@@ -8,12 +8,13 @@
 # Version History:
 ########################
 
-my $VERSION = "0.3.11";
+my $VERSION = "0.3.12";
 
 ########################
 # todo! add support for admin management
 # todo! gah, multi-channel support pathetic
 # todo! most of this crap needs to be refactored
+# 0.3.12(05/20/07): lol?  Prevent recursive aliasing infinite loop, x -> a, a -> x
 # 0.3.11(05/20/07): added 'alias'
 # 0.3.10(05/08/05): dont ban by nick, wait for nickserv response before joining chans
 # 0.3.9 (05/06/05): stop logging joins, fixed join flood ban?
@@ -130,11 +131,11 @@ my %commands   =  ( version => {
 my %admins     = ( adminnick => { 
                        password => '*', 
                        level    => 50, 
-                       host => "localhost.com" },
-                   anotheradminnick => {
+                       host => "host.com" },
+                   anothernick => {
                        password => '*', 
-                       level    => 50, 
-                       host => ".*.anotherhost.com" }
+                       level    => 20, 
+                       host => ".*.wildcardhost.com" }
                  );
 my %channels    = ();
 
@@ -919,7 +920,7 @@ sub plog {
 }
 
 sub interpret_command {  
-  my ($from, $nick, $host, $command) = @_;
+  my ($from, $nick, $host, $count, $command) = @_;
   my ($keyword, $arguments, $tonick);
   my $text;
 
@@ -964,7 +965,8 @@ sub interpret_command {
       $commands{$keyword}{ref_count}++;
       $commands{$keyword}{ref_user} = $nick;
 
-      return interpret_command($from, $nick, $host, $command);
+      return "Too many levels of aliasing, aborted." if(++$count > 5);
+      return interpret_command($from, $nick, $host, $count, $command);
     }
   }
 
@@ -1382,7 +1384,7 @@ sub on_public {
   }
 
   if(defined $command) {
-    $result = interpret_command($from, $nick, $host, $command);
+    $result = interpret_command($from, $nick, $host, 1, $command);
     if(defined $result) {
       if($result =~ s/^\/me\s+//i) {
         $conn->me($from, $result);
