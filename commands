@@ -1,0 +1,372 @@
+! text 1 Major-Willard 1104600621 9 Moc the unary boolean not operator
+!= text 1 Major-Willard 1104871606 0 nobody the comparison for inequality operator
+!x text 1 Zhivago 1179650750 0 nobody !(!x), yes
+" text 1 Major-Willard 1106527346 2 pragma_ the character that begins and terminates a string literal
+# text 1 Major-Willard 1104603072 3 centosian used to commence a preprocessor directive (include, define, undef, ifdef, ifndef, pragma).
+## text 1 prec 1107202876 3 pragma_ the preprocessor concatentation (token pasting) operator.
+#c text 1 pragma_ 1109029677 3 pragma_ for discussion involving the C programming language itself. We do not deal with the whole range of the spectrum. libgtk may be written in C, but this is hardly the proper channel for GTK-related questions.  Try #gtk.  Likewise, makefiles and autotools: #devtools, assembly: #asm, Xlib: #xlib, C++: #c++, and so on.
+$ text 1 Major-Willard 1106526551 1 Lt-Col-Kilgore a character that has no special meaning
+% text 1 Major-Willard 1106531636 0 nobody the remainder after division operator
+%: text 1 twkm 1104401858 0 nobody digraph alternative for #
+%:%: text 1 twkm 1104401865 0 nobody digraph alternative for ##
+%> text 1 twkm 1104616316 0 nobody digraph alternative for }
+%d text 1 prec 1104400903 1 pragma_ a *printf format specifier which converts its signed int argument to decimal representation; a *scanf format specifier which parses a decimal representation to its int* argument
+%p text 1 pragma_ 1106868530 0 nobody the printf/scanf format specifier used to print/read void pointers
+& text 1 Major-Willard 1104602453 3 Rupert-Giles the bitwise AND binary operator.  It is also the unary address operator.
+&& text 1 Major-Willard 1106515352 0 nobody the McCarthy logical-and binary operator
+&= text 1 prec 1107898482 0 nobody the bitwise inclusive-AND assignment operator.  The expression (x &= y) is equivalent to (x = x & y) except that the expression x is evaluated only once.
+&x->y text 1 pragma_ 1107406471 2 prec The address of the y member of the structure pointed to by x.
+&x[y] text 1 prec 1107730768 1 pragma_ equivalent to (x+y).  Neither the & operator nor the implied * operator (see x[y]) are evaluated.
+' text 1 Major-Willard 1106526412 0 nobody the character that begins and terminates a character constant
+'' text 1 Major-Willard 1104887580 0 nobody the delimiter of the start and end of a char
+( text 1 Major-Willard 1106527263 0 nobody used to commence a grouped expression
+) text 1 Major-Willard 1106527206 1 PoppaVic used to terminate a grouped expression
+* text 1 Major-Willard 1104600319 2 pragma_ the multiplication binary operator.  It is also the unary pointer dereference operator.  It is also used in declarations to declare a variable which is a pointer to a type: <type> *p;
+*= text 1 Major-Willard 1107662838 0 nobody the operator that multiplies the lvalue [to the left of the *] by the expression [to the right of the =]
++ text 1 Major-Willard 1104595760 0 nobody the addition binary operator
+++ text 1 Major-Willard 1105219173 1 Major-Willard a unary operator that increments basic types by 1; if it is placed before a variable the value of the expression is: <var> + 1; if it is placed after a variable the value of the expression is: <var>
++= text 1 Major-Willard 1107661684 0 nobody the operator that adds the expression [to the right of the =] to the lvalue [to the left of the +]
+, text 1 prec 1107316491 1 Spark the sequence operator.  It is also used to separate syntactic elements of: function arguments in a function call, declarators (in declarations of the same type), formal parameters in function declarations, enumeration elements, and initializers.
+- text 1 Major-Willard 1104595811 3 pragma_ the unary negation operator; the binary subtraction operator
+-- text 1 Major-Willard 1105219433 0 nobody a unary operator that decrements basic types by 1; if it is placed before a variable the value of the expression is: <var> - 1; if it is placed after a variable the value of the expression is: <var>
+-= text 1 Major-Willard 1107661964 0 nobody the operator that subtracts the expression [to the right of the =] to the lvalue [to the left of the -]
+-> text 1 Major-Willard 1104601334 5 pragma_ the operator that dereferences a pointer to permit access to a structure/union member.  The expressions (x->y) and ((*x).y) are equivalent.
+-lm text 1 prec 1106448497 0 nobody the standard UNIX linker command line option to link the functions in the math library.
+-pedantic text 1 pragma_ 1107929320 2 runtime a GCC flag that issues all warnings demanded by strict ISO C; rejects most programs that use forbidden extensions; should not be used to check for strict ISO conformance as it only warns for coding practices that _require_ a diagnostic, not everything; loosely supported
+-std text 1 pragma_ 1107929785 3 pragma_ a GCC flag that is used to specify which C standard to follow when compiling; some valid standards are: c89 (-ansi), c99, gnu89 (default), gnu99
+. text 1 Major-Willard 1104600864 8 roothorick the decimal point; the operator that permits access to a structure/union member; is used in structure member designators in C99.
+... text 1 prec 1106943402 3 GhostXz an ellipsis; used to mark a function or macro as variadic.  variadic macros were added by C99.
+/ text 1 Major-Willard 1104600246 0 nobody the division binary operator
+// text 1 Major-Willard 1108293482 2 Major-Willard used to introduce a comment that continues to the end of the line [C99]
+/= text 1 prec 1107662173 0 nobody the division assignment operator.  The expression (x /= y) is equivalent to (x = x / y) except that the expression x is evaluated only once.
+21days text 1 kate` 1177064329 2 Saparok http://norvig.com/21-days.html
+3star text 1 pragma_ 1111867182 2 pragma_ http://c2.com/cgi/wiki?ThreeStarProgrammer
+:) text 1 pragma_ 1109365121 27 NeverDream /say $faces
+:> text 1 twkm 1104401890 0 nobody digraph alternative for ]
+; text 1 Major-Willard 1104886076 1 Spark a statement and declaration terminator
+;) text 1 pragma_ 1109657503 1 pragma_ /me $body_action seductively.
+< text 1 Major-Willard 1104599441 0 nobody the less than comparison operator
+<% text 1 twkm 1104401845 0 nobody digraph replacement for {
+<: text 1 twkm 1104401882 1 pragma_ digraph replacement for [
+<< text 1 prec 1107979350 0 nobody the binary left shift operator
+<= text 1 Major-Willard 1104599493 0 nobody the less than or equal to comparison operator
+= text 1 Major-Willard 1104595880 0 nobody the assignment operator
+== text 1 Major-Willard 1104595949 0 nobody the comparison for equivalence operator
+> text 1 Major-Willard 1104599404 0 nobody the greater than comparison operator
+>= text 1 Major-Willard 1104599538 0 nobody the greater than or equal to comparison operator
+>> text 1 Major-Willard 1108253247 0 nobody the binary right shift operator
+?: text 1 infobahn 1104925315 3 noselasd the conditional (ternary) operator; <e1> ? <e2> : <e3> if <e1> is true, the operator evaluates and yields <e2>; otherwise it evaluates and yields <e3>
+??! text 1 twkm 1104400693 1 pragma_ trigraph replacement for |
+??'' text 1 twkm 1104400673 0 nobody trigraph replacement for ^
+??( text 1 twkm 1104400644 0 nobody trigraph replacement for [
+??) text 1 twkm 1104400667 1 pragma_ trigraph replacement for ]
+??- text 1 twkm 1104400703 0 nobody trigraph replacement for ~
+??/ text 1 twkm 1104400660 1 pragma_ trigraph replacement for \\
+??< text 1 twkm 1104400680 1 pragma_ trigraph replacement for {
+??= text 1 twkm 1104400632 0 nobody trigraph replacement for #
+??> text 1 twkm 1104400686 2 pragma_ trigraph replacement for }; digraph replacement for }
+APPALLING text 1 Major-Willard 1108954548 1 Major-Willard Acronym Production Particularly At Lavish Level Is No Good
+B text 1 Major-Willard 1111209918 4 pragma_ the programming language which was the precursor of C ; http://en.wikipedia.org/wiki/B_programming_language
+C/C++ text 1 pragma_ 1108258486 7 pragma_ a misnomer.  These two languages are completely different languages with each having its own standard.  C++ is not a "superset" of C anymore.  For C++ questions, please join #C++
+CHAR_BIT text 1 defrost 1104389685 3 pragma_ #include <limits.h> - maximum value for the number of bits used to represent an object of type char. - >= 8
+CHAR_MAX text 1 defrost 1104389685 0 nobody #include <limits.h> - maximum value for type char. Its value is: SCHAR_MAX if char represents negative values, UCHAR_MAX otherwise. - >= 127
+CHAR_MIN text 1 defrost 1104389685 0 nobody #include <limits.h> - minimum value for type char. Its value is: SCHAR_MIN if char represents negative values, zero otherwise. - <= 0
+CnotC++ text 1 LordOllie 1176998419 1 LordOllie C is not a subset of C++
+EOF text 1 infobahn 1104596552 9 pragma_ an integer constant expression, with type int and a negative value, that is returned by several functions to indicate end-of-file (ISO/IEC 9899:1999 7.19.1(3)). It is NOT a char. It is NOT a byte that is stored at the end of every file.
+EXIT_FAILURE text 1 mauke 1105443776 0 nobody a macro defined in <stdlib.h> whose value can be passed to exit() or returned from main() to indicate unsuccessful termination
+EXIT_SUCCESS text 1 mauke 1105443603 0 nobody a macro defined in <stdlib.h> whose value can be passed to exit() or returned from main() to indicate successful termination
+GIGO text 1 prec 1174497896 0 nobody garbage in, garbage out
+GP text 1 PoppaVic 1107533027 0 nobody General Purpose
+H&S text 1 heina 1109636091 2 pragma_ "C - A Reference Manual" by Harbison & Steele; a reference for C on par with K&R
+IMP text 1 Major-Willard 1108947650 0 nobody Interface Message Processor
+INT_MAX text 1 twkm 1104369616 2 pragma_ #include <limits.h> - INT_MAX - maximum value of an int object, at least +32767
+INT_MIN text 1 twkm 1104369627 0 nobody #include <limits.h> - INT_MIN - minimum value of an int object, at least -32767
+K&R text 1 Major-Willard 1105154344 11 PoppaVic The C Programming Language by Dennis Ritche and Brian Kernighan, it is the reference for C; the 2nd edition was updated to include ANSI C
+LONG_MAX text 1 twkm 1104369746 0 nobody #include <limits.h> - LONG_MAX - maximum value of a long int object, at least +2147483647
+LONG_MIN text 1 twkm 1104369732 0 nobody #include <limits.h> - LONG_MIN - minimum value of a long int object, at least -2147483647
+Lt-Col-Kilgore text 1 Lt-Col-Kilgore 1106871669 0 nobody 1st of the 9th, air-mobile
+MB_CUR_MAX text 1 twkm 1104394983 0 nobody #include <limits.h> - maximum number of bytes in a mult-byte character for an extended character in the current locale, which is never greater than MB_LEN_MAX.
+MB_LEN_MAX text 1 defrost 1104389706 0 nobody #include <limits.h> - maximum number of characters that constitute a multibyte character in any supported locale. Its value is >= MB_CUR_MAX.
+Major-Willard text 1 defrost 1104594621 7 Major-Willard a $sizes $colors gun totin non-jesus freak
+NET text 1 durnew 1106069886 0 nobody like the java platform, but by microsoft
+NULL text 1 Major-Willard 1104596262 9 pragma_ the (implementation defined) pointer value used to indicate a pointer that refers to no object; a macro expanding to a compile-time integer zero, possibly cast to (void *), e.g. ((void *)0) or 0L
+NeverDream text 1 NeverDream 1109794818 1 NeverDream the master of all things, living and dead. And those things which exist as a wave function that describes the state of both living and dead. But especially _YOU_!
+OMG text 1 vorpal 1174943035 1 vorpal Orbitz Meat Gravy
+Pascal text 1 Tom^ 1108206649 2 pragma_ "A program language named after a man who would turn over in his grave if he knew about it."
+Plan9 text 1 Major-Willard 1106978951 0 nobody written in C, it's free and you can find it here: http://plan9.bell-labs.com/plan9dist or /join #plan9
+QED text 1 Major-Willard 1106890375 0 nobody from the Latin; therin lies the proof
+SCHAR_MAX text 1 defrost 1104389707 0 nobody #include <limits.h> - maximum value for type signed char. - >= 127
+SCHAR_MIN text 1 defrost 1104389707 0 nobody #include <limits.h> - minimum value for type signed char. - <= -127
+SDL text 1 Tom^ 1107541279 0 nobody http://www.libsdl.org
+SHRT_MAX text 1 defrost 1104389724 0 nobody #include <limits.h> - maximum value for type short. - >= 32,767
+SHRT_MIN text 1 defrost 1104389724 0 nobody #include <limits.h> - minimum value for type short. - <= -32,767
+SIGBUS text 1 Major-Willard 1107559298 2 Major-Willard a signal sent when an address is referenced that is not correctly aligned
+SIGSEGV text 1 Major-Willard 1104612469 0 nobody a signal sent when an address is referenced that has not been allocated to your virtual address space
+SIGUSR1 text 1 Major-Willard 1104612781 0 nobody a signal reserved for unspecified user process use
+SIGUSR2 text 1 Major-Willard 1104613039 0 nobody a signal reserved for unspecified user process use
+SNAFU text 1 Major-Willard 1109292157 2 Major-Willard Situation Normal All Fucked Up
+SOP text 1 PoppaVic 1107543001 0 nobody "Standard Operating Procedure"
+Skapare text 1 pragma_ 1105957112 0 nobody Swedish for Creator, and he doesn't want you to bug him about it, anymore
+Squall` text 1 Squall` 1106979571 3 Squall` the sexiest hacker on the planet
+TARFU text 1 Major-Willard 1109292407 0 nobody Things Are Really Fucked Up
+TIL text 1 PoppaVic 1107798020 1 prec "Threaded Interpretive Language"
+TLI text 1 PoppaVic 1107535494 0 nobody "Too Little Info"
+TMI text 1 PoppaVic 1107535524 0 nobody "Too Much Info"
+TheStar text 1 TheStar 1107406902 0 nobody that huge glowing orb in the sky.
+UB text 1 LordOllie 1177692387 2 Draconx undefined behavior. See, http://en.wikipedia.org/wiki/Undefined_behavior
+UCHAR_MAX text 1 defrost 1104389724 0 nobody #include <limits.h> - maximum value for type unsigned char. - >= 255
+UINT_MAX text 1 twkm 1104369656 0 nobody #include <limits.h> - UINT_MAX - maximum value of an unsigned int object, at least 65535
+ULONG_MAX text 1 twkm 1104369766 0 nobody #include <limits.h> - ULONG_MAX - maximum value of an unsigned long int object, at least 4294967295
+USHRT_MAX text 1 defrost 1104389735 0 nobody #include <limits.h> - maximum value for type unsigned short. - >= 65,535
+Vinny text 1 Vinny_P 1110948024 1 Vinny_P Cool
+What text 1 prec 1107406885 0 nobody the meaning of life?
+[] text 1 prec 1107730883 3 GhostDuster the array subscript operator.  It is also part of declarator syntax.  The expressions (x[y]) and (*(x + y)) are equivalent.  See also &x[y].
+\ text 1 Major-Willard 1104603271 1 pragma_ the line continuation character; used in strings to specify special characters; used in character constants to specify special characters; when followed by u or U in C99, is used to specify a universal character name for use in string constants, character constants, or identifiers.
+^ text 1 Major-Willard 1104595483 0 nobody the bitwise exclusive OR (XOR) binary operator
+_ text 1 mauke 1105863511 0 nobody All identifiers that begin with an underscore and either an uppercase letter or another underscore are always reserved for any use.  All identifiers that begin with an underscore are always reserved for use as identifiers with file scope in both the ordinary and tag name spaces. (ISO 9899:1999, 7.1.3) Don''t use such identifiers.
+acoshl text 1 twkm 1104369471 0 nobody #include <math.h> - long double acoshl(long double);
+acosl text 1 twkm 1104369374 0 nobody #include <math.h> - long double acosl(long double);
+acronym module 1 pragma_ 1105953751 58 pragma_ acronym.pl
+animal_nouns text 1 pragma_ 1108981750 6 pragma_ wet overweight bloated skinny shaved dirty rabid drooling aroused fat filthy golden
+animals text 1 pragma_ 1108931430 6 pragma_ armadillo whale hyena squid trout hedgehog cat pig buffalo earthworm alligator turkey chicken cock badger calf
+ansicode text 1 pragma_ 1107812373 2 pragma_ http://www.inwap.com/pdp10/ansicode.txt
+apue text 1 twkm 1104636089 12 snhmib Advanced Programming in the UNIX Environment, by Stevens, see http://www.kohala.com/start/apue.html
+archivist text 1 Squall` 1110594100 2 pragma_ someone who wishes he had an identity
+argc text 1 prec 1104396991 2 kate` the traditional name of the first parameter to main(); argc is non-negative and gives the number of command line arugments (including the program name).
+argv text 1 prec 1104397065 5 kate` the traditional name of the second parameter to main(); argv[argc] == NULL; if argc>0 argv[0] is the program name. if argc>1, argv[1] through argv[argc-1] are the command line arguments.
+arrays text 1 pragma_ 1106022495 3 pragma_ /say Arrays and pointers: http://www.eskimo.com/~scs/C-faq/s6.html
+asinhl text 1 twkm 1104371830 0 nobody #include <math.h> - long double asinhl(long double);
+asinl text 1 twkm 1104371771 0 nobody #include <math.h> - double asinl(long double);
+ask text 1 pragma_ 1106341082 25 zvrba /say If you have a question, just ask.  If somebody knows, they'll answer :) For best results, be specific, informative, complete, concise and on-topic!  Don't ask if you can ask a question. Don't ask if anyone uses/knows about foo. Please don't be demanding or insulting. Remember, we're all volunteers.  Also see: http://www.catb.org/~esr/faqs/smart-questions.html
+atan2l text 1 twkm 1104371981 0 nobody #include <math.h> - long double atan2l(long double,long double);
+atanl text 1 twkm 1104371894 0 nobody #include <math.h> - long double atanl(long double);
+attacks text 1 pragma_ 1108933612 2 pragma_ thwaps smacks whacks whaps whips thwacks bashes boots headbutts bitchslaps punts
+autoshit text 1 PoppaVic 1104954897 1 PoppaVic is the portability whore that is GNU autoconf/automake/configure/aclocal/libtool/sh/m4 messes that are NOT portable
+autotools text 1 pragma_ 1107806042 0 nobody http://sources.redhat.com/autobook/
+away text 1 Shadewalker 1177950209 0 nobody http://sackheads.org/~bnaylor/spew/away_msgs.html
+bcopy text 1 Major-Willard 1107484574 0 nobody way cool, but it's more portable to use memcpy
+beej text 1 twkm 1104460587 30 Prof_Vince http://www.ecst.csuchico.edu/~beej/guide/net/ ; http://www-db.stanford.edu/~cho/programming/network.html
+beer text 1 dooky 1110681030 1 dooky The breakfast of champions
+binky text 1 prec 1106444999 9 runtime the Binky Pointer Fun Video at http://cslibrary.stanford.edu/104/
+bitwise text 1 prec 1106439894 1 pragma_ http://www.gmonline.demon.co.uk/cscene/CS9/CS9-02.html
+blamethecompiler text 1 prec 1106336163 2 pragma_ a common disease mostly contracted by beginning programmers.  There is no known cure except that over time, outbreaks will occur with less and less frequency.
+blog text 1 pragma_ 1107754780 1 pragma_ http://pragma.homeip.net/blog/
+bodily_action text 1 pragma_ 1108935242 0 nobody vomits sneezes coughs snores yawns
+body_action text 1 pragma_ 1109657461 0 nobody snorts coughs sneezes snores chokes spasms "cracks his neck" "scratches his butt"
+body_part text 1 pragma_ 1109021527 3 pragma_ arm hand head foot leg face ass ear nose neck "left buttock" nuts
+book text 1 pragma_ 1179504776 8 snhmib /me points accusingly at $args, "Where is your book?!"
+book2 text 1 PoppaVic 1179569523 0 nobody "What book are you [not] reading?"
+books text 1 twkm 1104378101 47 kate` http://www.iso-9899.info/wiki/Books
+bot text 1 pragma_ 1108855690 17 hnaz /say Yes, I am a bot.
+botsnack text 1 pragma_ 1174693123 17 pragma_ /me $eat_adverbs $eat_actions her snack.
+bounce text 1 pragma_ 1108872842 4 phiend /me bounces around.
+break text 1 Major-Willard 1104888615 0 nobody the statement used terminate the currently executing block
+bye text 1 pragma_ 1109365229 5 pragma_ /say $bye_words, $nick
+bye! text 1 NeverDream 1109793039 1 NeverDream /say Excellently observed, $nick, but let us cultivate our garden.
+bye_words text 1 pragma_ 1109013658 3 pragma_ Bye Later Adios Good-bye Sayonara Bye-bye "See you later"
+byte text 1 prec 1104873342 7 prec defined by the C standard as an addressable unit of storage large enough to hold a character value.  The char type is byte-sized and is at least 8 bits wide.  CHAR_BIT in <limits.h> defines the byte size for any given implementation.  The term "byte" is most often used to mean 8 bits; however, the term octet is preferred.
+c text 1 pragma_ 1108006206 10 Draconx|Laptop a low level language designed to make assembly "easier", useful for device drivers or operating systems. Thusly, one has to maintain buffers, memory, and various low level information. C is not meant to be used for everyday applications, a common misconception.
+c++ text 1 NeverDream 1108585029 3 GammaRay not C, try ##c++
+c10k text 1 twkm 1104635961 0 nobody the c10k problem, see http://www.kegel.com/c10k.html
+c99status text 1 pragma_ 1108082627 0 nobody GCC's C99 implementation status:  http://gcc.gnu.org/c99status.html
+c9xdiffs text 1 twkm 1104460717 0 nobody http://home.datacomm.ch/t_wolf/tw/c/c9x_changes.html
+candide text 1 pragma_ 1107122441 6 pragma_ a bot.  See http://www.iso-9899.info/wiki/Candide for more information.
+casting text 1 pragma_ 1105954332 8 PoppaVic /say Cast properly: http://www.cognitiveprocess.com/~rjh/prg/writings/casting.html
+cfaq text 1 pragma_ 1106283720 1 pragma_ comp.lang.c FAQ: http://www.eskimo.com/~scs/C-faq/top.html
+cgisock text 1 pragma_ 1106002098 0 nobody See http://www.cyberspace.org/~pfv/libcgisock.html for a nifty little module for the Apache Web Server that allows a browser to connect to programs already loading and running on remote systems via the ubiquitous Unix-Socket.
+channelstats text 1 pragma_ 1106000070 2 pragma_ See http://ortdotlove.net/c.html for #C channel statistics for irc.freenode.net!
+charset text 1 prec 1107982156 0 nobody a character set is a set of characters.  http://www.cs.tut.fi/~jkorpela/chars.html
+class text 1 runtime 1177799535 1 runtime not c, try ##c++
+colors text 1 pragma_ 1108931265 2 pragma_ red green yellow blue purple pink brown black white octarine cyan magenta orange
+const text 1 prec 1107648578 3 prec a type qualifier who would like a better description here.
+continue text 1 Major-Willard 1104888657 0 nobody the statement used recommence the currently executing block
+controlstack text 1 PoppaVic 1174907617 1 PoppaVic http://www.answers.com/topic/call-stack
+converting text 1 prec 1106351170 4 orbitz http://www.iso-9899.info/wiki/Converting
+cpp text 1 PoppaVic 1107543769 2 kollo15 The C Preprocessor ; integrated with gcc
+d text 1 pragma_ 1108430071 1 pragma_ the wrong specifier for double
+dads text 1 twkm 1104460751 0 nobody http://www.nist.gov/dads
+daemon text 1 prec 1112139369 0 nobody http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
+ddd text 1 pragma_ 1175114372 0 nobody a graphical front end to gdb and other debuggers (http://www.gnu.org/software/ddd/)
+declaredefine text 1 kate` 1179653420 0 nobody A declaration specifies the interpretation and attributes of a set of identifiers. A definition of an identifier is a declaration for that identifier that: for an object, causes storage to be reserved for that object; for a function, includes the function body; for an enumeration constant or typedef name, is the (only) declaration of the identifier.
+define module 1 pragma_ 1105953728 54 pragma_ define.pl
+defrost text 1 Major-Willard 1106696388 2 defrost the one who does the jokes ;p
+destroyer text 1 destroyer 1110396483 2 destroyer a script kiddy wannabe hacker.
+digraph text 1 twkm 1104552499 0 nobody a two character alternative punctuator, intended to make using c possible on systems where the primary punctuator is missing, typically from keyboards. they are normal tokens, so are processed in the same way as other source characters (apart from trigraphs).
+doesntcare text 1 pragma_ 1105954303 1 pragma_ /say Standard C does not know nor care about colors, mice, windows, keyboards, networks or any other system specific things. If you want help with something like that, you would want to tell us what OS, compiler, tools or libraries you are or intend to use/abuse.
+doesntwork text 1 pragma_ 1175456821 6 Draconx /say "It doesn't work!" is not very informative for the people trying to help you.  Please describe what you think may be wrong, what results you expected to get and what instead actually happens.  Pasting code and/or error messages to http://rafb.net/paste/ may be helpful.
+dontcastmalloc text 1 infobahn 1104594725 45 twkm /say There is no need to cast the result of library functions that return void *; it makes your code hard to read, adds no value, and can hide a bug if you don't have a valid prototype in scope.; see http://www.cpax.org.uk/prg/writings/casting.php
+dooky text 1 dooky 1109726391 6 Major-Willard the destroyer of worlds, an ardent sandwich eater.
+drafts text 1 pragma_ 1106110821 6 pragma_ http://www.nirvani.net.nyud.net:8090/docs/ansi_c.pdf
+dsaa text 1 twkm 1104460769 0 nobody http://ciips.ee.uwa.edu.au/~morris/Year2/PLDS210/ds_ToC.html
+duffing text 1 kate` 1176900462 8 kate` writing code from top to bottom, as opposed to horizontally. See http://iq0.com/notes/deep.nesting.html
+duffs-device text 1 defrost 1104395556 0 nobody magical old school technique to directly express general loop unrolling in C. see http://www.lysator.liu.se/c/duffs-device.html
+eat_actions text 1 pragma_ 1174693106 0 nobody gobbles snarfs munches inhales "wolfs down"
+eat_adverbs text 1 pragma_ 1174693210 0 nobody daintily hungrily messily greedily
+else text 1 Major-Willard 1105258795 0 nobody the keyword that executes a statement/block should an ''if'' expression evaluates to false
+errno text 1 defrost 1104386234 0 nobody library error macro, #include <errno.h> The macro designates a modifiable int object that is asigned a value greater than zero on certain library errors. see http://www.iso-9899.info/man?strerror
+errors text 1 pragma_ 1108853504 7 pragma_ /say If you have an error message please paste the actual error message.  Do not say "I have an error in my code."  Please paste the relevant code at http://rafb.net/paste/ with comments indicating the line numbers and a description of what you're trying to accomplish.  Do not ask to "find the error in my code, plzz".
+espdiff text 1 prec 1106956904 0 nobody a program which applies the appropriate transformation to a patch or set of patches, depending on what you intend to accomplish.
+f text 1 wcstok 1107401465 2 asfdff the wrong specifier for double
+faces text 1 pragma_ 1109365110 1 pragma_ :) ;) :o >:) :p :P~ :D ;-D :^) =^.^=
+factoid text 1 pragma_ 1108616481 a tidbit of information
+factoids text 1 pragma_ 1105953364 3 pragma_ /say For a list of my factoids see http://pragma.homeip.net/candide/factoids.html  - For information on factoids, see http://www.iso-9899.info/Candide
+faq module 1 twkm 1104460444 255 pragma_ cfaq.pl
+feof text 1 Major-Willard 1104888995 0 nobody a function, taking one FILE * as an argument, indicating a file has been completely read by getc/getchar/fread (not a recommended construct)
+fflush(stdin) text 1 defrost 1104396276 2 pragma_ an ungodly, undefined, non-portable abomination (1. an object of disgust. 2. an odious or degrading habit or act.)
+fgets.idiom text 1 prec 1106767895 3 vorpal while (fgets(line, sizeof line, stdin)) { /* process line */ }
+fhs text 1 twkm 1104460859 0 nobody http://www.redhat.com/docs/manuals/linux/RHL-9-Manual/ref-guide/s1-filesystem-fhs.html
+fish text 1 kate` 1177133577 2 pragma_ a friendly interactive shell: http://fishshell.org/
+funcpointers text 1 twkm 1104460679 1 pragma_ http://www.function-pointer.org/
+functionpointer text 1 orbitz 1104968677 1 pragma_ www.function-pointer.org
+gcc text 1 twkm 1104389164 1 Saparok GNU Compiler Collection, also the command name of the c compilation controller
+gdb text 1 twkm 1104460628 1 LordOllie tutorial: http://www.cs.princeton.edu/~benjasik/gdb/gdbtut.html; http://www.delorie.com/gnu/docs/gdb/gdb_toc.html
+gets text 1 pragma_ 1108103139 7 pragma_ very bad.  It cannot be told the size of the buffer to read in, therefore it has no way of preventing buffer overflows.  Use fgets() with 'stdin' as the FILE* instead.  http://www.eskimo.com/~scs/C-faq/q12.23.html
+gettimeofday text 1 Major-Willard 1104639290 0 nobody a function that returns the time in seconds and milliseconds since the epoch (Thursday, January 1 1970) and the local timezone
+gigo text 1 prec 1177948351 0 nobody Garbage In, Garbage Out
+google module 1 pragma_ 1105953714 39 pragma_ google.pl
+greenspun text 1 mauke 1108933892 2 pragma_ /say Greenspun's Tenth Rule of Programming: "Any sufficiently complicated C or Fortran program contains an ad-hoc, informally-specified bug-ridden slow implementation of half of Common Lisp."
+gspy module 1 pragma_ 1105953720 16 zero^ gspy.pl
+gtk text 1 PoppaVic 1179561518 2 PoppaVic http://gtk.org/api/ has online and tarball docs for glib, pango, gtk and other gtk+ libraries.
+gtop10 module 1 pragma_ 1175420853 4 pragma_ gtop10.pl
+gtop15 module 1 pragma_ 1175428910 21 pragma_ gtop15.pl
+help text 1 NeverDream 1109792986 56 kate` /say To learn all about me, see http://www.iso-9899.info/wiki/Candide
+herring text 1 Baughn 1173805492 0 nobody a vicious species, loyal only to Baughn. Attempts to wrest control of the Herring Hordes can result in consequences similar to http://fukung.net/v/2833/15cod.jpg .
+hi text 1 pragma_ 1109044278 98 pragma_ /say $hi_phrases, $nick
+hi_phrases text 1 pragma_ 1109044257 0 nobody "Well, hello there" "Hi there" "Hey, whats up" Hola Hi Hello "Que pasa"
+hostile text 1 prec 1105037725 1 pragma_ http://www.iscblog.info/blog/display/32
+hunterx text 1 hunterx 1106984850 0 nobody the sexiest hacker on the planet
+ia text 1 pragma_ 1174590993 20 pragma_ /say Your inner animal is a $sizes $animal_nouns $animals, $args.
+if text 1 Major-Willard 1105258377 1 Windows2000XPVIS the keyword that tests a bracketed expression and if true, executes the following statement or block; if the expression evaluates to false an optional ''else'' clause is executed
+implementation text 1 pragma_ 1106459085 0 nobody a particular set of software, running in a particular translation environment under particular control options, that performs translation of programs for, and supports execution of functions in, a particular execution environment (ISO/IEC 9899:1999 3.12)
+int text 1 infobahn 1104595147 0 nobody a signed integer data type, at least 16 bits wide, which must be able to represent (at least) all the numbers in the range -32767 to +32767. Its lowest value, INT_MIN, and highest value, INT_MAX, are defined in <limits.h>
+iodine text 1 snhmib 1177134210 2 snhmib /me is abused by iodine
+ipc text 1 twkm 1104609621 0 nobody IPC is Inter-Process Communication.  A nice tutorial for UNIX is at http://www.ecst.csuchico.edu/~beej/guide/ipc/
+jonbryan text 1 jonbryan 1106453242 0 nobody a 1337 h4x0r
+k&r text 1 twkm 1104460373 50 snhmib The C Programming Language, 2nd edition, by Kernighan and Ritchie, http://cm.bell-labs.com/cm/cs/cbook/ - be sure to see the errata as well, at http://cm.bell-labs.com/cm/cs/cbook/2ediffs.html
+kate text 1 kate` 1177134347 4 pragma_ fond of enums
+kate` text 1 Baughn 1177655583 1 pragma_ Lasagnasian
+kernelnewbies text 1 noselasd 1107807003 0 nobody #kernelnewbies at irc.kernelnewbies.org (or irc.oftc.net).
+learning text 1 pragma_ 1108007774 1 pragma_ most beginners are just trying to learn C. Try not to question their "silly" methods and please try to provide the answer to the question they are asking. They will learn better tricks as they gain more experience. One cannot expect someone to instantly know the _best_ way to write 'foo'. You were a beginner once. Only by experience did you learn more efficient methods. Try not redicule the beginners.
+lf text 1 mauke 1109394227 0 nobody wrong
+line text 1 prec 1106779283 0 nobody a sequence of characters terminated by a newline sequence ('\n' in C, CRLF in various Internet protocols).
+logs text 1 twkm 1104954683 4 pragma_ channel log since 1400UTC, 24 hours max, at http://www.iso-9899.info/channel.log
+long text 1 infobahn 1104595499 0 nobody a signed integer data type, at least 32 bits wide, which must be able to represent (at least) all the integers in the range -2147483647 to +2147483647. Its lowest value, LONG_MIN, and highest value, LONG_MAX, are defined in <limits.h>
+lysator text 1 twkm 1104460803 0 nobody http://www.lysator.liu.se/c/
+main text 1 twkm 1104231974 7 kate` int main(int argc, char *argv[]); or int main(int argc, char **argv); or int main(void); See also ''argc'' and ''argv''; the standard entry point to C programs
+man module 1 pragma_ 1107137901 153 pragma_ man.pl
+map module 1 pragma_ 1106888208 4 pragma_ map.pl
+math module 1 pragma_ 1105953711 50 pragma_ math.pl
+me text 1 pragma_ 1109820558 5 pragma_ /me $args
+mem text 1 prec 1104399754 4 pragma_ a reserved function identifier prefix when followed by a lowercase letter
+mind text 1 pepper^ 1108585995 a terrible thing to waste
+msg text 1 pragma_ 1109820572 6 pragma_ /msg $args
+nelemof text 1 prec 1108151345 0 nobody a standard idiom for computing the number of elements in an array variable:  #define nelemof(array) (sizeof array/sizeof *array)
+objectcgi text 1 pragma_ 1106001595 0 nobody See http://www.messners.com/objectcgi/objectcgi.html for a library to handle web CGI with C.
+objectsfirst text 1 twkm 1104460783 0 nobody http://ciips.ee.uwa.edu.au/~morris/Year1/CLP110/CLP_ToC.html
+onlinek&r2 text 1 LordOllie 1175854606 3 pragma_ If you cannot will not buy k&r2 go here at least, then quit pissing and moaning. http://publications.gbdirect.co.uk/c_book/
+oreo text 1 pragma_ 1108081475 3 pragma_ /say Considering your ineptitude and lack of formulating pointed questions, these people have actually wasted more time attempting to assist you than you deserve. I suggest you copy the answers they are giving you and take a break to review them later when you are of a more calm disposition. Obviously you are too upset or frustrated to think straight. Go have an oreo.  
+owh text 1 orbitz 1108258524 orbitz was here ; orbitz wears heels
+pant_status text 1 pragma_ 1173823726 0 nobody off on crotchless "around ankles" "showing butt-crack"
+pants text 1 pragma_ 1173560208 7 pragma_ /say Pant status: off
+paste text 1 twkm 1104460605 23 prec /say Paste code/errors here:   http://rafb.net/paste/ - Helper script for pasting files: http://code.google.com/p/rafb-pl/
+peril text 1 twkm 1104460665 0 nobody http://www.pldaniels.com/c-of-peril/
+ping text 1 pragma_ 1109821018 1 phrontist /msg $nick pong
+pizza_milkshake text 1 pizza_milkshake 1106981227 0 nobody half man, half pizza. www.parseerror.com/pizza.jpg
+pointers text 1 pragma_ 1107379418 6 PoppaVic http://pw2.netcom.com/~tjensen/ptr/cpoint.htm
+poppavic text 1 snhmib 1177158909 1 snhmib "sigh"
+posix text 1 pragma_ 1179496311 1 pragma_ /say The Open Group Base Specifications Issue 6: http://www.opengroup.org/onlinepubs/009695399/
+pragma text 1 pragma_ 1106796635 3 pragma_ (pragmatic information) A standardised form of comment which has meaning to a compiler. It may use a special syntax or a specific form within the normal comment syntax. A pragma usually conveys non-essential information, often intended to help the compiler to optimise the program. (1994-11-08)
+prec text 1 pragma_ 1107502825 1 Major-Willard very FRUITY
+prepared text 1 pragma_ 1175464588 3 pragma_ /say If you're working on this, you really shouldn't be asking C questions.  All your C questions should have been answered years ago or you probably aren't ready/prepared for this project.
+preprocessor text 1 NeverDream 1109792251 1 kollo15 an application that processes code before compilation/execution.
+proto module 1 pragma_ 1105953796 2 pragma_ prototype.pl
+prototype text 1 twkm 1105035288 2 Pryon a function declaration that also includes types for the parameters.
+qed text 1 Major-Willard 1106889817 0 nobody the multi-file, command line editor written by Rob Pike
+qsort text 1 twkm 1104399031 1 Pryon sort an array of data, #include <stdlib.h>, void qsort(void *base, size_t nelems, size_t elsize, int (*compar)(const void *, const void *)); returns nothing, see http://www.iso-9899.info/man?qsort
+rafb text 1 pragma_ 1179491580 3 pragma_ /say Read A !@#&ing Book - Your primary guide for learning C should be a good book (see http://www.iso-9899.info/wiki/Books).  You must not expect to become a proficient C programmer just from reading crappy online `tuts', staring at other people's code, and/or boring us to death by asking dozens of exceedingly trivial questions.
+rand text 1 twkm 1104397431 0 nobody pseudo-random number generator, #include <stdlib.h>, int rand(void); returns the next number in the sequence in the range [0,RAND_MAX], see http://www.iso-9899.info/man?rand; a *printf format specifier which converts its signed int argument to decimal representation; a *scanf format specifier which parses a decimal representation to its int* argument; test
+reference text 1 twkm 1104460727 13 prec http://www.acm.uiuc.edu/webmonkeys/book/c_guide/ - http://www-ccs.ucsd.edu/c/
+referencedtype text 1 pragma_ 1107989463 0 nobody "a pointer type may be derived from a function type, an object type, or an incomplete type, called the referenced type.  A pointer type describes an object whose value provides a reference to an entity of the referenced type.  A pointer type derived from the referenced type T is sometimes called ``pointer to T''.  The construction of a pointer type from a referenced type is called ``pointer type derivation''."
+references text 1 pragma_ 1108087719 2 pragma_ C does not have pass-by-reference or "heavy" references like C++ or some other languages do.  C does have a definition of references that is probably not what you want or need to know about, see:  !referencedtype
+register text 1 pragma_ 1107636580 1 kate` a storage-class specifier for an object that suggests that access for the object be as fast as possible.  The extent to which the suggestion is effective is implementation defined.  Whether or not addressable storage is actually used, the address of any part of an object declared with storage-class specifier register cannot be computed.
+resources text 1 pragma_ 1106813548 13 pragma_ http://www.cognitiveprocess.com/~rjh/prg/portable/c/resources.html - http://www.iso-9899.info/wiki/Web_resources - http://www.iso-9899.info/wiki/Books - See also: reference
+restrict text 1 twkm 1105427254 1 pragma_ a type qualifier, which may only be used with a pointer type, and which requires that objects referenced through such a pointer must be made through a single pointer value, i.e., no aliases / pointers into other parts of the object are allowed
+rtfm text 1 pragma_ 1108933679 20 pragma_ /me $attacks $args $rtfm_smack the $body_part with a $sizes $colors manual.
+rtfm_smack text 1 pragma_ 1109185551 0 nobody upside across about over
+rule1 text 1 PoppaVic 1106163701 0 nobody "First, make it run"
+rule2 text 1 PoppaVic 1106163779 0 nobody "Then, make it run right"
+rule3 text 1 PoppaVic 1106163837 1 pragma_ "Finally, make it run fast or small (pick one)" [This is where you'd profile]
+say text 1 pragma_ 1109820544 16 pragma_ /say $args
+scanf text 1 Major-Willard 1106970012 17 vorpal a function wherein lie dragons - "It's nearly impossible to do decent error recovery with scanf; usually it's far easier to read entire lines (with fgets or the like), then interpret them, either using sscanf or some other techniques." - See http://www.eskimo.com/~scs/C-faq/q12.20.html
+schildt text 1 twkm 1105514020 2 mauke please avoid herbert schildt's books, see http://www.iso-9899.info/wiki/Main_Page#Stuff_that_should_be_avoided
+seen module 1 pragma_ 1175417873 11 RadSurfer seen.pl
+segfault text 1 prec 1106351158 0 nobody http://www.iso-9899.info/wiki/Segfault
+shoot text 1 pragma_ 1109021460 53 xprment626 /me $weapon_action her $weapon and $shoot_action $args's $body_part.
+shoot_action text 1 pragma_ 1109021600 2 pragma_ "blows away" "shoots off" "shoots holes in" "takes off" "blows off" blasts "blasts off" "blasts through" "shoots through"
+short text 1 infobahn 1104595429 0 nobody a signed integer data type, at least 16 bits wide, which must be able to represent (at least) all the numbers in the range -32767 to +32767. Its lowest value, SHRT_MIN, and highest value, SHRT_MAX, are defined in <limits.h>
+sicp text 1 twkm 1104460692 1 kate` http://mitpress.mit.edu/sicp/
+sitestats text 1 twkm 1104462371 0 nobody http://www.iso-9899.info/webstats/
+size_t text 1 prec 1107760223 4 prec an unsigned integer type which is the result type of the sizeof operator.  A size_t variable can store the size of any object.  C90: printf("%lu\n", (unsigned long)sizeof a); C99: printf("%zu\n", sizeof a); 
+sizeof text 1 prec 1108181591 4 prec an operator which yields the size, in bytes, of the expression or the parenthesized type given as its operand.  The result type of the sizeof operator is size_t.  See also size_t and byte.
+sizes text 1 pragma_ 1108931310 5 pragma_ large small tiny massive huge gigantic titanic teeny miniscule
+skapare text 1 pragma_ 1105953849 0 nobody Swedish for Creator, and he doesn't want you to bug him about it, anymore
+slap text 1 pragma_ 1108932778 71 jingzhe /me $attacks $args with a $sizes $animal_nouns $animals!
+sleep text 1 pepper^ 1108585791 1 pepper^ waste of time
+smart text 1 pragma_ 1106519094 1 pragma_ See http://www.catb.org/~esr/faqs/smart-questions.html
+smarties text 1 twkm 1104460794 0 nobody http://www.torek.net/torek/c/index.html
+snippets text 1 twkm 1104460703 0 nobody http://c.snippets.org/
+source text 1 pragma_ 1105954460 28 jingzhe /say candide's $sizes $animal_nouns $animals can be found at http://pragma.homeip.net/stuff/scripts/pbot2.pl
+standard text 1 pragma_ 1175116374 10 kate` /say C89 draft PDF: http://std.dkuug.dk/JTC1/SC22/WG14/www/docs/n843.pdf - C99 + TC1 + TC2 working paper: http://open-std.org/JTC1/SC22/WG14/www/docs/n1124.pdf - comprehensive reference: http://ccs.ucsd.edu/c/
+static text 1 Major-Willard 1106976976 4 pragma_ used if the function/variable is only used in one source file, at global scope, it should be declared as static; variables of this storage class are initialised to zero; variables of this storage class which are declared in functions maintain their value between calls to the function
+std:: text 1 NeverDream 1108585411 2 pragma_ C++, not C. Try #c++
+stdarg text 1 prec 1104404716 0 nobody interfaces for handling variable argument lists; #include <stdarg.h>; void va_start(va_list ap, arg); void va_copy(va_list dest, va_list src); type va_arg(va_list ap, type); void va_end(va_list ap); see http://www.iso-9899.info/man?stdarg
+stderr text 1 Major-Willard 1104616252 0 nobody a FILE *, traditionally associated with file descriptor 2
+stdin text 1 Major-Willard 1104616182 16 Major-Willard a FILE *, traditionally associated with file descriptor 0, using fflush() with it is generally pointless
+stdout text 1 Major-Willard 1104616210 2 Major-Willard a FILE *, traditionally associated with file descriptor 1
+str text 1 prec 1104399552 2 prec a reserved file-scope identifier prefix when followed by a lowercase letter
+string text 1 kate` 1179262366 0 nobody a sequence of characters terminated by and including a null character ; http://www.iso-9899.info/wiki/String
+struct text 1 Major-Willard 1104886362 1 Windows2000XPVIS used to define an abstract data type containing other (possibly nested) data types
+support text 1 prec 1108943444 7 pragma_ /say If you are looking for installation support for a particular piece of software, you are in the wrong place.  This channel exists for C programmers and those aspiring to be C programmers -- it is not a general software support channel.
+taocp text 1 twkm 1104462083 2 pragma_ The Art of Computer Programming, by Knuth, http://www.iso-9899.info/wiki/Special:Booksources/0201485419
+teaching text 1 twkm 1108008187 0 nobody not just accepting that the person asking knows what they are doing and has merely forgotten the proper forms to use. Rather, they need insight into what solutions exist to solve the problems they face; for which, there can be no better tool than a clear explanation of the problem, even if you must draw it out of them millimeter by torturous millimeter.
+testcase text 1 kate` 1177340420 24 kate` /say A testcase is a minimal compilable example exhibiting your symptoms. Please paste a testcase at http://rafb.net/paste to help us assist you.
+thanks text 1 pragma_ 1109979248 7 davix /say $welcome, $nick
+threads text 1 twkm 1104460742 5 prec tutorial: http://www.llnl.gov/computing/tutorials/workshops/workshop/pthreads/MAIN.html - threads suck: http://threading.2038bug.com/
+to text 1 prec 1104400219 0 nobody a reserved function identifier prefix when followed by a lowercase letter
+trigraph text 1 twkm 1104552373 0 nobody a three character sequence beginning with two question marks, intended to make using c possible on systems where the usual punctuators are missing, typically from keyboards. these sequence is replaced during phase 1 of translation and takes place even within quoted strings.
+tutorial text 1 pragma_ 1108597292 1 pragma_ http://www.iso-9899.info/wiki/Web_resources#Getting_Started
+twkm text 1 Major-Willard 1106352903 3 PoppaVic a cruel man, but fair
+ub text 1 prec 1107485373 4 Draconx undefined behavior.  Invoking undefined behavior can cause demons to fly out from your nose. 
+unbufferedgetc text 1 pragma_ 1106032892 1 pragma_ How to disable line-buffering with termios: http://z.ssji.net/~shtrom/skb/getc.html
+union text 1 Major-Willard 1104886538 2 kate` used to define an abstract data type whose members occupy the same memory
+unixfaq text 1 twkm 1104460642 0 nobody http://www.erlenstar.demon.co.uk/unix/faq_toc.html
+unp text 1 twkm 1104636321 7 Saparok unix network programming [updated by unp1 and unp2], by stevens, see http://www.kohala.com/start/unp.html
+unp1 text 1 twkm 1104636232 0 nobody unix network programming, volume 1: networking api''s: sockets and xti, by stevens, see http://www.kohala.com/start/unpv12e.html
+unp2 text 1 twkm 1104636219 0 nobody unix network programming, volume 2: interprocess communications, by stevens, see http://www.kohala.com/start/unpv22e/unpv22e.html
+unsigned text 1 infobahn 1104595343 0 nobody a qualifier for integer data types, which renders them incapable of representing negative numbers but increases the number of positive values they can represent.
+v text 1 Zhivago 1178320878 0 nobody the same as v == 0
+voidmain text 1 twkm 1104875507 6 boris`` main returns an int, void main() is for dummies
+volatile text 1 twkm 1105427414 0 nobody a type qualifier, which requires that value caching not be performed.
+warnings text 1 Baughn 1173671019 21 Saparok http://www.iso-9899.info/wiki/WarningFlags
+wcs text 1 prec 1104399769 0 nobody a reserved function identifier prefix when followed by a lowercase letter
+wcsftime text 1 twkm 1104393957 0 nobody convert date and time to wide string, #include <wchar.h>, size_t wcsftime(wchar_t *ws, size_t maxlen, const wchar_t *format, const struct tm *timeptr); returns NULL if the conversion would succeed within maxlen wide characters otherwise the number of codes stored excluding the terminating null wide character, see http://www.iso-9899.info/man?wcsftime
+wcsrtombs text 1 twkm 1104395426 0 nobody convert wide character string to (narrow) character string (restartable), #include <wchar.h>, size_t wcsrtombs(char *s, const wchar_t **ws, size_t len, mbstate_t *ps); returns (size_t)-1 and stores EILSEQ in errno if a wide character is encountered that cannot be converted otherwise the number of bytes in the resulting sequence not including the terminating null character, see http://www.iso-9899.info/man?wcsrtombs
+weapon text 1 pragma_ 1109021747 2 pragma_ "Beretta 9mm" "Smith and Wesson" BFG9000 MP40 "rocket launcher" "hand grenade" shotgun railgun
+weapon_action text 1 pragma_ 1109021669 3 pragma_ "locks and loads" cocks loads "lovingly cleans" aims
+weather module 1 pragma_ 1105953726 12 snhmib weather.pl
+welcome text 1 pragma_ 1109979223 1 Saparok "No problem" "You're welcome" "Think nothing of it" "Not a problem" "My pleasure"
+wg14 text 1 twkm 1104460837 0 nobody http://www.open-std.org/jtc1/sc22/wg14/
+whymove text 1 pragma_ 1111196059 3 pragma_ /say See http://freenode.net/policy.shtml and http://freenode.net/policy.shtml#channelnaming for information on the unusual channel name.
+wiki text 1 twkm 1104229988 1 snhmib http://www.iso-9899.info/
+windows text 1 Major-Willard 1106527942 2 Major-Willard a thirty-two bit extension and graphical shell to a sixteen-bit patch to an eight-bit operating system originally coded for a four-bit microprocessor which was written by a two-bit company that can't stand one bit of competition.
+x->y text 1 prec 1108845393 equivalenu prec (*x).y
+x[y] text 1 prec 1106283927 11 pragma_ syntactic sugar for *(x + y)
+xy text 1 Draconx|Laptop 1175596315 9 kate` The XY problem:  You want to do X, but don't know how.  You think you can solve it using Y, but don't know how to do that, either.  You ask about Y, which is a strange thing to want to do.  Just ask about X.
+youredoingitwrong text 1 pragma_ 1178966474 2 pragma_ /say This is you:  http://www.doingitwrong.com/
+zealot text 1 Wolf 1106956916 0 nobody a close minded fool
+{ text 1 Major-Willard 1106528232 0 nobody used to commence a block
+| text 1 Major-Willard 1104595595 1 Major-Willard the bitwise inclusive OR binary operator
+|= text 1 prec 1107898467 0 nobody the bitwise inclusive-OR assignment operator.  The expression (x |= y) is equivalent to (x = x | y) except that the expression x is evaluated only once.
+|| text 1 Major-Willard 1106515400 1 fog_proxy the McCarthy logical-or binary operator
+} text 1 Major-Willard 1106528206 1 llpamies used to terminate a block
+~ text 1 Major-Willard 1104602592 2 Major-Willard the bitwise NOT unary operator
