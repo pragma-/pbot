@@ -110,9 +110,9 @@ my $commands_file     = "$home/pbot2/commands";
 my $admins_file       = "$home/pbot2/admins";
 my $module_dir        = "$home/pbot2/modules";
 my $ircserver         = 'irc.freenode.net';
-my $botnick           = 'candide';
-my $altbotnick        = 'candide_';
-my $identify_password = 'pop';
+my $botnick           = 'pbot2';
+my $altbotnick        = 'pbot2_';
+my $identify_password = '*';
 
 my $FLOOD_CHAT = 0;
 my $FLOOD_JOIN = 1;
@@ -127,14 +127,14 @@ my %commands   =  ( version => {
                        ref_user  => "nobody" } 
                  );
 
-my %admins     = ( pragma_ => { 
+my %admins     = ( adminnick => { 
                        password => '*', 
                        level    => 50, 
-                       host => "blackshell.com" },
-                   _pragma => {
+                       host => "localhost.com" },
+                   anotheradminnick => {
                        password => '*', 
                        level    => 50, 
-                       host => ".*.tmcc.edu" }
+                       host => ".*.anotherhost.com" }
                  );
 my %channels    = ();
 
