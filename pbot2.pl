@@ -8,12 +8,15 @@
 # Version History:
 ########################
 
-my $VERSION = "0.3.12";
+my $VERSION = "0.3.13";
 
 ########################
 # todo! add support for admin management
-# todo! gah, multi-channel support pathetic
+# todo! multi-channel support pathetic
 # todo! most of this crap needs to be refactored
+# 0.3.13(07/01/07): fork all modules
+#                   added unload_module, enable_command, disable_command
+#                   automatically export factoids every $export_factoids_timeout seconds
 # 0.3.12(05/20/07): lol?  Prevent recursive aliasing infinite loop, x -> a, a -> x
 # 0.3.11(05/20/07): added 'alias'
 # 0.3.10(05/08/05): dont ban by nick, wait for nickserv response before joining chans
@@ -98,6 +101,11 @@ use HTML::Entities;                  # for exporting
 use Time::HiRes qw(gettimeofday alarm);
 use strict;
 
+use POSIX 'WNOHANG';
+# automatically reap children processes in background
+$SIG{CHLD} = sub { while(waitpid(-1, WNOHANG) > 0) {} };
+my $child = 0; # this process is not the child        
+
 #unbuffer stdout
 STDOUT->autoflush(1);
 
@@ -105,7 +113,7 @@ STDOUT->autoflush(1);
 $SIG{ALRM} = \&sig_alarm_handler;
 
 # some configuration variables
-my $home = '/home/msmud';
+my $home = $ENV{HOME};
 my $channels_file     = "$home/pbot2/channels";
 my $commands_file     = "$home/pbot2/commands";
 my $admins_file       = "$home/pbot2/admins";
@@ -114,6 +122,8 @@ my $ircserver         = 'irc.freenode.net';
 my $botnick           = 'pbot2';
 my $altbotnick        = 'pbot2_';
 my $identify_password = '*';
+my $export_factoids_timeout = 300; # every 5 minutes
+my $export_factoids_path = "$home/htdocs/candide/factoids.html";
 
 my $FLOOD_CHAT = 0;
 my $FLOOD_JOIN = 1;
@@ -128,14 +138,14 @@ my %commands   =  ( version => {
                        ref_user  => "nobody" } 
                  );
 
-my %admins     = ( adminnick => { 
+my %admins     = ( admin_nick => { 
                        password => '*', 
                        level    => 50, 
-                       host => "host.com" },
-                   anothernick => {
+                       host => "blackshell.com" },
+                   another_admin => {
                        password => '*', 
-                       level    => 20, 
-                       host => ".*.wildcardhost.com" }
+                       level    => 50, 
+                       host => ".*.wildcard.edu" }
                  );
 my %channels    = ();
 
@@ -171,8 +181,8 @@ my %internal_commands = (
   list      => { sub => \&list,           level => 0  },
   load      => { sub => \&load_module,    level => 40 },
   unload    => { sub => \&unload_module,  level => 40 },
-  enable    => { sub => \&enable_module,  level => 20 },
-  disable   => { sub => \&disable_module, level => 20 },
+  enable    => { sub => \&enable_command, level => 20 },
+  disable   => { sub => \&disable_command,level => 20 },
   quiet     => { sub => \&quiet,          level => 10 },
   unquiet   => { sub => \&unquiet,        level => 10 },
   ignore    => { sub => \&ignore_user,    level => 10 }, 
@@ -225,7 +235,6 @@ sub loggedin {
 
 sub export {
   my ($from, $nick, $host, $arguments) = @_;
-  my $text;
 
   if(not defined $arguments) {
     return "/msg $nick Usage: export <modules|factoids|admins>";
@@ -236,37 +245,44 @@ sub export {
   }
 
   if($arguments =~ /^factoids$/i) {
-    open FILE, "> /var/www/htdocs/candide/factoids.html";
-    my $time = localtime;
-    print FILE "<html><body><i>Generated at $time</i><hr><h3>Candide's factoids:</h3><br>\n";
-    my $i = 0;
-    print FILE "<table border=\"0\">\n";
-    foreach my $command (sort keys %commands) {
-      if(exists $commands{$command}{text}) {
-        $i++;
-        if($i % 2) {
-          print FILE "<tr bgcolor=\"#dddddd\">\n";
-        } else {
-          print FILE "<tr>\n";
-        }
-        $text = "<td><b>$command</b> is " . encode_entities($commands{$command}{text}) . "</td>\n"; 
-        print FILE $text;
-        my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime($commands{$command}{timestamp});
-        my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d\n",
-                  $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
-        print FILE "<td align=\"right\">- submitted by<br> $commands{$command}{owner}<br><i>$t</i>\n";
-        print FILE "</td></tr>\n";
-      }
-    }
-    print FILE "</table>\n";
-    print FILE "<hr>$i factoids memorized.<br>This page is not generated in real-time.  An admin must 'export factoids'.</body></html>";
-    close(FILE);
-    return "$i factoids exported to http://pragma.homeip.net/candide/factoids.html";
+    return export_factoids(); 
   }
 
   if($arguments =~ /^admins$/i) {
     return "/msg $nick Coming soon.";
   }
+}
+
+sub export_factoids() {
+  my $text;
+  open FILE, "> $export_factoids_path" or return "Could not open export path.";
+  my $time = localtime;
+  print FILE "<html><body><i>Generated at $time</i><hr><h3>Candide's factoids:</h3><br>\n";
+  my $i = 0;
+  print FILE "<table border=\"0\">\n";
+  foreach my $command (sort keys %commands) {
+    if(exists $commands{$command}{text}) {
+      $i++;
+      if($i % 2) {
+        print FILE "<tr bgcolor=\"#dddddd\">\n";
+      } else {
+        print FILE "<tr>\n";
+      }
+      $text = "<td><b>$command</b> is " . encode_entities($commands{$command}{text}) . "</td>\n"; 
+      print FILE $text;
+      my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime($commands{$command}{timestamp});
+      my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d\n",
+          $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
+      print FILE "<td align=\"right\">- submitted by<br> $commands{$command}{owner}<br><i>$t</i>\n";
+      print FILE "</td></tr>\n";
+    }
+  }
+  print FILE "</table>\n";
+  print FILE "<hr>$i factoids memorized.<br>This page is automatically generated every $export_factoids_timeout seconds.</body></html>";
+  close(FILE);
+  plog "$i factoids exported.\n";
+  return "$i factoids exported to http://blackshell.com/~msmud/candide/factoids.html";
+
 }
 
 sub list {
@@ -298,7 +314,7 @@ sub list {
   }
 
   if($arguments =~ /^factoids$/i) {
-    return "For a list of factoids see http://pragma.homeip.net/candide/factoids.html";
+    return "For a list of factoids see http://blackshell.com/~msmud/candide/factoids.html";
   }
 
   if($arguments =~ /^admins$/i) {
@@ -633,16 +649,49 @@ sub load_module {
 
 sub unload_module {
   my ($from, $nick, $host, $arguments) = @_;
+
+  if(not defined $arguments) {
+    return "/msg $nick Usage: unload <module>";
+  } elsif(not exists $commands{$arguments}) {
+    return "/msg $nick $arguments not found.";
+  } elsif(not exists $commands{$arguments}{module}) {
+    return "/msg $nick $arguments is not a module.";
+  } else {
+    delete $commands{$arguments};
+    save_commands();
+    plog "$nick ($host) unloaded module $arguments\n";
+    return "/msg $nick $arguments unloaded.";
+  } 
 }
 
-sub enable_module {
+sub enable_command {
   my ($from, $nick, $host, $arguments) = @_;
-  return "/msg $nick Coming soon.";
+  
+  if(not defined $arguments) {
+    return "/msg $nick Usage: enable <command>";
+  } elsif(not exists $commands{$arguments}) {
+    return "/msg $nick $arguments not found.";
+  } else {
+    $commands{$arguments}{enabled} = 1;
+    save_commands();
+    plog "$nick ($host) enabled $arguments\n";
+    return "/msg $nick $arguments enabled.";
+  }   
 }
 
-sub disable_module {
+sub disable_command {
   my ($from, $nick, $host, $arguments) = @_;
-  return "/msg $nick Coming soon.";
+ 
+  if(not defined $arguments) {
+    return "/msg $nick Usage: disable <command>";
+  } elsif(not exists $commands{$arguments}) {
+    return "/msg $nick $arguments not found.";
+  } else {
+    $commands{$arguments}{enabled} = 0;
+    save_commands();
+    plog "$nick ($host) disabled $arguments\n";
+    return "/msg $nick $arguments disabled.";
+  }   
 }
 
 sub login {
@@ -988,39 +1037,46 @@ sub interpret_command {
   # Then, we check bot commands
   foreach $command (keys %commands) {
     if(lc $keyword =~ /^\Q$command\E$/i) {
-      # If it's a module, todo: add enable/disable support
-      if(exists $commands{$keyword} && exists $commands{$keyword}{module}) {
+      if(exists $commands{$keyword} && $commands{$keyword}{enabled} == 0) {
+        return "$keyword is currently disabled.";
+      } elsif(exists $commands{$keyword} && exists $commands{$keyword}{module}) {
         $commands{$keyword}{ref_count}++;
         $commands{$keyword}{ref_user} = $nick;
 
- #       my $pid = fork();
- #       return "Resources not available." if(not defined $pid);
- #       if($pid == 0)
- #       {
-        if(defined $arguments) {
-          plog "($from): $nick ($host): Executing module $commands{$keyword}{module} $arguments\n";
-          $arguments = quotemeta($arguments);
-          $arguments =~ s/\\\s+/ /;
-          if(defined $tonick) {
-            plog "($from): $nick ($host) sent to $tonick\n";
-            $text = `$module_dir/$commands{$keyword}{module} $arguments`;
-            my $fromnick = loggedin($nick, $host) ? "" : " ($nick)";
-            return "/msg $tonick $text$fromnick";
+        my $pid = fork;
+        if(not defined $pid) {
+          plog "Could not fork: $!\n";
+          return "/me groans loudly.";
+        }
+
+        if($pid == 0) {
+          $child = 1; # set to be killed after returning
+          if(defined $arguments) {
+            plog "($from): $nick ($host): Executing module $commands{$keyword}{module} $arguments\n";
+            $arguments = quotemeta($arguments);
+            $arguments =~ s/\\\s+/ /;
+
+            if(defined $tonick) {
+              plog "($from): $nick ($host) sent to $tonick\n";
+              $text = `$module_dir/$commands{$keyword}{module} $arguments`;
+              my $fromnick = loggedin($nick, $host) ? "" : " ($nick)";
+              return "/msg $tonick $text$fromnick";
+            } else {
+              return `$module_dir/$commands{$keyword}{module} $arguments`;
+            }
           } else {
-            return `$module_dir/$commands{$keyword}{module} $arguments`;
-          }
-        } else {
-          plog "($from): $nick ($host): Executing module $commands{$keyword}{module}\n";
-          if(defined $tonick) {
-            plog "($from): $nick ($host) sent to $tonick\n";
-            $text = `$module_dir/$commands{$keyword}{module}`;
-            my $fromnick = loggedin($nick, $host) ? "" : " ($nick)";
-            return "/msg $tonick $text$fromnick";
-          } else {
-            return `$module_dir/$commands{$keyword}{module}`;
-          }
-        } #end if($arguments)
-#        } #end if($pid == 0)
+            plog "($from): $nick ($host): Executing module $commands{$keyword}{module}\n";
+            if(defined $tonick) {
+              plog "($from): $nick ($host) sent to $tonick\n";
+              $text = `$module_dir/$commands{$keyword}{module}`;
+              my $fromnick = loggedin($nick, $host) ? "" : " ($nick)";
+              return "/msg $tonick $text$fromnick";
+            } else {
+              return `$module_dir/$commands{$keyword}{module}`;
+            }
+          } #end if($arguments)
+          return "/me moans loudly."; # er, didn't execute the module?
+        } #end if($pid == 0)
       }
 
       # Now we check to see if it's a factoid 
@@ -1036,20 +1092,20 @@ sub interpret_command {
           $text = $commands{$keyword}{text};
         }
         if(defined $arguments) {
-           if(not $text =~ s/\$args/$arguments/gi) {
-             # factoid doesn't take an argument
-             if($arguments =~ /^.{1,20}$/) {
-                # might be a nick
-                if($text =~ /^\/.+? /) {
-                  $text =~ s/^(\/.+?) /$1 $arguments: /;
-                } else {
-                  $text =~ s/^/\/say $arguments: $keyword is /;
-                }                  
-             } else {
-               plog "Factoid doesn't take arguments\n";
-               return "";
-             }
-           }
+          if(not $text =~ s/\$args/$arguments/gi) {
+            # factoid doesn't take an argument
+            if($arguments =~ /^.{1,20}$/) {
+              # might be a nick
+              if($text =~ /^\/.+? /) {
+                $text =~ s/^(\/.+?) /$1 $arguments: /;
+              } else {
+                $text =~ s/^/\/say $arguments: $keyword is /;
+              }                  
+            } else {
+              plog "Factoid doesn't take arguments\n";
+              return "";
+            }
+          }
         } else {
           # no arguments supplied
           $text =~ s/\$args/$nick/gi;
@@ -1076,7 +1132,7 @@ sub interpret_command {
           }
         }
         if($text =~ s/^\/say\s+//i || $text =~ /^\/me\s+/i
-           || $text =~ /^\/msg\s+/i) {
+          || $text =~ /^\/msg\s+/i) {
           return $text;
         } else {
           return "$keyword is $text";
@@ -1274,8 +1330,8 @@ sub check_quieted_timeouts {
       delete $quieted_nicks{$nick};
       $conn->privmsg($nick, "You may speak again.");
     } else {
-      my $timediff = $quieted_nicks{$nick}{time} - $now;
-      plog "quiet: $nick has $timediff seconds remaining\n"
+      #my $timediff = $quieted_nicks{$nick}{time} - $now;
+      #plog "quiet: $nick has $timediff seconds remaining\n"
     }
   }
 }
@@ -1290,7 +1346,7 @@ sub check_ignore_timeouts {
       unignore_user("", "floodcontrol", "", $host);
     } else {
       my $timediff = $ignore_list{$host} - $now;
-      plog "ignore: $host has $timediff seconds remaining\n"
+      #plog "ignore: $host has $timediff seconds remaining\n"
     }
   }
 }
@@ -1302,7 +1358,7 @@ sub check_opped_timeout {
     if($is_opped{$channel}{timeout} < $now) {
       lose_ops($channel);
     } else {
-      my $timediff = $is_opped{$channel}{timeout} - $now;
+      # my $timediff = $is_opped{$channel}{timeout} - $now;
       # plog "deop $channel in $timediff seconds\n";
     }
   }
@@ -1317,9 +1373,18 @@ sub check_unban_timeouts {
       gain_ops($unban_timeout{$ban}{channel});
       delete $unban_timeout{$ban};
     } else {
-      my $timediff = $unban_timeout{$ban}{timeout} - $now;
-      plog "$unban_timeout{$ban}{channel}: unban $ban in $timediff seconds\n";
+      #my $timediff = $unban_timeout{$ban}{timeout} - $now;
+      #plog "$unban_timeout{$ban}{channel}: unban $ban in $timediff seconds\n";
     }
+  }
+}
+
+my $export_factoids_time = gettimeofday + $export_factoids_timeout;
+sub check_export_timeout {
+  my $now = gettimeofday;
+  if($now > $export_factoids_time) {
+    export_factoids;
+    $export_factoids_time = $now + $export_factoids_timeout;
   }
 }
 
@@ -1329,6 +1394,7 @@ sub sig_alarm_handler {
   check_ignore_timeouts;
   check_opped_timeout;
   check_unban_timeouts;
+  check_export_timeout;
   alarm 10;
 }
 
@@ -1400,6 +1466,7 @@ sub on_public {
         $conn->privmsg($from, $result);
       }
     }
+    exit if($child != 0); # if this process is a child, it must die now
   }
 }
 
@@ -1441,7 +1508,7 @@ sub on_mode {
   } else {  # bot not targeted
     if($mode eq "+b") {
       if($nick eq "ChanServ") {
-        $unban_timeout{$target}{timeout} = gettimeofday + 3600 * 12; # 12 hours
+        $unban_timeout{$target}{timeout} = gettimeofday + 3600 * 2; # 2 hours
         $unban_timeout{$target}{channel} = $from;
       }
     } elsif($mode eq "+e" && $from eq $botnick) {
