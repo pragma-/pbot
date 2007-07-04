@@ -8,12 +8,13 @@
 # Version History:
 ########################
 
-my $VERSION = "0.3.13";
+my $VERSION = "0.3.14";
 
 ########################
 # todo! add support for admin management
 # todo! multi-channel support pathetic
 # todo! most of this crap needs to be refactored
+# 0.3.14(07/03/07): do not expand escaped dollar-signs in factoids (adlib)
 # 0.3.13(07/01/07): fork all modules
 #                   added unload_module, enable_command, disable_command
 #                   automatically export factoids every $export_factoids_timeout seconds
