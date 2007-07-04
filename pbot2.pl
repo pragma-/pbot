@@ -119,9 +119,9 @@ my $commands_file     = "$home/pbot2/commands";
 my $admins_file       = "$home/pbot2/admins";
 my $module_dir        = "$home/pbot2/modules";
 my $ircserver         = 'irc.freenode.net';
-my $botnick           = 'pbot2';
-my $altbotnick        = 'pbot2_';
-my $identify_password = '*';
+my $botnick           = 'candide';
+my $altbotnick        = 'candide_';
+my $identify_password = 'pop';
 my $export_factoids_timeout = 300; # every 5 minutes
 my $export_factoids_path = "$home/htdocs/candide/factoids.html";
 
@@ -138,14 +138,14 @@ my %commands   =  ( version => {
                        ref_user  => "nobody" } 
                  );
 
-my %admins     = ( admin_nick => { 
+my %admins     = ( pragma_ => { 
                        password => '*', 
                        level    => 50, 
                        host => "blackshell.com" },
-                   another_admin => {
+                   _pragma => {
                        password => '*', 
                        level    => 50, 
-                       host => ".*.wildcard.edu" }
+                       host => ".*.tmcc.edu" }
                  );
 my %channels    = ();
 
@@ -1111,17 +1111,19 @@ sub interpret_command {
           $text =~ s/\$args/$nick/gi;
         }
         $text =~ s/\$nick/$nick/g;
-        while($text =~ /\$([^\s!\+\.\$\/\\,;]+)/) {
+        while($text =~ /[^\\]\$([^\s!+.$\/\\,;]+)/g) { 
           my $var = $1;
+          #plog "adlib: got [$var]\n";
           #plog "adlib: parsing variable [\$$var]\n";
           if(exists $commands{$var} && exists $commands{$var}{text}) {
             my $change = $commands{$var}{text};
             my @list = split(/\s|(".*?")/, $change);
             my @mylist;
+            #plog "adlib: list [". join(':', @mylist) ."]\n";
             for(my $i = 0; $i <= $#list; $i++) {
+              #plog "adlib: pushing $i $list[$i]\n";
               push @mylist, $list[$i] if $list[$i];
             }
-            #plog "adlib: list [". join(':', @mylist) ."]\n";
             my $line = int(rand($#mylist + 1));
             $mylist[$line] =~ s/"//g;
             $text =~ s/\$$var/$mylist[$line]/;
@@ -1131,6 +1133,7 @@ sub interpret_command {
             #plog "adlib: not found: change: $text\n";
           }
         }
+        $text =~ s/\\\$/\$/g;
         if($text =~ s/^\/say\s+//i || $text =~ /^\/me\s+/i
           || $text =~ /^\/msg\s+/i) {
           return $text;
