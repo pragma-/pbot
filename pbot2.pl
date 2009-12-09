@@ -1666,7 +1666,7 @@ BEGIN {
       foreach my $channel (keys %{ $flood_watch{$nick} })
       {
         plog "Checking [$nick][$channel]\n";
-        my $length = $#{ $flood_watch{$nick}{$channel} } + 1;
+        my $length = $#{ $flood_watch{$nick}{$channel}{messages} } + 1;
         my %last = %{ @{ $flood_watch{$nick}{$channel}{messages} }[$length - 1] };
 
         if($now - $last{timestamp} >= 60 * 60 * 24) {
