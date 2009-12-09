@@ -1,8 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -w -I /home/msmud/lib/lib/perl5/site_perl/5.10.0/
 
 # quick and dirty by :pragma
 
-use strict;
 use LWP::UserAgent;
 
 my ($result, $acro, $entries, $text);
@@ -46,7 +45,7 @@ $acro="";
 
 while($text =~ m/<td width=.*?>(.*?)<\/td>/gsi)
 {
-  $acro = "$acro$1, ";
+  $acro = "$acro$1; ";
 }
 
 $acro =~ s/\s+\[slang\]//gi;
@@ -54,6 +53,5 @@ $acro =~ s/\s+\[joke\]//gi;
 $acro =~ s/\s+/ /g;
 $acro =~ s/<.*?>//g;
 $acro =~ s/&nbsp;//g;
-$acro =~ s/, , $//;
-$acro = substr($acro, 0, 300);
+$acro =~ s/; ; $//;
 print "$acro\n";

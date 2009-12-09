@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl 
 #
 # File: pbot2.pl
 # Author: pragma_
@@ -8,12 +8,22 @@
 # Version History:
 ########################
 
-my $VERSION = "0.3.14";
+my $VERSION = "0.4.1";
 
 ########################
-# todo! add support for admin management
-# todo! multi-channel support pathetic
-# todo! most of this crap needs to be refactored
+# todo! add support for admin management - needs support for adding/removing/saving!
+# todo! multi-channel support pathetic (note 12/08/09, fixed multi-channel for anti-flood and for ignore)
+# todo! most of this crap needs to be refactored (note 11/23/09, refactored execute_module)
+# 
+# 0.4.1 (12/08/09): improved anti-flood system to be significantly more accurate and per-channel
+#                   added per-nick-per-channel message history using %flood_watch
+#                   add per-channel support to ignore system
+#                   automatically remove message history for nicks that haven't spoken in one day (run once per hour)
+#                   do not ignore !login command
+# 0.3.16(11/23/09): refactored module execution to execute_module() subroutine
+#                   added trigger to execute get_title.pl module when URL is
+#                   detected in regular untriggered chat
+# 0.3.15(11/20/09): replace 'me' with '$nick' in arguments
 # 0.3.14(07/03/07): do not expand escaped dollar-signs in factoids (adlib)
 # 0.3.13(07/01/07): fork all modules
 #                   added unload_module, enable_command, disable_command
@@ -122,14 +132,20 @@ my $module_dir        = "$home/pbot2/modules";
 my $ircserver         = 'irc.freenode.net';
 my $botnick           = 'candide';
 my $altbotnick        = 'candide_';
-my $identify_password = 'pop';
+my $identify_password = 'helios';
 my $export_factoids_timeout = 300; # every 5 minutes
+my $export_factoids_time = gettimeofday + $export_factoids_timeout;
 my $export_factoids_path = "$home/htdocs/candide/factoids.html";
 
+my $MAX_FLOOD_MESSAGES = 4;
+my $MAX_NICK_MESSAGES = 8;
+
+# do not modify FLOOD_*
 my $FLOOD_CHAT = 0;
-my $FLOOD_JOIN = 1;
+my $FLOOD_JOIN = 1;  # currently unused -- todo?
 
 # set some defaults ...
+my $max_msg_len = 460;
 my %commands   =  ( version => { 
                        enabled   => 1, 
                        owner     => "pragma_", 
@@ -142,12 +158,13 @@ my %commands   =  ( version => {
 my %admins     = ( pragma_ => { 
                        password => '*', 
                        level    => 50, 
-                       host => "blackshell.com" },
+                       host => "unaffiliated/pragma/x-109842" },
                    _pragma => {
                        password => '*', 
                        level    => 50, 
                        host => ".*.tmcc.edu" }
                  );
+                 
 my %channels    = ();
 
 #... and load the rest
@@ -168,6 +185,7 @@ my $conn = $irc->newconn( Nick         => $botnick,
 my %internal_commands = ( 
   alias     => { sub => \&alias,          level => 0  },
   add       => { sub => \&add_text,       level => 0  },
+  regex     => { sub => \&add_regex,      level => 0  },
   learn     => { sub => \&add_text,       level => 0  },
   info      => { sub => \&info,           level => 0  },
   show      => { sub => \&show,           level => 0  },
@@ -281,7 +299,7 @@ sub export_factoids() {
   print FILE "</table>\n";
   print FILE "<hr>$i factoids memorized.<br>This page is automatically generated every $export_factoids_timeout seconds.</body></html>";
   close(FILE);
-  plog "$i factoids exported.\n";
+  #plog "$i factoids exported.\n";
   return "$i factoids exported to http://blackshell.com/~msmud/candide/factoids.html";
 
 }
@@ -354,6 +372,41 @@ sub alias {
   return "/msg $nick '$alias' aliases '$command'";  
 }
 
+sub add_regex {
+  my ($from, $nick, $host, $arguments) = @_;
+  my ($keyword, $text) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
+
+  if(not defined $keyword) {
+    $text = "";
+    foreach my $command (sort keys %commands) {
+      if(exists $commands{$command}{regex}) {
+        $text .= $command . " ";
+      }
+    }
+    return "Stored regexs: $text";
+  }
+
+  if(not defined $text) {
+    plog "add_regex: invalid usage\n";
+    return "/msg $nick Usage: regex <regex> <command>";
+  }
+
+  if(exists $commands{$keyword}) {
+    plog "$nick ($host) attempt to overwrite $keyword\n";
+    return "/msg $nick $keyword already exists.";
+  }
+
+  $commands{$keyword}{regex}     = $text;
+  $commands{$keyword}{owner}     = $nick;
+  $commands{$keyword}{timestamp} = time();
+  $commands{$keyword}{enabled}   = 1;
+  $commands{$keyword}{ref_count} = 0;
+  $commands{$keyword}{ref_user}  = "nobody";
+  plog "$nick ($host) added [$keyword] => [$text]\n";
+  save_commands();
+  return "/msg $nick $keyword added.";
+}
+
 sub add_text {
   my ($from, $nick, $host, $arguments) = @_;
   my ($keyword, $text) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
@@ -422,11 +475,14 @@ sub show {
     return "/msg $nick $arguments not found";
   }
 
-  if(not exists $commands{$arguments}{text}) {
+  if(exists $commands{$arguments}{command} || exists $commands{$arguments}{module}) {
     return "/msg $nick $arguments is not a factoid";
   }
 
-  return "$arguments: $commands{$arguments}{text}";
+  my $type;
+  $type = 'text' if exists $commands{$arguments}{text};
+  $type = 'regex' if exists $commands{$arguments}{regex};
+  return "$arguments: $commands{$arguments}{$type}";
 }
 
 sub info {
@@ -446,7 +502,7 @@ sub info {
       localtime($commands{$arguments}{timestamp});
     my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d",
               $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
-    return "$arguments: Submitted by $commands{$arguments}{owner} on $t, referenced $commands{$arguments}{ref_count} times (last by $commands{$arguments}{ref_user})";
+    return "$arguments: Factoid submitted by $commands{$arguments}{owner} on $t, referenced $commands{$arguments}{ref_count} times (last by $commands{$arguments}{ref_user})";
   }
 
   # module
@@ -455,8 +511,18 @@ sub info {
       localtime($commands{$arguments}{timestamp});
     my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d",
               $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
-    return "$arguments: Loaded by $commands{$arguments}{owner} on $t -> http://pragma.homeip.net/stuff/scripts/$commands{$arguments}{module}, used $commands{$arguments}{ref_count} times (last by $commands{$arguments}{ref_user})"; 
+    return "$arguments: Module loaded by $commands{$arguments}{owner} on $t -> http://pragma.homeip.net/stuff/scripts/$commands{$arguments}{module}, used $commands{$arguments}{ref_count} times (last by $commands{$arguments}{ref_user})"; 
   }
+
+  # regex
+  if(exists $commands{$arguments}{regex}) {
+    my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = 
+      localtime($commands{$arguments}{timestamp});
+    my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d",
+              $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
+    return "$arguments: Regex created by $commands{$arguments}{owner} on $t, used $commands{$arguments}{ref_count} times (last by $commands{$arguments}{ref_user})"; 
+  }
+
   return "/msg $nick $arguments is not a factoid or a module";
 }
 
@@ -480,12 +546,12 @@ sub top20 {
 
     if(lc $arguments eq "recent") {
       foreach my $command (sort { $commands{$b}{timestamp} <=> $commands{$a}{timestamp} } keys %commands) {
-        my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime($commands{$command}{timestamp});
-        my $t = sprintf("%04d/%02d/%02d",
-                  $year+1900, $month+1, $day_of_month);
-        $text .= "$command ($commands{$command}{owner} $t) ";
+        #my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime($commands{$command}{timestamp});
+        #my $t = sprintf("%04d/%02d/%02d", $year+1900, $month+1, $day_of_month);
+                
+        $text .= "$command ";
         $i++;
-        last if $i >= 20;
+        last if $i >= 50;
       }
       $text = "$i most recent submissions: $text" if $i > 0;
       return $text;
@@ -493,7 +559,7 @@ sub top20 {
 
     my $user = lc $arguments;
     foreach my $command (sort keys %commands) {
-      if($commands{$command}{ref_user} =~ /$arguments/i) {
+      if($commands{$command}{ref_user} =~ /\Q$arguments\E/i) {
         if($user ne lc $commands{$command}{ref_user} && not $user =~ /$commands{$command}{ref_user}/i) {
           $user .= " ($commands{$command}{ref_user})";
         }
@@ -521,7 +587,8 @@ sub count {
   eval {
     foreach my $command (keys %commands) {
       $total++ if exists $commands{$command}{text};
-      if($commands{$command}{owner} =~ /$arguments/i && exists $commands{$command}{text}) {
+      my $regex = qr/^\Q$arguments\E$/;
+      if($commands{$command}{owner} =~ /$regex/i && exists $commands{$command}{text}) {
         $i++;
       }
     }
@@ -543,12 +610,16 @@ sub find {
   my ($from, $nick, $host, $arguments) = @_;
   my $i = 0;
   my $text;
+  my $type;
 
   foreach my $command (sort keys %commands) {
-    if(exists $commands{$command}{text}) {
-      # is a factoid
+    if(exists $commands{$command}{text} || exists $commands{$command}{regex}) {
+      $type = 'text' if(exists $commands{$command}{text});
+      $type = 'regex' if(exists $commands{$command}{regex});
+      plog "Checking [$command], type: [$type]\n";
       eval {
-        if($commands{$command}{text} =~ /$arguments/i || $command =~ /$arguments/i) 
+        my $regex = qr/$arguments/;
+        if($commands{$command}{$type} =~ /$regex/i || $command =~ /$regex/i) 
         {
           $i++;
           $text .= "$command ";     
@@ -557,9 +628,12 @@ sub find {
       return "/msg $nick $arguments: $@" if $@;
     }
   }
+  
   if($i == 1) {
     chop $text;
-    return "found one match: '$text' is $commands{$text}{text}";
+    $type = 'text' if exists $commands{$text}{text};
+    $type = 'regex' if exists $commands{$text}{regex};
+    return "found one match: '$text' is '$commands{$text}{$type}'";
   } else {
     return "$i factoids contain '$arguments': $text" unless $i == 0;
     return "No factoids contain '$arguments'";
@@ -567,15 +641,20 @@ sub find {
 }
 
 sub change_text {
+  plog "Enter change_text\n";
   my ($from, $nick, $host, $arguments) = @_;
-  my ($keyword, $delim, $tochange, $changeto);
+  my ($keyword, $delim, $tochange, $changeto, $modifier);
 
   if(defined $arguments) {
-    if($arguments =~ /^(.*?)\s+s(.)/g) {
-      $keyword = $1; $delim = $2;
+    if($arguments =~ /^(.*?)\s+s(.)/) {
+      $keyword = $1; 
+      $delim = $2;
     }
-    if($arguments =~ /(.*?)$delim(.*)$delim$/g) {
-      $tochange = $1; $changeto = $2;
+    
+    if($arguments =~ /$delim(.*?)$delim(.*)$delim(.*)?$/) {
+      $tochange = $1; 
+      $changeto = $2;
+      $modifier  = $3;
     }
   }
 
@@ -589,15 +668,21 @@ sub change_text {
     return "/msg $nick $keyword not found.";
   }
 
-  plog "[$keyword][$delim][$tochange][$changeto]\n";
+  my $type;
+  $type = 'text' if exists $commands{$keyword}{text};
+  $type = 'regex' if exists $commands{$keyword}{regex};
+
+  plog "keyword: $keyword, type: $type, tochange: $tochange, changeto: $changeto\n";
+
   my $ret = eval {
-    if(not $commands{$keyword}{text} =~ s|$tochange|$changeto|) {
-      plog "($from) $nick ($host): failed to change '$keyword' 's/$tochange/$changeto/\n";
+    my $regex = qr/$tochange/;
+    if(not $commands{$keyword}{$type} =~ s|$regex|$changeto|) {
+      plog "($from) $nick ($host): failed to change '$keyword' 's$delim$tochange$delim$changeto$delim\n";
       return "/msg $nick Change $keyword failed.";
     } else {
       plog "($from) $nick ($host): changed '$keyword' 's/$tochange/$changeto/\n";
       save_commands();
-      return "Changed: $keyword is $commands{$keyword}{text}";
+      return "Changed: $keyword is $commands{$keyword}{$type}";
     }
   };
   return "/msg $nick Change $keyword: $@" if $@;
@@ -612,16 +697,23 @@ sub remove_text {
     return "/msg $nick Usage: remove <keyword>";
   }
 
+  plog "Attempting to remove [$arguments]\n";
   if(not exists $commands{$arguments}) {
     return "/msg $nick $arguments not found.";
   }
 
-  if(not exists $commands{$arguments}{text}) {
+  if(exists $commands{$arguments}{command} || exists $commands{$arguments}{module}) {
     plog "$nick ($host) attempted to remove $arguments [not factoid]\n";
     return "/msg $nick $arguments is not a factoid.";
   }
 
-  plog "$nick ($host) removed [$arguments][$commands{$arguments}{text}]\n";
+  if(($nick ne $commands{$arguments}{owner}) and (not loggedin($nick, $host))) {
+    plog "$nick ($host) attempted to remove $arguments [not owner]\n";
+    return "/msg $nick You are not the owner of '$arguments'";
+  }
+
+  plog "$nick ($host) removed [$arguments][$commands{$arguments}{text}]\n" if(exists $commands{$arguments}{text});
+  plog "$nick ($host) removed [$arguments][$commands{$arguments}{regex}]\n" if(exists $commands{$arguments}{regex});
   delete $commands{$arguments};
   save_commands();
   return "/msg $nick $arguments removed.";
@@ -739,43 +831,71 @@ my %ignore_list = ();
 
 sub ignore_user {
   my ($from, $nick, $host, $arguments) = @_;
-  my ($target, $length) = split /\s+/, $arguments;
+  my ($target, $channel, $length) = split /\s+/, $arguments;
 
   if(not defined $target) {
-     return "/msg $nick Usage: ignore host [timeout]";
+     return "/msg $nick Usage: ignore host [channel] [timeout]";
   }
 
+  if($target =~ /^list$/i) {
+    my $text = "Ignored: ";
+    my $sep = "";
+
+    foreach my $ignored (keys %ignore_list) {
+      foreach my $channel (keys %{ $ignore_list{$ignored} }) {
+        $text .= $sep . "[$ignored][$channel]" . int(gettimeofday - $ignore_list{$ignored}{$channel});
+        $sep = "; ";
+      }
+    }
+    return "/msg $nick $text";
+  }
+
+  if(not defined $channel) {
+    $channel = ".*"; # all channels
+  }
+  
   if(not defined $length) {
     $length = 300; # 5 minutes
   }
 
-  plog "$nick added [$target] to ignore list for $length seconds\n";
-  $ignore_list{$target} = gettimeofday + $length;
-  return "/msg $nick [$target] added to ignore list.";
+  plog "$nick added [$target][$channel] to ignore list for $length seconds\n";
+  $ignore_list{$target}{$channel} = gettimeofday + $length;
+  return "/msg $nick [$target][$channel] added to ignore list for $length seconds";
 }
 
 sub unignore_user {
   my ($from, $nick, $host, $arguments) = @_;
+  my ($target, $channel) = split /\s+/, $arguments;
 
-  if(not defined $arguments) {
-    return "/msg $nick Usage: unignore host";
+  if(not defined $target) {
+    return "/msg $nick Usage: unignore host [channel]";
   }
-  if(not exists $ignore_list{$arguments}) {
-    plog "$nick attempt to remove nonexistant [$arguments] from ignore list\n";
-    return "/msg $nick [$arguments] not found";
+
+  if(not defined $channel) {
+    $channel = ".*";
   }
-  delete $ignore_list{$arguments};
-  plog "$nick removed [$arguments] from ignore lost\n";
-  return "/msg $nick [$arguments] unignored";
+  
+  if(not exists $ignore_list{$target}{$channel}) {
+    plog "$nick attempt to remove nonexistent [$target][$channel] from ignore list\n";
+    return "/msg $nick [$target][$channel] not found in ignore list (use '!ignore list' to list ignores";
+  }
+  
+  delete $ignore_list{$target}{$channel};
+  plog "$nick removed [$target][$channel] from ignore list\n";
+  return "/msg $nick [$target][$channel] unignored";
 }
 
 sub check_ignore {
-  my $host = shift;
+  my ($nick, $host, $channel) = @_;
+
+  my $hostmask = "$nick" . '@' . "$host";
 
   foreach my $ignored (keys %ignore_list) {
-    if($host =~ /$ignored/i) {
-      plog "$host message ignored\n";
-      return 1;
+    foreach my $ignored_channel (keys %{ $ignore_list{$ignored} }) {
+      if(($channel =~ /$ignored_channel/i) && ($hostmask =~ /$ignored/i)) {
+        plog "$nick ($host) message ignored in channel $channel (matches [$ignored] host and [$ignored_channel] channel)\n";
+        return 1;
+      }
     }
   }
 }
@@ -876,9 +996,11 @@ sub ban_user {
   } else { #in a channel
     if($arguments =~ /^(.*?) (.*)$/) {
       $conn->privmsg("ChanServ", "AUTOREM $from ADD $1 $2");
+      plog "AUTOREM [$from] ADD [$1] [$2]\n";
+      plog "kick [$from] [$1] Banned\n";
       unshift @op_commands, "kick $from $1 Banned";
       gain_ops($from);
-      plog "$nick ($host) AUTOREM $1 ($2)\n";
+      plog "$nick ($from) AUTOREM $1 ($2)\n";
       return "/msg $nick $1 added to auto-remove";
     } else {
       plog "$nick ($host): bad format for ban in channel\n";      
@@ -969,10 +1091,68 @@ sub plog {
   print "$time :: $text";
 }
 
+sub execute_module {
+  my ($from, $nick, $tonick, $host, $keyword, $arguments) = @_;
+  my $text;
+  
+  my $pid = fork;
+  if(not defined $pid) {
+    plog "Could not fork: $!\n";
+    return "/me groans loudly.";
+  }
+
+  if($pid == 0) {
+    $child = 1; # set to be killed after returning
+    if(defined $arguments) {
+      plog "($from): $nick ($host): Executing module $commands{$keyword}{module} $arguments\n";
+      $arguments = quotemeta($arguments);
+      $arguments =~ s/\\\s+/ /;
+
+      if(defined $tonick) {
+        plog "($from): $nick ($host) sent to $tonick\n";
+        $text = `$module_dir/$commands{$keyword}{module} $arguments`;
+        my $fromnick = loggedin($nick, $host) ? "" : " ($nick)";
+        #return "/msg $tonick $text$fromnick"; # send private message to user
+        if(defined $text && length $text > 0) {
+          return "$tonick: $text";
+        } else {
+          return "";
+        }
+      } else {
+        return `$module_dir/$commands{$keyword}{module} $arguments`;
+      }
+    } else {
+      plog "($from): $nick ($host): Executing module $commands{$keyword}{module}\n";
+      if(defined $tonick) {
+        plog "($from): $nick ($host) sent to $tonick\n";
+        $text = `$module_dir/$commands{$keyword}{module}`;
+        my $fromnick = loggedin($nick, $host) ? "" : " ($nick)";
+        #return "/msg $tonick $text$fromnick"; # send private message to user
+        if(defined $text && length $text > 0) {
+          return "$tonick: $text";
+        } else {
+          return "";
+        }
+      } else {
+        # XXX extract $tonick from end of $arguments
+        return `$module_dir/$commands{$keyword}{module}`;
+      }
+    } #end if($arguments)
+    return "/me moans loudly."; # er, didn't execute the module?
+  } #end if($pid == 0)
+  plog "returning blank\n";
+  return "";
+}
+
 sub interpret_command {  
   my ($from, $nick, $host, $count, $command) = @_;
   my ($keyword, $arguments, $tonick);
   my $text;
+
+  plog "Enter interpret_command\n";
+  plog "[$from][$nick][$host][$count]command[$command]\n";
+
+  return "Too many levels of recursion, aborted." if(++$count > 5);
 
   if(not defined $from || not defined $nick || not defined $host ||
      not defined $command) {
@@ -988,19 +1168,27 @@ sub interpret_command {
   } elsif($command =~ /^([^ ]+)\s+is\s+also\s+(.*)$/) {
     ($keyword, $arguments) = ("change", "$1 s,\$, ; $2,");
   } elsif($command =~ /^([^ ]+)\s+is\s+(.*)$/) {
-    ($keyword, $arguments) = ("add", join(' ', $1, $2));
+    ($keyword, $arguments) = ("add", join(' ', $1, $2)) unless exists $commands{$1};
+    ($keyword, $arguments) = ($1, "is $2") if exists $commands{$1};
   } elsif($command =~ /^(.*?)\s+(.*)$/) {
     ($keyword, $arguments) = ($1, $2);
   } else {
     $keyword = $1 if $command =~ /^(.*)$/;
   }
+  
+  $arguments =~ s/\bme\b/\$nick/gi;
+  $arguments =~ s/\/\$nick/\/me/gi;
+
+  if($arguments =~ m/\b(your|him|her|its|it|them|their)(self|selves)\b/i) {
+    return "Why would I want to do that to myself?";
+  }
+  
+  plog "keyword: [$keyword], arguments: [$arguments], tonick: [$tonick]\n";
 
   if(not defined $keyword) {
     plog "Error 2, no keyword\n";
     return "";
   }
-
-  plog "[$from] $nick ($host) command: [$command], keyword: [$keyword], args: [$arguments]\n";
 
   # Check if it's an alias
   if(exists $commands{$keyword} and exists $commands{$keyword}{text}) {
@@ -1015,11 +1203,12 @@ sub interpret_command {
       $commands{$keyword}{ref_count}++;
       $commands{$keyword}{ref_user} = $nick;
 
-      return "Too many levels of aliasing, aborted." if(++$count > 5);
       return interpret_command($from, $nick, $host, $count, $command);
     }
   }
 
+  plog "Checking internal commands\n";
+  
   # First, we check internal commands
   foreach $command (keys %internal_commands) {
     if($keyword =~ /^$command$/i) {
@@ -1030,89 +1219,87 @@ sub interpret_command {
         return "/msg $nick Your access level of $admins{$nick}{level} is not sufficent to use this command."
           if $admins{$nick}{level} < $internal_commands{$keyword}{level};
       }
-      plog "($from): $nick ($host) Executing internal command: $keyword $arguments\n";
+      plog "($from): $nick ($host) Executing internal command: [$from][$nick][$host][$keyword][$arguments]\n";
       return $internal_commands{$keyword}{sub}($from, $nick, $host, $arguments);
     }
   }
 
+  plog "Checking bot commands\n";
+
   # Then, we check bot commands
   foreach $command (keys %commands) {
     if(lc $keyword =~ /^\Q$command\E$/i) {
+      
+      plog "=======================\n";
+      plog "[$keyword] == [$command]\n";
+      
       if(exists $commands{$keyword} && $commands{$keyword}{enabled} == 0) {
+        plog "$keyword disabled.\n";
         return "$keyword is currently disabled.";
       } elsif(exists $commands{$keyword} && exists $commands{$keyword}{module}) {
+        plog "Found module\n";
         $commands{$keyword}{ref_count}++;
         $commands{$keyword}{ref_user} = $nick;
 
-        my $pid = fork;
-        if(not defined $pid) {
-          plog "Could not fork: $!\n";
-          return "/me groans loudly.";
-        }
-
-        if($pid == 0) {
-          $child = 1; # set to be killed after returning
-          if(defined $arguments) {
-            plog "($from): $nick ($host): Executing module $commands{$keyword}{module} $arguments\n";
-            $arguments = quotemeta($arguments);
-            $arguments =~ s/\\\s+/ /;
-
-            if(defined $tonick) {
-              plog "($from): $nick ($host) sent to $tonick\n";
-              $text = `$module_dir/$commands{$keyword}{module} $arguments`;
-              my $fromnick = loggedin($nick, $host) ? "" : " ($nick)";
-              return "/msg $tonick $text$fromnick";
-            } else {
-              return `$module_dir/$commands{$keyword}{module} $arguments`;
-            }
-          } else {
-            plog "($from): $nick ($host): Executing module $commands{$keyword}{module}\n";
-            if(defined $tonick) {
-              plog "($from): $nick ($host) sent to $tonick\n";
-              $text = `$module_dir/$commands{$keyword}{module}`;
-              my $fromnick = loggedin($nick, $host) ? "" : " ($nick)";
-              return "/msg $tonick $text$fromnick";
-            } else {
-              return `$module_dir/$commands{$keyword}{module}`;
-            }
-          } #end if($arguments)
-          return "/me moans loudly."; # er, didn't execute the module?
-        } #end if($pid == 0)
+        $text = execute_module($from, $nick, $tonick, $host, $keyword, $arguments);
       }
 
       # Now we check to see if it's a factoid 
       elsif(exists $commands{$keyword} && exists $commands{$keyword}{text}) {
+        plog "Found factoid\n";
+
+        # Don't allow user-custom /msg factoids, unless factoid triggered by admin
+        if(($commands{$keyword}{text} =~ m/^\/msg/i) and (not loggedin($nick, $host))) {
+          plog "/MSG FACTOID NOT ALLOWED!\n";
+          return "You must login to use this command."
+        }
+        
         $commands{$keyword}{ref_count}++;
         $commands{$keyword}{ref_user} = $nick;
         plog "($from): $nick ($host): $keyword: Displaying text \"$commands{$keyword}{text}\"\n";
         if(defined $tonick) { # !tell foo about bar
           plog "($from): $nick ($host) sent to $tonick\n";
           my $fromnick = loggedin($nick, $host) ? "" : " ($nick)";
-          $text = "/msg $tonick $commands{$keyword}{text}$fromnick";
+          # $text = "/msg $tonick $commands{$keyword}{text}$fromnick";
+          $text = "$tonick: $keyword is $commands{$keyword}{text}";
         } else {
           $text = $commands{$keyword}{text};
         }
+        plog "text set to [$text]\n";
         if(defined $arguments) {
+          plog "got arguments: [$arguments]\n";
+          
+          # XXX - extract and remove $tonick from end of $arguments
           if(not $text =~ s/\$args/$arguments/gi) {
+            plog "factoid doesn't take argument, checking ...\n";
             # factoid doesn't take an argument
-            if($arguments =~ /^.{1,20}$/) {
+            if($arguments =~ /^[^ ]{1,20}$/) {
               # might be a nick
+              plog "could be nick\n";
               if($text =~ /^\/.+? /) {
                 $text =~ s/^(\/.+?) /$1 $arguments: /;
               } else {
-                $text =~ s/^/\/say $arguments: $keyword is /;
+                $text =~ s/^/\/say $arguments: $keyword is / unless (defined $tonick);
               }                  
             } else {
-              plog "Factoid doesn't take arguments\n";
-              return "";
+              if($text =~ /^\/.+? /) {
+                $text =~ s/^(\/.+?) /$1 /;
+              } else {
+                $text =~ s/^/\/say $keyword is / unless (defined $tonick);
+              }                  
             }
+            plog "unknown1: [$text]\n";
           }
+          plog "replaced \$args: [$text]\n";
         } else {
           # no arguments supplied
+          # plog "No arguments supplised\n";
           $text =~ s/\$args/$nick/gi;
+          # plog "[$text]\n";
         }
         $text =~ s/\$nick/$nick/g;
-        while($text =~ /[^\\]\$([^\s!+.$\/\\,;]+)/g) { 
+        # plog "subbed nick: [$text]\n";
+        while($text =~ /[^\\]\$([^\s!+.$\/\\,;=&]+)/g) { 
           my $var = $1;
           #plog "adlib: got [$var]\n";
           #plog "adlib: parsing variable [\$$var]\n";
@@ -1135,22 +1322,77 @@ sub interpret_command {
           }
         }
         $text =~ s/\\\$/\$/g;
+        # plog "finally... [$text]\n";
         if($text =~ s/^\/say\s+//i || $text =~ /^\/me\s+/i
           || $text =~ /^\/msg\s+/i) {
+          # plog "ret1\n";
           return $text;
         } else {
+          # plog "ret2\n";
           return "$keyword is $text";
         }
+        plog "unknown3: [$text]\n";
       } else {
-        plog "($from): $nick ($host): Unknown command type: $command\n";        
-        return "";
+        plog "($from): $nick ($host): Unknown command type: $command\n"; 
+        return "/me blinks.";
       }
-    }
-  }
+      plog "unknown4: [$text]\n";
+    } # else no match
+  } # end foreach
+  
+  # plog "attemping regex [$text]\n";
 
   # Otherwise, the command was not found.
-  plog "[$keyword] not found.\n";
-  return;
+  # Lets try regexp factoids ...
+  my $string = "$keyword $arguments";
+  my $found = 0;
+  
+  foreach my $command (sort keys %commands) {
+    if(exists $commands{$command}{regex}) {
+      eval {
+        my $regex = qr/$command/i;
+        # plog "testing $string =~ $regex\n";
+        if($string =~ $regex) {
+          plog "[$string] matches [$command][$regex] - calling [" . $commands{$command}{regex}. "$']\n";
+          my $cmd = "$commands{$command}{regex}$'";
+          my $a = $1;
+          my $b = $2;
+          my $c = $3;
+          my $d = $4;
+          my $e = $5;
+          my $f = $6;
+          my $g = $7;
+          my $h = $8;
+          my $i = $9;
+          my $before = $`;
+          my $after = $';
+          $cmd =~ s/\$1/$a/g;
+          $cmd =~ s/\$2/$b/g;
+          $cmd =~ s/\$3/$c/g;
+          $cmd =~ s/\$4/$d/g;
+          $cmd =~ s/\$5/$e/g;
+          $cmd =~ s/\$6/$f/g;
+          $cmd =~ s/\$7/$g/g;
+          $cmd =~ s/\$8/$h/g;
+          $cmd =~ s/\$9/$i/g;
+          $cmd =~ s/\$`/$before/g;
+          $cmd =~ s/\$'/$after/g;
+          $cmd =~ s/^\s+//;
+          $cmd =~ s/\s+$//;
+          $text = interpret_command($from, $nick, $host, $count, "$cmd");
+          $found = 1;
+        }
+      };
+      if($@) {
+        plog "Regex fail: $@\n";
+        return "/msg $nick Fail.";
+      }
+      last if $found;
+    }
+  }
+  
+  plog "[$keyword] not found.\n" if $text ne "";
+  return "$text";
 }
 
 sub load_channels {
@@ -1164,14 +1406,15 @@ sub load_channels {
   foreach my $line (@contents) {
     $i++;
     chomp $line;
-    my ($channel, $enabled, $showall) = split(/\s+/, $line);
-    if(not defined $channel || not defined $enabled) {
+    my ($channel, $enabled, $is_op, $showall) = split(/\s+/, $line);
+    if(not defined $channel || not defined $is_op || not defined $enabled) {
       die "Syntax error around line $i of $channels_file\n";
     }
     if(defined $channels{$channel}) {
       die "Duplicate channel $channel found in $channels_file around line $i\n";
     }
     $channels{$channel}{enabled} = $enabled;
+    $channels{$channel}{is_op} = $is_op;
     $channels{$channel}{showall} = $showall;
     plog "  Adding channel $channel ...\n";
   }
@@ -1181,7 +1424,7 @@ sub load_channels {
 sub save_channels {
   open(FILE, "> $channels_file") or die "Couldn't open $channels_file: $!\n";
   foreach my $channel (keys %channels) {
-    print FILE "$channel $channels{$channel}{enabled} $channels{$channel}{showall}\n";
+    print FILE "$channel $channels{$channel}{enabled} $channels{$channel}{is_op} $channels{$channel}{showall}\n";
   }
   close(FILE);
 }
@@ -1198,7 +1441,7 @@ sub load_commands {
     chomp $line;
     $i++;
     my ($command, $type, $enabled, $owner, $timestamp, $ref_count, $ref_user, $value) = split(/\s+/, $line, 8);
-    if(not defined $command || not defined $enabled
+    if(not defined $command || not defined $enabled || not defined $owner || not defined $timestamp
        || not defined $type || not defined $ref_count
        || not defined $ref_user || not defined $value) {
       die "Syntax error around line $i of $commands_file\n";
@@ -1223,7 +1466,7 @@ sub save_commands {
 
   foreach my $command (sort keys %commands) {
     next if $command eq "version";
-    if(defined $commands{$command}{module} || defined $commands{$command}{text}) {
+    if(defined $commands{$command}{module} || defined $commands{$command}{text} || defined $commands{$command}{regex}) {
       print FILE "$command ";
     } else {
       plog "save_commands: unknown command type $command\n";
@@ -1240,8 +1483,13 @@ sub save_commands {
       print FILE "$commands{$command}{enabled} $commands{$command}{owner} $commands{$command}{timestamp} ";
       print FILE "$commands{$command}{ref_count} $commands{$command}{ref_user} ";
       print FILE "$commands{$command}{text}\n";
+    } elsif(defined $commands{$command}{regex}) {
+      print FILE "regex ";
+      print FILE "$commands{$command}{enabled} $commands{$command}{owner} $commands{$command}{timestamp} ";
+      print FILE "$commands{$command}{ref_count} $commands{$command}{ref_user} ";
+      print FILE "$commands{$command}{regex}\n";
     } else {
-      plog "save_commands: skipping unknown command type $command\n";
+      plog "save_commands: skipping unknown command type for $command\n";
     }
   }
   close(FILE);
@@ -1257,62 +1505,65 @@ sub save_admins {
 my %flood_watch = ();
 
 sub check_flood {
-  my ($nick, $host, $channel, $max, $mode) = @_;
+  my ($nick, $host, $channel, $max, $mode, $msg) = @_;
   my $now = gettimeofday;
 
-  #plog "check flood [$channel]\n";
+  # plog "check flood $nick $host [$channel] $max $mode $msg\n";
 
   return if $nick eq $botnick;
 
   if(exists $flood_watch{$nick}) {
-    if($now - $flood_watch{$nick}{timestamp} < 5) {
-      if($mode == $FLOOD_JOIN && $flood_watch{$nick}{lastmode} == $FLOOD_JOIN) {
-        plog "($channel) $nick possible join flood\n";
-      }
-      $flood_watch{$nick}{count}++;
-      plog "($channel) $nick flood count $flood_watch{$nick}{count}\n";
-    } else {
-      if($flood_watch{$nick}{count} > 0) {
-        if($mode == $FLOOD_JOIN) {
-          plog "($channel) $nick possible join flood, count reset\n";
-          $flood_watch{$nick}{count} = 0;
-        } else {
-          $flood_watch{$nick}{count} = 0;
-          plog "$nick flood count reset\n";
-        }
-      }
+    # plog "nick exists\n";
+
+    if(not exists $flood_watch{$nick}{$channel}) {
+      # plog "adding new channel for existing nick\n";
+      $flood_watch{$nick}{$channel}{offenses} = 0;
+      $flood_watch{$nick}{$channel}{messages} = [];
     }
 
-    $flood_watch{$nick}{timestamp} = $now;
-    $flood_watch{$nick}{lastmode}  = $mode;   
+    # plog "appending new message\n";
+    push(@{ $flood_watch{$nick}{$channel}{messages} }, { timestamp => $now, msg => $msg, mode => $mode });
 
-    if($flood_watch{$nick}{count} >= $max && not loggedin($nick, $host)) {
-      $flood_watch{$nick}{offenses}++;
-      $flood_watch{$nick}{count} = 0;
-      my $length = $flood_watch{$nick}{offenses} * $flood_watch{$nick}{offenses} * 30;
-      if($channel =~ /^#/) { # channel flood
-        if($mode == $FLOOD_CHAT) {
-          quiet_nick_timed($nick, $channel, $length);
-          $conn->privmsg($nick, "You have been quieted due to flooding.  Please use a web paste service such as http://rafb.net/paste for lengthy pastes.  You will be allowed to speak again in $length seconds.");
-          plog "$nick $channel flood offense $flood_watch{$nick}{offenses} earned $length second quiet\n";
-        } elsif($mode == $FLOOD_JOIN) {
-          ban_user($channel, "flood control", "", "*!*@"."$host Join flood");
-          plog "$nick ($host) $channel join flood, banned\n";
-          $conn->privmsg($nick, "You have been banned for joining repeatedly.  Please /msg pragma_ for more information.");
-        } else {
-          plog "Unknown flood mode\n";
+    my $length = $#{ $flood_watch{$nick}{$channel}{messages} } + 1;
+
+    # plog "length: $length, max nick messages: $MAX_NICK_MESSAGES\n";
+
+    if($length >= $MAX_NICK_MESSAGES) {
+      my %msg = %{ shift(@{ $flood_watch{$nick}{$channel}{messages} }) };
+      #plog "shifting message off top: $msg{msg}, $msg{timestamp}\n";
+      $length--;
+    }
+
+    return if $channels{$channel}{is_op} == 0;
+
+    if($length >= $max) {
+      #plog "More than $max messages spoken, comparing time differences\n";
+      my %msg = %{ @{ $flood_watch{$nick}{$channel}{messages} }[$length - $max] };
+      my %last = %{ @{ $flood_watch{$nick}{$channel}{messages} }[$length - 1] };
+
+      #plog "Comparing $last{timestamp} against $msg{timestamp}\n";
+
+      if($last{timestamp} - $msg{timestamp} <= 10 && not loggedin($nick, $host)) {
+        $flood_watch{$nick}{$channel}{offenses}++;
+        my $length = $flood_watch{$nick}{$channel}{offenses} * $flood_watch{$nick}{$channel}{offenses} * 30;
+        if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
+          if($mode == $FLOOD_CHAT) {
+            quiet_nick_timed($nick, $channel, $length);
+            $conn->privmsg($nick, "You have been quieted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length seconds.");
+            plog "$nick $channel flood offense $flood_watch{$nick}{$channel}{offenses} earned $length second quiet\n";
+          }
+        } else { # private message flood
+          plog "$nick msg flood offense $flood_watch{$nick}{$channel}{offenses} earned $length second ignore\n";
+          ignore_user("", "floodcontrol", "", "$nick" . '@' . "$host $channel $length");
         }
-      } else { # msg flood
-        plog "$nick msg flood offense $flood_watch{$nick}{offenses} earned $length second ignore\n";
-        ignore_user("", "floodcontrol", "", "$host $length");
       }
     }
   } else {
+    # plog "brand new nick addition\n";
     # new addition
-    $flood_watch{$nick}{timestamp} = $now;
-    $flood_watch{$nick}{count}     = 1;
-    $flood_watch{$nick}{offenses}  = 0;
-    $flood_watch{$nick}{lastmode}  = $mode;
+    $flood_watch{$nick}{$channel}{offenses}  = 0;
+    $flood_watch{$nick}{$channel}{messages} = [];
+    push(@{ $flood_watch{$nick}{$channel}{messages} }, { timestamp => $now, msg => $msg, mode => $mode });
   }
 }
 
@@ -1344,13 +1595,18 @@ sub check_ignore_timeouts {
   my $now = gettimeofday;
 
   foreach my $host (keys %ignore_list) {
-    next if($ignore_list{$host} == -1); #permanent ignore
+    foreach my $channel (keys %{ $ignore_list{$host} }) {
+      next if($ignore_list{$host}{$channel} == -1); #permanent ignore
 
-    if($ignore_list{$host} < $now) {
-      unignore_user("", "floodcontrol", "", $host);
-    } else {
-      my $timediff = $ignore_list{$host} - $now;
-      #plog "ignore: $host has $timediff seconds remaining\n"
+      if($ignore_list{$host}{$channel} < $now) {
+        unignore_user("", "floodcontrol", "", "$host $channel");
+        if($host eq ".*") {
+          $conn->me($channel, "awakens.");
+        }
+      } else {
+        #my $timediff = $ignore_list{$host}{$channel} - $now;
+        #plog "ignore: $host has $timediff seconds remaining\n"
+      }
     }
   }
 }
@@ -1383,7 +1639,6 @@ sub check_unban_timeouts {
   }
 }
 
-my $export_factoids_time = gettimeofday + $export_factoids_timeout;
 sub check_export_timeout {
   my $now = gettimeofday;
   if($now > $export_factoids_time) {
@@ -1392,6 +1647,36 @@ sub check_export_timeout {
   }
 }
 
+
+BEGIN {
+  my $last_run = gettimeofday;
+  
+  sub check_message_history_timeout {
+    my $now = gettimeofday;
+
+    if($now - $last_run < 60 * 60) {
+      return;
+    } else {
+      plog "One hour has elapsed -- running check_message_history_timeout\n";
+    }
+    
+    $last_run = $now;
+    
+    foreach my $nick (keys %flood_watch) {
+      foreach my $channel (keys %{ $flood_watch{$nick} })
+      {
+        plog "Checking [$nick][$channel]\n";
+        my $length = $#{ $flood_watch{$nick}{$channel} } + 1;
+        my %last = %{ @{ $flood_watch{$nick}{$channel}{messages} }[$length - 1] };
+
+        if($now - $last{timestamp} >= 60 * 60 * 24) {
+          plog "$nick in $channel hasn't spoken in 24 hours, removing message history.\n";
+          delete $flood_watch{$nick}{$channel};
+        }
+      }
+    }
+  }
+}
 sub sig_alarm_handler {
   # check timeouts
   check_quieted_timeouts;
@@ -1399,6 +1684,7 @@ sub sig_alarm_handler {
   check_opped_timeout;
   check_unban_timeouts;
   check_export_timeout;
+  check_message_history_timeout;
   alarm 10;
 }
 
@@ -1429,6 +1715,9 @@ sub on_init {
   plog "*** @args\n";
 }
 
+my $last_timestamp = gettimeofday;
+my $flood_msg = 0;
+
 sub on_public {
   my ($conn, $event) = @_;
   my $mynick = $conn->nick; 
@@ -1437,34 +1726,82 @@ sub on_public {
   my $text = $event->{args}[0];
   my $from = $event->{to}[0];
   my ($command, $args, $result);
+  my $has_url = undef;
 
-  plog "($from): $nick ($host): $text\n"
+  plog "------------------------------------------------------\n($from): $nick ($host): $text\n"
     if((exists $channels{$from} && $channels{$from}{showall} == 1) || not $from =~ /^#/);
 
-  return if(check_ignore($host) && not loggedin($nick, $host)); # ignored host
+  check_flood($nick, $host, $from, $MAX_FLOOD_MESSAGES, $FLOOD_CHAT, $text);
 
-  check_flood($nick, $host, $from, 4, $FLOOD_CHAT);
-
-  if($text =~ /^.?$mynick.?\s+(.*?)[\?!]*$/i) {
-    $command = $1;
-  } elsif($text =~ /^(.*?),?\s+$mynick[\?!]*$/i) {
-    $command = $1;
-  } elsif($text =~ /^!(.*?)\?*$/) {
-    $command = $1;
+  if($text =~ /^.?$mynick.?\s+(.*?)([\?!]*)$/i) {
+    $command = "$1";
+  } elsif($text =~ /^(.*?),?\s+$mynick([\?!]*)$/i) {
+    $command = "$1";
+  } elsif($text =~ /^!(.*?)(\?*)$/) {
+    $command = "$1";
+  } elsif($text =~ /http:\/\/([^\s]+)/i) {
+    $has_url = $1;
   }
 
-  if(defined $command) {
-    $result = interpret_command($from, $nick, $host, 1, $command);
-    if(defined $result) {
+  if(defined $command || defined $has_url) {
+    if(defined $command && $command !~ /^login/i) {
+      plog "ignored text: [$nick][$host][$from][$text]\n" and return if(check_ignore($nick, $host, $from) && not loggedin($nick, $host)); # ignored host
+    }
+
+    my $now = gettimeofday;
+    
+    if($from =~ /^#/) {
+      $flood_msg++;
+      plog "flood_msg: $flood_msg\n";
+    }
+
+    if($flood_msg > 3) {
+      plog "flood_msg exceeded! [$flood_msg]\n";
+      ignore_user("", "floodcontrol", "", ".* $from 300");
+      $flood_msg = 0;
+      if($from =~ /^#/) {
+        $conn->me($from, "has been overwhelmed.");
+        $conn->me($from, "lies down and falls asleep."); 
+        return;
+      } 
+    }
+
+    if($now - $last_timestamp >= 15) {
+      $last_timestamp = $now;
+      if($flood_msg > 0) {
+        plog "flood_msg reset: (was $flood_msg)\n";
+        $flood_msg = 0;
+      }
+    }
+
+    if(not defined $has_url) {
+      $result = interpret_command($from, $nick, $host, 1, $command);
+    } else {
+      $result = execute_module($from, $nick, undef, $host, "title", "$nick http://$has_url");
+    }
+
+    if(defined $result && length $result > 0) {
+      my $len = length $result;
+      if($len > $max_msg_len) {
+        if(($len - $max_msg_len) > 10) {
+          plog "Message truncated.\n";
+          $result = substr($result, 0, $max_msg_len);
+          substr($result, $max_msg_len) = "... (" . ($len - $max_msg_len) . " more characters)";
+        }
+      }
+      
       if($result =~ s/^\/me\s+//i) {
         $conn->me($from, $result);
       } elsif($result =~ s/^\/msg\s+([^\s]+)\s+//i) {
-        $from = $1;
-        if($result =~ s/^\/me\s+//i) {
-          $conn->me($from, $result);
+        my $to = $1;
+        if($to =~ /.*serv$/i) {
+          plog "Possible HACK ATTEMPT /msg *serv: [$nick] [$host] [$command] [$result]\n";
+        }
+        elsif($result =~ s/^\/me\s+//i) {
+          $conn->me($to, $result);
         } else {
           $result =~ s/^\/say\s+//i;
-          $conn->privmsg($from, $result);
+          $conn->privmsg($to, $result);
         }
       } else {
         $conn->privmsg($from, $result);
@@ -1516,10 +1853,12 @@ sub on_mode {
         $unban_timeout{$target}{channel} = $from;
       }
     } elsif($mode eq "+e" && $from eq $botnick) {
-        foreach my $chan (keys %channels) {
+      foreach my $chan (keys %channels) {
+        if($channels{$chan}{enabled} != 0) {
           plog "Joining channel:  $chan\n";
           $conn->join($chan);
         }
+      }
     }
   }
 }
@@ -1529,14 +1868,14 @@ sub on_join {
   my ($nick, $host, $channel) = ($event->nick, $event->host, $event->to);
 
   #plog "$nick ($host) joined $channel\n";
-  check_flood($nick, $host, $channel, 3, $FLOOD_JOIN);
+  #check_flood($nick, $host, $channel, 3, $FLOOD_JOIN);
 }
 
 sub on_departure {
   my ($conn, $event) = @_;
   my ($nick, $host, $channel) = ($event->nick, $event->host, $event->to);
 
-  check_flood($nick, $host, $channel, 3, $FLOOD_JOIN);
+  #check_flood($nick, $host, $channel, 3, $FLOOD_JOIN);
 
   if(exists $admins{$nick} && exists $admins{$nick}{login}) { 
     plog "Whoops, $nick disconnected while still logged in.\n";

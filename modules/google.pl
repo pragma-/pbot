@@ -1,8 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -w -I /home/msmud/lib/lib/perl5/site_perl/5.10.0/
 
 # Quick and dirty by :pragma
 
-use strict;
 use LWP::UserAgent;
 
 my ($text, $arguments, $header, $footer, $t, $matches);
@@ -86,7 +85,7 @@ my $quote = chr(226) . chr(128) . chr(156);
 my $quote2 = chr(226) . chr(128) . chr(157);
 my $dash = chr(226) . chr(128) . chr(147);
 
-while($text =~ m/<div class=g><h2 class=r><a href=\"(.*?)\".*?>(.*?)<\/a>/g && $i < $matches)
+while($text =~ m/<li class=g><h3 class=r><a href=\"(.*?)\".*?>(.*?)<\/a>/g && $i < $matches)
 {
   if($i > 0)
   {
@@ -96,14 +95,19 @@ while($text =~ m/<div class=g><h2 class=r><a href=\"(.*?)\".*?>(.*?)<\/a>/g && $
   {
     $t = "$2: [$1]";
   }
-  $t =~ s/<b>//g;
-  $t =~ s/<\/b>//g;
+  $t =~ s/<[^>]+>//g;
+  $t =~ s/<\/[^>]+>//g;
   $t =~ s/$quote/"/g;
   $t =~ s/$quote2/"/g;
   $t =~ s/$dash/-/g;
+  $t =~ s/&quot;/"/g;
+  $t =~ s/&amp;/&/g;
+  $t =~ s/&nsb;/ /g;
   $t =~ s/&#39;/'/g;
   $t =~ s/&lt;/</g;
   $t =~ s/&gt;/>/g;
+  $t =~ s/<em>//g;
+  $t =~ s/<\/em>//g;
   print $t;
   $i++;
 

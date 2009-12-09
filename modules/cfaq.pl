@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
 
-use strict;
 
 my $file;
 my $match = 1;

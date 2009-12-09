@@ -1,6 +1,5 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -w -I /home/msmud/lib/lib/perl5/site_perl/5.10.0/
 
-use strict;
 use XML::RSS;
 use LWP::Simple;
 

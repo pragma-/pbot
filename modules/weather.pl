@@ -1,6 +1,5 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -I /home/msmud/lib/lib/perl5/site_perl/5.10.0/ 
 
-use strict;
 use LWP::Simple;
 
 my ($text, $weather, $location, $date, $i, $day, @days);

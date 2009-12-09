@@ -1,8 +1,6 @@
-#!/usr/bin/perl -w
-
+#!/usr/bin/perl -w -I /home/msmud/libwww-perl-5.808/lib
 # quick and dirty by :pragma
 
-use strict;
 use LWP::Simple;
 
 my ($result, $manpage, $section, $text, $name, $includes, $prototype, $conforms, $description);
@@ -12,43 +10,43 @@ if ($#ARGV < 0) {
   die;
 }
 
-#$manpage = join(" ", @ARGV);
 $manpage = join("+", @ARGV);
+$section = 8;
+my $loop = 1;
 
-$section = "3";
-
-#if($manpage =~ m/([0-9]+)\s+(.*)/) {
 if($manpage =~ m/([0-9]+)\+(.*)/) {
-#  $section = "$1 ";
   $section = $1;
   $manpage = $2;
+  $loop = 0;
 }
 
-if(!($section == 2 || $section == 3))
-{
-  print "I'm only interested in displaying information from section 2 or 3.\n";
-  exit 0;
-}
+$manpage =~ s/\+.*$//;
 
-#my $page = `man $section$manpage -w 2>&1`;
-#if($page =~ m/No.*?entry\sfor(.*)/i) {
-#  print "No entry for$1\n";
-#  exit 0;
-#}
+my $get_text;
+do {
+#  $text = get("http://www.freebsd.org/cgi/man.cgi?query=$manpage&sektion=$section&apropos=0&manpath=FreeBSD+6.2-RELEASE&format=ascii");
+  
+  $get_text = get("http://www.freebsd.org/cgi/man.cgi?query=$manpage&sektion=$section&apropos=0&manpath=SuSE+Linux%2Fi386+8.2&format=ascii");
 
-#$text = `groff -t -e -mandoc -Tascii $page`;
-#$text =~ s/\e.*?m//g;
 
-#$text = get("http://node1.yo-linux.com/cgi-bin/man2html?cgi_command=$manpage&cgi_section=$section&cgi_keyword=m");
+  $text = substr($get_text, 0, 5000);
+#  print '['.length($text).']'."\n";
+  
+  if($text =~ m/Sorry, no data found/)
+  {
+    $section--;
 
-$text = 
-get("http://www.freebsd.org/cgi/man.cgi?query=$manpage&sektion=$section&apropos=0&manpath=FreeBSD+6.2-RELEASE&format=ascii");
-
-if($text =~ m/Sorry, no data found/)
-{
-  print "No information found for $manpage in section $section.\n";
-  exit 0;
-}
+    if($section == 0 || $loop == 0) {
+      $section++;
+      if($section == 1 && $loop == 1) {
+        print "No information found for $manpage in any of the sections.\n";
+      } else {
+        print "No information found for $manpage in section $section.\n";
+      }
+      exit 0;
+    }
+  } else { $loop = 0; }
+} while($loop);
 
 $text =~ m/^\s+NAME/gsm;
 if($text =~ m/(.*?)SYNOPSIS/gsi) {
@@ -57,25 +55,37 @@ if($text =~ m/(.*?)SYNOPSIS/gsi) {
 
 my $i = 0;
 while ($text =~ m/#include <(.*?)>/gsi) {
-  $includes .= ", " if($i > 0);
-  $includes .= "$1";
-  $i++;
+  if(not $includes =~ /$1/) {
+    $includes .= ", " if($i > 0);
+    $includes .= "$1";
+    $i++;
+  }
 }
 
 $prototype = "$1 $2$manpage($3);"
   if($text =~ m/SYNOPSIS.*^\s+(.*?)\s+(\*?)$manpage\s*\((.*?)\)\;?\n.*DESC/ms);
 
-if($text =~ m/DESCRIPTION.*?$manpage(.*?)\./si) {
-  $description = "$manpage $1";
+if($text =~ m/DESCRIPTION(.*?)$manpage(.*?)\./si) {
+  my $foo = $1;
+  my $bar = $2;
+  $foo =~ s/\r//g;
+  $foo =~ s/\n//g;
+  $foo =~ s/\s+/ /g;
+  $foo =~ s/^\s+//;
+  if($foo =~ /^NOTE/) {
+    $description = "$foo$manpage $bar";
+  } else {
+    $description = "$manpage $bar";
+  }
   $description =~ s/\-\s+//g;
 }
 
-if ($text =~ m/^CONFORMING TO.*?^\s+The\s$manpage\s.*conforms to\s(.*?)$/ms) {
+if ($get_text =~ m/^CONFORMING TO.*?^\s+The\s$manpage\s.*conforms to\s(.*?)$/ms) {
   $conforms = $1;
-  } elsif ($text =~ m/^CONFORMING TO.*?^\s+The\s+$manpage\s+.*?is\s+compatible\s+with\s+(.*?)$/ms) {
+  } elsif ($get_text =~ m/^CONFORMING TO.*?^\s+The\s+$manpage\s+.*?is\s+compatible\s+with\s+(.*?)$/ms) {
   $conforms = "$1 ...";
-} elsif ($text =~ m/^CONFORMING TO.*?^\s+(.*?)\.\s/ms or
-         $text =~ m/^CONFORMING TO.*?^\s+(.*?)$/ms) {
+} elsif ($get_text =~ m/^CONFORMING TO.*?^\s+(.*?)\.\s/ms or
+         $get_text =~ m/^CONFORMING TO.*?^\s+(.*?)$/ms) {
   $conforms = $1;
 }
 
@@ -83,16 +93,27 @@ $result = "";
 $result .= "$name - " if (not defined $includes);
 $result .= "Includes: $includes - " if (defined $includes);
 $result .= "$prototype - " if (defined $prototype);
-$result .= "$conforms - " if (defined $conforms);
+
 $result .= $description;
+
+if($section == 3) {
+  $result .= " - http://www.iso-9899.info/man?$manpage";
+} else {
+  $result .= " - http://www.freebsd.org/cgi/man.cgi?sektion=$section&query=$manpage";
+}
+
+$result .= " - $conforms" if (defined $conforms);
 
 $result =~ s/^\s+//g;
 $result =~ s/\s+/ /g;
 $result =~ s/ANSI - C/ANSI C/g;
+$result =~ s/\(these.*?appeared in .*?\)//g;
+$result =~ s/(\w)- /$1/g;
 $result =~ s/\n//g;
 $result =~ s/\r//g;
 $result =~ s/\<A HREF.*?>//g;
 $result =~ s/\<\/A>//g;
 $result =~ s/&quot;//g;
 
-print "$result - http://www.iso-9899.info/man?$manpage";
+print "$result\n";
+

@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 
-use strict;
 use LWP::Simple;
 
 my ($text, $buffer, $location);

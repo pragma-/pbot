@@ -1,0 +1,2 @@
+#!/bin/sh
+/home/msmud/pbot2/modules/lookupbot.pl urban $*

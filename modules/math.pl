@@ -2,7 +2,6 @@
 
 # Quick and dirty by :pragma
 
-use strict;
 
 my ($arguments, $response);
 

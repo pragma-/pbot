@@ -1,8 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -w -I /home/msmud/lib/lib/perl5/site_perl/5.10.0/
 
 # quick and dirty by :pragma
 
-use strict;
 use LWP::Simple;
 
 my ($defint, $phrase, $text, $entry, $entries, $i);
@@ -27,7 +26,7 @@ $text = get("http://dictionary.reference.com/search?q=$phrase");
 
 $phrase =~ s/\%20/ /g;
 
-if($text =~ m/No results found/i)
+if($text =~ m/because there was not a match on/i)
 {
   print "No entry found for '$phrase'. ";
 
@@ -36,7 +35,7 @@ if($text =~ m/No results found/i)
   {
     print "Suggestions: ";
 
-    $i = 30;
+    $i = 90;
     while($text =~ m/<a href="\/search\?r=2&amp;q=.*?>(.*?)<\/a>/g && $i > 0)
     {
       print "$1, ";
@@ -61,7 +60,7 @@ if($text =~ m/No results found/i)
   exit 0;
 }
 
-if($text =~ m/<h1>(.*?) results for:/g)
+if($text =~ m/- (.*?) dictionary result/g)
 {
   $entries = $1;
 }
@@ -70,40 +69,50 @@ $entries = 1 if(not defined $entries);
 
 if($entry > $entries)
 {
-  print "But there are only $entries entries for $phrase.\n";
+  print "No entry found for $phrase.\n";
   exit 0;
 }
 
-print "$phrase ($entry of $entries entries): ";
+print "$phrase: ";
 
-$i = 1;
+$i = $entry;
 
-while($i <= $entry)
-{
-  if($text =~ m/<td valign="top">(.*?)<\/td>/gs)
-  {
-    $defint = $1;
-  }
-  $i++;
-}
-
-# and now for some fugly beautifying regexps...
+$defint = "";
 
 my $quote = chr(226) . chr(128) . chr(156);
 my $quote2 = chr(226) . chr(128) . chr(157);
 my $dash = chr(226) . chr(128) . chr(147);
 
-$defint =~ s/$quote/"/g;
-$defint =~ s/$quote2/"/g;
-$defint =~ s/$dash/-/g;
-$defint =~ s/<b>Pronun.*?<BR>//gsi;
-$defint =~ s/<.*?>//gsi;
-$defint =~ s/\&nbsp\;/ /gi;
-$defint =~ s/\&.*?\;//g;
-$defint =~ s/\r\n//gs;
-$defint =~ s/\( P \)//gs;
-$defint =~ s/\s+/ /gs;
+while($i <= $entries)
+{
+  if($text =~ m/<td>(.*?)<\/td>/gs)
+  {
+    $defint = $1;
+  }
 
-$defint = substr($defint, 0, 300);
+  # and now for some fugly beautifying regexps...
 
-print "$defint\n";
+  $defint =~ s/$quote/"/g;
+  $defint =~ s/$quote2/"/g;
+  $defint =~ s/$dash/-/g;
+  $defint =~ s/<b>Pronun.*?<BR>//gsi;
+  $defint =~ s/<.*?>//gsi;
+  $defint =~ s/\&nbsp\;/ /gi;
+  $defint =~ s/\&.*?\;//g;
+  $defint =~ s/\r\n//gs;
+  $defint =~ s/\( P \)//gs;
+  $defint =~ s/\s+/ /gs;
+
+  if($defint =~ /interfaceflash/) {
+    $i++;
+    next;
+  }
+
+  $i++ and next if $defint eq " ";
+
+  print "$i) $defint ";
+
+  $i++;
+}
+
+print "\n";
