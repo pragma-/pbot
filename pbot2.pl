@@ -8,13 +8,15 @@
 # Version History:
 ########################
 
-my $VERSION = "0.4.3";
+my $VERSION = "0.4.4";
 
 ########################
 # todo! add support for admin management - needs support for adding/removing/saving!
 # todo! multi-channel support pathetic (note 12/08/09, fixed multi-channel for anti-flood and for ignore)
 # todo! most of this crap needs to be refactored (note 11/23/09, refactored execute_module)
 # 
+# 0.4.4 (12/10/09): added [channel] optional parameter to !grab
+#                   fixed !rq's [channel] parameter
 # 0.4.3 (12/10/09): added !delq to delete quotegrabs
 # 0.4.2 (12/09/09): added support for quotegrabs: !grab, !getq, and !rq
 # 0.4.1 (12/08/09): improved anti-flood system to be significantly more accurate and per-channel
@@ -1608,12 +1610,13 @@ sub quotegrab {
   my ($from, $nick, $host, $arguments) = @_;
 
   if(not defined $arguments) {
-    return "Usage: !grab <nick> [history] -- where [history] is an optional argument that is an integer number of recent messages; e.g., to grab the 3rd most recent message for nick, use !grab nick 3";
+    return "Usage: !grab <nick> [history] [channel] -- where [history] is an optional argument that is an integer number of recent messages; e.g., to grab the 3rd most recent message for nick, use !grab nick 3";
   }
 
-  my ($grab_nick, $grab_history) = split(/\s+/, $arguments, 2);
+  my ($grab_nick, $grab_history, $channel) = split(/\s+/, $arguments, 3);
 
   $grab_history = 1 if not defined $grab_history;
+  $channel = $from if not defined $channel;
 
   if($grab_history < 1 || $grab_history > $MAX_NICK_MESSAGES) {
     return "/msg $nick Please choose a history between 1 and $MAX_NICK_MESSAGES";
@@ -1623,11 +1626,11 @@ sub quotegrab {
     return "No message history for $grab_nick.";
   }
 
-  if(not exists $flood_watch{$grab_nick}{$from}) {
-    return "No message history for $grab_nick in $from.";
+  if(not exists $flood_watch{$grab_nick}{$channel}) {
+    return "No message history for $grab_nick in $channel.";
   }
   
-  my @messages = @{ $flood_watch{$grab_nick}{$from}{messages} };
+  my @messages = @{ $flood_watch{$grab_nick}{$channel}{messages} };
 
   $grab_history--;
   
@@ -1637,11 +1640,11 @@ sub quotegrab {
 
   $grab_history = $#messages - $grab_history;
 
-  plog "$nick ($from) grabbed <$grab_nick> $messages[$grab_history]->{msg}\n";
+  plog "$nick ($from) grabbed <$grab_nick/$channel> $messages[$grab_history]->{msg}\n";
 
   my $quotegrab = {};
   $quotegrab->{nick} = $grab_nick;
-  $quotegrab->{channel} = $from;
+  $quotegrab->{channel} = $channel;
   $quotegrab->{timestamp} = $messages[$grab_history]->{timestamp};
   $quotegrab->{grabbed_by} = $nick;
   $quotegrab->{text} = $messages[$grab_history]->{msg};
@@ -1681,7 +1684,6 @@ sub show_random_quotegrab {
   my @quotes = ();
   my $nick_search = ".*";
   my $channel_search = $from;
-  my $channel_search_quoted = quotemeta($channel_search);
 
   plog "rq: arguments [$arguments]\n";
 
@@ -1690,11 +1692,11 @@ sub show_random_quotegrab {
     plog "[ns: $nick_search][cs: $channel_search]\n";
     if(not defined $channel_search) {
       $channel_search = $from;
-      $channel_search_quoted = quotemeta($channel_search);
     }
   } 
   
-  plog "[ns: $nick_search][cs: $channel_search]\n";
+  my $channel_search_quoted = quotemeta($channel_search);
+  plog "[ns: $nick_search][cs: $channel_search][csq: $channel_search_quoted]\n";
 
   eval {
     for(my $i = 0; $i <= $#quotegrabs; $i++) {
