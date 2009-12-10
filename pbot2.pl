@@ -8,13 +8,14 @@
 # Version History:
 ########################
 
-my $VERSION = "0.4.2";
+my $VERSION = "0.4.3";
 
 ########################
 # todo! add support for admin management - needs support for adding/removing/saving!
 # todo! multi-channel support pathetic (note 12/08/09, fixed multi-channel for anti-flood and for ignore)
 # todo! most of this crap needs to be refactored (note 11/23/09, refactored execute_module)
 # 
+# 0.4.3 (12/10/09): added !delq to delete quotegrabs
 # 0.4.2 (12/09/09): added support for quotegrabs: !grab, !getq, and !rq
 # 0.4.1 (12/08/09): improved anti-flood system to be significantly more accurate and per-channel
 #                   added per-nick-per-channel message history using %flood_watch
@@ -201,6 +202,7 @@ my %internal_commands = (
   regex     => { sub => \&add_regex,             level=> 0  },
   learn     => { sub => \&add_text,              level=> 0  },
   grab      => { sub => \&quotegrab,             level=> 0  },
+  delq      => { sub => \&delete_quotegrab,      level=> 40 },
   getq      => { sub => \&show_quotegrab,        level=> 0  },
   rq        => { sub => \&show_random_quotegrab, level=> 0  },
   info      => { sub => \&info,                  level=> 0  },
@@ -1650,6 +1652,19 @@ sub quotegrab {
   return "Quote grabbed: " . ($#quotegrabs + 1) . ": <$grab_nick> $msg";
 }
 
+sub delete_quotegrab {
+  my ($from, $nick, $host, $arguments) = @_;
+
+  if($arguments < 1 || $arguments > $#quotegrabs + 1) {
+    return "/msg $nick Valid range for !getq is 1 - " . ($#quotegrabs + 1);
+  }
+
+  my $quotegrab = $quotegrabs[$arguments - 1];
+  splice @quotegrabs, $arguments - 1, 1;
+  save_quotegrabs();
+  return "Deleted $arguments: <$quotegrab->{nick}> $quotegrab->{text}";
+}
+
 sub show_quotegrab {
   my ($from, $nick, $host, $arguments) = @_;
 
@@ -1668,18 +1683,23 @@ sub show_random_quotegrab {
   my $channel_search = $from;
   my $channel_search_quoted = quotemeta($channel_search);
 
+  plog "rq: arguments [$arguments]\n";
+
   if(defined $arguments) {
     ($nick_search, $channel_search) = split(/\s+/, $arguments, 2);
+    plog "[ns: $nick_search][cs: $channel_search]\n";
     if(not defined $channel_search) {
       $channel_search = $from;
       $channel_search_quoted = quotemeta($channel_search);
     }
   } 
+  
+  plog "[ns: $nick_search][cs: $channel_search]\n";
 
   eval {
     for(my $i = 0; $i <= $#quotegrabs; $i++) {
       my $hash = $quotegrabs[$i];
-      if($hash->{channel} =~ /$channel_search_quoted/i && $hash->{nick} =~ /$nick_search/) {
+      if($hash->{channel} =~ /$channel_search_quoted/i && $hash->{nick} =~ /$nick_search/i) {
         $hash->{id} = $i + 1;
         push @quotes, $hash;
       }
