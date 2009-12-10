@@ -8,13 +8,14 @@
 # Version History:
 ########################
 
-my $VERSION = "0.4.1";
+my $VERSION = "0.4.2";
 
 ########################
 # todo! add support for admin management - needs support for adding/removing/saving!
 # todo! multi-channel support pathetic (note 12/08/09, fixed multi-channel for anti-flood and for ignore)
 # todo! most of this crap needs to be refactored (note 11/23/09, refactored execute_module)
 # 
+# 0.4.2 (12/09/09): added support for quotegrabs: !grab, !getq, and !rq
 # 0.4.1 (12/08/09): improved anti-flood system to be significantly more accurate and per-channel
 #                   added per-nick-per-channel message history using %flood_watch
 #                   add per-channel support to ignore system
@@ -127,12 +128,13 @@ $SIG{ALRM} = \&sig_alarm_handler;
 my $home = $ENV{HOME};
 my $channels_file     = "$home/pbot2/channels";
 my $commands_file     = "$home/pbot2/commands";
+my $quotegrabs_file   = "$home/pbot2/quotegrabs";
 my $admins_file       = "$home/pbot2/admins";
 my $module_dir        = "$home/pbot2/modules";
 my $ircserver         = 'irc.freenode.net';
 my $botnick           = 'candide';
 my $altbotnick        = 'candide_';
-my $identify_password = 'helios';
+my $identify_password = 'habernat21';
 my $export_factoids_timeout = 300; # every 5 minutes
 my $export_factoids_time = gettimeofday + $export_factoids_timeout;
 my $export_factoids_path = "$home/htdocs/candide/factoids.html";
@@ -144,6 +146,8 @@ my $MAX_NICK_MESSAGES = 8;
 my $FLOOD_CHAT = 0;
 my $FLOOD_JOIN = 1;  # currently unused -- todo?
 
+my %flood_watch = ();
+
 # set some defaults ...
 my $max_msg_len = 460;
 my %commands   =  ( version => { 
@@ -154,6 +158,14 @@ my %commands   =  ( version => {
                        ref_count => 0, 
                        ref_user  => "nobody" } 
                  );
+
+my @quotegrabs   =  ({ 
+                       nick      => "candide",
+                       text      => "Who's a bot?", 
+                       channel   => "#pbot2", 
+                       grabbed_by => "pragma_", 
+                       timestamp => 0 
+                     });
 
 my %admins     = ( pragma_ => { 
                        password => '*', 
@@ -169,6 +181,7 @@ my %channels    = ();
 
 #... and load the rest
 load_channels();
+load_quotegrabs();
 load_commands();
 
 sub plog;
@@ -183,45 +196,49 @@ my $conn = $irc->newconn( Nick         => $botnick,
 
 #internal commands
 my %internal_commands = ( 
-  alias     => { sub => \&alias,          level => 0  },
-  add       => { sub => \&add_text,       level => 0  },
-  regex     => { sub => \&add_regex,      level => 0  },
-  learn     => { sub => \&add_text,       level => 0  },
-  info      => { sub => \&info,           level => 0  },
-  show      => { sub => \&show,           level => 0  },
-  histogram => { sub => \&histogram,      level => 0  },
-  top20     => { sub => \&top20,          level => 0  },
-  count     => { sub => \&count,          level => 0  },
-  find      => { sub => \&find,           level => 0  },
-  change    => { sub => \&change_text,    level => 0  },
-  remove    => { sub => \&remove_text,    level => 0  },
-  forget    => { sub => \&remove_text,    level => 0  },
-  export    => { sub => \&export,         level => 20 },
-  list      => { sub => \&list,           level => 0  },
-  load      => { sub => \&load_module,    level => 40 },
-  unload    => { sub => \&unload_module,  level => 40 },
-  enable    => { sub => \&enable_command, level => 20 },
-  disable   => { sub => \&disable_command,level => 20 },
-  quiet     => { sub => \&quiet,          level => 10 },
-  unquiet   => { sub => \&unquiet,        level => 10 },
-  ignore    => { sub => \&ignore_user,    level => 10 }, 
-  unignore  => { sub => \&unignore_user,  level => 10 },
-  ban       => { sub => \&ban_user,       level => 10 }, 
-  unban     => { sub => \&unban_user,     level => 10 }, 
-  kick      => { sub => \&kick_nick,      level => 10 },
-  login     => { sub => \&login,          level => 0  },
-  logout    => { sub => \&logout,         level => 0  },
-  join      => { sub => \&join_channel,   level => 50 },
-  part      => { sub => \&part_channel,   level => 50 },
-  addadmin  => { sub => \&add_admin,      level => 40 },
-  deladmin  => { sub => \&del_admin,      level => 40 }, 
-  die       => { sub => \&ack_die,        level => 50 } 
+  alias     => { sub => \&alias,                 level=> 0  },
+  add       => { sub => \&add_text,              level=> 0  },
+  regex     => { sub => \&add_regex,             level=> 0  },
+  learn     => { sub => \&add_text,              level=> 0  },
+  grab      => { sub => \&quotegrab,             level=> 0  },
+  getq      => { sub => \&show_quotegrab,        level=> 0  },
+  rq        => { sub => \&show_random_quotegrab, level=> 0  },
+  info      => { sub => \&info,                  level=> 0  },
+  show      => { sub => \&show,                  level=> 0  },
+  histogram => { sub => \&histogram,             level=> 0  },
+  top20     => { sub => \&top20,                 level=> 0  },
+  count     => { sub => \&count,                 level=> 0  },
+  find      => { sub => \&find,                  level=> 0  },
+  change    => { sub => \&change_text,           level=> 0  },
+  remove    => { sub => \&remove_text,           level=> 0  },
+  forget    => { sub => \&remove_text,           level=> 0  },
+  export    => { sub => \&export,                level=> 20 },
+  list      => { sub => \&list,                  level=> 0  },
+  load      => { sub => \&load_module,           level=> 40 },
+  unload    => { sub => \&unload_module,         level=> 40 },
+  enable    => { sub => \&enable_command,        level=> 20 },
+  disable   => { sub => \&disable_command,       level=> 20 },
+  quiet     => { sub => \&quiet,                 level=> 10 },
+  unquiet   => { sub => \&unquiet,               level=> 10 },
+  ignore    => { sub => \&ignore_user,           level=> 10 }, 
+  unignore  => { sub => \&unignore_user,         level=> 10 },
+  ban       => { sub => \&ban_user,              level=> 10 }, 
+  unban     => { sub => \&unban_user,            level=> 10 }, 
+  kick      => { sub => \&kick_nick,             level=> 10 },
+  login     => { sub => \&login,                 level=> 0  },
+  logout    => { sub => \&logout,                level=> 0  },
+  join      => { sub => \&join_channel,          level=> 50 },
+  part      => { sub => \&part_channel,          level=> 50 },
+  addadmin  => { sub => \&add_admin,             level=> 40 },
+  deladmin  => { sub => \&del_admin,             level=> 40 }, 
+  die       => { sub => \&ack_die,               level=> 50 } 
 );
 
 #set up handlers for the IRC engine
 $conn->add_handler([ 251,252,253,254,302,255 ], \&on_init);
 $conn->add_handler(376                        , \&on_connect    );
 $conn->add_handler('disconnect'               , \&on_disconnect );
+$conn->add_handler('caction'                  , \&on_action     );
 $conn->add_handler('public'                   , \&on_public     );
 $conn->add_handler('msg'                      , \&on_msg        );
 $conn->add_handler('mode'                     , \&on_mode       );
@@ -310,6 +327,26 @@ sub list {
   
   if(not defined $arguments) {
     return "/msg $nick Usage: list <modules|factoids|commands|admins>";
+  }
+
+  if($arguments =~/^messages\s+(.*?)\s+(.*)$/) {
+    my $nick_search = $1;
+    my $channel = $2;
+
+    if(not exists $flood_watch{$nick}) {
+      return "/msg $nick No messages for $nick_search yet.";
+    }
+
+    if(not exists $flood_watch{$nick}{$channel}) {
+      return "/msg $nick No messages for $nick_search in $channel yet.";
+    }
+
+    my @messages = @{ $flood_watch{$nick}{$channel}{messages} };
+
+    for(my $i = 0; $i <= $#messages; $i++) {
+      $conn->privmsg($nick, "" . ($i + 1) . ": " . $messages[$i]->{msg} . "\n");
+    }
+    return "";
   }
 
   if($arguments =~ /^modules$/i) {
@@ -1430,11 +1467,11 @@ sub save_channels {
 }
 
 sub load_commands {
+  plog "Loading commands from $commands_file ...\n";
+  
   open(FILE, "< $commands_file") or die "Couldn't open $commands_file: $!\n";
   my @contents = <FILE>;
   close(FILE);
-
-  plog "Loading commands from $commands_file ...\n";
 
   my $i = 0;
   foreach my $line (@contents) {
@@ -1502,8 +1539,6 @@ sub load_admins {
 sub save_admins {
 }
 
-my %flood_watch = ();
-
 sub check_flood {
   my ($nick, $host, $channel, $max, $mode, $msg) = @_;
   my $now = gettimeofday;
@@ -1565,6 +1600,149 @@ sub check_flood {
     $flood_watch{$nick}{$channel}{messages} = [];
     push(@{ $flood_watch{$nick}{$channel}{messages} }, { timestamp => $now, msg => $msg, mode => $mode });
   }
+}
+
+sub quotegrab {
+  my ($from, $nick, $host, $arguments) = @_;
+
+  if(not defined $arguments) {
+    return "Usage: !grab <nick> [history] -- where [history] is an optional argument that is an integer number of recent messages; e.g., to grab the 3rd most recent message for nick, use !grab nick 3";
+  }
+
+  my ($grab_nick, $grab_history) = split(/\s+/, $arguments, 2);
+
+  $grab_history = 1 if not defined $grab_history;
+
+  if($grab_history < 1 || $grab_history > $MAX_NICK_MESSAGES) {
+    return "/msg $nick Please choose a history between 1 and $MAX_NICK_MESSAGES";
+  }
+
+  if(not exists $flood_watch{$grab_nick}) {
+    return "No message history for $grab_nick.";
+  }
+
+  if(not exists $flood_watch{$grab_nick}{$from}) {
+    return "No message history for $grab_nick in $from.";
+  }
+  
+  my @messages = @{ $flood_watch{$grab_nick}{$from}{messages} };
+
+  $grab_history--;
+  
+  if($grab_history > $#messages) {
+    return "$grab_nick has only " . ($#messages + 1) . " messages in the history.";
+  }
+
+  $grab_history = $#messages - $grab_history;
+
+  plog "$nick ($from) grabbed <$grab_nick> $messages[$grab_history]->{msg}\n";
+
+  my $quotegrab = {};
+  $quotegrab->{nick} = $grab_nick;
+  $quotegrab->{channel} = $from;
+  $quotegrab->{timestamp} = $messages[$grab_history]->{timestamp};
+  $quotegrab->{grabbed_by} = $nick;
+  $quotegrab->{text} = $messages[$grab_history]->{msg};
+  push @quotegrabs, $quotegrab;
+  save_quotegrabs();
+  my $msg = $messages[$grab_history]->{msg};
+  $msg =~ s/(.{8}).*/$1.../;
+  return "Quote grabbed: " . ($#quotegrabs + 1) . ": <$grab_nick> $msg";
+}
+
+sub show_quotegrab {
+  my ($from, $nick, $host, $arguments) = @_;
+
+  if($arguments < 1 || $arguments > $#quotegrabs + 1) {
+    return "/msg $nick Valid range for !getq is 1 - " . ($#quotegrabs + 1);
+  }
+
+  my $quotegrab = $quotegrabs[$arguments - 1];
+  return "$arguments: <$quotegrab->{nick}> $quotegrab->{text}";
+}
+
+sub show_random_quotegrab {
+  my ($from, $nick, $host, $arguments) = @_;
+  my @quotes = ();
+  my $nick_search = ".*";
+  my $channel_search = $from;
+  my $channel_search_quoted = quotemeta($channel_search);
+
+  if(defined $arguments) {
+    ($nick_search, $channel_search) = split(/\s+/, $arguments, 2);
+    if(not defined $channel_search) {
+      $channel_search = $from;
+      $channel_search_quoted = quotemeta($channel_search);
+    }
+  } 
+
+  eval {
+    for(my $i = 0; $i <= $#quotegrabs; $i++) {
+      my $hash = $quotegrabs[$i];
+      if($hash->{channel} =~ /$channel_search_quoted/i && $hash->{nick} =~ /$nick_search/) {
+        $hash->{id} = $i + 1;
+        push @quotes, $hash;
+      }
+    }
+  };
+
+  if($@) {
+    plog "Error in show_random_quotegrab parameters: $@\n";
+    return "/msg $nick Error: $@"
+  }
+  
+  if($#quotes < 0) {
+    if($nick_search eq ".*") {
+      return "No quotes grabbed for $channel_search yet.  Use !grab to grab a quote.";
+    } else {
+      return "No quotes grabbed for $nick_search in $channel_search yet.  Use !grab to grab a quote.";
+    }
+  }
+
+  my $quotegrab = $quotes[int rand($#quotes + 1)];
+  return "$quotegrab->{id}: <$quotegrab->{nick}> $quotegrab->{text}";
+}
+
+sub load_quotegrabs {
+  plog "Loading quotegrabs from $quotegrabs_file ...\n";
+  
+  open(FILE, "< $quotegrabs_file") or die "Couldn't open $quotegrabs_file: $!\n";
+  my @contents = <FILE>;
+  close(FILE);
+
+  my $i = 0;
+  foreach my $line (@contents) {
+    chomp $line;
+    $i++;
+    my ($nick, $channel, $timestamp, $grabbed_by, $text) = split(/\s+/, $line, 5);
+    if(not defined $nick || not defined $channel || not defined $timestamp
+       || not defined $grabbed_by || not defined $text) {
+      die "Syntax error around line $i of $quotegrabs_file\n";
+    }
+
+    my $quotegrab = {};
+    $quotegrab->{nick} = $nick;
+    $quotegrab->{channel} = $channel;
+    $quotegrab->{timestamp} = $timestamp;
+    $quotegrab->{grabbed_by} = $grabbed_by;
+    $quotegrab->{text} = $text;
+    push @quotegrabs, $quotegrab;
+  }
+  plog "  $i quotegrabs loaded.\n";
+  plog "Done.\n";
+}
+
+sub save_quotegrabs {
+  open(FILE, "> $quotegrabs_file") or die "Couldn't open $quotegrabs_file: $!\n";
+
+  for(my $i = 0; $i <= $#quotegrabs; $i++) {
+    my $quotegrab = $quotegrabs[$i];
+    next if $quotegrab->{timestamp} == 0;
+    print FILE "$quotegrab->{nick} $quotegrab->{channel} $quotegrab->{timestamp} $quotegrab->{grabbed_by} $quotegrab->{text}\n";
+  }
+
+  close(FILE);
+  system("cp $quotegrabs_file $quotegrabs_file.bak");
 }
 
 sub quiet_nick_timed {
@@ -1819,6 +1997,12 @@ sub on_msg {
   $text =~ s/^!?(.*)/\!$1/;
   $event->{to}[0]   = $nick;
   $event->{args}[0] = $text;
+  on_public($conn, $event);
+}
+
+sub on_action {
+  my ($conn, $event) = @_;
+  
   on_public($conn, $event);
 }
 
