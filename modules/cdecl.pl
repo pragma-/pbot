@@ -10,21 +10,8 @@ if ($#ARGV < 0) {
 
 my $command = join(' ', @ARGV);
 
-$command =~ s/-[^ ]+//g;
-$command =~ s/\\//g;
-$command =~ s/;/\\;/g;
-$command =~ s/\(/\\(/g;
-$command =~ s/\)/\\)/g;
-$command =~ s/\$/\\\$/g;
-$command =~ s/\[/\\[/g;
-$command =~ s/\]/\\]/g;
-$command =~ s/\|/\\|/g;
-$command =~ s/'/\\'/g;
-$command =~ s/`/\\`/g;
-$command =~ s/,/\\,/g;
-$command =~ s/\*/\\*/g;
-$command =~ s/\?/\\?/g;
-
+$command = quotemeta($command);
+$command =~ s/\\ / /g;
 #print "[$command]\n";
 my $result = `/usr/bin/cdecl -c $command`;
 
