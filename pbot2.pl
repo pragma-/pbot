@@ -8,13 +8,18 @@
 # Version History:
 ########################
 
-my $VERSION = "0.4.4";
+my $VERSION = "0.4.6";
 
 ########################
 # todo! add support for admin management - needs support for adding/removing/saving!
 # todo! multi-channel support pathetic (note 12/08/09, fixed multi-channel for anti-flood and for ignore)
 # todo! most of this crap needs to be refactored (note 11/23/09, refactored execute_module)
+# todo! fix quotegrab ids -- ids not adjusted when quotegrab deleted
+# todo! make all hash keys case-insensitive!
 # 
+# 0.4.6 (03/06/10): channel name now always lower-cased in hashes
+#                   added trigger for NOTICE events
+# 0.4.5 (12/11/09): set quotegrab id when loading and grabbing; export quotegrabs to webpage
 # 0.4.4 (12/10/09): added [channel] optional parameter to !grab
 #                   fixed !rq's [channel] parameter
 # 0.4.3 (12/10/09): added !delq to delete quotegrabs
@@ -138,9 +143,14 @@ my $ircserver         = 'irc.freenode.net';
 my $botnick           = 'candide';
 my $altbotnick        = 'candide_';
 my $identify_password = '*';
+
 my $export_factoids_timeout = 300; # every 5 minutes
 my $export_factoids_time = gettimeofday + $export_factoids_timeout;
 my $export_factoids_path = "$home/htdocs/candide/factoids.html";
+
+my $export_quotegrabs_timeout = 300; # every 5 minutes
+my $export_quotegrabs_time = gettimeofday + $export_quotegrabs_timeout;
+my $export_quotegrabs_path = "$home/htdocs/candide/quotegrabs.html";
 
 my $MAX_FLOOD_MESSAGES = 4;
 my $MAX_NICK_MESSAGES = 8;
@@ -155,8 +165,8 @@ my %flood_watch = ();
 my $max_msg_len = 460;
 my %commands   =  ( version => { 
                        enabled   => 1, 
-                       owner     => "pragma_", 
-                       text      => "pbot2 version $VERSION", 
+                       owner     => "candide", 
+                       text      => "/say pbot2 version $VERSION", 
                        timestamp => 0,
                        ref_count => 0, 
                        ref_user  => "nobody" } 
@@ -167,6 +177,7 @@ my @quotegrabs   =  ({
                        text      => "Who's a bot?", 
                        channel   => "#pbot2", 
                        grabbed_by => "pragma_", 
+                       id         => 1,
                        timestamp => 0 
                      });
 
@@ -242,6 +253,7 @@ my %internal_commands = (
 $conn->add_handler([ 251,252,253,254,302,255 ], \&on_init);
 $conn->add_handler(376                        , \&on_connect    );
 $conn->add_handler('disconnect'               , \&on_disconnect );
+$conn->add_handler('notice'                   , \&on_notice     );
 $conn->add_handler('caction'                  , \&on_action     );
 $conn->add_handler('public'                   , \&on_public     );
 $conn->add_handler('msg'                      , \&on_msg        );
@@ -284,6 +296,10 @@ sub export {
     return "/msg $nick Coming soon.";
   }
 
+  if($arguments =~ /^quotegrabs$/i) {
+    return export_quotegrabs(); 
+  }
+
   if($arguments =~ /^factoids$/i) {
     return export_factoids(); 
   }
@@ -322,7 +338,46 @@ sub export_factoids() {
   close(FILE);
   #plog "$i factoids exported.\n";
   return "$i factoids exported to http://blackshell.com/~msmud/candide/factoids.html";
+}
 
+sub export_quotegrabs() { 
+  my $text;
+  my $last_channel = "";
+  my $had_table = 0;
+  open FILE, "> $export_quotegrabs_path" or return "Could not open export path.";
+  my $time = localtime;
+  print FILE "<html><body><i>Generated at $time</i><hr><h1>Candide's Quotegrabs</h1>\n";
+  my $i = 0;
+  foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or $$a{nick} cmp $$b{nick} } @quotegrabs) {
+    if(not $quotegrab->{channel} =~ /^$last_channel$/i) {
+      print FILE "</table>\n" if $had_table;
+      print FILE "<hr><h2>$quotegrab->{channel}</h2><hr>\n";
+      print FILE "<table border=\"0\">\n";
+      $had_table = 1;
+    }
+
+    $last_channel = $quotegrab->{channel};
+    $i++;
+
+    if($i % 2) {
+      print FILE "<tr bgcolor=\"#dddddd\">\n";
+    } else {
+      print FILE "<tr>\n";
+    }
+    print FILE "<td>" . ($quotegrab->{id}) . "</td>";
+    $text = "<td><b>&lt;$quotegrab->{nick}&gt;</b> " . encode_entities($quotegrab->{text}) . "</td>\n"; 
+    print FILE $text;
+    my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime($quotegrab->{timestamp});
+    my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d\n",
+      $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
+    print FILE "<td align=\"right\">- grabbed by<br> $quotegrab->{grabbed_by}<br><i>$t</i>\n";
+    print FILE "</td></tr>\n";
+  }
+
+  print FILE "</table>\n";
+  print FILE "<hr>$i quotegrabs grabbed.<br>This page is automatically generated every $export_quotegrabs_timeout seconds.</body></html>";
+  close(FILE);
+  return "$i quotegrabs exported to http://blackshell.com/~msmud/candide/quotegrabs.html";
 }
 
 sub list {
@@ -337,15 +392,15 @@ sub list {
     my $nick_search = $1;
     my $channel = $2;
 
-    if(not exists $flood_watch{$nick}) {
+    if(not exists $flood_watch{$nick_search}) {
       return "/msg $nick No messages for $nick_search yet.";
     }
 
-    if(not exists $flood_watch{$nick}{$channel}) {
+    if(not exists $flood_watch{$nick_search}{$channel}) {
       return "/msg $nick No messages for $nick_search in $channel yet.";
     }
 
-    my @messages = @{ $flood_watch{$nick}{$channel}{messages} };
+    my @messages = @{ $flood_watch{$nick_search}{$channel}{messages} };
 
     for(my $i = 0; $i <= $#messages; $i++) {
       $conn->privmsg($nick, "" . ($i + 1) . ": " . $messages[$i]->{msg} . "\n");
@@ -552,7 +607,7 @@ sub info {
       localtime($commands{$arguments}{timestamp});
     my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d",
               $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
-    return "$arguments: Module loaded by $commands{$arguments}{owner} on $t -> http://pragma.homeip.net/stuff/scripts/$commands{$arguments}{module}, used $commands{$arguments}{ref_count} times (last by $commands{$arguments}{ref_user})"; 
+    return "$arguments: Module loaded by $commands{$arguments}{owner} on $t -> http://code.google.com/p/pbot2-pl/source/browse/trunk/modules/$commands{$arguments}{module}, used $commands{$arguments}{ref_count} times (last by $commands{$arguments}{ref_user})"; 
   }
 
   # regex
@@ -928,11 +983,13 @@ sub unignore_user {
 
 sub check_ignore {
   my ($nick, $host, $channel) = @_;
+  $channel = lc $channel;
 
   my $hostmask = "$nick" . '@' . "$host";
 
   foreach my $ignored (keys %ignore_list) {
     foreach my $ignored_channel (keys %{ $ignore_list{$ignored} }) {
+      plog "check_ignore: comparing '$hostmask' against '$ignored' for channel '$channel'\n";
       if(($channel =~ /$ignored_channel/i) && ($hostmask =~ /$ignored/i)) {
         plog "$nick ($host) message ignored in channel $channel (matches [$ignored] host and [$ignored_channel] channel)\n";
         return 1;
@@ -944,6 +1001,7 @@ sub check_ignore {
 sub join_channel {
   my ($from, $nick, $host, $arguments) = @_;
 
+  # FIXME -- update %channels hash?
   plog "$nick ($host) made me join $arguments\n";
   $conn->join($arguments);
   return "/msg $nick Joined $arguments";
@@ -952,6 +1010,7 @@ sub join_channel {
 sub part_channel {
   my ($from, $nick, $host, $arguments) = @_;
 
+  # FIXME -- update %channels hash?
   plog "$nick ($host) made me part $arguments\n";
   $conn->part($arguments);
   return "/msg $nick Parted $arguments";
@@ -1451,20 +1510,27 @@ sub load_channels {
     if(not defined $channel || not defined $is_op || not defined $enabled) {
       die "Syntax error around line $i of $channels_file\n";
     }
+
+    $channel = lc $channel;
+
     if(defined $channels{$channel}) {
       die "Duplicate channel $channel found in $channels_file around line $i\n";
     }
+    
     $channels{$channel}{enabled} = $enabled;
     $channels{$channel}{is_op} = $is_op;
     $channels{$channel}{showall} = $showall;
-    plog "  Adding channel $channel ...\n";
+    
+    plog "  Adding channel $channel (enabled: $enabled, op: $is_op, showall: $showall) ...\n";
   }
+  
   plog "Done.\n";
 }
 
 sub save_channels {
   open(FILE, "> $channels_file") or die "Couldn't open $channels_file: $!\n";
   foreach my $channel (keys %channels) {
+    $channel = lc $channel;
     print FILE "$channel $channels{$channel}{enabled} $channels{$channel}{is_op} $channels{$channel}{showall}\n";
   }
   close(FILE);
@@ -1547,25 +1613,28 @@ sub check_flood {
   my ($nick, $host, $channel, $max, $mode, $msg) = @_;
   my $now = gettimeofday;
 
-  # plog "check flood $nick $host [$channel] $max $mode $msg\n";
+  $channel = lc $channel;
+   
+  #plog "check flood $nick $host [$channel] $max $mode $msg\n";
 
   return if $nick eq $botnick;
 
   if(exists $flood_watch{$nick}) {
-    # plog "nick exists\n";
+    #plog "nick exists\n";
 
     if(not exists $flood_watch{$nick}{$channel}) {
-      # plog "adding new channel for existing nick\n";
+      #plog "adding new channel for existing nick\n";
       $flood_watch{$nick}{$channel}{offenses} = 0;
       $flood_watch{$nick}{$channel}{messages} = [];
     }
 
-    # plog "appending new message\n";
+    #plog "appending new message\n";
+    
     push(@{ $flood_watch{$nick}{$channel}{messages} }, { timestamp => $now, msg => $msg, mode => $mode });
 
     my $length = $#{ $flood_watch{$nick}{$channel}{messages} } + 1;
 
-    # plog "length: $length, max nick messages: $MAX_NICK_MESSAGES\n";
+    #plog "length: $length, max nick messages: $MAX_NICK_MESSAGES\n";
 
     if($length >= $MAX_NICK_MESSAGES) {
       my %msg = %{ shift(@{ $flood_watch{$nick}{$channel}{messages} }) };
@@ -1575,12 +1644,14 @@ sub check_flood {
 
     return if $channels{$channel}{is_op} == 0;
 
+    #plog "length: $length, max: $max\n";
+
     if($length >= $max) {
-      #plog "More than $max messages spoken, comparing time differences\n";
+      # plog "More than $max messages spoken, comparing time differences\n";
       my %msg = %{ @{ $flood_watch{$nick}{$channel}{messages} }[$length - $max] };
       my %last = %{ @{ $flood_watch{$nick}{$channel}{messages} }[$length - 1] };
 
-      #plog "Comparing $last{timestamp} against $msg{timestamp}\n";
+      #plog "Comparing $last{timestamp} against $msg{timestamp}: " . ($last{timestamp} - $msg{timestamp}) . " seconds\n";
 
       if($last{timestamp} - $msg{timestamp} <= 10 && not loggedin($nick, $host)) {
         $flood_watch{$nick}{$channel}{offenses}++;
@@ -1598,7 +1669,7 @@ sub check_flood {
       }
     }
   } else {
-    # plog "brand new nick addition\n";
+    #plog "brand new nick addition\n";
     # new addition
     $flood_watch{$nick}{$channel}{offenses}  = 0;
     $flood_watch{$nick}{$channel}{messages} = [];
@@ -1648,6 +1719,7 @@ sub quotegrab {
   $quotegrab->{timestamp} = $messages[$grab_history]->{timestamp};
   $quotegrab->{grabbed_by} = $nick;
   $quotegrab->{text} = $messages[$grab_history]->{msg};
+  $quotegrab->{id} = $#quotegrabs + 2;
   push @quotegrabs, $quotegrab;
   save_quotegrabs();
   my $msg = $messages[$grab_history]->{msg};
@@ -1748,6 +1820,7 @@ sub load_quotegrabs {
     $quotegrab->{timestamp} = $timestamp;
     $quotegrab->{grabbed_by} = $grabbed_by;
     $quotegrab->{text} = $text;
+    $quotegrab->{id} = $i + 1;
     push @quotegrabs, $quotegrab;
   }
   plog "  $i quotegrabs loaded.\n";
@@ -1841,6 +1914,12 @@ sub check_unban_timeouts {
 
 sub check_export_timeout {
   my $now = gettimeofday;
+  
+  if($now > $export_quotegrabs_time) {
+    export_quotegrabs;
+    $export_quotegrabs_time = $now + $export_quotegrabs_timeout;
+  }
+  
   if($now > $export_factoids_time) {
     export_factoids;
     $export_factoids_time = $now + $export_factoids_timeout;
@@ -1893,14 +1972,14 @@ sub sig_alarm_handler {
 
 sub on_connect {
   my $conn = shift;
+  plog "Connected!  Identifying with NickServ . . .\n";
   $conn->privmsg("nickserv", "identify $identify_password");
   $conn->{connected} = 1;
 }
 
 sub on_disconnect {
   my ($self, $event) = @_;
-  my $text = "Disconnected, attempting to reconnect...\n";
-  plog $text;
+  plog "Disconnected, attempting to reconnect...\n";
   $self->connect();
   if(not $self->connected) {
     sleep(5);
@@ -1925,6 +2004,7 @@ sub on_public {
   my $host = $event->host;
   my $text = $event->{args}[0];
   my $from = $event->{to}[0];
+  $from = lc $from;
   my ($command, $args, $result);
   my $has_url = undef;
 
@@ -1944,7 +2024,7 @@ sub on_public {
   }
 
   if(defined $command || defined $has_url) {
-    if(defined $command && $command !~ /^login/i) {
+    if((defined $command && $command !~ /^login/i) || defined $has_url) {
       plog "ignored text: [$nick][$host][$from][$text]\n" and return if(check_ignore($nick, $host, $from) && not loggedin($nick, $host)); # ignored host
     }
 
@@ -1979,6 +2059,8 @@ sub on_public {
     } else {
       $result = execute_module($from, $nick, undef, $host, "title", "$nick http://$has_url");
     }
+    
+    $result =~ s/\$nick/$nick/g;
 
     if(defined $result && length $result > 0) {
       my $len = length $result;
@@ -2022,6 +2104,23 @@ sub on_msg {
   on_public($conn, $event);
 }
 
+sub on_notice {
+  my ($conn, $event) = @_;
+  my ($nick, $host) = ($event->nick, $event->host);
+  my $text = $event->{args}[0];
+
+  plog "Received NOTICE from $nick $host '$text'\n";
+
+  if($nick eq "NickServ" && $text =~ m/You are now identified/i) {
+    foreach my $chan (keys %channels) {
+      if($channels{$chan}{enabled} != 0) {
+        plog "Joining channel:  $chan\n";
+        $conn->join($chan);
+      }
+    }
+  }
+}
+
 sub on_action {
   my ($conn, $event) = @_;
   
@@ -2034,6 +2133,7 @@ sub on_mode {
   my $mode = $event->{args}[0];
   my $target = $event->{args}[1];
   my $from = $event->{to}[0];
+  $from = lc $from;
 
   plog "Got mode:  nick: $nick, host: $host, mode: $mode, target: $target, from: $from\n";
 
