@@ -1,0 +1,118 @@
+#
+# TODO: Make InternalCommands have Setter function add_internal_command(%hash) and move all itnernal commands to respective modules
+# TODO: Tons of more of refactoring and clean-ups and conversion to OOP
+#
+# TODO: add support for admin management - needs support for adding/removing/saving! [for 1.0]
+# TODO: multi-channel support pathetic (note 12/08/09, fixed multi-channel for anti-flood and for ignore)
+#       e.g., factoids need channel parameter, e.g. C factoids vs. C++ factoids (with an option to allow a factoid across all channels)
+#       [for 1.0]
+# TODO: most of this crap needs to be refactored (note 11/23/09, refactored execute_module; 03/12/10, refactored and cleaned up a lot)
+# TODO: fix quotegrab ids -- ids not adjusted when quotegrab deleted [for 0.5.0]
+# TODO: make most, if not all, hash key comparisions case-insensitive, but store values with case intact! [for 0.5.0]
+# 
+# 0.5.0-beta (03/16/10): split single large pbot2.pl file into packages and modules 
+#                   replaced nick@host with full nick!user@host hostmask throughout [TODO for admin stuff (logged_in, etc)]
+#                   ignore list saves/loads [TODO]
+#                   factoids/modules now case-insensitive in interpret_command
+#                   when using !tell foo about bar, replaced "(nick)" on end of text with "nick wants you to know:" at beginning of text
+#                   added STDIN reader and pass all input to interpret_command (was fun working out the POSIX suspend/bg/fg kinks!)
+#                   lots of code clean-up and refactoring
+# 0.4.6 (03/06/10): channel name now always lower-cased in hashes
+#                   added trigger for NOTICE events
+# 0.4.5 (12/11/09): set quotegrab id when loading and grabbing; export quotegrabs to webpage
+# 0.4.4 (12/10/09): added [channel] optional parameter to !grab
+#                   fixed !rq's [channel] parameter
+# 0.4.3 (12/10/09): added !delq to delete quotegrabs
+# 0.4.2 (12/09/09): added support for quotegrabs: !grab, !getq, and !rq
+# 0.4.1 (12/08/09): improved anti-flood system to be significantly more accurate and per-channel
+#                   added per-nick-per-channel message history using %flood_watch
+#                   add per-channel support to ignore system
+#                   automatically remove message history for nicks that haven't spoken in one day (run once per hour)
+#                   do not ignore !login command
+# 0.3.16(11/23/09): refactored module execution to execute_module() subroutine
+#                   added trigger to execute get_title.pl module when URL is
+#                   detected in regular untriggered chat
+# 0.3.15(11/20/09): replace 'me' with '$nick' in arguments
+# 0.3.14(07/03/07): do not expand escaped dollar-signs in factoids (adlib)
+# 0.3.13(07/01/07): fork all modules
+#                   added unload_module, enable_command, disable_command
+#                   automatically export factoids every $export_factoids_timeout seconds
+# 0.3.12(05/20/07): lol?  Prevent recursive aliasing infinite loop, x -> a, a -> x
+# 0.3.11(05/20/07): added 'alias'
+# 0.3.10(05/08/05): dont ban by nick, wait for nickserv response before joining chans
+# 0.3.9 (05/06/05): stop logging joins, fixed join flood ban?
+# 0.3.8 (04/28/05): changed 'top10' to 'top20' throughout
+# 0.3.7 (04/28/05): 'top10 recent' command lists 10 most recent factoid additions
+# 0.3.6 (04/15/05): join/part flood earns ban (broken, I'm lazy)
+# 0.3.5 (03/24/05): fix bug in interpret_command re $commands and $keyword
+#                   keeps track of op state in multi-channels (but not commands)
+#                   added nick searching to top10
+# 0.3.4 (03/22/05): added kick
+#                   list also lists admins
+#                   ban also kicks nick
+#                   unban also modes -b in addition to ChanServ AUTOREM DEL
+#                   oops, moved $is_opped = 0 from lose_ops() to on_mode()
+# 0.3.3 (03/21/05): added ban, unban using ChanServ AUTOREM
+# 0.3.2 (03/20/05): stays opped for a minimum of 5 minutes before deop
+# 0.3.1 (03/18/05): log out departed admins
+#                   implemented ignore and unignore
+#                   flooding with commands triggers timed ignore
+#                   no flood consequences for logged in admins
+# 0.3.0 (03/17/05): Hi-res timer support.
+#                   renamed %admin_commands to %internal_commands
+#                   added admin levels to %admin_commands
+#                   added access levels to internal commands
+#                   interpret_command uses access levels and checks login status
+#                   removed all extraneous loggedin() checks
+#                   internal commands processed before bot commands
+#                   added flood control
+#                   flooding channel tiggers timed quiet
+# 0.2.18(03/16/05): direct at $nick within channel
+# 0.2.17(03/11/05): Most confirmation and warning messages sent via /msg
+#                   restricted parsing to bot's name or ! only
+# 0.2.16(03/02/05): added '/msg'
+#                   /msg doesn't show ($nick) if admin
+# 0.2.15(02/20/05): special variable lists, "adlibs"
+# 0.2.14(02/19/05): added $botnick and $altbotnick
+#                   added more rules to trigger interpret_command
+#                   added '/me'
+#                   added '$args', allowed factoids to take arguments    
+# 0.2.13(02/19/05): added '/say' for no '<foo> is'
+#                   added $nick expansion in factoids
+#                   added 'show' command to display factoid literal          
+# 0.2.12(02/16/05): improved html for export
+#                   added 'commands' to list command
+# 0.2.11(02/12/05): added popularity to 'info' command
+#                   'top10' command for factoids
+# 0.2.10(02/07/05): added histogram command
+# 0.2.9 (02/03/05): info <factoid> || info <module>
+#                   find <factoid keyword>
+#                   use eval {} in change_text
+#                   count <nick> returns # of factoids <nick> has submitted
+# 0.2.8 (02/02/05): change_text: show result of change
+#                   ... debugging prints throughout
+#                   Allowed factoids to be appended using 'is also'
+# 0.2.7 (01/27/05): Removed '<command> for <nick>' syntax to direct
+#                   a command at a user.  Using 'tell <nick> about <command>'
+#                   instead.
+# 0.2.6 (01/22/05): Major source overhaul.
+#                   Allowed any non-word character to be used
+#                   as delimiter in change_text.
+# 0.2.5 (01/18/05): Don't die in save_commands.
+# 0.2.4 (01/18/05): Added 'change' command. 
+# 0.2.3 (01/17/05): Allowed factoids to be added using '%foo is bar' 
+# 0.2.2 (01/17/05): Responds only when addressed or explicitly triggered.
+# 0.2.1 (01/17/05): Allowed trailing question marks.  
+#                   Allowed 'is' for add_text.
+#                   Some minor bug fixes.
+#                   Aliased forget => remove.
+# 0.2.0 (01/16/05): Revamped hash structures for factoids.
+#                   All commands have a timestamp and owner.
+#                   Added 'export' command and modifed 'list'.
+# 0.1.4 (01/16/05): Minor tweaks and fixes for logging.
+# 0.1.3 (01/16/05): Can direct commands at nicks.
+#                   example: man fork for <nick>
+# 0.1.2 (01/15/05): Added 'list' admin command.
+# 0.1.1 (01/15/05): Some minor tweaks and fixes.
+# 0.1.0 (01/15/05): Initial version
+
