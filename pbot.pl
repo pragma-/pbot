@@ -37,8 +37,8 @@ my %config = ( log_file => "$home/pbot/log",
                export_quotegrabs_timeout => 300, # 5 minutes
 
                ircserver => 'irc.freenode.net',
-               botnick   => 'pragma__',
-               identify_password => 'hopelus',
+               botnick   => 'pbot3',
+               identify_password => '*',
              );
 
 my $pbot = PBot::PBot->new(%config);
