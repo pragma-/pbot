@@ -8,10 +8,10 @@
 # Version History:
 ########################
 
-my $VERSION = "0.5.0-beta";
+my $VERSION = "1.0.0";
 
 ########################
-# 0.5.0-beta (03/14/10): Initial version using PBot::PBot module
+# 1.0.0 (03/14/10): Initial version using PBot::PBot module
 
 use strict;
 use warnings;
@@ -22,22 +22,27 @@ my $home = $ENV{HOME};
 
 my %config = ( log_file => "$home/pbot/log",
 
-               channels_file   => "$home/pbot/channels",
-               commands_file   => "$home/pbot/commands",
-               quotegrabs_file => "$home/pbot/quotegrabs",
+               admins_file          => "$home/pbot/admins",
+               channels_file        => "$home/pbot/channels",
+
+               factoids_file           => "$home/pbot/factoids",
+               export_factoids_path    => "$home/pbot/factoids.html",
+               export_factoids_site    => 'http://blackshell.com/~msmud/pbot2/factoids.html',
+               export_factoids_timeout => 300, # 5 minutes
+               module_dir              => "$home/pbot/modules",
+
+               quotegrabs_file           => "$home/pbot/quotegrabs",
+               export_quotegrabs_path    => "$home/pbot/quotegrabs.html",
+               export_quotegrabs_site    => 'http://blackshell.com/~msmud/pbot2/quotegrabs.html',
+               export_quotegrabs_timeout => 300, # 5 minutes
 
                ircserver => 'irc.freenode.net',
-               botnick   => 'pbot3'
+               botnick   => 'pragma__',
+               identify_password => 'hopelus',
              );
 
 my $pbot = PBot::PBot->new(%config);
 
-$pbot->load_channels();
-$pbot->load_quotegrabs();
-$pbot->load_commands();
+$pbot->start();
 
-$pbot->connect();
-
-while(1) {
-  $pbot->do_one_loop();
-}
+# not reached

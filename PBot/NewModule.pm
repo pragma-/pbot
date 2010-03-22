@@ -1,5 +1,5 @@
 # File: NewModule.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: New module skeleton
 
@@ -9,15 +9,9 @@ use warnings;
 use strict;
 
 BEGIN {
-  use Exporter ();
-  use vars qw($VERSION @ISA @EXPORT_OK);
-
+  use vars qw($VERSION);
   $VERSION = $PBot::PBot::VERSION;
-  @ISA = qw(Exporter);
-  @EXPORT_OK = qw();
 }
-
-use vars @EXPORT_OK;
 
 use Carp ();
 
@@ -28,22 +22,22 @@ sub new {
 
   my ($class, %conf) = @_;
 
+  my $self = bless {}, $class;
+  $self->initialize(%conf);
+  return $self;
+}
+
+sub initialize {
+  my ($self, %conf) = @_;
+ 
   my $option = delete $conf{option};
+  $option = 10 unless defined $option; # set to default value unless defined
 
   if(defined $option) {
     # do something (optional)
-  } else {
-    # set default value (optional)
-    $option = undef;
   }
 
-  my $self = {
-    option => $option,
-  };
-
-  bless $self, $class;
-
-  return $self;
+  $self->{option} = $option;
 }
 
 # subs here

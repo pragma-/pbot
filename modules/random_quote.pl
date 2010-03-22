@@ -53,7 +53,7 @@ while(1) {
     $author =~ s/\++$//;
 
 #    print "http://www.quotationspage.com/search.php3?Search=$arguments&startsearch=Search&Author=$author&C=mgm&C=motivate&C=classic&C=coles&C=poorc&C=lindsly&C=net&C=devils&C=contrib&page=$page\n";
-    $response = $ua->get("http://www.quotationspage.com/search.php3?Search=$arguments&startsearch=Search&Author=$author&C=mgm&C=motivate&C=classic&C=coles&C=poorc&C=lindsly&C=net&C=devils&C=contrib&page=$page");
+    $response = $ua->get("http://www.quotationspage.com/search.php3?Search=$arguments&startsearch=Search&Author=$author&C=mgm&C=motivate&C=classic&C=coles&C=poorc&C=lindsly&C=net&C=contrib&page=$page");
   }
 
   if (not $response->is_success)

@@ -445,7 +445,7 @@ common text 1 pragma_ 1230993541 2 cousteau http://www.myconfinedspace.com/wp-co
 comparch text 1 pragma_ 1180158061 1 pragma_ http://dept-info.labri.fr/~strandh/Teaching/AMP/Common/Strandh-Tutorial/Dir.html
 compilerline text 1 PoppaVic 1266709397 2 PoppaVic Order Matters: CC <overall options> [-std=whatever] <debugging> <optimizing> <warnings> [-pedantic] <Other Include Paths> <Other Lib Paths> <Magic Defines> <Magic Undefines> [-f<language/platform options] [-m<machine options>] [-o outfile] files..... (this is all documented, and files can be .c or .o, .a or .so, or -l<to be linked> commands.) <paraphrased from man gcc>
 compliance text 1 n00p 1263936847 0 nobody !portability
-compliment module 1 pragma_ 1255395343 37 notk0 compliment
+compliment module 1 pragma_ 1255395343 38 pragma__ compliment
 const text 1 prec 1107648578 19 kuala http://publications.gbdirect.co.uk/c_book/chapter8/const_and_volatile.html - see section 8.4.1, http://c-faq.com/ansi/constmismatch.html
 continue text 1 Major-Willard 1104888657 4 pragma_ the statement used recommence the currently executing block
 controlstack text 1 PoppaVic 1174907617 2 lemonade`_ http://www.answers.com/topic/call-stack
@@ -561,7 +561,7 @@ gettimeofday text 1 Major-Willard 1104639290 0 nobody a function that returns th
 gigo text 1 prec 1177948351 5 zu22 Garbage In, Garbage Out -- http://c-faq.com/malloc/malloc1.html
 gnumake text 1 pragma_ 1194222910 1 pragma_ http://www.gnu.org/software/make/manual/make.pdf
 godprogrammer text 1 pragma_ 1260214264 9 lemonade` /say It's not unreasonable that if computer programmers developed an autonomous self-learning/self-correcting AI world and allowed it to run for several billion iterations; then came back to it, that they may not be able to alter it without destroying it. If such a programmer were to have orginally created debug routines and backdoors, such code would ultimately point to obsolete code regions.
-google module 1 pragma_ 1105953714 572 PoppaVic google.pl
+google module 1 pragma_ 1105953714 573 pragma_ google.pl
 gotchas text 1 kate` 1244833982 102 Dianora /say http://www.iso-9899.info/wiki/C_gotchas
 goto text 1 Baughn 1186325626 6 cousteau http://imgs.xkcd.com/comics/goto.png
 greenspun text 1 mauke 1108933892 3 leth /say Greenspun's Tenth Rule of Programming: "Any sufficiently complicated C or Fortran program contains an ad-hoc, informally-specified bug-ridden slow implementation of half of Common Lisp."
@@ -582,7 +582,7 @@ hello text 1 pragma_ 1179679787 54 pragma_ /call hi
 helloworld text 1 pragma_ 1237684920 0 nobody http://www.lisha.ufsc.br/~guto/teaching/os/exercise/hello.html
 help text 1 NeverDream 1109792986 398 Chris /say To learn all about me, see http://www.iso-9899.info/wiki/Candide
 herring text 1 Baughn 1173805492 1 rhc a vicious species, loyal only to Baughn. Attempts to wrest control of the Herring Hordes can result in consequences similar to http://fukung.net/v/2833/15cod.jpg .
-hi text 1 pragma_ 1109044278 709 pragma_ /say $hi_phrases, $nick
+hi text 1 pragma_ 1109044278 733 pragma_ /say $hi_phrases, $nick
 hi_phrases text 1 pragma_ 1109044257 1 dav7 "Well, hello there" "Hi there" "Hey, whats up" Hola Hi Hello "Que pasa"
 hint text 1 pragma_ 1205575974 1 pragma_ http://www.yesfunny.com/Sports/sports8.jpeg -- in other words, are you sure C is for you?
 hit text 1 pragma_ 1258701405 3 pragma_ /call slap
@@ -605,7 +605,7 @@ idiot text 1 pragma_ 1194139898 6 mordy_ moron knucklehead dolt half-wit retard 
 if text 1 Major-Willard 1105258377 10 M1TE5H the keyword that tests a bracketed expression and if true, executes the following statement or block; if the expression evaluates to false an optional ''else'' clause is executed
 ignore text 1 snhmib 1204687457 0 nobody nubsauce
 implementation text 1 pragma_ 1106459085 1 pragma_ a particular set of software, running in a particular translation environment under particular control options, that performs translation of programs for, and supports execution of functions in, a particular execution environment (ISO/IEC 9899:1999 3.12)
-insult module 1 pragma_ 1236819209 349 pragma_ insult.pl
+insult module 1 pragma_ 1236819209 353 pragma_ insult.pl
 int text 1 infobahn 1104595147 17 n00p a signed integer data type, at least 16 bits wide, which must be able to represent (at least) all the numbers in the range -32767 to +32767. Its lowest value, INT_MIN, and highest value, INT_MAX, are defined in <limits.h>
 integer text 1 prec 1189048945 2 cousteau http://wikipedia.org/wiki/Integer
 intelmanuals text 1 ColonelJ 1260039944 0 nobody http://developer.intel.com/products/processor/manuals/index.htm
@@ -649,7 +649,7 @@ linkageandstorage text 1 kate` 1221600612 3 Wulf_ /say http://www.iso-9899.info/
 literal text 1 pragma_ 1179678945 7 kuala /call show
 little text 1 Pip 1250423849 0 nobody horny
 livelife text 1 PARLIAMENT 1264393732 2 PARLIAMENT /say $sfq
-lol text 1 syntropy_ 1254011046 12 tuxedomask /say hello
+lol text 1 syntropy_ 1254011046 13 qwertypus /say hello
 long text 1 infobahn 1104595499 7 bros a signed integer data type, at least 32 bits wide, which must be able to represent (at least) all the integers in the range -2147483647 to +2147483647. Its lowest value, LONG_MIN, and highest value, LONG_MAX, are defined in <limits.h>
 look\sup\s([^\s]+) regex 1 pragma_ 1194261643 0 nobody man $1
 lsb text 1 PoppaVic 1182000690 4 lemonade` http://refspecs.freestandards.org/LSB_2.1.0/LSB-generic/LSB-generic/book1.html
@@ -803,7 +803,7 @@ rule3 text 1 PoppaVic 1106163837 3 Koper "Finally, make it run fast or small (pi
 rules text 1 gunninK 1264177779 2 gunninK $nick rules
 rvalue text 1 Wulf_ 1251745571 1 Wulf_ the "value of an expression"
 s&w text 1 ment 1251220163 1 ment when k&r fails, try http://www.smith-wesson.com/
-say text 1 pragma_ 1251663502 299 candide /say $args
+say text 1 pragma_ 1251663502 306 candide /say $args
 scanf text 1 Major-Willard 1106970012 271 Dianora a function that's stupid - "It's nearly impossible to do decent error recovery with scanf; usually it's far easier to read entire lines (with fgets or the like), then interpret them, either using sscanf or some other techniques." - See http://www.eskimo.com/~scs/C-faq/q12.20.html
 scanf_is_stupid text 1 n00p 1264982172 1 pragma_ /say It looks like the !scanf factoid was unsuccessful at convincing you not to use scanf(). scanf() isn't really that stupid, providing you know how to use it correctly. Chris Torek explains some problems with the way scanf() is commonly used and provides methods of solving those problems here: http://bytes.com/topic/c/answers/215517-warning-against-scanf#post840862
 schildt text 1 twkm 1105514020 13 pragma_ please avoid herbert schildt's books, see http://www.iso-9899.info/wiki/Main_Page#Stuff_that_should_be_avoided

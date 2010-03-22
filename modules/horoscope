@@ -1,2 +1,2 @@
 #!/bin/sh
-/home/msmud/pbot2/modules/lookupbot.pl horoscope $*
+~/pbot/modules/lookupbot.pl horoscope $*

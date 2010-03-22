@@ -22,24 +22,26 @@ if($phrase =~ m/([0-9]+)%20(.*)/)
   $phrase = $2;
 }
 
-$text = get("http://dictionary.reference.com/search?q=$phrase");
+$text = get("http://dictionary.reference.com/browse/$phrase");
 
 $phrase =~ s/\%20/ /g;
 
-if($text =~ m/because there was not a match on/i)
+if($text =~ m/no dictionary results/i)
 {
   print "No entry found for '$phrase'. ";
 
   
-  if($text =~ m/Dictionary suggestions:/g)
+  if($text =~ m/Did you mean <a class.*?>(.*?)<\/a>/g)
   {
-    print "Suggestions: ";
+    print "Did you mean '$1'?  Alternate suggestions: ";
 
     $i = 90;
-    while($text =~ m/<a href="\/search\?r=2&amp;q=.*?>(.*?)<\/a>/g && $i > 0)
+    $comma = "";
+    while($text =~ m/<div id="spellSuggestWrapper"><li .*?><a href=.*?>(.*?)<\/a>/g && $i > 0)
     {
-      print "$1, ";
+      print "$comma$1";
       $i--;
+      $comma = ", ";
     }
   }
 

@@ -25,7 +25,8 @@ sub check_stdin {
   return if not $foreground;
   
   if ($stdin->can_read(.5)) {
-    chomp(my $input = <STDIN>);
+    sysread(STDIN, my $input, 1024);
+    chomp $input;
     return $input;
   }
 }

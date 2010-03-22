@@ -1,5 +1,5 @@
 # File: IRCHandlers.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: Subroutines to handle IRC events
 
@@ -9,55 +9,60 @@ use warnings;
 use strict;
 
 BEGIN {
-  use Exporter ();
-  use vars qw($VERSION @ISA @EXPORT_OK);
-
+  use vars qw($VERSION);
   $VERSION = $PBot::PBot::VERSION;
-  @ISA = qw(Exporter);
-  @EXPORT_OK = qw($logger $identify_password %channels $botnick %is_opped %unban_timeout %admins);
 }
 
-use vars @EXPORT_OK;
+sub new {
+  if(ref($_[1]) eq 'HASH') {
+    Carp::croak("Options to IRCHandlers should be key/value pairs, not hash reference");
+  }
 
-*logger = \$PBot::PBot::logger;
-*unban_timeout = \%PBot::OperatorStuff::unban_timeout;
-*admins = \%PBot::BotAdminStuff::admins;
-*channels = \%PBot::ChannelStuff::channels;
-*identify_password = \$PBot::PBot::identify_password;
-*botnick = \$PBot::PBot::botnick;
-*is_opped = \%PBot::OperatorStuff::is_opped;
+  my ($class, %conf) = @_;
 
-use Time::HiRes qw(gettimeofday);
+  my $self = bless {}, $class;
+  $self->initialize(%conf);
+  return $self;
+}
+
+sub initialize {
+  my ($self, %conf) = @_;
+ 
+  my $pbot = delete $conf{pbot};
+  Carp::croak("Missing pbot parameter to IRCHandlers") if not defined $pbot;
+
+  $self->{pbot} = $pbot;
+}
 
 # IRC related subroutines
 #################################################
 
 sub on_connect {
-  my $conn = shift;
-  $logger->log("Connected!  Identifying with NickServ . . .\n");
-  $conn->privmsg("nickserv", "identify $identify_password");
+  my ($self, $conn) = @_;
+  $self->{pbot}->logger->log("Connected!  Identifying with NickServ . . .\n");
+  $conn->privmsg("nickserv", "identify " . $self->pbot->identify_password);
   $conn->{connected} = 1;
 }
 
 sub on_disconnect {
-  my ($self, $event) = @_;
-  $logger->log("Disconnected, attempting to reconnect...\n");
-  $self->connect();
-  if(not $self->connected) {
+  my ($self, $conn, $event) = @_;
+  $self->{pbot}->logger->log("Disconnected, attempting to reconnect...\n");
+  $conn->connect();
+  if(not $conn->connected) {
     sleep(5);
-    on_disconnect($self, $event) 
+    on_disconnect($self, $conn, $event) 
   }
 }
 
 sub on_init {
-  my ($self, $event) = @_;
+  my ($self, $conn, $event) = @_;
   my (@args) = ($event->args);
   shift (@args);
-  $logger->log("*** @args\n");
+  $self->{pbot}->logger->log("*** @args\n");
 }
 
 sub on_public {
-  my ($conn, $event) = @_;
+  my ($self, $conn, $event) = @_;
   
   my $from = $event->{to}[0];
   my $nick = $event->nick;
@@ -65,31 +70,31 @@ sub on_public {
   my $host = $event->host;
   my $text = $event->{args}[0];
 
-  PBot::Interpreter::process_line($from, $nick, $user, $host, $text);
+  $self->pbot->interpreter->process_line($from, $nick, $user, $host, $text);
 }
 
 sub on_msg {
-  my ($conn, $event) = @_;
+  my ($self, $conn, $event) = @_;
   my ($nick, $host) = ($event->nick, $event->host);
   my $text = $event->{args}[0];
 
   $text =~ s/^!?(.*)/\!$1/;
   $event->{to}[0]   = $nick;
   $event->{args}[0] = $text;
-  on_public($conn, $event);
+  on_public($self, $conn, $event);
 }
 
 sub on_notice {
-  my ($conn, $event) = @_;
+  my ($self, $conn, $event) = @_;
   my ($nick, $host) = ($event->nick, $event->host);
   my $text = $event->{args}[0];
 
-  $logger->log("Received NOTICE from $nick $host '$text'\n");
+  $self->{pbot}->logger->log("Received NOTICE from $nick $host '$text'\n");
 
   if($nick eq "NickServ" && $text =~ m/You are now identified/i) {
-    foreach my $chan (keys %channels) {
-      if($channels{$chan}{enabled} != 0) {
-        $logger->log("Joining channel:  $chan\n");
+    foreach my $chan (keys %{ $self->{pbot}->channels->channels }) {
+      if(${ $self->{pbot}->channels->channels }{$chan}{enabled} != 0) {
+        $self->{pbot}->logger->log("Joining channel:  $chan\n");
         $conn->join($chan);
       }
     }
@@ -97,33 +102,34 @@ sub on_notice {
 }
 
 sub on_action {
-  my ($conn, $event) = @_;
+  my ($self, $conn, $event) = @_;
   
-  on_public($conn, $event);
+  on_public($self, $conn, $event);
 }
 
 sub on_mode {
-  my ($conn, $event) = @_;
+  my ($self, $conn, $event) = @_;
   my ($nick, $host) = ($event->nick, $event->host);
   my $mode = $event->{args}[0];
   my $target = $event->{args}[1];
   my $channel = $event->{to}[0];
   $channel = lc $channel;
 
-  $logger->log("Got mode:  nick: $nick, host: $host, mode: $mode, target: " . (defined $target ? $target : "") . ", channel: $channel\n");
+  $self->{pbot}->logger->log("Got mode:  nick: $nick, host: $host, mode: $mode, target: " . (defined $target ? $target : "") . ", channel: $channel\n");
+=cut
 
   if(defined $target && $target eq $botnick) { # bot targeted
     if($mode eq "+o") {
-      $logger->log("$nick opped me in $channel\n");
+      $self->{pbot}->logger->log("$nick opped me in $channel\n");
       if(exists $is_opped{$channel}) {
-        $logger->log("warning: erm, I was already opped?\n");
+        $self->{pbot}->logger->log("warning: erm, I was already opped?\n");
       }
       $is_opped{$channel}{timeout} = gettimeofday + 300; # 5 minutes
       PBot::OperatorStuff::perform_op_commands();
     } elsif($mode eq "-o") {
-      $logger->log("$nick removed my ops in $channel\n");
+      $self->{pbot}->logger->log("$nick removed my ops in $channel\n");
       if(not exists $is_opped{$channel}) {
-        $logger->log("warning: erm, I wasn't opped?\n");
+        $self->{pbot}->logger->log("warning: erm, I wasn't opped?\n");
       }
       delete $is_opped{$channel};
     }    
@@ -136,33 +142,46 @@ sub on_mode {
     } elsif($mode eq "+e" && $channel eq $botnick) {
       foreach my $chan (keys %channels) {
         if($channels{$chan}{enabled} != 0) {
-          $logger->log("Joining channel:  $chan\n");
+          $self->{pbot}->logger->log("Joining channel:  $chan\n");
           $conn->join($chan);
         }
       }
     }
   }
+=cut
 }
 
 sub on_join {
-  my ($conn, $event) = @_;
+  my ($self, $conn, $event) = @_;
   my ($nick, $host, $channel) = ($event->nick, $event->host, $event->to);
 
-  #$logger->log("$nick!$user\@$host joined $channel\n");
+  #$self->{pbot}->logger->log("$nick!$user\@$host joined $channel\n");
   #check_flood($nick, $host, $channel, 3, $FLOOD_JOIN);
 }
 
 sub on_departure {
-  my ($conn, $event) = @_;
+  my ($self, $conn, $event) = @_;
   my ($nick, $host, $channel) = ($event->nick, $event->host, $event->to);
 
   #check_flood($nick, $host, $channel, 3, $FLOOD_JOIN);
 
+=cut
   if(exists $admins{$nick} && exists $admins{$nick}{login}) { 
-    $logger->log("Whoops, $nick left while still logged in.\n");
-    $logger->log("Logged out $nick.\n");
+    $self->{pbot}->logger->log("Whoops, $nick left while still logged in.\n");
+    $self->{pbot}->logger->log("Logged out $nick.\n");
     delete $admins{$nick}{login};
   }
+=cut
+}
+
+sub logger {
+  my $self = shift;
+  return $self->{logger};
+}
+
+sub pbot {
+  my $self = shift;
+  return $self->{pbot};
 }
 
 1;

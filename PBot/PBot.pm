@@ -9,51 +9,41 @@ use strict;
 use warnings;
 
 BEGIN {
-  use Exporter ();
-  use vars qw($VERSION @ISA @EXPORT_OK);
-
-  $VERSION = "0.5.0-beta";
-  @ISA = qw(Exporter);
-  # TODO: move all of these into the pbot object and pass that around instead
-  @EXPORT_OK = qw($VERSION %flood_watch $logger %commands $conn %admins $botnick %internal_commands
-                  %is_opped @op_commands %quieted_nicks %ignore_list %unban_timeout @quotegrabs
-                  $channels_file $MAX_NICK_MESSAGES %flood_watch $quotegrabs_file $export_quotegrabs_path $export_quotegrabs_timeout
-                  $commands_file $module_dir $admins_file $export_factoids_timeout $export_factoids_path $max_msg_len
-                  $export_factoids_time $export_quotegrabs_time $MAX_FLOOD_MESSAGES $identify_password);
+  use vars qw($VERSION);
+  $VERSION = "0.6.0-beta";
 }
-
-use vars @EXPORT_OK;
 
 # unbuffer stdout
 STDOUT->autoflush(1);
 
-use Net::IRC;                            # for the main IRC engine
-use HTML::Entities;                      # for exporting
-use Time::HiRes qw(gettimeofday alarm);  # for timers
 use Carp ();
-use Data::Dumper;
-
 use PBot::Logger;
-use PBot::IRCHandlers;
-use PBot::InternalCommands;
-use PBot::ChannelStuff;
+
 use PBot::StdinReader;
-use PBot::Quotegrabs;
-use PBot::FactoidStuff;
-use PBot::Interpreter;
-use PBot::IgnoreList;
-use PBot::BotAdminStuff;
-use PBot::Modules;
+
+use Net::IRC;
+use PBot::IRCHandlers;
+
 use PBot::AntiFlood;
-use PBot::OperatorStuff;
-use PBot::TimerStuff;
+use PBot::Interpreter;
+use PBot::Commands;
 
-*admins = \%PBot::BotAdminStuff::admins;
-*commands = \%PBot::FactoidStuff::commands;
-*quotegrabs = \@PBot::Quotegrabs::quotegrabs;
+use PBot::ChanOps;
+use PBot::Channels;
 
-# TODO: Move these into pbot object
-my $ircserver;
+use PBot::Quotegrabs;
+#use PBot::QuotegrabCommands;
+
+use PBot::Factoids; 
+use PBot::FactoidCommands;
+
+use PBot::BotAdmins;
+use PBot::BotAdminCommands;
+
+use PBot::IgnoreList;
+use PBot::IgnoreListCommands;
+
+use PBot::Timer;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -62,127 +52,174 @@ sub new {
 
   my ($class, %conf) = @_;
 
-  my $log_file          = delete $conf{log_file};
-
-  # TODO: Move all of these into pbot object
-  $channels_file     = delete $conf{channels_file};
-  $commands_file     = delete $conf{commands_file};
-  $quotegrabs_file   = delete $conf{quotegrabs_file};
-  $admins_file       = delete $conf{admins_file};
-  $module_dir        = delete $conf{module_dir};
-  $ircserver         = delete $conf{ircserver};
-  $botnick           = delete $conf{botnick};
-  $identify_password = delete $conf{identify_password};
-  $max_msg_len       = delete $conf{max_msg_len};
-
-  $export_factoids_timeout = delete $conf{export_factoids_timeout};
-  $export_factoids_path = delete $conf{export_factoids_path};
-
-  $export_quotegrabs_timeout = delete $conf{export_quotegrabs_timeout}; 
-  $export_quotegrabs_path = delete $conf{export_quotegrabs_path};
-
-  $MAX_FLOOD_MESSAGES = delete $conf{MAX_FLOOD_MESSAGES};
-  $MAX_NICK_MESSAGES = delete $conf{MAX_NICK_MESSAGES};
-
-  my $home = $ENV{HOME};
-  $channels_file      = "$home/pbot/channels" unless defined $channels_file;
-  $commands_file      = "$home/pbot/commands" unless defined $commands_file;
-  $quotegrabs_file    = "$home/pbot/quotegrabs" unless defined $quotegrabs_file;
-  $admins_file        = "$home/pbot/admins" unless defined $admins_file;
-  $module_dir         = "$home/pbot/modules" unless defined $module_dir;
-  $ircserver          = "irc.freenode.net" unless defined $ircserver;
-  $botnick            = "pbot2" unless defined $botnick;
-  $identify_password  = "" unless defined $identify_password;
-
-  $export_factoids_timeout  = -1 unless defined $export_factoids_timeout;
-  $export_factoids_time  = gettimeofday + $export_factoids_timeout;
-
-  $export_quotegrabs_timeout  = -1 unless defined $export_quotegrabs_timeout;
-  $export_quotegrabs_time  = gettimeofday + $export_quotegrabs_timeout;
-
-  $max_msg_len  = 460 unless defined $max_msg_len;
-  $MAX_FLOOD_MESSAGES  = 4 unless defined $MAX_FLOOD_MESSAGES;
-  $MAX_NICK_MESSAGES  = 8 unless defined $MAX_NICK_MESSAGES;
-
-  $commands{version} = {
-                       enabled   => 1, 
-                       owner     => $botnick,
-                       text      => "/say pbot2 version $VERSION", 
-                       timestamp => 0,
-                       ref_count => 0, 
-                       ref_user  => "nobody" }; 
-
-  # TODO: wrap these in Setters/Getters
-  unshift @quotegrabs, ({ 
-                       nick      => $botnick,
-                       text      => "Who's a bot?", 
-                       channel   => "#pbot2", 
-                       grabbed_by => "pragma_", 
-                       id         => 1,
-                       timestamp => 0 });
-
-  $admins{$botnick} = { 
-                       password => '*', 
-                       level    => 50,
-                       login    => 1,
-                       host => "localhost" };
-  
-  my $self = {
-    # TODO: add conf variables here
-  };
-
-  $logger = new PBot::Logger(log_file => $log_file);
-
-  bless $self, $class;
+  my $self = bless {}, $class;
+  $self->initialize(%conf);
   return $self;
 }
 
-my $irc = new Net::IRC;
+sub initialize {
+  my ($self, %conf) = @_;
+
+  my $log_file          = delete $conf{log_file};
+  my $channels_file     = delete $conf{channels_file};
+  my $admins_file       = delete $conf{admins_file};
+  
+  my $botnick           = delete $conf{botnick};
+  my $identify_password = delete $conf{identify_password};
+
+  my $ircserver          = delete $conf{ircserver};
+  my $max_msg_len        = delete $conf{max_msg_len};
+  my $MAX_FLOOD_MESSAGES = delete $conf{MAX_FLOOD_MESSAGES};
+  my $MAX_NICK_MESSAGES  = delete $conf{MAX_NICK_MESSAGES};
+
+  my $factoids_file           = delete $conf{factoids_file};
+  my $export_factoids_timeout = delete $conf{export_factoids_timeout};
+  my $export_factoids_path    = delete $conf{export_factoids_path};
+  my $export_factoids_site    = delete $conf{export_factoids_site};
+  my $module_dir              = delete $conf{module_dir};
+
+  my $quotegrabs_file           = delete $conf{quotegrabs_file};
+  my $export_quotegrabs_timeout = delete $conf{export_quotegrabs_timeout}; 
+  my $export_quotegrabs_path    = delete $conf{export_quotegrabs_path};
+  my $export_quotegrabs_site    = delete $conf{export_quotegrabs_site};
+
+  $ircserver          = "irc.freenode.net" unless defined $ircserver;
+  $botnick            = "pbot2"            unless defined $botnick;
+  $identify_password  = ""                 unless defined $identify_password;
+
+  $max_msg_len        = 460 unless defined $max_msg_len;
+  $MAX_FLOOD_MESSAGES = 4   unless defined $MAX_FLOOD_MESSAGES;
+  $MAX_NICK_MESSAGES  = 8   unless defined $MAX_NICK_MESSAGES;
+
+  $self->{botnick} = $botnick;
+  $self->{identify_password} = $identify_password;
+
+  $self->{max_msg_len} = $max_msg_len;
+  $self->{MAX_FLOOD_MESSAGES} = $MAX_FLOOD_MESSAGES;
+  $self->{MAX_NICK_MESSAGES} = $MAX_NICK_MESSAGES;
+  $self->{FLOOD_CHAT} = 0;
+
+  my $logger = PBot::Logger->new(log_file => $log_file);
+  $self->{logger} = $logger;
+
+  $self->{admins} = PBot::BotAdmins->new(
+    pbot => $self,
+    filename => $admins_file,
+  );
+
+  $self->admins->load_admins();
+  $self->admins->add_admin('*', "$botnick!stdin\@localhost", 50, 'admin');
+  $self->admins->login('*', "$botnick!stdin\@localhost", "admin");
+
+  $self->{factoids} = PBot::Factoids->new(
+      pbot        => $self,
+      filename    => $factoids_file, 
+      export_path => $export_factoids_path, 
+      export_site => $export_factoids_site, 
+  );
+
+  $self->factoids->add_factoid('text', '.*', $botnick, 'version', "/say pbot2 version $VERSION");
+  $self->factoids->load_factoids() if defined $factoids_file;
+
+  $self->module_dir($module_dir);
+
+  $self->{commands} = PBot::Commands->new(pbot => $self);
+
+  $self->{antiflood} = PBot::AntiFlood->new(pbot => $self);
+  $self->{ignorelist} = PBot::IgnoreList->new(pbot => $self);
+
+  $self->interpreter(PBot::Interpreter->new(pbot => $self));
+  $self->interpreter->register(sub { return $self->commands->interpreter(@_); });
+  $self->interpreter->register(sub { return $self->factoids->interpreter(@_); });
+
+  $self->{botadmincmds}   = PBot::BotAdminCommands->new(pbot => $self);
+  $self->{factoidcmds}    = PBot::FactoidCommands->new(pbot => $self);
+  $self->{ignorelistcmds} = PBot::IgnoreListCommands->new(pbot => $self);
+
+  $self->{irc}         = Net::IRC->new();
+  $self->{ircserver}   = $ircserver;
+  $self->{irchandlers} = PBot::IRCHandlers->new(pbot => $self);
+
+  $self->{channels} = PBot::Channels->new(pbot => $self, filename => $channels_file);
+  $self->channels->load_channels() if defined $channels_file;
+
+  $self->{chanops} = PBot::ChanOps->new(pbot => $self);
+
+  $self->{timer} = PBot::Timer->new(timeout => 10);
+  $self->timer->register(sub { $self->factoids->export_factoids     }, $export_factoids_timeout)   if defined $export_factoids_path;
+#  $self->timer->register(sub { $self->quotegrabs->export_quotegrabs }, $export_quotegrabs_timeout) if defined $export_quotegrabs_path;
+  $self->timer->start();
+}
+
+# TODO: add disconnect subroutine
 
 sub connect {
   my ($self, $server) = @_;
 
-  $server = $ircserver if not defined $server;
+  $server = $self->ircserver if not defined $server;
 
-  $logger->log("Connecting to $server ...\n");
-  $conn = $irc->newconn( 
-    Nick         => $botnick,
-    Username     => 'pbot3',                                 # FIXME: make this config
-    Ircname      => 'http://www.iso-9899.info/wiki/Candide', # FIXME: make this config
+  if($self->{connected}) {
+    # TODO: disconnect, clean-up, etc
+  }
+
+  $self->logger->log("Connecting to $server ...\n");
+
+  $self->conn($self->irc->newconn( 
+    Nick         => $self->{botnick},
+    Username     => $self->{username},
+    Ircname      => $self->{ircname},
     Server       => $server,
-    Port         => 6667)                                    # FIXME: make this config
-    or die "$0: Can't connect to IRC server.\n";
+    Port         => $self->{port}))
+      or Carp::croak "$0: Can't connect to IRC server.\n";
 
-  #set up handlers for the IRC engine
-  $conn->add_handler([ 251,252,253,254,302,255 ], \&PBot::IRCHandlers::on_init       );
-  $conn->add_handler(376                        , \&PBot::IRCHandlers::on_connect    );
-  $conn->add_handler('disconnect'               , \&PBot::IRCHandlers::on_disconnect );
-  $conn->add_handler('notice'                   , \&PBot::IRCHandlers::on_notice     );
-  $conn->add_handler('caction'                  , \&PBot::IRCHandlers::on_action     );
-  $conn->add_handler('public'                   , \&PBot::IRCHandlers::on_public     );
-  $conn->add_handler('msg'                      , \&PBot::IRCHandlers::on_msg        );
-  $conn->add_handler('mode'                     , \&PBot::IRCHandlers::on_mode       );
-  $conn->add_handler('part'                     , \&PBot::IRCHandlers::on_departure  );
-  $conn->add_handler('join'                     , \&PBot::IRCHandlers::on_join       );
-  $conn->add_handler('quit'                     , \&PBot::IRCHandlers::on_departure  );
+  $self->{connected} = 1;
+
+  #set up default handlers for the IRC engine
+  $self->conn->add_handler([ 251,252,253,254,302,255 ], sub { $self->irchandlers->on_init(@_)       });
+  $self->conn->add_handler(376                        , sub { $self->irchandlers->on_connect(@_)    });
+  $self->conn->add_handler('disconnect'               , sub { $self->irchandlers->on_disconnect(@_) });
+  $self->conn->add_handler('notice'                   , sub { $self->irchandlers->on_notice(@_)     });
+  $self->conn->add_handler('caction'                  , sub { $self->irchandlers->on_action(@_)     });
+  $self->conn->add_handler('public'                   , sub { $self->irchandlers->on_public(@_)     });
+  $self->conn->add_handler('msg'                      , sub { $self->irchandlers->on_msg(@_)        });
+  $self->conn->add_handler('mode'                     , sub { $self->irchandlers->on_mode(@_)       });
+  $self->conn->add_handler('part'                     , sub { $self->irchandlers->on_departure(@_)  });
+  $self->conn->add_handler('join'                     , sub { $self->irchandlers->on_join(@_)       });
+  $self->conn->add_handler('quit'                     , sub { $self->irchandlers->on_departure(@_)  });
 }
 
 #main loop
 sub do_one_loop {
+  my $self = shift;
+
   # process IRC events
-  $irc->do_one_loop();
+  $self->irc->do_one_loop();
 
   # process STDIN events
-  check_stdin();
+  $self->check_stdin();
+}
+
+sub start {
+  my $self = shift;
+
+  if(not defined $self->{connected} or $self->{connected} == 0) {
+    $self->connect();
+  }
+
+  while(1) {
+    $self->do_one_loop();
+  }
 }
 
 sub check_stdin {
+  my $self = shift;
+
   my $input = PBot::StdinReader::check_stdin();
 
   return if not defined $input;
 
-  $logger->log("---------------------------------------------\n");
-  $logger->log("Read '$input' from STDIN\n");
+  $self->logger->log("---------------------------------------------\n");
+  $self->logger->log("Read '$input' from STDIN\n");
 
   my ($from, $text);
 
@@ -194,19 +231,108 @@ sub check_stdin {
     $text = "!$input";
   }
 
-  return PBot::Interpreter::process_line($from, $botnick, "stdin", "localhost", $text);
+  return $self->interpreter->process_line($from, $self->{botnick}, "stdin", "localhost", $text);
 }
 
-sub load_channels {
-  return PBot::ChannelStuff::load_channels();
+sub irc {
+  my $self = shift;
+  return $self->{irc};
 }
 
-sub load_quotegrabs {
-  return PBot::Quotegrabs::load_quotegrabs();
+sub logger {
+  my $self = shift;
+  if(@_) { $self->{logger} = shift; }
+  return $self->{logger};
 }
 
-sub load_commands {
-  return PBot::FactoidStuff::load_commands();
+sub channels {
+  my $self = shift;
+  if(@_) { $self->{channels} = shift; }
+  return $self->{channels};
+}
+
+sub factoids {
+  my $self = shift;
+  if(@_) { $self->{factoids} = shift; }
+  return $self->{factoids};
+}
+
+sub timer {
+  my $self = shift;
+  if(@_) { $self->{timer} = shift; }
+  return $self->{timer};
+}
+
+sub conn {
+  my $self = shift;
+  if(@_) { $self->{conn} = shift; }
+  return $self->{conn};
+}
+
+sub irchandlers {
+  my $self = shift;
+  if(@_) { $self->{irchandlers} = shift; }
+  return $self->{irchandlers};
+}
+
+sub interpreter {
+  my $self = shift;
+  if(@_) { $self->{interpreter} = shift; }
+  return $self->{interpreter};
+}
+
+sub admins {
+  my $self = shift;
+  if(@_) { $self->{admins} = shift; }
+  return $self->{admins};
+}
+
+sub commands {
+  my $self = shift;
+  if(@_) { $self->{commands} = shift; }
+  return $self->{commands};
+}
+
+sub botnick {
+  my $self = shift;
+  if(@_) { $self->{botnick} = shift; }
+  return $self->{botnick};
+}
+
+sub identify_password {
+  my $self = shift;
+  if(@_) { $self->{identify_password} = shift; }
+  return $self->{identify_password};
+}
+
+sub max_msg_len {
+  my $self = shift;
+  if(@_) { $self->{max_msg_len} = shift; }
+  return $self->{max_msg_len};
+}
+
+sub module_dir {
+  my $self = shift;
+  if(@_) { $self->{module_dir} = shift; }
+  return $self->{module_dir};
+}
+
+sub ignorelist {
+  my $self = shift;
+  if(@_) { $self->{ignorelist} = shift; }
+  return $self->{ignorelist};
+}
+
+sub antiflood {
+  my $self = shift;
+  if(@_) { $self->{antiflood} = shift; }
+  return $self->{antiflood};
+}
+
+sub ircserver {
+  my $self = shift;
+  if(@_) { $self->{ircserver} = shift; }
+  return $self->{ircserver};
 }
 
 1;

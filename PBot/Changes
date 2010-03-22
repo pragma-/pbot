@@ -10,6 +10,8 @@
 # TODO: fix quotegrab ids -- ids not adjusted when quotegrab deleted [for 0.5.0]
 # TODO: make most, if not all, hash key comparisions case-insensitive, but store values with case intact! [for 0.5.0]
 # 
+# 0.6.0-beta (03/22/10): Converted everything into objects with zero exports.
+#                        Replaced <STDIN> with sysread(STDIN, ...) in StdinReader.pm as to not mix buffered IO with select()
 # 0.5.0-beta (03/16/10): split single large pbot2.pl file into packages and modules 
 #                   replaced nick@host with full nick!user@host hostmask throughout [TODO for admin stuff (logged_in, etc)]
 #                   ignore list saves/loads [TODO]
