@@ -50,7 +50,7 @@ sub on_disconnect {
   $conn->connect();
   if(not $conn->connected) {
     sleep(5);
-    on_disconnect($self, $conn, $event) 
+    on_disconnect($self, $conn, $event);
   }
 }
 

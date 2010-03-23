@@ -119,8 +119,8 @@ sub process_line {
     # TODO: move this to FactoidModuleLauncher somehow, completely out of Interpreter!
     if($pbot->factoids->{factoidmodulelauncher}->{child} != 0) {
       # if this process is a child, it must die now
-      #$pbot->logger->log("Terminating module.\n");
-      exit;
+      $pbot->logger->log("Terminating module.\n");
+      exit 0;
     }
   }
 }

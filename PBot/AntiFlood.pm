@@ -102,7 +102,7 @@ sub check_flood {
           }
         } else { # private message flood
           $self->{pbot}->logger->log("$nick msg flood offense ${ $self->message_history }{$nick}{$channel}{offenses} earned $length second ignore\n");
-          $self->{pbot}->ignorelist->ignore_user("", "floodcontrol", "", "$nick" . '@' . "$host $channel $length");
+          $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", "$nick!$user\@$host $channel $length");
         }
       }
     }

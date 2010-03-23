@@ -82,6 +82,9 @@ sub execute_module {
 
     return "/me moans loudly."; # er, didn't execute the module?
   } # end child block
+  else {
+    $self->{child} = 0;
+  }
   
   return ""; # child returns bot command, not parent -- so return blank/no command
 }

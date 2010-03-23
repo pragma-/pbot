@@ -69,23 +69,24 @@ sub list {
     return "/msg $nick Usage: list <modules|factoids|commands|admins>";
   }
 
-=cut move to PBot::AntiFlood somehow
   if($arguments =~/^messages\s+(.*?)\s+(.*)$/) {
     my $nick_search = $1;
     my $channel = $2;
 
-    if(not exists $flood_watch{$nick_search}) {
+    if(not exists ${ $self->{pbot}->antiflood->message_history }{$nick_search}) {
       return "/msg $nick No messages for $nick_search yet.";
     }
 
-    if(not exists $flood_watch{$nick_search}{$channel}) {
+    if(not exists ${ $self->{pbot}->antiflood->message_history }{$nick_search}{$channel}) {
       return "/msg $nick No messages for $nick_search in $channel yet.";
     }
 
-    my @messages = @{ $flood_watch{$nick_search}{$channel}{messages} };
+    my @messages = @{ ${ $self->{pbot}->antiflood->message_history }{$nick_search}{$channel}{messages} };
+    my $botnick = $self->{pbot}->botnick;
 
     for(my $i = 0; $i <= $#messages; $i++) {
-      $conn->privmsg($nick, "" . ($i + 1) . ": " . $messages[$i]->{msg} . "\n") unless $nick =~ /\Q$botnick\E/i;
+      $self->{pbot}->logger->log("" . ($i + 1) . ") " . localtime($messages[$i]->{timestamp}) . " <$nick_search> " . $messages[$i]->{msg} . "\n");
+      $self->{pbot}->conn->privmsg($nick, "" . ($i + 1) . ") " . localtime($messages[$i]->{timestamp}) . " <$nick_search> " . $messages[$i]->{msg} . "\n") unless $nick =~ /\Q$botnick\E/i;
     }
     return "";
   }
@@ -101,29 +102,27 @@ sub list {
   }
 
   if($arguments =~ /^commands$/i) {
-    $text = "Internal commands: ";
-    foreach my $command (sort keys %internal_commands) {
-      $text .= "$command ";
-      $text .= "($internal_commands{$command}{level}) " 
-        if $internal_commands{$command}{level} > 0;
+    $text = "Registered commands: ";
+    foreach my $command (sort { $a->{name} cmp $b->{name} } @{ $self->{pbot}->commands->{handlers} }) {
+      $text .= "$command->{name} ";
+      $text .= "($command->{level}) " if $command->{level} > 0;
     }
     return $text;
   }
 
   if($arguments =~ /^factoids$/i) {
-    return "For a list of factoids see http://blackshell.com/~msmud/candide/factoids.html";
+    return "For a list of factoids see " . $self->{pbot}->factoids->export_site;
   }
 
   if($arguments =~ /^admins$/i) {
     $text = "Admins: ";
-    foreach my $admin (sort { $admins{$b}{level} <=> $admins{$a}{level} } keys %admins) {
-      $text .= "*" if exists $admins{$admin}{login};
-      $text .= "$admin ($admins{$admin}{level}) ";
+    foreach my $admin (sort { ${ $self->{pbot}->admins->admins }{$b}{level} <=> ${ $self->{pbot}->admins->admins }{$a}{level} } keys %{ $self->{pbot}->admins->admins }) {
+      $text .= "*" if exists ${ $self->{pbot}->admins->admins }{$admin}{login};
+      $text .= "$admin (" . ${ $self->{pbot}->admins->admins }{$admin}{level} . ") ";
     }
     return $text;
   }
   return "/msg $nick Usage: list <modules|commands|factoids|admins>";
-=cut
 }
 
 sub alias {

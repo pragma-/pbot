@@ -48,7 +48,6 @@ sub ignore_user {
 
   my ($target, $channel, $length) = split /\s+/, $arguments;
 
-
   if(not defined $target) {
      return "/msg $nick Usage: ignore host [channel] [timeout]";
   }
@@ -82,7 +81,7 @@ sub ignore_user {
 sub unignore_user {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($target, $channel) = split /\s+/, $arguments;
+  my ($target, $channel) = split /\s+/, $arguments if defined $arguments;
 
   if(not defined $target) {
     return "/msg $nick Usage: unignore host [channel]";

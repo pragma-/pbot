@@ -35,6 +35,8 @@ sub initialize {
 
   $self->{pbot} = $pbot;
   $self->{ignore_list} = {};
+  $self->{ignore_flood_counter} = 0;
+  $self->{last_timestamp} = gettimeofday;
 }
 
 sub add {
@@ -54,9 +56,38 @@ sub remove {
 sub check_ignore {
   my $self = shift;
   my ($nick, $user, $host, $channel) = @_;
+  my $pbot = $self->{pbot};
   $channel = lc $channel;
 
   my $hostmask = "$nick!$user\@$host"; 
+
+  my $now = gettimeofday;
+
+  if(defined $channel) { # do not execute following if text is coming from STDIN ($channel undef)
+    if($channel =~ /^#/) {
+      $self->{ignore_flood_counter}++;  # TODO: make this per channel, e.g., ${ $self->{ignore_flood_counter} }{$channel}++
+      $pbot->logger->log("flood_msg: $self->{ignore_flood_counter}\n");
+    }
+
+    if($self->{ignore_flood_counter} > 4) {
+      $pbot->logger->log("flood_msg exceeded! [$self->{ignore_flood_counter}]\n");
+      $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", ".* $channel 300");
+      $self->{ignore_flood_counter} = 0;
+      if($channel =~ /^#/) {
+        $pbot->conn->me($channel, "has been overwhelmed.");
+        $pbot->conn->me($channel, "lies down and falls asleep."); 
+        return;
+      } 
+    }
+
+    if($now - $self->{last_timestamp} >= 15) {
+      $self->{last_timestamp} = $now;
+      if($self->{ignore_flood_counter} > 0) {
+        $pbot->logger->log("flood_msg reset: (was $self->{ignore_flood_counter})\n");
+        $self->{ignore_flood_counter} = 0;
+      }
+    }
+  }
 
   foreach my $ignored (keys %{ $self->{ignore_list} }) {
     foreach my $ignored_channel (keys %{ ${ $self->{ignore_list} }{$ignored} }) {
