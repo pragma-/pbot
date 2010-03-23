@@ -8,10 +8,8 @@ package PBot::PBot;
 use strict;
 use warnings;
 
-BEGIN {
-  use vars qw($VERSION);
-  $VERSION = "0.6.0-beta";
-}
+use vars qw($VERSION);
+$VERSION = "0.6.0-beta";
 
 # unbuffer stdout
 STDOUT->autoflush(1);
@@ -23,16 +21,14 @@ use PBot::StdinReader;
 
 use Net::IRC;
 use PBot::IRCHandlers;
+use PBot::Channels;
 
 use PBot::AntiFlood;
 use PBot::Interpreter;
 use PBot::Commands;
 
 use PBot::ChanOps;
-use PBot::Channels;
-
-use PBot::Quotegrabs;
-#use PBot::QuotegrabCommands;
+use PBot::ChanOpCommands;
 
 use PBot::Factoids; 
 use PBot::FactoidCommands;
@@ -42,6 +38,9 @@ use PBot::BotAdminCommands;
 
 use PBot::IgnoreList;
 use PBot::IgnoreListCommands;
+
+use PBot::Quotegrabs;
+# no PBot::QuotegrabsCommands (bundled inside PBot::Quotegrabs for a change)
 
 use PBot::Timer;
 
@@ -73,13 +72,11 @@ sub initialize {
   my $MAX_NICK_MESSAGES  = delete $conf{MAX_NICK_MESSAGES};
 
   my $factoids_file           = delete $conf{factoids_file};
-  my $export_factoids_timeout = delete $conf{export_factoids_timeout};
   my $export_factoids_path    = delete $conf{export_factoids_path};
   my $export_factoids_site    = delete $conf{export_factoids_site};
   my $module_dir              = delete $conf{module_dir};
 
   my $quotegrabs_file           = delete $conf{quotegrabs_file};
-  my $export_quotegrabs_timeout = delete $conf{export_quotegrabs_timeout}; 
   my $export_quotegrabs_path    = delete $conf{export_quotegrabs_path};
   my $export_quotegrabs_site    = delete $conf{export_quotegrabs_site};
 
@@ -102,6 +99,9 @@ sub initialize {
   my $logger = PBot::Logger->new(log_file => $log_file);
   $self->{logger} = $logger;
 
+  $self->{commands} = PBot::Commands->new(pbot => $self);
+  $self->{timer} = PBot::Timer->new(timeout => 10);
+
   $self->{admins} = PBot::BotAdmins->new(
     pbot => $self,
     filename => $admins_file,
@@ -123,8 +123,6 @@ sub initialize {
 
   $self->module_dir($module_dir);
 
-  $self->{commands} = PBot::Commands->new(pbot => $self);
-
   $self->{antiflood} = PBot::AntiFlood->new(pbot => $self);
   $self->{ignorelist} = PBot::IgnoreList->new(pbot => $self);
 
@@ -143,11 +141,19 @@ sub initialize {
   $self->{channels} = PBot::Channels->new(pbot => $self, filename => $channels_file);
   $self->channels->load_channels() if defined $channels_file;
 
-  $self->{chanops} = PBot::ChanOps->new(pbot => $self);
+  $self->{chanops}    = PBot::ChanOps->new(pbot => $self);
+  $self->{chanopcmds} = PBot::ChanOpCommands->new(pbot => $self);
 
-  $self->{timer} = PBot::Timer->new(timeout => 10);
-  $self->timer->register(sub { $self->factoids->export_factoids     }, $export_factoids_timeout)   if defined $export_factoids_path;
-#  $self->timer->register(sub { $self->quotegrabs->export_quotegrabs }, $export_quotegrabs_timeout) if defined $export_quotegrabs_path;
+  $self->{quotegrabs} = PBot::Quotegrabs->new(
+    pbot        => $self, 
+    filename    => $quotegrabs_file,
+    export_path => $export_quotegrabs_path,
+    export_site => $export_quotegrabs_site,
+  );
+
+  $self->quotegrabs->add_quotegrab($botnick, "#pbot2", 0, "pragma_", "Who's a bot?");
+  $self->quotegrabs->load_quotegrabs() if defined $quotegrabs_file;
+
   $self->timer->start();
 }
 
@@ -327,6 +333,18 @@ sub antiflood {
   my $self = shift;
   if(@_) { $self->{antiflood} = shift; }
   return $self->{antiflood};
+}
+
+sub quotegrabs {
+  my $self = shift;
+  if(@_) { $self->{quotegrabs} = shift; }
+  return $self->{quotegrabs};
+}
+
+sub chanops {
+  my $self = shift;
+  if(@_) { $self->{chanops} = shift; }
+  return $self->{chanops};
 }
 
 sub ircserver {

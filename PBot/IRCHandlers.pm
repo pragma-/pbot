@@ -8,10 +8,11 @@ package PBot::IRCHandlers;
 use warnings;
 use strict;
 
-BEGIN {
-  use vars qw($VERSION);
-  $VERSION = $PBot::PBot::VERSION;
-}
+use vars qw($VERSION);
+$VERSION = $PBot::PBot::VERSION;
+
+use Carp();
+use Time::HiRes qw(gettimeofday);
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -50,7 +51,7 @@ sub on_disconnect {
   $conn->connect();
   if(not $conn->connected) {
     sleep(5);
-    on_disconnect($self, $conn, $event);
+    $self->on_disconnect($self, $conn, $event);
   }
 }
 
@@ -81,7 +82,7 @@ sub on_msg {
   $text =~ s/^!?(.*)/\!$1/;
   $event->{to}[0]   = $nick;
   $event->{args}[0] = $text;
-  on_public($self, $conn, $event);
+  $self->on_public($conn, $event);
 }
 
 sub on_notice {
@@ -94,7 +95,7 @@ sub on_notice {
   if($nick eq "NickServ" && $text =~ m/You are now identified/i) {
     foreach my $chan (keys %{ $self->{pbot}->channels->channels }) {
       if(${ $self->{pbot}->channels->channels }{$chan}{enabled} != 0) {
-        $self->{pbot}->logger->log("Joining channel:  $chan\n");
+        $self->{pbot}->logger->log("Joining channel: $chan\n");
         $conn->join($chan);
       }
     }
@@ -104,7 +105,7 @@ sub on_notice {
 sub on_action {
   my ($self, $conn, $event) = @_;
   
-  on_public($self, $conn, $event);
+  $self->on_public($conn, $event);
 }
 
 sub on_mode {
@@ -116,39 +117,37 @@ sub on_mode {
   $channel = lc $channel;
 
   $self->{pbot}->logger->log("Got mode:  nick: $nick, host: $host, mode: $mode, target: " . (defined $target ? $target : "") . ", channel: $channel\n");
-=cut
 
-  if(defined $target && $target eq $botnick) { # bot targeted
+  if(defined $target && $target eq $self->{pbot}->botnick) { # bot targeted
     if($mode eq "+o") {
       $self->{pbot}->logger->log("$nick opped me in $channel\n");
-      if(exists $is_opped{$channel}) {
-        $self->{pbot}->logger->log("warning: erm, I was already opped?\n");
+      if(exists $self->{pbot}->chanops->{is_opped}->{$channel}) {
+        $self->{pbot}->logger->log("erm, I was already opped?\n");
       }
-      $is_opped{$channel}{timeout} = gettimeofday + 300; # 5 minutes
-      PBot::OperatorStuff::perform_op_commands();
+      $self->{pbot}->chanops->{is_opped}->{$channel}{timeout} = gettimeofday + 300; # 5 minutes
+      $self->{pbot}->chanops->perform_op_commands();
     } elsif($mode eq "-o") {
       $self->{pbot}->logger->log("$nick removed my ops in $channel\n");
-      if(not exists $is_opped{$channel}) {
+      if(not exists $self->{pbot}->chanops->{is_opped}->{$channel}) {
         $self->{pbot}->logger->log("warning: erm, I wasn't opped?\n");
       }
-      delete $is_opped{$channel};
+      delete $self->{pbot}->chanops->{is_opped}->{$channel};
     }    
   } else {  # bot not targeted
     if($mode eq "+b") {
       if($nick eq "ChanServ") {
-        $unban_timeout{$target}{timeout} = gettimeofday + 3600 * 2; # 2 hours
-        $unban_timeout{$target}{channel} = $channel;
+        $self->{pbot}->chanops->{unban_timeout}->{$target}{timeout} = gettimeofday + 3600 * 2; # 2 hours
+        $self->{pbot}->chanops->{unban_timeout}->{$target}{channel} = $channel;
       }
-    } elsif($mode eq "+e" && $channel eq $botnick) {
-      foreach my $chan (keys %channels) {
-        if($channels{$chan}{enabled} != 0) {
-          $self->{pbot}->logger->log("Joining channel:  $chan\n");
-          $conn->join($chan);
+    } elsif($mode eq "+e" && $channel eq $self->{pbot}->botnick) {
+      foreach my $chan (keys %{ $self->{pbot}->channels->channels }) {
+        if($self->channels->{channels}->{$chan}{enabled} != 0) {
+          $self->{pbot}->logger->log("Joining channel: $chan\n");
+          $self->{pbot}->conn->join($chan);
         }
       }
     }
   }
-=cut
 }
 
 sub on_join {
@@ -172,11 +171,6 @@ sub on_departure {
     delete $admins{$nick}{login};
   }
 =cut
-}
-
-sub logger {
-  my $self = shift;
-  return $self->{logger};
 }
 
 sub pbot {

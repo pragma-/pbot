@@ -43,20 +43,10 @@ sub initialize {
     Carp::croak("Missing pbot reference to Factoids");
   }
 
-  my $export_timeout = delete $conf{export_timeout};
-  if(not defined $export_timeout) {
-    if(defined $export_path) {
-      $export_timeout = 300; # every 5 minutes
-    } else {
-      $export_timeout = -1;
-    }
-  }
-
   $self->{factoids} = {};
   $self->{filename} = $filename;
   $self->{export_path} = $export_path;
   $self->{export_site} = $export_site;
-  $self->{export_timeout} = $export_timeout;
 
   $self->{pbot} = $pbot;
   $self->{factoidmodulelauncher} = PBot::FactoidModuleLauncher->new(pbot => $pbot);
@@ -164,6 +154,8 @@ sub save_factoids {
     }
   }
   close(FILE);
+
+  $self->export_factoids();
 }
 
 sub add_factoid {
@@ -188,7 +180,6 @@ sub export_factoids {
   my $filename;
 
   if(@_) { $filename = shift; } else { $filename = $self->export_path; }
-
   return if not defined $filename;
 
   my $text;
@@ -216,9 +207,8 @@ sub export_factoids {
   }
   print FILE "</table>\n";
   print FILE "<hr>$i factoids memorized.<br>";
-  print FILE "This page is automatically generated every " . $self->export_timeout . " seconds.</body></html>" if $self->export_timeout > 0;
   close(FILE);
-  $self->{pbot}->logger->log("$i factoids exported to path: " . $self->export_path . ", site: " . $self->export_site . "\n");
+  #$self->{pbot}->logger->log("$i factoids exported to path: " . $self->export_path . ", site: " . $self->export_site . "\n");
   return "$i factoids exported to " . $self->export_site;
 }
 
@@ -409,13 +399,6 @@ sub export_path {
 
   if(@_) { $self->{export_path} = shift; }
   return $self->{export_path};
-}
-
-sub export_timeout {
-  my $self = shift;
-
-  if(@_) { $self->{export_timeout} = shift; }
-  return $self->{export_timeout};
 }
 
 sub logger {

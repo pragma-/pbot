@@ -37,6 +37,8 @@ sub initialize {
   $self->{ignore_list} = {};
   $self->{ignore_flood_counter} = 0;
   $self->{last_timestamp} = gettimeofday;
+
+  $pbot->timer->register(sub { $self->check_ignore_timeouts }, 10);
 }
 
 sub add {
@@ -99,6 +101,27 @@ sub check_ignore {
     }
   }
   return 0;
+}
+
+sub check_ignore_timeouts {
+  my $self = shift;
+  my $now = gettimeofday();
+
+  foreach my $hostmask (keys %{ $self->{ignore_list} }) {
+    foreach my $channel (keys %{ $self->{ignore_list}->{$hostmask} }) {
+      next if($self->{ignore_list}->{$hostmask}{$channel} == -1); #permanent ignore
+
+      if($self->{ignore_list}->{$hostmask}{$channel} < $now) {
+        $self->{pbot}->{ignorelistcmds}->unignore_user("", "floodcontrol", "", "", "$hostmask $channel");
+        if($hostmask eq ".*") {
+          $self->{pbot}->conn->me($channel, "awakens.");
+        }
+      } else {
+        #my $timediff = $ignore_list{$host}{$channel} - $now;
+        #$logger->log "ignore: $host has $timediff seconds remaining\n"
+      }
+    }
+  }
 }
 
 1;

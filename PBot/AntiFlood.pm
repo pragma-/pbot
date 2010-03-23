@@ -45,6 +45,8 @@ sub initialize {
   $self->{flood_msg_count} = 0;
   $self->{last_timestamp} = gettimeofday;
   $self->{message_history} = {};
+
+  $pbot->timer->register(sub { $self->prune_message_history }, 60 * 60 * 1);
 }
 
 sub check_flood {
@@ -80,7 +82,7 @@ sub check_flood {
       $length--;
     }
 
-    return if not exists ${ $self->{pbot}->channels }{$channel} or ${ $self->{pbot}->channels }{$channel}{is_op} == 0;
+    return if ($channel =~ /^#/) and (not exists ${ $self->{pbot}->channels->channels }{$channel} or ${ $self->{pbot}->channels->channels }{$channel}{is_op} == 0);
 
     #$self->{pbot}->logger->log("length: $length, max: $max\n");
 
@@ -96,7 +98,7 @@ sub check_flood {
         my $length = ${ $self->message_history }{$nick}{$channel}{offenses} * ${ $self->message_history }{$nick}{$channel}{offenses} * 30;
         if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
           if($mode == $self->{FLOOD_CHAT}) {
-            # PBot::OperatorStuff::quiet_nick_timed($nick, $channel, $length);
+            $self->{pbot}->chanops->quiet_nick_timed($nick, $channel, $length);
             $self->{pbot}->conn->privmsg($nick, "You have been quieted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length seconds.");
             $self->{pbot}->logger->log("$nick $channel flood offense ${ $self->message_history }{$nick}{$channel}{offenses} earned $length second quiet\n");
           }
@@ -118,6 +120,25 @@ sub check_flood {
 sub message_history {
   my $self = shift;
   return $self->{message_history};
+}
+
+sub prune_message_history {
+  my $self = shift;
+
+  $self->{pbot}->logger->log("Pruning message history . . .\n");
+  foreach my $nick (keys %{ $self->{flood_watch} }) {
+    foreach my $channel (keys %{ $self->{flood_watch}->{$nick} })
+    {
+      $self->{pbot}->logger->log("Checking [$nick][$channel]\n");
+      my $length = $#{ $self->{flood_watch}->{$nick}{$channel}{messages} } + 1;
+      my %last = %{ @{ $self->{flood_watch}->{$nick}{$channel}{messages} }[$length - 1] };
+
+      if(gettimeofday - $last{timestamp} >= 60 * 60 * 24) {
+        $self->{pbot}->logger->log("$nick in $channel hasn't spoken in 24 hours, removing message history.\n");
+        delete $self->{flood_watch}->{$nick}{$channel};
+      }
+    }
+  }
 }
 
 1;
