@@ -15,10 +15,8 @@ use strict;
 
 use base 'PBot::Registerable';
 
-BEGIN {
-  use vars qw($VERSION);
-  $VERSION = '1.0.0';
-}
+use vars qw($VERSION);
+$VERSION = '1.0.0';
 
 use Carp ();
 

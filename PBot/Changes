@@ -1,15 +1,17 @@
+# pbot3 changelog and todo list
 #
-# TODO: Make InternalCommands have Setter function add_internal_command(%hash) and move all itnernal commands to respective modules
-# TODO: Tons of more of refactoring and clean-ups and conversion to OOP
+# TODO: A bit more refactoring and clean-ups and conversion to OOP
 #
 # TODO: add support for admin management - needs support for adding/removing/saving! [for 1.0]
-# TODO: multi-channel support pathetic (note 12/08/09, fixed multi-channel for anti-flood and for ignore)
+# TODO: multi-channel support needs improvement (note 12/08/09, fixed multi-channel for anti-flood and for ignore)
 #       e.g., factoids need channel parameter, e.g. C factoids vs. C++ factoids (with an option to allow a factoid across all channels)
 #       [for 1.0]
-# TODO: most of this crap needs to be refactored (note 11/23/09, refactored execute_module; 03/12/10, refactored and cleaned up a lot)
-# TODO: fix quotegrab ids -- ids not adjusted when quotegrab deleted [for 0.5.0]
-# TODO: make most, if not all, hash key comparisions case-insensitive, but store values with case intact! [for 0.5.0]
+#
+# TODO: Ignorelist saves and loads from file, uses regex hash keys.
 # 
+# 0.6.1-beta (03/23/10): Quotegrab ids properly adjusted when deleting quotegrab.
+#                        Admins loads from file, uses regex hash keys.
+#                        Lots of misc tweaks and improvements throughout.
 # 0.6.0-beta (03/22/10): Converted everything into objects with zero exports.
 #                        Replaced <STDIN> with sysread(STDIN, ...) in StdinReader.pm as to not mix buffered IO with select()
 # 0.5.0-beta (03/16/10): split single large pbot2.pl file into packages and modules 

@@ -1,5 +1,5 @@
 # File: IgnoreListCommands.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: Bot commands for interfacing with ignore list.
 

@@ -1,5 +1,5 @@
 # File: FactoidCommands.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: Administrative command subroutines.
 
@@ -10,10 +10,8 @@ package PBot::FactoidCommands;
 use warnings;
 use strict;
 
-BEGIN {
-  use vars qw($VERSION);
-  $VERSION = $PBot::PBot::VERSION;
-}
+use vars qw($VERSION);
+$VERSION = $PBot::PBot::VERSION;
 
 use Carp ();
 

@@ -1,5 +1,5 @@
 # File: ChanOpCommands.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: Channel operator command subroutines.
 
@@ -8,10 +8,8 @@ package PBot::ChanOpCommands;
 use warnings;
 use strict;
 
-BEGIN {
-  use vars qw($VERSION);
-  $VERSION = $PBot::PBot::VERSION;
-}
+use vars qw($VERSION);
+$VERSION = $PBot::PBot::VERSION;
 
 use Carp ();
 

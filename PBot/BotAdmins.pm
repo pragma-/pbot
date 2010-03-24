@@ -1,5 +1,5 @@
 # File: BotAdmins.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: Manages list of bot admins and whether they are logged in.
 
@@ -8,10 +8,8 @@ package PBot::BotAdmins;
 use warnings;
 use strict;
 
-BEGIN {
-  use vars qw($VERSION);
-  $VERSION = $PBot::PBot::VERSION;
-}
+use vars qw($VERSION);
+$VERSION = $PBot::PBot::VERSION;
 
 use Carp ();
 
@@ -64,13 +62,10 @@ sub add_admin {
   $channel = lc $channel;
   $hostmask = lc $hostmask;
 
-  $channel =~ s/\*/.*/g;
-  $hostmask =~ s/\*/.*/g;
-
   ${ $self->admins}{$channel}{$hostmask}{level}    = $level;
   ${ $self->admins}{$channel}{$hostmask}{password} = $password;
 
-  $self->{pbot}->logger->log("Adding new level $level admin: [$hostmask]\n");
+  $self->{pbot}->logger->log("Adding new level $level admin: [$hostmask] for channel [$channel]\n");
 }
 
 sub remove_admin {
@@ -185,16 +180,39 @@ sub filename {
   return $self->{filename};
 }
 
+sub find_admin {
+  my ($self, $channel_search, $hostmask_search) = @_;
+
+  $channel_search = '.*' if not defined $channel_search;
+  $hostmask_search = '.*' if not defined $hostmask_search;
+
+  my $result = eval {
+    foreach my $channel (keys %{ $self->{admins} }) {
+      if($channel_search =~ m/$channel/i) {
+        foreach my $hostmask (keys %{ $self->{admins}->{$channel} }) {
+          if($hostmask_search =~ m/$hostmask/i) {
+            return $self->{admins}{$channel}{$hostmask};
+          }
+        }
+      }
+    }
+    return undef;
+  };
+
+  if($@) {
+    $self->{pbot}->logger->log("Error in find_admin parameters: $@\n");
+  }
+
+  return $result;
+}
+
 sub loggedin {
   my ($self, $channel, $hostmask) = @_;
 
-  $channel = '*' if not defined $channel;
+  my $admin = $self->find_admin($channel, $hostmask);
 
-  $channel =~ s/\*/.*/g;
-  $hostmask =~ s/\*/.*/g;
-
-  if(exists ${ $self->{admins} }{$channel}{$hostmask}{loggedin}) {
-    return { hostmask => $hostmask, level => ${ $self->{admins} }{$channel}{$hostmask}{level} };
+  if(defined $admin && exists $admin->{loggedin}) {
+    return $admin;
   } else {
     return undef;
   }
@@ -203,22 +221,19 @@ sub loggedin {
 sub login {
   my ($self, $channel, $hostmask, $password) = @_;
 
-  $channel = '*' if not defined $channel;
+  my $admin = $self->find_admin($channel, $hostmask);
 
-  $channel =~ s/\*/.*/g;
-  $hostmask =~ s/\*/.*/g;
-
-  if((not exists ${ $self->{admins}}{$channel}) && (not exists ${ $self->{admins}}{$channel}{$hostmask})) {
+  if(not defined $admin) {
     $self->{pbot}->logger->log("Attempt to login non-existent [$channel][$hostmask] failed\n");
     return "You do not have an account.";
   }
 
-  if(${ $self->{admins} }{$channel}{$hostmask}{password} ne $password) {
+  if($admin->{password} ne $password) {
     $self->{pbot}->logger->log("Bad login password for [$channel][$hostmask]\n");
     return "I don't think so.";
   }
 
-  ${ $self->{admins}}{$channel}{$hostmask}{loggedin} = 1;
+  $admin->{loggedin} = 1;
 
   $self->{pbot}->logger->log("$hostmask logged-in in $channel\n");
 
@@ -228,12 +243,9 @@ sub login {
 sub logout {
   my ($self, $channel, $hostmask) = @_;
 
-  $channel = '*' if not defined $channel;
+  my $admin = $self->find_admin($channel, $hostmask);
 
-  $channel =~ s/\*/.*/g;
-  $hostmask =~ s/\*/.*/g;
-
-  delete ${ $self->{admins} }{$channel}{$hostmask}{loggedin};
+  delete $admin->{loggedin} if defined $admin;
 }
 
 1;

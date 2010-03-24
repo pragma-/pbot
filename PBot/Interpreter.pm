@@ -12,10 +12,8 @@ use base 'PBot::Registerable';
 
 use Carp ();
 
-BEGIN {
-  use vars qw($VERSION);
-  $VERSION = '1.0.0';
-}
+use vars qw($VERSION);
+$VERSION = '1.0.0';
 
 sub new {
   if(ref($_[1]) eq 'HASH') {

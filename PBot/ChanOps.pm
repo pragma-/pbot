@@ -1,5 +1,5 @@
 # File: ChanOps.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: Provides channel operator status tracking and commands.
 

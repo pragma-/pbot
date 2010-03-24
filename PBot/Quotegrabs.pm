@@ -1,5 +1,5 @@
 # File: Quotegrabs.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: Allows users to "grab" quotes from anti-flood history and store them for later retreival.
 

@@ -1,5 +1,5 @@
 # File: IgnoreList.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: Manages ignore list.
 

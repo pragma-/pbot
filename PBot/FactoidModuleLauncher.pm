@@ -1,5 +1,5 @@
 # File: FactoidModuleLauncher.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: Handles forking and execution of module processes
 
@@ -8,10 +8,8 @@ package PBot::FactoidModuleLauncher;
 use warnings;
 use strict;
 
-BEGIN {
-  use vars qw($VERSION);
-  $VERSION = $PBot::PBot::VERSION;
-}
+use vars qw($VERSION);
+$VERSION = $PBot::PBot::VERSION;
 
 use POSIX qw(WNOHANG); # for children process reaping
 use Carp ();

@@ -9,7 +9,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = "0.6.0-beta";
+$VERSION = "0.6.1-beta";
 
 # unbuffer stdout
 STDOUT->autoflush(1);
@@ -108,8 +108,8 @@ sub initialize {
   );
 
   $self->admins->load_admins();
-  $self->admins->add_admin('*', "$botnick!stdin\@localhost", 50, 'admin');
-  $self->admins->login('*', "$botnick!stdin\@localhost", "admin");
+  $self->admins->add_admin('.*', "$botnick!stdin\@localhost", 50, 'admin');
+  $self->admins->login('.*', "$botnick!stdin\@localhost", "admin");
 
   $self->{factoids} = PBot::Factoids->new(
       pbot        => $self,

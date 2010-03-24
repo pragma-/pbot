@@ -1,5 +1,5 @@
 # File: Factoids.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: Provides functionality for factoids and a type of external module execution.
 
@@ -8,10 +8,8 @@ package PBot::Factoids;
 use warnings;
 use strict;
 
-BEGIN {
-  use vars qw($VERSION);
-  $VERSION = $PBot::PBot::VERSION;
-}
+use vars qw($VERSION);
+$VERSION = $PBot::PBot::VERSION;
 
 use HTML::Entities;
 use Time::HiRes qw(gettimeofday);
@@ -216,11 +214,31 @@ sub interpreter {
   my $self = shift;
   my ($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick) = @_;
   my $result;
+  
+  $keyword = lc $keyword;
 
   my $pbot = $self->{pbot};
 
+  # Check if it's an alias
+  if(exists $self->factoids->{$keyword} and exists $self->factoids->{$keyword}{text}) {
+    my $command;
+    if($self->factoids->{$keyword}{text} =~ /^\/call\s+(.*)$/) {
+      if(defined $arguments) {
+        $command = "$1 $arguments";
+      } else {
+        $command = $1;
+      }
+      $pbot->logger->log("[" . (defined $from ? $from : "(undef)") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
+
+      $self->factoids->{$keyword}{ref_count}++;
+      $self->factoids->{$keyword}{ref_user} = $nick;
+
+      return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
+    }
+  }
+
   foreach my $command (keys %{ $self->factoids }) {
-    if(lc $keyword eq lc $command) {
+    if($keyword eq lc $command) {
       
       $self->{pbot}->logger->log("=======================\n");
       $self->{pbot}->logger->log("[$keyword] == [$command]\n");

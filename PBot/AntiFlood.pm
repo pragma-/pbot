@@ -1,5 +1,5 @@
 # File: AntiFlood.pm
-# Authoer: pragma_
+# Author: pragma_
 #
 # Purpose: Keeps track of which nick has said what and when.  Used in
 # conjunction with OperatorStuff and Quotegrabs for kick/quiet on flood
@@ -10,10 +10,8 @@ package PBot::AntiFlood;
 use warnings;
 use strict;
 
-BEGIN {
-  use vars qw($VERSION);
-  $VERSION = $PBot::PBot::VERSION;
-}
+use vars qw($VERSION);
+$VERSION = $PBot::PBot::VERSION;
 
 use Time::HiRes qw(gettimeofday);
 use Carp ();
