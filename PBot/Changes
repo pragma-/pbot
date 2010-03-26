@@ -7,8 +7,11 @@
 #       e.g., factoids need channel parameter, e.g. C factoids vs. C++ factoids (with an option to allow a factoid across all channels)
 #       [for 1.0]
 #
-# TODO: Ignorelist saves and loads from file, uses regex hash keys.
+# TODO: Ignorelist needs to save and load from file, use regex hash keys/search parameters.
 # 
+# 0.6.2-beta (03/25/10): 'list messages' command significant improved -- can use regexs search parameters.
+#                        Added optional regex search to 'rq' quotegrab command to match against quotegrab text.
+#                        Channel chat messages easier to read in log (from anti-flood module).
 # 0.6.1-beta (03/23/10): Quotegrab ids properly adjusted when deleting quotegrab.
 #                        Admins loads from file, uses regex hash keys.
 #                        Lots of misc tweaks and improvements throughout.

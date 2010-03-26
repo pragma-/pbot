@@ -259,6 +259,7 @@ sub show_random_quotegrab {
   my @quotes = ();
   my $nick_search = ".*";
   my $channel_search = $from;
+  my $text_search = ".*";
 
   if(not defined $from) {
     $self->{pbot}->logger->log("Command missing ~from parameter!\n");
@@ -266,20 +267,20 @@ sub show_random_quotegrab {
   }
 
   if(defined $arguments) {
-    ($nick_search, $channel_search) = split(/\s+/, $arguments, 2);
-    # $self->{pbot}->logger->log("[ns: $nick_search][cs: $channel_search]\n");
+    ($nick_search, $channel_search, $text_search) = split /\s+/, $arguments;
     if(not defined $channel_search) {
       $channel_search = $from;
     }
   } 
-  
-  my $channel_search_quoted = quotemeta($channel_search);
-  $self->{pbot}->logger->log("[ns: $nick_search][cs: $channel_search][csq: $channel_search_quoted]\n");
 
+  $nick_search = '.*' if not defined $nick_search;
+  $channel_search = '.*' if not defined $channel_search;
+  $text_search = '.*' if not defined $text_search;
+  
   eval {
     for(my $i = 0; $i <= $#{ $self->{quotegrabs} }; $i++) {
       my $hash = $self->{quotegrabs}[$i];
-      if($hash->{channel} =~ /$channel_search_quoted/i && $hash->{nick} =~ /$nick_search/i) {
+      if($hash->{channel} =~ /$channel_search/i && $hash->{nick} =~ /$nick_search/i && $hash->{text} =~ /$text_search/i) {
         $hash->{id} = $i + 1;
         push @quotes, $hash;
       }
@@ -288,12 +289,12 @@ sub show_random_quotegrab {
 
   if($@) {
     $self->{pbot}->logger->log("Error in show_random_quotegrab parameters: $@\n");
-    return "/msg $nick Error: $@"
+    return "/msg $nick Error in search parameters: $@"
   }
   
   if($#quotes < 0) {
     if($nick_search eq ".*") {
-      return "No quotes grabbed for $channel_search yet.  Use !grab to grab a quote.";
+      return "No quotes grabbed in $channel_search yet.  Use !grab to grab a quote.";
     } else {
       return "No quotes grabbed for $nick_search in $channel_search yet.  Use !grab to grab a quote.";
     }

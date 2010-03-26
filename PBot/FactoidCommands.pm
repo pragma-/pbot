@@ -61,30 +61,47 @@ sub list {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->factoids->factoids;
+  my $botnick = $self->{pbot}->botnick;
   my $text;
   
   if(not defined $arguments) {
     return "/msg $nick Usage: list <modules|factoids|commands|admins>";
   }
 
-  if($arguments =~/^messages\s+(.*?)\s+(.*)$/) {
-    my $nick_search = $1;
-    my $channel = $2;
+  if($arguments =~/^messages\s+(.*)$/) {
+    my ($nick_search, $channel_search, $text_search) = split / /, $1;
 
-    if(not exists ${ $self->{pbot}->antiflood->message_history }{$nick_search}) {
-      return "/msg $nick No messages for $nick_search yet.";
+    return "/msg $nick Usage: !list messages <nick regex> <channel regex> [text regex]" if not defined $channel_search;
+    $text_search = '.*' if not defined $text_search;
+
+    my @results = eval {
+      my @ret;
+      foreach my $history_nick (keys %{ $self->{pbot}->antiflood->message_history }) {
+        if($history_nick =~ m/$nick_search/i) {
+          foreach my $history_channel (keys %{ $self->{pbot}->antiflood->message_history->{$history_nick} }) {
+            if($history_channel =~ m/$channel_search/i) {
+              my @messages = @{ ${ $self->{pbot}->antiflood->message_history }{$history_nick}{$history_channel}{messages} };
+
+              for(my $i = 0; $i <= $#messages; $i++) {
+                next if $messages[$i]->{msg} =~ /^!login/;
+                push @ret, { text => $messages[$i]->{msg}, timestamp => $messages[$i]->{timestamp}, nick => $history_nick, channel => $history_channel } if $messages[$i]->{msg} =~ m/$text_search/i;
+              }
+            }
+          }
+        }
+      }
+      return @ret;
+    };
+
+    if($@) {
+      $self->{pbot}->logger->log("Error in search parameters: $@\n");
+      return "Error in search parameters: $@";
     }
 
-    if(not exists ${ $self->{pbot}->antiflood->message_history }{$nick_search}{$channel}) {
-      return "/msg $nick No messages for $nick_search in $channel yet.";
-    }
-
-    my @messages = @{ ${ $self->{pbot}->antiflood->message_history }{$nick_search}{$channel}{messages} };
-    my $botnick = $self->{pbot}->botnick;
-
-    for(my $i = 0; $i <= $#messages; $i++) {
-      $self->{pbot}->logger->log("" . ($i + 1) . ") " . localtime($messages[$i]->{timestamp}) . " <$nick_search> " . $messages[$i]->{msg} . "\n");
-      $self->{pbot}->conn->privmsg($nick, "" . ($i + 1) . ") " . localtime($messages[$i]->{timestamp}) . " <$nick_search> " . $messages[$i]->{msg} . "\n") unless $nick =~ /\Q$botnick\E/i;
+    my @sorted = sort { $a->{timestamp} <=> $b->{timestamp} } @results;
+    foreach my $msg (@sorted) {
+      $self->{pbot}->logger->log("[$msg->{channel}] " . localtime($msg->{timestamp}) . " <$msg->{nick}> " . $msg->{text} . "\n");
+      $self->{pbot}->conn->privmsg($nick, "[$msg->{channel}] " . localtime($msg->{timestamp}) . " <$msg->{nick}> " . $msg->{text} . "\n") unless $nick =~ /\Q$botnick\E/i;
     }
     return "";
   }

@@ -53,7 +53,7 @@ sub check_flood {
 
   $channel = lc $channel;
 
-  $self->{pbot}->logger->log(sprintf("check flood %-48s %-16s <%10s> %s\n", "$nick!$user\@$host", "[$channel]", , $nick, $text));
+  $self->{pbot}->logger->log(sprintf("%-14s | %-65s | %s\n", $channel, "$nick!$user\@$host", $text));
   
   return if $nick eq $self->{pbot}->botnick;
 
