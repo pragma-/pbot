@@ -9,7 +9,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = "0.6.2-beta";
+$VERSION = "0.6.3-beta";
 
 # unbuffer stdout
 STDOUT->autoflush(1);

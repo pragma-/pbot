@@ -265,7 +265,7 @@ sub histogram {
     $i++;
     last if $i >= 10;
   }
-  return "$factoid_count factoid_count, top 10 submitters: $text";
+  return "$factoid_count factoids, top 10 submitters: $text";
 }
 
 sub show {
@@ -422,35 +422,77 @@ sub find {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->factoids->factoids;
-  my $i = 0;
   my $text;
   my $type;
 
-  foreach my $command (sort keys %{ $factoids }) {
-    if(exists $factoids->{$command}{text} || exists $factoids->{$command}{regex}) {
-      $type = 'text' if(exists $factoids->{$command}{text});
-      $type = 'regex' if(exists $factoids->{$command}{regex});
-      # $self->{pbot}->logger->log("Checking [$command], type: [$type]\n");
-      eval {
-        my $regex = qr/$arguments/;
-        if($factoids->{$command}{$type} =~ /$regex/i || $command =~ /$regex/i) 
-        {
-          $i++;
-          $text .= "$command ";     
-        }
-      };
-      return "/msg $nick $arguments: $@" if $@;
+  if(not defined $arguments) {
+    return "/msg $nick Usage: !find [-owner nick] [-by nick] [text]";
+  }
+
+  my ($owner, $by);
+
+  $owner = $1 if $arguments =~ s/-owner\s+([^\b\s]+)//i;
+  $by = $1 if $arguments =~ s/-by\s+([^\b\s]+)//i;
+
+  $owner = '.*' if not defined $owner;
+  $by = '.*' if not defined $by;
+
+  $arguments =~ s/^\s+//;
+  $arguments =~ s/\s+$//;
+  $arguments =~ s/\s+/ /g;
+
+  my $argtype = undef;
+
+  if($owner ne '.*') {
+    $argtype = "owned by $owner";
+  }
+
+  if($by ne '.*') {
+    if(not defined $argtype) {
+      $argtype = "last referenced by $by";
+    } else {
+      $argtype .= " and last referenced by $by";
     }
   }
-  
+
+  if($arguments ne "") {
+    if(not defined $argtype) {
+      $argtype = "with text matching '$arguments'";
+    } else {
+      $argtype .= " and with text matching '$arguments'";
+    }
+  }
+
+  if(not defined $argtype) {
+    return "/msg $nick Usage: !find [-owner nick] [-by nick] [text]";
+  }
+
+  my $i = 0;
+  eval {
+    foreach my $command (sort keys %{ $factoids }) {
+      if(exists $factoids->{$command}{text} || exists $factoids->{$command}{regex}) {
+        $type = 'text' if(exists $factoids->{$command}{text});
+        $type = 'regex' if(exists $factoids->{$command}{regex});
+
+        if($factoids->{$command}{owner} =~ /$owner/i && $factoids->{$command}{ref_user} =~ /$by/i) {
+          next if($arguments ne "" && $factoids->{$command}{$type} !~ /$arguments/i && $command !~ /$arguments/i);
+          $i++;
+          $text .= "$command ";
+        }
+      }
+    }
+  };
+
+  return "/msg $nick $arguments: $@" if $@;
+
   if($i == 1) {
     chop $text;
     $type = 'text' if exists $factoids->{$text}{text};
     $type = 'regex' if exists $factoids->{$text}{regex};
-    return "found one match: '$text' is '$factoids->{$text}{$type}'";
+    return "found one factoid " . $argtype . ": '$text' is '$factoids->{$text}{$type}'";
   } else {
-    return "$i factoids contain '$arguments': $text" unless $i == 0;
-    return "No factoids contain '$arguments'";
+    return "$i factoids " . $argtype . ": $text" unless $i == 0;
+    return "No factoids " . $argtype;
   }
 }
 
