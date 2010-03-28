@@ -65,7 +65,7 @@ if (@ARGV > 0)
     }
 =cut
 } else {
-  print "Usage: !dict [-d database] [-n start from definition number] [-t first letter of word class type (n]oun, v]erb, etc)] <word>\n";
+      print "Usage: dict [-d database] [-n start from definition number] [-t first letter of word class type (n]oun, v]erb, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
   exit 0;
 }
 
@@ -351,7 +351,7 @@ sub initialise
 =cut
 
     if(not $config->args(\@ARGV)) {
-      print "Usage: !dict [-d database] [-n start from definition number] [-t first letter of word class type (n]oun, v]erb, etc)] <word>\n";
+      print "Usage: dict [-d database] [-n start from definition number] [-t first letter of word class type (n]oun, v]erb, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
       exit;
     }
 
