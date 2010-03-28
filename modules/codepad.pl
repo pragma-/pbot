@@ -41,11 +41,15 @@ my $ua = LWP::UserAgent->new();
 $ua->agent("Mozilla/5.0");
 push @{ $ua->requests_redirectable }, 'POST';
 
-if(($lang eq "C" or $lang eq "C++") and not $code =~ m/\w+ main\s?\([^)]+\)\s?{/) {
-  $code = "int main(void) { $code ; return 0; }";
+$code =~ s/#include <([^>]+)>/#include <$1>\n/g;
+
+if(($lang eq "C" or $lang eq "C++") and not $code =~ m/\w+ main\s?\([^)]*\)\s?{/) {
+  my $includes = '';
+  $includes = $1 if $code =~ s/^(#include.*>)//;
+  $code = "$includes\n int main(int argc, char **argv) { $code ; return 0; }";
 }
 
-my $escaped_code = uri_escape($code, "\0-\377");
+# my $escaped_code = uri_escape($code, "\0-\377");
 
 my %post = ( 'lang' => $lang, 'code' => $code, 'private' => 'True', 'run' => 'True', 'submit' => 'Submit' );
 
