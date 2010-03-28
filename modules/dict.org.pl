@@ -103,10 +103,15 @@ sub define_word
 
             my $comma = '';
             my $def_type = $config->def_type;
-            
+            my $def_contains = $config->def_contains;
+
             # normalize '*' to '.*'
             $def_type =~ s/\.\*/*/g;
             $def_type =~ s/\*/.*/g;
+
+            # normalize '*' to '.*'
+            $def_contains =~ s/\.\*/*/g;
+            $def_contains =~ s/\*/.*/g;
 
             eval {
               foreach my $type (keys %$defs) {
@@ -115,6 +120,7 @@ sub define_word
                 print "$comma$type: " if length $type;
                 foreach my $number (sort { $a <=> $b } keys %{ $defs->{$type} }) {
                   next unless $number >= $config->def_number;
+                  next unless $defs->{$type}{$number} =~ m/$def_contains/i;
                   print "$comma" unless $number == 1;
                   print "$number) $defs->{$type}{$number}";
                   $comma = ", ";
@@ -326,6 +332,7 @@ sub initialise
     $config->define('database',   { ARGCOUNT => 1, ALIAS => 'd' });
     $config->define('def_number',   { ARGCOUNT => 1, ALIAS => 'n', DEFAULT => 1 });
     $config->define('def_type',   { ARGCOUNT => 1, ALIAS => 't', DEFAULT => '*'});
+    $config->define('def_contains',   { ARGCOUNT => 1, ALIAS => 'search', DEFAULT => '*'});
 
 =cut
     $config->define('match',      { ARGCOUNT => 0, ALIAS => 'm' });
