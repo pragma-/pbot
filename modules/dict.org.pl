@@ -151,6 +151,7 @@ sub dict_hash {
   foreach my $line (@lines) {
     $line =~ s/^\s+//;
     $line =~ s/\s+$//;
+    $line =~ s/\s+/ /g;
 
     if($line =~ m/^([a-z]) (\d+): (.*)/i) {
       ($type, $number, $text) = ($1, $2, $3);
