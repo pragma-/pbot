@@ -77,4 +77,9 @@ $output =~ s/\s+/ /g;
 $output =~ s/^\s+//g;
 $output =~ s/\s+$//g;
 
+$output =~ s/ Line 1 ://g;
+$output =~ s/ \(first use in this function\)//g;
+$output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//g;
+$output =~ s/error: (.*?) error/error: $1; error/g;
+
 print "$nick: $output\n";
