@@ -585,7 +585,7 @@ sub load_module {
   my $factoids = $self->{pbot}->factoids->factoids;
   my ($keyword, $module) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
 
-  if(not defined $arguments) {
+  if(not defined $module) {
     return "/msg $nick Usage: load <command> <module>";
   }
 

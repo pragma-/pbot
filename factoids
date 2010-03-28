@@ -52,7 +52,7 @@ $ text 1 Major-Willard 1106526551 4 pragma_ a character that has no special mean
 /say text 1 pragma_ 1251694751 6 PARLIAMENT /call say
 0 text 1 Maxdamantus 1268450206 0 nobody !1
 0L text 1 dav7 1231291850 4 dav7 not something I know about :(
-1 text 1 Maxdamantus 1268450213 1 Maxdamantus !0
+1 text 1 Maxdamantus 1268450213 2 pragma_ !0
 10words text 1 pragma_ 1262461605 0 nobody http://theoatmeal.com/comics/misspelling
 1234 text 1 Maxdamantus 1259540426 5 Wulf_ foo
 20? text 1 pragma_ 1200772242 0 nobody /say If you have a question, please be specific and concise.  Don't ask questions like 'Does anyone know how to ...' or 'What is the best way to ...'.  We do not have the time or patience to play a game of 20 questions with people that are not capable of articulating properly.  See also: http://www.catb.org/~esr/faqs/smart-questions.html
@@ -64,8 +64,8 @@ $ text 1 Major-Willard 1106526551 4 pragma_ a character that has no special mean
 6thsense text 1 pragma_ 1262501664 1 pragma_ http://www.movie-moron.com/wp-content/gallery/various/I-See-Stupid-People.jpg
 8ball text 1 pragma_ 1193948417 602 zen /say $nick, $answers
 :( text 1 pragma_ 1180052710 11 gionnico /call :)
-:) text 1 pragma_ 1109365121 104 gionnico /say $faces
-:-( text 1 pragma_ 1180052743 0 nobody /call :)
+:) text 1 pragma_ 1109365121 105 pragma__ /say $faces
+:-( text 1 pragma_ 1180052743 2 pragma__ /call :)
 :-) text 1 pragma_ 1180052725 3 lemonade` /call :)
 :-D text 1 pragma_ 1180052738 0 nobody /call :)
 :-P text 1 pragma_ 1180052730 2 yobo2 /call :)
@@ -333,7 +333,7 @@ a_good_c_tutorial text 1 snhmib 1231877173 2 snhmib /call google "the tutorial, 
 abcdefg text 1 tolkad 1264735448 4 tolkad test
 acoshl text 1 twkm 1104369471 0 nobody #include <math.h> - long double acoshl(long double);
 acosl text 1 twkm 1104369374 0 nobody #include <math.h> - long double acosl(long double);
-acronym module 1 pragma_ 1105953751 381 pragma_ acronym.pl
+acronym module 1 pragma_ 1105953751 383 pbot3 acronym.pl
 adjective text 1 syntropy 1254003465 0 nobody fail stupid ignorant annoying awesome unique able adorable adventurous active afraid aggressive amusing awful bad bitter brief careless careful dark dangerous cheap chilly clean
 adkhaslsa text 1 kate` 1179672824 2 kate` x
 admins text 1 pragma_ 1192736884 1 pragma_ /call list admins
@@ -474,12 +474,12 @@ declare text 1 pragma_ 1191042438 181 Pryon /call cdecl declare
 declaredefine text 1 kate` 1179653420 5 PoppaVic A declaration specifies the interpretation and attributes of a set of identifiers. A definition of an identifier is a declaration for that identifier that: for an object, causes storage to be reserved for that object; for a function, includes the function body; for an enumeration constant or typedef name, is the (only) declaration of the identifier.
 def2 module 1 pragma_ 1194748965 41 pragma_ define2.pl
 default text 1 snhmib 1262537581 1 snhmib Hi there! Take a look at !k&r or !standard! Good luck!
-define module 1 pragma_ 1105953728 862 pbot3 define.pl
+define module 1 pragma_ 1105953728 863 pbot3 define.pl
 defrost text 1 Major-Willard 1106696388 3 Ramier the one who does the jokes ;p
 describe text 1 pragma_ 1193083745 66 s00p /call explain
 destroyer text 1 destroyer 1110396483 2 destroyer a script kiddy wannabe hacker.
 dickwad text 1 pragma_ 1199691115 6 pragma_ http://www.imagepoop.com/image/1427/Greater-Internet-Dickwad-Theory.html
-dict text 1 pragma_ 1179679066 313 pbot3 /call define
+dict module 1 pbot3 1269774779 5 pragma_ dict.org.pl
 dictionary text 1 pragma_ 1257557077 16 pragma_ /say !dict == dictionary.org; !gdict == Google's "define:<term>" search; !udict == Urban Dictionary; !wdict == Wikipedia
 die text 1 syntropy 1249675373 0 nobody YOU MUST DIE. http://omploader.org/vMjQ4MQ
 digraph text 1 twkm 1104552499 2 pragma_ a two character alternative punctuator, intended to make using c possible on systems where the primary punctuator is missing, typically from keyboards. they are normal tokens, so are processed in the same way as other source characters (apart from trigraphs).
@@ -489,7 +489,7 @@ doesn'?t\swork regex 1 pragma_ 1231207773 0 nobody doesntwork
 doesntcare text 1 pragma_ 1105954303 12 jwillia3 /say Standard C does not know nor care about colors, mice, windows, keyboards, networks or any other system specific things. If you want help with something like that, you would want to tell us what OS, compiler, tools or libraries you are or intend to use/abuse.
 doesntwork text 1 pragma_ 1175456821 117 PoppaVic /say "It doesn't work!" is not very informative for the people trying to help you.  Please describe what you think may be wrong, what results you expected to get and what instead actually happens.  Pasting code and/or error messages to http://codepad.org/ may be helpful.
 don'?t\scast\smalloc,? regex 1 pragma_ 1194258211 0 nobody dontcastmalloc
-dontcastmalloc text 1 infobahn 1104594725 439 kate` /say There is no need to cast the result of library functions that return void *; it makes your code hard to read, adds no value, and can hide a bug if you don't have a valid prototype in scope.  See http://www.cpax.org.uk/prg/writings/casting.php and http://c-faq.com/malloc/mallocnocast.html
+dontcastmalloc text 1 infobahn 1104594725 441 pragma_ /say There is no need to cast the result of library functions that return void *; it makes your code hard to read, adds no value, and can hide a bug if you don't have a valid prototype in scope.  See http://www.cpax.org.uk/prg/writings/casting.php and http://c-faq.com/malloc/mallocnocast.html
 dooky text 1 dooky 1109726391 6 Major-Willard the destroyer of worlds, an ardent sandwich eater.
 double text 1 pragma_ 1195072541 18 Chris /say When taking input for type double you need to use lf format specifier in the scanf statement. But when you are outputting a double you use f format specifier in the printf statements.
 draft text 1 pragma_ 1252608384 1 lemonade` /call standard
@@ -552,7 +552,7 @@ gdb text 1 twkm 1104460628 8 pragma_ /say GDB website: http://www.gnu.org/softwa
 gdefine module 1 pragma_ 1236819675 415 pragma_ gdefine.pl
 gdict text 1 pragma_ 1255125488 321 pragma_ /call gdefine
 geekporn text 1 pragma_ 1202802223 0 nobody http://www.ellf.ru/2008/02/05/kompy-kompy-kompy-86-foto.html
-get text 1 Irishmanluke 1257711390 16 IXin /me $attacks $args with a $sizes $colors $animal_nouns $animals
+get text 1 Irishmanluke 1257711390 17 pragma__ /me $attacks $args with a $sizes $colors $animal_nouns $animals
 getabook text 1 Cin 1194842863 3 cousteau http://img145.imageshack.us/img145/6982/1193921620752dw2.jpg
 getcdecl text 1 pragma_ 1191041433 3 PoppaVic http://hpux.cs.utah.edu/hppd/hpux/Misc/cdecl-2.5/
 getopt text 1 Quetzalcoatl_ 1237062000 1 cousteau a C library function for parsing command-line arguments. It is found on Linux, BSD, and other Unix systems.
@@ -561,7 +561,7 @@ gettimeofday text 1 Major-Willard 1104639290 0 nobody a function that returns th
 gigo text 1 prec 1177948351 5 zu22 Garbage In, Garbage Out -- http://c-faq.com/malloc/malloc1.html
 gnumake text 1 pragma_ 1194222910 1 pragma_ http://www.gnu.org/software/make/manual/make.pdf
 godprogrammer text 1 pragma_ 1260214264 9 lemonade` /say It's not unreasonable that if computer programmers developed an autonomous self-learning/self-correcting AI world and allowed it to run for several billion iterations; then came back to it, that they may not be able to alter it without destroying it. If such a programmer were to have orginally created debug routines and backdoors, such code would ultimately point to obsolete code regions.
-google module 1 pragma_ 1105953714 573 pragma_ google.pl
+google module 1 pragma_ 1105953714 577 pragma_ google.pl
 gotchas text 1 kate` 1244833982 102 Dianora /say http://www.iso-9899.info/wiki/C_gotchas
 goto text 1 Baughn 1186325626 6 cousteau http://imgs.xkcd.com/comics/goto.png
 greenspun text 1 mauke 1108933892 3 leth /say Greenspun's Tenth Rule of Programming: "Any sufficiently complicated C or Fortran program contains an ad-hoc, informally-specified bug-ridden slow implementation of half of Common Lisp."
@@ -582,7 +582,7 @@ hello text 1 pragma_ 1179679787 54 pragma_ /call hi
 helloworld text 1 pragma_ 1237684920 0 nobody http://www.lisha.ufsc.br/~guto/teaching/os/exercise/hello.html
 help text 1 NeverDream 1109792986 398 Chris /say To learn all about me, see http://www.iso-9899.info/wiki/Candide
 herring text 1 Baughn 1173805492 1 rhc a vicious species, loyal only to Baughn. Attempts to wrest control of the Herring Hordes can result in consequences similar to http://fukung.net/v/2833/15cod.jpg .
-hi text 1 pragma_ 1109044278 733 pragma_ /say $hi_phrases, $nick
+hi text 1 pragma_ 1109044278 803 pragma_ /say $hi_phrases, $nick
 hi_phrases text 1 pragma_ 1109044257 1 dav7 "Well, hello there" "Hi there" "Hey, whats up" Hola Hi Hello "Que pasa"
 hint text 1 pragma_ 1205575974 1 pragma_ http://www.yesfunny.com/Sports/sports8.jpeg -- in other words, are you sure C is for you?
 hit text 1 pragma_ 1258701405 3 pragma_ /call slap
@@ -605,7 +605,7 @@ idiot text 1 pragma_ 1194139898 6 mordy_ moron knucklehead dolt half-wit retard 
 if text 1 Major-Willard 1105258377 10 M1TE5H the keyword that tests a bracketed expression and if true, executes the following statement or block; if the expression evaluates to false an optional ''else'' clause is executed
 ignore text 1 snhmib 1204687457 0 nobody nubsauce
 implementation text 1 pragma_ 1106459085 1 pragma_ a particular set of software, running in a particular translation environment under particular control options, that performs translation of programs for, and supports execution of functions in, a particular execution environment (ISO/IEC 9899:1999 3.12)
-insult module 1 pragma_ 1236819209 353 pragma_ insult.pl
+insult module 1 pragma_ 1236819209 357 pragma_ insult.pl
 int text 1 infobahn 1104595147 17 n00p a signed integer data type, at least 16 bits wide, which must be able to represent (at least) all the numbers in the range -32767 to +32767. Its lowest value, INT_MIN, and highest value, INT_MAX, are defined in <limits.h>
 integer text 1 prec 1189048945 2 cousteau http://wikipedia.org/wiki/Integer
 intelmanuals text 1 ColonelJ 1260039944 0 nobody http://developer.intel.com/products/processor/manuals/index.htm
@@ -624,8 +624,8 @@ joeyadams text 1 joeyadams 1249675948 6 pragma_ a noob who doesn't know what he'
 jonbryan text 1 jonbryan 1106453242 0 nobody a 1337 h4x0r
 jseamus text 1 pragma_ 1259024447 1 PARLIAMENT obsessed with finding his identity.
 jump text 1 kp 1194414478 1 kp /me jumps out the window
-k&r text 1 Chris 1243951633 405 Dianora /say K&R is The C Programming Language, 2nd edition, by Kernighan and Ritchie, http://cm.bell-labs.com/cm/cs/cbook/ - be sure to see the errata as well, at http://cm.bell-labs.com/cm/cs/cbook/2ediffs.html
-k&r2 text 1 pragma_ 1198032355 33 pragma_ /call k&r
+k&r text 1 Chris 1243951633 408 pragma__ /say K&R is The C Programming Language, 2nd edition, by Kernighan and Ritchie, http://cm.bell-labs.com/cm/cs/cbook/ - be sure to see the errata as well, at http://cm.bell-labs.com/cm/cs/cbook/2ediffs.html
+k&r2 text 1 pragma_ 1198032355 35 pragma__ /call k&r
 kate text 1 kate` 1177134347 9 kate` fond of enums
 kate` text 1 Baughn 1177655583 6 pragma_ Lasagnasian
 kernelnewbies text 1 noselasd 1107807003 0 nobody #kernelnewbies at irc.kernelnewbies.org (or irc.oftc.net).
@@ -679,14 +679,13 @@ mitletter text 1 pragma_ 1251212390 1 pragma_ http://www.c4vct.com/kym/humor/mit
 mmg0 text 1 kp 1194414402 1 pragma_ a doody head
 modules text 1 pragma_ 1192736662 4 pragma_ /call list modules
 mother text 1 PARLIAMENT 1267843728 3 PARLIAMENT /say MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER MOTHER
-msg text 1 pragma_ 1109820572 30 pbot3 /msg $args
+msg text 1 pragma_ 1109820572 31 pragma__ /msg $args
 murphy text 1 pragma_ 1191356935 2 pragma_ /say If there's more than one possible outcome of a job or task, and one of those outcomes will result in disaster or an undesirable consequence, then somebody will do it that way.
 nak text 1 joeyadams 1256592064 1 joeyadams someone who doesn't know candide commands.  Ha ha!
 necrophile text 1 kp 1194246813 3 kp /me plays dead
 nelemof text 1 prec 1108151345 2 pragma_ a standard idiom for computing the number of elements in an array variable:  #define nelemof(array) (sizeof array/sizeof *array)
 never text 1 syntropy 1249676626 1 syntropy /say http://bit.ly/2KsmMm
 nickreg text 1 pragma_ 1267639456 1 pragma_ /say In order to speak in this channel, you must register your IRC nick-name through NickServ.  See `/msg nickserv help register` or follow the guide at http://www.wikihow.com/Register-a-User-Name-on-Freenode
-ninjaescapde text 1 pragma_ 1197786816 1 pragma_ pragma_
 noaids text 1 PARLIAMENT 1264284537 1 PARLIAMENT "Whew, you lucked out" "The needle was clean!" "The fresh corpse was clean!" "The prosititute didn't have aids!" "The teddy bear was aids free." "The homeless bum didn't have aids!" "Your hands were aids-free that time." "$who_answers didn't have aids . . . yet!" "$who_answers is aids-free at this time."
 nobook text 1 Baughn 1186245248 8 PoppaVic /say If you don't have a book then you are wasting your time and ours.  The only good way to learn C or C++ is throuhg a book. If you are too cheap to buy a book then just give up and learn something else that doesn't require a book.  In eithercase, go away until you have a book.
 nopizza text 1 PoppaVic 1203283186 6 pragma_ /say If you spend less time with pitchers of beer, pizza, p0rn, sex and video games you will discover the manpages, docs, google, and testprograms.
@@ -803,7 +802,7 @@ rule3 text 1 PoppaVic 1106163837 3 Koper "Finally, make it run fast or small (pi
 rules text 1 gunninK 1264177779 2 gunninK $nick rules
 rvalue text 1 Wulf_ 1251745571 1 Wulf_ the "value of an expression"
 s&w text 1 ment 1251220163 1 ment when k&r fails, try http://www.smith-wesson.com/
-say text 1 pragma_ 1251663502 306 candide /say $args
+say text 1 pragma_ 1251663502 308 pragma__ /say $args
 scanf text 1 Major-Willard 1106970012 271 Dianora a function that's stupid - "It's nearly impossible to do decent error recovery with scanf; usually it's far easier to read entire lines (with fgets or the like), then interpret them, either using sscanf or some other techniques." - See http://www.eskimo.com/~scs/C-faq/q12.20.html
 scanf_is_stupid text 1 n00p 1264982172 1 pragma_ /say It looks like the !scanf factoid was unsuccessful at convincing you not to use scanf(). scanf() isn't really that stupid, providing you know how to use it correctly. Chris Torek explains some problems with the way scanf() is commonly used and provides methods of solving those problems here: http://bytes.com/topic/c/answers/215517-warning-against-scanf#post840862
 schildt text 1 twkm 1105514020 13 pragma_ please avoid herbert schildt's books, see http://www.iso-9899.info/wiki/Main_Page#Stuff_that_should_be_avoided
@@ -884,7 +883,7 @@ teacher text 1 pragma_ 1199779292 5 kate` /say If someone in the channel is aski
 teaching text 1 twkm 1108008187 7 lemonade` not just accepting that the person asking knows what they are doing and has merely forgotten the proper forms to use. Rather, they need insight into what solutions exist to solve the problems they face; for which, there can be no better tool than a clear explanation of the problem, even if you must draw it out of them millimeter by torturous millimeter.
 temp text 1 syntropy_ 1254013586 0 nobody /msg ##c foo
 terminator text 1 Cin 1194839172 0 nobody http://img223.imageshack.us/img223/7959/stringliteralgg3.png
-test text 1 tolkad 1264736374 0 nobody /say Oort: candide ! test
+test text 1 tolkad 1264736374 1 pragma_ /say Oort: candide ! test
 test88 text 1 Cin 1194548259 0 nobody test
 testbed text 1 PoppaVic 1187198287 0 nobody A simple program that grows and evolves to _test_ what you learn/read and is disposable.
 testcase text 1 lemonade` 1249772768 181 jwillia3 /say a testcase is a minimal compilable example exhibiting your symptoms. "Minimal" means just the bare essentials required to illustrate your question. Please paste a testcase at http://codepad.org to help us assist you.
@@ -979,7 +978,7 @@ wizo text 1 kp 1194487607 2 kp /me <3 wizo.
 works text 1 pragma_ 1231373678 25 pragma_ /say It works it works! Omg omg omg! I mean it compiles. Now what's a segfault?
 wotsit text 1 snhmib 1199573903 6 snhmib http://www.wotsit.org, loads of file type resources!
 wright text 1 pragma_ 1263178267 0 nobody http://www.pagetutor.com/jokebreak/139.html
-wtf text 1 pragma_ 1251245783 40 pragma_ /call acronym
+wtf text 1 pragma_ 1251245783 43 pbot3 /call acronym
 x text 1 mauke 1267135629 0 nobody exactly equivalent to x != 0
 x->y text 1 prec 1108845393 equivalenv prec (*x).y
 xY text 1 Baughn 1203448278 3 jwillia3 /call xy

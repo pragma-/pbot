@@ -53,7 +53,10 @@ sub execute_module {
   $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: Executing module $module $arguments\n");
 
   $arguments = quotemeta($arguments);
-  $arguments =~ s/\\\s+/ /;
+  $arguments =~ s/\\\s+/ /g;
+  $arguments =~ s/\-/-/g;
+
+  print "args: $arguments\n";
   
   my $pid = fork;
   if(not defined $pid) {
