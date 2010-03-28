@@ -1,8 +1,5 @@
 #!/usr/bin/perl
 
-# Initial rough-draft prototype proof of concept
-# Once working, need to refactor and polish.
-
 use warnings;
 use strict;
 
@@ -23,12 +20,28 @@ my $code = join ' ', @ARGV;
 my $lang = "C";
 $lang = $1 if $code =~ s/-lang=([^\b\s]+)//i;
 
+my @languages = qw/C C++ D Haskell Lua OCaml PHP Perl Python Ruby Scheme Tcl/;
+
+my $found = 0;
+foreach my $l (@languages) {
+  if(uc $lang eq uc $l) {
+    $lang = $l;
+    $found = 1;
+    last;
+  }
+}
+
+if(not $found) {
+  print "$nick: Invalid language '$lang'.  Supported languages are: @languages\n";
+  exit 0;
+}
+
 my $ua = LWP::UserAgent->new();
 
 $ua->agent("Mozilla/5.0");
 push @{ $ua->requests_redirectable }, 'POST';
 
-if(not $code =~ m/\w+ main\s?\([^)]+\)\s?{/) {
+if(($lang eq "C" or $lang eq "C++") and not $code =~ m/\w+ main\s?\([^)]+\)\s?{/) {
   $code = "int main(void) { $code ; return 0; }";
 }
 
@@ -53,7 +66,7 @@ $text =~ s/<a style="" name="output-line-\d+">\d+<\/a>//g;
 if($text =~ /<span class="heading">Output:<\/span>.+?<div class="code">(.*)<\/div>.+?<\/table>/si) {
   $output = "$1";
 } else {
-  $output = "No output.";
+  $output = "<pre>No output.</pre>";
 }
 
 $output = decode_entities($output);
