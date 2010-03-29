@@ -124,16 +124,16 @@ sub prune_message_history {
   my $self = shift;
 
   $self->{pbot}->logger->log("Pruning message history . . .\n");
-  foreach my $nick (keys %{ $self->{flood_watch} }) {
-    foreach my $channel (keys %{ $self->{flood_watch}->{$nick} })
+  foreach my $nick (keys %{ $self->{message_history} }) {
+    foreach my $channel (keys %{ $self->{message_history}->{$nick} })
     {
       $self->{pbot}->logger->log("Checking [$nick][$channel]\n");
-      my $length = $#{ $self->{flood_watch}->{$nick}{$channel}{messages} } + 1;
-      my %last = %{ @{ $self->{flood_watch}->{$nick}{$channel}{messages} }[$length - 1] };
+      my $length = $#{ $self->{message_history}->{$nick}{$channel}{messages} } + 1;
+      my %last = %{ @{ $self->{message_history}->{$nick}{$channel}{messages} }[$length - 1] };
 
       if(gettimeofday - $last{timestamp} >= 60 * 60 * 24) {
         $self->{pbot}->logger->log("$nick in $channel hasn't spoken in 24 hours, removing message history.\n");
-        delete $self->{flood_watch}->{$nick}{$channel};
+        delete $self->{message_history}->{$nick}{$channel};
       }
     }
   }
