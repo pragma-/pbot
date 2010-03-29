@@ -108,8 +108,8 @@ sub initialize {
   );
 
   $self->admins->load_admins();
-  $self->admins->add_admin('.*', "$botnick!stdin\@localhost", 50, 'admin');
-  $self->admins->login('.*', "$botnick!stdin\@localhost", "admin");
+  $self->admins->add_admin($botnick, '.*', "$botnick!stdin\@localhost", 60, 'admin');
+  $self->admins->login('pbot3', "$botnick!stdin\@localhost", 'admin');
 
   $self->{factoids} = PBot::Factoids->new(
       pbot        => $self,

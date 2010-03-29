@@ -41,6 +41,7 @@ sub initialize {
   $pbot->commands->register(sub { return $self->part_channel(@_) },       "part",          45);
   $pbot->commands->register(sub { return $self->ack_die(@_)      },       "die",           50);
   $pbot->commands->register(sub { return $self->add_admin(@_)    },       "addadmin",      60);
+  $pbot->commands->register(sub { return $self->del_admin(@_)    },       "deladmin",      60);
 }
 
 sub login {
@@ -48,7 +49,7 @@ sub login {
   my ($from, $nick, $user, $host, $arguments) = @_;
 
   if($self->{pbot}->admins->loggedin($from, "$nick!$user\@$host")) {
-    return "/msg $nick You are already logged in.";
+    return "/msg $nick You are already logged into channel $from.";
   }
 
   my $result = $self->{pbot}->admins->login($from, "$nick!$user\@$host", $arguments);
@@ -58,7 +59,7 @@ sub login {
 sub logout {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  return "/msg $nick Uh, you aren't logged in." if(not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host"));
+  return "/msg $nick Uh, you aren't logged into channel $from." if(not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host"));
   $self->{pbot}->admins->logout($from, "$nick!$user\@$host");
   return "/msg $nick Good-bye, $nick.";
 }
@@ -66,13 +67,34 @@ sub logout {
 sub add_admin {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  return "/msg $nick Coming soon.";
+
+  my ($name, $channel, $hostmask, $level, $password) = split / /, $arguments, 5;
+
+  if(not defined $name or not defined $channel or not defined $hostmask or not defined $level
+    or not defined $password) {
+    return "/msg $nick Usage: addadmin name channel hostmask level password";
+  }
+
+  $self->{pbot}->{admins}->add_admin($name, $channel, $hostmask, $level, $password);
+  $self->{pbot}->{admins}->save_admins;
+  return "Admin added.";
 }
 
 sub del_admin {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  return "/msg $nick Coming soon.";
+
+  my ($channel, $hostmask) = split / /, $arguments, 2;
+
+  if(not defined $channel or not defined $hostmask) {
+    return "/msg $nick Usage: deladmin channel hostmask";
+  }
+
+  if($self->{pbot}->{admins}->remove_admin($channel, $hostmask)) {
+    return "Admin removed.";
+  } else {
+    return "No such admin found.";
+  }
 }
 
 sub join_channel {

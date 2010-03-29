@@ -57,22 +57,31 @@ sub initialize {
 
 sub add_admin {
   my $self = shift;
-  my ($channel, $hostmask, $level, $password) = @_;
+  my ($name, $channel, $hostmask, $level, $password) = @_;
 
   $channel = lc $channel;
   $hostmask = lc $hostmask;
 
-  ${ $self->admins}{$channel}{$hostmask}{level}    = $level;
-  ${ $self->admins}{$channel}{$hostmask}{password} = $password;
+  ${ $self->admins }{$channel}{$hostmask}{name}     = $name;
+  ${ $self->admins }{$channel}{$hostmask}{level}    = $level;
+  ${ $self->admins }{$channel}{$hostmask}{password} = $password;
 
-  $self->{pbot}->logger->log("Adding new level $level admin: [$hostmask] for channel [$channel]\n");
+  $self->{pbot}->logger->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");
 }
 
 sub remove_admin {
   my $self = shift;
   my ($channel, $hostmask) = @_;
 
-  delete ${ $self->admins }{$channel}{$hostmask};
+  my $admin = delete ${ $self->admins }{$channel}{$hostmask};
+  if(defined $admin) {
+    $self->{pbot}->logger->log("Removed level $admin->{level} admin [$admin->{name}] [$hostmask] from channel [$channel]\n");
+    $self->save_admins;
+    return 1;
+  } else {
+    $self->{pbot}->logger->log("Attempt to remove non-existent admin [$hostmask] from channel [$channel]\n");
+    return 0;
+  }
 }
 
 sub load_admins {
@@ -98,13 +107,13 @@ sub load_admins {
     chomp $line;
     $i++;
 
-    my ($channel, $hostmask, $level, $password) = split(/\s+/, $line, 4);
+    my ($name, $channel, $hostmask, $level, $password) = split(/\s+/, $line, 5);
     
-    if(not defined $channel || not defined $hostmask || not defined $level || not defined $password) {
+    if(not defined $name || not defined $channel || not defined $hostmask || not defined $level || not defined $password) {
          Carp::croak "Syntax error around line $i of $filename\n";
     }
 
-    $self->add_admin($channel, $hostmask, $level, $password);
+    $self->add_admin($name, $channel, $hostmask, $level, $password);
   }
 
   $self->{pbot}->logger->log("  $i admins loaded.\n");
@@ -121,6 +130,17 @@ sub save_admins {
     Carp::carp "No admins path specified -- skipping saving of admins\n";
     return;
   }
+
+  open(FILE, "> $filename") or Carp::croak "Couldn't open $filename: $!\n";
+
+  foreach my $channel (sort keys %{ $self->{admins} }) {
+    foreach my $hostmask (sort keys %{ $self->{admins}->{$channel} }) {
+      my $admin = $self->{admins}->{$channel}{$hostmask};
+      next if $admin->{name} eq $self->{pbot}->botnick;
+      print FILE "$admin->{name} $channel $hostmask $admin->{level} $admin->{password}\n"; 
+    }
+  }
+  close(FILE);
 }
 
 sub export_admins {
@@ -133,66 +153,30 @@ sub export_admins {
   return;
 }
 
-sub interpreter {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick) = @_;
-  my $result;
-
-  my $pbot = $self->{pbot};
-  return undef;  
-}
-
-sub export_path {
-  my $self = shift;
-
-  if(@_) { $self->{export_path} = shift; }
-  return $self->{export_path};
-}
-
-sub export_timeout {
-  my $self = shift;
-
-  if(@_) { $self->{export_timeout} = shift; }
-  return $self->{export_timeout};
-}
-
-sub logger {
-  my $self = shift;
-  if(@_) { $self->{logger} = shift; }
-  return $self->{logger};
-}
-
-sub export_site {
-  my $self = shift;
-  if(@_) { $self->{export_site} = shift; }
-  return $self->{export_site};
-}
-
-sub admins {
-  my $self = shift;
-  return $self->{admins};
-}
-
-sub filename {
-  my $self = shift;
-
-  if(@_) { $self->{filename} = shift; }
-  return $self->{filename};
-}
-
 sub find_admin {
-  my ($self, $channel_search, $hostmask_search) = @_;
+  my ($self, $from, $hostmask) = @_;
 
-  $channel_search = '.*' if not defined $channel_search;
-  $hostmask_search = '.*' if not defined $hostmask_search;
+  $from = $self->{pbot}->botnick if not defined $from;
+  $hostmask = '.*' if not defined $hostmask;
 
   my $result = eval {
-    foreach my $channel (keys %{ $self->{admins} }) {
-      if($channel_search =~ m/$channel/i) {
-        foreach my $hostmask (keys %{ $self->{admins}->{$channel} }) {
-          if($hostmask_search =~ m/$hostmask/i) {
-            return $self->{admins}{$channel}{$hostmask};
+    foreach my $channel_regex (keys %{ $self->{admins} }) {
+      if($from !~ m/^#/) {
+        # if not from a channel, make sure that nick portion of hostmask matches $from
+        foreach my $hostmask_regex (keys %{ $self->{admins}->{$channel_regex} }) {
+          my $nick;
+
+          if($hostmask_regex =~ m/^([^!]+)!.*/) {
+            $nick = $1;
+          } else {
+            $nick = $hostmask_regex;
           }
+
+          return $self->{admins}{$channel_regex}{$hostmask_regex} if($from =~ m/$nick/i and $hostmask =~ m/$hostmask_regex/i);
+        }
+      } elsif($from =~ m/$channel_regex/i) {
+        foreach my $hostmask_regex (keys %{ $self->{admins}->{$channel_regex} }) {
+          return $self->{admins}{$channel_regex}{$hostmask_regex} if $hostmask =~ m/$hostmask_regex/i;
         }
       }
     }
@@ -225,7 +209,7 @@ sub login {
 
   if(not defined $admin) {
     $self->{pbot}->logger->log("Attempt to login non-existent [$channel][$hostmask] failed\n");
-    return "You do not have an account.";
+    return "You do not have an account in $channel.";
   }
 
   if($admin->{password} ne $password) {
@@ -235,9 +219,9 @@ sub login {
 
   $admin->{loggedin} = 1;
 
-  $self->{pbot}->logger->log("$hostmask logged-in in $channel\n");
+  $self->{pbot}->logger->log("$hostmask logged into $channel\n");
 
-  return "Logged in.";
+  return "Logged into $channel.";
 }
 
 sub logout {
@@ -246,6 +230,38 @@ sub logout {
   my $admin = $self->find_admin($channel, $hostmask);
 
   delete $admin->{loggedin} if defined $admin;
+}
+
+sub export_path {
+  my $self = shift;
+
+  if(@_) { $self->{export_path} = shift; }
+  return $self->{export_path};
+}
+
+sub export_timeout {
+  my $self = shift;
+
+  if(@_) { $self->{export_timeout} = shift; }
+  return $self->{export_timeout};
+}
+
+sub export_site {
+  my $self = shift;
+  if(@_) { $self->{export_site} = shift; }
+  return $self->{export_site};
+}
+
+sub admins {
+  my $self = shift;
+  return $self->{admins};
+}
+
+sub filename {
+  my $self = shift;
+
+  if(@_) { $self->{filename} = shift; }
+  return $self->{filename};
 }
 
 1;

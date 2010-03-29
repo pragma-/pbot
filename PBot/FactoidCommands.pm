@@ -131,9 +131,21 @@ sub list {
 
   if($arguments =~ /^admins$/i) {
     $text = "Admins: ";
-    foreach my $admin (sort { ${ $self->{pbot}->admins->admins }{$b}{level} <=> ${ $self->{pbot}->admins->admins }{$a}{level} } keys %{ $self->{pbot}->admins->admins }) {
-      $text .= "*" if exists ${ $self->{pbot}->admins->admins }{$admin}{login};
-      $text .= "$admin (" . ${ $self->{pbot}->admins->admins }{$admin}{level} . ") ";
+    my $last_channel = "";
+    my $sep = "";
+    foreach my $channel (sort keys %{ $self->{pbot}->admins->admins }) {
+      if($last_channel ne $channel) {
+        print "texzt: [$text], sep: [$sep]\n";
+        $text .= $sep . "Channel " . ($channel eq ".*" ? "all" : $channel) . ": ";
+        $last_channel = $channel;
+        $sep = "";
+      }
+      foreach my $hostmask (sort keys %{ $self->{pbot}->admins->admins->{$channel} }) {
+        $text .= $sep;
+        $text .= "*" if exists ${ $self->{pbot}->admins->admins }{$channel}{$hostmask}{loggedin};
+        $text .= ${ $self->{pbot}->admins->admins }{$channel}{$hostmask}{name} . " (" . ${ $self->{pbot}->admins->admins }{$channel}{$hostmask}{level} . ")";
+        $sep = "; ";
+      }
     }
     return $text;
   }
