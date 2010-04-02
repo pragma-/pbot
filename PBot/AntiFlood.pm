@@ -102,7 +102,9 @@ sub check_flood {
           }
         } else { # private message flood
           $self->{pbot}->logger->log("$nick msg flood offense ${ $self->message_history }{$nick}{$channel}{offenses} earned $length second ignore\n");
+            $self->{pbot}->conn->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length seconds.");
           $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", "$nick!$user\@$host $channel $length");
+
         }
       }
     }

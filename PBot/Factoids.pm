@@ -345,7 +345,7 @@ sub interpreter {
 
     $result =~ s/\$nick/$nick/g;
 
-    while ($result =~ /[^\\]\$([^\s!+.$\/\\,;=&]+)/g) { 
+    while ($result =~ /[^\\]\$([a-zA-Z0-9_\-]+)/g) { 
       my $var = $1;
       #$self->{pbot}->logger->log("adlib: got [$var]\n");
       #$self->{pbot}->logger->log("adlib: parsing variable [\$$var]\n");
