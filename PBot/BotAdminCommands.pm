@@ -104,7 +104,7 @@ sub join_channel {
   # FIXME -- update %channels hash?
   $self->{pbot}->logger->log("$nick!$user\@$host made me join $arguments\n");
   $self->{pbot}->conn->join($arguments);
-  return "/msg $nick Joined $arguments";
+  return "/msg $nick Joining $arguments";
 }
 
 sub part_channel {
@@ -114,7 +114,7 @@ sub part_channel {
   # FIXME -- update %channels hash?
   $self->{pbot}->logger->log("$nick!$user\@$host made me part $arguments\n");
   $self->{pbot}->conn->part($arguments);
-  return "/msg $nick Parted $arguments";
+  return "/msg $nick Parting $arguments";
 }
 
 sub ack_die {

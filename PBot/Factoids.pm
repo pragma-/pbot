@@ -210,204 +210,214 @@ sub export_factoids {
   return "$i factoids exported to " . $self->export_site;
 }
 
+sub find_factoid {
+  my ($self, $keyword, $arguments) = @_;
+
+  my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
+
+  my $result = eval {
+    foreach my $command (keys %{ $self->factoids }) {
+      if(exists $self->factoids->{$command}{regex}) {
+        if($string =~ m/$command/i) {
+          return $command;
+        }
+      } else {
+        my $command_quoted = quotemeta($command);
+        if($keyword =~ m/^$command_quoted$/i) {
+          return $command;
+        }
+      }
+    }
+
+    return undef;
+  };
+
+  if($@) {
+    $self->{pbot}->logger->log("find_factoid: bad regex: $@\n");
+    return undef;
+  }
+
+  return $result;
+}
+
 sub interpreter {
   my $self = shift;
   my ($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick) = @_;
   my $result;
-  
-  $keyword = lc $keyword;
-
   my $pbot = $self->{pbot};
 
+  my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
+  $keyword = $self->find_factoid($keyword, $arguments);
+  return undef if not defined $keyword;
+
+  my $type;
+  $type = 'text' if exists $self->factoids->{$keyword}{text};
+  $type = 'regex' if exists $self->factoids->{$keyword}{regex};
+  $type = 'module' if exists $self->factoids->{$keyword}{module};
+
   # Check if it's an alias
-  if(exists $self->factoids->{$keyword} and exists $self->factoids->{$keyword}{text}) {
-    my $command;
-    if($self->factoids->{$keyword}{text} =~ /^\/call\s+(.*)$/) {
-      if(defined $arguments) {
-        $command = "$1 $arguments";
-      } else {
-        $command = $1;
-      }
-      $pbot->logger->log("[" . (defined $from ? $from : "(undef)") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
-
-      $self->factoids->{$keyword}{ref_count}++;
-      $self->factoids->{$keyword}{ref_user} = $nick;
-
-      return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
+  my $command;
+  if($self->factoids->{$keyword}{$type} =~ /^\/call\s+(.*)$/) {
+    if(defined $arguments) {
+      $command = "$1 $arguments";
+    } else {
+      $command = $1;
     }
+    $pbot->logger->log("[" . (defined $from ? $from : "(undef)") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
+
+    $self->factoids->{$keyword}{ref_count}++;
+    $self->factoids->{$keyword}{ref_user} = $nick;
+
+    return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
   }
 
-  foreach my $command (keys %{ $self->factoids }) {
-    if($keyword eq lc $command) {
-      
-      $self->{pbot}->logger->log("=======================\n");
-      $self->{pbot}->logger->log("[$keyword] == [$command]\n");
-      
-      if(${ $self->factoids }{$command}{enabled} == 0) {
-        $self->{pbot}->logger->log("$command disabled.\n");
-        return "$command is currently disabled.";
-      } elsif(exists ${ $self->factoids }{$command}{module}) {
-        $self->{pbot}->logger->log("Found module\n");
-        
-        ${ $self->factoids }{$keyword}{ref_count}++;
-        ${ $self->factoids }{$keyword}{ref_user} = $nick;
+  if(${ $self->factoids }{$keyword}{enabled} == 0) {
+    $self->{pbot}->logger->log("$keyword disabled.\n");
+    return "/msg $nick $keyword is currently disabled.";
+  } elsif(exists ${ $self->factoids }{$keyword}{module}) {
+    $self->{pbot}->logger->log("Found module\n");
 
-        return $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, $keyword, $arguments);
-      }
-      elsif(exists ${ $self->factoids }{$command}{text}) {
-        $self->{pbot}->logger->log("Found factoid\n");
+    ${ $self->factoids }{$keyword}{ref_count}++;
+    ${ $self->factoids }{$keyword}{ref_user} = $nick;
 
-        # Don't allow user-custom /msg factoids, unless factoid triggered by admin
-        if((${ $self->factoids }{$command}{text} =~ m/^\/msg/i) and (not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host"))) {
-          $self->{pbot}->logger->log("[HACK] Bad factoid (contains /msg): ${ $self->factoids }{$command}{text}\n");
-          return "You must login to use this command."
-        }
-        
-        ${ $self->factoids }{$command}{ref_count}++;
-        ${ $self->factoids }{$command}{ref_user} = $nick;
-        
-        $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $command: Displaying text \"${ $self->factoids }{$command}{text}\"\n");
-        
-        if(defined $tonick) { # !tell foo about bar
-          $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
-          my $fromnick = $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host") ? "" : "$nick wants you to know: ";
-          $result = ${ $self->factoids }{$command}{text};
+    return $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, $keyword, $arguments);
+  }
+  elsif(exists ${ $self->factoids }{$keyword}{text}) {
+    $self->{pbot}->logger->log("Found factoid\n");
 
-          my $botnick = "wtf"; # FIXME: wtf
+    # Don't allow user-custom /msg factoids, unless factoid triggered by admin
+    if((${ $self->factoids }{$keyword}{text} =~ m/^\/msg/i) and (not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host"))) {
+      $self->{pbot}->logger->log("[HACK] Bad factoid (contains /msg): ${ $self->factoids }{$keyword}{text}\n");
+      return "You must login to use this command."
+    }
 
-          if($result =~ s/^\/say\s+//i || $result =~ s/^\/me\s+/* $botnick /i
-            || $result =~ /^\/msg\s+/i) {
-            $result = "/msg $tonick $fromnick$result";
-          } else {
-            $result = "/msg $tonick $fromnick$command is $result";
-          }
+    ${ $self->factoids }{$keyword}{ref_count}++;
+    ${ $self->factoids }{$keyword}{ref_user} = $nick;
 
-          $self->{pbot}->logger->log("text set to [$result]\n");
-        } else {
-          $result = ${ $self->factoids }{$command}{text};
-        }
-        
-        if(defined $arguments) {
-          $self->{pbot}->logger->log("got arguments: [$arguments]\n");
-          
-          # TODO - extract and remove $tonick from end of $arguments
-          if(not $result =~ s/\$args/$arguments/gi) {
-            $self->{pbot}->logger->log("factoid doesn't take argument, checking ...\n");
-            # factoid doesn't take an argument
-            if($arguments =~ /^[^ ]{1,20}$/) {
-              # might be a nick
-              $self->{pbot}->logger->log("could be nick\n");
-              if($result =~ /^\/.+? /) {
-                $result =~ s/^(\/.+?) /$1 $arguments: /;
-              } else {
-                $result =~ s/^/\/say $arguments: $command is / unless (defined $tonick);
-              }                  
-            } else {
-              if($result !~ /^\/.+? /) {
-                $result =~ s/^/\/say $command is / unless (defined $tonick);
-              }                  
-            }
-            $self->{pbot}->logger->log("updated text: [$result]\n");
-          }
-          $self->{pbot}->logger->log("replaced \$args: [$result]\n");
-        } else {
-          # no arguments supplied
-          $result =~ s/\$args/$nick/gi;
-        }
-        
-        $result =~ s/\$nick/$nick/g;
-        
-        while($result =~ /[^\\]\$([^\s!+.$\/\\,;=&]+)/g) { 
-          my $var = $1;
-          #$self->{pbot}->logger->log("adlib: got [$var]\n");
-          #$self->{pbot}->logger->log("adlib: parsing variable [\$$var]\n");
-          if(exists ${ $self->factoids }{$var} && exists ${ $self->factoids }{$var}{text}) {
-            my $change = ${ $self->factoids }{$var}{text};
-            my @list = split(/\s|(".*?")/, $change);
-            my @mylist;
-            #$self->{pbot}->logger->log("adlib: list [". join(':', @mylist) ."]\n");
-            for(my $i = 0; $i <= $#list; $i++) {
-              #$self->{pbot}->logger->log("adlib: pushing $i $list[$i]\n");
-              push @mylist, $list[$i] if $list[$i];
-            }
-            my $line = int(rand($#mylist + 1));
-            $mylist[$line] =~ s/"//g;
-            $result =~ s/\$$var/$mylist[$line]/;
-            #$self->{pbot}->logger->log("adlib: found: change: $result\n");
-          } else {
-            $result =~ s/\$$var/$var/g;
-            #$self->{pbot}->logger->log("adlib: not found: change: $result\n");
-          }
-        }
-        
-        $result =~ s/\\\$/\$/g;
-        
-        # $self->{pbot}->logger->log("finally... [$result]\n");
-        if($result =~ s/^\/say\s+//i || $result =~ /^\/me\s+/i
-          || $result =~ /^\/msg\s+/i) {
-          # $self->{pbot}->logger->log("ret1\n");
-          return $result;
-        } else {
-          # $self->{pbot}->logger->log("ret2\n");
-          return "$command is $result";
-        }
-        
-        $self->{pbot}->logger->log("unknown3: [$result]\n");
+    $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"${ $self->factoids }{$keyword}{text}\"\n");
+
+    if(defined $tonick) { # !tell foo about bar
+      $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
+      my $fromnick = $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host") ? "" : "$nick wants you to know: ";
+      $result = ${ $self->factoids }{$keyword}{text};
+
+      my $botnick = $self->{pbot}->botnick;
+
+      if($result =~ s/^\/say\s+//i || $result =~ s/^\/me\s+/* $botnick /i
+        || $result =~ /^\/msg\s+/i) {
+        $result = "/msg $tonick $fromnick$result";
       } else {
-        $self->{pbot}->logger->log("($from): $nick!$user\@$host): Unknown command type for '$command'\n"); 
-        return "/me blinks.";
+        $result = "/msg $tonick $fromnick$keyword is $result";
       }
-      $self->{pbot}->logger->log("unknown4: [$result]\n");
-    } # else no match
-  } # end foreach
-  
-  #$self->{pbot}->logger->log("Checking regex factoids\n");
 
-  # Otherwise, the command was not found.
-  # Lets try regexp factoids ...
-  my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
-  
-  foreach my $command (sort keys %{ $self->factoids }) {
-    if(exists ${ $self->factoids }{$command}{regex}) {
-      eval {
-        my $regex = qr/$command/i;
-        # $self->{pbot}->logger->log("testing $string =~ $regex\n");
-        if($string =~ $regex) {
-          $self->{pbot}->logger->log("[$string] matches [$command][$regex] - calling [" . ${ $self->factoids }{$command}{regex}. "$']\n");
-          my $cmd = "${ $self->factoids }{$command}{regex}$'";
-          my $a = $1;
-          my $b = $2;
-          my $c = $3;
-          my $d = $4;
-          my $e = $5;
-          my $f = $6;
-          my $g = $7;
-          my $h = $8;
-          my $i = $9;
-          my $before = $`;
-          my $after = $';
-          $cmd =~ s/\$1/$a/g;
-          $cmd =~ s/\$2/$b/g;
-          $cmd =~ s/\$3/$c/g;
-          $cmd =~ s/\$4/$d/g;
-          $cmd =~ s/\$5/$e/g;
-          $cmd =~ s/\$6/$f/g;
-          $cmd =~ s/\$7/$g/g;
-          $cmd =~ s/\$8/$h/g;
-          $cmd =~ s/\$9/$i/g;
-          $cmd =~ s/\$`/$before/g;
-          $cmd =~ s/\$'/$after/g;
-          $cmd =~ s/^\s+//;
-          $cmd =~ s/\s+$//;
-          $result = $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $cmd);
-          return $result;
+      $self->{pbot}->logger->log("text set to [$result]\n");
+    } else {
+      $result = ${ $self->factoids }{$keyword}{text};
+    }
+
+    if(defined $arguments) {
+      $self->{pbot}->logger->log("got arguments: [$arguments]\n");
+
+      # TODO - extract and remove $tonick from end of $arguments
+      if(not $result =~ s/\$args/$arguments/gi) {
+        $self->{pbot}->logger->log("factoid doesn't take argument, checking ...\n");
+        # factoid doesn't take an argument
+        if($arguments =~ /^[^ ]{1,20}$/) {
+          # might be a nick
+          $self->{pbot}->logger->log("could be nick\n");
+          if($result =~ /^\/.+? /) {
+            $result =~ s/^(\/.+?) /$1 $arguments: /;
+          } else {
+            $result =~ s/^/\/say $arguments: $keyword is / unless (defined $tonick);
+          }                  
+        } else {
+          if($result !~ /^\/.+? /) {
+            $result =~ s/^/\/say $keyword is / unless (defined $tonick);
+          }                  
         }
-      };
-      if($@) {
-        $self->{pbot}->logger->log("Regex fail: $@\n");
-        return "/msg $nick Fail.";
+        $self->{pbot}->logger->log("updated text: [$result]\n");
+      }
+      $self->{pbot}->logger->log("replaced \$args: [$result]\n");
+    } else {
+      # no arguments supplied
+      $result =~ s/\$args/$nick/gi;
+    }
+
+    $result =~ s/\$nick/$nick/g;
+
+    while ($result =~ /[^\\]\$([^\s!+.$\/\\,;=&]+)/g) { 
+      my $var = $1;
+      #$self->{pbot}->logger->log("adlib: got [$var]\n");
+      #$self->{pbot}->logger->log("adlib: parsing variable [\$$var]\n");
+      if(exists ${ $self->factoids }{$var} && exists ${ $self->factoids }{$var}{text}) {
+        my $change = ${ $self->factoids }{$var}{text};
+        my @list = split(/\s|(".*?")/, $change);
+        my @mylist;
+        #$self->{pbot}->logger->log("adlib: list [". join(':', @mylist) ."]\n");
+        for(my $i = 0; $i <= $#list; $i++) {
+          #$self->{pbot}->logger->log("adlib: pushing $i $list[$i]\n");
+          push @mylist, $list[$i] if $list[$i];
+        }
+        my $line = int(rand($#mylist + 1));
+        $mylist[$line] =~ s/"//g;
+        $result =~ s/\$$var/$mylist[$line]/;
+        #$self->{pbot}->logger->log("adlib: found: change: $result\n");
+      } else {
+        $result =~ s/\$$var/$var/g;
+        #$self->{pbot}->logger->log("adlib: not found: change: $result\n");
       }
     }
+
+    $result =~ s/\\\$/\$/g;
+
+    if($result =~ s/^\/say\s+//i || $result =~ /^\/me\s+/i
+      || $result =~ /^\/msg\s+/i) {
+      return $result;
+    } else {
+      return "$keyword is $result";
+    }
+  } elsif(exists ${ $self->factoids }{$keyword}{regex}) {
+    $result = eval {
+      if($string =~ m/$keyword/i) {
+        $self->{pbot}->logger->log("[$string] matches [$keyword] - calling [" . ${ $self->factoids }{$keyword}{regex}. "$']\n");
+        my $cmd = "${ $self->factoids }{$keyword}{regex}$'";
+        my $a = $1;
+        my $b = $2;
+        my $c = $3;
+        my $d = $4;
+        my $e = $5;
+        my $f = $6;
+        my $g = $7;
+        my $h = $8;
+        my $i = $9;
+        my $before = $`;
+        my $after = $';
+        $cmd =~ s/\$1/$a/g;
+        $cmd =~ s/\$2/$b/g;
+        $cmd =~ s/\$3/$c/g;
+        $cmd =~ s/\$4/$d/g;
+        $cmd =~ s/\$5/$e/g;
+        $cmd =~ s/\$6/$f/g;
+        $cmd =~ s/\$7/$g/g;
+        $cmd =~ s/\$8/$h/g;
+        $cmd =~ s/\$9/$i/g;
+        $cmd =~ s/\$`/$before/g;
+        $cmd =~ s/\$'/$after/g;
+        $cmd =~ s/^\s+//;
+        $cmd =~ s/\s+$//;
+        $result = $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $cmd);
+        return $result;
+      }
+    };
+    if($@) {
+      $self->{pbot}->logger->log("Regex fail: $@\n");
+      return "/msg $nick Fail.";
+    }
+
+    return $result;
+  } else {
+    $self->{pbot}->logger->log("($from): $nick!$user\@$host): Unknown command type for '$keyword'\n"); 
+    return "/me blinks.";
   }
   return undef;  
 }
