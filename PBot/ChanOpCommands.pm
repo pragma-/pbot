@@ -79,17 +79,20 @@ sub unquiet {
     return "";
   }
 
- if(not $from =~ /^#/) { #not a channel
-    return "/msg $nick This command must be used in the channel.";
+  my ($target, $channel) = split / /, $arguments;
+
+  if(not defined $target) {
+    return "/msg $nick Usage: unquiet <nick> [channel]";
   }
 
-  if(not defined $arguments) {
-    return "/msg $nick Usage: unquiet nick";
-  }
+  $channel = $from if not defined $channel;
+  
+  return "/msg $nick Unquiet must be used against a channel.  Either use in channel, or specify !unquiet $target <channel>" if $channel !~ /^#/;
 
   $self->{pbot}->chanops->unquiet_nick($arguments, $from);
   delete ${ $self->{pbot}->chanops->{quieted_nicks} }{$arguments};
   $self->{pbot}->conn->privmsg($arguments, "$nick has allowed you to speak again.") unless $arguments =~ /\Q$self->{pbot}->botnick\E/i;
+  return "Done.";
 }
 
 sub ban_user {

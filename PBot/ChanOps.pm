@@ -50,6 +50,9 @@ sub gain_ops {
   
   if(not exists ${ $self->{is_opped} }{$channel}) {
     $self->{pbot}->conn->privmsg("chanserv", "op $channel");
+    $self->{is_opped}->{$channel}{timeout} = gettimeofday + 300; # assume we're going to be opped
+    $self->{pbot}->{irc}->flush_output_queue();
+    $self->{pbot}->{irc}->do_one_loop();
   } else {
     $self->perform_op_commands();
   }
@@ -77,6 +80,8 @@ sub perform_op_commands {
     }
     shift(@{ $self->{op_commands} });
   }
+  $self->{pbot}->{irc}->flush_output_queue();
+  $self->{pbot}->{irc}->do_one_loop();
   $self->{pbot}->logger->log("Done.\n");
 }
 
