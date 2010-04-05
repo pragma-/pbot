@@ -12,7 +12,7 @@ use HTML::FormatText;
 my @languages = qw/C C++ D Haskell Lua OCaml PHP Perl Python Ruby Scheme Tcl/;
 
 my %preludes = ( 'C' => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n",
-                 'C++' => "#include <iostream>\n",
+                 'C++' => "#include <iostream>\n#include <cstdio>\n",
                );
 
 if($#ARGV <= 0) {
