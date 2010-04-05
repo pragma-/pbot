@@ -318,29 +318,17 @@ sub info {
 
   # factoid
   if(exists $factoids->{$arguments}{text}) {
-    my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = 
-      localtime($factoids->{$arguments}{timestamp});
-    my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d",
-              $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
-    return "$arguments: Factoid submitted by $factoids->{$arguments}{owner} on $t, referenced $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})";
+    return "$arguments: Factoid submitted by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{timestamp}) . ", referenced $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})";
   }
 
   # module
   if(exists $factoids->{$arguments}{module}) {
-    my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = 
-      localtime($factoids->{$arguments}{timestamp});
-    my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d",
-              $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
-    return "$arguments: Module loaded by $factoids->{$arguments}{owner} on $t -> http://code.google.com/p/pbot2-pl/source/browse/trunk/modules/$factoids->{$arguments}{module}, used $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})"; 
+    return "$arguments: Module loaded by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{timestamp}) . " -> http://code.google.com/p/pbot2-pl/source/browse/trunk/modules/$factoids->{$arguments}{module}, used $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})"; 
   }
 
   # regex
   if(exists $factoids->{$arguments}{regex}) {
-    my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = 
-      localtime($factoids->{$arguments}{timestamp});
-    my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d",
-              $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
-    return "$arguments: Regex created by $factoids->{$arguments}{owner} on $t, used $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})"; 
+    return "$arguments: Regex created by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{timestamp}) . ", used $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})"; 
   }
 
   return "/msg $nick $arguments is not a factoid or a module";
