@@ -122,6 +122,7 @@ sub ack_die {
   my ($from, $nick, $user, $host, $arguments) = @_;
   $self->{pbot}->logger->log("$nick!$user\@$host made me exit.\n");
   $self->{pbot}->factoids->save_factoids();
+  $self->{pbot}->ignorelist->save_ignores();
   $self->{pbot}->conn->privmsg($from, "Good-bye.") if defined $from;
   $self->{pbot}->conn->quit("Departure requested.");
   exit 0;

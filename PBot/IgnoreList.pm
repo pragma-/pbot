@@ -37,8 +37,8 @@ sub initialize {
 
   $self->{pbot} = $pbot;
   $self->{ignore_list} = {};
-  $self->{ignore_flood_counter} = 0;
-  $self->{last_timestamp} = gettimeofday;
+  $self->{ignore_flood_counter} = {};
+  $self->{last_timestamp} = {};
   $self->{filename} = $filename;
 
   $pbot->timer->register(sub { $self->check_ignore_timeouts }, 10);
@@ -98,7 +98,11 @@ sub load_ignores {
       Carp::croak "Duplicate ignore [$hostmask][$channel] found in $filename around line $i\n";
     }
 
-    ${ $self->{ignore_list} }{$hostmask}{$channel} = gettimeofday + $length;
+    if($length == -1) {
+      ${ $self->{ignore_list} }{$hostmask}{$channel} = $length;
+    } else {
+      ${ $self->{ignore_list} }{$hostmask}{$channel} = gettimeofday + $length;
+    }
   }
 
   $self->{pbot}->logger->log("  $i entries in ignorelist\n");
@@ -141,26 +145,28 @@ sub check_ignore {
 
   if(defined $channel) { # do not execute following if text is coming from STDIN ($channel undef)
     if($channel =~ /^#/) {
-      $self->{ignore_flood_counter}++;  # TODO: make this per channel, e.g., ${ $self->{ignore_flood_counter} }{$channel}++
-      $pbot->logger->log("flood_msg: $self->{ignore_flood_counter}\n");
+      $self->{ignore_flood_counter}->{$channel}++;  # TODO: make this per channel, e.g., ${ $self->{ignore_flood_counter} }{$channel}++
+      $pbot->logger->log("flood_msg: $self->{ignore_flood_counter}->{$channel}\n");
     }
 
-    if($now - $self->{last_timestamp} >= 30) {
-      $self->{last_timestamp} = $now;
-      if($self->{ignore_flood_counter} > 0) {
-        $self->{ignore_flood_counter}--;
-        $pbot->logger->log("flood_msg decremented to $self->{ignore_flood_counter}\n");
+    if(not exists $self->{last_timestamp}->{$channel}) {
+      $self->{last_timestamp}->{$channel} = $now;
+    } elsif($now - $self->{last_timestamp}->{$channel} >= 30) {
+      $self->{last_timestamp}->{$channel} = $now;
+      if($self->{ignore_flood_counter}->{$channel} > 0) {
+        $self->{ignore_flood_counter}->{$channel}--;
+        $pbot->logger->log("flood_msg decremented to $self->{ignore_flood_counter}->{$channel}\n");
       }
     }
 
-    if(($self->{ignore_flood_counter} > 4) or ($channel =~ /^#osdev$/i and $self->{ignore_flood_counter} >= 3)) {
-      $pbot->logger->log("flood_msg exceeded! [$self->{ignore_flood_counter}]\n");
+    if(($self->{ignore_flood_counter}->{$channel} > 4) or ($channel =~ /^#osdev$/i and $self->{ignore_flood_counter}->{$channel} >= 3)) {
+      $pbot->logger->log("flood_msg exceeded! [$self->{ignore_flood_counter}->{$channel}]\n");
       $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", ".* $channel 600");
-      $self->{ignore_flood_counter} = 0;
+      $self->{ignore_flood_counter}->{$channel} = 0;
       if($channel =~ /^#/) {
         $pbot->conn->me($channel, "has been overwhelmed.");
         $pbot->conn->me($channel, "lies down and falls asleep."); 
-        return;
+        return 1;
       } 
     }
   }
