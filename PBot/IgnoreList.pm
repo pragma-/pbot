@@ -33,10 +33,13 @@ sub initialize {
     Carp::croak("Missing pbot reference to Channels");
   }
 
+  my $filename = delete $conf{filename};
+
   $self->{pbot} = $pbot;
   $self->{ignore_list} = {};
   $self->{ignore_flood_counter} = 0;
   $self->{last_timestamp} = gettimeofday;
+  $self->{filename} = $filename;
 
   $pbot->timer->register(sub { $self->check_ignore_timeouts }, 10);
 }
@@ -45,7 +48,13 @@ sub add {
   my $self = shift;
   my ($hostmask, $channel, $length) = @_;
 
-  ${ $self->{ignore_list} }{$hostmask}{$channel} = gettimeofday + $length;
+  if($length == -1) {
+    ${ $self->{ignore_list} }{$hostmask}{$channel} = -1;
+  } else {
+    ${ $self->{ignore_list} }{$hostmask}{$channel} = gettimeofday + $length;
+  }
+
+  $self->save_ignores();
 }
 
 sub remove {
@@ -53,6 +62,71 @@ sub remove {
   my ($hostmask, $channel) = @_;
 
   delete ${ $self->{ignore_list} }{$hostmask}{$channel};
+  $self->save_ignores();
+}
+
+sub load_ignores {
+  my $self = shift;
+  my $filename;
+
+  if(@_) { $filename = shift; } else { $filename = $self->{filename}; }
+
+  if(not defined $filename) {
+    Carp::carp "No ignorelist path specified -- skipping loading of ignorelist";
+    return;
+  }
+
+  $self->{pbot}->logger->log("Loading ignorelist from $filename ...\n");
+  
+  open(FILE, "< $filename") or Carp::croak "Couldn't open $filename: $!\n";
+  my @contents = <FILE>;
+  close(FILE);
+
+  my $i = 0;
+
+  foreach my $line (@contents) {
+    chomp $line;
+    $i++;
+
+    my ($hostmask, $channel, $length) = split(/\s+/, $line);
+    
+    if(not defined $hostmask || not defined $channel || not defined $length) {
+         Carp::croak "Syntax error around line $i of $filename\n";
+    }
+    
+    if(exists ${ $self->{ignore_list} }{$hostmask}{$channel}) {
+      Carp::croak "Duplicate ignore [$hostmask][$channel] found in $filename around line $i\n";
+    }
+
+    ${ $self->{ignore_list} }{$hostmask}{$channel} = gettimeofday + $length;
+  }
+
+  $self->{pbot}->logger->log("  $i entries in ignorelist\n");
+  $self->{pbot}->logger->log("Done.\n");
+}
+
+sub save_ignores {
+  my $self = shift;
+  my $filename;
+
+  if(@_) { $filename = shift; } else { $filename = $self->{filename}; }
+
+  if(not defined $filename) {
+    Carp::carp "No ignorelist path specified -- skipping saving of ignorelist\n";
+    return;
+  }
+
+  open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
+
+  foreach my $ignored (keys %{ $self->{ignore_list} }) {
+    foreach my $ignored_channel (keys %{ ${ $self->{ignore_list} }{$ignored} }) {
+      my $length = $self->{ignore_list}->{$ignored}{$ignored_channel};
+      $length = int($length - gettimeofday) unless $length == -1;
+      print FILE "$ignored $ignored_channel $length\n";
+    }
+  }
+
+  close(FILE);
 }
 
 sub check_ignore {
@@ -71,9 +145,17 @@ sub check_ignore {
       $pbot->logger->log("flood_msg: $self->{ignore_flood_counter}\n");
     }
 
-    if($self->{ignore_flood_counter} > 4) {
+    if($now - $self->{last_timestamp} >= 30) {
+      $self->{last_timestamp} = $now;
+      if($self->{ignore_flood_counter} > 0) {
+        $self->{ignore_flood_counter}--;
+        $pbot->logger->log("flood_msg decremented to $self->{ignore_flood_counter}\n");
+      }
+    }
+
+    if(($self->{ignore_flood_counter} > 4) or ($channel =~ /^#osdev$/i and $self->{ignore_flood_counter} >= 3)) {
       $pbot->logger->log("flood_msg exceeded! [$self->{ignore_flood_counter}]\n");
-      $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", ".* $channel 300");
+      $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", ".* $channel 600");
       $self->{ignore_flood_counter} = 0;
       if($channel =~ /^#/) {
         $pbot->conn->me($channel, "has been overwhelmed.");
@@ -81,19 +163,11 @@ sub check_ignore {
         return;
       } 
     }
-
-    if($now - $self->{last_timestamp} >= 15) {
-      $self->{last_timestamp} = $now;
-      if($self->{ignore_flood_counter} > 0) {
-        $pbot->logger->log("flood_msg reset: (was $self->{ignore_flood_counter})\n");
-        $self->{ignore_flood_counter} = 0;
-      }
-    }
   }
 
   foreach my $ignored (keys %{ $self->{ignore_list} }) {
     foreach my $ignored_channel (keys %{ ${ $self->{ignore_list} }{$ignored} }) {
-      $self->{pbot}->logger->log("check_ignore: comparing '$hostmask' against '$ignored' for channel '$channel'\n");
+      #$self->{pbot}->logger->log("check_ignore: comparing '$hostmask' against '$ignored' for channel '$channel'\n");
       if(($channel =~ /$ignored_channel/i) && ($hostmask =~ /$ignored/i)) {
         $self->{pbot}->logger->log("$nick!$user\@$host message ignored in channel $channel (matches [$ignored] host and [$ignored_channel] channel)\n");
         return 1;

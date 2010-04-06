@@ -71,6 +71,8 @@ sub initialize {
   my $MAX_FLOOD_MESSAGES = delete $conf{MAX_FLOOD_MESSAGES};
   my $MAX_NICK_MESSAGES  = delete $conf{MAX_NICK_MESSAGES};
 
+  my $ignorelist_file         = delete $conf{ignorelist_file};
+
   my $factoids_file           = delete $conf{factoids_file};
   my $export_factoids_path    = delete $conf{export_factoids_path};
   my $export_factoids_site    = delete $conf{export_factoids_site};
@@ -124,7 +126,9 @@ sub initialize {
   $self->module_dir($module_dir);
 
   $self->{antiflood} = PBot::AntiFlood->new(pbot => $self);
-  $self->{ignorelist} = PBot::IgnoreList->new(pbot => $self);
+
+  $self->{ignorelist} = PBot::IgnoreList->new(pbot => $self, filename => $ignorelist_file);
+  $self->{ignorelist}->load_ignores() if defined $ignorelist_file;
 
   $self->interpreter(PBot::Interpreter->new(pbot => $self));
   $self->interpreter->register(sub { return $self->commands->interpreter(@_); });

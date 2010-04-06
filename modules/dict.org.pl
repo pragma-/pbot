@@ -60,7 +60,7 @@ if (@ARGV > 0)
     else
     {
 =cut
-	define_word(shift @ARGV);
+	define_word(join ' ', @ARGV);
 =cut
     }
 =cut

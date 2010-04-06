@@ -24,6 +24,7 @@ my %config = ( log_file => "$home/pbot/log",
 
                admins_file          => "$home/pbot/admins",
                channels_file        => "$home/pbot/channels",
+               ignorelist_file      => "$home/pbot/ignorelist",
 
                factoids_file           => "$home/pbot/factoids",
                export_factoids_path    => "$home/pbot/factoids.html",
