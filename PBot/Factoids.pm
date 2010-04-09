@@ -13,6 +13,7 @@ $VERSION = $PBot::PBot::VERSION;
 
 use HTML::Entities;
 use Time::HiRes qw(gettimeofday);
+use Text::Levenshtein qw(fastdistance);
 use Carp ();
 
 use PBot::FactoidModuleLauncher;
@@ -240,6 +241,31 @@ sub find_factoid {
   return $result;
 }
 
+sub levenshtein_matches {
+  my ($self, $keyword) = @_;
+  my $comma = '';
+  my $result = "No such factoid '$keyword'; similiar matches: ";
+  
+  foreach my $command (sort keys %{ $self->factoids }) {
+    next if exists $self->factoids->{$command}{regex};
+    my $distance = fastdistance($keyword, $command);
+
+    # print "Distance $distance for $keyword (" , (length $keyword) , ") vs $command (" , length $command , ")\n";
+    
+    my $length = (length($keyword) > length($command)) ? length $keyword : length $command;
+
+    # print "Percentage: ", $distance / $length, "\n";
+
+    if($distance / $length < 0.50) {
+      $result .= $comma . $command;
+      $comma = ", ";
+    }
+  }
+
+  $result .= "none." if $comma eq '';
+  return $result;
+}
+
 sub interpreter {
   my $self = shift;
   my ($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick) = @_;
@@ -247,8 +273,9 @@ sub interpreter {
   my $pbot = $self->{pbot};
 
   my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
+  my $lev = lc $keyword;
   $keyword = $self->find_factoid($keyword, $arguments);
-  return undef if not defined $keyword;
+  return $self->levenshtein_matches($lev) if not defined $keyword;
 
   my $type;
   $type = 'text' if exists $self->factoids->{$keyword}{text};
@@ -419,7 +446,7 @@ sub interpreter {
     $self->{pbot}->logger->log("($from): $nick!$user\@$host): Unknown command type for '$keyword'\n"); 
     return "/me blinks.";
   }
-  return undef;  
+  return "/me wrinkles her nose.";
 }
 
 sub export_path {
