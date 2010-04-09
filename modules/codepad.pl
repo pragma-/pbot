@@ -16,7 +16,7 @@ my %preludes = ( 'C' => "#include <stdio.h>\n#include <stdlib.h>\n#include <stri
                );
 
 if($#ARGV <= 0) {
-  print "Usage: $0 <nick> <code>\n";
+  print "Usage: cc [-lang=<language>] <code>\n";
   exit 0;
 }
 
@@ -88,12 +88,12 @@ $output =~ s/\s+/ /g;
 $output =~ s/^\s+//g;
 $output =~ s/\s+$//g;
 
-$output =~ s/ Line 1 ://g;
+$output =~ s/ Line \d+ ://g;
 $output =~ s/ \(first use in this function\)//g;
 $output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//g;
 $output =~ s/error: (.*?) error/error: $1; error/g;
 
-print FILE "$nick: [$url] $output\n\n";
+print FILE "$nick: [ $url ] $output\n\n";
 close FILE;
 print "$nick: $output\n";
 
