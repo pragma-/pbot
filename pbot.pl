@@ -37,6 +37,8 @@ my %config = ( log_file => "$home/pbot/log",
 
                ircserver => 'irc.freenode.net',
                botnick   => 'pbot3',
+               username  => 'pbot3',
+               ircname   => 'http://www.iso-9899.info/wiki/Candide',
                identify_password => '*',
              );
 

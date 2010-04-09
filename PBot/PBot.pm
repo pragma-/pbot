@@ -64,6 +64,8 @@ sub initialize {
   my $admins_file       = delete $conf{admins_file};
   
   my $botnick           = delete $conf{botnick};
+  my $username          = delete $conf{username};
+  my $ircname           = delete $conf{ircname};
   my $identify_password = delete $conf{identify_password};
 
   my $ircserver          = delete $conf{ircserver};
@@ -91,6 +93,8 @@ sub initialize {
   $MAX_NICK_MESSAGES  = 8   unless defined $MAX_NICK_MESSAGES;
 
   $self->{botnick} = $botnick;
+  $self->{username} = $username;
+  $self->{ircname} = $ircname;
   $self->{identify_password} = $identify_password;
 
   $self->{max_msg_len} = $max_msg_len;
