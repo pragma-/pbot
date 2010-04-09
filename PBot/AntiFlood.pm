@@ -129,7 +129,7 @@ sub prune_message_history {
   foreach my $nick (keys %{ $self->{message_history} }) {
     foreach my $channel (keys %{ $self->{message_history}->{$nick} })
     {
-      $self->{pbot}->logger->log("Checking [$nick][$channel]\n");
+      #$self->{pbot}->logger->log("Checking [$nick][$channel]\n");
       my $length = $#{ $self->{message_history}->{$nick}{$channel}{messages} } + 1;
       my %last = %{ @{ $self->{message_history}->{$nick}{$channel}{messages} }[$length - 1] };
 
