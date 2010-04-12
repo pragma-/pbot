@@ -14,7 +14,7 @@ if(not length $search) {
 
 my ($section, $paragraph, $section_specified, $paragraph_specified, $match, $list_only);
 
-if($search =~ s/-section ([0-9\.p]+)//i) {
+if($search =~ s/-section\s*([0-9\.p]+)//i or $search =~ s/\b(\d+\.[0-9\.p]*)//i) {
   $section = $1;
 
   if($section =~ s/p(\d+)//i) {
@@ -105,7 +105,7 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
     my $t = $2;
 
     print "paragraph $p: [$t]\n" if $debug >= 3;
-    
+
     if($paragraph_specified and not length $search and $p == $paragraph) {
       $found = 1;
       $result = $t;
@@ -113,28 +113,30 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
     }
 
     if(length $search) {
-
-      #     print "$p\n";
-      #     print "[$t]\n";
-
-      if($t =~ m/$search/ms) {
-        $matches++;
-        if($matches >= $match) {
-          if($list_only) {
-            $result .= "$comma$this_section" . "p" . $p;
-            $comma = ", ";
-          } else {
-            $result = $t;
-            $paragraph = $p;
-            $paragraph_specified = 1;
-            $found = 1;
-            last;
+      eval {
+        if($t =~ m/\b$search\b/ms) {
+          $matches++;
+          if($matches >= $match) {
+            if($list_only) {
+              $result .= "$comma$this_section" . "p" . $p;
+              $comma = ", ";
+            } else {
+              $result = $t;
+              $paragraph = $p;
+              $paragraph_specified = 1;
+              $found = 1;
+              last;
+            }
           }
         }
+      };
+
+      if($@) {
+        print "Error in search regex; you may need to escape characters such as *, ?, ., etc.\n";
+        exit 0;
       }
     }
   }
-
   last if $found == 1;
 
   if($paragraph_specified) {
