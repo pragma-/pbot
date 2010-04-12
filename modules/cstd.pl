@@ -3,6 +3,8 @@
 use warnings;
 use strict;
 
+my $debug = 0;
+
 my $search = join ' ', @ARGV;
 
 if(not length $search) {
@@ -64,22 +66,24 @@ my $matches = 0;
 my $this_section;
 my $comma = "";
 
-#print "search: [$search]; section: [$section]\n";
-
 if($list_only) {
   $result = "Sections containing '$search': ";
 }
 
 $search =~ s/\s+/.*/g;
 
-while($text =~ m/^(\d+\.[0-9\.]*)/msg) {
+while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
   $this_section = $1;
+
+  print "----------------------------------\n" if $debug >= 2;
+  print "Processing section [$this_section]\n" if $debug;
 
   my $section_text;
 
-  if($text =~ m/(.*?)^(?=\d+\.)/msg) {
+  if($text =~ m/(.*?)^(?=\s{4}\d+\.)/msg) {
     $section_text = $1;
   } else {
+    print "No section text, skipping.\n" if $debug >= 4;
     last;
   }
 
@@ -89,21 +93,18 @@ while($text =~ m/^(\d+\.[0-9\.]*)/msg) {
     $section_title =~ s/\s+$//;
   }
 
-  if(not defined $section_text) {
-    print "Fatal error: no section text\n";
-    die;
+  if($section_specified and $this_section !~ m/^$section/) {
+    print "No section match, skipping.\n" if $debug >= 4;
+    next;
   }
 
-  if($section_specified) {
-    next if $this_section !~ m/^$section/;
-  }
-
-#  print "----------------------------------\n";
-#  print "$this_section text: [$section_text]\n";
+  print "$this_section [$section_title]\n" if $debug >= 2;
 
   while($section_text =~ m/^(\d+)\s(.*?)^(?=\d)/msgc or $section_text =~ m/^(\d+)\s(.*)/msg) {
-    my $p = $1;
+    my $p = $1 ;
     my $t = $2;
+
+    print "paragraph $p: [$t]\n" if $debug >= 3;
     
     if($paragraph_specified and not length $search and $p == $paragraph) {
       $found = 1;
@@ -116,7 +117,7 @@ while($text =~ m/^(\d+\.[0-9\.]*)/msg) {
       #     print "$p\n";
       #     print "[$t]\n";
 
-      if($t =~ m/$search/msi) {
+      if($t =~ m/$search/ms) {
         $matches++;
         if($matches >= $match) {
           if($list_only) {
