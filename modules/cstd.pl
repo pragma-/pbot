@@ -5,21 +5,28 @@ use strict;
 
 my $debug = 0;
 
+# for paragraphs
+my $USER_SPECIFIED    = 1;
+my $RESULTS_SPECIFIED = 2;
+
 my $search = join ' ', @ARGV;
 
 if(not length $search) {
-  print "Usage: cstd [-list] [-n #] [-section <section>] [search text] -- 'section' must be in the form of X.YpZ where X and Y are section/chapter and, optionally, Z is paragraph. If both 'section' and 'search text' are specified, then the search space will be within the specified section. You may use -n # to skip to the #th match. To list only the section numbers containing 'search text', add -list.\n";
+  print "Usage: cstd [-list] [-n#] [-section <section>] [search text] -- 'section' must be in the form of X.YpZ where X and Y are section/chapter and, optionally, Z is paragraph. If both 'section' and 'search text' are specified, then the search space will be within the specified section. You may use -n # to skip to the #th match. To list only the section numbers containing 'search text', add -list.\n";
   exit 0;
 }
 
 my ($section, $paragraph, $section_specified, $paragraph_specified, $match, $list_only);
+
+$section_specified = 0;
+$paragraph_specified = 0;
 
 if($search =~ s/-section\s*([0-9\.p]+)//i or $search =~ s/\b(\d+\.[0-9\.p]*)//i) {
   $section = $1;
 
   if($section =~ s/p(\d+)//i) {
     $paragraph = $1;
-    $paragraph_specified = 1;
+    $paragraph_specified = $USER_SPECIFIED;
   } else {
     $paragraph = 1;
   }
@@ -60,6 +67,8 @@ my $text = join '', @contents;
 $text =~ s/\r//g;
 
 my $result;
+my $found_section = "";
+my $found_section_title = "";
 my $section_title;
 my $found = 0;
 my $matches = 0;
@@ -83,7 +92,7 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
   if($text =~ m/(.*?)^(?=\s{4}\d+\.)/msg) {
     $section_text = $1;
   } else {
-    print "No section text, skipping.\n" if $debug >= 4;
+    print "No section text, end of file marker found.\n" if $debug >= 4;
     last;
   }
 
@@ -106,26 +115,29 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
 
     print "paragraph $p: [$t]\n" if $debug >= 3;
 
-    if($paragraph_specified and not length $search and $p == $paragraph) {
+    if($paragraph_specified == $USER_SPECIFIED and not length $search and $p == $paragraph) {
+      $result = $t if not $found;
       $found = 1;
-      $result = $t;
       last;
     }
 
     if(length $search) {
       eval {
-        if($t =~ m/\b$search\b/ms) {
+        if($t =~ m/\b$search/ms) {
           $matches++;
           if($matches >= $match) {
             if($list_only) {
               $result .= "$comma$this_section" . "p" . $p;
               $comma = ", ";
             } else {
-              $result = $t;
-              $paragraph = $p;
-              $paragraph_specified = 1;
+              if(not $found) {
+                $result = $t;
+                $found_section = $this_section;
+                $found_section_title = $section_title;
+                $paragraph = $p;
+                $paragraph_specified = $RESULTS_SPECIFIED;
+              }
               $found = 1;
-              last;
             }
           }
         }
@@ -137,15 +149,18 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
       }
     }
   }
-  last if $found == 1;
 
-  if($paragraph_specified) {
+  last if $found && $paragraph_specified == $USER_SPECIFIED;
+  
+  if($paragraph_specified == $USER_SPECIFIED) {
     print "No such paragraph '$paragraph' in section '$section' of n1256.\n";
     exit 0;
   }
 
   if(defined $section_specified and not length $search) {
     $found = 1;
+    $found_section = $this_section;
+    $found_section_title = $section_title;
     $result = $section_text;
     last;
   }
@@ -166,17 +181,21 @@ if(not $found and $comma eq "") {
   exit 0;
 }
 
-$result =~ s/$section_title// if length $section_title;
+$result =~ s/$found_section_title// if length $found_section_title;
 $result =~ s/^\s+//;
 $result =~ s/\s+$//;
 $result =~ s/\s+/ /g;
 $result =~ s/[\n\r]/ /g;
 
+if($matches > 1 and not $list_only) {
+  print "Displaying \#$match of $matches matches: ";
+}
+
 if($comma eq "") {
-  print $this_section;
+  print $found_section;
   print "p" . $paragraph if $paragraph_specified;
   print ": ";
-  print "[", $section_title, "] " if length $section_title;
+  print "[", $found_section_title, "] " if length $found_section_title;
 }
 
 print "$result\n";
