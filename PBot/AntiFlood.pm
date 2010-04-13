@@ -95,12 +95,14 @@ sub check_flood {
         ${ $self->message_history }{$nick}{$channel}{offenses}++;
         my $length = ${ $self->message_history }{$nick}{$channel}{offenses} * ${ $self->message_history }{$nick}{$channel}{offenses} * 30;
         if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
+          return if exists $self->{pbot}->chanops->{quieted_nicks}->{$nick};
           if($mode == $self->{FLOOD_CHAT}) {
             $self->{pbot}->chanops->quiet_nick_timed($nick, $channel, $length);
             $self->{pbot}->conn->privmsg($nick, "You have been quieted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length seconds.");
             $self->{pbot}->logger->log("$nick $channel flood offense ${ $self->message_history }{$nick}{$channel}{offenses} earned $length second quiet\n");
           }
         } else { # private message flood
+          return if exists $self->{pbot}->ignorelist->{ignore_list}->{"$nick!$user\@$host"}{$channel};
           $self->{pbot}->logger->log("$nick msg flood offense ${ $self->message_history }{$nick}{$channel}{offenses} earned $length second ignore\n");
             $self->{pbot}->conn->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length seconds.");
           $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", "$nick!$user\@$host $channel $length");

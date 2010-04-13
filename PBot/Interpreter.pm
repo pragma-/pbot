@@ -10,6 +10,7 @@ use strict;
 
 use base 'PBot::Registerable';
 
+use LWP::UserAgent;
 use Carp ();
 
 use vars qw($VERSION);
@@ -39,6 +40,25 @@ sub initialize {
   }
 
   $self->{pbot} = $pbot;
+}
+
+sub paste_codepad {
+  my $text = join(' ', @_);
+
+  $text =~ s/(.{120})\s/$1\n/g;
+
+  my $ua = LWP::UserAgent->new();
+  $ua->agent("Mozilla/5.0");
+  push @{ $ua->requests_redirectable }, 'POST';
+
+  my %post = ( 'lang' => 'Plain Text', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
+  my $response = $ua->post("http://codepad.org", \%post);
+
+  if(not $response->is_success) {
+    return $response->status_line;
+  }
+
+  return $response->request->uri;
 }
 
 sub process_line {
@@ -86,11 +106,11 @@ sub process_line {
     if(defined $result && length $result > 0) {
       my $len = length $result;
       if($len > $pbot->max_msg_len) {
-        if(($len - $pbot->max_msg_len) > 10) {
-          $pbot->logger->log("Message truncated.\n");
-          $result = substr($result, 0, $pbot->max_msg_len);
-          substr($result, $pbot->max_msg_len) = "... (" . ($len - $pbot->max_msg_len) . " more characters)";
-        }
+        my $link = paste_codepad("[$from] <$nick> $text\n$result");
+        my $trunc = "... truncated; see $link for full text.";
+        $pbot->logger->log("Message truncated -- pasted to $link\n");
+        $result = substr($result, 0, $pbot->max_msg_len);
+        substr($result, $pbot->max_msg_len - length $trunc) = $trunc;
       }
 
       $pbot->logger->log("Final result: $result\n");

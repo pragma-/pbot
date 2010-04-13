@@ -151,7 +151,7 @@ sub check_ignore {
 
     if(not exists $self->{last_timestamp}->{$channel}) {
       $self->{last_timestamp}->{$channel} = $now;
-    } elsif($now - $self->{last_timestamp}->{$channel} >= 30) {
+    } elsif($now - $self->{last_timestamp}->{$channel} >= 15) {
       $self->{last_timestamp}->{$channel} = $now;
       if($self->{ignore_flood_counter}->{$channel} > 0) {
         $self->{ignore_flood_counter}->{$channel}--;
@@ -159,9 +159,9 @@ sub check_ignore {
       }
     }
 
-    if(($self->{ignore_flood_counter}->{$channel} > 4) or ($channel =~ /^#osdev$/i and $self->{ignore_flood_counter}->{$channel} >= 3)) {
+    if(($self->{ignore_flood_counter}->{$channel} > 5) or ($channel =~ /^#osdev$/i and $self->{ignore_flood_counter}->{$channel} >= 3)) {
       $pbot->logger->log("flood_msg exceeded! [$self->{ignore_flood_counter}->{$channel}]\n");
-      $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", ".* $channel 600");
+      $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", ".* $channel 300");
       $self->{ignore_flood_counter}->{$channel} = 0;
       if($channel =~ /^#/) {
         $pbot->conn->me($channel, "has been overwhelmed.");

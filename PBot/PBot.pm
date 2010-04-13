@@ -88,7 +88,7 @@ sub initialize {
   $botnick            = "pbot2"            unless defined $botnick;
   $identify_password  = ""                 unless defined $identify_password;
 
-  $max_msg_len        = 460 unless defined $max_msg_len;
+  $max_msg_len        = 430 unless defined $max_msg_len;
   $MAX_FLOOD_MESSAGES = 4   unless defined $MAX_FLOOD_MESSAGES;
   $MAX_NICK_MESSAGES  = 8   unless defined $MAX_NICK_MESSAGES;
 
