@@ -79,7 +79,7 @@ if($list_only) {
   $result = "Sections containing '$search': ";
 }
 
-$search =~ s/\s+/.*/g;
+$search =~ s/\s+/.*?/g;
 
 while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
   $this_section = $1;
@@ -117,6 +117,8 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
 
     if($paragraph_specified == $USER_SPECIFIED and not length $search and $p == $paragraph) {
       $result = $t if not $found;
+      $found_section = $this_section;
+      $found_section_title = $section_title;
       $found = 1;
       last;
     }
@@ -169,7 +171,7 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
 }
 
 if(not $found and $comma eq "") {
-  $search =~ s/\.\*/ /g;
+  $search =~ s/\.\*\?/ /g;
   if($section_specified) {
     print "No such text '$search' found within section '$section' in n1256.\n" if length $search;
     print "No such section '$section' in n1256.\n" if not length $search;
