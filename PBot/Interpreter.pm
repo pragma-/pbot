@@ -100,17 +100,28 @@ sub process_line {
       $result = $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, "title", "$nick http://$has_url");
     }
     
-    $result =~ s/\$nick/$nick/g if defined $result;
+    if(defined $result) {
+      $result =~ s/\$nick/$nick/g;
+      $result =~ s/^\s+//;
+      $result =~ s/\s+$//;
+    }
 
-    # TODO add paging system?
     if(defined $result && length $result > 0) {
       my $len = length $result;
       if($len > $pbot->max_msg_len) {
-        my $link = paste_codepad("[$from] <$nick> $text\n$result");
+        print "result: [$result]\n";
+        my $link = paste_codepad("[$from] <$nick> $text\n\n$result");
         my $trunc = "... truncated; see $link for full text.";
         $pbot->logger->log("Message truncated -- pasted to $link\n");
+
+        $result =~ s/[\n\r]+/ /g;
+        $result =~ s/\s+/ /g;
+        
         $result = substr($result, 0, $pbot->max_msg_len);
         substr($result, $pbot->max_msg_len - length $trunc) = $trunc;
+      } else {
+        $result =~ s/[\n\r]+/ /g;
+        $result =~ s/\s+/ /g;
       }
 
       $pbot->logger->log("Final result: $result\n");

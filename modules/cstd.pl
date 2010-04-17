@@ -70,6 +70,7 @@ my $result;
 my $found_section = "";
 my $found_section_title = "";
 my $section_title;
+my $found_paragraph;
 my $found = 0;
 my $matches = 0;
 my $this_section;
@@ -117,6 +118,7 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
 
     if($paragraph_specified == $USER_SPECIFIED and not length $search and $p == $paragraph) {
       $result = $t if not $found;
+      $found_paragraph = $p;
       $found_section = $this_section;
       $found_section_title = $section_title;
       $found = 1;
@@ -136,7 +138,7 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
                 $result = $t;
                 $found_section = $this_section;
                 $found_section_title = $section_title;
-                $paragraph = $p;
+                $found_paragraph = $p;
                 $paragraph_specified = $RESULTS_SPECIFIED;
               }
               $found = 1;
@@ -163,11 +165,10 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
     $found = 1;
     $found_section = $this_section;
     $found_section_title = $section_title;
+    $found_paragraph = $paragraph;
     $result = $section_text;
     last;
   }
-
-  $paragraph = 1;
 }
 
 if(not $found and $comma eq "") {
@@ -186,8 +187,10 @@ if(not $found and $comma eq "") {
 $result =~ s/$found_section_title// if length $found_section_title;
 $result =~ s/^\s+//;
 $result =~ s/\s+$//;
+=cut
 $result =~ s/\s+/ /g;
 $result =~ s/[\n\r]/ /g;
+=cut
 
 if($matches > 1 and not $list_only) {
   print "Displaying \#$match of $matches matches: ";
@@ -195,7 +198,7 @@ if($matches > 1 and not $list_only) {
 
 if($comma eq "") {
   print $found_section;
-  print "p" . $paragraph if $paragraph_specified;
+  print "p" . $found_paragraph if $paragraph_specified;
   print ": ";
   print "[", $found_section_title, "] " if length $found_section_title;
 }
