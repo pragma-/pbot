@@ -244,7 +244,7 @@ sub find_factoid {
 sub levenshtein_matches {
   my ($self, $keyword) = @_;
   my $comma = '';
-  my $result = "No such factoid '$keyword'; similiar matches: ";
+  my $result = "I don't know about '$keyword'; did you mean ";
   
   foreach my $command (sort keys %{ $self->factoids }) {
     next if exists $self->factoids->{$command}{regex};
@@ -262,7 +262,9 @@ sub levenshtein_matches {
     }
   }
 
-  $result .= "none." if $comma eq '';
+  $result =~ s/(.*), /$1 or /;
+  $result =~ s/$/?/;
+  $result = undef if $comma eq '';
   return $result;
 }
 

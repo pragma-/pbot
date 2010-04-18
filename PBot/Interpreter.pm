@@ -109,7 +109,6 @@ sub process_line {
     if(defined $result && length $result > 0) {
       my $len = length $result;
       if($len > $pbot->max_msg_len) {
-        print "result: [$result]\n";
         my $link = paste_codepad("[$from] <$nick> $text\n\n$result");
         my $trunc = "... truncated; see $link for full text.";
         $pbot->logger->log("Message truncated -- pasted to $link\n");
@@ -179,8 +178,8 @@ sub interpret {
   } elsif($command =~ /^([^ ]+)\s+is\s+also\s+(.*)$/) {
     ($keyword, $arguments) = ("change", "$1 s,\$, ; $2,");
   } elsif($command =~ /^([^ ]+)\s+is\s+(.*)$/) {
-    ($keyword, $arguments) = ("add", join(' ', $1, $2)) unless exists ${ $pbot->factoids }{$1};
-    ($keyword, $arguments) = ($1, "is $2") if exists ${ $pbot->factoids }{$1};
+    ($keyword, $arguments) = ("add", join(' ', $1, $2)) unless exists ${ $pbot->factoids }{factoids}{$1};
+    ($keyword, $arguments) = ($1, "is $2") if exists ${ $pbot->factoids }{factoids}{$1};
   } elsif($command =~ /^(.*?)\s+(.*)$/) {
     ($keyword, $arguments) = ($1, $2);
   } else {

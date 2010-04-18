@@ -236,6 +236,7 @@ sub add_text {
 
   if(exists $factoids->{$keyword}) {
     $self->{pbot}->logger->log("$nick!$user\@$host attempt to overwrite $keyword\n");
+    return undef;
     return "/msg $nick $keyword already exists.";
   }
 
