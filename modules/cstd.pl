@@ -127,7 +127,7 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
 
     if(length $search) {
       eval {
-        if($t =~ m/\b$search/ms) {
+        if($t =~ m/\b$search/mis or $section_title =~ m/\b$search/mis) {
           $matches++;
           if($matches >= $match) {
             if($list_only) {
@@ -197,9 +197,13 @@ if($matches > 1 and not $list_only) {
 }
 
 if($comma eq "") {
+=cut
   print $found_section;
   print "p" . $found_paragraph if $paragraph_specified;
-  print ": ";
+=cut
+  print "http://blackshell.com/~msmud/cstd.html\#$found_section";
+  print "p" . $found_paragraph if $paragraph_specified;
+  print " : ";
   print "[", $found_section_title, "] " if length $found_section_title;
 }
 
