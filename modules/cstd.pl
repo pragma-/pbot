@@ -16,7 +16,7 @@ if(not length $search) {
   exit 0;
 }
 
-my ($section, $paragraph, $section_specified, $paragraph_specified, $match, $list_only);
+my ($section, $paragraph, $section_specified, $paragraph_specified, $match, $list_only, $list_titles);
 
 $section_specified = 0;
 $paragraph_specified = 0;
@@ -44,6 +44,12 @@ if($search =~ s/-n\s*(\d+)//) {
 
 if($search =~ s/-list//i) {
   $list_only = 1;
+  $list_titles = 1; # Added here instead of removing -titles option
+}
+
+if($search =~ s/-titles//i) {
+  $list_only = 1;
+  $list_titles = 1;
 }
 
 $search =~ s/^\s+//;
@@ -77,10 +83,10 @@ my $this_section;
 my $comma = "";
 
 if($list_only) {
-  $result = "Sections containing '$search': ";
+  $result = "Sections containing '$search':\n    ";
 }
 
-$search =~ s/\s+/.*?/g;
+$search =~ s/\s/./g;
 
 while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
   $this_section = $1;
@@ -131,8 +137,9 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
           $matches++;
           if($matches >= $match) {
             if($list_only) {
-              $result .= "$comma$this_section" . "p" . $p;
-              $comma = ", ";
+              $result .= sprintf("%s%-15s", $comma, $this_section."p".$p);
+              $result .= " $section_title" if $list_titles;
+              $comma = ",\n    ";
             } else {
               if(not $found) {
                 $result = $t;
@@ -172,7 +179,7 @@ while($text =~ m/^\s{4}(\d+\.[0-9\.]*)/msg) {
 }
 
 if(not $found and $comma eq "") {
-  $search =~ s/\.\*\?/ /g;
+  $search =~ s/\./ /g;
   if($section_specified) {
     print "No such text '$search' found within section '$section' in n1256.\n" if length $search;
     print "No such section '$section' in n1256.\n" if not length $search;
