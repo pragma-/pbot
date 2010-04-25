@@ -12,6 +12,9 @@ my $result;
 
 my %languages = (
   'Ada'                          => { 'id' =>    '7', 'name' => 'Ada (gnat-4.3.2)'                                 },
+  'asm'                          => { 'id' =>   '13', 'name' => 'Assembler (nasm-2.07)'                            },
+  'nasm'                         => { 'id' =>   '13', 'name' => 'Assembler (nasm-2.07)'                            },
+  'Assembler'                    => { 'id' =>   '13', 'name' => 'Assembler (nasm-2.07)'                            },
   'Assembler'                    => { 'id' =>   '13', 'name' => 'Assembler (nasm-2.07)'                            },
   'gawk'                         => { 'id' =>  '104', 'name' => 'AWK (gawk) (gawk-3.1.6)'                          },
   'mawk'                         => { 'id' =>  '105', 'name' => 'AWK (mawk) (mawk-1.3.3)'                          },
@@ -138,10 +141,10 @@ my $MEMORYLIMIT = 17;
 my $ILLEGAL_SYSCALL = 19;
 my $INTERNAL_ERROR = 20;
 
-if($result->{result} == $COMPILER_ERROR) {
+#if($result->{result} == $COMPILER_ERROR) {
   $output .= $result->{cmpinfo};
   $output =~ s/[\n\r]/ /g;
-}
+#}
 
 if($result->{signal}) {
   $output .= "\n[Signal: $result->{signal}]";
@@ -177,6 +180,9 @@ $output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//msg
 $output =~ s/prog\.c[:\d\s]*//g;
 $output =~ s/error: (.*?) error/error: $1; error/msg;
 
+$output = "No output." if $output =~ m/^\s+$/;
+
+print FILE localtime . "\n";
 print FILE "$nick: [ http://ideone.com/$url ] $output\n\n";
 close FILE;
 print "$nick: $output\n";

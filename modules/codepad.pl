@@ -83,16 +83,14 @@ if($text =~ /<span class="heading">Output:<\/span>.+?<div class="code">(.*)<\/di
 $output = decode_entities($output);
 $output = HTML::FormatText->new->format(parse_html($output));
 
-$output =~ s/[\n\r]/ /g;
-$output =~ s/\s+/ /g;
-$output =~ s/^\s+//g;
-$output =~ s/\s+$//g;
+$output =~ s/^\s+//;
 
 $output =~ s/ Line \d+ ://g;
 $output =~ s/ \(first use in this function\)//g;
 $output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//g;
-$output =~ s/error: (.*?) error/error: $1; error/g;
+$output =~ s/error: (.*?).error/error: $1; error/g;
 
+print FILE localtime . "\n";
 print FILE "$nick: [ $url ] $output\n\n";
 close FILE;
 print "$nick: $output\n";
