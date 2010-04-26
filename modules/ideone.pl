@@ -119,6 +119,8 @@ if(($lang eq "C99" or $lang eq "C" or $lang eq "C++") and not $code =~ m/(int|vo
   $code = "$prelude\n int main(int argc, char **argv) { $code ; return 0; }";
 }
 
+$code =~ s/\\n/\n/g;
+
 $result = get_result($soap->createSubmission($user, $pass, $code, $languages{$lang}{'id'}, $input, 1, 1));
 
 my $url = $result->{link};
@@ -137,22 +139,98 @@ my $output = "";
 my $COMPILER_ERROR = 11;
 my $RUNTIME_ERROR = 12;
 my $TIMELIMIT = 13;
+my $SUCCESSFUL = 15;
 my $MEMORYLIMIT = 17;
 my $ILLEGAL_SYSCALL = 19;
 my $INTERNAL_ERROR = 20;
 
-#if($result->{result} == $COMPILER_ERROR) {
+# signals extracted from ideone.com
+my @signame;
+$signame[0] = 'SIGZERO';
+$signame[1] = 'SIGHUP';
+$signame[2] = 'SIGINT';
+$signame[3] = 'SIGQUIT';
+$signame[4] = 'SIGILL';
+$signame[5] = 'SIGTRAP';
+$signame[6] = 'SIGABRT';
+$signame[7] = 'SIGBUS';
+$signame[8] = 'SIGFPE';
+$signame[9] = 'SIGKILL';
+$signame[10] = 'SIGUSR1';
+$signame[11] = 'SIGSEGV';
+$signame[12] = 'SIGUSR2';
+$signame[13] = 'SIGPIPE';
+$signame[14] = 'SIGALRM';
+$signame[15] = 'SIGTERM';
+$signame[16] = 'SIGSTKFLT';
+$signame[17] = 'SIGCHLD';
+$signame[18] = 'SIGCONT';
+$signame[19] = 'SIGSTOP';
+$signame[20] = 'SIGTSTP';
+$signame[21] = 'SIGTTIN';
+$signame[22] = 'SIGTTOU';
+$signame[23] = 'SIGURG';
+$signame[24] = 'SIGXCPU';
+$signame[25] = 'SIGXFSZ';
+$signame[26] = 'SIGVTALRM';
+$signame[27] = 'SIGPROF';
+$signame[28] = 'SIGWINCH';
+$signame[29] = 'SIGIO';
+$signame[30] = 'SIGPWR';
+$signame[31] = 'SIGSYS';
+$signame[32] = 'SIGNUM32';
+$signame[33] = 'SIGNUM33';
+$signame[34] = 'SIGRTMIN';
+$signame[35] = 'SIGNUM35';
+$signame[36] = 'SIGNUM36';
+$signame[37] = 'SIGNUM37';
+$signame[38] = 'SIGNUM38';
+$signame[39] = 'SIGNUM39';
+$signame[40] = 'SIGNUM40';
+$signame[41] = 'SIGNUM41';
+$signame[42] = 'SIGNUM42';
+$signame[43] = 'SIGNUM43';
+$signame[44] = 'SIGNUM44';
+$signame[45] = 'SIGNUM45';
+$signame[46] = 'SIGNUM46';
+$signame[47] = 'SIGNUM47';
+$signame[48] = 'SIGNUM48';
+$signame[49] = 'SIGNUM49';
+$signame[50] = 'SIGNUM50';
+$signame[51] = 'SIGNUM51';
+$signame[52] = 'SIGNUM52';
+$signame[53] = 'SIGNUM53';
+$signame[54] = 'SIGNUM54';
+$signame[55] = 'SIGNUM55';
+$signame[56] = 'SIGNUM56';
+$signame[57] = 'SIGNUM57';
+$signame[58] = 'SIGNUM58';
+$signame[59] = 'SIGNUM59';
+$signame[60] = 'SIGNUM60';
+$signame[61] = 'SIGNUM61';
+$signame[62] = 'SIGNUM62';
+$signame[63] = 'SIGNUM63';
+$signame[64] = 'SIGRTMAX';
+$signame[65] = 'SIGIOT';
+$signame[66] = 'SIGCLD';
+$signame[67] = 'SIGPOLL';
+$signame[68] = 'SIGUNUSED';
+
+if($result->{result} != $SUCCESSFUL) {
   $output .= $result->{cmpinfo};
   $output =~ s/[\n\r]/ /g;
-#}
-
-if($result->{signal}) {
-  $output .= "\n[Signal: $result->{signal}]";
 }
 
-if($result->{result} == $RUNTIME_ERROR) {
-  $output .= "\n[Runtime error]";
-}
+  if($result->{result} == $RUNTIME_ERROR) {
+    $output .= "\n[Runtime error]";
+    if($result->{signal}) {
+      $output .= "\n[Signal: $signame[$result->{signal}] ($result->{signal})]";
+    }
+  } else {
+    if($result->{signal}) {
+      $output .= "\n[Exit code: $result->{signal}]";
+    }
+  }
 
 if($result->{result} == $TIMELIMIT) {
   $output .= "\n[Time limit exceeded]";
@@ -182,7 +260,7 @@ $output =~ s/error: (.*?) error/error: $1; error/msg;
 
 $output = "No output." if $output =~ m/^\s+$/;
 
-print FILE localtime . "\n";
+print FILE localtime() . "\n";
 print FILE "$nick: [ http://ideone.com/$url ] $output\n\n";
 close FILE;
 print "$nick: $output\n";
