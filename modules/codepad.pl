@@ -8,6 +8,7 @@ use URI::Escape;
 use HTML::Entities;
 use HTML::Parse;
 use HTML::FormatText;
+use IPC::Open2;
 
 my @languages = qw/C C++ D Haskell Lua OCaml PHP Perl Python Ruby Scheme Tcl/;
 
@@ -28,6 +29,9 @@ print FILE "$nick: $code\n";
 
 my $lang = "C";
 $lang = $1 if $code =~ s/-lang=([^\b\s]+)//i;
+
+my $show_url = 0;
+$show_url = 1 if $code =~ s/-showurl//i;
 
 my $found = 0;
 foreach my $l (@languages) {
@@ -56,8 +60,11 @@ $code = $preludes{$lang} . $code;
 if(($lang eq "C" or $lang eq "C++") and not $code =~ m/(int|void) main\s*\([^)]*\)\s*{/) {
   my $prelude = '';
   $prelude = "$1$2" if $code =~ s/^\s*(#.*)(#.*?[>\n])//s;
-  $code = "$prelude\n int main(int argc, char **argv) { $code ; return 0; }";
+  $code = "$prelude\n\nint main(int argc, char **argv) { $code ; return 0; }";
 }
+
+$code =~ s/;\s*;/;/g;
+$code = pretty($code);
 
 my %post = ( 'lang' => $lang, 'code' => $code, 'private' => 'True', 'run' => 'True', 'submit' => 'Submit' );
 my $response = $ua->post("http://codepad.org", \%post);
@@ -85,13 +92,33 @@ $output = HTML::FormatText->new->format(parse_html($output));
 
 $output =~ s/^\s+//;
 
-$output =~ s/ Line \d+ ://g;
+$output =~ s/\s*Line\s+\d+\s+://g;
 $output =~ s/ \(first use in this function\)//g;
 $output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//g;
 $output =~ s/error: (.*?).error/error: $1; error/g;
 
-print FILE localtime . "\n";
+print FILE localtime() . "\n";
 print FILE "$nick: [ $url ] $output\n\n";
 close FILE;
-print "$nick: $output\n";
+
+if($show_url) {
+  print "$nick: [ $url ] $output\n";
+} else {
+  print "$nick: $output\n";
+}
+
+sub pretty {
+  my $code = join '', @_;
+  my $result;
+
+  my $pid = open2(\*IN, \*OUT, 'astyle -xUpf');
+  print OUT $code;
+  close OUT;
+  while(my $line = <IN>) {
+    $result .= $line;
+  }
+  close IN;
+  waitpid($pid, 0);
+  return $result;
+}
 

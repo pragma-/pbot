@@ -4,6 +4,7 @@
 use strict;
 
 use SOAP::Lite;
+use IPC::Open2;
 
 my $user = 'test';
 my $pass = 'test';
@@ -22,6 +23,8 @@ my %languages = (
   'bc'                           => { 'id' =>  '110', 'name' => 'bc (bc-1.06.95)'                                  },
   'Brainfuck'                    => { 'id' =>   '12', 'name' => 'Brainf**k (bff-1.0.3.1)'                          },
   'bf'                           => { 'id' =>   '12', 'name' => 'Brainf**k (bff-1.0.3.1)'                          },
+  'gnu89'                        => { 'id' =>   '11', 'name' => 'C (gcc-4.3.4)'                                    },
+  'C89'                          => { 'id' =>   '11', 'name' => 'C (gcc-4.3.4)'                                    },
   'C'                            => { 'id' =>   '11', 'name' => 'C (gcc-4.3.4)'                                    },
   'C#'                           => { 'id' =>   '27', 'name' => 'C# (gmcs 2.0.1)'                                  },
   'C++'                          => { 'id' =>    '1', 'name' => 'C++ (gcc-4.3.4)'                                  },
@@ -70,10 +73,14 @@ my %languages = (
   'VB'                           => { 'id' =>  '101', 'name' => 'Visual Basic .NET (mono-2.4.2.3)'                 },
 );
 
+# C    11
+# C99  34
+# C++  1
+
 my %preludes = ( 
-                 'C99' => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n",
-                 'C'   => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n",
-                 'C++' => "#include <iostream>\n#include <cstdio>\n",
+                 '34'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n",
+                 '11'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n",
+                 '1'   => "#include <iostream>\n#include <cstdio>\n",
                );
 
 if($#ARGV <= 0) {
@@ -89,6 +96,9 @@ print FILE "$nick: $code\n";
 
 my $lang = "C99";
 $lang = $1 if $code =~ s/-lang=([^\b\s]+)//i;
+
+my $show_link = 0;
+$show_link = 1 if $code =~ s/-showurl//i;
 
 my $found = 0;
 my @langs;
@@ -110,16 +120,23 @@ $input = $1 if $code =~ s/-input=(.*)$//i;
 
 $code =~ s/#include <([^>]+)>/\n#include <$1>\n/g;
 $code =~ s/#([^ ]+) (.*?)\\n/\n#$1 $2\n/g;
+$code =~ s/#([\w\d_]+)\\n/\n#$1\n/g;
 
-$code = $preludes{$lang} . $code;
+$code = $preludes{$languages{$lang}{'id'}} . $code;
 
-if(($lang eq "C99" or $lang eq "C" or $lang eq "C++") and not $code =~ m/(int|void) main\s*\([^)]*\)\s*{/) {
+if(($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$lang}{'id'} == 34) and not $code =~ m/main\s*\([^)]*\)\s*{/) {
   my $prelude = '';
   $prelude = "$1$2" if $code =~ s/^\s*(#.*)(#.*?[>\n])//s;
-  $code = "$prelude\n int main(int argc, char **argv) { $code ; return 0; }";
+  $code =~ s/^\s+//;
+  $code = "$prelude\n\nint main(int argc, char **argv) { $code; return 0;}\n";
 }
 
-$code =~ s/\\n/\n/g;
+$code =~ s/;\s*;/;/g;
+$code = pretty($code);
+
+$code =~ s/\\n/\n/g if $languages{$lang}{'id'} == 13 or $languages{$lang}{'id'} == 101;
+$code =~ s/;/\n/g if $languages{$lang}{'id'} == 13;
+$code =~ s/\|n/\n/g;
 
 $result = get_result($soap->createSubmission($user, $pass, $code, $languages{$lang}{'id'}, $input, 1, 1));
 
@@ -216,7 +233,7 @@ $signame[66] = 'SIGCLD';
 $signame[67] = 'SIGPOLL';
 $signame[68] = 'SIGUNUSED';
 
-if($result->{result} != $SUCCESSFUL) {
+if($result->{result} != $SUCCESSFUL or $languages{$lang}{'id'} == 13) {
   $output .= $result->{cmpinfo};
   $output =~ s/[\n\r]/ /g;
 }
@@ -256,6 +273,7 @@ $output =~ s/ Line \d+ ://g;
 $output =~ s/ \(first use in this function\)//g;
 $output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//msg;
 $output =~ s/prog\.c[:\d\s]*//g;
+$output =~ s/ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
 $output =~ s/error: (.*?) error/error: $1; error/msg;
 
 $output = "No output." if $output =~ m/^\s+$/;
@@ -263,7 +281,12 @@ $output = "No output." if $output =~ m/^\s+$/;
 print FILE localtime() . "\n";
 print FILE "$nick: [ http://ideone.com/$url ] $output\n\n";
 close FILE;
-print "$nick: $output\n";
+
+if($show_link) {
+  print "$nick: [ http://ideone.com/$url ] $output\n";
+} else {
+  print "$nick: $output\n";
+}
 
 # ---------------------------------------------
 
@@ -281,4 +304,19 @@ sub get_result {
       return $result->result;
     }
   }
+}
+
+sub pretty {
+  my $code = join '', @_;
+  my $result;
+
+  my $pid = open2(\*IN, \*OUT, 'astyle -xUpf');
+  print OUT $code;
+  close OUT;
+  while(my $line = <IN>) {
+    $result .= $line;
+  }
+  close IN;
+  waitpid($pid, 0);
+  return $result;
 }
