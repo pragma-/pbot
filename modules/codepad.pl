@@ -112,7 +112,7 @@ sub pretty {
   my $result;
 
   my $pid = open2(\*IN, \*OUT, 'astyle -xUpf');
-  print OUT $code;
+  print OUT "$code\n";
   close OUT;
   while(my $line = <IN>) {
     $result .= $line;
