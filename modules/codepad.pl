@@ -60,8 +60,7 @@ $code = $preludes{$lang} . $code;
 if(($lang eq "C" or $lang eq "C++") and not $code =~ m/(int|void) main\s*\([^)]*\)\s*{/) {
   my $prelude = '';
   $prelude = "$1$2" if $code =~ s/^\s*(#.*)(#.*?[>\n])//s;
-  $code = "$prelude\n\nint main(int argc, char **argv) { $code;/**/ return 0; }";
-  $code =~ s/;\s*;\/\*\*\//;/g;
+  $code = "$prelude\n\nint main(int argc, char **argv) { $code return 0; }";
 }
 
 $code = pretty($code);
