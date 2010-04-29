@@ -128,10 +128,10 @@ if(($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{
   my $prelude = '';
   $prelude = "$1$2" if $code =~ s/^\s*(#.*)(#.*?[>\n])//s;
   $code =~ s/^\s+//;
-  $code = "$prelude\n\nint main(int argc, char **argv) { $code; return 0;}\n";
+  $code = "$prelude\n\nint main(int argc, char **argv) { $code;/**/ return 0;}\n";
+  $code =~ s/;\s*;\/\*\*\//;/g;
 }
 
-$code =~ s/;\s*;/;/g;
 $code = pretty($code);
 
 $code =~ s/\\n/\n/g if $languages{$lang}{'id'} == 13 or $languages{$lang}{'id'} == 101;
