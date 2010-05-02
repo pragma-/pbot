@@ -4,6 +4,7 @@
 use strict;
 
 use SOAP::Lite;
+$SOAP::Constants::DO_NOT_USE_XML_PARSER = 1;
 use IPC::Open2;
 
 my $user = 'test';
