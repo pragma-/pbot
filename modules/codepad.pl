@@ -54,16 +54,38 @@ push @{ $ua->requests_redirectable }, 'POST';
 
 $code =~ s/#include <([^>]+)>/\n#include <$1>\n/g;
 $code =~ s/#([^ ]+) (.*?)\\n/\n#$1 $2\n/g;
+$code =~ s/#([\w\d_]+)\\n/\n#$1\n/g;
 
-$code = $preludes{$lang} . $code;
+my $precode = $preludes{$lang} . $code;
+$code = '';
 
-if(($lang eq "C" or $lang eq "C++") and not $code =~ m/(int|void) main\s*\([^)]*\)\s*{/) {
+if($lang eq "C" or $lang eq "C++") {
+  my $has_main = 0;
+  
   my $prelude = '';
-  $prelude = "$1$2" if $code =~ s/^\s*(#.*)(#.*?[>\n])//s;
-  $code = "$prelude\n\nint main(int argc, char **argv) { $code return 0; }";
+  $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
+  
+  while($precode =~ s/([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_]+)\s*\((.*?)\)\s*{(.*?)}//) {
+    my ($ret, $ident, $params, $body) = ($1, $2, $3, $4);
+    $code .= "$ret $ident($params) { $body }\n\n";
+    $has_main = 1 if $ident eq 'main';
+  }
+
+  $precode =~ s/^\s+//;
+  $precode =~ s/\s+$//;
+
+  if(not $has_main) {
+    $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) { $precode return 0;}\n";
+  } else {
+    $code = "$prelude\n\n$code\n\n$precode\n";
+  }
+} else {
+  $code = $precode;
 }
 
-$code = pretty($code);
+if($lang eq "C" or $lang eq "C++") {
+  $code = pretty($code);
+}
 
 my %post = ( 'lang' => $lang, 'code' => $code, 'private' => 'True', 'run' => 'True', 'submit' => 'Submit' );
 my $response = $ua->post("http://codepad.org", \%post);

@@ -12,6 +12,8 @@ my $pass = 'test';
 my $soap = SOAP::Lite->new(proxy => 'http://ideone.com/api/1/service');
 my $result;
 
+my $nooutput = 'No output.';
+
 my %languages = (
   'Ada'                          => { 'id' =>    '7', 'name' => 'Ada (gnat-4.3.2)'                                 },
   'asm'                          => { 'id' =>   '13', 'name' => 'Assembler (nasm-2.07)'                            },
@@ -123,20 +125,45 @@ $code =~ s/#include <([^>]+)>/\n#include <$1>\n/g;
 $code =~ s/#([^ ]+) (.*?)\\n/\n#$1 $2\n/g;
 $code =~ s/#([\w\d_]+)\\n/\n#$1\n/g;
 
-$code = $preludes{$languages{$lang}{'id'}} . $code;
+my $precode = $preludes{$languages{$lang}{'id'}} . $code;
+$code = '';
 
-if(($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$lang}{'id'} == 34) and not $code =~ m/main\s*\([^)]*\)\s*{/) {
+if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$lang}{'id'} == 34) {
+  my $has_main = 0;
+  
   my $prelude = '';
-  $prelude = "$1$2" if $code =~ s/^\s*(#.*)(#.*?[>\n])//s;
-  $code =~ s/^\s+//;
-  $code = "$prelude\n\nint main(int argc, char **argv) { $code return 0;}\n";
+  $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
+  
+  while($precode =~ s/([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_]+)\s*\((.*?)\)\s*{(.*?)}//) {
+    my ($ret, $ident, $params, $body) = ($1, $2, $3, $4);
+    $code .= "$ret $ident($params) { $body }\n\n";
+    $has_main = 1 if $ident eq 'main';
+  }
+
+  $precode =~ s/^\s+//;
+  $precode =~ s/\s+$//;
+
+  if(not $has_main) {
+    $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) { $precode return 0;}\n";
+    $nooutput = "Success.";
+  } else {
+    $code = "$prelude\n\n$code\n\n$precode\n";
+    $nooutput = "No output.";
+  }
+} else {
+  $code = $precode;
 }
 
-$code = pretty($code);
+if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$lang}{'id'} == 35
+     or $languages{$lang}{'id'} == 27 or $languages{$lang}{'id'} == 10 or $languages{$lang}{'id'} == 34) {
+  $code = pretty($code) 
+}
 
 $code =~ s/\\n/\n/g if $languages{$lang}{'id'} == 13 or $languages{$lang}{'id'} == 101;
 $code =~ s/;/\n/g if $languages{$lang}{'id'} == 13;
 $code =~ s/\|n/\n/g;
+$code =~ s/^\s+//;
+$code =~ s/\s+$//;
 
 $result = get_result($soap->createSubmission($user, $pass, $code, $languages{$lang}{'id'}, $input, 1, 1));
 
@@ -144,9 +171,9 @@ my $url = $result->{link};
 
 # wait for compilation/execution to complete
 while(1) {
-  sleep 2;
   $result = get_result($soap->getSubmissionStatus($user, $pass, $url));
   last if $result->{status} == 0;
+  sleep 1;
 }
 
 $result = get_result($soap->getSubmissionDetails($user, $pass, $url, 0, 0, 1, 1, 1));
@@ -276,7 +303,7 @@ $output =~ s/prog\.c[:\d\s]*//g;
 $output =~ s/ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
 $output =~ s/error: (.*?) error/error: $1; error/msg;
 
-$output = "No output." if $output =~ m/^\s+$/;
+$output = $nooutput if $output =~ m/^\s+$/;
 
 print FILE localtime() . "\n";
 print FILE "$nick: [ http://ideone.com/$url ] $output\n\n";
