@@ -134,7 +134,7 @@ if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
   
-  while($precode =~ s/([a-zA-Z0-9_*]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*{(.*?)}//) {
+  while($precode =~ s/([a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*{(.*?)}//) {
     my ($ret, $ident, $params, $body) = ($1, $2, $3, $4);
     $code .= "$ret $ident($params) { $body }\n\n";
     $has_main = 1 if $ident eq 'main';
