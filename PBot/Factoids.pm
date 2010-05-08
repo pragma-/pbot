@@ -51,6 +51,43 @@ sub initialize {
   $self->{factoidmodulelauncher} = PBot::FactoidModuleLauncher->new(pbot => $pbot);
 }
 
+
+sub load_factoids_add {
+  my ($self, $factoid, $i, $filename) = @_;
+
+  if(defined $factoid) {
+    my $trigger = delete $factoid->{trigger};
+
+    if(not defined $trigger) {
+      Carp::croak "Missing trigger around line $i of $filename\n";
+    }
+
+    if(exists $self->factoids->{$trigger}) {
+      Carp::croak "Duplicate factoid '$trigger' found in $filename around line $i\n";
+    }
+
+    my $type = delete $factoid->{type};
+
+    if(not defined $type) {
+      Carp::croak "Missing type for factoid '$trigger' around line $i of $filename\n";
+    }
+
+    $type = lc $type;
+
+    my $action = delete $factoid->{action};
+
+    if(not defined $action) {
+      Carp::croak "Missing action for factoid '$trigger' around line $i of $filename\n";
+    }
+
+    $self->factoids->{$trigger}{$type} = $action;
+
+    foreach my $key (keys %$factoid) {
+      $self->factoids->{$trigger}{$key} = $factoid->{$key};
+    }
+  }
+}
+
 sub load_factoids {
   my $self = shift;
   my $filename;
@@ -63,39 +100,58 @@ sub load_factoids {
   }
 
   $self->{pbot}->logger->log("Loading factoids from $filename ...\n");
-  
+
   open(FILE, "< $filename") or Carp::croak "Couldn't open $filename: $!\n";
-  my @contents = <FILE>;
-  close(FILE);
 
   my $i = 0;
-  my ($text, $regex, $modules);
+  my ($text, $regex, $modules, $factoid);
 
-  foreach my $line (@contents) {
-    chomp $line;
+  foreach my $line (<FILE>) {
     $i++;
 
-    my ($command, $type, $enabled, $owner, $timestamp, $ref_count, $ref_user, $value) = split(/\s+/, $line, 8);
-    
-    if(not defined $command || not defined $enabled || not defined $owner || not defined $timestamp
-       || not defined $type || not defined $ref_count
-       || not defined $ref_user || not defined $value) {
-         Carp::croak "Syntax error around line $i of $filename\n";
-    }
-    
-    if(exists ${ $self->factoids }{$command}) {
-      Carp::croak "Duplicate factoid $command found in $filename around line $i\n";
+    $line =~ s/^\s+//;
+    $line =~ s/\s+$//;
+
+    if(not $line) {
+      print "blank line at $i\n";
+      next;
     }
 
-    $type = lc $type;
+    if($line eq '-') {
+      # first store the old factoid, if there is one
+      if($factoid) {
+        my $type = lc $factoid->{type};
+        if($type eq "text") {
+          $text++;
+        } elsif($type eq "regex") {
+          $regex++;
+        } elsif($type eq "module") {
+          $modules++;
+        } else {
+          Carp::croak "Unknown type '$type' in $filename around line $i\n";
+        }
+        $self->load_factoids_add($factoid, $i, $filename);
+      }
 
-    ${ $self->factoids }{$command}{enabled}   = $enabled;
-    ${ $self->factoids }{$command}{$type}     = $value;
-    ${ $self->factoids }{$command}{owner}     = $owner;
-    ${ $self->factoids }{$command}{timestamp} = $timestamp;
-    ${ $self->factoids }{$command}{ref_count} = $ref_count;
-    ${ $self->factoids }{$command}{ref_user}  = $ref_user;
+      # start a new factoid
+      $factoid = {};
+      next;
+    }
 
+    my ($key, $value) = split /\:/, $line, 2;
+
+    $key =~ s/^\s+//;
+    $key =~ s/\s+$//;
+    $value =~ s/^\s+//;
+    $value =~ s/\s+$//;
+
+    $factoid->{$key} = $value;
+  }
+
+  close(FILE);
+
+  if($factoid) {
+    my $type = lc $factoid->{type};
     if($type eq "text") {
       $text++;
     } elsif($type eq "regex") {
@@ -105,9 +161,10 @@ sub load_factoids {
     } else {
       Carp::croak "Unknown type '$type' in $filename around line $i\n";
     }
+    $self->load_factoids_add($factoid, $i, $filename);
   }
 
-  $self->{pbot}->logger->log("  $i factoids loaded ($text factoids, $regex regexs, $modules modules).\n");
+  $self->{pbot}->logger->log("  " . ($text + $regex + $modules) . " factoids loaded ($text text, $regex regexs, $modules modules).\n");
   $self->{pbot}->logger->log("Done.\n");
 }
 
@@ -124,32 +181,32 @@ sub save_factoids {
 
   open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
 
-  foreach my $command (sort keys %{ $self->factoids }) {
-    next if $command eq "version";
-    if(defined ${ $self->factoids }{$command}{module} || defined ${ $self->factoids }{$command}{text} || defined ${ $self->factoids }{$command}{regex}) {
-      print FILE "$command ";
+  foreach my $trigger (sort keys %{ $self->factoids }) {
+    next if $trigger eq "version";
+
+    print FILE "-\n";
+    print FILE "trigger: $trigger\n";
+
+    my $type;
+
+    if(defined ${ $self->factoids }{$trigger}{module}) {
+      $type = 'module';
+    } elsif(defined ${ $self->factoids }{$trigger}{text}) {
+      $type = 'text';
+    } elsif(defined ${ $self->factoids }{$trigger}{regex}) {
+      $type = 'regex';
     } else {
-      $self->{pbot}->logger->log("save_commands: unknown command type $command\n");
+      $self->{pbot}->logger->log("WARNING: save_factoids: skipping unknown trigger type for $trigger\n");
+      #todo -- /msg logged in admins greater than level X 
       next;
     }
-    #bleh, this is ugly - duplicated
-    if(defined ${ $self->factoids }{$command}{module}) {
-      print FILE "module ";
-      print FILE "${ $self->factoids }{$command}{enabled} ${ $self->factoids }{$command}{owner} ${ $self->factoids }{$command}{timestamp} ";
-      print FILE "${ $self->factoids }{$command}{ref_count} ${ $self->factoids }{$command}{ref_user} ";
-      print FILE "${ $self->factoids }{$command}{module}\n";
-    } elsif(defined ${ $self->factoids }{$command}{text}) {
-      print FILE "text ";
-      print FILE "${ $self->factoids }{$command}{enabled} ${ $self->factoids }{$command}{owner} ${ $self->factoids }{$command}{timestamp} ";
-      print FILE "${ $self->factoids }{$command}{ref_count} ${ $self->factoids }{$command}{ref_user} ";
-      print FILE "${ $self->factoids }{$command}{text}\n";
-    } elsif(defined ${ $self->factoids }{$command}{regex}) {
-      print FILE "regex ";
-      print FILE "${ $self->factoids }{$command}{enabled} ${ $self->factoids }{$command}{owner} ${ $self->factoids }{$command}{timestamp} ";
-      print FILE "${ $self->factoids }{$command}{ref_count} ${ $self->factoids }{$command}{ref_user} ";
-      print FILE "${ $self->factoids }{$command}{regex}\n";
-    } else {
-      $self->{pbot}->logger->log("save_commands: skipping unknown command type for $command\n");
+
+    print FILE "type: $type\n";
+    print FILE "action: ${ $self->factoids }{$trigger}{$type}\n";
+
+    foreach my $key (sort keys %{ ${ $self->factoids }{$trigger} }) {
+      next if $key eq 'text' or $key eq 'module' or $key eq 'regex';
+      print FILE "$key: ${ $self->factoids }{$trigger}{$key}\n";
     }
   }
   close(FILE);
@@ -169,7 +226,7 @@ sub add_factoid {
   ${ $self->factoids }{$command}{$type}     = $text;
   ${ $self->factoids }{$command}{owner}     = $owner;
   ${ $self->factoids }{$command}{channel}   = $channel;
-  ${ $self->factoids }{$command}{timestamp} = gettimeofday;
+  ${ $self->factoids }{$command}{created_on} = gettimeofday;
   ${ $self->factoids }{$command}{ref_count} = 0;
   ${ $self->factoids }{$command}{ref_user}  = "nobody";
 }
@@ -197,7 +254,7 @@ sub export_factoids {
       }
       $text = "<td><b>$command</b> is " . encode_entities(${ $self->factoids }{$command}{text}) . "</td>\n"; 
       print FILE $text;
-      my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime(${ $self->factoids }{$command}{timestamp});
+      my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime(${ $self->factoids }{$command}{created_on});
       my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d\n",
           $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
       print FILE "<td align=\"right\">- submitted by<br> ${ $self->factoids }{$command}{owner}<br><i>$t</i>\n";

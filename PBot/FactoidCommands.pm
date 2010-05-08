@@ -168,12 +168,12 @@ sub alias {
     return "/msg $nick '$alias' already exists";
   }
   
-  $factoids->{$alias}{text}      = "/call $command";
-  $factoids->{$alias}{owner}     = $nick;
-  $factoids->{$alias}{timestamp} = time();
-  $factoids->{$alias}{enabled}   = 1;
-  $factoids->{$alias}{ref_count} = 0;
-  $factoids->{$alias}{ref_user}  = "nobody";
+  $factoids->{$alias}{text}       = "/call $command";
+  $factoids->{$alias}{owner}      = $nick;
+  $factoids->{$alias}{created_on} = time();
+  $factoids->{$alias}{enabled}    = 1;
+  $factoids->{$alias}{ref_count}  = 0;
+  $factoids->{$alias}{ref_user}   = "nobody";
   $self->{pbot}->logger->log("$nick!$user\@$host aliased $alias => $command\n");
   $self->{pbot}->factoids->save_factoids();
   return "/msg $nick '$alias' aliases '$command'";  
@@ -205,12 +205,12 @@ sub add_regex {
     return "/msg $nick $keyword already exists.";
   }
 
-  $factoids->{$keyword}{regex}     = $text;
-  $factoids->{$keyword}{owner}     = $nick;
-  $factoids->{$keyword}{timestamp} = time();
-  $factoids->{$keyword}{enabled}   = 1;
-  $factoids->{$keyword}{ref_count} = 0;
-  $factoids->{$keyword}{ref_user}  = "nobody";
+  $factoids->{$keyword}{regex}      = $text;
+  $factoids->{$keyword}{owner}      = $nick;
+  $factoids->{$keyword}{created_on} = time();
+  $factoids->{$keyword}{enabled}    = 1;
+  $factoids->{$keyword}{ref_count}  = 0;
+  $factoids->{$keyword}{ref_user}   = "nobody";
   $self->{pbot}->logger->log("$nick!$user\@$host added [$keyword] => [$text]\n");
   $self->{pbot}->factoids->save_factoids();
   return "/msg $nick $keyword added.";
@@ -240,12 +240,12 @@ sub add_text {
     return "/msg $nick $keyword already exists.";
   }
 
-  $factoids->{$keyword}{text}      = $text;
-  $factoids->{$keyword}{owner}     = $nick;
-  $factoids->{$keyword}{timestamp} = time();
-  $factoids->{$keyword}{enabled}   = 1;
-  $factoids->{$keyword}{ref_count} = 0;
-  $factoids->{$keyword}{ref_user}  = "nobody";
+  $factoids->{$keyword}{text}       = $text;
+  $factoids->{$keyword}{owner}      = $nick;
+  $factoids->{$keyword}{created_on} = time();
+  $factoids->{$keyword}{enabled}    = 1;
+  $factoids->{$keyword}{ref_count}  = 0;
+  $factoids->{$keyword}{ref_user}   = "nobody";
   
   $self->{pbot}->logger->log("$nick!$user\@$host added $keyword => $text\n");
   
@@ -319,17 +319,17 @@ sub info {
 
   # factoid
   if(exists $factoids->{$arguments}{text}) {
-    return "$arguments: Factoid submitted by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{timestamp}) . ", referenced $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})";
+    return "$arguments: Factoid submitted by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{created_on}) . ", referenced $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})";
   }
 
   # module
   if(exists $factoids->{$arguments}{module}) {
-    return "$arguments: Module loaded by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{timestamp}) . " -> http://code.google.com/p/pbot2-pl/source/browse/trunk/modules/$factoids->{$arguments}{module}, used $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})"; 
+    return "$arguments: Module loaded by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{created_on}) . " -> http://code.google.com/p/pbot2-pl/source/browse/trunk/modules/$factoids->{$arguments}{module}, used $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})"; 
   }
 
   # regex
   if(exists $factoids->{$arguments}{regex}) {
-    return "$arguments: Regex created by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{timestamp}) . ", used $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})"; 
+    return "$arguments: Regex created by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{created_on}) . ", used $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})"; 
   }
 
   return "/msg $nick $arguments is not a factoid or a module";
@@ -356,8 +356,8 @@ sub top20 {
   } else {
 
     if(lc $arguments eq "recent") {
-      foreach my $command (sort { $factoids->{$b}{timestamp} <=> $factoids->{$a}{timestamp} } keys %{ $factoids }) {
-        #my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime($factoids->{$command}{timestamp});
+      foreach my $command (sort { $factoids->{$b}{created_on} <=> $factoids->{$a}{created_on} } keys %{ $factoids }) {
+        #my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime($factoids->{$command}{created_on});
         #my $t = sprintf("%04d/%02d/%02d", $year+1900, $month+1, $day_of_month);
                 
         $text .= "$command ";
@@ -594,7 +594,7 @@ sub load_module {
     $factoids->{$keyword}{module} = $module;
     $factoids->{$keyword}{enabled} = 1;
     $factoids->{$keyword}{owner} = $nick;
-    $factoids->{$keyword}{timestamp} = time();
+    $factoids->{$keyword}{created_on} = time();
     $self->{pbot}->logger->log("$nick!$user\@$host loaded $keyword => $module\n");
     $self->{pbot}->factoids->save_factoids();
     return "/msg $nick Loaded $keyword => $module";
