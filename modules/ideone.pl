@@ -6,6 +6,7 @@ use strict;
 use SOAP::Lite;
 $SOAP::Constants::DO_NOT_USE_XML_PARSER = 1;
 use IPC::Open2;
+use HTML::Entities;
 
 my $user = 'test';
 my $pass = 'test';
@@ -294,6 +295,8 @@ if($result->{result} == $INTERNAL_ERROR) {
 
 $output .= "\n" . $result->{stderr};
 $output .= "\n" . $result->{output}; 
+
+$output = decode_entities($output);
 
 $output =~ s/cc1: warnings being treated as errors//;
 $output =~ s/ Line \d+ ://g;
