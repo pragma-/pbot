@@ -146,7 +146,7 @@ if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$
 
   if(not $has_main) {
     $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) { $precode return 0;}\n";
-    $nooutput = "Success.";
+    $nooutput = "Success [no output].";
   } else {
     $code = "$prelude\n\n$code\n\n$precode\n";
     $nooutput = "No output.";
@@ -305,6 +305,11 @@ $output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//msg
 $output =~ s/prog\.c[:\d\s]*//g;
 $output =~ s/ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
 $output =~ s/error: (.*?) error/error: $1; error/msg;
+
+my $left_quote = chr(226) . chr(128) . chr(152);
+my $right_quote = chr(226) . chr(128) . chr(153);
+$output =~ s/$left_quote/'/g;
+$output =~ s/$right_quote/'/g;
 
 $output = $nooutput if $output =~ m/^\s+$/;
 
