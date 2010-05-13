@@ -175,10 +175,10 @@ sub interpret {
     ($keyword, $arguments, $tonick) = ($2, $3, $1);
   } elsif($command =~ /^tell\s+(.{1,20})\s+about\s+(.*)$/) {
     ($keyword, $tonick) = ($2, $1);
-  } elsif($command =~ /^([^ ]+)\s+is\s+also\s+(.*)$/) {
-    ($keyword, $arguments) = ("change", "$1 s,\$, ; $2,");
-  } elsif($command =~ /^([^ ]+)\s+is\s+(.*)$/) {
-    ($keyword, $arguments) = ("add", join(' ', $1, $2)) unless exists ${ $pbot->factoids }{factoids}{$1};
+  } elsif($command =~ /^(.*?)\s+is\s+also\s+(.*)$/) {
+    ($keyword, $arguments) = ("change", "$1 s|\$| - $2|");
+  } elsif($command =~ /^(.*?)\s+is\s+(.*)$/) {
+    ($keyword, $arguments) = ("add", join(' is ', $1, $2)) unless exists ${ $pbot->factoids }{factoids}{$1};
     ($keyword, $arguments) = ($1, "is $2") if exists ${ $pbot->factoids }{factoids}{$1};
   } elsif($command =~ /^(.*?)\s+(.*)$/) {
     ($keyword, $arguments) = ($1, $2);

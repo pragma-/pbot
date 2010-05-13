@@ -220,19 +220,17 @@ sub add_text {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->factoids->factoids;
-  my ($keyword, $text) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
+  my ($keyword, $text) = $arguments =~ /^(.*?)\s+is\s+(.*)$/i if defined $arguments;
 
   if(not defined $text) {
     $self->{pbot}->logger->log("add_text: invalid usage\n");
-    return "/msg $nick Usage: add <keyword> <factoid>";
+    return "/msg $nick Usage: add <keyword> is <factoid>";
   }
 
   if(not defined $keyword) {
     $self->{pbot}->logger->log("add_text: invalid usage\n");
-    return "/msg $nick Usage: add <keyword> <factoid>";
+    return "/msg $nick Usage: add <keyword> is <factoid>";
   }
-
-  $text =~ s/^is\s+//;
 
   if(exists $factoids->{$keyword}) {
     $self->{pbot}->logger->log("$nick!$user\@$host attempt to overwrite $keyword\n");
@@ -251,7 +249,7 @@ sub add_text {
   
   $self->{pbot}->factoids->save_factoids();
   
-  return "/msg $nick $keyword added.";
+  return "/msg $nick '$keyword' added.";
 }
 
 sub histogram {
