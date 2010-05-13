@@ -13,6 +13,7 @@ $VERSION = $PBot::PBot::VERSION;
 
 use POSIX qw(WNOHANG); # for children process reaping
 use Carp ();
+use Text::Balanced qw(extract_delimited);
 
 # automatically reap children processes in background
 $SIG{CHLD} = sub { while(waitpid(-1, WNOHANG) > 0) {} };
@@ -54,9 +55,60 @@ sub execute_module {
 
   $arguments =~ s/\$nick/$nick/g;
 
-  $arguments = quotemeta($arguments);
-  $arguments =~ s/\\\s+/ /g;
-  $arguments =~ s/\-/-/g;
+  if(exists $self->{pbot}->factoids->factoids->{$keyword}{modulelauncher_subpattern}) {
+    if($self->{pbot}->factoids->factoids->{$keyword}{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\//) {
+      my ($p1, $p2) = ($1, $2);
+      $arguments =~ s/$p1/$p2/;
+      my $a = $1;
+      my $b = $2;
+      my $c = $3;
+      my $d = $4;
+      my $e = $5;
+      my $f = $6;
+      my $g = $7;
+      my $h = $8;
+      my $i = $9;
+      my $before = $`;
+      my $after = $';
+      $arguments =~ s/\$1/$a/g;
+      $arguments =~ s/\$2/$b/g;
+      $arguments =~ s/\$3/$c/g;
+      $arguments =~ s/\$4/$d/g;
+      $arguments =~ s/\$5/$e/g;
+      $arguments =~ s/\$6/$f/g;
+      $arguments =~ s/\$7/$g/g;
+      $arguments =~ s/\$8/$h/g;
+      $arguments =~ s/\$9/$i/g;
+      $arguments =~ s/\$`/$before/g;
+      $arguments =~ s/\$'/$after/g;
+    } else {
+      $self->{pbot}->logger->log("Invalid module substitution pattern [$self->{pbot}->factoids->factoids->{$keyword}{modulelauncher_subpattern}], ignoring.\n");
+    }
+  }
+
+  my $unquoted_args = $arguments;
+  $arguments = "";
+
+  while($unquoted_args =~ s/(.*?)('.*)//) {
+    my $prefix = $1;
+    my $remainder = $2;
+
+    $arguments .= quotemeta($prefix);
+
+    my ($e, $r) = extract_delimited($remainder, "'");
+
+    if(not defined $e) {
+      $arguments .= quotemeta($r);
+    } else {
+      $arguments .= $e;
+      $unquoted_args = $r;
+    }
+  }
+
+  $arguments .= $unquoted_args;
+
+  $arguments =~ s/\\\s/ /g;
+  $arguments =~ s/\\-/-/g;
 
   my $pid = fork;
   if(not defined $pid) {
