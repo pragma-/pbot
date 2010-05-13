@@ -67,19 +67,17 @@ if($lang eq "C" or $lang eq "C++") {
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
 
-  while($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*{//) {
-    my ($ret, $ident, $params) = ($1, $2, $3);
-
-    $precode = "{$precode";
-    my @extract = extract_codeblock($precode, '{}');
+  while($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
+    my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
+    
+    my @extract = extract_codeblock($potential_body, '{}');
     my $body;
     if(not defined $extract[0]) {
       $output .= "<pre>error: unmatched brackets for function '$ident'; </pre>";
       $body = $extract[1];
-      $precode = '';
     } else {
       $body = $extract[0];
-      $precode = $extract[1];
+      $precode .= $extract[1];
     }
     $code .= "$ret $ident($params) $body\n\n";
     $has_main = 1 if $ident eq 'main';
