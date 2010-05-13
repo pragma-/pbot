@@ -137,19 +137,17 @@ if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
   
-  while($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*{//) {
-    my ($ret, $ident, $params) = ($1, $2, $3);
+  while($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
+    my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
 
-    $precode = "{$precode";
-    my @extract = extract_codeblock($precode, '{}');
+    my @extract = extract_codeblock($potential_body, '{}');
     my $body;
     if(not defined $extract[0]) {
       $output .= "error: unmatched brackets for function '$ident';\n";
       $body = $extract[1];
-      $precode = '';
     } else {
       $body = $extract[0];
-      $precode = $extract[1];
+      $precode .= $extract[1];
     }
     $code .= "$ret $ident($params) $body\n\n";
     $has_main = 1 if $ident eq 'main';
