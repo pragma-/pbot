@@ -51,9 +51,13 @@ sub execute_module {
   my $module = $self->{pbot}->factoids->factoids->{$keyword}{module};
   my $module_dir = $self->{pbot}->module_dir;
 
+
   $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: Executing module $module $arguments\n");
 
   $arguments =~ s/\$nick/$nick/g;
+
+  $arguments = quotemeta($arguments);
+  $arguments =~ s/\\\s/ /g;
 
   if(exists $self->{pbot}->factoids->factoids->{$keyword}{modulelauncher_subpattern}) {
     if($self->{pbot}->factoids->factoids->{$keyword}{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\//) {
@@ -86,29 +90,26 @@ sub execute_module {
     }
   }
 
-  my $unquoted_args = $arguments;
+  my $argsbuf = $arguments;
   $arguments = "";
 
-  while($unquoted_args =~ s/(.*?)('.*)//) {
-    my $prefix = $1;
-    my $remainder = $2;
+  my $lr;
+  while(1) {
+    my ($e, $r, $p) = extract_delimited($argsbuf, "'", "[^']+");
 
-    $arguments .= quotemeta($prefix);
-
-    my ($e, $r) = extract_delimited($remainder, "'");
-
-    if(not defined $e) {
-      $arguments .= quotemeta($r);
-    } else {
+    if(defined $e) {
+      $e =~ s/\\//g;
+      $e =~ s/'/'\\''/g;
+      $e =~ s/^'\\''/'/;
+      $e =~ s/'\\''$/'/;
+      $arguments .= $p;
       $arguments .= $e;
-      $unquoted_args = $r;
+      $lr = $r;
+    } else {
+      $arguments .= $lr;
+      last;
     }
   }
-
-  $arguments .= $unquoted_args;
-
-  $arguments =~ s/\\\s/ /g;
-  $arguments =~ s/\\-/-/g;
 
   my $pid = fork;
   if(not defined $pid) {
