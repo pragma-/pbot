@@ -9,6 +9,7 @@ use HTML::Entities;
 use HTML::Parse;
 use HTML::FormatText;
 use IPC::Open2;
+use Text::Balanced qw(extract_codeblock);
 
 my @languages = qw/C C++ D Haskell Lua OCaml PHP Perl Python Ruby Scheme Tcl/;
 
@@ -23,6 +24,7 @@ if($#ARGV <= 0) {
 
 my $nick = shift @ARGV;
 my $code = join ' ', @ARGV;
+my $output;
 
 open FILE, ">> codepad_log.txt";
 print FILE "$nick: $code\n";
@@ -64,10 +66,22 @@ if($lang eq "C" or $lang eq "C++") {
   
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
-  
-  while($precode =~ s/([a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*{(.*?)}//) {
-    my ($ret, $ident, $params, $body) = ($1, $2, $3, $4);
-    $code .= "$ret $ident($params) { $body }\n\n";
+
+  while($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*{//) {
+    my ($ret, $ident, $params) = ($1, $2, $3);
+
+    $precode = "{$precode";
+    my @extract = extract_codeblock($precode, '{}');
+    my $body;
+    if(not defined $extract[0]) {
+      $output .= "<pre>error: unmatched brackets for function '$ident'; </pre>";
+      $body = $extract[1];
+      $precode = '';
+    } else {
+      $body = $extract[0];
+      $precode = $extract[1];
+    }
+    $code .= "$ret $ident($params) $body\n\n";
     $has_main = 1 if $ident eq 'main';
   }
 
@@ -97,15 +111,14 @@ if(not $response->is_success) {
 
 my $text = $response->decoded_content;
 my $url = $response->request->uri;
-my $output;
 
 # remove line numbers
 $text =~ s/<a style="" name="output-line-\d+">\d+<\/a>//g;
 
 if($text =~ /<span class="heading">Output:<\/span>.+?<div class="code">(.*)<\/div>.+?<\/table>/si) {
-  $output = "$1";
+  $output .= "$1";
 } else {
-  $output = "<pre>No output.</pre>";
+  $output .= "<pre>No output.</pre>";
 }
 
 $output = decode_entities($output);
