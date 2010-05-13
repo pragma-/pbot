@@ -7,12 +7,14 @@ use SOAP::Lite;
 $SOAP::Constants::DO_NOT_USE_XML_PARSER = 1;
 use IPC::Open2;
 use HTML::Entities;
+use Text::Balanced qw(extract_codeblock);
 
 my $user = 'test';
 my $pass = 'test';
 my $soap = SOAP::Lite->new(proxy => 'http://ideone.com/api/1/service');
 my $result;
 
+my $output = "";
 my $nooutput = 'No output.';
 
 my %languages = (
@@ -135,9 +137,21 @@ if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
   
-  while($precode =~ s/([a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*{(.*?)}//) {
-    my ($ret, $ident, $params, $body) = ($1, $2, $3, $4);
-    $code .= "$ret $ident($params) { $body }\n\n";
+  while($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*{//) {
+    my ($ret, $ident, $params) = ($1, $2, $3);
+
+    $precode = "{$precode";
+    my @extract = extract_codeblock($precode, '{}');
+    my $body;
+    if(not defined $extract[0]) {
+      $output .= "error: unmatched brackets for function '$ident';\n";
+      $body = $extract[1];
+      $precode = '';
+    } else {
+      $body = $extract[0];
+      $precode = $extract[1];
+    }
+    $code .= "$ret $ident($params) $body\n\n";
     $has_main = 1 if $ident eq 'main';
   }
 
@@ -148,7 +162,7 @@ if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$
     $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) { $precode return 0;}\n";
     $nooutput = "Success [no output].";
   } else {
-    $code = "$prelude\n\n$code\n\n$precode\n";
+    $code = "$prelude\n\n$precode\n\n$code\n";
     $nooutput = "No output.";
   }
 } else {
@@ -178,8 +192,6 @@ while(1) {
 }
 
 $result = get_result($soap->getSubmissionDetails($user, $pass, $url, 0, 0, 1, 1, 1));
-
-my $output = "";
 
 my $COMPILER_ERROR = 11;
 my $RUNTIME_ERROR = 12;
