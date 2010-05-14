@@ -96,6 +96,75 @@ if($#ARGV <= 0) {
 
 my $nick = shift @ARGV;
 my $code = join ' ', @ARGV;
+my @last_code;
+
+if(open FILE, "< ideone_last_code.txt") {
+  while(my $line = <FILE>) {
+    chomp $line;
+    push @last_code, $line;
+  }
+  close FILE;
+}
+
+if($code =~ m/^\s*show\s*$/i) {
+  if(defined $last_code[0]) {
+    print "$nick: $last_code[0]\n";
+  } else {
+    print "$nick: No recent code to show.\n"
+  }
+  exit 0;
+}
+
+if($code =~ m/^\s*s\/(.*)\/(.*)\s*$/) {
+  my ($inner_regex, $suffix) = ($1, $2);
+
+  if(length $suffix and $suffix =~ m/[^gi]/) {
+    print "$nick: Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
+    exit 0;
+  }
+  
+  if($inner_regex =~ m/(.*)\/(.*)/) {
+    my ($regex, $to) = ($1, $2);
+
+    if(defined $last_code[0]) {
+      $code = $last_code[0];
+    } else {
+      print "$nick: No recent code to change.\n";
+      exit 0;
+    }
+
+    my $ret = eval {
+      return $code =~ s|$regex|$to| if(not length $suffix);
+      return $code =~ s|$regex|$to|i if($suffix =~ /^i$/); 
+      return $code =~ s|$regex|$to|g if($suffix =~ /^g$/); 
+      return $code =~ s|$regex|$to|gi if($suffix =~ /^ig$/ or $suffix =~ /^gi$/); 
+    };
+
+    if($@) {
+      print "$nick: $@\n";
+      exit 0;
+    }
+
+    if(not $ret) {
+      print "$nick: No changes made.\n";
+      exit 0;
+    }
+  } else {
+    print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi]\n";
+    exit 0;
+  }  
+}
+
+open FILE, "> ideone_last_code.txt";
+
+unshift @last_code, $code;
+my $i = 0;
+foreach my $line (@last_code) {
+  last if(++$i > 10);
+  print FILE "$line\n";
+}
+
+close FILE;
 
 open FILE, ">> ideone_log.txt";
 print FILE "$nick: $code\n";
