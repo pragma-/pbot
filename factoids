@@ -5,8 +5,8 @@ action: the unary boolean not operator
 created_on: 1104600621
 enabled: 1
 owner: Major-Willard
-ref_count: 90
-ref_user: alick
+ref_count: 91
+ref_user: zid`
 -
 trigger: !!
 type: text
@@ -581,8 +581,8 @@ action: /say $nick, $answers
 created_on: 1193948417
 enabled: 1
 owner: pragma_
-ref_count: 649
-ref_user: bluechill
+ref_count: 656
+ref_user: goddard
 -
 trigger: :(
 type: text
@@ -2372,8 +2372,8 @@ action: the (implementation defined) pointer value used to indicate a pointer th
 created_on: 1104596262
 enabled: 1
 owner: Major-Willard
-ref_count: 36
-ref_user: SimManiac
+ref_count: 38
+ref_user: ecrane
 -
 trigger: NeverDream
 type: text
@@ -2759,8 +2759,8 @@ action: the bitwise exclusive OR (XOR) binary operator
 created_on: 1104595483
 enabled: 1
 owner: Major-Willard
-ref_count: 11
-ref_user: Klevre
+ref_count: 12
+ref_user: pragma_
 -
 trigger: ^am\s(.*)
 type: regex
@@ -3002,7 +3002,7 @@ action: acronym.pl
 created_on: 1105953751
 enabled: 1
 owner: pragma_
-ref_count: 432
+ref_count: 433
 ref_user: pragma_
 -
 trigger: address
@@ -3146,8 +3146,8 @@ action: http://linuxgazette.net/issue65/padala.html
 created_on: 1230592488
 enabled: 1
 owner: pragma_
-ref_count: 1
-ref_user: s00p
+ref_count: 2
+ref_user: OldParr
 -
 trigger: ansispec
 type: text
@@ -3173,8 +3173,8 @@ action: Yes. "Most likely." No. "I think not." Brilliant! "Are you a $sizes $idi
 created_on: 1195010969
 enabled: 1
 owner: pragma_
-ref_count: 2
-ref_user: pragma_
+ref_count: 3
+ref_user: dave0
 -
 trigger: any2c
 type: text
@@ -3200,8 +3200,8 @@ action: Advanced Programming in the UNIX Environment, by Stevens and Rago, see h
 created_on: 1268625692
 enabled: 1
 owner: PoppaVic
-ref_count: 5
-ref_user: Dianora
+ref_count: 6
+ref_user: PoppaVic
 -
 trigger: apue2
 type: text
@@ -3301,6 +3301,15 @@ enabled: 1
 owner: pragma_
 ref_count: 198
 ref_user: s00p
+-
+trigger: asm
+type: text
+action: /call cc -lang=asm
+created_on: 1273436768
+enabled: 1
+owner: pragma_
+ref_count: 3
+ref_user: pragma_
 -
 trigger: assume
 type: text
@@ -3416,8 +3425,8 @@ action: /call cc -lang=bash
 created_on: 1273286262
 enabled: 1
 owner: pragma_
-ref_count: 1
-ref_user: Rodya
+ref_count: 23
+ref_user: pragma_
 -
 trigger: bcopy
 type: text
@@ -3461,8 +3470,8 @@ action: the Binky Pointer Fun Video at http://cslibrary.stanford.edu/104/
 created_on: 1106444999
 enabled: 1
 owner: prec
-ref_count: 141
-ref_user: n00p
+ref_count: 142
+ref_user: apples
 -
 trigger: bite
 type: text
@@ -3479,8 +3488,8 @@ action: http://www.cs.utk.edu/~vose/c-stuff/bithacks.html or http://graphics.sta
 created_on: 1256619383
 enabled: 1
 owner: Chris
-ref_count: 18
-ref_user: kate`
+ref_count: 20
+ref_user: mnemoc
 -
 trigger: bitwise
 type: text
@@ -3533,8 +3542,8 @@ action: /me points accusingly at $args, "Where is your book?!"
 created_on: 1179504776
 enabled: 1
 owner: pragma_
-ref_count: 750
-ref_user: Wulf
+ref_count: 753
+ref_user: KordeX
 -
 trigger: book2
 type: text
@@ -3551,8 +3560,8 @@ action: http://www.iso-9899.info/wiki/Books
 created_on: 1104378101
 enabled: 1
 owner: twkm
-ref_count: 447
-ref_user: angie
+ref_count: 448
+ref_user: PoppaVic
 -
 trigger: booty(.*)
 type: regex
@@ -3659,8 +3668,8 @@ action: /say $bye_words, $nick
 created_on: 1109365229
 enabled: 1
 owner: pragma_
-ref_count: 25
-ref_user: Legion
+ref_count: 26
+ref_user: ouyes
 -
 trigger: bye!
 type: text
@@ -3695,8 +3704,8 @@ action: /say C is a low level language designed to make assembly "easier", usefu
 created_on: 1108006206
 enabled: 1
 owner: pragma
-ref_count: 142
-ref_user: Legion
+ref_count: 143
+ref_user: XgF
 -
 trigger: c++
 type: text
@@ -3767,8 +3776,8 @@ action: /call std
 created_on: 1204312010
 enabled: 1
 owner: peapicker
-ref_count: 30
-ref_user: s00p
+ref_count: 31
+ref_user: ldvx
 -
 trigger: c99status
 type: text
@@ -3803,7 +3812,7 @@ action: /call math
 created_on: 1193082106
 enabled: 1
 owner: pragma_
-ref_count: 7
+ref_count: 12
 ref_user: dave0
 -
 trigger: callgraph
@@ -3814,6 +3823,15 @@ enabled: 1
 owner: kate`
 ref_count: 3
 ref_user: kate`
+-
+trigger: calvinandhobbes
+type: text
+action: http://progressiveboink.com/archive/calvinhobbes.htm
+created_on: 1273441671
+enabled: 1
+owner: pragma_
+ref_count: 0
+ref_user: nobody
 -
 trigger: candide
 type: text
@@ -3866,8 +3884,8 @@ action: /call ideone $nick
 created_on: 1272176634
 enabled: 1
 owner: pragma_
-ref_count: 1340
-ref_user: pragma_
+ref_count: 1810
+ref_user: konr
 -
 trigger: cc2
 type: text
@@ -3875,8 +3893,8 @@ action: /call codepad $nick
 created_on: 1269788333
 enabled: 1
 owner: pragma_
-ref_count: 968
-ref_user: PoppaVic
+ref_count: 987
+ref_user: _pragma
 -
 trigger: cdecl
 type: module
@@ -3884,8 +3902,8 @@ action: cdecl.pl
 created_on: 1191041914
 enabled: 1
 owner: pragma_
-ref_count: 2237
-ref_user: wvd
+ref_count: 2295
+ref_user: tho
 -
 trigger: cfa
 type: text
@@ -3931,6 +3949,15 @@ enabled: 1
 owner: pragma_
 ref_count: 5
 ref_user: pragma_
+-
+trigger: char
+type: text
+action: guaranteed to store any value between -127 and 127 or 0 and 255 (inclusive). The range that the implementation chooses is implementation dependant.
+created_on: 1273681489
+enabled: 1
+owner: s00p
+ref_count: 0
+ref_user: nobody
 -
 trigger: char*a,b
 type: text
@@ -3991,9 +4018,10 @@ type: module
 action: codepad.pl
 created_on: 1269788272
 enabled: 1
+modulelauncher_subpattern: s/([^ ]+)\s+(.*)/$1 '$2'/
 owner: pragma_
-ref_count: 972
-ref_user: PoppaVic
+ref_count: 991
+ref_user: _pragma
 -
 trigger: colors
 type: text
@@ -4055,8 +4083,8 @@ action: Order Matters: CC <overall options> [-std=whatever] <debugging> <optimiz
 created_on: 1266709397
 enabled: 1
 owner: PoppaVic
-ref_count: 7
-ref_user: n00p
+ref_count: 8
+ref_user: PoppaVic
 -
 trigger: compliance
 type: text
@@ -4136,8 +4164,8 @@ action: The C Preprocessor ; integrated with gcc
 created_on: 1107543769
 enabled: 1
 owner: PoppaVic
-ref_count: 18
-ref_user: jwillia3
+ref_count: 19
+ref_user: s00p
 -
 trigger: cpp-com
 type: text
@@ -4145,8 +4173,8 @@ action: /say cplusplus-dot-com is a C++-related website that happens to referenc
 created_on: 1263936430
 enabled: 1
 owner: n00p
-ref_count: 2
-ref_user: n00p
+ref_count: 3
+ref_user: s00p
 -
 trigger: cpp_output
 type: text
@@ -4190,8 +4218,8 @@ action: cstd.pl
 created_on: 1270956236
 enabled: 1
 owner: pragma_
-ref_count: 814
-ref_user: Jafet
+ref_count: 845
+ref_user: Wulf
 -
 trigger: csv
 type: text
@@ -4201,6 +4229,15 @@ enabled: 1
 owner: lemonade`
 ref_count: 2
 ref_user: lemonade`
+-
+trigger: curse
+type: text
+action: /call compliment
+created_on: 1273798449
+enabled: 1
+owner: pragma_
+ref_count: 0
+ref_user: nobody
 -
 trigger: cya
 type: text
@@ -4253,8 +4290,8 @@ action: /me $dances.
 created_on: 1271192355
 enabled: 1
 owner: pragma_
-ref_count: 6
-ref_user: out0xCF8
+ref_count: 8
+ref_user: Love4Boobies
 -
 trigger: dances
 type: text
@@ -4271,8 +4308,8 @@ action: http://blackshell.com/~msmud/candide/dict_databases.txt
 created_on: 1269778271
 enabled: 1
 owner: pragma_
-ref_count: 6
-ref_user: pragma_
+ref_count: 7
+ref_user: _pragma
 -
 trigger: ddd
 type: text
@@ -4307,8 +4344,8 @@ action: /call cdecl declare
 created_on: 1191042438
 enabled: 1
 owner: pragma_
-ref_count: 191
-ref_user: Bish
+ref_count: 197
+ref_user: slonopotamus
 -
 trigger: declaredefine
 type: text
@@ -4343,8 +4380,8 @@ action: /call dict
 created_on: 1269778750
 enabled: 1
 owner: pragma_
-ref_count: 19
-ref_user: n00p
+ref_count: 30
+ref_user: pragma_
 -
 trigger: defrost
 type: text
@@ -4361,8 +4398,8 @@ action: /call explain
 created_on: 1193083745
 enabled: 1
 owner: pragma_
-ref_count: 83
-ref_user: n00p
+ref_count: 89
+ref_user: tho
 -
 trigger: destroyer
 type: text
@@ -4388,8 +4425,8 @@ action: dict.org.pl
 created_on: 1269777616
 enabled: 1
 owner: pragma_
-ref_count: 332
-ref_user: pragma_
+ref_count: 359
+ref_user: _pragma
 -
 trigger: dictionary
 type: text
@@ -4436,6 +4473,15 @@ owner: pragma_
 ref_count: 3
 ref_user: pragma_
 -
+trigger: does not work
+type: text
+action: /call doesntwork
+created_on: 1273363712
+enabled: 1
+owner: pbot3
+ref_count: 0
+ref_user: nobody
+-
 trigger: doesn'?t\swork
 type: regex
 action: doesntwork
@@ -4478,8 +4524,8 @@ action: /say There is no need to cast the result of library functions that retur
 created_on: 1104594725
 enabled: 1
 owner: infobahn
-ref_count: 453
-ref_user: Wulf
+ref_count: 456
+ref_user: Oddity
 -
 trigger: dooky
 type: text
@@ -4676,8 +4722,8 @@ action: excuse.sh
 created_on: 1236819394
 enabled: 1
 owner: pragma_
-ref_count: 253
-ref_user: Legion
+ref_count: 257
+ref_user: pbot3
 -
 trigger: existence
 type: text
@@ -4694,8 +4740,8 @@ action: /call cdecl explain
 created_on: 1191042468
 enabled: 1
 owner: pragma_
-ref_count: 1889
-ref_user: wvd
+ref_count: 1938
+ref_user: tho
 -
 trigger: f
 type: text
@@ -4901,8 +4947,8 @@ action: /call dict -d foldoc
 created_on: 1269854612
 enabled: 1
 owner: pragma_
-ref_count: 20
-ref_user: pragma_
+ref_count: 21
+ref_user: _pragma
 -
 trigger: foo-nix
 type: text
@@ -5000,8 +5046,8 @@ action: GNU Compiler Collection, also the command name of the c compilation cont
 created_on: 1104389164
 enabled: 1
 owner: twkm
-ref_count: 14
-ref_user: pragma_
+ref_count: 15
+ref_user: slonopotamus
 -
 trigger: gcchacks
 type: text
@@ -5117,7 +5163,7 @@ action: /say There is no "global" scope in C. There are four kinds of scopes: fu
 created_on: 1271966015
 enabled: 1
 owner: n00p
-ref_count: 4
+ref_count: 5
 ref_user: s00p
 -
 trigger: gnumake
@@ -5243,8 +5289,8 @@ action: /say To learn all about $args, see http://www.iso-9899.info/wiki/Candide
 created_on: 1272397269
 enabled: 1
 owner: pragma_
-ref_count: 11
-ref_user: pragma_
+ref_count: 15
+ref_user: _pragma
 -
 trigger: h/o
 type: text
@@ -5306,8 +5352,8 @@ action: /say To learn all about me, see http://www.iso-9899.info/wiki/Candide
 created_on: 1109792986
 enabled: 1
 owner: NeverDream
-ref_count: 445
-ref_user: alick
+ref_count: 453
+ref_user: Wulf
 -
 trigger: herring
 type: text
@@ -5324,8 +5370,8 @@ action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
 owner: pragma_
-ref_count: 813
-ref_user: Legion
+ref_count: 815
+ref_user: candide
 -
 trigger: hi_phrases
 type: text
@@ -5441,8 +5487,8 @@ action: /me hugs $args
 created_on: 1205458354
 enabled: 1
 owner: pragma_
-ref_count: 13
-ref_user: pragma_
+ref_count: 14
+ref_user: _pragma
 -
 trigger: hunterx
 type: text
@@ -5512,9 +5558,10 @@ type: module
 action: ideone.pl
 created_on: 1272176604
 enabled: 1
+modulelauncher_subpattern: s/([^ ]+)\s+(.*)/$1 '$2'/
 owner: pragma_
-ref_count: 1337
-ref_user: pragma_
+ref_count: 1807
+ref_user: konr
 -
 trigger: idiot
 type: text
@@ -5561,14 +5608,23 @@ owner: pragma_
 ref_count: 1
 ref_user: pragma_
 -
+trigger: inline
+type: text
+action: /say A function declared with an inline function specifier is an inline function. Making a function an inline function suggests that calls to the function be as fast as possible. If you use `inline', always use `static', too.
+created_on: 1273526791
+enabled: 1
+owner: Wulf
+ref_count: 1
+ref_user: Wulf
+-
 trigger: insult
 type: module
 action: insult.pl
 created_on: 1236819209
 enabled: 1
 owner: pragma_
-ref_count: 371
-ref_user: Legion
+ref_count: 372
+ref_user: pragma_
 -
 trigger: int
 type: text
@@ -5711,8 +5767,8 @@ action: /say K&R is The C Programming Language, 2nd edition, by Kernighan and Ri
 created_on: 1243951633
 enabled: 1
 owner: Chris
-ref_count: 467
-ref_user: apples
+ref_count: 476
+ref_user: magellanic
 -
 trigger: k&r2
 type: text
@@ -5792,8 +5848,8 @@ action: /me makes an attitude adjustment upside $args's head with the aid of a $
 created_on: 1208660815
 enabled: 1
 owner: vorpal
-ref_count: 28
-ref_user: snhmib
+ref_count: 29
+ref_user: Oddity
 -
 trigger: lart_tool
 type: text
@@ -5999,8 +6055,8 @@ action: int main(int argc, char *argv[]); or int main(int argc, char **argv); or
 created_on: 1104231974
 enabled: 1
 owner: twkm
-ref_count: 74
-ref_user: Jafet
+ref_count: 75
+ref_user: zid`
 -
 trigger: mainloop_io
 type: text
@@ -6044,8 +6100,8 @@ action: man.pl
 created_on: 1107137901
 enabled: 1
 owner: pragma_
-ref_count: 987
-ref_user: alick
+ref_count: 989
+ref_user: pragma_
 -
 trigger: manpage
 type: text
@@ -6062,7 +6118,7 @@ action: Man? Why bother installing? Ask ##C - Knows All, Tells All.
 created_on: 1271821903
 enabled: 1
 owner: PoppaVic
-ref_count: 6
+ref_count: 7
 ref_user: PoppaVic
 -
 trigger: manual
@@ -6098,7 +6154,7 @@ action: math.pl
 created_on: 1105953711
 enabled: 1
 owner: pragma_
-ref_count: 287
+ref_count: 295
 ref_user: dave0
 -
 trigger: me
@@ -6226,6 +6282,15 @@ enabled: 1
 owner: pragma_
 ref_count: 2
 ref_user: pragma_
+-
+trigger: n
+type: text
+action: equivalent to 0 for all n != 0
+created_on: 1273708252
+enabled: 1
+owner: fisted
+ref_count: 1
+ref_user: fisted
 -
 trigger: n1256
 type: text
@@ -6386,8 +6451,8 @@ action: region of data storage in the execution environment, the contents of whi
 created_on: 1240461189
 enabled: 1
 owner: Wulf_
-ref_count: 10
-ref_user: Wulf_
+ref_count: 11
+ref_user: Wulf
 -
 trigger: objectcgi
 type: text
@@ -6494,8 +6559,8 @@ action: /call compilerline
 created_on: 1266709336
 enabled: 1
 owner: PoppaVic
-ref_count: 6
-ref_user: n00p
+ref_count: 7
+ref_user: PoppaVic
 -
 trigger: oreo
 type: text
@@ -6589,12 +6654,12 @@ ref_user: Xgc
 -
 trigger: pastebin
 type: text
-action: /say Please do not use pastebin.org.  The reasons are many, including: the font is small and makes '1' and 'l' indistinguishable, among others; lacks syntax highlighting; copy/paste includes line numbers; cluttered layout; etc.  Please use http://codepad.org instead.
+action: /say Please do not use pastebin.org.  The reasons are many, including: the font is small and makes '1' and 'l' indistinguishable, among others; copy/paste includes line numbers (and NO, we do not want to scroll around in an ugly black-and-white textbox looking for what we wanted to copy); cluttered layout; etc.  Please use http://codepad.org instead.
 created_on: 1193081655
 enabled: 1
 owner: pragma_
-ref_count: 58
-ref_user: pragma_
+ref_count: 63
+ref_user: mnemoc
 -
 trigger: pastebin.com
 type: text
@@ -6622,6 +6687,15 @@ enabled: 1
 owner: twkm
 ref_count: 4
 ref_user: Legion
+-
+trigger: perl
+type: text
+action: /call cc -lang=perl
+created_on: 1273693148
+enabled: 1
+owner: pragma_
+ref_count: 2
+ref_user: pragma_
 -
 trigger: pftgu
 type: text
@@ -6719,8 +6793,8 @@ action: http://pw2.netcom.com/~tjensen/ptr/cpoint.htm and http://c-faq.com/ptrs/
 created_on: 1107379418
 enabled: 1
 owner: pragma_
-ref_count: 107
-ref_user: Lenhix
+ref_count: 108
+ref_user: rockstar_
 -
 trigger: portability
 type: text
@@ -6917,8 +6991,8 @@ action: /say For quotegrab commands: http://www.iso-9899.info/wiki/Candide#Quote
 created_on: 1260876948
 enabled: 1
 owner: pragma_
-ref_count: 18
-ref_user: pragma_
+ref_count: 19
+ref_user: _pragma
 -
 trigger: quotehelp
 type: text
@@ -7106,8 +7180,8 @@ action: a storage-class specifier for an object that suggests that access for th
 created_on: 1107636580
 enabled: 1
 owner: pragma_
-ref_count: 9
-ref_user: Syntropy|Laptop
+ref_count: 12
+ref_user: Wulf
 -
 trigger: religion
 type: text
@@ -7322,8 +7396,8 @@ action: /say $args
 created_on: 1251663502
 enabled: 1
 owner: pragma_
-ref_count: 365
-ref_user: SoulSeller
+ref_count: 367
+ref_user: Guthur
 -
 trigger: scanf
 type: text
@@ -7331,8 +7405,8 @@ action: a function that's stupid - "It's nearly impossible to do decent error re
 created_on: 1106970012
 enabled: 1
 owner: Major-Willard
-ref_count: 298
-ref_user: Dianora
+ref_count: 302
+ref_user: s00p
 -
 trigger: scanf_is_stupid
 type: text
@@ -7340,8 +7414,8 @@ action: /say It looks like the !scanf factoid was unsuccessful at convincing you
 created_on: 1264982172
 enabled: 1
 owner: n00p
-ref_count: 5
-ref_user: n00p
+ref_count: 6
+ref_user: dave0
 -
 trigger: schildt
 type: text
@@ -7385,8 +7459,8 @@ action: /say $nick: /msg nickserv info $args
 created_on: 1215709237
 enabled: 1
 owner: Jafag
-ref_count: 30
-ref_user: |Qeos|
+ref_count: 31
+ref_user: Wulf
 -
 trigger: segfault
 type: text
@@ -7448,8 +7522,8 @@ action: /me $weapon_action her $weapon and $shoot_action $args's $body_part.
 created_on: 1109021460
 enabled: 1
 owner: pragma_
-ref_count: 144
-ref_user: pragma_
+ref_count: 145
+ref_user: _root
 -
 trigger: shoot_action
 type: text
@@ -7583,8 +7657,8 @@ action: /me $attacks $args with a $sizes $animal_nouns $animals!
 created_on: 1108932778
 enabled: 1
 owner: pragma_
-ref_count: 104
-ref_user: Love4Boobies
+ref_count: 106
+ref_user: goddard
 -
 trigger: sleep
 type: text
@@ -7601,8 +7675,8 @@ action: /say See http://www.catb.org/~esr/faqs/smart-questions.html
 created_on: 1106519094
 enabled: 1
 owner: pragma_
-ref_count: 20
-ref_user: n00p
+ref_count: 21
+ref_user: Love4Boobies
 -
 trigger: smarties
 type: text
@@ -7763,8 +7837,8 @@ action: /say C99 + TC1,2,3 working paper: http://open-std.org/JTC1/SC22/WG14/www
 created_on: 1249578326
 enabled: 1
 owner: kate`
-ref_count: 55
-ref_user: kjelle
+ref_count: 60
+ref_user: Chris
 -
 trigger: static
 type: text
@@ -7781,8 +7855,8 @@ action: /call standard
 created_on: 1247743928
 enabled: 1
 owner: Chris
-ref_count: 135
-ref_user: kjelle
+ref_count: 140
+ref_user: Chris
 -
 trigger: std::
 type: text
@@ -7889,8 +7963,8 @@ action: a sequence of characters terminated by and including a null character ; 
 created_on: 1179262366
 enabled: 1
 owner: kate`
-ref_count: 36
-ref_user: wiel
+ref_count: 37
+ref_user: OldParr
 -
 trigger: strlen(s)
 type: text
@@ -8042,8 +8116,8 @@ action: /say :)
 created_on: 1272786662
 enabled: 1
 owner: arenics
-ref_count: 5
-ref_user: Syntropy|Laptop
+ref_count: 6
+ref_user: konr
 -
 trigger: test88
 type: text
@@ -8069,8 +8143,8 @@ action: /say A testcase is a minimal compilable example exhibiting your symptoms
 created_on: 1249772768
 enabled: 1
 owner: lemonade`
-ref_count: 214
-ref_user: s00p
+ref_count: 218
+ref_user: kesselhaus
 -
 trigger: than[ksx]+.*
 type: regex
@@ -8168,8 +8242,8 @@ action: /say "Try It And See" is a damaged philosophy that may lead to unportabl
 created_on: 1228985071
 enabled: 1
 owner: Spark
-ref_count: 15
-ref_user: n00p
+ref_count: 16
+ref_user: s00p
 -
 trigger: title
 type: module
@@ -8177,8 +8251,8 @@ action: get_title.pl
 created_on: 1258840021
 enabled: 1
 owner: pragma_
-ref_count: 30
-ref_user: pragma_
+ref_count: 31
+ref_user: Wulf
 -
 trigger: tits
 type: text
@@ -8384,8 +8458,8 @@ action: /say $welcome, $nick
 created_on: 1271368737
 enabled: 1
 owner: pragma_
-ref_count: 10
-ref_user: megabraker
+ref_count: 12
+ref_user: Wulf
 -
 trigger: u
 type: text
@@ -8438,7 +8512,7 @@ action: /call urban
 created_on: 1255059294
 enabled: 1
 owner: pragma_
-ref_count: 566
+ref_count: 573
 ref_user: pragma_
 -
 trigger: unbufferedgetc
@@ -8492,8 +8566,8 @@ action: /call unp2
 created_on: 1269767264
 enabled: 1
 owner: pragma_
-ref_count: 9
-ref_user: Dianora
+ref_count: 11
+ref_user: Draconx|Laptop
 -
 trigger: unp1
 type: text
@@ -8501,8 +8575,8 @@ action: /say Unix Network Programming Vol I: http://www.unpbook.com/
 created_on: 1195011079
 enabled: 1
 owner: pragma_
-ref_count: 97
-ref_user: n00p
+ref_count: 98
+ref_user: Draconx|Laptop
 -
 trigger: unp2
 type: text
@@ -8510,8 +8584,8 @@ action: unix network programming, volume 2: interprocess communications, by stev
 created_on: 1104636219
 enabled: 1
 owner: twkm
-ref_count: 11
-ref_user: Dianora
+ref_count: 13
+ref_user: Draconx|Laptop
 -
 trigger: unsigned
 type: text
@@ -8528,7 +8602,7 @@ action: urban
 created_on: 1255045031
 enabled: 1
 owner: pragma_
-ref_count: 659
+ref_count: 666
 ref_user: pragma_
 -
 trigger: usetherighttool
@@ -8717,8 +8791,8 @@ action: /call wikipedia
 created_on: 1257554566
 enabled: 1
 owner: pragma_
-ref_count: 379
-ref_user: pragma_
+ref_count: 380
+ref_user: Love4Boobies
 -
 trigger: weapon
 type: text
@@ -8780,8 +8854,8 @@ action: /call excuse
 created_on: 1236820003
 enabled: 1
 owner: pragma_
-ref_count: 205
-ref_user: pragma_
+ref_count: 209
+ref_user: pbot3
 -
 trigger: what_answers
 type: text
@@ -8861,7 +8935,7 @@ action: osdev_wiki.pl
 created_on: 1269800689
 enabled: 1
 owner: pragma_
-ref_count: 22
+ref_count: 23
 ref_user: Love4Boobies
 -
 trigger: wikipedia
@@ -8870,8 +8944,8 @@ action: wikipedia.pl
 created_on: 1257554350
 enabled: 1
 owner: pragma_
-ref_count: 384
-ref_user: pragma_
+ref_count: 385
+ref_user: Love4Boobies
 -
 trigger: win
 type: text
@@ -8942,7 +9016,7 @@ action: /call acronym
 created_on: 1251245783
 enabled: 1
 owner: pragma_
-ref_count: 65
+ref_count: 66
 ref_user: pragma_
 -
 trigger: x
