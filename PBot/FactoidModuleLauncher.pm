@@ -97,6 +97,8 @@ sub execute_module {
   while(1) {
     my ($e, $r, $p) = extract_delimited($argsbuf, "'", "[^']+");
 
+    $lr = $r if not defined $lr;
+
     if(defined $e) {
       $e =~ s/\\//g;
       $e =~ s/'/'\\''/g;
