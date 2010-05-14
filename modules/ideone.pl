@@ -7,7 +7,7 @@ use SOAP::Lite;
 $SOAP::Constants::DO_NOT_USE_XML_PARSER = 1;
 use IPC::Open2;
 use HTML::Entities;
-use Text::Balanced qw(extract_codeblock);
+use Text::Balanced qw(extract_codeblock extract_delimited);
 
 my $user = 'test';
 my $pass = 'test';
@@ -115,19 +115,50 @@ if($code =~ m/^\s*show\s*$/i) {
   exit 0;
 }
 
-if($code =~ m/^\s*s\/(.*)\/(.*)\s*$/) {
-  my ($inner_regex, $suffix) = ($1, $2);
+{
+  my $subcode = $code;
+  my $prevchange = $last_code[0];
+  my $got_changes = 0;
+  my $got_sub = 0;
 
-  if(length $suffix and $suffix =~ m/[^gi]/) {
-    print "$nick: Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
-    exit 0;
-  }
-  
-  if($inner_regex =~ m/(.*)\/(.*)/) {
-    my ($regex, $to) = ($1, $2);
+  while($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
+    $got_sub = 1;
+    $subcode =~ s/^\s*(and)?\s*s//;
 
-    if(defined $last_code[0]) {
-      $code = $last_code[0];
+    my ($regex, $to);
+    my ($e, $r) = extract_delimited($subcode, '/');
+
+    if(defined $e) {
+      $regex = $e;
+      $regex =~ s/^\///;
+      $regex =~ s/\/$//;
+      $subcode = "/$r";
+    } else {
+      print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+      exit 0;
+    }
+
+    ($e, $r) = extract_delimited($subcode, '/');
+
+    if(defined $e) {
+      $to = $e;
+      $to =~ s/^\///;
+      $to =~ s/\/$//;
+      $subcode = $r;
+    } else {
+      print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+      exit 0;
+    }
+
+    my $suffix;
+    $suffix = $1 if $subcode =~ s/^([^ ]+)//;
+
+    if(length $suffix and $suffix =~ m/[^gi]/) {
+      print "$nick: Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
+      exit 0;
+    }
+    if(defined $prevchange) {
+      $code = $prevchange;
     } else {
       print "$nick: No recent code to change.\n";
       exit 0;
@@ -145,14 +176,17 @@ if($code =~ m/^\s*s\/(.*)\/(.*)\s*$/) {
       exit 0;
     }
 
-    if(not $ret) {
-      print "$nick: No changes made.\n";
-      exit 0;
+    if($ret) {
+      $got_changes = 1;
     }
-  } else {
-    print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi]\n";
+
+    $prevchange = $code;
+  }
+
+  if($got_sub and not $got_changes) {
+    print "$nick: No changes made.\n";
     exit 0;
-  }  
+  }
 }
 
 open FILE, "> ideone_last_code.txt";
