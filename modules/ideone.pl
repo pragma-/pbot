@@ -175,7 +175,7 @@ while($subcode =~ m/^\s*(and)?\s*replace\s*'.*'\s*with\s*'.*'/i) {
 
   my $ret = eval {
     my $got_change;
-    while($code =~ s/(\W)$from(\W)/$1$to$2/) {
+    while($code =~ s/(\b)$from(\b)/$1$to$2/) {
       $got_change = 1;
     }
     return $got_change;
