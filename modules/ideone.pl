@@ -14,6 +14,8 @@ my $pass = 'test';
 my $soap = SOAP::Lite->new(proxy => 'http://ideone.com/api/1/service');
 my $result;
 
+my $MAX_UNDO_HISTORY = 100;
+
 my $output = "";
 my $nooutput = 'No output.';
 
@@ -204,15 +206,21 @@ while($subcode =~ s/^\s*(and)?\s*undo//) {
 
 open FILE, "> ideone_last_code.txt";
 
-unshift @last_code, $code unless ($got_undo and not $got_sub);
+unless ($got_undo and not $got_sub) {
+  unshift @last_code, $code;
+}
 
 my $i = 0;
 foreach my $line (@last_code) {
-  last if(++$i > 10);
+  last if(++$i > $MAX_UNDO_HISTORY);
   print FILE "$line\n";
 }
-
 close FILE;
+
+if($got_undo and not $got_sub) {
+  print "$nick: $code\n";
+  exit 0;
+}
 
 open FILE, ">> ideone_log.txt";
 print FILE "$nick: $code\n";
