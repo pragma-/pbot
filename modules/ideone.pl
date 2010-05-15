@@ -119,10 +119,11 @@ my $subcode = $code;
 my $got_undo = 0;
 my $got_sub = 0;
 
-if($subcode =~ s/^\s*undo//) {
+while($subcode =~ s/^\s*(and)?\s*undo//) {
   splice @last_code, 0, 1;
   if(not defined $last_code[0]) {
     print "$nick: No more undos remaining.\n";
+    exit 0;
   } else {
     $code = $last_code[0];
     $got_undo = 1;
