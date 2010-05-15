@@ -115,11 +115,23 @@ if($code =~ m/^\s*show\s*$/i) {
   exit 0;
 }
 
+my $subcode = $code;
+my $got_undo = 0;
+my $got_sub = 0;
+
+if($subcode =~ s/^\s*undo//) {
+  splice @last_code, 0, 1;
+  if(not defined $last_code[0]) {
+    print "$nick: No more undos remaining.\n";
+  } else {
+    $code = $last_code[0];
+    $got_undo = 1;
+  }
+}
+
 {
-  my $subcode = $code;
   my $prevchange = $last_code[0];
   my $got_changes = 0;
-  my $got_sub = 0;
 
   while($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
     $got_sub = 1;
@@ -191,7 +203,8 @@ if($code =~ m/^\s*show\s*$/i) {
 
 open FILE, "> ideone_last_code.txt";
 
-unshift @last_code, $code;
+unshift @last_code, $code unless ($got_undo and not $got_sub);
+
 my $i = 0;
 foreach my $line (@last_code) {
   last if(++$i > 10);
