@@ -86,8 +86,8 @@ my %languages = (
 # C++  1
 
 my %preludes = ( 
-                 '34'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n",
-                 '11'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n",
+                 '34'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n",
+                 '11'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n",
                  '1'   => "#include <iostream>\n#include <cstdio>\n",
                );
 
@@ -180,10 +180,88 @@ while($subcode =~ s/^\s*(and)?\s*undo//) {
     }
 
     my $ret = eval {
-      return $code =~ s|$regex|$to| if(not length $suffix);
-      return $code =~ s|$regex|$to|i if($suffix =~ /^i$/); 
-      return $code =~ s|$regex|$to|g if($suffix =~ /^g$/); 
-      return $code =~ s|$regex|$to|gi if($suffix =~ /^ig$/ or $suffix =~ /^gi$/); 
+      my $ret;
+      my $a;
+      my $b;
+      my $c;
+      my $d;
+      my $e;
+      my $f;
+      my $g;
+      my $h;
+      my $i;
+      my $before;
+      my $after;
+
+      if(not length $suffix) {
+        $ret = $code =~ s|$regex|$to|;
+        $a = $1;
+        $b = $2;
+        $c = $3;
+        $d = $4;
+        $e = $5;
+        $f = $6;
+        $g = $7;
+        $h = $8;
+        $i = $9;
+        $before = $`;
+        $after = $';
+      } elsif($suffix =~ /^i$/) {
+        $ret = $code =~ s|$regex|$to|i; 
+        $a = $1;
+        $b = $2;
+        $c = $3;
+        $d = $4;
+        $e = $5;
+        $f = $6;
+        $g = $7;
+        $h = $8;
+        $i = $9;
+        $before = $`;
+        $after = $';
+      } elsif($suffix =~ /^g$/) {
+        $ret = $code =~ s|$regex|$to|g;
+        $a = $1;
+        $b = $2;
+        $c = $3;
+        $d = $4;
+        $e = $5;
+        $f = $6;
+        $g = $7;
+        $h = $8;
+        $i = $9;
+        $before = $`;
+        $after = $';
+      } elsif($suffix =~ /^ig$/ or $suffix =~ /^gi$/) {
+        $ret = $code =~ s|$regex|$to|gi;
+        $a = $1;
+        $b = $2;
+        $c = $3;
+        $d = $4;
+        $e = $5;
+        $f = $6;
+        $g = $7;
+        $h = $8;
+        $i = $9;
+        $before = $`;
+        $after = $';
+      }
+
+      if($ret) {
+        $code =~ s/\$1/$a/g;
+        $code =~ s/\$2/$b/g;
+        $code =~ s/\$3/$c/g;
+        $code =~ s/\$4/$d/g;
+        $code =~ s/\$5/$e/g;
+        $code =~ s/\$6/$f/g;
+        $code =~ s/\$7/$g/g;
+        $code =~ s/\$8/$h/g;
+        $code =~ s/\$9/$i/g;
+        $code =~ s/\$`/$before/g;
+        $code =~ s/\$'/$after/g;
+      }
+
+      return $ret;
     };
 
     if($@) {
