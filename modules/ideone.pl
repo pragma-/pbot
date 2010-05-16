@@ -2,6 +2,7 @@
 
 # use warnings;
 use strict;
+use feature qw(switch);
 
 use SOAP::Lite;
 $SOAP::Constants::DO_NOT_USE_XML_PARSER = 1;
@@ -135,9 +136,13 @@ while($subcode =~ s/^\s*(and)?\s*undo//) {
 my $prevchange = $last_code[0];
 my $got_changes = 0;
 
-while($subcode =~ m/^\s*(and)?\s*replace\s*'.*'\s*with\s*'.*'/i) {
-  $got_sub = 1;
-  $subcode =~ s/^\s*(and)?\s*replace\s*//i;
+while($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
+  my $modifier = 'first';
+  
+  $subcode =~ s/^\s*(and)?\s*//;
+  $subcode =~ s/replace\s*([^']+)?\s*//i;
+  $modifier = $1 if defined $1;
+  $modifier =~ s/\s+$//;
 
   my ($from, $to);
   my ($e, $r) = extract_delimited($subcode, "'");
@@ -173,10 +178,38 @@ while($subcode =~ m/^\s*(and)?\s*replace\s*'.*'\s*with\s*'.*'/i) {
     exit 0;
   }
 
+  given($modifier) {
+    when($_ eq 'all'    ) {}
+    when($_ eq 'last'   ) {}
+    when($_ eq 'first'  ) { $modifier = 1; }
+    when($_ eq 'second' ) { $modifier = 2; }
+    when($_ eq 'third'  ) { $modifier = 3; }
+    when($_ eq 'fourth' ) { $modifier = 4; }
+    when($_ eq 'fifth'  ) { $modifier = 5; }
+    when($_ eq 'sixth'  ) { $modifier = 6; }
+    when($_ eq 'seventh') { $modifier = 7; }
+    when($_ eq 'eighth' ) { $modifier = 8; }
+    when($_ eq 'nineth' ) { $modifier = 9; }
+    when($_ eq 'tenth'  ) { $modifier = 10; }
+    default { print "$nick: Bad replacement modifier '$modifier'; valid modifiers are 'all', 'first', 'second', ..., 'tenth', 'last'\n"; exit 0; }
+  }
+
   my $ret = eval {
     my $got_change;
-    while($code =~ s/(\b)$from(\b)/$1$to$2/) {
-      $got_change = 1;
+
+    if($modifier eq 'all') {
+      while($code =~ s/(\b)$from(\b)/$1$to$2/) {
+        $got_change = 1;
+      }
+    } elsif($modifier eq 'last') {
+      if($code =~ s/(.*)(\b)$from(\b)/$1$2$to$3/) {
+        $got_change = 1;
+      }
+    } else {
+      my $count = 0;
+      if($code =~ s/(\b)$from(\b)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$from$2"; }/gex) {
+        $got_change = 1;
+      }
     }
     return $got_change;
   };
