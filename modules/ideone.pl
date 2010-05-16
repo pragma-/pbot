@@ -203,7 +203,7 @@ while($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
     $last_char = $1 if $from =~ m/(.)$/;
 
     if($first_char =~ /\W/) {
-      $first_bound = '\B';
+      $first_bound = '.';
     } else {
       $first_bound = '\b';
     }
@@ -224,7 +224,9 @@ while($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
       }
     } else {
       my $count = 0;
-      if($code =~ s/($first_bound)$from($last_bound)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$from$2"; }/gex) {
+      my $unescaped = $from;
+      $unescaped =~ s/\\//g;
+      if($code =~ s/($first_bound)$from($last_bound)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$unescaped$2"; }/gex) {
         $got_change = 1;
       }
     }
