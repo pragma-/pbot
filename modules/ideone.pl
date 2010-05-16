@@ -137,6 +137,7 @@ my $prevchange = $last_code[0];
 my $got_changes = 0;
 
 while($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
+  $got_sub = 1;
   my $modifier = 'first';
   
   $subcode =~ s/^\s*(and)?\s*//;
