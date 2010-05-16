@@ -198,17 +198,33 @@ while($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
   my $ret = eval {
     my $got_change;
 
+    my ($first_char, $last_char, $first_bound, $last_bound);
+    $first_char = $1 if $from =~ m/^(.)/;
+    $last_char = $1 if $from =~ m/(.)$/;
+
+    if($first_char =~ /\W/) {
+      $first_bound = '\B';
+    } else {
+      $first_bound = '\b';
+    }
+
+    if($last_char =~ /\W/) {
+      $last_bound = '\B';
+    } else {
+      $last_bound = '\b';
+    }
+
     if($modifier eq 'all') {
-      while($code =~ s/(\b)$from(\b)/$1$to$2/) {
+      while($code =~ s/($first_bound)$from($last_bound)/$1$to$2/) {
         $got_change = 1;
       }
     } elsif($modifier eq 'last') {
-      if($code =~ s/(.*)(\b)$from(\b)/$1$2$to$3/) {
+      if($code =~ s/(.*)($first_bound)$from($last_bound)/$1$2$to$3/) {
         $got_change = 1;
       }
     } else {
       my $count = 0;
-      if($code =~ s/(\b)$from(\b)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$from$2"; }/gex) {
+      if($code =~ s/($first_bound)$from($last_bound)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$from$2"; }/gex) {
         $got_change = 1;
       }
     }
