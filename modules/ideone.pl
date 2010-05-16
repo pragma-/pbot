@@ -209,8 +209,8 @@ my $got_changes = 0;
     my $modifier = $replacement->{'modifier'};
 
     if(defined $previous_from) {
-      if($previous_from eq $from) {
-        $modifier -= $previous_modifier;
+      if($previous_from eq $from and $previous_modifier =~ /^\d+$/) {
+        $modifier -= $modifier - $previous_modifier;
       }
     }
     
