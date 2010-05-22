@@ -133,13 +133,70 @@ while($subcode =~ s/^\s*(and)?\s*undo//) {
   }
 }
 
+my @replacements;
 my $prevchange = $last_code[0];
 my $got_changes = 0;
 
-{
-  my @replacements;
+while(1) {
+  $got_sub = 0;
+  $got_changes = 0;
 
-  while($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
+  if($subcode =~ m/^\s*(and)?\s*remove \s*([^']+)?\s*'/) {
+    my $modifier = 'first';
+
+    $subcode =~ s/^\s*(and)?\s*//;
+    $subcode =~ s/remove\s*([^']+)?\s*//i;
+    $modifier = $1 if defined $1;
+    $modifier =~ s/\s+$//;
+
+    my ($e, $r) = extract_delimited($subcode, "'");
+
+    my $text;
+
+    if(defined $e) {
+      $text = $e;
+      $text =~ s/^'//;
+      $text =~ s/'$//;
+      $subcode = "replace $modifier '$text' with '' and $r";
+    } else {
+      print "$nick: Unbalanced single quotes.  Usage: !cc remove [all, first, .., tenth, last] 'text' [and ...]\n";
+      exit 0;
+    }
+    next;
+  }
+
+  if($subcode =~ s/^\s*(and)?\s*add '//) {
+    $subcode = "'$subcode";
+
+    my ($e, $r) = extract_delimited($subcode, "'");
+
+    my $text;
+
+    if(defined $e) {
+      $text = $e;
+      $text =~ s/^'//;
+      $text =~ s/'$//;
+      $subcode = $r;
+
+      $got_sub = 1;
+      $got_changes = 1;
+
+      if(not defined $prevchange) {
+        print "$nick: No recent code to append to.\n";
+        exit 0;
+      }
+
+      $code = $prevchange;
+      $code =~ s/$/ $text/;
+      $prevchange = $code;
+    } else {
+      print "$nick: Unbalanced single quotes.  Usage: !cc add 'text' [and ...]\n";
+      exit 0;
+    }
+    next;
+  }
+
+  if($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
     $got_sub = 1;
     my $modifier = 'first';
 
@@ -159,7 +216,7 @@ my $got_changes = 0;
       $subcode = $r;
       $subcode =~ s/\s*with\s*//i;
     } else {
-      print "$nick: Unbalanced single quotes.  Usage: !cc replace 'from' with 'to' [and replace ... with ... [and ...]]\n";
+      print "$nick: Unbalanced single quotes.  Usage: !cc replace 'from' with 'to' [and ...]\n";
       exit 0;
     }
 
@@ -197,12 +254,164 @@ my $got_changes = 0;
     $replacement->{'modifier'} = $modifier;
 
     push @replacements, $replacement;
+    next;
   }
-  
+
+  if($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
+    $got_sub = 1;
+    $subcode =~ s/^\s*(and)?\s*s//;
+
+    my ($regex, $to);
+    my ($e, $r) = extract_delimited($subcode, '/');
+
+    if(defined $e) {
+      $regex = $e;
+      $regex =~ s/^\///;
+      $regex =~ s/\/$//;
+      $subcode = "/$r";
+    } else {
+      print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+      exit 0;
+    }
+
+    ($e, $r) = extract_delimited($subcode, '/');
+
+    if(defined $e) {
+      $to = $e;
+      $to =~ s/^\///;
+      $to =~ s/\/$//;
+      $subcode = $r;
+    } else {
+      print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+      exit 0;
+    }
+
+    my $suffix;
+    $suffix = $1 if $subcode =~ s/^([^ ]+)//;
+
+    if(length $suffix and $suffix =~ m/[^gi]/) {
+      print "$nick: Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
+      exit 0;
+    }
+    if(defined $prevchange) {
+      $code = $prevchange;
+    } else {
+      print "$nick: No recent code to change.\n";
+      exit 0;
+    }
+
+    my $ret = eval {
+      my $ret;
+      my $a;
+      my $b;
+      my $c;
+      my $d;
+      my $e;
+      my $f;
+      my $g;
+      my $h;
+      my $i;
+      my $before;
+      my $after;
+
+      if(not length $suffix) {
+        $ret = $code =~ s|$regex|$to|;
+        $a = $1;
+        $b = $2;
+        $c = $3;
+        $d = $4;
+        $e = $5;
+        $f = $6;
+        $g = $7;
+        $h = $8;
+        $i = $9;
+        $before = $`;
+        $after = $';
+      } elsif($suffix =~ /^i$/) {
+        $ret = $code =~ s|$regex|$to|i; 
+        $a = $1;
+        $b = $2;
+        $c = $3;
+        $d = $4;
+        $e = $5;
+        $f = $6;
+        $g = $7;
+        $h = $8;
+        $i = $9;
+        $before = $`;
+        $after = $';
+      } elsif($suffix =~ /^g$/) {
+        $ret = $code =~ s|$regex|$to|g;
+        $a = $1;
+        $b = $2;
+        $c = $3;
+        $d = $4;
+        $e = $5;
+        $f = $6;
+        $g = $7;
+        $h = $8;
+        $i = $9;
+        $before = $`;
+        $after = $';
+      } elsif($suffix =~ /^ig$/ or $suffix =~ /^gi$/) {
+        $ret = $code =~ s|$regex|$to|gi;
+        $a = $1;
+        $b = $2;
+        $c = $3;
+        $d = $4;
+        $e = $5;
+        $f = $6;
+        $g = $7;
+        $h = $8;
+        $i = $9;
+        $before = $`;
+        $after = $';
+      }
+
+      if($ret) {
+        $code =~ s/\$1/$a/g;
+        $code =~ s/\$2/$b/g;
+        $code =~ s/\$3/$c/g;
+        $code =~ s/\$4/$d/g;
+        $code =~ s/\$5/$e/g;
+        $code =~ s/\$6/$f/g;
+        $code =~ s/\$7/$g/g;
+        $code =~ s/\$8/$h/g;
+        $code =~ s/\$9/$i/g;
+        $code =~ s/\$`/$before/g;
+        $code =~ s/\$'/$after/g;
+      }
+
+      return $ret;
+    };
+
+    if($@) {
+      print "$nick: $@\n";
+      exit 0;
+    }
+
+    if($ret) {
+      $got_changes = 1;
+    }
+
+    $prevchange = $code;
+  }
+
+  if($got_sub and not $got_changes) {
+    print "$nick: No substitutions made.\n";
+    exit 0;
+  } elsif($got_sub and $got_changes) {
+    next;
+  }
+
+  last;
+}
+
+if($#replacements > 0) {
   @replacements = sort { $a->{'from'} cmp $b->{'from'} or $a->{'modifier'} <=> $b->{'modifier'} } @replacements;
 
   my ($previous_from, $previous_modifier);
-  
+
   foreach my $replacement (@replacements) {
     my $from = $replacement->{'from'};
     my $to = $replacement->{'to'};
@@ -213,7 +422,7 @@ my $got_changes = 0;
         $modifier -= $modifier - $previous_modifier;
       }
     }
-    
+
     if(defined $prevchange) {
       $code = $prevchange;
     } else {
@@ -265,6 +474,7 @@ my $got_changes = 0;
     }
 
     if($ret) {
+      $got_sub = 1;
       $got_changes = 1;
     }
 
@@ -278,152 +488,6 @@ my $got_changes = 0;
     exit 0;
   }
 }
-
-while($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
-  $got_sub = 1;
-  $subcode =~ s/^\s*(and)?\s*s//;
-
-  my ($regex, $to);
-  my ($e, $r) = extract_delimited($subcode, '/');
-
-  if(defined $e) {
-    $regex = $e;
-    $regex =~ s/^\///;
-    $regex =~ s/\/$//;
-    $subcode = "/$r";
-  } else {
-    print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
-    exit 0;
-  }
-
-  ($e, $r) = extract_delimited($subcode, '/');
-
-  if(defined $e) {
-    $to = $e;
-    $to =~ s/^\///;
-    $to =~ s/\/$//;
-    $subcode = $r;
-  } else {
-    print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
-    exit 0;
-  }
-
-  my $suffix;
-  $suffix = $1 if $subcode =~ s/^([^ ]+)//;
-
-  if(length $suffix and $suffix =~ m/[^gi]/) {
-    print "$nick: Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
-    exit 0;
-  }
-  if(defined $prevchange) {
-    $code = $prevchange;
-  } else {
-    print "$nick: No recent code to change.\n";
-    exit 0;
-  }
-
-  my $ret = eval {
-    my $ret;
-    my $a;
-    my $b;
-    my $c;
-    my $d;
-    my $e;
-    my $f;
-    my $g;
-    my $h;
-    my $i;
-    my $before;
-    my $after;
-
-    if(not length $suffix) {
-      $ret = $code =~ s|$regex|$to|;
-      $a = $1;
-      $b = $2;
-      $c = $3;
-      $d = $4;
-      $e = $5;
-      $f = $6;
-      $g = $7;
-      $h = $8;
-      $i = $9;
-      $before = $`;
-      $after = $';
-    } elsif($suffix =~ /^i$/) {
-      $ret = $code =~ s|$regex|$to|i; 
-      $a = $1;
-      $b = $2;
-      $c = $3;
-      $d = $4;
-      $e = $5;
-      $f = $6;
-      $g = $7;
-      $h = $8;
-      $i = $9;
-      $before = $`;
-      $after = $';
-    } elsif($suffix =~ /^g$/) {
-      $ret = $code =~ s|$regex|$to|g;
-      $a = $1;
-      $b = $2;
-      $c = $3;
-      $d = $4;
-      $e = $5;
-      $f = $6;
-      $g = $7;
-      $h = $8;
-      $i = $9;
-      $before = $`;
-      $after = $';
-    } elsif($suffix =~ /^ig$/ or $suffix =~ /^gi$/) {
-      $ret = $code =~ s|$regex|$to|gi;
-      $a = $1;
-      $b = $2;
-      $c = $3;
-      $d = $4;
-      $e = $5;
-      $f = $6;
-      $g = $7;
-      $h = $8;
-      $i = $9;
-      $before = $`;
-      $after = $';
-    }
-
-    if($ret) {
-      $code =~ s/\$1/$a/g;
-      $code =~ s/\$2/$b/g;
-      $code =~ s/\$3/$c/g;
-      $code =~ s/\$4/$d/g;
-      $code =~ s/\$5/$e/g;
-      $code =~ s/\$6/$f/g;
-      $code =~ s/\$7/$g/g;
-      $code =~ s/\$8/$h/g;
-      $code =~ s/\$9/$i/g;
-      $code =~ s/\$`/$before/g;
-      $code =~ s/\$'/$after/g;
-    }
-
-    return $ret;
-  };
-
-  if($@) {
-    print "$nick: $@\n";
-    exit 0;
-  }
-
-  if($ret) {
-    $got_changes = 1;
-  }
-
-  $prevchange = $code;
-}
-
-if($got_sub and not $got_changes) {
-  print "$nick: No changes made.\n";
-  exit 0;
-}
-
 
 open FILE, "> ideone_last_code.txt";
 
@@ -448,6 +512,8 @@ print FILE "$nick: $code\n";
 
 my $lang = "C99";
 $lang = $1 if $code =~ s/-lang=([^\b\s]+)//i;
+
+$lang = "C" if $code =~ s/-nowarn[ings]*//i;
 
 my $show_link = 0;
 $show_link = 1 if $code =~ s/-showurl//i;
