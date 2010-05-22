@@ -407,7 +407,7 @@ while(1) {
   last;
 }
 
-if($#replacements > 0) {
+if($#replacements > -1) {
   @replacements = sort { $a->{'from'} cmp $b->{'from'} or $a->{'modifier'} <=> $b->{'modifier'} } @replacements;
 
   my ($previous_from, $previous_modifier);
