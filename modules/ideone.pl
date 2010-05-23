@@ -157,7 +157,7 @@ while(1) {
       $text = $e;
       $text =~ s/^'//;
       $text =~ s/'$//;
-      $subcode = "replace $modifier '$text' with '' and $r";
+      $subcode = "replace $modifier '$text' with ''$r";
     } else {
       print "$nick: Unbalanced single quotes.  Usage: !cc remove [all, first, .., tenth, last] 'text' [and ...]\n";
       exit 0;
