@@ -143,7 +143,7 @@ sub pretty {
   my $code = join '', @_;
   my $result;
 
-  my $pid = open2(\*IN, \*OUT, 'astyle -xUpf');
+  my $pid = open2(\*IN, \*OUT, 'astyle -Upf');
   print OUT "$code\n";
   close OUT;
   while(my $line = <IN>) {
