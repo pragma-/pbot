@@ -2,6 +2,8 @@ More information coming soon.  Work in progress.
 --------------------------
 See also: http://www.iso-9899.info/wiki/Candide
 --------------------------
+PBot requires Perl 5.10, especially for !cc 
+--------------------------
 The first thing you'll want to do is edit pbot.pl and change the default
 settings: 
 
