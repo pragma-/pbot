@@ -20,12 +20,13 @@ http://perl.jonallen.info/writing/articles/install-perl-modules-without-root
 After installing Net::IRC, you'll need to edit Net::IRC's Connection.pm module to prevent it 
 from disconnecting IRC when a module completes after forking:
 
-/lib/perl5/site-perl/Net/IRC/Connection.pm around line 405 has a sub DESTROY:
+/lib/perl5/site-perl/Net/IRC/Connection.pm around line 405 has a sub DESTROY; insert a return; statement
+at line 407:
 
 404 # Standard destructor method for the GC routines. (HAHAHAH! DIE! DIE! DIE!)
 405 sub DESTROY {
 406   my $self = shift;
-407   return;  # <--- added to prevent disconnecting after forking exits
+407   return;  ## <--- added to prevent disconnecting after forking exits  ##
 408   $self->handler("destroy", "nobody will ever use this");
 409   $self->quit();
 410   # anything else?
