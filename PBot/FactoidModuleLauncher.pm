@@ -100,7 +100,7 @@ sub execute_module {
     $lr = $r if not defined $lr;
 
     if(defined $e) {
-      $e =~ s/\\//g;
+      $e =~ s/\\([^\w])/$1/g;
       $e =~ s/'/'\\''/g;
       $e =~ s/^'\\''/'/;
       $e =~ s/'\\''$/'/;
