@@ -1,5 +1,6 @@
 More information coming soon.  Work in progress.
 
+
 * List of Perl module dependencies, for installation.
 * Description of each PBot module, for customisation.
 
@@ -14,3 +15,31 @@ to point to the directory that contains the PBot, config, data, etc directories.
 associated with a registered NickServ account, if you want channel auto-join to succeed.
 
 More information coming soon.  Work in progress.
+
+/lib/perl5/site-perl/Net/IRC/Connection.pm around line 405 has a sub DESTROY where I inserted a return; in the first line,
+otherwise it would disconnect from IRC after a module exits:
+
+05:53:16 < pragma_>     404 # Standard destructor method for the GC routines. (HAHAHAH! DIE! DIE! DIE!)
+05:53:17 < pragma_>     405 sub DESTROY {
+05:53:17 < pragma_>     406   my $self = shift;
+05:53:17 < pragma_>     407   return;  # <--- added to prevent disconnecting after forking exits
+05:53:17 < pragma_>     408   $self->handler("destroy", "nobody will ever use this");
+05:53:17 < pragma_>     409   $self->quit();
+05:53:17 < pragma_>     410   # anything else?
+05:53:17 < pragma_>     411 }
+
+Todo:
+
+Add SSL and port options.
+
+04:33:09 < pragma_> you can type in the bot's stdin to talk in channels as the bot
+04:33:39 < candide> hi
+04:33:50 < pragma_> that was typing 'msg #pbot2 hi'
+04:34:15 < pragma_> you can send bot commands to channel by using ~channel command
+04:34:56 < pragma_> no, it was ~channel command
+04:35:11 < pragma_> like ~channel kick <args>
+04:35:18 < pragma_> because kick has to be used in a channel
+04:35:29 < pragma_> I'll have to document that
+04:36:09 < pragma_> that's from stdin only though
+04:36:20 < pragma_> and you can still background it with ^Z
+
