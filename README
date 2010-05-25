@@ -1,5 +1,16 @@
-Coming soon.  Work in progress.
+More information coming soon.  Work in progress.
 
-List of Perl module dependencies, for installation.
+* List of Perl module dependencies, for installation.
+* Description of each PBot module, for customisation.
 
-Description of each PBot module, for customisation.
+The first thing you'll want to do is edit pbot.pl and change the default
+settings: 
+
+  * If you did not extract/checkout PBot into ~/pbot (where ~/pbot/PBot 
+contains the PBot.pm module), you'll want to change $pbothome in pbot.pl 
+to point to the directory that contains the PBot, config, data, etc directories.
+
+  * Change the IRC settings in pbot.pl so that the bot-nick and identify password are
+associated with a registered NickServ account, if you want channel auto-join to succeed.
+
+More information coming soon.  Work in progress.
