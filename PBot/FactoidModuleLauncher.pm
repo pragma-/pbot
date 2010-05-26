@@ -124,6 +124,11 @@ sub execute_module {
   if($pid == 0) { # start child block
     $self->{child} = 1; # set to be killed after returning
     
+    if(not chdir $module_dir) {
+      $self->{pbot}->logger->log("Could not chdir to '$module_dir': $!\n");
+      die $!;
+    }
+
     if(defined $tonick) {
       $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
       $text = `$module_dir/$module $arguments`;
