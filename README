@@ -32,6 +32,26 @@ at line 407:
 410   # anything else?
 411 }
 --------------------------
+In addition to Net::IRC, PBot and several pbot-modules also use the following built-in and CPAN modules:
+
+use AppConfig::Std;
+use Data::Dumper;
+use Getopt::Std;
+use HTML::Entities;
+use HTML::FormatText;
+use HTML::Parse;
+use IPC::Open2;
+use LWP::Simple;
+use LWP::UserAgent
+use LWP::UserAgent::WithCache;
+use Net::Dict;
+use SOAP::Lite;
+use Text::Autoformat;
+use Text::Balanced;
+use URI::Escape;
+use WWW::Wikipedia;
+use XML::RSS;
+--------------------------
 Some quick-and-dirty info on using stdin (pbot shell after running pbot.sh):
 
 04:33:09 < pragma_> you can type in the bot's stdin to talk in channels as the bot
