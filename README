@@ -4,6 +4,9 @@ See also: http://www.iso-9899.info/wiki/Candide
 --------------------------
 PBot requires Perl 5.10, especially for !cc 
 --------------------------
+PBot is intended for the Freenode IRC network.  As such, it has not been
+tested on other networks.  Some IRC features, such as quieting, may need adjusting.
+--------------------------
 The first thing you'll want to do is edit pbot.pl and change the default
 settings: 
 
@@ -14,57 +17,40 @@ to point to the directory that contains the PBot, config, data, etc directories.
   * Change the IRC settings in pbot.pl so that the bot-nick and identify password are
 associated with a registered NickServ account, if you want channel auto-join to succeed.
 --------------------------
-Then you'll need to get Net::IRC from CPAN.  If you do not have root access, see
+Then you'll need to get several modules from CPAN.  If you do not have root access, see
 http://perl.jonallen.info/writing/articles/install-perl-modules-without-root
 
-After installing Net::IRC, you'll need to edit Net::IRC's Connection.pm module to prevent it 
-from disconnecting IRC when a module completes after forking:
-
-/lib/perl5/site-perl/Net/IRC/Connection.pm around line 405 has a sub DESTROY; insert a return; statement
-at line 407:
-
-404 # Standard destructor method for the GC routines. (HAHAHAH! DIE! DIE! DIE!)
-405 sub DESTROY {
-406   my $self = shift;
-407   return;  ## <--- added to prevent disconnecting after forking exits  ##
-408   $self->handler("destroy", "nobody will ever use this");
-409   $self->quit();
-410   # anything else?
-411 }
---------------------------
-In addition to Net::IRC, PBot and several pbot-modules also use the following built-in and CPAN modules:
-
-use AppConfig::Std;
-use Data::Dumper;
-use Getopt::Std;
-use HTML::Entities;
-use HTML::FormatText;
-use HTML::Parse;
-use IPC::Open2;
-use LWP::Simple;
-use LWP::UserAgent
-use LWP::UserAgent::WithCache;
-use Net::Dict;
-use SOAP::Lite;
-use Text::Autoformat;
-use Text::Balanced;
-use URI::Escape;
-use WWW::Wikipedia;
-use XML::RSS;
+Net::IRC
+AppConfig::Std
+Data::Dumper
+Getopt::Std
+HTML::Entities
+HTML::FormatText
+HTML::Parse
+IPC::Open2
+LWP::Simple
+LWP::UserAgent
+LWP::UserAgent::WithCache
+Net::Dict
+SOAP::Lite
+Text::Autoformat
+Text::Balanced
+URI::Escape
+WWW::Wikipedia
+XML::RSS
 --------------------------
 Some quick-and-dirty info on using stdin (pbot shell after running pbot.sh):
 
-04:33:09 < pragma_> you can type in the bot's stdin to talk in channels as the bot
-04:33:39 < candide> hi
-04:33:50 < pragma_> that was typing 'msg #pbot2 hi' from the bot's stdin
-04:34:15 < pragma_> you can send bot commands to channel by using ~channel command
-04:35:11 < pragma_> like ~channel kick <args>
-04:35:18 < pragma_> because kick has to be used in a channel
-04:36:20 < pragma_> and you can still background the bot with ^Z
+< pragma_> you can type in the bot's stdin to talk in channels as the bot
+< candide> hi
+< pragma_> that was typing 'msg #pbot2 hi' from the bot's stdin
+< pragma_> you can send bot commands to channel by using ~channel command
+< pragma_> like ~channel kick <args>
+< pragma_> because kick has to be used in a channel
+< pragma_> and you can still background the bot with ^Z
 --------------------------
 Coming soon to README:
 
-* List of Perl module dependencies, for installation.
 * Description of each PBot module, for customisation.
 --------------------------
 Todo:
