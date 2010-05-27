@@ -124,14 +124,14 @@ sub execute_module {
   if($pid == 0) { # start child block
     $self->{child} = 1; # set to be killed after returning
     
-    if(not chdir $module_dir) {
-      $self->{pbot}->logger->log("Could not chdir to '$module_dir': $!\n");
-      die $!;
-    }
-
     no warnings;
     *Net::IRC::Connection::DESTROY = sub { return; };
     use warnings;
+
+    if(not chdir $module_dir) {
+      $self->{pbot}->logger->log("Could not chdir to '$module_dir': $!\n");
+      Carp::croak("Could not chdir to '$module_dir': $!");
+    }
 
     if(defined $tonick) {
       $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
