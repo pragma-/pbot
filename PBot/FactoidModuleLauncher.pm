@@ -129,6 +129,10 @@ sub execute_module {
       die $!;
     }
 
+    no warnings;
+    *Net::IRC::Connection::DESTROY = sub { return; };
+    use warnings;
+
     if(defined $tonick) {
       $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
       $text = `$module_dir/$module $arguments`;
