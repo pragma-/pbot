@@ -155,7 +155,7 @@ sub check_ignore {
       $self->{last_timestamp}->{$channel} = $now;
       if($self->{ignore_flood_counter}->{$channel} > 0) {
         $self->{ignore_flood_counter}->{$channel} = 0;
-        $pbot->logger->log("flood_msg reset");
+        $pbot->logger->log("flood_msg reset\n");
       }
     }
 
