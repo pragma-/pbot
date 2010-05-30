@@ -117,7 +117,6 @@ sub check_quieted_timeouts {
       $self->{pbot}->logger->log("Unquieting $mask\n");
       $self->unquiet_mask($mask, $self->{quieted_masks}->{$mask}{channel});
       delete $self->{quieted_masks}->{$mask};
-      $self->{pbot}->conn->privmsg($mask, "You may speak again.");
     } else {
       #my $timediff = $quieted_masks{$mask}{time} - $now;
       #$logger->log "quiet: $mask has $timediff seconds remaining\n"
