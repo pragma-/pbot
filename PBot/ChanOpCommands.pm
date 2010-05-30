@@ -91,7 +91,7 @@ sub unquiet {
   $self->{pbot}->chanops->unquiet_user($arguments, $from);
   delete ${ $self->{pbot}->chanops->{quieted_masks} }{$arguments};
   $self->{pbot}->conn->privmsg($arguments, "$nick has allowed you to speak again.") unless $arguments =~ /\Q$self->{pbot}->botnick\E/i;
-  return "Done.";
+  return "/msg $nick Done.";
 }
 
 sub ban_user {

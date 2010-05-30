@@ -159,7 +159,7 @@ sub check_ignore {
       }
     }
 
-    if(($self->{ignore_flood_counter}->{$channel} > 5) or ($channel =~ /^#osdev$/i and $self->{ignore_flood_counter}->{$channel} >= 4)) {
+    if(exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 5) {
       $pbot->logger->log("flood_msg exceeded! [$self->{ignore_flood_counter}->{$channel}]\n");
       $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", ".* $channel 300");
       $self->{ignore_flood_counter}->{$channel} = 0;
