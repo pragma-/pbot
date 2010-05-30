@@ -93,20 +93,33 @@ sub check_flood {
 
       if($last{timestamp} - $msg{timestamp} <= 10 && not $self->{pbot}->admins->loggedin($channel, "$nick!$user\@$host")) {
         ${ $self->message_history }{$nick}{$channel}{offenses}++;
-        my $length = ${ $self->message_history }{$nick}{$channel}{offenses} * ${ $self->message_history }{$nick}{$channel}{offenses} * 30;
+        my $length = ${ $self->message_history }{$nick}{$channel}{offenses} ** ${ $self->message_history }{$nick}{$channel}{offenses} * ${ $self->message_history }{$nick}{$channel}{offenses} * 30;
         if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
-          return if exists $self->{pbot}->chanops->{quieted_nicks}->{$nick};
+          return if exists $self->{pbot}->chanops->{quieted_masks}->{"*!*\@$host"};
           if($mode == $self->{FLOOD_CHAT}) {
-            $self->{pbot}->chanops->quiet_nick_timed($nick, $channel, $length);
-            $self->{pbot}->conn->privmsg($nick, "You have been quieted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length seconds.");
+            $self->{pbot}->chanops->quiet_user_timed("*!*\@$host", $channel, $length);
+
             $self->{pbot}->logger->log("$nick $channel flood offense ${ $self->message_history }{$nick}{$channel}{offenses} earned $length second quiet\n");
+            
+            if($length  < 1000) {
+              $length = "$length seconds";
+            } else {
+              $length = "a little while";
+            }
+
+            $self->{pbot}->conn->privmsg($nick, "You have been quieted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length.");
           }
         } else { # private message flood
           return if exists $self->{pbot}->ignorelist->{ignore_list}->{"$nick!$user\@$host"}{$channel};
           $self->{pbot}->logger->log("$nick msg flood offense ${ $self->message_history }{$nick}{$channel}{offenses} earned $length second ignore\n");
-            $self->{pbot}->conn->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length seconds.");
           $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", "$nick!$user\@$host $channel $length");
+          if($length  < 1000) {
+            $length = "$length seconds";
+          } else {
+            $length = "a little while";
+          }
 
+          $self->{pbot}->conn->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");
         }
       }
     }
@@ -135,8 +148,8 @@ sub prune_message_history {
       my $length = $#{ $self->{message_history}->{$nick}{$channel}{messages} } + 1;
       my %last = %{ @{ $self->{message_history}->{$nick}{$channel}{messages} }[$length - 1] };
 
-      if(gettimeofday - $last{timestamp} >= 60 * 60 * 24) {
-        $self->{pbot}->logger->log("$nick in $channel hasn't spoken in 24 hours, removing message history.\n");
+      if(gettimeofday - $last{timestamp} >= 60 * 60 * 24 * 3) {
+        $self->{pbot}->logger->log("$nick in $channel hasn't spoken in three days, removing message history.\n");
         delete $self->{message_history}->{$nick}{$channel};
       }
     }

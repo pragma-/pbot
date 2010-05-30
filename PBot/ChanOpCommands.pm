@@ -57,7 +57,7 @@ sub quiet {
   }
 
   if(not defined $target) {
-    return "/msg $nick Usage: quiet nick [timeout seconds (default: 3600 or 1 hour)]"; 
+    return "/msg $nick Usage: quiet <mask> [timeout seconds (default: 3600 or 1 hour)]"; 
   }
 
   if(not defined $length) {
@@ -66,8 +66,7 @@ sub quiet {
 
   return "" if $target =~ /\Q$self->{pbot}->botnick\E/i;
 
-  $self->{pbot}->chanops->quiet_nick_timed($target, $from, $length);    
-  $self->{pbot}->conn->privmsg($target, "$nick has quieted you for $length seconds.");
+  $self->{pbot}->chanops->quiet_user_timed($target, $from, $length);    
 }
 
 sub unquiet {
@@ -82,15 +81,15 @@ sub unquiet {
   my ($target, $channel) = split / /, $arguments;
 
   if(not defined $target) {
-    return "/msg $nick Usage: unquiet <nick> [channel]";
+    return "/msg $nick Usage: unquiet <mask> [channel]";
   }
 
   $channel = $from if not defined $channel;
   
   return "/msg $nick Unquiet must be used against a channel.  Either use in channel, or specify !unquiet $target <channel>" if $channel !~ /^#/;
 
-  $self->{pbot}->chanops->unquiet_nick($arguments, $from);
-  delete ${ $self->{pbot}->chanops->{quieted_nicks} }{$arguments};
+  $self->{pbot}->chanops->unquiet_user($arguments, $from);
+  delete ${ $self->{pbot}->chanops->{quieted_masks} }{$arguments};
   $self->{pbot}->conn->privmsg($arguments, "$nick has allowed you to speak again.") unless $arguments =~ /\Q$self->{pbot}->botnick\E/i;
   return "Done.";
 }

@@ -34,7 +34,7 @@ sub initialize {
   }
 
   $self->{pbot} = $pbot;
-  $self->{quieted_nicks} = {};
+  $self->{quieted_masks} = {};
   $self->{unban_timeouts} = {};
   $self->{op_commands} = [];
   $self->{is_opped} = {};
@@ -85,42 +85,42 @@ sub perform_op_commands {
   $self->{pbot}->logger->log("Done.\n");
 }
 
-sub quiet_nick {
+sub quiet_user {
   my $self = shift;
-  my ($nick, $channel) = @_;
-  unshift @{ $self->{op_commands} }, "mode $channel +q $nick!*@*";
+  my ($mask, $channel) = @_;
+  unshift @{ $self->{op_commands} }, "mode $channel +b $mask";
   $self->gain_ops($channel);
 }
 
-sub unquiet_nick {
+sub unquiet_user {
   my $self = shift;
-  my ($nick, $channel) = @_;
-  unshift @{ $self->{op_commands} }, "mode $channel -q $nick!*@*";
+  my ($mask, $channel) = @_;
+  unshift @{ $self->{op_commands} }, "mode $channel -b $mask";
   $self->gain_ops($channel);
 }
 
-sub quiet_nick_timed {
+sub quiet_user_timed {
   my $self = shift;
-  my ($nick, $channel, $length) = @_;
+  my ($mask, $channel, $length) = @_;
 
-  $self->quiet_nick($nick, $channel);
-  ${ $self->{quieted_nicks} }{$nick}{time} = gettimeofday + $length;
-  ${ $self->{quieted_nicks} }{$nick}{channel} = $channel;
+  $self->quiet_user($mask, $channel);
+  ${ $self->{quieted_masks} }{$mask}{time} = gettimeofday + $length;
+  ${ $self->{quieted_masks} }{$mask}{channel} = $channel;
 }
 
 sub check_quieted_timeouts {
   my $self = shift;
   my $now = gettimeofday();
 
-  foreach my $nick (keys %{ $self->{quieted_nicks} }) {
-    if($self->{quieted_nicks}->{$nick}{time} < $now) {
-      $self->{pbot}->logger->log("Unquieting $nick\n");
-      $self->unquiet_nick($nick, $self->{quieted_nicks}->{$nick}{channel});
-      delete $self->{quieted_nicks}->{$nick};
-      $self->{pbot}->conn->privmsg($nick, "You may speak again.");
+  foreach my $mask (keys %{ $self->{quieted_masks} }) {
+    if($self->{quieted_masks}->{$mask}{time} < $now) {
+      $self->{pbot}->logger->log("Unquieting $mask\n");
+      $self->unquiet_mask($mask, $self->{quieted_masks}->{$mask}{channel});
+      delete $self->{quieted_masks}->{$mask};
+      $self->{pbot}->conn->privmsg($mask, "You may speak again.");
     } else {
-      #my $timediff = $quieted_nicks{$nick}{time} - $now;
-      #$logger->log "quiet: $nick has $timediff seconds remaining\n"
+      #my $timediff = $quieted_masks{$mask}{time} - $now;
+      #$logger->log "quiet: $mask has $timediff seconds remaining\n"
     }
   }
 }
