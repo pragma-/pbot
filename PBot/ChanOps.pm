@@ -115,7 +115,7 @@ sub check_quieted_timeouts {
   foreach my $mask (keys %{ $self->{quieted_masks} }) {
     if($self->{quieted_masks}->{$mask}{time} < $now) {
       $self->{pbot}->logger->log("Unquieting $mask\n");
-      $self->unquiet_mask($mask, $self->{quieted_masks}->{$mask}{channel});
+      $self->unquiet_user($mask, $self->{quieted_masks}->{$mask}{channel});
       delete $self->{quieted_masks}->{$mask};
     } else {
       #my $timediff = $quieted_masks{$mask}{time} - $now;
