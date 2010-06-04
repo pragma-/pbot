@@ -5,7 +5,7 @@ See also: http://www.iso-9899.info/wiki/Candide
 PBot requires Perl 5.10, especially for !cc 
 --------------------------
 PBot is intended for the Freenode IRC network.  As such, it has not been
-tested on other networks.  Some IRC features, such as quieting, may need adjusting.
+tested on other networks.  Some IRC features, such as NickServ auto-join, may need adjusting.
 --------------------------
 The first thing you'll want to do is edit pbot.pl and change the default
 settings: 
