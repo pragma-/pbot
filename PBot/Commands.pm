@@ -5,8 +5,6 @@
 #          register subroutines, along with a command name and admin level.
 #          Registered items will then be executed if their command name matches
 #          a name provided via input.
-#
-#          Takes BotAdminStuff object in order to use loggedin()
 
 package PBot::Commands;
 
