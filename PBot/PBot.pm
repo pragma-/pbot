@@ -10,8 +10,10 @@ package PBot::PBot;
 use strict;
 use warnings;
 
+# If you're creating a fork/branch of this code, please rename this file to include the branch name, e.g. PBot-fork.pm 
+# so that the !version command appropriately reflects this.
 use vars qw($VERSION);
-$VERSION = sprintf "%s %d %s", q$Id$ =~ /: ([^.]+)\.pm (\d+) ([^ ]+)/g;
+$VERSION = sprintf "%s revision %d %s", q$Id$ =~ /: ([^.]+)\.pm (\d+) ([^ ]+)/g;
 
 # unbuffer stdout
 STDOUT->autoflush(1);
@@ -126,7 +128,7 @@ sub initialize {
       export_site => $export_factoids_site, 
   );
 
-  $self->factoids->add_factoid('text', '.*', $botnick, 'version', "/say pbot2 version $VERSION");
+  $self->factoids->add_factoid('text', '.*', $botnick, 'version', "/say $VERSION");
   $self->factoids->load_factoids() if defined $factoids_file;
 
   $self->module_dir($module_dir);
