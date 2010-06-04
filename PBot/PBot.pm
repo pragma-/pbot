@@ -3,6 +3,8 @@
 #
 # Purpose: IRC Bot (3rd generation)
 
+# $Id$
+
 package PBot::PBot;
 
 use strict;
