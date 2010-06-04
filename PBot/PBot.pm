@@ -11,7 +11,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = "0.7.0";
+$VERSION = sprintf "%s %d %s", q$Id$ =~ /: ([^.]+)\.pm (\d+) ([^ ]+)/g;
 
 # unbuffer stdout
 STDOUT->autoflush(1);
