@@ -153,7 +153,7 @@ sub check_ignore {
       $self->{last_timestamp}->{$channel} = $now;
     } elsif($now - $self->{last_timestamp}->{$channel} >= 30) {
       $self->{last_timestamp}->{$channel} = $now;
-      if($self->{ignore_flood_counter}->{$channel} > 0) {
+      if(exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 0) {
         $self->{ignore_flood_counter}->{$channel} = 0;
         $pbot->logger->log("flood_msg reset\n");
       }
