@@ -1,13 +1,16 @@
 # pbot3 changelog and todo list
 #
-# TODO: A bit more refactoring and clean-ups and conversion to OOP
+# !! THIS FILE IS NO LONGER MAINTAINED.  IT IS BEING KEPT FOR HISTORICAL PURPOSES. !!
+# !! SEE SUBVERSION CHANGELIST AT CODE.GOOGLE.COM FOR LATEST CHANGES. !!
 #
-# TODO: add support for admin management - needs support for adding/removing/saving! [for 1.0]
+# Mostly done: A bit more refactoring and clean-ups and conversion to OOP
+#
+# DONE: add support for admin management - needs support for adding/removing/saving! [for 1.0]
 # TODO: multi-channel support needs improvement (note 12/08/09, fixed multi-channel for anti-flood and for ignore)
 #       e.g., factoids need channel parameter, e.g. C factoids vs. C++ factoids (with an option to allow a factoid across all channels)
 #       [for 1.0]
 #
-# TODO: Ignorelist needs to save and load from file, use regex hash keys/search parameters.
+# DONE: Ignorelist needs to save and load from file, use regex hash keys/search parameters.
 # 
 # 0.6.3-beta (03/26/10): Improved !find command by adding optional -owner and -by search parameters.
 # 0.6.2-beta (03/25/10): 'list messages' command significantly improved -- can use regexs search parameters.
