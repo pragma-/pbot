@@ -67,7 +67,7 @@ sub check_flood {
       ${ $self->message_history }{$nick}{$channel}{messages} = [];
     }
 
-    print "$nick $channel joinwatch: ${ $self->message_history }{$nick}{$channel}{join_watch}\n";
+    $self->{pbot}->logger->log("$nick $channel joinwatch: ${ $self->message_history }{$nick}{$channel}{join_watch}\n");
 
     #$self->{pbot}->logger->log("appending new message\n");
 
@@ -93,7 +93,7 @@ sub check_flood {
       my %msg = %{ @{ ${ $self->message_history }{$nick}{$channel}{messages} }[$length - $max_messages] };
       my %last = %{ @{ ${ $self->message_history }{$nick}{$channel}{messages} }[$length - 1] };
 
-      $self->{pbot}->logger->log("Comparing $last{timestamp} against $msg{timestamp}: " . (int($last{timestamp} - $msg{timestamp})) . " seconds\n");
+      $self->{pbot}->logger->log("Comparing " . int($last{timestamp}) . " against " . int($msg{timestamp}) . ": " . (int($last{timestamp} - $msg{timestamp})) . " seconds\n");
 
       if($last{timestamp} - $msg{timestamp} <= $max_time && not $self->{pbot}->admins->loggedin($channel, "$nick!$user\@$host")) {
         if($mode == $self->{FLOOD_JOIN}) {
@@ -101,6 +101,7 @@ sub check_flood {
             $self->{pbot}->chanops->quiet_user_timed("*!$user\@$host", $channel, 60 * 60);
             $self->{pbot}->logger->log("$nick!$user\@$host banned for one hour due to join flooding.\n");
             $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for one hour due to join flooding.");
+            ${ $self->message_history }{$nick}{$channel}{join_watch} = $max_messages - 2; # give them a chance to rejoin 
           } 
         } elsif($mode == $self->{FLOOD_CHAT}) {
           ${ $self->message_history }{$nick}{$channel}{offenses}++;
@@ -141,7 +142,7 @@ sub check_flood {
     } elsif($mode == $self->{FLOOD_CHAT}) {
       ${ $self->message_history }{$nick}{$channel}{join_watch} = 0;
     }
-    print "$nick $channel joinwatch adjusted: ${ $self->message_history }{$nick}{$channel}{join_watch}\n";
+    $self->{pbot}->logger->log("$nick $channel joinwatch adjusted: ${ $self->message_history }{$nick}{$channel}{join_watch}\n");
   } else {
     #$self->{pbot}->logger->log("brand new nick addition\n");
     # new addition
