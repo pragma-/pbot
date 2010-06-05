@@ -152,17 +152,15 @@ sub on_mode {
 
 sub on_join {
   my ($self, $conn, $event) = @_;
-  my ($nick, $host, $channel) = ($event->nick, $event->host, $event->to);
+  my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
 
   #$self->{pbot}->logger->log("$nick!$user\@$host joined $channel\n");
-  #check_flood($nick, $host, $channel, 3, $FLOOD_JOIN);
+  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, "JOIN", 3, 90, $self->{pbot}->{FLOOD_JOIN});
 }
 
 sub on_departure {
   my ($self, $conn, $event) = @_;
   my ($nick, $host, $channel) = ($event->nick, $event->host, $event->to);
-
-  #check_flood($nick, $host, $channel, 3, $FLOOD_JOIN);
 
 =cut
   if(exists $admins{$nick} && exists $admins{$nick}{login}) { 

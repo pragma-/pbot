@@ -73,7 +73,7 @@ sub process_line {
 
   my $pbot = $self->pbot;
 
-  $pbot->antiflood->check_flood($from, $nick, $user, $host, $text, $pbot->{MAX_FLOOD_MESSAGES}, $pbot->{FLOOD_CHAT}) if defined $from;
+  $pbot->antiflood->check_flood($from, $nick, $user, $host, $text, $pbot->{MAX_FLOOD_MESSAGES}, 10, $pbot->{FLOOD_CHAT}) if defined $from;
 
   if($text =~ /^.?$mynick.?\s+(.*?)([\?!]*)$/i) {
     $command = "$1";

@@ -89,7 +89,7 @@ sub initialize {
   my $export_quotegrabs_site    = delete $conf{export_quotegrabs_site};
 
   $ircserver          = "irc.freenode.net" unless defined $ircserver;
-  $botnick            = "pbot2"            unless defined $botnick;
+  $botnick            = "pbot3"            unless defined $botnick;
   $identify_password  = ""                 unless defined $identify_password;
 
   $max_msg_len        = 430 unless defined $max_msg_len;
@@ -105,6 +105,7 @@ sub initialize {
   $self->{MAX_FLOOD_MESSAGES} = $MAX_FLOOD_MESSAGES;
   $self->{MAX_NICK_MESSAGES} = $MAX_NICK_MESSAGES;
   $self->{FLOOD_CHAT} = 0;
+  $self->{FLOOD_JOIN} = 1;
 
   my $logger = PBot::Logger->new(log_file => $log_file);
   $self->{logger} = $logger;
