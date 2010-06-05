@@ -10,10 +10,15 @@ package PBot::PBot;
 use strict;
 use warnings;
 
-# If you're creating a fork/branch of this code, please rename this file to include the branch name, e.g. PBot-fork.pm 
-# so that the !version command appropriately reflects this.
+# These are set automatically by the build/commit script
+use constant {
+  BUILD_NAME     => "PBot",
+  BUILD_REVISION => 140,
+  BUILD_DATE     => "2010-06-04",
+};
+
 use vars qw($VERSION);
-$VERSION = sprintf "%s revision %d %s", q$Id$ =~ /: ([^.]+)\.pm (\d+) ([^ ]+)/g;
+$VERSION = BUILD_NAME . " revision " . BUILD_REVISION . " " . BUILD_DATE;
 
 # unbuffer stdout
 STDOUT->autoflush(1);
