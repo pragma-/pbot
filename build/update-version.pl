@@ -13,11 +13,11 @@ $rev++;
 
 print "New version: $rev $date\n";
 
-open my $in, '<', "PBot/PBot.pm" or die "Couldn't open PBot.pm for reading: $!";
+open my $in, '<', "PBot/VERSION.pm" or die "Couldn't open VERSION.pm for reading: $!";
 my @lines = <$in>;
 close $in;
 
-open my $out, '>', "PBot/PBot.pm" or die "Couldn't open PBot.pm for writing: $!";
+open my $out, '>', "PBot/VERSION.pm" or die "Couldn't open VERSION.pm for writing: $!";
 
 foreach my $text (@lines) {
   $text =~ s/BUILD_NAME\s+=> ".*",/BUILD_NAME     => "PBot",/;

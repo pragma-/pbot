@@ -10,15 +10,10 @@ package PBot::PBot;
 use strict;
 use warnings;
 
-# These are set automatically by the build/commit script
-use constant {
-  BUILD_NAME     => "PBot",
-  BUILD_REVISION => 140,
-  BUILD_DATE     => "2010-06-04",
-};
+use PBot::VERSION;
 
 use vars qw($VERSION);
-$VERSION = BUILD_NAME . " revision " . BUILD_REVISION . " " . BUILD_DATE;
+$VERSION = PBot::VERSION::BUILD_NAME . " revision " . PBot::VERSION::BUILD_REVISION . " " . PBot::VERSION::BUILD_DATE;
 
 # unbuffer stdout
 STDOUT->autoflush(1);
