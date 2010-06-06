@@ -54,16 +54,12 @@ sub get_flood_account {
 
   foreach my $n (keys %{ $self->{message_history} }) {
     my $userhost = "$user\@$host";
-    print "cmp ${ $self->{message_history} }{$n}{hostmask} vs $userhost\n";
     if(${ $self->{message_history} }{$n}{hostmask} =~ /\Q$userhost\E/i) {
       $self->{pbot}->logger->log("Using existing hostmask found with nick $n\n");
-      print "return $n\n";
       return $n;
     }
-    print "fail\n";
   }
 
-  print "undef\n";
   return undef;
 }
 
