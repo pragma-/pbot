@@ -79,6 +79,7 @@ sub list {
       foreach my $history_nick (keys %{ $self->{pbot}->antiflood->message_history }) {
         if($history_nick =~ m/$nick_search/i) {
           foreach my $history_channel (keys %{ $self->{pbot}->antiflood->message_history->{$history_nick} }) {
+            next if $history_channel eq 'hostmask'; # TODO: move channels into {channel} subkey
             if($history_channel =~ m/$channel_search/i) {
               my @messages = @{ ${ $self->{pbot}->antiflood->message_history }{$history_nick}{$history_channel}{messages} };
 
