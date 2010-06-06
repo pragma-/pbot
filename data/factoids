@@ -2546,15 +2546,6 @@ owner: PoppaVic
 ref_count: 0
 ref_user: nobody
 -
-trigger: Sailormoon
-type: text
-action: an ignorant Nazi-supporter who makes up imaginary stories about his education in order to disguise the fact that he flunked out of elementary school and didn't make it to high school; now he can only be accepted by Canadian TV Internet colleges, where he spends $1200 every 3 months on Internet classes with a robot teacher. Also, rarely emerges from his parents' house.  Converse with this person only if you wish to be insulted and belittled.
-created_on: 1259190786
-enabled: 1
-owner: pragma_
-ref_count: 15
-ref_user: bvalek2
--
 trigger: Skapare
 type: text
 action: Swedish for Creator, and he doesn't want you to bug him about it, anymore
@@ -3011,8 +3002,8 @@ action: acronym.pl
 created_on: 1105953751
 enabled: 1
 owner: pragma_
-ref_count: 437
-ref_user: leibert
+ref_count: 440
+ref_user: blinded
 -
 trigger: address
 type: text
@@ -3506,8 +3497,8 @@ action: http://www.cs.utk.edu/~vose/c-stuff/bithacks.html or http://graphics.sta
 created_on: 1256619383
 enabled: 1
 owner: Chris
-ref_count: 20
-ref_user: mnemoc
+ref_count: 21
+ref_user: pragma_
 -
 trigger: bitwise
 type: text
@@ -3614,8 +3605,8 @@ action: /me $eat_adverbs $eat_actions her snack.
 created_on: 1174693123
 enabled: 1
 owner: pragma_
-ref_count: 221
-ref_user: PoppaVic
+ref_count: 222
+ref_user: pragma_
 -
 trigger: bottom_up
 type: text
@@ -3713,8 +3704,8 @@ action: /say C is a low level language designed to make assembly "easier", usefu
 created_on: 1108006206
 enabled: 1
 owner: pragma
-ref_count: 146
-ref_user: koollman
+ref_count: 148
+ref_user: Harold_parker
 -
 trigger: c++
 type: text
@@ -3848,8 +3839,8 @@ action: a bot.  See http://www.iso-9899.info/wiki/Candide for more information.
 created_on: 1107122441
 enabled: 1
 owner: pragma_
-ref_count: 54
-ref_user: Wulf
+ref_count: 55
+ref_user: blinded
 -
 trigger: cast
 type: text
@@ -3893,8 +3884,8 @@ action: /call ideone $nick
 created_on: 1272176634
 enabled: 1
 owner: pragma_
-ref_count: 2882
-ref_user: candide
+ref_count: 2913
+ref_user: Harold_parker
 -
 trigger: cc2
 type: text
@@ -3911,8 +3902,8 @@ action: cdecl.pl
 created_on: 1191041914
 enabled: 1
 owner: pragma_
-ref_count: 2403
-ref_user: n00p
+ref_count: 2410
+ref_user: boris``
 -
 trigger: cfa
 type: text
@@ -3929,13 +3920,22 @@ action: comp.lang.c FAQ: http://www.eskimo.com/~scs/C-faq/top.html
 created_on: 1106283720
 enabled: 1
 owner: pragma_
-ref_count: 5
-ref_user: dave0
+ref_count: 7
+ref_user: pragma_
 -
 trigger: cgisock
 type: text
 action: See http://www.cyberspace.org/~pfv/libcgisock.html for a nifty little module for the Apache Web Server that allows a browser to connect to programs already loading and running on remote systems via the ubiquitous Unix-Socket.
 created_on: 1106002098
+enabled: 1
+owner: pragma_
+ref_count: 0
+ref_user: nobody
+-
+trigger: changelist
+type: text
+action: http://code.google.com/p/pbot2-pl/source/list
+created_on: 1275818314
 enabled: 1
 owner: pragma_
 ref_count: 0
@@ -4227,8 +4227,8 @@ action: cstd.pl
 created_on: 1270956236
 enabled: 1
 owner: pragma_
-ref_count: 930
-ref_user: apples
+ref_count: 943
+ref_user: SiegeX
 -
 trigger: csv
 type: text
@@ -4353,8 +4353,8 @@ action: /call cdecl declare
 created_on: 1191042438
 enabled: 1
 owner: pragma_
-ref_count: 200
-ref_user: PoppaVic
+ref_count: 202
+ref_user: boris``
 -
 trigger: declaredefine
 type: text
@@ -4434,7 +4434,7 @@ action: dict.org.pl
 created_on: 1269777616
 enabled: 1
 owner: pragma_
-ref_count: 387
+ref_count: 390
 ref_user: pragma_
 -
 trigger: die
@@ -4740,8 +4740,8 @@ action: /call cdecl explain
 created_on: 1191042468
 enabled: 1
 owner: pragma_
-ref_count: 2039
-ref_user: n00p
+ref_count: 2044
+ref_user: PoppaVic
 -
 trigger: f
 type: text
@@ -4875,8 +4875,8 @@ action: cfaq.pl
 created_on: 1104460444
 enabled: 1
 owner: twkm
-ref_count: 512
-ref_user: ecrane
+ref_count: 515
+ref_user: pragma_
 -
 trigger: feof
 type: text
@@ -4965,8 +4965,8 @@ action: /call dict -d foldoc
 created_on: 1269854612
 enabled: 1
 owner: pragma_
-ref_count: 22
-ref_user: C-Pip
+ref_count: 24
+ref_user: pragma_
 -
 trigger: foo-nix
 type: text
@@ -5082,7 +5082,7 @@ action: /say GDB website: http://www.gnu.org/software/gdb/ - GDB Manual: http://
 created_on: 1104460628
 enabled: 1
 owner: twkm
-ref_count: 11
+ref_count: 12
 ref_user: pragma_
 -
 trigger: gdefine
@@ -5199,8 +5199,8 @@ action: /say It's not unreasonable that if computer programmers developed an aut
 created_on: 1260214264
 enabled: 1
 owner: pragma_
-ref_count: 9
-ref_user: lemonade`
+ref_count: 10
+ref_user: pragma_
 -
 trigger: google
 type: module
@@ -5370,8 +5370,8 @@ action: /say To learn all about me, see http://www.iso-9899.info/wiki/Candide
 created_on: 1109792986
 enabled: 1
 owner: NeverDream
-ref_count: 474
-ref_user: Wulf
+ref_count: 475
+ref_user: pragma_
 -
 trigger: herring
 type: text
@@ -5388,8 +5388,8 @@ action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
 owner: pragma_
-ref_count: 840
-ref_user: dsf
+ref_count: 842
+ref_user: pragma_
 -
 trigger: hi_phrases
 type: text
@@ -5578,8 +5578,8 @@ created_on: 1272176604
 enabled: 1
 modulelauncher_subpattern: s/([^ ]+)\s+(.*)/$1 '$2'/
 owner: pragma_
-ref_count: 2879
-ref_user: candide
+ref_count: 2910
+ref_user: Harold_parker
 -
 trigger: idiot
 type: text
@@ -5776,8 +5776,8 @@ action: /say K&R is The C Programming Language, 2nd edition, by Kernighan and Ri
 created_on: 1243951633
 enabled: 1
 owner: Chris
-ref_count: 504
-ref_user: dsf
+ref_count: 508
+ref_user: araujo
 -
 trigger: k&r2
 type: text
@@ -5938,8 +5938,8 @@ action: http://www.leonerd.org.uk/code/libpack
 created_on: 1200500816
 enabled: 1
 owner: PoppaVic
-ref_count: 69
-ref_user: LeoNerd
+ref_count: 70
+ref_user: wito
 -
 trigger: lidapin
 type: text
@@ -6811,8 +6811,8 @@ action: http://pw2.netcom.com/~tjensen/ptr/cpoint.htm and http://c-faq.com/ptrs/
 created_on: 1107379418
 enabled: 1
 owner: pragma_
-ref_count: 114
-ref_user: s00p
+ref_count: 115
+ref_user: n00p
 -
 trigger: portability
 type: text
@@ -6847,8 +6847,8 @@ action: /say The Open Group Base Specifications Issue 6: http://www.opengroup.or
 created_on: 1179496311
 enabled: 1
 owner: pragma_
-ref_count: 13
-ref_user: HughJass
+ref_count: 15
+ref_user: pragma_
 -
 trigger: pounding-a-nail
 type: text
@@ -6865,17 +6865,8 @@ action: /call foldoc pragma
 created_on: 1270763790
 enabled: 1
 owner: pragma_
-ref_count: 2
-ref_user: C-Pip
--
-trigger: pragma_
-type: text
-action: too smart and too fast for you.
-created_on: 1260929953
-enabled: 1
-owner: pragma_
-ref_count: 13
-ref_user: NinoScript
+ref_count: 3
+ref_user: pragma_
 -
 trigger: prec
 type: text
@@ -7219,6 +7210,15 @@ owner: Baughn
 ref_count: 0
 ref_user: nobody
 -
+trigger: remove_char_from_string
+type: text
+action: while((ptr=strchr(str, 'w')))memmove(ptr,ptr+1,strlen(ptr));
+created_on: 1275787387
+enabled: 1
+owner: dave0
+ref_count: 0
+ref_user: nobody
+-
 trigger: resistance
 type: text
 action: futile.
@@ -7423,8 +7423,8 @@ action: /say $args
 created_on: 1251663502
 enabled: 1
 owner: pragma_
-ref_count: 395
-ref_user: candide
+ref_count: 407
+ref_user: pbot3
 -
 trigger: scanf
 type: text
@@ -7522,7 +7522,7 @@ action: packing structures, usually portably for later extraction: see man 3 xdr
 created_on: 1266811304
 enabled: 1
 owner: PoppaVic
-ref_count: 8
+ref_count: 9
 ref_user: PoppaVic
 -
 trigger: severity
@@ -7783,7 +7783,7 @@ action: /say My guts can be browsed at http://code.google.com/p/pbot2-pl/source/
 created_on: 1105954460
 enabled: 1
 owner: pragma_
-ref_count: 65
+ref_count: 66
 ref_user: pragma_
 -
 trigger: south
@@ -7864,8 +7864,8 @@ action: /say C99 + TC1,2,3 working paper: http://open-std.org/JTC1/SC22/WG14/www
 created_on: 1249578326
 enabled: 1
 owner: kate`
-ref_count: 74
-ref_user: tdmackey
+ref_count: 75
+ref_user: SiegeX
 -
 trigger: static
 type: text
@@ -8170,8 +8170,8 @@ action: /say A testcase is a minimal compilable example exhibiting your symptoms
 created_on: 1249772768
 enabled: 1
 owner: lemonade`
-ref_count: 227
-ref_user: Wulf
+ref_count: 228
+ref_user: dsf
 -
 trigger: than[ksx]+.*
 type: regex
@@ -8215,7 +8215,7 @@ action: /say It's not entirely unreasonable that God is just a computer programm
 created_on: 1260214746
 enabled: 1
 owner: pragma_
-ref_count: 2
+ref_count: 3
 ref_user: pragma_
 -
 trigger: theworld
@@ -8454,12 +8454,12 @@ ref_user: kate`
 -
 trigger: twiddling
 type: text
-action: /say http://www.cs.utk.edu/~vose/c-stuff/bithacks.html
+action: /call bithacks
 created_on: 1221611255
 enabled: 1
 owner: kate`
-ref_count: 11
-ref_user: kate`
+ref_count: 12
+ref_user: pragma_
 -
 trigger: twkm
 type: text
@@ -8494,8 +8494,8 @@ action: /say $welcome, $nick
 created_on: 1271368737
 enabled: 1
 owner: pragma_
-ref_count: 16
-ref_user: mnemoc
+ref_count: 17
+ref_user: slonopotamus
 -
 trigger: u
 type: text
@@ -8521,8 +8521,8 @@ action: undefined behavior. Invoking undefined behavior can cause fluffy kittens
 created_on: 1236376997
 enabled: 1
 owner: kate`
-ref_count: 35
-ref_user: rvvs89
+ref_count: 36
+ref_user: pragma_
 -
 trigger: ubuntumanpages
 type: text
@@ -8566,8 +8566,17 @@ action: /say We understood you the first time, and answered already; you may not
 created_on: 1204317155
 enabled: 1
 owner: Auris-
-ref_count: 13
+ref_count: 15
 ref_user: kate`
+-
+trigger: unicode
+type: text
+action: http://icu-project.org/apiref/icu4c/ustring_8h.html
+created_on: 1275736127
+enabled: 1
+owner: pragma_
+ref_count: 0
+ref_user: nobody
 -
 trigger: union
 type: text
@@ -8710,7 +8719,7 @@ action: /call dict -d vera
 created_on: 1270941287
 enabled: 1
 owner: pragma_
-ref_count: 14
+ref_count: 15
 ref_user: pragma_
 -
 trigger: videotestcase
@@ -9052,8 +9061,8 @@ action: /call acronym
 created_on: 1251245783
 enabled: 1
 owner: pragma_
-ref_count: 68
-ref_user: pseud0cod3r
+ref_count: 69
+ref_user: edlinde_
 -
 trigger: x
 type: text
