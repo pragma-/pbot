@@ -104,8 +104,6 @@ sub initialize {
   $self->{max_msg_len} = $max_msg_len;
   $self->{MAX_FLOOD_MESSAGES} = $MAX_FLOOD_MESSAGES;
   $self->{MAX_NICK_MESSAGES} = $MAX_NICK_MESSAGES;
-  $self->{FLOOD_CHAT} = 0;
-  $self->{FLOOD_JOIN} = 1;
 
   my $logger = PBot::Logger->new(log_file => $log_file);
   $self->{logger} = $logger;
