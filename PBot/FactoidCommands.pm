@@ -84,7 +84,7 @@ sub list {
 
               for(my $i = 0; $i <= $#messages; $i++) {
                 next if $messages[$i]->{msg} =~ /^!login/;
-                push @ret, { text => $messages[$i]->{msg}, timestamp => $messages[$i]->{timestamp}, nick => $history_nick, channel => $history_channel } if $messages[$i]->{msg} =~ m/$text_search/i;
+                push @ret, { offenses => ${ $self->{pbot}->antiflood->message_history }{$history_nick}{$history_channel}{offenses}, join_watch => ${ $self->{pbot}->antiflood->message_history }{$history_nick}{$history_channel}{join_watch}, text => $messages[$i]->{msg}, timestamp => $messages[$i]->{timestamp}, nick => $history_nick, channel => $history_channel } if $messages[$i]->{msg} =~ m/$text_search/i;
               }
             }
           }
@@ -100,7 +100,7 @@ sub list {
 
     my @sorted = sort { $a->{timestamp} <=> $b->{timestamp} } @results;
     foreach my $msg (@sorted) {
-      $self->{pbot}->logger->log("[$msg->{channel}] " . localtime($msg->{timestamp}) . " <$msg->{nick}> " . $msg->{text} . "\n");
+      $self->{pbot}->logger->log("[$msg->{channel}] " . localtime($msg->{timestamp}) . " [o: $msg->{offenses}, j: $msg->{join_watch}] <$msg->{nick}> " . $msg->{text} . "\n");
       $self->{pbot}->conn->privmsg($nick, "[$msg->{channel}] " . localtime($msg->{timestamp}) . " <$msg->{nick}> " . $msg->{text} . "\n") unless $nick =~ /\Q$botnick\E/i;
     }
     return "";
