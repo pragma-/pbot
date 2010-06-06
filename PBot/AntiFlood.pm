@@ -67,8 +67,6 @@ sub check_flood {
       ${ $self->message_history }{$nick}{$channel}{messages} = [];
     }
 
-    $self->{pbot}->logger->log("$nick $channel joinwatch: ${ $self->message_history }{$nick}{$channel}{join_watch}\n");
-
     #$self->{pbot}->logger->log("appending new message\n");
 
     push(@{ ${ $self->message_history }{$nick}{$channel}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
@@ -98,9 +96,9 @@ sub check_flood {
       if($last{timestamp} - $msg{timestamp} <= $max_time && not $self->{pbot}->admins->loggedin($channel, "$nick!$user\@$host")) {
         if($mode == $self->{FLOOD_JOIN}) {
           if(${ $self->message_history }{$nick}{$channel}{join_watch} >= $max_messages) {
-            $self->{pbot}->chanops->quiet_user_timed("*!$user\@$host", $channel, 60 * 60);
-            $self->{pbot}->logger->log("$nick!$user\@$host banned for one hour due to join flooding.\n");
-            $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for one hour due to join flooding.");
+            $self->{pbot}->chanops->quiet_user_timed("*!$user\@$host", $channel, 60 * 60 * 2);
+            $self->{pbot}->logger->log("$nick!$user\@$host banned for two hours due to join flooding.\n");
+            $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for two hours due to join flooding.");
             ${ $self->message_history }{$nick}{$channel}{join_watch} = $max_messages - 2; # give them a chance to rejoin 
           } 
         } elsif($mode == $self->{FLOOD_CHAT}) {
@@ -139,10 +137,10 @@ sub check_flood {
 
     if($mode == $self->{FLOOD_JOIN}) {
       ${ $self->message_history }{$nick}{$channel}{join_watch}++;
+      $self->{pbot}->logger->log("$nick $channel joinwatch adjusted: ${ $self->message_history }{$nick}{$channel}{join_watch}\n");
     } elsif($mode == $self->{FLOOD_CHAT}) {
       ${ $self->message_history }{$nick}{$channel}{join_watch} = 0;
     }
-    $self->{pbot}->logger->log("$nick $channel joinwatch adjusted: ${ $self->message_history }{$nick}{$channel}{join_watch}\n");
   } else {
     #$self->{pbot}->logger->log("brand new nick addition\n");
     # new addition
