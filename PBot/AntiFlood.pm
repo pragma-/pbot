@@ -81,7 +81,7 @@ sub check_flood {
     if(not exists ${ $self->message_history }{$account}{$channel}) {
       #$self->{pbot}->logger->log("adding new channel for existing nick\n");
       ${ $self->message_history }{$account}{$channel}{offenses} = 0;
-      ${ $self->message_history }{$account}{$channel}{join_watch} = $mode;  # FLOOD_CHAT = 0; FLOOD_JOIN = 1
+      ${ $self->message_history }{$account}{$channel}{join_watch} = 0;
       ${ $self->message_history }{$account}{$channel}{messages} = [];
     }
 
@@ -104,7 +104,20 @@ sub check_flood {
 
     return if ($channel =~ /^#/) and (not exists ${ $self->{pbot}->channels->channels }{$channel} or ${ $self->{pbot}->channels->channels }{$channel}{is_op} == 0);
 
-    if($length >= $max_messages) {
+    if($mode == $self->{FLOOD_JOIN}) {
+      if($text eq "JOIN") {
+        ${ $self->message_history }{$account}{$channel}{join_watch}++;
+      } else {
+        # PART or QUIT -- check PART/QUIT message for netsplits or changing host, and decrement joinwatch if found
+        ${ $self->message_history }{$account}{$channel}{join_watch}-- if($text =~ /Changing host/ or $text =~ /.*\.net .*\.split/);
+        ${ $self->message_history }{$account}{$channel}{join_watch} = 0 if ${ $self->message_history }{$account}{$channel}{join_watch} < 0;
+      }
+      $self->{pbot}->logger->log("$nick $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
+    } elsif($mode == $self->{FLOOD_CHAT}) {
+      ${ $self->message_history }{$account}{$channel}{join_watch} = 0;
+    }
+
+    if($max_messages > 0 and $length >= $max_messages) {
       $self->{pbot}->logger->log("More than $max_messages messages, comparing time differences ($max_time)\n") if $mode == $self->{FLOOD_JOIN};
       my %msg = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - $max_messages] };
       my %last = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - 1] };
@@ -114,9 +127,12 @@ sub check_flood {
       if($last{timestamp} - $msg{timestamp} <= $max_time && not $self->{pbot}->admins->loggedin($channel, "$nick!$user\@$host")) {
         if($mode == $self->{FLOOD_JOIN}) {
           if(${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages) {
-            $self->{pbot}->chanops->quiet_user_timed("*!$user\@$host", $channel, 60 * 60 * 2);
-            $self->{pbot}->logger->log("$nick!$user\@$host banned for two hours due to join flooding.\n");
-            $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for two hours due to join flooding.");
+            ${ $self->message_history }{$account}{$channel}{offenses}++;
+            my $timeout = (2 ** (${ $self->message_history }{$account}{$channel}{offenses} < 6 ? ${ $self->message_history }{$account}{$channel}{offenses} : 6));
+            $self->{pbot}->chanops->quiet_user_timed("*!$user\@$host", $channel, $timeout * 60 * 60);
+            $self->{pbot}->logger->log("$nick!$user\@$host banned for $timeout hours due to join flooding (offense #${ $self->message_history }{$account}{$channel}{offenses}).\n");
+            $timeout = "several" if($timeout > 8);
+            $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for $timeout hours due to join flooding.");
             ${ $self->message_history }{$account}{$channel}{join_watch} = $max_messages - 2; # give them a chance to rejoin 
           } 
         } elsif($mode == $self->{FLOOD_CHAT}) {
@@ -152,18 +168,11 @@ sub check_flood {
         }
       }
     }
-
-    if($mode == $self->{FLOOD_JOIN}) {
-      ${ $self->message_history }{$account}{$channel}{join_watch}++;
-      $self->{pbot}->logger->log("$nick $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
-    } elsif($mode == $self->{FLOOD_CHAT}) {
-      ${ $self->message_history }{$account}{$channel}{join_watch} = 0;
-    }
   } else {
     #$self->{pbot}->logger->log("brand new nick addition\n");
     # new addition
     ${ $self->message_history }{$nick}{$channel}{offenses} = 0;
-    ${ $self->message_history }{$nick}{$channel}{join_watch} = $mode;  # FLOOD_CHAT = 0; FLOOD_JOIN = 1
+    ${ $self->message_history }{$nick}{$channel}{join_watch} = 0;
     ${ $self->message_history }{$nick}{$channel}{messages} = [];
     ${ $self->message_history }{$nick}{hostmask} = "$nick!$user\@$host";
     push(@{ ${ $self->message_history }{$nick}{$channel}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
