@@ -105,11 +105,11 @@ sub check_flood {
     return if ($channel =~ /^#/) and (not exists ${ $self->{pbot}->channels->channels }{$channel} or ${ $self->{pbot}->channels->channels }{$channel}{is_op} == 0);
 
     if($mode == $self->{FLOOD_JOIN}) {
-      if($text eq "JOIN") {
+      if($text =~ /^JOIN/) {
         ${ $self->message_history }{$account}{$channel}{join_watch}++;
       } else {
         # PART or QUIT -- check PART/QUIT message for netsplits or changing host, and decrement joinwatch if found
-        ${ $self->message_history }{$account}{$channel}{join_watch}-- if($text =~ /Changing host/ or $text =~ /.*\.net .*\.split/);
+        ${ $self->message_history }{$account}{$channel}{join_watch}-- if($text =~ /^QUIT Changing host/ or $text =~ /^QUIT .*\.net .*\.split/);
         ${ $self->message_history }{$account}{$channel}{join_watch} = 0 if ${ $self->message_history }{$account}{$channel}{join_watch} < 0;
       }
       $self->{pbot}->logger->log("$nick $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
