@@ -172,7 +172,7 @@ sub check_flood {
     #$self->{pbot}->logger->log("brand new nick addition\n");
     # new addition
     ${ $self->message_history }{$nick}{$channel}{offenses} = 0;
-    ${ $self->message_history }{$nick}{$channel}{join_watch} = 0;
+    ${ $self->message_history }{$nick}{$channel}{join_watch} = $mode; # FLOOD_CHAT = 0, FLOOD_JOIN = 1
     ${ $self->message_history }{$nick}{$channel}{messages} = [];
     ${ $self->message_history }{$nick}{hostmask} = "$nick!$user\@$host";
     push(@{ ${ $self->message_history }{$nick}{$channel}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
