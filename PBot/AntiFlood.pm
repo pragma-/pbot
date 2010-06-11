@@ -107,12 +107,18 @@ sub check_flood {
     if($mode == $self->{FLOOD_JOIN}) {
       if($text =~ /^JOIN/) {
         ${ $self->message_history }{$account}{$channel}{join_watch}++;
+        $self->{pbot}->logger->log("$nick $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
       } else {
-        # PART or QUIT -- check PART/QUIT message for netsplits or changing host, and decrement joinwatch if found
-        ${ $self->message_history }{$account}{$channel}{join_watch}-- if($text =~ /^QUIT Changing host/ or $text =~ /^QUIT .*\.net .*\.split/);
-        ${ $self->message_history }{$account}{$channel}{join_watch} = 0 if ${ $self->message_history }{$account}{$channel}{join_watch} < 0;
+        # PART or QUIT -- check QUIT message for netsplits, and decrement joinwatch if found
+        if($text =~ /^QUIT .*\.net .*\.split/) {
+          foreach my $ch (keys %{ $self->message_history->{$account} }) {
+            next if $ch eq 'hostmask'; # TODO: move channels into {channel} subkey
+            ${ $self->message_history }{$account}{$ch}{join_watch}--;
+            ${ $self->message_history }{$account}{$ch}{join_watch} = 0 if ${ $self->message_history }{$account}{$ch}{join_watch} < 0;
+            $self->{pbot}->logger->log("$nick $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
+          }
+        }
       }
-      $self->{pbot}->logger->log("$nick $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
     } elsif($mode == $self->{FLOOD_CHAT}) {
       ${ $self->message_history }{$account}{$channel}{join_watch} = 0;
     }
