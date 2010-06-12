@@ -145,7 +145,6 @@ sub check_flood {
         foreach my $ch (keys %{ $self->message_history->{$account} }) {
           next if $ch eq 'hostmask'; # TODO: move channels into {channel} subkey
           ${ $self->message_history }{$account}{$ch}{join_watch}++;
-          ${ $self->message_history }{$account}{$ch}{join_watch} = 0 if ${ $self->message_history }{$account}{$ch}{join_watch} < 0;
           $self->{pbot}->logger->log("$nick $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
         }
       }
