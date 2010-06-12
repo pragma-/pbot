@@ -119,8 +119,8 @@ sub check_flood {
           }
         } elsif($text =~ /^QUIT Ping timeout/) {
           # deal with ping timeouts agressively
-          ${ $self->message_history }{$account}{$ch}{join_watch}++;
-          $self->{pbot}->logger->log("$nick $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
+          ${ $self->message_history }{$account}{$channel}{join_watch}++;
+          $self->{pbot}->logger->log("$nick $channel joinwatchannel adjusted: ${ $self->message_history }{$account}{$channel}{join_watchannel}\n");
         }
       }
     } elsif($mode == $self->{FLOOD_CHAT}) {
