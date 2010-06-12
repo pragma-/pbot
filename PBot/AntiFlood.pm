@@ -127,6 +127,7 @@ sub check_flood {
           ${ $self->message_history }{$account}{$chan}{offenses} = 0;
           ${ $self->message_history }{$account}{$chan}{join_watch} = 0;
           ${ $self->message_history }{$account}{$chan}{messages} = [];
+          push(@{ ${ $self->message_history }{$account}{$chan}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
         }
       }
 
@@ -134,6 +135,7 @@ sub check_flood {
       if($text =~ /^QUIT .*\.net .*\.split/) {
         foreach my $ch (keys %{ $self->message_history->{$account} }) {
           next if $ch eq 'hostmask'; # TODO: move channels into {channel} subkey
+          next if $ch !~ /^#/;
           ${ $self->message_history }{$account}{$ch}{join_watch}--;
           ${ $self->message_history }{$account}{$ch}{join_watch} = 0 if ${ $self->message_history }{$account}{$ch}{join_watch} < 0;
           $self->{pbot}->logger->log("$nick $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
@@ -144,12 +146,14 @@ sub check_flood {
         # deal with ping timeouts agressively
         foreach my $ch (keys %{ $self->message_history->{$account} }) {
           next if $ch eq 'hostmask'; # TODO: move channels into {channel} subkey
+          next if $ch !~ /^#/;
           ${ $self->message_history }{$account}{$ch}{join_watch}++;
           $self->{pbot}->logger->log("$nick $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
         }
       }
     }
   } elsif($mode == $self->{FLOOD_CHAT}) {
+    # reset joinwatch if they send a message
     ${ $self->message_history }{$account}{$channel}{join_watch} = 0;
   }
 

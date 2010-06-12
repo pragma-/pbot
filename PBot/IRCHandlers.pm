@@ -165,7 +165,7 @@ sub on_departure {
   my $text = uc $event->type;
   $text .= " $args";
 
-  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, $text, 0, 0, $self->{pbot}->antiflood->{FLOOD_JOIN});
+  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, $text, 4, 60 * 30, $self->{pbot}->antiflood->{FLOOD_JOIN});
 
 =cut
   if(exists $admins{$nick} && exists $admins{$nick}{login}) { 
