@@ -78,11 +78,7 @@ sub check_flood {
   if(not defined $account) {
     # new addition
     #$self->{pbot}->logger->log("brand new nick addition\n");
-    ${ $self->message_history }{$nick}{$channel}{offenses} = 0;
-    ${ $self->message_history }{$nick}{$channel}{join_watch} = 0;
-    ${ $self->message_history }{$nick}{$channel}{messages} = [];
     ${ $self->message_history }{$nick}{hostmask} = "$nick!$user\@$host";
-    push(@{ ${ $self->message_history }{$nick}{$channel}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
 
     $account = $nick;
   }
@@ -95,15 +91,9 @@ sub check_flood {
   }
 
   #$self->{pbot}->logger->log("appending new message\n");
-
   push(@{ ${ $self->message_history }{$account}{$channel}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
 
   my $length = $#{ ${ $self->message_history }{$account}{$channel}{messages} } + 1;
-
-  if($max_messages > $self->{pbot}->{MAX_NICK_MESSAGES}) {
-    $self->{pbot}->logger->log("Warning: max_messages greater than MAX_NICK_MESSAGES; truncating.\n");
-    $max_messages = $self->{pbot}->{MAX_NICK_MESSAGES};
-  }
 
   if($length >= $self->{pbot}->{MAX_NICK_MESSAGES}) {
     my %msg = %{ shift(@{ ${ $self->message_history }{$account}{$channel}{messages} }) };
@@ -127,8 +117,8 @@ sub check_flood {
           ${ $self->message_history }{$account}{$chan}{offenses} = 0;
           ${ $self->message_history }{$account}{$chan}{join_watch} = 0;
           ${ $self->message_history }{$account}{$chan}{messages} = [];
-          push(@{ ${ $self->message_history }{$account}{$chan}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
         }
+        push(@{ ${ $self->message_history }{$account}{$chan}{messages} }, { timestamp => $now, msg => $text, mode => $mode }) unless $chan eq $channel;
       }
 
       # check QUIT message for netsplits, and decrement joinwatch if found
@@ -155,6 +145,11 @@ sub check_flood {
   } elsif($mode == $self->{FLOOD_CHAT}) {
     # reset joinwatch if they send a message
     ${ $self->message_history }{$account}{$channel}{join_watch} = 0;
+  }
+
+  if($max_messages > $self->{pbot}->{MAX_NICK_MESSAGES}) {
+    $self->{pbot}->logger->log("Warning: max_messages greater than MAX_NICK_MESSAGES; truncating.\n");
+    $max_messages = $self->{pbot}->{MAX_NICK_MESSAGES};
   }
 
   if($max_messages > 0 and $length >= $max_messages) {
