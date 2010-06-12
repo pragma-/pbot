@@ -117,6 +117,10 @@ sub check_flood {
             ${ $self->message_history }{$account}{$ch}{join_watch} = 0 if ${ $self->message_history }{$account}{$ch}{join_watch} < 0;
             $self->{pbot}->logger->log("$nick $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
           }
+        } elsif($text =~ /^QUIT Ping timeout/) {
+          # deal with ping timeouts agressively
+          ${ $self->message_history }{$account}{$ch}{join_watch}++;
+          $self->{pbot}->logger->log("$nick $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
         }
       }
     } elsif($mode == $self->{FLOOD_CHAT}) {
