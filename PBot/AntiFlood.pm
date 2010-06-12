@@ -118,7 +118,19 @@ sub check_flood {
       ${ $self->message_history }{$account}{$channel}{join_watch}++;
       $self->{pbot}->logger->log("$nick $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
     } else {
-      # PART or QUIT -- check QUIT message for netsplits, and decrement joinwatch if found
+      # PART or QUIT
+
+      # if QUIT, then assume they existed on any channel the bot exists on
+      # this makes it possible to deal with ping timeout quits 
+      foreach my $chan (keys %{ $self->{pbot}->channels->channels }) {
+        if(not exists ${ $self->message_history }{$account}{$chan}) {
+          ${ $self->message_history }{$account}{$chan}{offenses} = 0;
+          ${ $self->message_history }{$account}{$chan}{join_watch} = 0;
+          ${ $self->message_history }{$account}{$chan}{messages} = [];
+        }
+      }
+
+      # check QUIT message for netsplits, and decrement joinwatch if found
       if($text =~ /^QUIT .*\.net .*\.split/) {
         foreach my $ch (keys %{ $self->message_history->{$account} }) {
           next if $ch eq 'hostmask'; # TODO: move channels into {channel} subkey
@@ -126,10 +138,16 @@ sub check_flood {
           ${ $self->message_history }{$account}{$ch}{join_watch} = 0 if ${ $self->message_history }{$account}{$ch}{join_watch} < 0;
           $self->{pbot}->logger->log("$nick $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
         }
-      } elsif($text =~ /^QUIT Ping timeout/) {
+      } 
+      # check QUIT message for Ping timeout
+      elsif($text =~ /^QUIT Ping timeout/) {
         # deal with ping timeouts agressively
-        ${ $self->message_history }{$account}{$channel}{join_watch}++;
-        $self->{pbot}->logger->log("$nick $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
+        foreach my $ch (keys %{ $self->message_history->{$account} }) {
+          next if $ch eq 'hostmask'; # TODO: move channels into {channel} subkey
+          ${ $self->message_history }{$account}{$ch}{join_watch}++;
+          ${ $self->message_history }{$account}{$ch}{join_watch} = 0 if ${ $self->message_history }{$account}{$ch}{join_watch} < 0;
+          $self->{pbot}->logger->log("$nick $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
+        }
       }
     }
   } elsif($mode == $self->{FLOOD_CHAT}) {
