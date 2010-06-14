@@ -62,9 +62,6 @@ sub lose_ops {
   my $self = shift;
   my $channel = shift;
   $self->{pbot}->conn->privmsg("chanserv", "op $channel -" . $self->{pbot}->botnick);
-  if(exists ${ $self->{is_opped} }{$channel}) {
-    ${ $self->{is_opped} }{$channel}{timeout} = gettimeofday + 60; # try again in 1 minute if failed
-  }
 }
 
 sub perform_op_commands {
