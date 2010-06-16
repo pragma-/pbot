@@ -169,7 +169,7 @@ sub check_flood {
           
           my $timeout = (2 ** (${ $self->message_history }{$account}{$channel}{offenses} < 6 ? ${ $self->message_history }{$account}{$channel}{offenses} : 6));
           
-          $self->{pbot}->chanops->quiet_user_timed("*!$user\@$host", $channel, $timeout * 60 * 60);
+          $self->{pbot}->chanops->quiet_user_timed("*!$user\@$host\$##fix_your_connection", $channel, $timeout * 60 * 60);
           
           $self->{pbot}->logger->log("$nick!$user\@$host banned for $timeout hours due to join flooding (offense #${ $self->message_history }{$account}{$channel}{offenses}).\n");
           
@@ -252,7 +252,7 @@ sub unbanme {
     return "/msg $nick Usage: unbanme <channel> <captcha>";
   }
 
-  my $mask = "*!$user\@$host";
+  my $mask = "*!$user\@$host\$##fix_your_connection";
 
   if(not exists $self->{pbot}->{chanops}->{quieted_masks}->{$mask}) {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
