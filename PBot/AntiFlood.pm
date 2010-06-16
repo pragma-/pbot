@@ -45,6 +45,8 @@ sub initialize {
   $self->{message_history} = {};
 
   $pbot->timer->register(sub { $self->prune_message_history }, 60 * 60 * 1);
+
+  $pbot->commands->register(sub { return $self->unbanme(@_) },  "unbanme",  0);
 }
 
 sub get_flood_account {
@@ -154,6 +156,7 @@ sub check_flood {
 
   if($max_messages > 0 and $length >= $max_messages) {
     $self->{pbot}->logger->log("More than $max_messages messages, comparing time differences ($max_time)\n") if $mode == $self->{FLOOD_JOIN};
+
     my %msg = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - $max_messages] };
     my %last = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - 1] };
 
@@ -163,11 +166,20 @@ sub check_flood {
       if($mode == $self->{FLOOD_JOIN}) {
         if(${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages) {
           ${ $self->message_history }{$account}{$channel}{offenses}++;
+          
           my $timeout = (2 ** (${ $self->message_history }{$account}{$channel}{offenses} < 6 ? ${ $self->message_history }{$account}{$channel}{offenses} : 6));
+          
           $self->{pbot}->chanops->quiet_user_timed("*!$user\@$host", $channel, $timeout * 60 * 60);
+          
           $self->{pbot}->logger->log("$nick!$user\@$host banned for $timeout hours due to join flooding (offense #${ $self->message_history }{$account}{$channel}{offenses}).\n");
+          
           $timeout = "several" if($timeout > 8);
-          $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for $timeout hours due to join flooding.");
+
+          my $captcha = generate_random_string(7);
+          ${ $self->message_history }{$account}{$channel}{captcha} = $captcha;
+          
+          $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for $timeout hours due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban by responding to this message with: unbanme $channel $captcha");
+
           ${ $self->message_history }{$account}{$channel}{join_watch} = $max_messages - 2; # give them a chance to rejoin 
         } 
       } elsif($mode == $self->{FLOOD_CHAT}) {
@@ -229,6 +241,61 @@ sub prune_message_history {
       }
     }
   }
+}
+
+sub unbanme {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  my ($channel, $captcha) = split / /, $arguments;
+
+  if(not defined $channel or not defined $captcha) {
+    return "/msg $nick Usage: unbanme <channel> <captcha>";
+  }
+
+  my $mask = "*!$user\@$host";
+
+  if(not exists $self->{pbot}->{chanops}->{quieted_masks}->{$mask}) {
+    return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
+  }
+
+  if(not $self->{pbot}->chanops->{quieted_masks}->{$mask}{channel} eq $channel) {
+    return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
+  }
+
+  my $account = $self->get_flood_account($nick, $user, $host);
+
+  if(not defined $account) {
+    return "/msg $nick I do not remember you.";
+  }
+
+  if(not exists $self->{message_history}->{$account}{$channel}{captcha}) {
+    return "/msg $nick I do not remember banning you in $channel.";
+  }
+
+  if(not $self->{message_history}->{$account}{$channel}{captcha} eq $captcha) {
+    return "/msg $nick Incorrect captcha.";
+  }
+
+  # TODO: these delete statements need to be abstracted to methods on objects
+  $self->{pbot}->chanops->unquiet_user($mask, $channel);
+  delete $self->{pbot}->chanops->{quieted_masks}->{$mask};
+  delete $self->{message_history}->{$account}{$channel}{captcha};
+
+  return "/msg $nick You have been unbanned from $channel.";
+}
+
+# based on Guy Malachi's code
+sub generate_random_string {
+  my $length_of_randomstring = shift;
+
+  my @chars=('a'..'z','A'..'Z','0'..'9','_');
+  my $random_string;
+
+  foreach (1..$length_of_randomstring) {
+    $random_string .= $chars[rand @chars];
+  }
+
+  return $random_string;
 }
 
 1;
