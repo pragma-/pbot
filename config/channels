@@ -1,1 +1,5 @@
-#pbot2 1 1 0
+-
+channel: #pbot2
+chanop: 1
+enabled: 1
+-

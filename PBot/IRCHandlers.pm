@@ -93,8 +93,8 @@ sub on_notice {
   $self->{pbot}->logger->log("Received NOTICE from $nick $host '$text'\n");
 
   if($nick eq "NickServ" && $text =~ m/You are now identified/i) {
-    foreach my $chan (keys %{ $self->{pbot}->channels->channels }) {
-      if(${ $self->{pbot}->channels->channels }{$chan}{enabled} != 0) {
+    foreach my $chan (keys %{ $self->{pbot}->channels->channels->hash }) {
+      if($self->{pbot}->channels->channels->hash->{$chan}{enabled}) {
         $self->{pbot}->logger->log("Joining channel: $chan\n");
         $conn->join($chan);
       }
@@ -140,8 +140,8 @@ sub on_mode {
         $self->{pbot}->chanops->{unban_timeout}->{$target}{channel} = $channel;
       }
     } elsif($mode eq "+e" && $channel eq $self->{pbot}->botnick) {
-      foreach my $chan (keys %{ $self->{pbot}->channels->channels }) {
-        if($self->channels->{channels}->{$chan}{enabled} != 0) {
+      foreach my $chan (keys %{ $self->{pbot}->channels->channels->hash }) {
+        if($self->channels->channels->hash->{$chan}{enabled}) {
           $self->{pbot}->logger->log("Joining channel: $chan\n");
           $self->{pbot}->conn->join($chan);
         }

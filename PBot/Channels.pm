@@ -12,6 +12,7 @@ use vars qw($VERSION);
 $VERSION = $PBot::PBot::VERSION;
 
 use Carp ();
+use PBot::HashObject;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -33,60 +34,77 @@ sub initialize {
      Carp::croak ("Missing pbot reference to Channels");
   }
 
-  my $channels_file = delete $conf{filename};
+  my $filename = delete $conf{filename};
 
   $self->{pbot} = $pbot;
-  $self->{filename} = $channels_file;
-  $self->{channels} = {};
+  $self->{channels} = PBot::HashObject->new(pbot => $pbot, name => 'Channels', index_key => 'channel', filename => $filename);
+
+  $pbot->commands->register(sub { $self->set(@_)       },  "chanset",   40);
+  $pbot->commands->register(sub { $self->unset(@_)     },  "chanunset", 40);
+  $pbot->commands->register(sub { $self->add(@_)       },  "chanadd",   40);
+  $pbot->commands->register(sub { $self->remove(@_)    },  "chanrem",   40);
+}
+
+sub set {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+  my ($channel, $key, $value) = split / /, $arguments, 3;
+
+  if(not defined $channel or not defined $key) {
+    return "/msg $nick Usage: chanset <channel> <key> <value>";
+  }
+
+  return "/msg $nick " . $self->channels->set($channel, $key, $value);
+}
+
+sub unset {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+  my ($channel, $key) = split / /, $arguments;
+
+  if(not defined $channel or not defined $key) {
+    return "/msg $nick Usage: chanunset <channel> <key>";
+  }
+
+  return "/msg $nick " . $self->channels->unset($channel, $key);
+}
+
+sub add {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  if(not defined $arguments) {
+    return "/msg $nick Usage: chanadd <channel>";
+  }
+
+  my $hash = {};
+  $hash->{channel} = $arguments;
+  $hash->{enabled} = 1;
+  $hash->{chanop} = 0;
+
+  return "/msg $nick " . $self->channels->add($hash);
+}
+
+sub remove {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  if(not defined $arguments) {
+    return "/msg $nick Usage: chanrem <channel>";
+  }
+
+  return "/msg $nick " . $self->channels->remove($arguments);
 }
 
 sub load_channels {
   my $self = shift;
 
-  open(FILE, "< $self->{filename}") or Carp::croak "Couldn't open $self->{filename}: $!\n";
-  my @contents = <FILE>;
-  close(FILE);
-
-  $self->{pbot}->logger->log("Loading channels from $self->{filename} ...\n");
-
-  my $i = 0;
-  foreach my $line (@contents) {
-    $i++;
-    chomp $line;
-    
-    my ($channel, $enabled, $is_op, $showall) = split(/\s+/, $line);
-    if(not defined $channel || not defined $is_op || not defined $enabled) {
-      Carp::croak "Syntax error around line $i of $self->{filename}\n";
-    }
-
-    $channel = lc $channel;
-
-    if(defined ${ $self->channels }{$channel}) {
-      Carp::croak "Duplicate channel $channel found in $self->{filename} around line $i\n";
-    }
-    
-    ${ $self->channels }{$channel}{enabled} = $enabled;
-    ${ $self->channels }{$channel}{is_op} = $is_op;
-    ${ $self->channels }{$channel}{showall} = $showall;
-    
-    $self->{pbot}->logger->log("  Adding channel $channel (enabled: $enabled, op: $is_op, showall: $showall) ...\n");
-  }
-  
-  $self->{pbot}->logger->log("Done.\n");
+  $self->channels->load_hash();
 }
 
 sub save_channels {
   my $self = shift;
-  open(FILE, "> $self->{filename}") or Carp::croak "Couldn't open $self->{filename}: $!\n";
-  foreach my $channel (keys %{ $self->channels }) {
-    $channel = lc $channel;
-    print FILE "$channel ${ $self->channels }{$channel}{enabled} ${ $self->channels }{$channel}{is_op} ${ $self->channels }{$channel}{showall}\n";
-  }
-  close(FILE);
+
+  $self->channels->save_hash();
 }
 
-sub PBot::Channels::channels {
-  # Carp::cluck "PBot::Channels::channels";
+sub channels {
   my $self = shift;
   return $self->{channels};
 }

@@ -103,7 +103,7 @@ sub check_flood {
     $length--;
   }
 
-  return if ($channel =~ /^#/) and (not exists ${ $self->{pbot}->channels->channels }{$channel} or ${ $self->{pbot}->channels->channels }{$channel}{is_op} == 0);
+  return if ($channel =~ /^#/) and (not exists $self->{pbot}->channels->channels->hash->{$channel} or $self->{pbot}->channels->channels->hash->{$channel}{chanop} == 0);
 
   if($mode == $self->{FLOOD_JOIN}) {
     if($text =~ /^JOIN/) {
@@ -114,7 +114,7 @@ sub check_flood {
 
       # if QUIT, then assume they existed on any channel the bot exists on
       # this makes it possible to deal with ping timeout quits 
-      foreach my $chan (keys %{ $self->{pbot}->channels->channels }) {
+      foreach my $chan (keys %{ $self->{pbot}->channels->channels->hash }) {
         if(not exists ${ $self->message_history }{$account}{$chan}) {
           ${ $self->message_history }{$account}{$chan}{offenses} = 0;
           ${ $self->message_history }{$account}{$chan}{join_watch} = 0;
