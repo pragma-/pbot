@@ -167,7 +167,7 @@ sub check_flood {
         if(${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages) {
           ${ $self->message_history }{$account}{$channel}{offenses}++;
           
-          my $timeout = (2 ** (${ $self->message_history }{$account}{$channel}{offenses} < 6 ? ${ $self->message_history }{$account}{$channel}{offenses} : 6));
+          my $timeout = (2 ** (($self->message_history->{$account}{$channel}{offenses} + 6) < 10 ? ${ $self->message_history }{$account}{$channel}{offenses} + 6 : 10));
           
           $self->{pbot}->chanops->quiet_user_timed("*!$user\@$host\$##fix_your_connection", $channel, $timeout * 60 * 60);
           
