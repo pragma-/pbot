@@ -49,8 +49,8 @@ sub set {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   my ($channel, $key, $value) = split / /, $arguments, 3;
 
-  if(not defined $channel or not defined $key) {
-    return "/msg $nick Usage: chanset <channel> <key> <value>";
+  if(not defined $channel) {
+    return "/msg $nick Usage: chanset <channel> [[key] <value>]";
   }
 
   return "/msg $nick " . $self->channels->set($channel, $key, $value);

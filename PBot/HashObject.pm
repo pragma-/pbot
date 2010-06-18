@@ -223,6 +223,17 @@ sub set {
     return $result;
   }
 
+  if(not defined $key) {
+    my $result = "[$self->{name}] $hash_index keys: ";
+    my $comma = '';
+    foreach my $k (sort keys %{ $self->hash->{$hash_index} }) {
+      $result .= $comma . "$k => " . $self->hash->{$hash_index}{$k};
+      $comma = ", ";
+    }
+    $result .= "none" if($comma eq '');
+    return $result;
+  }
+
   if(not defined $value) {
     $value = $self->hash->{$hash_index}{$key};
   } else {
