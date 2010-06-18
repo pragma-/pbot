@@ -2,7 +2,7 @@
 # Author: pragma_
 #
 # Purpose: Keeps track of which nick has said what and when.  Used in
-# conjunction with OperatorStuff and Quotegrabs for kick/quiet on flood
+# conjunction with OperatorStuff and Quotegrabs for kick/ban on flood
 # and grabbing quotes, respectively.
 
 package PBot::AntiFlood;
@@ -173,7 +173,7 @@ sub check_flood {
 
           my $banmask = address_to_mask($host);
 
-          $self->{pbot}->chanops->quiet_user_timed("*!$user\@$banmask\$##fix_your_connection", $channel, $timeout * 60 * 60);
+          $self->{pbot}->chanops->ban_user_timed("*!$user\@$banmask\$##fix_your_connection", $channel, $timeout * 60 * 60);
           
           $self->{pbot}->logger->log("$nick!$user\@$banmask banned for $timeout hours due to join flooding (offense #${ $self->message_history }{$account}{$channel}{offenses}).\n");
           
@@ -190,11 +190,11 @@ sub check_flood {
         ${ $self->message_history }{$account}{$channel}{offenses}++;
         my $length = ${ $self->message_history }{$account}{$channel}{offenses} ** ${ $self->message_history }{$account}{$channel}{offenses} * ${ $self->message_history }{$account}{$channel}{offenses} * 30;
         if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
-          return if exists $self->{pbot}->chanops->{quieted_masks}->{"*!*\@$host"};
+          return if exists $self->{pbot}->chanops->{unban_timeout}->{"*!*\@$host"};
           if($mode == $self->{FLOOD_CHAT}) {
-            $self->{pbot}->chanops->quiet_user_timed("*!$user\@$host", $channel, $length);
+            $self->{pbot}->chanops->ban_user_timed("*!$user\@$host", $channel, $length);
 
-            $self->{pbot}->logger->log("$nick $channel flood offense ${ $self->message_history }{$account}{$channel}{offenses} earned $length second quiet\n");
+            $self->{pbot}->logger->log("$nick $channel flood offense ${ $self->message_history }{$account}{$channel}{offenses} earned $length second ban\n");
 
             if($length  < 1000) {
               $length = "$length seconds";
@@ -202,7 +202,7 @@ sub check_flood {
               $length = "a little while";
             }
 
-            $self->{pbot}->conn->privmsg($nick, "You have been quieted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length.");
+            $self->{pbot}->conn->privmsg($nick, "You have been muted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length.");
           }
         } else { # private message flood
           return if exists $self->{pbot}->ignorelist->{ignore_list}->{"$nick!$user\@$host"}{$channel};
@@ -260,11 +260,11 @@ sub unbanme {
 
   my $mask = "*!$user\@$banmask\$##fix_your_connection";
 
-  if(not exists $self->{pbot}->{chanops}->{quieted_masks}->{$mask}) {
+  if(not exists $self->{pbot}->{chanops}->{unban_timeout}->{$mask}) {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
   }
 
-  if(not $self->{pbot}->chanops->{quieted_masks}->{$mask}{channel} eq $channel) {
+  if(not $self->{pbot}->chanops->{unban_timeout}->{$mask}{channel} eq $channel) {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
   }
 
@@ -283,8 +283,8 @@ sub unbanme {
   }
 
   # TODO: these delete statements need to be abstracted to methods on objects
-  $self->{pbot}->chanops->unquiet_user($mask, $channel);
-  delete $self->{pbot}->chanops->{quieted_masks}->{$mask};
+  $self->{pbot}->chanops->unban_user($mask, $channel);
+  delete $self->{pbot}->chanops->{unban_timeout}->{$mask};
   delete $self->{message_history}->{$account}{$channel}{captcha};
 
   return "/msg $nick You have been unbanned from $channel.";

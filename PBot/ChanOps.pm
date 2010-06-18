@@ -34,14 +34,12 @@ sub initialize {
   }
 
   $self->{pbot} = $pbot;
-  $self->{quieted_masks} = {};
-  $self->{unban_timeouts} = {};
+  $self->{unban_timeout} = {};
   $self->{op_commands} = [];
   $self->{is_opped} = {};
 
   $pbot->timer->register(sub { $self->check_opped_timeouts   }, 10);
-  $pbot->timer->register(sub { $self->check_quieted_timeouts }, 10);
-  $pbot->timer->register(sub { $self->check_unban_timeouts   }, 10);
+  $pbot->timer->register(sub { $self->check_unban_timeouts }, 10);
 }
 
 sub gain_ops {
@@ -82,41 +80,41 @@ sub perform_op_commands {
   $self->{pbot}->logger->log("Done.\n");
 }
 
-sub quiet_user {
+sub ban_user {
   my $self = shift;
   my ($mask, $channel) = @_;
   unshift @{ $self->{op_commands} }, "mode $channel +b $mask";
   $self->gain_ops($channel);
 }
 
-sub unquiet_user {
+sub unban_user {
   my $self = shift;
   my ($mask, $channel) = @_;
   unshift @{ $self->{op_commands} }, "mode $channel -b $mask";
   $self->gain_ops($channel);
 }
 
-sub quiet_user_timed {
+sub ban_user_timed {
   my $self = shift;
   my ($mask, $channel, $length) = @_;
 
-  $self->quiet_user($mask, $channel);
-  ${ $self->{quieted_masks} }{$mask}{time} = gettimeofday + $length;
-  ${ $self->{quieted_masks} }{$mask}{channel} = $channel;
+  $self->ban_user($mask, $channel);
+  ${ $self->{unban_timeout} }{$mask}{timeout} = gettimeofday + $length;
+  ${ $self->{unban_timeout} }{$mask}{channel} = $channel;
 }
 
-sub check_quieted_timeouts {
+sub check_unban_timeouts {
   my $self = shift;
   my $now = gettimeofday();
 
-  foreach my $mask (keys %{ $self->{quieted_masks} }) {
-    if($self->{quieted_masks}->{$mask}{time} < $now) {
-      $self->{pbot}->logger->log("Unquieting $mask\n");
-      $self->unquiet_user($mask, $self->{quieted_masks}->{$mask}{channel});
-      delete $self->{quieted_masks}->{$mask};
+  foreach my $mask (keys %{ $self->{unban_timeout} }) {
+    if($self->{unban_timeout}->{$mask}{timeout} < $now) {
+      $self->{pbot}->logger->log("Unbanning $mask\n");
+      $self->unban_user($mask, $self->{unban_timeout}->{$mask}{channel});
+      delete $self->{unban_timeout}->{$mask};
     } else {
-      #my $timediff = $quieted_masks{$mask}{time} - $now;
-      #$logger->log "quiet: $mask has $timediff seconds remaining\n"
+      #my $timediff = $unban_timeout{$mask}{timeout} - $now;
+      #$logger->log "ban: $mask has $timediff seconds remaining\n"
     }
   }
 }
@@ -131,22 +129,6 @@ sub check_opped_timeouts {
     } else {
       # my $timediff = $is_opped{$channel}{timeout} - $now;
       # $logger->log("deop $channel in $timediff seconds\n");
-    }
-  }
-}
-
-sub check_unban_timeouts {
-  my $self = shift;
-  my $now = gettimeofday();
-
-  foreach my $ban (keys %{ $self->{unban_timeouts} }) {
-    if($self->{unban_timeouts}->{$ban}{timeout} < $now) {
-      unshift @{ $self->{op_commands} }, "mode " . $self->{unban_timeout}->{$ban}{channel} . " -b $ban";
-      $self->gain_ops($self->{unban_timeouts}->{$ban}{channel});
-      delete $self->{unban_timeouts}->{$ban};
-    } else {
-      #my $timediff = $unban_timeout{$ban}{timeout} - $now;
-      #$logger->log("$unban_timeout{$ban}{channel}: unban $ban in $timediff seconds\n");
     }
   }
 }
