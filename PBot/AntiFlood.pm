@@ -179,10 +179,7 @@ sub check_flood {
           
           $timeout = "several" if($timeout > 8);
 
-          my $captcha = generate_random_string(7);
-          ${ $self->message_history }{$account}{$channel}{captcha} = $captcha;
-          
-          $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for $timeout hours due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban by responding to this message with: unbanme $channel $captcha");
+          $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for $timeout hours due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with: unbanme $channel; however, abusing this may lead to a permanent ban.");
 
           ${ $self->message_history }{$account}{$channel}{join_watch} = $max_messages - 2; # give them a chance to rejoin 
         } 
@@ -249,11 +246,10 @@ sub prune_message_history {
 
 sub unbanme {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
+  my $channel = $arguments;
 
-  my ($channel, $captcha) = split / /, $arguments;
-
-  if(not defined $channel or not defined $captcha) {
-    return "/msg $nick Usage: unbanme <channel> <captcha>";
+  if(not defined $channel) {
+    return "/msg $nick Usage: unbanme <channel>";
   }
 
   my $banmask = address_to_mask($host);
@@ -268,25 +264,9 @@ sub unbanme {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
   }
 
-  my $account = $self->get_flood_account($nick, $user, $host);
-
-  if(not defined $account) {
-    return "/msg $nick I do not remember you.";
-  }
-
-  if(not exists $self->{message_history}->{$account}{$channel}{captcha}) {
-    return "/msg $nick I do not remember banning you in $channel.";
-  }
-
-  if(not $self->{message_history}->{$account}{$channel}{captcha} eq $captcha) {
-    return "/msg $nick Incorrect captcha.";
-  }
-
-  # TODO: these delete statements need to be abstracted to methods on objects
   $self->{pbot}->chanops->unban_user($mask, $channel);
   delete $self->{pbot}->chanops->{unban_timeout}->hash->{$mask};
   $self->{pbot}->chanops->{unban_timeout}->save_hash();
-  delete $self->{message_history}->{$account}{$channel}{captcha};
 
   return "/msg $nick You have been unbanned from $channel.";
 }
