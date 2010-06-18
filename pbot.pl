@@ -59,6 +59,12 @@ my %config = (
                # You shouldn't need to change anything below this line.
                # -----------------------------------------------------
 
+               # Path to data directory
+               data_dir        => "$bothome/data",
+
+               # Path to config directory
+               conf_dir        => "$bothome/config",
+
                # Path to directory containing external script-like modules
                module_dir      => "$bothome/modules",
 

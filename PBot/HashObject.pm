@@ -101,7 +101,11 @@ sub load_hash {
 
   $self->{pbot}->logger->log("Loading $self->{name} objects from $filename ...\n");
 
-  open(FILE, "< $filename") or Carp::croak "Couldn't open $filename: $!\n";
+  if(not open(FILE, "< $filename")) {
+    Carp::carp "Couldn't open $filename: $!\n";
+    Carp::carp "Skipping loading from file.\n";
+    return;
+  }
 
   my $i = 0;
   my $hash;

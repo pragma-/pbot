@@ -64,6 +64,15 @@ sub initialize {
   my ($self, %conf) = @_;
 
   my $log_file          = delete $conf{log_file};
+
+  my $conf_dir          = delete $conf{conf_dir};
+  $conf_dir = "$ENV{HOME}/pbot/data" unless defined $conf_dir;
+  $self->{conf_dir} = $conf_dir;
+
+  my $data_dir          = delete $conf{data_dir};
+  $data_dir = "$ENV{HOME}/pbot/data" unless defined $data_dir;
+  $self->{data_dir} = $data_dir;
+
   my $channels_file     = delete $conf{channels_file};
   my $admins_file       = delete $conf{admins_file};
   
@@ -154,6 +163,8 @@ sub initialize {
 
   $self->{chanops}    = PBot::ChanOps->new(pbot => $self);
   $self->{chanopcmds} = PBot::ChanOpCommands->new(pbot => $self);
+
+  $self->{chanops}->{unban_timeout}->load_hash();
 
   $self->{quotegrabs} = PBot::Quotegrabs->new(
     pbot        => $self, 

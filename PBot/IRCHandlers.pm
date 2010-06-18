@@ -99,6 +99,7 @@ sub on_notice {
         $conn->join($chan);
       }
     }
+    $self->{pbot}->{joined_channels} = 1;
   }
 }
 
@@ -136,8 +137,9 @@ sub on_mode {
   } else {  # bot not targeted
     if($mode eq "+b") {
       if($nick eq "ChanServ") {
-        $self->{pbot}->chanops->{unban_timeout}->{$target}{timeout} = gettimeofday + 3600 * 2; # 2 hours
-        $self->{pbot}->chanops->{unban_timeout}->{$target}{channel} = $channel;
+        $self->{pbot}->chanops->{unban_timeout}->hash->{$target}{timeout} = gettimeofday + 3600 * 2; # 2 hours
+        $self->{pbot}->chanops->{unban_timeout}->hash->{$target}{channel} = $channel;
+        $self->{pbot}->chanops->{unban_timeout}->save_hash();
       }
     } elsif($mode eq "+e" && $channel eq $self->{pbot}->botnick) {
       foreach my $chan (keys %{ $self->{pbot}->channels->channels->hash }) {
@@ -146,6 +148,7 @@ sub on_mode {
           $self->{pbot}->conn->join($chan);
         }
       }
+      $self->{pbot}->{joined_channels} = 1;
     }
   }
 }

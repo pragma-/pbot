@@ -190,7 +190,7 @@ sub check_flood {
         ${ $self->message_history }{$account}{$channel}{offenses}++;
         my $length = ${ $self->message_history }{$account}{$channel}{offenses} ** ${ $self->message_history }{$account}{$channel}{offenses} * ${ $self->message_history }{$account}{$channel}{offenses} * 30;
         if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
-          return if exists $self->{pbot}->chanops->{unban_timeout}->{"*!*\@$host"};
+          return if exists $self->{pbot}->chanops->{unban_timeout}->hash->{"*!*\@$host"};
           if($mode == $self->{FLOOD_CHAT}) {
             $self->{pbot}->chanops->ban_user_timed("*!$user\@$host", $channel, $length);
 
@@ -260,11 +260,11 @@ sub unbanme {
 
   my $mask = "*!$user\@$banmask\$##fix_your_connection";
 
-  if(not exists $self->{pbot}->{chanops}->{unban_timeout}->{$mask}) {
+  if(not exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$mask}) {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
   }
 
-  if(not $self->{pbot}->chanops->{unban_timeout}->{$mask}{channel} eq $channel) {
+  if(not $self->{pbot}->chanops->{unban_timeout}->hash->{$mask}{channel} eq $channel) {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
   }
 
@@ -284,7 +284,8 @@ sub unbanme {
 
   # TODO: these delete statements need to be abstracted to methods on objects
   $self->{pbot}->chanops->unban_user($mask, $channel);
-  delete $self->{pbot}->chanops->{unban_timeout}->{$mask};
+  delete $self->{pbot}->chanops->{unban_timeout}->hash->{$mask};
+  $self->{pbot}->chanops->{unban_timeout}->save_hash();
   delete $self->{message_history}->{$account}{$channel}{captcha};
 
   return "/msg $nick You have been unbanned from $channel.";

@@ -12,6 +12,7 @@ use vars qw($VERSION);
 $VERSION = $PBot::PBot::VERSION;
 
 use Time::HiRes qw(gettimeofday);
+use PBot::HashObject;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -34,7 +35,7 @@ sub initialize {
   }
 
   $self->{pbot} = $pbot;
-  $self->{unban_timeout} = {};
+  $self->{unban_timeout} = PBot::HashObject->new(pbot => $pbot, name => 'Unban Timeouts', index_key => 'banmask', filename => "$pbot->{data_dir}/unban_timeouts");
   $self->{op_commands} = [];
   $self->{is_opped} = {};
 
@@ -99,19 +100,24 @@ sub ban_user_timed {
   my ($mask, $channel, $length) = @_;
 
   $self->ban_user($mask, $channel);
-  ${ $self->{unban_timeout} }{$mask}{timeout} = gettimeofday + $length;
-  ${ $self->{unban_timeout} }{$mask}{channel} = $channel;
+  $self->{unban_timeout}->hash->{$mask}{timeout} = gettimeofday + $length;
+  $self->{unban_timeout}->hash->{$mask}{channel} = $channel;
+  $self->{unban_timeout}->save_hash();
 }
 
 sub check_unban_timeouts {
   my $self = shift;
+
+  return if not $self->{pbot}->{joined_channels};
+
   my $now = gettimeofday();
 
-  foreach my $mask (keys %{ $self->{unban_timeout} }) {
-    if($self->{unban_timeout}->{$mask}{timeout} < $now) {
+  foreach my $mask (keys %{ $self->{unban_timeout}->hash }) {
+    if($self->{unban_timeout}->hash->{$mask}{timeout} < $now) {
       $self->{pbot}->logger->log("Unbanning $mask\n");
-      $self->unban_user($mask, $self->{unban_timeout}->{$mask}{channel});
-      delete $self->{unban_timeout}->{$mask};
+      $self->unban_user($mask, $self->{unban_timeout}->hash->{$mask}{channel});
+      delete $self->{unban_timeout}->hash->{$mask};
+      $self->{unban_timeout}->save_hash();
     } else {
       #my $timediff = $unban_timeout{$mask}{timeout} - $now;
       #$logger->log "ban: $mask has $timediff seconds remaining\n"
