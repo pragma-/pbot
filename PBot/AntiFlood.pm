@@ -168,10 +168,12 @@ sub check_flood {
           ${ $self->message_history }{$account}{$channel}{offenses}++;
           
           my $timeout = (2 ** (($self->message_history->{$account}{$channel}{offenses} + 6) < 10 ? ${ $self->message_history }{$account}{$channel}{offenses} + 6 : 10));
+
+          my $banmask = address_to_mask($host);
+
+          $self->{pbot}->chanops->quiet_user_timed("*!$user\@$banmask\$##fix_your_connection", $channel, $timeout * 60 * 60);
           
-          $self->{pbot}->chanops->quiet_user_timed("*!$user\@$host\$##fix_your_connection", $channel, $timeout * 60 * 60);
-          
-          $self->{pbot}->logger->log("$nick!$user\@$host banned for $timeout hours due to join flooding (offense #${ $self->message_history }{$account}{$channel}{offenses}).\n");
+          $self->{pbot}->logger->log("$nick!$user\@$banmask banned for $timeout hours due to join flooding (offense #${ $self->message_history }{$account}{$channel}{offenses}).\n");
           
           $timeout = "several" if($timeout > 8);
 
@@ -252,7 +254,9 @@ sub unbanme {
     return "/msg $nick Usage: unbanme <channel> <captcha>";
   }
 
-  my $mask = "*!$user\@$host\$##fix_your_connection";
+  my $banmask = address_to_mask($host);
+
+  my $mask = "*!$user\@$banmask\$##fix_your_connection";
 
   if(not exists $self->{pbot}->{chanops}->{quieted_masks}->{$mask}) {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
@@ -282,6 +286,26 @@ sub unbanme {
   delete $self->{message_history}->{$account}{$channel}{captcha};
 
   return "/msg $nick You have been unbanned from $channel.";
+}
+
+sub address_to_mask {
+  my $address = shift;
+  my $banmask;
+
+  if($address =~ m/^([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$/) {
+    my ($a, $b, $c, $d) = ($1, $2, $3, $4);
+    given($a) {
+      when($_ <= 127) { $banmask = "$a.*"; }
+      when($_ <= 191) { $banmask = "$a.$b.*"; }
+      default { $banmask = "$a.$b.$c.*"; }
+    }
+  } elsif($address =~ m/[^.]+\.([^.]+\.[^.]+)$/) {
+    $banmask = "*.$1";
+  } else {
+    $banmask = $address;
+  }
+
+  return $banmask;
 }
 
 # based on Guy Malachi's code
