@@ -202,7 +202,7 @@ sub check_flood {
 
           my $banmask = address_to_mask($host);
 
-          $self->{pbot}->chanops->ban_user_timed("*!$user\@$banmask\$##fix_your_connection", $channel, $timeout * 60 * 60);
+          $self->{pbot}->chanops->ban_user_timed("*!$user\@$banmask\$##stop_join_flood", $channel, $timeout * 60 * 60);
           
           $self->{pbot}->logger->log("$nick!$user\@$banmask banned for $timeout hours due to join flooding (offense #${ $self->message_history }{$account}{$channel}{offenses}).\n");
           
@@ -283,7 +283,7 @@ sub unbanme {
 
   my $banmask = address_to_mask($host);
 
-  my $mask = "*!$user\@$banmask\$##fix_your_connection";
+  my $mask = "*!$user\@$banmask\$##stop_join_flood";
 
   if(not exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$mask}) {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
