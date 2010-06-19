@@ -189,9 +189,7 @@ sub interpret {
   $arguments =~ s/\bme\b/\$nick/gi if defined $arguments;
   $arguments =~ s/\/\$nick/\/me/gi if defined $arguments;
 
-  $pbot->logger->log("keyword: [$keyword], arguments: [" . (defined $arguments ? $arguments : "(undef)") . "], tonick: [" . (defined $tonick ? $tonick : "(undef)") . "]\n");
-
-  if(defined $arguments && $arguments =~ m/\b(your|him|her|its|it|them|their)(self|selves)\b/i) {
+  if(defined $arguments && $arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i) {
     return "Why would I want to do that to myself?";
   }
 
