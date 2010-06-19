@@ -103,7 +103,7 @@ sub initialize {
 
   $max_msg_len        = 430 unless defined $max_msg_len;
   $MAX_FLOOD_MESSAGES = 4   unless defined $MAX_FLOOD_MESSAGES;
-  $MAX_NICK_MESSAGES  = 8   unless defined $MAX_NICK_MESSAGES;
+  $MAX_NICK_MESSAGES  = 12  unless defined $MAX_NICK_MESSAGES;
 
   $self->{botnick} = $botnick;
   $self->{username} = $username;

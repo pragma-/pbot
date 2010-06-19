@@ -39,6 +39,7 @@ sub initialize {
   }
 
   $self->{pbot} = $pbot;
+  $self->{FLOOD_IGNORE} = -1;
   $self->{FLOOD_CHAT} = 0;
   $self->{FLOOD_JOIN} = 1;
 
@@ -65,6 +66,24 @@ sub get_flood_account {
   }
 
   return undef;
+}
+
+sub add_message {
+  my ($self, $account, $channel, $text, $mode) = @_;
+  my $now = gettimeofday;
+
+  #$self->{pbot}->logger->log("appending new message\n");
+  push(@{ ${ $self->message_history }{$account}{$channel}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
+
+  my $length = $#{ ${ $self->message_history }{$account}{$channel}{messages} } + 1;
+
+  if($length >= $self->{pbot}->{MAX_NICK_MESSAGES}) {
+    my %msg = %{ shift(@{ ${ $self->message_history }{$account}{$channel}{messages} }) };
+    #$self->{pbot}->logger->log("shifting message off top: $msg{msg}, $msg{timestamp}\n");
+    $length--;
+  }
+
+  return $length;
 }
 
 sub check_flood {
@@ -94,16 +113,7 @@ sub check_flood {
     ${ $self->message_history }{$account}{$channel}{messages} = [];
   }
 
-  #$self->{pbot}->logger->log("appending new message\n");
-  push(@{ ${ $self->message_history }{$account}{$channel}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
-
-  my $length = $#{ ${ $self->message_history }{$account}{$channel}{messages} } + 1;
-
-  if($length >= $self->{pbot}->{MAX_NICK_MESSAGES}) {
-    my %msg = %{ shift(@{ ${ $self->message_history }{$account}{$channel}{messages} }) };
-    #$self->{pbot}->logger->log("shifting message off top: $msg{msg}, $msg{timestamp}\n");
-    $length--;
-  }
+  my $length = $self->add_message($account, $channel, $text, $mode);
 
   return if ($channel =~ /^#/) and (not exists $self->{pbot}->channels->channels->hash->{$channel} or $self->{pbot}->channels->channels->hash->{$channel}{chanop} == 0);
 
@@ -122,7 +132,7 @@ sub check_flood {
           ${ $self->message_history }{$account}{$chan}{join_watch} = 0;
           ${ $self->message_history }{$account}{$chan}{messages} = [];
         }
-        push(@{ ${ $self->message_history }{$account}{$chan}{messages} }, { timestamp => $now, msg => $text, mode => $mode }) unless $chan eq $channel;
+        $self->add_message($account, $chan, $text, $mode) unless $chan eq $channel;
       }
 
       # check QUIT message for netsplits, and decrement joinwatch if found
@@ -134,6 +144,7 @@ sub check_flood {
           ${ $self->message_history }{$account}{$ch}{join_watch} = 0 if ${ $self->message_history }{$account}{$ch}{join_watch} < 0;
           $self->{pbot}->logger->log("$nick $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
         }
+        $self->message_history->{$account}{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE}; 
       } 
       # check QUIT message for Ping timeout
       elsif($text =~ /^QUIT Ping timeout/) {
@@ -144,6 +155,8 @@ sub check_flood {
           ${ $self->message_history }{$account}{$ch}{join_watch}++;
           $self->{pbot}->logger->log("$nick $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
         }
+      } else {
+        $self->message_history->{$account}{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE};
       }
     }
   } elsif($mode == $self->{FLOOD_CHAT}) {
@@ -159,7 +172,23 @@ sub check_flood {
   if($max_messages > 0 and $length >= $max_messages) {
     $self->{pbot}->logger->log("More than $max_messages messages, comparing time differences ($max_time)\n") if $mode == $self->{FLOOD_JOIN};
 
-    my %msg = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - $max_messages] };
+    my %msg;
+    if($mode == $self->{FLOOD_CHAT}) {
+      %msg = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - $max_messages] };
+    } else {
+      my $count = 0;
+      my $i = $length - 1;
+      $self->{pbot}->logger->log("Checking flood history, i = $i\n");
+      for(; $i >= 0; $i--) {
+        $self->{pbot}->logger->log($i . " " . $self->message_history->{$account}{$channel}{messages}->[$i]{mode} ." " . $self->message_history->{$account}{$channel}{messages}->[$i]{msg} .  " " . $self->message_history->{$account}{$channel}{messages}->[$i]{timestamp} . "\n");
+        next if $self->message_history->{$account}{$channel}{messages}->[$i]{mode} != $self->{FLOOD_JOIN};
+        last if ++$count >= 4;
+      }
+      $i = 0 if $i < 0;
+      print "using $i\n";
+      %msg = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$i] };
+    }
+
     my %last = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - 1] };
 
     $self->{pbot}->logger->log("Comparing " . int($last{timestamp}) . " against " . int($msg{timestamp}) . ": " . (int($last{timestamp} - $msg{timestamp})) . " seconds\n") if $mode == $self->{FLOOD_JOIN};
