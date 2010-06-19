@@ -402,15 +402,11 @@ sub interpreter {
     }
 
     if(defined $arguments) {
-      $self->{pbot}->logger->log("got arguments: [$arguments]\n");
-
       # TODO - extract and remove $tonick from end of $arguments
       if(not $result =~ s/\$args/$arguments/gi) {
-        $self->{pbot}->logger->log("factoid doesn't take argument, checking ...\n");
         # factoid doesn't take an argument
         if($arguments =~ /^[^ ]{1,20}$/) {
           # might be a nick
-          $self->{pbot}->logger->log("could be nick\n");
           if($result =~ /^\/.+? /) {
             $result =~ s/^(\/.+?) /$1 $arguments: /;
           } else {
@@ -421,9 +417,7 @@ sub interpreter {
             $result =~ s/^/\/say $keyword is / unless (defined $tonick);
           }                  
         }
-        $self->{pbot}->logger->log("updated text: [$result]\n");
       }
-      $self->{pbot}->logger->log("replaced \$args: [$result]\n");
     } else {
       # no arguments supplied
       $result =~ s/\$args/$nick/gi;
