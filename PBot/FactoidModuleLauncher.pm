@@ -48,9 +48,14 @@ sub execute_module {
 
   $arguments = "" if not defined $arguments;
 
-  my $module = $self->{pbot}->factoids->factoids->{$keyword}{module};
-  my $module_dir = $self->{pbot}->module_dir;
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword);
 
+  if(not defined $trigger) {
+    return "/msg $nick Failed to find module for '$keyword' in channel $from\n";
+  }
+
+  my $module = $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{action};
+  my $module_dir = $self->{pbot}->module_dir;
 
   $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: Executing module $module $arguments\n");
 
@@ -59,21 +64,11 @@ sub execute_module {
   $arguments = quotemeta($arguments);
   $arguments =~ s/\\\s/ /g;
 
-  if(exists $self->{pbot}->factoids->factoids->{$keyword}{modulelauncher_subpattern}) {
-    if($self->{pbot}->factoids->factoids->{$keyword}{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\//) {
+  if(exists $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}) {
+    if($self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\//) {
       my ($p1, $p2) = ($1, $2);
       $arguments =~ s/$p1/$p2/;
-      my $a = $1;
-      my $b = $2;
-      my $c = $3;
-      my $d = $4;
-      my $e = $5;
-      my $f = $6;
-      my $g = $7;
-      my $h = $8;
-      my $i = $9;
-      my $before = $`;
-      my $after = $';
+      my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
       $arguments =~ s/\$1/$a/g;
       $arguments =~ s/\$2/$b/g;
       $arguments =~ s/\$3/$c/g;
@@ -86,7 +81,7 @@ sub execute_module {
       $arguments =~ s/\$`/$before/g;
       $arguments =~ s/\$'/$after/g;
     } else {
-      $self->{pbot}->logger->log("Invalid module substitution pattern [$self->{pbot}->factoids->factoids->{$keyword}{modulelauncher_subpattern}], ignoring.\n");
+      $self->{pbot}->logger->log("Invalid module substitution pattern [" . $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}. "], ignoring.\n");
     }
   }
 

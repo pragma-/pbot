@@ -178,8 +178,12 @@ sub interpret {
   } elsif($command =~ /^([^ ]+)\s+is\s+also\s+(.*)$/) {
     ($keyword, $arguments) = ("change", "$1 s|\$| - $2|");
   } elsif($command =~ /^([^ ]+)\s+is\s+(.*)$/) {
-    ($keyword, $arguments) = ("add", join(' is ', $1, $2)) unless exists ${ $pbot->factoids }{factoids}{$1};
-    ($keyword, $arguments) = ($1, "is $2") if exists ${ $pbot->factoids }{factoids}{$1};
+    my ($k, $a) = ($1, $2);
+    if(defined $pbot->factoids->find_factoid($from, $k)) {
+      ($keyword, $arguments) = ($k, "is $a");
+    } else {
+      ($keyword, $arguments) = ("add", join(' is ', $k, $a));
+    }
   } elsif($command =~ /^(.*?)\s+(.*)$/) {
     ($keyword, $arguments) = ($1, $2);
   } else {

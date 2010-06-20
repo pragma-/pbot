@@ -136,8 +136,8 @@ sub initialize {
       export_site => $export_factoids_site, 
   );
 
-  $self->factoids->add_factoid('text', '.*', $botnick, 'version', "/say $VERSION");
   $self->factoids->load_factoids() if defined $factoids_file;
+  $self->factoids->add_factoid('text', '.*', $botnick, 'version', "/say $VERSION");
 
   $self->module_dir($module_dir);
 

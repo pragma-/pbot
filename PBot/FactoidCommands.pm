@@ -3,8 +3,6 @@
 #
 # Purpose: Administrative command subroutines.
 
-# TODO: Add getter for factoids instead of directly accessing factoids
-
 package PBot::FactoidCommands;
 
 use warnings;
@@ -55,12 +53,37 @@ sub initialize {
   $pbot->commands->register(sub { return $self->unload_module(@_)   },       "unload",      50);
   $pbot->commands->register(sub { return $self->enable_command(@_)  },       "enable",      10);
   $pbot->commands->register(sub { return $self->disable_command(@_) },       "disable",     10);
+  $pbot->commands->register(sub { return $self->factset(@_)         },       "factset",     10);
+  $pbot->commands->register(sub { return $self->factunset(@_)       },       "factunset",   10);
+}
+
+sub factset {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($channel, $trigger, $key, $value) = split / /, $arguments, 4 if defined $arguments;
+
+  if(not defined $channel or not defined $trigger) {
+    return "/msg $nick Usage: factset <channel> <factoid> [key <value>]"
+  }
+
+  return "/msg $nick " . $self->{pbot}->factoids->factoids->set($channel, $trigger, $key, $value);
+}
+
+sub factunset {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($channel, $trigger, $key) = split / /, $arguments, 3 if defined $arguments;
+
+  if(not defined $channel or not defined $trigger) {
+    return "/msg $nick Usage: factunset <channel> <factoid> <key>"
+  }
+
+  return "/msg $nick " . $self->{pbot}->factoids->factoids->unset($channel, $trigger, $key);
 }
 
 sub list {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->factoids->factoids;
   my $botnick = $self->{pbot}->botnick;
   my $text;
   
@@ -108,10 +131,13 @@ sub list {
   }
 
   if($arguments =~ /^modules$/i) {
-    $text = "Loaded modules: ";
-    foreach my $command (sort keys %{ $factoids }) {
-      if(exists $factoids->{$command}{module}) {
-        $text .= "$command ";
+    $from = '.*' if not defined $from;
+    $text = "Loaded modules for channel $from: ";
+    foreach my $channel (sort keys %{ $self->{pbot}->factoids->factoids->hash }) {
+      foreach my $command (sort keys %{ $self->{pbot}->factoids->factoids->hash->{$channel} }) {
+        if($self->{pbot}->factoids->factoids->hash->{$channel}->{$command}->{type} eq 'module') {
+          $text .= "$command ";
+        }
       }
     }
     return $text;
@@ -156,101 +182,116 @@ sub list {
 sub alias {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->factoids->factoids;
   my ($alias, $command) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
   
   if(not defined $command) {
-    $self->{pbot}->logger->log("alias: invalid usage\n");
     return "/msg $nick Usage: alias <keyword> <command>";
   }
+
+  $from = '.*' if not defined $from;
+  my ($channel, $alias_trigger) = $self->{pbot}->factoids->find_factoid($from, $alias);
   
-  if(exists $factoids->{$alias}) {
+  if(defined $alias_trigger) {
     $self->{pbot}->logger->log("attempt to overwrite existing command\n");
-    return "/msg $nick '$alias' already exists";
+    return "/msg $nick '$alias_trigger' already exists for channel $channel";
   }
   
-  $factoids->{$alias}{text}       = "/call $command";
-  $factoids->{$alias}{owner}      = $nick;
-  $factoids->{$alias}{created_on} = time();
-  $factoids->{$alias}{enabled}    = 1;
-  $factoids->{$alias}{ref_count}  = 0;
-  $factoids->{$alias}{ref_user}   = "nobody";
-  $self->{pbot}->logger->log("$nick!$user\@$host aliased $alias => $command\n");
+  $self->{pbot}->factoids->add_factoid('text', $from, $nick, $alias, "/call $command");
+
+  $self->{pbot}->logger->log("$nick!$user\@$host [$from] aliased $alias => $command\n");
   $self->{pbot}->factoids->save_factoids();
-  return "/msg $nick '$alias' aliases '$command'";  
+  return "/msg $nick '$alias' aliases '$command' for channel $from";  
 }
 
 sub add_regex {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->factoids->factoids;
+  my $factoids = $self->{pbot}->factoids->factoids->hash;
   my ($keyword, $text) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
+
+  $from = '.*' if not defined $from;
 
   if(not defined $keyword) {
     $text = "";
-    foreach my $command (sort keys %{ $factoids }) {
-      if(exists $factoids->{$command}{regex}) {
-        $text .= $command . " ";
+    foreach my $trigger (sort keys %{ $factoids->{$from} }) {
+      if($factoids->{$from}->{$trigger}->{type} eq 'regex') {
+        $text .= $trigger . " ";
       }
     }
-    return "Stored regexs: $text";
+    return "Stored regexs for channel $from: $text";
   }
 
   if(not defined $text) {
-    $self->{pbot}->logger->log("add_regex: invalid usage\n");
     return "/msg $nick Usage: regex <regex> <command>";
   }
 
-  if(exists $factoids->{$keyword}) {
-    $self->{pbot}->logger->log("$nick!$user\@$host attempt to overwrite $keyword\n");
-    return "/msg $nick $keyword already exists.";
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword);
+
+  if(defined $trigger) {
+    $self->{pbot}->logger->log("$nick!$user\@$host attempt to overwrite $trigger\n");
+    return "/msg $nick $trigger already exists for channel $channel.";
   }
 
-  $factoids->{$keyword}{regex}      = $text;
-  $factoids->{$keyword}{owner}      = $nick;
-  $factoids->{$keyword}{created_on} = time();
-  $factoids->{$keyword}{enabled}    = 1;
-  $factoids->{$keyword}{ref_count}  = 0;
-  $factoids->{$keyword}{ref_user}   = "nobody";
+  $self->{pbot}->factoids->add_factoid('regex', $from, $nick, $keyword, $text);
   $self->{pbot}->logger->log("$nick!$user\@$host added [$keyword] => [$text]\n");
-  $self->{pbot}->factoids->save_factoids();
   return "/msg $nick $keyword added.";
 }
 
 sub add_text {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->factoids->factoids;
   my ($keyword, $text) = $arguments =~ /^(.*?)\s+is\s+(.*)$/i if defined $arguments;
 
-  if(not defined $text) {
-    $self->{pbot}->logger->log("add_text: invalid usage\n");
+  if(not defined $text or not defined $keyword) {
     return "/msg $nick Usage: add <keyword> is <factoid>";
   }
 
-  if(not defined $keyword) {
-    $self->{pbot}->logger->log("add_text: invalid usage\n");
-    return "/msg $nick Usage: add <keyword> is <factoid>";
-  }
+  $from = '.*' if not defined $from;
 
-  if(exists $factoids->{$keyword}) {
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword);
+
+  if(defined $trigger) {
     $self->{pbot}->logger->log("$nick!$user\@$host attempt to overwrite $keyword\n");
     return undef;
     return "/msg $nick $keyword already exists.";
   }
 
-  $factoids->{$keyword}{text}       = $text;
-  $factoids->{$keyword}{owner}      = $nick;
-  $factoids->{$keyword}{created_on} = time();
-  $factoids->{$keyword}{enabled}    = 1;
-  $factoids->{$keyword}{ref_count}  = 0;
-  $factoids->{$keyword}{ref_user}   = "nobody";
+  $self->{pbot}->factoids->add_factoid('text', $from, $nick, $keyword, $text);
   
   $self->{pbot}->logger->log("$nick!$user\@$host added $keyword => $text\n");
-  
-  $self->{pbot}->factoids->save_factoids();
-  
   return "/msg $nick '$keyword' added.";
+}
+
+sub remove_text {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+  my $factoids = $self->{pbot}->factoids->factoids->hash;
+
+  $from = '.*' if not defined $from;
+
+  if(not defined $arguments) {
+    return "/msg $nick Usage: remove <keyword>";
+  }
+
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $arguments);
+
+  if(not defined $trigger) {
+    return "/msg $nick $arguments not found in channel $from.";
+  }
+
+  if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
+    $self->{pbot}->logger->log("$nick!$user\@$host attempted to remove $trigger [not factoid]\n");
+    return "/msg $nick $trigger is not a factoid.";
+  }
+
+  if(($nick ne $factoids->{$channel}->{$trigger}->{owner}) and (not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host"))) {
+    $self->{pbot}->logger->log("$nick!$user\@$host attempted to remove $trigger [not owner]\n");
+    return "/msg $nick You are not the owner of '$trigger'";
+  }
+
+  $self->{pbot}->logger->log("$nick!$user\@$host removed [$channel][$trigger][" . $factoids->{$channel}->{$trigger}->{action} . "]\n");
+  $self->{pbot}->factoids->remove_factoid($channel, $trigger);
+  return "/msg $nick $trigger removed from channel $channel.";
 }
 
 sub histogram {
@@ -283,55 +324,59 @@ sub histogram {
 sub show {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->factoids->factoids;
+  my $factoids = $self->{pbot}->factoids->factoids->hash;
 
   if(not defined $arguments) {
     return "/msg $nick Usage: show <factoid>";
   }
 
-  if(not exists $factoids->{$arguments}) {
-    return "/msg $nick $arguments not found";
+  $from = '.*' if not defined $from;
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $arguments);
+
+  if(not defined $trigger) {
+    return "/msg $nick $arguments not found in channel $from";
   }
 
-  if(exists $factoids->{$arguments}{command} || exists $factoids->{$arguments}{module}) {
-    return "/msg $nick $arguments is not a factoid";
+  if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
+    return "/msg $nick $trigger is not a factoid";
   }
 
-  my $type;
-  $type = 'text' if exists $factoids->{$arguments}{text};
-  $type = 'regex' if exists $factoids->{$arguments}{regex};
-  return "$arguments: $factoids->{$arguments}{$type}";
+  return "$trigger: " . $factoids->{$channel}->{$trigger}->{action};
 }
 
 sub info {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->factoids->factoids;
+  my $factoids = $self->{pbot}->factoids->factoids->hash;
 
   if(not defined $arguments) {
     return "/msg $nick Usage: info <factoid|module>";
   }
 
-  if(not exists $factoids->{$arguments}) {
+  $from = '.*' if not defined $from;
+
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $arguments);
+
+  if(not defined $trigger) {
     return "/msg $nick $arguments not found";
   }
 
   # factoid
-  if(exists $factoids->{$arguments}{text}) {
-    return "$arguments: Factoid submitted by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{created_on}) . ", referenced $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})";
+  if($factoids->{$channel}->{$trigger}->{type} eq 'text') {
+    return "$trigger: Factoid submitted by " . $factoids->{$channel}->{$trigger}->{owner} . " on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . ", referenced " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . ")"; 
   }
 
   # module
-  if(exists $factoids->{$arguments}{module}) {
-    return "$arguments: Module loaded by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{created_on}) . " -> http://code.google.com/p/pbot2-pl/source/browse/trunk/modules/$factoids->{$arguments}{module}, used $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})"; 
+  if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
+    return "$trigger: Module loaded by " . $factoids->{$channel}->{$trigger}->{owner} . " on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " -> http://code.google.com/p/pbot2-pl/source/browse/trunk/modules/" . $factoids->{$channel}->{$trigger}->{action} . ", used " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . ")"; 
   }
 
   # regex
-  if(exists $factoids->{$arguments}{regex}) {
-    return "$arguments: Regex created by $factoids->{$arguments}{owner} on " . localtime($factoids->{$arguments}{created_on}) . ", used $factoids->{$arguments}{ref_count} times (last by $factoids->{$arguments}{ref_user})"; 
+  if($factoids->{$channel}->{$trigger}->{type} eq 'regex') {
+    return "$trigger: Regex created by " . $factoids->{$channel}->{$trigger}->{owner} . " on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . ", used " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . ")"; 
   }
 
-  return "/msg $nick $arguments is not a factoid or a module";
+  return "/msg $nick $trigger is not a factoid or a module";
 }
 
 sub top20 {
@@ -498,9 +543,8 @@ sub find {
 
 sub change_text {
   my $self = shift;
-  $self->{pbot}->logger->log("Enter change_text\n");
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->factoids->factoids;
+  my $factoids = $self->{pbot}->factoids->factoids->hash;
   my ($keyword, $delim, $tochange, $changeto, $modifier);
 
   if(defined $arguments) {
@@ -517,66 +561,27 @@ sub change_text {
   }
 
   if(not defined $changeto) {
-    $self->{pbot}->logger->log("($from) $nick!$user\@$host: improper use of change\n");
-    return "/msg $nick Usage: change <keyword> s/<to change>/<change to>/";
+    return "/msg $nick Usage: change <keyword> s/<pattern>/<replacement>/";
   }
 
-  if(not exists $factoids->{$keyword}) {
-    $self->{pbot}->logger->log("($from) $nick!$user\@$host: attempted to change nonexistant '$keyword'\n");
-    return "/msg $nick $keyword not found.";
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword);
+
+  if(not defined $trigger) {
+    return "/msg $nick $keyword not found in channel $from.";
   }
-
-  my $type;
-  $type = 'text' if exists $factoids->{$keyword}{text};
-  $type = 'regex' if exists $factoids->{$keyword}{regex};
-
-  $self->{pbot}->logger->log("keyword: $keyword, type: $type, tochange: $tochange, changeto: $changeto\n");
 
   my $ret = eval {
-    my $regex = qr/$tochange/;
-    if(not $factoids->{$keyword}{$type} =~ s|$regex|$changeto|) {
-      $self->{pbot}->logger->log("($from) $nick!$user\@$host: failed to change '$keyword' 's$delim$tochange$delim$changeto$delim\n");
-      return "/msg $nick Change $keyword failed.";
+    if(not $factoids->{$channel}->{$trigger}->{action} =~ s|$tochange|$changeto|) {
+      $self->{pbot}->logger->log("($from) $nick!$user\@$host: failed to change '$trigger' 's$delim$tochange$delim$changeto$delim\n");
+      return "/msg $nick Change $trigger failed.";
     } else {
-      $self->{pbot}->logger->log("($from) $nick!$user\@$host: changed '$keyword' 's/$tochange/$changeto/\n");
+      $self->{pbot}->logger->log("($from) $nick!$user\@$host: changed '$trigger' 's/$tochange/$changeto/\n");
       $self->{pbot}->factoids->save_factoids();
-      return "Changed: $keyword is $factoids->{$keyword}{$type}";
+      return "Changed: $trigger is " . $factoids->{$channel}->{$trigger}->{action};
     }
   };
-  return "/msg $nick Change $keyword: $@" if $@;
+  return "/msg $nick Change $trigger: $@" if $@;
   return $ret;
-}
-
-sub remove_text {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->factoids->factoids;
-
-  if(not defined $arguments) {
-    $self->{pbot}->logger->log("remove_text: invalid usage\n");
-    return "/msg $nick Usage: remove <keyword>";
-  }
-
-  $self->{pbot}->logger->log("Attempting to remove [$arguments]\n");
-  if(not exists $factoids->{$arguments}) {
-    return "/msg $nick $arguments not found.";
-  }
-
-  if(exists $factoids->{$arguments}{command} || exists $factoids->{$arguments}{module}) {
-    $self->{pbot}->logger->log("$nick!$user\@$host attempted to remove $arguments [not factoid]\n");
-    return "/msg $nick $arguments is not a factoid.";
-  }
-
-  if(($nick ne $factoids->{$arguments}{owner}) and (not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host"))) {
-    $self->{pbot}->logger->log("$nick!$user\@$host attempted to remove $arguments [not owner]\n");
-    return "/msg $nick You are not the owner of '$arguments'";
-  }
-
-  $self->{pbot}->logger->log("$nick!$user\@$host removed [$arguments][$factoids->{$arguments}{text}]\n") if(exists $factoids->{$arguments}{text});
-  $self->{pbot}->logger->log("$nick!$user\@$host removed [$arguments][$factoids->{$arguments}{regex}]\n") if(exists $factoids->{$arguments}{regex});
-  delete $factoids->{$arguments};
-  $self->{pbot}->factoids->save_factoids();
-  return "/msg $nick $arguments removed.";
 }
 
 sub load_module {

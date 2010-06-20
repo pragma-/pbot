@@ -17,6 +17,7 @@ use Text::Levenshtein qw(fastdistance);
 use Carp ();
 
 use PBot::FactoidModuleLauncher;
+use PBot::DualIndexHashObject;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -42,8 +43,7 @@ sub initialize {
     Carp::croak("Missing pbot reference to Factoids");
   }
 
-  $self->{factoids} = {};
-  $self->{filename} = $filename;
+  $self->{factoids} = PBot::DualIndexHashObject->new(name => 'Factoids', filename => $filename);
   $self->{export_path} = $export_path;
   $self->{export_site} = $export_site;
 
@@ -51,117 +51,21 @@ sub initialize {
   $self->{factoidmodulelauncher} = PBot::FactoidModuleLauncher->new(pbot => $pbot);
 }
 
-
-sub load_factoids_add {
-  my ($self, $factoid, $i, $filename) = @_;
-
-  if(defined $factoid) {
-    my $trigger = delete $factoid->{trigger};
-
-    if(not defined $trigger) {
-      Carp::croak "Missing trigger around line $i of $filename\n";
-    }
-
-    if(exists $self->factoids->{$trigger}) {
-      Carp::croak "Duplicate factoid '$trigger' found in $filename around line $i\n";
-    }
-
-    my $type = delete $factoid->{type};
-
-    if(not defined $type) {
-      Carp::croak "Missing type for factoid '$trigger' around line $i of $filename\n";
-    }
-
-    $type = lc $type;
-
-    my $action = delete $factoid->{action};
-
-    if(not defined $action) {
-      Carp::croak "Missing action for factoid '$trigger' around line $i of $filename\n";
-    }
-
-    $self->factoids->{$trigger}{$type} = $action;
-
-    foreach my $key (keys %$factoid) {
-      $self->factoids->{$trigger}{$key} = $factoid->{$key};
-    }
-  }
-}
-
 sub load_factoids {
   my $self = shift;
-  my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->filename; }
+  $self->{pbot}->logger->log("Loading factoids from " . $self->factoids->filename . " ...\n");
 
-  if(not defined $filename) {
-    Carp::carp "No factoids path specified -- skipping loading of factoids";
-    return;
-  }
+  $self->factoids->load;
 
-  $self->{pbot}->logger->log("Loading factoids from $filename ...\n");
+  my ($text, $regex, $modules);
 
-  open(FILE, "< $filename") or Carp::croak "Couldn't open $filename: $!\n";
-
-  my $i = 0;
-  my ($text, $regex, $modules, $factoid);
-
-  foreach my $line (<FILE>) {
-    $i++;
-
-    $line =~ s/^\s+//;
-    $line =~ s/\s+$//;
-
-    if(not $line) {
-      print "blank line at $i\n";
-      next;
+  foreach my $channel (keys %{ $self->factoids->hash }) {
+    foreach my $trigger (keys %{ $self->factoids->hash->{$channel} }) {
+      $text++   if $self->factoids->hash->{$channel}->{$trigger}->{type} eq 'text';
+      $regex++  if $self->factoids->hash->{$channel}->{$trigger}->{type} eq 'regex';
+      $modules++ if $self->factoids->hash->{$channel}->{$trigger}->{type} eq 'module';
     }
-
-    if($line eq '-') {
-      # first store the old factoid, if there is one
-      if($factoid) {
-        my $type = lc $factoid->{type};
-        if($type eq "text") {
-          $text++;
-        } elsif($type eq "regex") {
-          $regex++;
-        } elsif($type eq "module") {
-          $modules++;
-        } else {
-          Carp::croak "Unknown type '$type' in $filename around line $i\n";
-        }
-        $self->load_factoids_add($factoid, $i, $filename);
-      }
-
-      # start a new factoid
-      $factoid = {};
-      next;
-    }
-
-    my ($key, $value) = split /\:/, $line, 2;
-
-    $key =~ s/^\s+//;
-    $key =~ s/\s+$//;
-    $value =~ s/^\s+//;
-    $value =~ s/\s+$//;
-
-    $factoid->{$key} = $value;
-  }
-
-  close(FILE);
-
-  if($factoid) {
-    my $type = lc $factoid->{type};
-    if($type eq "text") {
-      $text++;
-    } elsif($type eq "regex") {
-      $regex++;
-    } elsif($type eq "module") {
-      $modules++;
-    } else {
-      Carp::croak "Unknown type '$type' in $filename around line $i\n";
-    }
-    $self->load_factoids_add($factoid, $i, $filename);
   }
 
   $self->{pbot}->logger->log("  " . ($text + $regex + $modules) . " factoids loaded ($text text, $regex regexs, $modules modules).\n");
@@ -170,65 +74,39 @@ sub load_factoids {
 
 sub save_factoids {
   my $self = shift;
-  my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->filename; }
-
-  if(not defined $filename) {
-    Carp::carp "No factoids path specified -- skipping saving of factoids\n";
-    return;
-  }
-
-  open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
-
-  foreach my $trigger (sort keys %{ $self->factoids }) {
-    next if $trigger eq "version";
-
-    print FILE "-\n";
-    print FILE "trigger: $trigger\n";
-
-    my $type;
-
-    if(defined ${ $self->factoids }{$trigger}{module}) {
-      $type = 'module';
-    } elsif(defined ${ $self->factoids }{$trigger}{text}) {
-      $type = 'text';
-    } elsif(defined ${ $self->factoids }{$trigger}{regex}) {
-      $type = 'regex';
-    } else {
-      $self->{pbot}->logger->log("WARNING: save_factoids: skipping unknown trigger type for $trigger\n");
-      #todo -- /msg logged in admins greater than level X 
-      next;
-    }
-
-    print FILE "type: $type\n";
-    print FILE "action: ${ $self->factoids }{$trigger}{$type}\n";
-
-    foreach my $key (sort keys %{ ${ $self->factoids }{$trigger} }) {
-      next if $key eq 'text' or $key eq 'module' or $key eq 'regex';
-      print FILE "$key: ${ $self->factoids }{$trigger}{$key}\n";
-    }
-  }
-  close(FILE);
-
-  $self->export_factoids();
+  $self->factoids->save;
+  $self->export_factoids;
 }
 
 sub add_factoid {
   my $self = shift;
-  my ($type, $channel, $owner, $command, $text) = @_;
+  my ($type, $channel, $owner, $trigger, $action) = @_;
 
   $type = lc $type;
   $channel = lc $channel;
-  $command = lc $command;
+  $trigger = lc $trigger;
 
-  ${ $self->factoids }{$command}{enabled}   = 1;
-  ${ $self->factoids }{$command}{$type}     = $text;
-  ${ $self->factoids }{$command}{owner}     = $owner;
-  ${ $self->factoids }{$command}{channel}   = $channel;
-  ${ $self->factoids }{$command}{created_on} = gettimeofday;
-  ${ $self->factoids }{$command}{ref_count} = 0;
-  ${ $self->factoids }{$command}{ref_user}  = "nobody";
+  $self->factoids->hash->{$channel}->{$trigger}->{enabled}    = 1;
+  $self->factoids->hash->{$channel}->{$trigger}->{type}       = $type;
+  $self->factoids->hash->{$channel}->{$trigger}->{action}     = $action;
+  $self->factoids->hash->{$channel}->{$trigger}->{owner}      = $owner;
+  $self->factoids->hash->{$channel}->{$trigger}->{created_on} = gettimeofday;
+  $self->factoids->hash->{$channel}->{$trigger}->{ref_count}  = 0;
+  $self->factoids->hash->{$channel}->{$trigger}->{ref_user}   = "nobody";
+
+  $self->save_factoids;
+}
+
+sub remove_factoid {
+  my $self = shift;
+  my ($channel, $trigger) = @_;
+
+  $channel = lc $channel;
+  $trigger = lc $trigger;
+
+  delete $self->factoids->hash->{$channel}->{$trigger};
+  $self->save_factoids;
 }
 
 sub export_factoids {
@@ -238,51 +116,61 @@ sub export_factoids {
   if(@_) { $filename = shift; } else { $filename = $self->export_path; }
   return if not defined $filename;
 
-  my $text;
   open FILE, "> $filename" or return "Could not open export path.";
+
   my $time = localtime;
   print FILE "<html><body><i>Generated at $time</i><hr><h3>Candide's factoids:</h3><br>\n";
+  
   my $i = 0;
-  print FILE "<table border=\"0\">\n";
-  foreach my $command (sort keys %{ $self->factoids }) {
-    if(exists ${ $self->factoids }{$command}{text}) {
-      $i++;
-      if($i % 2) {
-        print FILE "<tr bgcolor=\"#dddddd\">\n";
-      } else {
-        print FILE "<tr>\n";
+
+  foreach my $channel (sort keys %{ $self->factoids->hash }) {
+    my $chan = $channel eq '.*' ? 'any' : $channel;
+    print FILE "<hr>\nChannel $chan\n<hr>\n";
+    print FILE "<table border=\"0\">\n";
+    foreach my $trigger (sort keys %{ $self->factoids->hash->{$channel} }) {
+      if($self->factoids->hash->{$channel}->{$trigger}->{type} eq 'text') {
+        $i++;
+        if($i % 2) {
+          print FILE "<tr bgcolor=\"#dddddd\">\n";
+        } else {
+          print FILE "<tr>\n";
+        }
+
+        print FILE "<td><b>$trigger</b> is " . encode_entities($self->factoids->hash->{$channel}->{$trigger}->{action}) . "</td>\n"; 
+        
+        print FILE "<td align=\"right\">- submitted by<br> " . $self->factoids->hash->{$channel}->{$trigger}->{owner} . "<br><i>" . localtime($self->factoids->hash->{$channel}->{$trigger}->{created_on}) . "</i>\n</td>\n</tr>\n";
       }
-      $text = "<td><b>$command</b> is " . encode_entities(${ $self->factoids }{$command}{text}) . "</td>\n"; 
-      print FILE $text;
-      my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime(${ $self->factoids }{$command}{created_on});
-      my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d\n",
-          $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
-      print FILE "<td align=\"right\">- submitted by<br> ${ $self->factoids }{$command}{owner}<br><i>$t</i>\n";
-      print FILE "</td></tr>\n";
     }
+    print FILE "</table>\n";
   }
-  print FILE "</table>\n";
+
   print FILE "<hr>$i factoids memorized.<br>";
+  
   close(FILE);
+  
   #$self->{pbot}->logger->log("$i factoids exported to path: " . $self->export_path . ", site: " . $self->export_site . "\n");
   return "$i factoids exported to " . $self->export_site;
 }
 
 sub find_factoid {
-  my ($self, $keyword, $arguments) = @_;
+  my ($self, $from, $keyword, $arguments) = @_;
+
+  $from = '.*' if not defined $from;
 
   my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
 
-  my $result = eval {
-    foreach my $command (keys %{ $self->factoids }) {
-      if(exists $self->factoids->{$command}{regex}) {
-        if($string =~ m/$command/i) {
-          return $command;
-        }
-      } else {
-        my $command_quoted = quotemeta($command);
-        if($keyword =~ m/^$command_quoted$/i) {
-          return $command;
+  my @result = eval {
+    foreach my $channel (sort keys %{ $self->factoids->hash }) {
+      next unless $from =~ m/$channel/i;
+      foreach my $trigger (keys %{ $self->factoids->hash->{$channel} }) {
+        if($self->factoids->hash->{$channel}->{$trigger}->{type} eq 'regex') {
+          if($string =~ m/$trigger/i) {
+            return ($channel, $trigger);
+          }
+        } else {
+          if($keyword =~ m/^\Q$trigger\E$/i) {
+            return ($channel, $trigger);
+          }
         }
       }
     }
@@ -295,97 +183,74 @@ sub find_factoid {
     return undef;
   }
 
-  return $result;
-}
-
-sub levenshtein_matches {
-  my ($self, $keyword) = @_;
-  my $comma = '';
-  my $result = "I don't know about '$keyword'; did you mean ";
-  
-  foreach my $command (sort keys %{ $self->factoids }) {
-    next if exists $self->factoids->{$command}{regex};
-    my $distance = fastdistance($keyword, $command);
-
-    # print "Distance $distance for $keyword (" , (length $keyword) , ") vs $command (" , length $command , ")\n";
-    
-    my $length = (length($keyword) > length($command)) ? length $keyword : length $command;
-
-    # print "Percentage: ", $distance / $length, "\n";
-
-    if($distance / $length < 0.50) {
-      $result .= $comma . $command;
-      $comma = ", ";
-    }
-  }
-
-  $result =~ s/(.*), /$1 or /;
-  $result =~ s/$/?/;
-  $result = undef if $comma eq '';
-  return $result;
+  return @result;
 }
 
 sub interpreter {
   my $self = shift;
   my ($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick) = @_;
-  my $result;
+  my ($result, $channel);
   my $pbot = $self->{pbot};
 
-  my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
-  my $lev = lc $keyword;
-  $keyword = $self->find_factoid($keyword, $arguments);
-  return $self->levenshtein_matches($lev) if not defined $keyword;
+  my $original_keyword = $keyword;
+  ($channel, $keyword) = $self->find_factoid($from, $keyword, $arguments);
 
-  my $type;
-  $type = 'text' if exists $self->factoids->{$keyword}{text};
-  $type = 'regex' if exists $self->factoids->{$keyword}{regex};
-  $type = 'module' if exists $self->factoids->{$keyword}{module};
+  if(not defined $keyword) {
+    my $matches = $self->factoids->levenshtein_matches($from, lc $original_keyword);
+
+    return undef if $matches eq 'none';
+
+    return "No such factoid '$original_keyword'; did you mean $matches?";
+  }
+
+  my $type = $self->factoids->hash->{$channel}->{$keyword}->{type};
 
   # Check if it's an alias
-  my $command;
-  if($self->factoids->{$keyword}{$type} =~ /^\/call\s+(.*)$/) {
+  if($self->factoids->hash->{$channel}->{$keyword}->{action} =~ /^\/call\s+(.*)$/) {
+    my $command;
     if(defined $arguments) {
       $command = "$1 $arguments";
     } else {
       $command = $1;
     }
+
     $pbot->logger->log("[" . (defined $from ? $from : "(undef)") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
 
-    $self->factoids->{$keyword}{ref_count}++;
-    $self->factoids->{$keyword}{ref_user} = $nick;
+    $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
+    $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
 
     return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
   }
 
-  if(${ $self->factoids }{$keyword}{enabled} == 0) {
+  if($self->factoids->hash->{$channel}->{$keyword}->{enabled} == 0) {
     $self->{pbot}->logger->log("$keyword disabled.\n");
     return "/msg $nick $keyword is currently disabled.";
-  } elsif(exists ${ $self->factoids }{$keyword}{module}) {
+  } elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'module') {
     $self->{pbot}->logger->log("Found module\n");
 
-    ${ $self->factoids }{$keyword}{ref_count}++;
-    ${ $self->factoids }{$keyword}{ref_user} = $nick;
+    $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
+    $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
 
     return $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, $keyword, $arguments);
   }
-  elsif(exists ${ $self->factoids }{$keyword}{text}) {
+  elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'text') {
     $self->{pbot}->logger->log("Found factoid\n");
 
     # Don't allow user-custom /msg factoids, unless factoid triggered by admin
-    if((${ $self->factoids }{$keyword}{text} =~ m/^\/msg/i) and (not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host"))) {
-      $self->{pbot}->logger->log("[HACK] Bad factoid (contains /msg): ${ $self->factoids }{$keyword}{text}\n");
+    if(($self->factoids->hash->{$channel}->{$keyword}->{action} =~ m/^\/msg/i) and (not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host"))) {
+      $self->{pbot}->logger->log("[HACK] Bad factoid (contains /msg): " . $self->factoids->hash->{$channel}->{$keyword}->{action} . "\n");
       return "You must login to use this command."
     }
 
-    ${ $self->factoids }{$keyword}{ref_count}++;
-    ${ $self->factoids }{$keyword}{ref_user} = $nick;
+    $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
+    $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
 
-    $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"${ $self->factoids }{$keyword}{text}\"\n");
+    $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"" . $self->factoids->hash->{$channel}->{$keyword}->{action} . "\"\n");
 
     if(defined $tonick) { # !tell foo about bar
       $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
       my $fromnick = $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host") ? "" : "$nick wants you to know: ";
-      $result = ${ $self->factoids }{$keyword}{text};
+      $result = $self->factoids->hash->{$channel}->{$keyword}->{action};
 
       my $botnick = $self->{pbot}->botnick;
 
@@ -398,7 +263,7 @@ sub interpreter {
 
       $self->{pbot}->logger->log("text set to [$result]\n");
     } else {
-      $result = ${ $self->factoids }{$keyword}{text};
+      $result = $self->factoids->hash->{$channel}->{$keyword}->{action};
     }
 
     if(defined $arguments) {
@@ -425,12 +290,11 @@ sub interpreter {
 
     $result =~ s/\$nick/$nick/g;
 
-    while ($result =~ /[^\\]\$([a-zA-Z0-9_\-]+)/g) { 
-      my $var = $1;
-      #$self->{pbot}->logger->log("adlib: got [$var]\n");
-      #$self->{pbot}->logger->log("adlib: parsing variable [\$$var]\n");
-      if(exists ${ $self->factoids }{$var} && exists ${ $self->factoids }{$var}{text}) {
-        my $change = ${ $self->factoids }{$var}{text};
+    while ($result =~ /[^\\]\$([a-zA-Z0-9_\-\.]+)/g) { 
+      my ($var_chan, $var) = $self->find_factoid($from, $1);
+
+      if(defined $var && $self->factoids->hash->{$var_chan}->{$var}->{type} eq 'text') {
+        my $change = $self->factoids->hash->{$var_chan}->{$var}->{action};
         my @list = split(/\s|(".*?")/, $change);
         my @mylist;
         #$self->{pbot}->logger->log("adlib: list [". join(':', @mylist) ."]\n");
@@ -456,22 +320,13 @@ sub interpreter {
     } else {
       return "$keyword is $result";
     }
-  } elsif(exists ${ $self->factoids }{$keyword}{regex}) {
+  } elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'regex') {
     $result = eval {
+      my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
       if($string =~ m/$keyword/i) {
-        $self->{pbot}->logger->log("[$string] matches [$keyword] - calling [" . ${ $self->factoids }{$keyword}{regex}. "$']\n");
+        $self->{pbot}->logger->log("[$string] matches [$keyword] - calling [" . $self->factoids->hash->{$channel}->{$keyword}->{action} . "$']\n");
         my $cmd = "${ $self->factoids }{$keyword}{regex}$'";
-        my $a = $1;
-        my $b = $2;
-        my $c = $3;
-        my $d = $4;
-        my $e = $5;
-        my $f = $6;
-        my $g = $7;
-        my $h = $8;
-        my $i = $9;
-        my $before = $`;
-        my $after = $';
+        my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
         $cmd =~ s/\$1/$a/g;
         $cmd =~ s/\$2/$b/g;
         $cmd =~ s/\$3/$c/g;
