@@ -1,6 +1,16 @@
 [#pbot2]
-<foo>
-action: faffel garfieldalfa
+<test>
+action: /say This is a test in #pbot2!
+created_on: 1277013257.49081
+enabled: 1
+owner: pbot3
+ref_count: 1
+ref_user: pbot3
+type: text
+
+[##c]
+<test>
+action: /say A test in ##c!
 created_on: 1277013257.49081
 enabled: 1
 owner: pbot3
@@ -8247,7 +8257,7 @@ ref_user: nobody
 type: text
 
 <test>
-action: /say :)
+action: /say Testing in any channel ...
 created_on: 1272786662
 enabled: 1
 owner: arenics
@@ -9362,4 +9372,3 @@ ref_count: 9
 ref_user: pragma_
 type: text
 
-[hi]
