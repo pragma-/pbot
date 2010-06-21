@@ -87,24 +87,16 @@ sub add_message {
       # PART or QUIT
       # check QUIT message for netsplits, and decrement joinwatch if found
       if($text =~ /^QUIT .*\.net .*\.split/) {
-        foreach my $ch (keys %{ $self->message_history->{$account} }) {
-          next if $ch eq 'hostmask'; # TODO: move channels into {channel} subkey
-          next if $ch !~ /^#/;
-          ${ $self->message_history }{$account}{$ch}{join_watch}--;
-          ${ $self->message_history }{$account}{$ch}{join_watch} = 0 if ${ $self->message_history }{$account}{$ch}{join_watch} < 0;
-          $self->{pbot}->logger->log("$account $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
-        }
+        ${ $self->message_history }{$account}{$channel}{join_watch}--;
+        ${ $self->message_history }{$account}{$channel}{join_watch} = 0 if ${ $self->message_history }{$account}{$channel}{join_watch} < 0;
+        $self->{pbot}->logger->log("$account $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
         $self->message_history->{$account}{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE}; 
       }
       # check QUIT message for Ping timeout
       elsif($text =~ /^QUIT Ping timeout/) {
         # deal with ping timeouts agressively
-        foreach my $ch (keys %{ $self->message_history->{$account} }) {
-          next if $ch eq 'hostmask'; # TODO: move channels into {channel} subkey
-          next if $ch !~ /^#/;
-          ${ $self->message_history }{$account}{$ch}{join_watch}++;
-          $self->{pbot}->logger->log("$account $ch joinwatch adjusted: ${ $self->message_history }{$account}{$ch}{join_watch}\n");
-        }
+        ${ $self->message_history }{$account}{$channel}{join_watch}++;
+        $self->{pbot}->logger->log("$account $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
       } else {
         # some other type of QUIT or PART
         $self->message_history->{$account}{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE};
@@ -147,13 +139,6 @@ sub check_flood {
     $account = $nick;
   }
 
-  if(not exists ${ $self->message_history }{$account}{$channel}) {
-    #$self->{pbot}->logger->log("adding new channel for existing nick\n");
-    ${ $self->message_history }{$account}{$channel}{offenses} = 0;
-    ${ $self->message_history }{$account}{$channel}{join_watch} = 0;
-    ${ $self->message_history }{$account}{$channel}{messages} = [];
-  }
-
   # handle QUIT events
   # (these events come from $channel nick!user@host, not a specific channel or nick,
   # so they need to be dispatched to all channels the bot exists on)
@@ -175,6 +160,13 @@ sub check_flood {
 
     # don't do flood processing for QUIT messages
     return;
+  }
+
+  if(not exists ${ $self->message_history }{$account}{$channel}) {
+    #$self->{pbot}->logger->log("adding new channel for existing nick\n");
+    ${ $self->message_history }{$account}{$channel}{offenses} = 0;
+    ${ $self->message_history }{$account}{$channel}{join_watch} = 0;
+    ${ $self->message_history }{$account}{$channel}{messages} = [];
   }
 
   my $length = $self->add_message($account, $channel, $text, $mode);
@@ -204,7 +196,6 @@ sub check_flood {
         last if ++$count >= 4;
       }
       $i = 0 if $i < 0;
-      print "using $i\n";
       %msg = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$i] };
     }
 
