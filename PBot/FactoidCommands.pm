@@ -68,7 +68,7 @@ sub factset {
     return "/msg $nick Usage: factset <channel> <factoid> [key <value>]"
   }
 
-  return "/msg $nick " . $self->{pbot}->factoids->factoids->set($channel, $trigger, $key, $value);
+  return $self->{pbot}->factoids->factoids->set($channel, $trigger, $key, $value);
 }
 
 sub factunset {
