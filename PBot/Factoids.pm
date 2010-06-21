@@ -153,7 +153,7 @@ sub export_factoids {
 }
 
 sub find_factoid {
-  my ($self, $from, $keyword, $arguments) = @_;
+  my ($self, $from, $keyword, $arguments, $exact_channel) = @_;
 
   $from = '.*' if not defined $from;
 
@@ -161,7 +161,11 @@ sub find_factoid {
 
   my @result = eval {
     foreach my $channel (sort keys %{ $self->factoids->hash }) {
-      next unless $from =~ m/$channel/i;
+      if($exact_channel) {
+        next unless $from eq $channel;
+      } else {
+        next unless $from =~ m/$channel/i;
+      }
       foreach my $trigger (keys %{ $self->factoids->hash->{$channel} }) {
         if($self->factoids->hash->{$channel}->{$trigger}->{type} eq 'regex') {
           if($string =~ m/$trigger/i) {

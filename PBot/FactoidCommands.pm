@@ -191,7 +191,7 @@ sub alias {
   }
 
   $from = '.*' if not defined $from or $from !~ /^#/;
-  my ($channel, $alias_trigger) = $self->{pbot}->factoids->find_factoid($from, $alias);
+  my ($channel, $alias_trigger) = $self->{pbot}->factoids->find_factoid($from, $alias, undef, 1);
   
   if(defined $alias_trigger) {
     $self->{pbot}->logger->log("attempt to overwrite existing command\n");
@@ -227,7 +227,7 @@ sub add_regex {
     return "/msg $nick Usage: regex <regex> <command>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword);
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword, undef, 1);
 
   if(defined $trigger) {
     $self->{pbot}->logger->log("$nick!$user\@$host attempt to overwrite $trigger\n");
@@ -250,7 +250,7 @@ sub add_text {
 
   $from = '.*' if not defined $from or $from !~ /^#/;
 
-  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword);
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword, undef, 1);
 
   if(defined $trigger) {
     $self->{pbot}->logger->log("$nick!$user\@$host attempt to overwrite $keyword\n");
@@ -366,19 +366,21 @@ sub info {
   my $created_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{created_on});
   my $ref_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{last_referenced_on}) if defined $factoids->{$channel}->{$trigger}->{last_referenced_on};
 
+  my $chan = ($channel eq '.*' ? 'all channels' : $channel);
+
   # factoid
   if($factoids->{$channel}->{$trigger}->{type} eq 'text') {
-    return "$trigger: Factoid submitted by " . $factoids->{$channel}->{$trigger}->{owner} . " on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago], referenced " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
+    return "$trigger: Factoid submitted by " . $factoids->{$channel}->{$trigger}->{owner} . " for $chan on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago], referenced " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
   }
 
   # module
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
-    return "$trigger: Module loaded by " . $factoids->{$channel}->{$trigger}->{owner} . " on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago] -> http://code.google.com/p/pbot2-pl/source/browse/trunk/modules/" . $factoids->{$channel}->{$trigger}->{action} . ", used " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
+    return "$trigger: Module loaded by " . $factoids->{$channel}->{$trigger}->{owner} . " for $chan on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago] -> http://code.google.com/p/pbot2-pl/source/browse/trunk/modules/" . $factoids->{$channel}->{$trigger}->{action} . ", used " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
   }
 
   # regex
   if($factoids->{$channel}->{$trigger}->{type} eq 'regex') {
-    return "$trigger: Regex created by " . $factoids->{$channel}->{$trigger}->{owner} . " on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago], used " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
+    return "$trigger: Regex created by " . $factoids->{$channel}->{$trigger}->{owner} . " for $chan on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago], used " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
   }
 
   return "/msg $nick $trigger is not a factoid or a module";

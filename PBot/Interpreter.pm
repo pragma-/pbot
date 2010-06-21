@@ -180,7 +180,8 @@ sub interpret {
   } elsif($command =~ /^([^ ]+)\s+is\s+(.*)$/) {
     my ($k, $a) = ($1, $2);
 
-    my ($channel, $trigger) = $pbot->factoids->find_factoid($from, $k);
+    my ($channel, $trigger) = $pbot->factoids->find_factoid($from, $k, undef, 1);
+    
     if(defined $trigger) {
       ($keyword, $arguments) = ($k, "is $a");
     } else {
