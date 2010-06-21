@@ -84,7 +84,7 @@ sub factset {
   my ($channel, $trigger, $key, $value) = split / /, $arguments, 4 if defined $arguments;
 
   if(not defined $channel or not defined $trigger) {
-    return "/msg $nick Usage: factset <channel> <factoid> [key <value>]"
+    return "Usage: factset <channel> <factoid> [key <value>]"
   }
 
   return $self->{pbot}->factoids->factoids->set($channel, $trigger, $key, $value);
@@ -96,10 +96,10 @@ sub factunset {
   my ($channel, $trigger, $key) = split / /, $arguments, 3 if defined $arguments;
 
   if(not defined $channel or not defined $trigger) {
-    return "/msg $nick Usage: factunset <channel> <factoid> <key>"
+    return "Usage: factunset <channel> <factoid> <key>"
   }
 
-  return "/msg $nick " . $self->{pbot}->factoids->factoids->unset($channel, $trigger, $key);
+  return $self->{pbot}->factoids->factoids->unset($channel, $trigger, $key);
 }
 
 sub list {
@@ -206,7 +206,7 @@ sub alias {
   my ($alias, $command) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
   
   if(not defined $command) {
-    return "/msg $nick Usage: alias <keyword> <command>";
+    return "Usage: alias <keyword> <command>";
   }
 
   $from = '.*' if not defined $from or $from !~ /^#/;
@@ -243,7 +243,7 @@ sub add_regex {
   }
 
   if(not defined $text) {
-    return "/msg $nick Usage: regex <regex> <command>";
+    return "Usage: regex <regex> <command>";
   }
 
   my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword, undef, 1);
@@ -350,7 +350,7 @@ sub show {
   my ($chan, $trig) = split / /, $arguments;
 
   if(not defined $chan or not defined $trig) {
-    return "/msg $nick Usage: show <channel> <factoid>";
+    return "Usage: show <channel> <trigger>";
   }
 
   my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $trig);
@@ -374,13 +374,13 @@ sub info {
   my ($chan, $trig) = split / /, $arguments;
 
   if(not defined $chan or not defined $trig) {
-    return "/msg $nick Usage: info <channel> <trigger>";
+    return "Usage: info <channel> <trigger>";
   }
 
   my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $trig);
 
   if(not defined $trigger) {
-    return "/msg $nick '$trig' not found in channel '$chan' (did you mean channel '.*'?";
+    return "'$trig' not found in channel '$chan' (did you mean channel '.*'?";
   }
 
   my $created_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{created_on});
