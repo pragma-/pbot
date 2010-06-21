@@ -179,7 +179,9 @@ sub interpret {
     ($keyword, $arguments) = ("change", "$1 s|\$| - $2|");
   } elsif($command =~ /^([^ ]+)\s+is\s+(.*)$/) {
     my ($k, $a) = ($1, $2);
-    if(defined $pbot->factoids->find_factoid($from, $k)) {
+
+    my ($channel, $trigger) = $pbot->factoids->find_factoid($from, $k);
+    if(defined $trigger) {
       ($keyword, $arguments) = ($k, "is $a");
     } else {
       ($keyword, $arguments) = ("add", join(' is ', $k, $a));

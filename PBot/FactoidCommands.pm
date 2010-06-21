@@ -131,7 +131,7 @@ sub list {
   }
 
   if($arguments =~ /^modules$/i) {
-    $from = '.*' if not defined $from;
+    $from = '.*' if not defined $from or $from !~ /^#/;
     $text = "Loaded modules for channel $from: ";
     foreach my $channel (sort keys %{ $self->{pbot}->factoids->factoids->hash }) {
       foreach my $command (sort keys %{ $self->{pbot}->factoids->factoids->hash->{$channel} }) {
@@ -188,7 +188,7 @@ sub alias {
     return "/msg $nick Usage: alias <keyword> <command>";
   }
 
-  $from = '.*' if not defined $from;
+  $from = '.*' if not defined $from or $from !~ /^#/;
   my ($channel, $alias_trigger) = $self->{pbot}->factoids->find_factoid($from, $alias);
   
   if(defined $alias_trigger) {
@@ -209,7 +209,7 @@ sub add_regex {
   my $factoids = $self->{pbot}->factoids->factoids->hash;
   my ($keyword, $text) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
 
-  $from = '.*' if not defined $from;
+  $from = '.*' if not defined $from or $from !~ /^#/;
 
   if(not defined $keyword) {
     $text = "";
@@ -246,7 +246,7 @@ sub add_text {
     return "/msg $nick Usage: add <keyword> is <factoid>";
   }
 
-  $from = '.*' if not defined $from;
+  $from = '.*' if not defined $from or $from !~ /^#/;
 
   my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword);
 
@@ -267,7 +267,7 @@ sub remove_text {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->factoids->factoids->hash;
 
-  $from = '.*' if not defined $from;
+  $from = '.*' if not defined $from or $from !~ /^#/;
 
   if(not defined $arguments) {
     return "/msg $nick Usage: remove <keyword>";
@@ -330,7 +330,7 @@ sub show {
     return "/msg $nick Usage: show <factoid>";
   }
 
-  $from = '.*' if not defined $from;
+  $from = '.*' if not defined $from or $from !~ /^#/;
   my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $arguments);
 
   if(not defined $trigger) {
@@ -353,7 +353,7 @@ sub info {
     return "/msg $nick Usage: info <factoid|module>";
   }
 
-  $from = '.*' if not defined $from;
+  $from = '.*' if not defined $from or $from !~ /^#/;
 
   my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $arguments);
 
