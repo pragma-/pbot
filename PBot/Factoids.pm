@@ -218,6 +218,7 @@ sub interpreter {
 
     $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
     $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
+    $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
 
     return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
   }
@@ -230,6 +231,7 @@ sub interpreter {
 
     $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
     $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
+    $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
 
     return $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, $keyword, $arguments);
   }
@@ -244,6 +246,7 @@ sub interpreter {
 
     $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
     $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
+    $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
 
     $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"" . $self->factoids->hash->{$channel}->{$keyword}->{action} . "\"\n");
 
