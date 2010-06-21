@@ -94,6 +94,7 @@ sub add_factoid {
   $self->factoids->hash->{$channel}->{$trigger}->{created_on} = gettimeofday;
   $self->factoids->hash->{$channel}->{$trigger}->{ref_count}  = 0;
   $self->factoids->hash->{$channel}->{$trigger}->{ref_user}   = "nobody";
+  $self->factoids->hash->{$channel}->{$trigger}->{rate_limit} = 15;
 
   $self->save_factoids;
 }
@@ -227,10 +228,17 @@ sub interpreter {
     return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
   }
 
+  if(exists $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on}) {
+    if(gettimeofday - $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} <= $self->factoids->hash->{$channel}->{$keyword}->{rate_limit}) {
+      return "/msg $nick '$keyword' is rate-limited; try again in " . ($self->factoids->hash->{$channel}->{$keyword}->{rate_limit} - int(gettimeofday - $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on})) . " seconds.";
+    }
+  }
+
   if($self->factoids->hash->{$channel}->{$keyword}->{enabled} == 0) {
     $self->{pbot}->logger->log("$keyword disabled.\n");
     return "/msg $nick $keyword is currently disabled.";
-  } elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'module') {
+  } 
+  elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'module') {
     $self->{pbot}->logger->log("Found module\n");
 
     $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
