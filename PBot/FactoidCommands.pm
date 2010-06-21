@@ -347,15 +347,16 @@ sub show {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->factoids->factoids->hash;
 
-  if(not defined $arguments) {
-    return "/msg $nick Usage: show <factoid>";
+  my ($chan, $trig) = split / /, $arguments;
+
+  if(not defined $chan or not defined $trig) {
+    return "/msg $nick Usage: show <channel> <factoid>";
   }
 
-  $from = '.*' if not defined $from or $from !~ /^#/;
-  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $arguments);
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $trig);
 
   if(not defined $trigger) {
-    return "/msg $nick $arguments not found in channel $from";
+    return "/msg $nick '$trig' not found in channel '$chan' (did you mean channel '.*'?";
   }
 
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
@@ -370,22 +371,22 @@ sub info {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->factoids->factoids->hash;
 
-  if(not defined $arguments) {
-    return "/msg $nick Usage: info <factoid|module>";
+  my ($chan, $trig) = split / /, $arguments;
+
+  if(not defined $chan or not defined $trig) {
+    return "/msg $nick Usage: info <channel> <trigger>";
   }
 
-  $from = '.*' if not defined $from or $from !~ /^#/;
-
-  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $arguments);
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $trig);
 
   if(not defined $trigger) {
-    return "/msg $nick $arguments not found";
+    return "/msg $nick '$trig' not found in channel '$chan' (did you mean channel '.*'?";
   }
 
   my $created_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{created_on});
   my $ref_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{last_referenced_on}) if defined $factoids->{$channel}->{$trigger}->{last_referenced_on};
 
-  my $chan = ($channel eq '.*' ? 'all channels' : $channel);
+  $chan = ($channel eq '.*' ? 'all channels' : $channel);
 
   # factoid
   if($factoids->{$channel}->{$trigger}->{type} eq 'text') {
@@ -495,6 +496,8 @@ sub find {
   my $factoids = $self->{pbot}->factoids->factoids;
   my $text;
   my $type;
+
+
 
   if(not defined $arguments) {
     return "/msg $nick Usage: !find [-owner nick] [-by nick] [text]";
