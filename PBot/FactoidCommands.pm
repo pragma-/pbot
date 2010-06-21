@@ -57,6 +57,25 @@ sub initialize {
   $pbot->commands->register(sub { return $self->disable_command(@_) },       "disable",     10);
   $pbot->commands->register(sub { return $self->factset(@_)         },       "factset",     10);
   $pbot->commands->register(sub { return $self->factunset(@_)       },       "factunset",   10);
+  $pbot->commands->register(sub { return $self->call_factoid(@_)    },       "fact",         0);
+}
+
+sub call_factoid {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($chan, $keyword, $args) = split / /, $arguments, 3;
+
+  if(not defined $chan or not defined $keyword) {
+    return "Usage: !fact <channel> <keyword> [arguments]";
+  }
+
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $keyword, $args, 1);
+
+  if(not defined $trigger) {
+    return "No such factoid '$keyword' exists for channel '$chan'";
+  }
+
+  return $self->{pbot}->factoids->interpreter($channel, $nick, $user, $host, 1, $trigger, $args);
 }
 
 sub factset {
