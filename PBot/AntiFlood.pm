@@ -285,7 +285,9 @@ sub prune_message_history {
 
 sub unbanme {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  my $channel = $arguments;
+  my $channel = lc $arguments;
+  $host = lc $host;
+  $user = lc $user;
 
   if(not defined $channel) {
     return "/msg $nick Usage: unbanme <channel>";
@@ -293,7 +295,7 @@ sub unbanme {
 
   my $banmask = address_to_mask($host);
 
-  my $mask = "*!$user\@$banmask\$##stop_join_flood";
+  my $mask = lc "*!$user\@$banmask\$##stop_join_flood";
 
   if(not exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$mask}) {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
