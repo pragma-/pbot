@@ -50,10 +50,10 @@ sub set {
   my ($channel, $key, $value) = split / /, $arguments, 3;
 
   if(not defined $channel) {
-    return "/msg $nick Usage: chanset <channel> [[key] <value>]";
+    return "Usage: chanset <channel> [key <value>]";
   }
 
-  return "/msg $nick " . $self->channels->set($channel, $key, $value);
+  return $self->channels->set($channel, $key, $value);
 }
 
 sub unset {
@@ -61,10 +61,10 @@ sub unset {
   my ($channel, $key) = split / /, $arguments;
 
   if(not defined $channel or not defined $key) {
-    return "/msg $nick Usage: chanunset <channel> <key>";
+    return "Usage: chanunset <channel> <key>";
   }
 
-  return "/msg $nick " . $self->channels->unset($channel, $key);
+  return "msg $nick " . $self->channels->unset($channel, $key);
 }
 
 sub add {
