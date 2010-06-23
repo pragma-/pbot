@@ -14,10 +14,10 @@ type: text
 action: /say This is a test in #pbot2!
 created_on: 1277000257.49081
 enabled: 1
-last_referenced_on: 1277165616.24181
+last_referenced_on: 1277258183.307
 owner: pbot3
 rate_limit: 10
-ref_count: 16
+ref_count: 17
 ref_user: pragma_
 type: text
 
@@ -3485,13 +3485,14 @@ ref_user: notk0
 type: text
 
 <alias>
-action: am
-created_on: 1194414293
+action: /call factalias
+created_on: 1277259091.375
 enabled: 1
-owner: Draconx|Laptop
+last_referenced_on: 1277259146.81587
+owner: pbot3
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 3
+ref_user: pbot3
 type: text
 
 <aliases>
@@ -6070,11 +6071,11 @@ type: text
 action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
-last_referenced_on: 1277163209.95677
+last_referenced_on: 1277259066.50343
 owner: pragma_
 rate_limit: 15
-ref_count: 868
-ref_user: angstrom
+ref_count: 878
+ref_user: pbot3
 type: text
 
 <hi_phrases>
@@ -6348,6 +6349,17 @@ owner: pragma_
 rate_limit: 15
 ref_count: 1
 ref_user: pragma_
+type: text
+
+<info>
+action: /call factinfo
+created_on: 1277259101.38088
+enabled: 1
+last_referenced_on: 1277259105.95312
+owner: pbot3
+rate_limit: 15
+ref_count: 1
+ref_user: pbot3
 type: text
 
 <inline>
@@ -8628,13 +8640,14 @@ ref_user: nobody
 type: regex
 
 <show>
-action: oort
-created_on: 1264736132
+action: /call factshow
+created_on: 1277259146.86343
 enabled: 1
-owner: tolkad
+last_referenced_on: 1277259153.35938
+owner: pbot3
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: pbot3
 type: text
 
 <sicp>
@@ -9870,11 +9883,11 @@ ref_user: pragma_
 type: text
 
 <version>
-action: /say PBot revision 195 2010-06-21
-created_on: 1277176857.09794
+action: /say PBot revision 198 2010-06-22
+created_on: 1277259006.35938
 enabled: 1
 last_referenced_on: 1277163757.64518
-owner: candide
+owner: pbot3
 rate_limit: 15
 ref_count: 0
 ref_user: nobody

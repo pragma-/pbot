@@ -37,27 +37,28 @@ sub initialize {
 
   $self->{pbot} = $pbot;
   
-  $pbot->commands->register(sub { return $self->list(@_)            },       "list",        0);
-  $pbot->commands->register(sub { return $self->alias(@_)           },       "alias",       0);
-  $pbot->commands->register(sub { return $self->add_regex(@_)       },       "regex",       0);
-  $pbot->commands->register(sub { return $self->add_text(@_)        },       "add",         0);
-  $pbot->commands->register(sub { return $self->add_text(@_)        },       "learn",       0);
-  $pbot->commands->register(sub { return $self->histogram(@_)       },       "histogram",   0);
-  $pbot->commands->register(sub { return $self->show(@_)            },       "show",        0);
-  $pbot->commands->register(sub { return $self->info(@_)            },       "info",        0);
-  $pbot->commands->register(sub { return $self->top20(@_)           },       "top20",       0);
-  $pbot->commands->register(sub { return $self->count(@_)           },       "count",       0);
-  $pbot->commands->register(sub { return $self->find(@_)            },       "find",        0);
-  $pbot->commands->register(sub { return $self->change_text(@_)     },       "change",      0);
-  $pbot->commands->register(sub { return $self->remove_text(@_)     },       "remove",      0);
-  $pbot->commands->register(sub { return $self->remove_text(@_)     },       "forget",      0);
+  $pbot->commands->register(sub { return $self->factadd(@_)         },       "learn",        0);
+  $pbot->commands->register(sub { return $self->factadd(@_)         },       "factadd",      0);
+  $pbot->commands->register(sub { return $self->factrem(@_)         },       "forget",       0);
+  $pbot->commands->register(sub { return $self->factrem(@_)         },       "factrem",      0);
+  $pbot->commands->register(sub { return $self->factshow(@_)        },       "factshow",     0);
+  $pbot->commands->register(sub { return $self->factinfo(@_)        },       "factinfo",     0);
+  $pbot->commands->register(sub { return $self->factset(@_)         },       "factset",     10);
+  $pbot->commands->register(sub { return $self->factunset(@_)       },       "factunset",   10);
+  $pbot->commands->register(sub { return $self->factchange(@_)      },       "factchange",   0);
+  $pbot->commands->register(sub { return $self->factalias(@_)       },       "factalias",    0);
+  $pbot->commands->register(sub { return $self->call_factoid(@_)    },       "fact",         0);
+
+  $pbot->commands->register(sub { return $self->list(@_)            },       "list",         0);
+  $pbot->commands->register(sub { return $self->add_regex(@_)       },       "regex",        0);
+  $pbot->commands->register(sub { return $self->histogram(@_)       },       "histogram",    0);
+  $pbot->commands->register(sub { return $self->top20(@_)           },       "top20",        0);
+  $pbot->commands->register(sub { return $self->count(@_)           },       "count",        0);
+  $pbot->commands->register(sub { return $self->find(@_)            },       "find",         0);
   $pbot->commands->register(sub { return $self->load_module(@_)     },       "load",        50);
   $pbot->commands->register(sub { return $self->unload_module(@_)   },       "unload",      50);
   $pbot->commands->register(sub { return $self->enable_command(@_)  },       "enable",      10);
   $pbot->commands->register(sub { return $self->disable_command(@_) },       "disable",     10);
-  $pbot->commands->register(sub { return $self->factset(@_)         },       "factset",     10);
-  $pbot->commands->register(sub { return $self->factunset(@_)       },       "factunset",   10);
-  $pbot->commands->register(sub { return $self->call_factoid(@_)    },       "fact",         0);
 }
 
 sub call_factoid {
@@ -200,28 +201,27 @@ sub list {
   return "/msg $nick Usage: list <modules|commands|factoids|admins>";
 }
 
-sub alias {
+sub factalias {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($alias, $command) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
+  my ($chan, $alias, $command) = split / /, $arguments, 3 if defined $arguments;
   
   if(not defined $command) {
-    return "Usage: alias <keyword> <command>";
+    return "Usage: factalias <channel> <keyword> <command>";
   }
 
-  $from = '.*' if not defined $from or $from !~ /^#/;
-  my ($channel, $alias_trigger) = $self->{pbot}->factoids->find_factoid($from, $alias, undef, 1);
+  my ($channel, $alias_trigger) = $self->{pbot}->factoids->find_factoid($chan, $alias, undef, 1);
   
   if(defined $alias_trigger) {
     $self->{pbot}->logger->log("attempt to overwrite existing command\n");
     return "/msg $nick '$alias_trigger' already exists for channel $channel";
   }
   
-  $self->{pbot}->factoids->add_factoid('text', $from, $nick, $alias, "/call $command");
+  $self->{pbot}->factoids->add_factoid('text', $chan, $nick, $alias, "/call $command");
 
-  $self->{pbot}->logger->log("$nick!$user\@$host [$from] aliased $alias => $command\n");
+  $self->{pbot}->logger->log("$nick!$user\@$host [$chan] aliased $alias => $command\n");
   $self->{pbot}->factoids->save_factoids();
-  return "/msg $nick '$alias' aliases '$command' for channel $from";  
+  return "/msg $nick '$alias' aliases '$command' for channel $chan";  
 }
 
 sub add_regex {
@@ -258,18 +258,16 @@ sub add_regex {
   return "/msg $nick $keyword added.";
 }
 
-sub add_text {
+sub factadd {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($keyword, $text) = $arguments =~ /^(.*?)\s+is\s+(.*)$/i if defined $arguments;
+  my ($from_chan, $keyword, $text) = $arguments =~ /^(.*?)\s+(.*?)\s+is\s+(.*)$/i if defined $arguments;
 
-  if(not defined $text or not defined $keyword) {
-    return "/msg $nick Usage: add <keyword> is <factoid>";
+  if(not defined $from_chan or not defined $text or not defined $keyword) {
+    return "/msg $nick Usage: factadd <channel> <keyword> is <factoid>";
   }
 
-  $from = '.*' if not defined $from or $from !~ /^#/;
-
-  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword, undef, 1);
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from_chan, $keyword, undef, 1);
 
   if(defined $trigger) {
     $self->{pbot}->logger->log("$nick!$user\@$host attempt to overwrite $keyword\n");
@@ -277,27 +275,27 @@ sub add_text {
     return "/msg $nick $keyword already exists.";
   }
 
-  $self->{pbot}->factoids->add_factoid('text', $from, $nick, $keyword, $text);
+  $self->{pbot}->factoids->add_factoid('text', $from_chan, $nick, $keyword, $text);
   
   $self->{pbot}->logger->log("$nick!$user\@$host added $keyword => $text\n");
   return "/msg $nick '$keyword' added.";
 }
 
-sub remove_text {
+sub factrem {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->factoids->factoids->hash;
 
-  $from = '.*' if not defined $from or $from !~ /^#/;
+  my ($from_chan, $from_trigger) = split / /, $arguments;
 
-  if(not defined $arguments) {
-    return "/msg $nick Usage: remove <keyword>";
+  if(not defined $from_chan or not defined $from_trigger) {
+    return "/msg $nick Usage: factrem <channel> <keyword>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $arguments);
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from_chan, $from_trigger, undef, 1);
 
   if(not defined $trigger) {
-    return "/msg $nick $arguments not found in channel $from.";
+    return "/msg $nick $from_trigger not found in channel $from_chan.";
   }
 
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
@@ -342,7 +340,7 @@ sub histogram {
   return "$factoid_count factoids, top 10 submitters: $text";
 }
 
-sub show {
+sub factshow {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->factoids->factoids->hash;
@@ -350,13 +348,13 @@ sub show {
   my ($chan, $trig) = split / /, $arguments;
 
   if(not defined $chan or not defined $trig) {
-    return "Usage: show <channel> <trigger>";
+    return "Usage: factshow <channel> <trigger>";
   }
 
   my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $trig);
 
   if(not defined $trigger) {
-    return "/msg $nick '$trig' not found in channel '$chan' (did you mean channel '.*'?";
+    return "/msg $nick '$trig' not found in channel '$chan'";
   }
 
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
@@ -366,7 +364,7 @@ sub show {
   return "$trigger: " . $factoids->{$channel}->{$trigger}->{action};
 }
 
-sub info {
+sub factinfo {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->factoids->factoids->hash;
@@ -374,13 +372,13 @@ sub info {
   my ($chan, $trig) = split / /, $arguments;
 
   if(not defined $chan or not defined $trig) {
-    return "Usage: info <channel> <trigger>";
+    return "Usage: factinfo <channel> <trigger>";
   }
 
   my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $trig);
 
   if(not defined $trigger) {
-    return "'$trig' not found in channel '$chan' (did you mean channel '.*'?";
+    return "'$trig' not found in channel '$chan'";
   }
 
   my $created_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{created_on});
@@ -570,16 +568,17 @@ sub find {
   }
 }
 
-sub change_text {
+sub factchange {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->factoids->factoids->hash;
-  my ($keyword, $delim, $tochange, $changeto, $modifier);
+  my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier);
 
   if(defined $arguments) {
-    if($arguments =~ /^(.*?)\s+s(.)/) {
-      $keyword = $1; 
-      $delim = $2;
+    if($arguments =~ /^([^\s]+) ([^\s]+)\s+s(.)/) {
+      $channel = $1;
+      $keyword = $2; 
+      $delim = $3;
     }
     
     if($arguments =~ /$delim(.*?)$delim(.*)$delim(.*)?$/) {
@@ -589,11 +588,11 @@ sub change_text {
     }
   }
 
-  if(not defined $changeto) {
-    return "/msg $nick Usage: change <keyword> s/<pattern>/<replacement>/";
+  if(not defined $channel or not defined $changeto) {
+    return "/msg $nick Usage: factchange <channel> <keyword> s/<pattern>/<replacement>/";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword);
+  ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($channel, $keyword);
 
   if(not defined $trigger) {
     return "/msg $nick $keyword not found in channel $from.";
