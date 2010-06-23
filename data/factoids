@@ -14,10 +14,10 @@ type: text
 action: /say This is a test in #pbot2!
 created_on: 1277000257.49081
 enabled: 1
-last_referenced_on: 1277133747.27277
+last_referenced_on: 1277165616.24181
 owner: pbot3
-rate_limit: 0
-ref_count: 13
+rate_limit: 10
+ref_count: 16
 ref_user: pragma_
 type: text
 
@@ -2136,9 +2136,10 @@ type: text
 action: an integer constant expression, with type int and a negative value, that is returned by several functions to indicate end-of-file (ISO/IEC 9899:1999 7.19.1(3)). It is NOT a char. It is NOT a byte that is stored at the end of every file.
 created_on: 1104596552
 enabled: 1
+last_referenced_on: 1277154619.75901
 owner: infobahn
 rate_limit: 15
-ref_count: 33
+ref_count: 34
 ref_user: Wulf
 type: text
 
@@ -3086,10 +3087,11 @@ type: text
 action: (carriage return) Moves the active position to the initial position of the current line.
 created_on: 1244570284
 enabled: 1
+last_referenced_on: 1277228153.1788
 owner: Wulf_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: Wulf
 type: text
 
 <^>
@@ -3451,6 +3453,16 @@ rate_limit: 15
 ref_count: 0
 ref_user: nobody
 type: text
+
+<ago>
+action: ago.pl
+created_on: 1277256899.15762
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: module
 
 <aids>
 action: "There's no easy way to say this. You got aids. Yuck! :x"  $noaids $noaids $noaids "You contracted aids from $who_answers!" "You were attacked by a $animals!  You now have aids." $noaids $noaids
@@ -3976,10 +3988,11 @@ type: text
 action: /me points accusingly at $args, "Where is your book?!"
 created_on: 1179504776
 enabled: 1
+last_referenced_on: 1277150498.11992
 owner: pragma_
 rate_limit: 15
-ref_count: 765
-ref_user: nak
+ref_count: 767
+ref_user: zcram
 type: text
 
 <book2>
@@ -3996,10 +4009,11 @@ type: text
 action: http://www.iso-9899.info/wiki/Books
 created_on: 1104378101
 enabled: 1
+last_referenced_on: 1277159744.56438
 owner: twkm
 rate_limit: 15
-ref_count: 464
-ref_user: efaust
+ref_count: 465
+ref_user: Dianora
 type: text
 
 <booty(.*)>
@@ -4096,9 +4110,10 @@ type: text
 action: /say $bye_words, $nick
 created_on: 1109365229
 enabled: 1
+last_referenced_on: 1277141935.10995
 owner: pragma_
 rate_limit: 15
-ref_count: 30
+ref_count: 32
 ref_user: megabraker
 type: text
 
@@ -4136,10 +4151,11 @@ type: text
 action: /say C is a low level language designed to make assembly "easier", useful for device drivers or operating systems. Thusly, one has to maintain buffers, memory, and various low level information. C is not meant to be used for everyday applications, a common misconception.
 created_on: 1108006206
 enabled: 1
+last_referenced_on: 1277141710.64259
 owner: pragma
 rate_limit: 15
-ref_count: 154
-ref_user: rolfen
+ref_count: 155
+ref_user: megabraker
 type: text
 
 <c++>
@@ -4336,10 +4352,11 @@ type: text
 action: /call ideone $nick
 created_on: 1272176634
 enabled: 1
+last_referenced_on: 1277233638.86409
 owner: pragma_
-rate_limit: 15
-ref_count: 3312
-ref_user: Pinky
+rate_limit: 0
+ref_count: 3340
+ref_user: pizza_
 type: text
 
 <cc2>
@@ -4356,10 +4373,11 @@ type: text
 action: cdecl.pl
 created_on: 1191041914
 enabled: 1
+last_referenced_on: 1277166699.34796
 owner: pragma_
 rate_limit: 15
-ref_count: 2490
-ref_user: kate`
+ref_count: 2492
+ref_user: Wulf
 type: module
 
 <cfa>
@@ -4396,9 +4414,10 @@ type: text
 action: http://code.google.com/p/pbot2-pl/source/list
 created_on: 1275818314
 enabled: 1
+last_referenced_on: 1277165352.6388
 owner: pragma_
 rate_limit: 15
-ref_count: 4
+ref_count: 5
 ref_user: pragma_
 type: text
 
@@ -4517,10 +4536,11 @@ type: module
 action: red green yellow blue purple pink brown black white octarine cyan magenta orange
 created_on: 1108931265
 enabled: 1
+last_referenced_on: 1277141833.77794
 owner: pragma_
 rate_limit: 15
-ref_count: 5
-ref_user: Irishmanluke
+ref_count: 7
+ref_user: pragma_
 type: text
 
 <combo-breaker>
@@ -4597,10 +4617,11 @@ type: text
 action: compliment
 created_on: 1255395343
 enabled: 1
+last_referenced_on: 1277139842.73797
 owner: pragma_
 rate_limit: 15
-ref_count: 54
-ref_user: pragma_
+ref_count: 55
+ref_user: dave0
 type: module
 
 <const>
@@ -4727,10 +4748,11 @@ type: text
 action: cstd.pl
 created_on: 1270956236
 enabled: 1
+last_referenced_on: 1277234055.46338
 owner: pragma_
 rate_limit: 15
-ref_count: 991
-ref_user: Chris
+ref_count: 994
+ref_user: ecrane
 type: module
 
 <csv>
@@ -4957,10 +4979,11 @@ type: text
 action: dict.org.pl
 created_on: 1269777616
 enabled: 1
+last_referenced_on: 1277246751.56819
 owner: pragma_
 rate_limit: 15
-ref_count: 410
-ref_user: Wulf
+ref_count: 413
+ref_user: pragma_
 type: module
 
 <die>
@@ -5037,9 +5060,10 @@ type: text
 action: /say "It doesn't work!" is not very informative for the people trying to help you.  Please describe what you think may be wrong, what results you expected to get and what instead actually happens.  Pasting a compilable test-case and/or compiler messages to http://codepad.org/ may be helpful.
 created_on: 1175456821
 enabled: 1
+last_referenced_on: 1277148771.43879
 owner: pragma_
 rate_limit: 15
-ref_count: 137
+ref_count: 138
 ref_user: Wulf
 type: text
 
@@ -5087,10 +5111,11 @@ type: text
 action: /say When taking input for type double you need to use lf format specifier in the scanf statement. But when you are outputting a double you use f format specifier in the printf statements.
 created_on: 1195072541
 enabled: 1
+last_referenced_on: 1277216617.71238
 owner: pragma_
 rate_limit: 15
-ref_count: 22
-ref_user: pragma_
+ref_count: 23
+ref_user: Jafet
 type: text
 
 <draft>
@@ -5297,10 +5322,11 @@ type: text
 action: excuse.sh
 created_on: 1236819394
 enabled: 1
+last_referenced_on: 1277137283.63803
 owner: pragma_
 rate_limit: 15
-ref_count: 276
-ref_user: megabraker
+ref_count: 278
+ref_user: pragma_
 type: module
 
 <existence>
@@ -5317,10 +5343,11 @@ type: text
 action: /call cdecl explain
 created_on: 1191042468
 enabled: 1
+last_referenced_on: 1277166699.34623
 owner: pragma_
 rate_limit: 15
-ref_count: 2089
-ref_user: kate`
+ref_count: 2092
+ref_user: Wulf
 type: text
 
 <f>
@@ -5597,9 +5624,10 @@ type: text
 action: /say Function Pointer Tutorial: http://www.newty.de/fpt/fpt.html
 created_on: 1189558928
 enabled: 1
+last_referenced_on: 1277231237.97915
 owner: OrngeTide
 rate_limit: 15
-ref_count: 5
+ref_count: 6
 ref_user: Wulf
 type: text
 
@@ -5697,20 +5725,22 @@ type: text
 action: gdefine.pl
 created_on: 1236819675
 enabled: 1
+last_referenced_on: 1277172774.33622
 owner: pragma_
 rate_limit: 15
-ref_count: 422
-ref_user: Kaye
+ref_count: 423
+ref_user: pragma_
 type: module
 
 <gdict>
 action: /call gdefine
 created_on: 1255125488
 enabled: 1
+last_referenced_on: 1277172774.33372
 owner: pragma_
 rate_limit: 15
-ref_count: 327
-ref_user: _root
+ref_count: 328
+ref_user: pragma_
 type: text
 
 <geekporn>
@@ -5927,10 +5957,11 @@ type: text
 action: /say "Given..Want": What do you have to work with? What's the desired goal? Between them is the resulting Process. Now ask yourself: WHY am I doing this? Why THIS way?
 created_on: 1254241388
 enabled: 1
+last_referenced_on: 1277149965.14601
 owner: dbtid
 rate_limit: 15
-ref_count: 26
-ref_user: PoppaVic
+ref_count: 27
+ref_user: habnabit
 type: text
 
 <h>
@@ -5997,10 +6028,11 @@ type: regex
 action: /call hi
 created_on: 1179679787
 enabled: 1
+last_referenced_on: 1277141870.28097
 owner: pragma_
 rate_limit: 15
-ref_count: 77
-ref_user: rolfen
+ref_count: 78
+ref_user: megabraker
 type: text
 
 <helloworld>
@@ -6017,10 +6049,11 @@ type: text
 action: /say To learn all about me, see http://www.iso-9899.info/wiki/Candide
 created_on: 1109792986
 enabled: 1
+last_referenced_on: 1277141639.67316
 owner: NeverDream
 rate_limit: 15
-ref_count: 488
-ref_user: dave0
+ref_count: 489
+ref_user: megabraker
 type: text
 
 <herring>
@@ -6037,11 +6070,11 @@ type: text
 action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
-last_referenced_on: 1277133673.344
+last_referenced_on: 1277163209.95677
 owner: pragma_
 rate_limit: 15
-ref_count: 864
-ref_user: pragma_
+ref_count: 868
+ref_user: angstrom
 type: text
 
 <hi_phrases>
@@ -6138,10 +6171,11 @@ type: text
 action: /say $how_answers
 created_on: 1276845773
 enabled: 1
+last_referenced_on: 1277141724.48669
 owner: pragma_
 rate_limit: 15
-ref_count: 5
-ref_user: megabraker
+ref_count: 8
+ref_user: pragma_
 type: text
 
 <how_answers>
@@ -6258,11 +6292,12 @@ type: text
 action: ideone.pl
 created_on: 1272176604
 enabled: 1
+last_referenced_on: 1277233638.87527
 modulelauncher_subpattern: s/([^ ]+)\s+(.*)/$1 '$2'/
 owner: pragma_
 rate_limit: 15
-ref_count: 3309
-ref_user: Pinky
+ref_count: 3335
+ref_user: pizza_
 type: module
 
 <idiot>
@@ -6329,10 +6364,11 @@ type: text
 action: insult.pl
 created_on: 1236819209
 enabled: 1
+last_referenced_on: 1277256769.41503
 owner: pragma_
 rate_limit: 15
-ref_count: 378
-ref_user: snhmib
+ref_count: 380
+ref_user: pragma_
 type: module
 
 <int>
@@ -6479,10 +6515,11 @@ type: text
 action: /say K&R is The C Programming Language, 2nd edition, by Kernighan and Ritchie, http://cm.bell-labs.com/cm/cs/cbook/ - be sure to see the errata as well, at http://cm.bell-labs.com/cm/cs/cbook/2ediffs.html - Note that K&R is not designed to teach programming itself, but rather how C does programming.  If you want to learn how to program, this isn't the book or programming language for you.
 created_on: 1243951633
 enabled: 1
+last_referenced_on: 1277161233.0631
 owner: Chris
 rate_limit: 15
-ref_count: 524
-ref_user: rizlah
+ref_count: 527
+ref_user: Ygnus
 type: text
 
 <k&r2>
@@ -6649,10 +6686,11 @@ type: text
 action: /call double
 created_on: 1195072615
 enabled: 1
+last_referenced_on: 1277216617.67801
 owner: pragma_
 rate_limit: 15
-ref_count: 3
-ref_user: pragma_
+ref_count: 4
+ref_user: Jafet
 type: text
 
 <libpack>
@@ -6819,10 +6857,11 @@ type: text
 action: int main(int argc, char *argv[]); or int main(int argc, char **argv); or int main(void); See also ''argc'' and ''argv''; the standard entry point to C programs
 created_on: 1104231974
 enabled: 1
+last_referenced_on: 1277169228.22868
 owner: twkm
 rate_limit: 15
-ref_count: 76
-ref_user: Jafet
+ref_count: 78
+ref_user: kate`
 type: text
 
 <mainloop_io>
@@ -6869,10 +6908,11 @@ type: text
 action: man.pl
 created_on: 1107137901
 enabled: 1
+last_referenced_on: 1277154047.1415
 owner: pragma_
 rate_limit: 15
-ref_count: 1016
-ref_user: pragma_
+ref_count: 1017
+ref_user: efaust
 type: module
 
 <manpage>
@@ -7479,10 +7519,11 @@ type: text
 action: /say Paste code/errors to http://codepad.org
 created_on: 1247850332
 enabled: 1
+last_referenced_on: 1277142614.17624
 owner: PoppaVic
 rate_limit: 15
-ref_count: 58
-ref_user: dave0
+ref_count: 59
+ref_user: xuser
 type: text
 
 <pastebin>
@@ -7779,10 +7820,11 @@ type: text
 action: a function declaration that also includes types for the parameters.
 created_on: 1105035288
 enabled: 1
+last_referenced_on: 1277142106.61885
 owner: twkm
 rate_limit: 15
-ref_count: 9
-ref_user: Soul_keeper
+ref_count: 10
+ref_user: sepult
 type: text
 
 <pth>
@@ -9049,9 +9091,10 @@ type: text
 action: /say $args is a $sizes $idiot!
 created_on: 1194256622
 enabled: 1
+last_referenced_on: 1277141626.78617
 owner: pragma_
 rate_limit: 15
-ref_count: 42
+ref_count: 43
 ref_user: megabraker
 type: text
 
@@ -9179,10 +9222,11 @@ type: text
 action: /say Testing in any channel ...
 created_on: 1272786662
 enabled: 1
+last_referenced_on: 1277233976.52688
 owner: arenics
 rate_limit: 15
-ref_count: 19
-ref_user: pbot3
+ref_count: 20
+ref_user: ecrane
 type: text
 
 <test88>
@@ -9330,7 +9374,7 @@ action: get_title.pl
 created_on: 1258840021
 enabled: 1
 owner: pragma_
-rate_limit: 15
+rate_limit: 0
 ref_count: 32
 ref_user: lolfrenz
 type: module
@@ -9826,10 +9870,11 @@ ref_user: pragma_
 type: text
 
 <version>
-action: /say PBot revision 194 2010-06-21
-created_on: 1277133561.39062
+action: /say PBot revision 195 2010-06-21
+created_on: 1277176857.09794
 enabled: 1
-owner: pbot3
+last_referenced_on: 1277163757.64518
+owner: candide
 rate_limit: 15
 ref_count: 0
 ref_user: nobody
@@ -9959,10 +10004,11 @@ type: text
 action: /call wikipedia
 created_on: 1257554566
 enabled: 1
+last_referenced_on: 1277172793.64606
 owner: pragma_
 rate_limit: 15
-ref_count: 382
-ref_user: bearded_oneder
+ref_count: 383
+ref_user: pragma_
 type: text
 
 <weapon>
@@ -10029,10 +10075,11 @@ type: text
 action: /call excuse
 created_on: 1236820003
 enabled: 1
+last_referenced_on: 1277137283.63567
 owner: pragma_
 rate_limit: 15
-ref_count: 224
-ref_user: megabraker
+ref_count: 226
+ref_user: pragma_
 type: text
 
 <what_answers>
@@ -10059,9 +10106,10 @@ type: text
 action: /say $who_answers
 created_on: 1258611970
 enabled: 1
+last_referenced_on: 1277141657.64025
 owner: pragma_
 rate_limit: 15
-ref_count: 20
+ref_count: 21
 ref_user: megabraker
 type: text
 
@@ -10129,10 +10177,11 @@ type: module
 action: wikipedia.pl
 created_on: 1257554350
 enabled: 1
+last_referenced_on: 1277172793.65619
 owner: pragma_
 rate_limit: 15
-ref_count: 387
-ref_user: bearded_oneder
+ref_count: 388
+ref_user: pragma_
 type: module
 
 <win32>
@@ -10259,10 +10308,11 @@ type: text
 action: /say The XY problem:  You want to do X, but don't know how.  You think you can solve it using Y, but don't know how to do that, either.  You ask about Y, which is a strange thing to want to do.  Just ask about X.
 created_on: 1175596315
 enabled: 1
+last_referenced_on: 1277149829.60728
 owner: Draconx|Laptop
 rate_limit: 15
-ref_count: 169
-ref_user: sn5
+ref_count: 170
+ref_user: habnabit
 type: text
 
 <yo>
