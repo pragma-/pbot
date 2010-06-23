@@ -589,7 +589,7 @@ sub factchange {
   }
 
   if(not defined $channel or not defined $changeto) {
-    return "/msg $nick Usage: factchange <channel> <keyword> s/<pattern>/<replacement>/";
+    return "Usage: factchange <channel> <keyword> s/<pattern>/<replacement>/";
   }
 
   ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($channel, $keyword);

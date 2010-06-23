@@ -3488,10 +3488,10 @@ type: text
 action: /call factalias
 created_on: 1277259091.375
 enabled: 1
-last_referenced_on: 1277259146.81587
+last_referenced_on: 1277259441.23438
 owner: pbot3
 rate_limit: 15
-ref_count: 3
+ref_count: 4
 ref_user: pbot3
 type: text
 
@@ -4409,6 +4409,17 @@ owner: pragma_
 rate_limit: 15
 ref_count: 0
 ref_user: nobody
+type: text
+
+<change>
+action: /call factchange
+created_on: 1277259441.33026
+enabled: 1
+last_referenced_on: 1277259445.87274
+owner: pbot3
+rate_limit: 15
+ref_count: 1
+ref_user: pbot3
 type: text
 
 <changelist>
@@ -9884,7 +9895,7 @@ type: text
 
 <version>
 action: /say PBot revision 198 2010-06-22
-created_on: 1277259006.35938
+created_on: 1277259434.96875
 enabled: 1
 last_referenced_on: 1277163757.64518
 owner: pbot3
