@@ -37,7 +37,7 @@ sub initialize {
   my $filename = delete $conf{filename};
 
   $self->{pbot} = $pbot;
-  $self->{channels} = PBot::HashObject->new(pbot => $pbot, name => 'Channels', index_key => 'channel', filename => $filename);
+  $self->{channels} = PBot::HashObject->new(pbot => $pbot, name => 'Channels', filename => $filename);
 
   $pbot->commands->register(sub { $self->set(@_)       },  "chanset",   40);
   $pbot->commands->register(sub { $self->unset(@_)     },  "chanunset", 40);
@@ -75,11 +75,10 @@ sub add {
   }
 
   my $hash = {};
-  $hash->{channel} = $arguments;
   $hash->{enabled} = 1;
   $hash->{chanop} = 0;
 
-  return "/msg $nick " . $self->channels->add($hash);
+  return "/msg $nick " . $self->channels->add($arguments, $hash);
 }
 
 sub remove {

@@ -35,7 +35,7 @@ sub initialize {
   }
 
   $self->{pbot} = $pbot;
-  $self->{unban_timeout} = PBot::HashObject->new(pbot => $pbot, name => 'Unban Timeouts', index_key => 'banmask', filename => "$pbot->{data_dir}/unban_timeouts");
+  $self->{unban_timeout} = PBot::HashObject->new(pbot => $pbot, name => 'Unban Timeouts', filename => "$pbot->{data_dir}/unban_timeouts");
   $self->{op_commands} = [];
   $self->{is_opped} = {};
 

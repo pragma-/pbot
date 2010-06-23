@@ -35,11 +35,6 @@ sub initialize {
     $name = "hash object";
   }
 
-  my $index_key = delete $conf{index_key};
-  if(not defined $index_key) {
-    Carp::croak("Missing index_key to HashObject");
-  }
-
   my $filename = delete $conf{filename};
   if(not defined $filename) {
     Carp::carp("Missing filename to HashObject, will not be able to save to or load from file.");
@@ -51,7 +46,6 @@ sub initialize {
   }
 
   $self->{name} = $name;
-  $self->{index_key} = $index_key;
   $self->{filename} = $filename;
   $self->{pbot} = $pbot;
   $self->{hash} = {};
@@ -59,31 +53,21 @@ sub initialize {
 
 
 sub load_hash_add {
-  my ($self, $hash, $i, $filename) = @_;
+  my ($self, $index_key, $hash, $i, $filename) = @_;
 
   if(defined $hash) {
-    my $index = delete $hash->{$self->{index_key}};
-
-    if(not defined $index) {
+    if(exists $self->hash->{$index_key}) {
       if($i) {
-        Carp::croak "Missing $self->{index_key} value around line $i of $filename\n";
-      } else {
-        return undef;
-      }
-    }
-
-    if(exists $self->hash->{$index}) {
-      if($i) {
-        Carp::croak "Duplicate hash '$index' found in $filename around line $i\n";
+        Carp::croak "Duplicate hash '$index_key' found in $filename around line $i\n";
       } else {
         return undef;
       }
     }
 
     foreach my $key (keys %$hash) {
-      $self->hash->{$index}{$key} = $hash->{$key};
+      $self->hash->{$index_key}{$key} = $hash->{$key};
     }
-    return $index;
+    return 1;
   }
   return undef;
 }
@@ -107,8 +91,8 @@ sub load_hash {
     return;
   }
 
-  my $i = 0;
-  my $hash;
+  my ($hash, $index_key, $i);
+  $hash = {};
 
   foreach my $line (<FILE>) {
     $i++;
@@ -116,11 +100,14 @@ sub load_hash {
     $line =~ s/^\s+//;
     $line =~ s/\s+$//;
 
-    next if not $line;
+    if($line =~ /^\[(.*)\]$/) {
+      $index_key = $1;
+      next;
+    }
 
-    if($line eq '-') {
+    if($line eq '') {
       # store the old hash
-      $self->load_hash_add($hash, $i, $filename);
+      $self->load_hash_add($index_key, $hash, $i, $filename);
 
       # start a new hash
       $hash = {};
@@ -128,6 +115,10 @@ sub load_hash {
     }
 
     my ($key, $value) = split /\:/, $line, 2;
+
+    if(not defined $key or not defined $value) {
+      Carp::croak "Error around line $i of $filename\n";
+    }
 
     $key =~ s/^\s+//;
     $key =~ s/\s+$//;
@@ -156,14 +147,13 @@ sub save_hash {
   open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
 
   foreach my $index (sort keys %{ $self->hash }) {
-    print FILE "-\n";
-    print FILE "$self->{index_key}: $index\n";
+    print FILE "[$index]\n";
 
     foreach my $key (sort keys %{ ${ $self->hash }{$index} }) {
       print FILE "$key: ${ $self->hash }{$index}{$key}\n";
     }
+    print FILE "\n";
   }
-  print FILE "-\n";
   close(FILE);
 }
 
@@ -174,8 +164,7 @@ sub find_hash {
 
   my $result = eval {
     foreach my $index (keys %{ $self->hash }) {
-      my $index_quoted = quotemeta($index);
-      if($keyword =~ m/^$index_quoted$/i) {
+      if($keyword =~ m/^\Q$index\E$/i) {
         return $index;
       }
     }
@@ -266,17 +255,15 @@ sub unset {
 }
 
 sub add {
-  my ($self, $hash) = @_;
+  my ($self, $index_key, $hash) = @_;
 
-  my $index = $self->load_hash_add($hash, 0);
-
-  if($index) {
+  if($self->load_hash_add($index_key, $hash, 0)) {
     $self->save_hash();
   } else {
     return "Error occurred adding new $self->{name} object.";
   }
 
-  return "'$index' added to $self->{name}.";
+  return "'$index_key' added to $self->{name}.";
 }
 
 sub remove {
