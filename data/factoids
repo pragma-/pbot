@@ -4152,11 +4152,11 @@ type: text
 action: /say C is a low level language designed to make assembly "easier", useful for device drivers or operating systems. Thusly, one has to maintain buffers, memory, and various low level information. C is not meant to be used for everyday applications, a common misconception.
 created_on: 1108006206
 enabled: 1
-last_referenced_on: 1277141710.64259
+last_referenced_on: 1277275715.60147
 owner: pragma
 rate_limit: 15
-ref_count: 155
-ref_user: megabraker
+ref_count: 156
+ref_user: pbot3
 type: text
 
 <c++>
