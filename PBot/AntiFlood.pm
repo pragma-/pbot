@@ -209,7 +209,7 @@ sub check_flood {
         if(${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages) {
           ${ $self->message_history }{$account}{$channel}{offenses}++;
           
-          my $timeout = (2 ** (($self->message_history->{$account}{$channel}{offenses} + 4) < 10 ? ${ $self->message_history }{$account}{$channel}{offenses} + 6 : 10));
+          my $timeout = (2 ** (($self->message_history->{$account}{$channel}{offenses} + 4) < 10 ? ${ $self->message_history }{$account}{$channel}{offenses} + 4 : 10));
 
           my $banmask = address_to_mask($host);
 
