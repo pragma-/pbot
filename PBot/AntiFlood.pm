@@ -16,6 +16,7 @@ use vars qw($VERSION);
 $VERSION = $PBot::PBot::VERSION;
 
 use Time::HiRes qw(gettimeofday);
+use Time::Duration;
 use Carp ();
 
 sub new {
@@ -191,7 +192,7 @@ sub check_flood {
       my $i = $length - 1;
       $self->{pbot}->logger->log("Checking flood history, i = $i\n");
       for(; $i >= 0; $i--) {
-        $self->{pbot}->logger->log($i . " " . $self->message_history->{$account}{$channel}{messages}->[$i]{mode} ." " . $self->message_history->{$account}{$channel}{messages}->[$i]{msg} .  " " . $self->message_history->{$account}{$channel}{messages}->[$i]{timestamp} . "\n");
+        $self->{pbot}->logger->log($i . " " . $self->message_history->{$account}{$channel}{messages}->[$i]{mode} ." " . $self->message_history->{$account}{$channel}{messages}->[$i]{msg} .  " " . $self->message_history->{$account}{$channel}{messages}->[$i]{timestamp} . " [" . ago_exact(time - $self->message_history->{$account}{$channel}{messages}->[$i]{timestamp}) . "]\n");
         next if $self->message_history->{$account}{$channel}{messages}->[$i]{mode} != $self->{FLOOD_JOIN};
         last if ++$count >= 4;
       }
@@ -201,7 +202,7 @@ sub check_flood {
 
     my %last = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - 1] };
 
-    $self->{pbot}->logger->log("Comparing " . int($last{timestamp}) . " against " . int($msg{timestamp}) . ": " . (int($last{timestamp} - $msg{timestamp})) . " seconds\n") if $mode == $self->{FLOOD_JOIN};
+    $self->{pbot}->logger->log("Comparing " . int($last{timestamp}) . " against " . int($msg{timestamp}) . ": " . (int($last{timestamp} - $msg{timestamp})) . " seconds [" . ago_exact($last{timestamp} - $msg{timestamp}) . "]\n") if $mode == $self->{FLOOD_JOIN};
 
     if($last{timestamp} - $msg{timestamp} <= $max_time && not $self->{pbot}->admins->loggedin($channel, "$nick!$user\@$host")) {
       if($mode == $self->{FLOOD_JOIN}) {
