@@ -202,7 +202,7 @@ sub check_flood {
 
     my %last = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - 1] };
 
-    $self->{pbot}->logger->log("Comparing " . int($last{timestamp}) . " against " . int($msg{timestamp}) . ": " . (int($last{timestamp} - $msg{timestamp})) . " seconds [" . ago_exact($last{timestamp} - $msg{timestamp}) . "]\n") if $mode == $self->{FLOOD_JOIN};
+    $self->{pbot}->logger->log("Comparing " . int($last{timestamp}) . " against " . int($msg{timestamp}) . ": " . (int($last{timestamp} - $msg{timestamp})) . " seconds [" . duration_exact($last{timestamp} - $msg{timestamp}) . "]\n") if $mode == $self->{FLOOD_JOIN};
 
     if($last{timestamp} - $msg{timestamp} <= $max_time && not $self->{pbot}->admins->loggedin($channel, "$nick!$user\@$host")) {
       if($mode == $self->{FLOOD_JOIN}) {
