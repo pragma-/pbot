@@ -49,16 +49,18 @@ sub initialize {
   $pbot->commands->register(sub { return $self->factalias(@_)       },       "factalias",    0);
   $pbot->commands->register(sub { return $self->call_factoid(@_)    },       "fact",         0);
 
-  $pbot->commands->register(sub { return $self->list(@_)            },       "list",         0);
-  $pbot->commands->register(sub { return $self->add_regex(@_)       },       "regex",        0);
-  $pbot->commands->register(sub { return $self->histogram(@_)       },       "histogram",    0);
-  $pbot->commands->register(sub { return $self->top20(@_)           },       "top20",        0);
-  $pbot->commands->register(sub { return $self->count(@_)           },       "count",        0);
-  $pbot->commands->register(sub { return $self->find(@_)            },       "find",         0);
-  $pbot->commands->register(sub { return $self->load_module(@_)     },       "load",        50);
-  $pbot->commands->register(sub { return $self->unload_module(@_)   },       "unload",      50);
-  $pbot->commands->register(sub { return $self->enable_command(@_)  },       "enable",      10);
-  $pbot->commands->register(sub { return $self->disable_command(@_) },       "disable",     10);
+  # the following commands have not yet been updated to use the new factoid structure
+  # DO NOT USE!!  Factoid corruption may occur.
+  $pbot->commands->register(sub { return $self->list(@_)            },       "list",         999);
+  $pbot->commands->register(sub { return $self->add_regex(@_)       },       "regex",        999);
+  $pbot->commands->register(sub { return $self->histogram(@_)       },       "histogram",    999);
+  $pbot->commands->register(sub { return $self->top20(@_)           },       "top20",        999);
+  $pbot->commands->register(sub { return $self->count(@_)           },       "count",        999);
+  $pbot->commands->register(sub { return $self->find(@_)            },       "find",         999);
+  $pbot->commands->register(sub { return $self->load_module(@_)     },       "load",         999);
+  $pbot->commands->register(sub { return $self->unload_module(@_)   },       "unload",       999);
+  $pbot->commands->register(sub { return $self->enable_command(@_)  },       "enable",       999);
+  $pbot->commands->register(sub { return $self->disable_command(@_) },       "disable",      999);
 }
 
 sub call_factoid {
@@ -267,7 +269,7 @@ sub factadd {
     return "/msg $nick Usage: factadd <channel> <keyword> is <factoid>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from_chan, $keyword, undef, 1);
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from_chan, $keyword, undef, 1, 1);
 
   if(defined $trigger) {
     $self->{pbot}->logger->log("$nick!$user\@$host attempt to overwrite $keyword\n");
@@ -292,7 +294,7 @@ sub factrem {
     return "/msg $nick Usage: factrem <channel> <keyword>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from_chan, $from_trigger, undef, 1);
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from_chan, $from_trigger, undef, 1, 1);
 
   if(not defined $trigger) {
     return "/msg $nick $from_trigger not found in channel $from_chan.";
@@ -351,7 +353,7 @@ sub factshow {
     return "Usage: factshow <channel> <trigger>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $trig);
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $trig, undef, 0, 1);
 
   if(not defined $trigger) {
     return "/msg $nick '$trig' not found in channel '$chan'";
@@ -375,7 +377,7 @@ sub factinfo {
     return "Usage: factinfo <channel> <trigger>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $trig);
+  my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $trig, undef, 0, 1);
 
   if(not defined $trigger) {
     return "'$trig' not found in channel '$chan'";
@@ -592,7 +594,7 @@ sub factchange {
     return "Usage: factchange <channel> <keyword> s/<pattern>/<replacement>/";
   }
 
-  ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($channel, $keyword);
+  ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($channel, $keyword, undef, 0, 1);
 
   if(not defined $trigger) {
     return "/msg $nick $keyword not found in channel $from.";

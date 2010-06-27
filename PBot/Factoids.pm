@@ -154,7 +154,7 @@ sub export_factoids {
 }
 
 sub find_factoid {
-  my ($self, $from, $keyword, $arguments, $exact_channel) = @_;
+  my ($self, $from, $keyword, $arguments, $exact_channel, $exact_trigger) = @_;
 
   $from = '.*' if not defined $from;
 
@@ -168,7 +168,7 @@ sub find_factoid {
         next unless $from =~ m/$channel/i;
       }
       foreach my $trigger (keys %{ $self->factoids->hash->{$channel} }) {
-        if($self->factoids->hash->{$channel}->{$trigger}->{type} eq 'regex') {
+        if(not $exact_trigger and $self->factoids->hash->{$channel}->{$trigger}->{type} eq 'regex') {
           if($string =~ m/$trigger/i) {
             return ($channel, $trigger);
           }
@@ -229,7 +229,7 @@ sub interpreter {
   }
 
   if(exists $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on}) {
-    if(gettimeofday - $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} <= $self->factoids->hash->{$channel}->{$keyword}->{rate_limit}) {
+    if(gettimeofday - $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} < $self->factoids->hash->{$channel}->{$keyword}->{rate_limit}) {
       return "/msg $nick '$keyword' is rate-limited; try again in " . ($self->factoids->hash->{$channel}->{$keyword}->{rate_limit} - int(gettimeofday - $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on})) . " seconds.";
     }
   }
@@ -306,7 +306,7 @@ sub interpreter {
     $result =~ s/\$nick/$nick/g;
 
     while ($result =~ /[^\\]\$([a-zA-Z0-9_\-\.]+)/g) { 
-      my ($var_chan, $var) = $self->find_factoid($from, $1);
+      my ($var_chan, $var) = $self->find_factoid($from, $1, undef, 0, 1);
 
       if(defined $var && $self->factoids->hash->{$var_chan}->{$var}->{type} eq 'text') {
         my $change = $self->factoids->hash->{$var_chan}->{$var}->{action};
@@ -340,7 +340,7 @@ sub interpreter {
       my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
       if($string =~ m/$keyword/i) {
         $self->{pbot}->logger->log("[$string] matches [$keyword] - calling [" . $self->factoids->hash->{$channel}->{$keyword}->{action} . "$']\n");
-        my $cmd = "${ $self->factoids }{$keyword}{regex}$'";
+        my $cmd = $self->factoids->hash->{$channel}->{$keyword}->{action} . $';
         my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
         $cmd =~ s/\$1/$a/g;
         $cmd =~ s/\$2/$b/g;
