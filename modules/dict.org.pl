@@ -123,7 +123,7 @@ sub define_word
                   next unless $defs->{$type}{$number} =~ m/$def_contains/i;
                   print "$comma" unless $number == 1;
                   print "$number) $defs->{$type}{$number}";
-                  $comma = ", ";
+                  $comma = ",\n\n";
                 }
               }
             };

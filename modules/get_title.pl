@@ -3,6 +3,7 @@
 # Quick and dirty by :pragma
 
 use LWP::UserAgent;
+use HTML::Entities;
 
 my ($text);
 
@@ -17,12 +18,17 @@ $arguments = join("%20", @ARGV);
 
 exit if($arguments =~ m/imagebin/i);
 exit if($arguments =~ m/\/wiki\//i);
+exit if($arguments =~ m/github.com/i);
+exit if($arguments =~ m/wiki.osdev.org/i);
 exit if($arguments =~ m/wikipedia.org/i);
 exit if($arguments =~ m/everfall.com/i);
+exit if($arguments =~ m/\/paste\//i);
 exit if($arguments =~ m/pastie/i);
-exit if($arguments =~ m/codepad/i);
-exit if($arguments =~ m/paste.*\.(?:com|org|net|ca|uk)/i);
-exit if($arguments =~ m/pasting.*\.(?:com|org|net|ca|uk)/i);
+exit if($arguments =~ m/ideone.com/i);
+exit if($arguments =~ m/codepad.org/i);
+exit if($arguments =~ m/^http\:\/\/past(e|ing)\./i);
+exit if($arguments =~ m/paste.*\.(?:com|org|net|ch|ca|uk|info)/i);
+exit if($arguments =~ m/pasting.*\.(?:com|org|net|ca|uk|info|ch)/i);
 
 my $ua = LWP::UserAgent->new;
 $ua->agent("Mozilla/5.0");
@@ -66,6 +72,10 @@ $t =~ s/&nsb;/ /g;
 $t =~ s/&#39;/'/g;
 $t =~ s/&lt;/</g;
 $t =~ s/&gt;/>/g;
+$t =~ s/&laquo;/<</g;
+$t =~ s/&raquo;/>>/g;
+$t =~ s/&gt;/>/g;
+$t =~ s/&bull;/-/g;
 $t =~ s/<em>//g;
 $t =~ s/<\/em>//g;
 
@@ -75,5 +85,7 @@ if(length $t > 150) {
 }
 
 # $nick =~ s/^(.)(.*)/$1|$2/;
+
+$t = decode_entities($t);
 
 print "Title of $nick\'s link: $t\n";

@@ -3275,7 +3275,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 
      Forward references: array declarators (6.7.5.2), common definitions <stddef.h>
      (7.17).
-     6.5.7 Bitwise shift operators
+    6.5.7 Bitwise shift operators
      Syntax
 1             shift-expression:
                       additive-expression

@@ -181,13 +181,13 @@ while($text =~ m/^\s{4,6}(\d+\.[0-9\.]*)/msg) {
 if(not $found and $comma eq "") {
   $search =~ s/\\s\+/ /g;
   if($section_specified) {
-    print "No such text '$search' found within section '$section' in n1256.\n" if length $search;
-    print "No such section '$section' in n1256.\n" if not length $search;
+    print "No such text '$search' found within section '$section' in C99 Draft Standard (n1256).\n" if length $search;
+    print "No such section '$section' in C99 Draft Standard (n1256).\n" if not length $search;
     exit 0;
   }
 
-  print "No such section '$section' in n1256.\n" if not length $search;
-  print "No such text '$search' found in n1256.\n" if length $search;
+  print "No such section '$section' in C99 Draft Standard (n1256).\n" if not length $search;
+  print "No such text '$search' found in C99 Draft Standard (n1256).\n" if length $search;
   exit 0;
 }
 
