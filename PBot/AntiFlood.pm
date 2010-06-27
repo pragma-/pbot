@@ -208,7 +208,7 @@ sub check_flood {
         if(${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages) {
           ${ $self->message_history }{$account}{$channel}{offenses}++;
           
-          my $timeout = (2 ** (($self->message_history->{$account}{$channel}{offenses} + 6) < 10 ? ${ $self->message_history }{$account}{$channel}{offenses} + 6 : 10));
+          my $timeout = (2 ** (($self->message_history->{$account}{$channel}{offenses} + 4) < 10 ? ${ $self->message_history }{$account}{$channel}{offenses} + 6 : 10));
 
           my $banmask = address_to_mask($host);
 
@@ -218,7 +218,7 @@ sub check_flood {
           
           $timeout = "several" if($timeout > 8);
 
-          $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for $timeout hours due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with: unbanme $channel; however, abusing this may lead to a permanent ban.");
+          $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for $timeout hours due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with: unbanme $channel");
 
           ${ $self->message_history }{$account}{$channel}{join_watch} = $max_messages - 2; # give them a chance to rejoin 
         } 
