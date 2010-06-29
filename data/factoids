@@ -1,4 +1,3 @@
-[]
 [##c]
 <test>
 action: /say A test in ##c!
@@ -23,7 +22,6 @@ ref_count: 2
 ref_user: pragma_
 type: text
 
-[#botters]
 [#pbot2]
 <test>
 action: /say This is a test in #pbot2!
@@ -10581,6 +10579,3 @@ ref_count: 9
 ref_user: pragma_
 type: text
 
-[dave0]
-[poppavic]
-[pragma_]

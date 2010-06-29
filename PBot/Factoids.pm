@@ -120,13 +120,14 @@ sub export_factoids {
   open FILE, "> $filename" or return "Could not open export path.";
 
   my $time = localtime;
-  print FILE "<html><body><i>Generated at $time</i><hr><h3>Candide's factoids:</h3><br>\n";
+  print FILE "<html><body><i>Last updated at $time</i>\n";
+  print FILE "<hr><h3>Candide's factoids:</h3><br>\n";
   
   my $i = 0;
 
   foreach my $channel (sort keys %{ $self->factoids->hash }) {
-    my $chan = $channel eq '.*' ? 'any' : $channel;
-    print FILE "<hr>\nChannel $chan\n<hr>\n";
+    my $chan = $channel eq '.*' ? 'Global channel' : "Channel $channel";
+    print FILE "<hr>\n$chan\n<hr>\n";
     print FILE "<table border=\"0\">\n";
     foreach my $trigger (sort keys %{ $self->factoids->hash->{$channel} }) {
       if($self->factoids->hash->{$channel}->{$trigger}->{type} eq 'text') {
@@ -139,13 +140,14 @@ sub export_factoids {
 
         print FILE "<td><b>$trigger</b> is " . encode_entities($self->factoids->hash->{$channel}->{$trigger}->{action}) . "</td>\n"; 
         
-        print FILE "<td align=\"right\">- submitted by<br> " . $self->factoids->hash->{$channel}->{$trigger}->{owner} . "<br><i>" . localtime($self->factoids->hash->{$channel}->{$trigger}->{created_on}) . "</i>\n</td>\n</tr>\n";
+        print FILE "<td align=\"right\">- submitted by " . $self->factoids->hash->{$channel}->{$trigger}->{owner} . "<br><i>" . localtime($self->factoids->hash->{$channel}->{$trigger}->{created_on}) . "</i>\n</td>\n</tr>\n";
       }
     }
     print FILE "</table>\n";
   }
 
   print FILE "<hr>$i factoids memorized.<br>";
+  print FILE "<hr><i>Last updated at $time</i>\n";
   
   close(FILE);
   
