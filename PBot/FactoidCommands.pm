@@ -309,12 +309,13 @@ sub factrem {
 
   if(($nick ne $factoids->{$channel}->{$trigger}->{owner}) and (not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host"))) {
     $self->{pbot}->logger->log("$nick!$user\@$host attempted to remove $trigger [not owner]\n");
-    return "/msg $nick You are not the owner of '$trigger'";
+    my $chan = ($channel eq '.*' ? 'the global channel' : $channel);
+    return "/msg $nick You are not the owner of '$trigger' for $chan";
   }
 
   $self->{pbot}->logger->log("$nick!$user\@$host removed [$channel][$trigger][" . $factoids->{$channel}->{$trigger}->{action} . "]\n");
   $self->{pbot}->factoids->remove_factoid($channel, $trigger);
-  return "/msg $nick $trigger removed from " . ($channel eq '.*' ? 'global channel' : $channel) . ".";
+  return "/msg $nick $trigger removed from " . ($channel eq '.*' ? 'the global channel' : $channel) . ".";
 }
 
 sub histogram {

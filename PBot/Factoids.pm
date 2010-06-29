@@ -121,13 +121,13 @@ sub export_factoids {
 
   my $time = localtime;
   print FILE "<html><body><i>Last updated at $time</i>\n";
-  print FILE "<hr><h3>Candide's factoids:</h3><br>\n";
+  print FILE "<hr><h2>Candide's factoids</h2>\n";
   
   my $i = 0;
 
   foreach my $channel (sort keys %{ $self->factoids->hash }) {
     my $chan = $channel eq '.*' ? 'Global channel' : "Channel $channel";
-    print FILE "<hr>\n$chan\n<hr>\n";
+    print FILE "<hr>\n<h3>$chan<h3>\n<hr>\n";
     print FILE "<table border=\"0\">\n";
     foreach my $trigger (sort keys %{ $self->factoids->hash->{$channel} }) {
       if($self->factoids->hash->{$channel}->{$trigger}->{type} eq 'text') {
