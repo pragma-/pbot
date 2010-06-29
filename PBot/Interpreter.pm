@@ -185,7 +185,7 @@ sub interpret {
     if(defined $trigger) {
       ($keyword, $arguments) = ($k, "is $a");
     } else {
-      ($keyword, $arguments) = ("factadd", "$from $k is $a");
+      ($keyword, $arguments) = ("factadd", (defined $from ? $from : '.*' ) . " $k is $a");
     }
   } elsif($command =~ /^(.*?)\s+(.*)$/) {
     ($keyword, $arguments) = ($1, $2);

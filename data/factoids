@@ -23,28 +23,7 @@ ref_count: 2
 ref_user: pragma_
 type: text
 
-<urshit>
-action: $args ur shit
-created_on: 1277371322.68472
-enabled: 1
-last_referenced_on: 1277371333.81216
-owner: hateball
-rate_limit: 15
-ref_count: 1
-ref_user: hateball
-type: text
-
 [#botters]
-<excuse>
-action: lol
-created_on: 1277286675.13114
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
 [#pbot2]
 <test>
 action: /say This is a test in #pbot2!
@@ -10006,8 +9985,8 @@ ref_user: pragma_
 type: text
 
 <version>
-action: /say PBot revision 210 2010-06-28
-created_on: 1277785832.35938
+action: /say PBot revision 212 2010-06-28
+created_on: 1277790321.9375
 enabled: 1
 last_referenced_on: 1277547370.96948
 owner: pbot3
@@ -10603,26 +10582,5 @@ ref_user: pragma_
 type: text
 
 [dave0]
-<hair>
-action: as dumb as a box of hair
-created_on: 1277387092.24224
-enabled: 1
-last_referenced_on: 1277387118.69029
-owner: dave0
-rate_limit: 15
-ref_count: 1
-ref_user: dave0
-type: text
-
 [poppavic]
-<##c++>
-action: For all of your C++ needs: ##C++: down the hall, left, down the stairs, ahead - next to the boiler room.
-created_on: 1277459808.85581
-enabled: 1
-owner: PoppaVic
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
 [pragma_]

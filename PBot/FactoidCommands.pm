@@ -269,6 +269,8 @@ sub factadd {
     return "/msg $nick Usage: factadd <channel> <keyword> is <factoid>";
   }
 
+  $from_chan = '.*' if not $from_chan =~ m/^#/;
+
   my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from_chan, $keyword, undef, 1, 1);
 
   if(defined $trigger) {
@@ -279,8 +281,8 @@ sub factadd {
 
   $self->{pbot}->factoids->add_factoid('text', $from_chan, $nick, $keyword, $text);
   
-  $self->{pbot}->logger->log("$nick!$user\@$host added $keyword => $text\n");
-  return "/msg $nick '$keyword' added.";
+  $self->{pbot}->logger->log("$nick!$user\@$host added [$from_chan] $keyword => $text\n");
+  return "/msg $nick '$keyword' added to " . ($from_chan eq '.*' ? 'default channel' : $from_chan) . ".";
 }
 
 sub factrem {
@@ -312,7 +314,7 @@ sub factrem {
 
   $self->{pbot}->logger->log("$nick!$user\@$host removed [$channel][$trigger][" . $factoids->{$channel}->{$trigger}->{action} . "]\n");
   $self->{pbot}->factoids->remove_factoid($channel, $trigger);
-  return "/msg $nick $trigger removed from channel $channel.";
+  return "/msg $nick $trigger removed from " . ($channel eq '.*' ? 'default channel' : $channel) . ".";
 }
 
 sub histogram {
@@ -386,7 +388,7 @@ sub factinfo {
   my $created_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{created_on});
   my $ref_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{last_referenced_on}) if defined $factoids->{$channel}->{$trigger}->{last_referenced_on};
 
-  $chan = ($channel eq '.*' ? 'all channels' : $channel);
+  $chan = ($channel eq '.*' ? 'default channel' : $channel);
 
   # factoid
   if($factoids->{$channel}->{$trigger}->{type} eq 'text') {
@@ -552,7 +554,7 @@ sub factfind {
             $i++;
             
             if($chan ne $last_chan) {
-              $text .= $chan eq '.*' ? "[all channels] " : "[$chan] ";
+              $text .= $chan eq '.*' ? "[default channel] " : "[$chan] ";
               $last_chan = $chan;
             }
             $text .= "$trigger ";
@@ -567,11 +569,11 @@ sub factfind {
 
   if($i == 1) {
     chop $text;
-    return "found one factoid submitted for " . ($last_chan eq '.*' ? 'all channels' : $last_chan) . " " . $argtype . ": '$last_trigger' is '" . $factoids->{$last_chan}->{$last_trigger}->{action} . "'";
+    return "found one factoid submitted for " . ($last_chan eq '.*' ? 'default channel' : $last_chan) . " " . $argtype . ": '$last_trigger' is '" . $factoids->{$last_chan}->{$last_trigger}->{action} . "'";
   } else {
     return "$i factoids " . $argtype . ": $text" unless $i == 0;
 
-    my $chans = (defined $channel ? ($channel eq '.*' ? 'all channels' : $channel) : 'any channels');
+    my $chans = (defined $channel ? ($channel eq '.*' ? 'default channel' : $channel) : 'any channels');
     return "No factoids " . $argtype . " submitted for $chans";
   }
 }
