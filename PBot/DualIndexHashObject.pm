@@ -270,7 +270,7 @@ sub set {
     my $comma = '';
     foreach my $key (sort keys %{ $self->hash->{$primary}->{$secondary} }) {
       $result .= $comma . "$key => " . $self->hash->{$primary}->{$secondary}->{$key};
-      $comma = ", ";
+      $comma = "; ";
     }
     $result .= "none" if($comma eq '');
     return $result;
@@ -283,6 +283,7 @@ sub set {
     $self->save();
   }
 
+  $primary = 'global' if $primary eq '.*';
   return "[$self->{name}] ($primary) $secondary: '$key' " . (defined $value ? "set to '$value'" : "is not set.");
 }
 
@@ -308,6 +309,7 @@ sub unset {
   delete $self->hash->{$primary}->{$secondary}->{$key};
   $self->save();
 
+  $primary = 'global' if $primary eq '.*';
   return "[$self->{name}] ($primary) $secondary: '$key' unset.";
 }
 
