@@ -190,9 +190,9 @@ sub check_flood {
     } else {
       my $count = 0;
       my $i = $length - 1;
-      $self->{pbot}->logger->log("Checking flood history, i = $i\n");
+      $self->{pbot}->logger->log("Checking flood history, i = $i\n") if ${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages;
       for(; $i >= 0; $i--) {
-        $self->{pbot}->logger->log($i . " " . $self->message_history->{$account}{$channel}{messages}->[$i]{mode} ." " . $self->message_history->{$account}{$channel}{messages}->[$i]{msg} .  " " . $self->message_history->{$account}{$channel}{messages}->[$i]{timestamp} . " [" . ago_exact(time - $self->message_history->{$account}{$channel}{messages}->[$i]{timestamp}) . "]\n");
+        $self->{pbot}->logger->log($i . " " . $self->message_history->{$account}{$channel}{messages}->[$i]{mode} ." " . $self->message_history->{$account}{$channel}{messages}->[$i]{msg} .  " " . $self->message_history->{$account}{$channel}{messages}->[$i]{timestamp} . " [" . ago_exact(time - $self->message_history->{$account}{$channel}{messages}->[$i]{timestamp}) . "]\n") if ${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages;
         next if $self->message_history->{$account}{$channel}{messages}->[$i]{mode} != $self->{FLOOD_JOIN};
         last if ++$count >= 4;
       }
