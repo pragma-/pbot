@@ -266,7 +266,7 @@ sub set {
   }
 
   if(not defined $key) {
-    my $result = "[$self->{name}] ($primary) $secondary keys: ";
+    my $result = "[$self->{name}] (" . ($primary eq '.*' ? 'global' : $primary) . ") $secondary keys: ";
     my $comma = '';
     foreach my $key (sort keys %{ $self->hash->{$primary}->{$secondary} }) {
       $result .= $comma . "$key => " . $self->hash->{$primary}->{$secondary}->{$key};
