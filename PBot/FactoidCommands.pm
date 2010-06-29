@@ -48,15 +48,15 @@ sub initialize {
   $pbot->commands->register(sub { return $self->factchange(@_)      },       "factchange",   0);
   $pbot->commands->register(sub { return $self->factalias(@_)       },       "factalias",    0);
   $pbot->commands->register(sub { return $self->call_factoid(@_)    },       "fact",         0);
+  $pbot->commands->register(sub { return $self->factfind(@_)        },       "factfind",     0);
 
   # the following commands have not yet been updated to use the new factoid structure
   # DO NOT USE!!  Factoid corruption may occur.
-  $pbot->commands->register(sub { return $self->list(@_)            },       "list",         999);
+  $pbot->commands->register(sub { return $self->list(@_)            },       "list",         0);
   $pbot->commands->register(sub { return $self->add_regex(@_)       },       "regex",        999);
   $pbot->commands->register(sub { return $self->histogram(@_)       },       "histogram",    999);
   $pbot->commands->register(sub { return $self->top20(@_)           },       "top20",        999);
   $pbot->commands->register(sub { return $self->count(@_)           },       "count",        999);
-  $pbot->commands->register(sub { return $self->find(@_)            },       "find",         999);
   $pbot->commands->register(sub { return $self->load_module(@_)     },       "load",         999);
   $pbot->commands->register(sub { return $self->unload_module(@_)   },       "unload",       999);
   $pbot->commands->register(sub { return $self->enable_command(@_)  },       "enable",       999);
@@ -490,21 +490,18 @@ sub count {
   }
 }
 
-sub find {
+sub factfind {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->factoids->factoids;
-  my $text;
-  my $type;
-
-
+  my $factoids = $self->{pbot}->factoids->factoids->hash;
 
   if(not defined $arguments) {
-    return "/msg $nick Usage: !find [-owner nick] [-by nick] [text]";
+    return "/msg $nick Usage: !find [-channel channel] [-owner nick] [-by nick] [text]";
   }
 
-  my ($owner, $by);
+  my ($channel, $owner, $by);
 
+  $channel = $1 if $arguments =~ s/-channel\s+([^\b\s]+)//i;
   $owner = $1 if $arguments =~ s/-owner\s+([^\b\s]+)//i;
   $by = $1 if $arguments =~ s/-by\s+([^\b\s]+)//i;
 
@@ -538,20 +535,29 @@ sub find {
   }
 
   if(not defined $argtype) {
-    return "/msg $nick Usage: !find [-owner nick] [-by nick] [text]";
+    return "/msg $nick Usage: !find [-channel] [-owner nick] [-by nick] [text]";
   }
 
-  my $i = 0;
+  my ($text, $last_trigger, $last_chan, $i);
+  $last_chan = "";
+  $i = 0;
   eval {
-    foreach my $command (sort keys %{ $factoids }) {
-      if(exists $factoids->{$command}{text} || exists $factoids->{$command}{regex}) {
-        $type = 'text' if(exists $factoids->{$command}{text});
-        $type = 'regex' if(exists $factoids->{$command}{regex});
+    foreach my $chan (sort keys %{ $factoids }) {
+      next if defined $channel and $chan !~ /$channel/i;
+      foreach my $trigger (sort keys %{ $factoids->{$chan} }) {
+        if($factoids->{$chan}->{$trigger}->{type} eq 'text' or $factoids->{$chan}->{$trigger}->{type} eq 'regex') {
+          if($factoids->{$chan}->{$trigger}->{owner} =~ /$owner/i && $factoids->{$chan}->{$trigger}->{ref_user} =~ /$by/i) {
+            next if($arguments ne "" && $factoids->{$chan}->{$trigger}->{action} !~ /$arguments/i && $trigger !~ /$arguments/i);
 
-        if($factoids->{$command}{owner} =~ /$owner/i && $factoids->{$command}{ref_user} =~ /$by/i) {
-          next if($arguments ne "" && $factoids->{$command}{$type} !~ /$arguments/i && $command !~ /$arguments/i);
-          $i++;
-          $text .= "$command ";
+            $i++;
+            
+            if($chan ne $last_chan) {
+              $text .= $chan eq '.*' ? "[all channels] " : "[$chan] ";
+              $last_chan = $chan;
+            }
+            $text .= "$trigger ";
+            $last_trigger = $trigger;
+          }
         }
       }
     }
@@ -561,12 +567,12 @@ sub find {
 
   if($i == 1) {
     chop $text;
-    $type = 'text' if exists $factoids->{$text}{text};
-    $type = 'regex' if exists $factoids->{$text}{regex};
-    return "found one factoid " . $argtype . ": '$text' is '$factoids->{$text}{$type}'";
+    return "found one factoid submitted for " . ($last_chan eq '.*' ? 'all channels' : $last_chan) . " " . $argtype . ": '$last_trigger' is '" . $factoids->{$last_chan}->{$last_trigger}->{action} . "'";
   } else {
     return "$i factoids " . $argtype . ": $text" unless $i == 0;
-    return "No factoids " . $argtype;
+
+    my $chans = (defined $channel ? ($channel eq '.*' ? 'all channels' : $channel) : 'any channels');
+    return "No factoids " . $argtype . " submitted for $chans";
   }
 }
 
