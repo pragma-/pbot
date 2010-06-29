@@ -138,9 +138,9 @@ sub export_factoids {
           print FILE "<tr>\n";
         }
 
-        print FILE "<td><b>$trigger</b> is " . encode_entities($self->factoids->hash->{$channel}->{$trigger}->{action}) . "</td>\n"; 
+        print FILE "<td width=100%><b>$trigger</b> is " . encode_entities($self->factoids->hash->{$channel}->{$trigger}->{action}) . "</td>\n"; 
         
-        print FILE "<td align=\"right\">- submitted by " . $self->factoids->hash->{$channel}->{$trigger}->{owner} . "<br><i>" . localtime($self->factoids->hash->{$channel}->{$trigger}->{created_on}) . "</i>\n</td>\n</tr>\n";
+        print FILE "<td align=\"right\" nowrap>- submitted by " . $self->factoids->hash->{$channel}->{$trigger}->{owner} . "<br><i>" . localtime($self->factoids->hash->{$channel}->{$trigger}->{created_on}) . "</i>\n</td>\n</tr>\n";
       }
     }
     print FILE "</table>\n";
