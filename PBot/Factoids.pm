@@ -169,6 +169,7 @@ sub find_factoid {
       } else {
         next unless $from =~ m/$channel/i;
       }
+
       foreach my $trigger (keys %{ $self->factoids->hash->{$channel} }) {
         if(not $exact_trigger and $self->factoids->hash->{$channel}->{$trigger}->{type} eq 'regex') {
           if($string =~ m/$trigger/i) {
@@ -339,10 +340,11 @@ sub interpreter {
     }
   } elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'regex') {
     $result = eval {
-      my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
+      my $string = "$original_keyword" . (defined $arguments ? " $arguments" : "");
+      my $cmd;
       if($string =~ m/$keyword/i) {
         $self->{pbot}->logger->log("[$string] matches [$keyword] - calling [" . $self->factoids->hash->{$channel}->{$keyword}->{action} . "$']\n");
-        my $cmd = $self->factoids->hash->{$channel}->{$keyword}->{action} . $';
+        $cmd = $self->factoids->hash->{$channel}->{$keyword}->{action} . $';
         my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
         $cmd =~ s/\$1/$a/g;
         $cmd =~ s/\$2/$b/g;
@@ -357,10 +359,14 @@ sub interpreter {
         $cmd =~ s/\$'/$after/g;
         $cmd =~ s/^\s+//;
         $cmd =~ s/\s+$//;
-        $result = $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $cmd);
-        return $result;
+      } else {
+        $cmd = $self->factoids->hash->{$channel}->{$keyword}->{action}; 
       }
+
+      $result = $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $cmd);
+      return $result;
     };
+
     if($@) {
       $self->{pbot}->logger->log("Regex fail: $@\n");
       return "/msg $nick Fail.";
