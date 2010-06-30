@@ -569,7 +569,7 @@ if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$
   $precode =~ s/\s+$//;
 
   if(not $has_main) {
-    $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) { $precode return 0;}\n";
+    $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) { $precode\n;\n return 0;}\n";
     $nooutput = "Success [no output].";
   } else {
     $code = "$prelude\n\n$precode\n\n$code\n";
