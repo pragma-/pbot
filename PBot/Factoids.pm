@@ -199,6 +199,8 @@ sub interpreter {
   my ($result, $channel);
   my $pbot = $self->{pbot};
 
+  return undef if not length $keyword;
+
   my $original_keyword = $keyword;
   ($channel, $keyword) = $self->find_factoid($from, $keyword, $arguments);
 
@@ -305,7 +307,7 @@ sub interpreter {
 
     $result =~ s/\$nick/$nick/g;
 
-    while ($result =~ /[^\\]\$([a-zA-Z0-9_\-\.]+)/g) { 
+    while ($result =~ /[^\\]\$([a-zA-Z0-9_\-]+)/g) { 
       my ($var_chan, $var) = $self->find_factoid($from, $1, undef, 0, 1);
 
       if(defined $var && $self->factoids->hash->{$var_chan}->{$var}->{type} eq 'text') {

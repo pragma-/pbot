@@ -39,22 +39,22 @@ type: text
 action: the unary boolean not operator
 created_on: 1104600621
 enabled: 1
-last_referenced_on: 1277351832.15853
+last_referenced_on: 1277897410.15142
 owner: Major-Willard
 rate_limit: 15
-ref_count: 92
-ref_user: apples
+ref_count: 95
+ref_user: pragma_
 type: text
 
 <!!>
 action: /say !! is a common idiom for normalizing booleans - it will turn any nonzero value into 1, and leave zero at 0. For example, !!50 is 1.
 created_on: 1262200005
 enabled: 1
-last_referenced_on: 1277797649.18166
+last_referenced_on: 1277897661.37268
 owner: Random832
 rate_limit: 15
-ref_count: 7
-ref_user: Wulf
+ref_count: 10
+ref_user: pragma_
 type: text
 
 <!=>
@@ -574,10 +574,11 @@ type: text
 action: !1
 created_on: 1268450206
 enabled: 1
+last_referenced_on: 1277899716.06298
 owner: Maxdamantus
 rate_limit: 15
-ref_count: 2
-ref_user: Aless67
+ref_count: 3
+ref_user: pragma_
 type: text
 
 <0L>
@@ -618,16 +619,6 @@ owner: Maxdamantus
 rate_limit: 15
 ref_count: 7
 ref_user: jwillia3
-type: text
-
-<20?>
-action: /say If you have a question, please be specific and concise.  Don't ask questions like 'Does anyone know how to ...' or 'What is the best way to ...'.  We do not have the time or patience to play a game of 20 questions with people that are not capable of articulating properly.  See also: http://www.catb.org/~esr/faqs/smart-questions.html
-created_on: 1200772242
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
 type: text
 
 <20q>
@@ -694,10 +685,10 @@ type: text
 action: /say $nick, $answers
 created_on: 1193948417
 enabled: 1
-last_referenced_on: 1277879424.73832
+last_referenced_on: 1277892979.54392
 owner: pragma_
-rate_limit: 15
-ref_count: 702
+rate_limit: 0
+ref_count: 714
 ref_user: pragma_
 type: text
 
@@ -3444,10 +3435,11 @@ type: text
 action: /say $advicepredicate $advicehelper.
 created_on: 1258762773
 enabled: 1
+last_referenced_on: 1277892579.53732
 owner: PARLIAMENT
 rate_limit: 15
-ref_count: 23
-ref_user: prose
+ref_count: 24
+ref_user: pragma_
 type: text
 
 <advicehelper>
@@ -4032,11 +4024,11 @@ type: text
 action: /me points accusingly at $args, "Where is your book?!"
 created_on: 1179504776
 enabled: 1
-last_referenced_on: 1277507860.9661
+last_referenced_on: 1277887660.72878
 owner: pragma_
 rate_limit: 15
-ref_count: 768
-ref_user: PoppaVic
+ref_count: 769
+ref_user: n00p
 type: text
 
 <book2>
@@ -4053,11 +4045,11 @@ type: text
 action: http://www.iso-9899.info/wiki/Books
 created_on: 1104378101
 enabled: 1
-last_referenced_on: 1277159744.56438
+last_referenced_on: 1277887663.01715
 owner: twkm
 rate_limit: 15
-ref_count: 465
-ref_user: Dianora
+ref_count: 466
+ref_user: n00p
 type: text
 
 <booty(.*)>
@@ -4807,11 +4799,11 @@ type: text
 action: cstd.pl
 created_on: 1270956236
 enabled: 1
-last_referenced_on: 1277849943.27572
+last_referenced_on: 1277898666.03688
 owner: pragma_
 rate_limit: 15
-ref_count: 1004
-ref_user: apples
+ref_count: 1005
+ref_user: Jafet
 type: module
 
 <csv>
@@ -4889,9 +4881,10 @@ type: text
 action: /me $dances.
 created_on: 1271192355
 enabled: 1
+last_referenced_on: 1277899057.15775
 owner: pragma_
 rate_limit: 15
-ref_count: 10
+ref_count: 14
 ref_user: pragma_
 type: text
 
@@ -5137,16 +5130,6 @@ rate_limit: 15
 ref_count: 0
 ref_user: nobody
 type: regex
-
-<donkey>
-action: the best
-created_on: 1276976459
-enabled: 1
-owner: megabraker
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
 
 <dontcastmalloc>
 action: /say There is no need to cast the result of library functions that return void *; it makes your code hard to read, adds no value, and can hide a bug if you don't have a valid prototype in scope.  See http://www.cpax.org.uk/prg/writings/casting.php and http://c-faq.com/malloc/mallocnocast.html
@@ -5620,10 +5603,10 @@ type: text
 action: /call factfind
 created_on: 1277784994.65625
 enabled: 1
-last_referenced_on: 1277870779.99539
+last_referenced_on: 1277880083.42342
 owner: pbot3
 rate_limit: 15
-ref_count: 16
+ref_count: 17
 ref_user: pragma_
 type: text
 
@@ -7027,11 +7010,11 @@ type: text
 action: man.pl
 created_on: 1107137901
 enabled: 1
-last_referenced_on: 1277560411.10305
+last_referenced_on: 1277883339.23933
 owner: pragma_
 rate_limit: 15
-ref_count: 1024
-ref_user: yg
+ref_count: 1026
+ref_user: CDrone
 type: module
 
 <mankind>
@@ -8720,10 +8703,11 @@ type: text
 action: /me $weapon_action her $weapon and $shoot_action $args's $body_part.
 created_on: 1109021460
 enabled: 1
+last_referenced_on: 1277899702.25156
 owner: pragma_
 rate_limit: 15
-ref_count: 145
-ref_user: _root
+ref_count: 149
+ref_user: pragma_
 type: text
 
 <shoot_action>
@@ -8750,10 +8734,11 @@ type: text
 action: /call advice
 created_on: 1258762922
 enabled: 1
+last_referenced_on: 1277892579.52684
 owner: pragma_
 rate_limit: 15
-ref_count: 15
-ref_user: prose
+ref_count: 16
+ref_user: pragma_
 type: text
 
 <shouldn?'?t?\s(.*)>
@@ -10027,11 +10012,11 @@ ref_user: pragma_
 type: text
 
 <version>
-action: /say PBot revision 221 2010-06-29
-created_on: 1277877961.08901
+action: /say PBot revision 224 2010-06-30
+created_on: 1277897615.53125
 enabled: 1
 last_referenced_on: 1277547370.96948
-owner: candide
+owner: pbot3
 rate_limit: 15
 ref_count: 0
 ref_user: nobody
@@ -10345,11 +10330,11 @@ type: module
 action: try #winprog on EFnet or #winapi on freenode
 created_on: 1180888225
 enabled: 1
-last_referenced_on: 1277867722.90397
+last_referenced_on: 1277898861.8812
 owner: PoppaVic
 rate_limit: 15
-ref_count: 97
-ref_user: PoppaVic
+ref_count: 98
+ref_user: pragma_
 type: text
 
 <winapi>
@@ -10366,11 +10351,22 @@ type: text
 action: a thirty-two bit extension and graphical shell to a sixteen-bit patch to an eight-bit operating system originally coded for a four-bit microprocessor which was written by a two-bit company that can't stand one bit of competition.
 created_on: 1106527942
 enabled: 1
-last_referenced_on: 1277541949.60156
+last_referenced_on: 1277898873.37305
 owner: Major-Willard
 rate_limit: 15
-ref_count: 16
-ref_user: megabraker
+ref_count: 17
+ref_user: pragma_
+type: text
+
+<winprog>
+action: /call win32
+created_on: 1277898858.41818
+enabled: 1
+last_referenced_on: 1277898861.87861
+owner: pragma_
+rate_limit: 15
+ref_count: 1
+ref_user: pragma_
 type: text
 
 <wizo>

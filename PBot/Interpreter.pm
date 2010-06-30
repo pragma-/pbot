@@ -75,12 +75,12 @@ sub process_line {
 
   $pbot->antiflood->check_flood($from, $nick, $user, $host, $text, $pbot->{MAX_FLOOD_MESSAGES}, 10, $pbot->antiflood->{FLOOD_CHAT}) if defined $from;
 
-  if($text =~ /^.?$mynick.?\s+(.*?)([\?!]*)$/i) {
-    $command = "$1";
-  } elsif($text =~ /^(.*?),?\s+$mynick([\?!]*)$/i) {
-    $command = "$1";
-  } elsif($text =~ /^!(.*?)(\?*)$/) {
-    $command = "$1";
+  if($text =~ /^.?$mynick.?\s+(.*?)([?]*)$/i) {
+    $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
+  } elsif($text =~ /^(.*?),?\s+$mynick([?]*)$/i) {
+    $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
+  } elsif($text =~ /^!(.*?)([?]*)$/) {
+    $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
   } elsif($text =~ /http:\/\/([^\s]+)/i) {
     $has_url = $1;
   }
