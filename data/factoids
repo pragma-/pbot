@@ -27,10 +27,10 @@ type: text
 action: /say This is a test in #pbot2!
 created_on: 1277000257.49081
 enabled: 1
-last_referenced_on: 1277258183.307
+last_referenced_on: 1277801953.35678
 owner: pbot3
 rate_limit: 10
-ref_count: 17
+ref_count: 18
 ref_user: pragma_
 type: text
 
@@ -50,10 +50,11 @@ type: text
 action: /say !! is a common idiom for normalizing booleans - it will turn any nonzero value into 1, and leave zero at 0. For example, !!50 is 1.
 created_on: 1262200005
 enabled: 1
+last_referenced_on: 1277797649.18166
 owner: Random832
 rate_limit: 15
-ref_count: 6
-ref_user: IDLucas
+ref_count: 7
+ref_user: Wulf
 type: text
 
 <!=>
@@ -128,23 +129,25 @@ ref_user: pragma_
 type: text
 
 <##c>
-action: #c is for discussion involving the C programming language itself. We do not deal with the whole range of the spectrum. libgtk may be written in C, but this is hardly the proper channel for GTK-related questions.  Try #gtk.  Likewise, makefiles and autotools: #devtools, assembly: #asm, Xlib: #xlib, C++: #c++, and so on.
+action: /say ##c is for discussion involving the C programming language itself. We do not deal with the whole range of the spectrum. libgtk may be written in C, but this is hardly the proper channel for GTK-related questions.  Try #gtk.  Likewise, makefiles and autotools: #devtools, assembly: #asm, Xlib: #xlib, C++: #c++, and so on.
 created_on: 1245454768
 enabled: 1
+last_referenced_on: 1277878149.93176
 owner: anttil
 rate_limit: 15
-ref_count: 2
-ref_user: greece
+ref_count: 4
+ref_user: pragma_
 type: text
 
 <#c>
-action: for discussion involving the C programming language itself. We do not deal with the whole range of the spectrum. libgtk may be written in C, but this is hardly the proper channel for GTK-related questions.  Try #gtk.  Likewise, makefiles and autotools: #devtools, assembly: #asm, Xlib: #xlib, C++: #c++, and so on.
+action: /call ##c
 created_on: 1109029677
 enabled: 1
+last_referenced_on: 1277878149.92288
 owner: pragma_
 rate_limit: 15
-ref_count: 20
-ref_user: greece
+ref_count: 22
+ref_user: pragma_
 type: text
 
 <$>
@@ -691,10 +694,10 @@ type: text
 action: /say $nick, $answers
 created_on: 1193948417
 enabled: 1
-last_referenced_on: 1277624719.57392
+last_referenced_on: 1277879424.73832
 owner: pragma_
 rate_limit: 15
-ref_count: 695
+ref_count: 702
 ref_user: pragma_
 type: text
 
@@ -712,10 +715,11 @@ type: text
 action: /say $faces
 created_on: 1109365121
 enabled: 1
+last_referenced_on: 1277878212.48995
 owner: pragma_
 rate_limit: 15
-ref_count: 110
-ref_user: rgz
+ref_count: 111
+ref_user: pragma_
 type: text
 
 <:-(>
@@ -802,10 +806,11 @@ type: text
 action: /call :)
 created_on: 1180052714
 enabled: 1
+last_referenced_on: 1277878212.48022
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: pragma_
 type: text
 
 <;>
@@ -3184,6 +3189,16 @@ ref_count: 0
 ref_user: nobody
 type: regex
 
+<^do\s.*>
+action: 8ball
+created_on: 1277879456.23137
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: regex
+
 <^does.*>
 action: 8ball
 created_on: 1271375261
@@ -3388,10 +3403,10 @@ type: text
 action: acronym.pl
 created_on: 1105953751
 enabled: 1
-last_referenced_on: 1277423793.7384
+last_referenced_on: 1277870723.78591
 owner: pragma_
 rate_limit: 15
-ref_count: 444
+ref_count: 445
 ref_user: pragma_
 type: module
 
@@ -3479,10 +3494,10 @@ type: text
 action: ago.pl
 created_on: 1277256899.15762
 enabled: 1
-last_referenced_on: 1277611508.60253
+last_referenced_on: 1277812952.69623
 owner: pragma_
 rate_limit: 15
-ref_count: 4
+ref_count: 5
 ref_user: pragma_
 type: module
 
@@ -3934,11 +3949,11 @@ type: text
 action: the Binky Pointer Fun Video at http://cslibrary.stanford.edu/104/
 created_on: 1106444999
 enabled: 1
-last_referenced_on: 1277525809.10493
+last_referenced_on: 1277833299.46365
 owner: prec
 rate_limit: 15
-ref_count: 146
-ref_user: Yg
+ref_count: 147
+ref_user: snhmib
 type: text
 
 <bite>
@@ -4180,11 +4195,11 @@ type: text
 action: /say C is a low level language designed to make assembly "easier", useful for device drivers or operating systems. Thusly, one has to maintain buffers, memory, and various low level information. C is not meant to be used for everyday applications, a common misconception.
 created_on: 1108006206
 enabled: 1
-last_referenced_on: 1277542236.95154
+last_referenced_on: 1277837481.55131
 owner: pragma
 rate_limit: 15
-ref_count: 156
-ref_user: megabraker
+ref_count: 157
+ref_user: koollman
 type: text
 
 <c++>
@@ -4381,22 +4396,22 @@ type: text
 action: /call ideone $nick
 created_on: 1272176634
 enabled: 1
-last_referenced_on: 1277780394.22497
+last_referenced_on: 1277872463.42616
 owner: pragma_
 rate_limit: 0
-ref_count: 3508
-ref_user: OrderZero
+ref_count: 3528
+ref_user: PoppaVic
 type: text
 
 <cc2>
 action: /call codepad $nick
 created_on: 1269788333
 enabled: 1
-last_referenced_on: 1277675499.47632
+last_referenced_on: 1277863607.64252
 owner: pragma_
 rate_limit: 15
-ref_count: 1001
-ref_user: apples
+ref_count: 1012
+ref_user: pragma_
 type: text
 
 <cdecl>
@@ -4567,12 +4582,12 @@ type: text
 action: codepad.pl
 created_on: 1269788272
 enabled: 1
-last_referenced_on: 1277675499.47773
+last_referenced_on: 1277863607.64505
 modulelauncher_subpattern: s/([^ ]+)\s+(.*)/$1 '$2'/
 owner: pragma_
 rate_limit: 15
-ref_count: 1004
-ref_user: apples
+ref_count: 1015
+ref_user: pragma_
 type: module
 
 <colors>
@@ -4660,11 +4675,11 @@ type: text
 action: compliment
 created_on: 1255395343
 enabled: 1
-last_referenced_on: 1277370877.07838
+last_referenced_on: 1277819289.73207
 owner: pragma_
 rate_limit: 15
-ref_count: 59
-ref_user: pragma_
+ref_count: 67
+ref_user: velco
 type: module
 
 <const>
@@ -4792,11 +4807,11 @@ type: text
 action: cstd.pl
 created_on: 1270956236
 enabled: 1
-last_referenced_on: 1277596471.25247
+last_referenced_on: 1277849943.27572
 owner: pragma_
 rate_limit: 15
-ref_count: 1003
-ref_user: pragma_
+ref_count: 1004
+ref_user: apples
 type: module
 
 <csv>
@@ -5024,10 +5039,10 @@ type: text
 action: dict.org.pl
 created_on: 1269777616
 enabled: 1
-last_referenced_on: 1277780353.25143
+last_referenced_on: 1277800770.41563
 owner: pragma_
 rate_limit: 15
-ref_count: 416
+ref_count: 417
 ref_user: pragma_
 type: module
 
@@ -5051,14 +5066,15 @@ ref_count: 2
 ref_user: pragma_
 type: text
 
-<do>
-action: /call 8ball
-created_on: 1194467444
+<div0>
+action: http://fun.drno.de/pics/english/divided_by_zero.jpg
+created_on: 1277798070.11308
 enabled: 1
-owner: pragma_
+last_referenced_on: 1277804358.95194
+owner: Wulf
 rate_limit: 15
-ref_count: 66
-ref_user: nak
+ref_count: 4
+ref_user: pragma_
 type: text
 
 <dock>
@@ -5369,11 +5385,11 @@ type: text
 action: excuse.sh
 created_on: 1236819394
 enabled: 1
-last_referenced_on: 1277542082.5362
+last_referenced_on: 1277878451.73042
 owner: pragma_
 rate_limit: 5
-ref_count: 286
-ref_user: megabraker
+ref_count: 295
+ref_user: pragma_
 type: module
 
 <existence>
@@ -5543,10 +5559,11 @@ type: text
 action: cfaq.pl
 created_on: 1104460444
 enabled: 1
+last_referenced_on: 1277817537.90466
 owner: twkm
 rate_limit: 15
-ref_count: 516
-ref_user: dave0
+ref_count: 518
+ref_user: Draconx
 type: module
 
 <feof>
@@ -5603,11 +5620,11 @@ type: text
 action: /call factfind
 created_on: 1277784994.65625
 enabled: 1
-last_referenced_on: 1277785870.40625
+last_referenced_on: 1277870779.99539
 owner: pbot3
 rate_limit: 15
-ref_count: 7
-ref_user: pbot3
+ref_count: 16
+ref_user: pragma_
 type: text
 
 <findmybug>
@@ -6031,11 +6048,11 @@ type: text
 action: /say To learn all about $args, see http://www.iso-9899.info/wiki/Candide#$args
 created_on: 1272397269
 enabled: 1
-last_referenced_on: 1277778742.98291
+last_referenced_on: 1277802080.71216
 owner: pragma_
 rate_limit: 15
-ref_count: 29
-ref_user: pragma_
+ref_count: 33
+ref_user: Chris
 type: text
 
 <h/o>
@@ -6092,11 +6109,11 @@ type: regex
 action: /call hi
 created_on: 1179679787
 enabled: 1
-last_referenced_on: 1277141870.28097
+last_referenced_on: 1277860315.30973
 owner: pragma_
 rate_limit: 15
-ref_count: 78
-ref_user: megabraker
+ref_count: 80
+ref_user: majere
 type: text
 
 <helloworld>
@@ -6113,11 +6130,11 @@ type: text
 action: /say To learn all about me, see http://www.iso-9899.info/wiki/Candide
 created_on: 1109792986
 enabled: 1
-last_referenced_on: 1277780450.79483
+last_referenced_on: 1277817502.70541
 owner: NeverDream
 rate_limit: 15
-ref_count: 495
-ref_user: kate`
+ref_count: 497
+ref_user: Draconx
 type: text
 
 <herring>
@@ -6134,11 +6151,11 @@ type: text
 action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
-last_referenced_on: 1277547142.56256
+last_referenced_on: 1277877053.56665
 owner: pragma_
 rate_limit: 15
-ref_count: 883
-ref_user: megabraker
+ref_count: 886
+ref_user: pragma_
 type: text
 
 <hi_phrases>
@@ -6205,10 +6222,22 @@ type: text
 action: horoscope
 created_on: 1255107146
 enabled: 1
+last_referenced_on: 1277799362.88677
 owner: pragma_
 rate_limit: 15
-ref_count: 20
-ref_user: Teckla
+ref_count: 27
+ref_user: pragma_
+type: module
+
+<horrorscope>
+action: horrorscope
+created_on: 1277799286.01727
+enabled: 1
+last_referenced_on: 1277799376.77221
+owner: pragma_
+rate_limit: 0
+ref_count: 4
+ref_user: pragma_
 type: module
 
 <hostile>
@@ -6235,11 +6264,11 @@ type: text
 action: /say $how_answers
 created_on: 1276845773
 enabled: 1
-last_referenced_on: 1277541936.19183
+last_referenced_on: 1277873266.66513
 owner: pragma_
 rate_limit: 15
-ref_count: 10
-ref_user: megabraker
+ref_count: 12
+ref_user: pragma_
 type: text
 
 <how_answers>
@@ -6356,12 +6385,12 @@ type: text
 action: ideone.pl
 created_on: 1272176604
 enabled: 1
-last_referenced_on: 1277780394.23591
+last_referenced_on: 1277872463.4403
 modulelauncher_subpattern: s/([^ ]+)\s+(.*)/$1 '$2'/
 owner: pragma_
 rate_limit: 0
-ref_count: 3500
-ref_user: OrderZero
+ref_count: 3520
+ref_user: PoppaVic
 type: module
 
 <idiot>
@@ -6418,11 +6447,11 @@ type: text
 action: /call factinfo
 created_on: 1277259101.38088
 enabled: 1
-last_referenced_on: 1277613597.65086
+last_referenced_on: 1277798085.05793
 owner: pbot3
 rate_limit: 15
-ref_count: 7
-ref_user: pragma_
+ref_count: 9
+ref_user: Wulf
 type: text
 
 <inline>
@@ -6439,11 +6468,11 @@ type: text
 action: insult.pl
 created_on: 1236819209
 enabled: 1
-last_referenced_on: 1277370802.26019
+last_referenced_on: 1277798723.41667
 owner: pragma_
 rate_limit: 15
-ref_count: 381
-ref_user: NoCode
+ref_count: 382
+ref_user: Wulf
 type: module
 
 <int>
@@ -6885,10 +6914,10 @@ type: regex
 action: love_quote.pl
 created_on: 1271363105
 enabled: 1
-last_referenced_on: 1277609685.78848
+last_referenced_on: 1277873245.03489
 owner: pragma_
 rate_limit: 15
-ref_count: 35
+ref_count: 37
 ref_user: pragma_
 type: module
 
@@ -7004,6 +7033,16 @@ rate_limit: 15
 ref_count: 1024
 ref_user: yg
 type: module
+
+<mankind>
+action: http://etext.virginia.edu/toc/modeng/public/VanStor.html
+created_on: 1277818342.77735
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
 
 <manpage>
 action: /say Read the manual.
@@ -8667,13 +8706,14 @@ ref_user: dave0
 type: text
 
 <shoes>
-action: /say Lets say you want to buy a pair of shoes, right?  You come to my shoe store and I ask you what size your feet are.  You respond, "I like red."  I say, "That's nice, I'll look for some red shoes.  What size are your feet?"  And you respond, "I really like red."  Try to be smarter, please.
+action: /say Lets say you want to buy a pair of shoes, right?  You come to my shoe store and I ask you what size your feet are.  You respond, "I like red."  I say, "That's nice, I'll look for some red shoes.  What size are your feet?"  And you respond, "I really like red."  Try to answer our questions, please.
 created_on: 1274214754
 enabled: 1
+last_referenced_on: 1277797911.97186
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: pragma_
 type: text
 
 <shoot>
@@ -8730,11 +8770,11 @@ type: regex
 action: /call factshow
 created_on: 1277259146.86343
 enabled: 1
-last_referenced_on: 1277624666.43551
+last_referenced_on: 1277870694.92762
 owner: pbot3
 rate_limit: 15
-ref_count: 9
-ref_user: candide
+ref_count: 11
+ref_user: pragma_
 type: text
 
 <sicp>
@@ -8761,9 +8801,10 @@ type: text
 action: http://www.iso-9899.info/webstats/
 created_on: 1104462371
 enabled: 1
+last_referenced_on: 1277803372.41622
 owner: twkm
 rate_limit: 15
-ref_count: 1
+ref_count: 2
 ref_user: pragma_
 type: text
 
@@ -9012,11 +9053,11 @@ type: text
 action: /say C99 + TC1,2,3 working paper: http://open-std.org/JTC1/SC22/WG14/www/docs/n1256.pdf - Quick C library reference: http://www.acm.uiuc.edu/webmonkeys/book/c_guide/ - An explanation of all C standards: http://clc-wiki.net/wiki/The_C_Standard - Draft ANSI C Rationale:  http://www.scribd.com/doc/16306895/Draft-ANSI-C-Rationale
 created_on: 1249578326
 enabled: 1
-last_referenced_on: 1277335475.5537
+last_referenced_on: 1277871940.96725
 owner: kate`
 rate_limit: 15
-ref_count: 89
-ref_user: Ygnus
+ref_count: 90
+ref_user: esicerp
 type: text
 
 <static>
@@ -9033,11 +9074,11 @@ type: text
 action: /call standard
 created_on: 1247743928
 enabled: 1
-last_referenced_on: 1277335475.54027
+last_referenced_on: 1277871940.95354
 owner: Chris
 rate_limit: 15
-ref_count: 162
-ref_user: Ygnus
+ref_count: 163
+ref_user: esicerp
 type: text
 
 <std::>
@@ -9327,19 +9368,9 @@ created_on: 1272786662
 enabled: 1
 last_referenced_on: 1277233976.52688
 owner: arenics
-rate_limit: 15
+rate_limit: 10
 ref_count: 20
 ref_user: ecrane
-type: text
-
-<test88>
-action: test
-created_on: 1194548259
-enabled: 1
-owner: Cin
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
 type: text
 
 <testbed>
@@ -9356,11 +9387,11 @@ type: text
 action: /say A testcase is a minimal compilable example exhibiting your symptoms. "Minimal" means just the bare essentials required to illustrate your question. Please paste a testcase at http://codepad.org to help us assist you.
 created_on: 1249772768
 enabled: 1
-last_referenced_on: 1277554007.8593
+last_referenced_on: 1277848595.66814
 owner: lemonade`
 rate_limit: 15
-ref_count: 237
-ref_user: Wulf
+ref_count: 238
+ref_user: ecrane
 type: text
 
 <than[ksx]+.*>
@@ -9372,6 +9403,16 @@ rate_limit: 15
 ref_count: 0
 ref_user: nobody
 type: regex
+
+<thanks>
+action: /say $welcome
+created_on: 1277870713.88835
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
 
 <that>
 action: how we can alter the teaching of children like in the republic
@@ -9457,10 +9498,11 @@ type: text
 action: /call thanks
 created_on: 1179879858
 enabled: 1
+last_referenced_on: 1277870743.58728
 owner: pragma_
 rate_limit: 15
-ref_count: 28
-ref_user: EnginA
+ref_count: 30
+ref_user: pragma_
 type: text
 
 <tias>
@@ -9720,10 +9762,11 @@ type: text
 action: /say $welcome, $nick
 created_on: 1271368737
 enabled: 1
+last_referenced_on: 1277873261.07983
 owner: pragma_
 rate_limit: 15
-ref_count: 26
-ref_user: megabraker
+ref_count: 32
+ref_user: pragma_
 type: text
 
 <u>
@@ -9853,32 +9896,33 @@ type: text
 action: /call unp1
 created_on: 1269767264
 enabled: 1
-last_referenced_on: 1277687934.61368
+last_referenced_on: 1277852808.41947
 owner: pragma_
 rate_limit: 15
-ref_count: 27
-ref_user: yg
+ref_count: 28
+ref_user: esicerp
 type: text
 
 <unp1>
 action: Unix Network Programming Vol I: http://www.unpbook.com/
 created_on: 1195011079
 enabled: 1
-last_referenced_on: 1277687934.6182
+last_referenced_on: 1277852808.42921
 owner: pragma_
 rate_limit: 15
-ref_count: 111
-ref_user: yg
+ref_count: 112
+ref_user: esicerp
 type: text
 
 <unp2>
 action: unix network programming, volume 2: interprocess communications, by stevens, see http://www.kohala.com/start/unpv22e/unpv22e.html
 created_on: 1104636219
 enabled: 1
+last_referenced_on: 1277852825.9227
 owner: twkm
 rate_limit: 15
-ref_count: 21
-ref_user: pragma_
+ref_count: 22
+ref_user: esicerp
 type: text
 
 <unsigned>
@@ -9983,11 +10027,11 @@ ref_user: pragma_
 type: text
 
 <version>
-action: /say PBot revision 212 2010-06-28
-created_on: 1277790321.9375
+action: /say PBot revision 221 2010-06-29
+created_on: 1277877961.08901
 enabled: 1
 last_referenced_on: 1277547370.96948
-owner: pbot3
+owner: candide
 rate_limit: 15
 ref_count: 0
 ref_user: nobody
@@ -10188,11 +10232,11 @@ type: text
 action: /call excuse
 created_on: 1236820003
 enabled: 1
-last_referenced_on: 1277542082.53386
+last_referenced_on: 1277878451.72649
 owner: pragma_
 rate_limit: 15
-ref_count: 239
-ref_user: megabraker
+ref_count: 248
+ref_user: pragma_
 type: text
 
 <what_answers>
@@ -10301,10 +10345,11 @@ type: module
 action: try #winprog on EFnet or #winapi on freenode
 created_on: 1180888225
 enabled: 1
+last_referenced_on: 1277867722.90397
 owner: PoppaVic
 rate_limit: 15
-ref_count: 94
-ref_user: kate`
+ref_count: 97
+ref_user: PoppaVic
 type: text
 
 <winapi>
@@ -10372,9 +10417,10 @@ type: text
 action: /call acronym
 created_on: 1251245783
 enabled: 1
+last_referenced_on: 1277870723.77765
 owner: pragma_
 rate_limit: 15
-ref_count: 70
+ref_count: 71
 ref_user: pragma_
 type: text
 
@@ -10523,10 +10569,11 @@ type: text
 action: used to commence a block
 created_on: 1106528232
 enabled: 1
+last_referenced_on: 1277827320.90628
 owner: Major-Willard
 rate_limit: 15
-ref_count: 2
-ref_user: bearded_oneder
+ref_count: 3
+ref_user: lolfrenz
 type: text
 
 <|>
