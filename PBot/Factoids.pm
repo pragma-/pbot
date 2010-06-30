@@ -199,6 +199,9 @@ sub interpreter {
   my ($result, $channel);
   my $pbot = $self->{pbot};
 
+  # remove trailing comma or colon from keyword if keyword has other characters beforehand 
+  $keyword =~ s/^(.+)[:,]$/$1/;
+
   return undef if not length $keyword;
 
   my $original_keyword = $keyword;
@@ -297,7 +300,7 @@ sub interpreter {
             $result =~ s/^/\/say $arguments: $keyword is / unless (defined $tonick);
           }                  
         } else {
-          return undef;
+          # return undef;
         }
       }
     } else {
