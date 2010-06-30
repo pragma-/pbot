@@ -158,7 +158,7 @@ sub export_factoids {
 sub find_factoid {
   my ($self, $from, $keyword, $arguments, $exact_channel, $exact_trigger) = @_;
 
-  $from = '.*' if not defined $from;
+  $from = '.*' if not defined $from or $from !~ /^#/;
 
   my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
 
@@ -296,9 +296,7 @@ sub interpreter {
             $result =~ s/^/\/say $arguments: $keyword is / unless (defined $tonick);
           }                  
         } else {
-          if($result !~ /^\/.+? /) {
-            $result =~ s/^/\/say $keyword is / unless (defined $tonick);
-          }                  
+          return undef;
         }
       }
     } else {
