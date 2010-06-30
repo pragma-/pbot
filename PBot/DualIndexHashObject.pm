@@ -234,7 +234,7 @@ sub levenshtein_matches {
       my $distance = fastdistance($secondary_index_key, $index);
       my $length = (length($secondary_index_key) > length($index)) ? length $secondary_index_key : length $index;
 
-      if($distance / $length < 0.50) {
+      if($distance / $length < 0.60) {
         $result .= $comma . $index;
         $comma = ", ";
       }

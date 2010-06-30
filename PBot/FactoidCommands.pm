@@ -275,8 +275,7 @@ sub factadd {
 
   if(defined $trigger) {
     $self->{pbot}->logger->log("$nick!$user\@$host attempt to overwrite $keyword\n");
-    return undef;
-    return "/msg $nick $keyword already exists.";
+    return "/msg $nick $keyword already exists for " . ($from_chan eq '.*' ? 'global channel' : $from_chan) . ".";
   }
 
   $self->{pbot}->factoids->add_factoid('text', $from_chan, $nick, $keyword, $text);

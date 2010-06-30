@@ -13,7 +13,6 @@ $VERSION = $PBot::PBot::VERSION;
 
 use HTML::Entities;
 use Time::HiRes qw(gettimeofday);
-use Text::Levenshtein qw(fastdistance);
 use Carp ();
 
 use PBot::FactoidModuleLauncher;
@@ -204,7 +203,7 @@ sub interpreter {
   ($channel, $keyword) = $self->find_factoid($from, $keyword, $arguments);
 
   if(not defined $keyword) {
-    my $matches = $self->factoids->levenshtein_matches($from, lc $original_keyword);
+    my $matches = $self->factoids->levenshtein_matches('.*', lc $original_keyword);
 
     return undef if $matches eq 'none';
 
