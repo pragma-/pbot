@@ -138,7 +138,7 @@ sub export_factoids {
         }
         
         my $action = $self->factoids->hash->{$channel}->{$trigger}->{action};
-        $action =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http$2'>http$2<\/a>"/ge;
+        $action =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http" . encode_entities($2) . "'>http" . encode_entities($2) . "<\/a>"/ge;
         $action =~ s/(.*)<\/a>(.*$)/"$1<\/a>" . encode_entities($2)/e;
 
         print FILE "<td width=100%><b>$trigger</b> is " . $action . "</td>\n"; 
