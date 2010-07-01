@@ -136,8 +136,12 @@ sub export_factoids {
         } else {
           print FILE "<tr>\n";
         }
+        
+        my $action = $self->factoids->hash->{$channel}->{$trigger}->{action};
+        $action =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http$2'>http$2<\/a>"/ge;
+        $action =~ s/(.*)<\/a>(.*$)/"$1<\/a>" . encode_entities($2)/e;
 
-        print FILE "<td width=100%><b>$trigger</b> is " . encode_entities($self->factoids->hash->{$channel}->{$trigger}->{action}) . "</td>\n"; 
+        print FILE "<td width=100%><b>$trigger</b> is " . $action . "</td>\n"; 
         
         print FILE "<td align=\"right\" nowrap>- submitted by " . $self->factoids->hash->{$channel}->{$trigger}->{owner} . "<br><i>" . localtime($self->factoids->hash->{$channel}->{$trigger}->{created_on}) . "</i>\n</td>\n</tr>\n";
       }
