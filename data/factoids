@@ -1,4 +1,14 @@
 [##c]
+<schildt>
+action: /say Please avoid Herbert Schildt's C books.  See http://www.seebs.net/c/c_tcn4e.html and http://www.lysator.liu.se/c/schildt.html -- Other stuff to avoid: http://www.iso-9899.info/wiki/Main_Page#Stuff_that_should_be_avoided
+created_on: 1277949707.2979
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
 <test>
 action: /say A test in ##c!
 created_on: 1277013257.49081
@@ -15,11 +25,11 @@ type: text
 action: /say $args, make your own damn sandwich!
 created_on: 1277372207.45751
 enabled: 1
-last_referenced_on: 1277372256.23422
+last_referenced_on: 1277902141.92835
 owner: NoCode
 rate_limit: 15
-ref_count: 2
-ref_user: pragma_
+ref_count: 3
+ref_user: candide
 type: text
 
 [#pbot2]
@@ -39,22 +49,22 @@ type: text
 action: the unary boolean not operator
 created_on: 1104600621
 enabled: 1
-last_referenced_on: 1277897410.15142
+last_referenced_on: 1277900767.73838
 owner: Major-Willard
 rate_limit: 15
-ref_count: 95
-ref_user: pragma_
+ref_count: 98
+ref_user: pbot3
 type: text
 
 <!!>
 action: /say !! is a common idiom for normalizing booleans - it will turn any nonzero value into 1, and leave zero at 0. For example, !!50 is 1.
 created_on: 1262200005
 enabled: 1
-last_referenced_on: 1277897661.37268
+last_referenced_on: 1277797649.18166
 owner: Random832
 rate_limit: 15
-ref_count: 10
-ref_user: pragma_
+ref_count: 7
+ref_user: Wulf
 type: text
 
 <!=>
@@ -394,10 +404,11 @@ type: text
 action: the sequence operator.  It is also used to separate syntactic elements of: function arguments in a function call, declarators (in declarations of the same type), formal parameters in function declarations, enumeration elements, and initializers.
 created_on: 1107316491
 enabled: 1
+last_referenced_on: 1277903349.78253
 owner: prec
 rate_limit: 15
-ref_count: 7
-ref_user: Wulf
+ref_count: 12
+ref_user: pragma_
 type: text
 
 <->
@@ -625,10 +636,11 @@ type: text
 action: /say If you have a question, please be specific and concise. Don't ask questions like 'Does anyone know how to ...' or 'What is the best way to ...'. We do not have the time or patience to play a game of 20 questions with people that are not capable of articulating properly. See also: http://catb.org/~esr/faqs/smart-questions.html
 created_on: 1215709795
 enabled: 1
+last_referenced_on: 1277900053.49188
 owner: Jafet
 rate_limit: 15
-ref_count: 2
-ref_user: n00p
+ref_count: 3
+ref_user: pragma_
 type: text
 
 <21days>
@@ -685,10 +697,10 @@ type: text
 action: /say $nick, $answers
 created_on: 1193948417
 enabled: 1
-last_referenced_on: 1277892979.54392
+last_referenced_on: 1277909734.77233
 owner: pragma_
 rate_limit: 0
-ref_count: 714
+ref_count: 719
 ref_user: pragma_
 type: text
 
@@ -2679,10 +2691,10 @@ type: text
 action: the (implementation defined) pointer value used to indicate a pointer that refers to no object; a macro expanding to a compile-time integer zero, possibly cast to (void *), e.g. ((void *)0) or 0L
 created_on: 1104596262
 enabled: 1
-last_referenced_on: 1277613632.8911
+last_referenced_on: 1277900248.04003
 owner: Major-Willard
 rate_limit: 15
-ref_count: 39
+ref_count: 40
 ref_user: pragma_
 type: text
 
@@ -3394,10 +3406,10 @@ type: text
 action: acronym.pl
 created_on: 1105953751
 enabled: 1
-last_referenced_on: 1277870723.78591
+last_referenced_on: 1277905815.69842
 owner: pragma_
 rate_limit: 15
-ref_count: 445
+ref_count: 447
 ref_user: pragma_
 type: module
 
@@ -3528,10 +3540,11 @@ type: text
 action: /call find ^/call
 created_on: 1179677200
 enabled: 1
+last_referenced_on: 1277909698.47976
 owner: pragma_
 rate_limit: 15
-ref_count: 24
-ref_user: PoppaVic
+ref_count: 25
+ref_user: pragma_
 type: text
 
 <animal_nouns>
@@ -3830,9 +3843,10 @@ type: text
 action: /call unignore .* $args
 created_on: 1258799692
 enabled: 1
+last_referenced_on: 1277906938.22876
 owner: pragma_
 rate_limit: 15
-ref_count: 4
+ref_count: 5
 ref_user: pragma_
 type: text
 
@@ -4086,10 +4100,11 @@ type: text
 action: /me $eat_adverbs $eat_actions her snack.
 created_on: 1174693123
 enabled: 1
+last_referenced_on: 1277908256.6914
 owner: pragma_
 rate_limit: 15
-ref_count: 228
-ref_user: scroteless
+ref_count: 229
+ref_user: pragma_
 type: text
 
 <bottom_up>
@@ -4187,11 +4202,11 @@ type: text
 action: /say C is a low level language designed to make assembly "easier", useful for device drivers or operating systems. Thusly, one has to maintain buffers, memory, and various low level information. C is not meant to be used for everyday applications, a common misconception.
 created_on: 1108006206
 enabled: 1
-last_referenced_on: 1277837481.55131
+last_referenced_on: 1277924750.74262
 owner: pragma
 rate_limit: 15
-ref_count: 157
-ref_user: koollman
+ref_count: 158
+ref_user: lolfrenz
 type: text
 
 <c++>
@@ -4385,18 +4400,18 @@ ref_user: pragma_
 type: text
 
 <cc>
-action: /call ideone $nick
+action: /call codepad $nick
 created_on: 1272176634
 enabled: 1
-last_referenced_on: 1277872463.42616
+last_referenced_on: 1277904825.20606
 owner: pragma_
 rate_limit: 0
-ref_count: 3528
-ref_user: PoppaVic
+ref_count: 3530
+ref_user: pragma_
 type: text
 
 <cc2>
-action: /call codepad $nick
+action: /call ideone $nick
 created_on: 1269788333
 enabled: 1
 last_referenced_on: 1277863607.64252
@@ -4466,16 +4481,6 @@ last_referenced_on: 1277165352.6388
 owner: pragma_
 rate_limit: 15
 ref_count: 5
-ref_user: pragma_
-type: text
-
-<channel>
-action: the iwn
-created_on: 1253185803
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 1
 ref_user: pragma_
 type: text
 
@@ -4574,11 +4579,11 @@ type: text
 action: codepad.pl
 created_on: 1269788272
 enabled: 1
-last_referenced_on: 1277863607.64505
+last_referenced_on: 1277904825.20755
 modulelauncher_subpattern: s/([^ ]+)\s+(.*)/$1 '$2'/
 owner: pragma_
 rate_limit: 15
-ref_count: 1015
+ref_count: 1016
 ref_user: pragma_
 type: module
 
@@ -4799,11 +4804,11 @@ type: text
 action: cstd.pl
 created_on: 1270956236
 enabled: 1
-last_referenced_on: 1277898666.03688
+last_referenced_on: 1277929193.84593
 owner: pragma_
 rate_limit: 15
-ref_count: 1005
-ref_user: Jafet
+ref_count: 1007
+ref_user: Wulf
 type: module
 
 <csv>
@@ -5603,10 +5608,10 @@ type: text
 action: /call factfind
 created_on: 1277784994.65625
 enabled: 1
-last_referenced_on: 1277880083.42342
+last_referenced_on: 1277909698.49555
 owner: pbot3
 rate_limit: 15
-ref_count: 17
+ref_count: 19
 ref_user: pragma_
 type: text
 
@@ -6062,10 +6067,11 @@ type: regex
 action: http://en.wikipedia.org/wiki/Hashtable
 created_on: 1199914203
 enabled: 1
+last_referenced_on: 1277909043.80092
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: n00p
 type: text
 
 <havel>
@@ -6134,11 +6140,11 @@ type: text
 action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
-last_referenced_on: 1277877053.56665
+last_referenced_on: 1277909049.75163
 owner: pragma_
 rate_limit: 15
-ref_count: 886
-ref_user: pragma_
+ref_count: 888
+ref_user: n00p
 type: text
 
 <hi_phrases>
@@ -6165,10 +6171,11 @@ type: text
 action: /call slap
 created_on: 1258701405
 enabled: 1
+last_referenced_on: 1277909033.91337
 owner: pragma_
 rate_limit: 15
-ref_count: 4
-ref_user: megabraker
+ref_count: 5
+ref_user: n00p
 type: text
 
 <hmmm>
@@ -6348,10 +6355,11 @@ type: text
 action: http://en.wikipedia.org/wiki/Comparison_of_integrated_development_environments
 created_on: 1268466837
 enabled: 1
+last_referenced_on: 1277929915.53698
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: cppn3wbee
+ref_count: 2
+ref_user: MikeW_
 type: text
 
 <identifier>
@@ -6368,12 +6376,12 @@ type: text
 action: ideone.pl
 created_on: 1272176604
 enabled: 1
-last_referenced_on: 1277872463.4403
+last_referenced_on: 1277903941.59521
 modulelauncher_subpattern: s/([^ ]+)\s+(.*)/$1 '$2'/
 owner: pragma_
 rate_limit: 0
-ref_count: 3520
-ref_user: PoppaVic
+ref_count: 3521
+ref_user: pragma_
 type: module
 
 <idiot>
@@ -6549,6 +6557,17 @@ rate_limit: 15
 ref_count: 0
 ref_user: nobody
 type: regex
+
+<itsatrap>
+action: http://www.dilbert.com/dyn/str_strip/000000000/00000000/0000000/000000/90000/2000/700/92768/92768.strip.sunday.gif
+created_on: 1277910211.5416
+enabled: 1
+last_referenced_on: 1277910221.1587
+owner: pragma_
+rate_limit: 15
+ref_count: 1
+ref_user: pragma_
+type: text
 
 <itworks>
 action: /call works
@@ -6847,10 +6866,11 @@ type: text
 action: /say http://www.iso-9899.info/wiki/LinkageAndStorage
 created_on: 1221600612
 enabled: 1
+last_referenced_on: 1277929020.5457
 owner: kate`
 rate_limit: 15
-ref_count: 4
-ref_user: kate`
+ref_count: 5
+ref_user: Wulf
 type: text
 
 <literal>
@@ -7293,11 +7313,11 @@ type: text
 action: /say Another satisfied customer!  NEXT!!
 created_on: 1270253222
 enabled: 1
-last_referenced_on: 1277743190.50885
+last_referenced_on: 1277944197.31487
 owner: pragma_
 rate_limit: 15
-ref_count: 9
-ref_user: efaust
+ref_count: 10
+ref_user: Wulf
 type: text
 
 <nickreg>
@@ -7737,10 +7757,11 @@ type: text
 action: /say pong
 created_on: 1109821018
 enabled: 1
+last_referenced_on: 1277906790.54196
 owner: pragma_
 rate_limit: 15
-ref_count: 38
-ref_user: megabraker
+ref_count: 39
+ref_user: CDrone
 type: text
 
 <pizza_milkshake>
@@ -8450,10 +8471,11 @@ type: text
 action: /say Please find and read the documentation for that.
 created_on: 1199758774
 enabled: 1
+last_referenced_on: 1277911317.32564
 owner: pragma_
 rate_limit: 15
-ref_count: 32
-ref_user: Wulf
+ref_count: 33
+ref_user: soupdragon
 type: text
 
 <rtfm_smack>
@@ -8546,16 +8568,6 @@ owner: n00p
 rate_limit: 15
 ref_count: 6
 ref_user: dave0
-type: text
-
-<schildt>
-action: please avoid herbert schildt's books, see http://www.iso-9899.info/wiki/Main_Page#Stuff_that_should_be_avoided
-created_on: 1105514020
-enabled: 1
-owner: twkm
-rate_limit: 15
-ref_count: 17
-ref_user: s00p
 type: text
 
 <scissors>
@@ -8755,10 +8767,10 @@ type: regex
 action: /call factshow
 created_on: 1277259146.86343
 enabled: 1
-last_referenced_on: 1277870694.92762
+last_referenced_on: 1277906915.27104
 owner: pbot3
 rate_limit: 15
-ref_count: 11
+ref_count: 12
 ref_user: pragma_
 type: text
 
@@ -8857,10 +8869,11 @@ type: text
 action: /me $attacks $args with a $sizes $animal_nouns $animals!
 created_on: 1108932778
 enabled: 1
+last_referenced_on: 1277909033.92491
 owner: pragma_
 rate_limit: 15
-ref_count: 108
-ref_user: megabraker
+ref_count: 109
+ref_user: n00p
 type: text
 
 <sleep>
@@ -9160,10 +9173,11 @@ type: text
 action: /call linkageandstorage
 created_on: 1221600563
 enabled: 1
+last_referenced_on: 1277929020.53636
 owner: kate`
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: Wulf
 type: text
 
 <str>
@@ -9565,9 +9579,10 @@ type: text
 action: /say For all your makefile/scripting/toolchain needs, please join ##workingset.
 created_on: 1268857525
 enabled: 1
+last_referenced_on: 1277929006.23874
 owner: PoppaVic
 rate_limit: 15
-ref_count: 13
+ref_count: 14
 ref_user: PoppaVic
 type: text
 
@@ -9747,10 +9762,10 @@ type: text
 action: /say $welcome, $nick
 created_on: 1271368737
 enabled: 1
-last_referenced_on: 1277873261.07983
+last_referenced_on: 1277909039.92001
 owner: pragma_
 rate_limit: 15
-ref_count: 32
+ref_count: 33
 ref_user: pragma_
 type: text
 
@@ -9992,13 +10007,14 @@ ref_user: n00p
 type: text
 
 <vampire>
-action: /say The Help Vampire: A Spotter's Guide [http://www.slash7.com/pages]
+action: /say The Help Vampire: A Spotter's Guide http://slash7.com/2006/12/22/vampires/
 created_on: 1189558513
 enabled: 1
+last_referenced_on: 1277911260.06221
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: pragma_
+ref_count: 4
+ref_user: n00p
 type: text
 
 <vera>
@@ -10012,8 +10028,8 @@ ref_user: pragma_
 type: text
 
 <version>
-action: /say PBot revision 224 2010-06-30
-created_on: 1277897615.53125
+action: /say PBot revision 226 2010-06-30
+created_on: 1277948398.21875
 enabled: 1
 last_referenced_on: 1277547370.96948
 owner: pbot3
@@ -10106,10 +10122,11 @@ type: text
 action: /call 8ball
 created_on: 1270604559
 enabled: 1
+last_referenced_on: 1277908345.42939
 owner: pragma_
 rate_limit: 15
-ref_count: 4
-ref_user: nak
+ref_count: 6
+ref_user: pragma_
 type: text
 
 <wcs>
@@ -10515,9 +10532,10 @@ type: text
 action: http://www.centernegative.com/2009/03/zalgo-he-comes/
 created_on: 1262652805
 enabled: 1
+last_referenced_on: 1277909281.29401
 owner: pragma_
 rate_limit: 15
-ref_count: 2
+ref_count: 3
 ref_user: pragma_
 type: text
 
