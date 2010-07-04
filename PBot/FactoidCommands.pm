@@ -225,7 +225,7 @@ sub factalias {
 
   $self->{pbot}->logger->log("$nick!$user\@$host [$chan] aliased $alias => $command\n");
   $self->{pbot}->factoids->save_factoids();
-  return "/msg $nick '$alias' aliases '$command' for channel $chan";  
+  return "/msg $nick '$alias' aliases '$command' for " . ($chan eq '.*' ? 'the global channel' : $chan);  
 }
 
 sub add_regex {
