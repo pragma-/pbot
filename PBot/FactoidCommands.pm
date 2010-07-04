@@ -212,6 +212,8 @@ sub factalias {
     return "Usage: factalias <channel> <keyword> <command>";
   }
 
+  $chan = '.*' if $chan !~ /^#/;
+
   my ($channel, $alias_trigger) = $self->{pbot}->factoids->find_factoid($chan, $alias, undef, 1);
   
   if(defined $alias_trigger) {
