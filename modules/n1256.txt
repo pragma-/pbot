@@ -336,45 +336,45 @@
 
 
 
-     2.   Each instance of a backslash character (\) immediately followed by a new-line
-          character is deleted, splicing physical source lines to form logical source lines.
-          Only the last backslash on any physical source line shall be eligible for being part
-          of such a splice. A source file that is not empty shall end in a new-line character,
-          which shall not be immediately preceded by a backslash character before any such
-          splicing takes place.
-     3.   The source file is decomposed into preprocessing tokens6) and sequences of
-          white-space characters (including comments). A source file shall not end in a
-          partial preprocessing token or in a partial comment. Each comment is replaced by
-          one space character. New-line characters are retained. Whether each nonempty
-          sequence of white-space characters other than new-line is retained or replaced by
-          one space character is implementation-defined.
-     4.   Preprocessing directives are executed, macro invocations are expanded, and
-          _Pragma unary operator expressions are executed. If a character sequence that
-          matches the syntax of a universal character name is produced by token
-          concatenation (6.10.3.3), the behavior is undefined. A #include preprocessing
-          directive causes the named header or source file to be processed from phase 1
-          through phase 4, recursively. All preprocessing directives are then deleted.
-     5.   Each source character set member and escape sequence in character constants and
-          string literals is converted to the corresponding member of the execution character
-          set; if there is no corresponding member, it is converted to an implementation-
-          defined member other than the null (wide) character.7)
-     6.   Adjacent string literal tokens are concatenated.
-     7.   White-space characters separating tokens are no longer significant. Each
-          preprocessing token is converted into a token. The resulting tokens are
-          syntactically and semantically analyzed and translated as a translation unit.
-     8.   All external object and function references are resolved. Library components are
-          linked to satisfy external references to functions and objects not defined in the
-          current translation. All such translator output is collected into a program image
-          which contains information needed for execution in its execution environment.
-Forward references: universal character names (6.4.3), lexical elements (6.4),
-preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definitions (6.9).
+       2.   Each instance of a backslash character (\) immediately followed by a new-line
+            character is deleted, splicing physical source lines to form logical source lines.
+            Only the last backslash on any physical source line shall be eligible for being part
+            of such a splice. A source file that is not empty shall end in a new-line character,
+            which shall not be immediately preceded by a backslash character before any such
+            splicing takes place.
+       3.   The source file is decomposed into preprocessing tokens6) and sequences of
+            white-space characters (including comments). A source file shall not end in a
+            partial preprocessing token or in a partial comment. Each comment is replaced by
+            one space character. New-line characters are retained. Whether each nonempty
+            sequence of white-space characters other than new-line is retained or replaced by
+            one space character is implementation-defined.
+       4.   Preprocessing directives are executed, macro invocations are expanded, and
+            _Pragma unary operator expressions are executed. If a character sequence that
+            matches the syntax of a universal character name is produced by token
+            concatenation (6.10.3.3), the behavior is undefined. A #include preprocessing
+            directive causes the named header or source file to be processed from phase 1
+            through phase 4, recursively. All preprocessing directives are then deleted.
+       5.   Each source character set member and escape sequence in character constants and
+            string literals is converted to the corresponding member of the execution character
+            set; if there is no corresponding member, it is converted to an implementation-
+            defined member other than the null (wide) character.7)
+       6.   Adjacent string literal tokens are concatenated.
+       7.   White-space characters separating tokens are no longer significant. Each
+            preprocessing token is converted into a token. The resulting tokens are
+            syntactically and semantically analyzed and translated as a translation unit.
+       8.   All external object and function references are resolved. Library components are
+            linked to satisfy external references to functions and objects not defined in the
+            current translation. All such translator output is collected into a program image
+            which contains information needed for execution in its execution environment.
+  Forward references: universal character names (6.4.3), lexical elements (6.4),
+  preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definitions (6.9).
 
 
 
-6)    As described in 6.4, the process of dividing a source file's characters into preprocessing tokens is
-      context-dependent. For example, see the handling of < within a #include preprocessing directive.
-7)    An implementation need not convert all non-corresponding source characters to the same execution
-      character.
+  6)    As described in 6.4, the process of dividing a source file's characters into preprocessing tokens is
+        context-dependent. For example, see the handling of < within a #include preprocessing directive.
+  7)    An implementation need not convert all non-corresponding source characters to the same execution
+        character.
 
 
 
@@ -5427,26 +5427,26 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     label in the enclosing function.
 3   EXAMPLE 1 It is sometimes convenient to jump into the middle of a complicated set of statements. The
     following outline presents one possible approach to a problem based on these three assumptions:
-      1.   The general initialization code accesses objects only visible to the current function.
-      2.   The general initialization code is too large to warrant duplication.
-      3.   The code to determine the next operation is at the head of the loop. (To allow it to be reached by
-           continue statements, for example.)
-            /* ... */
-            goto first_time;
-            for (;;) {
-                    // determine next operation
-                    /* ... */
-                    if (need to reinitialize) {
-                            // reinitialize-only code
-                            /* ... */
-                    first_time:
-                            // general initialization code
-                            /* ... */
-                            continue;
-                    }
-                    // handle other operations
-                    /* ... */
-            }
+          1.   The general initialization code accesses objects only visible to the current function.
+          2.   The general initialization code is too large to warrant duplication.
+          3.   The code to determine the next operation is at the head of the loop. (To allow it to be reached by
+               continue statements, for example.)
+                /* ... */
+                goto first_time;
+                for (;;) {
+                        // determine next operation
+                        /* ... */
+                        if (need to reinitialize) {
+                                // reinitialize-only code
+                                /* ... */
+                        first_time:
+                                // general initialization code
+                                /* ... */
+                                continue;
+                        }
+                        // handle other operations
+                        /* ... */
+                }
 
 
 
@@ -6290,7 +6290,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     causes the implementation to behave as if the following sequence of source lines begins
     with a source line that has a line number as specified by the digit sequence (interpreted as
     a decimal integer). The digit sequence shall not specify zero, nor a number greater than
-    2147483647.
+          2147483647.
 4   A preprocessing directive of the form
        # line digit-sequence "s-char-sequenceopt" new-line
     sets the presumed line number similarly and changes the presumed name of the source
@@ -10627,6 +10627,11 @@ f,F           A double argument representing a floating-point number is converte
               any n-char-sequence, is implementation-defined. The F conversion specifier
               produces INF, INFINITY, or NAN instead of inf, infinity, or nan,
               respectively.243)
+   
+   243) When applied to infinite and NaN values, the -, +, and space flag characters have their usual meaning;
+     the # and 0 flag characters have no effect.
+
+
 e,E           A double argument representing a floating-point number is converted in the
               style [-]d.ddd e±dd, where there is one digit (which is nonzero if the
               argument is nonzero) before the decimal-point character and the number of
@@ -10648,12 +10653,6 @@ g,G           A double argument representing a floating-point number is converte
                  P - (X + 1).
               -- otherwise, the conversion is with style e (or E) and precision P - 1.
               Finally, unless the # flag is used, any trailing zeros are removed from the
-
-243) When applied to infinite and NaN values, the -, +, and space flag characters have their usual meaning;
-     the # and 0 flag characters have no effect.
-
-
-
               fractional portion of the result and the decimal-point character is removed if
               there is no fractional portion remaining.
               A double argument representing an infinity or NaN is converted in the style
@@ -10686,13 +10685,13 @@ s             If no l length modifier is present, the argument shall be a pointe
               element of an array of character type.246) Characters from the array are
 
 
-244) Binary implementations can choose the hexadecimal digit to the left of the decimal-point character so
-     that subsequent digits align to nibble (4-bit) boundaries.
-245) The precision p is sufficient to distinguish values of the source type if 16 p-1 > b n where b is
-     FLT_RADIX and n is the number of base-b digits in the significand of the source type. A smaller p
-     might suffice depending on the implementation's scheme for determining the digit to the left of the
-     decimal-point character.
-246) No special provisions are made for multibyte characters.
+          244) Binary implementations can choose the hexadecimal digit to the left of the decimal-point character so
+               that subsequent digits align to nibble (4-bit) boundaries.
+          245) The precision p is sufficient to distinguish values of the source type if 16 p-1 > b n where b is
+               FLT_RADIX and n is the number of base-b digits in the significand of the source type. A smaller p
+               might suffice depending on the implementation's scheme for determining the digit to the left of the
+               decimal-point character.
+          246) No special provisions are made for multibyte characters.
 
 
 
@@ -10758,7 +10757,7 @@ s             If no l length modifier is present, the argument shall be a pointe
      if an output or encoding error occurred.
      Environmental limits
 15   The number of characters that can be produced by any single conversion shall be at least
-     4095.
+             4095.
 16   EXAMPLE 1       To print a date and time in the form ``Sunday, July 3, 10:02'' followed by  to five decimal
      places:
              #include <math.h>
@@ -10940,9 +10939,9 @@ s             Matches a sequence of non-white-space characters.252)
               If an l length modifier is present, the input shall be a sequence of multibyte
 
 
-252) No special provisions are made for multibyte characters in the matching rules used by the c, s, and [
-     conversion specifiers -- the extent of the input field is determined on a byte-by-byte basis. The
-     resulting field is nevertheless a sequence of multibyte characters that begins in the initial shift state.
+          252) No special provisions are made for multibyte characters in the matching rules used by the c, s, and [
+               conversion specifiers -- the extent of the input field is determined on a byte-by-byte basis. The
+               resulting field is nevertheless a sequence of multibyte characters that begins in the initial shift state.
 
 
 
@@ -13509,10 +13508,10 @@ a,A          A double argument representing a floating-point number is converted
              is missing and FLT_RADIX is a power of 2, then the precision is sufficient
 
 
-283) When applied to infinite and NaN values, the -, +, and space flag wide characters have their usual
-     meaning; the # and 0 flag wide characters have no effect.
-284) Binary implementations can choose the hexadecimal digit to the left of the decimal-point wide
-     character so that subsequent digits align to nibble (4-bit) boundaries.
+          283) When applied to infinite and NaN values, the -, +, and space flag wide characters have their usual
+               meaning; the # and 0 flag wide characters have no effect.
+          284) Binary implementations can choose the hexadecimal digit to the left of the decimal-point wide
+               character so that subsequent digits align to nibble (4-bit) boundaries.
 
 
 
@@ -13551,10 +13550,10 @@ s            If no l length modifier is present, the argument shall be a pointer
 p            The argument shall be a pointer to void. The value of the pointer is
              converted to a sequence of printing wide characters, in an implementation-
 
-285) The precision p is sufficient to distinguish values of the source type if 16 p-1 > b n where b is
-     FLT_RADIX and n is the number of base-b digits in the significand of the source type. A smaller p
-     might suffice depending on the implementation's scheme for determining the digit to the left of the
-     decimal-point wide character.
+          285) The precision p is sufficient to distinguish values of the source type if 16 p-1 > b n where b is
+               FLT_RADIX and n is the number of base-b digits in the significand of the source type. A smaller p
+               might suffice depending on the implementation's scheme for determining the digit to the left of the
+               decimal-point wide character.
 
 
 
@@ -13829,15 +13828,15 @@ n        No input is consumed. The corresponding argument shall be a pointer to
      thompson\0.
 
 18   EXAMPLE 2        The call:
-              #include <stdio.h>
-              #include <wchar.h>
-              /* ... */
-              int i; float x; double y;
-              fwscanf(stdin, L"%2d%f%*d %lf", &i, &x, &y);
-     with input:
-              56789 0123 56a72
-     will assign to i the value 56 and to x the value 789.0, will skip past 0123, and will assign to y the value
-     56.0. The next wide character read from the input stream will be a.
+                    #include <stdio.h>
+                    #include <wchar.h>
+                    /* ... */
+                    int i; float x; double y;
+                    fwscanf(stdin, L"%2d%f%*d %lf", &i, &x, &y);
+           with input:
+                    56789 0123 56a72
+           will assign to i the value 56 and to x the value 789.0, will skip past 0123, and will assign to y the value
+           56.0. The next wide character read from the input stream will be a.
 
 
      290) See ``future library directions'' (7.26.12).
@@ -14268,7 +14267,7 @@ n        No input is consumed. The corresponding argument shall be a pointer to
 4   If the subject sequence has the expected form for a floating-point number, the sequence of
     wide characters starting with the first digit or the decimal-point wide character
     (whichever occurs first) is interpreted as a floating constant according to the rules of
-    6.4.4.2, except that the decimal-point wide character is used in place of a period, and that
+        6.4.4.2, except that the decimal-point wide character is used in place of a period, and that
     if neither an exponent part nor a decimal-point wide character appears in a decimal
     floating point number, or if a binary exponent part does not appear in a hexadecimal
     floating point number, an exponent part of the appropriate type with value zero is
