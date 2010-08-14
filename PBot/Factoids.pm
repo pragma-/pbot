@@ -203,6 +203,8 @@ sub interpreter {
   my ($result, $channel);
   my $pbot = $self->{pbot};
 
+  $from = lc $from;
+
   # remove trailing comma or colon from keyword if keyword has other characters beforehand 
   $keyword =~ s/^(.+)[:,]$/$1/;
 
@@ -239,8 +241,16 @@ sub interpreter {
     return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
   }
 
+  my $last_ref_in = 0;
+
   if(exists $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on}) {
-    if(gettimeofday - $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} < $self->factoids->hash->{$channel}->{$keyword}->{rate_limit}) {
+    if(exists $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_in}) {
+      if($self->factoids->hash->{$channel}->{$keyword}->{last_referenced_in} eq $from) {
+        $last_ref_in = 1;
+      }
+    }
+
+    if(($last_ref_in == 1) and (gettimeofday - $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} < $self->factoids->hash->{$channel}->{$keyword}->{rate_limit})) {
       return "/msg $nick '$keyword' is rate-limited; try again in " . ($self->factoids->hash->{$channel}->{$keyword}->{rate_limit} - int(gettimeofday - $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on})) . " seconds.";
     }
   }
@@ -255,6 +265,7 @@ sub interpreter {
     $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
     $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
+    $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_in} = $from;
 
     return $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, $keyword, $arguments);
   }
@@ -270,6 +281,7 @@ sub interpreter {
     $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
     $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
+    $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_in} = $from;
 
     $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"" . $self->factoids->hash->{$channel}->{$keyword}->{action} . "\"\n");
 
