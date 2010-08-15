@@ -11,6 +11,8 @@ use strict;
 use vars qw($VERSION);
 $VERSION = $PBot::PBot::VERSION;
 
+use PBot::DualIndexHashObject;
+
 use Carp ();
 
 sub new {
@@ -46,8 +48,7 @@ sub initialize {
     }
   }
 
-  $self->{admins} = {};
-  $self->{filename} = $filename;
+  $self->{admins} = PBot::DualIndexHashObject->new(name => 'Admins', filename => $filename);
   $self->{export_path} = $export_path;
   $self->{export_site} = $export_site;
   $self->{export_timeout} = $export_timeout;
@@ -62,18 +63,20 @@ sub add_admin {
   $channel = lc $channel;
   $hostmask = lc $hostmask;
 
-  ${ $self->admins }{$channel}{$hostmask}{name}     = $name;
-  ${ $self->admins }{$channel}{$hostmask}{level}    = $level;
-  ${ $self->admins }{$channel}{$hostmask}{password} = $password;
+  $self->admins->hash->{$channel}->{$hostmask}->{name}     = $name;
+  $self->admins->hash->{$channel}->{$hostmask}->{level}    = $level;
+  $self->admins->hash->{$channel}->{$hostmask}->{password} = $password;
 
   $self->{pbot}->logger->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");
+
+  $self->save_admins;
 }
 
 sub remove_admin {
   my $self = shift;
   my ($channel, $hostmask) = @_;
 
-  my $admin = delete ${ $self->admins }{$channel}{$hostmask};
+  my $admin = delete $self->admins->hash->{$channel}->{$hostmask};
   if(defined $admin) {
     $self->{pbot}->logger->log("Removed level $admin->{level} admin [$admin->{name}] [$hostmask] from channel [$channel]\n");
     $self->save_admins;
@@ -88,7 +91,7 @@ sub load_admins {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->filename; }
+  if(@_) { $filename = shift; } else { $filename = $self->admins->filename; }
 
   if(not defined $filename) {
     Carp::carp "No admins path specified -- skipping loading of admins";
@@ -96,24 +99,25 @@ sub load_admins {
   }
 
   $self->{pbot}->logger->log("Loading admins from $filename ...\n");
-  
-  open(FILE, "< $filename") or Carp::croak "Couldn't open $filename: $!\n";
-  my @contents = <FILE>;
-  close(FILE);
 
+  $self->admins->load;
+  
   my $i = 0;
 
-  foreach my $line (@contents) {
-    chomp $line;
-    $i++;
+  foreach my $channel (keys %{ $self->admins->hash } ) {
+    foreach my $hostmask (keys %{ $self->admins->hash->{$channel} }) {
+      $i++;
 
-    my ($name, $channel, $hostmask, $level, $password) = split(/\s+/, $line, 5);
-    
-    if(not defined $name || not defined $channel || not defined $hostmask || not defined $level || not defined $password) {
-         Carp::croak "Syntax error around line $i of $filename\n";
+      my $name = $self->admins->hash->{$channel}->{$hostmask}->{name};
+      my $level = $self->admins->hash->{$channel}->{$hostmask}->{level};
+      my $password = $self->admins->hash->{$channel}->{$hostmask}->{password};
+
+      if(not defined $name or not defined $level or not defined $password) {
+        Carp::croak "Syntax error around line $i of $filename\n";
+      }
+
+      $self->{pbot}->logger->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");
     }
-
-    $self->add_admin($name, $channel, $hostmask, $level, $password);
   }
 
   $self->{pbot}->logger->log("  $i admins loaded.\n");
@@ -122,25 +126,9 @@ sub load_admins {
 
 sub save_admins {
   my $self = shift;
-  my $filename;
-
-  if(@_) { $filename = shift; } else { $filename = $self->filename; }
-
-  if(not defined $filename) {
-    Carp::carp "No admins path specified -- skipping saving of admins\n";
-    return;
-  }
-
-  open(FILE, "> $filename") or Carp::croak "Couldn't open $filename: $!\n";
-
-  foreach my $channel (sort keys %{ $self->{admins} }) {
-    foreach my $hostmask (sort keys %{ $self->{admins}->{$channel} }) {
-      my $admin = $self->{admins}->{$channel}{$hostmask};
-      next if $admin->{name} eq $self->{pbot}->botnick;
-      print FILE "$admin->{name} $channel $hostmask $admin->{level} $admin->{password}\n"; 
-    }
-  }
-  close(FILE);
+  
+  $self->admins->save;
+  $self->export_admins;
 }
 
 sub export_admins {
@@ -160,10 +148,10 @@ sub find_admin {
   $hostmask = '.*' if not defined $hostmask;
 
   my $result = eval {
-    foreach my $channel_regex (keys %{ $self->{admins} }) {
+    foreach my $channel_regex (keys %{ $self->admins->hash }) {
       if($from !~ m/^#/) {
         # if not from a channel, make sure that nick portion of hostmask matches $from
-        foreach my $hostmask_regex (keys %{ $self->{admins}->{$channel_regex} }) {
+        foreach my $hostmask_regex (keys %{ $self->admins->hash->{$channel_regex} }) {
           my $nick;
 
           if($hostmask_regex =~ m/^([^!]+)!.*/) {
@@ -172,11 +160,11 @@ sub find_admin {
             $nick = $hostmask_regex;
           }
 
-          return $self->{admins}{$channel_regex}{$hostmask_regex} if($from =~ m/$nick/i and $hostmask =~ m/$hostmask_regex/i);
+          return $self->admins->hash->{$channel_regex}->{$hostmask_regex} if($from =~ m/$nick/i and $hostmask =~ m/$hostmask_regex/i);
         }
       } elsif($from =~ m/$channel_regex/i) {
-        foreach my $hostmask_regex (keys %{ $self->{admins}->{$channel_regex} }) {
-          return $self->{admins}{$channel_regex}{$hostmask_regex} if $hostmask =~ m/$hostmask_regex/i;
+        foreach my $hostmask_regex (keys %{ $self->admins->hash->{$channel_regex} }) {
+          return $self->admins->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/$hostmask_regex/i;
         }
       }
     }

@@ -1,2 +1,17 @@
-pragma .* .*!.*@unaffiliated/pragma/.* 60 *
-somename .* .*!example@xyzcorp.com 60 5ecret5@uce
+[#channel]
+<nick!user@host>
+level: 10
+name: example
+password: s3cr3ts@uce
+
+[.*]
+<.*!.*@unaffiliated/pragma/.*>
+level: 60
+name: pragma
+password: *
+
+<pbot3!stdin@localhost>
+level: 60
+name: pbot3
+password: admin
+

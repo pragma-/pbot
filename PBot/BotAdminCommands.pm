@@ -40,8 +40,10 @@ sub initialize {
   $pbot->commands->register(sub { return $self->join_channel(@_) },       "join",          45);
   $pbot->commands->register(sub { return $self->part_channel(@_) },       "part",          45);
   $pbot->commands->register(sub { return $self->ack_die(@_)      },       "die",           50);
-  $pbot->commands->register(sub { return $self->add_admin(@_)    },       "addadmin",      60);
-  $pbot->commands->register(sub { return $self->del_admin(@_)    },       "deladmin",      60);
+  $pbot->commands->register(sub { return $self->adminadd(@_)     },       "adminadd",      60);
+  $pbot->commands->register(sub { return $self->adminrem(@_)     },       "adminrem",      60);
+  $pbot->commands->register(sub { return $self->adminset(@_)     },       "adminset",      60);
+  $pbot->commands->register(sub { return $self->adminunset(@_)   },       "adminunset",    60);
 }
 
 sub login {
@@ -64,7 +66,7 @@ sub logout {
   return "/msg $nick Good-bye, $nick.";
 }
 
-sub add_admin {
+sub adminadd {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
@@ -72,22 +74,21 @@ sub add_admin {
 
   if(not defined $name or not defined $channel or not defined $hostmask or not defined $level
     or not defined $password) {
-    return "/msg $nick Usage: addadmin name channel hostmask level password";
+    return "/msg $nick Usage: adminadd name channel hostmask level password";
   }
 
   $self->{pbot}->{admins}->add_admin($name, $channel, $hostmask, $level, $password);
-  $self->{pbot}->{admins}->save_admins;
   return "Admin added.";
 }
 
-sub del_admin {
+sub adminrem {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
   my ($channel, $hostmask) = split / /, $arguments, 2;
 
   if(not defined $channel or not defined $hostmask) {
-    return "/msg $nick Usage: deladmin channel hostmask";
+    return "/msg $nick Usage: adminrem channel hostmask";
   }
 
   if($self->{pbot}->{admins}->remove_admin($channel, $hostmask)) {
@@ -96,6 +97,31 @@ sub del_admin {
     return "No such admin found.";
   }
 }
+
+sub adminset {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($channel, $hostmask, $key, $value) = split / /, $arguments, 4 if defined $arguments;
+
+  if(not defined $channel or not defined $hostmask) {
+    return "Usage: adminset <channel> <hostmask> <key> <value>";
+  }
+
+  return $self->{pbot}->admins->admins->set($channel, $hostmask, $key, $value);
+}
+
+sub adminunset {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($channel, $hostmask, $key) = split / /, $arguments, 3 if defined $arguments;
+
+  if(not defined $channel or not defined $hostmask) {
+    return "Usage: adminunset <channel> <hostmask> <key>";
+  }
+
+  return $self->{pbot}->admins->admins->unset($channel, $hostmask, $key);
+}
+
 
 sub join_channel {
   my $self = shift;

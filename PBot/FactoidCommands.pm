@@ -184,17 +184,16 @@ sub list {
     $text = "Admins: ";
     my $last_channel = "";
     my $sep = "";
-    foreach my $channel (sort keys %{ $self->{pbot}->admins->admins }) {
+    foreach my $channel (sort keys %{ $self->{pbot}->admins->admins->hash }) {
       if($last_channel ne $channel) {
-        print "texzt: [$text], sep: [$sep]\n";
         $text .= $sep . "Channel " . ($channel eq ".*" ? "all" : $channel) . ": ";
         $last_channel = $channel;
         $sep = "";
       }
-      foreach my $hostmask (sort keys %{ $self->{pbot}->admins->admins->{$channel} }) {
+      foreach my $hostmask (sort keys %{ $self->{pbot}->admins->admins->hash->{$channel} }) {
         $text .= $sep;
-        $text .= "*" if exists ${ $self->{pbot}->admins->admins }{$channel}{$hostmask}{loggedin};
-        $text .= ${ $self->{pbot}->admins->admins }{$channel}{$hostmask}{name} . " (" . ${ $self->{pbot}->admins->admins }{$channel}{$hostmask}{level} . ")";
+        $text .= "*" if exists $self->{pbot}->admins->admins->hash->{$channel}->{$hostmask}->{loggedin};
+        $text .= $self->{pbot}->admins->admins->hash->{$channel}->{$hostmask}->{name} . " (" . $self->{pbot}->admins->admins->hash->{$channel}->{$hostmask}->{level} . ")";
         $sep = "; ";
       }
     }
