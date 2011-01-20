@@ -422,6 +422,10 @@ sub horoscope_search {
     my ($line) = $content =~ m|CHANGE $term HERE -->(.+)<!-- END $term HERE|i;
     $line =~ s/  +/ /g;
 
+    if($line eq "") {
+      return "No results found; signs of the Zodiac are Aquarius, Pisces, Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn";
+    }
+
     return $line;
 }
 
@@ -435,6 +439,10 @@ sub horrorscope_search {
     $content =~ s/[\r\n]/ /gsm;
     my ($line) = $content =~ m|<tr>.*?$term.*?</td>(.*?)</tr>|i;
     $line =~ s/  +/ /g;
+
+    if($line eq "") {
+      return "No results found; signs of the Zodiac are Aquarius, Pisces, Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn";
+    }
 
     return $line;
 }
