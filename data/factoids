@@ -1,9 +1,208 @@
 [##c]
+<a>
+action: equivalent to a == 0
+created_on: 1287807972.21807
+enabled: 1
+owner: Zhivago
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<bdwgc>
+action: http://www.hpl.hp.com/personal/Hans_Boehm/gc/
+created_on: 1278590020.17125
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<bit>
+action: /say A bit is a unit of data storage large enough to hold an object that may have one of two values. It need not be possible to express the address of each individual bit of an object.
+created_on: 1288301601.60807
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292712804.34657
+owner: s00p
+rate_limit: 15
+ref_count: 1
+ref_user: sacho
+type: text
+
+<cprogramming.com>
+action: /say cprogramming.com is not a site to be recommended to C learners because it "provide you with C and C++ programming language resources". Find a resource that distinctly teaches C to avoid confusion. See !books.
+created_on: 1278133140.9678
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1284486154.08487
+owner: n00p
+rate_limit: 15
+ref_count: 1
+ref_user: fper
+type: text
+
+<error_file_not_found>
+action: neither !true or !false
+created_on: 1282062050.18461
+enabled: 1
+owner: n00p
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<format>
+action: /say Nothing happens...
+created_on: 1282061925.86021
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1282061931.90462
+owner: n00p
+rate_limit: 15
+ref_count: 1
+ref_user: n00p
+type: text
+
+<freebooks>
+action: http://qink.net/page/The-Ultimate-List-of-Freely-Available-Programming-Books.aspx
+created_on: 1288521640.40726
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<gccwarnings>
+action: http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
+created_on: 1292724675.8739
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<k&r>
+action: The C Programming Language, 2nd edition, by Kernighan and Ritchie, http://cm.bell-labs.com/cm/cs/cbook/ - be sure to see the errata as well, at http://cm.bell-labs.com/cm/cs/cbook/2ediffs.html
+created_on: 1278668183.21606
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292525287.23165
+owner: Chris
+rate_limit: 15
+ref_count: 134
+ref_user: PoppaVic
+type: text
+
+<king>
+action: /say Midas is the king, $nick.
+created_on: 1280266709.07129
+enabled: 1
+last_referenced_on: 1280266733.83463
+owner: Midass
+rate_limit: 15
+ref_count: 2
+ref_user: Midass
+type: text
+
+<laurenceb>
+action: asking a genuine question but he's a newb to this channel.  Could you please unban him and I'll tell him to pastebin his code
+created_on: 1287362152.10647
+enabled: 1
+owner: richardcavell
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<op>
+action: /op sig^
+created_on: 1282062016.41708
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1282062030.84923
+owner: sig^
+rate_limit: 15
+ref_count: 1
+ref_user: n00p
+type: text
+
+<p2s>
+action: /say A pointer to a string is a pointer to its initial (lowest addressed) character. The length of a string is the number of bytes preceding the null character and the value of a string is the sequence of the values of the contained characters, in order.
+created_on: 1289157193.4768
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289157238.22498
+owner: n00p
+rate_limit: 15
+ref_count: 1
+ref_user: guidj0s
+type: text
+
+<parmesan>
+action: grateful.
+created_on: 1285911849.82571
+enabled: 1
+owner: n00p
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<pointers>
+action: http://pw2.netcom.com/~tjensen/ptr/cpoint.htm | http://c-faq.com/ptrs/index.html | http://boredzo.org/pointers/
+created_on: 1280111959.6076
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288355294.01454
+owner: CyL_Zz
+rate_limit: 15
+ref_count: 3
+ref_user: wito
+type: text
+
+<registers>
+action: /say If you have a question about accessing registers in C, please don't ask us. Standard C has no way of manipulating hardware registers. We don't know what compiler or platform you're using. You should be reading the documentation instead.
+created_on: 1288774027.48456
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288774185.47036
+owner: boris``
+rate_limit: 15
+ref_count: 1
+ref_user: pragma_
+type: text
+
 <schildt>
 action: /say Please avoid Herbert Schildt's C books.  See http://www.seebs.net/c/c_tcn4e.html and http://www.lysator.liu.se/c/schildt.html -- Other stuff to avoid: http://www.iso-9899.info/wiki/Main_Page#Stuff_that_should_be_avoided
 created_on: 1277949707.2979
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288683286.69166
 owner: pragma_
+rate_limit: 15
+ref_count: 7
+ref_user: n00p
+type: text
+
+<stringptr>
+action: /say A pointer to a string is a pointer to its initial (lowest addressed) character. See also: !string
+created_on: 1289157592.73858
+enabled: 1
+owner: n00p
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<tcc>
+action: the tiny cc, which allows for such facilities, alternatively you can use
+created_on: 1288731512.59982
+enabled: 1
+owner: systema
 rate_limit: 15
 ref_count: 0
 ref_user: nobody
@@ -13,11 +212,21 @@ type: text
 action: /say A test in ##c!
 created_on: 1277013257.49081
 enabled: 1
-last_referenced_on: 1277376275.23721
+last_referenced_on: 1280342241.78681
 owner: pbot3
 rate_limit: 15
-ref_count: 2
-ref_user: emma
+ref_count: 3
+ref_user: SeySayux
+type: text
+
+<types>
+action: http://www.ibm.com/developerworks/views/power/libraryview.jsp?search_by=everything+you+ever+wanted+to+know+about+C+types
+created_on: 1286584567.49516
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
 type: text
 
 [##club-ubuntu]
@@ -49,32 +258,35 @@ type: text
 action: the unary boolean not operator
 created_on: 1104600621
 enabled: 1
-last_referenced_on: 1277900767.73838
+last_referenced_in: remoun
+last_referenced_on: 1290889288.0392
 owner: Major-Willard
 rate_limit: 15
-ref_count: 98
-ref_user: pbot3
+ref_count: 113
+ref_user: Remoun
 type: text
 
 <!!>
 action: /say !! is a common idiom for normalizing booleans - it will turn any nonzero value into 1, and leave zero at 0. For example, !!50 is 1.
 created_on: 1262200005
 enabled: 1
-last_referenced_on: 1277797649.18166
+last_referenced_in: remoun
+last_referenced_on: 1290889291.26574
 owner: Random832
 rate_limit: 15
-ref_count: 7
-ref_user: Wulf
+ref_count: 9
+ref_user: Remoun
 type: text
 
 <!=>
 action: the comparison for inequality operator
 created_on: 1104871606
 enabled: 1
+last_referenced_on: 1279640013.20094
 owner: Major-Willard
 rate_limit: 15
-ref_count: 5
-ref_user: pragma_
+ref_count: 6
+ref_user: KragenSitaker
 type: text
 
 <!false>
@@ -122,10 +334,11 @@ type: text
 action: used to commence a preprocessor directive (include, define, undef, ifdef, ifndef, pragma) and as the stringization operator (#x).
 created_on: 1197579677
 enabled: 1
+last_referenced_on: 1279640100.10456
 owner: Auris-
 rate_limit: 15
-ref_count: 4
-ref_user: disappearedng
+ref_count: 5
+ref_user: KragenSitaker
 type: text
 
 <##>
@@ -142,11 +355,12 @@ type: text
 action: /say ##c is for discussion involving the C programming language itself. We do not deal with the whole range of the spectrum. libgtk may be written in C, but this is hardly the proper channel for GTK-related questions.  Try #gtk.  Likewise, makefiles and autotools: #devtools, assembly: #asm, Xlib: #xlib, C++: #c++, and so on.
 created_on: 1245454768
 enabled: 1
-last_referenced_on: 1277878149.93176
+last_referenced_in: poppavic
+last_referenced_on: 1289628992.17514
 owner: anttil
 rate_limit: 15
-ref_count: 4
-ref_user: pragma_
+ref_count: 5
+ref_user: PoppaVic
 type: text
 
 <#c>
@@ -160,14 +374,28 @@ ref_count: 22
 ref_user: pragma_
 type: text
 
+<#c++>
+action: not ##C - down the hall, down the stairs, next to the boiler-room - across from ##C-sharp. (##objc is behind the boilers - be careful).
+created_on: 1278891031.30827
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290247061.70937
+owner: PoppaVic
+rate_limit: 15
+ref_count: 13
+ref_user: PoppaVic
+type: text
+
 <$>
 action: a character that has no special meaning
 created_on: 1106526551
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889301.26271
 owner: Major-Willard
 rate_limit: 15
-ref_count: 4
-ref_user: pragma_
+ref_count: 5
+ref_user: Remoun
 type: text
 
 <%>
@@ -224,10 +452,11 @@ type: text
 action: /call double
 created_on: 1262199608
 enabled: 1
+last_referenced_on: 1290889319.75478
 owner: Random832
 rate_limit: 15
-ref_count: 3
-ref_user: Random832
+ref_count: 4
+ref_user: Remoun
 type: text
 
 <%p>
@@ -264,10 +493,12 @@ type: text
 action: the bitwise inclusive-AND assignment operator.  The expression (x &= y) is equivalent to (x = x & y) except that the expression x is evaluated only once.
 created_on: 1107898482
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290169948.10744
 owner: prec
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: ule
 type: text
 
 <&x->y>
@@ -334,10 +565,12 @@ type: text
 action: the multiplication binary operator.  It is also the unary pointer dereference operator.  It is also used in declarations to declare a variable which is a pointer to a type: <type> *p;
 created_on: 1104600319
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289632392.5947
 owner: Major-Willard
 rate_limit: 15
-ref_count: 19
-ref_user: geckos
+ref_count: 20
+ref_user: etnikk
 type: text
 
 <*(char*)NULL>
@@ -415,10 +648,12 @@ type: text
 action: the unary negation operator; the binary subtraction operator
 created_on: 1104595811
 enabled: 1
+last_referenced_in: logann2019
+last_referenced_on: 1288278988.64451
 owner: Major-Willard
 rate_limit: 15
-ref_count: 10
-ref_user: pZombie
+ref_count: 11
+ref_user: logann2019
 type: text
 
 <-->
@@ -445,20 +680,24 @@ type: text
 action: the operator that dereferences a pointer to permit access to a structure/union member.  The expressions (x->y) and ((*x).y) are equivalent.
 created_on: 1104601334
 enabled: 1
+last_referenced_in: wingless
+last_referenced_on: 1288912491.49218
 owner: Major-Willard
 rate_limit: 15
-ref_count: 9
-ref_user: cousteau
+ref_count: 10
+ref_user: wingless
 type: text
 
 <-Wall>
 action: not sufficient enough.  Use -Wall -Wextra.
 created_on: 1275902093
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889336.15944
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: pragma_
+ref_count: 2
+ref_user: Remoun
 type: text
 
 <-lm>
@@ -495,25 +734,17 @@ type: text
 action: the decimal point; the operator that permits access to a structure/union member; is used in structure member designators in C99.
 created_on: 1104600864
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292607360.46186
 owner: Major-Willard
 rate_limit: 15
-ref_count: 19
-ref_user: [Pwner]John
+ref_count: 22
+ref_user: angstrom
 type: text
 
 <.*love\s+.*>
 action: lovequote
 created_on: 1271635108
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: regex
-
-<.*sorry.*>
-action: say Why are you sorry? . . .
-created_on: 1251663630
 enabled: 1
 owner: pragma_
 rate_limit: 15
@@ -575,10 +806,11 @@ type: text
 action: /call say
 created_on: 1251694751
 enabled: 1
+last_referenced_on: 1289378139.00623
 owner: pragma_
 rate_limit: 15
-ref_count: 9
-ref_user: pragma_
+ref_count: 14
+ref_user: Maxdamantus
 type: text
 
 <0>
@@ -622,16 +854,6 @@ ref_count: 1
 ref_user: n00p
 type: text
 
-<1234>
-action: foo
-created_on: 1259540426
-enabled: 1
-owner: Maxdamantus
-rate_limit: 15
-ref_count: 7
-ref_user: jwillia3
-type: text
-
 <20q>
 action: /say If you have a question, please be specific and concise. Don't ask questions like 'Does anyone know how to ...' or 'What is the best way to ...'. We do not have the time or patience to play a game of 20 questions with people that are not capable of articulating properly. See also: http://catb.org/~esr/faqs/smart-questions.html
 created_on: 1215709795
@@ -667,10 +889,12 @@ type: text
 action: http://c2.com/cgi/wiki?ThreeStarProgrammer
 created_on: 1111867182
 enabled: 1
+last_referenced_in: #pbot2
+last_referenced_on: 1292042090.04301
 owner: pragma_
 rate_limit: 15
-ref_count: 6
-ref_user: lemonade`
+ref_count: 7
+ref_user: pragma_
 type: text
 
 <5ex>
@@ -697,10 +921,11 @@ type: text
 action: /say $nick, $answers
 created_on: 1193948417
 enabled: 1
-last_referenced_on: 1277909734.77233
+last_referenced_in: ##c
+last_referenced_on: 1292489486.84054
 owner: pragma_
 rate_limit: 0
-ref_count: 719
+ref_count: 797
 ref_user: pragma_
 type: text
 
@@ -718,11 +943,12 @@ type: text
 action: /say $faces
 created_on: 1109365121
 enabled: 1
-last_referenced_on: 1277878212.48995
+last_referenced_in: ##c
+last_referenced_on: 1291472221.50743
 owner: pragma_
 rate_limit: 15
-ref_count: 111
-ref_user: pragma_
+ref_count: 113
+ref_user: sacho
 type: text
 
 <:-(>
@@ -799,21 +1025,22 @@ type: text
 action: /call :)
 created_on: 1180052721
 enabled: 1
+last_referenced_on: 1291472221.49704
 owner: pragma_
 rate_limit: 15
-ref_count: 4
-ref_user: kate`
+ref_count: 5
+ref_user: sacho
 type: text
 
 <:p>
 action: /call :)
 created_on: 1180052714
 enabled: 1
-last_referenced_on: 1277878212.48022
+last_referenced_on: 1280112140.53999
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: pragma_
+ref_count: 2
+ref_user: Random832
 type: text
 
 <;>
@@ -890,10 +1117,12 @@ type: text
 action: the assignment operator
 created_on: 1104595880
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292052226.1635
 owner: Major-Willard
 rate_limit: 15
-ref_count: 45
-ref_user: ivank
+ref_count: 54
+ref_user: blech_
 type: text
 
 <==>
@@ -940,10 +1169,12 @@ type: text
 action: a question mark.
 created_on: 1237066516
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1291905592.74614
 owner: Quetzalcoatl_
 rate_limit: 15
-ref_count: 2
-ref_user: crosvera
+ref_count: 3
+ref_user: Maxdamantus
 type: text
 
 <?:>
@@ -1060,10 +1291,12 @@ type: text
 action: a steaming, grotesque, viscous stool of an excuse for a cognition-utilising being.
 created_on: 1272814299
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1291509109.20018
 owner: n00p
 rate_limit: 15
-ref_count: 4
-ref_user: s00p
+ref_count: 6
+ref_user: n00p
 type: text
 
 <B>
@@ -1120,20 +1353,24 @@ type: text
 action: #include <limits.h> - maximum value for the number of bits used to represent an object of type char. - >= 8
 created_on: 1104389685
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288190281.84237
 owner: defrost
 rate_limit: 15
-ref_count: 8
-ref_user: s00p
+ref_count: 9
+ref_user: n00p
 type: text
 
 <CHAR_MAX>
 action: #include <limits.h> - maximum value for type char. Its value is: SCHAR_MAX if char represents negative values, UCHAR_MAX otherwise. - >= 127
 created_on: 1104389685
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288191304.54422
 owner: defrost
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: s00p
 type: text
 
 <CHAR_MIN>
@@ -1230,10 +1467,12 @@ type: text
 action: Resource temporarily unavailable
 created_on: 1239972852
 enabled: 1
+last_referenced_in: wulf
+last_referenced_on: 1290332775.70585
 owner: Wulf4
 rate_limit: 15
-ref_count: 1
-ref_user: Wulf_
+ref_count: 2
+ref_user: Wulf
 type: text
 
 <EALREADY>
@@ -2160,11 +2399,12 @@ type: text
 action: an integer constant expression, with type int and a negative value, that is returned by several functions to indicate end-of-file (ISO/IEC 9899:1999 7.19.1(3)). It is NOT a char. It is NOT a byte that is stored at the end of every file.
 created_on: 1104596552
 enabled: 1
-last_referenced_on: 1277154619.75901
+last_referenced_in: ##c
+last_referenced_on: 1290427074.70155
 owner: infobahn
 rate_limit: 15
-ref_count: 34
-ref_user: Wulf
+ref_count: 43
+ref_user: angstrom
 type: text
 
 <EOPNOTSUPP>
@@ -2541,10 +2781,12 @@ type: text
 action: "C - A Reference Manual" by Harbison & Steele; a reference for C on par with K&R - http://www.amazon.com/Reference-Manual-Samuel-P-Harbison/dp/013089592X
 created_on: 1109636091
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292146991.98607
 owner: heina
 rate_limit: 15
-ref_count: 127
-ref_user: kate`
+ref_count: 167
+ref_user: n00p
 type: text
 
 <IB>
@@ -2571,10 +2813,12 @@ type: text
 action: #include <limits.h> - INT_MAX - maximum value of an int object, at least +32767
 created_on: 1104369616
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289073849.48754
 owner: twkm
 rate_limit: 15
-ref_count: 2
-ref_user: pragma_
+ref_count: 3
+ref_user: n00p
 type: text
 
 <INT_MIN>
@@ -2591,10 +2835,12 @@ type: text
 action: hard to tell the difference between newlines and new posts.
 created_on: 1258439566
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288499365.02008
 owner: ntis11
 rate_limit: 15
-ref_count: 1
-ref_user: Love4Boobies
+ref_count: 4
+ref_user: roxdragon
 type: text
 
 <LE>
@@ -2680,22 +2926,25 @@ type: text
 <NET>
 action: like the java platform, but by microsoft
 created_on: 1106069886
-enabled: 1
+enabled: 0
+last_referenced_in: pragma_
+last_referenced_on: 1292285117.41991
 owner: durnew
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 4
+ref_user: pragma_
 type: text
 
 <NULL>
 action: the (implementation defined) pointer value used to indicate a pointer that refers to no object; a macro expanding to a compile-time integer zero, possibly cast to (void *), e.g. ((void *)0) or 0L
 created_on: 1104596262
 enabled: 1
-last_referenced_on: 1277900248.04003
+last_referenced_in: ##c
+last_referenced_on: 1287614948.63785
 owner: Major-Willard
 rate_limit: 15
-ref_count: 40
-ref_user: pragma_
+ref_count: 42
+ref_user: foocraft
 type: text
 
 <NeverDream>
@@ -2763,10 +3012,12 @@ type: text
 action: written in C, it's free and you can find it here: http://plan9.bell-labs.com/plan9dist or /join #plan9
 created_on: 1106978951
 enabled: 1
+last_referenced_in: solar_sea
+last_referenced_on: 1290597484.42051
 owner: Major-Willard
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: solar_sea
 type: text
 
 <QED>
@@ -3034,9 +3285,11 @@ type: text
 action: a Google-and-Wikipedia whore who likes to quote random links, but doesn't really understand the contents of most of them; never goes outside to interact with reality, and is a sheltered fool who cannot differentiate sarcasm and metaphors from literal speech.
 created_on: 1260585861
 enabled: 1
+last_referenced_in: pragma_
+last_referenced_on: 1288069481.1452
 owner: pragma_
 rate_limit: 15
-ref_count: 2
+ref_count: 3
 ref_user: pragma_
 type: text
 
@@ -3054,11 +3307,12 @@ type: text
 action: http://bigeyedeer.files.wordpress.com/2008/07/graf.gif
 created_on: 1217055595
 enabled: 1
-last_referenced_on: 1277352895.24932
+last_referenced_in: wulf
+last_referenced_on: 1287507131.87423
 owner: pragma_
 rate_limit: 15
-ref_count: 12
-ref_user: alexbobP
+ref_count: 13
+ref_user: Wulf
 type: text
 
 <[]>
@@ -3406,10 +3660,11 @@ type: text
 action: acronym.pl
 created_on: 1105953751
 enabled: 1
-last_referenced_on: 1277905815.69842
+last_referenced_in: ##c
+last_referenced_on: 1292113802.9644
 owner: pragma_
 rate_limit: 15
-ref_count: 447
+ref_count: 466
 ref_user: pragma_
 type: module
 
@@ -3447,11 +3702,12 @@ type: text
 action: /say $advicepredicate $advicehelper.
 created_on: 1258762773
 enabled: 1
-last_referenced_on: 1277892579.53732
+last_referenced_in: ##c
+last_referenced_on: 1292382199.87372
 owner: PARLIAMENT
 rate_limit: 15
-ref_count: 24
-ref_user: pragma_
+ref_count: 28
+ref_user: guidj0s
 type: text
 
 <advicehelper>
@@ -3498,10 +3754,11 @@ type: text
 action: ago.pl
 created_on: 1277256899.15762
 enabled: 1
-last_referenced_on: 1277812952.69623
+last_referenced_in: pragma_
+last_referenced_on: 1288391997.35031
 owner: pragma_
 rate_limit: 15
-ref_count: 5
+ref_count: 11
 ref_user: pragma_
 type: module
 
@@ -3529,21 +3786,21 @@ type: text
 action: /call factalias
 created_on: 1277259091.375
 enabled: 1
-last_referenced_on: 1277370626.92846
+last_referenced_on: 1289051812.03351
 owner: pbot3
 rate_limit: 15
-ref_count: 5
-ref_user: NoCode
+ref_count: 12
+ref_user: pragma_
 type: text
 
 <aliases>
 action: /call find ^/call
 created_on: 1179677200
 enabled: 1
-last_referenced_on: 1277909698.47976
+last_referenced_on: 1277953841.43233
 owner: pragma_
 rate_limit: 15
-ref_count: 25
+ref_count: 26
 ref_user: pragma_
 type: text
 
@@ -3561,10 +3818,12 @@ type: text
 action: armadillo whale hyena squid trout hedgehog cat pig buffalo earthworm alligator turkey chicken cock badger calf platypus grue
 created_on: 1108931430
 enabled: 1
+last_referenced_in: leetprogrammer
+last_referenced_on: 1289117120.15186
 owner: pragma_
 rate_limit: 15
-ref_count: 8
-ref_user: pragma_
+ref_count: 10
+ref_user: leetProgrammer
 type: text
 
 <ansicode>
@@ -3581,10 +3840,12 @@ type: text
 action: http://linuxgazette.net/issue65/padala.html
 created_on: 1230592488
 enabled: 1
+last_referenced_in: sig^
+last_referenced_on: 1291298282.76431
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: OldParr
+ref_count: 4
+ref_user: sig^
 type: text
 
 <ansispec>
@@ -3611,9 +3872,11 @@ type: text
 action: Yes. "Most likely." No. "I think not." Brilliant! "Are you a $sizes $idiot?" "Definitely not." "Most assuredly." Absolutely! "Not likely!" "Do I look like I care?" "Ask again later." "Outlook good." "Outlook not so good." "Reply hazy, try again." "Forget it!" "Yeah, right." "As if!" "Can has happy fun time!" "Signs point to yes." "You may rely on it." "That gives me an idea!"
 created_on: 1195010969
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1285996804.04893
 owner: pragma_
 rate_limit: 15
-ref_count: 4
+ref_count: 6
 ref_user: dave0
 type: text
 
@@ -3631,20 +3894,34 @@ type: text
 action: a fruit
 created_on: 1262537874
 enabled: 1
+last_referenced_on: 1278976992.5029
 owner: kleinbottle
 rate_limit: 15
-ref_count: 2
+ref_count: 4
 ref_user: ecrane
+type: text
+
+<apropos>
+action: /call man
+created_on: 1278231978.63715
+enabled: 1
+last_referenced_on: 1278231989.69858
+owner: pragma_
+rate_limit: 15
+ref_count: 1
+ref_user: pragma_
 type: text
 
 <apue>
 action: Advanced Programming in the UNIX Environment, by Stevens and Rago, see http://www.apuebook.com/
 created_on: 1268625692
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289565380.04157
 owner: PoppaVic
 rate_limit: 15
-ref_count: 6
-ref_user: PoppaVic
+ref_count: 18
+ref_user: Wulf
 type: text
 
 <apue2>
@@ -3692,10 +3969,12 @@ type: text
 action: An array type describes a contiguously allocated nonempty set of objects with a particular member object type, called the element type.
 created_on: 1247726531
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1291500999.37418
 owner: Wulf_
 rate_limit: 15
-ref_count: 6
-ref_user: wiel
+ref_count: 11
+ref_user: Migaaresno
 type: text
 
 <arrays>
@@ -3742,21 +4021,23 @@ type: text
 action: /say If you have a question, just ask.  If somebody knows, they'll answer :) For best results, be specific, informative, complete, concise and on-topic!  Don't ask if you can ask a question. Don't ask if anyone uses/knows about foo. Please don't be demanding or insulting. Remember, we're all volunteers.  Also see: http://www.catb.org/~esr/faqs/smart-questions.html
 created_on: 1106341082
 enabled: 1
-last_referenced_on: 1277419119.74626
+last_referenced_in: ##c
+last_referenced_on: 1292269408.98364
 owner: pragma_
 rate_limit: 15
-ref_count: 203
-ref_user: bgmerrell
+ref_count: 223
+ref_user: bone
 type: text
 
 <asm>
 action: /call cc -lang=asm
 created_on: 1273436768
 enabled: 1
+last_referenced_on: 1291579118.80281
 owner: pragma_
 rate_limit: 15
-ref_count: 3
-ref_user: pragma_
+ref_count: 5
+ref_user: Dalek_Caan
 type: text
 
 <assume>
@@ -3793,30 +4074,33 @@ type: text
 action: /call slap
 created_on: 1275116449
 enabled: 1
+last_referenced_on: 1280851303.24685
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: Wulf
+ref_count: 2
+ref_user: Cammaaron
 type: text
 
 <attacks>
 action: thwaps smacks whacks whaps whips thwacks bashes boots headbutts bitchslaps punts
 created_on: 1108933612
 enabled: 1
+last_referenced_on: 1280851293.33563
 owner: pragma_
 rate_limit: 15
-ref_count: 5
-ref_user: n00p
+ref_count: 6
+ref_user: Cammaaron
 type: text
 
 <atype>
 action: "char a[3]" "char a[2]"
 created_on: 1236413496
 enabled: 1
+last_referenced_on: 1281069537.60027
 owner: snhmib
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: rooftopjoe
 type: text
 
 <autoshit>
@@ -3884,20 +4168,22 @@ type: text
 action: http://www.exmsft.com/~hanss/badcode.htm
 created_on: 1232034710
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1284486099.08916
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: DrDuck
 type: text
 
 <bash>
 action: /call cc -lang=bash
 created_on: 1273286262
 enabled: 1
-last_referenced_on: 1277373049.76776
+last_referenced_on: 1289189827.35093
 owner: pragma_
 rate_limit: 15
-ref_count: 41
+ref_count: 104
 ref_user: pragma_
 type: text
 
@@ -3915,10 +4201,12 @@ type: text
 action: http://beej.us/guide/bgnet/
 created_on: 1186757356
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292206426.74268
 owner: twkm
 rate_limit: 15
-ref_count: 68
-ref_user: poincare101
+ref_count: 73
+ref_user: snhmib
 type: text
 
 <beej2>
@@ -3935,10 +4223,22 @@ type: text
 action: The breakfast of champions
 created_on: 1110681030
 enabled: 1
+last_referenced_in: dalek_caan
+last_referenced_on: 1291579411.24903
 owner: dooky
 rate_limit: 15
-ref_count: 6
-ref_user: shaktazuki
+ref_count: 8
+ref_user: Dalek_Caan
+type: text
+
+<betawaffle>
+action: a nice person
+created_on: 1282247147.57514
+enabled: 1
+owner: betawaffle
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
 type: text
 
 <bf>
@@ -3955,53 +4255,59 @@ type: text
 action: the Binky Pointer Fun Video at http://cslibrary.stanford.edu/104/
 created_on: 1106444999
 enabled: 1
-last_referenced_on: 1277833299.46365
+last_referenced_in: ouah
+last_referenced_on: 1292234417.95313
 owner: prec
 rate_limit: 15
-ref_count: 147
-ref_user: snhmib
+ref_count: 156
+ref_user: ouah
 type: text
 
 <bite>
 action: /me bites $args. Yummy!
 created_on: 1244945112
 enabled: 1
+last_referenced_in: nathan-d
+last_referenced_on: 1282920086.40948
 owner: Wulf_
 rate_limit: 15
-ref_count: 3
-ref_user: tp76
+ref_count: 4
+ref_user: Nathan-D
 type: text
 
 <bithacks>
 action: http://www.cs.utk.edu/~vose/c-stuff/bithacks.html or http://graphics.stanford.edu/~seander/bithacks.html
 created_on: 1256619383
 enabled: 1
-last_referenced_on: 1277542222.60122
+last_referenced_in: ##c
+last_referenced_on: 1292713334.07213
 owner: Chris
 rate_limit: 15
-ref_count: 23
-ref_user: megabraker
+ref_count: 30
+ref_user: pragma_
 type: text
 
 <bitwise>
 action: http://www.codersger.de/mags/cscene/CS9/CS9-02.html
 created_on: 1255220538
 enabled: 1
-last_referenced_on: 1277267090.71176
+last_referenced_on: 1278593906.15978
 owner: Random832
 rate_limit: 15
-ref_count: 5
-ref_user: Ygnus
+ref_count: 6
+ref_user: Jafet
 type: text
 
 <blamethecompiler>
 action: a common disease mostly contracted by beginning programmers.  There is no known cure except that over time, outbreaks will occur with less and less frequency.
 created_on: 1106336163
 enabled: 1
+last_referenced_in: sacho
+last_referenced_on: 1289935049.26651
 owner: prec
 rate_limit: 15
-ref_count: 4
-ref_user: n00p
+ref_count: 7
+ref_user: sacho
 type: text
 
 <bodily_action>
@@ -4035,14 +4341,15 @@ ref_user: pragma_
 type: text
 
 <book>
-action: /me points accusingly at $args, "Where is your book?!"
+action: /me points accusingly at $args, "Where is your book?!"  See http://www.iso-9899.info/wiki/Books for some useful book recommendations, including FREE online resources!
 created_on: 1179504776
 enabled: 1
-last_referenced_on: 1277887660.72878
+last_referenced_in: ##c
+last_referenced_on: 1292727111.85776
 owner: pragma_
 rate_limit: 15
-ref_count: 769
-ref_user: n00p
+ref_count: 847
+ref_user: pragma_
 type: text
 
 <book2>
@@ -4056,14 +4363,15 @@ ref_user: PoppaVic
 type: text
 
 <books>
-action: http://www.iso-9899.info/wiki/Books
+action: /say See http://www.iso-9899.info/wiki/Books for some useful book recommendations, including FREE online resources!
 created_on: 1104378101
 enabled: 1
-last_referenced_on: 1277887663.01715
+last_referenced_in: ##c
+last_referenced_on: 1292726913.42854
 owner: twkm
 rate_limit: 15
-ref_count: 466
-ref_user: n00p
+ref_count: 515
+ref_user: pragma_
 type: text
 
 <booty(.*)>
@@ -4100,10 +4408,11 @@ type: text
 action: /me $eat_adverbs $eat_actions her snack.
 created_on: 1174693123
 enabled: 1
-last_referenced_on: 1277908256.6914
+last_referenced_in: ##c
+last_referenced_on: 1292133456.37441
 owner: pragma_
 rate_limit: 15
-ref_count: 229
+ref_count: 239
 ref_user: pragma_
 type: text
 
@@ -4121,10 +4430,12 @@ type: text
 action: /me bounces around.
 created_on: 1108872842
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889398.08174
 owner: pragma_
 rate_limit: 15
-ref_count: 14
-ref_user: NinoScript
+ref_count: 16
+ref_user: Remoun
 type: text
 
 <break>
@@ -4141,9 +4452,11 @@ type: text
 action: http://www.effingpot.com/index.shtml
 created_on: 1208327851
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288301122.57884
 owner: pragma_
 rate_limit: 15
-ref_count: 1
+ref_count: 4
 ref_user: jwillia3
 type: text
 
@@ -4161,21 +4474,23 @@ type: text
 action: /say $bye_words, $nick
 created_on: 1109365229
 enabled: 1
-last_referenced_on: 1277547273.10841
+last_referenced_on: 1281103920.70985
 owner: pragma_
 rate_limit: 15
-ref_count: 34
-ref_user: megabraker
+ref_count: 36
+ref_user: starck_Aw
 type: text
 
 <bye!>
 action: /say Excellently observed, $nick, but let us cultivate our garden.
 created_on: 1109793039
 enabled: 1
+last_referenced_in: gionnico
+last_referenced_on: 1287612650.65304
 owner: NeverDream
 rate_limit: 15
-ref_count: 1
-ref_user: NeverDream
+ref_count: 4
+ref_user: gionnico
 type: text
 
 <bye_words>
@@ -4192,31 +4507,36 @@ type: text
 action: defined by the C standard as an addressable unit of storage large enough to hold a character value.  The char type is byte-sized and is at least 8 bits wide.  CHAR_BIT in <limits.h> defines the byte size for any given implementation.  The term "byte" is most often used to mean 8 bits; however, the term octet is preferred.
 created_on: 1104873342
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288918687.33545
 owner: prec
 rate_limit: 15
-ref_count: 13
-ref_user: sjm13
+ref_count: 16
+ref_user: guidj0s
 type: text
 
 <c>
 action: /say C is a low level language designed to make assembly "easier", useful for device drivers or operating systems. Thusly, one has to maintain buffers, memory, and various low level information. C is not meant to be used for everyday applications, a common misconception.
 created_on: 1108006206
 enabled: 1
-last_referenced_on: 1277924750.74262
+last_referenced_in: blargg
+last_referenced_on: 1291840293.21115
 owner: pragma
 rate_limit: 15
-ref_count: 158
-ref_user: lolfrenz
+ref_count: 185
+ref_user: blargg
 type: text
 
 <c++>
 action: /say C++ is not C, try ##c++
 created_on: 1108585029
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292134426.92467
 owner: NeverDream
 rate_limit: 15
-ref_count: 44
-ref_user: zu22
+ref_count: 58
+ref_user: freeone3000
 type: text
 
 <c++diffs>
@@ -4233,30 +4553,35 @@ type: text
 action: http://david.tribble.com/text/cdiffs.htm
 created_on: 1252250954
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1291509129.74012
 owner: PoppaVic
 rate_limit: 15
-ref_count: 1
-ref_user: Chris
+ref_count: 4
+ref_user: lemonade`
 type: text
 
 <c10k>
 action: the c10k problem, see http://www.kegel.com/c10k.html
 created_on: 1104635961
 enabled: 1
+last_referenced_on: 1278984575.38732
 owner: twkm
 rate_limit: 15
-ref_count: 10
-ref_user: pragma_
+ref_count: 11
+ref_user: apples
 type: text
 
 <c89>
 action: C89 draft: http://flash-gordon.me.uk/ansi.c.txt
 created_on: 1236861685
 enabled: 1
+last_referenced_in: #pbot2
+last_referenced_on: 1291960250.17063
 owner: Wulf4
 rate_limit: 15
-ref_count: 10
-ref_user: lemonade`
+ref_count: 15
+ref_user: pragma_
 type: text
 
 <c9888>
@@ -4283,29 +4608,33 @@ type: text
 action: /call std
 created_on: 1204312010
 enabled: 1
+last_referenced_on: 1290899359.78066
 owner: peapicker
 rate_limit: 15
-ref_count: 34
-ref_user: SiegeX
+ref_count: 42
+ref_user: eboyjr
 type: text
 
 <c99status>
 action: GCC's C99 implementation status:  http://gcc.gnu.org/c99status.html
 created_on: 1108082627
 enabled: 1
+last_referenced_on: 1280851314.14312
 owner: pragma_
 rate_limit: 15
-ref_count: 5
-ref_user: lemonade`
+ref_count: 6
+ref_user: Cammaaron
 type: text
 
 <c9xdiffs>
 action: http://home.datacomm.ch/t_wolf/tw/c/c9x_changes.html
 created_on: 1104460717
 enabled: 1
+last_referenced_in: lemonade`
+last_referenced_on: 1291509147.1196
 owner: twkm
 rate_limit: 15
-ref_count: 4
+ref_count: 5
 ref_user: lemonade`
 type: text
 
@@ -4323,20 +4652,23 @@ type: text
 action: /call math
 created_on: 1193082106
 enabled: 1
+last_referenced_on: 1290909275.35169
 owner: pragma_
 rate_limit: 15
-ref_count: 14
-ref_user: pragma_
+ref_count: 32
+ref_user: Aegis_
 type: text
 
 <callgraph>
 action: /say Generating a potential call graph from an RTL dump: http://www.gson.org/egypt/
 created_on: 1247207074
 enabled: 1
+last_referenced_in: ouah
+last_referenced_on: 1292234448.30969
 owner: kate`
 rate_limit: 15
-ref_count: 3
-ref_user: kate`
+ref_count: 9
+ref_user: ouah
 type: text
 
 <calvinandhobbes>
@@ -4353,40 +4685,47 @@ type: text
 action: a bot.  See http://www.iso-9899.info/wiki/Candide for more information.
 created_on: 1107122441
 enabled: 1
+last_referenced_in: izhido
+last_referenced_on: 1284485902.48374
 owner: pragma_
 rate_limit: 15
-ref_count: 55
-ref_user: blinded
+ref_count: 58
+ref_user: Izhido
 type: text
 
 <cast>
 action: /call cdecl cast
 created_on: 1191042665
 enabled: 1
+last_referenced_on: 1289787012.94635
 owner: pragma_
 rate_limit: 15
-ref_count: 54
-ref_user: pragma_
+ref_count: 57
+ref_user: Maxdamantus
 type: text
 
 <casting>
 action: /say Cast properly: http://www.cognitiveprocess.com/~rjh/prg/writings/casting.html
 created_on: 1105954332
 enabled: 1
+last_referenced_in: ouah
+last_referenced_on: 1292234263.4744
 owner: pragma_
 rate_limit: 15
-ref_count: 18
-ref_user: Sacho
+ref_count: 19
+ref_user: ouah
 type: text
 
 <cat>
 action: http://www.iso-9899.info/wiki/Cat
 created_on: 1195413751
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288967359.8497
 owner: kate`
 rate_limit: 15
-ref_count: 5
-ref_user: Rodya
+ref_count: 8
+ref_user: n0kS
 type: text
 
 <cbad>
@@ -4400,35 +4739,47 @@ ref_user: pragma_
 type: text
 
 <cc>
-action: /call codepad $nick
+action: /call compiler $nick
 created_on: 1272176634
 enabled: 1
-last_referenced_on: 1277904825.20606
+last_referenced_on: 1295485470.05901
 owner: pragma_
 rate_limit: 0
-ref_count: 3530
+ref_count: 8217
 ref_user: pragma_
 type: text
 
 <cc2>
-action: /call ideone $nick
+action: /call codepad $nick
 created_on: 1269788333
 enabled: 1
-last_referenced_on: 1277863607.64252
+last_referenced_on: 1292417370.53892
 owner: pragma_
 rate_limit: 15
-ref_count: 1012
-ref_user: pragma_
+ref_count: 1156
+ref_user: n00p
+type: text
+
+<cc3>
+action: /call ideone $nick
+created_on: 1291939644.25307
+enabled: 1
+last_referenced_on: 1292417413.04338
+owner: pragma_
+rate_limit: 0
+ref_count: 405
+ref_user: n00p
 type: text
 
 <cdecl>
 action: cdecl.pl
 created_on: 1191041914
 enabled: 1
-last_referenced_on: 1277663577.63003
+last_referenced_in: siegex
+last_referenced_on: 1292661519.86496
 owner: pragma_
 rate_limit: 15
-ref_count: 2499
+ref_count: 2794
 ref_user: SiegeX
 type: module
 
@@ -4446,9 +4797,11 @@ type: text
 action: comp.lang.c FAQ: http://www.eskimo.com/~scs/C-faq/top.html
 created_on: 1106283720
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1285739467.21426
 owner: pragma_
 rate_limit: 15
-ref_count: 9
+ref_count: 20
 ref_user: dave0
 type: text
 
@@ -4466,11 +4819,11 @@ type: text
 action: /call factchange
 created_on: 1277259441.33026
 enabled: 1
-last_referenced_on: 1277259445.87274
+last_referenced_on: 1295485549.43562
 owner: pbot3
 rate_limit: 15
-ref_count: 1
-ref_user: pbot3
+ref_count: 13
+ref_user: pragma_
 type: text
 
 <changelist>
@@ -4495,14 +4848,15 @@ ref_user: pragma_
 type: text
 
 <char>
-action: guaranteed to store any value between -127 and 127 or 0 and 255 (inclusive). The range that the implementation chooses is implementation dependant.
-created_on: 1273681489
+action: /say char is required to be able to represent (at least) the values inclusively between -127 and 127 (signed char), or 0 and 255 (unsigned char). The representation chosen is implementation-defined, meaning some compilers will treat a char as signed, others unsigned. sizeof (char) is always 1. See also: CHAR_BIT, CHAR_MIN, CHAR_MAX and byte
+created_on: 1288191355.84716
 enabled: 1
-last_referenced_on: 1277779700.39476
+last_referenced_in: ##c
+last_referenced_on: 1292045864.88831
 owner: s00p
 rate_limit: 15
-ref_count: 3
-ref_user: pragma_
+ref_count: 15
+ref_user: n00p
 type: text
 
 <char*a,b>
@@ -4579,23 +4933,24 @@ type: text
 action: codepad.pl
 created_on: 1269788272
 enabled: 1
-last_referenced_on: 1277904825.20755
+last_referenced_in: n00p
+last_referenced_on: 1292417413.04491
 modulelauncher_subpattern: s/([^ ]+)\s+(.*)/$1 '$2'/
 owner: pragma_
-rate_limit: 15
-ref_count: 1016
-ref_user: pragma_
+rate_limit: 1
+ref_count: 1693
+ref_user: n00p
 type: module
 
 <colors>
 action: red green yellow blue purple pink brown black white octarine cyan magenta orange
 created_on: 1108931265
 enabled: 1
-last_referenced_on: 1277141833.77794
+last_referenced_on: 1280267066.42372
 owner: pragma_
 rate_limit: 15
-ref_count: 7
-ref_user: pragma_
+ref_count: 9
+ref_user: Midass
 type: text
 
 <combo-breaker>
@@ -4612,10 +4967,11 @@ type: text
 action: /call list commands
 created_on: 1179674227
 enabled: 1
+last_referenced_on: 1288280786.10806
 owner: pragma_
 rate_limit: 15
-ref_count: 24
-ref_user: candide
+ref_count: 25
+ref_user: \-|lw]^]
 type: text
 
 <common>
@@ -4642,20 +4998,36 @@ type: text
 action: /say Please paste a *compilable* test-case that exhibits your symptoms.  If the code is incomplete, we cannot discount potential errors or undefined behavior elsewhere in your code, nor can we use our tools to debug.  Please do not waste our time this way.
 created_on: 1271712329
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290616342.26593
 owner: pragma_
 rate_limit: 15
-ref_count: 7
+ref_count: 11
 ref_user: pragma_
 type: text
 
+<compiler>
+action: compiler_client.pl
+created_on: 1291939583.25391
+enabled: 1
+last_referenced_in: #pbot2-test
+last_referenced_on: 1295485470.06659
+owner: pragma_
+rate_limit: 0
+ref_count: 1084
+ref_user: pragma_
+type: module
+
 <compilerline>
-action: Order Matters: CC <overall options> [-std=whatever] <debugging> <optimizing> <warnings> [-pedantic] <Other Include Paths> <Other Lib Paths> <Magic Defines> <Magic Undefines> [-f<language/platform options] [-m<machine options>] [-o outfile] files..... (this is all documented, and files can be .c or .o, .a or .so, or -l<to be linked> commands.) <paraphrased from man gcc>
+action: /say Order Matters: CC <overall options> [-std=whatever] <debugging> <optimizing> <warnings> [-pedantic] <Other Include Paths> <Other Lib Paths> <Magic Defines> <Magic Undefines> [-f<language/platform options] [-m<machine options>] [-o outfile] files..... (this is all documented, and files can be .c or .o, .a or .so, or -l<to be linked> commands.) <paraphrased from man gcc>
 created_on: 1266709397
 enabled: 1
+last_referenced_in: solar_sea
+last_referenced_on: 1290596135.7668
 owner: PoppaVic
 rate_limit: 15
-ref_count: 8
-ref_user: PoppaVic
+ref_count: 15
+ref_user: solar_sea
 type: text
 
 <compliance>
@@ -4672,22 +5044,36 @@ type: text
 action: compliment
 created_on: 1255395343
 enabled: 1
-last_referenced_on: 1277819289.73207
+last_referenced_in: n00p
+last_referenced_on: 1292158815.98784
 owner: pragma_
 rate_limit: 15
-ref_count: 67
-ref_user: velco
+ref_count: 95
+ref_user: n00p
 type: module
+
+<condiment>
+action: salt vinegar lemon pepper honey onion garlic mustard chilli
+created_on: 1285731911.98509
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1286577529.58862
+owner: dave0
+rate_limit: 15
+ref_count: 1
+ref_user: synx`
+type: text
 
 <const>
 action: http://publications.gbdirect.co.uk/c_book/chapter8/const_and_volatile.html - see section 8.4.1, http://c-faq.com/ansi/constmismatch.html
 created_on: 1107648578
 enabled: 1
-last_referenced_on: 1277393639.90095
+last_referenced_in: pragma_
+last_referenced_on: 1292131165.48109
 owner: prec
 rate_limit: 15
-ref_count: 21
-ref_user: dave0
+ref_count: 23
+ref_user: pragma_
 type: text
 
 <continue>
@@ -4724,30 +5110,23 @@ type: text
 action: /call botsnack
 created_on: 1195333486
 enabled: 1
+last_referenced_on: 1290596143.75579
 owner: pragma_
 rate_limit: 15
-ref_count: 22
-ref_user: pragma_
-type: text
-
-<coupon>
-action: http://scorpaen.com/yo/dishstfu.jpg
-created_on: 1203409804
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 24
+ref_user: solar_sea
 type: text
 
 <cpp>
 action: The C Preprocessor ; integrated with gcc
 created_on: 1107543769
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1284743221.66555
 owner: PoppaVic
 rate_limit: 15
-ref_count: 19
-ref_user: s00p
+ref_count: 20
+ref_user: pseud0cod3r
 type: text
 
 <cpp-com>
@@ -4804,11 +5183,12 @@ type: text
 action: cstd.pl
 created_on: 1270956236
 enabled: 1
-last_referenced_on: 1277929193.84593
+last_referenced_in: ##c
+last_referenced_on: 1292685850.29279
 owner: pragma_
 rate_limit: 15
-ref_count: 1007
-ref_user: Wulf
+ref_count: 1395
+ref_user: n00p
 type: module
 
 <csv>
@@ -4886,10 +5266,10 @@ type: text
 action: /me $dances.
 created_on: 1271192355
 enabled: 1
-last_referenced_on: 1277899057.15775
+last_referenced_on: 1277952224.51451
 owner: pragma_
 rate_limit: 15
-ref_count: 14
+ref_count: 15
 ref_user: pragma_
 type: text
 
@@ -4937,20 +5317,23 @@ type: text
 action: http://www.cs.usfca.edu/~parrt/course/652/lectures/cdecls.html
 created_on: 1195724740
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292680920.47573
 owner: kate`
 rate_limit: 15
-ref_count: 5
-ref_user: kate`
+ref_count: 7
+ref_user: snhmib
 type: text
 
 <declare>
 action: /call cdecl declare
 created_on: 1191042438
 enabled: 1
+last_referenced_on: 1292574626.43346
 owner: pragma_
 rate_limit: 15
-ref_count: 231
-ref_user: Chris
+ref_count: 275
+ref_user: phao
 type: text
 
 <declaredefine>
@@ -4987,30 +5370,34 @@ type: text
 action: /call dict
 created_on: 1269778750
 enabled: 1
+last_referenced_on: 1292015093.40203
 owner: pragma_
 rate_limit: 15
-ref_count: 46
-ref_user: snhmib
+ref_count: 58
+ref_user: tediosu
 type: text
 
 <defrost>
 action: the one who does the jokes ;p
 created_on: 1106696388
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288227213.31052
 owner: Major-Willard
 rate_limit: 15
-ref_count: 3
-ref_user: Ramier
+ref_count: 4
+ref_user: synx-
 type: text
 
 <describe>
 action: /call explain
 created_on: 1193083745
 enabled: 1
+last_referenced_on: 1287470794.42914
 owner: pragma_
 rate_limit: 15
-ref_count: 99
-ref_user: n00p
+ref_count: 111
+ref_user: neurodrone
 type: text
 
 <destroyer>
@@ -5027,31 +5414,45 @@ type: text
 action: http://www.imagepoop.com/image/1427/Greater-Internet-Dickwad-Theory.html
 created_on: 1199691115
 enabled: 1
+last_referenced_on: 1281608960.0845
 owner: pragma_
 rate_limit: 15
-ref_count: 7
-ref_user: jwillia3
+ref_count: 8
+ref_user: upd
 type: text
 
 <dict>
 action: dict.org.pl
 created_on: 1269777616
 enabled: 1
-last_referenced_on: 1277800770.41563
+last_referenced_in: ##c
+last_referenced_on: 1292226326.00415
 owner: pragma_
 rate_limit: 15
-ref_count: 417
-ref_user: pragma_
+ref_count: 456
+ref_user: neuro_sys
 type: module
+
+<did>
+action: /call 8ball
+created_on: 1286073809.59989
+enabled: 1
+last_referenced_on: 1286073824.04734
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: pragma_
+type: text
 
 <die>
 action: YOU MUST DIE. http://omploader.org/vMjQ4MQ
 created_on: 1249675373
 enabled: 1
+last_referenced_on: 1279229140.30258
 owner: syntropy
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: wuwei
 type: text
 
 <digraph>
@@ -5079,10 +5480,12 @@ type: text
 action: /me docks penises with $args
 created_on: 1255049382
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889568.23091
 owner: pragma_
 rate_limit: 15
-ref_count: 3
-ref_user: pragma_
+ref_count: 4
+ref_user: Remoun
 type: text
 
 <does not work>
@@ -5116,13 +5519,14 @@ ref_user: visof
 type: text
 
 <doesntwork>
-action: /say "It doesn't work!" is not very informative for the people trying to help you.  Please describe what you think may be wrong, what results you expected to get and what instead actually happens.  Pasting a compilable test-case and/or compiler messages to http://codepad.org/ may be helpful.
+action: /say "It doesn't work!" is not very informative for the people trying to help you.  Please describe what you think may be wrong, what results you expected to get and what instead actually happens.  Pasting a compilable test-case and/or compiler messages to http://ideone.com/ may be helpful.
 created_on: 1175456821
 enabled: 1
-last_referenced_on: 1277148771.43879
+last_referenced_in: ##c
+last_referenced_on: 1291927957.04163
 owner: pragma_
 rate_limit: 15
-ref_count: 138
+ref_count: 146
 ref_user: Wulf
 type: text
 
@@ -5140,42 +5544,47 @@ type: regex
 action: /say There is no need to cast the result of library functions that return void *; it makes your code hard to read, adds no value, and can hide a bug if you don't have a valid prototype in scope.  See http://www.cpax.org.uk/prg/writings/casting.php and http://c-faq.com/malloc/mallocnocast.html
 created_on: 1104594725
 enabled: 1
-last_referenced_on: 1277459557.10974
+last_referenced_in: ##c
+last_referenced_on: 1292113217.98734
 owner: infobahn
 rate_limit: 15
-ref_count: 472
-ref_user: Wulf
+ref_count: 532
+ref_user: pragma_
 type: text
 
 <dooky>
 action: the destroyer of worlds, an ardent sandwich eater.
 created_on: 1109726391
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1283528947.05619
 owner: dooky
 rate_limit: 15
-ref_count: 6
-ref_user: Major-Willard
+ref_count: 7
+ref_user: kate`
 type: text
 
 <double>
 action: /say When taking input for type double you need to use lf format specifier in the scanf statement. But when you are outputting a double you use f format specifier in the printf statements.
 created_on: 1195072541
 enabled: 1
-last_referenced_on: 1277216617.71238
+last_referenced_in: remoun
+last_referenced_on: 1290889319.76781
 owner: pragma_
 rate_limit: 15
-ref_count: 23
-ref_user: Jafet
+ref_count: 26
+ref_user: Remoun
 type: text
 
 <draft>
 action: /call standard
 created_on: 1252608384
 enabled: 1
+last_referenced_on: 1285450095.61059
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: poincare101
+ref_count: 5
+ref_user: Animus_
 type: text
 
 <drafts>
@@ -5232,10 +5641,11 @@ type: text
 action: writing code from top to bottom, as opposed to horizontally. See http://iq0.com/notes/deep.nesting.html
 created_on: 1176900462
 enabled: 1
-last_referenced_on: 1277647093.00511
+last_referenced_in: ##c
+last_referenced_on: 1292434448.06709
 owner: kate`
 rate_limit: 15
-ref_count: 76
+ref_count: 78
 ref_user: kate`
 type: text
 
@@ -5253,10 +5663,11 @@ type: text
 action: /say $rpg_ans
 created_on: 1231873978
 enabled: 1
+last_referenced_on: 1279662439.59275
 owner: pragma_
 rate_limit: 15
-ref_count: 5
-ref_user: d3mn0id
+ref_count: 6
+ref_user: SeySayux
 type: text
 
 <eat_actions>
@@ -5293,10 +5704,11 @@ type: text
 action: /call callgraph
 created_on: 1272355709
 enabled: 1
+last_referenced_on: 1289073940.43133
 owner: kate`
 rate_limit: 15
-ref_count: 1
-ref_user: kate`
+ref_count: 9
+ref_user: Asem
 type: text
 
 <else>
@@ -5307,6 +5719,17 @@ owner: Major-Willard
 rate_limit: 15
 ref_count: 0
 ref_user: nobody
+type: text
+
+<emacs>
+action: The Only Editor, http://www.gnu.org/software/emacs/
+created_on: 1279678958.80756
+enabled: 1
+last_referenced_on: 1279678975.88974
+owner: rhubarb
+rate_limit: 15
+ref_count: 1
+ref_user: rhubarb
 type: text
 
 <errno>
@@ -5320,13 +5743,15 @@ ref_user: nobody
 type: text
 
 <errors>
-action: /say If you have an error message please paste the actual error message.  Do not say "I have an error in my code."  Please paste the relevant code at http://rafb.net/paste/ with comments indicating the line numbers and a description of what you're trying to accomplish.  Do not ask to "find the error in my code, plzz".
+action: /say If you have an error message please paste the actual error message.  Do not say "I have an error in my code."  Please paste the relevant code at http://ideone.com with comments indicating the line numbers and a description of what you're trying to accomplish.  Do not ask to "find the error in my code, plzz".
 created_on: 1108853504
 enabled: 1
+last_referenced_in: sacho
+last_referenced_on: 1289935036.23939
 owner: pragma_
 rate_limit: 15
-ref_count: 18
-ref_user: pragma_
+ref_count: 20
+ref_user: sacho
 type: text
 
 <escapes>
@@ -5353,10 +5778,11 @@ type: text
 action: for the best, right?
 created_on: 1264580456
 enabled: 1
+last_referenced_on: 1280442244.75866
 owner: Nately
 rate_limit: 15
-ref_count: 2
-ref_user: pragma_
+ref_count: 3
+ref_user: Midass
 type: text
 
 <evilandomnipotence>
@@ -5373,11 +5799,12 @@ type: text
 action: excuse.sh
 created_on: 1236819394
 enabled: 1
-last_referenced_on: 1277878451.73042
+last_referenced_in: vdjh
+last_referenced_on: 1291861366.69754
 owner: pragma_
 rate_limit: 5
-ref_count: 295
-ref_user: pragma_
+ref_count: 324
+ref_user: vdjh
 type: module
 
 <existence>
@@ -5394,10 +5821,10 @@ type: text
 action: /call cdecl explain
 created_on: 1191042468
 enabled: 1
-last_referenced_on: 1277663577.62644
+last_referenced_on: 1292661519.86315
 owner: pragma_
 rate_limit: 15
-ref_count: 2101
+ref_count: 2378
 ref_user: SiegeX
 type: text
 
@@ -5405,153 +5832,69 @@ type: text
 action: /call double
 created_on: 1195072614
 enabled: 1
+last_referenced_on: 1283998793.83873
 owner: pragma_
 rate_limit: 15
-ref_count: 11
-ref_user: Chris
+ref_count: 12
+ref_user: pragma_
 type: text
 
 <faces>
 action: :) ;) :o >:) :p :P~ :D ;-D :^) =^.^= >:O
 created_on: 1209250455
 enabled: 1
+last_referenced_on: 1278350344.41917
 owner: kate`
 rate_limit: 15
-ref_count: 1
-ref_user: kate`
+ref_count: 2
+ref_user: hnd
 type: text
 
 <factoid>
 action: of information
 created_on: 1108616481
 enabled: 1
+last_referenced_in: asem
+last_referenced_on: 1289074144.99286
 owner: pragma_
 rate_limit: 15
-ref_count: i
-ref_user: PoppaVic
+ref_count: l
+ref_user: Asem
 type: text
 
 <factoids>
 action: /call list factoids
 created_on: 1192737117
 enabled: 1
+last_referenced_on: 1290889093.76263
 owner: pragma_
 rate_limit: 15
-ref_count: 5
-ref_user: appletizer
+ref_count: 7
+ref_user: Remoun
 type: text
 
 <false>
 action: !true
 created_on: 1197769474
 enabled: 1
-last_referenced_on: 1277547316.30694
+last_referenced_in: remoun
+last_referenced_on: 1290889132.84881
 owner: snhmib
 rate_limit: 15
-ref_count: 5
-ref_user: megabraker
-type: text
-
-<fap>
-action: /say $nick, fap to something on the first page of $fapsites
-created_on: 1258697281
-enabled: 1
-last_referenced_on: 1277373170.75365
-owner: PARLIAMENT
-rate_limit: 15
-ref_count: 94
-ref_user: pragma_
-type: text
-
-<fapgay>
-action: straight straight straight straight straight straight straight striaght straight "gay - You're screwed."
-created_on: 1258698593
-enabled: 1
-owner: PARLIAMENT
-rate_limit: 15
-ref_count: 1
-ref_user: PARLIAMENT
-type: text
-
-<faps>
-action: /me performs $faps3 masturbation with a $sizes $colors $faps4 while thinking of $who_answers.
-created_on: 1258697089
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 22
-ref_user: Nately
-type: text
-
-<faps1>
-action: pussy anal blowjob handjob
-created_on: 1258696772
-enabled: 1
-owner: PARLIAMENT
-rate_limit: 15
-ref_count: 1
-ref_user: PARLIAMENT
-type: text
-
-<faps2>
-action: chick girl beauty hot tits breasts playful pleasure asian black milf fat dwarf
-created_on: 1258698496
-enabled: 1
-owner: PARLIAMENT
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<faps3>
-action: anal vaginal penile
-created_on: 1258697019
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<faps4>
-action: buttplug "baseball bat" "coca-cola bottle" "string of anal beads" toaster "strawberry pop-tart"
-created_on: 1258697044
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<faps5>
-action: lesbian homosexual straight
-created_on: 1258697058
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<fapsites>
-action: http://redtube.com/?search=$faps1+$faps2 http://youporn.com/search?query=$faps1+$faps2&type=$fapgay
-created_on: 1258697164
-enabled: 1
-owner: PARLIAMENT
-rate_limit: 15
-ref_count: 4
-ref_user: pragma_
+ref_count: 8
+ref_user: Remoun
 type: text
 
 <faq>
 action: cfaq.pl
 created_on: 1104460444
 enabled: 1
-last_referenced_on: 1277817537.90466
+last_referenced_in: ##c
+last_referenced_on: 1292504535.73749
 owner: twkm
 rate_limit: 15
-ref_count: 518
-ref_user: Draconx
+ref_count: 529
+ref_user: snhmib
 type: module
 
 <feof>
@@ -5568,9 +5911,10 @@ type: text
 action: Foreign Function Interface
 created_on: 1192819360
 enabled: 1
+last_referenced_on: 1280462438.74276
 owner: PoppaVic
 rate_limit: 15
-ref_count: 2
+ref_count: 4
 ref_user: PoppaVic
 type: text
 
@@ -5588,10 +5932,12 @@ type: text
 action: while (fgets(line, sizeof line, stdin)) { /* process line */ }
 created_on: 1106767895
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1286630309.59922
 owner: prec
 rate_limit: 15
-ref_count: 10
-ref_user: pragma_
+ref_count: 13
+ref_user: n00p
 type: text
 
 <fhs>
@@ -5608,10 +5954,10 @@ type: text
 action: /call factfind
 created_on: 1277784994.65625
 enabled: 1
-last_referenced_on: 1277909698.49555
+last_referenced_on: 1292268416.09927
 owner: pbot3
 rate_limit: 15
-ref_count: 19
+ref_count: 64
 ref_user: pragma_
 type: text
 
@@ -5619,20 +5965,23 @@ type: text
 action: /call errors
 created_on: 1275602822
 enabled: 1
+last_referenced_on: 1287610155.99524
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: pragma_
+ref_count: 2
+ref_user: Wulf
 type: text
 
 <floating>
 action: http://docs.sun.com/source/806-3568/ncg_goldberg.html
 created_on: 1200954186
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292268421.11263
 owner: pragma_
 rate_limit: 15
-ref_count: 23
-ref_user: megabraker
+ref_count: 29
+ref_user: pragma_
 type: text
 
 <flushstdin>
@@ -5649,9 +5998,10 @@ type: text
 action: fnord.pl
 created_on: 1274561219
 enabled: 1
+last_referenced_on: 1280120376.93433
 owner: pragma_
 rate_limit: 15
-ref_count: 22
+ref_count: 24
 ref_user: pragma_
 type: module
 
@@ -5659,10 +6009,11 @@ type: module
 action: /call dict -d foldoc
 created_on: 1269854612
 enabled: 1
+last_referenced_on: 1292226325.99699
 owner: pragma_
 rate_limit: 15
-ref_count: 28
-ref_user: LumberCartel
+ref_count: 30
+ref_user: neuro_sys
 type: text
 
 <foo-nix>
@@ -5679,20 +6030,34 @@ type: text
 action: /say He who asks a question may be a fool for five minutes; he who does not ask a question remains a fool forever.
 created_on: 1194366107
 enabled: 1
+last_referenced_in: kkd9e
+last_referenced_on: 1288706201.58739
 owner: pragma_
 rate_limit: 15
-ref_count: 8
-ref_user: kjelle
+ref_count: 14
+ref_user: kkd9E
+type: text
+
+<forth>
+action: /call cc -lang=forth
+created_on: 1278217489.9096
+enabled: 1
+last_referenced_on: 1285643863.82419
+owner: pragma_
+rate_limit: 15
+ref_count: 11
+ref_user: PoppaVic
 type: text
 
 <fpt>
 action: /say Function Pointer Tutorial: http://www.newty.de/fpt/fpt.html
 created_on: 1189558928
 enabled: 1
-last_referenced_on: 1277231237.97915
+last_referenced_in: ##c
+last_referenced_on: 1291502889.39589
 owner: OrngeTide
 rate_limit: 15
-ref_count: 6
+ref_count: 7
 ref_user: Wulf
 type: text
 
@@ -5730,10 +6095,21 @@ type: text
 action: /call google
 created_on: 1240680519
 enabled: 1
+last_referenced_on: 1291235301.26187
 owner: pragma_
 rate_limit: 15
-ref_count: 89
-ref_user: bearded_oneder
+ref_count: 97
+ref_user: pikpik
+type: text
+
+<gabe_g23>
+action: currently away, try again later
+created_on: 1286761739.72805
+enabled: 1
+owner: Gabe_G23
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
 type: text
 
 <gamers>
@@ -5760,11 +6136,12 @@ type: text
 action: GNU Compiler Collection, also the command name of the c compilation controller
 created_on: 1104389164
 enabled: 1
-last_referenced_on: 1277541983.31503
+last_referenced_in: ##c
+last_referenced_on: 1292405669.61136
 owner: twkm
 rate_limit: 15
-ref_count: 19
-ref_user: megabraker
+ref_count: 25
+ref_user: pksadiq
 type: text
 
 <gcchacks>
@@ -5781,52 +6158,59 @@ type: text
 action: /say GDB website: http://www.gnu.org/software/gdb/ - GDB Manual: http://sourceware.org/gdb/current/onlinedocs/gdb/
 created_on: 1104460628
 enabled: 1
+last_referenced_in: mischief
+last_referenced_on: 1289964375.674
 owner: twkm
 rate_limit: 15
-ref_count: 13
-ref_user: pragma_
+ref_count: 14
+ref_user: mischief
 type: text
 
 <gdefine>
 action: gdefine.pl
 created_on: 1236819675
 enabled: 1
-last_referenced_on: 1277424219.00511
+last_referenced_in: pragma_
+last_referenced_on: 1287544504.05593
 owner: pragma_
 rate_limit: 15
-ref_count: 425
-ref_user: aoupi
+ref_count: 438
+ref_user: pragma_
 type: module
 
 <gdict>
 action: /call gdefine
 created_on: 1255125488
 enabled: 1
-last_referenced_on: 1277424219.00258
+last_referenced_on: 1287544504.05339
 owner: pragma_
 rate_limit: 15
-ref_count: 330
-ref_user: aoupi
+ref_count: 343
+ref_user: pragma_
 type: text
 
 <geekporn>
 action: http://www.ellf.ru/2008/02/05/kompy-kompy-kompy-86-foto.html
 created_on: 1202802223
 enabled: 1
+last_referenced_in: leetprogrammer
+last_referenced_on: 1289117156.8208
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: leetProgrammer
 type: text
 
 <get>
 action: /me $attacks $args with a $sizes $colors $animal_nouns $animals
 created_on: 1257711390
 enabled: 1
+last_referenced_in: arvind_khadri
+last_referenced_on: 1289323365.98697
 owner: Irishmanluke
 rate_limit: 15
-ref_count: 17
-ref_user: PoppaVic
+ref_count: 18
+ref_user: arvind_khadri
 type: text
 
 <getabook>
@@ -5843,9 +6227,11 @@ type: text
 action: http://hpux.cs.utah.edu/hppd/hpux/Misc/cdecl-2.5/
 created_on: 1191041433
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289073798.29132
 owner: pragma_
 rate_limit: 15
-ref_count: 3
+ref_count: 4
 ref_user: PoppaVic
 type: text
 
@@ -5863,10 +6249,12 @@ type: text
 action: very bad.  It cannot be told the size of the buffer to read in, therefore it has no way of preventing buffer overflows.  Use fgets() with 'stdin' as the FILE* instead.  http://www.eskimo.com/~scs/C-faq/q12.23.html
 created_on: 1108103139
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288845688.05081
 owner: pragma_
 rate_limit: 15
-ref_count: 51
-ref_user: wito
+ref_count: 55
+ref_user: bhwhite
 type: text
 
 <gettimeofday>
@@ -5893,10 +6281,12 @@ type: text
 action: /say There is no "global" scope in C. There are four kinds of scopes: function, file, block, and function prototype. A variable that appears outside of any block or list of parameters has file scope, which terminates at the end of the translation unit.
 created_on: 1271966015
 enabled: 1
+last_referenced_in: n00p
+last_referenced_on: 1290311945.75938
 owner: n00p
 rate_limit: 15
-ref_count: 7
-ref_user: s00p
+ref_count: 14
+ref_user: n00p
 type: text
 
 <gnumake>
@@ -5913,41 +6303,47 @@ type: text
 action: /say It's not unreasonable that if computer programmers developed an autonomous self-learning/self-correcting AI world and allowed it to run for several billion iterations; then came back to it, that they may not be able to alter it without destroying it. If such a programmer were to have orginally created debug routines and backdoors, such code would ultimately point to obsolete code regions.
 created_on: 1260214264
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1287610343.13599
 owner: pragma_
 rate_limit: 15
-ref_count: 10
-ref_user: pragma_
+ref_count: 11
+ref_user: Love4Boobies
 type: text
 
 <google>
-action: /say http://lmgtfy.com/
-created_on: 1276660976
+action: /say http://lmgtfy.com/?q=$args
+created_on: 1283520362.81541
 enabled: 1
-last_referenced_on: 1277373106.93327
-owner: pragma_
+last_referenced_in: kesselhaus
+last_referenced_on: 1292473226.4774
+owner: kate`
 rate_limit: 15
-ref_count: 3
-ref_user: Adola
+ref_count: 13
+ref_user: kesselhaus
 type: text
 
 <gotchas>
 action: /say http://www.iso-9899.info/wiki/C_gotchas
 created_on: 1244833982
 enabled: 1
+last_referenced_on: 1278135157.15998
 owner: kate`
 rate_limit: 15
-ref_count: 118
-ref_user: PoppaVic
+ref_count: 119
+ref_user: chuy_max
 type: text
 
 <goto>
 action: http://imgs.xkcd.com/comics/goto.png
 created_on: 1186325626
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290343484.5208
 owner: Baughn
 rate_limit: 15
-ref_count: 7
-ref_user: chittoor
+ref_count: 10
+ref_user: eboyjr
 type: text
 
 <greenspun>
@@ -5964,21 +6360,24 @@ type: text
 action: /say <grot> I remember the relief of waking up one morning (sane) in a hospital bed, after a night of terror after smoking cannbis, having freaked out completely and developed symptoms that went beyond ordinary panic attacks
 created_on: 1260048234
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1282602919.32164
 owner: pragma_
 rate_limit: 15
-ref_count: 6
-ref_user: grot
+ref_count: 7
+ref_user: apropos
 type: text
 
 <gspy>
 action: gspy.pl
 created_on: 1105953720
 enabled: 1
-last_referenced_on: 1277370928.87783
+last_referenced_in: agiofws
+last_referenced_on: 1288050071.54131
 owner: pragma_
 rate_limit: 15
-ref_count: 49
-ref_user: NoCode
+ref_count: 51
+ref_user: Agiofws
 type: module
 
 <gtop10>
@@ -6025,22 +6424,24 @@ type: text
 action: /say "Given..Want": What do you have to work with? What's the desired goal? Between them is the resulting Process. Now ask yourself: WHY am I doing this? Why THIS way?
 created_on: 1254241388
 enabled: 1
-last_referenced_on: 1277149965.14601
+last_referenced_in: ##c
+last_referenced_on: 1289513610.04657
 owner: dbtid
 rate_limit: 15
-ref_count: 27
-ref_user: habnabit
+ref_count: 30
+ref_user: PoppaVic
 type: text
 
 <h>
 action: /say To learn all about $args, see http://www.iso-9899.info/wiki/Candide#$args
 created_on: 1272397269
 enabled: 1
-last_referenced_on: 1277802080.71216
+last_referenced_in: pragma_
+last_referenced_on: 1292650640.84119
 owner: pragma_
 rate_limit: 15
-ref_count: 33
-ref_user: Chris
+ref_count: 47
+ref_user: pragma_
 type: text
 
 <h/o>
@@ -6067,11 +6468,12 @@ type: regex
 action: http://en.wikipedia.org/wiki/Hashtable
 created_on: 1199914203
 enabled: 1
-last_referenced_on: 1277909043.80092
+last_referenced_in: remoun
+last_referenced_on: 1290889545.83476
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: n00p
+ref_count: 5
+ref_user: Remoun
 type: text
 
 <havel>
@@ -6098,32 +6500,34 @@ type: regex
 action: /call hi
 created_on: 1179679787
 enabled: 1
-last_referenced_on: 1277860315.30973
+last_referenced_on: 1292040612.42888
 owner: pragma_
 rate_limit: 15
-ref_count: 80
-ref_user: majere
+ref_count: 104
+ref_user: pragma_
 type: text
 
 <helloworld>
 action: http://www.lisha.ufsc.br/~guto/teaching/os/exercise/hello.html
 created_on: 1237684920
 enabled: 1
+last_referenced_on: 1280421427.05268
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: sanjoyd
 type: text
 
 <help>
 action: /say To learn all about me, see http://www.iso-9899.info/wiki/Candide
 created_on: 1109792986
 enabled: 1
-last_referenced_on: 1277817502.70541
+last_referenced_in: smatz
+last_referenced_on: 1292724045.26849
 owner: NeverDream
 rate_limit: 15
-ref_count: 497
-ref_user: Draconx
+ref_count: 623
+ref_user: SmatZ
 type: text
 
 <herring>
@@ -6140,11 +6544,12 @@ type: text
 action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
-last_referenced_on: 1277909049.75163
+last_referenced_in: pragma_
+last_referenced_on: 1292660558.20234
 owner: pragma_
 rate_limit: 15
-ref_count: 888
-ref_user: n00p
+ref_count: 987
+ref_user: pragma_
 type: text
 
 <hi_phrases>
@@ -6161,10 +6566,12 @@ type: text
 action: http://www.yesfunny.com/Sports/sports8.jpeg -- in other words, are you sure C is for you?
 created_on: 1205575974
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889198.89126
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: n00p
+ref_count: 3
+ref_user: Remoun
 type: text
 
 <hit>
@@ -6182,29 +6589,33 @@ type: text
 action: it in
 created_on: 1230314812
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1285214631.56627
 owner: Dianora
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 2
+ref_user: Love4Boobies
 type: text
 
 <hola>
 action: /call hi
 created_on: 1193167207
 enabled: 1
+last_referenced_on: 1288280682.03835
 owner: pragma_
 rate_limit: 15
-ref_count: 3
-ref_user: megabraker
+ref_count: 4
+ref_user: logann2019
 type: text
 
 <homework>
 action: /say We can help with homework, as long as it's within the spirit of the assignment. We won't do it for you, though. Ask questions such as "Why is it that ... ?" rather than "Show me how to ..."
 created_on: 1231165509
 enabled: 1
+last_referenced_on: 1278516912.98663
 owner: kate`
 rate_limit: 15
-ref_count: 30
+ref_count: 31
 ref_user: pragma_
 type: text
 
@@ -6212,11 +6623,12 @@ type: text
 action: horoscope
 created_on: 1255107146
 enabled: 1
-last_referenced_on: 1277799362.88677
+last_referenced_in: ##c
+last_referenced_on: 1287925908.77971
 owner: pragma_
 rate_limit: 15
-ref_count: 27
-ref_user: pragma_
+ref_count: 36
+ref_user: mi6_x3m
 type: module
 
 <horrorscope>
@@ -6244,21 +6656,24 @@ type: text
 action: /say What you're attempting is akin to an apprentence carpenter attempting to construct an entire house without having learned how to measure.  In other words, there will be a lot of holes -- if the entire contraption doesn't fall apart completely.
 created_on: 1194058489
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288602578.9381
 owner: pragma_
 rate_limit: 15
-ref_count: 3
-ref_user: mauke
+ref_count: 4
+ref_user: n00p
 type: text
 
 <how>
 action: /say $how_answers
 created_on: 1276845773
 enabled: 1
-last_referenced_on: 1277873266.66513
+last_referenced_in: mji
+last_referenced_on: 1292569014.26771
 owner: pragma_
 rate_limit: 15
-ref_count: 12
-ref_user: pragma_
+ref_count: 30
+ref_user: mji
 type: text
 
 <how_answers>
@@ -6285,10 +6700,12 @@ type: text
 action: /say How to Design Programs: http://www.htdp.org/
 created_on: 1270427313
 enabled: 1
+last_referenced_in: angstrom
+last_referenced_on: 1284743490.85082
 owner: kate`
 rate_limit: 15
-ref_count: 2
-ref_user: n00p
+ref_count: 3
+ref_user: angstrom
 type: text
 
 <hug>
@@ -6305,20 +6722,23 @@ type: text
 action: the sexiest hacker on the planet
 created_on: 1106984850
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1285731785.93512
 owner: hunterx
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: aadq
 type: text
 
 <hush>
 action: /me blushes and goes quiet for now.
 created_on: 1258843946
 enabled: 1
+last_referenced_on: 1280175972.3589
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: chittoor
+ref_count: 3
+ref_user: slonopotamus
 type: text
 
 <i2a>
@@ -6335,10 +6755,12 @@ type: text
 action: /say Your inner animal is a $sizes $animal_nouns $animals, $args.
 created_on: 1174590993
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889066.85509
 owner: pragma_
 rate_limit: 15
-ref_count: 87
-ref_user: pragma_
+ref_count: 88
+ref_user: Remoun
 type: text
 
 <idb>
@@ -6376,32 +6798,36 @@ type: text
 action: ideone.pl
 created_on: 1272176604
 enabled: 1
-last_referenced_on: 1277903941.59521
+last_referenced_in: n00p
+last_referenced_on: 1292417370.54987
 modulelauncher_subpattern: s/([^ ]+)\s+(.*)/$1 '$2'/
 owner: pragma_
 rate_limit: 0
-ref_count: 3521
-ref_user: pragma_
+ref_count: 6901
+ref_user: n00p
 type: module
 
 <idiot>
 action: moron knucklehead dolt half-wit retard idiot chowderhead
 created_on: 1194139898
 enabled: 1
+last_referenced_on: 1278868176.99147
 owner: pragma_
 rate_limit: 15
-ref_count: 7
-ref_user: s-s
+ref_count: 8
+ref_user: pseud0cod3r
 type: text
 
 <if>
 action: the keyword that tests a bracketed expression and if true, executes the following statement or block; if the expression evaluates to false an optional ''else'' clause is executed
 created_on: 1105258377
 enabled: 1
+last_referenced_in: enigma
+last_referenced_on: 1287380676.30122
 owner: Major-Willard
 rate_limit: 15
-ref_count: 14
-ref_user: megabraker
+ref_count: 15
+ref_user: Enigma
 type: text
 
 <ignore>
@@ -6438,43 +6864,47 @@ type: text
 action: /call factinfo
 created_on: 1277259101.38088
 enabled: 1
-last_referenced_on: 1277798085.05793
+last_referenced_on: 1295485493.00474
 owner: pbot3
 rate_limit: 15
-ref_count: 9
-ref_user: Wulf
+ref_count: 40
+ref_user: pragma_
 type: text
 
 <inline>
 action: /say A function declared with an inline function specifier is an inline function. Making a function an inline function suggests that calls to the function be as fast as possible. If you use `inline', always use `static', too.
 created_on: 1273526791
 enabled: 1
+last_referenced_in: solar_sea
+last_referenced_on: 1290596192.10807
 owner: Wulf
 rate_limit: 15
-ref_count: 1
-ref_user: Wulf
+ref_count: 2
+ref_user: solar_sea
 type: text
 
 <insult>
 action: insult.pl
 created_on: 1236819209
 enabled: 1
-last_referenced_on: 1277798723.41667
+last_referenced_in: ##c
+last_referenced_on: 1291316935.7611
 owner: pragma_
 rate_limit: 15
-ref_count: 382
-ref_user: Wulf
+ref_count: 510
+ref_user: pragma_
 type: module
 
 <int>
 action: a signed integer data type, at least 16 bits wide, which must be able to represent (at least) all the numbers in the range -32767 to +32767. Its lowest value, INT_MIN, and highest value, INT_MAX, are defined in <limits.h>
 created_on: 1104595147
 enabled: 1
-last_referenced_on: 1277542162.60184
+last_referenced_in: remoun
+last_referenced_on: 1290889210.11336
 owner: infobahn
 rate_limit: 15
-ref_count: 37
-ref_user: megabraker
+ref_count: 55
+ref_user: Remoun
 type: text
 
 <integer>
@@ -6521,31 +6951,22 @@ type: text
 action: /call 8ball
 created_on: 1277624712.94018
 enabled: 1
-last_referenced_on: 1277624719.56398
+last_referenced_on: 1289628968.26291
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: pragma_
+ref_count: 2
+ref_user: PoppaVic
 type: text
 
 <isospec>
 action: /call standard
 created_on: 1192736447
 enabled: 1
+last_referenced_on: 1289607305.71185
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: lemonadedrink
-type: text
-
-<it>
-action: beyond true
-created_on: 1254141732
-enabled: 1
-owner: RuralHack
-rate_limit: 15
-ref_count: 6
-ref_user: xvit
+ref_count: 9
+ref_user: PoppaVic
 type: text
 
 <it\sworks>
@@ -6573,20 +6994,22 @@ type: text
 action: /call works
 created_on: 1231373861
 enabled: 1
+last_referenced_on: 1291315953.5892
 owner: pragma_
 rate_limit: 15
-ref_count: 5
-ref_user: pragma_
+ref_count: 6
+ref_user: Wulf
 type: text
 
 <javabad>
 action: /call size
 created_on: 1199480034
 enabled: 1
+last_referenced_on: 1281556284.08169
 owner: Baughn_
 rate_limit: 15
-ref_count: 1
-ref_user: gavino
+ref_count: 2
+ref_user: GatorAlli
 type: text
 
 <jekle>
@@ -6609,6 +7032,17 @@ ref_count: 0
 ref_user: nobody
 type: text
 
+<js>
+action: /call cc2 -lang=JavaScript
+created_on: 1288706195.35286
+enabled: 1
+last_referenced_on: 1292135467.8492
+owner: pragma_
+rate_limit: 15
+ref_count: 16
+ref_user: Maxdamantus
+type: text
+
 <jseamus>
 action: obsessed with finding his identity.
 created_on: 1259024447
@@ -6629,45 +7063,39 @@ ref_count: 1
 ref_user: kp
 type: text
 
-<k&r>
-action: /say K&R is The C Programming Language, 2nd edition, by Kernighan and Ritchie, http://cm.bell-labs.com/cm/cs/cbook/ - be sure to see the errata as well, at http://cm.bell-labs.com/cm/cs/cbook/2ediffs.html - Note that K&R is not designed to teach programming itself, but rather how C does programming.  If you want to learn how to program, this isn't the book or programming language for you.
-created_on: 1243951633
-enabled: 1
-last_referenced_on: 1277432431.78372
-owner: Chris
-rate_limit: 15
-ref_count: 531
-ref_user: pragma_
-type: text
-
 <k&r2>
 action: /call k&r
 created_on: 1198032355
 enabled: 1
+last_referenced_on: 1291471621.69707
 owner: pragma_
 rate_limit: 15
-ref_count: 33
-ref_user: pragma_
+ref_count: 42
+ref_user: n00p
 type: text
 
 <kate>
 action: fond of enums
 created_on: 1177134347
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290955807.25842
 owner: kate`
 rate_limit: 15
-ref_count: 9
-ref_user: kate`
+ref_count: 11
+ref_user: hackysack
 type: text
 
 <kate`>
 action: Lasagnasian
 created_on: 1177655583
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288280932.55317
 owner: Baughn
 rate_limit: 15
-ref_count: 6
-ref_user: pragma_
+ref_count: 7
+ref_user: \-|lw]^]
 type: text
 
 <kernelnewbies>
@@ -6684,40 +7112,48 @@ type: text
 action: /me kicks $args's ass with a $weapon
 created_on: 1208762874
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289064532.18409
 owner: andy
 rate_limit: 15
-ref_count: 3
-ref_user: andy
+ref_count: 4
+ref_user: Marach
 type: text
 
 <kill>
 action: /me kills $args
 created_on: 1258609384
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889389.2205
 owner: PARLIAMENT
 rate_limit: 15
-ref_count: 5
-ref_user: Nately
+ref_count: 18
+ref_user: Remoun
 type: text
 
 <kiss>
 action: /me kisses $args
 created_on: 1233633783
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290889662.02597
 owner: pragma_
 rate_limit: 15
-ref_count: 17
-ref_user: zacs7
+ref_count: 33
+ref_user: acidflash
 type: text
 
 <knr>
 action: http://www.blackshell.com/~msmud/knr/
 created_on: 1275526780
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889219.63087
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: pragma_
+ref_count: 4
+ref_user: Remoun
 type: text
 
 <kp>
@@ -6734,10 +7170,11 @@ type: text
 action: /call k&r
 created_on: 1274661466
 enabled: 1
+last_referenced_on: 1291231022.82372
 owner: Random832
 rate_limit: 15
-ref_count: 2
-ref_user: pragma_
+ref_count: 14
+ref_user: gl
 type: text
 
 <lart>
@@ -6780,6 +7217,18 @@ ref_count: 21
 ref_user: pragma_
 type: text
 
+<ld>
+action: /say "Undefined reference" is a linker error. It's not a compile error. #includes don't help. You did not define the thing in the error message; you forgot to link the file that defines it; you forgot to link to the library that defines it; or, if it's a static library, you have the wrong order on the linker command line. Check which one. (Note that some linkers call it an unresolved external.)
+created_on: 1287675054.41867
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288132927.89701
+owner: boris``
+rate_limit: 15
+ref_count: 3
+ref_user: pragma_
+type: text
+
 <learn21days>
 action: http://abstrusegoose.com/249
 created_on: 1268317654
@@ -6815,10 +7264,11 @@ type: text
 action: http://www.leonerd.org.uk/code/libpack
 created_on: 1200500816
 enabled: 1
-last_referenced_on: 1277728978.81696
+last_referenced_in: ##c
+last_referenced_on: 1292589362.06564
 owner: PoppaVic
 rate_limit: 15
-ref_count: 72
+ref_count: 83
 ref_user: LeoNerd
 type: text
 
@@ -6832,45 +7282,39 @@ ref_count: 1
 ref_user: kate`
 type: text
 
-<limits>
-action: http://www.landercasper.com/sounds.html#stayhere search for "limits"
-created_on: 1193015678
-enabled: 1
-owner: PoppaVic
-rate_limit: 15
-ref_count: 1
-ref_user: PoppaVic
-type: text
-
 <line>
 action: a sequence of characters terminated by a newline sequence ('\n' in C, CRLF in various Internet protocols).
 created_on: 1106779283
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889221.28175
 owner: prec
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 2
+ref_user: Remoun
 type: text
 
 <linkage>
 action: /call linkageandstorage
 created_on: 1221600538
 enabled: 1
+last_referenced_on: 1288768779.58587
 owner: kate`
 rate_limit: 15
-ref_count: 5
-ref_user: Wulf_
+ref_count: 7
+ref_user: Sunil
 type: text
 
 <linkageandstorage>
 action: /say http://www.iso-9899.info/wiki/LinkageAndStorage
 created_on: 1221600612
 enabled: 1
-last_referenced_on: 1277929020.5457
+last_referenced_in: solar_sea
+last_referenced_on: 1290596208.42814
 owner: kate`
 rate_limit: 15
-ref_count: 5
-ref_user: Wulf
+ref_count: 12
+ref_user: solar_sea
 type: text
 
 <literal>
@@ -6887,20 +7331,24 @@ type: text
 action: horny
 created_on: 1250423849
 enabled: 1
+last_referenced_in: solar_sea
+last_referenced_on: 1290596194.11258
 owner: Pip
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: solar_sea
 type: text
 
 <long>
 action: a signed integer data type, at least 32 bits wide, which must be able to represent (at least) all the integers in the range -2147483647 to +2147483647. Its lowest value, LONG_MIN, and highest value, LONG_MAX, are defined in <limits.h>
 created_on: 1104595499
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289140536.73446
 owner: infobahn
 rate_limit: 15
-ref_count: 9
-ref_user: megabraker
+ref_count: 11
+ref_user: Marach
 type: text
 
 <look\sup\s([^\s]+)>
@@ -6917,11 +7365,11 @@ type: regex
 action: love_quote.pl
 created_on: 1271363105
 enabled: 1
-last_referenced_on: 1277873245.03489
+last_referenced_on: 1280345316.4254
 owner: pragma_
 rate_limit: 15
-ref_count: 37
-ref_user: pragma_
+ref_count: 42
+ref_user: cafer
 type: module
 
 <lsb>
@@ -6932,6 +7380,17 @@ owner: PoppaVic
 rate_limit: 15
 ref_count: 4
 ref_user: lemonade`
+type: text
+
+<lto>
+action: /say Link-time optimization is a type of program optimization performed by a compiler to a program at link time. Link time optimization occurs in programming languages that compile programs on a file-by-file basis (such as C and Fortran), rather than all at once (such as Java).
+created_on: 1279664679.51194
+enabled: 1
+last_referenced_on: 1279665056.87261
+owner: zumbi
+rate_limit: 15
+ref_count: 2
+ref_user: pragma_
 type: text
 
 <luke>
@@ -6968,21 +7427,23 @@ type: text
 action: /me dances, magic, dance!
 created_on: 1196992954
 enabled: 1
+last_referenced_on: 1279235009.46232
 owner: pragma_
 rate_limit: 15
-ref_count: 9
-ref_user: Saparok
+ref_count: 10
+ref_user: ecrane
 type: text
 
 <main>
 action: int main(int argc, char *argv[]); or int main(int argc, char **argv); or int main(void); See also ''argc'' and ''argv''; the standard entry point to C programs
 created_on: 1104231974
 enabled: 1
-last_referenced_on: 1277547188.41859
+last_referenced_in: ##c
+last_referenced_on: 1283478888.3822
 owner: twkm
 rate_limit: 15
-ref_count: 80
-ref_user: megabraker
+ref_count: 82
+ref_user: kate`
 type: text
 
 <mainloop_io>
@@ -7006,6 +7467,17 @@ ref_count: 14
 ref_user: zcram
 type: text
 
+<malloc>
+action: /call dontcastmalloc
+created_on: 1280342692.40847
+enabled: 1
+last_referenced_on: 1290170005.26762
+owner: PoppaVic
+rate_limit: 15
+ref_count: 15
+ref_user: guest_143
+type: text
+
 <malloc\s+usage(.*)>
 action: mallocusage
 created_on: 1195076472
@@ -7020,31 +7492,35 @@ type: regex
 action: http://img441.imageshack.us/img441/6170/1194822657592cv0.jpg
 created_on: 1194839770
 enabled: 1
+last_referenced_on: 1280158113.42925
 owner: Cin
 rate_limit: 15
-ref_count: 17
-ref_user: pragma_
+ref_count: 19
+ref_user: Sgeo
 type: text
 
 <man>
 action: man.pl
 created_on: 1107137901
 enabled: 1
-last_referenced_on: 1277883339.23933
+last_referenced_in: ##c
+last_referenced_on: 1292358391.29079
 owner: pragma_
 rate_limit: 15
-ref_count: 1026
-ref_user: CDrone
+ref_count: 1085
+ref_user: Math
 type: module
 
 <mankind>
 action: http://etext.virginia.edu/toc/modeng/public/VanStor.html
 created_on: 1277818342.77735
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889231.26566
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 2
+ref_user: Remoun
 type: text
 
 <manpage>
@@ -7061,9 +7537,11 @@ type: text
 action: Man? Why bother installing? Ask ##C - Knows All, Tells All.
 created_on: 1271821903
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290235886.26088
 owner: PoppaVic
 rate_limit: 15
-ref_count: 12
+ref_count: 16
 ref_user: PoppaVic
 type: text
 
@@ -7071,10 +7549,12 @@ type: text
 action: /me $attacks $args $rtfm_smack the $body_part with a $sizes $colors manual.
 created_on: 1199758660
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290998728.88543
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: cousteau
+ref_count: 4
+ref_user: pragma_
 type: text
 
 <marco>
@@ -7101,20 +7581,24 @@ type: text
 action: math.pl
 created_on: 1105953711
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290909275.36385
 owner: pragma_
 rate_limit: 15
-ref_count: 300
-ref_user: pragma_
+ref_count: 320
+ref_user: Aegis_
 type: module
 
 <me>
 action: /me $args
 created_on: 1109820558
 enabled: 1
+last_referenced_in: wingless
+last_referenced_on: 1288920678.6004
 owner: pragma_
 rate_limit: 15
-ref_count: 24
-ref_user: pragma_
+ref_count: 29
+ref_user: wingless
 type: text
 
 <meaning>
@@ -7131,10 +7615,12 @@ type: text
 action: http://baetzler.de/humor/meat_beings.html -- What aliens would say if they discovered Earth
 created_on: 1260485203
 enabled: 1
+last_referenced_in: gionnico
+last_referenced_on: 1287612645.89854
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 2
+ref_user: gionnico
 type: text
 
 <megabraker>
@@ -7171,10 +7657,12 @@ type: text
 action: mature love
 created_on: 1271363525
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889233.27611
 owner: chittoor
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: Remoun
 type: text
 
 <mitletter>
@@ -7211,10 +7699,11 @@ type: text
 action: /msg $args
 created_on: 1109820572
 enabled: 1
-last_referenced_on: 1277422486.4963
+last_referenced_in: pragma_
+last_referenced_on: 1282598657.31643
 owner: pragma_
 rate_limit: 15
-ref_count: 47
+ref_count: 48
 ref_user: pragma_
 type: text
 
@@ -7222,10 +7711,11 @@ type: text
 action: http://c-faq.com/aryptr/dynmuldimary.html
 created_on: 1271609036
 enabled: 1
-last_referenced_on: 1277410329.79142
+last_referenced_in: ##c
+last_referenced_on: 1292442595.87081
 owner: PoppaVic
 rate_limit: 15
-ref_count: 3
+ref_count: 20
 ref_user: PoppaVic
 type: text
 
@@ -7233,10 +7723,12 @@ type: text
 action: /say If there's more than one possible outcome of a job or task, and one of those outcomes will result in disaster or an undesirable consequence, then somebody will do it that way.
 created_on: 1191356935
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288606297.90027
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: pragma_
+ref_count: 3
+ref_user: LKWgti\
 type: text
 
 <mute>
@@ -7253,10 +7745,12 @@ type: text
 action: equivalent to 0 for all n != 0
 created_on: 1273708252
 enabled: 1
+last_referenced_in: kingcocomango
+last_referenced_on: 1285124828.38446
 owner: fisted
 rate_limit: 15
-ref_count: 1
-ref_user: fisted
+ref_count: 2
+ref_user: kingcocomango
 type: text
 
 <n1256>
@@ -7293,10 +7787,11 @@ type: text
 action: a standard idiom for computing the number of elements in an array variable:  #define nelemof(array) (sizeof array/sizeof *array)
 created_on: 1108151345
 enabled: 1
+last_referenced_on: 1278616504.23704
 owner: prec
 rate_limit: 15
-ref_count: 2
-ref_user: pragma_
+ref_count: 3
+ref_user: n00p
 type: text
 
 <never>
@@ -7313,11 +7808,12 @@ type: text
 action: /say Another satisfied customer!  NEXT!!
 created_on: 1270253222
 enabled: 1
-last_referenced_on: 1277944197.31487
+last_referenced_in: ##c
+last_referenced_on: 1292612360.72635
 owner: pragma_
 rate_limit: 15
-ref_count: 10
-ref_user: Wulf
+ref_count: 107
+ref_user: guidj0s
 type: text
 
 <nickreg>
@@ -7364,10 +7860,11 @@ type: text
 action: /say $rpg_ans
 created_on: 1231873805
 enabled: 1
+last_referenced_on: 1279662453.37453
 owner: pragma_
 rate_limit: 15
-ref_count: 16
-ref_user: pragma_
+ref_count: 17
+ref_user: SeySayux
 type: text
 
 <northeast>
@@ -7434,10 +7931,12 @@ type: text
 action: region of data storage in the execution environment, the contents of which can represent values
 created_on: 1240461189
 enabled: 1
+last_referenced_in: animus`
+last_referenced_on: 1285539668.10817
 owner: Wulf_
 rate_limit: 15
-ref_count: 11
-ref_user: Wulf
+ref_count: 14
+ref_user: Animus`
 type: text
 
 <objectcgi>
@@ -7454,10 +7953,12 @@ type: text
 action: my pants are going on a rapmage through a long island bowling alley
 created_on: 1199181686
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289132676.73491
 owner: kp
 rate_limit: 15
-ref_count: 10
-ref_user: Gorgoroth
+ref_count: 12
+ref_user: Crum
 type: text
 
 <ohshit>
@@ -7468,16 +7969,6 @@ owner: PoppaVic
 rate_limit: 15
 ref_count: 4
 ref_user: cousteau
-type: text
-
-<oi>
-action: wtf
-created_on: 1268386560
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
 type: text
 
 <one-true-solution>
@@ -7494,10 +7985,12 @@ type: text
 action: http://www.marcuse.org/herbert/pubs/64onedim/odmcontents.html
 created_on: 1258771422
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1285212597.51546
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: n00p
+ref_count: 2
+ref_user: JodaZ
 type: text
 
 <onlinek&r2>
@@ -7510,14 +8003,27 @@ ref_count: 26
 ref_user: n00p
 type: text
 
+<ontopic>
+action: /say VB6 is on topic!
+created_on: 1287508746.42666
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1287509780.93403
+owner: n00p
+rate_limit: 15
+ref_count: 4
+ref_user: synx`
+type: text
+
 <oopbad>
 action: http://www.geocities.com/tablizer/oopbad.htm
 created_on: 1190225745
 enabled: 1
+last_referenced_on: 1278382618.44825
 owner: Baughn
 rate_limit: 15
-ref_count: 3
-ref_user: n00p
+ref_count: 5
+ref_user: alexbobP
 type: text
 
 <options>
@@ -7544,19 +8050,22 @@ type: text
 action: SICP -> I2A -> TAOCP -> APUE
 created_on: 1198331081
 enabled: 1
+last_referenced_in: cthuluh
+last_referenced_on: 1283864464.08512
 owner: gamag
 rate_limit: 15
-ref_count: 1
-ref_user: pragma_
+ref_count: 3
+ref_user: cthuluh
 type: text
 
 <ordermatters>
 action: /call compilerline
 created_on: 1266709336
 enabled: 1
+last_referenced_on: 1282713906.81782
 owner: PoppaVic
 rate_limit: 15
-ref_count: 7
+ref_count: 12
 ref_user: PoppaVic
 type: text
 
@@ -7564,10 +8073,12 @@ type: text
 action: /say Considering your ineptitude and lack of formulating pointed questions, these people have actually wasted more time attempting to assist you than you deserve. I suggest you copy the answers they are giving you and take a break to review them later when you are of a more calm disposition. Obviously you are too upset or frustrated to think straight. Go have an oreo.
 created_on: 1108081475
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1284743225.28715
 owner: pragma_
 rate_limit: 15
-ref_count: 11
-ref_user: Bish
+ref_count: 13
+ref_user: kate`
 type: text
 
 <owner>
@@ -7584,10 +8095,12 @@ type: text
 action: a moron incapable of logic who hasn't taken any computer science or electrical engineering classes and therefore holds mystical beliefs about what is possible with robots and simulations, constantly fabricating ridiculous laughable experiments.
 created_on: 1258884496
 enabled: 1
+last_referenced_in: poppavic
+last_referenced_on: 1292555804.07799
 owner: pragma_
 rate_limit: 15
-ref_count: 9
-ref_user: pragma_
+ref_count: 11
+ref_user: PoppaVic
 type: text
 
 <pant_status>
@@ -7614,10 +8127,11 @@ type: text
 action: /call rockpaperscissors
 created_on: 1273104506
 enabled: 1
+last_referenced_on: 1291861668.33321
 owner: pragma_
 rate_limit: 15
-ref_count: 4
-ref_user: OrderZero
+ref_count: 15
+ref_user: vdjh
 type: text
 
 <parsing>
@@ -7651,24 +8165,27 @@ ref_user: pragma_
 type: text
 
 <paste>
-action: /say Paste code/errors to http://codepad.org
+action: /say Paste code/errors to http://ideone.com
 created_on: 1247850332
 enabled: 1
-last_referenced_on: 1277142614.17624
+last_referenced_in: ##c
+last_referenced_on: 1292488762.56774
 owner: PoppaVic
 rate_limit: 15
-ref_count: 59
-ref_user: xuser
+ref_count: 75
+ref_user: Maxdamantus
 type: text
 
 <pastebin>
-action: /say Please do not use pastebin.org.  The reasons are many, including: the font is small and makes '1' and 'l' indistinguishable, among others; copy/paste includes line numbers (and NO, we do not want to scroll around in an ugly black-and-white textbox looking for what we wanted to copy); cluttered layout; etc.  Please use http://codepad.org instead.
+action: /say Please do not use pastebin.com.  The reasons are many, including: the font is small and makes '1' and 'l' indistinguishable, among others; copy/paste includes line numbers (and NO, we do not want to scroll around in an ugly black-and-white textbox looking for what we wanted to copy); cluttered layout; etc.  Please use http://codepad.org instead.
 created_on: 1193081655
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292610642.88478
 owner: pragma_
 rate_limit: 15
-ref_count: 68
-ref_user: m0rs
+ref_count: 93
+ref_user: guidj0s
 type: text
 
 <pastebin.com>
@@ -7695,21 +8212,23 @@ type: text
 action: http://www.pldaniels.com/c-of-peril/
 created_on: 1104460665
 enabled: 1
+last_referenced_in: leetprogrammer
+last_referenced_on: 1289117448.63483
 owner: twkm
 rate_limit: 15
-ref_count: 4
-ref_user: Legion
+ref_count: 5
+ref_user: leetProgrammer
 type: text
 
 <perl>
 action: /call cc -lang=perl
 created_on: 1273693148
 enabled: 1
-last_referenced_on: 1277712703.78885
+last_referenced_on: 1289082604.49322
 owner: pragma_
 rate_limit: 15
-ref_count: 19
-ref_user: pragma_
+ref_count: 20
+ref_user: Asem
 type: text
 
 <pftgu>
@@ -7736,11 +8255,11 @@ type: text
 action: /call cc -lang=php
 created_on: 1276978893
 enabled: 1
-last_referenced_on: 1277371078.55867
+last_referenced_on: 1289082620.19891
 owner: pragma_
 rate_limit: 15
-ref_count: 17
-ref_user: pragma_
+ref_count: 18
+ref_user: Asem
 type: text
 
 <pi>
@@ -7757,11 +8276,12 @@ type: text
 action: /say pong
 created_on: 1109821018
 enabled: 1
-last_referenced_on: 1277906790.54196
+last_referenced_in: mji
+last_referenced_on: 1292569025.31685
 owner: pragma_
 rate_limit: 15
-ref_count: 39
-ref_user: CDrone
+ref_count: 56
+ref_user: mji
 type: text
 
 <pizza_milkshake>
@@ -7788,20 +8308,23 @@ type: text
 action: /say Please do not abbreviate 'please', 'thanks' or 'sorry'.  It makes you look as though you don't really care.  See http://lumpio.no-ip.com/dont-use-thx-sry-plz.txt
 created_on: 1187652483
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288755474.55407
 owner: Draconx
 rate_limit: 15
-ref_count: 19
-ref_user: pragma_
+ref_count: 22
+ref_user: sswam
 type: text
 
 <pointerfun>
 action: /call binky
 created_on: 1206989366
 enabled: 1
+last_referenced_on: 1292234417.9438
 owner: Baughn
 rate_limit: 15
-ref_count: 10
-ref_user: Wulf
+ref_count: 12
+ref_user: ouah
 type: text
 
 <pointerops>
@@ -7818,20 +8341,23 @@ type: text
 action: http://pw2.netcom.com/~tjensen/ptr/cpoint.htm and http://c-faq.com/ptrs/index.html
 created_on: 1107379418
 enabled: 1
+last_referenced_in: ouah
+last_referenced_on: 1292233922.18328
 owner: pragma_
 rate_limit: 15
-ref_count: 116
-ref_user: n00p
+ref_count: 121
+ref_user: ouah
 type: text
 
 <portability>
 action: very important: http://clc-wiki.net/wiki/C_community:comp.lang.c:Portability_attitude
 created_on: 1263936716
 enabled: 1
+last_referenced_on: 1278489748.97558
 owner: n00p
 rate_limit: 15
-ref_count: 3
-ref_user: s00p
+ref_count: 4
+ref_user: n00p
 type: text
 
 <portable>
@@ -7848,20 +8374,24 @@ type: text
 action: http://portal.wecreatestuff.com/
 created_on: 1194469348
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889171.41433
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: n00p
+ref_count: 2
+ref_user: Remoun
 type: text
 
 <posix>
 action: /say The Open Group Base Specifications Issue 6: http://www.opengroup.org/onlinepubs/009695399/
 created_on: 1179496311
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292228362.3811
 owner: pragma_
 rate_limit: 15
-ref_count: 15
-ref_user: pragma_
+ref_count: 16
+ref_user: zcram
 type: text
 
 <pounding-a-nail>
@@ -7878,30 +8408,35 @@ type: text
 action: /call foldoc pragma
 created_on: 1270763790
 enabled: 1
+last_referenced_on: 1292226325.9856
 owner: pragma_
 rate_limit: 15
-ref_count: 7
-ref_user: LumberCartel
+ref_count: 9
+ref_user: neuro_sys
 type: text
 
 <prec>
 action: very FRUITY
 created_on: 1107502825
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1284485740.35987
 owner: pragma_
 rate_limit: 15
-ref_count: 4
-ref_user: typename
+ref_count: 5
+ref_user: pseud0cod3r
 type: text
 
 <predef>
 action: http://predef.sourceforge.net/ -- the Pre-defined C/C++ Compiler Macros project
 created_on: 1191766349
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289014635.06867
 owner: Auris-
 rate_limit: 15
-ref_count: 11
-ref_user: s00p
+ref_count: 14
+ref_user: n00p
 type: text
 
 <prepared>
@@ -7924,34 +8459,27 @@ ref_count: 2
 ref_user: Lenhix
 type: text
 
-<printf(1);>
-action: the best
-created_on: 1276976484
-enabled: 1
-owner: megabraker
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
 <process>
 action: /call projectprocess
 created_on: 1180197626
 enabled: 1
+last_referenced_on: 1287915049.13831
 owner: pragma_
 rate_limit: 15
-ref_count: 3
-ref_user: pragma_
+ref_count: 5
+ref_user: apparle
 type: text
 
 <projectprocess>
 action: http://www.projectcartoon.com/cartoon/644
 created_on: 1180197615
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1287915049.14373
 owner: pragma_
 rate_limit: 15
-ref_count: 4
-ref_user: n00p
+ref_count: 6
+ref_user: apparle
 type: text
 
 <prototype>
@@ -7969,10 +8497,11 @@ type: text
 action: http://www.gnu.org/software/pth/
 created_on: 1181487162
 enabled: 1
+last_referenced_on: 1278898866.45351
 owner: PoppaVic
 rate_limit: 15
-ref_count: 5
-ref_user: n00p
+ref_count: 6
+ref_user: PoppaVic
 type: text
 
 <py>
@@ -7989,11 +8518,11 @@ type: text
 action: /call cc -lang=python
 created_on: 1276564725
 enabled: 1
-last_referenced_on: 1277542036.62189
+last_referenced_on: 1278216513.41405
 owner: pragma_
 rate_limit: 15
-ref_count: 11
-ref_user: megabraker
+ref_count: 12
+ref_user: skampler
 type: text
 
 <qed>
@@ -8010,10 +8539,12 @@ type: text
 action: sort an array of data, #include <stdlib.h>, void qsort(void *base, size_t nelems, size_t elsize, int (*compar)(const void *, const void *)); returns nothing, see http://www.iso-9899.info/man?qsort
 created_on: 1104399031
 enabled: 1
+last_referenced_in: guest_143
+last_referenced_on: 1290170055.15603
 owner: twkm
 rate_limit: 15
-ref_count: 2
-ref_user: Sepero
+ref_count: 4
+ref_user: guest_143
 type: text
 
 <question>
@@ -8040,31 +8571,35 @@ type: text
 action: http://www.roangelo.net/logwitt/logwit12.html
 created_on: 1258590235
 enabled: 1
+last_referenced_in: kate`
+last_referenced_on: 1284648268.37292
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: dave0
+ref_count: 2
+ref_user: kate`
 type: text
 
 <quine>
 action: char*s="char*s=%c%s%c,c='%c';main(){printf(s,c,s,c,c);}",c='"';main(){printf(s,c,s,c,c);}
 created_on: 1275530214
 enabled: 1
+last_referenced_in: apples
+last_referenced_on: 1292192620.63583
 owner: dave0
 rate_limit: 15
-ref_count: 4
-ref_user: Wulf
+ref_count: 7
+ref_user: apples
 type: text
 
 <quote>
 action: /call topic
 created_on: 1258699991
 enabled: 1
-last_referenced_on: 1277609681.15118
+last_referenced_on: 1289926114.38496
 owner: pragma_
 rate_limit: 15
-ref_count: 1802
-ref_user: pragma_
+ref_count: 1826
+ref_user: Maxdamantus
 type: text
 
 <quotegrabs>
@@ -8081,9 +8616,11 @@ type: text
 action: /say Usage: !quote [--author <author>] [text] -- If you use !quote without arguments, it returns a random quote; if you use it with an argument, it searches for quotes containing that text; if you add --author <name> at the end, it searches for a quote by that author; if you specify text and --author, it searches for quotes by that author, containing that text.
 created_on: 1258776165
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1287786121.36034
 owner: pragma_
 rate_limit: 15
-ref_count: 13
+ref_count: 16
 ref_user: pragma_
 type: text
 
@@ -8101,10 +8638,12 @@ type: text
 action: pseudo-random number generator, #include <stdlib.h>, int rand(void); returns the next number in the sequence in the range [0,RAND_MAX], see http://www.iso-9899.info/man?rand and http://www.azillionmonkeys.com/qed/random.html
 created_on: 1104397431
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290392012.76817
 owner: twkm
 rate_limit: 15
-ref_count: 8
-ref_user: pragma_
+ref_count: 12
+ref_user: n00p
 type: text
 
 <rationale>
@@ -8151,10 +8690,12 @@ type: text
 action: http://www.iso-9899.info/wiki/Why_not_realloc
 created_on: 1254955396
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290803781.69021
 owner: Chris
 rate_limit: 15
-ref_count: 19
-ref_user: wito
+ref_count: 24
+ref_user: Wulf
 type: text
 
 <reason>
@@ -8181,19 +8722,21 @@ type: regex
 action: http://www.theravada.gr/rebirth.html
 created_on: 1258831285
 enabled: 1
+last_referenced_on: 1278135162.40852
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: chuy_max
 type: text
 
 <recent>
 action: /call top20 recent
 created_on: 1194139446
 enabled: 1
+last_referenced_on: 1285074145.91307
 owner: pragma_
 rate_limit: 15
-ref_count: 20
+ref_count: 21
 ref_user: pragma_
 type: text
 
@@ -8231,20 +8774,24 @@ type: text
 action: http://tlf.cx/bilder/tn/computing_for_farmers.jpg.ths.html
 created_on: 1180158102
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1281897519.77329
 owner: pragma_
 rate_limit: 15
-ref_count: 4
-ref_user: PoppaVic
+ref_count: 5
+ref_user: pippijn
 type: text
 
 <reference>
 action: http://www.acm.uiuc.edu/webmonkeys/book/c_guide/
 created_on: 1104460727
 enabled: 1
+last_referenced_in: bhwhite
+last_referenced_on: 1289583232.26652
 owner: twkm
 rate_limit: 15
-ref_count: 30
-ref_user: pragma_
+ref_count: 31
+ref_user: bhwhite
 type: text
 
 <referencedtype>
@@ -8281,10 +8828,12 @@ type: text
 action: a storage-class specifier for an object that suggests that access for the object be as fast as possible.  The extent to which the suggestion is effective is implementation defined.  Whether or not addressable storage is actually used, the address of any part of an object declared with storage-class specifier register cannot be computed.
 created_on: 1107636580
 enabled: 1
+last_referenced_in: mji
+last_referenced_on: 1292569036.36144
 owner: pragma_
 rate_limit: 15
-ref_count: 12
-ref_user: Wulf
+ref_count: 17
+ref_user: mji
 type: text
 
 <religion>
@@ -8351,30 +8900,35 @@ type: text
 action: /call rockpaperscissors
 created_on: 1273104501
 enabled: 1
+last_referenced_on: 1291861077.10021
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: pragma_
+ref_count: 7
+ref_user: vdjh
 type: text
 
 <rockpaperscissors>
 action: /me uses $rps!
 created_on: 1273104483
 enabled: 1
+last_referenced_in: vdjh
+last_referenced_on: 1291861664.39919
 owner: pragma_
 rate_limit: 15
-ref_count: 8
-ref_user: OrderZero
+ref_count: 21
+ref_user: vdjh
 type: text
 
 <roulette>
 action: /say $roulette_outcome
 created_on: 1254874530
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1285374560.31323
 owner: pragma_
 rate_limit: 15
-ref_count: 144
-ref_user: blinded
+ref_count: 147
+ref_user: synx`
 type: text
 
 <roulette_outcome>
@@ -8391,10 +8945,12 @@ type: text
 action: "You are standing $rpg_location.  You see a $sizes $rpg_location2 to the $rpg_direction." "You have been killed by a $sizes $animals!  R.I.P."
 created_on: 1231873892
 enabled: 1
+last_referenced_in: rsca
+last_referenced_on: 1290179344.37196
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: rsca
 type: text
 
 <rpg_direction>
@@ -8421,20 +8977,24 @@ type: text
 action: "$rpg_distance a $sizes $rpg_location2"
 created_on: 1231873398
 enabled: 1
+last_referenced_in: rsca
+last_referenced_on: 1290179338.78133
 owner: pragma_
 rate_limit: 15
-ref_count: 3
-ref_user: snhmib
+ref_count: 4
+ref_user: rsca
 type: text
 
 <rpg_location2>
 action: city castle headshop village "bath house"
 created_on: 1231873954
 enabled: 1
+last_referenced_in: rsca
+last_referenced_on: 1290179333.76742
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: snhmib
+ref_count: 2
+ref_user: rsca
 type: text
 
 <rps>
@@ -8471,11 +9031,12 @@ type: text
 action: /say Please find and read the documentation for that.
 created_on: 1199758774
 enabled: 1
-last_referenced_on: 1277911317.32564
+last_referenced_in: pragma_
+last_referenced_on: 1290998700.68389
 owner: pragma_
 rate_limit: 15
-ref_count: 33
-ref_user: soupdragon
+ref_count: 36
+ref_user: pragma_
 type: text
 
 <rtfm_smack>
@@ -8489,24 +9050,14 @@ ref_user: nobody
 type: text
 
 <ruby>
-action: better
-created_on: 1254141633
+action: /call cc -lang=ruby
+created_on: 1289051812.05396
 enabled: 1
-last_referenced_on: 1277542044.25568
-owner: RuralHack
+last_referenced_on: 1289082683.49619
+owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: megabraker
-type: text
-
-<rules>
-action: $nick rules
-created_on: 1264177779
-enabled: 1
-owner: gunninK
-rate_limit: 15
-ref_count: 3
-ref_user: dindinx
+ref_count: 6
+ref_user: Asem
 type: text
 
 <rvalue>
@@ -8533,51 +9084,80 @@ type: text
 action: sarcasm is lost on irc
 created_on: 1276666102
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288607403.07751
 owner: dave0
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 2
+ref_user: OrderZero
 type: text
 
 <say>
 action: /say $args
 created_on: 1251663502
 enabled: 1
-last_referenced_on: 1277785098.51562
+last_referenced_in: pragma_
+last_referenced_on: 1292542586.17511
 owner: pragma_
 rate_limit: 15
-ref_count: 436
-ref_user: pbot3
+ref_count: 490
+ref_user: pragma_
+type: text
+
+<scale>
+action: /say The scale of the Universe: http://htwins.net/scale/index.html
+created_on: 1282252138.81919
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
 type: text
 
 <scanf>
 action: a function that's stupid - "It's nearly impossible to do decent error recovery with scanf; usually it's far easier to read entire lines (with fgets or the like), then interpret them, either using sscanf or some other techniques." - See http://www.eskimo.com/~scs/C-faq/q12.20.html
 created_on: 1106970012
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1291229388.04942
 owner: Major-Willard
 rate_limit: 15
-ref_count: 307
-ref_user: sktrdie
+ref_count: 336
+ref_user: bhwhite
 type: text
 
 <scanf_is_stupid>
 action: /say It looks like the !scanf factoid was unsuccessful at convincing you not to use scanf(). scanf() isn't really that stupid, providing you know how to use it correctly. Chris Torek explains some problems with the way scanf() is commonly used and provides methods of solving those problems here: http://bytes.com/topic/c/answers/215517-warning-against-scanf#post840862
 created_on: 1264982172
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288630775.76832
 owner: n00p
 rate_limit: 15
-ref_count: 6
-ref_user: dave0
+ref_count: 7
+ref_user: n00p
+type: text
+
+<schildt>
+action: /call fact ##c schildt
+created_on: 1277953792.54663
+enabled: 1
+last_referenced_on: 1277953965.00148
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: pragma_
 type: text
 
 <scissors>
 action: /call rockpaperscissors
 created_on: 1273104511
 enabled: 1
+last_referenced_on: 1291861652.83563
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: pragma_
+ref_count: 4
+ref_user: vdjh
 type: text
 
 <screwwithcandide>
@@ -8624,10 +9204,12 @@ type: text
 action: /say $nick: /msg nickserv info $args
 created_on: 1215709237
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292674961.15622
 owner: Jafag
 rate_limit: 15
-ref_count: 31
-ref_user: Wulf
+ref_count: 36
+ref_user: Independer
 type: text
 
 <segfault>
@@ -8664,10 +9246,12 @@ type: text
 action: packing structures, usually portably for later extraction: see man 3 xdr as well as http://tpl.sourceforge.net/ and http://www.leonerd.org.uk/code/libpack/
 created_on: 1266811304
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290187017.28378
 owner: PoppaVic
 rate_limit: 15
-ref_count: 10
-ref_user: PoppaVic
+ref_count: 30
+ref_user: Math
 type: text
 
 <severity>
@@ -8684,42 +9268,47 @@ type: text
 action: /say Sex is allowed in ##C only on weekdays starting with 'T'.
 created_on: 1243974321
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1283813798.50267
 owner: pragma_
 rate_limit: 15
-ref_count: 6
-ref_user: OrderZero
+ref_count: 7
+ref_user: marik
 type: text
 
 <sh>
 action: /call cc -lang=bash
 created_on: 1275822098
 enabled: 1
+last_referenced_on: 1285074202.83161
 owner: pragma_
 rate_limit: 15
-ref_count: 49
-ref_user: dave0
+ref_count: 55
+ref_user: pragma_
 type: text
 
 <shoes>
 action: /say Lets say you want to buy a pair of shoes, right?  You come to my shoe store and I ask you what size your feet are.  You respond, "I like red."  I say, "That's nice, I'll look for some red shoes.  What size are your feet?"  And you respond, "I really like red."  Try to answer our questions, please.
 created_on: 1274214754
 enabled: 1
-last_referenced_on: 1277797911.97186
+last_referenced_in: armyriad
+last_referenced_on: 1289022927.98956
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: pragma_
+ref_count: 3
+ref_user: armyriad
 type: text
 
 <shoot>
 action: /me $weapon_action her $weapon and $shoot_action $args's $body_part.
 created_on: 1109021460
 enabled: 1
-last_referenced_on: 1277899702.25156
+last_referenced_in: ##c
+last_referenced_on: 1289027167.32702
 owner: pragma_
 rate_limit: 15
-ref_count: 149
-ref_user: pragma_
+ref_count: 158
+ref_user: armyriad
 type: text
 
 <shoot_action>
@@ -8736,21 +9325,23 @@ type: text
 action: a signed integer data type, at least 16 bits wide, which must be able to represent (at least) all the numbers in the range -32767 to +32767. Its lowest value, SHRT_MIN, and highest value, SHRT_MAX, are defined in <limits.h>
 created_on: 1104595429
 enabled: 1
+last_referenced_in: armyriad
+last_referenced_on: 1289022942.15464
 owner: infobahn
 rate_limit: 15
-ref_count: 3
-ref_user: n00p
+ref_count: 5
+ref_user: armyriad
 type: text
 
 <should>
 action: /call advice
 created_on: 1258762922
 enabled: 1
-last_referenced_on: 1277892579.52684
+last_referenced_on: 1292382199.86617
 owner: pragma_
 rate_limit: 15
-ref_count: 16
-ref_user: pragma_
+ref_count: 20
+ref_user: guidj0s
 type: text
 
 <shouldn?'?t?\s(.*)>
@@ -8767,10 +9358,10 @@ type: regex
 action: /call factshow
 created_on: 1277259146.86343
 enabled: 1
-last_referenced_on: 1277906915.27104
+last_referenced_on: 1295485510.28665
 owner: pbot3
 rate_limit: 15
-ref_count: 12
+ref_count: 24
 ref_user: pragma_
 type: text
 
@@ -8778,10 +9369,12 @@ type: text
 action: "Structure and Interpretation of Computer Programs", http://mitpress.mit.edu/sicp/
 created_on: 1191901455
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1287653075.12242
 owner: pizza_
 rate_limit: 15
-ref_count: 46
-ref_user: ws
+ref_count: 49
+ref_user: banisterfiend
 type: text
 
 <sicp+>
@@ -8809,30 +9402,35 @@ type: text
 action: http://steve-yegge.blogspot.com/2007/12/codes-worst-enemy.html
 created_on: 1199479944
 enabled: 1
+last_referenced_on: 1281556284.09337
 owner: Baughn_
 rate_limit: 15
-ref_count: 6
-ref_user: gavino
+ref_count: 7
+ref_user: GatorAlli
 type: text
 
 <size_t>
 action: an unsigned integer type which is the result type of the sizeof operator.  A size_t variable can store the size of any object.  C90: printf("%lu\n", (unsigned long)sizeof a); C99: printf("%zu\n", sizeof a);
 created_on: 1107760223
 enabled: 1
+last_referenced_in: ouah
+last_referenced_on: 1292233897.55495
 owner: prec
 rate_limit: 15
-ref_count: 12
-ref_user: s00p
+ref_count: 23
+ref_user: ouah
 type: text
 
 <sizeof>
 action: an operator which yields the size, in bytes, of the expression or the parenthesized type given as its operand.  The result type of the sizeof operator is size_t.  See also size_t and byte.
 created_on: 1108181591
 enabled: 1
+last_referenced_in: ouah
+last_referenced_on: 1292233873.43328
 owner: prec
 rate_limit: 15
-ref_count: 13
-ref_user: Wulf_
+ref_count: 19
+ref_user: ouah
 type: text
 
 <sizes>
@@ -8845,55 +9443,51 @@ ref_count: 7
 ref_user: R0b0t1
 type: text
 
-<skapare>
-action: Swedish for Creator, and he doesn't want you to bug him about it, anymore
-created_on: 1105953849
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
 <sky>
 action: /say The sky is $colors.
 created_on: 1186181196
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288966799.49703
 owner: upd
 rate_limit: 15
-ref_count: 19
-ref_user: Legion
+ref_count: 20
+ref_user: n0kS
 type: text
 
 <slap>
 action: /me $attacks $args with a $sizes $animal_nouns $animals!
 created_on: 1108932778
 enabled: 1
-last_referenced_on: 1277909033.92491
+last_referenced_on: 1280851303.25364
 owner: pragma_
 rate_limit: 15
-ref_count: 109
-ref_user: n00p
+ref_count: 110
+ref_user: Cammaaron
 type: text
 
 <sleep>
 action: waste of time
 created_on: 1108585791
 enabled: 1
+last_referenced_in: wingless
+last_referenced_on: 1288231337.13814
 owner: pepper^
 rate_limit: 15
-ref_count: 2
-ref_user: NinoScript
+ref_count: 3
+ref_user: wingless
 type: text
 
 <smart>
 action: /say See http://www.catb.org/~esr/faqs/smart-questions.html
 created_on: 1106519094
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1291501425.20117
 owner: pragma_
 rate_limit: 15
-ref_count: 22
-ref_user: m0rs
+ref_count: 24
+ref_user: Migaaresno
 type: text
 
 <smarties>
@@ -8920,10 +9514,12 @@ type: text
 action: "char a[1]" "char a[2]" "int a" "void a" "void* a[6]"
 created_on: 1236414189
 enabled: 1
+last_referenced_in: rsca
+last_referenced_on: 1289964335.56925
 owner: snhmib
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: rsca
 type: text
 
 <song\sof\sthe\sday(.*)>
@@ -8950,31 +9546,35 @@ type: text
 action: /say Sorting algorithm animations: http://www.sorting-algorithms.com/
 created_on: 1249125597
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289140485.92091
 owner: kate`
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: Maxdamantus
 type: text
 
 <source>
 action: /say My guts can be browsed at http://code.google.com/p/pbot2-pl/source/browse/#svn/trunk or checked out via ` svn checkout http://pbot2-pl.googlecode.com/svn/trunk `
 created_on: 1105954460
 enabled: 1
-last_referenced_on: 1277371894.77965
+last_referenced_in: n00p
+last_referenced_on: 1289201491.22729
 owner: pragma_
 rate_limit: 15
-ref_count: 72
-ref_user: pragma_
+ref_count: 79
+ref_user: n00p
 type: text
 
 <south>
 action: /say $rpg_ans
 created_on: 1231873967
 enabled: 1
+last_referenced_on: 1278350267.68603
 owner: pragma_
 rate_limit: 15
-ref_count: 2
-ref_user: Spark
+ref_count: 3
+ref_user: skampler
 type: text
 
 <southeast>
@@ -9001,30 +9601,33 @@ type: text
 action: The "Clockwise/Spiral Rule" is a technique for understanding C declarations.  See http://c-faq.com/decl/spiral.anderson.html
 created_on: 1198028238
 enabled: 1
+last_referenced_on: 1281464705.34387
 owner: Draconx|Laptop
 rate_limit: 15
-ref_count: 10
-ref_user: Draconx
+ref_count: 11
+ref_user: sn5
 type: text
 
 <sry>
 action: /call plz
 created_on: 1187652590
 enabled: 1
+last_referenced_on: 1288755474.5471
 owner: Draconx
 rate_limit: 15
-ref_count: 4
-ref_user: chroos
+ref_count: 7
+ref_user: sswam
 type: text
 
 <sscanf>
 action: /say The sscanf function is similar to scanf, except that its input comes from a string instead of a stream. fgets is commonly used prior to sscanf to provide a simple approach which doesn't leave unmatched bytes on the stream, unlike scanf. Note that sscanf's and sprintf's format specifiers are not perfectly reflective, and that it is possible for fgets to fetch part of a line.
 created_on: 1271531720
 enabled: 1
+last_referenced_on: 1278186086.32073
 owner: pragma_
 rate_limit: 15
-ref_count: 5
-ref_user: dave0
+ref_count: 6
+ref_user: PoppaVic
 type: text
 
 <stack_machine>
@@ -9051,20 +9654,23 @@ type: text
 action: /say C99 + TC1,2,3 working paper: http://open-std.org/JTC1/SC22/WG14/www/docs/n1256.pdf - Quick C library reference: http://www.acm.uiuc.edu/webmonkeys/book/c_guide/ - An explanation of all C standards: http://clc-wiki.net/wiki/The_C_Standard - Draft ANSI C Rationale:  http://www.scribd.com/doc/16306895/Draft-ANSI-C-Rationale
 created_on: 1249578326
 enabled: 1
-last_referenced_on: 1277871940.96725
+last_referenced_in: ##c
+last_referenced_on: 1292509781.02297
 owner: kate`
 rate_limit: 15
-ref_count: 90
-ref_user: esicerp
+ref_count: 178
+ref_user: gl
 type: text
 
 <static>
 action: used if the function/variable is only used in one source file, at file scope, it should be declared as static; variables of this storage class are initialised to zero; variables of this storage class which are declared in functions maintain their value between calls to the function
 created_on: 1106976976
 enabled: 1
+last_referenced_in: n00p
+last_referenced_on: 1290311959.00552
 owner: Major-Willard
 rate_limit: 15
-ref_count: 15
+ref_count: 17
 ref_user: n00p
 type: text
 
@@ -9072,11 +9678,11 @@ type: text
 action: /call standard
 created_on: 1247743928
 enabled: 1
-last_referenced_on: 1277871940.95354
+last_referenced_on: 1292509781.00952
 owner: Chris
 rate_limit: 15
-ref_count: 163
-ref_user: esicerp
+ref_count: 233
+ref_user: gl
 type: text
 
 <std::>
@@ -9093,10 +9699,12 @@ type: text
 action: interfaces for handling variable argument lists; #include <stdarg.h>; void va_start(va_list ap, arg); void va_copy(va_list dest, va_list src); type va_arg(va_list ap, type); void va_end(va_list ap); see http://www.iso-9899.info/man?stdarg
 created_on: 1104404716
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1285562556.49245
 owner: prec
 rate_limit: 15
-ref_count: 2
-ref_user: pragma_
+ref_count: 3
+ref_user: dave0
 type: text
 
 <stderr>
@@ -9163,41 +9771,71 @@ type: text
 action: /say If you do not stop it, I'm going to invoke my scary admin powers against you.  You've been warned.
 created_on: 1249676931
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889183.76755
 owner: joeyadams
 rate_limit: 15
-ref_count: 4
-ref_user: aeritharcanum
+ref_count: 6
+ref_user: Remoun
 type: text
 
 <storage>
 action: /call linkageandstorage
 created_on: 1221600563
 enabled: 1
-last_referenced_on: 1277929020.53636
+last_referenced_on: 1290596208.41816
 owner: kate`
 rate_limit: 15
-ref_count: 1
-ref_user: Wulf
+ref_count: 6
+ref_user: solar_sea
 type: text
 
 <str>
 action: a reserved file-scope identifier prefix when followed by a lowercase letter
 created_on: 1104399552
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289157280.21692
 owner: prec
 rate_limit: 15
-ref_count: 4
+ref_count: 5
+ref_user: n00p
+type: text
+
+<strcat>
+action: /say IT CAN ALL GO WRONG!
+created_on: 1288807638.54215
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288807642.57971
+owner: pragma_
+rate_limit: 15
+ref_count: 1
 ref_user: pragma_
+type: text
+
+<strcpy>
+action: /say IT CAN ALL GO WRONG!
+created_on: 1288807630.54684
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288898006.48959
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: guidj0s
 type: text
 
 <string>
 action: a contiguous sequence of characters terminated by and including the first null character; http://www.iso-9899.info/wiki/String
 created_on: 1179262366
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292466669.89423
 owner: kate`
 rate_limit: 15
-ref_count: 45
-ref_user: Wulf
+ref_count: 59
+ref_user: kate`
 type: text
 
 <strlen(s)>
@@ -9214,31 +9852,36 @@ type: text
 action: http://c-faq.com/lib/strncpy.html and http://blogs.msdn.com/oldnewthing/archive/2005/01/07/348437.aspx
 created_on: 1204705609
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288807425.0955
 owner: pragma_
 rate_limit: 15
-ref_count: 10
-ref_user: s00p
+ref_count: 12
+ref_user: bhwhite
 type: text
 
 <struct>
 action: used to define an abstract data type containing other (possibly nested) data types
 created_on: 1104886362
 enabled: 1
+last_referenced_in: caze
+last_referenced_on: 1290786647.89142
 owner: Major-Willard
 rate_limit: 15
-ref_count: 7
-ref_user: vikasap
+ref_count: 12
+ref_user: CaZe
 type: text
 
 <stupid>
 action: /say $args is a $sizes $idiot!
 created_on: 1194256622
 enabled: 1
-last_referenced_on: 1277141626.78617
+last_referenced_in: ##c
+last_referenced_on: 1287652939.48552
 owner: pragma_
 rate_limit: 15
-ref_count: 43
-ref_user: megabraker
+ref_count: 45
+ref_user: banisterfiend
 type: text
 
 <support>
@@ -9295,20 +9938,24 @@ type: text
 action: babbling talking "going on" ranting raving spouting muttering mumbling
 created_on: 1194294839
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889247.2955
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: pragma_
+ref_count: 2
+ref_user: Remoun
 type: text
 
 <taocp>
 action: The Art of Computer Programming, by Knuth, http://www.iso-9899.info/wiki/Special:Booksources/0201485419
 created_on: 1104462083
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1284831446.23842
 owner: twkm
 rate_limit: 15
-ref_count: 9
-ref_user: nadder
+ref_count: 12
+ref_user: Love4Boobies
 type: text
 
 <taunt>
@@ -9325,9 +9972,11 @@ type: text
 action: /say If someone in the channel is asking pointed questions of a specific individual, please do not answer their questions if you are not that individual.  We're sure you're quite smart and capable, but the point is to let the individual infer the answer himself.  You can give a programmer Coca-cola, but if you teach them how to carbonate coffee ...
 created_on: 1199779292
 enabled: 1
+last_referenced_in: kate`
+last_referenced_on: 1284648281.79672
 owner: pragma_
 rate_limit: 15
-ref_count: 5
+ref_count: 7
 ref_user: kate`
 type: text
 
@@ -9365,10 +10014,11 @@ type: text
 action: /say Testing in any channel ...
 created_on: 1272786662
 enabled: 1
-last_referenced_on: 1277233976.52688
+last_referenced_in: ecrane
+last_referenced_on: 1289431390.72147
 owner: arenics
 rate_limit: 10
-ref_count: 20
+ref_count: 25
 ref_user: ecrane
 type: text
 
@@ -9383,14 +10033,15 @@ ref_user: Wulf
 type: text
 
 <testcase>
-action: /say A testcase is a minimal compilable example exhibiting your symptoms. "Minimal" means just the bare essentials required to illustrate your question. Please paste a testcase at http://codepad.org to help us assist you.
+action: /say A testcase is a minimal compilable example exhibiting your symptoms. "Minimal" means just the bare essentials required to illustrate your question. "Compilable" means that there is enough code to compile it on our machines, and therefore use our debuggers. Please paste a testcase at http://ideone.com to help us assist you.
 created_on: 1249772768
 enabled: 1
-last_referenced_on: 1277848595.66814
+last_referenced_in: ##c
+last_referenced_on: 1292617263.40267
 owner: lemonade`
 rate_limit: 15
-ref_count: 238
-ref_user: ecrane
+ref_count: 345
+ref_user: guidj0s
 type: text
 
 <than[ksx]+.*>
@@ -9417,10 +10068,12 @@ type: text
 action: how we can alter the teaching of children like in the republic
 created_on: 1254142262
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289037235.98766
 owner: RuralHack
 rate_limit: 15
-ref_count: 7
-ref_user: geist
+ref_count: 10
+ref_user: Jafet
 type: text
 
 <the_cake>
@@ -9437,10 +10090,12 @@ type: text
 action: no bad in this world
 created_on: 1254142285
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288620726.74822
 owner: RuralHack
 rate_limit: 15
-ref_count: 3
-ref_user: Its_Neuroscience
+ref_count: 5
+ref_user: Noriandir
 type: text
 
 <thesims>
@@ -9477,41 +10132,57 @@ type: text
 action: http://thinking-forth.sourceforge.net/
 created_on: 1185822844
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889256.21648
 owner: PoppaVic
 rate_limit: 15
-ref_count: 5
-ref_user: PoppaVic
+ref_count: 9
+ref_user: Remoun
+type: text
+
+<this>
+action: an autoreply: I am currently not available. Please leave your message, and I will get back to you as soon as possible.
+created_on: 1289502471.11226
+enabled: 1
+owner: fighterlyt
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
 type: text
 
 <threads>
 action: tutorial: http://www.llnl.gov/computing/tutorials/workshops/workshop/pthreads/MAIN.html
 created_on: 1104460742
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288643275.08846
 owner: twkm
 rate_limit: 15
-ref_count: 18
-ref_user: wito
+ref_count: 21
+ref_user: kkd9E
 type: text
 
 <thx>
 action: /call thanks
 created_on: 1179879858
 enabled: 1
-last_referenced_on: 1277870743.58728
+last_referenced_on: 1290346104.4442
 owner: pragma_
 rate_limit: 15
-ref_count: 30
-ref_user: pragma_
+ref_count: 32
+ref_user: Kismet010
 type: text
 
 <tias>
 action: /say "Try It And See" is a damaged philosophy that may lead to unportable code/undefined behavior.
 created_on: 1228985071
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292105681.43499
 owner: Spark
 rate_limit: 15
-ref_count: 17
-ref_user: apples
+ref_count: 23
+ref_user: guidj0s
 type: text
 
 <title>
@@ -9529,10 +10200,12 @@ type: module
 action: http://fukung.net/v/9783/10c26d61f447c5ae1d141cc1485244fe.gif
 created_on: 1252284750
 enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889113.46753
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 3
+ref_user: Remoun
 type: text
 
 <titsorgtfo>
@@ -9549,20 +10222,23 @@ type: text
 action: /call thanks
 created_on: 1251695064
 enabled: 1
+last_referenced_on: 1288580478.91824
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: pragma_
+ref_count: 2
+ref_user: mithridates
 type: text
 
 <to>
 action: a reserved function identifier prefix when followed by a lowercase letter
 created_on: 1104400219
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1289963248.42205
 owner: prec
 rate_limit: 15
-ref_count: 3
-ref_user: oioioio
+ref_count: 4
+ref_user: paideia
 type: text
 
 <tolkad>
@@ -9576,13 +10252,14 @@ ref_user: nobody
 type: text
 
 <toolchain>
-action: /say For all your makefile/scripting/toolchain needs, please join ##workingset.
-created_on: 1268857525
+action: For all your makefile/scripting/toolchain needs, please join ##workingset. Don't ask why. Please.
+created_on: 1289691889.26701
 enabled: 1
-last_referenced_on: 1277929006.23874
+last_referenced_in: ##c
+last_referenced_on: 1292137915.55193
 owner: PoppaVic
 rate_limit: 15
-ref_count: 14
+ref_count: 2
 ref_user: PoppaVic
 type: text
 
@@ -9590,21 +10267,24 @@ type: text
 action: /say Top 10 beginner mistakes: http://www.andromeda.com/people/ddyer/topten.html (Bonus: find the mistakes within the mistakes!)
 created_on: 1193812563
 enabled: 1
+last_referenced_in: dalek_caan
+last_referenced_on: 1291579305.7349
 owner: pragma_
 rate_limit: 15
-ref_count: 14
-ref_user: n00p
+ref_count: 21
+ref_user: Dalek_Caan
 type: text
 
 <topic>
 action: random_quote.pl
 created_on: 1258699440
 enabled: 1
-last_referenced_on: 1277609681.16369
+last_referenced_in: ##c
+last_referenced_on: 1292599574.07086
 owner: pragma_
 rate_limit: 15
-ref_count: 1821
-ref_user: pragma_
+ref_count: 1845
+ref_user: wingless
 type: module
 
 <tor]{>
@@ -9661,21 +10341,24 @@ type: text
 action: http://www.saintgasoline.com/comics/2007-03-04-Allegory_of_Trolley_Problem_Paradox.JPG
 created_on: 1275605468
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288194266.16975
 owner: pragma_
 rate_limit: 15
-ref_count: 0
-ref_user: nobody
+ref_count: 1
+ref_user: kr04f
 type: text
 
 <true>
 action: !false
 created_on: 1197769594
 enabled: 1
-last_referenced_on: 1277547309.60128
+last_referenced_in: remoun
+last_referenced_on: 1290889130.10153
 owner: snhmib
 rate_limit: 15
-ref_count: 4
-ref_user: megabraker
+ref_count: 6
+ref_user: Remoun
 type: text
 
 <truth>
@@ -9692,9 +10375,11 @@ type: text
 action: http://www.iso-9899.info/wiki/Web_resources#Getting_Started , "the tutorial, by being brief, may also be misleading"
 created_on: 1108597292
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292187658.70746
 owner: pragma_
 rate_limit: 15
-ref_count: 40
+ref_count: 41
 ref_user: snhmib
 type: text
 
@@ -9748,6 +10433,18 @@ ref_count: 6
 ref_user: delimax
 type: text
 
+<types>
+action: http://www.ibm.com/developerworks/power/library/pa-ctypes3/
+created_on: 1289629005.77406
+enabled: 1
+last_referenced_in: poppavic
+last_referenced_on: 1289629011.4616
+owner: PoppaVic
+rate_limit: 15
+ref_count: 1
+ref_user: PoppaVic
+type: text
+
 <typo>
 action: typographical error
 created_on: 1235599055
@@ -9762,11 +10459,12 @@ type: text
 action: /say $welcome, $nick
 created_on: 1271368737
 enabled: 1
-last_referenced_on: 1277909039.92001
+last_referenced_in: ##c
+last_referenced_on: 1292488788.73951
 owner: pragma_
 rate_limit: 15
-ref_count: 33
-ref_user: pragma_
+ref_count: 80
+ref_user: wizo
 type: text
 
 <u>
@@ -9793,11 +10491,12 @@ type: text
 action: undefined behavior. Invoking undefined behavior can cause fluffy kittens to fly out from your nose.
 created_on: 1236376997
 enabled: 1
-last_referenced_on: 1277580671.24458
+last_referenced_in: ##c
+last_referenced_on: 1286290643.4972
 owner: kate`
 rate_limit: 15
-ref_count: 38
-ref_user: yg
+ref_count: 41
+ref_user: Wulf
 type: text
 
 <ubuntumanpages>
@@ -9824,10 +10523,10 @@ type: text
 action: /call urban
 created_on: 1255059294
 enabled: 1
-last_referenced_on: 1277525515.14342
+last_referenced_on: 1292489149.92279
 owner: pragma_
 rate_limit: 15
-ref_count: 584
+ref_count: 597
 ref_user: pragma_
 type: text
 
@@ -9835,10 +10534,10 @@ type: text
 action: /say How to disable line-buffering with termios: http://shtrom.ssji.net/skb/getc.html
 created_on: 1106032892
 enabled: 1
-last_referenced_on: 1277619324.32006
+last_referenced_on: 1278255236.92206
 owner: pragma_
 rate_limit: 15
-ref_count: 8
+ref_count: 10
 ref_user: pragma_
 type: text
 
@@ -9866,20 +10565,23 @@ type: text
 action: used to define an abstract data type whose members occupy the same memory
 created_on: 1104886538
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1285731738.09649
 owner: Major-Willard
 rate_limit: 15
-ref_count: 4
-ref_user: ColonelJ
+ref_count: 5
+ref_user: edman007
 type: text
 
 <unixfaq>
 action: http://www.erlenstar.demon.co.uk/unix/faq_toc.html
 created_on: 1104460642
 enabled: 1
+last_referenced_on: 1281777553.47855
 owner: twkm
 rate_limit: 15
-ref_count: 1
-ref_user: cousteau
+ref_count: 3
+ref_user: luneff
 type: text
 
 <unmaintainable>
@@ -9896,53 +10598,58 @@ type: text
 action: /call unp1
 created_on: 1269767264
 enabled: 1
-last_referenced_on: 1277852808.41947
+last_referenced_on: 1292267014.95146
 owner: pragma_
 rate_limit: 15
-ref_count: 28
-ref_user: esicerp
+ref_count: 42
+ref_user: ws
 type: text
 
 <unp1>
 action: Unix Network Programming Vol I: http://www.unpbook.com/
 created_on: 1195011079
 enabled: 1
-last_referenced_on: 1277852808.42921
+last_referenced_in: ws
+last_referenced_on: 1292267014.95553
 owner: pragma_
 rate_limit: 15
-ref_count: 112
-ref_user: esicerp
+ref_count: 126
+ref_user: ws
 type: text
 
 <unp2>
 action: unix network programming, volume 2: interprocess communications, by stevens, see http://www.kohala.com/start/unpv22e/unpv22e.html
 created_on: 1104636219
 enabled: 1
-last_referenced_on: 1277852825.9227
+last_referenced_in: ##c
+last_referenced_on: 1291938905.11477
 owner: twkm
 rate_limit: 15
-ref_count: 22
-ref_user: esicerp
+ref_count: 24
+ref_user: Wulf
 type: text
 
 <unsigned>
 action: a qualifier for integer data types, which renders them incapable of representing negative numbers but increases the number of positive values they can represent.
 created_on: 1104595343
 enabled: 1
+last_referenced_in: bgmerrell
+last_referenced_on: 1288288185.63506
 owner: infobahn
 rate_limit: 15
-ref_count: 2
-ref_user: n00p
+ref_count: 3
+ref_user: bgmerrell
 type: text
 
 <urban>
 action: urban
 created_on: 1255045031
 enabled: 1
-last_referenced_on: 1277525509.00804
+last_referenced_in: pragma_
+last_referenced_on: 1292489149.92448
 owner: pragma_
 rate_limit: 15
-ref_count: 678
+ref_count: 692
 ref_user: pragma_
 type: module
 
@@ -9986,14 +10693,28 @@ ref_count: 3
 ref_user: n00p
 type: text
 
+<v86>
+action: /say Somebody call the waaaaambulance! VB6 has arrived. See also: !vb6
+created_on: 1282263019.95534
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1287508681.79364
+owner: WAMBULANCE
+rate_limit: 15
+ref_count: 2
+ref_user: n00p
+type: text
+
 <valgrind>
 action: a memory debugging tool.  When your program is exhibiting erratic behavior, it may be due to a memory error such as overrunning a buffer or not updating the pointer after a realloc.  Try running your program with valgrind; it will save you a lot of time.
 created_on: 1249675748
 enabled: 1
+last_referenced_in: ouah
+last_referenced_on: 1292234428.6951
 owner: joeyadams
 rate_limit: 15
-ref_count: 7
-ref_user: c_nick
+ref_count: 8
+ref_user: ouah
 type: text
 
 <validity>
@@ -10010,28 +10731,42 @@ type: text
 action: /say The Help Vampire: A Spotter's Guide http://slash7.com/2006/12/22/vampires/
 created_on: 1189558513
 enabled: 1
-last_referenced_on: 1277911260.06221
+last_referenced_in: bhwhite
+last_referenced_on: 1290316788.7605
 owner: pragma_
 rate_limit: 15
+ref_count: 8
+ref_user: bhwhite
+type: text
+
+<vb6>
+action: /say Ask v86 about Microsoft Visual Basic 6. He's the VB6 expert here.
+created_on: 1282262905.33343
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1287509131.5402
+owner: WAMBULANCE
+rate_limit: 15
 ref_count: 4
-ref_user: n00p
+ref_user: xuser
 type: text
 
 <vera>
 action: /call dict -d vera
 created_on: 1270941287
 enabled: 1
+last_referenced_on: 1288219931.54905
 owner: pragma_
 rate_limit: 15
-ref_count: 15
+ref_count: 18
 ref_user: pragma_
 type: text
 
 <version>
-action: /say PBot revision 226 2010-06-30
-created_on: 1277948398.21875
+action: /say PBot revision 239 2011-01-19
+created_on: 1295483655.80585
 enabled: 1
-last_referenced_on: 1277547370.96948
+last_referenced_on: 1280159500.15982
 owner: pbot3
 rate_limit: 15
 ref_count: 0
@@ -10072,20 +10807,24 @@ type: text
 action: main returns an int, void main() is for dummies
 created_on: 1104875507
 enabled: 1
+last_referenced_in: rigid
+last_referenced_on: 1283572370.10251
 owner: twkm
 rate_limit: 15
-ref_count: 6
-ref_user: boris``
+ref_count: 7
+ref_user: rigid
 type: text
 
 <volatile>
 action: a type qualifier, which requires that value caching not be performed.
 created_on: 1105427414
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288968673.50741
 owner: twkm
 rate_limit: 15
-ref_count: 5
-ref_user: pepsi
+ref_count: 9
+ref_user: pragma_
 type: text
 
 <vt100>
@@ -10112,21 +10851,23 @@ type: text
 action: http://www.iso-9899.info/wiki/WarningFlags
 created_on: 1173671019
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292724696.07915
 owner: Baughn
 rate_limit: 15
-ref_count: 133
-ref_user: kate`
+ref_count: 138
+ref_user: pragma_
 type: text
 
 <was>
 action: /call 8ball
 created_on: 1270604559
 enabled: 1
-last_referenced_on: 1277908345.42939
+last_referenced_on: 1290889532.43573
 owner: pragma_
 rate_limit: 15
-ref_count: 6
-ref_user: pragma_
+ref_count: 11
+ref_user: Remoun
 type: text
 
 <wcs>
@@ -10163,11 +10904,11 @@ type: text
 action: /call wikipedia
 created_on: 1257554566
 enabled: 1
-last_referenced_on: 1277172793.64606
+last_referenced_on: 1280268047.69904
 owner: pragma_
 rate_limit: 15
-ref_count: 383
-ref_user: pragma_
+ref_count: 387
+ref_user: Midass
 type: text
 
 <weapon>
@@ -10214,10 +10955,12 @@ type: text
 action: /say $rpg_ans
 created_on: 1231873982
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290955815.83632
 owner: pragma_
 rate_limit: 15
-ref_count: 3
-ref_user: d3mn0id
+ref_count: 9
+ref_user: hackysack
 type: text
 
 <wg14>
@@ -10234,11 +10977,11 @@ type: text
 action: /call excuse
 created_on: 1236820003
 enabled: 1
-last_referenced_on: 1277878451.72649
+last_referenced_on: 1291861366.69536
 owner: pragma_
 rate_limit: 15
-ref_count: 248
-ref_user: pragma_
+ref_count: 270
+ref_user: vdjh
 type: text
 
 <what_answers>
@@ -10255,21 +10998,24 @@ type: text
 action: bot country
 created_on: 1263503154
 enabled: 1
+last_referenced_in: vdjh
+last_referenced_on: 1291861182.12915
 owner: hellyeah
 rate_limit: 15
-ref_count: 90
-ref_user: megabraker
+ref_count: 92
+ref_user: vdjh
 type: text
 
 <who>
 action: /say $who_answers
 created_on: 1258611970
 enabled: 1
-last_referenced_on: 1277542135.60051
+last_referenced_in: ##c
+last_referenced_on: 1291826915.90075
 owner: pragma_
 rate_limit: 15
-ref_count: 22
-ref_user: megabraker
+ref_count: 27
+ref_user: _Sync
 type: text
 
 <who_answers>
@@ -10296,10 +11042,12 @@ type: text
 action: /say $why_answers
 created_on: 1194258443
 enabled: 1
+last_referenced_in: lazydancer
+last_referenced_on: 1292190993.51918
 owner: pragma_
 rate_limit: 15
-ref_count: 67
-ref_user: megabraker
+ref_count: 75
+ref_user: lazydancer
 type: text
 
 <why_answers>
@@ -10316,74 +11064,81 @@ type: text
 action: /say See http://freenode.net/policy.shtml and http://freenode.net/policy.shtml#channelnaming for information on the unusual channel name.
 created_on: 1111196059
 enabled: 1
+last_referenced_in: vdjh
+last_referenced_on: 1291861134.6661
 owner: pragma_
 rate_limit: 15
-ref_count: 4
-ref_user: pragma_
+ref_count: 6
+ref_user: vdjh
 type: text
 
 <wiki>
 action: osdev_wiki.pl
 created_on: 1269800689
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1287789694.98846
 owner: pragma_
 rate_limit: 15
-ref_count: 23
-ref_user: Love4Boobies
+ref_count: 24
+ref_user: Pip
 type: module
 
 <wikipedia>
 action: wikipedia.pl
 created_on: 1257554350
 enabled: 1
-last_referenced_on: 1277172793.65619
+last_referenced_on: 1280268047.70947
 owner: pragma_
 rate_limit: 15
-ref_count: 388
-ref_user: pragma_
+ref_count: 392
+ref_user: Midass
 type: module
 
 <win32>
 action: try #winprog on EFnet or #winapi on freenode
 created_on: 1180888225
 enabled: 1
-last_referenced_on: 1277898861.8812
+last_referenced_in: ##c
+last_referenced_on: 1291025252.95618
 owner: PoppaVic
 rate_limit: 15
-ref_count: 98
-ref_user: pragma_
+ref_count: 123
+ref_user: PoppaVic
 type: text
 
 <winapi>
 action: /call win32
 created_on: 1275596861
 enabled: 1
+last_referenced_on: 1290633221.49648
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: pragma_
+ref_count: 4
+ref_user: cthuluh
 type: text
 
 <windows>
 action: a thirty-two bit extension and graphical shell to a sixteen-bit patch to an eight-bit operating system originally coded for a four-bit microprocessor which was written by a two-bit company that can't stand one bit of competition.
 created_on: 1106527942
 enabled: 1
-last_referenced_on: 1277898873.37305
+last_referenced_in: wormdrink
+last_referenced_on: 1290039886.26246
 owner: Major-Willard
 rate_limit: 15
-ref_count: 17
-ref_user: pragma_
+ref_count: 18
+ref_user: WormDrink
 type: text
 
 <winprog>
 action: /call win32
 created_on: 1277898858.41818
 enabled: 1
-last_referenced_on: 1277898861.87861
+last_referenced_on: 1290889259.06502
 owner: pragma_
 rate_limit: 15
-ref_count: 1
-ref_user: pragma_
+ref_count: 2
+ref_user: Remoun
 type: text
 
 <wizo>
@@ -10400,10 +11155,12 @@ type: text
 action: /say It works it works! Omg omg omg! I mean it compiles. Now what's a segfault?
 created_on: 1231373678
 enabled: 1
+last_referenced_in: blargg
+last_referenced_on: 1291933584.76869
 owner: pragma_
 rate_limit: 15
-ref_count: 28
-ref_user: pragma_
+ref_count: 30
+ref_user: blargg
 type: text
 
 <wotsit>
@@ -10430,10 +11187,10 @@ type: text
 action: /call acronym
 created_on: 1251245783
 enabled: 1
-last_referenced_on: 1277870723.77765
+last_referenced_on: 1289306719.73784
 owner: pragma_
 rate_limit: 15
-ref_count: 71
+ref_count: 80
 ref_user: pragma_
 type: text
 
@@ -10461,10 +11218,12 @@ type: text
 action: syntactic sugar for *(x + y)
 created_on: 1106283927
 enabled: 1
+last_referenced_in: wingless
+last_referenced_on: 1288912501.13903
 owner: prec
 rate_limit: 15
-ref_count: 30
-ref_user: pragma_
+ref_count: 33
+ref_user: wingless
 type: text
 
 <x[y][z]>
@@ -10481,11 +11240,12 @@ type: text
 action: /say The XY problem:  You want to do X, but don't know how.  You think you can solve it using Y, but don't know how to do that, either.  You ask about Y, which is a strange thing to want to do.  Just ask about X.
 created_on: 1175596315
 enabled: 1
-last_referenced_on: 1277149829.60728
+last_referenced_in: ##c
+last_referenced_on: 1292549788.83543
 owner: Draconx|Laptop
 rate_limit: 15
-ref_count: 170
-ref_user: habnabit
+ref_count: 203
+ref_user: Wulf
 type: text
 
 <yo>
@@ -10532,11 +11292,12 @@ type: text
 action: http://www.centernegative.com/2009/03/zalgo-he-comes/
 created_on: 1262652805
 enabled: 1
-last_referenced_on: 1277909281.29401
+last_referenced_in: ##c
+last_referenced_on: 1290339975.86383
 owner: pragma_
 rate_limit: 15
-ref_count: 3
-ref_user: pragma_
+ref_count: 6
+ref_user: sig^
 type: text
 
 <zealot>
@@ -10563,10 +11324,12 @@ type: text
 action: /say $args: are you an $zhivago_idiots ?
 created_on: 1236414077
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288631867.92547
 owner: snhmib
 rate_limit: 15
-ref_count: 23
-ref_user: sanjoyd
+ref_count: 27
+ref_user: Math
 type: text
 
 <zhivago_query>
@@ -10583,11 +11346,12 @@ type: text
 action: used to commence a block
 created_on: 1106528232
 enabled: 1
-last_referenced_on: 1277827320.90628
+last_referenced_in: ##c
+last_referenced_on: 1288106758.13788
 owner: Major-Willard
 rate_limit: 15
-ref_count: 3
-ref_user: lolfrenz
+ref_count: 6
+ref_user: knubbze
 type: text
 
 <|>
@@ -10604,10 +11368,12 @@ type: text
 action: the bitwise inclusive-OR assignment operator.  The expression (x |= y) is equivalent to (x = x | y) except that the expression x is evaluated only once.
 created_on: 1107898467
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1290169792.80662
 owner: prec
 rate_limit: 15
-ref_count: 10
-ref_user: pragma_
+ref_count: 11
+ref_user: Wulf
 type: text
 
 <||>
@@ -10634,9 +11400,10 @@ type: text
 action: the bitwise NOT unary operator
 created_on: 1104602592
 enabled: 1
+last_referenced_on: 1279640047.39735
 owner: Major-Willard
 rate_limit: 15
-ref_count: 9
-ref_user: pragma_
+ref_count: 11
+ref_user: ednos
 type: text
 
