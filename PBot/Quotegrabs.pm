@@ -162,6 +162,8 @@ sub grab_quotegrab {
     return "Usage: !grab <nick> [history] [channel] -- where [history] is an optional argument that is an integer number of recent messages; e.g., to grab the 3rd most recent message for nick, use !grab nick 3";
   }
 
+  $arguments = lc $arguments;
+
   my ($grab_nick, $grab_history, $channel) = split(/\s+/, $arguments, 3);
 
   if(not defined $grab_history) {
