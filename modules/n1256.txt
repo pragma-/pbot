@@ -3871,8 +3871,8 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 3   The type specifier _Complex shall not be used if the implementation does not provide
     complex types.104)
     Semantics
-4   Specifiers for structures, unions, and enumerations are discussed in 6.7.2.1 through
-    6.7.2.3. Declarations of typedef names are discussed in 6.7.7. The characteristics of the
+4   Specifiers for structures, unions, and enumerations are discussed in 6.7.2.1
+    through 6.7.2.3. Declarations of typedef names are discussed in 6.7.7. The characteristics of the
     other types are discussed in 6.2.5.
 5   Each of the comma-separated sets designates the same type, except that for bit-fields, it is
     implementation-defined whether the specifier int designates the same type as signed
