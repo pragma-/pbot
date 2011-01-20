@@ -24,6 +24,7 @@ my %languages = (
   'Ada'                          => { 'id' =>    '7', 'name' => 'Ada (gnat-4.3.2)'                                 },
   'asm'                          => { 'id' =>   '13', 'name' => 'Assembler (nasm-2.07)'                            },
   'nasm'                         => { 'id' =>   '13', 'name' => 'Assembler (nasm-2.07)'                            },
+  'gas'                          => { 'id' =>   '45', 'name' => 'Assembler (gcc-4.3.4)'                            },
   'Assembler'                    => { 'id' =>   '13', 'name' => 'Assembler (nasm-2.07)'                            },
   'Assembler'                    => { 'id' =>   '13', 'name' => 'Assembler (nasm-2.07)'                            },
   'gawk'                         => { 'id' =>  '104', 'name' => 'AWK (gawk) (gawk-3.1.6)'                          },
@@ -118,397 +119,411 @@ if($code =~ m/^\s*show\s*$/i) {
   exit 0;
 }
 
-my $subcode = $code;
-my $got_undo = 0;
-my $got_sub = 0;
+my $got_run;
 
-while($subcode =~ s/^\s*(and)?\s*undo//) {
-  splice @last_code, 0, 1;
-  if(not defined $last_code[0]) {
-    print "$nick: No more undos remaining.\n";
-    exit 0;
-  } else {
+if($code =~ m/^\s*run\s*$/i) {
+  if(defined $last_code[0]) {
     $code = $last_code[0];
-    $got_undo = 1;
+    $got_run = 1;
+  } else {
+    print "$nick: No recent code to run.\n";
+    exit 0;
   }
-}
+} else { 
+  my $subcode = $code;
+  my $got_undo = 0;
+  my $got_sub = 0;
 
-my @replacements;
-my $prevchange = $last_code[0];
-my $got_changes = 0;
-
-while(1) {
-  $got_sub = 0;
-  $got_changes = 0;
-
-  if($subcode =~ m/^\s*(and)?\s*remove \s*([^']+)?\s*'/) {
-    my $modifier = 'first';
-
-    $subcode =~ s/^\s*(and)?\s*//;
-    $subcode =~ s/remove\s*([^']+)?\s*//i;
-    $modifier = $1 if defined $1;
-    $modifier =~ s/\s+$//;
-
-    my ($e, $r) = extract_delimited($subcode, "'");
-
-    my $text;
-
-    if(defined $e) {
-      $text = $e;
-      $text =~ s/^'//;
-      $text =~ s/'$//;
-      $subcode = "replace $modifier '$text' with ''$r";
-    } else {
-      print "$nick: Unbalanced single quotes.  Usage: !cc remove [all, first, .., tenth, last] 'text' [and ...]\n";
+  while($subcode =~ s/^\s*(and)?\s*undo//) {
+    splice @last_code, 0, 1;
+    if(not defined $last_code[0]) {
+      print "$nick: No more undos remaining.\n";
       exit 0;
+    } else {
+      $code = $last_code[0];
+      $got_undo = 1;
     }
-    next;
   }
 
-  if($subcode =~ s/^\s*(and)?\s*add '//) {
-    $subcode = "'$subcode";
+  my @replacements;
+  my $prevchange = $last_code[0];
+  my $got_changes = 0;
 
-    my ($e, $r) = extract_delimited($subcode, "'");
+  while(1) {
+    $got_sub = 0;
+    $got_changes = 0;
 
-    my $text;
+    if($subcode =~ m/^\s*(and)?\s*remove \s*([^']+)?\s*'/) {
+      my $modifier = 'first';
 
-    if(defined $e) {
-      $text = $e;
-      $text =~ s/^'//;
-      $text =~ s/'$//;
-      $subcode = $r;
+      $subcode =~ s/^\s*(and)?\s*//;
+      $subcode =~ s/remove\s*([^']+)?\s*//i;
+      $modifier = $1 if defined $1;
+      $modifier =~ s/\s+$//;
 
+      my ($e, $r) = extract_delimited($subcode, "'");
+
+      my $text;
+
+      if(defined $e) {
+        $text = $e;
+        $text =~ s/^'//;
+        $text =~ s/'$//;
+        $subcode = "replace $modifier '$text' with ''$r";
+      } else {
+        print "$nick: Unbalanced single quotes.  Usage: !cc remove [all, first, .., tenth, last] 'text' [and ...]\n";
+        exit 0;
+      }
+      next;
+    }
+
+    if($subcode =~ s/^\s*(and)?\s*add '//) {
+      $subcode = "'$subcode";
+
+      my ($e, $r) = extract_delimited($subcode, "'");
+
+      my $text;
+
+      if(defined $e) {
+        $text = $e;
+        $text =~ s/^'//;
+        $text =~ s/'$//;
+        $subcode = $r;
+
+        $got_sub = 1;
+        $got_changes = 1;
+
+        if(not defined $prevchange) {
+          print "$nick: No recent code to append to.\n";
+          exit 0;
+        }
+
+        $code = $prevchange;
+        $code =~ s/$/ $text/;
+        $prevchange = $code;
+      } else {
+        print "$nick: Unbalanced single quotes.  Usage: !cc add 'text' [and ...]\n";
+        exit 0;
+      }
+      next;
+    }
+
+    if($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
       $got_sub = 1;
-      $got_changes = 1;
+      my $modifier = 'first';
 
-      if(not defined $prevchange) {
-        print "$nick: No recent code to append to.\n";
+      $subcode =~ s/^\s*(and)?\s*//;
+      $subcode =~ s/replace\s*([^']+)?\s*//i;
+      $modifier = $1 if defined $1;
+      $modifier =~ s/\s+$//;
+
+      my ($from, $to);
+      my ($e, $r) = extract_delimited($subcode, "'");
+
+      if(defined $e) {
+        $from = $e;
+        $from =~ s/^'//;
+        $from =~ s/'$//;
+        $from = quotemeta $from;
+        $subcode = $r;
+        $subcode =~ s/\s*with\s*//i;
+      } else {
+        print "$nick: Unbalanced single quotes.  Usage: !cc replace 'from' with 'to' [and ...]\n";
         exit 0;
       }
 
-      $code = $prevchange;
-      $code =~ s/$/ $text/;
-      $prevchange = $code;
-    } else {
-      print "$nick: Unbalanced single quotes.  Usage: !cc add 'text' [and ...]\n";
-      exit 0;
-    }
-    next;
-  }
+      ($e, $r) = extract_delimited($subcode, "'");
 
-  if($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
-    $got_sub = 1;
-    my $modifier = 'first';
+      if(defined $e) {
+        $to = $e;
+        $to =~ s/^'//;
+        $to =~ s/'$//;
+        $subcode = $r;
+      } else {
+        print "$nick: Unbalanced single quotes.  Usage: !cc replace 'from' with 'to' [and replace ... with ... [and ...]]\n";
+        exit 0;
+      }
 
-    $subcode =~ s/^\s*(and)?\s*//;
-    $subcode =~ s/replace\s*([^']+)?\s*//i;
-    $modifier = $1 if defined $1;
-    $modifier =~ s/\s+$//;
+      given($modifier) {
+        when($_ eq 'all'    ) {}
+        when($_ eq 'last'   ) {}
+        when($_ eq 'first'  ) { $modifier = 1; }
+        when($_ eq 'second' ) { $modifier = 2; }
+        when($_ eq 'third'  ) { $modifier = 3; }
+        when($_ eq 'fourth' ) { $modifier = 4; }
+        when($_ eq 'fifth'  ) { $modifier = 5; }
+        when($_ eq 'sixth'  ) { $modifier = 6; }
+        when($_ eq 'seventh') { $modifier = 7; }
+        when($_ eq 'eighth' ) { $modifier = 8; }
+        when($_ eq 'nineth' ) { $modifier = 9; }
+        when($_ eq 'tenth'  ) { $modifier = 10; }
+        default { print "$nick: Bad replacement modifier '$modifier'; valid modifiers are 'all', 'first', 'second', ..., 'tenth', 'last'\n"; exit 0; }
+      }
 
-    my ($from, $to);
-    my ($e, $r) = extract_delimited($subcode, "'");
+      my $replacement = {};
+      $replacement->{'from'} = $from;
+      $replacement->{'to'} = $to;
+      $replacement->{'modifier'} = $modifier;
 
-    if(defined $e) {
-      $from = $e;
-      $from =~ s/^'//;
-      $from =~ s/'$//;
-      $from = quotemeta $from;
-      $subcode = $r;
-      $subcode =~ s/\s*with\s*//i;
-    } else {
-      print "$nick: Unbalanced single quotes.  Usage: !cc replace 'from' with 'to' [and ...]\n";
-      exit 0;
-    }
-
-    ($e, $r) = extract_delimited($subcode, "'");
-
-    if(defined $e) {
-      $to = $e;
-      $to =~ s/^'//;
-      $to =~ s/'$//;
-      $subcode = $r;
-    } else {
-      print "$nick: Unbalanced single quotes.  Usage: !cc replace 'from' with 'to' [and replace ... with ... [and ...]]\n";
-      exit 0;
+      push @replacements, $replacement;
+      next;
     }
 
-    given($modifier) {
-      when($_ eq 'all'    ) {}
-      when($_ eq 'last'   ) {}
-      when($_ eq 'first'  ) { $modifier = 1; }
-      when($_ eq 'second' ) { $modifier = 2; }
-      when($_ eq 'third'  ) { $modifier = 3; }
-      when($_ eq 'fourth' ) { $modifier = 4; }
-      when($_ eq 'fifth'  ) { $modifier = 5; }
-      when($_ eq 'sixth'  ) { $modifier = 6; }
-      when($_ eq 'seventh') { $modifier = 7; }
-      when($_ eq 'eighth' ) { $modifier = 8; }
-      when($_ eq 'nineth' ) { $modifier = 9; }
-      when($_ eq 'tenth'  ) { $modifier = 10; }
-      default { print "$nick: Bad replacement modifier '$modifier'; valid modifiers are 'all', 'first', 'second', ..., 'tenth', 'last'\n"; exit 0; }
-    }
+    if($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
+      $got_sub = 1;
+      $subcode =~ s/^\s*(and)?\s*s//;
 
-    my $replacement = {};
-    $replacement->{'from'} = $from;
-    $replacement->{'to'} = $to;
-    $replacement->{'modifier'} = $modifier;
+      my ($regex, $to);
+      my ($e, $r) = extract_delimited($subcode, '/');
 
-    push @replacements, $replacement;
-    next;
-  }
+      if(defined $e) {
+        $regex = $e;
+        $regex =~ s/^\///;
+        $regex =~ s/\/$//;
+        $subcode = "/$r";
+      } else {
+        print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+        exit 0;
+      }
 
-  if($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
-    $got_sub = 1;
-    $subcode =~ s/^\s*(and)?\s*s//;
+      ($e, $r) = extract_delimited($subcode, '/');
 
-    my ($regex, $to);
-    my ($e, $r) = extract_delimited($subcode, '/');
+      if(defined $e) {
+        $to = $e;
+        $to =~ s/^\///;
+        $to =~ s/\/$//;
+        $subcode = $r;
+      } else {
+        print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+        exit 0;
+      }
 
-    if(defined $e) {
-      $regex = $e;
-      $regex =~ s/^\///;
-      $regex =~ s/\/$//;
-      $subcode = "/$r";
-    } else {
-      print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
-      exit 0;
-    }
+      my $suffix;
+      $suffix = $1 if $subcode =~ s/^([^ ]+)//;
 
-    ($e, $r) = extract_delimited($subcode, '/');
+      if(length $suffix and $suffix =~ m/[^gi]/) {
+        print "$nick: Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
+        exit 0;
+      }
+      if(defined $prevchange) {
+        $code = $prevchange;
+      } else {
+        print "$nick: No recent code to change.\n";
+        exit 0;
+      }
 
-    if(defined $e) {
-      $to = $e;
-      $to =~ s/^\///;
-      $to =~ s/\/$//;
-      $subcode = $r;
-    } else {
-      print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
-      exit 0;
-    }
+      my $ret = eval {
+        my $ret;
+        my $a;
+        my $b;
+        my $c;
+        my $d;
+        my $e;
+        my $f;
+        my $g;
+        my $h;
+        my $i;
+        my $before;
+        my $after;
 
-    my $suffix;
-    $suffix = $1 if $subcode =~ s/^([^ ]+)//;
+        if(not length $suffix) {
+          $ret = $code =~ s|$regex|$to|;
+          $a = $1;
+          $b = $2;
+          $c = $3;
+          $d = $4;
+          $e = $5;
+          $f = $6;
+          $g = $7;
+          $h = $8;
+          $i = $9;
+          $before = $`;
+          $after = $';
+        } elsif($suffix =~ /^i$/) {
+          $ret = $code =~ s|$regex|$to|i; 
+          $a = $1;
+          $b = $2;
+          $c = $3;
+          $d = $4;
+          $e = $5;
+          $f = $6;
+          $g = $7;
+          $h = $8;
+          $i = $9;
+          $before = $`;
+          $after = $';
+        } elsif($suffix =~ /^g$/) {
+          $ret = $code =~ s|$regex|$to|g;
+          $a = $1;
+          $b = $2;
+          $c = $3;
+          $d = $4;
+          $e = $5;
+          $f = $6;
+          $g = $7;
+          $h = $8;
+          $i = $9;
+          $before = $`;
+          $after = $';
+        } elsif($suffix =~ /^ig$/ or $suffix =~ /^gi$/) {
+          $ret = $code =~ s|$regex|$to|gi;
+          $a = $1;
+          $b = $2;
+          $c = $3;
+          $d = $4;
+          $e = $5;
+          $f = $6;
+          $g = $7;
+          $h = $8;
+          $i = $9;
+          $before = $`;
+          $after = $';
+        }
 
-    if(length $suffix and $suffix =~ m/[^gi]/) {
-      print "$nick: Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
-      exit 0;
-    }
-    if(defined $prevchange) {
-      $code = $prevchange;
-    } else {
-      print "$nick: No recent code to change.\n";
-      exit 0;
-    }
+        if($ret) {
+          $code =~ s/\$1/$a/g;
+          $code =~ s/\$2/$b/g;
+          $code =~ s/\$3/$c/g;
+          $code =~ s/\$4/$d/g;
+          $code =~ s/\$5/$e/g;
+          $code =~ s/\$6/$f/g;
+          $code =~ s/\$7/$g/g;
+          $code =~ s/\$8/$h/g;
+          $code =~ s/\$9/$i/g;
+          $code =~ s/\$`/$before/g;
+          $code =~ s/\$'/$after/g;
+        }
 
-    my $ret = eval {
-      my $ret;
-      my $a;
-      my $b;
-      my $c;
-      my $d;
-      my $e;
-      my $f;
-      my $g;
-      my $h;
-      my $i;
-      my $before;
-      my $after;
+        return $ret;
+      };
 
-      if(not length $suffix) {
-        $ret = $code =~ s|$regex|$to|;
-        $a = $1;
-        $b = $2;
-        $c = $3;
-        $d = $4;
-        $e = $5;
-        $f = $6;
-        $g = $7;
-        $h = $8;
-        $i = $9;
-        $before = $`;
-        $after = $';
-      } elsif($suffix =~ /^i$/) {
-        $ret = $code =~ s|$regex|$to|i; 
-        $a = $1;
-        $b = $2;
-        $c = $3;
-        $d = $4;
-        $e = $5;
-        $f = $6;
-        $g = $7;
-        $h = $8;
-        $i = $9;
-        $before = $`;
-        $after = $';
-      } elsif($suffix =~ /^g$/) {
-        $ret = $code =~ s|$regex|$to|g;
-        $a = $1;
-        $b = $2;
-        $c = $3;
-        $d = $4;
-        $e = $5;
-        $f = $6;
-        $g = $7;
-        $h = $8;
-        $i = $9;
-        $before = $`;
-        $after = $';
-      } elsif($suffix =~ /^ig$/ or $suffix =~ /^gi$/) {
-        $ret = $code =~ s|$regex|$to|gi;
-        $a = $1;
-        $b = $2;
-        $c = $3;
-        $d = $4;
-        $e = $5;
-        $f = $6;
-        $g = $7;
-        $h = $8;
-        $i = $9;
-        $before = $`;
-        $after = $';
+      if($@) {
+        print "$nick: $@\n";
+        exit 0;
       }
 
       if($ret) {
-        $code =~ s/\$1/$a/g;
-        $code =~ s/\$2/$b/g;
-        $code =~ s/\$3/$c/g;
-        $code =~ s/\$4/$d/g;
-        $code =~ s/\$5/$e/g;
-        $code =~ s/\$6/$f/g;
-        $code =~ s/\$7/$g/g;
-        $code =~ s/\$8/$h/g;
-        $code =~ s/\$9/$i/g;
-        $code =~ s/\$`/$before/g;
-        $code =~ s/\$'/$after/g;
+        $got_changes = 1;
       }
 
-      return $ret;
-    };
+      $prevchange = $code;
+    }
 
-    if($@) {
-      print "$nick: $@\n";
+    if($got_sub and not $got_changes) {
+      print "$nick: No substitutions made.\n";
       exit 0;
+    } elsif($got_sub and $got_changes) {
+      next;
     }
 
-    if($ret) {
-      $got_changes = 1;
-    }
-
-    $prevchange = $code;
+    last;
   }
 
-  if($got_sub and not $got_changes) {
-    print "$nick: No substitutions made.\n";
-    exit 0;
-  } elsif($got_sub and $got_changes) {
-    next;
-  }
+  if($#replacements > -1) {
+    @replacements = sort { $a->{'from'} cmp $b->{'from'} or $a->{'modifier'} <=> $b->{'modifier'} } @replacements;
 
-  last;
-}
+    my ($previous_from, $previous_modifier);
 
-if($#replacements > -1) {
-  @replacements = sort { $a->{'from'} cmp $b->{'from'} or $a->{'modifier'} <=> $b->{'modifier'} } @replacements;
+    foreach my $replacement (@replacements) {
+      my $from = $replacement->{'from'};
+      my $to = $replacement->{'to'};
+      my $modifier = $replacement->{'modifier'};
 
-  my ($previous_from, $previous_modifier);
-
-  foreach my $replacement (@replacements) {
-    my $from = $replacement->{'from'};
-    my $to = $replacement->{'to'};
-    my $modifier = $replacement->{'modifier'};
-
-    if(defined $previous_from) {
-      if($previous_from eq $from and $previous_modifier =~ /^\d+$/) {
-        $modifier -= $modifier - $previous_modifier;
+      if(defined $previous_from) {
+        if($previous_from eq $from and $previous_modifier =~ /^\d+$/) {
+          $modifier -= $modifier - $previous_modifier;
+        }
       }
+
+      if(defined $prevchange) {
+        $code = $prevchange;
+      } else {
+        print "$nick: No recent code to change.\n";
+        exit 0;
+      }
+
+      my $ret = eval {
+        my $got_change;
+
+        my ($first_char, $last_char, $first_bound, $last_bound);
+        $first_char = $1 if $from =~ m/^(.)/;
+        $last_char = $1 if $from =~ m/(.)$/;
+
+        if($first_char =~ /\W/) {
+          $first_bound = '.';
+        } else {
+          $first_bound = '\b';
+        }
+
+        if($last_char =~ /\W/) {
+          $last_bound = '\B';
+        } else {
+          $last_bound = '\b';
+        }
+
+        if($modifier eq 'all') {
+          while($code =~ s/($first_bound)$from($last_bound)/$1$to$2/) {
+            $got_change = 1;
+          }
+        } elsif($modifier eq 'last') {
+          if($code =~ s/(.*)($first_bound)$from($last_bound)/$1$2$to$3/) {
+            $got_change = 1;
+          }
+        } else {
+          my $count = 0;
+          my $unescaped = $from;
+          $unescaped =~ s/\\//g;
+          if($code =~ s/($first_bound)$from($last_bound)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$unescaped$2"; }/gex) {
+            $got_change = 1;
+          }
+        }
+        return $got_change;
+      };
+
+      if($@) {
+        print "$nick: $@\n";
+        exit 0;
+      }
+
+      if($ret) {
+        $got_sub = 1;
+        $got_changes = 1;
+      }
+
+      $prevchange = $code;
+      $previous_from = $from;
+      $previous_modifier = $modifier;
     }
 
-    if(defined $prevchange) {
-      $code = $prevchange;
-    } else {
-      print "$nick: No recent code to change.\n";
+    if($got_sub and not $got_changes) {
+      print "$nick: No replacements made.\n";
       exit 0;
     }
-
-    my $ret = eval {
-      my $got_change;
-
-      my ($first_char, $last_char, $first_bound, $last_bound);
-      $first_char = $1 if $from =~ m/^(.)/;
-      $last_char = $1 if $from =~ m/(.)$/;
-
-      if($first_char =~ /\W/) {
-        $first_bound = '.';
-      } else {
-        $first_bound = '\b';
-      }
-
-      if($last_char =~ /\W/) {
-        $last_bound = '\B';
-      } else {
-        $last_bound = '\b';
-      }
-
-      if($modifier eq 'all') {
-        while($code =~ s/($first_bound)$from($last_bound)/$1$to$2/) {
-          $got_change = 1;
-        }
-      } elsif($modifier eq 'last') {
-        if($code =~ s/(.*)($first_bound)$from($last_bound)/$1$2$to$3/) {
-          $got_change = 1;
-        }
-      } else {
-        my $count = 0;
-        my $unescaped = $from;
-        $unescaped =~ s/\\//g;
-        if($code =~ s/($first_bound)$from($last_bound)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$unescaped$2"; }/gex) {
-          $got_change = 1;
-        }
-      }
-      return $got_change;
-    };
-
-    if($@) {
-      print "$nick: $@\n";
-      exit 0;
-    }
-
-    if($ret) {
-      $got_sub = 1;
-      $got_changes = 1;
-    }
-
-    $prevchange = $code;
-    $previous_from = $from;
-    $previous_modifier = $modifier;
   }
 
-  if($got_sub and not $got_changes) {
-    print "$nick: No replacements made.\n";
+  open FILE, "> ideone_last_code.txt";
+
+  unless ($got_undo and not $got_sub) {
+    unshift @last_code, $code;
+  }
+
+  my $i = 0;
+  foreach my $line (@last_code) {
+    last if(++$i > $MAX_UNDO_HISTORY);
+    print FILE "$line\n";
+  }
+  close FILE;
+
+  if($got_undo and not $got_sub) {
+    print "$nick: $code\n";
     exit 0;
   }
 }
 
-open FILE, "> ideone_last_code.txt";
-
-unless ($got_undo and not $got_sub) {
-  unshift @last_code, $code;
+unless($got_run) {
+  open FILE, ">> ideone_log.txt";
+  print FILE "$nick: $code\n";
 }
-
-my $i = 0;
-foreach my $line (@last_code) {
-  last if(++$i > $MAX_UNDO_HISTORY);
-  print FILE "$line\n";
-}
-close FILE;
-
-if($got_undo and not $got_sub) {
-  print "$nick: $code\n";
-  exit 0;
-}
-
-open FILE, ">> ideone_log.txt";
-print FILE "$nick: $code\n";
 
 my $lang = "C99";
 $lang = $1 if $code =~ s/-lang=([^\b\s]+)//i;
@@ -584,8 +599,8 @@ if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$
   $code = pretty($code) 
 }
 
-$code =~ s/\\n/\n/g if $languages{$lang}{'id'} == 13 or $languages{$lang}{'id'} == 101;
-$code =~ s/;/\n/g if $languages{$lang}{'id'} == 13;
+$code =~ s/\\n/\n/g if $languages{$lang}{'id'} == 13 or $languages{$lang}{'id'} == 101 or $languages{$lang}{'id'} == 45;
+$code =~ s/;/\n/g if $languages{$lang}{'id'} == 13 or $languages{$lang}{'id'} == 45;
 $code =~ s/\|n/\n/g;
 $code =~ s/^\s+//;
 $code =~ s/\s+$//;
@@ -724,7 +739,7 @@ $output =~ s/cc1: warnings being treated as errors//;
 $output =~ s/ Line \d+ ://g;
 $output =~ s/ \(first use in this function\)//g;
 $output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//msg;
-$output =~ s/prog\.c[:\d\s]*//g;
+$output =~ s/prog\.c:[:\s\d]*//g;
 $output =~ s/ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
 $output =~ s/error: (.*?) error/error: $1; error/msg;
 
@@ -735,9 +750,11 @@ $output =~ s/$right_quote/'/g;
 
 $output = $nooutput if $output =~ m/^\s+$/;
 
-print FILE localtime() . "\n";
-print FILE "$nick: [ http://ideone.com/$url ] $output\n\n";
-close FILE;
+unless($got_run) {
+  print FILE localtime() . "\n";
+  print FILE "$nick: [ http://ideone.com/$url ] $output\n\n";
+  close FILE;
+}
 
 if($show_link) {
   print "$nick: [ http://ideone.com/$url ] $output\n";
@@ -750,12 +767,15 @@ if($show_link) {
 sub get_result {
   my $result = shift @_;
 
+  use Data::Dumper;
+
   if($result->fault) {
     print join ', ', $result->faultcode, $result->faultstring, $result->faultdetail;
     exit 0;
   } else {
     if($result->result->{error} ne "OK") {
-      print $result->result->{error};
+      print "error\n";
+      print Dumper($result->result->{error});
       exit 0;
     } else {
       return $result->result;
@@ -767,7 +787,7 @@ sub pretty {
   my $code = join '', @_;
   my $result;
 
-  my $pid = open2(\*IN, \*OUT, 'astyle -Upf');
+  my $pid = open2(\*IN, \*OUT, 'astyle -xUpf');
   print OUT "$code\n";
   close OUT;
   while(my $line = <IN>) {
