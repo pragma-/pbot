@@ -183,8 +183,8 @@ sub check_flood {
   # do not do flood processing if channel is not in bot's channel list or bot is not set as chanop for the channel
   return if ($channel =~ /^#/) and (not exists $self->{pbot}->channels->channels->hash->{$channel} or $self->{pbot}->channels->channels->hash->{$channel}{chanop} == 0);
 
-  # do not do flood processing for this event if lag is significant
-  return if defined $self->{lag} and $self->{lag} >= 2;
+  # do not do flood processing for this event if lag is uninitialized or is significant
+  return if not defined $self->{lag} or $self->{lag} >= 2;
 
   if($max_messages > $self->{pbot}->{MAX_NICK_MESSAGES}) {
     $self->{pbot}->logger->log("Warning: max_messages greater than MAX_NICK_MESSAGES; truncating.\n");
