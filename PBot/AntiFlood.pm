@@ -93,11 +93,11 @@ sub add_message {
         $self->{pbot}->logger->log("$account $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
         $self->message_history->{$account}{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE}; 
       }
-      # check QUIT message for Ping timeout
-      elsif($text =~ /^QUIT Ping timeout/) {
-        # deal with ping timeouts agressively
-        ${ $self->message_history }{$account}{$channel}{join_watch}++;
-        $self->{pbot}->logger->log("$account $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
+      # check QUIT message for Ping timeout or Excess Flood
+      elsif($text =~ /^QUIT Ping timeout/ or $text =~ /^QUIT Excess Flood/) {
+        # deal with these aggressively
+        #${ $self->message_history }{$account}{$channel}{join_watch}++;
+        #$self->{pbot}->logger->log("$account $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
       } else {
         # some other type of QUIT or PART
         $self->message_history->{$account}{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE};
@@ -331,20 +331,6 @@ sub address_to_mask {
   }
 
   return $banmask;
-}
-
-# based on Guy Malachi's code
-sub generate_random_string {
-  my $length_of_randomstring = shift;
-
-  my @chars=('a'..'z','A'..'Z','0'..'9','_');
-  my $random_string;
-
-  foreach (1..$length_of_randomstring) {
-    $random_string .= $chars[rand @chars];
-  }
-
-  return $random_string;
 }
 
 1;
