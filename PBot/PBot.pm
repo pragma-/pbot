@@ -214,6 +214,7 @@ sub connect {
   $self->conn->add_handler('part'                     , sub { $self->irchandlers->on_departure(@_)  });
   $self->conn->add_handler('join'                     , sub { $self->irchandlers->on_join(@_)       });
   $self->conn->add_handler('quit'                     , sub { $self->irchandlers->on_departure(@_)  });
+  $self->conn->add_handler('pong'                     , sub { $self->antiflood->on_pong(@_)         });
 }
 
 #main loop

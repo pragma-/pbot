@@ -15,7 +15,7 @@ use feature 'switch';
 use vars qw($VERSION);
 $VERSION = $PBot::PBot::VERSION;
 
-use Time::HiRes qw(gettimeofday);
+use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
 use Carp ();
 
@@ -48,9 +48,15 @@ sub initialize {
   $self->{last_timestamp} = gettimeofday;
   $self->{message_history} = {};
 
+  $self->{lag_history} = [];
+  $self->{LAG_HISTORY_MAX} = 3;
+  $self->{LAG_HISTORY_INTERVAL} = 10;
+
   $pbot->timer->register(sub { $self->prune_message_history }, 60 * 60 * 1);
+  $pbot->timer->register(sub { $self->send_ping }, $self->{LAG_HISTORY_INTERVAL});
 
   $pbot->commands->register(sub { return $self->unbanme(@_) },  "unbanme",  0);
+  $pbot->commands->register(sub { return $self->lagcheck(@_) }, "lagcheck", 0);
 }
 
 sub get_flood_account {
@@ -284,6 +290,47 @@ sub prune_message_history {
       }
     }
   }
+}
+
+sub send_ping {
+  my $self = shift;
+
+  return unless defined $self->{pbot}->conn;
+
+  $self->{ping_send_time} = [gettimeofday];
+  $self->{pbot}->conn->sl("PING :lagcheck");
+  # $self->{pbot}->logger->log("sent lagcheck PING\n");
+}
+
+sub on_pong {
+  my $self = shift;
+
+  my $elapsed = tv_interval($self->{ping_send_time});
+  push @{ $self->{lag_history} }, $elapsed;
+
+  # $self->{pbot}->logger->log("got lagcheck PONG\n");
+  # $self->{pbot}->logger->log("Lag: $elapsed\n");
+
+  my $len = @{ $self->{lag_history} };
+
+  if($len > $self->{LAG_HISTORY_MAX}) {
+    shift @{ $self->{lag_history} };
+    $len--;
+  }
+
+  my $lag = 0;
+  foreach my $l (@{ $self->{lag_history} }) {
+    $lag += $l;
+  }
+
+  $self->{lag} = $lag / $len;
+}
+
+sub lagcheck {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  my $lag = $self->{lag} || "initializing";
+  return "Lag: $lag";
 }
 
 sub unbanme {
