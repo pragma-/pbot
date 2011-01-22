@@ -227,7 +227,9 @@ sub check_flood {
         ${ $self->message_history }{$account}{$channel}{offenses}++;
         my $length = ${ $self->message_history }{$account}{$channel}{offenses} ** ${ $self->message_history }{$account}{$channel}{offenses} * ${ $self->message_history }{$account}{$channel}{offenses} * 30;
         if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
-          return if exists $self->{pbot}->chanops->{unban_timeout}->hash->{"*!*\@$host"};
+          # don't ban again if already banned
+          return if exists $self->{pbot}->chanops->{unban_timeout}->hash->{"*!$user\@$host"};
+
           if($mode == $self->{FLOOD_CHAT}) {
             $self->{pbot}->chanops->ban_user_timed("*!$user\@$host", $channel, $length);
 
