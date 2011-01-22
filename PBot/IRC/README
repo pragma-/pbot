@@ -1,0 +1,141 @@
+Net::IRC 0.72 README        T.J. Eckman           Mon Jul 02 00:00:00 GMT 2000
+==============================================================================
+
+Table of Contents
+------------------------
+
+0.  Deprecation notice
+1.  Introduction
+2.  Availability
+3.  Prerequisites
+4.  Installation
++-  4.1  Windows Installation
+5.  Demonstration Script
+6.  Bugs
+7.  Disclaimer
+8.  Copyright
+9.  Developer Information
+
+
+
+0. Deprecation notic
+------------------------
+
+    This module is officially DEPRECATED. It has been abandoned in favor of more
+modern approaches, including Bot::BasicBot and POE::Component::IRC. This release
+only serves to warn current and new users about the status of this distribution.
+
+
+1. Introduction
+------------------------
+
+    Welcome to Net::IRC, a work in progress. First intended to be a quick tool
+for writing an IRC script in Perl, Net::IRC has grown into a comprehensive
+Perl implementation of the IRC protocol (RFC 1459).
+
+
+2. Availability
+------------------------
+
+	CPAN, of course. http://www.perl.com/CPAN/modules/by-module/Net/
+	Also, Sourceforge: http://sourceforge.net/project/net-irc
+
+
+3. Prerequisites
+------------------------
+
+    Net::IRC requires Perl version 5.004 or higher to install and run.
+Hypothetically, it could run on 5.003_9something with IO::* installed, but
+you may as well upgrade anyhow. The latest version of Perl can be found at
+http://www.perl.com/CPAN/src/latest.tar.gz (for UNIX), or at
+http://www.perl.com/CPAN/ports/ for various non-Unix machines.
+
+    Net::IRC tries to use the Time::HiRes module by default, but will fail
+silently if you do not have it.  If you have Time::HiRes pacing settings
+and calls to schedule() can be fractional.
+
+
+4. Installation
+------------------------
+
+    Same old, same old. If you get through all these steps without anything
+emitting horrible dire warning messages, you're all set. In particular, the
+"perl Makefile.PL" will barf if run with older versions of Perl, but if you
+read the Prerequisites section of this README, you already know that, right?
+
+Do this, in the following order:
+
+        perl Makefile.PL
+        make
+        make install
+
+We don't have any automated tests yet, but they might be in the not-too-
+distant future. You may instead wish to play around with the...
+
+=> 4.1   Windows Installation
+
+    If you don't have a copy of 'make' on your machine, the easiest way to
+install this module is to unzip the file into a local directory, and
+copy the component files like this:
+	IRC.pm		=> path.to.perl/site/lib/Net/IRC.pm
+	Connection.pm	=> path.to.perl/site/lib/Net/IRC/Connection.pm
+	Event.pm	=> path.to.perl/site/lib/Net/IRC/Event.pm
+	DCC.pm		=> path.to.perl/site/lib/Net/IRC/DCC.pm
+
+5. Demonstration Script
+------------------------
+
+    A sample Net::IRC script is included with the distribution, under the
+creative name "irctest". It doesn't do much more than connect to a server and
+print annoying messages to anyone who talks to it, but that should be enough
+to give you an idea of how the whole enchilada fits together until we actually
+get some real documentation written. Just don't be surprised if IRC admins get
+a clue about it and start killing it as soon as they see one log on...
+
+	Oh, and by the way... if you say "Send me <filename>" to an irctest
+bot, it will send the specified file (if it can) as a demonstration of
+Net::IRC's DCC and scheduler interface. This is a potential security hole, so
+be careful.
+
+
+
+6. Bugs
+------------------------
+
+	Please submit bugs at the sourceforge project page for Net::IRC.
+  See section 9 for the address.
+
+
+7. Disclaimer
+------------------------
+
+	This software is under no warranty, explicit or implied.  Use at
+  your own risk.
+
+
+8. Copyright
+------------------------
+
+    This module copyright (c) 1997 Greg Bacon & Dennis Taylor. All rights
+    reserved. This module is free software; you can redistribute it and/or
+    modify it under the terms of the Perl Artistic License, distributed with
+    this module.
+
+    Any changes after 0.70, but before 0.72, are copyright Peter Sergeant,
+    and/or the people who submitted them.
+
+    Any changes after 0.71 are copyright T.J. Eckman, and/or the people
+    who submitted them.
+
+    Any changes after 0.73 are under the ownership of their respective
+    submitters.
+
+9. Developer Information
+------------------------
+
+    Maintenance is now handled via sourceforge:
+
+      http://sourceforge.net/projects/net-irc/
+
+    Bug reports, feature requests and patches should be submitted at the
+    above address.

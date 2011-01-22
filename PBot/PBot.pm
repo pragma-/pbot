@@ -23,7 +23,7 @@ use PBot::Logger;
 
 use PBot::StdinReader;
 
-use Net::IRC;
+use PBot::IRC;
 use PBot::IRCHandlers;
 use PBot::Channels;
 
@@ -154,7 +154,7 @@ sub initialize {
   $self->{factoidcmds}    = PBot::FactoidCommands->new(pbot => $self);
   $self->{ignorelistcmds} = PBot::IgnoreListCommands->new(pbot => $self);
 
-  $self->{irc}         = Net::IRC->new();
+  $self->{irc}         = PBot::IRC->new();
   $self->{ircserver}   = $ircserver;
   $self->{irchandlers} = PBot::IRCHandlers->new(pbot => $self);
 

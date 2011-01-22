@@ -1,0 +1,430 @@
+Revision history for Perl extension Net::IRC.
+
+0.1    Fri Oct 17 00:25:41 CDT 1997
+	- original version; created by h2xs 1.18
+
+0.2    Sat Oct 18 16:00:38 CDT 1997
+ 	- it works now, thanks entirely to Tkil (tkil@scrye.com)
+ 	- substantial cleanup of Connection.pm
+	- Removed "Written and designed by:" line in header comments...
+	  it didn't seem fair to the many other people who are putting
+	  such studly efforts into this.
+
+0.25   Sun Oct 19 06:26:36 CDT 1997
+	- Removed extraneous return values from handler code (don't ask)
+	- It's now possible to have more than one Net::IRC object in a
+	  single script, but I can't see why you'd ever want to.
+	- We now disconnect properly. Woohoo!
+	- Fixed YA CTCP bug.
+	- Fixed up parse() handling for cases like MODE and NICK.
+	- Fixed many stupid bugs that should have been caught long ago.
+	- Lots more, but I can't remember them all. Again, huge gigantic
+	  thanks are due to Tkil for his tireless dedication to hunting
+	  down and patching bugs. You go, man!
+
+0.26   Mon Oct 20 01:37:39 CDT 1997
+	- Fixed Makefile.PL to install IRC.pm and the other module in
+	  different places (it's nice to have make install actually work.)
+
+0.27   Mon Oct 20 23:28:48 CDT 1997
+	- Made trivial changes to the formatted output code (format(),
+	  Event->new(), _pr(), Connection->new()). This should give other
+	  developers a bit clearer idea of where I'm going with it. Time
+	  for extended hacking is scarce right now, alas.
+
+0.28   Fri Oct 24 06:12:42 CDT 1997
+	- Added $conn->me("#perl", "hacks billn to pieces") as an alias to
+	  $conn->ctcp("action", "#perl", "hacks billn to pieces").
+	- Fixed a couple small errors (typos, mostly).
+
+0.29   Sat Oct 25 16:48:19 CDT 1997
+	- Added a placeholder DCC.pm to the source tree so I won't have to
+	  go back and change stuff once it's written.
+	- Changed the order of default nick/ircname variables.
+	- Fixed the source tree and makedist script on execpc.com to allow
+	  for easier diffing and patching.
+
+0.3    Tue Nov 25 02:49:37 CST 1997
+	- Makefile.PL now barfs on older versions of Perl.
+	- IRC.pm caches $self->ioselect in select() to clean up the code
+	  a little. OO and procedural style bigots reach a compromise.
+	- IRC.pm's start() and select() methods have been merged.
+	- All eval "code;" statements changed to eval { code; }.
+	- Made small adjustment to Connection->parse() numeric routine.
+	- Working draft of DCC.pm written by borys, who kicks much ass.
+	- Bunch of subsequent revisions to DCC.pm, mostly by archon.
+	- irctest script nearly doubles in size.
+	- IRC.pm, especially start(), gets modified for DCC.pm.
+	- A bunch of other smaller changes associated with DCC.pm that
+	  I'm too tired to write down. You get the idea.
+	- Spent HOURS hacking miscellaneous CTCP and parse() bugs. Millions
+	  of thanks to Silmaril for devoting his brainpower to the bughunt.
+
+0.31   Wed Nov 26 00:19:30 CST 1997
+	- Fixed the irritating "Sender: owner-test@betterbox.net" bug in the
+	  mailing list config. OK, so it doesn't belong in this file, but I
+	  guess it's worth mentioning somewhere.
+	- ctcp_reply() method added to Connection.pm and used in irctest.
+
+0.32   Wed Dec  3 07:59:28 CST 1997
+	- Added new_send(), new_get(), and new_chat() to Connection.pm
+	- Removed ^A-removing stuff in DCC.pm (it's been fixed in Connection).
+	- Completely rewrote the irctest script, with more additions planned.
+	- The numeric event stuff has been farmed off from parse() to a
+	  separate routine, parse_num().
+	- Default block size for DCC SEND now 1k instead of 8k.
+	- DCC SEND and GET now always do binary transfers. If a problem comes
+	  up with this, blame it on tchrist and BeeF. :-)
+
+0.33   Fri Dec  5 14:27:41 CST 1997
+	- Version numbers now more realistic.
+        - Net::IRC now specifically resides under the Artistic License, which
+	  is now distributed with the module. Anyone have a problem with this?
+	- Connection.pm now strips CRs as well as LFs. Thanks, Aryeh!
+	- \r and \n hardcoded as \015 and \012 in some places to avoid
+	  possible cross-platform confusion.
+	- Problems with certain literal handler calls fixed in handler().
+	- irctest is now a full-featured Zippybot! Yow!!
+	- Made a first pathetic stab at documentation, still working on it.
+
+0.4    Wed Dec 10 16:08:21 CST 1997
+	- Made small changes to arg list for DCC::CHAT->new().
+	- Fixed precedence problem in Connection->new_* methods.
+	- Added DCC CHAT and GET capabilities to irctest.
+	- Added 'Proto => "tcp",' to all IO::Socket calls in DCC.pm, after
+	  being led astray by incorrect documentation. :-)
+	- User notification for dropped connections is more polite.
+	- Change to fragment handling in IRC->start().
+	- DCC CHAT->new() now requires nick as argument.
+	- privmsg() can be used to send DCC CHAT messages... just pass it
+	  an IO::Socket instead of a nick.
+	- Removed some debugging prints that accidentally got left in
+	  a few parts of the code. Doh!
+
+0.41   Wed Dec 10 22:36:10 CST 1997
+	- Fixed the order of args to Connection->ctcp().
+	- Fixed lots of bugs that this change caused to manifest. Argh.
+	- First Net::IRC release posted to CPAN, 11 Dec 1997.
+
+0.42   Mon Dec 29 22:44:18 CST 1997
+	- Added dcc_open and dcc_close handlers for DCC connections.
+	- DCC::GET now requires a nick as an argument to new().
+	- Added motd, users, whowas, ison, lusers, userhost and wallops subs
+	  to Connection.pm.
+	- Added event scheduler to IRC.pm and Connection.pm. Good idea, Che!
+	- &AUTOLOAD in Connection.pm completely rewritten by gbacon.
+	- Applied a nifty patch that breaks big messages to privmsg() and
+	  notice() into smaller chunks and sends them piecemeal.
+	- irctest now does DCC SEND via public message, as a demonstration.
+	- Real POD documentation for IRC.pm written; work begun on PODs for
+	  the rest, but it's a nontrivial task.
+	- Added do_one_loop() patch to IRC.pm and rewrote start() for easier
+	  Tk integration with Net::IRC scripts.
+	- Fixed user mode case in Connection->parse().
+	- Added a timeout() method to IRC.pm for finer user control over the
+	  select loop. Woo woo!
+
+0.43   Tue Dec 30 18:20:26 CST 1997
+	- Fixed some problems with the previous distribution... a few outdated
+	  files weren't properly removed before tarring by a particularly
+	  mischevious script.
+
+0.44   Wed Dec 31 18:13:32 CST 1997
+	- Fixed some newly created bugs with Connection->connected. Argh!
+	- Scrapped and redid distribution-rolling scripts. You know,
+	  ExtUtils::MakeMaker is really nice.
+
+0.45   Sat Jan  3 15:48:57 CST 1998
+	- All connections now give their names and causes of death upon
+	  expiring. This should make DCC problems much less confusing. :-)
+	- DCC SEND and CHAT no longer block on accept(). Woohoo!
+	- IRC->remove_conn() changed to removeconn() for consistency with
+	  IRC->addconn() and IRC->newconn().
+
+0.5b   Sun Mar 15 14:29:09 CST 1998
+	- Sizable chunks of IRC, DCC, and Connection.pm rewritten according to
+	  wise suggestions from the venerable elders \merlyn and Roderick.
+	- addfh() and removefh() methods added to IRC.pm; changed() and
+	  closed(), having been rendered utterly useless, were removed.
+	- Reading data from ready non-{DCC,Connection} sockets is now the
+	  responsibility of the user. This provides more flexibility (if you
+	  only want to read N bytes, if it's a buffered FH and not a socket,
+	  etc.), but will break any existing such code. Better now than later.
+	- Various documentation updates for IRC.pm; more progress made on the
+	  as-yet-unreleased Connection.pm docs. Any volunteers to help out
+	  with the PODs?
+	- The select loop now monitors writable and errored filehandles as
+	  well as readable ones. See the updated documentation for IRC.pm.
+	- Chat request feature added to irctest... if you say anything
+	  matching /^Chat/i on a channel with your bot, it will try to
+	  initiate a DCC CHAT with you. Mostly for debugging purposes, but
+	  it might actually be useful to someone out there anyhow...
+	- A bug report from Che_Fox led to the squashing of a bug in privmsg
+	  that kept it from properly trimming long lines before sending.
+	- Johnathan Vasilis pointed out a quickly-fixed bug in Connection->
+	  userhost(). Thanks!
+	- Events now trim preceding colons properly. Happy now, longhair? :-)
+	- Fixed a big fat bug with _add_generic_handler. Setting up multiple
+	  handlers with arrayrefs works again now.
+	- Connection.pm and DCC.pm's input routines now actually throw a
+	  "disconnect" or "dcc_close" event for connection-losing errors.
+	- Alex Ibrado's bug report resulted in the fixing of some stupid bugs
+	  in the kick, topic, squit, and wallops methods. Doh...
+	- Added Tkil's monster patch to fix Connection->parse errors, among
+	  other things. You go, Tkil!
+
+0.5    Wed Apr  1 23:28:13 CST 1998 
+	- Added a few Undernet compatibility changes suggested by Che_Fox.
+	- Fixed a really dumb bug in Connection->default. Umm, doh.
+	- DCC.pm got a number of miscellaneous changes, including making
+	  $dcc->{_time} actually useful for SEND and CHAT, and adding events
+	  for dcc_open and dcc_close all over. Thanks, mjd!
+	- Fixed some evil bugs in DCC.pm... CHAT could call autoflush() on
+	  the result of a failed IO::Socket->new(), and DCC GET had an odd
+	  hanging problem on the last block of a file. *Many* thanks to the
+	  indefatigable \mjd for spotting and patching the latter.
+	- Added sanity checks to DCC.pm to prevent abuse by malicious remote
+	  clients. Net::IRC -- making the world safe for bots, one Boolahman
+	  at a time!
+	- Stupid low-level CTCP dequoting bug fixed on a report from \mjd.
+	- Even stupider Connection->server bug tracked down and stomped.
+
+0.51   Tue May 19 01:03:57 CDT 1998 
+	- Aryeh patched a few minor bugs in the formatting functions.
+	- Problem with the select timeout in do_one_loop() squashed.
+	- Minor changes to dain-bramaged parts of DCC::CHAT::parse().
+	- Connection::parse() is now much friendlier to "localhost" servers.
+	- Added another error check to IRC::schedule() (thanks, Cuberoot!)
+	- Connection::sl() won't send \r\n over DCC CHAT anymore.
+	- All "return undef"s changed to "return;" as per gbacon's suggestion.
+	- irctest now uses strict -- it was mostly strict-safe before, but I
+	  had forgotten the actual 'use'... doh. Thanks, arkuat!
+	- tile is the DCC God. A two-line patch of his fixed an ugly DCC
+	  CHAT blocking bug I'd been hacking on for a few days. You GO, tile!
+	- The Net::IRC source now uses Carp for all error reporting.
+	- The setout() and seterr() methods are dead as a result of the
+	  previous change. You'll have to do your own tee'ing... sorry.
+
+0.52   Tue Jun  9 21:16:53 CDT 1998
+        - Fixed a stupid bug introduced in 0.51 which causes Net::IRC to
+	  attack the CPU like a rabid wolverine. Mea culpa. You just don't
+	  notice these things as much when you're testing each new version
+	  on a quad-CPU UltraSparc. :-)
+	- Fixed an oddity with irctest's cping handler which caused it to
+	  no longer work with the current version of Net::IRC.
+	- Formats will actually work with CTCP events now. Doh.
+	- Added Event->dump method to spew the contents of an Event object
+	  to STDERR for debugging. This is a good thing.
+
+0.53   Fri Jun 12 20:25:02 CDT 1998
+	- Fixed compatibility problems with Net::IRC on MacPerl. Many thanks
+	  to Chris Nandor for bringing this to our attention...
+	- Jonathan Vasilis spotted an incompatibility between ircd 2.9 and
+	  Net::IRC, which has since been squashed. Thanks, Jon!
+	- One can now pass Connection->new_get() an open filehandle as the
+	  last argument to specify a particular filename for incoming DCC
+	  SENDs. Naturally, when you don't provide the extra argument, the
+	  behavior is the same as before.
+
+0.54   Sun Jun 28 18:49:03 CDT 1998
+	- IRC::addfh() now requires only two arguments. In the absence of
+	  any indication of what you're using the filehandle for, it will
+	  assume you're reading from it. Previous behavior is, of course,
+	  unchanged.
+	- Connection::pr() finally got diked out. Took long enough...
+	- Minor doc fixes all over and cosmetic changes to irctest.
+	- List of events added to Event.pm documentation (finally!).
+	- The add_*handler functions will accept upper, lower, or mixed-case
+	  event names indiscriminately now.
+
+
+0.56b  Tue Dec 29 13:37:01 CST 1998
+	- The Makefile.PL was edited slightly for compatibility with nmake.
+	  Thanks to Duncan Harris for the bug report on this one.
+	- DCC CHAT objects can now send messages by calling the new privmsg()
+	  method... $chat->privmsg('string to send...'); . Useful, no?
+	- The indefatigable oznoid spent a good deal of his hard-earned
+	  time chasing down a pernicious connection bug. Way to go!
+	- Fixed, at long last, the "Read error" bugs in Connection->quit().
+	- Repaired some manifest idiocy in irctest. (Whoops. Thanks, Stupid_!)
+	- Fixed the new CORE::join warnings that crop up under 5.005. Grrrrr.
+	- Some debugging code added. Set DEBUG to 1 at the top of IRC.pm to
+	  enable verbose spewage of the module's actions. Still needs fleshing
+	  out, and needs some more debugging code in DCC.pm too.
+	- Net::IRC now dies by default when there are no open connections
+	  left. (Install a 'disconnect' handler to avoid this.)  This keeps it
+	  from ending up in a tight select loop over no sockets, which chews
+	  up CPU like mad.
+	- Fixed a parse problem where the handler for numeric events would
+	  grab non-numeric server messages, like "ERROR :Closing Link". Heh.
+	- Added disconnect() method to Connection.pm, to ensure that
+	  connections die properly BEFORE we call disconnect handlers. This
+	  approach is much cleaner... and less buggy.
+	- The handler which gets executed just before the quit() method
+	  issues a QUIT command (for saying things before you leave, etc.)
+	  is now known as "leaving", not "disconnect". This is a USER-VISIBLE
+	  CHANGE which may break some of existing code. BE WARNED.
+	- addconn() is now only called from Connection->connect(), and
+	  removeconn only from Connection->disconnect(). This is a good thing.
+	- DCC GET almost works. I accidentally reversed a test in some
+	  previous version and totally borked it so that it would die after
+	  one packet. Don't I feel like a total doofus... now, for those
+	  regression tests...
+	- Added a topic handler to irctest on a lark. I get more questions
+	  about topic reading/setting than about anything else...
+	- Added a "LocalAddr" atribute for Connection->connect(). Setting it
+	  to a valid hostname for your machine will cause you to connect with
+	  that hostname, instead of whatever default one your DNS will return.
+	  (Note: Some paranoid IRC servers don't like this.)
+
+0.57   Mon Mar  1 19:50:03 CST 1999
+	- Thanks to Gantoris for pointing out a bug in Event->to(). Now, when
+	  called in scalar context, it will return an array reference instead
+	  of the number of recipients.
+	- fubar@ameritech.net pointed out another motd numeric code which isn't
+	  in the (woefully outdated) RFC. If you've ever found yourself never
+	  receiving the MOTDs, this version's for you.
+	- Many thanks to Moses Moore, who offered some much-needed changes to
+	  Connection->privmsg(). Now the first argument can be an arrayref of
+	  recipient names, to specify a single message to be sent to multiple
+	  nicks/channels.
+	- Doru Petrescu <pdoru@kappa.ro> is not just the man. Nor, in fact, is
+	  he The Man. THIS is a person who can only be described as THE MAN
+	  HIMSELF, and I bow before his studly debugging skills. He sent me a
+          two-character fix today that seems to solve all the DCC problems I was
+	  having. Boy, do I feel dumb. Thanks, Doru!
+	- Everything's been checked into CVS, so I can have more detailed change
+	  logging. Hopefully, this will help avoid future rebreakings of DCC.
+	- Harald Kreuzer tipped me off to a bug in irctest's on_topic handler
+	  subroutine which really should have been caught in testing. Sorry
+	  about that... and thanks, Harald!
+	- Kajetan Hinner sent me a monster patch against 0.54. I'm still picking
+	  the relevant parts out of it, but I've included a couple notable parts
+	  from it already... especially all the new event numerics he added.
+	
+0.58   Thu Apr  8 11:00:58 CDT 1999
+	- Oh, dear. Many thanks to kleptog and Epesh for bringing to my
+	  attention a really simple, stupid bug which broke scripts using
+	  multiple connections. 0.57 was borked. Mea culpa.
+	- Added a "Password" parameter to the connect() method, for bots on
+	  restricted servers. Updated the docs to reflect this.
+
+0.59   Fri Jun 18 10:52:44 CDT 1999
+	- The default timeout for the select loop was changed from 1 to undef.
+	  If you're calling Net::IRC via do_one_loop instead of with start(),
+	  then you'll probably experience weird freezes with this. Tough. Do a
+	  $irc->timeout(0); to make your program run better than ever before, if
+	  you weren't already.
+	- Cleaned up some bogus ugly code here and there. Don't mind me, I'm
+	  just tidying up...
+	- Added Tom "tnalpggE" Monroe's nifty patch, which gives us away, rehash, 
+	  summon, and restart methods, and improves parsing of numeric events.
+	- Andrew Mackenzie kicks ass. After unsuccessfully nagging me to get off
+	  my lazy ass and fix a DCC bug, he did it himself. DCC receive now
+	  works again. h3o++ !
+	- Fixed a bogosity in Connection->mode(). Don't ask.
+
+0.60   Thu Aug 12 16:19:58 EDT 1999
+	- Fixed a stupid oversight in the Net::IRC::DCC::SEND::new() method which
+	  prevented one from sending files in directories outside of the current
+	  directory. Thanks to Frank Tobin for spotting this; sorry it took me so
+	  long to fix, but your email got lost in the noise for a couple weeks...
+	- Jan L. Peterson sent me a nifty patch which fixes the infamous colon-
+	  stripping bug in Event->args(). Sorry it took me so long to fix this
+	  one, everybody. Unlike the previous bug, this one has no excuse.
+	- Thanks to Jack Velte for pointing out the cause of some spurious
+	  "uninitialized value" warnings in Connection.pm.
+
+0.61   Thu Aug 26 22:29:39 EDT 1999
+	- Shizukesa pointed out the root cause of a bug that was sending duplicate
+	  dcc_close events when DCC connections shut down. Now fixed. He kicks
+	  ass. :-)  Added a $dcc->nick accessor method, too, as per his excellent
+	  suggestion.
+
+0.62   Wed Sep 22 18:13:28 EDT 1999
+	- Vadim Belman spotted two bugs in DCC.pm: one, a mistyping of
+	  'socket' as 'sock'; the other, a thoroughly inappropriate use of
+	  IO::Socket's LocalPort attribute. Both fixed, as per his patch.
+	- Jeremy Muhlich reminded me of a stupid change I made to the
+	  select loop several revisions ago which broke the proper behavior
+	  of schedule()ed events. Sigh.
+
+0.63   Sun Jan 30 18:50:28 PST 2000
+	- Harald Paulsen spent a good deal of time and effort hunting down a
+	  couple of really dumb bugs in Connection::parse(). Replaced a couple
+	  of "return"s with "next"s and it's all good. Wee!
+	- Richard-William Loerakker sent me a patch for DCC on multihomed
+	  machines... the DCC code wasn't paying attention to which
+	  interface the Connection object was attached to. Thanks, Richard!
+
+0.70   Mon May 29 11:52:26 PDT 2000
+	- Igor Shevchenko sent me a patch for DCC.pm which adds support
+	  for resuming DCC GETs. I haven't tested this feature, but the
+	  code looks right. :-)
+	- Finally fixed the pernicious "stripping the first colon" bug.
+	  Let's hope it stays dead this time! This may cause you to have to
+	  make a minor change to your CTCP handlers... but that's a small
+	  price to pay. (Shifting the first arg off should no longer be
+	  necessary.)
+	- Fixed an ugly DCC bug reported by Matthew Boehm. I can't
+	  believe I didn't notice this before! The fix uses Sys::Hostname
+	  to determine the machine's IP address; I'm not sure if this works
+	  on Windows, but it probably should. Let me know if not.
+	- Added Dave Schmitt's unignore patch, which fixes a big omission in
+	  Connection.pm -- you can now turn off ignores that you set with
+	  ignore(). Nifty!
+
+0.71   Mon Jul 02 00:00:00 GMT 2001
+	- Removed debugging information that was printing out weird messages
+	  as far as ACTIONs were concerned. Thanks to Joshua Swink, Glen and
+	  Mike.
+	- Made the LocalAddr option actually work, thanks to Abigail and
+	  Greg.
+	- Added some more Handlers, from Austnet, thanks to Andrew Macks
+	- Updated the documentation 
+
+0.72   Fri Dec 14 13:00:00 GMT 2001
+        - Added a patch from Anti Veeranna in Connection.pm to fix the
+          problems with IPv6 hostnames. Has not been tested with DCC.
+
+0.73   Wed Jan 02 13:00:00 GMT 2002
+        - Anti's Patch broke MODE handling. Implemented a quick fix.
+
+0.74   Wed Apr 16 Sometime GMT 2003
+	- Added Pacing
+	- Added SSL support
+	- Added Time::HiRes conditional support for fractional times
+	- Net::IRC::Connection::time -> Net::IRC::Connection::timestamp
+	  - Hopefully this doesn't break anyone, this was an undocumented
+	    access to the IRC 'TIME' command.
+	- Updated docs slightly, pointing to new webpage, etc.
+
+0.75   Fri Apr 30 who cares what time? 2004
+	- Hopefully fixed mysterious LocalAddr-related connection problems
+	- Rewrote event output system - created EventQueue
+	- Added add_default_handler for hooking all events at once
+	- UnrealIrcd events added (thanks to Hendrik Frenzel)
+        - Conditional require of Time::HiRes now works right in its absence
+          (thanks to Adam Monsen <adamm@wazamatta.com>)
+	- Massive readability/maintainability changes
+	  - Subs ordered in logical order, not alphabetical
+	  - Indentation
+	- Updated current maintainers (should have been changed for 0.74)
+
+0.76  Thu Sep 17 23:47:13 EDT 2009
+  - Officially deprecated. See Bot::BasicBot and POE::Component::IRC instead.
+
+0.77  Sat Dec 19 17:46:07 EST 2009
+  - Previous maintainer needs to learn how the dist tools work and include
+    everything in the manifest. New version to include everything in the old
+    tarball and make people stop harassing me about this long-dead (good
+    riddance) distribution once and for all.
+
+0.78  Wed Dec 23 12:07:22 EST 2009
+  - Spoke too soon, of course. Fix from BinGOs for fixing running this under
+    automated testing.
+
+0.79  Sat Dec 26 20:57:40 EST 2009
+  - Put "hic sunt dracones" text in the DESCRIPTION because Google indexes
+    search.cpan.org intelligently and presents the =head1 DESCRIPTION as the
+    search preview.

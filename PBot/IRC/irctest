@@ -1,0 +1,317 @@
+#!/usr/bin/perl -w
+#
+#  irctest
+#     Sample Net::IRC script that starts a vapid little annoybot.
+#     Please don't test your bots in #perl... we are easily annoyed.
+#
+
+use strict;
+use Net::IRC;
+
+#
+#  Create the IRC and Connection objects
+#
+
+my $irc = new Net::IRC;
+
+print "Creating connection to IRC server...\n";
+
+my $conn = $irc->newconn(Server   => ($ARGV[0]  ||  'irc.prison.net'),
+			 Port     => 6667,
+			 Nick     => 'Boolahman',
+			 Ircname  => 'This bot brought to you by Net::IRC.',
+			 Username => 'quetzal')
+    or die "irctest: Can't connect to IRC server.\n";
+
+#
+#  Here's some stuff to print at odd moments.
+#
+
+my @zippy = (
+  "I am a traffic light, and Alan Ginsberg kidnapped my laundry in 1927!",
+  "I'm a GENIUS!  I want to dispute sentence structure with SUSAN SONTAG!!",
+  "Now I'm telling MISS PIGGY about MONEY MARKET FUNDS!",
+  "I have a VISION!  It's a RANCID double-FISHWICH on an ENRICHED BUN!!",
+  "My pants just went on a wild rampage through a Long Island Bowling Alley!!",
+  "I always liked FLAG DAY!!",
+  "I will establish the first SHOPPING MALL in NUTLEY, New Jersey...",
+  "I used to be STUPID, too..before I started watching UHF-TV!!",
+  "I smell like a wet reducing clinic on Columbus Day!",
+  "Just walk along and try NOT to think about your INTESTINES being almost FORTY YARDS LONG!!",
+  "It's the RINSE CYCLE!!  They've ALL IGNORED the RINSE CYCLE!!",
+  "Yow!  It's some people inside the wall!  This is better than mopping!",
+  "Is the EIGHTIES when they had ART DECO and GERALD McBOING-BOING lunch boxes??",
+  "This PIZZA symbolizes my COMPLETE EMOTIONAL RECOVERY!!",
+  "I call it a \"SARDINE ON WHEAT\"!",
+  "Is it FUN to be a MIDGET?",
+  "Someone in DAYTON, Ohio is selling USED CARPETS to a SERBO-CROATIAN!!",
+	     );
+
+#
+#  Here are the handler subroutines. Fascinating, huh?
+#
+
+# What to do when the bot successfully connects.
+sub on_connect {
+	my $self = shift;
+	
+	print "Joining #IRC.pm...\n";
+	$self->join("#net-irc2");
+	$self->privmsg("#net-irc2", &pickrandom());
+	$self->topic("#net-irc2");
+}
+
+# Handles some messages you get when you connect
+sub on_init {
+    my ($self, $event) = @_;
+    my (@args) = ($event->args);
+    shift (@args);
+    
+    print "*** @args\n";
+}
+
+# What to do when someone leaves a channel the bot is on.
+sub on_part {
+    my ($self, $event) = @_;
+    my ($channel) = ($event->to)[0];
+
+    printf "*** %s has left channel %s\n", $event->nick, $channel;
+}
+
+# What to do when someone joins a channel the bot is on.
+sub on_join {
+    my ($self, $event) = @_;
+    my ($channel) = ($event->to)[0];
+
+    printf "*** %s (%s) has joined channel %s\n",
+    $event->nick, $event->userhost, $channel;
+
+    if ($event->userhost =~ /^corbeau\@.*execpc\.com/) {  # Auto-ops anyone who
+	$self->mode("#IRC.pm", "+o", $event->nick);      # matches hostmask.
+    }
+}
+
+# What to do when we receive a private PRIVMSG.
+sub on_msg {
+    my ($self, $event) = @_;
+    my ($nick) = $event->nick;
+
+    print "*$nick*  ", ($event->args), "\n";
+#    $self->privmsg($nick, &pickrandom());   # Say a Zippy quote.
+}
+
+# What to do when we receive channel text.
+sub on_public {
+    my ($self, $event) = @_;
+    my @to = $event->to;
+    my ($nick, $mynick) = ($event->nick, $self->nick);
+    my ($arg) = ($event->args);
+
+    # Note that $event->to() returns a list (or arrayref, in scalar
+    # context) of the message's recipients, since there can easily be
+    # more than one.
+    
+    print "<$nick> $arg\n";
+    if ($arg =~ /$mynick/i) {                   # Say a Zippy quote if our nick
+	$self->privmsg([ @to ], &pickrandom()); # appears in the message.
+    }
+
+    if ($arg =~ /Go away/i) {       # Tell him to leave, and he does.
+	$self->quit("Yow!!");
+	exit 0;
+    }
+
+    if ($arg =~ /^chat/i) {         # Request a DCC Chat initiation
+	$self->new_chat(1, $event->nick, $event->host);
+    }
+
+    # You can invoke this next part with "Send me Filename" or
+    # "Send Filename to me". It doesn't much like ending punctuation, though.
+    
+    $arg =~ s/[^"'\w]*?\b(to|me)\b[^'"\w]*?//g;
+
+    if ($arg =~ /^send\s+(\S+)\s*/i) {
+	if (-e $1) {
+	    $self->privmsg($nick, "Sending $1 in 10 seconds...");
+	    $self->schedule(10, \&Net::IRC::Connection::new_send, $nick, $1);
+	} else {
+	    $self->privmsg($nick, "No such file as $1, sorry.");
+	}
+    }
+}
+
+sub on_umode {
+    my ($self, $event) = @_;
+    my @to = $event->to;
+    my ($nick, $mynick) = ($event->nick, $self->nick);
+    my ($arg) = ($event->args);
+
+    # Note that $event->to() returns a list (or arrayref, in scalar
+    # context) of the message's recipients, since there can easily be
+    # more than one.
+    
+    print "<$nick> $arg\n";
+    if ($arg =~ /$mynick/i) {                   # Say a Zippy quote if our nick
+	$self->privmsg([ @to ], &pickrandom()); # appears in the message.
+    }
+
+    if ($arg =~ /Go away/i) {       # Tell him to leave, and he does.
+	$self->quit("Yow!!");
+	exit 0;
+    }
+
+    if ($arg =~ /^chat/i) {         # Request a DCC Chat initiation
+	$self->new_chat(1, $event->nick, $event->host);
+    }
+
+    # You can invoke this next part with "Send me Filename" or
+    # "Send Filename to me". It doesn't much like ending punctuation, though.
+    
+    $arg =~ s/[^"'\w]*?\b(to|me)\b[^'"\w]*?//g;
+
+    if ($arg =~ /^send\s+(\S+)\s*/i) {
+	if (-e $1) {
+	    $self->privmsg($nick, "Sending $1 in 10 seconds...");
+	    $self->schedule(10, \&Net::IRC::Connection::new_send, $nick, $1);
+	} else {
+	    $self->privmsg($nick, "No such file as $1, sorry.");
+	}
+    }
+}
+# What to do when we receive a message via DCC CHAT.
+sub on_chat {
+    my ($self, $event) = @_;
+    my ($sock) = ($event->to)[0];
+
+    print '*' . $event->nick . '* ' . join(' ', $event->args), "\n";
+    $self->privmsg($sock, &pickrandom());   # Say a Zippy quote.
+}
+
+# Prints the names of people in a channel when we enter.
+sub on_names {
+    my ($self, $event) = @_;
+    my (@list, $channel) = ($event->args);    # eat yer heart out, mjd!
+
+    # splice() only works on real arrays. Sigh.
+    ($channel, @list) = splice @list, 2;
+
+    print "Users on $channel: @list\n";
+}
+
+# What to do when we receive a DCC SEND or CHAT request.
+sub on_dcc {
+    my ($self, $event) = @_;
+    my $type = ($event->args)[1];
+
+    if (uc($type) eq 'SEND') {
+	open TEST, ">/tmp/net-irc.dcctest"
+	    or do { warn "Can't open test file: $!"; return; };
+	$self->new_get($event, \*TEST);
+	print "Saving incoming DCC SEND to /tmp/net-irc.dcctest\n";
+    } elsif(uc($type) eq 'CHAT') {
+	$self->new_chat($event);
+    } else {
+	print STDERR ("Unknown DCC type: " . $type);
+    }
+}
+
+# Yells about incoming CTCP PINGs.
+sub on_ping {
+    my ($self, $event) = @_;
+    my $nick = $event->nick;
+
+    $self->ctcp_reply($nick, join (' ', ($event->args)));
+    print "*** CTCP PING request from $nick received\n";
+}
+
+# Gives lag results for outgoing PINGs.
+sub on_ping_reply {
+    my ($self, $event) = @_;
+    my ($args) = ($event->args)[1];
+    my ($nick) = $event->nick;
+
+    $args = time - $args;
+    print "*** CTCP PING reply from $nick: $args sec.\n";
+}
+
+# Change our nick if someone stole it.
+sub on_nick_taken {
+    my ($self) = shift;
+
+    $self->nick(substr($self->nick, -1) . substr($self->nick, 0, 8));
+}
+
+# Display formatted CTCP ACTIONs.
+sub on_action {
+    my ($self, $event) = @_;
+    my ($nick, @args) = ($event->nick, $event->args);
+
+    print "* $nick @args\n";
+}
+
+# Reconnect to the server when we die.
+sub on_disconnect {
+	my ($self, $event) = @_;
+
+	print "Disconnected from ", $event->from(), " (",
+	      ($event->args())[0], "). Attempting to reconnect...\n";
+	$self->connect();
+}
+
+# Look at the topic for a channel you join.
+sub on_topic {
+	my ($self, $event) = @_;
+	my @args = $event->args();
+
+	# Note the use of the same handler sub for different events.
+
+	if ($event->type() eq 'notopic') {
+	    print "No topic set for $args[1].\n";
+
+	# If it's being done _to_ the channel, it's a topic change.
+	} elsif ($event->type() eq 'topic' and $event->to()) {
+	    print "Topic change for ", $event->to(), ": $args[0]\n";
+
+	} else {
+	    print "The topic for $args[1] is \"$args[2]\".\n";
+	}
+}
+
+
+sub pickrandom {   # Choose a random quote from the @zippy array.
+    return $zippy[ rand scalar @zippy ];
+}
+
+sub blah {
+  my ($self, $event) = @_;
+
+  print "Got event of type: " . $event->type . "\n";
+}
+
+print "Installing handler routines...";
+
+#$conn->add_default_handler(\&blah);
+
+$conn->add_handler('cping',  \&on_ping);
+$conn->add_handler('crping', \&on_ping_reply);
+$conn->add_handler('msg',    \&on_msg);
+$conn->add_handler('chat',   \&on_chat);
+$conn->add_handler('public', \&on_public);
+$conn->add_handler('caction', \&on_action);
+$conn->add_handler('join',   \&on_join);
+$conn->add_handler('umode',   \&on_umode);
+$conn->add_handler('part',   \&on_part);
+$conn->add_handler('cdcc',   \&on_dcc);
+$conn->add_handler('topic',   \&on_topic);
+$conn->add_handler('notopic',   \&on_topic);
+
+$conn->add_global_handler([ 251,252,253,254,302,255 ], \&on_init);
+$conn->add_global_handler('disconnect', \&on_disconnect);
+$conn->add_global_handler(376, \&on_connect);
+$conn->add_global_handler(433, \&on_nick_taken);
+$conn->add_global_handler(353, \&on_names);
+
+print " done.\n";
+
+print "starting...\n";
+$irc->start;

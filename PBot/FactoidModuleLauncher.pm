@@ -119,8 +119,9 @@ sub execute_module {
   if($pid == 0) { # start child block
     $self->{child} = 1; # set to be killed after returning
     
+    # don't quit the IRC client when the child dies
     no warnings;
-    *Net::IRC::Connection::DESTROY = sub { return; };
+    *PBot::IRC::Connection::DESTROY = sub { return; };
     use warnings;
 
     if(not chdir $module_dir) {

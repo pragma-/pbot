@@ -1,5 +1,3 @@
-More information coming soon.  Work in progress.
---------------------------
 See also: http://www.iso-9899.info/wiki/Candide
 --------------------------
 PBot requires Perl 5.10, especially for !cc 
@@ -20,7 +18,6 @@ associated with a registered NickServ account, if you want channel auto-join to 
 Then you'll need to get several modules from CPAN.  If you do not have root access, see
 http://perl.jonallen.info/writing/articles/install-perl-modules-without-root
 
-Net::IRC
 AppConfig::Std
 Data::Dumper
 Getopt::Std
@@ -41,18 +38,22 @@ XML::RSS
 --------------------------
 Some quick-and-dirty info on using stdin (pbot shell after running pbot.sh):
 
-< pragma_> you can type in the bot's stdin to talk in channels as the bot
-< candide> hi
-< pragma_> that was typing 'msg #pbot2 hi' from the bot's stdin
-< pragma_> you can send bot commands to channel by using ~channel command
-< pragma_> like ~channel kick <args>
-< pragma_> because kick has to be used in a channel
-< pragma_> and you can still background the bot with ^Z
+You can type in the bot's stdin to talk in channels as the bot, 
+e.g. by typing 'msg #pbot2 hi' from the bot's stdin.
+
+You can send bot commands to channel by using: ~channel command
+
+For instance, the kick command must be run in a channel:
+
+~#pbot2 kick somenick Example reason
+
+The bot may be backgrounded via ^Z.
 --------------------------
 Coming soon to README:
 
-* Description of each PBot module, for customisation.
+* Description of each PBot module, for dev customisation.
 --------------------------
 Todo:
 
 * Add SSL and port options to pbot.pl.
+* Use DualIndexHashObject as base for a Registry class?
