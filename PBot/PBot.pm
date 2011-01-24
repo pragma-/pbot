@@ -27,7 +27,9 @@ use PBot::IRC;
 use PBot::IRCHandlers;
 use PBot::Channels;
 
+use PBot::LagChecker;
 use PBot::AntiFlood;
+
 use PBot::Interpreter;
 use PBot::Commands;
 
@@ -141,6 +143,7 @@ sub initialize {
 
   $self->module_dir($module_dir);
 
+  $self->{lagchecker} = PBot::LagChecker->new(pbot => $self);
   $self->{antiflood} = PBot::AntiFlood->new(pbot => $self);
 
   $self->{ignorelist} = PBot::IgnoreList->new(pbot => $self, filename => $ignorelist_file);
@@ -214,7 +217,7 @@ sub connect {
   $self->conn->add_handler('part'                     , sub { $self->irchandlers->on_departure(@_)  });
   $self->conn->add_handler('join'                     , sub { $self->irchandlers->on_join(@_)       });
   $self->conn->add_handler('quit'                     , sub { $self->irchandlers->on_departure(@_)  });
-  $self->conn->add_handler('pong'                     , sub { $self->antiflood->on_pong(@_)         });
+  $self->conn->add_handler('pong'                     , sub { $self->lagchecker->on_pong(@_)         });
 }
 
 #main loop
@@ -262,6 +265,10 @@ sub check_stdin {
 
   return $self->interpreter->process_line($from, $self->{botnick}, "stdin", "localhost", $text);
 }
+
+###################################################################################
+# Getters/Setters
+###################################################################################
 
 sub irc {
   my $self = shift;
@@ -350,6 +357,12 @@ sub ignorelist {
   my $self = shift;
   if(@_) { $self->{ignorelist} = shift; }
   return $self->{ignorelist};
+}
+
+sub lagchecker {
+  my $self = shift;
+  if(@_) { $self->{lagchecker} = shift; }
+  return $self->{lagchecker};
 }
 
 sub antiflood {

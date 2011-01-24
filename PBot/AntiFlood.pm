@@ -15,6 +15,8 @@ use feature 'switch';
 use vars qw($VERSION);
 $VERSION = $PBot::PBot::VERSION;
 
+use PBot::LagChecker;
+
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
 use Carp ();
@@ -48,16 +50,9 @@ sub initialize {
   $self->{last_timestamp} = gettimeofday;
   $self->{message_history} = {};
 
-  $self->{lag} = undef;
-  $self->{lag_history} = [];
-  $self->{LAG_HISTORY_MAX} = 3;
-  $self->{LAG_HISTORY_INTERVAL} = 10;
-
   $pbot->timer->register(sub { $self->prune_message_history }, 60 * 60 * 1);
-  $pbot->timer->register(sub { $self->send_ping }, $self->{LAG_HISTORY_INTERVAL});
 
   $pbot->commands->register(sub { return $self->unbanme(@_) },  "unbanme",  0);
-  $pbot->commands->register(sub { return $self->lagcheck(@_) }, "lagcheck", 0);
 }
 
 sub get_flood_account {
@@ -183,8 +178,11 @@ sub check_flood {
   # do not do flood processing if channel is not in bot's channel list or bot is not set as chanop for the channel
   return if ($channel =~ /^#/) and (not exists $self->{pbot}->channels->channels->hash->{$channel} or $self->{pbot}->channels->channels->hash->{$channel}{chanop} == 0);
 
-  # do not do flood processing for this event if lag is uninitialized or is significant
-  return if not defined $self->{lag} or $self->{lag} >= 2;
+  # do not do flood enforcement for this event if bot is lagging
+  if($self->{pbot}->lagchecker->lagging) {
+    $self->{pbot}->logger->log("Disregarding enforcement of anti-flood due to lag: " . $self->{pbot}->lagchecker->lagstring . "\n");
+    return;
+  } 
 
   if($max_messages > $self->{pbot}->{MAX_NICK_MESSAGES}) {
     $self->{pbot}->logger->log("Warning: max_messages greater than MAX_NICK_MESSAGES; truncating.\n");
@@ -294,47 +292,6 @@ sub prune_message_history {
       }
     }
   }
-}
-
-sub send_ping {
-  my $self = shift;
-
-  return unless defined $self->{pbot}->conn;
-
-  $self->{ping_send_time} = [gettimeofday];
-  $self->{pbot}->conn->sl("PING :lagcheck");
-  # $self->{pbot}->logger->log("sent lagcheck PING\n");
-}
-
-sub on_pong {
-  my $self = shift;
-
-  my $elapsed = tv_interval($self->{ping_send_time});
-  push @{ $self->{lag_history} }, $elapsed;
-
-  # $self->{pbot}->logger->log("got lagcheck PONG\n");
-  # $self->{pbot}->logger->log("Lag: $elapsed\n");
-
-  my $len = @{ $self->{lag_history} };
-
-  if($len > $self->{LAG_HISTORY_MAX}) {
-    shift @{ $self->{lag_history} };
-    $len--;
-  }
-
-  my $lag = 0;
-  foreach my $l (@{ $self->{lag_history} }) {
-    $lag += $l;
-  }
-
-  $self->{lag} = $lag / $len;
-}
-
-sub lagcheck {
-  my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-  my $lag = $self->{lag} || "initializing";
-  return "Lag: $lag";
 }
 
 sub unbanme {
