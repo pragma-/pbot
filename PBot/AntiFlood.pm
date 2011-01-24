@@ -212,14 +212,14 @@ sub check_flood {
 
     my %last = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - 1] };
 
-    $self->{pbot}->logger->log("Comparing " . int($last{timestamp}) . " against " . int($msg{timestamp}) . ": " . (int($last{timestamp} - $msg{timestamp})) . " seconds [" . duration_exact($last{timestamp} - $msg{timestamp}) . "]\n") if $mode == $self->{FLOOD_JOIN};
+    $self->{pbot}->logger->log("Comparing $nick!$user\@$host " . int($last{timestamp}) . " against " . int($msg{timestamp}) . ": " . (int($last{timestamp} - $msg{timestamp})) . " seconds [" . duration_exact($last{timestamp} - $msg{timestamp}) . "]\n") if $mode == $self->{FLOOD_JOIN};
 
     if($last{timestamp} - $msg{timestamp} <= $max_time && not $self->{pbot}->admins->loggedin($channel, "$nick!$user\@$host")) {
       if($mode == $self->{FLOOD_JOIN}) {
         if(${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages) {
           ${ $self->message_history }{$account}{$channel}{offenses}++;
           
-          my $timeout = (2 ** (($self->message_history->{$account}{$channel}{offenses} + 4) < 10 ? ${ $self->message_history }{$account}{$channel}{offenses} + 4 : 10));
+          my $timeout = (2 ** (($self->message_history->{$account}{$channel}{offenses} + 2) < 10 ? ${ $self->message_history }{$account}{$channel}{offenses} + 2 : 10));
 
           my $banmask = address_to_mask($host);
 
