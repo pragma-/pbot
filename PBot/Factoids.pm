@@ -205,8 +205,8 @@ sub interpreter {
 
   $from = lc $from;
 
-  # remove trailing comma or colon from keyword if keyword has other characters beforehand 
-  $keyword =~ s/^(.+)[:,]$/$1/;
+  # (COMMENTED OUT) remove trailing comma or colon from keyword if keyword has other characters beforehand 
+  # $keyword =~ s/^(.+)[:,]$/$1/;
 
   return undef if not length $keyword;
 
