@@ -27,6 +27,21 @@ sub new {
   return $self;
 }
 
+# TODO - move this someplace better so it can be more accessible to user-customisation
+my %factoid_metadata_levels = (
+  created_on                  => 999,
+  enabled                     => 10,
+  last_referenced_in          => 60,
+  last_referenced_on          => 60,
+  modulelauncher_subpattern   => 60,
+  owner                       => 60,
+  rate_limit                  => 10,
+  ref_count                   => 60,
+  ref_user                    => 60,
+  type                        => 60,
+  # all others are allowed to be factset by anybody/default to level 0
+);
+
 sub initialize {
   my ($self, %conf) = @_;
 
@@ -43,8 +58,8 @@ sub initialize {
   $pbot->commands->register(sub { return $self->factrem(@_)         },       "factrem",      0);
   $pbot->commands->register(sub { return $self->factshow(@_)        },       "factshow",     0);
   $pbot->commands->register(sub { return $self->factinfo(@_)        },       "factinfo",     0);
-  $pbot->commands->register(sub { return $self->factset(@_)         },       "factset",     10);
-  $pbot->commands->register(sub { return $self->factunset(@_)       },       "factunset",   10);
+  $pbot->commands->register(sub { return $self->factset(@_)         },       "factset",      0);
+  $pbot->commands->register(sub { return $self->factunset(@_)       },       "factunset",    0);
   $pbot->commands->register(sub { return $self->factchange(@_)      },       "factchange",   0);
   $pbot->commands->register(sub { return $self->factalias(@_)       },       "factalias",    0);
   $pbot->commands->register(sub { return $self->call_factoid(@_)    },       "fact",         0);
@@ -90,6 +105,39 @@ sub factset {
     return "Usage: factset <channel> <factoid> [key <value>]"
   }
 
+  my $admininfo = $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host");
+
+  my $level = 0;
+  my $meta_level = 0;
+
+  if(defined $admininfo) {
+    $level = $admininfo->{level};
+  }
+
+  if(defined $key) {
+    if(defined $factoid_metadata_levels{$key}) {
+      $meta_level = $factoid_metadata_levels{$key};
+    }
+
+    if($meta_level > 0) {
+      if($level == 0) {
+        return "You must login to set '$key'";
+      } elsif($level < $meta_level) {
+        return "You must be at least level $meta_level to set '$key'";
+      }
+    }
+  }
+
+  my ($owner_channel, $owner_trigger) = $self->{pbot}->factoids->find_factoid($channel, $trigger, undef, 1);
+
+  if(defined $owner_channel) {
+    my $factoid = $self->{pbot}->factoids->factoids->hash->{$owner_channel}->{$owner_trigger};
+
+    if(lc $nick ne lc $factoid->{'owner'} and $level == 0) {
+      return "You are not the owner of $trigger.";
+    }
+  }
+
   return $self->{pbot}->factoids->factoids->set($channel, $trigger, $key, $value);
 }
 
@@ -98,8 +146,39 @@ sub factunset {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my ($channel, $trigger, $key) = split / /, $arguments, 3 if defined $arguments;
 
-  if(not defined $channel or not defined $trigger) {
+  if(not defined $channel or not defined $trigger or not defined $key) {
     return "Usage: factunset <channel> <factoid> <key>"
+  }
+
+  my $admininfo = $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host");
+
+  my $level = 0;
+  my $meta_level = 0;
+
+  if(defined $admininfo) {
+    $level = $admininfo->{level};
+  }
+
+  if(defined $factoid_metadata_levels{$key}) {
+    $meta_level = $factoid_metadata_levels{$key};
+  }
+
+  if($meta_level > 0) {
+    if($level == 0) {
+      return "You must login to unset '$key'";
+    } elsif($level < $meta_level) {
+      return "You must be at least level $meta_level to unset '$key'";
+    }
+  }
+
+  my ($owner_channel, $owner_trigger) = $self->{pbot}->factoids->find_factoid($channel, $trigger, undef, 1);
+
+  if(defined $owner_channel) {
+    my $factoid = $self->{pbot}->factoids->factoids->hash->{$owner_channel}->{$owner_trigger};
+
+    if(lc $nick ne lc $factoid->{'owner'} and $level == 0) {
+      return "You are not the owner of $trigger.";
+    }
   }
 
   return $self->{pbot}->factoids->factoids->unset($channel, $trigger, $key);

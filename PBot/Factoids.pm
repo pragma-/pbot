@@ -205,9 +205,6 @@ sub interpreter {
 
   $from = lc $from;
 
-  # (COMMENTED OUT) remove trailing comma or colon from keyword if keyword has other characters beforehand 
-  # $keyword =~ s/^(.+)[:,]$/$1/;
-
   return undef if not length $keyword;
 
   my $original_keyword = $keyword;
@@ -232,7 +229,7 @@ sub interpreter {
       $command = $1;
     }
 
-    $pbot->logger->log("[" . (defined $from ? $from : "(undef)") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
+    $pbot->logger->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
 
     $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
     $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
@@ -274,7 +271,7 @@ sub interpreter {
 
     # Don't allow user-custom /msg factoids, unless factoid triggered by admin
     if(($self->factoids->hash->{$channel}->{$keyword}->{action} =~ m/^\/msg/i) and (not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host"))) {
-      $self->{pbot}->logger->log("[HACK] Bad factoid (contains /msg): " . $self->factoids->hash->{$channel}->{$keyword}->{action} . "\n");
+      $self->{pbot}->logger->log("[ABUSE] Bad factoid (contains /msg): " . $self->factoids->hash->{$channel}->{$keyword}->{action} . "\n");
       return "You must login to use this command."
     }
 
@@ -299,21 +296,25 @@ sub interpreter {
         $result = "/msg $tonick $fromnick$keyword is $result";
       }
 
-      $self->{pbot}->logger->log("text set to [$result]\n");
+      $self->{pbot}->logger->log("result set to [$result]\n");
     } else {
       $result = $self->factoids->hash->{$channel}->{$keyword}->{action};
     }
 
     if(defined $arguments) {
-      # TODO - extract and remove $tonick from end of $arguments
+      if(exists $self->factoids->hash->{$channel}->{$keyword}->{action_with_args}) {
+        $result = $self->factoids->hash->{$channel}->{$keyword}->{action_with_args};
+      }
+      
       if(not $result =~ s/\$args/$arguments/gi) {
-        # factoid doesn't take an argument
+        # factoid doesn't take an argument, so assume argument is a nick if it is a single-word 20 characters or less 
+        # TODO - maintain list of channel nicks and compare against this list to ensure nick exists
         if($arguments =~ /^[^ ]{1,20}$/) {
           # might be a nick
           if($result =~ /^\/.+? /) {
             $result =~ s/^(\/.+?) /$1 $arguments: /;
           } else {
-            $result =~ s/^/\/say $arguments: $keyword is / unless (defined $tonick);
+            $result =~ s/^/\/say $arguments: $keyword is / unless defined $tonick;
           }                  
         } else {
           # return undef;
