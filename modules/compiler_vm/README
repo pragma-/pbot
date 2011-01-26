@@ -41,6 +41,7 @@ Files:
                          port (to compiler_vm_client.pl).
 
 - compiler_watchdog.pl: Runs a program and watches its exit signals/status.
+                        Run within the virtual machine.
 
 *** The following files are just auxiliary tools to start/connect to qemu, provided
 for convenience only.  Perhaps they will be useful during installation/testing:
