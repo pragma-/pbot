@@ -1,14 +1,4 @@
 [##c]
-<a>
-action: equivalent to a == 0
-created_on: 1287807972.21807
-enabled: 1
-owner: Zhivago
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
 <bdwgc>
 action: http://www.hpl.hp.com/personal/Hans_Boehm/gc/
 created_on: 1278590020.17125
@@ -41,16 +31,6 @@ owner: n00p
 rate_limit: 15
 ref_count: 1
 ref_user: fper
-type: text
-
-<error_file_not_found>
-action: neither !true or !false
-created_on: 1282062050.18461
-enabled: 1
-owner: n00p
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
 type: text
 
 <format>
@@ -95,39 +75,6 @@ owner: Chris
 rate_limit: 15
 ref_count: 140
 ref_user: Wulf
-type: text
-
-<king>
-action: /say Midas is the king, $nick.
-created_on: 1280266709.07129
-enabled: 1
-last_referenced_on: 1280266733.83463
-owner: Midass
-rate_limit: 15
-ref_count: 2
-ref_user: Midass
-type: text
-
-<laurenceb>
-action: asking a genuine question but he's a newb to this channel.  Could you please unban him and I'll tell him to pastebin his code
-created_on: 1287362152.10647
-enabled: 1
-owner: richardcavell
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<op>
-action: /op sig^
-created_on: 1282062016.41708
-enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1282062030.84923
-owner: sig^
-rate_limit: 15
-ref_count: 1
-ref_user: n00p
 type: text
 
 <p2s>
@@ -934,11 +881,11 @@ action: /say $nick, $answers
 created_on: 1193948417
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1295888325.28881
+last_referenced_on: 1296081386.31728
 owner: pragma_
 rate_limit: 0
-ref_count: 801
-ref_user: mike_f
+ref_count: 802
+ref_user: pragma_
 type: text
 
 <:(>
@@ -4289,12 +4236,12 @@ type: text
 action: /me bites $args. Yummy!
 created_on: 1244945112
 enabled: 1
-last_referenced_in: nathan-d
-last_referenced_on: 1282920086.40948
+last_referenced_in: ##c
+last_referenced_on: 1296064516.80154
 owner: Wulf_
 rate_limit: 15
-ref_count: 4
-ref_user: Nathan-D
+ref_count: 5
+ref_user: ManDay
 type: text
 
 <bithacks>
@@ -4367,11 +4314,11 @@ action: /me points accusingly at $args, "Where is your book?!"  See http://www.i
 created_on: 1179504776
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1295946187.00759
+last_referenced_on: 1296075965.33264
 owner: pragma_
 rate_limit: 15
-ref_count: 849
-ref_user: zvrba
+ref_count: 850
+ref_user: PoppaVic
 type: text
 
 <book2>
@@ -4765,11 +4712,11 @@ type: text
 action: /call compiler $nick
 created_on: 1272176634
 enabled: 1
-last_referenced_on: 1296038477.30522
+last_referenced_on: 1296084468.80416
 owner: pragma_
 rate_limit: 0
-ref_count: 8437
-ref_user: Love4Boobies
+ref_count: 8665
+ref_user: PoppaVic
 type: text
 
 <cc2>
@@ -4799,10 +4746,10 @@ action: cdecl.pl
 created_on: 1191041914
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1295919912.95467
+last_referenced_on: 1296060632.68826
 owner: pragma_
 rate_limit: 0
-ref_count: 2849
+ref_count: 2853
 ref_user: mike_f
 type: module
 
@@ -5045,12 +4992,12 @@ type: text
 action: compiler_client.pl
 created_on: 1291939583.25391
 enabled: 1
-last_referenced_in: love4boobies
-last_referenced_on: 1296038477.31423
+last_referenced_in: ##c
+last_referenced_on: 1296084468.81354
 owner: pragma_
 rate_limit: 0
-ref_count: 1304
-ref_user: Love4Boobies
+ref_count: 1532
+ref_user: PoppaVic
 type: module
 
 <compilerline>
@@ -5218,11 +5165,11 @@ type: text
 action: cstd.pl
 created_on: 1270956236
 enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1296040298.80231
+last_referenced_in: love4boobies
+last_referenced_on: 1296049720.01928
 owner: pragma_
 rate_limit: 0
-ref_count: 1412
+ref_count: 1414
 ref_user: Love4Boobies
 type: module
 
@@ -5580,11 +5527,11 @@ action: /say There is no need to cast the result of library functions that retur
 created_on: 1104594725
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1295813652.82056
+last_referenced_on: 1296040628.3351
 owner: infobahn
 rate_limit: 15
-ref_count: 534
-ref_user: Wulf
+ref_count: 535
+ref_user: CaZe
 type: text
 
 <dooky>
@@ -5856,10 +5803,10 @@ type: text
 action: /call cdecl explain
 created_on: 1191042468
 enabled: 1
-last_referenced_on: 1295919912.95267
+last_referenced_on: 1296060632.68616
 owner: pragma_
 rate_limit: 0
-ref_count: 2434
+ref_count: 2438
 ref_user: mike_f
 type: text
 
@@ -6350,12 +6297,12 @@ type: text
 action: /say http://lmgtfy.com/?q=$args
 created_on: 1283520362.81541
 enabled: 1
-last_referenced_in: kesselhaus
-last_referenced_on: 1292473226.4774
+last_referenced_in: ##c
+last_referenced_on: 1296069904.73869
 owner: kate`
 rate_limit: 15
-ref_count: 13
-ref_user: kesselhaus
+ref_count: 15
+ref_user: mike_f
 type: text
 
 <gotchas>
@@ -6558,11 +6505,11 @@ action: /say To learn all about me, see http://www.iso-9899.info/wiki/Candide
 action_with_args: /say To learn all about $args, see http://www.iso-9899.info/wiki/Candide#$args
 created_on: 1109792986
 enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1296010007.78324
+last_referenced_in: pragma_
+last_referenced_on: 1296040888.11933
 owner: NeverDream
 rate_limit: 0
-ref_count: 632
+ref_count: 634
 ref_user: pragma_
 type: text
 
@@ -6581,10 +6528,10 @@ action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
 last_referenced_in: #pbot2
-last_referenced_on: 1295999683.16563
+last_referenced_on: 1296040513.87889
 owner: pragma_
 rate_limit: 15
-ref_count: 991
+ref_count: 992
 ref_user: pragma_
 type: text
 
@@ -7539,12 +7486,12 @@ type: text
 action: man.pl
 created_on: 1107137901
 enabled: 1
-last_referenced_in: kulp
-last_referenced_on: 1295824264.54396
+last_referenced_in: ##c
+last_referenced_on: 1296078898.25505
 owner: pragma_
 rate_limit: 15
-ref_count: 1089
-ref_user: kulp
+ref_count: 1092
+ref_user: mike_f
 type: module
 
 <mankind>
@@ -7846,11 +7793,11 @@ action_with_args: /say $args is another satisfied customer! NEXT!!
 created_on: 1270253222
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1296040344.24435
+last_referenced_on: 1296084534.53062
 owner: pragma_
 rate_limit: 15
-ref_count: 113
-ref_user: Chris
+ref_count: 116
+ref_user: PoppaVic
 type: text
 
 <nickreg>
@@ -10037,16 +9984,6 @@ ref_count: 7
 ref_user: lemonade`
 type: text
 
-<temp>
-action: /msg ##c foo
-created_on: 1254013586
-enabled: 1
-owner: syntropy_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
 <terminator>
 action: http://img223.imageshack.us/img223/7959/stringliteralgg3.png
 created_on: 1194839172
@@ -10084,10 +10021,10 @@ action: /say A testcase is a minimal compilable example exhibiting your symptoms
 created_on: 1249772768
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1295881037.48227
+last_referenced_on: 1296055905.66135
 owner: lemonade`
 rate_limit: 15
-ref_count: 346
+ref_count: 347
 ref_user: Wulf
 type: text
 
@@ -10287,16 +10224,6 @@ owner: prec
 rate_limit: 15
 ref_count: 4
 ref_user: paideia
-type: text
-
-<tolkad>
-action: test\ntest
-created_on: 1264116317
-enabled: 1
-owner: tolkad
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
 type: text
 
 <toolchain>
@@ -10593,10 +10520,12 @@ type: text
 action: /say We understood you the first time, and answered already; you may not have understood the answers. Instead of ignoring them and repeating your question, find out what they mean.
 created_on: 1204317155
 enabled: 1
+last_referenced_in: pragma_
+last_referenced_on: 1296087256.84478
 owner: Auris-
 rate_limit: 15
-ref_count: 15
-ref_user: kate`
+ref_count: 16
+ref_user: pragma_
 type: text
 
 <unicode>
@@ -10912,11 +10841,11 @@ type: text
 action: /call 8ball
 created_on: 1270604559
 enabled: 1
-last_referenced_on: 1290889532.43573
+last_referenced_on: 1296081386.30698
 owner: pragma_
 rate_limit: 15
-ref_count: 11
-ref_user: Remoun
+ref_count: 12
+ref_user: pragma_
 type: text
 
 <wcs>
@@ -11333,10 +11262,11 @@ type: text
 action: /call understood
 created_on: 1203601730
 enabled: 1
+last_referenced_on: 1296087256.83515
 owner: kate`
 rate_limit: 15
-ref_count: 8
-ref_user: kate`
+ref_count: 9
+ref_user: pragma_
 type: text
 
 <zalgo>
@@ -11349,16 +11279,6 @@ owner: pragma_
 rate_limit: 15
 ref_count: 6
 ref_user: sig^
-type: text
-
-<zealot>
-action: a close minded fool
-created_on: 1106956916
-enabled: 1
-owner: Wolf
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
 type: text
 
 <zhivago_idiots>
