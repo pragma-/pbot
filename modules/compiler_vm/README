@@ -1,6 +1,7 @@
 Installation:
 
-You will need to download qemu and set up a virtual machine containing a compiler.
+You will need to download qemu and set up a virtual machine containing a system
+with a compiler and, optionally, sensible ulimits/fork-preventation/other security.
 
 Then you will need to edit some of the following files and replace IP addresses
 and paths where appropriate (some locations may not yet be documented).
