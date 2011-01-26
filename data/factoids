@@ -6579,10 +6579,10 @@ action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
 last_referenced_in: #pbot2
-last_referenced_on: 1295999683.16563
+last_referenced_on: 1296034738.3447
 owner: pragma_
 rate_limit: 15
-ref_count: 991
+ref_count: 992
 ref_user: pragma_
 type: text
 
@@ -10808,12 +10808,12 @@ ref_user: pragma_
 type: text
 
 <version>
-action: /say PBot revision 253 2011-01-25
-created_on: 1296001036.19118
+action: /say PBot revision 262 2011-01-25
+created_on: 1296034511.27086
 enabled: 1
 last_referenced_in: pragma_
 last_referenced_on: 1295699592.26509
-owner: candide
+owner: pbot3
 rate_limit: 15
 ref_count: 0
 ref_user: nobody
