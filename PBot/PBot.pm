@@ -67,69 +67,41 @@ sub initialize {
 
   my $log_file          = delete $conf{log_file};
 
-  my $conf_dir          = delete $conf{conf_dir};
-  $conf_dir = "$ENV{HOME}/pbot/data" unless defined $conf_dir;
-  $self->{conf_dir} = $conf_dir;
-
-  my $data_dir          = delete $conf{data_dir};
-  $data_dir = "$ENV{HOME}/pbot/data" unless defined $data_dir;
-  $self->{data_dir} = $data_dir;
+  $self->{conf_dir}     = delete $conf{conf_dir}   || "$ENV{HOME}/pbot/data";
+  $self->{data_dir}     = delete $conf{data_dir}   || "$ENV{HOME}/pbot/data";
+  $self->{module_dir}   = delete $conf{module_dir} || "$ENV{HOME}/pbot/modules";
 
   my $channels_file     = delete $conf{channels_file};
   my $admins_file       = delete $conf{admins_file};
   
-  my $botnick           = delete $conf{botnick};
-  my $username          = delete $conf{username};
-  my $ircname           = delete $conf{ircname};
-  my $identify_password = delete $conf{identify_password};
-
-  my $ircserver          = delete $conf{ircserver};
-  my $max_msg_len        = delete $conf{max_msg_len};
-  my $MAX_FLOOD_MESSAGES = delete $conf{MAX_FLOOD_MESSAGES};
-  my $MAX_NICK_MESSAGES  = delete $conf{MAX_NICK_MESSAGES};
+  $self->{ircserver}          = delete $conf{ircserver}          || "irc.freenode.net";
+  $self->{botnick}            = delete $conf{botnick}            || "pbot3";
+  $self->{username}           = delete $conf{username}           || "pbot3";
+  $self->{ircname}            = delete $conf{ircname}            || "http://code.google.com/p/pbot2-pl/";
+  $self->{identify_password}  = delete $conf{identify_password}  || "";
+  $self->{max_msg_len}        = delete $conf{max_msg_len}        || 430;
+  $self->{MAX_FLOOD_MESSAGES} = delete $conf{MAX_FLOOD_MESSAGES} || 4;
+  $self->{MAX_NICK_MESSAGES}  = delete $conf{MAX_NICK_MESSAGES}  || 12;
 
   my $ignorelist_file         = delete $conf{ignorelist_file};
 
   my $factoids_file           = delete $conf{factoids_file};
   my $export_factoids_path    = delete $conf{export_factoids_path};
   my $export_factoids_site    = delete $conf{export_factoids_site};
-  my $module_dir              = delete $conf{module_dir};
 
   my $quotegrabs_file           = delete $conf{quotegrabs_file};
   my $export_quotegrabs_path    = delete $conf{export_quotegrabs_path};
   my $export_quotegrabs_site    = delete $conf{export_quotegrabs_site};
 
-  $ircserver          = "irc.freenode.net" unless defined $ircserver;
-  $botnick            = "pbot3"            unless defined $botnick;
-  $identify_password  = ""                 unless defined $identify_password;
-
-  $max_msg_len        = 430 unless defined $max_msg_len;
-  $MAX_FLOOD_MESSAGES = 4   unless defined $MAX_FLOOD_MESSAGES;
-  $MAX_NICK_MESSAGES  = 12  unless defined $MAX_NICK_MESSAGES;
-
-  $self->{botnick} = $botnick;
-  $self->{username} = $username;
-  $self->{ircname} = $ircname;
-  $self->{identify_password} = $identify_password;
-
-  $self->{max_msg_len} = $max_msg_len;
-  $self->{MAX_FLOOD_MESSAGES} = $MAX_FLOOD_MESSAGES;
-  $self->{MAX_NICK_MESSAGES} = $MAX_NICK_MESSAGES;
-
-  my $logger = PBot::Logger->new(log_file => $log_file);
-  $self->{logger} = $logger;
-
+  $self->{logger}   = PBot::Logger->new(log_file => $log_file);
   $self->{commands} = PBot::Commands->new(pbot => $self);
-  $self->{timer} = PBot::Timer->new(timeout => 10);
+  $self->{timer}    = PBot::Timer->new(timeout => 10);
 
-  $self->{admins} = PBot::BotAdmins->new(
-    pbot => $self,
-    filename => $admins_file,
-  );
+  $self->{admins} = PBot::BotAdmins->new(pbot => $self, filename => $admins_file);
 
   $self->admins->load_admins();
-  $self->admins->add_admin($botnick, '.*', "$botnick!stdin\@localhost", 60, 'admin');
-  $self->admins->login($botnick, "$botnick!stdin\@localhost", 'admin');
+  $self->admins->add_admin($self->{botnick}, '.*', "$self->{botnick}!stdin\@localhost", 60, 'admin');
+  $self->admins->login($self->{botnick}, "$self->{botnick}!stdin\@localhost", 'admin');
 
   $self->{factoids} = PBot::Factoids->new(
       pbot        => $self,
@@ -139,9 +111,7 @@ sub initialize {
   );
 
   $self->factoids->load_factoids() if defined $factoids_file;
-  $self->factoids->add_factoid('text', '.*', $botnick, 'version', "/say $VERSION");
-
-  $self->module_dir($module_dir);
+  $self->factoids->add_factoid('text', '.*', $self->{botnick}, 'version', "/say $VERSION");
 
   $self->{lagchecker} = PBot::LagChecker->new(pbot => $self);
   $self->{antiflood} = PBot::AntiFlood->new(pbot => $self);
@@ -158,7 +128,6 @@ sub initialize {
   $self->{ignorelistcmds} = PBot::IgnoreListCommands->new(pbot => $self);
 
   $self->{irc}         = PBot::IRC->new();
-  $self->{ircserver}   = $ircserver;
   $self->{irchandlers} = PBot::IRCHandlers->new(pbot => $self);
 
   $self->{channels} = PBot::Channels->new(pbot => $self, filename => $channels_file);
@@ -176,7 +145,7 @@ sub initialize {
     export_site => $export_quotegrabs_site,
   );
 
-  $self->quotegrabs->add_quotegrab($botnick, "#pbot2", 0, "pragma_", "Who's a bot?");
+  $self->quotegrabs->add_quotegrab($self->{botnick}, "#pbot2", 0, "pragma_", "Who's a bot?");
   $self->quotegrabs->load_quotegrabs() if defined $quotegrabs_file;
 
   $self->timer->start();
@@ -266,9 +235,9 @@ sub check_stdin {
   return $self->interpreter->process_line($from, $self->{botnick}, "stdin", "localhost", $text);
 }
 
-###################################################################################
+#-----------------------------------------------------------------------------------
 # Getters/Setters
-###################################################################################
+#-----------------------------------------------------------------------------------
 
 sub irc {
   my $self = shift;
