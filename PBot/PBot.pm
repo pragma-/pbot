@@ -65,39 +65,39 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $log_file          = delete $conf{log_file};
+  my $log_file                = delete $conf{log_file};
 
-  $self->{conf_dir}     = delete $conf{conf_dir}   || "$ENV{HOME}/pbot/config";
-  $self->{data_dir}     = delete $conf{data_dir}   || "$ENV{HOME}/pbot/data";
-  $self->{module_dir}   = delete $conf{module_dir} || "$ENV{HOME}/pbot/modules";
+  $self->{conf_dir}           = delete $conf{conf_dir}           || "$ENV{HOME}/pbot/config";
+  $self->{data_dir}           = delete $conf{data_dir}           || "$ENV{HOME}/pbot/data";
+  $self->{module_dir}         = delete $conf{module_dir}         || "$ENV{HOME}/pbot/modules";
 
-  my $channels_file     = delete $conf{channels_file};
-  my $admins_file       = delete $conf{admins_file};
-  
   $self->{ircserver}          = delete $conf{ircserver}          || "irc.freenode.net";
   $self->{botnick}            = delete $conf{botnick}            || "pbot3";
   $self->{username}           = delete $conf{username}           || "pbot3";
   $self->{ircname}            = delete $conf{ircname}            || "http://code.google.com/p/pbot2-pl/";
   $self->{identify_password}  = delete $conf{identify_password}  || "";
+
   $self->{max_msg_len}        = delete $conf{max_msg_len}        || 430;
   $self->{MAX_FLOOD_MESSAGES} = delete $conf{MAX_FLOOD_MESSAGES} || 4;
   $self->{MAX_NICK_MESSAGES}  = delete $conf{MAX_NICK_MESSAGES}  || 12;
 
+  my $channels_file           = delete $conf{channels_file};
+  my $admins_file             = delete $conf{admins_file};
   my $ignorelist_file         = delete $conf{ignorelist_file};
 
   my $factoids_file           = delete $conf{factoids_file};
   my $export_factoids_path    = delete $conf{export_factoids_path};
   my $export_factoids_site    = delete $conf{export_factoids_site};
 
-  my $quotegrabs_file           = delete $conf{quotegrabs_file};
-  my $export_quotegrabs_path    = delete $conf{export_quotegrabs_path};
-  my $export_quotegrabs_site    = delete $conf{export_quotegrabs_site};
+  my $quotegrabs_file         = delete $conf{quotegrabs_file};
+  my $export_quotegrabs_path  = delete $conf{export_quotegrabs_path};
+  my $export_quotegrabs_site  = delete $conf{export_quotegrabs_site};
 
-  $self->{logger}   = PBot::Logger->new(log_file => $log_file);
-  $self->{commands} = PBot::Commands->new(pbot => $self);
-  $self->{timer}    = PBot::Timer->new(timeout => 10);
+  $self->{logger}             = PBot::Logger->new(log_file => $log_file);
+  $self->{commands}           = PBot::Commands->new(pbot => $self);
+  $self->{timer}              = PBot::Timer->new(timeout => 10);
 
-  $self->{admins} = PBot::BotAdmins->new(pbot => $self, filename => $admins_file);
+  $self->{admins}             = PBot::BotAdmins->new(pbot => $self, filename => $admins_file);
 
   $self->admins->load_admins();
   $self->admins->add_admin($self->{botnick}, '.*', "$self->{botnick}!stdin\@localhost", 60, 'admin');
@@ -113,10 +113,10 @@ sub initialize {
   $self->factoids->load_factoids() if defined $factoids_file;
   $self->factoids->add_factoid('text', '.*', $self->{botnick}, 'version', "/say $VERSION");
 
-  $self->{lagchecker} = PBot::LagChecker->new(pbot => $self);
-  $self->{antiflood} = PBot::AntiFlood->new(pbot => $self);
+  $self->{lagchecker}   = PBot::LagChecker->new(pbot => $self);
+  $self->{antiflood}    = PBot::AntiFlood->new(pbot => $self);
 
-  $self->{ignorelist} = PBot::IgnoreList->new(pbot => $self, filename => $ignorelist_file);
+  $self->{ignorelist}   = PBot::IgnoreList->new(pbot => $self, filename => $ignorelist_file);
   $self->{ignorelist}->load_ignores() if defined $ignorelist_file;
 
   $self->interpreter(PBot::Interpreter->new(pbot => $self));
@@ -127,18 +127,18 @@ sub initialize {
   $self->{factoidcmds}    = PBot::FactoidCommands->new(pbot => $self);
   $self->{ignorelistcmds} = PBot::IgnoreListCommands->new(pbot => $self);
 
-  $self->{irc}         = PBot::IRC->new();
-  $self->{irchandlers} = PBot::IRCHandlers->new(pbot => $self);
+  $self->{irc}            = PBot::IRC->new();
+  $self->{irchandlers}    = PBot::IRCHandlers->new(pbot => $self);
 
-  $self->{channels} = PBot::Channels->new(pbot => $self, filename => $channels_file);
+  $self->{channels}       = PBot::Channels->new(pbot => $self, filename => $channels_file);
   $self->channels->load_channels() if defined $channels_file;
 
-  $self->{chanops}    = PBot::ChanOps->new(pbot => $self);
-  $self->{chanopcmds} = PBot::ChanOpCommands->new(pbot => $self);
+  $self->{chanops}       = PBot::ChanOps->new(pbot => $self);
+  $self->{chanopcmds}    = PBot::ChanOpCommands->new(pbot => $self);
 
   $self->{chanops}->{unban_timeout}->load_hash();
 
-  $self->{quotegrabs} = PBot::Quotegrabs->new(
+  $self->{quotegrabs}    = PBot::Quotegrabs->new(
     pbot        => $self, 
     filename    => $quotegrabs_file,
     export_path => $export_quotegrabs_path,
