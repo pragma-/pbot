@@ -428,3 +428,8 @@ Revision history for Perl extension Net::IRC.
   - Put "hic sunt dracones" text in the DESCRIPTION because Google indexes
     search.cpan.org intelligently and presents the =head1 DESCRIPTION as the
     search preview.
+
+PBot fork Jan 20, 2011
+
+  - Renamed Net::IRC packages throughout to PBot::IRC.
+  - Added support for PONG events in Connection.pm
