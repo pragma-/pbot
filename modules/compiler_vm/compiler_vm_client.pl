@@ -1,0 +1,667 @@
+#!/usr/bin/perl
+
+# use warnings;
+use strict;
+use feature qw(switch);
+
+use IPC::Open2;
+use Text::Balanced qw(extract_codeblock extract_delimited);
+use IO::Socket;
+use LWP::UserAgent;
+
+my $MAX_UNDO_HISTORY = 100;
+
+my $output = "";
+my $nooutput = 'No output.';
+
+my %languages = (
+  'C99' => "std=C99 with pedantic warnings",
+  'C' => "std=gnu89",
+  'CLANG' => "std=gnu89 clang/llvm",
+  'CLANG99' => "std=c99 clang/llvm with pedantic warnings",
+#  'C++' => 1,
+);
+
+my %preludes = ( 
+                 'C99'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n\n",
+                 'C'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n\n",
+                 'C++'   => "#include <iostream>\n#include <cstdio>\n\nusing namespace std;\n\n",
+               );
+
+sub reset_vm {
+  my $sock = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => '4445', Proto => 'tcp', Type => 'SOCK_STREAM');
+  die "Could not create socket: $!" unless $sock;
+
+  $sock->autoflush();
+  print $sock "loadvm 2\r\n";
+  while(my $line = <$sock>) {
+    last if $line =~ /loadvm 2/;
+  }
+  sleep 2;
+  $sock->shutdown(1);
+}
+
+sub pretty {
+  my $code = join '', @_;
+  my $result;
+
+  my $pid = open2(\*IN, \*OUT, 'astyle -Upf');
+  print OUT "$code\n";
+  close OUT;
+  while(my $line = <IN>) {
+    $result .= $line;
+  }
+  close IN;
+  waitpid($pid, 0);
+  return $result;
+}
+
+sub paste_codepad {
+  my $text = join(' ', @_);
+
+  $text =~ s/(.{120})\s/$1\n/g;
+
+  my $ua = LWP::UserAgent->new();
+  $ua->agent("Mozilla/5.0");
+  push @{ $ua->requests_redirectable }, 'POST';
+
+  my %post = ( 'lang' => 'C', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
+  my $response = $ua->post("http://codepad.org", \%post);
+
+  if(not $response->is_success) {
+    return $response->status_line;
+  }
+
+  return $response->request->uri;
+}
+
+sub compile {
+  my ($lang, $code, $args, $input) = @_;
+
+  my $sock = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => '4444', Proto => 'tcp', Type => 'SOCK_STREAM');
+
+  die "Could not create socket: $!" unless $sock;
+
+  print $sock "compile:$lang:$args:$input\n";
+  print $sock "$code\n";
+  print $sock "compile:end\n";
+
+  my $result = "";
+  my $got_result = 0;
+
+  while(my $line = <$sock>) {
+    $line =~ s/[\r\n]+$//;
+
+    last if $line =~ /^result:end/;
+
+    if($line =~ /^result:/) {
+      $line =~ s/^result://;
+      $result .= $line;
+      $got_result = 1;
+      next;
+    }
+
+    if($got_result) {
+      $result .= $line . "\n";
+    }
+  }
+
+  close $sock;
+  return $result;
+}
+
+if($#ARGV < 1) {
+  print "Usage: cc [-compiler -options] <code> [-stdin=input]\n";
+  exit 0;
+}
+
+my $nick = shift @ARGV;
+my $code = join ' ', @ARGV;
+my @last_code;
+
+my $lang = "C99";
+$lang = $1 if $code =~ s/-lang=([^\b\s]+)//i;
+$lang = "C" if $code =~ s/-nowarn[ings]*//i;
+
+my $input = "";
+$input = $1 if $code =~ s/-input=(.*)$//i;
+
+my $args = "";
+$args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
+$args =~ s/\s+$//;
+
+if(open FILE, "< last_code.txt") {
+  while(my $line = <FILE>) {
+    chomp $line;
+    push @last_code, $line;
+  }
+  close FILE;
+}
+
+if($code =~ m/^\s*show\s*$/i) {
+  if(defined $last_code[0]) {
+    print "$nick: $last_code[0]\n";
+  } else {
+    print "$nick: No recent code to show.\n"
+  }
+  exit 0;
+}
+
+my $got_run = undef;
+
+if($code =~ m/^\s*(run|paste)\s*$/i) {
+  $got_run = lc $1;
+  if(defined $last_code[0]) {
+    $code = $last_code[0];
+  } else {
+    print "$nick: No recent code to $got_run.\n";
+    exit 0;
+  }
+} else { 
+  my $subcode = $code;
+  my $got_undo = 0;
+  my $got_sub = 0;
+
+  while($subcode =~ s/^\s*(and)?\s*undo//) {
+    splice @last_code, 0, 1;
+    if(not defined $last_code[0]) {
+      print "$nick: No more undos remaining.\n";
+      exit 0;
+    } else {
+      $code = $last_code[0];
+      $got_undo = 1;
+    }
+  }
+
+  my @replacements;
+  my $prevchange = $last_code[0];
+  my $got_changes = 0;
+
+  while(1) {
+    $got_sub = 0;
+    $got_changes = 0;
+
+    if($subcode =~ m/^\s*(and)?\s*remove \s*([^']+)?\s*'/) {
+      my $modifier = 'first';
+
+      $subcode =~ s/^\s*(and)?\s*//;
+      $subcode =~ s/remove\s*([^']+)?\s*//i;
+      $modifier = $1 if defined $1;
+      $modifier =~ s/\s+$//;
+
+      my ($e, $r) = extract_delimited($subcode, "'");
+
+      my $text;
+
+      if(defined $e) {
+        $text = $e;
+        $text =~ s/^'//;
+        $text =~ s/'$//;
+        $subcode = "replace $modifier '$text' with ''$r";
+      } else {
+        print "$nick: Unbalanced single quotes.  Usage: !cc remove [all, first, .., tenth, last] 'text' [and ...]\n";
+        exit 0;
+      }
+      next;
+    }
+
+    if($subcode =~ s/^\s*(and)?\s*prepend '//) {
+      $subcode = "'$subcode";
+
+      my ($e, $r) = extract_delimited($subcode, "'");
+
+      my $text;
+
+      if(defined $e) {
+        $text = $e;
+        $text =~ s/^'//;
+        $text =~ s/'$//;
+        $subcode = $r;
+
+        $got_sub = 1;
+        $got_changes = 1;
+
+        if(not defined $prevchange) {
+          print "$nick: No recent code to prepend to.\n";
+          exit 0;
+        }
+
+        $code = $prevchange;
+        $code =~ s/^/$text /;
+        $prevchange = $code;
+      } else {
+        print "$nick: Unbalanced single quotes.  Usage: !cc prepend 'text' [and ...]\n";
+        exit 0;
+      }
+      next;
+    }
+
+    if($subcode =~ s/^\s*(and)?\s*append '//) {
+      $subcode = "'$subcode";
+
+      my ($e, $r) = extract_delimited($subcode, "'");
+
+      my $text;
+
+      if(defined $e) {
+        $text = $e;
+        $text =~ s/^'//;
+        $text =~ s/'$//;
+        $subcode = $r;
+
+        $got_sub = 1;
+        $got_changes = 1;
+
+        if(not defined $prevchange) {
+          print "$nick: No recent code to append to.\n";
+          exit 0;
+        }
+
+        $code = $prevchange;
+        $code =~ s/$/ $text/;
+        $prevchange = $code;
+      } else {
+        print "$nick: Unbalanced single quotes.  Usage: !cc append 'text' [and ...]\n";
+        exit 0;
+      }
+      next;
+    }
+
+    if($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
+      $got_sub = 1;
+      my $modifier = 'first';
+
+      $subcode =~ s/^\s*(and)?\s*//;
+      $subcode =~ s/replace\s*([^']+)?\s*//i;
+      $modifier = $1 if defined $1;
+      $modifier =~ s/\s+$//;
+
+      my ($from, $to);
+      my ($e, $r) = extract_delimited($subcode, "'");
+
+      if(defined $e) {
+        $from = $e;
+        $from =~ s/^'//;
+        $from =~ s/'$//;
+        $from = quotemeta $from;
+        $subcode = $r;
+        $subcode =~ s/\s*with\s*//i;
+      } else {
+        print "$nick: Unbalanced single quotes.  Usage: !cc replace 'from' with 'to' [and ...]\n";
+        exit 0;
+      }
+
+      ($e, $r) = extract_delimited($subcode, "'");
+
+      if(defined $e) {
+        $to = $e;
+        $to =~ s/^'//;
+        $to =~ s/'$//;
+        $subcode = $r;
+      } else {
+        print "$nick: Unbalanced single quotes.  Usage: !cc replace 'from' with 'to' [and replace ... with ... [and ...]]\n";
+        exit 0;
+      }
+
+      given($modifier) {
+        when($_ eq 'all'    ) {}
+        when($_ eq 'last'   ) {}
+        when($_ eq 'first'  ) { $modifier = 1; }
+        when($_ eq 'second' ) { $modifier = 2; }
+        when($_ eq 'third'  ) { $modifier = 3; }
+        when($_ eq 'fourth' ) { $modifier = 4; }
+        when($_ eq 'fifth'  ) { $modifier = 5; }
+        when($_ eq 'sixth'  ) { $modifier = 6; }
+        when($_ eq 'seventh') { $modifier = 7; }
+        when($_ eq 'eighth' ) { $modifier = 8; }
+        when($_ eq 'nineth' ) { $modifier = 9; }
+        when($_ eq 'tenth'  ) { $modifier = 10; }
+        default { print "$nick: Bad replacement modifier '$modifier'; valid modifiers are 'all', 'first', 'second', ..., 'tenth', 'last'\n"; exit 0; }
+      }
+
+      my $replacement = {};
+      $replacement->{'from'} = $from;
+      $replacement->{'to'} = $to;
+      $replacement->{'modifier'} = $modifier;
+
+      push @replacements, $replacement;
+      next;
+    }
+
+    if($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
+      $got_sub = 1;
+      $subcode =~ s/^\s*(and)?\s*s//;
+
+      my ($regex, $to);
+      my ($e, $r) = extract_delimited($subcode, '/');
+
+      if(defined $e) {
+        $regex = $e;
+        $regex =~ s/^\///;
+        $regex =~ s/\/$//;
+        $subcode = "/$r";
+      } else {
+        print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+        exit 0;
+      }
+
+      ($e, $r) = extract_delimited($subcode, '/');
+
+      if(defined $e) {
+        $to = $e;
+        $to =~ s/^\///;
+        $to =~ s/\/$//;
+        $subcode = $r;
+      } else {
+        print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+        exit 0;
+      }
+
+      my $suffix;
+      $suffix = $1 if $subcode =~ s/^([^ ]+)//;
+
+      if(length $suffix and $suffix =~ m/[^gi]/) {
+        print "$nick: Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
+        exit 0;
+      }
+      if(defined $prevchange) {
+        $code = $prevchange;
+      } else {
+        print "$nick: No recent code to change.\n";
+        exit 0;
+      }
+
+      my $ret = eval {
+        my ($ret, $a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after);
+        
+        if(not length $suffix) {
+          $ret = $code =~ s|$regex|$to|;
+          ($a, $b, $c, $d, $e, $f, $g, $h, $i) = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+          $before = $`;
+          $after = $';
+        } elsif($suffix =~ /^i$/) {
+          $ret = $code =~ s|$regex|$to|i; 
+          ($a, $b, $c, $d, $e, $f, $g, $h, $i) = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+          $before = $`;
+          $after = $';
+        } elsif($suffix =~ /^g$/) {
+          $ret = $code =~ s|$regex|$to|g;
+          ($a, $b, $c, $d, $e, $f, $g, $h, $i) = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+          $before = $`;
+          $after = $';
+        } elsif($suffix =~ /^ig$/ or $suffix =~ /^gi$/) {
+          $ret = $code =~ s|$regex|$to|gi;
+          ($a, $b, $c, $d, $e, $f, $g, $h, $i) = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+          $before = $`;
+          $after = $';
+        }
+
+        if($ret) {
+          $code =~ s/\$1/$a/g;
+          $code =~ s/\$2/$b/g;
+          $code =~ s/\$3/$c/g;
+          $code =~ s/\$4/$d/g;
+          $code =~ s/\$5/$e/g;
+          $code =~ s/\$6/$f/g;
+          $code =~ s/\$7/$g/g;
+          $code =~ s/\$8/$h/g;
+          $code =~ s/\$9/$i/g;
+          $code =~ s/\$`/$before/g;
+          $code =~ s/\$'/$after/g;
+        }
+
+        return $ret;
+      };
+
+      if($@) {
+        print "$nick: $@\n";
+        exit 0;
+      }
+
+      if($ret) {
+        $got_changes = 1;
+      }
+
+      $prevchange = $code;
+    }
+
+    if($got_sub and not $got_changes) {
+      print "$nick: No substitutions made.\n";
+      exit 0;
+    } elsif($got_sub and $got_changes) {
+      next;
+    }
+
+    last;
+  }
+
+  if($#replacements > -1) {
+    @replacements = sort { $a->{'from'} cmp $b->{'from'} or $a->{'modifier'} <=> $b->{'modifier'} } @replacements;
+
+    my ($previous_from, $previous_modifier);
+
+    foreach my $replacement (@replacements) {
+      my $from = $replacement->{'from'};
+      my $to = $replacement->{'to'};
+      my $modifier = $replacement->{'modifier'};
+
+      if(defined $previous_from) {
+        if($previous_from eq $from and $previous_modifier =~ /^\d+$/) {
+          $modifier -= $modifier - $previous_modifier;
+        }
+      }
+
+      if(defined $prevchange) {
+        $code = $prevchange;
+      } else {
+        print "$nick: No recent code to change.\n";
+        exit 0;
+      }
+
+      my $ret = eval {
+        my $got_change;
+
+        my ($first_char, $last_char, $first_bound, $last_bound);
+        $first_char = $1 if $from =~ m/^(.)/;
+        $last_char = $1 if $from =~ m/(.)$/;
+
+        if($first_char =~ /\W/) {
+          $first_bound = '.';
+        } else {
+          $first_bound = '\b';
+        }
+
+        if($last_char =~ /\W/) {
+          $last_bound = '\B';
+        } else {
+          $last_bound = '\b';
+        }
+
+        if($modifier eq 'all') {
+          while($code =~ s/($first_bound)$from($last_bound)/$1$to$2/) {
+            $got_change = 1;
+          }
+        } elsif($modifier eq 'last') {
+          if($code =~ s/(.*)($first_bound)$from($last_bound)/$1$2$to$3/) {
+            $got_change = 1;
+          }
+        } else {
+          my $count = 0;
+          my $unescaped = $from;
+          $unescaped =~ s/\\//g;
+          if($code =~ s/($first_bound)$from($last_bound)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$unescaped$2"; }/gex) {
+            $got_change = 1;
+          }
+        }
+        return $got_change;
+      };
+
+      if($@) {
+        print "$nick: $@\n";
+        exit 0;
+      }
+
+      if($ret) {
+        $got_sub = 1;
+        $got_changes = 1;
+      }
+
+      $prevchange = $code;
+      $previous_from = $from;
+      $previous_modifier = $modifier;
+    }
+
+    if($got_sub and not $got_changes) {
+      print "$nick: No replacements made.\n";
+      exit 0;
+    }
+  }
+
+  open FILE, "> last_code.txt";
+
+  unless ($got_undo and not $got_sub) {
+    unshift @last_code, $code;
+  }
+
+  my $i = 0;
+  foreach my $line (@last_code) {
+    last if(++$i > $MAX_UNDO_HISTORY);
+    print FILE "$line\n";
+  }
+  close FILE;
+
+  if($got_undo and not $got_sub) {
+    print "$nick: $code\n";
+    exit 0;
+  }
+}
+
+# check to see if -flags were added by replacements
+$lang = $1 if $code =~ s/-lang=([^\b\s]+)//i;
+$lang = "C" if $code =~ s/-nowarn[ings]*//i;
+$input = $1 if $code =~ s/-input=(.*)$//i;
+$args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
+$args =~ s/\s+$//;
+
+unless($got_run) {
+  open FILE, ">> log.txt";
+  print FILE localtime() . "\n";
+  print FILE "$nick: $code\n";
+}
+
+my $found = 0;
+my @langs;
+foreach my $l (sort { uc $a cmp uc $b } keys %languages) {
+  push @langs, sprintf("      %-30s => %s", $l, $languages{$l});
+  if(uc $lang eq uc $l) {
+    $lang = $l;
+    $found = 1;
+  }
+}
+
+if(not $found) {
+  print "$nick: Invalid language '$lang'.  Supported languages are:\n", (join ",\n", @langs), "\n";
+  exit 0;
+}
+
+$code =~ s/#include <([^>]+)>/#include <$1>\n/g;
+$code =~ s/#([^ ]+) (.*?)\\n/#$1 $2\n/g;
+$code =~ s/#([\w\d_]+)\\n/#$1\n/g;
+
+my $precode = $preludes{$lang} . $code;
+$code = '';
+
+if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C++') {
+  my $has_main = 0;
+  
+  my $prelude = '';
+  $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
+
+  my $preprecode = $precode;
+
+  while($preprecode =~ s/([ a-zA-Z0-9\_\*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
+    my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
+
+    $ret =~ s/^\s+//;
+    $ret =~ s/\s+$//;
+
+    if($ret eq "else" or $ret eq "while") {
+      $precode .= "$ret $ident ($params) $potential_body";
+      next;
+    } else {
+      $precode =~ s/([ a-zA-Z0-9\_\*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//;
+    }
+
+    my @extract = extract_codeblock($potential_body, '{}');
+    my $body;
+    if(not defined $extract[0]) {
+      $output .= "error: unmatched brackets for function '$ident';\n";
+      $body = $extract[1];
+    } else {
+      $body = $extract[0];
+      $preprecode .= $extract[1];
+      $precode .= $extract[1];
+    }
+    #print "[$ret][$ident][$params][$body]\n";
+    $code .= "$ret $ident($params) $body\n\n";
+    $has_main = 1 if $ident eq 'main';
+  }
+
+  $precode =~ s/^\s+//;
+  $precode =~ s/\s+$//;
+
+  if(not $has_main) {
+    $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) {\n$precode\n;\nreturn 0;\n}\n";
+    $nooutput = "Success [no output].";
+  } else {
+    $code = "$prelude\n\n$precode\n\n$code\n";
+    $nooutput = "No output.";
+  }
+} else {
+  $code = $precode;
+}
+
+$code =~ s/\|n/\n/g;
+$code =~ s/^\s+//;
+$code =~ s/\s+$//;
+$code =~ s/;\n;\n/;\n/g;
+$code =~ s/(\n\n)+/\n\n/g;
+
+if(defined $got_run and $got_run eq "paste") {
+  my $uri = paste_codepad(pretty($code));
+  print "$nick: $uri\n";
+  exit 0;
+}
+
+print FILE "$nick: [lang:$lang][args:$args][input:$input]\n$code\n";
+
+$output = compile($lang, $code, $args, $input);
+
+$output =~ s/cc1: warnings being treated as errors//;
+$output =~ s/ Line \d+ ://g;
+$output =~ s/ \(first use in this function\)//g;
+$output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//msg;
+$output =~ s/prog\.c:[:\d]*//g;
+$output =~ s/ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
+$output =~ s/error: (.*?) error/error: $1; error/msg;
+$output =~ s/\/tmp\/.*\.o://g;
+$output =~ s/collect2: ld returned \d+ exit status//g;
+$output =~ s/\(\.text\+[^)]+\)://g;
+$output =~ s/\[ In/[In/;
+
+my $left_quote = chr(226) . chr(128) . chr(152);
+my $right_quote = chr(226) . chr(128) . chr(153);
+$output =~ s/$left_quote/'/g;
+$output =~ s/$right_quote/'/g;
+
+$output = $nooutput if $output =~ m/^\s+$/;
+
+unless($got_run) {
+  print FILE localtime() . "\n";
+  print FILE "$nick: $output\n\n";
+  close FILE;
+}
+
+print "$nick: $output\n";
+
+#reset_vm;

@@ -1,0 +1,57 @@
+Installation:
+
+You will need to download qemu and set up a virtual machine containing a compiler.
+
+Then you will need to edit some of the following files and replace IP addresses
+and paths where appropriate (some locations may not yet be documented).
+
+Once the files have been configured and copied to the appropriate locations,
+you will need to first start up the compiler_vm_server.pl script, and then 
+connect to qemu's monitor and issue the 'savevm 1' command to save the virtual 
+machine in this state.  Between compiles, this state will be loaded via 
+'loadvm 1' in order to reset everything within the machine for a clean and working
+environment for subsequent compiles.
+
+Files:
+
+(Read within each file for configuration instructions.)
+
+- compiler_client.pl:  Main entry point for compiling snippets.  Sends over TCP to
+                       compiler_server.pl.  This file can be run be run from the
+                       client machine or anywhere.
+
+- compiler_server.pl:  Responsible for setting up a TCP server to listen for
+                       incoming compile requests; and launching and resetting
+                       the virtual machine.  Sends to compiler_vm_client.pl.
+                       Run this file on the server hosting the virtual machine.
+
+- compiler_vm_client.pl: Responsible for sending snippets to the virtual
+                         machine.  Also expands/translates and formats
+                         snippets into compilable code (with main function and
+                         headers), and handles "interactive-editing".
+                         Sends over TCP to qemu serial port, waits for result,
+                         then sends result back caller (compiler_server.pl).
+                         Run this file on the server hosting the virtual machine.
+
+- compiler_vm_server.pl: Runs on the system inside the virtual machine.
+                         This script listens for incoming code snippets over
+                         the virtual machine's serial port.
+                         Calls compiler_watchdog.pl to monitor its exit signal
+                         or exit status, then returns result back over serial
+                         port (to compiler_vm_client.pl).
+
+- compiler_watchdog.pl: Runs a program and watches its exit signals/status.
+
+*** The following files are just auxiliary tools to start/connect to qemu, provided
+for convenience only.  Perhaps they will be useful during installation/testing:
+
+- monitor: Connects to qemu monitor (internal console) over TCP.
+
+- serial: Connects to qemu serial port over TCP.
+
+- runqemu: Launches qemu with a visible window, but without networking support.
+
+- runeqmu.net: Launches qemu with a visible window, and with networking support.
+               You may load a state previously saved with runqemu and reboot it
+               or otherwise reload its networking configuration to gain networking.
+
