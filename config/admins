@@ -1,7 +1,7 @@
-[#channel]
-<nick!user@host>
+[#channel/regex]
+<nick!user@host/regex>
 level: 10
-name: example
+name: identifer_not_nick
 password: s3cr3ts@uce
 
 [.*]
