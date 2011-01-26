@@ -67,7 +67,7 @@ sub initialize {
 
   my $log_file          = delete $conf{log_file};
 
-  $self->{conf_dir}     = delete $conf{conf_dir}   || "$ENV{HOME}/pbot/data";
+  $self->{conf_dir}     = delete $conf{conf_dir}   || "$ENV{HOME}/pbot/config";
   $self->{data_dir}     = delete $conf{data_dir}   || "$ENV{HOME}/pbot/data";
   $self->{module_dir}   = delete $conf{module_dir} || "$ENV{HOME}/pbot/modules";
 
