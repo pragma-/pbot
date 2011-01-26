@@ -3775,10 +3775,10 @@ action: ago.pl
 created_on: 1277256899.15762
 enabled: 1
 last_referenced_in: pragma_
-last_referenced_on: 1295999908.182
+last_referenced_on: 1296005527.70156
 owner: pragma_
 rate_limit: 15
-ref_count: 23
+ref_count: 24
 ref_user: pragma_
 type: module
 
@@ -3786,10 +3786,12 @@ type: module
 action: "There's no easy way to say this. You got aids. Yuck! :x"  $noaids $noaids $noaids "You contracted aids from $who_answers!" "You were attacked by a $animals!  You now have aids." $noaids $noaids
 created_on: 1264285407
 enabled: 1
+last_referenced_in: pseudonymous
+last_referenced_on: 1296033123.49287
 owner: PARLIAMENT
 rate_limit: 15
-ref_count: 2
-ref_user: SailorReality
+ref_count: 3
+ref_user: pseudonymous
 type: text
 
 <aidsroulette>
@@ -3806,10 +3808,10 @@ type: text
 action: /call factalias
 created_on: 1277259091.375
 enabled: 1
-last_referenced_on: 1295839906.78733
+last_referenced_on: 1296009740.42979
 owner: pbot3
 rate_limit: 15
-ref_count: 13
+ref_count: 14
 ref_user: pragma_
 type: text
 
@@ -4429,11 +4431,11 @@ action: /me $eat_adverbs $eat_actions her $snacks.
 action_with_args: /me gives $args a $sizes $snacks.
 created_on: 1174693123
 enabled: 1
-last_referenced_in: pragma_
-last_referenced_on: 1296003096.78375
+last_referenced_in: ##c
+last_referenced_on: 1296017846.24376
 owner: pragma_
 rate_limit: 15
-ref_count: 249
+ref_count: 251
 ref_user: pragma_
 type: text
 
@@ -4763,11 +4765,11 @@ type: text
 action: /call compiler $nick
 created_on: 1272176634
 enabled: 1
-last_referenced_on: 1296004775.02137
+last_referenced_on: 1296038477.30522
 owner: pragma_
 rate_limit: 0
-ref_count: 8421
-ref_user: ajf
+ref_count: 8437
+ref_user: Love4Boobies
 type: text
 
 <cc2>
@@ -4840,10 +4842,10 @@ type: text
 action: /call factchange
 created_on: 1277259441.33026
 enabled: 1
-last_referenced_on: 1296003445.97273
+last_referenced_on: 1296022304.80206
 owner: pbot3
 rate_limit: 15
-ref_count: 16
+ref_count: 17
 ref_user: pragma_
 type: text
 
@@ -5043,12 +5045,12 @@ type: text
 action: compiler_client.pl
 created_on: 1291939583.25391
 enabled: 1
-last_referenced_in: ajf
-last_referenced_on: 1296004775.03052
+last_referenced_in: love4boobies
+last_referenced_on: 1296038477.31423
 owner: pragma_
 rate_limit: 0
-ref_count: 1288
-ref_user: ajf
+ref_count: 1304
+ref_user: Love4Boobies
 type: module
 
 <compilerline>
@@ -5143,10 +5145,10 @@ type: text
 action: /call botsnack
 created_on: 1195333486
 enabled: 1
-last_referenced_on: 1296003096.77585
+last_referenced_on: 1296017846.2356
 owner: pragma_
 rate_limit: 15
-ref_count: 40
+ref_count: 42
 ref_user: pragma_
 type: text
 
@@ -5217,11 +5219,11 @@ action: cstd.pl
 created_on: 1270956236
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1295989710.16886
+last_referenced_on: 1296040298.80231
 owner: pragma_
 rate_limit: 0
-ref_count: 1409
-ref_user: ouah
+ref_count: 1412
+ref_user: Love4Boobies
 type: module
 
 <csv>
@@ -6087,10 +6089,10 @@ action: /say Function Pointer Tutorial: http://www.newty.de/fpt/fpt.html
 created_on: 1189558928
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1291502889.39589
+last_referenced_on: 1296009713.77547
 owner: OrngeTide
 rate_limit: 15
-ref_count: 7
+ref_count: 8
 ref_user: Wulf
 type: text
 
@@ -6556,11 +6558,11 @@ action: /say To learn all about me, see http://www.iso-9899.info/wiki/Candide
 action_with_args: /say To learn all about $args, see http://www.iso-9899.info/wiki/Candide#$args
 created_on: 1109792986
 enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1296004784.9974
+last_referenced_in: ##c
+last_referenced_on: 1296010007.78324
 owner: NeverDream
 rate_limit: 0
-ref_count: 628
+ref_count: 632
 ref_user: pragma_
 type: text
 
@@ -6579,10 +6581,10 @@ action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
 last_referenced_in: #pbot2
-last_referenced_on: 1296034738.3447
+last_referenced_on: 1295999683.16563
 owner: pragma_
 rate_limit: 15
-ref_count: 992
+ref_count: 991
 ref_user: pragma_
 type: text
 
@@ -6922,11 +6924,11 @@ action: insult.pl
 created_on: 1236819209
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1295979577.22763
+last_referenced_on: 1296040385.98063
 owner: pragma_
 rate_limit: 15
-ref_count: 511
-ref_user: snhmib
+ref_count: 512
+ref_user: Chris
 type: module
 
 <int>
@@ -7101,11 +7103,11 @@ type: text
 action: /call k&r
 created_on: 1198032355
 enabled: 1
-last_referenced_on: 1295871890.80663
+last_referenced_on: 1296033143.69816
 owner: pragma_
 rate_limit: 15
-ref_count: 43
-ref_user: Love4Boobies
+ref_count: 46
+ref_user: pseudonymous
 type: text
 
 <kate>
@@ -7840,14 +7842,15 @@ type: text
 
 <next>
 action: /say Another satisfied customer!  NEXT!!
+action_with_args: /say $args is another satisfied customer! NEXT!!
 created_on: 1270253222
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1296002661.70767
+last_referenced_on: 1296040344.24435
 owner: pragma_
 rate_limit: 15
-ref_count: 109
-ref_user: PoppaVic
+ref_count: 113
+ref_user: Chris
 type: text
 
 <nickreg>
@@ -9447,12 +9450,12 @@ type: text
 action: an unsigned integer type which is the result type of the sizeof operator.  A size_t variable can store the size of any object.  C90: printf("%lu\n", (unsigned long)sizeof a); C99: printf("%zu\n", sizeof a);
 created_on: 1107760223
 enabled: 1
-last_referenced_in: ouah
-last_referenced_on: 1292233897.55495
+last_referenced_in: ##c
+last_referenced_on: 1296037148.49069
 owner: prec
 rate_limit: 15
-ref_count: 23
-ref_user: ouah
+ref_count: 24
+ref_user: Maxdamantus
 type: text
 
 <sizeof>
@@ -9699,10 +9702,10 @@ action: /say C99 + TC1,2,3 working paper: http://open-std.org/JTC1/SC22/WG14/www
 created_on: 1249578326
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1296004601.7876
+last_referenced_on: 1296017978.80775
 owner: kate`
 rate_limit: 15
-ref_count: 181
+ref_count: 182
 ref_user: pragma_
 type: text
 
@@ -10297,14 +10300,14 @@ ref_user: nobody
 type: text
 
 <toolchain>
-action: For all your makefile/scripting/toolchain needs, please join ##workingset. Don't ask why. Please.
+action: /say For all your makefile/scripting/toolchain needs, please join ##workingset. Don't ask why. Please.
 created_on: 1289691889.26701
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1292137915.55193
+last_referenced_on: 1296022247.11246
 owner: PoppaVic
 rate_limit: 15
-ref_count: 2
+ref_count: 4
 ref_user: PoppaVic
 type: text
 
@@ -10776,12 +10779,12 @@ type: text
 action: /say The Help Vampire: A Spotter's Guide http://slash7.com/2006/12/22/vampires/
 created_on: 1189558513
 enabled: 1
-last_referenced_in: bhwhite
-last_referenced_on: 1290316788.7605
+last_referenced_in: love4boobies
+last_referenced_on: 1296040410.99256
 owner: pragma_
 rate_limit: 15
-ref_count: 8
-ref_user: bhwhite
+ref_count: 9
+ref_user: Love4Boobies
 type: text
 
 <vb6>
@@ -10808,12 +10811,12 @@ ref_user: pragma_
 type: text
 
 <version>
-action: /say PBot revision 262 2011-01-25
-created_on: 1296034511.27086
+action: /say PBot revision 253 2011-01-25
+created_on: 1296001036.19118
 enabled: 1
 last_referenced_in: pragma_
 last_referenced_on: 1295699592.26509
-owner: pbot3
+owner: candide
 rate_limit: 15
 ref_count: 0
 ref_user: nobody
