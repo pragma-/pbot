@@ -5832,18 +5832,6 @@ ref_count: 2
 ref_user: hnd
 type: text
 
-<factoid>
-action: of information
-created_on: 1108616481
-enabled: 1
-last_referenced_in: asem
-last_referenced_on: 1289074144.99286
-owner: pragma_
-rate_limit: 15
-ref_count: l
-ref_user: Asem
-type: text
-
 <factoids>
 action: /call list factoids
 created_on: 1192737117
@@ -5936,10 +5924,10 @@ type: text
 action: /call factfind
 created_on: 1277784994.65625
 enabled: 1
-last_referenced_on: 1296003464.14601
+last_referenced_on: 1296089181.46254
 owner: pbot3
 rate_limit: 15
-ref_count: 68
+ref_count: 69
 ref_user: pragma_
 type: text
 
@@ -6527,12 +6515,12 @@ type: text
 action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1296040513.87889
+last_referenced_in: stdin
+last_referenced_on: 1296087106.85293
 owner: pragma_
 rate_limit: 15
-ref_count: 992
-ref_user: pragma_
+ref_count: 993
+ref_user: pbot3
 type: text
 
 <hi_phrases>
@@ -10740,12 +10728,12 @@ ref_user: pragma_
 type: text
 
 <version>
-action: /say PBot revision 253 2011-01-25
-created_on: 1296001036.19118
+action: /say PBot revision 269 2011-01-26
+created_on: 1296088991.72662
 enabled: 1
 last_referenced_in: pragma_
 last_referenced_on: 1295699592.26509
-owner: candide
+owner: pbot3
 rate_limit: 15
 ref_count: 0
 ref_user: nobody
@@ -11190,7 +11178,7 @@ created_on: 1108845393
 enabled: 1
 owner: prec
 rate_limit: 15
-ref_count: equivalenv
+ref_count: 34
 ref_user: prec
 type: text
 
