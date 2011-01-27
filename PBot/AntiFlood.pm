@@ -46,8 +46,6 @@ sub initialize {
   $self->{FLOOD_CHAT} = 0;
   $self->{FLOOD_JOIN} = 1;
 
-  $self->{flood_msg_count} = 0;
-  $self->{last_timestamp} = gettimeofday;
   $self->{message_history} = {};
 
   $pbot->timer->register(sub { $self->prune_message_history }, 60 * 60 * 1);
@@ -154,6 +152,7 @@ sub check_flood {
       if(not exists ${ $self->message_history }{$account}{$chan}) {
         #$self->{pbot}->logger->log("adding new channel for existing nick\n");
         ${ $self->message_history }{$account}{$chan}{offenses} = 0;
+        ${ $self->message_history }{$account}{$chan}{last_offense_timestamp} = 0;
         ${ $self->message_history }{$account}{$chan}{join_watch} = 0;
         ${ $self->message_history }{$account}{$chan}{messages} = [];
       }
@@ -168,6 +167,7 @@ sub check_flood {
   if(not exists ${ $self->message_history }{$account}{$channel}) {
     #$self->{pbot}->logger->log("adding new channel for existing nick\n");
     ${ $self->message_history }{$account}{$channel}{offenses} = 0;
+    ${ $self->message_history }{$account}{$channel}{last_offense_timestamp} = 0;
     ${ $self->message_history }{$account}{$channel}{join_watch} = 0;
     ${ $self->message_history }{$account}{$channel}{messages} = [];
   }
@@ -216,6 +216,7 @@ sub check_flood {
       if($mode == $self->{FLOOD_JOIN}) {
         if(${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages) {
           ${ $self->message_history }{$account}{$channel}{offenses}++;
+          ${ $self->message_history }{$account}{$channel}{last_offense_timestamp} = gettimeofday;
           
           my $timeout = (2 ** (($self->message_history->{$account}{$channel}{offenses} + 2) < 10 ? ${ $self->message_history }{$account}{$channel}{offenses} + 2 : 10));
 
@@ -233,6 +234,7 @@ sub check_flood {
         } 
       } elsif($mode == $self->{FLOOD_CHAT}) {
         ${ $self->message_history }{$account}{$channel}{offenses}++;
+        ${ $self->message_history }{$account}{$channel}{last_offense_timestamp} = gettimeofday;
         my $length = ${ $self->message_history }{$account}{$channel}{offenses} ** ${ $self->message_history }{$account}{$channel}{offenses} * ${ $self->message_history }{$account}{$channel}{offenses} * 30;
         if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
           # don't ban again if already banned
@@ -289,6 +291,13 @@ sub prune_message_history {
       if(gettimeofday - $last{timestamp} >= 60 * 60 * 24 * 3) {
         $self->{pbot}->logger->log("$nick in $channel hasn't spoken in three days, removing message history.\n");
         delete $self->{message_history}->{$nick}{$channel};
+      } else {
+        # decrease offenses counter if 24 hours of elapsed without any new offense
+        if ($self->{message_history}->{$nick}{$channel}{offenses} > 0 and $self->{message_history}->{$nick}{$channel}{last_offense_timestamp} > 0 and (gettimeofday - $self->{message_history}->{$nick}{$channel}{last_offense_timestamp} >= 60 * 60 * 24)) {
+          $self->{message_history}->{$nick}{$channel}{offenses}--;
+          $self->{message_history}->{$nick}{$channel}{last_offense_timestamp} = gettimeofday;
+          $self->{pbot}->logger->log("anti-flood: [$channel][$nick] 24 hours since last offense/decrease -- decreasing offenses to $self->{message_history}->{$nick}{$channel}{offenses}\n");
+        }
       }
     }
   }

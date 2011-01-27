@@ -211,7 +211,7 @@ sub list {
 
               for(my $i = 0; $i <= $#messages; $i++) {
                 next if $messages[$i]->{msg} =~ /^!login/;
-                push @ret, { offenses => ${ $self->{pbot}->antiflood->message_history }{$history_nick}{$history_channel}{offenses}, join_watch => ${ $self->{pbot}->antiflood->message_history }{$history_nick}{$history_channel}{join_watch}, text => $messages[$i]->{msg}, timestamp => $messages[$i]->{timestamp}, nick => $history_nick, channel => $history_channel } if $messages[$i]->{msg} =~ m/$text_search/i;
+                push @ret, { offenses => ${ $self->{pbot}->antiflood->message_history }{$history_nick}{$history_channel}{offenses}, last_offense_timestamp => $self->{pbot}->antiflood->message_history->{$history_nick}{$history_channel}{last_offense_timestamp}, join_watch => ${ $self->{pbot}->antiflood->message_history }{$history_nick}{$history_channel}{join_watch}, text => $messages[$i]->{msg}, timestamp => $messages[$i]->{timestamp}, nick => $history_nick, channel => $history_channel } if $messages[$i]->{msg} =~ m/$text_search/i;
               }
             }
           }
@@ -226,13 +226,19 @@ sub list {
     }
 
     my $text = "";
+    my %seen_nicks = ();
     my @sorted = sort { $a->{timestamp} <=> $b->{timestamp} } @results;
     foreach my $msg (@sorted) {
-      $self->{pbot}->logger->log("[$msg->{channel}] " . localtime($msg->{timestamp}) . " [o: $msg->{offenses}, j: $msg->{join_watch}] <$msg->{nick}> " . $msg->{text} . "\n");
-     $text .= "[$msg->{channel}] " . localtime($msg->{timestamp}) . " <$msg->{nick}> " . $msg->{text} . "\n";
+      if(not exists $seen_nicks{$msg->{nick}}) {
+        $seen_nicks{$msg->{nick}} = 1;
+        $text .= "--- [$msg->{nick}: join counter: $msg->{join_watch}; offenses: $msg->{offenses}; last offense/decrease: " . ($msg->{last_offense_timestamp} > 0 ? ago(gettimeofday - $msg->{last_offense_timestamp}) : "unknown") . "]\n";
+      }
+
+      $text .= "[$msg->{channel}] " . localtime($msg->{timestamp}) . " <$msg->{nick}> " . $msg->{text} . "\n";
     }
-    
-    return "Messages: $text";
+
+    $self->{pbot}->logger->log($text);
+    return "Messages:\n\n$text";
   }
 
   if($arguments =~ /^modules$/i) {
