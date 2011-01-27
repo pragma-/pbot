@@ -64,13 +64,13 @@ sub initialize {
   $pbot->commands->register(sub { return $self->factalias(@_)       },       "factalias",    0);
   $pbot->commands->register(sub { return $self->call_factoid(@_)    },       "fact",         0);
   $pbot->commands->register(sub { return $self->factfind(@_)        },       "factfind",     0);
+  $pbot->commands->register(sub { return $self->list(@_)            },       "list",         0);
+  $pbot->commands->register(sub { return $self->top20(@_)           },       "top20",        0);
 
   # the following commands have not yet been updated to use the new factoid structure
   # DO NOT USE!!  Factoid corruption may occur.
-  $pbot->commands->register(sub { return $self->list(@_)            },       "list",         0);
   $pbot->commands->register(sub { return $self->add_regex(@_)       },       "regex",        999);
   $pbot->commands->register(sub { return $self->histogram(@_)       },       "histogram",    999);
-  $pbot->commands->register(sub { return $self->top20(@_)           },       "top20",        999);
   $pbot->commands->register(sub { return $self->count(@_)           },       "count",        999);
   $pbot->commands->register(sub { return $self->load_module(@_)     },       "load",         999);
   $pbot->commands->register(sub { return $self->unload_module(@_)   },       "unload",       999);
@@ -491,49 +491,66 @@ sub factinfo {
 sub top20 {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->factoids->factoids;
+  my $factoids = $self->{pbot}->factoids->factoids->hash;
   my %hash = ();
   my $text = "";
   my $i = 0;
 
-  if(not defined $arguments) {
-    foreach my $command (sort {$factoids->{$b}{ref_count} <=> $factoids->{$a}{ref_count}} keys %{ $factoids }) {
-      if($factoids->{$command}{ref_count} > 0 && exists $factoids->{$command}{text}) {
-        $text .= "$command ($factoids->{$command}{ref_count}) ";
-        $i++;
-        last if $i >= 20;
-      }
-    }
-    $text = "Top $i referenced factoids: $text" if $i > 0;
-    return $text;
-  } else {
+  my ($channel, $args) = split / /, $arguments, 2 if defined $arguments;
 
-    if(lc $arguments eq "recent") {
-      foreach my $command (sort { $factoids->{$b}{created_on} <=> $factoids->{$a}{created_on} } keys %{ $factoids }) {
-        #my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime($factoids->{$command}{created_on});
-        #my $t = sprintf("%04d/%02d/%02d", $year+1900, $month+1, $day_of_month);
-                
-        $text .= "$command ";
-        $i++;
-        last if $i >= 50;
+  if(not defined $channel) {
+    return "Usage: top20 <channel> [nick or 'recent']";
+  }
+
+  if(not defined $args) {
+    foreach my $chan (sort keys %{ $factoids }) {
+      next if lc $chan ne lc $channel;
+      foreach my $command (sort {$factoids->{$chan}->{$b}{ref_count} <=> $factoids->{$chan}->{$a}{ref_count}} keys %{ $factoids->{$chan} }) {
+        if($factoids->{$chan}->{$command}{ref_count} > 0 and $factoids->{$chan}->{$command}{type} eq 'text') {
+          $text .= "$command ($factoids->{$chan}->{$command}{ref_count}) ";
+          $i++;
+          last if $i >= 20;
+        }
       }
-      $text = "$i most recent submissions: $text" if $i > 0;
+      $channel = "the global channel" if $channel eq '.*';
+      $text = "Top $i referenced factoids for $channel: $text" if $i > 0;
       return $text;
     }
 
-    my $user = lc $arguments;
-    foreach my $command (sort keys %{ $factoids }) {
-      if($factoids->{$command}{ref_user} =~ /\Q$arguments\E/i) {
-        if($user ne lc $factoids->{$command}{ref_user} && not $user =~ /$factoids->{$command}{ref_user}/i) {
-          $user .= " ($factoids->{$command}{ref_user})";
+  } else {
+
+    if(lc $args eq "recent") {
+      foreach my $chan (sort keys %{ $factoids }) {
+        next if lc $chan ne lc $channel;
+        foreach my $command (sort { $factoids->{$chan}->{$b}{created_on} <=> $factoids->{$chan}->{$a}{created_on} } keys %{ $factoids->{$chan} }) {
+          my $ago = ago(gettimeofday - $factoids->{$chan}->{$command}->{created_on});
+          $text .= "   $command [$ago by $factoids->{$chan}->{$command}->{owner}]\n";
+          $i++;
+          last if $i >= 50;
         }
-        $text .= "$command ";
-        $i++;
-        last if $i >= 20;
+        $channel = "global channel" if $channel eq '.*';
+        $text = "$i most recent $channel submissions:\n\n$text" if $i > 0;
+        return $text;
       }
     }
-    $text = "$i factoids last referenced by $user: $text" if $i > 0;
-    return $text;
+
+    my $user = lc $args;
+    foreach my $chan (sort keys %{ $factoids }) {
+      next if lc $chan ne lc $channel;
+      foreach my $command (sort { ($factoids->{$chan}->{$b}{last_referenced_on} || 0) <=> ($factoids->{$chan}->{$a}{last_referenced_on} || 0) } keys %{ $factoids->{$chan} }) {
+        if($factoids->{$chan}->{$command}{ref_user} =~ /\Q$args\E/i) {
+          if($user ne lc $factoids->{$chan}->{$command}{ref_user} && not $user =~ /$factoids->{$chan}->{$command}{ref_user}/i) {
+            $user .= " ($factoids->{$chan}->{$command}{ref_user})";
+          }
+          my $ago = $factoids->{$chan}->{$command}{last_referenced_on} ? ago(gettimeofday - $factoids->{$chan}->{$command}{last_referenced_on}) : "unknown";
+          $text .= "   $command [$ago]\n";
+          $i++;
+          last if $i >= 20;
+        }
+      }
+      $text = "$i factoids last referenced by $user:\n\n$text" if $i > 0;
+      return $text;
+    }
   }
 }
 
