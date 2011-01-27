@@ -1,0 +1,2 @@
+#!/bin/sh
+~/pbot/modules/lookupbot.pl horrorscope $*
