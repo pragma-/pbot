@@ -225,12 +225,14 @@ sub list {
       return "Error in search parameters: $@";
     }
 
+    my $text = "";
     my @sorted = sort { $a->{timestamp} <=> $b->{timestamp} } @results;
     foreach my $msg (@sorted) {
       $self->{pbot}->logger->log("[$msg->{channel}] " . localtime($msg->{timestamp}) . " [o: $msg->{offenses}, j: $msg->{join_watch}] <$msg->{nick}> " . $msg->{text} . "\n");
-      $self->{pbot}->conn->privmsg($nick, "[$msg->{channel}] " . localtime($msg->{timestamp}) . " <$msg->{nick}> " . $msg->{text} . "\n") unless $nick =~ /\Q$botnick\E/i;
+     $text .= "[$msg->{channel}] " . localtime($msg->{timestamp}) . " <$msg->{nick}> " . $msg->{text} . "\n";
     }
-    return "";
+    
+    return "Messages: $text";
   }
 
   if($arguments =~ /^modules$/i) {
