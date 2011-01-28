@@ -34,11 +34,9 @@ sub initialize {
 sub execute_all {
   my $self = shift;
 
-  if($#{ $self->{handlers} } > -1) {
-    foreach my $func (@{ $self->{handlers} }) {
-      my $result = &{ $func->{subref} }(@_);
-      return $result if defined $result;
-    }
+  foreach my $func (@{ $self->{handlers} }) {
+    my $result = &{ $func->{subref} }(@_);
+    return $result if defined $result;
   }
   return undef;
 }
