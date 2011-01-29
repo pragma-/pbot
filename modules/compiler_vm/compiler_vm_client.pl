@@ -568,7 +568,12 @@ $code =~ s/#include <([^>]+)>/#include <$1>\n/g;
 $code =~ s/#([^ ]+) (.*?)\\n/#$1 $2\n/g;
 $code =~ s/#([\w\d_]+)\\n/#$1\n/g;
 
-my $precode = $preludes{$lang} . $code;
+my $precode;
+if($code =~ m/#include/) {
+  $precode = $code;
+} else {
+  $precode = $preludes{$lang} . $code;
+}
 $code = '';
 
 if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C++') {
