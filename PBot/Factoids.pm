@@ -37,10 +37,7 @@ sub initialize {
   my $export_path = delete $conf{export_path};
   my $export_site = delete $conf{export_site};
 
-  my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
-    Carp::croak("Missing pbot reference to Factoids");
-  }
+  my $pbot = delete $conf{pbot} || Carp::croak("Missing pbot reference to Factoids");
 
   $self->{factoids} = PBot::DualIndexHashObject->new(name => 'Factoids', filename => $filename);
   $self->{export_path} = $export_path;
@@ -199,23 +196,54 @@ sub find_factoid {
 
 sub interpreter {
   my $self = shift;
-  my ($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick) = @_;
+  my ($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick, $ref_from) = @_;
   my ($result, $channel);
   my $pbot = $self->{pbot};
 
-  $from = lc $from;
-
   return undef if not length $keyword;
+
+  $from = lc $from;
+  $ref_from = "" if not defined $ref_from;
 
   my $original_keyword = $keyword;
   ($channel, $keyword) = $self->find_factoid($from, $keyword, $arguments);
 
   if(not defined $keyword) {
-    my $matches = $self->factoids->levenshtein_matches('.*', lc $original_keyword);
+    # first check all channels for this keyword
+    my $chans = "";
+    my $comma = "";
+    my $found = 0;
+    my ($fwd_chan, $fwd_trig);
 
-    return undef if $matches eq 'none';
+    foreach my $chan (keys %{ $self->factoids->hash }) {    
+      foreach my $trig (keys %{ $self->factoids->hash->{$chan} }) {
+        if(lc $trig eq lc $original_keyword) {
+          $chans .= $comma . $chan;
+          $comma = ", ";
+          $found++;
+          $fwd_chan = $chan;
+          $fwd_trig = $trig;
+          last;
+        }
+      }
+    }
 
-    return "No such factoid '$original_keyword'; did you mean $matches?";
+    if($found > 1) {
+      return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple locations (choose one): $chans";
+    } 
+    elsif($found == 1) {
+      $pbot->logger->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
+
+      return $ref_from . $pbot->factoids->interpreter($fwd_chan, $nick, $user, $host, $count, $fwd_trig, $arguments, undef, "[$fwd_chan] ");
+    } else {
+      # if keyword hasn't been found, display similiar matches for all channels
+      my $matches = $self->factoids->levenshtein_matches('.*', lc $original_keyword);
+
+      # don't say anything if nothing similiar was found
+      return undef if $matches eq 'none';
+
+      return $ref_from . "No such factoid '$original_keyword'; did you mean $matches?";
+    }
   }
 
   my $type = $self->factoids->hash->{$channel}->{$keyword}->{type};
@@ -235,7 +263,7 @@ sub interpreter {
     $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
 
-    return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
+    return $ref_from . $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command, $ref_from);
   }
 
   my $last_ref_in = 0;
@@ -248,13 +276,13 @@ sub interpreter {
     }
 
     if(($last_ref_in == 1) and (gettimeofday - $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} < $self->factoids->hash->{$channel}->{$keyword}->{rate_limit})) {
-      return "/msg $nick '$keyword' is rate-limited; try again in " . ($self->factoids->hash->{$channel}->{$keyword}->{rate_limit} - int(gettimeofday - $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on})) . " seconds.";
+      return "/msg $nick $ref_from'$keyword' is rate-limited; try again in " . ($self->factoids->hash->{$channel}->{$keyword}->{rate_limit} - int(gettimeofday - $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on})) . " seconds.";
     }
   }
 
   if($self->factoids->hash->{$channel}->{$keyword}->{enabled} == 0) {
     $self->{pbot}->logger->log("$keyword disabled.\n");
-    return "/msg $nick $keyword is currently disabled.";
+    return "/msg $nick $ref_from$keyword is currently disabled.";
   } 
   elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'module') {
     $self->{pbot}->logger->log("Found module\n");
@@ -264,7 +292,7 @@ sub interpreter {
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
 
-    return $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, $keyword, $arguments);
+    return $ref_from . $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, $keyword, $arguments);
   }
   elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'text') {
     $self->{pbot}->logger->log("Found factoid\n");
@@ -353,9 +381,9 @@ sub interpreter {
 
     if($result =~ s/^\/say\s+//i || $result =~ /^\/me\s+/i
       || $result =~ /^\/msg\s+/i) {
-      return $result;
+      return $ref_from . $result;
     } else {
-      return "$keyword is $result";
+      return $ref_from . "$keyword is $result";
     }
   } elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'regex') {
     $result = eval {
@@ -382,21 +410,24 @@ sub interpreter {
         $cmd = $self->factoids->hash->{$channel}->{$keyword}->{action}; 
       }
 
-      $result = $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $cmd);
-      return $result;
+      $result = $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $cmd, $ref_from);
+      return $ref_from . $result;
     };
 
     if($@) {
       $self->{pbot}->logger->log("Regex fail: $@\n");
-      return "/msg $nick Fail.";
+      return "/msg $nick $ref_from" . "Fail.";
     }
 
-    return $result;
+    return $ref_from . $result;
   } else {
     $self->{pbot}->logger->log("($from): $nick!$user\@$host): Unknown command type for '$keyword'\n"); 
-    return "/me blinks.";
+    return "/me blinks." . " $ref_from";
   }
-  return "/me wrinkles her nose.";
+
+  # should never be reached; if it has, something has gone horribly wrong.
+  # (advanced notification of corruption or a waste of space?)
+  return "/me wrinkles her nose." . " $ref_from";
 }
 
 sub export_path {

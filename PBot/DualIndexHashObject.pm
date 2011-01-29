@@ -168,57 +168,37 @@ sub save {
 }
 
 sub find_index {
-  my ($self, $primary_index_key, $secondary_index_key) = @_;
-  my $result;
+  my $self = shift;
+  my ($primary_index_key, $secondary_index_key) = map {lc} @_;
 
-  if(not $secondary_index_key) {
-    $result = eval {
-      foreach my $index (keys %{ $self->hash }) {
-        if($primary_index_key =~ m/^\Q$index\E$/i) {
-          return $index;
-        }
-      }
+  return undef if not defined $primary_index_key;
 
-      return undef;
-    };
+  return $primary_index_key if not $secondary_index_key;
 
-    if($@) {
-      Carp::carp ("find_index: bad regex: $@\n");
-      return undef;
-    }
-  } else {
-    $result = eval {
-      foreach my $index (keys %{ $self->hash->{$primary_index_key} }) {
-        if($secondary_index_key =~ m/^\Q$index\E$/i) {
-          return $index;
-        }
-      }
+  return undef if not exists $self->hash->{$primary_index_key};
 
-      return undef;
-    };
-
-    if($@) {
-      Carp::carp ("find_index: bad regex: $@\n");
-      return undef;
-    }
+  foreach my $index (keys %{ $self->hash->{$primary_index_key} }) {
+    return $index if $secondary_index_key eq lc $index;
   }
 
-  return $result;
+  return undef;
 }
 
 sub levenshtein_matches {
-  my ($self, $primary_index_key, $secondary_index_key) = @_;
+  my ($self, $primary_index_key, $secondary_index_key, $distance) = @_;
   my $comma = '';
   my $result = "";
+
+  $distance = 0.60 if not defined $distance;
 
   $primary_index_key = '.*' if not defined $primary_index_key;
   
   if(not $secondary_index_key) {
     foreach my $index (sort keys %{ $self->hash }) {
-      my $distance = fastdistance($primary_index_key, $index);
+      my $distance_result = fastdistance($primary_index_key, $index);
       my $length = (length($primary_index_key) > length($index)) ? length $primary_index_key : length $index;
 
-      if($distance / $length < 0.50) {
+      if($distance_result / $length < $distance) {
         $result .= $comma . $index;
         $comma = ", ";
       }
@@ -230,13 +210,23 @@ sub levenshtein_matches {
       return 'none';
     }
 
-    foreach my $index (sort keys %{ $self->hash->{$primary} }) {
-      my $distance = fastdistance($secondary_index_key, $index);
-      my $length = (length($secondary_index_key) > length($index)) ? length $secondary_index_key : length $index;
+    my $last_header = "";
+    my $header = "";
 
-      if($distance / $length < 0.60) {
-        $result .= $comma . $index;
-        $comma = ", ";
+    foreach my $index1 (sort keys %{ $self->hash }) {
+      $header = "[$index1] ";
+      $header = "[global channel] " if $header eq "[.*] ";
+
+      foreach my $index2 (sort keys %{ $self->hash->{$index1} }) {
+        my $distance_result = fastdistance($secondary_index_key, $index2);
+        my $length = (length($secondary_index_key) > length($index2)) ? length $secondary_index_key : length $index2;
+
+        if($distance_result / $length < $distance) {
+          $header = "" if $last_header eq $header;
+          $last_header = $header;
+          $result .= $comma . $header . $index2;
+          $comma = ", ";
+        }
       }
     }
   }
