@@ -4728,6 +4728,28 @@ ref_count: 0
 ref_user: nobody
 type: text
 
+<apue>
+action: Advanced Programming in the UNIX Environment, by Stevens and Rago, see http://www.apuebook.com/
+created_on: 1268625692
+enabled: 1
+last_referenced_in: pseudonymous
+last_referenced_on: 1295934822.26987
+owner: PoppaVic
+rate_limit: 15
+ref_count: 20
+ref_user: pseudonymous
+type: text
+
+<apue2>
+action: http://www.apuebook.com/
+created_on: 1197696012
+enabled: 1
+owner: kp
+rate_limit: 15
+ref_count: 5
+ref_user: Draconx
+type: text
+
 <beej>
 action: http://beej.us/guide/bgnet/
 created_on: 1186757356
@@ -4740,6 +4762,26 @@ ref_count: 73
 ref_user: snhmib
 type: text
 
+<gettimeofday>
+action: a function that returns the time in seconds and milliseconds since the epoch (Thursday, January 1 1970) and the local timezone
+created_on: 1104639290
+enabled: 1
+owner: Major-Willard
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<ipc>
+action: /say IPC is Inter-Process Communication.  A nice tutorial for UNIX is at http://www.ecst.csuchico.edu/~beej/guide/ipc/
+created_on: 1104609621
+enabled: 1
+owner: twkm
+rate_limit: 15
+ref_count: 7
+ref_user: n00p
+type: text
+
 <posix>
 action: /say The Open Group Base Specifications Issue 6: http://www.opengroup.org/onlinepubs/009695399/
 created_on: 1179496311
@@ -4750,6 +4792,84 @@ owner: pragma_
 rate_limit: 15
 ref_count: 17
 ref_user: pragma_
+type: text
+
+<pth>
+action: http://www.gnu.org/software/pth/
+created_on: 1181487162
+enabled: 1
+last_referenced_on: 1278898866.45351
+owner: PoppaVic
+rate_limit: 15
+ref_count: 6
+ref_user: PoppaVic
+type: text
+
+<raw_ping>
+action: http://courses.cs.vt.edu/~cs4254/fall04/slides/raw_1.pdf
+created_on: 1203042361
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 1
+ref_user: pragma_
+type: text
+
+<unbufferedgetc>
+action: /say How to disable line-buffering with termios: http://shtrom.ssji.net/skb/getc.html
+created_on: 1106032892
+enabled: 1
+last_referenced_on: 1278255236.92206
+owner: pragma_
+rate_limit: 15
+ref_count: 10
+ref_user: pragma_
+type: text
+
+<unixfaq>
+action: http://www.erlenstar.demon.co.uk/unix/faq_toc.html
+created_on: 1104460642
+enabled: 1
+last_referenced_on: 1281777553.47855
+owner: twkm
+rate_limit: 15
+ref_count: 3
+ref_user: luneff
+type: text
+
+<unp>
+action: /call unp1
+created_on: 1269767264
+enabled: 1
+last_referenced_on: 1292267014.95146
+owner: pragma_
+rate_limit: 15
+ref_count: 42
+ref_user: ws
+type: text
+
+<unp1>
+action: Unix Network Programming Vol I: http://www.unpbook.com/
+created_on: 1195011079
+enabled: 1
+last_referenced_in: ws
+last_referenced_on: 1292267014.95553
+owner: pragma_
+rate_limit: 15
+ref_count: 126
+ref_user: ws
+type: text
+
+<unp2>
+action: unix network programming, volume 2: interprocess communications, by stevens, see http://www.kohala.com/start/unpv22e/unpv22e.html
+created_on: 1104636219
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1291938905.11477
+owner: twkm
+rate_limit: 15
+ref_count: 24
+ref_user: Wulf
 type: text
 
 [#pbot2]
@@ -5943,28 +6063,6 @@ owner: pragma_
 rate_limit: 15
 ref_count: 1
 ref_user: pragma_
-type: text
-
-<apue>
-action: Advanced Programming in the UNIX Environment, by Stevens and Rago, see http://www.apuebook.com/
-created_on: 1268625692
-enabled: 1
-last_referenced_in: pseudonymous
-last_referenced_on: 1295934822.26987
-owner: PoppaVic
-rate_limit: 15
-ref_count: 20
-ref_user: pseudonymous
-type: text
-
-<apue2>
-action: http://www.apuebook.com/
-created_on: 1197696012
-enabled: 1
-owner: kp
-rate_limit: 15
-ref_count: 5
-ref_user: Draconx
 type: text
 
 <ask>
@@ -7245,16 +7343,6 @@ ref_count: 3
 ref_user: cousteau
 type: text
 
-<gettimeofday>
-action: a function that returns the time in seconds and milliseconds since the epoch (Thursday, January 1 1970) and the local timezone
-created_on: 1104639290
-enabled: 1
-owner: Major-Willard
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
 <gnumake>
 action: http://www.gnu.org/software/make/manual/make.pdf
 created_on: 1194222910
@@ -7738,16 +7826,6 @@ owner: ColonelJ
 rate_limit: 15
 ref_count: 0
 ref_user: nobody
-type: text
-
-<ipc>
-action: /say IPC is Inter-Process Communication.  A nice tutorial for UNIX is at http://www.ecst.csuchico.edu/~beej/guide/ipc/
-created_on: 1104609621
-enabled: 1
-owner: twkm
-rate_limit: 15
-ref_count: 7
-ref_user: n00p
 type: text
 
 <is>
@@ -8401,18 +8479,6 @@ ref_count: 13
 ref_user: kate`
 type: text
 
-<pZombie>
-action: a moron incapable of logic who hasn't taken any computer science or electrical engineering classes and therefore holds mystical beliefs about what is possible with robots and simulations, constantly fabricating ridiculous laughable experiments.
-created_on: 1258884496
-enabled: 1
-last_referenced_in: poppavic
-last_referenced_on: 1292555804.07799
-owner: pragma_
-rate_limit: 15
-ref_count: 11
-ref_user: PoppaVic
-type: text
-
 <pant_status>
 action: off on crotchless "around ankles" "showing butt-crack"
 created_on: 1173823726
@@ -8664,17 +8730,6 @@ ref_count: 6
 ref_user: apparle
 type: text
 
-<pth>
-action: http://www.gnu.org/software/pth/
-created_on: 1181487162
-enabled: 1
-last_referenced_on: 1278898866.45351
-owner: PoppaVic
-rate_limit: 15
-ref_count: 6
-ref_user: PoppaVic
-type: text
-
 <py>
 action: /call cc -lang=python
 created_on: 1276574930
@@ -8766,16 +8821,6 @@ enabled: 1
 owner: pragma_
 rate_limit: 15
 ref_count: 72
-ref_user: pragma_
-type: text
-
-<raw_ping>
-action: http://courses.cs.vt.edu/~cs4254/fall04/slides/raw_1.pdf
-created_on: 1203042361
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 1
 ref_user: pragma_
 type: text
 
@@ -9739,17 +9784,6 @@ ref_count: 599
 ref_user: pragma_
 type: text
 
-<unbufferedgetc>
-action: /say How to disable line-buffering with termios: http://shtrom.ssji.net/skb/getc.html
-created_on: 1106032892
-enabled: 1
-last_referenced_on: 1278255236.92206
-owner: pragma_
-rate_limit: 15
-ref_count: 10
-ref_user: pragma_
-type: text
-
 <understood>
 action: /say We understood you the first time, and answered already; you may not have understood the answers. Instead of ignoring them and repeating your question, find out what they mean.
 created_on: 1204317155
@@ -9772,17 +9806,6 @@ ref_count: 0
 ref_user: nobody
 type: text
 
-<unixfaq>
-action: http://www.erlenstar.demon.co.uk/unix/faq_toc.html
-created_on: 1104460642
-enabled: 1
-last_referenced_on: 1281777553.47855
-owner: twkm
-rate_limit: 15
-ref_count: 3
-ref_user: luneff
-type: text
-
 <unmaintainable>
 action: http://freeworld.thc.org/root/phun/unmaintain.html
 created_on: 1207882362
@@ -9791,41 +9814,6 @@ owner: vorpal
 rate_limit: 15
 ref_count: 1
 ref_user: vorpal
-type: text
-
-<unp>
-action: /call unp1
-created_on: 1269767264
-enabled: 1
-last_referenced_on: 1292267014.95146
-owner: pragma_
-rate_limit: 15
-ref_count: 42
-ref_user: ws
-type: text
-
-<unp1>
-action: Unix Network Programming Vol I: http://www.unpbook.com/
-created_on: 1195011079
-enabled: 1
-last_referenced_in: ws
-last_referenced_on: 1292267014.95553
-owner: pragma_
-rate_limit: 15
-ref_count: 126
-ref_user: ws
-type: text
-
-<unp2>
-action: unix network programming, volume 2: interprocess communications, by stevens, see http://www.kohala.com/start/unpv22e/unpv22e.html
-created_on: 1104636219
-enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1291938905.11477
-owner: twkm
-rate_limit: 15
-ref_count: 24
-ref_user: Wulf
 type: text
 
 <urban>
@@ -9907,7 +9895,7 @@ type: text
 
 <version>
 action: /say PBot revision 276 2011-01-28
-created_on: 1296295653.97996
+created_on: 1296296766.68039
 enabled: 1
 owner: candide
 rate_limit: 15
