@@ -194,6 +194,16 @@ ref_count: 3
 ref_user: Sepero
 type: text
 
+<%zu>
+action: the printf format specifier used to print size_t values (sizeof, strlen, etc)
+created_on: 1106868530
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 3
+ref_user: Sepero
+type: text
+
 <&>
 action: the bitwise AND binary operator.  It is also the unary address operator.
 created_on: 1104602453
@@ -765,6 +775,16 @@ owner: pragma_
 rate_limit: 15
 ref_count: 6
 ref_user: pragma_
+type: text
+
+<CE>
+action: Unix system calls and subroutines using C: http://www.cs.cf.ac.uk/Dave/C/CE.html
+created_on: 1202752439
+enabled: 1
+owner: PoppaVic
+rate_limit: 15
+ref_count: 2
+ref_user: PoppaVic
 type: text
 
 <CHAR_BIT>
@@ -1414,15 +1434,13 @@ ref_user: lemonade`
 type: text
 
 <casting>
-action: /say Cast properly: http://www.cognitiveprocess.com/~rjh/prg/writings/casting.html
-created_on: 1105954332
+action: http://web.archive.org/web/20060228210010/http://www.cognitiveprocess.com/~rjh/prg/writings/casting.html
+created_on: 1296283738.47843
 enabled: 1
-last_referenced_in: pragma_
-last_referenced_on: 1295930303.49433
 owner: pragma_
 rate_limit: 15
-ref_count: 20
-ref_user: pragma_
+ref_count: 0
+ref_user: nobody
 type: text
 
 <cat>
@@ -1474,11 +1492,11 @@ action: /say char is required to be able to represent (at least) the values incl
 created_on: 1288191355.84716
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1292045864.88831
+last_referenced_on: 1296283301.93384
 owner: s00p
 rate_limit: 15
-ref_count: 15
-ref_user: n00p
+ref_count: 16
+ref_user: pragma_
 type: text
 
 <char*a,b>
@@ -1781,11 +1799,11 @@ type: text
 action: /call c2english
 created_on: 1296182114.77211
 enabled: 1
-last_referenced_on: 1296266183.92378
+last_referenced_on: 1296283355.59571
 owner: pragma_
 rate_limit: 0
-ref_count: 71
-ref_user: Wulf
+ref_count: 74
+ref_user: guidj0s
 type: text
 
 <errno>
@@ -1802,10 +1820,10 @@ type: text
 action: /call cdecl explain
 created_on: 1191042468
 enabled: 1
-last_referenced_on: 1296250880.46879
+last_referenced_on: 1296282947.78519
 owner: pragma_
 rate_limit: 0
-ref_count: 2444
+ref_count: 2445
 ref_user: guidj0s
 type: text
 
@@ -1987,12 +2005,12 @@ type: text
 action: http://www.yesfunny.com/Sports/sports8.jpeg -- in other words, are you sure C is for you?
 created_on: 1205575974
 enabled: 1
-last_referenced_in: remoun
-last_referenced_on: 1290889198.89126
+last_referenced_in: ##c
+last_referenced_on: 1296283661.73722
 owner: pragma_
 rate_limit: 15
-ref_count: 3
-ref_user: Remoun
+ref_count: 4
+ref_user: pragma_
 type: text
 
 <idb>
@@ -2053,12 +2071,12 @@ type: text
 action: /say A function declared with an inline function specifier is an inline function. Making a function an inline function suggests that calls to the function be as fast as possible. If you use `inline', always use `static', too.
 created_on: 1273526791
 enabled: 1
-last_referenced_in: solar_sea
-last_referenced_on: 1290596192.10807
+last_referenced_in: ##c
+last_referenced_on: 1296283409.05105
 owner: Wulf
 rate_limit: 15
-ref_count: 2
-ref_user: solar_sea
+ref_count: 3
+ref_user: pragma_
 type: text
 
 <int>
@@ -2587,10 +2605,12 @@ type: text
 action: /say /When k&r fails, try http://www.smith-wesson.com/
 created_on: 1251220163
 enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1296283538.80082
 owner: ment
 rate_limit: 15
-ref_count: 1
-ref_user: ment
+ref_count: 2
+ref_user: pragma_
 type: text
 
 <scanf>
@@ -3117,12 +3137,12 @@ type: text
 action: http://www.ibm.com/developerworks/power/library/pa-ctypes3/ -- http://www.ibm.com/developerworks/views/power/libraryview.jsp?search_by=everything+you+ever+wanted+to+know+about+C+types
 created_on: 1289629005.77406
 enabled: 1
-last_referenced_in: poppavic
-last_referenced_on: 1289629011.4616
+last_referenced_in: ##c
+last_referenced_on: 1296282951.9489
 owner: PoppaVic
 rate_limit: 15
-ref_count: 1
-ref_user: PoppaVic
+ref_count: 2
+ref_user: pragma_
 type: text
 
 <union>
@@ -3348,322 +3368,14 @@ action: /say $args, make your own damn sandwich!
 created_on: 1277372207.45751
 enabled: 1
 last_referenced_in: ##club-ubuntu
-last_referenced_on: 1296275814.78415
+last_referenced_on: 1296283312.02064
 owner: NoCode
-rate_limit: 15
-ref_count: 6
-ref_user: pragma_
-type: text
-
-[#pbot2]
-<resistance>
-action: futile.
-created_on: 1195527445
-enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1296270012.10031
-owner: kp
-rate_limit: 15
-ref_count: 1
-ref_user: pragma_
-type: text
-
-<test>
-action: /say This is a test in #pbot2!
-created_on: 1277000257.49081
-enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1296270044.8945
-owner: pbot3
-rate_limit: 10
-ref_count: 19
-ref_user: pragma_
-type: text
-
-[.*]
-<.*love\s+.*>
-action: lovequote
-created_on: 1271635108
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: regex
-
-<.*thank\s+(you|u).*>
-action: thanks
-created_on: 1251695217
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: regex
-
-</say>
-action: /call say
-created_on: 1251694751
-enabled: 1
-last_referenced_on: 1289378139.00623
-owner: pragma_
-rate_limit: 15
-ref_count: 14
-ref_user: Maxdamantus
-type: text
-
-<0>
-action: !1
-created_on: 1268450206
-enabled: 1
-last_referenced_on: 1277899716.06298
-owner: Maxdamantus
-rate_limit: 15
-ref_count: 3
-ref_user: pragma_
-type: text
-
-<1>
-action: !0
-created_on: 1268450213
-enabled: 1
-owner: Maxdamantus
-rate_limit: 15
-ref_count: 1
-ref_user: Maxdamantus
-type: text
-
-<10words>
-action: http://theoatmeal.com/comics/misspelling
-created_on: 1262461605
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 1
-ref_user: n00p
-type: text
-
-<20q>
-action: /say If you have a question, please be specific and concise. Don't ask questions like 'Does anyone know how to ...' or 'What is the best way to ...'. We do not have the time or patience to play a game of 20 questions with people that are not capable of articulating properly. See also: http://catb.org/~esr/faqs/smart-questions.html
-created_on: 1215709795
-enabled: 1
-last_referenced_on: 1277900053.49188
-owner: Jafet
-rate_limit: 15
-ref_count: 3
-ref_user: pragma_
-type: text
-
-<21days>
-action: http://norvig.com/21-days.html
-created_on: 1177064329
-enabled: 1
-owner: kate`
-rate_limit: 15
-ref_count: 18
-ref_user: cppn3wbee
-type: text
-
-<2html.vim>
-action: #!/bin/sh   vim -n -c ':so \$VIMRUNTIME/syntax/2html.vim' -c ':wqa' \$1 > /dev/null 2> /dev/null
-created_on: 1183513530
-enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1296268938.05751
-owner: pragma_
-rate_limit: 15
-ref_count: 6
-ref_user: pragma_
-type: text
-
-<3star>
-action: http://c2.com/cgi/wiki?ThreeStarProgrammer
-created_on: 1111867182
-enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1292042090.04301
-owner: pragma_
 rate_limit: 15
 ref_count: 7
 ref_user: pragma_
 type: text
 
-<6thsense>
-action: http://www.movie-moron.com/wp-content/gallery/various/I-See-Stupid-People.jpg
-created_on: 1262501664
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 2
-ref_user: n00p
-type: text
-
-<8ball>
-action: /say $nick, $answers
-created_on: 1193948417
-enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1296178251.73503
-owner: pragma_
-rate_limit: 0
-ref_count: 817
-ref_user: sjs205
-type: text
-
-<:(>
-action: /call :)
-created_on: 1180052710
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 15
-ref_user: rgz
-type: text
-
-<:)>
-action: /say $faces
-created_on: 1109365121
-enabled: 1
-last_referenced_in: davve123
-last_referenced_on: 1295738270.39331
-owner: pragma_
-rate_limit: 15
-ref_count: 115
-ref_user: davve123
-type: text
-
-<:-(>
-action: /call :)
-created_on: 1180052743
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<:-)>
-action: /call :)
-created_on: 1180052725
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 3
-ref_user: lemonade`
-type: text
-
-<:-D>
-action: /call :)
-created_on: 1180052738
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<:-P>
-action: /call :)
-created_on: 1180052730
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 2
-ref_user: yobo2
-type: text
-
-<:-p>
-action: /call :)
-created_on: 1180052734
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<:D>
-action: /call :)
-created_on: 1180052717
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 9
-ref_user: rgz
-type: text
-
-<:o>
-action: /call :)
-created_on: 1180052721
-enabled: 1
-last_referenced_on: 1295697348.33155
-owner: pragma_
-rate_limit: 15
-ref_count: 6
-ref_user: pragma_
-type: text
-
-<:p>
-action: /call :)
-created_on: 1180052714
-enabled: 1
-last_referenced_on: 1280112140.53999
-owner: pragma_
-rate_limit: 15
-ref_count: 2
-ref_user: Random832
-type: text
-
-<;)>
-action: /me $body_action seductively.
-created_on: 1109657503
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 6
-ref_user: veronica_
-type: text
-
-<APPALLING>
-action: Acronym Production Particularly At Lavish Level Is No Good
-created_on: 1108954548
-enabled: 1
-owner: Major-Willard
-rate_limit: 15
-ref_count: 3
-ref_user: lemonade`
-type: text
-
-<BFS>
-action: Breadth First Search -- http://en.wikipedia.org/wiki/Breadth-first_search
-created_on: 1242883241
-enabled: 1
-owner: Wulf_
-rate_limit: 15
-ref_count: 1
-ref_user: zacs7
-type: text
-
-<CE>
-action: http://www.cs.cf.ac.uk/Dave/C/CE.html
-created_on: 1202752439
-enabled: 1
-owner: PoppaVic
-rate_limit: 15
-ref_count: 2
-ref_user: PoppaVic
-type: text
-
-<DFS>
-action: Depth First Search -- http://en.wikipedia.org/wiki/Depth-first_search
-created_on: 1242883141
-enabled: 1
-owner: Chris
-rate_limit: 15
-ref_count: 1
-ref_user: Chris
-type: text
-
+[##posix]
 <E2BIG>
 action: Argument list too long
 created_on: 1239972824
@@ -4976,6 +4688,651 @@ ref_count: 0
 ref_user: nobody
 type: text
 
+<SIGBUS>
+action: a signal sent when an address is referenced that is not correctly aligned
+created_on: 1107559298
+enabled: 1
+owner: Major-Willard
+rate_limit: 15
+ref_count: 2
+ref_user: Major-Willard
+type: text
+
+<SIGSEGV>
+action: a signal sent when an address is referenced that has not been allocated to your virtual address space
+created_on: 1104612469
+enabled: 1
+owner: Major-Willard
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<SIGUSR1>
+action: a signal reserved for unspecified user process use
+created_on: 1104612781
+enabled: 1
+owner: Major-Willard
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<SIGUSR2>
+action: a signal reserved for unspecified user process use
+created_on: 1104613039
+enabled: 1
+owner: Major-Willard
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<beej>
+action: http://beej.us/guide/bgnet/
+created_on: 1186757356
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292206426.74268
+owner: twkm
+rate_limit: 15
+ref_count: 73
+ref_user: snhmib
+type: text
+
+<posix>
+action: /say The Open Group Base Specifications Issue 6: http://www.opengroup.org/onlinepubs/009695399/
+created_on: 1179496311
+enabled: 1
+last_referenced_in: pragma_
+last_referenced_on: 1295723488.7735
+owner: pragma_
+rate_limit: 15
+ref_count: 17
+ref_user: pragma_
+type: text
+
+[#pbot2]
+<resistance>
+action: futile.
+created_on: 1195527445
+enabled: 1
+last_referenced_in: #pbot2
+last_referenced_on: 1296270012.10031
+owner: kp
+rate_limit: 15
+ref_count: 1
+ref_user: pragma_
+type: text
+
+<test>
+action: /say This is a test in #pbot2!
+created_on: 1277000257.49081
+enabled: 1
+last_referenced_in: #pbot2
+last_referenced_on: 1296283315.51412
+owner: pbot3
+rate_limit: 10
+ref_count: 20
+ref_user: pragma_
+type: text
+
+[#philosophy]
+<advice>
+action: /say $advicepredicate $advicehelper.
+created_on: 1258762773
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1292382199.87372
+owner: PARLIAMENT
+rate_limit: 15
+ref_count: 28
+ref_user: guidj0s
+type: text
+
+<advicehelper>
+action: "do it" "not do it"
+created_on: 1258762756
+enabled: 1
+owner: PARLIAMENT
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<advicehelper2>
+action: "would" "would not" might "could possibly" may "may not" "couldn't possibly"
+created_on: 1258763100
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<advicehelper3>
+action: wise dumb smart stupid
+created_on: 1258763112
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<advicepredicate>
+action: "I recommend to" "My advice is to" "I think it $advicehelper2 be $advicehelper3 to" "I think it $advicehelper2 be $advicehelper3 to" "I think it $advicehelper2 be $advicehelper3 to" "I think it $advicehelper2 be $advicehelper3 to" "I think it $advicehelper2 be $advicehelper3 to"
+created_on: 1258763084
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<death>
+action: http://www.newscientist.com/article/mg19626252.800
+created_on: 1262505629
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 1
+ref_user: n00p
+type: text
+
+<everything>
+action: for the best, right?
+created_on: 1264580456
+enabled: 1
+last_referenced_on: 1280442244.75866
+owner: Nately
+rate_limit: 15
+ref_count: 3
+ref_user: Midass
+type: text
+
+<evilandomnipotence>
+action: http://www.ditext.com/mackie/evil.html
+created_on: 1260213447
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 1
+ref_user: n00p
+type: text
+
+<existence>
+action: /say The most basic property is the property that there are no properties; which is a property in itself.  The most basic object is the void; which by the same vein of the first sentence means that there cannot be a void.  Everything and nothing is filled with something.  Existence is simply a paradox of contradictions and opposite reactions.  Ones and zeroes, truth and fiction.  Everything that shall be will be.  A collective imagination of sentience.
+created_on: 1258974955
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 10
+ref_user: pragma_
+type: text
+
+<fool>
+action: /say He who asks a question may be a fool for five minutes; he who does not ask a question remains a fool forever.
+created_on: 1194366107
+enabled: 1
+last_referenced_in: pseudonymous
+last_referenced_on: 1296107642.23715
+owner: pragma_
+rate_limit: 15
+ref_count: 15
+ref_user: pseudonymous
+type: text
+
+<gamers>
+action: http://infovore.org/talks/if-gamers-ran-the-world/
+created_on: 1228387329
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<godprogrammer>
+action: /say It's not unreasonable that if computer programmers developed an autonomous self-learning/self-correcting AI world and allowed it to run for several billion iterations; then came back to it, that they may not be able to alter it without destroying it. If such a programmer were to have orginally created debug routines and backdoors, such code would ultimately point to obsolete code regions.
+created_on: 1260214264
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1287610343.13599
+owner: pragma_
+rate_limit: 15
+ref_count: 11
+ref_user: Love4Boobies
+type: text
+
+<mankind>
+action: http://etext.virginia.edu/toc/modeng/public/VanStor.html
+created_on: 1277818342.77735
+enabled: 1
+last_referenced_in: remoun
+last_referenced_on: 1290889231.26566
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: Remoun
+type: text
+
+<meaning>
+action: http://users.aristotle.net/~diogenes/meaning1.htm
+created_on: 1269729905
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<meat>
+action: http://baetzler.de/humor/meat_beings.html -- What aliens would say if they discovered Earth
+created_on: 1260485203
+enabled: 1
+last_referenced_in: gionnico
+last_referenced_on: 1287612645.89854
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: gionnico
+type: text
+
+<onedim-man>
+action: http://www.marcuse.org/herbert/pubs/64onedim/odmcontents.html
+created_on: 1258771422
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1285212597.51546
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: JodaZ
+type: text
+
+<phil31>
+action: http://philosophy.ucsd.edu/faculty/dbrink/courses/31-05/
+created_on: 1258966138
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: n00p
+type: text
+
+<questions>
+action: http://www.roangelo.net/logwitt/logwit12.html
+created_on: 1258590235
+enabled: 1
+last_referenced_in: kate`
+last_referenced_on: 1284648268.37292
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: kate`
+type: text
+
+<scale>
+action: /say The scale of the Universe: http://htwins.net/scale/index.html
+created_on: 1282252138.81919
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<sky>
+action: /say The sky is $colors.
+created_on: 1186181196
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288966799.49703
+owner: upd
+rate_limit: 15
+ref_count: 20
+ref_user: n0kS
+type: text
+
+<stinkin-thinkin>
+action: http://psychcentral.com/lib/2006/the-top-10-types-of-stinkin-thinkin/
+created_on: 1203669727
+enabled: 1
+owner: _pragma
+rate_limit: 15
+ref_count: 1
+ref_user: pragma_
+type: text
+
+<thesims>
+action: /say It's not entirely unreasonable that God is just a computer programmer and we're just The Sims; albeit with a very complex and intelligent autonomous AI that is capable of deluding us into thinking we have free-will.  See also !godprogrammer
+created_on: 1260214746
+enabled: 1
+last_referenced_in: #pbot2
+last_referenced_on: 1296270243.39787
+owner: pragma_
+rate_limit: 15
+ref_count: 4
+ref_user: pragma_
+type: text
+
+<theworld>
+action: http://strangemaps.files.wordpress.com/2006/11/800px-reagan-digitised-poster.JPG -- http://interactive.usc.edu/members/nsharkasi/americanworld.jpg -- http://cdn.epltalk.com/wp-content/uploads/2009/10/world-according-to-americans.jpg -- http://img293.imageshack.us/img293/2952/usworldem8.jpg
+created_on: 1262055589
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 1
+ref_user: n00p
+type: text
+
+<thingswedo>
+action: http://faculty.ed.uiuc.edu/g-cziko/twd/pdf/index.html
+created_on: 1259592605
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<trolley>
+action: http://www.saintgasoline.com/comics/2007-03-04-Allegory_of_Trolley_Problem_Paradox.JPG
+created_on: 1275605468
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1288194266.16975
+owner: pragma_
+rate_limit: 15
+ref_count: 1
+ref_user: kr04f
+type: text
+
+<validity>
+action: http://www.jimpryor.net/teaching/vocab/validity.html
+created_on: 1260221360
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: n00p
+type: text
+
+[.*]
+<.*love\s+.*>
+action: lovequote
+created_on: 1271635108
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: regex
+
+<.*thank\s+(you|u).*>
+action: thanks
+created_on: 1251695217
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: regex
+
+</say>
+action: /call say
+created_on: 1251694751
+enabled: 1
+last_referenced_on: 1289378139.00623
+owner: pragma_
+rate_limit: 15
+ref_count: 14
+ref_user: Maxdamantus
+type: text
+
+<0>
+action: !1
+created_on: 1268450206
+enabled: 1
+last_referenced_on: 1277899716.06298
+owner: Maxdamantus
+rate_limit: 15
+ref_count: 3
+ref_user: pragma_
+type: text
+
+<1>
+action: !0
+created_on: 1268450213
+enabled: 1
+owner: Maxdamantus
+rate_limit: 15
+ref_count: 1
+ref_user: Maxdamantus
+type: text
+
+<10words>
+action: http://theoatmeal.com/comics/misspelling
+created_on: 1262461605
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 1
+ref_user: n00p
+type: text
+
+<20q>
+action: /say If you have a question, please be specific and concise. Don't ask questions like 'Does anyone know how to ...' or 'What is the best way to ...'. We do not have the time or patience to play a game of 20 questions with people that are not capable of articulating properly. See also: http://catb.org/~esr/faqs/smart-questions.html
+created_on: 1215709795
+enabled: 1
+last_referenced_on: 1277900053.49188
+owner: Jafet
+rate_limit: 15
+ref_count: 3
+ref_user: pragma_
+type: text
+
+<21days>
+action: http://norvig.com/21-days.html
+created_on: 1177064329
+enabled: 1
+owner: kate`
+rate_limit: 15
+ref_count: 18
+ref_user: cppn3wbee
+type: text
+
+<2html.vim>
+action: #!/bin/sh   vim -n -c ':so \$VIMRUNTIME/syntax/2html.vim' -c ':wqa' \$1 > /dev/null 2> /dev/null
+created_on: 1183513530
+enabled: 1
+last_referenced_in: ##c
+last_referenced_on: 1296268938.05751
+owner: pragma_
+rate_limit: 15
+ref_count: 6
+ref_user: pragma_
+type: text
+
+<3star>
+action: http://c2.com/cgi/wiki?ThreeStarProgrammer
+created_on: 1111867182
+enabled: 1
+last_referenced_in: #pbot2
+last_referenced_on: 1292042090.04301
+owner: pragma_
+rate_limit: 15
+ref_count: 7
+ref_user: pragma_
+type: text
+
+<6thsense>
+action: http://www.movie-moron.com/wp-content/gallery/various/I-See-Stupid-People.jpg
+created_on: 1262501664
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: n00p
+type: text
+
+<8ball>
+action: /say $nick, $answers
+created_on: 1193948417
+enabled: 1
+last_referenced_in: #pbot2
+last_referenced_on: 1296178251.73503
+owner: pragma_
+rate_limit: 0
+ref_count: 817
+ref_user: sjs205
+type: text
+
+<:(>
+action: /call :)
+created_on: 1180052710
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 15
+ref_user: rgz
+type: text
+
+<:)>
+action: /say $faces
+created_on: 1109365121
+enabled: 1
+last_referenced_in: davve123
+last_referenced_on: 1295738270.39331
+owner: pragma_
+rate_limit: 15
+ref_count: 115
+ref_user: davve123
+type: text
+
+<:-(>
+action: /call :)
+created_on: 1180052743
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<:-)>
+action: /call :)
+created_on: 1180052725
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 3
+ref_user: lemonade`
+type: text
+
+<:-D>
+action: /call :)
+created_on: 1180052738
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<:-P>
+action: /call :)
+created_on: 1180052730
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: yobo2
+type: text
+
+<:-p>
+action: /call :)
+created_on: 1180052734
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<:D>
+action: /call :)
+created_on: 1180052717
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 9
+ref_user: rgz
+type: text
+
+<:o>
+action: /call :)
+created_on: 1180052721
+enabled: 1
+last_referenced_on: 1295697348.33155
+owner: pragma_
+rate_limit: 15
+ref_count: 6
+ref_user: pragma_
+type: text
+
+<:p>
+action: /call :)
+created_on: 1180052714
+enabled: 1
+last_referenced_on: 1280112140.53999
+owner: pragma_
+rate_limit: 15
+ref_count: 2
+ref_user: Random832
+type: text
+
+<;)>
+action: /me $body_action seductively.
+created_on: 1109657503
+enabled: 1
+owner: pragma_
+rate_limit: 15
+ref_count: 6
+ref_user: veronica_
+type: text
+
+<APPALLING>
+action: Acronym Production Particularly At Lavish Level Is No Good
+created_on: 1108954548
+enabled: 1
+owner: Major-Willard
+rate_limit: 15
+ref_count: 3
+ref_user: lemonade`
+type: text
+
+<BFS>
+action: Breadth First Search -- http://en.wikipedia.org/wiki/Breadth-first_search
+created_on: 1242883241
+enabled: 1
+owner: Wulf_
+rate_limit: 15
+ref_count: 1
+ref_user: zacs7
+type: text
+
+<DFS>
+action: Depth First Search -- http://en.wikipedia.org/wiki/Depth-first_search
+created_on: 1242883141
+enabled: 1
+owner: Chris
+rate_limit: 15
+ref_count: 1
+ref_user: Chris
+type: text
+
 <GIGO>
 action: garbage in, garbage out
 created_on: 1174497896
@@ -5100,46 +5457,6 @@ ref_count: 3
 ref_user: megabraker
 type: text
 
-<SIGBUS>
-action: a signal sent when an address is referenced that is not correctly aligned
-created_on: 1107559298
-enabled: 1
-owner: Major-Willard
-rate_limit: 15
-ref_count: 2
-ref_user: Major-Willard
-type: text
-
-<SIGSEGV>
-action: a signal sent when an address is referenced that has not been allocated to your virtual address space
-created_on: 1104612469
-enabled: 1
-owner: Major-Willard
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<SIGUSR1>
-action: a signal reserved for unspecified user process use
-created_on: 1104612781
-enabled: 1
-owner: Major-Willard
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<SIGUSR2>
-action: a signal reserved for unspecified user process use
-created_on: 1104613039
-enabled: 1
-owner: Major-Willard
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
 <SNAFU>
 action: Situation Normal All Fucked Up
 created_on: 1109292157
@@ -5218,18 +5535,6 @@ owner: Wulf_
 rate_limit: 15
 ref_count: 10
 ref_user: Wulf4
-type: text
-
-<Utopiah>
-action: a Google-and-Wikipedia whore who likes to quote random links, but doesn't really understand the contents of most of them; never goes outside to interact with reality, and is a sheltered fool who cannot differentiate sarcasm and metaphors from literal speech.
-created_on: 1260585861
-enabled: 1
-last_referenced_in: pragma_
-last_referenced_on: 1288069481.1452
-owner: pragma_
-rate_limit: 15
-ref_count: 3
-ref_user: pragma_
 type: text
 
 <Zhivago>
@@ -5358,16 +5663,6 @@ type: regex
 <^does.*>
 action: 8ball
 created_on: 1271375261
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: regex
-
-<^good\sgirl$>
-action: me wags her tail happily.
-created_on: 1271799942
 enabled: 1
 owner: pragma_
 rate_limit: 15
@@ -5525,58 +5820,6 @@ owner: pragma_
 rate_limit: 15
 ref_count: 1
 ref_user: pragma_
-type: text
-
-<advice>
-action: /say $advicepredicate $advicehelper.
-created_on: 1258762773
-enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1292382199.87372
-owner: PARLIAMENT
-rate_limit: 15
-ref_count: 28
-ref_user: guidj0s
-type: text
-
-<advicehelper>
-action: "do it" "not do it"
-created_on: 1258762756
-enabled: 1
-owner: PARLIAMENT
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<advicehelper2>
-action: "would" "would not" might "could possibly" may "may not" "couldn't possibly"
-created_on: 1258763100
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<advicehelper3>
-action: wise dumb smart stupid
-created_on: 1258763112
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<advicepredicate>
-action: "I recommend to" "My advice is to" "I think it $advicehelper2 be $advicehelper3 to" "I think it $advicehelper2 be $advicehelper3 to" "I think it $advicehelper2 be $advicehelper3 to" "I think it $advicehelper2 be $advicehelper3 to" "I think it $advicehelper2 be $advicehelper3 to"
-created_on: 1258763084
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
 type: text
 
 <ago>
@@ -5863,18 +6106,6 @@ ref_count: 104
 ref_user: pragma_
 type: text
 
-<beej>
-action: http://beej.us/guide/bgnet/
-created_on: 1186757356
-enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1292206426.74268
-owner: twkm
-rate_limit: 15
-ref_count: 73
-ref_user: snhmib
-type: text
-
 <beer>
 action: The breakfast of champions
 created_on: 1110681030
@@ -5951,6 +6182,18 @@ ref_count: 3
 ref_user: pragma_
 type: text
 
+<bookorder>
+action: SICP -> I2A -> TAOCP -> APUE
+created_on: 1198331081
+enabled: 1
+last_referenced_in: cthuluh
+last_referenced_on: 1283864464.08512
+owner: gamag
+rate_limit: 15
+ref_count: 3
+ref_user: cthuluh
+type: text
+
 <booty(.*)>
 action: me wiggles her butt.
 created_on: 1195532640
@@ -5960,16 +6203,6 @@ rate_limit: 15
 ref_count: 0
 ref_user: nobody
 type: regex
-
-<bossbear>
-action: an unoriginal plagarist and UFO nut whose babble closely resembles http://timecube.com -- Do not click any of his links.
-created_on: 1259019160
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 5
-ref_user: pragma_
-type: text
 
 <bot_reply>
 action: "Bot? Where?" "We can't stop here, this is bot country!" "Who's a bot?"
@@ -6078,11 +6311,11 @@ action: c2english.pl
 created_on: 1296182059.70458
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1296266183.93404
+last_referenced_on: 1296283355.60374
 owner: pragma_
 rate_limit: 0
-ref_count: 77
-ref_user: Wulf
+ref_count: 80
+ref_user: guidj0s
 type: module
 
 <caio>
@@ -6198,11 +6431,11 @@ type: text
 action: cdecl.pl
 created_on: 1191041914
 enabled: 1
-last_referenced_in: guidj0s
-last_referenced_on: 1296250880.47051
+last_referenced_in: ##c
+last_referenced_on: 1296282947.79044
 owner: pragma_
 rate_limit: 0
-ref_count: 2859
+ref_count: 2860
 ref_user: guidj0s
 type: module
 
@@ -6370,16 +6603,6 @@ ref_count: 1648
 ref_user: pragma_
 type: module
 
-<compliance>
-action: !portability
-created_on: 1263936847
-enabled: 1
-owner: n00p
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
 <compliment>
 action: compliment
 created_on: 1255395343
@@ -6433,16 +6656,6 @@ owner: PoppaVic
 rate_limit: 15
 ref_count: 1
 ref_user: leomonadedrink
-type: text
-
-<crazyplanet>
-action: http://www.ourcrazyplanet.com/
-created_on: 1180161295
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 1
-ref_user: n00p
 type: text
 
 <cstd>
@@ -6534,16 +6747,6 @@ type: text
 <ddd>
 action: a graphical front end to gdb and other debuggers (http://www.gnu.org/software/ddd/)
 created_on: 1175114372
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 1
-ref_user: n00p
-type: text
-
-<death>
-action: http://www.newscientist.com/article/mg19626252.800
-created_on: 1262505629
 enabled: 1
 owner: pragma_
 rate_limit: 15
@@ -6767,27 +6970,6 @@ ref_count: 0
 ref_user: nobody
 type: text
 
-<everything>
-action: for the best, right?
-created_on: 1264580456
-enabled: 1
-last_referenced_on: 1280442244.75866
-owner: Nately
-rate_limit: 15
-ref_count: 3
-ref_user: Midass
-type: text
-
-<evilandomnipotence>
-action: http://www.ditext.com/mackie/evil.html
-created_on: 1260213447
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 1
-ref_user: n00p
-type: text
-
 <excuse>
 action: excuse.sh
 created_on: 1236819394
@@ -6799,16 +6981,6 @@ rate_limit: 5
 ref_count: 339
 ref_user: lestat
 type: module
-
-<existence>
-action: /say The most basic property is the property that there are no properties; which is a property in itself.  The most basic object is the void; which by the same vein of the first sentence means that there cannot be a void.  Everything and nothing is filled with something.  Existence is simply a paradox of contradictions and opposite reactions.  Ones and zeroes, truth and fiction.  Everything that shall be will be.  A collective imagination of sentience.
-created_on: 1258974955
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 10
-ref_user: pragma_
-type: text
 
 <faces>
 action: :) ;) :o >:) :p :P~ :D ;-D :^) =^.^= >:O
@@ -6825,11 +6997,11 @@ type: text
 action: /call list factoids
 created_on: 1192737117
 enabled: 1
-last_referenced_on: 1290889093.76263
+last_referenced_on: 1296282965.91819
 owner: pragma_
 rate_limit: 15
-ref_count: 7
-ref_user: Remoun
+ref_count: 8
+ref_user: pragma_
 type: text
 
 <false>
@@ -6922,18 +7094,6 @@ ref_count: 36
 ref_user: pragma_
 type: text
 
-<fool>
-action: /say He who asks a question may be a fool for five minutes; he who does not ask a question remains a fool forever.
-created_on: 1194366107
-enabled: 1
-last_referenced_in: pseudonymous
-last_referenced_on: 1296107642.23715
-owner: pragma_
-rate_limit: 15
-ref_count: 15
-ref_user: pseudonymous
-type: text
-
 <forth>
 action: /call cc -lang=forth
 created_on: 1278217489.9096
@@ -6984,16 +7144,6 @@ owner: pragma_
 rate_limit: 15
 ref_count: 97
 ref_user: pikpik
-type: text
-
-<gamers>
-action: http://infovore.org/talks/if-gamers-ran-the-world/
-created_on: 1228387329
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
 type: text
 
 <gas-notes>
@@ -7073,18 +7223,6 @@ ref_count: 343
 ref_user: pragma_
 type: text
 
-<geekporn>
-action: http://www.ellf.ru/2008/02/05/kompy-kompy-kompy-86-foto.html
-created_on: 1202802223
-enabled: 1
-last_referenced_in: leetprogrammer
-last_referenced_on: 1289117156.8208
-owner: pragma_
-rate_limit: 15
-ref_count: 1
-ref_user: leetProgrammer
-type: text
-
 <get>
 action: /me $attacks $args with a $sizes $colors $animal_nouns $animals
 created_on: 1257711390
@@ -7127,17 +7265,15 @@ ref_count: 1
 ref_user: pragma_
 type: text
 
-<godprogrammer>
-action: /say It's not unreasonable that if computer programmers developed an autonomous self-learning/self-correcting AI world and allowed it to run for several billion iterations; then came back to it, that they may not be able to alter it without destroying it. If such a programmer were to have orginally created debug routines and backdoors, such code would ultimately point to obsolete code regions.
-created_on: 1260214264
+<good\sgirl>
+action: me wags her tail happily.
+created_on: 1271799942
 enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1287610343.13599
 owner: pragma_
 rate_limit: 15
-ref_count: 11
-ref_user: Love4Boobies
-type: text
+ref_count: 0
+ref_user: nobody
+type: regex
 
 <google>
 action: /say http://lmgtfy.com/?q=$args
@@ -7282,16 +7418,6 @@ ref_count: 5
 ref_user: Remoun
 type: text
 
-<havel>
-action: http://www.gse.buffalo.edu/FAS/Bromley/classes/theory/Havel.htm
-created_on: 1230293490
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 1
-ref_user: n00p
-type: text
-
 <having?.*>
 action: 8ball
 created_on: 1276141317
@@ -7340,12 +7466,12 @@ type: text
 action: /say $hi_phrases, $nick
 created_on: 1109044278
 enabled: 1
-last_referenced_in: mike_f
-last_referenced_on: 1296233250.62347
+last_referenced_in: pragma_
+last_referenced_on: 1296282945.7878
 owner: pragma_
 rate_limit: 15
-ref_count: 1001
-ref_user: mike_f
+ref_count: 1002
+ref_user: pragma_
 type: text
 
 <hi_phrases>
@@ -7575,10 +7701,10 @@ type: text
 action: /call factinfo
 created_on: 1277259101.38088
 enabled: 1
-last_referenced_on: 1296118707.58604
+last_referenced_on: 1296283448.92602
 owner: pbot3
 rate_limit: 15
-ref_count: 44
+ref_count: 45
 ref_user: pragma_
 type: text
 
@@ -7738,11 +7864,11 @@ action: /me kicks $args's ass with a $weapon
 created_on: 1208762874
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1289064532.18409
+last_referenced_on: 1296283524.338
 owner: andy
 rate_limit: 15
-ref_count: 4
-ref_user: Marach
+ref_count: 5
+ref_user: snhmib
 type: text
 
 <kill>
@@ -7972,18 +8098,6 @@ ref_count: 1096
 ref_user: ouah
 type: module
 
-<mankind>
-action: http://etext.virginia.edu/toc/modeng/public/VanStor.html
-created_on: 1277818342.77735
-enabled: 1
-last_referenced_in: remoun
-last_referenced_on: 1290889231.26566
-owner: pragma_
-rate_limit: 15
-ref_count: 2
-ref_user: Remoun
-type: text
-
 <manpage>
 action: /say Read the manual.
 created_on: 1204078264
@@ -8038,28 +8152,6 @@ owner: pragma_
 rate_limit: 15
 ref_count: 29
 ref_user: wingless
-type: text
-
-<meaning>
-action: http://users.aristotle.net/~diogenes/meaning1.htm
-created_on: 1269729905
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
-<meat>
-action: http://baetzler.de/humor/meat_beings.html -- What aliens would say if they discovered Earth
-created_on: 1260485203
-enabled: 1
-last_referenced_in: gionnico
-last_referenced_on: 1287612645.89854
-owner: pragma_
-rate_limit: 15
-ref_count: 2
-ref_user: gionnico
 type: text
 
 <mitletter>
@@ -8154,11 +8246,11 @@ action_with_args: /say $args is another satisfied customer! NEXT!!
 created_on: 1270253222
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1296177914.9899
+last_referenced_on: 1296283413.99076
 owner: pragma_
 rate_limit: 15
-ref_count: 123
-ref_user: ouah
+ref_count: 124
+ref_user: PoppaVic
 type: text
 
 <nickreg>
@@ -8264,18 +8356,6 @@ ref_count: 3
 ref_user: pragma_
 type: text
 
-<onedim>
-action: http://www.marcuse.org/herbert/pubs/64onedim/odmcontents.html
-created_on: 1258771422
-enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1285212597.51546
-owner: pragma_
-rate_limit: 15
-ref_count: 2
-ref_user: JodaZ
-type: text
-
 <oopbad>
 action: http://www.geocities.com/tablizer/oopbad.htm
 created_on: 1190225745
@@ -8307,18 +8387,6 @@ owner: Cin
 rate_limit: 15
 ref_count: 13
 ref_user: pippijn
-type: text
-
-<order>
-action: SICP -> I2A -> TAOCP -> APUE
-created_on: 1198331081
-enabled: 1
-last_referenced_in: cthuluh
-last_referenced_on: 1283864464.08512
-owner: gamag
-rate_limit: 15
-ref_count: 3
-ref_user: cthuluh
 type: text
 
 <oreo>
@@ -8461,16 +8529,6 @@ ref_count: 1
 ref_user: n00p
 type: text
 
-<phil31>
-action: http://philosophy.ucsd.edu/faculty/dbrink/courses/31-05/
-created_on: 1258966138
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 2
-ref_user: n00p
-type: text
-
 <php>
 action: /call cc -lang=php
 created_on: 1276978893
@@ -8483,13 +8541,15 @@ ref_user: Asem
 type: text
 
 <pi>
-action: 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930381964428810975665933446128475648233786783165271201909145648566923460348610454326648213393607260249141273724587006606315588174881520920962829254091715364367892590360011330530548820466521384146951941511609
+action: 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230
 created_on: 1245253689
 enabled: 1
+last_referenced_in: pragma_
+last_referenced_on: 1296283018.43261
 owner: pragma_
 rate_limit: 15
-ref_count: 3
-ref_user: kate`
+ref_count: 4
+ref_user: pragma_
 type: text
 
 <ping>
@@ -8526,18 +8586,6 @@ owner: pragma_
 rate_limit: 15
 ref_count: 2
 ref_user: Remoun
-type: text
-
-<posix>
-action: /say The Open Group Base Specifications Issue 6: http://www.opengroup.org/onlinepubs/009695399/
-created_on: 1179496311
-enabled: 1
-last_referenced_in: pragma_
-last_referenced_on: 1295723488.7735
-owner: pragma_
-rate_limit: 15
-ref_count: 17
-ref_user: pragma_
 type: text
 
 <pounding-a-nail>
@@ -8678,18 +8726,6 @@ ref_count: 1
 ref_user: kate`
 type: text
 
-<questions>
-action: http://www.roangelo.net/logwitt/logwit12.html
-created_on: 1258590235
-enabled: 1
-last_referenced_in: kate`
-last_referenced_on: 1284648268.37292
-owner: pragma_
-rate_limit: 15
-ref_count: 2
-ref_user: kate`
-type: text
-
 <quote>
 action: /call topic
 created_on: 1258699991
@@ -8782,17 +8818,6 @@ rate_limit: 15
 ref_count: 0
 ref_user: nobody
 type: regex
-
-<rebirth>
-action: http://www.theravada.gr/rebirth.html
-created_on: 1258831285
-enabled: 1
-last_referenced_on: 1278135162.40852
-owner: pragma_
-rate_limit: 15
-ref_count: 1
-ref_user: chuy_max
-type: text
 
 <recurrence>
 action: see: recursion
@@ -9005,16 +9030,6 @@ ref_count: 491
 ref_user: BCMM
 type: text
 
-<scale>
-action: /say The scale of the Universe: http://htwins.net/scale/index.html
-created_on: 1282252138.81919
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
 <scissors>
 action: /call rockpaperscissors
 created_on: 1273104511
@@ -9190,18 +9205,6 @@ ref_count: 7
 ref_user: R0b0t1
 type: text
 
-<sky>
-action: /say The sky is $colors.
-created_on: 1186181196
-enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1288966799.49703
-owner: upd
-rate_limit: 15
-ref_count: 20
-ref_user: n0kS
-type: text
-
 <slap>
 action: /me $attacks $args with a $sizes $animal_nouns $animals!
 created_on: 1108932778
@@ -9319,28 +9322,6 @@ owner: pragma_
 rate_limit: 15
 ref_count: 13
 ref_user: gravaera
-type: text
-
-<stinkin-thinkin>
-action: http://psychcentral.com/lib/2006/the-top-10-types-of-stinkin-thinkin/
-created_on: 1203669727
-enabled: 1
-owner: _pragma
-rate_limit: 15
-ref_count: 1
-ref_user: pragma_
-type: text
-
-<stop>
-action: /say If you do not stop it, I'm going to invoke my scary admin powers against you.  You've been warned.
-created_on: 1249676931
-enabled: 1
-last_referenced_in: remoun
-last_referenced_on: 1290889183.76755
-owner: joeyadams
-rate_limit: 15
-ref_count: 6
-ref_user: Remoun
 type: text
 
 <stupid>
@@ -9496,38 +9477,6 @@ ref_count: 0
 ref_user: nobody
 type: text
 
-<thesims>
-action: /say It's not entirely unreasonable that God is just a computer programmer and we're just The Sims; albeit with a very complex and intelligent autonomous AI that is capable of deluding us into thinking we have free-will.  See also !godprogrammer
-created_on: 1260214746
-enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1296270243.39787
-owner: pragma_
-rate_limit: 15
-ref_count: 4
-ref_user: pragma_
-type: text
-
-<theworld>
-action: http://strangemaps.files.wordpress.com/2006/11/800px-reagan-digitised-poster.JPG -- http://interactive.usc.edu/members/nsharkasi/americanworld.jpg -- http://cdn.epltalk.com/wp-content/uploads/2009/10/world-according-to-americans.jpg -- http://img293.imageshack.us/img293/2952/usworldem8.jpg
-created_on: 1262055589
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 1
-ref_user: n00p
-type: text
-
-<thingswedo>
-action: http://faculty.ed.uiuc.edu/g-cziko/twd/pdf/index.html
-created_on: 1259592605
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 0
-ref_user: nobody
-type: text
-
 <thinking>
 action: http://thinking-forth.sourceforge.net/
 created_on: 1185822844
@@ -9643,16 +9592,6 @@ ref_count: 1855
 ref_user: pragma_
 type: module
 
-<tor]{>
-action: a devout extremist Christian zealot who believes strongly in the Bible's "word of God".  He will "conveniently" ignore any relevent commentary you make and will relentlessly pursue his attempts to belittle non-believers.  He possesses no logic or rationality; only absolute faith.  He cannot make arguments; he can only preach.  Converse with him at your own risk.
-created_on: 1258970930
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 8
-ref_user: pragma_
-type: text
-
 <touche>
 action: /call touché
 created_on: 1203837688
@@ -9671,18 +9610,6 @@ owner: themathkid
 rate_limit: 15
 ref_count: 1
 ref_user: themathkid
-type: text
-
-<trolley>
-action: http://www.saintgasoline.com/comics/2007-03-04-Allegory_of_Trolley_Problem_Paradox.JPG
-created_on: 1275605468
-enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1288194266.16975
-owner: pragma_
-rate_limit: 15
-ref_count: 1
-ref_user: kr04f
 type: text
 
 <true>
@@ -9725,16 +9652,6 @@ owner: kate`
 rate_limit: 15
 ref_count: 12
 ref_user: pragma_
-type: text
-
-<twkm>
-action: a cruel man, but fair
-created_on: 1106352903
-enabled: 1
-owner: Major-Willard
-rate_limit: 15
-ref_count: 4
-ref_user: dahitokiri
 type: text
 
 <ty>
@@ -9965,16 +9882,6 @@ ref_count: 8
 ref_user: ouah
 type: text
 
-<validity>
-action: http://www.jimpryor.net/teaching/vocab/validity.html
-created_on: 1260221360
-enabled: 1
-owner: pragma_
-rate_limit: 15
-ref_count: 2
-ref_user: n00p
-type: text
-
 <vampire>
 action: /say The Help Vampire: A Spotter's Guide http://slash7.com/2006/12/22/vampires/
 created_on: 1189558513
@@ -10000,7 +9907,7 @@ type: text
 
 <version>
 action: /say PBot revision 276 2011-01-28
-created_on: 1296282927.85216
+created_on: 1296295653.97996
 enabled: 1
 owner: candide
 rate_limit: 15
@@ -10224,18 +10131,6 @@ ref_count: 8
 ref_user: pragma_
 type: text
 
-<wiki>
-action: osdev_wiki.pl
-created_on: 1269800689
-enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1287789694.98846
-owner: pragma_
-rate_limit: 15
-ref_count: 24
-ref_user: Pip
-type: module
-
 <wikipedia>
 action: wikipedia.pl
 created_on: 1257554350
@@ -10292,16 +10187,6 @@ owner: pragma_
 rate_limit: 15
 ref_count: 2
 ref_user: Remoun
-type: text
-
-<wizo>
-action: /me <3 wizo.
-created_on: 1194487607
-enabled: 1
-owner: kp
-rate_limit: 15
-ref_count: 2
-ref_user: kp
 type: text
 
 <works>
