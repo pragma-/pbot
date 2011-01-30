@@ -67,19 +67,21 @@ sub initialize {
 
   my $log_file                = delete $conf{log_file};
 
-  $self->{conf_dir}           = delete $conf{conf_dir}           || "$ENV{HOME}/pbot/config";
-  $self->{data_dir}           = delete $conf{data_dir}           || "$ENV{HOME}/pbot/data";
-  $self->{module_dir}         = delete $conf{module_dir}         || "$ENV{HOME}/pbot/modules";
+  $self->{conf_dir}           = delete $conf{conf_dir}           // "$ENV{HOME}/pbot/config";
+  $self->{data_dir}           = delete $conf{data_dir}           // "$ENV{HOME}/pbot/data";
+  $self->{module_dir}         = delete $conf{module_dir}         // "$ENV{HOME}/pbot/modules";
 
-  $self->{ircserver}          = delete $conf{ircserver}          || "irc.freenode.net";
-  $self->{botnick}            = delete $conf{botnick}            || "pbot3";
-  $self->{username}           = delete $conf{username}           || "pbot3";
-  $self->{ircname}            = delete $conf{ircname}            || "http://code.google.com/p/pbot2-pl/";
-  $self->{identify_password}  = delete $conf{identify_password}  || "";
+  $self->{ircserver}          = delete $conf{ircserver}          // "irc.freenode.net";
+  $self->{botnick}            = delete $conf{botnick}            // "pbot3";
+  $self->{username}           = delete $conf{username}           // "pbot3";
+  $self->{ircname}            = delete $conf{ircname}            // "http://code.google.com/p/pbot2-pl/";
+  $self->{identify_password}  = delete $conf{identify_password}  // "";
 
-  $self->{max_msg_len}        = delete $conf{max_msg_len}        || 430;
-  $self->{MAX_FLOOD_MESSAGES} = delete $conf{MAX_FLOOD_MESSAGES} || 4;
-  $self->{MAX_NICK_MESSAGES}  = delete $conf{MAX_NICK_MESSAGES}  || 12;
+  $self->{max_msg_len}        = delete $conf{max_msg_len}        // 430;
+  $self->{MAX_FLOOD_MESSAGES} = delete $conf{MAX_FLOOD_MESSAGES} // 4;
+  $self->{MAX_NICK_MESSAGES}  = delete $conf{MAX_NICK_MESSAGES}  // 12;
+
+  $self->{trigger}            = delete $conf{trigger}            // '!';
 
   my $channels_file           = delete $conf{channels_file};
   my $admins_file             = delete $conf{admins_file};
@@ -226,10 +228,10 @@ sub check_stdin {
 
   if($input =~ m/^~([^ ]+)\s+(.*)/) {
     $from = $1;
-    $text = "!$2";
+    $text = "$self->{trigger}$2";
   } else {
     $from = undef;
-    $text = "!$input";
+    $text = "$self->{trigger}$input";
   }
 
   return $self->interpreter->process_line($from, $self->{botnick}, "stdin", "localhost", $text);

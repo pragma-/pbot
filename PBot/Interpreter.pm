@@ -79,7 +79,7 @@ sub process_line {
     $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
   } elsif($text =~ /^(.*?),?\s+$mynick([?]*)$/i) {
     $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
-  } elsif($text =~ /^!(.*?)([?]*)$/) {
+  } elsif($text =~ /^\Q$pbot->{trigger}\E(.*?)([?]*)$/) {
     $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
   } elsif($text =~ /http:\/\/([^\s]+)/i) {
     $has_url = $1;

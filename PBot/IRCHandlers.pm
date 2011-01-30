@@ -79,7 +79,7 @@ sub on_msg {
   my ($nick, $host) = ($event->nick, $event->host);
   my $text = $event->{args}[0];
 
-  $text =~ s/^!?(.*)/\!$1/;
+  $text =~ s/^\Q$self->{pbot}->{trigger}\E?(.*)/$self->{pbot}->{trigger}$1/;
   $event->{to}[0]   = $nick;
   $event->{args}[0] = $text;
   $self->on_public($conn, $event);
