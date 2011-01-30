@@ -167,7 +167,7 @@ sub find_factoid {
       if($exact_channel) {
         next unless $from eq $channel;
       } else {
-        next unless $from =~ m/$channel/i;
+        next unless $from =~ m/^$channel$/i;
       }
 
       foreach my $trigger (keys %{ $self->factoids->hash->{$channel} }) {
@@ -209,7 +209,6 @@ sub interpreter {
   ($channel, $keyword) = $self->find_factoid($from, $keyword, $arguments);
 
   if(not defined $keyword) {
-    # first check all channels for this keyword
     my $chans = "";
     my $comma = "";
     my $found = 0;
@@ -229,7 +228,7 @@ sub interpreter {
     }
 
     if($found > 1) {
-      return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple locations (choose one): $chans";
+      return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple locations (use 'fact <keyword> <location>' to choose one): $chans";
     } 
     elsif($found == 1) {
       $pbot->logger->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
@@ -266,7 +265,7 @@ sub interpreter {
     $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
 
-    return $ref_from . $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command, $ref_from);
+    return $ref_from . $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
   }
 
   my $last_ref_in = 0;
@@ -413,7 +412,7 @@ sub interpreter {
         $cmd = $self->factoids->hash->{$channel}->{$keyword}->{action}; 
       }
 
-      $result = $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $cmd, $ref_from);
+      $result = $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $cmd);
       return $ref_from . $result;
     };
 
