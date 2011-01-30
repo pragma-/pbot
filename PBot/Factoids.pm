@@ -228,7 +228,7 @@ sub interpreter {
     }
 
     if($found > 1) {
-      return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple locations (use 'fact <keyword> <location>' to choose one): $chans";
+      return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple locations (use 'fact <location> <keyword>' to choose one): $chans";
     } 
     elsif($found == 1) {
       $pbot->logger->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
