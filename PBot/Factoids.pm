@@ -203,11 +203,18 @@ sub interpreter {
   return undef if not length $keyword;
 
   $from = lc $from;
-  $ref_from = "" if not defined $ref_from;
 
-  # search for factoid against global channel and current channel (from)
+  # search for factoid against global channel and current channel (from unless ref_from is defined)
   my $original_keyword = $keyword;
-  ($channel, $keyword) = $self->find_factoid($from, $keyword, $arguments);
+  ($channel, $keyword) = $self->find_factoid($ref_from ? $ref_from : $from, $keyword, $arguments);
+
+  if(not defined $ref_from) {
+    $ref_from = "";
+  } else {
+    $ref_from = "[$ref_from] ";
+  }
+
+  $arguments = "" if not defined $arguments;
 
   # if no match found, attempt to call factoid from another channel if it exists there
   if(not defined $keyword) {
@@ -238,13 +245,13 @@ sub interpreter {
     elsif($found == 1) {
       $pbot->logger->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
 
-      return $ref_from . $pbot->factoids->interpreter($fwd_chan, $nick, $user, $host, $count, $fwd_trig, $arguments, undef, "[$fwd_chan] ");
+      return $ref_from . $pbot->factoids->interpreter($from, $nick, $user, $host, $count, $fwd_trig, $arguments, undef, $fwd_chan);
     } 
     # otherwise keyword hasn't been found, display similiar matches for all channels
     else {
       # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, don't say anything
-      return "" if $arguments !~ /^[^.+-, ]{1,20}$/;
-
+      return "" if length $arguments and $arguments !~ /^[^.+-, ]{1,20}$/;
+      
       # find matches from all channels
       my $matches = $self->factoids->levenshtein_matches('.*', lc $original_keyword);
 
