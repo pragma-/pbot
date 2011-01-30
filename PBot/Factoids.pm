@@ -245,7 +245,7 @@ sub interpreter {
     elsif($found == 1) {
       $pbot->logger->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
 
-      return $ref_from . $pbot->factoids->interpreter($from, $nick, $user, $host, $count, $fwd_trig, $arguments, undef, $fwd_chan);
+      return $pbot->factoids->interpreter($from, $nick, $user, $host, $count, $fwd_trig, $arguments, undef, $fwd_chan);
     } 
     # otherwise keyword hasn't been found, display similiar matches for all channels
     else {
@@ -267,7 +267,7 @@ sub interpreter {
   # Check if it's an alias
   if($self->factoids->hash->{$channel}->{$keyword}->{action} =~ /^\/call\s+(.*)$/) {
     my $command;
-    if(defined $arguments) {
+    if(length $arguments) {
       $command = "$1 $arguments";
     } else {
       $command = $1;
@@ -279,7 +279,7 @@ sub interpreter {
     $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
 
-    return $ref_from . $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
+    return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
   }
 
   my $last_ref_in = 0;
@@ -345,7 +345,7 @@ sub interpreter {
       $result = $self->factoids->hash->{$channel}->{$keyword}->{action};
     }
 
-    if(defined $arguments) {
+    if(length $arguments) {
       if(exists $self->factoids->hash->{$channel}->{$keyword}->{action_with_args}) {
         $result = $self->factoids->hash->{$channel}->{$keyword}->{action_with_args};
       }
@@ -395,9 +395,9 @@ sub interpreter {
 
     $result =~ s/\\\$/\$/g;
 
-    if($result =~ s/^\/say\s+//i || $result =~ /^\/me\s+/i
-      || $result =~ /^\/msg\s+/i) {
-      return $ref_from . $result;
+    if($result =~ s/^\/say\s+/$ref_from/i || $result =~ s/^\/me\s+(.*)/\/me $1 $ref_from/i
+      || $result =~ s/^\/msg\s+([^ ]+)/\/msg $1 $ref_from/i) {
+      return $result;
     } else {
       return $ref_from . "$keyword is $result";
     }
@@ -427,7 +427,7 @@ sub interpreter {
       }
 
       $result = $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $cmd);
-      return $ref_from . $result;
+      return $result;
     };
 
     if($@) {
