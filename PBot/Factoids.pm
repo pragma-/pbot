@@ -236,6 +236,9 @@ sub interpreter {
 
       return $ref_from . $pbot->factoids->interpreter($fwd_chan, $nick, $user, $host, $count, $fwd_trig, $arguments, undef, "[$fwd_chan] ");
     } else {
+      # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, don't say anything
+      return "" if $arguments !~ /^[^.+-, ]{1,20}$/;
+
       # if keyword hasn't been found, display similiar matches for all channels
       my $matches = $self->factoids->levenshtein_matches('.*', lc $original_keyword);
 
@@ -337,7 +340,7 @@ sub interpreter {
       if(not $result =~ s/\$args/$arguments/gi) {
         # factoid doesn't take an argument, so assume argument is a nick if it is a single-word 20 characters or less 
         # TODO - maintain list of channel nicks and compare against this list to ensure nick exists
-        if($arguments =~ /^[^ ]{1,20}$/) {
+        if($arguments =~ /^[^.+-, ]{1,20}$/) {
           # might be a nick
           if($result =~ /^\/.+? /) {
             $result =~ s/^(\/.+?) /$1 $arguments: /;
@@ -345,7 +348,7 @@ sub interpreter {
             $result =~ s/^/\/say $arguments: $keyword is / unless defined $tonick;
           }                  
         } else {
-          # return undef;
+          # return "";
         }
       }
     } else {
