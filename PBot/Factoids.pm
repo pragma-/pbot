@@ -205,16 +205,19 @@ sub interpreter {
   $from = lc $from;
   $ref_from = "" if not defined $ref_from;
 
+  # search for factoid against global channel and current channel (from)
   my $original_keyword = $keyword;
   ($channel, $keyword) = $self->find_factoid($from, $keyword, $arguments);
 
+  # if no match found, attempt to call factoid from another channel if it exists there
   if(not defined $keyword) {
     my $chans = "";
     my $comma = "";
     my $found = 0;
     my ($fwd_chan, $fwd_trig);
 
-    foreach my $chan (keys %{ $self->factoids->hash }) {    
+    # build string of which channels contain the keyword, keeping track of the last one and count
+    foreach my $chan (keys %{ $self->factoids->hash }) {
       foreach my $trig (keys %{ $self->factoids->hash->{$chan} }) {
         if(lc $trig eq lc $original_keyword) {
           $chans .= $comma . $chan;
@@ -227,18 +230,22 @@ sub interpreter {
       }
     }
 
+    # if multiple channels have this keyword, then ask user to disambiguate
     if($found > 1) {
       return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple locations (use 'fact <location> <keyword>' to choose one): $chans";
     } 
+    # if there's just one other channel that has this keyword, trigger that instance
     elsif($found == 1) {
       $pbot->logger->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
 
       return $ref_from . $pbot->factoids->interpreter($fwd_chan, $nick, $user, $host, $count, $fwd_trig, $arguments, undef, "[$fwd_chan] ");
-    } else {
+    } 
+    # otherwise keyword hasn't been found, display similiar matches for all channels
+    else {
       # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, don't say anything
       return "" if $arguments !~ /^[^.+-, ]{1,20}$/;
 
-      # if keyword hasn't been found, display similiar matches for all channels
+      # find matches from all channels
       my $matches = $self->factoids->levenshtein_matches('.*', lc $original_keyword);
 
       # don't say anything if nothing similiar was found
