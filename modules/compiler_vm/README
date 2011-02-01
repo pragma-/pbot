@@ -47,6 +47,7 @@ Files:
 
 - cc: Allows you to use the compiler locally with or without qemu installed.
       Can be used within virtual machine for testing.
+      Requires only compiler_vm_client.pl, compiler_vm_server.pl and compiler_watchdog.pl.
       Must have gcc, gdb and astyle installed locally if not used within virtual machine.
       WARNING: If not used within virtual machine will not use qemu at all and will 
                affect local system -- compile "safe" code!
