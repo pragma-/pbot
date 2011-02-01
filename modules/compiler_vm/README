@@ -34,6 +34,13 @@ Starting the virtual machine for PBot:
 Now that the virtual machine is configured and saved, you may launch the local server to listen for
 code from PBot to send to the virtual machine's server.  To do so, run the compiler_server.pl script.
 
+Dependencies:
+
+gcc
+gdb
+astyle
+ulimit -c 50000 (required to produce core files if you wish to have gdb debugger output)
+
 Files:
 
 (Read within each file for configuration instructions.)
