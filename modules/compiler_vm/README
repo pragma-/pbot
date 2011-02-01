@@ -10,7 +10,7 @@ without installing qemu.  No PBot installation or configuration is required in t
 To use the local non-vm 'cc' script, you will need to have gcc, gdb and astyle installed locally.
 
 Be aware that you need to single-quote or escape the code if you use the local 'cc' within a shell,
-e.g.:  ./cc $'char s[] = "hello, world"; puts(s);  if(s[0] == 'h') puts("true");' 
+e.g.:  ./cc $'char s[] = "hello, world"; puts(s);  if(s[0] == \'h\') puts("true");' 
 
 WARNING: Using the local 'cc' script outside of the virtual machine will not use qemu at all; 
          it will affect local system -- compile "safe" code!
