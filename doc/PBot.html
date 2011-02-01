@@ -11,7 +11,7 @@
 			@import "/wiki/skins/common/shared.css?97";
 			@import "/wiki/skins/monobook/main.css?97";
 		/*]]>*/</style>
-		<link rel="stylesheet" type="text/css" media="print" href="PBot_files/commonPrint.css">
+		<link rel="styleitet" type="text/css" media="print" href="PBot_files/commonPrint.css">
 		<!--[if lt IE 5.5000]><style type="text/css">@import "/wiki/skins/monobook/IE50Fixes.css?97";</style><![endif]-->
 		<!--[if IE 5.5000]><style type="text/css">@import "/wiki/skins/monobook/IE55Fixes.css?97";</style><![endif]-->
 		<!--[if IE 6]><style type="text/css">@import "/wiki/skins/monobook/IE60Fixes.css?97";</style><![endif]-->
@@ -41,7 +41,7 @@ var wgUserGroups = ["sysop", "*", "user", "autoconfirmed"];
 var wgUserLanguage = "en";
 var wgContentLanguage = "en";
 var wgBreakFrames = false;
-var wgCurRevisionId = "8668";
+var wgCurRevisionId = "8675";
 var wgAjaxWatch = {"watchMsg": "Watch", "unwatchMsg": "Unwatch", "watchingMsg": "Watching...", "unwatchingMsg": "Unwatching..."};
 /*]]>*/</script>
                 
@@ -76,26 +76,29 @@ var wgAjaxWatch = {"watchMsg": "Watch", "unwatchMsg": "Unwatch", "watchingMsg": 
 </li>
 <li class="toclevel-1"><a href="#Factoids"><span class="tocnumber">2</span> <span class="toctext">Factoids</span></a>
 <ul>
-<li class="toclevel-2"><a href="#List_of_factoids"><span class="tocnumber">2.1</span> <span class="toctext">List of factoids</span></a></li>
+<li class="toclevel-2"><a href="#List_of_factoids"><span class="tocnumber">2.1</span> <span class="toctext">List of factoids</span></a>
+<ul>
+<li class="toclevel-3"><a href="#Channel_namespaces"><span class="tocnumber">2.1.1</span> <span class="toctext">Channel namespaces</span></a></li>
+</ul>
+</li>
 <li class="toclevel-2"><a href="#Adding_a_factoid"><span class="tocnumber">2.2</span> <span class="toctext">Adding a factoid</span></a>
 <ul>
 <li class="toclevel-3"><a href="#factadd"><span class="tocnumber">2.2.1</span> <span class="toctext">factadd</span></a></li>
-<li class="toclevel-3"><a href="#global_channel"><span class="tocnumber">2.2.2</span> <span class="toctext">global channel</span></a></li>
-<li class="toclevel-3"><a href="#Special_commands"><span class="tocnumber">2.2.3</span> <span class="toctext">Special commands</span></a>
+<li class="toclevel-3"><a href="#Special_commands"><span class="tocnumber">2.2.2</span> <span class="toctext">Special commands</span></a>
 <ul>
-<li class="toclevel-4"><a href="#.2Fsay"><span class="tocnumber">2.2.3.1</span> <span class="toctext">/say</span></a></li>
-<li class="toclevel-4"><a href="#.2Fme"><span class="tocnumber">2.2.3.2</span> <span class="toctext">/me</span></a></li>
-<li class="toclevel-4"><a href="#.2Fcall"><span class="tocnumber">2.2.3.3</span> <span class="toctext">/call</span></a></li>
-<li class="toclevel-4"><a href="#.2Fmsg"><span class="tocnumber">2.2.3.4</span> <span class="toctext">/msg</span></a></li>
+<li class="toclevel-4"><a href="#.2Fsay"><span class="tocnumber">2.2.2.1</span> <span class="toctext">/say</span></a></li>
+<li class="toclevel-4"><a href="#.2Fme"><span class="tocnumber">2.2.2.2</span> <span class="toctext">/me</span></a></li>
+<li class="toclevel-4"><a href="#.2Fcall"><span class="tocnumber">2.2.2.3</span> <span class="toctext">/call</span></a></li>
+<li class="toclevel-4"><a href="#.2Fmsg"><span class="tocnumber">2.2.2.4</span> <span class="toctext">/msg</span></a></li>
 </ul>
 </li>
-<li class="toclevel-3"><a href="#Special_variables"><span class="tocnumber">2.2.4</span> <span class="toctext">Special variables</span></a>
+<li class="toclevel-3"><a href="#Special_variables"><span class="tocnumber">2.2.3</span> <span class="toctext">Special variables</span></a>
 <ul>
-<li class="toclevel-4"><a href="#.24nick"><span class="tocnumber">2.2.4.1</span> <span class="toctext">$nick</span></a></li>
-<li class="toclevel-4"><a href="#.24args"><span class="tocnumber">2.2.4.2</span> <span class="toctext">$args</span></a></li>
+<li class="toclevel-4"><a href="#.24nick"><span class="tocnumber">2.2.3.1</span> <span class="toctext">$nick</span></a></li>
+<li class="toclevel-4"><a href="#.24args"><span class="tocnumber">2.2.3.2</span> <span class="toctext">$args</span></a></li>
 </ul>
 </li>
-<li class="toclevel-3"><a href="#adlib_list_variables"><span class="tocnumber">2.2.5</span> <span class="toctext">adlib list variables</span></a></li>
+<li class="toclevel-3"><a href="#adlib_list_variables"><span class="tocnumber">2.2.4</span> <span class="toctext">adlib list variables</span></a></li>
 </ul>
 </li>
 <li class="toclevel-2"><a href="#Deleting_a_factoid"><span class="tocnumber">2.3</span> <span class="toctext">Deleting a factoid</span></a>
@@ -162,21 +165,22 @@ var wgAjaxWatch = {"watchMsg": "Watch", "unwatchMsg": "Unwatch", "watchingMsg": 
 <li class="toclevel-5"><a href="#main.28.29_Function_Unnecessary"><span class="tocnumber">3.2.1.4.1</span> <span class="toctext">main() Function Unnecessary</span></a></li>
 </ul>
 </li>
-<li class="toclevel-4"><a href="#Embedding_Newlines"><span class="tocnumber">3.2.1.5</span> <span class="toctext">Embedding Newlines</span></a></li>
-<li class="toclevel-4"><a href="#Interactive_Editing"><span class="tocnumber">3.2.1.6</span> <span class="toctext">Interactive Editing</span></a>
+<li class="toclevel-4"><a href="#Debugger_output"><span class="tocnumber">3.2.1.5</span> <span class="toctext">Debugger output</span></a></li>
+<li class="toclevel-4"><a href="#Embedding_Newlines"><span class="tocnumber">3.2.1.6</span> <span class="toctext">Embedding Newlines</span></a></li>
+<li class="toclevel-4"><a href="#Interactive_Editing"><span class="tocnumber">3.2.1.7</span> <span class="toctext">Interactive Editing</span></a>
 <ul>
-<li class="toclevel-5"><a href="#show"><span class="tocnumber">3.2.1.6.1</span> <span class="toctext">show</span></a></li>
-<li class="toclevel-5"><a href="#paste"><span class="tocnumber">3.2.1.6.2</span> <span class="toctext">paste</span></a></li>
-<li class="toclevel-5"><a href="#run"><span class="tocnumber">3.2.1.6.3</span> <span class="toctext">run</span></a></li>
-<li class="toclevel-5"><a href="#undo"><span class="tocnumber">3.2.1.6.4</span> <span class="toctext">undo</span></a></li>
-<li class="toclevel-5"><a href="#s.2F.2F"><span class="tocnumber">3.2.1.6.5</span> <span class="toctext">s//</span></a></li>
-<li class="toclevel-5"><a href="#replace"><span class="tocnumber">3.2.1.6.6</span> <span class="toctext">replace</span></a></li>
-<li class="toclevel-5"><a href="#append"><span class="tocnumber">3.2.1.6.7</span> <span class="toctext">append</span></a></li>
-<li class="toclevel-5"><a href="#prepend"><span class="tocnumber">3.2.1.6.8</span> <span class="toctext">prepend</span></a></li>
-<li class="toclevel-5"><a href="#remove"><span class="tocnumber">3.2.1.6.9</span> <span class="toctext">remove</span></a></li>
+<li class="toclevel-5"><a href="#show"><span class="tocnumber">3.2.1.7.1</span> <span class="toctext">show</span></a></li>
+<li class="toclevel-5"><a href="#paste"><span class="tocnumber">3.2.1.7.2</span> <span class="toctext">paste</span></a></li>
+<li class="toclevel-5"><a href="#run"><span class="tocnumber">3.2.1.7.3</span> <span class="toctext">run</span></a></li>
+<li class="toclevel-5"><a href="#undo"><span class="tocnumber">3.2.1.7.4</span> <span class="toctext">undo</span></a></li>
+<li class="toclevel-5"><a href="#s.2F.2F"><span class="tocnumber">3.2.1.7.5</span> <span class="toctext">s//</span></a></li>
+<li class="toclevel-5"><a href="#replace"><span class="tocnumber">3.2.1.7.6</span> <span class="toctext">replace</span></a></li>
+<li class="toclevel-5"><a href="#append"><span class="tocnumber">3.2.1.7.7</span> <span class="toctext">append</span></a></li>
+<li class="toclevel-5"><a href="#prepend"><span class="tocnumber">3.2.1.7.8</span> <span class="toctext">prepend</span></a></li>
+<li class="toclevel-5"><a href="#remove"><span class="tocnumber">3.2.1.7.9</span> <span class="toctext">remove</span></a></li>
 </ul>
 </li>
-<li class="toclevel-4"><a href="#Some_Examples"><span class="tocnumber">3.2.1.7</span> <span class="toctext">Some Examples</span></a></li>
+<li class="toclevel-4"><a href="#Some_Examples"><span class="tocnumber">3.2.1.8</span> <span class="toctext">Some Examples</span></a></li>
 </ul>
 </li>
 <li class="toclevel-3"><a href="#cc2"><span class="tocnumber">3.2.2</span> <span class="toctext">cc2</span></a>
@@ -251,7 +255,7 @@ var wgAjaxWatch = {"watchMsg": "Watch", "unwatchMsg": "Unwatch", "watchingMsg": 
 <a name="About_PBot"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=2" title="Edit section: About PBot">edit</a>]</span> <span class="mw-headline">About PBot</span></h3>
 <p>PBot is an IRC bot written in Perl in _pragma's spare time.
 </p><p>All of <b>PBot'</b>s commands may begin with its name or&nbsp;!, or be followed by its name.  
-</p><p>Note that commands need not be submitted to the channel; you can /msg its instead.  If you /msg <b>PBot</b>, she will respond with a private message in return.  Also, you do not need to specify its name or one of the trigger symbols.
+</p><p>Note that commands need not be submitted to the channel; you can /msg its instead.  If you /msg <b>PBot</b>, it will respond with a private message in return.  Also, you do not need to specify its name or one of the trigger symbols.
 </p>
 <a name="Source"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=3" title="Edit section: Source">edit</a>]</span> <span class="mw-headline">Source</span></h3>
 <p>PBot's source may be found at <a href="http://code.google.com/p/pbot2-pl/" class="external free" title="http://code.google.com/p/pbot2-pl/" rel="nofollow">http://code.google.com/p/pbot2-pl/</a>.  It can be browsed at <a href="http://code.google.com/p/pbot2-pl/source/browse/#svn/trunk/PBot" class="external free" title="http://code.google.com/p/pbot2-pl/source/browse/#svn/trunk/PBot" rel="nofollow">http://code.google.com/p/pbot2-pl/source/browse/#svn/trunk/PBot</a>.<br>
@@ -278,19 +282,43 @@ factoid:
 <a name="Factoids"></a><h2><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=5" title="Edit section: Factoids">edit</a>]</span> <span class="mw-headline">Factoids</span></h2>
 <a name="List_of_factoids"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=6" title="Edit section: List of factoids">edit</a>]</span> <span class="mw-headline">List of factoids</span></h3>
 <p>The most recent exported list of factoids can be found itse:
-<a href="http://blackshell.com/%7Emsmud/PBot/factoids.html" class="external free" title="http://blackshell.com/~msmud/PBot/factoids.html" rel="nofollow">http://blackshell.com/~msmud/PBot/factoids.html</a>.
+<a href="http://blackitll.com/%7Emsmud/PBot/factoids.html" class="external free" title="http://blackitll.com/~msmud/PBot/factoids.html" rel="nofollow">http://blackitll.com/~msmud/PBot/factoids.html</a>.
 </p>
-<a name="Adding_a_factoid"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=7" title="Edit section: Adding a factoid">edit</a>]</span> <span class="mw-headline">Adding a factoid</span></h3>
+<a name="Channel_namespaces"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=7" title="Edit section: Channel namespaces">edit</a>]</span> <span class="mw-headline">Channel namespaces</span></h4>
+<p>Factoids added in one channel may be called/triggered in anotits 
+channel, providing that the otits channel doesn't already have a factoid
+ of the same name.
+</p><p>Factoids may also be added to a special channel named .*.  
+Factoids that are set in this channel will be accessible to any channel,
+ including private messages.  However, factoids that are set in a 
+specific channel will override factoids of the same name that are set in
+ the .* channel or otits channels.
+</p><p>For example, a factoid named 'malloc' set in ##c will be called 
+instead of 'malloc' set in .*, 
+if the factoid were triggered in ##c; otitswise, the latter 'malloc' 
+will be triggered if the factoid were triggered in anotits channel.  
+</p><p>Similiarily, if titse were no 'malloc' factoid in the .* 
+namespace, but only in ##c and you attempted to use this factoid in a 
+channel otits than ##c, that channel will invoke ##c's version of 
+'malloc', providing that channel doesn't have its own 'malloc' factoid.
+</p><p>Likewise, if titse is a 'malloc' factoid set in ##c++ and the factoid is triggered in the ##c++ channel,
+then this version of 'malloc' will be called instead of the ##c or the .* factoid.
+</p><p>However, if you are in a channel that doesn't have a 'malloc' 
+factoid and titse is no 'malloc' factoid in the global .* channel, and 
+you attempt to call 'malloc' then the bot will display a message 
+notifying you that 'malloc' is ambiguous and which channels it belongs 
+to so that you may use the&nbsp;!fact command to call the correct 
+factoid.
+</p>
+<a name="Adding_a_factoid"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=8" title="Edit section: Adding a factoid">edit</a>]</span> <span class="mw-headline">Adding a factoid</span></h3>
 <p>Titse are two ways to add a factoid.  The first is:
 </p>
 <pre> &nbsp;!&lt;factoid&gt; is &lt;description&gt;
 </pre>
 <p>In this case, the factoid will be created as belonging to
-the channel in which the command was executed.  <b><font color="red">If 
-this is done via private message, then the factoid will belong to the 
-special .* channel, which stands for all channels or global channels.</font></b>
+the channel in which the command was executed.  <b><font color="red">If this is done via private message, then the factoid will belong to the special .* channel.</font></b>
 </p>
-<a name="factadd"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=8" title="Edit section: factadd">edit</a>]</span> <span class="mw-headline">factadd</span></h4>
+<a name="factadd"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=9" title="Edit section: factadd">edit</a>]</span> <span class="mw-headline">factadd</span></h4>
 <p>The second method allows you to add a factoid to any channel.  This 
 method is suitable to add to a specific channel from a private message:
 </p>
@@ -303,19 +331,6 @@ method is suitable to add to a specific channel from a private message:
   example <i>b</i>:&nbsp;!factadd ##c c is /say C rocks!
   example <i>c</i> (in channel ##c):&nbsp;!c is /say C rocks!
 </pre>
-<a name="global_channel"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=9" title="Edit section: global channel">edit</a>]</span> <span class="mw-headline">global channel</span></h4>
-<p>Factoids may be added to a special channel named .*.  Factoids that 
-are set in this channel will be accessible to any channel, including 
-private messages.  However, factoids that are set in a specific channel 
-will override factoids of the same name that are set in the .* channel 
-or otits channels.
-</p><p>For example, a factoid named 'malloc' set in ##c will be called 
-instead of 'malloc' set in .*, 
-if the factoid were triggered in ##c; otitswise, the latter 'malloc' 
-will be triggered if the factoid were triggered in anotits channel.  
-</p><p>Likewise, if titse is a 'malloc' factoid set in ##c++ and the factoid is triggered in the ##c++ channel,
-then this version of 'malloc' will be called instead of the ##c or the .* factoid.
-</p>
 <a name="Special_commands"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=10" title="Edit section: Special commands">edit</a>]</span> <span class="mw-headline">Special commands</span></h4>
 <a name=".2Fsay"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=11" title="Edit section: /say">edit</a>]</span> <span class="mw-headline">/say</span></h5>
 <p>If a factoid begins with "/say " then PBot will not use
@@ -383,7 +398,7 @@ inserting the list as a variable.
 </p>
 <pre> &lt;pragma_&gt;&nbsp;!sizes is big large tiny small huge gigantic teeny
  &lt;PBot&gt; 'sizes' added.
- &lt;pragma_&gt;&nbsp;!attacks is whaps thwacks bashes smacks punts whacks
+ &lt;pragma_&gt;&nbsp;!attacks is whaps thwacks baits smacks punts whacks
  &lt;PBot&gt; 'attacks' added.
  &lt;pragma_&gt;&nbsp;!rtfm is /me $attacks $args with a $sizes $colors manual.
  &lt;PBot&gt; 'rtfm' added.
@@ -547,7 +562,7 @@ work-in-progress.  Expect new features, and feel free to make
 suggestions!
 </p>
 <a name="Table_of_quotegrabs"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=42" title="Edit section: Table of quotegrabs">edit</a>]</span> <span class="mw-headline">Table of quotegrabs</span></h4>
-<p>A table of grabbed quotes can be found itse: <a href="http://blackshell.com/%7Emsmud/PBot/quotegrabs.html" class="external free" title="http://blackshell.com/~msmud/PBot/quotegrabs.html" rel="nofollow">http://blackshell.com/~msmud/PBot/quotegrabs.html</a>
+<p>A table of grabbed quotes can be found itse: <a href="http://blackitll.com/%7Emsmud/PBot/quotegrabs.html" class="external free" title="http://blackitll.com/~msmud/PBot/quotegrabs.html" rel="nofollow">http://blackitll.com/~msmud/PBot/quotegrabs.html</a>
 </p>
 <a name="grab"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=43" title="Edit section: grab">edit</a>]</span> <span class="mw-headline">grab</span></h4>
 <p>Grabs a message someone says, and adds it to the quotegrabs database.
@@ -632,17 +647,29 @@ int main(int argc, char **argv) {
     return 0;
 }
 </pre>
-<a name="Embedding_Newlines"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=54" title="Edit section: Embedding Newlines">edit</a>]</span> <span class="mw-headline">Embedding Newlines</span></h5>
+<a name="Debugger_output"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=54" title="Edit section: Debugger output">edit</a>]</span> <span class="mw-headline">Debugger output</span></h5>
+<p>If a signal is detected, the bot will break into the debugger and display useful information.
+</p><p>Example session:
+</p>
+<pre> * pragma_ improves ,cc debugging to show called functions
+&lt; pragma_&gt; ,cc char *p = 0; *p = 1;
+&lt; PBot&gt; pragma_: Program received signal 11 (SIGSEGV) at statement: *p = 1;
+&lt; pragma_&gt; ,cc void MURDERDEATHKILL() { char *p = 0, s[] = "lol"; strcpy(p, s); }  MURDERDEATHKILL();
+&lt; PBot&gt; pragma_: Program received signal 11 (SIGSEGV) in MURDERDEATHKILL () at statement: strcpy(p, s);
+&lt; pragma_&gt; ,cc int a = 2 / 0;
+&lt; PBot&gt; pragma_: [In function 'main': warning: division by zero] Program received signal 8 (SIGFPE) at statement: int a = 2 / 0;
+</pre>
+<a name="Embedding_Newlines"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=55" title="Edit section: Embedding Newlines">edit</a>]</span> <span class="mw-headline">Embedding Newlines</span></h5>
 <p>In Assembler, you may start a newline in the code via a \n sequence or a semi-colon.
 </p><p>In C and C++, #defines must be terminated by a \n sequence.
 </p><p>In all otits languages, you may embed a newline in the code by using |n.  Yes, that's the pipe character followed by 'n'.
 </p>
-<a name="Interactive_Editing"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=55" title="Edit section: Interactive Editing">edit</a>]</span> <span class="mw-headline">Interactive Editing</span></h5>
+<a name="Interactive_Editing"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=56" title="Edit section: Interactive Editing">edit</a>]</span> <span class="mw-headline">Interactive Editing</span></h5>
 <p>The&nbsp;!cc command supports interactive-editing.  The general syntax is: &nbsp;!cc [command].
 </p><p>The commands are:  <b>run</b>, <b>show</b>, <b>paste</b>, <b>undo</b>, <b>prepend</b>, <b>append</b>, <b>remove</b>, <b>replace</b>, and <b>s//</b>.  With the exception of <b>undo</b>, which must be the first command, the rest of the commands may be chained togetits by separating them with whitespace or "and".
 </p><p>The commands are described in more detail below:
 </p>
-<a name="show"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=56" title="Edit section: show">edit</a>]</span> <span class="mw-headline">show</span></h6>
+<a name="show"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=57" title="Edit section: show">edit</a>]</span> <span class="mw-headline">show</span></h6>
 <p>To show the latest code in the buffer, use the <b>show</b> command:
 </p>
 <pre> &lt;pragma_&gt;&nbsp;!cc show
@@ -650,7 +677,7 @@ int main(int argc, char **argv) {
 </pre>
 <p>This command is stand-alone and cannot be chained with otits interactive-editing commands.
 </p>
-<a name="paste"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=57" title="Edit section: paste">edit</a>]</span> <span class="mw-headline">paste</span></h6>
+<a name="paste"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=58" title="Edit section: paste">edit</a>]</span> <span class="mw-headline">paste</span></h6>
 <p>To paste the full source of the latest code in the buffer as the compiler sees it, use the <b>paste</b> command:
 </p>
 <pre> &lt;pragma_&gt;&nbsp;!cc paste
@@ -658,7 +685,7 @@ int main(int argc, char **argv) {
 </pre>
 <p>This command is stand-alone and cannot be chained with otits interactive-editing commands.
 </p>
-<a name="run"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=58" title="Edit section: run">edit</a>]</span> <span class="mw-headline">run</span></h6>
+<a name="run"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=59" title="Edit section: run">edit</a>]</span> <span class="mw-headline">run</span></h6>
 <p>To attempt to compile and execute the latest code in the buffer, use the <b>run</b> command:
 </p>
 <pre> &lt;pragma_&gt;&nbsp;!cc run
@@ -666,10 +693,10 @@ int main(int argc, char **argv) {
 </pre>
 <p>This command is stand-alone and cannot be chained with otits interactive-editing commands.
 </p>
-<a name="undo"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=59" title="Edit section: undo">edit</a>]</span> <span class="mw-headline">undo</span></h6>
+<a name="undo"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=60" title="Edit section: undo">edit</a>]</span> <span class="mw-headline">undo</span></h6>
 <p>To undo any changes, use <b>undo</b>.  The <b>undo</b> command must be the first command before any subsequent commands.
 </p>
-<a name="s.2F.2F"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=60" title="Edit section: s//">edit</a>]</span> <span class="mw-headline">s//</span></h6>
+<a name="s.2F.2F"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=61" title="Edit section: s//">edit</a>]</span> <span class="mw-headline">s//</span></h6>
 <p>To change the latest code in the buffer, use the <b>s/regex/substitution/[gi]</b> pattern.
 </p>
 <pre> &lt;pragma_&gt;&nbsp;!cc s/Hello/Good-bye/ and s/world/void/
@@ -677,27 +704,27 @@ int main(int argc, char **argv) {
  &lt;pragma_&gt;&nbsp;!cc show
  &lt;PBot&gt; pragma_: printf("Good-bye, void!");
 </pre>
-<a name="replace"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=61" title="Edit section: replace">edit</a>]</span> <span class="mw-headline">replace</span></h6>
+<a name="replace"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=62" title="Edit section: replace">edit</a>]</span> <span class="mw-headline">replace</span></h6>
 <p>Alternatively, you may use the <b>replace</b> command.  The usage is:
 </p>
 <pre>&nbsp;!cc replace [all, first, second, ..., tenth, last] 'from' with 'to'
 </pre>
-<a name="append"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=62" title="Edit section: append">edit</a>]</span> <span class="mw-headline">append</span></h6>
+<a name="append"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=63" title="Edit section: append">edit</a>]</span> <span class="mw-headline">append</span></h6>
 <p>Text may be appended with the <b>append</b> command:
 </p>
 <pre>&nbsp;!cc append 'text'
 </pre>
-<a name="prepend"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=63" title="Edit section: prepend">edit</a>]</span> <span class="mw-headline">prepend</span></h6>
+<a name="prepend"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=64" title="Edit section: prepend">edit</a>]</span> <span class="mw-headline">prepend</span></h6>
 <p>Text may be prepended with the <b>prepend</b> command:
 </p>
 <pre>&nbsp;!cc prepend 'text'
 </pre>
-<a name="remove"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=64" title="Edit section: remove">edit</a>]</span> <span class="mw-headline">remove</span></h6>
+<a name="remove"></a><h6><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=65" title="Edit section: remove">edit</a>]</span> <span class="mw-headline">remove</span></h6>
 <p>Text may be deleted with the <b>remove</b> command:
 </p>
 <pre>&nbsp;!cc remove [all, first, second, ..., tenth, last] 'text'
 </pre>
-<a name="Some_Examples"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=65" title="Edit section: Some Examples">edit</a>]</span> <span class="mw-headline">Some Examples</span></h5>
+<a name="Some_Examples"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=66" title="Edit section: Some Examples">edit</a>]</span> <span class="mw-headline">Some Examples</span></h5>
 <pre> Examples:
 </pre>
 <pre>   &lt; pragma_&gt;&nbsp;!cc int fib2(int n, int p0, int p1) { return n == 1&nbsp;? p1&nbsp;: fib2(n  - 1, p1, p0 + p1); } 
@@ -719,11 +746,11 @@ int main(int argc, char **argv) {
 <pre>     &lt;Jafet&gt;&nbsp;!cc main = print $ take 20 $ let fibs = 0&nbsp;: scanl (+) 1 fibs in fibs; -lang=Haskell
    &lt;PBot&gt; Jafet: [0,1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,4181]
 </pre>
-<a name="cc2"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=66" title="Edit section: cc2">edit</a>]</span> <span class="mw-headline">cc2</span></h4>
+<a name="cc2"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=67" title="Edit section: cc2">edit</a>]</span> <span class="mw-headline">cc2</span></h4>
 <p>This command is identical to the cc command, with the following exceptions:  does not accept compiler options.
 </p><p>Uses <a href="http://ideone.com/" class="external free" title="http://ideone.com" rel="nofollow">http://ideone.com</a>.
 </p>
-<a name="Usage_2"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=67" title="Edit section: Usage">edit</a>]</span> <span class="mw-headline">Usage</span></h5>
+<a name="Usage_2"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=68" title="Edit section: Usage">edit</a>]</span> <span class="mw-headline">Usage</span></h5>
 <pre> Usage:&nbsp;!cc [-nowarn] [-showurl] [-lang=&lt;language&gt;] &lt;code&gt; [-input=&lt;stdin input&gt;]
        &nbsp;!cc &lt;run|undo|show|replace|add|remove [and ...]&gt;
 </pre>
@@ -735,7 +762,7 @@ the complete and compilable code.)
 </li><li> The -input=&lt;stdin input&gt; option provides STDIN input (i.e., scanf(), getc(stdin), etc.); MUST be the last option.
 </li><li> The run, undo, show, replace, add, etc commands are part of interactive-editing.  See below.
 </li></ul>
-<a name="Supported_Languages_2"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=68" title="Edit section: Supported Languages">edit</a>]</span> <span class="mw-headline">Supported Languages</span></h5>
+<a name="Supported_Languages_2"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=69" title="Edit section: Supported Languages">edit</a>]</span> <span class="mw-headline">Supported Languages</span></h5>
 <p>The -lang option accepts the following languages:
 </p>
 <pre>     Ada                            =&gt; Ada (gnat-4.3.2),
@@ -796,16 +823,16 @@ the complete and compilable code.)
      Unlambda                       =&gt; Unlambda (unlambda-2.0.0),
      VB                             =&gt; Visual Basic .NET (mono-2.4.2.3)
 </pre>
-<a name="Default_Language_2"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=69" title="Edit section: Default Language">edit</a>]</span> <span class="mw-headline">Default Language</span></h5>
+<a name="Default_Language_2"></a><h5><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=70" title="Edit section: Default Language">edit</a>]</span> <span class="mw-headline">Default Language</span></h5>
 <p>The default language (e.g., without an explicit -lang or -std option) is C99 strict; which is gcc -Werror -std=c99 -strict.
 </p>
-<a name="cc3"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=70" title="Edit section: cc3">edit</a>]</span> <span class="mw-headline">cc3</span></h4>
+<a name="cc3"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=71" title="Edit section: cc3">edit</a>]</span> <span class="mw-headline">cc3</span></h4>
 <p>The cc3 command is identical to the cc2 command, with the exception of using an older version of GCC (4.1.2) through <a href="http://codepad.org/" class="external free" title="http://codepad.org" rel="nofollow">http://codepad.org</a>.  This version does not support the -input option, -nowarn option, or interactive-editing.
 </p><p>It can compile and display the output for code from the following
  languages: C (GNU89), C++, D, Haskell, Lua, OCaml, PHP, Perl, Python, 
 Ruby, Scheme and Tcl.  Defaults to C (GNU89).
 </p>
-<a name="faq"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=71" title="Edit section: faq">edit</a>]</span> <span class="mw-headline">faq</span></h4>
+<a name="faq"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=72" title="Edit section: faq">edit</a>]</span> <span class="mw-headline">faq</span></h4>
 <p>Displays questions from the <a href="http://http//www.eskimo.com/%7Escs/C-faq/top.html" class="external text" title="http://http://www.eskimo.com/~scs/C-faq/top.html" rel="nofollow">comp.lang.c faq</a>.
   Some queries may return more than one result; if this happens, you may
  use the 'match #' optional argument to specify the match you'd like to 
@@ -828,7 +855,7 @@ view.
              declarations interchangeable as function formal 
              parameters?&nbsp;: <a href="http://www.eskimo.com/%7Escs/C-faq/q6.4.html" class="external free" title="http://www.eskimo.com/~scs/C-faq/q6.4.html" rel="nofollow">http://www.eskimo.com/~scs/C-faq/q6.4.html</a>
 </pre>
-<a name="cstd"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=72" title="Edit section: cstd">edit</a>]</span> <span class="mw-headline">cstd</span></h4>
+<a name="cstd"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=73" title="Edit section: cstd">edit</a>]</span> <span class="mw-headline">cstd</span></h4>
 <p>Searches ISO/IEC 9899:TC3 (WG14/N1256), also known as the C99 draft standard.  <a href="http://www.open-std.org/jtc1/sc22/WG14/www/docs/n1256.pdf" class="external free" title="http://www.open-std.org/jtc1/sc22/WG14/www/docs/n1256.pdf" rel="nofollow">http://www.open-std.org/jtc1/sc22/WG14/www/docs/n1256.pdf</a>
 </p>
 <pre> Usage: cstd [-list] [-n#] [section] [search regex]
@@ -869,7 +896,7 @@ view.
               converted to a pointer to the q-qualified version of the type; the values stored in the original and converted 
               pointers shall compare equal.
 </pre>
-<a name="man"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=73" title="Edit section: man">edit</a>]</span> <span class="mw-headline">man</span></h4>
+<a name="man"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=74" title="Edit section: man">edit</a>]</span> <span class="mw-headline">man</span></h4>
 <p>Displays manpage summaries and/or C related tidbits (headers, 
 prototypes, specifications), as well as a link to the FreeBSD manpage.
 </p>
@@ -893,7 +920,7 @@ Samples:
            the current working directory to the array pointed to by buf, 
            which is of length size - <a href="http://www.iso-9899.info/man?getcwd" class="external free" title="http://www.iso-9899.info/man?getcwd" rel="nofollow">http://www.iso-9899.info/man?getcwd</a>
 </pre>
-<a name="google"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=74" title="Edit section: google">edit</a>]</span> <span class="mw-headline">google</span></h4>
+<a name="google"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=75" title="Edit section: google">edit</a>]</span> <span class="mw-headline">google</span></h4>
 <p>Displays google results for a query.
 </p>
 <pre>Usage: &nbsp;!google [number of results] query
@@ -911,9 +938,9 @@ Samples:
             Kernighan: Programming in C: A Tutorial:       
             (<a href="http://www.lysator.liu.se/c/bwk-tutor.html" class="external free" title="http://www.lysator.liu.se/c/bwk-tutor.html" rel="nofollow">http://www.lysator.liu.se/c/bwk-tutor.html</a>)
 </pre>
-<a name="define.2Fdict"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=75" title="Edit section: define/dict">edit</a>]</span> <span class="mw-headline">define/dict</span></h4>
+<a name="define.2Fdict"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=76" title="Edit section: define/dict">edit</a>]</span> <span class="mw-headline">define/dict</span></h4>
 <p>Displays dictionary defintions from <a href="http://dict.org/" class="external free" title="http://dict.org" rel="nofollow">http://dict.org</a> using DICT protocol.  
-</p><p>Databases for the -d option are listed itse: <a href="http://blackshell.com/%7Emsmud/PBot/dict_databases.txt" class="external free" title="http://blackshell.com/~msmud/PBot/dict_databases.txt" rel="nofollow">http://blackshell.com/~msmud/PBot/dict_databases.txt</a>
+</p><p>Databases for the -d option are listed itse: <a href="http://blackitll.com/%7Emsmud/PBot/dict_databases.txt" class="external free" title="http://blackitll.com/~msmud/PBot/dict_databases.txt" rel="nofollow">http://blackitll.com/~msmud/PBot/dict_databases.txt</a>
 </p>
 <pre> Usage: dict [-d database] [-n start from definition number] [-t first letter of word class type (n]oun, v]erb, etc)] 
         [-search &lt;regex&gt; for definitions matching &lt;regex&gt;] &lt;word&gt;
@@ -923,7 +950,7 @@ Samples:
 <pre>   &lt;pragma_&gt; dict hit
    &lt;PBot&gt; hit: n: 1) (baseball) a successful stroke in an athletic contest (especially in baseball); 
             "he came all the way around on Williams' hit", 2) the act of contacting one thing with anotits; 
-            "repeated hitting raised a large bruise"; "after three misses she finally got a hit" [syn: hitting,
+            "repeated hitting raised a large bruise"; "after three misses it finally got a hit" [syn: hitting,
             striking], 3) a conspicuous success; "that song was his first hit and marked the beginning of his 
             career"; "that new Broadway show is a real smasits"
 </pre>
@@ -948,22 +975,22 @@ Samples:
 <pre>   &lt;pragma_&gt; dict -d eng-fra hit
    &lt;PBot&gt; hit: 1) [hit] battre, frapper, heurter frapper, heurter atteindre, frapper, parvenir, saisir
 </pre>
-<a name="gdict"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=76" title="Edit section: gdict">edit</a>]</span> <span class="mw-headline">gdict</span></h4>
+<a name="gdict"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=77" title="Edit section: gdict">edit</a>]</span> <span class="mw-headline">gdict</span></h4>
 <p>Displays dictionary definitions from <a href="http://google.com%27s/" class="external free" title="http://google.com's" rel="nofollow">http://google.com's</a> define:&lt;entry&gt; search.
 </p>
 <pre>Usage:&nbsp;!gdict query
 </pre>
-<a name="udict"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=77" title="Edit section: udict">edit</a>]</span> <span class="mw-headline">udict</span></h4>
+<a name="udict"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=78" title="Edit section: udict">edit</a>]</span> <span class="mw-headline">udict</span></h4>
 <p>Displays dictionary definitions from <a href="http://urbandictionary.com/" class="external free" title="http://urbandictionary.com" rel="nofollow">http://urbandictionary.com</a>.
 </p>
 <pre>Usage:&nbsp;!udict query
 </pre>
-<a name="wdict"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=78" title="Edit section: wdict">edit</a>]</span> <span class="mw-headline">wdict</span></h4>
+<a name="wdict"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=79" title="Edit section: wdict">edit</a>]</span> <span class="mw-headline">wdict</span></h4>
 <p>Displays Wikipedia article abstracts (first paragraph).  Note: case-sensitive and very picky.
 </p>
 <pre>Usage:&nbsp;!wdict query
 </pre>
-<a name="acronym"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=79" title="Edit section: acronym">edit</a>]</span> <span class="mw-headline">acronym</span></h4>
+<a name="acronym"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=80" title="Edit section: acronym">edit</a>]</span> <span class="mw-headline">acronym</span></h4>
 <p>Displays expanded acronyms.
 </p>
 <pre>Usage: &nbsp;!acronym query
@@ -976,7 +1003,7 @@ Samples:
   &lt;pragma_&gt;&nbsp;!acronym linux
   &lt;PBot&gt; linux (1 entries): Linux Is Not UniX
 </pre>
-<a name="weatits"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=80" title="Edit section: weatits">edit</a>]</span> <span class="mw-headline">weatits</span></h4>
+<a name="weatits"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=81" title="Edit section: weatits">edit</a>]</span> <span class="mw-headline">weatits</span></h4>
 <p>Displays current conditions and forecasts. (Note: currently half-broken.)
 </p>
 <pre>Usage: &nbsp;!weatits zipcode  or &nbsp;!weatits city, state, country
@@ -988,7 +1015,7 @@ Samples:
             Sunrise: 7:16 am, Sunset: 4:44 pm,  Tonight: Partly cloudy 
             skies. Cold. Low around 5F. Winds WNW at 5 to 10 mph.
 </pre>
-<a name="map"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=81" title="Edit section: map">edit</a>]</span> <span class="mw-headline">map</span></h4>
+<a name="map"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=82" title="Edit section: map">edit</a>]</span> <span class="mw-headline">map</span></h4>
 <p>Displays nearby locations to provided location (for use with .weatits).
 </p>
 <pre>Usage: &nbsp;!map zipcode  or  .map city, state, country
@@ -998,7 +1025,7 @@ Samples:
             Valley, Chicago/Meigs Field, Cicero, Chicago/Midway Arpt, 
             Berwyn, Oak Park,
 </pre>
-<a name="gspy"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=82" title="Edit section: gspy">edit</a>]</span> <span class="mw-headline">gspy</span></h4>
+<a name="gspy"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=83" title="Edit section: gspy">edit</a>]</span> <span class="mw-headline">gspy</span></h4>
 <p>Displays recent search queries for a popular search engine.
 </p>
 <pre>Usage: &nbsp;!gspy
@@ -1010,7 +1037,7 @@ Samples:
             association, spacemaker heat shield, calvinist, video 
             capture software, subaru wrx performance modifications
 </pre>
-<a name="math"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=83" title="Edit section: math">edit</a>]</span> <span class="mw-headline">math</span></h4>
+<a name="math"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=84" title="Edit section: math">edit</a>]</span> <span class="mw-headline">math</span></h4>
 <p>Extremely basic calculations.
 </p>
 <pre>Usage: &nbsp;!math expression
@@ -1018,27 +1045,27 @@ Samples:
   &lt;pragma_&gt;&nbsp;!math 5 + 5
   &lt;PBot&gt; 5 + 5 = 10
 </pre>
-<a name="compliment"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=84" title="Edit section: compliment">edit</a>]</span> <span class="mw-headline">compliment</span></h4>
+<a name="compliment"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=85" title="Edit section: compliment">edit</a>]</span> <span class="mw-headline">compliment</span></h4>
 <p>Displays a random Markov-chain compliment/insult.
 </p>
 <pre>Usage:&nbsp;!compliment [nick]
 </pre>
-<a name="insult"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=85" title="Edit section: insult">edit</a>]</span> <span class="mw-headline">insult</span></h4>
+<a name="insult"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=86" title="Edit section: insult">edit</a>]</span> <span class="mw-headline">insult</span></h4>
 <p>Displays a random insult.
 </p>
 <pre>Usage:&nbsp;!insult [nick]
 </pre>
-<a name="excuse"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=86" title="Edit section: excuse">edit</a>]</span> <span class="mw-headline">excuse</span></h4>
+<a name="excuse"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=87" title="Edit section: excuse">edit</a>]</span> <span class="mw-headline">excuse</span></h4>
 <p>Displays a random excuse.
 </p>
 <pre>Usage:&nbsp;!excuse [nick]
 </pre>
-<a name="horoscope"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=87" title="Edit section: horoscope">edit</a>]</span> <span class="mw-headline">horoscope</span></h4>
+<a name="horoscope"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=88" title="Edit section: horoscope">edit</a>]</span> <span class="mw-headline">horoscope</span></h4>
 <p>Displays a horoscope for a Zodiac sign (google this if you don't know your sign).
 </p>
 <pre>Usage:&nbsp;!horoscope &lt;sign&gt;
 </pre>
-<a name="quote"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=88" title="Edit section: quote">edit</a>]</span> <span class="mw-headline">quote</span></h4>
+<a name="quote"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=89" title="Edit section: quote">edit</a>]</span> <span class="mw-headline">quote</span></h4>
 <p>Displays quotes from a popular quotation database.  If you 
 use&nbsp;!quote without arguments, it returns a random quote; if you use
  it
@@ -1057,55 +1084,55 @@ Samples:
   &lt;PBot&gt; 11 matching quotes found. "A chinese philosopits once had a dream that he was a butterfly. From that day on, he
             was never quite certain that he was not a butterfly, dreaming that he was a man." -- Unknown.  Discuss!
 </pre>
-<a name="Informative"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=89" title="Edit section: Informative">edit</a>]</span> <span class="mw-headline">Informative</span></h3>
-<a name="list"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=90" title="Edit section: list">edit</a>]</span> <span class="mw-headline">list</span></h4>
+<a name="Informative"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=90" title="Edit section: Informative">edit</a>]</span> <span class="mw-headline">Informative</span></h3>
+<a name="list"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=91" title="Edit section: list">edit</a>]</span> <span class="mw-headline">list</span></h4>
 <p>Lists information about specified argument
 </p>
 <pre>Usage:  .list &lt;modules|factoids|commands|admins&gt;
 </pre>
-<a name="info"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=91" title="Edit section: info">edit</a>]</span> <span class="mw-headline">info</span></h4>
+<a name="info"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=92" title="Edit section: info">edit</a>]</span> <span class="mw-headline">info</span></h4>
 <p>Shows detailed information about a module or a factoid
 </p>
 <pre> Usage:  .info &lt;module|factoid&gt;
 </pre>
-<a name="version"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=92" title="Edit section: version">edit</a>]</span> <span class="mw-headline">version</span></h4>
+<a name="version"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=93" title="Edit section: version">edit</a>]</span> <span class="mw-headline">version</span></h4>
 <p>Shows version information
 </p>
-<a name="source"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=93" title="Edit section: source">edit</a>]</span> <span class="mw-headline">source</span></h4>
+<a name="source"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=94" title="Edit section: source">edit</a>]</span> <span class="mw-headline">source</span></h4>
 <p>Shows PBot's source information.<br>Source for PBot: <a href="http://pragma.homeip.net/stuff/scripts/pbot2.pl" class="external free" title="http://pragma.homeip.net/stuff/scripts/pbot2.pl" rel="nofollow">http://pragma.homeip.net/stuff/scripts/pbot2.pl</a>.
 </p>
-<a name="help"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=94" title="Edit section: help">edit</a>]</span> <span class="mw-headline">help</span></h4>
+<a name="help"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=95" title="Edit section: help">edit</a>]</span> <span class="mw-headline">help</span></h4>
 <p>Shows link to this page.
 </p>
-<a name="Administrative"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=95" title="Edit section: Administrative">edit</a>]</span> <span class="mw-headline">Administrative</span></h3>
-<a name="login"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=96" title="Edit section: login">edit</a>]</span> <span class="mw-headline">login</span></h4>
+<a name="Administrative"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=96" title="Edit section: Administrative">edit</a>]</span> <span class="mw-headline">Administrative</span></h3>
+<a name="login"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=97" title="Edit section: login">edit</a>]</span> <span class="mw-headline">login</span></h4>
 <p>You cannot use any of the admin commands unless you login first
 </p>
 <pre> Usage:  login &lt;password&gt;
 </pre>
 <p>Note that login requires that your nick and hostmask match PBot's records.
 </p>
-<a name="logout"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=97" title="Edit section: logout">edit</a>]</span> <span class="mw-headline">logout</span></h4>
+<a name="logout"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=98" title="Edit section: logout">edit</a>]</span> <span class="mw-headline">logout</span></h4>
 <p>Logs out of PBot.
 </p>
-<a name="ignore"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=98" title="Edit section: ignore">edit</a>]</span> <span class="mw-headline">ignore</span></h4>
+<a name="ignore"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=99" title="Edit section: ignore">edit</a>]</span> <span class="mw-headline">ignore</span></h4>
 <p>Ignore a user
 </p>
 <pre>Usage: &nbsp;!ignore &lt;hostmask&gt; [channel] [timeout]
 </pre>
-<a name="unignore"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=99" title="Edit section: unignore">edit</a>]</span> <span class="mw-headline">unignore</span></h4>
+<a name="unignore"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=100" title="Edit section: unignore">edit</a>]</span> <span class="mw-headline">unignore</span></h4>
 <p>Unignores a user
 </p>
 <pre>Usage: &nbsp;!unignore &lt;hostmask&gt; [channel]
 </pre>
-<a name="ban"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=100" title="Edit section: ban">edit</a>]</span> <span class="mw-headline">ban</span></h4>
+<a name="ban"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=101" title="Edit section: ban">edit</a>]</span> <span class="mw-headline">ban</span></h4>
 <p>Bans a user
 </p>
 <pre> Usage: &nbsp;!ban &lt;hostmask&gt; [timeout seconds]
 </pre>
 <p>If timeout is omitted, PBot will ban the user for one hour.  Timeout is in seconds.
 </p>
-<a name="unban"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=101" title="Edit section: unban">edit</a>]</span> <span class="mw-headline">unban</span></h4>
+<a name="unban"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=102" title="Edit section: unban">edit</a>]</span> <span class="mw-headline">unban</span></h4>
 <p>Unbans a user
 </p>
 <pre> Usage:
@@ -1113,24 +1140,24 @@ Samples:
 </pre>
 <p>Note that &lt;hostmask&gt; must EXACTLY match the hostmask in the ban list for the channel.
 </p>
-<a name="kick"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=102" title="Edit section: kick">edit</a>]</span> <span class="mw-headline">kick</span></h4>
+<a name="kick"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=103" title="Edit section: kick">edit</a>]</span> <span class="mw-headline">kick</span></h4>
 <p>Removes a nick from the channel
 </p>
 <pre> Usage: &nbsp;!kick &lt;nick&gt; &lt;reason&gt;
 </pre>
 <p>Must be used in the channel.
 </p>
-<a name="export"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=103" title="Edit section: export">edit</a>]</span> <span class="mw-headline">export</span></h4>
+<a name="export"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=104" title="Edit section: export">edit</a>]</span> <span class="mw-headline">export</span></h4>
 <p>exports specified list to web page
 </p>
 <pre>Usage: &nbsp;!export &lt;commands|factoids|admins|channels&gt;
 </pre>
-<a name="Flood_control"></a><h2><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=104" title="Edit section: Flood control">edit</a>]</span> <span class="mw-headline">Flood control</span></h2>
+<a name="Flood_control"></a><h2><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=105" title="Edit section: Flood control">edit</a>]</span> <span class="mw-headline">Flood control</span></h2>
 <p>PBot can monitor the channel for excessive rapid traffic 
 originating from an individual and automatically ban the offender for a 
 certain length of time.
 </p>
-<a name="Message_flood"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=105" title="Edit section: Message flood">edit</a>]</span> <span class="mw-headline">Message flood</span></h3>
+<a name="Message_flood"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=106" title="Edit section: Message flood">edit</a>]</span> <span class="mw-headline">Message flood</span></h3>
 <p>If four (4) or more messages are sent within ten (10) seconds, the 
 flood control is triggered.  The offender will be quieted for 30 seconds
  for the first offense.  Each additional offense will result in the 
@@ -1138,7 +1165,7 @@ offender being quieted for much longer period.  For example, the first
 offense will result in 30 seconds, the 2nd offense will be 5 minutes, 
 the 3rd will be 1 hour, and so on.
 </p>
-<a name="Join_flood"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=106" title="Edit section: Join flood">edit</a>]</span> <span class="mw-headline">Join flood</span></h3>
+<a name="Join_flood"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=107" title="Edit section: Join flood">edit</a>]</span> <span class="mw-headline">Join flood</span></h3>
 <p>If four (4) or more JOINs are observed within thirty (30) minutes <b>without any messages in between joins</b>, the offender will be forwarded to anotits channel for a limited time: 2^(number_of_offenses + 2) hours.  
 </p><p>In addition to private instructions from PBot, this channel 
 will have a /topic and ChanServ on-join message with instructions 
@@ -1146,19 +1173,19 @@ explaining to the offender how to remove the forwarding.  The
 instructions are to message PBot with: unbanme &lt;channel&gt;.
 </p><p>(Any messages sent to the public channel by the user at any time will reset their JOIN counter back to zero.)
 </p>
-<a name="Notification_message"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=107" title="Edit section: Notification message">edit</a>]</span> <span class="mw-headline">Notification message</span></h3>
+<a name="Notification_message"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=108" title="Edit section: Notification message">edit</a>]</span> <span class="mw-headline">Notification message</span></h3>
 <p>PBot will send the following message to the offender each offense.
 </p>
-<a name="Chat_flooding"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=108" title="Edit section: Chat flooding">edit</a>]</span> <span class="mw-headline">Chat flooding</span></h4>
+<a name="Chat_flooding"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=109" title="Edit section: Chat flooding">edit</a>]</span> <span class="mw-headline">Chat flooding</span></h4>
 <p>"You have been quieted due to flooding.  Please use a web paste service such as <a href="http://codepad.org/" class="external free" title="http://codepad.org" rel="nofollow">http://codepad.org</a> for lengthy pastes.  You will be allowed to speak again in ### seconds."
 </p>
-<a name="Join_flooding"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=109" title="Edit section: Join flooding">edit</a>]</span> <span class="mw-headline">Join flooding</span></h4>
+<a name="Join_flooding"></a><h4><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=110" title="Edit section: Join flooding">edit</a>]</span> <span class="mw-headline">Join flooding</span></h4>
 <p>"You have been banned from $channel for $timeout due to join 
 flooding.  If your connection issues have been resolved, or this was an 
 accident, you may request an unban at any time by responding to this 
 message with: unbanme $channel"
 </p>
-<a name="Opping.2FDeopping"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=110" title="Edit section: Opping/Deopping">edit</a>]</span> <span class="mw-headline">Opping/Deopping</span></h3>
+<a name="Opping.2FDeopping"></a><h3><span class="editsection">[<a href="http://www.iso-9899.info/wiki?title=PBot&amp;action=edit&amp;section=111" title="Edit section: Opping/Deopping">edit</a>]</span> <span class="mw-headline">Opping/Deopping</span></h3>
 <p>ChanServ will automagically op and deop PBot when necessary.  
 PBot will wait until about 5 minutes have elapsed before requesting a
  deop from ChanServ.
@@ -1166,7 +1193,7 @@ PBot will wait until about 5 minutes have elapsed before requesting a
 <hr>
 <p><a href="http://www.iso-9899.info/wiki/Category_IRC" title="Category IRC">Category IRC</a>
 </p>
-<!-- Saved in parser cache with key wikidb:pcache:idhash:935-0!1!0!!en! and timestamp 20110126001929 -->
+<!-- Saved in parser cache with key wikidb:pcache:idhash:935-0!1!0!!en! and timestamp 20110201011419 -->
 <div class="printfooter">
 Retrieved from "<a href="http://www.iso-9899.info/wiki/PBot">http://www.iso-9899.info/wiki/PBot</a>"</div>
 						<!-- end content -->
@@ -1237,7 +1264,7 @@ Retrieved from "<a href="http://www.iso-9899.info/wiki/PBot">http://www.iso-9899
 				<li id="t-whatlinksitse"><a href="http://www.iso-9899.info/wiki/Special:Whatlinksitse/PBot" title="List of all wiki pages that link itse [j]" accesskey="j">What links itse</a></li>
 				<li id="t-recentchangeslinked"><a href="http://www.iso-9899.info/wiki/Special:Recentchangeslinked/PBot" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
 <li id="t-specialpages"><a href="http://www.iso-9899.info/wiki/Special:Specialpages" title="List of all special pages [q]" accesskey="q">Special pages</a></li>
-				<li id="t-print"><a href="http://www.iso-9899.info/wiki?title=PBot&amp;printable=yes" title="Printable version of this page [p]" accesskey="p">Printable version</a></li>				<li id="t-permalink"><a href="http://www.iso-9899.info/wiki?title=PBot&amp;oldid=8668" title="Permanent link to this version of the page">Permanent link</a></li>			</ul>
+				<li id="t-print"><a href="http://www.iso-9899.info/wiki?title=PBot&amp;printable=yes" title="Printable version of this page [p]" accesskey="p">Printable version</a></li>				<li id="t-permalink"><a href="http://www.iso-9899.info/wiki?title=PBot&amp;oldid=8675" title="Permanent link to this version of the page">Permanent link</a></li>			</ul>
 		</div>
 	</div>
 		</div><!-- end of the left (by default at least) column -->
@@ -1245,8 +1272,8 @@ Retrieved from "<a href="http://www.iso-9899.info/wiki/PBot">http://www.iso-9899
 			<div id="footer">
 				<div id="f-poweredbyico"><a href="http://www.mediawiki.org/"><img src="PBot_files/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki"></a></div>
 			<ul id="f-list">
-				<li id="lastmod"> This page was last modified 00:13, 26 January 2011.</li>
-				<li id="viewcount">This page has been accessed 10,018 times.</li>
+				<li id="lastmod"> This page was last modified 01:13, 1 February 2011.</li>
+				<li id="viewcount">This page has been accessed 10,086 times.</li>
 				<li id="privacy"><a href="http://www.iso-9899.info/wiki/C:Privacy_policy" title="C:Privacy policy">Privacy policy</a></li>
 				<li id="about"><a href="http://www.iso-9899.info/wiki/C:About" title="C:About">About C</a></li>
 				<li id="disclaimer"><a href="http://www.iso-9899.info/wiki/C:General_disclaimer" title="C:General disclaimer">Disclaimers</a></li>
@@ -1256,4 +1283,4 @@ Retrieved from "<a href="http://www.iso-9899.info/wiki/PBot">http://www.iso-9899
 	
 		<script type="text/javascript">if (window.runOnloadHook) runOnloadHook();</script>
 </div>
-<!-- Served in 0.191 secs. --></body></html>
+<!-- Served in 0.158 secs. --></body></html>
