@@ -91,10 +91,14 @@ sub debug_program {
 
   while(my $line = <$output>) {
 	  if($line =~ s/^#\d+//) {
+            next if $line =~ /\?\?/;
+            next if $line =~ /in main\s*\(/;
+
 		  $line =~ s/\s*0x[0-9a-fA-F]+\s*//;
 		  $result .= "$line ";
 	  }
 	  elsif($line =~ s/^\d+//) {
+                  $result .= "at " if not length $result;
 		  $result .= "statement: $line";
 		  last;
 	  }
