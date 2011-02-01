@@ -4,6 +4,7 @@ use warnings;
 use strict;
 
 use POSIX ":sys_wait_h";
+use IPC::Open2;
 
 my @signame;
 $signame[0] = 'SIGZERO';
@@ -76,6 +77,39 @@ $signame[66] = 'SIGCLD';
 $signame[67] = 'SIGPOLL';
 $signame[68] = 'SIGUNUSED';
 
+sub debug_program {
+  my ($input, $output);
+
+  my $pid = open2($output, $input, 'gdb -silent -batch -x debugcommands ./prog ./core 2>/dev/null');
+
+  if(not $pid) {
+    print "Error debugging program.\n";
+    exit;
+  }
+
+  my $result = "";
+
+  while(my $line = <$output>) {
+	  if($line =~ s/^#\d+//) {
+		  $line =~ s/\s*0x[0-9a-fA-F]+\s*//;
+		  $result .= "$line ";
+	  }
+	  elsif($line =~ s/^\d+//) {
+		  $result .= "statement: $line";
+		  last;
+	  }
+  }
+
+  close $output;
+  close $input;
+  waitpid($pid, 0);
+
+  $result =~ s/^\s+//;
+  $result =~ s/\s+$//;
+  print "$result\n";
+  exit;
+}
+
 sub reaper {
   my $child;
   while (($child=waitpid(-1,WNOHANG))>0) {
@@ -92,6 +126,7 @@ sub reaper {
 
     if($wifsignaled == 1) {
       print "\nProgram received signal $wtermsig ($signame[$wtermsig])\n";
+      debug_program if $wtermsig != 0;
       exit;
     }
 

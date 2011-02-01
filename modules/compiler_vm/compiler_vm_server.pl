@@ -3,27 +3,36 @@
 use warnings;
 use strict;
 
+my $USE_LOCAL = defined $ENV{'CC_LOCAL'}; 
+
 my %languages = (
   'C' => {
-    'cmdline' => 'gcc $args $file -o prog',
+    'cmdline' => 'gcc $args $file -o prog -ggdb',
     'args' => '-Wextra -Wall -Wno-unused -std=gnu89',
     'file' => 'prog.c',
   },
   'C++' => {
-    'cmdline' => 'g++ $args $file -o prog',
+    'cmdline' => 'g++ $args $file -o prog -ggdb',
     'args' => '',
     'file' => 'prog.cpp',
   },
   'C99' => {
-    'cmdline' => 'gcc $args $file -o prog',
-    'args' => '-Wextra -Wall -Wno-unused -pedantic -std=c99',
+    'cmdline' => 'gcc $args $file -o prog -ggdb',
+    'args' => '-Wextra -Wall -Wno-unused -pedantic -std=c99 -lm',
     'file' => 'prog.c',
   },
 );
 
 sub runserver {
-  open(my $input, '<', "/dev/ttyS0") or die $!;
-  open(my $output, '>', "/dev/ttyS0") or die $!;
+  my ($input, $output);
+
+  if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
+    open($input, '<', "/dev/ttyS0") or die $!;
+    open($output, '>', "/dev/ttyS0") or die $!;
+  } else {
+    open($input, '<', "/dev/stdin") or die $!;
+    open($output, '>', "/dev/stdout") or die $!;
+  }
 
   my $lang;
   my $code;
@@ -49,8 +58,12 @@ sub runserver {
       print $output "result:$result\n";
       print $output "result:end\n";
 
-      print "input: ";
-      next;
+      if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
+        print "input: ";
+        next;
+      } else {
+        exit;
+      }
     }
 
     if($line =~ m/^compile:\s*(.*)/) {
@@ -107,14 +120,18 @@ sub interpret {
 
   print "Executing [$cmdline]\n";
   my ($ret, $result) = execute(60, $cmdline);
-  print "Got result: ($ret) [$result]\n";
+  # print "Got result: ($ret) [$result]\n";
 
+  # if exit code was not 0, then there was a problem compiling, such as an error diagnostic
+  # so return the compiler output
   if($ret != 0) {
     return $result;
   }
 
   my $output = "";
 
+  # no errors compiling, but if $result contains something, it must be a warning message
+  # so prepend it to the output
   if(length $result) {
     $result =~ s/^\s+//;
     $result =~ s/\s+$//;
@@ -123,10 +140,10 @@ sub interpret {
 
   ($ret, $result) = execute(5, "./compiler_watchdog.pl");
 
-  print "Executed prog; got result: ($ret) [$result]\n";
-
   $result =~ s/^\s+//;
   $result =~ s/\s+$//;
+
+  # print "Executed prog; got result: ($ret) [$result]\n";
 
   if(not length $result) {
     $result = "Success (no output).\n" if $ret == 0;

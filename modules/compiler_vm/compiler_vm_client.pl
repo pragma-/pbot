@@ -9,6 +9,7 @@ use Text::Balanced qw(extract_codeblock extract_delimited);
 use IO::Socket;
 use LWP::UserAgent;
 
+my $USE_LOCAL        = defined $ENV{'CC_LOCAL'}; 
 my $MAX_UNDO_HISTORY = 100;
 
 my $output = "";
@@ -27,19 +28,6 @@ my %preludes = (
                  'C'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n\n",
                  'C++'   => "#include <iostream>\n#include <cstdio>\n\nusing namespace std;\n\n",
                );
-
-sub reset_vm {
-  my $sock = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => '4445', Proto => 'tcp', Type => 'SOCK_STREAM');
-  die "Could not create socket: $!" unless $sock;
-
-  $sock->autoflush();
-  print $sock "loadvm 2\r\n";
-  while(my $line = <$sock>) {
-    last if $line =~ /loadvm 2/;
-  }
-  sleep 2;
-  $sock->shutdown(1);
-}
 
 sub pretty {
   my $code = join '', @_;
@@ -76,20 +64,28 @@ sub paste_codepad {
 }
 
 sub compile {
-  my ($lang, $code, $args, $input) = @_;
+  my ($lang, $code, $args, $input, $local) = @_;
 
-  my $sock = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => '4444', Proto => 'tcp', Type => 'SOCK_STREAM');
+  my ($compiler, $compiler_output, $pid);
+ 
+  if(defined $local and $local != 0) {
+    print "Using local compiler instead of virtual machine\n";
+    $pid = open2($compiler_output, $compiler, './compiler_vm_server.pl') || die "repl failed: $@\n";
+    print "Started compiler, pid: $pid\n";
+  } else {
+    $compiler  = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => '4444', Proto => 'tcp', Type => 'SOCK_STREAM');
+    die "Could not create socket: $!" unless $compiler;
+    $compiler_output = $compiler;
+  }
 
-  die "Could not create socket: $!" unless $sock;
-
-  print $sock "compile:$lang:$args:$input\n";
-  print $sock "$code\n";
-  print $sock "compile:end\n";
+  print $compiler "compile:$lang:$args:$input\n";
+  print $compiler "$code\n";
+  print $compiler "compile:end\n";
 
   my $result = "";
   my $got_result = 0;
 
-  while(my $line = <$sock>) {
+  while(my $line = <$compiler_output>) {
     $line =~ s/[\r\n]+$//;
 
     last if $line =~ /^result:end/;
@@ -106,7 +102,9 @@ sub compile {
     }
   }
 
-  close $sock;
+  close $compiler;
+  close $output if defined $output;
+  waitpid($pid, 0) if defined $pid;
   return $result;
 }
 
@@ -640,7 +638,7 @@ if(defined $got_run and $got_run eq "paste") {
 
 print FILE "$nick: [lang:$lang][args:$args][input:$input]\n$code\n";
 
-$output = compile($lang, $code, $args, $input);
+$output = compile($lang, pretty($code), $args, $input, $USE_LOCAL);
 
 $output =~ s/cc1: warnings being treated as errors//;
 $output =~ s/ Line \d+ ://g;
@@ -653,11 +651,15 @@ $output =~ s/\/tmp\/.*\.o://g;
 $output =~ s/collect2: ld returned \d+ exit status//g;
 $output =~ s/\(\.text\+[^)]+\)://g;
 $output =~ s/\[ In/[In/;
+$output =~ s/warning: Can't read pathname for load map: Input.output error.//g;
 
 my $left_quote = chr(226) . chr(128) . chr(152);
 my $right_quote = chr(226) . chr(128) . chr(153);
 $output =~ s/$left_quote/'/g;
 $output =~ s/$right_quote/'/g;
+
+$output =~ s/[\r\n]+/ /g;
+$output =~ s/\s+/ /g;
 
 $output = $nooutput if $output =~ m/^\s+$/;
 
@@ -668,5 +670,3 @@ unless($got_run) {
 }
 
 print "$nick: $output\n";
-
-#reset_vm;

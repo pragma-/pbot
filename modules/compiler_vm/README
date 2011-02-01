@@ -1,21 +1,48 @@
 Installation:
 
+If you want to run the compiler inside a virtual machine for more security,
+these scripts are designed to work with qemu 0.11.1.  This is required in
+order to use PBot's trigger.  
+
+In addition, you can use the provided 'cc' script to use your local compiler tools
+without installing qemu.  No PBot installation or configuration is required in this case.
+
+To use the local non-vm 'cc' script, you will need to have gcc, gdb and astyle installed locally.
+
+Be aware that you need to single-quote or escape the code if you use the local 'cc' within a shell,
+e.g.:  ./cc 'char s[] = "hello, world"; puts(s);  if(s[0] == \'h\') puts("true");' 
+
+WARNING: Using the local 'cc' script outside of the virtual machine will not use qemu at all; 
+         it will affect local system -- compile "safe" code!
+
+Virtual machine installation:
+
 You will need to download qemu and set up a virtual machine containing a system
 with a compiler and, optionally, sensible ulimits/fork-preventation/other security.
 
-Then you will need to edit some of the following files and replace IP addresses
-and paths where appropriate (some locations may not yet be documented).
+1) copy compiler_vm_server.pl and compiler_watchdog.pl to the virtual machine.
+2) then start up the compiler_vm_server.pl script inside the virtual machine
+3) then connect to qemu's monitor and issue the 'savevm 1' command to save the virtual state
+   (After compiles, this state will be loaded via 'loadvm 1' to reset everything within the machine 
+    for a clean and working environment for subsequent compiles.)
 
-Once the files have been configured and copied to the appropriate locations,
-you will need to first start up the compiler_vm_server.pl script, and then 
-connect to qemu's monitor and issue the 'savevm 1' command to save the virtual 
-machine in this state.  Between compiles, this state will be loaded via 
-'loadvm 1' in order to reset everything within the machine for a clean and working
-environment for subsequent compiles.
+Now the virtual machine state 1 is saved in a state where it is listening for incoming code.  You can 
+go ahead and quit qemu without shutting down the guest operating sytem.
+
+Starting the virtual machine for PBot:
+
+Now that the virtual machine is configured and saved, you may launch the local server to listen for
+code from PBot to send to the virtual machine's server.  To do so, run the compiler_server.pl script.
 
 Files:
 
 (Read within each file for configuration instructions.)
+
+- cc: Allows you to use the compiler locally with or without qemu installed.
+      Can be used within virtual machine for testing.
+      Must have gcc, gdb and astyle installed locally if not used within virtual machine.
+      WARNING: If not used within virtual machine will not use qemu at all and will 
+               affect local system -- compile "safe" code!
 
 - compiler_client.pl:  Main entry point for compiling snippets.  Sends over TCP to
                        compiler_server.pl.  This file can be run be run from the
