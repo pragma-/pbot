@@ -1,1 +1,1 @@
-"/cygdrive/c/Program Files (x86)\QemuManager\qemu\qemu-system-x86_64.exe" -L "C:\Program Files (x86)\QemuManager\qemu" -M "pc" -m 512 -cpu "qemu64" -vga cirrus -drive "file=C:\Program Files (x86)\QemuManager\images\Test.qcow2,index=0,media=disk" -enable-kqemu -kernel-kqemu -net none -localtime -serial "tcp:127.0.0.1:4444,server,nowait" -monitor "tcp:127.0.0.1:4445,server,nowait" -kernel-kqemu -loadvm 1 
+qemu-system-x86_64 -M pc -hda /home/compiler/compiler-vm-image -m 128 -monitor "tcp:127.0.0.1:4445,server,nowait" -serial "tcp:127.0.0.1:4444,server,nowait" -boot c -loadvm 2

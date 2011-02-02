@@ -28,6 +28,7 @@ sub vm_stop {
   my $pid = shift @_;
   return if not defined $pid;
   kill 'TERM', $pid;
+  waitpid($pid, 0);
 }
 
 sub vm_start {
@@ -38,7 +39,9 @@ sub vm_start {
   }
 
   if($pid == 0) {
-    exec('"/cygdrive/c/Program Files (x86)\QemuManager\qemu\qemu-system-x86_64.exe" -L "C:\Program Files (x86)\QemuManager\qemu" -M "pc" -m 512 -cpu "qemu64" -vga cirrus -drive "file=C:\Program Files (x86)\QemuManager\images\Test.qcow2,index=0,media=disk" -enable-kqemu -kernel-kqemu -net none -localtime -serial "tcp:127.0.0.1:4444,server,nowait" -monitor "tcp:127.0.0.1:4445,server,nowait" -kernel-kqemu -loadvm 1 -nographic'); 
+    my $command = 'qemu-system-x86_64 -M pc -hda /home/compiler/compiler-vm-image -m 128 -monitor tcp:127.0.0.1:4445,server,nowait -serial tcp:127.0.0.1:4444,server,nowait -boot c -loadvm 2 -nographic';
+    my @command_list = split / /, $command;
+    exec(@command_list); 
   } else {
     return $pid;
   }
@@ -58,7 +61,7 @@ sub execute {
       my $pid = open(my $fh, '-|', "$cmdline 2>&1");
 
       local $SIG{ALRM} = sub { print "Time out\n"; kill 'TERM', $pid; die "Timed-out\n"; };
-      alarm(6);
+      alarm(5);
       
       while(my $line = <$fh>) {
         $result .= $line;

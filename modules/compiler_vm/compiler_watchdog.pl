@@ -95,9 +95,17 @@ sub debug_program {
             next if $line =~ /in main\s*\(/;
 
 		  $line =~ s/\s*0x[0-9a-fA-F]+\s*//;
-		  $result .= "$line ";
+		  $line =~ s/\s+at .*:\d+//;
+
+		  if($line !~ m/^\s*in\s+/) {
+			  $result = "in $line from ";
+		  } else {
+			  $result .= "$line at ";
+		  }
 	  }
 	  elsif($line =~ s/^\d+//) {
+		  next if $line =~ /No such file/;
+
                   $result .= "at " if not length $result;
 		  $result .= "statement: $line";
 		  last;

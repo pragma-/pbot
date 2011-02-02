@@ -73,7 +73,7 @@ sub compile {
     $pid = open2($compiler_output, $compiler, './compiler_vm_server.pl') || die "repl failed: $@\n";
     print "Started compiler, pid: $pid\n";
   } else {
-    $compiler  = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => '4444', Proto => 'tcp', Type => 'SOCK_STREAM');
+    $compiler  = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => '4444', Proto => 'tcp', Type => SOCK_STREAM);
     die "Could not create socket: $!" unless $compiler;
     $compiler_output = $compiler;
   }
