@@ -5,7 +5,7 @@ use strict;
 use feature qw(switch);
 
 use IPC::Open2;
-use Text::Balanced qw(extract_codeblock extract_delimited);
+use Text::Balanced qw(extract_bracketed extract_delimited);
 use IO::Socket;
 use LWP::UserAgent;
 
@@ -578,7 +578,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C++') {
   my $has_main = 0;
   
   my $prelude = '';
-  $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
+  $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?>\s*\n|#.*?\n)//s;
 
   my $preprecode = $precode;
 
@@ -595,7 +595,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C++') {
       $precode =~ s/([ a-zA-Z0-9\_\*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//;
     }
 
-    my @extract = extract_codeblock($potential_body, '{}');
+    my @extract = extract_bracketed($potential_body, '{}');
     my $body;
     if(not defined $extract[0]) {
       $output .= "error: unmatched brackets for function '$ident';\n";
