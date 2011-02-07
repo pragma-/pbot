@@ -3,4 +3,4 @@
 CC_LOCAL=1
 export CC_LOCAL
 ulimit -c 50000
-./compiler_vm_client.pl compiler $*
+./compiler_vm_client.pl compiler "$@"
