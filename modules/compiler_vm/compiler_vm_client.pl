@@ -26,10 +26,10 @@ my %languages = (
 );
 
 my %preludes = ( 
-                 'C99'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n\n",
-                 'C'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n\n",
-                 'C++'   => "#include <iostream>\n#include <cstdio>\n\nusing namespace std;\n\n",
-               );
+  'C99'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n\n",
+  'C'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n\n",
+  'C++'   => "#include <iostream>\n#include <cstdio>\n\nusing namespace std;\n\n",
+);
 
 sub pretty {
   my $code = join '', @_;
@@ -58,18 +58,18 @@ sub paste_codepad {
   my %post = ( 'lang' => 'C', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
   my $response = $ua->post("http://codepad.org", \%post);
 
-  if(not $response->is_success) {
-    return $response->status_line;
-  }
+if(not $response->is_success) {
+  return $response->status_line;
+}
 
-  return $response->request->uri;
+return $response->request->uri;
 }
 
 sub compile {
   my ($lang, $code, $args, $input, $local) = @_;
 
   my ($compiler, $compiler_output, $pid);
- 
+
   if(defined $local and $local != 0) {
     print "Using local compiler instead of virtual machine\n";
     $pid = open2($compiler_output, $compiler, './compiler_vm_server.pl') || die "repl failed: $@\n";
@@ -375,7 +375,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
 
       my $ret = eval {
         my ($ret, $a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after);
-        
+
         if(not length $suffix) {
           $ret = $code =~ s|$regex|$to|;
           ($a, $b, $c, $d, $e, $f, $g, $h, $i) = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
@@ -580,7 +580,7 @@ $code = '';
 
 if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C++') {
   my $has_main = 0;
-  
+
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?>\s*\n|#.*?\n)//s;
 
@@ -677,28 +677,28 @@ print FILE "$nick: [lang:$lang][args:$args][input:$input]\n$code\n";
 $output = compile($lang, pretty($code), $args, $input, $USE_LOCAL);
 
 if($output =~ m/^\s*$/) {
-	$output = $nooutput 
+  $output = $nooutput 
 } else {
-	$output =~ s/cc1: warnings being treated as errors//;
-	$output =~ s/ Line \d+ ://g;
-	$output =~ s/ \(first use in this function\)//g;
-	$output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//msg;
-	$output =~ s/prog\.c:[:\d]*//g;
-	$output =~ s/ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
-	$output =~ s/error: (.*?) error/error: $1; error/msg;
-	$output =~ s/\/tmp\/.*\.o://g;
-	$output =~ s/collect2: ld returned \d+ exit status//g;
-	$output =~ s/\(\.text\+[^)]+\)://g;
-	$output =~ s/\[ In/[In/;
-	$output =~ s/warning: Can't read pathname for load map: Input.output error.//g;
+  $output =~ s/cc1: warnings being treated as errors//;
+  $output =~ s/ Line \d+ ://g;
+  $output =~ s/ \(first use in this function\)//g;
+  $output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//msg;
+  $output =~ s/prog\.c:[:\d]*//g;
+  $output =~ s/ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
+  $output =~ s/error: (.*?) error/error: $1; error/msg;
+  $output =~ s/\/tmp\/.*\.o://g;
+  $output =~ s/collect2: ld returned \d+ exit status//g;
+  $output =~ s/\(\.text\+[^)]+\)://g;
+  $output =~ s/\[ In/[In/;
+  $output =~ s/warning: Can't read pathname for load map: Input.output error.//g;
 
-	my $left_quote = chr(226) . chr(128) . chr(152);
-	my $right_quote = chr(226) . chr(128) . chr(153);
-	$output =~ s/$left_quote/'/g;
-	$output =~ s/$right_quote/'/g;
+  my $left_quote = chr(226) . chr(128) . chr(152);
+  my $right_quote = chr(226) . chr(128) . chr(153);
+  $output =~ s/$left_quote/'/g;
+  $output =~ s/$right_quote/'/g;
 
-$output =~ s/[\r\n]+/ /g;
-$output =~ s/\s+/ /g;
+  $output =~ s/[\r\n]+/ /g;
+  $output =~ s/\s+/ /g;
 }
 
 unless($got_run) {
