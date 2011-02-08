@@ -9,6 +9,8 @@ use Text::Balanced qw(extract_bracketed extract_delimited);
 use IO::Socket;
 use LWP::UserAgent;
 
+my $debug = 0;
+
 my $USE_LOCAL        = defined $ENV{'CC_LOCAL'}; 
 my $MAX_UNDO_HISTORY = 100;
 
@@ -116,6 +118,8 @@ if($#ARGV < 1) {
 my $nick = shift @ARGV;
 my $code = join ' ', @ARGV;
 my @last_code;
+
+print "      code: [$code]\n" if $debug;
 
 my $lang = "C99";
 $lang = $1 if $code =~ s/-lang=([^\b\s]+)//i;
@@ -580,10 +584,41 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C++') {
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?>\s*\n|#.*?\n)//s;
 
+  # strip C and C++ style comments
+  $precode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $3 ? $3 : ""#gse;
+
+  print "   precode: [$precode]\n" if $debug;
+
   my $preprecode = $precode;
 
-  while($preprecode =~ s/([ a-zA-Z0-9\_\*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
+  # white-out contents of quoted literals
+  $preprecode =~ s/(?:\"((?:\\\"|(?!\").)*)\")/'"' . ('-' x length $1) . '"'/ge;
+  $preprecode =~ s/(?:\'((?:\\\'|(?!\').)*)\')/"'" . ('-' x length $1) . "'"/ge;
+
+  print "preprecode: [$preprecode]\n" if $debug;
+
+  # look for potential functions to extract
+  while($preprecode =~ m/([ a-zA-Z0-9_*[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)/) {
+    my ($pre_ret, $pre_ident, $pre_params, $pre_potential_body) = ($1, $2, $3, $4);
+
+    # find the pos at which this function lives, for extracting from precode
+    $preprecode =~ m/(\Q$pre_ret\E\s+\Q$pre_ident\E\s*\(\s*\Q$pre_params\E\s*\)\s*\Q$pre_potential_body\E)/g;
+    my $extract_pos = (pos $preprecode) - (length $1);
+
+    # now that we have the pos, substitute out the extracted potential function from preprecode
+    $preprecode =~ s/([ a-zA-Z0-9_*[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)//;
+
+    # create tmpcode object that starts from extract pos, to skip any quoted code
+    my $tmpcode = substr($precode, $extract_pos);
+    print "tmpcode: [$tmpcode]\n";
+
+    $precode = substr($precode, 0, $extract_pos);
+    print "precode: [$precode]\n" if $debug;
+
+    $tmpcode =~ m/([ a-zA-Z0-9_*[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)/;
     my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
+
+    print "[$ret][$ident][$params][$potential_body]\n" if $debug;
 
     $ret =~ s/^\s+//;
     $ret =~ s/\s+$//;
@@ -592,20 +627,21 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C++') {
       $precode .= "$ret $ident ($params) $potential_body";
       next;
     } else {
-      $precode =~ s/([ a-zA-Z0-9\_\*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//;
+      $tmpcode =~ s/([ a-zA-Z0-9_*[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)//;
     }
 
     my @extract = extract_bracketed($potential_body, '{}');
     my $body;
     if(not defined $extract[0]) {
-      $output .= "error: unmatched brackets for function '$ident';\n";
-      $body = $extract[1];
+      print "error: unmatched brackets for function '$ident';\n";
+      exit;
     } else {
       $body = $extract[0];
       $preprecode .= $extract[1];
       $precode .= $extract[1];
     }
-    #print "[$ret][$ident][$params][$body]\n";
+
+    print "[$ret][$ident][$params][$body]\n" if $debug;
     $code .= "$ret $ident($params) $body\n\n";
     $has_main = 1 if $ident eq 'main';
   }
@@ -615,10 +651,10 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C++') {
 
   if(not $has_main) {
     $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) {\n$precode\n;\nreturn 0;\n}\n";
-    $nooutput = "Success [no output].";
+    $nooutput = "No warnings, errors or output.";
   } else {
     $code = "$prelude\n\n$precode\n\n$code\n";
-    $nooutput = "No output.";
+    $nooutput = "No warnings, errors or output.";
   }
 } else {
   $code = $precode;
@@ -640,28 +676,30 @@ print FILE "$nick: [lang:$lang][args:$args][input:$input]\n$code\n";
 
 $output = compile($lang, pretty($code), $args, $input, $USE_LOCAL);
 
-$output =~ s/cc1: warnings being treated as errors//;
-$output =~ s/ Line \d+ ://g;
-$output =~ s/ \(first use in this function\)//g;
-$output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//msg;
-$output =~ s/prog\.c:[:\d]*//g;
-$output =~ s/ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
-$output =~ s/error: (.*?) error/error: $1; error/msg;
-$output =~ s/\/tmp\/.*\.o://g;
-$output =~ s/collect2: ld returned \d+ exit status//g;
-$output =~ s/\(\.text\+[^)]+\)://g;
-$output =~ s/\[ In/[In/;
-$output =~ s/warning: Can't read pathname for load map: Input.output error.//g;
+if($output =~ m/^\s*$/) {
+	$output = $nooutput 
+} else {
+	$output =~ s/cc1: warnings being treated as errors//;
+	$output =~ s/ Line \d+ ://g;
+	$output =~ s/ \(first use in this function\)//g;
+	$output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//msg;
+	$output =~ s/prog\.c:[:\d]*//g;
+	$output =~ s/ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
+	$output =~ s/error: (.*?) error/error: $1; error/msg;
+	$output =~ s/\/tmp\/.*\.o://g;
+	$output =~ s/collect2: ld returned \d+ exit status//g;
+	$output =~ s/\(\.text\+[^)]+\)://g;
+	$output =~ s/\[ In/[In/;
+	$output =~ s/warning: Can't read pathname for load map: Input.output error.//g;
 
-my $left_quote = chr(226) . chr(128) . chr(152);
-my $right_quote = chr(226) . chr(128) . chr(153);
-$output =~ s/$left_quote/'/g;
-$output =~ s/$right_quote/'/g;
+	my $left_quote = chr(226) . chr(128) . chr(152);
+	my $right_quote = chr(226) . chr(128) . chr(153);
+	$output =~ s/$left_quote/'/g;
+	$output =~ s/$right_quote/'/g;
 
 $output =~ s/[\r\n]+/ /g;
 $output =~ s/\s+/ /g;
-
-$output = $nooutput if $output =~ m/^\s+$/;
+}
 
 unless($got_run) {
   print FILE localtime() . "\n";
