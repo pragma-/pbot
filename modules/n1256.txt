@@ -9842,8 +9842,7 @@ char int_p_sep_by_space
     These types are required.
     7.18.2 Limits of specified-width integer types
 1   The following object-like macros226) specify the minimum and maximum limits of the
-    types declared in <stdint.h>. Each macro name corresponds to a similar type name in
-    7.18.1.
+    types declared in <stdint.h>. Each macro name corresponds to a similar type name in 7.18.1.
 2   Each instance of any defined macro shall be replaced by a constant expression suitable
     for use in #if preprocessing directives, and this expression shall have the same type as
     would an expression that is an object of the corresponding type converted according to

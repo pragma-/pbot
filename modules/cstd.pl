@@ -208,10 +208,10 @@ if($comma eq "") {
   print $found_section;
   print "p" . $found_paragraph if $paragraph_specified;
 =cut
-  print "http://blackshell.com/~msmud/cstd.html\#$found_section";
+  print "\nhttp://blackshell.com/~msmud/cstd.html\#$found_section";
   print "p" . $found_paragraph if $paragraph_specified;
-  print " : ";
-  print "[", $found_section_title, "] " if length $found_section_title;
+  print "\n\n";
+  print "[", $found_section_title, "]\n\n" if length $found_section_title;
 }
 
 print "$result\n";
