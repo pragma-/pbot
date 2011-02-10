@@ -44,6 +44,15 @@ sub initialize {
   $pbot->commands->register(sub { return $self->adminrem(@_)     },       "adminrem",      60);
   $pbot->commands->register(sub { return $self->adminset(@_)     },       "adminset",      60);
   $pbot->commands->register(sub { return $self->adminunset(@_)   },       "adminunset",    60);
+  $pbot->commands->register(sub { return $self->sl(@_)           },       "sl",            60);
+}
+
+sub sl {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+
+  $self->{pbot}->conn->sl($arguments);
+  return "Sent.\n";
 }
 
 sub login {
