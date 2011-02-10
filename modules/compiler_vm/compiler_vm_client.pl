@@ -610,7 +610,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C++') {
 
     # create tmpcode object that starts from extract pos, to skip any quoted code
     my $tmpcode = substr($precode, $extract_pos);
-    print "tmpcode: [$tmpcode]\n";
+    print "tmpcode: [$tmpcode]\n" if $debug;
 
     $precode = substr($precode, 0, $extract_pos);
     print "precode: [$precode]\n" if $debug;
