@@ -107,20 +107,20 @@ sub process_line {
     }
 
     if(defined $result && length $result > 0) {
-      my $len = length $result;
-      if($len > $pbot->max_msg_len) {
-        my $link = paste_codepad("[$from] <$nick> $text\n\n$result");
-        my $trunc = "... truncated; see $link for full text.";
-        $pbot->logger->log("Message truncated -- pasted to $link\n");
 
-        $result =~ s/[\n\r]+/ /g;
-        $result =~ s/\s+/ /g;
+      my $original_result = $result;
+
+      $result =~ s/[\n\r]+/ /g;
+      $result =~ s/\s+/ /g;
+      
+      if(length $result > $pbot->max_msg_len) {
+        my $link = paste_codepad("[$from] <$nick> $text\n\n$original_result");
+        my $trunc = "... [truncated; see $link for full text.]";
+        $pbot->logger->log("Message truncated -- pasted to $link\n");
         
-        $result = substr($result, 0, $pbot->max_msg_len);
-        substr($result, $pbot->max_msg_len - length $trunc) = $trunc;
-      } else {
-        $result =~ s/[\n\r]+/ /g;
-        $result =~ s/\s+/ /g;
+        my $trunc_len = length $result < $pbot->max_msg_len ? length $result : $pbot->max_msg_len;
+        $result = substr($result, 0, $trunc_len);
+        substr($result, $trunc_len - length $trunc) = $trunc;
       }
 
       $pbot->logger->log("Final result: $result\n");
