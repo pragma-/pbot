@@ -114,7 +114,7 @@ sub process_line {
       $result =~ s/\s+/ /g;
       
       if(length $result > $pbot->max_msg_len) {
-        my $link = paste_codepad("[$from] <$nick> $text\n\n$original_result");
+        my $link = paste_codepad("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
         my $trunc = "... [truncated; see $link for full text.]";
         $pbot->logger->log("Message truncated -- pasted to $link\n");
         

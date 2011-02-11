@@ -195,23 +195,39 @@ sub list {
   }
 
   if($arguments =~/^messages\s+(.*)$/) {
-    my ($nick_search, $channel_search, $text_search) = split / /, $1;
+    my ($mask_search, $channel_search, $text_search) = split / /, $1;
 
-    return "/msg $nick Usage: !list messages <nick regex> <channel regex> [text regex]" if not defined $channel_search;
+    return "/msg $nick Usage: !list messages <hostmask or nick regex> <channel regex> [text regex]" if not defined $channel_search;
     $text_search = '.*' if not defined $text_search;
 
     my @results = eval {
       my @ret;
-      foreach my $history_nick (keys %{ $self->{pbot}->antiflood->message_history }) {
-        if($history_nick =~ m/$nick_search/i) {
-          foreach my $history_channel (keys %{ $self->{pbot}->antiflood->message_history->{$history_nick} }) {
-            next if $history_channel eq 'hostmask'; # TODO: move channels into {channel} subkey
+      foreach my $history_mask (keys %{ $self->{pbot}->antiflood->message_history }) {
+        my $nickserv = "(undef)";
+
+        $nickserv = $self->{pbot}->antiflood->message_history->{$history_mask}->{nickserv_account} if exists $self->{pbot}->antiflood->message_history->{$history_mask}->{nickserv_account};
+        
+        if($history_mask =~ m/$mask_search/i) {
+          foreach my $history_channel (keys %{ $self->{pbot}->antiflood->message_history->{$history_mask}->{channels} }) {
             if($history_channel =~ m/$channel_search/i) {
-              my @messages = @{ ${ $self->{pbot}->antiflood->message_history }{$history_nick}{$history_channel}{messages} };
+              my @messages = @{ $self->{pbot}->antiflood->message_history->{$history_mask}->{channels}->{$history_channel}{messages} };
 
               for(my $i = 0; $i <= $#messages; $i++) {
-                next if $messages[$i]->{msg} =~ /^!login/;
-                push @ret, { offenses => ${ $self->{pbot}->antiflood->message_history }{$history_nick}{$history_channel}{offenses}, last_offense_timestamp => $self->{pbot}->antiflood->message_history->{$history_nick}{$history_channel}{last_offense_timestamp}, join_watch => ${ $self->{pbot}->antiflood->message_history }{$history_nick}{$history_channel}{join_watch}, text => $messages[$i]->{msg}, timestamp => $messages[$i]->{timestamp}, nick => $history_nick, channel => $history_channel } if $messages[$i]->{msg} =~ m/$text_search/i;
+                next if $messages[$i]->{msg} =~ /^\Q$self->{pbot}->{trigger}\E?login/; # don't reveal login passwords
+
+                print "$history_mask, $history_channel\n";
+                print "joinwatch: ", $self->{pbot}->antiflood->message_history->{$history_mask}->{channels}->{$history_channel}{join_watch}, "\n";
+
+                push @ret, { 
+                  offenses => $self->{pbot}->antiflood->message_history->{$history_mask}->{channels}->{$history_channel}{offenses}, 
+                  last_offense_timestamp => $self->{pbot}->antiflood->message_history->{$history_mask}->{channels}->{$history_channel}{last_offense_timestamp}, 
+                  join_watch => $self->{pbot}->antiflood->message_history->{$history_mask}->{channels}->{$history_channel}{join_watch}, 
+                  text => $messages[$i]->{msg}, 
+                  timestamp => $messages[$i]->{timestamp}, 
+                  mask => $history_mask, 
+                  nickserv => $nickserv, 
+                  channel => $history_channel 
+                } if $messages[$i]->{msg} =~ m/$text_search/i;
               }
             }
           }
@@ -226,15 +242,16 @@ sub list {
     }
 
     my $text = "";
-    my %seen_nicks = ();
+    my %seen_masks = ();
     my @sorted = sort { $a->{timestamp} <=> $b->{timestamp} } @results;
+
     foreach my $msg (@sorted) {
-      if(not exists $seen_nicks{$msg->{nick}}) {
-        $seen_nicks{$msg->{nick}} = 1;
-        $text .= "--- [$msg->{nick}: join counter: $msg->{join_watch}; offenses: $msg->{offenses}; last offense/decrease: " . ($msg->{last_offense_timestamp} > 0 ? ago(gettimeofday - $msg->{last_offense_timestamp}) : "unknown") . "]\n";
+      if(not exists $seen_masks{$msg->{mask}}) {
+        $seen_masks{$msg->{mask}} = 1;
+        $text .= "--- [$msg->{mask} [$msg->{nickserv}]: join counter: $msg->{join_watch}; offenses: $msg->{offenses}; last offense/decrease: " . ($msg->{last_offense_timestamp} > 0 ? ago(gettimeofday - $msg->{last_offense_timestamp}) : "unknown") . "]\n";
       }
 
-      $text .= "[$msg->{channel}] " . localtime($msg->{timestamp}) . " <$msg->{nick}> " . $msg->{text} . "\n";
+      $text .= "[$msg->{channel}] " . localtime($msg->{timestamp}) . " <$msg->{mask}> " . $msg->{text} . "\n";
     }
 
     $self->{pbot}->logger->log($text);

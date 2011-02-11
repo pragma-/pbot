@@ -56,16 +56,27 @@ sub initialize {
 sub get_flood_account {
   my ($self, $nick, $user, $host) = @_;
 
-  return $nick if exists ${ $self->message_history }{$nick};
+  return "$nick!$user\@$host" if exists $self->message_history->{"$nick!$user\@$host"};
 
-  foreach my $n (keys %{ $self->{message_history} }) {
-    my $userhost = "$user\@$host";
-    if(${ $self->{message_history} }{$n}{hostmask} =~ /\Q$userhost\E/i) {
-      $self->{pbot}->logger->log("Using existing hostmask found with nick $n\n");
-      return $n;
+  my $suspicious_nick = 0;
+
+  foreach my $mask (keys %{ $self->message_history }) {
+
+    # check if foo!bar@baz matches foo!*@*; e.g., same nick, but different user@host (usually logging into nickserv, but could possibly be attempted nick hijacking)
+    if($mask =~ m/^\Q$nick\E!.*/i) {
+      $self->{pbot}->logger->log("anti-flood: Warning: Found nick $nick with existing differing hostmask $mask, using $nick!$user\@$host anyway.\n");
+      # flag this as suspicious, so we check whois to get nickserv account if there is no user@host existing account found
+      $suspicious_nick = 1; 
+    }
+
+    # check if foo!bar@baz matches *!bar@baz; e.g., same user@host, but different nick (usually alt-nicks due to rejoining)
+    if($mask =~ m/!\Q$user\E@\Q$host\E$/i) {
+      $self->{pbot}->logger->log("anti-flood: Using existing hostmask $mask found for $nick!$user\@$host\n");
+      return $mask;
     }
   }
 
+  $self->{pbot}->conn->whois($nick) if $suspicious_nick;
   return undef;
 }
 
@@ -76,40 +87,40 @@ sub add_message {
   return undef if $channel =~ /[@!]/; # ignore QUIT messages from nick!user@host channels
 
   #$self->{pbot}->logger->log("appending new message\n");
-  push(@{ $self->message_history->{$account}{$channel}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
+  push(@{ $self->message_history->{$account}->{channels}->{$channel}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
 
-  my $length = $#{ $self->message_history->{$account}{$channel}{messages} } + 1;
+  my $length = $#{ $self->message_history->{$account}->{channels}->{$channel}{messages} } + 1;
 
   if($mode == $self->{FLOOD_JOIN}) {
     if($text =~ /^JOIN/) {
-      ${ $self->message_history }{$account}{$channel}{join_watch}++;
-      $self->{pbot}->logger->log("$account $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
+      $self->message_history->{$account}->{channels}->{$channel}{join_watch}++;
+      $self->{pbot}->logger->log("$account $channel joinwatch adjusted: " . $self->message_history->{$account}->{channels}->{$channel}{join_watch} . "\n");
     } else {
       # PART or QUIT
       # check QUIT message for netsplits, and decrement joinwatch if found
       if($text =~ /^QUIT .*\.net .*\.split/) {
-        ${ $self->message_history }{$account}{$channel}{join_watch}--;
-        ${ $self->message_history }{$account}{$channel}{join_watch} = 0 if ${ $self->message_history }{$account}{$channel}{join_watch} < 0;
-        $self->{pbot}->logger->log("$account $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
-        $self->message_history->{$account}{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE}; 
+        $self->message_history->{$account}->{channels}->{$channel}{join_watch}--;
+        $self->message_history->{$account}->{channels}->{$channel}{join_watch} = 0 if $self->message_history->{$account}->{channels}->{$channel}{join_watch} < 0;
+        $self->{pbot}->logger->log("$account $channel joinwatch adjusted: " . $self->message_history->{$account}->{channels}->{$channel}{join_watch} . "\n");
+        $self->message_history->{$account}->{channels}->{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE}; 
       }
       # check QUIT message for Ping timeout or Excess Flood
       elsif($text =~ /^QUIT Ping timeout/ or $text =~ /^QUIT Excess Flood/) {
-        # deal with these aggressively
-        #${ $self->message_history }{$account}{$channel}{join_watch}++;
-        #$self->{pbot}->logger->log("$account $channel joinwatch adjusted: ${ $self->message_history }{$account}{$channel}{join_watch}\n");
+        # ignore these (used to treat aggressively)
+        $self->message_history->{$account}->{channels}->{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE};
       } else {
         # some other type of QUIT or PART
-        $self->message_history->{$account}{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE};
+        $self->message_history->{$account}->{channels}->{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE};
       }
     }
   } elsif($mode == $self->{FLOOD_CHAT}) {
     # reset joinwatch if they send a message
-    ${ $self->message_history }{$account}{$channel}{join_watch} = 0;
+    $self->message_history->{$account}->{channels}->{$channel}{join_watch} = 0;
   }
 
+  # keep only MAX_NICK_MESSAGES message history per channel
   if($length >= $self->{pbot}->{MAX_NICK_MESSAGES}) {
-    my %msg = %{ shift(@{ $self->message_history->{$account}{$channel}{messages} }) };
+    my %msg = %{ shift(@{ $self->message_history->{$account}->{channels}->{$channel}{messages} }) };
     #$self->{pbot}->logger->log("shifting message off top: $msg{msg}, $msg{timestamp}\n");
     $length--;
   }
@@ -119,9 +130,10 @@ sub add_message {
 
 sub check_flood {
   my ($self, $channel, $nick, $user, $host, $text, $max_messages, $max_time, $mode) = @_;
+  my $mask = lc "$nick!$user\@$host";
   my $now = gettimeofday;
 
-  $self->{pbot}->logger->log(sprintf("%-14s | %-65s | %s\n", $channel, "$nick!$user\@$host", $text));
+  $self->{pbot}->logger->log(sprintf("%-14s | %-65s | %s\n", $channel, $mask, $text));
 
   $nick = lc $nick;
   $user = lc $user;
@@ -134,42 +146,44 @@ sub check_flood {
 
   if(not defined $account) {
     # new addition
-    #$self->{pbot}->logger->log("brand new nick addition\n");
-    ${ $self->message_history }{$nick}{hostmask} = "$nick!$user\@$host";
+    #$self->{pbot}->logger->log("brand new account addition\n");
+    #$self->message_history->{$mask} = {};
+    $self->message_history->{$mask}->{channels} = {};
+    
+    $self->{pbot}->conn->whois($nick);
 
-    $account = $nick;
+    $account = $mask;
   }
 
   # handle QUIT events
   # (these events come from $channel nick!user@host, not a specific channel or nick,
   # so they need to be dispatched to all channels the bot exists on)
   if($mode == $self->{FLOOD_JOIN} and $text =~ /^QUIT/) {
-    foreach my $chan (keys %{ $self->{pbot}->channels->channels->hash }) {
-      $chan = lc $chan;
+    foreach my $chan (lc keys %{ $self->{pbot}->channels->channels->hash }) {
 
       next if $chan eq $channel;  # skip nick!user@host "channel"
 
-      if(not exists ${ $self->message_history }{$account}{$chan}) {
-        #$self->{pbot}->logger->log("adding new channel for existing nick\n");
-        ${ $self->message_history }{$account}{$chan}{offenses} = 0;
-        ${ $self->message_history }{$account}{$chan}{last_offense_timestamp} = 0;
-        ${ $self->message_history }{$account}{$chan}{join_watch} = 0;
-        ${ $self->message_history }{$account}{$chan}{messages} = [];
+      if(not exists $self->message_history->{$account}->{channels}->{$chan}) {
+        #$self->{pbot}->logger->log("adding new channel for existing account\n");
+        $self->message_history->{$account}->{channels}->{$chan}{offenses} = 0;
+        $self->message_history->{$account}->{channels}->{$chan}{last_offense_timestamp} = 0;
+        $self->message_history->{$account}->{channels}->{$chan}{join_watch} = 0;
+        $self->message_history->{$account}->{channels}->{$chan}{messages} = [];
       }
 
       $self->add_message($account, $chan, $text, $mode);
     }
 
-    # don't do flood processing for QUIT messages
+    # don't do flood processing for QUIT events
     return;
   }
 
-  if(not exists ${ $self->message_history }{$account}{$channel}) {
+  if(not exists $self->message_history->{$account}->{channels}->{$channel}) {
     #$self->{pbot}->logger->log("adding new channel for existing nick\n");
-    ${ $self->message_history }{$account}{$channel}{offenses} = 0;
-    ${ $self->message_history }{$account}{$channel}{last_offense_timestamp} = 0;
-    ${ $self->message_history }{$account}{$channel}{join_watch} = 0;
-    ${ $self->message_history }{$account}{$channel}{messages} = [];
+    $self->message_history->{$account}->{channels}->{$channel}{offenses} = 0;
+    $self->message_history->{$account}->{channels}->{$channel}{last_offense_timestamp} = 0;
+    $self->message_history->{$account}->{channels}->{$channel}{join_watch} = 0;
+    $self->message_history->{$account}->{channels}->{$channel}{messages} = [];
   }
 
   my $length = $self->add_message($account, $channel, $text, $mode);
@@ -194,69 +208,78 @@ sub check_flood {
 
     my %msg;
     if($mode == $self->{FLOOD_CHAT}) {
-      %msg = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - $max_messages] };
-    } else {
+      %msg = %{ @{ $self->message_history->{$account}->{channels}->{$channel}{messages} }[$length - $max_messages] };
+    } 
+    elsif($mode == $self->{FLOOD_JOIN}) {
       my $count = 0;
       my $i = $length - 1;
-      $self->{pbot}->logger->log("Checking flood history, i = $i\n") if ${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages;
+      $self->{pbot}->logger->log("Checking flood history, i = $i\n") if $self->message_history->{$account}->{channels}->{$channel}{join_watch} >= $max_messages;
       for(; $i >= 0; $i--) {
-        $self->{pbot}->logger->log($i . " " . $self->message_history->{$account}{$channel}{messages}->[$i]{mode} ." " . $self->message_history->{$account}{$channel}{messages}->[$i]{msg} .  " " . $self->message_history->{$account}{$channel}{messages}->[$i]{timestamp} . " [" . ago_exact(time - $self->message_history->{$account}{$channel}{messages}->[$i]{timestamp}) . "]\n") if ${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages;
-        next if $self->message_history->{$account}{$channel}{messages}->[$i]{mode} != $self->{FLOOD_JOIN};
+        $self->{pbot}->logger->log($i . " " . $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{mode} ." " . $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{msg} .  " " . $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{timestamp} . " [" . ago_exact(time - $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{timestamp}) . "]\n") if $self->message_history->{$account}->{channels}->{$channel}{join_watch} >= $max_messages;
+        next if $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{mode} != $self->{FLOOD_JOIN};
         last if ++$count >= 4;
       }
       $i = 0 if $i < 0;
-      %msg = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$i] };
+      %msg = %{ @{ $self->message_history->{$account}->{channels}->{$channel}{messages} }[$i] };
+    }
+    else {
+      $self->{pbot}->logger->log("Unknown flood mode [$mode] ... aborting flood enforcement.\n");
+      return;
     }
 
-    my %last = %{ @{ ${ $self->message_history }{$account}{$channel}{messages} }[$length - 1] };
+    my %last = %{ @{ $self->message_history->{$account}->{channels}->{$channel}{messages} }[$length - 1] };
 
     $self->{pbot}->logger->log("Comparing $nick!$user\@$host " . int($last{timestamp}) . " against " . int($msg{timestamp}) . ": " . (int($last{timestamp} - $msg{timestamp})) . " seconds [" . duration_exact($last{timestamp} - $msg{timestamp}) . "]\n") if $mode == $self->{FLOOD_JOIN};
 
     if($last{timestamp} - $msg{timestamp} <= $max_time && not $self->{pbot}->admins->loggedin($channel, "$nick!$user\@$host")) {
       if($mode == $self->{FLOOD_JOIN}) {
-        if(${ $self->message_history }{$account}{$channel}{join_watch} >= $max_messages) {
-          ${ $self->message_history }{$account}{$channel}{offenses}++;
-          ${ $self->message_history }{$account}{$channel}{last_offense_timestamp} = gettimeofday;
+        if($self->message_history->{$account}->{channels}->{$channel}{join_watch} >= $max_messages) {
+          $self->message_history->{$account}->{channels}->{$channel}{offenses}++;
+          $self->message_history->{$account}->{channels}->{$channel}{last_offense_timestamp} = gettimeofday;
           
-          my $timeout = (2 ** (($self->message_history->{$account}{$channel}{offenses} + 2) < 10 ? ${ $self->message_history }{$account}{$channel}{offenses} + 2 : 10));
+          my $timeout = (2 ** (($self->message_history->{$account}->{channels}->{$channel}{offenses} + 2) < 10 ? $self->message_history->{$account}->{channels}->{$channel}{offenses} + 2 : 10));
 
           my $banmask = address_to_mask($host);
 
           $self->{pbot}->chanops->ban_user_timed("*!$user\@$banmask\$##stop_join_flood", $channel, $timeout * 60 * 60);
           
-          $self->{pbot}->logger->log("$nick!$user\@$banmask banned for $timeout hours due to join flooding (offense #${ $self->message_history }{$account}{$channel}{offenses}).\n");
+          $self->{pbot}->logger->log("$nick!$user\@$banmask banned for $timeout hours due to join flooding (offense #" . $self->message_history->{$account}->{channels}->{$channel}{offenses} . ").\n");
           
           $timeout = "several" if($timeout > 8);
 
           $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel for $timeout hours due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with: unbanme $channel");
 
-          ${ $self->message_history }{$account}{$channel}{join_watch} = $max_messages - 2; # give them a chance to rejoin 
+          $self->message_history->{$account}->{channels}->{$channel}{join_watch} = $max_messages - 2; # give them a chance to rejoin 
         } 
       } elsif($mode == $self->{FLOOD_CHAT}) {
-        ${ $self->message_history }{$account}{$channel}{offenses}++;
-        ${ $self->message_history }{$account}{$channel}{last_offense_timestamp} = gettimeofday;
-        my $length = ${ $self->message_history }{$account}{$channel}{offenses} ** ${ $self->message_history }{$account}{$channel}{offenses} * ${ $self->message_history }{$account}{$channel}{offenses} * 30;
+        $self->message_history->{$account}->{channels}->{$channel}{offenses}++;
+        $self->message_history->{$account}->{channels}->{$channel}{last_offense_timestamp} = gettimeofday;
+        
+        my $length = $self->message_history->{$account}->{channels}->{$channel}{offenses} ** $self->message_history->{$account}->{channels}->{$channel}{offenses} * $self->message_history->{$account}->{channels}->{$channel}{offenses} * 30;
+
         if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
           # don't ban again if already banned
           return if exists $self->{pbot}->chanops->{unban_timeout}->hash->{"*!$user\@$host"};
 
-          if($mode == $self->{FLOOD_CHAT}) {
-            $self->{pbot}->chanops->ban_user_timed("*!$user\@$host", $channel, $length);
+          $self->{pbot}->chanops->ban_user_timed("*!$user\@$host", $channel, $length);
 
-            $self->{pbot}->logger->log("$nick $channel flood offense ${ $self->message_history }{$account}{$channel}{offenses} earned $length second ban\n");
+          $self->{pbot}->logger->log("$nick $channel flood offense " . $self->message_history->{$account}->{channels}->{$channel}{offenses} . " earned $length second ban\n");
 
-            if($length  < 1000) {
-              $length = "$length seconds";
-            } else {
-              $length = "a little while";
-            }
-
-            $self->{pbot}->conn->privmsg($nick, "You have been muted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length.");
+          if($length  < 1000) {
+            $length = "$length seconds";
+          } else {
+            $length = "a little while";
           }
-        } else { # private message flood
-          return if exists $self->{pbot}->ignorelist->{ignore_list}->{"$nick!$user\@$host"}{$channel};
-          $self->{pbot}->logger->log("$nick msg flood offense ${ $self->message_history }{$account}{$channel}{offenses} earned $length second ignore\n");
+
+          $self->{pbot}->conn->privmsg($nick, "You have been muted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length.");
+        } 
+        else { # private message flood
+          return if exists $self->{pbot}->ignorelist->{ignore_list}->{"$nick!$user\@$host"}->{channels}->{$channel};
+
+          $self->{pbot}->logger->log("$nick msg flood offense " . $self->message_history->{$account}->{channels}->{$channel}{offenses} . " earned $length second ignore\n");
+
           $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", "$nick!$user\@$host $channel $length");
+
           if($length  < 1000) {
             $length = "$length seconds";
           } else {
@@ -279,26 +302,40 @@ sub prune_message_history {
   my $self = shift;
 
   $self->{pbot}->logger->log("Pruning message history . . .\n");
-  foreach my $nick (keys %{ $self->{message_history} }) {
-    foreach my $channel (keys %{ $self->{message_history}->{$nick} })
-    {
-      next if $channel eq 'hostmask'; # TODO: move channels into {channel} subkey
 
-      #$self->{pbot}->logger->log("Checking [$nick][$channel]\n");
-      my $length = $#{ $self->{message_history}->{$nick}{$channel}{messages} } + 1;
-      my %last = %{ @{ $self->{message_history}->{$nick}{$channel}{messages} }[$length - 1] };
+  foreach my $mask (keys %{ $self->{message_history} }) {
+    foreach my $channel (keys %{ $self->{message_history}->{$mask}->{channels} }) {
 
+      #$self->{pbot}->logger->log("Checking [$mask][$channel]\n");
+      my $length = $#{ $self->{message_history}->{$mask}->{channels}->{$channel}{messages} } + 1;
+      my %last = %{ @{ $self->{message_history}->{$mask}->{channels}->{$channel}{messages} }[$length - 1] };
+
+      # delete channel key if no activity within 3 days
       if(gettimeofday - $last{timestamp} >= 60 * 60 * 24 * 3) {
-        $self->{pbot}->logger->log("$nick in $channel hasn't spoken in three days, removing message history.\n");
-        delete $self->{message_history}->{$nick}{$channel};
-      } else {
-        # decrease offenses counter if 24 hours of elapsed without any new offense
-        if ($self->{message_history}->{$nick}{$channel}{offenses} > 0 and $self->{message_history}->{$nick}{$channel}{last_offense_timestamp} > 0 and (gettimeofday - $self->{message_history}->{$nick}{$channel}{last_offense_timestamp} >= 60 * 60 * 24)) {
-          $self->{message_history}->{$nick}{$channel}{offenses}--;
-          $self->{message_history}->{$nick}{$channel}{last_offense_timestamp} = gettimeofday;
-          $self->{pbot}->logger->log("anti-flood: [$channel][$nick] 24 hours since last offense/decrease -- decreasing offenses to $self->{message_history}->{$nick}{$channel}{offenses}\n");
-        }
+        $self->{pbot}->logger->log("$mask in $channel hasn't spoken in three days; removing channel history.\n");
+        delete $self->{message_history}->{$mask}->{channels}->{$channel};
+        next;
+      } 
+
+      # decrease offenses counter if 24 hours of elapsed without any new offense
+      elsif ($self->{message_history}->{$mask}->{channels}->{$channel}{offenses} > 0 and 
+             $self->{message_history}->{$mask}->{channels}->{$channel}{last_offense_timestamp} > 0 and 
+             (gettimeofday - $self->{message_history}->{$mask}->{channels}->{$channel}{last_offense_timestamp} >= 60 * 60 * 24)) {
+        $self->{message_history}->{$mask}->{channels}->{$channel}{offenses}--;
+        $self->{message_history}->{$mask}->{channels}->{$channel}{last_offense_timestamp} = gettimeofday;
+        $self->{pbot}->logger->log("anti-flood: [$channel][$mask] 24 hours since last offense/decrease -- decreasing offenses to $self->{message_history}->{$mask}->{channels}->{$channel}{offenses}\n");
       }
+    }
+
+    # delete account for this $mask if all its channels have been deleted
+    my $count = 0;
+    foreach my $channel (keys %{ $self->{message_history}->{$mask} }) {
+      $count++;
+    }
+
+    if($count == 0) {
+      $self->{pbot}->logger->log("$mask has no more channels remaining; deleting history account.\n");
+      delete $self->{message_history}->{$mask};
     }
   }
 }
@@ -350,6 +387,34 @@ sub address_to_mask {
   }
 
   return $banmask;
+}
+
+sub check_nickserv_accounts {
+  my ($self, $nick, $account) = @_;
+
+  foreach my $mask (keys %{ $self->{message_history} }) {
+    if(exists $self->{message_history}->{$mask}->{nickserv_account}) {
+      if(lc $self->{message_history}->{$mask}->{nickserv_account} eq lc $account) {
+        $self->{pbot}->logger->log("anti-flood: Found existing NickServ account for $nick [$account] with message history account $mask.\n");
+      }
+    } 
+    else {
+      if($mask =~ m/^\Q$nick\E!/i) {
+        $self->{pbot}->logger->log("anti-flood: nick $nick matches mask $mask, and no NickServ account; setting account to $account.\n");
+        $self->message_history->{$mask}->{nickserv_account} = $account;
+      }
+    }
+  }
+}
+
+sub on_whoisaccount {
+  my ($self, $conn, $event) = @_;
+  my $nick    = $event->{args}[1];
+  my $account = $event->{args}[2];
+
+  $self->{pbot}->logger->log("$nick is using NickServ account [$account]\n");
+
+  $self->check_nickserv_accounts($nick, $account);
 }
 
 1;

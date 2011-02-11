@@ -175,15 +175,23 @@ sub grab_quotegrab {
     return "/msg $nick Please choose a history between 1 and $self->{pbot}->{MAX_NICK_MESSAGES}";
   }
 
-  if(not exists $self->{pbot}->antiflood->message_history->{$grab_nick}) {
+  my $found_mask = undef;
+  foreach my $mask (keys %{ $self->{pbot}->antiflood->message_history }) {
+    if($mask =~ m/^\Q$grab_nick\E!/i) {
+      $found_mask = $mask;
+      last;
+    }
+  }
+
+  if(not defined $found_mask) {
     return "No message history for $grab_nick.";
   }
 
-  if(not exists $self->{pbot}->antiflood->message_history->{$grab_nick}{$channel}) {
+  if(not exists $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}) {
     return "No message history for $grab_nick in $channel.";
   }
   
-  my @messages = @{ $self->{pbot}->antiflood->message_history->{$grab_nick}{$channel}{messages} };
+  my @messages = @{ $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}{messages} };
 
   $grab_history--;
   
@@ -208,7 +216,7 @@ sub grab_quotegrab {
   $self->save_quotegrabs();
   
   my $msg = $messages[$grab_history]->{msg};
-  $msg =~ s/(.{8}).*/$1.../;
+  $msg =~ s/(.{21}).*/$1.../;
   
   return "Quote grabbed: " . ($#{ $self->{quotegrabs} } + 1) . ": <$grab_nick> $msg";
 }

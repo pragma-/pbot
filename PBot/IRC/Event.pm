@@ -95,9 +95,9 @@ sub args {
 sub dump {
     my ($self, $arg, $counter) = (shift, undef, 0);   # heh heh!
 
-    printf STDERR "TYPE: %-30s    FORMAT: %-30s\n", $self->type, $self->format;
-    print STDERR "FROM: ", $self->from, "\n";
-    print STDERR "TO: ", join(", ", @{$self->to}), "\n";
+    printf "TYPE: %-30s    FORMAT: %-30s\n", $self->type, $self->format;
+    print "FROM: ", $self->from, "\n";
+    print "TO: ", join(", ", @{$self->to}), "\n";
     foreach $arg ($self->args) {
 		print "Arg ", $counter++, ": ", $arg, "\n";
     }
@@ -306,6 +306,7 @@ sub trans {
 	   323 => "listend",
 	   324 => "channelmodeis",
 	   329 => "channelcreate",  # 1997-11-24 -- archon
+	   330 => "whoisaccount",   # 2011-02-10 pragma_ for freenode
 	   331 => "notopic",
 	   332 => "topic",
 	   333 => "topicinfo",      # 1997-11-24 -- archon

@@ -433,3 +433,8 @@ PBot fork Jan 20, 2011
 
   - Renamed Net::IRC packages throughout to PBot::IRC.
   - Added support for PONG events in Connection.pm
+
+PBot fork Feb 10, 2011
+
+  - Added support for freenode's whoisaccount
+  - Moved debug output from STDERR to STDOUT

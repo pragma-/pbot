@@ -474,7 +474,7 @@ sub handler {
     croak "Not enough arguments to handler()";
   }
   
-  print STDERR "Trying to handle event '$ev'.\n" if $self->{_debug};
+  print "Trying to handle event '$ev'.\n" if $self->{_debug};
   
   my $handler = undef;
   if (exists $self->{_handler}->{$ev}) {
@@ -500,7 +500,7 @@ sub handler {
     confess "Bad parameter passed to handler(): rp=$rp";
   }
   
-  warn "Handler for '$ev' called.\n" if $self->{_debug};
+  print "Handler for '$ev' called.\n" if $self->{_debug};
   
   return 1;
 }
@@ -864,7 +864,7 @@ sub parse {
    $line =~ s/[\012\015]+$//;
    next unless $line;
    
-   print STDERR "<<< $line\n" if $self->{_debug};
+   print "<<< $line\n" if $self->{_debug};
    
    # Like the RFC says: "respond as quickly as possible..."
    if ($line =~ /^PING/) {
@@ -955,7 +955,7 @@ sub parse {
      }  elsif ($type eq "public" or $type eq "msg"   or
                $type eq "notice" or $type eq "mode"  or
                $type eq "join"   or $type eq "part"  or
-               $type eq "topic"  or $type eq "invite" ) {
+               $type eq "topic"  or $type eq "invite" or $type eq "whoisaccount" ) {
        
        $ev = PBot::IRC::Event->new( $type, # pragma_ 2011/21/01
                                    $from,

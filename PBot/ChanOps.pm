@@ -40,7 +40,7 @@ sub initialize {
   $self->{is_opped} = {};
 
   $pbot->timer->register(sub { $self->check_opped_timeouts   }, 10);
-  $pbot->timer->register(sub { $self->check_unban_timeouts }, 10);
+  $pbot->timer->register(sub { $self->check_unban_timeouts   }, 10);
 }
 
 sub gain_ops {
