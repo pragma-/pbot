@@ -58,25 +58,24 @@ sub get_flood_account {
 
   return "$nick!$user\@$host" if exists $self->message_history->{"$nick!$user\@$host"};
 
-  my $suspicious_nick = 0;
-
   foreach my $mask (keys %{ $self->message_history }) {
 
-    # check if foo!bar@baz matches foo!*@*; e.g., same nick, but different user@host (usually logging into nickserv, but could possibly be attempted nick hijacking)
+    # check if foo!bar@baz matches foo!*@*; e.g., same nick, but possibly different user@host 
+    # (usually logging into nickserv, but could possibly be attempted nick hijacking)
+
     if($mask =~ m/^\Q$nick\E!.*/i) {
-      $self->{pbot}->logger->log("anti-flood: Warning: Found nick $nick with existing differing hostmask $mask, using $nick!$user\@$host anyway.\n");
-      # flag this as suspicious, so we check whois to get nickserv account if there is no user@host existing account found
-      $suspicious_nick = 1; 
+      $self->{pbot}->logger->log("anti-flood: [get-account] $nick!$user\@$host seen previously as $mask\n");
     }
 
-    # check if foo!bar@baz matches *!bar@baz; e.g., same user@host, but different nick (usually alt-nicks due to rejoining)
+    # check if foo!bar@baz matches *!bar@baz; e.g., same user@host, but different nick 
+    # (usually alternate-nicks due to rejoining)
+    
     if($mask =~ m/!\Q$user\E@\Q$host\E$/i) {
-      $self->{pbot}->logger->log("anti-flood: Using existing hostmask $mask found for $nick!$user\@$host\n");
+      $self->{pbot}->logger->log("anti-flood: [get-account] $nick!$user\@$host using existing mask $mask\n");
       return $mask;
     }
   }
 
-  $self->{pbot}->conn->whois($nick) if $suspicious_nick;
   return undef;
 }
 
@@ -311,8 +310,8 @@ sub prune_message_history {
       my %last = %{ @{ $self->{message_history}->{$mask}->{channels}->{$channel}{messages} }[$length - 1] };
 
       # delete channel key if no activity within 3 days
-      if(gettimeofday - $last{timestamp} >= 60 * 60 * 24 * 3) {
-        $self->{pbot}->logger->log("$mask in $channel hasn't spoken in three days; removing channel history.\n");
+      if(gettimeofday - $last{timestamp} >= 60 * 60 * 24 * 90) {
+        $self->{pbot}->logger->log("$mask in $channel hasn't spoken in ninety days; removing channel history.\n");
         delete $self->{message_history}->{$mask}->{channels}->{$channel};
         next;
       } 
@@ -395,12 +394,12 @@ sub check_nickserv_accounts {
   foreach my $mask (keys %{ $self->{message_history} }) {
     if(exists $self->{message_history}->{$mask}->{nickserv_account}) {
       if(lc $self->{message_history}->{$mask}->{nickserv_account} eq lc $account) {
-        $self->{pbot}->logger->log("anti-flood: Found existing NickServ account for $nick [$account] with message history account $mask.\n");
+        $self->{pbot}->logger->log("anti-flood: [check-account] $nick [nickserv: $account] seen previously as $mask.\n");
       }
     } 
     else {
       if($mask =~ m/^\Q$nick\E!/i) {
-        $self->{pbot}->logger->log("anti-flood: nick $nick matches mask $mask, and no NickServ account; setting account to $account.\n");
+        $self->{pbot}->logger->log("anti-flood: $mask: setting nickserv account to [$account]\n");
         $self->message_history->{$mask}->{nickserv_account} = $account;
       }
     }
