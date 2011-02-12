@@ -40,8 +40,7 @@ sub initialize {
 
 sub on_connect {
   my ($self, $conn) = @_;
-  $self->{pbot}->logger->log("Connected!  Identifying with NickServ . . .\n");
-  $conn->privmsg("nickserv", "identify " . $self->pbot->identify_password);
+  $self->{pbot}->logger->log("Connected!\n");
   $conn->{connected} = 1;
 }
 
@@ -92,7 +91,12 @@ sub on_notice {
 
   $self->{pbot}->logger->log("Received NOTICE from $nick $host '$text'\n");
 
-  if($nick eq "NickServ" && $text =~ m/You are now identified/i) {
+  if($nick eq "NickServ" && $text =~ m/This nickname is registered/) {
+    $self->{pbot}->logger->log("Identifying with NickServ . . .\n");
+    $conn->privmsg("nickserv", "identify " . $self->pbot->identify_password);
+  }
+  
+  if($nick eq "NickServ" && $text =~ m/You are now identified/) {
     foreach my $chan (keys %{ $self->{pbot}->channels->channels->hash }) {
       if($self->{pbot}->channels->channels->hash->{$chan}{enabled}) {
         $self->{pbot}->logger->log("Joining channel: $chan\n");

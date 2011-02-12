@@ -61,7 +61,7 @@ sub get_flood_account {
   foreach my $mask (keys %{ $self->message_history }) {
 
     # check if foo!bar@baz matches foo!*@*; e.g., same nick, but possibly different user@host 
-    # (usually logging into nickserv, but could possibly be attempted nick hijacking)
+    # (usually logging into nickserv or a dynamic ip address, but could possibly be attempted nick hijacking)
 
     if($mask =~ m/^\Q$nick\E!.*/i) {
       $self->{pbot}->logger->log("anti-flood: [get-account] $nick!$user\@$host seen previously as $mask\n");
