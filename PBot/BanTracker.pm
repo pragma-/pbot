@@ -56,7 +56,31 @@ sub get_banlist {
   delete $self->{banlist}->{$channel};
 
   $self->{pbot}->logger->log("Retrieving banlist for $channel.\n");
-  $conn->sl("mode $channel +b");
+  $conn->sl("mode $channel +bq");
+}
+
+sub get_baninfo {
+  my ($self, $mask) = @_;
+
+  $mask = quotemeta $mask;
+
+  $mask =~ s/\\\*/.*?/g;
+  $mask =~ s/\\\?/./g;
+
+  $self->{pbot}->logger->log("get-baninfo: mask regex: $mask\n");
+
+  foreach my $channel (keys %{ $self->{banlist} }) {
+    foreach my $banmask (keys %{ $self->{banlist}{$channel} }) {
+      if($banmask =~ m/$mask/i) {
+        my $baninfo = {};
+        $baninfo->{channel} = $channel;
+        $baninfo->{owner} = $self->{banlist}{$channel}[0];
+        return $baninfo;
+      }
+    }
+  }
+
+  return undef;
 }
 
 sub on_banlistentry {
@@ -76,11 +100,11 @@ sub track_mode {
   my $self = shift;
   my ($source, $mode, $target, $channel) = @_;
 
-  if($mode eq "+b") {
+  if($mode eq "+b" or $mode eq "+q") {
     $self->{pbot}->logger->log("ban-tracker: $target banned by $source in $channel.\n");
     $self->{banlist}->{$channel}->{$target} = [ $source, gettimeofday ];
   }
-  elsif($mode eq "-b") {
+  elsif($mode eq "-b" or $mode eq "-q") {
     $self->{pbot}->logger->log("ban-tracker: $target unbanned by $source in $channel.\n");
     delete $self->{banlist}->{$channel}->{$target};
   } else {

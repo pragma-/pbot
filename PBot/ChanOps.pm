@@ -75,9 +75,9 @@ sub perform_op_commands {
       $self->{pbot}->logger->log("  executing kick on $1 $2 $3\n");
     }
     shift(@{ $self->{op_commands} });
+    $self->{pbot}->{irc}->flush_output_queue();
+    $self->{pbot}->{irc}->do_one_loop();
   }
-  $self->{pbot}->{irc}->flush_output_queue();
-  $self->{pbot}->{irc}->do_one_loop();
   $self->{pbot}->logger->log("Done.\n");
 }
 
