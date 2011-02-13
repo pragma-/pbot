@@ -124,9 +124,6 @@ sub on_mode {
   my $i = 0;
   my $target;
 
-  use Data::Dumper;
-  print Dumper($event), "\n";
-
   while($mode_string =~ m/(.)/g) {
     my $char = $1;
 
