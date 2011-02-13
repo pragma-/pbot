@@ -1,8 +1,8 @@
 # File: AntiFlood.pm
 # Author: pragma_
 #
-# Purpose: Keeps track of which nick has said what and when.  Used in
-# conjunction with OperatorStuff and Quotegrabs for kick/ban on flood
+# Purpose: Keeps track of who has said what and when.  Used in
+# conjunction with ChanOps and Quotegrabs for kick/ban on flood
 # and grabbing quotes, respectively.
 
 package PBot::AntiFlood;
@@ -71,8 +71,9 @@ sub get_flood_account {
     # (usually alternate-nicks due to rejoining)
     
     if($mask =~ m/!\Q$user\E@\Q$host\E$/i) {
-      $self->{pbot}->logger->log("anti-flood: [get-account] $nick!$user\@$host using existing mask $mask\n");
-      return $mask;
+      $self->{pbot}->logger->log("anti-flood: [get-account] $nick!$user\@$host linked to $mask\n");
+      $self->{message_history}->{"$nick!$user\@$host"} = $self->{message_history}->{$mask};
+      return "$nick!$user\@$host";
     }
   }
 
