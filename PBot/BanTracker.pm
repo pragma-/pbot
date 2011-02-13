@@ -62,19 +62,20 @@ sub get_banlist {
 sub get_baninfo {
   my ($self, $mask) = @_;
 
-  $mask = quotemeta $mask;
-
-  $mask =~ s/\\\*/.*?/g;
-  $mask =~ s/\\\?/./g;
-
-  $self->{pbot}->logger->log("get-baninfo: mask regex: $mask\n");
-
   foreach my $channel (keys %{ $self->{banlist} }) {
     foreach my $banmask (keys %{ $self->{banlist}{$channel} }) {
+      $banmask = quotemeta $banmask;
+
+      $banmask =~ s/\\\*/.*?/g;
+      $banmask =~ s/\\\?/./g;
+
+      $self->{pbot}->logger->log("get-baninfo: $channel banmask regex: $banmask\n");
+
       if($banmask =~ m/$mask/i) {
         my $baninfo = {};
         $baninfo->{channel} = $channel;
         $baninfo->{owner} = $self->{banlist}{$channel}[0];
+        $self->{pbot}->logger->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
         return $baninfo;
       }
     }

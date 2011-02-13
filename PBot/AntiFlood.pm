@@ -392,17 +392,20 @@ sub address_to_mask {
 sub check_nickserv_accounts {
   my ($self, $nick, $account) = @_;
 
-  my $banned_channel = undef;
+  my @banned_channels;
 
   foreach my $mask (keys %{ $self->{message_history} }) {
     if(exists $self->{message_history}->{$mask}->{nickserv_account}) {
       if(lc $self->{message_history}->{$mask}->{nickserv_account} eq lc $account) {
         $self->{pbot}->logger->log("anti-flood: [check-account] $nick [nickserv: $account] seen previously as $mask.\n");
+
         my $baninfo = $self->{pbot}->bantracker->get_baninfo($mask);
+
         if(defined $baninfo) {
           $self->{pbot}->logger->log("anti-flood: [check-bans] $mask is banned in $baninfo->{channel} by $baninfo->{owner}\n");
-          $banned_channel = $baninfo->{channel};
+          push @banned_channels, $baninfo->{channel};
         }
+
       }
     } 
     else {
@@ -410,12 +413,12 @@ sub check_nickserv_accounts {
         $self->{pbot}->logger->log("anti-flood: $mask: setting nickserv account to [$account]\n");
         $self->message_history->{$mask}->{nickserv_account} = $account;
         
-        if(defined $banned_channel) {
+        foreach my $banned_channel (@banned_channels) {
           my $banmask;
           $mask =~ m/[^@]+\@(.*)/;
           $banmask = "*!*\@$1";
 
-          $self->{pbot}->logger->log("anti-flood: [$account] is banned in $banned_channel, banning $banmask.\n");
+          $self->{pbot}->logger->log("anti-flood: [check-bans] Ban detected on account $account in $banned_channel, banning $banmask.\n");
           $self->{pbot}->chanops->ban_user_timed($banmask, $banned_channel, 60 * 60 * 5);
         }
       }
