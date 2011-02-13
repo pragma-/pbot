@@ -115,43 +115,59 @@ sub on_action {
 
 sub on_mode {
   my ($self, $conn, $event) = @_;
-  my ($nick, $host) = ($event->nick, $event->host);
+  my ($nick, $user, $host) = ($event->nick, $event->user, $event->host);
   my $mode = $event->{args}[0];
   my $target = $event->{args}[1];
   my $channel = $event->{to}[0];
   $channel = lc $channel;
 
-  $self->{pbot}->logger->log("Got mode:  nick: $nick, host: $host, mode: $mode, target: " . (defined $target ? $target : "") . ", channel: $channel\n");
+  $self->{pbot}->logger->log("Got mode: source: $nick!$user\@$host, mode: $mode, target: " . (defined $target ? $target : "(undef)") . ", channel: $channel\n");
+
+  if($mode eq "-b" or $mode eq "+b") {
+    $self->{pbot}->bantracker->track_mode("$nick!$user\@$host", $mode, $target, $channel);
+  }
 
   if(defined $target && $target eq $self->{pbot}->botnick) { # bot targeted
     if($mode eq "+o") {
       $self->{pbot}->logger->log("$nick opped me in $channel\n");
+
       if(exists $self->{pbot}->chanops->{is_opped}->{$channel}) {
         $self->{pbot}->logger->log("erm, I was already opped?\n");
       }
+
       $self->{pbot}->chanops->{is_opped}->{$channel}{timeout} = gettimeofday + 300; # 5 minutes
       $self->{pbot}->chanops->perform_op_commands();
-    } elsif($mode eq "-o") {
+    } 
+    elsif($mode eq "-o") {
       $self->{pbot}->logger->log("$nick removed my ops in $channel\n");
+
       if(not exists $self->{pbot}->chanops->{is_opped}->{$channel}) {
         $self->{pbot}->logger->log("warning: erm, I wasn't opped?\n");
       }
+
       delete $self->{pbot}->chanops->{is_opped}->{$channel};
+    }
+    elsif($mode eq "+b") {
+      $self->{pbot}->logger->log("Got banned in $channel, attempting unban.");
+      $conn->privmsg("chanserv", "unban $channel");
     }    
-  } else {  # bot not targeted
+  } 
+  else {  # bot not targeted
     if($mode eq "+b") {
       if($nick eq "ChanServ") {
         $self->{pbot}->chanops->{unban_timeout}->hash->{$target}{timeout} = gettimeofday + 3600 * 2; # 2 hours
         $self->{pbot}->chanops->{unban_timeout}->hash->{$target}{channel} = $channel;
         $self->{pbot}->chanops->{unban_timeout}->save_hash();
       }
-    } elsif($mode eq "+e" && $channel eq $self->{pbot}->botnick) {
+    } 
+    elsif($mode eq "+e" && $channel eq $self->{pbot}->botnick) {
       foreach my $chan (keys %{ $self->{pbot}->channels->channels->hash }) {
         if($self->channels->channels->hash->{$chan}{enabled}) {
           $self->{pbot}->logger->log("Joining channel: $chan\n");
           $self->{pbot}->conn->join($chan);
         }
       }
+
       $self->{pbot}->{joined_channels} = 1;
     }
   }

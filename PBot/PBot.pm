@@ -27,6 +27,8 @@ use PBot::IRC;
 use PBot::IRCHandlers;
 use PBot::Channels;
 
+use PBot::BanTracker;
+
 use PBot::LagChecker;
 use PBot::AntiFlood;
 
@@ -115,6 +117,8 @@ sub initialize {
   $self->factoids->load_factoids() if defined $factoids_file;
   $self->factoids->add_factoid('text', '.*', $self->{botnick}, 'version', "/say $VERSION");
 
+  $self->{bantracker}   = PBot::BanTracker->new(pbot => $self);
+
   $self->{lagchecker}   = PBot::LagChecker->new(pbot => $self);
   $self->{antiflood}    = PBot::AntiFlood->new(pbot => $self);
 
@@ -177,19 +181,21 @@ sub connect {
   $self->{connected} = 1;
 
   #set up default handlers for the IRC engine
-  $self->conn->add_handler([ 251,252,253,254,302,255 ], sub { $self->irchandlers->on_init(@_)       });
-  $self->conn->add_handler(376                        , sub { $self->irchandlers->on_connect(@_)    });
-  $self->conn->add_handler('disconnect'               , sub { $self->irchandlers->on_disconnect(@_) });
-  $self->conn->add_handler('notice'                   , sub { $self->irchandlers->on_notice(@_)     });
-  $self->conn->add_handler('caction'                  , sub { $self->irchandlers->on_action(@_)     });
-  $self->conn->add_handler('public'                   , sub { $self->irchandlers->on_public(@_)     });
-  $self->conn->add_handler('msg'                      , sub { $self->irchandlers->on_msg(@_)        });
-  $self->conn->add_handler('mode'                     , sub { $self->irchandlers->on_mode(@_)       });
-  $self->conn->add_handler('part'                     , sub { $self->irchandlers->on_departure(@_)  });
-  $self->conn->add_handler('join'                     , sub { $self->irchandlers->on_join(@_)       });
-  $self->conn->add_handler('quit'                     , sub { $self->irchandlers->on_departure(@_)  });
-  $self->conn->add_handler('pong'                     , sub { $self->lagchecker->on_pong(@_)        });
-  $self->conn->add_handler('whoisaccount'             , sub { $self->antiflood->on_whoisaccount(@_) });
+  $self->conn->add_handler([ 251,252,253,254,302,255 ], sub { $self->irchandlers->on_init(@_)        });
+  $self->conn->add_handler(376                        , sub { $self->irchandlers->on_connect(@_)     });
+  $self->conn->add_handler('disconnect'               , sub { $self->irchandlers->on_disconnect(@_)  });
+  $self->conn->add_handler('notice'                   , sub { $self->irchandlers->on_notice(@_)      });
+  $self->conn->add_handler('caction'                  , sub { $self->irchandlers->on_action(@_)      });
+  $self->conn->add_handler('public'                   , sub { $self->irchandlers->on_public(@_)      });
+  $self->conn->add_handler('msg'                      , sub { $self->irchandlers->on_msg(@_)         });
+  $self->conn->add_handler('mode'                     , sub { $self->irchandlers->on_mode(@_)        });
+  $self->conn->add_handler('part'                     , sub { $self->irchandlers->on_departure(@_)   });
+  $self->conn->add_handler('join'                     , sub { $self->irchandlers->on_join(@_)        });
+  $self->conn->add_handler('quit'                     , sub { $self->irchandlers->on_departure(@_)   });
+  $self->conn->add_handler('pong'                     , sub { $self->lagchecker->on_pong(@_)         });
+  $self->conn->add_handler('whoisaccount'             , sub { $self->antiflood->on_whoisaccount(@_)  });
+  $self->conn->add_handler('banlist'                  , sub { $self->bantracker->on_banlistentry(@_) });
+  $self->conn->add_handler('endofnames'               , sub { $self->bantracker->get_banlist(@_)     });
 }
 
 #main loop
@@ -329,6 +335,12 @@ sub ignorelist {
   my $self = shift;
   if(@_) { $self->{ignorelist} = shift; }
   return $self->{ignorelist};
+}
+
+sub bantracker {
+  my $self = shift;
+  if(@_) { $self->{bantracker} = shift; }
+  return $self->{bantracker};
 }
 
 sub lagchecker {
