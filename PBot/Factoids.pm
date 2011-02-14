@@ -81,7 +81,6 @@ sub add_factoid {
 
   $type = lc $type;
   $channel = lc $channel;
-  $trigger = lc $trigger;
 
   $self->factoids->hash->{$channel}->{$trigger}->{enabled}    = 1;
   $self->factoids->hash->{$channel}->{$trigger}->{type}       = $type;
@@ -100,7 +99,6 @@ sub remove_factoid {
   my ($channel, $trigger) = @_;
 
   $channel = lc $channel;
-  $trigger = lc $trigger;
 
   delete $self->factoids->hash->{$channel}->{$trigger};
   $self->save_factoids;
@@ -164,11 +162,7 @@ sub find_factoid {
 
   my @result = eval {
     foreach my $channel (sort keys %{ $self->factoids->hash }) {
-      if($exact_channel) {
-        next unless $from eq $channel;
-      } else {
-        next unless $from =~ m/^$channel$/i;
-      }
+      next unless lc $from eq lc $channel;
 
       foreach my $trigger (keys %{ $self->factoids->hash->{$channel} }) {
         if(not $exact_trigger and $self->factoids->hash->{$channel}->{$trigger}->{type} eq 'regex') {
@@ -324,8 +318,6 @@ sub interpreter {
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
 
-    $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"" . $self->factoids->hash->{$channel}->{$keyword}->{action} . "\"\n");
-
     if(defined $tonick) { # !tell foo about bar
       $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
       my $fromnick = $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host") ? "" : "$nick wants you to know: ";
@@ -368,6 +360,8 @@ sub interpreter {
       # no arguments supplied
       $result =~ s/\$args/$nick/gi;
     }
+
+    $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"" . $self->factoids->hash->{$channel}->{$keyword}->{action} . "\"\n");
 
     $result =~ s/\$nick/$nick/g;
 
