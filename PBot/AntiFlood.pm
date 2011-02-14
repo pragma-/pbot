@@ -393,37 +393,48 @@ sub check_nickserv_accounts {
   my ($self, $nick, $account) = @_;
 
   my @banned_channels;
+  my @account_masks;
 
   foreach my $mask (keys %{ $self->{message_history} }) {
+
     if(exists $self->{message_history}->{$mask}->{nickserv_account}) {
+      # has nickserv account
       if(lc $self->{message_history}->{$mask}->{nickserv_account} eq lc $account) {
+        # pre-existing mask found using this account previously, check for bans
         $self->{pbot}->logger->log("anti-flood: [check-account] $nick [nickserv: $account] seen previously as $mask.\n");
 
         my $baninfo = $self->{pbot}->bantracker->get_baninfo($mask);
 
         if(defined $baninfo) {
           $self->{pbot}->logger->log("anti-flood: [check-bans] $mask is banned in $baninfo->{channel} by $baninfo->{owner}\n");
-          push @banned_channels, $baninfo->{channel};
+          push @banned_channels, $baninfo->{channel}; 
         }
 
       }
     } 
     else {
+      # no nickserv account set yet
       if($mask =~ m/^\Q$nick\E!/i) {
+        # nick matches, must belong to account
         $self->{pbot}->logger->log("anti-flood: $mask: setting nickserv account to [$account]\n");
         $self->message_history->{$mask}->{nickserv_account} = $account;
-        
-        foreach my $banned_channel (@banned_channels) {
-          my $banmask;
-          $mask =~ m/[^@]+\@(.*)/;
-          $banmask = "*!*\@$1";
 
-          $self->{pbot}->logger->log("anti-flood: [check-bans] Ban detected on account $account in $banned_channel, banning $banmask.\n");
-          $self->{pbot}->chanops->ban_user_timed($banmask, $banned_channel, 60 * 60 * 5);
-        }
+        push @account_masks, $mask;
       }
     }
   }
+
+  foreach my $banned_channel (@banned_channels) {
+    foreach my $account_mask (@account_masks) {
+      my $banmask;
+      $account_mask =~ m/[^@]+\@(.*)/;
+      $banmask = "*!*\@$1";
+
+      $self->{pbot}->logger->log("anti-flood: [check-bans] Ban detected on account $account in $banned_channel, banning $banmask.\n");
+      $self->{pbot}->chanops->ban_user_timed($banmask, $banned_channel, 60 * 60 * 5);
+    }
+  }
+
 }
 
 sub on_whoisaccount {

@@ -69,9 +69,7 @@ sub get_baninfo {
       $banmask =~ s/\\\*/.*?/g;
       $banmask =~ s/\\\?/./g;
 
-      $self->{pbot}->logger->log("get-baninfo: $channel banmask regex: $banmask\n");
-
-      if($banmask =~ m/$mask/i) {
+      if($mask =~ m/$banmask/i) {
         my $baninfo = {};
         $baninfo->{channel} = $channel;
         $baninfo->{owner} = $self->{banlist}{$channel}[0];
