@@ -162,7 +162,11 @@ sub find_factoid {
 
   my @result = eval {
     foreach my $channel (sort keys %{ $self->factoids->hash }) {
-      next unless lc $from eq lc $channel;
+      if($exact_channel) {
+        next unless lc $from eq lc $channel;
+      } else {
+        next unless $from =~ m/^$channel$/i;
+      }
 
       foreach my $trigger (keys %{ $self->factoids->hash->{$channel} }) {
         if(not $exact_trigger and $self->factoids->hash->{$channel}->{$trigger}->{type} eq 'regex') {
@@ -361,7 +365,7 @@ sub interpreter {
       $result =~ s/\$args/$nick/gi;
     }
 
-    $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"" . $self->factoids->hash->{$channel}->{$keyword}->{action} . "\"\n");
+    $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"" . $result . "\"\n");
 
     $result =~ s/\$nick/$nick/g;
 
