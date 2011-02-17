@@ -64,6 +64,7 @@ sub get_baninfo {
 
   foreach my $channel (keys %{ $self->{banlist} }) {
     foreach my $banmask (keys %{ $self->{banlist}{$channel} }) {
+      my $banmask_key = $banmask;
       $banmask = quotemeta $banmask;
 
       $banmask =~ s/\\\*/.*?/g;
@@ -71,8 +72,10 @@ sub get_baninfo {
 
       if($mask =~ m/$banmask/i) {
         my $baninfo = {};
+        $baninfo->{banmask} = $banmask_key;
         $baninfo->{channel} = $channel;
-        $baninfo->{owner} = $self->{banlist}{$channel}[0];
+        $baninfo->{owner} = $self->{banlist}{$channel}{$banmask_key}[0];
+        $baninfo->{when} = $self->{banlist}{$channel}{$banmask_key}[1];
         $self->{pbot}->logger->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
         return $baninfo;
       }
