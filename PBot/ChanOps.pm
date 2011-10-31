@@ -91,6 +91,9 @@ sub ban_user {
 sub unban_user {
   my $self = shift;
   my ($mask, $channel) = @_;
+  $self->{pbot}->logger->log("Unbanning $mask\n");
+  delete $self->{unban_timeout}->hash->{$mask};
+  $self->{unban_timeout}->save_hash();
   unshift @{ $self->{op_commands} }, "mode $channel -b $mask";
   $self->gain_ops($channel);
 }
@@ -114,10 +117,7 @@ sub check_unban_timeouts {
 
   foreach my $mask (keys %{ $self->{unban_timeout}->hash }) {
     if($self->{unban_timeout}->hash->{$mask}{timeout} < $now) {
-      $self->{pbot}->logger->log("Unbanning $mask\n");
       $self->unban_user($mask, $self->{unban_timeout}->hash->{$mask}{channel});
-      delete $self->{unban_timeout}->hash->{$mask};
-      $self->{unban_timeout}->save_hash();
     } else {
       #my $timediff = $unban_timeout{$mask}{timeout} - $now;
       #$logger->log "ban: $mask has $timediff seconds remaining\n"

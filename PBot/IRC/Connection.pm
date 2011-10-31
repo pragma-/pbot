@@ -1380,6 +1380,8 @@ sub sl_real {
   if ($self->{_debug}) {
     print ">>> $line\n";
   }
+
+  return unless defined $self->socket;
   
   # RFC compliance can be kinda nice...
   my $rv = $self->ssl ?

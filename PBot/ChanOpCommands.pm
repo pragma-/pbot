@@ -86,10 +86,8 @@ sub unban_user {
   
   return "/msg $nick Usage for /msg: !unban $target <channel>" if $channel !~ /^#/;
 
-  $self->{pbot}->chanops->unban_user($arguments, $from);
-  delete $self->{pbot}->chanops->{unban_timeout}->hash->{$arguments};
-  $self->{pbot}->chanops->{unban_timeout}->save_hash();
-  return "/msg $nick $arguments has been unbanned.";
+  $self->{pbot}->chanops->unban_user($target, $channel);
+  return "/msg $nick $target has been unbanned from $channel.";
 }
 
 sub kick_user {

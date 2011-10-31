@@ -70,7 +70,7 @@ sub get_baninfo {
       $banmask =~ s/\\\*/.*?/g;
       $banmask =~ s/\\\?/./g;
 
-      if($mask =~ m/$banmask/i) {
+      if($mask =~ m/^$banmask$/i) {
         my $baninfo = {};
         $baninfo->{banmask} = $banmask_key;
         $baninfo->{channel} = $channel;
