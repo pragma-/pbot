@@ -71,6 +71,9 @@ sub process_line {
 
   $from = lc $from if defined $from;
 
+  $text =~ s/^\s+//;
+  $text =~ s/\s+$//;
+
   my $pbot = $self->pbot;
 
   $pbot->antiflood->check_flood($from, $nick, $user, $host, $text, $pbot->{MAX_FLOOD_MESSAGES}, 10, $pbot->antiflood->{FLOOD_CHAT}) if defined $from;

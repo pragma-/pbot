@@ -94,7 +94,6 @@ sub add_message {
   if($mode == $self->{FLOOD_JOIN}) {
     if($text =~ /^JOIN/) {
       $self->message_history->{$account}->{channels}->{$channel}{join_watch}++;
-      $self->{pbot}->logger->log("$account $channel joinwatch adjusted: " . $self->message_history->{$account}->{channels}->{$channel}{join_watch} . "\n");
     } else {
       # PART or QUIT
       # check QUIT message for netsplits, and decrement joinwatch if found
@@ -204,7 +203,7 @@ sub check_flood {
   }
 
   if($max_messages > 0 and $length >= $max_messages) {
-    $self->{pbot}->logger->log("More than $max_messages messages, comparing time differences ($max_time)\n") if $mode == $self->{FLOOD_JOIN};
+      # $self->{pbot}->logger->log("More than $max_messages messages, comparing time differences ($max_time)\n") if $mode == $self->{FLOOD_JOIN};
 
     my %msg;
     if($mode == $self->{FLOOD_CHAT}) {
@@ -213,9 +212,9 @@ sub check_flood {
     elsif($mode == $self->{FLOOD_JOIN}) {
       my $count = 0;
       my $i = $length - 1;
-      $self->{pbot}->logger->log("Checking flood history, i = $i\n") if $self->message_history->{$account}->{channels}->{$channel}{join_watch} >= $max_messages;
+      # $self->{pbot}->logger->log("Checking flood history, i = $i\n") if $self->message_history->{$account}->{channels}->{$channel}{join_watch} >= $max_messages;
       for(; $i >= 0; $i--) {
-        $self->{pbot}->logger->log($i . " " . $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{mode} ." " . $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{msg} .  " " . $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{timestamp} . " [" . ago_exact(time - $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{timestamp}) . "]\n") if $self->message_history->{$account}->{channels}->{$channel}{join_watch} >= $max_messages;
+          # $self->{pbot}->logger->log($i . " " . $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{mode} ." " . $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{msg} .  " " . $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{timestamp} . " [" . ago_exact(time - $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{timestamp}) . "]\n") if $self->message_history->{$account}->{channels}->{$channel}{join_watch} >= $max_messages;
         next if $self->message_history->{$account}->{channels}->{$channel}{messages}->[$i]{mode} != $self->{FLOOD_JOIN};
         last if ++$count >= 4;
       }
@@ -406,8 +405,9 @@ sub check_nickserv_accounts {
         my $baninfo = $self->{pbot}->bantracker->get_baninfo($mask);
 
         if(defined $baninfo) {
-          $self->{pbot}->logger->log("anti-flood: [check-bans] $mask is banned in $baninfo->{channel} by $baninfo->{owner}\n");
-          push @banned_channels, $baninfo->{channel}; 
+          $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}\n");
+          push @banned_channels, $baninfo->{channel};
+          $self->{pbot}->conn->privmsg($nick, "You have been banned in $baninfo->{channel} for attempting to evade a ban on $baninfo->{banmask} set by $baninfo->{owner}");
         }
 
       }

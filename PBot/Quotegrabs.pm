@@ -12,6 +12,8 @@ use vars qw($VERSION);
 $VERSION = $PBot::PBot::VERSION;
 
 use HTML::Entities;
+use Time::Duration;
+use Time::HiRes qw(gettimeofday);
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -46,7 +48,7 @@ sub initialize {
   #-------------------------------------------------------------------------------------
   $pbot->commands->register(sub { $self->grab_quotegrab(@_)        },  "grab",  0);
   $pbot->commands->register(sub { $self->show_quotegrab(@_)        },  "getq",  0);
-  $pbot->commands->register(sub { $self->delete_quotegrab(@_)      },  "delq",  0);
+  $pbot->commands->register(sub { $self->delete_quotegrab(@_)      },  "delq", 10);
   $pbot->commands->register(sub { $self->show_random_quotegrab(@_) },  "rq",    0);
 }
 
@@ -261,7 +263,9 @@ sub show_quotegrab {
   }
 
   my $quotegrab = $self->{quotegrabs}[$arguments - 1];
-  return "$arguments: <$quotegrab->{nick}> $quotegrab->{text}";
+  my $timestamp = $quotegrab->{timestamp};
+  my $ago = ago(gettimeofday - $timestamp);
+  return "$arguments: grabbed by $quotegrab->{grabbed_by} on " . localtime($timestamp) . " [$ago] <$quotegrab->{nick}> $quotegrab->{text}";
 }
 
 sub show_random_quotegrab {
