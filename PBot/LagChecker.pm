@@ -47,6 +47,7 @@ sub initialize {
   $self->{lag_average} = undef;        # average of entries in lag history, in seconds
   $self->{lag_string} = undef;         # string representation of lag history and lag average
   $self->{lag_history} = [];           # history of previous PING/PONG timings
+  $self->{pong_received} = undef;      # tracks pong replies; undef if no ping sent; 0 if ping sent but no pong reply yet; 1 if ping/pong completed
 
   $pbot->timer->register(sub { $self->send_ping }, $self->{LAG_HISTORY_INTERVAL});
 
@@ -59,12 +60,14 @@ sub send_ping {
   return unless defined $self->{pbot}->conn;
 
   $self->{ping_send_time} = [gettimeofday];
+  $self->{pong_received} = 0;
   $self->{pbot}->conn->sl("PING :lagcheck");
-  # $self->{pbot}->logger->log("sent lagcheck PING\n");
 }
 
 sub on_pong {
   my $self = shift;
+
+  $self->{pong_received} = 1;
 
   my $elapsed = tv_interval($self->{ping_send_time});
   push @{ $self->{lag_history} }, [ $self->{ping_send_time}[0], $elapsed ];
@@ -95,6 +98,19 @@ sub on_pong {
 
 sub lagging {
   my $self = shift;
+
+  if(defined $self->{pong_received} and $self->{pong_received} == 0) {
+      # a ping has been sent (pong_received is not undef) and no pong has been received yet
+      my $elapsed = tv_interval($self->{ping_send_time});
+      my $lag_total = $elapsed;
+      my $len = @{ $self->{lag_history} };
+      foreach my $entry (@{ $self->{lag_history} }) {
+          my ($send_time, $lag_result) = @{ $entry };
+          $lag_total += $lag_result;
+      }
+      my $average = $lag_total / ($len + 1);
+      return $average >= $self->{LAG_THRESHOLD};
+  }
 
   return 0 if not defined $self->{lag_average};
   return $self->{lag_average} >= $self->{LAG_THRESHOLD};
