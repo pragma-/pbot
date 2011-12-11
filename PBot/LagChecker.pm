@@ -126,6 +126,31 @@ sub lagstring {
 sub lagcheck {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
+  if(defined $self->{pong_received} and $self->{pong_received} == 0) {
+      # a ping has been sent (pong_received is not undef) and no pong has been received yet
+      my $elapsed = tv_interval($self->{ping_send_time});
+      my $lag_total = $elapsed;
+      my $len = @{ $self->{lag_history} };
+
+      my $lagstring = "";
+      my $comma = "";
+
+      foreach my $entry (@{ $self->{lag_history} }) {
+          my ($send_time, $lag_result) = @{ $entry };
+
+          $lag_total += $lag_result;
+          my $ago = ago(gettimeofday - $send_time);
+          $lagstring .= $comma . "[$ago] $lag_result";
+          $comma = "; ";
+      }
+
+      $lagstring .= $comma . "[waiting for pong] $elapsed";
+
+      my $average = $lag_total / ($len + 1);
+      $lagstring .= "; average: $average}";
+      return $lagstring;
+  }
+
   return "My lag: " . $self->lagstring;
 }
 
