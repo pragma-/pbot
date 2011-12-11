@@ -1,6 +1,9 @@
-#!/usr/bin/perl -w -I /home/msmud/lib/lib/perl5/site_perl/5.10.0/
+#!/usr/bin/perl
 
 # Quick and dirty by :pragma
+
+use warnings;
+use strict;
 
 use Google::Search;
 
@@ -40,4 +43,3 @@ while( my $result = $search->next) {
 }
 
 print "\n";
-
