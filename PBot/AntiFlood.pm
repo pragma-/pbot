@@ -15,6 +15,7 @@ use feature 'switch';
 use vars qw($VERSION);
 $VERSION = $PBot::PBot::VERSION;
 
+use PBot::DualIndexHashObject;
 use PBot::LagChecker;
 
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -48,9 +49,80 @@ sub initialize {
 
   $self->{message_history} = {};
 
+  my $filename = delete $conf{filename} // $self->{pbot}->{data_dir} . '/ban_whitelist';
+  $self->{ban_whitelist} = PBot::DualIndexHashObject->new(name => 'BanWhitelist', filename => $filename);
+  $self->{ban_whitelist}->load;
+
   $pbot->timer->register(sub { $self->prune_message_history }, 60 * 60 * 1);
 
-  $pbot->commands->register(sub { return $self->unbanme(@_) },  "unbanme",  0);
+  $pbot->commands->register(sub { return $self->unbanme(@_)   },  "unbanme",   0);
+  $pbot->commands->register(sub { return $self->whitelist(@_) },  "whitelist", 10);
+}
+
+sub ban_whitelisted {
+    my ($self, $channel, $mask) = lc @_;
+
+    if($self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted}) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+sub whitelist {
+    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+    $arguments = lc $arguments;
+
+    my ($command, $args) = split / /, $arguments, 2;
+
+    return "Usage: whitelist <command>, where commands are: list/show, add, remove" if not defined $command;
+
+    given($command) {
+        when($_ eq "list" or $_ eq "show") {
+            my $text = "Ban whitelist:\n";
+            my $entries = 0;
+            foreach my $channel (keys %{ $self->{ban_whitelist}->hash }) {
+                $text .= "  $channel:\n";
+                foreach my $mask (keys %{ $self->{ban_whitelist}->hash->{$channel} }) {
+                    $text .= "    $mask,\n";
+                    $entries++;
+                }
+            }
+            $text .= "none" if $entries == 0;
+            return $text;
+        }
+        when("add") {
+            my ($channel, $mask) = split / /, $args, 2;
+            return "Usage: whitelist add <channel> <mask>" if not defined $channel or not defined $mask;
+
+            $self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted} = 1;
+            $self->{ban_whitelist}->hash->{$channel}->{$mask}->{owner} = "$nick!$user\@$host";
+            $self->{ban_whitelist}->hash->{$channel}->{$mask}->{created_on} = gettimeofday;
+
+            $self->{ban_whitelist}->save;
+            return "$mask whitelisted in channel $channel";
+        }
+        when("remove") {
+            my ($channel, $mask) = split / /, $args, 2;
+            return "Usage: whitelist remove <channel> <mask>" if not defined $channel or not defined $mask;
+
+            if(not defined $self->{ban_whitelist}->hash->{$channel}) {
+                return "No whitelists for channel $channel";
+            }
+
+            if(not defined $self->{ban_whitelist}->hash->{$channel}->{$mask}) {
+                return "No such whitelist $mask for channel $channel";
+            }
+
+            delete $self->{ban_whitelist}->hash->{$channel}->{$mask};
+            delete $self->{ban_whitelist}->hash->{$channel} if keys %{ $self->{ban_whitelist}->hash->{$channel} } == 0;
+            $self->{ban_whitelist}->save;
+            return "$mask whitelist removed from channel $channel";
+        }
+        default {
+            return "Unknown command '$command'; commands are: list/show, add, remove";
+        }
+    }
 }
 
 sub get_flood_account {
@@ -395,7 +467,6 @@ sub check_nickserv_accounts {
   my @account_masks;
 
   foreach my $mask (keys %{ $self->{message_history} }) {
-
     if(exists $self->{message_history}->{$mask}->{nickserv_account}) {
       # has nickserv account
       if(lc $self->{message_history}->{$mask}->{nickserv_account} eq lc $account) {
@@ -404,12 +475,16 @@ sub check_nickserv_accounts {
 
         my $baninfo = $self->{pbot}->bantracker->get_baninfo($mask);
 
+        if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
+            $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+            return;
+        }
+
         if(defined $baninfo) {
           $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}\n");
           push @banned_channels, $baninfo->{channel};
           $self->{pbot}->conn->privmsg($nick, "You have been banned in $baninfo->{channel} for attempting to evade a ban on $baninfo->{banmask} set by $baninfo->{owner}");
         }
-
       }
     } 
     else {
@@ -426,15 +501,13 @@ sub check_nickserv_accounts {
 
   foreach my $banned_channel (@banned_channels) {
     foreach my $account_mask (@account_masks) {
-      my $banmask;
       $account_mask =~ m/[^@]+\@(.*)/;
-      $banmask = "*!*\@$1";
+      my $banmask = "*!*\@$1";
 
       $self->{pbot}->logger->log("anti-flood: [check-bans] Ban detected on account $account in $banned_channel, banning $banmask.\n");
       $self->{pbot}->chanops->ban_user_timed($banmask, $banned_channel, 60 * 60 * 5);
     }
   }
-
 }
 
 sub on_whoisaccount {
@@ -443,7 +516,6 @@ sub on_whoisaccount {
   my $account = $event->{args}[2];
 
   $self->{pbot}->logger->log("$nick is using NickServ account [$account]\n");
-
   $self->check_nickserv_accounts($nick, $account);
 }
 

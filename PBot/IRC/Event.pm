@@ -451,6 +451,7 @@ sub trans {
            640 => "rpl_dumping",        # UnrealIrcd, Hendrik Frenzel
            641 => "rpl_dumprpl",        # UnrealIrcd, Hendrik Frenzel
            642 => "rpl_eodump",         # UnrealIrcd, Hendrik Frenzel
+           728 => "quietlist",  # freenode +q, pragma_ 12/12/2011
 
            999 => "numericerror",           # Bahamut IRCD
 

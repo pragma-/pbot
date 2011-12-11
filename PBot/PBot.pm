@@ -194,7 +194,9 @@ sub connect {
   $self->conn->add_handler('quit'                     , sub { $self->irchandlers->on_departure(@_)   });
   $self->conn->add_handler('pong'                     , sub { $self->lagchecker->on_pong(@_)         });
   $self->conn->add_handler('whoisaccount'             , sub { $self->antiflood->on_whoisaccount(@_)  });
-  $self->conn->add_handler('banlist'                  , sub { $self->bantracker->on_banlistentry(@_) });
+  $self->conn->add_handler('banlist'                  , sub { $self->bantracker->on_banlist_entry(@_) });
+  # freenode quietlist
+  $self->conn->add_handler(728                        , sub { $self->bantracker->on_quietlist_entry(@_) });
   $self->conn->add_handler('endofnames'               , sub { $self->bantracker->get_banlist(@_)     });
 }
 

@@ -56,7 +56,8 @@ sub get_banlist {
   delete $self->{banlist}->{$channel};
 
   $self->{pbot}->logger->log("Retrieving banlist for $channel.\n");
-  $conn->sl("mode $channel +bq");
+  $conn->sl("mode $channel +b");
+  $conn->sl("mode $channel +q");
 }
 
 sub get_baninfo {
@@ -85,7 +86,20 @@ sub get_baninfo {
   return undef;
 }
 
-sub on_banlistentry {
+sub on_quietlist_entry {
+  my ($self, $conn, $event) = @_;
+  my $channel   = lc $event->{args}[1];
+  my $target    = lc $event->{args}[3];
+  my $source    = lc $event->{args}[4];
+  my $timestamp =    $event->{args}[5];
+
+  my $ago = ago(gettimeofday - $timestamp);
+
+  $self->{pbot}->logger->log("ban-tracker: [quietlist entry] $channel: $target quieted by $source $ago.\n");
+  $self->{banlist}->{$channel}->{$target} = [ $source, $timestamp ];
+}
+
+sub on_banlist_entry {
   my ($self, $conn, $event) = @_;
   my $channel   = lc $event->{args}[1];
   my $target    = lc $event->{args}[2];
