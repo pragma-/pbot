@@ -63,7 +63,7 @@ sub ban_whitelisted {
     my ($self, $channel, $mask) = lc @_;
 
     $self->{pbot}->logger->log("whitelist check: $channel, $mask\n");
-    return defined $self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted} ? 0 : 1;
+    return defined $self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted} ? 1 : 0;
 }
 
 sub whitelist {
