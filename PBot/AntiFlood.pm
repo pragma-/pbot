@@ -144,7 +144,7 @@ sub get_flood_account {
     if($mask =~ m/!\Q$user\E@\Q$host\E$/i) {
       $self->{pbot}->logger->log("anti-flood: [get-account] $nick!$user\@$host linked to $mask\n");
       $self->{message_history}->{"$nick!$user\@$host"} = $self->{message_history}->{$mask};
-      $self->check_nickserv_accounts($nick, $self->{message_history}->{$mask}->{nickserv_account});
+      $self->check_nickserv_accounts($nick, $self->{message_history}->{$mask}->{nickserv_account}) if defined $self->{message_history}->{$mask}->{nickserv_account};
       return "$nick!$user\@$host";
     }
   }
