@@ -476,17 +476,17 @@ sub check_nickserv_accounts {
         my $baninfo = $self->{pbot}->bantracker->get_baninfo($mask);
 
         if(defined $baninfo) {
-            if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
-                $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
-                next;
-            } else {
-                $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}\n");
-                push @banned_channels, $baninfo->{channel};
-                $self->{pbot}->conn->privmsg($nick, "You have been banned in $baninfo->{channel} for attempting to evade a ban on $baninfo->{banmask} set by $baninfo->{owner}");
-            }
+          if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
+            $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+            next;
+          } else {
+            $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}\n");
+            push @banned_channels, $baninfo->{channel};
+            $self->{pbot}->conn->privmsg($nick, "You have been banned in $baninfo->{channel} for attempting to evade a ban on $baninfo->{banmask} set by $baninfo->{owner}");
+          }
         }
-    }
-} 
+      }
+    } 
     else {
       # no nickserv account set yet
       if($mask =~ m/^\Q$nick\E!/i) {
