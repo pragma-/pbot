@@ -62,11 +62,8 @@ sub initialize {
 sub ban_whitelisted {
     my ($self, $channel, $mask) = lc @_;
 
-    if($self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted}) {
-        return 1;
-    } else {
-        return 0;
-    }
+    $self->{pbot}->logger->log("whitelist check: $channel, $mask\n");
+    return defined $self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted} ? 0 : 1;
 }
 
 sub whitelist {
@@ -478,7 +475,7 @@ sub check_nickserv_accounts {
 
         if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
             $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
-            return;
+            next;
         }
 
         if(defined $baninfo) {
