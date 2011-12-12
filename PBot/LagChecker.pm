@@ -102,14 +102,7 @@ sub lagging {
   if(defined $self->{pong_received} and $self->{pong_received} == 0) {
       # a ping has been sent (pong_received is not undef) and no pong has been received yet
       my $elapsed = tv_interval($self->{ping_send_time});
-      my $lag_total = $elapsed;
-      my $len = @{ $self->{lag_history} };
-      foreach my $entry (@{ $self->{lag_history} }) {
-          my ($send_time, $lag_result) = @{ $entry };
-          $lag_total += $lag_result;
-      }
-      my $average = $lag_total / ($len + 1);
-      return $average >= $self->{LAG_THRESHOLD};
+      return $elapsed >= $self->{LAG_THRESHOLD};
   }
 
   return 0 if not defined $self->{lag_average};
