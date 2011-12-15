@@ -144,7 +144,11 @@ sub get_flood_account {
     if($mask =~ m/!\Q$user\E@\Q$host\E$/i) {
       $self->{pbot}->logger->log("anti-flood: [get-account] $nick!$user\@$host linked to $mask\n");
       $self->{message_history}->{"$nick!$user\@$host"} = $self->{message_history}->{$mask};
-      $self->check_nickserv_accounts($nick, $self->{message_history}->{$mask}->{nickserv_account}) if defined $self->{message_history}->{$mask}->{nickserv_account};
+
+      if(defined $self->{message_history}->{$mask}->{nickserv_account}) {
+        $self->check_nickserv_accounts($nick, $self->{message_history}->{$mask}->{nickserv_account}); 
+      }
+
       return "$nick!$user\@$host";
     }
   }
@@ -463,8 +467,7 @@ sub address_to_mask {
 sub check_nickserv_accounts {
   my ($self, $nick, $account) = @_;
 
-  my @banned_channels;
-  my @account_masks;
+  my ($account_mask, @bans);
 
   foreach my $mask (keys %{ $self->{message_history} }) {
     if(exists $self->{message_history}->{$mask}->{nickserv_account}) {
@@ -480,13 +483,11 @@ sub check_nickserv_accounts {
             $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
             next;
           } else {
-            $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}\n");
-            push @banned_channels, $baninfo->{channel};
-            $self->{pbot}->conn->privmsg($nick, "You have been banned in $baninfo->{channel} for attempting to evade a ban on $baninfo->{banmask} set by $baninfo->{owner}");
+            push @bans, $baninfo;
           }
         }
       }
-    } 
+    }
     else {
       # no nickserv account set yet
       if($mask =~ m/^\Q$nick\E!/i) {
@@ -494,19 +495,32 @@ sub check_nickserv_accounts {
         $self->{pbot}->logger->log("anti-flood: $mask: setting nickserv account to [$account]\n");
         $self->message_history->{$mask}->{nickserv_account} = $account;
 
-        push @account_masks, $mask;
+        $account_mask = $mask;
+
+        my $baninfo = $self->{pbot}->bantracker->get_baninfo($mask);
+
+        if(defined $baninfo) {
+          if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
+            $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+            next;
+          } else {
+            push @bans, $baninfo;
+          }
+        }
       }
     }
   }
 
-  foreach my $banned_channel (@banned_channels) {
-    foreach my $account_mask (@account_masks) {
-      $account_mask =~ m/[^@]+\@(.*)/;
-      my $banmask = "*!*\@$1";
+  foreach my $baninfo (@bans) {
+    $self->{pbot}->logger->log("anti-flood: [check-bans] $account_mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}\n");
+    $self->{pbot}->conn->privmsg($nick, "You have been banned in $baninfo->{channel} for attempting to evade a ban on $baninfo->{banmask} set by $baninfo->{owner}");
 
-      $self->{pbot}->logger->log("anti-flood: [check-bans] Ban detected on account $account in $banned_channel, banning $banmask.\n");
-      $self->{pbot}->chanops->ban_user_timed($banmask, $banned_channel, 60 * 60 * 5);
-    }
+    $account_mask =~ m/[^!]+\!(.*)/;
+    my $banmask = "*!$1";
+
+    $self->{pbot}->logger->log("anti-flood: [check-bans] Ban detected on account $account in $baninfo->{channel}, banning $banmask.\n");
+
+    $self->{pbot}->chanops->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 5);
   }
 }
 

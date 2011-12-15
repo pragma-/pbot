@@ -77,7 +77,14 @@ sub get_baninfo {
         $baninfo->{channel} = $channel;
         $baninfo->{owner} = $self->{banlist}{$channel}{$banmask_key}[0];
         $baninfo->{when} = $self->{banlist}{$channel}{$banmask_key}[1];
+        $baninfo->{type} = $self->{banlist}{$channel}{$banmask_key}[2];
         $self->{pbot}->logger->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
+
+        if($baninfo->{type} eq '+b' and $banmask_key =~ m/!\*@\*$/) {
+          $self->{pbot}->logger->log("get-baninfo: Disregarding generic nick ban\n");
+          return undef;
+        }
+
         return $baninfo;
       }
     }
@@ -96,7 +103,7 @@ sub on_quietlist_entry {
   my $ago = ago(gettimeofday - $timestamp);
 
   $self->{pbot}->logger->log("ban-tracker: [quietlist entry] $channel: $target quieted by $source $ago.\n");
-  $self->{banlist}->{$channel}->{$target} = [ $source, $timestamp ];
+  $self->{banlist}->{$channel}->{$target} = [ $source, $timestamp, '+q' ];
 }
 
 sub on_banlist_entry {
@@ -109,7 +116,7 @@ sub on_banlist_entry {
   my $ago = ago(gettimeofday - $timestamp);
 
   $self->{pbot}->logger->log("ban-tracker: [banlist entry] $channel: $target banned by $source $ago.\n");
-  $self->{banlist}->{$channel}->{$target} = [ $source, $timestamp ];
+  $self->{banlist}->{$channel}->{$target} = [ $source, $timestamp, '+b' ];
 }
 
 sub track_mode {
@@ -117,11 +124,11 @@ sub track_mode {
   my ($source, $mode, $target, $channel) = @_;
 
   if($mode eq "+b" or $mode eq "+q") {
-    $self->{pbot}->logger->log("ban-tracker: $target banned by $source in $channel.\n");
-    $self->{banlist}->{$channel}->{$target} = [ $source, gettimeofday ];
+    $self->{pbot}->logger->log("ban-tracker: $target " . ($mode eq '+b' ? 'banned' : 'quieted') . " by $source in $channel.\n");
+    $self->{banlist}->{$channel}->{$target} = [ $source, gettimeofday, $mode ];
   }
   elsif($mode eq "-b" or $mode eq "-q") {
-    $self->{pbot}->logger->log("ban-tracker: $target unbanned by $source in $channel.\n");
+    $self->{pbot}->logger->log("ban-tracker: $target " . ($mode eq '-b' ? 'unbanned' : 'unquieted') . " by $source in $channel.\n");
     delete $self->{banlist}->{$channel}->{$target};
   } else {
     $self->{pbot}->logger->log("BanTracker: Unknown mode '$mode'\n");
