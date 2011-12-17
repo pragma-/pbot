@@ -346,7 +346,7 @@ sub interpreter {
         $result = $self->factoids->hash->{$channel}->{$keyword}->{action_with_args};
       }
       
-      if(not $result =~ s/\$args/$arguments/gi) {
+      if(not $result =~ s/\$args/$arguments/gi and not exists $self->factoids->hash->{$channel}->{$keyword}->{action_with_args}) {
         # factoid doesn't take an argument, so assume argument is a nick if it is a single-word 20 characters or less 
         # TODO - maintain list of channel nicks and compare against this list to ensure nick exists
         if($arguments =~ /^[^.+-, ]{1,20}$/) {

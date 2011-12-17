@@ -104,7 +104,6 @@ sub process_line {
     }
     
     if(defined $result) {
-      $result =~ s/\$nick/$nick/g;
       $result =~ s/^\s+//;
       $result =~ s/\s+$//;
     }
@@ -197,8 +196,7 @@ sub interpret {
     $keyword = $1 if $command =~ /^(.*)$/;
   }
   
-  $arguments =~ s/\bme\b/\$nick/gi if defined $arguments;
-  $arguments =~ s/\/\$nick/\/me/gi if defined $arguments;
+  $arguments =~ s/\bme\b/$nick/gi if defined $arguments;
 
   if(defined $arguments && $arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i) {
     return "Why would I want to do that to myself?";
