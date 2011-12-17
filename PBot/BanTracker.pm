@@ -64,28 +64,25 @@ sub get_baninfo {
   my ($self, $mask) = @_;
 
   foreach my $channel (keys %{ $self->{banlist} }) {
-    foreach my $banmask (keys %{ $self->{banlist}{$channel} }) {
-      my $banmask_key = $banmask;
-      $banmask = quotemeta $banmask;
+    foreach my $mode (keys %{ $self->{banlist}{$channel} }) {
+      foreach my $banmask (keys %{ $self->{banlist}{$channel}{$mode} }) {
+        my $banmask_key = $banmask;
+        $banmask = quotemeta $banmask;
 
-      $banmask =~ s/\\\*/.*?/g;
-      $banmask =~ s/\\\?/./g;
+        $banmask =~ s/\\\*/.*?/g;
+        $banmask =~ s/\\\?/./g;
 
-      if($mask =~ m/^$banmask$/i) {
-        my $baninfo = {};
-        $baninfo->{banmask} = $banmask_key;
-        $baninfo->{channel} = $channel;
-        $baninfo->{owner} = $self->{banlist}{$channel}{$banmask_key}[0];
-        $baninfo->{when} = $self->{banlist}{$channel}{$banmask_key}[1];
-        $baninfo->{type} = $self->{banlist}{$channel}{$banmask_key}[2];
-        $self->{pbot}->logger->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
+        if($mask =~ m/^$banmask$/i) {
+          my $baninfo = {};
+          $baninfo->{banmask} = $banmask_key;
+          $baninfo->{channel} = $channel;
+          $baninfo->{owner} = $self->{banlist}{$channel}{$mode}{$banmask_key}[0];
+          $baninfo->{when} = $self->{banlist}{$channel}{$mode}{$banmask_key}[1];
+          $baninfo->{type} = $mode;
+          $self->{pbot}->logger->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
 
-        if($baninfo->{type} eq '+b' and $banmask_key =~ m/!\*@\*$/) {
-          $self->{pbot}->logger->log("get-baninfo: Disregarding generic nick ban\n");
-          return undef;
+          return $baninfo;
         }
-
-        return $baninfo;
       }
     }
   }
@@ -103,7 +100,7 @@ sub on_quietlist_entry {
   my $ago = ago(gettimeofday - $timestamp);
 
   $self->{pbot}->logger->log("ban-tracker: [quietlist entry] $channel: $target quieted by $source $ago.\n");
-  $self->{banlist}->{$channel}->{$target} = [ $source, $timestamp, '+q' ];
+  $self->{banlist}->{$channel}->{'+q'}->{$target} = [ $source, $timestamp ];
 }
 
 sub on_banlist_entry {
@@ -116,7 +113,7 @@ sub on_banlist_entry {
   my $ago = ago(gettimeofday - $timestamp);
 
   $self->{pbot}->logger->log("ban-tracker: [banlist entry] $channel: $target banned by $source $ago.\n");
-  $self->{banlist}->{$channel}->{$target} = [ $source, $timestamp, '+b' ];
+  $self->{banlist}->{$channel}->{'+b'}->{$target} = [ $source, $timestamp ];
 }
 
 sub track_mode {
@@ -125,11 +122,14 @@ sub track_mode {
 
   if($mode eq "+b" or $mode eq "+q") {
     $self->{pbot}->logger->log("ban-tracker: $target " . ($mode eq '+b' ? 'banned' : 'quieted') . " by $source in $channel.\n");
-    $self->{banlist}->{$channel}->{$target} = [ $source, gettimeofday, $mode ];
+    $self->{banlist}->{$channel}->{$mode}->{$target} = [ $source, gettimeofday ];
   }
   elsif($mode eq "-b" or $mode eq "-q") {
     $self->{pbot}->logger->log("ban-tracker: $target " . ($mode eq '-b' ? 'unbanned' : 'unquieted') . " by $source in $channel.\n");
-    delete $self->{banlist}->{$channel}->{$target};
+    delete $self->{banlist}->{$channel}->{$mode eq "-b" ? "+b" : "+q"}->{$target};
+
+    delete $self->{pbot}->chanops->{unban_timeout}->hash->{$target};
+    $self->{pbot}->chanops->{unban_timeout}->save_hash();
   } else {
     $self->{pbot}->logger->log("BanTracker: Unknown mode '$mode'\n");
   }
