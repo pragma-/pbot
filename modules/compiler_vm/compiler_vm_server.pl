@@ -138,7 +138,8 @@ sub interpret {
     $output = "[$result]\n";
   }
 
-  ($ret, $result) = execute(5, "./compiler_watchdog.pl");
+  my $user_input_quoted = quotemeta $user_input;
+  ($ret, $result) = execute(5, "./compiler_watchdog.pl $user_input_quoted");
 
   $result =~ s/^\s+//;
   $result =~ s/\s+$//;

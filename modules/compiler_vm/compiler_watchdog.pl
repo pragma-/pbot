@@ -165,6 +165,8 @@ sub reaper {
   }
 }
 
+my $stdin_input = join ' ', @ARGV;
+
 sub execute {
   my ($cmdline) = @_;
   my ($ret, $result);
@@ -176,7 +178,17 @@ sub execute {
   local $SIG{TERM} = sub { kill 'TERM', $child; };
 
   if($child == 0) {
-    exec("$cmdline 2>&1");
+    if(length $stdin_input) {
+      my ($out, $in);
+      open2($out, $in, "$cmdline 2>&1");
+      print $in "$stdin_input\n";
+      while(<$out>) {
+        print $_ . "\n";
+      }
+      exit 0;
+    } else {
+      exec("$cmdline 2>&1");
+    }
    } else {
     while(1) { sleep 10; }
   }

@@ -26,7 +26,7 @@ my %languages = (
 );
 
 my %preludes = ( 
-  'C99'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n\n",
+  'C99'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include \"prelude.h\"\n\n",
   'C'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n\n",
   'C++'   => "#include <iostream>\n#include <cstdio>\n\nusing namespace std;\n\n",
 );
@@ -696,9 +696,12 @@ if($output =~ m/^\s*$/) {
   my $right_quote = chr(226) . chr(128) . chr(153);
   $output =~ s/$left_quote/'/g;
   $output =~ s/$right_quote/'/g;
+  $output =~ s/\s*In function 'main':\s*//g;
+  $output =~ s/warning: unknown conversion type character 'b' in format\s+warning: too many arguments for format/info: conversion type character 'b' in format is a candide extension/g;
 
-  $output =~ s/[\r\n]+/ /g;
-  $output =~ s/\s+/ /g;
+  #$output =~ s/[\r\n]+/ /g;
+  #$output =~ s/\s+/ /g;
+
 }
 
 unless($got_run) {

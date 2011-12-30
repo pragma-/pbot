@@ -27,7 +27,7 @@ sub server_listen {
 sub vm_stop {
   my $pid = shift @_;
   return if not defined $pid;
-  kill 'TERM', $pid;
+  kill 9, $pid;
   waitpid($pid, 0);
 }
 
@@ -39,7 +39,8 @@ sub vm_start {
   }
 
   if($pid == 0) {
-    my $command = 'qemu-system-x86_64 -M pc -hda /home/compiler/compiler-vm-image -m 128 -monitor tcp:127.0.0.1:4445,server,nowait -serial tcp:127.0.0.1:4444,server,nowait -boot c -loadvm 2 -nographic';
+      #system('cp /home/compiler/compiler-saved-vm-backup /home/compiler/compiler-saved-vm');
+    my $command = 'qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler-saved-vm -m 128 -monitor tcp:127.0.0.1:4445,server,nowait -serial tcp:127.0.0.1:4444,server,nowait -enable-kvm -boot c -nographic -loadvm 1';
     my @command_list = split / /, $command;
     exec(@command_list); 
   } else {
@@ -47,8 +48,23 @@ sub vm_start {
   }
 }
 
+sub vm_reset {
+  use IO::Socket;
+
+  my $sock = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => 4445, Prot => 'tcp');
+  if(not defined $sock) {
+    print "Unable to connect to monitor: $!\n";
+    return;
+  }
+
+  print $sock "loadvm 1\n";
+  close $sock;
+}
+
 sub execute {
   my ($cmdline) = @_;
+
+  print "execute($cmdline)\n";
 
   my ($ret, $result);
 
@@ -61,7 +77,7 @@ sub execute {
       my $pid = open(my $fh, '-|', "$cmdline 2>&1");
 
       local $SIG{ALRM} = sub { print "Time out\n"; kill 'TERM', $pid; die "Timed-out\n"; };
-      alarm(5);
+      alarm(7);
       
       while(my $line = <$fh>) {
         $result .= $line;
@@ -71,21 +87,19 @@ sub execute {
 
       my $ret = $? >> 8;
       alarm 0;
+      print "[$ret, $result]\n";
       return ($ret, $result);
     };
 
     alarm 0;
     if($@ =~ /Timed-out/) {
-      #kill 'TERM', $child;
       return (-13, '[Timed-out]');
     }
-
-    print "[$ret, $result]\n";
 
     return ($ret, $result);
   } else {
     waitpid($child, 0);
-    #print "child exited, parent continuing\n";
+    print "child exited, parent continuing\n";
     return undef;
   }
 }
@@ -99,19 +113,19 @@ sub compiler_server {
   while (my $client = $server->accept()) {
     $client->autoflush(1);
     my $hostinfo = gethostbyaddr($client->peeraddr);
-    printf "[Connect from %s]\n", $hostinfo->name || $client->peerhost;
+    printf "[Connect from %s]\n", $client->peerhost;
     eval {
       my $lang;
       my $nick;
       my $code = "";
 
       local $SIG{ALRM} = sub { die 'Timed-out'; };
-      alarm 1;
+      alarm 5;
 
       while (my $line = <$client>) {
         $line =~ s/[\r\n]+$//;
         next if $line =~ m/^\s*$/;
-        alarm 1;
+        alarm 5;
         print "got: [$line]\n";
 
         if($line =~ /compile:end/) {
@@ -124,7 +138,7 @@ sub compiler_server {
           my ($ret, $result) = execute("./compiler_vm_client.pl $tnick -lang=$tlang $code");
 
           if(not defined $ret) {
-            #print "parent continued\n";
+            print "parent continued\n";
             last;
           }
 
@@ -137,6 +151,7 @@ sub compiler_server {
           print $client $result . "\n";
           close $client;
           # child exit
+          print "child exit\n";
           exit;
         }
 
