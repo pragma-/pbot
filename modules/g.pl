@@ -6,6 +6,7 @@ use warnings;
 use strict;
 
 use Google::Search;
+use HTML::Entities;
 
 my ($nick, $arguments, $matches);
 
@@ -37,7 +38,7 @@ if(not $search->first) {
 
 my $comma = "";
 while( my $result = $search->next) {
-    print $comma, $result->titleNoFormatting, ": ", $result->uri;
+    print $comma, decode_entities $result->titleNoFormatting, ": ", $result->uri;
     $comma = " -- ";
     last if --$matches <= 0;
 }
