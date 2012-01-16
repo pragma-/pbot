@@ -24,6 +24,7 @@ if(not defined $section) {
 }
 
 open FH, "<n1256.txt" or die "Could not open n1256.txt: $!";
+#open FH, "<n1570.txt" or die "Could not open n1570.txt: $!";
 my @contents = <FH>;
 close FH;
 
@@ -42,23 +43,23 @@ my $comma = "";
 
 print "<html>\n<body>\n";
 
-#$debug = 9999;
+$debug = 9999;
 
 my $last_section_number = 0;
 my $section_number = 0;
 
-while($text =~ m/^\s{4,6}(\d+\.[0-9\.]*)/msg) {
+while($text =~ m/^\s{4}([0-9A-Z]+\.[0-9\.]*)/msg) {
   $last_section_number = $section_number;
   $this_section = $1;
 
   ($section_number) = $this_section =~ /([^.]+)\./;
 
-  print "----------------------------------\n" if $debug >= 2;
-  print "Processing section [$this_section]; number [$section_number]\n" if $debug;
+  print STDERR "----------------------------------\n" if $debug >= 2;
+  print STDERR "Processing section [$this_section]; number [$section_number]\n" if $debug;
 
 
   my $diff = $section_number - $last_section_number;
-  print "Diff: $diff\n" if $debug >= 2;
+  print STDERR "Diff: $diff\n" if $debug >= 2;
 
   if($section_number > 0 and $diff < 0 or $diff > 1) { 
      die "Diff out of bounds: $diff";
@@ -66,10 +67,10 @@ while($text =~ m/^\s{4,6}(\d+\.[0-9\.]*)/msg) {
 
   my $section_text;
 
-  if($text =~ m/(.*?)^(?=\s{4,6}\d+\.)/msg) {
+  if($text =~ m/(.*?)^(?=\s{4}[0-9A-Z]+\.)/msg) {
     $section_text = $1;
   } else {
-    print "No section text, end of file marker found.\n" if $debug >= 4;
+    print STDERR "No section text, end of file marker found.\n" if $debug >= 4;
     last;
   }
 
@@ -79,7 +80,7 @@ while($text =~ m/^\s{4,6}(\d+\.[0-9\.]*)/msg) {
     $section_title =~ s/\s+$//;
   }
 
-  print "$this_section [$section_title]\n" if $debug >= 2;
+  print STDERR "$this_section [$section_title]\n" if $debug >= 2;
   
   print "<hr>\n";
   print "<a name='$this_section'>";
@@ -87,11 +88,10 @@ while($text =~ m/^\s{4,6}(\d+\.[0-9\.]*)/msg) {
   print "</a>\n";
         
   while($section_text =~ m/^(\d+)\s(.*?)^(?=\d)/msgc or $section_text =~ m/^(\d+)\s(.*)/msg) {
-    my $p = $1 ;
+    my $p = $1;
     my $t = $2;
 
-
-    print "paragraph $p: [$t]\n" if $debug >= 3;
+    print STDERR "paragraph $p: [$t]\n" if $debug >= 3;
 
     $t = encode_entities($t);
 
@@ -99,14 +99,6 @@ while($text =~ m/^\s{4,6}(\d+\.[0-9\.]*)/msg) {
     print "<pre>$p $t</pre>\n";
     print "</a>\n";
   }
-
-  last if $found && $paragraph_specified == $USER_SPECIFIED;
-  
-  if($paragraph_specified == $USER_SPECIFIED) {
-    print "No such paragraph '$paragraph' in section '$section' of n1256.\n";
-    exit 0;
-  }
 }
 
 print "\n</body>\n</html>\n";
-
