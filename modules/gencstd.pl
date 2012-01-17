@@ -7,7 +7,7 @@ use HTML::Entities;
 
 my $debug = 9999; 
 
- open FH, "<n1256.txt" or die "Could not open n1256.txt: $!";
+open FH, "<n1256.txt" or die "Could not open n1256.txt: $!";
 #open FH, "<n1570.txt" or die "Could not open n1570.txt: $!";
 my @contents = <FH>;
 close FH;
@@ -71,11 +71,18 @@ while($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
   if(not $section_text =~ m/^(?=\d+\s)/msg) {
     print "<pre>$section_text</pre>\n";
   } else {
+    my $last_p;
+    my $p;
     while($section_text =~ m/^(\d+)\s(.*?)^(?=\d)/msgc or $section_text =~ m/^(\d+)\s(.*)/msg) {
-      my $p = $1;
+      $last_p = $p;
+      $p = $1;
       my $t = $2;
 
       print STDERR "paragraph $p: [$t]\n" if $debug >= 3;
+
+      if(($last_p - $p) != -1) {
+        die "Paragraph diff invalid";
+      }
 
       $t = encode_entities($t);
 

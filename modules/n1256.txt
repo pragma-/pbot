@@ -1576,8 +1576,8 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
      float. Its type category is array.
 
      Forward references: compatible type and composite type (6.2.7), declarations (6.7).
-     6.2.6 Representations of types
-     6.2.6.1 General
+    6.2.6 Representations of types
+    6.2.6.1 General
 1    The representations of all types are unspecified except as stated in this subclause.
 2    Except for bit-fields, objects are composed of contiguous sequences of one or more bytes,
      the number, order, and encoding of which are either explicitly specified or
@@ -2787,8 +2787,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 2   An identifier is a primary expression, provided it has been declared as designating an
     object (in which case it is an lvalue) or a function (in which case it is a function
     designator).79)
-3   A constant is a primary expression. Its type depends on its form and value, as detailed in
-    6.4.4.
+3   A constant is a primary expression. Its type depends on its form and value, as detailed in 6.4.4.
 4   A string literal is a primary expression. It is an lvalue with type as detailed in 6.4.5.
 5   A parenthesized expression is a primary expression. Its type and value are identical to
     those of the unparenthesized expression. It is an lvalue, a function designator, or a void
@@ -2924,7 +2923,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 
      Forward references: function declarators (including prototypes) (6.7.5.3), function
      definitions (6.9.1), the return statement (6.8.6.4), simple assignment (6.5.16.1).
-     6.5.2.3 Structure and union members
+    6.5.2.3 Structure and union members
      Constraints
 1    The first operand of the . operator shall have a qualified or unqualified structure or union
      type, and the second operand shall name a member of that type.
@@ -3299,7 +3298,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 2   Unless the type name specifies a void type, the type name shall specify qualified or
     unqualified scalar type and the operand shall have scalar type.
 3   Conversions that involve pointers, other than where permitted by the constraints of
-    6.5.16.1, shall be specified by means of an explicit cast.
+      6.5.16.1, shall be specified by means of an explicit cast.
     Semantics
 4   Preceding an expression by a parenthesized type name converts the value of the
     expression to the named type. This construction is called a cast .89) A cast that specifies
@@ -3414,7 +3413,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 
      Forward references: array declarators (6.7.5.2), common definitions <stddef.h>
      (7.17).
-     6.5.7 Bitwise shift operators
+   6.5.7 Bitwise shift operators
      Syntax
 1             shift-expression:
                       additive-expression
@@ -4010,8 +4009,8 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 3   The type specifier _Complex shall not be used if the implementation does not provide
     complex types.104)
     Semantics
-4   Specifiers for structures, unions, and enumerations are discussed in 6.7.2.1 through
-    6.7.2.3. Declarations of typedef names are discussed in 6.7.7. The characteristics of the
+4   Specifiers for structures, unions, and enumerations are discussed in 6.7.2.1 through 6.7.2.3. 
+    Declarations of typedef names are discussed in 6.7.7. The characteristics of the
     other types are discussed in 6.2.5.
 5   Each of the comma-separated sets designates the same type, except that for bit-fields, it is
     implementation-defined whether the specifier int designates the same type as signed
@@ -4335,7 +4334,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 
      Forward references: declarators (6.7.5), array declarators (6.7.5.2), type definitions
      (6.7.7).
-     6.7.3 Type qualifiers
+   6.7.3 Type qualifiers
      Syntax
 1             type-qualifier:
                      const
@@ -4419,7 +4418,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
              pci = &cs.mem;        //   valid
              pi = a[0];            //   invalid: a[0] has type ``const int *''
 
-     6.7.3.1 Formal definition of restrict
+   6.7.3.1 Formal definition of restrict
 1    Let D be a declaration of an ordinary identifier that provides a means of designating an
      object P as a restrict-qualified pointer to type T.
 2    If D appears inside a block and does not have storage class extern, let B denote the
@@ -4521,7 +4520,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
                     return t;
               }
 
-     6.7.4 Function specifiers
+   6.7.4 Function specifiers
      Syntax
 1             function-specifier:
                      inline
@@ -4781,7 +4780,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 
      Forward references:            function declarators (6.7.5.3), function definitions (6.9.1),
      initialization (6.7.8).
-     6.7.5.3 Function declarators (including prototypes)
+   6.7.5.3 Function declarators (including prototypes)
      Constraints
 1    A function declarator shall not specify a return type that is a function type or an array
      type.
@@ -5697,8 +5696,8 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     Semantics
 4   As discussed in 5.1.1.1, the unit of program text after preprocessing is a translation unit,
     which consists of a sequence of external declarations. These are described as ``external''
-    because they appear outside any function (and hence have file scope). As discussed in
-    6.7, a declaration that also causes storage to be reserved for an object or a function named
+    because they appear outside any function (and hence have file scope). As discussed in 6.7,
+    a declaration that also causes storage to be reserved for an object or a function named
     by the identifier is a definition.
 5   An external definition is an external declaration that is also a definition of a function
     (other than an inline definition) or an object. If an identifier declared with external
@@ -5824,7 +5823,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
                     func(); /* or (*func)(); ...                   */
               }
 
-     6.9.2 External object definitions
+   6.9.2 External object definitions
      Semantics
 1    If the declaration of an identifier for an object has file scope and an initializer, the
      declaration is an external definition for the identifier.
@@ -6426,7 +6425,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     file to the current token.
 3   A preprocessing directive of the form
        # line digit-sequence new-line
-0   causes the implementation to behave as if the following sequence of source lines begins
+    causes the implementation to behave as if the following sequence of source lines begins
     with a source line that has a line number as specified by the digit sequence (interpreted as
     a decimal integer). The digit sequence shall not specify zero, nor a number greater than 2147483647.
 4   A preprocessing directive of the form
@@ -9978,8 +9977,7 @@ char int_p_sep_by_space
     These types are required.
     7.18.2 Limits of specified-width integer types
 1   The following object-like macros226) specify the minimum and maximum limits of the
-    types declared in <stdint.h>. Each macro name corresponds to a similar type name in
-    7.18.1.
+    types declared in <stdint.h>. Each macro name corresponds to a similar type name in 7.18.1.
 2   Each instance of any defined macro shall be replaced by a constant expression suitable
     for use in #if preprocessing directives, and this expression shall have the same type as
     would an expression that is an object of the corresponding type converted according to
@@ -10081,8 +10079,7 @@ char int_p_sep_by_space
     7.18.4 Macros for integer constants
 1   The following function-like macros230) expand to integer constants suitable for
     initializing objects that have integer types corresponding to types defined in
-    <stdint.h>. Each macro name corresponds to a similar type name in 7.18.1.2 or
-    7.18.1.5.
+    <stdint.h>. Each macro name corresponds to a similar type name in 7.18.1.2 or 7.18.1.5.
 2   The argument in any instance of these macros shall be an unsuffixed integer constant (as
     defined in 6.4.4.1) with a value that does not exceed the limits for the corresponding type.
 3   Each invocation of one of these macros shall expand to an integer constant expression
@@ -10365,8 +10362,8 @@ char int_p_sep_by_space
      (7.19.5.5), the setvbuf function (7.19.5.6), the fgetwc function (7.24.3.1), the
      fputwc function (7.24.3.3), conversion state (7.24.6), the mbrtowc function
      (7.24.6.3.2), the wcrtomb function (7.24.6.3.3).
-     7.19.4 Operations on files
-     7.19.4.1 The remove function
+   7.19.4 Operations on files
+   7.19.4.1 The remove function
      Synopsis
 1           #include <stdio.h>
             int remove(const char *filename);
@@ -10377,7 +10374,7 @@ char int_p_sep_by_space
      function is implementation-defined.
      Returns
 3    The remove function returns zero if the operation succeeds, nonzero if it fails.
-     7.19.4.2 The rename function
+   7.19.4.2 The rename function
      Synopsis
 1           #include <stdio.h>
             int rename(const char *old, const char *new);
@@ -10939,7 +10936,7 @@ s             If no l length modifier is present, the argument shall be a pointe
               |            Z|
 
      Forward references: conversion state (7.24.6), the wcrtomb function (7.24.6.3.3).
-     7.19.6.2 The fscanf function
+   7.19.6.2 The fscanf function
      Synopsis
 1             #include <stdio.h>
               int fscanf(FILE * restrict stream,
@@ -12019,7 +12016,7 @@ p        Matches an implementation-defined set of sequences, which should be the
      the result underflows (7.12.1), the functions return a value whose magnitude is no greater
      than the smallest normalized positive number in the return type; whether errno acquires
      the value ERANGE is implementation-defined.
-     7.20.1.4 The strtol, strtoll, strtoul, and strtoull functions
+   7.20.1.4 The strtol, strtoll, strtoul, and strtoull functions
      Synopsis
 1            #include <stdlib.h>
              long int strtol(
@@ -12570,8 +12567,8 @@ p        Matches an implementation-defined set of sequences, which should be the
     7.21.1 String function conventions
 1   The header <string.h> declares one type and several functions, and defines one
     macro useful for manipulating arrays of character type and other objects treated as arrays
-    of character type.268) The type is size_t and the macro is NULL (both described in
-    7.17). Various methods are used for determining the lengths of the arrays, but in all cases
+    of character type.268) The type is size_t and the macro is NULL (both described in 7.17). 
+    Various methods are used for determining the lengths of the arrays, but in all cases
     a char * or void * argument points to the initial (lowest addressed) character of the
     array. If an array is accessed beyond the end of an object, the behavior is undefined.
 2   Where an argument declared as size_t n specifies the length of the array for a
@@ -13751,7 +13748,7 @@ p            The argument shall be a pointer to void. The value of the pointer i
 
      Forward references:          the btowc function (7.24.6.1.1), the mbrtowc function
      (7.24.6.3.2).
-     7.24.2.2 The fwscanf function
+   7.24.2.2 The fwscanf function
      Synopsis
 1           #include <stdio.h>
             #include <wchar.h>
@@ -14897,8 +14894,8 @@ n        No input is consumed. The corresponding argument shall be a pointer to
     7.24.6 Extended multibyte/wide character conversion utilities
 1   The header <wchar.h> declares an extended set of functions useful for conversion
     between multibyte characters and wide characters.
-2   Most of the following functions -- those that are listed as ``restartable'', 7.24.6.3 and
-    7.24.6.4 -- take as a last argument a pointer to an object of type mbstate_t that is used
+2   Most of the following functions -- those that are listed as ``restartable'', 7.24.6.3 and 7.24.6.4
+    -- take as a last argument a pointer to an object of type mbstate_t that is used
     to describe the current conversion state from a particular multibyte character sequence to
     a wide character sequence (or the reverse) under the rules of a particular setting for the
     LC_CTYPE category of the current locale.
@@ -15499,7 +15496,7 @@ n        No input is consumed. The corresponding argument shall be a pointer to
 
                                                    Annex A
                                                  (informative)
-                                  Language syntax summary
+  A. Language syntax summary
 1   NOTE     The notation is described in 6.1.
 
     A.1 Lexical grammar
@@ -16096,7 +16093,7 @@ A.3 Preprocessing directives
 
                                 Annex B
                               (informative)
-                          Library summary
+  B. Library summary
 B.1 Diagnostics <assert.h>
        NDEBUG
        void assert(scalar expression);
@@ -16894,7 +16891,7 @@ B.24 Wide character classification and mapping utilities <wctype.h>
 
                                            Annex C
                                          (informative)
-                                      Sequence points
+   C. Sequence points
 1   The following are the sequence points described in 5.1.2.3:
     -- The call to a function, after the arguments have been evaluated (6.5.2.2).
     -- The end of the first operand of the following operators: logical AND && (6.5.13);
@@ -16919,7 +16916,7 @@ B.24 Wide character classification and mapping utilities <wctype.h>
 
                                          Annex D
                                         (normative)
-                   Universal character names for identifiers
+  D. Universal character names for identifiers
 1   This clause lists the hexadecimal code values that are valid in universal character names
     in identifiers.
 2   This table is reproduced unchanged from ISO/IEC TR 10176:1998, produced by ISO/IEC
@@ -16993,7 +16990,7 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 
                                          Annex E
                                        (informative)
-                                Implementation limits
+  E. Implementation limits
 1   The contents of the header <limits.h> are given below, in alphabetical order. The
     minimum magnitudes shown shall be replaced by implementation-defined magnitudes
     with the same sign. The values shall all be constant expressions suitable for use in #if
@@ -17071,7 +17068,7 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 
                                                Annex F
                                               (normative)
-                          IEC 60559 floating-point arithmetic
+  F. IEC 60559 floating-point arithmetic
     F.1 Introduction
 1   This annex specifies C language support for the IEC 60559 floating-point standard. The
     IEC 60559 floating-point standard is specifically Binary floating-point arithmetic for
@@ -17530,8 +17527,8 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 13   If a function with one or more NaN arguments returns a NaN result, the result should be
      the same as one of the NaN arguments (after possible type conversion), except perhaps
      for the sign.
-     F.9.1 Trigonometric functions
-     F.9.1.1 The acos functions
+   F.9.1 Trigonometric functions
+   F.9.1.1 The acos functions
 1    -- acos(1) returns +0.
      -- acos( x ) returns a NaN and raises the ``invalid'' floating-point exception for
         | x | > 1.
@@ -17926,7 +17923,7 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 
                                           Annex G
                                         (informative)
-                   IEC 60559-compatible complex arithmetic
+   G. IEC 60559-compatible complex arithmetic
     G.1 Introduction
 1   This annex supplements annex F to specify complex arithmetic for compatibility with
     IEC 60559 real floating-point arithmetic. Although these specifications have been
@@ -18451,7 +18448,7 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 
                                           Annex H
                                         (informative)
-                        Language independent arithmetic
+    H. Language independent arithmetic
     H.1 Introduction
 1   This annex documents the extent to which the C language supports the ISO/IEC 10967-1
     standard for language-independent arithmetic (LIA-1). LIA-1 is more general than
@@ -18648,7 +18645,7 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 
                                            Annex I
                                         (informative)
-                                    Common warnings
+   I. Common warnings
 1   An implementation may generate warnings in many situations, none of which are
     specified as part of this International Standard. The following are a few of the more
     common situations.
@@ -18692,7 +18689,7 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 
                                              Annex J
                                           (informative)
-                                      Portability issues
+  J. Portability issues
 1   This annex collects some information about portability that appears in this International
     Standard.
     J.1 Unspecified behavior

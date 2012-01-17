@@ -1117,28 +1117,29 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
 
      Forward references: expressions (6.5), type qualifiers (6.7.3), statements (6.8), floating-
      point environment &lt;fenv.h&gt; (7.6), the signal function (7.14), files (7.21.3).
-     5.1.2.4 Multi-threaded executions and data races
 </pre>
 </a>
-<a name='5.1.2.3p1'><pre>1    Under a hosted implementation, a program can have more than one thread of execution
+<hr>
+<a name='5.1.2.4'><h3>5.1.2.4 [Multi-threaded executions and data races]</h3></a>
+<a name='5.1.2.4p1'><pre>1    Under a hosted implementation, a program can have more than one thread of execution
      (or thread ) running concurrently. The execution of each thread proceeds as defined by
      the remainder of this standard. The execution of the entire program consists of an
      execution of all of its threads.14) Under a freestanding implementation, it is
      implementation-defined whether a program can have more than one thread of execution.
 </pre>
 </a>
-<a name='5.1.2.3p2'><pre>2    The value of an object visible to a thread T at a particular point is the initial value of the
+<a name='5.1.2.4p2'><pre>2    The value of an object visible to a thread T at a particular point is the initial value of the
      object, a value stored in the object by T , or a value stored in the object by another thread,
      according to the rules below.
 </pre>
 </a>
-<a name='5.1.2.3p3'><pre>3    NOTE 1 In some cases, there may instead be undefined behavior. Much of this section is motivated by
+<a name='5.1.2.4p3'><pre>3    NOTE 1 In some cases, there may instead be undefined behavior. Much of this section is motivated by
      the desire to support atomic operations with explicit and detailed visibility constraints. However, it also
      implicitly supports a simpler view for more restricted programs.
 
 </pre>
 </a>
-<a name='5.1.2.3p4'><pre>4    Two expression evaluations conflict if one of them modifies a memory location and the
+<a name='5.1.2.4p4'><pre>4    Two expression evaluations conflict if one of them modifies a memory location and the
      other one reads or modifies the same memory location.
 
 
@@ -1150,7 +1151,7 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
 
 </pre>
 </a>
-<a name='5.1.2.3p5'><pre>5    The library defines a number of atomic operations (7.17) and operations on mutexes
+<a name='5.1.2.4p5'><pre>5    The library defines a number of atomic operations (7.17) and operations on mutexes
      (7.26.4) that are specially identified as synchronization operations. These operations play
      a special role in making assignments in one thread visible to another. A synchronization
      operation on one or more memory locations is either an acquire operation, a release
@@ -1161,7 +1162,7 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
      atomic read-modify-write operations, which have special characteristics.
 </pre>
 </a>
-<a name='5.1.2.3p6'><pre>6    NOTE 2 For example, a call that acquires a mutex will perform an acquire operation on the locations
+<a name='5.1.2.4p6'><pre>6    NOTE 2 For example, a call that acquires a mutex will perform an acquire operation on the locations
      composing the mutex. Correspondingly, a call that releases the same mutex will perform a release
      operation on those same locations. Informally, performing a release operation on A forces prior side effects
      on other memory locations to become visible to other threads that later perform an acquire or consume
@@ -1170,46 +1171,46 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
 
 </pre>
 </a>
-<a name='5.1.2.3p7'><pre>7    All modifications to a particular atomic object M occur in some particular total order,
+<a name='5.1.2.4p7'><pre>7    All modifications to a particular atomic object M occur in some particular total order,
      called the modification order of M . If A and B are modifications of an atomic object M ,
      and A happens before B, then A shall precede B in the modification order of M , which is
      defined below.
 </pre>
 </a>
-<a name='5.1.2.3p8'><pre>8    NOTE 3     This states that the modification orders must respect the ``happens before&#39;&#39; relation.
+<a name='5.1.2.4p8'><pre>8    NOTE 3     This states that the modification orders must respect the ``happens before&#39;&#39; relation.
 
 </pre>
 </a>
-<a name='5.1.2.3p9'><pre>9    NOTE 4 There is a separate order for each atomic object. There is no requirement that these can be
+<a name='5.1.2.4p9'><pre>9    NOTE 4 There is a separate order for each atomic object. There is no requirement that these can be
      combined into a single total order for all objects. In general this will be impossible since different threads
      may observe modifications to different variables in inconsistent orders.
 
 </pre>
 </a>
-<a name='5.1.2.3p10'><pre>10   A release sequence headed by a release operation A on an atomic object M is a maximal
+<a name='5.1.2.4p10'><pre>10   A release sequence headed by a release operation A on an atomic object M is a maximal
      contiguous sub-sequence of side effects in the modification order of M , where the first
      operation is A and every subsequent operation either is performed by the same thread that
      performed the release or is an atomic read-modify-write operation.
 </pre>
 </a>
-<a name='5.1.2.3p11'><pre>11   Certain library calls synchronize with other library calls performed by another thread. In
+<a name='5.1.2.4p11'><pre>11   Certain library calls synchronize with other library calls performed by another thread. In
      particular, an atomic operation A that performs a release operation on an object M
      synchronizes with an atomic operation B that performs an acquire operation on M and
      reads a value written by any side effect in the release sequence headed by A.
 </pre>
 </a>
-<a name='5.1.2.3p12'><pre>12   NOTE 5 Except in the specified cases, reading a later value does not necessarily ensure visibility as
+<a name='5.1.2.4p12'><pre>12   NOTE 5 Except in the specified cases, reading a later value does not necessarily ensure visibility as
      described below. Such a requirement would sometimes interfere with efficient implementation.
 
 </pre>
 </a>
-<a name='5.1.2.3p13'><pre>13   NOTE 6 The specifications of the synchronization operations define when one reads the value written by
+<a name='5.1.2.4p13'><pre>13   NOTE 6 The specifications of the synchronization operations define when one reads the value written by
      another. For atomic variables, the definition is clear. All operations on a given mutex occur in a single total
      order. Each mutex acquisition ``reads the value written&#39;&#39; by the last mutex release.
 
 </pre>
 </a>
-<a name='5.1.2.3p14'><pre>14   An evaluation A carries a dependency 15) to an evaluation B if:
+<a name='5.1.2.4p14'><pre>14   An evaluation A carries a dependency 15) to an evaluation B if:
 
 
      15) The ``carries a dependency&#39;&#39; relation is a subset of the ``sequenced before&#39;&#39; relation, and is similarly
@@ -1228,7 +1229,7 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
      -- for some evaluation X , A carries a dependency to X and X carries a dependency to B.
 </pre>
 </a>
-<a name='5.1.2.3p15'><pre>15   An evaluation A is dependency-ordered before16) an evaluation B if:
+<a name='5.1.2.4p15'><pre>15   An evaluation A is dependency-ordered before16) an evaluation B if:
      -- A performs a release operation on an atomic object M , and, in another thread, B
         performs a consume operation on M and reads a value written by any side effect in
         the release sequence headed by A, or
@@ -1236,14 +1237,14 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
         dependency to B.
 </pre>
 </a>
-<a name='5.1.2.3p16'><pre>16   An evaluation A inter-thread happens before an evaluation B if A synchronizes with B, A
+<a name='5.1.2.4p16'><pre>16   An evaluation A inter-thread happens before an evaluation B if A synchronizes with B, A
      is dependency-ordered before B, or, for some evaluation X :
      -- A synchronizes with X and X is sequenced before B,
      -- A is sequenced before X and X inter-thread happens before B, or
      -- A inter-thread happens before X and X inter-thread happens before B.
 </pre>
 </a>
-<a name='5.1.2.3p17'><pre>17   NOTE 7 The ``inter-thread happens before&#39;&#39; relation describes arbitrary concatenations of ``sequenced
+<a name='5.1.2.4p17'><pre>17   NOTE 7 The ``inter-thread happens before&#39;&#39; relation describes arbitrary concatenations of ``sequenced
      before&#39;&#39;, ``synchronizes with&#39;&#39;, and ``dependency-ordered before&#39;&#39; relationships, with two exceptions. The
      first exception is that a concatenation is not permitted to end with ``dependency-ordered before&#39;&#39; followed
      by ``sequenced before&#39;&#39;. The reason for this limitation is that a consume operation participating in a
@@ -1257,7 +1258,7 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
 
 </pre>
 </a>
-<a name='5.1.2.3p18'><pre>18   An evaluation A happens before an evaluation B if A is sequenced before B or A inter-
+<a name='5.1.2.4p18'><pre>18   An evaluation A happens before an evaluation B if A is sequenced before B or A inter-
      thread happens before B.
 
 
@@ -1269,7 +1270,7 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
 
 </pre>
 </a>
-<a name='5.1.2.3p19'><pre>19   A visible side effect A on an object M with respect to a value computation B of M
+<a name='5.1.2.4p19'><pre>19   A visible side effect A on an object M with respect to a value computation B of M
      satisfies the conditions:
      -- A happens before B, and
      -- there is no other side effect X to M such that A happens before X and X happens
@@ -1278,19 +1279,19 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
      value stored by the visible side effect A.
 </pre>
 </a>
-<a name='5.1.2.3p20'><pre>20   NOTE 8 If there is ambiguity about which side effect to a non-atomic object is visible, then there is a data
+<a name='5.1.2.4p20'><pre>20   NOTE 8 If there is ambiguity about which side effect to a non-atomic object is visible, then there is a data
      race and the behavior is undefined.
 
 </pre>
 </a>
-<a name='5.1.2.3p21'><pre>21   NOTE 9 This states that operations on ordinary variables are not visibly reordered. This is not actually
+<a name='5.1.2.4p21'><pre>21   NOTE 9 This states that operations on ordinary variables are not visibly reordered. This is not actually
      detectable without data races, but it is necessary to ensure that data races, as defined here, and with suitable
      restrictions on the use of atomics, correspond to data races in a simple interleaved (sequentially consistent)
      execution.
 
 </pre>
 </a>
-<a name='5.1.2.3p22'><pre>22   The visible sequence of side effects on an atomic object M , with respect to a value
+<a name='5.1.2.4p22'><pre>22   The visible sequence of side effects on an atomic object M , with respect to a value
      computation B of M , is a maximal contiguous sub-sequence of side effects in the
      modification order of M , where the first side effect is visible with respect to B, and for
      every subsequent side effect, it is not the case that B happens before it. The value of an
@@ -1302,13 +1303,13 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
      effect Y , where Y follows X in the modification order of M .
 </pre>
 </a>
-<a name='5.1.2.3p23'><pre>23   NOTE 10 This effectively disallows compiler reordering of atomic operations to a single object, even if
+<a name='5.1.2.4p23'><pre>23   NOTE 10 This effectively disallows compiler reordering of atomic operations to a single object, even if
      both operations are ``relaxed&#39;&#39; loads. By doing so, we effectively make the ``cache coherence&#39;&#39; guarantee
      provided by most hardware available to C atomic operations.
 
 </pre>
 </a>
-<a name='5.1.2.3p24'><pre>24   NOTE 11 The visible sequence depends on the ``happens before&#39;&#39; relation, which in turn depends on the
+<a name='5.1.2.4p24'><pre>24   NOTE 11 The visible sequence depends on the ``happens before&#39;&#39; relation, which in turn depends on the
      values observed by loads of atomics, which we are restricting here. The intended reading is that there must
      exist an association of atomic loads with modifications they observe that, together with suitably chosen
      modification orders and the ``happens before&#39;&#39; relation derived as described above, satisfy the resulting
@@ -1316,12 +1317,12 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
 
 </pre>
 </a>
-<a name='5.1.2.3p25'><pre>25   The execution of a program contains a data race if it contains two conflicting actions in
+<a name='5.1.2.4p25'><pre>25   The execution of a program contains a data race if it contains two conflicting actions in
      different threads, at least one of which is not atomic, and neither happens before the
      other. Any such data race results in undefined behavior.
 </pre>
 </a>
-<a name='5.1.2.3p26'><pre>26   NOTE 12 It can be shown that programs that correctly use simple mutexes and
+<a name='5.1.2.4p26'><pre>26   NOTE 12 It can be shown that programs that correctly use simple mutexes and
      memory_order_seq_cst operations to prevent all data races, and use no other synchronization
      operations, behave as though the operations executed by their constituent threads were simply interleaved,
      with each value computation of an object being the last value stored in that interleaving. This is normally
@@ -1334,7 +1335,7 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
 
 </pre>
 </a>
-<a name='5.1.2.3p27'><pre>27   NOTE 13 Compiler transformations that introduce assignments to a potentially shared memory location
+<a name='5.1.2.4p27'><pre>27   NOTE 13 Compiler transformations that introduce assignments to a potentially shared memory location
      that would not be modified by the abstract machine are generally precluded by this standard, since such an
      assignment might overwrite another assignment by a different thread in cases in which an abstract machine
      execution would not have encountered a data race. This includes implementations of data member
@@ -1344,7 +1345,7 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
 
 </pre>
 </a>
-<a name='5.1.2.3p28'><pre>28   NOTE 14 Transformations that introduce a speculative read of a potentially shared memory location may
+<a name='5.1.2.4p28'><pre>28   NOTE 14 Transformations that introduce a speculative read of a potentially shared memory location may
      not preserve the semantics of the program as defined in this standard, since they potentially introduce a data
      race. However, they are typically valid in the context of an optimizing compiler that targets a specific
      machine with well-defined semantics for data races. They would be invalid for a hypothetical machine that
@@ -2471,23 +2472,27 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
      float. Its type category is array.
 
      Forward references: compatible type and composite type (6.2.7), declarations (6.7).
-     6.2.6 Representations of types
-     6.2.6.1 General
 </pre>
 </a>
-<a name='6.2.5p1'><pre>1    The representations of all types are unspecified except as stated in this subclause.
+<hr>
+<a name='6.2.6'><h3>6.2.6 [Representations of types]</h3></a>
+<pre> Representations of types
+</pre>
+<hr>
+<a name='6.2.6.1'><h3>6.2.6.1 [General]</h3></a>
+<a name='6.2.6.1p1'><pre>1    The representations of all types are unspecified except as stated in this subclause.
 </pre>
 </a>
-<a name='6.2.5p2'><pre>2    Except for bit-fields, objects are composed of contiguous sequences of one or more bytes,
+<a name='6.2.6.1p2'><pre>2    Except for bit-fields, objects are composed of contiguous sequences of one or more bytes,
      the number, order, and encoding of which are either explicitly specified or
      implementation-defined.
 </pre>
 </a>
-<a name='6.2.5p3'><pre>3    Values stored in unsigned bit-fields and objects of type unsigned char shall be
+<a name='6.2.6.1p3'><pre>3    Values stored in unsigned bit-fields and objects of type unsigned char shall be
      represented using a pure binary notation.49)
 </pre>
 </a>
-<a name='6.2.5p4'><pre>4    Values stored in non-bit-field objects of any other object type consist of n &times; CHAR_BIT
+<a name='6.2.6.1p4'><pre>4    Values stored in non-bit-field objects of any other object type consist of n &times; CHAR_BIT
      bits, where n is the size of an object of that type, in bytes. The value may be copied into
      an object of type unsigned char [n] (e.g., by memcpy); the resulting set of bytes is
      called the object representation of the value. Values stored in bit-fields consist of m bits,
@@ -2497,7 +2502,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
      equal may have different object representations.
 </pre>
 </a>
-<a name='6.2.5p5'><pre>5    Certain object representations need not represent a value of the object type. If the stored
+<a name='6.2.6.1p5'><pre>5    Certain object representations need not represent a value of the object type. If the stored
      value of an object has such a representation and is read by an lvalue expression that does
      not have character type, the behavior is undefined. If such a representation is produced
      by a side effect that modifies all or any part of the object by an lvalue expression that
@@ -2505,7 +2510,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
      a trap representation.
 </pre>
 </a>
-<a name='6.2.5p6'><pre>6    When a value is stored in an object of structure or union type, including in a member
+<a name='6.2.6.1p6'><pre>6    When a value is stored in an object of structure or union type, including in a member
      object, the bytes of the object representation that correspond to any padding bytes take
      unspecified values.51) The value of a structure or union object is never a trap
 
@@ -2526,19 +2531,19 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     a trap representation.
 </pre>
 </a>
-<a name='6.2.5p7'><pre>7   When a value is stored in a member of an object of union type, the bytes of the object
+<a name='6.2.6.1p7'><pre>7   When a value is stored in a member of an object of union type, the bytes of the object
     representation that do not correspond to that member but do correspond to other members
     take unspecified values.
 </pre>
 </a>
-<a name='6.2.5p8'><pre>8   Where an operator is applied to a value that has more than one object representation,
+<a name='6.2.6.1p8'><pre>8   Where an operator is applied to a value that has more than one object representation,
     which object representation is used shall not affect the value of the result.52) Where a
     value is stored in an object using a type that has more than one object representation for
     that value, it is unspecified which representation is used, but a trap representation shall
     not be generated.
 </pre>
 </a>
-<a name='6.2.5p9'><pre>9   Loads and stores of objects with                             atomic      types      are     done      with
+<a name='6.2.6.1p9'><pre>9   Loads and stores of objects with                             atomic      types      are     done      with
     memory_order_seq_cst semantics.
     Forward references: declarations (6.7), expressions (6.5), lvalues, arrays, and function
     designators (6.3.2.1), order and consistency (7.17.3).
@@ -4113,21 +4118,19 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     designator).91)
 </pre>
 </a>
-<a name='6.5.1p3'><pre>3   A constant is a primary expression. Its type depends on its form and value, as detailed in
+<a name='6.5.1p3'><pre>3   A constant is a primary expression. Its type depends on its form and value, as detailed in 6.4.4.
 </pre>
 </a>
-<hr>
-<a name='6.4.4.'><h3>6.4.4. [Primary expressions]</h3></a>
-<a name='6.4.4.p4'><pre>4   A string literal is a primary expression. It is an lvalue with type as detailed in 6.4.5.
+<a name='6.5.1p4'><pre>4   A string literal is a primary expression. It is an lvalue with type as detailed in 6.4.5.
 </pre>
 </a>
-<a name='6.4.4.p5'><pre>5   A parenthesized expression is a primary expression. Its type and value are identical to
+<a name='6.5.1p5'><pre>5   A parenthesized expression is a primary expression. Its type and value are identical to
     those of the unparenthesized expression. It is an lvalue, a function designator, or a void
     expression if the unparenthesized expression is, respectively, an lvalue, a function
     designator, or a void expression.
 </pre>
 </a>
-<a name='6.4.4.p6'><pre>6   A generic selection is a primary expression. Its type and value depend on the selected
+<a name='6.5.1p6'><pre>6   A generic selection is a primary expression. Its type and value depend on the selected
     generic association, as detailed in the following subclause.
     Forward references: declarations (6.7).
 </pre>
@@ -4342,15 +4345,15 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 
      Forward references: function declarators (including prototypes) (6.7.6.3), function
      definitions (6.9.1), the return statement (6.8.6.4), simple assignment (6.5.16.1).
-     6.5.2.3 Structure and union members
-     Constraints
 </pre>
 </a>
-<a name='6.5.2.2p1'><pre>1    The first operand of the . operator shall have an atomic, qualified, or unqualified
+<hr>
+<a name='6.5.2.3'><h3>6.5.2.3 [Structure and union members]</h3></a>
+<a name='6.5.2.3p1'><pre>1    The first operand of the . operator shall have an atomic, qualified, or unqualified
      structure or union type, and the second operand shall name a member of that type.
 </pre>
 </a>
-<a name='6.5.2.2p2'><pre>2    The first operand of the -&gt; operator shall have type ``pointer to atomic, qualified, or
+<a name='6.5.2.3p2'><pre>2    The first operand of the -&gt; operator shall have type ``pointer to atomic, qualified, or
      unqualified structure&#39;&#39; or ``pointer to atomic, qualified, or unqualified union&#39;&#39;, and the
      second operand shall name a member of the type pointed to.
 
@@ -4362,24 +4365,24 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     Semantics
 </pre>
 </a>
-<a name='6.5.2.2p3'><pre>3   A postfix expression followed by the . operator and an identifier designates a member of
+<a name='6.5.2.3p3'><pre>3   A postfix expression followed by the . operator and an identifier designates a member of
     a structure or union object. The value is that of the named member,95) and is an lvalue if
     the first expression is an lvalue. If the first expression has qualified type, the result has
     the so-qualified version of the type of the designated member.
 </pre>
 </a>
-<a name='6.5.2.2p4'><pre>4   A postfix expression followed by the -&gt; operator and an identifier designates a member
+<a name='6.5.2.3p4'><pre>4   A postfix expression followed by the -&gt; operator and an identifier designates a member
     of a structure or union object. The value is that of the named member of the object to
     which the first expression points, and is an lvalue.96) If the first expression is a pointer to
     a qualified type, the result has the so-qualified version of the type of the designated
     member.
 </pre>
 </a>
-<a name='6.5.2.2p5'><pre>5   Accessing a member of an atomic structure or union object results in undefined
+<a name='6.5.2.3p5'><pre>5   Accessing a member of an atomic structure or union object results in undefined
     behavior.97)
 </pre>
 </a>
-<a name='6.5.2.2p6'><pre>6   One special guarantee is made in order to simplify the use of unions: if a union contains
+<a name='6.5.2.3p6'><pre>6   One special guarantee is made in order to simplify the use of unions: if a union contains
     several structures that share a common initial sequence (see below), and if the union
     object currently contains one of these structures, it is permitted to inspect the common
     initial part of any of them anywhere that a declaration of the completed type of the union
@@ -4388,12 +4391,12 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     initial members.
 </pre>
 </a>
-<a name='6.5.2.2p7'><pre>7   EXAMPLE 1 If f is a function returning a structure or union, and x is a member of that structure or
+<a name='6.5.2.3p7'><pre>7   EXAMPLE 1 If f is a function returning a structure or union, and x is a member of that structure or
     union, f().x is a valid postfix expression but is not an lvalue.
 
 </pre>
 </a>
-<a name='6.5.2.2p8'><pre>8   EXAMPLE 2       In:
+<a name='6.5.2.3p8'><pre>8   EXAMPLE 2       In:
              struct s { int i; const int ci; };
              struct s s;
              const struct s cs;
@@ -4424,7 +4427,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 
 </pre>
 </a>
-<a name='6.5.2.2p9'><pre>9   EXAMPLE 3       The following is a valid fragment:
+<a name='6.5.2.3p9'><pre>9   EXAMPLE 3       The following is a valid fragment:
              union {
                      struct {
                            int      alltypes;
@@ -4837,22 +4840,21 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     or unqualified scalar type, and the operand shall have scalar type.
 </pre>
 </a>
-<a name='6.5.4p3'><pre>3   Conversions that involve pointers, other than where permitted by the constraints of
+<a name='6.5.4p3'><pre>3   Conversions that involve pointers, other than where permitted by the constraints of 6.5.16.1, 
+    shall be specified by means of an explicit cast.
 </pre>
 </a>
-<hr>
-<a name='6.5.16.1'><h3>6.5.16.1 [, shall be specified by means of an explicit cast.]</h3></a>
-<a name='6.5.16.1p4'><pre>4   A pointer type shall not be converted to any floating type. A floating type shall not be
+<a name='6.5.4p4'><pre>4   A pointer type shall not be converted to any floating type. A floating type shall not be
     converted to any pointer type.
     Semantics
 </pre>
 </a>
-<a name='6.5.16.1p5'><pre>5   Preceding an expression by a parenthesized type name converts the value of the
+<a name='6.5.4p5'><pre>5   Preceding an expression by a parenthesized type name converts the value of the
     expression to the named type. This construction is called a cast .104) A cast that specifies
     no conversion has no effect on the type or value of an expression.
 </pre>
 </a>
-<a name='6.5.16.1p6'><pre>6   If the value of the expression is represented with greater range or precision than required
+<a name='6.5.4p6'><pre>6   If the value of the expression is represented with greater range or precision than required
     by the type named by the cast (6.3.1.8), then the cast specifies a conversion even if the
     type of the expression is the same as the named type and removes any extra range and
     precision.
@@ -4998,22 +5000,22 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 
      Forward references: array declarators (6.7.6.2), common definitions &lt;stddef.h&gt;
      (7.19).
-     6.5.7 Bitwise shift operators
-     Syntax
 </pre>
 </a>
-<a name='6.5.6p1'><pre>1             shift-expression:
+<hr>
+<a name='6.5.7'><h3>6.5.7 [Bitwise shift operators]</h3></a>
+<a name='6.5.7p1'><pre>1             shift-expression:
                       additive-expression
                       shift-expression &lt;&lt; additive-expression
                       shift-expression &gt;&gt; additive-expression
      Constraints
 </pre>
 </a>
-<a name='6.5.6p2'><pre>2    Each of the operands shall have integer type.
+<a name='6.5.7p2'><pre>2    Each of the operands shall have integer type.
      Semantics
 </pre>
 </a>
-<a name='6.5.6p3'><pre>3    The integer promotions are performed on each of the operands. The type of the result is
+<a name='6.5.7p3'><pre>3    The integer promotions are performed on each of the operands. The type of the result is
      that of the promoted left operand. If the value of the right operand is negative or is
 
      106) Another way to approach pointer arithmetic is first to convert the pointer(s) to character pointer(s): In
@@ -5030,14 +5032,14 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     greater than or equal to the width of the promoted left operand, the behavior is undefined.
 </pre>
 </a>
-<a name='6.5.6p4'><pre>4   The result of E1 &lt;&lt; E2 is E1 left-shifted E2 bit positions; vacated bits are filled with
+<a name='6.5.7p4'><pre>4   The result of E1 &lt;&lt; E2 is E1 left-shifted E2 bit positions; vacated bits are filled with
     zeros. If E1 has an unsigned type, the value of the result is E1 &times; 2E2 , reduced modulo
     one more than the maximum value representable in the result type. If E1 has a signed
     type and nonnegative value, and E1 &times; 2E2 is representable in the result type, then that is
     the resulting value; otherwise, the behavior is undefined.
 </pre>
 </a>
-<a name='6.5.6p5'><pre>5   The result of E1 &gt;&gt; E2 is E1 right-shifted E2 bit positions. If E1 has an unsigned type
+<a name='6.5.7p5'><pre>5   The result of E1 &gt;&gt; E2 is E1 right-shifted E2 bit positions. If E1 has an unsigned type
     or if E1 has a signed type and a nonnegative value, the value of the result is the integral
     part of the quotient of E1 / 2E2 . If E1 has a signed type and a negative value, the
     resulting value is implementation-defined.
@@ -5748,7 +5750,6 @@ semantics.113)
          register are sizeof and _Alignof.
 
 
-
 </pre>
 </a>
 <hr>
@@ -6079,11 +6080,11 @@ semantics.113)
               };
 
      Forward references: declarators (6.7.6), tags (6.7.2.3).
-     6.7.2.2 Enumeration specifiers
-     Syntax
 </pre>
 </a>
-<a name='6.7.2.1p1'><pre>1             enum-specifier:
+<hr>
+<a name='6.7.2.2'><h3>6.7.2.2 [Enumeration specifiers]</h3></a>
+<a name='6.7.2.2p1'><pre>1             enum-specifier:
                     enum identifieropt { enumerator-list }
                     enum identifieropt { enumerator-list , }
                     enum identifier
@@ -6096,7 +6097,7 @@ semantics.113)
      Constraints
 </pre>
 </a>
-<a name='6.7.2.1p2'><pre>2    The expression that defines the value of an enumeration constant shall be an integer
+<a name='6.7.2.2p2'><pre>2    The expression that defines the value of an enumeration constant shall be an integer
      constant expression that has a value representable as an int.
 
 
@@ -6106,7 +6107,7 @@ semantics.113)
     Semantics
 </pre>
 </a>
-<a name='6.7.2.1p3'><pre>3   The identifiers in an enumerator list are declared as constants that have type int and
+<a name='6.7.2.2p3'><pre>3   The identifiers in an enumerator list are declared as constants that have type int and
     may appear wherever such are permitted.127) An enumerator with = defines its
     enumeration constant as the value of the constant expression. If the first enumerator has
     no =, the value of its enumeration constant is 0. Each subsequent enumerator with no =
@@ -6116,14 +6117,14 @@ semantics.113)
     enumeration.) The enumerators of an enumeration are also known as its members.
 </pre>
 </a>
-<a name='6.7.2.1p4'><pre>4   Each enumerated type shall be compatible with char, a signed integer type, or an
+<a name='6.7.2.2p4'><pre>4   Each enumerated type shall be compatible with char, a signed integer type, or an
     unsigned integer type. The choice of type is implementation-defined,128) but shall be
     capable of representing the values of all the members of the enumeration. The
     enumerated type is incomplete until immediately after the } that terminates the list of
     enumerator declarations, and complete thereafter.
 </pre>
 </a>
-<a name='6.7.2.1p5'><pre>5   EXAMPLE       The following fragment:
+<a name='6.7.2.2p5'><pre>5   EXAMPLE       The following fragment:
             enum hue { chartreuse, burgundy, claret=20, winedark };
             enum hue col, *cp;
             col = claret;
@@ -6396,27 +6397,27 @@ semantics.113)
 <a name='6.7.3p13'><pre>13   EXAMPLE 3        The declaration
               _Atomic volatile int *p;
      specifies that p has the type ``pointer to volatile atomic int&#39;&#39;, a pointer to a volatile-qualified atomic type.
-
-     6.7.3.1 Formal definition of restrict
 </pre>
 </a>
-<a name='6.7.3p1'><pre>1    Let D be a declaration of an ordinary identifier that provides a means of designating an
+<hr>
+<a name='6.7.3.1'><h3>6.7.3.1 [Formal definition of restrict]</h3></a>
+<a name='6.7.3.1p1'><pre>1    Let D be a declaration of an ordinary identifier that provides a means of designating an
      object P as a restrict-qualified pointer to type T.
 </pre>
 </a>
-<a name='6.7.3p2'><pre>2    If D appears inside a block and does not have storage class extern, let B denote the
+<a name='6.7.3.1p2'><pre>2    If D appears inside a block and does not have storage class extern, let B denote the
      block. If D appears in the list of parameter declarations of a function definition, let B
      denote the associated block. Otherwise, let B denote the block of main (or the block of
      whatever function is called at program startup in a freestanding environment).
 </pre>
 </a>
-<a name='6.7.3p3'><pre>3    In what follows, a pointer expression E is said to be based on object P if (at some
+<a name='6.7.3.1p3'><pre>3    In what follows, a pointer expression E is said to be based on object P if (at some
      sequence point in the execution of B prior to the evaluation of E) modifying P to point to
      a copy of the array object into which it formerly pointed would change the value of E.137)
      Note that ``based&#39;&#39; is defined only for expressions with pointer types.
 </pre>
 </a>
-<a name='6.7.3p4'><pre>4    During each execution of B, let L be any lvalue that has &amp;L based on P. If L is used to
+<a name='6.7.3.1p4'><pre>4    During each execution of B, let L be any lvalue that has &amp;L based on P. If L is used to
      access the value of the object X that it designates, and X is also modified (by any means),
      then the following requirements apply: T shall not be const-qualified. Every other lvalue
      used to access the value of X shall also have its address based on P. Every access that
@@ -6436,15 +6437,15 @@ semantics.113)
      requirements are not met, then the behavior is undefined.
 </pre>
 </a>
-<a name='6.7.3p5'><pre>5    Here an execution of B means that portion of the execution of the program that would
+<a name='6.7.3.1p5'><pre>5    Here an execution of B means that portion of the execution of the program that would
      correspond to the lifetime of an object with scalar type and automatic storage duration
      associated with B.
 </pre>
 </a>
-<a name='6.7.3p6'><pre>6    A translator is free to ignore any or all aliasing implications of uses of restrict.
+<a name='6.7.3.1p6'><pre>6    A translator is free to ignore any or all aliasing implications of uses of restrict.
 </pre>
 </a>
-<a name='6.7.3p7'><pre>7    EXAMPLE 1       The file scope declarations
+<a name='6.7.3.1p7'><pre>7    EXAMPLE 1       The file scope declarations
               int * restrict a;
               int * restrict b;
               extern int c[];
@@ -6453,7 +6454,7 @@ semantics.113)
 
 </pre>
 </a>
-<a name='6.7.3p8'><pre>8    EXAMPLE 2       The function parameter declarations in the following example
+<a name='6.7.3.1p8'><pre>8    EXAMPLE 2       The function parameter declarations in the following example
               void f(int n, int * restrict p, int * restrict q)
               {
                     while (n-- &gt; 0)
@@ -6463,7 +6464,7 @@ semantics.113)
      parameters, then it is not also accessed through the other.
 </pre>
 </a>
-<a name='6.7.3p9'><pre>9    The benefit of the restrict qualifiers is that they enable a translator to make an effective dependence
+<a name='6.7.3.1p9'><pre>9    The benefit of the restrict qualifiers is that they enable a translator to make an effective dependence
      analysis of function f without examining any of the calls of f in the program. The cost is that the
      programmer has to examine all of those calls to ensure that none give undefined behavior. For example, the
      second call of f in g has undefined behavior because each of d[1] through d[49] is accessed through
@@ -6477,7 +6478,7 @@ semantics.113)
 
 </pre>
 </a>
-<a name='6.7.3p10'><pre>10   EXAMPLE 3       The function parameter declarations
+<a name='6.7.3.1p10'><pre>10   EXAMPLE 3       The function parameter declarations
               void h(int n, int * restrict p, int * restrict q, int * restrict r)
               {
                     int i;
@@ -6493,7 +6494,7 @@ semantics.113)
 
 </pre>
 </a>
-<a name='6.7.3p11'><pre>11   EXAMPLE 4 The rule limiting assignments between restricted pointers does not distinguish between a
+<a name='6.7.3.1p11'><pre>11   EXAMPLE 4 The rule limiting assignments between restricted pointers does not distinguish between a
      function call and an equivalent nested block. With one exception, only ``outer-to-inner&#39;&#39; assignments
      between restricted pointers declared in nested blocks have defined behavior.
               {
@@ -6509,7 +6510,7 @@ semantics.113)
               }
 </pre>
 </a>
-<a name='6.7.3p12'><pre>12   The one exception allows the value of a restricted pointer to be carried out of the block in which it (or, more
+<a name='6.7.3.1p12'><pre>12   The one exception allows the value of a restricted pointer to be carried out of the block in which it (or, more
      precisely, the ordinary identifier used to designate it) is declared when that block finishes execution. For
      example, this permits new_vector to return a vector.
               typedef struct { int n; float * restrict v; } vector;
@@ -6520,34 +6521,33 @@ semantics.113)
                     t.v = malloc(n * sizeof (float));
                     return t;
               }
-
-     6.7.4 Function specifiers
-     Syntax
 </pre>
 </a>
-<a name='6.7.3p1'><pre>1             function-specifier:
+<hr>
+<a name='6.7.4'><h3>6.7.4 [Function specifiers]</h3></a>
+<a name='6.7.4p1'><pre>1             function-specifier:
                      inline
                      _Noreturn
      Constraints
 </pre>
 </a>
-<a name='6.7.3p2'><pre>2    Function specifiers shall be used only in the declaration of an identifier for a function.
+<a name='6.7.4p2'><pre>2    Function specifiers shall be used only in the declaration of an identifier for a function.
 </pre>
 </a>
-<a name='6.7.3p3'><pre>3    An inline definition of a function with external linkage shall not contain a definition of a
+<a name='6.7.4p3'><pre>3    An inline definition of a function with external linkage shall not contain a definition of a
      modifiable object with static or thread storage duration, and shall not contain a reference
      to an identifier with internal linkage.
 </pre>
 </a>
-<a name='6.7.3p4'><pre>4    In a hosted environment, no function specifier(s) shall appear in a declaration of main.
+<a name='6.7.4p4'><pre>4    In a hosted environment, no function specifier(s) shall appear in a declaration of main.
      Semantics
 </pre>
 </a>
-<a name='6.7.3p5'><pre>5    A function specifier may appear more than once; the behavior is the same as if it
+<a name='6.7.4p5'><pre>5    A function specifier may appear more than once; the behavior is the same as if it
      appeared only once.
 </pre>
 </a>
-<a name='6.7.3p6'><pre>6    A function declared with an inline function specifier is an inline function. Making a
+<a name='6.7.4p6'><pre>6    A function declared with an inline function specifier is an inline function. Making a
      function an inline function suggests that calls to the function be as fast as possible.138)
 
 
@@ -6555,7 +6555,7 @@ semantics.113)
      The extent to which such suggestions are effective is implementation-defined.139)
 </pre>
 </a>
-<a name='6.7.3p7'><pre>7    Any function with internal linkage can be an inline function. For a function with external
+<a name='6.7.4p7'><pre>7    Any function with internal linkage can be an inline function. For a function with external
      linkage, the following restrictions apply: If a function is declared with an inline
      function specifier, then it shall also be defined in the same translation unit. If all of the
      file scope declarations for a function in a translation unit include the inline function
@@ -6567,15 +6567,15 @@ semantics.113)
      function uses the inline definition or the external definition.140)
 </pre>
 </a>
-<a name='6.7.3p8'><pre>8    A function declared with a _Noreturn function specifier shall not return to its caller.
+<a name='6.7.4p8'><pre>8    A function declared with a _Noreturn function specifier shall not return to its caller.
      Recommended practice
 </pre>
 </a>
-<a name='6.7.3p9'><pre>9    The implementation should produce a diagnostic message for a function declared with a
+<a name='6.7.4p9'><pre>9    The implementation should produce a diagnostic message for a function declared with a
      _Noreturn function specifier that appears to be capable of returning to its caller.
 </pre>
 </a>
-<a name='6.7.3p10'><pre>10   EXAMPLE 1 The declaration of an inline function with external linkage can result in either an external
+<a name='6.7.4p10'><pre>10   EXAMPLE 1 The declaration of an inline function with external linkage can result in either an external
      definition, or a definition available for use only within the translation unit. A file scope declaration with
      extern creates an external definition. The following example shows an entire translation unit.
               inline double fahr(double t)
@@ -6613,14 +6613,14 @@ semantics.113)
               }
 </pre>
 </a>
-<a name='6.7.3p11'><pre>11   Note that the definition of fahr is an external definition because fahr is also declared with extern, but
+<a name='6.7.4p11'><pre>11   Note that the definition of fahr is an external definition because fahr is also declared with extern, but
      the definition of cels is an inline definition. Because cels has external linkage and is referenced, an
      external definition has to appear in another translation unit (see 6.9); the inline definition and the external
      definition are distinct and either may be used for the call.
 
 </pre>
 </a>
-<a name='6.7.3p12'><pre>12   EXAMPLE 2
+<a name='6.7.4p12'><pre>12   EXAMPLE 2
               _Noreturn void f () {
                     abort(); // ok
               }
@@ -6629,36 +6629,36 @@ semantics.113)
               }
 
      Forward references: function definitions (6.9.1).
-     6.7.5 Alignment specifier
-     Syntax
 </pre>
 </a>
-<a name='6.7.3p1'><pre>1             alignment-specifier:
+<hr>
+<a name='6.7.5'><h3>6.7.5 [Alignment specifier]</h3></a>
+<a name='6.7.5p1'><pre>1             alignment-specifier:
                      _Alignas ( type-name )
                     _Alignas ( constant-expression )
      Constraints
 </pre>
 </a>
-<a name='6.7.3p2'><pre>2    An alignment attribute shall not be specified in a declaration of a typedef, or a bit-field, or
+<a name='6.7.5p2'><pre>2    An alignment attribute shall not be specified in a declaration of a typedef, or a bit-field, or
      a function, or a parameter, or an object declared with the register storage-class
      specifier.
 </pre>
 </a>
-<a name='6.7.3p3'><pre>3    The constant expression shall be an integer constant expression. It shall evaluate to a
+<a name='6.7.5p3'><pre>3    The constant expression shall be an integer constant expression. It shall evaluate to a
      valid fundamental alignment, or to a valid extended alignment supported by the
      implementation in the context in which it appears, or to zero.
 </pre>
 </a>
-<a name='6.7.3p4'><pre>4    The combined effect of all alignment attributes in a declaration shall not specify an
+<a name='6.7.5p4'><pre>4    The combined effect of all alignment attributes in a declaration shall not specify an
      alignment that is less strict than the alignment that would otherwise be required for the
      type of the object or member being declared.
      Semantics
 </pre>
 </a>
-<a name='6.7.3p5'><pre>5    The first form is equivalent to _Alignas (_Alignof (type-name)).
+<a name='6.7.5p5'><pre>5    The first form is equivalent to _Alignas (_Alignof (type-name)).
 </pre>
 </a>
-<a name='6.7.3p6'><pre>6    The alignment requirement of the declared object or member is taken to be the specified
+<a name='6.7.5p6'><pre>6    The alignment requirement of the declared object or member is taken to be the specified
      alignment. An alignment specification of zero has no effect.141) When multiple
      alignment specifiers occur in a declaration, the effective alignment requirement is the
      strictest specified alignment.
@@ -6667,7 +6667,7 @@ semantics.113)
 
 </pre>
 </a>
-<a name='6.7.3p7'><pre>7   If the definition of an object has an alignment specifier, any other declaration of that
+<a name='6.7.5p7'><pre>7   If the definition of an object has an alignment specifier, any other declaration of that
     object shall either specify equivalent alignment or have no alignment specifier. If the
     definition of an object does not have an alignment specifier, any other declaration of that
     object shall also have no alignment specifier. If declarations of an object in different
@@ -6921,28 +6921,27 @@ semantics.113)
 
 
 
-
-     6.7.6.3 Function declarators (including prototypes)
-     Constraints
 </pre>
 </a>
-<a name='6.7.6.2p1'><pre>1    A function declarator shall not specify a return type that is a function type or an array
+<hr>
+<a name='6.7.6.3'><h3>6.7.6.3 [Function declarators (including prototypes)]</h3></a>
+<a name='6.7.6.3p1'><pre>1    A function declarator shall not specify a return type that is a function type or an array
      type.
 </pre>
 </a>
-<a name='6.7.6.2p2'><pre>2    The only storage-class specifier that shall occur in a parameter declaration is register.
+<a name='6.7.6.3p2'><pre>2    The only storage-class specifier that shall occur in a parameter declaration is register.
 </pre>
 </a>
-<a name='6.7.6.2p3'><pre>3    An identifier list in a function declarator that is not part of a definition of that function
+<a name='6.7.6.3p3'><pre>3    An identifier list in a function declarator that is not part of a definition of that function
      shall be empty.
 </pre>
 </a>
-<a name='6.7.6.2p4'><pre>4    After adjustment, the parameters in a parameter type list in a function declarator that is
+<a name='6.7.6.3p4'><pre>4    After adjustment, the parameters in a parameter type list in a function declarator that is
      part of a definition of that function shall not have incomplete type.
      Semantics
 </pre>
 </a>
-<a name='6.7.6.2p5'><pre>5    If, in the declaration ``T D1&#39;&#39;, D1 has the form
+<a name='6.7.6.3p5'><pre>5    If, in the declaration ``T D1&#39;&#39;, D1 has the form
              D( parameter-type-list )
      or
              D( identifier-listopt )
@@ -6951,11 +6950,11 @@ semantics.113)
      T &#39;&#39;.
 </pre>
 </a>
-<a name='6.7.6.2p6'><pre>6    A parameter type list specifies the types of, and may declare identifiers for, the
+<a name='6.7.6.3p6'><pre>6    A parameter type list specifies the types of, and may declare identifiers for, the
      parameters of the function.
 </pre>
 </a>
-<a name='6.7.6.2p7'><pre>7    A declaration of a parameter as ``array of type&#39;&#39; shall be adjusted to ``qualified pointer to
+<a name='6.7.6.3p7'><pre>7    A declaration of a parameter as ``array of type&#39;&#39; shall be adjusted to ``qualified pointer to
      type&#39;&#39;, where the type qualifiers (if any) are those specified within the [ and ] of the
      array type derivation. If the keyword static also appears within the [ and ] of the
      array type derivation, then for each call to the function, the value of the corresponding
@@ -6963,15 +6962,15 @@ semantics.113)
      elements as specified by the size expression.
 </pre>
 </a>
-<a name='6.7.6.2p8'><pre>8    A declaration of a parameter as ``function returning type&#39;&#39; shall be adjusted to ``pointer to
+<a name='6.7.6.3p8'><pre>8    A declaration of a parameter as ``function returning type&#39;&#39; shall be adjusted to ``pointer to
      function returning type&#39;&#39;, as in 6.3.2.1.
 </pre>
 </a>
-<a name='6.7.6.2p9'><pre>9    If the list terminates with an ellipsis (, ...), no information about the number or types
+<a name='6.7.6.3p9'><pre>9    If the list terminates with an ellipsis (, ...), no information about the number or types
      of the parameters after the comma is supplied.144)
 </pre>
 </a>
-<a name='6.7.6.2p10'><pre>10   The special case of an unnamed parameter of type void as the only item in the list
+<a name='6.7.6.3p10'><pre>10   The special case of an unnamed parameter of type void as the only item in the list
      specifies that the function has no parameters.
 
 
@@ -6983,28 +6982,28 @@ semantics.113)
 
 </pre>
 </a>
-<a name='6.7.6.2p11'><pre>11   If, in a parameter declaration, an identifier can be treated either as a typedef name or as a
+<a name='6.7.6.3p11'><pre>11   If, in a parameter declaration, an identifier can be treated either as a typedef name or as a
      parameter name, it shall be taken as a typedef name.
 </pre>
 </a>
-<a name='6.7.6.2p12'><pre>12   If the function declarator is not part of a definition of that function, parameters may have
+<a name='6.7.6.3p12'><pre>12   If the function declarator is not part of a definition of that function, parameters may have
      incomplete type and may use the [*] notation in their sequences of declarator specifiers
      to specify variable length array types.
 </pre>
 </a>
-<a name='6.7.6.2p13'><pre>13   The storage-class specifier in the declaration specifiers for a parameter declaration, if
+<a name='6.7.6.3p13'><pre>13   The storage-class specifier in the declaration specifiers for a parameter declaration, if
      present, is ignored unless the declared parameter is one of the members of the parameter
      type list for a function definition.
 </pre>
 </a>
-<a name='6.7.6.2p14'><pre>14   An identifier list declares only the identifiers of the parameters of the function. An empty
+<a name='6.7.6.3p14'><pre>14   An identifier list declares only the identifiers of the parameters of the function. An empty
      list in a function declarator that is part of a definition of that function specifies that the
      function has no parameters. The empty list in a function declarator that is not part of a
      definition of that function specifies that no information about the number or types of the
      parameters is supplied.145)
 </pre>
 </a>
-<a name='6.7.6.2p15'><pre>15   For two function types to be compatible, both shall specify compatible return types.146)
+<a name='6.7.6.3p15'><pre>15   For two function types to be compatible, both shall specify compatible return types.146)
      Moreover, the parameter type lists, if both are present, shall agree in the number of
      parameters and in use of the ellipsis terminator; corresponding parameters shall have
      compatible types. If one type has a parameter type list and the other type is specified by a
@@ -7021,7 +7020,7 @@ semantics.113)
      is taken as having the unqualified version of its declared type.)
 </pre>
 </a>
-<a name='6.7.6.2p16'><pre>16   EXAMPLE 1       The declaration
+<a name='6.7.6.3p16'><pre>16   EXAMPLE 1       The declaration
               int f(void), *fip(), (*pfi)();
      declares a function f with no parameters returning an int, a function fip with no parameter specification
      returning a pointer to an int, and a pointer pfi to a function with no parameter specification returning an
@@ -7039,14 +7038,14 @@ semantics.113)
      designator, which is then used to call the function; it returns an int.
 </pre>
 </a>
-<a name='6.7.6.2p17'><pre>17   If the declaration occurs outside of any function, the identifiers have file scope and external linkage. If the
+<a name='6.7.6.3p17'><pre>17   If the declaration occurs outside of any function, the identifiers have file scope and external linkage. If the
      declaration occurs inside a function, the identifiers of the functions f and fip have block scope and either
      internal or external linkage (depending on what file scope declarations for these identifiers are visible), and
      the identifier of the pointer pfi has block scope and no linkage.
 
 </pre>
 </a>
-<a name='6.7.6.2p18'><pre>18   EXAMPLE 2        The declaration
+<a name='6.7.6.3p18'><pre>18   EXAMPLE 2        The declaration
                int (*apfi[3])(int *x, int *y);
      declares an array apfi of three pointers to functions returning int. Each of these functions has two
      parameters that are pointers to int. The identifiers x and y are declared for descriptive purposes only and
@@ -7054,7 +7053,7 @@ semantics.113)
 
 </pre>
 </a>
-<a name='6.7.6.2p19'><pre>19   EXAMPLE 3        The declaration
+<a name='6.7.6.3p19'><pre>19   EXAMPLE 3        The declaration
                int (*fpfi(int (*)(long), int))(int, ...);
      declares a function fpfi that returns a pointer to a function returning an int. The function fpfi has two
      parameters: a pointer to a function returning an int (with one parameter of type long int), and an int.
@@ -7063,7 +7062,7 @@ semantics.113)
 
 </pre>
 </a>
-<a name='6.7.6.2p20'><pre>20   EXAMPLE 4        The following prototype has a variably modified parameter.
+<a name='6.7.6.3p20'><pre>20   EXAMPLE 4        The following prototype has a variably modified parameter.
                void addscalar(int n, int m,
                      double a[n][n*m+300], double x);
                int main()
@@ -7083,7 +7082,7 @@ semantics.113)
 
 </pre>
 </a>
-<a name='6.7.6.2p21'><pre>21   EXAMPLE 5        The following are all compatible function prototype declarators.
+<a name='6.7.6.3p21'><pre>21   EXAMPLE 5        The following are all compatible function prototype declarators.
                double    maximum(int       n,   int   m,   double     a[n][m]);
                double    maximum(int       n,   int   m,   double     a[*][*]);
                double    maximum(int       n,   int   m,   double     a[ ][*]);
@@ -8122,11 +8121,11 @@ semantics.113)
 <a name='6.9p4'><pre>4   As discussed in 5.1.1.1, the unit of program text after preprocessing is a translation unit,
     which consists of a sequence of external declarations. These are described as ``external&#39;&#39;
     because they appear outside any function (and hence have file scope). As discussed in
+     6.7, a declaration that also causes storage to be reserved for an object or a function named
+    by the identifier is a definition.
 </pre>
 </a>
-<hr>
-<a name='6.7'><h3>6.7 [, a declaration that also causes storage to be reserved for an object or a function named]</h3></a>
-<a name='6.7p5'><pre>5   An external definition is an external declaration that is also a definition of a function
+<a name='6.9p5'><pre>5   An external definition is an external declaration that is also a definition of a function
     (other than an inline definition) or an object. If an identifier declared with external
     linkage is used in an expression (other than as part of the operand of a sizeof or
     _Alignof operator whose result is an integer constant), somewhere in the entire
@@ -8277,16 +8276,15 @@ semantics.113)
                     /* ... */
                     func(); /* or (*func)(); ...                   */
               }
-
-     6.9.2 External object definitions
-     Semantics
 </pre>
 </a>
-<a name='6.9.1p1'><pre>1    If the declaration of an identifier for an object has file scope and an initializer, the
+<hr>
+<a name='6.9.2'><h3>6.9.2 [External object definitions]</h3></a>
+<a name='6.9.2p1'><pre>1    If the declaration of an identifier for an object has file scope and an initializer, the
      declaration is an external definition for the identifier.
 </pre>
 </a>
-<a name='6.9.1p2'><pre>2    A declaration of an identifier for an object that has file scope without an initializer, and
+<a name='6.9.2p2'><pre>2    A declaration of an identifier for an object that has file scope without an initializer, and
      without a storage-class specifier or with the storage-class specifier static, constitutes a
      tentative definition. If a translation unit contains one or more tentative definitions for an
      identifier, and the translation unit contains no external definition for that identifier, then
@@ -8295,7 +8293,7 @@ semantics.113)
      equal to 0.
 </pre>
 </a>
-<a name='6.9.1p3'><pre>3    If the declaration of an identifier for an object is a tentative definition and has internal
+<a name='6.9.2p3'><pre>3    If the declaration of an identifier for an object is a tentative definition and has internal
      linkage, the declared type shall not be an incomplete type.
 
 
@@ -8305,7 +8303,7 @@ semantics.113)
 
 </pre>
 </a>
-<a name='6.9.1p4'><pre>4   EXAMPLE 1
+<a name='6.9.2p4'><pre>4   EXAMPLE 1
              int i1 = 1;                    // definition, external linkage
              static int i2 = 2;             // definition, internal linkage
              extern int i3 = 3;             // definition, external linkage
@@ -8324,7 +8322,7 @@ semantics.113)
 
 </pre>
 </a>
-<a name='6.9.1p5'><pre>5   EXAMPLE 2       If at the end of the translation unit containing
+<a name='6.9.2p5'><pre>5   EXAMPLE 2       If at the end of the translation unit containing
              int i[];
     the array i still has incomplete type, the implicit initializer causes it to have one element, which is set to
     zero on program startup.
@@ -10635,16 +10633,16 @@ semantics.113)
 <a name='7.6p10'><pre>10   Additional implementation-defined environments, with macro definitions beginning with
      FE_ and an uppercase letter,212) and having type ``pointer to const-qualified fenv_t&#39;&#39;,
      may also be specified by the implementation.
-     7.6.1 The FENV_ACCESS pragma
-     Synopsis
 </pre>
 </a>
-<a name='7.6p1'><pre>1             #include &lt;fenv.h&gt;
+<hr>
+<a name='7.6.1'><h3>7.6.1 [The FENV_ACCESS pragma]</h3></a>
+<a name='7.6.1p1'><pre>1             #include &lt;fenv.h&gt;
               #pragma STDC FENV_ACCESS on-off-switch
      Description
 </pre>
 </a>
-<a name='7.6p2'><pre>2    The FENV_ACCESS pragma provides a means to inform the implementation when a
+<a name='7.6.1p2'><pre>2    The FENV_ACCESS pragma provides a means to inform the implementation when a
      program might access the floating-point environment to test floating-point status flags or
      run under non-default floating-point control modes.213) The pragma shall occur either
      outside external declarations or preceding all explicit declarations and statements inside a
@@ -10675,7 +10673,7 @@ semantics.113)
 
 </pre>
 </a>
-<a name='7.6p3'><pre>3   EXAMPLE
+<a name='7.6.1p3'><pre>3   EXAMPLE
             #include &lt;fenv.h&gt;
             void f(double x)
             {
@@ -10689,7 +10687,7 @@ semantics.113)
             }
 </pre>
 </a>
-<a name='7.6p4'><pre>4   If the function g might depend on status flags set as a side effect of the first x + 1, or if the second
+<a name='7.6.1p4'><pre>4   If the function g might depend on status flags set as a side effect of the first x + 1, or if the second
     x + 1 might depend on control modes set as a side effect of the call to function g, then the program shall
     contain an appropriately placed invocation of #pragma STDC FENV_ACCESS ON.214)
 
@@ -14698,12 +14696,10 @@ char int_p_sep_by_space
 <hr>
 <a name='7.20.2'><h3>7.20.2 [Limits of specified-width integer types]</h3></a>
 <a name='7.20.2p1'><pre>1   The following object-like macros specify the minimum and maximum limits of the types
-    declared in &lt;stdint.h&gt;. Each macro name corresponds to a similar type name in
+    declared in &lt;stdint.h&gt;. Each macro name corresponds to a similar type name in 7.20.1.
 </pre>
 </a>
-<hr>
-<a name='7.20.1.'><h3>7.20.1. [Limits of specified-width integer types]</h3></a>
-<a name='7.20.1.p2'><pre>2   Each instance of any defined macro shall be replaced by a constant expression suitable
+<a name='7.20.2p2'><pre>2   Each instance of any defined macro shall be replaced by a constant expression suitable
     for use in #if preprocessing directives, and this expression shall have the same type as
     would an expression that is an object of the corresponding type converted according to
     the integer promotions. Its implementation-defined value shall be equal to or greater in
@@ -15191,34 +15187,37 @@ char int_p_sep_by_space
      (7.21.5.5), the setvbuf function (7.21.5.6), the fgetwc function (7.29.3.1), the
      fputwc function (7.29.3.3), conversion state (7.29.6), the mbrtowc function
      (7.29.6.3.2), the wcrtomb function (7.29.6.3.3).
-     7.21.4 Operations on files
-     7.21.4.1 The remove function
-     Synopsis
 </pre>
 </a>
-<a name='7.21.3p1'><pre>1           #include &lt;stdio.h&gt;
+<hr>
+<a name='7.21.4'><h3>7.21.4 [Operations on files]</h3></a>
+<pre> Operations on files
+</pre>
+<hr>
+<a name='7.21.4.1'><h3>7.21.4.1 [The remove function]</h3></a>
+<a name='7.21.4.1p1'><pre>1           #include &lt;stdio.h&gt;
             int remove(const char *filename);
      Description
 </pre>
 </a>
-<a name='7.21.3p2'><pre>2    The remove function causes the file whose name is the string pointed to by filename
+<a name='7.21.4.1p2'><pre>2    The remove function causes the file whose name is the string pointed to by filename
      to be no longer accessible by that name. A subsequent attempt to open that file using that
      name will fail, unless it is created anew. If the file is open, the behavior of the remove
      function is implementation-defined.
      Returns
 </pre>
 </a>
-<a name='7.21.3p3'><pre>3    The remove function returns zero if the operation succeeds, nonzero if it fails.
-     7.21.4.2 The rename function
-     Synopsis
+<a name='7.21.4.1p3'><pre>3    The remove function returns zero if the operation succeeds, nonzero if it fails.
 </pre>
 </a>
-<a name='7.21.3p1'><pre>1           #include &lt;stdio.h&gt;
+<hr>
+<a name='7.21.4.2'><h3>7.21.4.2 [The rename function]</h3></a>
+<a name='7.21.4.2p1'><pre>1           #include &lt;stdio.h&gt;
             int rename(const char *old, const char *new);
      Description
 </pre>
 </a>
-<a name='7.21.3p2'><pre>2    The rename function causes the file whose name is the string pointed to by old to be
+<a name='7.21.4.2p2'><pre>2    The rename function causes the file whose name is the string pointed to by old to be
      henceforth known by the name given by the string pointed to by new. The file named
      old is no longer accessible by that name. If a file named by the string pointed to by new
      exists prior to the call to the rename function, the behavior is implementation-defined.
@@ -15231,7 +15230,7 @@ char int_p_sep_by_space
     Returns
 </pre>
 </a>
-<a name='7.21.3p3'><pre>3   The rename function returns zero if the operation succeeds, nonzero if it fails,269) in
+<a name='7.21.4.2p3'><pre>3   The rename function returns zero if the operation succeeds, nonzero if it fails,269) in
     which case if the file existed previously it is still known by its original name.
 </pre>
 </a>
@@ -16186,21 +16185,21 @@ s             Matches a sequence of non-white-space characters.286)
      Forward references: the strtod, strtof, and strtold functions (7.22.1.3), the
      strtol, strtoll, strtoul, and strtoull functions (7.22.1.4), conversion state
      (7.29.6), the wcrtomb function (7.29.6.3.3).
-     7.21.6.3 The printf function
-     Synopsis
 </pre>
 </a>
-<a name='7.21.6.2p1'><pre>1            #include &lt;stdio.h&gt;
+<hr>
+<a name='7.21.6.3'><h3>7.21.6.3 [The printf function]</h3></a>
+<a name='7.21.6.3p1'><pre>1            #include &lt;stdio.h&gt;
              int printf(const char * restrict format, ...);
      Description
 </pre>
 </a>
-<a name='7.21.6.2p2'><pre>2    The printf function is equivalent to fprintf with the argument stdout interposed
+<a name='7.21.6.3p2'><pre>2    The printf function is equivalent to fprintf with the argument stdout interposed
      before the arguments to printf.
      Returns
 </pre>
 </a>
-<a name='7.21.6.2p3'><pre>3    The printf function returns the number of characters transmitted, or a negative value if
+<a name='7.21.6.3p3'><pre>3    The printf function returns the number of characters transmitted, or a negative value if
      an output or encoding error occurred.
 
 
@@ -17195,11 +17194,11 @@ s             Matches a sequence of non-white-space characters.286)
      errno. If the result underflows (7.12.1), the functions return a value whose magnitude is
      no greater than the smallest normalized positive number in the return type; whether
      errno acquires the value ERANGE is implementation-defined.
-     7.22.1.4 The strtol, strtoll, strtoul, and strtoull functions
-     Synopsis
 </pre>
 </a>
-<a name='7.22.1.3p1'><pre>1            #include &lt;stdlib.h&gt;
+<hr>
+<a name='7.22.1.4'><h3>7.22.1.4 [The strtol, strtoll, strtoul, and strtoull functions]</h3></a>
+<a name='7.22.1.4p1'><pre>1            #include &lt;stdlib.h&gt;
              long int strtol(
                   const char * restrict nptr,
                   char ** restrict endptr,
@@ -17219,7 +17218,7 @@ s             Matches a sequence of non-white-space characters.286)
      Description
 </pre>
 </a>
-<a name='7.22.1.3p2'><pre>2    The strtol, strtoll, strtoul, and strtoull functions convert the initial
+<a name='7.22.1.4p2'><pre>2    The strtol, strtoll, strtoul, and strtoull functions convert the initial
      portion of the string pointed to by nptr to long int, long long int, unsigned
      long int, and unsigned long long int representation, respectively. First,
      they decompose the input string into three parts: an initial, possibly empty, sequence of
@@ -17237,7 +17236,7 @@ s             Matches a sequence of non-white-space characters.286)
     integer, and return the result.
 </pre>
 </a>
-<a name='7.22.1.3p3'><pre>3   If the value of base is zero, the expected form of the subject sequence is that of an
+<a name='7.22.1.4p3'><pre>3   If the value of base is zero, the expected form of the subject sequence is that of an
     integer constant as described in 6.4.4.1, optionally preceded by a plus or minus sign, but
     not including an integer suffix. If the value of base is between 2 and 36 (inclusive), the
     expected form of the subject sequence is a sequence of letters and digits representing an
@@ -17248,14 +17247,14 @@ s             Matches a sequence of non-white-space characters.286)
     optionally precede the sequence of letters and digits, following the sign if present.
 </pre>
 </a>
-<a name='7.22.1.3p4'><pre>4   The subject sequence is defined as the longest initial subsequence of the input string,
+<a name='7.22.1.4p4'><pre>4   The subject sequence is defined as the longest initial subsequence of the input string,
     starting with the first non-white-space character, that is of the expected form. The subject
     sequence contains no characters if the input string is empty or consists entirely of white
     space, or if the first non-white-space character is other than a sign or a permissible letter
     or digit.
 </pre>
 </a>
-<a name='7.22.1.3p5'><pre>5   If the subject sequence has the expected form and the value of base is zero, the sequence
+<a name='7.22.1.4p5'><pre>5   If the subject sequence has the expected form and the value of base is zero, the sequence
     of characters starting with the first digit is interpreted as an integer constant according to
     the rules of 6.4.4.1. If the subject sequence has the expected form and the value of base
     is between 2 and 36, it is used as the base for conversion, ascribing to each letter its value
@@ -17264,17 +17263,17 @@ s             Matches a sequence of non-white-space characters.286)
     object pointed to by endptr, provided that endptr is not a null pointer.
 </pre>
 </a>
-<a name='7.22.1.3p6'><pre>6   In other than the &quot;C&quot; locale, additional locale-specific subject sequence forms may be
+<a name='7.22.1.4p6'><pre>6   In other than the &quot;C&quot; locale, additional locale-specific subject sequence forms may be
     accepted.
 </pre>
 </a>
-<a name='7.22.1.3p7'><pre>7   If the subject sequence is empty or does not have the expected form, no conversion is
+<a name='7.22.1.4p7'><pre>7   If the subject sequence is empty or does not have the expected form, no conversion is
     performed; the value of nptr is stored in the object pointed to by endptr, provided
     that endptr is not a null pointer.
     Returns
 </pre>
 </a>
-<a name='7.22.1.3p8'><pre>8   The strtol, strtoll, strtoul, and strtoull functions return the converted
+<a name='7.22.1.4p8'><pre>8   The strtol, strtoll, strtoul, and strtoull functions return the converted
     value, if any. If no conversion could be performed, zero is returned. If the correct value
     is outside the range of representable values, LONG_MIN, LONG_MAX, LLONG_MIN,
     LLONG_MAX, ULONG_MAX, or ULLONG_MAX is returned (according to the return type
@@ -18094,11 +18093,12 @@ s             Matches a sequence of non-white-space characters.286)
 <a name='7.24.1p1'><pre>1   The header &lt;string.h&gt; declares one type and several functions, and defines one
     macro useful for manipulating arrays of character type and other objects treated as arrays
     of character type.307) The type is size_t and the macro is NULL (both described in
+     7.19). Various methods are used for determining the lengths of the arrays, but in all cases
+    a char * or void * argument points to the initial (lowest addressed) character of the
+    array. If an array is accessed beyond the end of an object, the behavior is undefined.
 </pre>
 </a>
-<hr>
-<a name='7.19'><h3>7.19 [). Various methods are used for determining the lengths of the arrays, but in all cases]</h3></a>
-<a name='7.19p2'><pre>2   Where an argument declared as size_t n specifies the length of the array for a
+<a name='7.24.1p2'><pre>2   Where an argument declared as size_t n specifies the length of the array for a
     function, n can have the value zero on a call to that function. Unless explicitly stated
     otherwise in the description of a particular function in this subclause, pointer arguments
     on such a call shall still have valid values, as described in 7.1.4. On such a call, a
@@ -18107,7 +18107,7 @@ s             Matches a sequence of non-white-space characters.286)
     characters.
 </pre>
 </a>
-<a name='7.19p3'><pre>3   For all functions in this subclause, each character shall be interpreted as if it had the type
+<a name='7.24.1p3'><pre>3   For all functions in this subclause, each character shall be interpreted as if it had the type
     unsigned char (and therefore every possible object representation is valid and has a
     different value).
 </pre>
@@ -20400,18 +20400,18 @@ g,G          A double argument representing a floating-point number is converted
 
      Forward references:           the btowc function (7.29.6.1.1), the mbrtowc function
      (7.29.6.3.2).
-     7.29.2.2 The fwscanf function
-     Synopsis
 </pre>
 </a>
-<a name='7.29.2.1p1'><pre>1            #include &lt;stdio.h&gt;
+<hr>
+<a name='7.29.2.2'><h3>7.29.2.2 [The fwscanf function]</h3></a>
+<a name='7.29.2.2p1'><pre>1            #include &lt;stdio.h&gt;
              #include &lt;wchar.h&gt;
              int fwscanf(FILE * restrict stream,
                   const wchar_t * restrict format, ...);
      Description
 </pre>
 </a>
-<a name='7.29.2.1p2'><pre>2    The fwscanf function reads input from the stream pointed to by stream, under
+<a name='7.29.2.2p2'><pre>2    The fwscanf function reads input from the stream pointed to by stream, under
      control of the wide string pointed to by format that specifies the admissible input
      sequences and how they are to be converted for assignment, using subsequent arguments
 
@@ -20427,7 +20427,7 @@ g,G          A double argument representing a floating-point number is converted
     ignored.
 </pre>
 </a>
-<a name='7.29.2.1p3'><pre>3   The format is composed of zero or more directives: one or more white-space wide
+<a name='7.29.2.2p3'><pre>3   The format is composed of zero or more directives: one or more white-space wide
     characters, an ordinary wide character (neither % nor a white-space wide character), or a
     conversion specification. Each conversion specification is introduced by the wide
     character %. After the %, the following appear in sequence:
@@ -20439,34 +20439,34 @@ g,G          A double argument representing a floating-point number is converted
        applied.
 </pre>
 </a>
-<a name='7.29.2.1p4'><pre>4   The fwscanf function executes each directive of the format in turn. When all directives
+<a name='7.29.2.2p4'><pre>4   The fwscanf function executes each directive of the format in turn. When all directives
     have been executed, or if a directive fails (as detailed below), the function returns.
     Failures are described as input failures (due to the occurrence of an encoding error or the
     unavailability of input characters), or matching failures (due to inappropriate input).
 </pre>
 </a>
-<a name='7.29.2.1p5'><pre>5   A directive composed of white-space wide character(s) is executed by reading input up to
+<a name='7.29.2.2p5'><pre>5   A directive composed of white-space wide character(s) is executed by reading input up to
     the first non-white-space wide character (which remains unread), or until no more wide
     characters can be read. The directive never fails.
 </pre>
 </a>
-<a name='7.29.2.1p6'><pre>6   A directive that is an ordinary wide character is executed by reading the next wide
+<a name='7.29.2.2p6'><pre>6   A directive that is an ordinary wide character is executed by reading the next wide
     character of the stream. If that wide character differs from the directive, the directive
     fails and the differing and subsequent wide characters remain unread. Similarly, if end-
     of-file, an encoding error, or a read error prevents a wide character from being read, the
     directive fails.
 </pre>
 </a>
-<a name='7.29.2.1p7'><pre>7   A directive that is a conversion specification defines a set of matching input sequences, as
+<a name='7.29.2.2p7'><pre>7   A directive that is a conversion specification defines a set of matching input sequences, as
     described below for each specifier. A conversion specification is executed in the
     following steps:
 </pre>
 </a>
-<a name='7.29.2.1p8'><pre>8   Input white-space wide characters (as specified by the iswspace function) are skipped,
+<a name='7.29.2.2p8'><pre>8   Input white-space wide characters (as specified by the iswspace function) are skipped,
     unless the specification includes a [, c, or n specifier.337)
 </pre>
 </a>
-<a name='7.29.2.1p9'><pre>9   An input item is read from the stream, unless the specification includes an n specifier. An
+<a name='7.29.2.2p9'><pre>9   An input item is read from the stream, unless the specification includes an n specifier. An
     input item is defined as the longest sequence of input wide characters which does not
     exceed any specified field width and which is, or is a prefix of, a matching input
 
@@ -20481,7 +20481,7 @@ g,G          A double argument representing a floating-point number is converted
      from the stream, in which case it is an input failure.
 </pre>
 </a>
-<a name='7.29.2.1p10'><pre>10   Except in the case of a % specifier, the input item (or, in the case of a %n directive, the
+<a name='7.29.2.2p10'><pre>10   Except in the case of a % specifier, the input item (or, in the case of a %n directive, the
      count of input wide characters) is converted to a type appropriate to the conversion
      specifier. If the input item is not a matching sequence, the execution of the directive fails:
      this condition is a matching failure. Unless assignment suppression was indicated by a *,
@@ -20491,7 +20491,7 @@ g,G          A double argument representing a floating-point number is converted
      represented in the object, the behavior is undefined.
 </pre>
 </a>
-<a name='7.29.2.1p11'><pre>11   The length modifiers and their meanings are:
+<a name='7.29.2.2p11'><pre>11   The length modifiers and their meanings are:
      hh           Specifies that a following d, i, o, u, x, X, or n conversion specifier applies
                   to an argument with type pointer to signed char or unsigned char.
      h            Specifies that a following d, i, o, u, x, X, or n conversion specifier applies
@@ -20526,7 +20526,7 @@ g,G          A double argument representing a floating-point number is converted
      the behavior is undefined.
 </pre>
 </a>
-<a name='7.29.2.1p12'><pre>12   The conversion specifiers and their meanings are:
+<a name='7.29.2.2p12'><pre>12   The conversion specifiers and their meanings are:
      d           Matches an optionally signed decimal integer, whose format is the same as
                  expected for the subject sequence of the wcstol function with the value 10
                  for the base argument. The corresponding argument shall be a pointer to
@@ -20622,26 +20622,26 @@ s        Matches a sequence of non-white-space wide characters.
                     complete conversion specification shall be %%.
 </pre>
 </a>
-<a name='7.29.2.1p13'><pre>13   If a conversion specification is invalid, the behavior is undefined.339)
+<a name='7.29.2.2p13'><pre>13   If a conversion specification is invalid, the behavior is undefined.339)
 </pre>
 </a>
-<a name='7.29.2.1p14'><pre>14   The conversion specifiers A, E, F, G, and X are also valid and behave the same as,
+<a name='7.29.2.2p14'><pre>14   The conversion specifiers A, E, F, G, and X are also valid and behave the same as,
      respectively, a, e, f, g, and x.
 </pre>
 </a>
-<a name='7.29.2.1p15'><pre>15   Trailing white space (including new-line wide characters) is left unread unless matched
+<a name='7.29.2.2p15'><pre>15   Trailing white space (including new-line wide characters) is left unread unless matched
      by a directive. The success of literal matches and suppressed assignments is not directly
      determinable other than via the %n directive.
      Returns
 </pre>
 </a>
-<a name='7.29.2.1p16'><pre>16   The fwscanf function returns the value of the macro EOF if an input failure occurs
+<a name='7.29.2.2p16'><pre>16   The fwscanf function returns the value of the macro EOF if an input failure occurs
      before the first conversion (if any) has completed. Otherwise, the function returns the
      number of input items assigned, which can be fewer than provided for, or even zero, in
      the event of an early matching failure.
 </pre>
 </a>
-<a name='7.29.2.1p17'><pre>17   EXAMPLE 1       The call:
+<a name='7.29.2.2p17'><pre>17   EXAMPLE 1       The call:
               #include &lt;stdio.h&gt;
               #include &lt;wchar.h&gt;
               /* ... */
@@ -20661,7 +20661,7 @@ s        Matches a sequence of non-white-space wide characters.
 
 </pre>
 </a>
-<a name='7.29.2.1p18'><pre>18   EXAMPLE 2        The call:
+<a name='7.29.2.2p18'><pre>18   EXAMPLE 2        The call:
               #include &lt;stdio.h&gt;
               #include &lt;wchar.h&gt;
               /* ... */
@@ -20675,25 +20675,25 @@ s        Matches a sequence of non-white-space wide characters.
      Forward references: the wcstod, wcstof, and wcstold functions (7.29.4.1.1), the
      wcstol, wcstoll, wcstoul, and wcstoull functions (7.29.4.1.2), the wcrtomb
      function (7.29.6.3.3).
-     7.29.2.3 The swprintf function
-     Synopsis
 </pre>
 </a>
-<a name='7.29.2.1p1'><pre>1             #include &lt;wchar.h&gt;
+<hr>
+<a name='7.29.2.3'><h3>7.29.2.3 [The swprintf function]</h3></a>
+<a name='7.29.2.3p1'><pre>1             #include &lt;wchar.h&gt;
               int swprintf(wchar_t * restrict s,
                    size_t n,
                    const wchar_t * restrict format, ...);
      Description
 </pre>
 </a>
-<a name='7.29.2.1p2'><pre>2    The swprintf function is equivalent to fwprintf, except that the argument s
+<a name='7.29.2.3p2'><pre>2    The swprintf function is equivalent to fwprintf, except that the argument s
      specifies an array of wide characters into which the generated output is to be written,
      rather than written to a stream. No more than n wide characters are written, including a
      terminating null wide character, which is always added (unless n is zero).
      Returns
 </pre>
 </a>
-<a name='7.29.2.1p3'><pre>3    The swprintf function returns the number of wide characters written in the array, not
+<a name='7.29.2.3p3'><pre>3    The swprintf function returns the number of wide characters written in the array, not
      counting the terminating null wide character, or a negative value if an encoding error
      occurred or if n or more wide characters were requested to be written.
 
@@ -21939,11 +21939,13 @@ s        Matches a sequence of non-white-space wide characters.
 </pre>
 </a>
 <a name='7.29.6p2'><pre>2   Most of the following functions -- those that are listed as ``restartable&#39;&#39;, 7.29.6.3 and
+     7.29.6.4 -- take as a last argument a pointer to an object of type mbstate_t that is used
+    to describe the current conversion state from a particular multibyte character sequence to
+    a wide character sequence (or the reverse) under the rules of a particular setting for the
+    LC_CTYPE category of the current locale.
 </pre>
 </a>
-<hr>
-<a name='7.29.6.4'><h3>7.29.6.4 [-- take as a last argument a pointer to an object of type mbstate_t that is used]</h3></a>
-<a name='7.29.6.4p3'><pre>3   The initial conversion state corresponds, for a conversion in either direction, to the
+<a name='7.29.6p3'><pre>3   The initial conversion state corresponds, for a conversion in either direction, to the
     beginning of a new multibyte character in the initial shift state. A zero-valued
     mbstate_t object is (at least) one way to describe an initial conversion state. A zero-
     valued mbstate_t object can be used to initiate conversion involving any multibyte
@@ -21954,7 +21956,7 @@ s        Matches a sequence of non-white-space wide characters.
     undefined.348)
 </pre>
 </a>
-<a name='7.29.6.4p4'><pre>4   On entry, each function takes the described conversion state (either internal or pointed to
+<a name='7.29.6p4'><pre>4   On entry, each function takes the described conversion state (either internal or pointed to
     by an argument) as current. The conversion state described by the referenced object is
     altered as needed to track the shift state, and the position within a multibyte character, for
     the associated multibyte character sequence.
@@ -22826,10 +22828,11 @@ s        Matches a sequence of non-white-space wide characters.
 
                                                  Annex A
                                                (informative)
-                                Language syntax summary
 </pre>
 </a>
-<a name='7.31.17p1'><pre>1   NOTE   The notation is described in 6.1.
+<hr>
+<a name='A.'><h3>A. [Language syntax summary]</h3></a>
+<a name='A.p1'><pre>1   NOTE   The notation is described in 6.1.
 
 </pre>
 </a>
@@ -23495,7 +23498,10 @@ s        Matches a sequence of non-white-space wide characters.
 
                                   Annex B
                                 (informative)
-                            Library summary
+</pre>
+<hr>
+<a name='B.'><h3>B. [Library summary]</h3></a>
+<pre> Library summary
 </pre>
 <hr>
 <a name='B.1'><h3>B.1 [Diagnostics <assert.h>]</h3></a>
@@ -24695,7 +24701,38 @@ s        Matches a sequence of non-white-space wide characters.
 </pre>
 <hr>
 <a name='B.29'><h3>B.29 [Wide character classification and mapping utilities <wctype.h>]</h3></a>
-<a name='B.29p1'><pre>1   The following are the sequence points described in 5.1.2.3:
+<pre> Wide character classification and mapping utilities <wctype.h>
+      wint_t         wctrans_t         wctype_t         WEOF
+      int iswalnum(wint_t wc);
+      int iswalpha(wint_t wc);
+      int iswblank(wint_t wc);
+      int iswcntrl(wint_t wc);
+      int iswdigit(wint_t wc);
+      int iswgraph(wint_t wc);
+      int iswlower(wint_t wc);
+      int iswprint(wint_t wc);
+      int iswpunct(wint_t wc);
+      int iswspace(wint_t wc);
+      int iswupper(wint_t wc);
+      int iswxdigit(wint_t wc);
+      int iswctype(wint_t wc, wctype_t desc);
+      wctype_t wctype(const char *property);
+      wint_t towlower(wint_t wc);
+      wint_t towupper(wint_t wc);
+      wint_t towctrans(wint_t wc, wctrans_t desc);
+      wctrans_t wctrans(const char *property);
+
+
+
+
+
+
+                                           Annex C
+                                         (informative)
+</pre>
+<hr>
+<a name='C.'><h3>C. [Sequence points]</h3></a>
+<a name='C.p1'><pre>1   The following are the sequence points described in 5.1.2.3:
     -- Between the evaluations of the function designator and actual arguments in a function
        call and the actual call. (6.5.2.2).
     -- Between the evaluations of the first and second operands of the following operators:
@@ -24724,10 +24761,11 @@ s        Matches a sequence of non-white-space wide characters.
 
                                          Annex D
                                         (normative)
-                   Universal character names for identifiers
 </pre>
 </a>
-<a name='B.29p1'><pre>1   This clause lists the hexadecimal code values that are valid in universal character names
+<hr>
+<a name='D.'><h3>D. [Universal character names for identifiers]</h3></a>
+<a name='D.p1'><pre>1   This clause lists the hexadecimal code values that are valid in universal character names
     in identifiers.
 </pre>
 </a>
@@ -24771,10 +24809,11 @@ s        Matches a sequence of non-white-space wide characters.
 
                                          Annex E
                                        (informative)
-                                Implementation limits
 </pre>
 </a>
-<a name='D.2p1'><pre>1   The contents of the header &lt;limits.h&gt; are given below, in alphabetical order. The
+<hr>
+<a name='E.'><h3>E. [Implementation limits]</h3></a>
+<a name='E.p1'><pre>1   The contents of the header &lt;limits.h&gt; are given below, in alphabetical order. The
     minimum magnitudes shown shall be replaced by implementation-defined magnitudes
     with the same sign. The values shall all be constant expressions suitable for use in #if
     preprocessing directives. The components are described further in 5.2.4.2.1.
@@ -24799,19 +24838,19 @@ s        Matches a sequence of non-white-space wide characters.
             #define    ULLONG_MAX          18446744073709551615
 </pre>
 </a>
-<a name='D.2p2'><pre>2   The contents of the header &lt;float.h&gt; are given below. All integer values, except
+<a name='E.p2'><pre>2   The contents of the header &lt;float.h&gt; are given below. All integer values, except
     FLT_ROUNDS, shall be constant expressions suitable for use in #if preprocessing
     directives; all floating values shall be constant expressions. The components are
     described further in 5.2.4.2.2.
 </pre>
 </a>
-<a name='D.2p3'><pre>3   The values given in the following list shall be replaced by implementation-defined
+<a name='E.p3'><pre>3   The values given in the following list shall be replaced by implementation-defined
     expressions:
             #define FLT_EVAL_METHOD
             #define FLT_ROUNDS
 </pre>
 </a>
-<a name='D.2p4'><pre>4   The values given in the following list shall be replaced by implementation-defined
+<a name='E.p4'><pre>4   The values given in the following list shall be replaced by implementation-defined
     constant expressions that are greater or equal in magnitude (absolute value) to those
     shown, with the same sign:
 
@@ -24841,14 +24880,14 @@ s        Matches a sequence of non-white-space wide characters.
            #define    LDBL_MIN_EXP
 </pre>
 </a>
-<a name='D.2p5'><pre>5   The values given in the following list shall be replaced by implementation-defined
+<a name='E.p5'><pre>5   The values given in the following list shall be replaced by implementation-defined
     constant expressions with values that are greater than or equal to those shown:
            #define DBL_MAX                                        1E+37
            #define FLT_MAX                                        1E+37
            #define LDBL_MAX                                       1E+37
 </pre>
 </a>
-<a name='D.2p6'><pre>6   The values given in the following list shall be replaced by implementation-defined
+<a name='E.p6'><pre>6   The values given in the following list shall be replaced by implementation-defined
     constant expressions with (positive) values that are less than or equal to those shown:
            #define    DBL_EPSILON                                  1E-9
            #define    DBL_MIN                                     1E-37
@@ -24864,9 +24903,12 @@ s        Matches a sequence of non-white-space wide characters.
 
                                                Annex F
                                               (normative)
-                          IEC 60559 floating-point arithmetic
 </pre>
 </a>
+<hr>
+<a name='F.'><h3>F. [IEC 60559 floating-point arithmetic]</h3></a>
+<pre> IEC 60559 floating-point arithmetic
+</pre>
 <hr>
 <a name='F.1'><h3>F.1 [Introduction]</h3></a>
 <a name='F.1p1'><pre>1   This annex specifies C language support for the IEC 60559 floating-point standard. The
@@ -25445,17 +25487,22 @@ s        Matches a sequence of non-white-space wide characters.
 <a name='F.10p13'><pre>13   If a function with one or more NaN arguments returns a NaN result, the result should be
      the same as one of the NaN arguments (after possible type conversion), except perhaps
      for the sign.
-     F.10.1 Trigonometric functions
-     F.10.1.1 The acos functions
 </pre>
 </a>
-<a name='F.10p1'><pre>1    -- acos(1) returns +0.
+<hr>
+<a name='F.10.1'><h3>F.10.1 [Trigonometric functions]</h3></a>
+<pre> Trigonometric functions
+</pre>
+<hr>
+<a name='F.10.1.1'><h3>F.10.1.1 [The acos functions]</h3></a>
+<a name='F.10.1.1p1'><pre>1    -- acos(1) returns +0.
      -- acos( x ) returns a NaN and raises the ``invalid&#39;&#39; floating-point exception for
         | x | &gt; 1.
-     F.10.1.2 The asin functions
 </pre>
 </a>
-<a name='F.10p1'><pre>1    -- asin(&plusmn;0) returns &plusmn;0.
+<hr>
+<a name='F.10.1.2'><h3>F.10.1.2 [The asin functions]</h3></a>
+<a name='F.10.1.2p1'><pre>1    -- asin(&plusmn;0) returns &plusmn;0.
      -- asin( x ) returns a NaN and raises the ``invalid&#39;&#39; floating-point exception for
         | x | &gt; 1.
 
@@ -26142,9 +26189,12 @@ s        Matches a sequence of non-white-space wide characters.
 
                                            Annex G
                                           (normative)
-                   IEC 60559-compatible complex arithmetic
 </pre>
 </a>
+<hr>
+<a name='G.'><h3>G. [IEC 60559-compatible complex arithmetic]</h3></a>
+<pre> IEC 60559-compatible complex arithmetic
+</pre>
 <hr>
 <a name='G.1'><h3>G.1 [Introduction]</h3></a>
 <a name='G.1p1'><pre>1   This annex supplements annex F to specify complex arithmetic for compatibility with
@@ -26796,9 +26846,12 @@ s        Matches a sequence of non-white-space wide characters.
 
                                           Annex H
                                         (informative)
-                        Language independent arithmetic
 </pre>
 </a>
+<hr>
+<a name='H.'><h3>H. [Language independent arithmetic]</h3></a>
+<pre> Language independent arithmetic
+</pre>
 <hr>
 <a name='H.1'><h3>H.1 [Introduction]</h3></a>
 <a name='H.1p1'><pre>1   This annex documents the extent to which the C language supports the ISO/IEC 10967-1
@@ -27072,15 +27125,16 @@ s        Matches a sequence of non-white-space wide characters.
 
                                            Annex I
                                         (informative)
-                                    Common warnings
 </pre>
 </a>
-<a name='H.3.1.2p1'><pre>1   An implementation may generate warnings in many situations, none of which are
+<hr>
+<a name='I.'><h3>I. [Common warnings]</h3></a>
+<a name='I.p1'><pre>1   An implementation may generate warnings in many situations, none of which are
     specified as part of this International Standard. The following are a few of the more
     common situations.
 </pre>
 </a>
-<a name='H.3.1.2p2'><pre>2   -- A new struct or union type appears in a function prototype (6.2.1, 6.7.2.3).
+<a name='I.p2'><pre>2   -- A new struct or union type appears in a function prototype (6.2.1, 6.7.2.3).
     -- A block with initialization of an object that has automatic storage duration is jumped
        into (6.2.4).
     -- An implicit narrowing conversion is encountered, such as the assignment of a long
@@ -27120,10 +27174,11 @@ s        Matches a sequence of non-white-space wide characters.
 
                                             Annex J
                                          (informative)
-                                     Portability issues
 </pre>
 </a>
-<a name='H.3.1.2p1'><pre>1   This annex collects some information about portability that appears in this International
+<hr>
+<a name='J.'><h3>J. [Portability issues]</h3></a>
+<a name='J.p1'><pre>1   This annex collects some information about portability that appears in this International
     Standard.
 </pre>
 </a>
@@ -28262,9 +28317,12 @@ s        Matches a sequence of non-white-space wide characters.
 
                                            Annex K
                                           (normative)
-                              Bounds-checking interfaces
 </pre>
 </a>
+<hr>
+<a name='K.'><h3>K. [Bounds-checking interfaces]</h3></a>
+<pre> Bounds-checking interfaces
+</pre>
 <hr>
 <a name='K.1'><h3>K.1 [Background]</h3></a>
 <a name='K.1p1'><pre>1   Traditionally, the C Library has contained many functions that trust the programmer to
@@ -28623,12 +28681,15 @@ s        Matches a sequence of non-white-space wide characters.
 </pre>
 </a>
 <a name='K.3.5.1.2p10'><pre>10   The value of the macro TMP_MAX_S shall be at least 25.
-     K.3.5.2 File access functions
-     K.3.5.2.1 The fopen_s function
-     Synopsis
 </pre>
 </a>
-<a name='K.3.5.1.2p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
+<hr>
+<a name='K.3.5.2'><h3>K.3.5.2 [File access functions]</h3></a>
+<pre> File access functions
+</pre>
+<hr>
+<a name='K.3.5.2.1'><h3>K.3.5.2.1 [The fopen_s function]</h3></a>
+<a name='K.3.5.2.1p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
             #include &lt;stdio.h&gt;
             errno_t fopen_s(FILE * restrict * restrict streamptr,
                  const char * restrict filename,
@@ -28636,10 +28697,10 @@ s        Matches a sequence of non-white-space wide characters.
      Runtime-constraints
 </pre>
 </a>
-<a name='K.3.5.1.2p2'><pre>2    None of streamptr, filename, or mode shall be a null pointer.
+<a name='K.3.5.2.1p2'><pre>2    None of streamptr, filename, or mode shall be a null pointer.
 </pre>
 </a>
-<a name='K.3.5.1.2p3'><pre>3    If there is a runtime-constraint violation, fopen_s does not attempt to open a file.
+<a name='K.3.5.2.1p3'><pre>3    If there is a runtime-constraint violation, fopen_s does not attempt to open a file.
      Furthermore, if streamptr is not a null pointer, fopen_s sets *streamptr to the
      null pointer.
 
@@ -28654,11 +28715,11 @@ s        Matches a sequence of non-white-space wide characters.
     Description
 </pre>
 </a>
-<a name='K.3.5.1.2p4'><pre>4   The fopen_s function opens the file whose name is the string pointed to by
+<a name='K.3.5.2.1p4'><pre>4   The fopen_s function opens the file whose name is the string pointed to by
     filename, and associates a stream with it.
 </pre>
 </a>
-<a name='K.3.5.1.2p5'><pre>5   The mode string shall be as described for fopen, with the addition that modes starting
+<a name='K.3.5.2.1p5'><pre>5   The mode string shall be as described for fopen, with the addition that modes starting
     with the character &#39;w&#39; or &#39;a&#39; may be preceded by the character &#39;u&#39;, see below:
     uw             truncate to zero length or create text file for writing, default
                    permissions
@@ -28682,11 +28743,11 @@ s        Matches a sequence of non-white-space wide characters.
                    default permissions
 </pre>
 </a>
-<a name='K.3.5.1.2p6'><pre>6   Opening a file with exclusive mode (&#39;x&#39; as the last character in the mode argument)
+<a name='K.3.5.2.1p6'><pre>6   Opening a file with exclusive mode (&#39;x&#39; as the last character in the mode argument)
     fails if the file already exists or cannot be created.
 </pre>
 </a>
-<a name='K.3.5.1.2p7'><pre>7   To the extent that the underlying system supports the concepts, files opened for writing
+<a name='K.3.5.2.1p7'><pre>7   To the extent that the underlying system supports the concepts, files opened for writing
     shall be opened with exclusive (also known as non-shared) access. If the file is being
     created, and the first character of the mode string is not &#39;u&#39;, to the extent that the
     underlying system supports it, the file shall have a file permission that prevents other
@@ -28695,7 +28756,7 @@ s        Matches a sequence of non-white-space wide characters.
     system default file access permissions.389)
 </pre>
 </a>
-<a name='K.3.5.1.2p8'><pre>8   If the file was opened successfully, then the pointer to FILE pointed to by streamptr
+<a name='K.3.5.2.1p8'><pre>8   If the file was opened successfully, then the pointer to FILE pointed to by streamptr
     will be set to the pointer to the object controlling the opened file. Otherwise, the pointer
 
 
@@ -28707,7 +28768,7 @@ s        Matches a sequence of non-white-space wide characters.
     Returns
 </pre>
 </a>
-<a name='K.3.5.1.2p9'><pre>9   The fopen_s function returns zero if it opened the file. If it did not open the file or if
+<a name='K.3.5.2.1p9'><pre>9   The fopen_s function returns zero if it opened the file. If it did not open the file or if
     there was a runtime-constraint violation, fopen_s returns a nonzero value.
 </pre>
 </a>
@@ -29841,37 +29902,38 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <a name='K.3.6.4.1p10'><pre>10   The wctomb_s function returns zero if successful, and a nonzero value if there was a
      runtime-constraint violation or wc did not correspond to a valid multibyte character.
-     K.3.6.5 Multibyte/wide string conversion functions
 </pre>
 </a>
-<a name='K.3.6.4.1p1'><pre>1    The behavior of the multibyte string functions is affected by the LC_CTYPE category of
+<hr>
+<a name='K.3.6.5'><h3>K.3.6.5 [Multibyte/wide string conversion functions]</h3></a>
+<a name='K.3.6.5p1'><pre>1    The behavior of the multibyte string functions is affected by the LC_CTYPE category of
      the current locale.
-     K.3.6.5.1 The mbstowcs_s function
-     Synopsis
 </pre>
 </a>
-<a name='K.3.6.4.1p1'><pre>1            #include &lt;stdlib.h&gt;
+<hr>
+<a name='K.3.6.5.1'><h3>K.3.6.5.1 [The mbstowcs_s function]</h3></a>
+<a name='K.3.6.5.1p1'><pre>1            #include &lt;stdlib.h&gt;
              errno_t mbstowcs_s(size_t * restrict retval,
                   wchar_t * restrict dst, rsize_t dstmax,
                   const char * restrict src, rsize_t len);
      Runtime-constraints
 </pre>
 </a>
-<a name='K.3.6.4.1p2'><pre>2    Neither retval nor src shall be a null pointer. If dst is not a null pointer, then
+<a name='K.3.6.5.1p2'><pre>2    Neither retval nor src shall be a null pointer. If dst is not a null pointer, then
      neither len nor dstmax shall be greater than RSIZE_MAX. If dst is a null pointer,
      then dstmax shall equal zero. If dst is not a null pointer, then dstmax shall not equal
      zero. If dst is not a null pointer and len is not less than dstmax, then a null character
      shall occur within the first dstmax multibyte characters of the array pointed to by src.
 </pre>
 </a>
-<a name='K.3.6.4.1p3'><pre>3    If there is a runtime-constraint violation, then mbstowcs_s does the following. If
+<a name='K.3.6.5.1p3'><pre>3    If there is a runtime-constraint violation, then mbstowcs_s does the following. If
      retval is not a null pointer, then mbstowcs_s sets *retval to (size_t)(-1). If
      dst is not a null pointer and dstmax is greater than zero and less than RSIZE_MAX,
      then mbstowcs_s sets dst[0] to the null wide character.
      Description
 </pre>
 </a>
-<a name='K.3.6.4.1p4'><pre>4    The mbstowcs_s function converts a sequence of multibyte characters that begins in
+<a name='K.3.6.5.1p4'><pre>4    The mbstowcs_s function converts a sequence of multibyte characters that begins in
      the initial shift state from the array pointed to by src into a sequence of corresponding
      wide characters. If dst is not a null pointer, the converted characters are stored into the
      array pointed to by dst. Conversion continues up to and including a terminating null
@@ -29885,24 +29947,24 @@ s        Matches a sequence of non-white-space wide characters.
     takes place as if by a call to the mbrtowc function.
 </pre>
 </a>
-<a name='K.3.6.4.1p5'><pre>5   Regardless of whether dst is or is not a null pointer, if the input conversion encounters a
+<a name='K.3.6.5.1p5'><pre>5   Regardless of whether dst is or is not a null pointer, if the input conversion encounters a
     sequence of bytes that do not form a valid multibyte character, an encoding error occurs:
     the mbstowcs_s function stores the value (size_t)(-1) into *retval.
     Otherwise, the mbstowcs_s function stores into *retval the number of multibyte
     characters successfully converted, not including the terminating null character (if any).
 </pre>
 </a>
-<a name='K.3.6.4.1p6'><pre>6   All elements following the terminating null wide character (if any) written by
+<a name='K.3.6.5.1p6'><pre>6   All elements following the terminating null wide character (if any) written by
     mbstowcs_s in the array of dstmax wide characters pointed to by dst take
     unspecified values when mbstowcs_s returns.415)
 </pre>
 </a>
-<a name='K.3.6.4.1p7'><pre>7   If copying takes place between objects that overlap, the objects take on unspecified
+<a name='K.3.6.5.1p7'><pre>7   If copying takes place between objects that overlap, the objects take on unspecified
     values.
     Returns
 </pre>
 </a>
-<a name='K.3.6.4.1p8'><pre>8   The mbstowcs_s function returns zero if no runtime-constraint violation and no
+<a name='K.3.6.5.1p8'><pre>8   The mbstowcs_s function returns zero if no runtime-constraint violation and no
     encoding error occurred. Otherwise, a nonzero value is returned.
 </pre>
 </a>
@@ -30405,23 +30467,25 @@ s        Matches a sequence of non-white-space wide characters.
              t   =   strtok_s(str2,   &amp;max2,   &quot; \t&quot;, &amp;ptr2);      //   t   is a null pointer
              t   =   strtok_s(NULL,   &amp;max1,   &quot;#,&quot;, &amp;ptr1);       //   t   points to the token &quot;c&quot;
              t   =   strtok_s(NULL,   &amp;max1,   &quot;?&quot;, &amp;ptr1);        //   t   is a null pointer
-
-     K.3.7.4 Miscellaneous functions
-     K.3.7.4.1 The memset_s function
-     Synopsis
 </pre>
 </a>
-<a name='K.3.7.3.1p1'><pre>1            #define _ _STDC_WANT_LIB_EXT1_ _ 1
+<hr>
+<a name='K.3.7.4'><h3>K.3.7.4 [Miscellaneous functions]</h3></a>
+<pre> Miscellaneous functions
+</pre>
+<hr>
+<a name='K.3.7.4.1'><h3>K.3.7.4.1 [The memset_s function]</h3></a>
+<a name='K.3.7.4.1p1'><pre>1            #define _ _STDC_WANT_LIB_EXT1_ _ 1
              #include &lt;string.h&gt;
              errno_t memset_s(void *s, rsize_t smax, int c, rsize_t n)
      Runtime-constraints
 </pre>
 </a>
-<a name='K.3.7.3.1p2'><pre>2    s shall not be a null pointer. Neither smax nor n shall be greater than RSIZE_MAX. n
+<a name='K.3.7.4.1p2'><pre>2    s shall not be a null pointer. Neither smax nor n shall be greater than RSIZE_MAX. n
      shall not be greater than smax.
 </pre>
 </a>
-<a name='K.3.7.3.1p3'><pre>3    If there is a runtime-constraint violation, then if s is not a null pointer and smax is not
+<a name='K.3.7.4.1p3'><pre>3    If there is a runtime-constraint violation, then if s is not a null pointer and smax is not
      greater than RSIZE_MAX, the memset_s function stores the value of c (converted to an
      unsigned char) into each of the first smax characters of the object pointed to by s.
 
@@ -30432,7 +30496,7 @@ s        Matches a sequence of non-white-space wide characters.
     Description
 </pre>
 </a>
-<a name='K.3.7.3.1p4'><pre>4   The memset_s function copies the value of c (converted to an unsigned char) into
+<a name='K.3.7.4.1p4'><pre>4   The memset_s function copies the value of c (converted to an unsigned char) into
     each of the first n characters of the object pointed to by s. Unlike memset, any call to
     the memset_s function shall be evaluated strictly according to the rules of the abstract
     machine as described in (5.1.2.3). That is, any call to the memset_s function shall
@@ -30441,7 +30505,7 @@ s        Matches a sequence of non-white-space wide characters.
     Returns
 </pre>
 </a>
-<a name='K.3.7.3.1p5'><pre>5   The memset_s function returns zero if there was no runtime-constraint violation.
+<a name='K.3.7.4.1p5'><pre>5   The memset_s function returns zero if there was no runtime-constraint violation.
     Otherwise, a nonzero value is returned.
 </pre>
 </a>
@@ -31510,12 +31574,15 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <a name='K.3.9.2.1.1p23'><pre>23   The wmemmove_s function returns zero if there was no runtime-constraint violation.
      Otherwise, a nonzero value is returned.
-     K.3.9.2.2 Wide string concatenation functions
-     K.3.9.2.2.1 The wcscat_s function
-     Synopsis
 </pre>
 </a>
-<a name='K.3.9.2.1.1p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
+<hr>
+<a name='K.3.9.2.2'><h3>K.3.9.2.2 [Wide string concatenation functions]</h3></a>
+<pre> Wide string concatenation functions
+</pre>
+<hr>
+<a name='K.3.9.2.2.1'><h3>K.3.9.2.2.1 [The wcscat_s function]</h3></a>
+<a name='K.3.9.2.2.1p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
             #include &lt;wchar.h&gt;
             errno_t wcscat_s(wchar_t * restrict s1,
                  rsize_t s1max,
@@ -31523,11 +31590,11 @@ s        Matches a sequence of non-white-space wide characters.
      Runtime-constraints
 </pre>
 </a>
-<a name='K.3.9.2.1.1p2'><pre>2    Let m denote the value s1max - wcsnlen_s(s1, s1max) upon entry to
+<a name='K.3.9.2.2.1p2'><pre>2    Let m denote the value s1max - wcsnlen_s(s1, s1max) upon entry to
      wcscat_s.
 </pre>
 </a>
-<a name='K.3.9.2.1.1p3'><pre>3    Neither s1 nor s2 shall be a null pointer. s1max shall not be greater than RSIZE_MAX.
+<a name='K.3.9.2.2.1p3'><pre>3    Neither s1 nor s2 shall be a null pointer. s1max shall not be greater than RSIZE_MAX.
      s1max shall not equal zero. m shall not equal zero.446) m shall be greater than
      wcsnlen_s(s2, m ). Copying shall not take place between objects that overlap.
 
@@ -31535,30 +31602,30 @@ s        Matches a sequence of non-white-space wide characters.
 
 </pre>
 </a>
-<a name='K.3.9.2.1.1p4'><pre>4    If there is a runtime-constraint violation, then if s1 is not a null pointer and s1max is
+<a name='K.3.9.2.2.1p4'><pre>4    If there is a runtime-constraint violation, then if s1 is not a null pointer and s1max is
      greater than zero and not greater than RSIZE_MAX, then wcscat_s sets s1[0] to the
      null wide character.
      Description
 </pre>
 </a>
-<a name='K.3.9.2.1.1p5'><pre>5    The wcscat_s function appends a copy of the wide string pointed to by s2 (including
+<a name='K.3.9.2.2.1p5'><pre>5    The wcscat_s function appends a copy of the wide string pointed to by s2 (including
      the terminating null wide character) to the end of the wide string pointed to by s1. The
      initial wide character from s2 overwrites the null wide character at the end of s1.
 </pre>
 </a>
-<a name='K.3.9.2.1.1p6'><pre>6    All elements following the terminating null wide character (if any) written by
+<a name='K.3.9.2.2.1p6'><pre>6    All elements following the terminating null wide character (if any) written by
      wcscat_s in the array of s1max wide characters pointed to by s1 take unspecified
      values when wcscat_s returns.447)
      Returns
 </pre>
 </a>
-<a name='K.3.9.2.1.1p7'><pre>7    The wcscat_s function returns zero448) if there was no runtime-constraint violation.
+<a name='K.3.9.2.2.1p7'><pre>7    The wcscat_s function returns zero448) if there was no runtime-constraint violation.
      Otherwise, a nonzero value is returned.
      K.3.9.2.2.2 The wcsncat_s function
      Synopsis
 </pre>
 </a>
-<a name='K.3.9.2.1.1p8'><pre>8             #define _ _STDC_WANT_LIB_EXT1_ _ 1
+<a name='K.3.9.2.2.1p8'><pre>8             #define _ _STDC_WANT_LIB_EXT1_ _ 1
               #include &lt;wchar.h&gt;
               errno_t wcsncat_s(wchar_t * restrict s1,
                    rsize_t s1max,
@@ -31567,11 +31634,11 @@ s        Matches a sequence of non-white-space wide characters.
      Runtime-constraints
 </pre>
 </a>
-<a name='K.3.9.2.1.1p9'><pre>9    Let m denote the value s1max - wcsnlen_s(s1, s1max) upon entry to
+<a name='K.3.9.2.2.1p9'><pre>9    Let m denote the value s1max - wcsnlen_s(s1, s1max) upon entry to
      wcsncat_s.
 </pre>
 </a>
-<a name='K.3.9.2.1.1p10'><pre>10   Neither s1 nor s2 shall be a null pointer. Neither s1max nor n shall be greater than
+<a name='K.3.9.2.2.1p10'><pre>10   Neither s1 nor s2 shall be a null pointer. Neither s1max nor n shall be greater than
      RSIZE_MAX. s1max shall not equal zero. m shall not equal zero.449) If n is not less
      than m , then m shall be greater than wcsnlen_s(s2, m ). Copying shall not take
      place between objects that overlap.
@@ -31589,30 +31656,30 @@ s        Matches a sequence of non-white-space wide characters.
 
 </pre>
 </a>
-<a name='K.3.9.2.1.1p11'><pre>11   If there is a runtime-constraint violation, then if s1 is not a null pointer and s1max is
+<a name='K.3.9.2.2.1p11'><pre>11   If there is a runtime-constraint violation, then if s1 is not a null pointer and s1max is
      greater than zero and not greater than RSIZE_MAX, then wcsncat_s sets s1[0] to the
      null wide character.
      Description
 </pre>
 </a>
-<a name='K.3.9.2.1.1p12'><pre>12   The wcsncat_s function appends not more than n successive wide characters (wide
+<a name='K.3.9.2.2.1p12'><pre>12   The wcsncat_s function appends not more than n successive wide characters (wide
      characters that follow a null wide character are not copied) from the array pointed to by
      s2 to the end of the wide string pointed to by s1. The initial wide character from s2
      overwrites the null wide character at the end of s1. If no null wide character was copied
      from s2, then s1[s1max-m+n] is set to a null wide character.
 </pre>
 </a>
-<a name='K.3.9.2.1.1p13'><pre>13   All elements following the terminating null wide character (if any) written by
+<a name='K.3.9.2.2.1p13'><pre>13   All elements following the terminating null wide character (if any) written by
      wcsncat_s in the array of s1max wide characters pointed to by s1 take unspecified
      values when wcsncat_s returns.450)
      Returns
 </pre>
 </a>
-<a name='K.3.9.2.1.1p14'><pre>14   The wcsncat_s function returns zero451) if there was no runtime-constraint violation.
+<a name='K.3.9.2.2.1p14'><pre>14   The wcsncat_s function returns zero451) if there was no runtime-constraint violation.
      Otherwise, a nonzero value is returned.
 </pre>
 </a>
-<a name='K.3.9.2.1.1p15'><pre>15   EXAMPLE 1 The wcsncat_s function can be used to copy a wide string without the danger that the
+<a name='K.3.9.2.2.1p15'><pre>15   EXAMPLE 1 The wcsncat_s function can be used to copy a wide string without the danger that the
      result will not be null terminated or that wide characters will be written past the end of the destination
      array.
               #define _ _STDC_WANT_LIB_EXT1_ _ 1
@@ -31732,26 +31799,28 @@ s        Matches a sequence of non-white-space wide characters.
             t   =   wcstok_s(str2,   &amp;max2,   &quot; \t&quot;, &amp;ptr2);      //   t   is a null pointer
             t   =   wcstok_s(NULL,   &amp;max1,   &quot;#,&quot;, &amp;ptr1);       //   t   points to the token &quot;c&quot;
             t   =   wcstok_s(NULL,   &amp;max1,   &quot;?&quot;, &amp;ptr1);        //   t   is a null pointer
-
-     K.3.9.2.4 Miscellaneous functions
-     K.3.9.2.4.1 The wcsnlen_s function
-     Synopsis
 </pre>
 </a>
-<a name='K.3.9.2.3.1p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
+<hr>
+<a name='K.3.9.2.4'><h3>K.3.9.2.4 [Miscellaneous functions]</h3></a>
+<pre> Miscellaneous functions
+</pre>
+<hr>
+<a name='K.3.9.2.4.1'><h3>K.3.9.2.4.1 [The wcsnlen_s function]</h3></a>
+<a name='K.3.9.2.4.1p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
             #include &lt;wchar.h&gt;
             size_t wcsnlen_s(const wchar_t *s, size_t maxsize);
      Description
 </pre>
 </a>
-<a name='K.3.9.2.3.1p2'><pre>2    The wcsnlen_s function computes the length of the wide string pointed to by s.
+<a name='K.3.9.2.4.1p2'><pre>2    The wcsnlen_s function computes the length of the wide string pointed to by s.
      Returns
 </pre>
 </a>
-<a name='K.3.9.2.3.1p3'><pre>3    If s is a null pointer,452) then the wcsnlen_s function returns zero.
+<a name='K.3.9.2.4.1p3'><pre>3    If s is a null pointer,452) then the wcsnlen_s function returns zero.
 </pre>
 </a>
-<a name='K.3.9.2.3.1p4'><pre>4    Otherwise, the wcsnlen_s function returns the number of wide characters that precede
+<a name='K.3.9.2.4.1p4'><pre>4    Otherwise, the wcsnlen_s function returns the number of wide characters that precede
      the terminating null wide character. If there is no null wide character in the first
      maxsize wide characters of s then wcsnlen_s returns maxsize. At most the first
 
@@ -31772,6 +31841,9 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.9.3.1.1'><h3>K.3.9.3.1.1 [The wcrtomb_s function]</h3></a>
+<a name='K.3.9.3.1.1p1'><pre>1    Synopsis
+</pre>
+</a>
 <a name='K.3.9.3.1.1p2'><pre>2           #include &lt;wchar.h&gt;
             errno_t wcrtomb_s(size_t * restrict retval,
                  char * restrict s, rsize_t smax,
@@ -31834,6 +31906,9 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.9.3.2.1'><h3>K.3.9.3.2.1 [The mbsrtowcs_s function]</h3></a>
+<a name='K.3.9.3.2.1p1'><pre>1    Synopsis
+</pre>
+</a>
 <a name='K.3.9.3.2.1p2'><pre>2          #include &lt;wchar.h&gt;
            errno_t mbsrtowcs_s(size_t * restrict retval,
                 wchar_t * restrict dst, rsize_t dstmax,
@@ -32001,9 +32076,12 @@ s        Matches a sequence of non-white-space wide characters.
 
                                                 Annex L
                                                (normative)
-                                            Analyzability
 </pre>
 </a>
+<hr>
+<a name='L.'><h3>L. [Analyzability]</h3></a>
+<pre> Analyzability
+</pre>
 <hr>
 <a name='L.1'><h3>L.1 [Scope]</h3></a>
 <a name='L.1p1'><pre>1   This annex specifies optional behavior that can aid in the analyzability of C programs.
