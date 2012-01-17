@@ -18789,7 +18789,7 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 -- The characters stored by the strftime or wcsftime function if any of the time
    values being converted is outside the normal range (7.23.3.5, 7.24.5.1).
 -- The conversion state after an encoding error occurs (7.24.6.3.2, 7.24.6.3.3, 7.24.6.4.1,
-   7.24.6.4.2,
+     7.24.6.4.2,
 -- The resulting value when the ``invalid'' floating-point exception is raised during
    IEC 60559 floating to integer conversion (F.4).
 -- Whether conversion of non-integer IEC 60559 floating values to integer raises the
@@ -19124,7 +19124,7 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
    the name va_copy or va_end (7.15.1).
 -- The va_start or va_copy macro is invoked without a corresponding invocation
    of the va_end macro in the same function, or vice versa (7.15.1, 7.15.1.2, 7.15.1.3,
-   7.15.1.4).
+     7.15.1.4).
 -- The type parameter to the va_arg macro is not such that a pointer to an object of
    that type can be obtained simply by postfixing a * (7.15.1.1).
 -- The va_arg macro is invoked when there is no actual next argument, or with a
@@ -19161,11 +19161,11 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
    setvbuf function (7.19.5.6).
 -- There are insufficient arguments for the format in a call to one of the formatted
    input/output functions, or an argument does not have an appropriate type (7.19.6.1,
-   7.19.6.2, 7.24.2.1, 7.24.2.2).
+     7.19.6.2, 7.24.2.1, 7.24.2.2).
 -- The format in a call to one of the formatted input/output functions or to the
    strftime or wcsftime function is not a valid multibyte character sequence that
    begins and ends in its initial shift state (7.19.6.1, 7.19.6.2, 7.23.3.5, 7.24.2.1, 7.24.2.2,
-   7.24.5.1).
+     7.24.5.1).
 -- In a call to one of the formatted output functions, a precision appears with a
    conversion specifier other than those described (7.19.6.1, 7.24.2.1).
 -- A conversion specification for a formatted output function uses an asterisk to denote
@@ -19179,19 +19179,19 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 
 -- A conversion specification for one of the formatted input/output functions uses a
    length modifier with a conversion specifier other than those described (7.19.6.1,
-   7.19.6.2, 7.24.2.1, 7.24.2.2).
+     7.19.6.2, 7.24.2.1, 7.24.2.2).
 -- An s conversion specifier is encountered by one of the formatted output functions,
    and the argument is missing the null terminator (unless a precision is specified that
    does not require null termination) (7.19.6.1, 7.24.2.1).
 -- An n conversion specification for one of the formatted input/output functions includes
    any flags, an assignment-suppressing character, a field width, or a precision (7.19.6.1,
-   7.19.6.2, 7.24.2.1, 7.24.2.2).
+     7.19.6.2, 7.24.2.1, 7.24.2.2).
 -- A % conversion specifier is encountered by one of the formatted input/output
    functions, but the complete conversion specification is not exactly %% (7.19.6.1,
-   7.19.6.2, 7.24.2.1, 7.24.2.2).
+     7.19.6.2, 7.24.2.1, 7.24.2.2).
 -- An invalid conversion specification is found in the format for one of the formatted
    input/output functions, or the strftime or wcsftime function (7.19.6.1, 7.19.6.2,
-   7.23.3.5, 7.24.2.1, 7.24.2.2, 7.24.5.1).
+     7.23.3.5, 7.24.2.1, 7.24.2.2, 7.24.5.1).
 -- The number of characters transmitted by a formatted output function is greater than
    INT_MAX (7.19.6.1, 7.19.6.3, 7.19.6.8, 7.19.6.10).
 -- The result of a conversion by one of the formatted input functions cannot be
@@ -19211,7 +19211,7 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
    vwscanf function is called with an improperly initialized va_list argument, or
    the argument is used (other than in an invocation of va_end) after the function
    returns (7.19.6.8, 7.19.6.9, 7.19.6.10, 7.19.6.11, 7.19.6.12, 7.19.6.13, 7.19.6.14,
-   7.24.2.5, 7.24.2.6, 7.24.2.7, 7.24.2.8, 7.24.2.9, 7.24.2.10).
+     7.24.2.5, 7.24.2.6, 7.24.2.7, 7.24.2.8, 7.24.2.9, 7.24.2.10).
 -- The contents of the array supplied in a call to the fgets, gets, or fgetws function
    are used after a read error occurred (7.19.7.2, 7.19.7.7, 7.24.3.2).
 
@@ -19265,7 +19265,7 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 -- The contents of the destination array are used after a call to the strxfrm,
    strftime, wcsxfrm, or wcsftime function in which the specified length was
    too small to hold the entire null-terminated result (7.21.4.5, 7.23.3.5, 7.24.4.4.4,
-   7.24.5.1).
+     7.24.5.1).
 -- The first argument in the very first call to the strtok or wcstok is a null pointer
    (7.21.5.8, 7.24.4.5.7).
 -- The type of an argument to a type-generic macro is not compatible with the type of
@@ -19473,40 +19473,40 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 
 
 
--- Whether a domain error occurs or zero is returned when a remquo function has a
-   second argument of zero (7.12.10.3).
--- Whether the equivalent of signal(sig, SIG_DFL); is executed prior to the call
-   of a signal handler, and, if not, the blocking of signals that is performed (7.14.1.1).
--- The null pointer constant to which the macro NULL expands (7.17).
--- Whether the last line of a text stream requires a terminating new-line character
-   (7.19.2).
--- Whether space characters that are written out to a text stream immediately before a
-   new-line character appear when read in (7.19.2).
--- The number of null characters that may be appended to data written to a binary
-   stream (7.19.2).
--- Whether the file position indicator of an append-mode stream is initially positioned at
-   the beginning or end of the file (7.19.3).
--- Whether a write on a text stream causes the associated file to be truncated beyond that
-   point (7.19.3).
--- The characteristics of file buffering (7.19.3).
--- Whether a zero-length file actually exists (7.19.3).
--- The rules for composing valid file names (7.19.3).
--- Whether the same file can be simultaneously open multiple times (7.19.3).
--- The nature and choice of encodings used for multibyte characters in files (7.19.3).
--- The effect of the remove function on an open file (7.19.4.1).
--- The effect if a file with the new name exists prior to a call to the rename function
-   (7.19.4.2).
--- Whether an open temporary file is removed upon abnormal program termination
-   (7.19.4.3).
--- Which changes of mode are permitted (if any), and under what circumstances
-   (7.19.5.4).
--- The style used to print an infinity or NaN, and the meaning of any n-char or n-wchar
-   sequence printed for a NaN (7.19.6.1, 7.24.2.1).
--- The output for %p conversion in the fprintf or fwprintf function (7.19.6.1,
-   7.24.2.1).
--- The interpretation of a - character that is neither the first nor the last character, nor
-    the second where a ^ character is the first, in the scanlist for %[ conversion in the
-    fscanf or fwscanf function (7.19.6.2, 7.24.2.1).
+    -- Whether a domain error occurs or zero is returned when a remquo function has a
+       second argument of zero (7.12.10.3).
+    -- Whether the equivalent of signal(sig, SIG_DFL); is executed prior to the call
+       of a signal handler, and, if not, the blocking of signals that is performed (7.14.1.1).
+    -- The null pointer constant to which the macro NULL expands (7.17).
+    -- Whether the last line of a text stream requires a terminating new-line character
+       (7.19.2).
+    -- Whether space characters that are written out to a text stream immediately before a
+       new-line character appear when read in (7.19.2).
+    -- The number of null characters that may be appended to data written to a binary
+       stream (7.19.2).
+    -- Whether the file position indicator of an append-mode stream is initially positioned at
+       the beginning or end of the file (7.19.3).
+    -- Whether a write on a text stream causes the associated file to be truncated beyond that
+       point (7.19.3).
+    -- The characteristics of file buffering (7.19.3).
+    -- Whether a zero-length file actually exists (7.19.3).
+    -- The rules for composing valid file names (7.19.3).
+    -- Whether the same file can be simultaneously open multiple times (7.19.3).
+    -- The nature and choice of encodings used for multibyte characters in files (7.19.3).
+    -- The effect of the remove function on an open file (7.19.4.1).
+    -- The effect if a file with the new name exists prior to a call to the rename function
+       (7.19.4.2).
+    -- Whether an open temporary file is removed upon abnormal program termination
+       (7.19.4.3).
+    -- Which changes of mode are permitted (if any), and under what circumstances
+       (7.19.5.4).
+    -- The style used to print an infinity or NaN, and the meaning of any n-char or n-wchar
+       sequence printed for a NaN (7.19.6.1, 7.24.2.1).
+    -- The output for %p conversion in the fprintf or fwprintf function (7.19.6.1,
+       7.24.2.1).
+    -- The interpretation of a - character that is neither the first nor the last character, nor
+        the second where a ^ character is the first, in the scanlist for %[ conversion in the
+        fscanf or fwscanf function (7.19.6.2, 7.24.2.1).
 
 
     -- The set of sequences matched by a %p conversion and the interpretation of the
@@ -19665,65 +19665,65 @@ Special characters: 00B5, 00B7, 02B0-02B8, 02BB, 02BD-02C1, 02D0-02D1,
 
 
 
-                                  Bibliography
-  1.   ``The C Reference Manual'' by Dennis M. Ritchie, a version of which was
-       published in The C Programming Language by Brian W. Kernighan and Dennis
-       M. Ritchie, Prentice-Hall, Inc., (1978). Copyright owned by AT&T.
-  2.   1984 /usr/group Standard by the /usr/group Standards Committee, Santa Clara,
-       California, USA, November 1984.
-  3.   ANSI X3/TR-1-82 (1982), American National Dictionary for Information
-       Processing Systems, Information Processing Systems Technical Report.
-  4.   ANSI/IEEE 754-1985, American National Standard for Binary Floating-Point
-       Arithmetic .
-  5.   ANSI/IEEE 854-1988, American National Standard for Radix-Independent
-       Floating-Point Arithmetic .
-  6.   IEC 60559:1989, Binary floating-point arithmetic for microprocessor systems,
-       second edition (previously designated IEC 559:1989).
-  7.   ISO 31-11:1992, Quantities and units -- Part 11: Mathematical signs and
-       symbols for use in the physical sciences and technology .
-  8.   ISO/IEC 646:1991, Information technology -- ISO 7-bit coded character set for
-       information interchange.
-  9.   ISO/IEC 2382-1:1993, Information technology -- Vocabulary -- Part 1:
-       Fundamental terms.
- 10.   ISO 4217:1995, Codes for the representation of currencies and funds.
- 11.   ISO 8601:1988, Data elements and interchange formats -- Information
-       interchange -- Representation of dates and times.
- 12.   ISO/IEC 9899:1990, Programming languages -- C .
- 13.   ISO/IEC 9899/COR1:1994, Technical Corrigendum 1.
- 14.   ISO/IEC 9899/COR2:1996, Technical Corrigendum 2.
- 15.   ISO/IEC 9899/AMD1:1995, Amendment 1 to ISO/IEC 9899:1990 C Integrity .
- 16.   ISO/IEC 9945-2:1993, Information technology -- Portable Operating System
-       Interface (POSIX) -- Part 2: Shell and Utilities.
- 17.   ISO/IEC TR 10176:1998, Information technology -- Guidelines for the
-       preparation of programming language standards.
- 18.   ISO/IEC 10646-1:1993, Information technology -- Universal Multiple-Octet
-       Coded Character Set (UCS) -- Part 1: Architecture and Basic Multilingual Plane.
- 19.   ISO/IEC 10646-1/COR1:1996,      Technical       Corrigendum      1      to
-       ISO/IEC 10646-1:1993.
- 20.   ISO/IEC 10646-1/COR2:1998,      Technical       Corrigendum      2      to
-       ISO/IEC 10646-1:1993.
- 21.   ISO/IEC 10646-1/AMD1:1996, Amendment 1 to ISO/IEC 10646-1:1993
-       Transformation Format for 16 planes of group 00 (UTF-16).
- 22.   ISO/IEC 10646-1/AMD2:1996, Amendment 2 to ISO/IEC 10646-1:1993 UCS
-       Transformation Format 8 (UTF-8).
- 23.   ISO/IEC 10646-1/AMD3:1996, Amendment 3 to ISO/IEC 10646-1:1993.
- 24.   ISO/IEC 10646-1/AMD4:1996, Amendment 4 to ISO/IEC 10646-1:1993.
- 25.   ISO/IEC 10646-1/AMD5:1998, Amendment 5 to ISO/IEC 10646-1:1993 Hangul
-       syllables.
- 26.   ISO/IEC 10646-1/AMD6:1997, Amendment 6 to ISO/IEC 10646-1:1993 Tibetan.
- 27.   ISO/IEC 10646-1/AMD7:1997, Amendment 7 to ISO/IEC 10646-1:1993 33
-       additional characters.
- 28.   ISO/IEC 10646-1/AMD8:1997, Amendment 8 to ISO/IEC 10646-1:1993.
- 29.   ISO/IEC 10646-1/AMD9:1997,    Amendment     9   to    ISO/IEC 10646-1:1993
-       Identifiers for characters.
- 30.   ISO/IEC 10646-1/AMD10:1998, Amendment 10 to ISO/IEC 10646-1:1993
-       Ethiopic .
- 31.   ISO/IEC 10646-1/AMD11:1998, Amendment 11 to ISO/IEC 10646-1:1993
-       Unified Canadian Aboriginal Syllabics.
- 32.   ISO/IEC 10646-1/AMD12:1998, Amendment 12 to ISO/IEC 10646-1:1993
-       Cherokee.
- 33.   ISO/IEC 10967-1:1994, Information technology -- Language independent
-       arithmetic -- Part 1: Integer and floating point arithmetic .
+                                          Bibliography
+          1.   ``The C Reference Manual'' by Dennis M. Ritchie, a version of which was
+               published in The C Programming Language by Brian W. Kernighan and Dennis
+               M. Ritchie, Prentice-Hall, Inc., (1978). Copyright owned by AT&T.
+          2.   1984 /usr/group Standard by the /usr/group Standards Committee, Santa Clara,
+               California, USA, November 1984.
+          3.   ANSI X3/TR-1-82 (1982), American National Dictionary for Information
+               Processing Systems, Information Processing Systems Technical Report.
+          4.   ANSI/IEEE 754-1985, American National Standard for Binary Floating-Point
+               Arithmetic .
+          5.   ANSI/IEEE 854-1988, American National Standard for Radix-Independent
+               Floating-Point Arithmetic .
+          6.   IEC 60559:1989, Binary floating-point arithmetic for microprocessor systems,
+               second edition (previously designated IEC 559:1989).
+          7.   ISO 31-11:1992, Quantities and units -- Part 11: Mathematical signs and
+               symbols for use in the physical sciences and technology .
+          8.   ISO/IEC 646:1991, Information technology -- ISO 7-bit coded character set for
+               information interchange.
+          9.   ISO/IEC 2382-1:1993, Information technology -- Vocabulary -- Part 1:
+               Fundamental terms.
+         10.   ISO 4217:1995, Codes for the representation of currencies and funds.
+         11.   ISO 8601:1988, Data elements and interchange formats -- Information
+               interchange -- Representation of dates and times.
+         12.   ISO/IEC 9899:1990, Programming languages -- C .
+         13.   ISO/IEC 9899/COR1:1994, Technical Corrigendum 1.
+         14.   ISO/IEC 9899/COR2:1996, Technical Corrigendum 2.
+         15.   ISO/IEC 9899/AMD1:1995, Amendment 1 to ISO/IEC 9899:1990 C Integrity .
+         16.   ISO/IEC 9945-2:1993, Information technology -- Portable Operating System
+               Interface (POSIX) -- Part 2: Shell and Utilities.
+         17.   ISO/IEC TR 10176:1998, Information technology -- Guidelines for the
+               preparation of programming language standards.
+         18.   ISO/IEC 10646-1:1993, Information technology -- Universal Multiple-Octet
+               Coded Character Set (UCS) -- Part 1: Architecture and Basic Multilingual Plane.
+         19.   ISO/IEC 10646-1/COR1:1996,      Technical       Corrigendum      1      to
+               ISO/IEC 10646-1:1993.
+         20.   ISO/IEC 10646-1/COR2:1998,      Technical       Corrigendum      2      to
+               ISO/IEC 10646-1:1993.
+         21.   ISO/IEC 10646-1/AMD1:1996, Amendment 1 to ISO/IEC 10646-1:1993
+               Transformation Format for 16 planes of group 00 (UTF-16).
+         22.   ISO/IEC 10646-1/AMD2:1996, Amendment 2 to ISO/IEC 10646-1:1993 UCS
+               Transformation Format 8 (UTF-8).
+         23.   ISO/IEC 10646-1/AMD3:1996, Amendment 3 to ISO/IEC 10646-1:1993.
+         24.   ISO/IEC 10646-1/AMD4:1996, Amendment 4 to ISO/IEC 10646-1:1993.
+         25.   ISO/IEC 10646-1/AMD5:1998, Amendment 5 to ISO/IEC 10646-1:1993 Hangul
+               syllables.
+         26.   ISO/IEC 10646-1/AMD6:1997, Amendment 6 to ISO/IEC 10646-1:1993 Tibetan.
+         27.   ISO/IEC 10646-1/AMD7:1997, Amendment 7 to ISO/IEC 10646-1:1993 33
+               additional characters.
+         28.   ISO/IEC 10646-1/AMD8:1997, Amendment 8 to ISO/IEC 10646-1:1993.
+         29.   ISO/IEC 10646-1/AMD9:1997,    Amendment     9   to    ISO/IEC 10646-1:1993
+               Identifiers for characters.
+         30.   ISO/IEC 10646-1/AMD10:1998, Amendment 10 to ISO/IEC 10646-1:1993
+               Ethiopic .
+         31.   ISO/IEC 10646-1/AMD11:1998, Amendment 11 to ISO/IEC 10646-1:1993
+               Unified Canadian Aboriginal Syllabics.
+         32.   ISO/IEC 10646-1/AMD12:1998, Amendment 12 to ISO/IEC 10646-1:1993
+               Cherokee.
+         33.   ISO/IEC 10967-1:1994, Information technology -- Language independent
+               arithmetic -- Part 1: Integer and floating point arithmetic .
 
 
 

@@ -2930,7 +2930,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 
      Forward references: common definitions <stddef.h> (7.19), the mbtowc function
      (7.22.7.2), Unicode utilities <uchar.h> (7.28).
-     6.4.5 String literals
+    6.4.5 String literals
      Syntax
 1             string-literal:
                       encoding-prefixopt " s-char-sequenceopt "
@@ -21768,7 +21768,7 @@ B.29 Wide character classification and mapping utilities <wctype.h>
    the name va_copy or va_end (7.16.1).
 -- The va_start or va_copy macro is invoked without a corresponding invocation
    of the va_end macro in the same function, or vice versa (7.16.1, 7.16.1.2, 7.16.1.3,
-   7.16.1.4).
+     7.16.1.4).
 -- The type parameter to the va_arg macro is not such that a pointer to an object of
    that type can be obtained simply by postfixing a * (7.16.1.1).
 -- The va_arg macro is invoked when there is no actual next argument, or with a
@@ -21807,11 +21807,11 @@ B.29 Wide character classification and mapping utilities <wctype.h>
    setvbuf function (7.21.5.6).
 -- There are insufficient arguments for the format in a call to one of the formatted
    input/output functions, or an argument does not have an appropriate type (7.21.6.1,
-   7.21.6.2, 7.29.2.1, 7.29.2.2).
+     7.21.6.2, 7.29.2.1, 7.29.2.2).
 -- The format in a call to one of the formatted input/output functions or to the
    strftime or wcsftime function is not a valid multibyte character sequence that
    begins and ends in its initial shift state (7.21.6.1, 7.21.6.2, 7.27.3.5, 7.29.2.1, 7.29.2.2,
-   7.29.5.1).
+     7.29.5.1).
 -- In a call to one of the formatted output functions, a precision appears with a
    conversion specifier other than those described (7.21.6.1, 7.29.2.1).
 -- A conversion specification for a formatted output function uses an asterisk to denote
@@ -21821,7 +21821,7 @@ B.29 Wide character classification and mapping utilities <wctype.h>
    conversion specifier other than those described (7.21.6.1, 7.29.2.1).
 -- A conversion specification for one of the formatted input/output functions uses a
    length modifier with a conversion specifier other than those described (7.21.6.1,
-   7.21.6.2, 7.29.2.1, 7.29.2.2).
+     7.21.6.2, 7.29.2.1, 7.29.2.2).
 
 
 
@@ -21830,13 +21830,13 @@ B.29 Wide character classification and mapping utilities <wctype.h>
    does not require null termination) (7.21.6.1, 7.29.2.1).
 -- An n conversion specification for one of the formatted input/output functions includes
    any flags, an assignment-suppressing character, a field width, or a precision (7.21.6.1,
-   7.21.6.2, 7.29.2.1, 7.29.2.2).
+     7.21.6.2, 7.29.2.1, 7.29.2.2).
 -- A % conversion specifier is encountered by one of the formatted input/output
    functions, but the complete conversion specification is not exactly %% (7.21.6.1,
-   7.21.6.2, 7.29.2.1, 7.29.2.2).
+     7.21.6.2, 7.29.2.1, 7.29.2.2).
 -- An invalid conversion specification is found in the format for one of the formatted
    input/output functions, or the strftime or wcsftime function (7.21.6.1, 7.21.6.2,
-   7.27.3.5, 7.29.2.1, 7.29.2.2, 7.29.5.1).
+     7.27.3.5, 7.29.2.1, 7.29.2.2, 7.29.5.1).
 -- The number of characters or wide characters transmitted by a formatted output
    function (or written to an array, or that would have been written to an array) is greater
    than INT_MAX (7.21.6.1, 7.29.2.1).
@@ -21859,7 +21859,7 @@ B.29 Wide character classification and mapping utilities <wctype.h>
    vwscanf function is called with an improperly initialized va_list argument, or
    the argument is used (other than in an invocation of va_end) after the function
    returns (7.21.6.8, 7.21.6.9, 7.21.6.10, 7.21.6.11, 7.21.6.12, 7.21.6.13, 7.21.6.14,
-   7.29.2.5, 7.29.2.6, 7.29.2.7, 7.29.2.8, 7.29.2.9, 7.29.2.10).
+     7.29.2.5, 7.29.2.6, 7.29.2.7, 7.29.2.8, 7.29.2.9, 7.29.2.10).
 -- The contents of the array supplied in a call to the fgets or fgetws function are
    used after a read error occurred (7.21.7.2, 7.29.3.2).
 
@@ -21918,7 +21918,7 @@ B.29 Wide character classification and mapping utilities <wctype.h>
 -- The contents of the destination array are used after a call to the strxfrm,
    strftime, wcsxfrm, or wcsftime function in which the specified length was
    too small to hold the entire null-terminated result (7.24.4.5, 7.27.3.5, 7.29.4.4.4,
-   7.29.5.1).
+     7.29.5.1).
 -- The first argument in the very first call to the strtok or wcstok is a null pointer
    (7.24.5.8, 7.29.4.5.7).
 -- The type of an argument to a type-generic macro is not compatible with the type of
@@ -22162,7 +22162,7 @@ B.29 Wide character classification and mapping utilities <wctype.h>
 -- The style used to print an infinity or NaN, and the meaning of any n-char or n-wchar
    sequence printed for a NaN (7.21.6.1, 7.29.2.1).
 -- The output for %p conversion in the fprintf or fwprintf function (7.21.6.1,
-   7.29.2.1).
+     7.29.2.1).
 -- The interpretation of a - character that is neither the first nor the last character, nor
    the second where a ^ character is the first, in the scanlist for %[ conversion in the
    fscanf or fwscanf function (7.21.6.2, 7.29.2.1).
@@ -25131,75 +25131,75 @@ B.29 Wide character classification and mapping utilities <wctype.h>
 
 
 
-                                  Bibliography
-  1.   ``The C Reference Manual'' by Dennis M. Ritchie, a version of which was
-       published in The C Programming Language by Brian W. Kernighan and Dennis
-       M. Ritchie, Prentice-Hall, Inc., (1978). Copyright owned by AT&T.
-  2.   1984 /usr/group Standard by the /usr/group Standards Committee, Santa Clara,
-       California, USA, November 1984.
-  3.   ANSI X3/TR-1-82 (1982), American National Dictionary for Information
-       Processing Systems, Information Processing Systems Technical Report.
-  4.   ANSI/IEEE 754-1985, American National Standard for Binary Floating-Point
-       Arithmetic .
-  5.   ANSI/IEEE 854-1988, American National Standard for Radix-Independent
-       Floating-Point Arithmetic .
-  6.   IEC 60559:1989, Binary floating-point arithmetic for microprocessor systems,
-       second edition (previously designated IEC 559:1989).
-  7.   ISO 31-11:1992, Quantities and units -- Part 11: Mathematical signs and
-       symbols for use in the physical sciences and technology .
-  8.   ISO/IEC 646:1991, Information technology -- ISO 7-bit coded character set for
-       information interchange.
-  9.   ISO/IEC 2382-1:1993, Information technology -- Vocabulary -- Part 1:
-       Fundamental terms.
- 10.   ISO 4217:1995, Codes for the representation of currencies and funds.
- 11.   ISO 8601:1988, Data elements and interchange formats -- Information
-       interchange -- Representation of dates and times.
- 12.   ISO/IEC 9899:1990, Programming languages -- C .
- 13.   ISO/IEC 9899/COR1:1994, Technical Corrigendum 1.
- 14.   ISO/IEC 9899/COR2:1996, Technical Corrigendum 2.
- 15.   ISO/IEC 9899/AMD1:1995, Amendment 1 to ISO/IEC 9899:1990 C Integrity .
- 16.   ISO/IEC 9899:1999, Programming languages -- C .
- 17.   ISO/IEC 9899:1999/Cor.1:2001, Technical Corrigendum 1.
- 18.   ISO/IEC 9899:1999/Cor.2:2004, Technical Corrigendum 2.
- 19.   ISO/IEC 9899:1999/Cor.3:2007, Technical Corrigendum 3.
- 20.    ISO/IEC 9945-2:1993, Information technology -- Portable Operating System
-        Interface (POSIX) -- Part 2: Shell and Utilities.
- 21.    ISO/IEC TR 10176:1998, Information technology -- Guidelines for the
-        preparation of programming language standards.
- 22.    ISO/IEC 10646-1:1993, Information technology -- Universal Multiple-Octet
-        Coded Character Set (UCS) -- Part 1: Architecture and Basic Multilingual Plane.
- 23.    ISO/IEC 10646-1/COR1:1996,          Technical       Corrigendum       1      to
-        ISO/IEC 10646-1:1993.
- 24.    ISO/IEC 10646-1/COR2:1998,          Technical       Corrigendum       2      to
-        ISO/IEC 10646-1:1993.
- 25.    ISO/IEC 10646-1/AMD1:1996, Amendment 1 to ISO/IEC 10646-1:1993
-        Transformation Format for 16 planes of group 00 (UTF-16).
- 26.    ISO/IEC 10646-1/AMD2:1996, Amendment 2 to ISO/IEC 10646-1:1993 UCS
-        Transformation Format 8 (UTF-8).
- 27.    ISO/IEC 10646-1/AMD3:1996, Amendment 3 to ISO/IEC 10646-1:1993.
- 28.    ISO/IEC 10646-1/AMD4:1996, Amendment 4 to ISO/IEC 10646-1:1993.
- 29.    ISO/IEC 10646-1/AMD5:1998, Amendment 5 to ISO/IEC 10646-1:1993 Hangul
-        syllables.
- 30.    ISO/IEC 10646-1/AMD6:1997,       Amendment      6   to   ISO/IEC 10646-1:1993
-        Tibetan.
- 31.    ISO/IEC 10646-1/AMD7:1997, Amendment 7 to ISO/IEC 10646-1:1993 33
-        additional characters.
- 32.    ISO/IEC 10646-1/AMD8:1997, Amendment 8 to ISO/IEC 10646-1:1993.
- 33.    ISO/IEC 10646-1/AMD9:1997,       Amendment      9   to   ISO/IEC 10646-1:1993
-        Identifiers for characters.
- 34.    ISO/IEC 10646-1/AMD10:1998, Amendment 10 to ISO/IEC 10646-1:1993
-        Ethiopic .
- 35.    ISO/IEC 10646-1/AMD11:1998, Amendment 11 to ISO/IEC 10646-1:1993
-        Unified Canadian Aboriginal Syllabics.
- 36.    ISO/IEC 10646-1/AMD12:1998, Amendment 12 to ISO/IEC 10646-1:1993
-        Cherokee.
- 37.    ISO/IEC 10967-1:1994, Information technology -- Language independent
-        arithmetic -- Part 1: Integer and floating point arithmetic .
- 38.   ISO/IEC TR 19769:2004, Information technology -- Programming languages,
-       their environments and system software interfaces -- Extensions for the
-       programming language C to support new character data types.
- 39.   ISO/IEC TR 24731-1:2007, Information technology -- Programming languages,
-       their environments and system software interfaces -- Extensions to the C library
-       -- Part 1: Bounds-checking interfaces.
+                                        Bibliography
+        1.   ``The C Reference Manual'' by Dennis M. Ritchie, a version of which was
+             published in The C Programming Language by Brian W. Kernighan and Dennis
+             M. Ritchie, Prentice-Hall, Inc., (1978). Copyright owned by AT&T.
+        2.   1984 /usr/group Standard by the /usr/group Standards Committee, Santa Clara,
+             California, USA, November 1984.
+        3.   ANSI X3/TR-1-82 (1982), American National Dictionary for Information
+             Processing Systems, Information Processing Systems Technical Report.
+        4.   ANSI/IEEE 754-1985, American National Standard for Binary Floating-Point
+             Arithmetic .
+        5.   ANSI/IEEE 854-1988, American National Standard for Radix-Independent
+             Floating-Point Arithmetic .
+        6.   IEC 60559:1989, Binary floating-point arithmetic for microprocessor systems,
+             second edition (previously designated IEC 559:1989).
+        7.   ISO 31-11:1992, Quantities and units -- Part 11: Mathematical signs and
+             symbols for use in the physical sciences and technology .
+        8.   ISO/IEC 646:1991, Information technology -- ISO 7-bit coded character set for
+             information interchange.
+        9.   ISO/IEC 2382-1:1993, Information technology -- Vocabulary -- Part 1:
+             Fundamental terms.
+       10.   ISO 4217:1995, Codes for the representation of currencies and funds.
+       11.   ISO 8601:1988, Data elements and interchange formats -- Information
+             interchange -- Representation of dates and times.
+       12.   ISO/IEC 9899:1990, Programming languages -- C .
+       13.   ISO/IEC 9899/COR1:1994, Technical Corrigendum 1.
+       14.   ISO/IEC 9899/COR2:1996, Technical Corrigendum 2.
+       15.   ISO/IEC 9899/AMD1:1995, Amendment 1 to ISO/IEC 9899:1990 C Integrity .
+       16.   ISO/IEC 9899:1999, Programming languages -- C .
+       17.   ISO/IEC 9899:1999/Cor.1:2001, Technical Corrigendum 1.
+       18.   ISO/IEC 9899:1999/Cor.2:2004, Technical Corrigendum 2.
+       19.   ISO/IEC 9899:1999/Cor.3:2007, Technical Corrigendum 3.
+       20.    ISO/IEC 9945-2:1993, Information technology -- Portable Operating System
+              Interface (POSIX) -- Part 2: Shell and Utilities.
+       21.    ISO/IEC TR 10176:1998, Information technology -- Guidelines for the
+              preparation of programming language standards.
+       22.    ISO/IEC 10646-1:1993, Information technology -- Universal Multiple-Octet
+              Coded Character Set (UCS) -- Part 1: Architecture and Basic Multilingual Plane.
+       23.    ISO/IEC 10646-1/COR1:1996,          Technical       Corrigendum       1      to
+              ISO/IEC 10646-1:1993.
+       24.    ISO/IEC 10646-1/COR2:1998,          Technical       Corrigendum       2      to
+              ISO/IEC 10646-1:1993.
+       25.    ISO/IEC 10646-1/AMD1:1996, Amendment 1 to ISO/IEC 10646-1:1993
+              Transformation Format for 16 planes of group 00 (UTF-16).
+       26.    ISO/IEC 10646-1/AMD2:1996, Amendment 2 to ISO/IEC 10646-1:1993 UCS
+              Transformation Format 8 (UTF-8).
+       27.    ISO/IEC 10646-1/AMD3:1996, Amendment 3 to ISO/IEC 10646-1:1993.
+       28.    ISO/IEC 10646-1/AMD4:1996, Amendment 4 to ISO/IEC 10646-1:1993.
+       29.    ISO/IEC 10646-1/AMD5:1998, Amendment 5 to ISO/IEC 10646-1:1993 Hangul
+              syllables.
+       30.    ISO/IEC 10646-1/AMD6:1997,       Amendment      6   to   ISO/IEC 10646-1:1993
+              Tibetan.
+       31.    ISO/IEC 10646-1/AMD7:1997, Amendment 7 to ISO/IEC 10646-1:1993 33
+              additional characters.
+       32.    ISO/IEC 10646-1/AMD8:1997, Amendment 8 to ISO/IEC 10646-1:1993.
+       33.    ISO/IEC 10646-1/AMD9:1997,       Amendment      9   to   ISO/IEC 10646-1:1993
+              Identifiers for characters.
+       34.    ISO/IEC 10646-1/AMD10:1998, Amendment 10 to ISO/IEC 10646-1:1993
+              Ethiopic .
+       35.    ISO/IEC 10646-1/AMD11:1998, Amendment 11 to ISO/IEC 10646-1:1993
+              Unified Canadian Aboriginal Syllabics.
+       36.    ISO/IEC 10646-1/AMD12:1998, Amendment 12 to ISO/IEC 10646-1:1993
+              Cherokee.
+       37.    ISO/IEC 10967-1:1994, Information technology -- Language independent
+              arithmetic -- Part 1: Integer and floating point arithmetic .
+       38.   ISO/IEC TR 19769:2004, Information technology -- Programming languages,
+             their environments and system software interfaces -- Extensions for the
+             programming language C to support new character data types.
+       39.   ISO/IEC TR 24731-1:2007, Information technology -- Programming languages,
+             their environments and system software interfaces -- Extensions to the C library
+             -- Part 1: Bounds-checking interfaces.
 
     9999.

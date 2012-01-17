@@ -88,7 +88,7 @@ if($list_only) {
 
 $search =~ s/\s/\\s+/g;
 
-while($text =~ m/^\s{4}([0-9A-Z]+\.[0-9\.]*)/msg) {
+while($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
   $this_section = $1;
 
   print "----------------------------------\n" if $debug >= 2;
@@ -96,7 +96,7 @@ while($text =~ m/^\s{4}([0-9A-Z]+\.[0-9\.]*)/msg) {
 
   my $section_text;
 
-  if($text =~ m/(.*?)^(?=\s{4}[0-9A-Z]+\.)/msg) {
+  if($text =~ m/(.*?)^(?=\s{0,4}[0-9A-Z]+\.)/msg) {
     $section_text = $1;
   } else {
     print "No section text, end of file marker found.\n" if $debug >= 4;

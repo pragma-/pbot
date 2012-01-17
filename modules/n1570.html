@@ -741,8 +741,12 @@ xviii                         Introduction
 </a>
 <hr>
 <a name='5.1'><h3>5.1 [Conceptual models]</h3></a>
+<pre> Conceptual models
+</pre>
 <hr>
 <a name='5.1.1'><h3>5.1.1 [Translation environment]</h3></a>
+<pre> Translation environment
+</pre>
 <hr>
 <a name='5.1.1.1'><h3>5.1.1.1 [Program structure]</h3></a>
 <a name='5.1.1.1p1'><pre>1   A C program need not all be translated at the same time. The text of the program is kept
@@ -1355,6 +1359,8 @@ preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definiti
 </a>
 <hr>
 <a name='5.2'><h3>5.2 [Environmental considerations]</h3></a>
+<pre> Environmental considerations
+</pre>
 <hr>
 <a name='5.2.1'><h3>5.2.1 [Character sets]</h3></a>
 <a name='5.2.1p1'><pre>1   Two sets of characters and their associated collating sequences shall be defined: the set in
@@ -1968,6 +1974,8 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 </a>
 <hr>
 <a name='6.'><h3>6. [Language]</h3></a>
+<pre> Language
+</pre>
 <hr>
 <a name='6.1'><h3>6.1 [Notation]</h3></a>
 <a name='6.1p1'><pre>1   In the syntax notation used in this clause, syntactic categories (nonterminals) are
@@ -1988,6 +1996,8 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 </a>
 <hr>
 <a name='6.2'><h3>6.2 [Concepts]</h3></a>
+<pre> Concepts
+</pre>
 <hr>
 <a name='6.2.1'><h3>6.2.1 [Scopes of identifiers]</h3></a>
 <a name='6.2.1p1'><pre>1   An identifier can denote an object; a function; a tag or a member of a structure, union, or
@@ -2754,6 +2764,8 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 </a>
 <hr>
 <a name='6.3.1'><h3>6.3.1 [Arithmetic operands]</h3></a>
+<pre> Arithmetic operands
+</pre>
 <hr>
 <a name='6.3.1.1'><h3>6.3.1.1 [Boolean, characters, and integers]</h3></a>
 <a name='6.3.1.1p1'><pre>1   Every integer type has an integer conversion rank defined as follows:
@@ -2937,6 +2949,8 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 </a>
 <hr>
 <a name='6.3.2'><h3>6.3.2 [Other operands]</h3></a>
+<pre> Other operands
+</pre>
 <hr>
 <a name='6.3.2.1'><h3>6.3.2.1 [Lvalues, arrays, and function designators]</h3></a>
 <a name='6.3.2.1p1'><pre>1   An lvalue is an expression (with an object type other than void) that potentially
@@ -3175,6 +3189,8 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 </a>
 <hr>
 <a name='6.4.2'><h3>6.4.2 [Identifiers]</h3></a>
+<pre> Identifiers
+</pre>
 <hr>
 <a name='6.4.2.1'><h3>6.4.2.1 [General]</h3></a>
 <a name='6.4.2.1p1'><pre>1            identifier:
@@ -3708,11 +3724,11 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 
      Forward references: common definitions &lt;stddef.h&gt; (7.19), the mbtowc function
      (7.22.7.2), Unicode utilities &lt;uchar.h&gt; (7.28).
-     6.4.5 String literals
-     Syntax
 </pre>
 </a>
-<a name='6.4.4.4p1'><pre>1             string-literal:
+<hr>
+<a name='6.4.5'><h3>6.4.5 [String literals]</h3></a>
+<a name='6.4.5p1'><pre>1             string-literal:
                       encoding-prefixopt &quot; s-char-sequenceopt &quot;
               encoding-prefix:
                      u8
@@ -3729,17 +3745,17 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
      Constraints
 </pre>
 </a>
-<a name='6.4.4.4p2'><pre>2    A sequence of adjacent string literal tokens shall not include both a wide string literal and
+<a name='6.4.5p2'><pre>2    A sequence of adjacent string literal tokens shall not include both a wide string literal and
      a UTF-8 string literal.
      Description
 </pre>
 </a>
-<a name='6.4.4.4p3'><pre>3    A character string literal is a sequence of zero or more multibyte characters enclosed in
+<a name='6.4.5p3'><pre>3    A character string literal is a sequence of zero or more multibyte characters enclosed in
      double-quotes, as in &quot;xyz&quot;. A UTF-8 string literal is the same, except prefixed by u8.
      A wide string literal is the same, except prefixed by the letter L, u, or U.
 </pre>
 </a>
-<a name='6.4.4.4p4'><pre>4    The same considerations apply to each element of the sequence in a string literal as if it
+<a name='6.4.5p4'><pre>4    The same considerations apply to each element of the sequence in a string literal as if it
      were in an integer character constant (for a character or UTF-8 string literal) or a wide
      character constant (for a wide string literal), except that the single-quote &#39; is
      representable either by itself or by the escape sequence \&#39;, but the double-quote &quot; shall
@@ -3749,7 +3765,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     Semantics
 </pre>
 </a>
-<a name='6.4.4.4p5'><pre>5   In translation phase 6, the multibyte character sequences specified by any sequence of
+<a name='6.4.5p5'><pre>5   In translation phase 6, the multibyte character sequences specified by any sequence of
     adjacent character and identically-prefixed string literal tokens are concatenated into a
     single multibyte character sequence. If any of the tokens has an encoding prefix, the
     resulting multibyte character sequence is treated as having the same prefix; otherwise, it
@@ -3758,7 +3774,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     sequence are implementation-defined.
 </pre>
 </a>
-<a name='6.4.4.4p6'><pre>6   In translation phase 7, a byte or code of value zero is appended to each multibyte
+<a name='6.4.5p6'><pre>6   In translation phase 7, a byte or code of value zero is appended to each multibyte
     character sequence that results from a string literal or literals.78) The multibyte character
     sequence is then used to initialize an array of static storage duration and length just
     sufficient to contain the sequence. For character string literals, the array elements have
@@ -3777,12 +3793,12 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
     character set is implementation-defined.
 </pre>
 </a>
-<a name='6.4.4.4p7'><pre>7   It is unspecified whether these arrays are distinct provided their elements have the
+<a name='6.4.5p7'><pre>7   It is unspecified whether these arrays are distinct provided their elements have the
     appropriate values. If the program attempts to modify such an array, the behavior is
     undefined.
 </pre>
 </a>
-<a name='6.4.4.4p8'><pre>8   EXAMPLE 1      This pair of adjacent character string literals
+<a name='6.4.5p8'><pre>8   EXAMPLE 1      This pair of adjacent character string literals
              &quot;\x12&quot; &quot;3&quot;
     produces a single character string literal containing the two characters whose values are &#39;\x12&#39; and &#39;3&#39;,
     because escape sequences are converted into single members of the execution character set just prior to
@@ -3790,7 +3806,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 
 </pre>
 </a>
-<a name='6.4.4.4p9'><pre>9   EXAMPLE 2      Each of the sequences of adjacent string literal tokens
+<a name='6.4.5p9'><pre>9   EXAMPLE 2      Each of the sequences of adjacent string literal tokens
 
 
 
@@ -9230,6 +9246,8 @@ semantics.113)
 </a>
 <hr>
 <a name='6.11'><h3>6.11 [Future language directions]</h3></a>
+<pre> Future language directions
+</pre>
 <hr>
 <a name='6.11.1'><h3>6.11.1 [Floating types]</h3></a>
 <a name='6.11.1p1'><pre>1   Future standardization may include additional floating-point types, including those with
@@ -9292,8 +9310,12 @@ semantics.113)
 </a>
 <hr>
 <a name='7.'><h3>7. [Library]</h3></a>
+<pre> Library
+</pre>
 <hr>
 <a name='7.1'><h3>7.1 [Introduction]</h3></a>
+<pre> Introduction
+</pre>
 <hr>
 <a name='7.1.1'><h3>7.1.1 [Definitions of terms]</h3></a>
 <a name='7.1.1p1'><pre>1   A string is a contiguous sequence of characters terminated by and including the first null
@@ -9583,6 +9605,8 @@ semantics.113)
 </a>
 <hr>
 <a name='7.2.1'><h3>7.2.1 [Program diagnostics]</h3></a>
+<pre> Program diagnostics
+</pre>
 <hr>
 <a name='7.2.1.1'><h3>7.2.1.1 [The assert macro]</h3></a>
 <a name='7.2.1.1p1'><pre>1           #include &lt;assert.h&gt;
@@ -9622,6 +9646,8 @@ semantics.113)
 </a>
 <hr>
 <a name='7.3'><h3>7.3 [Complex arithmetic <complex.h>]</h3></a>
+<pre> Complex arithmetic <complex.h>
+</pre>
 <hr>
 <a name='7.3.1'><h3>7.3.1 [Introduction]</h3></a>
 <a name='7.3.1p1'><pre>1   The header &lt;complex.h&gt; defines macros and declares functions that support complex
@@ -9728,6 +9754,8 @@ semantics.113)
 </a>
 <hr>
 <a name='7.3.5'><h3>7.3.5 [Trigonometric functions]</h3></a>
+<pre> Trigonometric functions
+</pre>
 <hr>
 <a name='7.3.5.1'><h3>7.3.5.1 [The cacos functions]</h3></a>
 <a name='7.3.5.1p1'><pre>1            #include &lt;complex.h&gt;
@@ -9849,6 +9877,8 @@ semantics.113)
 </a>
 <hr>
 <a name='7.3.6'><h3>7.3.6 [Hyperbolic functions]</h3></a>
+<pre> Hyperbolic functions
+</pre>
 <hr>
 <a name='7.3.6.1'><h3>7.3.6.1 [The cacosh functions]</h3></a>
 <a name='7.3.6.1p1'><pre>1          #include &lt;complex.h&gt;
@@ -9967,6 +9997,8 @@ semantics.113)
 </a>
 <hr>
 <a name='7.3.7'><h3>7.3.7 [Exponential and logarithmic functions]</h3></a>
+<pre> Exponential and logarithmic functions
+</pre>
 <hr>
 <a name='7.3.7.1'><h3>7.3.7.1 [The cexp functions]</h3></a>
 <a name='7.3.7.1p1'><pre>1          #include &lt;complex.h&gt;
@@ -10009,6 +10041,8 @@ semantics.113)
 </a>
 <hr>
 <a name='7.3.8'><h3>7.3.8 [Power and absolute-value functions]</h3></a>
+<pre> Power and absolute-value functions
+</pre>
 <hr>
 <a name='7.3.8.1'><h3>7.3.8.1 [The cabs functions]</h3></a>
 <a name='7.3.8.1p1'><pre>1           #include &lt;complex.h&gt;
@@ -10070,6 +10104,8 @@ semantics.113)
 </a>
 <hr>
 <a name='7.3.9'><h3>7.3.9 [Manipulation functions]</h3></a>
+<pre> Manipulation functions
+</pre>
 <hr>
 <a name='7.3.9.1'><h3>7.3.9.1 [The carg functions]</h3></a>
 <a name='7.3.9.1p1'><pre>1          #include &lt;complex.h&gt;
@@ -10399,6 +10435,8 @@ semantics.113)
 </a>
 <hr>
 <a name='7.4.2'><h3>7.4.2 [Character case mapping functions]</h3></a>
+<pre> Character case mapping functions
+</pre>
 <hr>
 <a name='7.4.2.1'><h3>7.4.2.1 [The tolower function]</h3></a>
 <a name='7.4.2.1p1'><pre>1           #include &lt;ctype.h&gt;
@@ -11084,6 +11122,8 @@ semantics.113)
 </a>
 <hr>
 <a name='7.8.2'><h3>7.8.2 [Functions for greatest-width integer types]</h3></a>
+<pre> Functions for greatest-width integer types
+</pre>
 <hr>
 <a name='7.8.2.1'><h3>7.8.2.1 [The imaxabs function]</h3></a>
 <a name='7.8.2.1p1'><pre>1           #include &lt;inttypes.h&gt;
@@ -11285,6 +11325,8 @@ semantics.113)
 </a>
 <hr>
 <a name='7.11.1'><h3>7.11.1 [Locale control]</h3></a>
+<pre> Locale control
+</pre>
 <hr>
 <a name='7.11.1.1'><h3>7.11.1.1 [The setlocale function]</h3></a>
 <a name='7.11.1.1p1'><pre>1            #include &lt;locale.h&gt;
@@ -11353,6 +11395,8 @@ semantics.113)
 </a>
 <hr>
 <a name='7.11.2'><h3>7.11.2 [Numeric formatting convention inquiry]</h3></a>
+<pre> Numeric formatting convention inquiry
+</pre>
 <hr>
 <a name='7.11.2.1'><h3>7.11.2.1 [The localeconv function]</h3></a>
 <a name='7.11.2.1p1'><pre>1           #include &lt;locale.h&gt;
@@ -11927,6 +11971,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.12.4'><h3>7.12.4 [Trigonometric functions]</h3></a>
+<pre> Trigonometric functions
+</pre>
 <hr>
 <a name='7.12.4.1'><h3>7.12.4.1 [The acos functions]</h3></a>
 <a name='7.12.4.1p1'><pre>1          #include &lt;math.h&gt;
@@ -12056,6 +12102,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.12.5'><h3>7.12.5 [Hyperbolic functions]</h3></a>
+<pre> Hyperbolic functions
+</pre>
 <hr>
 <a name='7.12.5.1'><h3>7.12.5.1 [The acosh functions]</h3></a>
 <a name='7.12.5.1p1'><pre>1          #include &lt;math.h&gt;
@@ -12165,6 +12213,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.12.6'><h3>7.12.6 [Exponential and logarithmic functions]</h3></a>
+<pre> Exponential and logarithmic functions
+</pre>
 <hr>
 <a name='7.12.6.1'><h3>7.12.6.1 [The exp functions]</h3></a>
 <a name='7.12.6.1p1'><pre>1          #include &lt;math.h&gt;
@@ -12430,6 +12480,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.12.7'><h3>7.12.7 [Power and absolute-value functions]</h3></a>
+<pre> Power and absolute-value functions
+</pre>
 <hr>
 <a name='7.12.7.1'><h3>7.12.7.1 [The cbrt functions]</h3></a>
 <a name='7.12.7.1p1'><pre>1           #include &lt;math.h&gt;
@@ -12532,6 +12584,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.12.8'><h3>7.12.8 [Error and gamma functions]</h3></a>
+<pre> Error and gamma functions
+</pre>
 <hr>
 <a name='7.12.8.1'><h3>7.12.8.1 [The erf functions]</h3></a>
 <a name='7.12.8.1p1'><pre>1           #include &lt;math.h&gt;
@@ -12621,6 +12675,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.12.9'><h3>7.12.9 [Nearest integer functions]</h3></a>
+<pre> Nearest integer functions
+</pre>
 <hr>
 <a name='7.12.9.1'><h3>7.12.9.1 [The ceil functions]</h3></a>
 <a name='7.12.9.1p1'><pre>1           #include &lt;math.h&gt;
@@ -12786,6 +12842,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.12.10'><h3>7.12.10 [Remainder functions]</h3></a>
+<pre> Remainder functions
+</pre>
 <hr>
 <a name='7.12.10.1'><h3>7.12.10.1 [The fmod functions]</h3></a>
 <a name='7.12.10.1p1'><pre>1            #include &lt;math.h&gt;
@@ -12857,6 +12915,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.12.11'><h3>7.12.11 [Manipulation functions]</h3></a>
+<pre> Manipulation functions
+</pre>
 <hr>
 <a name='7.12.11.1'><h3>7.12.11.1 [The copysign functions]</h3></a>
 <a name='7.12.11.1p1'><pre>1           #include &lt;math.h&gt;
@@ -12948,6 +13008,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.12.12'><h3>7.12.12 [Maximum, minimum, and positive difference functions]</h3></a>
+<pre> Maximum, minimum, and positive difference functions
+</pre>
 <hr>
 <a name='7.12.12.1'><h3>7.12.12.1 [The fdim functions]</h3></a>
 <a name='7.12.12.1p1'><pre>1           #include &lt;math.h&gt;
@@ -13010,6 +13072,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.12.13'><h3>7.12.13 [Floating multiply-add]</h3></a>
+<pre> Floating multiply-add
+</pre>
 <hr>
 <a name='7.12.13.1'><h3>7.12.13.1 [The fma functions]</h3></a>
 <a name='7.12.13.1p1'><pre>1           #include &lt;math.h&gt;
@@ -13202,6 +13266,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.13.1'><h3>7.13.1 [Save calling environment]</h3></a>
+<pre> Save calling environment
+</pre>
 <hr>
 <a name='7.13.1.1'><h3>7.13.1.1 [The setjmp macro]</h3></a>
 <a name='7.13.1.1p1'><pre>1           #include &lt;setjmp.h&gt;
@@ -13242,6 +13308,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.13.2'><h3>7.13.2 [Restore calling environment]</h3></a>
+<pre> Restore calling environment
+</pre>
 <hr>
 <a name='7.13.2.1'><h3>7.13.2.1 [The longjmp function]</h3></a>
 <a name='7.13.2.1p1'><pre>1            #include &lt;setjmp.h&gt;
@@ -13363,6 +13431,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.14.1'><h3>7.14.1 [Specify signal handling]</h3></a>
+<pre> Specify signal handling
+</pre>
 <hr>
 <a name='7.14.1.1'><h3>7.14.1.1 [The signal function]</h3></a>
 <a name='7.14.1.1p1'><pre>1            #include &lt;signal.h&gt;
@@ -13435,6 +13505,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.14.2'><h3>7.14.2 [Send signal]</h3></a>
+<pre> Send signal
+</pre>
 <hr>
 <a name='7.14.2.1'><h3>7.14.2.1 [The raise function]</h3></a>
 <a name='7.14.2.1p1'><pre>1           #include &lt;signal.h&gt;
@@ -13685,6 +13757,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.17'><h3>7.17 [Atomics <stdatomic.h>]</h3></a>
+<pre> Atomics <stdatomic.h>
+</pre>
 <hr>
 <a name='7.17.1'><h3>7.17.1 [Introduction]</h3></a>
 <a name='7.17.1p1'><pre>1   The header &lt;stdatomic.h&gt; defines several macros and declares several types and
@@ -13743,6 +13817,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.17.2'><h3>7.17.2 [Initialization]</h3></a>
+<pre> Initialization
+</pre>
 <hr>
 <a name='7.17.2.1'><h3>7.17.2.1 [The ATOMIC_VAR_INIT macro]</h3></a>
 <a name='7.17.2.1p1'><pre>1           #include &lt;stdatomic.h&gt;
@@ -14802,6 +14878,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.21'><h3>7.21 [Input/output <stdio.h>]</h3></a>
+<pre> Input/output <stdio.h>
+</pre>
 <hr>
 <a name='7.21.1'><h3>7.21.1 [Introduction]</h3></a>
 <a name='7.21.1p1'><pre>1   The header &lt;stdio.h&gt; defines several macros, and declares three types and many
@@ -15230,6 +15308,8 @@ char int_p_sep_by_space
 </a>
 <hr>
 <a name='7.21.5'><h3>7.21.5 [File access functions]</h3></a>
+<pre> File access functions
+</pre>
 <hr>
 <a name='7.21.5.1'><h3>7.21.5.1 [The fclose function]</h3></a>
 <a name='7.21.5.1p1'><pre>1          #include &lt;stdio.h&gt;
@@ -16413,6 +16493,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.21.7'><h3>7.21.7 [Character input/output functions]</h3></a>
+<pre> Character input/output functions
+</pre>
 <hr>
 <a name='7.21.7.1'><h3>7.21.7.1 [The fgetc function]</h3></a>
 <a name='7.21.7.1p1'><pre>1           #include &lt;stdio.h&gt;
@@ -16649,6 +16731,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.21.8'><h3>7.21.8 [Direct input/output functions]</h3></a>
+<pre> Direct input/output functions
+</pre>
 <hr>
 <a name='7.21.8.1'><h3>7.21.8.1 [The fread function]</h3></a>
 <a name='7.21.8.1p1'><pre>1           #include &lt;stdio.h&gt;
@@ -16706,6 +16790,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.21.9'><h3>7.21.9 [File positioning functions]</h3></a>
+<pre> File positioning functions
+</pre>
 <hr>
 <a name='7.21.9.1'><h3>7.21.9.1 [The fgetpos function]</h3></a>
 <a name='7.21.9.1p1'><pre>1          #include &lt;stdio.h&gt;
@@ -16832,6 +16918,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.21.10'><h3>7.21.10 [Error-handling functions]</h3></a>
+<pre> Error-handling functions
+</pre>
 <hr>
 <a name='7.21.10.1'><h3>7.21.10.1 [The clearerr function]</h3></a>
 <a name='7.21.10.1p1'><pre>1          #include &lt;stdio.h&gt;
@@ -17201,6 +17289,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.22.2'><h3>7.22.2 [Pseudo-random sequence generation functions]</h3></a>
+<pre> Pseudo-random sequence generation functions
+</pre>
 <hr>
 <a name='7.22.2.1'><h3>7.22.2.1 [The rand function]</h3></a>
 <a name='7.22.2.1p1'><pre>1           #include &lt;stdlib.h&gt;
@@ -17412,6 +17502,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.22.4'><h3>7.22.4 [Communication with the environment]</h3></a>
+<pre> Communication with the environment
+</pre>
 <hr>
 <a name='7.22.4.1'><h3>7.22.4.1 [The abort function]</h3></a>
 <a name='7.22.4.1p1'><pre>1          #include &lt;stdlib.h&gt;
@@ -17741,6 +17833,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.22.6'><h3>7.22.6 [Integer arithmetic functions]</h3></a>
+<pre> Integer arithmetic functions
+</pre>
 <hr>
 <a name='7.22.6.1'><h3>7.22.6.1 [The abs, labs and llabs functions]</h3></a>
 <a name='7.22.6.1p1'><pre>1           #include &lt;stdlib.h&gt;
@@ -17993,6 +18087,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.24'><h3>7.24 [String handling <string.h>]</h3></a>
+<pre> String handling <string.h>
+</pre>
 <hr>
 <a name='7.24.1'><h3>7.24.1 [String function conventions]</h3></a>
 <a name='7.24.1p1'><pre>1   The header &lt;string.h&gt; declares one type and several functions, and defines one
@@ -18018,6 +18114,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.24.2'><h3>7.24.2 [Copying functions]</h3></a>
+<pre> Copying functions
+</pre>
 <hr>
 <a name='7.24.2.1'><h3>7.24.2.1 [The memcpy function]</h3></a>
 <a name='7.24.2.1p1'><pre>1            #include &lt;string.h&gt;
@@ -18110,6 +18208,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.24.3'><h3>7.24.3 [Concatenation functions]</h3></a>
+<pre> Concatenation functions
+</pre>
 <hr>
 <a name='7.24.3.1'><h3>7.24.3.1 [The strcat function]</h3></a>
 <a name='7.24.3.1p1'><pre>1            #include &lt;string.h&gt;
@@ -18277,6 +18377,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.24.5'><h3>7.24.5 [Search functions]</h3></a>
+<pre> Search functions
+</pre>
 <hr>
 <a name='7.24.5.1'><h3>7.24.5.1 [The memchr function]</h3></a>
 <a name='7.24.5.1p1'><pre>1           #include &lt;string.h&gt;
@@ -18471,6 +18573,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.24.6'><h3>7.24.6 [Miscellaneous functions]</h3></a>
+<pre> Miscellaneous functions
+</pre>
 <hr>
 <a name='7.24.6.1'><h3>7.24.6.1 [The memset function]</h3></a>
 <a name='7.24.6.1p1'><pre>1           #include &lt;string.h&gt;
@@ -18674,6 +18778,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.26'><h3>7.26 [Threads <threads.h>]</h3></a>
+<pre> Threads <threads.h>
+</pre>
 <hr>
 <a name='7.26.1'><h3>7.26.1 [Introduction]</h3></a>
 <a name='7.26.1p1'><pre>1   The header &lt;threads.h&gt; includes the header &lt;time.h&gt;, defines macros, and
@@ -18755,6 +18861,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.26.2'><h3>7.26.2 [Initialization functions]</h3></a>
+<pre> Initialization functions
+</pre>
 <hr>
 <a name='7.26.2.1'><h3>7.26.2.1 [The call_once function]</h3></a>
 <a name='7.26.2.1p1'><pre>1          #include &lt;threads.h&gt;
@@ -18774,6 +18882,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.26.3'><h3>7.26.3 [Condition variable functions]</h3></a>
+<pre> Condition variable functions
+</pre>
 <hr>
 <a name='7.26.3.1'><h3>7.26.3.1 [The cnd_broadcast function]</h3></a>
 <a name='7.26.3.1p1'><pre>1          #include &lt;threads.h&gt;
@@ -18896,6 +19006,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.26.4'><h3>7.26.4 [Mutex functions]</h3></a>
+<pre> Mutex functions
+</pre>
 <hr>
 <a name='7.26.4.1'><h3>7.26.4.1 [The mtx_destroy function]</h3></a>
 <a name='7.26.4.1p1'><pre>1          #include &lt;threads.h&gt;
@@ -19023,6 +19135,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.26.5'><h3>7.26.5 [Thread functions]</h3></a>
+<pre> Thread functions
+</pre>
 <hr>
 <a name='7.26.5.1'><h3>7.26.5.1 [The thrd_create function]</h3></a>
 <a name='7.26.5.1p1'><pre>1           #include &lt;threads.h&gt;
@@ -19187,6 +19301,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.26.6'><h3>7.26.6 [Thread-specific storage functions]</h3></a>
+<pre> Thread-specific storage functions
+</pre>
 <hr>
 <a name='7.26.6.1'><h3>7.26.6.1 [The tss_create function]</h3></a>
 <a name='7.26.6.1p1'><pre>1          #include &lt;threads.h&gt;
@@ -19264,6 +19380,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.27'><h3>7.27 [Date and time <time.h>]</h3></a>
+<pre> Date and time <time.h>
+</pre>
 <hr>
 <a name='7.27.1'><h3>7.27.1 [Components of time]</h3></a>
 <a name='7.27.1p1'><pre>1   The header &lt;time.h&gt; defines two macros, and declares several types and functions for
@@ -19327,6 +19445,8 @@ s             Matches a sequence of non-white-space characters.286)
 </a>
 <hr>
 <a name='7.27.2'><h3>7.27.2 [Time manipulation functions]</h3></a>
+<pre> Time manipulation functions
+</pre>
 <hr>
 <a name='7.27.2.1'><h3>7.27.2.1 [The clock function]</h3></a>
 <a name='7.27.2.1p1'><pre>1           #include &lt;time.h&gt;
@@ -19765,6 +19885,14 @@ the specified values is outside the normal range, the characters stored are unsp
 </a>
 <hr>
 <a name='7.19'><h3>7.19 [);]</h3></a>
+<pre>);
+           char16_t
+    which is an unsigned integer type used for 16-bit characters and is the same type as
+    uint_least16_t (described in 7.20.1.2); and
+           char32_t
+    which is an unsigned integer type used for 32-bit characters and is the same type as
+    uint_least32_t (also described in 7.20.1.2).
+</pre>
 <hr>
 <a name='7.28.1'><h3>7.28.1 [Restartable multibyte/wide character conversion functions]</h3></a>
 <a name='7.28.1p1'><pre>1   These functions have a parameter, ps, of type pointer to mbstate_t that points to an
@@ -19943,6 +20071,8 @@ the specified values is outside the normal range, the characters stored are unsp
 </a>
 <hr>
 <a name='7.29'><h3>7.29 [Extended multibyte and wide character utilities <wchar.h>]</h3></a>
+<pre> Extended multibyte and wide character utilities <wchar.h>
+</pre>
 <hr>
 <a name='7.29.1'><h3>7.29.1 [Introduction]</h3></a>
 <a name='7.29.1p1'><pre>1   The header &lt;wchar.h&gt; defines four macros, and declares four data types, one tag, and
@@ -20810,6 +20940,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.29.3'><h3>7.29.3 [Wide character input/output functions]</h3></a>
+<pre> Wide character input/output functions
+</pre>
 <hr>
 <a name='7.29.3.1'><h3>7.29.3.1 [The fgetwc function]</h3></a>
 <a name='7.29.3.1p1'><pre>1           #include &lt;stdio.h&gt;
@@ -21065,6 +21197,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.29.4.1'><h3>7.29.4.1 [Wide string numeric conversion functions]</h3></a>
+<pre> Wide string numeric conversion functions
+</pre>
 <hr>
 <a name='7.29.4.1.1'><h3>7.29.4.1.1 [The wcstod, wcstof, and wcstold functions]</h3></a>
 <a name='7.29.4.1.1p1'><pre>1          #include &lt;wchar.h&gt;
@@ -21276,6 +21410,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.29.4.2'><h3>7.29.4.2 [Wide string copying functions]</h3></a>
+<pre> Wide string copying functions
+</pre>
 <hr>
 <a name='7.29.4.2.1'><h3>7.29.4.2.1 [The wcscpy function]</h3></a>
 <a name='7.29.4.2.1p1'><pre>1          #include &lt;wchar.h&gt;
@@ -21366,6 +21502,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.29.4.3'><h3>7.29.4.3 [Wide string concatenation functions]</h3></a>
+<pre> Wide string concatenation functions
+</pre>
 <hr>
 <a name='7.29.4.3.1'><h3>7.29.4.3.1 [The wcscat function]</h3></a>
 <a name='7.29.4.3.1p1'><pre>1          #include &lt;wchar.h&gt;
@@ -21529,6 +21667,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.29.4.5'><h3>7.29.4.5 [Wide string search functions]</h3></a>
+<pre> Wide string search functions
+</pre>
 <hr>
 <a name='7.29.4.5.1'><h3>7.29.4.5.1 [The wcschr function]</h3></a>
 <a name='7.29.4.5.1p1'><pre>1           #include &lt;wchar.h&gt;
@@ -21724,6 +21864,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.29.4.6'><h3>7.29.4.6 [Miscellaneous functions]</h3></a>
+<pre> Miscellaneous functions
+</pre>
 <hr>
 <a name='7.29.4.6.1'><h3>7.29.4.6.1 [The wcslen function]</h3></a>
 <a name='7.29.4.6.1p1'><pre>1           #include &lt;wchar.h&gt;
@@ -21756,6 +21898,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.29.5'><h3>7.29.5 [Wide character time conversion functions]</h3></a>
+<pre> Wide character time conversion functions
+</pre>
 <hr>
 <a name='7.29.5.1'><h3>7.29.5.1 [The wcsftime function]</h3></a>
 <a name='7.29.5.1p1'><pre>1           #include &lt;time.h&gt;
@@ -21828,6 +21972,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.29.6.1'><h3>7.29.6.1 [Single-byte/wide character conversion functions]</h3></a>
+<pre> Single-byte/wide character conversion functions
+</pre>
 <hr>
 <a name='7.29.6.1.1'><h3>7.29.6.1.1 [The btowc function]</h3></a>
 <a name='7.29.6.1.1p1'><pre>1           #include &lt;wchar.h&gt;
@@ -21865,6 +22011,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.29.6.2'><h3>7.29.6.2 [Conversion state functions]</h3></a>
+<pre> Conversion state functions
+</pre>
 <hr>
 <a name='7.29.6.2.1'><h3>7.29.6.2.1 [The mbsinit function]</h3></a>
 <a name='7.29.6.2.1p1'><pre>1           #include &lt;wchar.h&gt;
@@ -22121,6 +22269,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.30'><h3>7.30 [Wide character classification and mapping utilities <wctype.h>]</h3></a>
+<pre> Wide character classification and mapping utilities <wctype.h>
+</pre>
 <hr>
 <a name='7.30.1'><h3>7.30.1 [Introduction]</h3></a>
 <a name='7.30.1p1'><pre>1   The header &lt;wctype.h&gt; defines one macro, and declares three data types and many
@@ -22436,6 +22586,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.30.3.1'><h3>7.30.3.1 [Wide character case mapping functions]</h3></a>
+<pre> Wide character case mapping functions
+</pre>
 <hr>
 <a name='7.30.3.1.1'><h3>7.30.3.1.1 [The towlower function]</h3></a>
 <a name='7.30.3.1.1p1'><pre>1           #include &lt;wctype.h&gt;
@@ -22639,6 +22791,10 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='7.31.14'><h3>7.31.14 [Date and time <time.h>]</h3></a>
+<pre> Date and time <time.h>
+    Macros beginning with TIME_ and an uppercase letter may be added to the macros in the
+    <time.h> header.
+</pre>
 <hr>
 <a name='7.31.15'><h3>7.31.15 [Threads <threads.h>]</h3></a>
 <a name='7.31.15p1'><pre>1   Function names, type names, and enumeration constants that begin with either cnd_,
@@ -22679,27 +22835,1867 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='A.1'><h3>A.1 [Lexical grammar]</h3></a>
+<pre> Lexical grammar
+</pre>
 <hr>
 <a name='A.1.1'><h3>A.1.1 [Lexical elements]</h3></a>
+<pre> Lexical elements
+    (6.4) token:
+                   keyword
+                   identifier
+                   constant
+                   string-literal
+                   punctuator
+    (6.4) preprocessing-token:
+                  header-name
+                  identifier
+                  pp-number
+                  character-constant
+                  string-literal
+                  punctuator
+                  each non-white-space character that cannot be one of the above
+
+
+</pre>
 <hr>
 <a name='A.1.2'><h3>A.1.2 [Keywords]</h3></a>
+<pre> Keywords
+(6.4.1) keyword: one of
+              auto                      if                       unsigned
+              break                     inline                   void
+              case                      int                      volatile
+              char                      long                     while
+              const                     register                 _Alignas
+              continue                  restrict                 _Alignof
+              default                   return                   _Atomic
+              do                        short                    _Bool
+              double                    signed                   _Complex
+              else                      sizeof                   _Generic
+              enum                      static                   _Imaginary
+              extern                    struct                   _Noreturn
+              float                     switch                   _Static_assert
+              for                       typedef                  _Thread_local
+              goto                      union
+</pre>
+<hr>
+<a name='A.1.3'><h3>A.1.3 [Identifiers]</h3></a>
+<pre> Identifiers
+(6.4.2.1) identifier:
+               identifier-nondigit
+               identifier identifier-nondigit
+               identifier digit
+(6.4.2.1) identifier-nondigit:
+               nondigit
+               universal-character-name
+               other implementation-defined characters
+(6.4.2.1) nondigit: one of
+              _ a b           c    d   e   f    g   h    i   j   k   l   m
+                   n o        p    q   r   s    t   u    v   w   x   y   z
+                   A B        C    D   E   F    G   H    I   J   K   L   M
+                   N O        P    Q   R   S    T   U    V   W   X   Y   Z
+(6.4.2.1) digit: one of
+               0 1 2          3    4   5   6    7   8    9
+
+
+</pre>
 <hr>
 <a name='A.1.4'><h3>A.1.4 [Universal character names]</h3></a>
+<pre> Universal character names
+(6.4.3) universal-character-name:
+              \u hex-quad
+              \U hex-quad hex-quad
+(6.4.3) hex-quad:
+              hexadecimal-digit hexadecimal-digit
+                           hexadecimal-digit hexadecimal-digit
+</pre>
+<hr>
+<a name='A.1.5'><h3>A.1.5 [Constants]</h3></a>
+<pre> Constants
+(6.4.4) constant:
+              integer-constant
+              floating-constant
+              enumeration-constant
+              character-constant
+(6.4.4.1) integer-constant:
+               decimal-constant integer-suffixopt
+               octal-constant integer-suffixopt
+               hexadecimal-constant integer-suffixopt
+(6.4.4.1) decimal-constant:
+              nonzero-digit
+              decimal-constant digit
+(6.4.4.1) octal-constant:
+               0
+               octal-constant octal-digit
+(6.4.4.1) hexadecimal-constant:
+              hexadecimal-prefix hexadecimal-digit
+              hexadecimal-constant hexadecimal-digit
+(6.4.4.1) hexadecimal-prefix: one of
+              0x 0X
+(6.4.4.1) nonzero-digit: one of
+              1 2 3 4 5              6      7   8   9
+(6.4.4.1) octal-digit: one of
+               0 1 2 3           4   5      6   7
+
+
+
+
+
+
+(6.4.4.1) hexadecimal-digit: one of
+              0 1 2 3 4 5                6      7    8   9
+              a b c d e f
+              A B C D E F
+(6.4.4.1) integer-suffix:
+               unsigned-suffix long-suffixopt
+               unsigned-suffix long-long-suffix
+               long-suffix unsigned-suffixopt
+               long-long-suffix unsigned-suffixopt
+(6.4.4.1) unsigned-suffix: one of
+               u U
+(6.4.4.1) long-suffix: one of
+               l L
+(6.4.4.1) long-long-suffix: one of
+               ll LL
+(6.4.4.2) floating-constant:
+                decimal-floating-constant
+                hexadecimal-floating-constant
+(6.4.4.2) decimal-floating-constant:
+              fractional-constant exponent-partopt floating-suffixopt
+              digit-sequence exponent-part floating-suffixopt
+(6.4.4.2) hexadecimal-floating-constant:
+              hexadecimal-prefix hexadecimal-fractional-constant
+                             binary-exponent-part floating-suffixopt
+              hexadecimal-prefix hexadecimal-digit-sequence
+                             binary-exponent-part floating-suffixopt
+(6.4.4.2) fractional-constant:
+               digit-sequenceopt . digit-sequence
+               digit-sequence .
+(6.4.4.2) exponent-part:
+              e signopt digit-sequence
+              E signopt digit-sequence
+(6.4.4.2) sign: one of
+               + -
+
+
+
+
+
+(6.4.4.2) digit-sequence:
+               digit
+               digit-sequence digit
+(6.4.4.2) hexadecimal-fractional-constant:
+              hexadecimal-digit-sequenceopt .
+                             hexadecimal-digit-sequence
+              hexadecimal-digit-sequence .
+(6.4.4.2) binary-exponent-part:
+               p signopt digit-sequence
+               P signopt digit-sequence
+(6.4.4.2) hexadecimal-digit-sequence:
+              hexadecimal-digit
+              hexadecimal-digit-sequence hexadecimal-digit
+(6.4.4.2) floating-suffix: one of
+                f l F L
+(6.4.4.3) enumeration-constant:
+              identifier
+(6.4.4.4) character-constant:
+              ' c-char-sequence '
+              L' c-char-sequence '
+              u' c-char-sequence '
+              U' c-char-sequence '
+(6.4.4.4) c-char-sequence:
+               c-char
+               c-char-sequence c-char
+(6.4.4.4) c-char:
+               any member of the source character set except
+                            the single-quote ', backslash \, or new-line character
+               escape-sequence
+(6.4.4.4) escape-sequence:
+              simple-escape-sequence
+              octal-escape-sequence
+              hexadecimal-escape-sequence
+              universal-character-name
+
+
+
+
+
+
+(6.4.4.4) simple-escape-sequence: one of
+              \' \" \? \\
+              \a \b \f \n \r \t                   \v
+(6.4.4.4) octal-escape-sequence:
+               \ octal-digit
+               \ octal-digit octal-digit
+               \ octal-digit octal-digit octal-digit
+(6.4.4.4) hexadecimal-escape-sequence:
+              \x hexadecimal-digit
+              hexadecimal-escape-sequence hexadecimal-digit
+</pre>
+<hr>
+<a name='A.1.6'><h3>A.1.6 [String literals]</h3></a>
+<pre> String literals
+(6.4.5) string-literal:
+               encoding-prefixopt " s-char-sequenceopt "
+(6.4.5) encoding-prefix:
+              u8
+              u
+              U
+              L
+(6.4.5) s-char-sequence:
+               s-char
+               s-char-sequence s-char
+(6.4.5) s-char:
+               any member of the source character set except
+                            the double-quote ", backslash \, or new-line character
+               escape-sequence
+</pre>
+<hr>
+<a name='A.1.7'><h3>A.1.7 [Punctuators]</h3></a>
+<pre> Punctuators
+(6.4.6) punctuator: one of
+              [ ] ( ) { } . ->
+              ++ -- & * + - ~ !
+              / % << >> < > <= >=                      ==      !=    ^    |   &&   ||
+              ? : ; ...
+              = *= /= %= += -= <<=                     >>=      &=       ^=   |=
+              , # ##
+              <: :> <% %> %: %:%:
+
+
+</pre>
 <hr>
 <a name='A.1.8'><h3>A.1.8 [Header names]</h3></a>
+<pre> Header names
+(6.4.7) header-name:
+              < h-char-sequence >
+              " q-char-sequence "
+(6.4.7) h-char-sequence:
+              h-char
+              h-char-sequence h-char
+(6.4.7) h-char:
+              any member of the source character set except
+                           the new-line character and >
+(6.4.7) q-char-sequence:
+              q-char
+              q-char-sequence q-char
+(6.4.7) q-char:
+              any member of the source character set except
+                           the new-line character and "
+</pre>
+<hr>
+<a name='A.1.9'><h3>A.1.9 [Preprocessing numbers]</h3></a>
+<pre> Preprocessing numbers
+(6.4.8) pp-number:
+              digit
+              . digit
+              pp-number   digit
+              pp-number   identifier-nondigit
+              pp-number   e sign
+              pp-number   E sign
+              pp-number   p sign
+              pp-number   P sign
+              pp-number   .
+
+
+</pre>
 <hr>
 <a name='A.2'><h3>A.2 [Phrase structure grammar]</h3></a>
+<pre> Phrase structure grammar
+</pre>
+<hr>
+<a name='A.2.1'><h3>A.2.1 [Expressions]</h3></a>
+<pre> Expressions
+(6.5.1) primary-expression:
+              identifier
+              constant
+              string-literal
+              ( expression )
+              generic-selection
+(6.5.1.1) generic-selection:
+              _Generic ( assignment-expression , generic-assoc-list )
+(6.5.1.1) generic-assoc-list:
+              generic-association
+              generic-assoc-list , generic-association
+(6.5.1.1) generic-association:
+              type-name : assignment-expression
+              default : assignment-expression
+(6.5.2) postfix-expression:
+               primary-expression
+               postfix-expression [ expression ]
+               postfix-expression ( argument-expression-listopt )
+               postfix-expression . identifier
+               postfix-expression -> identifier
+               postfix-expression ++
+               postfix-expression --
+               ( type-name ) { initializer-list }
+               ( type-name ) { initializer-list , }
+(6.5.2) argument-expression-list:
+             assignment-expression
+             argument-expression-list , assignment-expression
+(6.5.3) unary-expression:
+              postfix-expression
+              ++ unary-expression
+              -- unary-expression
+              unary-operator cast-expression
+              sizeof unary-expression
+              sizeof ( type-name )
+              _Alignof ( type-name )
+
+
+
+(6.5.3) unary-operator: one of
+              & * + - ~                !
+(6.5.4) cast-expression:
+               unary-expression
+               ( type-name ) cast-expression
+(6.5.5) multiplicative-expression:
+               cast-expression
+               multiplicative-expression * cast-expression
+               multiplicative-expression / cast-expression
+               multiplicative-expression % cast-expression
+(6.5.6) additive-expression:
+               multiplicative-expression
+               additive-expression + multiplicative-expression
+               additive-expression - multiplicative-expression
+(6.5.7) shift-expression:
+                additive-expression
+                shift-expression << additive-expression
+                shift-expression >> additive-expression
+(6.5.8) relational-expression:
+               shift-expression
+               relational-expression   <    shift-expression
+               relational-expression   >    shift-expression
+               relational-expression   <=   shift-expression
+               relational-expression   >=   shift-expression
+(6.5.9) equality-expression:
+               relational-expression
+               equality-expression == relational-expression
+               equality-expression != relational-expression
+(6.5.10) AND-expression:
+             equality-expression
+             AND-expression & equality-expression
+(6.5.11) exclusive-OR-expression:
+              AND-expression
+              exclusive-OR-expression ^ AND-expression
+
+
+
+
+
+
+(6.5.12) inclusive-OR-expression:
+               exclusive-OR-expression
+               inclusive-OR-expression | exclusive-OR-expression
+(6.5.13) logical-AND-expression:
+              inclusive-OR-expression
+              logical-AND-expression && inclusive-OR-expression
+(6.5.14) logical-OR-expression:
+              logical-AND-expression
+              logical-OR-expression || logical-AND-expression
+(6.5.15) conditional-expression:
+              logical-OR-expression
+              logical-OR-expression ? expression : conditional-expression
+(6.5.16) assignment-expression:
+              conditional-expression
+              unary-expression assignment-operator assignment-expression
+(6.5.16) assignment-operator: one of
+              = *= /= %= +=                -=    <<=     >>=       &=    ^=   |=
+(6.5.17) expression:
+              assignment-expression
+              expression , assignment-expression
+(6.6) constant-expression:
+              conditional-expression
+</pre>
+<hr>
+<a name='A.2.2'><h3>A.2.2 [Declarations]</h3></a>
+<pre> Declarations
+(6.7) declaration:
+               declaration-specifiers init-declarator-listopt ;
+               static_assert-declaration
+(6.7) declaration-specifiers:
+               storage-class-specifier declaration-specifiersopt
+               type-specifier declaration-specifiersopt
+               type-qualifier declaration-specifiersopt
+               function-specifier declaration-specifiersopt
+               alignment-specifier declaration-specifiersopt
+(6.7) init-declarator-list:
+               init-declarator
+               init-declarator-list , init-declarator
+
+
+
+
+(6.7) init-declarator:
+               declarator
+               declarator = initializer
+(6.7.1) storage-class-specifier:
+              typedef
+              extern
+              static
+              _Thread_local
+              auto
+              register
+(6.7.2) type-specifier:
+               void
+               char
+               short
+               int
+               long
+               float
+               double
+               signed
+               unsigned
+               _Bool
+               _Complex
+               atomic-type-specifier
+               struct-or-union-specifier
+               enum-specifier
+               typedef-name
+(6.7.2.1) struct-or-union-specifier:
+               struct-or-union identifieropt { struct-declaration-list }
+               struct-or-union identifier
+(6.7.2.1) struct-or-union:
+               struct
+               union
+(6.7.2.1) struct-declaration-list:
+               struct-declaration
+               struct-declaration-list struct-declaration
+(6.7.2.1) struct-declaration:
+               specifier-qualifier-list struct-declarator-listopt ;
+               static_assert-declaration
+
+
+
+(6.7.2.1) specifier-qualifier-list:
+               type-specifier specifier-qualifier-listopt
+               type-qualifier specifier-qualifier-listopt
+(6.7.2.1) struct-declarator-list:
+               struct-declarator
+               struct-declarator-list , struct-declarator
+(6.7.2.1) struct-declarator:
+               declarator
+               declaratoropt : constant-expression
+(6.7.2.2) enum-specifier:
+              enum identifieropt { enumerator-list }
+              enum identifieropt { enumerator-list , }
+              enum identifier
+(6.7.2.2) enumerator-list:
+              enumerator
+              enumerator-list , enumerator
+(6.7.2.2) enumerator:
+              enumeration-constant
+              enumeration-constant = constant-expression
+(6.7.2.4) atomic-type-specifier:
+              _Atomic ( type-name )
+(6.7.3) type-qualifier:
+              const
+              restrict
+              volatile
+              _Atomic
+(6.7.4) function-specifier:
+               inline
+               _Noreturn
+(6.7.5) alignment-specifier:
+              _Alignas ( type-name )
+              _Alignas ( constant-expression )
+(6.7.6) declarator:
+              pointeropt direct-declarator
+
+
+
+
+
+(6.7.6) direct-declarator:
+               identifier
+               ( declarator )
+               direct-declarator [ type-qualifier-listopt assignment-expressionopt ]
+               direct-declarator [ static type-qualifier-listopt assignment-expression ]
+               direct-declarator [ type-qualifier-list static assignment-expression ]
+               direct-declarator [ type-qualifier-listopt * ]
+               direct-declarator ( parameter-type-list )
+               direct-declarator ( identifier-listopt )
+(6.7.6) pointer:
+               * type-qualifier-listopt
+               * type-qualifier-listopt pointer
+(6.7.6) type-qualifier-list:
+              type-qualifier
+              type-qualifier-list type-qualifier
+(6.7.6) parameter-type-list:
+             parameter-list
+             parameter-list , ...
+(6.7.6) parameter-list:
+             parameter-declaration
+             parameter-list , parameter-declaration
+(6.7.6) parameter-declaration:
+             declaration-specifiers declarator
+             declaration-specifiers abstract-declaratoropt
+(6.7.6) identifier-list:
+                identifier
+                identifier-list , identifier
+(6.7.7) type-name:
+              specifier-qualifier-list abstract-declaratoropt
+(6.7.7) abstract-declarator:
+              pointer
+              pointeropt direct-abstract-declarator
+
+
+
+
+
+
+(6.7.7) direct-abstract-declarator:
+               ( abstract-declarator )
+               direct-abstract-declaratoropt [ type-qualifier-listopt
+                              assignment-expressionopt ]
+               direct-abstract-declaratoropt [ static type-qualifier-listopt
+                              assignment-expression ]
+               direct-abstract-declaratoropt [ type-qualifier-list static
+                              assignment-expression ]
+               direct-abstract-declaratoropt [ * ]
+               direct-abstract-declaratoropt ( parameter-type-listopt )
+(6.7.8) typedef-name:
+              identifier
+(6.7.9) initializer:
+                assignment-expression
+                { initializer-list }
+                { initializer-list , }
+(6.7.9) initializer-list:
+                designationopt initializer
+                initializer-list , designationopt initializer
+(6.7.9) designation:
+              designator-list =
+(6.7.9) designator-list:
+              designator
+              designator-list designator
+(6.7.9) designator:
+              [ constant-expression ]
+              . identifier
+(6.7.10) static_assert-declaration:
+               _Static_assert ( constant-expression , string-literal ) ;
+
+
+</pre>
 <hr>
 <a name='A.2.3'><h3>A.2.3 [Statements]</h3></a>
+<pre> Statements
+(6.8) statement:
+              labeled-statement
+              compound-statement
+              expression-statement
+              selection-statement
+              iteration-statement
+              jump-statement
+(6.8.1) labeled-statement:
+               identifier : statement
+               case constant-expression : statement
+               default : statement
+(6.8.2) compound-statement:
+             { block-item-listopt }
+(6.8.2) block-item-list:
+               block-item
+               block-item-list block-item
+(6.8.2) block-item:
+               declaration
+               statement
+(6.8.3) expression-statement:
+              expressionopt ;
+(6.8.4) selection-statement:
+               if ( expression ) statement
+               if ( expression ) statement else statement
+               switch ( expression ) statement
+(6.8.5) iteration-statement:
+                while ( expression ) statement
+                do statement while ( expression ) ;
+                for ( expressionopt ; expressionopt ; expressionopt ) statement
+                for ( declaration expressionopt ; expressionopt ) statement
+(6.8.6) jump-statement:
+              goto identifier ;
+              continue ;
+              break ;
+              return expressionopt ;
+</pre>
+<hr>
+<a name='A.2.4'><h3>A.2.4 [External definitions]</h3></a>
+<pre> External definitions
+(6.9) translation-unit:
+               external-declaration
+               translation-unit external-declaration
+(6.9) external-declaration:
+               function-definition
+               declaration
+(6.9.1) function-definition:
+               declaration-specifiers declarator declaration-listopt compound-statement
+(6.9.1) declaration-list:
+              declaration
+              declaration-list declaration
+</pre>
+<hr>
+<a name='A.3'><h3>A.3 [Preprocessing directives]</h3></a>
+<pre> Preprocessing directives
+(6.10) preprocessing-file:
+              groupopt
+(6.10) group:
+                group-part
+                group group-part
+(6.10) group-part:
+              if-section
+              control-line
+              text-line
+              # non-directive
+(6.10) if-section:
+                if-group elif-groupsopt else-groupopt endif-line
+(6.10) if-group:
+               # if     constant-expression new-line groupopt
+               # ifdef identifier new-line groupopt
+               # ifndef identifier new-line groupopt
+(6.10) elif-groups:
+               elif-group
+               elif-groups elif-group
+(6.10) elif-group:
+               # elif         constant-expression new-line groupopt
+
+
+
+
+(6.10) else-group:
+               # else        new-line groupopt
+(6.10) endif-line:
+               # endif       new-line
+(6.10) control-line:
+              # include pp-tokens new-line
+              # define identifier replacement-list new-line
+              # define identifier lparen identifier-listopt )
+                                              replacement-list new-line
+              # define identifier lparen ... ) replacement-list new-line
+              # define identifier lparen identifier-list , ... )
+                                              replacement-list new-line
+              # undef   identifier new-line
+              # line    pp-tokens new-line
+              # error   pp-tokensopt new-line
+              # pragma pp-tokensopt new-line
+              #         new-line
+(6.10) text-line:
+               pp-tokensopt new-line
+(6.10) non-directive:
+              pp-tokens new-line
+(6.10) lparen:
+                 a ( character not immediately preceded by white-space
+(6.10) replacement-list:
+              pp-tokensopt
+(6.10) pp-tokens:
+              preprocessing-token
+              pp-tokens preprocessing-token
+(6.10) new-line:
+              the new-line character
+
+
+
+
+
+
+                                  Annex B
+                                (informative)
+                            Library summary
+</pre>
+<hr>
+<a name='B.1'><h3>B.1 [Diagnostics <assert.h>]</h3></a>
+<pre> Diagnostics <assert.h>
+        NDEBUG
+        static_assert
+        void assert(scalar expression);
+</pre>
+<hr>
+<a name='B.2'><h3>B.2 [Complex <complex.h>]</h3></a>
+<pre> Complex <complex.h>
+        _ _STDC_NO_COMPLEX_ _              imaginary
+        complex                            _Imaginary_I
+        _Complex_I                         I
+        #pragma STDC CX_LIMITED_RANGE on-off-switch
+        double complex cacos(double complex z);
+        float complex cacosf(float complex z);
+        long double complex cacosl(long double complex z);
+        double complex casin(double complex z);
+        float complex casinf(float complex z);
+        long double complex casinl(long double complex z);
+        double complex catan(double complex z);
+        float complex catanf(float complex z);
+        long double complex catanl(long double complex z);
+        double complex ccos(double complex z);
+        float complex ccosf(float complex z);
+        long double complex ccosl(long double complex z);
+        double complex csin(double complex z);
+        float complex csinf(float complex z);
+        long double complex csinl(long double complex z);
+        double complex ctan(double complex z);
+        float complex ctanf(float complex z);
+        long double complex ctanl(long double complex z);
+        double complex cacosh(double complex z);
+        float complex cacoshf(float complex z);
+        long double complex cacoshl(long double complex z);
+        double complex casinh(double complex z);
+        float complex casinhf(float complex z);
+        long double complex casinhl(long double complex z);
+
+
+
+      double complex catanh(double complex z);
+      float complex catanhf(float complex z);
+      long double complex catanhl(long double complex z);
+      double complex ccosh(double complex z);
+      float complex ccoshf(float complex z);
+      long double complex ccoshl(long double complex z);
+      double complex csinh(double complex z);
+      float complex csinhf(float complex z);
+      long double complex csinhl(long double complex z);
+      double complex ctanh(double complex z);
+      float complex ctanhf(float complex z);
+      long double complex ctanhl(long double complex z);
+      double complex cexp(double complex z);
+      float complex cexpf(float complex z);
+      long double complex cexpl(long double complex z);
+      double complex clog(double complex z);
+      float complex clogf(float complex z);
+      long double complex clogl(long double complex z);
+      double cabs(double complex z);
+      float cabsf(float complex z);
+      long double cabsl(long double complex z);
+      double complex cpow(double complex x, double complex y);
+      float complex cpowf(float complex x, float complex y);
+      long double complex cpowl(long double complex x,
+           long double complex y);
+      double complex csqrt(double complex z);
+      float complex csqrtf(float complex z);
+      long double complex csqrtl(long double complex z);
+      double carg(double complex z);
+      float cargf(float complex z);
+      long double cargl(long double complex z);
+      double cimag(double complex z);
+      float cimagf(float complex z);
+      long double cimagl(long double complex z);
+      double complex CMPLX(double x, double y);
+      float complex CMPLXF(float x, float y);
+      long double complex CMPLXL(long double x, long double y);
+      double complex conj(double complex z);
+      float complex conjf(float complex z);
+      long double complex conjl(long double complex z);
+      double complex cproj(double complex z);
+
+
+
+        float complex cprojf(float complex z);
+        long double complex cprojl(long double complex z);
+        double creal(double complex z);
+        float crealf(float complex z);
+        long double creall(long double complex z);
+</pre>
+<hr>
+<a name='B.3'><h3>B.3 [Character handling <ctype.h>]</h3></a>
+<pre> Character handling <ctype.h>
+        int   isalnum(int c);
+        int   isalpha(int c);
+        int   isblank(int c);
+        int   iscntrl(int c);
+        int   isdigit(int c);
+        int   isgraph(int c);
+        int   islower(int c);
+        int   isprint(int c);
+        int   ispunct(int c);
+        int   isspace(int c);
+        int   isupper(int c);
+        int   isxdigit(int c);
+        int   tolower(int c);
+        int   toupper(int c);
+</pre>
+<hr>
+<a name='B.4'><h3>B.4 [Errors <errno.h>]</h3></a>
+<pre> Errors <errno.h>
+        EDOM           EILSEQ             ERANGE           errno
+        _ _STDC_WANT_LIB_EXT1_ _
+        errno_t
+</pre>
+<hr>
+<a name='B.5'><h3>B.5 [Floating-point environment <fenv.h>]</h3></a>
+<pre> Floating-point environment <fenv.h>
+        fenv_t                FE_OVERFLOW              FE_TOWARDZERO
+        fexcept_t             FE_UNDERFLOW             FE_UPWARD
+        FE_DIVBYZERO          FE_ALL_EXCEPT            FE_DFL_ENV
+        FE_INEXACT            FE_DOWNWARD
+        FE_INVALID            FE_TONEAREST
+        #pragma STDC FENV_ACCESS on-off-switch
+        int feclearexcept(int excepts);
+        int fegetexceptflag(fexcept_t *flagp, int excepts);
+        int feraiseexcept(int excepts);
+        int fesetexceptflag(const fexcept_t *flagp,
+             int excepts);
+        int fetestexcept(int excepts);
+
+
+
+      int   fegetround(void);
+      int   fesetround(int round);
+      int   fegetenv(fenv_t *envp);
+      int   feholdexcept(fenv_t *envp);
+      int   fesetenv(const fenv_t *envp);
+      int   feupdateenv(const fenv_t *envp);
+</pre>
+<hr>
+<a name='B.6'><h3>B.6 [Characteristics of floating types <float.h>]</h3></a>
+<pre> Characteristics of floating types <float.h>
+      FLT_ROUNDS              DBL_DIG                  FLT_MAX
+      FLT_EVAL_METHOD         LDBL_DIG                 DBL_MAX
+      FLT_HAS_SUBNORM         FLT_MIN_EXP              LDBL_MAX
+      DBL_HAS_SUBNORM         DBL_MIN_EXP              FLT_EPSILON
+      LDBL_HAS_SUBNORM        LDBL_MIN_EXP             DBL_EPSILON
+      FLT_RADIX               FLT_MIN_10_EXP           LDBL_EPSILON
+      FLT_MANT_DIG            DBL_MIN_10_EXP           FLT_MIN
+      DBL_MANT_DIG            LDBL_MIN_10_EXP          DBL_MIN
+      LDBL_MANT_DIG           FLT_MAX_EXP              LDBL_MIN
+      FLT_DECIMAL_DIG         DBL_MAX_EXP              FLT_TRUE_MIN
+      DBL_DECIMAL_DIG         LDBL_MAX_EXP             DBL_TRUE_MIN
+      LDBL_DECIMAL_DIG        FLT_MAX_10_EXP           LDBL_TRUE_MIN
+      DECIMAL_DIG             DBL_MAX_10_EXP
+      FLT_DIG                 LDBL_MAX_10_EXP
+</pre>
+<hr>
+<a name='B.7'><h3>B.7 [Format conversion of integer types <inttypes.h>]</h3></a>
+<pre> Format conversion of integer types <inttypes.h>
+      imaxdiv_t
+      PRIdN         PRIdLEASTN       PRIdFASTN             PRIdMAX   PRIdPTR
+      PRIiN         PRIiLEASTN       PRIiFASTN             PRIiMAX   PRIiPTR
+      PRIoN         PRIoLEASTN       PRIoFASTN             PRIoMAX   PRIoPTR
+      PRIuN         PRIuLEASTN       PRIuFASTN             PRIuMAX   PRIuPTR
+      PRIxN         PRIxLEASTN       PRIxFASTN             PRIxMAX   PRIxPTR
+      PRIXN         PRIXLEASTN       PRIXFASTN             PRIXMAX   PRIXPTR
+      SCNdN         SCNdLEASTN       SCNdFASTN             SCNdMAX   SCNdPTR
+      SCNiN         SCNiLEASTN       SCNiFASTN             SCNiMAX   SCNiPTR
+      SCNoN         SCNoLEASTN       SCNoFASTN             SCNoMAX   SCNoPTR
+      SCNuN         SCNuLEASTN       SCNuFASTN             SCNuMAX   SCNuPTR
+      SCNxN         SCNxLEASTN       SCNxFASTN             SCNxMAX   SCNxPTR
+      intmax_t imaxabs(intmax_t j);
+      imaxdiv_t imaxdiv(intmax_t numer, intmax_t denom);
+      intmax_t strtoimax(const char * restrict nptr,
+              char ** restrict endptr, int base);
+
+
+
+        uintmax_t strtoumax(const char * restrict nptr,
+                char ** restrict endptr, int base);
+        intmax_t wcstoimax(const wchar_t * restrict nptr,
+                wchar_t ** restrict endptr, int base);
+        uintmax_t wcstoumax(const wchar_t * restrict nptr,
+                wchar_t ** restrict endptr, int base);
+</pre>
+<hr>
+<a name='B.8'><h3>B.8 [Alternative spellings <iso646.h>]</h3></a>
+<pre> Alternative spellings <iso646.h>
+        and            bitor              not_eq           xor
+        and_eq         compl              or               xor_eq
+        bitand         not                or_eq
+</pre>
+<hr>
+<a name='B.9'><h3>B.9 [Sizes of integer types <limits.h>]</h3></a>
+<pre> Sizes of integer types <limits.h>
+        CHAR_BIT       CHAR_MAX           INT_MIN          ULONG_MAX
+        SCHAR_MIN      MB_LEN_MAX         INT_MAX          LLONG_MIN
+        SCHAR_MAX      SHRT_MIN           UINT_MAX         LLONG_MAX
+        UCHAR_MAX      SHRT_MAX           LONG_MIN         ULLONG_MAX
+        CHAR_MIN       USHRT_MAX          LONG_MAX
+</pre>
+<hr>
+<a name='B.10'><h3>B.10 [Localization <locale.h>]</h3></a>
+<pre> Localization <locale.h>
+        struct lconv   LC_ALL             LC_CTYPE         LC_NUMERIC
+        NULL           LC_COLLATE         LC_MONETARY      LC_TIME
+        char *setlocale(int category, const char *locale);
+        struct lconv *localeconv(void);
+</pre>
+<hr>
+<a name='B.11'><h3>B.11 [Mathematics <math.h>]</h3></a>
+<pre> Mathematics <math.h>
+        float_t               FP_INFINITE              FP_FAST_FMAL
+        double_t              FP_NAN                   FP_ILOGB0
+        HUGE_VAL              FP_NORMAL                FP_ILOGBNAN
+        HUGE_VALF             FP_SUBNORMAL             MATH_ERRNO
+        HUGE_VALL             FP_ZERO                  MATH_ERREXCEPT
+        INFINITY              FP_FAST_FMA              math_errhandling
+        NAN                   FP_FAST_FMAF
+        #pragma STDC FP_CONTRACT on-off-switch
+        int fpclassify(real-floating x);
+        int isfinite(real-floating x);
+        int isinf(real-floating x);
+        int isnan(real-floating x);
+        int isnormal(real-floating x);
+        int signbit(real-floating x);
+
+
+      double acos(double x);
+      float acosf(float x);
+      long double acosl(long double x);
+      double asin(double x);
+      float asinf(float x);
+      long double asinl(long double x);
+      double atan(double x);
+      float atanf(float x);
+      long double atanl(long double x);
+      double atan2(double y, double x);
+      float atan2f(float y, float x);
+      long double atan2l(long double y, long double x);
+      double cos(double x);
+      float cosf(float x);
+      long double cosl(long double x);
+      double sin(double x);
+      float sinf(float x);
+      long double sinl(long double x);
+      double tan(double x);
+      float tanf(float x);
+      long double tanl(long double x);
+      double acosh(double x);
+      float acoshf(float x);
+      long double acoshl(long double x);
+      double asinh(double x);
+      float asinhf(float x);
+      long double asinhl(long double x);
+      double atanh(double x);
+      float atanhf(float x);
+      long double atanhl(long double x);
+      double cosh(double x);
+      float coshf(float x);
+      long double coshl(long double x);
+      double sinh(double x);
+      float sinhf(float x);
+      long double sinhl(long double x);
+      double tanh(double x);
+      float tanhf(float x);
+      long double tanhl(long double x);
+      double exp(double x);
+      float expf(float x);
+
+
+
+        long double expl(long double x);
+        double exp2(double x);
+        float exp2f(float x);
+        long double exp2l(long double x);
+        double expm1(double x);
+        float expm1f(float x);
+        long double expm1l(long double x);
+        double frexp(double value, int *exp);
+        float frexpf(float value, int *exp);
+        long double frexpl(long double value, int *exp);
+        int ilogb(double x);
+        int ilogbf(float x);
+        int ilogbl(long double x);
+        double ldexp(double x, int exp);
+        float ldexpf(float x, int exp);
+        long double ldexpl(long double x, int exp);
+        double log(double x);
+        float logf(float x);
+        long double logl(long double x);
+        double log10(double x);
+        float log10f(float x);
+        long double log10l(long double x);
+        double log1p(double x);
+        float log1pf(float x);
+        long double log1pl(long double x);
+        double log2(double x);
+        float log2f(float x);
+        long double log2l(long double x);
+        double logb(double x);
+        float logbf(float x);
+        long double logbl(long double x);
+        double modf(double value, double *iptr);
+        float modff(float value, float *iptr);
+        long double modfl(long double value, long double *iptr);
+        double scalbn(double x, int n);
+        float scalbnf(float x, int n);
+        long double scalbnl(long double x, int n);
+        double scalbln(double x, long int n);
+        float scalblnf(float x, long int n);
+        long double scalblnl(long double x, long int n);
+        double cbrt(double x);
+
+
+
+      float cbrtf(float x);
+      long double cbrtl(long double x);
+      double fabs(double x);
+      float fabsf(float x);
+      long double fabsl(long double x);
+      double hypot(double x, double y);
+      float hypotf(float x, float y);
+      long double hypotl(long double x, long double y);
+      double pow(double x, double y);
+      float powf(float x, float y);
+      long double powl(long double x, long double y);
+      double sqrt(double x);
+      float sqrtf(float x);
+      long double sqrtl(long double x);
+      double erf(double x);
+      float erff(float x);
+      long double erfl(long double x);
+      double erfc(double x);
+      float erfcf(float x);
+      long double erfcl(long double x);
+      double lgamma(double x);
+      float lgammaf(float x);
+      long double lgammal(long double x);
+      double tgamma(double x);
+      float tgammaf(float x);
+      long double tgammal(long double x);
+      double ceil(double x);
+      float ceilf(float x);
+      long double ceill(long double x);
+      double floor(double x);
+      float floorf(float x);
+      long double floorl(long double x);
+      double nearbyint(double x);
+      float nearbyintf(float x);
+      long double nearbyintl(long double x);
+      double rint(double x);
+      float rintf(float x);
+      long double rintl(long double x);
+      long int lrint(double x);
+      long int lrintf(float x);
+      long int lrintl(long double x);
+
+
+
+        long long int llrint(double x);
+        long long int llrintf(float x);
+        long long int llrintl(long double x);
+        double round(double x);
+        float roundf(float x);
+        long double roundl(long double x);
+        long int lround(double x);
+        long int lroundf(float x);
+        long int lroundl(long double x);
+        long long int llround(double x);
+        long long int llroundf(float x);
+        long long int llroundl(long double x);
+        double trunc(double x);
+        float truncf(float x);
+        long double truncl(long double x);
+        double fmod(double x, double y);
+        float fmodf(float x, float y);
+        long double fmodl(long double x, long double y);
+        double remainder(double x, double y);
+        float remainderf(float x, float y);
+        long double remainderl(long double x, long double y);
+        double remquo(double x, double y, int *quo);
+        float remquof(float x, float y, int *quo);
+        long double remquol(long double x, long double y,
+             int *quo);
+        double copysign(double x, double y);
+        float copysignf(float x, float y);
+        long double copysignl(long double x, long double y);
+        double nan(const char *tagp);
+        float nanf(const char *tagp);
+        long double nanl(const char *tagp);
+        double nextafter(double x, double y);
+        float nextafterf(float x, float y);
+        long double nextafterl(long double x, long double y);
+        double nexttoward(double x, long double y);
+        float nexttowardf(float x, long double y);
+        long double nexttowardl(long double x, long double y);
+        double fdim(double x, double y);
+        float fdimf(float x, float y);
+        long double fdiml(long double x, long double y);
+        double fmax(double x, double y);
+
+
+
+      float fmaxf(float x, float y);
+      long double fmaxl(long double x, long double y);
+      double fmin(double x, double y);
+      float fminf(float x, float y);
+      long double fminl(long double x, long double y);
+      double fma(double x, double y, double z);
+      float fmaf(float x, float y, float z);
+      long double fmal(long double x, long double y,
+           long double z);
+      int isgreater(real-floating x, real-floating y);
+      int isgreaterequal(real-floating x, real-floating y);
+      int isless(real-floating x, real-floating y);
+      int islessequal(real-floating x, real-floating y);
+      int islessgreater(real-floating x, real-floating y);
+      int isunordered(real-floating x, real-floating y);
+</pre>
+<hr>
+<a name='B.12'><h3>B.12 [Nonlocal jumps <setjmp.h>]</h3></a>
+<pre> Nonlocal jumps <setjmp.h>
+      jmp_buf
+      int setjmp(jmp_buf env);
+      _Noreturn void longjmp(jmp_buf env, int val);
+</pre>
+<hr>
+<a name='B.13'><h3>B.13 [Signal handling <signal.h>]</h3></a>
+<pre> Signal handling <signal.h>
+      sig_atomic_t   SIG_IGN            SIGILL           SIGTERM
+      SIG_DFL        SIGABRT            SIGINT
+      SIG_ERR        SIGFPE             SIGSEGV
+      void (*signal(int sig, void (*func)(int)))(int);
+      int raise(int sig);
+
+
+</pre>
 <hr>
 <a name='B.14'><h3>B.14 [Alignment <stdalign.h>]</h3></a>
+<pre> Alignment <stdalign.h>
+        alignas
+        _ _alignas_is_defined
+</pre>
+<hr>
+<a name='B.15'><h3>B.15 [Variable arguments <stdarg.h>]</h3></a>
+<pre> Variable arguments <stdarg.h>
+        va_list
+        type va_arg(va_list ap, type);
+        void va_copy(va_list dest, va_list src);
+        void va_end(va_list ap);
+        void va_start(va_list ap, parmN);
+</pre>
+<hr>
+<a name='B.16'><h3>B.16 [Atomics <stdatomic.h>]</h3></a>
+<pre> Atomics <stdatomic.h>
+        ATOMIC_BOOL_LOCK_FREE      atomic_uint
+        ATOMIC_CHAR_LOCK_FREE      atomic_long
+        ATOMIC_CHAR16_T_LOCK_FREE  atomic_ulong
+        ATOMIC_CHAR32_T_LOCK_FREE  atomic_llong
+        ATOMIC_WCHAR_T_LOCK_FREE   atomic_ullong
+        ATOMIC_SHORT_LOCK_FREE     atomic_char16_t
+        ATOMIC_INT_LOCK_FREE       atomic_char32_t
+        ATOMIC_LONG_LOCK_FREE      atomic_wchar_t
+        ATOMIC_LLONG_LOCK_FREE     atomic_int_least8_t
+        ATOMIC_POINTER_LOCK_FREE   atomic_uint_least8_t
+        ATOMIC_FLAG_INIT           atomic_int_least16_t
+        memory_order               atomic_uint_least16_t
+        atomic_flag                atomic_int_least32_t
+        memory_order_relaxed       atomic_uint_least32_t
+        memory_order_consume       atomic_int_least64_t
+        memory_order_acquire       atomic_uint_least64_t
+        memory_order_release       atomic_int_fast8_t
+        memory_order_acq_rel       atomic_uint_fast8_t
+        memory_order_seq_cst       atomic_int_fast16_t
+        atomic_bool                atomic_uint_fast16_t
+        atomic_char                atomic_int_fast32_t
+        atomic_schar               atomic_uint_fast32_t
+        atomic_uchar               atomic_int_fast64_t
+        atomic_short               atomic_uint_fast64_t
+        atomic_ushort              atomic_intptr_t
+        atomic_int                 atomic_uintptr_t
+
+
+
+
+
+      atomic_size_t                    atomic_intmax_t
+      atomic_ptrdiff_t                 atomic_uintmax_t
+      #define ATOMIC_VAR_INIT(C value)
+      void atomic_init(volatile A *obj, C value);
+      type kill_dependency(type y);
+      void atomic_thread_fence(memory_order order);
+      void atomic_signal_fence(memory_order order);
+      _Bool atomic_is_lock_free(const volatile A *obj);
+      void atomic_store(volatile A *object, C desired);
+      void atomic_store_explicit(volatile A *object,
+            C desired, memory_order order);
+      C atomic_load(volatile A *object);
+      C atomic_load_explicit(volatile A *object,
+            memory_order order);
+      C atomic_exchange(volatile A *object, C desired);
+      C atomic_exchange_explicit(volatile A *object,
+            C desired, memory_order order);
+      _Bool atomic_compare_exchange_strong(volatile A *object,
+            C *expected, C desired);
+      _Bool atomic_compare_exchange_strong_explicit(
+            volatile A *object, C *expected, C desired,
+            memory_order success, memory_order failure);
+      _Bool atomic_compare_exchange_weak(volatile A *object,
+            C *expected, C desired);
+      _Bool atomic_compare_exchange_weak_explicit(
+            volatile A *object, C *expected, C desired,
+            memory_order success, memory_order failure);
+      C atomic_fetch_key(volatile A *object, M operand);
+      C atomic_fetch_key_explicit(volatile A *object,
+            M operand, memory_order order);
+      _Bool atomic_flag_test_and_set(
+            volatile atomic_flag *object);
+      _Bool atomic_flag_test_and_set_explicit(
+            volatile atomic_flag *object, memory_order order);
+      void atomic_flag_clear(volatile atomic_flag *object);
+      void atomic_flag_clear_explicit(
+            volatile atomic_flag *object, memory_order order);
+
+
+</pre>
 <hr>
 <a name='B.17'><h3>B.17 [Boolean type and values <stdbool.h>]</h3></a>
+<pre> Boolean type and values <stdbool.h>
+        bool
+        true
+        false
+        _ _bool_true_false_are_defined
+</pre>
+<hr>
+<a name='B.18'><h3>B.18 [Common definitions <stddef.h>]</h3></a>
+<pre> Common definitions <stddef.h>
+        ptrdiff_t       max_align_t        NULL
+        size_t          wchar_t
+        offsetof(type, member-designator)
+        _ _STDC_WANT_LIB_EXT1_ _
+        rsize_t
+</pre>
+<hr>
+<a name='B.19'><h3>B.19 [Integer types <stdint.h>]</h3></a>
+<pre> Integer types <stdint.h>
+        intN_t                 INT_LEASTN_MIN           PTRDIFF_MAX
+        uintN_t                INT_LEASTN_MAX           SIG_ATOMIC_MIN
+        int_leastN_t           UINT_LEASTN_MAX          SIG_ATOMIC_MAX
+        uint_leastN_t          INT_FASTN_MIN            SIZE_MAX
+        int_fastN_t            INT_FASTN_MAX            WCHAR_MIN
+        uint_fastN_t           UINT_FASTN_MAX           WCHAR_MAX
+        intptr_t               INTPTR_MIN               WINT_MIN
+        uintptr_t              INTPTR_MAX               WINT_MAX
+        intmax_t               UINTPTR_MAX              INTN_C(value)
+        uintmax_t              INTMAX_MIN               UINTN_C(value)
+        INTN_MIN               INTMAX_MAX               INTMAX_C(value)
+        INTN_MAX               UINTMAX_MAX              UINTMAX_C(value)
+        UINTN_MAX              PTRDIFF_MIN
+        _ _STDC_WANT_LIB_EXT1_ _
+        RSIZE_MAX
+
+
+</pre>
 <hr>
 <a name='B.20'><h3>B.20 [Input/output <stdio.h>]</h3></a>
+<pre> Input/output <stdio.h>
+      size_t        _IOLBF             FILENAME_MAX     TMP_MAX
+      FILE          _IONBF             L_tmpnam         stderr
+      fpos_t        BUFSIZ             SEEK_CUR         stdin
+      NULL          EOF                SEEK_END         stdout
+      _IOFBF        FOPEN_MAX          SEEK_SET
+      int remove(const char *filename);
+      int rename(const char *old, const char *new);
+      FILE *tmpfile(void);
+      char *tmpnam(char *s);
+      int fclose(FILE *stream);
+      int fflush(FILE *stream);
+      FILE *fopen(const char * restrict filename,
+           const char * restrict mode);
+      FILE *freopen(const char * restrict filename,
+           const char * restrict mode,
+           FILE * restrict stream);
+      void setbuf(FILE * restrict stream,
+           char * restrict buf);
+      int setvbuf(FILE * restrict stream,
+           char * restrict buf,
+           int mode, size_t size);
+      int fprintf(FILE * restrict stream,
+           const char * restrict format, ...);
+      int fscanf(FILE * restrict stream,
+           const char * restrict format, ...);
+      int printf(const char * restrict format, ...);
+      int scanf(const char * restrict format, ...);
+      int snprintf(char * restrict s, size_t n,
+           const char * restrict format, ...);
+      int sprintf(char * restrict s,
+           const char * restrict format, ...);
+      int sscanf(const char * restrict s,
+           const char * restrict format, ...);
+      int vfprintf(FILE * restrict stream,
+           const char * restrict format, va_list arg);
+      int vfscanf(FILE * restrict stream,
+           const char * restrict format, va_list arg);
+      int vprintf(const char * restrict format, va_list arg);
+      int vscanf(const char * restrict format, va_list arg);
+
+
+
+        int vsnprintf(char * restrict s, size_t n,
+             const char * restrict format, va_list arg);
+        int vsprintf(char * restrict s,
+             const char * restrict format, va_list arg);
+        int vsscanf(const char * restrict s,
+             const char * restrict format, va_list arg);
+        int fgetc(FILE *stream);
+        char *fgets(char * restrict s, int n,
+             FILE * restrict stream);
+        int fputc(int c, FILE *stream);
+        int fputs(const char * restrict s,
+             FILE * restrict stream);
+        int getc(FILE *stream);
+        int getchar(void);
+        int putc(int c, FILE *stream);
+        int putchar(int c);
+        int puts(const char *s);
+        int ungetc(int c, FILE *stream);
+        size_t fread(void * restrict ptr,
+             size_t size, size_t nmemb,
+             FILE * restrict stream);
+        size_t fwrite(const void * restrict ptr,
+             size_t size, size_t nmemb,
+             FILE * restrict stream);
+        int fgetpos(FILE * restrict stream,
+             fpos_t * restrict pos);
+        int fseek(FILE *stream, long int offset, int whence);
+        int fsetpos(FILE *stream, const fpos_t *pos);
+        long int ftell(FILE *stream);
+        void rewind(FILE *stream);
+        void clearerr(FILE *stream);
+        int feof(FILE *stream);
+        int ferror(FILE *stream);
+        void perror(const char *s);
+        _ _STDC_WANT_LIB_EXT1_ _
+        L_tmpnam_s    TMP_MAX_S         errno_t          rsize_t
+        errno_t tmpfile_s(FILE * restrict * restrict streamptr);
+        errno_t tmpnam_s(char *s, rsize_t maxsize);
+
+
+
+
+
+      errno_t fopen_s(FILE * restrict * restrict streamptr,
+           const char * restrict filename,
+           const char * restrict mode);
+      errno_t freopen_s(FILE * restrict * restrict newstreamptr,
+           const char * restrict filename,
+           const char * restrict mode,
+           FILE * restrict stream);
+      int fprintf_s(FILE * restrict stream,
+           const char * restrict format, ...);
+      int fscanf_s(FILE * restrict stream,
+           const char * restrict format, ...);
+      int printf_s(const char * restrict format, ...);
+      int scanf_s(const char * restrict format, ...);
+      int snprintf_s(char * restrict s, rsize_t n,
+           const char * restrict format, ...);
+      int sprintf_s(char * restrict s, rsize_t n,
+           const char * restrict format, ...);
+      int sscanf_s(const char * restrict s,
+           const char * restrict format, ...);
+      int vfprintf_s(FILE * restrict stream,
+           const char * restrict format,
+           va_list arg);
+      int vfscanf_s(FILE * restrict stream,
+           const char * restrict format,
+           va_list arg);
+      int vprintf_s(const char * restrict format,
+           va_list arg);
+      int vscanf_s(const char * restrict format,
+           va_list arg);
+      int vsnprintf_s(char * restrict s, rsize_t n,
+           const char * restrict format,
+           va_list arg);
+      int vsprintf_s(char * restrict s, rsize_t n,
+           const char * restrict format,
+           va_list arg);
+      int vsscanf_s(const char * restrict s,
+           const char * restrict format,
+           va_list arg);
+      char *gets_s(char *s, rsize_t n);
+
+</pre>
 <hr>
 <a name='B.21'><h3>B.21 [General utilities <stdlib.h>]</h3></a>
-<a name='B.21p1'><pre>1   The following are the sequence points described in 5.1.2.3:
+<pre> General utilities <stdlib.h>
+        size_t       ldiv_t             EXIT_FAILURE     MB_CUR_MAX
+        wchar_t      lldiv_t            EXIT_SUCCESS
+        div_t        NULL               RAND_MAX
+        double atof(const char *nptr);
+        int atoi(const char *nptr);
+        long int atol(const char *nptr);
+        long long int atoll(const char *nptr);
+        double strtod(const char * restrict nptr,
+             char ** restrict endptr);
+        float strtof(const char * restrict nptr,
+             char ** restrict endptr);
+        long double strtold(const char * restrict nptr,
+             char ** restrict endptr);
+        long int strtol(const char * restrict nptr,
+             char ** restrict endptr, int base);
+        long long int strtoll(const char * restrict nptr,
+             char ** restrict endptr, int base);
+        unsigned long int strtoul(
+             const char * restrict nptr,
+             char ** restrict endptr, int base);
+        unsigned long long int strtoull(
+             const char * restrict nptr,
+             char ** restrict endptr, int base);
+        int rand(void);
+        void srand(unsigned int seed);
+        void *aligned_alloc(size_t alignment, size_t size);
+        void *calloc(size_t nmemb, size_t size);
+        void free(void *ptr);
+        void *malloc(size_t size);
+        void *realloc(void *ptr, size_t size);
+        _Noreturn void abort(void);
+        int atexit(void (*func)(void));
+        int at_quick_exit(void (*func)(void));
+        _Noreturn void exit(int status);
+        _Noreturn void _Exit(int status);
+        char *getenv(const char *name);
+        _Noreturn void quick_exit(int status);
+        int system(const char *string);
+
+
+
+
+      void *bsearch(const void *key, const void *base,
+           size_t nmemb, size_t size,
+           int (*compar)(const void *, const void *));
+      void qsort(void *base, size_t nmemb, size_t size,
+           int (*compar)(const void *, const void *));
+      int abs(int j);
+      long int labs(long int j);
+      long long int llabs(long long int j);
+      div_t div(int numer, int denom);
+      ldiv_t ldiv(long int numer, long int denom);
+      lldiv_t lldiv(long long int numer,
+           long long int denom);
+      int mblen(const char *s, size_t n);
+      int mbtowc(wchar_t * restrict pwc,
+           const char * restrict s, size_t n);
+      int wctomb(char *s, wchar_t wchar);
+      size_t mbstowcs(wchar_t * restrict pwcs,
+           const char * restrict s, size_t n);
+      size_t wcstombs(char * restrict s,
+           const wchar_t * restrict pwcs, size_t n);
+      _ _STDC_WANT_LIB_EXT1_ _
+      errno_t
+      rsize_t
+      constraint_handler_t
+      constraint_handler_t set_constraint_handler_s(
+           constraint_handler_t handler);
+      void abort_handler_s(
+           const char * restrict msg,
+           void * restrict ptr,
+           errno_t error);
+      void ignore_handler_s(
+           const char * restrict msg,
+           void * restrict ptr,
+           errno_t error);
+      errno_t getenv_s(size_t * restrict len,
+                char * restrict value, rsize_t maxsize,
+                const char * restrict name);
+
+
+
+
+
+
+        void *bsearch_s(const void *key, const void *base,
+             rsize_t nmemb, rsize_t size,
+             int (*compar)(const void *k, const void *y,
+                             void *context),
+             void *context);
+        errno_t qsort_s(void *base, rsize_t nmemb, rsize_t size,
+             int (*compar)(const void *x, const void *y,
+                             void *context),
+             void *context);
+        errno_t wctomb_s(int * restrict status,
+             char * restrict s,
+             rsize_t smax,
+             wchar_t wc);
+        errno_t mbstowcs_s(size_t * restrict retval,
+             wchar_t * restrict dst, rsize_t dstmax,
+             const char * restrict src, rsize_t len);
+        errno_t wcstombs_s(size_t * restrict retval,
+             char * restrict dst, rsize_t dstmax,
+             const wchar_t * restrict src, rsize_t len);
+</pre>
+<hr>
+<a name='B.22'><h3>B.22 [_Noreturn <stdnoreturn.h>]</h3></a>
+<pre> _Noreturn <stdnoreturn.h>
+        noreturn
+</pre>
+<hr>
+<a name='B.23'><h3>B.23 [String handling <string.h>]</h3></a>
+<pre> String handling <string.h>
+        size_t
+        NULL
+      void *memcpy(void * restrict s1,
+           const void * restrict s2, size_t n);
+      void *memmove(void *s1, const void *s2, size_t n);
+      char *strcpy(char * restrict s1,
+           const char * restrict s2);
+      char *strncpy(char * restrict s1,
+           const char * restrict s2, size_t n);
+      char *strcat(char * restrict s1,
+           const char * restrict s2);
+      char *strncat(char * restrict s1,
+           const char * restrict s2, size_t n);
+      int memcmp(const void *s1, const void *s2, size_t n);
+      int strcmp(const char *s1, const char *s2);
+      int strcoll(const char *s1, const char *s2);
+      int strncmp(const char *s1, const char *s2, size_t n);
+
+
+      size_t strxfrm(char * restrict s1,
+           const char * restrict s2, size_t n);
+      void *memchr(const void *s, int c, size_t n);
+      char *strchr(const char *s, int c);
+      size_t strcspn(const char *s1, const char *s2);
+      char *strpbrk(const char *s1, const char *s2);
+      char *strrchr(const char *s, int c);
+      size_t strspn(const char *s1, const char *s2);
+      char *strstr(const char *s1, const char *s2);
+      char *strtok(char * restrict s1,
+           const char * restrict s2);
+      void *memset(void *s, int c, size_t n);
+      char *strerror(int errnum);
+      size_t strlen(const char *s);
+      _ _STDC_WANT_LIB_EXT1_ _
+      errno_t
+      rsize_t
+      errno_t memcpy_s(void * restrict s1, rsize_t s1max,
+           const void * restrict s2, rsize_t n);
+      errno_t memmove_s(void *s1, rsize_t s1max,
+           const void *s2, rsize_t n);
+      errno_t strcpy_s(char * restrict s1,
+           rsize_t s1max,
+           const char * restrict s2);
+      errno_t strncpy_s(char * restrict s1,
+           rsize_t s1max,
+           const char * restrict s2,
+           rsize_t n);
+      errno_t strcat_s(char * restrict s1,
+           rsize_t s1max,
+           const char * restrict s2);
+      errno_t strncat_s(char * restrict s1,
+           rsize_t s1max,
+           const char * restrict s2,
+           rsize_t n);
+      char *strtok_s(char * restrict s1,
+           rsize_t * restrict s1max,
+           const char * restrict s2,
+           char ** restrict ptr);
+      errno_t memset_s(void *s, rsize_t smax, int c, rsize_t n)
+
+
+
+        errno_t strerror_s(char *s, rsize_t maxsize,
+             errno_t errnum);
+        size_t strerrorlen_s(errno_t errnum);
+        size_t strnlen_s(const char *s, size_t maxsize);
+</pre>
+<hr>
+<a name='B.24'><h3>B.24 [Type-generic math <tgmath.h>]</h3></a>
+<pre> Type-generic math <tgmath.h>
+        acos         sqrt               fmod             nextafter
+        asin         fabs               frexp            nexttoward
+        atan         atan2              hypot            remainder
+        acosh        cbrt               ilogb            remquo
+        asinh        ceil               ldexp            rint
+        atanh        copysign           lgamma           round
+        cos          erf                llrint           scalbn
+        sin          erfc               llround          scalbln
+        tan          exp2               log10            tgamma
+        cosh         expm1              log1p            trunc
+        sinh         fdim               log2             carg
+        tanh         floor              logb             cimag
+        exp          fma                lrint            conj
+        log          fmax               lround           cproj
+        pow          fmin               nearbyint        creal
+</pre>
+<hr>
+<a name='B.25'><h3>B.25 [Threads <threads.h>]</h3></a>
+<pre> Threads <threads.h>
+        thread_local                    once_flag
+        ONCE_FLAG_INIT                  mtx_plain                      
+        TSS_DTOR_ITERATIONS             mtx_recursive
+        cnd_t                           mtx_timed
+        thrd_t                          thrd_timedout
+        tss_t                           thrd_success
+        mtx_t                           thrd_busy
+        tss_dtor_t                      thrd_error
+        thrd_start_t                    thrd_nomem
+      void call_once(once_flag *flag, void (*func)(void));
+      int cnd_broadcast(cnd_t *cond);
+      void cnd_destroy(cnd_t *cond);
+      int cnd_init(cnd_t *cond);
+      int cnd_signal(cnd_t *cond);
+      int cnd_timedwait(cnd_t *restrict cond,
+           mtx_t *restrict mtx,
+           const struct timespec *restrict ts);
+      int cnd_wait(cnd_t *cond, mtx_t *mtx);
+
+
+      void mtx_destroy(mtx_t *mtx);
+      int mtx_init(mtx_t *mtx, int type);
+      int mtx_lock(mtx_t *mtx);
+      int mtx_timedlock(mtx_t *restrict mtx,
+           const struct timespec *restrict ts);
+      int mtx_trylock(mtx_t *mtx);
+      int mtx_unlock(mtx_t *mtx);
+      int thrd_create(thrd_t *thr, thrd_start_t func,
+           void *arg);
+      thrd_t thrd_current(void);
+      int thrd_detach(thrd_t thr);
+      int thrd_equal(thrd_t thr0, thrd_t thr1);
+      _Noreturn void thrd_exit(int res);
+      int thrd_join(thrd_t thr, int *res);
+      int thrd_sleep(const struct timespec *duration,
+           struct timespec *remaining);
+      void thrd_yield(void);
+      int tss_create(tss_t *key, tss_dtor_t dtor);
+      void tss_delete(tss_t key);
+      void *tss_get(tss_t key);
+      int tss_set(tss_t key, void *val);
+</pre>
+<hr>
+<a name='B.26'><h3>B.26 [Date and time <time.h>]</h3></a>
+<pre> Date and time <time.h>
+      NULL                 size_t                   struct timespec
+      CLOCKS_PER_SEC       clock_t                  struct tm
+      TIME_UTC             time_t
+      clock_t clock(void);
+      double difftime(time_t time1, time_t time0);
+      time_t mktime(struct tm *timeptr);
+      time_t time(time_t *timer);
+      int timespec_get(timespec *ts, int base);
+      char *asctime(const struct tm *timeptr);
+      char *ctime(const time_t *timer);
+      struct tm *gmtime(const time_t *timer);
+      struct tm *localtime(const time_t *timer);
+      size_t strftime(char * restrict s,
+           size_t maxsize,
+           const char * restrict format,
+           const struct tm * restrict timeptr);
+      _ _STDC_WANT_LIB_EXT1_ _
+
+
+
+        errno_t
+        rsize_t
+        errno_t asctime_s(char *s, rsize_t maxsize,
+             const struct tm *timeptr);
+        errno_t ctime_s(char *s, rsize_t maxsize,
+             const time_t *timer);
+        struct tm *gmtime_s(const time_t * restrict timer,
+             struct tm * restrict result);
+        struct tm *localtime_s(const time_t * restrict timer,
+             struct tm * restrict result);
+</pre>
+<hr>
+<a name='B.27'><h3>B.27 [Unicode utilities <uchar.h>]</h3></a>
+<pre> Unicode utilities <uchar.h>
+        mbstate_t    size_t             char16_t         char32_t
+        size_t mbrtoc16(char16_t * restrict pc16,
+             const char * restrict s, size_t n,
+             mbstate_t * restrict ps);
+        size_t c16rtomb(char * restrict s, char16_t c16,
+             mbstate_t * restrict ps);
+        size_t mbrtoc32(char32_t * restrict pc32,
+             const char * restrict s, size_t n,
+             mbstate_t * restrict ps);
+        size_t c32rtomb(char * restrict s, char32_t c32,
+             mbstate_t * restrict ps);
+</pre>
+<hr>
+<a name='B.28'><h3>B.28 [Extended multibyte/wide character utilities <wchar.h>]</h3></a>
+<pre> Extended multibyte/wide character utilities <wchar.h>
+        wchar_t             wint_t                   WCHAR_MAX
+        size_t              struct tm                WCHAR_MIN
+        mbstate_t           NULL                     WEOF
+        int fwprintf(FILE * restrict stream,
+             const wchar_t * restrict format, ...);
+        int fwscanf(FILE * restrict stream,
+             const wchar_t * restrict format, ...);
+        int swprintf(wchar_t * restrict s, size_t n,
+             const wchar_t * restrict format, ...);
+        int swscanf(const wchar_t * restrict s,
+             const wchar_t * restrict format, ...);
+        int vfwprintf(FILE * restrict stream,
+             const wchar_t * restrict format, va_list arg);
+
+
+
+
+      int vfwscanf(FILE * restrict stream,
+           const wchar_t * restrict format, va_list arg);
+      int vswprintf(wchar_t * restrict s, size_t n,
+           const wchar_t * restrict format, va_list arg);
+      int vswscanf(const wchar_t * restrict s,
+           const wchar_t * restrict format, va_list arg);
+      int vwprintf(const wchar_t * restrict format,
+           va_list arg);
+      int vwscanf(const wchar_t * restrict format,
+           va_list arg);
+      int wprintf(const wchar_t * restrict format, ...);
+      int wscanf(const wchar_t * restrict format, ...);
+      wint_t fgetwc(FILE *stream);
+      wchar_t *fgetws(wchar_t * restrict s, int n,
+           FILE * restrict stream);
+      wint_t fputwc(wchar_t c, FILE *stream);
+      int fputws(const wchar_t * restrict s,
+           FILE * restrict stream);
+      int fwide(FILE *stream, int mode);
+      wint_t getwc(FILE *stream);
+      wint_t getwchar(void);
+      wint_t putwc(wchar_t c, FILE *stream);
+      wint_t putwchar(wchar_t c);
+      wint_t ungetwc(wint_t c, FILE *stream);
+      double wcstod(const wchar_t * restrict nptr,
+           wchar_t ** restrict endptr);
+      float wcstof(const wchar_t * restrict nptr,
+           wchar_t ** restrict endptr);
+      long double wcstold(const wchar_t * restrict nptr,
+           wchar_t ** restrict endptr);
+      long int wcstol(const wchar_t * restrict nptr,
+           wchar_t ** restrict endptr, int base);
+      long long int wcstoll(const wchar_t * restrict nptr,
+           wchar_t ** restrict endptr, int base);
+      unsigned long int wcstoul(const wchar_t * restrict nptr,
+           wchar_t ** restrict endptr, int base);
+      unsigned long long int wcstoull(
+           const wchar_t * restrict nptr,
+           wchar_t ** restrict endptr, int base);
+
+
+
+
+
+        wchar_t *wcscpy(wchar_t * restrict s1,
+             const wchar_t * restrict s2);
+        wchar_t *wcsncpy(wchar_t * restrict s1,
+             const wchar_t * restrict s2, size_t n);
+        wchar_t *wmemcpy(wchar_t * restrict s1,
+             const wchar_t * restrict s2, size_t n);
+        wchar_t *wmemmove(wchar_t *s1, const wchar_t *s2,
+             size_t n);
+        wchar_t *wcscat(wchar_t * restrict s1,
+             const wchar_t * restrict s2);
+        wchar_t *wcsncat(wchar_t * restrict s1,
+             const wchar_t * restrict s2, size_t n);
+        int wcscmp(const wchar_t *s1, const wchar_t *s2);
+        int wcscoll(const wchar_t *s1, const wchar_t *s2);
+        int wcsncmp(const wchar_t *s1, const wchar_t *s2,
+             size_t n);
+        size_t wcsxfrm(wchar_t * restrict s1,
+             const wchar_t * restrict s2, size_t n);
+        int wmemcmp(const wchar_t *s1, const wchar_t *s2,
+             size_t n);
+        wchar_t *wcschr(const wchar_t *s, wchar_t c);
+        size_t wcscspn(const wchar_t *s1, const wchar_t *s2);
+        wchar_t *wcspbrk(const wchar_t *s1, const wchar_t *s2);
+        wchar_t *wcsrchr(const wchar_t *s, wchar_t c);
+        size_t wcsspn(const wchar_t *s1, const wchar_t *s2);
+        wchar_t *wcsstr(const wchar_t *s1, const wchar_t *s2);
+        wchar_t *wcstok(wchar_t * restrict s1,
+             const wchar_t * restrict s2,
+             wchar_t ** restrict ptr);
+        wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n);
+        size_t wcslen(const wchar_t *s);
+        wchar_t *wmemset(wchar_t *s, wchar_t c, size_t n);
+        size_t wcsftime(wchar_t * restrict s, size_t maxsize,
+             const wchar_t * restrict format,
+             const struct tm * restrict timeptr);
+        wint_t btowc(int c);
+        int wctob(wint_t c);
+        int mbsinit(const mbstate_t *ps);
+        size_t mbrlen(const char * restrict s, size_t n,
+             mbstate_t * restrict ps);
+
+
+
+
+      size_t mbrtowc(wchar_t * restrict pwc,
+           const char * restrict s, size_t n,
+           mbstate_t * restrict ps);
+      size_t wcrtomb(char * restrict s, wchar_t wc,
+           mbstate_t * restrict ps);
+      size_t mbsrtowcs(wchar_t * restrict dst,
+           const char ** restrict src, size_t len,
+           mbstate_t * restrict ps);
+      size_t wcsrtombs(char * restrict dst,
+           const wchar_t ** restrict src, size_t len,
+           mbstate_t * restrict ps);
+      _ _STDC_WANT_LIB_EXT1_ _
+      errno_t
+      rsize_t
+      int fwprintf_s(FILE * restrict stream,
+           const wchar_t * restrict format, ...);
+      int fwscanf_s(FILE * restrict stream,
+           const wchar_t * restrict format, ...);
+      int snwprintf_s(wchar_t * restrict s,
+           rsize_t n,
+           const wchar_t * restrict format, ...);
+      int swprintf_s(wchar_t * restrict s, rsize_t n,
+           const wchar_t * restrict format, ...);
+      int swscanf_s(const wchar_t * restrict s,
+           const wchar_t * restrict format, ...);
+      int vfwprintf_s(FILE * restrict stream,
+           const wchar_t * restrict format,
+           va_list arg);
+      int vfwscanf_s(FILE * restrict stream,
+           const wchar_t * restrict format, va_list arg);
+      int vsnwprintf_s(wchar_t * restrict s,
+           rsize_t n,
+           const wchar_t * restrict format,
+           va_list arg);
+      int vswprintf_s(wchar_t * restrict s,
+           rsize_t n,
+           const wchar_t * restrict format,
+           va_list arg);
+
+
+
+
+
+        int vswscanf_s(const wchar_t * restrict s,
+             const wchar_t * restrict format,
+             va_list arg);
+        int vwprintf_s(const wchar_t * restrict format,
+             va_list arg);
+        int vwscanf_s(const wchar_t * restrict format,
+             va_list arg);
+        int wprintf_s(const wchar_t * restrict format, ...);
+        int wscanf_s(const wchar_t * restrict format, ...);
+        errno_t wcscpy_s(wchar_t * restrict s1,
+             rsize_t s1max,
+             const wchar_t * restrict s2);
+        errno_t wcsncpy_s(wchar_t * restrict s1,
+             rsize_t s1max,
+             const wchar_t * restrict s2,
+             rsize_t n);
+        errno_t wmemcpy_s(wchar_t * restrict s1,
+             rsize_t s1max,
+             const wchar_t * restrict s2,
+             rsize_t n);
+        errno_t wmemmove_s(wchar_t *s1, rsize_t s1max,
+             const wchar_t *s2, rsize_t n);
+        errno_t wcscat_s(wchar_t * restrict s1,
+             rsize_t s1max,
+             const wchar_t * restrict s2);
+        errno_t wcsncat_s(wchar_t * restrict s1,
+             rsize_t s1max,
+             const wchar_t * restrict s2,
+             rsize_t n);
+        wchar_t *wcstok_s(wchar_t * restrict s1,
+             rsize_t * restrict s1max,
+             const wchar_t * restrict s2,
+             wchar_t ** restrict ptr);
+        size_t wcsnlen_s(const wchar_t *s, size_t maxsize);
+        errno_t wcrtomb_s(size_t * restrict retval,
+             char * restrict s, rsize_t smax,
+             wchar_t wc, mbstate_t * restrict ps);
+
+
+
+
+
+
+      errno_t mbsrtowcs_s(size_t * restrict retval,
+           wchar_t * restrict dst, rsize_t dstmax,
+           const char ** restrict src, rsize_t len,
+           mbstate_t * restrict ps);
+      errno_t wcsrtombs_s(size_t * restrict retval,
+           char * restrict dst, rsize_t dstmax,
+           const wchar_t ** restrict src, rsize_t len,
+           mbstate_t * restrict ps);
+</pre>
+<hr>
+<a name='B.29'><h3>B.29 [Wide character classification and mapping utilities <wctype.h>]</h3></a>
+<a name='B.29p1'><pre>1   The following are the sequence points described in 5.1.2.3:
     -- Between the evaluations of the function designator and actual arguments in a function
        call and the actual call. (6.5.2.2).
     -- Between the evaluations of the first and second operands of the following operators:
@@ -22731,7 +24727,7 @@ s        Matches a sequence of non-white-space wide characters.
                    Universal character names for identifiers
 </pre>
 </a>
-<a name='B.21p1'><pre>1   This clause lists the hexadecimal code values that are valid in universal character names
+<a name='B.29p1'><pre>1   This clause lists the hexadecimal code values that are valid in universal character names
     in identifiers.
 </pre>
 </a>
@@ -23057,6 +25053,11 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='F.6'><h3>F.6 [The return statement]</h3></a>
+<pre> The return statement
+    If the return expression is evaluated in a floating-point format different from the return
+    type, the expression is converted as if by assignment362) to the return type of the function
+    and the resulting value is returned to the caller.
+</pre>
 <hr>
 <a name='F.7'><h3>F.7 [Contracted expressions]</h3></a>
 <a name='F.7p1'><pre>1   A contracted expression is correctly rounded (once) and treats infinities, NaNs, signed
@@ -23518,6 +25519,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='F.10.2'><h3>F.10.2 [Hyperbolic functions]</h3></a>
+<pre> Hyperbolic functions
+</pre>
 <hr>
 <a name='F.10.2.1'><h3>F.10.2.1 [The acosh functions]</h3></a>
 <a name='F.10.2.1p1'><pre>1   -- acosh(1) returns +0.
@@ -23559,6 +25562,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='F.10.3'><h3>F.10.3 [Exponential and logarithmic functions]</h3></a>
+<pre> Exponential and logarithmic functions
+</pre>
 <hr>
 <a name='F.10.3.1'><h3>F.10.3.1 [The exp functions]</h3></a>
 <a name='F.10.3.1p1'><pre>1   -- exp(&plusmn;0) returns 1.
@@ -23729,6 +25734,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='F.10.4'><h3>F.10.4 [Power and absolute value functions]</h3></a>
+<pre> Power and absolute value functions
+</pre>
 <hr>
 <a name='F.10.4.1'><h3>F.10.4.1 [The cbrt functions]</h3></a>
 <a name='F.10.4.1p1'><pre>1   -- cbrt(&plusmn;0) returns &plusmn;0.
@@ -23790,6 +25797,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='F.10.5'><h3>F.10.5 [Error and gamma functions]</h3></a>
+<pre> Error and gamma functions
+</pre>
 <hr>
 <a name='F.10.5.1'><h3>F.10.5.1 [The erf functions]</h3></a>
 <a name='F.10.5.1p1'><pre>1   -- erf(&plusmn;0) returns &plusmn;0.
@@ -23828,6 +25837,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='F.10.6'><h3>F.10.6 [Nearest integer functions]</h3></a>
+<pre> Nearest integer functions
+</pre>
 <hr>
 <a name='F.10.6.1'><h3>F.10.6.1 [The ceil functions]</h3></a>
 <a name='F.10.6.1p1'><pre>1   -- ceil(&plusmn;0) returns &plusmn;0.
@@ -23959,6 +25970,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='F.10.7'><h3>F.10.7 [Remainder functions]</h3></a>
+<pre> Remainder functions
+</pre>
 <hr>
 <a name='F.10.7.1'><h3>F.10.7.1 [The fmod functions]</h3></a>
 <a name='F.10.7.1p1'><pre>1   -- fmod(&plusmn;0, y ) returns &plusmn;0 for y not zero.
@@ -24012,6 +26025,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='F.10.8'><h3>F.10.8 [Manipulation functions]</h3></a>
+<pre> Manipulation functions
+</pre>
 <hr>
 <a name='F.10.8.1'><h3>F.10.8.1 [The copysign functions]</h3></a>
 <a name='F.10.8.1p1'><pre>1   copysign is specified in the Appendix to IEC 60559.
@@ -24057,6 +26072,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='F.10.9'><h3>F.10.9 [Maximum, minimum, and positive difference functions]</h3></a>
+<pre> Maximum, minimum, and positive difference functions
+</pre>
 <hr>
 <a name='F.10.9.1'><h3>F.10.9.1 [The fdim functions]</h3></a>
 <a name='F.10.9.1p1'><pre>1   No additional requirements.
@@ -24086,6 +26103,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='F.10.10'><h3>F.10.10 [Floating multiply-add]</h3></a>
+<pre> Floating multiply-add
+</pre>
 <hr>
 <a name='F.10.10.1'><h3>F.10.10.1 [The fma functions]</h3></a>
 <a name='F.10.10.1p1'><pre>1   -- fma( x , y , z ) computes xy + z , correctly rounded once.
@@ -24176,6 +26195,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='G.4'><h3>G.4 [Conversions]</h3></a>
+<pre> Conversions
+</pre>
 <hr>
 <a name='G.4.1'><h3>G.4.1 [Imaginary types]</h3></a>
 <a name='G.4.1p1'><pre>1   Conversions among imaginary types follow rules analogous to those for real floating
@@ -24491,6 +26512,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='G.6.1'><h3>G.6.1 [Trigonometric functions]</h3></a>
+<pre> Trigonometric functions
+</pre>
 <hr>
 <a name='G.6.1.1'><h3>G.6.1.1 [The cacos functions]</h3></a>
 <a name='G.6.1.1p1'><pre>1   -- cacos(conj( z )) = conj(cacos( z )).
@@ -24513,6 +26536,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='G.6.2'><h3>G.6.2 [Hyperbolic functions]</h3></a>
+<pre> Hyperbolic functions
+</pre>
 <hr>
 <a name='G.6.2.1'><h3>G.6.2.1 [The cacosh functions]</h3></a>
 <a name='G.6.2.1p1'><pre>1   -- cacosh(conj( z )) = conj(cacosh( z )).
@@ -24653,6 +26678,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='G.6.3'><h3>G.6.3 [Exponential and logarithmic functions]</h3></a>
+<pre> Exponential and logarithmic functions
+</pre>
 <hr>
 <a name='G.6.3.1'><h3>G.6.3.1 [The cexp functions]</h3></a>
 <a name='G.6.3.1p1'><pre>1   -- cexp(conj( z )) = conj(cexp( z )).
@@ -24704,6 +26731,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='G.6.4'><h3>G.6.4 [Power and absolute-value functions]</h3></a>
+<pre> Power and absolute-value functions
+</pre>
 <hr>
 <a name='G.6.4.1'><h3>G.6.4.1 [The cpow functions]</h3></a>
 <a name='G.6.4.1p1'><pre>1   The cpow functions raise floating-point exceptions if appropriate for the calculation of
@@ -25570,7 +27599,7 @@ s        Matches a sequence of non-white-space wide characters.
    the name va_copy or va_end (7.16.1).
 -- The va_start or va_copy macro is invoked without a corresponding invocation
    of the va_end macro in the same function, or vice versa (7.16.1, 7.16.1.2, 7.16.1.3,
-   7.16.1.4).
+     7.16.1.4).
 -- The type parameter to the va_arg macro is not such that a pointer to an object of
    that type can be obtained simply by postfixing a * (7.16.1.1).
 -- The va_arg macro is invoked when there is no actual next argument, or with a
@@ -25609,11 +27638,11 @@ s        Matches a sequence of non-white-space wide characters.
    setvbuf function (7.21.5.6).
 -- There are insufficient arguments for the format in a call to one of the formatted
    input/output functions, or an argument does not have an appropriate type (7.21.6.1,
-   7.21.6.2, 7.29.2.1, 7.29.2.2).
+     7.21.6.2, 7.29.2.1, 7.29.2.2).
 -- The format in a call to one of the formatted input/output functions or to the
    strftime or wcsftime function is not a valid multibyte character sequence that
    begins and ends in its initial shift state (7.21.6.1, 7.21.6.2, 7.27.3.5, 7.29.2.1, 7.29.2.2,
-   7.29.5.1).
+     7.29.5.1).
 -- In a call to one of the formatted output functions, a precision appears with a
    conversion specifier other than those described (7.21.6.1, 7.29.2.1).
 -- A conversion specification for a formatted output function uses an asterisk to denote
@@ -25623,7 +27652,7 @@ s        Matches a sequence of non-white-space wide characters.
    conversion specifier other than those described (7.21.6.1, 7.29.2.1).
 -- A conversion specification for one of the formatted input/output functions uses a
    length modifier with a conversion specifier other than those described (7.21.6.1,
-   7.21.6.2, 7.29.2.1, 7.29.2.2).
+     7.21.6.2, 7.29.2.1, 7.29.2.2).
 
 
 
@@ -25632,13 +27661,13 @@ s        Matches a sequence of non-white-space wide characters.
    does not require null termination) (7.21.6.1, 7.29.2.1).
 -- An n conversion specification for one of the formatted input/output functions includes
    any flags, an assignment-suppressing character, a field width, or a precision (7.21.6.1,
-   7.21.6.2, 7.29.2.1, 7.29.2.2).
+     7.21.6.2, 7.29.2.1, 7.29.2.2).
 -- A % conversion specifier is encountered by one of the formatted input/output
    functions, but the complete conversion specification is not exactly %% (7.21.6.1,
-   7.21.6.2, 7.29.2.1, 7.29.2.2).
+     7.21.6.2, 7.29.2.1, 7.29.2.2).
 -- An invalid conversion specification is found in the format for one of the formatted
    input/output functions, or the strftime or wcsftime function (7.21.6.1, 7.21.6.2,
-   7.27.3.5, 7.29.2.1, 7.29.2.2, 7.29.5.1).
+     7.27.3.5, 7.29.2.1, 7.29.2.2, 7.29.5.1).
 -- The number of characters or wide characters transmitted by a formatted output
    function (or written to an array, or that would have been written to an array) is greater
    than INT_MAX (7.21.6.1, 7.29.2.1).
@@ -25661,7 +27690,7 @@ s        Matches a sequence of non-white-space wide characters.
    vwscanf function is called with an improperly initialized va_list argument, or
    the argument is used (other than in an invocation of va_end) after the function
    returns (7.21.6.8, 7.21.6.9, 7.21.6.10, 7.21.6.11, 7.21.6.12, 7.21.6.13, 7.21.6.14,
-   7.29.2.5, 7.29.2.6, 7.29.2.7, 7.29.2.8, 7.29.2.9, 7.29.2.10).
+     7.29.2.5, 7.29.2.6, 7.29.2.7, 7.29.2.8, 7.29.2.9, 7.29.2.10).
 -- The contents of the array supplied in a call to the fgets or fgetws function are
    used after a read error occurred (7.21.7.2, 7.29.3.2).
 
@@ -25720,7 +27749,7 @@ s        Matches a sequence of non-white-space wide characters.
 -- The contents of the destination array are used after a call to the strxfrm,
    strftime, wcsxfrm, or wcsftime function in which the specified length was
    too small to hold the entire null-terminated result (7.24.4.5, 7.27.3.5, 7.29.4.4.4,
-   7.29.5.1).
+     7.29.5.1).
 -- The first argument in the very first call to the strtok or wcstok is a null pointer
    (7.24.5.8, 7.29.4.5.7).
 -- The type of an argument to a type-generic macro is not compatible with the type of
@@ -26003,7 +28032,7 @@ s        Matches a sequence of non-white-space wide characters.
 -- The style used to print an infinity or NaN, and the meaning of any n-char or n-wchar
    sequence printed for a NaN (7.21.6.1, 7.29.2.1).
 -- The output for %p conversion in the fprintf or fwprintf function (7.21.6.1,
-   7.29.2.1).
+     7.29.2.1).
 -- The interpretation of a - character that is neither the first nor the last character, nor
    the second where a ^ character is the first, in the scanlist for %[ conversion in the
    fscanf or fwscanf function (7.21.6.2, 7.29.2.1).
@@ -26298,8 +28327,12 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3'><h3>K.3 [Library]</h3></a>
+<pre> Library
+</pre>
 <hr>
 <a name='K.3.1'><h3>K.3.1 [Introduction]</h3></a>
+<pre> Introduction
+</pre>
 <hr>
 <a name='K.3.1.1'><h3>K.3.1.1 [Standard headers]</h3></a>
 <a name='K.3.1.1p1'><pre>1   The functions, macros, and types declared or defined in K.3 and its subclauses are not
@@ -26481,6 +28514,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.5.1'><h3>K.3.5.1 [Operations on files]</h3></a>
+<pre> Operations on files
+</pre>
 <hr>
 <a name='K.3.5.1.1'><h3>K.3.5.1.1 [The tmpfile_s function]</h3></a>
 <a name='K.3.5.1.1p1'><pre>1          #define _ _STDC_WANT_LIB_EXT1_ _ 1
@@ -27343,6 +29378,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.5.4'><h3>K.3.5.4 [Character input/output functions]</h3></a>
+<pre> Character input/output functions
+</pre>
 <hr>
 <a name='K.3.5.4.1'><h3>K.3.5.4.1 [The gets_s function]</h3></a>
 <a name='K.3.5.4.1p1'><pre>1          #define _ _STDC_WANT_LIB_EXT1_ _ 1
@@ -27429,6 +29466,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.6.1'><h3>K.3.6.1 [Runtime-constraint handling]</h3></a>
+<pre> Runtime-constraint handling
+</pre>
 <hr>
 <a name='K.3.6.1.1'><h3>K.3.6.1.1 [The set_constraint_handler_s function]</h3></a>
 <a name='K.3.6.1.1p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
@@ -27530,6 +29569,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.6.2'><h3>K.3.6.2 [Communication with the environment]</h3></a>
+<pre> Communication with the environment
+</pre>
 <hr>
 <a name='K.3.6.2.1'><h3>K.3.6.2.1 [The getenv_s function]</h3></a>
 <a name='K.3.6.2.1p1'><pre>1            #define _ _STDC_WANT_LIB_EXT1_ _ 1
@@ -27963,6 +30004,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.7.1'><h3>K.3.7.1 [Copying functions]</h3></a>
+<pre> Copying functions
+</pre>
 <hr>
 <a name='K.3.7.1.1'><h3>K.3.7.1.1 [The memcpy_s function]</h3></a>
 <a name='K.3.7.1.1p1'><pre>1          #define _ _STDC_WANT_LIB_EXT1_ _ 1
@@ -28136,6 +30179,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.7.2'><h3>K.3.7.2 [Concatenation functions]</h3></a>
+<pre> Concatenation functions
+</pre>
 <hr>
 <a name='K.3.7.2.1'><h3>K.3.7.2.1 [The strcat_s function]</h3></a>
 <a name='K.3.7.2.1p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
@@ -28279,6 +30324,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.7.3'><h3>K.3.7.3 [Search functions]</h3></a>
+<pre> Search functions
+</pre>
 <hr>
 <a name='K.3.7.3.1'><h3>K.3.7.3.1 [The strtok_s function]</h3></a>
 <a name='K.3.7.3.1p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
@@ -28692,6 +30739,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.9.1'><h3>K.3.9.1 [Formatted wide character input/output functions]</h3></a>
+<pre> Formatted wide character input/output functions
+</pre>
 <hr>
 <a name='K.3.9.1.1'><h3>K.3.9.1.1 [The fwprintf_s function]</h3></a>
 <a name='K.3.9.1.1p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
@@ -29272,8 +31321,12 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.9.2'><h3>K.3.9.2 [General wide string utilities]</h3></a>
+<pre> General wide string utilities
+</pre>
 <hr>
 <a name='K.3.9.2.1'><h3>K.3.9.2.1 [Wide string copying functions]</h3></a>
+<pre> Wide string copying functions
+</pre>
 <hr>
 <a name='K.3.9.2.1.1'><h3>K.3.9.2.1.1 [The wcscpy_s function]</h3></a>
 <a name='K.3.9.2.1.1p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
@@ -29595,6 +31648,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.9.2.3'><h3>K.3.9.2.3 [Wide string search functions]</h3></a>
+<pre> Wide string search functions
+</pre>
 <hr>
 <a name='K.3.9.2.3.1'><h3>K.3.9.2.3.1 [The wcstok_s function]</h3></a>
 <a name='K.3.9.2.3.1p1'><pre>1           #define _ _STDC_WANT_LIB_EXT1_ _ 1
@@ -29707,6 +31762,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='K.3.9.3'><h3>K.3.9.3 [Extended multibyte/wide character conversion utilities]</h3></a>
+<pre> Extended multibyte/wide character conversion utilities
+</pre>
 <hr>
 <a name='K.3.9.3.1'><h3>K.3.9.3.1 [Restartable multibyte/wide character conversion functions]</h3></a>
 <a name='K.3.9.3.1p1'><pre>1   Unlike wcrtomb, wcrtomb_s does not permit the ps parameter (the pointer to the
@@ -29958,6 +32015,8 @@ s        Matches a sequence of non-white-space wide characters.
 </a>
 <hr>
 <a name='L.2'><h3>L.2 [Definitions]</h3></a>
+<pre> Definitions
+</pre>
 <hr>
 <a name='L.2.1'><h3>L.2.1 [Definitions]</h3></a>
 <a name='L.2.1p1'><pre>1   out-of-bounds store
@@ -30037,79 +32096,79 @@ s        Matches a sequence of non-white-space wide characters.
 
 
 
-                                  Bibliography
-  1.   ``The C Reference Manual&#39;&#39; by Dennis M. Ritchie, a version of which was
-       published in The C Programming Language by Brian W. Kernighan and Dennis
-       M. Ritchie, Prentice-Hall, Inc., (1978). Copyright owned by AT&amp;T.
-  2.   1984 /usr/group Standard by the /usr/group Standards Committee, Santa Clara,
-       California, USA, November 1984.
-  3.   ANSI X3/TR-1-82 (1982), American National Dictionary for Information
-       Processing Systems, Information Processing Systems Technical Report.
-  4.   ANSI/IEEE 754-1985, American National Standard for Binary Floating-Point
-       Arithmetic .
-  5.   ANSI/IEEE 854-1988, American National Standard for Radix-Independent
-       Floating-Point Arithmetic .
-  6.   IEC 60559:1989, Binary floating-point arithmetic for microprocessor systems,
-       second edition (previously designated IEC 559:1989).
-  7.   ISO 31-11:1992, Quantities and units -- Part 11: Mathematical signs and
-       symbols for use in the physical sciences and technology .
-  8.   ISO/IEC 646:1991, Information technology -- ISO 7-bit coded character set for
-       information interchange.
-  9.   ISO/IEC 2382-1:1993, Information technology -- Vocabulary -- Part 1:
-       Fundamental terms.
- 10.   ISO 4217:1995, Codes for the representation of currencies and funds.
- 11.   ISO 8601:1988, Data elements and interchange formats -- Information
-       interchange -- Representation of dates and times.
- 12.   ISO/IEC 9899:1990, Programming languages -- C .
- 13.   ISO/IEC 9899/COR1:1994, Technical Corrigendum 1.
- 14.   ISO/IEC 9899/COR2:1996, Technical Corrigendum 2.
- 15.   ISO/IEC 9899/AMD1:1995, Amendment 1 to ISO/IEC 9899:1990 C Integrity .
- 16.   ISO/IEC 9899:1999, Programming languages -- C .
- 17.   ISO/IEC 9899:1999/Cor.1:2001, Technical Corrigendum 1.
- 18.   ISO/IEC 9899:1999/Cor.2:2004, Technical Corrigendum 2.
- 19.   ISO/IEC 9899:1999/Cor.3:2007, Technical Corrigendum 3.
- 20.    ISO/IEC 9945-2:1993, Information technology -- Portable Operating System
-        Interface (POSIX) -- Part 2: Shell and Utilities.
- 21.    ISO/IEC TR 10176:1998, Information technology -- Guidelines for the
-        preparation of programming language standards.
- 22.    ISO/IEC 10646-1:1993, Information technology -- Universal Multiple-Octet
-        Coded Character Set (UCS) -- Part 1: Architecture and Basic Multilingual Plane.
- 23.    ISO/IEC 10646-1/COR1:1996,          Technical       Corrigendum       1      to
-        ISO/IEC 10646-1:1993.
- 24.    ISO/IEC 10646-1/COR2:1998,          Technical       Corrigendum       2      to
-        ISO/IEC 10646-1:1993.
- 25.    ISO/IEC 10646-1/AMD1:1996, Amendment 1 to ISO/IEC 10646-1:1993
-        Transformation Format for 16 planes of group 00 (UTF-16).
- 26.    ISO/IEC 10646-1/AMD2:1996, Amendment 2 to ISO/IEC 10646-1:1993 UCS
-        Transformation Format 8 (UTF-8).
- 27.    ISO/IEC 10646-1/AMD3:1996, Amendment 3 to ISO/IEC 10646-1:1993.
- 28.    ISO/IEC 10646-1/AMD4:1996, Amendment 4 to ISO/IEC 10646-1:1993.
- 29.    ISO/IEC 10646-1/AMD5:1998, Amendment 5 to ISO/IEC 10646-1:1993 Hangul
-        syllables.
- 30.    ISO/IEC 10646-1/AMD6:1997,       Amendment      6   to   ISO/IEC 10646-1:1993
-        Tibetan.
- 31.    ISO/IEC 10646-1/AMD7:1997, Amendment 7 to ISO/IEC 10646-1:1993 33
-        additional characters.
- 32.    ISO/IEC 10646-1/AMD8:1997, Amendment 8 to ISO/IEC 10646-1:1993.
- 33.    ISO/IEC 10646-1/AMD9:1997,       Amendment      9   to   ISO/IEC 10646-1:1993
-        Identifiers for characters.
- 34.    ISO/IEC 10646-1/AMD10:1998, Amendment 10 to ISO/IEC 10646-1:1993
-        Ethiopic .
- 35.    ISO/IEC 10646-1/AMD11:1998, Amendment 11 to ISO/IEC 10646-1:1993
-        Unified Canadian Aboriginal Syllabics.
- 36.    ISO/IEC 10646-1/AMD12:1998, Amendment 12 to ISO/IEC 10646-1:1993
-        Cherokee.
- 37.    ISO/IEC 10967-1:1994, Information technology -- Language independent
-        arithmetic -- Part 1: Integer and floating point arithmetic .
- 38.   ISO/IEC TR 19769:2004, Information technology -- Programming languages,
-       their environments and system software interfaces -- Extensions for the
-       programming language C to support new character data types.
- 39.   ISO/IEC TR 24731-1:2007, Information technology -- Programming languages,
-       their environments and system software interfaces -- Extensions to the C library
-       -- Part 1: Bounds-checking interfaces.
+                                        Bibliography
+        1.   ``The C Reference Manual&#39;&#39; by Dennis M. Ritchie, a version of which was
+             published in The C Programming Language by Brian W. Kernighan and Dennis
+             M. Ritchie, Prentice-Hall, Inc., (1978). Copyright owned by AT&amp;T.
+        2.   1984 /usr/group Standard by the /usr/group Standards Committee, Santa Clara,
+             California, USA, November 1984.
+        3.   ANSI X3/TR-1-82 (1982), American National Dictionary for Information
+             Processing Systems, Information Processing Systems Technical Report.
+        4.   ANSI/IEEE 754-1985, American National Standard for Binary Floating-Point
+             Arithmetic .
+        5.   ANSI/IEEE 854-1988, American National Standard for Radix-Independent
+             Floating-Point Arithmetic .
+        6.   IEC 60559:1989, Binary floating-point arithmetic for microprocessor systems,
+             second edition (previously designated IEC 559:1989).
+        7.   ISO 31-11:1992, Quantities and units -- Part 11: Mathematical signs and
+             symbols for use in the physical sciences and technology .
+        8.   ISO/IEC 646:1991, Information technology -- ISO 7-bit coded character set for
+             information interchange.
+        9.   ISO/IEC 2382-1:1993, Information technology -- Vocabulary -- Part 1:
+             Fundamental terms.
+       10.   ISO 4217:1995, Codes for the representation of currencies and funds.
+       11.   ISO 8601:1988, Data elements and interchange formats -- Information
+             interchange -- Representation of dates and times.
+       12.   ISO/IEC 9899:1990, Programming languages -- C .
+       13.   ISO/IEC 9899/COR1:1994, Technical Corrigendum 1.
+       14.   ISO/IEC 9899/COR2:1996, Technical Corrigendum 2.
+       15.   ISO/IEC 9899/AMD1:1995, Amendment 1 to ISO/IEC 9899:1990 C Integrity .
+       16.   ISO/IEC 9899:1999, Programming languages -- C .
+       17.   ISO/IEC 9899:1999/Cor.1:2001, Technical Corrigendum 1.
+       18.   ISO/IEC 9899:1999/Cor.2:2004, Technical Corrigendum 2.
+       19.   ISO/IEC 9899:1999/Cor.3:2007, Technical Corrigendum 3.
+       20.    ISO/IEC 9945-2:1993, Information technology -- Portable Operating System
+              Interface (POSIX) -- Part 2: Shell and Utilities.
+       21.    ISO/IEC TR 10176:1998, Information technology -- Guidelines for the
+              preparation of programming language standards.
+       22.    ISO/IEC 10646-1:1993, Information technology -- Universal Multiple-Octet
+              Coded Character Set (UCS) -- Part 1: Architecture and Basic Multilingual Plane.
+       23.    ISO/IEC 10646-1/COR1:1996,          Technical       Corrigendum       1      to
+              ISO/IEC 10646-1:1993.
+       24.    ISO/IEC 10646-1/COR2:1998,          Technical       Corrigendum       2      to
+              ISO/IEC 10646-1:1993.
+       25.    ISO/IEC 10646-1/AMD1:1996, Amendment 1 to ISO/IEC 10646-1:1993
+              Transformation Format for 16 planes of group 00 (UTF-16).
+       26.    ISO/IEC 10646-1/AMD2:1996, Amendment 2 to ISO/IEC 10646-1:1993 UCS
+              Transformation Format 8 (UTF-8).
+       27.    ISO/IEC 10646-1/AMD3:1996, Amendment 3 to ISO/IEC 10646-1:1993.
+       28.    ISO/IEC 10646-1/AMD4:1996, Amendment 4 to ISO/IEC 10646-1:1993.
+       29.    ISO/IEC 10646-1/AMD5:1998, Amendment 5 to ISO/IEC 10646-1:1993 Hangul
+              syllables.
+       30.    ISO/IEC 10646-1/AMD6:1997,       Amendment      6   to   ISO/IEC 10646-1:1993
+              Tibetan.
+       31.    ISO/IEC 10646-1/AMD7:1997, Amendment 7 to ISO/IEC 10646-1:1993 33
+              additional characters.
+       32.    ISO/IEC 10646-1/AMD8:1997, Amendment 8 to ISO/IEC 10646-1:1993.
+       33.    ISO/IEC 10646-1/AMD9:1997,       Amendment      9   to   ISO/IEC 10646-1:1993
+              Identifiers for characters.
+       34.    ISO/IEC 10646-1/AMD10:1998, Amendment 10 to ISO/IEC 10646-1:1993
+              Ethiopic .
+       35.    ISO/IEC 10646-1/AMD11:1998, Amendment 11 to ISO/IEC 10646-1:1993
+              Unified Canadian Aboriginal Syllabics.
+       36.    ISO/IEC 10646-1/AMD12:1998, Amendment 12 to ISO/IEC 10646-1:1993
+              Cherokee.
+       37.    ISO/IEC 10967-1:1994, Information technology -- Language independent
+              arithmetic -- Part 1: Integer and floating point arithmetic .
+       38.   ISO/IEC TR 19769:2004, Information technology -- Programming languages,
+             their environments and system software interfaces -- Extensions for the
+             programming language C to support new character data types.
+       39.   ISO/IEC TR 24731-1:2007, Information technology -- Programming languages,
+             their environments and system software interfaces -- Extensions to the C library
+             -- Part 1: Bounds-checking interfaces.
 
 </pre>
 </a>
+
 </body>
 </html>
-
