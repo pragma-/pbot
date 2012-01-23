@@ -345,7 +345,7 @@ sub gen_html {
           if($paren == -1) {
             if(length $number and defined $footnotes[$number]) {
               print STDERR "Got footnote $number here!\n";
-              $footer .= "<a name='FOOTNOTE.$number'>\n<pre><i><b>Footnote $number)</b> $footnotes[$number]</i></pre>\n</a>\n";
+              $footer .= "<a name='FOOTNOTE.$number'>\n<pre><i><b>Footnote $number)</b> ", encode_entities $footnotes[$number], "</i></pre>\n</a>\n";
             }
 
             $paren = 0;
