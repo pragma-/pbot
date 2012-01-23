@@ -65,7 +65,7 @@ if($list_only and not length $search) {
   exit 0;
 }
 
-open FH, "<n1570.txt" or die "Could not open n1570.txt: $!";
+open FH, "<n1570.out" or die "Could not open n1570: $!";
 my @contents = <FH>;
 close FH;
 
@@ -94,24 +94,31 @@ while($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
   print "----------------------------------\n" if $debug >= 2;
   print "Processing section [$this_section]\n" if $debug;
 
+
+  if($section_specified and $this_section !~ m/^$section/) {
+    print "No section match, skipping.\n" if $debug >= 4;
+    next;
+  }
+
   my $section_text;
 
-  if($text =~ m/(.*?)^(?=\s{0,4}[0-9A-Z]+\.)/msg) {
+  if($text =~ m/(.*?)^(?=\s{0,4}(?!FOOTNOTE)[0-9A-Z]+\.)/msg) {
     $section_text = $1;
   } else {
     print "No section text, end of file marker found.\n" if $debug >= 4;
     last;
   }
 
+  if($section =~ /FOOTNOTE/) {
+    $section_text =~ s/^\s{4}//ms;
+    $section_text =~ s/^\s{4}FOOTNOTE.*//ms;
+    $section_text =~ s/^\d.*//ms;
+  }
+
   if($section_text =~ m/(.*?)$/msg) {
     $section_title = $1 if length $1;
     $section_title =~ s/^\s+//;
     $section_title =~ s/\s+$//;
-  }
-
-  if($section_specified and $this_section !~ m/^$section/) {
-    print "No section match, skipping.\n" if $debug >= 4;
-    next;
   }
 
   print "$this_section [$section_title]\n" if $debug >= 2;

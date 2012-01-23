@@ -1,96 +1,369 @@
 #!/usr/bin/perl
 
+# ugly and hacked together 
+
 use warnings;
 use strict;
 
 use HTML::Entities;
+use Data::Dumper;
 
 my $debug = 9999; 
+
+sub gen_data;
+sub gen_txt;
+sub gen_html;
 
 open FH, "<n1256.txt" or die "Could not open n1256.txt: $!";
 #open FH, "<n1570.txt" or die "Could not open n1570.txt: $!";
 my @contents = <FH>;
 close FH;
 
+
 my $text = join '', @contents;
 $text =~ s/\r//g;
 
-print "<html>\n<body>\n";
-
 my ($section_title, $this_section);
 
+my %sections;
 my $last_section_number = 0;
 my $section_number = 0;
 my $last_section;
+my @footnotes;
+my $footnote = 0;
+my $last_footnote = 0;
 
-while($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
-  $last_section_number = $section_number;
-  $last_section = $this_section;
-  $this_section = $1;
+gen_data;
+gen_txt;
+#gen_html;
 
-  ($section_number) = $this_section =~ /([^.]+)\./;
+sub gen_data {
+  while($text =~ m/^\s{0,5}([0-9A-Z]+\.[0-9\.]*)/msg) {
+    $last_section_number = $section_number;
+    $last_section = $this_section;
+    $this_section = $1;
 
-  print STDERR "----------------------------------\n" if $debug >= 2;
-  print STDERR "Processing section [$this_section]; number [$section_number]\n" if $debug;
+    ($section_number) = $this_section =~ /([^.]+)\./;
 
-  print STDERR "this_section: [$this_section]; last_section: [$last_section]\n";
-  print STDERR "Section diff: ", ($this_section - $last_section), "\n";
+    print STDERR "----------------------------------\n" if $debug >= 2;
+    print STDERR "Processing section [$this_section]; number [$section_number]\n" if $debug;
 
-  my $diff = $section_number - $last_section_number;
-  print STDERR "Diff: $diff\n" if $debug >= 2;
+    print STDERR "this_section: [$this_section]; last_section: [$last_section]\n";
+    print STDERR "Section diff: ", ($this_section - $last_section), "\n";
 
-  if($section_number > 0 and $diff < 0 or $diff > 1) { 
-     print STDERR "Diff out of bounds: $diff\n";
-     last;
-  }
+    my $diff = $section_number - $last_section_number;
+    print STDERR "Diff: $diff\n" if $debug >= 2;
 
-  my $section_text;
+    if($section_number > 0 and $diff < 0 or $diff > 1) { 
+      print STDERR "Diff out of bounds: $diff\n";
+      last;
+    }
 
-  if($text =~ m/(.*?)^(?=\s{0,4}[0-9A-Z]+\.)/msg) {
-    $section_text = $1;
-  } else {
-    print STDERR "No section text, end of file marker found.\n" if $debug >= 4;
-    last;
-  }
+    my $section_text;
 
-  if($section_text =~ m/(.*?)$/msg) {
-    $section_title = $1 if length $1;
-    $section_title =~ s/^\s+//;
-    $section_title =~ s/\s+$//;
-  }
+    if($text =~ m/(.*?)^(?=\s{0,4}[0-9A-Z]+\.)/msg) {
+      $section_text = $1;
+    } else {
+      print STDERR "No section text, end of file marker found.\n" if $debug >= 4;
+      last;
+    }
 
-  print STDERR "$this_section [$section_title]\n" if $debug >= 2;
-  
-  print "<hr>\n";
-  print "<a name='$this_section'>";
-  print "<h3>$this_section [$section_title]</h3>";
-  print "</a>\n";
+    if($section_text =~ m/(.*?)$/msg) {
+      $section_title = $1 if length $1;
+      $section_title =~ s/^\s+//;
+      $section_title =~ s/\s+$//;
+    }
 
-  print STDERR "section text: [$section_text]\n" if $debug >= 2;
+    print STDERR "$this_section [$section_title]\n" if $debug >= 2;
+    $sections{$this_section}{title} = $section_title;
 
-  if(not $section_text =~ m/^(?=\d+\s)/msg) {
-    print "<pre>$section_text</pre>\n";
-  } else {
-    my $last_p;
-    my $p;
-    while($section_text =~ m/^(\d+)\s(.*?)^(?=\d)/msgc or $section_text =~ m/^(\d+)\s(.*)/msg) {
-      $last_p = $p;
-      $p = $1;
-      my $t = $2;
+    print STDERR "section text: [$section_text]\n" if $debug >= 2;
 
-      print STDERR "paragraph $p: [$t]\n" if $debug >= 3;
+    if(not $section_text =~ m/^(?=\d+\s)/msg) {
+      $sections{$this_section}{text} = $section_text;
+    } else {
+      my $last_p = 0;
+      my $p = 0;
+      while($section_text =~ m/^(\d+)\s(.*?)^(?=\d)/msgc or $section_text =~ m/^(\d+)\s(.*)/msg) {
+        $last_p = $p;
+        $p = $1;
+        my $t = $2;
 
-      if(($last_p - $p) != -1) {
-        die "Paragraph diff invalid";
+        print STDERR "paragraph $p: [$t]\n" if $debug >= 3;
+
+        if(($last_p - $p) != -1) {
+          die "Paragraph diff invalid";
+        }
+
+        while($t =~ m/^(\s*)(\d+)\)(\s*)(.*?)$/msg) {
+          my $leading_spaces = $1;
+          $footnote = $2;
+          my $middle_spaces = $3;
+          my $footnote_text = "$4\n";
+          print STDERR "1st footnote\n";
+          print STDERR "processing footnote $footnote [last: $last_footnote]\n" if $debug >= 2;
+          if($last_footnote - $footnote != -1) {
+            print STDERR "footnotes dump: \n";
+            shift @footnotes;
+            my $dump = Dumper(@footnotes);
+            #print STDERR "$dump\n";
+            die "Footnote diff invalid";
+          }
+          $last_footnote = $footnote;
+
+          my $indent = (length $leading_spaces) + (length $footnote) + (length ')') + (length $middle_spaces);
+          $indent--;
+
+          print STDERR "footnote $footnote text [indent=$indent]: [$footnote_text]\n" if $debug >= 4;
+
+          while ($t =~ m/^(.*?)$/msgc) {
+            my $line = $1;
+            print STDERR "processing [$line]\n";
+
+            if($line =~ m/^(\s*)(\d+)\)(\s*)(.*?)$/msg) {
+              print STDERR "----------------\n" if $debug >= 10;
+              print STDERR "footnote $footnote: [$footnote_text]\n" if $debug >= 5;
+              $footnotes[$footnote] = $footnote_text;
+              print STDERR "----------------\n" if $debug >= 10;
+
+              $leading_spaces = $1;
+              $footnote = $2;
+              $middle_spaces = $3;
+              $footnote_text = "$4\n";
+
+              print STDERR "2nd footnote\n";
+              print STDERR "processing footnote $footnote [last: $last_footnote]\n" if $debug >= 2;
+              if($last_footnote - $footnote != -1) {
+                print STDERR "footnotes dump: \n";
+                shift @footnotes;
+                my $dump = Dumper(@footnotes);
+                #print STDERR "$dump\n";
+                die "Footnote diff invalid";
+              }
+              $last_footnote = $footnote;
+
+              my $indent = (length $leading_spaces) + (length $footnote) + (length ')') + (length $middle_spaces);
+              $indent--;
+
+              print STDERR "footnote $footnote text [indent=$indent]: [$footnote_text]\n" if $debug >= 4;
+              next;
+            }
+
+            if(not $line =~ m/^\s{$indent}/msg) {
+              print STDERR "INTERRUPTED FOOTNOTE\n";
+              last;
+            }
+            $footnote_text .= "$line\n";
+            print STDERR "footnote $footnote text: appending [$line]\n" if $debug >= 3;
+          }
+
+          print STDERR "----------------\n" if $debug >= 10;
+          print STDERR "footnote $footnote: [$footnote_text]\n" if $debug >= 5;
+          $footnotes[$footnote] = $footnote_text;
+          print STDERR "----------------\n" if $debug >= 10;
+        }
+
+        $sections{$this_section . "p$p"}{text} = "$p $t";
       }
-
-      $t = encode_entities($t);
-
-      print "<a name='$this_section" . "p$p'>";
-      print "<pre>$p $t</pre>\n";
-      print "</a>\n";
     }
   }
 }
 
-print "\n</body>\n</html>\n";
+sub bysection {
+  my $inverse = 1;
+  print STDERR "section cmp $a <=> $b\n";
+  
+  my ($a1, $p1) = split /p/, $a;
+  my ($b1, $p2) = split /p/, $b;
+
+  $p1 = 0 if not defined $p1;
+  $p2 = 0 if not defined $p2;
+
+  my @k1 = split /\./, $a1;
+  my @k2 = split /\./, $b1;
+  my @r;
+
+  if($#k2 > $#k1) {
+    my @t = @k1;
+    @k1 = @k2;
+    @k2 = @t;
+    my $tp = $p1;
+    $p1 = $p2;
+    $p2 = $tp;
+    $inverse = -1;
+  } else {
+    $inverse = 1;
+  }
+
+=cut
+  print STDERR "k1 vals:\n";
+  print STDERR Dumper(@k1), "\n";
+  print STDERR "p1: $p1\n";
+
+  print STDERR "k2 vals:\n";
+  print STDERR Dumper(@k2), "\n";
+  print STDERR "p2: $p2\n";
+=cut
+
+  my $i = 0;
+  for(; $i < $#k1 + 1; $i++) {
+    if(not defined $k2[$i]) {
+      $r[$i] = 1;
+    } else {
+      print STDERR "   cmp k1[$i] ($k1[$i]) vs k2[$i] ($k2[$i])\n";
+      if($i == 0) {
+        $r[$i] = $k1[$i] cmp $k2[$i];
+      } else {
+        $r[$i] = $k1[$i] <=> $k2[$i];
+      }
+    }
+    print STDERR "  r[$i] = $r[$i]\n";
+  }
+
+  $r[$i] = ($p1 <=> $p2);
+  print STDERR "  $p1 <=> $p2 => r[$i] = $r[$i]\n";
+
+  my $ret = 0;
+  foreach my $rv (@r) {
+    print STDERR "  checking r: $rv\n";
+    if($rv != 0) {
+      $ret = $rv;
+      last;
+    }
+  }
+
+  $ret = $ret * $inverse;
+
+  print STDERR "ret $ret\n";
+  return $ret;
+}
+
+sub gen_txt {
+  my $footer = "";
+  my $paren = 0;
+  my $section_head;
+  my $section_title;
+
+  foreach my $this_section (sort bysection keys %sections) {
+    print STDERR "writing section $this_section\n";
+    if(not $this_section =~ m/p/) {
+      print "    $this_section $sections{$this_section}{title}\n";
+      $section_head = $this_section;
+      $section_title = $sections{$this_section}{title};
+    }
+
+    my $section_text = $sections{$this_section}{text};
+
+    for($footnote = 1; $footnote < $#footnotes; $footnote++) {
+      my $sub = quotemeta $footnotes[$footnote];
+      $sub =~ s/(\\ )+/\\s*/g;
+      #print STDERR "subbing out [$footnote) $sub]\n";
+      $section_text =~ s/^\s*$footnote\)\s*$sub//ms;
+    }
+
+    while($section_text =~ m/^(.*?)$/msg) {
+      my $line = $1;
+
+      print STDERR "paren reset, line [$line]\n";
+      my $number = "";
+      while($line =~ m/(.)/g) {
+        my $c = $1;
+
+        if($c =~ m/[0-9]/) {
+          $number .= $c;
+        } elsif($c eq ' ') {
+          $number = "";
+        } elsif($c eq '(') {
+          $paren++;
+          print STDERR "got $paren (\n";
+        } elsif($c eq ')') {
+          $paren--;
+          print STDERR "got $paren )\n";
+
+          if($paren == -1) {
+            if(length $number and defined $footnotes[$number]) {
+              print STDERR "Got footnote $number here!\n";
+              $footer .= "    FOOTNOTE.$number\n      $footnotes[$number]\n";
+            }
+
+            $paren = 0;
+          }
+        } else {
+          $number = "";
+        }
+      }
+    }
+
+    print "$section_text\n";
+
+    if(length $footer) {
+      print $footer;
+      $footer = "";
+    }
+  }
+}
+
+sub gen_html {
+  print "<html>\n<body>\n";
+
+  my $footer = "";
+  my $paren = 0;
+
+  foreach my $this_section (sort bysection keys %sections) {
+    print STDERR "writing section $this_section\n";
+    print "<a name='", encode_entities $this_section, "'>\n";
+    print "<hr>\n<h3>", encode_entities $this_section, " [", encode_entities $sections{$this_section}{title}, "]</h3>\n" if not $this_section =~ m/p/;
+
+    my $section_text = $sections{$this_section}{text};
+
+    for($footnote = 1; $footnote < $#footnotes; $footnote++) {
+      my $sub = quotemeta $footnotes[$footnote];
+      $sub =~ s/(\\ )+/\\s*/g;
+      #print STDERR "subbing out [$footnote) $sub]\n";
+      $section_text =~ s/^\s*$footnote\)\s*$sub//ms;
+    }
+
+    while($section_text =~ m/^(.*?)$/msg) {
+      my $line = $1;
+
+      print STDERR "paren reset, line [$line]\n";
+      my $number = "";
+      while($line =~ m/(.)/g) {
+        my $c = $1;
+
+        if($c =~ m/[0-9]/) {
+          $number .= $c;
+        } elsif($c eq ' ') {
+          $number = "";
+        } elsif($c eq '(') {
+          $paren++;
+          print STDERR "got $paren (\n";
+        } elsif($c eq ')') {
+          $paren--;
+          print STDERR "got $paren )\n";
+
+          if($paren == -1) {
+            if(length $number and defined $footnotes[$number]) {
+              print STDERR "Got footnote $number here!\n";
+              $footer .= "<a name='FOOTNOTE.$number'>\n<pre><i><b>Footnote $number)</b> $footnotes[$number]</i></pre>\n</a>\n";
+            }
+
+            $paren = 0;
+          }
+        } else {
+          $number = "";
+        }
+      }
+    }
+
+    print "<pre>", encode_entities $section_text, "</pre>\n";
+    print "</a>\n";
+
+    if(length $footer) {
+      print $footer;
+      $footer = "";
+    }
+  }
+
+  print "\n</body>\n</html>\n";
+}
