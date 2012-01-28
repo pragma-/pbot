@@ -1,4 +1,3 @@
-#if 1 
 #include <limits.h>
 #include <wchar.h>
 #include <stdio.h>
@@ -87,7 +86,10 @@ __attribute__ (( constructor )) static void printf_binary_register(void)
     register_printf_specifier('b', printf_binary_handler, printf_binary_arginfo);
 }
 
-#endif
-
 #define STR(s) #s
 #define REVEAL(s) STR(s)
+
+void gdb() {}
+#define dump(var)  gdb("print " #var)
+#define ptype(var) gdb("ptype " #var)
+#define watch(var) gdb("watch " #var)

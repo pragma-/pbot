@@ -40,7 +40,7 @@ sub vm_start {
 
   if($pid == 0) {
       #system('cp /home/compiler/compiler-saved-vm-backup /home/compiler/compiler-saved-vm');
-    my $command = 'qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler-saved-vm -m 128 -monitor tcp:127.0.0.1:4445,server,nowait -serial tcp:127.0.0.1:4444,server,nowait -enable-kvm -boot c -nographic -loadvm 1';
+    my $command = 'nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler-saved-vm-2 -m 76 -monitor tcp:127.0.0.1:3335,server,nowait -serial tcp:127.0.0.1:3333,server,nowait -enable-kvm -boot c -loadvm 1 -nographic';
     my @command_list = split / /, $command;
     exec(@command_list); 
   } else {
@@ -51,14 +51,16 @@ sub vm_start {
 sub vm_reset {
   use IO::Socket;
 
+  print "Resetting vm\n";
   my $sock = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => 4445, Prot => 'tcp');
   if(not defined $sock) {
-    print "Unable to connect to monitor: $!\n";
+    print "[vm_reset] Unable to connect to monitor: $!\n";
     return;
   }
 
   print $sock "loadvm 1\n";
   close $sock;
+  print "Resetted vm\n";
 }
 
 sub execute {
@@ -135,7 +137,7 @@ sub compiler_server {
           my $tnick = quotemeta($nick);
           my $tlang = quotemeta($lang);
 
-          my ($ret, $result) = execute("./compiler_vm_client.pl $tnick -lang=$tlang $code");
+          my ($ret, $result) = execute("./compiler_vm_client-2.pl $tnick -lang=$tlang $code");
 
           if(not defined $ret) {
             print "parent continued\n";
@@ -172,7 +174,6 @@ sub compiler_server {
     alarm 0;
 
     close $client;
-
     print "stopping vm $vm_pid\n";
     vm_stop $vm_pid;
     $vm_pid = vm_start;

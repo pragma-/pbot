@@ -12,23 +12,21 @@ use LWP::UserAgent;
 my $debug = 0;
 
 my $USE_LOCAL        = defined $ENV{'CC_LOCAL'}; 
-my $MAX_UNDO_HISTORY = 100;
+my $MAX_UNDO_HISTORY = 1000000;
 
 my $output = "";
 my $nooutput = 'No output.';
 
 my %languages = (
-  'C99' => "std=C99 with pedantic warnings",
-  'C' => "std=gnu89",
-  'CLANG' => "std=gnu89 clang/llvm",
-  'CLANG99' => "std=c99 clang/llvm with pedantic warnings",
-#  'C++' => 1,
+  'C11' => "gcc -std=c11 -pedantic -Wall -Wextra (default)",
+  'C99' => "gcc -std=c99 -pedantic -Wall -Wextra",
+  'C89' => "gcc -std=c89 -pedantic -Wall -Wextra",
 );
 
 my %preludes = ( 
-  'C99'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include \"prelude.h\"\n\n",
-  'C'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n\n",
-  'C++'   => "#include <iostream>\n#include <cstdio>\n\nusing namespace std;\n\n",
+  'C99'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <prelude.h>\n\n",
+  'C11'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <prelude.h>\n\n",
+  'C'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <prelude.h>\n\n",
 );
 
 sub pretty {
@@ -75,7 +73,7 @@ sub compile {
     $pid = open2($compiler_output, $compiler, './compiler_vm_server.pl') || die "repl failed: $@\n";
     print "Started compiler, pid: $pid\n";
   } else {
-    $compiler  = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => '4444', Proto => 'tcp', Type => SOCK_STREAM);
+    $compiler  = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => '3333', Proto => 'tcp', Type => SOCK_STREAM);
     die "Could not create socket: $!" unless $compiler;
     $compiler_output = $compiler;
   }
@@ -121,9 +119,8 @@ my @last_code;
 
 print "      code: [$code]\n" if $debug;
 
-my $lang = "C99";
-$lang = $1 if $code =~ s/-lang=([^\b\s]+)//i;
-$lang = "C" if $code =~ s/-nowarn[ings]*//i;
+my $lang = "C11";
+$lang = uc $1 if $code =~ s/-lang=([^\b\s]+)//i;
 
 my $input = "";
 $input = $1 if $code =~ s/-input=(.*)$//i;
@@ -539,8 +536,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
 }
 
 # check to see if -flags were added by replacements
-$lang = $1 if $code =~ s/-lang=([^\b\s]+)//i;
-$lang = "C" if $code =~ s/-nowarn[ings]*//i;
+$lang = uc $1 if $code =~ s/-lang=([^\b\s]+)//i;
 $input = $1 if $code =~ s/-input=(.*)$//i;
 $args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
 $args =~ s/\s+$//;
@@ -578,7 +574,7 @@ if($code =~ m/#include/) {
 }
 $code = '';
 
-if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C++') {
+if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   my $has_main = 0;
 
   my $prelude = '';
@@ -679,6 +675,7 @@ $output = compile($lang, pretty($code), $args, $input, $USE_LOCAL);
 if($output =~ m/^\s*$/) {
   $output = $nooutput 
 } else {
+  print FILE "\n$output\n";
   $output =~ s/cc1: warnings being treated as errors//;
   $output =~ s/ Line \d+ ://g;
   $output =~ s/ \(first use in this function\)//g;
@@ -697,7 +694,14 @@ if($output =~ m/^\s*$/) {
   $output =~ s/$left_quote/'/g;
   $output =~ s/$right_quote/'/g;
   $output =~ s/\s*In function 'main':\s*//g;
-  $output =~ s/warning: unknown conversion type character 'b' in format\s+warning: too many arguments for format/info: conversion type character 'b' in format is a candide extension/g;
+  $output =~ s/warning: unknown conversion type character 'b' in format \[-Wformat\]\s+warning: too many arguments for format \[-Wformat-extra-args\]/info: conversion type character 'b' in format is a candide extension/g;
+  $output =~ s/warning: unknown conversion type character 'b' in format \[-Wformat\]//g;
+  $output =~ s/\s\(core dumped\)/./;
+  $output =~ s/\[\s+/[/g;
+  $output =~ s/ \[enabled by default\]//g;
+  $output =~ s/initializer\s+warning: \(near/initializer (near/g;
+  $output =~ s/note: each undeclared identifier is reported only once for each function it appears in//g;
+  $output =~ s/\(gdb\)//g;
 
   #$output =~ s/[\r\n]+/ /g;
   #$output =~ s/\s+/ /g;
