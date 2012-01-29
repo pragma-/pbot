@@ -8,17 +8,22 @@ my $USE_LOCAL = defined $ENV{'CC_LOCAL'};
 my %languages = (
   'C' => {
     'cmdline' => 'gcc $args $file -o prog -ggdb',
-    'args' => '-Wextra -Wall -Wno-unused -std=gnu89',
+    'args' => '-Wextra -Wall -Wno-unused -std=gnu89 -lm',
     'file' => 'prog.c',
   },
   'C++' => {
     'cmdline' => 'g++ $args $file -o prog -ggdb',
-    'args' => '',
+    'args' => '-lm',
     'file' => 'prog.cpp',
   },
   'C99' => {
     'cmdline' => 'gcc $args $file -o prog -ggdb',
     'args' => '-Wextra -Wall -Wno-unused -pedantic -std=c99 -lm',
+    'file' => 'prog.c',
+  },
+  'C11' => {
+    'cmdline' => 'gcc $args $file -o prog -ggdb',
+    'args' => '-Wextra -Wall -Wno-unused -pedantic -std=c11 -lm',
     'file' => 'prog.c',
   },
 );
@@ -58,6 +63,8 @@ sub runserver {
       print $output "result:$result\n";
       print $output "result:end\n";
 
+      system("rm *");
+
       if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
         print "input: ";
         next;
@@ -75,7 +82,7 @@ sub runserver {
       ($lang, $user_args, $user_input) = split /:/, $options;
 
       $code = "";
-      $lang = "C99" if not defined $lang;
+      $lang = "C11" if not defined $lang;
       $user_args = "" if not defined $user_args;
       $user_input = "" if not defined $user_input;
 
@@ -139,7 +146,7 @@ sub interpret {
   }
 
   my $user_input_quoted = quotemeta $user_input;
-  ($ret, $result) = execute(5, "./compiler_watchdog.pl $user_input_quoted");
+  ($ret, $result) = execute(60, "compiler_watchdog.pl $user_input_quoted");
 
   $result =~ s/^\s+//;
   $result =~ s/\s+$//;
