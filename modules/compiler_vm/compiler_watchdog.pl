@@ -31,24 +31,31 @@ sub execute {
         next if $line =~ m/^\(gdb\) \$\d+ = "Ok\."/;
         next if $line =~ m/^(\(gdb\) )?Breakpoint \d+ at 0x/;
         next if $line =~ m/^(\(gdb\) )?Starting program/;
-        next if $line =~ m/^\d+: .*? =/;
+
+        if($line =~ m/^\d+: (.*? = .*)/) {
+            print "<$1>\n";
+            $got_output = 1;
+            next;
+        }
 
         if($line =~ m/^Reading symbols from.*done\.$/) {
             print $in "break gdb\n";
             #<$out>;
 
-            print $in "list main\n";
+            print $in "list main,9001\n";
             print $in "print \"Ok.\"\n";
+            my $break = 0;
             while(my $line = <$out>) {
                 chomp $line;
                 print "list got: [$line]\n" if $debug >= 4;
                 if($line =~ m/^(\d+)\s+return 0;/) {
-                    print $in "break $1\n";
+                    $break = $1;
                 }
 
                 last if $line =~ m/^\(gdb\) \$\d+ = "Ok."/;
             }
 
+            print $in "break $break\n";
             print $in "run\n";
             next;
         }
@@ -59,7 +66,18 @@ sub execute {
             if($line =~ m/^\d+\s+return 0;$/) {
                 if($got_output == 0) {
                     print "no output, checking locals\n" if $debug >= 5;
-                    print $in "info locals\nprint \"Ok.\"\n";
+                    print $in "print \"Go.\"\ninfo locals\nprint \"Ok.\"\n";
+
+                    while(my $peep = <$out>) {
+                        chomp $peep;
+                        last if $peep =~ m/\(gdb\) \$\d+ = "Go."/;
+
+                        # fix this
+                        $peep =~ s/^\d+: (.*?) =/$1 =/;
+                        print "<$peep>\n";
+                        $got_output = 1;
+                    }
+
                     my $result = "";
                     my $vars = "";
                     my $varsep = "";
@@ -78,18 +96,11 @@ sub execute {
                     $result =~ s/\s+$//;
 
                     $vars =~ s/\(gdb\)\s*//g;
-                    $local_vars = "<local variables: $vars>" if length $vars;
-
-                    print $in "cont\n";
-                    next;
-                } else {
-                    print $in "cont\n";
-                    next;
-                } 
-            } else {
-                print $in "cont\n";
-                next;
+                    $local_vars = "<no output: $vars>" if length $vars;
+                }
             }
+            print $in "cont\n";
+            next;
         }
 
 
@@ -127,7 +138,7 @@ sub execute {
 
             if($cmd eq "watch") {
                 print $in "display $args\n";
-                #<$out>;
+                <$out>;
                 $watching++;
                 $ignore_response = 1;
             }
@@ -135,7 +146,7 @@ sub execute {
             print $in "$command\nprint \"Ok.\"\n";
             my $next_line = <$out>;
             chomp $next_line;
-            #print "nextline: $next_line\n";
+            print "nextline: $next_line\n" if $debug >= 1;
 
             $next_line =~ s/^\(gdb\)\s*\(gdb\)\s+\$\d+ = "Ok."//;
             $next_line =~ s/^\(gdb\)\s+\$\d+//;
