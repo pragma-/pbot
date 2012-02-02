@@ -40,7 +40,7 @@ sub vm_start {
 
   if($pid == 0) {
       #system('cp /home/compiler/compiler-saved-vm-backup /home/compiler/compiler-saved-vm');
-    my $command = 'nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler-saved-vm-2 -m 76 -monitor tcp:127.0.0.1:3335,server,nowait -serial tcp:127.0.0.1:3333,server,nowait -enable-kvm -boot c -loadvm 1 -nographic';
+    my $command = 'nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler-saved-vm -m 76 -monitor tcp:127.0.0.1:3335,server,nowait -serial tcp:127.0.0.1:3333,server,nowait -enable-kvm -boot c -loadvm 1 -nographic';
     my @command_list = split / /, $command;
     exec(@command_list); 
   } else {
@@ -137,7 +137,7 @@ sub compiler_server {
           my $tnick = quotemeta($nick);
           my $tlang = quotemeta($lang);
 
-          my ($ret, $result) = execute("./compiler_vm_client-2.pl $tnick -lang=$tlang $code");
+          my ($ret, $result) = execute("./compiler_vm_client.pl $tnick -lang=$tlang $code");
 
           if(not defined $ret) {
             print "parent continued\n";

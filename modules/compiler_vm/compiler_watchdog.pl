@@ -27,6 +27,7 @@ sub execute {
         my $ignore_response = 0;
 
         next if not length $line;
+        next if $line =~ m/^\(gdb\) No line \d+ in file/;
         next if $line =~ m/^\(gdb\) Continuing/;
         next if $line =~ m/^\(gdb\) \$\d+ = "Ok\."/;
         next if $line =~ m/^(\(gdb\) )?Breakpoint \d+ at 0x/;
@@ -40,16 +41,33 @@ sub execute {
 
         if($line =~ m/^Reading symbols from.*done\.$/) {
             print $in "break gdb\n";
-            #<$out>;
 
             print $in "list main,9001\n";
             print $in "print \"Ok.\"\n";
             my $break = 0;
+            my $bracket = 0;
+            my $main_ended = 0;
             while(my $line = <$out>) {
                 chomp $line;
                 print "list got: [$line]\n" if $debug >= 4;
-                if($line =~ m/^(\d+)\s+return 0;/) {
+                if(not $main_ended and $line =~ m/^(\d+)\s+return 0;/) {
                     $break = $1;
+                } else {
+                    my ($line_number) = $line =~ m/^(\d+)/g;
+                    while($line =~ m/(.)/g) {
+                        my $char = $1;
+                        if($char eq '{') {
+                            $bracket++;
+                        } elsif($char eq '}') {
+                            $bracket--;
+
+                            if($bracket == 0) {
+                                $break = $line_number;
+                                $main_ended = 1;
+                                last;
+                            }
+                        }
+                    }
                 }
 
                 last if $line =~ m/^\(gdb\) \$\d+ = "Ok."/;
@@ -63,7 +81,7 @@ sub execute {
         if($line =~ m/^Breakpoint \d+, main/) {
             my $line = <$out>;
             print "== got: $line\n" if $debug >= 5;
-            if($line =~ m/^\d+\s+return 0;$/) {
+            if($line =~ m/^\d+\s+return 0;\s*$/ or $line =~ m/^\d+\s+}\s*$/) {
                 if($got_output == 0) {
                     print "no output, checking locals\n" if $debug >= 5;
                     print $in "print \"Go.\"\ninfo locals\nprint \"Ok.\"\n";
@@ -97,10 +115,17 @@ sub execute {
 
                     $vars =~ s/\(gdb\)\s*//g;
                     $local_vars = "<no output: $vars>" if length $vars;
-                }
+
+                    print $in "cont\n";
+                    next;
+                } else {
+                    print $in "cont\n";
+                    next;
+                } 
+            } else {
+                print $in "cont\n";
+                next;
             }
-            print $in "cont\n";
-            next;
         }
 
 
@@ -113,23 +138,23 @@ sub execute {
             next;
         }
 
-        if($line =~ m/^\d+\s+watch\((.*)\)/) {
+        if($line =~ m/^\d+\s+.*\bwatch\((.*)\)/) {
             $line = "1 gdb(\"watch $1\");";
         }
 
-        if($line =~ m/^\d+\s+dump\((.*)\)/) {
+        if($line =~ m/^\d+\s+.*\bdump\((.*)\)/) {
             $line = "1 gdb(\"print $1\");";
         }
 
-        if($line =~ m/^\d+\s+print\((.*)\)/) {
+        if($line =~ m/^\d+\s+.*\bprint\((.*)\)/) {
             $line = "1 gdb(\"print $1\");";
         }
 
-        if($line =~ m/^\d+\s+ptype\((.*)\)/) {
+        if($line =~ m/^\d+\s+.*\bptype\((.*)\)/) {
             $line = "1 gdb(\"ptype $1\");";
         }
 
-        if($line =~ m/^\d+\s+.*gdb\("(.*)"\)/) {
+        if($line =~ m/^\d+\s+.*\bgdb\("(.*)"\)/) {
             my $command = $1;
             my ($cmd, $args) = split / /, $command, 2;
             $args = "" if not defined $args;
@@ -207,8 +232,6 @@ sub execute {
 
         if($line =~ m/^Watchpoint \d+ deleted/) {
             my $ignore = <$out>;
-            print "ignored $ignore\n" if $debug >= 5;
-            $ignore = <$out>;
             print "ignored $ignore\n" if $debug >= 5;
             print $in "cont\n";
             next;

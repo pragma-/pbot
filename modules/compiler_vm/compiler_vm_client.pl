@@ -24,9 +24,9 @@ my %languages = (
 );
 
 my %preludes = ( 
-  'C99'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <prelude.h>\n\n",
-  'C11'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <prelude.h>\n\n",
-  'C'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <prelude.h>\n\n",
+  'C99'  => "#define _XOPEN_SOURCE\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
+  'C11'  => "#define _XOPEN_SOURCE\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
+  'C'  => "#define _XOPEN_SOURCE\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
 );
 
 sub pretty {
@@ -44,6 +44,7 @@ sub pretty {
   return $result;
 }
 
+=cut
 sub paste_codepad {
   my $text = join(' ', @_);
 
@@ -61,6 +62,29 @@ if(not $response->is_success) {
 }
 
 return $response->request->uri;
+}
+=cut
+
+sub paste_codepad {
+  my $text = join(' ', @_);
+
+  $text =~ s/(.{120})\s/$1\n/g;
+
+  my $ua = LWP::UserAgent->new();
+  $ua->agent("Mozilla/5.0");
+  $ua->requests_redirectable([ ]);
+
+  my %post = ( 'sprunge' => $text, 'submit' => 'Submit' );
+  my $response = $ua->post("http://sprunge.us", \%post);
+
+  if(not $response->is_success) {
+    return $response->status_line;
+  }
+
+  my $result = $response->content;
+  $result =~ s/^\s+//;
+  $result =~ s/\s+$/?c/;
+  return $result;
 }
 
 sub compile {
@@ -527,6 +551,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
     last if(++$i > $MAX_UNDO_HISTORY);
     print FILE "$line\n";
   }
+
   close FILE;
 
   if($got_undo and not $got_sub) {
@@ -543,6 +568,7 @@ $args =~ s/\s+$//;
 
 unless($got_run) {
   open FILE, ">> log.txt";
+  print FILE "------------------------------------------------------------------------\n";
   print FILE localtime() . "\n";
   print FILE "$nick: $code\n";
 }
@@ -568,7 +594,7 @@ $code =~ s/#([\w\d_]+)\\n/#$1\n/g;
 
 my $precode;
 if($code =~ m/#include/) {
-  $precode = $code;
+  $precode = "#include <prelude.h>\n" . $code;
 } else {
   $precode = $preludes{$lang} . $code;
 }
@@ -668,14 +694,20 @@ if(defined $got_run and $got_run eq "paste") {
   exit 0;
 }
 
-print FILE "$nick: [lang:$lang][args:$args][input:$input]\n$code\n";
+print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n";
 
 $output = compile($lang, pretty($code), $args, $input, $USE_LOCAL);
+
+$output =~ s/^\s+//;
+$output =~ s/\s+$//;
 
 if($output =~ m/^\s*$/) {
   $output = $nooutput 
 } else {
-  print FILE "\n$output\n";
+  unless($got_run) {
+      print FILE localtime() . "\n";
+      print FILE "$output\n";
+  }
   $output =~ s/cc1: warnings being treated as errors//;
   $output =~ s/ Line \d+ ://g;
   $output =~ s/ \(first use in this function\)//g;
@@ -702,15 +734,19 @@ if($output =~ m/^\s*$/) {
   $output =~ s/initializer\s+warning: \(near/initializer (near/g;
   $output =~ s/note: each undeclared identifier is reported only once for each function it appears in//g;
   $output =~ s/\(gdb\)//g;
-
-  #$output =~ s/[\r\n]+/ /g;
-  #$output =~ s/\s+/ /g;
-
+  $output =~ s/", '\\(\d{3})' <repeats \d+ times>,? ?"/\\$1/g;
+  $output =~ s/, '\\(\d{3})' <repeats \d+ times>\s*//g;
+  print FILE $output, "\n";
+  $output =~ s/(\\000)+/\\0/g;
+  $output =~ s/\\0[^">]+/\\0/g;
+  #$output =~ s/(\\\d{3})+//g;
+  $output =~ s/\\0"/"/g;
+  $output =~ s/"\\0/"/g;
+  $output =~ s/\.\.\.>/>/g;
 }
 
 unless($got_run) {
-  print FILE localtime() . "\n";
-  print FILE "$nick: $output\n\n";
+  print FILE "$nick: $output\n";
   close FILE;
 }
 

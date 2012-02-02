@@ -7,7 +7,7 @@ my $USE_LOCAL = defined $ENV{'CC_LOCAL'};
 
 my %languages = (
   'C' => {
-    'cmdline' => 'gcc $args $file -o prog -ggdb',
+    'cmdline' => 'gcc $args $file -o prog -gdwarf-2 -g3',
     'args' => '-Wextra -Wall -Wno-unused -std=gnu89 -lm',
     'file' => 'prog.c',
   },
@@ -17,12 +17,12 @@ my %languages = (
     'file' => 'prog.cpp',
   },
   'C99' => {
-    'cmdline' => 'gcc $args $file -o prog -ggdb',
+    'cmdline' => 'gcc $args $file -o prog -gdwarf-2 -g3',
     'args' => '-Wextra -Wall -Wno-unused -pedantic -std=c99 -lm',
     'file' => 'prog.c',
   },
   'C11' => {
-    'cmdline' => 'gcc $args $file -o prog -ggdb',
+    'cmdline' => 'gcc $args $file -o prog -gdwarf-2 -g3',
     'args' => '-Wextra -Wall -Wno-unused -pedantic -std=c11 -lm',
     'file' => 'prog.c',
   },
