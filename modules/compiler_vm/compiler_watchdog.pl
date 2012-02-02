@@ -115,19 +115,11 @@ sub execute {
 
                     $vars =~ s/\(gdb\)\s*//g;
                     $local_vars = "<no output: $vars>" if length $vars;
-
-                    print $in "cont\n";
-                    next;
-                } else {
-                    print $in "cont\n";
-                    next;
-                } 
-            } else {
-                print $in "cont\n";
-                next;
+                }
             }
+            print $in "cont\n";
+            next;
         }
-
 
         if($line =~ m/Breakpoint \d+, gdb/) {
             print $in "up\n";
@@ -281,38 +273,51 @@ sub execute {
             $got_output = 1;
             print "$line ";
 
-            print $in "up\nup\nup\nup\nup\nup\nup\ninfo locals\nquit\ny\n";
-
             while(my $line = <$out>) {
                 chomp $line;
-                #print "got: [$line]\n";
-                if($line =~ s/^0x[0-9A-Fa-f]+\s//) {
-                    next if $line =~ /in main\s*\(/;
+                $line =~ s/^\(gdb\)\s+//;
+                $line =~ s/main \(.*?\)/main ()/;
 
+                print "signal got: [$line]\n" if $debug >= 5;
+
+                if($line =~ s/^(#\d+\s+)?0x[0-9A-Fa-f]+\s//) {
                     $line =~ s/\s+at .*:\d+//;
+                    $line =~ s/\s+from \/lib.*//;
 
-                    if($line !~ m/^\s*in\s+/) {
-                        $result = "in $line from ";
+                    if($line =~ s/^\s*in\s+//) {
+                        if(not length $result) {
+                            $result .= "in $line ";
+                        } else {
+                            $result .= "called by $line ";
+                        }
+                        print $in "info locals\n";
                     } else {
-                        $result .= "$line at ";
+                        $result = "in $line from ";
+                        print $in "info locals\n";
                     }
+                }
+                elsif($line =~ m/^No symbol table info available/) {
+                    print $in "up\n";
                 }
                 elsif($line =~ s/^\d+\s+//) {
                     next if $line =~ /No such file/;
 
-                    $result .= "at " if not length $result;
-                    $result .= "statement: $line";
+                    $result .= "at statement: $line ";
+                    print $in "up\n";
                 }
                 elsif($line =~ m/([^=]+)=\s+(.*)/) {
                     $vars .= "$varsep$1= $2";
                     $varsep = "; ";
                 }
+                elsif($line =~ m/^Initial frame selected; you cannot go up/) {
+                    last;
+                }
             }
 
             $result =~ s/^\s+//;
             $result =~ s/\s+$//;
+            $result =~ s/in main \(\) //;
 
-            $vars =~ s/\(gdb\)\s*//g;
             $vars = " <local variables: $vars>" if length $vars;
 
             print "$result$vars\n";
