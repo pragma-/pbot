@@ -7,7 +7,7 @@ use IPC::Open2;
 
 my $stdin_input = join ' ', @ARGV;
 
-my $debug = 0; 
+my $debug = 5; 
 
 my $watching = 0;
 my $got_output = 0;
@@ -27,11 +27,15 @@ sub execute {
         my $ignore_response = 0;
 
         next if not length $line;
-        next if $line =~ m/^\(gdb\) No line \d+ in file/;
+        <$out> and next if $line =~ m/^\(gdb\) No line \d+ in/;
         next if $line =~ m/^\(gdb\) Continuing/;
         next if $line =~ m/^\(gdb\) \$\d+ = "Ok\."/;
         next if $line =~ m/^(\(gdb\) )?Breakpoint \d+ at 0x/;
+        next if $line =~ m/^\(gdb\) Breakpoint \d+ at 0x/;
+        next if $line =~ m/^\(gdb\) Note: breakpoint \d+ also set/;
         next if $line =~ m/^(\(gdb\) )?Starting program/;
+        next if $line =~ m/PRETTY_FUNCTION__ =/;
+        next if $line =~ m/libc_start_main/;
 
         if($line =~ m/^\d+: (.*? = .*)/) {
             print "<$1>\n";
@@ -61,7 +65,7 @@ sub execute {
                         } elsif($char eq '}') {
                             $bracket--;
 
-                            if($bracket == 0) {
+                            if($bracket == 0 and not $main_ended) {
                                 $break = $line_number;
                                 $main_ended = 1;
                                 last;
@@ -121,6 +125,7 @@ sub execute {
             next;
         }
 
+
         if($line =~ m/Breakpoint \d+, gdb/) {
             print $in "up\n";
             $line = <$out>;
@@ -128,6 +133,50 @@ sub execute {
             $line = <$out>;
             print "ignored $line\n" if $debug >= 2;
             next;
+        }
+
+        if($line =~ m/^Breakpoint \d+, (.*?) at/) {
+            my $func = $1;
+            my $direction = "entered";
+            my $return_value = "";
+            my $nextline = <$out>;
+
+            print "got bt nextline: <$nextline>\n" if $debug >= 5;
+
+            if($nextline =~ m/^\d+\s+}$/) {
+                $direction = "leaving";
+
+                print $in "finish\n";
+                while(my $retval = <$out>) {
+                    chomp $retval;
+                    print "got retval line: <$retval>\n" if $debug >= 5;
+                    if($retval =~ m/Value returned is \$\d+ = (.*)/) {
+                        $return_value = ", returned $1";
+                        last;
+                    }
+                }
+            }
+
+            my $indent = 0;
+            print $in "bt\n";
+            while(my $bt = <$out>) {
+                print "got bt: <$bt>\n" if $debug >= 5;
+                $bt =~ s/^\(gdb\) //;
+                if($bt =~ m/^#(\d+) .* main .* at prog/) {
+                    $indent = $1;
+                    last;
+                }
+            } 
+
+            $indent++ if $direction eq "leaving";
+            
+            print "<$direction [$indent]", ' ' x $indent, "$func$return_value>\n";
+            print $in "cont\n";
+            next;
+        }
+
+        if($line =~ m/^\d+\s+.*\btrace\((.*)\)/) {
+            $line = "1 gdb(\"break $1\");";
         }
 
         if($line =~ m/^\d+\s+.*\bwatch\((.*)\)/) {
@@ -151,7 +200,44 @@ sub execute {
             my ($cmd, $args) = split / /, $command, 2;
             $args = "" if not defined $args;
 
-            #print "got command [$command]\n";
+            print "got command [$command]\n" if $debug >= 10;
+
+            if($cmd eq "break") {
+                $ignore_response = 1;
+
+                print $in "list $args,9001\n";
+                print $in "print \"Ok.\"\n";
+                my $break = 0;
+                my $bracket = 0;
+                my $func_ended = 0;
+                while(my $line = <$out>) {
+                    chomp $line;
+                    print "list break got: [$line]\n" if $debug >= 4;
+                    if(not $func_ended and $line =~ m/^(\d+)\s+return(.*?);/) {
+                        print "breaking at $1\n" if $debug >= 5;
+                        print $in "break $1\n";
+                    } else {
+                        my ($line_number) = $line =~ m/^(\d+)/g;
+                        while($line =~ m/(.)/g) {
+                            my $char = $1;
+                            if($char eq '{') {
+                                $bracket++;
+                            } elsif($char eq '}') {
+                                $bracket--;
+
+                                if($bracket == 0 and not $func_ended) {
+                                    print $in "break $line_number\n"; 
+                                    print "func ended, breaking at $line_number\n" if $debug >= 5;
+                                    $func_ended = 1;
+                                    last;
+                                }
+                            }
+                        }
+                    }
+
+                    last if $line =~ m/^\(gdb\) \$\d+ = "Ok."/;
+                }
+            }
 
             if($cmd eq "watch") {
                 print $in "display $args\n";
@@ -276,9 +362,11 @@ sub execute {
             while(my $line = <$out>) {
                 chomp $line;
                 $line =~ s/^\(gdb\)\s+//;
-                $line =~ s/main \(.*?\)/main ()/;
+                $line =~ s/main \(.*?\)/main ()/g;
 
                 print "signal got: [$line]\n" if $debug >= 5;
+
+                next if $line =~ m/__PRETTY_FUNCTION__ =/;
 
                 if($line =~ s/^(#\d+\s+)?0x[0-9A-Fa-f]+\s//) {
                     $line =~ s/\s+at .*:\d+//;
