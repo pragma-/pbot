@@ -13,6 +13,9 @@ my $watching = 0;
 my $got_output = 0;
 my $local_vars = "";
 
+sub flushall;
+sub gdb;
+
 sub execute {
     my ($cmdline) = @_;
     my ($ret, $result);
@@ -22,7 +25,7 @@ sub execute {
 
     while(my $line = <$out>) {
         chomp $line;
-        print "-- got: [$line]\n" if $debug >= 1;
+        print "--- got: [$line]\n" if $debug >= 1;
 
         my $ignore_response = 0;
 
@@ -44,10 +47,10 @@ sub execute {
         }
 
         if($line =~ m/^Reading symbols from.*done\.$/) {
-            print $in "break gdb\n";
+            gdb $in, "break gdb\n";
 
-            print $in "list main,9001\n";
-            print $in "print \"Ok.\"\n";
+            gdb $in, "list main,9001\n";
+            gdb $in, "print \"Ok.\"\n";
             my $break = 0;
             my $bracket = 0;
             my $main_ended = 0;
@@ -73,8 +76,8 @@ sub execute {
                 last if $line =~ m/^\(gdb\) \$\d+ = "Ok."/;
             }
 
-            print $in "break $break\n";
-            print $in "run\n";
+            gdb $in, "break $break\n";
+            gdb $in, "run\n";
             next;
         }
 
@@ -84,7 +87,7 @@ sub execute {
             if($line =~ m/^\d+\s+return.*?;\s*$/ or $line =~ m/^\d+\s+}\s*$/) {
                 if($got_output == 0) {
                     print "no output, checking locals\n" if $debug >= 5;
-                    print $in "print \"Go.\"\ninfo locals\nprint \"Ok.\"\n";
+                    gdb $in, "print \"Go.\"\ninfo locals\nprint \"Ok.\"\n";
 
                     while(my $peep = <$out>) {
                         chomp $peep;
@@ -117,13 +120,13 @@ sub execute {
                     $local_vars = "<no output: $vars>" if length $vars;
                 }
             }
-            print $in "cont\n";
+            gdb $in, "cont\n";
             next;
         }
 
 
         if($line =~ m/Breakpoint \d+, gdb/) {
-            print $in "up\n";
+            gdb $in, "up\n";
             $line = <$out>;
             print "ignored $line\n" if $debug >= 2;
             $line = <$out>;
@@ -136,26 +139,44 @@ sub execute {
             my $direction = "entered";
             my $return_value = "";
             my $nextline = <$out>;
+            chomp $nextline;
 
             print "got bt nextline: <$nextline>\n" if $debug >= 5;
 
             if($nextline =~ m/^\d+\s+}$/) {
                 $direction = "leaving";
 
-                print $in "finish\n";
+                gdb $in, "finish\n";
                 while(my $retval = <$out>) {
                     chomp $retval;
                     print "got retval line: <$retval>\n" if $debug >= 5;
+                    $retval =~ s/^\(gdb\)\s+//;
+
+                    if($retval =~ m/^Run till exit/) {
+                        <$out>;
+                        <$out>;
+                        next;
+                    }
+
                     if($retval =~ m/Value returned is \$\d+ = (.*)/) {
                         $return_value = ", returned $1";
                         last;
                     }
+                    
+                    next if not length $retval;
+                    next if $retval =~ m/^\$\d+ = 0/;
+
+                    print "$retval\n";
+                    $got_output = 1;
                 }
             }
 
+            flushall $in, $out;
+
             my $indent = 0;
-            print $in "bt\n";
+            gdb $in, "bt\n";
             while(my $bt = <$out>) {
+                chomp $bt;
                 print "got bt: <$bt>\n" if $debug >= 5;
                 $bt =~ s/^\(gdb\) //;
                 if($bt =~ m/^#(\d+) .* main .* at prog/) {
@@ -167,7 +188,7 @@ sub execute {
             $indent++ if $direction eq "leaving";
             
             print "<$direction [$indent]", ' ' x $indent, "$func$return_value>\n";
-            print $in "cont\n";
+            gdb $in, "cont\n";
             next;
         }
 
@@ -201,8 +222,8 @@ sub execute {
             if($cmd eq "break") {
                 $ignore_response = 1;
 
-                print $in "list $args,9001\n";
-                print $in "print \"Ok.\"\n";
+                gdb $in, "list $args,9001\n";
+                gdb $in, "print \"Ok.\"\n";
                 my $break = 0;
                 my $bracket = 0;
                 my $func_ended = 0;
@@ -218,7 +239,7 @@ sub execute {
                             $bracket--;
 
                             if($bracket == 0 and not $func_ended) {
-                                print $in "break $line_number\n"; 
+                                gdb $in, "break $line_number\n"; 
                                 print "func ended, breaking at $line_number\n" if $debug >= 5;
                                 $func_ended = 1;
                                 last;
@@ -231,13 +252,13 @@ sub execute {
             }
 
             if($cmd eq "watch") {
-                print $in "display $args\n";
+                gdb $in, "display $args\n";
                 <$out>;
                 $watching++;
                 $ignore_response = 1;
             }
 
-            print $in "$command\nprint \"Ok.\"\n";
+            gdb $in, "$command\nprint \"Ok.\"\n";
             while(my $next_line = <$out>) {
                 chomp $next_line;
                 print "nextline: $next_line\n" if $debug >= 1;
@@ -261,7 +282,7 @@ sub execute {
                 }
             }
 
-            print $in "cont\n";
+            gdb $in, "cont\n";
             next;
         }
 
@@ -282,7 +303,7 @@ sub execute {
 
             $got_output = 1;
             print "<$var = $val2>\n";
-            print $in "cont\n";
+            gdb $in, "cont\n";
             next;
         }
 
@@ -299,15 +320,17 @@ sub execute {
             my ($val2) = $new =~ m/New value = (.*)/;
 
             $got_output = 1;
-            print "<$var changed: $val1 => $val2>\n";
-            print $in "cont\n";
+            my $output = "<$var changed: $val1 => $val2>\n";
+            flushall $in, $out;
+            print $output;
+            gdb $in, "cont\n";
             next;
         }
 
         if($line =~ m/^Watchpoint \d+ deleted/) {
             my $ignore = <$out>;
             print "ignored $ignore\n" if $debug >= 5;
-            print $in "cont\n";
+            gdb $in, "cont\n";
             next;
         }
 
@@ -331,6 +354,7 @@ sub execute {
         }
 
         if($line =~ m/Program received signal SIGTRAP/) { 
+            my $output = "";
             my $line = <$out>;
             print "ignored $line\n" if $debug >= 5;
             $line = <$out>;
@@ -340,9 +364,11 @@ sub execute {
                 chomp $line;
                 $line =~ s/^\d+:\s//;
                 $got_output = 1;
-                print "<$line>\n";
+                $output .= "<$line>\n";
             }
-            print $in "cont\n";
+            flushall $in, $out;
+            print $output;
+            gdb $in, "cont\n";
             next;
         }
 
@@ -374,20 +400,20 @@ sub execute {
                         } else {
                             $result .= "called by $line ";
                         }
-                        print $in "info locals\n";
+                        gdb $in, "info locals\n";
                     } else {
                         $result = "in $line from ";
-                        print $in "info locals\n";
+                        gdb $in, "info locals\n";
                     }
                 }
                 elsif($line =~ m/^No symbol table info available/) {
-                    print $in "up\n";
+                    gdb $in, "up\n";
                 }
                 elsif($line =~ s/^\d+\s+//) {
                     next if $line =~ /No such file/;
 
                     $result .= "at statement: $line ";
-                    print $in "up\n";
+                    gdb $in, "up\n";
                 }
                 elsif($line =~ m/([^=]+)=\s+(.*)/) {
                     $vars .= "$varsep$1= $2";
@@ -418,6 +444,29 @@ sub execute {
 
         next if not length $line;
 
+        $got_output = 1;
+        print "$line\n";
+    }
+}
+
+sub gdb {
+    my ($in, $command) = @_;
+
+    chomp $command;
+    print "+++ gdb command [$command]\n" if $debug >= 2;
+    print $in "$command\n";
+}
+
+sub flushall {
+    my ($in, $out) = @_;
+
+    gdb $in, "call fflush(0)\nprint \"Ok.\"\n";
+    while(my $line = <$out>) {
+        chomp $line;
+        $line =~ s/^\(gdb\)\s*//;
+        $line =~ s/\$\d+ = 0$//;
+        last if $line =~ m/\$\d+ = "Ok."/;
+        next unless length $line;
         $got_output = 1;
         print "$line\n";
     }
