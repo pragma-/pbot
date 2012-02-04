@@ -33,7 +33,7 @@ sub pretty {
   my $code = join '', @_;
   my $result;
 
-  my $pid = open2(\*IN, \*OUT, 'astyle -Upf');
+  my $pid = open2(\*IN, \*OUT, 'astyle -Ujpf');
   print OUT "$code\n";
   close OUT;
   while(my $line = <IN>) {
@@ -736,13 +736,12 @@ if($output =~ m/^\s*$/) {
   $output =~ s/\(gdb\)//g;
   $output =~ s/", '\\(\d{3})' <repeats \d+ times>,? ?"/\\$1/g;
   $output =~ s/, '\\(\d{3})' <repeats \d+ times>\s*//g;
-  print FILE $output, "\n";
   $output =~ s/(\\000)+/\\0/g;
   $output =~ s/\\0[^">]+/\\0/g;
-  #$output =~ s/(\\\d{3})+//g;
   $output =~ s/\\0"/"/g;
   $output =~ s/"\\0/"/g;
   $output =~ s/\.\.\.>/>/g;
+  $output =~ s/(\\\d{3})+//g;
 }
 
 unless($got_run) {

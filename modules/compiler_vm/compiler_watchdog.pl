@@ -7,7 +7,7 @@ use IPC::Open2;
 
 my $stdin_input = join ' ', @ARGV;
 
-my $debug = 5; 
+my $debug = 0; 
 
 my $watching = 0;
 my $got_output = 0;
@@ -54,22 +54,18 @@ sub execute {
             while(my $line = <$out>) {
                 chomp $line;
                 print "list got: [$line]\n" if $debug >= 4;
-                if(not $main_ended and $line =~ m/^(\d+)\s+return 0;/) {
-                    $break = $1;
-                } else {
-                    my ($line_number) = $line =~ m/^(\d+)/g;
-                    while($line =~ m/(.)/g) {
-                        my $char = $1;
-                        if($char eq '{') {
-                            $bracket++;
-                        } elsif($char eq '}') {
-                            $bracket--;
+                my ($line_number) = $line =~ m/^(\d+)/g;
+                while($line =~ m/(.)/g) {
+                    my $char = $1;
+                    if($char eq '{') {
+                        $bracket++;
+                    } elsif($char eq '}') {
+                        $bracket--;
 
-                            if($bracket == 0 and not $main_ended) {
-                                $break = $line_number;
-                                $main_ended = 1;
-                                last;
-                            }
+                        if($bracket == 0 and not $main_ended) {
+                            $break = $line_number;
+                            $main_ended = 1;
+                            last;
                         }
                     }
                 }
@@ -85,7 +81,7 @@ sub execute {
         if($line =~ m/^Breakpoint \d+, main/) {
             my $line = <$out>;
             print "== got: $line\n" if $debug >= 5;
-            if($line =~ m/^\d+\s+return 0;\s*$/ or $line =~ m/^\d+\s+}\s*$/) {
+            if($line =~ m/^\d+\s+return.*?;\s*$/ or $line =~ m/^\d+\s+}\s*$/) {
                 if($got_output == 0) {
                     print "no output, checking locals\n" if $debug >= 5;
                     print $in "print \"Go.\"\ninfo locals\nprint \"Ok.\"\n";
@@ -213,24 +209,19 @@ sub execute {
                 while(my $line = <$out>) {
                     chomp $line;
                     print "list break got: [$line]\n" if $debug >= 4;
-                    if(not $func_ended and $line =~ m/^(\d+)\s+return(.*?);/) {
-                        print "breaking at $1\n" if $debug >= 5;
-                        print $in "break $1\n";
-                    } else {
-                        my ($line_number) = $line =~ m/^(\d+)/g;
-                        while($line =~ m/(.)/g) {
-                            my $char = $1;
-                            if($char eq '{') {
-                                $bracket++;
-                            } elsif($char eq '}') {
-                                $bracket--;
+                    my ($line_number) = $line =~ m/^(\d+)/g;
+                    while($line =~ m/(.)/g) {
+                        my $char = $1;
+                        if($char eq '{') {
+                            $bracket++;
+                        } elsif($char eq '}') {
+                            $bracket--;
 
-                                if($bracket == 0 and not $func_ended) {
-                                    print $in "break $line_number\n"; 
-                                    print "func ended, breaking at $line_number\n" if $debug >= 5;
-                                    $func_ended = 1;
-                                    last;
-                                }
+                            if($bracket == 0 and not $func_ended) {
+                                print $in "break $line_number\n"; 
+                                print "func ended, breaking at $line_number\n" if $debug >= 5;
+                                $func_ended = 1;
+                                last;
                             }
                         }
                     }
@@ -247,21 +238,26 @@ sub execute {
             }
 
             print $in "$command\nprint \"Ok.\"\n";
-            my $next_line = <$out>;
-            chomp $next_line;
-            print "nextline: $next_line\n" if $debug >= 1;
+            while(my $next_line = <$out>) {
+                chomp $next_line;
+                print "nextline: $next_line\n" if $debug >= 1;
 
-            $next_line =~ s/^\(gdb\)\s*\(gdb\)\s+\$\d+ = "Ok."//;
-            $next_line =~ s/^\(gdb\)\s+\$\d+//;
-            $next_line =~ s/^\(gdb\)\s+type//;
+                last if $next_line =~ m/\$\d+ = "Ok."/;
+                $next_line =~ s/^\(gdb\)\s*\(gdb\)\s+\$\d+ = "Ok."//;
+                $next_line =~ s/^\(gdb\)\s+\$\d+//;
+                $next_line =~ s/^\(gdb\)\s+type//;
+                $next_line =~ s/^\(gdb\)\s*//;
 
-            if(not $ignore_response) {
-                if($next_line =~ m/=/) {
-                    $got_output = 1;
-                    print "<$args$next_line>\n";
-                } else {
-                    print "<$next_line>\n" if length $next_line;
-                    $got_output = 1 if length $next_line;
+                next if not length $next_line;
+
+                if(not $ignore_response) {
+                    if($next_line =~ m/=/) {
+                        $got_output = 1;
+                        print "<$args$next_line>\n";
+                    } else {
+                        $got_output = 1; 
+                        print "<$next_line>\n";
+                    }
                 }
             }
 
