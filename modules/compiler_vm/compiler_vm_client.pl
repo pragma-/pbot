@@ -698,8 +698,10 @@ print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n
 
 $output = compile($lang, pretty($code), $args, $input, $USE_LOCAL);
 
+=cut
 $output =~ s/^\s+//;
 $output =~ s/\s+$//;
+=cut
 
 if($output =~ m/^\s*$/) {
   $output = $nooutput 
@@ -725,11 +727,12 @@ if($output =~ m/^\s*$/) {
   my $right_quote = chr(226) . chr(128) . chr(153);
   $output =~ s/$left_quote/'/g;
   $output =~ s/$right_quote/'/g;
+  $output =~ s/\t/   /g;
   $output =~ s/\s*In function 'main':\s*//g;
   $output =~ s/warning: unknown conversion type character 'b' in format \[-Wformat\]\s+warning: too many arguments for format \[-Wformat-extra-args\]/info: conversion type character 'b' in format is a candide extension/g;
   $output =~ s/warning: unknown conversion type character 'b' in format \[-Wformat\]//g;
   $output =~ s/\s\(core dumped\)/./;
-  $output =~ s/\[\s+/[/g;
+#  $output =~ s/\[\s+/[/g;
   $output =~ s/ \[enabled by default\]//g;
   $output =~ s/initializer\s+warning: \(near/initializer (near/g;
   $output =~ s/note: each undeclared identifier is reported only once for each function it appears in//g;
@@ -737,11 +740,16 @@ if($output =~ m/^\s*$/) {
   $output =~ s/", '\\(\d{3})' <repeats \d+ times>,? ?"/\\$1/g;
   $output =~ s/, '\\(\d{3})' <repeats \d+ times>\s*//g;
   $output =~ s/(\\000)+/\\0/g;
-  $output =~ s/\\0[^">]+/\\0/g;
+  $output =~ s/\\0[^">']+/\\0/g;
   $output =~ s/\\0"/"/g;
   $output =~ s/"\\0/"/g;
   $output =~ s/\.\.\.>/>/g;
   $output =~ s/(\\\d{3})+//g;
+  $output =~ s/<\s*included at \/home\/compiler\/>\s*//g;
+  $output =~ s/\s*compilation terminated due to -Wfatal-errors\.//g;
+  $output =~ s/^======= Backtrace.*\[vsyscall\]\s*$//ms;
+  $output =~ s/glibc detected \*\*\* \/home\/compiler\/prog: //;
+  $output =~ s/: \/home\/compiler\/prog terminated//;
 }
 
 unless($got_run) {
