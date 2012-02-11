@@ -147,7 +147,7 @@ my $lang = "C11";
 $lang = uc $1 if $code =~ s/-lang=([^\b\s]+)//i;
 
 my $input = "";
-$input = $1 if $code =~ s/-input=(.*)$//i;
+$input = $1 if $code =~ s/-(?:input|stdin)=(.*)$//i;
 
 my $args = "";
 $args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
@@ -588,9 +588,13 @@ if(not $found) {
   exit 0;
 }
 
+print "code before: [$code]\n" if $debug;
+
 $code =~ s/#include <([^>]+)>/#include <$1>\n/g;
 $code =~ s/#([^ ]+) (.*?)\\n/#$1 $2\n/g;
 $code =~ s/#([\w\d_]+)\\n/#$1\n/g;
+
+print "code after: [$code]\n" if $debug;
 
 my $precode;
 if($code =~ m/#include/) {
@@ -604,7 +608,9 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   my $has_main = 0;
 
   my $prelude = '';
-  $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?>\s*\n|#.*?\n)//s;
+  $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?>\s*\n)//s;
+
+  print "*** prelude: [$prelude]\nprecode: [$precode]\n" if $debug;
 
   # strip C and C++ style comments
   $precode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $3 ? $3 : ""#gse;
@@ -619,9 +625,13 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "preprecode: [$preprecode]\n" if $debug;
 
+  print "looking for functions, has main: $has_main\n" if $debug >= 2;
+
   # look for potential functions to extract
   while($preprecode =~ m/([ a-zA-Z0-9_*[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)/) {
     my ($pre_ret, $pre_ident, $pre_params, $pre_potential_body) = ($1, $2, $3, $4);
+
+    print "looking for functions, found [$pre_ret][$pre_ident][$pre_params][...], has main: $has_main\n" if $debug >= 2;
 
     # find the pos at which this function lives, for extracting from precode
     $preprecode =~ m/(\Q$pre_ret\E\s+\Q$pre_ident\E\s*\(\s*\Q$pre_params\E\s*\)\s*\Q$pre_potential_body\E)/g;
@@ -637,7 +647,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     $precode = substr($precode, 0, $extract_pos);
     print "precode: [$precode]\n" if $debug;
 
-    $tmpcode =~ m/([ a-zA-Z0-9_*[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)/;
+    $tmpcode =~ m/([ a-zA-Z0-9_*[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)/ms;
     my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
 
     print "[$ret][$ident][$params][$potential_body]\n" if $debug;
@@ -682,11 +692,58 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   $code = $precode;
 }
 
+print "after func extract, code: [$code]\n" if $debug;
+
 $code =~ s/\|n/\n/g;
 $code =~ s/^\s+//;
 $code =~ s/\s+$//;
 $code =~ s/;\n;\n/;\n/g;
-$code =~ s/(\n\n)+/\n\n/g;
+$code =~ s/^\s*;\s*$//gms;
+
+my $single_quote = 0;
+my $double_quote = 0;
+my $parens = 0;
+my $escaped = 0;
+
+while($code =~ m/(.)/msg) {
+    my $ch = $1;
+    my $pos = pos $code;
+
+    print "adding newlines, ch = [$ch], single: $single_quote, double: $double_quote, escape: $escaped, pos: $pos\n" if $debug >= 10;
+
+    if($ch eq '\\') {
+        $escaped = not $escaped;
+    } elsif($ch eq '"') {
+        $double_quote = not $double_quote unless $escaped;
+        $escaped = 0;
+    } elsif($ch eq '(' and not $single_quote and not $double_quote) {
+        $parens++;
+    } elsif($ch eq ')' and not $single_quote and not $double_quote) {
+        $parens--;
+        $parens = 0 if $parens < 0;
+    } elsif($ch eq ';' and not $single_quote and not $double_quote and $parens == 0) {
+        substr ($code, $pos, 0) = "\n";
+        pos $code = $pos + 1;
+    } elsif($ch eq "'") {
+        $single_quote = not $single_quote unless $escaped;
+        $escaped = 0;
+    } elsif($ch eq 'n' and $escaped) {
+        substr ($code, $pos - 2, 2) = "\n" and pos $code = $pos unless $single_quote or $double_quote;
+        $escaped = 0;
+    } elsif($ch eq '{' and not $single_quote and not $double_quote) {
+        substr ($code, $pos, 0) = "\n";
+        pos $code = $pos + 1;
+    } elsif($ch eq '}' and not $single_quote and not $double_quote) {
+        substr ($code, $pos, 0) = "\n";
+        pos $code = $pos + 1;
+    } else {
+        $escaped = 0;
+    }
+}
+
+$code =~ s/(?:\n\n)+/\n\n/g;
+
+print "final code: [$code]\n" if $debug;
 
 if(defined $got_run and $got_run eq "paste") {
   my $uri = paste_codepad(pretty($code));
@@ -697,11 +754,6 @@ if(defined $got_run and $got_run eq "paste") {
 print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n";
 
 $output = compile($lang, pretty($code), $args, $input, $USE_LOCAL);
-
-=cut
-$output =~ s/^\s+//;
-$output =~ s/\s+$//;
-=cut
 
 if($output =~ m/^\s*$/) {
   $output = $nooutput 
