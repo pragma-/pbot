@@ -33,18 +33,19 @@ sub pretty {
   my $code = join '', @_;
   my $result;
 
-  my $pid = open2(\*IN, \*OUT, 'astyle -Ujpf');
-  print OUT "$code\n";
-  close OUT;
-  while(my $line = <IN>) {
-    $result .= $line;
-  }
-  close IN;
-  waitpid($pid, 0);
+  open my $fh, ">prog.c" or die "Couldn't write prog.c: $!";
+  print $fh $code;
+  close $fh;
+
+  system("astyle", "-Ujpfnq", "prog.c");
+
+  open $fh, "<prog.c" or die "Couldn't read prog.c: $!";
+  $result = join '', <$fh>;
+  close $fh;
+
   return $result;
 }
 
-=cut
 sub paste_codepad {
   my $text = join(' ', @_);
 
@@ -57,15 +58,14 @@ sub paste_codepad {
   my %post = ( 'lang' => 'C', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
   my $response = $ua->post("http://codepad.org", \%post);
 
-if(not $response->is_success) {
-  return $response->status_line;
+  if(not $response->is_success) {
+    return $response->status_line;
+  }
+
+  return $response->request->uri;
 }
 
-return $response->request->uri;
-}
-=cut
-
-sub paste_codepad {
+sub paste_sprunge {
   my $text = join(' ', @_);
 
   $text =~ s/(.{120})\s/$1\n/g;
@@ -722,8 +722,10 @@ while($code =~ m/(.)/msg) {
         $parens--;
         $parens = 0 if $parens < 0;
     } elsif($ch eq ';' and not $single_quote and not $double_quote and $parens == 0) {
-        substr ($code, $pos, 0) = "\n";
-        pos $code = $pos + 1;
+        if(not substr($code, $pos, 1) =~ m/[\n\r]/) {
+            substr ($code, $pos, 0) = "\n";
+            pos $code = $pos + 1;
+        }
     } elsif($ch eq "'") {
         $single_quote = not $single_quote unless $escaped;
         $escaped = 0;
@@ -731,11 +733,15 @@ while($code =~ m/(.)/msg) {
         substr ($code, $pos - 2, 2) = "\n" and pos $code = $pos unless $single_quote or $double_quote;
         $escaped = 0;
     } elsif($ch eq '{' and not $single_quote and not $double_quote) {
-        substr ($code, $pos, 0) = "\n";
-        pos $code = $pos + 1;
+        if(not substr($code, $pos, 1) =~ m/[\n\r]/) {
+            substr ($code, $pos, 0) = "\n";
+            pos $code = $pos + 1;
+        }
     } elsif($ch eq '}' and not $single_quote and not $double_quote) {
-        substr ($code, $pos, 0) = "\n";
-        pos $code = $pos + 1;
+        if(not substr($code, $pos, 1) =~ m/[\n\r;]/) {
+            substr ($code, $pos, 0) = "\n";
+            pos $code = $pos + 1;
+        }
     } else {
         $escaped = 0;
     }
@@ -752,6 +758,8 @@ if(defined $got_run and $got_run eq "paste") {
 }
 
 print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n";
+
+$input = "Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet." if not length $input;
 
 $output = compile($lang, pretty($code), $args, $input, $USE_LOCAL);
 
