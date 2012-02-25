@@ -39,8 +39,7 @@ sub vm_start {
   }
 
   if($pid == 0) {
-      #system('cp /home/compiler/compiler-saved-vm-backup /home/compiler/compiler-saved-vm');
-    my $command = 'nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler-saved-vm -m 76 -monitor tcp:127.0.0.1:3335,server,nowait -serial tcp:127.0.0.1:3333,server,nowait -enable-kvm -boot c -loadvm 1 -nographic';
+    my $command = 'nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler-saved-vm -m 128 -monitor tcp:127.0.0.1:3335,server,nowait -serial tcp:127.0.0.1:3333,server,nowait -boot c -loadvm 1 -enable-kvm -nographic';
     my @command_list = split / /, $command;
     exec(@command_list); 
   } else {
@@ -78,7 +77,7 @@ sub execute {
 
       my $pid = open(my $fh, '-|', "$cmdline 2>&1");
 
-      local $SIG{ALRM} = sub { print "Time out\n"; kill 'TERM', $pid; die "Timed-out\n"; };
+      local $SIG{ALRM} = sub { print "Time out\n"; kill 'TERM', $pid; die "Timed-out: $result\n"; };
       alarm(7);
       
       while(my $line = <$fh>) {
@@ -89,20 +88,21 @@ sub execute {
 
       my $ret = $? >> 8;
       alarm 0;
-      print "[$ret, $result]\n";
+      #print "[$ret, $result]\n";
       return ($ret, $result);
     };
 
     alarm 0;
-    if($@ =~ /Timed-out/) {
-      return (-13, '[Timed-out]');
+    if($@ =~ /Timed-out: (.*)/) {
+      return (-13, "[Timed-out] $1");
     }
 
     return ($ret, $result);
   } else {
     waitpid($child, 0);
+    my $result = $? >> 8;
     print "child exited, parent continuing\n";
-    return undef;
+    return (undef, $result);
   }
 }
 
@@ -116,6 +116,8 @@ sub compiler_server {
     $client->autoflush(1);
     my $hostinfo = gethostbyaddr($client->peeraddr);
     printf "[Connect from %s]\n", $client->peerhost;
+    my $timed_out;
+
     eval {
       my $lang;
       my $nick;
@@ -140,10 +142,12 @@ sub compiler_server {
           my ($ret, $result) = execute("./compiler_vm_client.pl $tnick -lang=$tlang $code");
 
           if(not defined $ret) {
-            print "parent continued\n";
+            #print "parent continued\n";
+            $timed_out = 1 if $result == 243; # -13 == 243
             last;
           }
 
+          $result =~ s/\s+$//;
           print "Ret: $ret; result: [$result]\n";
 
           if($ret == -13) {
@@ -153,8 +157,8 @@ sub compiler_server {
           print $client $result . "\n";
           close $client;
           # child exit
-          print "child exit\n";
-          exit;
+          # print "child exit\n";
+          exit $ret;
         }
 
         if($line =~ /compile:([^:]+):(.*)$/) {
@@ -174,6 +178,9 @@ sub compiler_server {
     alarm 0;
 
     close $client;
+
+    next unless $timed_out;
+    
     print "stopping vm $vm_pid\n";
     vm_stop $vm_pid;
     $vm_pid = vm_start;
