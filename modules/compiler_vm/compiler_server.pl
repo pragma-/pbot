@@ -115,6 +115,7 @@ sub compiler_server {
   while (my $client = $server->accept()) {
     $client->autoflush(1);
     my $hostinfo = gethostbyaddr($client->peeraddr);
+    print '-' x 20, "\n";
     printf "[Connect from %s]\n", $client->peerhost;
     my $timed_out;
 

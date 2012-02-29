@@ -24,9 +24,9 @@ my %languages = (
 );
 
 my %preludes = ( 
-  'C99'  => "#define _XOPEN_SOURCE\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
-  'C11'  => "#define _XOPEN_SOURCE\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
-  'C'  => "#define _XOPEN_SOURCE\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
+  'C99'  => "#define _XOPEN_SOURCE\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
+  'C11'  => "#define _XOPEN_SOURCE\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
+  'C'  => "#define _XOPEN_SOURCE\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
 );
 
 sub pretty {
@@ -655,7 +655,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     $ret =~ s/^\s+//;
     $ret =~ s/\s+$//;
 
-    if($ret eq "else" or $ret eq "while") {
+    if(not length $ret or $ret eq "else" or $ret eq "while" or $ret eq "if" or $ret eq "for" or $ident eq "for" or $ident eq "while" or $ident eq "if") {
       $precode .= "$ret $ident ($params) $potential_body";
       next;
     } else {
@@ -681,6 +681,8 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   $precode =~ s/^\s+//;
   $precode =~ s/\s+$//;
 
+  $precode =~ s/^{(.*)}$/$1/s;
+
   if(not $has_main) {
     $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) {\n$precode\n;\nreturn 0;\n}\n";
     $nooutput = "No warnings, errors or output.";
@@ -704,6 +706,7 @@ my $single_quote = 0;
 my $double_quote = 0;
 my $parens = 0;
 my $escaped = 0;
+my $cpp = 0; # preprocessor
 
 while($code =~ m/(.)/msg) {
     my $ch = $1;
@@ -713,6 +716,8 @@ while($code =~ m/(.)/msg) {
 
     if($ch eq '\\') {
         $escaped = not $escaped;
+    } elsif($ch eq '#' and not $cpp and not $escaped and not $single_quote and not $double_quote) {
+        $cpp = 1;
     } elsif($ch eq '"') {
         $double_quote = not $double_quote unless $escaped;
         $escaped = 0;
@@ -731,13 +736,14 @@ while($code =~ m/(.)/msg) {
         $escaped = 0;
     } elsif($ch eq 'n' and $escaped) {
         substr ($code, $pos - 2, 2) = "\n" and pos $code = $pos unless $single_quote or $double_quote;
+        $cpp = 0 unless $single_quote or $double_quote;
         $escaped = 0;
-    } elsif($ch eq '{' and not $single_quote and not $double_quote) {
+    } elsif($ch eq '{' and not $cpp and not $single_quote and not $double_quote) {
         if(not substr($code, $pos, 1) =~ m/[\n\r]/) {
             substr ($code, $pos, 0) = "\n";
             pos $code = $pos + 1;
         }
-    } elsif($ch eq '}' and not $single_quote and not $double_quote) {
+    } elsif($ch eq '}' and not $cpp and not $single_quote and not $double_quote) {
         if(not substr($code, $pos, 1) =~ m/[\n\r;]/) {
             substr ($code, $pos, 0) = "\n";
             pos $code = $pos + 1;
@@ -752,7 +758,7 @@ $code =~ s/(?:\n\n)+/\n\n/g;
 print "final code: [$code]\n" if $debug;
 
 if(defined $got_run and $got_run eq "paste") {
-  my $uri = paste_codepad(pretty($code));
+  my $uri = paste_sprunge(pretty($code));
   print "$nick: $uri\n";
   exit 0;
 }
@@ -770,6 +776,7 @@ if($output =~ m/^\s*$/) {
       print FILE localtime() . "\n";
       print FILE "$output\n";
   }
+
   $output =~ s/cc1: warnings being treated as errors//;
   $output =~ s/ Line \d+ ://g;
   $output =~ s/ \(first use in this function\)//g;
@@ -782,7 +789,6 @@ if($output =~ m/^\s*$/) {
   $output =~ s/\(\.text\+[^)]+\)://g;
   $output =~ s/\[ In/[In/;
   $output =~ s/warning: Can't read pathname for load map: Input.output error.//g;
-
   my $left_quote = chr(226) . chr(128) . chr(152);
   my $right_quote = chr(226) . chr(128) . chr(153);
   $output =~ s/$left_quote/'/g;
@@ -810,6 +816,10 @@ if($output =~ m/^\s*$/) {
   $output =~ s/^======= Backtrace.*\[vsyscall\]\s*$//ms;
   $output =~ s/glibc detected \*\*\* \/home\/compiler\/prog: //;
   $output =~ s/: \/home\/compiler\/prog terminated//;
+  $output =~ s/<Defined at \/home\/compiler\/>/<Defined at \/home\/compiler\/prog.c:0>/g;
+  $output =~ s/\s*In file included from\s+\/usr\/include\/.*?:\d+:\d+:\s*/, /g;
+  $output =~ s/\s*collect2: error: ld returned 1 exit status//g;
+  $output =~ s/In function\s*`main':\s*\/home\/compiler\/ undefined reference to/error: undefined reference to/g;
 }
 
 unless($got_run) {

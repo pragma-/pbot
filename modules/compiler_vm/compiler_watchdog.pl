@@ -5,7 +5,10 @@ use strict;
 
 use IPC::Open2;
 
-my $stdin_input = join ' ', @ARGV;
+my $stdin_input = (join ' ', @ARGV) || "Lorem ipsum dolor sit amet.\n";
+open my $fh, '>', '.input' or die "Couldn't open .input: $!";
+print $fh $stdin_input;
+close $fh;
 
 my $debug = 0; 
 
@@ -80,7 +83,7 @@ sub execute {
             gdb $in, "break $break\n";
             gdb $in, "set width 0\n";
             gdb $in, "set height 0\n";
-            gdb $in, "run\n";
+            gdb $in, "run < .input\n";
             next;
         }
 
