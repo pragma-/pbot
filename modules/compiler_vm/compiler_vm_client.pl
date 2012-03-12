@@ -820,6 +820,34 @@ if($output =~ m/^\s*$/) {
   $output =~ s/\s*In file included from\s+\/usr\/include\/.*?:\d+:\d+:\s*/, /g;
   $output =~ s/\s*collect2: error: ld returned 1 exit status//g;
   $output =~ s/In function\s*`main':\s*\/home\/compiler\/ undefined reference to/error: undefined reference to/g;
+  $output =~ s/compilation terminated.//;
+  
+  # splint
+  $output =~ s/Splint 3.1.2 --- 03 May 2009\s*//;
+  $output =~ s/Finished checking --- \d+ code warning\s*//;
+  print FILE "splint: [$output]\n";
+  $output =~ s/\s*\(in function main\)\s*Fresh\s*storage\s*.*?\s*not\s*released.*?reference\s+to\s+it\s+is\s+lost.\s*//msg;
+  $output =~ s/\s*\(in function main\)\s*//g;
+  $output =~ s/\s*\(Use\s+.*?\s+to\s+inhibit\s+warning\)//msg;
+  $output =~ s/Suspect modification of observer/Suspect modification of string-literal/g;
+  $output =~ s/Storage\s*declared\s*with\s*observer\s*is\s*possibly\s*modified.\s*Observer\s*storage\s*may\s*not\s*be\s*modified./Such modification is undefined-behavior./gs;
+  $output =~ s/Storage\s*(.*?)?\s*becomes observer\s*//g;
+  $output =~ s/Fresh storage .*? created\s*//g;
+  $output =~ s/Storage .*? becomes null\s*//g;
+  $output =~ s/To\s*make\s*char\s*and\s*int\s*types\s*equivalent,\s*use\s*\+charint.\s*//gs;
+  $output =~ s/To\s*ignore\s*signs\s*in\s*type\s*comparisons\s*use\s*\+ignoresigns\s*//gs;
+  $output =~ s/Fresh storage/Allocated storage/g;
+  $output =~ s/derived\s*from\s*.*?\s*precondition:\s*requires\s*maxSet\(.*?\)\s*>=\s*maxRead\(.*?\)\s*//gs;
+  $output =~ s/\s*needed\s*to\s*satisfy\s*precondition:\s*requires\s*max.*?\(.*?\)\s*>=\s*\d+//gs;
+  $output =~ s/\s*needed\s*to\s*satisfy\s*precondition:\s*requires\s*max.*?\(.*?\)\s*>=\s*.*?@//gs;
+  $output =~ s/\s*To allow all numeric types to match, use \+relaxtypes.//g;
+  $output =~ s/\s*Corresponding format code//g;
+  $output =~ s/Command Line: Setting .*? redundant with current value\s*//g;
+  # $output =~ s/maxSet\((.*?)\s*@\s*\)/$1/g;
+  $output =~ s/\s*Unable to resolve constraint: requires .*? >= [^ \]]+//gs;
+  $output =~ s/\s*To\s*allow\s*arbitrary\s*integral\s*types\s*to\s*match\s*any\s*integral\s*type,\s*use\s*\+matchanyintegral.//gs;
+  $output =~ s/\s*Storage\s*.*?\s*becomes\s*static//gs;
+  $output =~ s/A\s*possibly\s*null\s*pointer\s*is\s*passed\s*as\s*a\s*parameter\s*corresponding\s*to\s*a\s*formal\s*parameter\s*with\s*no\s*\/\*\@null\@\*\/\s*annotation.\s*If\s*NULL\s*may\s*be\s*used\s*for\s*this\s*parameter,\s*add\s*a\s*\/\*\@null\@\*\/\s*annotation\s*to\s*the\s*function\s*parameter\s*declaration./A possibly null pointer is passed as a parameter to a function./gs;
 }
 
 unless($got_run) {

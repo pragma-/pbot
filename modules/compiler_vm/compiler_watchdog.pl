@@ -444,7 +444,7 @@ sub execute {
                     gdb $in, "up\n";
                 }
                 elsif($line =~ s/^\d+\s+//) {
-                    next if $line =~ /No such file/;
+                    gdb $in, "up\n" and next if $line =~ /No such file/;
 
                     $result .= "at statement: $line " unless $skip;
                     #    gdb $in, "info locals\n" unless $skip;

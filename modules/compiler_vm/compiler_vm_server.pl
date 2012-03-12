@@ -7,8 +7,8 @@ my $USE_LOCAL = defined $ENV{'CC_LOCAL'};
 
 my %languages = (
   'C' => {
-    'cmdline' => 'gcc $args $file -o prog -gdwarf-2 -g3',
-    'args' => '-Wextra -Wall -Wno-unused -std=gnu89 -lm',
+    'cmdline' => 'gcc $args $file -o prog -ggdb -g3',
+    'args' => '-Wextra -Wall -Wno-unused -std=gnu89 -lm -Wfatal-errors',
     'file' => 'prog.c',
   },
   'C++' => {
@@ -17,13 +17,13 @@ my %languages = (
     'file' => 'prog.cpp',
   },
   'C99' => {
-    'cmdline' => 'gcc $args $file -o prog -gdwarf-2 -g3',
-    'args' => '-Wextra -Wall -Wno-unused -pedantic -std=c99 -lm',
+    'cmdline' => 'gcc $args $file -o prog -ggdb -g3',
+    'args' => '-Wextra -Wall -Wno-unused -pedantic -std=c99 -lm -Wfatal-errors',
     'file' => 'prog.c',
   },
   'C11' => {
-    'cmdline' => 'gcc $args $file -o prog -gdwarf-2 -g3',
-    'args' => '-Wextra -Wall -Wno-unused -pedantic -std=c11 -lm',
+    'cmdline' => 'gcc $args $file -o prog -ggdb -g3',
+    'args' => '-Wextra -Wall -Wno-unused -Wcast-qual -Wconversion -Wlogical-op -pedantic -std=c11 -lm -Wfatal-errors',
     'file' => 'prog.c',
   },
 );
@@ -63,7 +63,7 @@ sub runserver {
       print $output "result:$result\n";
       print $output "result:end\n";
 
-      system("rm *");
+      #system("rm *");
 
       if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
         print "input: ";
@@ -126,7 +126,7 @@ sub interpret {
   $cmdline =~ s/\$file/$languages{$lang}{'file'}/;
 
   print "Executing [$cmdline]\n";
-  my ($ret, $result) = execute(60, $cmdline);
+  my ($ret, $result) = execute(60, "$cmdline 2>&1");
   # print "Got result: ($ret) [$result]\n";
 
   # if exit code was not 0, then there was a problem compiling, such as an error diagnostic
@@ -137,18 +137,42 @@ sub interpret {
 
   my $output = "";
 
+  my $splint_result;
+  ($ret, $splint_result) = execute(60, "splint -paramuse -varuse -warnposix -exportlocal -retvalint -predboolint -compdef -formatcode +bounds -boolops +boolint +charint +matchanyintegral +charintliteral -I/usr/lib/gcc/x86_64-linux-gnu/4.7/include -I /usr/lib/gcc/x86_64-linux-gnu/4.7/include-fixed/ -I /usr/include/x86_64-linux-gnu/ prog.c 2>/dev/null");
+
+  if($ret == 0) {
+      $splint_result = "";
+  } else {
+      $splint_result =~ s/\s*prog.c:\s*\(in function main\)\s*prog.c:\d+:\d+:\s*Fresh\s*storage\s*.*?\s*not\s*released.*?reference\s*to\s*it\s*is\s*lost.\s*\(Use\s*.*?\s*to\s*inhibit\s*warning\)\s*//msg;
+      $splint_result =~ s/prog.c:\d+:\d+:?//g;
+      $splint_result =~ s/prog.c:\s*//g;
+      $splint_result =~ s/\s*(\(\s*in\s*function\s*.*?\s*\))?\s*Possible\s*out-of-bounds\s*(read|store):\s*.*?\s*Unable\s*to\s*resolve\s*constraint:\s*requires\s*max(Read|Set)\(.*?\)\s*>=\s*0\s*needed\s*to\s*satisfy\s*precondition:\s*requires\s*max(Read|Set)\(.*?\)\s*>=\s*0\s*(A\s*memory.*?beyond\s*the\s*allocated\s*(storage|buffer).\s*\(Use\s*.*?\s*to\s*inhibit\s*warning\))?//msg;
+      $splint_result =~ s/\s*(\(\s*in\s*function\s*.*?\s*\))?\s*Possible\s*out-of-bounds\s*(read|store):\s*.*?\s*Unable\s*to\s*resolve\s*constraint:\s*requires\s*max(Read|Set)\(.*?\)\s*>=\s*.*?\s*\+\s*-\d+\s*needed\s*to\s*satisfy\s*precondition:\s*requires\s*max(Read|Set)\(.*?\)\s*>=\s*.*?\s*\+\s*-\d+\s*derived\s*from\s*.*?\s*precondition:\s*requires.*?\s*\+\s*-\d+\s*(A\s*memory.*?beyond\s*the\s*allocated\s*(storage|buffer).\s*\(Use\s*.*?\s*to\s*inhibit\s*warning\))?//msg;
+      $splint_result =~ s/Storage .*? becomes observer\s*//g;
+      $splint_result =~ s/Fresh storage .*? created\s*//g;
+      $splint_result =~ s/^\s+//msg;
+      $splint_result =~ s/\s+$//msg;
+      $splint_result =~ s/\s+/ /msg;
+      print "splint_result: [$splint_result]\n";
+  }
+
   # no errors compiling, but if $result contains something, it must be a warning message
   # so prepend it to the output
-  if(length $result) {
+  if(length $result or length $splint_result) {
     $result =~ s/^\s+//;
     $result =~ s/\s+$//;
-    $output = "[$result]\n";
+    $splint_result =~ s/^\s+//;
+    $splint_result =~ s/\s+$//;
+    $splint_result = " $splint_result" if length $result and length $splint_result;
+    $output = "[$result$splint_result]\n";
+    $output =~ s/^\[\s*\]\s*//;
+    $output =~ s/^\[\s*(.*?)\s*\]\s*$/[$1]\n/; # remove whitespace hack
   }
 
   my $user_input_quoted = quotemeta $user_input;
-  ($ret, $result) = execute(60, "compiler_watchdog.pl $user_input_quoted");
+  ($ret, $result) = execute(60, "compiler_watchdog.pl $user_input_quoted 2>&1");
 
-  $result =~ s/^\s+//;
+  #$result =~ s/^\s+//;
   $result =~ s/\s+$//;
 
   # print "Executed prog; got result: ($ret) [$result]\n";
@@ -172,7 +196,7 @@ sub execute {
 
     my $result = '';
 
-    my $pid = open(my $fh, '-|', "$cmdline 2>&1");
+    my $pid = open(my $fh, '-|', "$cmdline");
 
     local $SIG{ALRM} = sub { print "Time out\n"; kill 'TERM', $pid; die "$result [Timed-out]\n"; };
     alarm($timeout);
