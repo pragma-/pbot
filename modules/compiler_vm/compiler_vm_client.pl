@@ -661,7 +661,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
       $precode .= "$ret $ident ($params) $potential_body";
       next;
     } else {
-      $tmpcode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)//;
+      $tmpcode =~ s/$func_regex//;
     }
 
     my @extract = extract_bracketed($potential_body, '{}');
