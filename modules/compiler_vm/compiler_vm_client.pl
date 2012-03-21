@@ -847,6 +847,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/\s*Unable to resolve constraint: requires .*? >= [^ \]]+//gs;
   $output =~ s/\s*To\s*allow\s*arbitrary\s*integral\s*types\s*to\s*match\s*any\s*integral\s*type,\s*use\s*\+matchanyintegral.//gs;
   $output =~ s/\s*Storage\s*.*?\s*becomes\s*static//gs;
+  $output =~ s/Possibly\s*null\s*storage\s*passed\s*as\s*non-null\s*param:/Possibly null storage passed to function:/g;
   $output =~ s/A\s*possibly\s*null\s*pointer\s*is\s*passed\s*as\s*a\s*parameter\s*corresponding\s*to\s*a\s*formal\s*parameter\s*with\s*no\s*\/\*\@null\@\*\/\s*annotation.\s*If\s*NULL\s*may\s*be\s*used\s*for\s*this\s*parameter,\s*add\s*a\s*\/\*\@null\@\*\/\s*annotation\s*to\s*the\s*function\s*parameter\s*declaration./A possibly null pointer is passed as a parameter to a function./gs;
 }
 
