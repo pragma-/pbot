@@ -610,7 +610,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?>\s*\n)//s;
 
-  print "*** prelude: [$prelude]\nprecode: [$precode]\n" if $debug;
+  print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $debug;
 
   # strip C and C++ style comments
   $precode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $3 ? $3 : ""#gse;
@@ -627,8 +627,10 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "looking for functions, has main: $has_main\n" if $debug >= 2;
 
+  my $func_regex = qr/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\(([^;]+)\)\s*(\{.*)/;
+
   # look for potential functions to extract
-  while($preprecode =~ m/([ a-zA-Z0-9_*[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)/) {
+  while($preprecode =~ $func_regex) {
     my ($pre_ret, $pre_ident, $pre_params, $pre_potential_body) = ($1, $2, $3, $4);
 
     print "looking for functions, found [$pre_ret][$pre_ident][$pre_params][...], has main: $has_main\n" if $debug >= 2;
@@ -638,7 +640,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     my $extract_pos = (pos $preprecode) - (length $1);
 
     # now that we have the pos, substitute out the extracted potential function from preprecode
-    $preprecode =~ s/([ a-zA-Z0-9_*[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)//;
+    $preprecode =~ s/$func_regex//;
 
     # create tmpcode object that starts from extract pos, to skip any quoted code
     my $tmpcode = substr($precode, $extract_pos);
@@ -647,7 +649,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     $precode = substr($precode, 0, $extract_pos);
     print "precode: [$precode]\n" if $debug;
 
-    $tmpcode =~ m/([ a-zA-Z0-9_*[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)/ms;
+    $tmpcode =~ m/$func_regex/ms;
     my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
 
     print "[$ret][$ident][$params][$potential_body]\n" if $debug;
@@ -659,7 +661,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
       $precode .= "$ret $ident ($params) $potential_body";
       next;
     } else {
-      $tmpcode =~ s/([ a-zA-Z0-9_*[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)//;
+      $tmpcode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*(\{.*)//;
     }
 
     my @extract = extract_bracketed($potential_body, '{}');
@@ -687,6 +689,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) {\n$precode\n;\nreturn 0;\n}\n";
     $nooutput = "No warnings, errors or output.";
   } else {
+    print "code: [$code]; precode: [$precode]\n" if $debug;
     $code = "$prelude\n\n$precode\n\n$code\n";
     $nooutput = "No warnings, errors or output.";
   }
