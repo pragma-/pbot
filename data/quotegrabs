@@ -11,7 +11,6 @@ Mkop ##c 1260429170.97791 pragma_ Insight of the day: Programming is likely to i
 Mkop ##c 1260429869.08334 pragma_ I'll stop playing with it in public.
 wcarss ##c 1260439638.90734 pragma_ "What do trumpets and pirates have in common? They're both terrible on the high C's"
 Wulf_ ##c 1260440015.57858 pragma_ Why do all Pascal programmers ask to live in Atlantis? Because it is below C level.
-twkm ##c 1260440632.46203 pragma_ oh, and ewww, x86.
 Pryon ##c 1260468358.44293 pragma_ (users are evil)
 codrus ##philosophy 1260475825.13385 pragma_ Give a man a fish and he will eat for a day. Teach him how to fish, and he will sit in a boat and drink beer all day.
 pragma_ ##philosophy 1260490037.9738 pragma_ It's like trying to teach math to someone.  You tell them, "You have 4 apples, and I take away 2; how many do you have left?"  Then you tell them, "You have 3 oranges, and I give you 2; how many do you have?"  But they instead go off to read about fruit.
@@ -118,3 +117,62 @@ dotblank ##c 1296946020.23387 carcat wow I feel like a moron
 wulf ##c 1297290701.12426 pragma_ ,cc #define foo pri \n #define bar ntf \n #define cat(x,y) x ## y \n #define f(x,y) cat(x,y) \n f(foo,bar)("Hello, World!");
 pragma_ ##cc 1297486050.68282 pragma_ i just have these moments where i conveniently forget that i'm insane
 pragma_ #pbot2-test 1297486300.5413 pragma_ I think most people who remain in academia are actually the self-conscious insecure folks that are afraid of not knowing anything.  The other people who understand what knowledge is just shrug their shoulders and go around trolling people, like Socrates and 4chan.
+pragma_ ##c 1297811778.29007 pragma_ Some people in here benefit from warnings such as "Do not use hand to stop chain" on chainsaws.
+pragma_ ##c 1297985866.71355 pragma_ :D
+pragma_ ##c 1297985861.03266 pragma_ "Such an extensive computer science education opened up a wide range of career options, ranging from a professor at a university to ... a professor at another university."
+kulp ##c 1297986017.39203 pragma_ "The pig go. Go is to the fountain. The pig put foot. Grunt. Foot in what? ketchup. The dove fly. Fly is in sky. The dove drop something. The something on the pig. The pig  disgusting. The pig rattle. Rattle with dove. The dove angry. The pig leave. The dove produce. Produce is chicken wing. With wing bark. No Quack." — A Neural Network
+zhivago ##c 1300081855.23997 n00p nubnub: All that big O can tell you is how _one particular algorithm_ scales _with respect to itself_.
+tzanger ##c 1300326093.27169 rizlah it's innocent enough to start up a few, but then you find yourself a few days later with dozens of them and all kinds of locking and exclusivity code wrapping odd parts of the software, an overflowing ashtray and empty bottles of alcohol scattered around the floor
+caze ##c 1300517427.14627 n00p This porridge is too hot. This porridge it too cold. Boo hoo.
+van7hu ##c 1300653974.61016 van7hu JOIN
+twkm ##c 1301070961.89707 n00p have tons of fun, use utf-7.
+taylanub ##c 1301342198.95665 CaZe ??
+taylanub ##c 1301342087.26808 CaZe i don't have any real lisp experience but what i hear is enough
+zid` ##c 1302298869.94301 n00p I wasn't aware socrates was an asshole.
+pragma_ ##c 1302421933.15632 pragma_ If you ask me to do an oil change on your car, I'd probably end up taking the whole car apart, and would probably have pieces left over if I put it back together again; but it'd probably run better!
+thegoodcushion ##c 1302606537.4784 CaZe Wulf: Putting together test cases means setting up a wiki
+dandaman ##c 1303445899.00686 pragma_ now i regret that in my OS class
+dandaman ##c 1303445894.88279 pragma_ I learned C, i forgot it when I figured out C++ was way better
+dandaman ##c 1303446097.60019 pragma_ out of all the programming channel on freenode, you guys are the douchiest
+mutex_ ##c 1305241559.47538 Wulf wow, i'm stupid
+zhivago ##c 1305782427.2798 boris`` I wish you wouldn't fantasize about my asshole.
+n00p ##c 1306965345.19056 CaZe I live to perv.
+poppavic ##c 1307770140.16644 n00p someday, a book and his very own compiler.
+tigerpaw ##c 1310594959.6896 CaZe dude shut the fuck up. i'm learning something new here
+kate` ##c 1316698853.14392 pragma_ time to hoover my sand
+bardamu ##c 1321473057.09641 pragma_ I don't care what you say.. You don't know me... I have a lot people who love me especially women
+pragma_ ##c 1323739976.379 pragma_ guy stays up all night, writes code, gets a nap, wakes up feeling like shit, runs code and notices it doesn't actually work as previously thought last night, spends hours debugging, gets stressed out, adds more backlog.  other guy gets some sleep, wakes up refreshed, writes code with a clear head, ???, profit.
+silv3r_m00n ##c 1323847911.6855 pragma_ strcat is throwing exceptions
+jmcg ##c 1324074575.22988 pragma_ I mean, as a compiler, I'd punch you in the face.
+haqe17 ##c 1324783238.26424 pragma_ now that my code compiles, I can see the segfaults :) im so happy
+zhivago ##c 1327935940.51239 GeorgeJ Pantaloons: In any case, you're being a useless retard and you should be aware of this.
+zhivago ##c 1327936299.4043 GeorgeJ How many retarded things do you have to say each day in order to retain your retard license?
+georgej ##c 1327961210.90647 CaZe pragma_: Does candide save its quotes somewhere?
+tnurgsid ##c 1328860756.80703 fisted_ Zhivago:  Did you actually call me retarded?  That's not your style.
+rob``` ##c 1329346979.86719 GeorgeJ cs[tc]: your indentation is horrible. if i was printf() i'd give you garbage output too
+thepro4ever ##c 1330560757.67576 pragma_ man i'm an idiot
+thepro4ever ##c 1330560777.36747 pragma_ pragma_: you're an ass
+chris ##c 1330575512.19766 sha0 ninor: I suspect it's some kind of mental retardation.
+caze ##c 1330851423.5035 sha0 I'm just describing the symptoms of the misalignment.
+guidj0s ##c 1330908419.959 sha0 If I had to guess, I'd say the latter is the most stupid.
+kulp ##c 1331050111.6331 pragma_ an architecture course i took permitted any language. i used perl. the next year it was c/c++ only.
+caze ##c 1331625950.99372 CaZe I take it that's not a VPS.
+caze ##c 1331625910.96142 CaZe Both of your packages.
+zhivago ##c 1331879611.50663 pragma_ I do not understand.
+zhivago ##c 1332392703.56716 boris`` dsturbnull: Then any retard can write a retard app without retarding up the rest of your system.
+zhivago ##c 1332900062.69753 sha0 cs: Please sit quietly in the corner.
+duclare ##c 1333291563.14411 sha0 use brain never
+kesselhaus_ ##c 1333291594.7014 sha0 brain is out ..
+chris ##c 1335122126.63198 sha0 Leave my typos alone.
+dizzylizzy ##c 1335398927.25691 sha0 could not possibly be clearer
+sha0 ##c 1335401924.63693 pragma- likes Mr. Noodles, anyway.
+applebloom ##c 1335588079.68576 pragma- <pragma-> applebloom: I think your problem isn't your eyes but the fact that you seem to prefer to remain in a state of perplexed stupidity while exclaiming confused startled profanties
+pragma- ##c 1336200267.25643 sha0 "That's what." -- She
+she ##c 1336200433.72763 pragma- That's what.
+pragma- ##c 1336215436.23656 sha0 Stop arguing with me!
+yasar ##c 1335464211.31959 CaZe How would you profile a C program?
+phao ##c 1338318395.19821 pragma- igli, I thought he was creating prog1
+soryy708 ##c 1338648607.70068 fisted candide - How about extern ?
+chris ##c 1339733003.29741 CaZe Oh, semantics pedantry.
+poppavic ##c 1341709294.90064 engla alas, plan9 is in a parallel dimension.
+chris ##c 1342102921.74647 pragma- Normally loving C is a symptom of not knowing other languages.
