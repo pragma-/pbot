@@ -39,14 +39,14 @@ while(1) {
     }
 
     # print "search: [$arguments]; author: [$author]\n";
-    if((length $arguments < 4) && ($author eq "")) {
+    if((length $arguments < 3) && ($author eq "")) {
       print "Quote search parameter too small.\n";
-      die;
+      exit;
     }
 
     if((length $author > 0) && (length $author < 3)) {
       print "Quote author parameter too small.\n";
-      die;
+      exit;
     }
 
     $arguments =~ s/\++$//;
@@ -83,7 +83,7 @@ while(1) {
   
   if($#quotes < 0) {
     print "No results found.\n";
-    die;
+    exit;
   }
 
   last if($#ARGV < 0);
@@ -93,7 +93,7 @@ while(1) {
 
 if($#quotes < 0) {
   print "No results found.\n";
-  die;
+  exit;
 }
 
 
@@ -121,4 +121,4 @@ $t =~ s/&gt;/>/g;
 $t =~ s/<em>//g;
 $t =~ s/<\/em>//g;
 
-print "$t  Discuss!\n";
+print "$t\n";

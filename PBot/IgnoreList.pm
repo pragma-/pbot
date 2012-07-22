@@ -174,7 +174,7 @@ sub check_ignore {
   foreach my $ignored (keys %{ $self->{ignore_list} }) {
     foreach my $ignored_channel (keys %{ ${ $self->{ignore_list} }{$ignored} }) {
       #$self->{pbot}->logger->log("check_ignore: comparing '$hostmask' against '$ignored' for channel '$channel'\n");
-      if(($channel =~ /$ignored_channel/i) && ($hostmask =~ /$ignored/i)) {
+      if(($channel =~ /\Q$ignored_channel\E/i) && ($hostmask =~ /\Q$ignored\E/i)) {
         $self->{pbot}->logger->log("$nick!$user\@$host message ignored in channel $channel (matches [$ignored] host and [$ignored_channel] channel)\n");
         return 1;
       }

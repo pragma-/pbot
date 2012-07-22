@@ -42,7 +42,6 @@ sub execute {
         next if $line =~ m/^(\(gdb\) )*Starting program/;
         next if $line =~ m/PRETTY_FUNCTION__ =/;
         next if $line =~ m/libc_start_main/;
-        next if $line =~ m/libc-start.c/;
 
         if($line =~ m/^\d+: (.*? = .*)/) {
             print "<$1>\n";
@@ -91,9 +90,6 @@ sub execute {
             my $line = <$out>;
             print "== got: $line\n" if $debug >= 5;
             if($line =~ m/^\d+\s+return.*?;\s*$/ or $line =~ m/^\d+\s+}\s*$/) {
-                for(my $i = 0; $i < $watching; $i++) {
-                    <$out>;
-                }
                 if($got_output == 0) {
                     print "no output, checking locals\n" if $debug >= 5;
                     gdb $in, "print \"Go.\"\ninfo locals\nprint \"Ok.\"\n";
@@ -171,7 +167,7 @@ sub execute {
                         $return_value = ", returned $1";
                         last;
                     }
-
+                    
                     next if not length $retval;
                     next if $retval =~ m/^\$\d+ = 0/;
 
@@ -195,7 +191,7 @@ sub execute {
             } 
 
             $indent++ if $direction eq "leaving";
-
+            
             print "<$direction [$indent]", ' ' x $indent, "$func$return_value>\n";
             gdb $in, "cont\n";
             next;
@@ -339,8 +335,6 @@ sub execute {
         if($line =~ m/^Watchpoint \d+ deleted/) {
             my $ignore = <$out>;
             print "ignored $ignore\n" if $debug >= 5;
-            $ignore = <$out>;
-            print "ignored $ignore\n" if $debug >= 5;
             gdb $in, "cont\n";
             next;
         }
@@ -383,9 +377,7 @@ sub execute {
             next;
         }
 
-        if($line =~ m/Program received signal ([^, ]+)/) {
-            my $signal = $1;
-            my $trace_prog_only = 1;
+        if($line =~ m/Program received signal/) {
             my $result = "";
             my $vars = "";
             my $varsep = "";
@@ -393,14 +385,6 @@ sub execute {
             $line =~ s/\.$//;
             $got_output = 1;
             print "$line ";
-
-            print "\ngot signal [$signal]\n" if $debug >= 2;
-
-            if($signal eq "SIGABRT") {
-                $trace_prog_only = 1;
-            }
-
-            my $last_file = "";
 
             while(my $line = <$out>) {
                 chomp $line;
@@ -411,44 +395,30 @@ sub execute {
 
                 next if $line =~ m/__PRETTY_FUNCTION__ =/;
 
-                my $skip = 0;
-                if($trace_prog_only) {
-                    if($line =~ m/.*\s(.*?)\.c:\d+$/) {
-                        $last_file = $1;
-                    }
-
-                    $skip = 1 if not $last_file eq "prog";
-                }
-
-                print "last file: [$last_file], skip: $skip\n" if $debug >= 6;
-
                 if($line =~ s/^(#\d+\s+)?0x[0-9A-Fa-f]+\s//) {
                     $line =~ s/\s+at .*:\d+//;
                     $line =~ s/\s+from \/lib.*//;
 
                     if($line =~ s/^\s*in\s+//) {
                         if(not length $result) {
-                            $result .= "in $line " unless $skip;
+                            $result .= "in $line ";
                         } else {
-                            $result .= "called by $line " unless $skip;
+                            $result .= "called by $line ";
                         }
-                        gdb $in, "info locals\n" unless $skip;
-                        gdb $in, "print \"Ok.\"";
+                        gdb $in, "info locals\n";
                     } else {
-                        $result = "in $line from " unless $skip;
-                        gdb $in, "info locals\n" unless $skip;
-                        gdb $in, "print \"Ok.\"";
+                        $result = "in $line from ";
+                        gdb $in, "info locals\n";
                     }
                 }
-                elsif($line =~ m/^\$\d+ = "Ok."/) {
+                elsif($line =~ m/^No symbol table info available/) {
                     gdb $in, "up\n";
                 }
                 elsif($line =~ s/^\d+\s+//) {
-                    gdb $in, "up\n" and next if $line =~ /No such file/;
+                    next if $line =~ /No such file/;
 
-                    $result .= "at statement: $line " unless $skip;
-                    #    gdb $in, "info locals\n" unless $skip;
-                    gdb $in, "print \"Ok.\"";
+                    $result .= "at statement: $line ";
+                    gdb $in, "up\n";
                 }
                 elsif($line =~ m/([^=]+)=\s+(.*)/) {
                     $vars .= "$varsep$1= $2";
@@ -507,4 +477,4 @@ sub flushall {
     }
 }
 
-execute("LIBC_FATAL_STDERR_=1 gdb -silent ./prog 2>&1");
+execute("LIBC_FATAL_STDERR=1 gdb -silent ./prog 2>&1");

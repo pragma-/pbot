@@ -39,7 +39,7 @@ sub vm_start {
   }
 
   if($pid == 0) {
-    my $command = 'nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler-saved-vm -m 128 -monitor tcp:127.0.0.1:3335,server,nowait -serial tcp:127.0.0.1:3333,server,nowait -boot c -loadvm 1 -enable-kvm -nographic';
+    my $command = 'nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler/compiler-savedvm.qcow2 -m 128 -monitor tcp:127.0.0.1:3335,server,nowait -serial tcp:127.0.0.1:3333,server,nowait -boot c -loadvm 1 -enable-kvm -nographic';
     my @command_list = split / /, $command;
     exec(@command_list); 
   } else {
@@ -133,7 +133,7 @@ sub compiler_server {
         alarm 5;
         print "got: [$line]\n";
 
-        if($line =~ /compile:end/) {
+        if($line =~ m/^compile:end$/) {
           $code = quotemeta($code);
           print "Attemping compile...\n";
           alarm 0;

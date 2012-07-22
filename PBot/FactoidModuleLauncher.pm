@@ -62,7 +62,7 @@ sub execute_module {
   $arguments =~ s/\$nick/$nick/g;
 
   $arguments = quotemeta($arguments);
-  $arguments =~ s/\\\s/ /g;
+  $arguments =~ s/\\\s/ /;
 
   if(exists $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}) {
     if($self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\//) {
@@ -128,6 +128,8 @@ sub execute_module {
       $self->{pbot}->logger->log("Could not chdir to '$module_dir': $!\n");
       Carp::croak("Could not chdir to '$module_dir': $!");
     }
+
+    print "module arguments: [$arguments]\n";
 
     if(defined $tonick) {
       $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");

@@ -113,9 +113,7 @@ while($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
     $section_text =~ s/^\s{4}//ms;
     $section_text =~ s/^\s{4}FOOTNOTE.*//ms;
     $section_text =~ s/^\d.*//ms;
-  }
-
-  if($section_text =~ m/(.*?)$/msg) {
+  } elsif ($section_text =~ m/(.*?)$/msg) {
     $section_title = $1 if length $1;
     $section_title =~ s/^\s+//;
     $section_title =~ s/\s+$//;
@@ -207,7 +205,7 @@ $result =~ s/[\n\r]/ /g;
 =cut
 
 if($matches > 1 and not $list_only) {
-  print "Displaying \#$match of $matches matches: ";
+  print "Displaying $match of $matches matches: ";
 }
 
 if($comma eq "") {
@@ -215,7 +213,8 @@ if($comma eq "") {
   print $found_section;
   print "p" . $found_paragraph if $paragraph_specified;
 =cut
-  print "\nhttp://blackshell.com/~msmud/n1570.html\#$found_section";
+#  print "\nhttp://blackshell.com/~msmud/n1570.html\#$found_section";
+  print "\nhttp://www.iso-9899.info/n1570.html\#$found_section";
   print "p" . $found_paragraph if $paragraph_specified;
   print "\n\n";
   print "[", $found_section_title, "]\n\n" if length $found_section_title;

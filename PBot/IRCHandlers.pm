@@ -144,21 +144,11 @@ sub on_mode {
     if(defined $target && $target eq $self->{pbot}->botnick) { # bot targeted
       if($mode eq "+o") {
         $self->{pbot}->logger->log("$nick opped me in $channel\n");
-
-        if(exists $self->{pbot}->chanops->{is_opped}->{$channel}) {
-          $self->{pbot}->logger->log("erm, I was already opped?\n");
-        }
-
         $self->{pbot}->chanops->{is_opped}->{$channel}{timeout} = gettimeofday + 300; # 5 minutes
         $self->{pbot}->chanops->perform_op_commands();
       } 
       elsif($mode eq "-o") {
         $self->{pbot}->logger->log("$nick removed my ops in $channel\n");
-
-        if(not exists $self->{pbot}->chanops->{is_opped}->{$channel}) {
-          $self->{pbot}->logger->log("warning: erm, I wasn't opped?\n");
-        }
-
         delete $self->{pbot}->chanops->{is_opped}->{$channel};
       }
       elsif($mode eq "+b") {

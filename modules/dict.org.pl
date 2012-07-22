@@ -1,7 +1,9 @@
 #!/usr/bin/perl -w
 
+=cut
 eval 'exec /usr/bin/perl -w -S $0 ${1+"$@"}'
     if 0; # not running under some shell
+=cut
 #
 # dict - perl DICT client (for accessing network dictionary servers)
 #
@@ -352,7 +354,7 @@ sub initialise
 =cut
 
     if(not $config->args(\@ARGV)) {
-      print "Usage: dict [-d database] [-n start from definition number] [-t first letter of word class type (n]oun, v]erb, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
+      print "Usage : dict [-d database] [-n start from definition number] [-t first letter of word class type (n]oun, v]erb, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
       exit;
     }
 

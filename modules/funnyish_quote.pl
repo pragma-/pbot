@@ -42,4 +42,4 @@ $t =~ s/&gt;/>/g;
 $t =~ s/<em>//g;
 $t =~ s/<\/em>//g;
 
-print "$t  Discuss!\n";
+print "$t\n";

@@ -23,10 +23,10 @@ if($query =~ /^(\d+)\.\*\?/) {
   $query =~ s/^\d+\.\*\?//;
 }
 
-opendir(DIR, "/home/msmud/htdocs/C-faq/") or die "$!";
+opendir(DIR, "/home/compiler/htdocs/C-faq/") or die "$!";
 
 while (defined ($file = readdir DIR)) {
-  open(FILE, "< /home/msmud/htdocs/C-faq/$file") or die "Can't open $file: $!";
+  open(FILE, "< /home/compiler/htdocs/C-faq/$file") or die "Can't open $file: $!";
   my @contents = <FILE>;
   my $text = join('', @contents);
   my $heading = $1 if($text =~ /^<H1>(.*?)<\/H1>$/smg);

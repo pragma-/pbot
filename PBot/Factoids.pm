@@ -156,31 +156,40 @@ sub export_factoids {
 sub find_factoid {
   my ($self, $from, $keyword, $arguments, $exact_channel, $exact_trigger) = @_;
 
+  my $debug = 0;
+
+  $self->{pbot}->logger->log("find_factoid: from: [$from], kw: [$keyword], args: [" . (defined $arguments ? $arguments : "undef") . "], " . (defined $exact_channel ? $exact_channel : "undef") . ", " . (defined $exact_trigger ? $exact_trigger : "undef") . "\n") if $debug;
+
   $from = '.*' if not defined $from or $from !~ /^#/;
 
+  $self->{pbot}->logger->log("from: $from\n") if $debug;
+
   my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
+
+  $self->{pbot}->logger->log("string: $string\n") if $debug;
 
   my @result = eval {
     foreach my $channel (sort keys %{ $self->factoids->hash }) {
       if($exact_channel) {
-        next unless lc $from eq lc $channel;
-      } else {
-        next unless $from =~ m/^$channel$/i;
+        next unless lc $from eq lc $channel or $from eq '.*' or $channel eq '.*';
       }
 
       foreach my $trigger (keys %{ $self->factoids->hash->{$channel} }) {
         if(not $exact_trigger and $self->factoids->hash->{$channel}->{$trigger}->{type} eq 'regex') {
           if($string =~ m/$trigger/i) {
+            $self->{pbot}->logger->log("return regex $channel: $trigger\n") if $debug;
             return ($channel, $trigger);
           }
         } else {
           if($keyword =~ m/^\Q$trigger\E$/i) {
+            $self->{pbot}->logger->log("return $channel: $trigger\n") if $debug;
             return ($channel, $trigger);
           }
         }
       }
     }
 
+  $self->{pbot}->logger->log("find_factoid: no match\n") if $debug;
     return undef;
   };
 
@@ -202,14 +211,21 @@ sub interpreter {
 
   $from = lc $from;
 
+  #$self->{pbot}->logger->log("factoids interpreter: from: [$from], ref_from: [" . (defined $ref_from ? $ref_from : "undef") . "]\n");
+
   # search for factoid against global channel and current channel (from unless ref_from is defined)
   my $original_keyword = $keyword;
-  ($channel, $keyword) = $self->find_factoid($ref_from ? $ref_from : $from, $keyword, $arguments);
+  #$self->{pbot}->logger->log("calling find_factoid in Factoids.pm, interpreter() to search for factoid against global/current\n");
+  ($channel, $keyword) = $self->find_factoid($ref_from ? $ref_from : $from, $keyword, $arguments, 1);
 
-  if(not defined $ref_from) {
+  if(not defined $ref_from or $ref_from eq '.*') {
     $ref_from = "";
   } else {
-    $ref_from = "[$ref_from] ";
+    $ref_from = "[$ref_from] "; 
+  }
+
+  if(defined $channel and not $channel eq '.*' and not lc $channel eq $from) {
+    $ref_from = "[$channel] ";
   }
 
   $arguments = "" if not defined $arguments;
@@ -370,6 +386,8 @@ sub interpreter {
     $result =~ s/\$nick/$nick/g;
 
     while ($result =~ /[^\\]\$([a-zA-Z0-9_\-]+)/g) { 
+      #$self->{pbot}->logger->log("adlib: looking for [$1]\n");
+      #$self->{pbot}->logger->log("calling find_factoid in Factoids.pm, interpreter() to look for adlib");
       my ($var_chan, $var) = $self->find_factoid($from, $1, undef, 0, 1);
 
       if(defined $var && $self->factoids->hash->{$var_chan}->{$var}->{type} eq 'text') {

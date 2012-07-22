@@ -42,6 +42,7 @@ sub initialize {
   $self->{pbot} = $pbot;
 }
 
+=cut
 sub paste_codepad {
   my $text = join(' ', @_);
 
@@ -60,13 +61,38 @@ sub paste_codepad {
 
   return $response->request->uri;
 }
+=cut
+
+sub paste_codepad {
+  my $text = join(' ', @_);
+
+  $text =~ s/(.{120})\s/$1\n/g;
+
+  my $ua = LWP::UserAgent->new();
+  $ua->agent("Mozilla/5.0");
+  $ua->requests_redirectable([ ]);
+
+  my %post = ( 'sprunge' => $text, 'submit' => 'Submit' );
+  my $response = $ua->post("http://sprunge.us", \%post);
+
+  if(not $response->is_success) {
+    return $response->status_line;
+  }
+
+  my $result = $response->content;
+  $result =~ s/^\s+//;
+  $result =~ s/\s+$//;
+  return $result;
+}
 
 sub process_line {
   my $self = shift;
   my ($from, $nick, $user, $host, $text) = @_;
-  
+
   my ($command, $args, $result);
-  my $has_url = undef;
+  my $has_url;
+  my $has_code;
+  my $nick_override;
   my $mynick = $self->pbot->botnick;
 
   $from = lc $from if defined $from;
@@ -78,18 +104,27 @@ sub process_line {
 
   $pbot->antiflood->check_flood($from, $nick, $user, $host, $text, $pbot->{MAX_FLOOD_MESSAGES}, 10, $pbot->antiflood->{FLOOD_CHAT}) if defined $from;
 
-  if($text =~ /^.?$mynick.?\s+(.*?)([?]*)$/i) {
+  my $preserve_whitespace = 0;
+
+  if($text =~ /^.?$mynick.?\s+(.*?)([?!.]*)$/i) {
     $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
-  } elsif($text =~ /^(.*?),?\s+$mynick([?]*)$/i) {
+  } elsif($text =~ /^(.*?),?\s+$mynick([?!.]*)$/i) {
     $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
-  } elsif($text =~ /^\Q$pbot->{trigger}\E(.*?)([?]*)$/) {
+  } elsif($text =~ /^\Q$pbot->{trigger}\E(.*?)([?!.]*)$/) {
     $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
-  } elsif($text =~ /http:\/\/([^\s]+)/i) {
+  } elsif($text =~ /https?:\/\/([^\s]+)/i) {
     $has_url = $1;
+  } elsif($text =~ /^\s*([^,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$/) {
+    $nick_override = $1;
+    $has_code = $2 if length $2 and $nick_override ne 'enum' and $nick_override ne 'struct';
+    $preserve_whitespace = 1;
+  } elsif($text =~ /^\s*{\s*(.*)\s*}\s*$/) {
+    $has_code = $1 if length $1;
+    $preserve_whitespace = 1;
   }
 
-  if(defined $command || defined $has_url) {
-    if((defined $command && $command !~ /^login/i) || defined $has_url) {
+  if(defined $command || defined $has_url || defined $has_code) {
+    if((defined $command && $command !~ /^login/i) || defined $has_url || defined $has_code) {
       if(defined $from && $pbot->ignorelist->check_ignore($nick, $user, $host, $from) && not $pbot->admins->loggedin($from, "$nick!$user\@$host")) {
         # ignored hostmask
         $pbot->logger->log("ignored text: [$from][$nick!$user\@$host\[$text\]\n");
@@ -97,24 +132,30 @@ sub process_line {
       }
     }
 
-    if(not defined $has_url) {
-      $result = $self->interpret($from, $nick, $user, $host, 1, $command);
-    } else {
+    if(defined $has_url) {
       $result = $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, "title", "$nick http://$has_url");
-    }
-    
-    if(defined $result) {
-      $result =~ s/^\s+//;
-      $result =~ s/\s+$//;
+    } elsif(defined $has_code) {
+      $result = $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $has_code");
+    } else {
+      $result = $self->interpret($from, $nick, $user, $host, 1, $command);
     }
 
     if(defined $result && length $result > 0) {
-
       my $original_result = $result;
-
       $result =~ s/[\n\r]+/ /g;
-      $result =~ s/\s+/ /g;
-      
+
+      if($preserve_whitespace == 0 && defined $command) {
+        my ($cmd, $args) = split / /, $command, 2;
+        #$self->{pbot}->logger->log("calling find_factoid in Interpreter.pm, process_line() for preserve_whitespace\n");
+        my ($chan, $trigger) = $self->{pbot}->factoids->find_factoid($from, $cmd, $args, 0, 1);
+        if(defined $trigger) {
+          $preserve_whitespace = $self->{pbot}->factoids->factoids->hash->{$chan}->{$trigger}->{preserve_whitespace};
+          $preserve_whitespace = 0 if not defined $preserve_whitespace;
+        }
+      }
+
+      $result =~ s/\s+/ /g unless $preserve_whitespace;
+
       if(length $result > $pbot->max_msg_len) {
         my $link = paste_codepad("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
         my $trunc = "... [truncated; see $link for full text.]";
@@ -182,8 +223,8 @@ sub interpret {
   } elsif($command =~ /^([^ ]+)\s+is\s+(.*)$/) {
     my ($k, $a) = ($1, $2);
 
-    # my ($channel, $trigger) = $pbot->factoids->find_factoid($from, $k, undef, 1);
-    my ($channel, $trigger) = $pbot->factoids->find_factoid($from, $k);
+    $self->{pbot}->logger->log("calling find_factoid in Interpreter.pm, interpret() for factadd\n");
+    my ($channel, $trigger) = $pbot->factoids->find_factoid($from, $k, $a, 1);
     
     if(defined $trigger) {
       ($keyword, $arguments) = ($k, "is $a");
@@ -196,7 +237,7 @@ sub interpret {
     $keyword = $1 if $command =~ /^(.*)$/;
   }
   
-  $arguments =~ s/\bme\b/$nick/gi if defined $arguments;
+  $arguments =~ s/(?<![\w\/])me\b/$nick/gi if defined $arguments;
 
   if(defined $arguments && $arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i) {
     return "Why would I want to do that to myself?";

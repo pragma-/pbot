@@ -16,6 +16,10 @@ if ($#ARGV <= 0)
 my $nick = shift(@ARGV);
 $arguments = join("%20", @ARGV);
 
+exit if($arguments =~ m/sprunge.us/i);
+exit if($arguments =~ m/hastebin.com/i);
+exit if($arguments =~ m/lmgtfy.com/i);
+exit if($arguments =~ m/gyazo/i);
 exit if($arguments =~ m/imagebin/i);
 exit if($arguments =~ m/\/wiki\//i);
 exit if($arguments =~ m/github.com/i);
@@ -88,4 +92,7 @@ if(length $t > 150) {
 
 $t = decode_entities($t);
 
-print "Title of $nick\'s link: $t\n";
+$t =~ s/^\s+//;
+$t =~ s/\s+$//;
+
+print "Title of $nick\'s link: $t\n" if length $t;

@@ -25,7 +25,7 @@ my %languages = (
 
 my %preludes = ( 
   'C99'  => "#define _XOPEN_SOURCE\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
-  'C11'  => "#define _XOPEN_SOURCE\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
+  'C11'  => "#define _XOPEN_SOURCE\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <complex.h>\n#include <prelude.h>\n\n",
   'C'  => "#define _XOPEN_SOURCE\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
 );
 
@@ -112,7 +112,7 @@ sub compile {
   while(my $line = <$compiler_output>) {
     $line =~ s/[\r\n]+$//;
 
-    last if $line =~ /^result:end/;
+    last if $line =~ /^result:end$/;
 
     if($line =~ /^result:/) {
       $line =~ s/^result://;
@@ -562,7 +562,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
 
 # check to see if -flags were added by replacements
 $lang = uc $1 if $code =~ s/-lang=([^\b\s]+)//i;
-$input = $1 if $code =~ s/-input=(.*)$//i;
+$input = $1 if $code =~ s/-(?:input|stdin)=(.*)$//i;
 $args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
 $args =~ s/\s+$//;
 
@@ -598,7 +598,7 @@ print "code after: [$code]\n" if $debug;
 
 my $precode;
 if($code =~ m/#include/) {
-  $precode = "#include <prelude.h>\n" . $code;
+  $precode = $code; 
 } else {
   $precode = $preludes{$lang} . $code;
 }
@@ -608,7 +608,8 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   my $has_main = 0;
 
   my $prelude = '';
-  $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?>\s*\n)//s;
+  #$prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?>\s*\n)//s;
+  $prelude = "$1" if $precode =~ s/^\s*(#.*\n)//s;
 
   print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $debug;
 
@@ -627,7 +628,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "looking for functions, has main: $has_main\n" if $debug >= 2;
 
-  my $func_regex = qr/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\(([^;]+)\)\s*(\{.*)/;
+  my $func_regex = qr/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\(([^;]*)\)\s*(\{.*)/;
 
   # look for potential functions to extract
   while($preprecode =~ $func_regex) {
@@ -798,7 +799,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/$right_quote/'/g;
   $output =~ s/\t/   /g;
   $output =~ s/\s*In function 'main':\s*//g;
-  $output =~ s/warning: unknown conversion type character 'b' in format \[-Wformat\]\s+warning: too many arguments for format \[-Wformat-extra-args\]/info: conversion type character 'b' in format is a candide extension/g;
+  $output =~ s/warning: unknown conversion type character 'b' in format \[-Wformat\]\s+warning: too many arguments for format \[-Wformat-extra-args\]/info: %b is a candide extension/g;
   $output =~ s/warning: unknown conversion type character 'b' in format \[-Wformat\]//g;
   $output =~ s/\s\(core dumped\)/./;
 #  $output =~ s/\[\s+/[/g;
@@ -823,6 +824,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/\s*In file included from\s+\/usr\/include\/.*?:\d+:\d+:\s*/, /g;
   $output =~ s/\s*collect2: error: ld returned 1 exit status//g;
   $output =~ s/In function\s*`main':\s*\/home\/compiler\/ undefined reference to/error: undefined reference to/g;
+  $output =~ s/\/home\/compiler\///g;
   $output =~ s/compilation terminated.//;
   
   # splint

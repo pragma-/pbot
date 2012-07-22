@@ -130,7 +130,6 @@ sub get_flood_account {
   return "$nick!$user\@$host" if exists $self->message_history->{"$nick!$user\@$host"};
 
   foreach my $mask (keys %{ $self->message_history }) {
-
     # check if foo!bar@baz matches foo!*@*; e.g., same nick, but possibly different user@host 
     # (usually logging into nickserv or a dynamic ip address, but could possibly be attempted nick hijacking)
 
@@ -140,7 +139,6 @@ sub get_flood_account {
 
     # check if foo!bar@baz matches *!bar@baz; e.g., same user@host, but different nick 
     # (usually alternate-nicks due to rejoining)
-    
     if($mask =~ m/!\Q$user\E@\Q$host\E$/i) {
       $self->{pbot}->logger->log("anti-flood: [get-account] $nick!$user\@$host linked to $mask\n");
       $self->{message_history}->{"$nick!$user\@$host"} = $self->{message_history}->{$mask};
@@ -222,7 +220,6 @@ sub check_flood {
   if(not defined $account) {
     # new addition
     #$self->{pbot}->logger->log("brand new account addition\n");
-    #$self->message_history->{$mask} = {};
     $self->message_history->{$mask}->{channels} = {};
     
     $self->{pbot}->conn->whois($nick);
@@ -327,15 +324,15 @@ sub check_flood {
           $self->message_history->{$account}->{channels}->{$channel}{join_watch} = $max_messages - 2; # give them a chance to rejoin 
         } 
       } elsif($mode == $self->{FLOOD_CHAT}) {
+        # don't increment offenses again if already banned
+        return if exists $self->{pbot}->chanops->{unban_timeout}->hash->{"*!$user\@$host"};
+
         $self->message_history->{$account}->{channels}->{$channel}{offenses}++;
         $self->message_history->{$account}->{channels}->{$channel}{last_offense_timestamp} = gettimeofday;
         
         my $length = $self->message_history->{$account}->{channels}->{$channel}{offenses} ** $self->message_history->{$account}->{channels}->{$channel}{offenses} * $self->message_history->{$account}->{channels}->{$channel}{offenses} * 30;
 
         if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
-          # don't ban again if already banned
-          return if exists $self->{pbot}->chanops->{unban_timeout}->hash->{"*!$user\@$host"};
-
           $self->{pbot}->chanops->ban_user_timed("*!$user\@$host", $channel, $length);
 
           $self->{pbot}->logger->log("$nick $channel flood offense " . $self->message_history->{$account}->{channels}->{$channel}{offenses} . " earned $length second ban\n");

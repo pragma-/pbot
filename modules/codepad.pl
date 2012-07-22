@@ -99,6 +99,9 @@ if($lang eq "C" or $lang eq "C++") {
   $code = pretty($code);
 }
 
+$code =~ s/^\s+//;
+$code =~ s/\s+$//;
+
 my %post = ( 'lang' => $lang, 'code' => $code, 'private' => 'True', 'run' => 'True', 'submit' => 'Submit' );
 my $response = $ua->post("http://codepad.org", \%post);
 
