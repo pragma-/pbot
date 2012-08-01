@@ -162,6 +162,7 @@ sub add_message {
 
   #$self->{pbot}->logger->log("appending new message\n");
   push(@{ $self->message_history->{$account}->{channels}->{$channel}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
+  $self->message_history->{$account}->{channels}->{$channel}{last_spoken} = $now;
 
   my $length = $#{ $self->message_history->{$account}->{channels}->{$channel}{messages} } + 1;
 

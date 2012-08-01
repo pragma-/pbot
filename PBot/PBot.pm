@@ -81,7 +81,7 @@ sub initialize {
 
   $self->{max_msg_len}        = delete $conf{max_msg_len}        // 430;
   $self->{MAX_FLOOD_MESSAGES} = delete $conf{MAX_FLOOD_MESSAGES} // 4;
-  $self->{MAX_NICK_MESSAGES}  = delete $conf{MAX_NICK_MESSAGES}  // 12;
+  $self->{MAX_NICK_MESSAGES}  = delete $conf{MAX_NICK_MESSAGES}  // 32;
 
   $self->{trigger}            = delete $conf{trigger}            // '!';
 
