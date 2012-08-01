@@ -211,15 +211,15 @@ sub grab_quotegrab {
   } else {
     # regex history
     my $ret = eval {
-      my $i = 0;
+      my $i = $#messages;
       my $found = 0;
-      while($i <= $#messages) {
+      while($i >= 0) {
         if($messages[$i]->{msg} =~ m/$grab_history/i) {
           $grab_history = $i;
           $found = 1;
           last;
         }
-        $i++;
+        $i--;
       }
 
       if($found == 0) {

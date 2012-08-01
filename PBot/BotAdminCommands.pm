@@ -45,6 +45,7 @@ sub initialize {
   $pbot->commands->register(sub { return $self->adminset(@_)     },       "adminset",      60);
   $pbot->commands->register(sub { return $self->adminunset(@_)   },       "adminunset",    60);
   $pbot->commands->register(sub { return $self->sl(@_)           },       "sl",            60);
+  $pbot->commands->register(sub { return $self->export(@_)       },       "export",        60);
 }
 
 sub sl {
@@ -167,7 +168,7 @@ sub export {
   my ($from, $nick, $user, $host, $arguments) = @_;
 
   if(not defined $arguments) {
-    return "/msg $nick Usage: export <modules|factoids|admins>";
+    return "/msg $nick Usage: export <modules|factoids|admins|quotegrabs>";
   }
 
   if($arguments =~ /^modules$/i) {
