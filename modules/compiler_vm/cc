@@ -1,4 +1,3 @@
 #!/bin/sh
 
-ulimit -c 50000
 CC_LOCAL=1 ./compiler_vm_client.pl compiler "$@"
