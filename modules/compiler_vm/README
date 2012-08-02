@@ -39,7 +39,6 @@ Dependencies:
 gcc (tested with 4.4.4)
 gdb (tested with 7.2)
 astyle (tested with 1.24 -- not working with astyle 2.0)
-ulimit -c 50000 (required to produce core files if you wish to have gdb debugger output)
 
 Files:
 
