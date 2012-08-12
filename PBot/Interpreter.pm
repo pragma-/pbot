@@ -135,7 +135,7 @@ sub process_line {
     if(defined $has_url) {
       $result = $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, "title", "$nick http://$has_url");
     } elsif(defined $has_code) {
-      $result = $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $has_code");
+      $result = $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $has_code }");
     } else {
       $result = $self->interpret($from, $nick, $user, $host, 1, $command);
     }

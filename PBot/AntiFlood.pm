@@ -379,8 +379,10 @@ sub prune_message_history {
   foreach my $mask (keys %{ $self->{message_history} }) {
     foreach my $channel (keys %{ $self->{message_history}->{$mask}->{channels} }) {
 
-      #$self->{pbot}->logger->log("Checking [$mask][$channel]\n");
+      $self->{pbot}->logger->log("Checking [$mask][$channel]\n");
       my $length = $#{ $self->{message_history}->{$mask}->{channels}->{$channel}{messages} } + 1;
+      $self->{pbot}->logger->log("length: $length\n");
+      next unless $length > 0;
       my %last = %{ @{ $self->{message_history}->{$mask}->{channels}->{$channel}{messages} }[$length - 1] };
 
       # delete channel key if no activity within 3 days

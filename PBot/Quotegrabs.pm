@@ -212,6 +212,7 @@ sub grab_quotegrab {
     # regex history
     my $ret = eval {
       my $i = $#messages;
+      $i-- if($nick =~ /^\Q$grab_nick\E$/i); # skip 'grab' command if grabbing own nick
       my $found = 0;
       while($i >= 0) {
         if($messages[$i]->{msg} =~ m/$grab_history/i) {
