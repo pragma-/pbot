@@ -92,7 +92,7 @@ __attribute__ (( constructor )) static void printf_binary_register(void)
 #define STR(s) #s
 #define REVEAL(s) STR(s)
 
-void gdb() {}
+void gdb() { asm(""); }
 #define dump(expression) gdb("print " #expression)
 #define print(expression) gdb("print " #expression)
 #define ptype(expression) gdb("ptype " #expression)
