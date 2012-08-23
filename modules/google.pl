@@ -12,7 +12,7 @@ $matches = 1;
 
 if ($#ARGV < 0)
 {
-  print "Usage: !google [number of results] query\n";
+  print "Usage: google [number of results] query\n";
   die;
 }
 

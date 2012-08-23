@@ -165,6 +165,7 @@ sub ack_die {
 }
 
 sub export {
+  my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
   if(not defined $arguments) {

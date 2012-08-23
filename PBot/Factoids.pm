@@ -259,7 +259,7 @@ sub interpreter {
     elsif($found == 1) {
       $pbot->logger->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
 
-      return $pbot->factoids->interpreter($from, $nick, $user, $host, $count, $fwd_trig, $arguments, undef, $fwd_chan);
+      return $pbot->factoids->interpreter($from, $nick, $user, $host, $count, $fwd_trig, $arguments, $tonick, $fwd_chan);
     } 
     # otherwise keyword hasn't been found, display similiar matches for all channels
     else {
@@ -293,7 +293,7 @@ sub interpreter {
     $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
 
-    return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command);
+    return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command, $tonick);
   }
 
   my $last_ref_in = 0;
@@ -338,24 +338,7 @@ sub interpreter {
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
 
-    if(defined $tonick) { # !tell foo about bar
-      $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
-      my $fromnick = $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host") ? "" : "$nick wants you to know: ";
-      $result = $self->factoids->hash->{$channel}->{$keyword}->{action};
-
-      my $botnick = $self->{pbot}->botnick;
-
-      if($result =~ s/^\/say\s+//i || $result =~ s/^\/me\s+/* $botnick /i
-        || $result =~ /^\/msg\s+/i) {
-        $result = "/msg $tonick $fromnick$result";
-      } else {
-        $result = "/msg $tonick $fromnick$keyword is $result";
-      }
-
-      $self->{pbot}->logger->log("result set to [$result]\n");
-    } else {
-      $result = $self->factoids->hash->{$channel}->{$keyword}->{action};
-    }
+    $result = $self->factoids->hash->{$channel}->{$keyword}->{action};
 
     if(length $arguments) {
       if(exists $self->factoids->hash->{$channel}->{$keyword}->{action_with_args}) {
@@ -378,7 +361,29 @@ sub interpreter {
       }
     } else {
       # no arguments supplied
-      $result =~ s/\$args/$nick/gi;
+      if(defined $tonick) {
+        $result =~ s/\$args/$tonick/gi;
+      } else {
+        $result =~ s/\$args/$nick/gi;
+      }
+    }
+
+    if(defined $tonick) { # !tell foo about bar
+      $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
+      my $botnick = $self->{pbot}->botnick;
+
+      # get rid of original caller's nick
+      $result =~ s/^\/([^ ]+) \Q$nick\E:\s+/\/$1 /;
+      $result =~ s/^\Q$nick\E:\s+//;
+
+      if($result =~ s/^\/say\s+//i || $result =~ s/^\/me\s+/* $botnick /i
+        || $result =~ /^\/msg\s+/i) {
+        $result = "/say $tonick: $result";
+      } else {
+        $result = "/say $tonick: $keyword is $result";
+      }
+
+      $self->{pbot}->logger->log("result set to [$result]\n");
     }
 
     $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"" . $result . "\"\n");
@@ -442,7 +447,7 @@ sub interpreter {
         $cmd = $self->factoids->hash->{$channel}->{$keyword}->{action}; 
       }
 
-      $result = $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $cmd);
+      $result = $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $cmd, $tonick);
       return $result;
     };
 

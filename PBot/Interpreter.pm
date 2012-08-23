@@ -106,12 +106,12 @@ sub process_line {
 
   my $preserve_whitespace = 0;
 
-  if($text =~ /^.?$mynick.?\s+(.*?)([?!.]*)$/i) {
-    $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
-  } elsif($text =~ /^(.*?),?\s+$mynick([?!.]*)$/i) {
-    $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
-  } elsif($text =~ /^\Q$pbot->{trigger}\E(.*?)([?!.]*)$/) {
-    $command = "$1" . (defined $2 and length $2 >= 2 ? substr $2, 1, 1 : "");
+  if($text =~ /^\Q$pbot->{trigger}\E(.*)$/) {
+    $command = $1;
+  } elsif($text =~ /^.?$mynick.?\s+(.*?)$/i) {
+    $command = $1;
+  } elsif($text =~ /^(.*?),?\s+$mynick[?!.]*$/i) {
+    $command = $1;
   } elsif($text =~ /https?:\/\/([^\s]+)/i) {
     $has_url = $1;
   } elsif($text =~ /^\s*([^,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$/) {
@@ -198,8 +198,8 @@ sub process_line {
 
 sub interpret {
   my $self = shift;
-  my ($from, $nick, $user, $host, $count, $command) = @_;
-  my ($keyword, $arguments, $tonick);
+  my ($from, $nick, $user, $host, $count, $command, $tonick) = @_;
+  my ($keyword, $arguments) = ("", "");
   my $text;
   my $pbot = $self->pbot;
 
@@ -234,10 +234,14 @@ sub interpret {
   } elsif($command =~ /^(.*?)\s+(.*)$/) {
     ($keyword, $arguments) = ($1, $2);
   } else {
-    $keyword = $1 if $command =~ /^(.*)$/;
+    $keyword = $command;
   }
-  
-  $arguments =~ s/(?<![\w\/])me\b/$nick/gi if defined $arguments;
+
+  if($keyword ne "factadd" and $keyword ne "add" and $keyword ne "msg") {
+    $keyword =~ s/(\w+)([?!.]+)$/$1/;
+    $arguments =~ s/(\w+)([?!.]+)$/$1/;
+    $arguments =~ s/(?<![\w\/\-])me\b/$nick/gi if defined $arguments;
+  }
 
   if(defined $arguments && $arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i) {
     return "Why would I want to do that to myself?";

@@ -135,6 +135,10 @@ sub execute_module {
       $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
       $text = `$module_dir/$module $arguments`;
       if(defined $text && length $text > 0) {
+        # get rid of original caller's nick
+        $text =~ s/^\/([^ ]+) \Q$nick\E:\s+/\/$1 /;
+        $text =~ s/^\Q$nick\E:\s+//;
+
         return "$tonick: $text";
       } else {
         return "";

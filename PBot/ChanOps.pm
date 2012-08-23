@@ -119,8 +119,8 @@ sub check_unban_timeouts {
     if($self->{unban_timeout}->hash->{$mask}{timeout} < $now) {
       $self->unban_user($mask, $self->{unban_timeout}->hash->{$mask}{channel});
     } else {
-      #my $timediff = $unban_timeout{$mask}{timeout} - $now;
-      #$logger->log "ban: $mask has $timediff seconds remaining\n"
+      # my $timediff = $self->{unban_timeout}->hash->{$mask}{timeout} - $now;
+      # $self->{pbot}->logger->log("ban: $mask has $timediff seconds remaining\n");
     }
   }
 }
@@ -132,9 +132,10 @@ sub check_opped_timeouts {
   foreach my $channel (keys %{ $self->{is_opped} }) {
     if($self->{is_opped}->{$channel}{timeout} < $now) {
       $self->lose_ops($channel);
+      delete $self->{is_opped}->{$channel}; # assume chanserv is alive and deop will succeed
     } else {
-      # my $timediff = $is_opped{$channel}{timeout} - $now;
-      # $logger->log("deop $channel in $timediff seconds\n");
+      # my $timediff = $self->{is_opped}->{$channel}{timeout} - $now;
+      # $self->{pbot}->logger->log("deop $channel in $timediff seconds\n");
     }
   }
 }
