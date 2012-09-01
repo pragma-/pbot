@@ -2,7 +2,7 @@
 
 # use warnings;
 use strict;
-use feature qw(switch);
+use feature "switch";
 
 use IPC::Open2;
 use Text::Balanced qw(extract_bracketed extract_delimited);
@@ -37,7 +37,7 @@ sub pretty {
   print $fh $code;
   close $fh;
 
-  system("astyle", "-Ujpfnq", "prog.c");
+  system("astyle", "-UHjfnq", "prog.c");
 
   open $fh, "<prog.c" or die "Couldn't read prog.c: $!";
   $result = join '', <$fh>;
@@ -591,8 +591,63 @@ if(not $found) {
 print "code before: [$code]\n" if $debug;
 
 $code =~ s/#include <([^>]+)>/#include <$1>\n/g;
-$code =~ s/#([^ ]+) (.*?)\\n/#$1 $2\n/g;
-$code =~ s/#([\w\d_]+)\\n/#$1\n/g;
+
+# replace \n outside of quotes with literal newline
+my $new_code = "";
+
+use constant {
+  NORMAL        => 0,
+  DOUBLE_QUOTED => 1,
+  SINGLE_QUOTED => 2,
+};
+
+my $state = NORMAL;
+my $escaped = 0;
+
+while($code =~ m/(.)/g) {
+  my $ch = $1;
+
+  given ($ch) {
+    when ('\\') {
+      if($escaped == 0) {
+        $escaped = 1;
+        next;
+      }
+    }
+
+    if($state == NORMAL) {
+      when ($_ eq '"' and not $escaped) {
+        $state = DOUBLE_QUOTED;
+      }
+
+      when ($_ eq "'" and not $escaped) {
+        $state = SINGLE_QUOTED;
+      }
+
+      when ($_ eq 'n' and $escaped == 1) {
+        $ch = "\n";
+        $escaped = 0;
+      }
+    }
+
+    if($state == DOUBLE_QUOTED) {
+      when ($_ eq '"' and not $escaped) {
+        $state = NORMAL;
+      }
+    }
+
+    if($state == SINGLE_QUOTED) {
+      when ($_ eq "'" and not $escaped) {
+        $state = NORMAL;
+      }
+    }
+  }
+
+  $new_code .= '\\' and $escaped = 0 if $escaped;
+  $new_code .= $ch;
+}
+
+$code = $new_code;
 
 print "code after: [$code]\n" if $debug;
 
@@ -703,8 +758,7 @@ print "after func extract, code: [$code]\n" if $debug;
 $code =~ s/\|n/\n/g;
 $code =~ s/^\s+//;
 $code =~ s/\s+$//;
-$code =~ s/;\n;\n/;\n/g;
-$code =~ s/^\s*;\s*$//gms;
+$code =~ s/;\s+;\n/;\n/gs;
 
 my $single_quote = 0;
 my $double_quote = 0;
@@ -828,9 +882,11 @@ if($output =~ m/^\s*$/) {
   $output =~ s/compilation terminated.//;
   $output =~ s/<'(.)' = char>/<'$1' = int>/g;
   $output =~ s/, <incomplete sequence >//g;
+  $output =~ s/\s*warning: shadowed declaration is here \[-Wshadow\]//g;
+  $output =~ s/preprocessor macro>\s+<at\s+>/preprocessor macro>/g;
 
   # remove duplicate warnings/infos
-  $output =~ s/(warning: .*?\s)\1/$1/g;
+  $output =~ s/(\[*.*warning:.*?\s*)\1/$1/g;
   $output =~ s/(info: .*?\s)\1/$1/g;
   $output =~ s/^\[\s+(warning:|info:)/[$1/;  # remove leading spaces in first warning/info
   
