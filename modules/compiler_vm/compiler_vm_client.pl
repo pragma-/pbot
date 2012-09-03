@@ -659,12 +659,17 @@ if($code =~ m/#include/) {
 }
 $code = '';
 
+print "--- precode: [$precode]\n" if $debug;
+
 if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   my $has_main = 0;
 
   my $prelude = '';
-  #$prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?>\s*\n)//s;
-  $prelude = "$1" if $precode =~ s/^\s*(#.*\n)//s;
+  while($precode =~ s/^\s*(#.*\n)//g) {
+    $prelude .= $1;
+  }
+
+  #$prelude = "$1" if $precode =~ s/^\s*(#.*\n)//s;
 
   print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $debug;
 
@@ -683,20 +688,20 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "looking for functions, has main: $has_main\n" if $debug >= 2;
 
-  my $func_regex = qr/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\(([^;]*)\)\s*(\{.*)/;
+  my $func_regex = qr/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\(([^;]*)\)\s*(\{.*)/ms;
 
   # look for potential functions to extract
-  while($preprecode =~ $func_regex) {
+  while($preprecode =~ /$func_regex/ms) {
     my ($pre_ret, $pre_ident, $pre_params, $pre_potential_body) = ($1, $2, $3, $4);
 
-    print "looking for functions, found [$pre_ret][$pre_ident][$pre_params][...], has main: $has_main\n" if $debug >= 2;
+    print "looking for functions, found [$pre_ret][$pre_ident][$pre_params][$pre_potential_body], has main: $has_main\n" if $debug >= 2;
 
     # find the pos at which this function lives, for extracting from precode
     $preprecode =~ m/(\Q$pre_ret\E\s+\Q$pre_ident\E\s*\(\s*\Q$pre_params\E\s*\)\s*\Q$pre_potential_body\E)/g;
     my $extract_pos = (pos $preprecode) - (length $1);
 
     # now that we have the pos, substitute out the extracted potential function from preprecode
-    $preprecode =~ s/$func_regex//;
+    $preprecode =~ s/$func_regex//ms;
 
     # create tmpcode object that starts from extract pos, to skip any quoted code
     my $tmpcode = substr($precode, $extract_pos);
@@ -708,7 +713,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     $tmpcode =~ m/$func_regex/ms;
     my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
 
-    print "[$ret][$ident][$params][$potential_body]\n" if $debug;
+    print "1st extract: [$ret][$ident][$params][$potential_body]\n" if $debug;
 
     $ret =~ s/^\s+//;
     $ret =~ s/\s+$//;
@@ -717,7 +722,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
       $precode .= "$ret $ident ($params) $potential_body";
       next;
     } else {
-      $tmpcode =~ s/$func_regex//;
+      $tmpcode =~ s/$func_regex//ms;
     }
 
     my @extract = extract_bracketed($potential_body, '{}');
@@ -731,7 +736,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
       $precode .= $extract[1];
     }
 
-    print "[$ret][$ident][$params][$body]\n" if $debug;
+    print "final extract: [$ret][$ident][$params][$body]\n" if $debug;
     $code .= "$ret $ident($params) $body\n\n";
     $has_main = 1 if $ident eq 'main';
   }
