@@ -604,7 +604,7 @@ use constant {
 my $state = NORMAL;
 my $escaped = 0;
 
-while($code =~ m/(.)/g) {
+while($code =~ m/(.)/gs) {
   my $ch = $1;
 
   given ($ch) {
@@ -865,6 +865,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/, '\\(\d{3})' <repeats \d+ times>\s*//g;
   $output =~ s/(\\000)+/\\0/g;
   $output =~ s/\\0[^">']+/\\0/g;
+  $output =~ s/= (\d+) '\\0'/= $1/g;
   $output =~ s/\\0"/"/g;
   $output =~ s/"\\0/"/g;
   $output =~ s/\.\.\.>/>/g;
