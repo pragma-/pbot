@@ -98,11 +98,7 @@ sub load_ignores {
       Carp::croak "Duplicate ignore [$hostmask][$channel] found in $filename around line $i\n";
     }
 
-    if($length == -1) {
-      ${ $self->{ignore_list} }{$hostmask}{$channel} = $length;
-    } else {
-      ${ $self->{ignore_list} }{$hostmask}{$channel} = gettimeofday + $length;
-    }
+    ${ $self->{ignore_list} }{$hostmask}{$channel} = $length;
   }
 
   $self->{pbot}->logger->log("  $i entries in ignorelist\n");
@@ -125,7 +121,6 @@ sub save_ignores {
   foreach my $ignored (keys %{ $self->{ignore_list} }) {
     foreach my $ignored_channel (keys %{ ${ $self->{ignore_list} }{$ignored} }) {
       my $length = $self->{ignore_list}->{$ignored}{$ignored_channel};
-      $length = int($length - gettimeofday) unless $length == -1;
       print FILE "$ignored $ignored_channel $length\n";
     }
   }
@@ -174,7 +169,13 @@ sub check_ignore {
   foreach my $ignored (keys %{ $self->{ignore_list} }) {
     foreach my $ignored_channel (keys %{ ${ $self->{ignore_list} }{$ignored} }) {
       #$self->{pbot}->logger->log("check_ignore: comparing '$hostmask' against '$ignored' for channel '$channel'\n");
-      if(($channel =~ /\Q$ignored_channel\E/i) && ($hostmask =~ /\Q$ignored\E/i)) {
+      my $ignored_channel_escaped = quotemeta $ignored_channel;
+      my $ignored_escaped = quotemeta $ignored;
+
+      $ignored_channel_escaped =~ s/\\(\.|\*)/$1/g;
+      $ignored_escaped =~ s/\\(\.|\*)/$1/g;
+
+      if(($channel =~ /$ignored_channel_escaped/i) && ($hostmask =~ /$ignored_escaped/i)) {
         $self->{pbot}->logger->log("$nick!$user\@$host message ignored in channel $channel (matches [$ignored] host and [$ignored_channel] channel)\n");
         return 1;
       }

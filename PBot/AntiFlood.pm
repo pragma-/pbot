@@ -347,7 +347,7 @@ sub check_flood {
           $self->{pbot}->conn->privmsg($nick, "You have been muted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length.");
         } 
         else { # private message flood
-          return if exists $self->{pbot}->ignorelist->{ignore_list}->{"$nick!$user\@$host"}->{channels}->{$channel};
+          return if exists ${ $self->{pbot}->ignorelist->{ignore_list} }{"$nick!$user\@$host"}{$channel};
 
           $self->{pbot}->logger->log("$nick msg flood offense " . $self->message_history->{$account}->{channels}->{$channel}{offenses} . " earned $length second ignore\n");
 
@@ -381,7 +381,6 @@ sub prune_message_history {
 
       $self->{pbot}->logger->log("Checking [$mask][$channel]\n");
       my $length = $#{ $self->{message_history}->{$mask}->{channels}->{$channel}{messages} } + 1;
-      $self->{pbot}->logger->log("length: $length\n");
       next unless $length > 0;
       my %last = %{ @{ $self->{message_history}->{$mask}->{channels}->{$channel}{messages} }[$length - 1] };
 
@@ -450,7 +449,12 @@ sub unbanme {
       }
     }
   }
- 
+
+  my $account = $self->get_flood_account($nick, $user, $host);
+  if(defined $account and $self->message_history->{$account}->{channels}->{$channel}{offenses} > 2) {
+    return "/msg $nick You may only use unbanme for the first two offenses. You will be automatically unbanned in a few hours, and your offense counter will decrement once every 24 hours.";
+  }
+
   $self->{pbot}->chanops->unban_user($mask, $channel);
   delete $self->{pbot}->chanops->{unban_timeout}->hash->{$mask};
   $self->{pbot}->chanops->{unban_timeout}->save_hash();

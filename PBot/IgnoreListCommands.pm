@@ -58,8 +58,8 @@ sub ignore_user {
 
     foreach my $ignored (keys %{ $self->{pbot}->ignorelist->{ignore_list} }) {
       foreach my $channel (keys %{ ${ $self->{pbot}->ignorelist->{ignore_list} }{$ignored} }) {
-        $text .= $sep . "[$ignored][$channel]" . int(gettimeofday - ${ $self->{pbot}->ignorelist->{ignore_list} }{$ignored}{$channel});
-        $sep = "; ";
+        $text .= $sep . "[$ignored]->[$channel]->[" . (${ $self->{pbot}->ignorelist->{ignore_list} }{$ignored}{$channel} == -1 ? -1 : int(gettimeofday - ${ $self->{pbot}->ignorelist->{ignore_list} }{$ignored}{$channel})) . "]";
+        $sep = ";\n";
       }
     }
     return "/msg $nick $text";
@@ -70,7 +70,7 @@ sub ignore_user {
   }
   
   if(not defined $length) {
-    $length = 300; # 5 minutes
+    $length = -1; # permanently
   }
 
   $self->{pbot}->logger->log("$nick added [$target][$channel] to ignore list for $length seconds\n");

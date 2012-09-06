@@ -216,11 +216,11 @@ sub interpret {
   if($command =~ /^tell\s+(.{1,20})\s+about\s+(.*?)\s+(.*)$/i) 
   {
     ($keyword, $arguments, $tonick) = ($2, $3, $1);
-  } elsif($command =~ /^tell\s+(.{1,20})\s+about\s+(.*)$/) {
+  } elsif($command =~ /^tell\s+(.{1,20})\s+about\s+(.*)$/i) {
     ($keyword, $tonick) = ($2, $1);
-  } elsif($command =~ /^([^ ]+)\s+is\s+also\s+(.*)$/) {
+  } elsif($command =~ /^([^ ]+)\s+is\s+also\s+(.*)$/i) {
     ($keyword, $arguments) = ("change", "$1 s|\$| - $2|");
-  } elsif($command =~ /^([^ ]+)\s+is\s+(.*)$/) {
+  } elsif($command =~ /^([^ ]+)\s+is\s+(.*)$/i) {
     my ($k, $a) = ($1, $2);
 
     $self->{pbot}->logger->log("calling find_factoid in Interpreter.pm, interpret() for factadd\n");
