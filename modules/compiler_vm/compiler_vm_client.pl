@@ -649,7 +649,66 @@ while($code =~ m/(.)/gs) {
 
 $code = $new_code;
 
-print "code after: [$code]\n" if $debug;
+print "code after \\n replacement: [$code]\n" if $debug;
+
+my $single_quote = 0;
+my $double_quote = 0;
+my $parens = 0;
+my $escaped = 0;
+my $cpp = 0; # preprocessor
+
+while($code =~ m/(.)/msg) {
+  my $ch = $1;
+  my $pos = pos $code;
+
+  print "adding newlines, ch = [$ch], parens: $parens, cpp: $cpp, single: $single_quote, double: $double_quote, escaped: $escaped, pos: $pos\n" if $debug >= 10;
+
+  if($ch eq '\\') {
+    $escaped = not $escaped;
+  } elsif($ch eq '#' and not $cpp and not $escaped and not $single_quote and not $double_quote) {
+    $cpp = 1;
+  } elsif($ch eq '"') {
+    $double_quote = not $double_quote unless $escaped;
+    $escaped = 0;
+  } elsif($ch eq '(' and not $single_quote and not $double_quote) {
+    $parens++;
+  } elsif($ch eq ')' and not $single_quote and not $double_quote) {
+    $parens--;
+    $parens = 0 if $parens < 0;
+  } elsif($ch eq ';' and not $cpp and not $single_quote and not $double_quote and $parens == 0) {
+    if(not substr($code, $pos, 1) =~ m/[\n\r]/) {
+      substr ($code, $pos, 0) = "\n";
+      pos $code = $pos + 1;
+    }
+  } elsif($ch eq "'") {
+    $single_quote = not $single_quote unless $escaped;
+    $escaped = 0;
+  } elsif($ch eq 'n' and $escaped) {
+    if(not $single_quote and not $double_quote) {
+      print "added newline\n" if $debug >= 10;
+      substr ($code, $pos - 2, 2) = "\n";
+      pos $code = $pos;
+      $cpp = 0;
+    }
+    $escaped = 0;
+  } elsif($ch eq '{' and not $cpp and not $single_quote and not $double_quote) {
+    if(not substr($code, $pos, 1) =~ m/[\n\r]/) {
+      substr ($code, $pos, 0) = "\n";
+      pos $code = $pos + 1;
+    }
+  } elsif($ch eq '}' and not $cpp and not $single_quote and not $double_quote) {
+    if(not substr($code, $pos, 1) =~ m/[\n\r;]/) {
+      substr ($code, $pos, 0) = "\n";
+      pos $code = $pos + 1;
+    }
+  } elsif($ch eq "\n" and $cpp and not $single_quote and not $double_quote) {
+    $cpp = 0;
+  } else {
+    $escaped = 0;
+  }
+}
+
+print "code after \\n additions: [$code]\n" if $debug;
 
 my $precode;
 if($code =~ m/#include/) {
@@ -688,7 +747,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "looking for functions, has main: $has_main\n" if $debug >= 2;
 
-  my $func_regex = qr/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\(([^;]*)\)\s*(\{.*)/ms;
+  my $func_regex = qr/^([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\(([^)]*)\)\s*(\{.*)/ms;
 
   # look for potential functions to extract
   while($preprecode =~ /$func_regex/ms) {
@@ -763,59 +822,7 @@ print "after func extract, code: [$code]\n" if $debug;
 $code =~ s/\|n/\n/g;
 $code =~ s/^\s+//;
 $code =~ s/\s+$//;
-$code =~ s/;\s+;\n/;\n/gs;
-
-my $single_quote = 0;
-my $double_quote = 0;
-my $parens = 0;
-my $escaped = 0;
-my $cpp = 0; # preprocessor
-
-while($code =~ m/(.)/msg) {
-    my $ch = $1;
-    my $pos = pos $code;
-
-    print "adding newlines, ch = [$ch], single: $single_quote, double: $double_quote, escape: $escaped, pos: $pos\n" if $debug >= 10;
-
-    if($ch eq '\\') {
-        $escaped = not $escaped;
-    } elsif($ch eq '#' and not $cpp and not $escaped and not $single_quote and not $double_quote) {
-        $cpp = 1;
-    } elsif($ch eq '"') {
-        $double_quote = not $double_quote unless $escaped;
-        $escaped = 0;
-    } elsif($ch eq '(' and not $single_quote and not $double_quote) {
-        $parens++;
-    } elsif($ch eq ')' and not $single_quote and not $double_quote) {
-        $parens--;
-        $parens = 0 if $parens < 0;
-    } elsif($ch eq ';' and not $single_quote and not $double_quote and $parens == 0) {
-        if(not substr($code, $pos, 1) =~ m/[\n\r]/) {
-            substr ($code, $pos, 0) = "\n";
-            pos $code = $pos + 1;
-        }
-    } elsif($ch eq "'") {
-        $single_quote = not $single_quote unless $escaped;
-        $escaped = 0;
-    } elsif($ch eq 'n' and $escaped) {
-        substr ($code, $pos - 2, 2) = "\n" and pos $code = $pos unless $single_quote or $double_quote;
-        $cpp = 0 unless $single_quote or $double_quote;
-        $escaped = 0;
-    } elsif($ch eq '{' and not $cpp and not $single_quote and not $double_quote) {
-        if(not substr($code, $pos, 1) =~ m/[\n\r]/) {
-            substr ($code, $pos, 0) = "\n";
-            pos $code = $pos + 1;
-        }
-    } elsif($ch eq '}' and not $cpp and not $single_quote and not $double_quote) {
-        if(not substr($code, $pos, 1) =~ m/[\n\r;]/) {
-            substr ($code, $pos, 0) = "\n";
-            pos $code = $pos + 1;
-        }
-    } else {
-        $escaped = 0;
-    }
-}
-
+$code =~ s/;\s*;\n/;\n/gs;
 $code =~ s/(?:\n\n)+/\n\n/g;
 
 print "final code: [$code]\n" if $debug;
@@ -890,6 +897,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/, <incomplete sequence >//g;
   $output =~ s/\s*warning: shadowed declaration is here \[-Wshadow\]//g;
   $output =~ s/preprocessor macro>\s+<at\s+>/preprocessor macro>/g;
+  $output =~ s/<No symbol table is loaded.  Use the "file" command.>\s*//;
 
   # remove duplicate warnings/infos
   $output =~ s/(\[*.*warning:.*?\s*)\1/$1/g;
