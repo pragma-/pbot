@@ -26,6 +26,7 @@ exit if($arguments =~ m/github.com/i);
 exit if($arguments =~ m/wiki.osdev.org/i);
 exit if($arguments =~ m/wikipedia.org/i);
 exit if($arguments =~ m/everfall.com/i);
+exit if($arguments =~ m/fukung.net/i);
 exit if($arguments =~ m/\/paste\//i);
 exit if($arguments =~ m/paste\./i);
 exit if($arguments =~ m/pastie/i);
