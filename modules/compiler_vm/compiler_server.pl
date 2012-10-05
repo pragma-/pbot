@@ -101,7 +101,7 @@ sub execute {
   } else {
     waitpid($child, 0);
     my $result = $? >> 8;
-    print "child exited, parent continuing\n";
+    print "child exited, parent continuing [result = $result]\n";
     return (undef, $result);
   }
 }
@@ -117,7 +117,8 @@ sub compiler_server {
     my $hostinfo = gethostbyaddr($client->peeraddr);
     print '-' x 20, "\n";
     printf "[Connect from %s]\n", $client->peerhost;
-    my $timed_out;
+    my $timed_out = 0;
+    my $killed = 0;
 
     eval {
       my $lang;
@@ -144,12 +145,19 @@ sub compiler_server {
 
           if(not defined $ret) {
             #print "parent continued\n";
+            print "parent continued [$result]\n";
             $timed_out = 1 if $result == 243; # -13 == 243
+            $killed = 1 if $result == 242; # -14 = 242
             last;
           }
 
           $result =~ s/\s+$//;
           print "Ret: $ret; result: [$result]\n";
+
+          if($result =~ m/Killed$/) {
+            print "Processed was killed\n";
+            $killed = 1;
+          }
 
           if($ret == -13) {
             print $client "$nick: ";
@@ -157,6 +165,9 @@ sub compiler_server {
 
           print $client $result . "\n";
           close $client;
+
+          $ret = -14 if $killed;
+
           # child exit
           # print "child exit\n";
           exit $ret;
@@ -170,7 +181,6 @@ sub compiler_server {
         }
 
         $code .= $line . "\n";
-
       }
 
       alarm 0;
@@ -180,7 +190,7 @@ sub compiler_server {
 
     close $client;
 
-    next unless $timed_out;
+    next unless ($timed_out or $killed);
     
     print "stopping vm $vm_pid\n";
     vm_stop $vm_pid;

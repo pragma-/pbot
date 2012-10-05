@@ -70,7 +70,7 @@ sub unset {
 sub add {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  if(not defined $arguments) {
+  if(not defined $arguments or not length $arguments) {
     return "/msg $nick Usage: chanadd <channel>";
   }
 
@@ -84,7 +84,7 @@ sub add {
 sub remove {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  if(not defined $arguments) {
+  if(not defined $arguments or not length $arguments) {
     return "/msg $nick Usage: chanrem <channel>";
   }
 

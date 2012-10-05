@@ -728,8 +728,6 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     $prelude .= $1;
   }
 
-  #$prelude = "$1" if $precode =~ s/^\s*(#.*\n)//s;
-
   print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $debug;
 
   # strip C and C++ style comments
@@ -806,7 +804,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   $precode =~ s/^{(.*)}$/$1/s;
 
   if(not $has_main) {
-    $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) {\n$precode\n;\nreturn 0;\n}\n";
+    $code = "$prelude\n\n$code\n\nint main(void) {\n$precode\n;\nreturn 0;\n}\n";
     $nooutput = "No warnings, errors or output.";
   } else {
     print "code: [$code]; precode: [$precode]\n" if $debug;
@@ -897,7 +895,8 @@ if($output =~ m/^\s*$/) {
   $output =~ s/, <incomplete sequence >//g;
   $output =~ s/\s*warning: shadowed declaration is here \[-Wshadow\]//g;
   $output =~ s/preprocessor macro>\s+<at\s+>/preprocessor macro>/g;
-  $output =~ s/<No symbol table is loaded.  Use the "file" command.>\s*//;
+  $output =~ s/<No symbol table is loaded.  Use the "file" command.>\s*//g;
+  $output =~ s/cc1: all warnings being treated as; errors//g;
 
   # remove duplicate warnings/infos
   $output =~ s/(\[*.*warning:.*?\s*)\1/$1/g;

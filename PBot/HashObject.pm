@@ -194,7 +194,7 @@ sub levenshtein_matches {
 
     # print "Percentage: ", $distance / $length, "\n";
 
-    if($distance / $length < 0.50) {
+    if($length != 0 && $distance / $length < 0.50) {
       $result .= $comma . $index;
       $comma = ", ";
     }

@@ -358,6 +358,11 @@ sub execute {
             exit 0;
         }
 
+        if($line =~ m/Program terminated with signal SIGKILL/) {
+            print "Killed\n";
+            return 0;
+        }
+
         if($line =~ m/Program received signal SIGTRAP/) { 
             my $output = "";
             my $line = <$out>;

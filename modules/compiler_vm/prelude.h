@@ -83,6 +83,7 @@ static int printf_binary_arginfo(const struct printf_info *info, size_t n, int *
  
 __attribute__ (( constructor )) static void printf_binary_register(void)
 {
+    setvbuf(stdout, NULL, _IONBF, 0);
     setlocale(LC_ALL, "");
     register_printf_specifier('b', printf_binary_handler, printf_binary_arginfo);
 }
@@ -92,7 +93,7 @@ __attribute__ (( constructor )) static void printf_binary_register(void)
 #define STR(s) #s
 #define REVEAL(s) STR(s)
 
-void gdb() { asm(""); }
+void gdb() { __asm__(""); }
 #define dump(expression) gdb("print " #expression)
 #define print(expression) gdb("print " #expression)
 #define ptype(expression) gdb("ptype " #expression)

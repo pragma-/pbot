@@ -8,7 +8,7 @@ use strict;
 use HTML::Entities;
 use Data::Dumper;
 
-my $debug = 9999; 
+my $debug = 1000; 
 
 sub gen_data;
 sub gen_txt;
@@ -34,8 +34,8 @@ my $footnote = 0;
 my $last_footnote = 0;
 
 gen_data;
-gen_txt;
-#gen_html;
+#gen_txt;
+gen_html;
 
 sub gen_data {
   while($text =~ m/^\s{0,5}([0-9A-Z]+\.[0-9\.]*)/msg) {
@@ -45,11 +45,11 @@ sub gen_data {
 
     ($section_number) = $this_section =~ /([^.]+)\./;
 
-    print STDERR "----------------------------------\n" if $debug >= 2;
+    print STDERR "----------------------------------\n" if $debug;
     print STDERR "Processing section [$this_section]; number [$section_number]\n" if $debug;
 
-    print STDERR "this_section: [$this_section]; last_section: [$last_section]\n";
-    print STDERR "Section diff: ", ($this_section - $last_section), "\n";
+    print STDERR "this_section: [$this_section]; last_section: [$last_section]\n" if $debug >= 2;
+    print STDERR "Section diff: ", ($this_section - $last_section), "\n" if $debug >= 2;
 
     my $diff = $section_number - $last_section_number;
     print STDERR "Diff: $diff\n" if $debug >= 2;
@@ -64,7 +64,7 @@ sub gen_data {
     if($text =~ m/(.*?)^(?=\s{0,4}[0-9A-Z]+\.)/msg) {
       $section_text = $1;
     } else {
-      print STDERR "No section text, end of file marker found.\n" if $debug >= 4;
+      print STDERR "No section text, end of file marker found.\n";
       last;
     }
 
@@ -100,12 +100,12 @@ sub gen_data {
           $footnote = $2;
           my $middle_spaces = $3;
           my $footnote_text = "$4\n";
-          print STDERR "1st footnote\n";
+          print STDERR "1st footnote\n" if $debug;
           print STDERR "processing footnote $footnote [last: $last_footnote]\n" if $debug >= 2;
           if($last_footnote - $footnote != -1) {
-            print STDERR "footnotes dump: \n";
+            print STDERR "footnotes dump: \n" if $debug > 5;
             shift @footnotes;
-            my $dump = Dumper(@footnotes);
+            my $dump = Dumper(@footnotes) if $debug > 5;
             #print STDERR "$dump\n";
             die "Footnote diff invalid";
           }
@@ -118,26 +118,26 @@ sub gen_data {
 
           while ($t =~ m/^(.*?)$/msgc) {
             my $line = $1;
-            print STDERR "processing [$line]\n";
+            print STDERR "processing [$line]\n" if $debug;
 
             if($line =~ m/^(\s*)(\d+)\)(\s*)(.*?)$/msg) {
-              print STDERR "----------------\n" if $debug >= 10;
-              print STDERR "footnote $footnote: [$footnote_text]\n" if $debug >= 5;
+              print STDERR "----------------\n" if $debug >= 1;
+              print STDERR "footnote $footnote: [$footnote_text]\n" if $debug >= 1;
               $footnotes[$footnote] = $footnote_text;
-              print STDERR "----------------\n" if $debug >= 10;
+              print STDERR "----------------\n" if $debug >= 1;
 
               $leading_spaces = $1;
               $footnote = $2;
               $middle_spaces = $3;
               $footnote_text = "$4\n";
 
-              print STDERR "2nd footnote\n";
+              print STDERR "2nd footnote\n" if $debug >= 2;
               print STDERR "processing footnote $footnote [last: $last_footnote]\n" if $debug >= 2;
               if($last_footnote - $footnote != -1) {
                 print STDERR "footnotes dump: \n";
                 shift @footnotes;
                 my $dump = Dumper(@footnotes);
-                #print STDERR "$dump\n";
+                print STDERR "$dump\n" if $debug >= 3;
                 die "Footnote diff invalid";
               }
               $last_footnote = $footnote;
@@ -157,10 +157,10 @@ sub gen_data {
             print STDERR "footnote $footnote text: appending [$line]\n" if $debug >= 3;
           }
 
-          print STDERR "----------------\n" if $debug >= 10;
-          print STDERR "footnote $footnote: [$footnote_text]\n" if $debug >= 5;
+          print STDERR "----------------\n" if $debug >= 1;
+          print STDERR "footnote $footnote: [$footnote_text]\n" if $debug >= 1;
           $footnotes[$footnote] = $footnote_text;
-          print STDERR "----------------\n" if $debug >= 10;
+          print STDERR "----------------\n" if $debug >= 1;
         }
 
         $sections{$this_section . "p$p"}{text} = "$p $t";
@@ -171,7 +171,7 @@ sub gen_data {
 
 sub bysection {
   my $inverse = 1;
-  print STDERR "section cmp $a <=> $b\n";
+  print STDERR "section cmp $a <=> $b\n" if $debug > 10;
   
   my ($a1, $p1) = split /p/, $a;
   my ($b1, $p2) = split /p/, $b;
@@ -210,22 +210,22 @@ sub bysection {
     if(not defined $k2[$i]) {
       $r[$i] = 1;
     } else {
-      print STDERR "   cmp k1[$i] ($k1[$i]) vs k2[$i] ($k2[$i])\n";
+      print STDERR "   cmp k1[$i] ($k1[$i]) vs k2[$i] ($k2[$i])\n" if $debug >= 5;
       if($i == 0) {
         $r[$i] = $k1[$i] cmp $k2[$i];
       } else {
         $r[$i] = $k1[$i] <=> $k2[$i];
       }
     }
-    print STDERR "  r[$i] = $r[$i]\n";
+    print STDERR "  r[$i] = $r[$i]\n" if $debug >= 5;
   }
 
   $r[$i] = ($p1 <=> $p2);
-  print STDERR "  $p1 <=> $p2 => r[$i] = $r[$i]\n";
+  print STDERR "  $p1 <=> $p2 => r[$i] = $r[$i]\n" if $debug >= 5;
 
   my $ret = 0;
   foreach my $rv (@r) {
-    print STDERR "  checking r: $rv\n";
+    print STDERR "  checking r: $rv\n" if $debug >= 5;
     if($rv != 0) {
       $ret = $rv;
       last;
@@ -234,7 +234,7 @@ sub bysection {
 
   $ret = $ret * $inverse;
 
-  print STDERR "ret $ret\n";
+  print STDERR "ret $ret\n" if $debug >= 5;
   return $ret;
 }
 
@@ -245,7 +245,7 @@ sub gen_txt {
   my $section_title;
 
   foreach my $this_section (sort bysection keys %sections) {
-    print STDERR "writing section $this_section\n";
+    print STDERR "writing section $this_section\n" if $debug;
     if(not $this_section =~ m/p/) {
       print "    $this_section $sections{$this_section}{title}\n";
       $section_head = $this_section;
@@ -264,7 +264,7 @@ sub gen_txt {
     while($section_text =~ m/^(.*?)$/msg) {
       my $line = $1;
 
-      print STDERR "paren reset, line [$line]\n";
+      print STDERR "paren reset, line [$line]\n" if $debug >= 8;
       my $number = "";
       while($line =~ m/(.)/g) {
         my $c = $1;
@@ -275,14 +275,14 @@ sub gen_txt {
           $number = "";
         } elsif($c eq '(') {
           $paren++;
-          print STDERR "got $paren (\n";
+          print STDERR "got $paren (\n" if $debug >= 8;
         } elsif($c eq ')') {
           $paren--;
-          print STDERR "got $paren )\n";
+          print STDERR "got $paren )\n" if $debug >= 8;
 
           if($paren == -1) {
             if(length $number and defined $footnotes[$number]) {
-              print STDERR "Got footnote $number here!\n";
+              print STDERR "Got footnote $number here!\n" if $debug;
               $footer .= "    FOOTNOTE.$number\n      $footnotes[$number]\n";
             }
 
@@ -310,7 +310,7 @@ sub gen_html {
   my $paren = 0;
 
   foreach my $this_section (sort bysection keys %sections) {
-    print STDERR "writing section $this_section\n";
+    print STDERR "writing section $this_section\n" if $debug;
     print "<a name='", encode_entities $this_section, "'>\n";
     print "<hr>\n<h3>", encode_entities $this_section, " [", encode_entities $sections{$this_section}{title}, "]</h3>\n" if not $this_section =~ m/p/;
 
@@ -323,10 +323,12 @@ sub gen_html {
       $section_text =~ s/^\s*$footnote\)\s*$sub//ms;
     }
 
+    $section_text = encode_entities $section_text;
+
     while($section_text =~ m/^(.*?)$/msg) {
       my $line = $1;
 
-      print STDERR "paren reset, line [$line]\n";
+      print STDERR "paren reset, line [$line]\n" if $debug >= 8;
       my $number = "";
       while($line =~ m/(.)/g) {
         my $c = $1;
@@ -337,14 +339,15 @@ sub gen_html {
           $number = "";
         } elsif($c eq '(') {
           $paren++;
-          print STDERR "got $paren (\n";
+          print STDERR "got $paren (\n" if $debug >= 8;
         } elsif($c eq ')') {
           $paren--;
-          print STDERR "got $paren )\n";
+          print STDERR "got $paren )\n" if $debug >= 8;
 
           if($paren == -1) {
             if(length $number and defined $footnotes[$number]) {
-              print STDERR "Got footnote $number here!\n";
+              print STDERR "Got footnote $number here!\n" if $debug;
+              $section_text =~ s/$number\)/<sup>[$number]<\/sup>/;
               $footer .= "<a name='FOOTNOTE.$number'>\n<pre><i><b>Footnote $number)</b> ", encode_entities $footnotes[$number], "</i></pre>\n</a>\n";
             }
 
@@ -356,7 +359,10 @@ sub gen_html {
       }
     }
 
-    print "<pre>", encode_entities $section_text, "</pre>\n";
+    $section_text =~ s/\(([0-9.]+)\)/(<a href="#$1">$1<\/a>)/g;
+    $footer =~ s/\(([0-9.]+)\)/(<a href="#$1">$1<\/a>)/g;
+
+    print "<pre>", $section_text, "</pre>\n";
     print "</a>\n";
 
     if(length $footer) {
