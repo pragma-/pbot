@@ -7,22 +7,22 @@ my $USE_LOCAL = defined $ENV{'CC_LOCAL'};
 
 my %languages = (
   'C' => {
-    'cmdline' => 'gcc $args $file -o prog -ggdb -g3',
+    'cmdline' => 'gcc $file $args -o prog -ggdb -g3',
     'args' => '-Wextra -Wall -Wno-unused -std=gnu89 -lm -Wfatal-errors',
     'file' => 'prog.c',
   },
   'C++' => {
-    'cmdline' => 'g++ $args $file -o prog -ggdb',
+    'cmdline' => 'g++ $file $args -o prog -ggdb',
     'args' => '-lm',
     'file' => 'prog.cpp',
   },
   'C99' => {
-    'cmdline' => 'gcc $args $file -o prog -ggdb -g3',
+    'cmdline' => 'gcc $file $args -o prog -ggdb -g3',
     'args' => '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -std=c99 -lm -Wfatal-errors',
     'file' => 'prog.c',
   },
   'C11' => {
-    'cmdline' => 'gcc $args $file -o prog -ggdb -g3',
+    'cmdline' => 'gcc $file $args -o prog -ggdb -g3',
     'args' => '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -std=c11 -lm -Wfatal-errors',
     'file' => 'prog.c',
   },
@@ -126,7 +126,7 @@ sub interpret {
   $cmdline =~ s/\$file/$languages{$lang}{'file'}/;
 
   print "Executing [$cmdline]\n";
-  my ($ret, $result) = execute(60, "$cmdline 2>&1");
+  my ($ret, $result) = execute(60, $cmdline);
   # print "Got result: ($ret) [$result]\n";
 
   # if exit code was not 0, then there was a problem compiling, such as an error diagnostic
@@ -146,9 +146,17 @@ sub interpret {
   }
 
   my $user_input_quoted = quotemeta $user_input;
-  ($ret, $result) = execute(60, "compiler_watchdog.pl $user_input_quoted");
+  ($ret, $result) = execute(60, "bash -c 'ulimit -t 1; compiler_watchdog.pl $user_input_quoted > .output'");
 
-  #$result =~ s/^\s+//;
+  $result = "";
+
+  open(FILE, '.output');
+  while(<FILE>) {
+    $result .= $_;
+    last if length $result >= 2048 * 20;
+  }
+  close(FILE);
+ 
   $result =~ s/\s+$//;
 
   # print "Executed prog; got result: ($ret) [$result]\n";
