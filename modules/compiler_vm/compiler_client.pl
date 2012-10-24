@@ -23,7 +23,7 @@ if(not defined $sock) {
 my $nick = shift @ARGV;
 my $code = join ' ', @ARGV;
 
-my $lang = "C99";
+my $lang = "C11";
 
 if($code =~ s/-lang=([^ ]+)//) {
   $lang = uc $1;

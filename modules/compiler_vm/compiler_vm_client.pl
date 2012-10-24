@@ -102,7 +102,9 @@ sub compile {
     $compiler_output = $compiler;
   }
 
-  print $compiler "compile:$lang:$args:$input\n";
+  my $date = time;
+
+  print $compiler "compile:$lang:$args:$input:$date\n";
   print $compiler "$code\n";
   print $compiler "compile:end\n";
 
@@ -576,7 +578,8 @@ unless($got_run) {
 my $found = 0;
 my @langs;
 foreach my $l (sort { uc $a cmp uc $b } keys %languages) {
-  push @langs, sprintf("      %-30s => %s", $l, $languages{$l});
+  #push @langs, sprintf("      %-30s => %s", $l, $languages{$l});
+  push @langs, sprintf("%s => %s", $l, $languages{$l});
   if(uc $lang eq uc $l) {
     $lang = $l;
     $found = 1;
@@ -584,7 +587,7 @@ foreach my $l (sort { uc $a cmp uc $b } keys %languages) {
 }
 
 if(not $found) {
-  print "$nick: Invalid language '$lang'.  Supported languages are:\n", (join ",\n", @langs), "\n";
+  print "$nick: Invalid language '$lang'.  Supported languages are:\n", (join ",\n", @langs), "\n; For additional languages try the cc2 command.";
   exit 0;
 }
 
@@ -731,7 +734,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $debug;
 
   # strip C and C++ style comments
-  $precode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $3 ? $3 : ""#gse;
+  $precode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $3 ? $3 : " "#gse;
 
   print "   precode: [$precode]\n" if $debug;
 
@@ -786,6 +789,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     my $body;
     if(not defined $extract[0]) {
       print "error: unmatched brackets for function '$ident';\n";
+      print "body: [$potential_body]\n";
       exit;
     } else {
       $body = $extract[0];
@@ -892,6 +896,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/\/home\/compiler\///g;
   $output =~ s/compilation terminated.//;
   $output =~ s/<'(.)' = char>/<'$1' = int>/g;
+  $output =~ s/= (-?\d+) ''/= $1/g;
   $output =~ s/, <incomplete sequence >//g;
   $output =~ s/\s*warning: shadowed declaration is here \[-Wshadow\]//g;
   $output =~ s/preprocessor macro>\s+<at\s+>/preprocessor macro>/g;

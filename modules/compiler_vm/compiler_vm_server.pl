@@ -39,6 +39,7 @@ sub runserver {
     open($output, '>', "/dev/stdout") or die $!;
   }
 
+  my $date;
   my $lang;
   my $code;
   my $user_args;
@@ -57,7 +58,7 @@ sub runserver {
 
       print "Attempting compile [$lang] ...\n";
       
-      my $result = interpret($lang, $code, $user_args, $user_input);
+      my $result = interpret($lang, $code, $user_args, $user_input, $date);
       
       print "Done compiling; result: [$result]\n";
       print $output "result:$result\n";
@@ -79,14 +80,14 @@ sub runserver {
       $user_input = undef;
       $lang = undef;
 
-      ($lang, $user_args, $user_input) = split /:/, $options;
+      ($lang, $user_args, $user_input, $date) = split /:/, $options;
 
       $code = "";
       $lang = "C11" if not defined $lang;
       $user_args = "" if not defined $user_args;
       $user_input = "" if not defined $user_input;
 
-      print "Setting lang [$lang]; [$user_args]; [$user_input]\n";
+      print "Setting lang [$lang]; [$user_args]; [$user_input]; [$date]\n";
       next;
     }
 
@@ -98,9 +99,9 @@ sub runserver {
 }
 
 sub interpret {
-  my ($lang, $code, $user_args, $user_input) = @_;
+  my ($lang, $code, $user_args, $user_input, $date) = @_;
 
-  print "lang: [$lang], code: [$code], user_args: [$user_args], input: [$user_input]\n";
+  print "lang: [$lang], code: [$code], user_args: [$user_args], input: [$user_input], date: [$date]\n";
 
   $lang = uc $lang;
 
@@ -146,7 +147,7 @@ sub interpret {
   }
 
   my $user_input_quoted = quotemeta $user_input;
-  ($ret, $result) = execute(60, "bash -c 'ulimit -t 1; compiler_watchdog.pl $user_input_quoted > .output'");
+  ($ret, $result) = execute(60, "bash -c 'date -s \@$date; ulimit -t 1; compiler_watchdog.pl $user_input_quoted > .output'");
 
   $result = "";
 

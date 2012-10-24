@@ -154,7 +154,7 @@ sub compiler_server {
           $result =~ s/\s+$//;
           print "Ret: $ret; result: [$result]\n";
 
-          if($result =~ m/Killed$/) {
+          if($result =~ m/\[Killed\]$/) {
             print "Processed was killed\n";
             $killed = 1;
           }

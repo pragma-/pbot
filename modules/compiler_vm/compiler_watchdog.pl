@@ -359,7 +359,7 @@ sub execute {
         }
 
         if($line =~ m/Program terminated with signal SIGKILL/) {
-            print "Killed\n";
+            print "[Killed]\n";
             return 0;
         }
 
