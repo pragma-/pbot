@@ -36,7 +36,7 @@ sub initialize {
 
   $self->{pbot} = $pbot;
   $self->{unban_timeout} = PBot::HashObject->new(pbot => $pbot, name => 'Unban Timeouts', filename => "$pbot->{data_dir}/unban_timeouts");
-  $self->{op_commands} = [];
+  $self->{op_commands} = {};
   $self->{is_opped} = {};
 
   $pbot->timer->register(sub { $self->check_opped_timeouts   }, 10);
@@ -47,13 +47,11 @@ sub gain_ops {
   my $self = shift;
   my $channel = shift;
   
-  if(not exists ${ $self->{is_opped} }{$channel}) {
+  if(not exists $self->{is_opped}->{$channel}) {
     $self->{pbot}->conn->privmsg("chanserv", "op $channel");
     $self->{is_opped}->{$channel}{timeout} = gettimeofday + 300; # assume we're going to be opped
-    $self->{pbot}->{irc}->flush_output_queue();
-    $self->{pbot}->{irc}->do_one_loop();
   } else {
-    $self->perform_op_commands();
+    $self->perform_op_commands($channel);
   }
 }
 
@@ -65,8 +63,10 @@ sub lose_ops {
 
 sub perform_op_commands {
   my $self = shift;
+  my $channel = shift;
+
   $self->{pbot}->logger->log("Performing op commands...\n");
-  foreach my $command (@{ $self->{op_commands} }) {
+  foreach my $command (@{ $self->{op_commands}->{$channel} }) {
     if($command =~ /^mode (.*?) (.*)/i) {
       $self->{pbot}->conn->mode($1, $2);
       $self->{pbot}->logger->log("  executing mode $1 $2\n");
@@ -74,9 +74,7 @@ sub perform_op_commands {
       $self->{pbot}->conn->kick($1, $2, $3) unless $1 =~ /\Q$self->{pbot}->botnick\E/i;
       $self->{pbot}->logger->log("  executing kick on $1 $2 $3\n");
     }
-    shift(@{ $self->{op_commands} });
-    $self->{pbot}->{irc}->flush_output_queue();
-    $self->{pbot}->{irc}->do_one_loop();
+    shift(@{ $self->{op_commands}->{$channel} });
   }
   $self->{pbot}->logger->log("Done.\n");
 }
@@ -84,7 +82,8 @@ sub perform_op_commands {
 sub ban_user {
   my $self = shift;
   my ($mask, $channel) = @_;
-  unshift @{ $self->{op_commands} }, "mode $channel +b $mask";
+
+  unshift @{ $self->{op_commands}->{$channel} }, "mode $channel +b $mask";
   $self->gain_ops($channel);
 }
 
@@ -94,7 +93,7 @@ sub unban_user {
   $self->{pbot}->logger->log("Unbanning $mask\n");
   delete $self->{unban_timeout}->hash->{$mask};
   $self->{unban_timeout}->save_hash();
-  unshift @{ $self->{op_commands} }, "mode $channel -b $mask";
+  unshift @{ $self->{op_commands}->{$channel} }, "mode $channel -b $mask";
   $self->gain_ops($channel);
 }
 

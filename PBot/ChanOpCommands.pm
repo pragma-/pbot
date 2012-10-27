@@ -107,7 +107,7 @@ sub kick_user {
     $self->{pbot}->logger->log("$nick!$user\@$host: invalid arguments to kick\n");
     return "/msg $nick Usage: !kick <nick> <reason>";
   }
-  unshift @{ $self->{pbot}->chanops->{op_commands} }, "kick $from $1 $2";
+  unshift @{ $self->{pbot}->chanops->{op_commands}->{$from} }, "kick $from $1 $2";
   $self->{pbot}->chanops->gain_ops($from);
 }
 

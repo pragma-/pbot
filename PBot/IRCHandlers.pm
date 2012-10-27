@@ -145,7 +145,7 @@ sub on_mode {
       if($mode eq "+o") {
         $self->{pbot}->logger->log("$nick opped me in $channel\n");
         $self->{pbot}->chanops->{is_opped}->{$channel}{timeout} = gettimeofday + 300; # 5 minutes
-        $self->{pbot}->chanops->perform_op_commands();
+        $self->{pbot}->chanops->perform_op_commands($channel);
       } 
       elsif($mode eq "-o") {
         $self->{pbot}->logger->log("$nick removed my ops in $channel\n");
@@ -195,13 +195,12 @@ sub on_departure {
 
   $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, $text, 4, 60 * 30, $self->{pbot}->antiflood->{FLOOD_JOIN});
 
-=cut
-  if(exists $admins{$nick} && exists $admins{$nick}{login}) { 
+  my $admin = $self->{pbot}->admins->find_admin($channel, "$nick!$user\@$host");
+  if(defined $admin and $admin->{loggedin}) {
     $self->{pbot}->logger->log("Whoops, $nick left while still logged in.\n");
     $self->{pbot}->logger->log("Logged out $nick.\n");
-    delete $admins{$nick}{login};
+    delete $admin->{loggedin};
   }
-=cut
 }
 
 sub pbot {

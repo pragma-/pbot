@@ -204,15 +204,15 @@ sub add_message {
 
 sub check_flood {
   my ($self, $channel, $nick, $user, $host, $text, $max_messages, $max_time, $mode) = @_;
-  my $mask = lc "$nick!$user\@$host";
-  my $now = gettimeofday;
 
-  $self->{pbot}->logger->log(sprintf("%-14s | %-65s | %s\n", $channel, $mask, $text));
+  $channel = lc $channel;
+  my $mask = lc "$nick!$user\@$host";
+
+  $self->{pbot}->logger->log(sprintf("%-14s | %-65s | %s\n", $channel eq $mask ? "QUIT" : $channel, $mask, $text));
 
   $nick = lc $nick;
   $user = lc $user;
   $host = lc $host;
-  $channel = lc $channel;
 
   return if $nick eq lc $self->{pbot}->botnick;
 

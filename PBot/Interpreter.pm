@@ -42,7 +42,6 @@ sub initialize {
   $self->{pbot} = $pbot;
 }
 
-=cut
 sub paste_codepad {
   my $text = join(' ', @_);
 
@@ -61,9 +60,8 @@ sub paste_codepad {
 
   return $response->request->uri;
 }
-=cut
 
-sub paste_codepad {
+sub paste_sprunge {
   my $text = join(' ', @_);
 
   $text =~ s/(.{120})\s/$1\n/g;
@@ -157,7 +155,7 @@ sub process_line {
       $result =~ s/\s+/ /g unless $preserve_whitespace;
 
       if(length $result > $pbot->max_msg_len) {
-        my $link = paste_codepad("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
+        my $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
         my $trunc = "... [truncated; see $link for full text.]";
         $pbot->logger->log("Message truncated -- pasted to $link\n");
         
