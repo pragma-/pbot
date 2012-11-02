@@ -214,4 +214,11 @@ if($comma eq "") {
   print "[", $found_section_title, "]\n\n" if length $found_section_title;
 }
 
+$result =~ s/\s*Constraints\s*$//;
+$result =~ s/\s*Semantics\s*$//;
+$result =~ s/\s*Description\s*$//;
+$result =~ s/\s*Returns\s*$//;
+$result =~ s/\s*Runtime-constraints\s*$//;
+$result =~ s/\s*Recommended practice\s*$//;
+
 print "$result\n";

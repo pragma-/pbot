@@ -829,13 +829,7 @@ $code =~ s/(?:\n\n)+/\n\n/g;
 
 print "final code: [$code]\n" if $debug;
 
-if(defined $got_run and $got_run eq "paste") {
-  my $uri = paste_sprunge(pretty($code));
-  print "$nick: $uri\n";
-  exit 0;
-}
-
-print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n";
+print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n" unless $got_run;
 
 $input = "Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet." if not length $input;
 
@@ -902,6 +896,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/preprocessor macro>\s+<at\s+>/preprocessor macro>/g;
   $output =~ s/<No symbol table is loaded.  Use the "file" command.>\s*//g;
   $output =~ s/cc1: all warnings being treated as; errors//g;
+  $output =~ s/, note: this is the location of the previous definition//g;
 
   # remove duplicate warnings/infos
   $output =~ s/(\[*.*warning:.*?\s*)\1/$1/g;
@@ -911,7 +906,7 @@ if($output =~ m/^\s*$/) {
   # splint
   $output =~ s/Splint 3.1.2 --- 03 May 2009\s*//;
   $output =~ s/Finished checking --- \d+ code warning\s*//;
-  print FILE "splint: [$output]\n";
+  print FILE "splint: [$output]\n" unless $got_run;
   $output =~ s/\s*\(in function main\)\s*Fresh\s*storage\s*.*?\s*not\s*released.*?reference\s+to\s+it\s+is\s+lost.\s*//msg;
   $output =~ s/\s*\(in function main\)\s*//g;
   $output =~ s/\s*\(Use\s+.*?\s+to\s+inhibit\s+warning\)//msg;
@@ -941,6 +936,13 @@ if($output =~ m/^\s*$/) {
 unless($got_run) {
   print FILE "$nick: $output\n";
   close FILE;
+}
+
+if(defined $got_run and $got_run eq "paste") {
+  $code .= "\n\n/************* OUTPUT *************\n$output************** OUTPUT **************/\n"; 
+  my $uri = paste_sprunge(pretty($code));
+  print "$nick: $uri\n";
+  exit 0;
 }
 
 print "$nick: $output\n";

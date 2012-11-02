@@ -16,6 +16,8 @@ if ($#ARGV <= 0)
 my $nick = shift(@ARGV);
 $arguments = join("%20", @ARGV);
 
+exit if($arguments =~ m/stackoverflow.com/i);
+exit if($arguments =~ m/scratch.mit.edu/i);
 exit if($arguments =~ m/sprunge.us/i);
 exit if($arguments =~ m/hastebin.com/i);
 exit if($arguments =~ m/lmgtfy.com/i);

@@ -32,7 +32,11 @@ my $search = Google::Search->Web(query => $arguments, referrer => 'http://blacks
 print "$nick: ";
 
 if(not $search->first) {
+  if($search->error) {
     print $search->error->reason, "\n";
+  } else {
+    print "No results found\n";
+  }
     exit;
 }
 
