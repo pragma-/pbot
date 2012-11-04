@@ -266,8 +266,15 @@ sub interpreter {
       # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, don't say anything
       return "" if length $arguments and $arguments !~ /^[^.+-, ]{1,20}$/;
       
-      # find matches from all channels
-      my $matches = $self->factoids->levenshtein_matches('.*', lc $original_keyword);
+      my $matches = $self->{pbot}->{factoidcmds}->factfind($from, $nick, $user, $host, quotemeta $original_keyword);
+
+      # found factfind matches
+      if($matches !~ m/^No factoids/) {
+        return "No such factoid '$original_keyword'; found $matches";
+      }
+
+      # otherwise find levenshtein closest matches from all channels
+      $matches = $self->factoids->levenshtein_matches('.*', lc $original_keyword);
 
       # don't say anything if nothing similiar was found
       return undef if $matches eq 'none';

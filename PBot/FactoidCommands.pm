@@ -652,14 +652,14 @@ sub factfind {
 
   if($arguments ne "") {
     if(not defined $argtype) {
-      $argtype = "with text matching '$arguments'";
+      $argtype = "with text containing '$arguments'";
     } else {
-      $argtype .= " and with text matching '$arguments'";
+      $argtype .= " and with text containing '$arguments'";
     }
   }
 
   if(not defined $argtype) {
-    return "/msg $nick Usage: !find [-channel] [-owner nick] [-by nick] [text]";
+    return "/msg $nick Usage: factfind [-channel] [-owner nick] [-by nick] [text]";
   }
 
   my ($text, $last_trigger, $last_chan, $i);
