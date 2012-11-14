@@ -151,6 +151,9 @@ $lang = uc $1 if $code =~ s/-lang=([^\b\s]+)//i;
 my $input = "";
 $input = $1 if $code =~ s/-(?:input|stdin)=(.*)$//i;
 
+my $got_paste = undef;
+$got_paste = 1 if $code =~ s/^\s*-paste\s*//i;
+
 my $args = "";
 $args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
 $args =~ s/\s+$//;
@@ -938,7 +941,7 @@ unless($got_run) {
   close FILE;
 }
 
-if(defined $got_run and $got_run eq "paste") {
+if(defined $got_paste or (defined $got_run and $got_run eq "paste")) {
   $code .= "\n\n/************* OUTPUT *************\n$output************** OUTPUT **************/\n"; 
   my $uri = paste_sprunge(pretty($code));
   print "$nick: $uri\n";
