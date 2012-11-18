@@ -751,13 +751,14 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "looking for functions, has main: $has_main\n" if $debug >= 2;
 
-  my $func_regex = qr/^([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\(([^)]*)\)\s*(\{.*)/ms;
+  my $func_regex = qr/^([ a-zA-Z0-9_*]+)\s+([a-zA-Z0-9_*]+)\s*\(([^{]*)\s*({.*)/ms;
 
   # look for potential functions to extract
   while($preprecode =~ /$func_regex/ms) {
     my ($pre_ret, $pre_ident, $pre_params, $pre_potential_body) = ($1, $2, $3, $4);
+    $pre_params =~ s/\)\s*$//;
 
-    print "looking for functions, found [$pre_ret][$pre_ident][$pre_params][$pre_potential_body], has main: $has_main\n" if $debug >= 2;
+    print "looking for functions, found [$pre_ret][$pre_ident][$pre_params][$pre_potential_body], has main: $has_main\n" if $debug >= 1;
 
     # find the pos at which this function lives, for extracting from precode
     $preprecode =~ m/(\Q$pre_ret\E\s+\Q$pre_ident\E\s*\(\s*\Q$pre_params\E\s*\)\s*\Q$pre_potential_body\E)/g;
@@ -775,6 +776,7 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
     $tmpcode =~ m/$func_regex/ms;
     my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
+    $params =~ s/\)\s*$//;
 
     print "1st extract: [$ret][$ident][$params][$potential_body]\n" if $debug;
 
@@ -828,6 +830,7 @@ $code =~ s/\|n/\n/g;
 $code =~ s/^\s+//;
 $code =~ s/\s+$//;
 $code =~ s/;\s*;\n/;\n/gs;
+$code =~ s/({|})\n\s*;\n/$1\n/gs;
 $code =~ s/(?:\n\n)+/\n\n/g;
 
 print "final code: [$code]\n" if $debug;
@@ -900,7 +903,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/<No symbol table is loaded.  Use the "file" command.>\s*//g;
   $output =~ s/cc1: all warnings being treated as; errors//g;
   $output =~ s/, note: this is the location of the previous definition//g;
-
+ 
   # remove duplicate warnings/infos
   $output =~ s/(\[*.*warning:.*?\s*)\1/$1/g;
   $output =~ s/(info: .*?\s)\1/$1/g;
@@ -942,7 +945,8 @@ unless($got_run) {
 }
 
 if(defined $got_paste or (defined $got_run and $got_run eq "paste")) {
-  $code .= "\n\n/************* OUTPUT *************\n$output************** OUTPUT **************/\n"; 
+  $output =~ s/[\r\n]+$//;
+  $code .= "\n\n/************* OUTPUT *************\n$output\n************** OUTPUT **************/\n"; 
   my $uri = paste_sprunge(pretty($code));
   print "$nick: $uri\n";
   exit 0;
