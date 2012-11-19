@@ -751,12 +751,11 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "looking for functions, has main: $has_main\n" if $debug >= 2;
 
-  my $func_regex = qr/^([ a-zA-Z0-9_*]+)\s+([a-zA-Z0-9_*]+)\s*\(([^{]*)\s*({.*)/ms;
+  my $func_regex = qr/^([ A-Z0-9_*]+)\s+([A-Z0-9_*]+)\s*\((.*?)\s*\)\s*({.*)/ims;
 
   # look for potential functions to extract
   while($preprecode =~ /$func_regex/ms) {
     my ($pre_ret, $pre_ident, $pre_params, $pre_potential_body) = ($1, $2, $3, $4);
-    $pre_params =~ s/\)\s*$//;
 
     print "looking for functions, found [$pre_ret][$pre_ident][$pre_params][$pre_potential_body], has main: $has_main\n" if $debug >= 1;
 
@@ -776,7 +775,6 @@ if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
     $tmpcode =~ m/$func_regex/ms;
     my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
-    $params =~ s/\)\s*$//;
 
     print "1st extract: [$ret][$ident][$params][$potential_body]\n" if $debug;
 
