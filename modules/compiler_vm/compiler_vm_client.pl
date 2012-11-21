@@ -17,6 +17,8 @@ my $MAX_UNDO_HISTORY = 1000000;
 my $output = "";
 my $nooutput = 'No output.';
 
+my $warn_unterminated_define = 0;
+
 my %languages = (
   'C11' => "gcc -std=c11 -pedantic -Wall -Wextra (default)",
   'C99' => "gcc -std=c99 -pedantic -Wall -Wextra",
@@ -26,7 +28,7 @@ my %languages = (
 my %preludes = ( 
   'C99'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
   'C11'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <complex.h>\n#include <prelude.h>\n\n",
-  'C'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
+  'C89'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
 );
 
 sub pretty {
@@ -726,12 +728,20 @@ $code = '';
 
 print "--- precode: [$precode]\n" if $debug;
 
-if($lang eq 'C' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
+if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   my $has_main = 0;
 
   my $prelude = '';
   while($precode =~ s/^\s*(#.*\n)//g) {
     $prelude .= $1;
+  }
+
+  if($precode =~ m/^\s*(#.*)/m) {
+    my $line = $1;
+
+    if($line !~ m/\n/) {
+      $warn_unterminated_define = 1;
+    }
   }
 
   print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $debug;
@@ -935,6 +945,14 @@ if($output =~ m/^\s*$/) {
   $output =~ s/Possibly\s*null\s*storage\s*passed\s*as\s*non-null\s*param:/Possibly null storage passed to function:/g;
   $output =~ s/A\s*possibly\s*null\s*pointer\s*is\s*passed\s*as\s*a\s*parameter\s*corresponding\s*to\s*a\s*formal\s*parameter\s*with\s*no\s*\/\*\@null\@\*\/\s*annotation.\s*If\s*NULL\s*may\s*be\s*used\s*for\s*this\s*parameter,\s*add\s*a\s*\/\*\@null\@\*\/\s*annotation\s*to\s*the\s*function\s*parameter\s*declaration./A possibly null pointer is passed as a parameter to a function./gs;
   $output =~ s/ called by \?\? \(\)//g;
+}
+
+if($warn_unterminated_define == 1) {
+  if($output =~ m/^\[(warning:|info:)/) {
+    $output =~ s/^\[/[notice: #define not terminated by \\n, the remainder of the line will be part of this #define /;
+  } else {
+    $output =~ s/^/[notice: #define not terminated by \\n, the remainder of the line will be part of this #define] /;
+  }
 }
 
 unless($got_run) {
