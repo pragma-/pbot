@@ -156,8 +156,8 @@ $input = $1 if $code =~ s/-(?:input|stdin)=(.*)$//i;
 my $got_paste = undef;
 $got_paste = 1 if $code =~ s/\s*-paste\s*//i;
 
-my $got_naked = undef;
-$got_naked = 1 if $code =~ s/\s*-naked\s*//i;
+my $got_nomain = undef;
+$got_nomain = 1 if $code =~ s/\s*-nomain\s*//i;
 
 my $args = "";
 $args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
@@ -764,7 +764,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "looking for functions, has main: $has_main\n" if $debug >= 2;
 
-  my $func_regex = qr/^([ *\w]+)\s+([*\w]+)\s*\((.*?)\s*\)\s*({.*)/ims;
+  my $func_regex = qr/^([ *\w]+)\s+([*\w]+)\s*\(([^;]+)\s*\)\s*({.*)/ims;
 
   # look for potential functions to extract
   while($preprecode =~ /$func_regex/ms) {
@@ -823,7 +823,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   $precode =~ s/^{(.*)}$/$1/s;
 
-  if(not $has_main and not $got_naked) {
+  if(not $has_main and not $got_nomain) {
     $code = "$prelude\n\n$code\n\nint main(void) {\n$precode\n;\nreturn 0;\n}\n";
     $nooutput = "No warnings, errors or output.";
   } else {
