@@ -764,7 +764,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "looking for functions, has main: $has_main\n" if $debug >= 2;
 
-  my $func_regex = qr/^([ *\w]+)\s+([*\w]+)\s*\(([^;]+)\s*\)\s*({.*)/ims;
+  my $func_regex = qr/^([ *\w]+)\s+([*\w]+)\s*\(([^;]*)\s*\)\s*({.*)/ims;
 
   # look for potential functions to extract
   while($preprecode =~ /$func_regex/ms) {
