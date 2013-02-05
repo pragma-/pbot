@@ -950,6 +950,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/Possibly\s*null\s*storage\s*passed\s*as\s*non-null\s*param:/Possibly null storage passed to function:/g;
   $output =~ s/A\s*possibly\s*null\s*pointer\s*is\s*passed\s*as\s*a\s*parameter\s*corresponding\s*to\s*a\s*formal\s*parameter\s*with\s*no\s*\/\*\@null\@\*\/\s*annotation.\s*If\s*NULL\s*may\s*be\s*used\s*for\s*this\s*parameter,\s*add\s*a\s*\/\*\@null\@\*\/\s*annotation\s*to\s*the\s*function\s*parameter\s*declaration./A possibly null pointer is passed as a parameter to a function./gs;
   $output =~ s/ called by \?\? \(\)//g;
+  $output =~ s/\s*Copyright\s*\(C\)\s*\d+\s*Free\s*Software\s*Foundation,\s*Inc.\s*This\s*is\s*free\s*software;\s*see\s*the\s*source\s*for\s*copying\s*conditions.\s*\s*There\s*is\s*NO\s*warranty;\s*not\s*even\s*for\s*MERCHANTABILITY\s*or\s*FITNESS\s*FOR\s*A\s*PARTICULAR\s*PURPOSE.//gs;
 }
 
 if($warn_unterminated_define == 1) {

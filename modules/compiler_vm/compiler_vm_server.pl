@@ -6,7 +6,7 @@ use strict;
 my $USE_LOCAL = defined $ENV{'CC_LOCAL'}; 
 
 my %languages = (
-  'C' => {
+  'C89' => {
     'cmdline' => 'gcc $file $args -o prog -ggdb -g3',
     'args' => '-Wextra -Wall -Wno-unused -std=gnu89 -lm -Wfatal-errors',
     'file' => 'prog.c',
@@ -64,7 +64,7 @@ sub runserver {
       print $output "result:$result\n";
       print $output "result:end\n";
 
-      # system("rm *");
+      system("rm prog");
 
       if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
         print "input: ";
@@ -117,9 +117,9 @@ sub interpret {
 
   if(length $user_args) {
     print "Replacing args with $user_args\n";
-    $user_args = quotemeta($user_args);
-    $user_args =~ s/\\ / /g;
-    $cmdline =~ s/\$args/$user_args/;
+    my $user_args_quoted = quotemeta($user_args);
+    $user_args_quoted =~ s/\\ / /g;
+    $cmdline =~ s/\$args/$user_args_quoted/;
   } else {
     $cmdline =~ s/\$args/$languages{$lang}{'args'}/;
   }
@@ -136,10 +136,14 @@ sub interpret {
     return $result;
   }
 
-  my $output = "";
+  if($user_args =~ m/--version/) {
+    # arg contained --version, so don't compile and just return the version output
+    return $result;
+  }
 
   # no errors compiling, but if $result contains something, it must be a warning message
   # so prepend it to the output
+  my $output = "";
   if(length $result) {
     $result =~ s/^\s+//;
     $result =~ s/\s+$//;
