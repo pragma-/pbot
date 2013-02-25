@@ -74,6 +74,10 @@ sub initialize {
   $self->{module_dir}         = delete $conf{module_dir}         // "$ENV{HOME}/pbot/modules";
 
   $self->{ircserver}          = delete $conf{ircserver}          // "irc.freenode.net";
+  $self->{port}               = delete $conf{port}               // 6667;
+  $self->{SSL}                = delete $conf{SSL}                // 0;
+  $self->{SSL_ca_file}        = delete $conf{SSL_ca_file}        // undef;
+  $self->{SSL_ca_path}        = delete $conf{SSL_ca_path}        // undef;
   $self->{botnick}            = delete $conf{botnick}            // "pbot3";
   $self->{username}           = delete $conf{username}           // "pbot3";
   $self->{ircname}            = delete $conf{ircname}            // "http://code.google.com/p/pbot2-pl/";
@@ -171,12 +175,15 @@ sub connect {
   $self->logger->log("Connecting to $server ...\n");
 
   $self->conn($self->irc->newconn( 
-    Nick         => $self->{botnick},
-    Username     => $self->{username},
-    Ircname      => $self->{ircname},
-    Server       => $server,
-    Port         => $self->{port}))
-      or Carp::croak "$0: Can't connect to IRC server.\n";
+      Nick         => $self->{botnick},
+      Username     => $self->{username},
+      Ircname      => $self->{ircname},
+      Server       => $server,
+      SSL          => $self->{SSL},
+      SSL_ca_file  => $self->{SSL_ca_file},
+      SSL_ca_path  => $self->{SSL_ca_path},
+      Port         => $self->{port}))
+    or Carp::croak "$0: Can't connect to IRC server.\n";
 
   $self->{connected} = 1;
 

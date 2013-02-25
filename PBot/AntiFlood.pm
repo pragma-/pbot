@@ -540,8 +540,8 @@ sub check_nickserv_accounts {
   }
 
   foreach my $baninfo (@bans) {
-    $self->{pbot}->logger->log("anti-flood: [check-bans] $account_mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}\n");
-    $self->{pbot}->conn->privmsg($nick, "You have been banned in $baninfo->{channel} for attempting to evade a ban on $baninfo->{banmask} set by $baninfo->{owner}");
+    $self->{pbot}->logger->log("anti-flood: [check-bans] $account_mask may have evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}\n");
+    #$self->{pbot}->conn->privmsg($nick, "You have been banned in $baninfo->{channel} for attempting to evade a ban on $baninfo->{banmask} set by $baninfo->{owner}");
 
     $account_mask =~ m/[^!]+\!(.*)/;
     my $banmask = "*!$1";

@@ -12,7 +12,7 @@ my $RESULTS_SPECIFIED = 2;
 my $search = join ' ', @ARGV;
 
 if(not length $search) {
-  print "Usage: c11std [-list] [-n#] [-section <section>] [search text] -- 'section' must be in the form of X.YpZ where X and Y are section/chapter and, optionally, Z is paragraph. If both 'section' and 'search text' are specified, then the search space will be within the specified section. You may use -n # to skip to the #th match. To list only the section numbers containing 'search text', add -list.\n";
+  print "Usage: c11std [-list] [-n#] [-section <section>] [search text] -- 'section' must be in the form of X.YpZ where X and Y are section/chapter and, optionally, pZ is paragraph. If both 'section' and 'search text' are specified, then the search space will be within the specified section. You may use -n # to skip to the #th match. To list only the section numbers containing 'search text', add -list.\n";
   exit 0;
 }
 

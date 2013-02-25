@@ -50,6 +50,8 @@ my %autoloaded = ( 'ircname'  => undef,
                    'hostname' => undef,
 		   'pacing'   => undef,
                    'ssl'      => undef,
+                   'ssl_ca_path' => undef,
+                   'ssl_ca_file' => undef,
 		 );
 
 # This hash will contain any global default handlers that the user specifies.
@@ -77,6 +79,8 @@ sub new {
     _lastsl     =>  0,
     _pacing     =>  0,       # no pacing by default
     _ssl	=>  0,       # no ssl by default
+    _ssl_ca_path => undef,
+    _ssl_ca_file => undef,
     _format     => { 'default' => "[%f:%t]  %m  <%d>", },
   };
   
@@ -228,6 +232,8 @@ sub connect {
     $self->username($arg{'Username'}) if exists $arg{'Username'};
     $self->pacing($arg{'Pacing'}) if exists $arg{'Pacing'};
     $self->ssl($arg{'SSL'}) if exists $arg{'SSL'};
+    $self->ssl_ca_path($arg{'SSL_ca_path'}) if exists $arg{'SSL_ca_path'};
+    $self->ssl_ca_file($arg{'SSL_ca_file'}) if exists $arg{'SSL_ca_file'};
   }
   
   # Lots of error-checking claptrap first...
@@ -260,12 +266,31 @@ sub connect {
   
   if($self->ssl) {
     require IO::Socket::SSL;
-    
-    $self->socket(IO::Socket::SSL->new(PeerAddr  => $self->server,
-                                       PeerPort  => $self->port,
-                                       Proto     => "tcp",
-                                       LocalAddr => $self->hostname,
-                                       ));
+
+    if($self->ssl_ca_file) {
+      $self->socket(IO::Socket::SSL->new(PeerAddr  => $self->server,
+          PeerPort        => $self->port,
+          Proto           => "tcp",
+          LocalAddr       => $self->hostname,
+          SSL_verify_mode => IO::Socket::SSL->SSL_VERIFY_PEER,
+          SSL_ca_file     => $self->ssl_ca_file,
+        ));
+    } elsif($self->ssl_ca_path) {
+      $self->socket(IO::Socket::SSL->new(PeerAddr  => $self->server,
+          PeerPort        => $self->port,
+          Proto           => "tcp",
+          LocalAddr       => $self->hostname,
+          SSL_verify_mode => IO::Socket::SSL->SSL_VERIFY_PEER,
+          SSL_ca_path     => $self->ssl_ca_path,
+        ));
+    } else {
+      $self->socket(IO::Socket::SSL->new(PeerAddr  => $self->server,
+          PeerPort  => $self->port,
+          Proto     => "tcp",
+          LocalAddr => $self->hostname,
+        ));
+    }
+
   } else {
     
     $self->socket(IO::Socket::INET->new(PeerAddr  => $self->server,

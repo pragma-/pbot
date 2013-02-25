@@ -129,7 +129,7 @@ sub execute_module {
       Carp::croak("Could not chdir to '$module_dir': $!");
     }
 
-    print "module arguments: [$arguments]\n";
+    # print "module arguments: [$arguments]\n";
 
     if(defined $tonick) {
       $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");

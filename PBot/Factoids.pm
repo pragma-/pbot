@@ -207,7 +207,7 @@ sub interpreter {
   my ($result, $channel);
   my $pbot = $self->{pbot};
 
-  return undef if not length $keyword;
+  return undef if not length $keyword or $count > 5;
 
   $from = lc $from;
 
@@ -253,13 +253,13 @@ sub interpreter {
 
     # if multiple channels have this keyword, then ask user to disambiguate
     if($found > 1) {
-      return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple locations (use 'fact <location> <keyword>' to choose one): $chans";
+      return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple channels (use 'fact <channel> <keyword>' to choose one): $chans";
     } 
     # if there's just one other channel that has this keyword, trigger that instance
     elsif($found == 1) {
       $pbot->logger->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
 
-      return $pbot->factoids->interpreter($from, $nick, $user, $host, $count, $fwd_trig, $arguments, $tonick, $fwd_chan);
+      return $pbot->factoids->interpreter($from, $nick, $user, $host, ++$count, $fwd_trig, $arguments, $tonick, $fwd_chan);
     } 
     # otherwise keyword hasn't been found, display similiar matches for all channels
     else {
@@ -270,7 +270,7 @@ sub interpreter {
 
       # found factfind matches
       if($matches !~ m/^No factoids/) {
-        return "No such factoid '$original_keyword'; found $matches";
+        return "No such factoid '$original_keyword'; $matches";
       }
 
       # otherwise find levenshtein closest matches from all channels

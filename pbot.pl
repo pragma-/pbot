@@ -26,6 +26,21 @@ my %config = (
                # IRC server address to connect to
                ircserver => 'irc.freenode.net',
 
+               # IRC port
+               port => '6667',
+
+               # Use SSL?  0 = disabled, 1 = enabled
+               # Note that you may need to use a specific port for SSL; e.g., freenode uses 6697 or 7000 for SSL
+               # Uncomment SSL_ca_path or SSL_ca_file below to enable SSL verification (will still work without
+               # verification, but will be susceptible to man-in-the-middle attacks)
+               SSL => 0,
+
+               # SSL CA certificates path; e.g., linux: /etc/ssl/certs
+               # SSL_ca_path => '/etc/ssl/certs',
+
+               # SSL CA file, if SSL_ca_path will not do; e.g., OpenBSD: /etc/ssl/cert.pem
+               # SSL_ca_file => '/etc/ssl/cert.pem',
+
                # IRC nick (what people see when you talk in channels)
                # (must be a nick registered with a NickServ account for channel auto-join to work)
                botnick   => 'pbot3',
@@ -61,6 +76,9 @@ my %config = (
                # -----------------------------------------------------
                # You shouldn't need to change anything below this line.
                # -----------------------------------------------------
+
+               # Maximum messages to remember per nick/hostmask
+               MAX_NICK_MESSAGES => 256,
 
                # Path to data directory
                data_dir        => "$bothome/data",
