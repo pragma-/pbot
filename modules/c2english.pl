@@ -81,6 +81,10 @@ $output =~ s/whose initial value is/with value being/g;
 $output =~ s/each element of which is a(n?)/of type a$1/g;
 $output =~ s/\s+s\s*$//g;
 $output =~ s/variable/object/g;
+$output =~ s/of type a character/of type char/g;
+$output =~ s/of type an integer/of type int/g;
+$output =~ s/to a character/to char/g;
+$output =~ s/to an integer/to int/g;
 
 $output =~ s/\s+/ /;
 if($output eq " ") {

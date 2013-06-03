@@ -16,7 +16,7 @@ my $sock = IO::Socket::INET->new(
   Proto => 'tcp');
 
 if(not defined $sock) {
-  print "Fatal error compiling: $!; try the cc2 command instead\n";
+  print "Fatal error compiling: $!; try again later\n";
   die $!;
 }
 

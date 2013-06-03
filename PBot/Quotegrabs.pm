@@ -161,7 +161,7 @@ sub grab_quotegrab {
   }
 
   if(not defined $arguments) {
-    return "Usage: !grab <nick> [history] [channel] -- where [history] is an optional argument that is either an integer number of recent messages or a regex (without whitespace) of the text within the message; e.g., to grab the 3rd most recent message for nick, use !grab nick 3; and [channel] is an optional channel, so you can use it from /msg (you will need to also specify [history] in this case)";
+    return "Usage: grab <nick> [history] [channel] -- where [history] is an optional argument that is either an integer number of recent messages or a regex (without whitespace) of the text within the message; e.g., to grab the 3rd most recent message for nick, use `grab nick 3` or to grab a message containing 'pizza', use `grab nick pizza`; and [channel] is an optional channel, so you can use it from /msg (you will need to also specify [history] in this case)";
   }
 
   $arguments = lc $arguments;
@@ -340,9 +340,9 @@ sub show_random_quotegrab {
   
   if($#quotes < 0) {
     if($nick_search eq ".*") {
-      return "No quotes grabbed in $channel_search yet.  Use !grab to grab a quote.";
+      return "No quotes grabbed in $channel_search yet (use `rq <nick> <channel>` to specify the correct channel).  Use `grab` to grab a quote.";
     } else {
-      return "No quotes grabbed for $nick_search in $channel_search yet.  Use !grab to grab a quote.";
+      return "No quotes grabbed for $nick_search in $channel_search yet (use `rq <nick> <channel>` to specify the correct channel)..  Use `grab` to grab a quote.";
     }
   }
 

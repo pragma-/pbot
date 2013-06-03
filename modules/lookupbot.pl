@@ -444,6 +444,10 @@ sub horrorscope_search {
     my ($line) = $content =~ m|<tr>.*?$term.*?</td>(.*?)</tr>|i;
     $line =~ s/  +/ /g;
 
+    if($line eq "") {
+      return "No results found; signs of the Zodiac are Aquarius, Pisces, Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn";
+    }
+
     return $line;
 }
 
