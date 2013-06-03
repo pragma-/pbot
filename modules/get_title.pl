@@ -4,12 +4,13 @@
 
 use LWP::UserAgent;
 use HTML::Entities;
+use Text::Levenshtein qw(fastdistance);
 
 my ($text);
 
 if ($#ARGV <= 0)
 {
-  print "Usage: !title nick URL\n";
+  print "Usage: title nick URL\n";
   exit;
 }
 
@@ -18,6 +19,7 @@ $arguments = join("%20", @ARGV);
 
 exit if($arguments =~ m/stackoverflow.com/i);
 exit if($arguments =~ m/scratch.mit.edu/i);
+exit if($arguments =~ m/imgur.com/i);
 exit if($arguments =~ m/sprunge.us/i);
 exit if($arguments =~ m/hastebin.com/i);
 exit if($arguments =~ m/lmgtfy.com/i);
@@ -35,8 +37,8 @@ exit if($arguments =~ m/pastie/i);
 exit if($arguments =~ m/ideone.com/i);
 exit if($arguments =~ m/codepad.org/i);
 exit if($arguments =~ m/^http\:\/\/past(e|ing)\./i);
-exit if($arguments =~ m/paste.*\.(?:com|org|net|ch|ca|uk|info)/i);
-exit if($arguments =~ m/pasting.*\.(?:com|org|net|ca|uk|info|ch)/i);
+exit if($arguments =~ m/paste.*\.(?:com|org|net|ch|ca|de|uk|info)/i);
+exit if($arguments =~ m/pasting.*\.(?:com|org|net|ca|de|uk|info|ch)/i);
 
 my $ua = LWP::UserAgent->new;
 $ua->agent("Mozilla/5.0");
@@ -98,5 +100,15 @@ $t = decode_entities($t);
 
 $t =~ s/^\s+//;
 $t =~ s/\s+$//;
+
+my ($file) = $arguments =~ m/.*\/(.*)$/;
+$file =~ s/[_-]/ /g;
+
+my $distance = fastdistance(lc $file, lc $t);
+my $length = (length $file > length $t) ? length $file : length $t;
+
+if($distance / $length < 0.75) {
+    exit;
+}
 
 print "Title of $nick\'s link: $t\n" if length $t;
