@@ -38,7 +38,7 @@ tor]{ ##philosophy 1260648768.92263 pragma_ benzap..forcing a belief on to peopl
 Nately ##philosophy 1260689740.5131 pragma_ is there still random fap?
 Incarnation ##philosophy 1260766213.17936 pragma_ and I'm not saying I'm smart
 gnech ##c 1260766721.60784 spv are there any good tutorials on how to code webpages using C
-Zhivago ##c 1260775613.60165 ColonelJ waits for the moment of illumination.
+Zhivago ##c 1260775613.60165 ColonelJ /me waits for the moment of illumination.
 patrisk ##c 1260822079.36312 pragma_ I wonder how many K&R books have been sold because of this channel.
 pragma_ ##philosophy 1260828964.99089 pragma_ I've known for a long while that politicans and rulers do not live by their own constitutions or rules; they preach one thing, and do a different thing in privacy; schools are just day-care centers and training camps to brainwash more complacant sheep for the diplomats and bureaucracies to utilize as slaves; paychecks are just a facade when you consider how much money the top dogs are making compared to the so-called workers
 R0b0t1 ##c 1260830770.32572 pragma_ I wrote a audio driver in brainfuck once.
@@ -185,7 +185,7 @@ zhivago ##c 1343961169.20752 pragma- hays: Re-read what I said, and try to think
 zhivago ##c 1343964427.29518 pragma- "I know, I'll convert my string from utf-16 to utf-32 when users want to select a character and copy it to the clibport, because that will be less trouble!"
 kate` ##c 1343972090.39981 pragma- dardevelin: thank you for the feeback, though; next time you ask for something, i shall refrain from giving my input
 kate` ##c 1343973170.46784 pragma- hey, what do i know? you just told me to shut up, when i was trying to help you. somehow i don't feel like teaching you how to do this
-kate` ##c 1343973926.43453 pragma- stabs herself in the face
+kate` ##c 1343973926.43453 pragma- /me stabs herself in the face
 zhivago ##c 1343982418.68603 pragma- Do you have a C book, or are you just banging on the keyboard like a monkey?
 orbitz ##c 1344035770.70519 pragma- ambro718: You never fail to impress me with your ability to create absolutely ridiculous situations that probably don't need to exist in the first place
 zhivago ##c 1344048180.63503 pragma- bcsllc: If you have trouble with the arithmetic, you might ask a small child to help you.
@@ -216,3 +216,17 @@ zhivago ##c 1359976876.44201 aero1 If you're reading a byte, then you don't bloo
 caze ##c 1360166890.20033 lemonade` lemonade`: We're not in the context of real life. We're in the context of talking about C.
 poppavic ##c 1360198316.55118 Vigud #define bob addition\n#include "crap"\n#define bob subtraction\n#include "crap"....
 ss23 ##c 1360237352.68975 pragma- A programmer saw a problem and decided to solve it he would use threads. two has. Now he problems
+zhivago ##c 1360850950.05185 Vigud As far as C in unix is concerned, eclipse is like tap-dancing while riding a unicycle.
+mathi ##c 1361564859.87449 kulp daowee, the problem is that in C it may work while it is wrong :P
+zhivago ##c 1361792348.43704 Vigud I maintain that fish are happier than lobsters.
+poppavic ##c 1361916426.13017 Vigud I before C, except after Tea
+kate` ##c 1363011431.19696 kulp "imagine my code is completely different from what i'm showing you. will it work?"
+beramiah ##c-unregistered 1363060035.28276 guidj0s C n00b here: is there any way to convert from an int**arr to an arr[][]?
+edk ##c 1363260039.58065 sha0 now maybe you'd like to point to the last time I said "stack" in here
+mar77i ##c 1363706804.30748 kulp sedeki: because this channel doesn't have a bot that !grabs people?
+fizzie ##c 1366395165.91062 pragma- ,cc #define FOO__(count,v) do { int foo_##count = v; printf("foo_%s = %d\n", #count, foo_##count); } while (0)  \n  #define FOO_(count,v) FOO__(count,v)  \n  #define FOO(v) FOO_(__COUNTER__,v)  \n  FOO(42); FOO(64);
+beaky ##c 1368721794.5656 pragma- one can only hope my code never ends up running a live system with lives at stake
+pragma- ##c 1369261094.94262 pragma- seen in ##java just now:  "Can someone tell me if this code is correct?  <pastebin>"  "Does it compile?"  "Nope :("  "Then it's not correct."
+ne2k ##c 1370363463.13971 pragma- why is printf so complicated? it's, like, half of C was invented just so printf would work!!!!!11
+cousteau ##c 1370363580.66943 pragma- I can't believe I'm not yet in the qdb with all the pile of brainfarts I say all day
+pragma- #pbot2 1370365407.79333 pragma- /me rolls his eyes.

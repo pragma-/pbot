@@ -109,6 +109,8 @@ sub on_notice {
 
 sub on_action {
   my ($self, $conn, $event) = @_;
+
+  $event->{args}[0] = "/me " . $event->{args}[0];
   
   $self->on_public($conn, $event);
 }
@@ -182,7 +184,6 @@ sub on_join {
   my ($self, $conn, $event) = @_;
   my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
 
-  #$self->{pbot}->logger->log("$nick!$user\@$host joined $channel\n");
   $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, "JOIN", 4, 60 * 30, $self->{pbot}->antiflood->{FLOOD_JOIN});
 }
 
