@@ -100,7 +100,9 @@ if($#quotes < 0) {
 $t = $quotes[int rand($#quotes + 1)];
 
 if($#ARGV > -1) {
-  $t = "" . ($#quotes + 1) . " matching quote" . (($#quotes + 1) != 1 ? "s" : "") . " found. $t";
+  if($#quotes + 1 > 1) {
+    $t = "" . ($#quotes + 1) . " matching quote" . (($#quotes + 1) != 1 ? "s" : "") . " found. $t";
+  }
 }
 
 my $quote = chr(226) . chr(128) . chr(156);
