@@ -232,7 +232,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
         $text =~ s/'$//;
         $subcode = "replace $modifier '$text' with ''$r";
       } else {
-        print "$nick: Unbalanced single quotes.  Usage: !cc remove [all, first, .., tenth, last] 'text' [and ...]\n";
+        print "$nick: Unbalanced single quotes.  Usage: cc remove [all, first, .., tenth, last] 'text' [and ...]\n";
         exit 0;
       }
       next;
@@ -263,7 +263,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
         $code =~ s/^/$text /;
         $prevchange = $code;
       } else {
-        print "$nick: Unbalanced single quotes.  Usage: !cc prepend 'text' [and ...]\n";
+        print "$nick: Unbalanced single quotes.  Usage: cc prepend 'text' [and ...]\n";
         exit 0;
       }
       next;
@@ -294,7 +294,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
         $code =~ s/$/ $text/;
         $prevchange = $code;
       } else {
-        print "$nick: Unbalanced single quotes.  Usage: !cc append 'text' [and ...]\n";
+        print "$nick: Unbalanced single quotes.  Usage: cc append 'text' [and ...]\n";
         exit 0;
       }
       next;
@@ -320,7 +320,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
         $subcode = $r;
         $subcode =~ s/\s*with\s*//i;
       } else {
-        print "$nick: Unbalanced single quotes.  Usage: !cc replace 'from' with 'to' [and ...]\n";
+        print "$nick: Unbalanced single quotes.  Usage: cc replace 'from' with 'to' [and ...]\n";
         exit 0;
       }
 
@@ -332,7 +332,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
         $to =~ s/'$//;
         $subcode = $r;
       } else {
-        print "$nick: Unbalanced single quotes.  Usage: !cc replace 'from' with 'to' [and replace ... with ... [and ...]]\n";
+        print "$nick: Unbalanced single quotes.  Usage: cc replace 'from' with 'to' [and replace ... with ... [and ...]]\n";
         exit 0;
       }
 
@@ -374,7 +374,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
         $regex =~ s/\/$//;
         $subcode = "/$r";
       } else {
-        print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+        print "$nick: Unbalanced slashes.  Usage: cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
         exit 0;
       }
 
@@ -386,7 +386,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
         $to =~ s/\/$//;
         $subcode = $r;
       } else {
-        print "$nick: Unbalanced slashes.  Usage: !cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+        print "$nick: Unbalanced slashes.  Usage: cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
         exit 0;
       }
 
@@ -511,7 +511,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
         }
 
         if($modifier eq 'all') {
-          while($code =~ s/($first_bound)$from($last_bound)/$1$to$2/) {
+          if($code =~ s/($first_bound)$from($last_bound)/$1$to$2/g) {
             $got_change = 1;
           }
         } elsif($modifier eq 'last') {
@@ -739,7 +739,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     $prelude .= $1;
   }
 
-  if($precode =~ m/^\s*(#.*)/m) {
+  if($precode =~ m/^\s*(#.*)/ms) {
     my $line = $1;
 
     if($line !~ m/\n/) {
@@ -764,7 +764,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "looking for functions, has main: $has_main\n" if $debug >= 2;
 
-  my $func_regex = qr/^([ *\w]+)\s+([*\w]+)\s*\(([^;]*)\s*\)\s*({.*)/ims;
+  my $func_regex = qr/^([ *\w]+)\s+([*\w]+)\s*\(([^;{]*)\s*\)\s*({.*)/ims;
 
   # look for potential functions to extract
   while($preprecode =~ /$func_regex/ms) {
@@ -804,8 +804,12 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     my @extract = extract_bracketed($potential_body, '{}');
     my $body;
     if(not defined $extract[0]) {
-      print "error: unmatched brackets for function '$ident';\n";
-      print "body: [$potential_body]\n";
+        if($debug == 0) {
+            print "error: unmatched brackets\n";
+        } else {
+            print "error: unmatched brackets for function '$ident';\n";
+            print "body: [$potential_body]\n";
+        }
       exit;
     } else {
       $body = $extract[0];
@@ -860,11 +864,17 @@ if($output =~ m/^\s*$/) {
       print FILE "$output\n";
   }
 
+  unless(defined $got_paste or (defined $got_run and $got_run eq "paste")) {
+      $output =~ s/ Line \d+ ://g;
+      $output =~ s/prog\.c:[:\d]*//g;
+  } else {
+      $output =~ s/prog\.c:(\d+)/"\n" . ($1 + 2)/ge;
+      $output =~ s/prog\.c://g;
+  }
+
   $output =~ s/cc1: warnings being treated as errors//;
-  $output =~ s/ Line \d+ ://g;
   $output =~ s/ \(first use in this function\)//g;
   $output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//msg;
-  $output =~ s/prog\.c:[:\d]*//g;
   $output =~ s/ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
   $output =~ s/error: (.*?) error/error: $1; error/msg;
   $output =~ s/\/tmp\/.*\.o://g;
@@ -874,10 +884,11 @@ if($output =~ m/^\s*$/) {
   $output =~ s/warning: Can't read pathname for load map: Input.output error.//g;
   my $left_quote = chr(226) . chr(128) . chr(152);
   my $right_quote = chr(226) . chr(128) . chr(153);
-  $output =~ s/$left_quote/'/g;
-  $output =~ s/$right_quote/'/g;
+  $output =~ s/$left_quote/'/msg;
+  $output =~ s/$right_quote/'/msg;
+  $output =~ s/`/'/msg;
   $output =~ s/\t/   /g;
-  $output =~ s/\s*In function 'main':\s*//g;
+  $output =~ s/\s*In function .main.:\s*//g;
   $output =~ s/warning: unknown conversion type character 'b' in format \[-Wformat\]\s+warning: too many arguments for format \[-Wformat-extra-args\]/info: %b is a candide extension/g;
   $output =~ s/warning: unknown conversion type character 'b' in format \[-Wformat\]//g;
   $output =~ s/\s\(core dumped\)/./;
@@ -955,9 +966,9 @@ if($output =~ m/^\s*$/) {
 
 if($warn_unterminated_define == 1) {
   if($output =~ m/^\[(warning:|info:)/) {
-    $output =~ s/^\[/[notice: #define not terminated by \\n, the remainder of the line will be part of this #define /;
+    $output =~ s/^\[/[warning: preprocessor directive not terminated by \\n, the remainder of the line will be part of this directive /;
   } else {
-    $output =~ s/^/[notice: #define not terminated by \\n, the remainder of the line will be part of this #define] /;
+    $output =~ s/^/[warning: preprocessor directive not terminated by \\n, the remainder of the line will be part of this directive] /;
   }
 }
 
