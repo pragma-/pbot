@@ -146,7 +146,7 @@ sub initialize {
   $self->{chanops}       = PBot::ChanOps->new(pbot => $self);
   $self->{chanopcmds}    = PBot::ChanOpCommands->new(pbot => $self);
 
-  $self->{chanops}->{unban_timeout}->load_hash();
+  $self->{chanops}->{unban_timeout}->load;
 
   $self->{quotegrabs}    = PBot::Quotegrabs->new(
     pbot        => $self, 

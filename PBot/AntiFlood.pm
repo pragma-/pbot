@@ -326,7 +326,7 @@ sub check_flood {
         } 
       } elsif($mode == $self->{FLOOD_CHAT}) {
         # don't increment offenses again if already banned
-        return if exists $self->{pbot}->chanops->{unban_timeout}->hash->{"*!$user\@$host"};
+        return if $self->{pbot}->chanops->{unban_timeout}->find_index($channel, "*!$user\@$host");
 
         $self->message_history->{$account}->{channels}->{$channel}{offenses}++;
         $self->message_history->{$account}->{channels}->{$channel}{last_offense_timestamp} = gettimeofday;
@@ -416,26 +416,23 @@ sub prune_message_history {
 sub unbanme {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   my $channel = lc $arguments;
-  $host = lc $host;
+  $nick = lc $nick;
   $user = lc $user;
+  $host = lc $host;
 
   if(not defined $arguments or not defined $channel) {
     return "/msg $nick Usage: unbanme <channel>";
   }
 
-  my $banmask = address_to_mask($host);
+  my $banmask = lc address_to_mask($host);
 
-  my $mask = lc "*!$user\@$banmask\$##stop_join_flood";
+  my $mask = "*!$user\@$banmask\$##stop_join_flood";
 
-  if(not exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$mask}) {
+  if(not $self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, $mask)) {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
   }
 
-  if(not $self->{pbot}->chanops->{unban_timeout}->hash->{$mask}{channel} eq $channel) {
-    return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
-  }
-
-  my $baninfo = $self->{pbot}->bantracker->get_baninfo(lc "$nick!$user\@$host");
+  my $baninfo = $self->{pbot}->bantracker->get_baninfo("$nick!$user\@$host");
 
   if(defined $baninfo) {
     if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
@@ -455,8 +452,6 @@ sub unbanme {
   }
 
   $self->{pbot}->chanops->unban_user($mask, $channel);
-  delete $self->{pbot}->chanops->{unban_timeout}->hash->{$mask};
-  $self->{pbot}->chanops->{unban_timeout}->save_hash();
 
   return "/msg $nick You have been unbanned from $channel.";
 }
@@ -484,6 +479,8 @@ sub address_to_mask {
 sub check_bans {
   my ($self, $bans, $mask) = @_;
 
+  $self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans on ($mask)\n");
+
   my $baninfo = $self->{pbot}->bantracker->get_baninfo($mask);
 
   if(defined $baninfo) {
@@ -502,7 +499,7 @@ sub check_bans {
     $banmask_regex =~ s/\\\?/./g;
 
     if($baninfo->{type} eq '+q' and $mask =~ /^$banmask_regex$/i) {
-      $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask matches quiet banmask, disregarding\n");
+      $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches quiet banmask ($banmask_regex), disregarding\n");
       return undef;
     }
 

@@ -35,7 +35,7 @@ sub initialize {
   }
 
   $self->{pbot} = $pbot;
-  $self->{unban_timeout} = PBot::HashObject->new(pbot => $pbot, name => 'Unban Timeouts', filename => "$pbot->{data_dir}/unban_timeouts");
+  $self->{unban_timeout} = PBot::DualIndexHashObject->new(pbot => $pbot, name => 'Unban Timeouts', filename => "$pbot->{data_dir}/unban_timeouts");
   $self->{op_commands} = {};
   $self->{is_opped} = {};
 
@@ -91,8 +91,10 @@ sub unban_user {
   my $self = shift;
   my ($mask, $channel) = @_;
   $self->{pbot}->logger->log("Unbanning $mask\n");
-  delete $self->{unban_timeout}->hash->{$mask};
-  $self->{unban_timeout}->save_hash();
+  if($self->{unban_timeout}->find_index($channel, $mask)) {
+    $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + 7200; # try again in 2 hours if unban doesn't immediately succeed
+    $self->{unban_timeout}->save;
+  }
   unshift @{ $self->{op_commands}->{$channel} }, "mode $channel -b $mask";
   $self->gain_ops($channel);
 }
@@ -102,9 +104,8 @@ sub ban_user_timed {
   my ($mask, $channel, $length) = @_;
 
   $self->ban_user($mask, $channel);
-  $self->{unban_timeout}->hash->{$mask}{timeout} = gettimeofday + $length;
-  $self->{unban_timeout}->hash->{$mask}{channel} = $channel;
-  $self->{unban_timeout}->save_hash();
+  $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
+  $self->{unban_timeout}->save;
 }
 
 sub check_unban_timeouts {
@@ -114,12 +115,11 @@ sub check_unban_timeouts {
 
   my $now = gettimeofday();
 
-  foreach my $mask (keys %{ $self->{unban_timeout}->hash }) {
-    if($self->{unban_timeout}->hash->{$mask}{timeout} < $now) {
-      $self->unban_user($mask, $self->{unban_timeout}->hash->{$mask}{channel});
-    } else {
-      # my $timediff = $self->{unban_timeout}->hash->{$mask}{timeout} - $now;
-      # $self->{pbot}->logger->log("ban: $mask has $timediff seconds remaining\n");
+  foreach my $channel (keys %{ $self->{unban_timeout}->hash }) {
+    foreach my $mask (keys %{ $self->{unban_timeout}->hash->{$channel} }) {
+      if($self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} < $now) {
+        $self->unban_user($mask, $channel);
+      }
     }
   }
 }

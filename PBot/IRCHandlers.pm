@@ -161,9 +161,8 @@ sub on_mode {
     else {  # bot not targeted
       if($mode eq "+b") {
         if($nick eq "ChanServ") {
-          $self->{pbot}->chanops->{unban_timeout}->hash->{$target}{timeout} = gettimeofday + 3600 * 2; # 2 hours
-          $self->{pbot}->chanops->{unban_timeout}->hash->{$target}{channel} = $channel;
-          $self->{pbot}->chanops->{unban_timeout}->save_hash();
+          $self->{pbot}->chanops->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + 3600 * 2; # 2 hours
+          $self->{pbot}->chanops->{unban_timeout}->save;
         }
       } 
       elsif($mode eq "+e" && $channel eq $self->{pbot}->botnick) {

@@ -341,6 +341,12 @@ sub remove {
   }
 
   delete $self->hash->{$primary}->{$secondary};
+
+  # remove primary group if no more secondaries
+  if(scalar keys $self->hash->{$primary} == 0) {
+      delete $self->hash->{$primary};
+  }
+
   $self->save();
   return "'$secondary' removed from $primary group [$self->{name}].";
 }

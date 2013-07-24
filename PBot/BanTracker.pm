@@ -128,8 +128,9 @@ sub track_mode {
     $self->{pbot}->logger->log("ban-tracker: $target " . ($mode eq '-b' ? 'unbanned' : 'unquieted') . " by $source in $channel.\n");
     delete $self->{banlist}->{$channel}->{$mode eq "-b" ? "+b" : "+q"}->{$target};
 
-    delete $self->{pbot}->chanops->{unban_timeout}->hash->{$target};
-    $self->{pbot}->chanops->{unban_timeout}->save_hash();
+    if($self->{pbot}->chanops->{unban_timeout}->find_index($channel, $target)) {
+      $self->{pbot}->chanops->{unban_timeout}->remove($channel, $target);
+    }
   } else {
     $self->{pbot}->logger->log("BanTracker: Unknown mode '$mode'\n");
   }
