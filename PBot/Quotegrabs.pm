@@ -160,7 +160,7 @@ sub grab_quotegrab {
     return "";
   }
 
-  if(not defined $arguments) {
+  if(not defined $arguments or not length $arguments) {
     return "Usage: grab <nick> [history [channel]] -- where [history] is an optional argument that is either an integer number of recent messages or a regex (without whitespace) of the text within the message; e.g., to grab the 3rd most recent message for nick, use `grab nick 3` or to grab a message containing 'pizza', use `grab nick pizza`; and [channel] is an optional channel, so you can use it from /msg (you will need to also specify [history] in this case)";
   }
 
