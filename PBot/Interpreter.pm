@@ -95,28 +95,30 @@ sub process_line {
 
   $from = lc $from if defined $from;
 
-  $text =~ s/^\s+//;
-  $text =~ s/\s+$//;
-
   my $pbot = $self->pbot;
 
   $pbot->antiflood->check_flood($from, $nick, $user, $host, $text, $pbot->{MAX_FLOOD_MESSAGES}, 10, $pbot->antiflood->{FLOOD_CHAT}) if defined $from;
 
+  $text =~ s/^\s+//;
+  $text =~ s/\s+$//;
   my $preserve_whitespace = 0;
 
-  if($text =~ /^\Q$pbot->{trigger}\E(.*)$/) {
+  my $cmd_text = $text;
+  $cmd_text =~ s/^\/me\s+//;
+
+  if($cmd_text =~ /^\Q$pbot->{trigger}\E(.*)$/) {
     $command = $1;
-  } elsif($text =~ /^.?$mynick.?\s+(.*?)$/i) {
+  } elsif($cmd_text =~ /^.?$mynick.?\s+(.*?)$/i) {
     $command = $1;
-  } elsif($text =~ /^(.*?),?\s+$mynick[?!.]*$/i) {
+  } elsif($cmd_text =~ /^(.*?),?\s+$mynick[?!.]*$/i) {
     $command = $1;
-  } elsif($text =~ /https?:\/\/([^\s]+)/i) {
+  } elsif($cmd_text =~ /https?:\/\/([^\s]+)/i) {
     $has_url = $1;
-  } elsif($text =~ /^\s*([^,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$/) {
+  } elsif($cmd_text =~ /^\s*([^,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$/) {
     $nick_override = $1;
     $has_code = $2 if length $2 and $nick_override ne 'enum' and $nick_override ne 'struct';
     $preserve_whitespace = 1;
-  } elsif($text =~ /^\s*{\s*(.*)\s*}\s*$/) {
+  } elsif($cmd_text =~ /^\s*{\s*(.*)\s*}\s*$/) {
     $has_code = $1 if length $1;
     $preserve_whitespace = 1;
   }
