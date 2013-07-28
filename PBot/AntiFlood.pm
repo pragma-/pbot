@@ -282,7 +282,11 @@ sub check_flood {
 
   # check for ban evasion if channel begins with # (not private message) and hasn't yet been validated against ban evasion
   if($channel =~ m/^#/ and not $self->message_history->{$account}->{channels}->{$channel}{validated}) {
-    $self->check_bans($account, $channel);
+    if($mode == $self->{FLOOD_JOIN} and $text =~ /^PART/) {
+      # don't check for evasion on PARTs
+    } else {
+      $self->check_bans($account, $channel);
+    }
   }
 
   if($max_messages > 0 and $length >= $max_messages) {
