@@ -143,6 +143,10 @@ sub get_flood_account {
       $self->{pbot}->logger->log("anti-flood: [get-account] $nick!$user\@$host linked to $mask\n");
       $self->{message_history}->{"$nick!$user\@$host"} = $self->{message_history}->{$mask};
 
+      foreach my $channel (keys %{ $self->{message_history}->{$mask}->{channels} }) {
+        $self->{message_history}->{$mask}->{channels}->{$channel}{validated} = 0;
+      }
+
       if(defined $self->{message_history}->{$mask}->{nickserv_account}) {
         $self->check_nickserv_accounts($nick, $self->{message_history}->{$mask}->{nickserv_account}); 
       }
@@ -276,8 +280,13 @@ sub check_flood {
     $max_messages = $self->{pbot}->{MAX_NICK_MESSAGES};
   }
 
+  # check for ban evasion if channel begins with # (not private message) and hasn't yet been validated against ban evasion
+  if($channel =~ m/^#/ and not $self->message_history->{$account}->{channels}->{$channel}{validated}) {
+    $self->check_bans($account, $channel);
+  }
+
   if($max_messages > 0 and $length >= $max_messages) {
-      # $self->{pbot}->logger->log("More than $max_messages messages, comparing time differences ($max_time)\n") if $mode == $self->{FLOOD_JOIN};
+    # $self->{pbot}->logger->log("More than $max_messages messages, comparing time differences ($max_time)\n") if $mode == $self->{FLOOD_JOIN};
 
     my %msg;
     if($mode == $self->{FLOOD_CHAT}) {
@@ -401,12 +410,7 @@ sub prune_message_history {
     }
 
     # delete account for this $mask if all its channels have been deleted
-    my $count = 0;
-    foreach my $channel (keys %{ $self->{message_history}->{$mask} }) {
-      $count++;
-    }
-
-    if($count == 0) {
+    if(scalar keys %{ $self->{message_history}->{$mask} } == 0) {
       $self->{pbot}->logger->log("$mask has no more channels remaining; deleting history account.\n");
       delete $self->{message_history}->{$mask};
     }
@@ -432,16 +436,23 @@ sub unbanme {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
   }
 
-  my $baninfo = $self->{pbot}->bantracker->get_baninfo("$nick!$user\@$host");
+  my $nickserv_account;
+  if(exists $self->{message_history}->{"$nick!$user\@$host"}->{nickserv_account}) {
+    $nickserv_account = $self->{message_history}->{"$nick!$user\@$host"}->{nickserv_account};
+  }
 
-  if(defined $baninfo) {
-    if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
-      $self->{pbot}->logger->log("anti-flood: [unbanme] $nick!$user\@$host banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
-    } else {
-      if($channel eq lc $baninfo->{channel}) {
-        my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
-        $self->{pbot}->logger->log("anti-flood: [unbanme] $nick!$user\@$host $mode as $baninfo->{banmask} in $baninfo->{channel} by $baninfo->{owner}, unbanme rejected\n");
-        return "/msg $nick You have been $mode as $baninfo->{banmask} by $baninfo->{owner}, unbanme will not work until it is removed.";
+  my $baninfos = $self->{pbot}->bantracker->get_baninfo("$nick!$user\@$host", $channel, $nickserv_account);
+
+  if(defined $baninfos) {
+    foreach my $baninfo (@$baninfos) {
+      if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
+        $self->{pbot}->logger->log("anti-flood: [unbanme] $nick!$user\@$host banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+      } else {
+        if($channel eq lc $baninfo->{channel}) {
+          my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
+          $self->{pbot}->logger->log("anti-flood: [unbanme] $nick!$user\@$host $mode as $baninfo->{banmask} in $baninfo->{channel} by $baninfo->{owner}, unbanme rejected\n");
+          return "/msg $nick You have been $mode as $baninfo->{banmask} by $baninfo->{owner}, unbanme will not work until it is removed.";
+        }
       }
     }
   }
@@ -477,50 +488,101 @@ sub address_to_mask {
 }
 
 sub check_bans {
-  my ($self, $bans, $mask) = @_;
+  my ($self, $mask, $channel) = @_;
+  my ($bans, $nickserv_account, $host);
 
-  $self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans on ($mask)\n");
-
-  my $baninfo = $self->{pbot}->bantracker->get_baninfo($mask);
-
-  if(defined $baninfo) {
-    if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
-      $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
-      return undef;
-    } 
-    
-    if($baninfo->{type} eq '+b' and $baninfo->{banmask} =~ m/!\*@\*$/) {
-      $self->{pbot}->logger->log("anti-flood: [check-bans] Disregarding generic nick ban\n");
-      return undef;
-    } 
-    
-    my $banmask_regex = quotemeta $baninfo->{banmask};
-    $banmask_regex =~ s/\\\*/.*/g;
-    $banmask_regex =~ s/\\\?/./g;
-
-    if($baninfo->{type} eq '+q' and $mask =~ /^$banmask_regex$/i) {
-      $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches quiet banmask ($banmask_regex), disregarding\n");
-      return undef;
-    }
-
-    push @$bans, $baninfo;
-    return $baninfo;
+  if(exists $self->{message_history}->{$mask}->{nickserv_account}) {
+    $nickserv_account = $self->{message_history}->{$mask}->{nickserv_account};
   }
-  return undef;
+
+  ($host) = $mask =~ m/\@(.*)$/;
+
+  foreach my $account (keys %{ $self->{message_history} }) {
+    if(exists $self->{message_history}->{$account}->{channels}->{$channel}) {
+      my $check_ban = 0;
+
+      # check if nickserv accounts match
+      if(defined $nickserv_account) {
+        if(exists $self->{message_history}->{$account}->{nickserv_account} and $self->{message_history}->{$account}->{nickserv_account} eq $nickserv_account) {
+          $self->{pbot}->logger->log("anti-flood: [check-bans] nickserv account for $account matches $nickserv_account\n");
+          $check_ban = 1;
+        }
+      }
+
+      # check if hosts match
+      my ($account_host) = $account =~ m/\@(.*)$/;
+      my $target_nickserv_account;
+      
+      if($host eq $account_host) {
+        $self->{pbot}->logger->log("anti-flood: [check-bans] host for $account matches $mask\n");
+
+        if(exists $self->{message_history}->{$account}->{nickserv_account}) {
+          $target_nickserv_account = $self->{message_history}->{$account}->{nickserv_account};
+        }
+        $check_ban = 1;
+      }
+
+      if($check_ban) {
+        $self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans in $channel on $account\n");
+        my $baninfos = $self->{pbot}->bantracker->get_baninfo($account, $channel, $target_nickserv_account);
+
+        if(defined $baninfos) {
+          foreach my $baninfo (@$baninfos) {
+            if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
+              $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+              next;
+            } 
+
+            if($baninfo->{type} eq '+b' and $baninfo->{banmask} =~ m/!\*@\*$/) {
+              $self->{pbot}->logger->log("anti-flood: [check-bans] Disregarding generic nick ban\n");
+              next;
+            } 
+
+            my $banmask_regex = quotemeta $baninfo->{banmask};
+            $banmask_regex =~ s/\\\*/.*/g;
+            $banmask_regex =~ s/\\\?/./g;
+
+            if($baninfo->{type} eq '+q' and $mask =~ /^$banmask_regex$/i) {
+              $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches quiet banmask ($banmask_regex), disregarding\n");
+              next;
+            }
+
+            if(not defined $bans) {
+              $bans = [];
+            }
+
+            $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches $baninfo->{type} $baninfo->{banmask}, adding ban\n");
+            push @$bans, $baninfo;
+            next;
+          }
+        }
+      }
+    }
+  }
+
+  if(defined $bans) {
+    $mask =~ m/[^!]+\!(.*)/;
+    my $banmask = "*!$1";
+
+    foreach my $baninfo (@$bans) {
+      $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
+      $self->{pbot}->chanops->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 5);
+      return;
+    }
+  }
+
+  $self->message_history->{$mask}->{channels}->{$channel}{validated} = 1;
 }
 
 sub check_nickserv_accounts {
   my ($self, $nick, $account) = @_;
 
-  my ($account_mask, @bans);
-
   foreach my $mask (keys %{ $self->{message_history} }) {
     if(exists $self->{message_history}->{$mask}->{nickserv_account}) {
       # has nickserv account
       if(lc $self->{message_history}->{$mask}->{nickserv_account} eq lc $account) {
-        # pre-existing mask found using this account previously, check for bans
+        # pre-existing mask found using this account previously
         $self->{pbot}->logger->log("anti-flood: [check-account] $nick [nickserv: $account] seen previously as $mask.\n");
-        $self->check_bans(\@bans, $mask);
       }
     }
     else {
@@ -529,23 +591,8 @@ sub check_nickserv_accounts {
         # nick matches, must belong to account
         $self->{pbot}->logger->log("anti-flood: $mask: setting nickserv account to [$account]\n");
         $self->message_history->{$mask}->{nickserv_account} = $account;
-
-        $account_mask = $mask;
-        $self->check_bans(\@bans, $mask);
       }
     }
-  }
-
-  foreach my $baninfo (@bans) {
-    $self->{pbot}->logger->log("anti-flood: [check-bans] $account_mask may have evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}\n");
-    #$self->{pbot}->conn->privmsg($nick, "You have been banned in $baninfo->{channel} for attempting to evade a ban on $baninfo->{banmask} set by $baninfo->{owner}");
-
-    $account_mask =~ m/[^!]+\!(.*)/;
-    my $banmask = "*!$1";
-
-    $self->{pbot}->logger->log("anti-flood: [check-bans] Ban detected on account $account in $baninfo->{channel}, banning $banmask.\n");
-
-    $self->{pbot}->chanops->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 5);
   }
 }
 

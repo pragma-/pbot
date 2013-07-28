@@ -61,33 +61,42 @@ sub get_banlist {
 }
 
 sub get_baninfo {
-  my ($self, $mask) = @_;
+  my ($self, $mask, $channel, $account) = @_;
+  my ($bans, $ban_account);
 
-  foreach my $channel (keys %{ $self->{banlist} }) {
-    foreach my $mode (keys %{ $self->{banlist}{$channel} }) {
-      foreach my $banmask (keys %{ $self->{banlist}{$channel}{$mode} }) {
-        my $banmask_key = $banmask;
-        $banmask = quotemeta $banmask;
+  foreach my $mode (keys %{ $self->{banlist}{$channel} }) {
+    foreach my $banmask (keys %{ $self->{banlist}{$channel}{$mode} }) {
+      my $banmask_key = $banmask;
+      $banmask = quotemeta $banmask;
 
-        $banmask =~ s/\\\*/.*?/g;
-        $banmask =~ s/\\\?/./g;
+      $banmask =~ s/\\\*/.*?/g;
+      $banmask =~ s/\\\?/./g;
 
-        if($mask =~ m/^$banmask$/i) {
-          my $baninfo = {};
-          $baninfo->{banmask} = $banmask_key;
-          $baninfo->{channel} = $channel;
-          $baninfo->{owner} = $self->{banlist}{$channel}{$mode}{$banmask_key}[0];
-          $baninfo->{when} = $self->{banlist}{$channel}{$mode}{$banmask_key}[1];
-          $baninfo->{type} = $mode;
-          $self->{pbot}->logger->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
+      if($banmask =~ m/^\$a:(.*)/) {
+        $ban_account = lc $1;
+      } else {
+        $ban_account = "";
+      }
 
-          return $baninfo;
+      if((defined $account and $account eq $ban_account) or $mask =~ m/^$banmask$/i) {
+        if(not defined $bans) {
+          $bans = [];
         }
+
+        my $baninfo = {};
+        $baninfo->{banmask} = $banmask_key;
+        $baninfo->{channel} = $channel;
+        $baninfo->{owner} = $self->{banlist}{$channel}{$mode}{$banmask_key}[0];
+        $baninfo->{when} = $self->{banlist}{$channel}{$mode}{$banmask_key}[1];
+        $baninfo->{type} = $mode;
+        $self->{pbot}->logger->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
+
+        push @$bans, $baninfo;
       }
     }
   }
 
-  return undef;
+  return $bans;
 }
 
 sub on_quietlist_entry {
