@@ -941,7 +941,7 @@ sub parse {
      $type = lc $type;
 
      # fix splitting of IPv6 hostnames in modes -- pragma- 2013/07/30
-     if($type eq "mode" and $#stuff > -1) {
+     if($type eq "mode" and $#stuff > -1 and length $line) {
        my @other_stuff = split /\s+/, $line;
        $stuff[$#stuff] .= ':' . shift @other_stuff;
        push @stuff, @other_stuff;

@@ -64,6 +64,8 @@ sub get_baninfo {
   my ($self, $mask, $channel, $account) = @_;
   my ($bans, $ban_account);
 
+  $account = lc $account if defined $account;
+
   foreach my $mode (keys %{ $self->{banlist}{$channel} }) {
     foreach my $banmask (keys %{ $self->{banlist}{$channel}{$mode} }) {
       my $banmask_key = $banmask;

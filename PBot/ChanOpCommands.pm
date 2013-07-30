@@ -65,6 +65,7 @@ sub ban_user {
   return "" if $target =~ /\Q$self->{pbot}->botnick\E/i;
 
   $self->{pbot}->chanops->ban_user_timed($target, $from, $length);    
+  return "/msg $nick $target banned in $from for $length seconds";
 }
 
 sub unban_user {
