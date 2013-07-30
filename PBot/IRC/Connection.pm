@@ -500,6 +500,12 @@ sub handler {
   }
   
   print "Trying to handle event '$ev'.\n" if $self->{_debug};
+
+  
+  if($self->{_debug}) {
+    use Data::Dumper;
+    print "ev: ", Dumper($ev), "\nevent: ", Dumper($event), "\n";
+  }
   
   my $handler = undef;
   if (exists $self->{_handler}->{$ev}) {
@@ -928,11 +934,22 @@ sub parse {
      # Fixes problems with IPv6 hostnames.
      # ($from, $line) = split ":", $line, 2;
      ($from, $line) = $line =~ /^(?:|)(\S+\s+[^:]+):?(.*)/;
+
+     print "from: [$from], line: [$line]\n" if $self->{_debug};
      
      ($from, $type, @stuff) = split /\s+/, $from;
      $type = lc $type;
+
+     # fix splitting of IPv6 hostnames in modes -- pragma- 2013/07/30
+     if($type eq "mode" and $#stuff > -1) {
+       my @other_stuff = split /\s+/, $line;
+       $stuff[$#stuff] .= ':' . shift @other_stuff;
+       push @stuff, @other_stuff;
+       $line = "";
+     }
+
      # This should be fairly intuitive... (cperl-mode sucks, though)
-     
+
      if (defined $line and index($line, "\001") >= 0) {
        $itype = "ctcp";
        unless ($type eq "notice") {

@@ -504,18 +504,19 @@ sub check_bans {
   foreach my $account (keys %{ $self->{message_history} }) {
     if(exists $self->{message_history}->{$account}->{channels}->{$channel}) {
       my $check_ban = 0;
+      my $target_nickserv_account;
 
       # check if nickserv accounts match
       if(defined $nickserv_account) {
         if(exists $self->{message_history}->{$account}->{nickserv_account} and $self->{message_history}->{$account}->{nickserv_account} eq $nickserv_account) {
           $self->{pbot}->logger->log("anti-flood: [check-bans] nickserv account for $account matches $nickserv_account\n");
+          $target_nickserv_account = $self->{message_history}->{$account}->{nickserv_account};
           $check_ban = 1;
         }
       }
 
       # check if hosts match
       my ($account_host) = $account =~ m/\@(.*)$/;
-      my $target_nickserv_account;
       
       if($host eq $account_host) {
         $self->{pbot}->logger->log("anti-flood: [check-bans] host for $account matches $mask\n");

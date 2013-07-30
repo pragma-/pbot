@@ -90,7 +90,7 @@ sub ban_user {
 sub unban_user {
   my $self = shift;
   my ($mask, $channel) = @_;
-  $self->{pbot}->logger->log("Unbanning $mask\n");
+  $self->{pbot}->logger->log("Unbanning $channel $mask\n");
   if($self->{unban_timeout}->find_index($channel, $mask)) {
     $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + 7200; # try again in 2 hours if unban doesn't immediately succeed
     $self->{unban_timeout}->save;
