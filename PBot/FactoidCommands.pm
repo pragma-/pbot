@@ -39,6 +39,8 @@ my %factoid_metadata_levels = (
   ref_count                   => 60,
   ref_user                    => 60,
   type                        => 60,
+  edited_by                   => 60,
+  edited_on                   => 60,
   # all others are allowed to be factset by anybody/default to level 0
 );
 

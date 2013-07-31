@@ -297,7 +297,7 @@ sub interpreter {
     $pbot->logger->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
 
     $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
-    $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
+    $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = "$nick!$user\@$host";
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
 
     return $pbot->interpreter->interpret($from, $nick, $user, $host, $count, $command, $tonick);
@@ -325,7 +325,7 @@ sub interpreter {
     $self->{pbot}->logger->log("Found module\n");
 
     $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
-    $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
+    $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = "$nick!$user\@$host";
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
 
@@ -341,7 +341,7 @@ sub interpreter {
     }
 
     $self->factoids->hash->{$channel}->{$keyword}->{ref_count}++;
-    $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = $nick;
+    $self->factoids->hash->{$channel}->{$keyword}->{ref_user} = "$nick!$user\@$host";
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
 
