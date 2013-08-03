@@ -66,6 +66,8 @@ sub get_baninfo {
 
   $account = lc $account if defined $account;
 
+  $self->{pbot}->logger->log("[get-baninfo] Getting baninfo for $mask in $channel using account " . (defined $account ? $account : "[undefined]") . "\n");
+
   foreach my $mode (keys %{ $self->{banlist}{$channel} }) {
     foreach my $banmask (keys %{ $self->{banlist}{$channel}{$mode} }) {
       my $banmask_key = $banmask;
