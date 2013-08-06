@@ -590,12 +590,12 @@ sub check_bans {
   }
 
   if(defined $bans) {
-    $mask =~ m/[^!]+\!(.*)/;
-    my $banmask = "*!$1";
+    $mask =~ m/[^!]+!([^@]+)@(.*)/;
+    my $banmask = "*!$1@" . address_to_mask($2);
 
     foreach my $baninfo (@$bans) {
       $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
-      $self->{pbot}->chanops->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 16);
+      $self->{pbot}->chanops->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 12);
       $self->message_history->{$mask}->{channels}->{$channel}{validated} = 0;
       return;
     }
