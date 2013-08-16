@@ -85,6 +85,10 @@ $output =~ s/of type a character/of type char/g;
 $output =~ s/of type an integer/of type int/g;
 $output =~ s/to a character/to char/g;
 $output =~ s/to an integer/to int/g;
+$output =~ s/with no arguments returning/with unspecified arguments returning/g;
+$output =~ s/with argument a void/with no arguments/g;
+$output =~ s/\s*After that,\s*$//;
+$output =~s/as long as zero does not equal 1/while the condition is true/g;
 
 $output =~ s/\s+/ /;
 if($output eq " ") {

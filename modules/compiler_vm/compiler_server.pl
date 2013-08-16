@@ -39,7 +39,7 @@ sub vm_start {
   }
 
   if($pid == 0) {
-    my $command = 'nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler/compiler-savedvm.qcow2 -m 128 -monitor tcp:127.0.0.1:3335,server,nowait -serial tcp:127.0.0.1:3333,server,nowait -boot c -loadvm 1 -enable-kvm -nographic';
+    my $command = 'nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler/compiler-savedvm.qcow2 -m 128 -monitor tcp:127.0.0.1:3335,server,nowait -serial tcp:127.0.0.1:3333,server,nowait -boot c -loadvm 1 -enable-kvm -nographic -no-kvm-irqchip';
     my @command_list = split / /, $command;
     exec(@command_list); 
   } else {
@@ -77,7 +77,7 @@ sub execute {
 
       my $pid = open(my $fh, '-|', "$cmdline 2>&1");
 
-      local $SIG{ALRM} = sub { print "Time out\n"; kill 'TERM', $pid; die "Timed-out: $result\n"; };
+      local $SIG{ALRM} = sub { print "Time out\n"; kill 9, $pid; die "Timed-out: $result\n"; };
       alarm(7);
       
       while(my $line = <$fh>) {

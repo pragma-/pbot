@@ -212,7 +212,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
 
   while(1) {
     $got_sub = 0;
-    $got_changes = 0;
+    #$got_changes = 0;
 
     if($subcode =~ m/^\s*(and)?\s*remove \s*([^']+)?\s*'/) {
       my $modifier = 'first';
@@ -552,7 +552,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
 
   open FILE, "> last_code.txt";
 
-  unless ($got_undo and not $got_sub) {
+  unless ($got_undo and not $got_changes) {
     unshift @last_code, $code;
   }
 
@@ -564,7 +564,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
 
   close FILE;
 
-  if($got_undo and not $got_sub) {
+  if($got_undo and not $got_changes) {
     print "$nick: $code\n";
     exit 0;
   }
@@ -764,7 +764,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "looking for functions, has main: $has_main\n" if $debug >= 2;
 
-  my $func_regex = qr/^([ *\w]+)\s+([*\w]+)\s*\(([^;{]*)\s*\)\s*({.*)/ims;
+  my $func_regex = qr/^([ *\w]+)\s+([*\w]+)\s*\(([^;{]*)\s*\)\s*({.*|<%.*|\?\?<.*)/ims;
 
   # look for potential functions to extract
   while($preprecode =~ /$func_regex/ms) {
@@ -800,6 +800,11 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     } else {
       $tmpcode =~ s/$func_regex//ms;
     }
+
+    $potential_body =~ s/^\s*<%/{/ms;
+    $potential_body =~ s/%>\s*$/}/ms;
+    $potential_body =~ s/^\s*\?\?</{/ms;
+    $potential_body =~ s/\?\?>$/}/ms;
 
     my @extract = extract_bracketed($potential_body, '{}');
     my $body;
@@ -917,7 +922,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/In function\s*`main':\s*\/home\/compiler\/ undefined reference to/error: undefined reference to/g;
   $output =~ s/\/home\/compiler\///g;
   $output =~ s/compilation terminated.//;
-  $output =~ s/<'(.)' = char>/<'$1' = int>/g;
+  $output =~ s/<'(.*)' = char>/<'$1' = int>/g;
   $output =~ s/= (-?\d+) ''/= $1/g;
   $output =~ s/, <incomplete sequence >//g;
   $output =~ s/\s*warning: shadowed declaration is here \[-Wshadow\]//g;
@@ -962,6 +967,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/A\s*possibly\s*null\s*pointer\s*is\s*passed\s*as\s*a\s*parameter\s*corresponding\s*to\s*a\s*formal\s*parameter\s*with\s*no\s*\/\*\@null\@\*\/\s*annotation.\s*If\s*NULL\s*may\s*be\s*used\s*for\s*this\s*parameter,\s*add\s*a\s*\/\*\@null\@\*\/\s*annotation\s*to\s*the\s*function\s*parameter\s*declaration./A possibly null pointer is passed as a parameter to a function./gs;
   $output =~ s/ called by \?\? \(\)//g;
   $output =~ s/\s*Copyright\s*\(C\)\s*\d+\s*Free\s*Software\s*Foundation,\s*Inc.\s*This\s*is\s*free\s*software;\s*see\s*the\s*source\s*for\s*copying\s*conditions.\s*\s*There\s*is\s*NO\s*warranty;\s*not\s*even\s*for\s*MERCHANTABILITY\s*or\s*FITNESS\s*FOR\s*A\s*PARTICULAR\s*PURPOSE.//gs;
+  $output =~ s/\s*process\s*\d+\s*is\s*executing\s*new\s*program:\s*.*?\s*Error\s*in\s*re-setting\s*breakpoint\s*\d+:\s*.*?No\s*symbol\s*table\s*is\s*loaded.\s*\s*Use\s*the\s*"file"\s*command.//s;
 }
 
 if($warn_unterminated_define == 1) {
@@ -979,7 +985,7 @@ unless($got_run) {
 
 if(defined $got_paste or (defined $got_run and $got_run eq "paste")) {
   $output =~ s/[\r\n]+$//;
-  $code .= "\n\n/************* OUTPUT *************\n$output\n************** OUTPUT **************/\n"; 
+  $code .= "\n\n/************* OUTPUT *************\n$output\n************** OUTPUT *************/\n"; 
   my $uri = paste_sprunge(pretty($code));
   print "$nick: $uri\n";
   exit 0;

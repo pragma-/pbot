@@ -111,4 +111,6 @@ if($distance / $length < 0.75) {
     exit;
 }
 
+exit if $t =~ m/^Gerrit Code Review$/i;
+
 print "Title of $nick\'s link: $t\n" if length $t;
