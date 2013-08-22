@@ -180,6 +180,21 @@ if($code =~ m/^\s*show\s*$/i) {
   exit 0;
 }
 
+if($code =~ m/^\s*diff\s*$/i) {
+  if($#last_code < 1) {
+    print "$nick: Not enough recent code to diff.\n"
+  } else {
+    use Text::WordDiff;
+    my $diff = word_diff \$last_code[1], \$last_code[0], { STYLE => 'MARKUP' };
+    $diff =~ s/<del>(.*?)<\/del><ins>(.*?)<\/ins>/<replaced `$1` with `$2`>/g;
+    $diff =~ s/<del>(.*?)<\/del>/<removed `$1`>/g;
+    $diff =~ s/<ins>(.*?)<\/ins>/<inserted `$1`>/g;
+
+    print "$nick: $diff\n";
+  }
+  exit 0;
+}
+
 my $got_run = undef;
 
 if($code =~ m/^\s*(run|paste)\s*$/i) {
