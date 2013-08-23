@@ -186,7 +186,9 @@ if($code =~ m/^\s*diff\s*$/i) {
   } else {
     use Text::WordDiff;
     my $diff = word_diff \$last_code[1], \$last_code[0], { STYLE => 'MARKUP' };
-    $diff =~ s/<del>(.*?)<\/del><ins>(.*?)<\/ins>/<replaced `$1` with `$2`>/g;
+    $diff =~ s/<del>([^\s]+)(\s+)<\/del>/<del>$1<\/del>$2/g;
+    $diff =~ s/<ins>([^\s]+)(\s+)<\/ins>/<ins>$1<\/ins>$2/g;
+    $diff =~ s/<del>(.*?)<\/del>\s*<ins>(.*?)<\/ins>/<replaced `$1` with `$2`>/g;
     $diff =~ s/<del>(.*?)<\/del>/<removed `$1`>/g;
     $diff =~ s/<ins>(.*?)<\/ins>/<inserted `$1`>/g;
 
