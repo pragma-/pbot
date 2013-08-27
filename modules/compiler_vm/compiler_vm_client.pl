@@ -189,8 +189,8 @@ if($code =~ m/^\s*diff\s*$/i) {
     if($diff !~ /(?:<del>|<ins>)/) {
       $diff = "No difference.";
     } else {
-      $diff =~ s/<del>([^\s]+)(\s+)<\/del>/<del>$1<\/del>$2/g;
-      $diff =~ s/<ins>([^\s]+)(\s+)<\/ins>/<ins>$1<\/ins>$2/g;
+      $diff =~ s/<del>(.*?)(\s+)<\/del>/<del>$1<\/del>$2/g;
+      $diff =~ s/<ins>(.*?)(\s+)<\/ins>/<ins>$1<\/ins>$2/g;
       $diff =~ s/<del>((?:(?!<del>).)*)<\/del>\s*<ins>((?:(?!<ins>).)*)<\/ins>/<[replaced `$1` with `$2`]>/g;
       $diff =~ s/<del>(.*?)<\/del>/<[removed `$1`]>/g;
       $diff =~ s/<ins>(.*?)<\/ins>/<[inserted `$1`]>/g;
@@ -468,7 +468,9 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
       };
 
       if($@) {
-        print "$nick: $@\n";
+        my $foo = $@;
+        $foo =~ s/ at \.\/compiler_vm_client.pl line \d+\.\s*//;
+        print "$nick: $foo\n";
         exit 0;
       }
 
@@ -551,7 +553,9 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
       };
 
       if($@) {
-        print "$nick: $@\n";
+        my $foo = $@;
+        $foo =~ s/ at \.\/compiler_vm_client.pl line \d+\.\s*//;
+        print "$nick: $foo\n";
         exit 0;
       }
 
@@ -574,7 +578,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
   open FILE, "> last_code.txt";
 
   unless ($got_undo and not $got_changes) {
-    unshift @last_code, $code;
+    unshift @last_code, length $args ? $args . ' ' . $code : $code;
   }
 
   my $i = 0;
@@ -771,7 +775,13 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $debug;
 
   # strip C and C++ style comments
-  $precode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $3 ? $3 : " "#gse;
+  if($lang eq 'C89' or $args =~ m/-std=(gnu89|c89)/i) {
+    $precode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/# #gs;
+    $precode =~ s#|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $2 ? $2 : " "#gse;
+  } else {
+    $precode =~ s#|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $2 ? $2 : " "#gse;
+    $precode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/# #gs;
+  }
 
   print "   precode: [$precode]\n" if $debug;
 
