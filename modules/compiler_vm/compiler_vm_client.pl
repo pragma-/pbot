@@ -774,22 +774,20 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $debug;
 
-  # strip C and C++ style comments
-  if($lang eq 'C89' or $args =~ m/-std=(gnu89|c89)/i) {
-    $precode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/# #gs;
-    $precode =~ s#|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $2 ? $2 : " "#gse;
-  } else {
-    $precode =~ s#|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $2 ? $2 : " "#gse;
-    $precode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/# #gs;
-  }
-
-  print "   precode: [$precode]\n" if $debug;
-
   my $preprecode = $precode;
 
   # white-out contents of quoted literals
   $preprecode =~ s/(?:\"((?:\\\"|(?!\").)*)\")/'"' . ('-' x length $1) . '"'/ge;
   $preprecode =~ s/(?:\'((?:\\\'|(?!\').)*)\')/"'" . ('-' x length $1) . "'"/ge;
+
+  # strip C and C++ style comments
+  if($lang eq 'C89' or $args =~ m/-std=(gnu89|c89)/i) {
+    $preprecode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/# #gs;
+    $preprecode =~ s#|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $2 ? $2 : ""#gse;
+  } else {
+    $preprecode =~ s#|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $2 ? $2 : ""#gse;
+    $preprecode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/# #gs;
+  }
 
   print "preprecode: [$preprecode]\n" if $debug;
 
@@ -881,6 +879,8 @@ $code =~ s/\|n/\n/g;
 $code =~ s/^\s+//;
 $code =~ s/\s+$//;
 $code =~ s/;\s*;\n/;\n/gs;
+$code =~ s/;(\s*\/\*.*?\*\/\s*);\n/;$1/gs;
+$code =~ s/;(\s*\/\/.*?\s*);\n/;$1/gs;
 $code =~ s/({|})\n\s*;\n/$1\n/gs;
 $code =~ s/(?:\n\n)+/\n\n/g;
 
