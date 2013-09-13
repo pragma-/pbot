@@ -65,7 +65,7 @@ sub ban_whitelisted {
     $mask = lc $mask;
 
     $self->{pbot}->logger->log("whitelist check: $channel, $mask\n");
-    return defined $self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted} ? 1 : 0;
+    return (exists $self->{ban_whitelist}->hash->{$channel}->{$mask} and defined $self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted}) ? 1 : 0;
 }
 
 sub whitelist {
@@ -175,6 +175,8 @@ sub add_message {
       $self->message_history->{$account}->{channels}->{$channel}{join_watch}++;
     } else {
       # PART or QUIT
+      $self->message_history->{$account}->{channels}->{$channel}{validated} = 0;
+
       # check QUIT message for netsplits, and decrement joinwatch if found
       if($text =~ /^QUIT .*\.net .*\.split/) {
         $self->message_history->{$account}->{channels}->{$channel}{join_watch}--;
@@ -396,7 +398,7 @@ sub prune_message_history {
       next unless $length > 0;
       my %last = %{ @{ $self->{message_history}->{$mask}->{channels}->{$channel}{messages} }[$length - 1] };
 
-      # delete channel key if no activity within 3 days
+      # delete channel key if no activity for a while
       if(gettimeofday - $last{timestamp} >= 60 * 60 * 24 * 90) {
         $self->{pbot}->logger->log("$mask in $channel hasn't spoken in ninety days; removing channel history.\n");
         delete $self->{message_history}->{$mask}->{channels}->{$channel};
@@ -491,6 +493,39 @@ sub address_to_mask {
   return $banmask;
 }
 
+sub devalidate_accounts {
+  # remove validation on accounts in $channel that match a ban/quiet $mask
+  my ($self, $mask, $channel) = @_;
+  my ($nickserv_account, $ban_account);
+
+  if($mask =~ m/^\$a:(.*)/) {
+    $ban_account = lc $1;
+  } else {
+    $ban_account = "";
+  }
+
+  my $mask_original = $mask;
+  $mask = quotemeta $mask;
+  $mask =~ s/\\\*/.*?/g;
+  $mask =~ s/\\\?/./g;
+
+  foreach my $account (keys %{ $self->{message_history} }) {
+    if(exists $self->{message_history}->{$account}->{channels}->{$channel}) {
+      if(exists $self->{message_history}->{$account}->{nickserv_account}) {
+        $nickserv_account = $self->{message_history}->{$account}->{nickserv_account};
+      } else {
+        $nickserv_account = undef;
+      }
+
+      if((defined $nickserv_account and $nickserv_account eq $ban_account) or $account =~ m/^$mask$/i) {
+        $self->{pbot}->logger->log("anti-flood: [devalidate-accounts] $account matches $mask_original, devalidating\n");
+
+        $self->message_history->{$mask}->{channels}->{$channel}{validated} = 0;
+      }
+    }
+  }
+}
+
 sub check_bans {
   my ($self, $mask, $channel) = @_;
   my ($bans, $nickserv_account, $nick, $host);
@@ -552,7 +587,7 @@ sub check_bans {
 
       CHECKBAN:
       if($check_ban) {
-        # $self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans in $channel on $account\n");
+        # $self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans in $channel on $account using $target_nickserv_account\n");
         my $baninfos = $self->{pbot}->bantracker->get_baninfo($account, $channel, $target_nickserv_account);
 
         if(defined $baninfos) {

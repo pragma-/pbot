@@ -70,17 +70,16 @@ sub get_baninfo {
 
   foreach my $mode (keys %{ $self->{banlist}{$channel} }) {
     foreach my $banmask (keys %{ $self->{banlist}{$channel}{$mode} }) {
-      my $banmask_key = $banmask;
-      $banmask = quotemeta $banmask;
-
-      $banmask =~ s/\\\*/.*?/g;
-      $banmask =~ s/\\\?/./g;
-
       if($banmask =~ m/^\$a:(.*)/) {
         $ban_account = lc $1;
       } else {
         $ban_account = "";
       }
+
+      my $banmask_key = $banmask;
+      $banmask = quotemeta $banmask;
+      $banmask =~ s/\\\*/.*?/g;
+      $banmask =~ s/\\\?/./g;
 
       if((defined $account and $account eq $ban_account) or $mask =~ m/^$banmask$/i) {
         if(not defined $bans) {
@@ -136,6 +135,7 @@ sub track_mode {
   if($mode eq "+b" or $mode eq "+q") {
     $self->{pbot}->logger->log("ban-tracker: $target " . ($mode eq '+b' ? 'banned' : 'quieted') . " by $source in $channel.\n");
     $self->{banlist}->{$channel}->{$mode}->{$target} = [ $source, gettimeofday ];
+    $self->{pbot}->antiflood->devalidate_accounts($target, $channel);
   }
   elsif($mode eq "-b" or $mode eq "-q") {
     $self->{pbot}->logger->log("ban-tracker: $target " . ($mode eq '-b' ? 'unbanned' : 'unquieted') . " by $source in $channel.\n");

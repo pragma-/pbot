@@ -41,6 +41,7 @@ my %factoid_metadata_levels = (
   type                        => 60,
   edited_by                   => 60,
   edited_on                   => 60,
+  locked                      => 10,
   # all others are allowed to be factset by anybody/default to level 0
 );
 
@@ -425,6 +426,10 @@ sub factrem {
     return "/msg $nick You are not the owner of '$trigger' for $chan";
   }
 
+  if(exists $factoids->{$channel}->{$trigger}->{'locked'} and $factoids->{$channel}->{$trigger}->{'locked'} != 0) {
+    return "$trigger is locked; unlock before deleting.";
+  }
+
   $self->{pbot}->logger->log("$nick!$user\@$host removed [$channel][$trigger][" . $factoids->{$channel}->{$trigger}->{action} . "]\n");
   $self->{pbot}->factoids->remove_factoid($channel, $trigger);
   return "/msg $nick $trigger removed from " . ($channel eq '.*' ? 'the global channel' : $channel) . ".";
@@ -736,6 +741,10 @@ sub factchange {
 
   if(not defined $trigger) {
     return "/msg $nick $keyword not found in channel $from.";
+  }
+
+  if(not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host") and exists $factoids->{$channel}->{$trigger}->{'locked'} and $factoids->{$channel}->{$trigger}->{'locked'} != 0) {
+    return "$trigger is locked and cannot be changed.";
   }
 
   my $ret = eval {
