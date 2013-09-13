@@ -154,10 +154,10 @@ my $input = "";
 $input = $1 if $code =~ s/-(?:input|stdin)=(.*)$//i;
 
 my $got_paste = undef;
-$got_paste = 1 if $code =~ s/\s*-paste\s*//i;
+$got_paste = 1 if $code =~ s/(?<=\s)*-paste\s*//i;
 
 my $got_nomain = undef;
-$got_nomain = 1 if $code =~ s/\s*-nomain\s*//i;
+$got_nomain = 1 if $code =~ s/(?<=\s)*-nomain\s*//i;
 
 my $args = "";
 $args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
@@ -321,7 +321,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
       next;
     }
 
-    if($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
+    if($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*?'/i) {
       $got_sub = 1;
       my $modifier = 'first';
 
@@ -569,7 +569,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
       $previous_modifier = $modifier;
     }
 
-    if($got_sub and not $got_changes) {
+    if(not $got_changes) {
       print "$nick: No replacements made.\n";
       exit 0;
     }
@@ -961,6 +961,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/<No symbol table is loaded.  Use the "file" command.>\s*//g;
   $output =~ s/cc1: all warnings being treated as; errors//g;
   $output =~ s/, note: this is the location of the previous definition//g;
+  $output =~ s/ called by gdb \(\) at statement: void gdb\(\) { __asm__\(""\); }//;
  
   # remove duplicate warnings/infos
   $output =~ s/(\[*.*warning:.*?\s*)\1/$1/g;
