@@ -19,6 +19,8 @@ my $nooutput = 'No output.';
 
 my $warn_unterminated_define = 0;
 my $save_last_code = 0;
+my $unshift_last_code = 0;
+my $only_show = 0;
 
 my %languages = (
   'C11' => "gcc -std=c11 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wfatal_errors",
@@ -156,7 +158,10 @@ if(open FILE, "< last_code.txt") {
   close FILE;
 }
 
-if($code =~ m/^\s*show\s*$/i) {
+my $subcode = $code;
+while ($subcode =~ s/^\s*(-[^ ]+)\s*//) {}
+
+if($subcode =~ m/^\s*show\s*$/i) {
   if(defined $last_code[0]) {
     print "$nick: $last_code[0]\n";
   } else {
@@ -165,7 +170,7 @@ if($code =~ m/^\s*show\s*$/i) {
   exit 0;
 }
 
-if($code =~ m/^\s*diff\s*$/i) {
+if($subcode =~ m/^\s*diff\s*$/i) {
   if($#last_code < 1) {
     print "$nick: Not enough recent code to diff.\n"
   } else {
@@ -188,7 +193,7 @@ if($code =~ m/^\s*diff\s*$/i) {
 
 my $got_run = undef;
 
-if($code =~ m/^\s*(run|paste)\s*$/i) {
+if($subcode =~ m/^\s*(run|paste)\s*$/i) {
   $got_run = lc $1;
   if(defined $last_code[0]) {
     $code = $last_code[0];
@@ -197,7 +202,6 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
     exit 0;
   }
 } else { 
-  my $subcode = $code;
   my $got_undo = 0;
   my $got_sub = 0;
 
@@ -560,13 +564,14 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
     }
   }
 
+  $save_last_code = 1;
+
   unless ($got_undo and not $got_changes) {
-    $save_last_code = 1;
+    $unshift_last_code = 1;
   }
 
   if($got_undo and not $got_changes) {
-    print "$nick: $code\n";
-    exit 0;
+    $only_show = 1;
   }
 }
 
@@ -589,7 +594,10 @@ $args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
 $args =~ s/\s+$//;
 
 if($save_last_code) {
-  unshift @last_code, $extracted_args . (length $args ? $args . ' ' . $code : $code);
+  if($unshift_last_code) {
+    unshift @last_code, $extracted_args . (length $args ? $args . ' ' . $code : $code);
+  }
+
   open FILE, "> last_code.txt";
 
   my $i = 0;
@@ -599,6 +607,11 @@ if($save_last_code) {
   }
 
   close FILE;
+}
+
+if($only_show) {
+  print "$nick: $code\n";
+  exit 0;
 }
 
 unless($got_run) {
