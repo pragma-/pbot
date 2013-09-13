@@ -18,11 +18,12 @@ my $output = "";
 my $nooutput = 'No output.';
 
 my $warn_unterminated_define = 0;
+my $save_last_code = 0;
 
 my %languages = (
-  'C11' => "gcc -std=c11 -pedantic -Wall -Wextra (default)",
-  'C99' => "gcc -std=c99 -pedantic -Wall -Wextra",
-  'C89' => "gcc -std=c89 -pedantic -Wall -Wextra",
+  'C11' => "gcc -std=c11 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wfatal_errors",
+  'C99' => "gcc -std=c99 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wfatal_errors",
+  'C89' => "gcc -std=c89 -pedantic -Wall -Wextra -Wno-unused -Wfatal_errors",
 );
 
 my %preludes = ( 
@@ -146,22 +147,6 @@ my $code = join ' ', @ARGV;
 my @last_code;
 
 print "      code: [$code]\n" if $debug;
-
-my $lang = "C11";
-$lang = uc $1 if $code =~ s/-lang=([^\b\s]+)//i;
-
-my $input = "";
-$input = $1 if $code =~ s/-(?:input|stdin)=(.*)$//i;
-
-my $got_paste = undef;
-$got_paste = 1 if $code =~ s/(?<=\s)*-paste\s*//i;
-
-my $got_nomain = undef;
-$got_nomain = 1 if $code =~ s/(?<=\s)*-nomain\s*//i;
-
-my $args = "";
-$args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
-$args =~ s/\s+$//;
 
 if(open FILE, "< last_code.txt") {
   while(my $line = <FILE>) {
@@ -575,11 +560,37 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
     }
   }
 
-  open FILE, "> last_code.txt";
-
   unless ($got_undo and not $got_changes) {
-    unshift @last_code, length $args ? $args . ' ' . $code : $code;
+    $save_last_code = 1;
   }
+
+  if($got_undo and not $got_changes) {
+    print "$nick: $code\n";
+    exit 0;
+  }
+}
+
+my $lang = "C11";
+$lang = uc $1 if $code =~ s/-lang=([^\b\s]+)//i;
+
+my $input = "";
+$input = $1 if $code =~ s/-(?:input|stdin)=(.*)$//i;
+
+my $extracted_args = '';
+
+my $got_paste = undef;
+$got_paste = 1 and $extracted_args .= "-paste " if $code =~ s/(?<=\s)*-paste\s*//i;
+
+my $got_nomain = undef;
+$got_nomain = 1 and $extracted_args .= "-nomain " if $code =~ s/(?<=\s)*-nomain\s*//i;
+
+my $args = "";
+$args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
+$args =~ s/\s+$//;
+
+if($save_last_code) {
+  unshift @last_code, $extracted_args . (length $args ? $args . ' ' . $code : $code);
+  open FILE, "> last_code.txt";
 
   my $i = 0;
   foreach my $line (@last_code) {
@@ -588,18 +599,7 @@ if($code =~ m/^\s*(run|paste)\s*$/i) {
   }
 
   close FILE;
-
-  if($got_undo and not $got_changes) {
-    print "$nick: $code\n";
-    exit 0;
-  }
 }
-
-# check to see if -flags were added by replacements
-$lang = uc $1 if $code =~ s/-lang=([^\b\s]+)//i;
-$input = $1 if $code =~ s/-(?:input|stdin)=(.*)$//i;
-$args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
-$args =~ s/\s+$//;
 
 unless($got_run) {
   open FILE, ">> log.txt";
@@ -611,7 +611,6 @@ unless($got_run) {
 my $found = 0;
 my @langs;
 foreach my $l (sort { uc $a cmp uc $b } keys %languages) {
-  #push @langs, sprintf("      %-30s => %s", $l, $languages{$l});
   push @langs, sprintf("%s => %s", $l, $languages{$l});
   if(uc $lang eq uc $l) {
     $lang = $l;
@@ -760,7 +759,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   my $has_main = 0;
 
   my $prelude = '';
-  while($precode =~ s/^\s*(#.*\n)//g) {
+  while($precode =~ s/^\s*(#.*\n{1,2})//g) {
     $prelude .= $1;
   }
 
@@ -908,30 +907,30 @@ if($output =~ m/^\s*$/) {
       $output =~ s/prog\.c://g;
   }
 
-  $output =~ s/cc1: warnings being treated as errors//;
-  $output =~ s/ \(first use in this function\)//g;
-  $output =~ s/error: \(Each undeclared identifier is reported only once.*?\)//msg;
-  $output =~ s/ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
-  $output =~ s/error: (.*?) error/error: $1; error/msg;
-  $output =~ s/\/tmp\/.*\.o://g;
-  $output =~ s/collect2: ld returned \d+ exit status//g;
+  $output =~ s/(\d+:\d+:\s*)*cc1: warnings being treated as errors//;
+  $output =~ s/(\d+:\d+:\s*)* \(first use in this function\)//g;
+  $output =~ s/(\d+:\d+:\s*)*error: \(Each undeclared identifier is reported only once.*?\)//msg;
+  $output =~ s/(\d+:\d+:\s*)*ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
+  $output =~ s/(\d+:\d+:\s*)*error: (.*?) error/error: $1; error/msg;
+  $output =~ s/(\d+:\d+:\s*)*\/tmp\/.*\.o://g;
+  $output =~ s/(\d+:\d+:\s*)*collect2: ld returned \d+ exit status//g;
   $output =~ s/\(\.text\+[^)]+\)://g;
   $output =~ s/\[ In/[In/;
-  $output =~ s/warning: Can't read pathname for load map: Input.output error.//g;
+  $output =~ s/(\d+:\d+:\s*)*warning: Can't read pathname for load map: Input.output error.//g;
   my $left_quote = chr(226) . chr(128) . chr(152);
   my $right_quote = chr(226) . chr(128) . chr(153);
   $output =~ s/$left_quote/'/msg;
   $output =~ s/$right_quote/'/msg;
   $output =~ s/`/'/msg;
   $output =~ s/\t/   /g;
-  $output =~ s/\s*In function .main.:\s*//g;
-  $output =~ s/warning: unknown conversion type character 'b' in format \[-Wformat\]\s+warning: too many arguments for format \[-Wformat-extra-args\]/info: %b is a candide extension/g;
-  $output =~ s/warning: unknown conversion type character 'b' in format \[-Wformat\]//g;
+  $output =~ s/(\d+:\d+:\s*)*\s*In function .main.:\s*//g;
+  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat\]\s+(\d+:\d+:\s*)*warning: too many arguments for format \[-Wformat-extra-args\]/info: %b is a candide extension/g;
+  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat\]//g;
   $output =~ s/\s\(core dumped\)/./;
 #  $output =~ s/\[\s+/[/g;
   $output =~ s/ \[enabled by default\]//g;
   $output =~ s/initializer\s+warning: \(near/initializer (near/g;
-  $output =~ s/note: each undeclared identifier is reported only once for each function it appears in//g;
+  $output =~ s/(\d+:\d+:\s*)*note: each undeclared identifier is reported only once for each function it appears in//g;
   $output =~ s/\(gdb\)//g;
   $output =~ s/", '\\(\d{3})' <repeats \d+ times>,? ?"/\\$1/g;
   $output =~ s/, '\\(\d{3})' <repeats \d+ times>\s*//g;
@@ -1016,9 +1015,28 @@ unless($got_run) {
 }
 
 if(defined $got_paste or (defined $got_run and $got_run eq "paste")) {
-  $output =~ s/[\r\n]+$//;
-  $code .= "\n\n/************* OUTPUT *************\n$output\n************** OUTPUT *************/\n"; 
+  my $flags = "";
+
+  $extracted_args =~ s/-paste //g;
+  if(length $extracted_args) {
+    $extracted_args =~ s/\s*$//;
+    $flags .= '[' . $extracted_args . '] ';
+  }
+
+  if(length $args) {
+    $flags .= "gcc " . $args . " -o prog prog.c";
+  } else {
+    $flags .= $languages{$lang} . " -o prog prog.c"; 
+  }
+  $code .= "\n\n/************* COMPILER FLAGS *************\n$flags\n************** COMPILER FLAGS *************/\n"; 
+
+  $output =~ s/^\s+//;
+  $output =~ s/\s+$//;
+  $output =~ s/[\r\n]+/\n/g;
+  $code .= "\n/************* OUTPUT *************\n$output\n************** OUTPUT *************/\n"; 
+
   my $uri = paste_sprunge(pretty($code));
+  
   print "$nick: $uri\n";
   exit 0;
 }
