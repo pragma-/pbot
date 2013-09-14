@@ -175,8 +175,6 @@ sub add_message {
       $self->message_history->{$account}->{channels}->{$channel}{join_watch}++;
     } else {
       # PART or QUIT
-      $self->message_history->{$account}->{channels}->{$channel}{validated} = 0;
-
       # check QUIT message for netsplits, and decrement joinwatch if found
       if($text =~ /^QUIT .*\.net .*\.split/) {
         $self->message_history->{$account}->{channels}->{$channel}{join_watch}--;
@@ -238,8 +236,7 @@ sub check_flood {
   # (these events come from $channel nick!user@host, not a specific channel or nick,
   # so they need to be dispatched to all channels the bot exists on)
   if($mode == $self->{FLOOD_JOIN} and $text =~ /^QUIT/) {
-    foreach my $chan (lc keys %{ $self->{pbot}->channels->channels->hash }) {
-
+    foreach my $chan (map lc, keys %{ $self->{pbot}->channels->channels->hash }) {
       next if $chan eq $channel;  # skip nick!user@host "channel"
 
       if(not exists $self->message_history->{$account}->{channels}->{$chan}) {
@@ -251,6 +248,9 @@ sub check_flood {
       }
 
       $self->add_message($account, $chan, $text, $mode);
+
+      # remove validation on QUITs so we check for ban-evasion when user returns at a later time
+      $self->message_history->{$account}->{channels}->{$chan}{validated} = 0;
     }
 
     # don't do flood processing for QUIT events
@@ -270,6 +270,11 @@ sub check_flood {
   
   # do not do flood processing if channel is not in bot's channel list or bot is not set as chanop for the channel
   return if ($channel =~ /^#/) and (not exists $self->{pbot}->channels->channels->hash->{$channel} or $self->{pbot}->channels->channels->hash->{$channel}{chanop} == 0);
+
+  if($channel =~ /^#/ and $mode == $self->{FLOOD_JOIN} and $text =~ /^PART/) {
+    # remove validation on PART so we check for ban-evasion when user returns at a later time
+    $self->message_history->{$account}->{channels}->{$channel}{validated} = 0;
+  }
 
   # do not do flood enforcement for this event if bot is lagging
   if($self->{pbot}->lagchecker->lagging) {
@@ -518,9 +523,9 @@ sub devalidate_accounts {
       }
 
       if((defined $nickserv_account and $nickserv_account eq $ban_account) or $account =~ m/^$mask$/i) {
-        $self->{pbot}->logger->log("anti-flood: [devalidate-accounts] $account matches $mask_original, devalidating\n");
+        $self->{pbot}->logger->log("anti-flood: [devalidate-accounts] $account matches $mask_original in $channel, devalidating\n");
 
-        $self->message_history->{$mask}->{channels}->{$channel}{validated} = 0;
+        $self->message_history->{$account}->{channels}->{$channel}{validated} = 0;
       }
     }
   }
