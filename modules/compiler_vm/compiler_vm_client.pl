@@ -874,11 +874,11 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   $precode =~ s/^{(.*)}$/$1/s;
 
   if(not $has_main and not $got_nomain) {
-    $code = "$prelude\n\n$code\n\nint main(void) {\n$precode\n;\nreturn 0;\n}\n";
+    $code = "$prelude\n$code" . "int main(void) {\n$precode\n;\nreturn 0;\n}\n";
     $nooutput = "No warnings, errors or output.";
   } else {
     print "code: [$code]; precode: [$precode]\n" if $debug;
-    $code = "$prelude\n\n$precode\n\n$code\n";
+    $code = "$prelude\n$precode\n\n$code\n";
     $nooutput = "No warnings, errors or output.";
   }
 } else {
