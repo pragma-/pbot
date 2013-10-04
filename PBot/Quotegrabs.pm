@@ -315,10 +315,12 @@ sub delete_quotegrab {
 
   my $text = $quotegrab->{text};
 
+  my ($first_nick) = split /\+/, $quotegrab->{nick}, 2;
+
   if($text =~ s/^\/me\s+//) {
-      return "Deleted $arguments: * $quotegrab->{nick} $text";
+      return "Deleted $arguments: * $first_nick $text";
   } else {
-      return "Deleted $arguments: <$quotegrab->{nick}> $text";
+      return "Deleted $arguments: <$first_nick> $text";
   }
 }
 
@@ -333,11 +335,12 @@ sub show_quotegrab {
   my $timestamp = $quotegrab->{timestamp};
   my $ago = ago(gettimeofday - $timestamp);
   my $text = $quotegrab->{text};
+  my ($first_nick) = split /\+/, $quotegrab->{nick}, 2;
 
   if($text =~ s/^\/me\s+//) {
-      return "$arguments: grabbed by $quotegrab->{grabbed_by} on " . localtime($timestamp) . " [$ago] * $quotegrab->{nick} $text";
+      return "$arguments: grabbed by $quotegrab->{grabbed_by} on " . localtime($timestamp) . " [$ago] * $first_nick $text";
   } else {
-      return "$arguments: grabbed by $quotegrab->{grabbed_by} on " . localtime($timestamp) . " [$ago] <$quotegrab->{nick}> $text";
+      return "$arguments: grabbed by $quotegrab->{grabbed_by} on " . localtime($timestamp) . " [$ago] <$first_nick> $text";
   }
 }
 
@@ -389,11 +392,12 @@ sub show_random_quotegrab {
 
   my $quotegrab = $quotes[int rand($#quotes + 1)];
   my $text = $quotegrab->{text};
+  my ($first_nick) = split /\+/, $quotegrab->{nick}, 2;
 
   if($text =~ s/^\/me\s+//) {
-      return "$quotegrab->{id}: * $quotegrab->{nick} $text";
+      return "$quotegrab->{id}: * $first_nick $text";
   } else {
-      return "$quotegrab->{id}: <$quotegrab->{nick}> $text";
+      return "$quotegrab->{id}: <$first_nick> $text";
   }
 }
 
