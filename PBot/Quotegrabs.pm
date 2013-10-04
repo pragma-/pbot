@@ -161,88 +161,112 @@ sub grab_quotegrab {
   }
 
   if(not defined $arguments or not length $arguments) {
-    return "Usage: grab <nick> [history [channel]] -- where [history] is an optional argument that is either an integer number of recent messages or a regex (without whitespace) of the text within the message; e.g., to grab the 3rd most recent message for nick, use `grab nick 3` or to grab a message containing 'pizza', use `grab nick pizza`; and [channel] is an optional channel, so you can use it from /msg (you will need to also specify [history] in this case)";
+    return "Usage: grab <nick> [history [channel]] -- where [history] is an optional argument that is either an integral number of recent messages or a regex (without whitespace) of the text within the message; e.g., to grab the 3rd most recent message for nick, use `grab nick 3` or to grab a message containing 'pizza', use `grab nick pizza`; and [channel] is an optional channel, so you can use it from /msg (you will need to also specify [history] in this case)";
   }
 
   $arguments = lc $arguments;
 
-  my ($grab_nick, $grab_history, $channel) = split(/\s+/, $arguments, 3);
+  my @grabs = split /\s\+\s/, $arguments;
 
-  if(not defined $grab_history) {
-    $grab_history = $nick eq $grab_nick ? 2 : 1;
-  }
-  $channel = $from if not defined $channel;
+  my ($grab_nick, $grab_history, $channel, $grab_nicks, $grab_text);
 
-  if($grab_history =~ /^\d+$/ and ($grab_history < 1 || $grab_history > $self->{pbot}->{MAX_NICK_MESSAGES})) {
-    return "/msg $nick Please choose a history between 1 and $self->{pbot}->{MAX_NICK_MESSAGES}";
-  }
+  foreach my $grab (@grabs) {
+    ($grab_nick, $grab_history, $channel) = split(/\s+/, $grab, 3);
 
-  my $found_mask = undef;
-  my $last_spoken = 0;
-  foreach my $mask (keys %{ $self->{pbot}->antiflood->message_history }) {
-    if($mask =~ m/^\Q$grab_nick\E!/i) {
-      if(defined $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken}
-          and $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken} > $last_spoken) {
-        $last_spoken = $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken};
-        $found_mask = $mask;
-      }
+    if(not defined $grab_history) {
+      $grab_history = $nick eq $grab_nick ? 2 : 1;
     }
-  }
+    $channel = $from if not defined $channel;
 
-  if(not defined $found_mask) {
-    return "No message history for $grab_nick.";
-  }
-
-  if(not exists $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}) {
-    return "No message history for $grab_nick in $channel.";
-  }
-  
-  my @messages = @{ $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}{messages} };
-
-  if($grab_history =~ /^\d+$/) {
-    # integral history
-    $grab_history--;
-
-    if($grab_history > $#messages) {
-      return "$grab_nick has only " . ($#messages + 1) . " messages in the history.";
+    if($grab_history =~ /^\d+$/ and ($grab_history < 1 || $grab_history > $self->{pbot}->{MAX_NICK_MESSAGES})) {
+      return "/msg $nick Please choose a history between 1 and $self->{pbot}->{MAX_NICK_MESSAGES}";
     }
 
-    $grab_history = $#messages - $grab_history;
-  } else {
-    # regex history
-    my $ret = eval {
-      my $i = $#messages;
-      $i-- if($nick =~ /^\Q$grab_nick\E$/i); # skip 'grab' command if grabbing own nick
-      my $found = 0;
-      while($i >= 0) {
-        if($messages[$i]->{msg} =~ m/$grab_history/i) {
-          $grab_history = $i;
-          $found = 1;
-          last;
+    my $found_mask = undef;
+    my $last_spoken = 0;
+    foreach my $mask (keys %{ $self->{pbot}->antiflood->message_history }) {
+      if($mask =~ m/^\Q$grab_nick\E!/i) {
+        if(defined $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken}
+            and $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken} > $last_spoken) {
+          $last_spoken = $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken};
+          $found_mask = $mask;
         }
-        $i--;
+      }
+    }
+
+    if(not defined $found_mask) {
+      return "No message history for $grab_nick.";
+    }
+
+    if(not exists $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}) {
+      return "No message history for $grab_nick in $channel.";
+    }
+
+    my @messages = @{ $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}{messages} };
+
+    if($grab_history =~ /^\d+$/) {
+      # integral history
+      $grab_history--;
+
+      if($grab_history > $#messages) {
+        return "$grab_nick has only " . ($#messages + 1) . " messages in the history.";
       }
 
-      if($found == 0) {
-        return "/msg $nick No message containing regex '$grab_history' found for $grab_nick";
-      } else {
-        return undef;
+      $grab_history = $#messages - $grab_history;
+    } else {
+      # regex history
+      my $ret = eval {
+        my $i = $#messages;
+        $i-- if($nick =~ /^\Q$grab_nick\E$/i); # skip 'grab' command if grabbing own nick
+        my $found = 0;
+        while($i >= 0) {
+          if($messages[$i]->{msg} =~ m/$grab_history/i) {
+            $grab_history = $i;
+            $found = 1;
+            last;
+          }
+          $i--;
+        }
+
+        if($found == 0) {
+          return "/msg $nick No message containing regex '$grab_history' found for $grab_nick";
+        } else {
+          return undef;
+        }
+      };
+      return "/msg $nick Bad grab regex: $@" if $@;
+      if(defined $ret) {
+        return $ret;
       }
-    };
-    return "/msg $nick Bad grab regex: $@" if $@;
-    if(defined $ret) {
-      return $ret;
+    }
+
+    $self->{pbot}->logger->log("$nick ($from) grabbed <$grab_nick/$channel> $messages[$grab_history]->{msg}\n");
+
+    if(not defined $grab_nicks) {
+      $grab_nicks = $grab_nick;
+    } else {
+      $grab_nicks .= "+$grab_nick";
+    }
+
+    my $text = $messages[$grab_history]->{msg};
+
+    if(not defined $grab_text) {
+      $grab_text = $text;
+    } else {
+      if($text =~ s/^\/me\s+//) {
+        $grab_text .= "   * $grab_nick $text";
+      } else {
+        $grab_text .= "   <$grab_nick> $text";
+      }
     }
   }
-
-  $self->{pbot}->logger->log("$nick ($from) grabbed <$grab_nick/$channel> $messages[$grab_history]->{msg}\n");
 
   my $quotegrab = {};
-  $quotegrab->{nick} = $grab_nick;
+  $quotegrab->{nick} = $grab_nicks;
   $quotegrab->{channel} = $channel;
-  $quotegrab->{timestamp} = $messages[$grab_history]->{timestamp};
-  $quotegrab->{grabbed_by} = $nick;
-  $quotegrab->{text} = $messages[$grab_history]->{msg};
+  $quotegrab->{timestamp} = gettimeofday;
+  $quotegrab->{grabbed_by} = "$nick!$user\@$host";
+  $quotegrab->{text} = $grab_text;
   $quotegrab->{id} = $#{ $self->{quotegrabs} } + 2;
   
   push @{ $self->{quotegrabs} }, $quotegrab;
@@ -250,6 +274,7 @@ sub grab_quotegrab {
   $self->save_quotegrabs();
   
   my $text = $quotegrab->{text};
+  ($grab_nick) = split /\+/, $grab_nicks, 2;
 
   if($text =~ s/^\/me\s+//) {
       return "Quote grabbed: " . ($#{ $self->{quotegrabs} } + 1) . ": * $grab_nick $text";
