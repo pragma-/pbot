@@ -49,7 +49,6 @@ sub runserver {
 
   while(my $line = <$input>) {
     chomp $line;
-    next unless length $line;
 
     print "Got [$line]\n";
 
