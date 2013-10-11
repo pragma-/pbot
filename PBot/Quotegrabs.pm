@@ -15,6 +15,8 @@ use HTML::Entities;
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
 
+use POSIX qw(strftime);
+
 sub new {
   if(ref($_[1]) eq 'HASH') {
     Carp::croak("Options to Quotegrabs should be key/value pairs, not hash reference");
@@ -111,18 +113,30 @@ sub export_quotegrabs() {
   my $self = shift;
   return "Not enabled" if not defined $self->{export_path};
   my $text;
+  my $table_id = 1;
   my $last_channel = "";
   my $had_table = 0;
   open FILE, "> $self->{export_path}" or return "Could not open export path.";
   my $time = localtime;
-  print FILE "<html><body><i>Generated at $time</i><hr><h1>Candide's Quotegrabs</h1>\n";
+  print FILE "<html>\n<head><link href=\"css/blue.css\" rel=\"stylesheet\" type=\"text/css\">\n";
+  print FILE '<script type="text/javascript" src="js/jquery-latest.js"></script>' . "\n";
+  print FILE '<script type="text/javascript" src="js/jquery.tablesorter.js"></script>' . "\n";
+  print FILE "<body><i>Generated at $time</i><hr><h1>Candide's Quotegrabs</h1>\n";
   my $i = 0;
   foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or $$a{nick} cmp $$b{nick} } @{ $self->{quotegrabs} }) {
     if(not $quotegrab->{channel} =~ /^$last_channel$/i) {
-      print FILE "</table>\n" if $had_table;
+      print FILE "</tbody>\n</table>\n" if $had_table;
       print FILE "<hr><h2>$quotegrab->{channel}</h2><hr>\n";
-      print FILE "<table border=\"0\">\n";
+      print FILE "<table border=\"0\" id=\"table$table_id\" class=\"tablesorter\">\n";
+      print FILE "<thead>\n<tr>\n";
+      print FILE "<th>id&nbsp;&nbsp;&nbsp;&nbsp;</th>\n";
+      print FILE "<th>author(s)</th>\n";
+      print FILE "<th>quote</th>\n";
+      print FILE "<th>date</th>\n";
+      print FILE "<th>grabbed by</th>\n";
+      print FILE "</tr>\n</thead>\n<tbody>\n";
       $had_table = 1;
+      $table_id++;
     }
 
     $last_channel = $quotegrab->{channel};
@@ -133,17 +147,39 @@ sub export_quotegrabs() {
     } else {
       print FILE "<tr>\n";
     }
+
     print FILE "<td>" . ($quotegrab->{id}) . "</td>";
-    $text = "<td><b>&lt;$quotegrab->{nick}&gt;</b> " . encode_entities($quotegrab->{text}) . "</td>\n"; 
+
+    my @nicks = split /\+/, $quotegrab->{nick};
+    $text = join ', ', sort @nicks;
+    print FILE "<td>" . encode_entities($text) . "</td>";
+
+    my $nick;
+    $text = $quotegrab->{text};
+
+    if($text =~ s/^\/me\s+//) {
+      $nick = "* $nicks[0]";
+    } else {
+      $nick = "<$nicks[0]>";
+    }
+
+    $text = "<td><b>". encode_entities($nick) . "</b> " . encode_entities($text) . "</td>\n"; 
     print FILE $text;
-    my ($seconds, $minutes, $hours, $day_of_month, $month, $year, $wday, $yday, $isdst) = localtime($quotegrab->{timestamp});
-    my $t = sprintf("%02d:%02d:%02d-%04d/%02d/%02d\n",
-      $hours, $minutes, $seconds, $year+1900, $month+1, $day_of_month);
-    print FILE "<td align=\"right\">- grabbed by<br> $quotegrab->{grabbed_by}<br><i>$t</i>\n";
-    print FILE "</td></tr>\n";
+    
+
+    print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %a %H:%M:%S", localtime $quotegrab->{timestamp}) . "</td>\n";
+    print FILE "<td>" . encode_entities($quotegrab->{grabbed_by}) . "</td>\n";
+    print FILE "</tr>\n";
   }
 
-  print FILE "</table>\n";
+  print FILE "</tbody>\n</table>\n" if $had_table;
+  print FILE "<script type='text/javascript'>\n";
+  $table_id--;
+  while($table_id > 0) {
+    print FILE '$(document).ready(function() { $("#table' . $table_id . '").tablesorter(); });' . "\n";
+    $table_id--;
+  }
+  print FILE "</script>\n";
   close(FILE);
   return "$i quotegrabs exported to http://blackshell.com/~msmud/candide/quotegrabs.html";
 }
