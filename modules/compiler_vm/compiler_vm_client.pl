@@ -23,9 +23,9 @@ my $unshift_last_code = 0;
 my $only_show = 0;
 
 my %languages = (
-  'C11' => "gcc -std=c11 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wfatal_errors",
-  'C99' => "gcc -std=c99 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wfatal_errors",
-  'C89' => "gcc -std=c89 -pedantic -Wall -Wextra -Wno-unused -Wfatal_errors",
+  'C11' => "gcc -std=c11 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wfatal-errors",
+  'C99' => "gcc -std=c99 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wfatal-errors",
+  'C89' => "gcc -std=c89 -pedantic -Wall -Wextra -Wno-unused -Wfatal-errors",
 );
 
 my %preludes = ( 
@@ -638,8 +638,6 @@ if(not $found) {
 
 print "code before: [$code]\n" if $debug;
 
-$code =~ s/#include <([^>]+)>/#include <$1>\n/g;
-
 # replace \n outside of quotes with literal newline
 my $new_code = "";
 
@@ -715,8 +713,16 @@ while($code =~ m/(.)/msg) {
     $escaped = not $escaped;
   } elsif($ch eq '#' and not $cpp and not $escaped and not $single_quote and not $double_quote) {
     $cpp = 1;
+
+    if($code =~ m/include\s*[<']([^>']*)[>']/msg) {
+      my $match = $1;
+      $pos = pos $code;
+      substr ($code, $pos, 0) = "\n";
+      pos $code = $pos;
+      $cpp = 0;
+    }
   } elsif($ch eq '"') {
-    $double_quote = not $double_quote unless $escaped;
+    $double_quote = not $double_quote unless $escaped or $single_quote;
     $escaped = 0;
   } elsif($ch eq '(' and not $single_quote and not $double_quote) {
     $parens++;
@@ -729,7 +735,7 @@ while($code =~ m/(.)/msg) {
       pos $code = $pos + 1;
     }
   } elsif($ch eq "'") {
-    $single_quote = not $single_quote unless $escaped;
+    $single_quote = not $single_quote unless $escaped or $double_quote;
     $escaped = 0;
   } elsif($ch eq 'n' and $escaped) {
     if(not $single_quote and not $double_quote) {
@@ -758,8 +764,13 @@ while($code =~ m/(.)/msg) {
 
 print "code after \\n additions: [$code]\n" if $debug;
 
+# white-out contents of quoted literals
+my $white_code = $code;
+$white_code =~ s/(?:\"((?:\\\"|(?!\").)*)\")/'"' . ('-' x length $1) . '"'/ge;
+$white_code =~ s/(?:\'((?:\\\'|(?!\').)*)\')/"'" . ('-' x length $1) . "'"/ge;
+
 my $precode;
-if($code =~ m/#include/) {
+if($white_code =~ m/#include/) {
   $precode = $code; 
 } else {
   $precode = $preludes{$lang} . $code;
@@ -902,7 +913,9 @@ print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n
 
 $input = "Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet." if not length $input;
 
-$output = compile($lang, pretty($code), $args, $input, $USE_LOCAL);
+my $pretty_code = pretty $code;
+
+$output = compile($lang, $pretty_code, $args, $input, $USE_LOCAL);
 
 if($output =~ m/^\s*$/) {
   $output = $nooutput 
@@ -916,7 +929,7 @@ if($output =~ m/^\s*$/) {
       $output =~ s/ Line \d+ ://g;
       $output =~ s/prog\.c:[:\d]*//g;
   } else {
-      $output =~ s/prog\.c:(\d+)/"\n" . ($1 + 2)/ge;
+      $output =~ s/prog\.c:(\d+)/\n$1/g;
       $output =~ s/prog\.c://g;
   }
 
@@ -1012,6 +1025,8 @@ if($output =~ m/^\s*$/) {
   $output =~ s/ called by \?\? \(\)//g;
   $output =~ s/\s*Copyright\s*\(C\)\s*\d+\s*Free\s*Software\s*Foundation,\s*Inc.\s*This\s*is\s*free\s*software;\s*see\s*the\s*source\s*for\s*copying\s*conditions.\s*\s*There\s*is\s*NO\s*warranty;\s*not\s*even\s*for\s*MERCHANTABILITY\s*or\s*FITNESS\s*FOR\s*A\s*PARTICULAR\s*PURPOSE.//gs;
   $output =~ s/\s*process\s*\d+\s*is\s*executing\s*new\s*program:\s*.*?\s*Error\s*in\s*re-setting\s*breakpoint\s*\d+:\s*.*?No\s*symbol\s*table\s*is\s*loaded.\s*\s*Use\s*the\s*"file"\s*command.//s;
+  $output =~ s/\](\d+:\d+:\s*)*warning:/]\n$1warning:/g;
+  $output =~ s/\](\d+:\d+:\s*)*error:/]\n$1error:/g;
 }
 
 if($warn_unterminated_define == 1) {
@@ -1041,14 +1056,13 @@ if(defined $got_paste or (defined $got_run and $got_run eq "paste")) {
   } else {
     $flags .= $languages{$lang} . " -o prog prog.c"; 
   }
-  $code .= "\n\n/************* COMPILER FLAGS *************\n$flags\n************** COMPILER FLAGS *************/\n"; 
 
-  $output =~ s/^\s+//;
+  $pretty_code .= "\n\n/************* COMPILER FLAGS *************\n$flags\n************** COMPILER FLAGS *************/\n"; 
+
   $output =~ s/\s+$//;
-  $output =~ s/[\r\n]+/\n/g;
-  $code .= "\n/************* OUTPUT *************\n$output\n************** OUTPUT *************/\n"; 
+  $pretty_code .= "\n/************* OUTPUT *************\n$output\n************** OUTPUT *************/\n"; 
 
-  my $uri = paste_sprunge(pretty($code));
+  my $uri = paste_sprunge($pretty_code);
   
   print "$nick: $uri\n";
   exit 0;
