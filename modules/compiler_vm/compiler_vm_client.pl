@@ -714,7 +714,7 @@ while($code =~ m/(.)/msg) {
   } elsif($ch eq '#' and not $cpp and not $escaped and not $single_quote and not $double_quote) {
     $cpp = 1;
 
-    if($code =~ m/include\s*[<']([^>']*)[>']/msg) {
+    if($code =~ m/include\s*[<"]([^>"]*)[>"]/msg) {
       my $match = $1;
       $pos = pos $code;
       substr ($code, $pos, 0) = "\n";
