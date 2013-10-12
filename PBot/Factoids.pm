@@ -14,6 +14,7 @@ $VERSION = $PBot::PBot::VERSION;
 use HTML::Entities;
 use Time::HiRes qw(gettimeofday);
 use Carp ();
+use POSIX qw(strftime);
 
 use PBot::FactoidModuleLauncher;
 use PBot::DualIndexHashObject;
@@ -114,15 +115,31 @@ sub export_factoids {
   open FILE, "> $filename" or return "Could not open export path.";
 
   my $time = localtime;
-  print FILE "<html><body><i>Last updated at $time</i>\n";
+  print FILE "<html><head>\n<link href='css/blue.css' rel='stylesheet' type='text/css'>\n";
+  print FILE '<script type="text/javascript" src="js/jquery-latest.js"></script>' . "\n";
+  print FILE '<script type="text/javascript" src="js/jquery.tablesorter.js"></script>' . "\n";
+  print FILE "</head>\n<body><i>Last updated at $time</i>\n";
   print FILE "<hr><h2>Candide's factoids</h2>\n";
   
   my $i = 0;
+  my $table_id = 1;
 
   foreach my $channel (sort keys %{ $self->factoids->hash }) {
     my $chan = $channel eq '.*' ? 'Global channel' : "Channel $channel";
-    print FILE "<hr>\n<h3>$chan<h3>\n<hr>\n";
-    print FILE "<table border=\"0\">\n";
+    print FILE "<hr>\n<h3>$chan</h3>\n<hr>\n";
+    print FILE "<table border=\"0\" id=\"table$table_id\" class=\"tablesorter\">\n";
+    print FILE "<thead>\n<tr>\n";
+    print FILE "<th>owner</th>\n";
+    print FILE "<th>created on</th>\n";
+    print FILE "<th>times referenced</th>\n";
+    print FILE "<th>factoid</th>\n";
+    print FILE "<th>last edited by</th>\n";
+    print FILE "<th>edited date</th>\n";
+    print FILE "<th>last referenced by</th>\n";
+    print FILE "<th>last referenced date</th>\n";
+    print FILE "</tr>\n</thead>\n<tbody>\n";
+    $table_id++;
+
     foreach my $trigger (sort keys %{ $self->factoids->hash->{$channel} }) {
       if($self->factoids->hash->{$channel}->{$trigger}->{type} eq 'text') {
         $i++;
@@ -132,20 +149,51 @@ sub export_factoids {
           print FILE "<tr>\n";
         }
         
+        print FILE "<td>" . $self->factoids->hash->{$channel}->{$trigger}->{owner} . "</td>\n";
+        print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $self->factoids->hash->{$channel}->{$trigger}->{created_on}) . "</td>\n";
+
+        print FILE "<td>" . $self->factoids->hash->{$channel}->{$trigger}->{ref_count} . "</td>\n";
+
         my $action = $self->factoids->hash->{$channel}->{$trigger}->{action};
         $action =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http" . encode_entities($2) . "'>http" . encode_entities($2) . "<\/a>"/ge;
         $action =~ s/(.*)<\/a>(.*$)/"$1<\/a>" . encode_entities($2)/e;
-
         print FILE "<td width=100%><b>$trigger</b> is " . $action . "</td>\n"; 
-        
-        print FILE "<td align=\"right\" nowrap>- submitted by " . $self->factoids->hash->{$channel}->{$trigger}->{owner} . "<br><i>" . localtime($self->factoids->hash->{$channel}->{$trigger}->{created_on}) . "</i>\n</td>\n</tr>\n";
+
+        if(exists $self->factoids->hash->{$channel}->{$trigger}->{edited_by}) { 
+          print FILE "<td>" . $self->factoids->hash->{$channel}->{$trigger}->{edited_by} . "</td>\n";
+          print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $self->factoids->hash->{$channel}->{$trigger}->{edited_on}) . "</td>\n";
+        } else {
+          print FILE "<td></td>\n";
+          print FILE "<td></td>\n";
+        }
+
+        print FILE "<td>" . $self->factoids->hash->{$channel}->{$trigger}->{ref_user} . "</td>\n";
+
+        if(exists $self->factoids->hash->{$channel}->{$trigger}->{last_referenced_on}) {
+          print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $self->factoids->hash->{$channel}->{$trigger}->{last_referenced_on}) . "</td>\n";
+        } else {
+          print FILE "<td></td>\n";
+        }
+ 
+        print FILE "</tr>\n";
       }
     }
-    print FILE "</table>\n";
+    print FILE "</tbody>\n</table>\n";
   }
 
   print FILE "<hr>$i factoids memorized.<br>";
   print FILE "<hr><i>Last updated at $time</i>\n";
+
+  print FILE "<script type='text/javascript'>\n";
+  $table_id--;
+  print FILE '$(document).ready(function() {' . "\n";
+  while($table_id > 0) {
+    print FILE '$("#table' . $table_id . '").tablesorter();' . "\n";
+    $table_id--;
+  }
+  print FILE "});\n";
+  print FILE "</script>\n";
+  print FILE "</body>\n</html>\n";
   
   close(FILE);
   
