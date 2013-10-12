@@ -123,12 +123,12 @@ sub export_quotegrabs() {
   print FILE "<html>\n<head><link href=\"css/blue.css\" rel=\"stylesheet\" type=\"text/css\">\n";
   print FILE '<script type="text/javascript" src="js/jquery-latest.js"></script>' . "\n";
   print FILE '<script type="text/javascript" src="js/jquery.tablesorter.js"></script>' . "\n";
-  print FILE "<body><i>Generated at $time</i><hr><h1>Candide's Quotegrabs</h1>\n";
+  print FILE "</head>\n<body><i>Generated at $time</i><hr><h2>Candide's Quotegrabs</h2>\n";
   my $i = 0;
   foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or $$a{nick} cmp $$b{nick} } @{ $self->{quotegrabs} }) {
     if(not $quotegrab->{channel} =~ /^$last_channel$/i) {
       print FILE "</tbody>\n</table>\n" if $had_table;
-      print FILE "<hr><h2>$quotegrab->{channel}</h2><hr>\n";
+      print FILE "<hr><h3>$quotegrab->{channel}</h3><hr>\n";
       print FILE "<table border=\"0\" id=\"table$table_id\" class=\"tablesorter\">\n";
       print FILE "<thead>\n<tr>\n";
       print FILE "<th>id&nbsp;&nbsp;&nbsp;&nbsp;</th>\n";
@@ -184,6 +184,7 @@ sub export_quotegrabs() {
   }
   print FILE "});\n";
   print FILE "</script>\n";
+  print FILE "</body>\n</html>\n";
   close(FILE);
   return "$i quotegrabs exported to http://blackshell.com/~msmud/candide/quotegrabs.html";
 }
