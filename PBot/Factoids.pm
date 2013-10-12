@@ -478,11 +478,15 @@ sub interpreter {
 
     $result =~ s/\\\$/\$/g;
 
-    if($result =~ s/^\/say\s+/$ref_from/i || $result =~ s/^\/me\s+(.*)/\/me $1 $ref_from/i
-      || $result =~ s/^\/msg\s+([^ ]+)/\/msg $1 $ref_from/i) {
+    if($ref_from) {
+      if($result =~ s/^\/say\s+/$ref_from/i || $result =~ s/^\/me\s+(.*)/\/me $1 $ref_from/i
+        || $result =~ s/^\/msg\s+([^ ]+)/\/msg $1 $ref_from/i) {
+        return $result;
+      } else {
+        return $ref_from . "$keyword is $result";
+      }
+    }else {
       return $result;
-    } else {
-      return $ref_from . "$keyword is $result";
     }
   } elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'regex') {
     $result = eval {

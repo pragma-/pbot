@@ -168,11 +168,16 @@ sub process_line {
 
       $pbot->logger->log("Final result: $result\n");
       
-      if($result =~ s/^\/me\s+//i) {
+      if($result =~ s/^\/say\s+//i) {
+        $pbot->conn->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
+      } elsif($result =~ s/^\/me\s+//i) {
         $pbot->conn->me($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
       } elsif($result =~ s/^\/msg\s+([^\s]+)\s+//i) {
         my $to = $1;
-        if($to =~ /.*serv$/i) {
+        if($to =~ /,/) {
+          $pbot->logger->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$nick!$user\@$host] [$command] [$result]\n");
+        }
+        elsif($to =~ /.*serv$/i) {
           $pbot->logger->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$nick!$user\@$host] [$command] [$result]\n");
         }
         elsif($result =~ s/^\/me\s+//i) {
