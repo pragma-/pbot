@@ -119,13 +119,20 @@ sub export_factoids {
   print FILE '<script type="text/javascript" src="js/jquery-latest.js"></script>' . "\n";
   print FILE '<script type="text/javascript" src="js/jquery.tablesorter.js"></script>' . "\n";
   print FILE "</head>\n<body><i>Last updated at $time</i>\n";
-  print FILE "<hr><h2>Candide's factoids</h2>\n";
+  print FILE "<hr><h2>Candide's factoids</h2>\n<hr>\n";
   
   my $i = 0;
   my $table_id = 1;
 
   foreach my $channel (sort keys %{ $self->factoids->hash }) {
-    my $chan = $channel eq '.*' ? 'Global channel' : "Channel $channel";
+    my $chan = $channel eq '.*' ? 'global' : $channel;
+
+    print FILE "<a href='#" . $chan . "'>$chan</a><br>\n";
+  }
+
+  foreach my $channel (sort keys %{ $self->factoids->hash }) {
+    my $chan = $channel eq '.*' ? 'global' : $channel;
+    print FILE "<a name='$chan'></a>\n";
     print FILE "<hr>\n<h3>$chan</h3>\n<hr>\n";
     print FILE "<table border=\"0\" id=\"table$table_id\" class=\"tablesorter\">\n";
     print FILE "<thead>\n<tr>\n";
