@@ -109,6 +109,8 @@ sub save_quotegrabs {
   $self->export_quotegrabs();
 }
 
+sub uniq { my %seen; grep !$seen{$_}++, @_ }
+
 sub export_quotegrabs() { 
   my $self = shift;
   return "Not enabled" if not defined $self->{export_path};
@@ -151,7 +153,7 @@ sub export_quotegrabs() {
     print FILE "<td>" . ($quotegrab->{id}) . "</td>";
 
     my @nicks = split /\+/, $quotegrab->{nick};
-    $text = join ', ', sort @nicks;
+    $text = join ', ', uniq(@nicks);
     print FILE "<td>" . encode_entities($text) . "</td>";
 
     my $nick;
