@@ -175,10 +175,12 @@ sub export_quotegrabs() {
   print FILE "</tbody>\n</table>\n" if $had_table;
   print FILE "<script type='text/javascript'>\n";
   $table_id--;
+  print FILE '$(document).ready(function() {' . "\n";
   while($table_id > 0) {
-    print FILE '$(document).ready(function() { $("#table' . $table_id . '").tablesorter(); });' . "\n";
+    print FILE '$("#table' . $table_id . '").tablesorter();' . "\n";
     $table_id--;
   }
+  print FILE "});\n";
   print FILE "</script>\n";
   close(FILE);
   return "$i quotegrabs exported to http://blackshell.com/~msmud/candide/quotegrabs.html";
