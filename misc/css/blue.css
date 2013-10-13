@@ -1,4 +1,9 @@
 body, h1, h2 { font-family:Arial, Helvetica, sans-serif; }
+h3 { font-family:Arial, Helvetica, sans-serif; color:#55717d; }
+
+a:link { text-decoration:none; color:#55717d; }
+a:visited { text-decoration:none; color:#55717d; }
+a:hover { text-decoration:none; color:#18a3de; font-weight:bold; }
 
 /* tables */
 table.tablesorter {
