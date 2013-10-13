@@ -125,12 +125,14 @@ sub export_factoids {
   my $table_id = 1;
 
   foreach my $channel (sort keys %{ $self->factoids->hash }) {
+    next if not scalar keys %{ $self->factoids->hash->{$channel} };
     my $chan = $channel eq '.*' ? 'global' : $channel;
 
-    print FILE "<a href='#" . $chan . "'>$chan</a><br>\n";
+    print FILE "<a href='#" . $chan . "'>" . encode_entities($chan) . "</a><br>\n";
   }
 
   foreach my $channel (sort keys %{ $self->factoids->hash }) {
+    next if not scalar keys %{ $self->factoids->hash->{$channel} };
     my $chan = $channel eq '.*' ? 'global' : $channel;
     print FILE "<a name='$chan'></a>\n";
     print FILE "<hr>\n<h3>$chan</h3>\n<hr>\n";
