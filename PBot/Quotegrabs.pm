@@ -116,7 +116,6 @@ sub export_quotegrabs() {
   return "Not enabled" if not defined $self->{export_path};
   my $text;
   my $table_id = 1;
-  my $last_channel = "";
   my $had_table = 0;
   open FILE, "> $self->{export_path}" or return "Could not open export path.";
   my $time = localtime;
@@ -125,9 +124,20 @@ sub export_quotegrabs() {
   print FILE '<script type="text/javascript" src="js/jquery.tablesorter.js"></script>' . "\n";
   print FILE "</head>\n<body><i>Generated at $time</i><hr><h2>Candide's Quotegrabs</h2>\n";
   my $i = 0;
+
+  my $last_channel = "";
+  foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or $$a{nick} cmp $$b{nick} } @{ $self->{quotegrabs} }) {
+    if(not $quotegrab->{channel} =~ /^$last_channel$/i) {
+      print FILE "<a href='#" . $quotegrab->{channel} . "'>" . encode_entities($quotegrab->{channel}) . "</a><br>\n";
+      $last_channel = $quotegrab->{channel};
+    }
+  }
+
+  $last_channel = "";
   foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or $$a{nick} cmp $$b{nick} } @{ $self->{quotegrabs} }) {
     if(not $quotegrab->{channel} =~ /^$last_channel$/i) {
       print FILE "</tbody>\n</table>\n" if $had_table;
+      print FILE "<a name='" . $quotegrab->{channel} . "'></a>\n";
       print FILE "<hr><h3>$quotegrab->{channel}</h3><hr>\n";
       print FILE "<table border=\"0\" id=\"table$table_id\" class=\"tablesorter\">\n";
       print FILE "<thead>\n<tr>\n";
