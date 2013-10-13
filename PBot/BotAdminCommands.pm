@@ -177,11 +177,11 @@ sub export {
   }
 
   if($arguments =~ /^quotegrabs$/i) {
-    return PBot::Quotegrabs::export_quotegrabs(); 
+    return $self->{pbot}->quotegrabs->export_quotegrabs; 
   }
 
   if($arguments =~ /^factoids$/i) {
-    return PBot::Factoids::export_factoids(); 
+    return $self->{pbot}->factoids->export_factoids; 
   }
 
   if($arguments =~ /^admins$/i) {
