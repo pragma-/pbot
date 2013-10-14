@@ -533,7 +533,7 @@ sub devalidate_accounts {
 
 sub check_bans {
   my ($self, $mask, $channel) = @_;
-  my ($bans, $nickserv_account, $nick, $host);
+  my ($bans, $nickserv_account, $nick, $host, $do_not_validate);
 
   # $self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans on $mask in $channel\n"); 
 
@@ -597,6 +597,13 @@ sub check_bans {
 
         if(defined $baninfos) {
           foreach my $baninfo (@$baninfos) {
+            if(time - $baninfo->{when} < 5) {
+              $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but within 5 seconds of establishing ban; giving another chance\n");
+              $self->message_history->{$mask}->{channels}->{$channel}{validated} = 0;
+              $do_not_validate = 1;
+              next;
+            }
+
             if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
               $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
               next;
@@ -641,7 +648,7 @@ sub check_bans {
     }
   }
 
-  $self->message_history->{$mask}->{channels}->{$channel}{validated} = 1;
+  $self->message_history->{$mask}->{channels}->{$channel}{validated} = 1 unless $do_not_validate;
 }
 
 sub check_nickserv_accounts {
