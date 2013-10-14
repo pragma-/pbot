@@ -119,7 +119,7 @@ sub export_factoids {
   print FILE '<script type="text/javascript" src="js/jquery-latest.js"></script>' . "\n";
   print FILE '<script type="text/javascript" src="js/jquery.tablesorter.js"></script>' . "\n";
   print FILE "</head>\n<body><i>Last updated at $time</i>\n";
-  print FILE "<hr><h2>Candide's factoids</h2>\n<hr>\n";
+  print FILE "<hr><h2>Candide's factoids</h2>\n";
   
   my $i = 0;
   my $table_id = 1;
@@ -487,8 +487,12 @@ sub interpreter {
       } else {
         return $ref_from . "$keyword is $result";
       }
-    }else {
-      return $result;
+    } else {
+      if($result =~ m/^\/say/i || $result =~ m/^\/me/i || $result =~ m/^\/msg/i) {
+        return $result;
+      } else {
+        return "$keyword is $result";
+      }
     }
   } elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'regex') {
     $result = eval {
