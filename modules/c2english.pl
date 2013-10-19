@@ -72,7 +72,7 @@ open my $fh, '>', 'code.c' or die "Could not write code: $!";
 print $fh $code;
 close $fh;
 
-my ($ret, $result) = execute(10, "gcc -std=c89 -pedantic -Werror -Wno-unused -c code.c");
+my ($ret, $result) = execute(10, "gcc -std=c89 -pedantic -Werror -Wno-unused -fsyntax-only -fno-diagnostics-show-option code.c");
 
 if($ret != 0) {
   $output = $result;
@@ -128,6 +128,7 @@ if($ret != 0) {
   $output =~ s/<'(.*)' = char>/<'$1' = int>/g;
   $output =~ s/= (-?\d+) ''/= $1/g;
   $output =~ s/, <incomplete sequence >//g;
+  $output =~ s/\s*error: expected ';' before 'return'//g;
 
   print "$output\n";
   exit 0;
@@ -154,7 +155,8 @@ $output =~ s/to an integer/to int/g;
 $output =~ s/with no arguments returning/with unspecified arguments returning/g;
 $output =~ s/with argument a void/with no arguments/g;
 $output =~ s/\s*After that,\s*$//;
-$output =~s/as long as zero does not equal 1/while the condition is true/g;
+$output =~ s/as long as zero does not equal 1/while the condition is true/g;
+$output =~ s/\ncompute nothing.//g;
 
 $output =~ s/\s+/ /;
 if($output eq " ") {
