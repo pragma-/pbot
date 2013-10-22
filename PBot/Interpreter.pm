@@ -170,8 +170,10 @@ sub process_line {
       
       if($result =~ s/^\/say\s+//i) {
         $pbot->conn->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
+        $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0);
       } elsif($result =~ s/^\/me\s+//i) {
         $pbot->conn->me($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
+        $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', '/me ' . $result, 0, 0, 0);
       } elsif($result =~ s/^\/msg\s+([^\s]+)\s+//i) {
         my $to = $1;
         if($to =~ /,/) {
@@ -182,14 +184,18 @@ sub process_line {
         }
         elsif($result =~ s/^\/me\s+//i) {
           $pbot->conn->me($to, $result) if $to !~ /\Q$mynick\E/i;
+          $pbot->antiflood->check_flood($to, $pbot->{botnick}, $pbot->{username}, 'localhost', '/me ' . $result, 0, 0, 0);
         } else {
           $result =~ s/^\/say\s+//i;
           $pbot->conn->privmsg($to, $result) if $to !~ /\Q$mynick\E/i;
+          $pbot->antiflood->check_flood($to, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0);
         }
       } else {
         $pbot->conn->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
+        $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0);
       }
     }
+
     $pbot->logger->log("---------------------------------------------\n");
 
     # TODO: move this to FactoidModuleLauncher somehow, completely out of Interpreter!

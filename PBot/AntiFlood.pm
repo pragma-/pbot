@@ -218,8 +218,6 @@ sub check_flood {
   $user = lc $user;
   $host = lc $host;
 
-  return if $nick eq lc $self->{pbot}->botnick;
-
   my $account = $self->get_flood_account($nick, $user, $host);
 
   if(not defined $account) {
@@ -268,6 +266,9 @@ sub check_flood {
   my $length = $self->add_message($account, $channel, $text, $mode);
   return if not defined $length;
   
+  # do not do flood processing for bot messages
+  return if $nick eq lc $self->{pbot}->botnick;
+
   # do not do flood processing if channel is not in bot's channel list or bot is not set as chanop for the channel
   return if ($channel =~ /^#/) and (not exists $self->{pbot}->channels->channels->hash->{$channel} or $self->{pbot}->channels->channels->hash->{$channel}{chanop} == 0);
 
