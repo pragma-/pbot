@@ -246,11 +246,11 @@ sub grab_quotegrab {
     }
 
     if(not defined $found_mask) {
-      return "No message history for $grab_nick.";
+      return "No message history for $grab_nick in channel $channel.  Usage: grab <nick> [history [channel]]; to specify channel, you must also specify history";
     }
 
     if(not exists $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}) {
-      return "No message history for $grab_nick in $channel.";
+      return "No message history for $grab_nick in channel $channel.  Usage: grab <nick> [history [channel]]; to specify channel, you must also specify history";
     }
 
     my @messages = @{ $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}{messages} };
@@ -260,7 +260,7 @@ sub grab_quotegrab {
       $grab_history--;
 
       if($grab_history > $#messages) {
-        return "$grab_nick has only " . ($#messages + 1) . " messages in the history.";
+        return "$grab_nick has only " . ($#messages + 1) . " messages in the history for channel $channel.";
       }
 
       $grab_history = $#messages - $grab_history;
@@ -280,7 +280,7 @@ sub grab_quotegrab {
         }
 
         if($found == 0) {
-          return "/msg $nick No message containing regex '$grab_history' found for $grab_nick";
+          return "/msg $nick No message containing regex '$grab_history' found for $grab_nick in channel $channel.";
         } else {
           return undef;
         }
@@ -435,9 +435,9 @@ sub show_random_quotegrab {
   
   if($#quotes < 0) {
     if($nick_search eq ".*") {
-      return "No quotes grabbed in $channel_search yet (use `rq [nick [channel]]` to specify the correct channel).  Use `grab` to grab a quote.";
+      return "No quotes grabbed in $channel_search yet (use `rq <nick> <channel>` to specify the correct channel).  Use `grab` to grab a quote.";
     } else {
-      return "No quotes grabbed for $nick_search in $channel_search yet (use `rq [nick [channel]]` to specify the correct channel)..  Use `grab` to grab a quote.";
+      return "No quotes grabbed for $nick_search in $channel_search yet (use `rq <nick> <channel>` to specify the correct channel)..  Use `grab` to grab a quote.";
     }
   }
 
