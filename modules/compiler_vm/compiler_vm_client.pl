@@ -720,6 +720,8 @@ while($code =~ m/(.)/msg) {
       substr ($code, $pos, 0) = "\n";
       pos $code = $pos;
       $cpp = 0;
+    } else {
+      pos $code = $pos;
     }
   } elsif($ch eq '"') {
     $double_quote = not $double_quote unless $escaped or $single_quote;
