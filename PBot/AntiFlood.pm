@@ -4,6 +4,9 @@
 # Purpose: Keeps track of who has said what and when.  Used in
 # conjunction with ChanOps and Quotegrabs for kick/ban on flood
 # and grabbing quotes, respectively.
+#
+# We should take out the message-tracking stuff and put it in its own
+# MessageTracker class.
 
 package PBot::AntiFlood;
 

@@ -50,7 +50,7 @@ sub initialize {
   #-------------------------------------------------------------------------------------
   $pbot->commands->register(sub { $self->grab_quotegrab(@_)        },  "grab",  0);
   $pbot->commands->register(sub { $self->show_quotegrab(@_)        },  "getq",  0);
-  $pbot->commands->register(sub { $self->delete_quotegrab(@_)      },  "delq", 10);
+  $pbot->commands->register(sub { $self->delete_quotegrab(@_)      },  "delq",  0);
   $pbot->commands->register(sub { $self->show_random_quotegrab(@_) },  "rq",    0);
 }
 
@@ -356,6 +356,11 @@ sub delete_quotegrab {
   }
 
   my $quotegrab = $self->{quotegrabs}[$arguments - 1];
+
+  if(not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host") and $quotegrab->{grabbed_by} ne "$nick!$user\@$host") {
+    return "You are not the grabber of this quote.";
+  }
+
   splice @{ $self->{quotegrabs} }, $arguments - 1, 1;
 
   for(my $i = $arguments - 1; $i <= $#{ $self->{quotegrabs} }; $i++ ) {
