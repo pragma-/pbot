@@ -53,7 +53,7 @@ sub initialize {
   $pbot->commands->register(sub { $self->delete_quotegrab(@_)      },  "delq",  0);
   $pbot->commands->register(sub { $self->show_random_quotegrab(@_) },  "rq",    0);
 
-  # ought to be in MessageTracker.pm (when it's created)
+  # ought to be in MessageTracker.pm once we create that module
   $pbot->commands->register(sub { $self->recall_message(@_)        },  "recall",  0);
 }
 
@@ -475,85 +475,107 @@ sub recall_message {
 
   $arguments = lc $arguments;
 
-  my ($recall_nick, $recall_history, $channel) = split(/\s+/, $arguments, 3);
+  my @recalls = split /\s\+\s/, $arguments;
 
-  if(not defined $recall_history) {
-    $recall_history = $nick eq $recall_nick ? 2 : 1;
-  }
-  $channel = $from if not defined $channel;
+  my ($recall_nick, $recall_history, $channel, $recall_nicks, $recall_text);
 
-  if($recall_history =~ /^\d+$/ and ($recall_history < 1 || $recall_history > $self->{pbot}->{MAX_NICK_MESSAGES})) {
-    return "/msg $nick Please choose a history between 1 and $self->{pbot}->{MAX_NICK_MESSAGES}";
-  }
+  foreach my $recall (@recalls) {
+    ($recall_nick, $recall_history, $channel) = split(/\s+/, $recall, 3);
 
-  my $found_mask = undef;
-  my $last_spoken = 0;
-  foreach my $mask (keys %{ $self->{pbot}->antiflood->message_history }) {
-    if($mask =~ m/^\Q$recall_nick\E!/i) {
-      if(defined $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken}
-          and $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken} > $last_spoken) {
-        $last_spoken = $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken};
-        $found_mask = $mask;
-      }
+    if(not defined $recall_history) {
+      $recall_history = $nick eq $recall_nick ? 2 : 1;
     }
-  }
+    $channel = $from if not defined $channel;
 
-  if(not defined $found_mask) {
-    return "No message history for $recall_nick in channel $channel.  Usage: recall <nick> [history [channel]]; to specify channel, you must also specify history";
-  }
-
-  if(not exists $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}) {
-    return "No message history for $recall_nick in channel $channel.  Usage: recall <nick> [history [channel]]; to specify channel, you must also specify history";
-  }
-
-  my @messages = @{ $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}{messages} };
-
-  if($recall_history =~ /^\d+$/) {
-    # integral history
-    $recall_history--;
-
-    if($recall_history > $#messages) {
-      return "$recall_nick has only " . ($#messages + 1) . " messages in the history for channel $channel.";
+    if($recall_history =~ /^\d+$/ and ($recall_history < 1 || $recall_history > $self->{pbot}->{MAX_NICK_MESSAGES})) {
+      return "/msg $nick Please choose a history between 1 and $self->{pbot}->{MAX_NICK_MESSAGES}";
     }
 
-    $recall_history = $#messages - $recall_history;
-  } else {
-    # regex history
-    my $ret = eval {
-      my $i = $#messages;
-      $i-- if($nick =~ /^\Q$recall_nick\E$/i); # skip 'recall' command if recallbing own nick
-      my $found = 0;
-      while($i >= 0) {
-        if($messages[$i]->{msg} =~ m/$recall_history/i) {
-          $recall_history = $i;
-          $found = 1;
-          last;
+    my $found_mask = undef;
+    my $last_spoken = 0;
+    foreach my $mask (keys %{ $self->{pbot}->antiflood->message_history }) {
+      if($mask =~ m/^\Q$recall_nick\E!/i) {
+        if(defined $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken}
+            and $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken} > $last_spoken) {
+          $last_spoken = $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken};
+          $found_mask = $mask;
         }
-        $i--;
+      }
+    }
+
+    if(not defined $found_mask) {
+      return "No message history for $recall_nick in channel $channel.  Usage: recall <nick> [history [channel]]; to specify channel, you must also specify history";
+    }
+
+    if(not exists $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}) {
+      return "No message history for $recall_nick in channel $channel.  Usage: recall <nick> [history [channel]]; to specify channel, you must also specify history";
+    }
+
+    my @messages = @{ $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}{messages} };
+
+    if($recall_history =~ /^\d+$/) {
+      # integral history
+      $recall_history--;
+
+      if($recall_history > $#messages) {
+        return "$recall_nick has only " . ($#messages + 1) . " messages in the history for channel $channel.";
       }
 
-      if($found == 0) {
-        return "/msg $nick No message containing regex '$recall_history' found for $recall_nick in channel $channel.";
-      } else {
-        return undef;
+      $recall_history = $#messages - $recall_history;
+    } else {
+      # regex history
+      my $ret = eval {
+        my $i = $#messages;
+        $i-- if($nick =~ /^\Q$recall_nick\E$/i); # skip 'recall' command if recallbing own nick
+        my $found = 0;
+        while($i >= 0) {
+          if($messages[$i]->{msg} =~ m/$recall_history/i) {
+            $recall_history = $i;
+            $found = 1;
+            last;
+          }
+          $i--;
+        }
+
+        if($found == 0) {
+          return "/msg $nick No message containing regex '$recall_history' found for $recall_nick in channel $channel.";
+        } else {
+          return undef;
+        }
+      };
+      return "/msg $nick Bad recall regex: $@" if $@;
+      if(defined $ret) {
+        return $ret;
       }
-    };
-    return "/msg $nick Bad recall regex: $@" if $@;
-    if(defined $ret) {
-      return $ret;
+    }
+
+    $self->{pbot}->logger->log("$nick ($from) recalled <$recall_nick/$channel> $messages[$recall_history]->{msg}\n");
+
+    if(not defined $recall_nicks) {
+      $recall_nicks = $recall_nick;
+    } else {
+      $recall_nicks .= "+$recall_nick";
+    }
+
+    my $text = $messages[$recall_history]->{msg};
+    my $ago = ago(gettimeofday - $messages[$recall_history]->{timestamp});
+
+    if(not defined $recall_text) {
+      if($text =~ s/^\/me\s+//) {
+        $recall_text = "[$ago] * $recall_nick $text";
+      } else {
+        $recall_text = "[$ago] <$recall_nick> $text";
+      }
+    } else {
+      if($text =~ s/^\/me\s+//) {
+        $recall_text .= " [$ago] * $recall_nick $text";
+      } else {
+        $recall_text .= " [$ago] <$recall_nick> $text";
+      }
     }
   }
 
-  $self->{pbot}->logger->log("$nick ($from) recalled <$recall_nick/$channel> $messages[$recall_history]->{msg}\n");
-
-  my $text = $messages[$recall_history]->{msg};
-  my $ago = ago(gettimeofday - $messages[$recall_history]->{timestamp});
-
-  if($text =~ s/^\/me\s+//) {
-    return "$ago: * $recall_nick $text";
-  } else {
-    return "$ago: <$recall_nick> $text";
-  }
+  return $recall_text;
 }
 
 1;
