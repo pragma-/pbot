@@ -42,13 +42,6 @@ class CParser(c_parser.CParser):
 
 
 class CGenerator(c_generator.CGenerator):
-    def visit_BinaryOp(self, n):
-        lval_str = self._parenthesize_if(n.left,
-                            lambda d: not self._is_simple_node(d))
-        rval_str = self._parenthesize_if(n.right,
-                            lambda d: not self._is_simple_node(d))
-        return '(%s %s %s)' % (lval_str, n.op, rval_str)
- 
     def visit_UnaryOp(self, n):
         # don't parenthesize an operand to sizeof if it's not a type
         if n.op == 'sizeof':
@@ -58,12 +51,8 @@ class CGenerator(c_generator.CGenerator):
                 return 'sizeof %s' % self._parenthesize_unless_simple(n.expr)
         return super(CGenerator, self).visit_UnaryOp(n)
 
-    def _is_simple_node(self, n):
-        """ Returns True for nodes that are "simple" - i.e. nodes that always
-            have higher precedence than operators.
-        """
-        return isinstance(n,( c_ast.Constant, c_ast.ID, c_ast.ArrayRef,
-                              c_ast.StructRef, c_ast.FuncCall, c_ast.BinaryOp))
+    def visit_Assignment(self, n):
+        return '%s %s %s' % (self.visit(n.lvalue), n.op, self._parenthesize_unless_simple(n.rvalue))
 
 def translate_to_c(input):
     parser = CParser(yacc_optimize=False)
