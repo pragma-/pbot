@@ -13,7 +13,7 @@ use warnings;
 # These are set automatically by the build/commit script
 use constant {
   BUILD_NAME     => "PBot",
-  BUILD_REVISION => 464,
+  BUILD_REVISION => 466,
   BUILD_DATE     => "2013-11-13",
 };
 

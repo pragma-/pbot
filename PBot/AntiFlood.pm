@@ -213,13 +213,9 @@ sub check_flood {
   my ($self, $channel, $nick, $user, $host, $text, $max_messages, $max_time, $mode) = @_;
 
   $channel = lc $channel;
-  my $mask = lc "$nick!$user\@$host";
+  my $mask = "$nick!$user\@$host";
 
   $self->{pbot}->logger->log(sprintf("%-14s | %-65s | %s\n", $channel eq $mask ? "QUIT" : $channel, $mask, $text));
-
-  $nick = lc $nick;
-  $user = lc $user;
-  $host = lc $host;
 
   my $account = $self->get_flood_account($nick, $user, $host);
 

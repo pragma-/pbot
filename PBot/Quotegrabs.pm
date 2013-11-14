@@ -137,7 +137,7 @@ sub export_quotegrabs() {
   }
 
   $last_channel = "";
-  foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or $$a{nick} cmp $$b{nick} } @{ $self->{quotegrabs} }) {
+  foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or lc $$a{nick} cmp lc $$b{nick} } @{ $self->{quotegrabs} }) {
     if(not $quotegrab->{channel} =~ /^$last_channel$/i) {
       print FILE "</tbody>\n</table>\n" if $had_table;
       print FILE "<a name='" . $quotegrab->{channel} . "'></a>\n";
@@ -236,6 +236,10 @@ sub grab_quotegrab {
       return "/msg $nick Please choose a history between 1 and $self->{pbot}->{MAX_NICK_MESSAGES}";
     }
 
+    if(not $channel =~ m/^#/) {
+      return "'$channel' is not a valid channel; usage: grab <nick> [[history] channel] (you must specify a history parameter before the channel parameter)";
+    }
+
     my $found_mask = undef;
     my $last_spoken = 0;
     foreach my $mask (keys %{ $self->{pbot}->antiflood->message_history }) {
@@ -251,6 +255,8 @@ sub grab_quotegrab {
     if(not defined $found_mask) {
       return "No message history for $grab_nick in channel $channel.  Usage: grab <nick> [history [channel]]; to specify channel, you must also specify history";
     }
+
+    ($grab_nick) = $found_mask =~ m/^([^!]+)!/; # convert $grab_nick to match casing of nick
 
     if(not exists $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}) {
       return "No message history for $grab_nick in channel $channel.  Usage: grab <nick> [history [channel]]; to specify channel, you must also specify history";
