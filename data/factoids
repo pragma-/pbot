@@ -2689,18 +2689,6 @@ ref_count: 0
 ref_user: nobody
 type: text
 
-<foo>
-action: /say bar
-created_on: 1384408750.51409
-enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1384408753.1056
-owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
-rate_limit: 15
-ref_count: 1
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
-type: text
-
 <foobar>
 action: /say English metasyntactic variables: foo, bar, baz, qux, quux, corge, grault, garply, waldo, fred, plugh, xyzzy, thud; UK: wibble, wobble, wubble; French: toto, titi, tata, tutu
 created_on: 1363887757.90264
@@ -8466,12 +8454,12 @@ type: text
 action: /call compiler $nick
 created_on: 1272176634
 enabled: 1
-last_referenced_on: 1384409703.95701
+last_referenced_on: 1384410709.62993
 owner: pragma_
 preserve_whitespace: 1
 rate_limit: 4
-ref_count: 34199
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 34208
+ref_user: nitrix!~nitrix@unaffiliated/nitrix
 type: text
 
 <cc2>
@@ -8731,12 +8719,12 @@ type: text
 action: compiler_client.pl
 created_on: 1291939583.25391
 enabled: 1
-last_referenced_in: pragma-
-last_referenced_on: 1384409703.9779
+last_referenced_in: nitrix
+last_referenced_on: 1384410709.6505
 owner: pragma_
 rate_limit: 0
-ref_count: 27040
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 27049
+ref_user: nitrix!~nitrix@unaffiliated/nitrix
 type: module
 
 <compiler_block>
@@ -10218,10 +10206,10 @@ type: text
 action: /call factinfo
 created_on: 1277259101.38088
 enabled: 1
-last_referenced_on: 1384409598.69076
+last_referenced_on: 1384410713.52531
 owner: pbot3
 rate_limit: 15
-ref_count: 220
+ref_count: 221
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -11194,10 +11182,10 @@ created_on: 1384409686.31718
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1384410037.52574
 enabled: 1
-last_referenced_on: 1384410019.55822
+last_referenced_on: 1384410707.46215
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 10
+ref_count: 17
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -11206,10 +11194,10 @@ action: paren/paren.py
 created_on: 1384409655.04392
 enabled: 1
 last_referenced_in: pragma-
-last_referenced_on: 1384410019.57775
+last_referenced_on: 1384410707.48185
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 0
-ref_count: 9
+ref_count: 16
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: module
 
