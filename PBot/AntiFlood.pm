@@ -431,15 +431,12 @@ sub prune_message_history {
 sub unbanme {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   my $channel = lc $arguments;
-  $nick = lc $nick;
-  $user = lc $user;
-  $host = lc $host;
 
   if(not defined $arguments or not defined $channel) {
     return "/msg $nick Usage: unbanme <channel>";
   }
 
-  my $banmask = lc address_to_mask($host);
+  my $banmask = address_to_mask($host);
 
   my $mask = "*!$user\@$banmask\$##stop_join_flood";
 
