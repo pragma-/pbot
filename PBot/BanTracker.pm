@@ -141,8 +141,13 @@ sub track_mode {
     $self->{pbot}->logger->log("ban-tracker: $target " . ($mode eq '-b' ? 'unbanned' : 'unquieted') . " by $source in $channel.\n");
     delete $self->{banlist}->{$channel}->{$mode eq "-b" ? "+b" : "+q"}->{$target};
 
-    if($mode eq "-b" and $self->{pbot}->chanops->{unban_timeout}->find_index($channel, $target)) {
-      $self->{pbot}->chanops->{unban_timeout}->remove($channel, $target);
+    if($mode eq "-b") {
+      if($self->{pbot}->chanops->{unban_timeout}->find_index($channel, $target)) {
+        $self->{pbot}->chanops->{unban_timeout}->remove($channel, $target);
+      } elsif($self->{pbot}->chanops->{unban_timeout}->find_index($channel, "$target\$##stop_join_flood")) {
+        # freenode strips channel forwards from unban result if no ban exists with a channel forward
+        $self->{pbot}->chanops->{unban_timeout}->remove($channel, "$target\$##stop_join_flood");
+      }
     }
   } else {
     $self->{pbot}->logger->log("BanTracker: Unknown mode '$mode'\n");
