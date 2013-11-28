@@ -156,7 +156,7 @@ while($code =~ m/(.)/msg) {
 
 print "code after \\n additions: [$code]\n" if $debug;
 
-$code =~ s/#include [<"'].*?['">]//gm;
+#$code =~ s/#include [<"'].*?['">]//gm;
 
 print "code after include removal: [$code]\n" if $debug;
 
@@ -289,6 +289,7 @@ close $fh;
 
 my ($ret, $result) = execute(5, "gcc -E prog.c");
 
+$result =~ s/.*# \d+ "prog.c"(\s+\d+)*//ms;
 $result =~ s/^#.*$//gm;
 $result =~ s/[\n\r]/ /gm;
 $result =~ s/\s+/ /gm;
