@@ -156,6 +156,10 @@ while($code =~ m/(.)/msg) {
 
 print "code after \\n additions: [$code]\n" if $debug;
 
+$code =~ s/#include [<"'].*?['">]//gm;
+
+print "code after include removal: [$code]\n" if $debug;
+
 my $precode = $code;
 $code = '';
 
