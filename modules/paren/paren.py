@@ -51,6 +51,12 @@ class CGenerator(c_generator.CGenerator):
             else:
                 return n.op + operand
 
+    def visit_TernaryOp(self, n):
+        return '({0}) ? ({1}) : ({2})'.format(
+                self.visit(n.cond),
+                self.visit(n.iftrue),
+                self.visit(n.iffalse))
+
     def visit_Assignment(self, n):
         return '%s %s %s' % (self.visit(n.lvalue), n.op, self._parenthesize_unless_simple(n.rvalue))
 
@@ -68,7 +74,7 @@ def parenthesize(source):
 
 if __name__ == "__main__":
     if len(sys.argv) > 2:
-        parenthesize(' '.join(sys.argv[2:]))
+        parenthesize(' '.join(sys.argv[2:]).rstrip(';'))
     elif len(sys.argv) == 2:
         print(sys.argv[1] + ': ' + "Usage: paren <expression>")
     else:
