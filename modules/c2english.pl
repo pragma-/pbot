@@ -8,6 +8,11 @@ use Text::Balanced qw(extract_codeblock extract_delimited);
 my $code = join ' ', @ARGV;
 my $output;
 
+my $force;
+if($code =~ s/^-f\s+//) {
+  $force = 1;
+}
+
 $code =~ s/#include <([^>]+)>/\n#include <$1>\n/g;
 $code =~ s/#([^ ]+) (.*?)\\n/\n#$1 $2\n/g;
 $code =~ s/#([\w\d_]+)\\n/\n#$1\n/g;
@@ -74,7 +79,7 @@ close $fh;
 
 my ($ret, $result) = execute(10, "gcc -std=c89 -pedantic -Werror -Wno-unused -fsyntax-only -fno-diagnostics-show-option code.c");
 
-if($ret != 0) {
+if(not $force and $ret != 0) {
   $output = $result;
 
   $output =~ s/code\.c:\d+:\d+://g;
@@ -129,9 +134,19 @@ if($ret != 0) {
   $output =~ s/= (-?\d+) ''/= $1/g;
   $output =~ s/, <incomplete sequence >//g;
   $output =~ s/\s*error: expected ';' before 'return'//g;
+  $output =~ s/^\s+//;
+  $output =~ s/\s+$//;
+  $output =~ s/error: ISO C forbids nested functions\s+//g;
 
-  print "$output\n";
-  exit 0;
+  # don't error about undeclared objects
+  $output =~ s/error: '[^']+' undeclared\s*//g;
+
+  if(length $output) {
+    print "$output\n";
+    exit 0;
+  } else {
+    $output = undef;
+  }
 }
 
 $output = `./c2e 2>/dev/null code.c` if not defined $output;
