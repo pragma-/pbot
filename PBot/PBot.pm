@@ -69,7 +69,7 @@ sub initialize {
 
   my $log_file                = delete $conf{log_file};
 
-  $self->{conf_dir}           = delete $conf{conf_dir}           // "$ENV{HOME}/pbot/config";
+  $self->{config_dir}         = delete $conf{config_dir}         // "$ENV{HOME}/pbot/config";
   $self->{data_dir}           = delete $conf{data_dir}           // "$ENV{HOME}/pbot/data";
   $self->{module_dir}         = delete $conf{module_dir}         // "$ENV{HOME}/pbot/modules";
 
@@ -83,9 +83,10 @@ sub initialize {
   $self->{ircname}            = delete $conf{ircname}            // "http://code.google.com/p/pbot2-pl/";
   $self->{identify_password}  = delete $conf{identify_password}  // "";
 
-  $self->{max_msg_len}        = delete $conf{max_msg_len}        // 430;
+  $self->{max_msg_len}        = delete $conf{max_msg_len}        // 425;
   $self->{MAX_FLOOD_MESSAGES} = delete $conf{MAX_FLOOD_MESSAGES} // 4;
   $self->{MAX_NICK_MESSAGES}  = delete $conf{MAX_NICK_MESSAGES}  // 32;
+  $self->{message_history_file} = delete $conf{message_history_file} // "$ENV{HOME}/pbot/data/message_history";
 
   $self->{trigger}            = delete $conf{trigger}            // '!';
 

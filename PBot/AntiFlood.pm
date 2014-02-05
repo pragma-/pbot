@@ -15,6 +15,8 @@ use strict;
 
 use feature 'switch';
 
+use Storable;
+
 use vars qw($VERSION);
 $VERSION = $PBot::PBot::VERSION;
 
@@ -50,7 +52,7 @@ sub initialize {
   $self->{FLOOD_CHAT} = 0;
   $self->{FLOOD_JOIN} = 1;
 
-  $self->{message_history} = {};
+  $self->load_message_history;
 
   my $filename = delete $conf{filename} // $self->{pbot}->{data_dir} . '/ban_whitelist';
   $self->{ban_whitelist} = PBot::DualIndexHashObject->new(name => 'BanWhitelist', filename => $filename);
@@ -60,6 +62,7 @@ sub initialize {
 
   $pbot->commands->register(sub { return $self->unbanme(@_)   },  "unbanme",   0);
   $pbot->commands->register(sub { return $self->whitelist(@_) },  "whitelist", 10);
+  $pbot->commands->register(sub { return $self->save_message_history_cmd(@_) },  "save_message_history", 60);
 }
 
 sub ban_whitelisted {
@@ -685,6 +688,27 @@ sub on_whoisaccount {
 
   $self->{pbot}->logger->log("$nick is using NickServ account [$account]\n");
   $self->check_nickserv_accounts($nick, $account);
+}
+
+sub save_message_history {
+  my $self = shift;
+  store($self->{message_history}, $self->{pbot}->{message_history_file});
+}
+
+sub load_message_history {
+  my $self = shift;
+
+  if(-e $self->{pbot}->{message_history_file}) {
+    $self->{message_history} = retrieve($self->{pbot}->{message_history_file});
+  } else {
+    $self->{message_history} = {};
+  }
+}
+
+sub save_message_history_cmd {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+  $self->save_message_history;
+  return "Message history saved.";
 }
 
 1;
