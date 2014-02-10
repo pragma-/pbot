@@ -450,14 +450,14 @@ sub show_random_quotegrab {
   if($#quotes < 0) {
     my $result = "No quotes grabbed ";
 
-    if($channel_search ne '.*') {
-      $result .= "in $channel_search ";
-    }
-
     if($nick_search ne '.*') {
       $result .= "for $nick_search ";
     }
-    
+
+    if($channel_search ne '.*') {
+      $result .= "in $channel_search ";
+    }
+   
     if($text_search ne '.*') {
       $result .= "matching '$text_search' ";
     }
