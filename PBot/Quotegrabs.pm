@@ -448,11 +448,21 @@ sub show_random_quotegrab {
   }
   
   if($#quotes < 0) {
-    if($nick_search eq ".*") {
-      return "No quotes grabbed in $channel_search yet (use `rq <nick> <channel>` to specify the correct channel).  Use `grab` to grab a quote.";
-    } else {
-      return "No quotes grabbed for $nick_search in $channel_search yet (use `rq <nick> <channel>` to specify the correct channel)..  Use `grab` to grab a quote.";
+    my $result = "No quotes grabbed ";
+
+    if($channel_search ne '.*') {
+      $result .= "in $channel_search ";
     }
+
+    if($nick_search ne '.*') {
+      $result .= "for $nick_search ";
+    }
+    
+    if($text_search ne '.*') {
+      $result .= "matching '$text_search' ";
+    }
+
+    return $result . "yet (use `rq <nick> <channel>` to specify the correct channel)..  Use `grab` to grab a quote.";;
   }
 
   my $quotegrab = $quotes[int rand($#quotes + 1)];
