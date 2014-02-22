@@ -168,7 +168,11 @@ while($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
   last if $found && $paragraph_specified == $USER_SPECIFIED;
   
   if($paragraph_specified == $USER_SPECIFIED) {
-    print "No such paragraph '$paragraph' in section '$section' of n1256.\n";
+    if(length $search) {
+      print "No such text '$search' found within paragraph $paragraph of section $section of n1256.\n";
+    } else {
+      print "No such paragraph $paragraph in section $section of n1256.\n";
+    }
     exit 0;
   }
 
