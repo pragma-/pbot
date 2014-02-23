@@ -5,8 +5,12 @@ use strict;
 
 use IO::Socket;
 use Net::hostent;
+use IPC::Shareable;
 
-my $PORT = 9000;
+my $SERVER_PORT    = 9000;
+my $MONITOR_PORT   = 3335;
+my $SERIAL_PORT    = 3333;
+my $HEARTBEAT_PORT = 3336;
 
 sub server_listen {
   my $port = shift @_;
@@ -17,7 +21,7 @@ sub server_listen {
     Listen    => SOMAXCONN,
     Reuse     => 1);
 
-  die "can't setup server" unless $server;
+  die "can't setup server: $!" unless $server;
 
   print "[Server $0 accepting clients]\n";
 
@@ -39,7 +43,7 @@ sub vm_start {
   }
 
   if($pid == 0) {
-    my $command = 'nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler/compiler-savedvm.qcow2 -m 128 -monitor tcp:127.0.0.1:3335,server,nowait -serial tcp:127.0.0.1:3333,server,nowait -boot c -loadvm 1 -enable-kvm -nographic -no-kvm-irqchip';
+    my $command = "nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler/compiler-savedvm.qcow2 -m 128 -monitor tcp:127.0.0.1:$MONITOR_PORT,server,nowait -serial tcp:127.0.0.1:$SERIAL_PORT,server,nowait -serial tcp:127.0.0.1:$HEARTBEAT_PORT,server -boot c -loadvm 1 -enable-kvm -no-kvm-irqchip -nographic";
     my @command_list = split / /, $command;
     exec(@command_list); 
   } else {
@@ -51,7 +55,7 @@ sub vm_reset {
   use IO::Socket;
 
   print "Resetting vm\n";
-  my $sock = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => 4445, Prot => 'tcp');
+  my $sock = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => $MONITOR_PORT, Prot => 'tcp');
   if(not defined $sock) {
     print "[vm_reset] Unable to connect to monitor: $!\n";
     return;
@@ -59,7 +63,7 @@ sub vm_reset {
 
   print $sock "loadvm 1\n";
   close $sock;
-  print "Resetted vm\n";
+  print "Reset vm\n";
 }
 
 sub execute {
@@ -107,96 +111,154 @@ sub execute {
 }
 
 sub compiler_server {
-  my $vm_pid = vm_start;
-  print "vm started pid: $vm_pid\n";
+  my ($server, $heartbeat_pid, $heartbeat_monitor);
 
-  my $server = server_listen($PORT);
+  my $heartbeat;
+  my $running;
 
-  while (my $client = $server->accept()) {
-    $client->autoflush(1);
-    my $hostinfo = gethostbyaddr($client->peeraddr);
-    print '-' x 20, "\n";
-    printf "[Connect from %s]\n", $client->peerhost;
-    my $timed_out = 0;
-    my $killed = 0;
+  tie $heartbeat, 'IPC::Shareable', 'dat1', { create => 1 };
+  tie $running,   'IPC::Shareable', 'dat2', { create => 1 };
 
-    eval {
-      my $lang;
-      my $nick;
-      my $code = "";
+  while(1) {
+    $running = 1;
+    $heartbeat = 0;
 
-      local $SIG{ALRM} = sub { die 'Timed-out'; };
-      alarm 5;
+    my $vm_pid = vm_start;
+    print "vm started pid: $vm_pid\n";
 
-      while (my $line = <$client>) {
-        $line =~ s/[\r\n]+$//;
-        next if $line =~ m/^\s*$/;
-        alarm 5;
-        print "got: [$line]\n";
+    $heartbeat_pid = fork;
+    die "Fork failed: $!" if not defined $heartbeat_pid;
 
-        if($line =~ m/^compile:end$/) {
-          $code = quotemeta($code);
-          print "Attemping compile...\n";
-          alarm 0;
-          my $tnick = quotemeta($nick);
-          my $tlang = quotemeta($lang);
+    if($heartbeat_pid == 0) {
+      tie $heartbeat, 'IPC::Shareable', 'dat1', { create => 1 };
+      tie $running,   'IPC::Shareable', 'dat2', { create => 1 };
 
-          my ($ret, $result) = execute("./compiler_vm_client.pl $tnick -lang=$tlang $code");
-
-          if(not defined $ret) {
-            #print "parent continued\n";
-            print "parent continued [$result]\n";
-            $timed_out = 1 if $result == 243; # -13 == 243
-            $killed = 1 if $result == 242; # -14 = 242
-            last;
-          }
-
-          $result =~ s/\s+$//;
-          print "Ret: $ret; result: [$result]\n";
-
-          if($result =~ m/\[Killed\]$/) {
-            print "Processed was killed\n";
-            $killed = 1;
-          }
-
-          if($ret == -13) {
-            print $client "$nick: ";
-          }
-
-          print $client $result . "\n";
-          close $client;
-
-          $ret = -14 if $killed;
-
-          # child exit
-          # print "child exit\n";
-          exit $ret;
+      $heartbeat_monitor = undef;
+      while(not $heartbeat_monitor) {
+        print "Connecting to heartbeat ...";
+        $heartbeat_monitor = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => $HEARTBEAT_PORT, Proto => 'tcp', Type => SOCK_STREAM);
+        if(not $heartbeat_monitor) {
+          print " failed.\n";
+          sleep 2;
+        } else {
+          print " success!\n";
         }
-
-        if($line =~ /compile:([^:]+):(.*)$/) {
-          $nick = $1;
-          $lang = $2;
-          $code = "";
-          next;
-        }
-
-        $code .= $line . "\n";
       }
 
-      alarm 0;
-    };
+      #print "child: running: $running\n";
 
-    alarm 0;
+      while($running and <$heartbeat_monitor>) {
+        $heartbeat = 1;
+        #print "child: got heartbeat\n";
+      }
 
-    close $client;
+      #print "child no longer running\n";
+      exit;
+    } else {
+      if(not defined $server) {
+        print "Starting compiler server on port $SERVER_PORT\n";
+        $server = server_listen($SERVER_PORT);
+      } else {
+        print "Compiler server already listening on port $SERVER_PORT\n";
+      }
 
-    next unless ($timed_out or $killed);
-    
-    print "stopping vm $vm_pid\n";
-    vm_stop $vm_pid;
-    $vm_pid = vm_start;
-    print "new vm pid: $vm_pid\n";
-  } 
+      #print "parent: running: $running\n";
+
+      while ($running and my $client = $server->accept()) {
+        $client->autoflush(1);
+        my $hostinfo = gethostbyaddr($client->peeraddr);
+        print '-' x 20, "\n";
+        printf "[Connect from %s at %s]\n", $client->peerhost, scalar localtime;
+        my $timed_out = 0;
+        my $killed = 0;
+
+        eval {
+          my $lang;
+          my $nick;
+          my $code = "";
+
+          local $SIG{ALRM} = sub { die 'Timed-out'; };
+          alarm 5;
+
+          while (my $line = <$client>) {
+            $line =~ s/[\r\n]+$//;
+            next if $line =~ m/^\s*$/;
+            alarm 5;
+            print "got: [$line]\n";
+
+            if($line =~ m/^compile:end$/) {
+              if($heartbeat == 0) {
+                print "No heartbeat yet, ignoring compile attempt.\n";
+                print $client "$nick: Recovering from previous snippet, please wait.\n";
+                last;
+              }
+
+              $code = quotemeta($code);
+              print "Attempting compile...\n";
+              alarm 0;
+              my $tnick = quotemeta($nick);
+              my $tlang = quotemeta($lang);
+
+              my ($ret, $result) = execute("./compiler_vm_client.pl $tnick -lang=$tlang $code");
+
+              if(not defined $ret) {
+                #print "parent continued\n";
+                print "parent continued [$result]\n";
+                $timed_out = 1 if $result == 243; # -13 == 243
+                $killed = 1 if $result == 242; # -14 = 242
+                last;
+              }
+
+              $result =~ s/\s+$//;
+              print "Ret: $ret; result: [$result]\n";
+
+              if($result =~ m/\[Killed\]$/) {
+                print "Process was killed\n";
+                $killed = 1;
+              }
+
+              if($ret == -13) {
+                print $client "$nick: ";
+              }
+
+              print $client $result . "\n";
+              close $client;
+
+              $ret = -14 if $killed;
+
+              # child exit
+              # print "child exit\n";
+              exit $ret;
+            }
+
+            if($line =~ /compile:([^:]+):(.*)$/) {
+              $nick = $1;
+              $lang = $2;
+              $code = "";
+              next;
+            }
+
+            $code .= $line . "\n";
+          }
+
+          alarm 0;
+        };
+
+        alarm 0;
+
+        close $client;
+
+        next unless ($timed_out or $killed);
+
+        print "stopping vm $vm_pid\n";
+        vm_stop $vm_pid;
+        $running = 0;
+        last;
+      } 
+      #print "Compiler server no longer running, restarting...\n";
+    }
+    waitpid($heartbeat_pid, 0);
+  }
 }
 
 compiler_server;

@@ -29,11 +29,12 @@ my %languages = (
 );
 
 sub runserver {
-  my ($input, $output);
+  my ($input, $output, $heartbeat);
 
   if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
     open($input, '<', "/dev/ttyS0") or die $!;
     open($output, '>', "/dev/ttyS0") or die $!;
+    open($heartbeat, '>', "/dev/ttyS1") or die $!;
   } else {
     open($input, '<', "/dev/stdin") or die $!;
     open($output, '>', "/dev/stdout") or die $!;
@@ -47,54 +48,65 @@ sub runserver {
 
   print "Waiting for input...\n";
 
-  while(my $line = <$input>) {
-    chomp $line;
+  my $pid = fork;
+  die "Fork failed: $!" if not defined $pid;
 
-    print "Got [$line]\n";
+  if($pid == 0) {
+    while(my $line = <$input>) {
+      chomp $line;
 
-    if($line =~ m/^compile:\s*end/) {
-      next if not defined $lang or not defined $code;
+      print "Got [$line]\n";
 
-      print "Attempting compile [$lang] ...\n";
-      
-      my $result = interpret($lang, $code, $user_args, $user_input, $date);
-      
-      print "Done compiling; result: [$result]\n";
-      print $output "result:$result\n";
-      print $output "result:end\n";
+      if($line =~ m/^compile:\s*end/) {
+        next if not defined $lang or not defined $code;
 
-      system("rm prog");
+        print "Attempting compile [$lang] ...\n";
 
-      if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
-        print "input: ";
-        next;
-      } else {
-        exit;
+        my $result = interpret($lang, $code, $user_args, $user_input, $date);
+
+        print "Done compiling; result: [$result]\n";
+        print $output "result:$result\n";
+        print $output "result:end\n";
+
+        #system("rm prog");
+
+        if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
+          print "input: ";
+          next;
+        } else {
+          exit;
+        }
       }
+
+      if($line =~ m/^compile:\s*(.*)/) {
+        my $options = $1;
+        $user_args = undef;
+        $user_input = undef;
+        $lang = undef;
+
+        ($lang, $user_args, $user_input, $date) = split /:/, $options;
+
+        $code = "";
+        $lang = "C11" if not defined $lang;
+        $user_args = "" if not defined $user_args;
+        $user_input = "" if not defined $user_input;
+
+        print "Setting lang [$lang]; [$user_args]; [$user_input]; [$date]\n";
+        next;
+      }
+
+      $code .= $line . "\n";
     }
-
-    if($line =~ m/^compile:\s*(.*)/) {
-      my $options = $1;
-      $user_args = undef;
-      $user_input = undef;
-      $lang = undef;
-
-      ($lang, $user_args, $user_input, $date) = split /:/, $options;
-
-      $code = "";
-      $lang = "C11" if not defined $lang;
-      $user_args = "" if not defined $user_args;
-      $user_input = "" if not defined $user_input;
-
-      print "Setting lang [$lang]; [$user_args]; [$user_input]; [$date]\n";
-      next;
+  } else {
+    while(1) {
+      print $heartbeat "\n";
+      sleep 1;
     }
-
-    $code .= $line . "\n";
   }
 
   close $input;
   close $output;
+  close $heartbeat;
 }
 
 sub interpret {
@@ -107,6 +119,8 @@ sub interpret {
   if(not exists $languages{$lang}) {
     return "No support for language '$lang' at this time.\n";
   }
+
+  system("chmod -R 755 /home/compiler");
 
   open(my $fh, '>', $languages{$lang}{'file'}) or die $!;
   print $fh $code . "\n";
@@ -149,6 +163,7 @@ sub interpret {
     $output = "[$result]\n";
   }
 
+  print "Executing gdb\n";
   my $user_input_quoted = quotemeta $user_input;
   ($ret, $result) = execute(60, "bash -c 'date -s \@$date; ulimit -t 1; compiler_watchdog.pl $user_input_quoted > .output'");
 
