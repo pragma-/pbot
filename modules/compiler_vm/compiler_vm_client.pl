@@ -181,9 +181,9 @@ if($subcode =~ m/^\s*diff\s*$/i) {
     } else {
       $diff =~ s/<del>(.*?)(\s+)<\/del>/<del>$1<\/del>$2/g;
       $diff =~ s/<ins>(.*?)(\s+)<\/ins>/<ins>$1<\/ins>$2/g;
-      $diff =~ s/<del>((?:(?!<del>).)*)<\/del>\s*<ins>((?:(?!<ins>).)*)<\/ins>/<[replaced `$1` with `$2`]>/g;
-      $diff =~ s/<del>(.*?)<\/del>/<[removed `$1`]>/g;
-      $diff =~ s/<ins>(.*?)<\/ins>/<[inserted `$1`]>/g;
+      $diff =~ s/<del>((?:(?!<del>).)*)<\/del>\s*<ins>((?:(?!<ins>).)*)<\/ins>/`replaced $1 with $2`/g;
+      $diff =~ s/<del>(.*?)<\/del>/`removed $1`/g;
+      $diff =~ s/<ins>(.*?)<\/ins>/`inserted $1`/g;
     }
 
     print "$nick: $diff\n";
@@ -911,9 +911,12 @@ $code =~ s/(?:\n\n)+/\n\n/g;
 
 print "final code: [$code]\n" if $debug;
 
-print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n" unless $got_run;
+$input = `fortune -u` if not length $input;
+$input =~ s/[\n\r\t]/ /msg;
+$input =~ s/:/ - /g;
+$input =~ s/\s+/ /g;
 
-$input = "Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet." if not length $input;
+print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n" unless $got_run;
 
 my $pretty_code = pretty $code;
 
@@ -988,8 +991,17 @@ if($output =~ m/^\s*$/) {
   $output =~ s/<No symbol table is loaded.  Use the "file" command.>\s*//g;
   $output =~ s/cc1: all warnings being treated as; errors//g;
   $output =~ s/, note: this is the location of the previous definition//g;
-  $output =~ s/ called by gdb \(\) at statement: void gdb\(\) { __asm__\(""\); }//;
- 
+  $output =~ s/ called by gdb \(\) at statement: void gdb\(\) { __asm__\(""\); }//g;
+#  $output =~ s/(?<!\s)(expands to:)/ $1/g;
+
+  my $removed_warning = 0;
+  
+  $removed_warning++ if $output =~ s/warning: ISO C forbids nested functions \[-pedantic\]\s*//g;
+
+  if($removed_warning) {
+    $output =~ s/^\[\]\s*//;
+  }
+  
   # remove duplicate warnings/infos
   $output =~ s/(\[*.*warning:.*?\s*)\1/$1/g;
   $output =~ s/(info: .*?\s)\1/$1/g;
