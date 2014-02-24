@@ -62,7 +62,7 @@ sub execute_module {
   $arguments =~ s/\$nick/$nick/g;
 
   $arguments = quotemeta($arguments);
-  $arguments =~ s/\\\s/ /;
+  $arguments =~ s/\\\s/ /g;
 
   if(exists $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}) {
     if($self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\//) {
@@ -80,6 +80,7 @@ sub execute_module {
       $arguments =~ s/\$9/$i/g;
       $arguments =~ s/\$`/$before/g;
       $arguments =~ s/\$'/$after/g;
+      $self->{pbot}->logger->log("arguments subpattern: $arguments\n");
     } else {
       $self->{pbot}->logger->log("Invalid module substitution pattern [" . $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}. "], ignoring.\n");
     }
@@ -129,11 +130,12 @@ sub execute_module {
       Carp::croak("Could not chdir to '$module_dir': $!");
     }
 
-    # print "module arguments: [$arguments]\n";
+    # $self->{pbot}->logger->log("module arguments: [$arguments]\n");
+
+    $text = `$module_dir/$module $arguments`;
 
     if(defined $tonick) {
       $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
-      $text = `$module_dir/$module $arguments`;
       if(defined $text && length $text > 0) {
         # get rid of original caller's nick
         $text =~ s/^\/([^ ]+) \Q$nick\E:\s+/\/$1 /;
@@ -144,7 +146,11 @@ sub execute_module {
         return "";
       }
     } else {
-      return `$module_dir/$module $arguments`;
+      if(exists $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{add_nick} and $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{add_nick} != 0) {
+        return "$nick: $text";
+      } else {
+        return $text;
+      }
     }
 
     return "/me moans loudly."; # er, didn't execute the module?
