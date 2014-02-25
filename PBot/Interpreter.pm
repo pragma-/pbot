@@ -106,7 +106,10 @@ sub process_line {
   my $cmd_text = $text;
   $cmd_text =~ s/^\/me\s+//;
 
-  if($cmd_text =~ /^\Q$pbot->{trigger}\E(.*)$/) {
+  if($cmd_text =~ /^$pbot->{trigger}?\s*{\s*(.*)\s*}\s*$/) {
+    $has_code = $1 if length $1;
+    $preserve_whitespace = 1;
+  } elsif($cmd_text =~ /^\Q$pbot->{trigger}\E(.*)$/) {
     $command = $1;
   } elsif($cmd_text =~ /^.?$mynick.?\s+(.*?)$/i) {
     $command = $1;
@@ -117,9 +120,6 @@ sub process_line {
   } elsif($cmd_text =~ /^\s*([^,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$/) {
     $nick_override = $1;
     $has_code = $2 if length $2 and $nick_override ne 'enum' and $nick_override ne 'struct';
-    $preserve_whitespace = 1;
-  } elsif($cmd_text =~ /^\s*{\s*(.*)\s*}\s*$/) {
-    $has_code = $1 if length $1;
     $preserve_whitespace = 1;
   }
 
