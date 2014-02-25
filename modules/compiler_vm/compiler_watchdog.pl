@@ -19,14 +19,17 @@ my $local_vars = "";
 sub flushall;
 sub gdb;
 
+use IO::Handle;
+
 sub execute {
     my ($cmdline) = @_;
     my ($ret, $result);
 
+    open my $output_file, '>>', '.gdb_output' or die "Couldn't open .output: $!";
+    $output_file->autoflush(1);
+
     my ($out, $in);
     open2($out, $in, "$cmdline 2>&1");
-
-    open my $output_file, '>>', '.output' or die "Couldn't open .output: $!";
 
     while(my $line = <$out>) {
         chomp $line;
@@ -84,7 +87,7 @@ sub execute {
             gdb $in, "break $break\n";
             gdb $in, "set width 0\n";
             gdb $in, "set height 0\n";
-            gdb $in, "run < .input > .output\n";
+            gdb $in, "run < .input >> .prog_output\n";
             next;
         }
 
