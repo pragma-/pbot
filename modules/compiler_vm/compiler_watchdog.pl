@@ -26,6 +26,8 @@ sub execute {
     my ($out, $in);
     open2($out, $in, "$cmdline 2>&1");
 
+    open my $output_file, '>>', '.output' or die "Couldn't open .output: $!";
+
     while(my $line = <$out>) {
         chomp $line;
         print "--- got: [$line]\n" if $debug >= 1;
@@ -44,7 +46,7 @@ sub execute {
         next if $line =~ m/libc_start_main/;
 
         if($line =~ m/^\d+: (.*? = .*)/) {
-            print "<$1>\n";
+            print $output_file "<$1>\n";
             $got_output = 1;
             next;
         }
@@ -82,7 +84,7 @@ sub execute {
             gdb $in, "break $break\n";
             gdb $in, "set width 0\n";
             gdb $in, "set height 0\n";
-            gdb $in, "run < .input\n";
+            gdb $in, "run < .input > .output\n";
             next;
         }
 
@@ -90,7 +92,7 @@ sub execute {
             my $line = <$out>;
             print "== got: $line\n" if $debug >= 5;
             if($line =~ m/^\d+\s+return.*?;\s*$/ or $line =~ m/^\d+\s+}\s*$/) {
-                if($got_output == 0) {
+                if($got_output == 0 and -s '.output' == 0) {
                     print "no output, checking locals\n" if $debug >= 5;
                     gdb $in, "print \"Go.\"\ninfo locals\nprint \"Ok.\"\n";
 
@@ -100,7 +102,7 @@ sub execute {
 
                         # fix this
                         $peep =~ s/^\d+: (.*?) =/$1 =/;
-                        print "<$peep>\n";
+                        print $output_file "<$peep>\n";
                         $got_output = 1;
                     }
 
@@ -128,7 +130,6 @@ sub execute {
             gdb $in, "cont\n";
             next;
         }
-
 
         if($line =~ m/Breakpoint \d+, gdb/) {
             gdb $in, "up\n";
@@ -171,7 +172,7 @@ sub execute {
                     next if not length $retval;
                     next if $retval =~ m/^\$\d+ = 0/;
 
-                    print "$retval\n";
+                    print $output_file "$retval\n";
                     $got_output = 1;
                 }
             }
@@ -192,7 +193,7 @@ sub execute {
 
             $indent++ if $direction eq "leaving";
             
-            print "<$direction [$indent]", ' ' x $indent, "$func$return_value>\n";
+            print $output_file "<$direction [$indent]", ' ' x $indent, "$func$return_value>\n";
             gdb $in, "cont\n";
             next;
         }
@@ -215,6 +216,10 @@ sub execute {
 
         if($line =~ m/^\d+\s+.*\bptype\((.*)\)/) {
             $line = "1 gdb(\"ptype $1\");";
+        }
+
+        if($line =~ m/^\d+\s+.*\bwhatis\((.*)\)/) {
+            $line = "1 gdb(\"whatis $1\");";
         }
 
         if($line =~ m/^\d+\s+.*\bgdb\("(.*)"\)/) {
@@ -279,10 +284,10 @@ sub execute {
                 if(not $ignore_response) {
                     if($next_line =~ m/=/) {
                         $got_output = 1;
-                        print "<$args$next_line>\n";
+                        print $output_file "<$args$next_line>\n";
                     } else {
                         $got_output = 1; 
-                        print "<$next_line>\n";
+                        print $output_file "<$next_line>\n";
                     }
                 }
             }
@@ -307,7 +312,7 @@ sub execute {
             my ($val2) = $new =~ m/New value = (.*)/;
 
             $got_output = 1;
-            print "<$var = $val2>\n";
+            print $output_file "<$var = $val2>\n";
             gdb $in, "cont\n";
             next;
         }
@@ -327,7 +332,7 @@ sub execute {
             $got_output = 1;
             my $output = "<$var changed: $val1 => $val2>\n";
             flushall $in, $out;
-            print $output;
+            print $output_file $output;
             gdb $in, "cont\n";
             next;
         }
@@ -340,26 +345,26 @@ sub execute {
         }
 
         if($line =~ m/^Program exited/) {
-            print " $local_vars\n" if length $local_vars and not $got_output;
+            print $output_file " $local_vars\n" if length $local_vars and not $got_output;
             exit 0;
         }
 
         if($line =~ s/\[Inferior .* exited with code (\d+)\]//) {
-            print "$line\n";
-            print "<Exit $1>\n";
-            print " $local_vars\n" if length $local_vars and not $got_output;
+            print $output_file "$line\n";
+            print $output_file "<Exit $1>\n";
+            print $output_file " $local_vars\n" if length $local_vars and not $got_output;
             exit 0;
         }
 
         if($line =~ s/\[Inferior .* exited normally\]//) {
-            print "$line\n" if length $line;
+            print $output_file "$line\n" if length $line;
             $got_output = 1 if length $line;
-            print " $local_vars\n" if length $local_vars and not $got_output;
+            print $output_file " $local_vars\n" if length $local_vars and not $got_output;
             exit 0;
         }
 
         if($line =~ m/Program terminated with signal SIGKILL/) {
-            print "[Killed]\n";
+            print $output_file "[Killed]\n";
             return 0;
         }
 
@@ -377,7 +382,7 @@ sub execute {
                 $output .= "<$line>\n";
             }
             flushall $in, $out;
-            print $output;
+            print $output_file $output;
             gdb $in, "cont\n";
             next;
         }
@@ -389,7 +394,7 @@ sub execute {
 
             $line =~ s/\.$//;
             $got_output = 1;
-            print "$line ";
+            print $output_file "$line ";
 
             while(my $line = <$out>) {
                 chomp $line;
@@ -440,13 +445,13 @@ sub execute {
 
             $vars = " <local variables: $vars>" if length $vars;
 
-            print "$result$vars\n";
+            print $output_file "$result$vars\n";
             exit 0;
         }
 
         if($line =~ s/^\(gdb\)\s*//) {
             $got_output = 1;
-            print "<$line>\n";
+            print $output_file "<$line>\n";
             next;
         }
 
@@ -457,6 +462,8 @@ sub execute {
         $got_output = 1;
         print "$line\n";
     }
+
+    close $output_file;
 }
 
 sub gdb {

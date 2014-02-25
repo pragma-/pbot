@@ -164,9 +164,10 @@ sub interpret {
   }
 
   print "Executing gdb\n";
+  unlink '.output';
   my $user_input_quoted = quotemeta $user_input;
   $user_input_quoted =~ s/\\"/"'\\"'"/g;
-  ($ret, $result) = execute(60, "bash -c \"date -s \@$date; ulimit -t 1; compiler_watchdog.pl $user_input_quoted > .output\"");
+  ($ret, $result) = execute(60, "bash -c \"date -s \@$date; ulimit -t 1; compiler_watchdog.pl $user_input_quoted\"");
 
   $result = "";
 
