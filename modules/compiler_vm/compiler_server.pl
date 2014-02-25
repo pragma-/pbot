@@ -12,6 +12,9 @@ my $MONITOR_PORT   = 3335;
 my $SERIAL_PORT    = 3333;
 my $HEARTBEAT_PORT = 3336;
 
+my $COMPILE_TIMEOUT = 7;
+my $NOGRAPHIC       = 0;
+
 sub server_listen {
   my $port = shift @_;
 
@@ -43,7 +46,7 @@ sub vm_start {
   }
 
   if($pid == 0) {
-    my $command = "nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler/compiler-savedvm.qcow2 -m 128 -monitor tcp:127.0.0.1:$MONITOR_PORT,server,nowait -serial tcp:127.0.0.1:$SERIAL_PORT,server,nowait -serial tcp:127.0.0.1:$HEARTBEAT_PORT,server -boot c -loadvm 1 -enable-kvm -no-kvm-irqchip -nographic";
+    my $command = "nice -n -20 qemu-system-x86_64 -M pc -net none -hda /home/compiler/compiler/compiler-savedvm.qcow2 -m 128 -monitor tcp:127.0.0.1:$MONITOR_PORT,server,nowait -serial tcp:127.0.0.1:$SERIAL_PORT,server,nowait -serial tcp:127.0.0.1:$HEARTBEAT_PORT,server -boot c -loadvm 1 -enable-kvm -no-kvm-irqchip" . ($NOGRAPHIC ? "" : " -nographic");
     my @command_list = split / /, $command;
     exec(@command_list); 
   } else {
@@ -82,7 +85,7 @@ sub execute {
       my $pid = open(my $fh, '-|', "$cmdline 2>&1");
 
       local $SIG{ALRM} = sub { print "Time out\n"; kill 9, $pid; die "Timed-out: $result\n"; };
-      alarm(7);
+      alarm($COMPILE_TIMEOUT);
       
       while(my $line = <$fh>) {
         $result .= $line;
