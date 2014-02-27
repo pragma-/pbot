@@ -17,6 +17,7 @@ my $got_output = 0;
 my $local_vars = "";
 
 sub flushall;
+sub writenewline;
 sub gdb;
 
 use IO::Handle;
@@ -95,7 +96,8 @@ sub execute {
             my $line = <$out>;
             print "== got: $line\n" if $debug >= 5;
             if($line =~ m/^\d+\s+return.*?;\s*$/ or $line =~ m/^\d+\s+}\s*$/) {
-                if($got_output == 0 and -s '.output' == 0) {
+                writenewline $in, $out;
+                if($got_output == 0 and -s '.output' <= 1) {
                     print "no output, checking locals\n" if $debug >= 5;
                     gdb $in, "print \"Go.\"\ninfo locals\nprint \"Ok.\"\n";
 
@@ -475,6 +477,18 @@ sub gdb {
     chomp $command;
     print "+++ gdb command [$command]\n" if $debug >= 2;
     print $in "$command\n";
+}
+
+sub writenewline {
+    my ($in, $out) = @_;
+
+    gdb $in, "call puts(\"\")\nprint \"Ok.\"\n";
+    while(my $line = <$out>) {
+        chomp $line;
+        $line =~ s/^\(gdb\)\s*//;
+        $line =~ s/\$\d+ = 0$//;
+        last if $line =~ m/\$\d+ = "Ok."/;
+    }
 }
 
 sub flushall {

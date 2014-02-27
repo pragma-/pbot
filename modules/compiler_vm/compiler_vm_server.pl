@@ -3,6 +3,8 @@
 use warnings;
 use strict;
 
+use Proc::ProcessTable;
+
 my $USE_LOCAL = defined $ENV{'CC_LOCAL'}; 
 
 my %languages = (
@@ -27,6 +29,8 @@ my %languages = (
     'file' => 'prog.c',
   },
 );
+
+my $merger_pid;
 
 sub runserver {
   my ($input, $output, $heartbeat);
@@ -128,13 +132,20 @@ sub interpret {
 
   my $cmdline = $languages{$lang}{'cmdline'};
 
+  my $diagnostics_caret;
+  if($user_args =~ s/\s+-paste//) {
+    $diagnostics_caret = '-fdiagnostics-show-caret';
+  } else {
+    $diagnostics_caret = '-fno-diagnostics-show-caret';
+  }
+
   if(length $user_args) {
     print "Replacing args with $user_args\n";
     my $user_args_quoted = quotemeta($user_args);
     $user_args_quoted =~ s/\\ / /g;
-    $cmdline =~ s/\$args/$user_args_quoted/;
+    $cmdline =~ s/\$args/$user_args_quoted $diagnostics_caret/;
   } else {
-    $cmdline =~ s/\$args/$languages{$lang}{'args'}/;
+    $cmdline =~ s/\$args/$languages{$lang}{'args'} $diagnostics_caret/;
   }
 
   $cmdline =~ s/\$file/$languages{$lang}{'file'}/;
@@ -164,7 +175,19 @@ sub interpret {
   }
 
   print "Executing gdb\n";
-  unlink '.output';
+
+  open my $truncate_output, '>', '.output';
+  close $truncate_output;
+  unlink '.gdb_output', '.prog_output';
+
+  if(not defined $merger_pid or not find_pid($merger_pid)) {
+    waitpid $merger_pid, 0 if defined $merger_pid;
+    print "compiler_vm_server: starting merger\n";
+    $merger_pid = start_merger;
+    sleep 1;
+    print "merger started; pid: $merger_pid\n";
+  }
+
   my $user_input_quoted = quotemeta $user_input;
   $user_input_quoted =~ s/\\"/"'\\"'"/g;
   ($ret, $result) = execute(60, "bash -c \"date -s \@$date; ulimit -t 1; compiler_watchdog.pl $user_input_quoted\"");
@@ -225,6 +248,29 @@ sub execute {
 
   print "[$ret, $result]\n";
   return ($ret, $result);
+}
+
+sub start_merger {
+  my $merger_pid = fork;
+  die "merger fork failed: $!" if not defined $merger_pid;
+
+  if($merger_pid == 0) {
+    exec('compiler_output_merger.pl');
+    die "merger exec failed: $!";
+  } else {
+    print "compiler_vm_server: merger startered; pid: $merger_pid\n";
+    return $merger_pid;
+  }
+}
+
+sub find_pid {
+  my ($pid) = @_;
+  return 0 if not defined $pid;
+  my $t = new Proc::ProcessTable('enable_ttys' => 0);
+  foreach my $p (@{ $t->table }) {
+    return 1 if $p->pid == $pid;
+  }
+  return 0;
 }
 
 runserver;

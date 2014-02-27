@@ -911,7 +911,7 @@ $code =~ s/(?:\n\n)+/\n\n/g;
 
 print "final code: [$code]\n" if $debug;
 
-$input = `fortune -u` if not length $input;
+$input = `fortune -u -s` if not length $input;
 $input =~ s/[\n\r\t]/ /msg;
 $input =~ s/:/ - /g;
 $input =~ s/\s+/ /g;
@@ -920,7 +920,9 @@ print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n
 
 my $pretty_code = pretty $code;
 
+$args .= ' -paste' if defined $got_paste or $got_run eq "paste";
 $output = compile($lang, $pretty_code, $args, $input, $USE_LOCAL);
+$args =~ s/ -paste$// if defined $got_paste or $got_run eq "paste";
 
 if($output =~ m/^\s*$/) {
   $output = $nooutput 
