@@ -461,7 +461,6 @@ sub execute {
 
         $got_output = 1;
         print "$line\n";
-        flushall $in, $out;
     }
 }
 
