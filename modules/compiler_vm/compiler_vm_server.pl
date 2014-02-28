@@ -3,8 +3,6 @@
 use warnings;
 use strict;
 
-use Proc::ProcessTable;
-
 my $USE_LOCAL = defined $ENV{'CC_LOCAL'}; 
 
 my %languages = (
@@ -29,8 +27,6 @@ my %languages = (
     'file' => 'prog.c',
   },
 );
-
-my $merger_pid;
 
 sub runserver {
   my ($input, $output, $heartbeat);
@@ -162,6 +158,7 @@ sub interpret {
 
   if($user_args =~ m/--version/) {
     # arg contained --version, so don't compile and just return the version output
+    $result =~ s/\s+\(Ubuntu.*-\d+ubuntu\d+\)//;
     return $result;
   }
 
@@ -175,22 +172,9 @@ sub interpret {
   }
 
   print "Executing gdb\n";
-
-  open my $truncate_output, '>', '.output';
-  close $truncate_output;
-  unlink '.gdb_output', '.prog_output';
-
-  if(not defined $merger_pid or not find_pid($merger_pid)) {
-    waitpid $merger_pid, 0 if defined $merger_pid;
-    print "compiler_vm_server: starting merger\n";
-    $merger_pid = start_merger;
-    sleep 1;
-    print "merger started; pid: $merger_pid\n";
-  }
-
   my $user_input_quoted = quotemeta $user_input;
   $user_input_quoted =~ s/\\"/"'\\"'"/g;
-  ($ret, $result) = execute(60, "bash -c \"date -s \@$date; ulimit -t 1; compiler_watchdog.pl $user_input_quoted\"");
+  ($ret, $result) = execute(60, "bash -c \"date -s \@$date; ulimit -t 1; compiler_watchdog.pl $user_input_quoted > .output\"");
 
   $result = "";
 
@@ -248,29 +232,6 @@ sub execute {
 
   print "[$ret, $result]\n";
   return ($ret, $result);
-}
-
-sub start_merger {
-  my $merger_pid = fork;
-  die "merger fork failed: $!" if not defined $merger_pid;
-
-  if($merger_pid == 0) {
-    exec('compiler_output_merger.pl');
-    die "merger exec failed: $!";
-  } else {
-    print "compiler_vm_server: merger startered; pid: $merger_pid\n";
-    return $merger_pid;
-  }
-}
-
-sub find_pid {
-  my ($pid) = @_;
-  return 0 if not defined $pid;
-  my $t = new Proc::ProcessTable('enable_ttys' => 0);
-  foreach my $p (@{ $t->table }) {
-    return 1 if $p->pid == $pid;
-  }
-  return 0;
 }
 
 runserver;
