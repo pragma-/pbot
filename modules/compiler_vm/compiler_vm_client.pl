@@ -932,6 +932,9 @@ if($output =~ m/^\s*$/) {
       print FILE "$output\n";
   }
 
+  $output =~ s/In file included from prog.c:\d+:\d+:\s*//msg;
+  $output =~ s/prog: prog.c:\d+: [^:]+: Assertion/Assertion/g;
+
   unless(defined $got_paste or (defined $got_run and $got_run eq "paste")) {
       $output =~ s/ Line \d+ ://g;
       $output =~ s/prog\.c:[:\d]*//g;
@@ -940,6 +943,7 @@ if($output =~ m/^\s*$/) {
       $output =~ s/prog\.c://g;
   }
 
+  $output =~ s/;?\s?__PRETTY_FUNCTION__ = "[^"]+"//g;
   $output =~ s/(\d+:\d+:\s*)*cc1: warnings being treated as errors//;
   $output =~ s/(\d+:\d+:\s*)* \(first use in this function\)//g;
   $output =~ s/(\d+:\d+:\s*)*error: \(Each undeclared identifier is reported only once.*?\)//msg;
@@ -957,8 +961,8 @@ if($output =~ m/^\s*$/) {
   $output =~ s/`/'/msg;
   $output =~ s/\t/   /g;
   $output =~ s/(\d+:\d+:\s*)*\s*In function .main.:\s*//g;
-  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat\]\s+(\d+:\d+:\s*)*warning: too many arguments for format \[-Wformat-extra-args\]/info: %b is a candide extension/g;
-  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat\]//g;
+  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat=?\]\s+(\d+:\d+:\s*)*warning: too many arguments for format \[-Wformat-extra-args\]/info: %b is a candide extension/g;
+  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat=?\]//g;
   $output =~ s/\s\(core dumped\)/./;
 #  $output =~ s/\[\s+/[/g;
   $output =~ s/ \[enabled by default\]//g;
