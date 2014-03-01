@@ -934,6 +934,7 @@ if($output =~ m/^\s*$/) {
 
   $output =~ s/In file included from prog.c:\d+:\d+:\s*//msg;
   $output =~ s/prog: prog.c:\d+: [^:]+: Assertion/Assertion/g;
+  $output =~ s,/usr/include/[^:]+:\d+:\d+:\s+,,g;
 
   unless(defined $got_paste or (defined $got_run and $got_run eq "paste")) {
       $output =~ s/ Line \d+ ://g;
@@ -960,7 +961,13 @@ if($output =~ m/^\s*$/) {
   $output =~ s/$right_quote/'/msg;
   $output =~ s/`/'/msg;
   $output =~ s/\t/   /g;
-  $output =~ s/(\d+:\d+:\s*)*\s*In function .main.:\s*//g;
+  if($output =~ /In function '([^']+)':/) {
+    if($1 eq 'main') {
+      $output =~ s/(\d+:\d+:\s*)*\s?In function .main.:\s*//g;
+    } else {
+      $output =~ s/(\d+:\d+:\s*)*\s?In function .main.:\s?/In function 'main':/g;
+    }
+  }
   $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat=?\]\s+(\d+:\d+:\s*)*warning: too many arguments for format \[-Wformat-extra-args\]/info: %b is a candide extension/g;
   $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat=?\]//g;
   $output =~ s/\s\(core dumped\)/./;
