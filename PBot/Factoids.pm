@@ -118,6 +118,7 @@ sub export_factoids {
   print FILE "<html><head>\n<link href='css/blue.css' rel='stylesheet' type='text/css'>\n";
   print FILE '<script type="text/javascript" src="js/jquery-latest.js"></script>' . "\n";
   print FILE '<script type="text/javascript" src="js/jquery.tablesorter.js"></script>' . "\n";
+  print FILE '<script type="text/javascript" src="js/picnet.table.filter.min.js"></script>' . "\n";
   print FILE "</head>\n<body><i>Last updated at $time</i>\n";
   print FILE "<hr><h2>Candide's factoids</h2>\n";
   
@@ -198,6 +199,7 @@ sub export_factoids {
   print FILE '$(document).ready(function() {' . "\n";
   while($table_id > 0) {
     print FILE '$("#table' . $table_id . '").tablesorter();' . "\n";
+    print FILE '$("#table' . $table_id . '").tableFilter();' . "\n";
     $table_id--;
   }
   print FILE "});\n";

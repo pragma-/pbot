@@ -125,6 +125,7 @@ sub export_quotegrabs() {
   print FILE "<html>\n<head><link href=\"css/blue.css\" rel=\"stylesheet\" type=\"text/css\">\n";
   print FILE '<script type="text/javascript" src="js/jquery-latest.js"></script>' . "\n";
   print FILE '<script type="text/javascript" src="js/jquery.tablesorter.js"></script>' . "\n";
+  print FILE '<script type="text/javascript" src="js/picnet.table.filter.min.js"></script>' . "\n";
   print FILE "</head>\n<body><i>Generated at $time</i><hr><h2>Candide's Quotegrabs</h2>\n";
   my $i = 0;
 
@@ -193,6 +194,7 @@ sub export_quotegrabs() {
   print FILE '$(document).ready(function() {' . "\n";
   while($table_id > 0) {
     print FILE '$("#table' . $table_id . '").tablesorter();' . "\n";
+    print FILE '$("#table' . $table_id . '").tableFilter();' . "\n";
     $table_id--;
   }
   print FILE "});\n";
