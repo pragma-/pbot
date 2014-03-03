@@ -38,7 +38,7 @@ sub initialize {
   my $export_path = delete $conf{export_path};
   my $export_site = delete $conf{export_site};
 
-  my $pbot = delete $conf{pbot} || Carp::croak("Missing pbot reference to Factoids");
+  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to Factoids");
 
   $self->{factoids} = PBot::DualIndexHashObject->new(name => 'Factoids', filename => $filename);
   $self->{export_path} = $export_path;

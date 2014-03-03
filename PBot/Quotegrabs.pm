@@ -32,29 +32,22 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
-    Carp::croak("Missing pbot reference to Quotegrabs");
-  }
-
-  my $filename = delete $conf{filename};
-  my $export_path = delete $conf{export_path};
-
-  $self->{pbot} = $pbot;
-  $self->{filename} = $filename;
-  $self->{export_path} = $export_path;
+  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference in Quotegrabs");
+  $self->{filename} = delete $conf{filename};
+  $self->{export_path} = delete $conf{export_path};
+  $self->{export_site} = delete $conf{export_site};
   $self->{quotegrabs} = [];
 
   #-------------------------------------------------------------------------------------
   # The following could be in QuotegrabsCommands.pm, or they could be kept in here?
   #-------------------------------------------------------------------------------------
-  $pbot->commands->register(sub { $self->grab_quotegrab(@_)        },  "grab",  0);
-  $pbot->commands->register(sub { $self->show_quotegrab(@_)        },  "getq",  0);
-  $pbot->commands->register(sub { $self->delete_quotegrab(@_)      },  "delq",  0);
-  $pbot->commands->register(sub { $self->show_random_quotegrab(@_) },  "rq",    0);
+  $self->{pbot}->commands->register(sub { $self->grab_quotegrab(@_)        },  "grab",  0);
+  $self->{pbot}->commands->register(sub { $self->show_quotegrab(@_)        },  "getq",  0);
+  $self->{pbot}->commands->register(sub { $self->delete_quotegrab(@_)      },  "delq",  0);
+  $self->{pbot}->commands->register(sub { $self->show_random_quotegrab(@_) },  "rq",    0);
 
   # ought to be in MessageTracker.pm once we create that module
-  $pbot->commands->register(sub { $self->recall_message(@_)        },  "recall",  0);
+  $self->{pbot}->commands->register(sub { $self->recall_message(@_)        },  "recall",  0);
 }
 
 sub load_quotegrabs {
@@ -201,7 +194,7 @@ sub export_quotegrabs() {
   print FILE "</script>\n";
   print FILE "</body>\n</html>\n";
   close(FILE);
-  return "$i quotegrabs exported to http://blackshell.com/~msmud/candide/quotegrabs.html";
+  return "$i quotegrabs exported to " . $self->{export_site};
 }
 
 # ----------------------------------------------------------------------------------------
