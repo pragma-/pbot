@@ -1851,10 +1851,10 @@ action: /say C89/C90 draft: http://flash-gordon.me.uk/ansi.c.txt or http://web.a
 created_on: 1236861685
 enabled: 1
 last_referenced_in: pragma-
-last_referenced_on: 1393877069.42851
+last_referenced_on: 1393946502.21155
 owner: Wulf4
 rate_limit: 15
-ref_count: 97
+ref_count: 98
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -7185,34 +7185,34 @@ action_with_args: /say $nick, $answers
 created_on: 1193948417
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1393901895.20933
+last_referenced_on: 1393945309.2847
 owner: pragma_
 rate_limit: 0
-ref_count: 1303
-ref_user: puish!~jgb@unaffiliated/jonbryan
+ref_count: 1304
+ref_user: cousteau!~cousteau@138.100.74.81
 type: text
 
 <:(>
 action: /call :)
 created_on: 1180052710
 enabled: 1
-last_referenced_on: 1390399438.41235
+last_referenced_on: 1393961635.61896
 owner: pragma_
 rate_limit: 15
-ref_count: 27
-ref_user: rie!~chatzilla@p2003004ACE51B43792E6BAFFFE5389F3.dip0.t-ipconnect.de
+ref_count: 28
+ref_user: nCrazed!~nCrazed@5.2.16.190
 type: text
 
 <:)>
 action: /say $faces
 created_on: 1109365121
 enabled: 1
-last_referenced_in: rob``
-last_referenced_on: 1390851212.03434
+last_referenced_in: ##c
+last_referenced_on: 1393961635.63607
 owner: pragma_
 rate_limit: 15
-ref_count: 152
-ref_user: rob``!~rob@gtng-4db047dd.pool.mediaWays.net
+ref_count: 153
+ref_user: nCrazed!~nCrazed@5.2.16.190
 type: text
 
 <:-(>
@@ -8557,11 +8557,11 @@ type: text
 action: c11std.pl
 created_on: 1326727233.54048
 enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1393889491.09541
+last_referenced_in: pragma-
+last_referenced_on: 1393959075.38608
 owner: pragma_
 rate_limit: 0
-ref_count: 1136
+ref_count: 1141
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: module
 
@@ -8703,14 +8703,16 @@ ref_user: pragma_
 type: text
 
 <cc>
-action: /call compiler $nick
+action: /call compiler $nick $channel
 created_on: 1272176634
+edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
+edited_on: 1393967703.12375
 enabled: 1
-last_referenced_on: 1393921443.89722
+last_referenced_on: 1393967711.47421
 owner: pragma_
 preserve_whitespace: 1
 rate_limit: 4
-ref_count: 37728
+ref_count: 37763
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -8764,10 +8766,10 @@ type: text
 action: /call factchange
 created_on: 1277259441.33026
 enabled: 1
-last_referenced_on: 1393300207.62137
+last_referenced_on: 1393967703.11071
 owner: pbot3
 rate_limit: 15
-ref_count: 236
+ref_count: 238
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -8972,10 +8974,10 @@ action: compiler_client.pl
 created_on: 1291939583.25391
 enabled: 1
 last_referenced_in: pragma-
-last_referenced_on: 1393921443.9184
+last_referenced_on: 1393967711.49546
 owner: pragma_
 rate_limit: 0
-ref_count: 30569
+ref_count: 30604
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: module
 
@@ -9637,11 +9639,11 @@ type: text
 action: /call factfind
 created_on: 1277784994.65625
 enabled: 1
-last_referenced_on: 1393744259.21007
+last_referenced_on: 1393951484.46497
 owner: pbot3
 rate_limit: 15
-ref_count: 358
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 359
+ref_user: lemonade`!~lemonade`@pool-108-28-100-56.washdc.fios.verizon.net
 type: text
 
 <floating>
@@ -10125,12 +10127,12 @@ action: /say To learn all about me, see http://www.iso-9899.info/wiki/Candide
 action_with_args: /say To learn all about $args, see http://www.iso-9899.info/wiki/Candide#$args
 created_on: 1109792986
 enabled: 1
-last_referenced_in: lemonade`
-last_referenced_on: 1393639199.45894
+last_referenced_in: ##c
+last_referenced_on: 1393933113.36018
 owner: NeverDream
 rate_limit: 0
-ref_count: 1224
-ref_user: lemonade`!~lemonade`@pool-108-28-100-56.washdc.fios.verizon.net
+ref_count: 1226
+ref_user: dozn!~dozn@24-207-52-240.eastlink.ca
 type: text
 
 <herring>
@@ -11010,12 +11012,12 @@ type: text
 action: man.pl
 created_on: 1107137901
 enabled: 1
-last_referenced_in: puish
-last_referenced_on: 1393565259.68701
+last_referenced_in: ##c
+last_referenced_on: 1393945292.18739
 owner: pragma_
 rate_limit: 15
-ref_count: 1361
-ref_user: puish!~jgb@unaffiliated/jonbryan
+ref_count: 1362
+ref_user: cousteau!~cousteau@138.100.74.81
 type: module
 
 <manpage>
@@ -12290,12 +12292,12 @@ type: text
 action: /say $args
 created_on: 1251663502
 enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1393702026.66878
+last_referenced_in: pragma-
+last_referenced_on: 1393967745.99187
 owner: pragma_
 rate_limit: 0
-ref_count: 808
-ref_user: fisted!~fisted@unaffiliated/fisted
+ref_count: 814
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <scheme>
@@ -12459,10 +12461,10 @@ type: regex
 action: /call factshow
 created_on: 1277259146.86343
 enabled: 1
-last_referenced_on: 1393928620.05921
+last_referenced_on: 1393967768.1747
 owner: pbot3
 rate_limit: 15
-ref_count: 186
+ref_count: 194
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -12933,11 +12935,11 @@ type: text
 action: /call 8ball
 created_on: 1360662740.86483
 enabled: 1
-last_referenced_on: 1389897389.91006
+last_referenced_on: 1393945309.26443
 owner: pragma-
 rate_limit: 15
-ref_count: 2
-ref_user: zid`!zid@laiz.stalker.fi
+ref_count: 3
+ref_user: cousteau!~cousteau@138.100.74.81
 type: text
 
 <that's>
@@ -13398,8 +13400,8 @@ ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <version>
-action: /say PBot revision 494 2014-03-01
-created_on: 1393838096.62111
+action: /say PBot revision 501 2014-03-04
+created_on: 1393968046.58128
 enabled: 1
 last_referenced_in: lemonade`
 last_referenced_on: 1393639215.26177
@@ -13940,8 +13942,10 @@ ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <{>
-action: /call compiler_block $nick
+action: /call compiler_block $nick $channel
 created_on: 1329860884.76944
+edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
+edited_on: 1393967624.45297
 enabled: 1
 last_referenced_in: pragma_
 last_referenced_on: 1393297892.74508

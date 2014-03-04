@@ -21,6 +21,7 @@ if(not defined $sock) {
 }
 
 my $nick = shift @ARGV;
+my $channel = shift @ARGV;
 my $code = join ' ', @ARGV;
 
 my $lang = "C11";
@@ -29,7 +30,7 @@ if($code =~ s/-lang=([^ ]+)//) {
   $lang = uc $1;
 }
 
-print $sock "compile:$nick:$lang\n";
+print $sock "compile:$nick:$channel:$lang\n";
 print $sock "$code\n";
 print $sock "compile:end\n";
 

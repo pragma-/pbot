@@ -29,9 +29,9 @@ my %languages = (
 );
 
 my %preludes = ( 
-  'C99'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
-  'C11'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <complex.h>\n#include <prelude.h>\n\n",
-  'C89'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <prelude.h>\n\n",
+  'C99'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <signal.h>\n#include <prelude.h>\n\n",
+  'C11'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <complex.h>\n#include <signal.h>\n#include <prelude.h>\n\n",
+  'C89'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <signal.h>\n#include <prelude.h>\n\n",
 );
 
 sub pretty {
@@ -139,18 +139,20 @@ sub compile {
   return $result;
 }
 
-if($#ARGV < 1) {
+if($#ARGV < 2) {
   print "Usage: cc [-compiler -options] <code> [-stdin=input]\n";
+  # usage for shell: cc <nick> <channel> [-compiler -options] <code> [-stdin=input]
   exit 0;
 }
 
 my $nick = shift @ARGV;
+my $channel = lc shift @ARGV;
 my $code = join ' ', @ARGV;
 my @last_code;
 
 print "      code: [$code]\n" if $debug;
 
-if(open FILE, "< last_code.txt") {
+if(open FILE, "< history/$channel.hist") {
   while(my $line = <FILE>) {
     chomp $line;
     push @last_code, $line;
@@ -598,7 +600,7 @@ if($save_last_code) {
     unshift @last_code, $extracted_args . (length $args ? $args . ' ' . $code : $code);
   }
 
-  open FILE, "> last_code.txt";
+  open FILE, "> history/$channel.hist";
 
   my $i = 0;
   foreach my $line (@last_code) {

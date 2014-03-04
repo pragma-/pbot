@@ -178,6 +178,7 @@ sub compiler_server {
         eval {
           my $lang;
           my $nick;
+          my $channel;
           my $code = "";
 
           local $SIG{ALRM} = sub { die 'Timed-out'; };
@@ -196,13 +197,10 @@ sub compiler_server {
                 last;
               }
 
-              $code = quotemeta($code);
               print "Attempting compile...\n";
               alarm 0;
-              my $tnick = quotemeta($nick);
-              my $tlang = quotemeta($lang);
 
-              my ($ret, $result) = execute("./compiler_vm_client.pl $tnick -lang=$tlang $code");
+              my ($ret, $result) = execute("./compiler_vm_client.pl \Q$nick\E \Q$channel\E -lang=\Q$lang\E \Q$code\E");
 
               if(not defined $ret) {
                 #print "parent continued\n";
@@ -234,9 +232,10 @@ sub compiler_server {
               exit $ret;
             }
 
-            if($line =~ /compile:([^:]+):(.*)$/) {
+            if($line =~ /compile:([^:]+):([^:]+):(.*)$/) {
               $nick = $1;
-              $lang = $2;
+              $channel = $2;
+              $lang = $3;
               $code = "";
               next;
             }
