@@ -60,6 +60,7 @@ sub execute_module {
   $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: Executing module $module $arguments\n");
 
   $arguments =~ s/\$nick/$nick/g;
+  $arguments =~ s/\$channel/$from/g;
 
   $arguments = quotemeta($arguments);
   $arguments =~ s/\\\s/ /g;

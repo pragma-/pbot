@@ -455,6 +455,7 @@ sub interpreter {
     $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"" . $result . "\"\n");
 
     $result =~ s/\$nick/$nick/g;
+    $result =~ s/\$channel/$from/g;
 
     while ($result =~ /[^\\]\$([a-zA-Z0-9_\-]+)/g) { 
       #$self->{pbot}->logger->log("adlib: looking for [$1]\n");
