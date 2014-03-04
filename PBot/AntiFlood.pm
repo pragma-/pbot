@@ -623,6 +623,11 @@ sub check_bans {
               next;
             }
 
+            if(defined $nickserv_account and $baninfo->{type} eq '+q' and $mask =~ /^\$a:(.*)/ and lc $1 eq lc $nickserv_account) {
+              $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches account ($nickserv_account), disregarding\n");
+              next;
+            }
+
             if(not defined $bans) {
               $bans = [];
             }
