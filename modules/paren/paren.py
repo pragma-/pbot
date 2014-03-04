@@ -66,17 +66,17 @@ def parenthesize(source):
     try:
         ast = parser.parse(source, '<input>')
     except plyparser.ParseError as e:
-        print("{0}: Error: {1}".format(sys.argv[1], e.args[0]))
+        print("Error: " + e.args[0])
         return
     generator = CGenerator()
-    print("{0}: {1}".format(sys.argv[1], generator.visit(ast)))
+    print(generator.visit(ast))
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        parenthesize(' '.join(sys.argv[2:]).rstrip(';'))
-    elif len(sys.argv) == 2:
-        print(sys.argv[1] + ': ' + "Usage: paren <expression>")
+    if len(sys.argv) > 1:
+        parenthesize(' '.join(sys.argv[1:]).rstrip(';'))
+    elif len(sys.argv) == 1:
+        print("Usage: paren <expression>")
     else:
         print('error')
 

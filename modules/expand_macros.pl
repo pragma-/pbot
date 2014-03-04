@@ -21,7 +21,6 @@ if($#ARGV < 1) {
   exit 0;
 }
 
-my $nick = shift @ARGV;
 my $code = join ' ', @ARGV;
 my $lang = 'C89';
 my $args = "";
@@ -301,9 +300,9 @@ if(not $has_main) {
   $result =~ s/\s*}\s*$//;
 }
 
-$output = $result;
+$output = length $result ? $result : $nooutput;
 
-print "$nick: $output\n";
+print "$output\n";
 
 sub execute {
   my $timeout = shift @_;
