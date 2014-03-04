@@ -633,7 +633,7 @@ sub factfind {
   my $factoids = $self->{pbot}->factoids->factoids->hash;
 
   if(not defined $arguments) {
-    return "/msg $nick Usage: !find [-channel channel] [-owner nick] [-by nick] [text]";
+    return "/msg $nick Usage: factfind [-channel channel] [-owner nick] [-by nick] [text]";
   }
 
   my ($channel, $owner, $by);
@@ -664,10 +664,13 @@ sub factfind {
   }
 
   if($arguments ne "") {
+    my $unquoted_args = $arguments;
+    $unquoted_args =~ s/(?:\\(?!\\))//g;
+    $unquoted_args =~ s/(?:\\\\)/\\/g;
     if(not defined $argtype) {
-      $argtype = "with text containing '$arguments'";
+      $argtype = "with text containing '$unquoted_args'";
     } else {
-      $argtype .= " and with text containing '$arguments'";
+      $argtype .= " and with text containing '$unquoted_args'";
     }
   }
 
