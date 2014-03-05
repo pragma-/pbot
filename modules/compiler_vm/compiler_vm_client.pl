@@ -152,6 +152,38 @@ my @last_code;
 
 print "      code: [$code]\n" if $debug;
 
+my $subcode = $code;
+while ($subcode =~ s/^\s*(-[^ ]+)\s*//) {}
+
+my $copy_code;
+if($subcode =~ s/^\s*copy\s+(\S+)\s*//) {
+  my $copy = $1;
+
+  if(open FILE, "< history/$copy.hist") {
+    $copy_code = <FILE>;
+    close FILE;
+    goto COPY_ERROR if not $copy_code;;
+    chomp $copy_code;
+  } else {
+    goto COPY_ERROR;
+  }
+
+  goto COPY_SUCCESS;
+
+  COPY_ERROR:
+  print "$nick: No history for $copy.\n";
+  exit 0;
+
+  COPY_SUCCESS:
+  $code = $copy_code;
+  $only_show = 1;
+  $save_last_code = 1;
+}
+
+if($subcode =~ m/^\s*(?:and\s+)?(?:diff|show)\s+(\S+)\s*$/) {
+  $channel = $1;
+}
+
 if(open FILE, "< history/$channel.hist") {
   while(my $line = <FILE>) {
     chomp $line;
@@ -160,10 +192,9 @@ if(open FILE, "< history/$channel.hist") {
   close FILE;
 }
 
-my $subcode = $code;
-while ($subcode =~ s/^\s*(-[^ ]+)\s*//) {}
+unshift @last_code, $copy_code if defined $copy_code;
 
-if($subcode =~ m/^\s*show\s*$/i) {
+if($subcode =~ m/^\s*(?:and\s+)?show(?:\s+\S+)?\s*$/i) {
   if(defined $last_code[0]) {
     print "$nick: $last_code[0]\n";
   } else {
@@ -172,7 +203,7 @@ if($subcode =~ m/^\s*show\s*$/i) {
   exit 0;
 }
 
-if($subcode =~ m/^\s*diff\s*$/i) {
+if($subcode =~ m/^\s*(?:and\s+)?diff(?:\s+\S+)?\s*$/i) {
   if($#last_code < 1) {
     print "$nick: Not enough recent code to diff.\n"
   } else {
@@ -193,12 +224,13 @@ if($subcode =~ m/^\s*diff\s*$/i) {
   exit 0;
 }
 
-my $got_run = undef;
+my $got_run;
 
-if($subcode =~ m/^\s*(run|paste)\s*$/i) {
+if($subcode =~ m/^\s*(?:and\s+)?(run|paste)\s*$/i) {
   $got_run = lc $1;
   if(defined $last_code[0]) {
     $code = $last_code[0];
+    $only_show = 0;
   } else {
     print "$nick: No recent code to $got_run.\n";
     exit 0;
@@ -568,8 +600,12 @@ if($subcode =~ m/^\s*(run|paste)\s*$/i) {
 
   $save_last_code = 1;
 
-  unless ($got_undo and not $got_changes) {
-    $unshift_last_code = 1;
+  unless($got_undo and not $got_changes) {
+    $unshift_last_code = 1 unless $copy_code and not $got_changes;
+  }
+
+  if($copy_code and $got_changes) {
+    $only_show = 0;
   }
 
   if($got_undo and not $got_changes) {
@@ -616,7 +652,7 @@ if($only_show) {
   exit 0;
 }
 
-unless($got_run) {
+unless($got_run and $copy_code) {
   open FILE, ">> log.txt";
   print FILE "------------------------------------------------------------------------\n";
   print FILE localtime() . "\n";
@@ -918,7 +954,7 @@ $input =~ s/[\n\r\t]/ /msg;
 $input =~ s/:/ - /g;
 $input =~ s/\s+/ /g;
 
-print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n" unless $got_run;
+print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n" unless $got_run and $copy_code;
 
 my $pretty_code = pretty $code;
 
@@ -929,7 +965,7 @@ $args =~ s/ -paste$// if defined $got_paste or $got_run eq "paste";
 if($output =~ m/^\s*$/) {
   $output = $nooutput 
 } else {
-  unless($got_run) {
+  unless($got_run and $copy_code) {
       print FILE localtime() . "\n";
       print FILE "$output\n";
   }
@@ -1025,7 +1061,7 @@ if($output =~ m/^\s*$/) {
   # splint
   $output =~ s/Splint 3.1.2 --- 03 May 2009\s*//;
   $output =~ s/Finished checking --- \d+ code warning\s*//;
-  print FILE "splint: [$output]\n" unless $got_run;
+  print FILE "splint: [$output]\n" unless $got_run and $copy_code;
   $output =~ s/\s*\(in function main\)\s*Fresh\s*storage\s*.*?\s*not\s*released.*?reference\s+to\s+it\s+is\s+lost.\s*//msg;
   $output =~ s/\s*\(in function main\)\s*//g;
   $output =~ s/\s*\(Use\s+.*?\s+to\s+inhibit\s+warning\)//msg;
@@ -1066,7 +1102,7 @@ if($warn_unterminated_define == 1) {
   }
 }
 
-unless($got_run) {
+unless($got_run and $copy_code) {
   print FILE "$nick: $output\n";
   close FILE;
 }
