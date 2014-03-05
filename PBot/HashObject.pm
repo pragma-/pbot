@@ -30,27 +30,11 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $name = delete $conf{name};
-  if(not defined $name) {
-    $name = "hash object";
-  }
-
-  my $filename = delete $conf{filename};
-  if(not defined $filename) {
-    Carp::carp("Missing filename to HashObject, will not be able to save to or load from file.");
-  }
-
-  my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
-    Carp::croak("Missing pbot reference to HashObject");
-  }
-
-  $self->{name} = $name;
-  $self->{filename} = $filename;
-  $self->{pbot} = $pbot;
+  $self->{name} = delete $conf{name} // 'hash object';
+  $self->{filename}  = delete $conf{filename} // Carp::carp("Missing filename to HashObject, will not be able to save to or load from file.");
+  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to HashObject");
   $self->{hash} = {};
 }
-
 
 sub load_hash_add {
   my ($self, $index_key, $hash, $i, $filename) = @_;
