@@ -479,11 +479,13 @@ sub factshow {
     return "/msg $nick '$trig' not found in channel '$chan'";
   }
 
+  my $result = "$trigger: " . $factoids->{$channel}->{$trigger}->{action};
+
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
-    return "/msg $nick $trigger is not a factoid";
+    $result .= ' [module]';
   }
 
-  return "$trigger: " . $factoids->{$channel}->{$trigger}->{action};
+  return $result;
 }
 
 sub factinfo {
