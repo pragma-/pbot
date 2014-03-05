@@ -29,11 +29,7 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
-     Carp::croak ("Missing pbot reference to Channels");
-  }
-
+  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to Channels");
   my $filename = delete $conf{filename};
 
   $self->{pbot} = $pbot;
@@ -43,6 +39,7 @@ sub initialize {
   $pbot->commands->register(sub { $self->unset(@_)     },  "chanunset", 40);
   $pbot->commands->register(sub { $self->add(@_)       },  "chanadd",   40);
   $pbot->commands->register(sub { $self->remove(@_)    },  "chanrem",   40);
+  $pbot->commands->register(sub { $self->list(@_)      },  "chanlist",  10);
 }
 
 sub set {
@@ -89,6 +86,22 @@ sub remove {
   }
 
   return "/msg $nick " . $self->channels->remove($arguments);
+}
+
+sub list {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+  my $result;
+
+  foreach my $index (sort keys %{ $self->channels->hash }) {
+    $result .= "$index: {";
+    my $comma = ' ';
+    foreach my $key (sort keys %{ ${ $self->channels->hash }{$index} }) {
+      $result .= "$comma$key => ${ $self->channels->hash }{$index}{$key}";
+      $comma = ', ';
+    }
+    $result .= " }\n";
+  }
+  return "/msg $nick $result";
 }
 
 sub load_channels {
