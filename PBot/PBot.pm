@@ -247,7 +247,7 @@ sub check_stdin {
     $from = $1;
     $text = "$self->{trigger}$2";
   } else {
-    $from = undef;
+    $from = "$self->{botnick}!stdin\@localhost";
     $text = "$self->{trigger}$input";
   }
 
