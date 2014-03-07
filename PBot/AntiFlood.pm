@@ -140,7 +140,7 @@ sub get_flood_account {
     # (usually logging into nickserv or a dynamic ip address, but could possibly be attempted nick hijacking)
 
     if($mask =~ m/^\Q$nick\E!.*/i) {
-      $self->{pbot}->logger->log("anti-flood: [get-account] $nick!$user\@$host seen previously as $mask\n");
+      #$self->{pbot}->logger->log("anti-flood: [get-account] $nick!$user\@$host seen previously as $mask\n");
     }
 
     # check if foo!bar@baz matches *!bar@baz; e.g., same user@host, but different nick 
@@ -185,7 +185,6 @@ sub add_message {
       if($text =~ /^QUIT .*\.net .*\.split/) {
         $self->message_history->{$account}->{channels}->{$channel}{join_watch}--;
         $self->message_history->{$account}->{channels}->{$channel}{join_watch} = 0 if $self->message_history->{$account}->{channels}->{$channel}{join_watch} < 0;
-        $self->{pbot}->logger->log("$account $channel joinwatch adjusted: " . $self->message_history->{$account}->{channels}->{$channel}{join_watch} . "\n");
         $self->message_history->{$account}->{channels}->{$channel}{messages}->[$length - 1]{mode} = $self->{FLOOD_IGNORE}; 
       }
       # check QUIT message for Ping timeout or Excess Flood
@@ -324,8 +323,6 @@ sub check_flood {
     }
 
     my %last = %{ @{ $self->message_history->{$account}->{channels}->{$channel}{messages} }[$length - 1] };
-
-    $self->{pbot}->logger->log("Comparing $nick!$user\@$host " . int($last{timestamp}) . " against " . int($msg{timestamp}) . ": " . (int($last{timestamp} - $msg{timestamp})) . " seconds [" . duration_exact($last{timestamp} - $msg{timestamp}) . "]\n") if $mode == $self->{FLOOD_JOIN};
 
     if($last{timestamp} - $msg{timestamp} <= $max_time && not $self->{pbot}->admins->loggedin($channel, "$nick!$user\@$host")) {
       if($mode == $self->{FLOOD_JOIN}) {
@@ -555,7 +552,7 @@ sub check_bans {
       # check if nickserv accounts match
       if(defined $nickserv_account) {
         if(exists $self->{message_history}->{$account}->{nickserv_account} and $self->{message_history}->{$account}->{nickserv_account} eq $nickserv_account) {
-          $self->{pbot}->logger->log("anti-flood: [check-bans] nickserv account for $account matches $nickserv_account\n");
+          #$self->{pbot}->logger->log("anti-flood: [check-bans] nickserv account for $account matches $nickserv_account\n");
           $target_nickserv_account = $self->{message_history}->{$account}->{nickserv_account};
           $check_ban = 1;
           goto CHECKBAN;
@@ -566,7 +563,7 @@ sub check_bans {
       my ($account_host) = $account =~ m/\@(.*)$/;
       
       if($host eq $account_host) {
-        $self->{pbot}->logger->log("anti-flood: [check-bans] host for $account matches $mask\n");
+        #$self->{pbot}->logger->log("anti-flood: [check-bans] host for $account matches $mask\n");
 
         if(exists $self->{message_history}->{$account}->{nickserv_account}) {
           $target_nickserv_account = $self->{message_history}->{$account}->{nickserv_account};
@@ -579,7 +576,7 @@ sub check_bans {
       my ($account_nick) = $account =~ m/^([^!]+)/;
 
       if($nick eq $account_nick) {
-        $self->{pbot}->logger->log("anti-flood: [check-bans] nick for $account matches $mask\n");
+        #$self->{pbot}->logger->log("anti-flood: [check-bans] nick for $account matches $mask\n");
 
         if(exists $self->{message_history}->{$account}->{nickserv_account}) {
           $target_nickserv_account = $self->{message_history}->{$account}->{nickserv_account};
@@ -621,7 +618,7 @@ sub check_bans {
               next;
             }
 
-            if(defined $nickserv_account and $baninfo->{type} eq '+q' and $mask =~ /^\$a:(.*)/ and lc $1 eq lc $nickserv_account) {
+            if(defined $nickserv_account and $baninfo->{type} eq '+q' and $baninfo->{banmask} =~ /^\$a:(.*)/ and lc $1 eq lc $nickserv_account) {
               $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches account ($nickserv_account), disregarding\n");
               next;
             }
@@ -662,7 +659,7 @@ sub check_nickserv_accounts {
       # has nickserv account
       if(lc $self->{message_history}->{$mask}->{nickserv_account} eq lc $account) {
         # pre-existing mask found using this account previously
-        $self->{pbot}->logger->log("anti-flood: [check-account] $nick [nickserv: $account] seen previously as $mask.\n");
+        #$self->{pbot}->logger->log("anti-flood: [check-account] $nick [nickserv: $account] seen previously as $mask.\n");
       }
     }
     else {
