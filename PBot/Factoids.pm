@@ -452,7 +452,7 @@ sub interpreter {
       $self->{pbot}->logger->log("result set to [$result]\n");
     }
 
-    $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host): $keyword: Displaying text \"" . $result . "\"\n");
+    $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: $keyword: Displaying text \"" . $result . "\"\n");
 
     $result =~ s/\$nick/$nick/g;
     $result =~ s/\$channel/$from/g;
