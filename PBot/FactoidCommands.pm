@@ -709,7 +709,7 @@ sub factfind {
 
   if($i == 1) {
     chop $text;
-    return "found one factoid submitted for " . ($last_chan eq '.*' ? 'global channel' : $last_chan) . " " . $argtype . ": '$last_trigger' is '" . $factoids->{$last_chan}->{$last_trigger}->{action} . "'";
+    return "found one factoid submitted for " . ($last_chan eq '.*' ? 'global channel' : $last_chan) . " " . $argtype . ": $last_trigger is $factoids->{$last_chan}->{$last_trigger}->{action}";
   } else {
     return "found $i factoids " . $argtype . ": $text" unless $i == 0;
 
