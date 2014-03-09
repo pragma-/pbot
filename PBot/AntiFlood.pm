@@ -59,6 +59,7 @@ sub initialize {
   $self->{ban_whitelist}->load;
 
   $pbot->timer->register(sub { $self->prune_message_history }, 60 * 60 * 1);
+  $pbot->timer->register(sub { $self->save_message_history }, 60 * 60 * 8);
 
   $pbot->commands->register(sub { return $self->unbanme(@_)   },  "unbanme",   0);
   $pbot->commands->register(sub { return $self->whitelist(@_) },  "whitelist", 10);
@@ -169,6 +170,17 @@ sub add_message {
   my $now = gettimeofday;
 
   return undef if $channel =~ /[@!]/; # ignore QUIT messages from nick!user@host channels
+  return undef if $account =~ /(?:$self->{pbot}->{username}|stdin)\@localhost/;
+
+  $text =~ s/^$self->{pbot}->{trigger}login\s+\S+/$self->{pbot}->{trigger}login <redacted>/; # redact login passwords (e.g., from `recall` command, etc)
+
+  if(not exists $self->message_history->{$account}->{channels}->{$channel}) {
+    #$self->{pbot}->logger->log("adding new channel for existing nick\n");
+    $self->message_history->{$account}->{channels}->{$channel}{offenses} = 0;
+    $self->message_history->{$account}->{channels}->{$channel}{last_offense_timestamp} = 0;
+    $self->message_history->{$account}->{channels}->{$channel}{join_watch} = 0;
+    $self->message_history->{$account}->{channels}->{$channel}{messages} = [];
+  }
 
   #$self->{pbot}->logger->log("appending new message\n");
   push(@{ $self->message_history->{$account}->{channels}->{$channel}{messages} }, { timestamp => $now, msg => $text, mode => $mode });
@@ -222,46 +234,24 @@ sub check_flood {
   my $account = $self->get_flood_account($nick, $user, $host);
 
   if(not defined $account) {
-    # new addition
-    #$self->{pbot}->logger->log("brand new account addition\n");
-    $self->message_history->{$mask}->{channels} = {};
-    
     $self->{pbot}->conn->whois($nick);
-
     $account = $mask;
   }
 
   # handle QUIT events
   # (these events come from $channel nick!user@host, not a specific channel or nick,
-  # so they need to be dispatched to all channels the bot exists on)
+  # so they need to be dispatched to all channels the nick has been seen on)
   if($mode == $self->{FLOOD_JOIN} and $text =~ /^QUIT/) {
-    foreach my $chan (map lc, keys %{ $self->{pbot}->channels->channels->hash }) {
-      next if $chan eq $channel;  # skip nick!user@host "channel"
-
-      if(not exists $self->message_history->{$account}->{channels}->{$chan}) {
-        #$self->{pbot}->logger->log("adding new channel for existing account\n");
-        $self->message_history->{$account}->{channels}->{$chan}{offenses} = 0;
-        $self->message_history->{$account}->{channels}->{$chan}{last_offense_timestamp} = 0;
-        $self->message_history->{$account}->{channels}->{$chan}{join_watch} = 0;
-        $self->message_history->{$account}->{channels}->{$chan}{messages} = [];
-      }
-
+    return if not exists $self->message_history->{$account}; # don't create empty account
+    foreach my $chan (keys %{ $self->message_history->{$account}->{channels} }) {
+      next if $chan !~ m/^#/;  # skip non-channels (private messages, etc)
       $self->add_message($account, $chan, $text, $mode);
-
       # remove validation on QUITs so we check for ban-evasion when user returns at a later time
       $self->message_history->{$account}->{channels}->{$chan}{validated} = 0;
     }
 
     # don't do flood processing for QUIT events
     return;
-  }
-
-  if(not exists $self->message_history->{$account}->{channels}->{$channel}) {
-    #$self->{pbot}->logger->log("adding new channel for existing nick\n");
-    $self->message_history->{$account}->{channels}->{$channel}{offenses} = 0;
-    $self->message_history->{$account}->{channels}->{$channel}{last_offense_timestamp} = 0;
-    $self->message_history->{$account}->{channels}->{$channel}{join_watch} = 0;
-    $self->message_history->{$account}->{channels}->{$channel}{messages} = [];
   }
 
   my $length = $self->add_message($account, $channel, $text, $mode);
@@ -398,12 +388,18 @@ sub prune_message_history {
     foreach my $channel (keys %{ $self->{message_history}->{$mask}->{channels} }) {
 
       my $length = $#{ $self->{message_history}->{$mask}->{channels}->{$channel}{messages} } + 1;
-      next unless $length > 0;
+
+      if($length <= 0) {
+        $self->{pbot}->logger->log("[prune-message-history] $mask in $channel has no messages, removing channel entry\n");
+        delete $self->{message_history}->{$mask}->{channels}->{$channel};
+        next;
+      }
+
       my %last = %{ @{ $self->{message_history}->{$mask}->{channels}->{$channel}{messages} }[$length - 1] };
 
       # delete channel key if no activity for a while
       if(gettimeofday - $last{timestamp} >= 60 * 60 * 24 * 90) {
-        $self->{pbot}->logger->log("$mask in $channel hasn't spoken in ninety days; removing channel history.\n");
+        $self->{pbot}->logger->log("[prune-message-history] $mask in $channel hasn't spoken in ninety days; removing channel history.\n");
         delete $self->{message_history}->{$mask}->{channels}->{$channel};
         next;
       } 
@@ -414,13 +410,13 @@ sub prune_message_history {
              (gettimeofday - $self->{message_history}->{$mask}->{channels}->{$channel}{last_offense_timestamp} >= 60 * 60 * 24)) {
         $self->{message_history}->{$mask}->{channels}->{$channel}{offenses}--;
         $self->{message_history}->{$mask}->{channels}->{$channel}{last_offense_timestamp} = gettimeofday;
-        $self->{pbot}->logger->log("anti-flood: [$channel][$mask] 24 hours since last offense/decrease -- decreasing offenses to $self->{message_history}->{$mask}->{channels}->{$channel}{offenses}\n");
+        $self->{pbot}->logger->log("[prune-message-history] [$channel][$mask] 24 hours since last offense/decrease -- decreasing offenses to $self->{message_history}->{$mask}->{channels}->{$channel}{offenses}\n");
       }
     }
 
     # delete account for this $mask if all its channels have been deleted
     if(scalar keys %{ $self->{message_history}->{$mask} } == 0) {
-      $self->{pbot}->logger->log("$mask has no more channels remaining; deleting history account.\n");
+      $self->{pbot}->logger->log("[prune-message-history] $mask has no more channels remaining; deleting history account.\n");
       delete $self->{message_history}->{$mask};
     }
   }
@@ -692,7 +688,9 @@ sub on_whoisaccount {
 
 sub save_message_history {
   my $self = shift;
+  $self->{pbot}->logger->log("Saving message history\n");
   store($self->{message_history}, $self->{pbot}->{message_history_file});
+  $self->{pbot}->logger->log("Message history saved\n");
 }
 
 sub load_message_history {
