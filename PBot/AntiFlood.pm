@@ -234,7 +234,6 @@ sub check_flood {
   my $account = $self->get_flood_account($nick, $user, $host);
 
   if(not defined $account) {
-    $self->{pbot}->conn->whois($nick);
     $account = $mask;
   }
 
@@ -284,6 +283,7 @@ sub check_flood {
     if($mode == $self->{FLOOD_JOIN} and $text =~ /^PART/) {
       # don't check for evasion on PARTs
     } else {
+      $self->{pbot}->conn->whois($nick);
       $self->check_bans($account, $channel);
     }
   }
@@ -515,7 +515,6 @@ sub devalidate_accounts {
 
       if((defined $nickserv_account and $nickserv_account eq $ban_account) or $account =~ m/^$mask$/i) {
         $self->{pbot}->logger->log("anti-flood: [devalidate-accounts] $account matches $mask_original in $channel, devalidating\n");
-
         $self->message_history->{$account}->{channels}->{$channel}{validated} = 0;
       }
     }
