@@ -64,6 +64,7 @@ sub get_baninfo {
   my ($self, $mask, $channel, $account) = @_;
   my ($bans, $ban_account);
 
+  $account = undef if $account == -1;
   $account = lc $account if defined $account;
 
   $self->{pbot}->logger->log("[get-baninfo] Getting baninfo for $mask in $channel using account " . (defined $account ? $account : "[undefined]") . "\n");
