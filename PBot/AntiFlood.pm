@@ -154,8 +154,10 @@ sub get_flood_account {
         $self->{message_history}->{$mask}->{channels}->{$channel}{validated} = 0;
       }
 
-      if(defined $self->{message_history}->{$mask}->{nickserv_account}) {
-        $self->check_nickserv_accounts($nick, $self->{message_history}->{$mask}->{nickserv_account}); 
+      if(exists $self->{message_history}->{$mask}->{nickserv_accounts}) {
+        foreach my $nickserv_account (keys $self->{message_history}->{$mask}->{nickserv_accounts}) {
+          $self->check_nickserv_accounts($nick, $nickserv_account); 
+        }
       }
 
       return "$nick!$user\@$host";
@@ -438,22 +440,26 @@ sub unbanme {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
   }
 
-  my $nickserv_account;
-  if(exists $self->{message_history}->{"$nick!$user\@$host"}->{nickserv_account}) {
-    $nickserv_account = $self->{message_history}->{"$nick!$user\@$host"}->{nickserv_account};
+  my $nickserv_accounts;
+  if(exists $self->{message_history}->{"$nick!$user\@$host"}->{nickserv_accounts}) {
+    $nickserv_accounts = $self->{message_history}->{"$nick!$user\@$host"}->{nickserv_accounts};
+  } else {
+    $nickserv_accounts->{0} = 0;
   }
 
-  my $baninfos = $self->{pbot}->bantracker->get_baninfo("$nick!$user\@$host", $channel, $nickserv_account);
+  foreach my $nickserv_account (keys $nickserv_accounts) {
+    my $baninfos = $self->{pbot}->bantracker->get_baninfo("$nick!$user\@$host", $channel, $nickserv_account);
 
-  if(defined $baninfos) {
-    foreach my $baninfo (@$baninfos) {
-      if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
-        $self->{pbot}->logger->log("anti-flood: [unbanme] $nick!$user\@$host banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
-      } else {
-        if($channel eq lc $baninfo->{channel}) {
-          my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
-          $self->{pbot}->logger->log("anti-flood: [unbanme] $nick!$user\@$host $mode as $baninfo->{banmask} in $baninfo->{channel} by $baninfo->{owner}, unbanme rejected\n");
-          return "/msg $nick You have been $mode as $baninfo->{banmask} by $baninfo->{owner}, unbanme will not work until it is removed.";
+    if(defined $baninfos) {
+      foreach my $baninfo (@$baninfos) {
+        if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
+          $self->{pbot}->logger->log("anti-flood: [unbanme] $nick!$user\@$host banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+        } else {
+          if($channel eq lc $baninfo->{channel}) {
+            my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
+            $self->{pbot}->logger->log("anti-flood: [unbanme] $nick!$user\@$host $mode as $baninfo->{banmask} in $baninfo->{channel} by $baninfo->{owner}, unbanme rejected\n");
+            return "/msg $nick You have been $mode as $baninfo->{banmask} by $baninfo->{owner}, unbanme will not work until it is removed.";
+          }
         }
       }
     }
@@ -492,12 +498,12 @@ sub address_to_mask {
 sub devalidate_accounts {
   # remove validation on accounts in $channel that match a ban/quiet $mask
   my ($self, $mask, $channel) = @_;
-  my ($nickserv_account, $ban_account);
+  my ($nickserv_accounts, $ban_account);
 
   if($mask =~ m/^\$a:(.*)/) {
     $ban_account = lc $1;
   } else {
-    $ban_account = "";
+    $ban_account = undef;
   }
 
   my $mask_original = $mask;
@@ -507,13 +513,23 @@ sub devalidate_accounts {
 
   foreach my $account (keys %{ $self->{message_history} }) {
     if(exists $self->{message_history}->{$account}->{channels}->{$channel}) {
-      if(exists $self->{message_history}->{$account}->{nickserv_account}) {
-        $nickserv_account = $self->{message_history}->{$account}->{nickserv_account};
+      if(defined $ban_account and exists $self->{message_history}->{$account}->{nickserv_accounts}) {
+        $nickserv_accounts = $self->{message_history}->{$account}->{nickserv_accounts};
       } else {
-        $nickserv_account = undef;
+        $nickserv_accounts = undef;
       }
 
-      if((defined $nickserv_account and $nickserv_account eq $ban_account) or $account =~ m/^$mask$/i) {
+      my $devalidate = 0;
+      if(defined $ban_account and defined $nickserv_accounts) {
+        foreach my $nickserv_account (keys $nickserv_accounts) {
+          if($nickserv_account eq $ban_account) {
+            $devalidate = 1;
+            last;
+          }
+        }
+      }
+
+      if($devalidate or $account =~ m/^$mask$/i) {
         $self->{pbot}->logger->log("anti-flood: [devalidate-accounts] $account matches $mask_original in $channel, devalidating\n");
         $self->message_history->{$account}->{channels}->{$channel}{validated} = 0;
       }
@@ -523,13 +539,15 @@ sub devalidate_accounts {
 
 sub check_bans {
   my ($self, $mask, $channel) = @_;
-  my ($bans, $nickserv_account, $nick, $host, $do_not_validate);
+  my ($bans, @nickserv_accounts, $nick, $host, $do_not_validate);
 
   # $self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans on $mask in $channel\n"); 
 
-  if(exists $self->{message_history}->{$mask}->{nickserv_account}) {
-    $nickserv_account = $self->{message_history}->{$mask}->{nickserv_account};
-    # $self->{pbot}->logger->log("anti-flood: [check-bans] $mask is using account $nickserv_account\n");
+  if(exists $self->{message_history}->{$mask}->{nickserv_accounts}) {
+    foreach my $account (keys $self->{message_history}->{$mask}->{nickserv_accounts}) {
+      # $self->{pbot}->logger->log("anti-flood: [check-bans] $mask is using account $account\n");
+      push @nickserv_accounts, $account;
+    }
     delete $self->{message_history}->{$mask}->{channels}->{$channel}{needs_validation};
   } else {
     # mark this account as needing check-bans when nickserv account is identified
@@ -542,15 +560,19 @@ sub check_bans {
   foreach my $account (keys %{ $self->{message_history} }) {
     if(exists $self->{message_history}->{$account}->{channels}->{$channel}) {
       my $check_ban = 0;
-      my $target_nickserv_account;
+      my $target_nickserv_accounts;
 
       # check if nickserv accounts match
-      if(defined $nickserv_account) {
-        if(exists $self->{message_history}->{$account}->{nickserv_account} and $self->{message_history}->{$account}->{nickserv_account} eq $nickserv_account) {
-          #$self->{pbot}->logger->log("anti-flood: [check-bans] nickserv account for $account matches $nickserv_account\n");
-          $target_nickserv_account = $self->{message_history}->{$account}->{nickserv_account};
-          $check_ban = 1;
-          goto CHECKBAN;
+      foreach my $nickserv_account (@nickserv_accounts) {
+        if(exists $self->{message_history}->{$account}->{nickserv_accounts}) {
+          foreach my $key ($self->{message_history}->{$account}->{nickserv_accounts}) {
+            if($key eq $nickserv_account) {
+              #$self->{pbot}->logger->log("anti-flood: [check-bans] nickserv account for $account matches $nickserv_account\n");
+              $target_nickserv_accounts = $self->{message_history}->{$account}->{nickserv_accounts};
+              $check_ban = 1;
+              goto CHECKBAN;
+            }
+          }
         }
       }
 
@@ -559,9 +581,8 @@ sub check_bans {
       
       if($host eq $account_host) {
         #$self->{pbot}->logger->log("anti-flood: [check-bans] host for $account matches $mask\n");
-
-        if(exists $self->{message_history}->{$account}->{nickserv_account}) {
-          $target_nickserv_account = $self->{message_history}->{$account}->{nickserv_account};
+        if(exists $self->{message_history}->{$account}->{nickserv_accounts}) {
+          $target_nickserv_accounts = $self->{message_history}->{$account}->{nickserv_accounts};
         }
         $check_ban = 1;
         goto CHECKBAN;
@@ -572,9 +593,8 @@ sub check_bans {
 
       if($nick eq $account_nick) {
         #$self->{pbot}->logger->log("anti-flood: [check-bans] nick for $account matches $mask\n");
-
-        if(exists $self->{message_history}->{$account}->{nickserv_account}) {
-          $target_nickserv_account = $self->{message_history}->{$account}->{nickserv_account};
+        if(exists $self->{message_history}->{$account}->{nickserv_accounts}) {
+          $target_nickserv_accounts = $self->{message_history}->{$account}->{nickserv_accounts};
         }
         $check_ban = 1;
         goto CHECKBAN;
@@ -582,49 +602,62 @@ sub check_bans {
 
       CHECKBAN:
       if($check_ban) {
-        # $self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans in $channel on $account using $target_nickserv_account\n");
-        my $baninfos = $self->{pbot}->bantracker->get_baninfo($account, $channel, $target_nickserv_account);
+        if(not defined $target_nickserv_accounts) {
+          $target_nickserv_accounts->{0} = 0;
+        }
 
-        if(defined $baninfos) {
-          foreach my $baninfo (@$baninfos) {
-            if(time - $baninfo->{when} < 5) {
-              $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but within 5 seconds of establishing ban; giving another chance\n");
-              $self->message_history->{$mask}->{channels}->{$channel}{validated} = 0;
-              $do_not_validate = 1;
+        foreach my $target_nickserv_account (keys $target_nickserv_accounts) {
+          # $self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans in $channel on $account using $target_nickserv_account\n");
+          my $baninfos = $self->{pbot}->bantracker->get_baninfo($account, $channel, $target_nickserv_account);
+
+          if(defined $baninfos) {
+            foreach my $baninfo (@$baninfos) {
+              if(time - $baninfo->{when} < 5) {
+                $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but within 5 seconds of establishing ban; giving another chance\n");
+                $self->message_history->{$mask}->{channels}->{$channel}{validated} = 0;
+                $do_not_validate = 1;
+                next;
+              }
+
+              if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
+                $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+                next;
+              } 
+
+              if($baninfo->{type} eq '+b' and $baninfo->{banmask} =~ m/!\*@\*$/) {
+                $self->{pbot}->logger->log("anti-flood: [check-bans] Disregarding generic nick ban\n");
+                next;
+              } 
+
+              my $banmask_regex = quotemeta $baninfo->{banmask};
+              $banmask_regex =~ s/\\\*/.*/g;
+              $banmask_regex =~ s/\\\?/./g;
+
+              if($baninfo->{type} eq '+q' and $mask =~ /^$banmask_regex$/i) {
+                $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches quiet banmask ($banmask_regex), disregarding\n");
+                next;
+              }
+
+              my $skip_quiet_nickserv_mask = 0;
+              foreach my $nickserv_account (@nickserv_accounts) {
+                if($baninfo->{type} eq '+q' and $baninfo->{banmask} =~ /^\$a:(.*)/ and lc $1 eq $nickserv_account and $nickserv_account eq $self->{message_history}->{$mask}->{nickserv_account}) {
+                  $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches account ($nickserv_account), disregarding\n");
+                  $skip_quiet_nickserv_mask = 1;
+                } elsif($baninfo->{type} eq '+b' and $baninfo->{banmask} =~ /^\$a:(.*)/ and lc $1 eq $nickserv_account) {
+                  $skip_quiet_nickserv_mask = 0;
+                  last;
+                }
+              }
+              next if $skip_quiet_nickserv_mask;
+
+              if(not defined $bans) {
+                $bans = [];
+              }
+
+              $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches $baninfo->{type} $baninfo->{banmask}, adding ban\n");
+              push @$bans, $baninfo;
               next;
             }
-
-            if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
-              $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
-              next;
-            } 
-
-            if($baninfo->{type} eq '+b' and $baninfo->{banmask} =~ m/!\*@\*$/) {
-              $self->{pbot}->logger->log("anti-flood: [check-bans] Disregarding generic nick ban\n");
-              next;
-            } 
-
-            my $banmask_regex = quotemeta $baninfo->{banmask};
-            $banmask_regex =~ s/\\\*/.*/g;
-            $banmask_regex =~ s/\\\?/./g;
-
-            if($baninfo->{type} eq '+q' and $mask =~ /^$banmask_regex$/i) {
-              $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches quiet banmask ($banmask_regex), disregarding\n");
-              next;
-            }
-
-            if(defined $nickserv_account and $baninfo->{type} eq '+q' and $baninfo->{banmask} =~ /^\$a:(.*)/ and lc $1 eq lc $nickserv_account) {
-              $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches account ($nickserv_account), disregarding\n");
-              next;
-            }
-
-            if(not defined $bans) {
-              $bans = [];
-            }
-
-            $self->{pbot}->logger->log("anti-flood: [check-bans] Hostmask ($mask) matches $baninfo->{type} $baninfo->{banmask}, adding ban\n");
-            push @$bans, $baninfo;
-            next;
           }
         }
       }
@@ -649,19 +682,19 @@ sub check_bans {
 sub check_nickserv_accounts {
   my ($self, $nick, $account) = @_;
 
+  $account = lc $account;
+
   foreach my $mask (keys %{ $self->{message_history} }) {
-    if(exists $self->{message_history}->{$mask}->{nickserv_account}) {
-      # has nickserv account
-      if(lc $self->{message_history}->{$mask}->{nickserv_account} eq lc $account) {
-        # pre-existing mask found using this account previously
-        #$self->{pbot}->logger->log("anti-flood: [check-account] $nick [nickserv: $account] seen previously as $mask.\n");
-      }
+    if(exists $self->{message_history}->{$mask}->{nickserv_accounts} and exists $self->{message_history}->{$mask}->{nickserv_accounts}->{$account}) {
+      # pre-existing mask found using this account previously
+      #$self->{pbot}->logger->log("anti-flood: [check-account] $nick [nickserv: $account] seen previously as $mask.\n");
     }
     else {
       # no nickserv account set yet
       if($mask =~ m/^\Q$nick\E!/i) {
         # nick matches, must belong to account
         $self->{pbot}->logger->log("anti-flood: $mask: setting nickserv account to [$account]\n");
+        $self->message_history->{$mask}->{nickserv_accounts}->{$account} = gettimeofday;
         $self->message_history->{$mask}->{nickserv_account} = $account;
 
         # check to see if any channels need check-ban validation
@@ -679,7 +712,7 @@ sub check_nickserv_accounts {
 sub on_whoisaccount {
   my ($self, $conn, $event) = @_;
   my $nick    = $event->{args}[1];
-  my $account = $event->{args}[2];
+  my $account = lc $event->{args}[2];
 
   $self->{pbot}->logger->log("$nick is using NickServ account [$account]\n");
   $self->check_nickserv_accounts($nick, $account);
