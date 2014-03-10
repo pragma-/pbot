@@ -695,6 +695,7 @@ sub check_nickserv_accounts {
       if(exists $self->{message_history}->{$mask}->{nickserv_accounts} and exists $self->{message_history}->{$mask}->{nickserv_accounts}->{$account}) {
         # pre-existing mask found using this account previously
         #$self->{pbot}->logger->log("anti-flood: [check-account] $nick [nickserv: $account] seen previously as $mask.\n");
+        $hostmask = $mask;
       }
       else {
         # no nickserv account set yet
