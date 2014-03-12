@@ -52,14 +52,17 @@ sub initialize {
   $self->{FLOOD_CHAT} = 0;
   $self->{FLOOD_JOIN} = 1;
 
+  $self->{ENTER_ABUSE_MAX_LINES} = 4;
+  $self->{ENTER_ABUSE_MAX_OFFENSES} = 3;
+
   $self->load_message_history;
+  $self->{channels} = {}; # per-channel statistics, e.g. for optimized tracking of last spoken nick, etc
 
   my $filename = delete $conf{filename} // $self->{pbot}->{data_dir} . '/ban_whitelist';
   $self->{ban_whitelist} = PBot::DualIndexHashObject->new(name => 'BanWhitelist', filename => $filename);
   $self->{ban_whitelist}->load;
 
   $pbot->timer->register(sub { $self->prune_message_history }, 60 * 60 * 1);
-  $pbot->timer->register(sub { $self->save_message_history }, 60 * 60 * 8);
 
   $pbot->commands->register(sub { return $self->unbanme(@_)   },  "unbanme",   0);
   $pbot->commands->register(sub { return $self->whitelist(@_) },  "whitelist", 10);
@@ -177,7 +180,6 @@ sub add_message {
   my $now = gettimeofday;
 
   return undef if $channel =~ /[@!]/; # ignore QUIT messages from nick!user@host channels
-  return undef if $account =~ /(?:$self->{pbot}->{username}|stdin)\@localhost/;
 
   $text =~ s/^$self->{pbot}->{trigger}login\s+\S+/$self->{pbot}->{trigger}login <redacted>/; # redact login passwords (e.g., from `recall` command, etc)
 
@@ -264,7 +266,10 @@ sub check_flood {
   return if not defined $length;
   
   # do not do flood processing for bot messages
-  return if $nick eq lc $self->{pbot}->botnick;
+  if($nick eq $self->{pbot}->botnick) {
+    $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+    return;
+  }
 
   # do not do flood processing if channel is not in bot's channel list or bot is not set as chanop for the channel
   return if ($channel =~ /^#/) and (not exists $self->{pbot}->channels->channels->hash->{$channel} or $self->{pbot}->channels->channels->hash->{$channel}{chanop} == 0);
@@ -292,6 +297,25 @@ sub check_flood {
     } else {
       $self->{pbot}->conn->whois($nick);
       $self->check_bans($account, $channel);
+    }
+  }
+
+  if($mode == $self->{FLOOD_CHAT} and $channel =~ m/^#/) {
+    if(defined $self->{channels}->{$channel}->{last_spoken_nick} and $nick eq $self->{channels}->{$channel}->{last_spoken_nick}) {
+      if(++$self->message_history->{$account}->{channels}->{$channel}{enter_abuse} >= $self->{ENTER_ABUSE_MAX_LINES} - 1) {
+        $self->message_history->{$account}->{channels}->{$channel}{enter_abuse} = $self->{ENTER_ABUSE_MAX_LINES} / 2 - 1;
+        if(++$self->message_history->{$account}->{channels}->{$channel}{enter_abuses} >= $self->{ENTER_ABUSE_MAX_OFFENSES}) {
+          my $offenses = $self->message_history->{$account}->{channels}->{$channel}{enter_abuses} - $self->{ENTER_ABUSE_MAX_OFFENSES} + 1;
+          my $ban_length = $offenses ** $offenses * $offenses * 30;
+          $self->{pbot}->chanops->ban_user_timed("*!$user\@$host", $channel, $ban_length);
+          $ban_length = duration($ban_length);
+          $self->{pbot}->logger->log("$nick $channel enter abuse offense " . $self->message_history->{$account}->{channels}->{$channel}{enter_abuses} . " earned $ban_length ban\n");
+          $self->{pbot}->conn->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in $ban_length.");
+        }
+      }
+    } else {
+      $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+      $self->message_history->{$account}->{channels}->{$channel}{enter_abuse} = 0;
     }
   }
 
@@ -326,17 +350,13 @@ sub check_flood {
         if($self->message_history->{$account}->{channels}->{$channel}{join_watch} >= $max_messages) {
           $self->message_history->{$account}->{channels}->{$channel}{offenses}++;
           $self->message_history->{$account}->{channels}->{$channel}{last_offense_timestamp} = gettimeofday;
-          
+
           my $timeout = (2 ** (($self->message_history->{$account}->{channels}->{$channel}{offenses} + 2) < 10 ? $self->message_history->{$account}->{channels}->{$channel}{offenses} + 2 : 10));
-
           my $banmask = address_to_mask($host);
-
+          
           $self->{pbot}->chanops->ban_user_timed("*!$user\@$banmask\$##stop_join_flood", $channel, $timeout * 60 * 60);
-          
           $self->{pbot}->logger->log("$nick!$user\@$banmask banned for $timeout hours due to join flooding (offense #" . $self->message_history->{$account}->{channels}->{$channel}{offenses} . ").\n");
-          
           $self->{pbot}->conn->privmsg($nick, "You have been banned from $channel due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with: unbanme $channel, otherwise you will be automatically unbanned in $timeout hours.");
-
           $self->message_history->{$account}->{channels}->{$channel}{join_watch} = $max_messages - 2; # give them a chance to rejoin 
         } 
       } elsif($mode == $self->{FLOOD_CHAT}) {
@@ -350,30 +370,15 @@ sub check_flood {
 
         if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
           $self->{pbot}->chanops->ban_user_timed("*!$user\@$host", $channel, $length);
-
-          $self->{pbot}->logger->log("$nick $channel flood offense " . $self->message_history->{$account}->{channels}->{$channel}{offenses} . " earned $length second ban\n");
-
-          if($length  < 1000) {
-            $length = "$length seconds";
-          } else {
-            $length = "a little while";
-          }
-
+          $length = duration($length);
+          $self->{pbot}->logger->log("$nick $channel flood offense " . $self->message_history->{$account}->{channels}->{$channel}{offenses} . " earned $length ban\n");
           $self->{pbot}->conn->privmsg($nick, "You have been muted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length.");
         } 
         else { # private message flood
           return if exists ${ $self->{pbot}->ignorelist->{ignore_list} }{"$nick!$user\@$host"}{$channel};
-
-          $self->{pbot}->logger->log("$nick msg flood offense " . $self->message_history->{$account}->{channels}->{$channel}{offenses} . " earned $length second ignore\n");
-
           $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", "$nick!$user\@$host $channel $length");
-
-          if($length  < 1000) {
-            $length = "$length seconds";
-          } else {
-            $length = "a little while";
-          }
-
+          $length = duration($length);
+          $self->{pbot}->logger->log("$nick msg flood offense " . $self->message_history->{$account}->{channels}->{$channel}{offenses} . " earned $length ignore\n");
           $self->{pbot}->conn->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");
         }
       }
@@ -393,7 +398,6 @@ sub prune_message_history {
 
   foreach my $mask (keys %{ $self->{message_history} }) {
     foreach my $channel (keys %{ $self->{message_history}->{$mask}->{channels} }) {
-
       my $length = $#{ $self->{message_history}->{$mask}->{channels}->{$channel}{messages} } + 1;
 
       if($length <= 0) {
@@ -412,12 +416,18 @@ sub prune_message_history {
       } 
 
       # decrease offenses counter if 24 hours of elapsed without any new offense
-      elsif ($self->{message_history}->{$mask}->{channels}->{$channel}{offenses} > 0 and 
+      if ($self->{message_history}->{$mask}->{channels}->{$channel}{offenses} > 0 and 
              $self->{message_history}->{$mask}->{channels}->{$channel}{last_offense_timestamp} > 0 and 
              (gettimeofday - $self->{message_history}->{$mask}->{channels}->{$channel}{last_offense_timestamp} >= 60 * 60 * 24)) {
         $self->{message_history}->{$mask}->{channels}->{$channel}{offenses}--;
         $self->{message_history}->{$mask}->{channels}->{$channel}{last_offense_timestamp} = gettimeofday;
         $self->{pbot}->logger->log("[prune-message-history] [$channel][$mask] 24 hours since last offense/decrease -- decreasing offenses to $self->{message_history}->{$mask}->{channels}->{$channel}{offenses}\n");
+      }
+
+      # decrease enter abuses counter once an hour
+      if(defined $self->message_history->{$mask}->{channels}->{$channel}{enter_abuses} and $self->message_history->{$mask}->{channels}->{$channel}{enter_abuses} > 0) {
+        $self->message_history->{$mask}->{channels}->{$channel}{enter_abuses}--;
+        $self->{pbot}->logger->log("[prune-message-history] [$channel][$mask] decreasing enter abuse offenses to $self->{message_history}->{$mask}->{channels}->{$channel}{enter_abuses}\n");
       }
     }
 
@@ -427,6 +437,7 @@ sub prune_message_history {
       delete $self->{message_history}->{$mask};
     }
   }
+  $self->save_message_history;
 }
 
 sub unbanme {
