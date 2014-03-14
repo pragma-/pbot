@@ -21,6 +21,7 @@ STDOUT->autoflush(1);
 use Carp ();
 use PBot::Logger;
 
+use PBot::SelectHandler;
 use PBot::StdinReader;
 
 use PBot::IRC;
@@ -106,8 +107,10 @@ sub initialize {
   $self->{commands}           = PBot::Commands->new(pbot => $self);
   $self->{timer}              = PBot::Timer->new(timeout => 10);
 
-  $self->{admins}             = PBot::BotAdmins->new(pbot => $self, filename => $admins_file);
+  $self->{select_handler}     = PBot::SelectHandler->new(pbot => $self);
+  $self->{stdin_reader}       = PBot::StdinReader->new(pbot => $self);
 
+  $self->{admins}             = PBot::BotAdmins->new(pbot => $self, filename => $admins_file);
   $self->admins->load_admins();
   $self->admins->add_admin($self->{botnick}, '.*', "$self->{botnick}!stdin\@localhost", 60, 'admin');
   $self->admins->login($self->{botnick}, "$self->{botnick}!stdin\@localhost", 'admin');
@@ -215,8 +218,8 @@ sub do_one_loop {
   # process IRC events
   $self->irc->do_one_loop();
 
-  # process STDIN events
-  $self->check_stdin();
+  # process SelectHandler
+  $self->{select_handler}->do_select();
 }
 
 sub start {
@@ -229,29 +232,6 @@ sub start {
   while(1) {
     $self->do_one_loop();
   }
-}
-
-sub check_stdin {
-  my $self = shift;
-
-  my $input = PBot::StdinReader::check_stdin();
-
-  return if not defined $input;
-
-  $self->logger->log("---------------------------------------------\n");
-  $self->logger->log("Read '$input' from STDIN\n");
-
-  my ($from, $text);
-
-  if($input =~ m/^~([^ ]+)\s+(.*)/) {
-    $from = $1;
-    $text = "$self->{trigger}$2";
-  } else {
-    $from = "$self->{botnick}!stdin\@localhost";
-    $text = "$self->{trigger}$input";
-  }
-
-  return $self->interpreter->process_line($from, $self->{botnick}, "stdin", "localhost", $text);
 }
 
 #-----------------------------------------------------------------------------------
