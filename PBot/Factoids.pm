@@ -388,7 +388,7 @@ sub interpreter {
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
 
-    return $ref_from . $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, $keyword, $arguments);
+    return $ref_from . $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, "$keyword $arguments", $keyword, $arguments, 1);
   }
   elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'text') {
     $self->{pbot}->logger->log("Found factoid\n");

@@ -87,7 +87,7 @@ sub process_line {
   my $self = shift;
   my ($from, $nick, $user, $host, $text) = @_;
 
-  my ($command, $args, $result);
+  my $command;
   my $has_url;
   my $has_code;
   my $nick_override;
@@ -133,78 +133,77 @@ sub process_line {
     }
 
     if(defined $has_url) {
-      $result = $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, "title", "$nick http://$has_url");
+      $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
     } elsif(defined $has_code) {
-      $result = $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }");
+      $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
     } else {
-      $result = $self->interpret($from, $nick, $user, $host, 1, $command);
-    }
-
-    if(defined $result && length $result > 0) {
-      my $original_result = $result;
-      $result =~ s/[\n\r]+/ /g;
-
-      if($preserve_whitespace == 0 && defined $command) {
-        my ($cmd, $args) = split / /, $command, 2;
-        #$self->{pbot}->logger->log("calling find_factoid in Interpreter.pm, process_line() for preserve_whitespace\n");
-        my ($chan, $trigger) = $self->{pbot}->factoids->find_factoid($from, $cmd, $args, 0, 1);
-        if(defined $trigger) {
-          $preserve_whitespace = $self->{pbot}->factoids->factoids->hash->{$chan}->{$trigger}->{preserve_whitespace};
-          $preserve_whitespace = 0 if not defined $preserve_whitespace;
-        }
-      }
-
-      $result =~ s/\s+/ /g unless $preserve_whitespace;
-
-      if(length $result > $pbot->max_msg_len) {
-        my $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
-        my $trunc = "... [truncated; see $link for full text.]";
-        $pbot->logger->log("Message truncated -- pasted to $link\n");
-        
-        my $trunc_len = length $result < $pbot->max_msg_len ? length $result : $pbot->max_msg_len;
-        $result = substr($result, 0, $trunc_len);
-        substr($result, $trunc_len - length $trunc) = $trunc;
-      }
-
-      $pbot->logger->log("Final result: $result\n");
-      
-      if($result =~ s/^\/say\s+//i) {
-        $pbot->conn->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-        $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0);
-      } elsif($result =~ s/^\/me\s+//i) {
-        $pbot->conn->me($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-        $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', '/me ' . $result, 0, 0, 0);
-      } elsif($result =~ s/^\/msg\s+([^\s]+)\s+//i) {
-        my $to = $1;
-        if($to =~ /,/) {
-          $pbot->logger->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$nick!$user\@$host] [$command] [$result]\n");
-        }
-        elsif($to =~ /.*serv$/i) {
-          $pbot->logger->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$nick!$user\@$host] [$command] [$result]\n");
-        }
-        elsif($result =~ s/^\/me\s+//i) {
-          $pbot->conn->me($to, $result) if $to !~ /\Q$mynick\E/i;
-          $pbot->antiflood->check_flood($to, $pbot->{botnick}, $pbot->{username}, 'localhost', '/me ' . $result, 0, 0, 0);
-        } else {
-          $result =~ s/^\/say\s+//i;
-          $pbot->conn->privmsg($to, $result) if $to !~ /\Q$mynick\E/i;
-          $pbot->antiflood->check_flood($to, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0);
-        }
-      } else {
-        $pbot->conn->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-        $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0);
-      }
-    }
-
-    $pbot->logger->log("---------------------------------------------\n");
-
-    # TODO: move this to FactoidModuleLauncher somehow, completely out of Interpreter!
-    if($pbot->factoids->{factoidmodulelauncher}->{child} != 0) {
-      # if this process is a child, it must die now
-      $pbot->logger->log("Terminating module.\n");
-      exit 0;
+      $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command), 1, $preserve_whitespace); 
     }
   }
+}
+
+sub handle_result {
+  my ($self, $from, $nick, $user, $host, $text, $command, $result, $checkflood, $preserve_whitespace) = @_;
+  my ($pbot, $mynick) = ($self->{pbot}, $self->{pbot}->{botnick});
+
+  if(not defined $result or length $result == 0) {
+    return;
+  }
+
+  my $original_result = $result;
+  $result =~ s/[\n\r]+/ /g;
+
+  if($preserve_whitespace == 0 && defined $command) {
+    my ($cmd, $args) = split / /, $command, 2;
+    #$self->{pbot}->logger->log("calling find_factoid in Interpreter.pm, process_line() for preserve_whitespace\n");
+    my ($chan, $trigger) = $self->{pbot}->factoids->find_factoid($from, $cmd, $args, 0, 1);
+    if(defined $trigger) {
+      $preserve_whitespace = $self->{pbot}->factoids->factoids->hash->{$chan}->{$trigger}->{preserve_whitespace};
+      $preserve_whitespace = 0 if not defined $preserve_whitespace;
+    }
+  }
+
+  $result =~ s/\s+/ /g unless $preserve_whitespace;
+
+  if(length $result > $pbot->max_msg_len) {
+    my $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
+    my $trunc = "... [truncated; see $link for full text.]";
+    $pbot->logger->log("Message truncated -- pasted to $link\n");
+
+    my $trunc_len = length $result < $pbot->max_msg_len ? length $result : $pbot->max_msg_len;
+    $result = substr($result, 0, $trunc_len);
+    substr($result, $trunc_len - length $trunc) = $trunc;
+  }
+
+  $pbot->logger->log("Final result: [$result]\n");
+
+  if($result =~ s/^\/say\s+//i) {
+    $pbot->conn->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
+    $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0) if $checkflood;
+  } elsif($result =~ s/^\/me\s+//i) {
+    $pbot->conn->me($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
+    $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
+  } elsif($result =~ s/^\/msg\s+([^\s]+)\s+//i) {
+    my $to = $1;
+    if($to =~ /,/) {
+      $pbot->logger->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$nick!$user\@$host] [$command] [$result]\n");
+    }
+    elsif($to =~ /.*serv$/i) {
+      $pbot->logger->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$nick!$user\@$host] [$command] [$result]\n");
+    }
+    elsif($result =~ s/^\/me\s+//i) {
+      $pbot->conn->me($to, $result) if $to !~ /\Q$mynick\E/i;
+      $pbot->antiflood->check_flood($to, $pbot->{botnick}, $pbot->{username}, 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
+    } else {
+      $result =~ s/^\/say\s+//i;
+      $pbot->conn->privmsg($to, $result) if $to !~ /\Q$mynick\E/i;
+      $pbot->antiflood->check_flood($to, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0) if $checkflood;
+    }
+  } else {
+    $pbot->conn->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
+    $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0) if $checkflood;
+  }
+  $pbot->logger->log("---------------------------------------------\n");
 }
 
 sub interpret {

@@ -38,12 +38,11 @@ sub initialize {
     Carp::croak("Missing pbot reference to PBot::FactoidModuleLauncher");
   }
 
-  $self->{child} = 0;
   $self->{pbot} = $pbot;
 }
 
 sub execute_module {
-  my ($self, $from, $tonick, $nick, $user, $host, $keyword, $arguments) = @_;
+  my ($self, $from, $tonick, $nick, $user, $host, $command, $keyword, $arguments, $preserve_whitespace) = @_;
   my $text;
 
   $arguments = "" if not defined $arguments;
@@ -51,7 +50,8 @@ sub execute_module {
   my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($from, $keyword);
 
   if(not defined $trigger) {
-    return "/msg $nick Failed to find module for '$keyword' in channel $from\n";
+    $self->{pbot}->{interpreter}->handle_result($from, $nick, $user, $host, $command, "$keyword $arguments", "/msg $nick Failed to find module for '$keyword' in channel $from\n", 1, 0);
+    return;
   }
 
   my $module = $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{action};
@@ -110,16 +110,21 @@ sub execute_module {
     }
   }
 
+  pipe(my $reader, my $writer);
   my $pid = fork;
+
   if(not defined $pid) {
     $self->{pbot}->logger->log("Could not fork module: $!\n");
-    return "/me groans loudly.";
+    close $reader;
+    close $writer;
+    $self->{pbot}->{interpreter}->handle_result($from, $nick, $user, $host, $command, "$keyword $arguments", "/me groans loudly.\n", 1, 0);
+    return; 
   }
 
-  # FIXME -- add check to ensure $module} exists
+  # FIXME -- add check to ensure $module exists
 
   if($pid == 0) { # start child block
-    $self->{child} = 1; # set to be killed after returning
+    close $reader;
     
     # don't quit the IRC client when the child dies
     no warnings;
@@ -142,25 +147,37 @@ sub execute_module {
         $text =~ s/^\/([^ ]+) \Q$nick\E:\s+/\/$1 /;
         $text =~ s/^\Q$nick\E:\s+//;
 
-        return "$tonick: $text";
-      } else {
-        return "";
+        print $writer "$from $tonick: $text\n";
+        $self->{pbot}->{interpreter}->handle_result($from, $nick, $user, $host, $command, "$keyword $arguments", "$tonick: $text", 0, $preserve_whitespace);
       }
+      exit 0;
     } else {
       if(exists $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{add_nick} and $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{add_nick} != 0) {
-        return "$nick: $text";
+        print $writer "$from $nick: $text";
+        $self->{pbot}->{interpreter}->handle_result($from, $nick, $user, $host, $command, "$keyword $arguments", "$nick: $text", 0, $preserve_whitespace);
       } else {
-        return $text;
+        print $writer "$from $text";
+        $self->{pbot}->{interpreter}->handle_result($from, $nick, $user, $host, $command, "$keyword $arguments", $text, 0, $preserve_whitespace);
       }
+      exit 0;
     }
 
-    return "/me moans loudly."; # er, didn't execute the module?
+    # er, didn't execute the module?
+    print $writer "$from /me moans loudly.\n";
+    $self->{pbot}->{interpreter}->handle_result($from, $nick, $user, $host, $command, "$keyword $arguments", "/me moans loudly.", 0, 0);
+    exit 0;
   } # end child block
   else {
-    $self->{child} = 0;
+    close $writer;
+    $self->{pbot}->{select_handler}->add_reader($reader, sub { $self->module_pipe_reader(@_) });
+    return "";
   }
-  
-  return ""; # child returns bot command, not parent -- so return blank/no command
+}
+
+sub module_pipe_reader {
+  my ($self, $buf) = @_;
+  my ($channel, $text) = split / /, $buf, 2;
+  $self->{pbot}->antiflood->check_flood($channel, $self->{pbot}->{botnick}, $self->{pbot}->{username}, 'localhost', $text, 0, 0, 0);
 }
 
 1;
