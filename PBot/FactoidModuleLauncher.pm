@@ -177,6 +177,8 @@ sub execute_module {
 sub module_pipe_reader {
   my ($self, $buf) = @_;
   my ($channel, $text) = split / /, $buf, 2;
+  return if not defined $text or not length $text;
+  $text = $self->{pbot}->interpreter->truncate_result($channel, $self->{pbot}->{botnick}, 'undef', $text, $text, 0);
   $self->{pbot}->antiflood->check_flood($channel, $self->{pbot}->{botnick}, $self->{pbot}->{username}, 'localhost', $text, 0, 0, 0);
 }
 

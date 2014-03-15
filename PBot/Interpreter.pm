@@ -142,6 +142,28 @@ sub process_line {
   }
 }
 
+sub truncate_result {
+  my ($self, $from, $nick, $text, $original_result, $result, $paste) = @_;
+
+  if(length $result > $self->{pbot}->max_msg_len) {
+    my $link;
+    if($paste) {
+      $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
+    } else {
+      $link = 'undef';
+    }
+
+    my $trunc = "... [truncated; see $link for full text.]";
+    $self->{pbot}->logger->log("Message truncated -- pasted to $link\n") if $paste;
+
+    my $trunc_len = length $result < $self->{pbot}->max_msg_len ? length $result : $self->{pbot}->max_msg_len;
+    $result = substr($result, 0, $trunc_len);
+    substr($result, $trunc_len - length $trunc) = $trunc;
+  }
+
+  return $result;
+}
+
 sub handle_result {
   my ($self, $from, $nick, $user, $host, $text, $command, $result, $checkflood, $preserve_whitespace) = @_;
   my ($pbot, $mynick) = ($self->{pbot}, $self->{pbot}->{botnick});
@@ -151,7 +173,7 @@ sub handle_result {
   }
 
   my $original_result = $result;
-  $result =~ s/[\n\r]+/ /g;
+  $result =~ s/[\n\r]/ /g;
 
   if($preserve_whitespace == 0 && defined $command) {
     my ($cmd, $args) = split / /, $command, 2;
@@ -164,17 +186,7 @@ sub handle_result {
   }
 
   $result =~ s/\s+/ /g unless $preserve_whitespace;
-
-  if(length $result > $pbot->max_msg_len) {
-    my $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
-    my $trunc = "... [truncated; see $link for full text.]";
-    $pbot->logger->log("Message truncated -- pasted to $link\n");
-
-    my $trunc_len = length $result < $pbot->max_msg_len ? length $result : $pbot->max_msg_len;
-    $result = substr($result, 0, $trunc_len);
-    substr($result, $trunc_len - length $trunc) = $trunc;
-  }
-
+  $result = $self->truncate_result($from, $nick, $text, $original_result, $result, 1);
   $pbot->logger->log("Final result: [$result]\n");
 
   if($result =~ s/^\/say\s+//i) {
