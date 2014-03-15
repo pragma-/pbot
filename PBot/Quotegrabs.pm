@@ -398,9 +398,9 @@ sub show_quotegrab {
   my ($first_nick) = split /\+/, $quotegrab->{nick}, 2;
 
   if($text =~ s/^\/me\s+//) {
-      return "$arguments: grabbed by $quotegrab->{grabbed_by} on " . localtime($timestamp) . " [$ago] * $first_nick $text";
+      return "$arguments: grabbed by $quotegrab->{grabbed_by} in $quotegrab->{channel} on " . localtime($timestamp) . " [$ago] * $first_nick $text";
   } else {
-      return "$arguments: grabbed by $quotegrab->{grabbed_by} on " . localtime($timestamp) . " [$ago] <$first_nick> $text";
+      return "$arguments: grabbed by $quotegrab->{grabbed_by} in $quotegrab->{channel} on " . localtime($timestamp) . " [$ago] <$first_nick> $text";
   }
 }
 
