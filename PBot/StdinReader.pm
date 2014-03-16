@@ -28,7 +28,6 @@ sub initialize {
   # used to check whether process is in background or foreground, for stdin reading
   open TTY, "</dev/tty" or die $!;
   $self->{tty_fd} = fileno(TTY);
-  $self->{foreground} = (tcgetpgrp($self->{tty_fd}) == getpgrp()) ? 1 : 0;
 
   $self->{pbot}->{select_handler}->add_reader(\*STDIN, sub { $self->stdin_reader(@_) });
 }

@@ -35,28 +35,30 @@ sub add_reader {
   $self->{readers}->{$handle} = $sub;
 }
 
+sub remove_reader {
+  my ($self, $handle) = @_;
+  $self->{select}->remove($handle);
+  delete $self->{readers}->{$handle};
+}
+
 sub do_select {
   my ($self) = @_;
   my @ready = $self->{select}->can_read(.5);
   foreach my $fh (@ready) {
-    my $ret = sysread($fh, my $buf, 4096);
+    my $ret = sysread($fh, my $buf, 8192);
 
     if(not defined $ret) {
       $self->{pbot}->logger->log("Error with $fh: $!\n");
-      $self->{select}->remove($fh);
-      delete $self->{readers}->{$fh};
+      $self->remove_reader($fh);
       next;
     }
 
     if($ret == 0) {
-      $self->{pbot}->logger->log("done with $fh\n");
-      $self->{select}->remove($fh);
-      delete $self->{readers}->{$fh};
+      $self->remove_reader($fh);
       next;
     }
 
     chomp $buf;
-    $self->{pbot}->logger->log("read from $fh: [$buf]\n");
 
     if(not exists $self->{readers}->{$fh}) {
       $self->{pbot}->logger->log("Error: no reader for $fh\n");
