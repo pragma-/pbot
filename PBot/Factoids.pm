@@ -388,7 +388,10 @@ sub interpreter {
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
     $self->factoids->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
 
-    return $ref_from . $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, "$keyword $arguments", $keyword, $arguments, 1);
+    my $preserve_whitespace = $self->factoids->hash->{$channel}->{$keyword}->{preserve_whitespace};
+    $preserve_whitespace = 0 if not defined $preserve_whitespace;
+
+    return $ref_from . $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, "$keyword $arguments", $keyword, $arguments, $preserve_whitespace);
   }
   elsif($self->factoids->hash->{$channel}->{$keyword}->{type} eq 'text') {
     $self->{pbot}->logger->log("Found factoid\n");

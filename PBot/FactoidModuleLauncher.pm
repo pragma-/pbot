@@ -63,7 +63,6 @@ sub execute_module {
   $arguments =~ s/\$channel/$from/g;
 
   $arguments = quotemeta($arguments);
-  $arguments =~ s/\\\s/ /g;
 
   if(exists $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}) {
     if($self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\//) {
@@ -81,7 +80,7 @@ sub execute_module {
       $arguments =~ s/\$9/$i/g;
       $arguments =~ s/\$`/$before/g;
       $arguments =~ s/\$'/$after/g;
-      $self->{pbot}->logger->log("arguments subpattern: $arguments\n");
+      #$self->{pbot}->logger->log("arguments subpattern: $arguments\n");
     } else {
       $self->{pbot}->logger->log("Invalid module substitution pattern [" . $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}. "], ignoring.\n");
     }
