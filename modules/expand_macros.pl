@@ -16,7 +16,7 @@ my $USE_LOCAL        = defined $ENV{'CC_LOCAL'};
 my $output = "";
 my $nooutput = 'No output.';
 
-if($#ARGV < 1) {
+if($#ARGV < 0) {
   print "Usage: expand <code>\n";
   exit 0;
 }
