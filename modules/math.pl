@@ -23,7 +23,7 @@ if($arguments =~ m/([\$`\|{}"'#@=])/) {
 } else {
   while($arguments =~ /([a-zA-Z0-9]+)/g) {
     my $keyword = $1;
-    next if $keyword =~ m/^[0-9]$/;
+    next if $keyword =~ m/^[0-9]+$/;
     $invalid = $keyword and last if not grep { /^$keyword$/ } @valid_keywords;
   }
 }
