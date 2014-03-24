@@ -487,4 +487,4 @@ sub flushall {
     }
 }
 
-execute("LIBC_FATAL_STDERR=1 gdb -silent ./prog 2>&1");
+execute("LIBC_FATAL_STDERR=1 MALLOC_CHECK_=1 gdb -silent -q -nx ./prog 2>&1");
