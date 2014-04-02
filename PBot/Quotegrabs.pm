@@ -533,6 +533,7 @@ sub recall_message {
     }
 
     my @messages = @{ $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}{messages} };
+    my ($found_nick) = $found_mask =~ m/^([^!]+)/;
 
     if($recall_history =~ /^\d+$/) {
       # integral history
@@ -572,26 +573,20 @@ sub recall_message {
 
     $self->{pbot}->logger->log("$nick ($from) recalled <$recall_nick/$channel> $messages[$recall_history]->{msg}\n");
 
-    if(not defined $recall_nicks) {
-      $recall_nicks = $recall_nick;
-    } else {
-      $recall_nicks .= "+$recall_nick";
-    }
-
     my $text = $messages[$recall_history]->{msg};
     my $ago = ago(gettimeofday - $messages[$recall_history]->{timestamp});
 
     if(not defined $recall_text) {
       if($text =~ s/^\/me\s+//) {
-        $recall_text = "[$ago] * $recall_nick $text";
+        $recall_text = "[$ago] * $found_nick $text";
       } else {
-        $recall_text = "[$ago] <$recall_nick> $text";
+        $recall_text = "[$ago] <$found_nick> $text";
       }
     } else {
       if($text =~ s/^\/me\s+//) {
-        $recall_text .= " [$ago] * $recall_nick $text";
+        $recall_text .= " [$ago] * $found_nick $text";
       } else {
-        $recall_text .= " [$ago] <$recall_nick> $text";
+        $recall_text .= " [$ago] <$found_nick> $text";
       }
     }
   }
