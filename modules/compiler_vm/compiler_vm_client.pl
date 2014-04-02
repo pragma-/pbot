@@ -1142,4 +1142,22 @@ if(defined $got_paste or (defined $got_run and $got_run eq "paste")) {
   exit 0;
 }
 
+if(open FILE, "< history/$channel.last-output") {
+  my $last_output;
+
+  while(my $line = <FILE>) {
+    $last_output .= $line;
+  }
+  close FILE;
+
+  if($last_output eq $output) {
+    print "$nick: Same output.\n";
+    exit 0;
+  }
+}
+
 print "$nick: $output\n";
+
+open FILE, "> history/$channel.last-output" or die "Couldn't open $channel.last-output: $!";
+print FILE "$output";
+close FILE;
