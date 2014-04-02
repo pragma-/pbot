@@ -253,12 +253,16 @@ if($subcode =~ m/^\s*(?:and\s+)?(run|paste)\s*$/i) {
   my @replacements;
   my $prevchange = $last_code[0];
   my $got_changes = 0;
+  my $last_keyword;
 
   while(1) {
     $got_sub = 0;
     #$got_changes = 0;
 
+    $subcode =~ s/^\s*and\s+'/and $last_keyword '/ if defined $last_keyword;
+
     if($subcode =~ m/^\s*(and)?\s*remove \s*([^']+)?\s*'/) {
+      $last_keyword = 'remove';
       my $modifier = 'first';
 
       $subcode =~ s/^\s*(and)?\s*//;
@@ -283,6 +287,7 @@ if($subcode =~ m/^\s*(?:and\s+)?(run|paste)\s*$/i) {
     }
 
     if($subcode =~ s/^\s*(and)?\s*prepend '//) {
+      $last_keyword = 'prepend';
       $subcode = "'$subcode";
 
       my ($e, $r) = extract_delimited($subcode, "'");
@@ -314,6 +319,7 @@ if($subcode =~ m/^\s*(?:and\s+)?(run|paste)\s*$/i) {
     }
 
     if($subcode =~ s/^\s*(and)?\s*append '//) {
+      $last_keyword = 'append';
       $subcode = "'$subcode";
 
       my ($e, $r) = extract_delimited($subcode, "'");
@@ -345,6 +351,7 @@ if($subcode =~ m/^\s*(?:and\s+)?(run|paste)\s*$/i) {
     }
 
     if($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*?'/i) {
+      $last_keyword = 'replace';
       $got_sub = 1;
       my $modifier = 'first';
 
@@ -406,6 +413,7 @@ if($subcode =~ m/^\s*(?:and\s+)?(run|paste)\s*$/i) {
     }
 
     if($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
+      $last_keyword = undef;
       $got_sub = 1;
       $subcode =~ s/^\s*(and)?\s*s//;
 
@@ -970,7 +978,8 @@ if($output =~ m/^\s*$/) {
       print FILE "$output\n";
   }
 
-  $output =~ s/In file included from prog.c:\d+:\d+:\s*//msg;
+  $output =~ s/In file included from .*?:\d+:\d+.\s*from prog.c:\d+:\s*//msg;
+  $output =~ s/In file included from .*?:\d+:\d+.\s*//msg;
   $output =~ s/prog: prog.c:\d+: [^:]+: Assertion/Assertion/g;
   $output =~ s,/usr/include/[^:]+:\d+:\d+:\s+,,g;
 
