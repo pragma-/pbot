@@ -8,6 +8,7 @@ use IPC::Open2;
 use Text::Balanced qw(extract_bracketed extract_delimited);
 use IO::Socket;
 use LWP::UserAgent;
+use Time::HiRes qw/gettimeofday/;
 
 my $debug = 0;
 
@@ -1144,20 +1145,27 @@ if(defined $got_paste or (defined $got_run and $got_run eq "paste")) {
 
 if(open FILE, "< history/$channel.last-output") {
   my $last_output;
+  my $time = <FILE>;
 
-  while(my $line = <FILE>) {
-    $last_output .= $line;
-  }
-  close FILE;
+  if(gettimeofday - $time > 60 * 10) {
+    close FILE;
+  } else {
+    while(my $line = <FILE>) {
+      $last_output .= $line;
+    }
+    close FILE;
 
-  if($last_output eq $output) {
-    print "$nick: Same output.\n";
-    exit 0;
+    if($last_output eq $output) {
+      print "$nick: Same output.\n";
+      exit 0;
+    }
   }
 }
 
 print "$nick: $output\n";
 
 open FILE, "> history/$channel.last-output" or die "Couldn't open $channel.last-output: $!";
+my $now = gettimeofday;
+print FILE "$now\n";
 print FILE "$output";
 close FILE;
