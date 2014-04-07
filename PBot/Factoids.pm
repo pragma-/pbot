@@ -167,7 +167,15 @@ sub export_factoids {
         my $action = $self->factoids->hash->{$channel}->{$trigger}->{action};
         $action =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http" . encode_entities($2) . "'>http" . encode_entities($2) . "<\/a>"/ge;
         $action =~ s/(.*)<\/a>(.*$)/"$1<\/a>" . encode_entities($2)/e;
-        print FILE "<td width=100%><b>$trigger</b> is " . $action . "</td>\n"; 
+
+        if(exists $self->factoids->hash->{$channel}->{$trigger}->{action_with_args}) {
+          my $with_args = $self->factoids->hash->{$channel}->{$trigger}->{action_with_args};
+          $with_args =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http" . encode_entities($2) . "'>http" . encode_entities($2) . "<\/a>"/ge;
+          $with_args =~ s/(.*)<\/a>(.*$)/"$1<\/a>" . encode_entities($2)/e;
+          print FILE "<td width=100%><b>$trigger</b> is $action<br><br><b>with_args:</b> $with_args</td>\n"; 
+        } else {
+          print FILE "<td width=100%><b>$trigger</b> is $action</td>\n"; 
+        }
 
         if(exists $self->factoids->hash->{$channel}->{$trigger}->{edited_by}) { 
           print FILE "<td>" . $self->factoids->hash->{$channel}->{$trigger}->{edited_by} . "</td>\n";
