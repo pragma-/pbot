@@ -26,7 +26,7 @@ my $get_text;
 do {
 #  $text = get("http://www.freebsd.org/cgi/man.cgi?query=$manpage&sektion=$section&apropos=0&manpath=FreeBSD+6.2-RELEASE&format=ascii");
   
-  $get_text = get("http://www.freebsd.org/cgi/man.cgi?query=$manpage&sektion=$section&apropos=0&manpath=SuSE+Linux%2Fi386+8.2&format=ascii");
+  $get_text = get("http://www.freebsd.org/cgi/man.cgi?query=$manpage&sektion=$section&apropos=0&manpath=SuSE+Linux%2Fi386+11.3&format=ascii");
 
 
   $text = substr($get_text, 0, 5000);
@@ -73,9 +73,9 @@ if($text =~ m/DESCRIPTION(.*?)$manpage(.*?)\./si) {
   $foo =~ s/\s+/ /g;
   $foo =~ s/^\s+//;
   if($foo =~ /^NOTE/) {
-    $description = "$foo$manpage $bar";
+    $description = "$foo$manpage$bar";
   } else {
-    $description = "$manpage $bar";
+    $description = "$manpage$bar";
   }
   $description =~ s/\-\s+//g;
 }
@@ -90,7 +90,7 @@ if ($get_text =~ m/^CONFORMING TO.*?^\s+The\s$manpage\s.*conforms to\s(.*?)$/ms)
 }
 
 $result = "";
-$result .= "$name - " if (not defined $includes);
+$result .= "$name - " if (not defined $includes and defined $name);
 $result .= "Includes: $includes - " if (defined $includes);
 $result .= "$prototype - " if (defined $prototype);
 
