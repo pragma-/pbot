@@ -1143,7 +1143,7 @@ if(defined $got_paste or (defined $got_run and $got_run eq "paste")) {
   exit 0;
 }
 
-if(length $output > 10 and open FILE, "< history/$channel.last-output") {
+if(length $output > 22 and open FILE, "< history/$channel.last-output") {
   my $last_output;
   my $time = <FILE>;
 
