@@ -204,7 +204,7 @@ sub list {
   if($arguments =~/^messages\s+(.*)$/) {
     my ($mask_search, $channel_search, $text_search) = split / /, $1;
 
-    return "/msg $nick Usage: !list messages <hostmask or nick regex> <channel regex> [text regex]" if not defined $channel_search;
+    return "/msg $nick Usage: list messages <hostmask or nick regex> <channel regex> [text regex]" if not defined $channel_search;
     $text_search = '.*' if not defined $text_search;
 
     my @results = eval {
@@ -375,7 +375,7 @@ sub add_regex {
 sub factadd {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($from_chan, $keyword, $text) = $arguments =~ /^(.*?)\s+(.*?)\s+is\s+(.*)$/i if defined $arguments;
+  my ($from_chan, $keyword, $text) = $arguments =~ /^(\S+)\s+(\S+)\s+is\s+(.*)$/i if defined $arguments;
 
   if(not defined $from_chan or not defined $text or not defined $keyword) {
     return "/msg $nick Usage: factadd <channel> <keyword> is <factoid>";
