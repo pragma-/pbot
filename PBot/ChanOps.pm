@@ -12,7 +12,6 @@ use vars qw($VERSION);
 $VERSION = $PBot::PBot::VERSION;
 
 use Time::HiRes qw(gettimeofday);
-use PBot::HashObject;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -61,12 +60,17 @@ sub lose_ops {
   $self->{pbot}->conn->privmsg("chanserv", "op $channel -" . $self->{pbot}->botnick);
 }
 
+sub add_op_command {
+  my ($self, $channel, $command) = @_;
+  push @{ $self->{op_commands}->{$channel} }, $command;
+}
+
 sub perform_op_commands {
   my $self = shift;
   my $channel = shift;
 
   $self->{pbot}->logger->log("Performing op commands...\n");
-  foreach my $command (@{ $self->{op_commands}->{$channel} }) {
+  while(my $command = shift @{ $self->{op_commands}->{$channel} }) {
     if($command =~ /^mode (.*?) (.*)/i) {
       $self->{pbot}->conn->mode($1, $2);
       $self->{pbot}->logger->log("  executing mode $1 $2\n");
@@ -74,7 +78,6 @@ sub perform_op_commands {
       $self->{pbot}->conn->kick($1, $2, $3) unless $1 =~ /\Q$self->{pbot}->botnick\E/i;
       $self->{pbot}->logger->log("  executing kick on $1 $2 $3\n");
     }
-    shift(@{ $self->{op_commands}->{$channel} });
   }
   $self->{pbot}->logger->log("Done.\n");
 }
@@ -83,7 +86,7 @@ sub ban_user {
   my $self = shift;
   my ($mask, $channel) = @_;
 
-  unshift @{ $self->{op_commands}->{$channel} }, "mode $channel +b $mask";
+  $self->add_op_command($channel, "mode $channel +b $mask");
   $self->gain_ops($channel);
 }
 
@@ -95,7 +98,7 @@ sub unban_user {
     $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + 7200; # try again in 2 hours if unban doesn't immediately succeed
     $self->{unban_timeout}->save;
   }
-  unshift @{ $self->{op_commands}->{$channel} }, "mode $channel -b $mask";
+  $self->add_op_command($channel, "mode $channel -b $mask");
   $self->gain_ops($channel);
 }
 

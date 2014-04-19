@@ -54,6 +54,7 @@ sub initialize {
 
   $self->{ENTER_ABUSE_MAX_LINES} = 4;
   $self->{ENTER_ABUSE_MAX_OFFENSES} = 3;
+  $self->{ENTER_ABUSE_MAX_SECONDS} = 20;
 
   $self->load_message_history;
   $self->{channels} = {}; # per-channel statistics, e.g. for optimized tracking of last spoken nick, etc
@@ -305,7 +306,7 @@ sub check_flood {
       my %msg  = %{ @{ $self->message_history->{$account}->{channels}->{$channel}{messages} }[$length - 2] };
       my %last = %{ @{ $self->message_history->{$account}->{channels}->{$channel}{messages} }[$length - 1] };
 
-      if($last{timestamp} - $msg{timestamp} <= 10) {
+      if($last{timestamp} - $msg{timestamp} <= $self->{ENTER_ABUSE_MAX_SECONDS}) {
         if(++$self->message_history->{$account}->{channels}->{$channel}{enter_abuse} >= $self->{ENTER_ABUSE_MAX_LINES} - 1) {
           $self->message_history->{$account}->{channels}->{$channel}{enter_abuse} = $self->{ENTER_ABUSE_MAX_LINES} / 2 - 1;
           if(++$self->message_history->{$account}->{channels}->{$channel}{enter_abuses} >= $self->{ENTER_ABUSE_MAX_OFFENSES}) {
@@ -315,14 +316,19 @@ sub check_flood {
             $ban_length = duration($ban_length);
             $self->{pbot}->logger->log("$nick $channel enter abuse offense " . $self->message_history->{$account}->{channels}->{$channel}{enter_abuses} . " earned $ban_length ban\n");
             $self->{pbot}->conn->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in $ban_length.");
+          } else {
+            $self->{pbot}->logger->log("$nick $channel enter abuses counter incremented to " . $self->message_history->{$account}->{channels}->{$channel}{enter_abuses} . "\n");
           }
+        } else {
+          $self->{pbot}->logger->log("$nick $channel enter abuse counter incremented to " . $self->message_history->{$account}->{channels}->{$channel}{enter_abuse} . "\n");
         }
       } else {
-        # $self->{pbot}->logger->log("$nick $channel more than 10 seconds since last message, enter abuse counter reset\n");
-        $self->message_history->{$account}->{channels}->{$channel}{enter_abuse} = 0;
+          $self->{pbot}->logger->log("$nick $channel more than $self->{ENTER_ABUSE_MAX_SECONDS} seconds since last message, enter abuse counter reset\n");
+          $self->message_history->{$account}->{channels}->{$channel}{enter_abuse} = 0;
       }
     } else {
       $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+      $self->{pbot}->logger->log("$nick $channel enter abuse counter reset\n") if defined $self->message_history->{$account}->{channels}->{$channel}{enter_abuse} and $self->message_history->{$account}->{channels}->{$channel}{enter_abuse} > 0;
       $self->message_history->{$account}->{channels}->{$channel}{enter_abuse} = 0;
     }
   }
@@ -694,6 +700,8 @@ sub check_bans {
 
     foreach my $baninfo (@$bans) {
       $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
+      my ($bannick) = $banmask =~ m/^([^!]+)/;
+      $self->{pbot}->chanops->add_op_command($baninfo->{channel}, "kick $bannick $baninfo->{channel} Ban evasion");
       $self->{pbot}->chanops->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 12);
       $self->message_history->{$mask}->{channels}->{$channel}{validated} = 0;
       return;
