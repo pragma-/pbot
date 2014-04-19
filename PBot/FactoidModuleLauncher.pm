@@ -64,11 +64,21 @@ sub execute_module {
 
   $arguments = quotemeta($arguments);
 
+  if(exists $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{unquote_spaces}) {
+    $arguments =~ s/\\ / /g;
+  }
+
   if(exists $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}) {
-    if($self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\//) {
-      my ($p1, $p2) = ($1, $2);
-      $arguments =~ s/$p1/$p2/;
-      my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
+    if($self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\/(.*)/) {
+      my ($p1, $p2, $p3) = ($1, $2, $3);
+      my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after);
+      if($p3 eq 'g') {
+        $arguments =~ s/$p1/$p2/g;
+        ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
+      } else {
+        $arguments =~ s/$p1/$p2/;
+        ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
+      }
       $arguments =~ s/\$1/$a/g;
       $arguments =~ s/\$2/$b/g;
       $arguments =~ s/\$3/$c/g;
