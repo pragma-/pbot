@@ -140,8 +140,7 @@ sub check_ignore {
 
   if(defined $channel) { # do not execute following if text is coming from STDIN ($channel undef)
     if($channel =~ /^#/) {
-      $self->{ignore_flood_counter}->{$channel}++;  # TODO: make this per channel, e.g., ${ $self->{ignore_flood_counter} }{$channel}++
-      $pbot->logger->log("flood_msg: $self->{ignore_flood_counter}->{$channel}\n");
+      $self->{ignore_flood_counter}->{$channel}++;
     }
 
     if(not exists $self->{last_timestamp}->{$channel}) {
@@ -150,12 +149,10 @@ sub check_ignore {
       $self->{last_timestamp}->{$channel} = $now;
       if(exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 0) {
         $self->{ignore_flood_counter}->{$channel} = 0;
-        $pbot->logger->log("flood_msg reset\n");
       }
     }
 
     if(exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 5) {
-      $pbot->logger->log("flood_msg exceeded! [$self->{ignore_flood_counter}->{$channel}]\n");
       $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", ".* $channel 300");
       $self->{ignore_flood_counter}->{$channel} = 0;
       if($channel =~ /^#/) {
