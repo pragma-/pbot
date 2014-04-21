@@ -700,8 +700,8 @@ sub check_bans {
 
     foreach my $baninfo (@$bans) {
       $self->{pbot}->logger->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
-      my ($bannick) = $banmask =~ m/^([^!]+)/;
-      $self->{pbot}->chanops->add_op_command($baninfo->{channel}, "kick $bannick $baninfo->{channel} Ban evasion");
+      my ($bannick) = $mask =~ m/^([^!]+)/;
+      $self->{pbot}->chanops->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Ban evasion");
       $self->{pbot}->chanops->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 12);
       $self->message_history->{$mask}->{channels}->{$channel}{validated} = 0;
       return;

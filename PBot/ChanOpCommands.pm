@@ -119,6 +119,7 @@ sub kick_user {
 
   $self->{pbot}->chanops->add_op_command($from, "kick $from $1 $2");
   $self->{pbot}->chanops->gain_ops($from);
+  return "/msg $nick Kicking $1 from $from with reason '$2'";
 }
 
 1;
