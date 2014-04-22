@@ -1,11 +1,8 @@
 #!/usr/bin/perl -w
 
-
-my $file;
 my $match = 1;
 my $matches = 0;
 my $found = 0;
-my $result;
 
 print "Usage: faq [match #] <search regex>\n" and exit 0 if not defined $ARGV[0];
 
@@ -23,40 +20,54 @@ if($query =~ /^(\d+)\.\*\?/) {
   $query =~ s/^\d+\.\*\?//;
 }
 
-opendir(DIR, "/home/compiler/htdocs/C-faq/") or die "$!";
+open(FILE, "< cfaq-questions.html") or print "Can't open cfaq-questions.html: $!" and exit 1;
+my @contents = <FILE>;
+close(FILE);
 
-while (defined ($file = readdir DIR)) {
-  open(FILE, "< /home/compiler/htdocs/C-faq/$file") or die "Can't open $file: $!";
-  my @contents = <FILE>;
-  my $text = join('', @contents);
-  my $heading = $1 if($text =~ /^<H1>(.*?)<\/H1>$/smg);
+my ($heading, $question_full, $question_link, $question_number, $question_text, $result);
 
-  while($text =~ /<p><a href=(.*?) rel=.*?>(.*?)<\/a>/smg) {
-    my ($link, $question) = ($1, $2);
-    if($question =~ /$query/ims) {
-      $question =~ s/\n/ /g;
-      $question =~ s/\r/ /g;
-      $question =~ s/<.*?>//g;
-      $question =~ s/\s+/ /g;
-      $question =~ s/&lt;/</g;
-      $question =~ s/&gt;/>/g;
-      $result = "$heading, $question: http://www.eskimo.com/~scs/C-faq/$link\n" if ($matches + 1 == $match);
-      $found = 1;
-      $matches++;
+foreach my $line (@contents) {
+  if($line =~ m/^<H4>(.*?)<\/H4>/) {
+    $heading = $1;
+    next;
+  }
+
+  if($line =~ m/<p><a href="(.*?)" rel=subdocument>(.*?)<\/a>/) {
+    ($question_link, $question_number) = ($1, $2);
+
+    if(defined $question_full) {
+      if($question_full =~ m/$query/i) {
+        $matches++;
+        $found = 1;
+        if($match == $matches) {
+          $question_text =~ s/\s+/ /g;
+          $result = $question_text;
+        }
+      }
     }
-  }  
-  close(FILE);
+
+    $question_full = "$question_number $question_link ";
+    $question_text = "http://c-faq.com/$question_link - $heading, $question_number: ";
+    next;
+  }
+
+  if(defined $question_full) {
+    $line =~ s/[\n\r]/ /g;
+    $line =~ s/(<pre>|<\/pre>|<TT>|<\/TT>|<\/a>)//g;
+    $line =~ s/<a href=".*?">//g;
+    $line =~ s/&nbsp;/ /g;
+
+    $question_full .= $line;
+    $question_text .= $line;
+  }
 }
-closedir(DIR);
 
 if($found == 1) {
   print "But there are $matches results...\n" and exit if($match > $matches);
 
   print "$matches results, displaying #$match: " if ($matches > 1);
 
-  $result =~ s/&amp;/&/g;
-
-  print "$result";
+  print "$result\n";
 } else {
   $query =~ s/\.\*\?/ /g;
   print "No FAQs match $query\n";

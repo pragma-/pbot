@@ -1,0 +1,3139 @@
+<!DOCTYPE HTML PUBLIC "-//W3O//DTD W3 HTML 2.0//EN">
+<!-- This collection of hypertext pages is Copyright 1995-2005 by Steve Summit. -->
+<!-- Content from the book "C Programming FAQs: Frequently Asked Questions" -->
+<!-- (Addison-Wesley, 1995, ISBN 0-201-84519-9) is made available here by -->
+<!-- permission of the author and the publisher as a service to the community. -->
+<!-- It is intended to complement the use of the published text -->
+<!-- and is protected by international copyright laws. -->
+<!-- The on-line content may be accessed freely for personal use -->
+<!-- but may not be published or retransmitted without explicit permission. -->
+<!-- -->
+<!-- this page built Sat Dec 24 21:47:45 2005 by faqproc version 2.7 -->
+<!-- from source file all.sgml dated Wed Dec 21 15:28:12 2005 -->
+<!-- corresponding to FAQ list version 4.0 -->
+<html>
+<head>
+<meta name=GENERATOR content="faqproc">
+<title>All Questions</title>
+</head>
+<body bgcolor="#ffffff">
+&nbsp;
+<a href="../index.html"><img src="../images/buttontop.gif" alt="top/contents"></a>
+<a href="../search.html"><img src="../images/buttonsrch.gif" alt="search"></a>
+<hr>
+<hr>
+<H4>1. Declarations and Initializations</H4>
+<p><a href="decl/inttypes.html" rel=subdocument>1.1</a>
+
+How should I decide which integer type to use?
+</p><p><a href="decl/exactsizes.html" rel=subdocument>1.2</a>
+Why aren't the sizes of the standard types precisely defined?
+</p><p><a href="decl/int16.html" rel=subdocument>1.3</a>
+Since C doesn't define sizes exactly,
+I've been using
+typedefs
+like <TT>int16</TT> and
+<TT>int32</TT>.
+I can then define these typedefs
+to be <TT>int</TT>, <TT>short</TT>, <TT>long</TT>,
+etc. depending on what machine I'm using.
+
+That should solve everything, right?
+</p><p><a href="decl/octabyte.html" rel=subdocument>1.4</a>
+What should the 64-bit type be
+on a
+machine that can support it?
+</p><p><a href="decl/charstarws.html" rel=subdocument>1.5</a>
+What's wrong with
+this
+declaration?
+<pre>
+char* p1, p2;</pre>
+
+
+
+
+I get errors when I try to
+use
+<TT>p2</TT>.
+</p><p><a href="decl/mimic.html" rel=subdocument>1.6</a>
+I'm trying to declare a pointer and allocate some space for it,
+but it's
+not working.
+What's wrong with
+this code?
+<pre>
+char *p;
+*p = malloc(10);</pre>
+
+
+</p><p><a href="decl/decldef.html" rel=subdocument>1.7</a>
+What's the best way to declare and define
+global variables
+and functions?
+</p><p><a href="decl/opaque.html" rel=subdocument>1.8</a>
+How can I implement
+opaque (abstract) data types in C?
+
+</p><p><a href="decl/semiglobal.html" rel=subdocument>1.9</a>
+How can I make a sort of ``semi-global'' variable,
+that is,
+one that's
+private to a few functions spread across a few source files?
+</p><p><a href="decl/static.html" rel=subdocument>1.10</a>
+Do
+all
+declarations for
+the same
+<TT>static</TT> function
+or variable
+have to include the storage class <TT>static</TT>?
+</p><p><a href="decl/extern.html" rel=subdocument>1.11</a>
+What does <TT>extern</TT> mean in a function declaration?
+</p><p><a href="decl/auto.html" rel=subdocument>1.12</a>
+What's the <TT>auto</TT> keyword good for?
+</p><p><a href="decl/typedefvsdefine.html" rel=subdocument>1.13</a>
+What's the difference between using a <TT>typedef</TT>
+or
+
+a <TT>#define</TT>
+for a user-defined type?
+</p><p><a href="decl/selfrefstruct.html" rel=subdocument>1.14</a>
+
+I can't seem to define a linked list
+successfully.
+I tried
+<pre>
+	typedef struct {
+		char *item;
+		NODEPTR next;
+	} *NODEPTR;
+</pre>
+but the compiler gave me error messages.
+Can't a structure in C contain a pointer to itself?
+
+</p><p><a href="decl/mutrefstructs.html" rel=subdocument>1.15</a>
+How can I define a pair of mutually referential structures?
+I tried
+<pre>
+	typedef struct {
+		int afield;
+		BPTR bpointer;
+	} *APTR;
+
+	typedef struct {
+		int bfield;
+		APTR apointer;
+	} *BPTR;
+</pre>
+but the compiler doesn't know about
+<TT>BPTR</TT>
+when it is used in
+the first structure declaration.
+</p><p><a href="decl/structtypdf.html" rel=subdocument>1.16</a>
+What's the difference between
+these two declarations?
+<pre>
+	struct x1 { ... };
+	typedef struct { ... } x2;
+</pre>
+
+</p><p><a href="decl/pfitypedef.html" rel=subdocument>1.17</a>
+What does
+<pre>
+typedef int (*funcptr)();</pre>
+
+mean?
+</p><p><a href="decl/typdfcnst.html" rel=subdocument>1.18</a>
+I've got
+the declarations
+<pre>
+	typedef char *charp;
+	const charp p;
+</pre>
+Why is <TT>p</TT> turning out <TT>const</TT>,
+instead of the characters pointed to?
+
+</p><p><a href="decl/constasconst.html" rel=subdocument>1.19</a>
+I don't understand why I can't
+use <TT>const</TT> values in initializers and array
+dimensions,
+as in
+<pre>
+	const int n = 5;
+	int a[n];
+</pre>
+
+</p><p><a href="decl/constptrconst.html" rel=subdocument>1.20</a>
+What's the difference between
+<TT>const&nbsp;char&nbsp;*p</TT>,
+<TT>char&nbsp;const&nbsp;*p</TT>,
+and <TT>char&nbsp;*&nbsp;const&nbsp;p</TT>?
+
+</p><p><a href="decl/constparm.html" rel=subdocument>1.20b</a>
+
+
+
+
+
+</p><p>What does it mean for a function parameter to be <TT>const</TT>?
+What do the two <TT>const</TT>'s in
+<pre>
+	int f(const * const p)
+</pre>
+mean?
+</p><p><a href="decl/cdecl1.html" rel=subdocument>1.21</a>
+How do I
+construct
+declarations of complicated types such as
+``array of N pointers to functions returning
+pointers to functions returning pointers
+to <TT>char</TT>'',
+or figure out what similarly complicated declarations mean?
+</p><p><a href="decl/recurfuncp.html" rel=subdocument>1.22</a>
+
+
+
+How can I declare a function
+
+that can return
+a pointer to a function
+of the same type?
+I'm building a state machine with one function
+for each state, each of which returns a pointer to the function for
+the next state.
+But I can't find a way to declare the
+functions--I seem
+to need a function
+returning a pointer to a function
+returning a pointer to a function
+returning a pointer to a function...,
+ad infinitum.
+</p><p><a href="decl/dynarray.html" rel=subdocument>1.23</a>
+Can I declare a local array
+(or parameter array)
+of a size matching a passed-in array,
+or set by another parameter?
+</p><p><a href="decl/extarraysize.html" rel=subdocument>1.24</a>
+I have an <TT>extern</TT> array
+which is defined
+in
+one file,
+and used in another:
+<pre>
+<I>file1.c:</I>			<I>file2.c:</I>
+
+int array[] = {1, 2, 3};	extern int array[];
+</pre>
+Why doesn't <TT>sizeof</TT> work on
+<TT>array</TT> in <TT>file2.c</TT>?
+</p><p><a href="decl/implfdecl.html" rel=subdocument>1.25</a>
+My compiler is complaining
+about an invalid redeclaration of a function,
+but I only define it once
+and call it once.
+
+</p><p><a href="decl/main.html" rel=subdocument>1.25b</a>
+What's the right declaration for <TT>main</TT>?
+<br>Is <TT>void&nbsp;main()</TT> correct?
+</p><p><a href="decl/argpromo.html" rel=subdocument>1.26</a>
+My compiler is complaining about mismatched function prototypes
+which look fine to me.
+</p><p><a href="decl/headerglom.html" rel=subdocument>1.27</a>
+I'm getting strange
+syntax errors
+on the very first
+declaration in
+a file,
+but it looks fine.
+
+
+</p><p><a href="decl/bigdatastr.html" rel=subdocument>1.28</a>
+My compiler isn't letting me declare a big array
+
+like
+<pre>
+double array[256][256];</pre>
+
+</p><p><a href="decl/namespace.html" rel=subdocument>1.29</a>
+How can I determine
+which identifiers are safe for me to use
+and which are reserved?
+</p><p><a href="decl/initval.html" rel=subdocument>1.30</a>
+What
+am I allowed to
+assume about the initial values of variables
+and arrays
+which are not explicitly initialized?
+<br>If global variables start out as ``zero'',
+is that good enough
+for null pointers and floating-point zeroes?
+</p><p><a href="decl/autoaggrinit.html" rel=subdocument>1.31</a>
+This code, straight out of a book, isn't compiling:
+<pre>
+int f()
+{
+	char a[] = "Hello, world!";
+}
+</pre>
+</p><p><a href="decl/fcninit.html" rel=subdocument>1.31b</a>
+What's wrong with
+this initialization?
+<pre>
+char *p = malloc(10);</pre>
+
+My compiler is complaining about
+an ``invalid initializer'',
+or something.
+</p><p><a href="decl/strlitinit.html" rel=subdocument>1.32</a>
+What is the difference between
+these initializations?
+<pre>
+char a[] = "string literal";
+char *p  = "string literal";
+</pre>
+My program
+crashes if
+I try to
+assign a new value to <TT>p[i]</TT>.
+</p><p><a href="decl/nonstring.html" rel=subdocument>1.33</a>
+Is <TT>char&nbsp;a[3]&nbsp;=&nbsp;"abc";</TT> legal?
+</p><p><a href="decl/ptrfuncinit.html" rel=subdocument>1.34</a>
+I finally figured out the syntax for declaring pointers to
+functions, but now how do I initialize one?
+</p><p><a href="decl/initunion.html" rel=subdocument>1.35</a>
+Can I initialize unions?
+
+</p><hr>
+<H4>2. Structures, Unions, and Enumerations</H4>
+<p><a href="struct/typedef.html" rel=subdocument>2.1</a>
+What's the difference between
+these two declarations?
+<pre>
+	struct x1 { ... };
+	typedef struct { ... } x2;
+</pre>
+</p><p><a href="struct/impltypedef.html" rel=subdocument>2.2</a>
+Why doesn't
+<pre>
+struct x { ... };
+x thestruct;</pre>
+
+work?
+</p><p><a href="struct/selfref.html" rel=subdocument>2.3</a>
+Can a structure contain a pointer
+to itself?
+</p><p><a href="struct/opaquetypes.html" rel=subdocument>2.4</a>
+How can I implement
+opaque (abstract) data types in C?
+</p><p><a href="struct/oop.html" rel=subdocument>2.4b</a>
+Is there a good way of simulating OOP-style inheritance,
+or other OOP features,
+in C?
+</p><p><a href="struct/fcnproto.html" rel=subdocument>2.5</a>
+Why does the declaration
+<pre>
+extern int f(struct x *p);</pre>
+
+give me
+an obscure
+warning message
+about
+``struct x declared inside parameter list''?
+
+</p><p><a href="struct/structhack.html" rel=subdocument>2.6</a>
+I came across some code that declared a structure
+like this:
+<pre>
+struct name {
+	int namelen;
+	char namestr[1];
+};
+</pre>
+and then did some tricky allocation to make
+the
+<TT>namestr</TT>
+array act like it
+had several elements,
+with the number
+recorded by <TT>namelen</TT>.
+How does this work?
+Is
+it
+legal or portable?
+</p><p><a href="struct/firstclass.html" rel=subdocument>2.7</a>
+I heard
+that structures could be assigned
+to variables and passed to and from functions, but K&amp;R1
+says
+not.
+
+</p><p><a href="struct/compare.html" rel=subdocument>2.8</a>
+Is there a way to
+compare structures
+automatically?
+</p><p><a href="struct/passret.html" rel=subdocument>2.9</a>
+How
+are
+structure passing and returning
+implemented?
+</p><p><a href="struct/anonstruct.html" rel=subdocument>2.10</a>
+How can
+I pass constant values to functions which accept structure arguments?
+How can I create nameless, immediate, constant structure values?
+</p><p><a href="struct/io.html" rel=subdocument>2.11</a>
+How can I read/write structures from/to
+
+data files?
+
+</p><p><a href="struct/padding.html" rel=subdocument>2.12</a>
+Why is my
+compiler
+leaving holes in structures,
+wasting space
+and preventing
+
+``binary'' I/O to external data
+files?
+Can
+I turn
+this
+off,
+or otherwise control the alignment of structure fields?
+
+</p><p><a href="struct/endpad.html" rel=subdocument>2.13</a>
+Why does <TT>sizeof</TT> report a larger size than I expect for a
+structure type,
+as if there were padding at the end?
+</p><p><a href="struct/offsetof.html" rel=subdocument>2.14</a>
+How can I determine the byte offset of a field within a structure?
+</p><p><a href="struct/fieldnames.html" rel=subdocument>2.15</a>
+How can I access structure fields by name at run time?
+</p><p><a href="struct/withxref.html" rel=subdocument>2.16</a>
+Does C have an equivalent to Pascal's
+<TT>with</TT> statement?
+
+</p><p><a href="struct/decay.html" rel=subdocument>2.17</a>
+If an array name acts like a pointer to the base of an array,
+why isn't the same thing true of a structure?
+</p><p><a href="struct/retcrash.html" rel=subdocument>2.18</a>
+This program
+works correctly, but
+it
+dumps core
+after it
+finishes.
+Why?
+<pre>
+	struct list {
+		char *item;
+		struct list *next;
+	}
+
+	/* Here is the main program. */
+
+	main(argc, argv)
+	{ ... }
+</pre>
+
+</p><p><a href="struct/union.html" rel=subdocument>2.19</a>
+What's the difference between a structure and a union, anyway?
+</p><p><a href="struct/initunion.html" rel=subdocument>2.20</a>
+Can I initialize unions?
+</p><p><a href="struct/taggedunion.html" rel=subdocument>2.21</a>
+Is there an automatic way
+to keep track of which field of a union is in use?
+</p><p><a href="struct/enumvsdefine.html" rel=subdocument>2.22</a>
+What's the difference between
+an enumeration and a set of
+preprocessor <TT>#define</TT>s?
+</p><p><a href="struct/enumport.html" rel=subdocument>2.23</a>
+Are enumerations really portable?
+<br>Aren't they Pascalish?
+<br>
+</p><p><a href="struct/enumprint.html" rel=subdocument>2.24</a>
+Is there an easy way to print enumeration values symbolically?
+</p><p><a href="struct/bitfield0.html" rel=subdocument>2.25</a>
+I came across some structure declarations with colons and 
+numbers next to certain
+fields,
+like this:
+<pre>
+struct record {
+	char *name;
+	int refcount : 4;
+	unsigned dirty : 1;
+};
+</pre>
+What gives?
+</p><p><a href="struct/bitfields.html" rel=subdocument>2.26</a>
+Why do people use explicit masks and
+bit-twiddling
+code so much,
+instead of declaring bit-fields?
+</p><hr>
+<H4>3. Expressions</H4>
+<p><a href="expr/evalorder1.html" rel=subdocument>3.1</a>
+Why doesn't
+this code:
+
+<pre>
+a[i] = i++;</pre>
+
+work?
+</p><p><a href="expr/evalorder2.html" rel=subdocument>3.2</a>
+Under my compiler, the code
+<pre>
+int i&nbsp;=&nbsp;7;
+printf("%d\n",&nbsp;i++&nbsp;*&nbsp;i++);</pre>
+
+prints 49.
+Regardless of the order of evaluation, shouldn't it print 56?
+</p><p><a href="expr/ieqiplusplus.html" rel=subdocument>3.3</a>
+I've experimented with
+the code
+<pre>
+int i&nbsp;=&nbsp;3;
+i&nbsp;=&nbsp;i++;</pre>
+
+on several compilers.
+Some gave <TT>i</TT> the
+
+value 3,
+and
+some gave 4.
+Which compiler is correct?
+</p><p><a href="expr/xorswapexpr.html" rel=subdocument>3.3b</a>
+Here's a slick expression:
+<pre>
+a&nbsp;^=&nbsp;b&nbsp;^=&nbsp;a&nbsp;^=&nbsp;b</pre>
+
+It swaps <TT>a</TT> and <TT>b</TT> without using a temporary.
+</p><p><a href="expr/precvsooe.html" rel=subdocument>3.4</a>
+Can I use explicit parentheses to force
+the order of evaluation I want,
+and control these side effects?
+Even if I don't, doesn't precedence dictate it?
+</p><p><a href="expr/seqpointops.html" rel=subdocument>3.5</a>
+But what about the
+<TT>&amp;&amp;</TT>
+and
+<TT>||</TT>
+
+
+operators?
+<br>I see code like 
+``<TT>while((c&nbsp;=&nbsp;getchar())&nbsp;!=&nbsp;EOF&nbsp;&amp;&amp;&nbsp;c&nbsp;!=&nbsp;'\n')</TT>'' ...
+</p><p><a href="expr/shortcircuit.html" rel=subdocument>3.6</a>
+Is it safe to assume
+that the right-hand side
+of the
+<TT>&amp;&amp;</TT>
+and
+<TT>||</TT>
+operators
+won't be evaluated
+if the left-hand side determines the outcome?
+</p><p><a href="expr/comma.html" rel=subdocument>3.7</a>
+Why did
+<pre>
+printf("%d&nbsp;%d",&nbsp;f1(),&nbsp;f2());</pre>
+
+call <TT>f2</TT> first?
+I thought the comma operator guaranteed left-to-right evaluation.
+</p><p><a href="expr/seqpoints.html" rel=subdocument>3.8</a>
+How can I understand
+complex expressions like the ones in this section,
+and avoid writing undefined ones?
+What's a ``sequence point''?
+</p><p><a href="expr/evalorder4.html" rel=subdocument>3.9</a>
+So
+if I write
+<pre>
+a[i]&nbsp;=&nbsp;i++;</pre>
+
+and I don't care
+
+which cell of <TT>a[]</TT> gets written to,
+the code is fine,
+and <TT>i</TT> gets
+incremented by one,
+right?
+
+</p><p><a href="expr/experiment.html" rel=subdocument>3.10a</a>
+People keep saying that the behavior
+of <TT>i&nbsp;=&nbsp;i++</TT>
+is undefined,
+but
+I just tried
+it
+on an ANSI-conforming compiler,
+and got the results I expected.
+
+</p><p><a href="expr/expec0.html" rel=subdocument>3.10b</a>
+People told me that if I evaluated an undefined expression,
+or accessed an uninitialized variable,
+I'd get a random, garbage value.
+But I tried it, and got <em>zero</em>.
+What's up with that?
+</p><p><a href="expr/confused.html" rel=subdocument>3.11</a>
+How can I avoid these undefined evaluation order difficulties
+if I don't feel like learning the complicated rules?
+</p><p><a href="expr/prevspost.html" rel=subdocument>3.12a</a>
+What's the difference between <TT>++i</TT> and <TT>i++</TT>?
+</p><p><a href="expr/plusplus.html" rel=subdocument>3.12b</a>
+If I'm not using the value of the expression,
+should I use <TT>++i</TT> or <TT>i++</TT> to increment a variable?
+</p><p><a href="expr/transitivity.html" rel=subdocument>3.13</a>
+I need to check whether one number lies between two others.
+Why doesn't
+<pre>
+if(a &lt; b &lt; c)</pre>
+
+work?
+</p><p><a href="expr/intoverflow1.html" rel=subdocument>3.14</a>
+Why doesn't the code
+<pre>
+int&nbsp;a&nbsp;=&nbsp;1000,&nbsp;b&nbsp;=&nbsp;1000;
+long&nbsp;int&nbsp;c&nbsp;=&nbsp;a&nbsp;*&nbsp;b;</pre>
+
+work?
+</p><p><a href="expr/intovf3.html" rel=subdocument>3.14b</a>
+How can I ensure that integer arithmetic doesn't overflow?
+
+</p><p><a href="expr/truncation1.html" rel=subdocument>3.15</a>
+Why does the code
+<pre>
+double degC, degF;
+degC = 5 / 9 * (degF - 32);</pre>
+
+keep giving me 0?
+</p><p><a href="expr/qcolonlhs.html" rel=subdocument>3.16</a>
+I have a complicated expression which
+I have
+to assign
+to one 
+of two variables,
+depending on a condition.
+Can I use code like this?
+<pre>
+	((condition) ? a : b) = complicated_expression;
+</pre>
+</p><p><a href="expr/ternprec.html" rel=subdocument>3.17</a>
+I have
+some code
+containing expressions
+like
+<pre>
+a ? b = c : d</pre>
+
+and some compilers are accepting it but some are not.
+</p><p><a href="expr/unswarn.html" rel=subdocument>3.18</a>
+What does the warning
+``semantics of `<TT>&gt;</TT>' change in ANSI C''
+mean?
+</p><p><a href="expr/preservingrules.html" rel=subdocument>3.19</a>
+What's the difference between the ``unsigned preserving''
+and ``value preserving'' rules?
+</p><hr>
+<H4>4. Pointers</H4>
+<p><a href="ptrs/goodfor.html" rel=subdocument>4.1</a>
+What are pointers really good for, anyway?
+</p><p><a href="ptrs/mimic.html" rel=subdocument>4.2</a>
+I'm trying to declare a pointer and allocate some space for it,
+but it's
+not working.
+What's wrong with
+this code?
+<pre>
+char *p;
+*p = malloc(10);</pre>
+
+</p><p><a href="ptrs/unopprec2.html" rel=subdocument>4.3</a>
+Does <TT>*p++</TT> increment <TT>p</TT>,
+or what it points to?
+</p><p><a href="ptrs/explscale.html" rel=subdocument>4.4</a>
+I'm
+trying to use
+pointers to
+manipulate an array of <TT>int</TT>s.
+
+What's wrong with this code?
+<pre>
+	int array[5], i, *ip;
+	for(i = 0; i &lt; 5; i++) array[i] = i;
+	ip = array;
+	printf("%d\n", *(ip + 3 * sizeof(int)));
+</pre>
+I expected the last line to print 3,
+but it printed garbage.
+</p><p><a href="ptrs/castincr.html" rel=subdocument>4.5</a>
+I
+have
+a <TT>char&nbsp;*</TT> pointer
+that happens to point to
+some <TT>int</TT>s,
+and I want to step it over them.
+Why doesn't
+<pre>
+((int *)p)++;</pre>
+
+work?
+</p><p><a href="ptrs/voidparith.html" rel=subdocument>4.6</a>
+Why can't I perform arithmetic on a <TT>void&nbsp;*</TT> pointer?
+
+</p><p><a href="ptrs/align.html" rel=subdocument>4.7</a>
+I've got some code that's trying to unpack external structures, 
+but it's crashing
+with a message about an ``unaligned access.''
+What does this mean?
+</p><p><a href="ptrs/passptrinit.html" rel=subdocument>4.8</a>
+I have a function which accepts,
+and is supposed to initialize,
+a pointer:
+<pre>
+	void f(int *ip)
+	{
+		static int dummy = 5;
+		ip = &amp;dummy;
+	}
+</pre>
+But when I call it like this:
+<pre>
+	int *ip;
+	f(ip);
+</pre>
+the
+pointer in the caller remains unchanged.
+</p><p><a href="ptrs/genericpp.html" rel=subdocument>4.9</a>
+Suppose I want to write a function that takes a generic pointer
+as an argument and I want to simulate passing it by reference.
+Can I give the formal parameter type <TT>void&nbsp;**</TT>,
+and do something like this?
+<pre>
+	void f(void **);
+	double *dp;
+	f((void **)&amp;dp);
+</pre>
+</p><p><a href="ptrs/refconst.html" rel=subdocument>4.10</a>
+I have a function
+<pre>
+	extern int f(int *);
+</pre>
+which accepts a pointer to an <TT>int</TT>.
+How can I pass a constant
+by reference?
+A call like
+<pre>
+	f(&amp;5);
+</pre>
+doesn't seem to work.
+</p><p><a href="ptrs/passbyref.html" rel=subdocument>4.11</a>
+Does C even have ``pass by reference''?
+</p><p><a href="ptrs/funccall.html" rel=subdocument>4.12</a>
+I've seen different syntax used for calling functions via pointers.
+What's the story?
+</p><p><a href="ptrs/generic.html" rel=subdocument>4.13</a>
+What's the total generic pointer type?
+My compiler complained
+when I tried to stuff function pointers into a <TT>void&nbsp;*</TT>.
+</p><p><a href="ptrs/int2ptr.html" rel=subdocument>4.14</a>
+How are integers converted to and from pointers?
+Can I temporarily stuff an integer into a pointer,
+or vice versa?
+</p><p><a href="ptrs/int2charp.html" rel=subdocument>4.15</a>
+How do I convert an <TT>int</TT> to a <TT>char&nbsp;*</TT>?
+I tried a cast, but it's not working.
+</p><p><a href="ptrs/charstarws3.html" rel=subdocument>4.16</a>
+What's wrong with
+this
+declaration?
+<pre>
+char* p1, p2;</pre>
+
+
+
+
+I get errors when I try to
+use
+<TT>p2</TT>.
+
+</p><p><a href="ptrs/nearfar2.html" rel=subdocument>4.17</a>
+What are ``near'' and ``far'' pointers?
+
+</p><hr>
+<H4>5. Null Pointers</H4>
+<p><a href="null/null1.html" rel=subdocument>5.1</a>
+
+What is this infamous null pointer, anyway?
+</p><p><a href="null/null2.html" rel=subdocument>5.2</a>
+
+How do I get a null pointer in my programs?
+</p><p><a href="null/ptrtest.html" rel=subdocument>5.3</a>
+Is the abbreviated pointer comparison ``<TT>if(p)</TT>'' to test for
+non-null pointers valid?
+What if the internal representation for null pointers is nonzero?
+</p><p><a href="null/macro.html" rel=subdocument>5.4</a>
+What is <TT>NULL</TT> and how is it
+defined?
+</p><p><a href="null/machnon0.html" rel=subdocument>5.5</a>
+How should <TT>NULL</TT> be defined on a machine which uses a nonzero bit
+pattern as the internal representation of a null pointer?
+</p><p><a href="null/safermacs.html" rel=subdocument>5.6</a>
+If <TT>NULL</TT> were defined as
+follows:
+<pre>
+	#define NULL ((char *)0)
+</pre>
+wouldn't that make function calls which pass an uncast <TT>NULL</TT> work?
+</p><p><a href="null/long0.html" rel=subdocument>5.7</a>
+My vendor provides header files that <TT>#define</TT> <TT>NULL</TT> as <TT>0L</TT>.
+Why?
+</p><p><a href="null/fcnptr.html" rel=subdocument>5.8</a>
+Is <TT>NULL</TT> valid for pointers to functions?
+</p><p><a href="null/nullor0.html" rel=subdocument>5.9</a>
+If <TT>NULL</TT> and <TT>0</TT> are equivalent
+as null pointer constants,
+which should I use?
+</p><p><a href="null/macsochange.html" rel=subdocument>5.10</a>
+But wouldn't it be better to use <TT>NULL</TT>
+(rather than
+
+<TT>0</TT>),
+in case the value of <TT>NULL</TT> changes,
+perhaps on a machine with nonzero internal null pointers?
+</p><p><a href="null/nullreq.html" rel=subdocument>5.11</a>
+I once used a compiler that wouldn't work unless <TT>NULL</TT> was
+used.
+</p><p><a href="null/nullptrmacro.html" rel=subdocument>5.12</a>
+
+I use the preprocessor macro
+<pre>
+#define Nullptr(type) (type *)0</pre>
+
+to help me build null pointers of the correct type.
+</p><p><a href="null/varieties.html" rel=subdocument>5.13</a>
+This is strange.
+<TT>NULL</TT> is guaranteed to be <TT>0</TT>, but the null pointer is not?
+</p><p><a href="null/confusion.html" rel=subdocument>5.14</a>
+Why is there so much confusion surrounding null pointers?
+Why do these questions come up so often?
+</p><p><a href="null/confused2.html" rel=subdocument>5.15</a>
+I'm confused.
+I just can't understand all this null pointer stuff.
+</p><p><a href="null/confusion4.html" rel=subdocument>5.16</a>
+
+Given all the confusion surrounding null pointers,
+wouldn't it be easier simply
+
+to require them to be represented
+internally by zeroes?
+
+</p><p><a href="null/machexamp.html" rel=subdocument>5.17</a>
+Seriously, have any actual machines really used nonzero null
+pointers,
+or different representations for pointers to different types?
+</p><p><a href="null/runtime0.html" rel=subdocument>5.18</a>
+Is a run-time integral value of 0,
+cast to a pointer,
+guaranteed to be a null pointer?
+</p><p><a href="null/accessloc0.html" rel=subdocument>5.19</a>
+How can I access
+an interrupt vector
+located at
+the machine's location 0?
+If I set a pointer to <TT>0</TT>,
+the compiler might translate it to some nonzero internal null
+pointer value.
+</p><p><a href="null/nullpassign.html" rel=subdocument>5.20</a>
+What does a run-time ``null pointer assignment'' error mean?
+How can I track it down?
+</p><hr>
+<H4>6. Arrays and Pointers</H4>
+<p><a href="aryptr/aryptr1.html" rel=subdocument>6.1</a>
+I had the definition <TT>char&nbsp;a[6]</TT> in one source file, and in
+another I declared <TT>extern&nbsp;char&nbsp;*a</TT>.
+Why didn't it work?
+</p><p><a href="aryptr/aryptr2.html" rel=subdocument>6.2</a>
+But I heard that <TT>char a[]</TT> was identical to <TT>char&nbsp;*a</TT>.
+</p><p><a href="aryptr/aryptrequiv.html" rel=subdocument>6.3</a>
+So what is meant by the ``equivalence of pointers and arrays'' in C?
+</p><p><a href="aryptr/aryptrparam.html" rel=subdocument>6.4</a>
+If they're so different,
+then
+
+why
+are array and pointer declarations interchangeable as
+function formal parameters?
+</p><p><a href="aryptr/arypbref.html" rel=subdocument>6.4b</a>
+So arrays are passed by reference,
+even though the rest of C uses pass by value?
+</p><p><a href="aryptr/arrayassign.html" rel=subdocument>6.5</a>
+Why can't
+I
+do something like this?
+<pre>
+	extern char *getpass();
+	char str[10];
+	str = getpass("Enter password: ");
+</pre>
+</p><p><a href="aryptr/aryparmasgn.html" rel=subdocument>6.6</a>
+If you can't assign to arrays,
+then
+how can
+<pre>
+	int f(char str[])
+	{
+		if(str[0] == '\0')
+			str = "none";
+		...
+	}
+</pre>
+work?
+</p><p><a href="aryptr/aryasgn3.html" rel=subdocument>6.6b</a>
+And what about this?
+Isn't this an array assignment?
+<pre>
+	char a[] = "Hello, world!\n";
+</pre>
+</p><p><a href="aryptr/arraylval.html" rel=subdocument>6.7</a>
+How can an array be an lvalue, if you can't assign to it?
+</p><p><a href="aryptr/practdiff.html" rel=subdocument>6.8</a>
+Practically speaking,
+what
+is the
+difference between arrays and pointers?
+</p><p><a href="aryptr/constptr.html" rel=subdocument>6.9</a>
+Someone explained to me that arrays were really just constant pointers.
+</p><p><a href="aryptr/ptrkindofary.html" rel=subdocument>6.10</a>
+I'm still mystified.
+
+Is a pointer a kind of array,
+or is an array a kind of pointer?
+</p><p><a href="aryptr/joke.html" rel=subdocument>6.11</a>
+
+I came across some ``joke'' code containing the ``expression''
+<TT>5["abcdef"]</TT> .
+How can this be legal C?
+</p><p><a href="aryptr/aryvsadr.html" rel=subdocument>6.12</a>
+Since array references decay into pointers,
+if <TT>arr</TT> is an array,
+what's
+the difference between
+<TT>arr</TT> and <TT>&amp;arr</TT>?
+</p><p><a href="aryptr/ptrtoarray.html" rel=subdocument>6.13</a>
+How do I declare a pointer to an array?
+</p><p><a href="aryptr/dynarray.html" rel=subdocument>6.14</a>
+How can I set an array's size at run time?
+<br>How can I avoid
+
+fixed-sized arrays?
+</p><p><a href="aryptr/dynlocarys.html" rel=subdocument>6.15</a>
+How can I declare local arrays of a size matching a passed-in array?
+
+</p><p><a href="aryptr/dynmuldimary.html" rel=subdocument>6.16</a>
+How can I dynamically allocate a multidimensional array?
+</p><p><a href="aryptr/non0based.html" rel=subdocument>6.17</a>
+Here's a neat trick: if I write
+<pre>
+	int realarray[10];
+	int *array = &amp;realarray[-1];
+</pre>
+I can treat <TT>array</TT> as if it were a 1-based array.
+</p><p><a href="aryptr/pass2dary.html" rel=subdocument>6.18</a>
+My compiler complained when I passed a two-dimensional array to a
+function expecting a pointer to a pointer.
+</p><p><a href="aryptr/ary2dfunc2.html" rel=subdocument>6.19</a>
+How do I write functions which accept two-dimensional arrays
+when the width is not known at compile time?
+</p><p><a href="aryptr/ary2dfunc3.html" rel=subdocument>6.20</a>
+How can I use statically- and dynamically-allocated
+multidimensional arrays interchangeably when passing them to functions?
+</p><p><a href="aryptr/aryparmsize.html" rel=subdocument>6.21</a>
+Why doesn't <TT>sizeof</TT> properly report the size of an array
+when the array
+is a parameter to a function?
+I have a test routine
+<pre>
+	f(char a[10])
+	{
+		int i = sizeof(a);
+		printf("%d\n", i);
+	}
+</pre>
+and it prints
+4, not 10.
+</p><p><a href="aryptr/extarysize.html" rel=subdocument>6.22</a>
+How can code in a file where an array is declared as <TT>extern</TT>
+(i.e. it is defined, and its size determined, in some other file)
+
+determine the size of the array?
+<TT>sizeof</TT> doesn't seem to work.
+</p><p><a href="aryptr/arraynels.html" rel=subdocument>6.23</a>
+I want to know how many elements are in an array,
+but <TT>sizeof</TT> yields the size in bytes.
+</p><p><a href="aryptr/arybits.html" rel=subdocument>6.24</a>
+Is there a way to have an array of bits?
+</p><hr>
+<H4>7. Memory Allocation</H4>
+<p><a href="malloc/malloc1.html" rel=subdocument>7.1</a>
+Why doesn't
+this fragment
+work?
+<pre>
+	char *answer;
+	printf("Type something:\n");
+	gets(answer);
+	printf("You typed \"%s\"\n", answer);
+</pre>
+</p><p><a href="malloc/malloc2.html" rel=subdocument>7.2</a>
+I can't get <TT>strcat</TT> to work.
+I tried
+<pre>
+	char *s1 = "Hello, ";
+	char *s2 = "world!";
+	char *s3 = strcat(s1, s2);
+</pre>
+but I got strange results.
+</p><p><a href="malloc/attitude.html" rel=subdocument>7.3</a>
+
+
+But the
+man page
+for <TT>strcat</TT> says that
+it takes two <TT>char&nbsp;*</TT>'s as arguments.
+How am
+
+I supposed to know to allocate things?
+</p><p><a href="malloc/lucky.html" rel=subdocument>7.3b</a>
+I just tried the code
+<pre>
+char *p;
+strcpy(p, "abc");</pre>
+
+and it worked.
+How?
+Why didn't it crash?
+</p><p><a href="malloc/ptrvaralloc.html" rel=subdocument>7.3c</a>
+How much memory does a pointer variable allocate?
+</p><p><a href="malloc/linebfdur.html" rel=subdocument>7.4</a>
+I'm
+reading
+lines from a file into an
+array,
+with this code:
+<pre>
+	char linebuf[80];
+	char *lines[100];
+	int i;
+
+	for(i = 0; i &lt; 100; i++) {
+		char *p = fgets(linebuf, 80, fp);
+		if(p == NULL) break;
+		lines[i] = p;
+	}
+</pre>
+Why do all the lines end up containing copies of the last line?
+</p><p><a href="malloc/retaggr.html" rel=subdocument>7.5a</a>
+I have a function that is supposed to return a string,
+but when it returns to its caller,
+the returned string is garbage.
+</p><p><a href="malloc/retaggr2.html" rel=subdocument>7.5b</a>
+So what's the right way to return a string
+or other aggregate?
+</p><p><a href="malloc/decl.html" rel=subdocument>7.6</a>
+Why am I getting
+``warning: assignment of pointer from integer lacks a cast''
+for calls to <TT>malloc</TT>?
+</p><p><a href="malloc/cast.html" rel=subdocument>7.7</a>
+Why does some code carefully cast the values returned by <TT>malloc</TT>
+to the pointer type being allocated?
+</p><p><a href="malloc/mallocnocast.html" rel=subdocument>7.7b</a>
+What's wrong with casting <TT>malloc</TT>'s return value?
+</p><p><a href="malloc/mallocnocast2.html" rel=subdocument>7.7c</a>
+In a call to <TT>malloc</TT>,
+what does an error like
+``Cannot convert `<TT>void&nbsp;*</TT>' to `<TT>int&nbsp;*'''
+mean?
+</TT></p><p><a href="malloc/sizeofchar.html" rel=subdocument>7.8</a>
+I see code like
+<pre>
+	char *p = malloc(strlen(s) + 1);
+	strcpy(p, s);
+</pre>
+Shouldn't that be <TT>malloc((strlen(s) + 1) * sizeof(char))</TT>?
+</p><p><a href="malloc/mymallocretp.html" rel=subdocument>7.9</a>
+I wrote a little wrapper around <TT>malloc</TT>,
+but it doesn't work:
+<pre>
+	#include &lt;stdio.h&gt;
+	#include &lt;stdlib.h&gt;
+
+	mymalloc(void *retp, size_t size)
+	{
+		retp = malloc(size);
+		if(retp == NULL) {
+			fprintf(stderr, "out of memory\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+</pre>
+</p><p><a href="malloc/mimic3.html" rel=subdocument>7.10</a>
+I'm trying to declare a pointer and allocate some space for it,
+but it's
+not working.
+What's wrong with
+this code?
+<pre>
+char *p;
+*p = malloc(10);</pre>
+
+
+</p><p><a href="malloc/fcninit2.html" rel=subdocument>7.10a</a>
+What's wrong with
+this initialization?
+<pre>
+char *p = malloc(10);</pre>
+
+My compiler is complaining about
+an ``invalid initializer'',
+or something.
+
+</p><p><a href="malloc/lintpalign2.html" rel=subdocument>7.10b</a>
+How can I shut off the
+``warning: possible pointer alignment problem''
+message
+which
+<TT>lint</TT> gives me for each call to <TT>malloc</TT>?
+
+</p><p><a href="malloc/dynarray2.html" rel=subdocument>7.11</a>
+How can I dynamically allocate arrays?
+</p><p><a href="malloc/memavail2.html" rel=subdocument>7.12</a>
+How can I find out how much memory is available?
+
+</p><p><a href="malloc/malloc0xref.html" rel=subdocument>7.13</a>
+What should <TT>malloc(0)</TT> do?
+Return a null pointer or a pointer to 0 bytes?
+
+</p><p><a href="malloc/lazyalloc.html" rel=subdocument>7.14</a>
+I've heard that some operating systems
+
+don't actually allocate <TT>malloc</TT>'ed memory
+until
+the
+
+program tries to
+use
+it.
+Is this legal?
+</p><p><a href="malloc/sizetlong.html" rel=subdocument>7.15</a>
+<TT>malloc</TT>
+is
+returning crazy pointer values,
+but I <em>did</em> read question <a href="decl.html">7.6</a>
+and I have included the line
+<pre>
+	extern void *malloc();
+</pre>
+before I call it.
+</p><p><a href="malloc/sizewrap.html" rel=subdocument>7.16</a>
+I'm allocating a large array for some numeric work,
+using the line
+<pre>
+	double *array = malloc(300 * 300 * sizeof(double));
+</pre>
+<TT>malloc</TT> isn't returning null,
+but
+the program is acting strangely,
+as if it's overwriting memory,
+or <TT>malloc</TT> isn't allocating as much as I asked for,
+or something.
+</p><p><a href="malloc/segment.html" rel=subdocument>7.17</a>
+I've got 8 meg of memory in my PC.
+Why can I only seem to <TT>malloc</TT> 640K or so?
+</p><p><a href="malloc/efficiency.html" rel=subdocument>7.18</a>
+My application depends heavily on
+dynamic allocation of nodes for data structures,
+and <TT>malloc</TT>/<TT>free</TT> overhead
+is
+becoming
+a bottleneck.
+What can
+I do?
+</p><p><a href="malloc/crash.html" rel=subdocument>7.19</a>
+My program is crashing, apparently somewhere down inside
+<TT>malloc</TT>,
+but I can't see anything wrong with it.
+Is there a bug in <TT>malloc</TT>?
+</p><p><a href="malloc/noscale.html" rel=subdocument>7.19b</a>
+</p><p>I'm dynamically allocating an array, like this:
+<pre>
+	int *iarray = (int *)malloc(nints);
+</pre>
+<TT>malloc</TT> isn't returning NULL,
+but the code isn't working.
+</p><p><a href="malloc/useafterfree.html" rel=subdocument>7.20</a>
+You can't use dynamically-allocated memory after you free it, can you?
+</p><p><a href="malloc/ptrafterfree.html" rel=subdocument>7.21</a>
+Why isn't a pointer
+null
+after calling
+<TT>free</TT>?
+
+<br>
+How unsafe is it to use
+(assign, compare)
+a pointer value after it's been freed?
+</p><p><a href="malloc/local.html" rel=subdocument>7.22</a>
+When I call <TT>malloc</TT> to allocate memory for a
+pointer which is local to a function,
+do I have to explicitly <TT>free</TT> it?
+</p><p><a href="malloc/freeforall.html" rel=subdocument>7.23</a>
+I'm allocating structures which contain pointers to other
+dynamically-allocated objects.
+When I free
+a structure,
+do I
+also
+have to free each subsidiary pointer?
+</p><p><a href="malloc/freeb4exit.html" rel=subdocument>7.24</a>
+Must I free allocated memory before the program exits?
+</p><p><a href="malloc/freetoOS.html" rel=subdocument>7.25</a>
+I have a program which <TT>malloc</TT>s
+and later
+<TT>free</TT>s a lot
+of memory,
+but
+I can see from the operating system
+that
+memory usage
+doesn't
+actually
+go back down.
+</p><p><a href="malloc/freesize.html" rel=subdocument>7.26</a>
+How does <TT>free</TT> know how many bytes to free?
+
+</p><p><a href="malloc/querysize.html" rel=subdocument>7.27</a>
+So can I query the malloc package to find out how big an
+allocated block is?
+</p><p><a href="malloc/sizeof.html" rel=subdocument>7.28</a>
+Why doesn't <TT>sizeof</TT> tell me the size of
+the block of memory pointed to by a pointer?
+</p><p><a href="malloc/realloc.html" rel=subdocument>7.29</a>
+Having dynamically allocated an array
+(as in question <a href="../aryptr/dynarray.html">6.14</a>),
+can I change its size?
+</p><p><a href="malloc/reallocnull.html" rel=subdocument>7.30</a>
+Is it legal to pass a null pointer as the first argument to <TT>realloc</TT>?
+Why would you want to?
+</p><p><a href="malloc/calloc.html" rel=subdocument>7.31</a>
+What's the difference between <TT>calloc</TT> and <TT>malloc</TT>?
+Which should I
+
+use?
+
+Is it safe to take advantage of <TT>calloc</TT>'s
+zero-filling?
+Does <TT>free</TT> work
+on memory allocated with <TT>calloc</TT>,
+or do you
+
+need a <TT>cfree</TT>?
+</p><p><a href="malloc/alloca.html" rel=subdocument>7.32</a>
+What is <TT>alloca</TT> and why is its use discouraged?
+</p><hr>
+<H4>8. Characters and Strings</H4>
+<p><a href="charstring/strvschar.html" rel=subdocument>8.1</a>
+
+Why doesn't
+<pre>
+strcat(string,&nbsp;'!');</pre>
+
+work?
+</p><p><a href="charstring/stringeq.html" rel=subdocument>8.2</a>
+I'm checking a string to see if it matches a particular value.
+Why isn't this code working?
+<pre>
+	char *string;
+	...
+	if(string == "value") {
+		/* string matches "value" */
+		...
+	}
+</pre>
+</p><p><a href="charstring/assign.html" rel=subdocument>8.3</a>
+If I can say
+<pre>
+	char a[] = "Hello, world!";
+</pre>
+why can't I say
+<pre>
+	char a[14];
+	a = "Hello, world!";
+</pre>
+</p><p><a href="charstring/malloc.html" rel=subdocument>8.4</a>
+I can't get <TT>strcat</TT> to work.
+I tried
+<pre>
+	char *s1 = "Hello, ";
+	char *s2 = "world!";
+	char *s3 = strcat(s1, s2);
+</pre>
+but I got strange results.
+
+</p><p><a href="charstring/strlitinit.html" rel=subdocument>8.5</a>
+What is the difference between
+these initializations?
+<pre>
+char a[] = "string literal";
+char *p  = "string literal";
+</pre>
+My program
+crashes if
+I try to
+assign a new value to <TT>p[i]</TT>.
+
+</p><p><a href="charstring/asciivals.html" rel=subdocument>8.6</a>
+How can I get the
+numeric
+
+value
+(i.e. ASCII or other character set code)
+corresponding to a
+character,
+or vice versa?
+</p><p><a href="charstring/substr.html" rel=subdocument>8.7</a>
+Does C have anything like the ``substr''
+(extract substring)
+routine present in other languages?
+
+</p><p><a href="charstring/runtimesc.html" rel=subdocument>8.8</a>
+I'm reading
+strings
+typed by
+the user
+into an array,
+and then printing them out later.
+When the user types
+a sequence like <TT>\n</TT>,
+why
+isn't it being
+handled properly?
+</p><p><a href="charstring/sizeofchar.html" rel=subdocument>8.9</a>
+I think something's wrong with my compiler:
+I just noticed that <TT>sizeof('a')</TT> is 2, not 1
+(i.e. not <TT>sizeof(char)</TT>).
+</p><p><a href="charstring/wchar.html" rel=subdocument>8.10</a>
+I'm starting to think about multinational character sets,
+and I'm worried about the implications
+of making <TT>sizeof(char)</TT> be 2
+so that 16-bit character sets can be represented.
+</p><hr>
+<H4>9. Boolean Expressions and Variables</H4>
+<p><a href="bool/booltype.html" rel=subdocument>9.1</a>
+What is the right type to use for Boolean values in C?
+Is there a standard type?
+Should
+I use
+<TT>#define</TT>s or enums
+for the true and false values?
+</p><p><a href="bool/bool2.html" rel=subdocument>9.2</a>
+Isn't #defining <TT>TRUE</TT> to be 1 dangerous, since any nonzero value
+is considered ``true'' in C?
+What if a built-in logical or relational operator ``returns''
+something other than 1?
+</p><p><a href="bool/ifptr.html" rel=subdocument>9.3</a>
+Is <TT>if(p)</TT>,
+where <TT>p</TT> is a pointer,
+a
+valid
+and portable test?
+</p><p><a href="bool/macros.html" rel=subdocument>9.4</a>
+Should I use symbolic names like <TT>TRUE</TT>
+and <TT>FALSE</TT> for Boolean constants,
+or plain 1 and 0?
+</p><p><a href="bool/thirdparty.html" rel=subdocument>9.5</a>
+A
+third-party
+header file
+I just started using
+is defining its own <TT>TRUE</TT>
+and <TT>FALSE</TT> values
+incompatibly with
+the code I've already developed.
+What can I do?
+</p><hr>
+<H4>10. C Preprocessor</H4>
+<p><a href="cpp/safemacros.html" rel=subdocument>10.1</a>
+I'm trying to define
+a few simple little function-like macros
+such as
+<pre>
+	#define square(x) x * x
+</pre>
+but they're not always working.
+</p><p><a href="cpp/slm.html" rel=subdocument>10.2</a>
+Here are
+some cute preprocessor macros:
+<pre>
+	#define begin	{
+	#define end	}
+</pre>
+With these,
+I can write C code that looks more like Pascal.
+What do y'all think?
+</p><p><a href="cpp/swapmacro.html" rel=subdocument>10.3</a>
+How can I write a generic macro to swap two values?
+</p><p><a href="cpp/multistmt.html" rel=subdocument>10.4</a>
+What's the best way to write a multi-statement macro?
+</p><p><a href="cpp/typedefvsdefine.html" rel=subdocument>10.5</a>
+What's the difference between using a <TT>typedef</TT>
+or
+
+a <TT>#define</TT>
+for a user-defined type?
+
+</p><p><a href="cpp/constvsdefine.html" rel=subdocument>10.5b</a>
+What's the difference between
+<pre>
+	const MAXSIZE = 100;
+</pre>
+<pre>
+and
+</pre>
+<pre>
+	#define MAXSIZE 100
+</pre>
+</p><p><a href="cpp/hfiles.html" rel=subdocument>10.6</a>
+I'm splitting up a program
+into multiple source files
+for the first time,
+
+and I'm wondering what to put in <TT>.c</TT> files
+and what to put in <TT>.h</TT> files.
+(What does ``<TT>.h</TT>''
+mean,
+anyway?)
+</p><p><a href="cpp/nestincl.html" rel=subdocument>10.7</a>
+Is it acceptable for one header file to <TT>#include</TT> another?
+</p><p><a href="cpp/inclkinds.html" rel=subdocument>10.8a</a>
+What's the difference between
+<TT>#include&nbsp;&lt;&gt;</TT>
+and
+<TT>#include&nbsp;""</TT>
+?
+</p><p><a href="cpp/cppsearchpath.html" rel=subdocument>10.8b</a>
+What are the complete rules for header file searching?
+</p><p><a href="cpp/headerglom.html" rel=subdocument>10.9</a>
+I'm getting strange
+syntax errors
+on the very first
+declaration in
+a file,
+but it looks fine.
+
+</p><p><a href="cpp/def3rdparty.html" rel=subdocument>10.10</a>
+I'm using header files
+which
+accompany two different third-party libraries,
+and they are ``helpfully'' defining
+common macros such as <TT>TRUE</TT>,
+<TT>FALSE</TT>,
+<TT>Min()</TT>,
+and <TT>Max()</TT>,
+
+but the definitions clash with each other
+and with definitions I'd
+
+already established in my own header files.
+What can I do?
+</p><p><a href="cpp/extlibs.html" rel=subdocument>10.10b</a>
+I'm #including the
+right
+header file for
+the library function I'm using,
+but the linker keeps saying it's undefined.
+</p><p><a href="cpp/missinghdr.html" rel=subdocument>10.11</a>
+I'm compiling a program, and
+I seem to be missing
+one
+of the
+header files it
+requires.
+Can someone send me
+a copy?
+</p><p><a href="cpp/ifstrcmp.html" rel=subdocument>10.12</a>
+How can I construct preprocessor <TT>#if</TT> expressions
+which compare strings?
+</p><p><a href="cpp/ifexpr.html" rel=subdocument>10.13</a>
+Does the <TT>sizeof</TT> operator work in preprocessor <TT>#if</TT> directives?
+</p><p><a href="cpp/ifddef.html" rel=subdocument>10.14</a>
+Can I use an <TT>#ifdef</TT> in a <TT>#define</TT> line,
+to define something two different
+ways,
+like this?
+<pre>
+	#define a b \
+	#ifdef whatever
+		c d
+	#else
+		e f g
+	#endif
+</pre>
+</p><p><a href="cpp/iftypedef.html" rel=subdocument>10.15</a>
+Is there 
+
+
+
+anything like
+an <TT>#ifdef</TT> for <TT>typedef</TT>s?
+</p><p><a href="cpp/ifendian.html" rel=subdocument>10.16</a>
+How can I use a preprocessor <TT>#if</TT> expression to
+tell
+whether a machine's byte order
+is big-endian or little-endian?
+</p><p><a href="cpp/ifdefsyntax.html" rel=subdocument>10.17</a>
+I'm getting strange syntax errors inside
+lines
+I've
+<TT>#ifdef</TT>fed out.
+
+</p><p><a href="cpp/unifdef.html" rel=subdocument>10.18</a>
+I inherited some code
+which contains far too many <TT>#ifdef</TT>'s for my taste.
+How can I preprocess
+the
+code
+to
+leave only one conditional compilation set,
+without running it through the preprocessor
+and expanding all of the <TT>#include</TT>'s and <TT>#define</TT>'s as well?
+</p><p><a href="cpp/listpredef.html" rel=subdocument>10.19</a>
+How can I list all of the predefined identifiers?
+</p><p><a href="cpp/oldpaste.html" rel=subdocument>10.20</a>
+I have some old code that tries to construct identifiers with a
+macro like
+<pre>
+#define Paste(a, b) a/**/b</pre>
+
+but it doesn't work any more.
+</p><p><a href="cpp/charize.html" rel=subdocument>10.21</a>
+I have an old macro
+<pre>
+#define&nbsp;CTRL(c)&nbsp;('c'&nbsp;&amp;&nbsp;037)</pre>
+
+
+that doesn't
+seem to
+work any more.
+</p><p><a href="cpp/macstrexp2.html" rel=subdocument>10.22</a>
+Why is the macro
+<pre>
+	#define TRACE(n) printf("TRACE: %d\n", n)
+</pre>
+giving me the warning ``macro replacement within a string literal''?
+It seems to be expanding
+<pre>
+	TRACE(count);
+</pre>
+as
+<pre>
+	printf("TRACE: %d\count", count);
+</pre>
+</p><p><a href="cpp/macstrexp1.html" rel=subdocument>10.23</a>
+How can I
+use
+a macro argument
+inside
+a string
+literal
+in the macro expansion?
+</p><p><a href="cpp/stringize.html" rel=subdocument>10.24</a>
+I'm trying to use
+the ANSI ``stringizing'' preprocessing operator
+`<TT>#</TT>'
+to insert the value of a symbolic constant into a message,
+but it keeps
+stringizing the macro's name rather than its
+value.
+
+</p><p><a href="cpp/notgeneral.html" rel=subdocument>10.25</a>
+I've got this tricky preprocessing I want to do
+and
+I can't figure out a way
+to do it.
+</p><p><a href="cpp/varargs.html" rel=subdocument>10.26</a>
+How can I write a macro which takes a variable number of
+arguments,
+or use the preprocessor to ``turn off'' a function call with a
+variable number of arguments?
+</p><p><a href="cpp/debugmacs.html" rel=subdocument>10.27</a>
+How can I include expansions of the <TT>__FILE__</TT>
+and <TT>__LINE__</TT> macros
+in a general-purpose debugging macro?
+</p><hr>
+<H4>11. ANSI/ISO Standard C</H4>
+<p><a href="ansi/ansi1.html" rel=subdocument>11.1</a>
+What is the ``ANSI C Standard?''
+</p><p><a href="ansi/avail.html" rel=subdocument>11.2</a>
+How can I get a copy of the Standard?
+</p><p><a href="ansi/updates.html" rel=subdocument>11.2b</a>
+Where can I get information about updates to the Standard?
+</p><p><a href="ansi/argpromos.html" rel=subdocument>11.3</a>
+My ANSI compiler
+complains about a mismatch when it sees
+<pre>
+	extern int func(float);
+
+	int func(x)
+	float x;
+	{ ...
+</pre>
+</p><p><a href="ansi/mixoldandnew.html" rel=subdocument>11.4</a>
+Can you mix old-style and new-style
+function syntax?
+</p><p><a href="ansi/structinproto.html" rel=subdocument>11.5</a>
+Why does the declaration
+<pre>
+extern int f(struct x *p);</pre>
+
+give me
+an obscure
+warning message
+about
+``struct x declared inside parameter list''?
+</p><p><a href="ansi/varargproto.html" rel=subdocument>11.6</a>
+I had a frustrating problem which turned out to be caused by the line
+<pre>
+	printf("%d", n);
+</pre>
+where <TT>n</TT> was actually a <TT>long&nbsp;int</TT>.
+I thought that ANSI function prototypes
+were supposed to guard against argument type mismatches like this.
+
+</p><p><a href="ansi/varargproto2.html" rel=subdocument>11.7</a>
+I heard that you have to <TT>#include</TT> <TT>&lt;stdio.h&gt;</TT>
+before calling <TT>printf</TT>.
+Why?
+
+</p><p><a href="ansi/constasconst.html" rel=subdocument>11.8</a>
+I don't understand why I can't
+use <TT>const</TT> values in initializers and array
+dimensions,
+as in
+<pre>
+	const int n = 5;
+	int a[n];
+</pre>
+</p><p><a href="ansi/strlitnotconst.html" rel=subdocument>11.8b</a>
+If you can't modify string literals,
+why aren't they defined as being
+arrays of <TT>const</TT> characters?
+</p><p><a href="ansi/constptrconst.html" rel=subdocument>11.9</a>
+What's the difference between
+<TT>const&nbsp;char&nbsp;*p</TT>,
+<TT>char&nbsp;const&nbsp;*p</TT>,
+and <TT>char&nbsp;*&nbsp;const&nbsp;p</TT>?
+</p><p><a href="ansi/constmismatch.html" rel=subdocument>11.10</a>
+
+
+
+Why can't I pass a <TT>char&nbsp;**</TT> to a function which expects a
+<TT>const&nbsp;char&nbsp;**</TT>?
+</p><p><a href="ansi/typedefconst.html" rel=subdocument>11.11</a>
+I've got
+the declarations
+<pre>
+	typedef char *charp;
+	const charp p;
+</pre>
+Why is <TT>p</TT> turning out <TT>const</TT>,
+instead of the characters pointed to?
+</p><p><a href="ansi/constvsdefine2.html" rel=subdocument>11.11b</a>
+What's the difference between
+<pre>
+	const MAXSIZE = 100;
+</pre>
+<pre>
+and
+</pre>
+<pre>
+	#define MAXSIZE 100
+</pre>
+
+</p><p><a href="ansi/maindecl.html" rel=subdocument>11.12a</a>
+What's the correct declaration of <TT>main()</TT>?
+</p><p><a href="ansi/voidmain.html" rel=subdocument>11.12b</a>
+
+Can I declare <TT>main</TT> as <TT>void</TT>,
+to shut off these annoying
+``main returns no value'' messages?
+</p><p><a href="ansi/envp.html" rel=subdocument>11.13</a>
+But what about <TT>main</TT>'s third argument,
+<TT>envp</TT>?
+</p><p><a href="ansi/voidmain3.html" rel=subdocument>11.14a</a>
+I believe that declaring <TT>void&nbsp;main()</TT> can't fail,
+since I'm calling <TT>exit</TT> instead of returning,
+and anyway my operating system ignores a program's exit/return status.
+</p><p><a href="ansi/voidmainexamp.html" rel=subdocument>11.14b</a>
+So what could go wrong?
+Are there
+really any
+systems where <TT>void&nbsp;main()</TT> doesn't work?
+</p><p><a href="ansi/voidmainbooks.html" rel=subdocument>11.15</a>
+The book I've been using,
+<I>C Programing
+for the Compleat Idiot</I>,
+always uses <TT>void&nbsp;main()</TT>.
+</p><p><a href="ansi/exitvsreturn.html" rel=subdocument>11.16</a>
+Is <TT>exit(status)</TT> truly equivalent
+to returning the same <TT>status</TT> from <TT>main</TT>?
+</p><p><a href="ansi/stringize.html" rel=subdocument>11.17</a>
+I'm trying to use
+the ANSI ``stringizing'' preprocessing operator
+`<TT>#</TT>'
+to insert the value of a symbolic constant into a message,
+but it keeps
+stringizing the macro's name rather than its
+value.
+</p><p><a href="ansi/macstrexp.html" rel=subdocument>11.18</a>
+What does the message
+``warning: macro replacement within a string literal''
+mean?
+</p><p><a href="ansi/ifdefsyntax.html" rel=subdocument>11.19</a>
+I'm getting strange syntax errors inside
+lines
+I've
+<TT>#ifdef</TT>fed out.
+</p><p><a href="ansi/pragma.html" rel=subdocument>11.20</a>
+What are <TT>#pragma</TT>s 
+and what are they good for?
+</p><p><a href="ansi/pragmaonce.html" rel=subdocument>11.21</a>
+What does ``<TT>#pragma&nbsp;once</TT>'' mean?
+I found it in some header files.
+</p><p><a href="ansi/nonstrings.html" rel=subdocument>11.22</a>
+Is <TT>char&nbsp;a[3]&nbsp;=&nbsp;"abc";</TT> legal?
+What does it mean?
+</p><p><a href="ansi/aryvsadr.html" rel=subdocument>11.23</a>
+Since array references decay into pointers,
+if <TT>arr</TT> is an array,
+what's
+the difference between
+<TT>arr</TT> and <TT>&amp;arr</TT>?
+
+</p><p><a href="ansi/voidparith.html" rel=subdocument>11.24</a>
+Why can't I perform arithmetic on a <TT>void&nbsp;*</TT> pointer?
+</p><p><a href="ansi/memmove.html" rel=subdocument>11.25</a>
+What's the difference between
+<TT>memcpy</TT> and
+<TT>memmove</TT>?
+
+</p><p><a href="ansi/malloc0.html" rel=subdocument>11.26</a>
+What should <TT>malloc(0)</TT> do?
+Return a null pointer or a pointer to 0 bytes?
+</p><p><a href="ansi/extidsignif.html" rel=subdocument>11.27</a>
+Why does the ANSI Standard
+place limits on
+the length
+and case-significance
+of
+
+external identifiers?
+</p><p><a href="ansi/noalias.html" rel=subdocument>11.28</a>
+What was <TT>noalias</TT> and what ever happened to it?
+</p><p><a href="ansi/preansi.html" rel=subdocument>11.29a</a>
+My compiler is rejecting the simplest possible test programs,
+with all kinds of syntax errors.
+It's complaining about the
+first line of
+<pre>
+	main(int argc, char **argv)
+	{
+		return 0;
+	}
+</pre>
+</p><p><a href="ansi/preansi2.html" rel=subdocument>11.29b</a>
+What does the message
+
+``Automatic aggregate intialization is an ANSI feature''
+mean?
+My compiler is complaining about valid ANSI code.
+</p><p><a href="ansi/preansilib.html" rel=subdocument>11.30</a>
+Why are some ANSI/ISO Standard library functions showing up as
+undefined, even though I've got an ANSI compiler?
+</p><p><a href="ansi/cproto.html" rel=subdocument>11.31</a>
+Does anyone have a tool for converting old-style C programs to
+ANSI C,
+or vice versa,
+or for automatically generating prototypes?
+</p><p><a href="ansi/extensions.html" rel=subdocument>11.32</a>
+Why won't
+the Frobozz Magic C Compiler,
+which claims to be ANSI compliant,
+accept this code?
+I know that the code is ANSI, because <TT>gcc</TT> accepts it.
+</p><p><a href="ansi/undef.html" rel=subdocument>11.33</a>
+People seem to make a point of distinguishing
+between
+implementation-defined,
+unspecified,
+and
+undefined
+behavior.
+What do these mean?
+</p><p><a href="ansi/compliance.html" rel=subdocument>11.33b</a>
+What does it really mean for a program to be
+``legal''
+or
+``valid''
+or
+``conforming''?
+</p><p><a href="ansi/appalled.html" rel=subdocument>11.34</a>
+I'm appalled that the ANSI Standard leaves so many issues undefined.
+Isn't a Standard's whole job to standardize these things?
+</p><p><a href="ansi/experiment.html" rel=subdocument>11.35</a>
+People keep saying that the behavior
+of <TT>i&nbsp;=&nbsp;i++</TT>
+is undefined,
+but
+I just tried
+it
+on an ANSI-conforming compiler,
+and got the results I expected.
+</p><hr>
+<H4>12. Stdio</H4>
+<p><a href="stdio/getcharc.html" rel=subdocument>12.1</a>
+What's wrong with
+this code?
+<pre>
+char c;
+while((c = getchar()) != EOF) ...</pre>
+
+</p><p><a href="stdio/eofval.html" rel=subdocument>12.1b</a>
+I have a simple little program that reads characters until EOF,
+but how do I actually <em>enter</em> that ``EOF'' value
+from the keyboard?
+I see that <TT>EOF</TT> is defined by <TT>&lt;stdio.h&gt;</TT> to be -1;
+am I supposed to enter -1?
+</p><p><a href="stdio/feof.html" rel=subdocument>12.2</a>
+Why
+does
+the
+simple line-copying loop
+<TT>while(!feof(infp)) {
+fgets(buf,&nbsp;MAXLINE,&nbsp;infp);
+fputs(buf,&nbsp;outfp);
+}
+</TT>copy
+the last line twice?
+
+</p><p><a href="stdio/linebfdur.html" rel=subdocument>12.3</a>
+I'm using <TT>fgets</TT> to read
+lines from a file into an
+array
+of pointers.
+Why do all the lines end up containing copies of the last line?
+</p><p><a href="stdio/fflush.html" rel=subdocument>12.4</a>
+My program's prompts and intermediate output don't always show up
+on the screen,
+especially when I pipe the output through another program.
+</p><p><a href="stdio/charatatime.html" rel=subdocument>12.5</a>
+
+
+How can I read one character at a time,
+without waiting for the RETURN key?
+
+</p><p><a href="stdio/printfpercent.html" rel=subdocument>12.6</a>
+How can I print a <TT>'%'</TT> character
+in a <TT>printf</TT> format string?
+I tried <TT>\%</TT>, but it didn't work.
+</p><p><a href="stdio/printftypes.html" rel=subdocument>12.7</a>
+Why doesn't
+<pre>
+long int n = 123456;
+printf("%d\n", n);</pre>
+
+work?
+</p><p><a href="stdio/varargproto.html" rel=subdocument>12.8</a>
+I thought that ANSI function prototypes
+were supposed to guard against argument type mismatches.
+</p><p><a href="stdio/scanfvsprintf.html" rel=subdocument>12.9</a>
+Someone told me it was wrong to use <TT>%lf</TT> with <TT>printf</TT>.
+How can
+<TT>printf</TT> use <TT>%f</TT> for type <TT>double</TT>,
+if <TT>scanf</TT> requires <TT>%lf</TT>?
+</p><p><a href="stdio/printftypedef.html" rel=subdocument>12.9b</a>
+What <TT>printf</TT> format should I use for a typedef
+like <TT>size_t</TT>
+when I don't know
+whether it's <TT>long</TT> or some other type?
+</p><p><a href="stdio/printfvwid.html" rel=subdocument>12.10</a>
+How can I implement a variable field width with <TT>printf</TT>?
+That is, instead of
+something like
+<TT>%8d</TT>,
+I want the width to be specified
+at run time.
+</p><p><a href="stdio/commaprint.html" rel=subdocument>12.11</a>
+How can I print numbers with commas separating the thousands?
+<br>What about currency formatted numbers?
+</p><p><a href="stdio/scanf1.html" rel=subdocument>12.12</a>
+Why doesn't the call
+<TT>scanf("%d", i)</TT>
+work?
+</p><p><a href="stdio/scanf1a.html" rel=subdocument>12.12b</a>
+Why <em>does</em> the call
+<pre>
+char s[30];
+scanf("%s", s);</pre>
+
+work?
+I thought you always needed an <TT>&amp;</TT>
+on each variable passed to <TT>scanf</TT>.
+</p><p><a href="stdio/scanf2.html" rel=subdocument>12.13</a>
+Why doesn't
+this code:
+<pre>
+double d;
+scanf("%f", &amp;d);</pre>
+
+work?
+</p><p><a href="stdio/scanfh.html" rel=subdocument>12.14</a>
+Why doesn't the code
+<pre>
+short int s;
+scanf("%d", &amp;s);</pre>
+
+work?
+</p><p><a href="stdio/scanfvwid.html" rel=subdocument>12.15</a>
+How can I specify a variable width in a <TT>scanf</TT> format string?
+</p><p><a href="stdio/datafmts.html" rel=subdocument>12.16</a>
+How can I read data from
+data files with particular formats?
+<br>How can I read ten floats without having to use a jawbreaker 
+<TT>scanf</TT> format
+<br>like
+<TT>"%f&nbsp;%f&nbsp;%f&nbsp;%f&nbsp;%f&nbsp;%f&nbsp;%f&nbsp;%f&nbsp;%f&nbsp;%f"</TT>?
+<br>How can I read an arbitrary number of fields from a line into an array?
+</p><p><a href="stdio/scanfhang.html" rel=subdocument>12.17</a>
+When I read
+numbers
+from the keyboard with
+
+<TT>scanf</TT>
+and a
+<TT>"%d\n"</TT>
+format,
+like this:
+<pre>
+	int n;
+	scanf("%d\n", &amp;n);
+	printf("you typed %d\n", n);
+</pre>
+
+it seems to hang until I type one extra line of input.
+</p><p><a href="stdio/scanfinterlace.html" rel=subdocument>12.18a</a>
+I'm reading a number with <TT>scanf</TT>
+and
+<TT>%d</TT>,
+and then a string with
+<TT>gets()</TT>:
+<pre>
+	int n;
+	char str[80];
+
+	printf("enter a number: ");
+	scanf("%d", &amp;n);
+	printf("enter a string: ");
+	gets(str);
+	printf("you typed %d and \"%s\"\n", n, str);
+</pre>
+but the compiler seems to be
+skipping the call to <TT>gets()</TT>!
+</p><p><a href="stdio/scanfc.html" rel=subdocument>12.18b</a>
+I'm using <TT>scanf&nbsp;%c</TT> to read a Y/N response,
+but later input gets skipped.
+</p><p><a href="stdio/scanfjam.html" rel=subdocument>12.19</a>
+I figured I could use <TT>scanf</TT> more safely
+if I checked its return value
+to make sure that the user
+typed the numeric values I expect:
+<pre>
+	int n;
+
+	while(1) {
+		printf("enter a number: ");
+		if(scanf("%d", &amp;n) == 1)
+			break;
+		printf("try again: ");
+	}
+
+	printf("you typed %d\n", n);
+</pre>
+but sometimes it seems to go into an infinite loop.
+<a href="achtung.html" rel=subdocument>[footnote]</a>
+Why?
+</p><p><a href="stdio/scanfprobs.html" rel=subdocument>12.20</a>
+Why does everyone say not to use <TT>scanf</TT>?
+What should I use instead?
+</p><p><a href="stdio/sprintfsize.html" rel=subdocument>12.21</a>
+How can I tell how much destination buffer space I'll need
+for an arbitrary <TT>sprintf</TT> call?
+How can I avoid
+overflowing
+the destination buffer with <TT>sprintf</TT>?
+</p><p><a href="stdio/sprintfret.html" rel=subdocument>12.22</a>
+What's the deal on <TT>sprintf</TT>'s return value?
+Is it an <TT>int</TT> or a <TT>char&nbsp;*</TT>?
+</p><p><a href="stdio/getsvsfgets.html" rel=subdocument>12.23</a>
+Why does everyone say not to use <TT>gets()</TT>?
+</p><p><a href="stdio/printferrno.html" rel=subdocument>12.24</a>
+I thought I'd check <TT>errno</TT>
+after a long string of <TT>printf</TT> calls,
+to see if any of them had failed:
+<pre>
+	errno = 0;
+	printf("This\n");
+	printf("is\n");
+	printf("a\n");
+	printf("test.\n");
+	if(errno != 0)
+		fprintf(stderr, "printf failed: %s\n", strerror(errno));
+</pre>
+
+Why is it printing
+something strange like
+``printf failed: Not a typewriter''
+when I redirect the output to a file?
+</p><p><a href="stdio/fgetpos.html" rel=subdocument>12.25</a>
+What's the difference between <TT>fgetpos</TT>/<TT>fsetpos</TT>
+and <TT>ftell</TT>/<TT>fseek</TT>?
+<br>What are <TT>fgetpos</TT> and <TT>fsetpos</TT> good for?
+</p><p><a href="stdio/stdinflush.html" rel=subdocument>12.26a</a>
+How can I flush pending input so that a user's typeahead
+isn't read at the next prompt?
+Will <TT>fflush(stdin)</TT>
+work?
+</p><p><a href="stdio/stdinflush2.html" rel=subdocument>12.26b</a>
+If <TT>fflush</TT> won't work,
+what can I use to flush input?
+</p><p><a href="stdio/fopenfp.html" rel=subdocument>12.27</a>
+I wrote this routine which is supposed to open a file:
+<pre>
+	myfopen(char *filename, FILE *fp)
+	{
+		fp = fopen(filename, "r");
+	}
+</pre>
+But when I call it like this:
+<pre>
+		FILE *infp;
+		myfopen("filename.dat", infp);
+</pre>
+the <TT>infp</TT> variable
+in the caller doesn't get set properly.
+</p><p><a href="stdio/fopenmodec.html" rel=subdocument>12.28</a>
+I can't even get a simple <TT>fopen</TT> call to work!
+What's wrong with
+this call?
+<pre>
+	FILE *fp = fopen(filename, 'r');
+</pre>
+</p><p><a href="stdio/constrpath.html" rel=subdocument>12.28b</a>
+How can I open files with names like
+``<TT>file1</TT>'',
+``<TT>file2</TT>'',
+``<TT>file3</TT>'',
+etc.,
+where the numeric part is controlled by a variable?
+Basically I want ``<TT>file%d</TT>'',
+like <TT>printf</TT>.
+</p><p><a href="stdio/fopenpath.html" rel=subdocument>12.29</a>
+<TT>fopen</TT> is failing for certain pathnames.
+
+</p><p><a href="stdio/fupdate.html" rel=subdocument>12.30</a>
+I'm trying to update a file in place,
+by using <TT>fopen</TT> mode <TT>"r+"</TT>,
+reading a certain string,
+and writing back a modified string,
+but it's not working.
+</p><p><a href="stdio/insdelrec.html" rel=subdocument>12.31</a>
+How can I insert or delete a line
+(or record)
+in the middle of a file?
+
+</p><p><a href="stdio/fdfilename.html" rel=subdocument>12.32</a>
+How can I recover the file name given an open
+stream?
+</p><p><a href="stdio/freopen.html" rel=subdocument>12.33</a>
+How can I redirect <TT>stdin</TT> or <TT>stdout</TT>
+to a file
+from within a program?
+</p><p><a href="stdio/undofreopen.html" rel=subdocument>12.34</a>
+Once I've used <TT>freopen</TT>, how can I get the original
+<TT>stdout</TT>
+(or <TT>stdin</TT>)
+back?
+</p><p><a href="stdio/redirp.html" rel=subdocument>12.35</a>
+How can I tell if standard input or output is redirected
+(i.e. whether ``<TT>&lt;</TT>'' or ``<TT>&gt;</TT>''
+was used on the invocation command line)?
+</p><p><a href="stdio/devtty.html" rel=subdocument>12.36</a>
+I'm trying to write a program like ``<TT>more</TT>.''
+
+How can I
+get
+back
+to
+the interactive keyboard if <TT>stdin</TT> is redirected?
+</p><p><a href="stdio/multiway.html" rel=subdocument>12.36b</a>
+How can I arrange to have output go two places at once,
+e.g. to the screen and to a file?
+</p><p><a href="stdio/binaryio.html" rel=subdocument>12.37</a>
+I want to
+read and write numbers
+between files and memory
+in a byte-at-a-time way,
+not as formatted characters
+the way <TT>fprintf</TT> and <TT>fscanf</TT> do.
+How
+can I do this?
+</p><p><a href="stdio/fopenbinary.html" rel=subdocument>12.38</a>
+How can I read a binary data file properly?
+I'm occasionally seeing <TT>0x0a</TT> and <TT>0x0d</TT> values getting garbled,
+and
+I seem
+to hit EOF prematurely if the data contains the value <TT>0x1a</TT>.
+</p><p><a href="stdio/stdinbinary.html" rel=subdocument>12.39</a>
+I'm writing a
+``filter''
+for binary files,
+but <TT>stdin</TT> and <TT>stdout</TT> are preopened
+as text streams.
+How can I change
+their mode
+to binary?
+</p><p><a href="stdio/textvsbinary.html" rel=subdocument>12.40</a>
+What's the difference between text and binary I/O?
+</p><p><a href="stdio/structio.html" rel=subdocument>12.41</a>
+How can I read/write structures from/to
+
+data files?
+
+
+</p><p><a href="stdio/extconform.html" rel=subdocument>12.42</a>
+How can I write code to conform to these old, binary data file formats?
+</p><p><a href="stdio/runtimesc2.html" rel=subdocument>12.43</a>
+I'm reading
+strings
+typed by
+the user
+into an array,
+and then printing them out later.
+When the user types
+a sequence like <TT>\n</TT>,
+why
+isn't it being
+handled properly?
+
+</p><hr>
+<H4>13. Library Functions</H4>
+<p><a href="lib/itoa.html" rel=subdocument>13.1</a>
+How can I convert numbers to strings
+(the opposite of <TT>atoi</TT>)?
+Is there an <TT>itoa</TT> function?
+
+</p><p><a href="lib/strncpy.html" rel=subdocument>13.2</a>
+Why does <TT>strncpy</TT> not always
+place a <TT>'\0'</TT> terminator
+in the destination string?
+</p><p><a href="lib/substr.html" rel=subdocument>13.3</a>
+Does C have anything like the ``substr''
+(extract substring)
+routine present in other languages?
+</p><p><a href="lib/strupper.html" rel=subdocument>13.4</a>
+How do I convert a string to all upper or lower case?
+
+</p><p><a href="lib/toupper.html" rel=subdocument>13.5</a>
+Why
+do some versions of
+<TT>toupper</TT> act strangely if given an upper-case letter?
+<br>Why does some code call <TT>islower</TT> before <TT>toupper</TT>?
+</p><p><a href="lib/strtok.html" rel=subdocument>13.6</a>
+How can I split up a
+string
+into
+whitespace-separated fields?
+<br>How can I duplicate the process
+by which <TT>main()</TT>
+is handed <TT>argc</TT> and <TT>argv</TT>?
+</p><p><a href="lib/regex.html" rel=subdocument>13.7</a>
+I need some code to do
+regular expression
+and
+wildcard matching.
+</p><p><a href="lib/qsort1.html" rel=subdocument>13.8</a>
+I'm trying to sort an array of strings with <TT>qsort</TT>,
+using
+<TT>strcmp</TT>
+as the comparison function,
+but it's not working.
+</p><p><a href="lib/qsort2.html" rel=subdocument>13.9</a>
+Now I'm trying to sort an array of structures
+with <TT>qsort</TT>.
+My comparison function takes pointers to structures,
+but the compiler
+complains
+that the function is
+of the wrong type for <TT>qsort</TT>.
+How can I cast the function pointer to shut off the warning?
+</p><p><a href="lib/listsort.html" rel=subdocument>13.10</a>
+How can I sort a linked list?
+</p><p><a href="lib/extsort.html" rel=subdocument>13.11</a>
+How can I sort more data than will fit in memory?
+</p><p><a href="lib/curtime.html" rel=subdocument>13.12</a>
+How can I get the
+current date
+or
+time of day in a C program?
+</p><p><a href="lib/mktime.html" rel=subdocument>13.13</a>
+I know that the library function <TT>localtime</TT>
+will convert a <TT>time_t</TT> into a broken-down <TT>struct&nbsp;tm</TT>,
+and that <TT>ctime</TT>
+will convert a
+<TT>time_t</TT> to a printable string.
+How can I
+perform the inverse operations of converting
+a <TT>struct&nbsp;tm</TT> or a string into a <TT>time_t</TT>?
+</p><p><a href="lib/calendar.html" rel=subdocument>13.14</a>
+How can I add
+N
+days to a date?
+
+
+How can I find the difference between two dates?
+
+</p><p><a href="lib/y2k.html" rel=subdocument>13.14b</a>
+Did C have any Year 2000 problems?
+</p><p><a href="lib/rand.html" rel=subdocument>13.15</a>
+I need a random number generator.
+</p><p><a href="lib/randrange.html" rel=subdocument>13.16</a>
+How can I get random integers in a certain range?
+</p><p><a href="lib/srand.html" rel=subdocument>13.17</a>
+Each time I run my program,
+I get the same sequence of numbers back from <TT>rand()</TT>.
+</p><p><a href="lib/notveryrand.html" rel=subdocument>13.18</a>
+I need a random true/false value,
+so I'm just taking <TT>rand()&nbsp;%&nbsp;2</TT>,
+but it's alternating 0, 1, 0, 1, 0...
+</p><p><a href="lib/shuffle.html" rel=subdocument>13.19</a>
+How can I return a sequence of random numbers
+which don't repeat at all?
+</p><p><a href="lib/fprand.html" rel=subdocument>13.19b</a>
+How can I generate floating-point random numbers?
+</p><p><a href="lib/gaussian.html" rel=subdocument>13.20</a>
+How can I generate random numbers with a
+normal or
+Gaussian distribution?
+</p><p><a href="lib/rand48.html" rel=subdocument>13.21</a>
+I'm porting this program, and it calls a routine
+<TT>drand48</TT>,
+which my library doesn't have.
+What is
+it?
+</p><p><a href="lib/exitvsreturn.html" rel=subdocument>13.22</a>
+Is <TT>exit(status)</TT> truly equivalent
+to returning the same <TT>status</TT> from <TT>main</TT>?
+
+</p><p><a href="lib/memmove.html" rel=subdocument>13.23</a>
+What's the difference between
+<TT>memcpy</TT> and
+<TT>memmove</TT>?
+
+
+</p><p><a href="lib/oldlibfcns.html" rel=subdocument>13.24</a>
+I'm trying to port this old program.
+Why do I get ``undefined external'' errors
+for some library functions?
+</p><p><a href="lib/extlibs.html" rel=subdocument>13.25</a>
+I
+keep getting
+errors due to library functions being undefined,
+but I'm #including all
+the right header files.
+</p><p><a href="lib/libsearch.html" rel=subdocument>13.26</a>
+I'm still getting errors due to library functions being undefined,
+even though I'm
+explicitly
+requesting the right libraries
+while linking.
+</p><p><a href="lib/bloat.html" rel=subdocument>13.27</a>
+Why is my simple program,
+which hardly does more than print ``Hello, world!''
+in a window,
+compiling to such a huge executable
+(several hundred K)?
+Should I <TT>#include</TT> fewer header files?
+</p><p><a href="lib/endundef.html" rel=subdocument>13.28</a>
+What does it mean when the linker says that <TT>_end</TT> is undefined?
+</p><p><a href="lib/noprintf.html" rel=subdocument>13.29</a>
+My compiler is complaining that <TT>printf</TT> is undefined!
+How can this be?
+It's the world's most popular C function...
+</p><hr>
+<H4>14. Floating Point</H4>
+<p><a href="fp/printfprec.html" rel=subdocument>14.1</a>
+When I set a <TT>float</TT> variable to, say, 3.1,
+why is <TT>printf</TT> printing it as 3.0999999?
+</p><p><a href="fp/fpdecl.html" rel=subdocument>14.2</a>
+I'm trying to take some
+square roots,
+and I've simplified the code down to
+<pre>
+	main()
+	{
+		printf("%f\n", sqrt(144.));
+	}
+</pre>
+but I'm
+still
+getting
+crazy numbers.
+</p><p><a href="fp/libm.html" rel=subdocument>14.3</a>
+I'm trying to do some simple
+trig,
+
+and I am #including <TT>&lt;math.h&gt;</TT>,
+but
+
+the linker keeps
+complaining
+that functions like <TT>sin</TT>
+and <TT>cos</TT>
+are undefined.
+</p><p><a href="fp/strangefp.html" rel=subdocument>14.4a</a>
+My floating-point calculations are acting strangely and giving me
+different answers on different machines.
+</p><p><a href="fp/degrees.html" rel=subdocument>14.4b</a>
+I'm sure I've got the
+trig functions
+declared correctly,
+but they're still giving me wrong answers.
+</p><p><a href="fp/fpequal.html" rel=subdocument>14.5</a>
+What's a good way to check for ``close enough''
+floating-point equality?
+</p><p><a href="fp/round.html" rel=subdocument>14.6</a>
+How do I round numbers?
+</p><p><a href="fp/pow.html" rel=subdocument>14.7</a>
+Why doesn't C have an
+exponentiation operator?
+</p><p><a href="fp/mpi.html" rel=subdocument>14.8</a>
+The predefined constant <TT>M_PI</TT>
+seems to be missing from
+my machine's copy of
+<TT>&lt;math.h&gt;</TT>.
+</p><p><a href="fp/nan.html" rel=subdocument>14.9</a>
+How do I
+set variables to, or
+test for
+IEEE NaN
+(``Not a Number'')
+and other special values?
+</p><p><a href="fp/fpexcepts.html" rel=subdocument>14.10</a>
+How can I
+handle
+floating-point exceptions gracefully?
+
+</p><p><a href="fp/complex.html" rel=subdocument>14.11</a>
+What's a good way to implement complex numbers in C?
+</p><p><a href="fp/mathsrc.html" rel=subdocument>14.12</a>
+I'm looking for some
+code to do:
+</p><p>Fast Fourier Transforms (FFT's)
+<br>matrix arithmetic (multiplication, inversion, etc.)
+<br>complex arithmetic
+<br></p><p><a href="fp/fpnotlinked.html" rel=subdocument>14.13</a>
+I'm having trouble with a Turbo C program which crashes and says
+something like
+``floating point formats not linked.''
+</p><hr>
+<H4>15. Variable-Length Argument Lists</H4>
+<p><a href="varargs/protos.html" rel=subdocument>15.1</a>
+I heard that you have to <TT>#include</TT> <TT>&lt;stdio.h&gt;</TT>
+before calling <TT>printf</TT>.
+Why?
+</p><p><a href="varargs/promos.html" rel=subdocument>15.2</a>
+How can <TT>%f</TT> be used
+for both <TT>float</TT> and <TT>double</TT> arguments
+in <TT>printf</TT>?
+Aren't they different types?
+</p><p><a href="varargs/proto2.html" rel=subdocument>15.3</a>
+I had a frustrating problem which turned out to be caused by the line
+<pre>
+	printf("%d", n);
+</pre>
+where <TT>n</TT> was actually a <TT>long&nbsp;int</TT>.
+I thought that ANSI function prototypes
+were supposed to guard against argument type mismatches like this.
+</p><p><a href="varargs/varargs1.html" rel=subdocument>15.4</a>
+How can I write a function that takes a variable number of
+arguments?
+</p><p><a href="varargs/vprintf.html" rel=subdocument>15.5</a>
+How can I write a function that takes a format string and a
+variable number of arguments, like <TT>printf</TT>, and passes them to
+<TT>printf</TT> to do most of the work?
+</p><p><a href="varargs/vscanf.html" rel=subdocument>15.6</a>
+How can I write a function analogous to <TT>scanf</TT>,
+i.e. that accepts similar arguments,
+and
+calls <TT>scanf</TT> to do most of the work?
+</p><p><a href="varargs/oldvarargs.html" rel=subdocument>15.7</a>
+I have
+a pre-ANSI
+compiler,
+without <TT>&lt;stdarg.h&gt;</TT>.
+What can I do?
+</p><p><a href="varargs/nargs.html" rel=subdocument>15.8</a>
+How can I discover how many arguments a function was actually
+called with?
+</p><p><a href="varargs/onefixedarg.html" rel=subdocument>15.9</a>
+My compiler isn't letting me declare a function
+<pre>
+	int f(...)
+	{
+	}
+</pre>
+i.e. accepting a variable number of arguments,
+but
+with no fixed arguments at all.
+</p><p><a href="varargs/float.html" rel=subdocument>15.10</a>
+I have a varargs function which accepts a <TT>float</TT> parameter.
+Why isn't
+<pre>
+va_arg(argp,&nbsp;float)</pre>
+
+working?
+</p><p><a href="varargs/funcptr.html" rel=subdocument>15.11</a>
+I can't get <TT>va_arg</TT> to pull in an argument
+of type pointer-to-function.
+</p><p><a href="varargs/handoff.html" rel=subdocument>15.12</a>
+How can I write a function which takes a variable number of
+arguments and passes them to some other function 
+(which takes a variable number of arguments)?
+
+</p><p><a href="varargs/invvarargs.html" rel=subdocument>15.13</a>
+How can I call a function with an argument list built up at run time?
+
+</p><hr>
+<H4>16. Strange Problems</H4>
+<p><a href="strangeprob/emptyloop.html" rel=subdocument>16.1</a>
+Why is this loop always executing once?
+<pre>
+	for(i = start; i &lt; end; i++);
+		{
+		printf("%d\n", i);
+		}
+</pre>
+</p><p><a href="strangeprob/unclosed.html" rel=subdocument>16.1b</a>
+I'm getting baffling syntax errors which make no sense at all,
+and it seems like large chunks of my program aren't being compiled.
+</p><p><a href="strangeprob/procedure.html" rel=subdocument>16.1c</a>
+Why isn't my procedure call working?
+The compiler seems to skip right over it.
+</p><p><a href="strangeprob/headerglom.html" rel=subdocument>16.2</a>
+I'm getting strange
+syntax errors
+on the very first
+declaration in
+a file,
+but it looks fine.
+
+
+</p><p><a href="strangeprob/biglocal.html" rel=subdocument>16.3</a>
+This program crashes before it even runs!
+(When single-stepping with a debugger, it dies before the first
+statement in <TT>main</TT>.)
+</p><p><a href="strangeprob/crashatexit.html" rel=subdocument>16.4</a>
+I have a program that seems to run correctly,
+but
+it
+crashes as it's exiting,
+<em>after</em>
+the last statement in <TT>main()</TT>.
+What could be causing this?
+</p><p><a href="strangeprob/funnybugs.html" rel=subdocument>16.5</a>
+This program runs perfectly on
+one machine,
+but I get weird results on
+another.
+Stranger still,
+adding or
+removing a debugging printout
+changes the symptoms...
+</p><p><a href="strangeprob/strlitnomod.html" rel=subdocument>16.6</a>
+Why does
+this code:
+<pre>
+char&nbsp;*p&nbsp;=&nbsp;"hello,&nbsp;world!";
+p[0]&nbsp;=&nbsp;'H';</pre>
+
+crash?
+</p><p><a href="strangeprob/ptralign.html" rel=subdocument>16.7</a>
+</p><p>I've got some code that's trying to unpack external structures, 
+but it's crashing
+with a message about an ``unaligned access.''
+What does this mean?
+The code looks like this:
+<pre>
+struct mystruct {
+	char c;
+	long int i32;
+	int i16;
+} s;
+
+char buf[7], *p;
+fread(buf, 7, 1, fp);
+p = buf;
+s.c = *p++;
+s.i32 = *(long int *)p;
+p += 4;
+s.i16 = *(int *)p;
+</pre>
+</p><p><a href="strangeprob/segv.html" rel=subdocument>16.8</a>
+What
+do
+``Segmentation violation'',
+``Bus error'',
+and
+``General protection fault''
+mean?
+What's a ``core dump''?
+</p><hr>
+<H4>17. Style</H4>
+<p><a href="style/layout.html" rel=subdocument>17.1</a>
+
+What's the best style for code layout in C?
+
+</p><p><a href="style/srcfiles.html" rel=subdocument>17.2</a>
+How should functions be apportioned among source files?
+</p><p><a href="style/strcmp.html" rel=subdocument>17.3</a>
+Here's a neat trick for checking whether two strings are equal:
+<pre>
+if(!strcmp(s1, s2))</pre>
+
+Is this
+good style?
+</p><p><a href="style/revtest.html" rel=subdocument>17.4</a>
+Why do some people write
+<TT>if(0&nbsp;==&nbsp;x)</TT>
+instead of
+<TT>if(x&nbsp;==&nbsp;0)</TT>?
+</p><p><a href="style/protomacro.html" rel=subdocument>17.4b</a>
+I've seen function declarations that look like this:
+<pre>
+extern int func __((int, int));</pre>
+
+What are those
+extra parentheses and underscores
+for?
+</p><p><a href="style/voidcasts.html" rel=subdocument>17.5</a>
+I came across some code that
+puts
+a <TT>(void)</TT> cast before
+each
+call to <TT>printf</TT>.
+
+Why?
+</p><p><a href="style/nullor0.html" rel=subdocument>17.6</a>
+If <TT>NULL</TT> and <TT>0</TT> are equivalent
+as null pointer constants,
+which should I use?
+</p><p><a href="style/bool.html" rel=subdocument>17.7</a>
+Should I use symbolic names like <TT>TRUE</TT>
+and <TT>FALSE</TT> for Boolean constants,
+or plain 1 and 0?
+
+</p><p><a href="style/hungarian.html" rel=subdocument>17.8</a>
+What is ``Hungarian Notation''?
+Is it worthwhile?
+</p><p><a href="style/guides.html" rel=subdocument>17.9</a>
+Where can I get the
+``Indian Hill Style Guide''
+and other
+coding standards?
+</p><p><a href="style/stylewars.html" rel=subdocument>17.10</a>
+Some people say that <TT>goto</TT>'s are evil
+and that I should never use them.
+Isn't that a bit extreme?
+</p><p><a href="style/vsefficiency.html" rel=subdocument>17.11</a>
+
+People always say that good style is important,
+but when they go out of their way
+to use clear techniques
+and make their programs readable,
+they seem to end up with less efficient programs.
+Since efficiency is so important,
+isn't it
+necessary
+to sacrifice some style and
+readability?
+</p><p><a href="style/charstarws2.html" rel=subdocument>17.12</a>
+Which is correct,
+<pre>
+char&nbsp;*p</pre>
+
+or
+<pre>
+char*&nbsp;p</pre>
+?
+</p><hr>
+<H4>18. Tools and Resources</H4>
+<p><a href="resources/tools.html" rel=subdocument>18.1</a>
+I need
+some C development tools.
+</p><p><a href="resources/mallocdbg.html" rel=subdocument>18.2</a>
+How can I track down these pesky malloc problems?
+</p><p><a href="resources/compilers.html" rel=subdocument>18.3</a>
+What's a free or cheap C compiler I can use?
+</p><p><a href="resources/lint1.html" rel=subdocument>18.4</a>
+
+
+
+
+I just typed in this program, and it's acting strangely.
+Can you see anything
+wrong with it?
+</p><p><a href="resources/lintptralign.html" rel=subdocument>18.5</a>
+How can I shut off the
+``warning: possible pointer alignment problem''
+message
+which
+<TT>lint</TT> gives me for each call to <TT>malloc</TT>?
+</p><p><a href="resources/voidmain.html" rel=subdocument>18.6</a>
+
+Can I declare <TT>main</TT> as <TT>void</TT>,
+to shut off these annoying
+``main returns no value'' messages?
+
+</p><p><a href="resources/ansilint.html" rel=subdocument>18.7</a>
+Where can I get an ANSI-compatible <TT>lint</TT>?
+</p><p><a href="resources/lintvsansi.html" rel=subdocument>18.8</a>
+Don't ANSI function prototypes render <TT>lint</TT> obsolete?
+</p><p><a href="resources/tutorials.html" rel=subdocument>18.9</a>
+Are there any C tutorials
+or other resources
+on the net?
+
+</p><p><a href="resources/tutsources.html" rel=subdocument>18.9b</a>
+Where can I find some good code examples to study and learn from?
+</p><p><a href="resources/books.html" rel=subdocument>18.10</a>
+What's a good book for learning C?
+What about advanced books and references?
+</p><p><a href="resources/kranswers.html" rel=subdocument>18.11</a>
+Where can I find answers to the exercises in
+K&amp;R?
+</p><p><a href="resources/booksrcs.html" rel=subdocument>18.12</a>
+Does anyone know where the source code from
+books
+like
+<I>Numerical Recipes in C</I>,
+Plauger's
+<I>The Standard C Library</I>,
+or
+Kernighan and
+Pike's
+<I>The UNIX Programming Environment</I>
+is available on-line?
+</p><p><a href="resources/stdlibsrc.html" rel=subdocument>18.13</a>
+Where can I find the sources of the standard C libraries?
+</p><p><a href="resources/onlinecref.html" rel=subdocument>18.13b</a>
+Is there an on-line C reference manual?
+</p><p><a href="resources/ansiavail.html" rel=subdocument>18.13c</a>
+Where can I get a copy of the ANSI/ISO C Standard?
+</p><p><a href="resources/expreval.html" rel=subdocument>18.14</a>
+I need code to parse and evaluate
+expressions.
+</p><p><a href="resources/grammars.html" rel=subdocument>18.15</a>
+Where can I get a BNF or
+YACC grammar for C?
+</p><p><a href="resources/cctestsuite.html" rel=subdocument>18.15b</a>
+Does anyone have a C compiler test suite I can use?
+</p><p><a href="resources/miscsrcs.html" rel=subdocument>18.15c</a>
+Where are some collections of useful code fragments and examples?
+</p><p><a href="resources/mplib.html" rel=subdocument>18.15d</a>
+I need code for performing multiple precision arithmetic.
+</p><p><a href="resources/sources.html" rel=subdocument>18.16</a>
+Where
+and how
+can I get copies of all these freely distributable programs?
+</p><p><a href="resources/faqavail.html" rel=subdocument>18.17</a>
+Where can I get extra copies of this list?
+
+</p><hr>
+<H4>19. System Dependencies</H4>
+<p><a href="osdep/cbreak.html" rel=subdocument>19.1</a>
+How can I read a single character from the keyboard without
+waiting for
+the RETURN key?
+How can I stop characters from being
+echoed
+
+on the screen as they're typed?
+</p><p><a href="osdep/readavail.html" rel=subdocument>19.2</a>
+How can I find out
+if there are characters
+available for reading
+(and if so, how many)?
+Alternatively, how can I do a read that will not block if there
+are no characters available?
+</p><p><a href="osdep/baton.html" rel=subdocument>19.3</a>
+How can I display a
+percentage-done indication
+that updates itself in place,
+or show one of those
+``twirling baton''
+progress indicators?
+</p><p><a href="osdep/termcap.html" rel=subdocument>19.4</a>
+How can I clear the screen?
+<br>How can I
+print
+text in color?
+<br>
+How can I
+move the cursor
+to a specific x,&nbsp;y position?
+</p><p><a href="osdep/waitforkey.html" rel=subdocument>19.4b</a>
+I'm compiling some test programs on a windows-based system,
+and the windows containing my program's output
+are closing so quickly
+after my program calls <TT>exit</TT>
+that I can't see the output.
+How can I make it pause before closing?
+</p><p><a href="osdep/specialkeys.html" rel=subdocument>19.5</a>
+How do I read the arrow keys?
+What about function keys?
+</p><p><a href="osdep/mouse.html" rel=subdocument>19.6</a>
+How do I read the mouse?
+</p><p><a href="osdep/serial.html" rel=subdocument>19.7</a>
+How can I do serial (``comm'') port I/O?
+</p><p><a href="osdep/printer.html" rel=subdocument>19.8</a>
+How can I direct output to the printer?
+</p><p><a href="osdep/escseqs.html" rel=subdocument>19.9</a>
+How do I send escape sequences
+to control a terminal or other 
+device?
+</p><p><a href="osdep/portio.html" rel=subdocument>19.9b</a>
+How can I access an I/O board directly?
+</p><p><a href="osdep/graphics.html" rel=subdocument>19.10</a>
+How can I do graphics?
+</p><p><a href="osdep/gifjpeg.html" rel=subdocument>19.10b</a>
+How can I
+display GIF and JPEG images?
+</p><p><a href="osdep/fonts.html" rel=subdocument>19.10c</a>
+How can I load new fonts for display?
+</p><p><a href="osdep/sendmail.html" rel=subdocument>19.10d</a>
+How can I send mail from within a C program?
+</p><p><a href="osdep/fileexists.html" rel=subdocument>19.11</a>
+How can I check whether a file exists?
+I want to
+warn the user
+if a requested input file is missing.
+</p><p><a href="osdep/filesize.html" rel=subdocument>19.12</a>
+How can I find out the size of a file,
+prior to reading it in?
+</p><p><a href="osdep/modtime.html" rel=subdocument>19.12b</a>
+How can I find the modification date
+and time
+of a file?
+</p><p><a href="osdep/ftruncate.html" rel=subdocument>19.13</a>
+How can a file be shortened in-place without completely clearing
+or rewriting it?
+</p><p><a href="osdep/insdelrec.html" rel=subdocument>19.14</a>
+How can I insert or delete a line
+(or record)
+in the middle of a file?
+</p><p><a href="osdep/fdfilename.html" rel=subdocument>19.15</a>
+How can I recover the file name given an open
+stream
+or
+file descriptor?
+</p><p><a href="osdep/delete.html" rel=subdocument>19.16</a>
+How can I delete a file?
+</p><p><a href="osdep/copy.html" rel=subdocument>19.16b</a>
+How do I copy files?
+</p><p><a href="osdep/dospath.html" rel=subdocument>19.17</a>
+Why can't I open a file by its explicit path?
+The
+call
+<pre>
+fopen("c:\newdir\file.dat",&nbsp;"r")</pre>
+
+is failing.
+</p><p><a href="osdep/fopenenv.html" rel=subdocument>19.17b</a>
+<TT>fopen</TT> isn't letting me open files like
+<TT>"$HOME/.profile"</TT>
+and
+<TT>"~/.myrcfile"</TT>.
+</p><p><a href="osdep/abrtretrign.html" rel=subdocument>19.17c</a>
+How can I suppress the
+dreaded MS-DOS
+``Abort, Retry, Ignore?'' message?
+</p><p><a href="osdep/nfile.html" rel=subdocument>19.18</a>
+I'm getting an error,
+``Too many open files''.
+How can I increase the allowable number of simultaneously open files?
+</p><p><a href="osdep/diskfree.html" rel=subdocument>19.19</a>
+How can I find out how much free space
+is available on disk?
+</p><p><a href="osdep/readdir.html" rel=subdocument>19.20</a>
+How can I read a directory in a C program?
+</p><p><a href="osdep/mkdir.html" rel=subdocument>19.21</a>
+How do I create a directory?
+<br>How do I remove a directory
+(and its contents)?
+</p><p><a href="osdep/memavail.html" rel=subdocument>19.22</a>
+How can I find out how much memory is available?
+</p><p><a href="osdep/bigdatastr.html" rel=subdocument>19.23</a>
+How can I allocate arrays or structures bigger than 64K?
+</p><p><a href="osdep/dgroup.html" rel=subdocument>19.24</a>
+What does the error message
+``DGROUP
+data allocation
+exceeds 64K''
+mean,
+and what can I do about it?
+I thought that using large model meant that I could use
+more than 64K of data!
+</p><p><a href="osdep/rawmemadr.html" rel=subdocument>19.25</a>
+How can I access memory
+(a memory-mapped device,
+or graphics memory)
+located at a certain address?
+<br>How can I do PEEK and POKE in C?
+</p><p><a href="osdep/endiantest.html" rel=subdocument>19.25b</a>
+How can I determine whether a machine's
+byte order
+is big-endian or little-endian?
+
+</p><p><a href="osdep/accessloc0.html" rel=subdocument>19.26</a>
+How can I access
+an interrupt vector
+located at
+the machine's location 0?
+If I set a pointer to <TT>0</TT>,
+the compiler might translate it to some nonzero internal null
+pointer value.
+
+</p><p><a href="osdep/system.html" rel=subdocument>19.27</a>
+How can I invoke
+another program
+(a standalone executable,
+or an operating system command)
+from within a C program?
+</p><p><a href="osdep/system2.html" rel=subdocument>19.28</a>
+How can I call <TT>system</TT> when parameters
+(filenames, etc.)
+of the executed command
+aren't known until run time?
+</p><p><a href="osdep/systemret.html" rel=subdocument>19.29</a>
+How do I get an accurate error status return from <TT>system</TT> on MS-DOS?
+</p><p><a href="osdep/popen.html" rel=subdocument>19.30</a>
+How can I invoke
+another program
+or command
+and
+trap
+its output?
+</p><p><a href="osdep/exepath.html" rel=subdocument>19.31</a>
+How can my program discover the complete pathname to the executable
+from
+which it was invoked?
+</p><p><a href="osdep/auxfiles.html" rel=subdocument>19.32</a>
+How can I automatically locate
+a program's
+configuration files
+in the same directory as
+the
+executable?
+</p><p><a href="osdep/setenv.html" rel=subdocument>19.33</a>
+How can a process change an environment variable in its caller?
+</p><p><a href="osdep/argv.html" rel=subdocument>19.34</a>
+How can I open files mentioned on the command line,
+and parse option flags?
+
+</p><p><a href="osdep/exitvsreturn.html" rel=subdocument>19.35</a>
+Is <TT>exit(status)</TT> truly equivalent
+to returning the same <TT>status</TT> from <TT>main</TT>?
+
+</p><p><a href="osdep/dynlink.html" rel=subdocument>19.36</a>
+How can I read in an object file and jump to
+locations
+in it?
+</p><p><a href="osdep/subsecond.html" rel=subdocument>19.37</a>
+How can I implement a delay,
+or time a user's response,
+with sub-second resolution?
+
+</p><p><a href="osdep/sigint.html" rel=subdocument>19.38</a>
+How can I trap or ignore
+keyboard interrupts
+like
+control-C?
+</p><p><a href="osdep/fpexcepts.html" rel=subdocument>19.39</a>
+How can I
+handle
+floating-point exceptions gracefully?
+</p><p><a href="osdep/intovf2.html" rel=subdocument>19.39b</a>
+How can I ensure that integer arithmetic doesn't overflow?
+
+</p><p><a href="osdep/networking.html" rel=subdocument>19.40</a>
+How do I...
+Use sockets?
+Do networking?
+Write client/server applications?
+</p><p><a href="osdep/xobjfiles.html" rel=subdocument>19.40a</a>
+Can I combine .OBJ and .LIB files from Microsoft C and Turbo C?
+</p><p><a href="osdep/tsr.html" rel=subdocument>19.40b</a>
+How do I...
+Use BIOS calls?
+Write
+ISR's?
+Create TSR's?
+</p><p><a href="osdep/int86.html" rel=subdocument>19.40c</a>
+I'm trying to compile
+this program,
+but the compiler is complaining that
+``<TT>union&nbsp;REGS</TT>''
+is undefined,
+and the linker
+is complaining that
+<TT>int86</TT>
+is
+undefined.
+</p><p><a href="osdep/nearfar.html" rel=subdocument>19.40d</a>
+What are ``near'' and ``far'' pointers?
+</p><p><a href="osdep/gottabe.html" rel=subdocument>19.41</a>
+But I can't use all these nonstandard, system-dependent functions,
+because my program has to be ANSI compatible!
+</p><p><a href="osdep/sysdep.html" rel=subdocument>19.42</a>
+Why
+isn't any of this
+standardized in C?
+Any real program has to do some of these things.
+</p><hr>
+<H4>20. Miscellaneous</H4>
+<p><a href="misc/multretval.html" rel=subdocument>20.1</a>
+How can I return
+multiple
+values from a function?
+</p><p><a href="misc/ragged.html" rel=subdocument>20.2</a>
+What's a good data structure to use
+for storing lines of text?
+I started to use
+fixed-size
+arrays of arrays of <TT>char</TT>,
+but they're just too restrictive.
+</p><p><a href="misc/argv.html" rel=subdocument>20.3</a>
+How can I open files mentioned on the command line,
+and parse option flags?
+</p><p><a href="misc/errno.html" rel=subdocument>20.4</a>
+What's the right way
+to use <TT>errno</TT>?
+</p><p><a href="misc/binaryfiles.html" rel=subdocument>20.5</a>
+How can I write data files which can be read on other machines
+with different
+word size,
+byte order,
+or floating point
+formats?
+</p><p><a href="misc/symtab.html" rel=subdocument>20.6</a>
+If I have a <TT>char&nbsp;*</TT> variable
+pointing to
+the name of a function,
+how can I call that function?
+Code like
+<pre>
+	extern int func(int, int);
+	char *funcname = "func";
+	int r = (*funcname)(1, 2);
+</pre>
+or
+<pre>
+	r = (*(int (*)(int, int))funcname)(1, 2);
+</pre>
+doesn't seem to work.
+</p><p><a href="misc/intovf.html" rel=subdocument>20.6b</a>
+How can I ensure that integer arithmetic doesn't overflow?
+</p><p><a href="misc/bitmanip.html" rel=subdocument>20.7</a>
+How can I manipulate individual bits?
+</p><p><a href="misc/bitsets.html" rel=subdocument>20.8</a>
+How can I implement sets or arrays of bits?
+
+</p><p><a href="misc/endiantest.html" rel=subdocument>20.9</a>
+How can I determine whether a machine's
+byte order
+is big-endian or little-endian?
+</p><p><a href="misc/byteswap.html" rel=subdocument>20.9b</a>
+How do I swap bytes?
+</p><p><a href="misc/hexio.html" rel=subdocument>20.10</a>
+How can I convert integers to
+binary or
+hexadecimal?
+
+</p><p><a href="misc/base2.html" rel=subdocument>20.11</a>
+Can I use base-2 constants
+(something like <TT>0b101010</TT>)?
+<br>Is there a
+<TT>printf</TT> format for binary?
+</p><p><a href="misc/bitcount.html" rel=subdocument>20.12</a>
+What is the most efficient way to count the number of bits
+which are set in
+an integer?
+</p><p><a href="misc/efficiency.html" rel=subdocument>20.13</a>
+What's the best way of making my program efficient?
+</p><p><a href="misc/eff2.html" rel=subdocument>20.14</a>
+Are pointers really faster than arrays?
+How much do function calls slow things down?
+Is <TT>++i</TT> faster than <TT>i&nbsp;=&nbsp;i&nbsp;+&nbsp;1</TT>?
+</p><p><a href="misc/shifts.html" rel=subdocument>20.15</a>
+I've been replacing multiplications and divisions
+with shift operators,
+because shifting is more efficient.
+</p><p><a href="misc/unsshift.html" rel=subdocument>20.15b</a>
+People claim that optimizing compilers are good
+and that we no longer have to write things in assembler for speed,
+but
+my compiler
+can't even
+replace <TT>i/=2</TT> with a shift.
+</p><p><a href="misc/swapnotemp.html" rel=subdocument>20.15c</a>
+How can I swap two values without using a temporary?
+</p><p><a href="misc/switchimpl.html" rel=subdocument>20.16</a>
+Which is more efficient,
+a <TT>switch</TT> statement or an <TT>if</TT>/<TT>else</TT> chain?
+</p><p><a href="misc/strswitch.html" rel=subdocument>20.17</a>
+Is there a way to <TT>switch</TT> on strings?
+</p><p><a href="misc/nonconstcase.html" rel=subdocument>20.18</a>
+Is there a way to have non-constant <TT>case</TT> labels
+(i.e. ranges or arbitrary expressions)?
+</p><p><a href="misc/returnparens.html" rel=subdocument>20.19</a>
+Are the outer parentheses
+in <TT>return</TT> statements
+really optional?
+</p><p><a href="misc/nestcomment.html" rel=subdocument>20.20</a>
+Why don't C comments nest?
+How am I supposed to comment out code containing comments?
+Are
+comments
+legal inside quoted strings?
+</p><p><a href="misc/multibreak.html" rel=subdocument>20.20b</a>
+Why isn't there a numbered, multi-level <TT>break</TT> statement
+to break out of several loops at once?
+What am I supposed to use instead, a <TT>goto</TT>?
+</p><p><a href="misc/funkyasgnop.html" rel=subdocument>20.21</a>
+There seem to be a few missing operators, like <TT>^^</TT>, 
+<TT>&amp;&amp;=</TT>, and <TT>-&gt;=</TT>.
+</p><p><a href="misc/circshift.html" rel=subdocument>20.21a</a>
+Does C have circular shift operators?
+</p><p><a href="misc/quintplus.html" rel=subdocument>20.21b</a>
+Is C a great language, or what?
+Where else could you write something like
+<TT>a+++++b</TT>
+?
+</p><p><a href="misc/colonequal.html" rel=subdocument>20.22</a>
+If the assignment operator were <TT>:=</TT>,
+wouldn't it then be harder to accidentally write things like
+<TT>if(a&nbsp;=&nbsp;b)</TT> ?
+</p><p><a href="misc/with.html" rel=subdocument>20.23</a>
+Does C have an equivalent to Pascal's
+<TT>with</TT> statement?
+</p><p><a href="misc/nestfcns.html" rel=subdocument>20.24</a>
+Why doesn't C have nested functions?
+</p><p><a href="misc/assert.html" rel=subdocument>20.24b</a>
+What is <TT>assert()</TT>
+and when would I use it?
+</p><p><a href="misc/mixlang.html" rel=subdocument>20.25</a>
+How can I call FORTRAN
+(C++, BASIC, Pascal,
+Ada, LISP) functions from C?
+(And vice versa?)
+</p><p><a href="misc/langtran.html" rel=subdocument>20.26</a>
+Does anyone know of a program
+for converting
+Pascal or FORTRAN
+(or
+LISP,
+Ada,
+awk,
+``Old'' C,
+...)
+to C?
+</p><p><a href="misc/cplusplus.html" rel=subdocument>20.27</a>
+Is C++ a superset of C?
+What are the differences between C and C++?
+Can I use a C++ compiler to compile C code?
+</p><p><a href="misc/soundex.html" rel=subdocument>20.28</a>
+I need
+a sort of an ``approximate'' strcmp routine, for comparing
+two strings for close, but not necessarily exact, equality.
+</p><p><a href="misc/hash.html" rel=subdocument>20.29</a>
+What is hashing?
+</p><p><a href="misc/gaussian.html" rel=subdocument>20.30</a>
+How can I generate random numbers with a
+normal or
+Gaussian distribution?
+
+</p><p><a href="misc/zeller.html" rel=subdocument>20.31</a>
+How can I find the day of the week given the date?
+</p><p><a href="misc/leapyear.html" rel=subdocument>20.32</a>
+Is <TT>(year&nbsp;%&nbsp;4&nbsp;==&nbsp;0)</TT> an accurate test for leap years?
+(Was 2000 a leap year?)
+</p><p><a href="misc/leapsec.html" rel=subdocument>20.33</a>
+Why can <TT>tm_sec</TT>
+in the <TT>tm</TT> structure
+range from 0 to 61,
+suggesting that there can be 62 seconds in a minute?
+</p><p><a href="misc/quine.html" rel=subdocument>20.34</a>
+Here's a good puzzle:
+how
+do you write a program which produces its own source code as
+output?
+</p><p><a href="misc/duff.html" rel=subdocument>20.35</a>
+What is ``Duff's Device''?
+</p><p><a href="misc/ioccc.html" rel=subdocument>20.36</a>
+When will the next
+International
+Obfuscated C Code Contest
+(IOCCC)
+be held?
+How do I submit contest entries?
+Who won this year's IOCCC?
+How can I get a copy of
+the
+current and
+previous
+winning entries?
+</p><p><a href="misc/entry.html" rel=subdocument>20.37</a>
+What was the <TT>entry</TT> keyword
+mentioned in K&amp;R1?
+</p><p><a href="misc/nameofc.html" rel=subdocument>20.38</a>
+Where does the name ``C'' come from, anyway?
+</p><p><a href="misc/pronounce.html" rel=subdocument>20.39</a>
+
+How do you pronounce ``<TT>char</TT>''?
+What's that funny name for the ``<TT>#</TT>'' character?
+</p><p><a href="misc/lvalue.html" rel=subdocument>20.39b</a>
+What do ``lvalue'' and ``rvalue'' mean?
+</p><p><a href="misc/faqavail.html" rel=subdocument>20.40</a>
+Where can I get extra copies of this list?
+</p><hr>
+<H4>Glossary</H4>
+<hr>
+<H4>Bibliography</H4>
+<hr>
+<H4>Acknowledgements</H4>
+<hr>
+<a href="index.html">top</a>
+</p>
+</body>
+</html>
