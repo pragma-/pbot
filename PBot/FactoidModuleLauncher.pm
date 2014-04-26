@@ -79,17 +79,17 @@ sub execute_module {
         $arguments =~ s/$p1/$p2/;
         ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
       }
-      $arguments =~ s/\$1/$a/g;
-      $arguments =~ s/\$2/$b/g;
-      $arguments =~ s/\$3/$c/g;
-      $arguments =~ s/\$4/$d/g;
-      $arguments =~ s/\$5/$e/g;
-      $arguments =~ s/\$6/$f/g;
-      $arguments =~ s/\$7/$g/g;
-      $arguments =~ s/\$8/$h/g;
-      $arguments =~ s/\$9/$i/g;
-      $arguments =~ s/\$`/$before/g;
-      $arguments =~ s/\$'/$after/g;
+      $arguments =~ s/\$1/$a/g if defined $a;
+      $arguments =~ s/\$2/$b/g if defined $b;
+      $arguments =~ s/\$3/$c/g if defined $c;
+      $arguments =~ s/\$4/$d/g if defined $d;
+      $arguments =~ s/\$5/$e/g if defined $e;
+      $arguments =~ s/\$6/$f/g if defined $f;
+      $arguments =~ s/\$7/$g/g if defined $g;
+      $arguments =~ s/\$8/$h/g if defined $h;
+      $arguments =~ s/\$9/$i/g if defined $i;
+      $arguments =~ s/\$`/$before/g if defined $before;
+      $arguments =~ s/\$'/$after/g if defined $after;
       #$self->{pbot}->logger->log("arguments subpattern: $arguments\n");
     } else {
       $self->{pbot}->logger->log("Invalid module substitution pattern [" . $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}. "], ignoring.\n");
