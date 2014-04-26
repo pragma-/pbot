@@ -37,8 +37,9 @@ $response = eval("use POSIX qw/ceil floor/; use Math::Trig; use Math::Complex;" 
 
 if($@) {
   my $error = $@;
-  $error =~ s/ at \(eval \d+\) line \d+.//;
   $error =~ s/[\n\r]+//g;
+  $error =~ s/ at \(eval \d+\) line \d+.//;
+  $error =~ s/ at EOF$//;
   $error =~ s/Died at .*//;
   print $error;
   exit 1;

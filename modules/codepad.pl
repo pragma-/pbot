@@ -24,6 +24,7 @@ if($#ARGV <= 0) {
 
 my $nick = shift @ARGV;
 my $code = join ' ', @ARGV;
+
 my $output;
 
 open FILE, ">> codepad_log.txt";
@@ -96,7 +97,7 @@ if($lang eq "C" or $lang eq "C++") {
 }
 
 if($lang eq "C" or $lang eq "C++") {
-  $code = pretty($code);
+#  $code = pretty($code);
 }
 
 $code =~ s/^\s+//;

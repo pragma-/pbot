@@ -1,12 +1,10 @@
-#!/usr/bin/perl -w -I /home/msmud/lib/lib/perl5/site_perl/5.10.0/
+#!/usr/bin/perl -w
 
 # Quick and dirty by :pragma
 
 use LWP::UserAgent;
 use HTML::Entities;
 use Text::Levenshtein qw(fastdistance);
-
-my ($text);
 
 if ($#ARGV <= 0)
 {
@@ -21,6 +19,7 @@ exit if($arguments =~ m/stackoverflow.com/i);
 exit if($arguments =~ m/scratch.mit.edu/i);
 exit if($arguments =~ m/imgur.com/i);
 exit if($arguments =~ m/sprunge.us/i);
+exit if($arguments =~ m/pastebin.ws/i);
 exit if($arguments =~ m/hastebin.com/i);
 exit if($arguments =~ m/lmgtfy.com/i);
 exit if($arguments =~ m/gyazo/i);
@@ -52,7 +51,7 @@ if (not $response->is_success)
   die "Couldn't get link: $arguments";
 }
 
-$text = $response->content;
+my $text = $response->content;
 
 if($text =~ m/<title>(.*?)<\/title>/msi)
 {
@@ -112,5 +111,6 @@ if($distance / $length < 0.75) {
 }
 
 exit if $t =~ m/^Gerrit Code Review$/i;
+exit if $t =~ m/pastebin/i;
 
 print "Title of $nick\'s link: $t\n" if length $t;

@@ -53,9 +53,12 @@ foreach my $line (@contents) {
 
   if(defined $question_full) {
     $line =~ s/[\n\r]/ /g;
-    $line =~ s/(<pre>|<\/pre>|<TT>|<\/TT>|<\/a>)//g;
+    $line =~ s/(<pre>|<\/pre>|<TT>|<\/TT>|<\/a>|<br>)//g;
     $line =~ s/<a href=".*?">//g;
     $line =~ s/&nbsp;/ /g;
+    $line =~ s/&amp;/&/g;
+    $line =~ s/&lt;/</g;
+    $line =~ s/&gt;/>/g;
 
     $question_full .= $line;
     $question_text .= $line;
