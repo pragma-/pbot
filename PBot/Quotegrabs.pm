@@ -428,6 +428,12 @@ sub show_random_quotegrab {
     $channel_search = $possible_channel_search if not defined $channel_search;
     $text_search = $possible_text_search if not defined $text_search;
 
+    if($nick_search =~ m/^#/) {
+      my $tmp = $channel_search;
+      $channel_search = $nick_search;
+      $nick_search = $tmp;
+    }
+
     if(not defined $channel_search) {
       $channel_search = $from;
     }
@@ -456,18 +462,18 @@ sub show_random_quotegrab {
     my $result = "No quotes grabbed ";
 
     if($nick_search ne '.*') {
-      $result .= "for $nick_search ";
+      $result .= "for nick $nick_search ";
     }
 
     if($channel_search ne '.*') {
-      $result .= "in $channel_search ";
+      $result .= "in channel $channel_search ";
     }
    
     if($text_search ne '.*') {
-      $result .= "matching '$text_search' ";
+      $result .= "matching text '$text_search' ";
     }
 
-    return $result . "yet (use `rq <nick> <channel>` to specify the correct channel).  Use `grab` to grab a quote.";;
+    return $result . "yet (usage: rq [nick regex] [-channel <channel regex>] [-text <text regex>]).";;
   }
 
   my $quotegrab = $quotes[int rand($#quotes + 1)];
