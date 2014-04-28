@@ -524,6 +524,7 @@ if($subcode =~ m/^\s*(?:and\s+)?(run|paste)\s*$/i) {
   }
 
   if($#replacements > -1) {
+    use re::engine::RE2;
     @replacements = sort { $a->{'from'} cmp $b->{'from'} or $a->{'modifier'} <=> $b->{'modifier'} } @replacements;
 
     my ($previous_from, $previous_modifier);

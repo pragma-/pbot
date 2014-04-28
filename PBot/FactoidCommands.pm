@@ -753,6 +753,7 @@ sub factchange {
   }
 
   my $ret = eval {
+    use re::engine::RE2;
     if(not $factoids->{$channel}->{$trigger}->{action} =~ s|$tochange|$changeto|) {
       $self->{pbot}->logger->log("($from) $nick!$user\@$host: failed to change '$trigger' 's$delim$tochange$delim$changeto$delim\n");
       return "/msg $nick Change $trigger failed.";
