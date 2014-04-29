@@ -524,7 +524,7 @@ if($subcode =~ m/^\s*(?:and\s+)?(run|paste)\s*$/i) {
   }
 
   if($#replacements > -1) {
-    use re::engine::RE2;
+    use re::engine::RE2 -strict => 1;
     @replacements = sort { $a->{'from'} cmp $b->{'from'} or $a->{'modifier'} <=> $b->{'modifier'} } @replacements;
 
     my ($previous_from, $previous_modifier);
@@ -578,7 +578,7 @@ if($subcode =~ m/^\s*(?:and\s+)?(run|paste)\s*$/i) {
           my $count = 0;
           my $unescaped = $from;
           $unescaped =~ s/\\//g;
-          if($code =~ s/($first_bound)$from($last_bound)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$unescaped$2"; }/gex) {
+          if($code =~ s/($first_bound)$from($last_bound)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$unescaped$2"; }/ge) {
             $got_change = 1;
           }
         }
