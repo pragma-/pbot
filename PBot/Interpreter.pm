@@ -259,7 +259,12 @@ sub interpret {
     $keyword = $command;
   }
 
-  if($keyword ne "factadd" and $keyword ne "add" and $keyword ne "msg") {
+  if($keyword ne "factadd" 
+      and $keyword ne "add"
+      and $keyword ne "factset"
+      and $keyword ne "factchange"
+      and $keyword ne "change"
+      and $keyword ne "msg") {
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
     $arguments =~ s/(\w+)([?!.]+)$/$1/;
     $arguments =~ s/(?<![\w\/\-])me\b/$nick/gi if defined $arguments;
