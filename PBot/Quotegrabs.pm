@@ -14,6 +14,7 @@ $VERSION = $PBot::PBot::VERSION;
 use HTML::Entities;
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
+use Getopt::Long qw(GetOptionsFromString);
 
 use POSIX qw(strftime);
 
@@ -414,19 +415,24 @@ sub show_random_quotegrab {
     return "";
   }
 
+  my $usage = 'Usage: rq [nick regex] [-c,--channel <channel regex>] [-t,--text <text regex>]';
+
   if(defined $arguments) {
-    $nick_search = $1 if $arguments =~ s/-nick\s+(\S+)//g;
-    $channel_search = $1 if $arguments =~ s/-channel\s+(\S+)//g;
-    $text_search = $1 if $arguments =~ s/-text\s+(\S+)//g;
+    my $getopt_error;
+    local $SIG{__WARN__} = sub {
+      $getopt_error = shift;
+      chomp $getopt_error;
+    };
 
-    $arguments =~ s/^\s+//;
-    $arguments =~ s/\s+$//;
+    my ($ret, $args) = GetOptionsFromString($arguments, 
+      'channel|c=s' => \$channel_search, 
+      'text|t=s'    => \$text_search);
 
-    my ($possible_nick_search, $possible_channel_search, $possible_text_search) = split /\s+/, $arguments;
+    return "$getopt_error -- $usage" if defined $getopt_error;
 
-    $nick_search = $possible_nick_search if not defined $nick_search;
-    $channel_search = $possible_channel_search if not defined $channel_search;
-    $text_search = $possible_text_search if not defined $text_search;
+    $nick_search = shift @$args;
+    $channel_search = shift @$args if not defined $channel_search;
+    $text_search = shift @$args if not defined $text_search;
 
     if($nick_search =~ m/^#/) {
       my $tmp = $channel_search;
@@ -473,7 +479,7 @@ sub show_random_quotegrab {
       $result .= "matching text '$text_search' ";
     }
 
-    return $result . "yet (usage: rq [nick regex] [-channel <channel regex>] [-text <text regex>]).";;
+    return $result . "yet ($usage).";;
   }
 
   my $quotegrab = $quotes[int rand($#quotes + 1)];
@@ -481,9 +487,9 @@ sub show_random_quotegrab {
   my ($first_nick) = split /\+/, $quotegrab->{nick}, 2;
 
   if($text =~ s/^\/me\s+//) {
-      return "$quotegrab->{id}: " . ($channel_search eq '.*' ? "[$quotegrab->{channel}] " : "") . "* $first_nick $text";
+      return "$quotegrab->{id}: " . (($channel_search eq '.*' or $quotegrab->{channel} ne $from) ? "[$quotegrab->{channel}] " : "") . "* $first_nick $text";
   } else {
-      return "$quotegrab->{id}: " . ($channel_search eq '.*' ? "[$quotegrab->{channel}] " : "") . "<$first_nick> $text";
+      return "$quotegrab->{id}: " . (($channel_search eq '.*' or $quotegrab->{channel} ne $from) ? "[$quotegrab->{channel}] " : "") . "<$first_nick> $text";
   }
 }
 
