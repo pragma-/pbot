@@ -38,12 +38,14 @@ sub nickometer ($) {
 		      'dood'			=> 500,
 		      'dude'			=> 500,
 		      '[l1](oo?|u)[sz]er'	=> 500,
-		      '[l1]eet'			=> 500,
+		      '[l1](ee|33)[t7]'		=> 500,
 		      'e[l1]ite'		=> 500,
 		      '[l1]ord'			=> 500,
-		      'pron'			=> 1000,
-		      'warez'			=> 1000,
-		      'xx'			=> 100,
+		      's[e3]xy'			=> 700,
+		      'h[o0]rny'		=> 700,
+		      'pr[o0]n'			=> 1000,
+		      'w[4a]r[e3]z'		=> 1000,
+		      'xx'			=> 300,
 		      '\[rkx]0'			=> 1000,
 		      '\0[rkx]'			=> 1000,
 		     );
@@ -55,8 +57,9 @@ sub nickometer ($) {
     unless ($raw) {
       $nick =~ tr/023457+8/ozeasttb/;
     }
-    &punish($special_cost{$special}, "matched special case /$special_pattern/")
-      if $nick =~ /$special_pattern/i;
+    while($nick =~ /$special_pattern/ig) {
+      &punish($special_cost{$special}, "matched special case /$special_pattern/")
+    }
   }
   
   # Allow Perl referencing
@@ -112,7 +115,7 @@ sub nickometer ($) {
   # Punish uppercase to lowercase shifts and vice-versa, modulo 
   # exceptions above
   my $case_shifts = &case_shifts($orig_case);
-  &punish(&slow_pow(9, $case_shifts),
+  &punish(&slow_pow(5, $case_shifts),
 	  $case_shifts . ' case ' .
 	    (($case_shifts == 1) ? 'shift' : 'shifts'))
     if ($case_shifts > 1 && /[A-Z]/);
