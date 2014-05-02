@@ -25,6 +25,7 @@ sub nickometer ($) {
 
   # Deal with special cases (precede with \ to prevent de-k3wlt0k)
   my %special_cost = (
+		      '__'			=> 200,
 		      '69'			=> 500,
 		      'dea?th'			=> 500,
 		      'dark'			=> 400,
@@ -62,6 +63,10 @@ sub nickometer ($) {
     }
   }
   
+  while(m/[A-Z]([^A-Z]+)\b/g) {
+    &punish(250, "length 1 between capitals") if length $1 == 1;
+  }
+
   # Allow Perl referencing
   s/^\\([A-Za-z])/$1/;
   
@@ -139,7 +144,7 @@ sub nickometer ($) {
   $remains =~ tr/a-zA-Z0-9//d;
   my $remains_length = length($remains);
 
-  &punish(50 * $remains_length + &slow_pow(9, $remains_length),
+  &punish(150 * $remains_length + &slow_pow(9, $remains_length),
 	  $remains_length . ' extraneous ' .
 	    (($remains_length == 1) ? 'symbol' : 'symbols'))
     if $remains;
