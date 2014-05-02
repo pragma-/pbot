@@ -8,7 +8,7 @@ my $USE_LOCAL = defined $ENV{'CC_LOCAL'};
 my %languages = (
   'C89' => {
     'cmdline' => 'gcc $file $args -o prog -ggdb -g3',
-    'args' => '-Wextra -Wall -Wno-unused -std=gnu89 -lm -Wfatal-errors',
+    'args' => '-Wextra -Wall -Wno-unused -std=gnu89 -lm -Wfloat-equal -Wshadow -Wfatal-errors',
     'file' => 'prog.c',
   },
   'C++' => {
@@ -18,12 +18,12 @@ my %languages = (
   },
   'C99' => {
     'cmdline' => 'gcc $file $args -o prog -ggdb -g3',
-    'args' => '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -std=c99 -lm -Wfatal-errors',
+    'args' => '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c99 -lm -Wfatal-errors',
     'file' => 'prog.c',
   },
   'C11' => {
     'cmdline' => 'gcc $file $args -o prog -ggdb -g3',
-    'args' => '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -std=c11 -lm -Wfatal-errors',
+    'args' => '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c11 -lm -Wfatal-errors',
     'file' => 'prog.c',
   },
 );

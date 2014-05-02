@@ -24,9 +24,9 @@ my $unshift_last_code = 0;
 my $only_show = 0;
 
 my %languages = (
-  'C11' => "gcc -std=c11 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wfatal-errors",
-  'C99' => "gcc -std=c99 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wfatal-errors",
-  'C89' => "gcc -std=c89 -pedantic -Wall -Wextra -Wno-unused -Wfatal-errors",
+  'C11' => "gcc -std=c11 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wshadow -Wfatal-errors",
+  'C99' => "gcc -std=c99 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wshadow -Wfatal-errors",
+  'C89' => "gcc -std=c89 -pedantic -Wall -Wextra -Wno-unused -Wfloat-equal -Wshadow -Wfatal-errors",
 );
 
 my %preludes = ( 
@@ -637,9 +637,16 @@ $got_paste = 1 and $extracted_args .= "-paste " if $code =~ s/(?<=\s)*-paste\s*/
 my $got_nomain = undef;
 $got_nomain = 1 and $extracted_args .= "-nomain " if $code =~ s/(?<=\s)*-nomain\s*//i;
 
+my $include_args = "";
+while($code =~ s/-include\s+(\S+)\s+//) {
+  $include_args .= "#include <$1> ";
+}
+
 my $args = "";
 $args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
 $args =~ s/\s+$//;
+
+$code = "$include_args$code";
 
 if($save_last_code) {
   if($unshift_last_code) {
@@ -1048,7 +1055,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/<'(.*)' = char>/<'$1' = int>/g;
   $output =~ s/= (-?\d+) ''/= $1/g;
   $output =~ s/, <incomplete sequence >//g;
-  $output =~ s/\s*warning: shadowed declaration is here \[-Wshadow\]//g;
+  $output =~ s/\s*warning: shadowed declaration is here \[-Wshadow\]//g unless $got_paste or $got_run eq 'paste';
   $output =~ s/preprocessor macro>\s+<at\s+>/preprocessor macro>/g;
   $output =~ s/<No symbol table is loaded.  Use the "file" command.>\s*//g;
   $output =~ s/cc1: all warnings being treated as; errors//g;
