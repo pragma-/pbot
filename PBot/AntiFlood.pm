@@ -224,7 +224,7 @@ sub add_message {
   }
 
   # keep only MAX_NICK_MESSAGES message history per channel
-  if($length >= $self->{pbot}->{MAX_NICK_MESSAGES}) {
+  while($length >= $self->{pbot}->{MAX_NICK_MESSAGES}) {
     my %msg = %{ shift(@{ $self->message_history->{$account}->{channels}->{$channel}{messages} }) };
     #$self->{pbot}->logger->log("shifting message off top: $msg{msg}, $msg{timestamp}\n");
     $length--;
