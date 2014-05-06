@@ -387,10 +387,6 @@ sub show_random_quotegrab {
 
   $channel_search = undef if defined $channel_search and $channel_search !~ /^#/;
 
-  print "nick: [" . (defined $nick_search ? $nick_search : "undef") . "]\n";
-  print "channel: [" . (defined $channel_search ? $channel_search : "undef") . "]\n";
-  print "text: [" . (defined $text_search ? $text_search : "undef") . "]\n";
-
   my $quotegrab = $self->{quotegrabs_db}->get_random_quotegrab($nick_search, $channel_search, $text_search);
   
   if(not defined $quotegrab) {

@@ -134,7 +134,6 @@ sub get_random_quotegrab {
 
     $sql .= 'ORDER BY RANDOM() LIMIT 1';
 
-    print "sql: [$sql]\n";
     my $sth = $self->{dbh}->prepare($sql);
     $sth->execute(@params);
     return $sth->fetchrow_hashref();
