@@ -16,6 +16,9 @@ use Time::Duration;
 use Time::HiRes qw(gettimeofday);
 use Getopt::Long qw(GetOptionsFromString);
 
+use PBot::Quotegrabs_SQLite;      # use SQLite backend for quotegrabs database
+#use PBot::Quotegrabs_Hashtable;   # use Perl hashtable backend for quotegrabs database
+
 use POSIX qw(strftime);
 
 sub new {
@@ -37,7 +40,10 @@ sub initialize {
   $self->{filename} = delete $conf{filename};
   $self->{export_path} = delete $conf{export_path};
   $self->{export_site} = delete $conf{export_site};
-  $self->{quotegrabs} = [];
+
+  $self->{quotegrabs_db} = PBot::Quotegrabs_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
+  #$self->{quotegrabs_db} = PBot::Quotegrabs_Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
+  $self->{quotegrabs_db}->begin();
 
   #-------------------------------------------------------------------------------------
   # The following could be in QuotegrabsCommands.pm, or they could be kept in here?
@@ -51,66 +57,14 @@ sub initialize {
   $self->{pbot}->commands->register(sub { $self->recall_message(@_)        },  "recall",  0);
 }
 
-sub load_quotegrabs {
-  my $self = shift;
-  my $filename;
-
-  if(@_) { $filename = shift; } else { $filename = $self->{filename}; }
-  return if not defined $filename;
-
-  $self->{pbot}->logger->log("Loading quotegrabs from $filename ...\n");
-  
-  open(FILE, "< $filename") or die "Couldn't open $filename: $!\n";
-  my @contents = <FILE>;
-  close(FILE);
-
-  my $i = 0;
-  foreach my $line (@contents) {
-    chomp $line;
-    $i++;
-    my ($nick, $channel, $timestamp, $grabbed_by, $text) = split(/\s+/, $line, 5);
-    if(not defined $nick || not defined $channel || not defined $timestamp
-       || not defined $grabbed_by || not defined $text) {
-      die "Syntax error around line $i of $self->{quotegrabs}_file\n";
-    }
-
-    my $quotegrab = {};
-    $quotegrab->{nick} = $nick;
-    $quotegrab->{channel} = $channel;
-    $quotegrab->{timestamp} = $timestamp;
-    $quotegrab->{grabbed_by} = $grabbed_by;
-    $quotegrab->{text} = $text;
-    $quotegrab->{id} = $i + 1;
-    push @{ $self->{quotegrabs} }, $quotegrab;
-  }
-  $self->{pbot}->logger->log("  $i quotegrabs loaded.\n");
-  $self->{pbot}->logger->log("Done.\n");
-}
-
-sub save_quotegrabs {
-  my $self = shift;
-  my $filename;
-
-  if(@_) { $filename = shift; } else { $filename = $self->{filename}; }
-  return if not defined $filename;
-
-  open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
-
-  for(my $i = 0; $i <= $#{ $self->{quotegrabs} }; $i++) {
-    my $quotegrab = $self->{quotegrabs}[$i];
-    next if $quotegrab->{timestamp} == 0;
-    print FILE "$quotegrab->{nick} $quotegrab->{channel} $quotegrab->{timestamp} $quotegrab->{grabbed_by} $quotegrab->{text}\n";
-  }
-
-  close(FILE);
-  $self->export_quotegrabs();
-}
-
 sub uniq { my %seen; grep !$seen{$_}++, @_ }
 
-sub export_quotegrabs() { 
+sub export_quotegrabs { 
   my $self = shift;
   return "Not enabled" if not defined $self->{export_path};
+
+  my $quotegrabs = $self->{quotegrabs_db}->get_all_quotegrabs();
+
   my $text;
   my $table_id = 1;
   my $had_table = 0;
@@ -124,7 +78,7 @@ sub export_quotegrabs() {
   my $i = 0;
 
   my $last_channel = "";
-  foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or $$a{nick} cmp $$b{nick} } @{ $self->{quotegrabs} }) {
+  foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or $$a{nick} cmp $$b{nick} } @$quotegrabs) {
     if(not $quotegrab->{channel} =~ /^$last_channel$/i) {
       print FILE "<a href='#" . $quotegrab->{channel} . "'>" . encode_entities($quotegrab->{channel}) . "</a><br>\n";
       $last_channel = $quotegrab->{channel};
@@ -132,7 +86,7 @@ sub export_quotegrabs() {
   }
 
   $last_channel = "";
-  foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or lc $$a{nick} cmp lc $$b{nick} } @{ $self->{quotegrabs} }) {
+  foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or lc $$a{nick} cmp lc $$b{nick} } @$quotegrabs) {
     if(not $quotegrab->{channel} =~ /^$last_channel$/i) {
       print FILE "</tbody>\n</table>\n" if $had_table;
       print FILE "<a name='" . $quotegrab->{channel} . "'></a>\n";
@@ -211,7 +165,7 @@ sub grab_quotegrab {
   }
 
   if(not defined $arguments or not length $arguments) {
-    return "Usage: grab <nick> [history [channel]] -- where [history] is an optional argument that is either an integral number of recent messages or a regex (without whitespace) of the text within the message; e.g., to grab the 3rd most recent message for nick, use `grab nick 3` or to grab a message containing 'pizza', use `grab nick pizza`; and [channel] is an optional channel, so you can use it from /msg (you will need to also specify [history] in this case)";
+    return "Usage: grab <nick> [history [channel]] [+ <nick> [history [channel]] ...] -- where [history] is an optional argument that is a regex (without whitespace) of the text within the message; e.g., to grab a message containing 'pizza', use `grab nick pizza`; you can chain grabs with + to grab multiple messages";
   }
 
   $arguments = lc $arguments;
@@ -323,56 +277,41 @@ sub grab_quotegrab {
   $quotegrab->{timestamp} = gettimeofday;
   $quotegrab->{grabbed_by} = "$nick!$user\@$host";
   $quotegrab->{text} = $grab_text;
-  $quotegrab->{id} = $#{ $self->{quotegrabs} } + 2;
+  $quotegrab->{id} = undef;
   
-  push @{ $self->{quotegrabs} }, $quotegrab;
-  
-  $self->save_quotegrabs();
+  $quotegrab->{id} = $self->{quotegrabs_db}->add_quotegrab($quotegrab);
+
+  if(not defined $quotegrab->{id}) {
+    return "Failed to grab quote.";
+  }
+
+  $self->export_quotegrabs();
   
   my $text = $quotegrab->{text};
   ($grab_nick) = split /\+/, $grab_nicks, 2;
 
   if($text =~ s/^\/me\s+//) {
-      return "Quote grabbed: " . ($#{ $self->{quotegrabs} } + 1) . ": * $grab_nick $text";
+      return "Quote grabbed: $quotegrab->{id}: * $grab_nick $text";
   } else {
-      return "Quote grabbed: " . ($#{ $self->{quotegrabs} } + 1) . ": <$grab_nick> $text";
+      return "Quote grabbed: $quotegrab->{id}: <$grab_nick> $text";
   }
 }
-
-sub add_quotegrab {
-  my ($self, $nick, $channel, $timestamp, $grabbed_by, $text) = @_;
-
-  my $quotegrab = {};
-  $quotegrab->{nick} = $nick;
-  $quotegrab->{channel} = $channel;
-  $quotegrab->{timestamp} = $timestamp;
-  $quotegrab->{grabbed_by} = $grabbed_by;
-  $quotegrab->{text} = $text;
-  $quotegrab->{id} = $#{ $self->{quotegrabs} } + 2;
-  
-  push @{ $self->{quotegrabs} }, $quotegrab;
-} 
 
 sub delete_quotegrab {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  if($arguments < 1 || $arguments > $#{ $self->{quotegrabs} } + 1) {
-    return "/msg $nick Valid range for `getq` is 1 - " . ($#{ $self->{quotegrabs} } + 1);
-  }
+  my $quotegrab = $self->{quotegrabs_db}->get_quotegrab($arguments);
 
-  my $quotegrab = $self->{quotegrabs}[$arguments - 1];
+  if(not defined $quotegrab) {
+    return "/msg $nick No quotegrab matching id $arguments found.";
+  }
 
   if(not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host") and $quotegrab->{grabbed_by} ne "$nick!$user\@$host") {
     return "You are not the grabber of this quote.";
   }
 
-  splice @{ $self->{quotegrabs} }, $arguments - 1, 1;
-
-  for(my $i = $arguments - 1; $i <= $#{ $self->{quotegrabs} }; $i++ ) {
-    $self->{quotegrabs}[$i]->{id}--;
-  }
-
-  $self->save_quotegrabs();
+  $self->{quotegrabs_db}->delete_quotegrab($arguments);
+  $self->export_quotegrabs();
 
   my $text = $quotegrab->{text};
 
@@ -388,11 +327,12 @@ sub delete_quotegrab {
 sub show_quotegrab {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  if($arguments < 1 || $arguments > $#{ $self->{quotegrabs} } + 1) {
-    return "/msg $nick Valid range for !getq is 1 - " . ($#{ $self->{quotegrabs} } + 1);
+  my $quotegrab = $self->{quotegrabs_db}->get_quotegrab($arguments);
+
+  if(not defined $quotegrab) {
+    return "/msg $nick No quotegrab matching id $arguments found.";
   }
 
-  my $quotegrab = $self->{quotegrabs}[$arguments - 1];
   my $timestamp = $quotegrab->{timestamp};
   my $ago = ago(gettimeofday - $timestamp);
   my $text = $quotegrab->{text};
@@ -443,46 +383,34 @@ sub show_random_quotegrab {
     if(not defined $channel_search) {
       $channel_search = $from;
     }
-  } 
-
-  $nick_search = '.*' if not defined $nick_search;
-  $channel_search = '.*' if not defined $channel_search or $channel_search !~ /^#/;
-  $text_search = '.*' if not defined $text_search;
-  
-  eval {
-    for(my $i = 0; $i <= $#{ $self->{quotegrabs} }; $i++) {
-      my $hash = $self->{quotegrabs}[$i];
-      if($hash->{channel} =~ /$channel_search/i && $hash->{nick} =~ /$nick_search/i && $hash->{text} =~ /$text_search/i) {
-        $hash->{id} = $i + 1;
-        push @quotes, $hash;
-      }
-    }
-  };
-
-  if($@) {
-    $self->{pbot}->logger->log("Error in show_random_quotegrab parameters: $@\n");
-    return "/msg $nick Error in search parameters: $@"
   }
+
+  $channel_search = undef if defined $channel_search and $channel_search !~ /^#/;
+
+  print "nick: [" . (defined $nick_search ? $nick_search : "undef") . "]\n";
+  print "channel: [" . (defined $channel_search ? $channel_search : "undef") . "]\n";
+  print "text: [" . (defined $text_search ? $text_search : "undef") . "]\n";
+
+  my $quotegrab = $self->{quotegrabs_db}->get_random_quotegrab($nick_search, $channel_search, $text_search);
   
-  if($#quotes < 0) {
+  if(not defined $quotegrab) {
     my $result = "No quotes grabbed ";
 
-    if($nick_search ne '.*') {
+    if(defined $nick_search) {
       $result .= "for nick $nick_search ";
     }
 
-    if($channel_search ne '.*') {
+    if(defined $channel_search) {
       $result .= "in channel $channel_search ";
     }
    
-    if($text_search ne '.*') {
+    if(defined $text_search) {
       $result .= "matching text '$text_search' ";
     }
 
     return $result . "yet ($usage).";;
   }
 
-  my $quotegrab = $quotes[int rand($#quotes + 1)];
   my $text = $quotegrab->{text};
   my ($first_nick) = split /\+/, $quotegrab->{nick}, 2;
 

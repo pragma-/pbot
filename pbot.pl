@@ -107,7 +107,7 @@ $config{ignorelist_file} = "$config{config_dir}/ignorelist";
 $config{factoids_file}   = "$config{data_dir}/factoids";
 
 # Location of file containing channel user quotes
-$config{quotegrabs_file} = "$config{data_dir}/quotegrabs";
+$config{quotegrabs_file} = "$config{data_dir}/quotegrabs.sqlite3";
 
 # Location of file containing message history
 $config{message_history_file} = "$config{data_dir}/message_history";

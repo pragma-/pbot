@@ -160,6 +160,7 @@ sub ack_die {
   $self->{pbot}->factoids->save_factoids;
   $self->{pbot}->ignorelist->save_ignores;
   $self->{pbot}->antiflood->save_message_history;
+  $self->{pbot}->{quotegrabs}->{quotegrabs_db}->end();
   $self->{pbot}->conn->privmsg($from, "Good-bye.") if defined $from;
   $self->{pbot}->conn->quit("Departure requested.");
   exit 0;

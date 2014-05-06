@@ -55,7 +55,7 @@ use PBot::Timer;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to Logger should be key/value pairs, not hash reference");
+    Carp::croak("Options to PBot should be key/value pairs, not hash reference");
   }
 
   my ($class, %conf) = @_;
@@ -158,9 +158,6 @@ sub initialize {
     export_path => $export_quotegrabs_path,
     export_site => $export_quotegrabs_site,
   );
-
-  $self->quotegrabs->add_quotegrab($self->{botnick}, "#pbot2", 0, "pragma_", "Who's a bot?");
-  $self->quotegrabs->load_quotegrabs() if defined $quotegrabs_file;
 
   $self->timer->start();
 }
