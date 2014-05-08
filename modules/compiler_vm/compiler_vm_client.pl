@@ -987,8 +987,9 @@ if($output =~ m/^\s*$/) {
       print FILE "$output\n";
   }
 
-  $output =~ s/In file included from .*?:\d+:\d+.\s*from prog.c:\d+:\s*//msg;
+  $output =~ s/In file included from .*?:\d+:\d+.\s*from prog.c:\d+.\s*//msg;
   $output =~ s/In file included from .*?:\d+:\d+.\s*//msg;
+  $output =~ s/\s*from prog.c:\d+.\s*//g;
   $output =~ s/prog: prog.c:\d+: [^:]+: Assertion/Assertion/g;
   $output =~ s,/usr/include/[^:]+:\d+:\d+:\s+,,g;
 
@@ -1001,7 +1002,7 @@ if($output =~ m/^\s*$/) {
   }
 
   $output =~ s/;?\s?__PRETTY_FUNCTION__ = "[^"]+"//g;
-  $output =~ s/(\d+:\d+:\s*)*cc1: warnings being treated as errors//;
+  $output =~ s/(\d+:\d+:\s*)*cc1: (all\s+)?warnings being treated as errors//;
   $output =~ s/(\d+:\d+:\s*)* \(first use in this function\)//g;
   $output =~ s/(\d+:\d+:\s*)*error: \(Each undeclared identifier is reported only once.*?\)//msg;
   $output =~ s/(\d+:\d+:\s*)*ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
