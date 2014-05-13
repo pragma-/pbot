@@ -165,7 +165,7 @@ sub create_nickserv {
 sub update_nickserv_account {
   my ($self, $id, $nickserv, $timestamp) = @_;
   
-  $self->{pbot}->logger->log("Updating nickserv account for id $id to $nickserv with timestamp [$timestamp]\n");
+  #$self->{pbot}->logger->log("Updating nickserv account for id $id to $nickserv with timestamp [$timestamp]\n");
 
   $self->create_nickserv($id, $nickserv);
 
@@ -361,7 +361,7 @@ sub get_hostmasks_for_channel {
 sub add_message {
   my ($self, $id, $mask, $channel, $message) = @_;
 
-  $self->{pbot}->logger->log("Adding message [$id][$mask][$channel][$message->{msg}][$message->{timestamp}][$message->{mode}]\n");
+  #$self->{pbot}->logger->log("Adding message [$id][$mask][$channel][$message->{msg}][$message->{timestamp}][$message->{mode}]\n");
 
   eval {
     my $sth = $self->{dbh}->prepare('INSERT INTO Messages VALUES (?, ?, ?, ?, ?)');
@@ -432,6 +432,11 @@ sub recall_message_by_count {
 
 sub recall_message_by_text {
   my ($self, $id, $channel, $text, $ignore_command) = @_;
+  
+  $text =~ s/\.\*\?/%/g;
+  $text =~ s/\.\*/%/g;
+  $text =~ s/\*/%/g;
+  $text =~ s/\?/_/g;
 
   my $messages = eval {
     my $sth = $self->{dbh}->prepare('SELECT msg,mode,timestamp FROM Messages WHERE id = ? AND channel = ? AND msg LIKE ? ORDER BY timestamp DESC LIMIT 10');
@@ -627,7 +632,7 @@ sub get_message_account_id {
   };
 
   $self->{pbot}->logger->log($@) if $@;
-  $self->{pbot}->logger->log("get_message_account_id: returning id [". (defined $id ? $id: 'undef') . "] for mask [$mask]\n");
+  #$self->{pbot}->logger->log("get_message_account_id: returning id [". (defined $id ? $id: 'undef') . "] for mask [$mask]\n");
   return $id;
 }
 
@@ -635,10 +640,15 @@ sub commit_message_history {
   my $self = shift;
 
   if($self->{new_entries} > 0) {
-    $self->{pbot}->logger->log("Commiting $self->{new_entries} messages to SQLite\n");
+    #$self->{pbot}->logger->log("Commiting $self->{new_entries} messages to SQLite\n");
+    eval {
+      $self->{dbh}->commit();
+      $self->{dbh}->begin_work();
+    };
+
+    $self->{pbot}->logger->log("SQLite error $@ when committing $self->{new_entries} entries.\n") if $@;
+
     $self->{new_entries} = 0;
-    $self->{dbh}->commit();
-    $self->{dbh}->begin_work();
   }
 }
 

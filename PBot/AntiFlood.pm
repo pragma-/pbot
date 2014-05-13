@@ -66,7 +66,7 @@ sub ban_whitelisted {
     $channel = lc $channel;
     $mask = lc $mask;
 
-    $self->{pbot}->logger->log("whitelist check: $channel, $mask\n");
+    #$self->{pbot}->logger->log("whitelist check: $channel, $mask\n");
     return (exists $self->{ban_whitelist}->hash->{$channel}->{$mask} and defined $self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted}) ? 1 : 0;
 }
 
@@ -136,7 +136,7 @@ sub check_join_watch {
   if($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN}) {
     if($text =~ /^JOIN/) {
       $channel_data->{join_watch}++;
-      $self->{pbot}->logger->log("Join watch incremented to $channel_data->{join_watch} for $account\n");
+      #$self->{pbot}->logger->log("Join watch incremented to $channel_data->{join_watch} for $account\n");
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
     } else {
       # PART or QUIT
@@ -158,7 +158,7 @@ sub check_join_watch {
     # reset joinwatch if they send a message
     if($channel_data->{join_watch} > 0) {
       $channel_data->{join_watch} = 0;
-      $self->{pbot}->logger->log("Join watch reset for $account\n");
+      #$self->{pbot}->logger->log("Join watch reset for $account\n");
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
     }
   }
@@ -245,15 +245,15 @@ sub check_flood {
             $self->{pbot}->logger->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
             $self->{pbot}->conn->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in $ban_length.");
           } else {
-            $self->{pbot}->logger->log("$nick $channel enter abuses counter incremented to " . $channel_data->{enter_abuses} . "\n");
+            #$self->{pbot}->logger->log("$nick $channel enter abuses counter incremented to " . $channel_data->{enter_abuses} . "\n");
           }
         } else {
-          $self->{pbot}->logger->log("$nick $channel enter abuse counter incremented to " . $channel_data->{enter_abuse} . "\n");
+          #$self->{pbot}->logger->log("$nick $channel enter abuse counter incremented to " . $channel_data->{enter_abuse} . "\n");
         }
         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
       } else {
         if($channel_data->{enter_abuse} > 0) {
-          $self->{pbot}->logger->log("$nick $channel more than $self->{ENTER_ABUSE_MAX_SECONDS} seconds since last message, enter abuse counter reset\n");
+          #$self->{pbot}->logger->log("$nick $channel more than $self->{ENTER_ABUSE_MAX_SECONDS} seconds since last message, enter abuse counter reset\n");
           $channel_data->{enter_abuse} = 0;
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
         }
@@ -261,7 +261,7 @@ sub check_flood {
     } else {
       $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
       if($channel_data->{enter_abuse} > 0) {
-        $self->{pbot}->logger->log("$nick $channel enter abuse counter reset\n"); 
+        #$self->{pbot}->logger->log("$nick $channel enter abuse counter reset\n"); 
         $channel_data->{enter_abuse} = 0;
         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
       }
@@ -284,14 +284,14 @@ sub check_flood {
 
     my $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $channel, 0);
 
-    $self->{pbot}->logger->log(" msg: [$msg->{timestamp}] $msg->{msg}\n");
-    $self->{pbot}->logger->log("last: [$last->{timestamp}] $last->{msg}\n");
-    $self->{pbot}->logger->log("Comparing message timestamps $last->{timestamp} - $msg->{timestamp} = " . ($last->{timestamp} - $msg->{timestamp}) . " against max_time $max_time\n");
+    #$self->{pbot}->logger->log(" msg: [$msg->{timestamp}] $msg->{msg}\n");
+    #$self->{pbot}->logger->log("last: [$last->{timestamp}] $last->{msg}\n");
+    #$self->{pbot}->logger->log("Comparing message timestamps $last->{timestamp} - $msg->{timestamp} = " . ($last->{timestamp} - $msg->{timestamp}) . " against max_time $max_time\n");
 
     if($last->{timestamp} - $msg->{timestamp} <= $max_time && not $self->{pbot}->admins->loggedin($channel, "$nick!$user\@$host")) {
       if($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN}) {
         my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'offenses', 'last_offense', 'join_watch');
-        $self->{pbot}->{logger}->log("$account offenses $channel_data->{offenses}, join watch $channel_data->{join_watch}, max messages $max_messages\n");
+        #$self->{pbot}->{logger}->log("$account offenses $channel_data->{offenses}, join watch $channel_data->{join_watch}, max messages $max_messages\n");
         if($channel_data->{join_watch} >= $max_messages) {
           $channel_data->{offenses}++;
           $channel_data->{last_offense} = gettimeofday;
@@ -415,7 +415,7 @@ sub devalidate_accounts {
   my ($self, $mask, $channel) = @_;
   my @message_accounts;
 
-  $self->{pbot}->logger->log("Devalidating accounts for $mask in $channel\n");
+  #$self->{pbot}->logger->log("Devalidating accounts for $mask in $channel\n");
 
   if($mask =~ m/^\$a:(.*)/) {
     my $ban_account = lc $1;
@@ -428,7 +428,7 @@ sub devalidate_accounts {
     my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'validated');
     if(defined $channel_data and $channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
       $channel_data->{validated} &= ~$self->{NICKSERV_VALIDATED};
-      $self->{pbot}->logger->log("Devalidating account $account\n");
+      #$self->{pbot}->logger->log("Devalidating account $account\n");
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
     }
   }
@@ -437,13 +437,13 @@ sub devalidate_accounts {
 sub check_bans {
   my ($self, $message_account, $mask, $channel) = @_;
 
-  $self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans on $mask in $channel\n"); 
+  #$self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans on $mask in $channel\n"); 
 
   my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
   my $current_nickserv_account = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
 
   if($current_nickserv_account) {
-    $self->{pbot}->logger->log("anti-flood: [check-bans] current nickserv [$current_nickserv_account] found for $mask\n");
+    #$self->{pbot}->logger->log("anti-flood: [check-bans] current nickserv [$current_nickserv_account] found for $mask\n");
     my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
     if($channel_data->{validated} & $self->{NEEDS_CHECKBAN}) {
       $channel_data->{validated} &= ~$self->{NEEDS_CHECKBAN};
@@ -456,7 +456,7 @@ sub check_bans {
       $channel_data->{validated} |= $self->{NEEDS_CHECKBAN};
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
     }
-    $self->{pbot}->logger->log("anti-flood: [check-bans] no account for $mask; marking for later validation\n");
+    #$self->{pbot}->logger->log("anti-flood: [check-bans] no account for $mask; marking for later validation\n");
   }
 
   my ($nick, $host) = $mask =~ m/^([^!]+)![^@]+\@(.*)$/;
@@ -472,7 +472,7 @@ sub check_bans {
     foreach my $nickserv_account (@nickserv_accounts) {
       foreach my $key (@hostmask_nickserv_accounts) {
         if($key eq $nickserv_account) {
-          $self->{pbot}->logger->log("anti-flood: [check-bans] nickserv account for $hostmask->{hostmask} matches $nickserv_account\n");
+          #$self->{pbot}->logger->log("anti-flood: [check-bans] nickserv account for $hostmask->{hostmask} matches $nickserv_account\n");
           $check_ban = 1;
           goto CHECKBAN;
         }
@@ -482,7 +482,7 @@ sub check_bans {
     # check if hosts match
     my ($account_host) = $hostmask->{hostmask} =~ m/\@(.*)$/;
     if($host eq $account_host) {
-      $self->{pbot}->logger->log("anti-flood: [check-bans] host for $hostmask->{hostmask} matches $mask\n");
+      #$self->{pbot}->logger->log("anti-flood: [check-bans] host for $hostmask->{hostmask} matches $mask\n");
       $check_ban = 1;
       goto CHECKBAN;
     }
@@ -490,7 +490,7 @@ sub check_bans {
     # check if nicks match
     my ($account_nick) = $hostmask->{hostmask} =~ m/^([^!]+)/;
     if($nick eq $account_nick) {
-      $self->{pbot}->logger->log("anti-flood: [check-bans] nick for $hostmask->{hostmask} matches $mask\n");
+      #$self->{pbot}->logger->log("anti-flood: [check-bans] nick for $hostmask->{hostmask} matches $mask\n");
       $check_ban = 1;
       goto CHECKBAN;
     }
@@ -502,7 +502,7 @@ sub check_bans {
       }
 
       foreach my $target_nickserv_account (@hostmask_nickserv_accounts) {
-        $self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans in $channel on $hostmask->{hostmask} using $target_nickserv_account\n");
+        #$self->{pbot}->logger->log("anti-flood: [check-bans] checking for bans in $channel on $hostmask->{hostmask} using $target_nickserv_account\n");
         my $baninfos = $self->{pbot}->bantracker->get_baninfo($hostmask->{hostmask}, $channel, $target_nickserv_account);
 
         if(defined $baninfos) {
@@ -594,7 +594,7 @@ sub check_nickserv_accounts {
   my $force_validation = 0;
   my $message_account;
 
-  $self->{pbot}->logger->log("Checking nickserv accounts for nick $nick with account $account and hostmask " . (defined $hostmask ? $hostmask : 'undef') . "\n");
+  #$self->{pbot}->logger->log("Checking nickserv accounts for nick $nick with account $account and hostmask " . (defined $hostmask ? $hostmask : 'undef') . "\n");
 
   $account = lc $account;
 
@@ -619,7 +619,7 @@ sub check_nickserv_accounts {
     $force_validation = 1;
   }
 
-  $self->{pbot}->logger->log("anti-flood: $message_account: setting nickserv account to [$account]\n");
+  #$self->{pbot}->logger->log("anti-flood: $message_account: setting nickserv account to [$account]\n");
   $self->{pbot}->{messagehistory}->{database}->update_nickserv_account($message_account, $account, scalar gettimeofday);
   $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($message_account, $account);
 
@@ -647,7 +647,7 @@ sub on_whoisaccount {
 sub adjust_offenses {
   my $self = shift;
 
-  $self->{pbot}->logger->log("Adjusting offenses . . .\n");
+  #$self->{pbot}->logger->log("Adjusting offenses . . .\n");
 
   # decrease offenses counter if 24 hours have elapsed since latest offense
   my $channel_datas = $self->{pbot}->{messagehistory}->{database}->get_channel_datas_where_last_offense_older_than(gettimeofday - 60 * 60 * 24);
@@ -657,7 +657,7 @@ sub adjust_offenses {
       my $channel = delete $channel_data->{channel};
       $channel_data->{offenses}--;
       $channel_data->{last_offense} = gettimeofday;
-      $self->{pbot}->logger->log("[adjust-offenses] [$id][$channel] 24 hours since last offense/decrease -- decreasing offenses to $channel_data->{offenses}\n");
+      #$self->{pbot}->logger->log("[adjust-offenses] [$id][$channel] 24 hours since last offense/decrease -- decreasing offenses to $channel_data->{offenses}\n");
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($id, $channel, $channel_data);
     }
   }
@@ -667,7 +667,7 @@ sub adjust_offenses {
     my $id = delete $channel_data->{id};
     my $channel = delete $channel_data->{channel};
     $channel_data->{enter_abuses}--;
-    $self->{pbot}->logger->log("[adjust-offenses] [$id][$channel] decreasing enter abuse offenses to $channel_data->{enter_abuses}\n");
+    #$self->{pbot}->logger->log("[adjust-offenses] [$id][$channel] decreasing enter abuse offenses to $channel_data->{enter_abuses}\n");
     $self->{pbot}->{messagehistory}->{database}->update_channel_data($id, $channel, $channel_data);
   }
 }
