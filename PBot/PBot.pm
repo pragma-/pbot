@@ -31,6 +31,7 @@ use PBot::Channels;
 use PBot::BanTracker;
 
 use PBot::LagChecker;
+use PBot::MessageHistory;
 use PBot::AntiFlood;
 
 use PBot::Interpreter;
@@ -87,10 +88,10 @@ sub initialize {
   $self->{max_msg_len}        = delete $conf{max_msg_len}        // 425;
   $self->{MAX_FLOOD_MESSAGES} = delete $conf{MAX_FLOOD_MESSAGES} // 4;
   $self->{MAX_NICK_MESSAGES}  = delete $conf{MAX_NICK_MESSAGES}  // 32;
-  $self->{message_history_file} = delete $conf{message_history_file} // "$ENV{HOME}/pbot/data/message_history";
 
   $self->{trigger}            = delete $conf{trigger}            // '!';
 
+  my $messagehistory_file     = delete $conf{message_history_file};
   my $channels_file           = delete $conf{channels_file};
   my $admins_file             = delete $conf{admins_file};
   my $ignorelist_file         = delete $conf{ignorelist_file};
@@ -127,8 +128,9 @@ sub initialize {
 
   $self->{bantracker}   = PBot::BanTracker->new(pbot => $self);
 
-  $self->{lagchecker}   = PBot::LagChecker->new(pbot => $self);
-  $self->{antiflood}    = PBot::AntiFlood->new(pbot => $self);
+  $self->{lagchecker}     = PBot::LagChecker->new(pbot => $self);
+  $self->{messagehistory} = PBot::MessageHistory->new(pbot => $self, filename => $messagehistory_file);
+  $self->{antiflood}      = PBot::AntiFlood->new(pbot => $self);
 
   $self->{ignorelist}   = PBot::IgnoreList->new(pbot => $self, filename => $ignorelist_file);
   $self->{ignorelist}->load_ignores() if defined $ignorelist_file;

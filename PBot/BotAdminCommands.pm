@@ -137,9 +137,11 @@ sub join_channel {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  # FIXME -- update %channels hash?
-  $self->{pbot}->logger->log("$nick!$user\@$host made me join $arguments\n");
-  $self->{pbot}->conn->join($arguments);
+  foreach my $channel (split /\s+/, $arguments) {
+    $self->{pbot}->logger->log("$nick!$user\@$host made me join $channel\n");
+    $self->{pbot}->conn->join($channel);
+  }
+
   return "/msg $nick Joining $arguments";
 }
 
@@ -147,9 +149,13 @@ sub part_channel {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  # FIXME -- update %channels hash?
-  $self->{pbot}->logger->log("$nick!$user\@$host made me part $arguments\n");
-  $self->{pbot}->conn->part($arguments);
+  $arguments = $from if not $arguments;
+
+  foreach my $channel (split /\s+/, $arguments) {
+    $self->{pbot}->logger->log("$nick!$user\@$host made me part $channel\n");
+    $self->{pbot}->conn->part($channel);
+  }
+
   return "/msg $nick Parting $arguments";
 }
 
@@ -157,10 +163,13 @@ sub ack_die {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   $self->{pbot}->logger->log("$nick!$user\@$host made me exit.\n");
+
+  # TODO: move all of those to an registerable atexit handler
   $self->{pbot}->factoids->save_factoids;
   $self->{pbot}->ignorelist->save_ignores;
-  $self->{pbot}->antiflood->save_message_history;
-  $self->{pbot}->{quotegrabs}->{quotegrabs_db}->end();
+  $self->{pbot}->{quotegrabs}->{database}->end();
+  $self->{pbot}->{messagehistory}->{database}->end();
+
   $self->{pbot}->conn->privmsg($from, "Good-bye.") if defined $from;
   $self->{pbot}->conn->quit("Departure requested.");
   exit 0;

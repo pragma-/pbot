@@ -63,6 +63,7 @@ sub end {
 
   if(exists $self->{dbh} and defined $self->{dbh}) {
     $self->{dbh}->disconnect();
+    delete $self->{dbh};
   }
 }
 

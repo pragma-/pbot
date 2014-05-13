@@ -41,9 +41,9 @@ sub initialize {
   $self->{export_path} = delete $conf{export_path};
   $self->{export_site} = delete $conf{export_site};
 
-  $self->{quotegrabs_db} = PBot::Quotegrabs_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
-  #$self->{quotegrabs_db} = PBot::Quotegrabs_Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
-  $self->{quotegrabs_db}->begin();
+  $self->{database} = PBot::Quotegrabs_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
+  #$self->{database} = PBot::Quotegrabs_Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
+  $self->{database}->begin();
 
   #-------------------------------------------------------------------------------------
   # The following could be in QuotegrabsCommands.pm, or they could be kept in here?
@@ -52,9 +52,6 @@ sub initialize {
   $self->{pbot}->commands->register(sub { $self->show_quotegrab(@_)        },  "getq",  0);
   $self->{pbot}->commands->register(sub { $self->delete_quotegrab(@_)      },  "delq",  0);
   $self->{pbot}->commands->register(sub { $self->show_random_quotegrab(@_) },  "rq",    0);
-
-  # ought to be in MessageTracker.pm once we create that module
-  $self->{pbot}->commands->register(sub { $self->recall_message(@_)        },  "recall",  0);
 }
 
 sub uniq { my %seen; grep !$seen{$_}++, @_ }
@@ -63,7 +60,7 @@ sub export_quotegrabs {
   my $self = shift;
   return "Not enabled" if not defined $self->{export_path};
 
-  my $quotegrabs = $self->{quotegrabs_db}->get_all_quotegrabs();
+  my $quotegrabs = $self->{database}->get_all_quotegrabs();
 
   my $text;
   my $table_id = 1;
@@ -177,80 +174,43 @@ sub grab_quotegrab {
   foreach my $grab (@grabs) {
     ($grab_nick, $grab_history, $channel) = split(/\s+/, $grab, 3);
 
-    if(not defined $grab_history) {
-      $grab_history = $nick eq $grab_nick ? 2 : 1;
-    }
+    $grab_history = $nick eq $grab_nick ? 2 : 1 if not defined $grab_history; # skip grab command if grabbing self without arguments
     $channel = $from if not defined $channel;
-
-    if($grab_history =~ /^\d+$/ and ($grab_history < 1 || $grab_history > $self->{pbot}->{MAX_NICK_MESSAGES})) {
-      return "/msg $nick Please choose a history between 1 and $self->{pbot}->{MAX_NICK_MESSAGES}";
-    }
 
     if(not $channel =~ m/^#/) {
       return "'$channel' is not a valid channel; usage: grab <nick> [[history] channel] (you must specify a history parameter before the channel parameter)";
     }
 
-    my $found_mask = undef;
-    my $last_spoken = 0;
-    foreach my $mask (keys %{ $self->{pbot}->antiflood->message_history }) {
-      if($mask =~ m/^\Q$grab_nick\E!/i) {
-        if(defined $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken}
-            and $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken} > $last_spoken) {
-          $last_spoken = $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken};
-          $found_mask = $mask;
-        }
-      }
+    my ($account, $found_nick) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($grab_nick);
+
+    if(not defined $account) {
+      return "I don't know anybody named $grab_nick";
     }
 
-    if(not defined $found_mask) {
-      return "No message history for $grab_nick in channel $channel.  Usage: grab <nick> [history [channel]]; to specify channel, you must also specify history";
-    }
+    $grab_nick = $found_nick; # convert nick to proper casing
 
-    ($grab_nick) = $found_mask =~ m/^([^!]+)!/; # convert $grab_nick to match casing of nick
-
-    if(not exists $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}) {
-      return "No message history for $grab_nick in channel $channel.  Usage: grab <nick> [history [channel]]; to specify channel, you must also specify history";
-    }
-
-    my @messages = @{ $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}{messages} };
+    my $message;
 
     if($grab_history =~ /^\d+$/) {
       # integral history
-      $grab_history--;
-
-      if($grab_history > $#messages) {
-        return "$grab_nick has only " . ($#messages + 1) . " messages in the history for channel $channel.";
+      my $max_messages = $self->{pbot}->{messagehistory}->{database}->get_max_messages($account, $channel);
+      if($grab_history < 1 || $grab_history > $max_messages) {
+        return "Please choose a history between 1 and $max_messages";
       }
 
-      $grab_history = $#messages - $grab_history;
+      $grab_history--;
+
+      $message = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $channel, $grab_history, 'grab');
     } else {
       # regex history
-      my $ret = eval {
-        my $i = $#messages;
-        $i-- if($nick =~ /^\Q$grab_nick\E$/i); # skip 'grab' command if grabbing own nick
-        my $found = 0;
-        while($i >= 0) {
-          if($messages[$i]->{msg} =~ m/$grab_history/i) {
-            $grab_history = $i;
-            $found = 1;
-            last;
-          }
-          $i--;
-        }
+      $message = $self->{pbot}->{messagehistory}->{database}->recall_message_by_text($account, $channel, $grab_history, 'grab');
 
-        if($found == 0) {
-          return "/msg $nick No message containing regex '$grab_history' found for $grab_nick in channel $channel.";
-        } else {
-          return undef;
-        }
-      };
-      return "/msg $nick Bad grab regex: $@" if $@;
-      if(defined $ret) {
-        return $ret;
+      if(not defined $message) {
+        return "No such message for nick $grab_nick in channel $channel containing text '$grab_history'";
       }
     }
 
-    $self->{pbot}->logger->log("$nick ($from) grabbed <$grab_nick/$channel> $messages[$grab_history]->{msg}\n");
+    $self->{pbot}->logger->log("$nick ($from) grabbed <$grab_nick/$channel> $message->{msg}\n");
 
     if(not defined $grab_nicks) {
       $grab_nicks = $grab_nick;
@@ -258,7 +218,7 @@ sub grab_quotegrab {
       $grab_nicks .= "+$grab_nick";
     }
 
-    my $text = $messages[$grab_history]->{msg};
+    my $text = $message->{msg};
 
     if(not defined $grab_text) {
       $grab_text = $text;
@@ -279,7 +239,7 @@ sub grab_quotegrab {
   $quotegrab->{text} = $grab_text;
   $quotegrab->{id} = undef;
   
-  $quotegrab->{id} = $self->{quotegrabs_db}->add_quotegrab($quotegrab);
+  $quotegrab->{id} = $self->{database}->add_quotegrab($quotegrab);
 
   if(not defined $quotegrab->{id}) {
     return "Failed to grab quote.";
@@ -300,7 +260,7 @@ sub grab_quotegrab {
 sub delete_quotegrab {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  my $quotegrab = $self->{quotegrabs_db}->get_quotegrab($arguments);
+  my $quotegrab = $self->{database}->get_quotegrab($arguments);
 
   if(not defined $quotegrab) {
     return "/msg $nick No quotegrab matching id $arguments found.";
@@ -310,7 +270,7 @@ sub delete_quotegrab {
     return "You are not the grabber of this quote.";
   }
 
-  $self->{quotegrabs_db}->delete_quotegrab($arguments);
+  $self->{database}->delete_quotegrab($arguments);
   $self->export_quotegrabs();
 
   my $text = $quotegrab->{text};
@@ -327,7 +287,7 @@ sub delete_quotegrab {
 sub show_quotegrab {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  my $quotegrab = $self->{quotegrabs_db}->get_quotegrab($arguments);
+  my $quotegrab = $self->{database}->get_quotegrab($arguments);
 
   if(not defined $quotegrab) {
     return "/msg $nick No quotegrab matching id $arguments found.";
@@ -387,7 +347,7 @@ sub show_random_quotegrab {
 
   $channel_search = undef if defined $channel_search and $channel_search !~ /^#/;
 
-  my $quotegrab = $self->{quotegrabs_db}->get_random_quotegrab($nick_search, $channel_search, $text_search);
+  my $quotegrab = $self->{database}->get_random_quotegrab($nick_search, $channel_search, $text_search);
   
   if(not defined $quotegrab) {
     my $result = "No quotes grabbed ";
@@ -415,119 +375,6 @@ sub show_random_quotegrab {
   } else {
       return "$quotegrab->{id}: " . (($channel_search eq '.*' or $quotegrab->{channel} ne $from) ? "[$quotegrab->{channel}] " : "") . "<$first_nick> $text";
   }
-}
-
-# this ought to be in MessageTracker.pm once we create that module
-sub recall_message {
-  my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-  if(not defined $from) {
-    $self->{pbot}->logger->log("Command missing ~from parameter!\n");
-    return "";
-  }
-
-  if(not defined $arguments or not length $arguments) {
-    return "Usage: recall <nick> [history [channel]] -- where [history] is an optional argument that is either an integral number of recent messages or a regex (without whitespace) of the text within the message; e.g., to recall the 3rd most recent message for nick, use `recall nick 3` or to recall a message containing 'pizza', use `recall nick pizza`; and [channel] is an optional channel, so you can use it from /msg (you will need to also specify [history] in this case)";
-  }
-
-  $arguments = lc $arguments;
-
-  my @recalls = split /\s\+\s/, $arguments;
-
-  my ($recall_nick, $recall_history, $channel, $recall_nicks, $recall_text);
-
-  foreach my $recall (@recalls) {
-    ($recall_nick, $recall_history, $channel) = split(/\s+/, $recall, 3);
-
-    if(not defined $recall_history) {
-      $recall_history = $nick eq $recall_nick ? 2 : 1;
-    }
-    $channel = $from if not defined $channel;
-
-    if($recall_history =~ /^\d+$/ and ($recall_history < 1 || $recall_history > $self->{pbot}->{MAX_NICK_MESSAGES})) {
-      return "/msg $nick Please choose a history between 1 and $self->{pbot}->{MAX_NICK_MESSAGES}";
-    }
-
-    my $found_mask = undef;
-    my $last_spoken = 0;
-    foreach my $mask (keys %{ $self->{pbot}->antiflood->message_history }) {
-      if($mask =~ m/^\Q$recall_nick\E!/i) {
-        if(defined $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken}
-            and $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken} > $last_spoken) {
-          $last_spoken = $self->{pbot}->antiflood->message_history->{$mask}->{channels}->{$channel}{last_spoken};
-          $found_mask = $mask;
-        }
-      }
-    }
-
-    if(not defined $found_mask) {
-      return "No message history for $recall_nick in channel $channel.  Usage: recall <nick> [history [channel]]; to specify channel, you must also specify history";
-    }
-
-    if(not exists $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}) {
-      return "No message history for $recall_nick in channel $channel.  Usage: recall <nick> [history [channel]]; to specify channel, you must also specify history";
-    }
-
-    my @messages = @{ $self->{pbot}->antiflood->message_history->{$found_mask}->{channels}->{$channel}{messages} };
-    my ($found_nick) = $found_mask =~ m/^([^!]+)/;
-
-    if($recall_history =~ /^\d+$/) {
-      # integral history
-      $recall_history--;
-
-      if($recall_history > $#messages) {
-        return "$recall_nick has only " . ($#messages + 1) . " messages in the history for channel $channel.";
-      }
-
-      $recall_history = $#messages - $recall_history;
-    } else {
-      # regex history
-      my $ret = eval {
-        my $i = $#messages;
-        $i-- if($nick =~ /^\Q$recall_nick\E$/i); # skip 'recall' command if recallbing own nick
-        my $found = 0;
-        while($i >= 0) {
-          if($messages[$i]->{msg} =~ m/$recall_history/i) {
-            $recall_history = $i;
-            $found = 1;
-            last;
-          }
-          $i--;
-        }
-
-        if($found == 0) {
-          return "/msg $nick No message containing regex '$recall_history' found for $recall_nick in channel $channel.";
-        } else {
-          return undef;
-        }
-      };
-      return "/msg $nick Bad recall regex: $@" if $@;
-      if(defined $ret) {
-        return $ret;
-      }
-    }
-
-    $self->{pbot}->logger->log("$nick ($from) recalled <$recall_nick/$channel> $messages[$recall_history]->{msg}\n");
-
-    my $text = $messages[$recall_history]->{msg};
-    my $ago = ago(gettimeofday - $messages[$recall_history]->{timestamp});
-
-    if(not defined $recall_text) {
-      if($text =~ s/^\/me\s+//) {
-        $recall_text = "[$ago] * $found_nick $text";
-      } else {
-        $recall_text = "[$ago] <$found_nick> $text";
-      }
-    } else {
-      if($text =~ s/^\/me\s+//) {
-        $recall_text .= " [$ago] * $found_nick $text";
-      } else {
-        $recall_text .= " [$ago] <$found_nick> $text";
-      }
-    }
-  }
-
-  return $recall_text;
 }
 
 1;

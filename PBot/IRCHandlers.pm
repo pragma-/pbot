@@ -183,7 +183,9 @@ sub on_join {
   my ($self, $conn, $event) = @_;
   my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
 
-  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, "JOIN", 4, 60 * 30, $self->{pbot}->antiflood->{FLOOD_JOIN});
+  my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
+  $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "JOIN", $self->{pbot}->{messagehistory}->{MSG_JOIN});
+  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, "JOIN", 4, 60 * 30, $self->{pbot}->{messagehistory}->{MSG_JOIN});
 }
 
 sub on_departure {
@@ -193,7 +195,19 @@ sub on_departure {
   my $text = uc $event->type;
   $text .= " $args";
 
-  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, $text, 4, 60 * 30, $self->{pbot}->antiflood->{FLOOD_JOIN});
+  my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
+
+  if($text =~ m/^QUIT/) {
+    # QUIT messages must be dispatched to each channel the user is on
+    my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($message_account);
+    foreach my $chan (@channels) {
+      $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $chan, $text, $self->{pbot}->{messagehistory}->{MSG_JOIN});
+    }
+  } else {
+    $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_JOIN});
+  }
+
+  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, $text, 4, 60 * 30, $self->{pbot}->{messagehistory}->{MSG_JOIN});
 
   my $admin = $self->{pbot}->admins->find_admin($channel, "$nick!$user\@$host");
   if(defined $admin and $admin->{loggedin}) {

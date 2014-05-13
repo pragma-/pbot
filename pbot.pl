@@ -110,7 +110,7 @@ $config{factoids_file}   = "$config{data_dir}/factoids";
 $config{quotegrabs_file} = "$config{data_dir}/quotegrabs.sqlite3";
 
 # Location of file containing message history
-$config{message_history_file} = "$config{data_dir}/message_history";
+$config{message_history_file} = "$config{data_dir}/message_history.sqlite3";
 
 # Create and initialize bot object
 my $pbot = PBot::PBot->new(%config);

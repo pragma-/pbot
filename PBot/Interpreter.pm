@@ -97,7 +97,10 @@ sub process_line {
 
   my $pbot = $self->pbot;
 
-  $pbot->antiflood->check_flood($from, $nick, $user, $host, $text, $pbot->{MAX_FLOOD_MESSAGES}, 10, $pbot->antiflood->{FLOOD_CHAT}) if defined $from;
+  my $message_account = $pbot->{messagehistory}->get_message_account($nick, $user, $host);
+  $pbot->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $from, $text, $pbot->{messagehistory}->{MSG_CHAT});
+
+  $pbot->antiflood->check_flood($from, $nick, $user, $host, $text, $pbot->{MAX_FLOOD_MESSAGES}, 10, $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
 
   $text =~ s/^\s+//;
   $text =~ s/\s+$//;
