@@ -38,7 +38,7 @@ sub begin {
 
   $self->{pbot}->logger->log("Opening message history SQLite database: $self->{filename}\n");
 
-  $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0 }) or die $DBI::errstr; 
+  $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr; 
 
   eval {
     #$self->{dbh}->trace($self->{dbh}->parse_trace_flags('SQL|1|test'));
