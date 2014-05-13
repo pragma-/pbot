@@ -643,11 +643,11 @@ sub commit_message_history {
     #$self->{pbot}->logger->log("Commiting $self->{new_entries} messages to SQLite\n");
     eval {
       $self->{dbh}->commit();
-      $self->{dbh}->begin_work();
     };
 
     $self->{pbot}->logger->log("SQLite error $@ when committing $self->{new_entries} entries.\n") if $@;
 
+    $self->{dbh}->begin_work();
     $self->{new_entries} = 0;
   }
 }
