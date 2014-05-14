@@ -409,14 +409,26 @@ SQL
 sub recall_message_by_count {
   my ($self, $id, $channel, $count, $ignore_command) = @_;
 
-  my $messages = eval {
-    my $sth = $self->{dbh}->prepare('SELECT msg, mode, timestamp FROM Messages WHERE id = ? AND channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
-    $sth->bind_param(1, $id);
-    $sth->bind_param(2, $channel);
-    $sth->bind_param(3, $count);
-    $sth->execute();
-    return $sth->fetchall_arrayref({});
-  };
+  my $messages;
+
+  if(defined $id) {
+    $messages = eval {
+      my $sth = $self->{dbh}->prepare('SELECT msg, mode, timestamp FROM Messages WHERE id = ? AND channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
+      $sth->bind_param(1, $id);
+      $sth->bind_param(2, $channel);
+      $sth->bind_param(3, $count);
+      $sth->execute();
+      return $sth->fetchall_arrayref({});
+    };
+  } else {
+    $messages = eval {
+      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp FROM Messages WHERE channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
+      $sth->bind_param(1, $channel);
+      $sth->bind_param(2, $count);
+      $sth->execute();
+      return $sth->fetchall_arrayref({});
+    };
+  }
 
   $self->{pbot}->logger->log($@) if $@;
 
@@ -438,14 +450,26 @@ sub recall_message_by_text {
   $text =~ s/\*/%/g;
   $text =~ s/\?/_/g;
 
-  my $messages = eval {
-    my $sth = $self->{dbh}->prepare('SELECT msg,mode,timestamp FROM Messages WHERE id = ? AND channel = ? AND msg LIKE ? ORDER BY timestamp DESC LIMIT 10');
-    $sth->bind_param(1, $id);
-    $sth->bind_param(2, $channel);
-    $sth->bind_param(3, "%$text%");
-    $sth->execute();
-    return $sth->fetchall_arrayref({});
-  };
+  my $messages;
+
+  if(defined $id) {
+    $messages = eval {
+      my $sth = $self->{dbh}->prepare('SELECT msg,mode,timestamp FROM Messages WHERE id = ? AND channel = ? AND msg LIKE ? ORDER BY timestamp DESC LIMIT 10');
+      $sth->bind_param(1, $id);
+      $sth->bind_param(2, $channel);
+      $sth->bind_param(3, "%$text%");
+      $sth->execute();
+      return $sth->fetchall_arrayref({});
+    };
+  } else {
+    $messages = eval {
+      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp FROM Messages WHERE channel = ? AND msg LIKE ? ORDER BY timestamp DESC LIMIT 10');
+      $sth->bind_param(1, $channel);
+      $sth->bind_param(2, "%$text%");
+      $sth->execute();
+      return $sth->fetchall_arrayref({});
+    };
+  }
 
   $self->{pbot}->logger->log($@) if $@;
 

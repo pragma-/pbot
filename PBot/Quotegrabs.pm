@@ -315,7 +315,7 @@ sub show_random_quotegrab {
     return "";
   }
 
-  my $usage = 'Usage: rq [nick regex] [-c,--channel <channel regex>] [-t,--text <text regex>]';
+  my $usage = 'Usage: rq [nick [channel [text]]] [-c,--channel <channel>] [-t,--text <text>]';
 
   if(defined $arguments) {
     my $getopt_error;
