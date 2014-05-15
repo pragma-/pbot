@@ -188,6 +188,25 @@ sub on_join {
   $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, "JOIN", 4, 60 * 30, $self->{pbot}->{messagehistory}->{MSG_JOIN});
 }
 
+sub on_kick {
+  my ($self, $conn, $event) = @_;
+  my ($nick, $user, $host, $target, $channel, $reason) = ($event->nick, $event->user, $event->host, $event->to, $event->{args}[0], $event->{args}[1]);
+
+  $self->{pbot}->logger->log("$nick!$user\@$host kicked $target from $channel ($reason)\n");
+
+  my ($message_account) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($target);
+
+  if(defined $message_account) {
+    my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($message_account);
+
+    my ($target_nick, $target_user, $target_host) = $hostmask =~ m/^([^!]+)!([^@]+)@(.*)/;
+    my $text = "KICKED by $nick!$user\@$host ($reason)";
+
+    $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
+    $self->{pbot}->antiflood->check_flood($channel, $target_nick, $target_user, $target_host, $text, 4, 60 * 30, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
+  }
+}
+
 sub on_departure {
   my ($self, $conn, $event) = @_;
   my ($nick, $user, $host, $channel, $args) = ($event->nick, $event->user, $event->host, $event->to, $event->args);

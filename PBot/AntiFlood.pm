@@ -211,7 +211,7 @@ sub check_flood {
   # check for ban evasion if channel begins with # (not private message) and hasn't yet been validated against ban evasion
   if($channel =~ m/^#/ and not $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'validated')->{'validated'} & $self->{NICKSERV_VALIDATED}) {
     if($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
-      # don't check for evasion on PARTs
+      # don't check for evasion on PART/KICK
     } else {
       $self->{pbot}->conn->whois($nick);
       $self->check_bans($account, $mask, $channel);

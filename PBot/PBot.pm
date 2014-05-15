@@ -201,6 +201,7 @@ sub connect {
   $self->conn->add_handler('mode'                     , sub { $self->irchandlers->on_mode(@_)        });
   $self->conn->add_handler('part'                     , sub { $self->irchandlers->on_departure(@_)   });
   $self->conn->add_handler('join'                     , sub { $self->irchandlers->on_join(@_)        });
+  $self->conn->add_handler('kick'                     , sub { $self->irchandlers->on_kick(@_)        });
   $self->conn->add_handler('quit'                     , sub { $self->irchandlers->on_departure(@_)   });
   $self->conn->add_handler('pong'                     , sub { $self->lagchecker->on_pong(@_)         });
   $self->conn->add_handler('whoisaccount'             , sub { $self->antiflood->on_whoisaccount(@_)  });
