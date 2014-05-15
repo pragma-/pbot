@@ -134,31 +134,27 @@ sub check_join_watch {
   my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'join_watch');
 
   if($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN}) {
-    if($text =~ /^JOIN/) {
-      $channel_data->{join_watch}++;
-      #$self->{pbot}->logger->log("Join watch incremented to $channel_data->{join_watch} for $account\n");
-      $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+    $channel_data->{join_watch}++;
+    $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+  } elsif($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
+    # PART or QUIT
+    # check QUIT message for netsplits, and decrement joinwatch to allow a free rejoin
+    if($text =~ /^QUIT .*\.net .*\.split/) {
+      if($channel_data->{join_watch} > 0) {
+        $channel_data->{join_watch}--; 
+        $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+      }
+    }
+    # check QUIT message for Ping timeout or Excess Flood
+    elsif($text =~ /^QUIT Ping timeout/ or $text =~ /^QUIT Excess Flood/) {
+      # ignore these (used to treat aggressively)
     } else {
-      # PART or QUIT
-      # check QUIT message for netsplits, and decrement joinwatch to allow a free rejoin
-      if($text =~ /^QUIT .*\.net .*\.split/) {
-        if($channel_data->{join_watch} > 0) {
-          $channel_data->{join_watch}--; 
-          $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
-        }
-      }
-      # check QUIT message for Ping timeout or Excess Flood
-      elsif($text =~ /^QUIT Ping timeout/ or $text =~ /^QUIT Excess Flood/) {
-        # ignore these (used to treat aggressively)
-      } else {
-        # some other type of QUIT or PART
-      }
+      # some other type of QUIT or PART
     }
   } elsif($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
     # reset joinwatch if they send a message
     if($channel_data->{join_watch} > 0) {
       $channel_data->{join_watch} = 0;
-      #$self->{pbot}->logger->log("Join watch reset for $account\n");
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
     }
   }
@@ -176,7 +172,7 @@ sub check_flood {
   # handle QUIT events
   # (these events come from $channel nick!user@host, not a specific channel or nick,
   # so they need to be dispatched to all channels the nick has been seen on)
-  if($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN} and $text =~ /^QUIT/) {
+  if($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE} and $text =~ /^QUIT/) {
     my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
     foreach my $chan (@channels) {
       $self->check_join_watch($account, $chan, $text, $mode);
@@ -198,7 +194,7 @@ sub check_flood {
   # do not do flood processing if channel is not in bot's channel list or bot is not set as chanop for the channel
   return if ($channel =~ /^#/) and (not exists $self->{pbot}->channels->channels->hash->{$channel} or $self->{pbot}->channels->channels->hash->{$channel}{chanop} == 0);
 
-  if($channel =~ /^#/ and $mode == $self->{pbot}->{messagehistory}->{MSG_JOIN} and $text =~ /^PART/) {
+  if($channel =~ /^#/ and $mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
     # remove validation on PART so we check for ban-evasion when user returns at a later time
     my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'validated');
     if($channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
@@ -214,7 +210,7 @@ sub check_flood {
 
   # check for ban evasion if channel begins with # (not private message) and hasn't yet been validated against ban evasion
   if($channel =~ m/^#/ and not $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'validated')->{'validated'} & $self->{NICKSERV_VALIDATED}) {
-    if($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN} and $text =~ /^PART/) {
+    if($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
       # don't check for evasion on PARTs
     } else {
       $self->{pbot}->conn->whois($nick);
@@ -228,6 +224,7 @@ sub check_flood {
     return;
   } 
 
+  # check for enter abuse
   if($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT} and $channel =~ m/^#/) {
     my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'enter_abuse', 'enter_abuses');
 
@@ -268,6 +265,7 @@ sub check_flood {
     }
   }
 
+  # check for chat/join/private message flooding
   if($max_messages > 0 and $self->{pbot}->{messagehistory}->{database}->get_max_messages($account, $channel) >= $max_messages) {
     my $msg;
     if($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
@@ -276,6 +274,10 @@ sub check_flood {
     elsif($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN}) {
       my $joins = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, $max_messages, $self->{pbot}->{messagehistory}->{MSG_JOIN});
       $msg = $joins->[0];
+    }
+    elsif($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
+      # no flood checks to be done for departure events
+      return;
     }
     else {
       $self->{pbot}->logger->log("Unknown flood mode [$mode] ... aborting flood enforcement.\n");

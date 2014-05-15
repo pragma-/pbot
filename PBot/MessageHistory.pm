@@ -39,8 +39,9 @@ sub initialize {
   $self->{database}->begin();
   $self->{database}->devalidate_all_channels();
 
-  $self->{MSG_CHAT}   =  0;
-  $self->{MSG_JOIN}   =  1;
+  $self->{MSG_CHAT}      = 0;  # PRIVMSG, ACTION
+  $self->{MSG_JOIN}      = 1;  # JOIN
+  $self->{MSG_DEPARTURE} = 2;  # PART, QUIT, KICK
 
   $self->{pbot}->commands->register(sub { $self->recall_message(@_) },  "recall",  0);
 }

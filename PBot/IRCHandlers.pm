@@ -201,13 +201,13 @@ sub on_departure {
     # QUIT messages must be dispatched to each channel the user is on
     my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($message_account);
     foreach my $chan (@channels) {
-      $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $chan, $text, $self->{pbot}->{messagehistory}->{MSG_JOIN});
+      $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $chan, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
     }
   } else {
-    $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_JOIN});
+    $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
   }
 
-  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, $text, 4, 60 * 30, $self->{pbot}->{messagehistory}->{MSG_JOIN});
+  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, $text, 4, 60 * 30, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
 
   my $admin = $self->{pbot}->admins->find_admin($channel, "$nick!$user\@$host");
   if(defined $admin and $admin->{loggedin}) {
