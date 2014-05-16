@@ -255,7 +255,7 @@ sub on_nickchange {
   $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($newnick_account);
   $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($newnick_account, { last_seen => scalar gettimeofday });
 
-  $self->{pbot}->antiflood->check_flood("$nick!$user\@$host", $nick, $user, $host, "NICKCHANGE $newnick", 3, 60 * 60, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
+  $self->{pbot}->antiflood->check_flood("$nick!$user\@$host", $nick, $user, $host, "NICKCHANGE $newnick", 3, 60 * 30, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
 }
 
 sub pbot {
