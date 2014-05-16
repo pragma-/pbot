@@ -46,6 +46,8 @@ sub initialize {
 
   $self->{pbot} = $pbot;
   $self->{factoidmodulelauncher} = PBot::FactoidModuleLauncher->new(pbot => $pbot);
+
+  $self->{pbot}->{atexit}->register(sub { $self->save_factoids; return; });
 }
 
 sub load_factoids {

@@ -60,9 +60,9 @@ sub new {
   }
 
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
+  $self->register_signal_handlers;
   return $self;
 }
 
@@ -107,6 +107,8 @@ sub initialize {
   $self->{logger}             = PBot::Logger->new(log_file => $log_file);
   $self->{commands}           = PBot::Commands->new(pbot => $self);
   $self->{timer}              = PBot::Timer->new(timeout => 10);
+
+  $self->{atexit}             = PBot::Registerable->new();
 
   $self->{select_handler}     = PBot::SelectHandler->new(pbot => $self);
   $self->{stdin_reader}       = PBot::StdinReader->new(pbot => $self);
@@ -233,6 +235,16 @@ sub start {
   while(1) {
     $self->do_one_loop();
   }
+}
+
+sub register_signal_handlers {
+  my $self = shift;
+  $SIG{INT} = sub { $self->atexit; exit 0; };
+}
+
+sub atexit {
+  my $self = shift;
+  $self->{atexit}->execute_all;
 }
 
 #-----------------------------------------------------------------------------------

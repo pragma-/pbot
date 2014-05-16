@@ -45,6 +45,8 @@ sub initialize {
   #$self->{database} = PBot::Quotegrabs_Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
   $self->{database}->begin();
 
+  $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
+
   #-------------------------------------------------------------------------------------
   # The following could be in QuotegrabsCommands.pm, or they could be kept in here?
   #-------------------------------------------------------------------------------------

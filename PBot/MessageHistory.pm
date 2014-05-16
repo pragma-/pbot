@@ -45,6 +45,8 @@ sub initialize {
   $self->{MSG_NICKCHANGE} = 3;  # CHANGED NICK
 
   $self->{pbot}->commands->register(sub { $self->recall_message(@_) },  "recall",  0);
+
+  $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
 }
 
 sub get_message_account {

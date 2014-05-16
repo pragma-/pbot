@@ -163,13 +163,7 @@ sub ack_die {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   $self->{pbot}->logger->log("$nick!$user\@$host made me exit.\n");
-
-  # TODO: move all of those to an registerable atexit handler
-  $self->{pbot}->factoids->save_factoids;
-  $self->{pbot}->ignorelist->save_ignores;
-  $self->{pbot}->{quotegrabs}->{database}->end();
-  $self->{pbot}->{messagehistory}->{database}->end();
-
+  $self->{pbot}->atexit();
   $self->{pbot}->conn->privmsg($from, "Good-bye.") if defined $from;
   $self->{pbot}->conn->quit("Departure requested.");
   exit 0;

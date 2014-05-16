@@ -19,7 +19,6 @@ sub new {
   }
 
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -27,7 +26,6 @@ sub new {
 
 sub initialize {
   my $self = shift;
-
   $self->{handlers} = [];
 }
 
@@ -67,7 +65,6 @@ sub register {
     Carp::croak("Must pass subroutine reference to register()");
   }
 
-  # TODO: Check if subref already exists in handlers?
   my $ref = { subref => $subref };
   push @{ $self->{handlers} }, $ref;
 
