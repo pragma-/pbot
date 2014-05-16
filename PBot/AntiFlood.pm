@@ -365,6 +365,14 @@ sub check_flood {
           $self->{pbot}->conn->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");
         }
       } elsif($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} and $self->{nickflood}->{$account}->{changes} >= $max_messages) {
+        ($nick) = $text =~ m/NICKCHANGE (.*)/;
+
+        if($nick =~ m/^Guest\d+$/) {
+          # Don't enforce for services-mandated change to guest account
+          $self->{nickflood}->{$account}->{changes}--;
+          return;
+        }
+
         $self->{nickflood}->{$account}->{offenses}++;
         $self->{nickflood}->{$account}->{changes} = $max_messages - 2; # allow 1 more change (to go back to original nick)
         $self->{nickflood}->{$account}->{timestamp} = gettimeofday;
@@ -376,7 +384,6 @@ sub check_flood {
           $self->{pbot}->chanops->ban_user_timed("*!$user\@$host", $chan, $length);
         }
 
-        ($nick) = $text =~ m/NICKCHANGE (.*)/;
         $length = duration($length);
         $self->{pbot}->logger->log("$nick nickchange flood offense " . $self->{nickflood}->{$account}->{offenses} . " earned $length ban\n");
         $self->{pbot}->conn->privmsg($nick, "You have been temporarily banned due to nick-change flooding.  You will be unbanned in $length.");
