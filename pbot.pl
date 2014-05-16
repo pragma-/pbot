@@ -67,11 +67,11 @@ my %config = (
   # may be viewed in a browser.
   # -----------------------------------------------------
 
-  export_factoids_path      => "$bothome/factoids.html",
-  export_factoids_site      => 'http://blackshell.com/~msmud/candide/factoids.html',
+  export_factoids_path      => "$bothome/factoids.html",   # change to a path in your webroot
+  export_factoids_site      => 'http://your.website.com/factoids.html',
 
-  export_quotegrabs_path    => "$bothome/quotegrabs.html",
-  export_quotegrabs_site    => 'http://blackshell.com/~msmud/candide/quotegrabs.html',
+  export_quotegrabs_path    => "$bothome/quotegrabs.html", # change to a path in your webroot
+  export_quotegrabs_site    => 'http://your.website.com/quotegrabs.html',
 
   # -----------------------------------------------------
   # You shouldn't need to change anything below this line.
