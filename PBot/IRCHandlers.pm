@@ -220,6 +220,7 @@ sub on_departure {
     # QUIT messages must be dispatched to each channel the user is on
     my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($message_account);
     foreach my $chan (@channels) {
+      next if $chan !~ m/^#/;
       $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $chan, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
     }
   } else {
@@ -234,6 +235,27 @@ sub on_departure {
     $self->{pbot}->logger->log("Logged out $nick.\n");
     delete $admin->{loggedin};
   }
+}
+
+sub on_nickchange {
+  my ($self, $conn, $event) = @_;
+  my ($nick, $user, $host, $newnick) = ($event->nick, $event->user, $event->host, $event->args);
+
+  $self->{pbot}->logger->log("$nick!$user\@$host changed nick to $newnick\n");
+
+  my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+  $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($message_account);
+  my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($message_account);
+  foreach my $channel (@channels) {
+    next if $channel !~ m/^#/;
+    $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "NICKCHANGE $newnick", $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
+  }
+
+  my $newnick_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($newnick, $user, $host);
+  $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($newnick_account);
+  $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($newnick_account, { last_seen => scalar gettimeofday });
+
+  $self->{pbot}->antiflood->check_flood("$nick!$user\@$host", $nick, $user, $host, "NICKCHANGE $newnick", 3, 60 * 60, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
 }
 
 sub pbot {

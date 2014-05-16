@@ -265,7 +265,7 @@ sub get_message_account {
   return $id if defined $id;
 
   my $rows = eval {
-    my $sth = $self->{dbh}->prepare('SELECT id,hostmask FROM Hostmasks WHERE hostmask LIKE ?');
+    my $sth = $self->{dbh}->prepare('SELECT id,hostmask FROM Hostmasks WHERE hostmask LIKE ? ORDER BY last_seen DESC');
     $sth->bind_param(1, "$nick!%");
     $sth->execute();
     my $rows = $sth->fetchall_arrayref({});

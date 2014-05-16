@@ -49,7 +49,8 @@ sub initialize {
   $self->{ENTER_ABUSE_MAX_OFFENSES} = 3;
   $self->{ENTER_ABUSE_MAX_SECONDS}  = 20;
 
-  $self->{channels} = {}; # per-channel statistics, e.g. for optimized tracking of last spoken nick for enter-abuse detection, etc
+  $self->{channels} = {};  # per-channel statistics, e.g. for optimized tracking of last spoken nick for enter-abuse detection, etc
+  $self->{nickflood} = {}; # statistics to track nickchange flooding
 
   my $filename = delete $conf{banwhitelist_file} // $self->{pbot}->{data_dir} . '/ban_whitelist';
   $self->{ban_whitelist} = PBot::DualIndexHashObject->new(name => 'BanWhitelist', filename => $filename);
@@ -165,9 +166,14 @@ sub check_flood {
   $channel = lc $channel;
 
   my $mask = "$nick!$user\@$host";
-  $self->{pbot}->logger->log(sprintf("%-14s | %-65s | %s\n", $channel eq $mask ? "QUIT" : $channel, $mask, $text));
-
   my $account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
+
+  if($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+    $self->{pbot}->logger->log(sprintf("%-14s | %-65s | %s\n", "NICKCHANGE", $mask, $text));
+    $self->{nickflood}->{$account}->{changes}++;
+  } else {
+    $self->{pbot}->logger->log(sprintf("%-14s | %-65s | %s\n", $channel eq $mask ? "QUIT" : $channel, $mask, $text));
+  }
 
   # handle QUIT events
   # (these events come from $channel nick!user@host, not a specific channel or nick,
@@ -175,6 +181,7 @@ sub check_flood {
   if($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE} and $text =~ /^QUIT/) {
     my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
     foreach my $chan (@channels) {
+      next if $chan !~ m/^#/;
       $self->check_join_watch($account, $chan, $text, $mode);
     }
 
@@ -183,7 +190,20 @@ sub check_flood {
     return;
   }
 
-  $self->check_join_watch($account, $channel, $text, $mode);
+  if($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+    my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
+    return if not @channels;
+    $channel = undef;
+    foreach my $chan (@channels) {
+      if($chan =~ m/^#/) {
+        $channel = $chan;
+        last;
+      }
+    }
+    return if not defined $channel;
+  } else {
+    $self->check_join_watch($account, $channel, $text, $mode);
+  }
   
   # do not do flood processing for bot messages
   if($nick eq $self->{pbot}->botnick) {
@@ -275,6 +295,10 @@ sub check_flood {
       my $joins = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, $max_messages, $self->{pbot}->{messagehistory}->{MSG_JOIN});
       $msg = $joins->[0];
     }
+    elsif($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+      my $nickchanges = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, $max_messages, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
+      $msg = $nickchanges->[0];
+    }
     elsif($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
       # no flood checks to be done for departure events
       return;
@@ -340,6 +364,22 @@ sub check_flood {
           $self->{pbot}->logger->log("$nick msg flood offense " . $channel_data->{offenses} . " earned $length ignore\n");
           $self->{pbot}->conn->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");
         }
+      } elsif($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} and $self->{nickflood}->{$account}->{changes} >= $max_messages) {
+        $self->{nickflood}->{$account}->{offenses}++;
+        $self->{nickflood}->{$account}->{changes} = $max_messages - 2; # allow 1 more change (to go back to original nick)
+        $self->{nickflood}->{$account}->{timestamp} = gettimeofday;
+
+        my $length = $self->{nickflood}->{$account}->{offenses} ** $self->{nickflood}->{$account}->{offenses} * $self->{nickflood}->{$account}->{offenses} * 60 * 4;
+
+        my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
+        foreach my $chan (@channels) {
+          $self->{pbot}->chanops->ban_user_timed("*!$user\@$host", $chan, $length);
+        }
+
+        ($nick) = $text =~ m/NICKCHANGE (.*)/;
+        $length = duration($length);
+        $self->{pbot}->logger->log("$nick nickchange flood offense " . $self->{nickflood}->{$account}->{offenses} . " earned $length ban\n");
+        $self->{pbot}->conn->privmsg($nick, "You have been temporarily banned due to nick-change flooding.  You will be unbanned in $length.");
       }
     }
   }
@@ -671,6 +711,18 @@ sub adjust_offenses {
     $channel_data->{enter_abuses}--;
     #$self->{pbot}->logger->log("[adjust-offenses] [$id][$channel] decreasing enter abuse offenses to $channel_data->{enter_abuses}\n");
     $self->{pbot}->{messagehistory}->{database}->update_channel_data($id, $channel, $channel_data);
+  }
+
+  foreach my $account (keys %{ $self->{nickflood} }) {
+    if($self->{nickflood}->{$account}->{offenses} > 0 and gettimeofday - $self->{nickflood}->{$account}->{timestamp} >= 60 * 60 * 24) {
+      $self->{nickflood}->{$account}->{offenses}--;
+
+      if($self->{nickflood}->{$account}->{offenses} == 0) {
+        delete $self->{nickflood}->{$account};
+      } else {
+        $self->{nickflood}->{$account}->{timestamp} = gettimeofday;
+      }
+    }
   }
 }
 
