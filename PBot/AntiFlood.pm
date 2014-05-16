@@ -170,7 +170,13 @@ sub check_flood {
 
   if($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
     $self->{pbot}->logger->log(sprintf("%-14s | %-65s | %s\n", "NICKCHANGE", $mask, $text));
-    $self->{nickflood}->{$account}->{changes}++;
+
+    my ($newnick) = $text =~ m/NICKCHANGE (.*)/;
+    if($newnick =~ m/^Guest\d+$/) {
+      # Don't enforce for services-mandated change to guest account
+    } else {
+      $self->{nickflood}->{$account}->{changes}++;
+    }
   } else {
     $self->{pbot}->logger->log(sprintf("%-14s | %-65s | %s\n", $channel eq $mask ? "QUIT" : $channel, $mask, $text));
   }
@@ -366,12 +372,6 @@ sub check_flood {
         }
       } elsif($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} and $self->{nickflood}->{$account}->{changes} >= $max_messages) {
         ($nick) = $text =~ m/NICKCHANGE (.*)/;
-
-        if($nick =~ m/^Guest\d+$/) {
-          # Don't enforce for services-mandated change to guest account
-          $self->{nickflood}->{$account}->{changes}--;
-          return;
-        }
 
         $self->{nickflood}->{$account}->{offenses}++;
         $self->{nickflood}->{$account}->{changes} = $max_messages - 2; # allow 1 more change (to go back to original nick)
