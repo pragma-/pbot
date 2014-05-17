@@ -13,9 +13,6 @@ use strict;
 
 use base 'PBot::Registerable';
 
-use vars qw($VERSION);
-$VERSION = '1.0.0';
-
 use Carp ();
 
 sub new {

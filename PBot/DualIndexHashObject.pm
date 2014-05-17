@@ -9,9 +9,6 @@ package PBot::DualIndexHashObject;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = "1.0";
-
 use Text::Levenshtein qw(fastdistance);
 use Carp ();
 
@@ -30,18 +27,9 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $name = delete $conf{name};
-  if(not defined $name) {
-    $name = "dual index hash object";
-  }
-
-  my $filename = delete $conf{filename};
-  if(not defined $filename) {
-    Carp::carp("Missing filename to DualIndexHashObject, will not be able to save to or load from file.");
-  }
-
-  $self->{name} = $name;
-  $self->{filename} = $filename;
+  $self->{name}     = delete $conf{name} // 'Dual Index hash object';
+  $self->{filename} = delete $conf{filename} // Carp::carp("Missing filename to DualIndexHashObject, will not be able to save to or load from file.");
+  $self->{ignore_duplicates} = delete $conf{ignore_duplicates} // 0;
   $self->{hash} = {};
 }
 
@@ -50,7 +38,7 @@ sub load_hash_add {
   my ($self, $primary_index_key, $secondary_index_key, $hash, $i, $filename) = @_;
 
   if(defined $hash) {
-    if(exists $self->hash->{$primary_index_key}->{$secondary_index_key}) {
+    if(not $self->{ignore_duplicates} and exists $self->hash->{$primary_index_key}->{$secondary_index_key}) {
       if($i) {
         Carp::croak "Duplicate secondary_index_key '$secondary_index_key' found in $filename around line $i\n";
       } else {
@@ -67,10 +55,9 @@ sub load_hash_add {
 }
 
 sub load {
-  my $self = shift;
-  my $filename;
+  my ($self, $filename) = @_;
 
-  if(@_) { $filename = shift; } else { $filename = $self->filename; }
+  $filename = $self->filename if not defined $filename;
 
   if(not defined $filename) {
     Carp::carp "No $self->{name} filename specified -- skipping loading from file";
@@ -93,19 +80,13 @@ sub load {
 
     if($line =~ /^\[(.*)\]$/) {
       $primary_index_key = $1;
-
-      if(exists $self->hash->{$primary_index_key} and $primary_index_key ne '.*') {
-        Carp::croak "Duplicate primary_index_key '$primary_index_key' at line $i of $filename\n";
-      }
-
-      $self->hash->{$primary_index_key} = {};
       next;
     }
 
     if($line =~ /^<(.*)>$/) {
       $secondary_index_key = $1;
 
-      if(exists $self->hash->{$primary_index_key}->{$secondary_index_key}) {
+      if(not $self->{ignore_duplicates} and exists $self->hash->{$primary_index_key}->{$secondary_index_key}) {
         Carp::croak "Duplicate secondary_index_key '$secondary_index_key' at line $i of $filename\n";
       }
 
@@ -237,12 +218,12 @@ sub levenshtein_matches {
 }
 
 sub set {
-  my ($self, $primary_index_key, $secondary_index_key, $key, $value) = @_;
+  my ($self, $primary_index_key, $secondary_index_key, $key, $value, $dont_save) = @_;
 
   my $primary = $self->find_index($primary_index_key);
 
   if(not $primary) {
-    my $result = "No such $self->{name} object group '$primary_index_key'; similiar matches: ";
+    my $result = "No such $self->{name} object [$primary_index_key]; similiar matches: ";
     $result .= $self->levenshtein_matches($primary_index_key);
     return $result;
   }
@@ -250,13 +231,13 @@ sub set {
   my $secondary = $self->find_index($primary, $secondary_index_key);
 
   if(not $secondary) {
-    my $result = "No such $self->{name} object '$secondary_index_key'; similiar matches: ";
+    my $result = "No such $self->{name} object [$primary_index_key] $secondary_index_key; similiar matches: ";
     $result .= $self->levenshtein_matches($primary, $secondary_index_key);
     return $result;
   }
 
   if(not defined $key) {
-    my $result = "[$self->{name}] (" . ($primary eq '.*' ? 'global' : $primary) . ") $secondary keys: ";
+    my $result = "[" . ($primary eq '.*' ? 'global' : $primary) . "] $secondary keys: ";
     my $comma = '';
     foreach my $key (sort keys %{ $self->hash->{$primary}->{$secondary} }) {
       $result .= $comma . "$key => " . $self->hash->{$primary}->{$secondary}->{$key};
@@ -270,11 +251,11 @@ sub set {
     $value = $self->hash->{$primary}->{$secondary}->{$key};
   } else {
     $self->hash->{$primary}->{$secondary}->{$key} = $value;
-    $self->save();
+    $self->save unless $dont_save;
   }
 
   $primary = 'global' if $primary eq '.*';
-  return "[$self->{name}] ($primary) $secondary: '$key' " . (defined $value ? "set to '$value'" : "is not set.");
+  return "[$primary] $secondary: '$key' " . (defined $value ? "set to '$value'" : "is not set.");
 }
 
 sub unset {

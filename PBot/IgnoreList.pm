@@ -8,9 +8,6 @@ package PBot::IgnoreList;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use Time::HiRes qw(gettimeofday);
 
 sub new {
@@ -28,20 +25,16 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
-    Carp::croak("Missing pbot reference to Channels");
-  }
+  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to Channels");
+  $self->{filename} = delete $conf{filename};
 
-  my $filename = delete $conf{filename};
-
-  $self->{pbot} = $pbot;
   $self->{ignore_list} = {};
   $self->{ignore_flood_counter} = {};
   $self->{last_timestamp} = {};
-  $self->{filename} = $filename;
 
-  $pbot->timer->register(sub { $self->check_ignore_timeouts }, 10);
+  $self->load_ignores;
+
+  $self->{pbot}->timer->register(sub { $self->check_ignore_timeouts }, 10);
 }
 
 sub add {

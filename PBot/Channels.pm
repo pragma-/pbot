@@ -8,9 +8,6 @@ package PBot::Channels;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use Carp ();
 use PBot::HashObject;
 
@@ -29,17 +26,16 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to Channels");
-  my $filename = delete $conf{filename};
+  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to Channels");
 
-  $self->{pbot} = $pbot;
-  $self->{channels} = PBot::HashObject->new(pbot => $pbot, name => 'Channels', filename => $filename);
+  $self->{channels} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => delete $conf{filename});
+  $self->load_channels;
 
-  $pbot->commands->register(sub { $self->set(@_)       },  "chanset",   40);
-  $pbot->commands->register(sub { $self->unset(@_)     },  "chanunset", 40);
-  $pbot->commands->register(sub { $self->add(@_)       },  "chanadd",   40);
-  $pbot->commands->register(sub { $self->remove(@_)    },  "chanrem",   40);
-  $pbot->commands->register(sub { $self->list(@_)      },  "chanlist",  10);
+  $self->{pbot}->commands->register(sub { $self->set(@_)       },  "chanset",   40);
+  $self->{pbot}->commands->register(sub { $self->unset(@_)     },  "chanunset", 40);
+  $self->{pbot}->commands->register(sub { $self->add(@_)       },  "chanadd",   40);
+  $self->{pbot}->commands->register(sub { $self->remove(@_)    },  "chanrem",   40);
+  $self->{pbot}->commands->register(sub { $self->list(@_)      },  "chanlist",  10);
 }
 
 sub set {

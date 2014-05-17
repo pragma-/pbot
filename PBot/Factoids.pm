@@ -8,14 +8,12 @@ package PBot::Factoids;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use HTML::Entities;
 use Time::HiRes qw(gettimeofday);
 use Carp ();
 use POSIX qw(strftime);
 
+use PBot::PBot qw($VERSION);
 use PBot::FactoidModuleLauncher;
 use PBot::DualIndexHashObject;
 
@@ -48,6 +46,9 @@ sub initialize {
   $self->{factoidmodulelauncher} = PBot::FactoidModuleLauncher->new(pbot => $pbot);
 
   $self->{pbot}->{atexit}->register(sub { $self->save_factoids; return; });
+
+  $self->load_factoids;
+  $self->add_factoid('text', '.*', $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'version', "/say $VERSION", 1);
 }
 
 sub load_factoids {
@@ -80,7 +81,7 @@ sub save_factoids {
 
 sub add_factoid {
   my $self = shift;
-  my ($type, $channel, $owner, $trigger, $action) = @_;
+  my ($type, $channel, $owner, $trigger, $action, $dont_save) = @_;
 
   $type = lc $type;
   $channel = lc $channel;
@@ -94,7 +95,7 @@ sub add_factoid {
   $self->factoids->hash->{$channel}->{$trigger}->{ref_user}   = "nobody";
   $self->factoids->hash->{$channel}->{$trigger}->{rate_limit} = 15;
 
-  $self->save_factoids;
+  $self->save_factoids unless $dont_save;
 }
 
 sub remove_factoid {
@@ -104,6 +105,11 @@ sub remove_factoid {
   $channel = lc $channel;
 
   delete $self->factoids->hash->{$channel}->{$trigger};
+
+  if(not scalar keys $self->factoids->hash->{$channel}) {
+    delete $self->factoids->hash->{$channel};
+  }
+
   $self->save_factoids;
 }
 
@@ -449,7 +455,7 @@ sub interpreter {
 
     if(defined $tonick) { # !tell foo about bar
       $self->{pbot}->logger->log("($from): $nick!$user\@$host) sent to $tonick\n");
-      my $botnick = $self->{pbot}->botnick;
+      my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
       # get rid of original caller's nick
       $result =~ s/^\/([^ ]+) \Q$nick\E:\s+/\/$1 /;

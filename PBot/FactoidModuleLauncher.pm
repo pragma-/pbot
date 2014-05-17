@@ -8,9 +8,6 @@ package PBot::FactoidModuleLauncher;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use POSIX qw(WNOHANG); # for children process reaping
 use Carp ();
 use Text::Balanced qw(extract_delimited);
@@ -55,7 +52,7 @@ sub execute_module {
   }
 
   my $module = $self->{pbot}->factoids->factoids->hash->{$channel}->{$trigger}->{action};
-  my $module_dir = $self->{pbot}->module_dir;
+  my $module_dir = $self->{pbot}->{registry}->get_value('general', 'module_dir');
 
   $self->{pbot}->logger->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: Executing module $module $arguments\n");
 
@@ -187,8 +184,8 @@ sub module_pipe_reader {
   my ($self, $buf) = @_;
   my ($channel, $text) = split / /, $buf, 2;
   return if not defined $text or not length $text;
-  $text = $self->{pbot}->interpreter->truncate_result($channel, $self->{pbot}->{botnick}, 'undef', $text, $text, 0);
-  $self->{pbot}->antiflood->check_flood($channel, $self->{pbot}->{botnick}, $self->{pbot}->{username}, 'localhost', $text, 0, 0, 0);
+  $text = $self->{pbot}->interpreter->truncate_result($channel, $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'undef', $text, $text, 0);
+  $self->{pbot}->antiflood->check_flood($channel, $self->{pbot}->{registry}->get_value('irc', 'botnick'), $self->{pbot}->{registry}->get_value('irc', 'username'), 'localhost', $text, 0, 0, 0);
 }
 
 1;

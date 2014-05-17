@@ -11,9 +11,6 @@ use strict;
 
 use feature 'switch';
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
 use Carp ();

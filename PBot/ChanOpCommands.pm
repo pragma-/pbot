@@ -8,9 +8,6 @@ package PBot::ChanOpCommands;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use Carp ();
 
 sub new {
@@ -62,7 +59,8 @@ sub ban_user {
     $length = 60 * 60; # one hour
   }
 
-  return "" if $target =~ /\Q$self->{pbot}->botnick\E/i;
+  my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+  return "" if $target =~ /\Q$botnick\E/i;
 
   $self->{pbot}->chanops->ban_user_timed($target, $from, $length);    
   return "/msg $nick $target banned in $from for $length seconds";

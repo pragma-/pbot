@@ -3,9 +3,6 @@ package PBot::StdinReader;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = '1.0.0';
-
 use POSIX qw(tcgetpgrp getpgrp);  # to check whether process is in background or foreground
 use Carp ();
 
@@ -46,13 +43,13 @@ sub stdin_reader {
 
   if($input =~ m/^~([^ ]+)\s+(.*)/) {
     $from = $1;
-    $text = "$self->{pbot}->{trigger}$2";
+    $text = $self->{pbot}->{registry}->get_value('general', 'trigger') . $2;
   } else {
-    $from = "$self->{pbot}->{botnick}!stdin\@localhost";
-    $text = "$self->{pbot}->{trigger}$input";
+    $from = $self->{pbot}->{registry}->get_value('irc', 'botnick') . "!stdin\@localhost";
+    $text = $self->{pbot}->{registry}->get_value('general', 'trigger') . $input;
   }
 
-  return $self->{pbot}->interpreter->process_line($from, $self->{pbot}->{botnick}, "stdin", "localhost", $text);
+  return $self->{pbot}->interpreter->process_line($from, $self->{pbot}->{registry}->get_value('irc', 'botnick'), "stdin", "localhost", $text);
 }
 
 1;

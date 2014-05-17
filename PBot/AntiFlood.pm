@@ -14,9 +14,6 @@ use strict;
 
 use feature 'switch';
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use PBot::DualIndexHashObject;
 use PBot::LagChecker;
 
@@ -45,14 +42,10 @@ sub initialize {
   $self->{NICKSERV_VALIDATED}       = (1<<0); 
   $self->{NEEDS_CHECKBAN}           = (1<<1); 
 
-  $self->{ENTER_ABUSE_MAX_LINES}    = 4;
-  $self->{ENTER_ABUSE_MAX_OFFENSES} = 3;
-  $self->{ENTER_ABUSE_MAX_SECONDS}  = 20;
-
-  $self->{channels} = {};  # per-channel statistics, e.g. for optimized tracking of last spoken nick for enter-abuse detection, etc
+  $self->{channels}  = {}; # per-channel statistics, e.g. for optimized tracking of last spoken nick for enter-abuse detection, etc
   $self->{nickflood} = {}; # statistics to track nickchange flooding
 
-  my $filename = delete $conf{banwhitelist_file} // $self->{pbot}->{data_dir} . '/ban_whitelist';
+  my $filename = delete $conf{banwhitelist_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/ban_whitelist';
   $self->{ban_whitelist} = PBot::DualIndexHashObject->new(name => 'BanWhitelist', filename => $filename);
   $self->{ban_whitelist}->load;
 
@@ -212,7 +205,7 @@ sub check_flood {
   }
   
   # do not do flood processing for bot messages
-  if($nick eq $self->{pbot}->botnick) {
+  if($nick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
     $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
     return;
   }
@@ -229,9 +222,9 @@ sub check_flood {
     }
   }
 
-  if($max_messages > $self->{pbot}->{MAX_NICK_MESSAGES}) {
-    $self->{pbot}->logger->log("Warning: max_messages greater than MAX_NICK_MESSAGES; truncating.\n");
-    $max_messages = $self->{pbot}->{MAX_NICK_MESSAGES};
+  if($max_messages > $self->{pbot}->{registry}->get_value('messagehistory', 'max_messages')) {
+    $self->{pbot}->logger->log("Warning: max_messages greater than max_messages limit; truncating.\n");
+    $max_messages = $self->{pbot}->{registry}->get_value('messagehistory', 'max_messages');
   }
 
   # check for ban evasion if channel begins with # (not private message) and hasn't yet been validated against ban evasion
@@ -257,11 +250,15 @@ sub check_flood {
     if(defined $self->{channels}->{$channel}->{last_spoken_nick} and $nick eq $self->{channels}->{$channel}->{last_spoken_nick}) {
       my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, 2, $self->{pbot}->{messagehistory}->{MSG_CHAT});
 
-      if($messages->[1]->{timestamp} - $messages->[0]->{timestamp} <= $self->{ENTER_ABUSE_MAX_SECONDS}) {
-        if(++$channel_data->{enter_abuse} >= $self->{ENTER_ABUSE_MAX_LINES} - 1) {
-          $channel_data->{enter_abuse} = $self->{ENTER_ABUSE_MAX_LINES} / 2 - 1;
-          if(++$channel_data->{enter_abuses} >= $self->{ENTER_ABUSE_MAX_OFFENSES}) {
-            my $offenses = $channel_data->{enter_abuses} - $self->{ENTER_ABUSE_MAX_OFFENSES} + 1;
+      my $enter_abuse_max_lines    = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_lines');
+      my $enter_abuse_max_seconds  = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_seconds');
+      my $enter_abuse_max_offenses = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_offenses');
+
+      if($messages->[1]->{timestamp} - $messages->[0]->{timestamp} <= $enter_abuse_max_seconds) {
+        if(++$channel_data->{enter_abuse} >= $enter_abuse_max_lines - 1) {
+          $channel_data->{enter_abuse} = $enter_abuse_max_lines / 2 - 1;
+          if(++$channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
+            my $offenses = $channel_data->{enter_abuses} - $enter_abuse_max_offenses + 1;
             my $ban_length = $offenses ** $offenses * $offenses * 30;
             $self->{pbot}->chanops->ban_user_timed("*!$user\@$host", $channel, $ban_length);
             $ban_length = duration($ban_length);
@@ -276,7 +273,7 @@ sub check_flood {
         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
       } else {
         if($channel_data->{enter_abuse} > 0) {
-          #$self->{pbot}->logger->log("$nick $channel more than $self->{ENTER_ABUSE_MAX_SECONDS} seconds since last message, enter abuse counter reset\n");
+          #$self->{pbot}->logger->log("$nick $channel more than $enter_abuse_max_seconds seconds since last message, enter abuse counter reset\n");
           $channel_data->{enter_abuse} = 0;
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
         }
@@ -396,7 +393,7 @@ sub unbanme {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   my $channel = lc $arguments;
 
-  if(not defined $arguments or not defined $channel) {
+  if(not $arguments or not $channel) {
     return "/msg $nick Usage: unbanme <channel>";
   }
 

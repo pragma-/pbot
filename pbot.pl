@@ -77,8 +77,8 @@ my %config = (
   # You shouldn't need to change anything below this line.
   # -----------------------------------------------------
 
-  # Maximum messages to remember per nick/hostmask
-  MAX_NICK_MESSAGES => 256,
+  # Maximum messages to remember per nick/hostmask in message history
+  MAX_MESSAGES => 256,
 
   # Path to data directory
   data_dir        => "$bothome/data",
@@ -93,6 +93,9 @@ my %config = (
   # (if you use pbot.sh and you change log_file, be sure to also change the log path in pbot.sh)
   log_file        => "$bothome/log/log",
 );
+
+# Location of file containing configuration registry
+$config{registry_file}   = "$config{config_dir}/registry";
 
 # Location of file containing bot admin information
 $config{admins_file}     = "$config{config_dir}/admins";

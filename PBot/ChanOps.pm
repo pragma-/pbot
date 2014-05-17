@@ -8,9 +8,6 @@ package PBot::ChanOps;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use Time::HiRes qw(gettimeofday);
 
 sub new {
@@ -34,7 +31,10 @@ sub initialize {
   }
 
   $self->{pbot} = $pbot;
-  $self->{unban_timeout} = PBot::DualIndexHashObject->new(pbot => $pbot, name => 'Unban Timeouts', filename => "$pbot->{data_dir}/unban_timeouts");
+
+  $self->{unban_timeout} = PBot::DualIndexHashObject->new(pbot => $pbot, name => 'Unban Timeouts', filename => $pbot->{registry}->get_value('general', 'data_dir') . '/unban_timeouts');
+  $self->{unban_timeout}->load;
+
   $self->{op_commands} = {};
   $self->{is_opped} = {};
 
@@ -57,7 +57,7 @@ sub gain_ops {
 sub lose_ops {
   my $self = shift;
   my $channel = shift;
-  $self->{pbot}->conn->privmsg("chanserv", "op $channel -" . $self->{pbot}->botnick);
+  $self->{pbot}->conn->privmsg("chanserv", "op $channel -" . $self->{pbot}->{registry}->get_value('irc', 'botnick'));
 }
 
 sub add_op_command {
@@ -68,6 +68,7 @@ sub add_op_command {
 sub perform_op_commands {
   my $self = shift;
   my $channel = shift;
+  my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
   $self->{pbot}->logger->log("Performing op commands...\n");
   while(my $command = shift @{ $self->{op_commands}->{$channel} }) {
@@ -75,7 +76,7 @@ sub perform_op_commands {
       $self->{pbot}->conn->mode($1, $2);
       $self->{pbot}->logger->log("  executing mode $1 $2\n");
     } elsif($command =~ /^kick (.*?) (.*?) (.*)/i) {
-      $self->{pbot}->conn->kick($1, $2, $3) unless $1 =~ /\Q$self->{pbot}->botnick\E/i;
+      $self->{pbot}->conn->kick($1, $2, $3) unless $1 =~ /\Q$botnick\E/i;
       $self->{pbot}->logger->log("  executing kick on $1 $2 $3\n");
     }
   }

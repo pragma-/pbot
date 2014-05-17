@@ -11,9 +11,6 @@ package PBot::BanTracker;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use Data::Dumper;

@@ -9,9 +9,6 @@ package PBot::HashObject;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use Text::Levenshtein qw(fastdistance);
 use Carp ();
 

@@ -13,9 +13,6 @@ use base 'PBot::Registerable';
 use LWP::UserAgent;
 use Carp ();
 
-use vars qw($VERSION);
-$VERSION = '1.0.0';
-
 sub new {
   if(ref($_[1]) eq 'HASH') {
     Carp::croak("Options to Interpreter should be key/value pairs, not hash reference");
@@ -91,7 +88,7 @@ sub process_line {
   my $has_url;
   my $has_code;
   my $nick_override;
-  my $mynick = $self->pbot->botnick;
+  my $mynick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
   $from = lc $from if defined $from;
 
@@ -100,7 +97,7 @@ sub process_line {
   my $message_account = $pbot->{messagehistory}->get_message_account($nick, $user, $host);
   $pbot->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $from, $text, $pbot->{messagehistory}->{MSG_CHAT});
 
-  $pbot->antiflood->check_flood($from, $nick, $user, $host, $text, $pbot->{MAX_FLOOD_MESSAGES}, 10, $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
+  $pbot->antiflood->check_flood($from, $nick, $user, $host, $text, $pbot->{registry}->get_value('antiflood', 'max_chat_flood'), 10, $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
 
   $text =~ s/^\s+//;
   $text =~ s/\s+$//;
@@ -109,10 +106,12 @@ sub process_line {
   my $cmd_text = $text;
   $cmd_text =~ s/^\/me\s+//;
 
-  if($cmd_text =~ /^$pbot->{trigger}?\s*{\s*(.*)\s*}\s*$/) {
+  my $bot_trigger = $pbot->{registry}->get_value('general', 'trigger');
+
+  if($cmd_text =~ /^$bot_trigger?\s*{\s*(.*)\s*}\s*$/) {
     $has_code = $1 if length $1;
     $preserve_whitespace = 1;
-  } elsif($cmd_text =~ /^\Q$pbot->{trigger}\E(.*)$/) {
+  } elsif($cmd_text =~ /^\Q$bot_trigger\E(.*)$/) {
     $command = $1;
   } elsif($cmd_text =~ /^.?$mynick.?\s+(.*?)$/i) {
     $command = $1;
@@ -147,8 +146,9 @@ sub process_line {
 
 sub truncate_result {
   my ($self, $from, $nick, $text, $original_result, $result, $paste) = @_;
+  my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
 
-  if(length $result > $self->{pbot}->max_msg_len) {
+  if(length $result > $max_msg_len) {
     my $link;
     if($paste) {
       $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
@@ -159,7 +159,7 @@ sub truncate_result {
     my $trunc = "... [truncated; see $link for full text.]";
     $self->{pbot}->logger->log("Message truncated -- pasted to $link\n") if $paste;
 
-    my $trunc_len = length $result < $self->{pbot}->max_msg_len ? length $result : $self->{pbot}->max_msg_len;
+    my $trunc_len = length $result < $max_msg_len ? length $result : $max_msg_len;
     $result = substr($result, 0, $trunc_len);
     substr($result, $trunc_len - length $trunc) = $trunc;
   }
@@ -169,7 +169,7 @@ sub truncate_result {
 
 sub handle_result {
   my ($self, $from, $nick, $user, $host, $text, $command, $result, $checkflood, $preserve_whitespace) = @_;
-  my ($pbot, $mynick) = ($self->{pbot}, $self->{pbot}->{botnick});
+  my ($pbot, $mynick) = ($self->{pbot}, $self->{pbot}->{registry}->get_value('irc', 'botnick'));
 
   if(not defined $result or length $result == 0) {
     return;
@@ -194,10 +194,10 @@ sub handle_result {
 
   if($result =~ s/^\/say\s+//i) {
     $pbot->conn->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0) if $checkflood;
+    $pbot->antiflood->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
   } elsif($result =~ s/^\/me\s+//i) {
     $pbot->conn->me($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
+    $pbot->antiflood->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
   } elsif($result =~ s/^\/msg\s+([^\s]+)\s+//i) {
     my $to = $1;
     if($to =~ /,/) {
@@ -208,15 +208,15 @@ sub handle_result {
     }
     elsif($result =~ s/^\/me\s+//i) {
       $pbot->conn->me($to, $result) if $to !~ /\Q$mynick\E/i;
-      $pbot->antiflood->check_flood($to, $pbot->{botnick}, $pbot->{username}, 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
+      $pbot->antiflood->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
     } else {
       $result =~ s/^\/say\s+//i;
       $pbot->conn->privmsg($to, $result) if $to !~ /\Q$mynick\E/i;
-      $pbot->antiflood->check_flood($to, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0) if $checkflood;
+      $pbot->antiflood->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
     }
   } else {
     $pbot->conn->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->antiflood->check_flood($from, $pbot->{botnick}, $pbot->{username}, 'localhost', $result, 0, 0, 0) if $checkflood;
+    $pbot->antiflood->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
   }
   $pbot->logger->log("---------------------------------------------\n");
 }

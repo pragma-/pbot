@@ -8,9 +8,6 @@ package PBot::IRCHandlers;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use Carp();
 use Time::HiRes qw(gettimeofday);
 
@@ -70,15 +67,16 @@ sub on_public {
   my $host = $event->host;
   my $text = $event->{args}[0];
 
-  $self->pbot->interpreter->process_line($from, $nick, $user, $host, $text);
+  $self->{pbot}->interpreter->process_line($from, $nick, $user, $host, $text);
 }
 
 sub on_msg {
   my ($self, $conn, $event) = @_;
   my ($nick, $host) = ($event->nick, $event->host);
   my $text = $event->{args}[0];
+  my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
 
-  $text =~ s/^\Q$self->{pbot}->{trigger}\E?(.*)/$self->{pbot}->{trigger}$1/;
+  $text =~ s/^\Q$bot_trigger\E?(.*)/$bot_trigger$1/;
   $event->{to}[0]   = $nick;
   $event->{args}[0] = $text;
   $self->on_public($conn, $event);
@@ -93,7 +91,7 @@ sub on_notice {
 
   if($nick eq "NickServ" && $text =~ m/This nickname is registered/) {
     $self->{pbot}->logger->log("Identifying with NickServ . . .\n");
-    $conn->privmsg("nickserv", "identify " . $self->pbot->identify_password);
+    $conn->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
   }
   
   if($nick eq "NickServ" && $text =~ m/You are now identified/) {
@@ -143,7 +141,7 @@ sub on_mode {
       $self->{pbot}->bantracker->track_mode("$nick!$user\@$host", $mode, $target, $channel);
     }
 
-    if(defined $target && $target eq $self->{pbot}->botnick) { # bot targeted
+    if(defined $target && $target eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) { # bot targeted
       if($mode eq "+o") {
         $self->{pbot}->logger->log("$nick opped me in $channel\n");
         $self->{pbot}->chanops->{is_opped}->{$channel}{timeout} = gettimeofday + 300; # 5 minutes
@@ -165,7 +163,7 @@ sub on_mode {
           $self->{pbot}->chanops->{unban_timeout}->save;
         }
       } 
-      elsif($mode eq "+e" && $channel eq $self->{pbot}->botnick) {
+      elsif($mode eq "+e" && $channel eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
         foreach my $chan (keys %{ $self->{pbot}->channels->channels->hash }) {
           if($self->channels->channels->hash->{$chan}{enabled}) {
             $self->{pbot}->logger->log("Joining channel: $chan\n");
@@ -185,7 +183,7 @@ sub on_join {
 
   my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
   $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "JOIN", $self->{pbot}->{messagehistory}->{MSG_JOIN});
-  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, "JOIN", 4, 60 * 30, $self->{pbot}->{messagehistory}->{MSG_JOIN});
+  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, "JOIN", $self->{pbot}->{registry}->get_value('antiflood', 'max_join_flood'), 60 * 30, $self->{pbot}->{messagehistory}->{MSG_JOIN});
 }
 
 sub on_kick {
@@ -203,7 +201,7 @@ sub on_kick {
     my $text = "KICKED by $nick!$user\@$host ($reason)";
 
     $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
-    $self->{pbot}->antiflood->check_flood($channel, $target_nick, $target_user, $target_host, $text, 4, 60 * 30, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
+    $self->{pbot}->antiflood->check_flood($channel, $target_nick, $target_user, $target_host, $text, $self->{pbot}->{registry}->get_value('antiflood', 'max_join_flood'), 60 * 30, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
   }
 }
 
@@ -227,7 +225,7 @@ sub on_departure {
     $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
   }
 
-  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, $text, 4, 60 * 30, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
+  $self->{pbot}->antiflood->check_flood($channel, $nick, $user, $host, $text, $self->{pbot}->{registry}->get_value('antiflood', 'max_join_flood'), 60 * 30, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
 
   my $admin = $self->{pbot}->admins->find_admin($channel, "$nick!$user\@$host");
   if(defined $admin and $admin->{loggedin}) {
@@ -255,12 +253,7 @@ sub on_nickchange {
   $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($newnick_account);
   $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($newnick_account, { last_seen => scalar gettimeofday });
 
-  $self->{pbot}->antiflood->check_flood("$nick!$user\@$host", $nick, $user, $host, "NICKCHANGE $newnick", 3, 60 * 30, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
-}
-
-sub pbot {
-  my $self = shift;
-  return $self->{pbot};
+  $self->{pbot}->antiflood->check_flood("$nick!$user\@$host", $nick, $user, $host, "NICKCHANGE $newnick", $self->{pbot}->{registry}->get_value('antiflood', 'max_nick_flood'), 60 * 30, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
 }
 
 1;

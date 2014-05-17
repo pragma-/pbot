@@ -3,9 +3,6 @@ package PBot::Logger;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = '1.0.0';
-
 use Carp ();
 
 sub new {

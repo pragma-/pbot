@@ -8,9 +8,6 @@ package PBot::BotAdminCommands;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use Carp ();
 
 sub new {

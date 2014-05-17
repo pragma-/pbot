@@ -8,9 +8,6 @@ package PBot::BotAdmins;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use PBot::DualIndexHashObject;
 
 use Carp ();
@@ -58,7 +55,7 @@ sub initialize {
 
 sub add_admin {
   my $self = shift;
-  my ($name, $channel, $hostmask, $level, $password) = @_;
+  my ($name, $channel, $hostmask, $level, $password, $dont_save) = @_;
 
   $channel = lc $channel;
   $hostmask = lc $hostmask;
@@ -69,7 +66,7 @@ sub add_admin {
 
   $self->{pbot}->logger->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");
 
-  $self->save_admins;
+  $self->save_admins unless $dont_save;
 }
 
 sub remove_admin {
@@ -144,7 +141,7 @@ sub export_admins {
 sub find_admin {
   my ($self, $from, $hostmask) = @_;
 
-  $from = $self->{pbot}->botnick if not defined $from;
+  $from = $self->{pbot}->{registry}->get_value('irc', 'botnick') if not defined $from;
   $hostmask = '.*' if not defined $hostmask;
 
   my $result = eval {

@@ -33,7 +33,7 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  $self->{filename} = delete $conf{filename} // $self->{pbot}->{data_dir} . '/message_history.sqlite3';
+  $self->{filename} = delete $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/message_history.sqlite3';
 
   $self->{database} = PBot::MessageHistory_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
   $self->{database}->begin();

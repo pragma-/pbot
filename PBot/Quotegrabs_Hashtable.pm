@@ -8,9 +8,6 @@ package PBot::Quotegrabs_Hashtable;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use HTML::Entities;
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);

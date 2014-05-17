@@ -8,9 +8,6 @@ package PBot::Quotegrabs_SQLite;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use DBI;
 use Carp qw(shortmess);
 

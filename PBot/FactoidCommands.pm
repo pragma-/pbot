@@ -8,9 +8,6 @@ package PBot::FactoidCommands;
 use warnings;
 use strict;
 
-use vars qw($VERSION);
-$VERSION = $PBot::PBot::VERSION;
-
 use Carp ();
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
@@ -87,7 +84,7 @@ sub call_factoid {
   my ($chan, $keyword, $args) = split / /, $arguments, 3;
 
   if(not defined $chan or not defined $keyword) {
-    return "Usage: !fact <channel> <keyword> [arguments]";
+    return "Usage: fact <channel> <keyword> [arguments]";
   }
 
   my ($channel, $trigger) = $self->{pbot}->factoids->find_factoid($chan, $keyword, $args, 1);
@@ -105,7 +102,7 @@ sub factset {
   my ($channel, $trigger, $key, $value) = split / /, $arguments, 4 if defined $arguments;
 
   if(not defined $channel or not defined $trigger) {
-    return "Usage: factset <channel> <factoid> [key <value>]"
+    return "Usage: factset <channel> <factoid> [key [value]]";
   }
 
   my $admininfo = $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host");
@@ -194,13 +191,14 @@ sub factunset {
 sub list {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $botnick = $self->{pbot}->botnick;
   my $text;
   
   if(not defined $arguments) {
     return "/msg $nick Usage: list <modules|factoids|commands|admins>";
   }
 
+  # TODO - update this to use new MessageHistory API
+=cut
   if($arguments =~/^messages\s+(.*)$/) {
     my ($mask_search, $channel_search, $text_search) = split / /, $1;
 
@@ -215,12 +213,12 @@ sub list {
         $nickserv = $self->{pbot}->antiflood->message_history->{$history_mask}->{nickserv_account} if exists $self->{pbot}->antiflood->message_history->{$history_mask}->{nickserv_account};
         
         if($history_mask =~ m/$mask_search/i) {
+          my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
           foreach my $history_channel (keys %{ $self->{pbot}->antiflood->message_history->{$history_mask}->{channels} }) {
             if($history_channel =~ m/$channel_search/i) {
               my @messages = @{ $self->{pbot}->antiflood->message_history->{$history_mask}->{channels}->{$history_channel}{messages} };
-
               for(my $i = 0; $i <= $#messages; $i++) {
-                next if $messages[$i]->{msg} =~ /^\Q$self->{pbot}->{trigger}\E?login/; # don't reveal login passwords
+                next if $messages[$i]->{msg} =~ /^\Q$bot_trigger\E?login/; # don't reveal login passwords
 
                 print "$history_mask, $history_channel\n";
                 print "joinwatch: ", $self->{pbot}->antiflood->message_history->{$history_mask}->{channels}->{$history_channel}{join_watch}, "\n";
@@ -264,6 +262,7 @@ sub list {
     $self->{pbot}->logger->log($text);
     return "Messages:\n\n$text";
   }
+=cut
 
   if($arguments =~ /^modules$/i) {
     $from = '.*' if not defined $from or $from !~ /^#/;

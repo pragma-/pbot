@@ -27,7 +27,7 @@ sub initialize {
   my ($self, %conf) = @_;
 
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference in " . __FILE__);
-  $self->{filename}  = delete $conf{filename} // $self->{pbot}->{data_dir} . '/message_history.sqlite3';
+  $self->{filename}  = delete $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/message_history.sqlite3';
 
   $self->{pbot}->timer->register(sub { $self->commit_message_history }, 5);
   $self->{new_entries} = 0;
@@ -433,8 +433,10 @@ sub recall_message_by_count {
   $self->{pbot}->logger->log($@) if $@;
 
   if(defined $ignore_command) {
+    my $botnick     = $self->{pbot}->{registry}->get_value('irc',     'botnick');
+    my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
     foreach my $message (@$messages) {
-      next if $message->{msg} =~ m/^$self->{pbot}->{botnick}. $ignore_command/ or $message->{msg} =~ m/^$self->{pbot}->{trigger}$ignore_command/;
+      next if $message->{msg} =~ m/^$botnick. $ignore_command/ or $message->{msg} =~ m/^$bot_trigger$ignore_command/;
       return $message;
     }
     return undef;
@@ -474,8 +476,10 @@ sub recall_message_by_text {
   $self->{pbot}->logger->log($@) if $@;
 
   if(defined $ignore_command) {
+    my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
+    my $botnick     = $self->{pbot}->{registry}->get_value('irc',     'botnick');
     foreach my $message (@$messages) {
-      next if $message->{msg} =~ m/^$self->{pbot}->{botnick}. $ignore_command/ or $message->{msg} =~ m/^$self->{pbot}->{trigger}$ignore_command/;
+      next if $message->{msg} =~ m/^$botnick. $ignore_command/ or $message->{msg} =~ m/^$bot_trigger$ignore_command/;
       return $message;
     }
     return undef;
