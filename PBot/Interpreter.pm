@@ -97,7 +97,7 @@ sub process_line {
   my $message_account = $pbot->{messagehistory}->get_message_account($nick, $user, $host);
   $pbot->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $from, $text, $pbot->{messagehistory}->{MSG_CHAT});
 
-  $pbot->antiflood->check_flood($from, $nick, $user, $host, $text, $pbot->{registry}->get_value('antiflood', 'max_chat_flood'), 10, $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
+  $pbot->{antiflood}->check_flood($from, $nick, $user, $host, $text, $pbot->{registry}->get_value('antiflood', 'max_chat_flood'), 10, $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
 
   $text =~ s/^\s+//;
   $text =~ s/\s+$//;
@@ -127,17 +127,17 @@ sub process_line {
 
   if(defined $command || defined $has_url || defined $has_code) {
     if((defined $command && $command !~ /^login/i) || defined $has_url || defined $has_code) {
-      if(defined $from && $pbot->ignorelist->check_ignore($nick, $user, $host, $from) && not $pbot->admins->loggedin($from, "$nick!$user\@$host")) {
+      if(defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from) && not $pbot->{admins}->loggedin($from, "$nick!$user\@$host")) {
         # ignored hostmask
-        $pbot->logger->log("ignored text: [$from][$nick!$user\@$host\[$text\]\n");
+        $pbot->{logger}->log("ignored text: [$from][$nick!$user\@$host\[$text\]\n");
         return;
       }
     }
 
     if(defined $has_url) {
-      $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
+      $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
     } elsif(defined $has_code) {
-      $self->{pbot}->factoids->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
+      $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
     } else {
       $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command), 1, $preserve_whitespace); 
     }
@@ -157,7 +157,7 @@ sub truncate_result {
     }
 
     my $trunc = "... [truncated; see $link for full text.]";
-    $self->{pbot}->logger->log("Message truncated -- pasted to $link\n") if $paste;
+    $self->{pbot}->{logger}->log("Message truncated -- pasted to $link\n") if $paste;
 
     my $trunc_len = length $result < $max_msg_len ? length $result : $max_msg_len;
     $result = substr($result, 0, $trunc_len);
@@ -180,45 +180,45 @@ sub handle_result {
 
   if($preserve_whitespace == 0 && defined $command) {
     my ($cmd, $args) = split / /, $command, 2;
-    #$self->{pbot}->logger->log("calling find_factoid in Interpreter.pm, process_line() for preserve_whitespace\n");
-    my ($chan, $trigger) = $self->{pbot}->factoids->find_factoid($from, $cmd, $args, 0, 1);
+    #$self->{pbot}->{logger}->log("calling find_factoid in Interpreter.pm, process_line() for preserve_whitespace\n");
+    my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $cmd, $args, 0, 1);
     if(defined $trigger) {
-      $preserve_whitespace = $self->{pbot}->factoids->factoids->hash->{$chan}->{$trigger}->{preserve_whitespace};
+      $preserve_whitespace = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};
       $preserve_whitespace = 0 if not defined $preserve_whitespace;
     }
   }
 
   $result =~ s/\s+/ /g unless $preserve_whitespace;
   $result = $self->truncate_result($from, $nick, $text, $original_result, $result, 1);
-  $pbot->logger->log("Final result: [$result]\n");
+  $pbot->{logger}->log("Final result: [$result]\n");
 
   if($result =~ s/^\/say\s+//i) {
-    $pbot->conn->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->antiflood->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
+    $pbot->{conn}->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
+    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
   } elsif($result =~ s/^\/me\s+//i) {
-    $pbot->conn->me($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->antiflood->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
+    $pbot->{conn}->me($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
+    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
   } elsif($result =~ s/^\/msg\s+([^\s]+)\s+//i) {
     my $to = $1;
     if($to =~ /,/) {
-      $pbot->logger->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$nick!$user\@$host] [$command] [$result]\n");
+      $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$nick!$user\@$host] [$command] [$result]\n");
     }
     elsif($to =~ /.*serv$/i) {
-      $pbot->logger->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$nick!$user\@$host] [$command] [$result]\n");
+      $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$nick!$user\@$host] [$command] [$result]\n");
     }
     elsif($result =~ s/^\/me\s+//i) {
-      $pbot->conn->me($to, $result) if $to !~ /\Q$mynick\E/i;
-      $pbot->antiflood->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
+      $pbot->{conn}->me($to, $result) if $to !~ /\Q$mynick\E/i;
+      $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
     } else {
       $result =~ s/^\/say\s+//i;
-      $pbot->conn->privmsg($to, $result) if $to !~ /\Q$mynick\E/i;
-      $pbot->antiflood->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
+      $pbot->{conn}->privmsg($to, $result) if $to !~ /\Q$mynick\E/i;
+      $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
     }
   } else {
-    $pbot->conn->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->antiflood->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
+    $pbot->{conn}->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
+    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
   }
-  $pbot->logger->log("---------------------------------------------\n");
+  $pbot->{logger}->log("---------------------------------------------\n");
 }
 
 sub interpret {
@@ -228,13 +228,13 @@ sub interpret {
   my $text;
   my $pbot = $self->pbot;
 
-  $pbot->logger->log("=== Enter interpret_command: [" . (defined $from ? $from : "(undef)") . "][$nick!$user\@$host][$count][$command]\n");
+  $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $from ? $from : "(undef)") . "][$nick!$user\@$host][$count][$command]\n");
 
   return "Too many levels of recursion, aborted." if(++$count > 5);
 
   if(not defined $nick || not defined $user || not defined $host ||
      not defined $command) {
-    $pbot->logger->log("Error 1, bad parameters to interpret_command\n");
+    $pbot->{logger}->log("Error 1, bad parameters to interpret_command\n");
     return undef;
   }
 
@@ -248,8 +248,8 @@ sub interpret {
   } elsif($command =~ /^([^ ]+)\s+is\s+(.*)$/i) {
     my ($k, $a) = ($1, $2);
 
-    $self->{pbot}->logger->log("calling find_factoid in Interpreter.pm, interpret() for factadd\n");
-    my ($channel, $trigger) = $pbot->factoids->find_factoid($from, $k, $a, 1);
+    $self->{pbot}->{logger}->log("calling find_factoid in Interpreter.pm, interpret() for factadd\n");
+    my ($channel, $trigger) = $pbot->{factoids}->find_factoid($from, $k, $a, 1);
     
     if(defined $trigger) {
       ($keyword, $arguments) = ($k, "is $a");
@@ -278,7 +278,7 @@ sub interpret {
   }
 
   if(not defined $keyword) {
-    $pbot->logger->log("Error 2, no keyword\n");
+    $pbot->{logger}->log("Error 2, no keyword\n");
     return undef;
   }
 

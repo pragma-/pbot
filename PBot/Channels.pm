@@ -31,11 +31,11 @@ sub initialize {
   $self->{channels} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => delete $conf{filename});
   $self->load_channels;
 
-  $self->{pbot}->commands->register(sub { $self->set(@_)       },  "chanset",   40);
-  $self->{pbot}->commands->register(sub { $self->unset(@_)     },  "chanunset", 40);
-  $self->{pbot}->commands->register(sub { $self->add(@_)       },  "chanadd",   40);
-  $self->{pbot}->commands->register(sub { $self->remove(@_)    },  "chanrem",   40);
-  $self->{pbot}->commands->register(sub { $self->list(@_)      },  "chanlist",  10);
+  $self->{pbot}->{commands}->register(sub { $self->set(@_)       },  "chanset",   40);
+  $self->{pbot}->{commands}->register(sub { $self->unset(@_)     },  "chanunset", 40);
+  $self->{pbot}->{commands}->register(sub { $self->add(@_)       },  "chanadd",   40);
+  $self->{pbot}->{commands}->register(sub { $self->remove(@_)    },  "chanrem",   40);
+  $self->{pbot}->{commands}->register(sub { $self->list(@_)      },  "chanlist",  10);
 }
 
 sub set {
@@ -46,7 +46,7 @@ sub set {
     return "Usage: chanset <channel> [key <value>]";
   }
 
-  return $self->channels->set($channel, $key, $value);
+  return $self->{channels}->set($channel, $key, $value);
 }
 
 sub unset {
@@ -57,7 +57,7 @@ sub unset {
     return "Usage: chanunset <channel> <key>";
   }
 
-  return "msg $nick " . $self->channels->unset($channel, $key);
+  return "msg $nick " . $self->{channels}->unset($channel, $key);
 }
 
 sub add {
@@ -71,7 +71,7 @@ sub add {
   $hash->{enabled} = 1;
   $hash->{chanop} = 0;
 
-  return "/msg $nick " . $self->channels->add($arguments, $hash);
+  return "/msg $nick " . $self->{channels}->add($arguments, $hash);
 }
 
 sub remove {
@@ -81,18 +81,18 @@ sub remove {
     return "/msg $nick Usage: chanrem <channel>";
   }
 
-  return "/msg $nick " . $self->channels->remove($arguments);
+  return "/msg $nick " . $self->{channels}->remove($arguments);
 }
 
 sub list {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   my $result;
 
-  foreach my $index (sort keys %{ $self->channels->hash }) {
+  foreach my $index (sort keys %{ $self->{channels}->hash }) {
     $result .= "$index: {";
     my $comma = ' ';
-    foreach my $key (sort keys %{ ${ $self->channels->hash }{$index} }) {
-      $result .= "$comma$key => ${ $self->channels->hash }{$index}{$key}";
+    foreach my $key (sort keys %{ ${ $self->{channels}->hash }{$index} }) {
+      $result .= "$comma$key => ${ $self->{channels}->hash }{$index}{$key}";
       $comma = ', ';
     }
     $result .= " }\n";
@@ -103,13 +103,13 @@ sub list {
 sub load_channels {
   my $self = shift;
 
-  $self->channels->load_hash();
+  $self->{channels}->load_hash();
 }
 
 sub save_channels {
   my $self = shift;
 
-  $self->channels->save_hash();
+  $self->{channels}->save_hash();
 }
 
 sub channels {

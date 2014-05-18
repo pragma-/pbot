@@ -33,8 +33,8 @@ sub initialize {
 
   $self->{pbot} = $pbot;
 
-  $pbot->commands->register(sub { return $self->ignore_user(@_)    },    "ignore",    10);
-  $pbot->commands->register(sub { return $self->unignore_user(@_)  },    "unignore",  10);
+  $pbot->{commands}->register(sub { return $self->ignore_user(@_)    },    "ignore",    10);
+  $pbot->{commands}->register(sub { return $self->unignore_user(@_)  },    "unignore",  10);
 }
 
 sub ignore_user {
@@ -53,9 +53,9 @@ sub ignore_user {
     my $text = "Ignored: ";
     my $sep = "";
 
-    foreach my $ignored (keys %{ $self->{pbot}->ignorelist->{ignore_list} }) {
-      foreach my $channel (keys %{ ${ $self->{pbot}->ignorelist->{ignore_list} }{$ignored} }) {
-        $text .= $sep . "[$ignored]->[$channel]->[" . (${ $self->{pbot}->ignorelist->{ignore_list} }{$ignored}{$channel} == -1 ? -1 : int(gettimeofday - ${ $self->{pbot}->ignorelist->{ignore_list} }{$ignored}{$channel})) . "]";
+    foreach my $ignored (keys %{ $self->{pbot}->{ignorelist}->{ignore_list} }) {
+      foreach my $channel (keys %{ ${ $self->{pbot}->{ignorelist}->{ignore_list} }{$ignored} }) {
+        $text .= $sep . "[$ignored]->[$channel]->[" . (${ $self->{pbot}->{ignorelist}->{ignore_list} }{$ignored}{$channel} == -1 ? -1 : int(gettimeofday - ${ $self->{pbot}->{ignorelist}->{ignore_list} }{$ignored}{$channel})) . "]";
         $sep = ";\n";
       }
     }
@@ -70,8 +70,8 @@ sub ignore_user {
     $length = -1; # permanently
   }
 
-  $self->{pbot}->logger->log("$nick added [$target][$channel] to ignore list for $length seconds\n");
-  $self->{pbot}->ignorelist->add($target, $channel, $length);
+  $self->{pbot}->{logger}->log("$nick added [$target][$channel] to ignore list for $length seconds\n");
+  $self->{pbot}->{ignorelist}->add($target, $channel, $length);
   return "/msg $nick [$target][$channel] added to ignore list for $length seconds";
 }
 
@@ -88,13 +88,13 @@ sub unignore_user {
     $channel = ".*";
   }
   
-  if(not exists ${ $self->{pbot}->ignorelist->{ignore_list} }{$target}{$channel}) {
-    $self->{pbot}->logger->log("$nick attempt to remove nonexistent [$target][$channel] from ignore list\n");
+  if(not exists ${ $self->{pbot}->{ignorelist}->{ignore_list} }{$target}{$channel}) {
+    $self->{pbot}->{logger}->log("$nick attempt to remove nonexistent [$target][$channel] from ignore list\n");
     return "/msg $nick [$target][$channel] not found in ignore list (use '!ignore list' to list ignores";
   }
   
-  $self->{pbot}->ignorelist->remove($target, $channel);
-  $self->{pbot}->logger->log("$nick removed [$target][$channel] from ignore list\n");
+  $self->{pbot}->{ignorelist}->remove($target, $channel);
+  $self->{pbot}->{logger}->log("$nick removed [$target][$channel] from ignore list\n");
   return "/msg $nick [$target][$channel] unignored";
 }
 

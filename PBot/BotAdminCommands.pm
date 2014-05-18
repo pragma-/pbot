@@ -32,24 +32,24 @@ sub initialize {
 
   $self->{pbot} = $pbot;
   
-  $pbot->commands->register(sub { return $self->login(@_)        },       "login",         0);
-  $pbot->commands->register(sub { return $self->logout(@_)       },       "logout",        0);
-  $pbot->commands->register(sub { return $self->join_channel(@_) },       "join",          45);
-  $pbot->commands->register(sub { return $self->part_channel(@_) },       "part",          45);
-  $pbot->commands->register(sub { return $self->ack_die(@_)      },       "die",           50);
-  $pbot->commands->register(sub { return $self->adminadd(@_)     },       "adminadd",      60);
-  $pbot->commands->register(sub { return $self->adminrem(@_)     },       "adminrem",      60);
-  $pbot->commands->register(sub { return $self->adminset(@_)     },       "adminset",      60);
-  $pbot->commands->register(sub { return $self->adminunset(@_)   },       "adminunset",    60);
-  $pbot->commands->register(sub { return $self->sl(@_)           },       "sl",            60);
-  $pbot->commands->register(sub { return $self->export(@_)       },       "export",        60);
+  $pbot->{commands}->register(sub { return $self->login(@_)        },       "login",         0);
+  $pbot->{commands}->register(sub { return $self->logout(@_)       },       "logout",        0);
+  $pbot->{commands}->register(sub { return $self->join_channel(@_) },       "join",          45);
+  $pbot->{commands}->register(sub { return $self->part_channel(@_) },       "part",          45);
+  $pbot->{commands}->register(sub { return $self->ack_die(@_)      },       "die",           50);
+  $pbot->{commands}->register(sub { return $self->adminadd(@_)     },       "adminadd",      60);
+  $pbot->{commands}->register(sub { return $self->adminrem(@_)     },       "adminrem",      60);
+  $pbot->{commands}->register(sub { return $self->adminset(@_)     },       "adminset",      60);
+  $pbot->{commands}->register(sub { return $self->adminunset(@_)   },       "adminunset",    60);
+  $pbot->{commands}->register(sub { return $self->sl(@_)           },       "sl",            60);
+  $pbot->{commands}->register(sub { return $self->export(@_)       },       "export",        60);
 }
 
 sub sl {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  $self->{pbot}->conn->sl($arguments);
+  $self->{pbot}->{conn}->sl($arguments);
   return "Sent.\n";
 }
 
@@ -57,19 +57,19 @@ sub login {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  if($self->{pbot}->admins->loggedin($from, "$nick!$user\@$host")) {
+  if($self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host")) {
     return "/msg $nick You are already logged into channel $from.";
   }
 
-  my $result = $self->{pbot}->admins->login($from, "$nick!$user\@$host", $arguments);
+  my $result = $self->{pbot}->{admins}->login($from, "$nick!$user\@$host", $arguments);
   return "/msg $nick $result";
 }
 
 sub logout {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  return "/msg $nick Uh, you aren't logged into channel $from." if(not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host"));
-  $self->{pbot}->admins->logout($from, "$nick!$user\@$host");
+  return "/msg $nick Uh, you aren't logged into channel $from." if(not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host"));
+  $self->{pbot}->{admins}->logout($from, "$nick!$user\@$host");
   return "/msg $nick Good-bye, $nick.";
 }
 
@@ -114,7 +114,7 @@ sub adminset {
     return "Usage: adminset <channel> <hostmask> <key> <value>";
   }
 
-  return $self->{pbot}->admins->admins->set($channel, $hostmask, $key, $value);
+  return $self->{pbot}->{admins}->{admins}->set($channel, $hostmask, $key, $value);
 }
 
 sub adminunset {
@@ -126,7 +126,7 @@ sub adminunset {
     return "Usage: adminunset <channel> <hostmask> <key>";
   }
 
-  return $self->{pbot}->admins->admins->unset($channel, $hostmask, $key);
+  return $self->{pbot}->{admins}->{admins}->unset($channel, $hostmask, $key);
 }
 
 
@@ -135,8 +135,8 @@ sub join_channel {
   my ($from, $nick, $user, $host, $arguments) = @_;
 
   foreach my $channel (split /\s+/, $arguments) {
-    $self->{pbot}->logger->log("$nick!$user\@$host made me join $channel\n");
-    $self->{pbot}->conn->join($channel);
+    $self->{pbot}->{logger}->log("$nick!$user\@$host made me join $channel\n");
+    $self->{pbot}->{conn}->join($channel);
   }
 
   return "/msg $nick Joining $arguments";
@@ -149,8 +149,8 @@ sub part_channel {
   $arguments = $from if not $arguments;
 
   foreach my $channel (split /\s+/, $arguments) {
-    $self->{pbot}->logger->log("$nick!$user\@$host made me part $channel\n");
-    $self->{pbot}->conn->part($channel);
+    $self->{pbot}->{logger}->log("$nick!$user\@$host made me part $channel\n");
+    $self->{pbot}->{conn}->part($channel);
   }
 
   return "/msg $nick Parting $arguments";
@@ -159,10 +159,10 @@ sub part_channel {
 sub ack_die {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  $self->{pbot}->logger->log("$nick!$user\@$host made me exit.\n");
+  $self->{pbot}->{logger}->log("$nick!$user\@$host made me exit.\n");
   $self->{pbot}->atexit();
-  $self->{pbot}->conn->privmsg($from, "Good-bye.") if defined $from;
-  $self->{pbot}->conn->quit("Departure requested.");
+  $self->{pbot}->{conn}->privmsg($from, "Good-bye.") if defined $from;
+  $self->{pbot}->{conn}->quit("Departure requested.");
   exit 0;
 }
 
@@ -179,11 +179,11 @@ sub export {
   }
 
   if($arguments =~ /^quotegrabs$/i) {
-    return $self->{pbot}->quotegrabs->export_quotegrabs; 
+    return $self->{pbot}->{quotegrabs}->export_quotegrabs; 
   }
 
   if($arguments =~ /^factoids$/i) {
-    return $self->{pbot}->factoids->export_factoids; 
+    return $self->{pbot}->{factoids}->export_factoids; 
   }
 
   if($arguments =~ /^admins$/i) {

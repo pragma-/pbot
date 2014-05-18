@@ -71,7 +71,7 @@ sub schedulequeue {
 sub addconn {
   my ($self, $conn) = @_;
   
-  $self->addfh( $conn->socket, $conn->can('parse'), ($_[2] || 'r'), $conn);
+  $self->addfh( ${conn}->socket, ${conn}->can('parse'), ($_[2] || 'r'), $conn);
 }
 
 # Adds a filehandle to the select loop. Tasty and flavorful.
@@ -171,11 +171,11 @@ sub do_one_loop {
       my $conn = $self->{_connhash}->{$sock};
       $conn or next;
     
-      # $conn->[0] is a code reference to a handler sub.
-      # $conn->[1] is optionally an object which the
+      # ${conn}->[0] is a code reference to a handler sub.
+      # ${conn}->[1] is optionally an object which the
       #    handler sub may be a method of.
       
-      $conn->[0]->($conn->[1] ? ($conn->[1], $sock) : $sock);
+      ${conn}->[0]->(${conn}->[1] ? (${conn}->[1], $sock) : $sock);
     }
   }
 }
@@ -194,7 +194,7 @@ sub newconn {
   my $self = shift;
   my $conn = PBot::IRC::Connection->new($self, @_); # pragma_ 2011/01/21
   
-  return if $conn->error;
+  return if ${conn}->error;
   return $conn;
 }
 
@@ -237,7 +237,7 @@ sub dequeue_output_event {
 sub removeconn {
   my ($self, $conn) = @_;
   
-  $self->removefh( $conn->socket );
+  $self->removefh( ${conn}->socket );
 }
 
 # Given a filehandle, removes it from all select lists. You get the picture.
@@ -295,11 +295,11 @@ and we'll be happy to help you out with bringing your bots into the modern era.
     use Net::IRC;
 
     $irc = new Net::IRC;
-    $conn = $irc->newconn(Nick    => 'some_nick',
+    $conn = ${irc}->newconn(Nick    => 'some_nick',
                           Server  => 'some.irc.server.com',
 	                  Port    =>  6667,
 			  Ircname => 'Some witty comment.');
-    $irc->start;
+    ${irc}->start;
 
 =head1 DESCRIPTION
 
@@ -416,7 +416,7 @@ To that end, say something like this:
 
     $irc = new Net::IRC;
 
-    $conn = $irc->newconn(Nick    => 'some_nick',
+    $conn = ${irc}->newconn(Nick    => 'some_nick',
                           Server  => 'some.irc.server.com');
 
 ...or something similar. Acceptable parameters to newconn() are:
@@ -531,7 +531,7 @@ When you've set up all your handlers, the following command will put your
 program in an infinite loop, grabbing input from all open connections and
 passing it off to the proper handlers:
 
-    $irc->start;
+    ${irc}->start;
 
 Note that new connections can be added and old ones dropped from within your
 handlers even after you call this. Just don't expect any code below the call
@@ -610,7 +610,7 @@ B<Optional:> A string containing any combination of the letters r, w or e
 conditions you're expecting on that filehandle. For example, this line
 select()s $fh (a filehandle, of course) for both reading and writing:
 
-    $irc->addfh( $fh, \&callback, "rw" );
+    ${irc}->addfh( $fh, \&callback, "rw" );
 
 =back
 

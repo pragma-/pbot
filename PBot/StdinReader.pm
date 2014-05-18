@@ -36,8 +36,8 @@ sub stdin_reader {
   $self->{foreground} = (tcgetpgrp($self->{tty_fd}) == getpgrp()) ? 1 : 0;
   return if not $self->{foreground};
 
-  $self->{pbot}->logger->log("---------------------------------------------\n");
-  $self->{pbot}->logger->log("Read '$input' from STDIN\n");
+  $self->{pbot}->{logger}->log("---------------------------------------------\n");
+  $self->{pbot}->{logger}->log("Read '$input' from STDIN\n");
 
   my ($from, $text);
 
@@ -49,7 +49,7 @@ sub stdin_reader {
     $text = $self->{pbot}->{registry}->get_value('general', 'trigger') . $input;
   }
 
-  return $self->{pbot}->interpreter->process_line($from, $self->{pbot}->{registry}->get_value('irc', 'botnick'), "stdin", "localhost", $text);
+  return $self->{pbot}->{interpreter}->process_line($from, $self->{pbot}->{registry}->get_value('irc', 'botnick'), "stdin", "localhost", $text);
 }
 
 1;

@@ -46,19 +46,19 @@ sub initialize {
   $self->{lag_history} = [];           # history of previous PING/PONG timings
   $self->{pong_received} = undef;      # tracks pong replies; undef if no ping sent; 0 if ping sent but no pong reply yet; 1 if ping/pong completed
 
-  $pbot->timer->register(sub { $self->send_ping }, $self->{LAG_HISTORY_INTERVAL});
+  $pbot->{timer}->register(sub { $self->send_ping }, $self->{LAG_HISTORY_INTERVAL});
 
-  $pbot->commands->register(sub { return $self->lagcheck(@_) }, "lagcheck", 0);
+  $pbot->{commands}->register(sub { return $self->lagcheck(@_) }, "lagcheck", 0);
 }
 
 sub send_ping {
   my $self = shift;
 
-  return unless defined $self->{pbot}->conn;
+  return unless defined $self->{pbot}->{conn};
 
   $self->{ping_send_time} = [gettimeofday];
   $self->{pong_received} = 0;
-  $self->{pbot}->conn->sl("PING :lagcheck");
+  $self->{pbot}->{conn}->sl("PING :lagcheck");
 }
 
 sub on_pong {

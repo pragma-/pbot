@@ -33,7 +33,7 @@ sub initialize {
 sub begin {
   my $self = shift;
 
-  $self->{pbot}->logger->log("Opening quotegrabs SQLite database: $self->{filename}\n");
+  $self->{pbot}->{logger}->log("Opening quotegrabs SQLite database: $self->{filename}\n");
 
   $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0 }) or die $DBI::errstr;
 
@@ -50,13 +50,13 @@ CREATE TABLE IF NOT EXISTS Quotegrabs (
 SQL
   };
 
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 }
 
 sub end {
   my $self = shift;
 
-  $self->{pbot}->logger->log("Closing quotegrabs SQLite database\n");
+  $self->{pbot}->{logger}->log("Closing quotegrabs SQLite database\n");
 
   if(exists $self->{dbh} and defined $self->{dbh}) {
     $self->{dbh}->disconnect();
@@ -80,7 +80,7 @@ sub add_quotegrab {
     return $self->{dbh}->sqlite_last_insert_rowid();
   };
 
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $id;
 }
 
@@ -94,7 +94,7 @@ sub get_quotegrab {
     return $sth->fetchrow_hashref();
   };
 
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $quotegrab;
 }
 
@@ -137,7 +137,7 @@ sub get_random_quotegrab {
     return $sth->fetchrow_hashref();
   };
 
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $quotegrab;
 }
 
@@ -150,7 +150,7 @@ sub get_all_quotegrabs {
     return $sth->fetchall_arrayref({});
   };
 
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $quotegrabs;
 }
 
@@ -163,7 +163,7 @@ sub delete_quotegrab {
     $sth->execute();
   };
 
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 }
 
 1;

@@ -36,7 +36,7 @@ sub initialize {
 
   $self->{banlist} = {};
 
-  $pbot->commands->register(sub { return $self->dumpbans(@_) }, "dumpbans", 60);
+  $pbot->{commands}->register(sub { return $self->dumpbans(@_) }, "dumpbans", 60);
 }
 
 sub dumpbans {
@@ -52,9 +52,9 @@ sub get_banlist {
 
   delete $self->{banlist}->{$channel};
 
-  $self->{pbot}->logger->log("Retrieving banlist for $channel.\n");
-  $conn->sl("mode $channel +b");
-  $conn->sl("mode $channel +q");
+  $self->{pbot}->{logger}->log("Retrieving banlist for $channel.\n");
+  ${conn}->sl("mode $channel +b");
+  ${conn}->sl("mode $channel +q");
 }
 
 sub get_baninfo {
@@ -64,7 +64,7 @@ sub get_baninfo {
   $account = undef if $account eq '-1';
   $account = lc $account if defined $account;
 
-  $self->{pbot}->logger->log("[get-baninfo] Getting baninfo for $mask in $channel using account " . (defined $account ? $account : "[undefined]") . "\n");
+  $self->{pbot}->{logger}->log("[get-baninfo] Getting baninfo for $mask in $channel using account " . (defined $account ? $account : "[undefined]") . "\n");
 
   foreach my $mode (keys %{ $self->{banlist}{$channel} }) {
     foreach my $banmask (keys %{ $self->{banlist}{$channel}{$mode} }) {
@@ -90,7 +90,7 @@ sub get_baninfo {
         $baninfo->{owner} = $self->{banlist}{$channel}{$mode}{$banmask_key}[0];
         $baninfo->{when} = $self->{banlist}{$channel}{$mode}{$banmask_key}[1];
         $baninfo->{type} = $mode;
-        $self->{pbot}->logger->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
+        $self->{pbot}->{logger}->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
 
         push @$bans, $baninfo;
       }
@@ -109,7 +109,7 @@ sub on_quietlist_entry {
 
   my $ago = ago(gettimeofday - $timestamp);
 
-  $self->{pbot}->logger->log("ban-tracker: [quietlist entry] $channel: $target quieted by $source $ago.\n");
+  $self->{pbot}->{logger}->log("ban-tracker: [quietlist entry] $channel: $target quieted by $source $ago.\n");
   $self->{banlist}->{$channel}->{'+q'}->{$target} = [ $source, $timestamp ];
 }
 
@@ -122,7 +122,7 @@ sub on_banlist_entry {
 
   my $ago = ago(gettimeofday - $timestamp);
 
-  $self->{pbot}->logger->log("ban-tracker: [banlist entry] $channel: $target banned by $source $ago.\n");
+  $self->{pbot}->{logger}->log("ban-tracker: [banlist entry] $channel: $target banned by $source $ago.\n");
   $self->{banlist}->{$channel}->{'+b'}->{$target} = [ $source, $timestamp ];
 }
 
@@ -131,24 +131,24 @@ sub track_mode {
   my ($source, $mode, $target, $channel) = @_;
 
   if($mode eq "+b" or $mode eq "+q") {
-    $self->{pbot}->logger->log("ban-tracker: $target " . ($mode eq '+b' ? 'banned' : 'quieted') . " by $source in $channel.\n");
+    $self->{pbot}->{logger}->log("ban-tracker: $target " . ($mode eq '+b' ? 'banned' : 'quieted') . " by $source in $channel.\n");
     $self->{banlist}->{$channel}->{$mode}->{$target} = [ $source, gettimeofday ];
-    $self->{pbot}->antiflood->devalidate_accounts($target, $channel);
+    $self->{pbot}->{antiflood}->devalidate_accounts($target, $channel);
   }
   elsif($mode eq "-b" or $mode eq "-q") {
-    $self->{pbot}->logger->log("ban-tracker: $target " . ($mode eq '-b' ? 'unbanned' : 'unquieted') . " by $source in $channel.\n");
+    $self->{pbot}->{logger}->log("ban-tracker: $target " . ($mode eq '-b' ? 'unbanned' : 'unquieted') . " by $source in $channel.\n");
     delete $self->{banlist}->{$channel}->{$mode eq "-b" ? "+b" : "+q"}->{$target};
 
     if($mode eq "-b") {
-      if($self->{pbot}->chanops->{unban_timeout}->find_index($channel, $target)) {
-        $self->{pbot}->chanops->{unban_timeout}->remove($channel, $target);
-      } elsif($self->{pbot}->chanops->{unban_timeout}->find_index($channel, "$target\$##stop_join_flood")) {
+      if($self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, $target)) {
+        $self->{pbot}->{chanops}->{unban_timeout}->remove($channel, $target);
+      } elsif($self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, "$target\$##stop_join_flood")) {
         # freenode strips channel forwards from unban result if no ban exists with a channel forward
-        $self->{pbot}->chanops->{unban_timeout}->remove($channel, "$target\$##stop_join_flood");
+        $self->{pbot}->{chanops}->{unban_timeout}->remove($channel, "$target\$##stop_join_flood");
       }
     }
   } else {
-    $self->{pbot}->logger->log("BanTracker: Unknown mode '$mode'\n");
+    $self->{pbot}->{logger}->log("BanTracker: Unknown mode '$mode'\n");
   }
 }
 

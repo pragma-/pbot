@@ -80,7 +80,7 @@ sub interpreter {
 
   my $pbot = $self->{pbot};
 
-  my $admin = $pbot->admins->loggedin($from, "$nick!$user\@$host");
+  my $admin = $pbot->{admins}->loggedin($from, "$nick!$user\@$host");
 
   my $level = defined $admin ? $admin->{level} : 0;
 

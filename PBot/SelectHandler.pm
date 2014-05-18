@@ -45,7 +45,7 @@ sub do_select {
     my $ret = sysread($fh, my $buf, 8192);
 
     if(not defined $ret) {
-      $self->{pbot}->logger->log("Error with $fh: $!\n");
+      $self->{pbot}->{logger}->log("Error with $fh: $!\n");
       $self->remove_reader($fh);
       next;
     }
@@ -58,7 +58,7 @@ sub do_select {
     chomp $buf;
 
     if(not exists $self->{readers}->{$fh}) {
-      $self->{pbot}->logger->log("Error: no reader for $fh\n");
+      $self->{pbot}->{logger}->log("Error: no reader for $fh\n");
     } else {
       $self->{readers}->{$fh}->($buf);
     }

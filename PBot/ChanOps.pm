@@ -41,8 +41,8 @@ sub initialize {
 
   $self->{commands} = PBot::ChanOpCommands->new(pbot => $pbot);
 
-  $pbot->timer->register(sub { $self->check_opped_timeouts   }, 10);
-  $pbot->timer->register(sub { $self->check_unban_timeouts   }, 10);
+  $pbot->{timer}->register(sub { $self->check_opped_timeouts   }, 10);
+  $pbot->{timer}->register(sub { $self->check_unban_timeouts   }, 10);
 }
 
 sub gain_ops {
@@ -50,7 +50,7 @@ sub gain_ops {
   my $channel = shift;
   
   if(not exists $self->{is_opped}->{$channel}) {
-    $self->{pbot}->conn->privmsg("chanserv", "op $channel");
+    $self->{pbot}->{conn}->privmsg("chanserv", "op $channel");
     $self->{is_opped}->{$channel}{timeout} = gettimeofday + 300; # assume we're going to be opped
   } else {
     $self->perform_op_commands($channel);
@@ -60,7 +60,7 @@ sub gain_ops {
 sub lose_ops {
   my $self = shift;
   my $channel = shift;
-  $self->{pbot}->conn->privmsg("chanserv", "op $channel -" . $self->{pbot}->{registry}->get_value('irc', 'botnick'));
+  $self->{pbot}->{conn}->privmsg("chanserv", "op $channel -" . $self->{pbot}->{registry}->get_value('irc', 'botnick'));
 }
 
 sub add_op_command {
@@ -73,17 +73,17 @@ sub perform_op_commands {
   my $channel = shift;
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
-  $self->{pbot}->logger->log("Performing op commands...\n");
+  $self->{pbot}->{logger}->log("Performing op commands...\n");
   while(my $command = shift @{ $self->{op_commands}->{$channel} }) {
     if($command =~ /^mode (.*?) (.*)/i) {
-      $self->{pbot}->conn->mode($1, $2);
-      $self->{pbot}->logger->log("  executing mode $1 $2\n");
+      $self->{pbot}->{conn}->mode($1, $2);
+      $self->{pbot}->{logger}->log("  executing mode $1 $2\n");
     } elsif($command =~ /^kick (.*?) (.*?) (.*)/i) {
-      $self->{pbot}->conn->kick($1, $2, $3) unless $1 =~ /\Q$botnick\E/i;
-      $self->{pbot}->logger->log("  executing kick on $1 $2 $3\n");
+      $self->{pbot}->{conn}->kick($1, $2, $3) unless $1 =~ /\Q$botnick\E/i;
+      $self->{pbot}->{logger}->log("  executing kick on $1 $2 $3\n");
     }
   }
-  $self->{pbot}->logger->log("Done.\n");
+  $self->{pbot}->{logger}->log("Done.\n");
 }
 
 sub ban_user {
@@ -97,7 +97,7 @@ sub ban_user {
 sub unban_user {
   my $self = shift;
   my ($mask, $channel) = @_;
-  $self->{pbot}->logger->log("Unbanning $channel $mask\n");
+  $self->{pbot}->{logger}->log("Unbanning $channel $mask\n");
   if($self->{unban_timeout}->find_index($channel, $mask)) {
     $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + 7200; # try again in 2 hours if unban doesn't immediately succeed
     $self->{unban_timeout}->save;
@@ -141,7 +141,7 @@ sub check_opped_timeouts {
       delete $self->{is_opped}->{$channel}; # assume chanserv is alive and deop will succeed
     } else {
       # my $timediff = $self->{is_opped}->{$channel}{timeout} - $now;
-      # $self->{pbot}->logger->log("deop $channel in $timediff seconds\n");
+      # $self->{pbot}->{logger}->log("deop $channel in $timediff seconds\n");
     }
   }
 }

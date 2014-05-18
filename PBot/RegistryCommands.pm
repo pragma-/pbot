@@ -27,13 +27,13 @@ sub initialize {
   my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to FactoidCommands");
   $self->{pbot} = $pbot;
   
-  $pbot->commands->register(sub { return $self->regadd(@_)         },       "regadd",     60);
-  $pbot->commands->register(sub { return $self->regrem(@_)         },       "regrem",     60);
-  $pbot->commands->register(sub { return $self->regshow(@_)        },       "regshow",     0);
-  $pbot->commands->register(sub { return $self->regset(@_)         },       "regset",     60);
-  $pbot->commands->register(sub { return $self->regunset(@_)       },       "regunset",   60);
-  $pbot->commands->register(sub { return $self->regchange(@_)      },       "regchange",  60);
-  $pbot->commands->register(sub { return $self->regfind(@_)        },       "regfind",     0);
+  $pbot->{commands}->register(sub { return $self->regadd(@_)         },       "regadd",     60);
+  $pbot->{commands}->register(sub { return $self->regrem(@_)         },       "regrem",     60);
+  $pbot->{commands}->register(sub { return $self->regshow(@_)        },       "regshow",     0);
+  $pbot->{commands}->register(sub { return $self->regset(@_)         },       "regset",     60);
+  $pbot->{commands}->register(sub { return $self->regunset(@_)       },       "regunset",   60);
+  $pbot->{commands}->register(sub { return $self->regchange(@_)      },       "regchange",  60);
+  $pbot->{commands}->register(sub { return $self->regfind(@_)        },       "regfind",     0);
 }
 
 sub regset {
@@ -74,7 +74,7 @@ sub regadd {
 
   $self->{pbot}->{registry}->add('text', $section, $item, $value);
 
-  $self->{pbot}->logger->log("$nick!$user\@$host added registry entry [$section] $item => $value\n");
+  $self->{pbot}->{logger}->log("$nick!$user\@$host added registry entry [$section] $item => $value\n");
   return "/msg $nick [$section] $item set to $value";
 }
 
@@ -95,7 +95,7 @@ sub regrem {
     return "/msg $nick No such item $item in section $section.";
   }
 
-  $self->{pbot}->logger->log("$nick!$user\@$host removed registry item [$section][$item]\n");
+  $self->{pbot}->{logger}->log("$nick!$user\@$host removed registry item [$section][$item]\n");
   $self->{pbot}->{registry}->remove($section, $item);
   return "/msg $nick Registry item $item removed from section $section.";
 }
@@ -224,10 +224,10 @@ sub regchange {
   my $ret = eval {
     use re::engine::RE2 -strict => 1;
     if(not $registry->{$section}->{$item}->{value} =~ s|$tochange|$changeto|) {
-      $self->{pbot}->logger->log("($from) $nick!$user\@$host: failed to change [$section] $item 's$delim$tochange$delim$changeto$delim$modifier\n");
+      $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change [$section] $item 's$delim$tochange$delim$changeto$delim$modifier\n");
       return "/msg $nick Change [$section] $item failed.";
     } else {
-      $self->{pbot}->logger->log("($from) $nick!$user\@$host: changed [$section] $item 's/$tochange/$changeto/\n");
+      $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: changed [$section] $item 's/$tochange/$changeto/\n");
       $self->{pbot}->{registry}->process_trigger($section, $item, 'value', $registry->{$section}->{$item}->{value});
       $self->{pbot}->{registry}->save;
       return "Changed: [$section] $item set to $registry->{$section}->{$item}->{value}";

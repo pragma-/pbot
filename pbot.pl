@@ -77,9 +77,6 @@ my %config = (
   # You shouldn't need to change anything below this line.
   # -----------------------------------------------------
 
-  # Maximum messages to remember per nick/hostmask in message history
-  MAX_MESSAGES => 256,
-
   # Path to data directory
   data_dir        => "$bothome/data",
 

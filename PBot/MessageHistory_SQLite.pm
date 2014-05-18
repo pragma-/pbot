@@ -29,14 +29,14 @@ sub initialize {
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference in " . __FILE__);
   $self->{filename}  = delete $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/message_history.sqlite3';
 
-  $self->{pbot}->timer->register(sub { $self->commit_message_history }, 5);
+  $self->{pbot}->{timer}->register(sub { $self->commit_message_history }, 5);
   $self->{new_entries} = 0;
 }
 
 sub begin {
   my $self = shift;
 
-  $self->{pbot}->logger->log("Opening message history SQLite database: $self->{filename}\n");
+  $self->{pbot}->{logger}->log("Opening message history SQLite database: $self->{filename}\n");
 
   $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr; 
 
@@ -93,13 +93,13 @@ SQL
 
     $self->{dbh}->begin_work();
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 }
 
 sub end {
   my $self = shift;
 
-  $self->{pbot}->logger->log("Closing message history SQLite database\n");
+  $self->{pbot}->{logger}->log("Closing message history SQLite database\n");
 
   if(exists $self->{dbh} and defined $self->{dbh}) {
     $self->{dbh}->commit() if $self->{new_entries};
@@ -117,7 +117,7 @@ sub get_nickserv_accounts {
     $sth->execute();
     return $sth->fetchall_arrayref();
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return map {$_->[0]} @$nickserv_accounts;
 }
 
@@ -131,7 +131,7 @@ sub set_current_nickserv_account {
     $sth->execute();
     $self->{new_entries}++;
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 }
 
 sub get_current_nickserv_account {
@@ -143,7 +143,7 @@ sub get_current_nickserv_account {
     $sth->execute();
     return $sth->fetchrow_hashref()->{'nickserv'};
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $nickserv;
 }
 
@@ -159,13 +159,13 @@ sub create_nickserv {
     my $rv = $sth->execute();
     $self->{new_entries}++ if $sth->rows;
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 }
 
 sub update_nickserv_account {
   my ($self, $id, $nickserv, $timestamp) = @_;
   
-  #$self->{pbot}->logger->log("Updating nickserv account for id $id to $nickserv with timestamp [$timestamp]\n");
+  #$self->{pbot}->{logger}->log("Updating nickserv account for id $id to $nickserv with timestamp [$timestamp]\n");
 
   $self->create_nickserv($id, $nickserv);
 
@@ -177,7 +177,7 @@ sub update_nickserv_account {
     $sth->execute();
     $self->{new_entries}++;
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 }
 
 sub add_message_account {
@@ -207,7 +207,7 @@ sub add_message_account {
     }
   };
 
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $id;
 }
 
@@ -222,7 +222,7 @@ sub find_message_account_by_nick {
     return ($row->{id}, $row->{hostmask});
   };
   
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   $hostmask =~ s/!.*$// if defined $hostmask;
   return ($id, $hostmask);
 }
@@ -236,7 +236,7 @@ sub find_message_accounts_by_nickserv {
     $sth->execute();
     return $sth->fetchall_arrayref();
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return map {$_->[0]} @$accounts;
 }
 
@@ -253,7 +253,7 @@ sub find_message_accounts_by_mask {
     $sth->execute();
     return $sth->fetchall_arrayref();
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return map {$_->[0]} @$accounts;
 }
 
@@ -271,7 +271,7 @@ sub get_message_account {
     my $rows = $sth->fetchall_arrayref({});
 
     foreach my $row (@$rows) {
-      $self->{pbot}->logger->log("Found matching nick $row->{hostmask} with id $row->{id}\n");
+      $self->{pbot}->{logger}->log("Found matching nick $row->{hostmask} with id $row->{id}\n");
     }
 
     if(not defined $rows->[0]) {
@@ -280,26 +280,26 @@ sub get_message_account {
       $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
-        $self->{pbot}->logger->log("Found matching user\@host mask $row->{hostmask} with id $row->{id}\n");
+        $self->{pbot}->{logger}->log("Found matching user\@host mask $row->{hostmask} with id $row->{id}\n");
       }
     }
     return $rows;
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 
   if(defined $rows->[0]) {
-    $self->{pbot}->logger->log("message-history: [get-account] $nick!$user\@$host linked to $rows->[0]->{hostmask} with id $rows->[0]->{id}\n");
+    $self->{pbot}->{logger}->log("message-history: [get-account] $nick!$user\@$host linked to $rows->[0]->{hostmask} with id $rows->[0]->{id}\n");
     $self->add_message_account("$nick!$user\@$host", $rows->[0]->{id});
     $self->devalidate_all_channels($rows->[0]->{id});
     my @nickserv_accounts = $self->get_nickserv_accounts($rows->[0]->{id});
     foreach my $nickserv_account (@nickserv_accounts) {
-      $self->{pbot}->logger->log("$nick!$user\@$host [$rows->[0]->{id}] seen with nickserv account [$nickserv_account]\n");
-      $self->{pbot}->antiflood->check_nickserv_accounts($nick, $nickserv_account, "$nick!$user\@$host"); 
+      $self->{pbot}->{logger}->log("$nick!$user\@$host [$rows->[0]->{id}] seen with nickserv account [$nickserv_account]\n");
+      $self->{pbot}->{antiflood}->check_nickserv_accounts($nick, $nickserv_account, "$nick!$user\@$host"); 
     }
     return $rows->[0]->{id};
   }
 
-  $self->{pbot}->logger->log("No account found for mask [$mask], adding new account\n");
+  $self->{pbot}->{logger}->log("No account found for mask [$mask], adding new account\n");
   return $self->add_message_account($mask);
 }
 
@@ -312,7 +312,7 @@ sub find_most_recent_hostmask {
     $sth->execute();
     return $sth->fetchrow_hashref()->{'hostmask'};
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $hostmask;
 }
 
@@ -341,7 +341,7 @@ sub update_hostmask_data {
     $sth->execute();
     $self->{new_entries}++;
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 }
 
 sub get_hostmasks_for_channel {
@@ -354,14 +354,14 @@ sub get_hostmasks_for_channel {
     return $sth->fetchall_arrayref({});
   };
   
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $hostmasks;
 }
 
 sub add_message {
   my ($self, $id, $mask, $channel, $message) = @_;
 
-  #$self->{pbot}->logger->log("Adding message [$id][$mask][$channel][$message->{msg}][$message->{timestamp}][$message->{mode}]\n");
+  #$self->{pbot}->{logger}->log("Adding message [$id][$mask][$channel][$message->{msg}][$message->{timestamp}][$message->{mode}]\n");
 
   eval {
     my $sth = $self->{dbh}->prepare('INSERT INTO Messages VALUES (?, ?, ?, ?, ?)');
@@ -373,7 +373,7 @@ sub add_message {
     $sth->execute();
     $self->{new_entries}++;
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   $self->update_channel_data($id, $channel, { last_seen => $message->{timestamp} });
   $self->update_hostmask_data($mask, { last_seen => $message->{timestamp} });
 }
@@ -402,7 +402,7 @@ SQL
     $sth->execute();
     return $sth->fetchall_arrayref({});
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $messages;
 }
 
@@ -430,7 +430,7 @@ sub recall_message_by_count {
     };
   }
 
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 
   if(defined $ignore_command) {
     my $botnick     = $self->{pbot}->{registry}->get_value('irc',     'botnick');
@@ -473,7 +473,7 @@ sub recall_message_by_text {
     };
   }
 
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 
   if(defined $ignore_command) {
     my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
@@ -499,7 +499,7 @@ sub get_max_messages {
     $sth->finish();
     return $row->{'COUNT(*)'};
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   $count = 0 if not defined $count;
   return $count;
 }
@@ -516,7 +516,7 @@ sub create_channel {
     my $rv = $sth->execute();
     $self->{new_entries}++ if $sth->rows;
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 }
 
 sub get_channels {
@@ -528,7 +528,7 @@ sub get_channels {
     $sth->execute();
     return $sth->fetchall_arrayref();
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return map {$_->[0]} @$channels;
 }
 
@@ -557,7 +557,7 @@ sub get_channel_data {
     $sth->execute();
     return $sth->fetchrow_hashref();
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $channel_data;
 }
 
@@ -589,7 +589,7 @@ sub update_channel_data {
     $sth->execute();
     $self->{new_entries}++;
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 }
 
 sub get_channel_datas_where_last_offense_older_than {
@@ -601,7 +601,7 @@ sub get_channel_datas_where_last_offense_older_than {
     $sth->execute();
     return $sth->fetchall_arrayref({});
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $channel_datas;
 }
 
@@ -613,7 +613,7 @@ sub get_channel_datas_with_enter_abuses {
     $sth->execute();
     return $sth->fetchall_arrayref({});
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $channel_datas;
 }
 
@@ -629,7 +629,7 @@ sub devalidate_all_channels {
     $sth->execute();
     $self->{new_entries}++;
   };
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
 }
 
 # End of public API, the remaining are internal support routines for this module
@@ -644,7 +644,7 @@ sub get_new_account_id {
     return $row->{id};
   };
 
-  $self->{pbot}->logger->log($@) if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return ++$id;
 }
 
@@ -659,8 +659,8 @@ sub get_message_account_id {
     return $row->{id};
   };
 
-  $self->{pbot}->logger->log($@) if $@;
-  #$self->{pbot}->logger->log("get_message_account_id: returning id [". (defined $id ? $id: 'undef') . "] for mask [$mask]\n");
+  $self->{pbot}->{logger}->log($@) if $@;
+  #$self->{pbot}->{logger}->log("get_message_account_id: returning id [". (defined $id ? $id: 'undef') . "] for mask [$mask]\n");
   return $id;
 }
 
@@ -668,12 +668,12 @@ sub commit_message_history {
   my $self = shift;
 
   if($self->{new_entries} > 0) {
-    #$self->{pbot}->logger->log("Commiting $self->{new_entries} messages to SQLite\n");
+    #$self->{pbot}->{logger}->log("Commiting $self->{new_entries} messages to SQLite\n");
     eval {
       $self->{dbh}->commit();
     };
 
-    $self->{pbot}->logger->log("SQLite error $@ when committing $self->{new_entries} entries.\n") if $@;
+    $self->{pbot}->{logger}->log("SQLite error $@ when committing $self->{new_entries} entries.\n") if $@;
 
     $self->{dbh}->begin_work();
     $self->{new_entries} = 0;

@@ -37,7 +37,7 @@ sub initialize {
 
   $self->load_ignores;
 
-  $self->{pbot}->timer->register(sub { $self->check_ignore_timeouts }, 10);
+  $self->{pbot}->{timer}->register(sub { $self->check_ignore_timeouts }, 10);
 }
 
 sub add {
@@ -72,7 +72,7 @@ sub load_ignores {
     return;
   }
 
-  $self->{pbot}->logger->log("Loading ignorelist from $filename ...\n");
+  $self->{pbot}->{logger}->log("Loading ignorelist from $filename ...\n");
   
   open(FILE, "< $filename") or Carp::croak "Couldn't open $filename: $!\n";
   my @contents = <FILE>;
@@ -97,8 +97,8 @@ sub load_ignores {
     ${ $self->{ignore_list} }{$hostmask}{$channel} = $length;
   }
 
-  $self->{pbot}->logger->log("  $i entries in ignorelist\n");
-  $self->{pbot}->logger->log("Done.\n");
+  $self->{pbot}->{logger}->log("  $i entries in ignorelist\n");
+  $self->{pbot}->{logger}->log("Done.\n");
 }
 
 sub save_ignores {
@@ -152,8 +152,8 @@ sub check_ignore {
       $self->{commands}->ignore_user("", "floodcontrol", "", "", ".* $channel 300");
       $self->{ignore_flood_counter}->{$channel} = 0;
       if($channel =~ /^#/) {
-        $pbot->conn->me($channel, "has been overwhelmed.");
-        $pbot->conn->me($channel, "lies down and falls asleep."); 
+        $pbot->{conn}->me($channel, "has been overwhelmed.");
+        $pbot->{conn}->me($channel, "lies down and falls asleep."); 
         return 1;
       } 
     }
@@ -161,7 +161,7 @@ sub check_ignore {
 
   foreach my $ignored (keys %{ $self->{ignore_list} }) {
     foreach my $ignored_channel (keys %{ ${ $self->{ignore_list} }{$ignored} }) {
-      #$self->{pbot}->logger->log("check_ignore: comparing '$hostmask' against '$ignored' for channel '$channel'\n");
+      #$self->{pbot}->{logger}->log("check_ignore: comparing '$hostmask' against '$ignored' for channel '$channel'\n");
       my $ignored_channel_escaped = quotemeta $ignored_channel;
       my $ignored_escaped = quotemeta $ignored;
 
@@ -169,7 +169,7 @@ sub check_ignore {
       $ignored_escaped =~ s/\\(\.|\*)/$1/g;
 
       if(($channel =~ /$ignored_channel_escaped/i) && ($hostmask =~ /$ignored_escaped/i)) {
-        $self->{pbot}->logger->log("$nick!$user\@$host message ignored in channel $channel (matches [$ignored] host and [$ignored_channel] channel)\n");
+        $self->{pbot}->{logger}->log("$nick!$user\@$host message ignored in channel $channel (matches [$ignored] host and [$ignored_channel] channel)\n");
         return 1;
       }
     }
@@ -188,11 +188,11 @@ sub check_ignore_timeouts {
       if($self->{ignore_list}->{$hostmask}{$channel} < $now) {
         $self->{commands}->unignore_user("", "floodcontrol", "", "", "$hostmask $channel");
         if($hostmask eq ".*") {
-          $self->{pbot}->conn->me($channel, "awakens.");
+          $self->{pbot}->{conn}->me($channel, "awakens.");
         }
       } else {
         #my $timediff = $ignore_list{$host}{$channel} - $now;
-        #$logger->log "ignore: $host has $timediff seconds remaining\n"
+        #${logger}->log "ignore: $host has $timediff seconds remaining\n"
       }
     }
   }

@@ -47,10 +47,10 @@ sub initialize {
   #-------------------------------------------------------------------------------------
   # The following could be in QuotegrabsCommands.pm, or they could be kept in here?
   #-------------------------------------------------------------------------------------
-  $self->{pbot}->commands->register(sub { $self->grab_quotegrab(@_)        },  "grab",  0);
-  $self->{pbot}->commands->register(sub { $self->show_quotegrab(@_)        },  "getq",  0);
-  $self->{pbot}->commands->register(sub { $self->delete_quotegrab(@_)      },  "delq",  0);
-  $self->{pbot}->commands->register(sub { $self->show_random_quotegrab(@_) },  "rq",    0);
+  $self->{pbot}->{commands}->register(sub { $self->grab_quotegrab(@_)        },  "grab",  0);
+  $self->{pbot}->{commands}->register(sub { $self->show_quotegrab(@_)        },  "getq",  0);
+  $self->{pbot}->{commands}->register(sub { $self->delete_quotegrab(@_)      },  "delq",  0);
+  $self->{pbot}->{commands}->register(sub { $self->show_random_quotegrab(@_) },  "rq",    0);
 }
 
 sub uniq { my %seen; grep !$seen{$_}++, @_ }
@@ -156,7 +156,7 @@ sub grab_quotegrab {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
   if(not defined $from) {
-    $self->{pbot}->logger->log("Command missing ~from parameter!\n");
+    $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 
@@ -209,7 +209,7 @@ sub grab_quotegrab {
       }
     }
 
-    $self->{pbot}->logger->log("$nick ($from) grabbed <$grab_nick/$channel> $message->{msg}\n");
+    $self->{pbot}->{logger}->log("$nick ($from) grabbed <$grab_nick/$channel> $message->{msg}\n");
 
     if(not defined $grab_nicks) {
       $grab_nicks = $grab_nick;
@@ -265,7 +265,7 @@ sub delete_quotegrab {
     return "/msg $nick No quotegrab matching id $arguments found.";
   }
 
-  if(not $self->{pbot}->admins->loggedin($from, "$nick!$user\@$host") and $quotegrab->{grabbed_by} ne "$nick!$user\@$host") {
+  if(not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host") and $quotegrab->{grabbed_by} ne "$nick!$user\@$host") {
     return "You are not the grabber of this quote.";
   }
 
@@ -310,7 +310,7 @@ sub show_random_quotegrab {
   my ($nick_search, $channel_search, $text_search);
 
   if(not defined $from) {
-    $self->{pbot}->logger->log("Command missing ~from parameter!\n");
+    $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 

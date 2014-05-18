@@ -64,7 +64,7 @@ sub load_hash {
     return;
   }
 
-  $self->{pbot}->logger->log("Loading $self->{name} objects from $filename ...\n");
+  $self->{pbot}->{logger}->log("Loading $self->{name} objects from $filename ...\n");
 
   if(not open(FILE, "< $filename")) {
     Carp::carp "Couldn't open $filename: $!\n";
@@ -111,7 +111,7 @@ sub load_hash {
 
   close(FILE);
 
-  $self->{pbot}->logger->log("Done.\n");
+  $self->{pbot}->{logger}->log("Done.\n");
 }
 
 sub save_hash {
@@ -154,7 +154,7 @@ sub find_hash {
   };
 
   if($@) {
-    $self->{pbot}->logger->log("find_hash: bad regex: $@\n");
+    $self->{pbot}->{logger}->log("find_hash: bad regex: $@\n");
     return undef;
   }
 

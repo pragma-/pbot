@@ -43,7 +43,7 @@ sub initialize {
 sub load {
   my $self = shift;
 
-  $self->{pbot}->logger->log("Loading registry from " . $self->{registry}->{filename} . " ...\n");
+  $self->{pbot}->{logger}->log("Loading registry from " . $self->{registry}->{filename} . " ...\n");
 
   $self->{registry}->load;
 
@@ -53,7 +53,7 @@ sub load {
     }
   }
 
-  $self->{pbot}->logger->log("Done.\n");
+  $self->{pbot}->{logger}->log("Done.\n");
 }
 
 sub save {

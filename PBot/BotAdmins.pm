@@ -58,11 +58,11 @@ sub add_admin {
   $channel = lc $channel;
   $hostmask = lc $hostmask;
 
-  $self->admins->hash->{$channel}->{$hostmask}->{name}     = $name;
-  $self->admins->hash->{$channel}->{$hostmask}->{level}    = $level;
-  $self->admins->hash->{$channel}->{$hostmask}->{password} = $password;
+  $self->{admins}->hash->{$channel}->{$hostmask}->{name}     = $name;
+  $self->{admins}->hash->{$channel}->{$hostmask}->{level}    = $level;
+  $self->{admins}->hash->{$channel}->{$hostmask}->{password} = $password;
 
-  $self->{pbot}->logger->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");
+  $self->{pbot}->{logger}->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");
 
   $self->save_admins unless $dont_save;
 }
@@ -71,13 +71,13 @@ sub remove_admin {
   my $self = shift;
   my ($channel, $hostmask) = @_;
 
-  my $admin = delete $self->admins->hash->{$channel}->{$hostmask};
+  my $admin = delete $self->{admins}->hash->{$channel}->{$hostmask};
   if(defined $admin) {
-    $self->{pbot}->logger->log("Removed level $admin->{level} admin [$admin->{name}] [$hostmask] from channel [$channel]\n");
+    $self->{pbot}->{logger}->log("Removed level $admin->{level} admin [$admin->{name}] [$hostmask] from channel [$channel]\n");
     $self->save_admins;
     return 1;
   } else {
-    $self->{pbot}->logger->log("Attempt to remove non-existent admin [$hostmask] from channel [$channel]\n");
+    $self->{pbot}->{logger}->log("Attempt to remove non-existent admin [$hostmask] from channel [$channel]\n");
     return 0;
   }
 }
@@ -86,43 +86,43 @@ sub load_admins {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->admins->filename; }
+  if(@_) { $filename = shift; } else { $filename = $self->{admins}->filename; }
 
   if(not defined $filename) {
     Carp::carp "No admins path specified -- skipping loading of admins";
     return;
   }
 
-  $self->{pbot}->logger->log("Loading admins from $filename ...\n");
+  $self->{pbot}->{logger}->log("Loading admins from $filename ...\n");
 
-  $self->admins->load;
+  $self->{admins}->load;
   
   my $i = 0;
 
-  foreach my $channel (keys %{ $self->admins->hash } ) {
-    foreach my $hostmask (keys %{ $self->admins->hash->{$channel} }) {
+  foreach my $channel (keys %{ $self->{admins}->hash } ) {
+    foreach my $hostmask (keys %{ $self->{admins}->hash->{$channel} }) {
       $i++;
 
-      my $name = $self->admins->hash->{$channel}->{$hostmask}->{name};
-      my $level = $self->admins->hash->{$channel}->{$hostmask}->{level};
-      my $password = $self->admins->hash->{$channel}->{$hostmask}->{password};
+      my $name = $self->{admins}->hash->{$channel}->{$hostmask}->{name};
+      my $level = $self->{admins}->hash->{$channel}->{$hostmask}->{level};
+      my $password = $self->{admins}->hash->{$channel}->{$hostmask}->{password};
 
       if(not defined $name or not defined $level or not defined $password) {
         Carp::croak "Syntax error around line $i of $filename\n";
       }
 
-      $self->{pbot}->logger->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");
+      $self->{pbot}->{logger}->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");
     }
   }
 
-  $self->{pbot}->logger->log("  $i admins loaded.\n");
-  $self->{pbot}->logger->log("Done.\n");
+  $self->{pbot}->{logger}->log("  $i admins loaded.\n");
+  $self->{pbot}->{logger}->log("Done.\n");
 }
 
 sub save_admins {
   my $self = shift;
   
-  $self->admins->save;
+  $self->{admins}->save;
   $self->export_admins;
 }
 
@@ -143,10 +143,10 @@ sub find_admin {
   $hostmask = '.*' if not defined $hostmask;
 
   my $result = eval {
-    foreach my $channel_regex (keys %{ $self->admins->hash }) {
+    foreach my $channel_regex (keys %{ $self->{admins}->hash }) {
       if($from !~ m/^#/) {
         # if not from a channel, make sure that nick portion of hostmask matches $from
-        foreach my $hostmask_regex (keys %{ $self->admins->hash->{$channel_regex} }) {
+        foreach my $hostmask_regex (keys %{ $self->{admins}->hash->{$channel_regex} }) {
           my $nick;
 
           if($hostmask_regex =~ m/^([^!]+)!.*/) {
@@ -155,11 +155,11 @@ sub find_admin {
             $nick = $hostmask_regex;
           }
 
-          return $self->admins->hash->{$channel_regex}->{$hostmask_regex} if($from =~ m/$nick/i and $hostmask =~ m/$hostmask_regex/i);
+          return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if($from =~ m/$nick/i and $hostmask =~ m/$hostmask_regex/i);
         }
       } elsif($from =~ m/$channel_regex/i) {
-        foreach my $hostmask_regex (keys %{ $self->admins->hash->{$channel_regex} }) {
-          return $self->admins->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/$hostmask_regex/i;
+        foreach my $hostmask_regex (keys %{ $self->{admins}->hash->{$channel_regex} }) {
+          return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/$hostmask_regex/i;
         }
       }
     }
@@ -167,7 +167,7 @@ sub find_admin {
   };
 
   if($@) {
-    $self->{pbot}->logger->log("Error in find_admin parameters: $@\n");
+    $self->{pbot}->{logger}->log("Error in find_admin parameters: $@\n");
   }
 
   return $result;
@@ -191,18 +191,18 @@ sub login {
   my $admin = $self->find_admin($channel, $hostmask);
 
   if(not defined $admin) {
-    $self->{pbot}->logger->log("Attempt to login non-existent [$channel][$hostmask] failed\n");
+    $self->{pbot}->{logger}->log("Attempt to login non-existent [$channel][$hostmask] failed\n");
     return "You do not have an account in $channel.";
   }
 
   if($admin->{password} ne $password) {
-    $self->{pbot}->logger->log("Bad login password for [$channel][$hostmask]\n");
+    $self->{pbot}->{logger}->log("Bad login password for [$channel][$hostmask]\n");
     return "I don't think so.";
   }
 
   $admin->{loggedin} = 1;
 
-  $self->{pbot}->logger->log("$hostmask logged into $channel\n");
+  $self->{pbot}->{logger}->log("$hostmask logged into $channel\n");
 
   return "Logged into $channel.";
 }

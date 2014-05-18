@@ -50,7 +50,7 @@ sub load_quotegrabs {
   if(@_) { $filename = shift; } else { $filename = $self->{filename}; }
   return if not defined $filename;
 
-  $self->{pbot}->logger->log("Loading quotegrabs from $filename ...\n");
+  $self->{pbot}->{logger}->log("Loading quotegrabs from $filename ...\n");
   
   open(FILE, "< $filename") or die "Couldn't open $filename: $!\n";
   my @contents = <FILE>;
@@ -75,8 +75,8 @@ sub load_quotegrabs {
     $quotegrab->{id} = $i + 1;
     push @{ $self->{quotegrabs} }, $quotegrab;
   }
-  $self->{pbot}->logger->log("  $i quotegrabs loaded.\n");
-  $self->{pbot}->logger->log("Done.\n");
+  $self->{pbot}->{logger}->log("  $i quotegrabs loaded.\n");
+  $self->{pbot}->{logger}->log("Done.\n");
 }
 
 sub save_quotegrabs {
@@ -151,7 +151,7 @@ sub get_random_quotegrab {
   };
 
   if($@) {
-    $self->{pbot}->logger->log("Error in show_random_quotegrab parameters: $@\n");
+    $self->{pbot}->{logger}->log("Error in show_random_quotegrab parameters: $@\n");
     return undef;
   }
   

@@ -44,7 +44,9 @@ sub initialize {
   $self->{MSG_DEPARTURE}  = 2;  # PART, QUIT, KICK
   $self->{MSG_NICKCHANGE} = 3;  # CHANGED NICK
 
-  $self->{pbot}->commands->register(sub { $self->recall_message(@_) },  "recall",  0);
+  $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_messages', $conf{max_messages} // 32);
+
+  $self->{pbot}->{commands}->register(sub { $self->recall_message(@_) },  "recall",  0);
 
   $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
 }
@@ -63,7 +65,7 @@ sub recall_message {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
   if(not defined $from) {
-    $self->{pbot}->logger->log("Command missing ~from parameter!\n");
+    $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 
@@ -170,7 +172,7 @@ sub recall_message {
       $recall_nick = $found_nick;
     }
 
-    $self->{pbot}->logger->log("$nick ($from) recalled <$recall_nick/$recall_channel> $message->{msg}\n");
+    $self->{pbot}->{logger}->log("$nick ($from) recalled <$recall_nick/$recall_channel> $message->{msg}\n");
 
     my $text = $message->{msg};
     my $ago = ago(gettimeofday - $message->{timestamp});
