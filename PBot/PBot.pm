@@ -86,7 +86,7 @@ sub initialize {
   $self->{registry}->add_default('text', 'irc',     'botnick',     delete $conf{botnick}     // "pbot3");
   $self->{registry}->add_default('text', 'irc',     'username',    delete $conf{username}    // "pbot3");
   $self->{registry}->add_default('text', 'irc',     'ircname',     delete $conf{ircname}     // "http://code.google.com/p/pbot2-pl/");
-  $self->{registry}->add_default('text', 'irc',     'identify_password', delete $conf{identify_password} // "");
+  $self->{registry}->add_default('text', 'irc',     'identify_password', delete $conf{identify_password} // 'none');
   $self->{registry}->set('irc', 'SSL_ca_file',       'private', 1);
   $self->{registry}->set('irc', 'SSL_ca_path',       'private', 1);
   $self->{registry}->set('irc', 'identify_password', 'private', 1);
