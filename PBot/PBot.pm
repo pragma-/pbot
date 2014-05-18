@@ -112,13 +112,13 @@ sub initialize {
   $self->{interpreter}->register(sub { return $self->{factoids}->interpreter(@_); });
 
   $self->{factoids} = PBot::Factoids->new(
-      pbot        => $self,
-      filename    => delete $conf{factoids_file},
-      export_path => delete $conf{export_factoids_path},
-      export_site => delete $conf{export_factoids_site}, 
+    pbot        => $self,
+    filename    => delete $conf{factoids_file},
+    export_path => delete $conf{export_factoids_path},
+    export_site => delete $conf{export_factoids_site}, 
   );
 
-  $self->{quotegrabs}     = PBot::Quotegrabs->new(
+  $self->{quotegrabs} = PBot::Quotegrabs->new(
     pbot        => $self, 
     filename    => delete $conf{quotegrabs_file},
     export_path => delete $conf{export_quotegrabs_path},
@@ -151,14 +151,14 @@ sub connect {
   $self->{logger}->log("Connecting to $server ...\n");
 
   $self->{conn} = $self->{irc}->newconn( 
-      Nick         => $self->{registry}->get_value('irc', 'botnick'),
-      Username     => $self->{registry}->get_value('irc', 'username'),
-      Ircname      => $self->{registry}->get_value('irc', 'ircname'),
-      Server       => $server,
-      SSL          => $self->{registry}->get_value('irc', 'SSL'),
-      SSL_ca_file  => $self->{registry}->get_value('irc', 'SSL_ca_file'),
-      SSL_ca_path  => $self->{registry}->get_value('irc', 'SSL_ca_path'),
-      Port         => $self->{registry}->get_value('irc', 'port'))
+    Nick         => $self->{registry}->get_value('irc', 'botnick'),
+    Username     => $self->{registry}->get_value('irc', 'username'),
+    Ircname      => $self->{registry}->get_value('irc', 'ircname'),
+    Server       => $server,
+    SSL          => $self->{registry}->get_value('irc', 'SSL'),
+    SSL_ca_file  => $self->{registry}->get_value('irc', 'SSL_ca_file'),
+    SSL_ca_path  => $self->{registry}->get_value('irc', 'SSL_ca_path'),
+    Port         => $self->{registry}->get_value('irc', 'port'))
     or Carp::croak "$0: Can't connect to IRC server.\n";
 
   $self->{connected} = 1;
