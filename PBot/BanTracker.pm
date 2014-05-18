@@ -53,8 +53,8 @@ sub get_banlist {
   delete $self->{banlist}->{$channel};
 
   $self->{pbot}->{logger}->log("Retrieving banlist for $channel.\n");
-  ${conn}->sl("mode $channel +b");
-  ${conn}->sl("mode $channel +q");
+  $conn->sl("mode $channel +b");
+  $conn->sl("mode $channel +q");
 }
 
 sub get_baninfo {

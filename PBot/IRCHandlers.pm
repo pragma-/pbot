@@ -38,14 +38,14 @@ sub initialize {
 sub on_connect {
   my ($self, $conn) = @_;
   $self->{pbot}->{logger}->log("Connected!\n");
-  ${conn}->{connected} = 1;
+  $conn->{connected} = 1;
 }
 
 sub on_disconnect {
   my ($self, $conn, $event) = @_;
   $self->{pbot}->{logger}->log("Disconnected, attempting to reconnect...\n");
-  ${conn}->connect();
-  if(not ${conn}->connected) {
+  $conn->connect();
+  if(not $conn->connected) {
     sleep(5);
     $self->on_disconnect($self, $conn, $event);
   }
@@ -91,14 +91,14 @@ sub on_notice {
 
   if($nick eq "NickServ" && $text =~ m/This nickname is registered/) {
     $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
-    ${conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+    $conn->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
   }
   
   if($nick eq "NickServ" && $text =~ m/You are now identified/) {
     foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
       if($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
         $self->{pbot}->{logger}->log("Joining channel: $chan\n");
-        ${conn}->join($chan);
+        $conn->join($chan);
       }
     }
     $self->{pbot}->{joined_channels} = 1;
@@ -153,7 +153,7 @@ sub on_mode {
       }
       elsif($mode eq "+b") {
         $self->{pbot}->{logger}->log("Got banned in $channel, attempting unban.");
-        ${conn}->privmsg("chanserv", "unban $channel");
+        $conn->privmsg("chanserv", "unban $channel");
       }    
     } 
     else {  # bot not targeted
