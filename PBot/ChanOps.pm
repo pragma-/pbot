@@ -8,6 +8,7 @@ package PBot::ChanOps;
 use warnings;
 use strict;
 
+use PBot::ChanOpCommands;
 use Time::HiRes qw(gettimeofday);
 
 sub new {
@@ -37,6 +38,8 @@ sub initialize {
 
   $self->{op_commands} = {};
   $self->{is_opped} = {};
+
+  $self->{commands} = PBot::ChanOpCommands->new(pbot => $pbot);
 
   $pbot->timer->register(sub { $self->check_opped_timeouts   }, 10);
   $pbot->timer->register(sub { $self->check_unban_timeouts   }, 10);

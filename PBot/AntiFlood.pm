@@ -362,7 +362,7 @@ sub check_flood {
 
           my $length = $channel_data->{offenses} ** $channel_data->{offenses} * $channel_data->{offenses} * 30;
 
-          $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", "$nick!$user\@$host $channel $length");
+          $self->{pbot}->ignorelist->{commands}->ignore_user("", "floodcontrol", "", "", "$nick!$user\@$host $channel $length");
           $length = duration($length);
           $self->{pbot}->logger->log("$nick msg flood offense " . $channel_data->{offenses} . " earned $length ignore\n");
           $self->{pbot}->conn->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");

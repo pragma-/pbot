@@ -26,40 +26,23 @@ STDOUT->autoflush(1);
 
 use Carp ();
 use PBot::Logger;
-
 use PBot::Registry;
-
 use PBot::SelectHandler;
 use PBot::StdinReader;
-
 use PBot::IRC;
 use PBot::IRCHandlers;
 use PBot::Channels;
-
 use PBot::BanTracker;
-
 use PBot::LagChecker;
 use PBot::MessageHistory;
 use PBot::AntiFlood;
-
 use PBot::Interpreter;
 use PBot::Commands;
-
 use PBot::ChanOps;
-use PBot::ChanOpCommands;
-
 use PBot::Factoids; 
-use PBot::FactoidCommands;
-
 use PBot::BotAdmins;
-use PBot::BotAdminCommands;
-
 use PBot::IgnoreList;
-use PBot::IgnoreListCommands;
-
 use PBot::Quotegrabs;
-# no PBot::QuotegrabsCommands (bundled inside PBot::Quotegrabs for a change)
-
 use PBot::Timer;
 
 sub new {
@@ -89,43 +72,53 @@ sub initialize {
   # registry created, but not yet loaded, to allow modules to create default values and triggers
   $self->{registry} = PBot::Registry->new(pbot => $self, filename => delete $conf{registry_file} // "$config_dir/registry");
 
-  $self->{registry}->add_default('text', 'general', 'config_dir', $config_dir);
-  $self->{registry}->add_default('text', 'general', 'data_dir',   delete $conf{data_dir}   // "$ENV{HOME}/pbot/data");
-  $self->{registry}->add_default('text', 'general', 'module_dir', delete $conf{module_dir} // "$ENV{HOME}/pbot/modules");
-  $self->{registry}->add_default('text', 'general', 'trigger',    delete $conf{trigger}    // '!');
+  $self->{registry}->add_default('text', 'general', 'config_dir',  $config_dir);
+  $self->{registry}->add_default('text', 'general', 'data_dir',    delete $conf{data_dir}    // "$ENV{HOME}/pbot/data");
+  $self->{registry}->add_default('text', 'general', 'module_dir',  delete $conf{module_dir}  // "$ENV{HOME}/pbot/modules");
+  $self->{registry}->add_default('text', 'general', 'trigger',     delete $conf{trigger}     // '!');
 
-  $self->{registry}->add_default('text', 'irc', 'max_msg_len', delete $conf{max_msg_len} // 425);
-  $self->{registry}->add_default('text', 'irc', 'ircserver',   delete $conf{ircserver}   // "irc.freenode.net");
-  $self->{registry}->add_default('text', 'irc', 'port',        delete $conf{port}        // 6667);
-  $self->{registry}->add_default('text', 'irc', 'SSL',         delete $conf{SSL}         // 0);
-  $self->{registry}->add_default('text', 'irc', 'SSL_ca_file', delete $conf{SSL_ca_file} // 'none');
-  $self->{registry}->set('irc', 'SSL_ca_file', 'private', 1);
-  $self->{registry}->add_default('text', 'irc', 'SSL_ca_path', delete $conf{SSL_ca_path} // 'none');
-  $self->{registry}->set('irc', 'SSL_ca_path', 'private', 1);
-  $self->{registry}->add_default('text', 'irc', 'botnick',     delete $conf{botnick}     // "pbot3");
-  $self->{registry}->add_default('text', 'irc', 'username',    delete $conf{username}    // "pbot3");
-  $self->{registry}->add_default('text', 'irc', 'ircname',     delete $conf{ircname}     // "http://code.google.com/p/pbot2-pl/");
-  $self->{registry}->add_default('text', 'irc', 'identify_password', delete $conf{identify_password} // "");
+  $self->{registry}->add_default('text', 'irc',     'max_msg_len', delete $conf{max_msg_len} // 425);
+  $self->{registry}->add_default('text', 'irc',     'ircserver',   delete $conf{ircserver}   // "irc.freenode.net");
+  $self->{registry}->add_default('text', 'irc',     'port',        delete $conf{port}        // 6667);
+  $self->{registry}->add_default('text', 'irc',     'SSL',         delete $conf{SSL}         // 0);
+  $self->{registry}->add_default('text', 'irc',     'SSL_ca_file', delete $conf{SSL_ca_file} // 'none');
+  $self->{registry}->add_default('text', 'irc',     'SSL_ca_path', delete $conf{SSL_ca_path} // 'none');
+  $self->{registry}->add_default('text', 'irc',     'botnick',     delete $conf{botnick}     // "pbot3");
+  $self->{registry}->add_default('text', 'irc',     'username',    delete $conf{username}    // "pbot3");
+  $self->{registry}->add_default('text', 'irc',     'ircname',     delete $conf{ircname}     // "http://code.google.com/p/pbot2-pl/");
+  $self->{registry}->add_default('text', 'irc',     'identify_password', delete $conf{identify_password} // "");
+  $self->{registry}->set('irc', 'SSL_ca_file',       'private', 1);
+  $self->{registry}->set('irc', 'SSL_ca_path',       'private', 1);
   $self->{registry}->set('irc', 'identify_password', 'private', 1);
 
   $self->{registry}->add_trigger('irc', 'botnick', sub { $self->change_botnick_trigger(@_) });
 
-  $self->{registry}->add_default('text', 'antiflood', 'max_join_flood',    delete $conf{max_join_flood}    // 4);
-  $self->{registry}->add_default('text', 'antiflood', 'max_chat_flood',    delete $conf{max_chat_flood}    // 4);
-  $self->{registry}->add_default('text', 'antiflood', 'max_enter_flood',   delete $conf{max_enter_flood}   // 4);
-  $self->{registry}->add_default('text', 'antiflood', 'max_nick_flood',    delete $conf{max_nick_flood}    // 3);
-
+  $self->{registry}->add_default('text', 'antiflood', 'max_join_flood',           delete $conf{max_join_flood}           //  4);
+  $self->{registry}->add_default('text', 'antiflood', 'max_chat_flood',           delete $conf{max_chat_flood}           //  4);
+  $self->{registry}->add_default('text', 'antiflood', 'max_enter_flood',          delete $conf{max_enter_flood}          //  4);
+  $self->{registry}->add_default('text', 'antiflood', 'max_nick_flood',           delete $conf{max_nick_flood}           //  3);
   $self->{registry}->add_default('text', 'antiflood', 'enter_abuse_max_lines',    delete $conf{enter_abuse_max_lines}    //  4);
   $self->{registry}->add_default('text', 'antiflood', 'enter_abuse_max_seconds',  delete $conf{enter_abuse_max_seconds}  // 20);
   $self->{registry}->add_default('text', 'antiflood', 'enter_abuse_max_offenses', delete $conf{enter_abuse_max_offenses} //  3);
 
   $self->{registry}->add_default('text', 'messagehistory', 'max_messages', delete $conf{max_messages} // 32);
  
-  $self->{select_handler}     = PBot::SelectHandler->new(pbot => $self);
-  $self->{stdin_reader}       = PBot::StdinReader->new(pbot => $self);
+  $self->{select_handler} = PBot::SelectHandler->new(pbot => $self);
+  $self->{stdin_reader}   = PBot::StdinReader->new(pbot => $self);
+  $self->{admins}         = PBot::BotAdmins->new(pbot => $self, filename => delete $conf{admins_file});
+  $self->{bantracker}     = PBot::BanTracker->new(pbot => $self);
+  $self->{lagchecker}     = PBot::LagChecker->new(pbot => $self);
+  $self->{messagehistory} = PBot::MessageHistory->new(pbot => $self, filename => delete $conf{messagehistory_file});
+  $self->{antiflood}      = PBot::AntiFlood->new(pbot => $self);
+  $self->{ignorelist}     = PBot::IgnoreList->new(pbot => $self, filename => delete $conf{ignorelist_file});
+  $self->{irc}            = PBot::IRC->new();
+  $self->{irchandlers}    = PBot::IRCHandlers->new(pbot => $self);
+  $self->{channels}       = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file});
+  $self->{chanops}        = PBot::ChanOps->new(pbot => $self);
 
-  $self->{admins}             = PBot::BotAdmins->new(pbot => $self, filename => delete $conf{admins_file});
-  $self->admins->load_admins();
+  $self->interpreter(PBot::Interpreter->new(pbot => $self));
+  $self->interpreter->register(sub { return $self->commands->interpreter(@_); });
+  $self->interpreter->register(sub { return $self->factoids->interpreter(@_); });
 
   $self->{factoids} = PBot::Factoids->new(
       pbot        => $self,
@@ -134,31 +127,7 @@ sub initialize {
       export_site => delete $conf{export_factoids_site}, 
   );
 
-  $self->{bantracker}   = PBot::BanTracker->new(pbot => $self);
-
-  $self->{lagchecker}     = PBot::LagChecker->new(pbot => $self);
-  $self->{messagehistory} = PBot::MessageHistory->new(pbot => $self, filename => delete $conf{messagehistory_file});
-  $self->{antiflood}      = PBot::AntiFlood->new(pbot => $self);
-
-  $self->{ignorelist}   = PBot::IgnoreList->new(pbot => $self, filename => delete $conf{ignorelist_file});
-
-  $self->interpreter(PBot::Interpreter->new(pbot => $self));
-  $self->interpreter->register(sub { return $self->commands->interpreter(@_); });
-  $self->interpreter->register(sub { return $self->factoids->interpreter(@_); });
-
-  $self->{botadmincmds}   = PBot::BotAdminCommands->new(pbot => $self);
-  $self->{factoidcmds}    = PBot::FactoidCommands->new(pbot => $self);
-  $self->{ignorelistcmds} = PBot::IgnoreListCommands->new(pbot => $self);
-
-  $self->{irc}            = PBot::IRC->new();
-  $self->{irchandlers}    = PBot::IRCHandlers->new(pbot => $self);
-
-  $self->{channels}       = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file});
-
-  $self->{chanops}       = PBot::ChanOps->new(pbot => $self);
-  $self->{chanopcmds}    = PBot::ChanOpCommands->new(pbot => $self);
-
-  $self->{quotegrabs}    = PBot::Quotegrabs->new(
+  $self->{quotegrabs}     = PBot::Quotegrabs->new(
     pbot        => $self, 
     filename    => delete $conf{quotegrabs_file},
     export_path => delete $conf{export_quotegrabs_path},

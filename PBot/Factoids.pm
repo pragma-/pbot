@@ -14,6 +14,7 @@ use Carp ();
 use POSIX qw(strftime);
 
 use PBot::PBot qw($VERSION);
+use PBot::FactoidCommands;
 use PBot::FactoidModuleLauncher;
 use PBot::DualIndexHashObject;
 
@@ -32,17 +33,18 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $filename = delete $conf{filename};
+  my $filename    = delete $conf{filename};
   my $export_path = delete $conf{export_path};
   my $export_site = delete $conf{export_site};
 
   my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to Factoids");
 
-  $self->{factoids} = PBot::DualIndexHashObject->new(name => 'Factoids', filename => $filename);
+  $self->{factoids}    = PBot::DualIndexHashObject->new(name => 'Factoids', filename => $filename);
   $self->{export_path} = $export_path;
   $self->{export_site} = $export_site;
 
-  $self->{pbot} = $pbot;
+  $self->{pbot}                  = $pbot;
+  $self->{commands}              = PBot::FactoidCommands->new(pbot => $pbot);
   $self->{factoidmodulelauncher} = PBot::FactoidModuleLauncher->new(pbot => $pbot);
 
   $self->{pbot}->{atexit}->register(sub { $self->save_factoids; return; });
@@ -341,7 +343,7 @@ sub interpreter {
       # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, don't say anything
       return "" if length $arguments and $arguments !~ /^[^.+-, ]{1,20}$/;
       
-      my $matches = $self->{pbot}->{factoidcmds}->factfind($from, $nick, $user, $host, quotemeta $original_keyword);
+      my $matches = $self->{commands}->factfind($from, $nick, $user, $host, quotemeta $original_keyword);
 
       # found factfind matches
       if($matches !~ m/^No factoids/) {

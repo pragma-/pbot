@@ -8,6 +8,7 @@ package PBot::IgnoreList;
 use warnings;
 use strict;
 
+use PBot::IgnoreListCommands;
 use Time::HiRes qw(gettimeofday);
 
 sub new {
@@ -28,9 +29,11 @@ sub initialize {
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to Channels");
   $self->{filename} = delete $conf{filename};
 
-  $self->{ignore_list} = {};
+  $self->{ignore_list}          = {};
   $self->{ignore_flood_counter} = {};
-  $self->{last_timestamp} = {};
+  $self->{last_timestamp}       = {};
+
+  $self->{commands} = PBot::IgnoreListCommands->new(pbot => $self->{pbot});
 
   $self->load_ignores;
 
@@ -146,7 +149,7 @@ sub check_ignore {
     }
 
     if(exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 5) {
-      $self->{pbot}->{ignorelistcmds}->ignore_user("", "floodcontrol", "", "", ".* $channel 300");
+      $self->{commands}->ignore_user("", "floodcontrol", "", "", ".* $channel 300");
       $self->{ignore_flood_counter}->{$channel} = 0;
       if($channel =~ /^#/) {
         $pbot->conn->me($channel, "has been overwhelmed.");
@@ -183,7 +186,7 @@ sub check_ignore_timeouts {
       next if($self->{ignore_list}->{$hostmask}{$channel} == -1); #permanent ignore
 
       if($self->{ignore_list}->{$hostmask}{$channel} < $now) {
-        $self->{pbot}->{ignorelistcmds}->unignore_user("", "floodcontrol", "", "", "$hostmask $channel");
+        $self->{commands}->unignore_user("", "floodcontrol", "", "", "$hostmask $channel");
         if($hostmask eq ".*") {
           $self->{pbot}->conn->me($channel, "awakens.");
         }

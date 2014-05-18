@@ -9,12 +9,13 @@ use warnings;
 use strict;
 
 use PBot::DualIndexHashObject;
+use PBot::BotAdminCommands;
 
 use Carp ();
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to BotAdmins should be key/value pairs, not hash reference");
+    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
   my ($class, %conf) = @_;
@@ -27,16 +28,11 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $filename = delete $conf{filename};
-  my $export_path = delete $conf{export_path};
-  my $export_site = delete $conf{export_site};
-
-  my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
-    Carp::croak("Missing pbot reference to BotAdmins");
-  }
-
+  my $filename       = delete $conf{filename};
+  my $export_path    = delete $conf{export_path};
+  my $export_site    = delete $conf{export_site};
   my $export_timeout = delete $conf{export_timeout};
+
   if(not defined $export_timeout) {
     if(defined $export_path) {
       $export_timeout = 300; # every 5 minutes
@@ -45,12 +41,14 @@ sub initialize {
     }
   }
 
-  $self->{admins} = PBot::DualIndexHashObject->new(name => 'Admins', filename => $filename);
-  $self->{export_path} = $export_path;
-  $self->{export_site} = $export_site;
+  $self->{pbot}           = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{admins}         = PBot::DualIndexHashObject->new(name => 'Admins', filename => $filename);
+  $self->{commands}       = PBot::BotAdminCommands->new(pbot => $self->{pbot});
+  $self->{export_path}    = $export_path;
+  $self->{export_site}    = $export_site;
   $self->{export_timeout} = $export_timeout;
 
-  $self->{pbot} = $pbot;
+  $self->load_admins;
 }
 
 sub add_admin {
