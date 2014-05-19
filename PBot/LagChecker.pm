@@ -34,11 +34,13 @@ sub initialize {
   $self->{pbot} = $pbot;
 
   # maximum number of lag history entries to retain
-  $pbot->{registry}->add_default('text', 'lagchecker', 'lag_history_max',      $conf{lag_history_max} //  3); 
+  $pbot->{registry}->add_default('text', 'lagchecker', 'lag_history_max',      $conf{lag_history_max}      //  3); 
   # lagging is true if lag_average reaches or exceeds this threshold, in seconds
-  $pbot->{registry}->add_default('text', 'lagchecker', 'lag_threshold',        $conf{lag_threadhold}  //  2);
+  $pbot->{registry}->add_default('text', 'lagchecker', 'lag_threshold',        $conf{lag_threadhold}       //  2);
   # how often to send PING, in seconds
-  $pbot->{registry}->add_default('text', 'lagchecker', 'lag_history_interval', $conf{lag_history_max} // 10);
+  $pbot->{registry}->add_default('text', 'lagchecker', 'lag_history_interval', $conf{lag_history_interval} // 10);
+
+  $pbot->{registry}->add_trigger('lagchecker', 'lag_history_interval', sub { $self->lag_history_interval_trigger(@_) });
 
   $self->{lag_average} = undef;        # average of entries in lag history, in seconds
   $self->{lag_string} = undef;         # string representation of lag history and lag average
@@ -46,9 +48,18 @@ sub initialize {
   $self->{pong_received} = undef;      # tracks pong replies; undef if no ping sent; 0 if ping sent but no pong reply yet; 1 if ping/pong completed
   $self->{ping_send_time} = undef;     # when last ping was sent
 
-  $pbot->{timer}->register(sub { $self->send_ping }, $pbot->{registry}->get_value('lagchecker', 'lag_history_interval'));
+  $pbot->{timer}->register(
+    sub { $self->send_ping },
+    $pbot->{registry}->get_value('lagchecker', 'lag_history_interval'),
+    'lag_history_interval'
+  );
 
   $pbot->{commands}->register(sub { return $self->lagcheck(@_) }, "lagcheck", 0);
+}
+
+sub lag_history_interval_trigger {
+  my ($self, $section, $item, $newvalue) = @_;
+  $self->{pbot}->{timer}->update_interval('lag_history_interval', $newvalue);
 }
 
 sub send_ping {

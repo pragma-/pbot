@@ -28,9 +28,22 @@ sub initialize {
 
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference in " . __FILE__);
   $self->{filename}  = delete $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/message_history.sqlite3';
-
-  $self->{pbot}->{timer}->register(sub { $self->commit_message_history }, 5);
   $self->{new_entries} = 0;
+
+  $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'sqlite_commit_interval', 30);
+
+  $self->{pbot}->{registry}->add_trigger('messagehistory', 'sqlite_commit_interval', sub { $self->sqlite_commit_interval_trigger(@_) });
+
+  $self->{pbot}->{timer}->register(
+    sub { $self->commit_message_history },
+    $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_commit_interval'),
+    'messagehistory_sqlite_commit_interval'
+  );
+}
+
+sub sqlite_commit_interval_trigger {
+  my ($self, $section, $item, $newvalue) = @_;
+  $self->{pbot}->{timer}->update_interval('messagehistory_sqlite_commit_interval', $newvalue);
 }
 
 sub begin {

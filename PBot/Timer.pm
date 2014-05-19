@@ -107,11 +107,11 @@ sub on_tick_handler {
     } else {
       # call default overridable handler if timeout has elapsed
       if(defined $self->{last}) {
-        # print "$self->{name} last = $self->{last}, seconds: $seconds, timeout: " . $self->timeout . " " . ($seconds - $self->{last}) . "\n";
+        # print "$self->{name} last = $self->{last}, seconds: $seconds, timeout: $self->{timeout} " . ($seconds - $self->{last}) . "\n";
 
         $self->{last} -= $max_seconds if $seconds < $self->{last}; # handle wrap-around
 
-        if($seconds - $self->{last} >= $self->timeout) {
+        if($seconds - $self->{last} >= $self->{timeout}) {
           $elapsed = 1;
           $self->{last} = $seconds;
         }
@@ -139,22 +139,19 @@ sub on_tick {
 
 sub register {
   my $self = shift;
-  my ($ref, $timeout);
+  my ($ref, $timeout, $id) = @_;
 
-  if(@_) {
-    ($ref, $timeout) = @_;
-  } else {
-    Carp::croak("Must pass subroutine reference to register()");
-  }
+  Carp::croak("Must pass subroutine reference to register()") if not defined $ref;
 
   # TODO: Check if subref already exists in handlers?
 
   $timeout = 300 if not defined $timeout; # set default value of 5 minutes if not defined
+  $id = 'timer' if not defined $id;
 
-  my $h = { subref => $ref, timeout => $timeout };
+  my $h = { subref => $ref, timeout => $timeout, id => $id };
   push @{ $self->{handlers} }, $h;
 
-  # print "-- Registering timer $ref at $timeout seconds\n";
+  # print "-- Registering timer $ref [$id] at $timeout seconds\n";
 
   if($timeout < $min_timeout) {
     $min_timeout = $timeout;
@@ -180,23 +177,15 @@ sub unregister {
   @{ $self->{handlers} } = grep { $_->{subref} != $ref } @{ $self->{handlers} };
 }
 
-sub max_seconds {
-  if(@_) { $max_seconds = shift; }
-  return $max_seconds;
-}
+sub update_interval {
+  my ($self, $id, $interval) = @_;
 
-sub timeout {
-  my $self = shift;
-
-  if(@_) { $self->{timeout} = shift; }
-  return $self->{timeout};
-}
-
-sub name {
-  my $self = shift;
-
-  if(@_) { $self->{name} = shift; }
-  return $self->{name};
+  foreach my $h (@{ $self->{handlers} }) {
+    if($h->{id} eq $id) {
+      $h->{timeout} = $interval;
+      last;
+    }
+  }
 }
 
 1;
