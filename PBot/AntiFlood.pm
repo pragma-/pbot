@@ -51,13 +51,22 @@ sub initialize {
 
   $self->{pbot}->{timer}->register(sub { $self->adjust_offenses }, 60 * 60 * 1);
 
-  $self->{pbot}->{registry}->add_default('text', 'antiflood', 'max_join_flood',           $conf{max_join_flood}           //  4);
-  $self->{pbot}->{registry}->add_default('text', 'antiflood', 'max_chat_flood',           $conf{max_chat_flood}           //  4);
-  $self->{pbot}->{registry}->add_default('text', 'antiflood', 'max_enter_flood',          $conf{max_enter_flood}          //  4);
-  $self->{pbot}->{registry}->add_default('text', 'antiflood', 'max_nick_flood',           $conf{max_nick_flood}           //  3);
-  $self->{pbot}->{registry}->add_default('text', 'antiflood', 'enter_abuse_max_lines',    $conf{enter_abuse_max_lines}    //  4);
-  $self->{pbot}->{registry}->add_default('text', 'antiflood', 'enter_abuse_max_seconds',  $conf{enter_abuse_max_seconds}  // 20);
-  $self->{pbot}->{registry}->add_default('text', 'antiflood', 'enter_abuse_max_offenses', $conf{enter_abuse_max_offenses} //  3);
+  $self->{pbot}->{registry}->add_default('text',  'antiflood', 'join_flood_threshold',      $conf{join_flood_threshold}      //  4);
+  $self->{pbot}->{registry}->add_default('text',  'antiflood', 'join_flood_time_threshold', $conf{join_flood_time_threshold} //  60 * 30);
+  $self->{pbot}->{registry}->add_default('array', 'antiflood', 'join_flood_punishment',     $conf{join_flood_punishment}     // '28800,86400,604800,2419200,14515200');
+
+  $self->{pbot}->{registry}->add_default('text',  'antiflood', 'chat_flood_threshold',      $conf{chat_flood_threshold}      //  4);
+  $self->{pbot}->{registry}->add_default('text',  'antiflood', 'chat_flood_time_threshold', $conf{chat_flood_time_threshold} // 10);
+  $self->{pbot}->{registry}->add_default('array', 'antiflood', 'chat_flood_punishment',     $conf{chat_flood_punishment}     // '60,300,3600,86400,604800,2419200');
+
+  $self->{pbot}->{registry}->add_default('text',  'antiflood', 'nick_flood_threshold',      $conf{nick_flood_threshold}      //  3);
+  $self->{pbot}->{registry}->add_default('text',  'antiflood', 'nick_flood_time_threshold', $conf{nick_flood_time_threshold} //  60 * 30);
+  $self->{pbot}->{registry}->add_default('array', 'antiflood', 'nick_flood_punishment',     $conf{nick_flood_punishment}     // '60,300,3600,86400,604800,2419200');
+
+  $self->{pbot}->{registry}->add_default('text',  'antiflood', 'enter_abuse_threshold',      $conf{enter_abuse_threshold}      //  4);
+  $self->{pbot}->{registry}->add_default('text',  'antiflood', 'enter_abuse_time_threshold', $conf{enter_abuse_time_threshold} // 20);
+  $self->{pbot}->{registry}->add_default('array', 'antiflood', 'enter_abuse_punishment',     $conf{enter_abuse_punishment}     // '28800,86400,604800,2419200,14515200');
+  $self->{pbot}->{registry}->add_default('text',  'antiflood', 'enter_abuse_max_offenses',   $conf{enter_abuse_max_offenses}   //  3);
 
   $self->{pbot}->{commands}->register(sub { return $self->unbanme(@_)   },  "unbanme",   0);
   $self->{pbot}->{commands}->register(sub { return $self->whitelist(@_) },  "whitelist", 10);
@@ -258,16 +267,17 @@ sub check_flood {
     if(defined $self->{channels}->{$channel}->{last_spoken_nick} and $nick eq $self->{channels}->{$channel}->{last_spoken_nick}) {
       my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, 2, $self->{pbot}->{messagehistory}->{MSG_CHAT});
 
-      my $enter_abuse_max_lines    = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_lines');
-      my $enter_abuse_max_seconds  = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_seconds');
-      my $enter_abuse_max_offenses = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_offenses');
+      my $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_threshold');
+      my $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_time_threshold');
+      my $enter_abuse_max_offenses   = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_offenses');
 
-      if($messages->[1]->{timestamp} - $messages->[0]->{timestamp} <= $enter_abuse_max_seconds) {
-        if(++$channel_data->{enter_abuse} >= $enter_abuse_max_lines - 1) {
-          $channel_data->{enter_abuse} = $enter_abuse_max_lines / 2 - 1;
+      if($messages->[1]->{timestamp} - $messages->[0]->{timestamp} <= $enter_abuse_time_threshold) {
+        if(++$channel_data->{enter_abuse} >= $enter_abuse_threshold - 1) {
+          $channel_data->{enter_abuse} = $enter_abuse_threshold / 2 - 1;
           if(++$channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
             my $offenses = $channel_data->{enter_abuses} - $enter_abuse_max_offenses + 1;
-            my $ban_length = $offenses ** $offenses * $offenses * 30;
+            my @punishment = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_punishment');
+            my $ban_length = $punishment[$offenses - 1 > $#punishment ? $#punishment : $offenses - 1];
             $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $channel, $ban_length);
             $ban_length = duration($ban_length);
             $self->{pbot}->{logger}->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
@@ -281,7 +291,7 @@ sub check_flood {
         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
       } else {
         if($channel_data->{enter_abuse} > 0) {
-          #$self->{pbot}->{logger}->log("$nick $channel more than $enter_abuse_max_seconds seconds since last message, enter abuse counter reset\n");
+          #$self->{pbot}->{logger}->log("$nick $channel more than $enter_abuse_time_threshold seconds since last message, enter abuse counter reset\n");
           $channel_data->{enter_abuse} = 0;
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
         }
@@ -333,12 +343,14 @@ sub check_flood {
           $channel_data->{offenses}++;
           $channel_data->{last_offense} = gettimeofday;
 
-          my $timeout = (2 ** (($channel_data->{offenses} + 2) < 10 ? $channel_data->{offenses} + 2 : 10));
+          my @punishment = $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_punishment');
+          my $timeout = $punishment[$channel_data->{offenses} - 1 > $#punishment ? $#punishment : $channel_data->{offenses} - 1];
+          my $duration = duration($timeout);
           my $banmask = address_to_mask($host);
           
-          $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$banmask\$##stop_join_flood", $channel, $timeout * 60 * 60);
-          $self->{pbot}->{logger}->log("$nick!$user\@$banmask banned for $timeout hours due to join flooding (offense #" . $channel_data->{offenses} . ").\n");
-          $self->{pbot}->{conn}->privmsg($nick, "You have been banned from $channel due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with: unbanme $channel, otherwise you will be automatically unbanned in $timeout hours.");
+          $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$banmask\$##stop_join_flood", $channel, $timeout);
+          $self->{pbot}->{logger}->log("$nick!$user\@$banmask banned for $duration due to join flooding (offense #" . $channel_data->{offenses} . ").\n");
+          $self->{pbot}->{conn}->privmsg($nick, "You have been banned from $channel due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with: unbanme $channel, otherwise you will be automatically unbanned in $duration.");
           $channel_data->{join_watch} = $max_messages - 2; # give them a chance to rejoin 
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
         } 
@@ -352,7 +364,8 @@ sub check_flood {
           $channel_data->{last_offense} = gettimeofday;
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
 
-          my $length = $channel_data->{offenses} ** $channel_data->{offenses} * $channel_data->{offenses} * 30;
+          my @punishment = $self->{pbot}->{registry}->get_value('antiflood', 'chat_flood_punishment');
+          my $length = $punishment[$channel_data->{offenses} - 1 > $#punishment ? $#punishment : $channel_data->{offenses} - 1];
 
           $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $channel, $length);
           $length = duration($length);
@@ -368,7 +381,8 @@ sub check_flood {
           $channel_data->{last_offense} = gettimeofday;
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
 
-          my $length = $channel_data->{offenses} ** $channel_data->{offenses} * $channel_data->{offenses} * 30;
+          my @punishment = $self->{pbot}->{registry}->get_value('antiflood', 'chat_flood_punishment');
+          my $length = $punishment[$channel_data->{offenses} - 1 > $#punishment ? $#punishment : $channel_data->{offenses} - 1];
 
           $self->{pbot}->{ignorelist}->{commands}->ignore_user("", "floodcontrol", "", "", "$nick!$user\@$host $channel $length");
           $length = duration($length);
@@ -382,7 +396,8 @@ sub check_flood {
         $self->{nickflood}->{$account}->{changes} = $max_messages - 2; # allow 1 more change (to go back to original nick)
         $self->{nickflood}->{$account}->{timestamp} = gettimeofday;
 
-        my $length = $self->{nickflood}->{$account}->{offenses} ** $self->{nickflood}->{$account}->{offenses} * $self->{nickflood}->{$account}->{offenses} * 60 * 4;
+        my @punishment = $self->{pbot}->{registry}->get_value('antiflood', 'nick_flood_punishment');
+        my $length = $punishment[$self->{nickflood}->{$account}->{offenses} - 1 > $#punishment ? $#punishment : $self->{nickflood}->{$account}->{offenses} - 1];
 
         my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
         foreach my $chan (@channels) {

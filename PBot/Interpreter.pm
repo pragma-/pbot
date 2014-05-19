@@ -97,7 +97,10 @@ sub process_line {
   my $message_account = $pbot->{messagehistory}->get_message_account($nick, $user, $host);
   $pbot->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $from, $text, $pbot->{messagehistory}->{MSG_CHAT});
 
-  $pbot->{antiflood}->check_flood($from, $nick, $user, $host, $text, $pbot->{registry}->get_value('antiflood', 'max_chat_flood'), 10, $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
+  $pbot->{antiflood}->check_flood($from, $nick, $user, $host, $text,
+    $pbot->{registry}->get_value('antiflood', 'chat_flood_threshold'),
+    $pbot->{registry}->get_value('antiflood', 'chat_flood_time_threshold'),
+    $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
 
   $text =~ s/^\s+//;
   $text =~ s/\s+$//;

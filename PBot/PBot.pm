@@ -98,7 +98,7 @@ sub initialize {
   $self->{stdin_reader}   = PBot::StdinReader->new(pbot => $self);
   $self->{admins}         = PBot::BotAdmins->new(pbot => $self, filename => delete $conf{admins_file});
   $self->{bantracker}     = PBot::BanTracker->new(pbot => $self);
-  $self->{lagchecker}     = PBot::LagChecker->new(pbot => $self);
+  $self->{lagchecker}     = PBot::LagChecker->new(pbot => $self, %conf);
   $self->{messagehistory} = PBot::MessageHistory->new(pbot => $self, filename => delete $conf{messagehistory_file}, %conf);
   $self->{antiflood}      = PBot::AntiFlood->new(pbot => $self, %conf);
   $self->{ignorelist}     = PBot::IgnoreList->new(pbot => $self, filename => delete $conf{ignorelist_file});

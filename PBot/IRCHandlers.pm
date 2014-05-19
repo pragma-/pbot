@@ -183,7 +183,10 @@ sub on_join {
 
   my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
   $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "JOIN", $self->{pbot}->{messagehistory}->{MSG_JOIN});
-  $self->{pbot}->{antiflood}->check_flood($channel, $nick, $user, $host, "JOIN", $self->{pbot}->{registry}->get_value('antiflood', 'max_join_flood'), 60 * 30, $self->{pbot}->{messagehistory}->{MSG_JOIN});
+  $self->{pbot}->{antiflood}->check_flood($channel, $nick, $user, $host, "JOIN", 
+    $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_threshold'), 
+    $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_time_threshold'),
+    $self->{pbot}->{messagehistory}->{MSG_JOIN});
 }
 
 sub on_kick {
@@ -201,7 +204,10 @@ sub on_kick {
     my $text = "KICKED by $nick!$user\@$host ($reason)";
 
     $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
-    $self->{pbot}->{antiflood}->check_flood($channel, $target_nick, $target_user, $target_host, $text, $self->{pbot}->{registry}->get_value('antiflood', 'max_join_flood'), 60 * 30, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
+    $self->{pbot}->{antiflood}->check_flood($channel, $target_nick, $target_user, $target_host, $text, 
+      $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_threshold'),
+      $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_time_threshold'),
+      $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
   }
 }
 
@@ -225,7 +231,10 @@ sub on_departure {
     $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
   }
 
-  $self->{pbot}->{antiflood}->check_flood($channel, $nick, $user, $host, $text, $self->{pbot}->{registry}->get_value('antiflood', 'max_join_flood'), 60 * 30, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
+  $self->{pbot}->{antiflood}->check_flood($channel, $nick, $user, $host, $text, 
+    $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_threshold'),
+    $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_time_threshold'),
+    $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
 
   my $admin = $self->{pbot}->{admins}->find_admin($channel, "$nick!$user\@$host");
   if(defined $admin and $admin->{loggedin}) {
@@ -253,7 +262,10 @@ sub on_nickchange {
   $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($newnick_account);
   $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($newnick_account, { last_seen => scalar gettimeofday });
 
-  $self->{pbot}->{antiflood}->check_flood("$nick!$user\@$host", $nick, $user, $host, "NICKCHANGE $newnick", $self->{pbot}->{registry}->get_value('antiflood', 'max_nick_flood'), 60 * 30, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
+  $self->{pbot}->{antiflood}->check_flood("$nick!$user\@$host", $nick, $user, $host, "NICKCHANGE $newnick",
+    $self->{pbot}->{registry}->get_value('antiflood', 'nick_flood_threshold'),
+    $self->{pbot}->{registry}->get_value('antiflood', 'nick_flood_time_threshold'),
+    $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
 }
 
 1;

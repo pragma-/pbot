@@ -30,23 +30,23 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
-    Carp::croak("Missing pbot reference to LagChecker");
-  }
-
+  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to LagChecker");
   $self->{pbot} = $pbot;
 
-  $self->{LAG_HISTORY_MAX} = 3;        # maximum number of lag history entries to retain
-  $self->{LAG_THRESHOLD} = 2;          # lagging is true if lag_average reaches or exceeds this threshold, in seconds
-  $self->{LAG_HISTORY_INTERVAL} = 10;  # how often to send PING, in seconds
+  # maximum number of lag history entries to retain
+  $pbot->{registry}->add_default('text', 'lagchecker', 'lag_history_max',      $conf{lag_history_max} //  3); 
+  # lagging is true if lag_average reaches or exceeds this threshold, in seconds
+  $pbot->{registry}->add_default('text', 'lagchecker', 'lag_threshold',        $conf{lag_threadhold}  //  2);
+  # how often to send PING, in seconds
+  $pbot->{registry}->add_default('text', 'lagchecker', 'lag_history_interval', $conf{lag_history_max} // 10);
 
   $self->{lag_average} = undef;        # average of entries in lag history, in seconds
   $self->{lag_string} = undef;         # string representation of lag history and lag average
   $self->{lag_history} = [];           # history of previous PING/PONG timings
   $self->{pong_received} = undef;      # tracks pong replies; undef if no ping sent; 0 if ping sent but no pong reply yet; 1 if ping/pong completed
+  $self->{ping_send_time} = undef;     # when last ping was sent
 
-  $pbot->{timer}->register(sub { $self->send_ping }, $self->{LAG_HISTORY_INTERVAL});
+  $pbot->{timer}->register(sub { $self->send_ping }, $pbot->{registry}->get_value('lagchecker', 'lag_history_interval'));
 
   $pbot->{commands}->register(sub { return $self->lagcheck(@_) }, "lagcheck", 0);
 }
@@ -71,7 +71,9 @@ sub on_pong {
 
   my $len = @{ $self->{lag_history} };
 
-  if($len > $self->{LAG_HISTORY_MAX}) {
+  my $lag_history_max = $self->{pbot}->{registry}->get_value('lagchecker', 'lag_history_max');
+
+  while($len > $lag_history_max) {
     shift @{ $self->{lag_history} };
     $len--;
   }
@@ -99,11 +101,11 @@ sub lagging {
   if(defined $self->{pong_received} and $self->{pong_received} == 0) {
       # a ping has been sent (pong_received is not undef) and no pong has been received yet
       my $elapsed = tv_interval($self->{ping_send_time});
-      return $elapsed >= $self->{LAG_THRESHOLD};
+      return $elapsed >= $self->{pbot}->{registry}->get_value('lagchecker', 'lag_threshold');
   }
 
   return 0 if not defined $self->{lag_average};
-  return $self->{lag_average} >= $self->{LAG_THRESHOLD};
+  return $self->{lag_average} >= $self->{pbot}->{registry}->get_value('lagchecker', 'lag_threshold');
 }
 
 sub lagstring {
