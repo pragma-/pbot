@@ -18,7 +18,7 @@ BEGIN {
   our @EXPORT = qw($VERSION);
 
   our $VERSION = PBot::VERSION::BUILD_NAME . " revision " . PBot::VERSION::BUILD_REVISION . " " . PBot::VERSION::BUILD_DATE;
-  print "PBot version $VERSION\n";
+  print "$VERSION\n";
 }
 
 # unbuffer stdout
@@ -61,16 +61,16 @@ sub initialize {
   my ($self, %conf) = @_;
 
   # logger created first to allow other modules to log things
-  $self->{logger}   = PBot::Logger->new(log_file => delete $conf{log_file});
+  $self->{logger}   = PBot::Logger->new(log_file => delete $conf{log_file}, %conf);
 
-  $self->{atexit}   = PBot::Registerable->new();
-  $self->{timer}    = PBot::Timer->new(timeout => 10);
-  $self->{commands} = PBot::Commands->new(pbot => $self);
+  $self->{atexit}   = PBot::Registerable->new(%conf);
+  $self->{timer}    = PBot::Timer->new(timeout => 10, %conf);
+  $self->{commands} = PBot::Commands->new(pbot => $self, %conf);
 
   my $config_dir = delete $conf{config_dir} // "$ENV{HOME}/pbot/config";
 
   # registry created, but not yet loaded, to allow modules to create default values and triggers
-  $self->{registry} = PBot::Registry->new(pbot => $self, filename => delete $conf{registry_file} // "$config_dir/registry");
+  $self->{registry} = PBot::Registry->new(pbot => $self, filename => delete $conf{registry_file} // "$config_dir/registry", %conf);
 
   $self->{registry}->add_default('text', 'general', 'config_dir',  $config_dir);
   $self->{registry}->add_default('text', 'general', 'data_dir',    delete $conf{data_dir}    // "$ENV{HOME}/pbot/data");
@@ -94,20 +94,20 @@ sub initialize {
 
   $self->{registry}->add_trigger('irc', 'botnick', sub { $self->change_botnick_trigger(@_) });
  
-  $self->{select_handler} = PBot::SelectHandler->new(pbot => $self);
-  $self->{stdin_reader}   = PBot::StdinReader->new(pbot => $self);
-  $self->{admins}         = PBot::BotAdmins->new(pbot => $self, filename => delete $conf{admins_file});
-  $self->{bantracker}     = PBot::BanTracker->new(pbot => $self);
+  $self->{select_handler} = PBot::SelectHandler->new(pbot => $self, %conf);
+  $self->{stdin_reader}   = PBot::StdinReader->new(pbot => $self, %conf);
+  $self->{admins}         = PBot::BotAdmins->new(pbot => $self, filename => delete $conf{admins_file}, %conf);
+  $self->{bantracker}     = PBot::BanTracker->new(pbot => $self, %conf);
   $self->{lagchecker}     = PBot::LagChecker->new(pbot => $self, %conf);
   $self->{messagehistory} = PBot::MessageHistory->new(pbot => $self, filename => delete $conf{messagehistory_file}, %conf);
   $self->{antiflood}      = PBot::AntiFlood->new(pbot => $self, %conf);
-  $self->{ignorelist}     = PBot::IgnoreList->new(pbot => $self, filename => delete $conf{ignorelist_file});
+  $self->{ignorelist}     = PBot::IgnoreList->new(pbot => $self, filename => delete $conf{ignorelist_file}, %conf);
   $self->{irc}            = PBot::IRC->new();
-  $self->{irchandlers}    = PBot::IRCHandlers->new(pbot => $self);
-  $self->{channels}       = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file});
-  $self->{chanops}        = PBot::ChanOps->new(pbot => $self);
+  $self->{irchandlers}    = PBot::IRCHandlers->new(pbot => $self, %conf);
+  $self->{channels}       = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file}, %conf);
+  $self->{chanops}        = PBot::ChanOps->new(pbot => $self, %conf);
 
-  $self->{interpreter}    = PBot::Interpreter->new(pbot => $self);
+  $self->{interpreter}    = PBot::Interpreter->new(pbot => $self, %conf);
   $self->{interpreter}->register(sub { return $self->{commands}->interpreter(@_); });
   $self->{interpreter}->register(sub { return $self->{factoids}->interpreter(@_); });
 
@@ -116,6 +116,7 @@ sub initialize {
     filename    => delete $conf{factoids_file},
     export_path => delete $conf{export_factoids_path},
     export_site => delete $conf{export_factoids_site}, 
+    %conf
   );
 
   $self->{quotegrabs} = PBot::Quotegrabs->new(
@@ -123,6 +124,7 @@ sub initialize {
     filename    => delete $conf{quotegrabs_file},
     export_path => delete $conf{export_quotegrabs_path},
     export_site => delete $conf{export_quotegrabs_site},
+    %conf
   );
 
   # load registry entries from file to overwrite defaults

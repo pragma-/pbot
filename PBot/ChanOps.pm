@@ -13,11 +13,10 @@ use Time::HiRes qw(gettimeofday);
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to ChanOps should be key/value pairs, not hash reference");
+    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -26,23 +25,25 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
-    Carp::croak("Missing pbot reference to ChanOps");
-  }
+  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to ChanOps");
 
-  $self->{pbot} = $pbot;
+  $self->{unban_timeout} = PBot::DualIndexHashObject->new(
+    pbot => $self->{pbot},
+    name => 'Unban Timeouts',
+    filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/unban_timeouts'
+  );
 
-  $self->{unban_timeout} = PBot::DualIndexHashObject->new(pbot => $pbot, name => 'Unban Timeouts', filename => $pbot->{registry}->get_value('general', 'data_dir') . '/unban_timeouts');
   $self->{unban_timeout}->load;
 
   $self->{op_commands} = {};
   $self->{is_opped} = {};
 
-  $self->{commands} = PBot::ChanOpCommands->new(pbot => $pbot);
+  $self->{commands} = PBot::ChanOpCommands->new(pbot => $self->{pbot});
 
-  $pbot->{timer}->register(sub { $self->check_opped_timeouts   }, 10);
-  $pbot->{timer}->register(sub { $self->check_unban_timeouts   }, 10);
+  $self->{pbot}->{registry}->add_default('text', 'general', 'deop_timeout', $conf{'deop_timeout'} // 300);
+
+  $self->{pbot}->{timer}->register(sub { $self->check_opped_timeouts }, 10);
+  $self->{pbot}->{timer}->register(sub { $self->check_unban_timeouts }, 10);
 }
 
 sub gain_ops {
@@ -51,7 +52,7 @@ sub gain_ops {
   
   if(not exists $self->{is_opped}->{$channel}) {
     $self->{pbot}->{conn}->privmsg("chanserv", "op $channel");
-    $self->{is_opped}->{$channel}{timeout} = gettimeofday + 300; # assume we're going to be opped
+    $self->{is_opped}->{$channel}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('general', 'deop_timeout'); # assume we're going to be opped
   } else {
     $self->perform_op_commands($channel);
   }
