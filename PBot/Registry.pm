@@ -138,6 +138,20 @@ sub get_value {
   return undef;
 }
 
+sub get_array_value {
+  my ($self, $section, $item, $index) = @_;
+
+  if(exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$item}) {
+    if($self->{registry}->hash->{$section}->{$item}->{type} eq 'array') {
+      my @array = split /\s*,\s*/, $self->{registry}->hash->{$section}->{$item}->{value};
+      return $array[$index >= $#array ? $#array : $index];
+    } else {
+      return $self->{registry}->hash->{$section}->{$item}->{value};
+    }
+  }
+  return undef;
+}
+
 sub add_trigger {
   my ($self, $section, $item, $subref) = @_;
   $self->{triggers}->{$section}->{$item} = $subref;

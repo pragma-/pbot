@@ -276,8 +276,7 @@ sub check_flood {
           $channel_data->{enter_abuse} = $enter_abuse_threshold / 2 - 1;
           if(++$channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
             my $offenses = $channel_data->{enter_abuses} - $enter_abuse_max_offenses + 1;
-            my @punishment = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_punishment');
-            my $ban_length = $punishment[$offenses - 1 > $#punishment ? $#punishment : $offenses - 1];
+            my $ban_length = $self->{pbot}->{registry}->get_array_value('antiflood', 'enter_abuse_punishment', $offenses - 1);
             $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $channel, $ban_length);
             $ban_length = duration($ban_length);
             $self->{pbot}->{logger}->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
@@ -343,8 +342,7 @@ sub check_flood {
           $channel_data->{offenses}++;
           $channel_data->{last_offense} = gettimeofday;
 
-          my @punishment = $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_punishment');
-          my $timeout = $punishment[$channel_data->{offenses} - 1 > $#punishment ? $#punishment : $channel_data->{offenses} - 1];
+          my $timeout = $self->{pbot}->{registry}->get_array_value('antiflood', 'join_flood_punishment', $channel_data->{offenses} - 1);
           my $duration = duration($timeout);
           my $banmask = address_to_mask($host);
           
@@ -364,8 +362,7 @@ sub check_flood {
           $channel_data->{last_offense} = gettimeofday;
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
 
-          my @punishment = $self->{pbot}->{registry}->get_value('antiflood', 'chat_flood_punishment');
-          my $length = $punishment[$channel_data->{offenses} - 1 > $#punishment ? $#punishment : $channel_data->{offenses} - 1];
+          my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $channel_data->{offenses} - 1);
 
           $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $channel, $length);
           $length = duration($length);
@@ -381,8 +378,7 @@ sub check_flood {
           $channel_data->{last_offense} = gettimeofday;
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
 
-          my @punishment = $self->{pbot}->{registry}->get_value('antiflood', 'chat_flood_punishment');
-          my $length = $punishment[$channel_data->{offenses} - 1 > $#punishment ? $#punishment : $channel_data->{offenses} - 1];
+          my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $channel_data->{offenses} - 1);
 
           $self->{pbot}->{ignorelist}->{commands}->ignore_user("", "floodcontrol", "", "", "$nick!$user\@$host $channel $length");
           $length = duration($length);
@@ -396,8 +392,7 @@ sub check_flood {
         $self->{nickflood}->{$account}->{changes} = $max_messages - 2; # allow 1 more change (to go back to original nick)
         $self->{nickflood}->{$account}->{timestamp} = gettimeofday;
 
-        my @punishment = $self->{pbot}->{registry}->get_value('antiflood', 'nick_flood_punishment');
-        my $length = $punishment[$self->{nickflood}->{$account}->{offenses} - 1 > $#punishment ? $#punishment : $self->{nickflood}->{$account}->{offenses} - 1];
+        my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'nick_flood_punishment', $self->{nickflood}->{$account}->{offenses} - 1);
 
         my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
         foreach my $chan (@channels) {
@@ -741,7 +736,7 @@ sub adjust_offenses {
   }
 
   foreach my $account (keys %{ $self->{nickflood} }) {
-    if($self->{nickflood}->{$account}->{offenses} > 0 and gettimeofday - $self->{nickflood}->{$account}->{timestamp} >= 60 * 60 * 24) {
+    if($self->{nickflood}->{$account}->{offenses} and gettimeofday - $self->{nickflood}->{$account}->{timestamp} >= 60 * 60 * 24) {
       $self->{nickflood}->{$account}->{offenses}--;
 
       if($self->{nickflood}->{$account}->{offenses} == 0) {
