@@ -65,7 +65,7 @@ sub initialize {
 
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'enter_abuse_threshold',      $conf{enter_abuse_threshold}      //  4);
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'enter_abuse_time_threshold', $conf{enter_abuse_time_threshold} // 20);
-  $self->{pbot}->{registry}->add_default('array', 'antiflood', 'enter_abuse_punishment',     $conf{enter_abuse_punishment}     // '28800,86400,604800,2419200,14515200');
+  $self->{pbot}->{registry}->add_default('array', 'antiflood', 'enter_abuse_punishment',     $conf{enter_abuse_punishment}     // '60,300,3600,86400,604800,2419200');
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'enter_abuse_max_offenses',   $conf{enter_abuse_max_offenses}   //  3);
 
   $self->{pbot}->{commands}->register(sub { return $self->unbanme(@_)   },  "unbanme",   0);
