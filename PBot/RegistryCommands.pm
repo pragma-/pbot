@@ -181,10 +181,10 @@ sub regfind {
     chop $text;
     return "Found one registry entry: [$last_section] $last_item: $registry->{$last_section}->{$last_item}->{value}";
   } else {
-    return "found $i registry entries: $text" unless $i == 0;
+    return "Found $i registry entries: $text" unless $i == 0;
 
     my $sections = (defined $section ? "section $section" : 'any sections');
-    return "No registry entries matching query found in $sections.";
+    return "No matching registry entries found in $sections.";
   }
 }
 

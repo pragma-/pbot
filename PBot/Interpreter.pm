@@ -15,11 +15,10 @@ use Carp ();
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to Interpreter should be key/value pairs, not hash reference");
+    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -30,54 +29,14 @@ sub initialize {
 
   $self->SUPER::initialize(%conf);
 
-  my $pbot = delete $conf{pbot};
+  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
-  if(not defined $pbot) {
-    Carp::croak("Missing pbot reference to PBot::Interpreter");
-  }
-
-  $self->{pbot} = $pbot;
-}
-
-sub paste_codepad {
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $ua = LWP::UserAgent->new();
-  $ua->agent("Mozilla/5.0");
-  push @{ $ua->requests_redirectable }, 'POST';
-
-  my %post = ( 'lang' => 'Plain Text', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
-  my $response = $ua->post("http://codepad.org", \%post);
-
-  if(not $response->is_success) {
-    return $response->status_line;
-  }
-
-  return $response->request->uri;
-}
-
-sub paste_sprunge {
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $ua = LWP::UserAgent->new();
-  $ua->agent("Mozilla/5.0");
-  $ua->requests_redirectable([ ]);
-
-  my %post = ( 'sprunge' => $text, 'submit' => 'Submit' );
-  my $response = $ua->post("http://sprunge.us", \%post);
-
-  if(not $response->is_success) {
-    return $response->status_line;
-  }
-
-  my $result = $response->content;
-  $result =~ s/^\s+//;
-  $result =~ s/\s+$//;
-  return $result;
+  $self->{pbot}->{registry}->add_default('text',  'general', 'show_url_titles',          $conf{show_url_titles} // 1);
+  $self->{pbot}->{registry}->add_default('array', 'general', 'show_url_titles_channels', $conf{show_url_titles_channels} // '.*');
+  $self->{pbot}->{registry}->add_default('array', 'general', 'show_url_titles_ignore_channels', $conf{show_url_titles_ignore_channels} // 'none');
+  $self->{pbot}->{registry}->add_default('text',  'general', 'compile_blocks',           $conf{compile_blocks} // 1);
+  $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',  $conf{compile_blocks_channels}  // '.*');
+  $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_ignore_channels',  $conf{compile_blocks_ignore_channels}  // 'none');
 }
 
 sub process_line {
@@ -92,7 +51,7 @@ sub process_line {
 
   $from = lc $from if defined $from;
 
-  my $pbot = $self->pbot;
+  my $pbot = $self->{pbot};
 
   my $message_account = $pbot->{messagehistory}->get_message_account($nick, $user, $host);
   $pbot->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $from, $text, $pbot->{messagehistory}->{MSG_CHAT});
@@ -138,9 +97,17 @@ sub process_line {
     }
 
     if(defined $has_url) {
-      $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
+      if($self->{pbot}->{registry}->get_value('general', 'show_url_titles')
+          and not grep { $from =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_ignore_channels')
+          and grep { $from =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_channels')) {
+        $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
+      }
     } elsif(defined $has_code) {
-      $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
+      if($self->{pbot}->{registry}->get_value('general', 'compile_blocks')
+          and not grep { $from =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'compile_blocks_ignore_channels')
+          and grep { $from =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'compile_blocks_channels')) {
+        $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
+      }
     } else {
       $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command), 1, $preserve_whitespace); 
     }
@@ -229,7 +196,7 @@ sub interpret {
   my ($from, $nick, $user, $host, $count, $command, $tonick) = @_;
   my ($keyword, $arguments) = ("", "");
   my $text;
-  my $pbot = $self->pbot;
+  my $pbot = $self->{pbot};
 
   $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $from ? $from : "(undef)") . "][$nick!$user\@$host][$count][$command]\n");
 
@@ -288,10 +255,45 @@ sub interpret {
   return $self->SUPER::execute_all($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick);
 }
 
-sub pbot {
-  my $self = shift;
-  if(@_) { $self->{pbot} = shift; }
-  return $self->{pbot};
+sub paste_codepad {
+  my $text = join(' ', @_);
+
+  $text =~ s/(.{120})\s/$1\n/g;
+
+  my $ua = LWP::UserAgent->new();
+  $ua->agent("Mozilla/5.0");
+  push @{ $ua->requests_redirectable }, 'POST';
+
+  my %post = ( 'lang' => 'Plain Text', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
+  my $response = $ua->post("http://codepad.org", \%post);
+
+  if(not $response->is_success) {
+    return $response->status_line;
+  }
+
+  return $response->request->uri;
+}
+
+sub paste_sprunge {
+  my $text = join(' ', @_);
+
+  $text =~ s/(.{120})\s/$1\n/g;
+
+  my $ua = LWP::UserAgent->new();
+  $ua->agent("Mozilla/5.0");
+  $ua->requests_redirectable([ ]);
+
+  my %post = ( 'sprunge' => $text, 'submit' => 'Submit' );
+  my $response = $ua->post("http://sprunge.us", \%post);
+
+  if(not $response->is_success) {
+    return $response->status_line;
+  }
+
+  my $result = $response->content;
+  $result =~ s/^\s+//;
+  $result =~ s/\s+$//;
+  return $result;
 }
 
 1;
