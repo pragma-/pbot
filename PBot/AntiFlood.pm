@@ -51,6 +51,8 @@ sub initialize {
 
   $self->{pbot}->{timer}->register(sub { $self->adjust_offenses }, 60 * 60 * 1);
 
+  $self->{pbot}->{registry}->add_default('text',  'antiflood', 'enforce',                   $conf{enforce_antiflood}         //  1);
+
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'join_flood_threshold',      $conf{join_flood_threshold}      //  4);
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'join_flood_time_threshold', $conf{join_flood_time_threshold} //  60 * 30);
   $self->{pbot}->{registry}->add_default('array', 'antiflood', 'join_flood_punishment',     $conf{join_flood_punishment}     // '28800,86400,604800,2419200,14515200');
@@ -275,12 +277,14 @@ sub check_flood {
         if(++$channel_data->{enter_abuse} >= $enter_abuse_threshold - 1) {
           $channel_data->{enter_abuse} = $enter_abuse_threshold / 2 - 1;
           if(++$channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
-            my $offenses = $channel_data->{enter_abuses} - $enter_abuse_max_offenses + 1;
-            my $ban_length = $self->{pbot}->{registry}->get_array_value('antiflood', 'enter_abuse_punishment', $offenses - 1);
-            $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $channel, $ban_length);
-            $ban_length = duration($ban_length);
-            $self->{pbot}->{logger}->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
-            $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in $ban_length.");
+            if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
+              my $offenses = $channel_data->{enter_abuses} - $enter_abuse_max_offenses + 1;
+              my $ban_length = $self->{pbot}->{registry}->get_array_value('antiflood', 'enter_abuse_punishment', $offenses - 1);
+              $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $channel, $ban_length);
+              $ban_length = duration($ban_length);
+              $self->{pbot}->{logger}->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
+              $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in $ban_length.");
+            }
           } else {
             #$self->{pbot}->{logger}->log("$nick $channel enter abuses counter incremented to " . $channel_data->{enter_abuses} . "\n");
           }
@@ -342,13 +346,15 @@ sub check_flood {
           $channel_data->{offenses}++;
           $channel_data->{last_offense} = gettimeofday;
 
-          my $timeout = $self->{pbot}->{registry}->get_array_value('antiflood', 'join_flood_punishment', $channel_data->{offenses} - 1);
-          my $duration = duration($timeout);
-          my $banmask = address_to_mask($host);
-          
-          $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$banmask\$##stop_join_flood", $channel, $timeout);
-          $self->{pbot}->{logger}->log("$nick!$user\@$banmask banned for $duration due to join flooding (offense #" . $channel_data->{offenses} . ").\n");
-          $self->{pbot}->{conn}->privmsg($nick, "You have been banned from $channel due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with: unbanme $channel, otherwise you will be automatically unbanned in $duration.");
+          if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
+            my $timeout = $self->{pbot}->{registry}->get_array_value('antiflood', 'join_flood_punishment', $channel_data->{offenses} - 1);
+            my $duration = duration($timeout);
+            my $banmask = address_to_mask($host);
+
+            $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$banmask\$##stop_join_flood", $channel, $timeout);
+            $self->{pbot}->{logger}->log("$nick!$user\@$banmask banned for $duration due to join flooding (offense #" . $channel_data->{offenses} . ").\n");
+            $self->{pbot}->{conn}->privmsg($nick, "You have been banned from $channel due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with: unbanme $channel, otherwise you will be automatically unbanned in $duration.");
+          }
           $channel_data->{join_watch} = $max_messages - 2; # give them a chance to rejoin 
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
         } 
@@ -362,12 +368,14 @@ sub check_flood {
           $channel_data->{last_offense} = gettimeofday;
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
 
-          my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $channel_data->{offenses} - 1);
+          if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
+            my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $channel_data->{offenses} - 1);
 
-          $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $channel, $length);
-          $length = duration($length);
-          $self->{pbot}->{logger}->log("$nick $channel flood offense " . $channel_data->{offenses} . " earned $length ban\n");
-          $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length.");
+            $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $channel, $length);
+            $length = duration($length);
+            $self->{pbot}->{logger}->log("$nick $channel flood offense " . $channel_data->{offenses} . " earned $length ban\n");
+            $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length.");
+          }
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
         } 
         else { # private message flood
@@ -392,16 +400,18 @@ sub check_flood {
         $self->{nickflood}->{$account}->{changes} = $max_messages - 2; # allow 1 more change (to go back to original nick)
         $self->{nickflood}->{$account}->{timestamp} = gettimeofday;
 
-        my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'nick_flood_punishment', $self->{nickflood}->{$account}->{offenses} - 1);
+        if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
+          my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'nick_flood_punishment', $self->{nickflood}->{$account}->{offenses} - 1);
 
-        my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
-        foreach my $chan (@channels) {
-          $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $chan, $length);
+          my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
+          foreach my $chan (@channels) {
+            $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $chan, $length);
+          }
+
+          $length = duration($length);
+          $self->{pbot}->{logger}->log("$nick nickchange flood offense " . $self->{nickflood}->{$account}->{offenses} . " earned $length ban\n");
+          $self->{pbot}->{conn}->privmsg($nick, "You have been temporarily banned due to nick-change flooding.  You will be unbanned in $length.");
         }
-
-        $length = duration($length);
-        $self->{pbot}->{logger}->log("$nick nickchange flood offense " . $self->{nickflood}->{$account}->{offenses} . " earned $length ban\n");
-        $self->{pbot}->{conn}->privmsg($nick, "You have been temporarily banned due to nick-change flooding.  You will be unbanned in $length.");
       }
     }
   }
@@ -633,8 +643,10 @@ sub check_bans {
     foreach my $baninfo (@$bans) {
       $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
       my ($bannick) = $mask =~ m/^([^!]+)/;
-      $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Ban evasion");
-      $self->{pbot}->{chanops}->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 12);
+      if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
+        $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Ban evasion");
+        $self->{pbot}->{chanops}->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 12);
+      }
       my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
       if($channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
         $channel_data->{validated} &= ~$self->{NICKSERV_VALIDATED};
