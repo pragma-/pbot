@@ -405,6 +405,7 @@ sub check_flood {
 
           my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
           foreach my $chan (@channels) {
+            next if $chan !~ /^#/;
             $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $chan, $length);
           }
 
