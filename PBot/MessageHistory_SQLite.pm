@@ -31,8 +31,10 @@ sub initialize {
   $self->{new_entries} = 0;
 
   $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'sqlite_commit_interval', 30);
+  $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'sqlite_debug',           $conf{sqlite_debug} // 0);
 
   $self->{pbot}->{registry}->add_trigger('messagehistory', 'sqlite_commit_interval', sub { $self->sqlite_commit_interval_trigger(@_) });
+  $self->{pbot}->{registry}->add_trigger('messagehistory', 'sqlite_debug',           sub { $self->sqlite_debug_trigger(@_) });
 
   $self->{pbot}->{timer}->register(
     sub { $self->commit_message_history },
@@ -46,6 +48,12 @@ sub sqlite_commit_interval_trigger {
   $self->{pbot}->{timer}->update_interval('messagehistory_sqlite_commit_interval', $newvalue);
 }
 
+sub sqlite_debug_trigger {
+  my ($self, $section, $item, $newvalue) = @_;
+  $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$newvalue")) if defined $self->{dbh};
+  
+}
+
 sub begin {
   my $self = shift;
 
@@ -54,7 +62,11 @@ sub begin {
   $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr; 
 
   eval {
-    #$self->{dbh}->trace($self->{dbh}->parse_trace_flags('SQL|1|test'));
+    my $sqlite_debug = $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_debug');
+    use PBot::SQLiteLoggerLayer;
+    use PBot::SQLiteLogger;
+    open $self->{trace_layer}, '>:via(PBot::SQLiteLoggerLayer)', PBot::SQLiteLogger->new(pbot => $self->{pbot});
+    $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$sqlite_debug"), $self->{trace_layer});
 
     $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Hostmasks (
