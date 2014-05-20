@@ -69,13 +69,13 @@ sub regadd {
   my ($section, $item, $value) = split / /, $arguments, 3 if defined $arguments;
 
   if(not defined $section or not defined $item or not defined $value) {
-    return "/msg $nick Usage: regadd <section> <item> <value>";
+    return "Usage: regadd <section> <item> <value>";
   }
 
   $self->{pbot}->{registry}->add('text', $section, $item, $value);
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host added registry entry [$section] $item => $value\n");
-  return "/msg $nick [$section] $item set to $value";
+  return "[$section] $item set to $value";
 }
 
 sub regrem {
@@ -84,20 +84,20 @@ sub regrem {
   my ($section, $item) = split / /, $arguments if defined $arguments;
 
   if(not defined $section or not defined $item) {
-    return "/msg $nick Usage: regrem <section> <item>";
+    return "Usage: regrem <section> <item>";
   }
 
   if(not exists $self->{pbot}->{registry}->{registry}->hash->{$section}) {
-    return "/msg $nick No such registry section $section.";
+    return "No such registry section $section.";
   }
 
   if(not exists $self->{pbot}->{registry}->{registry}->hash->{$section}->{$item}) {
-    return "/msg $nick No such item $item in section $section.";
+    return "No such item $item in section $section.";
   }
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host removed registry item [$section][$item]\n");
   $self->{pbot}->{registry}->remove($section, $item);
-  return "/msg $nick Registry item $item removed from section $section.";
+  return "Registry item $item removed from section $section.";
 }
 
 sub regshow {
@@ -112,15 +112,15 @@ sub regshow {
   }
 
   if(not exists $registry->{$section}) {
-    return "/msg $nick No such registry section $section.";
+    return "No such registry section $section.";
   }
 
   if(not exists $registry->{$section}->{$item}) {
-    return "/msg $nick No such registry item $item in section $section.";
+    return "No such registry item $item in section $section.";
   }
 
   if($registry->{$section}->{$item}->{private}) {
-    return "/msg $nick [$section] $item is private.";
+    return "[$section] $item: <private>";
   }
 
   my $result = "[$section] $item: $registry->{$section}->{$item}->{value}";
@@ -137,20 +137,23 @@ sub regfind {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $registry = $self->{pbot}->{registry}->{registry}->hash;
 
+  my $usage = "Usage: regfind [-showvalues] [-section section] <regex>";
+
   if(not defined $arguments) {
-    return "/msg $nick Usage: regfind [-section section] <text>";
+    return $usage;
   }
 
-  my $section;
+  my ($section, $showvalues);
 
   $section = $1 if $arguments =~ s/-section\s+([^\b\s]+)//i;
+  $showvalues = 1 if $arguments =~ s/-showvalues//i;
 
   $arguments =~ s/^\s+//;
   $arguments =~ s/\s+$//;
   $arguments =~ s/\s+/ /g;
 
   if($arguments eq "") {
-    return "/msg $nick Usage: regfind [-section section] <text>";
+    return $usage;
   }
 
   my ($text, $last_item, $last_section, $i);
@@ -160,16 +163,28 @@ sub regfind {
     foreach my $section_key (sort keys %{ $registry }) {
       next if defined $section and $section_key !~ /^$section$/i;
       foreach my $item_key (sort keys %{ $registry->{$section_key} }) {
-        next if $registry->{$section_key}->{$item_key}->{private};
-        next if $registry->{$section_key}->{$item_key}->{value} !~ /$arguments/i and $item_key !~ /$arguments/i;
+        if($registry->{$section_key}->{$item_key}->{private}) {
+          # do not match on value if private
+          next if $item_key !~ /$arguments/i;
+        } else {
+          next if $registry->{$section_key}->{$item_key}->{value} !~ /$arguments/i and $item_key !~ /$arguments/i;
+        }
 
         $i++;
 
         if($section_key ne $last_section) {
-          $text .= "[$section_key] ";
+          $text .= "[$section_key]\n";
           $last_section = $section_key;
         }
-        $text .= "$item_key ";
+        if($showvalues) {
+          if($registry->{$section_key}->{$item_key}->{private}) {
+            $text .= "  $item_key = <private>\n";
+          } else {
+            $text .= "  $item_key = $registry->{$section_key}->{$item_key}->{value}" . ($registry->{$section_key}->{$item_key}->{type} eq 'array' ? " [array]\n" : "\n");
+          }
+        } else {
+          $text .= "  $item_key\n";
+        }
         $last_item = $item_key;
       }
     }
@@ -179,9 +194,13 @@ sub regfind {
 
   if($i == 1) {
     chop $text;
-    return "Found one registry entry: [$last_section] $last_item: $registry->{$last_section}->{$last_item}->{value}";
+    if($registry->{$last_section}->{$last_item}->{private}) {
+      return "Found one registry entry: [$last_section] $last_item: <private>";
+    } else {
+      return "Found one registry entry: [$last_section] $last_item: $registry->{$last_section}->{$last_item}->{value}" . ($registry->{$last_section}->{$last_item}->{type} eq 'array' ? ' [array]' : '');
+    }
   } else {
-    return "Found $i registry entries: $text" unless $i == 0;
+    return "Found $i registry entries:\n$text" unless $i == 0;
 
     my $sections = (defined $section ? "section $section" : 'any sections');
     return "No matching registry entries found in $sections.";
@@ -214,11 +233,11 @@ sub regchange {
   my $registry = $self->{pbot}->{registry}->{registry}->hash;
 
   if(not exists $registry->{$section}) {
-    return "/msg $nick No such registry section $section.";
+    return "No such registry section $section.";
   }
 
   if(not exists $registry->{$section}->{$item}) {
-    return "/msg $nick No such registry item $item in section $section.";
+    return "No such registry item $item in section $section.";
   }
 
   my $ret = eval {
