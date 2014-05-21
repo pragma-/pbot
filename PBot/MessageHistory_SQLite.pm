@@ -373,7 +373,7 @@ sub get_hostmasks_for_channel {
   my ($self, $channel) = @_;
 
   my $hostmasks = eval {
-    my $sth = $self->{dbh}->prepare('SELECT hostmasks.id, hostmask FROM Hostmasks, Channels WHERE channels.id = hostmasks.id AND channel = ?');
+    my $sth = $self->{dbh}->prepare('SELECT hostmasks.id, hostmask, nickserv FROM Hostmasks, Nickserv, Channels WHERE nickserv.id = hostmasks.id AND channels.id = hostmasks.id AND channel = ?');
     $sth->bind_param(1, $channel);
     $sth->execute();
     return $sth->fetchall_arrayref({});
