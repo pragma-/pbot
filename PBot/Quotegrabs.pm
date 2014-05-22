@@ -171,7 +171,7 @@ sub grab_quotegrab {
   my ($grab_nick, $grab_history, $channel, $grab_nicks, $grab_text);
 
   foreach my $grab (@grabs) {
-    ($grab_nick, $grab_history, $channel) = split(/\s+/, $grab, 3);
+    ($grab_nick, $grab_history, $channel) = $self->{pbot}->{commands}->parse_arguments($grab);
 
     $grab_history = $nick eq $grab_nick ? 2 : 1 if not defined $grab_history; # skip grab command if grabbing self without arguments
     $channel = $from if not defined $channel;
