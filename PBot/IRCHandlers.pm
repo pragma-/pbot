@@ -144,7 +144,7 @@ sub on_mode {
     if(defined $target && $target eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) { # bot targeted
       if($mode eq "+o") {
         $self->{pbot}->{logger}->log("$nick opped me in $channel\n");
-        $self->{pbot}->{chanops}->{is_opped}->{$channel}{timeout} = gettimeofday + 300; # 5 minutes
+        $self->{pbot}->{chanops}->{is_opped}->{$channel}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('general', 'deop_timeout');;
         $self->{pbot}->{chanops}->perform_op_commands($channel);
       } 
       elsif($mode eq "-o") {
@@ -159,7 +159,7 @@ sub on_mode {
     else {  # bot not targeted
       if($mode eq "+b") {
         if($nick eq "ChanServ") {
-          $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + 3600 * 2; # 2 hours
+          $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout');
           $self->{pbot}->{chanops}->{unban_timeout}->save;
         }
       } 
