@@ -238,6 +238,7 @@ sub find_factoid {
   $self->{pbot}->{logger}->log("find_factoid: from: [$from], kw: [$keyword], args: [" . (defined $arguments ? $arguments : "undef") . "], " . (defined $exact_channel ? $exact_channel : "undef") . ", " . (defined $exact_trigger ? $exact_trigger : "undef") . "\n") if $debug;
 
   $from = '.*' if not defined $from or $from !~ /^#/;
+  $from = lc $from;
 
   $self->{pbot}->{logger}->log("from: $from\n") if $debug;
 
@@ -248,7 +249,7 @@ sub find_factoid {
   my @result = eval {
     foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
       if($exact_channel) {
-        next unless lc $from eq lc $channel or $from eq '.*' or $channel eq '.*';
+        next unless $from eq lc $channel;
       }
 
       foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
@@ -266,7 +267,7 @@ sub find_factoid {
       }
     }
 
-  $self->{pbot}->{logger}->log("find_factoid: no match\n") if $debug;
+    $self->{pbot}->{logger}->log("find_factoid: no match\n") if $debug;
     return undef;
   };
 

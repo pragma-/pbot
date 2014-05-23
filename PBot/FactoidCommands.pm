@@ -62,6 +62,7 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->factunset(@_)       },       "factunset",    0);
   $pbot->{commands}->register(sub { return $self->factchange(@_)      },       "factchange",   0);
   $pbot->{commands}->register(sub { return $self->factalias(@_)       },       "factalias",    0);
+  $pbot->{commands}->register(sub { return $self->factmove(@_)        },       "factmove",     0);
   $pbot->{commands}->register(sub { return $self->call_factoid(@_)    },       "fact",         0);
   $pbot->{commands}->register(sub { return $self->factfind(@_)        },       "factfind",     0);
   $pbot->{commands}->register(sub { return $self->list(@_)            },       "list",         0);
@@ -312,6 +313,70 @@ sub list {
   return "/msg $nick Usage: list <modules|commands|factoids|admins>";
 }
 
+sub factmove {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($src_channel, $source, $target_channel, $target) = split / /, $arguments, 4 if $arguments;
+  
+  my $usage = "Usage: factmove <source channel> <source factoid> <target channel/factoid> [target factoid]";
+
+  if(not defined $target_channel) {
+    return $usage;
+  }
+
+  if($target_channel !~ /^#/ and $target_channel ne '.*') {
+    if(defined $target) {
+      return "Unexpected argument '$target' when renaming to '$target_channel'. Perhaps '$target_channel' is missing #s? $usage";
+    }
+
+    $target = $target_channel;
+    $target_channel = $src_channel;
+  } else {
+    if(not defined $target) {
+      $target = $source;
+    }
+  }
+
+  my ($found_src_channel, $found_source) = $self->{pbot}->{factoids}->find_factoid($src_channel, $source, undef, 1, 1);
+
+  if(not defined $found_src_channel) {
+    return "Source factoid $source not found in channel $src_channel";
+  }
+
+  my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
+
+  my ($owner) = $factoids->{$found_src_channel}->{$found_source}->{'owner'} =~ m/([^!]+)/;
+
+  if((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host"))) {
+    $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to move [$found_src_channel] $found_source (not owner)\n");
+    my $chan = ($found_src_channel eq '.*' ? 'the global channel' : $found_src_channel);
+    return "/msg $nick You are not the owner of $found_source for $chan";
+  }
+
+  if($factoids->{$found_src_channel}->{$found_source}->{'locked'}) {
+    return "$found_source is locked; unlock before moving.";
+  }
+
+  my ($found_target_channel, $found_target) = $self->{pbot}->{factoids}->find_factoid($target_channel, $target, undef, 1, 1);
+
+  if(defined $found_target_channel) {
+    return "Target factoid $target already exists in channel $target_channel";
+  }
+
+  $target_channel = lc $target_channel;
+
+  $factoids->{$target_channel}->{$target} = $factoids->{$found_src_channel}->{$found_source};
+  delete $factoids->{$found_src_channel}->{$found_source};
+
+  $self->{pbot}->{factoids}->save_factoids;
+
+  if($src_channel eq $target_channel) {
+    return "[$found_src_channel] $found_source renamed to $target";  
+  } else {
+    return "[$found_src_channel] $found_source moved to [$target_channel] $target";
+  }
+}
+
 sub factalias {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
@@ -422,10 +487,10 @@ sub factrem {
   if((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host"))) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to remove $trigger [not owner]\n");
     my $chan = ($channel eq '.*' ? 'the global channel' : $channel);
-    return "/msg $nick You are not the owner of '$trigger' for $chan";
+    return "/msg $nick You are not the owner of $trigger for $chan";
   }
 
-  if(exists $factoids->{$channel}->{$trigger}->{'locked'} and $factoids->{$channel}->{$trigger}->{'locked'} != 0) {
+  if($factoids->{$channel}->{$trigger}->{'locked'}) {
     return "$trigger is locked; unlock before deleting.";
   }
 
@@ -475,7 +540,7 @@ sub factshow {
   my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
 
   if(not defined $trigger) {
-    return "/msg $nick '$trig' not found in channel '$chan'";
+    return "/msg $nick $trig not found in channel $chan";
   }
 
   my $result = "$trigger: " . $factoids->{$channel}->{$trigger}->{action};
@@ -501,7 +566,7 @@ sub factinfo {
   my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
 
   if(not defined $trigger) {
-    return "'$trig' not found in channel '$chan'";
+    return "$trig not found in channel $chan";
   }
 
   my $created_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{created_on});
@@ -747,7 +812,7 @@ sub factchange {
     return "/msg $nick $keyword not found in channel $from.";
   }
 
-  if(not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host") and exists $factoids->{$channel}->{$trigger}->{'locked'} and $factoids->{$channel}->{$trigger}->{'locked'} != 0) {
+  if(not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host") and $factoids->{$channel}->{$trigger}->{'locked'}) {
     return "$trigger is locked and cannot be changed.";
   }
 
