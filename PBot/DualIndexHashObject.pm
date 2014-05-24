@@ -237,11 +237,11 @@ sub set {
   }
 
   if(not defined $key) {
-    my $result = "[" . ($primary eq '.*' ? 'global' : $primary) . "] $secondary keys: ";
+    my $result = "[" . ($primary eq '.*' ? 'global' : $primary) . "] $secondary keys:\n";
     my $comma = '';
     foreach my $key (sort keys %{ $self->hash->{$primary}->{$secondary} }) {
       $result .= $comma . "$key => " . $self->hash->{$primary}->{$secondary}->{$key};
-      $comma = "; ";
+      $comma = ";\n";
     }
     $result .= "none" if($comma eq '');
     return $result;

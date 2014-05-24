@@ -67,16 +67,14 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->factfind(@_)        },       "factfind",     0);
   $pbot->{commands}->register(sub { return $self->list(@_)            },       "list",         0);
   $pbot->{commands}->register(sub { return $self->top20(@_)           },       "top20",        0);
+  $pbot->{commands}->register(sub { return $self->load_module(@_)     },       "load",        60);
+  $pbot->{commands}->register(sub { return $self->unload_module(@_)   },       "unload",      60);
+  $pbot->{commands}->register(sub { return $self->histogram(@_)       },       "histogram",    0);
+  $pbot->{commands}->register(sub { return $self->count(@_)           },       "count",        0);
 
   # the following commands have not yet been updated to use the new factoid structure
   # DO NOT USE!!  Factoid corruption may occur.
   $pbot->{commands}->register(sub { return $self->add_regex(@_)       },       "regex",        999);
-  $pbot->{commands}->register(sub { return $self->histogram(@_)       },       "histogram",    999);
-  $pbot->{commands}->register(sub { return $self->count(@_)           },       "count",        999);
-  $pbot->{commands}->register(sub { return $self->load_module(@_)     },       "load",         999);
-  $pbot->{commands}->register(sub { return $self->unload_module(@_)   },       "unload",       999);
-  $pbot->{commands}->register(sub { return $self->enable_command(@_)  },       "enable",       999);
-  $pbot->{commands}->register(sub { return $self->disable_command(@_) },       "disable",      999);
 }
 
 sub call_factoid {
@@ -502,14 +500,16 @@ sub factrem {
 sub histogram {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->{factoids}->factoids;
+  my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
   my %hash;
   my $factoid_count = 0;
 
-  foreach my $command (keys %{ $factoids }) {
-    if(exists $factoids->{$command}{text}) {
-      $hash{$factoids->{$command}{owner}}++;
-      $factoid_count++;
+  foreach my $channel (keys %$factoids) {
+    foreach my $command (keys %{ $factoids->{$channel} }) {
+      if($factoids->{$channel}->{$command}->{type} eq 'text') {
+        $hash{$factoids->{$channel}->{$command}->{owner}}++;
+        $factoid_count++;
+      }
     }
   }
 
@@ -518,12 +518,11 @@ sub histogram {
 
   foreach my $owner (sort {$hash{$b} <=> $hash{$a}} keys %hash) {
     my $percent = int($hash{$owner} / $factoid_count * 100);
-    $percent = 1 if $percent == 0;
-    $text .= "$owner: $hash{$owner} ($percent". "%) ";  
+    $text .= "$owner: $hash{$owner} ($percent". "%)\n";  
     $i++;
     last if $i >= 10;
   }
-  return "$factoid_count factoids, top 10 submitters: $text";
+  return "$factoid_count factoids, top 10 submitters:\n$text";
 }
 
 sub factshow {
@@ -661,7 +660,7 @@ sub top20 {
 sub count {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->{factoids}->factoids;
+  my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
   my $i = 0;
   my $total = 0;
 
@@ -672,17 +671,19 @@ sub count {
   $arguments = ".*" if($arguments =~ /^factoids$/);
 
   eval {
-    foreach my $command (keys %{ $factoids }) {
-      $total++ if exists $factoids->{$command}{text};
-      my $regex = qr/^\Q$arguments\E$/;
-      if($factoids->{$command}{owner} =~ /$regex/i && exists $factoids->{$command}{text}) {
-        $i++;
+    foreach my $channel (keys %{ $factoids }) {
+      foreach my $command (keys %{ $factoids->{$channel} }) {
+        next if $factoids->{$channel}->{$command}->{type} ne 'text';
+        $total++; 
+        if($factoids->{$channel}->{$command}->{owner} =~ /\Q$arguments\E/i) {
+          $i++;
+        }
       }
     }
   };
   return "/msg $nick $arguments: $@" if $@;
 
-  return "I have $i factoids" if($arguments eq ".*");
+  return "I have $i factoids." if $arguments eq ".*";
 
   if($i > 0) {
     my $percent = int($i / $total * 100);
@@ -773,9 +774,9 @@ sub factfind {
 
   if($i == 1) {
     chop $text;
-    return "found one factoid submitted for " . ($last_chan eq '.*' ? 'global channel' : $last_chan) . " " . $argtype . ": $last_trigger is $factoids->{$last_chan}->{$last_trigger}->{action}";
+    return "Found one factoid submitted for " . ($last_chan eq '.*' ? 'global channel' : $last_chan) . " " . $argtype . ": $last_trigger is $factoids->{$last_chan}->{$last_trigger}->{action}";
   } else {
-    return "found $i factoids " . $argtype . ": $text" unless $i == 0;
+    return "Found $i factoids " . $argtype . ": $text" unless $i == 0;
 
     my $chans = (defined $channel ? ($channel eq '.*' ? 'global channel' : $channel) : 'any channels');
     return "No factoids " . $argtype . " submitted for $chans";
@@ -836,77 +837,41 @@ sub factchange {
 sub load_module {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->{factoids}->factoids;
+  my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
   my ($keyword, $module) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
 
   if(not defined $module) {
-    return "/msg $nick Usage: load <command> <module>";
+    return "/msg $nick Usage: load <keyword> <module>";
   }
 
-  if(not exists($factoids->{$keyword})) {
-    $factoids->{$keyword}{module} = $module;
-    $factoids->{$keyword}{enabled} = 1;
-    $factoids->{$keyword}{owner} = $nick;
-    $factoids->{$keyword}{created_on} = time();
-    $self->{pbot}->{logger}->log("$nick!$user\@$host loaded $keyword => $module\n");
+  if(not exists($factoids->{'.*'}->{$keyword})) {
+    $self->{pbot}->{factoids}->add_factoid('module', '.*', "$nick!$user\@$host", $keyword, $module);
+    $factoids->{'.*'}->{$keyword}->{add_nick} = 1;
+    $self->{pbot}->{logger}->log("$nick!$user\@$host loaded module $keyword => $module\n");
     $self->{pbot}->{factoids}->save_factoids();
-    return "/msg $nick Loaded $keyword => $module";
+    return "/msg $nick Loaded module $keyword => $module";
   } else {
-    return "/msg $nick There is already a command named $keyword.";
+    return "/msg $nick There is already a keyword named $keyword.";
   }
 }
 
 sub unload_module {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->{factoids}->factoids;
+  my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
   if(not defined $arguments) {
-    return "/msg $nick Usage: unload <module>";
-  } elsif(not exists $factoids->{$arguments}) {
+    return "/msg $nick Usage: unload <keyword>";
+  } elsif(not exists $factoids->{'.*'}->{$arguments}) {
     return "/msg $nick $arguments not found.";
-  } elsif(not exists $factoids->{$arguments}{module}) {
+  } elsif($factoids->{'.*'}->{$arguments}{type} ne 'module') {
     return "/msg $nick $arguments is not a module.";
   } else {
-    delete $factoids->{$arguments};
+    delete $factoids->{'.*'}->{$arguments};
     $self->{pbot}->{factoids}->save_factoids();
     $self->{pbot}->{logger}->log("$nick!$user\@$host unloaded module $arguments\n");
     return "/msg $nick $arguments unloaded.";
   } 
-}
-
-sub enable_command {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->{factoids}->factoids;
-  
-  if(not defined $arguments) {
-    return "/msg $nick Usage: enable <command>";
-  } elsif(not exists $factoids->{$arguments}) {
-    return "/msg $nick $arguments not found.";
-  } else {
-    $factoids->{$arguments}{enabled} = 1;
-    $self->{pbot}->{factoids}->save_factoids();
-    $self->{pbot}->{logger}->log("$nick!$user\@$host enabled $arguments\n");
-    return "/msg $nick $arguments enabled.";
-  }   
-}
-
-sub disable_command {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->{factoids}->factoids;
-
-  if(not defined $arguments) {
-    return "/msg $nick Usage: disable <command>";
-  } elsif(not exists $factoids->{$arguments}) {
-    return "/msg $nick $arguments not found.";
-  } else {
-    $factoids->{$arguments}{enabled} = 0;
-    $self->{pbot}->{factoids}->save_factoids();
-    $self->{pbot}->{logger}->log("$nick!$user\@$host disabled $arguments\n");
-    return "/msg $nick $arguments disabled.";
-  }   
 }
 
 1;

@@ -47,6 +47,8 @@ sub initialize {
   $self->{commands}              = PBot::FactoidCommands->new(pbot => $pbot);
   $self->{factoidmodulelauncher} = PBot::FactoidModuleLauncher->new(pbot => $pbot);
 
+  $self->{pbot}->{registry}->add_default('text', 'factoids', 'default_rate_limit', '15');
+
   $self->{pbot}->{atexit}->register(sub { $self->save_factoids; return; });
 
   $self->load_factoids;
@@ -95,7 +97,7 @@ sub add_factoid {
   $self->{factoids}->hash->{$channel}->{$trigger}->{created_on} = gettimeofday;
   $self->{factoids}->hash->{$channel}->{$trigger}->{ref_count}  = 0;
   $self->{factoids}->hash->{$channel}->{$trigger}->{ref_user}   = "nobody";
-  $self->{factoids}->hash->{$channel}->{$trigger}->{rate_limit} = 15;
+  $self->{factoids}->hash->{$channel}->{$trigger}->{rate_limit} = $self->{pbot}->{registry}->get_value('factoids', 'default_rate_limit');
 
   $self->save_factoids unless $dont_save;
 }
