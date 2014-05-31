@@ -472,10 +472,8 @@ sub recall_message_by_count {
 sub recall_message_by_text {
   my ($self, $id, $channel, $text, $ignore_command) = @_;
   
-  $text =~ s/\.\*\?/%/g;
-  $text =~ s/\.\*/%/g;
-  $text =~ s/\*/%/g;
-  $text =~ s/\?/_/g;
+  $text =~ s/\.?\*\??/%/g;
+  $text =~ s/\./_/g;
 
   my $messages;
 

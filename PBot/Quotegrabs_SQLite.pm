@@ -101,9 +101,13 @@ sub get_quotegrab {
 sub get_random_quotegrab {
   my ($self, $nick, $channel, $text) = @_;
 
-  $nick =~ s/\.?\*/%/g if defined $nick;
-  $channel =~ s/\.?\*/%/g if defined $channel;
-  $text =~ s/\.?\*/%/g if defined $text;
+  $nick =~ s/\.?\*\??/%/g if defined $nick;
+  $channel =~ s/\.?\*\??/%/g if defined $channel;
+  $text =~ s/\.?\*\??/%/g if defined $text;
+
+  $nick =~ s/\./_/g if defined $nick;
+  $channel =~ s/\./_/g if defined $channel;
+  $text =~ s/\./_/g if defined $text;
 
   my $quotegrab = eval {
     my $sql = 'SELECT * FROM Quotegrabs ';
