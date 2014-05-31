@@ -244,6 +244,24 @@ sub on_departure {
   }
 }
 
+sub on_notregistered {
+  my ($self, $conn, $event) = @_;
+  my ($addr, $msg) = $event->args;
+
+  $self->{pbot}->{logger}->log("Received NOTREGISTERED from $addr: $msg\n");
+  $conn->privmsg("nickserv", "release " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  $conn->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+}
+
+sub on_bannickchange {
+  my ($self, $conn, $event) = @_;
+  my ($addr, $nick, $msg) = $event->args;
+
+  $self->{pbot}->{logger}->log("Received BANNICKCHANGE from $addr: $nick ($msg)\n");
+  $conn->privmsg("nickserv", "release " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  $conn->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+}
+
 sub on_nickchange {
   my ($self, $conn, $event) = @_;
   my ($nick, $user, $host, $newnick) = ($event->nick, $event->user, $event->host, $event->args);
