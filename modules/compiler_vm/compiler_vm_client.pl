@@ -12,6 +12,14 @@ use Time::HiRes qw/gettimeofday/;
 
 my $debug = 0;
 
+$SIG{INT} = sub { cleanup(); exit 1; };
+
+my $compiler_client;
+
+sub cleanup {
+  close $compiler_client if defined $compiler_client;
+}
+
 my $USE_LOCAL        = defined $ENV{'CC_LOCAL'}; 
 my $MAX_UNDO_HISTORY = 1000000;
 
@@ -31,7 +39,7 @@ my %languages = (
 
 my %preludes = ( 
   'C99'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <complex.h>\n#include <math.h>\n#include <tgmath.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <locale.h>\n#include <wchar.h>\n#include <fenv.h>\n#inclue <iso646.h>\n#include <setjmp.h>\n#include <signal.h>\n#include <prelude.h>\n\n",
-  'C11'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdatomic.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <complex.h>\n#include <setjmp.h>\n#include <wchar.h>\n#include <wctype.h>\n#include <tgmath.h>\n#include <fenv.h>\n#include <locale.h>\n#include <iso646.h>\n#include <signal.h>\n#include <prelude.h>\n\n",
+  'C11'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <complex.h>\n#include <setjmp.h>\n#include <wchar.h>\n#include <wctype.h>\n#include <tgmath.h>\n#include <fenv.h>\n#include <locale.h>\n#include <iso646.h>\n#include <signal.h>\n#include <prelude.h>\n\n",
   'C89'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <locale.h>\n#include <setjmp.h>\n#include <signal.h>\n#include <prelude.h>\n\n",
 );
 
@@ -106,6 +114,7 @@ sub compile {
     $compiler  = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => '3333', Proto => 'tcp', Type => SOCK_STREAM);
     die "Could not create socket: $!" unless $compiler;
     $compiler_output = $compiler;
+    $compiler_client = $compiler;
   }
 
   my $date = time;
@@ -141,7 +150,7 @@ sub compile {
 }
 
 if($#ARGV < 2) {
-  print "Usage: cc [-compiler -options] <code> [-stdin=input]\n";
+  print "Usage: cc [-compiler options] [-options] <code> [-stdin=input]\n";
   # usage for shell: cc <nick> <channel> [-compiler -options] <code> [-stdin=input]
   exit 0;
 }
@@ -209,7 +218,7 @@ if($subcode =~ m/^\s*(?:and\s+)?diff(?:\s+\S+)?\s*$/i) {
     print "$nick: Not enough recent code to diff.\n"
   } else {
     use Text::WordDiff;
-    my $diff = word_diff \$last_code[1], \$last_code[0], { STYLE => 'MARKUP' };
+    my $diff = word_diff(\$last_code[1], \$last_code[0], { STYLE => 'Diff' });
     if($diff !~ /(?:<del>|<ins>)/) {
       $diff = "No difference.";
     } else {
@@ -1006,7 +1015,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/(\d+:\d+:\s*)* \(first use in this function\)//g;
   $output =~ s/(\d+:\d+:\s*)*error: \(Each undeclared identifier is reported only once.*?\)//msg;
   $output =~ s/(\d+:\d+:\s*)*ld: warning: cannot find entry symbol _start; defaulting to [^ ]+//;
-  $output =~ s/(\d+:\d+:\s*)*error: (.*?) error/error: $1; error/msg;
+#  $output =~ s/(\d+:\d+:\s*)*error: (.*?) error/error: $1; error/msg;
   $output =~ s/(\d+:\d+:\s*)*\/tmp\/.*\.o://g;
   $output =~ s/(\d+:\d+:\s*)*collect2: ld returned \d+ exit status//g;
   $output =~ s/\(\.text\+[^)]+\)://g;
