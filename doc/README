@@ -18,23 +18,10 @@ associated with a registered NickServ account, if you want channel auto-join to 
 Then you'll need to get several modules from CPAN.  If you do not have root access, see
 http://perl.jonallen.info/writing/articles/install-perl-modules-without-root
 
-AppConfig::Std
-Data::Dumper
-Getopt::Std
-HTML::Entities
-HTML::FormatText
-HTML::Parse
-IPC::Open2
-LWP::Simple
-LWP::UserAgent
-LWP::UserAgent::WithCache
-Net::Dict
-SOAP::Lite
-Text::Autoformat
-Text::Balanced
-URI::Escape
-WWW::Wikipedia
-XML::RSS
+The list of modules to install can be found in the modules file located in the same
+directory as this README file.  You can install the modules with the following command:
+
+$ cpan $(cat MODULES)
 --------------------------
 Some quick-and-dirty info on using stdin (pbot shell after running pbot.sh):
 
