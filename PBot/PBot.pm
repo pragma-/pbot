@@ -77,6 +77,7 @@ sub initialize {
   $self->{registry}->add_default('text', 'general', 'module_dir',  delete $conf{module_dir}  // "$ENV{HOME}/pbot/modules");
   $self->{registry}->add_default('text', 'general', 'trigger',     delete $conf{trigger}     // '!');
 
+  $self->{registry}->add_default('text', 'irc',     'debug',       delete $conf{irc_debug}   // 0);
   $self->{registry}->add_default('text', 'irc',     'max_msg_len', delete $conf{max_msg_len} // 425);
   $self->{registry}->add_default('text', 'irc',     'ircserver',   delete $conf{ircserver}   // "irc.freenode.net");
   $self->{registry}->add_default('text', 'irc',     'port',        delete $conf{port}        // 6667);
@@ -93,6 +94,7 @@ sub initialize {
   $self->{registry}->set('irc', 'identify_password', 'private', 1);
 
   $self->{registry}->add_trigger('irc', 'botnick', sub { $self->change_botnick_trigger(@_) });
+  $self->{registry}->add_trigger('irc', 'debug',   sub { $self->irc_debug_trigger(@_)      });
  
   $self->{select_handler} = PBot::SelectHandler->new(pbot => $self, %conf);
   $self->{stdin_reader}   = PBot::StdinReader->new(pbot => $self, %conf);
@@ -184,6 +186,8 @@ sub connect {
   $self->{conn}->add_handler('banlist'                  , sub { $self->{bantracker}->on_banlist_entry(@_) });
   $self->{conn}->add_handler('endofnames'               , sub { $self->{bantracker}->get_banlist(@_)      });
   $self->{conn}->add_handler(728                        , sub { $self->{bantracker}->on_quietlist_entry(@_) });
+  $self->{conn}->add_handler('bannickchange'            , sub { $self->{irchandlers}->on_bannickchange(@_) });
+  $self->{conn}->add_handler('notregistered'            , sub { $self->{irchandlers}->on_notregistered(@_) });
 }
 
 #main loop
@@ -207,6 +211,12 @@ sub register_signal_handlers {
 sub atexit {
   my $self = shift;
   $self->{atexit}->execute_all;
+}
+
+sub irc_debug_trigger {
+  my ($self, $section, $item, $newvalue) = @_;
+  $self->{irc}->debug($newvalue);
+  $self->{conn}->debug($newvalue) if $self->{connected};
 }
 
 sub change_botnick_trigger {
