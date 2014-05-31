@@ -12,6 +12,12 @@ close $fh;
 
 my $debug = 0; 
 
+#my $opening = "<";
+#my $closing = ">\n";
+
+my $opening = "\n";
+my $closing = "\n\n";
+
 my $watching = 0;
 my $got_output = 0;
 my $local_vars = "";
@@ -34,6 +40,7 @@ sub execute {
 
         next if not length $line;
         <$out> and next if $line =~ m/^\(gdb\) No line \d+ in/;
+        next if $line =~ m/^\[New Thread/;
         next if $line =~ m/^\(gdb\) Continuing/;
         next if $line =~ m/^\(gdb\) \$\d+ = "Ok\."/;
         next if $line =~ m/^(\(gdb\) )*Breakpoint \d+ at 0x/;
@@ -44,7 +51,7 @@ sub execute {
         next if $line =~ m/libc_start_main/;
 
         if($line =~ m/^\d+: (.*? = .*)/) {
-            print "<$1>\n";
+            print "$opening$1$closing";
             $got_output = 1;
             next;
         }
@@ -100,7 +107,7 @@ sub execute {
 
                         # fix this
                         $peep =~ s/^\d+: (.*?) =/$1 =/;
-                        print "<$peep>\n";
+                        print "$opening$peep$closing";
                         $got_output = 1;
                     }
 
@@ -122,7 +129,7 @@ sub execute {
                     $result =~ s/\s+$//;
 
                     $vars =~ s/\(gdb\)\s*//g;
-                    $local_vars = "<no output: $vars>" if length $vars;
+                    $local_vars = $opening . "no output: $vars$closing" if length $vars;
                 }
             }
             gdb $in, "cont\n";
@@ -191,7 +198,7 @@ sub execute {
 
             $indent++ if $direction eq "leaving";
             
-            print "<$direction [$indent]", ' ' x $indent, "$func$return_value>\n";
+            print "$opening$direction [$indent]", ' ' x $indent, "$func$return_value$closing";
             gdb $in, "cont\n";
             next;
         }
@@ -268,12 +275,13 @@ sub execute {
                 $ignore_response = 1;
             }
 
+            my $final_closing = "";
             gdb $in, "$command\nprint \"Ok.\"\n";
             while(my $next_line = <$out>) {
                 chomp $next_line;
                 print "nextline: $next_line\n" if $debug >= 1;
 
-                last if $next_line =~ m/\$\d+ = "Ok."/;
+                print $final_closing and last if $next_line =~ m/\$\d+ = "Ok."/;
                 $next_line =~ s/^\(gdb\)\s*\(gdb\)\s+\$\d+ = "Ok."//;
                 $next_line =~ s/^\(gdb\)\s+\$\d+//;
                 $next_line =~ s/^\(gdb\)\s+type//;
@@ -282,12 +290,14 @@ sub execute {
                 next if not length $next_line;
 
                 if(not $ignore_response) {
-                    if($next_line =~ m/=/) {
+                    if($next_line =~ m/=/) { # ptype
                         $got_output = 1;
-                        print "<$args$next_line>\n";
+                        print "$opening$args$next_line";
+                        $final_closing = $closing;
                     } else {
                         $got_output = 1; 
-                        print "<$next_line>\n";
+                        $next_line =~ s/^\s+//;
+                        print "\n$next_line";
                     }
                 }
             }
@@ -312,7 +322,7 @@ sub execute {
             my ($val2) = $new =~ m/New value = (.*)/;
 
             $got_output = 1;
-            print "<$var = $val2>\n";
+            print "$opening$var = $val2$closing";
             gdb $in, "cont\n";
             next;
         }
@@ -330,7 +340,7 @@ sub execute {
             my ($val2) = $new =~ m/New value = (.*)/;
 
             $got_output = 1;
-            my $output = "<$var changed: $val1 => $val2>\n";
+            my $output = "$opening$var changed: $val1 => $val2$closing";
             flushall $in, $out;
             print $output;
             gdb $in, "cont\n";
@@ -350,8 +360,8 @@ sub execute {
         }
 
         if($line =~ s/\[Inferior .* exited with code (\d+)\]//) {
-            print "$line\n";
-            print "<Exit $1>\n";
+            print "$line\n" if length $line;
+            print $opening . "Exit " . (oct $1) . $closing;
             print " $local_vars\n" if length $local_vars and not $got_output;
             exit 0;
         }
@@ -379,7 +389,7 @@ sub execute {
                 chomp $line;
                 $line =~ s/^\d+:\s//;
                 $got_output = 1;
-                $output .= "<$line>\n";
+                $output .= "$opening$line$closing";
             }
             flushall $in, $out;
             print $output;
@@ -451,7 +461,7 @@ sub execute {
 
         if($line =~ s/^\(gdb\)\s*//) {
             $got_output = 1;
-            print "<$line>\n";
+            print "$opening$line$closing";
             next;
         }
 
