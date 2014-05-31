@@ -287,7 +287,7 @@ sub interpreter {
   my ($result, $channel);
   my $pbot = $self->{pbot};
 
-  return undef if not length $keyword or $count > 5;
+  return undef if not length $keyword or $count > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
 
   $from = lc $from;
 

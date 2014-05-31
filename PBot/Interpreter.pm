@@ -37,6 +37,7 @@ sub initialize {
   $self->{pbot}->{registry}->add_default('text',  'general', 'compile_blocks',           $conf{compile_blocks} // 1);
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',  $conf{compile_blocks_channels}  // '.*');
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_ignore_channels',  $conf{compile_blocks_ignore_channels}  // 'none');
+  $self->{pbot}->{registry}->add_default('text',  'interpreter', 'max_recursion',  10);
 }
 
 sub process_line {
@@ -200,7 +201,7 @@ sub interpret {
 
   $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $from ? $from : "(undef)") . "][$nick!$user\@$host][$count][$command]\n");
 
-  return "Too many levels of recursion, aborted." if(++$count > 5);
+  return "Too many levels of recursion, aborted." if(++$count > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
 
   if(not defined $nick || not defined $user || not defined $host ||
      not defined $command) {
