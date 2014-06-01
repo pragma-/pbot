@@ -64,24 +64,24 @@ sub add {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
   if(not defined $arguments or not length $arguments) {
-    return "/msg $nick Usage: chanadd <channel>";
+    return "Usage: chanadd <channel>";
   }
 
   my $hash = {};
   $hash->{enabled} = 1;
   $hash->{chanop} = 0;
 
-  return "/msg $nick " . $self->{channels}->add($arguments, $hash);
+  return $self->{channels}->add($arguments, $hash);
 }
 
 sub remove {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
   if(not defined $arguments or not length $arguments) {
-    return "/msg $nick Usage: chanrem <channel>";
+    return "Usage: chanrem <channel>";
   }
 
-  return "/msg $nick " . $self->{channels}->remove($arguments);
+  return $self->{channels}->remove($arguments);
 }
 
 sub list {
@@ -97,7 +97,7 @@ sub list {
     }
     $result .= " }\n";
   }
-  return "/msg $nick $result";
+  return $result;
 }
 
 sub load_channels {
