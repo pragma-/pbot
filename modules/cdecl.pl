@@ -2,17 +2,17 @@
 
 # quick and dirty by :pragma
 
+my $command = join(' ', @ARGV);
 
-if ($#ARGV < 0) {
-  print "For help with cdecl, see http://linux.die.net/man/1/cdecl\n";
+my @args = split(' ', $command); # because @ARGV may be one quoted argument
+if (@args < 2) {
+  print "Usage: cdecl <explain|declare|cast|set|...> <code>, see http://linux.die.net/man/1/cdecl\n";
   die;
 }
 
-my $command = join(' ', @ARGV);
-
 $command = quotemeta($command);
 $command =~ s/\\ / /g;
-#print "[$command]\n";
+
 my $result = `/usr/bin/cdecl -c $command`;
 
 chomp $result;
