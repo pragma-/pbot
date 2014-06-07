@@ -25,7 +25,7 @@ startrule : translation_unit
           startrule(?)
     
 translation_unit : (comment 
-                 | global_var_declaration 
+                 | external_declaration 
                  | function_definition
                  | function_prototype 
                  | preproc[matchrule => 'translation_unit'])
@@ -145,7 +145,7 @@ token : <skip: '[ \t]*'> /\S+/
           $return =~ s/"/\\"/; # escaping all quotes.
         }
 
-global_var_declaration : declaration 
+external_declaration : declaration 
 
 function_definition : <skip: '\s*'> declaration_specifiers(?) declarator[context => 'function_definition']
                       '(' parameter_type_list(?) ')' '{' declaration_list(?) statement_list(?) '}' 
