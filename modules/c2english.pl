@@ -17,12 +17,15 @@ $code =~ s/#include <([^>]+)>/\n#include <$1>\n/g;
 $code =~ s/#([^ ]+) (.*?)\\n/\n#$1 $2\n/g;
 $code =~ s/#([\w\d_]+)\\n/\n#$1\n/g;
 
+my $original_code = $code;
+
 my $precode = $code;
 $code = '';
 
-my $has_main = 0;
+my ($has_function, $has_main);
 
-my $prelude = "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <prelude.h>\n\n";
+my $prelude_base = "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n\n";
+my $prelude = $prelude_base;
 $prelude .= "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
 
 my $preprecode = $precode;
@@ -51,6 +54,7 @@ while($preprecode =~ s/([ a-zA-Z0-9\_\*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*
     $precode .= $extract[1];
   }
   $code .= "$ret $ident($params) $body\n\n";
+  $has_function = 1;
   $has_main = 1 if $ident eq 'main';
 }
 
@@ -58,7 +62,7 @@ $precode =~ s/^\s+//;
 $precode =~ s/\s+$//;
 
 if(not $has_main) {
-  $code = "$prelude\n\n$code\n\nint main(void) { $precode\n;\nreturn 0;}\n";
+  $code = "$prelude\n\n$code\n\nint main(void) {\n$precode\n;\nreturn 0;}\n";
 } else {
   $code = "$prelude\n\n$precode\n\n$code\n";
 }
@@ -71,13 +75,13 @@ $code =~ s/;(\s*\/\*.*?\*\/\s*);\n/;$1/gs;
 $code =~ s/;(\s*\/\/.*?\s*);\n/;$1/gs;
 $code =~ s/({|})\n\s*;\n/$1\n/gs;
 
-chdir "$ENV{HOME}/blackshell/msmud/babel-buster/code" or die "Could not chdir: $!";
+chdir "c2english" or die "Could not chdir: $!";
 
 open my $fh, '>', 'code.c' or die "Could not write code: $!";
 print $fh $code;
 close $fh;
 
-my ($ret, $result) = execute(10, "gcc -std=c89 -pedantic -Werror -Wno-unused -fsyntax-only -fno-diagnostics-show-option code.c");
+my ($ret, $result) = execute(10, "gcc -std=c89 -pedantic -Werror -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
 
 if(not $force and $ret != 0) {
   $output = $result;
@@ -149,37 +153,28 @@ if(not $force and $ret != 0) {
   }
 }
 
-$output = `./c2e 2>/dev/null code.c` if not defined $output;
+$code =~ s/^\Q$prelude_base\E\s*//;
 
-if(not $has_main) {
-  $output =~ s/Let main be a function returning an integer.  It is called with no arguments.  To perform the function, //;
-  $output =~ s/\s*(Then|Next,|Continuing on, we next)?\s*return 0.//i;
-  $output =~ s/^(.)/uc $1/e;
+open my $fh, '>', 'code2eng.c' or die "Could not write code: $!";
+print $fh $code;
+close $fh;
+
+$output = `./c2eng.pl code2eng.c` if not defined $output;
+
+if(not $has_function and not $has_main) {
+  $output =~ s/Let 'main' be a function taking no parameters and returning int.\s*To perform the function:\s*//;
+  $output =~ s/\s*Return 0.\s*$//;
+  $output =~ s/\s*Return 0.\s*End of function 'main'.\s*//;
+  $output =~ s/\s*Do nothing.\s*$//;
+  $output =~ s/^\s*(.)/\U$1/;
 }
-
-$output =~ s/"a"/a/g;
-$output =~ s/whose initial value is/with value being/g;
-$output =~ s/each element of which is a(n?)/of type a$1/g;
-$output =~ s/\s+s\s*$//g;
-$output =~ s/variable/object/g;
-$output =~ s/of type a pointer/of type pointer/g;
-$output =~ s/of type a character/of type char/g;
-$output =~ s/of type an integer/of type int/g;
-$output =~ s/to a character/to char/g;
-$output =~ s/to an integer/to int/g;
-$output =~ s/with no arguments returning/with unspecified arguments returning/g;
-$output =~ s/with argument a void/with no arguments/g;
-$output =~ s/\s*After that,\s*$//;
-$output =~ s/as long as zero does not equal 1/while the condition is true/g;
-$output =~ s/\ncompute nothing.//g;
 
 $output =~ s/\s+/ /;
-if($output eq " ") {
-  print "Does not compute.  I only know about C89 and valid code.\n";
-  exit;
+if(not $output) {
+  $output = "Does not compute.  I only know about C89 and valid code.\n";
 }
 
-print "$output\n";
+print "[Note: Work-in-progress; may be issues!] $output\n";
 
 sub execute {
   my $timeout = shift @_;
