@@ -81,7 +81,8 @@ open my $fh, '>', 'code.c' or die "Could not write code: $!";
 print $fh $code;
 close $fh;
 
-my ($ret, $result) = execute(10, "gcc -std=c89 -pedantic -Werror -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
+#my ($ret, $result) = execute(10, "gcc -std=c89 -pedantic -Werror -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
+my ($ret, $result) = execute(10, "gcc -std=gnu89 -Werror -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
 
 if(not $force and $ret != 0) {
   $output = $result;
@@ -162,9 +163,9 @@ close $fh;
 $output = `./c2eng.pl code2eng.c` if not defined $output;
 
 if(not $has_function and not $has_main) {
-  $output =~ s/Let 'main' be a function taking no parameters and returning int.\s*To perform the function:\s*//;
+  $output =~ s/Let .main. be a function taking no parameters and returning int.\s*To perform the function:\s*//;
   $output =~ s/\s*Return 0.\s*$//;
-  $output =~ s/\s*Return 0.\s*End of function 'main'.\s*//;
+  $output =~ s/\s*Return 0.\s*End of function .main..\s*//;
   $output =~ s/\s*Do nothing.\s*$//;
   $output =~ s/^\s*(.)/\U$1/;
 }

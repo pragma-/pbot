@@ -13,8 +13,8 @@
 # etc
 
 {
-  my @defined_types = ('FILE'); 
-  my ($basic, $add_on, @basics, $rule_context, $rule_name, @macros, $array_size); 
+  my @defined_types = ('`FILE`'); 
+  my ($basic, @basics, $rule_name, @macros); 
 }
 
 startrule: 
@@ -43,8 +43,6 @@ preproc:
     | pragma 
     | preproc_conditional[matchrule => $arg{matchrule}]
           { $return = $item[-1]; }
-    | '#' /^.*\n/
-          { print STDERR "Unknown CPP directive $item[-1]\n"; $return = ""; }
 
 definition: 
       <skip: '[ \t]*'> /\n*/ macro_definition
@@ -183,8 +181,8 @@ function_definition:
             my $return_type = $item{declarator}; 
             my $name = $item{declarator}; 
 
-            $name =~ s/^.*?'/'/; 
-            $return_type =~ s/\'.*\'//;
+            $name =~ s/^.*?`/`/; 
+            $return_type =~ s/`.*`//;
 
             if ($return_type =~ /\w/ ) { 
               $return_type .= "to a ";
@@ -430,7 +428,7 @@ assignment_operator:
       '=' 
           {
             if ($arg{context} eq 'statement') { 
-              $return = ['Assign to', ' the value' ] ; 
+              $return = ['Assign to', ' the value' ]; 
             } else { 
               $return = ', which is assigned to be '; 
             }
@@ -602,7 +600,7 @@ declaration:
       declaration_specifiers init_declarator_list(?) ';'
           {
             # This whole thing needs to be re-written to parse declarations inside-out.
-            my @init_list = @{$item{'init_declarator_list(?)'}->[0]};
+            my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
             my $init_declaration_list;
 
             if ($item{declaration_specifiers} =~ s/type definition of //) {
@@ -616,8 +614,7 @@ declaration:
 
               $return = "Let $init_declaration_list be another name for $item{declaration_specifiers}.\n";
 
-              # add to defined types, removing single-quotes
-              push @defined_types, map { s/'//g; $_ } @init_list; 
+              push @defined_types, @init_list; 
             } else {
               my $and = @init_list > 1 ? ' and' : '';
 
@@ -632,7 +629,11 @@ declaration:
                   $match_prefix = undef;
                 }
 
-                $return .= $name;
+                if(length $name) {
+                  $return .= $name;
+                } else {
+                  $return .= 'there';
+                }
 
                 for(my $i = 0; $i < @init_list; $i++) {
                   my ($prefix, $name) = split / ([^ ]+)$/, $init_list[$i];
@@ -681,8 +682,8 @@ init_declarator:
               } else {  
                 $return = "initialized to $init as "; 
               }
+              $return .= $item{declarator};
             }
-            $return .= $item{declarator};
           }
 
 initializer:
@@ -751,7 +752,6 @@ postfix_expression:
 
             push @basics, $basic; 
             $basic =  $item{primary_expression};
-            $add_on = 0 ; 
             $return = $item{primary_expression}; 
             1;
           }
@@ -940,7 +940,7 @@ primary_expression:
     | string 
     | identifier
           {
-            $return = "`$item{identifier}`";
+            $return = "$item{identifier}";
           }
 
 declarator:
@@ -952,9 +952,9 @@ direct_declarator:
       identifier[context => 'direct_declarator'] array_declarator(s?)
           { 
             if(@{$item{'array_declarator(s?)'}}) {
-              $return = join('', @{$item{'array_declarator(s?)'}}) . "'$item{identifier}'";
+              $return = join('', @{$item{'array_declarator(s?)'}}) . "$item{identifier}";
             } else {
-              $return = "'$item{identifier}'";
+              $return = "$item{identifier}";
             }
           }
     | '(' declarator ')' array_declarator(s)
@@ -978,9 +978,9 @@ array_declarator:
       ( '[' assignment_expression(?) ']'
           {
             if (@{$item{'assignment_expression(?)'}}) { 
-              $array_size = 'size '. join('',@{$item{'assignment_expression(?)'}}) . ' ';
+              $return = 'size '. join('',@{$item{'assignment_expression(?)'}}) . ' ';
             } else { 
-              $array_size = 'unspecified size ';
+              $return = 'unspecified size ';
             }
           }
       )(s?)
@@ -1161,13 +1161,14 @@ struct_or_union_specifier:
       comment(?) struct_or_union identifier(?) '{' struct_declaration_list '}' 
           {
             my $identifier = join('',@{$item{'identifier(?)'}});
-            $return = join('',@{$item{'comment(?)'}}) . $item{struct_or_union} ;
-            if ($identifier) { $return .= ", called $identifier, "; } 
-            $return .= "which contains the following:\n" . $item{struct_declaration_list}; 
+            $return = join('',@{$item{'comment(?)'}}) . $item{struct_or_union};
+            if ($identifier) { $return .= " tagged $identifier"; } 
+            $return .= " which contains the following:\n" . $item{struct_declaration_list}; 
           }
     | struct_or_union identifier
           {
-            $return = "the $item{struct_or_union} $item{identifier}";
+            $item{struct_or_union} =~ s/^(a|an)/the/;
+            $return = "$item{struct_or_union} $item{identifier}";
           }
 
 struct_declaration_list:
@@ -1186,7 +1187,8 @@ struct_declaration_list:
           } 
 
 struct_declaration:
-      comment(?) specifier_qualifier_list struct_declarator_list ';'
+      specifier_qualifier_list ';'
+    | comment(?) specifier_qualifier_list struct_declarator_list ';'
           { $return = join('', @{$item{'comment(?)'}}) . $item{specifier_qualifier_list} . ' ' . $item{struct_declarator_list}; }
 
 type_name:
@@ -1196,6 +1198,8 @@ type_name:
 specifier_qualifier_list:
       type_specifier specifier_qualifier_list(?) 
           { $return = $item{type_specifier} . join('', @{$item{'specifier_qualifier_list(?)'}}); }
+    | type_specifier
+          { $return = $item{type_specifier}; }
 
 struct_declarator_list:
       struct_declarator
@@ -1210,7 +1214,9 @@ struct_declarator:
 struct_or_union:
       comment(?) ('struct' 
           { $return = 'a structure'; }
-        | 'an union') comment(?) 
+        | 'union'
+          { $return = 'an union'; }
+      ) comment(?) 
           {
             shift @item; 
             foreach (@item) { 
@@ -1317,6 +1323,7 @@ integer_constant:
 
 identifier_word:
       /[a-z_\$][a-z0-9_]*/i
+          { $return = "`$item[-1]`"; }
 
 string:
       /".*?[^\"]"/  # FIXME: doesn't handle escaped quotes
