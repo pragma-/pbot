@@ -262,7 +262,7 @@ compound_statement:
             $return .= "End block.\n" if not $arg{context};
 
             if ($arg{context}) { 
-              $return .= "End $arg{context}.\n"; 
+              $return .= "End $arg{context}.\n" unless $arg{context} eq 'do loop'; 
             } 
             1;
           }
@@ -328,7 +328,7 @@ iteration_statement:
             $return .= $item{statement} . "\n"; 
           } 
     | 'do' statement[context => 'do loop'] 'while' '(' expression ')' ';' 
-          { $return = "Do the following:\n$item{statement}\nDo this as long as '$item{expression}' evaluates to a positive number.\n"; }
+          { $return = "Do the following:^L $item{statement}\nDo this as long as $item{expression}.\n"; }
 
 for_initialization:
       expression[context => 'statement']
@@ -415,14 +415,14 @@ assignment_expression:
     | conditional_expression[context => $arg{context}]
 
 conditional_expression:
-      logical_OR_AND_expression[context => $arg{context}] 
-    | logical_OR_AND_expression[context => $arg{context}]
+      logical_OR_AND_expression[context => $arg{context}]
         '?' expression[context => 'conditional_expression1']
         ':' conditional_expression[context => 'conditional_expression2']
           {
-            $return = "the choice dependent on the value of $item{logical_OR_expression}" .
-              " comprising of $item{expression} or $item{conditional_expression}";  
+            $return = "the value depending on if $item{logical_OR_AND_expression} is true" .
+              " then $item{expression} otherwise $item{conditional_expression}";  
           } 
+    | logical_OR_AND_expression[context => $arg{context}] 
 
 assignment_operator:
       '=' 
@@ -817,32 +817,21 @@ postfix_expression:
             }
           }
 
-      # struct dereferences: 
+      # struct accesses:
       ( '.' identifier )(?)
           { 
             # capitalize when necessary!
             my $identifier = join('',@{$item[-1]}); 
             if ($identifier) {
-              if ($arg{context} eq 'statement') { 
-                $return = 'S'; 
-              } else { 
-                $return = 's'; 
-              } 
-              $return .= "tructure $basic" . "'s member $identifier"; 
+              $return = "the member $identifier of structure $basic"; 
             }
           } 
       ( '->' identifier )(?) 
           {
             # capitalize when necessary!
-            my $identifier2 = join('',@{$item[-1]}); 
-            if (length $identifier2) {
-              if ($arg{context} eq 'statement') { 
-                $return = 'The '; 
-              } else { 
-                $return = 'the '; 
-              } 
-              # todo: apply same approach one rank above....
-              $return .= "member $identifier2 of the structure pointed to by $basic"; 
+            my $identifier = join('',@{$item[-1]}); 
+            if ($identifier) {
+              $return = "the member $identifier of the structure pointed to by $basic"; 
             } 
           }
       ( '++' )(?)
@@ -892,11 +881,11 @@ argument_expression_list:
             my $last = ''; 
             if ($#arg_exp_list > 1) {
               $last = pop @arg_exp_list; 
-              $return = 's \'' . join('\', \'', @arg_exp_list) . '\', and \'' . $last . '\'';  
+              $return = 's ' . join(', ', @arg_exp_list) . ", and $last";
             } elsif ( $#arg_exp_list == 1 ) { 
-              $return = 's \'' . $arg_exp_list[0] . '\' and ' . "'$arg_exp_list[1]'";  
+              $return = "s $arg_exp_list[0] and $arg_exp_list[1]";  
             } else { 
-              $return = ' ' . "\'$arg_exp_list[0]\'";
+              $return = " $arg_exp_list[0]";
             }
           } 
 
@@ -1198,8 +1187,6 @@ type_name:
 specifier_qualifier_list:
       type_specifier specifier_qualifier_list(?) 
           { $return = $item{type_specifier} . join('', @{$item{'specifier_qualifier_list(?)'}}); }
-    | type_specifier
-          { $return = $item{type_specifier}; }
 
 struct_declarator_list:
       struct_declarator
