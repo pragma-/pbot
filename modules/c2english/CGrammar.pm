@@ -1137,7 +1137,7 @@ typedef_name:
             foreach (@defined_types) { 
               if ($item{identifier} eq $_) {
                 $answer = 1;      
-                $return = ($item{identifier} =~ m/^[aeiouy]/ ? 'an ' : 'a ') . $item{identifier};
+                $return = ($item{identifier} =~ m/^`[aeiouy]/ ? 'an ' : 'a ') . $item{identifier};
               } 
             }
             if (!$answer) { undef $answer; } 
@@ -1218,21 +1218,22 @@ enum_specifier:
           {
             $return .= 'an enumeration'; 
 
+            if (@{$item{'identifier(?)'}}){ 
+              $return .= ' of ' . join('',@{$item{'identifier(?)'}});
+            }
+
             my @enumerator_list = @{$item{enumerator_list}};
 
             if(@enumerator_list == 1) {
-              $return .= " of $enumerator_list[0]";
+              $return .= " comprising $enumerator_list[0]";
             } else {
               my $last = pop @enumerator_list; 
-              $return .= ' of ' . join(', ', @enumerator_list) . " and $last"; 
+              $return .= ' comprising ' . join(', ', @enumerator_list) . " and $last"; 
             }
 
-            if (@{$item{'identifier(?)'}}){ 
-              $return .= ' identified as ' . join('',@{$item{'identifier(?)'}});
-            }
           }
     | 'enum' identifier
-          { $return = ($item{identifer} =~ m/^[aieouy]/ ? 'an ' : 'a ') . "$item{identifier} enumeration"; }
+          { $return = "an enumeration of type $item{identifier}"; }
 
 
 enumerator_list:
