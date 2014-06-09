@@ -63,11 +63,9 @@ macro_definition:
             push @macros, $item[3]; 
             if ($#symbols > 0) { 
               $last = pop @symbols; 
-              $return .= "with the symbols '" . join("', '",@symbols) . "' and '$last' "; 
-            } elsif ($#symbols > 0) { 
-              $return .= "with the symbols '$symbols[0]' and '$symbols[1]' "; 
+              $return .= "with the symbols " . join(", ",@symbols) . " and $last "; 
             } else { 
-              $return .= "with the symbol '$symbols[0]' "; 
+              $return .= "with the symbol $symbols[0] "; 
             } 
             $return .= "to use the token sequence \'$item{token_sequence}\'.\n"; 
           } 
@@ -311,7 +309,7 @@ iteration_statement:
             $return .= $item{statement} ; 
 
             if ($increment) { 
-              $return .= "Finally, ^L$increment.\n"; 
+              $return .= "After each iteration, ^L$increment.\n"; 
             } 
           } 
     | 'while' '(' <commit> expression  ')' statement[context => 'while loop']  
@@ -395,7 +393,7 @@ labeled_statement:
 expression:
       <leftop: assignment_expression[context => $arg{context}] ',' assignment_expression[context => $arg{context}]>
           {
-            $return = join(". We're not done yet. ",@{$item[-1]}); 
+            $return = join(", then ^L",@{$item[-1]}); 
           }
 
 assignment_expression:
@@ -529,8 +527,8 @@ logical_OR_AND_expression:
           } 
 
 log_OR_AND_bit_or_and_eq: 
-      '||' { $return = ' logically orred by '; }
-    | '&&' { $return = ' logically anded by '; }
+      '||' { $return = ' or '; }
+    | '&&' { $return = ' and '; }
     | '|'  { $return = ' bitwise orred by '; }
     | '&'  { $return = ' bitwise anded by '; }
     | '^'  { $return = ' bitwise xorred by ';}
@@ -1218,29 +1216,27 @@ struct_or_union:
 enum_specifier:
       'enum' identifier(?) '{' enumerator_list '}' 
           {
-            $return = 'enumeration ' ; 
+            $return .= 'an enumeration'; 
 
-            if (@{$item{'identifier(?)'}}){ 
-              $return .= 'identified as ' . join('',@{$item{'identifier(?)'}}) . ' ';
+            my @enumerator_list = @{$item{enumerator_list}};
+
+            if(@enumerator_list == 1) {
+              $return .= " of $enumerator_list[0]";
+            } else {
+              my $last = pop @enumerator_list; 
+              $return .= ' of ' . join(', ', @enumerator_list) . " and $last"; 
             }
 
-            $return .= 'comprising of ' . $item{enumerator_list} ; 
+            if (@{$item{'identifier(?)'}}){ 
+              $return .= ' identified as ' . join('',@{$item{'identifier(?)'}});
+            }
           }
-    | 'enum' identifier 
+    | 'enum' identifier
+          { $return = ($item{identifer} =~ m/^[aieouy]/ ? 'an ' : 'a ') . "$item{identifier} enumeration"; }
+
 
 enumerator_list:
-      (enumerator ',')(s?) enumerator
-           {
-             my @enumerator_list = @{$item[1]}; 
-
-             if ($#enumerator_list > 1) {
-               $return = join(', ', @enumerator_list) . ', and ' . $item{enumerator};  
-             } elsif ($#enumerator_list == 1) { 
-                $return = $enumerator_list[1] . ' and ' . $item{enumerator};  
-             } else { 
-               $return = $item{enumerator_declaration};  
-             }
-           }
+      <leftop:enumerator ',' enumerator>
 
 enumerator:
       identifier ( '=' constant_expression )(?)
