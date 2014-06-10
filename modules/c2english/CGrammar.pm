@@ -288,7 +288,7 @@ statement:
 
 iteration_statement:
       'for' '(' <commit> for_initialization(?) ';' for_expression(?) ';' for_increment(?) ')'    
-        statement[context => 'statement']
+        statement[context => 'for loop']
           { 
             my $initialization = join('', @{$item{'for_initialization(?)'}}); 
             my $item_expression = join('',@{$item{'for_expression(?)'}}); 
@@ -423,7 +423,6 @@ conditional_expression:
 assignment_operator:
       '=' 
           {
-            print STDERR "arg1: [$arg{context}]\n";
             if ($arg{context} eq 'statement') { 
               $return = ['Assign to', ' the value' ]; 
             } elsif ($arg{context} eq 'for loop') {
@@ -763,60 +762,47 @@ unary_expression:
           { $return = "the size of the datatype $item{type_name}"; }
 
 postfix_expression:
-      primary_expression[context => $arg{context}]  
+      primary_expression[context => $arg{context}] '(' argument_expression_list(?) ')' # function call 
+          {
+            push @basics, $basic; 
+            $basic =  $item{primary_expression};
+
+            if(not defined $arg{context}) {
+              $return = "the result of ";
+            } else {
+              $return = "Perform ";
+            }
+
+            # is this function call involving a pointer to a function?
+            if ($basic =~ /parenthetical/) { 
+              $return .= "the function pointed by $basic"; 
+            } else { 
+              $return =~ s/Perform/Call/;
+              $return .= "the function $basic"; 
+            }
+
+            # To discriminate between macros and functions. 
+            foreach (@macros) { 
+              if ($basic eq $_) { 
+                $return =~ s/Call/Insert/;
+                $return =~ s/function/macro/; 
+              }
+            }
+
+            my $arg_exp_list = join('',@{$item{'argument_expression_list(?)'}}); 
+            if ($arg_exp_list) { 
+              $return .= " with argument$arg_exp_list";
+            }
+            1;
+          }
+    | primary_expression[context => $arg{context}]  
           {
             # must be global. use stack to prevent disasters.
             # Todo: this is just a Bad Idea, TM. $return needs to be turned to an hash with the 
             # arguments doing the right thing and then the last action assembles the sucker.
-
             push @basics, $basic; 
             $basic =  $item{primary_expression};
             $return = $item{primary_expression}; 
-            1;
-          }
-      ( # function call 
-        '(' argument_expression_list(?) ')'  
-          {
-            my $arg_exp_list = join('',@{$item{'argument_expression_list(?)'}}); 
-            if ($arg_exp_list) { 
-              $return = " with argument$arg_exp_list";
-            } else { 
-              $return = "without any arguments"; 
-            } 
-          } 
-      )(?)
-          { 
-            my $args = join('',@{$item[-1]}); 
-            if ($args) {
-              if ($arg{context} eq 'statement') { 
-                $return = "Perform ";
-              } 
-
-              # is this function call involving a pointer to a function?
-              if ($basic =~ /parenthetical/) { 
-                $return .= "the function pointed by $basic"; 
-              } else { 
-                $return =~ s/Perform/Call/;
-                $return .= "the function $basic"; 
-              }
-
-              # To discriminate between macros and functions. 
-              foreach (@macros) { 
-                if ($basic eq $_) { 
-                  $return =~ s/Call/Insert/;
-                  $return =~ s/function/macro/; 
-                }
-              }
-
-              if ($args =~ /^ with arg/) { 
-                $return .= $args; 
-              } 
-
-              # if ($arg{context} eq 'statement') { 
-              #     $return .= ".\n"; 
-              # }
-            }
-            1; 
           }
 
       # array reference and plain expression
@@ -1320,6 +1306,17 @@ constant:
             $return =~ s/[Ll]$/(long)/; 
           } 
     | m{'.*?[^\']'} # character constant FIXME: doesn't handle escaped quotes
+          {
+            my $constant = $item[1];
+
+            if($constant eq q/'\n'/) {
+              $return = 'a newline';
+            } elsif($constant eq q/'\t'/) {
+              $return = 'a tab';
+            } else {
+              $return = $constant;
+            }
+          }
   # | enumeration_constant 
   # needs more.
  
