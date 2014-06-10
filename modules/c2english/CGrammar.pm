@@ -99,7 +99,7 @@ pragma:
       '#' 'pragma' token_sequence(?) <skip: '[ \t]*'> "\n"
           {
             my $pragma = join('',@{$item{'token_sequence(?)'}}); 
-            if ($pragma) { $pragma = ' "' . $pragma . '"'; }
+            if ($pragma) { $pragma = ' "$pragma"'; }
             $return = "Process a compiler-dependent pragma$pragma.\n";     
           }
 
@@ -116,17 +116,11 @@ preproc_conditional:
 
 if_line:
       '#' 'ifdef' identifier <skip: '[ \t]*'> "\n"
-          {
-            $return .= "If the macro $item{identifier} is defined, then ^L"; 
-          }
+          { $return .= "If the macro $item{identifier} is defined, then ^L"; }
     | '#' 'ifndef' identifier /\n+/
-          {
-            $return .= "If the macro $item{identifier} is not defined, then ^L"; 
-          }
+          { $return .= "If the macro $item{identifier} is not defined, then ^L"; }
     | '#' 'if' constant_expression "\n"
-          { 
-            $return .= "If the preprocessor condition^L $item{constant_expression} is true, then ^L";     
-          }
+          { $return .= "If the preprocessor condition^L $item{constant_expression} is true, then ^L"; }
 
 elif_parts:
       ('#' 'elif' constant_expression 
@@ -144,10 +138,7 @@ else_parts:
       (/\n+/)(?) '#' 'else' 
           { $rule_name = $arg{matchrule}; }
       (<matchrule: $rule_name>)[matchrule => $arg{matchrule}](s?)
-          {
-            $return = "Otherwise, ^L"; 
-            $return .= join('',@{$item[-1]}); 
-          }
+          { $return = "Otherwise, ^L" . join('',@{$item[-1]}); }
 
 token_sequence:
       token(s)
@@ -155,10 +146,7 @@ token_sequence:
 
 token:
       <skip: '[ \t]*'> /\S+/ 
-          { 
-            $return = $item[-1]; 
-            $return =~ s/"/\\"/; # escaping all quotes.
-          }
+          { $return = $item[-1]; }
 
 external_declaration:
       declaration 
@@ -634,52 +622,116 @@ declaration:
 
               push @defined_types, @init_list; 
             } else {
-              my $and = @init_list > 1 ? ' and' : '';
-
               while(@init_list) {
                 $return .= "Let ";
 
                 my $first_object = shift @init_list;
-                my ($match_prefix, $name) = split / ([^ ]+)$/, $first_object;
+                my @args = split /\|/, $first_object, 3;
 
-                if(not defined $name) {
-                  $name = $match_prefix;
-                  $match_prefix = undef;
+                my ($first_qualifier, $first_initializer);
+                my $first_identifier = shift @args;
+
+                if(not length $first_identifier) {
+                  $first_identifier = 'there';
                 }
 
-                if(length $name) {
-                  $return .= $name;
+                my @identifiers = ($first_identifier);
+
+                my $next_arg = shift @args;
+                if($next_arg =~ m/initialized/) {
+                  $first_initializer = $next_arg;
+                  $first_qualifier = shift @args // '';
                 } else {
-                  $return .= 'there';
+                  $first_qualifier = $next_arg;
+                  $first_initializer = shift @args // '';
                 }
 
+                my @initializers;
+                if($first_initializer) {
+                  push @initializers, [ $first_identifier, $first_initializer ];
+                }
+                
                 for(my $i = 0; $i < @init_list; $i++) {
-                  my ($prefix, $name) = split / ([^ ]+)$/, $init_list[$i];
+                  @args = split /\|/, $init_list[$i], 3;
 
-                  if(not defined $name) {
-                    $name = $prefix;
-                    $prefix = undef;
+                  my ($qualifier, $initializer);
+                  my $identifier = shift @args;
+                  $next_arg = shift @args;
+
+                  if($next_arg =~ m/initialized/) {
+                    $initializer = $next_arg;
+                    $qualifier = shift @args // '';
+                  } else {
+                    $qualifier = $next_arg;
+                    $initializer = shift @args // '';
                   }
 
-                  next unless $prefix eq $match_prefix;
+                  next unless $qualifier eq $first_qualifier;
+
+                  push @identifiers, $identifier;
+                  if($initializer) {
+                    push @initializers, [ $identifier, $initializer ];
+                  }
 
                   splice @init_list, $i--, 1;
+                }
 
-                  if($i == @init_list - 1) {
-                    $return .= "$and $name";
+                my $and = @identifiers > 1 ? ' and ' : '';
+                my $comma = '';
+                for(my $i = 0; $i < @identifiers; $i++) {
+                  if($i == @identifiers - 1) {
+                    $return .= "$and$identifiers[$i]";
                   } else {
-                    $return .= ", $name";
+                    $return .= "$comma$identifiers[$i]";
+                    $comma = ', ';
                   }
                 }
-                if($match_prefix) {
-                  $return .= " be $match_prefix $item{declaration_specifiers}.\n";
+ 
+                $return .= ' be ';
+
+                if($first_qualifier) {
+                  if(@identifiers == 1) {
+                    $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
+                  }
+                  $return .= "$first_qualifier $item{declaration_specifiers}";
                 } else {
-                  $return .= " be $item{declaration_specifiers}.\n";
+                  if(@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
+                    $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
+                  }
+                  $return .= "$item{declaration_specifiers}";
                 }
+
+                if(@initializers) {
+                  if(@identifiers > 1) {
+                    $return .= ".\nInitialize ";
+
+                    @initializers = sort { $a->[1] cmp $b->[1] } @initializers;
+                    my ($and, $comma);
+
+                    for(my $i = 0; $i < @initializers; $i++) {
+                      my ($identifier, $initializer) = @{$initializers[$i]};
+
+                      if($i < @initializers - 1 and $initializer eq $initializers[$i + 1]->[1]) {
+                        $return .= "$comma$identifier";
+                        $comma = ', ';
+                        $and = ' and ';
+                      } else {
+                        $initializer =~ s/^initialized to //;
+                        $return .= "$and$identifier to $initializer";
+                        if($i < @initializers - 2) {
+                          $and = ', ';
+                        } else {
+                          $and = ' and ';
+                        }
+                      }
+                    }
+                  } else {
+                    $return .= " $initializers[0]->[1]";
+                  }
+                }
+                $return .= ".\n";
               }
             }
-
-            $return .= $item{'comment(?)'};
           }
 
 init_declarator_list:
@@ -695,12 +747,7 @@ init_declarator:
             my $init = join('',@{$item[-1]});  
 
             if (length $init) {
-              if ($return =~ /an array of/ ) { 
-                $return = "initialized to $init as "; 
-              } else {  
-                $return = "initialized to $init as "; 
-              }
-              $return .= $item{declarator};
+              $return = "$item{declarator}|initialized to $init"; 
             }
           }
 
@@ -940,7 +987,7 @@ primary_expression:
 declarator:
       direct_declarator
     | pointer direct_declarator
-          { $return = "$item{pointer} $item{direct_declarator}"; }
+          { $return = "$item{direct_declarator}|$item{pointer}"; }
 
 direct_declarator:
       identifier[context => 'direct_declarator'] array_declarator(s?)
@@ -1157,7 +1204,7 @@ struct_or_union_specifier:
             my $identifier = join('',@{$item{'identifier(?)'}});
             $return = join('',@{$item{'comment(?)'}}) . $item{struct_or_union};
             if ($identifier) { $return .= " tagged $identifier"; } 
-            $return .= " which contains the following:\n" . $item{struct_declaration_list}; 
+            $return .= " with members $item{struct_declaration_list}"; 
           }
     | struct_or_union identifier
           {
