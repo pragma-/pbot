@@ -25,11 +25,11 @@ startrule:
       startrule(?)
     
 translation_unit:
-      (comment 
+      comment 
     | external_declaration 
     | function_definition
     | function_prototype 
-    | preproc[matchrule => 'translation_unit'])
+    | preproc[matchrule => 'translation_unit']
 
 preproc: 
       definition 
@@ -39,7 +39,6 @@ preproc:
     | error
     | pragma 
     | preproc_conditional[matchrule => $arg{matchrule}]
-          { $return = $item[-1]; }
 
 definition: 
       macro_definition
@@ -117,25 +116,21 @@ preproc_conditional:
 if_line:
       '#' 'ifdef' identifier <skip: '[ \t]*'> "\n"
           { $return .= "If the macro $item{identifier} is defined, then ^L"; }
-    | '#' 'ifndef' identifier /\n+/
+    | '#' 'ifndef' identifier <skip: '[ \t]*'> "\n"
           { $return .= "If the macro $item{identifier} is not defined, then ^L"; }
-    | '#' 'if' constant_expression "\n"
+    | '#' 'if' constant_expression <skip: '[ \t]*'> "\n"
           { $return .= "If the preprocessor condition^L $item{constant_expression} is true, then ^L"; }
 
 elif_parts:
       ('#' 'elif' constant_expression 
-          {
-            $return = "\nNote: we interrupt the current context again.\n"; 
-            $return .= "Instead of the previous precondition, we include "; 
-            $return .= "the following text based on this condition: \"$item{constant_expression}\"."; 
-            # $rule_name = $arg{matchrule}; 
-          }
+          { $return .= "Otherwise, if the preprocessor condition $item{constant_expression} is true, then ^L"; }
       (<matchrule: $rule_name> )[matchrule => $arg{matchrule}](s?)
           { $return .=  join('',@{$item[-1]}); }
       )(s) 
+          { $return = join('', @{$item[-1]}); }
  
 else_parts:
-      (/\n+/)(?) '#' 'else' 
+      '#' 'else' 
           { $rule_name = $arg{matchrule}; }
       (<matchrule: $rule_name>)[matchrule => $arg{matchrule}](s?)
           { $return = "Otherwise, ^L" . join('',@{$item[-1]}); }
@@ -204,17 +199,16 @@ function_prototype:
             my $parameter_list = join('', @{$item{'parameter_type_list(?)'}}); 
 
             my $return_type = $item{declarator}; 
-            my $name = $item{declarator} ; 
+            my $name = $item{declarator}; 
 
-            $name =~ s/^.*?'/'/; 
-            $return_type =~ s/\'.*\'//;
+            $name =~ s/\|.*$//; 
+            $return_type =~ s/`.*`\|?//;
 
-            if ($return_type =~ /\w/ ) { 
-              $return_type .= "to a ";
-              $return_type .= $declaration_specifiers;
-            } else {
-              $return_type = $declaration_specifiers;
-            } 
+            if($return_type) {
+              $return_type .= ' ';
+            }
+
+            $return_type .= $declaration_specifiers;
 
             $return = "Let $name be a function prototype"; 
 
@@ -719,7 +713,7 @@ declaration:
                         $initializer =~ s/^initialized to //;
                         $return .= "$and$identifier to $initializer";
                         if($i < @initializers - 2) {
-                          $and = ', ';
+                          $and = $comma = ', ';
                         } else {
                           $and = ' and ';
                         }
