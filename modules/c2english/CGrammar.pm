@@ -5,12 +5,9 @@
 # todo: 
 # 1. the entire syntax for pointers to functions.
 # 2. preprocessor directives. (getting there)
-# So, the problem with handling CPP directives is when they
-# interrupt something. I'm open to ideas. 
 # 4. functions to handle the nesting levels (ordinal number generator and CPP stack)
 # 6. change returns to prints where appropriate.
 # 7. syntax for int *p[10] vs int (*p)[10] vs int *(*p)[10]
-# etc
 
 {
   my @defined_types = ('`FILE`'); 
@@ -27,7 +24,7 @@ startrule:
           } 
       startrule(?)
     
-translation_unit: 
+translation_unit:
       (comment 
     | external_declaration 
     | function_definition
@@ -35,9 +32,9 @@ translation_unit:
     | preproc[matchrule => 'translation_unit'])
 
 preproc: 
-      <skip: '[ \t]*'> definition 
+      definition 
     | undefinition  
-    | <skip: '[ \t]*'> inclusion  
+    | inclusion  
     | line 
     | error
     | pragma 
@@ -45,41 +42,44 @@ preproc:
           { $return = $item[-1]; }
 
 definition: 
-      <skip: '[ \t]*'> /\n*/ macro_definition
-    | <skip: '[ \t]*'> /\s*?\n*#/ 'define' identifier token_sequence(?) .../\s*?\n/
+      macro_definition
+    | '#' 'define' identifier token_sequence(?) <skip: '[ \t]*'> "\n"
           {
             my $token_sequence = join('',@{$item{'token_sequence(?)'}});
-            $return = "Define $item{identifier}";
+            $return = "Define the macro $item{identifier}";
             $return .= " to mean $token_sequence" if $token_sequence;
             $return .= ".\n";
           }
 
 macro_definition:
-      '#' 'define' identifier '(' <leftop: identifier ',' identifier > ')' token_sequence "\n"
+      '#' 'define' identifier '(' <leftop: identifier ',' identifier> ')' token_sequence <skip: '[ \t]*'> "\n"
           {
-            my @symbols = @{$item[-4]}; 
+            my @symbols = @{$item[-5]}; 
             my $last; 
-            $return = "Define the macro $item[3] "; 
-            push @macros, $item[3]; 
+            push @macros, $item{identifier}; 
+            $return = "Define the macro $item{identifier} "; 
             if ($#symbols > 0) { 
               $last = pop @symbols; 
               $return .= "with the symbols " . join(", ",@symbols) . " and $last "; 
             } else { 
               $return .= "with the symbol $symbols[0] "; 
             } 
-            $return .= "to use the token sequence \'$item{token_sequence}\'.\n"; 
+            $return .= "to use the token sequence `$item{token_sequence}`.\n"; 
           } 
 
 undefinition:
-      <skip: '[ \t]*'> ("\n")(s?) '#' 'undef' identifier 
-          { $return = "\nAnnul the definition of $item{identifier}.\n"; }
+      '#' 'undef' identifier <skip: '[ \t]*'> "\n"
+          { 
+            @macros = grep { $_ ne $item{identifier} } @macros;
+            $return = "\nAnnul the definition of $item{identifier}.\n";
+          }
 
 inclusion: 
-      <skip: '[ \t]*'> /\s*?\n*#/ 'include' '<' filename '>' .../\s*?\n/
+      '#' 'include' '<' filename '>' <skip: '[ \t]*'> "\n"
           { $return = "\nInclude system file $item{filename}.\n"; }
-    | <skip: '[ \t]*'> /\s*?\n*#/ 'include' '"' filename '"' .../\s*?\n/
+    | '#' 'include' '"' filename '"' <skip: '[ \t]*'> "\n"
           { $return = "\nInclude user file $item{filename}.\n"; }
-    | <skip: '[ \t]*'> /\s*?\n*#/  'include' token
+    | '#' 'include' token
           { $return = "\nImport code noted by the token $item{token}.\n"; }   
 
 filename: 
@@ -88,48 +88,44 @@ filename:
 line: 
       '#' 'line' constant ('"' filename '"'
           { $return = "and filename $item{filename}"; }
-      )(?) /\n+/
-          { $return = "\nThis is line number $item{constant}" . join('', @{$item[-1]}) . ".\n"; }
+      )(?) <skip: '[ \t]*'> "\n"
+          { $return = "\nThis is line number $item{constant} " . join('', @{$item[-3]}) . ".\n"; }
 
 error:
-      '#' 'error' token_sequence(?) 
+      '#' 'error' token_sequence(?) <skip: '[ \t]*'> "\n"
           { $return = "Stop compilation with error \"" . join('', @{$item{'token_sequence(?)'}}) . "\".\n"; }
 
 pragma: 
-      '#' 'pragma' token_sequence(?) 
+      '#' 'pragma' token_sequence(?) <skip: '[ \t]*'> "\n"
           {
-            my $pragma = join('',@{$item[-1]}); 
+            my $pragma = join('',@{$item{'token_sequence(?)'}}); 
             if ($pragma) { $pragma = ' "' . $pragma . '"'; }
-            $return = "\nNote: a compiler-dependent pragma$pragma is added here.\n";     
+            $return = "Process a compiler-dependent pragma$pragma.\n";     
           }
 
 preproc_conditional: 
-      <skip: '[ \t]*'> /\n*/ if_line[matchrule => $arg{matchrule}] 
+      if_line[matchrule => $arg{matchrule}] 
           { $rule_name = $arg{matchrule}; }
-                    <matchrule: $rule_name>(s?)
-                      { $return = $item{if_line} . join('',@{$item[-1]}); }
-                    (elif_parts[matchrule => $rule_name])(?)
-                    (else_parts[matchrule => $rule_name])(?)
-                      { $return .= join('',@{$item[-2]}) .  join('',@{$item[-1]}); }
-                    /\n*/ '#' 'endif' 
-                      { $return .= "\nNote: This ends a conditional inclusion section.\n"; }
+      <matchrule: $rule_name>(s?)
+          { $return = $item{if_line} . join('',@{$item[-1]}); }
+      (elif_parts[matchrule => $rule_name])(?)
+      (else_parts[matchrule => $rule_name])(?)
+          { $return .= join('',@{$item[-2]}) .  join('',@{$item[-1]}); }
+      '#' 'endif' 
+          { $return .= "End preprocessor conditional.\n"; }
 
 if_line:
-      <skip: '[ \t]*'> '#' 'ifdef' identifier .../\n+/
+      '#' 'ifdef' identifier <skip: '[ \t]*'> "\n"
           {
-            $return = "\nNote: The current context is interrupted.\n"; 
-            $return .= "The next section is used only if $item{identifier} is defined.\n"; 
+            $return .= "If the macro $item{identifier} is defined, then ^L"; 
           }
-    | <skip: '[ \t]*'> '#' 'ifndef' identifier /\n+/
+    | '#' 'ifndef' identifier /\n+/
           {
-            $return = "\nNote: The current context is interrupted.\n"; 
-            $return .= "The next section is used only if $item{identifier} is NOT defined.\n"; 
+            $return .= "If the macro $item{identifier} is not defined, then ^L"; 
           }
-    | <skip: '[ \t]*'> '#' 'if' constant_expression "\n"
+    | '#' 'if' constant_expression "\n"
           { 
-            $return = "\nNote: The current context is interrupted.\n"; 
-            $return .= "The next section is used only if we meet this macro condition:\n"; 
-            $return .= "\"$item{constant_expression}\".\n";     
+            $return .= "If the preprocessor condition^L $item{constant_expression} is true, then ^L";     
           }
 
 elif_parts:
@@ -149,7 +145,7 @@ else_parts:
           { $rule_name = $arg{matchrule}; }
       (<matchrule: $rule_name>)[matchrule => $arg{matchrule}](s?)
           {
-            $return = "\nNote: we interrupt the current context once more.\n" . "The following section gets included if the previous precondition fails.\n"; 
+            $return = "Otherwise, ^L"; 
             $return .= join('',@{$item[-1]}); 
           }
 
@@ -195,7 +191,7 @@ function_definition:
               $return .= " taking $parameter_list"; 
             }
 
-            $return .= " and returning $return_type.\nTo perform the function: ^L";
+            $return .= " and returning $return_type.\nTo perform the function, ^L";
 
             if ($declaration_list) { 
               $return .= $declaration_list; 
@@ -203,6 +199,8 @@ function_definition:
 
             if ($statement_list ) { 
               $return .= $statement_list; 
+            } else {
+              $return .= "Do nothing.\n";
             }
 
             # $return .= "End of function $name.\n";
@@ -290,7 +288,7 @@ statement:
 
 iteration_statement:
       'for' '(' <commit> for_initialization(?) ';' for_expression(?) ';' for_increment(?) ')'    
-        statement[context => 'for loop']
+        statement[context => 'statement']
           { 
             my $initialization = join('', @{$item{'for_initialization(?)'}}); 
             my $item_expression = join('',@{$item{'for_expression(?)'}}); 
@@ -329,7 +327,7 @@ iteration_statement:
           { $return = "Do the following:^L $item{statement}\nDo this as long as $item{expression}.\n"; }
 
 for_initialization:
-      expression[context => 'statement']
+      expression[context => 'for loop']
 
 for_expression:
       expression[context => 'for_expression']
@@ -404,7 +402,7 @@ assignment_expression:
             my $assignment_expression = $item{assignment_expression}; 
             my $assignment_operator = $item{assignment_operator};
 
-            if ($arg{context} eq 'statement' ) {
+            if ($arg{context} eq 'statement' or $arg{context} eq 'for loop') {
               $return .= "${$item{assignment_operator}}[0] $item{unary_expression}${$item{assignment_operator}}[1] $assignment_expression";
             } else {
               $return = "$item{unary_expression}, $assignment_operator $assignment_expression"; 
@@ -425,8 +423,11 @@ conditional_expression:
 assignment_operator:
       '=' 
           {
+            print STDERR "arg1: [$arg{context}]\n";
             if ($arg{context} eq 'statement') { 
               $return = ['Assign to', ' the value' ]; 
+            } elsif ($arg{context} eq 'for loop') {
+              $return = ['assigning to', ' the value' ];
             } else { 
               $return = ', which is assigned to be '; 
             }
@@ -434,7 +435,9 @@ assignment_operator:
     | '+=' 
           {
             if ($arg{context} eq 'statement') { 
-              $return = ['Increment',' by'] 
+              $return = ['Increment',' by'];
+            } elsif ($arg{context} eq 'for loop') { 
+              $return = ['incrementing',' by'];
             } else { 
               $return = 'which is incremented by '; 
             }
@@ -443,6 +446,8 @@ assignment_operator:
           {
             if ($arg{context} eq 'statement') { 
               $return = ['Decrement' , ' by']; 
+            } elsif ($arg{context} eq 'for loop') { 
+              $return = ['decrementing' , ' by']; 
             } else { 
               $return = 'which is decremented by '; 
             }
@@ -450,7 +455,9 @@ assignment_operator:
     | '*='
           {
             if ($arg{context} eq 'statement') { 
-              $return = ['Multiply' , ' by']  
+              $return = ['Multiply' , ' by'];  
+            } elsif ($arg{context} eq 'for loop') { 
+              $return = ['multiplying' , ' by'];
             } else { 
               $return = 'which is multiplied by '; 
             }
@@ -459,6 +466,8 @@ assignment_operator:
           { 
             if ($arg{context} eq 'statement') {  
               $return = ['Divide' , ' by' ]; 
+            } elsif ($arg{context} eq 'for loop') {  
+              $return = ['dividing' , ' by' ]; 
             } else { 
               $return = 'which is divided by '; 
             }
@@ -467,6 +476,8 @@ assignment_operator:
           { 
             if ($arg{context} eq 'statement') { 
               $return = ['Reduce', ' to modulo '] ;  
+            } elsif ($arg{context} eq 'for loop') { 
+              $return = ['reducing', ' to modulo '] ;  
             } else { 
               $return = 'which is reduced to modulo '; 
             }
@@ -475,6 +486,8 @@ assignment_operator:
           { 
             if ($arg{context} eq 'statement') { 
               $return = ['Bit-shift', ' left by'];  
+            } elsif ($arg{context} eq 'for loop') { 
+              $return = ['bit-shifting', ' left by'];  
             } else { 
               $return = 'which is bit-shifted left by '; 
             }
@@ -483,6 +496,8 @@ assignment_operator:
           { 
             if ($arg{context} eq 'statement') { 
               $return = ['Bit-shift', ' right by'];  
+            } elsif ($arg{context} eq 'for loop') { 
+              $return = ['bit-shifting', ' right by'];  
             } else { 
               $return = 'which is bit-shifted right by '; 
             }
@@ -490,25 +505,31 @@ assignment_operator:
     | '&='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Bit-wise anded', ' by' ];  
+              $return = ['Bit-wise ANDed', ' by' ];  
+            } elsif ($arg{context} eq 'for loop') { 
+              $return = ['bit-wise ANDing', ' by' ];  
             } else { 
-              $return = 'which is bit-wise anded by '; 
+              $return = 'which is bit-wise ANDed by '; 
             }
           }
     | '^='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Exclusive-or',' by'];
+              $return = ['Exclusive-OR',' by'];
+            } elsif ($arg{context} eq 'for loop') { 
+              $return = ['exclusive-ORing',' by'];
             } else { 
-              $return = 'which is exclusive-orred by '; 
+              $return = 'which is exclusive-ORed by '; 
             }
           }
     | '|='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Bit-wise orred', ' by'];  
+              $return = ['Bit-wise ORed', ' by'];  
+            } elsif ($arg{context} eq 'for loop') { 
+              $return = ['bit-wise ORing', ' by'];  
             } else { 
-              $return = 'which is bit-wise orred by '; 
+              $return = 'which is bit-wise ORed by '; 
             }
           }
 
@@ -529,9 +550,9 @@ logical_OR_AND_expression:
 log_OR_AND_bit_or_and_eq: 
       '||' { $return = ' or '; }
     | '&&' { $return = ' and '; }
-    | '|'  { $return = ' bitwise orred by '; }
-    | '&'  { $return = ' bitwise anded by '; }
-    | '^'  { $return = ' bitwise xorred by ';}
+    | '|'  { $return = ' bitwise ORed by '; }
+    | '&'  { $return = ' bitwise ANDed by '; }
+    | '^'  { $return = ' bitwise XORed by ';}
     | '==' { $return = ' is equal to ' ; }
     | '!=' { $return = ' is not equal to ' ; } 
 
@@ -591,8 +612,8 @@ cast_expression:
 
 declaration_list: 
       # <skip: '\s*'>
-      declaration(s) 
-          { $return = join('', @{$item{'declaration(s)'}}); }
+      preproc[context => 'statement'](?) declaration(s) 
+          { $return = join('', @{$item{'preproc(?)'}}) . join('', @{$item{'declaration(s)'}}); }
 
 declaration:
       declaration_specifiers init_declarator_list(?) ';'
@@ -781,7 +802,7 @@ postfix_expression:
 
               # To discriminate between macros and functions. 
               foreach (@macros) { 
-                if ($basic eq "'$_'") { 
+                if ($basic eq $_) { 
                   $return =~ s/Call/Insert/;
                   $return =~ s/function/macro/; 
                 }
@@ -839,7 +860,7 @@ postfix_expression:
               if ($arg{context} eq 'statement') { 
                 $return = "increment $basic by one";
               } else { 
-                $return = "$return (which is incremented up by one)";
+                $return = "$return which is incremented by one";
               }
             }
           }
@@ -850,7 +871,7 @@ postfix_expression:
               if ($arg{context} eq 'statement') { 
                 $return = "decrement $basic by one";
               } else { 
-               $return = "$return (which is decremented by one)";
+               $return = "$return which is decremented by one";
               }
             }
             $basic = pop @basics; 
