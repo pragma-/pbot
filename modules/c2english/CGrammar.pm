@@ -604,6 +604,7 @@ declaration_list:
 declaration:
       declaration_specifiers init_declarator_list(?) ';'
           {
+            print STDERR "wtf\n"; print STDERR ::Dumper \%item;
             # This whole thing needs to be re-written to parse declarations inside-out.
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
             my $init_declaration_list;
@@ -689,7 +690,7 @@ declaration:
                 $return .= ' be ';
 
                 if($first_qualifier) {
-                  if(@identifiers == 1) {
+                  if(@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
                     $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
                   }
                   $return .= "$first_qualifier $item{declaration_specifiers}";
@@ -1024,7 +1025,7 @@ array_declarator:
           {
             my @array = @{$item[-1]};  
             if (@array) { 
-              $return .= 'an array of ' . join('of an array of ' , @array) . 'of ';
+              $return .= 'an array of ' . join('of an array of ' , @array) . 'of';
             } else {
               undef;
             }
