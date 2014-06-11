@@ -296,14 +296,19 @@ iteration_statement:
           { 
             if($item{expression} =~ /(^\d+$)/) {
               if($1 == 0) {
-                $item{expression} = 'never';
+                $return = "Never ^L";
               } else {
-                $item{expression} = 'forever';
+                $return = "Repeatedly ^L";
               }
+            } else {
+              $return = "While $item{expression}, ^L"; 
             }
 
-            $return = "While $item{expression}, ^L"; 
-            $return .= $item{statement} . "\n"; 
+            if($item{statement}) {
+              $return .= $item{statement} . "\n"; 
+            } else {
+              $return .= "do nothing.\n";
+            }
           } 
     | 'do' statement[context => 'do loop'] 'while' '(' expression ')' ';' 
           { $return = "Do the following:^L $item{statement}\nDo this as long as $item{expression}.\n"; }
@@ -987,7 +992,7 @@ direct_declarator:
       identifier[context => 'direct_declarator'] array_declarator(s?)
           { 
             if(@{$item{'array_declarator(s?)'}}) {
-              $return = join('', @{$item{'array_declarator(s?)'}}) . "$item{identifier}";
+              $return = "$item{identifier}|" . join('', @{$item{'array_declarator(s?)'}});
             } else {
               $return = "$item{identifier}";
             }
@@ -1002,10 +1007,10 @@ direct_declarator:
               $prefix .= ' ';
             }
 
-            $return = $prefix . join('', @{$item{'array_declarator(s)'}}) . $name;
+            $return = "$name|$prefix" . join('', @{$item{'array_declarator(s)'}});
           }
     | '(' declarator array_declarator(s) ')'
-          { $return = join('', @{$item{'array_declarator(s)'}}) . $item{'declarator'}; }
+          { $return = $item{'declarator'} . join('', @{$item{'array_declarator(s)'}}) }
     | '(' declarator ')' 
           { $return = $item{declarator}; }
 
@@ -1303,7 +1308,7 @@ comment:
           { $return = $item{comment_cxx}; }
 
 comment_c:
-      m{/\*(.*?)\*/}s
+      m{/\*[^*]*\*+([^/*][^*]*\*+)*/}s
           {
             $return = $item[1];
             $return =~ s|^/\*+\s*||;
