@@ -979,9 +979,6 @@ primary_expression:
     | constant
     | string 
     | identifier
-          {
-            $return = "$item{identifier}";
-          }
 
 declarator:
       direct_declarator
@@ -1108,7 +1105,6 @@ DAD: # macro for direct_abstract_declarator
 
 identifier: 
       ...!reserved identifier_word
-          { $return = $item{identifier_word}; }
 
 pointer:
       '*' type_qualifier_list(s) pointer(?) 
@@ -1303,9 +1299,7 @@ enumerator:
 
 comment:
       comment_c 
-          { $return = $item{comment_c}; }
     | comment_cxx
-          { $return = $item{comment_cxx}; }
 
 comment_c:
       m{/\*[^*]*\*+([^/*][^*]*\*+)*/}s
@@ -1323,6 +1317,7 @@ comment_cxx:
             $return = $item[1]; 
             $return =~ s|^//\s*||;
             $return =~ s/\n*$//;
+            $return =~ s/"/\\"/g;
             $return = "\nQuick comment: \"$return\".\n";
           }
 
