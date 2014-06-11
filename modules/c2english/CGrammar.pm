@@ -1346,14 +1346,26 @@ constant:
             $return =~ s/[Uu]$/(unsigned)/; 
             $return =~ s/[Ll]$/(long)/; 
           } 
-    | m{'.*?[^\']'} # character constant FIXME: doesn't handle escaped quotes
+    | /(?:\'((?:\\\'|(?!\').)*)\')/ # character constant
           {
             my $constant = $item[1];
 
-            if($constant eq q/'\n'/) {
+            if($constant eq q('\n')) {
               $return = 'a newline';
-            } elsif($constant eq q/'\t'/) {
+            } elsif($constant eq q('\f')) {
+              $return = 'a form-feed character';
+            } elsif($constant eq q('\t')) {
               $return = 'a tab';
+            } elsif($constant eq q('\v')) {
+              $return = 'a vertical tab';
+            } elsif($constant eq q('\b')) {
+              $return = 'an alert character';
+            } elsif($constant eq q('\r')) {
+              $return = 'a carriage-return';
+            } elsif($constant eq q('\b')) {
+              $return = 'a backspace character';
+            } elsif($constant eq q('\'')) {
+              $return = 'a single-quote';
             } else {
               $return = $constant;
             }
@@ -1369,7 +1381,7 @@ identifier_word:
           { $return = "`$item[-1]`"; }
 
 string:
-      /".*?[^\"]"/  # FIXME: doesn't handle escaped quotes
+      /(?:\"(?:\\\"|(?!\").)*\")/
 
 reserved: 
       'int' | 'double' | 'short' | 'volatile' | 'register' | 'float' | 'signed'
