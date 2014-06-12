@@ -614,7 +614,8 @@ declaration_list:
           { $return = join('', @{$item{'preproc(?)'}}) . join('', @{$item{'declaration(s)'}}); }
 
 declaration:
-      declaration_specifiers init_declarator_list(?) ';'
+      function_prototype
+    | declaration_specifiers init_declarator_list(?) ';'
           {
             # This whole thing needs to be re-written to parse declarations inside-out.
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
