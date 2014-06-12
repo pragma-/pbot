@@ -404,7 +404,7 @@ assignment_expression:
               $return .= "${$item{assignment_operator}}[1] " if $assignment_expression !~ /the result of/;
               $return .= $assignment_expression;
             } else {
-              $return = "$item{unary_expression}, $assignment_operator $assignment_expression"; 
+              $return = "$item{unary_expression} $assignment_operator $assignment_expression"; 
             } 
           } 
     | conditional_expression[context => $arg{context}]
@@ -427,7 +427,7 @@ assignment_operator:
             } elsif ($arg{context} eq 'for loop') {
               $return = ['assigning to', 'the value' ];
             } else { 
-              $return = ', which is assigned to be '; 
+              $return = 'which is assigned to be'; 
             }
           }
     | '+=' 
@@ -437,7 +437,7 @@ assignment_operator:
             } elsif ($arg{context} eq 'for loop') { 
               $return = ['incrementing','by'];
             } else { 
-              $return = 'which is incremented by '; 
+              $return = 'which is incremented by'; 
             }
           }
     | '-='
@@ -447,7 +447,7 @@ assignment_operator:
             } elsif ($arg{context} eq 'for loop') { 
               $return = ['decrementing' , 'by']; 
             } else { 
-              $return = 'which is decremented by '; 
+              $return = 'which is decremented by'; 
             }
           }
     | '*='
@@ -457,7 +457,7 @@ assignment_operator:
             } elsif ($arg{context} eq 'for loop') { 
               $return = ['multiplying' , 'by'];
             } else { 
-              $return = 'which is multiplied by '; 
+              $return = 'which is multiplied by'; 
             }
           }
     | '/='
@@ -467,7 +467,7 @@ assignment_operator:
             } elsif ($arg{context} eq 'for loop') {  
               $return = ['dividing' , 'by' ]; 
             } else { 
-              $return = 'which is divided by '; 
+              $return = 'which is divided by'; 
             }
           }
     | '%=' 
@@ -477,7 +477,7 @@ assignment_operator:
             } elsif ($arg{context} eq 'for loop') { 
               $return = ['reducing', 'to modulo '] ;  
             } else { 
-              $return = 'which is reduced to modulo '; 
+              $return = 'which is reduced to modulo'; 
             }
           }
     | '<<='
@@ -487,7 +487,7 @@ assignment_operator:
             } elsif ($arg{context} eq 'for loop') { 
               $return = ['bit-shifting', 'left by'];  
             } else { 
-              $return = 'which is bit-shifted left by '; 
+              $return = 'which is bit-shifted left by'; 
             }
           }
     | '>>='
@@ -497,7 +497,7 @@ assignment_operator:
             } elsif ($arg{context} eq 'for loop') { 
               $return = ['bit-shifting', 'right by'];  
             } else { 
-              $return = 'which is bit-shifted right by '; 
+              $return = 'which is bit-shifted right by'; 
             }
           }
     | '&='
@@ -507,7 +507,7 @@ assignment_operator:
             } elsif ($arg{context} eq 'for loop') { 
               $return = ['bit-wise ANDing', 'by' ];  
             } else { 
-              $return = 'which is bit-wise ANDed by '; 
+              $return = 'which is bit-wise ANDed by'; 
             }
           }
     | '^='
@@ -517,7 +517,7 @@ assignment_operator:
             } elsif ($arg{context} eq 'for loop') { 
               $return = ['exclusive-ORing','by'];
             } else { 
-              $return = 'which is exclusive-ORed by '; 
+              $return = 'which is exclusive-ORed by'; 
             }
           }
     | '|='
@@ -527,7 +527,7 @@ assignment_operator:
             } elsif ($arg{context} eq 'for loop') { 
               $return = ['bit-wise ORing', 'by'];  
             } else { 
-              $return = 'which is bit-wise ORed by '; 
+              $return = 'which is bit-wise ORed by'; 
             }
           }
 
