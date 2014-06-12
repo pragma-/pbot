@@ -289,6 +289,7 @@ iteration_statement:
             $return .= $item{statement} ; 
 
             if ($increment) { 
+              $return =~ s/End for loop.$//;
               $return .= "After each iteration, ^L$increment.\n"; 
             } 
           } 
@@ -324,7 +325,16 @@ for_increment:
 
 selection_statement:
       'if' <commit> '(' expression[context => 'if block'] ')' statement[context => 'if block'] 
-          { $return = "If $item{expression}, then ^L$item{statement}"; }
+          { 
+            if($item{expression} =~ /^(\d+)$/) {
+              if($1 == 0) {
+                $item{expression} = "never";
+              } else {
+                $item{expression} = "always";
+              }
+            }
+            $return = "If $item{expression} then ^L$item{statement}";
+          }
       ('else' statement[context => 'else block']
           { $return = "Otherwise, ^L$item{statement}"; }
       )(?)
@@ -390,7 +400,9 @@ assignment_expression:
             my $assignment_operator = $item{assignment_operator};
 
             if ($arg{context} eq 'statement' or $arg{context} eq 'for loop') {
-              $return .= "${$item{assignment_operator}}[0] $item{unary_expression}${$item{assignment_operator}}[1] $assignment_expression";
+              $return .= "${$item{assignment_operator}}[0] $item{unary_expression} ";
+              $return .= "${$item{assignment_operator}}[1] " if $assignment_expression !~ /the result of/;
+              $return .= $assignment_expression;
             } else {
               $return = "$item{unary_expression}, $assignment_operator $assignment_expression"; 
             } 
@@ -411,9 +423,9 @@ assignment_operator:
       '=' 
           {
             if ($arg{context} eq 'statement') { 
-              $return = ['Assign to', ' the value' ]; 
+              $return = ['Assign to', 'the value' ]; 
             } elsif ($arg{context} eq 'for loop') {
-              $return = ['assigning to', ' the value' ];
+              $return = ['assigning to', 'the value' ];
             } else { 
               $return = ', which is assigned to be '; 
             }
@@ -421,9 +433,9 @@ assignment_operator:
     | '+=' 
           {
             if ($arg{context} eq 'statement') { 
-              $return = ['Increment',' by'];
+              $return = ['Increment','by'];
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['incrementing',' by'];
+              $return = ['incrementing','by'];
             } else { 
               $return = 'which is incremented by '; 
             }
@@ -431,9 +443,9 @@ assignment_operator:
     | '-='
           {
             if ($arg{context} eq 'statement') { 
-              $return = ['Decrement' , ' by']; 
+              $return = ['Decrement' , 'by']; 
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['decrementing' , ' by']; 
+              $return = ['decrementing' , 'by']; 
             } else { 
               $return = 'which is decremented by '; 
             }
@@ -441,9 +453,9 @@ assignment_operator:
     | '*='
           {
             if ($arg{context} eq 'statement') { 
-              $return = ['Multiply' , ' by'];  
+              $return = ['Multiply' , 'by'];  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['multiplying' , ' by'];
+              $return = ['multiplying' , 'by'];
             } else { 
               $return = 'which is multiplied by '; 
             }
@@ -451,9 +463,9 @@ assignment_operator:
     | '/='
           { 
             if ($arg{context} eq 'statement') {  
-              $return = ['Divide' , ' by' ]; 
+              $return = ['Divide' , 'by' ]; 
             } elsif ($arg{context} eq 'for loop') {  
-              $return = ['dividing' , ' by' ]; 
+              $return = ['dividing' , 'by' ]; 
             } else { 
               $return = 'which is divided by '; 
             }
@@ -461,9 +473,9 @@ assignment_operator:
     | '%=' 
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Reduce', ' to modulo '] ;  
+              $return = ['Reduce', 'to modulo '] ;  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['reducing', ' to modulo '] ;  
+              $return = ['reducing', 'to modulo '] ;  
             } else { 
               $return = 'which is reduced to modulo '; 
             }
@@ -471,9 +483,9 @@ assignment_operator:
     | '<<='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Bit-shift', ' left by'];  
+              $return = ['Bit-shift', 'left by'];  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['bit-shifting', ' left by'];  
+              $return = ['bit-shifting', 'left by'];  
             } else { 
               $return = 'which is bit-shifted left by '; 
             }
@@ -481,9 +493,9 @@ assignment_operator:
     | '>>='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Bit-shift', ' right by'];  
+              $return = ['Bit-shift', 'right by'];  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['bit-shifting', ' right by'];  
+              $return = ['bit-shifting', 'right by'];  
             } else { 
               $return = 'which is bit-shifted right by '; 
             }
@@ -491,9 +503,9 @@ assignment_operator:
     | '&='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Bit-wise ANDed', ' by' ];  
+              $return = ['Bit-wise ANDed', 'by' ];  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['bit-wise ANDing', ' by' ];  
+              $return = ['bit-wise ANDing', 'by' ];  
             } else { 
               $return = 'which is bit-wise ANDed by '; 
             }
@@ -501,9 +513,9 @@ assignment_operator:
     | '^='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Exclusive-OR',' by'];
+              $return = ['Exclusive-OR','by'];
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['exclusive-ORing',' by'];
+              $return = ['exclusive-ORing','by'];
             } else { 
               $return = 'which is exclusive-ORed by '; 
             }
@@ -511,9 +523,9 @@ assignment_operator:
     | '|='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Bit-wise ORed', ' by'];  
+              $return = ['Bit-wise ORed', 'by'];  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['bit-wise ORing', ' by'];  
+              $return = ['bit-wise ORing', 'by'];  
             } else { 
               $return = 'which is bit-wise ORed by '; 
             }
@@ -582,7 +594,7 @@ closure:
 
 cast_expression:
       '(' type_name ')' cast_expression[context => 'recast']
-          { $return = "a casting into the type \'$item{type_name}\' of $item{cast_expression}"; }
+          { $return = "$item{cast_expression} type-casted as $item{type_name}"; }
     | unary_expression[context => $arg{context}] 
           { $return = $item{unary_expression}; } 
       #( ...closure )(?) 
@@ -604,7 +616,6 @@ declaration_list:
 declaration:
       declaration_specifiers init_declarator_list(?) ';'
           {
-            print STDERR "wtf\n"; print STDERR ::Dumper \%item;
             # This whole thing needs to be re-written to parse declarations inside-out.
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
             my $init_declaration_list;
@@ -814,7 +825,7 @@ postfix_expression:
             push @basics, $basic; 
             $basic =  $item{primary_expression};
 
-            if(not defined $arg{context}) {
+            if(not defined $arg{context} or $arg{context} eq 'assignment_expression') {
               $return = "the result of ";
             } else {
               $return = "Perform ";
@@ -1169,7 +1180,7 @@ type_qualifier:
 type_specifier:
       'double'
     | 'short'
-    | 'long' 
+    | 'long'
     | 'char'
     | 'int' 
     | 'float'
@@ -1230,11 +1241,14 @@ struct_declaration:
 
 type_name:
       specifier_qualifier_list abstract_declarator(?)
-          { $return = $item{specifier_qualifier_list} . join('',@{$item{'abstract_declarator(?)'}}); }
+          { $return = $item{specifier_qualifier_list}. join('',@{$item{'abstract_declarator(?)'}}); }
 
 specifier_qualifier_list:
       type_specifier specifier_qualifier_list(?) 
-          { $return = $item{type_specifier} . join('', @{$item{'specifier_qualifier_list(?)'}}); }
+          { 
+            $return = $item{type_specifier};
+            $return .= ' ' . join('', @{$item{'specifier_qualifier_list(?)'}}) if @{$item{'specifier_qualifier_list(?)'}};
+          }
 
 struct_declarator_list:
       struct_declarator
