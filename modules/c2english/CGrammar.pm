@@ -570,7 +570,7 @@ rel_mul_add_ex_op:
 unary_operator: 
       '&' { $return = 'the address of '; }
     | '*' { $return = 'the contents of '; }
-    | '+' { $return = 'the value of '; }
+    | '+' { $return = ''; }
     | '-' ...constant { $return  = 'negative '; }
     | '-' { $return = 'minus '; }
     | '~' { $return = "the one's complement of "; }
@@ -776,7 +776,7 @@ initializer:
             }
           } 
     | '{' comment(?) initializer_list (',' )(?) '}'
-          { $return = 'the set ' . join('', @{$item{'initializer_list(?)'}}); }
+          { $return = 'the set ' . $item{'initializer_list'}; }
 
 initializer_list:
       <leftop: initializer ',' initializer > 
@@ -870,13 +870,30 @@ postfix_expression:
           {
             my $item_expression = '';
             if (@{$item[-1]}) { 
-              $item_expression=join(',',@{$item[-1]}); 
-              $basic =~ s/^'//; 
-              $basic =~ s/\'$//; 
+              $item_expression = join(' and ', @{$item[-1]}); 
             }
 
-            if ( length $item_expression) { 
-              $return = "array $basic\'s element at address ($item_expression)";
+            if (length $item_expression) { 
+              if($item_expression =~ /^\d+$/) {
+                $item_expression++;
+                my ($last_digit) = $item_expression =~ /(\d)$/;
+                if($last_digit == 1) {
+                  $item_expression .= 'st'; 
+                } elsif($last_digit == 2) {
+                  $item_expression .= 'nd';
+                } elsif($last_digit == 3) {
+                  $item_expression .= 'rd';
+                } else {
+                  $item_expression .= 'th';
+                }
+                $return = "the $item_expression element of array $basic";
+              } elsif($item_expression =~ /^-\s*\d+$/) {
+                $item_expression *= -1;
+                my $plural = $item_expression == 1 ? '' : 's';
+                $return = "the location $item_expression element$plural backwards from where $basic points";
+              } else {
+                $return = "the element of $basic at location $item_expression";
+              }
             }
           }
 
