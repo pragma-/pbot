@@ -368,9 +368,7 @@ jump_statement:
     | 'goto' <commit> identifier ';' comment(?)
           { 
             $return = "Go to the label named $item{identifier}.\n";
-            if ($item{comment}) { 
-              $return .= $item{comment};
-            }
+            $return .= join('', @{$item{'comment(?)'}});
           }
 
 expression_statement:
@@ -378,14 +376,18 @@ expression_statement:
           { 
             my $item_expression = join('',@{$item[1]}); 
             if (!$item_expression) { 
-              $return = "Do nothing.\n"; 
+              if($arg{context} eq 'label') {
+                return "";
+              } else {
+                $return = "Do nothing.\n"; 
+              }
             } else { 
               $return = $item_expression.".\n" ; 
             } 
           }
 
 labeled_statement:
-      identifier ':' statement
+      identifier ':' statement[context => 'label'] (';')(?)
           { $return = "Let there be a label $item{identifier}.\n$item{statement}"; }
     | 'case' constant_expression ':' statement[context => 'case'] 
           { $return = "When it has the value $item{constant_expression}, ^L$item{statement}"; }
