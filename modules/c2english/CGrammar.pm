@@ -7,7 +7,6 @@
 # 2. preprocessor directives. (getting there)
 # 4. functions to handle the nesting levels (ordinal number generator and CPP stack)
 # 6. change returns to prints where appropriate.
-# 7. syntax for int *p[10] vs int (*p)[10] vs int *(*p)[10]
 
 {
   my @defined_types = ('`FILE`'); 
@@ -658,6 +657,21 @@ declaration:
                   $first_initializer = shift @args // '';
                 }
 
+                if($first_initializer !~ /^initialized/) {
+                  if($first_qualifier =~ /\|initialized/) {
+                    my ($fq, $fi) = split /\|/, $first_qualifier, 2;
+                    $first_qualifier .= " $fq";
+                    $first_initializer = $fi;
+                  } elsif($first_initializer =~ /\|initialized/) {
+                    my ($fq, $fi) = split /\|/, $first_initializer, 2;
+                    $first_qualifier .= " $fq";
+                    $first_initializer = $fi;
+                  } else {
+                    $first_qualifier .= " $first_initializer";
+                    $first_initializer = '';
+                  }
+                }
+
                 my @initializers;
                 if($first_initializer) {
                   push @initializers, [ $first_identifier, $first_initializer ];
@@ -1025,17 +1039,7 @@ direct_declarator:
             }
           }
     | '(' declarator ')' array_declarator(s)
-          { 
-            my ($prefix, $name) = split / ([^ ]+)$/, $item{'declarator'};
-            if(not defined $name) {
-              $name = $prefix;
-              $prefix = undef;
-            } else {
-              $prefix .= ' ';
-            }
-
-            $return = "$name|$prefix" . join('', @{$item{'array_declarator(s)'}});
-          }
+          { $return = "$item{declarator} " . join('', @{$item{'array_declarator(s)'}}); }
     | '(' declarator array_declarator(s) ')'
           { $return = $item{'declarator'} . join('', @{$item{'array_declarator(s)'}}) }
     | '(' declarator ')' 
