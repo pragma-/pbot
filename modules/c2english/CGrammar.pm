@@ -239,7 +239,7 @@ compound_statement:
             $return .= "End block.\n" if not $arg{context};
 
             if ($arg{context}) { 
-              $return .= "End $arg{context}.\n" unless $arg{context} eq 'do loop'; 
+              $return .= "End $arg{context}.\n" unless $arg{context} eq 'do loop' or $arg{context} eq 'case'; 
             } 
             1;
           }
@@ -339,14 +339,22 @@ selection_statement:
       )(?)
           { $return .= join('',@{$item[-1]}); }
     | 'switch'  '(' expression ')'  statement[context => 'switch']  
-          { $return = "This section is controlled by a switch based on the expression \'$item{expression}\':\n$item{statement}"; }
+          { $return = "Given the expression \'$item{expression}\',\n^L$item{statement}"; }
  
 
 jump_statement: 
-      <skip:'\s*'> 'break' ';'   
-          { $return = "Break from the current block.\n"; } 
+      'break' ';'   
+          { 
+            if($arg{context} eq 'switch' or $arg{context} eq 'case') {
+              $return = "Break case.\n";
+            } elsif(length $arg{context}) {
+              $return = "Break from the $arg{context}.\n";
+            } else {
+              $return = "Break from the current block.\n";
+            }
+          } 
     | 'continue' ';'
-          { $return = "Return to the top of the current loop and continue it.\n"; } 
+          { $return = "Return to the top of the current loop.\n"; } 
     | 'return' <commit> expression[context => 'return'](?) ';' 
           {
             my $item_expression = join('', @{$item{'expression(?)'}});
@@ -378,11 +386,11 @@ expression_statement:
 
 labeled_statement:
       identifier ':' statement
-          { $return = "The following statement is preceded by the label $item{identifier}.\n$item{statement}"; }
+          { $return = "Let there be a label $item{identifier}.\n$item{statement}"; }
     | 'case' constant_expression ':' statement[context => 'case'] 
-          { $return = "In the case it has the value $item{constant_expression}, do this:\n$item{statement}"; }
+          { $return = "When it has the value $item{constant_expression}, ^L$item{statement}"; }
     | 'default' ':' statement 
-          { $return = "In the default case, do this:\n$item{statement}"; } 
+          { $return = "In the default case, ^L$item{statement}"; } 
 
 expression:
       <leftop: assignment_expression[context => $arg{context}] ',' assignment_expression[context => $arg{context}]>
