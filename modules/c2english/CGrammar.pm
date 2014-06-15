@@ -146,8 +146,8 @@ external_declaration:
       declaration 
 
 function_definition:
-      <skip: '\s*'> declaration_specifiers(?) declarator[context => 'function_definition']
-        '(' parameter_type_list(?) ')' '{' declaration_list(?) statement_list(?) '}' 
+      declaration_specifiers(?) declarator[context => 'function_definition'] '(' parameter_type_list(?) ')'
+        '{' declaration_list(?) statement_list(?) '}' 
           {
             my $declaration_specifiers = join('', @{$item{'declaration_specifiers(?)'}}); 
             my $parameter_list = join('', @{$item{'parameter_type_list(?)'}}); 
@@ -157,12 +157,11 @@ function_definition:
             my $return_type = $item{declarator}; 
             my $name = $item{declarator}; 
 
-            $name =~ s/^.*?`/`/; 
-            $return_type =~ s/`.*`//;
+            $name =~ s/`[^`]+$/`/; 
+            $return_type =~ s/`.*`\|?//;
 
             if ($return_type =~ /\w/ ) { 
-              $return_type .= "to a ";
-              $return_type .= $declaration_specifiers;
+              $return_type .= " $declaration_specifiers";
             } else { 
               $return_type = $declaration_specifiers;
             }
@@ -311,7 +310,7 @@ iteration_statement:
             }
           } 
     | 'do' statement[context => 'do loop'] 'while' '(' expression ')' ';' 
-          { $return = "Do the following:^L $item{statement}\nDo this as long as $item{expression}.\n"; }
+          { $return = "Do the following:^L $item{statement}Do this as long as $item{expression}.\n"; }
 
 for_initialization:
       expression[context => 'for loop']
@@ -838,24 +837,13 @@ unary_expression:
     |'sizeof' '(' type_name ')' 
           { $return = "the size of the datatype $item{type_name}"; }
 
-postfix_expression:
-      primary_expression[context => $arg{context}] '(' argument_expression_list(?) ')' # function call 
+postfix_function_call:
+      '(' argument_expression_list(?) ')'
           {
-            push @basics, $basic; 
-            $basic =  $item{primary_expression};
-
             if(not defined $arg{context} or $arg{context} eq 'assignment_expression') {
-              $return = "the result of ";
+              $return = "the result of the function $arg{primary_expression}";
             } else {
-              $return = "Perform ";
-            }
-
-            # is this function call involving a pointer to a function?
-            if ($basic =~ /parenthetical/) { 
-              $return .= "the function pointed by $basic"; 
-            } else { 
-              $return =~ s/Perform/Call/;
-              $return .= "the function $basic"; 
+              $return = "Call the function $arg{primary_expression} ";
             }
 
             # To discriminate between macros and functions. 
@@ -872,16 +860,20 @@ postfix_expression:
             }
             1;
           }
-    | primary_expression[context => $arg{context}]  
+    | {""}
+
+postfix_expression:
+      primary_expression[context => $arg{context}] postfix_function_call[primary_expression => $item[1], context => $arg{context}]
           {
-            # must be global. use stack to prevent disasters.
-            # Todo: this is just a Bad Idea, TM. $return needs to be turned to an hash with the 
-            # arguments doing the right thing and then the last action assembles the sucker.
             push @basics, $basic; 
             $basic =  $item{primary_expression};
-            $return = $item{primary_expression}; 
-          }
 
+            if($item{postfix_function_call}) {
+              $return = $item{postfix_function_call};
+            } else {
+              $return = $item{primary_expression}; 
+            }
+          }
       # array reference and plain expression
       ( '[' expression[context => 'array_address'] ']' 
           { $return = $item{expression}; } 
@@ -957,7 +949,6 @@ postfix_expression:
             $basic = pop @basics; 
             1;
           }
-
     # having done the simplest cases, we go to the catch all for left recursions.
     | primary_expression postfix_suffix(s)
           {
@@ -978,18 +969,22 @@ argument_expression_list:
           {
             my @arg_exp_list = @{$item[1]}; 
             my $last = ''; 
-            if ($#arg_exp_list > 1) {
+            if (@arg_exp_list > 2) {
               $last = pop @arg_exp_list; 
               $return = 's ' . join(', ', @arg_exp_list) . ", and $last";
-            } elsif ( $#arg_exp_list == 1 ) { 
+            } elsif (@arg_exp_list == 2 ) { 
               $return = "s $arg_exp_list[0] and $arg_exp_list[1]";  
-            } else { 
-              $return = " $arg_exp_list[0]";
+            } else {
+              if ($arg_exp_list[0]) {
+                $return = " $arg_exp_list[0]";
+              } else {
+                $return = '';
+              }
             }
-          } 
+          }
 
 narrow_closure:
-      ';' | ',' | '->' 
+      ';' | ',' | '->'
 
 primary_expression:
       '(' expression ')' (...narrow_closure)(?)
