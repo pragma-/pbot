@@ -419,14 +419,19 @@ assignment_expression:
     | conditional_expression[context => $arg{context}]
 
 conditional_expression:
-      logical_OR_AND_expression[context => $arg{context}]
-        '?' expression[context => 'conditional_expression1']
-        ':' conditional_expression[context => 'conditional_expression2']
+      logical_OR_AND_expression[context => $arg{context}] conditional_ternary_expression
           {
-            $return = "the value depending on if $item{logical_OR_AND_expression} is true" .
-              " then $item{expression} otherwise $item{conditional_expression}";  
-          } 
-    | logical_OR_AND_expression[context => $arg{context}] 
+            if($item{conditional_ternary_expression}) {
+              $return = "depending on if $item{logical_OR_AND_expression} is true then $item{conditional_ternary_expression}";
+            } else {
+              $return = $item{logical_OR_AND_expression};
+            }
+          }
+
+conditional_ternary_expression:
+      '?' expression ':' conditional_expression
+          { $return = "$item{expression} otherwise $item{conditional_expression}"; } 
+    | { "" } # nothing
 
 assignment_operator:
       '=' 
@@ -547,7 +552,7 @@ logical_OR_AND_expression:
       <leftop:
         rel_add_mul_shift_expression[context => $arg{context}]
         log_OR_AND_bit_or_and_eq
-        rel_add_mul_shift_expression[context => 'logical_OR_AND_expression'] >
+        rel_add_mul_shift_expression[context => 'logical_OR_AND_expression']>
           {
             if (defined $arg{context} and $arg{context} eq 'for_expression') { print STDERR "hmm2\n"; }
             my @ands = @{$item[1]}; 
@@ -606,19 +611,8 @@ cast_expression:
           { $return = "$item{cast_expression} type-casted as $item{type_name}"; }
     | unary_expression[context => $arg{context}] 
           { $return = $item{unary_expression}; } 
-      #( ...closure )(?) 
-      #   {
-      #     if ($arg{context} eq 'statement' #&& !($return =~ /^Perform/)
-      # ) 
-      #   {
-      #     if (${$item[-1]}[0]) {  
-      #        $return .= ".\n";
-      #     } 
-      #  }
-      #}
 
 declaration_list: 
-      # <skip: '\s*'>
       preproc[context => 'statement'](?) declaration(s) 
           { $return = join('', @{$item{'preproc(?)'}}) . join('', @{$item{'declaration(s)'}}); }
 
@@ -1000,39 +994,28 @@ narrow_closure:
 primary_expression:
       '(' expression ')' (...narrow_closure)(?)
           { 
+            print STDERR "wtf\n";
+            print STDERR "expression: [$item{expression}]; text: [$text]\n";
             my $expression = $item{expression} ; 
             my $repeats = 1; 
-            my $ending = 1; 
 
-            if ($expression =~  /^the (\d+)-layered parenthetical expression/) { 
-              $repeats = $1 + 1; 
-              $expression =~ s/^the \d+-layered parenthetical expression //;
-            } elsif ($expression =~  /^the parenthetical expression/) { 
-              $repeats = 2; 
-              $expression =~ s/^the parenthetical expression //;
-            } 
-
-            if ($expression =~ / now$/) { 
-              $ending++; 
-              $expression =~ s/ now$//; 
-              $expression .= " (now drop $ending layers of context)" ; 
-            } elsif ($expression =~ /now drop (\d+) layers of context\)$/ ) { 
-              $ending = $1 + 1; 
-              $expression =~ s/\d+ layers of context\)$/$ending layers of context \)/; 
-            } else { $expression .= ' now'; } 
-              if ($repeats > 1) { 
-                $return = "the $repeats-layered parenthetical expression $expression"; 
-              } else { 
-                $return = "the parenthetical expression $expression"; 
-              }
-
-              if (@{$item[-1]}) {
-                $return =~ s/ now$//;
-              } 
+            if ($expression =~ /^the expression (\(+)/) { 
+              $repeats = (length $1) + 1; 
+              print STDERR "Got repeats: $repeats from matching [$1]\n";
+              $expression =~ s/^the expression \(+//;
             }
+
+            print STDERR "repeats: $repeats\n";
+
+            $expression .= ')';
+            $return = "the expression ";
+            $return .= '(' x $repeats;
+            $return .= $expression;
+          }
     | constant
     | string 
     | identifier
+    | { "" } # nothing
 
 declarator:
       direct_declarator
