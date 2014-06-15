@@ -14,13 +14,8 @@ use Data::Dumper;
 # 4. functions to handle the nesting levels (ordinal number generator and CPP stack)
 # 6. change returns to prints where appropriate.
 
-open GRAMMAR, 'CGrammar.pm' or die "Could not open CGrammar.pm: $!";
-local $/;
-my $grammar = <GRAMMAR>;
-close GRAMMAR;
-
-our ($opt_T, $opt_t, $opt_o);
-getopts('Tto:'); 
+our ($opt_T, $opt_t, $opt_o, $opt_P);
+getopts('TPto:'); 
 
 if ($opt_T ) {
   $::RD_TRACE = 1;
@@ -34,7 +29,18 @@ $Parse::RecDescent::skip = '\s*';
 # This may be necessary..
 # $::RD_AUTOACTION = q { [@item] };
 
-my $parser = Parse::RecDescent->new($grammar) or die "Bad grammar!\n"; 
+my $parser;
+
+if($opt_P) {
+  precompile_grammar();
+  exit 0;
+} else {
+  if(!eval { require PCGrammar }) {
+    precompile_grammar();
+  }
+  require PCGrammar;
+  $parser = PCGrammar->new() or die "Bad grammar!\n";
+}
 
 if ($opt_o) { 
   open(OUTFILE, ">>$opt_o"); 
@@ -64,3 +70,13 @@ foreach my $arg (@ARGV) {
 
 $text =~ s/\s+//g;
 print "\n[$text]\n" if length $text;
+
+sub precompile_grammar {
+  print STDERR "Precompiling grammar...\n";
+  open GRAMMAR, 'CGrammar.pm' or die "Could not open CGrammar.pm: $!";
+  local $/;
+  my $grammar = <GRAMMAR>;
+  close GRAMMAR;
+
+  Parse::RecDescent->Precompile($grammar, "PCGrammar") or die "Could not precompile: $!";
+}
