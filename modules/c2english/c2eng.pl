@@ -31,16 +31,12 @@ $Parse::RecDescent::skip = '\s*';
 
 my $parser;
 
-if($opt_P) {
+if($opt_P or !eval { require PCGrammar }) {
   precompile_grammar();
-  exit 0;
-} else {
-  if(!eval { require PCGrammar }) {
-    precompile_grammar();
-  }
   require PCGrammar;
-  $parser = PCGrammar->new() or die "Bad grammar!\n";
 }
+
+$parser = PCGrammar->new() or die "Bad grammar!\n";
 
 if ($opt_o) { 
   open(OUTFILE, ">>$opt_o"); 
