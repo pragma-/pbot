@@ -31,17 +31,17 @@ translation_unit:
     | preproc[matchrule => 'translation_unit']
 
 preproc: 
-      definition 
-    | undefinition  
-    | inclusion  
-    | line 
-    | error
-    | pragma 
-    | preproc_conditional[matchrule => $arg{matchrule}]
+      '#' (definition 
+        | undefinition  
+        | inclusion  
+        | line 
+        | error
+        | pragma 
+        | preproc_conditional[matchrule => $arg{matchrule}])
 
 definition: 
       macro_definition
-    | '#' 'define' identifier token_sequence(?) <skip: '[ \t]*'> "\n"
+    | 'define' identifier token_sequence(?) <skip: '[ \t]*'> "\n"
           {
             my $token_sequence = join('',@{$item{'token_sequence(?)'}});
             $return = "Define the macro $item{identifier}";
@@ -50,7 +50,7 @@ definition:
           }
 
 macro_definition:
-      '#' 'define' identifier '(' <leftop: identifier ',' identifier> ')' token_sequence <skip: '[ \t]*'> "\n"
+      'define' identifier '(' <leftop: identifier ',' identifier> ')' token_sequence <skip: '[ \t]*'> "\n"
           {
             my @symbols = @{$item[-5]}; 
             my $last; 
@@ -66,35 +66,35 @@ macro_definition:
           } 
 
 undefinition:
-      '#' 'undef' identifier <skip: '[ \t]*'> "\n"
+      'undef' identifier <skip: '[ \t]*'> "\n"
           { 
             @macros = grep { $_ ne $item{identifier} } @macros;
             $return = "\nAnnul the definition of $item{identifier}.\n";
           }
 
 inclusion: 
-      '#' 'include' '<' filename '>' <skip: '[ \t]*'> "\n"
+      'include' '<' filename '>' <skip: '[ \t]*'> "\n"
           { $return = "\nInclude system file $item{filename}.\n"; }
-    | '#' 'include' '"' filename '"' <skip: '[ \t]*'> "\n"
+    | 'include' '"' filename '"' <skip: '[ \t]*'> "\n"
           { $return = "\nInclude user file $item{filename}.\n"; }
-    | '#' 'include' token
+    | 'include' token
           { $return = "\nImport code noted by the token $item{token}.\n"; }   
 
 filename: 
       /[_\.\-\w\/]+/ 
 
 line: 
-      '#' 'line' constant ('"' filename '"'
+      'line' constant ('"' filename '"'
           { $return = "and filename $item{filename}"; }
       )(?) <skip: '[ \t]*'> "\n"
           { $return = "\nThis is line number $item{constant} " . join('', @{$item[-3]}) . ".\n"; }
 
 error:
-      '#' 'error' token_sequence(?) <skip: '[ \t]*'> "\n"
+      'error' token_sequence(?) <skip: '[ \t]*'> "\n"
           { $return = "Stop compilation with error \"" . join('', @{$item{'token_sequence(?)'}}) . "\".\n"; }
 
 pragma: 
-      '#' 'pragma' token_sequence(?) <skip: '[ \t]*'> "\n"
+      'pragma' token_sequence(?) <skip: '[ \t]*'> "\n"
           {
             my $pragma = join('',@{$item{'token_sequence(?)'}}); 
             if ($pragma) { $pragma = ' "$pragma"'; }
@@ -109,19 +109,19 @@ preproc_conditional:
       (elif_parts[matchrule => $rule_name])(?)
       (else_parts[matchrule => $rule_name])(?)
           { $return .= join('',@{$item[-2]}) .  join('',@{$item[-1]}); }
-      '#' 'endif' 
+      'endif' 
           { $return .= "End preprocessor conditional.\n"; }
 
 if_line:
-      '#' 'ifdef' identifier <skip: '[ \t]*'> "\n"
+      'ifdef' identifier <skip: '[ \t]*'> "\n"
           { $return .= "If the macro $item{identifier} is defined, then ^L"; }
-    | '#' 'ifndef' identifier <skip: '[ \t]*'> "\n"
+    | 'ifndef' identifier <skip: '[ \t]*'> "\n"
           { $return .= "If the macro $item{identifier} is not defined, then ^L"; }
-    | '#' 'if' constant_expression <skip: '[ \t]*'> "\n"
+    | 'if' constant_expression <skip: '[ \t]*'> "\n"
           { $return .= "If the preprocessor condition^L $item{constant_expression} is true, then ^L"; }
 
 elif_parts:
-      ('#' 'elif' constant_expression 
+      ('elif' constant_expression 
           { $return .= "Otherwise, if the preprocessor condition $item{constant_expression} is true, then ^L"; }
       (<matchrule: $rule_name> )[matchrule => $arg{matchrule}](s?)
           { $return .=  join('',@{$item[-1]}); }
@@ -129,7 +129,7 @@ elif_parts:
           { $return = join('', @{$item[-1]}); }
  
 else_parts:
-      '#' 'else' 
+      'else' 
           { $rule_name = $arg{matchrule}; }
       (<matchrule: $rule_name>)[matchrule => $arg{matchrule}](s?)
           { $return = "Otherwise, ^L" . join('',@{$item[-1]}); }
@@ -994,18 +994,13 @@ narrow_closure:
 primary_expression:
       '(' expression ')' (...narrow_closure)(?)
           { 
-            print STDERR "wtf\n";
-            print STDERR "expression: [$item{expression}]; text: [$text]\n";
             my $expression = $item{expression} ; 
             my $repeats = 1; 
 
             if ($expression =~ /^the expression (\(+)/) { 
               $repeats = (length $1) + 1; 
-              print STDERR "Got repeats: $repeats from matching [$1]\n";
               $expression =~ s/^the expression \(+//;
             }
-
-            print STDERR "repeats: $repeats\n";
 
             $expression .= ')';
             $return = "the expression ";
@@ -1418,5 +1413,5 @@ reserved:
     | 'unsigned' | 'char' | 'for' | 'if' | 'switch' | 'while' | 'do' | 'case'
     | 'extern' | 'void' | 'exit' | 'return' | 'auto' | 'break' | 'const'
     | 'continue' | 'default' | 'else' | 'enum' | 'struct' | 'goto' | 'long'
-    | 'register' | 'sizeof' | 'static' | 'typedef' | 'union' 
+    | 'register' | 'sizeof' | 'static' | 'typedef' | 'union'
 
