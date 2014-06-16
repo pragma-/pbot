@@ -861,6 +861,7 @@ postfix_productions:
             }
 
             if($postfix) { 
+              $return =~ s/^(Call|Insert)/the result of/;
               $return = "$postfix $return"; 
             }
             1;
@@ -1246,12 +1247,14 @@ struct_or_union_specifier:
             my $identifier = join('',@{$item{'identifier(?)'}});
             $return = join('',@{$item{'comment(?)'}}) . $item{struct_or_union};
             if ($identifier) { $return .= " tagged $identifier"; } 
-            $return .= " with members $item{struct_declaration_list}"; 
+            my $plural = $item{struct_declaration_list} =~ / and / ? 's' : '';
+            $return .= " with member$plural $item{struct_declaration_list}"; 
           }
     | struct_or_union identifier
           {
-            $item{struct_or_union} =~ s/^(a|an)/the/;
-            $return = "$item{struct_or_union} $item{identifier}";
+            $item{struct_or_union} =~ s/^(a|an)//;
+            $return = $item{identifier} =~ m/^`[aeiouy]/ ? 'an' : 'a';
+            $return .= " $item{identifier} $item{struct_or_union}";
           }
 
 struct_declaration_list:
@@ -1372,29 +1375,33 @@ comment_cxx:
           }
 
 constant:
-      /-?[0-9]*\.[0-9]+f?/ 
+      /-?[0-9]*\.[0-9]*[lf]{0,2}/i
           {
-            if ($item[1] =~ /\D/) { 
+            if ($item[1] =~ s/f$//i) { 
               $return = "the floating point number $item[1]";
-            } else { 
+            } elsif ($item[1] =~ s/l$//i) {
+              $return = "long double $item[1]";
+            } else {
               $return = $item[1];
             }
           } 
-    | /0x[0-9a-fA-F]+/ ('L')(?)
+    | /0x[0-9a-f]+[lu]{0,2}/i
           { 
-            if ($item[-1]) { 
-              $return = 'the long ' ."hexadecimal number $item[1]"; 
-            } else { 
-              $return = 'the ' . "hexadecimal number $item[1]";
-            } 
+            $return .= 'unsigned ' if $item[1] =~ s/[Uu]//; 
+            $return .= 'long ' if $item[1] =~ s/[Ll]//; 
+            $return = "the $return" . "hexadecimal number $item[1]";
           } 
-    | /0\d+/
-          { $return = "the octal number $item[1]"; } 
-    |/-?[0-9]+[lu]?/i # integer constant
+    | /0\d+[lu]{0,2}/i
+          {
+            $return .= 'unsigned ' if $item[1] =~ s/[Uu]//; 
+            $return .= 'long ' if $item[1] =~ s/[Ll]//; 
+            $return = "the $return" . "octal number $item[1]";
+          }
+    |/-?[0-9]+[lu]{0,2}/i # integer constant
           {
             $return = $item[-1]; 
-            $return =~ s/[Uu]$/(unsigned)/; 
-            $return =~ s/[Ll]$/(long)/; 
+            $return = "long $return" if $return =~ s/[Ll]//; 
+            $return = "unsigned $return" if $return =~ s/[Uu]//; 
           } 
     | /(?:\'((?:\\\'|(?!\').)*)\')/ # character constant
           {

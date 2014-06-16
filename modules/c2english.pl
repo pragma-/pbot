@@ -386,7 +386,7 @@ open $fh, '>', 'code2eng.c' or die "Could not write code: $!";
 print $fh $code;
 close $fh;
 
-$output = `./c2eng.pl code2eng.c` if not defined $output;
+$output = `./c2eng.pl -P code2eng.c` if not defined $output;
 
 if(not $has_function and not $has_main) {
   $output =~ s/Let .main. be a function taking no parameters and returning int.\s*To perform the function.\s*(return 0.)?//i;
@@ -401,8 +401,12 @@ if(not $has_function and not $has_main) {
 
 $output =~ s/\s+/ /;
 if(not $output) {
-  $output = "Does not compute.  I only know about C89 and valid code.\n";
+  $output = "Does not compute; I only know about C89 and valid code -- though I am still under construction.\n";
 }
+
+# beautification
+$output =~ s/the value the expression/the value of the expression/g;
+$output =~ s/the value the address/the address/g;
 
 print "[Work-in-progress; there will be issues!] $output\n";
 
