@@ -561,9 +561,9 @@ logical_OR_AND_expression:
 log_OR_AND_bit_or_and_eq: 
       '||' { $return = ' or '; }
     | '&&' { $return = ' and '; }
-    | '|'  { $return = ' bitwise ORed by '; }
-    | '&'  { $return = ' bitwise ANDed by '; }
-    | '^'  { $return = ' bitwise XORed by ';}
+    | '|'  { $return = ' bitwise-ORed by '; }
+    | '&'  { $return = ' bitwise-ANDed by '; }
+    | '^'  { $return = ' bitwise-XORed by ';}
     | '==' { $return = ' is equal to ' ; }
     | '!=' { $return = ' is not equal to ' ; } 
 
