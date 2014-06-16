@@ -10,7 +10,7 @@
 
 {
   my @defined_types = ('`FILE`'); 
-  my ($basic, @basics, $rule_name, @macros); 
+  my ($rule_name, @macros); 
 }
 
 startrule: 
@@ -430,7 +430,7 @@ conditional_expression:
 conditional_ternary_expression:
       '?' expression ':' conditional_expression
           { $return = "$item{expression} otherwise $item{conditional_expression}"; } 
-    | { "" } # nothing
+    | {""}
 
 assignment_operator:
       '=' 
@@ -619,7 +619,6 @@ declaration:
       function_prototype
     | declaration_specifiers init_declarator_list(?) ';'
           {
-            # This whole thing needs to be re-written to parse declarations inside-out.
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
             my $init_declaration_list;
 
@@ -670,7 +669,7 @@ declaration:
                     $first_qualifier .= " $fq";
                     $first_initializer = $fi;
                   } else {
-                    $first_qualifier .= " $first_initializer";
+                    $first_qualifier .= " $first_initializer" if $first_initializer;
                     $first_initializer = '';
                   }
                 }
@@ -835,12 +834,14 @@ unary_expression:
     |'sizeof' unary_expression 
           { $return = "the size of $item{unary_expression}"; }
     |'sizeof' '(' type_name ')' 
-          { $return = "the size of the datatype $item{type_name}"; }
+          { $return = "the size of the type $item{type_name}"; }
 
-postfix_function_call:
-      '(' argument_expression_list(?) ')'
+postfix_productions:
+      '(' argument_expression_list(?) ')' postfix_productions[context => 'function call'](?)
           {
-            if(not defined $arg{context} or $arg{context} eq 'assignment_expression') {
+            my $postfix = $item[-1]->[0];
+
+            if(not defined $arg{context} or $arg{context} ne 'statement') {
               $return = "the result of the function $arg{primary_expression}";
             } else {
               $return = "Call the function $arg{primary_expression} ";
@@ -848,7 +849,7 @@ postfix_function_call:
 
             # To discriminate between macros and functions. 
             foreach (@macros) { 
-              if ($basic eq $_) { 
+              if ($arg{primary_expression} eq $_) { 
                 $return =~ s/Call/Insert/;
                 $return =~ s/function/macro/; 
               }
@@ -858,31 +859,23 @@ postfix_function_call:
             if ($arg_exp_list) { 
               $return .= " with argument$arg_exp_list";
             }
+
+            if($postfix) { 
+              $return = "$postfix $return"; 
+            }
             1;
           }
-    | {""}
-
-postfix_expression:
-      primary_expression[context => $arg{context}] postfix_function_call[primary_expression => $item[1], context => $arg{context}]
-          {
-            push @basics, $basic; 
-            $basic =  $item{primary_expression};
-
-            if($item{postfix_function_call}) {
-              $return = $item{postfix_function_call};
-            } else {
-              $return = $item{primary_expression}; 
-            }
-          }
-      # array reference and plain expression
+    | # array reference and plain expression
       ( '[' expression[context => 'array_address'] ']' 
           { $return = $item{expression}; } 
-      )(s?)
+      )(s) postfix_productions[context => 'array_address'](?)
           {
             my $item_expression = '';
-            if (@{$item[-1]}) { 
-              $item_expression = join(' and ', @{$item[-1]}); 
+            if (@{$item[-2]}) { 
+              $item_expression = join(' and ', @{$item[-2]}); 
             }
+
+            my $postfix = $item[-1]->[0];
 
             if (length $item_expression) { 
               if($item_expression =~ /^\d+$/) {
@@ -897,64 +890,101 @@ postfix_expression:
                 } else {
                   $item_expression .= 'th';
                 }
-                $return = "the $item_expression element of array $basic";
+                if($arg{context} eq 'function call') {
+                  $return = "the $item_expression element of";
+                } else {
+                  $return = "the $item_expression element of $arg{primary_expression}";
+                }
               } elsif($item_expression =~ /^-\s*\d+$/) {
                 $item_expression *= -1;
                 my $plural = $item_expression == 1 ? '' : 's';
-                $return = "the location $item_expression element$plural backwards from where $basic points";
+                $return = "the location $item_expression element$plural backwards from where $arg{primary_expression} points";
               } else {
-                $return = "the element of $basic at location $item_expression";
+                $return = "the element of $arg{primary_expression} at location $item_expression";
               }
             }
-          }
 
-      # struct accesses:
-      ( '.' identifier )(?)
+            if($postfix) {
+              $return = "$postfix $return";
+            }
+          }
+    | ('.' identifier)(s) postfix_productions[context => 'struct access'](?)
           { 
-            # capitalize when necessary!
-            my $identifier = join('',@{$item[-1]}); 
+            my $identifier = join('',@{$item[-2]}); 
+            my $postfix = $item[-1]->[0];
+
             if ($identifier) {
-              $return = "the member $identifier of structure $basic"; 
+              if($arg{context} eq 'array_address') {
+                $return = "member $identifier of";
+              } else {
+                $return = "the member $identifier of $arg{primary_expression}"; 
+              }
+            }
+
+            if($postfix) {
+              $return = "$postfix->[0] $return $postfix->[1]";
             }
           } 
-      ( '->' identifier )(?) 
+    | ('->' identifier)(s) postfix_productions[context => 'struct access'](?) 
           {
-            # capitalize when necessary!
-            my $identifier = join('',@{$item[-1]}); 
+            my $identifier = join('',@{$item[-2]}); 
+            my $postfix = $item[-1]->[0];
+
             if ($identifier) {
-              $return = "the member $identifier of the structure pointed to by $basic"; 
+              $return = "the member $identifier of the structure pointed to by $arg{primary_expression}"; 
             } 
+
+            if($postfix) {
+              $return = "$postfix->[0] $return $postfix->[1]";
+            }
           }
-      ( '++' )(?)
+    | ('++')(s)
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
               if ($arg{context} eq 'statement') { 
-                $return = "increment $basic by one";
+                $return = "increment $arg{primary_expression} by one";
+              } elsif($arg{context} eq 'struct access') {
+                $return = ['increment', 'by one'];
               } else { 
                 $return = "$return which is incremented by one";
               }
             }
           }
-      ( '--' )(?)
+    | ('--')(s)
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
               if ($arg{context} eq 'statement') { 
-                $return = "decrement $basic by one";
+                $return = "decrement $arg{primary_expression} by one";
+              } elsif($arg{context} eq 'struct access') {
+                $return = ['decrement', 'by one'];
               } else { 
                $return = "$return which is decremented by one";
               }
             }
-            $basic = pop @basics; 
-            1;
           }
     # having done the simplest cases, we go to the catch all for left recursions.
     | primary_expression postfix_suffix(s)
           {
-            # todo: test this. formulate a syntax setup.
-            print STDERR "Danger Will Robinson! Untested code testing!!\n"; 
+            # is this ever reached?
+            print STDERR "Untested code!\n"; 
             $return = $item{primary_expression} . "'s " . join('',@{$item{'postfix_suffix(s)'}}); 
+          }
+    | {""}
+
+postfix_expression:
+      primary_expression[context => $arg{context}] postfix_productions[primary_expression => $item[1], context => $arg{context}]
+          {
+            my $postfix_productions = $item{'postfix_productions'};
+
+            if(length $postfix_productions) {
+              $return = $postfix_productions;
+            } elsif(length $item{primary_expression}) {
+              $return = $item{primary_expression}; 
+            } else {
+              $return = undef;
+            }
           }
 
 postfix_suffix:
@@ -965,7 +995,7 @@ postfix_suffix:
     | '--' 
 
 argument_expression_list:
-      <leftop: assignment_expression ',' assignment_expression >
+      <leftop: assignment_expression[context => 'function argument'] ',' assignment_expression[context => 'function argument']>
           {
             my @arg_exp_list = @{$item[1]}; 
             my $last = ''; 
@@ -1005,7 +1035,7 @@ primary_expression:
     | constant
     | string 
     | identifier
-    | { "" } # nothing
+    | {} # nothing
 
 declarator:
       direct_declarator
