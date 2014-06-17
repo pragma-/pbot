@@ -714,6 +714,11 @@ declaration:
                   }
 
                   if($first_qualifier) {
+                    if($first_qualifier =~ /bit\-field/) {
+                      $first_qualifier = "$item{declaration_specifiers} $first_qualifier";
+                      $item{declaration_specifiers} = '';
+                    }
+
                     if(@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
                       $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
                     } elsif(@identifiers > 1) {
@@ -1081,7 +1086,12 @@ declarator:
           { $return = "$item{direct_declarator}|$item{pointer}"; }
 
 direct_declarator:
-      identifier[context => 'direct_declarator'] array_declarator(s?)
+      identifier ':' constant
+          { 
+            my $bits = $item{constant} == 1 ? "$item{constant} bit" : "$item{constant} bits";
+            $return = "$item{identifier}|bit-field of $bits";
+          }
+    | identifier[context => 'direct_declarator'] array_declarator(s?)
           { 
             if(@{$item{'array_declarator(s?)'}}) {
               $return = "$item{identifier}|" . join('', @{$item{'array_declarator(s?)'}});
@@ -1314,29 +1324,8 @@ struct_declaration_list:
             }
           } 
 
-bitfield_identifier:
-    identifier ':' constant
-          { $return = [$item{identifier}, $item{constant}]; }
-
 struct_declaration:
-      declaration_specifiers <leftop: bitfield_identifier ',' bitfield_identifier> ';'
-          { 
-            $return = "$item{declaration_specifiers} ";
-
-            my @bitfields = @{$item[-2]};
-            my $sep = '';
-            for(my $i = 0; $i < @bitfields; $i++) {
-              my $plural = $bitfields[$i]->[1] == 1 ? '' : 's';
-              $return .= "$sep" . "bit-field of $bitfields[$i]->[1] bit$plural $bitfields[$i]->[0]";
-
-              if($i == $#bitfields - 1) {
-                $sep = ' and ';
-              } else {
-                $sep = ', ';
-              }
-            }
-          }
-    | comment(s?) declaration[context => 'struct member'] comment(s?)
+      comment(s?) declaration[context => 'struct member'] comment(s?)
           { $return = join('', @{$item[1]}) . $item{declaration} . join('', @{$item[-1]}); }
 
 type_name:
