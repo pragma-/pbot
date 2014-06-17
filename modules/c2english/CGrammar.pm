@@ -716,7 +716,7 @@ declaration:
                   if($first_qualifier) {
                     if(@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
                       $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
-                    } else {
+                    } elsif(@identifiers > 1) {
                       $first_qualifier =~ s/pointer/pointers/;
                     }
                     $return .= "$first_qualifier $item{declaration_specifiers} ";
@@ -754,7 +754,7 @@ declaration:
                   if($first_qualifier) {
                     if(@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
                       $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
-                    } else {
+                    } elsif(@identifiers > 1) {
                       $first_qualifier =~ s/pointer/pointers/;
                     }
                     $return .= "$first_qualifier $item{declaration_specifiers}";
@@ -1100,9 +1100,14 @@ array_declarator:
       ( '[' assignment_expression(?) ']'
           {
             if (@{$item{'assignment_expression(?)'}}) { 
-              $return = 'size '. join('',@{$item{'assignment_expression(?)'}}) . ' ';
+              my $size = join('', @{$item{'assignment_expression(?)'}});
+              if($size =~ /^(unsigned|long)*\s*1$/) {
+                $return = "$size element ";
+              } else {
+                $return = "$size elements ";
+              }
             } else { 
-              $return = 'unspecified size ';
+              $return = 'unspecified length ';
             }
           }
       )(s?)
