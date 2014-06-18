@@ -1238,12 +1238,15 @@ declaration_specifiers:
     | comment(?) type_specifier declaration_specifiers(?) 
           {
             my $decl_spec = join(' ', @{$item{'declaration_specifiers(?)'}});
-            $return = join('',@{$item{'comment(?)'}}) . $item{type_specifier};
-            if ($decl_spec) { $return .=  ' ' . $decl_spec; } 
+            $return = join('',@{$item{'comment(?)'}});
+            $return .= "$decl_spec " if $decl_spec;
+            $return .= $item{type_specifier};
           }
     | comment(?) type_qualifier declaration_specifiers(?) 
           {
-            my $decl_spec = $return = join('',@{$item{'comment(?)'}}) . $item{type_qualifier} . ' ' .  join(' ',@{$item{'declaration_specifiers(?)'}});
+            my $decl_spec = join(' ',@{$item{'declaration_specifiers(?)'}});
+            $return = join('',@{$item{'comment(?)'}}) . $item{type_qualifier};
+            $return .=  " $decl_spec" if $decl_spec;
           }
 
 storage_class_specifier:
