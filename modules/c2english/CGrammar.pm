@@ -421,7 +421,10 @@ conditional_expression:
       logical_OR_AND_expression[context => $arg{context}] conditional_ternary_expression
           {
             if($item{conditional_ternary_expression}) {
-              $return = "depending on if $item{logical_OR_AND_expression} is true then $item{conditional_ternary_expression}";
+              my $op1 = $item{conditional_ternary_expression}->[0];
+              my $op2 = $item{conditional_ternary_expression}->[1];
+              my $istrue = $item{logical_OR_AND_expression} =~ /(greater|less|equal)/ ? '' : ' is true';
+              $return = "$op1 if $item{logical_OR_AND_expression}$istrue otherwise to $op2";
             } else {
               $return = $item{logical_OR_AND_expression};
             }
@@ -429,7 +432,7 @@ conditional_expression:
 
 conditional_ternary_expression:
       '?' expression ':' conditional_expression
-          { $return = "$item{expression} otherwise $item{conditional_expression}"; } 
+          { $return = [$item{expression}, $item{conditional_expression}]; } 
     | {""}
 
 assignment_operator:
