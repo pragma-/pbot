@@ -1210,12 +1210,12 @@ pointer:
       '*' type_qualifier_list(s) pointer(?) 
           { 
             $return = join('', @{$item{'pointer(?)'}}) if @{$item{'pointer(?)'}};
-            $return .= ' ' .  join('', @{$item{'type_qualifier_list(s)'}}) . ' pointer to a ';
+            $return .= ' ' .  join('', @{$item{'type_qualifier_list(s)'}}) . ' pointer to ';
           }
     | '*' pointer(?) 
           { 
             $return = join('', @{$item{'pointer(?)'}});
-            $return .= ' pointer to a'; 
+            $return .= ' pointer to '; 
           } 
  
 type_qualifier_list:
