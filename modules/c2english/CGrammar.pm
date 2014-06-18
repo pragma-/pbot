@@ -1209,13 +1209,13 @@ identifier:
 pointer:
       '*' type_qualifier_list(s) pointer(?) 
           { 
-            $return = join('', @{$item{'type_qualifier_list(s)'}}) . ' pointer to a ';
-            $return .= ' ' . join('', @{$item{'pointer(?)'}}) if @{$item{'pointer(?)'}};
+            $return = join('', @{$item{'pointer(?)'}}) if @{$item{'pointer(?)'}};
+            $return .= ' ' .  join('', @{$item{'type_qualifier_list(s)'}}) . ' pointer to a ';
           }
     | '*' pointer(?) 
           { 
-            $return .= 'pointer to a'; 
-            $return .= ' ' . join('', @{$item{'pointer(?)'}});
+            $return = join('', @{$item{'pointer(?)'}});
+            $return .= ' pointer to a'; 
           } 
  
 type_qualifier_list:
