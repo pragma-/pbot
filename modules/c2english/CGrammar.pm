@@ -1,12 +1,10 @@
 # C-to-English Grammar
 #
-# Warning: work-in-progress. Many things are incomplete or non-functional.
+# Warning: work-in-progress. Some things are incomplete or non-functional.
 #
 # todo: 
 # 1. the entire syntax for pointers to functions.
 # 2. preprocessor directives. (getting there)
-# 4. functions to handle the nesting levels (ordinal number generator and CPP stack)
-# 6. change returns to prints where appropriate.
 
 {
   my @defined_types = ('`FILE`'); 
@@ -109,7 +107,7 @@ preproc_conditional:
       (elif_parts[matchrule => $rule_name])(?)
       (else_parts[matchrule => $rule_name])(?)
           { $return .= join('',@{$item[-2]}) .  join('',@{$item[-1]}); }
-      'endif' 
+      '#' 'endif' 
           { $return .= "End preprocessor conditional.\n"; }
 
 if_line:
@@ -121,7 +119,7 @@ if_line:
           { $return .= "If the preprocessor condition^L $item{constant_expression} is true, then ^L"; }
 
 elif_parts:
-      ('elif' constant_expression 
+      ('#' 'elif' constant_expression 
           { $return .= "Otherwise, if the preprocessor condition $item{constant_expression} is true, then ^L"; }
       (<matchrule: $rule_name> )[matchrule => $arg{matchrule}](s?)
           { $return .=  join('',@{$item[-1]}); }
@@ -129,7 +127,7 @@ elif_parts:
           { $return = join('', @{$item[-1]}); }
  
 else_parts:
-      'else' 
+      '#' 'else' 
           { $rule_name = $arg{matchrule}; }
       (<matchrule: $rule_name>)[matchrule => $arg{matchrule}](s?)
           { $return = "Otherwise, ^L" . join('',@{$item[-1]}); }
