@@ -145,7 +145,6 @@ external_declaration:
 function_definition:
       declaration_specifiers(?) declarator[context => 'function definition'] compound_statement[context => 'function definition'](?)
           {
-            print STDERR "wtf9\n", ::Dumper \%item;
             my $declaration_specifiers = join('', @{$item{'declaration_specifiers(?)'}}); 
             my $name = $item{declarator}->[0];
             my $parameter_list = $item{declarator}->[1];
@@ -568,7 +567,6 @@ declaration_list:
 declaration:
       declaration_specifiers init_declarator_list(?) ';'
           {
-            print STDERR "wtf2\n", ::Dumper \%item;
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
             my $init_declaration_list;
 
@@ -591,7 +589,6 @@ declaration:
                 $return .= "Let " unless $arg{context} eq 'struct member';
 
                 my @args = ::flatten shift @init_list;
-                print STDERR "wtf7\n", ::Dumper \@args;
 
                 my ($first_qualifier, $first_initializer);
                 my $first_identifier = shift @args;
@@ -615,6 +612,8 @@ declaration:
                   $first_qualifier .= " $first_initializer" if $first_initializer;
                   $first_initializer = '';
                 }
+
+                my $remaining_args = join(' ', @args);
 
                 my @initializers;
                 if($first_initializer) {
@@ -702,12 +701,15 @@ declaration:
                     } elsif(@identifiers > 1) {
                       $first_qualifier =~ s/pointer/pointers/;
                     }
-                    $return .= "$first_qualifier $item{declaration_specifiers}";
+                    $return .= "$first_qualifier ";
+                    $return .= "$remaining_args " if $remaining_args;
+                    $return .= $item{declaration_specifiers};
                   } else {
                     if(@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
                       $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
                     }
-                    $return .= "$item{declaration_specifiers}";
+                    $return .= "$remaining_args " if $remaining_args;
+                    $return .= $item{declaration_specifiers};
                   }
 
                   if(@initializers) {
@@ -923,7 +925,6 @@ postfix_productions:
           }
     | ('++')(s)
           {
-          print STDERR "wtf4\n", ::Dumper \%item;
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
               if ($arg{context} eq 'statement') { 
