@@ -1112,17 +1112,22 @@ parameter_list:
             for(my $i = 0; $i < @parameter_list; $i++) {
               $return .= $comma;
               if(ref $parameter_list[$i] eq 'ARRAY') {
-                my @list = @{$parameter_list[$i]};
+                my @list = ::flatten @{$parameter_list[$i]};
                 if(@list == 0) {
                   $return = "no parameters";
                 } elsif (@list ==  1) {
                   $return .= $list[0];
                 } else {
+                  if(grep { /function.*returning/ } @list) {
+                    push @list, shift @list;
+                    push @list, shift @list;
+                  }
                   $return .= join(' ', @list);
                 }
               } else {
                 $return .= $parameter_list[$i];
               }
+
               if($i == $#parameter_list - 1) {
                 $comma = ' and ';
               } else {
