@@ -1382,24 +1382,25 @@ constant:
             } else {
               $return = $item[1];
             }
+            $return .= '0' if $return =~ /\.$/;
           } 
-    | /0x[0-9a-f]+[lu]{0,2}/i
+    | /0x[0-9a-f]+[lu]{0,3}/i
           { 
             $return .= 'unsigned ' if $item[1] =~ s/[Uu]//; 
-            $return .= 'long ' if $item[1] =~ s/[Ll]//; 
+            $return .= 'long ' while $item[1] =~ s/[Ll]//; 
             $return = "the $return" . "hexadecimal number $item[1]";
           } 
-    | /0\d+[lu]{0,2}/i
+    | /0\d+[lu]{0,3}/i
           {
             $return .= 'unsigned ' if $item[1] =~ s/[Uu]//; 
-            $return .= 'long ' if $item[1] =~ s/[Ll]//; 
+            $return .= 'long ' while $item[1] =~ s/[Ll]//; 
             $return = "the $return" . "octal number $item[1]";
           }
-    |/-?[0-9]+[lu]{0,2}/i # integer constant
+    | /-?[0-9]+[lu]{0,3}/i # integer constant
           {
-            $return = $item[-1]; 
-            $return = "long $return" if $return =~ s/[Ll]//; 
-            $return = "unsigned $return" if $return =~ s/[Uu]//; 
+            $return .= "unsigned " if $item[-1] =~ s/[Uu]//; 
+            $return .= "long " while $item[-1] =~ s/[Ll]//; 
+            $return .= $item[-1];
           } 
     | /(?:\'((?:\\\'|(?!\').)*)\')/ # character constant
           {
