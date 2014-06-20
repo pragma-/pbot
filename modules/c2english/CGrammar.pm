@@ -1220,7 +1220,6 @@ storage_class_specifier:
 
 type_qualifier:
       'const'
-          { $return = "constant"; }
     | 'volatile' 
 
 type_specifier:
