@@ -3,7 +3,7 @@
 # Warning: work-in-progress. Some things are incomplete or non-functional.
 #
 # todo: 
-# 1. the entire syntax for pointers to functions.
+# 1. pointers to functions. (getting there)
 # 2. preprocessor directives. (getting there)
 
 {
@@ -15,8 +15,8 @@ startrule:
       translation_unit 
           { 
             my $output = $item[-1];
-            $output =~ s/\^L(\s*.)/\L$1/g; # lowercase specified characters
-            $output =~ s/\^U(\s*.)/\U$1/g; # uppercase specified characters
+            $output =~ s/\^L(\s*.?)/\L$1/g; # lowercase specified characters
+            $output =~ s/\^U(\s*.?)/\U$1/g; # uppercase specified characters
             print $output;
           } 
       startrule(?)
@@ -25,7 +25,6 @@ translation_unit:
       comment
     | external_declaration 
     | function_definition
-    | function_prototype 
     | preproc[matchrule => 'translation_unit']
 
 preproc: 
@@ -144,76 +143,25 @@ external_declaration:
       declaration 
 
 function_definition:
-      declaration_specifiers(?) declarator[context => 'function_definition'] '(' parameter_type_list(?) ')'
-        '{' declaration_list(?) statement_list(?) '}' 
+      declaration_specifiers(?) declarator[context => 'function definition'] compound_statement[context => 'function definition'](?)
           {
+            print STDERR "wtf9\n", ::Dumper \%item;
             my $declaration_specifiers = join('', @{$item{'declaration_specifiers(?)'}}); 
-            my $parameter_list = join('', @{$item{'parameter_type_list(?)'}}); 
-            my $declaration_list = join('',@{$item{'declaration_list(?)'}}); 
-            my $statement_list = join('',@{$item{'statement_list(?)'}}); 
+            my $name = $item{declarator}->[0];
+            my $parameter_list = $item{declarator}->[1];
 
-            my $return_type = $item{declarator}; 
-            my $name = $item{declarator}; 
-
-            $name =~ s/`[^`]+$/`/; 
-            $return_type =~ s/`.*`\|?//;
-
-            if ($return_type =~ /\w/ ) { 
-              $return_type .= " $declaration_specifiers";
-            } else { 
+            my $return_type;
+            if(@{$item{declarator}} > 2) {
+              $return_type = "$item{declarator}->[2] $declaration_specifiers";
+            } else {
               $return_type = $declaration_specifiers;
             }
 
-            $return = "\nLet $name be a function";
-
-            if ($parameter_list) { 
-              $return .= " taking $parameter_list"; 
-            }
-
-            $return .= " and returning $return_type.\nTo perform the function, ^L";
-
-            if ($declaration_list) { 
-              $return .= $declaration_list; 
-            }
-
-            if ($statement_list ) { 
-              $return .= $statement_list; 
-            } else {
-              $return .= "Do nothing.\n";
-            }
-
-            # $return .= "End of function $name.\n";
-            # $return .= $item{compound_statement}; 
-            1;
+            $return = "\nLet $name be a ";
+            $return .= $parameter_list;
+            $return .= " $return_type.\nTo perform the function, ^L";
+            $return .= join('', @{$item{'compound_statement(?)'}});
           } 
-
-function_prototype:
-      declaration_specifiers(?) declarator[context => 'function_prototype']
-        '(' parameter_type_list(?) ')' ';'
-          {
-            my $declaration_specifiers = join('', @{$item{'declaration_specifiers(?)'}}); 
-            my $parameter_list = join('', @{$item{'parameter_type_list(?)'}}); 
-
-            my $return_type = $item{declarator}; 
-            my $name = $item{declarator}; 
-
-            $name =~ s/\|.*$//; 
-            $return_type =~ s/`.*`\|?//;
-
-            if($return_type) {
-              $return_type .= ' ';
-            }
-
-            $return_type .= $declaration_specifiers;
-
-            $return = "Let $name be a function prototype"; 
-
-            if ($parameter_list) { 
-              $return .= " taking $parameter_list";
-            }
-
-            $return .= " and returning $return_type.\n"; 
-          }
 
 compound_statement:
       '{' declaration_list(?) statement_list(?) '}' 
@@ -230,19 +178,22 @@ compound_statement:
             if ($statement_list ) { 
               $return .= $statement_list;   
             } else {
-              $return .= "Do nothing and ^L";
+              $return .= "Do nothing.\n";
             } 
 
             $return .= "End block.\n" if not $arg{context};
 
-            if ($arg{context}) { 
-              $return .= "End $arg{context}.\n" unless $arg{context} eq 'do loop' or $arg{context} eq 'case'; 
+            if ($arg{context} 
+                and $arg{context} ne 'do loop'
+                and $arg{context} ne 'case'
+                and $arg{context} ne 'function definition') { 
+              $return .= "End $arg{context}.\n";
             } 
             1;
           }
 
 statement_list:
-      comment(?) preproc[matchrule => 'statement'](?) statement
+      comment(?) preproc[matchrule => 'statement'](?) statement[context => undef]
                {
                  my $preproc = join('',@{$item{'preproc(?)'}}); 
                  my $comment = join('',@{$item{'comment(?)'}}); 
@@ -252,13 +203,12 @@ statement_list:
                  if ($comment) { $return = $comment . $return; }  
                  if ($preproc) { $return = $preproc . $return; } 
                } 
-      statement_list(?)
+        statement_list(?)
                { $return .= join('',@{$item{'statement_list(?)'}}); }
 
 statement: 
       jump_statement
-          { $return = $item{jump_statement}; }
-    | compound_statement[context => $arg{context}, name => $arg{context} ]
+    | compound_statement
     | iteration_statement
     | selection_statement
     | labeled_statement
@@ -337,7 +287,6 @@ selection_statement:
           { $return .= join('',@{$item[-1]}); }
     | 'switch'  '(' expression ')'  statement[context => 'switch']  
           { $return = "Given the expression \'$item{expression}\',\n^L$item{statement}"; }
- 
 
 jump_statement: 
       'break' ';'   
@@ -617,9 +566,9 @@ declaration_list:
           { $return = join('', @{$item{'preproc(?)'}}) . join('', @{$item{'declaration(s)'}}); }
 
 declaration:
-      function_prototype
-    | declaration_specifiers init_declarator_list(?) ';'
+      declaration_specifiers init_declarator_list(?) ';'
           {
+            print STDERR "wtf2\n", ::Dumper \%item;
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
             my $init_declaration_list;
 
@@ -641,8 +590,8 @@ declaration:
                 $inits++;
                 $return .= "Let " unless $arg{context} eq 'struct member';
 
-                my $first_object = shift @init_list;
-                my @args = split /\|/, $first_object, 3;
+                my @args = ::flatten shift @init_list;
+                print STDERR "wtf7\n", ::Dumper \@args;
 
                 my ($first_qualifier, $first_initializer);
                 my $first_identifier = shift @args;
@@ -663,18 +612,8 @@ declaration:
                 }
 
                 if($first_initializer !~ /^initialized/) {
-                  if($first_qualifier =~ /\|initialized/) {
-                    my ($fq, $fi) = split /\|/, $first_qualifier, 2;
-                    $first_qualifier .= " $fq";
-                    $first_initializer = $fi;
-                  } elsif($first_initializer =~ /\|initialized/) {
-                    my ($fq, $fi) = split /\|/, $first_initializer, 2;
-                    $first_qualifier .= " $fq";
-                    $first_initializer = $fi;
-                  } else {
-                    $first_qualifier .= " $first_initializer" if $first_initializer;
-                    $first_initializer = '';
-                  }
+                  $first_qualifier .= " $first_initializer" if $first_initializer;
+                  $first_initializer = '';
                 }
 
                 my @initializers;
@@ -683,12 +622,12 @@ declaration:
                 }
                 
                 for(my $i = 0; $i < @init_list; $i++) {
-                  @args = split /\|/, $init_list[$i], 3;
+                  @args = ::flatten $init_list[$i];
 
                   my ($qualifier, $initializer);
                   my $identifier = shift @args;
-                  $next_arg = shift @args;
 
+                  $next_arg = shift @args;
                   if($next_arg =~ m/initialized/) {
                     $initializer = $next_arg;
                     $qualifier = shift @args // '';
@@ -818,7 +757,7 @@ init_declarator:
             my $init = join('',@{$item[-1]});  
 
             if (length $init) {
-              $return = "$item{declarator}|initialized to $init"; 
+              $return = [$item{declarator}, "initialized to $init"]; 
             }
           }
 
@@ -984,6 +923,7 @@ postfix_productions:
           }
     | ('++')(s)
           {
+          print STDERR "wtf4\n", ::Dumper \%item;
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
               if ($arg{context} eq 'statement') { 
@@ -991,7 +931,7 @@ postfix_productions:
               } elsif($arg{context} eq 'struct access') {
                 $return = ['increment', 'by one'];
               } else { 
-                $return = "$return which is incremented by one";
+                $return = "post-incremented $arg{primary_expression}";
               }
             }
           }
@@ -1004,7 +944,7 @@ postfix_productions:
               } elsif($arg{context} eq 'struct access') {
                 $return = ['decrement', 'by one'];
               } else { 
-               $return = "$return which is decremented by one";
+               $return = "post-decremented $arg{primary_expression}";
               }
             }
           }
@@ -1082,9 +1022,20 @@ primary_expression:
     | {} # nothing
 
 declarator:
-      direct_declarator
-    | pointer direct_declarator
-          { $return = "$item{direct_declarator}|$item{pointer}"; }
+      direct_declarator(s)
+          { 
+            my @direct_declarator = @{$item{'direct_declarator(s)'}};
+            if(@direct_declarator == 1) {
+              $return = $direct_declarator[0]; 
+            } else {
+              $return = $item{'direct_declarator(s)'}; 
+            }
+          }
+    | pointer direct_declarator(s)
+          { 
+            push @{$item{'direct_declarator(s)'}}, $item{pointer};
+            $return = $item{'direct_declarator(s)'};
+          }
 
 direct_declarator:
       identifier ':' constant
@@ -1095,13 +1046,18 @@ direct_declarator:
     | identifier[context => 'direct_declarator'] array_declarator(s?)
           { 
             if(@{$item{'array_declarator(s?)'}}) {
-              $return = "$item{identifier}|" . join('', @{$item{'array_declarator(s?)'}});
+              $return = [$item{identifier}, join('', @{$item{'array_declarator(s?)'}})];
             } else {
-              $return = "$item{identifier}";
+              $return = $item{identifier};
             }
           }
     | '(' declarator ')' array_declarator(s)
-          { $return = "$item{declarator} " . join('', @{$item{'array_declarator(s)'}}); }
+          { 
+            push @{$item{declarator}}, join('', @{$item{'array_declarator(s)'}});
+            $return = $item{declarator};
+          }
+    | '(' parameter_type_list ')'
+          { $return = "function taking $item{parameter_type_list} and returning"; }
     | '(' declarator array_declarator(s) ')'
           { $return = $item{'declarator'} . join('', @{$item{'array_declarator(s)'}}) }
     | '(' declarator ')' 
@@ -1145,37 +1101,39 @@ identifier_list:
           }
 
 parameter_type_list:
-      <skip: '[ \t]*'> parameter_list
-    | parameter_list ',' '...' # FIXME: never reached
-          { $return = $item{parameter_list} . ', and possibly other arguments'; }
+      parameter_list
 
 parameter_list:
       <leftop: parameter_declaration ',' parameter_declaration>
           {
-            my @parameter_list = @{$item[1]}; 
-            if ($#parameter_list > 1) {
-              $return = pop(@parameter_list); 
-              $return = join(', ', @parameter_list) . ', and ' . $return;  
-            } elsif ($#parameter_list == 1) { 
-              $return = $parameter_list[0] . ' and ' .$parameter_list[1];
-            } else { 
-              if(ref $parameter_list[0] eq 'ARRAY') {
-                my $list = join('', @{ $parameter_list[0] });
-                if(not $list) {
+            my @parameter_list = @{$item[1]};
+            my $comma = '';
+            for(my $i = 0; $i < @parameter_list; $i++) {
+              $return .= $comma;
+              if(ref $parameter_list[$i] eq 'ARRAY') {
+                my @list = @{$parameter_list[$i]};
+                if(@list == 0) {
                   $return = "no parameters";
+                } elsif (@list ==  1) {
+                  $return .= $list[0];
                 } else {
-                  $return = $list;
+                  $return .= join(' ', @list);
                 }
               } else {
-                $return = $parameter_list[0];
+                $return .= $parameter_list[$i];
+              }
+              if($i == $#parameter_list - 1) {
+                $comma = ' and ';
+              } else {
+                $comma = ', ';
               }
             }
           }
 
 parameter_declaration:
       declaration_specifiers declarator 
-          { $return = $item{declaration_specifiers} . ' ' . $item{declarator}; }
-    | /,?\.\.\./ 
+          { $return = [$item{declaration_specifiers}, $item{declarator}]; }
+    | '...'
           { $return = "variadic parameters"; }
     | declaration_specifiers abstract_declarator(?) 
     | ''
