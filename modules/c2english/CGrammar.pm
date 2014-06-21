@@ -1444,9 +1444,9 @@ string:
       /(?:\"(?:\\\"|(?!\").)*\")/
 
 reserved: 
-      'int' | 'double' | 'short' | 'volatile' | 'register' | 'float' | 'signed'
+      ('int' | 'double' | 'short' | 'volatile' | 'register' | 'float' | 'signed'
     | 'unsigned' | 'char' | 'for' | 'if' | 'switch' | 'while' | 'do' | 'case'
     | 'extern' | 'void' | 'exit' | 'return' | 'auto' | 'break' | 'const'
     | 'continue' | 'default' | 'else' | 'enum' | 'struct' | 'goto' | 'long'
-    | 'register' | 'sizeof' | 'static' | 'typedef' | 'union'
+    | 'register' | 'sizeof' | 'static' | 'typedef' | 'union') /\z/
 
