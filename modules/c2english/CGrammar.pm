@@ -567,6 +567,7 @@ declaration_list:
 declaration:
       declaration_specifiers init_declarator_list(?) ';'
           {
+            print STDERR "wtf2\n", ::Dumper \%item;
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
             my $init_declaration_list;
 
@@ -1198,6 +1199,7 @@ declaration_specifiers:
           }
     | comment(?) type_specifier declaration_specifiers(?) 
           {
+            print STDERR "wtf1\n", ::Dumper \%item;
             my $decl_spec = join(' ', @{$item{'declaration_specifiers(?)'}});
             $return = join('',@{$item{'comment(?)'}});
             $return .= "$decl_spec " if $decl_spec;
@@ -1444,9 +1446,7 @@ string:
       /(?:\"(?:\\\"|(?!\").)*\")/
 
 reserved: 
-      ('int' | 'double' | 'short' | 'volatile' | 'register' | 'float' | 'signed'
-    | 'unsigned' | 'char' | 'for' | 'if' | 'switch' | 'while' | 'do' | 'case'
-    | 'extern' | 'void' | 'exit' | 'return' | 'auto' | 'break' | 'const'
-    | 'continue' | 'default' | 'else' | 'enum' | 'struct' | 'goto' | 'long'
-    | 'register' | 'sizeof' | 'static' | 'typedef' | 'union') /\z/
+    /(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto
+       |if|int|long|register|return|signed|sizeof|short|static|struct|switch|typedef
+       |union|unsigned|void|volatile|while)\b/x
 
