@@ -1118,10 +1118,14 @@ parameter_list:
                 } elsif (@list ==  1) {
                   $return .= $list[0];
                 } else {
+                  my $identifier;
                   if(grep { /function.*returning/ } @list) {
                     push @list, shift @list;
-                    push @list, shift @list;
+                    $identifier = shift @list;
+                  } else {
+                    $identifier = pop @list;
                   }
+                  $return .= "$identifier as ";
                   $return .= join(' ', @list);
                 }
               } else {
