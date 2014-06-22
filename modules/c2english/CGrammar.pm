@@ -1042,7 +1042,7 @@ direct_declarator:
       identifier ':' constant
           { 
             my $bits = $item{constant} == 1 ? "$item{constant} bit" : "$item{constant} bits";
-            $return = "$item{identifier}|bit-field of $bits";
+            $return = [$item{identifier}, "bit-field of $bits"];
           }
     | identifier[context => 'direct_declarator'] array_declarator(s?)
           { 
