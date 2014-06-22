@@ -17,9 +17,10 @@ startrule:
             my $output = $item[-1];
             $output =~ s/\^L(\s*.?)/\L$1/g; # lowercase specified characters
             $output =~ s/\^U(\s*.?)/\U$1/g; # uppercase specified characters
-            print $output;
+            push @$return, $output;
           } 
       startrule(?)
+          { push @$return, $item[-1]; }
     
 translation_unit:
       comment

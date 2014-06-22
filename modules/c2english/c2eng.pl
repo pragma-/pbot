@@ -61,11 +61,18 @@ foreach my $arg (@ARGV) {
     undef $::RD_TRACE;
   } 
 
-  defined $parser->startrule(\$text) or die "Bad text!\n$text\n";
+  my $result = $parser->startrule(\$text) or die "Bad text!\n$text\n";
+
+  $text =~ s/^\s+//g;
+  $text =~ s/\s+$//g;
+
+  if(length $text) {
+    die "Bad parse: $text";
+  } else {
+    print join('', flatten($result));
+  }
 }
 
-$text =~ s/\s+//g;
-print "\n[$text]\n" if length $text;
 
 sub precompile_grammar {
   print STDERR "Precompiling grammar...\n";
