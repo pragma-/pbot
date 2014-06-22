@@ -67,7 +67,7 @@ foreach my $arg (@ARGV) {
   $text =~ s/\s+$//g;
 
   if(length $text) {
-    die "Bad parse: $text";
+    print "Bad parse at: $text";
   } else {
     print join('', flatten($result));
   }
