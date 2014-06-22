@@ -567,7 +567,6 @@ declaration_list:
 declaration:
       declaration_specifiers init_declarator_list(?) ';'
           {
-            print STDERR "wtf2\n", ::Dumper \%item;
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
             my $init_declaration_list;
 
@@ -1117,12 +1116,20 @@ parameter_list:
                 if(@list == 0) {
                   $return = "no parameters";
                 } elsif (@list ==  1) {
-                  $return .= $list[0];
+                  if($list[0] eq 'void') {
+                    $return = "no parameters";
+                  } else {
+                    $return .= $list[0];
+                  }
                 } else {
                   push @list, shift @list;
-                  my $identifier = shift @list;
-                  $return .= "$identifier as ";
-                  $return .= join(' ', @list);
+                  if($list[0] =~ /^`.*`$/) {
+                    my $identifier = shift @list;
+                    $return .= "$identifier as ";
+                    $return .= join(' ', @list);
+                  } else {
+                    $return .= join(' ', @list);
+                  }
                 }
               } else {
                 $return .= $parameter_list[$i];
@@ -1142,22 +1149,34 @@ parameter_declaration:
     | '...'
           { $return = "variadic parameters"; }
     | declaration_specifiers abstract_declarator(?) 
+          { $return = [$item{declaration_specifiers}, $item{'abstract_declarator(?)'}]; }
     | ''
           { $return = "unspecified parameters"; }
 
 abstract_declarator: 
       pointer 
-    | pointer(?) direct_abstract_declarator 
-          { $return = join('',@{$item{'pointer(?)'}}) . $item{direct_abstract_declarator}; }
+    | pointer(?) direct_abstract_declarator(s) 
+          { $return = join(' ',@{$item{'pointer(?)'}}) . join(' ', @{$item{'direct_abstract_declarator(s)'}}); }
 
 direct_abstract_declarator:
       '(' abstract_declarator ')'
+          { $return = $item{abstract_declarator}; }
     | '[' ']'
-    | '[' constant_expression ']'
+          { $return = "array of unspecified length of"; }
+    | '[' constant_expression ']' 
+          { 
+            my $size = $item{constant_expression};
+            if($size =~ /^(unsigned|long)*\s*1$/) {
+              $return = "array of $size element of";
+            } else {
+              $return = "array of $size elements of";
+            }
+          }
     | DAD '[' ']'
     | DAD '[' constant_expression ']'
     | '(' ')'
     | '(' parameter_type_list ')'
+          { $return = "function taking $item{parameter_type_list} and returning"; }
     | DAD '(' ')'
     | DAD '(' parameter_type_list ')'
 
@@ -1175,12 +1194,12 @@ pointer:
       '*' type_qualifier_list(s) pointer(?) 
           { 
             $return = join('', @{$item{'pointer(?)'}}) if @{$item{'pointer(?)'}};
-            $return .= ' ' .  join('', @{$item{'type_qualifier_list(s)'}}) . ' pointer to ';
+            $return .= ' ' .  join('', @{$item{'type_qualifier_list(s)'}}) . ' pointer to';
           }
     | '*' pointer(?) 
           { 
             $return = join('', @{$item{'pointer(?)'}});
-            $return .= ' pointer to '; 
+            $return .= 'pointer to'; 
           } 
  
 type_qualifier_list:
@@ -1199,7 +1218,6 @@ declaration_specifiers:
           }
     | comment(?) type_specifier declaration_specifiers(?) 
           {
-            print STDERR "wtf1\n", ::Dumper \%item;
             my $decl_spec = join(' ', @{$item{'declaration_specifiers(?)'}});
             $return = join('',@{$item{'comment(?)'}});
             $return .= "$decl_spec " if $decl_spec;
