@@ -406,7 +406,8 @@ if(not $output) {
 
 # beautification
 $output =~ s/the value the expression/the value of the expression/g;
-$output =~ s/the value the address/the address/g;
+$output =~ s/the value the/the/g;
+$output =~ s/(is true is)+/is/g;
 
 print "$output\n";
 

@@ -144,7 +144,7 @@ external_declaration:
       declaration 
 
 function_definition:
-      declaration_specifiers(?) declarator[context => 'function definition'] compound_statement[context => 'function definition'](?)
+      declaration_specifiers[context => 'function definition'](?) declarator[context => 'function definition'] compound_statement[context => 'function definition'](?)
           {
             my $declaration_specifiers = join('', @{$item{'declaration_specifiers(?)'}}); 
             my $name = $item{declarator}->[0];
@@ -157,6 +157,11 @@ function_definition:
               $return_type = $declaration_specifiers;
             }
 
+            if($return_type =~ s/( with.*)$//) {
+              my $storage_class_specifier = $1;
+              $parameter_list =~ s/function/function$storage_class_specifier/;
+            }
+
             $return = "\nLet $name be a ";
             $return .= $parameter_list;
             $return .= " $return_type.\nTo perform the function, ^L";
@@ -164,7 +169,7 @@ function_definition:
           } 
 
 compound_statement:
-      '{' declaration_list(?) statement_list(?) '}' 
+      '{' declaration_list[context => 'compound statement'](?) statement_list[context => 'compound statement'](?) '}' 
           { 
             my $declaration_list = join('',@{$item{'declaration_list(?)'}}); 
             my $statement_list = join('',@{$item{'statement_list(?)'}}); 
@@ -227,7 +232,8 @@ iteration_statement:
             }
 
             if ($item_expression) { 
-              $return .= "For as long as $item_expression, ^L"; 
+              my $istrue = $item{expression} =~ /(greater|less|equal|false$)/ ? '' : ' is true';
+              $return .= "For as long as ^L$item_expression$istrue, ^L"; 
             } else {
               $return .= "Repeatedly ^L";
             } 
@@ -239,7 +245,7 @@ iteration_statement:
               $return .= "After each iteration, ^L$increment.\n"; 
             } 
           } 
-    | 'while' '(' <commit> expression  ')' statement[context => 'while loop']  
+    | 'while' '(' <commit> expression[context => 'while conditional']  ')' statement[context => 'while loop']  
           { 
             if($item{expression} =~ /(^\d+$)/) {
               if($1 == 0) {
@@ -248,7 +254,8 @@ iteration_statement:
                 $return = "Repeatedly ^L";
               }
             } else {
-              $return = "While $item{expression}, ^L"; 
+              my $istrue = $item{expression} =~ /(greater|less|equal|false$)/ ? '' : ' is true';
+              $return = "While ^L$item{expression}$istrue, ^L"; 
             }
 
             if($item{statement}) {
@@ -257,36 +264,54 @@ iteration_statement:
               $return .= "do nothing.\n";
             }
           } 
-    | 'do' statement[context => 'do loop'] 'while' '(' expression ')' ';' 
-          { $return = "Do the following:^L $item{statement}Do this as long as $item{expression}.\n"; }
+    | 'do' statement[context => 'do loop'] 'while' '(' expression[context => 'do while conditional'] ')' ';' 
+          {
+            $item{statement} =~ s/^do nothing/nothing/i;
+            $return = "Do the following:^L $item{statement}";
+            if($item{expression} =~ /(^\d+$)/) {
+              if($1 == 0) {
+                $return .= "Do this once.\n";
+              } else {
+                $return .= "Do this repeatedly.\n";
+              }
+            } else {
+              my $istrue = $item{expression} =~ /(greater|less|equal|false$)/ ? '' : ' is true';
+              $return .= "Do this as long as ^L$item{expression}$istrue.\n";
+            }
+          }
 
 for_initialization:
       expression[context => 'for loop']
 
 for_expression:
-      expression[context => 'for_expression']
+      expression[context => 'for conditional']
 
 for_increment:
       expression[context => 'statement'] 
 
 selection_statement:
-      'if' <commit> '(' expression[context => 'if block'] ')' statement[context => 'if block'] 
+      'if' <commit> '(' expression[context => 'if conditional'] ')' statement[context => 'if statement'] 
           { 
             if($item{expression} =~ /^(\d+)$/) {
               if($1 == 0) {
-                $item{expression} = "never";
+                $return = "Never ";
               } else {
-                $item{expression} = "always";
+                $return = "Always ";
               }
+            } else {
+              my $istrue = $item{expression} =~ /(greater|less|equal|false$)/ ? '' : ' is true';
+              $return = "If ^L$item{expression}$istrue then ";
             }
-            $return = "If $item{expression} then ^L$item{statement}";
+            $return .= "^L$item{statement}";
           }
       ('else' statement[context => 'else block']
           { $return = "Otherwise, ^L$item{statement}"; }
       )(?)
           { $return .= join('',@{$item[-1]}); }
-    | 'switch'  '(' expression ')'  statement[context => 'switch']  
-          { $return = "Given the expression \'$item{expression}\',\n^L$item{statement}"; }
+    | 'switch'  '(' expression[context => 'switch conditional'] ')'  statement[context => 'switch']  
+          { 
+            $return = "Given the expression \'^L$item{expression}\',\n^L$item{statement}";
+          }
 
 jump_statement: 
       'break' ';'   
@@ -301,7 +326,7 @@ jump_statement:
           } 
     | 'continue' ';'
           { $return = "Return to the top of the current loop.\n"; } 
-    | 'return' <commit> expression[context => 'return'](?) ';' 
+    | 'return' <commit> expression[context => 'statement'](?) ';' 
           {
             my $item_expression = join('', @{$item{'expression(?)'}});
 
@@ -347,9 +372,9 @@ expression:
           }
 
 assignment_expression:
-      unary_expression[context => 'assignment_expression'] 
+      unary_expression[context => 'assignment expression'] 
         assignment_operator[context => $arg{context}] 
-        assignment_expression[context =>  'assignment_expression'] 
+        assignment_expression[context =>  'assignment expression'] 
           {
             my $assignment_expression = $item{assignment_expression}; 
             my $assignment_operator = $item{assignment_operator};
@@ -386,111 +411,111 @@ assignment_operator:
       '=' 
           {
             if ($arg{context} eq 'statement') { 
-              $return = ['Assign to', 'the value' ]; 
+              $return = ['Assign to^L', 'the value^L' ]; 
             } elsif ($arg{context} eq 'for loop') {
-              $return = ['assigning to', 'the value' ];
+              $return = ['assigning to^L', 'the value^L' ];
             } else { 
-              $return = 'which is assigned to be'; 
+              $return = 'which is assigned to be^L'; 
             }
           }
     | '+=' 
           {
             if ($arg{context} eq 'statement') { 
-              $return = ['Increment','by'];
+              $return = ['Increment^L','by^L'];
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['incrementing','by'];
+              $return = ['incrementing^L','by^L'];
             } else { 
-              $return = 'which is incremented by'; 
+              $return = 'which is incremented by^L'; 
             }
           }
     | '-='
           {
             if ($arg{context} eq 'statement') { 
-              $return = ['Decrement' , 'by']; 
+              $return = ['Decrement^L', 'by^L']; 
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['decrementing' , 'by']; 
+              $return = ['decrementing^L' , 'by^L']; 
             } else { 
-              $return = 'which is decremented by'; 
+              $return = 'which is decremented by^L'; 
             }
           }
     | '*='
           {
             if ($arg{context} eq 'statement') { 
-              $return = ['Multiply' , 'by'];  
+              $return = ['Multiply^L' , 'by^L'];  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['multiplying' , 'by'];
+              $return = ['multiplying^L' , 'by^L'];
             } else { 
-              $return = 'which is multiplied by'; 
+              $return = 'which is multiplied by^L'; 
             }
           }
     | '/='
           { 
             if ($arg{context} eq 'statement') {  
-              $return = ['Divide' , 'by' ]; 
+              $return = ['Divide^L' , 'by^L' ]; 
             } elsif ($arg{context} eq 'for loop') {  
-              $return = ['dividing' , 'by' ]; 
+              $return = ['dividing^L' , 'by^L' ]; 
             } else { 
-              $return = 'which is divided by'; 
+              $return = 'which is divided by^L'; 
             }
           }
     | '%=' 
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Reduce', 'to modulo '] ;  
+              $return = ['Reduce^L', 'to modulo ^L'] ;  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['reducing', 'to modulo '] ;  
+              $return = ['reducing^L', 'to modulo ^L'] ;  
             } else { 
-              $return = 'which is reduced to modulo'; 
+              $return = 'which is reduced to modulo^L'; 
             }
           }
     | '<<='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Bit-shift', 'left by'];  
+              $return = ['Bit-shift^L', 'left by^L'];  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['bit-shifting', 'left by'];  
+              $return = ['bit-shifting^L', 'left by^L'];  
             } else { 
-              $return = 'which is bit-shifted left by'; 
+              $return = 'which is bit-shifted left by^L'; 
             }
           }
     | '>>='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Bit-shift', 'right by'];  
+              $return = ['Bit-shift^L', 'right by^L'];  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['bit-shifting', 'right by'];  
+              $return = ['bit-shifting^L', 'right by^L'];  
             } else { 
-              $return = 'which is bit-shifted right by'; 
+              $return = 'which is bit-shifted right by^L'; 
             }
           }
     | '&='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Bit-wise ANDed', 'by' ];  
+              $return = ['Bit-wise ANDed^L', 'by^L' ];  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['bit-wise ANDing', 'by' ];  
+              $return = ['bit-wise ANDing^L', 'by^L' ];  
             } else { 
-              $return = 'which is bit-wise ANDed by'; 
+              $return = 'which is bit-wise ANDed by^L'; 
             }
           }
     | '^='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Exclusive-OR','by'];
+              $return = ['Exclusive-OR^L','by^L'];
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['exclusive-ORing','by'];
+              $return = ['exclusive-ORing^L','by^L'];
             } else { 
-              $return = 'which is exclusive-ORed by'; 
+              $return = 'which is exclusive-ORed by^L'; 
             }
           }
     | '|='
           { 
             if ($arg{context} eq 'statement') { 
-              $return = ['Bit-wise ORed', 'by'];  
+              $return = ['Bit-wise ORed^L', 'by^L'];  
             } elsif ($arg{context} eq 'for loop') { 
-              $return = ['bit-wise ORing', 'by'];  
+              $return = ['bit-wise ORing^L', 'by^L'];  
             } else { 
-              $return = 'which is bit-wise ORed by'; 
+              $return = 'which is bit-wise ORed by^L'; 
             }
           }
 
@@ -503,54 +528,54 @@ logical_OR_AND_expression:
         log_OR_AND_bit_or_and_eq
         rel_add_mul_shift_expression[context => 'logical_OR_AND_expression']>
           {
-            if (defined $arg{context} and $arg{context} eq 'for_expression') { print STDERR "hmm2\n"; }
-            my @ands = @{$item[1]}; 
-            $return = join ('' , @ands);
+            if (defined $arg{context} and $arg{context} eq 'for conditional') { print STDERR "hmm2\n"; }
+            $return = join ('' , @{$item[1]});
           } 
 
 log_OR_AND_bit_or_and_eq: 
-      '||' { $return = ' or '; }
-    | '&&' { $return = ' and '; }
-    | '|'  { $return = ' bitwise-ORed by '; }
-    | '&'  { $return = ' bitwise-ANDed by '; }
-    | '^'  { $return = ' bitwise-XORed by ';}
-    | '==' { $return = ' is equal to ' ; }
-    | '!=' { $return = ' is not equal to ' ; } 
+      '||' { $return = ' or ^L'; }
+    | '&&' { $return = ' and ^L'; }
+    | '|'  { $return = ' bitwise-ORed by ^L'; }
+    | '&'  { $return = ' bitwise-ANDed by ^L'; }
+    | '^'  { $return = ' bitwise-XORed by ^L';}
+    | '==' { $return = ' is equal to ^L'; }
+    | '!=' { $return = ' is not equal to ^L'; } 
 
 rel_mul_add_ex_op: 
-      '+'  { $return = ' plus '; }
-    | '-'  { $return = ' minus '; }
-    | '*'  { $return = ' times '; }
-    | '/'  { $return = ' divided by '; }
-    | '%'  { $return = ' modulo '; }
-    | '<<' { $return = ' shifted left by '; }
-    | '>>' { $return = ' shifted right by '; }
-    | '>=' { $return = ' is greater than or equal to '; }
-    | "<=" { $return = ' is less than or equal to '; }
-    | '>'  { $return = ' is greater than '; }
-    | '<'  { $return = ' is less than '; }
+      '+'  { $return = ' plus ^L'; }
+    | '-'  { $return = ' minus ^L'; }
+    | '*'  { $return = ' times ^L'; }
+    | '/'  { $return = ' divided by ^L'; }
+    | '%'  { $return = ' modulo ^L'; }
+    | '<<' { $return = ' shifted left by ^L'; }
+    | '>>' { $return = ' shifted right by ^L'; }
+    | '>=' { $return = ' is greater than or equal to ^L'; }
+    | "<=" { $return = ' is less than or equal to ^L'; }
+    | '>'  { $return = ' is greater than ^L'; }
+    | '<'  { $return = ' is less than ^L'; }
 
 unary_operator: 
       '&' { $return = 'the address of '; }
-    | '*' { $return = 'the contents of '; }
+    | '*' { $return = 'the dereference of '; }
     | '+' { $return = ''; }
-    | '-' ...constant { $return  = 'negative '; }
+    | '-' ...identifier { $return  = 'negative '; }
     | '-' { $return = 'minus '; }
     | '~' { $return = "the one's complement of "; }
-    | '!' { $return = 'the logical negation of '; }
-
+    | '!' '!' { $return = 'the normalized boolean value of '; }
+    | '!' 
+          { 
+            if($arg{context} =~ /conditional/) {
+              $return = ['', ' is false'];
+            } else {
+              $return = 'the logical negation of ';
+            }
+          }
 
 rel_add_mul_shift_expression:
-      cast_expression[context => $arg{context}] ...';'
+      cast_expression ...';'
           { $return = $item{cast_expression}; }
-    | <leftop:
-        cast_expression[context => $arg{context}]
-        rel_mul_add_ex_op
-        cast_expression[context => 'add_mul_shift_expression'] >
-          {
-            my @ands = @{$item[1]}; 
-            $return = join ('' , @ands);
-          } 
+    | <leftop: cast_expression rel_mul_add_ex_op cast_expression>
+          { $return = join ('' , @{$item[1]}); } 
 
 closure: 
       ',' | ';' | ')' 
@@ -803,7 +828,7 @@ unary_expression:
             if ($arg{context} eq 'statement' ) {
               $return = "pre-increment $item{unary_expression}"; 
             } else { 
-              $return = "the pre-incremented $item{unary_expression}";
+              $return = "pre-incremented $item{unary_expression}";
             }
           }
     | '--' unary_expression  
@@ -811,15 +836,23 @@ unary_expression:
             if ($arg{context} eq 'statement' ) {
               $return = "Pre-decrement $item{unary_expression}"; 
             } else { 
-              $return = "the pre-decremented $item{unary_expression}";
+              $return = "pre-decremented $item{unary_expression}";
             }
           }
     | unary_operator cast_expression[context => $arg{context}]
-          { $return = $item{unary_operator} . $item{cast_expression}; }
-    |'sizeof' unary_expression 
-          { $return = "the size of $item{unary_expression}"; }
-    |'sizeof' '(' type_name ')' 
+          { 
+            if(ref $item{unary_operator} eq 'ARRAY') {
+              $return = $item{unary_operator}->[0] . $item{cast_expression} . $item{unary_operator}->[1];
+            } else {
+              $return = $item{unary_operator} . $item{cast_expression};
+            }
+          }
+    | 'sizeof' '(' type_name[context => 'sizeof'] ')' 
           { $return = "the size of the type $item{type_name}"; }
+    | 'sizeof' '(' assignment_expression[context => 'sizeof'] ')' 
+          { $return = "the size of the type of the expression ($item{assignment_expression})"; }
+    | 'sizeof' unary_expression[context => 'sizeof'] 
+          { $return = "the size of $item{unary_expression}"; }
 
 postfix_productions:
       '(' argument_expression_list(?) ')' postfix_productions[context => 'function call'](?)
@@ -928,11 +961,9 @@ postfix_productions:
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
-              if ($arg{context} eq 'statement') { 
-                $return = "increment $arg{primary_expression} by one";
-              } elsif($arg{context} eq 'struct access') {
+              if($arg{context} eq 'struct access') {
                 $return = ['increment', 'by one'];
-              } else { 
+              } else {
                 $return = "post-incremented $arg{primary_expression}";
               }
             }
@@ -941,13 +972,11 @@ postfix_productions:
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
-              if ($arg{context} eq 'statement') { 
-                $return = "decrement $arg{primary_expression} by one";
-              } elsif($arg{context} eq 'struct access') {
+              if($arg{context} eq 'struct access') {
                 $return = ['decrement', 'by one'];
-              } else { 
+              } else {
                $return = "post-decremented $arg{primary_expression}";
-              }
+             }
             }
           }
     # having done the simplest cases, we go to the catch all for left recursions.
@@ -1008,13 +1037,17 @@ primary_expression:
             my $expression = $item{expression} ; 
             my $repeats = 1; 
 
-            if ($expression =~ /^the expression (\(+)/) { 
+            if ($expression =~ /^The expression (\(+)/) { 
               $repeats = (length $1) + 1; 
-              $expression =~ s/^the expression \(+//;
+              $expression =~ s/^The expression \(+//;
             }
 
             $expression .= ')';
-            $return = "the expression ";
+            if($arg{context} eq 'statement') {
+              $return = "Evaluate the expression ";
+            } else {
+              $return = "The expression ";
+            }
             $return .= '(' x $repeats;
             $return .= $expression;
           }
@@ -1176,6 +1209,7 @@ direct_abstract_declarator:
     | DAD '[' ']'
     | DAD '[' constant_expression ']'
     | '(' ')'
+          { $return = 'function taking unspecified parameters and returning'; }
     | '(' parameter_type_list ')'
           { $return = "function taking $item{parameter_type_list} and returning"; }
     | DAD '(' ')'
@@ -1199,7 +1233,8 @@ pointer:
           }
     | '*' pointer(?) 
           { 
-            $return = join('', @{$item{'pointer(?)'}});
+            my $pointers = join('', @{$item{'pointer(?)'}});
+            $return .= "$pointers " if $pointers;
             $return .= 'pointer to'; 
           } 
  
@@ -1214,8 +1249,15 @@ declaration_specifiers:
     | comment(?) storage_class_specifier declaration_specifiers(?) 
           {
             my $decl_spec =  join(' ', @{$item{'declaration_specifiers(?)'}});
-            $return = join('',@{$item{'comment(?)'}}) . $item{storage_class_specifier} ;
-            if ($decl_spec) { $return .=  ' ' . $decl_spec; } 
+            $return = join('',@{$item{'comment(?)'}});
+
+            if($item{storage_class_specifier} =~ m/^with/) {
+              if ($decl_spec) { $return .=  "$decl_spec "; } 
+              $return .= $item{storage_class_specifier};
+            } else {
+              $return .= $item{storage_class_specifier};
+              if ($decl_spec) { $return .=  " $decl_spec"; }
+            }
           }
     | comment(?) type_specifier declaration_specifiers(?) 
           {
@@ -1233,13 +1275,25 @@ declaration_specifiers:
 
 storage_class_specifier:
       'auto'
-          { $return = "(auto)"; }
+          { $return = "with automatic storage-duration"; }
     | 'extern'
-          { $return = "(declared elsewhere)"; }
+          {
+            if($arg{context} eq 'function definition') {
+              $return = "with external linkage";
+            } else {
+              $return = "with external linkage, possibly defined elsewhere";
+            }
+          }
     | 'static' 
-          { $return = "(this declaration is not to be shared)"; }
+          { 
+            if($arg{context} eq 'function definition') {
+              $return = "with internal linkage";
+            } else {
+              $return = "with internal linkage and life-time duration";
+            }
+          }
     | 'register'
-          { $return = "(suggestion to be as fast as possible)"; }
+          { $return = "with a suggestion to be as fast as possible"; }
     | 'typedef'
           { $return = 'type definition of'; }
 
@@ -1311,8 +1365,12 @@ struct_declaration:
           { $return = join('', @{$item[1]}) . $item{declaration} . join('', @{$item[-1]}); }
 
 type_name:
-      specifier_qualifier_list abstract_declarator(?)
-          { $return = $item{specifier_qualifier_list}. join('',@{$item{'abstract_declarator(?)'}}); }
+        specifier_qualifier_list abstract_declarator(?)
+          { 
+            my $abstract_declarator = join('',@{$item{'abstract_declarator(?)'}});
+            $return = "$abstract_declarator " if $abstract_declarator;
+            $return .= $item{specifier_qualifier_list};
+          }
 
 specifier_qualifier_list:
       type_specifier specifier_qualifier_list(?) 
@@ -1369,7 +1427,7 @@ enumerator:
           {
             $return = $item[1]; 
              if (@{$item[-1]}) { 
-               $return .= 'marking ' . join('', @{$item[-1]}); 
+               $return .= ' marking ' . join('', @{$item[-1]}); 
              }
            }
 
