@@ -1,10 +1,5 @@
 # C-to-English Grammar
-#
-# Warning: work-in-progress. Some things are incomplete or non-functional.
-#
-# todo: 
-# 1. pointers to functions. (getting there)
-# 2. preprocessor directives. (getting there)
+# Pragmatic Software
 
 {
   my @defined_types = ('`FILE`'); 
@@ -24,7 +19,7 @@ startrule:
     
 translation_unit:
       comment
-    | external_declaration[context => 'external declaration'] 
+    | external_declaration
     | function_definition
     | preproc[matchrule => 'translation_unit']
 
@@ -141,7 +136,7 @@ token:
           { $return = $item[-1]; }
 
 external_declaration:
-      declaration 
+      declaration[context => 'external declaration'] 
 
 function_definition:
       declaration_specifiers[context => 'function definition'](?) declarator[context => 'function definition'] compound_statement[context => 'function definition statement'](?)
