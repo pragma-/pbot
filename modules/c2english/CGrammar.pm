@@ -24,7 +24,7 @@ startrule:
     
 translation_unit:
       comment
-    | external_declaration 
+    | external_declaration[context => 'external declaration'] 
     | function_definition
     | preproc[matchrule => 'translation_unit']
 
@@ -144,7 +144,7 @@ external_declaration:
       declaration 
 
 function_definition:
-      declaration_specifiers[context => 'function definition'](?) declarator[context => 'function definition'] compound_statement[context => 'function definition'](?)
+      declaration_specifiers[context => 'function definition'](?) declarator[context => 'function definition'] compound_statement[context => 'function definition statement'](?)
           {
             my $declaration_specifiers = join('', @{$item{'declaration_specifiers(?)'}}); 
             my $name = $item{declarator}->[0];
@@ -169,7 +169,7 @@ function_definition:
           } 
 
 compound_statement:
-      '{' declaration_list[context => 'compound statement'](?) statement_list[context => 'compound statement'](?) '}' 
+      '{' declaration_list(?) statement_list(?) '}' 
           { 
             my $declaration_list = join('',@{$item{'declaration_list(?)'}}); 
             my $statement_list = join('',@{$item{'statement_list(?)'}}); 
@@ -191,6 +191,7 @@ compound_statement:
             if ($arg{context} 
                 and $arg{context} ne 'do loop'
                 and $arg{context} ne 'case'
+                and $arg{context} ne 'function definition statement' 
                 and $arg{context} ne 'function definition') { 
               $return .= "End $arg{context}.\n";
             } 
@@ -1288,6 +1289,8 @@ storage_class_specifier:
           { 
             if($arg{context} eq 'function definition') {
               $return = "with internal linkage";
+            } elsif($arg{context} eq 'function definition statement') {
+              $return = "with life-time duration";
             } else {
               $return = "with internal linkage and life-time duration";
             }
