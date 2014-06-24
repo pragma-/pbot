@@ -551,19 +551,19 @@ rel_mul_add_ex_op:
     | '<'  { $return = ' is less than ^L'; }
 
 unary_operator: 
-      '&' { $return = 'the address of '; }
-    | '*' { $return = 'the dereference of '; }
+      '&' { $return = 'the address of ^L'; }
+    | '*' { $return = 'the dereference of ^L'; }
     | '+' { $return = ''; }
-    | '-' ...identifier { $return  = 'negative '; }
-    | '-' { $return = 'minus '; }
-    | '~' { $return = "the one's complement of "; }
-    | '!' '!' { $return = 'the normalized boolean value of '; }
+    | '-' ...identifier { $return  = 'negative ^L'; }
+    | '-' { $return = 'minus ^L'; }
+    | '~' { $return = "the one's complement of ^L"; }
+    | '!' '!' { $return = 'the normalized boolean value of ^L'; }
     | '!' 
           { 
             if($arg{context} =~ /conditional/) {
               $return = ['', ' is false'];
             } else {
-              $return = 'the logical negation of ';
+              $return = 'the logical negation of ^L';
             }
           }
 
