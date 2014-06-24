@@ -406,8 +406,8 @@ if(not $output) {
 
 # beautification
 $output =~ s/the value the expression/the value of the expression/g;
+$output =~ s/the value the member/the value of the member/g;
 $output =~ s/the value the/the/g;
-$output =~ s/(is true is)+/is/g;
 
 print "$output\n";
 

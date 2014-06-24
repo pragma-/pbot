@@ -906,16 +906,16 @@ postfix_productions:
                   $expression .= 'th';
                 }
                 if($arg{context} eq 'function call') {
-                  $return = "the $expression element of";
+                  $return = "the $expression element of^L";
                 } else {
-                  $return = "the $expression element of $arg{primary_expression}";
+                  $return = "the $expression element of ^L$arg{primary_expression}^L";
                 }
               } elsif($expression =~ /^-\s*\d+$/) {
                 $expression *= -1;
                 my $plural = $expression == 1 ? '' : 's';
-                $return = "the location $expression element$plural backwards from where $arg{primary_expression} points";
+                $return = "the location $expression element$plural backwards from where ^L$arg{primary_expression} points^L";
               } else {
-                $return = "the element of $arg{primary_expression} at location $expression";
+                $return = "the element of ^L$arg{primary_expression} at location ^L$expression^L";
               }
             }
 
@@ -923,26 +923,31 @@ postfix_productions:
               $return = "$postfix $return";
             }
           }
-    | ('.' identifier)(s) postfix_productions[context => 'struct access'](?)
+    | '.' identifier postfix_productions[context => 'struct access'](?)
           { 
-            my $identifier = join('',@{$item[-2]}); 
+            my $identifier = $item[-2]; 
             my $postfix = $item[-1]->[0];
 
             if ($identifier) {
               if($arg{context} eq 'array_address') {
-                $return = "member $identifier of";
+                $return = "the member $identifier of^L";
               } else {
-                $return = "the member $identifier of $arg{primary_expression}"; 
+                $return = "the member $identifier of^L";
+                $return .= " $arg{primary_expression}" if $arg{primary_expression};
               }
             }
 
             if($postfix) {
-              $return = "$postfix->[0] $return $postfix->[1]";
+              if(ref $postfix eq 'ARRAY') {
+                $return = "$postfix->[0] $return $postfix->[1]";
+              } else {
+                $return = "$postfix $return";
+              }
             }
           } 
-    | ('->' identifier)(s) postfix_productions[context => 'struct access'](?) 
+    | '->' identifier postfix_productions[context => 'struct access'](?) 
           {
-            my $identifier = join('',@{$item[-2]}); 
+            my $identifier = $item[-2]; 
             my $postfix = $item[-1]->[0];
 
             if ($identifier) {
@@ -950,7 +955,11 @@ postfix_productions:
             } 
 
             if($postfix) {
-              $return = "$postfix->[0] $return $postfix->[1]";
+              if(ref $postfix eq 'ARRAY') {
+                $return = "$postfix->[0] $return $postfix->[1]";
+              } else {
+                $return = "$postfix $return";
+              }
             }
           }
     | ('++')(s)
