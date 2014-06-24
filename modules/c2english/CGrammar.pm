@@ -220,16 +220,16 @@ iteration_statement:
         statement[context => 'for loop']
           { 
             my $initialization = join('', @{$item{'for_initialization(?)'}}); 
-            my $item_expression = join('',@{$item{'for_expression(?)'}}); 
+            my $expression = join('',@{$item{'for_expression(?)'}}); 
             my $increment = join('',@{$item{'for_increment(?)'}}); 
 
             if ($initialization) { 
               $return .= "Prepare a loop by ^L$initialization, then ^L"; 
             }
 
-            if ($item_expression) { 
-              my $istrue = $item{expression} =~ /(greater|less|equal|false$)/ ? '' : ' is true';
-              $return .= "For as long as ^L$item_expression$istrue, ^L"; 
+            if ($expression) { 
+              my $expression  = ::istrue $expression;
+              $return .= "For as long as ^L$expression, ^L"; 
             } else {
               $return .= "Repeatedly ^L";
             } 
@@ -250,8 +250,8 @@ iteration_statement:
                 $return = "Repeatedly ^L";
               }
             } else {
-              my $istrue = $item{expression} =~ /(greater|less|equal|false$)/ ? '' : ' is true';
-              $return = "While ^L$item{expression}$istrue, ^L"; 
+              my $expression = ::istrue $item{expression};
+              $return = "While ^L$expression, ^L"; 
             }
 
             if($item{statement}) {
@@ -271,8 +271,8 @@ iteration_statement:
                 $return .= "Do this repeatedly.\n";
               }
             } else {
-              my $istrue = $item{expression} =~ /(greater|less|equal|false$)/ ? '' : ' is true';
-              $return .= "Do this as long as ^L$item{expression}$istrue.\n";
+              my $expression = ::istrue $item{expression};
+              $return .= "Do this as long as ^L$expression.\n";
             }
           }
 
@@ -295,8 +295,8 @@ selection_statement:
                 $return = "Always ";
               }
             } else {
-              my $istrue = $item{expression} =~ /(greater|less|equal|false$)/ ? '' : ' is true';
-              $return = "If ^L$item{expression}$istrue then ";
+              my $expression = ::istrue $item{expression};
+              $return = "If ^L$expression then ";
             }
             $return .= "^L$item{statement}";
           }
@@ -324,10 +324,10 @@ jump_statement:
           { $return = "Return to the top of the current loop.\n"; } 
     | 'return' <commit> expression[context => 'statement'](?) ';' 
           {
-            my $item_expression = join('', @{$item{'expression(?)'}});
+            my $expression = join('', @{$item{'expression(?)'}});
 
-            if (length $item_expression) { 
-              $return = "Return ^L$item_expression.\n";
+            if (length $expression) { 
+              $return = "Return ^L$expression.\n";
             } else {
               $return = "Return no value.\n";
             }
@@ -341,15 +341,15 @@ jump_statement:
 expression_statement:
       expression[context => 'statement'](?) ';'
           { 
-            my $item_expression = join('',@{$item[1]}); 
-            if (!$item_expression) { 
+            my $expression = join('',@{$item[1]}); 
+            if (!$expression) { 
               if($arg{context} eq 'label') {
                 return "";
               } else {
                 $return = "Do nothing.\n"; 
               }
             } else { 
-              $return = $item_expression.".\n" ; 
+              $return = $expression.".\n" ; 
             } 
           }
 
@@ -391,8 +391,8 @@ conditional_expression:
             if($item{conditional_ternary_expression}) {
               my $op1 = $item{conditional_ternary_expression}->[0];
               my $op2 = $item{conditional_ternary_expression}->[1];
-              my $istrue = $item{logical_OR_AND_expression} =~ /(greater|less|equal)/ ? '' : ' is true';
-              $return = "$op1 if $item{logical_OR_AND_expression}$istrue otherwise to $op2";
+              my $expression = ::istrue $item{logical_OR_AND_expression};
+              $return = "$op1 if $expression otherwise to $op2";
             } else {
               $return = $item{logical_OR_AND_expression};
             }
@@ -885,37 +885,37 @@ postfix_productions:
           { $return = $item{expression}; } 
       )(s) postfix_productions[context => 'array_address'](?)
           {
-            my $item_expression = '';
+            my $expression = '';
             if (@{$item[-2]}) { 
-              $item_expression = join(' and ', @{$item[-2]}); 
+              $expression = join(' and ', @{$item[-2]}); 
             }
 
             my $postfix = $item[-1]->[0];
 
-            if (length $item_expression) { 
-              if($item_expression =~ /^\d+$/) {
-                $item_expression++;
-                my ($last_digit) = $item_expression =~ /(\d)$/;
+            if (length $expression) { 
+              if($expression =~ /^\d+$/) {
+                $expression++;
+                my ($last_digit) = $expression =~ /(\d)$/;
                 if($last_digit == 1) {
-                  $item_expression .= 'st'; 
+                  $expression .= 'st'; 
                 } elsif($last_digit == 2) {
-                  $item_expression .= 'nd';
+                  $expression .= 'nd';
                 } elsif($last_digit == 3) {
-                  $item_expression .= 'rd';
+                  $expression .= 'rd';
                 } else {
-                  $item_expression .= 'th';
+                  $expression .= 'th';
                 }
                 if($arg{context} eq 'function call') {
-                  $return = "the $item_expression element of";
+                  $return = "the $expression element of";
                 } else {
-                  $return = "the $item_expression element of $arg{primary_expression}";
+                  $return = "the $expression element of $arg{primary_expression}";
                 }
-              } elsif($item_expression =~ /^-\s*\d+$/) {
-                $item_expression *= -1;
-                my $plural = $item_expression == 1 ? '' : 's';
-                $return = "the location $item_expression element$plural backwards from where $arg{primary_expression} points";
+              } elsif($expression =~ /^-\s*\d+$/) {
+                $expression *= -1;
+                my $plural = $expression == 1 ? '' : 's';
+                $return = "the location $expression element$plural backwards from where $arg{primary_expression} points";
               } else {
-                $return = "the element of $arg{primary_expression} at location $item_expression";
+                $return = "the element of $arg{primary_expression} at location $expression";
               }
             }
 

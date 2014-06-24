@@ -87,3 +87,18 @@ sub precompile_grammar {
 sub flatten {
   map { ref eq 'ARRAY' ? flatten(@$_) : $_ } @_
 }
+
+sub istrue {
+  my @parts = split / and /, $_[0];
+  my ($result, $and) = ('', '');
+  foreach my $part (@parts) {
+    $result .= $and;
+    if($part !~ /(greater|less|equal|false$)/) {
+      $result .= "$part is true";
+    } else {
+      $result .= $part;
+    }
+    $and = ' and ';
+  }
+  return $result;
+}
