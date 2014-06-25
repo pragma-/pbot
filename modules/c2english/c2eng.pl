@@ -93,7 +93,7 @@ sub istrue {
   my ($result, $and) = ('', '');
   foreach my $part (@parts) {
     $result .= $and;
-    if($part !~ /(greater|less|equal|false$)/) {
+    if($part !~ /(discard the result|greater|less|equal|false$)/) {
       $result .= "$part is nonzero";
     } else {
       $result .= $part;

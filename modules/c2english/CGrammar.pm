@@ -2,8 +2,7 @@
 # Pragmatic Software
 
 {
-  my @defined_types = ('`FILE`'); 
-  my ($rule_name, @macros); 
+  my ($rule_name, @macros, @typedefs, @identifiers); 
 }
 
 startrule: 
@@ -322,7 +321,7 @@ jump_statement:
           } 
     | 'continue' ';'
           { $return = "Return to the top of the current loop.\n"; } 
-    | 'return' <commit> expression[context => 'statement'](?) ';' 
+    | 'return' <commit> expression[context => 'return statement'](?) ';' 
           {
             my $expression = join('', @{$item{'expression(?)'}});
 
@@ -364,7 +363,7 @@ labeled_statement:
 expression:
       <leftop: assignment_expression[context => $arg{context}] ',' assignment_expression[context => $arg{context}]>
           {
-            $return = join(", then ^L",@{$item[-1]}); 
+            $return = join(" and then discard the result and evaluate ^L",@{$item[-1]}); 
           }
 
 assignment_expression:
@@ -392,7 +391,7 @@ conditional_expression:
               my $op1 = $item{conditional_ternary_expression}->[0];
               my $op2 = $item{conditional_ternary_expression}->[1];
               my $expression = ::istrue $item{logical_OR_AND_expression};
-              $return = "$op1 if $expression otherwise to $op2";
+              $return = "$op1 if $expression otherwise $op2";
             } else {
               $return = $item{logical_OR_AND_expression};
             }
@@ -603,7 +602,7 @@ declaration:
 
               $return = "Let $init_declaration_list be another name for $item{declaration_specifiers}.\n";
 
-              push @defined_types, @init_list; 
+              push @typedefs, @init_list; 
             } else {
               my $inits = 0;
               while(@init_list) {
@@ -749,7 +748,7 @@ declaration:
                           $comma = ', ';
                           $and = ' and ';
                         } else {
-                          $initializer =~ s/^initialized to //;
+                          $initializer =~ s/^initialized to \^L//;
                           $return .= "$and$identifier to $initializer";
                           if($i < @initializers - 2) {
                             $and = $comma = ', ';
@@ -781,7 +780,7 @@ init_declarator:
             my $init = join('',@{$item[-1]});  
 
             if (length $init) {
-              $return = [$item{declarator}, "initialized to $init"]; 
+              $return = [$item{declarator}, "initialized to ^L$init"]; 
             }
           }
 
@@ -987,7 +986,6 @@ postfix_productions:
     # having done the simplest cases, we go to the catch all for left recursions.
     | primary_expression postfix_suffix(s)
           {
-            # is this ever reached?
             print STDERR "Untested code!\n"; 
             $return = $item{primary_expression} . "'s " . join('',@{$item{'postfix_suffix(s)'}}); 
           }
@@ -1008,11 +1006,11 @@ postfix_expression:
           }
 
 postfix_suffix:
-      ('[' expression ']')(s)
-    | '.' identifier 
-    | '->' identifier 
-    | '++' 
-    | '--' 
+      '[' expression ']'
+    | '.' identifier
+    | '->' identifier
+    | '++'
+    | '--'
 
 argument_expression_list:
       <leftop: assignment_expression[context => 'function argument'] ',' assignment_expression[context => 'function argument']>
@@ -1229,6 +1227,12 @@ DAD: # macro for direct_abstract_declarator
 
 identifier: 
       ...!reserved identifier_word
+          {
+            if(not grep { $_ eq $item{identifier_word} } @identifiers) {
+              push @identifiers, $item{identifier_word};
+            }
+            $return = $item{identifier_word};
+          }
 
 pointer:
       '*' type_qualifier_list(s) pointer(?) 
@@ -1318,6 +1322,25 @@ type_specifier:
     | 'void'
     | 'signed'
     | 'unsigned'
+    | 'FILE' | 'fpos_t'
+    | 'bool' | '_Bool'
+    | '_Complex' | '_Imaginary'
+    | 'int_fast8_t'   | 'int_fast16_t'   | 'int_fast24_t'   | 'int_fast32_t'   | 'int_fast64_t'   | 'int_fast128_t'
+    | 'uint_fast8_t'  | 'uint_fast16_t'  | 'uint_fast24_t'  | 'uint_fast32_t'  | 'uint_fast64_t'  | 'uint_fast128_t'
+    | 'int_least8_t'  | 'int_least16_t'  | 'int_least24_t'  | 'int_least32_t'  | 'int_least64_t'  | 'int_least128_t'
+    | 'uint_least8_t' | 'uint_least16_t' | 'uint_least24_t' | 'uint_least32_t' | 'uint_least64_t' | 'uint_least128_t'
+    | 'int8_t'   | 'int16_t'  | 'int24_t'  | 'int32_t'  | 'int64_t'  | 'int128_t'
+    | 'uint8_t'  | 'uint16_t' | 'uint24_t' | 'uint32_t' | 'uint64_t' | 'uint128_t'
+    | 'intmax_t' | 'uintmax_t'
+    | 'intptr_t' | 'uintptr_t' | 'ptrdiff_t'
+    | 'sig_atomic_t'
+    | 'wint_t' | 'wchar_t'
+    | 'size_t' | 'rsize_t' | 'max_align_t'
+    | 'mbstate_t' | 'char16_t' | 'char32_t'
+    | 'fenv_t' | 'fexcept_t'
+    | 'div_t' | 'ldiv_t' | 'lldiv_t' | 'imaxdiv_t'
+    | 'cnd_t' | 'thrd_t' | 'tss_t' | 'mtx_t' | 'tss_dtor_t' | 'thrd_start_t' | 'once_flag'
+    | 'clock_t' | 'time_t'
     | struct_or_union_specifier
     | enum_specifier
     | typedef_name 
@@ -1326,7 +1349,7 @@ typedef_name:
       identifier
           {
             my $answer = 0; 
-            foreach (@defined_types) { 
+            foreach (@typedefs) { 
               if ($item{identifier} eq $_) {
                 $answer = 1;      
                 $return = ($item{identifier} =~ m/^`[aeiouy]/ ? 'an ' : 'a ') . $item{identifier};
