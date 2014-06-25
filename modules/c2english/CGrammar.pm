@@ -589,180 +589,171 @@ declaration:
       declaration_specifiers init_declarator_list(?) ';'
           {
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
-            my $init_declaration_list;
+            my $typedef = $item{declaration_specifiers} =~ s/^type definition of //;
 
-            if ($item{declaration_specifiers} =~ s/type definition of //) {
-              if(@init_list > 1) {
-                my $last = pop @init_list;
-                $init_declaration_list = join(', ', @init_list) . ' and ' . $last;
-                push @init_list, $last;
-              } else {
-                $init_declaration_list = $init_list[0];
+            my $inits = 0;
+            while(@init_list) {
+              $inits++;
+              $return .= "Let " unless $arg{context} eq 'struct member';
+
+              my @args = ::flatten shift @init_list;
+
+              my ($first_qualifier, $first_initializer);
+              my $first_identifier = shift @args;
+
+              if(not length $first_identifier) {
+                $first_identifier = 'there';
               }
 
-              $return = "Let $init_declaration_list be another name for $item{declaration_specifiers}.\n";
+              my @identifiers = ($first_identifier);
 
-              push @typedefs, @init_list; 
-            } else {
-              my $inits = 0;
-              while(@init_list) {
-                $inits++;
-                $return .= "Let " unless $arg{context} eq 'struct member';
+              my $next_arg = shift @args;
+              if($next_arg =~ m/initialized/) {
+                $first_initializer = $next_arg;
+                $first_qualifier = shift @args // '';
+              } else {
+                $first_qualifier = $next_arg;
+                $first_initializer = shift @args // '';
+              }
 
-                my @args = ::flatten shift @init_list;
+              if($first_initializer !~ /^initialized/) {
+                $first_qualifier .= " $first_initializer" if $first_initializer;
+                $first_initializer = '';
+              }
 
-                my ($first_qualifier, $first_initializer);
-                my $first_identifier = shift @args;
+              my $remaining_args = join(' ', @args);
 
-                if(not length $first_identifier) {
-                  $first_identifier = 'there';
-                }
+              my @initializers;
+              if($first_initializer) {
+                push @initializers, [ $first_identifier, $first_initializer ];
+              }
 
-                my @identifiers = ($first_identifier);
+              for(my $i = 0; $i < @init_list; $i++) {
+                @args = ::flatten $init_list[$i];
 
-                my $next_arg = shift @args;
+                my ($qualifier, $initializer);
+                my $identifier = shift @args;
+
+                $next_arg = shift @args;
                 if($next_arg =~ m/initialized/) {
-                  $first_initializer = $next_arg;
-                  $first_qualifier = shift @args // '';
+                  $initializer = $next_arg;
+                  $qualifier = shift @args // '';
                 } else {
-                  $first_qualifier = $next_arg;
-                  $first_initializer = shift @args // '';
+                  $qualifier = $next_arg;
+                  $initializer = shift @args // '';
                 }
 
-                if($first_initializer !~ /^initialized/) {
-                  $first_qualifier .= " $first_initializer" if $first_initializer;
-                  $first_initializer = '';
+                next unless $qualifier eq $first_qualifier;
+
+                push @identifiers, $identifier;
+                if($initializer) {
+                  push @initializers, [ $identifier, $initializer ];
                 }
 
-                my $remaining_args = join(' ', @args);
+                splice @init_list, $i--, 1;
+              }
 
-                my @initializers;
-                if($first_initializer) {
-                  push @initializers, [ $first_identifier, $first_initializer ];
-                }
-                
-                for(my $i = 0; $i < @init_list; $i++) {
-                  @args = ::flatten $init_list[$i];
-
-                  my ($qualifier, $initializer);
-                  my $identifier = shift @args;
-
-                  $next_arg = shift @args;
-                  if($next_arg =~ m/initialized/) {
-                    $initializer = $next_arg;
-                    $qualifier = shift @args // '';
-                  } else {
-                    $qualifier = $next_arg;
-                    $initializer = shift @args // '';
-                  }
-
-                  next unless $qualifier eq $first_qualifier;
-
-                  push @identifiers, $identifier;
-                  if($initializer) {
-                    push @initializers, [ $identifier, $initializer ];
-                  }
-
-                  splice @init_list, $i--, 1;
+              if($arg{context} eq 'struct member') {
+                if($inits > 1 and not @init_list) {
+                  $return .= ' and ';
+                } elsif($inits > 1) {
+                  $return .= ', ';
                 }
 
-                if($arg{context} eq 'struct member') {
-                  if($inits > 1 and not @init_list) {
-                    $return .= ' and ';
-                  } elsif($inits > 1) {
-                    $return .= ', ';
+                if($first_qualifier) {
+                  if($first_qualifier =~ /bit\-field/) {
+                    $first_qualifier = "$item{declaration_specifiers} $first_qualifier";
+                    $item{declaration_specifiers} = '';
                   }
 
-                  if($first_qualifier) {
-                    if($first_qualifier =~ /bit\-field/) {
-                      $first_qualifier = "$item{declaration_specifiers} $first_qualifier";
-                      $item{declaration_specifiers} = '';
-                    }
-
-                    if(@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
-                      $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
-                    } elsif(@identifiers > 1) {
-                      $first_qualifier =~ s/pointer/pointers/;
-                    }
-                    $return .= "$first_qualifier $item{declaration_specifiers} ";
-                  } else {
-                    if(@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
-                      $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
-                    }
-                    $return .= "$item{declaration_specifiers} ";
+                  if(@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
+                    $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
+                  } elsif(@identifiers > 1) {
+                    $first_qualifier =~ s/pointer/pointers/;
                   }
-
-                  my $and = @identifiers > 1 ? ' and ' : '';
-                  my $comma = '';
-                  for(my $i = 0; $i < @identifiers; $i++) {
-                    if($i == @identifiers - 1) {
-                      $return .= "$and$identifiers[$i]";
-                    } else {
-                      $return .= "$comma$identifiers[$i]";
-                      $comma = ', ';
-                    }
-                  }
+                  $return .= "$first_qualifier $item{declaration_specifiers} ";
                 } else {
-                  my $and = @identifiers > 1 ? ' and ' : '';
-                  my $comma = '';
-                  for(my $i = 0; $i < @identifiers; $i++) {
-                    if($i == @identifiers - 1) {
-                      $return .= "$and$identifiers[$i]";
-                    } else {
-                      $return .= "$comma$identifiers[$i]";
-                      $comma = ', ';
-                    }
+                  if(@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
+                    $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
                   }
+                  $return .= "$item{declaration_specifiers} ";
+                }
 
-                  $return .= ' be ';
-
-                  if($first_qualifier) {
-                    if(@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
-                      $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
-                    } elsif(@identifiers > 1) {
-                      $first_qualifier =~ s/pointer/pointers/;
-                    }
-                    $return .= "$first_qualifier ";
-                    $return .= "$remaining_args " if $remaining_args;
-                    $return .= $item{declaration_specifiers};
+                my $and = @identifiers > 1 ? ' and ' : '';
+                my $comma = '';
+                for(my $i = 0; $i < @identifiers; $i++) {
+                  if($i == @identifiers - 1) {
+                    $return .= "$and$identifiers[$i]";
                   } else {
-                    if(@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
-                      $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
-                    }
-                    $return .= "$remaining_args " if $remaining_args;
-                    $return .= $item{declaration_specifiers};
+                    $return .= "$comma$identifiers[$i]";
+                    $comma = ', ';
                   }
+                }
+              } else {
+                my $and = @identifiers > 1 ? ' and ' : '';
+                my $comma = '';
+                for(my $i = 0; $i < @identifiers; $i++) {
+                  if($i == @identifiers - 1) {
+                    $return .= "$and$identifiers[$i]";
+                  } else {
+                    $return .= "$comma$identifiers[$i]";
+                    $comma = ', ';
+                  }
+                }
 
-                  if(@initializers) {
-                    if(@identifiers > 1) {
-                      $return .= ".\nInitialize ";
+                $return .= ' be ';
 
-                      @initializers = sort { $a->[1] cmp $b->[1] } @initializers;
-                      my ($and, $comma);
+                if($typedef) {
+                  $return .= 'another name for ';
+                  push @typedefs, @identifiers;
+                }
 
-                      for(my $i = 0; $i < @initializers; $i++) {
-                        my ($identifier, $initializer) = @{$initializers[$i]};
+                if($first_qualifier) {
+                  if(@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
+                    $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
+                  } elsif(@identifiers > 1) {
+                    $first_qualifier =~ s/pointer/pointers/;
+                  }
+                  $return .= "$first_qualifier ";
+                  $return .= "$remaining_args " if $remaining_args;
+                  $return .= $item{declaration_specifiers};
+                } else {
+                  if(@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
+                    $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
+                  }
+                  $return .= "$remaining_args " if $remaining_args;
+                  $return .= $item{declaration_specifiers};
+                }
 
-                        if($i < @initializers - 1 and $initializer eq $initializers[$i + 1]->[1]) {
-                          $return .= "$comma$identifier";
-                          $comma = ', ';
-                          $and = ' and ';
+                if(@initializers) {
+                  if(@identifiers > 1) {
+                    $return .= ".\nInitialize ";
+
+                    @initializers = sort { $a->[1] cmp $b->[1] } @initializers;
+                    my ($and, $comma);
+
+                    for(my $i = 0; $i < @initializers; $i++) {
+                      my ($identifier, $initializer) = @{$initializers[$i]};
+
+                      if($i < @initializers - 1 and $initializer eq $initializers[$i + 1]->[1]) {
+                        $return .= "$comma$identifier";
+                        $comma = ', ';
+                        $and = ' and ';
+                      } else {
+                        $initializer =~ s/^initialized to \^L//;
+                        $return .= "$and$identifier to $initializer";
+                        if($i < @initializers - 2) {
+                          $and = $comma = ', ';
                         } else {
-                          $initializer =~ s/^initialized to \^L//;
-                          $return .= "$and$identifier to $initializer";
-                          if($i < @initializers - 2) {
-                            $and = $comma = ', ';
-                          } else {
-                            $and = ' and ';
-                          }
+                          $and = ' and ';
                         }
                       }
-                    } else {
-                      $return .= " $initializers[0]->[1]";
                     }
+                  } else {
+                    $return .= " $initializers[0]->[1]";
                   }
-                  $return .= ".\n";
                 }
+                $return .= ".\n";
               }
             }
           }
