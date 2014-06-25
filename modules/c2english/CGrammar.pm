@@ -668,8 +668,9 @@ declaration:
 
                   if(@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
                     $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
-                  } elsif(@identifiers > 1) {
+                  } elsif(@identifiers > 1 and not $typedef) {
                     $first_qualifier =~ s/pointer/pointers/;
+                    $first_qualifier =~ s/an array/arrays/;
                   }
                   $return .= "$first_qualifier $item{declaration_specifiers} ";
                 } else {
@@ -701,18 +702,20 @@ declaration:
                   }
                 }
 
-                $return .= ' be ';
-
                 if($typedef) {
-                  $return .= 'another name for ';
+                  $return .= ' each' if @identifiers > 1;
+                  $return .= ' be another name for ';
                   push @typedefs, @identifiers;
+                } else {
+                  $return .= ' be ';
                 }
 
                 if($first_qualifier) {
                   if(@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
                     $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
-                  } elsif(@identifiers > 1) {
+                  } elsif(@identifiers > 1 and not $typedef) {
                     $first_qualifier =~ s/pointer/pointers/;
+                    $first_qualifier =~ s/an array/arrays/;
                   }
                   $return .= "$first_qualifier ";
                   $return .= "$remaining_args " if $remaining_args;
