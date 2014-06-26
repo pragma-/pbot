@@ -282,7 +282,7 @@ for_expression:
       expression[context => 'for conditional']
 
 for_increment:
-      expression[context => 'statement'] 
+      expression[context => 'for increment statement'] 
 
 selection_statement:
       'if' <commit> '(' expression[context => 'if conditional'] ')' statement[context => 'if statement'] 
@@ -361,15 +361,21 @@ labeled_statement:
           { $return = "In the default case, ^L$item{statement}"; } 
 
 expression:
-      <leftop: assignment_expression[context => $arg{context}] ',' assignment_expression[context => $arg{context}]>
+      <leftop: assignment_expression ',' assignment_expression>
           {
-            $return = join(" and then discard the result and evaluate ^L",@{$item[-1]}); 
+            if($arg{context} eq 'for increment statement') {
+              $return = join(', then ', @{$item[-1]});
+            } else {
+              my $that = $arg{context} =~ /conditional/ ? ' that' : '';
+              $return .= "Evaluate$that " if @{$item[-1]} > 1;
+              $return .= join(" and then discard the result and then evaluate$that ^L", @{$item[-1]}); 
+            }
           }
 
 assignment_expression:
       unary_expression[context => 'assignment expression'] 
-        assignment_operator[context => $arg{context}] 
-        assignment_expression[context =>  'assignment expression'] 
+        assignment_operator
+        assignment_expression[context => 'assignment expression'] 
           {
             my $assignment_expression = $item{assignment_expression}; 
             my $assignment_operator = $item{assignment_operator};
@@ -382,10 +388,10 @@ assignment_expression:
               $return = "$item{unary_expression} $assignment_operator $assignment_expression"; 
             } 
           } 
-    | conditional_expression[context => $arg{context}]
+    | conditional_expression
 
 conditional_expression:
-      logical_OR_AND_expression[context => $arg{context}] conditional_ternary_expression
+      logical_OR_AND_expression conditional_ternary_expression
           {
             if($item{conditional_ternary_expression}) {
               my $op1 = $item{conditional_ternary_expression}->[0];
@@ -519,7 +525,7 @@ constant_expression:
 
 logical_OR_AND_expression:
       <leftop:
-        rel_add_mul_shift_expression[context => $arg{context}]
+        rel_add_mul_shift_expression
         log_OR_AND_bit_or_and_eq
         rel_add_mul_shift_expression[context => 'logical_OR_AND_expression']>
           {
@@ -578,7 +584,7 @@ closure:
 cast_expression:
       '(' type_name ')' cast_expression[context => 'recast']
           { $return = "$item{cast_expression} type-casted as $item{type_name}"; }
-    | unary_expression[context => $arg{context}] 
+    | unary_expression 
           { $return = $item{unary_expression}; } 
 
 declaration_list: 
@@ -792,7 +798,7 @@ initializer:
             }
           } 
     | '{' comment(?) initializer_list (',' )(?) '}'
-          { $return = 'the set ' . $item{'initializer_list'}; }
+          { $return = 'the set { ' . $item{'initializer_list'} . ' }'; }
 
 initializer_list:
       <leftop: initializer ',' initializer > 
@@ -810,7 +816,7 @@ initializer_list:
           }
 
 unary_expression:
-      postfix_expression[context => $arg{context}] 
+      postfix_expression
           { $return = $item{postfix_expression}; }
     | '++' unary_expression
           {
@@ -828,7 +834,7 @@ unary_expression:
               $return = "pre-decremented $item{unary_expression}";
             }
           }
-    | unary_operator cast_expression[context => $arg{context}]
+    | unary_operator cast_expression
           { 
             if(ref $item{unary_operator} eq 'ARRAY') {
               $return = $item{unary_operator}->[0] . $item{cast_expression} . $item{unary_operator}->[1];
@@ -959,7 +965,7 @@ postfix_productions:
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
-              if($arg{context} eq 'struct access') {
+              if($arg{context} eq 'struct access' or $arg{context} eq 'for increment statement') {
                 $return = ['increment', 'by one'];
               } else {
                 $return = "post-incremented $arg{primary_expression}";
@@ -970,7 +976,7 @@ postfix_productions:
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
-              if($arg{context} eq 'struct access') {
+              if($arg{context} eq 'struct access' or $arg{context} eq 'for increment statement') {
                 $return = ['decrement', 'by one'];
               } else {
                $return = "post-decremented $arg{primary_expression}";
@@ -986,11 +992,13 @@ postfix_productions:
     | {""}
 
 postfix_expression:
-      primary_expression[context => $arg{context}] postfix_productions[primary_expression => $item[1], context => $arg{context}]
+      primary_expression postfix_productions[primary_expression => $item[1], context => $arg{context}]
           {
             my $postfix_productions = $item{'postfix_productions'};
 
-            if(length $postfix_productions) {
+            if(ref $postfix_productions eq 'ARRAY') {
+              $return = "$postfix_productions->[0] $item{primary_expression} $postfix_productions->[1]";
+            } elsif(length $postfix_productions) {
               $return = $postfix_productions;
             } elsif(length $item{primary_expression}) {
               $return = $item{primary_expression}; 
@@ -1043,10 +1051,10 @@ primary_expression:
             if($arg{context} eq 'statement') {
               $return = "Evaluate the expression ";
             } else {
-              $return = "The expression ";
+              $return = "The result of the expression ";
             }
             $return .= '(' x $repeats;
-            $return .= $expression;
+            $return .= "^L$expression";
           }
     | constant
     | string 
