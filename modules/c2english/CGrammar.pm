@@ -965,7 +965,7 @@ postfix_productions:
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
-              if($arg{context} eq 'struct access' or $arg{context} eq 'for increment statement') {
+              if($arg{context} eq 'struct access' or $arg{context} =~ /statement/) {
                 $return = ['increment', 'by one'];
               } else {
                 $return = "post-incremented $arg{primary_expression}";
@@ -976,7 +976,7 @@ postfix_productions:
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
-              if($arg{context} eq 'struct access' or $arg{context} eq 'for increment statement') {
+              if($arg{context} eq 'struct access' or $arg{context} =~ /statement/) {
                 $return = ['decrement', 'by one'];
               } else {
                $return = "post-decremented $arg{primary_expression}";
