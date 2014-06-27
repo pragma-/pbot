@@ -1270,12 +1270,12 @@ declaration_specifiers:
               if ($decl_spec) { $return .=  " $decl_spec"; }
             }
           }
-    | comment(?) type_specifier declaration_specifiers(?) 
+    | comment(?) type_specifier(s) declaration_specifiers(?) 
           {
             my $decl_spec = join(' ', @{$item{'declaration_specifiers(?)'}});
             $return = join('',@{$item{'comment(?)'}});
             $return .= "$decl_spec " if $decl_spec;
-            $return .= $item{type_specifier};
+            $return .= join(' ', @{$item{'type_specifier(s)'}});
           }
     | comment(?) type_qualifier declaration_specifiers(?) 
           {
