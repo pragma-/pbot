@@ -81,7 +81,8 @@ foreach my $arg (@ARGV) {
     $output =~ s/of evaluate/of/g;
  
     foreach my $quote (@quotes) {
-      $output =~ s/"-*"/"$quote"/;
+      next unless $quote;
+      $output =~ s/"-+"/"$quote"/;
     }
 
     print $output;
