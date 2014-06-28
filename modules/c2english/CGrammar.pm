@@ -365,10 +365,11 @@ expression:
           {
             if($arg{context} eq 'for increment statement') {
               $return = join(', then ', @{$item[-1]});
+            } elsif( $arg{context} =~ /conditional/) {
+              $return = join(' and the result discarded and ', @{$item[-1]});
             } else {
-              my $that = $arg{context} =~ /conditional/ ? ' that' : '';
-              $return .= "Evaluate$that " if @{$item[-1]} > 1;
-              $return .= join(" and then discard the result and then evaluate$that ^L", @{$item[-1]}); 
+              $return .= "Evaluate " if @{$item[-1]} > 1;
+              $return .= join(" and discard the result and then evaluate ^L", @{$item[-1]}); 
             }
           }
 
@@ -530,7 +531,7 @@ logical_OR_AND_expression:
         rel_add_mul_shift_expression[context => 'logical_OR_AND_expression']>
           {
             if (defined $arg{context} and $arg{context} eq 'for conditional') { print STDERR "hmm2\n"; }
-            $return = join ('' , @{$item[1]});
+            $return = join ('', @{$item[1]});
           } 
 
 log_OR_AND_bit_or_and_eq: 

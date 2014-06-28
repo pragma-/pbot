@@ -93,12 +93,14 @@ sub istrue {
   my ($result, $and) = ('', '');
   foreach my $part (@parts) {
     $result .= $and;
-    if($part !~ /(discard the result|greater|less|equal|false$)/) {
+    if($part !~ /(discard the result|result discarded|greater|less|equal|false$)/) {
       $result .= "$part is nonzero";
     } else {
       $result .= $part;
     }
     $and = ' and ';
   }
+  $result =~ s/is nonzero and the result discarded/is evaluated and the result discarded/g;
+  $result =~ s/is ((?:(?!evaluated).)+) and the result discarded/is evaluated to be $1 and the result discarded/g;
   return $result;
 }
