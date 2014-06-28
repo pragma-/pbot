@@ -69,7 +69,22 @@ foreach my $arg (@ARGV) {
   if(length $text) {
     print "Bad parse at: $text";
   } else {
-    print join('', flatten($result));
+    my $output = join('', flatten($result));
+
+    # beautification
+    my @quotes;
+    $output =~ s/(?:\"((?:\\\"|(?!\").)*)\")/push @quotes, $1; '"' . ('-' x length $1) . '"'/ge;
+
+    $output =~ s/the value the expression/the value of the expression/g;
+    $output =~ s/the value the member/the value of the member/g;
+    $output =~ s/the value the/the/g;
+    $output =~ s/of evaluate/of/g;
+ 
+    foreach my $quote (@quotes) {
+      $output =~ s/"-*"/"$quote"/;
+    }
+
+    print $output;
   }
 }
 

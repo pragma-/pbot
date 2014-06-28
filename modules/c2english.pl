@@ -404,11 +404,6 @@ if(not $output) {
   $output = "Does not compute; I only understand valid C89 code.\n";
 }
 
-# beautification
-$output =~ s/the value the expression/the value of the expression/g;
-$output =~ s/the value the member/the value of the member/g;
-$output =~ s/the value the/the/g;
-
 print "$output\n";
 
 sub execute {
