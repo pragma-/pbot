@@ -215,7 +215,7 @@ statement:
     | expression_statement
 
 iteration_statement:
-      'for' '(' <commit> for_initialization(?) ';' for_expression(?) ';' for_increment(?) ')'    
+      'for' '(' <commit> for_initialization(?) for_expression(?) for_increment(?) ')'    
         statement[context => 'for loop']
           { 
             my $initialization = join('', @{$item{'for_initialization(?)'}}); 
@@ -276,10 +276,11 @@ iteration_statement:
           }
 
 for_initialization:
-      expression[context => 'for loop']
+      declaration[context => 'for init']
+    | expression_statement[context => 'for init']
 
 for_expression:
-      expression[context => 'for conditional']
+      expression_statement[context => 'for conditional']
 
 for_increment:
       expression[context => 'for increment statement'] 
@@ -338,17 +339,20 @@ jump_statement:
           }
 
 expression_statement:
-      expression[context => 'statement'](?) ';'
+      expression(?) ';'
           { 
             my $expression = join('',@{$item[1]}); 
             if (!$expression) { 
-              if($arg{context} eq 'label') {
-                return "";
+              if($arg{context} eq 'label'
+                  or $arg{context} eq 'for init'
+                  or $arg{context} eq 'for conditional') {
+                $return = "";
               } else {
                 $return = "Do nothing.\n"; 
               }
             } else { 
-              $return = $expression.".\n" ; 
+              $return = $expression;
+              $return .= ".\n" unless $arg{context} =~ /^for /;
             } 
           }
 
@@ -363,7 +367,8 @@ labeled_statement:
 expression:
       <leftop: assignment_expression ',' assignment_expression>
           {
-            if($arg{context} eq 'for increment statement') {
+            if($arg{context} eq 'for increment statement'
+                or $arg{context} eq 'for init') {
               $return = join(', then ', @{$item[-1]});
             } elsif( $arg{context} =~ /conditional/) {
               $return = join(' and the result discarded and ', @{$item[-1]});
@@ -381,7 +386,7 @@ assignment_expression:
             my $assignment_expression = $item{assignment_expression}; 
             my $assignment_operator = $item{assignment_operator};
 
-            if ($arg{context} eq 'statement' or $arg{context} eq 'for loop') {
+            if ($arg{context} eq 'statement' or $arg{context} eq 'for init') {
               $return .= "${$item{assignment_operator}}[0] $item{unary_expression} ";
               $return .= "${$item{assignment_operator}}[1] " if $assignment_expression !~ /the result of/;
               $return .= $assignment_expression;
@@ -414,7 +419,7 @@ assignment_operator:
           {
             if ($arg{context} eq 'statement') { 
               $return = ['Assign to^L', 'the value^L' ]; 
-            } elsif ($arg{context} eq 'for loop') {
+            } elsif ($arg{context} eq 'for init') {
               $return = ['assigning to^L', 'the value^L' ];
             } else { 
               $return = 'which is assigned to be^L'; 
@@ -424,7 +429,7 @@ assignment_operator:
           {
             if ($arg{context} eq 'statement') { 
               $return = ['Increment^L','by^L'];
-            } elsif ($arg{context} eq 'for loop') { 
+            } elsif ($arg{context} eq 'for init') { 
               $return = ['incrementing^L','by^L'];
             } else { 
               $return = 'which is incremented by^L'; 
@@ -434,7 +439,7 @@ assignment_operator:
           {
             if ($arg{context} eq 'statement') { 
               $return = ['Decrement^L', 'by^L']; 
-            } elsif ($arg{context} eq 'for loop') { 
+            } elsif ($arg{context} eq 'for init') { 
               $return = ['decrementing^L' , 'by^L']; 
             } else { 
               $return = 'which is decremented by^L'; 
@@ -444,7 +449,7 @@ assignment_operator:
           {
             if ($arg{context} eq 'statement') { 
               $return = ['Multiply^L' , 'by^L'];  
-            } elsif ($arg{context} eq 'for loop') { 
+            } elsif ($arg{context} eq 'for init') { 
               $return = ['multiplying^L' , 'by^L'];
             } else { 
               $return = 'which is multiplied by^L'; 
@@ -454,7 +459,7 @@ assignment_operator:
           { 
             if ($arg{context} eq 'statement') {  
               $return = ['Divide^L' , 'by^L' ]; 
-            } elsif ($arg{context} eq 'for loop') {  
+            } elsif ($arg{context} eq 'for init') {  
               $return = ['dividing^L' , 'by^L' ]; 
             } else { 
               $return = 'which is divided by^L'; 
@@ -464,7 +469,7 @@ assignment_operator:
           { 
             if ($arg{context} eq 'statement') { 
               $return = ['Reduce^L', 'to modulo ^L'] ;  
-            } elsif ($arg{context} eq 'for loop') { 
+            } elsif ($arg{context} eq 'for init') { 
               $return = ['reducing^L', 'to modulo ^L'] ;  
             } else { 
               $return = 'which is reduced to modulo^L'; 
@@ -474,7 +479,7 @@ assignment_operator:
           { 
             if ($arg{context} eq 'statement') { 
               $return = ['Bit-shift^L', 'left by^L'];  
-            } elsif ($arg{context} eq 'for loop') { 
+            } elsif ($arg{context} eq 'for init') { 
               $return = ['bit-shifting^L', 'left by^L'];  
             } else { 
               $return = 'which is bit-shifted left by^L'; 
@@ -484,7 +489,7 @@ assignment_operator:
           { 
             if ($arg{context} eq 'statement') { 
               $return = ['Bit-shift^L', 'right by^L'];  
-            } elsif ($arg{context} eq 'for loop') { 
+            } elsif ($arg{context} eq 'for init') { 
               $return = ['bit-shifting^L', 'right by^L'];  
             } else { 
               $return = 'which is bit-shifted right by^L'; 
@@ -494,7 +499,7 @@ assignment_operator:
           { 
             if ($arg{context} eq 'statement') { 
               $return = ['Bit-wise ANDed^L', 'by^L' ];  
-            } elsif ($arg{context} eq 'for loop') { 
+            } elsif ($arg{context} eq 'for init') { 
               $return = ['bit-wise ANDing^L', 'by^L' ];  
             } else { 
               $return = 'which is bit-wise ANDed by^L'; 
@@ -504,7 +509,7 @@ assignment_operator:
           { 
             if ($arg{context} eq 'statement') { 
               $return = ['Exclusive-OR^L','by^L'];
-            } elsif ($arg{context} eq 'for loop') { 
+            } elsif ($arg{context} eq 'for init') { 
               $return = ['exclusive-ORing^L','by^L'];
             } else { 
               $return = 'which is exclusive-ORed by^L'; 
@@ -514,7 +519,7 @@ assignment_operator:
           { 
             if ($arg{context} eq 'statement') { 
               $return = ['Bit-wise ORed^L', 'by^L'];  
-            } elsif ($arg{context} eq 'for loop') { 
+            } elsif ($arg{context} eq 'for init') { 
               $return = ['bit-wise ORing^L', 'by^L'];  
             } else { 
               $return = 'which is bit-wise ORed by^L'; 
@@ -601,7 +606,13 @@ declaration:
             my $inits = 0;
             while(@init_list) {
               $inits++;
-              $return .= "Let " unless $arg{context} eq 'struct member';
+              if(not $arg{context} eq 'struct memember') {
+                if($arg{context} eq 'for init') {
+                  $return .= "letting ";
+                } else {
+                  $return .= "Let ";
+                }
+              }
 
               my @args = ::flatten shift @init_list;
 
@@ -763,7 +774,7 @@ declaration:
                     $return .= " $initializers[0]->[1]";
                   }
                 }
-                $return .= ".\n";
+                $return .= ".\n" unless $arg{context} eq 'for init';
               }
             }
           }
@@ -854,6 +865,8 @@ postfix_productions:
       '(' argument_expression_list(?) ')' postfix_productions[context => 'function call'](?)
           {
             my $postfix = $item[-1]->[0];
+
+            $arg{primary_expression} =~ s/^Evaluate the expression/resulting from the expression/;
 
             if(not defined $arg{context} or $arg{context} ne 'statement') {
               $return = "the result of the function $arg{primary_expression}";
@@ -1316,15 +1329,8 @@ type_qualifier:
     | 'volatile' 
 
 type_specifier:
-      'double'
-    | 'short'
-    | 'long'
-    | 'char'
-    | 'int' 
-    | 'float'
-    | 'void'
-    | 'signed'
-    | 'unsigned'
+      'void' | 'double' | 'float' | 'char' | 'short' | 'int' | 'long'
+    | 'signed' | 'unsigned'
     | 'FILE' | 'fpos_t'
     | 'bool' | '_Bool'
     | '_Complex' | '_Imaginary'
@@ -1542,8 +1548,6 @@ constant:
               $return = $constant;
             }
           }
-  # | enumeration_constant 
-  # needs more.
  
 integer_constant:
       /[0-9]+/ 
@@ -1557,6 +1561,7 @@ string:
 
 reserved: 
     /(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto
-       |if|int|long|register|return|signed|sizeof|short|static|struct|switch|typedef
-       |union|unsigned|void|volatile|while)\b/x
+       |if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef
+       |union|unsigned|void|volatile|while|_Alignas|_Alignof|_Atomic|_Bool|_Complex|_Generic
+       |_Imaginary|_Noreturn|_Static_assert|_Thread_local)\b/x
 
