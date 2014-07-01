@@ -79,6 +79,8 @@ foreach my $arg (@ARGV) {
     $output =~ s/the value the member/the value of the member/g;
     $output =~ s/the value the/the/g;
     $output =~ s/of evaluate/of/g;
+    $output =~ s/the evaluate the/the/g;
+    $output =~ s/by evaluate the/by the/g;
  
     foreach my $quote (@quotes) {
       next unless $quote;

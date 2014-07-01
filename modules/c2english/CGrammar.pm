@@ -339,7 +339,7 @@ jump_statement:
           }
 
 expression_statement:
-      expression(?) ';'
+      expression[context => "$arg{context}|statement"](?) ';'
           { 
             my $expression = join('',@{$item[1]}); 
             if (!$expression) { 
@@ -386,7 +386,7 @@ assignment_expression:
             my $assignment_expression = $item{assignment_expression}; 
             my $assignment_operator = $item{assignment_operator};
 
-            if ($arg{context} eq 'statement' or $arg{context} eq 'for init') {
+            if (ref $assignment_operator eq 'ARRAY') {
               $return .= "${$item{assignment_operator}}[0] $item{unary_expression} ";
               $return .= "${$item{assignment_operator}}[1] " if $assignment_expression !~ /the result of/;
               $return .= $assignment_expression;
@@ -403,7 +403,14 @@ conditional_expression:
               my $op1 = $item{conditional_ternary_expression}->[0];
               my $op2 = $item{conditional_ternary_expression}->[1];
               my $expression = ::istrue $item{logical_OR_AND_expression};
-              $return = "$op1 if $expression otherwise $op2";
+
+              if($arg{context} =~ /statement$/) {
+                $return = "$op1 if $expression otherwise to $op2";
+              } elsif($arg{context} =~ /assignment expression$/) {
+                $return = "$op1 if $expression otherwise to be $op2";
+              } else {
+                $return = "$op1 if $expression otherwise $op2";
+              }
             } else {
               $return = $item{logical_OR_AND_expression};
             }
@@ -417,7 +424,7 @@ conditional_ternary_expression:
 assignment_operator:
       '=' 
           {
-            if ($arg{context} eq 'statement') { 
+            if ($arg{context} =~ /statement$/) { 
               $return = ['Assign to^L', 'the value^L' ]; 
             } elsif ($arg{context} eq 'for init') {
               $return = ['assigning to^L', 'the value^L' ];
@@ -427,7 +434,7 @@ assignment_operator:
           }
     | '+=' 
           {
-            if ($arg{context} eq 'statement') { 
+            if ($arg{context} =~ /statement$/) { 
               $return = ['Increment^L','by^L'];
             } elsif ($arg{context} eq 'for init') { 
               $return = ['incrementing^L','by^L'];
@@ -437,7 +444,7 @@ assignment_operator:
           }
     | '-='
           {
-            if ($arg{context} eq 'statement') { 
+            if ($arg{context} =~ /statement$/) { 
               $return = ['Decrement^L', 'by^L']; 
             } elsif ($arg{context} eq 'for init') { 
               $return = ['decrementing^L' , 'by^L']; 
@@ -447,7 +454,7 @@ assignment_operator:
           }
     | '*='
           {
-            if ($arg{context} eq 'statement') { 
+            if ($arg{context} =~ /statement$/) { 
               $return = ['Multiply^L' , 'by^L'];  
             } elsif ($arg{context} eq 'for init') { 
               $return = ['multiplying^L' , 'by^L'];
@@ -457,7 +464,7 @@ assignment_operator:
           }
     | '/='
           { 
-            if ($arg{context} eq 'statement') {  
+            if ($arg{context} =~ /statement$/) {  
               $return = ['Divide^L' , 'by^L' ]; 
             } elsif ($arg{context} eq 'for init') {  
               $return = ['dividing^L' , 'by^L' ]; 
@@ -467,7 +474,7 @@ assignment_operator:
           }
     | '%=' 
           { 
-            if ($arg{context} eq 'statement') { 
+            if ($arg{context} =~ /statement$/) { 
               $return = ['Reduce^L', 'to modulo ^L'] ;  
             } elsif ($arg{context} eq 'for init') { 
               $return = ['reducing^L', 'to modulo ^L'] ;  
@@ -477,7 +484,7 @@ assignment_operator:
           }
     | '<<='
           { 
-            if ($arg{context} eq 'statement') { 
+            if ($arg{context} =~ /statement$/) { 
               $return = ['Bit-shift^L', 'left by^L'];  
             } elsif ($arg{context} eq 'for init') { 
               $return = ['bit-shifting^L', 'left by^L'];  
@@ -487,7 +494,7 @@ assignment_operator:
           }
     | '>>='
           { 
-            if ($arg{context} eq 'statement') { 
+            if ($arg{context} =~ /statement$/) { 
               $return = ['Bit-shift^L', 'right by^L'];  
             } elsif ($arg{context} eq 'for init') { 
               $return = ['bit-shifting^L', 'right by^L'];  
@@ -497,7 +504,7 @@ assignment_operator:
           }
     | '&='
           { 
-            if ($arg{context} eq 'statement') { 
+            if ($arg{context} =~ /statement$/) { 
               $return = ['Bit-wise ANDed^L', 'by^L' ];  
             } elsif ($arg{context} eq 'for init') { 
               $return = ['bit-wise ANDing^L', 'by^L' ];  
@@ -507,7 +514,7 @@ assignment_operator:
           }
     | '^='
           { 
-            if ($arg{context} eq 'statement') { 
+            if ($arg{context} =~ /statement$/) { 
               $return = ['Exclusive-OR^L','by^L'];
             } elsif ($arg{context} eq 'for init') { 
               $return = ['exclusive-ORing^L','by^L'];
@@ -517,7 +524,7 @@ assignment_operator:
           }
     | '|='
           { 
-            if ($arg{context} eq 'statement') { 
+            if ($arg{context} =~ /statement$/) { 
               $return = ['Bit-wise ORed^L', 'by^L'];  
             } elsif ($arg{context} eq 'for init') { 
               $return = ['bit-wise ORing^L', 'by^L'];  
@@ -606,7 +613,7 @@ declaration:
             my $inits = 0;
             while(@init_list) {
               $inits++;
-              if(not $arg{context} eq 'struct memember') {
+              if(not $arg{context} eq 'struct member') {
                 if($arg{context} eq 'for init') {
                   $return .= "letting ";
                 } else {
@@ -832,18 +839,26 @@ unary_expression:
           { $return = $item{postfix_expression}; }
     | '++' unary_expression
           {
-            if ($arg{context} eq 'statement' ) {
+            if ($arg{context} =~ /statement$/ ) {
               $return = "pre-increment $item{unary_expression}"; 
             } else { 
-              $return = "pre-incremented $item{unary_expression}";
+              if($item{unary_expression} =~ s/^the member//) {
+                $return = "the pre-incremented member $item{unary_expression}";
+              } else {
+                $return = "pre-incremented $item{unary_expression}";
+              }
             }
           }
     | '--' unary_expression  
           {
-            if ($arg{context} eq 'statement' ) {
+            if ($arg{context} =~ /statement$/ ) {
               $return = "Pre-decrement $item{unary_expression}"; 
             } else { 
-              $return = "pre-decremented $item{unary_expression}";
+              if($item{unary_expression} =~ s/^the member//) {
+                $return = "the pre-decremented member $item{unary_expression}";
+              } else {
+                $return = "pre-decremented $item{unary_expression}";
+              }
             }
           }
     | unary_operator cast_expression
@@ -893,10 +908,9 @@ postfix_productions:
             }
             1;
           }
-    | # array reference and plain expression
-      ( '[' expression[context => 'array_address'] ']' 
+    | ('[' expression[context => 'array_address'] ']' 
           { $return = $item{expression}; } 
-      )(s) postfix_productions[context => 'array_address'](?)
+      )(s) postfix_productions[context => "$arg{context}|array_address"](?)
           {
             my $expression = '';
             if (@{$item[-2]}) { 
@@ -910,7 +924,11 @@ postfix_productions:
                 $expression++;
                 my ($last_digit) = $expression =~ /(\d)$/;
                 if($last_digit == 1) {
-                  $expression .= 'st'; 
+                  if($expression =~ /11$/) {
+                    $expression .= 'th';
+                  } else {
+                    $expression .= 'st'; 
+                  }
                 } elsif($last_digit == 2) {
                   $expression .= 'nd';
                 } elsif($last_digit == 3) {
@@ -921,7 +939,8 @@ postfix_productions:
                 if($arg{context} eq 'function call') {
                   $return = "the $expression element of^L";
                 } else {
-                  $return = "the $expression element of ^L$arg{primary_expression}^L";
+                  $return = "the $expression element of^L";
+                  $return .= " $arg{primary_expression}" if $arg{primary_expression};
                 }
               } elsif($expression =~ /^-\s*\d+$/) {
                 $expression *= -1;
@@ -936,50 +955,77 @@ postfix_productions:
               $return = "$postfix $return";
             }
           }
-    | '.' identifier postfix_productions[context => 'struct access'](?)
+    | '.' identifier postfix_productions[context => "$arg{context}|struct access"](?)
           { 
             my $identifier = $item[-2]; 
             my $postfix = $item[-1]->[0];
 
-            if ($identifier) {
-              if($arg{context} eq 'array_address') {
-                $return = "the member $identifier of^L";
-              } else {
-                $return = "the member $identifier of^L";
-                $return .= " $arg{primary_expression}" if $arg{primary_expression};
-              }
-            }
-
             if($postfix) {
               if(ref $postfix eq 'ARRAY') {
-                $return = "$postfix->[0] $return $postfix->[1]";
+                $return = "$postfix->[0] the member $identifier $postfix->[1] of";
               } else {
-                $return = "$postfix $return";
+                if($arg{context} =~ /conditional/ or $arg{context} =~ /assignment expression/) {
+                  $return = "$postfix member $identifier of";
+                  $return .= " the" unless $arg{context} =~ /array_address/;
+                } else {
+                  $postfix =~ s/ the(\^L)?$/$1/;
+                  $return = "$postfix the member $identifier of";
+                  $return .= " the" unless $arg{context} =~ /array_address/;
+                }
+                if($arg{primary_expression}) { 
+                  $return =~ s/ the(\^L)?$/$1/;
+                  $return .= " ^L$arg{primary_expression}"
+                }
+              }
+            } else {
+              if($arg{context} =~ /array_address/) {
+                $return = "the member $identifier of^L";
+              } else {
+                $return = "the member $identifier of the^L";
+                if($arg{primary_expression}) {
+                  $return =~ s/ the(\^L)?$/$1/;
+                  $return .= " $arg{primary_expression}";
+                }
               }
             }
+            1;
           } 
-    | '->' identifier postfix_productions[context => 'struct access'](?) 
+    | '->' identifier postfix_productions[context => "$arg{context}|struct access"](?) 
           {
             my $identifier = $item[-2]; 
             my $postfix = $item[-1]->[0];
 
-            if ($identifier) {
-              $return = "the member $identifier of the structure pointed to by $arg{primary_expression}"; 
-            } 
-
             if($postfix) {
               if(ref $postfix eq 'ARRAY') {
-                $return = "$postfix->[0] $return $postfix->[1]";
+                $return = "$postfix->[0] the member $identifier $postfix->[1] of the structure pointed to by^L";
               } else {
-                $return = "$postfix $return";
+                if($arg{context} =~ /conditional/ or $arg{context} =~ /assignment expression/) {
+                  $return = "$postfix member $identifier of the structure pointed to by the^L";
+                } else {
+                  $postfix =~ s/ the(\^L)?$/$1/;
+                  $return = "$postfix the member $identifier of the structure pointed to by the^L";
+                }
               }
+            } else {
+              $return = "the member $identifier of the structure pointed to by the^L";
             }
+            if($arg{primary_expression}) {
+              $return =~ s/ the(\^L)?$/$1/;
+              $return .= " $arg{primary_expression}";
+            }
+            1;
           }
     | ('++')(s)
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
-              if($arg{context} eq 'struct access' or $arg{context} =~ /statement/) {
+              if($arg{context} =~ /struct access/) {
+                if($arg{context} =~ /conditional/ or $arg{context} =~ /assignment expression/) {
+                  $return = "the post-incremented";
+                } else {
+                  $return = "post-increment";
+                }
+              } elsif($arg{context} =~ /statement/) {
                 $return = ['increment', 'by one'];
               } else {
                 $return = "post-incremented $arg{primary_expression}";
@@ -990,8 +1036,14 @@ postfix_productions:
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
-              if($arg{context} eq 'struct access' or $arg{context} =~ /statement/) {
-                $return = ['decrement', 'by one'];
+              if($arg{context} =~ /struct access/) {
+                if($arg{context} =~ /conditional/ or $arg{context} =~ /assignment expression/) {
+                  $return = "the post-decremented";
+                } else {
+                  $return = "post-decrement";
+                }
+              } elsif($arg{context} =~ /statement/) {
+                  $return = ['decrement', 'by one'];
               } else {
                $return = "post-decremented $arg{primary_expression}";
              }
@@ -1062,7 +1114,7 @@ primary_expression:
             }
 
             $expression .= ')';
-            if($arg{context} eq 'statement') {
+            if($arg{context} =~ /statement$/) {
               $return = "Evaluate the expression ";
             } else {
               $return = "The result of the expression ";
