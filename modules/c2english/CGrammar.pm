@@ -424,110 +424,110 @@ conditional_ternary_expression:
 assignment_operator:
       '=' 
           {
-            if ($arg{context} =~ /statement$/) { 
-              $return = ['Assign to^L', 'the value^L' ]; 
-            } elsif ($arg{context} eq 'for init') {
+            if ($arg{context} =~ /for init/) {
               $return = ['assigning to^L', 'the value^L' ];
+            } elsif ($arg{context} =~ /statement$/) { 
+              $return = ['Assign to^L', 'the value^L' ]; 
             } else { 
               $return = 'which is assigned to be^L'; 
             }
           }
     | '+=' 
           {
-            if ($arg{context} =~ /statement$/) { 
-              $return = ['Increment^L','by^L'];
-            } elsif ($arg{context} eq 'for init') { 
+            if ($arg{context} =~ /for init/) { 
               $return = ['incrementing^L','by^L'];
+            } elsif ($arg{context} =~ /statement$/) { 
+              $return = ['Increment^L','by^L'];
             } else { 
               $return = 'which is incremented by^L'; 
             }
           }
     | '-='
           {
-            if ($arg{context} =~ /statement$/) { 
-              $return = ['Decrement^L', 'by^L']; 
-            } elsif ($arg{context} eq 'for init') { 
+            if ($arg{context} =~ /for init/) { 
               $return = ['decrementing^L' , 'by^L']; 
+            } elsif ($arg{context} =~ /statement$/) { 
+              $return = ['Decrement^L', 'by^L']; 
             } else { 
               $return = 'which is decremented by^L'; 
             }
           }
     | '*='
           {
-            if ($arg{context} =~ /statement$/) { 
-              $return = ['Multiply^L' , 'by^L'];  
-            } elsif ($arg{context} eq 'for init') { 
+            if ($arg{context} =~ /for init/) { 
               $return = ['multiplying^L' , 'by^L'];
+            } elsif ($arg{context} =~ /statement$/) { 
+              $return = ['Multiply^L' , 'by^L'];  
             } else { 
               $return = 'which is multiplied by^L'; 
             }
           }
     | '/='
           { 
-            if ($arg{context} =~ /statement$/) {  
-              $return = ['Divide^L' , 'by^L' ]; 
-            } elsif ($arg{context} eq 'for init') {  
+            if ($arg{context} =~ /for init/) {  
               $return = ['dividing^L' , 'by^L' ]; 
+            } elsif ($arg{context} =~ /statement$/) {  
+              $return = ['Divide^L' , 'by^L' ]; 
             } else { 
               $return = 'which is divided by^L'; 
             }
           }
     | '%=' 
           { 
-            if ($arg{context} =~ /statement$/) { 
-              $return = ['Reduce^L', 'to modulo ^L'] ;  
-            } elsif ($arg{context} eq 'for init') { 
+            if ($arg{context} =~ /for init/) { 
               $return = ['reducing^L', 'to modulo ^L'] ;  
+            } elsif ($arg{context} =~ /statement$/) { 
+              $return = ['Reduce^L', 'to modulo ^L'] ;  
             } else { 
               $return = 'which is reduced to modulo^L'; 
             }
           }
     | '<<='
           { 
-            if ($arg{context} =~ /statement$/) { 
-              $return = ['Bit-shift^L', 'left by^L'];  
-            } elsif ($arg{context} eq 'for init') { 
+            if ($arg{context} =~ /for init/) { 
               $return = ['bit-shifting^L', 'left by^L'];  
+            } elsif ($arg{context} =~ /statement$/) { 
+              $return = ['Bit-shift^L', 'left by^L'];  
             } else { 
               $return = 'which is bit-shifted left by^L'; 
             }
           }
     | '>>='
           { 
-            if ($arg{context} =~ /statement$/) { 
-              $return = ['Bit-shift^L', 'right by^L'];  
-            } elsif ($arg{context} eq 'for init') { 
+            if ($arg{context} =~ /for init/) { 
               $return = ['bit-shifting^L', 'right by^L'];  
+            } elsif ($arg{context} =~ /statement$/) { 
+              $return = ['Bit-shift^L', 'right by^L'];  
             } else { 
               $return = 'which is bit-shifted right by^L'; 
             }
           }
     | '&='
           { 
-            if ($arg{context} =~ /statement$/) { 
-              $return = ['Bit-wise ANDed^L', 'by^L' ];  
-            } elsif ($arg{context} eq 'for init') { 
+            if ($arg{context} =~ /for init/) { 
               $return = ['bit-wise ANDing^L', 'by^L' ];  
+            } elsif ($arg{context} =~ /statement$/) { 
+              $return = ['Bit-wise ANDed^L', 'by^L' ];  
             } else { 
               $return = 'which is bit-wise ANDed by^L'; 
             }
           }
     | '^='
           { 
-            if ($arg{context} =~ /statement$/) { 
-              $return = ['Exclusive-OR^L','by^L'];
-            } elsif ($arg{context} eq 'for init') { 
+            if ($arg{context} =~ /for init/) { 
               $return = ['exclusive-ORing^L','by^L'];
+            } elsif ($arg{context} =~ /statement$/) { 
+              $return = ['Exclusive-OR^L','by^L'];
             } else { 
               $return = 'which is exclusive-ORed by^L'; 
             }
           }
     | '|='
           { 
-            if ($arg{context} =~ /statement$/) { 
-              $return = ['Bit-wise ORed^L', 'by^L'];  
-            } elsif ($arg{context} eq 'for init') { 
+            if ($arg{context} =~ /for init/) { 
               $return = ['bit-wise ORing^L', 'by^L'];  
+            } elsif ($arg{context} =~ /statement$/) { 
+              $return = ['Bit-wise ORed^L', 'by^L'];  
             } else { 
               $return = 'which is bit-wise ORed by^L'; 
             }
@@ -839,26 +839,30 @@ unary_expression:
           { $return = $item{postfix_expression}; }
     | '++' unary_expression
           {
-            if ($arg{context} =~ /statement$/ ) {
-              $return = "pre-increment $item{unary_expression}"; 
-            } else { 
+            if ($arg{context} =~ /for init/) {
+              $return = "pre-incrementing $item{unary_expression}"; 
+            } elsif ($arg{context} =~ /(conditional|expression)/) { 
               if ($item{unary_expression} =~ s/^the member//) {
                 $return = "the pre-incremented member $item{unary_expression}";
               } else {
                 $return = "pre-incremented $item{unary_expression}";
               }
+            } else {
+              $return = "pre-increment $item{unary_expression}"; 
             }
           }
     | '--' unary_expression  
           {
-            if ($arg{context} =~ /statement$/ ) {
-              $return = "Pre-decrement $item{unary_expression}"; 
-            } else { 
+            if ($arg{context} =~ /for init/) {
+              $return = "pre-decrementing $item{unary_expression}"; 
+            } elsif ($arg{context} =~ /(conditional|expression)/) { 
               if ($item{unary_expression} =~ s/^the member//) {
                 $return = "the pre-decremented member $item{unary_expression}";
               } else {
                 $return = "pre-decremented $item{unary_expression}";
               }
+            } else {
+              $return = "Pre-decrement $item{unary_expression}"; 
             }
           }
     | unary_operator cast_expression
@@ -1025,10 +1029,12 @@ postfix_productions:
                 } else {
                   $return = "post-increment";
                 }
-              } elsif ($arg{context} =~ /statement/) {
-                $return = ['increment', 'by one'];
-              } else {
+              } elsif ($arg{context} =~ /for init/) {
+                $return = ['incrementing', 'by one'];
+              } elsif ($arg{context} =~ /(conditional|expression)/) {
                 $return = "post-incremented $arg{primary_expression}";
+              } else {
+                $return = ['increment', 'by one'];
               }
             }
           }
@@ -1042,11 +1048,13 @@ postfix_productions:
                 } else {
                   $return = "post-decrement";
                 }
-              } elsif ($arg{context} =~ /statement/) {
-                  $return = ['decrement', 'by one'];
-              } else {
+              } elsif ($arg{context} =~ /for init/) {
+                $return = ['decrementing', 'by one'];
+              } elsif ($arg{context} =~ /(conditional|expression)/) {
                $return = "post-decremented $arg{primary_expression}";
-             }
+              } else {
+                $return = ['decrement', 'by one'];
+              }
             }
           }
     # having done the simplest cases, we go to the catch all for left recursions.
@@ -1103,7 +1111,7 @@ narrow_closure:
       ';' | ',' | '->'
 
 primary_expression:
-      '(' expression ')' (...narrow_closure)(?)
+      '(' expression[context => "$arg{context}|expression"] ')' (...narrow_closure)(?)
           { 
             my $expression = $item{expression} ; 
             my $repeats = 1; 
