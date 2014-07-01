@@ -1080,6 +1080,12 @@ postfix_expression:
               $return = undef;
             }
           }
+    | '(' type_name ')' '{' initializer_list '}' postfix_productions[context => "$arg{context}|compound literal"](?)
+          {
+            my $postfix = $item[-1]->[0];
+            $return = "A compound-literal of type $item{type_name} initialized to the set { $item{initializer_list} }";
+            $return = "$postfix $return" if $postfix;
+          }
 
 postfix_suffix:
       '[' expression ']'
@@ -1516,7 +1522,6 @@ enum_specifier:
           }
     | 'enum' identifier
           { $return = "an enumeration of type $item{identifier}"; }
-
 
 enumerator_list:
       <leftop:enumerator ',' enumerator>
