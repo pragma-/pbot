@@ -128,7 +128,7 @@ sub urban_search {
     my $content = shift;
     my $term = shift;
 
-    my @rawlines = $content =~ /<div class=["'](definition|example|def_p)["']>(.+?)<\/?div/gism;
+    my @rawlines = $content =~ /<div class=["'](meaning|definition|example|def_p)["']>(.+?)<\/?div/gism;
     my @lines;
     foreach (@rawlines) {
         my @s = split /(?:\n|<br\/?>)/;
@@ -148,7 +148,7 @@ sub urban_search {
         $s =~ s/\s*$//;
         $s =~ s/<.+?>//g;
 
-        if ($s =~ /(definition|def_p)/) {
+        if ($s =~ /(meaning|definition|def_p)/) {
             $def_word++;
         } elsif ($s =~ /example/) {
 # Do nothing
@@ -231,6 +231,7 @@ sub wwotd_search {
 ##
 # Dictionary.com word of the day
 ##
+=cut
 sub wotd_search {
     my $content = shift;
 
@@ -241,7 +242,7 @@ sub wotd_search {
     
     return join ("\n", @lines);
 }
-
+=cut
 ##
 # Sloganizer
 ##
@@ -669,7 +670,7 @@ sub process_request {
 # whitespace delimited lines up to 400 characters long
 # to prevent IRSSI truncating the output lines
 	my @lines = $result =~ /(.{0,400})(?:\r|\n|\s+|$)/g;
-	@lines = () unless defined @lines;
+	@lines = () unless @lines;
 
 	my @output = ();
 	foreach my $text (@lines) {
@@ -722,7 +723,7 @@ sub public_responder {
     my @lines = process_request($trigger, $term, $server, $nick, $target);
 
 # Display if necessary
-    if (defined @lines) {
+    if (@lines) {
         $server->command("msg $target -!- $_")
             for grep { /./ } @lines;
     }
