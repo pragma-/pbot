@@ -819,7 +819,7 @@ initializer:
             }
           } 
     | '{' comment(?) initializer_list (',' )(?) '}'
-          { $return = 'the list { ' . $item{'initializer_list'} . ' }'; }
+          { $return = '{ ' . $item{'initializer_list'} . ' }'; }
 
 initializer_list:
       <leftop: initializer ',' initializer > 
@@ -1129,7 +1129,7 @@ postfix_expression:
     | '(' type_name ')' '{' initializer_list '}' postfix_productions[context => "$arg{context}|compound literal"](?)
           {
             my $postfix = $item[-1]->[0];
-            $return = "A compound-literal of type $item{type_name} initialized to the list { $item{initializer_list} }";
+            $return = "A compound-literal of type $item{type_name} initialized to { $item{initializer_list} }";
             $return = "$postfix $return" if $postfix;
           }
 
@@ -1462,8 +1462,8 @@ type_specifier:
         | 'div_t' | 'ldiv_t' | 'lldiv_t' | 'imaxdiv_t'
         | 'cnd_t' | 'thrd_t' | 'tss_t' | 'mtx_t' | 'tss_dtor_t' | 'thrd_start_t' | 'once_flag'
         | 'clock_t' | 'time_t'
-        | struct_or_union_specifier
-        | enum_specifier
+        | <skip:'[\s]*'> struct_or_union_specifier
+        | <skip:'[\s]*'> enum_specifier
         | typedef_name) .../\W/
           { $return = $item[3]; }
 
