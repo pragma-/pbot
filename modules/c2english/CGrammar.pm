@@ -804,7 +804,9 @@ init_declarator:
           }
 
 initializer:
-      comment(?) assignment_expression comment(?)
+      designation initializer
+          { $return = "$item[1] $item[2]"; }
+    | comment(?) assignment_expression comment(?)
           {
             $return = $item[2]; 
 
@@ -817,7 +819,7 @@ initializer:
             }
           } 
     | '{' comment(?) initializer_list (',' )(?) '}'
-          { $return = 'the set { ' . $item{'initializer_list'} . ' }'; }
+          { $return = 'the list { ' . $item{'initializer_list'} . ' }'; }
 
 initializer_list:
       <leftop: initializer ',' initializer > 
@@ -828,10 +830,54 @@ initializer_list:
               my $init = pop @inits; 
               $return = join(', ',@inits) . ', and ' .$init; 
             } elsif ($#inits == 1) { 
-              $return = $inits[0] . ' and ' . $inits[1]; 
+              $return = $inits[0] . ', and ' . $inits[1]; 
             } else { 
               $return = $inits[0]; 
             } 
+          }
+
+designation:
+      designator_list '='
+          {
+            $return = $item{designator_list};
+          }
+
+designator_list:
+      designator(s)
+          {
+            $return = join('', @{$item{'designator(s)'}});
+          }
+
+designator:
+      '[' constant_expression ']'
+          {
+            my $expression = $item{constant_expression};
+            if ($expression =~ /^\d+$/) {
+              $expression++;
+              my ($last_digit) = $expression =~ /(\d)$/;
+              if ($last_digit == 1) {
+                if ($expression =~ /11$/) {
+                  $expression .= 'th';
+                } else {
+                  $expression .= 'st'; 
+                }
+              } elsif ($last_digit == 2) {
+                $expression .= 'nd';
+              } elsif ($last_digit == 3) {
+                $expression .= 'rd';
+              } else {
+                $expression .= 'th';
+              }
+              $expression = "the $expression element";
+            } else {
+              $expression = "the element at location $expression";
+            }
+
+            $return = "$expression set to";
+          }
+    | '.' identifier
+          {
+            $return = "the member $item{identifier} set to";
           }
 
 unary_expression:
@@ -918,7 +964,7 @@ postfix_productions:
           {
             my $expression = '';
             if (@{$item[-2]}) { 
-              $expression = join(' and ', @{$item[-2]}); 
+              $expression = join(', and ', @{$item[-2]}); 
             }
 
             my $postfix = $item[-1]->[0];
@@ -1083,7 +1129,7 @@ postfix_expression:
     | '(' type_name ')' '{' initializer_list '}' postfix_productions[context => "$arg{context}|compound literal"](?)
           {
             my $postfix = $item[-1]->[0];
-            $return = "A compound-literal of type $item{type_name} initialized to the set { $item{initializer_list} }";
+            $return = "A compound-literal of type $item{type_name} initialized to the list { $item{initializer_list} }";
             $return = "$postfix $return" if $postfix;
           }
 
@@ -1516,7 +1562,7 @@ enum_specifier:
               $return .= " comprising $enumerator_list[0]";
             } else {
               my $last = pop @enumerator_list; 
-              $return .= ' comprising ' . join(', ', @enumerator_list) . " and $last"; 
+              $return .= ' comprising ' . join(', ', @enumerator_list) . ", and $last"; 
             }
 
           }
