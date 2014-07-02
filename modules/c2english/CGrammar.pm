@@ -1441,30 +1441,31 @@ type_qualifier:
     | 'volatile' 
 
 type_specifier:
-      'void' | 'double' | 'float' | 'char' | 'short' | 'int' | 'long'
-    | 'signed' | 'unsigned'
-    | 'FILE' | 'fpos_t'
-    | 'bool' | '_Bool'
-    | '_Complex' | '_Imaginary'
-    | 'int_fast8_t'   | 'int_fast16_t'   | 'int_fast24_t'   | 'int_fast32_t'   | 'int_fast64_t'   | 'int_fast128_t'
-    | 'uint_fast8_t'  | 'uint_fast16_t'  | 'uint_fast24_t'  | 'uint_fast32_t'  | 'uint_fast64_t'  | 'uint_fast128_t'
-    | 'int_least8_t'  | 'int_least16_t'  | 'int_least24_t'  | 'int_least32_t'  | 'int_least64_t'  | 'int_least128_t'
-    | 'uint_least8_t' | 'uint_least16_t' | 'uint_least24_t' | 'uint_least32_t' | 'uint_least64_t' | 'uint_least128_t'
-    | 'int8_t'   | 'int16_t'  | 'int24_t'  | 'int32_t'  | 'int64_t'  | 'int128_t'
-    | 'uint8_t'  | 'uint16_t' | 'uint24_t' | 'uint32_t' | 'uint64_t' | 'uint128_t'
-    | 'intmax_t' | 'uintmax_t'
-    | 'intptr_t' | 'uintptr_t' | 'ptrdiff_t'
-    | 'sig_atomic_t'
-    | 'wint_t' | 'wchar_t'
-    | 'size_t' | 'rsize_t' | 'max_align_t'
-    | 'mbstate_t' | 'char16_t' | 'char32_t'
-    | 'fenv_t' | 'fexcept_t'
-    | 'div_t' | 'ldiv_t' | 'lldiv_t' | 'imaxdiv_t'
-    | 'cnd_t' | 'thrd_t' | 'tss_t' | 'mtx_t' | 'tss_dtor_t' | 'thrd_start_t' | 'once_flag'
-    | 'clock_t' | 'time_t'
-    | struct_or_union_specifier
-    | enum_specifier
-    | typedef_name 
+      <skip:''> /\s*/ ('void' | 'double' | 'float' | 'char' | 'short' | 'int' | 'long'
+        | 'signed' | 'unsigned'
+        | 'FILE' | 'fpos_t'
+        | 'bool' | '_Bool'
+        | '_Complex' | '_Imaginary'
+        | 'int_fast8_t'   | 'int_fast16_t'   | 'int_fast24_t'   | 'int_fast32_t'   | 'int_fast64_t'   | 'int_fast128_t'
+        | 'uint_fast8_t'  | 'uint_fast16_t'  | 'uint_fast24_t'  | 'uint_fast32_t'  | 'uint_fast64_t'  | 'uint_fast128_t'
+        | 'int_least8_t'  | 'int_least16_t'  | 'int_least24_t'  | 'int_least32_t'  | 'int_least64_t'  | 'int_least128_t'
+        | 'uint_least8_t' | 'uint_least16_t' | 'uint_least24_t' | 'uint_least32_t' | 'uint_least64_t' | 'uint_least128_t'
+        | 'int8_t'   | 'int16_t'  | 'int24_t'  | 'int32_t'  | 'int64_t'  | 'int128_t'
+        | 'uint8_t'  | 'uint16_t' | 'uint24_t' | 'uint32_t' | 'uint64_t' | 'uint128_t'
+        | 'intmax_t' | 'uintmax_t'
+        | 'intptr_t' | 'uintptr_t' | 'ptrdiff_t'
+        | 'sig_atomic_t'
+        | 'wint_t' | 'wchar_t'
+        | 'size_t' | 'rsize_t' | 'max_align_t'
+        | 'mbstate_t' | 'char16_t' | 'char32_t'
+        | 'fenv_t' | 'fexcept_t'
+        | 'div_t' | 'ldiv_t' | 'lldiv_t' | 'imaxdiv_t'
+        | 'cnd_t' | 'thrd_t' | 'tss_t' | 'mtx_t' | 'tss_dtor_t' | 'thrd_start_t' | 'once_flag'
+        | 'clock_t' | 'time_t'
+        | struct_or_union_specifier
+        | enum_specifier
+        | typedef_name) .../\W/
+          { $return = $item[3]; }
 
 typedef_name:
       identifier
