@@ -162,20 +162,23 @@ function_definition:
             $return .= join('', @{$item{'compound_statement(?)'}});
           } 
 
+block_item_list:
+      block_item(s)
+          { $return = join('', @{$item{'block_item(s)'}}); }
+
+block_item:
+      declaration
+    | statement
+
 compound_statement:
-      '{' declaration_list(?) statement_list(?) '}' 
+      '{' block_item_list(s?) '}' 
           { 
-            my $declaration_list = join('',@{$item{'declaration_list(?)'}}); 
-            my $statement_list = join('',@{$item{'statement_list(?)'}}); 
+            my $block_items = join('', @{$item{'block_item_list(s?)'}});
 
             $return = "Begin new block.\n" if not $arg{context};
 
-            if ($declaration_list) { 
-              $return .= $declaration_list; 
-            }
-
-            if ($statement_list ) { 
-              $return .= $statement_list;   
+            if ($block_items) { 
+              $return .= $block_items;
             } else {
               $return .= "Do nothing.\n";
             } 
