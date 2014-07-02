@@ -169,6 +169,8 @@ block_item_list:
 block_item:
       declaration
     | statement
+    | preproc
+    | comment
 
 compound_statement:
       '{' block_item_list(s?) '}' 
