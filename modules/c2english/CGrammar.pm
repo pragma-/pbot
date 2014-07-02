@@ -1217,46 +1217,74 @@ direct_declarator:
     | identifier[context => 'direct_declarator'] array_declarator(s?)
           { 
             if (@{$item{'array_declarator(s?)'}}) {
-              $return = [$item{identifier}, join('', @{$item{'array_declarator(s?)'}})];
+              $return = [$item{identifier}, join(' ', @{$item{'array_declarator(s?)'}})];
             } else {
               $return = $item{identifier};
             }
           }
     | '(' declarator ')' array_declarator(s)
           { 
-            push @{$item{declarator}}, join('', @{$item{'array_declarator(s)'}});
+            push @{$item{declarator}}, join(' ', @{$item{'array_declarator(s)'}});
             $return = $item{declarator};
           }
     | '(' parameter_type_list ')'
           { $return = "function taking $item{parameter_type_list} and returning"; }
     | '(' declarator array_declarator(s) ')'
-          { $return = $item{'declarator'} . join('', @{$item{'array_declarator(s)'}}) }
+          { $return = $item{'declarator'} . join(' ', @{$item{'array_declarator(s)'}}) }
     | '(' declarator ')' 
           { $return = $item{declarator}; }
 
+array_qualifiers:
+      type_qualifier_list array_qualifiers(?)
+          { 
+            $return = $item{'type_qualifier_list'};
+            my $qualifiers = join('', @{$item{'array_qualifiers(?)'}});
+            $return .= " $qualifiers" if $qualifiers;
+          }
+    | 'static' array_qualifiers(?)
+          { 
+            $return = $item[1];
+            my $qualifiers = join('', @{$item{'array_qualifiers(?)'}});
+            $return .= " $qualifiers" if $qualifiers;
+          }
+
 array_declarator:
-      ( '[' assignment_expression(?) ']'
+      '[' array_qualifiers(?) assignment_expression(?) ']'
           {
-            if (@{$item{'assignment_expression(?)'}}) { 
-              my $size = join('', @{$item{'assignment_expression(?)'}});
+            my $size;
+            if (@{$item{'assignment_expression(?)'}}) {
+              $size = join('', @{$item{'assignment_expression(?)'}});
               if ($size =~ /^(unsigned|long)*\s*1$/) {
-                $return = "$size element ";
+                $size = "$size element";
               } else {
-                $return = "$size elements ";
+                $size = "$size elements";
               }
-            } else { 
-              $return = 'unspecified length ';
-            }
-          }
-      )(s?)
-          {
-            my @array = @{$item[-1]};  
-            if (@array) { 
-              $return .= 'an array of ' . join('of an array of ' , @array) . 'of';
             } else {
-              undef;
+              $size = 'unspecified length';
+            }
+
+            my $qualifiers = join('', @{$item{'array_qualifiers(?)'}});
+
+            if ($qualifiers) {
+              if($qualifiers =~ s/static//g) {
+                $qualifiers =~ s/^\s+//;
+                $qualifiers =~ s/\s+$//;
+                $qualifiers =~ s/\s+/ /g;
+                if($qualifiers) {
+                  $return = "a $qualifiers array ";
+                } else {
+                  $return = "an array ";
+                }
+                $return .= "with optimization hint to provide access to the first element of $size of";
+              } else {
+                $return = "an $qualifiers array of $size of";
+              }
+            } else {
+              $return = "an array of $size of";
             }
           }
+    | '[' '*' ']'
+          { $return = 'an array of variable length of unspecified size of'; }
 
 identifier_list:
       (identifier ',')(s?) identifier
@@ -1332,18 +1360,45 @@ direct_abstract_declarator:
       '(' abstract_declarator ')'
           { $return = $item{abstract_declarator}; }
     | '[' ']'
-          { $return = "array of unspecified length of"; }
-    | '[' constant_expression ']' 
-          { 
-            my $size = $item{constant_expression};
-            if ($size =~ /^(unsigned|long)*\s*1$/) {
-              $return = "array of $size element of";
+          { $return = 'array of unspecified length of'; }
+    | '[' '*' ']'
+          { $return = 'array of variable length of unspecified size of'; }
+    | '[' array_qualifiers(?) assignment_expression(?) ']'
+          {
+            my $size;
+            if (@{$item{'assignment_expression(?)'}}) {
+              $size = join('', @{$item{'assignment_expression(?)'}});
+              if ($size =~ /^(unsigned|long)*\s*1$/) {
+                $size = "$size element";
+              } else {
+                $size = "$size elements";
+              }
             } else {
-              $return = "array of $size elements of";
+              $size = 'unspecified length';
+            }
+
+            my $qualifiers = join('', @{$item{'array_qualifiers(?)'}});
+
+            if ($qualifiers) {
+              if($qualifiers =~ s/static//g) {
+                $qualifiers =~ s/^\s+//;
+                $qualifiers =~ s/\s+$//;
+                $qualifiers =~ s/\s+/ /g;
+                if($qualifiers) {
+                  $return = "a $qualifiers array ";
+                } else {
+                  $return = "an array ";
+                }
+                $return .= "with optimization hint to provide access to the first element of $size of";
+              } else {
+                $return = "an $qualifiers array of $size of";
+              }
+            } else {
+              $return = "an array of $size of";
             }
           }
     | DAD '[' ']'
-    | DAD '[' constant_expression ']'
+    | DAD '[' array_qualifiers(?) assignment_expression(?) ']'
     | '(' ')'
           { $return = 'function taking unspecified parameters and returning'; }
     | '(' parameter_type_list ')'
@@ -1354,7 +1409,7 @@ direct_abstract_declarator:
 DAD: # macro for direct_abstract_declarator 
       ( '(' abstract_declarator ')' )(s?)
       ( '[' ']' )(s?)
-      ( '[' constant_expression ']' )(s?)
+      ( '[' assignment_expression ']' )(s?)
       ( '(' ')' )(s?)
       ( '(' parameter_type_list ')' )(s?)
 
