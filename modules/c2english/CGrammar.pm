@@ -238,7 +238,7 @@ iteration_statement:
               $return .= "Repeatedly ^L";
             } 
 
-            $return .= $item{statement} ; 
+            $return .= "$item{statement}."; 
 
             if ($increment) { 
               $return =~ s/End for loop.$//;
@@ -412,7 +412,7 @@ conditional_expression:
               if ($arg{context} =~ /statement$/) {
                 $return = "$op1 if $expression otherwise to $op2";
               } elsif ($arg{context} =~ /assignment expression$/) {
-                $return = "$op1 if $expression otherwise to be $op2";
+                $return = "$op1 if $expression otherwise the value $op2";
               } else {
                 $return = "$op1 if $expression otherwise $op2";
               }
@@ -690,6 +690,19 @@ declaration:
                   $return .= ', ';
                 }
 
+                my $and = @identifiers > 1 ? ' and ' : '';
+                my $comma = '';
+                for (my $i = 0; $i < @identifiers; $i++) {
+                  if ($i == @identifiers - 1) {
+                    $return .= "$and$identifiers[$i]";
+                  } else {
+                    $return .= "$comma$identifiers[$i]";
+                    $comma = ', ';
+                  }
+                }
+
+                $return .= ' as ';
+
                 if ($first_qualifier) {
                   if ($first_qualifier =~ /bit\-field/) {
                     $first_qualifier = "$item{declaration_specifiers} $first_qualifier";
@@ -702,23 +715,12 @@ declaration:
                     $first_qualifier =~ s/pointer/pointers/;
                     $first_qualifier =~ s/an array/arrays/;
                   }
-                  $return .= "$first_qualifier $item{declaration_specifiers} ";
+                  $return .= "$first_qualifier $item{declaration_specifiers}";
                 } else {
                   if (@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
                     $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
                   }
-                  $return .= "$item{declaration_specifiers} ";
-                }
-
-                my $and = @identifiers > 1 ? ' and ' : '';
-                my $comma = '';
-                for (my $i = 0; $i < @identifiers; $i++) {
-                  if ($i == @identifiers - 1) {
-                    $return .= "$and$identifiers[$i]";
-                  } else {
-                    $return .= "$comma$identifiers[$i]";
-                    $comma = ', ';
-                  }
+                  $return .= $item{declaration_specifiers};
                 }
               } else {
                 my $and = @identifiers > 1 ? ' and ' : '';
@@ -843,14 +845,13 @@ initializer_list:
 
 designation:
       designator_list '='
-          {
-            $return = $item{designator_list};
-          }
+          { $return = $item{designator_list}; }
 
 designator_list:
       designator(s)
-          {
-            $return = join('', @{$item{'designator(s)'}});
+          { 
+            $return = join(' of ', reverse @{$item{'designator(s)'}});
+            $return .= ' set to';
           }
 
 designator:
@@ -878,12 +879,10 @@ designator:
               $expression = "the element at location $expression";
             }
 
-            $return = "$expression set to";
+            $return = $expression;
           }
     | '.' identifier
-          {
-            $return = "the member $item{identifier} set to";
-          }
+          { $return = "the member $item{identifier}"; }
 
 unary_expression:
       postfix_expression
@@ -895,7 +894,9 @@ unary_expression:
             } elsif ($arg{context} =~ /(conditional|expression)/) { 
               if ($item{unary_expression} =~ s/^the member//) {
                 $return = "the pre-incremented member $item{unary_expression}";
-              } else {
+              } elsif ($item{unary_expression} =~ s/^the element//) {
+                $return = "the pre-incremented element $item{unary_expression}";
+              }else {
                 $return = "pre-incremented $item{unary_expression}";
               }
             } else {
@@ -909,6 +910,8 @@ unary_expression:
             } elsif ($arg{context} =~ /(conditional|expression)/) { 
               if ($item{unary_expression} =~ s/^the member//) {
                 $return = "the pre-decremented member $item{unary_expression}";
+              } elsif ($item{unary_expression} =~ s/^the element//) {
+                $return = "the pre-decremented element $item{unary_expression}";
               } else {
                 $return = "pre-decremented $item{unary_expression}";
               }
@@ -938,10 +941,10 @@ postfix_productions:
 
             $arg{primary_expression} =~ s/^Evaluate the expression/resulting from the expression/;
 
-            if (not defined $arg{context} or $arg{context} ne 'statement') {
-              $return = "the result of the function $arg{primary_expression}";
+            if($arg{context} =~ /statement/) {
+              $return = "Call the function $arg{primary_expression}";
             } else {
-              $return = "Call the function $arg{primary_expression} ";
+              $return = "the result of the function $arg{primary_expression}";
             }
 
             # To discriminate between macros and functions. 
@@ -963,9 +966,9 @@ postfix_productions:
             }
             1;
           }
-    | ('[' expression[context => 'array_address'] ']' 
+    | ('[' expression[context => 'array address'] ']' 
           { $return = $item{expression}; } 
-      )(s) postfix_productions[context => "$arg{context}|array_address"](?)
+      )(s) postfix_productions[context => "$arg{context}|array address"](?)
           {
             my $expression = '';
             if (@{$item[-2]}) { 
@@ -1008,6 +1011,7 @@ postfix_productions:
 
             if ($postfix) {
               $return = "$postfix $return";
+              $return =~ s/the post-([^ ]+) the/the post-$1/g;
             }
           }
     | '.' identifier postfix_productions[context => "$arg{context}|struct access"](?)
@@ -1021,11 +1025,11 @@ postfix_productions:
               } else {
                 if ($arg{context} =~ /conditional/ or $arg{context} =~ /assignment expression/) {
                   $return = "$postfix member $identifier of";
-                  $return .= " the" unless $arg{context} =~ /array_address/;
+                  $return .= " the" unless $arg{context} =~ /array address/;
                 } else {
                   $postfix =~ s/ the(\^L)?$/$1/;
                   $return = "$postfix the member $identifier of";
-                  $return .= " the" unless $arg{context} =~ /array_address/;
+                  $return .= " the" unless $arg{context} =~ /array address/;
                 }
                 if ($arg{primary_expression}) { 
                   $return =~ s/ the(\^L)?$/$1/;
@@ -1033,7 +1037,7 @@ postfix_productions:
                 }
               }
             } else {
-              if ($arg{context} =~ /array_address/) {
+              if ($arg{context} =~ /array address/) {
                 $return = "the member $identifier of^L";
               } else {
                 $return = "the member $identifier of the^L";
@@ -1074,7 +1078,7 @@ postfix_productions:
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
-              if ($arg{context} =~ /struct access/) {
+              if ($arg{context} =~ /(struct access|array address)/) {
                 if ($arg{context} =~ /conditional/ or $arg{context} =~ /assignment expression/) {
                   $return = "the post-incremented";
                 } else {
@@ -1093,7 +1097,7 @@ postfix_productions:
           {
             my $increment = join('',@{$item[-1]}); 
             if ($increment) {
-              if ($arg{context} =~ /struct access/) {
+              if ($arg{context} =~ /(struct access|array address)/) {
                 if ($arg{context} =~ /conditional/ or $arg{context} =~ /assignment expression/) {
                   $return = "the post-decremented";
                 } else {

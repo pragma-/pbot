@@ -108,7 +108,7 @@ sub flatten {
 }
 
 sub istrue {
-  my @parts = split / and /, $_[0];
+  my @parts = split /(?<!,) and /, $_[0];
   my ($result, $and) = ('', '');
   foreach my $part (@parts) {
     $result .= $and;
