@@ -4,6 +4,8 @@
 use strict;
 use feature "switch";
 
+no if $] >= 5.018, warnings => "experimental::smartmatch";
+
 use IPC::Open2;
 use Text::Balanced qw(extract_bracketed extract_delimited);
 use IO::Socket;
@@ -119,6 +121,7 @@ sub compile {
 
   my $date = time;
 
+  sleep 1;
   print $compiler "compile:$lang:$args:$input:$date\n";
   print $compiler "$code\n";
   print $compiler "compile:end\n";
@@ -778,7 +781,13 @@ while($code =~ m/(.)/msg) {
   } elsif($ch eq '#' and not $cpp and not $escaped and not $single_quote and not $double_quote) {
     $cpp = 1;
 
-    if($code =~ m/include\s*[<"]([^>"]*)[>"]/msg) {
+    if($code =~ m/include\s*<([^>\n]*)>/msg) {
+      my $match = $1;
+      $pos = pos $code;
+      substr ($code, $pos, 0) = "\n";
+      pos $code = $pos;
+      $cpp = 0;
+    } elsif($code =~ m/include\s*"([^"\n]*)"/msg) {
       my $match = $1;
       $pos = pos $code;
       substr ($code, $pos, 0) = "\n";
@@ -1120,6 +1129,8 @@ if($output =~ m/^\s*$/) {
   $output =~ s/\s*process\s*\d+\s*is\s*executing\s*new\s*program:\s*.*?\s*Error\s*in\s*re-setting\s*breakpoint\s*\d+:\s*.*?No\s*symbol\s*table\s*is\s*loaded.\s*\s*Use\s*the\s*"file"\s*command.//s;
   $output =~ s/\](\d+:\d+:\s*)*warning:/]\n$1warning:/g;
   $output =~ s/\](\d+:\d+:\s*)*error:/]\n$1error:/g;
+  $output =~ s/\s+no output/ no output/;
+  $output =~ s/^\s+no output/no output/;
 }
 
 if($warn_unterminated_define == 1) {
