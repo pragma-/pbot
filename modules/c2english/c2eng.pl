@@ -7,13 +7,6 @@ use Parse::RecDescent;
 use Getopt::Std;
 use Data::Dumper;
 
-# todo: 1. the entire syntax for pointers to functions.
-# 2. preprocessor directives. (getting there)
-# So, the problem with handling CPP directives is when they
-# interrupt something. I'm open to ideas. 
-# 4. functions to handle the nesting levels (ordinal number generator and CPP stack)
-# 6. change returns to prints where appropriate.
-
 our ($opt_T, $opt_t, $opt_o, $opt_P);
 getopts('TPto:'); 
 
