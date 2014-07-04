@@ -19,7 +19,7 @@ if($code =~ s/^-f\s+//) {
 }
 
 my ($has_function, $has_main, $got_nomain);
-my $prelude_base = "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n\n";
+my $prelude_base = "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <stdnoreturn.h>\n#include <stdbool.h>\n\n";
 my $prelude = $prelude_base;
 
 print "code before: [$code]\n" if $debug;
@@ -275,7 +275,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   $precode =~ s/^{(.*)}$/$1/s;
 
   if(not $has_main and not $got_nomain) {
-    $code = "$prelude\n$code" . "int main(void) {\n$precode\n;\nreturn 0;\n}\n";
+    $code = "$prelude\n$code" . "int main(void) {\n$precode\n;\n}\n";
   } else {
     print "code: [$code]; precode: [$precode]\n" if $debug;
     $code = "$prelude\n$precode\n\n$code\n";
@@ -389,14 +389,17 @@ close $fh;
 $output = `./c2eng.pl code2eng.c` if not defined $output;
 
 if(not $has_function and not $has_main) {
-  $output =~ s/Let .main. be a function taking no arguments and returning int.\s*To perform the function.\s*(return 0.)?//i;
+  $output =~ s/Let .main. be a function taking no arguments and returning int.\s*When called, the function will.\s*(return 0.)?//i;
   $output =~ s/\s*Return 0.\s*End of function .main..\s*//;
-  $output =~ s/\s*Return 0.$//;
+  $output =~ s/\s*Finally, return 0.$//;
+  $output =~ s/\s*and then return 0.$/./;
   $output =~ s/\s*Do nothing.\s*$//;
   $output =~ s/^\s*(.)/\U$1/;
   $output =~ s/\.\s+(\S)/. \U$1/g;
 } elsif($has_function and not $has_main) {
-  $output =~ s/\s*Let `main` be a function taking no arguments and returning int.\s*To perform the function, return 0.//;
+  $output =~ s/\s*Let `main` be a function taking no arguments and returning int.\s*When called, the function will return 0.//;
+  $output =~ s/\s*Finally, return 0.$//;
+  $output =~ s/\s*and then return 0.$/./;
 }
 
 $output =~ s/\s+/ /;

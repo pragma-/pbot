@@ -162,20 +162,37 @@ function_definition:
               $parameter_list =~ s/function/function with suggestion to be as fast as possible$and/;
             }
 
-            if ($declaration_specifiers =~ /_Noreturn/) {
+            if ($return_type =~ s/_Noreturn//g) {
+              $return_type = join(' ', split(' ', $return_type));
               $parameter_list =~ s/ returning$//;
-              $return_type = "which doesn't return to its caller";
+              if ($return_type eq 'void') {
+                $return_type = "which doesn't return to its caller";
+              } else {
+                $return_type = "which shouldn't return to its caller yet does mysteriously return $return_type";
+              }
             }
             
-            $return = "\nLet $name be a ";
-            $return .= $parameter_list;
-            $return .= " $return_type.\nTo perform the function, ^L";
-            $return .= join('', @{$item{'compound_statement(?)'}});
+            $return = "\nLet $name be a $parameter_list $return_type.\n";
+            
+            my $statements = join('', @{$item{'compound_statement(?)'}});
+            $return .= "When called, the function will ^L$statements";
           } 
 
 block_item_list:
       block_item(s)
-          { $return = join('', @{$item{'block_item(s)'}}); }
+          { 
+            if (@{$item{'block_item(s)'}} == 1) {
+              $return = $item{'block_item(s)'}->[0];
+            } elsif (@{$item{'block_item(s)'}} == 2) {
+              my $first = $item{'block_item(s)'}->[0];
+              my $second = $item{'block_item(s)'}->[1];
+              $first =~ s/\.?\s*$//;
+              $return = "$first and then ^L$second";
+            } else {
+              my $last = pop @{$item{'block_item(s)'}};
+              $return = join('Then ^L', @{$item{'block_item(s)'}}) . "Finally, ^L$last";
+            }
+          }
 
 block_item:
       declaration
@@ -629,7 +646,11 @@ declaration:
             $item{declaration_specifiers} = join(' ', split(' ', $item{declaration_specifiers}));
 
             if ($noreturn) {
-              $item{declaration_specifiers} = "which doesn't return to its caller";
+              if($item{declaration_specifiers} eq 'void') {
+                $item{declaration_specifiers} = "which doesn't return to its caller";
+              } else {
+                $item{declaration_specifiers} = "which shouldn't return to its caller yet does mysteriously return $item{declaration_specifiers}";
+              }
             }
 
             my $inits = 0;
@@ -637,9 +658,9 @@ declaration:
               $inits++;
               if (not $arg{context} eq 'struct member') {
                 if ($arg{context} eq 'for init') {
-                  $return .= "letting ";
+                  $return .= "declaring ";
                 } else {
-                  $return .= "Let ";
+                  $return .= "Declare ";
                 }
               }
 
@@ -753,10 +774,10 @@ declaration:
 
                 if ($typedef) {
                   $return .= ' each' if @identifiers > 1;
-                  $return .= ' be another name for ';
+                  $return .= ' as another name for ';
                   push @typedefs, @identifiers;
                 } else {
-                  $return .= ' be ';
+                  $return .= ' as ';
                 }
 
                 if ($first_qualifier) {
