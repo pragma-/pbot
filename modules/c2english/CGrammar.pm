@@ -788,6 +788,7 @@ declaration:
                     $return .= " $initializers[0]->[1]";
                   }
                 }
+                $return =~ s/,$//;
                 $return .= ".\n" unless $arg{context} eq 'for init';
               }
             }
@@ -1552,7 +1553,7 @@ struct_or_union_specifier:
             $return = join('',@{$item{'comment(?)'}}) . $item{struct_or_union};
             if ($identifier) { $return .= " tagged $identifier"; } 
             my $plural = $item{struct_declaration_list} =~ / and / ? 's' : '';
-            $return .= " with member$plural $item{struct_declaration_list}"; 
+            $return .= ", with member$plural $item{struct_declaration_list},";
           }
     | struct_or_union identifier
           {
