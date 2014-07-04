@@ -152,10 +152,21 @@ function_definition:
             }
 
             if ($return_type =~ s/( with.*)$//) {
-              my $storage_class_specifier = $1;
-              $parameter_list =~ s/function/function$storage_class_specifier/;
+              my $specifier = $1;
+              $parameter_list =~ s/function/function$specifier/;
             }
 
+            if ($return_type =~ s/inline//g) {
+              $return_type = join(' ', split(' ', $return_type));
+              my $and = $parameter_list =~ s/function with/function/ ? ' and' : '';
+              $parameter_list =~ s/function/function with suggestion to be as fast as possible$and/;
+            }
+
+            if ($declaration_specifiers =~ /_Noreturn/) {
+              $parameter_list =~ s/ returning$//;
+              $return_type = "which doesn't return to its caller";
+            }
+            
             $return = "\nLet $name be a ";
             $return .= $parameter_list;
             $return .= " $return_type.\nTo perform the function, ^L";
@@ -614,6 +625,12 @@ declaration:
           {
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
             my $typedef = $item{declaration_specifiers} =~ s/^type definition of //;
+            my $noreturn = $item{declaration_specifiers} =~ s/_Noreturn//g;
+            $item{declaration_specifiers} = join(' ', split(' ', $item{declaration_specifiers}));
+
+            if ($noreturn) {
+              $item{declaration_specifiers} = "which doesn't return to its caller";
+            }
 
             my $inits = 0;
             while (@init_list) {
@@ -743,6 +760,10 @@ declaration:
                 }
 
                 if ($first_qualifier) {
+                  if ($noreturn) {
+                    $first_qualifier =~ s/ returning$//;
+                  }
+
                   if (@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
                     $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
                   } elsif (@identifiers > 1 and not $typedef) {
@@ -1272,9 +1293,7 @@ array_declarator:
 
             if ($qualifiers) {
               if($qualifiers =~ s/static//g) {
-                $qualifiers =~ s/^\s+//;
-                $qualifiers =~ s/\s+$//;
-                $qualifiers =~ s/\s+/ /g;
+                $qualifiers = join(' ', split(' ', $qualifiers));
                 if($qualifiers) {
                   $return = "a $qualifiers array ";
                 } else {
@@ -1386,9 +1405,7 @@ direct_abstract_declarator:
 
             if ($qualifiers) {
               if($qualifiers =~ s/static//g) {
-                $qualifiers =~ s/^\s+//;
-                $qualifiers =~ s/\s+$//;
-                $qualifiers =~ s/\s+/ /g;
+                $qualifiers = join(' ', split(' ', $qualifiers));
                 if($qualifiers) {
                   $return = "a $qualifiers array ";
                 } else {
@@ -1444,6 +1461,11 @@ type_qualifier_list:
       type_qualifier(s) 
           { $return = join(' ', @{$item{'type_qualifier(s)'}}); }
 
+function_specifier:
+      'inline'
+    | '_Noreturn'
+    | 'noreturn'
+          { $return = '_Noreturn'; }
 
 declaration_specifiers:
       comment(?) type_specifier ...identifier
@@ -1472,6 +1494,12 @@ declaration_specifiers:
           {
             my $decl_spec = join(' ',@{$item{'declaration_specifiers(?)'}});
             $return = join('',@{$item{'comment(?)'}}) . $item{type_qualifier};
+            $return .=  " $decl_spec" if $decl_spec;
+          }
+   | comment(?) function_specifier declaration_specifiers(?)
+          {
+            my $decl_spec = join(' ',@{$item{'declaration_specifiers(?)'}});
+            $return = join('',@{$item{'comment(?)'}}) . $item{function_specifier};
             $return .=  " $decl_spec" if $decl_spec;
           }
 
