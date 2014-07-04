@@ -389,14 +389,14 @@ close $fh;
 $output = `./c2eng.pl code2eng.c` if not defined $output;
 
 if(not $has_function and not $has_main) {
-  $output =~ s/Let .main. be a function taking no parameters and returning int.\s*To perform the function.\s*(return 0.)?//i;
+  $output =~ s/Let .main. be a function taking no arguments and returning int.\s*To perform the function.\s*(return 0.)?//i;
   $output =~ s/\s*Return 0.\s*End of function .main..\s*//;
   $output =~ s/\s*Return 0.$//;
   $output =~ s/\s*Do nothing.\s*$//;
   $output =~ s/^\s*(.)/\U$1/;
   $output =~ s/\.\s+(\S)/. \U$1/g;
 } elsif($has_function and not $has_main) {
-  $output =~ s/\s*Let `main` be a function taking no parameters and returning int.\s*To perform the function, return 0.//;
+  $output =~ s/\s*Let `main` be a function taking no arguments and returning int.\s*To perform the function, return 0.//;
 }
 
 $output =~ s/\s+/ /;

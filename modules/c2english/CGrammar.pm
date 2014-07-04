@@ -1317,10 +1317,10 @@ parameter_list:
               if (ref $parameter_list[$i] eq 'ARRAY') {
                 my @list = ::flatten @{$parameter_list[$i]};
                 if (@list == 0) {
-                  $return = "no parameters";
+                  $return = "no arguments";
                 } elsif (@list ==  1) {
                   if ($list[0] eq 'void') {
-                    $return = "no parameters";
+                    $return = "no arguments";
                   } else {
                     $return .= $list[0];
                   }
@@ -1350,11 +1350,11 @@ parameter_declaration:
       declaration_specifiers declarator 
           { $return = [$item{declaration_specifiers}, $item{declarator}]; }
     | '...'
-          { $return = "variadic parameters"; }
+          { $return = "variadic arguments"; }
     | declaration_specifiers abstract_declarator(?) 
           { $return = [$item{declaration_specifiers}, $item{'abstract_declarator(?)'}]; }
     | ''
-          { $return = "unspecified parameters"; }
+          { $return = "unspecified arguments"; }
 
 abstract_declarator: 
       pointer 
@@ -1405,7 +1405,7 @@ direct_abstract_declarator:
     | DAD '[' ']'
     | DAD '[' array_qualifiers(?) assignment_expression(?) ']'
     | '(' ')'
-          { $return = 'function taking unspecified parameters and returning'; }
+          { $return = 'function taking unspecified arguments and returning'; }
     | '(' parameter_type_list ')'
           { $return = "function taking $item{parameter_type_list} and returning"; }
     | DAD '(' ')'
