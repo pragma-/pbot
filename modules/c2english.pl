@@ -389,7 +389,7 @@ close $fh;
 $output = `./c2eng.pl code2eng.c` if not defined $output;
 
 if(not $has_function and not $has_main) {
-  $output =~ s/Let .main. be a function taking no arguments and returning int.\s*When called, the function will.\s*(return 0.)?//i;
+  $output =~ s/Let .main. be a function taking no arguments and returning int.\s*When called, the function will.\s*(do nothing.)?//i;
   $output =~ s/\s*Return 0.\s*End of function .main..\s*//;
   $output =~ s/\s*Finally, return 0.$//;
   $output =~ s/\s*and then return 0.$/./;
@@ -397,7 +397,7 @@ if(not $has_function and not $has_main) {
   $output =~ s/^\s*(.)/\U$1/;
   $output =~ s/\.\s+(\S)/. \U$1/g;
 } elsif($has_function and not $has_main) {
-  $output =~ s/\s*Let `main` be a function taking no arguments and returning int.\s*When called, the function will return 0.//;
+  $output =~ s/\s*Let `main` be a function taking no arguments and returning int.\s*When called, the function will do nothing.//;
   $output =~ s/\s*Finally, return 0.$//;
   $output =~ s/\s*and then return 0.$/./;
 }

@@ -66,9 +66,9 @@ undefinition:
 
 inclusion: 
       'include' '<' filename '>' <skip: '[ \t]*'> "\n"
-          { $return = "\nInclude system file $item{filename}.\n"; }
+          { $return = "\nInclude the header $item{filename}.\n"; }
     | 'include' '"' filename '"' <skip: '[ \t]*'> "\n"
-          { $return = "\nInclude user file $item{filename}.\n"; }
+          { $return = "\nInclude the source file $item{filename}.\n"; }
     | 'include' token
           { $return = "\nImport code noted by the token $item{token}.\n"; }   
 
@@ -669,11 +669,7 @@ declaration:
               my ($first_qualifier, $first_initializer);
               my $first_identifier = shift @args;
 
-              if (not length $first_identifier) {
-                $first_identifier = 'there';
-              }
-
-              my @identifiers = ($first_identifier);
+              my @identifiers = ($first_identifier) unless not length $first_identifier;
 
               my $next_arg = shift @args;
               if ($next_arg =~ m/initialized/) {
@@ -739,7 +735,7 @@ declaration:
                   }
                 }
 
-                $return .= ' as ';
+                $return .= ' as ' unless not @identifiers;
 
                 if ($first_qualifier) {
                   if ($first_qualifier =~ /bit\-field/) {
@@ -753,7 +749,8 @@ declaration:
                     $first_qualifier =~ s/pointer/pointers/;
                     $first_qualifier =~ s/an array/arrays/;
                   }
-                  $return .= "$first_qualifier $item{declaration_specifiers}";
+                  $return .= "$first_qualifier";
+                  $return .=  $item{declaration_specifiers} if $item{declaration_specifiers};
                 } else {
                   if (@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
                     $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
@@ -777,7 +774,7 @@ declaration:
                   $return .= ' as another name for ';
                   push @typedefs, @identifiers;
                 } else {
-                  $return .= ' as ';
+                  $return .= ' as ' unless not @identifiers;
                 }
 
                 if ($first_qualifier) {
