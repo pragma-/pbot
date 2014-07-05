@@ -750,7 +750,7 @@ declaration:
                     $first_qualifier =~ s/an array/arrays/;
                   }
                   $return .= "$first_qualifier";
-                  $return .=  $item{declaration_specifiers} if $item{declaration_specifiers};
+                  $return .= " $item{declaration_specifiers}" if $item{declaration_specifiers};
                 } else {
                   if (@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
                     $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
@@ -837,7 +837,7 @@ init_declarator_list:
       <leftop: init_declarator ',' init_declarator> 
 
 init_declarator:
-      declarator[context => 'init_declarator']
+      declarator[context => "$arg{context}|init_declarator"]
           {
             $return = $item{declarator};
           }
@@ -1304,7 +1304,11 @@ array_declarator:
                 $size = "$size elements";
               }
             } else {
-              $size = 'unspecified length';
+              if ($arg{context} =~ /struct member/) {
+                $size = 'flexible length';
+              } else {
+                $size = 'unspecified length';
+              }
             }
 
             my $qualifiers = join('', @{$item{'array_qualifiers(?)'}});
@@ -1395,7 +1399,11 @@ parameter_declaration:
 
 abstract_declarator: 
       pointer(?) direct_abstract_declarator(s) 
-          { $return = join(' ',@{$item{'pointer(?)'}}) . ' ' . join(' ', @{$item{'direct_abstract_declarator(s)'}}); }
+          { 
+            my $pointer = join(' ', @{$item{'pointer(?)'}});
+            $return = "$pointer " if $pointer;
+            $return .= join(' ', @{$item{'direct_abstract_declarator(s)'}});
+          }
     | pointer 
 
 direct_abstract_declarator:
