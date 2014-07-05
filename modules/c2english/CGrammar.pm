@@ -1394,9 +1394,9 @@ parameter_declaration:
           { $return = "unspecified arguments"; }
 
 abstract_declarator: 
-      pointer 
-    | pointer(?) direct_abstract_declarator(s) 
-          { $return = join(' ',@{$item{'pointer(?)'}}) . join(' ', @{$item{'direct_abstract_declarator(s)'}}); }
+      pointer(?) direct_abstract_declarator(s) 
+          { $return = join(' ',@{$item{'pointer(?)'}}) . ' ' . join(' ', @{$item{'direct_abstract_declarator(s)'}}); }
+    | pointer 
 
 direct_abstract_declarator:
       '(' abstract_declarator ')'
