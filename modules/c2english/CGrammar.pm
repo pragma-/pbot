@@ -640,6 +640,7 @@ declaration_list:
 declaration:
       declaration_specifiers init_declarator_list(?) ';'
           {
+            print STDERR "wtf1\n", ::Dumper \%item;
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
             my $typedef = $item{declaration_specifiers} =~ s/^type definition of //;
             my $noreturn = $item{declaration_specifiers} =~ s/_Noreturn//g;
@@ -1236,6 +1237,21 @@ primary_expression:
     | identifier
     | {} # nothing
 
+Alignas:
+      '_Alignas'
+    | 'alignas'
+
+alignment_specifier:
+      Alignas '(' type_name ')'
+          {
+            $return = "with alignment of the type $item{type_name}";
+          }
+    | Alignas '(' constant_expression ')'
+          {
+            my $plural = $item{constant_expression} != 1 ? 's' : '';
+            $return = "with alignment of $item{constant_expression} byte$plural between objects";
+          }
+
 declarator:
       direct_declarator(s)
           { 
@@ -1494,13 +1510,13 @@ function_specifier:
           { $return = '_Noreturn'; }
 
 declaration_specifiers:
-      comment(?) type_specifier ...identifier
-          { $return = join('', @{$item{'comment(?)'}}) . $item{type_specifier}; }
-    | comment(?) storage_class_specifier declaration_specifiers(?) 
+      comment[context => 'declaration_specifiers'] declaration_specifiers(s)
+          { $return = "$item{comment} " . join(' ', @{$item{'declaration_specifiers(s)'}}); }
+    | type_specifier ...identifier
+          { $return = $item{type_specifier}; }
+    | storage_class_specifier declaration_specifiers(?) 
           {
             my $decl_spec =  join(' ', @{$item{'declaration_specifiers(?)'}});
-            $return = join('',@{$item{'comment(?)'}});
-
             if ($item{storage_class_specifier} =~ m/^with/) {
               if ($decl_spec) { $return .=  "$decl_spec "; } 
               $return .= $item{storage_class_specifier};
@@ -1509,24 +1525,37 @@ declaration_specifiers:
               if ($decl_spec) { $return .=  " $decl_spec"; }
             }
           }
-    | comment(?) type_specifier(s) declaration_specifiers(?) 
+    | type_specifier(s) declaration_specifiers(?) 
           {
+            print STDERR "wtf3\n", ::Dumper \%item;
             my $decl_spec = join(' ', @{$item{'declaration_specifiers(?)'}});
-            $return = join('',@{$item{'comment(?)'}});
+            if ($decl_spec =~ s/\s*(with.*)$//) {
+              push @{$item{'type_specifier(s)'}}, $1;
+            } 
             $return .= "$decl_spec " if $decl_spec;
             $return .= join(' ', @{$item{'type_specifier(s)'}});
           }
-    | comment(?) type_qualifier declaration_specifiers(?) 
+    | type_qualifier declaration_specifiers(?) 
           {
             my $decl_spec = join(' ',@{$item{'declaration_specifiers(?)'}});
-            $return = join('',@{$item{'comment(?)'}}) . $item{type_qualifier};
+            $return = $item{type_qualifier};
             $return .=  " $decl_spec" if $decl_spec;
           }
-   | comment(?) function_specifier declaration_specifiers(?)
+    | function_specifier declaration_specifiers(?)
           {
             my $decl_spec = join(' ',@{$item{'declaration_specifiers(?)'}});
-            $return = join('',@{$item{'comment(?)'}}) . $item{function_specifier};
+            $return = $item{function_specifier};
             $return .=  " $decl_spec" if $decl_spec;
+          }
+    | alignment_specifier(s) declaration_specifiers(?)
+          {
+            my $decl_spec = join(' ',@{$item{'declaration_specifiers(?)'}});
+            if ($decl_spec) {
+              $return =  "$decl_spec ";
+              $return .= 'or ' if $decl_spec =~ /with alignment/;
+            }
+            $return .= join(' or ', @{$item{'alignment_specifier(s)'}});
+            $return .= ', whichever is more strict' if $return =~ /or with alignment/;
           }
 
 storage_class_specifier:
@@ -1708,11 +1737,16 @@ comment:
 comment_c:
       m{/\*[^*]*\*+([^/*][^*]*\*+)*/}s
           {
+            print STDERR "wtf4\n", ::Dumper \%arg;
             $return = $item[1];
             $return =~ s|^/\*+\s*||;
             $return =~ s|\s*\*+/$||;
             $return =~ s/"/\\"/g;
-            $return = "\nA comment: \"$return\".\n"; 
+            if ($arg{context} =~ /statement/) {
+              $return = "\nA comment: \"$return\".\n"; 
+            } else {
+              $return = "(a comment: \"$return\")"; 
+            }
           }
 
 comment_cxx:
