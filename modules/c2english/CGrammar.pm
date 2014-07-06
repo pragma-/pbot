@@ -640,7 +640,6 @@ declaration_list:
 declaration:
       declaration_specifiers init_declarator_list(?) ';'
           {
-            print STDERR "wtf1\n", ::Dumper \%item;
             my @init_list = defined $item{'init_declarator_list(?)'}->[0] ? @{$item{'init_declarator_list(?)'}->[0]} : ('');
             my $typedef = $item{declaration_specifiers} =~ s/^type definition of //;
             my $noreturn = $item{declaration_specifiers} =~ s/_Noreturn//g;
@@ -1527,7 +1526,6 @@ declaration_specifiers:
           }
     | type_specifier(s) declaration_specifiers(?) 
           {
-            print STDERR "wtf3\n", ::Dumper \%item;
             my $decl_spec = join(' ', @{$item{'declaration_specifiers(?)'}});
             if ($decl_spec =~ s/\s*(with.*)$//) {
               push @{$item{'type_specifier(s)'}}, $1;
@@ -1737,7 +1735,6 @@ comment:
 comment_c:
       m{/\*[^*]*\*+([^/*][^*]*\*+)*/}s
           {
-            print STDERR "wtf4\n", ::Dumper \%arg;
             $return = $item[1];
             $return =~ s|^/\*+\s*||;
             $return =~ s|\s*\*+/$||;
