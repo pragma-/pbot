@@ -1605,6 +1605,13 @@ storage_class_specifier:
 type_qualifier:
       'const'
     | 'volatile' 
+    | 'restrict'
+    | '_Atomic'
+          { $return = 'atomic'; }
+
+atomic_type_specifier:
+      '_Atomic' '(' type_name ')'
+          { $return = "atomic $item{type_name}"; }
 
 type_specifier:
       <skip:''> /\s*/ ('void' | 'double' | 'float' | 'char' | 'short' | 'int' | 'long'
@@ -1630,6 +1637,7 @@ type_specifier:
         | 'clock_t' | 'time_t'
         | <skip:'[\s]*'> struct_or_union_specifier
         | <skip:'[\s]*'> enum_specifier
+        | <skip:'[\s]*'> atomic_type_specifier
         | typedef_name) .../\W/
           { $return = $item[3]; }
 
