@@ -978,12 +978,12 @@ unary_expression:
               $return = $item{unary_operator} . $item{cast_expression};
             }
           }
+    | 'sizeof' unary_expression[context => 'sizeof'] 
+          { $return = "the size of $item{unary_expression}"; }
     | 'sizeof' '(' type_name[context => 'sizeof'] ')' 
           { $return = "the size of the type $item{type_name}"; }
     | 'sizeof' '(' assignment_expression[context => 'sizeof'] ')' 
           { $return = "the size of the type of the expression ($item{assignment_expression})"; }
-    | 'sizeof' unary_expression[context => 'sizeof'] 
-          { $return = "the size of $item{unary_expression}"; }
     | Alignof '(' type_name ')'
           { $return = "the alignment of the type $item{type_name}"; }
 
