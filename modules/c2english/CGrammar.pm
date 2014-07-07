@@ -973,6 +973,12 @@ unary_expression:
           { $return = "the size of the type of the expression ($item{assignment_expression})"; }
     | 'sizeof' unary_expression[context => 'sizeof'] 
           { $return = "the size of $item{unary_expression}"; }
+    | Alignof '(' type_name ')'
+          { $return = "the alignment of the type $item{type_name}"; }
+
+Alignof:
+      '_Alignof'
+    | 'alignof'
 
 postfix_productions:
       '(' argument_expression_list(?) ')' postfix_productions[context => 'function call'](?)
@@ -1824,6 +1830,6 @@ string:
 reserved: 
     /(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto
        |if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef
-       |union|unsigned|void|volatile|while|_Alignas|_Alignof|_Atomic|_Bool|_Complex|_Generic
+       |union|unsigned|void|volatile|while|_Alignas|alignas|_Alignof|alignof|_Atomic|_Bool|_Complex|_Generic
        |_Imaginary|_Noreturn|_Static_assert|_Thread_local)\b/x
 
