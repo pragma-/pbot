@@ -640,10 +640,7 @@ Static_assert:
 static_assert_declaration:
       Static_assert '(' constant_expression ',' string ')' ';'
           {
-            if(not $item{constant_expression} =~ s/ is / is not /) {
-              $item{constant_expression} .= ' is false';
-            }
-            $return = "Halt compilation and produce the diagnostic $item{string} if $item{constant_expression}.\n";
+            $return = "Halt compilation and produce the diagnostic $item{string} unless $item{constant_expression}.\n";
           }
 
 declaration_list: 
