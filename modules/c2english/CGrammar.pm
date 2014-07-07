@@ -633,6 +633,16 @@ cast_expression:
     | unary_expression 
           { $return = $item{unary_expression}; } 
 
+Static_assert:
+      '_Static_assert'
+    | 'static_assert'
+
+static_assert_declaration:
+      Static_assert '(' constant_expression ',' string ')' ';'
+          {
+            $return = "Declare a static assertion to produce the diagnostic $item{string} if $item{constant_expression} is false.\n";
+          }
+
 declaration_list: 
       preproc[context => 'statement'](?) declaration(s) 
           { $return = join('', @{$item{'preproc(?)'}}) . join('', @{$item{'declaration(s)'}}); }
@@ -832,6 +842,7 @@ declaration:
               }
             }
           }
+    | static_assert_declaration
 
 init_declarator_list:
       <leftop: init_declarator ',' init_declarator> 
@@ -1817,9 +1828,6 @@ constant:
             }
           }
  
-integer_constant:
-      /[0-9]+/ 
-
 identifier_word:
       /[a-z_\$][a-z0-9_]*/i
           { $return = "`$item[-1]`"; }
@@ -1831,5 +1839,5 @@ reserved:
     /(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto
        |if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef
        |union|unsigned|void|volatile|while|_Alignas|alignas|_Alignof|alignof|_Atomic|_Bool|_Complex|_Generic
-       |_Imaginary|_Noreturn|_Static_assert|_Thread_local)\b/x
+       |_Imaginary|_Noreturn|noreturn|_Static_assert|static_assert|_Thread_local)\b/x
 
