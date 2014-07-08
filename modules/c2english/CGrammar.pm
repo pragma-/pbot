@@ -745,7 +745,7 @@ declaration:
                   }
 
                   if (@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
-                    $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
+                    $return .= $first_qualifier =~ m/^[aeiou]/ ? 'an ' : 'a ';
                   } elsif (@identifiers > 1 and not $typedef) {
                     $first_qualifier =~ s/pointer/pointers/;
                     $first_qualifier =~ s/an array/arrays/;
@@ -754,7 +754,7 @@ declaration:
                   $return .= " $item{declaration_specifiers}" if $item{declaration_specifiers};
                 } else {
                   if (@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
-                    $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
+                    $return .= $item{declaration_specifiers} =~ m/^[aeiou]/ ? 'an ' : 'a ';
                   }
                   $return .= $item{declaration_specifiers};
                 }
@@ -784,7 +784,7 @@ declaration:
                   }
 
                   if (@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
-                    $return .= $first_qualifier =~ m/^[aeiouy]/ ? 'an ' : 'a ';
+                    $return .= $first_qualifier =~ m/^[aeiou]/ ? 'an ' : 'a ';
                   } elsif (@identifiers > 1 and not $typedef) {
                     $first_qualifier =~ s/pointer/pointers/;
                     $first_qualifier =~ s/an array/arrays/;
@@ -793,7 +793,7 @@ declaration:
                   $return .= $item{declaration_specifiers};
                 } else {
                   if (@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
-                    $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
+                    $return .= $item{declaration_specifiers} =~ m/^[aeiou]/ ? 'an ' : 'a ';
                   }
                   $return .= $item{declaration_specifiers};
                 }
@@ -1019,15 +1019,9 @@ postfix_productions:
             }
             1;
           }
-    | ('[' expression[context => 'array address'] ']' 
-          { $return = $item{expression}; } 
-      )(s) postfix_productions[context => "$arg{context}|array address"](?)
+    | '[' expression[context => 'array address'] ']' postfix_productions[context => "$arg{context}|array address"](?)
           {
-            my $expression = '';
-            if (@{$item[-2]}) { 
-              $expression = join(', and ', @{$item[-2]}); 
-            }
-
+            my $expression = $item[2];
             my $postfix = $item[-1]->[0];
 
             if (length $expression) { 
@@ -1058,7 +1052,8 @@ postfix_productions:
                 my $plural = $expression == 1 ? '' : 's';
                 $return = "the location $expression element$plural backwards from where ^L$arg{primary_expression} points^L";
               } else {
-                $return = "the element of ^L$arg{primary_expression} at location ^L$expression^L";
+                $return = "the element at location ^L$expression^L of";
+                $return .= " $arg{primary_expression}" if $arg{primary_expression};
               }
             }
 
@@ -1642,7 +1637,7 @@ typedef_name:
             foreach (@typedefs) { 
               if ($item{identifier} eq $_) {
                 $answer = 1;      
-                $return = ($item{identifier} =~ m/^`[aeiouy]/ ? 'an ' : 'a ') . $item{identifier};
+                $return = ($item{identifier} =~ m/^`[aeiou]/ ? 'an ' : 'a ') . $item{identifier};
               } 
             }
             if (!$answer) { undef $answer; } 
@@ -1661,7 +1656,7 @@ struct_or_union_specifier:
     | struct_or_union identifier
           {
             $item{struct_or_union} =~ s/^(a|an)//;
-            $return = $item{identifier} =~ m/^`[aeiouy]/ ? 'an' : 'a';
+            $return = $item{identifier} =~ m/^`[aeiou]/ ? 'an' : 'a';
             $return .= " $item{identifier} $item{struct_or_union}";
           }
 
