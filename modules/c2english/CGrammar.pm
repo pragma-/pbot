@@ -681,21 +681,15 @@ declaration:
 
               my @identifiers = ($first_identifier) unless not length $first_identifier;
 
-              my $next_arg = shift @args;
-              if ($next_arg =~ m/initialized/) {
-                $first_initializer = $next_arg;
-                $first_qualifier = shift @args // '';
-              } else {
-                $first_qualifier = $next_arg;
-                $first_initializer = shift @args // '';
+              my $sep = '';
+              foreach my $arg (@args) {
+                if ($arg =~ /initialized/) {
+                  $first_initializer .= "$sep$arg";
+                } else {
+                  $first_qualifier .= "$sep$arg";
+                }
+                $sep = ' ';
               }
-
-              if ($first_initializer !~ /^initialized/) {
-                $first_qualifier .= " $first_initializer" if $first_initializer;
-                $first_initializer = '';
-              }
-
-              my $remaining_args = join(' ', @args);
 
               my @initializers;
               if ($first_initializer) {
@@ -708,13 +702,14 @@ declaration:
                 my ($qualifier, $initializer);
                 my $identifier = shift @args;
 
-                $next_arg = shift @args;
-                if ($next_arg =~ m/initialized/) {
-                  $initializer = $next_arg;
-                  $qualifier = shift @args // '';
-                } else {
-                  $qualifier = $next_arg;
-                  $initializer = shift @args // '';
+                my $sep = '';
+                foreach my $arg (@args) {
+                  if ($arg =~ /initialized/) {
+                    $initializer .= "$sep$arg";
+                  } else {
+                    $qualifier .= "$sep$arg";
+                  }
+                  $sep = ' ';
                 }
 
                 next unless $qualifier eq $first_qualifier;
@@ -799,13 +794,11 @@ declaration:
                     $first_qualifier =~ s/an array/arrays/;
                   }
                   $return .= "$first_qualifier ";
-                  $return .= "$remaining_args " if $remaining_args;
                   $return .= $item{declaration_specifiers};
                 } else {
                   if (@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
                     $return .= $item{declaration_specifiers} =~ m/^[aeiouy]/ ? 'an ' : 'a ';
                   }
-                  $return .= "$remaining_args " if $remaining_args;
                   $return .= $item{declaration_specifiers};
                 }
 
@@ -824,7 +817,7 @@ declaration:
                         $comma = ', ';
                         $and = ' and ';
                       } else {
-                        $initializer =~ s/^initialized to \^L//;
+                        $initializer =~ s/^\s*initialized to \^L//;
                         $return .= "$and$identifier to $initializer";
                         if ($i < @initializers - 2) {
                           $and = $comma = ', ';
@@ -881,18 +874,7 @@ initializer:
 
 initializer_list:
       <leftop: initializer ',' initializer > 
-          {
-            my @inits = @{$item[1]};
-
-           if ($#inits >1) { 
-              my $init = pop @inits; 
-              $return = join(', ',@inits) . ', and ' .$init; 
-            } elsif ($#inits == 1) { 
-              $return = $inits[0] . ', and ' . $inits[1]; 
-            } else { 
-              $return = $inits[0]; 
-            } 
-          }
+          { $return = join(', ', @{$item[1]}); }
 
 designation:
       designator_list '='
@@ -979,11 +961,29 @@ unary_expression:
             }
           }
     | 'sizeof' unary_expression[context => 'sizeof'] 
-          { $return = "the size of $item{unary_expression}"; }
+          {
+            if ($arg{context} =~ /statement$/) {
+              $return = "Evaluate and discard the size of ^L$item{unary_expression}";
+            } else {
+              $return = "the size of ^L$item{unary_expression}";
+            }
+          }
     | 'sizeof' '(' type_name[context => 'sizeof'] ')' 
-          { $return = "the size of the type $item{type_name}"; }
+          {
+            if ($arg{context} =~ /statement$/) {
+              $return = "Evaluate and discard the size of the type $item{type_name}";
+            } else {
+              $return = "the size of the type $item{type_name}";
+            }
+          }
     | 'sizeof' '(' assignment_expression[context => 'sizeof'] ')' 
-          { $return = "the size of the type of the expression ($item{assignment_expression})"; }
+          {
+            if ($arg{context} =~ /statement$/) {
+              $return = "Evaluate and discard the size of the type of the expression (^L$item{assignment_expression})";
+            } else {
+              $return = "the size of the type of the expression (^L$item{assignment_expression})";
+            }
+          }
     | Alignof '(' type_name ')'
           { $return = "the alignment of the type $item{type_name}"; }
 
