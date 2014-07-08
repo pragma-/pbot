@@ -681,14 +681,12 @@ declaration:
 
               my @identifiers = ($first_identifier) unless not length $first_identifier;
 
-              my $sep = '';
               foreach my $arg (@args) {
                 if ($arg =~ /initialized/) {
-                  $first_initializer .= "$sep$arg";
+                  $first_initializer .= (length $first_initializer ? ' ' : '') . $arg;
                 } else {
-                  $first_qualifier .= "$sep$arg";
+                  $first_qualifier .= (length $first_qualifier ? ' ' : '') . $arg;
                 }
-                $sep = ' ';
               }
 
               my @initializers;
@@ -702,14 +700,12 @@ declaration:
                 my ($qualifier, $initializer);
                 my $identifier = shift @args;
 
-                my $sep = '';
                 foreach my $arg (@args) {
                   if ($arg =~ /initialized/) {
-                    $initializer .= "$sep$arg";
+                    $initializer .= (length $initializer ? ' ' : '') . $arg;
                   } else {
-                    $qualifier .= "$sep$arg";
+                    $qualifier .= (length $qualifier ? ' ' : '') . $arg;
                   }
-                  $sep = ' ';
                 }
 
                 next unless $qualifier eq $first_qualifier;
@@ -817,7 +813,7 @@ declaration:
                         $comma = ', ';
                         $and = ' and ';
                       } else {
-                        $initializer =~ s/^\s*initialized to \^L//;
+                        $initializer =~ s/^initialized to \^L//;
                         $return .= "$and$identifier to $initializer";
                         if ($i < @initializers - 2) {
                           $and = $comma = ', ';
@@ -1611,31 +1607,32 @@ atomic_type_specifier:
           { $return = "atomic $item{type_name}"; }
 
 type_specifier:
-      <skip:''> /\s*/ ('void' | 'double' | 'float' | 'char' | 'short' | 'int' | 'long'
-        | 'signed' | 'unsigned'
-        | 'FILE' | 'fpos_t'
-        | 'bool' | '_Bool'
-        | '_Complex' | '_Imaginary'
-        | 'int_fast8_t'   | 'int_fast16_t'   | 'int_fast24_t'   | 'int_fast32_t'   | 'int_fast64_t'   | 'int_fast128_t'
-        | 'uint_fast8_t'  | 'uint_fast16_t'  | 'uint_fast24_t'  | 'uint_fast32_t'  | 'uint_fast64_t'  | 'uint_fast128_t'
-        | 'int_least8_t'  | 'int_least16_t'  | 'int_least24_t'  | 'int_least32_t'  | 'int_least64_t'  | 'int_least128_t'
-        | 'uint_least8_t' | 'uint_least16_t' | 'uint_least24_t' | 'uint_least32_t' | 'uint_least64_t' | 'uint_least128_t'
-        | 'int8_t'   | 'int16_t'  | 'int24_t'  | 'int32_t'  | 'int64_t'  | 'int128_t'
-        | 'uint8_t'  | 'uint16_t' | 'uint24_t' | 'uint32_t' | 'uint64_t' | 'uint128_t'
-        | 'intmax_t' | 'uintmax_t'
-        | 'intptr_t' | 'uintptr_t' | 'ptrdiff_t'
-        | 'sig_atomic_t'
-        | 'wint_t' | 'wchar_t'
-        | 'size_t' | 'rsize_t' | 'max_align_t'
-        | 'mbstate_t' | 'char16_t' | 'char32_t'
-        | 'fenv_t' | 'fexcept_t'
-        | 'div_t' | 'ldiv_t' | 'lldiv_t' | 'imaxdiv_t'
-        | 'cnd_t' | 'thrd_t' | 'tss_t' | 'mtx_t' | 'tss_dtor_t' | 'thrd_start_t' | 'once_flag'
-        | 'clock_t' | 'time_t'
-        | <skip:'[\s]*'> struct_or_union_specifier
-        | <skip:'[\s]*'> enum_specifier
-        | <skip:'[\s]*'> atomic_type_specifier
-        | typedef_name) .../\W/
+      <skip:''> /\s*/
+        (typedef_name | 'void' | 'double' | 'float' | 'char' | 'short' | 'int' | 'long'
+          | 'signed' | 'unsigned'
+          | 'FILE' | 'fpos_t'
+          | 'bool' | '_Bool'
+          | '_Complex' | '_Imaginary'
+          | 'int_fast8_t'   | 'int_fast16_t'   | 'int_fast24_t'   | 'int_fast32_t'   | 'int_fast64_t'   | 'int_fast128_t'
+          | 'uint_fast8_t'  | 'uint_fast16_t'  | 'uint_fast24_t'  | 'uint_fast32_t'  | 'uint_fast64_t'  | 'uint_fast128_t'
+          | 'int_least8_t'  | 'int_least16_t'  | 'int_least24_t'  | 'int_least32_t'  | 'int_least64_t'  | 'int_least128_t'
+          | 'uint_least8_t' | 'uint_least16_t' | 'uint_least24_t' | 'uint_least32_t' | 'uint_least64_t' | 'uint_least128_t'
+          | 'int8_t'   | 'int16_t'  | 'int24_t'  | 'int32_t'  | 'int64_t'  | 'int128_t'
+          | 'uint8_t'  | 'uint16_t' | 'uint24_t' | 'uint32_t' | 'uint64_t' | 'uint128_t'
+          | 'intmax_t' | 'uintmax_t'
+          | 'intptr_t' | 'uintptr_t' | 'ptrdiff_t'
+          | 'sig_atomic_t'
+          | 'wint_t' | 'wchar_t'
+          | 'size_t' | 'rsize_t' | 'max_align_t'
+          | 'mbstate_t' | 'char16_t' | 'char32_t'
+          | 'fenv_t' | 'fexcept_t'
+          | 'div_t' | 'ldiv_t' | 'lldiv_t' | 'imaxdiv_t'
+          | 'cnd_t' | 'thrd_t' | 'tss_t' | 'mtx_t' | 'tss_dtor_t' | 'thrd_start_t' | 'once_flag'
+          | 'clock_t' | 'time_t'
+          | <skip:'[\s]*'> struct_or_union_specifier
+          | <skip:'[\s]*'> enum_specifier
+          | <skip:'[\s]*'> atomic_type_specifier
+        ) .../\W/
           { $return = $item[3]; }
 
 typedef_name:
