@@ -1658,7 +1658,7 @@ struct_or_union_specifier:
             my $identifier = join('',@{$item{'identifier(?)'}});
             $return = join('',@{$item{'comment(?)'}}) . $item{struct_or_union};
             if ($identifier) { $return .= " tagged $identifier"; } 
-            my $plural = $item{struct_declaration_list} =~ / and / ? 's' : '';
+            my $plural = $item{struct_declaration_list} =~ / and (?!returning)/ ? 's' : '';
             $return .= ", with member$plural $item{struct_declaration_list},";
           }
     | struct_or_union identifier
