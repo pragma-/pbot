@@ -622,7 +622,12 @@ rel_add_mul_shift_expression:
       cast_expression ...';'
           { $return = $item{cast_expression}; }
     | <leftop: cast_expression rel_mul_add_ex_op cast_expression>
-          { $return = join('' , @{$item[1]}); } 
+          {
+            if($arg{context} =~ /expression/) {
+              $return = 'the result of the expression ';
+            }
+            $return .= join('' , @{$item[1]}); 
+          }
 
 closure: 
       ',' | ';' | ')' 
@@ -853,7 +858,7 @@ init_declarator:
 initializer:
       designation initializer
           { $return = "$item[1] $item[2]"; }
-    | comment(?) assignment_expression comment(?)
+    | comment(?) assignment_expression[context => "$arg{context}|initializer expression"] comment(?)
           {
             $return = $item[2]; 
 
