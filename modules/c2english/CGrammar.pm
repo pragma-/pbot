@@ -262,7 +262,7 @@ iteration_statement:
             if (length $expression) { 
               if ($expression =~ /^(\d+)$/) {
                 if($expression == 0) {
-                  $return .= "Repeatedly never ^L";
+                  $return .= "Never repeatedly ^L";
                 } else {
                   $return .= "Repeatedly ^L";
                 }
@@ -285,7 +285,7 @@ iteration_statement:
           { 
             if ($item{expression} =~ /(^\d+$)/) {
               if ($1 == 0) {
-                $return = "Repeatedly never ^L";
+                $return = "Never repeatedly ^L";
               } else {
                 $return = "Repeatedly ^L";
               }
