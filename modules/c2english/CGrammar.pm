@@ -266,7 +266,7 @@ iteration_statement:
               $return .= "Repeatedly ^L";
             } 
 
-            $return .= "$item{statement}."; 
+            $return .= "$item{statement}.\n"; 
 
             if ($increment) { 
               $return =~ s/End for loop.$//;
@@ -1015,7 +1015,7 @@ postfix_productions:
             }
 
             my $arg_exp_list = join('',@{$item{'argument_expression_list(?)'}}); 
-            if ($arg_exp_list) { 
+            if (length $arg_exp_list) { 
               $return .= " with argument$arg_exp_list";
             }
 
@@ -1214,7 +1214,7 @@ argument_expression_list:
             } elsif (@arg_exp_list == 2 ) { 
               $return = "s ^L$arg_exp_list[0] and ^L$arg_exp_list[1]";  
             } else {
-              if ($arg_exp_list[0]) {
+              if (length $arg_exp_list[0]) {
                 $return = " ^L$arg_exp_list[0]";
               } else {
                 $return = '';
