@@ -623,10 +623,11 @@ rel_add_mul_shift_expression:
           { $return = $item{cast_expression}; }
     | <leftop: cast_expression rel_mul_add_ex_op cast_expression>
           {
-            if($arg{context} =~ /expression/) {
+            my $expression = join('', @{$item[1]});
+            if($arg{context} =~ /expression/ and $expression =~ / /) {
               $return = 'the result of the expression ';
             }
-            $return .= join('' , @{$item[1]}); 
+            $return .= $expression;
           }
 
 closure: 
