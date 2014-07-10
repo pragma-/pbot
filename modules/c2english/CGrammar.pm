@@ -220,7 +220,7 @@ compound_statement:
                 and $arg{context} ne 'case'
                 and $arg{context} ne 'function definition statement' 
                 and $arg{context} ne 'function definition') { 
-              $return .= "End $arg{context}.\n";
+              $return .= "End $arg{context}.";
             } 
             1;
           }
@@ -259,14 +259,22 @@ iteration_statement:
               $return .= "Prepare a loop by ^L$initialization, then ^L"; 
             }
 
-            if ($expression) { 
-              my $expression  = ::istrue $expression;
-              $return .= "For as long as ^L$expression, ^L"; 
+            if (length $expression) { 
+              if ($expression =~ /^(\d+)$/) {
+                if($expression == 0) {
+                  $return .= "Repeatedly never ^L";
+                } else {
+                  $return .= "Repeatedly ^L";
+                }
+              } else {
+                my $expression  = ::istrue $expression;
+                $return .= "For as long as ^L$expression, ^L"; 
+              }
             } else {
               $return .= "Repeatedly ^L";
             } 
 
-            $return .= "$item{statement}.\n"; 
+            $return .= $item{statement};
 
             if ($increment) { 
               $return =~ s/End for loop.$//;
@@ -277,7 +285,7 @@ iteration_statement:
           { 
             if ($item{expression} =~ /(^\d+$)/) {
               if ($1 == 0) {
-                $return = "Never ^L";
+                $return = "Repeatedly never ^L";
               } else {
                 $return = "Repeatedly ^L";
               }
@@ -375,7 +383,7 @@ expression_statement:
       expression[context => "$arg{context}|statement"](?) ';'
           { 
             my $expression = join('',@{$item[1]}); 
-            if (!$expression) { 
+            if (not length $expression) {
               if ($arg{context} eq 'label'
                   or $arg{context} eq 'for init'
                   or $arg{context} eq 'for conditional') {
