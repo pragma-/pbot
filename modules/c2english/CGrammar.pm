@@ -624,7 +624,7 @@ rel_add_mul_shift_expression:
     | <leftop: cast_expression rel_mul_add_ex_op cast_expression>
           {
             my $expression = join('', @{$item[1]});
-            if($arg{context} =~ /expression/ and $expression =~ / /) {
+            if($arg{context} =~ /expression/ and $expression =~ / / and $expression !~ /the result of the expression/i) {
               $return = 'the result of the expression ';
             }
             $return .= $expression;
@@ -1210,12 +1210,12 @@ argument_expression_list:
             my $last = ''; 
             if (@arg_exp_list > 2) {
               $last = pop @arg_exp_list; 
-              $return = 's ' . join(', ', @arg_exp_list) . ", and $last";
+              $return = 's ' . join(', ^L', @arg_exp_list) . ", and ^L$last";
             } elsif (@arg_exp_list == 2 ) { 
-              $return = "s $arg_exp_list[0] and $arg_exp_list[1]";  
+              $return = "s ^L$arg_exp_list[0] and ^L$arg_exp_list[1]";  
             } else {
               if ($arg_exp_list[0]) {
-                $return = " $arg_exp_list[0]";
+                $return = " ^L$arg_exp_list[0]";
               } else {
                 $return = '';
               }
