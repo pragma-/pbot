@@ -1847,7 +1847,20 @@ identifier_word:
           { $return = "`$item[-1]`"; }
 
 string:
-      /(?:\"(?:\\\"|(?!\").)*\")/
+      (/(?:\"(?:\\\"|(?!\").)*\")/)(s)
+          {
+            if (@{$item[-1]} == 1) {
+              $return = @{$item[-1]}[0];
+            } else {
+              $return = '"';
+              foreach my $string (@{$item[-1]}) {
+                $string =~ s/^"//;
+                $string =~ s/"$//;
+                $return .= $string; 
+              }
+              $return .= '"';
+            }
+          }
 
 reserved: 
     /(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto
