@@ -13,6 +13,7 @@ use warnings;
 use strict;
 
 use feature 'switch';
+no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 use PBot::DualIndexHashObject;
 use PBot::LagChecker;
@@ -266,7 +267,8 @@ sub check_flood {
 
   # check for enter abuse
   if($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT} and $channel =~ m/^#/) {
-    my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'enter_abuse', 'enter_abuses');
+    my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'enter_abuse', 'enter_abuses', 'offenses');
+    my $other_offenses = delete $channel_data->{offenses};
 
     if(defined $self->{channels}->{$channel}->{last_spoken_nick} and $nick eq $self->{channels}->{$channel}->{last_spoken_nick}) {
       my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, 2, $self->{pbot}->{messagehistory}->{MSG_CHAT});
@@ -280,12 +282,13 @@ sub check_flood {
           $channel_data->{enter_abuse} = $enter_abuse_threshold / 2 - 1;
           if(++$channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
             if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-              my $offenses = $channel_data->{enter_abuses} - $enter_abuse_max_offenses + 1;
+              my $offenses = $channel_data->{enter_abuses} - $enter_abuse_max_offenses + 1 + $other_offenses;
               my $ban_length = $self->{pbot}->{registry}->get_array_value('antiflood', 'enter_abuse_punishment', $offenses - 1);
               $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $channel, $ban_length);
               $ban_length = duration($ban_length);
               $self->{pbot}->{logger}->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
               $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in $ban_length.");
+              $channel_data->{last_offense} = gettimeofday;
             }
           } else {
             #$self->{pbot}->{logger}->log("$nick $channel enter abuses counter incremented to " . $channel_data->{enter_abuses} . "\n");
@@ -408,6 +411,7 @@ sub check_flood {
           my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
           foreach my $chan (@channels) {
             next if $chan !~ /^#/;
+            next if not exists $self->{pbot}->{channels}->{channels}->hash->{$chan} or $self->{pbot}->{channels}->{channels}->hash->{$chan}{chanop} == 0;
             $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $chan, $length);
           }
 
@@ -738,9 +742,12 @@ sub adjust_offenses {
   foreach my $channel_data (@$channel_datas) {
     my $id = delete $channel_data->{id};
     my $channel = delete $channel_data->{channel};
-    $channel_data->{enter_abuses}--;
-    #$self->{pbot}->{logger}->log("[adjust-offenses] [$id][$channel] decreasing enter abuse offenses to $channel_data->{enter_abuses}\n");
-    $self->{pbot}->{messagehistory}->{database}->update_channel_data($id, $channel, $channel_data);
+    my $last_offense = delete $channel_data->{last_offense};
+    if(gettimeofday - $last_offense >= 60 * 60 * 24) {
+      $channel_data->{enter_abuses}--;
+      $self->{pbot}->{logger}->log("[adjust-offenses] [$id][$channel] decreasing enter abuse offenses to $channel_data->{enter_abuses}\n");
+      $self->{pbot}->{messagehistory}->{database}->update_channel_data($id, $channel, $channel_data);
+    }
   }
 
   foreach my $account (keys %{ $self->{nickflood} }) {
