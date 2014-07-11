@@ -240,8 +240,9 @@ sub find_message_account_by_nick {
   my ($self, $nick) = @_;
 
   my ($id, $hostmask) = eval {
-    my $sth = $self->{dbh}->prepare('SELECT id,hostmask FROM Hostmasks WHERE hostmask LIKE ? LIMIT 1');
-    $sth->bind_param(1, "$nick!%");
+    my $sth = $self->{dbh}->prepare('SELECT id,hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" LIMIT 1');
+    my $qnick = quotemeta $nick;
+    $sth->bind_param(1, "$qnick!%");
     $sth->execute();
     my $row = $sth->fetchrow_hashref();
     return ($row->{id}, $row->{hostmask});
@@ -268,13 +269,14 @@ sub find_message_accounts_by_nickserv {
 sub find_message_accounts_by_mask {
   my ($self, $mask) = @_;
 
-  $mask =~ s/\*/%/g;
-  $mask =~ s/\?/_/g;
-  $mask =~ s/\$.*$//;
+  my $qmask = quotemeta $mask;
+  $qmask =~ s/\\\*/%/g;
+  $qmask =~ s/\\\?/_/g;
+  $qmask =~ s/\\\$.*$//;
 
   my $accounts = eval {
-    my $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE hostmask LIKE ?');
-    $sth->bind_param(1, $mask);
+    my $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\"');
+    $sth->bind_param(1, $qmask);
     $sth->execute();
     return $sth->fetchall_arrayref();
   };
@@ -290,8 +292,9 @@ sub get_message_account {
   return $id if defined $id;
 
   my $rows = eval {
-    my $sth = $self->{dbh}->prepare('SELECT id,hostmask FROM Hostmasks WHERE hostmask LIKE ? ORDER BY last_seen DESC');
-    $sth->bind_param(1, "$nick!%");
+    my $sth = $self->{dbh}->prepare('SELECT id,hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC');
+    my $qnick = quotemeta $nick;
+    $sth->bind_param(1, "$qnick!%");
     $sth->execute();
     my $rows = $sth->fetchall_arrayref({});
 
@@ -353,7 +356,7 @@ sub update_hostmask_data {
       $comma = ', ';
     }
 
-    $sql .= ' WHERE hostmask LIKE ?';
+    $sql .= ' WHERE hostmask LIKE ? ESCAPE "\"';
 
     my $sth = $self->{dbh}->prepare($sql);
 
@@ -362,7 +365,8 @@ sub update_hostmask_data {
       $sth->bind_param($param++, $data->{$key});
     }
 
-    $sth->bind_param($param, $mask);
+    my $qmask = quotemeta $mask;
+    $sth->bind_param($param, $qmask);
     $sth->execute();
     $self->{new_entries}++;
   };
@@ -632,7 +636,7 @@ sub get_channel_datas_with_enter_abuses {
   my ($self) = @_;
 
   my $channel_datas = eval {
-    my $sth = $self->{dbh}->prepare('SELECT id, channel, enter_abuses FROM Channels WHERE enter_abuses > 0');
+    my $sth = $self->{dbh}->prepare('SELECT id, channel, enter_abuses, last_offense FROM Channels WHERE enter_abuses > 0');
     $sth->execute();
     return $sth->fetchall_arrayref({});
   };
@@ -653,6 +657,107 @@ sub devalidate_all_channels {
     $self->{new_entries}++;
   };
   $self->{pbot}->{logger}->log($@) if $@;
+}
+
+sub get_also_known_as {
+  my ($self, $nick) = @_;
+
+  $self->{pbot}->{logger}->log("Looking for AKAs for nick [$nick]\n");
+
+  my @list = eval {
+    my %aka_hostmasks;
+    my $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC');
+    my $qnick = quotemeta $nick;
+    $sth->bind_param(1, "$qnick!%");
+    $sth->execute();
+    my $rows = $sth->fetchall_arrayref({});
+
+    my %hostmasks;
+    foreach my $row (@$rows) {
+      $hostmasks{$row->{hostmask}} = $row->{hostmask};
+      $self->{pbot}->{logger}->log("Found matching nick for hostmask $row->{hostmask}\n");
+    }
+
+    my %ids;
+    foreach my $hostmask (keys %hostmasks) {
+      my $id = $self->get_message_account_id($hostmask);
+      next if exists $ids{$id};
+      $ids{$id} = $id;
+
+      $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE id == ?');
+      $sth->bind_param(1, $id);
+      $sth->execute();
+      $rows = $sth->fetchall_arrayref({});
+
+      foreach my $row (@$rows) {
+        $aka_hostmasks{$row->{hostmask}} = $row->{hostmask};
+        $self->{pbot}->{logger}->log("Adding matching id AKA hostmask $row->{hostmask}\n");
+        $hostmasks{$row->{hostmask}} = $row->{hostmask};
+      }
+    }
+
+    foreach my $hostmask (keys %hostmasks) {
+      my ($host) = $hostmask =~ /(\@.*)$/;
+      $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE hostmask LIKE ?');
+      $sth->bind_param(1, "\%$host");
+      $sth->execute();
+      $rows = $sth->fetchall_arrayref({});
+
+      foreach my $row (@$rows) {
+        next if exists $ids{$row->{id}};
+        $ids{$row->{id}} = $row->{id};
+
+        $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE id == ?');
+        $sth->bind_param(1, $row->{id});
+        $sth->execute();
+        my $rows = $sth->fetchall_arrayref({});
+
+        foreach my $row (@$rows) {
+          $aka_hostmasks{$row->{hostmask}} = $row->{hostmask};
+          $self->{pbot}->{logger}->log("Adding matching host AKA hostmask $row->{hostmask}\n");
+        }
+      }
+    }
+
+    my %nickservs;
+    foreach my $id (keys %ids) {
+      $sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE id == ?');
+      $sth->bind_param(1, $id);
+      $sth->execute();
+      $rows = $sth->fetchall_arrayref({});
+
+      foreach my $row (@$rows) {
+        $nickservs{$row->{nickserv}} = $row->{nickserv};
+      }
+    }
+
+    foreach my $nickserv (keys %nickservs) {
+      $sth = $self->{dbh}->prepare('SELECT id FROM Nickserv WHERE nickserv == ?');
+      $sth->bind_param(1, $nickserv);
+      $sth->execute();
+      $rows = $sth->fetchall_arrayref({});
+
+      foreach my $row (@$rows) {
+        next if exists $ids{$row->{id}};
+        $ids{$row->{id}} = $row->{id};
+
+        $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE id == ?');
+        $sth->bind_param(1, $row->{id});
+        $sth->execute();
+        my $rows = $sth->fetchall_arrayref({});
+
+        foreach my $row (@$rows) {
+          $aka_hostmasks{$row->{hostmask}} = $row->{hostmask};
+          $self->{pbot}->{logger}->log("Adding matching nickserv AKA hostmask $row->{hostmask}\n");
+        }
+      }
+    }
+
+    return sort keys %aka_hostmasks;
+  };
+
+  $self->{pbot}->{logger}->log($@) if $@;
+  return @list;
 }
 
 # End of public API, the remaining are internal support routines for this module

@@ -46,7 +46,8 @@ sub initialize {
 
   $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_messages', $conf{max_messages} // 32);
 
-  $self->{pbot}->{commands}->register(sub { $self->recall_message(@_) },  "recall",  0);
+  $self->{pbot}->{commands}->register(sub { $self->recall_message(@_)     },  "recall",  0);
+  $self->{pbot}->{commands}->register(sub { $self->list_also_known_as(@_) },  "aka",     0);
 
   $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
 }
@@ -59,6 +60,35 @@ sub get_message_account {
 sub add_message {
   my ($self, $account, $mask, $channel, $text, $mode) = @_;
   $self->{database}->add_message($account, $mask, $channel, { timestamp => scalar gettimeofday, msg => $text, mode => $mode });
+}
+
+sub list_also_known_as {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  if(not length $arguments) {
+    return "Usage: aka <nick>";
+  }
+
+  my @akas = $self->{database}->get_also_known_as($arguments);
+  if(@akas) {
+    my $result = "$arguments also known as: ";
+
+    my %uniq;
+    foreach my $aka (@akas) {
+      my ($nick) = $aka =~ /^([^!]+)!/;
+      $uniq{$nick} = $nick;
+    }
+
+    my $sep = "";
+    foreach my $aka (sort keys %uniq) {
+      next if $aka =~ /^Guest\d+$/;
+      $result .= "$sep$aka";
+      $sep = ", ";
+    }
+    return $result;
+  } else {
+    return "I don't know anybody named $arguments.";
+  }
 }
 
 sub recall_message {
