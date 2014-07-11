@@ -40,6 +40,7 @@ my %factoid_metadata_levels = (
   edited_on                   => 60,
   locked                      => 10,
   add_nick                    => 10,
+  nooverride                  => 10,
   # all others are allowed to be factset by anybody/default to level 0
 );
 
@@ -447,10 +448,15 @@ sub factadd {
   $from_chan = '.*' if not $from_chan =~ m/^#/;
 
   my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, undef, 1, 1);
-
   if(defined $trigger) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to overwrite $keyword\n");
-    return "$keyword already exists for " . ($from_chan eq '.*' ? 'global channel' : $from_chan) . ".";
+    return "$keyword already exists for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
+  }
+
+  ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid('.*', $keyword, undef, 1, 1);
+  if(defined $trigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$trigger}->{'nooverride'}) {
+    $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $keyword\n");
+    return "$keyword already exists for the global channel and cannot be overridden for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
   }
 
   $self->{pbot}->{factoids}->add_factoid('text', $from_chan, "$nick!$user\@$host", $keyword, $text);
@@ -860,6 +866,7 @@ sub load_module {
   if(not exists($factoids->{'.*'}->{$keyword})) {
     $self->{pbot}->{factoids}->add_factoid('module', '.*', "$nick!$user\@$host", $keyword, $module);
     $factoids->{'.*'}->{$keyword}->{add_nick} = 1;
+    $factoids->{'.*'}->{$keyword}->{nooverride} = 1;
     $self->{pbot}->{logger}->log("$nick!$user\@$host loaded module $keyword => $module\n");
     $self->{pbot}->{factoids}->save_factoids();
     return "Loaded module $keyword => $module";
