@@ -65,29 +65,53 @@ sub add_message {
 sub list_also_known_as {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
+  my $usage = "Usage: aka [-h] <nick>";
+
   if(not length $arguments) {
-    return "Usage: aka <nick>";
+    return $usage;
   }
 
-  my @akas = $self->{database}->get_also_known_as($arguments);
+  my $getopt_error;
+  local $SIG{__WARN__} = sub {
+    $getopt_error = shift;
+    chomp $getopt_error;
+  };
+
+  my $show_hostmasks;
+  my ($ret, $args) = GetOptionsFromString($arguments,
+    'h' => \$show_hostmasks);
+
+  return "$getopt_error -- $usage" if defined $getopt_error;
+  return "Too many arguments -- $usage" if @$args > 1;
+  return "Missing argument -- $usage" if @$args != 1;
+
+  my @akas = $self->{database}->get_also_known_as(@$args[0]);
   if(@akas) {
-    my $result = "$arguments also known as: ";
+    my $result = "@$args[0] also known as: ";
 
     my %uniq;
     foreach my $aka (@akas) {
-      my ($nick) = $aka =~ /^([^!]+)!/;
-      $uniq{$nick} = $nick;
+      if (not $show_hostmasks) {
+        my ($nick) = $aka =~ /^([^!]+)!/;
+        $uniq{$nick} = $nick;
+      } else {
+        $uniq{$aka} = $aka;
+      }
     }
 
     my $sep = "";
     foreach my $aka (sort keys %uniq) {
-      next if $aka =~ /^Guest\d+$/;
+      next if $aka =~ /^Guest\d+(!.*)?$/;
       $result .= "$sep$aka";
-      $sep = ", ";
+      if ($show_hostmasks) {
+        $sep = ",\n";
+      } else {
+        $sep = ", ";
+      }
     }
     return $result;
   } else {
-    return "I don't know anybody named $arguments.";
+    return "I don't know anybody named @$args[0].";
   }
 }
 
