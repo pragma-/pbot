@@ -75,7 +75,6 @@ foreach my $arg (@ARGV) {
     $output =~ s/the evaluate the/the/g;
     $output =~ s/by evaluate the/by the/g;
     $output =~ s/the a /the /g;
-    $output =~ s/result of the expression the result of the function/result of the function/g;
  
     foreach my $quote (@quotes) {
       next unless $quote;

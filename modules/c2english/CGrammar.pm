@@ -363,7 +363,7 @@ jump_statement:
           } 
     | 'continue' ';'
           { $return = "Return to the top of the current loop.\n"; } 
-    | 'return' <commit> expression[context => 'return statement'](?) ';' 
+    | 'return' <commit> expression[context => "$arg{context}|return expression"](?) ';' 
           {
             my $expression = join('', @{$item{'expression(?)'}});
 
@@ -584,7 +584,11 @@ logical_OR_AND_expression:
         rel_add_mul_shift_expression[context => 'logical_OR_AND_expression']>
           {
             if (defined $arg{context} and $arg{context} eq 'for conditional') { print STDERR "hmm2\n"; }
-            $return = join('', @{$item[1]});
+            my $expression = join('', @{$item[1]});
+            if($arg{context} =~ /expression$/ and $expression =~ / / and $expression !~ /^the result of/i) {
+              $return = 'the result of the expression ^L';
+            }
+            $return .= $expression;
           } 
 
 log_OR_AND_bit_or_and_eq: 
@@ -630,20 +634,14 @@ rel_add_mul_shift_expression:
       cast_expression ...';'
           { $return = $item{cast_expression}; }
     | <leftop: cast_expression rel_mul_add_ex_op cast_expression>
-          {
-            my $expression = join('', @{$item[1]});
-            if($arg{context} =~ /expression/ and $expression =~ / / and $expression !~ /the result of the expression/i) {
-              $return = 'the result of the expression ';
-            }
-            $return .= $expression;
-          }
+          { $return = join('', @{$item[1]}); }
 
 closure: 
       ',' | ';' | ')' 
 
 cast_expression:
       '(' type_name ')' cast_expression[context => 'recast']
-          { $return = "$item{cast_expression} type-casted as $item{type_name}"; }
+          { $return = "$item{cast_expression} converted to $item{type_name}"; }
     | unary_expression 
           { $return = $item{unary_expression}; } 
 
@@ -1008,7 +1006,7 @@ postfix_productions:
 
             $arg{primary_expression} =~ s/^Evaluate the expression/resulting from the expression/;
 
-            if($arg{context} =~ /statement/) {
+            if($arg{context} =~ /statement$/) {
               $return = "Call the function $arg{primary_expression}";
             } else {
               $return = "the result of the function $arg{primary_expression}";
