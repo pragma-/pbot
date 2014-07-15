@@ -546,11 +546,11 @@ assignment_operator:
     | '&='
           { 
             if ($arg{context} =~ /for init/) { 
-              $return = ['bit-wise ANDing^L', 'by^L' ];  
+              $return = ['bitwise-ANDing^L', 'by^L' ];  
             } elsif ($arg{context} =~ /statement$/) { 
-              $return = ['Bit-wise ANDed^L', 'by^L' ];  
+              $return = ['Bitwise-AND^L', 'by^L' ];  
             } else { 
-              $return = 'which is bit-wise ANDed by^L'; 
+              $return = 'which is bitwise-ANDed by^L'; 
             }
           }
     | '^='
@@ -566,11 +566,11 @@ assignment_operator:
     | '|='
           { 
             if ($arg{context} =~ /for init/) { 
-              $return = ['bit-wise ORing^L', 'by^L'];  
+              $return = ['bitwise-ORing^L', 'by^L'];  
             } elsif ($arg{context} =~ /statement$/) { 
-              $return = ['Bit-wise ORed^L', 'by^L'];  
+              $return = ['Bitwise-OR^L', 'by^L'];  
             } else { 
-              $return = 'which is bit-wise ORed by^L'; 
+              $return = 'which is bitwise-ORed by^L'; 
             }
           }
 
@@ -585,7 +585,7 @@ logical_OR_AND_expression:
           {
             if (defined $arg{context} and $arg{context} eq 'for conditional') { print STDERR "hmm2\n"; }
             my $expression = join('', @{$item[1]});
-            if($arg{context} =~ /expression$/ and $expression =~ / / and $expression !~ /^the result of/i) {
+            if($arg{context} =~ /initializer expression$/ and $expression =~ / / and $expression !~ /^the .*? number \S+$/i) {
               $return = 'the result of the expression ^L';
             }
             $return .= $expression;
