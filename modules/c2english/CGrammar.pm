@@ -585,7 +585,7 @@ logical_OR_AND_expression:
           {
             if (defined $arg{context} and $arg{context} eq 'for conditional') { print STDERR "hmm2\n"; }
             my $expression = join('', @{$item[1]});
-            if($arg{context} =~ /initializer expression$/ and $expression =~ / / and $expression !~ /^the .*? number \S+$/i) {
+            if($arg{context} =~ /initializer expression$/ and $expression =~ / / and $expression !~ /^the .*? number \S+$/i and $expression !~ /^the result of the/) {
               $return = 'the result of the expression ^L';
             }
             $return .= $expression;
@@ -1835,6 +1835,8 @@ constant:
               $return = 'a backspace character';
             } elsif ($constant eq q('\'')) {
               $return = 'a single-quote';
+            } elsif ($constant eq q(' ')) {
+              $return = 'a space';
             } else {
               $return = $constant;
             }
