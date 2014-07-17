@@ -216,10 +216,12 @@ compound_statement:
             $return .= "End block.\n" if not $arg{context};
 
             if ($arg{context} 
-                and $arg{context} ne 'do loop'
-                and $arg{context} ne 'case'
-                and $arg{context} ne 'function definition statement' 
-                and $arg{context} ne 'function definition') { 
+                and $arg{context} !~ /do loop/
+                and $arg{context} !~ /if statement/
+                and $arg{context} !~ /else block/
+                and $arg{context} !~ /case/
+                and $arg{context} !~ /function definition statement/ 
+                and $arg{context} !~ /function definition/) { 
               $return .= "End $arg{context}.\n";
             } 
             1;
@@ -327,7 +329,7 @@ for_increment:
       expression[context => 'for increment statement'] 
 
 selection_statement:
-      'if' <commit> '(' expression[context => 'if conditional'] ')' statement[context => 'if statement'] 
+      'if' <commit> '(' expression[context => 'if conditional'] ')' statement[context => "$arg{context}|if statement"]
           { 
             if ($item{expression} =~ /^(\d+)$/) {
               if ($1 == 0) {
@@ -341,7 +343,7 @@ selection_statement:
             }
             $return .= "^L$item{statement}";
           }
-      ('else' statement[context => 'else block']
+      ('else' statement[context => "$arg{context}|else block"]
           { $return = "Otherwise, ^L$item{statement}"; }
       )(?)
           { $return .= join('',@{$item[-1]}); }
@@ -353,7 +355,7 @@ selection_statement:
 jump_statement: 
       'break' ';'   
           { 
-            if ($arg{context} eq 'switch' or $arg{context} eq 'case') {
+            if ($arg{context} =~ /switch/ or $arg{context} =~ /case/) {
               $return = "Exit switch block.\n";
             } elsif (length $arg{context}) {
               $return = "Break from the $arg{context}.\n";
@@ -416,7 +418,7 @@ labeled_statement:
           { 
             my $last = pop @{$item[-1]};
             my $statements = join('', @{$item[-1]});
-            if (length $statements and $statements !~ /Exit switch block/) {
+            if (length $statements and $statements !~ /Exit switch block\.\s*$/) {
               $statements .= "Fall through to the next case.\n";
             }
             $return = "If it has the value $item[-2], ^L$statements$last";
