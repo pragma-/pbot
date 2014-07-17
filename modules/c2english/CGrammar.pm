@@ -358,7 +358,8 @@ jump_statement:
             if ($arg{context} =~ /switch/ or $arg{context} =~ /case/) {
               $return = "Exit switch block.\n";
             } elsif (length $arg{context}) {
-              $return = "Break from the $arg{context}.\n";
+              my ($context) = $arg{context} =~ /([^|]+)/;
+              $return = "Break from the $context.\n";
             } else {
               $return = "Break from the current block.\n";
             }
@@ -395,7 +396,7 @@ expression_statement:
               }
             } else { 
               $return = $expression;
-              $return .= ".\n" unless $arg{context} =~ /for conditional$/;
+              $return .= ".\n" unless $arg{context} =~ /for (init|conditional)$/;
             } 
           }
 
