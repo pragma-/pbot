@@ -220,7 +220,7 @@ compound_statement:
                 and $arg{context} ne 'case'
                 and $arg{context} ne 'function definition statement' 
                 and $arg{context} ne 'function definition') { 
-              $return .= "End $arg{context}.";
+              $return .= "End $arg{context}.\n";
             } 
             1;
           }
@@ -295,7 +295,7 @@ iteration_statement:
             }
 
             if ($item{statement}) {
-              $return .= $item{statement} . "\n"; 
+              $return .= $item{statement} . "\n";
             } else {
               $return .= "do nothing.\n";
             }
@@ -347,14 +347,14 @@ selection_statement:
           { $return .= join('',@{$item[-1]}); }
     | 'switch'  '(' expression[context => 'switch conditional'] ')'  statement[context => 'switch']  
           { 
-            $return = "Given the expression \'^L$item{expression}\',\n^L$item{statement}";
+            $return = "When given the expression \'^L$item{expression}\', ^L$item{statement}";
           }
 
 jump_statement: 
       'break' ';'   
           { 
             if ($arg{context} eq 'switch' or $arg{context} eq 'case') {
-              $return = "Break case.\n";
+              $return = "Exit switch block.\n";
             } elsif (length $arg{context}) {
               $return = "Break from the $arg{context}.\n";
             } else {
@@ -393,15 +393,34 @@ expression_statement:
               }
             } else { 
               $return = $expression;
-              $return .= ".\n" unless $arg{context} =~ /^for /;
+              $return .= ".\n" unless $arg{context} =~ /for conditional$/;
             } 
           }
 
 labeled_statement:
       identifier ':' statement[context => 'label'] (';')(?)
           { $return = "Let there be a label $item{identifier}.\n$item{statement}"; }
-    | 'case' constant_expression ':' statement[context => 'case'] 
-          { $return = "When it has the value $item{constant_expression}, ^L$item{statement}"; }
+    | ('case' constant_expression 
+          { $return = $item{constant_expression}; } 
+        ':')(s)
+          { 
+            my @items = @{$item[1]};
+            if (@items <= 2) {
+              $return = join(' or ', @{$item[1]});
+            } else {
+              my $last = pop @items;
+              $return = join(', ', @items) . " or $last";
+            }
+          }
+        (statement[context => 'case'])(s)
+          { 
+            my $last = pop @{$item[-1]};
+            my $statements = join('', @{$item[-1]});
+            if (length $statements and $statements !~ /Exit switch block/) {
+              $statements .= "Fall through to the next case.\n";
+            }
+            $return = "If it has the value $item[-2], ^L$statements$last";
+          }
     | 'default' ':' statement 
           { $return = "In the default case, ^L$item{statement}"; } 
 
@@ -1171,12 +1190,6 @@ postfix_productions:
                 $return = ['decrement', 'by one'];
               }
             }
-          }
-    # having done the simplest cases, we go to the catch all for left recursions.
-    | primary_expression postfix_suffix(s)
-          {
-            print STDERR "Untested code!\n"; 
-            $return = $item{primary_expression} . "'s " . join('',@{$item{'postfix_suffix(s)'}}); 
           }
     | {""}
 

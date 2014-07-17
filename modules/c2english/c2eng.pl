@@ -75,6 +75,8 @@ foreach my $arg (@ARGV) {
     $output =~ s/the evaluate the/the/g;
     $output =~ s/by evaluate the/by the/g;
     $output =~ s/the a /the /g;
+    $output =~ s/Then if it has the value/If it has the value/g;
+    $output =~ s/\.\s+Then exit switch block/ and then exit switch block/g;
  
     foreach my $quote (@quotes) {
       next unless $quote;
