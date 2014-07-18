@@ -196,7 +196,7 @@ block_item_list:
 
 block_item:
       declaration
-    | statement
+    | statement[context => "$arg{context}|block item"]
     | preproc
     | comment
 
@@ -205,7 +205,13 @@ compound_statement:
           { 
             my $block_items = join('', @{$item{'block_item_list(s?)'}});
 
-            $return = "Begin new block.\n" if not $arg{context};
+            if ($arg{context} =~ /block item/
+                and $arg{context} !~ /do loop$/
+                and $arg{context} !~ /if statement$/
+                and $arg{context} !~ /switch$/
+                and $arg{context} !~ /else block$/) {
+              $return = "Begin new block.\n";
+            }
 
             if ($block_items) { 
               $return .= $block_items;
@@ -213,16 +219,24 @@ compound_statement:
               $return .= "Do nothing.\n";
             } 
 
-            $return .= "End block.\n" if not $arg{context};
+            if ($arg{context} =~ /block item/
+                and $arg{context} !~ /do loop$/
+                and $arg{context} !~ /if statement$/
+                and $arg{context} !~ /switch$/
+                and $arg{context} !~ /else block$/) {
+              $return .= "End block.\n";
+            }
 
             if ($arg{context} 
-                and $arg{context} !~ /do loop/
-                and $arg{context} !~ /if statement/
-                and $arg{context} !~ /else block/
-                and $arg{context} !~ /case/
-                and $arg{context} !~ /function definition statement/ 
-                and $arg{context} !~ /function definition/) { 
-              $return .= "End $arg{context}.\n";
+                and $arg{context} !~ /do loop$/
+                and $arg{context} !~ /if statement$/
+                and $arg{context} !~ /else block$/
+                and $arg{context} !~ /case$/
+                and $arg{context} !~ /function definition statement$/ 
+                and $arg{context} !~ /function definition$/) { 
+              my @contexts = split /\|/, $arg{context};
+              my $context = pop @contexts;
+              $return .= "End $context.\n" unless $context eq 'block item';
             } 
             1;
           }
@@ -347,9 +361,9 @@ selection_statement:
           { $return = "Otherwise, ^L$item{statement}"; }
       )(?)
           { $return .= join('',@{$item[-1]}); }
-    | 'switch'  '(' expression[context => 'switch conditional'] ')'  statement[context => 'switch']  
+    | 'switch'  '(' expression[context => 'switch conditional'] ')'  statement[context => "$arg{context}|switch"]  
           { 
-            $return = "When given the expression \'^L$item{expression}\', ^L$item{statement}";
+            $return = "When given the expression ^L$item{expression}, ^L$item{statement}";
           }
 
 jump_statement: 
@@ -415,7 +429,7 @@ labeled_statement:
               $return = join(', ', @items) . " or $last";
             }
           }
-        (statement[context => 'case'])(s)
+        (statement[context => "$arg{context}|case"])(s)
           { 
             my $last = pop @{$item[-1]};
             my $statements = join('', @{$item[-1]});
@@ -469,7 +483,7 @@ conditional_expression:
               my $op2 = $item{conditional_ternary_expression}->[1];
               my $expression = ::istrue $item{logical_OR_AND_expression};
 
-              if ($arg{context} =~ /statement$/) {
+              if ($arg{context} =~ /initializer expression$/) {
                 $return = "$op1 if $expression otherwise to $op2";
               } elsif ($arg{context} =~ /assignment expression$/) {
                 $return = "$op1 if $expression otherwise the value $op2";
@@ -1771,7 +1785,7 @@ enumerator:
           {
             $return = $item[1]; 
              if (@{$item[-1]}) { 
-               $return .= ' marking ' . join('', @{$item[-1]}); 
+               $return .= ' marking ^L' . join('', @{$item[-1]}); 
              }
            }
 
