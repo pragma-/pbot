@@ -421,6 +421,8 @@ labeled_statement:
             my $statements = join('', @{$item[-1]});
             if (length $statements and $statements !~ /Exit switch block\.\s*$/) {
               $statements .= "Fall through to the next case.\n";
+            } elsif (not length $statements and not $last) {
+              $statements = "Do nothing.\n";
             }
             $return = "If it has the value $item[-2], ^L$statements$last";
           }
