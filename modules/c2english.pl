@@ -19,7 +19,7 @@ if($code =~ s/^-f\s+//) {
 }
 
 my ($has_function, $has_main, $got_nomain);
-my $prelude_base = "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <stdnoreturn.h>\n#include <stdbool.h>\n#include <stdalign.h>\n#define _Atomic\n#define _Static_assert(a, b)\n\n";
+my $prelude_base = "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <stdnoreturn.h>\n#include <stdbool.h>\n#include <stdalign.h>\n#include <time.h>\n#define _Atomic\n#define _Static_assert(a, b)\n\n";
 my $prelude = $prelude_base;
 
 print "code before: [$code]\n" if $debug;
@@ -290,8 +290,8 @@ $code =~ s/\|n/\n/g;
 $code =~ s/^\s+//;
 $code =~ s/\s+$//;
 $code =~ s/;\s*;\n/;\n/gs;
-$code =~ s/;(\s*\/\*.*?\*\/\s*);\n/;$1/gs;
-$code =~ s/;(\s*\/\/.*?\s*);\n/;$1/gs;
+$code =~ s/(;)?(\s*\/\*.*?\*\/\s*);\n/$1$2/gs;
+$code =~ s/(;)?(\s*\/\/.*?\s*);\n/$1$2/gs;
 $code =~ s/({|})\n\s*;\n/$1\n/gs;
 $code =~ s/(?:\n\n)+/\n\n/g;
 

@@ -467,6 +467,7 @@ assignment_expression:
 
             if (ref $assignment_operator eq 'ARRAY') {
               $return .= "${$item{assignment_operator}}[0] $item{unary_expression} ";
+              ${$item{assignment_operator}}[1] =~ s/the value/the result of the expression/ if $assignment_expression =~ / /;
               $return .= "${$item{assignment_operator}}[1] " if $assignment_expression !~ /the result of/;
               $return .= $assignment_expression;
             } else {
@@ -1840,7 +1841,7 @@ comment_cxx:
             $return =~ s|^//\s*||;
             $return =~ s/\n*$//;
             $return =~ s/"/\\"/g;
-            $return = "\nQuick comment: \"$return\".\n";
+            $return = "\nA quick comment: \"$return\".\n";
           }
 
 constant:
