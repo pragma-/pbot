@@ -19,9 +19,6 @@ if ($opt_T ) {
 $::RD_HINT = 1;
 $Parse::RecDescent::skip = '\s*'; 
 
-# This may be necessary..
-# $::RD_AUTOACTION = q { [@item] };
-
 my $parser;
 
 if($opt_P or !eval { require PCGrammar }) {
@@ -76,6 +73,8 @@ foreach my $arg (@ARGV) {
     $output =~ s/by evaluate the/by the/g;
     $output =~ s/the a /the /g;
     $output =~ s/Then if it has the value/If it has the value/g;
+    $output =~ s/result of the expression a generic-selection/result of a generic-selection/g;
+    $output =~ s/the function a generic-selection/the function resulting from a generic-selection/g;
     $output =~ s/\.\s+Then exit switch block/ and then exit switch block/g;
  
     foreach my $quote (@quotes) {

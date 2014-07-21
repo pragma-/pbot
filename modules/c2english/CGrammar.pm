@@ -623,7 +623,11 @@ logical_OR_AND_expression:
           {
             if (defined $arg{context} and $arg{context} eq 'for conditional') { print STDERR "hmm2\n"; }
             my $expression = join('', @{$item[1]});
-            if($arg{context} =~ /initializer expression$/ and $expression =~ / / and $expression !~ /^the .*? number \S+$/i and $expression !~ /^the result of the/) {
+            if($arg{context} =~ /initializer expression$/
+                and $expression =~ / /
+                and $expression !~ /^the .*? number \S+$/i
+                and $expression !~ /the size of/i
+                and $expression !~ /^the result of the/) {
               $return = 'the result of the expression ^L';
             }
             $return .= $expression;
@@ -1213,7 +1217,13 @@ postfix_productions:
     | {""}
 
 postfix_expression:
-      primary_expression postfix_productions[primary_expression => $item[1], context => $arg{context}]
+      '(' type_name ')' '{' initializer_list '}' postfix_productions[context => "$arg{context}|compound literal"](?)
+          {
+            my $postfix = $item[-1]->[0];
+            $return = "A compound-literal of type $item{type_name} initialized to { $item{initializer_list} }";
+            $return = "$postfix $return" if $postfix;
+          }
+    | primary_expression postfix_productions[primary_expression => $item[1], context => $arg{context}]
           {
             my $postfix_productions = $item{'postfix_productions'};
 
@@ -1226,12 +1236,6 @@ postfix_expression:
             } else {
               $return = undef;
             }
-          }
-    | '(' type_name ')' '{' initializer_list '}' postfix_productions[context => "$arg{context}|compound literal"](?)
-          {
-            my $postfix = $item[-1]->[0];
-            $return = "A compound-literal of type $item{type_name} initialized to { $item{initializer_list} }";
-            $return = "$postfix $return" if $postfix;
           }
 
 postfix_suffix:
@@ -1286,7 +1290,29 @@ primary_expression:
     | constant
     | string 
     | identifier
+    | generic_selection
     | {} # nothing
+
+generic_selection:
+      '_Generic' '(' assignment_expression ',' generic_assoc_list ')'
+          { $return = "a generic-selection on $item{assignment_expression} yielding $item{generic_assoc_list}"; }
+
+generic_assoc_list:
+      <leftop: generic_association ',' generic_association>
+          { 
+            if (@{$item[-1]} == 1) {
+              $return = $item[-1]->[0];
+            } else {
+              my $last = pop @{$item[-1]};
+              $return = join(', ', @{$item[-1]}) . " and $last";
+            }
+          }
+
+generic_association:
+      type_name ':' assignment_expression
+          { $return = "$item{assignment_expression} in the case that it has type $item{type_name}"; }
+    | 'default' ':' assignment_expression
+          { $return = "$item{assignment_expression} in the default case"; }
 
 Alignas:
       '_Alignas'
