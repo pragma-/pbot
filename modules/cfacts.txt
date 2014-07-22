@@ -511,7 +511,7 @@
 [7.1.4 Use of library functions] integer constant expressions shall additionally be suitable for use in #if preprocessing directives.
 [7.1.4 Use of library functions] A library function shall not directly or indirectly modify objects accessible by threads other than the current thread unless the objects are accessed directly or indirectly via the function's non-const arguments.
 [7.1.4 Use of library functions] Unless otherwise specified, library functions shall perform all operations solely within the current thread if those operations have effects that are visible to users.
-[7.2 Diagnostics <assert.h>] If NDEBUG is defined as a macro name at the point in the source file where <assert.
+[7.2 Diagnostics <assert.h>] If NDEBUG is defined as a macro name at the point in the source file where <assert.h> is included, the assert macro is defined simple as #define assert(ignore) ((void)0)
 [7.2 Diagnostics <assert.h>] The assert macro shall be implemented as a macro, not as an actual function.
 [7.2 Diagnostics <assert.h>] If the macro definition is suppressed in order to access an actual function, the behavior is undefined.
 [7.3.1 Introduction] If _Imaginary_I is not defined, I shall expand to _Complex_I.
@@ -561,7 +561,6 @@
 [7.12 Mathematics <math.h>] The value of FP_ILOGB0 shall be either INT_MIN or -INT_MAX.
 [7.12 Mathematics <math.h>] A macro is defined if and only if the fma function is implemented directly with a hardware multiply-add instruction.
 [7.12 Mathematics <math.h>] If a macro definition is suppressed or a program defines an identifier with the name math_errhandling, the behavior is undefined.
-[7.12 Mathematics <math.h>] If the expression math_errhandling & MATH_ERREXCEPT can be nonzero, the implementation shall define the macros FE_DIVBYZERO, FE_INVALID, and FE_OVERFLOW in <fenv.
 [7.12.1 Treatment of error conditions] Each function shall execute as if it were a single operation without raising SIGFPE and without generating any of the floating-point exceptions ``invalid'', ``divide-by-zero'', or ``overflow'' except to reflect the result of the function.
 [7.12.1 Treatment of error conditions] A floating result overflows if the magnitude of the mathematical result is finite but so large that the mathematical result cannot be represented without extraordinary roundoff error in an object of the specified type.
 [7.12.1 Treatment of error conditions] If a domain, pole, or range error occurs and the integer expression math_errhandling & MATH_ERRNO is zero, then errno shall either be set to the value corresponding to the error or left unmodified.
@@ -767,7 +766,6 @@
 [7.22.1.3 The strtod, strtof, and strtold functions] A pointer to the final string is stored in the object pointed to by endptr, provided that endptr is not a null pointer.
 [7.22.1.3 The strtod, strtof, and strtold functions] If the subject sequence has the hexadecimal form and FLT_RADIX is a power of 2, the value resulting from the conversion is correctly rounded.
 [7.22.1.3 The strtod, strtof, and strtold functions] If the subject sequence is empty or does not have the expected form, no conversion is performed; the value of nptr is stored in the object pointed to by endptr, provided that endptr is not a null pointer.
-[7.22.1.3 The strtod, strtof, and strtold functions] If the subject sequence has the decimal form and at most DECIMAL_DIG (defined in <float.
 [7.22.1.3 The strtod, strtof, and strtold functions] If the subject sequence D has the decimal form and more than DECIMAL_DIG significant digits, consider the two bounding, adjacent decimal strings L and U , both having DECIMAL_DIG significant digits, such that the values of L , D, and U satisfy L D U.
 [7.22.1.3 The strtod, strtof, and strtold functions] If no conversion could be performed, zero is returned.
 [7.22.1.4 The strtol, strtoll, strtoul, and strtoull functions] If the value of base is between 2 and 36 (inclusive), the expected form of the subject sequence is a sequence of letters and digits representing an integer with the radix specified by base, optionally preceded by a plus or minus sign, but not including an integer suffix.
