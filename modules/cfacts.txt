@@ -511,7 +511,7 @@
 [7.1.4 Use of library functions] integer constant expressions shall additionally be suitable for use in #if preprocessing directives.
 [7.1.4 Use of library functions] A library function shall not directly or indirectly modify objects accessible by threads other than the current thread unless the objects are accessed directly or indirectly via the function's non-const arguments.
 [7.1.4 Use of library functions] Unless otherwise specified, library functions shall perform all operations solely within the current thread if those operations have effects that are visible to users.
-[7.2 Diagnostics <assert.h>] If NDEBUG is defined as a macro name at the point in the source file where <assert.h> is included, the assert macro is defined simple as #define assert(ignore) ((void)0)
+[7.2 Diagnostics <assert.h>] If NDEBUG is defined as a macro name at the point in the source file where <assert.h> is included, the assert macro is defined simply as #define assert(ignore) ((void)0)
 [7.2 Diagnostics <assert.h>] The assert macro shall be implemented as a macro, not as an actual function.
 [7.2 Diagnostics <assert.h>] If the macro definition is suppressed in order to access an actual function, the behavior is undefined.
 [7.3.1 Introduction] If _Imaginary_I is not defined, I shall expand to _Complex_I.
