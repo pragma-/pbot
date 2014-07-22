@@ -1,0 +1,936 @@
+[3. Terms, definitions, and symbols] An example of implementation-defined behavior is the propagation of the high-order bit when a signed integer is shifted right.
+[3. Terms, definitions, and symbols] An example of locale-specific behavior is whether the islower function returns true for characters other than the 26 lowercase Latin letters.
+[3. Terms, definitions, and symbols] An example of undefined behavior is the behavior on integer overflow.
+[3. Terms, definitions, and symbols] An example of unspecified behavior is the order in which the arguments to a function are evaluated.
+[3. Terms, definitions, and symbols] A byte is composed of a contiguous sequence of bits, the number of which is implementation-defined.
+[4. Conformance] In this International Standard, ``shall'' is to be interpreted as a requirement on an implementation or on a program; conversely, ``shall not'' is to be interpreted as a prohibition.
+[4. Conformance] If a ``shall'' or ``shall not'' requirement that appears outside of a constraint or runtime-constraint is violated, the behavior is undefined.
+[4. Conformance] A program that is correct in all other aspects, operating on correct data, containing unspecified behavior shall be a correct program [...].
+[4. Conformance] The implementation shall not successfully translate a preprocessing translation unit containing a #error preprocessing directive unless it is part of a group skipped by conditional inclusion.
+[4. Conformance] A strictly conforming program shall use only those features of the language and library specified in this International Standard.
+[4. Conformance] A conforming hosted implementation shall accept any strictly conforming program.
+[4. Conformance] A conforming program is one that is acceptable to a conforming implementation.
+[4. Conformance] An implementation shall be accompanied by a document that defines all implementation-defined and locale-specific characteristics and all extensions.
+[5. Environment] An implementation translates C source files and executes C programs in two data-processing-system environments, which will be called the translation environment and the execution environment in this International Standard.
+[5.1.1.1 Program structure] A source file together with all the headers and source files included via the preprocessing directive #include is known as a preprocessing translation unit.
+[5.1.1.2 Translation phases] A source file that is not empty shall end in a new-line character [...].
+[5.1.1.2 Translation phases] A source file shall not end in a partial preprocessing token or in a partial comment.
+[5.1.1.3 Diagnostics] A conforming implementation shall produce at least one diagnostic message (identified in an implementation-defined manner) if a preprocessing translation unit or translation unit contains a violation of any syntax rule or constraint, even if the behavior is also explicitly specified as undefined or implementation-defined.
+[5.1.1.3 Diagnostics] An implementation shall issue a diagnostic for the translation unit: char i; int i; because in those cases where wording in this International Standard describes the behavior for a construct as being both a constraint error and resulting in undefined behavior, the constraint error shall be diagnosed.
+[5.1.2 Execution environments] [...] program startup occurs when a designated C function is called by the execution environment.
+[5.1.2.2.1 Program startup] If the value of argc is greater than zero, the array members argv[0] through argv[argc-1] inclusive shall contain pointers to strings, which are given implementation-defined values by the host environment prior to program startup.
+[5.1.2.2.1 Program startup] If the host environment is not capable of supplying strings with letters in both uppercase and lowercase, the implementation shall ensure that the strings are received in lowercase.
+[5.1.2.2.1 Program startup] If the value of argc is greater than zero, the string pointed to by argv[0] represents the program name; argv[0][0] shall be the null character if the program name is not available from the host environment.
+[5.1.2.2.1 Program startup] If the value of argc is greater than one, the strings pointed to by argv[1] through argv[argc-1] represent the program parameters.
+[5.1.2.2.3 Program termination] If the return type of the main function is a type compatible with int, a return from the initial call to the main function is equivalent to calling the exit function with the value returned by the main function as its argument; reaching the } that terminates the main function returns a value of 0.
+[5.1.2.2.3 Program termination] If the return type is not compatible with int, the termination status returned to the host environment is unspecified.
+[5.1.2.3 Program execution] Given any two evaluations A and B, if A is sequenced before B, then the execution of A shall precede the execution of B.
+[5.1.2.3 Program execution] A is sequenced before B, then B is sequenced after A.
+[5.1.2.3 Program execution] If A is not sequenced before or after B, then A and B are unsequenced.
+[5.1.2.3 Program execution] A and B are indeterminately sequenced when A is sequenced either before or after B, but it is unspecified which.
+[5.1.2.3 Program execution] A and B implies that every value computation and side effect associated with A is sequenced before every value computation and side effect associated with B.
+[5.1.2.3 Program execution] A summary of the sequence points is given in annex C.
+[5.1.2.3 Program execution] An actual implementation need not evaluate part of an expression if it can deduce that its value is not used and that no needed side effects are produced [...].
+[5.1.2.3 Program execution] At program termination, all data written into files shall be identical to the result that execution of the program according to the abstract semantics would have produced.
+[5.1.2.4 Multi-threaded executions and data races] A synchronization operation on one or more memory locations is either an acquire operation, a release operation, both an acquire and release operation, or a consume operation.
+[5.1.2.4 Multi-threaded executions and data races] A synchronization operation without an associated memory location is a fence and can be either an acquire fence, a release fence, or both an acquire and release fence.
+[5.1.2.4 Multi-threaded executions and data races] A forces prior side effects on other memory locations to become visible to other threads that later perform an acquire or consume operation on A.
+[5.1.2.4 Multi-threaded executions and data races] If A and B are modifications of an atomic object M, and A happens before B, then A shall precede B in the modification order of M [...].
+[5.1.2.4 Multi-threaded executions and data races] A release sequence headed by a release operation A on an atomic object M is a maximal contiguous sub-sequence of side effects in the modification order of M , where the first operation is A and every subsequent operation either is performed by the same thread that performed the release or is an atomic read-modify-write operation.
+[5.1.2.4 Multi-threaded executions and data races] An evaluation A happens before an evaluation B if A is sequenced before B or A inter-thread happens before B.
+[5.1.2.4 Multi-threaded executions and data races] A visible side effect A on an object M with respect to a value computation B of M satisfies the conditions: A happens before B, and there is no other side effect X to M such that A happens before X and X happens before B.
+[5.1.2.4 Multi-threaded executions and data races] If there is ambiguity about which side effect to a non-atomic object is visible, then there is a data race and the behavior is undefined.
+[5.1.2.4 Multi-threaded executions and data races] The value of an atomic object M, as determined by evaluation B, shall be the value stored by some operation in the visible sequence of M with respect to B.
+[5.2.1 Character sets] In a character constant or string literal, members of the execution character set shall be represented by corresponding members of the source character set or by escape sequences consisting of the backslash \ followed by one or more characters.
+[5.2.1 Character sets] A byte with all bits set to 0, called the null character, shall exist in the basic execution character set; it is used to terminate a character string.
+[5.2.1 Character sets] The representation of each member of the source and execution basic character sets shall fit in a byte.
+[5.2.1 Character sets] In source files, there shall be some way of indicating the end of each line of text; this International Standard treats such an end-of-line indicator as if it were a single new-line character.
+[5.2.1 Character sets] If any other characters are encountered in a source file (except in an identifier, a character constant, a string literal, a header name, a comment, or a preprocessing token that is never converted to a token), the behavior is undefined.
+[5.2.1 Character sets] A letter is an uppercase letter or a lowercase letter as defined above; in this International Standard the term does not include other characters that are letters in other alphabets.
+[5.2.1.2 Multibyte characters] For both character sets, the following shall hold: The basic character set shall be present and each character shall be encoded as a single byte. [...]
+[5.2.1.2 Multibyte characters] A byte with all bits zero shall be interpreted as a null character independent of shift state.
+[5.2.1.2 Multibyte characters] For source files, the following shall hold: An identifier, comment, string literal, character constant, or header name shall begin and end in the initial shift state. [...]
+[5.2.1.2 Multibyte characters] An identifier, comment, string literal, character constant, or header name shall consist of a sequence of valid multibyte characters.
+[5.2.2 Character display semantics] If the active position is at the final position of a line (if there is one), the behavior of the display device is unspecified.
+[5.2.2 Character display semantics] If the active position is at the initial position of a line, the behavior of the display device is unspecified.
+[5.2.2 Character display semantics] If the active position is at or past the last defined horizontal tabulation position, the behavior of the display device is unspecified.
+[5.2.2 Character display semantics] If the active position is at or past the last defined vertical tabulation position, the behavior of the display device is unspecified.
+[5.2.3 Signals and interrupts] All such objects shall be maintained outside the function image (the instructions that compose the executable representation of a function) on a per-invocation basis.
+[5.2.4.2 Numerical limits] An implementation is required to document all the limits specified in this subclause [...].
+[5.2.4.2.2 Characteristics of floating types <float.h>] A NaN is an encoding signifying Not-a-Number.
+[5.2.4.2.2 Characteristics of floating types <float.h>] Wherever such values are unsigned, any requirement in this International Standard to retrieve the sign shall produce an unspecified sign, and any requirement to set the sign shall be ignored.
+[5.2.4.2.2 Characteristics of floating types <float.h>] If the presence or absence of subnormal numbers is indeterminable, then the value is intended to be a positive number no greater than the minimum normalized positive number for the type.
+[5.2.4.2.2 Characteristics of floating types <float.h>] If a type wider than double were supported, then DECIMAL_DIG would be greater than 17.
+[6.1 Notation] An optional symbol is indicated by the subscript ``opt'', so that { expressionopt } indicates an optional expression enclosed in braces.
+[6.1 Notation] A summary of the language syntax is given in annex A.
+[6.2.1 Scopes of identifiers] A member of an enumeration is called an enumeration constant.
+[6.2.1 Scopes of identifiers] A function prototype is a declaration of a function that declares the types of its parameters.
+[6.2.1 Scopes of identifiers] A label name is the only kind of identifier that has function scope.
+[6.2.1 Scopes of identifiers] If the declarator or type specifier that declares the identifier appears outside of any block or list of parameters, the identifier has file scope, which terminates at the end of the translation unit.
+[6.2.1 Scopes of identifiers] If the declarator or type specifier that declares the identifier appears inside a block or within the list of parameter declarations in a function definition, the identifier has block scope, which terminates at the end of the associated block.
+[6.2.1 Scopes of identifiers] If the declarator or type specifier that declares the identifier appears within the list of parameter declarations in a function prototype (not part of a function definition), the identifier has function prototype scope, which terminates at the end of the function declarator.
+[6.2.1 Scopes of identifiers] If an identifier designates two different entities in the same name space, the scopes might overlap.
+[6.2.1 Scopes of identifiers] If [the scopes overlap], the scope of one entity (the inner scope) will end strictly before the scope of the other entity (the outer scope).
+[6.2.2 Linkages of identifiers] If the declaration of a file scope identifier for an object or a function contains the storage-class specifier static, the identifier has internal linkage.
+[6.2.2 Linkages of identifiers] If no prior declaration is visible, or if the prior declaration specifies no linkage, then the identifier has external linkage.
+[6.2.2 Linkages of identifiers] If the declaration of an identifier for a function has no storage-class specifier, its linkage is determined exactly as if it were declared with the storage-class specifier extern.
+[6.2.2 Linkages of identifiers] If the declaration of an identifier for an object has file scope and no storage-class specifier, its linkage is external.
+[6.2.2 Linkages of identifiers] If, within a translation unit, the same identifier appears with both internal and external linkage, the behavior is undefined.
+[6.2.3 Name spaces of identifiers] If more than one declaration of a particular identifier is visible at any point in a translation unit, the syntactic context disambiguates uses that refer to different entities.
+[6.2.3 Name spaces of identifiers] A function declaration can contain the storage-class specifier static only if it is at file scope.
+[6.2.4 Storage durations of objects] An object exists, has a constant address, and retains its last-stored value throughout its lifetime.
+[6.2.4 Storage durations of objects] If an object is referred to outside of its lifetime, the behavior is undefined.
+[6.2.4 Storage durations of objects] An object whose identifier is declared without the storage-class specifier _Thread_local, and either with external or internal linkage or with the storage-class specifier static, has static storage duration.
+[6.2.4 Storage durations of objects] An object whose identifier is declared with the storage-class specifier _Thread_local has thread storage duration.
+[6.2.4 Storage durations of objects] An object whose identifier is declared with no linkage and without the storage-class specifier static has automatic storage duration, as do some compound literals.
+[6.2.4 Storage durations of objects] If the block is entered recursively, a new instance of the object is created each time.
+[6.2.4 Storage durations of objects] If an initialization is specified for the object, it is performed each time the declaration or compound literal is reached in the execution of the block; otherwise, the value becomes indeterminate each time the declaration is reached.
+[6.2.4 Storage durations of objects] If the scope is entered recursively, a new instance of the object is created each time.
+[6.2.5 Types] An identifier declared to be an object is the simplest such expression; the type is specified in the declaration of the identifier.
+[6.2.5 Types] An object declared as type _Bool is large enough to store the values 0 and 1.
+[6.2.5 Types] An object declared as type char is large enough to store any member of the basic execution character set.
+[6.2.5 Types] If a member of the basic execution character set is stored in a char object, its value is guaranteed to be nonnegative.
+[6.2.5 Types] If any other character is stored in a char object, the resulting value is implementation-defined but shall be within the range of values that can be represented in that type.
+[6.2.5 Types] A computation involving unsigned operands can never overflow, because a result that cannot be represented by the resulting unsigned integer type is reduced modulo the number that is one greater than the largest value that can be represented by the resulting type.
+[6.2.5 Types] Implementation-defined keywords shall have the form of an identifier reserved for any use [...].
+[6.2.5 Types] The implementation shall define char to have the same range, representation, and behavior as either signed char or unsigned char.
+[6.2.5 Types] An enumeration comprises a set of named integer constant values.
+[6.2.5 Types] A specification for imaginary types is in annex G.
+[6.2.5 Types] An implementation may define new keywords that provide alternative ways to designate a basic (or any other) type; this does not violate the requirement that all basic types be different.
+[6.2.5 Types] The element type shall be complete whenever the array type is specified.
+[6.2.5 Types] An array type is said to be derived from its element type, and if its element type is T , the array type is sometimes called ``array of T ''.
+[6.2.5 Types] A structure type describes a sequentially allocated nonempty set of member objects (and, in certain circumstances, an incomplete array), each of which has an optionally specified name and possibly distinct type.
+[6.2.5 Types] A union type describes an overlapping nonempty set of member objects, each of which has an optionally specified name and possibly distinct type.
+[6.2.5 Types] A function type is characterized by its return type and the number and types of its parameters.
+[6.2.5 Types] A function type is said to be derived from its return type, and if its return type is T , the function type is sometimes called ``function returning T ''.
+[6.2.5 Types] A pointer type derived from the referenced type T is sometimes called ``pointer to T ''.
+[6.2.5 Types] A pointer type is a complete object type.
+[6.2.5 Types] An array type of unknown size is an incomplete type.
+[6.2.5 Types] A type has known constant size if the type is not incomplete and is not a variable length array type.
+[6.2.5 Types] A declarator type derivation from a type T is the construction of a derived declarator type from T by the application of an array-type, a function-type, or a pointer-type derivation to T.
+[6.2.5 Types] A type is characterized by its type category , which is either the outermost derivation of a derived type (as noted above in the construction of derived types), or the type itself if the type consists of no derived types.
+[6.2.5 Types] A derived type is not qualified by the qualifiers (if any) of the type from which it is derived.
+[6.2.5 Types] A pointer to void shall have the same representation and alignment requirements as a pointer to a character type.
+[6.2.5 Types] All pointers to structure types shall have the same representation and alignment requirements as each other.
+[6.2.5 Types] Values stored in unsigned bit-fields and objects of type unsigned char shall be represented using a pure binary notation.
+[6.2.5 Types] If the stored value of an object has such a representation and is read by an lvalue expression that does not have character type, the behavior is undefined.
+[6.2.5 Types] If such a representation is produced by a side effect that modifies all or any part of the object by an lvalue expression that does not have character type, the behavior is undefined.
+[6.2.5 Types] Where an operator is applied to a value that has more than one object representation, which object representation is used shall not affect the value of the result.
+[6.2.6.2 Integer types] If there are N value bits, each bit shall represent a different power of 2 between 1 and 2 N -1 , so that objects of that type shall be capable of representing values from 0 to 2 N - 1 using a pure binary representation; this shall be known as the value representation.
+[6.2.6.2 Integer types] There need not be any padding bits; signed char shall not have any padding bits.
+[6.2.6.2 Integer types] If the implementation supports negative zeros, they shall be generated only by: the &, |, ^, ~, <<, and >> operators with operands that produce such a value; the +, -, *, /, and % operators where one operand is a negative zero and the result is zero; compound assignment operators based on the above cases.
+[6.2.6.2 Integer types] If the implementation does not support negative zeros, the behavior of the &, |, ^, ~, <<, and >> operators with operands that would produce such a value is undefined.
+[6.2.6.2 Integer types] A valid (non-trap) object representation of a signed integer type where the sign bit is zero is a valid object representation of the corresponding unsigned type, and shall represent the same value.
+[6.2.7 Compatible type and composite type] All declarations that refer to the same object or function shall have compatible type; otherwise, the behavior is undefined.
+[6.2.7 Compatible type and composite type] If only one type is a function type with a parameter type list (a function prototype), the composite type is a function prototype with the parameter type list.
+[6.2.7 Compatible type and composite type] If both types are function types with parameter type lists, the type of each parameter in the composite parameter type list is the composite type of the corresponding parameters.
+[6.2.8 Alignment of objects] An alignment is an implementation-defined integer value representing the number of bytes between successive addresses at which a given object can be allocated.
+[6.2.8 Alignment of objects] A fundamental alignment is represented by an alignment less than or equal to the greatest alignment supported by the implementation in all contexts, which is equal to _Alignof (max_align_t).
+[6.2.8 Alignment of objects] An extended alignment is represented by an alignment greater than _Alignof (max_align_t).
+[6.2.8 Alignment of objects] A type having an extended alignment requirement is an over-aligned type.
+[6.2.8 Alignment of objects] Every valid alignment value shall be a nonnegative integral power of two.
+[6.2.8 Alignment of objects] An address that satisfies an alignment requirement also satisfies any weaker valid alignment requirement.
+[6.2.8 Alignment of objects] The types char, signed char, and unsigned char shall have the weakest alignment requirement.
+[6.3.1.1 Boolean, characters, and integers] The rank of a signed integer type shall be greater than the rank of any signed integer type with less precision.
+[6.3.1.1 Boolean, characters, and integers] The rank of any unsigned integer type shall equal the rank of the corresponding signed integer type, if any.
+[6.3.1.1 Boolean, characters, and integers] The rank of char shall equal the rank of signed char and unsigned char.
+[6.3.1.1 Boolean, characters, and integers] The rank of any enumerated type shall equal the rank of the compatible integer type.
+[6.3.1.1 Boolean, characters, and integers] If an int can represent all values of the original type (as restricted by the width, for a bit-field), the value is converted to an int; otherwise, it is converted to an unsigned int.
+[6.3.1.4 Real floating and integer] If the value of the integral part cannot be represented by the integer type, the behavior is undefined.
+[6.3.1.4 Real floating and integer] If the value being converted is in the range of values that can be represented but cannot be represented exactly, the result is either the nearest higher or nearest lower representable value, chosen in an implementation-defined manner.
+[6.3.1.4 Real floating and integer] If the value being converted is outside the range of values that can be represented, the behavior is undefined.
+[6.3.1.5 Real floating types] If the value being converted is in the range of values that can be represented but cannot be represented exactly, the result is either the nearest higher or nearest lower representable value, chosen in an implementation-defined manner.
+[6.3.1.5 Real floating types] If the value being converted is outside the range of values that can be represented, the behavior is undefined.
+[6.3.1.8 Usual arithmetic conversions] If both operands have the same type, then no further conversion is needed.
+[6.3.2.1 Lvalues, arrays, and function designators] An lvalue is an expression (with an object type other than void) that potentially designates an object; if an lvalue does not designate an object when it is evaluated, the behavior is undefined.
+[6.3.2.1 Lvalues, arrays, and function designators] A modifiable lvalue is an lvalue that does not have array type, does not have an incomplete type, does not have a const-qualified type, and if it is a structure or union, does not have any member (including, recursively, any member or element of all contained aggregates or unions) with a const-qualified type.
+[6.3.2.1 Lvalues, arrays, and function designators] operator or an assignment operator, an lvalue that does not have array type is converted to the value stored in the designated object (and is no longer an lvalue); this is called lvalue conversion.
+[6.3.2.1 Lvalues, arrays, and function designators] If the lvalue has qualified type, the value has the unqualified version of the type of the lvalue; additionally, if the lvalue has atomic type, the value has the non-atomic version of the type of the lvalue; otherwise, the value has the type of the lvalue.
+[6.3.2.1 Lvalues, arrays, and function designators] If the lvalue has an incomplete type and does not have array type, the behavior is undefined.
+[6.3.2.1 Lvalues, arrays, and function designators] If the lvalue designates an object of automatic storage duration that could have been declared with the register storage class (never had its address taken), and that object is uninitialized (not declared with an initializer and no assignment to it has been performed prior to use), the behavior is undefined.
+[6.3.2.1 Lvalues, arrays, and function designators] If the array object has register storage class, the behavior is undefined.
+[6.3.2.1 Lvalues, arrays, and function designators] A function designator is an expression that has function type.
+[6.3.2.1 Lvalues, arrays, and function designators] An obvious example of an lvalue is an identifier of an object.
+[6.3.2.2 void] If an expression of any other type is evaluated as a void expression, its value or designator is discarded.
+[6.3.2.2 void] A void expression is evaluated for its side effects.
+[6.3.2.3 Pointers] A pointer to any object type may be converted to a pointer to void and back again; the result shall compare equal to the original pointer.
+[6.3.2.3 Pointers] An integer constant expression with the value 0, or such an expression cast to type void *, is called a null pointer constant.
+[6.3.2.3 Pointers] If a null pointer constant is converted to a pointer type, the resulting pointer, called a null pointer , is guaranteed to compare unequal to a pointer to any object or function.
+[6.3.2.3 Pointers] Any two null pointers shall compare equal.
+[6.3.2.3 Pointers] If the result cannot be represented in the integer type, the behavior is undefined.
+[6.3.2.3 Pointers] If the resulting pointer is not correctly aligned for the referenced type, the behavior is undefined.
+[6.3.2.3 Pointers] A pointer to a function of one type may be converted to a pointer to a function of another type and back again; the result shall compare equal to the original pointer.
+[6.3.2.3 Pointers] If a converted pointer is used to call a function whose type is not compatible with the referenced type, the behavior is undefined.
+[6.3.2.3 Pointers] A is correctly aligned for a pointer to type B, which in turn is correctly aligned for a pointer to type C, then a pointer to type A is correctly aligned for a pointer to type C.
+[6.4 Lexical elements] A token is the minimal lexical element of the language in translation phases 7 and 8.
+[6.4 Lexical elements] A preprocessing token is the minimal lexical element of the language in translation phases 3 through 6.
+[6.4 Lexical elements] If a ' or a " character matches the last category, the behavior is undefined.
+[6.4 Lexical elements] An additional category, placemarkers, is used internally in translation phase 4.
+[6.4 Lexical elements] If the input stream has been parsed into preprocessing tokens up to a given character, the next preprocessing token is the longest sequence of characters that could constitute a preprocessing token.
+[6.4.2.1 General] Each universal character name in an identifier shall designate a character whose encoding in ISO/IEC 10646 falls into one of the ranges specified in annex D.
+[6.4.2.1 General] An implementation may allow multibyte characters that are not part of the basic source character set to appear in identifiers; which characters and their correspondence to universal character names is implementation-defined.
+[6.4.2.1 General] If two identifiers differ only in nonsignificant characters, the behavior is undefined.
+[6.4.3 Universal character names] A universal character name shall not specify a character whose short identifier is less than 00A0 other than 0024 ($), 0040 (@), or 0060 (`), nor one in the range D800 through DFFF inclusive.
+[6.4.4.1 Integer constants] A decimal constant begins with a nonzero digit and consists of a sequence of decimal digits.
+[6.4.4.1 Integer constants] An octal constant consists of the prefix 0 optionally followed by a sequence of the digits 0 through 7 only.
+[6.4.4.1 Integer constants] A hexadecimal constant consists of the prefix 0x or 0X followed by a sequence of the decimal digits and the letters a (or A) through f (or F) with values 10 through 15 respectively.
+[6.4.4.1 Integer constants] If an integer constant cannot be represented by any type in its list, it may have an extended integer type, if the extended integer type can represent its value.
+[6.4.4.1 Integer constants] If all of the types in the list for the constant are signed, the extended integer type shall be signed.
+[6.4.4.1 Integer constants] If all of the types in the list for the constant are unsigned, the extended integer type shall be unsigned.
+[6.4.4.1 Integer constants] If the list contains both signed and unsigned types, the extended integer type may be signed or unsigned.
+[6.4.4.1 Integer constants] If an integer constant cannot be represented by any type in its list and has no extended integer type, then the integer constant has no type.
+[6.4.4.2 Floating constants] If suffixed by the letter f or F, it has type float.
+[6.4.4.2 Floating constants] If suffixed by the letter l or L, it has type long double.
+[6.4.4.2 Floating constants] The conversion of a floating constant shall not raise an exceptional condition or a floating-point exception at execution time.
+[6.4.4.4 Character constants] An integer character constant is a sequence of one or more multibyte characters enclosed in single-quotes, as in 'x'.
+[6.4.4.4 Character constants] A wide character constant is the same, except prefixed by the letter L, u, or U.
+[6.4.4.4 Character constants] If an integer character constant contains a single character or escape sequence, its value is the one that results when an object with type char whose value is that of the single character or escape sequence is converted to type int.
+[6.4.4.4 Character constants] If any other character follows a backslash, the result is not a token and a diagnostic is required.
+[6.4.5 String literals] A character string literal is a sequence of zero or more multibyte characters enclosed in double-quotes, as in "xyz".
+[6.4.5 String literals] A UTF-8 string literal is the same, except prefixed by u8.
+[6.4.5 String literals] A wide string literal is the same, except prefixed by the letter L, u, or U.
+[6.4.5 String literals] If any of the tokens has an encoding prefix, the resulting multibyte character sequence is treated as having the same prefix; otherwise, it is treated as a character string literal.
+[6.4.5 String literals] If the program attempts to modify such an array, the behavior is undefined.
+[6.4.6 Punctuators] A punctuator is a symbol that has independent syntactic and semantic significance.
+[6.4.6 Punctuators] An operand is an entity on which an operator acts.
+[6.4.7 Header names] If the characters ', \, ", //, or /* occur in the sequence between the < and > delimiters, the behavior is undefined.
+[6.5 Expressions] An expression is a sequence of operators and operands that specifies computation of a value, or that designates an object or a function, or that generates side effects, or that performs a combination thereof.
+[6.5 Expressions] If a side effect on a scalar object is unsequenced relative to either a different side effect on the same scalar object or a value computation using the value of the same scalar object, the behavior is undefined.
+[6.5 Expressions] If there are multiple allowable orderings of the subexpressions of an expression, the behavior is undefined if such an unsequenced side effect occurs in any of the orderings.
+[6.5 Expressions] If an exceptional condition occurs during the evaluation of an expression (that is, if the result is not mathematically defined or not in the range of representable values for its type), the behavior is undefined.
+[6.5 Expressions] If a value is stored into an object having no declared type through an lvalue having a type that is not a character type, then the type of the lvalue becomes the effective type of the object for that access and for subsequent accesses that do not modify the stored value.
+[6.5 Expressions] If a value is copied into an object having no declared type using memcpy or memmove, or is copied as an array of character type, then the effective type of the modified object for that access and for subsequent accesses that do not modify the value is the effective type of the object from which the value is copied, if it has one.
+[6.5 Expressions] A floating expression may be contracted , that is, evaluated as though it were a single operation, thereby omitting rounding errors implied by the source code and the expression evaluation method.
+[6.5 Expressions] A contracted expression might also omit the raising of floating-point exceptions.
+[6.5.1 Primary expressions] An identifier is a primary expression, provided it has been declared as designating an object (in which case it is an lvalue) or a function (in which case it is a function designator).
+[6.5.1 Primary expressions] A constant is a primary expression.
+[6.5.1 Primary expressions] A string literal is a primary expression.
+[6.5.1 Primary expressions] A parenthesized expression is a primary expression.
+[6.5.1 Primary expressions] A generic selection is a primary expression.
+[6.5.1.1 Generic selection] Constraints 2 A generic selection shall have no more than one default generic association.
+[6.5.1.1 Generic selection] No two generic associations in the same generic selection shall specify compatible types.
+[6.5.1.1 Generic selection] If a generic selection has no default generic association, its controlling expression shall have type compatible with exactly one of the types named in its generic association list.
+[6.5.1.1 Generic selection] If a generic selection has a generic association with a type name that is compatible with the type of the controlling expression, then the result expression of the generic selection is the expression in that generic association.
+[6.5.2.1 Array subscripting] A postfix expression followed by an expression in square brackets [] is a subscripted designation of an element of an array object.
+[6.5.2.1 Array subscripting] If the unary * operator is applied to this pointer explicitly, or implicitly as a result of subscripting, the result is the referenced ( n - 1)-dimensional array, which itself is converted into a pointer if used as other than an lvalue.
+[6.5.2.2 Function calls] If the expression that denotes the called function has a type that includes a prototype, the number of arguments shall agree with the number of parameters.
+[6.5.2.2 Function calls] A postfix expression followed by parentheses () containing a possibly empty, comma-separated list of expressions is a function call.
+[6.5.2.2 Function calls] If the expression that denotes the called function has type pointer to function returning an object type, the function call expression has the same type as that object type [...].
+[6.5.2.2 Function calls] If the expression that denotes the called function has a type that does not include a prototype, the integer promotions are performed on each argument, and arguments that have type float are promoted to double.
+[6.5.2.2 Function calls] If the number of arguments does not equal the number of parameters, the behavior is undefined.
+[6.5.2.2 Function calls] If the function is defined with a type that includes a prototype, and either the prototype ends with an ellipsis (,.
+[6.5.2.2 Function calls] A parameter declared to have array or function type is adjusted to have a pointer type [...].
+[6.5.2.2 Function calls] If the expression that denotes the called function has a type that does include a prototype, the arguments are implicitly converted, as if by assignment, to the types of the corresponding parameters, taking the type of each parameter to be the unqualified version of its declared type.
+[6.5.2.2 Function calls] If the function is defined with a type that is not compatible with the type (of the expression) pointed to by the expression that denotes the called function, the behavior is undefined.
+[6.5.2.2 Function calls] operator shall have an atomic, qualified, or unqualified structure or union type, and the second operand shall name a member of that type.
+[6.5.2.2 Function calls] If the first expression has qualified type, the result has the so-qualified version of the type of the designated member.
+[6.5.2.2 Function calls] If the first expression is a pointer to a qualified type, the result has the so-qualified version of the type of the designated member.
+[6.5.2.2 Function calls] If f is a function returning a structure or union, and x is a member of that structure or union, f().
+[6.5.2.2 Function calls] If the member used to read the contents of a union object is not the same as the member last used to store a value in the object, the appropriate part of the object representation of the value is reinterpreted as an object representation in the new type [...].
+[6.5.2.2 Function calls] If &E is a valid pointer expression (where & is the ``address-of '' operator, which generates a pointer to its operand), the expression (&E)->MOS is the same as E.
+[6.5.2.5 Compound literals] A postfix expression that consists of a parenthesized type name followed by a brace-enclosed list of initializers is a compound literal.
+[6.5.2.5 Compound literals] If the type name specifies an array of unknown size, the size is determined by the initializer list [...].
+[6.5.2.5 Compound literals] If the compound literal occurs outside the body of a function, the object has static storage duration; otherwise, it has automatic storage duration associated with the enclosing block.
+[6.5.3.2 Address and indirection operators] The operand of the unary * operator shall have pointer type.
+[6.5.3.2 Address and indirection operators] If the operand has type ``type'', the result has type ``pointer to type''.
+[6.5.3.2 Address and indirection operators] If the operand is the result of a unary * operator, neither that operator nor the & operator is evaluated and the result is as if both were omitted, except that the constraints on the operators still apply and the result is not an lvalue.
+[6.5.3.2 Address and indirection operators] If the operand points to a function, the result is a function designator; if it points to an object, the result is an lvalue designating the object.
+[6.5.3.2 Address and indirection operators] If the operand has type ``pointer to type'', the result has type ``type''.
+[6.5.3.2 Address and indirection operators] If an invalid value has been assigned to the pointer, the behavior of the unary * operator is undefined.
+[6.5.3.3 Unary arithmetic operators] If the promoted type is an unsigned type, the expression ~E is equivalent to the maximum value representable in that type minus E.
+[6.5.3.3 Unary arithmetic operators] If *P is an lvalue and T is the name of an object pointer type, *(T)P is an lvalue that has a type compatible with that to which T points.
+[6.5.3.4 The sizeof and _Alignof operators] The _Alignof operator shall not be applied to a function type or an incomplete type.
+[6.5.3.4 The sizeof and _Alignof operators] If the type of the operand is a variable length array type, the operand is evaluated; otherwise, the operand is not evaluated and the result is an integer constant.
+[6.5.3.4 The sizeof and _Alignof operators] A principal use of the sizeof operator is in communication with routines such as storage allocators and I/O systems.
+[6.5.4 Cast operators] A pointer type shall not be converted to any floating type.
+[6.5.5 Multiplicative operators] The operands of the % operator shall have integer type.
+[6.5.5 Multiplicative operators] If the quotient a/b is representable, the expression (a/b)*b + a%b shall equal a; otherwise, the behavior of both a/b and a%b is undefined.
+[6.5.6 Additive operators] If both operands have arithmetic type, the usual arithmetic conversions are performed on them.
+[6.5.6 Additive operators] If the pointer operand points to an element of an array object, and the array is large enough, the result points to an element offset from the original element such that the difference of the subscripts of the resulting and original array elements equals the integer expression.
+[6.5.6 Additive operators] If both the pointer operand and the result point to elements of the same array object, or one past the last element of the array object, the evaluation shall not produce an overflow; otherwise, the behavior is undefined.
+[6.5.6 Additive operators] If the result points one past the last element of the array object, it shall not be used as the operand of a unary * operator that is evaluated.
+[6.5.6 Additive operators] If the result is not representable in an object of that type, the behavior is undefined.
+[6.5.6 Additive operators] If E1 has an unsigned type or if E1 has a signed type and a nonnegative value, the value of the result is the integral part of the quotient of E1 / 2E2.
+[6.5.6 Additive operators] If E1 has a signed type and a negative value, the resulting value is implementation-defined.
+[6.5.8 Relational operators] If both of the operands have arithmetic type, the usual arithmetic conversions are performed.
+[6.5.8 Relational operators] If two pointers to object types both point to the same object, or both point one past the last element of the same array object, they compare equal.
+[6.5.8 Relational operators] If the objects pointed to are members of the same aggregate object, pointers to structure members declared later compare greater than pointers to members declared earlier in the structure, and pointers to array elements with larger subscript values compare greater than pointers to elements of the same array with lower subscript values.
+[6.5.8 Relational operators] If the expression P points to an element of an array object and the expression Q points to the last element of the same array object, the pointer expression Q+1 compares greater than P.
+[6.5.8 Relational operators] Each of the operators < (less than), > (greater than), <= (less than or equal to), and >= (greater than or equal to) shall yield 1 if the specified relation is true and 0 if it is false.
+[6.5.9 Equality operators] If both of the operands have arithmetic type, the usual arithmetic conversions are performed.
+[6.5.9 Equality operators] If one operand is a pointer and the other is a null pointer constant, the null pointer constant is converted to the type of the pointer.
+[6.5.9 Equality operators] If one operand is a pointer to an object type and the other is a pointer to a qualified or unqualified version of void, the former is converted to the type of the latter.
+[6.5.10 Bitwise AND operator] If prior invalid pointer operations (such as accesses outside array bounds) produced undefined behavior, subsequent comparisons also produce undefined behavior.
+[6.5.13 Logical AND operator] Semantics 3 The && operator shall yield 1 if both of its operands compare unequal to 0; otherwise, it yields 0.
+[6.5.13 Logical AND operator] If the first operand compares equal to 0, the second operand is not evaluated.
+[6.5.14 Logical OR operator] Semantics 3 The || operator shall yield 1 if either of its operands compare unequal to 0; otherwise, it yields 0.
+[6.5.14 Logical OR operator] If the first operand compares unequal to 0, the second operand is not evaluated.
+[6.5.15 Conditional operator] If both the second and third operands have arithmetic type, the result type that would be determined by the usual arithmetic conversions, were they applied to those two operands, is the type of the result.
+[6.5.15 Conditional operator] If both the operands have structure or union type, the result has that type.
+[6.5.15 Conditional operator] If both operands have void type, the result has void type.
+[6.5.15 Conditional operator] If both the second and third operands are pointers or one is a null pointer constant and the other is a pointer, the result type is a pointer to a type qualified with all the type qualifiers of the types referenced by both operands.
+[6.5.16 Assignment operators] An assignment expression has the value of the left operand after the assignment, but is not an lvalue.
+[6.5.16.1 Simple assignment] If the value being stored in an object is read from another object that overlaps in any way the storage of the first object, then the overlap shall be exact and the two objects shall have qualified or unqualified versions of a compatible type; otherwise, the behavior is undefined.
+[6.5.16.2 Compound assignment] For the other operators, the left operand shall have atomic, qualified, or unqualified arithmetic type, and (considering the type the left operand would have after lvalue conversion) each operand shall have arithmetic type consistent with those allowed by the corresponding binary operator.
+[6.5.16.2 Compound assignment] A compound assignment of the form E1 op = E2 is equivalent to the simple assignment expression E1 = E1 op (E2), except that the lvalue E1 is evaluated only once, and with respect to an indeterminately-sequenced function call, the operation of a compound assignment is a single evaluation.
+[6.5.16.2 Compound assignment] If E1 has an atomic type, compound assignment is a read-modify-write operation with memory_order_seq_cst memory order semantics.
+[6.5.16.2 Compound assignment] If E1 or E2 has floating type, then exceptional conditions or floating-point exceptions encountered during discarded evaluations of new should also be discarded in order to satisfy the equivalence of E1 op = E2 and E1 = E1 op (E2).
+[6.5.16.2 Compound assignment] If FLT_EVAL_METHOD is not 0, then T2 must be a type with the range and precision to which E2 is evaluated in order to satisfy the equivalence.
+[6.6 Constant expressions] Constraints 3 Constant expressions shall not contain assignment, increment, decrement, function-call, or comma operators, except when they are contained within a subexpression that is not evaluated.
+[6.6 Constant expressions] An expression that evaluates to a constant is required in several contexts.
+[6.6 Constant expressions] If a floating expression is evaluated in the translation environment, the arithmetic range and precision shall be at least as great as if the expression were being evaluated in the execution environment.
+[6.6 Constant expressions] Cast operators in an integer constant expression shall only convert arithmetic types to integer types, except as part of an operand to the sizeof or _Alignof operator.
+[6.6 Constant expressions] An integer constant expression is required in a number of contexts such as the size of a bit-field member of a structure, the value of an enumeration constant, and the size of a non-variable length array.
+[6.6 Constant expressions] An arithmetic constant expression shall have arithmetic type and shall only have operands that are integer constants, floating constants, enumeration constants, character constants, sizeof expressions whose results are integer constants, and _Alignof expressions.
+[6.6 Constant expressions] An address constant is a null pointer, a pointer to an lvalue designating an object of static storage duration, or a pointer to a function designator; it shall be created explicitly using the unary & operator or an integer constant cast to pointer type, or implicitly by the use of an expression of array or function type.
+[6.6 Constant expressions] and -> operators, the address & and indirection * unary operators, and pointer casts may be used in the creation of an address constant, but the value of an object shall not be accessed by use of these operators.
+[6.7 Declarations] All declarations in the same scope that refer to the same object or function shall specify compatible types.
+[6.7 Declarations] A definition of an identifier is a declaration for that identifier that: --for an object, causes storage to be reserved for that object; --for a function, includes the function body; --for an enumeration constant, is the (only) declaration of the identifier; --for a typedef name, is the first (or only) declaration of the identifier.
+[6.7 Declarations] If an identifier for an object is declared with no linkage, the type for the object shall be complete by the end of its declarator, or by the end of its init-declarator if it has an initializer; in the case of function parameters (including in prototypes), it is the adjusted type that is required to be complete.
+[6.7.1 Storage-class specifiers] If _Thread_local appears in any declaration of an object, it shall be present in every declaration of that object.
+[6.7.1 Storage-class specifiers] Semantics 5 The typedef specifier is called a ``storage-class specifier'' for syntactic convenience only [...].
+[6.7.1 Storage-class specifiers] A declaration of an identifier for an object with storage-class specifier register suggests that access to the object be as fast as possible.
+[6.7.1 Storage-class specifiers] If an aggregate or union object is declared with a storage-class specifier other than typedef, the properties resulting from the storage-class specifier, except with respect to linkage, also apply to the members of the object, and so on recursively for any aggregate or union member objects.
+[6.7.1 Storage-class specifiers] Each list of type specifiers shall be one of the following multisets (delimited by commas, when there is more than one multiset per item); the type specifiers may occur in any order, possibly intermixed with the other declaration specifiers.
+[6.7.2.1 Structure and union specifiers] A struct-declaration that does not declare an anonymous structure or anonymous union shall contain a struct-declarator-list.
+[6.7.2.1 Structure and union specifiers] If the value is zero, the declaration shall have no declarator.
+[6.7.2.1 Structure and union specifiers] A bit-field shall have a type that is a qualified or unqualified version of _Bool, signed int, unsigned int, or some other implementation-defined type.
+[6.7.2.1 Structure and union specifiers] If the struct-declaration-list does not contain any named members, either directly or via an anonymous structure or anonymous union, the behavior is undefined.
+[6.7.2.1 Structure and union specifiers] A member of a structure or union may have any complete object type other than a variably modified type. In addition, a member may be declared to consist of a specified number of bits (including a sign bit, if any). Such a member is called a bit-field; its width is preceded by a colon.
+[6.7.2.1 Structure and union specifiers] A bit-field is interpreted as having a signed or unsigned integer type consisting of the specified number of bits.
+[6.7.2.1 Structure and union specifiers] If the value 0 or 1 is stored into a nonzero-width bit-field of type _Bool, the value of the bit-field shall compare equal to the value stored; a _Bool bit-field has the semantics of a _Bool.
+[6.7.2.1 Structure and union specifiers] If enough space remains, a bit-field that immediately follows another bit-field in a structure shall be packed into adjacent bits of the same unit.
+[6.7.2.1 Structure and union specifiers] If insufficient space remains, whether a bit-field that does not fit is put into the next unit or overlaps adjacent units is implementation-defined.
+[6.7.2.1 Structure and union specifiers] An unnamed bit-field structure member is useful for padding to conform to externally imposed layouts.
+[6.7.2.1 Structure and union specifiers] An unnamed member whose type specifier is a structure specifier with no tag is called an anonymous structure; an unnamed member whose type specifier is a union specifier with no tag is called an anonymous union.
+[6.7.2.1 Structure and union specifiers] A pointer to a structure object, suitably converted, points to its initial member (or if that member is a bit-field, then to the unit in which it resides), and vice versa.
+[6.7.2.1 Structure and union specifiers] A pointer to a union object, suitably converted, points to each of its members (or if a member is a bit-field, then to the unit in which it resides), and vice versa.
+[6.7.2.1 Structure and union specifiers] As a special case, the last element of a structure with more than one named member may have an incomplete array type; this is called a flexible array member.
+[6.7.2.1 Structure and union specifiers] If this array would have no elements, it behaves as if it had one element but the behavior is undefined if any attempt is made to access that element or to generate a pointer one past it.
+[6.7.2.1 Structure and union specifiers] If the first enumerator has no =, the value of its enumeration constant is 0.
+[6.7.2.1 Structure and union specifiers] Each enumerated type shall be compatible with char, a signed integer type, or an unsigned integer type.
+[6.7.2.3 Tags] Where two declarations that use the same tag declare the same type, they shall both use the same choice of struct, union, or enum.
+[6.7.2.3 Tags] A type specifier of the form enum identifier without an enumerator list shall only appear after the type it specifies is complete.
+[6.7.2.3 Tags] A type specifier of the form struct-or-union identifieropt { struct-declaration-list } or enum identifieropt { enumerator-list } or enum identifieropt { enumerator-list , } declares a structure, union, or enumerated type.
+[6.7.2.3 Tags] If an identifier is provided,130) the type specifier also declares the identifier to be the tag of that type.
+[6.7.2.3 Tags] If a type specifier of the form struct-or-union identifier occurs other than as part of one of the above forms, and no other declaration of the identifier as a tag is visible, then it declares an incomplete structure or union type, and declares the identifier as the tag of that type.
+[6.7.2.3 Tags] An incomplete type may only by used when the size of an object of that type is not needed.
+[6.7.2.3 Tags] If there is no identifier, the type can, within the translation unit, only be referred to by the declaration of which it is a part.
+[6.7.2.3 Tags] A similar construction with enum does not exist.
+[6.7.2.3 Tags] If a type specifier of the form struct-or-union identifier or enum identifier occurs other than as part of one of the above forms, and a declaration of the identifier as a tag is visible, then it specifies the same type as that other declaration, and does not redeclare the tag.
+[6.7.2.4 Atomic type specifiers] The type name in an atomic type specifier shall not refer to an array type, a function type, an atomic type, or a qualified type.
+[6.7.2.4 Atomic type specifiers] If the _Atomic keyword is immediately followed by a left parenthesis, it is interpreted as a type specifier (with a type name), not as a type qualifier.
+[6.7.3 Type qualifiers] The type modified by the _Atomic qualifier shall not be an array type or a function type.
+[6.7.3 Type qualifiers] If the same qualifier appears more than once in the same specifier-qualifier-list , either directly or via one or more typedefs, the behavior is the same as if it appeared only once.
+[6.7.3 Type qualifiers] If other qualifiers appear along with the _Atomic qualifier in a specifier-qualifier- 132) The implementation may place a const object that is not volatile in a read-only region of storage.
+[6.7.3 Type qualifiers] If an attempt is made to modify an object defined with a const-qualified type through use of an lvalue with non-const-qualified type, the behavior is undefined.
+[6.7.3 Type qualifiers] If an attempt is made to refer to an object defined with a volatile-qualified type through use of an lvalue with non-volatile-qualified type, the behavior is undefined.
+[6.7.3 Type qualifiers] Therefore any expression referring to such an object shall be evaluated strictly according to the rules of the abstract machine [...].
+[6.7.3 Type qualifiers] Furthermore, at every sequence point the value last stored in the object shall agree with that prescribed by the abstract machine, except as modified by the unknown factors mentioned previously.
+[6.7.3 Type qualifiers] An object that is accessed through a restrict-qualified pointer has a special association with that pointer.
+[6.7.3 Type qualifiers] If the specification of an array type includes any type qualifiers, the element type is so-qualified, not the array type.
+[6.7.3 Type qualifiers] If the specification of a function type includes any type qualifiers, the behavior is undefined.
+[6.7.3 Type qualifiers] An object declared extern const volatile int real_time_clock; 133) This applies to those objects that behave as if they were defined with qualified types, even if they are never actually defined as objects in the program (such as an object at a memory-mapped input/output address).
+[6.7.3 Type qualifiers] Actions on objects so declared shall not be ``optimized out'' by an implementation or reordered except as permitted by the rules for evaluating expressions.
+[6.7.3 Type qualifiers] If D appears inside a block and does not have storage class extern, let B denote the block.
+[6.7.3 Type qualifiers] If D appears in the list of parameter declarations of a function definition, let B denote the associated block.
+[6.7.3 Type qualifiers] If L is used to access the value of the object X that it designates, and X is also modified (by any means), then the following requirements apply: T shall not be const-qualified.
+[6.7.3 Type qualifiers] Every access that modifies X shall be considered also to modify P, for the purposes of this subclause.
+[6.7.3 Type qualifiers] If P is assigned the value of a pointer expression E that is based on another restricted pointer 137) In other words, E depends on the value of P itself rather than on the value of an object referenced indirectly through P.
+[6.7.3 Type qualifiers] object P2, associated with block B2, then either the execution of B2 shall begin before the execution of B, or the execution of B2 shall end prior to the assignment.
+[6.7.3 Type qualifiers] If these requirements are not met, then the behavior is undefined.
+[6.7.3 Type qualifiers] A translator is free to ignore any or all aliasing implications of uses of restrict.
+[6.7.3 Type qualifiers] An inline definition of a function with external linkage shall not contain a definition of a modifiable object with static or thread storage duration, and shall not contain a reference to an identifier with internal linkage.
+[6.7.3 Type qualifiers] A function specifier may appear more than once; the behavior is the same as if it appeared only once.
+[6.7.3 Type qualifiers] A function declared with an inline function specifier is an inline function.
+[6.7.3 Type qualifiers] For a function with external linkage, the following restrictions apply: If a function is declared with an inline function specifier, then it shall also be defined in the same translation unit.
+[6.7.3 Type qualifiers] If all of the file scope declarations for a function in a translation unit include the inline function specifier without extern, then the definition in that translation unit is an inline definition.
+[6.7.3 Type qualifiers] Therefore, for example, the expansion of a macro used within the body of the function uses the definition it had at the point the function body appears, and not where the function is called; and identifiers refer to the declarations in scope where the body occurs.
+[6.7.5 Alignment specifier] An alignment attribute shall not be specified in a declaration of a typedef, or a bit-field, or a function, or a parameter, or an object declared with the register storage-class specifier.
+[6.7.5 Alignment specifier] It shall evaluate to a valid fundamental alignment, or to a valid extended alignment supported by the implementation in the context in which it appears, or to zero.
+[6.7.5 Alignment specifier] If the definition of an object has an alignment specifier, any other declaration of that object shall either specify equivalent alignment or have no alignment specifier.
+[6.7.5 Alignment specifier] If the definition of an object does not have an alignment specifier, any other declaration of that object shall also have no alignment specifier.
+[6.7.5 Alignment specifier] If declarations of an object in different translation units have different alignment specifiers, the behavior is undefined.
+[6.7.6 Declarators] A full declarator is a declarator that is not part of another declarator.
+[6.7.6 Declarators] If, in the nested sequence of declarators in a full declarator, there is a declarator specifying a variable length array type, the type specified by the full declarator is said to be variably modified.
+[6.7.6 Declarators] If, in the declaration ``T D1'', D1 has the form identifier then the type specified for ident is T.
+[6.7.6 Declarators] If, in the declaration ``T D1'', D1 has the form ( D ) then ident has the type specified by the declaration ``T D''.
+[6.7.6.1 Pointer declarators] If, in the declaration ``T D1'', D1 has the form * type-qualifier-listopt D and the type specified for ident in the declaration ``T D'' is `` derived-declarator-type-list T '', then the type specified for ident is `` derived-declarator-type-list type-qualifier-list pointer to T ''.
+[6.7.6.1 Pointer declarators] For two pointer types to be compatible, both shall be identically qualified and both shall be pointers to compatible types.
+[6.7.6.1 Pointer declarators] const int *ptr_to_constant; int *const constant_ptr; The contents of any object pointed to by ptr_to_constant shall not be modified through that pointer, but ptr_to_constant itself may be changed to point to another object.
+[6.7.6.2 Array declarators] If they delimit an expression (which specifies the size of an array), the expression shall have an integer type.
+[6.7.6.2 Array declarators] If the expression is a constant expression, it shall have a value greater than zero.
+[6.7.6.2 Array declarators] The optional type qualifiers and the keyword static shall appear only in a declaration of a function parameter with an array type, and then only in the outermost array type derivation.
+[6.7.6.2 Array declarators] If an identifier is declared to be an object with static or thread storage duration, it shall not have a variable length array type.
+[6.7.6.2 Array declarators] If the size is not present, the array type is an incomplete type.
+[6.7.6.2 Array declarators] If the size is * instead of being an expression, the array type is a variable length array type of unspecified size, which can only be used in declarations or type names with function prototype scope;143) such arrays are nonetheless complete types.
+[6.7.6.2 Array declarators] If the size is an integer constant expression and the element type has a known constant size, the array type is not a variable length array type; otherwise, the array type is a variable length array type.
+[6.7.6.2 Array declarators] If the size is an expression that is not an integer constant expression: if it occurs in a declaration at function prototype scope, it is treated as if it were replaced by *; otherwise, each time it is evaluated it shall have a value greater than zero.
+[6.7.6.2 Array declarators] For two array types to be compatible, both shall have compatible element types, and if both size specifiers are present, and are integer constant expressions, then both size specifiers shall have the same constant value.
+[6.7.6.2 Array declarators] If the two array types are used in a context which requires them to be compatible, it is undefined behavior if the two size specifiers evaluate to unequal values.
+[6.7.6.2 Array declarators] A function declarator shall not specify a return type that is a function type or an array type.
+[6.7.6.2 Array declarators] An identifier list in a function declarator that is not part of a definition of that function shall be empty.
+[6.7.6.2 Array declarators] If, in the declaration ``T D1'', D1 has the form D( parameter-type-list ) or D( identifier-listopt ) and the type specified for ident in the declaration ``T D'' is `` derived-declarator-type-list T '', then the type specified for ident is `` derived-declarator-type-list function returning T ''.
+[6.7.6.2 Array declarators] A parameter type list specifies the types of, and may declare identifiers for, the parameters of the function.
+[6.7.6.2 Array declarators] If the keyword static also appears within the [ and ] of the array type derivation, then for each call to the function, the value of the corresponding actual argument shall provide access to the first element of an array with at least as many elements as specified by the size expression.
+[6.7.6.2 Array declarators] If the list terminates with an ellipsis (,.
+[6.7.6.2 Array declarators] If, in a parameter declaration, an identifier can be treated either as a typedef name or as a parameter name, it shall be taken as a typedef name.
+[6.7.6.2 Array declarators] If the function declarator is not part of a definition of that function, parameters may have incomplete type and may use the [*] notation in their sequences of declarator specifiers to specify variable length array types.
+[6.7.6.2 Array declarators] An identifier list declares only the identifiers of the parameters of the function.
+[6.7.6.2 Array declarators] An empty list in a function declarator that is part of a definition of that function specifies that the function has no parameters.
+[6.7.6.2 Array declarators] If one type has a parameter type list and the other type is specified by a function declarator that is not part of a function definition and that contains an empty identifier list, the parameter list shall not have an ellipsis terminator and the type of each parameter shall be compatible with the type that results from the application of the default argument promotions.
+[6.7.6.2 Array declarators] If both function types are ``old style'', parameter types are not compared.
+[6.7.6.2 Array declarators] If the declaration occurs outside of any function, the identifiers have file scope and external linkage.
+[6.7.6.2 Array declarators] If the declaration occurs inside a function, the identifiers of the functions f and fip have block scope and either internal or external linkage (depending on what file scope declarations for these identifiers are visible), and the identifier of the pointer pfi has block scope and no linkage.
+[6.7.8 Type definitions] If a typedef name specifies a variably modified type then it shall have block scope.
+[6.7.8 Type definitions] If these declarations are followed in an inner scope by t f(t (t)); long t; then a function f is declared with type ``function returning signed int with one unnamed parameter with type pointer to function returning signed int with one unnamed parameter with type signed int'', and an identifier t with type long int.
+[6.7.8 Type definitions] If a typedef name denotes a variable length array type, the length of the array is fixed at the time the typedef name is defined, not each time it is used.
+[6.7.9 Initialization] identifier Constraints 2 No initializer shall attempt to provide a value for an object not contained within the entity being initialized.
+[6.7.9 Initialization] All the expressions in an initializer for an object that has static or thread storage duration shall be constant expressions or string literals.
+[6.7.9 Initialization] If the declaration of an identifier has block scope, and the identifier has external or internal linkage, the declaration shall have no initializer for the identifier.
+[6.7.9 Initialization] If a designator has the form [ constant-expression ] then the current object (defined below) shall have array type and the expression shall be an integer constant expression.
+[6.7.9 Initialization] If the array is of unknown size, any nonnegative value is valid.
+[6.7.9 Initialization] If an object that has automatic storage duration is not initialized explicitly, its value is indeterminate.
+[6.7.9 Initialization] The initializer for a structure or union object that has automatic storage duration shall be either an initializer list as described below, or a single expression that has compatible structure or union type.
+[6.7.9 Initialization] Otherwise, the initializer for an object that has aggregate or union type shall be a brace-enclosed list of initializers for the elements or named members.
+[6.7.9 Initialization] The initialization shall occur in initializer list order, each initializer provided for a particular subobject overriding any previously listed initializer for the same subobject;151) all subobjects that are not initialized explicitly shall be initialized implicitly the same as objects that have static storage duration.
+[6.7.9 Initialization] If the aggregate or union contains elements or members that are aggregates or unions, these rules apply recursively to the subaggregates or contained unions.
+[6.7.9 Initialization] If the initializer of a subaggregate or contained union begins with a left brace, the initializers enclosed by that brace and its matching right brace initialize the elements or members of the subaggregate or the contained union.
+[6.7.9 Initialization] If there are fewer initializers in a brace-enclosed list than there are elements or members of an aggregate, or fewer characters in a string literal used to initialize an array of known size than there are elements in the array, the remainder of the aggregate shall be initialized implicitly the same as objects that have static storage duration.
+[6.7.9 Initialization] If the initializer list for a subaggregate or contained union does not begin with a left brace, its subobjects are initialized as usual, but the subaggregate or contained union does not become the current object: current objects are associated only with brace-enclosed initializer lists.
+[6.7.9 Initialization] If an array of unknown size is initialized, its size is determined by the largest indexed element with an explicit initializer.
+[6.7.9 Initialization] If there had been more than six items in any of the lists, a diagnostic message would have been issued.
+[6.7.9 Initialization] A a = { 1, 2 }, b = { 3, 4, 5 }; is identical to int a[] = { 1, 2 }, b[] = { 3, 4, 5 }; due to the rules for incomplete types.
+[6.7.9 Initialization] If an attempt is made to use p to modify the contents of the array, the behavior is undefined.
+[6.7.10 Static assertions] Semantics 3 The constant expression shall be an integer constant expression.
+[6.7.10 Static assertions] If the value of the constant expression compares unequal to 0, the declaration has no effect.
+[6.8 Statements and blocks] A full expression is an expression that is not part of another expression or of a declarator.
+[6.8.1 Labeled statements] Label names shall be unique within a function.
+[6.8.2 Compound statement] A compound statement is a block.
+[6.8.3 Expression and null statements] A null statement (consisting of just a semicolon) performs no operations.
+[6.8.3 Expression and null statements] If a function call is evaluated as an expression statement for its side effects only, the discarding of its value may be made explicit by converting the expression to a void expression by means of a cast [...].
+[6.8.4 Selection statements] A selection statement is a block whose scope is a strict subset of the scope of its enclosing block.
+[6.8.4.1 The if statement] If the first substatement is reached via a label, the second substatement is not executed.
+[6.8.4.1 The if statement] An else is associated with the lexically nearest preceding if that is allowed by the syntax.
+[6.8.4.2 The switch statement] If a switch statement has an associated case or default label within the scope of an identifier with a variably modified type, the entire switch statement shall be within the scope of that identifier.
+[6.8.4.2 The switch statement] A switch statement causes control to jump to, into, or past the statement that is the switch body , depending on the value of a controlling expression, and on the presence of a default label and the values of any case labels on or in the switch body.
+[6.8.4.2 The switch statement] A case or default label is accessible only within the closest enclosing switch statement.
+[6.8.4.2 The switch statement] If a converted value matches that of the promoted controlling expression, control jumps to the statement following the matched case label.
+[6.8.4.2 The switch statement] If no converted case constant expression matches and there is no default label, no part of the switch body is executed.
+[6.8.5 Iteration statements] The declaration part of a for statement shall only declare identifiers for objects having storage class auto or register.
+[6.8.5 Iteration statements] An iteration statement is a block whose scope is a strict subset of the scope of its enclosing block.
+[6.8.5 Iteration statements] An iteration statement whose controlling expression is not a constant expression,156) that performs no input/output operations, does not access volatile objects, and performs no synchronization or atomic operations in its body, controlling expression, or (in the case of 155) Code jumped over is not executed.
+[6.8.5 Iteration statements] An omitted controlling expression is replaced by a nonzero constant, which is a constant expression.
+[6.8.5.3 The for statement] If clause-1 is a declaration, the scope of any identifiers it declares is the remainder of the declaration and the entire loop, including the other two expressions; it is reached in the order of execution before the first evaluation of the controlling expression.
+[6.8.5.3 The for statement] If clause-1 is an expression, it is evaluated as a void expression before the first evaluation of the controlling expression.
+[6.8.5.3 The for statement] An omitted expression-2 is replaced by a nonzero constant.
+[6.8.6.1 The goto statement] A goto statement shall not jump from outside the scope of an identifier having a variably modified type to inside the scope of that identifier.
+[6.8.6.1 The goto statement] A goto statement is not allowed to jump past any declarations of objects with variably modified types.
+[6.8.6.1 The goto statement] A jump within the scope, however, is permitted.
+[6.8.6.2 The continue statement] A continue statement causes a jump to the loop-continuation portion of the smallest enclosing iteration statement; that is, to the end of the loop body.
+[6.8.6.4 The return statement] A return statement with an expression shall not appear in a function whose return type is void.
+[6.8.6.4 The return statement] A return statement without an expression shall only appear in a function whose return type is void.
+[6.8.6.4 The return statement] If a return statement with an expression is executed, the value of the expression is returned to the caller as the value of the function call expression.
+[6.8.6.4 The return statement] If the expression has a type different from the return type of the function in which it appears, the value is converted as if by assignment to an object having the return type of the function.
+[6.9 External definitions] There shall be no more than one external definition for each identifier declared with internal linkage in a translation unit.
+[6.9 External definitions] An external definition is an external declaration that is also a definition of a function (other than an inline definition) or an object.
+[6.9 External definitions] If an identifier declared with external linkage is used in an expression (other than as part of the operand of a sizeof or _Alignof operator whose result is an integer constant), somewhere in the entire program there shall be exactly one external definition for the identifier; otherwise, there shall be no more than one.
+[6.9.1 Function definitions] The storage-class specifier, if any, in the declaration specifiers shall be either extern or static.
+[6.9.1 Function definitions] If the declarator includes a parameter type list, the declaration of each parameter shall include an identifier, except for the special case of a parameter list consisting of a single parameter of type void, in which case there shall not be an identifier.
+[6.9.1 Function definitions] If the declarator includes an identifier list, each declaration in the declaration list shall have at least one declarator, those declarators shall declare only identifiers from the identifier list, and every identifier in the identifier list shall be declared.
+[6.9.1 Function definitions] The declarations in the declaration list shall contain no storage-class specifier other than register and no initializations.
+[6.9.1 Function definitions] If the declarator includes a parameter type list, the list also specifies the types of all the parameters; such a declarator also serves as a function prototype for later calls to the same function in the same translation unit.
+[6.9.1 Function definitions] If the declarator includes an identifier list,163) the types of the parameters shall be declared in a following declaration list.
+[6.9.1 Function definitions] If a function that accepts a variable number of arguments is defined without a parameter type list that ends with the ellipsis notation, the behavior is undefined.
+[6.9.1 Function definitions] If the } that terminates a function is reached, and the value of the function call is used by the caller, the behavior is undefined.
+[6.9.1 Function definitions] If the declaration of an identifier for an object has file scope and an initializer, the declaration is an external definition for the identifier.
+[6.9.1 Function definitions] If a translation unit contains one or more tentative definitions for an identifier, and the translation unit contains no external definition for that identifier, then the behavior is exactly as if the translation unit contains a file scope declaration of that identifier, with the composite type as of the end of the translation unit, with an initializer equal to 0.
+[6.9.1 Function definitions] If the declaration of an identifier for an object is a tentative definition and has internal linkage, the declared type shall not be an incomplete type.
+[6.9.1 Function definitions] If at the end of the translation unit containing int i[]; the array i still has incomplete type, the implicit initializer causes it to have one element, which is set to zero on program startup.
+[6.10 Preprocessing directives] A new-line character ends the preprocessing directive even if it occurs within what would otherwise be an 165) Thus, preprocessing directives are commonly called ``lines''.
+[6.10 Preprocessing directives] A text line shall not begin with a # preprocessing token.
+[6.10.1 Conditional inclusion] If the token defined is generated as a result of this replacement process or use of the defined unary operator does not match one of the two specified forms prior to macro replacement, the behavior is undefined.
+[6.10.1 Conditional inclusion] If it evaluates to false (zero), the group that it controls is skipped: directives are processed only through the name that determines the directive in order to keep track of the level of nested conditionals; the rest of the directives' preprocessing tokens are ignored, as are the other preprocessing tokens in the group.
+[6.10.1 Conditional inclusion] If none of the conditions evaluates to true, and there is a #else directive, the group controlled by the #else is processed; lacking a #else directive, all the groups until the #endif are skipped.
+[6.10.2 Source file inclusion] The named source file is searched 169) As indicated by the syntax, a preprocessing token shall not follow a #else or #endif directive before the terminating new-line character.
+[6.10.2 Source file inclusion] If this search is not supported, or if the search fails, the directive is reprocessed as if it read # include <h-char-sequence> new-line with the identical contained sequence (including > characters, if any) from the original directive.
+[6.10.2 Source file inclusion] A preprocessing directive of the form # include pp-tokens new-line (that does not match one of the two previous forms) is permitted.
+[6.10.2 Source file inclusion] The first character shall not be a digit.
+[6.10.3 Macro replacement] An identifier currently defined as an object-like macro shall not be redefined by another #define preprocessing directive unless the second definition is an object-like macro definition and the two replacement lists are identical.
+[6.10.3 Macro replacement] There shall be white-space between the identifier and the replacement list in the definition of an object-like macro.
+[6.10.3 Macro replacement] If the identifier-list in the macro definition does not end with an ellipsis, the number of arguments (including those arguments consisting of no preprocessing tokens) in an invocation of a function-like macro shall equal the number of parameters in the macro definition.
+[6.10.3 Macro replacement] There shall exist a ) preprocessing token that terminates the invocation.
+[6.10.3 Macro replacement] A parameter identifier in a function-like macro shall be uniquely declared within its scope.
+[6.10.3 Macro replacement] If a # preprocessing token, followed by an identifier, occurs lexically at the point at which a preprocessing directive could begin, the identifier is not subject to macro replacement.
+[6.10.3 Macro replacement] A preprocessing directive of the form # define identifier replacement-list new-line defines an object-like macro that causes each subsequent instance of the macro name171) to be replaced by the replacement list of preprocessing tokens that constitute the remainder of the directive.
+[6.10.3 Macro replacement] A preprocessing directive of the form # define identifier lparen identifier-listopt ) replacement-list new-line # define identifier lparen.
+[6.10.3 Macro replacement] If there are sequences of preprocessing tokens within the list of arguments that would otherwise act as preprocessing directives,172) the behavior is undefined.
+[6.10.3 Macro replacement] If there is a.
+[6.10.3.1 Argument substitution] A parameter in the replacement list, unless preceded by a # or ## preprocessing token or followed by a ## preprocessing token (see below), is replaced by the corresponding argument after all macros contained therein have been expanded.
+[6.10.3.1 Argument substitution] An identifier _ _VA_ARGS_ _ that occurs in the replacement list shall be treated as if it were a parameter, and the variable arguments shall form the preprocessing tokens used to replace it.
+[6.10.3.2 The # operator] If, in the replacement list, a parameter is immediately preceded by a # preprocessing token, both are replaced by a single character string literal preprocessing token that contains the spelling of the preprocessing token sequence for the corresponding argument.
+[6.10.3.2 The # operator] If the replacement that results is not a valid character string literal, the behavior is undefined.
+[6.10.3.3 The ## operator] A ## preprocessing token shall not occur at the beginning or at the end of a replacement list for either form of macro definition.
+[6.10.3.3 The ## operator] If, in the replacement list of a function-like macro, a parameter is immediately preceded or followed by a ## preprocessing token, the parameter is replaced by the corresponding argument's preprocessing token sequence; however, if an argument consists of no preprocessing tokens, the parameter is replaced by a placemarker preprocessing token instead.
+[6.10.3.3 The ## operator] If the result is not a valid preprocessing token, the behavior is undefined.
+[6.10.3.4 Rescanning and further replacement] If the name of the macro being replaced is found during this scan of the replacement list (not including the rest of the source file's preprocessing tokens), it is not replaced.
+[6.10.3.5 Scope of macro definitions] A macro definition lasts (independent of block structure) until a corresponding #undef directive is encountered or (if none is encountered) until the end of the preprocessing translation unit.
+[6.10.4 Line control] The digit sequence shall not specify zero, nor a number greater than 2147483647.
+[6.10.4 Line control] A preprocessing directive of the form # line pp-tokens new-line (that does not match one of the two previous forms) is permitted.
+[6.10.4 Line control] The directive resulting after all replacements shall match one of the two previous forms and is then processed as appropriate.
+[6.10.6 Pragma directive] An implementation is not required to perform macro replacement in pragmas, but it is permitted except for in standard pragmas (where STDC immediately follows pragma).
+[6.10.6 Pragma directive] If the result of macro replacement in a non-standard pragma has the same form as a standard pragma, the behavior is still implementation-defined; an implementation is permitted to behave as if it were the standard pragma, but is not required to.
+[6.10.8 Predefined macro names] None of these macro names, nor the identifier defined, shall be the subject of a #define or a #undef preprocessing directive.
+[6.10.8 Predefined macro names] The implementation shall not predefine the macro _ _cplusplus, nor shall it define it in any standard header.
+[6.10.8.1 Mandatory macros] If the date of translation is not available, an implementation-defined valid date shall be supplied.
+[6.10.8.1 Mandatory macros] If the time of translation is not available, an implementation-defined valid time shall be supplied.
+[6.10.8.2 Environment macros] If this symbol is defined, then every character in the Unicode required set, when stored in an object of type wchar_t, has the same value as the short identifier of that character.
+[6.10.8.2 Environment macros] If some other encoding is used, the macro shall not be defined and the actual encoding used is implementation-defined.
+[6.10.8.2 Environment macros] If some other encoding is used, the macro shall not be defined and the actual encoding used is implementation-defined.
+[6.10.8.2 Environment macros] If some other encoding is used, the macro shall not be defined and the actual encoding used is implementation-defined.
+[6.10.8.3 Conditional feature macros] An implementation that defines _ _STDC_NO_COMPLEX_ _ shall not define _ _STDC_IEC_559_COMPLEX_ _.
+[6.10.9 Pragma operator] A unary operator expression of the form: _Pragma ( string-literal ) is processed as follows: The string literal is destringized by deleting any encoding prefix, deleting the leading and trailing double-quotes, replacing each escape sequence \" by a double-quote, and replacing each escape sequence \\ by a single backslash.
+[6.10.9 Pragma operator] A directive of the form: #pragma listing on ".
+[7.1.1 Definitions of terms] A string is a contiguous sequence of characters terminated by and including the first null character.
+[7.1.1 Definitions of terms] A pointer to a string is a pointer to its initial (lowest addressed) character.
+[7.1.1 Definitions of terms] A null wide character is a wide character with code value zero.
+[7.1.1 Definitions of terms] A wide string is a contiguous sequence of wide characters terminated by and including the first null wide character.
+[7.1.1 Definitions of terms] A pointer to a wide string is a pointer to its initial (lowest addressed) wide character.
+[7.1.1 Definitions of terms] A shift sequence is a contiguous sequence of bytes within a multibyte string that (potentially) causes a change in shift state (see 5.
+[7.1.1 Definitions of terms] A shift sequence shall not have a corresponding wide character; it is instead taken to be an adjunct to an adjacent multibyte character.
+[7.1.1 Definitions of terms] For state-dependent encodings, the values for MB_CUR_MAX and MB_LEN_MAX shall thus be large enough to count all the bytes in any complete multibyte character plus at least one adjacent shift sequence of maximum length.
+[7.1.2 Standard headers] Declarations of types described in this clause shall not include type qualifiers, unless explicitly stated otherwise.
+[7.1.2 Standard headers] If a file with the same name as one of the above < and > delimited sequences, not provided as part of the implementation, is placed in any of the standard places that are searched for included source files, the behavior is undefined.
+[7.1.2 Standard headers] If used, a header shall be included outside of any external declaration or definition, and it shall first be included before the first reference to any of the functions or objects it declares, or to any of the types or macros it defines.
+[7.1.2 Standard headers] The program shall not have any macros with names lexically identical to keywords currently defined prior to the inclusion of the header or when any macro defined in the header is expanded.
+[7.1.2 Standard headers] A header is not necessarily a source file, nor are the < and > delimited sequences in header names necessarily valid source file names.
+[7.1.2 Standard headers] Any declaration of a library function shall have external linkage.
+[7.1.2 Standard headers] A summary of the contents of the standard headers is given in annex B.
+[7.1.3 Reserved identifiers] If the program declares or defines an identifier in a context in which it is reserved (other than as allowed by 7.
+[7.1.3 Reserved identifiers] If the program removes (with #undef) any macro definition of an identifier in the first group listed above, the behavior is undefined.
+[7.1.4 Use of library functions] If a function argument is described as being an array, the pointer actually passed to the function shall have a value such that all address computations and accesses to objects (that would be valid if the pointer did point to the first element of such an array) are in fact valid.
+[7.1.4 Use of library functions] Any invocation of a library function that is implemented as a macro shall expand to code that evaluates each of its arguments exactly once, fully protected by parentheses where necessary, so it is generally safe to use arbitrary expressions as arguments.
+[7.1.4 Use of library functions] integer constant expressions shall additionally be suitable for use in #if preprocessing directives.
+[7.1.4 Use of library functions] A library function shall not directly or indirectly modify objects accessible by threads other than the current thread unless the objects are accessed directly or indirectly via the function's non-const arguments.
+[7.1.4 Use of library functions] Unless otherwise specified, library functions shall perform all operations solely within the current thread if those operations have effects that are visible to users.
+[7.2 Diagnostics <assert.h>] If NDEBUG is defined as a macro name at the point in the source file where <assert.
+[7.2 Diagnostics <assert.h>] The assert macro shall be implemented as a macro, not as an actual function.
+[7.2 Diagnostics <assert.h>] If the macro definition is suppressed in order to access an actual function, the behavior is undefined.
+[7.3.1 Introduction] If _Imaginary_I is not defined, I shall expand to _Complex_I.
+[7.3.1 Introduction] A specification for imaginary types is in informative annex G.
+[7.3.2 Conventions] An implementation may set errno but is not required to.
+[7.3.3 Branch cuts] These implementations shall map a cut so the function is continuous as the cut is approached coming around the finite endpoint of the cut in a counter clockwise direction.
+[7.3.4 The CX_LIMITED_RANGE pragma] If this pragma is used in any other context, the behavior is undefined.
+[7.3.9.3 The CMPLX macros] The resulting expression shall be suitable for use as an initializer for an object with static or thread storage duration, provided both arguments are likewise suitable.
+[7.3.9.5 The cproj functions] If z has an infinite part, then cproj(z) is equivalent to INFINITY + I * copysign(0.
+[7.4 Character handling <ctype.h>] If the argument has any other value, the behavior is undefined.
+[7.4.2.1 The tolower function] If the argument is a character for which isupper is true and there are one or more corresponding characters, as specified by the current locale, for which islower is true, the tolower function returns one of the corresponding characters (always the same one for any given locale); otherwise, the argument is returned unchanged.
+[7.4.2.2 The toupper function] If the argument is a character for which islower is true and there are one or more corresponding characters, as specified by the current locale, for which isupper is true, the toupper function returns one of the corresponding characters (always the same one for any given locale); otherwise, the argument is returned unchanged.
+[7.5 Errors <errno.h>] If a macro definition is suppressed in order to access an actual object, or a program defines an identifier with the name errno, the behavior is undefined.
+[7.6 Floating-point environment <fenv.h>] A floating-point status flag is a system variable whose value is set (but never cleared) when a floating-point exception is raised, which occurs as a side effect of exceptional floating-point arithmetic to provide auxiliary information.
+[7.6 Floating-point environment <fenv.h>] A floating-point control mode is a system variable whose value may be set by the user to affect the subsequent behavior of floating-point arithmetic.
+[7.6 Floating-point environment <fenv.h>] A floating-point status flag is not an object and can be set more than once within an expression.
+[7.6 Floating-point environment <fenv.h>] If no such macros are defined, FE_ALL_EXCEPT shall be defined as 0.
+[7.6 Floating-point environment <fenv.h>] If this pragma is used in any other context, the behavior is undefined.
+[7.6 Floating-point environment <fenv.h>] If part of a program tests floating-point status flags, sets floating-point control modes, or runs under non-default mode settings, but was translated with the state for the FENV_ACCESS pragma ``off'', the behavior is undefined.
+[7.6 Floating-point environment <fenv.h>] If the function g might depend on status flags set as a side effect of the first x + 1, or if the second x + 1 might depend on control modes set as a side effect of the call to function g, then the program shall contain an appropriately placed invocation of #pragma STDC FENV_ACCESS ON.
+[7.6.2.1 The feclearexcept function] An implementation may endow floating-point status flags with more information --for example, the address of the code which first raised the floating-point exception; the functions fegetexceptflag and fesetexceptflag deal with the full content of flags.
+[7.6.2.4 The fesetexceptflag function] The value of *flagp shall have been set by a previous call to fegetexceptflag whose second argument represented at least those floating-point exceptions represented by the argument excepts.
+[7.6.3.2 The fesetround function] If the argument is not equal to the value of a rounding direction macro, the rounding direction is not changed.
+[7.6.4.3 The fesetenv function] The argument envp shall point to an object set by a call to fegetenv or feholdexcept, or equal a floating-point environment macro.
+[7.6.4.4 The feupdateenv function] The argument envp shall point to an object set by a call to feholdexcept or fegetenv, or equal a floating-point environment macro.
+[7.8.2.1 The imaxabs function] If the result cannot be represented, the behavior is undefined.
+[7.8.2.2 The imaxdiv function] The structure shall contain (in either order) the members quot (the quotient) and rem (the remainder), each of which has type intmax_t.
+[7.8.2.2 The imaxdiv function] If either part of the result cannot be represented, the behavior is undefined.
+[7.8.2.3 The strtoimax and strtoumax functions] If no conversion could be performed, zero is returned.
+[7.8.2.3 The strtoimax and strtoumax functions] If the correct value is outside the range of representable values, INTMAX_MAX, INTMAX_MIN, or UINTMAX_MAX is returned (according to the return type and sign of the value, if any), and the value of the macro ERANGE is stored in errno.
+[7.8.2.4 The wcstoimax and wcstoumax functions] If no conversion could be performed, zero is returned.
+[7.8.2.4 The wcstoimax and wcstoumax functions] If the correct value is outside the range of representable values, INTMAX_MAX, INTMAX_MIN, or UINTMAX_MAX is returned (according to the return type and sign of the value, if any), and the value of the macro ERANGE is stored in errno.
+[7.11 Localization <locale.h>] The structure shall contain at least the following members, in any order.
+[7.11 Localization <locale.h>] In the "C" locale, the members shall have the values specified in the comments.
+[7.11.1.1 The setlocale function] The implementation shall behave as if no library function calls the setlocale function.
+[7.11.1.1 The setlocale function] If a pointer to a string is given for locale and the selection can be honored, the setlocale function returns a pointer to the string associated with the specified category for the new locale.
+[7.11.1.1 The setlocale function] If the selection cannot be honored, the setlocale function returns a null pointer and the program's locale is not changed.
+[7.11.1.1 The setlocale function] A null pointer for locale causes the setlocale function to return a pointer to the string associated with the category for the program's current locale; the program's locale is not changed.
+[7.11.1.1 The setlocale function] The string pointed to shall not be modified by the program, but may be overwritten by a subsequent call to the setlocale function.
+[7.11.2.1 The localeconv function] The implementation shall arrange to encode in a string the various categories due to a heterogeneous locale when category has the value LC_ALL.
+[7.11.2.1 The localeconv function] Apart from grouping and mon_grouping, the strings shall start and end in the initial shift state.
+[7.11.2.1 The localeconv function] If the currency symbol and sign string are adjacent, a space separates them from the value; otherwise, a space separates the currency symbol from the value.
+[7.11.2.1 The localeconv function] If the currency symbol and sign string are adjacent, a space separates them; otherwise, a space separates the sign string from the value.
+[7.11.2.1 The localeconv function] The implementation shall behave as if no library function calls the localeconv function.
+[7.11.2.1 The localeconv function] The structure pointed to by the return value shall not be modified by the program, but may be overwritten by a subsequent call to the localeconv function.
+[7.12 Mathematics <math.h>] If FLT_EVAL_METHOD equals 0, float_t and double_t are float and double, respectively; if FLT_EVAL_METHOD equals 1, they are both double; if FLT_EVAL_METHOD equals 2, they are both long double; and for other values of FLT_EVAL_METHOD, they are otherwise implementation-defined.
+[7.12 Mathematics <math.h>] The value of FP_ILOGB0 shall be either INT_MIN or -INT_MAX.
+[7.12 Mathematics <math.h>] A macro is defined if and only if the fma function is implemented directly with a hardware multiply-add instruction.
+[7.12 Mathematics <math.h>] If a macro definition is suppressed or a program defines an identifier with the name math_errhandling, the behavior is undefined.
+[7.12 Mathematics <math.h>] If the expression math_errhandling & MATH_ERREXCEPT can be nonzero, the implementation shall define the macros FE_DIVBYZERO, FE_INVALID, and FE_OVERFLOW in <fenv.
+[7.12.1 Treatment of error conditions] Each function shall execute as if it were a single operation without raising SIGFPE and without generating any of the floating-point exceptions ``invalid'', ``divide-by-zero'', or ``overflow'' except to reflect the result of the function.
+[7.12.1 Treatment of error conditions] A floating result overflows if the magnitude of the mathematical result is finite but so large that the mathematical result cannot be represented without extraordinary roundoff error in an object of the specified type.
+[7.12.1 Treatment of error conditions] If a domain, pole, or range error occurs and the integer expression math_errhandling & MATH_ERRNO is zero,233) then errno shall either be set to the value corresponding to the error or left unmodified.
+[7.12.1 Treatment of error conditions] If no such error occurs, errno shall be left unmodified regardless of the setting of math_errhandling.
+[7.12.2 The FP_CONTRACT pragma] If this pragma is used in any other context, the behavior is undefined.
+[7.12.3.6 The signbit macro] If zero is unsigned, it is treated as positive.
+[7.12.5.4 The cosh functions] A range error occurs if the magnitude of x is too large.
+[7.12.5.5 The sinh functions] A range error occurs if the magnitude of x is too large.
+[7.12.6.1 The exp functions] A range error occurs if the magnitude of x is too large.
+[7.12.6.2 The exp2 functions] A range error occurs if the magnitude of x is too large.
+[7.12.6.3 The expm1 functions] A range error occurs if x is too large.
+[7.12.6.4 The frexp functions] If value is not a floating-point number or if the integral power of 2 is outside the range of int, the results are unspecified.
+[7.12.6.4 The frexp functions] If value is zero, both parts of the result are zero.
+[7.12.6.5 The ilogb functions] If x is zero they compute the value FP_ILOGB0; if x is infinite they compute the value INT_MAX; if x is a NaN they compute the value FP_ILOGBNAN; otherwise, they are equivalent to calling the corresponding logb function and casting the returned value to type int.
+[7.12.6.5 The ilogb functions] A domain error or range error may occur if x is zero, infinite, or NaN.
+[7.12.6.5 The ilogb functions] If the correct value is outside the range of the return type, the numeric result is unspecified.
+[7.12.6.7 The log functions] A domain error occurs if the argument is negative.
+[7.12.6.7 The log functions] A pole error may occur if the argument is zero.
+[7.12.6.8 The log10 functions] A domain error occurs if the argument is negative.
+[7.12.6.8 The log10 functions] A pole error may occur if the argument is zero.
+[7.12.6.9 The log1p functions] A domain error occurs if the argument is less than -1.
+[7.12.6.10 The log2 functions] A domain error occurs if the argument is less than zero.
+[7.12.6.10 The log2 functions] A pole error may occur if the argument is zero.
+[7.12.6.11 The logb functions] If x is subnormal it is treated as though it were normalized; thus, for positive finite x, 1 x × FLT_RADIX-logb(x) < FLT_RADIX A domain error or pole error may occur if the argument is zero.
+[7.12.7.4 The pow functions] A domain error occurs if x is finite and negative and y is finite and not an integer value.
+[7.12.7.4 The pow functions] A domain error may occur if x is zero and y is zero.
+[7.12.7.4 The pow functions] A domain error or pole error may occur if x is zero and y is less than zero.
+[7.12.7.5 The sqrt functions] A domain error occurs if the argument is less than zero.
+[7.12.8.2 The erfc functions] A range error occurs if x is too large.
+[7.12.8.3 The lgamma functions] A range error occurs if x is too large.
+[7.12.8.3 The lgamma functions] A pole error may occur if x is a negative integer or zero.
+[7.12.8.4 The tgamma functions] A domain error or pole error may occur if x is a negative integer or zero.
+[7.12.8.4 The tgamma functions] A range error occurs if the magnitude of x is too large and may occur if the magnitude of x is too small.
+[7.12.9.5 The lrint and llrint functions] If the rounded value is outside the range of the return type, the numeric result is unspecified and a domain error or range error may occur.
+[7.12.9.7 The lround and llround functions] If the rounded value is outside the range of the return type, the numeric result is unspecified and a domain error or range error may occur.
+[7.12.10.1 The fmod functions] If y is zero, whether a domain error occurs or the fmod functions return zero is implementation-defined.
+[7.12.10.2 The remainder functions] If r = 0, its sign shall be that of x.
+[7.12.10.2 The remainder functions] If y is zero, whether a domain error occurs or the functions return zero is implementation defined.
+[7.12.10.3 The remquo functions] If y is zero, the value stored in the object pointed to by quo is unspecified and whether a domain error occurs or the functions return zero is implementation defined.
+[7.12.11.2 The nan functions] If tagp does not point to an n-char sequence or an empty string, the call is equivalent to strtod("NAN", (char**) NULL).
+[7.12.11.2 The nan functions] If the implementation does not support quiet NaNs, the functions return zero.
+[7.12.11.3 The nextafter functions] A range error may occur if the magnitude of x is the largest finite value representable in the type and the result is infinite or not representable in the type.
+[7.12.14 Comparison macros] In the synopses in this subclause, real-floating indicates that the argument shall be an expression of real floating type245) (both arguments need not have the same type).
+[7.12.14.2 The isgreaterequal macro] If any argument is of integer type, or any other type that is not a real floating type, the behavior is undefined.
+[7.13 Nonlocal jumps <setjmp.h>] If a macro definition is suppressed in order to access an actual function, or a program defines an external identifier with the name setjmp, the behavior is undefined.
+[7.13.1.1 The setjmp macro] If the return is from a direct invocation, the setjmp macro returns the value zero.
+[7.13.1.1 The setjmp macro] If the return is from a call to the longjmp function, the setjmp macro returns a nonzero value.
+[7.13.1.1 The setjmp macro] If the invocation appears in any other context, the behavior is undefined.
+[7.14 Signal handling <signal.h>] An implementation need not generate any of these signals, except as a result of explicit calls to the raise function.
+[7.14 Signal handling <signal.h>] The complete set of signals, their semantics, and their default handling is implementation-defined; all signal numbers shall be positive.
+[7.14.1.1 The signal function] If the value of func is SIG_DFL, default handling for that signal will occur.
+[7.14.1.1 The signal function] If the value of func is SIG_IGN, the signal will be ignored.
+[7.14.1.1 The signal function] An invocation of such a function because of a signal, or (recursively) of any further functions called by that invocation (other than functions in the standard library),251) is called a signal handler.
+[7.14.1.1 The signal function] If and when the function returns, if the value of sig is SIGFPE, SIGILL, SIGSEGV, or any other implementation-defined value corresponding to a computational exception, the behavior is undefined; otherwise the program will resume execution at the point it was interrupted.
+[7.14.1.1 The signal function] If the signal occurs as the result of calling the abort or raise function, the signal handler shall not call the raise function.
+[7.14.1.1 The signal function] If any signal is generated by an asynchronous signal handler, the behavior is undefined.
+[7.14.1.1 The signal function] The implementation shall behave as if no library function calls the signal function.
+[7.14.1.1 The signal function] If the request can be honored, the signal function returns the value of func for the most recent successful call to signal for the specified signal sig.
+[7.14.2.1 The raise function] If a signal handler is called, the raise function shall not return until after the signal handler does.
+[7.16 Variable arguments <stdarg.h>] If access to the varying arguments is desired, the called function shall declare an object (generally referred to as ap in this subclause) having type va_list.
+[7.16.1 Variable argument list access macros] If a macro definition is suppressed in order to access an actual function, or a program defines an external identifier with the same name, the behavior is undefined.
+[7.16.1.1 The va_arg macro] The parameter ap shall have been initialized by the va_start or va_copy macro (without an intervening invocation of the va_end 253) It is permitted to create a pointer to a va_list and pass that pointer to another function, in which case the original function may make further use of the original list after the other function returns.
+[7.16.1.1 The va_arg macro] The parameter type shall be a type name specified such that the type of a pointer to an object that has the specified type can be obtained simply by postfixing a * to type.
+[7.16.1.2 The va_copy macro] Neither the va_copy nor va_start macro shall be invoked to reinitialize dest without an intervening invocation of the va_end macro for the same dest.
+[7.16.1.3 The va_end macro] If there is no corresponding invocation of the va_start or va_copy macro, or if the va_end macro is not invoked before the return, the behavior is undefined.
+[7.16.1.4 The va_start macro] Neither the va_start nor va_copy macro shall be invoked to reinitialize ap without an intervening invocation of the va_end macro for the same ap.
+[7.16.1.4 The va_start macro] If the parameter parmN is declared with the register storage class, with a function or array type, or with a type that is not compatible with the type that results after application of the default argument promotions, the behavior is undefined.
+[7.17.2.1 The ATOMIC_VAR_INIT macro] An atomic object with automatic storage duration that is not explicitly initialized using ATOMIC_VAR_INIT is initially in an indeterminate state; however, the default (zero) initialization for objects with static or thread-local storage duration is guaranteed to produce a valid state.
+[7.17.3 Order and consistency] A does not exist, the result of some modification of M in the visible sequence of side effects with respect to B that is not memory_order_seq_cst.
+[7.17.3 Order and consistency] A and B on an atomic object M , where A modifies M and B takes its value, if there is a memory_order_seq_cst fence X such that A is sequenced before X and B follows X in S , then B observes either the effects of A or a later modification of M in its modification order.
+[7.17.3 Order and consistency] A and B on an atomic object M , where A modifies M and B takes its value, if there are memory_order_seq_cst fences X and Y such that A is sequenced before X , Y is sequenced before B, and X precedes Y in S , then B observes either the effects of A or a later modification of M in its modification order.
+[7.17.3 Order and consistency] An atomic store shall only store a value that has been computed from constants and program input values by a finite sequence of program evaluations, such that each evaluation observes the values of variables as computed by the last prior assignment in the sequence.
+[7.17.3 Order and consistency] If an evaluation B observes a value computed by A in a different thread, then B does not happen before A.
+[7.17.3 Order and consistency] If an evaluation A is included in the sequence, then all evaluations that assign to the same variable and happen before A are also included.
+[7.17.3 Order and consistency] For example, with x and y initially zero, 256) Among other implications, atomic variables shall not decay.
+[7.17.4 Fences] A fence with acquire semantics is called an acquire fence; a fence with release semantics is called a release fence.
+[7.17.4 Fences] A release fence A synchronizes with an acquire fence B if there exist atomic operations X and Y , both operating on some atomic object M , such that A is sequenced before X , X modifies M , Y is sequenced before B, and Y reads the value written by X or a value written by any side effect in the hypothetical release sequence X would head if it were a release operation.
+[7.17.4 Fences] A release fence A synchronizes with an atomic operation B that performs an acquire operation on an atomic object M if there exists an atomic operation X such that A is sequenced before X , X modifies M , and B reads the value written by X or a value written by any side effect in the hypothetical release sequence X would head if it were a release operation.
+[7.17.4 Fences] An atomic operation A that is a release operation on an atomic object M synchronizes with an acquire fence B if there exists some atomic operation X on M such that X is sequenced before B and reads the value written by A or a value written by any side effect in the release sequence headed by A.
+[7.17.5 Lock-free property] A value of 0 indicates that the type is never lock-free; a value of 1 indicates that the type is sometimes lock-free; a value of 2 indicates that the type is always lock-free.
+[7.17.5.1 The atomic_is_lock_free generic function] A *obj); Description 2 The atomic_is_lock_free generic function indicates whether or not the object pointed to by obj is lock-free.
+[7.17.7.4 The atomic_compare_exchange generic functions] The failure argument shall be no stronger than the success argument.
+[7.17.7.4 The atomic_compare_exchange generic functions] A consequence of spurious failure is that nearly all uses of weak compare-and-exchange will be in a loop.
+[7.17.8 Atomic flag type and operations] Operations on an object of type atomic_flag shall be lock free.
+[7.17.8 Atomic flag type and operations] An atomic_flag that is not explicitly initialized with ATOMIC_FLAG_INIT is initially in an indeterminate state.
+[7.19 Common definitions <stddef.h>] The type and member designator shall be such that given static type t; then the expression &(t.
+[7.19 Common definitions <stddef.h>] If the specified member is a bit-field, the behavior is undefined.
+[7.20 Integer types <stdint.h>] An implementation shall provide those types described as ``required'', but need not provide any of the others (described as ``optional'').
+[7.20.1.1 Exact-width integer types] However, if an implementation provides integer types with widths of 8, 16, 32, or 64 bits, no padding bits, and (for the signed types) that have a two's complement representation, it shall define the corresponding typedef names.
+[7.20.2 Limits of specified-width integer types] Each instance of any defined macro shall be replaced by a constant expression suitable for use in #if preprocessing directives, and this expression shall have the same type as would an expression that is an object of the corresponding type converted according to the integer promotions.
+[7.20.3 Limits of other integer types] Each instance of these macros shall be replaced by a constant expression suitable for use in #if preprocessing directives, and this expression shall have the same type as would an expression that is an object of the corresponding type converted according to the integer promotions.
+[7.20.3 Limits of other integer types] An implementation shall define only the macros corresponding to those typedef names it actually provides.
+[7.20.4 Macros for integer constants] Each invocation of one of these macros shall expand to an integer constant expression suitable for use in #if preprocessing directives.
+[7.20.4.1 Macros for minimum-width integer constants] The macro UINTN_C(value) shall expand to an integer constant expression corresponding to the type uint_leastN_t.
+[7.21.1 Introduction] If the implementation imposes no practical limit on the length of file name strings, the value of FILENAME_MAX should instead be the recommended size of an array intended to hold a file name string.
+[7.21.2 Streams] A text stream is an ordered sequence of characters composed into lines, each line consisting of zero or more characters plus a terminating new-line character.
+[7.21.2 Streams] A binary stream is an ordered sequence of characters that can transparently record internal data.
+[7.21.2 Streams] An implementation need not distinguish between text streams and binary streams.
+[7.21.2 Streams] A successful call to fgetpos stores a representation of the value of this mbstate_t object as part of the value of the fpos_t object.
+[7.21.2 Streams] Environmental limits 9 An implementation shall support text files with lines containing at least 254 characters, including the terminating new-line character.
+[7.21.3 Files] A stream is associated with an external file (which may be a physical device) by opening a file, which may involve creating a new file.
+[7.21.3 Files] A file may be disassociated from a controlling stream by closing the file.
+[7.21.3 Files] If the main function returns to its original caller, or if the exit function is called, all open files are closed (hence all output streams are flushed) before program termination.
+[7.21.3 Files] Environmental limits 15 The value of FOPEN_MAX shall be at least eight, including the three standard text streams.
+[7.21.4.1 The remove function] A subsequent attempt to open that file using that name will fail, unless it is created anew.
+[7.21.4.1 The remove function] If the file is open, the behavior of the remove function is implementation-defined.
+[7.21.4.2 The rename function] If a file named by the string pointed to by new exists prior to the call to the rename function, the behavior is implementation-defined.
+[7.21.4.3 The tmpfile function] If the program terminates abnormally, whether an open temporary file is removed is implementation-defined.
+[7.21.4.3 The tmpfile function] If the file cannot be created, the tmpfile function returns a null pointer.
+[7.21.4.4 The tmpnam function] The implementation shall behave as if no library function calls the tmpnam function.
+[7.21.4.4 The tmpnam function] If no suitable string can be generated, the tmpnam function returns a null pointer.
+[7.21.4.4 The tmpnam function] If the argument is not a null pointer, it is assumed to point to an array of at least L_tmpnam chars; the tmpnam function writes its result in that array and returns the argument as its value.
+[7.21.5.2 The fflush function] If stream points to an output stream or an update stream in which the most recent operation was not input, the fflush function causes any unwritten data for that stream to be delivered to the host environment to be written to the file; otherwise, the behavior is undefined.
+[7.21.5.2 The fflush function] If stream is a null pointer, the fflush function performs this flushing action on all streams for which the behavior is defined above.
+[7.21.5.3 The fopen function] If the string is one of the following, the file is open in the indicated mode.
+[7.21.5.3 The fopen function] If the string begins with one of the above sequences, the implementation might choose to ignore the remaining characters, or it might use them to select different kinds of a file (some of which might not conform to the properties in 7.
+[7.21.5.3 The fopen function] However, output shall not be directly followed by input without an intervening call to the fflush function or to a file positioning function (fseek, fsetpos, or rewind), and input shall not be directly followed by output without an intervening call to a file positioning function, unless the input operation encounters end-of-file.
+[7.21.5.3 The fopen function] If the open operation fails, fopen returns a null pointer.
+[7.21.5.4 The freopen function] If filename is a null pointer, the freopen function attempts to change the mode of the stream to that specified by mode, as if the name of the file currently associated with the stream had been used.
+[7.21.5.6 The setvbuf function] If buf is not a null pointer, the array it points to may be used instead of a buffer allocated by the setvbuf function273) and the argument size specifies the size of the array; otherwise, size may determine the size of a buffer allocated by the setvbuf function.
+[7.21.6.1 The fprintf function] If there are insufficient arguments for the format, the behavior is undefined.
+[7.21.6.1 The fprintf function] If the format is exhausted while arguments remain, the excess arguments are evaluated (as always) but are otherwise ignored.
+[7.21.6.1 The fprintf function] The format shall be a multibyte character sequence, beginning and ending in its initial shift state.
+[7.21.6.1 The fprintf function] If the converted value has fewer characters than the field width, it is padded with spaces (by default) on the left (or right, if the left adjustment flag, described later, has been given) to the field width.
+[7.21.6.1 The fprintf function] If a precision appears with any other conversion specifier, the behavior is undefined.
+[7.21.6.1 The fprintf function] The arguments specifying field width, or precision, or both, shall appear (in that order) before the argument (if any) to be converted.
+[7.21.6.1 The fprintf function] A negative field width argument is taken as a -flag followed by a positive field width.
+[7.21.6.1 The fprintf function] A negative precision argument is taken as if the precision were omitted.
+[7.21.6.1 The fprintf function] If the first character of a signed conversion is not a sign, or if a signed conversion results in no characters, a space is prefixed to the result.
+[7.21.6.1 The fprintf function] If the space and + flags both appear, the space flag is ignored.
+[7.21.6.1 The fprintf function] If the 0 and -flags both appear, the 0 flag is ignored.
+[7.21.6.1 The fprintf function] If a length modifier appears with any conversion specifier other than as specified above, the behavior is undefined.
+[7.21.6.1 The fprintf function] A double argument representing a floating-point number is converted to decimal notation in the style [-]ddd.
+[7.21.6.1 The fprintf function] If a decimal-point character appears, at least one digit appears before it.
+[7.21.6.1 The fprintf function] A double argument representing an infinity is converted in one of the styles [-]inf or [-]infinity --which style is implementation-defined.
+[7.21.6.1 The fprintf function] A double argument representing a NaN is converted in one of the styles [-]nan or [-]nan(n-char-sequence) --which style, and the meaning of any n-char-sequence, is implementation-defined.
+[7.21.6.1 The fprintf function] If the precision is specified, no more than that many bytes are written.
+[7.21.6.1 The fprintf function] If the precision is not specified or is greater than the size of the array, the array shall contain a null character.
+[7.21.6.1 The fprintf function] If a conversion specification is invalid, the behavior is undefined.
+[7.21.6.1 The fprintf function] If any argument is not the correct type for the corresponding conversion specification, the behavior is undefined.
+[7.21.6.1 The fprintf function] A conversions, if FLT_RADIX is a power of 2, the value is correctly rounded to a hexadecimal floating number with the given precision.
+[7.21.6.1 The fprintf function] A conversions, if FLT_RADIX is not a power of 2 and the result is not exactly representable in the given precision, the result should be one of the two adjacent numbers in hexadecimal floating style with the given precision, with the extra stipulation that the error should have a correct sign for the current rounding direction.
+[7.21.6.1 The fprintf function] If the number of significant decimal digits is more than DECIMAL_DIG but the source value is exactly representable with DECIMAL_DIG digits, then the result should be an exact representation with trailing zeros.
+[7.21.6.1 The fprintf function] Environmental limits 15 The number of characters that can be produced by any single conversion shall be at least 4095.
+[7.21.6.2 The fscanf function] If there are insufficient arguments for the format, the behavior is undefined.
+[7.21.6.2 The fscanf function] If the format is exhausted while arguments remain, the excess arguments are evaluated (as always) but are otherwise ignored.
+[7.21.6.2 The fscanf function] A directive composed of white-space character(s) is executed by reading input up to the first non-white-space character (which remains unread), or until no more characters can be read.
+[7.21.6.2 The fscanf function] A directive that is an ordinary multibyte character is executed by reading the next characters of the stream.
+[7.21.6.2 The fscanf function] If any of those characters differ from the ones composing the directive, the directive fails and the differing and subsequent characters remain unread.
+[7.21.6.2 The fscanf function] A directive that is a conversion specification defines a set of matching input sequences, as described below for each specifier.
+[7.21.6.2 The fscanf function] A conversion specification is executed in the following steps: 8 Input white-space characters (as specified by the isspace function) are skipped, unless the specification includes a [, c, or n specifier.
+[7.21.6.2 The fscanf function] An input item is read from the stream, unless the specification includes an n specifier.
+[7.21.6.2 The fscanf function] An input item is defined as the longest sequence of input characters which does not exceed any specified field width and which is, or is a prefix of, a matching input sequence.
+[7.21.6.2 The fscanf function] If the length of the input item is zero, the execution of the directive fails; this condition is a matching failure unless end-of-file, an encoding error, or a read error prevented input from the stream, in which case it is an input failure.
+[7.21.6.2 The fscanf function] If the input item is not a matching sequence, the execution of the directive fails: this condition is a matching failure.
+[7.21.6.2 The fscanf function] If this object does not have an appropriate type, or if the result of the conversion cannot be represented in the object, the behavior is undefined.
+[7.21.6.2 The fscanf function] If a length modifier appears with any conversion specifier other than as specified above, the behavior is undefined.
+[7.21.6.2 The fscanf function] If the conversion specifier begins with [] or [^], the right bracket character is in the scanlist and the next following right bracket character is the matching right bracket that ends the specification; otherwise the first following right bracket character is the one that ends the specification.
+[7.21.6.2 The fscanf function] If the input item is a value converted earlier during the same program execution, the pointer that results shall compare equal to that value; otherwise the behavior of the %p conversion is undefined.
+[7.21.6.2 The fscanf function] The corresponding argument shall be a pointer to signed integer into which is to be written the number of characters read from the input stream so far by this call to the fscanf function.
+[7.21.6.2 The fscanf function] If the conversion specification includes an assignment-suppressing character or a field width, the behavior is undefined.
+[7.21.6.2 The fscanf function] If a conversion specification is invalid, the behavior is undefined.
+[7.21.6.5 The snprintf function] If n is zero, nothing is written, and s may be a null pointer.
+[7.21.6.5 The snprintf function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.21.6.6 The sprintf function] A null character is written at the end of the characters written; it is not counted as part of the returned value.
+[7.21.6.6 The sprintf function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.21.6.7 The sscanf function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.21.6.12 The vsnprintf function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.21.6.13 The vsprintf function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.21.7.1 The fgetc function] If the end-of-file indicator for the input stream pointed to by stream is not set and a next character is present, the fgetc function obtains that character as an unsigned char converted to an int and advances the associated file position indicator for the stream (if defined).
+[7.21.7.1 The fgetc function] If the end-of-file indicator for the stream is set, or if the stream is at end-of-file, the end-of-file indicator for the stream is set and the fgetc function returns EOF.
+[7.21.7.1 The fgetc function] If a read error occurs, the error indicator for the stream is set and the fgetc function returns EOF.
+[7.21.7.1 The fgetc function] An end-of-file and a read error can be distinguished by use of the feof and ferror functions.
+[7.21.7.2 The fgets function] A null character is written immediately after the last character read into the array.
+[7.21.7.2 The fgets function] If end-of-file is encountered and no characters have been read into the array, the contents of the array remain unchanged and a null pointer is returned.
+[7.21.7.2 The fgets function] If a read error occurs during the operation, the array contents are indeterminate and a null pointer is returned.
+[7.21.7.3 The fputc function] If the file cannot support positioning requests, or if the stream was opened with append mode, the character is appended to the output stream.
+[7.21.7.3 The fputc function] If a write error occurs, the error indicator for the stream is set and fputc returns EOF.
+[7.21.7.5 The getc function] If the stream is at end-of-file, the end-of-file indicator for the stream is set and getc returns EOF.
+[7.21.7.5 The getc function] If a read error occurs, the error indicator for the stream is set and getc returns EOF.
+[7.21.7.6 The getchar function] If the stream is at end-of-file, the end-of-file indicator for the stream is set and getchar returns EOF.
+[7.21.7.6 The getchar function] If a read error occurs, the error indicator for the stream is set and getchar returns EOF.
+[7.21.7.7 The putc function] If a write error occurs, the error indicator for the stream is set and putc returns EOF.
+[7.21.7.8 The putchar function] If a write error occurs, the error indicator for the stream is set and putchar returns EOF.
+[7.21.7.10 The ungetc function] A successful intervening call (with the stream pointed to by stream) to a file positioning function (fseek, fsetpos, or rewind) discards any pushed-back characters for the stream.
+[7.21.7.10 The ungetc function] If the ungetc function is called too many times on the same stream without an intervening read or file positioning operation on that stream, the operation may fail.
+[7.21.7.10 The ungetc function] If the value of c equals that of the macro EOF, the operation fails and the input stream is unchanged.
+[7.21.7.10 The ungetc function] The value of the file position indicator for the stream after reading or discarding all pushed-back characters shall be the same as it was before the characters were pushed back.
+[7.21.8.1 The fread function] If an error occurs, the resulting value of the file position indicator for the stream is indeterminate.
+[7.21.8.1 The fread function] If a partial element is read, its value is indeterminate.
+[7.21.8.1 The fread function] If size or nmemb is zero, fread returns zero and the contents of the array and the state of the stream remain unchanged.
+[7.21.8.2 The fwrite function] If an error occurs, the resulting value of the file position indicator for the stream is indeterminate.
+[7.21.8.2 The fwrite function] If size or nmemb is zero, fwrite returns zero and the state of the stream remains unchanged.
+[7.21.9.1 The fgetpos function] If successful, the fgetpos function returns zero; on failure, the fgetpos function returns nonzero and stores an implementation-defined positive value in errno.
+[7.21.9.2 The fseek function] If a read or write error occurs, the error indicator for the stream is set and fseek fails.
+[7.21.9.2 The fseek function] For a text stream, either offset shall be zero, or offset shall be a value returned by an earlier successful call to the ftell function on a stream associated with the same file and whence shall be SEEK_SET.
+[7.21.9.3 The fsetpos function] If a read or write error occurs, the error indicator for the stream is set and fsetpos fails.
+[7.21.9.3 The fsetpos function] A successful call to the fsetpos function undoes any effects of the ungetc function on the stream, clears the end-of-file indicator for the stream, and then establishes the new parse state and position.
+[7.21.9.3 The fsetpos function] If successful, the fsetpos function returns zero; on failure, the fsetpos function returns nonzero and stores an implementation-defined positive value in errno.
+[7.21.9.4 The ftell function] If successful, the ftell function returns the current value of the file position indicator for the stream.
+[7.22.1 Numeric conversion functions] If the value of the result cannot be represented, the behavior is undefined.
+[7.22.1.3 The strtod, strtof, and strtold functions] A character sequence INF or INFINITY is interpreted as an infinity, if representable in the return type, else like a floating constant that is too large for the range of the return type.
+[7.22.1.3 The strtod, strtof, and strtold functions] A character sequence NAN or NAN(n-char-sequenceopt) is interpreted as a quiet NaN, if supported in the return type, else like a subject sequence part that does not have the expected form; the meaning of the n-char sequence is implementation-defined.
+[7.22.1.3 The strtod, strtof, and strtold functions] A pointer to the final string is stored in the object pointed to by endptr, provided that endptr is not a null pointer.
+[7.22.1.3 The strtod, strtof, and strtold functions] If the subject sequence has the hexadecimal form and FLT_RADIX is a power of 2, the value resulting from the conversion is correctly rounded.
+[7.22.1.3 The strtod, strtof, and strtold functions] If the subject sequence is empty or does not have the expected form, no conversion is performed; the value of nptr is stored in the object pointed to by endptr, provided that endptr is not a null pointer.
+[7.22.1.3 The strtod, strtof, and strtold functions] If the subject sequence has the decimal form and at most DECIMAL_DIG (defined in <float.
+[7.22.1.3 The strtod, strtof, and strtold functions] If the subject sequence D has the decimal form and more than DECIMAL_DIG significant digits, consider the two bounding, adjacent decimal strings L and U , both having DECIMAL_DIG significant digits, such that the values of L , D, and U satisfy L D U.
+[7.22.1.3 The strtod, strtof, and strtold functions] If no conversion could be performed, zero is returned.
+[7.22.1.4 The strtol, strtoll, strtoul, and strtoull functions] If the value of base is between 2 and 36 (inclusive), the expected form of the subject sequence is a sequence of letters and digits representing an integer with the radix specified by base, optionally preceded by a plus or minus sign, but not including an integer suffix.
+[7.22.1.4 The strtol, strtoll, strtoul, and strtoull functions] If the value of base is 16, the characters 0x or 0X may optionally precede the sequence of letters and digits, following the sign if present.
+[7.22.1.4 The strtol, strtoll, strtoul, and strtoull functions] If the subject sequence has the expected form and the value of base is zero, the sequence of characters starting with the first digit is interpreted as an integer constant [...].
+[7.22.1.4 The strtol, strtoll, strtoul, and strtoull functions] If the subject sequence has the expected form and the value of base is between 2 and 36, it is used as the base for conversion, ascribing to each letter its value as given above.
+[7.22.1.4 The strtol, strtoll, strtoul, and strtoull functions] If the subject sequence begins with a minus sign, the value resulting from the conversion is negated (in the return type).
+[7.22.1.4 The strtol, strtoll, strtoul, and strtoull functions] A pointer to the final string is stored in the object pointed to by endptr, provided that endptr is not a null pointer.
+[7.22.1.4 The strtol, strtoll, strtoul, and strtoull functions] If the subject sequence is empty or does not have the expected form, no conversion is performed; the value of nptr is stored in the object pointed to by endptr, provided that endptr is not a null pointer.
+[7.22.1.4 The strtol, strtoll, strtoul, and strtoull functions] If no conversion could be performed, zero is returned.
+[7.22.1.4 The strtol, strtoll, strtoul, and strtoull functions] If the correct value is outside the range of representable values, LONG_MIN, LONG_MAX, LLONG_MIN, LLONG_MAX, ULONG_MAX, or ULLONG_MAX is returned (according to the return type and sign of the value, if any), and the value of the macro ERANGE is stored in errno.
+[7.22.2.1 The rand function] The implementation shall behave as if no library function calls the rand function.
+[7.22.2.1 The rand function] The value of the RAND_MAX macro shall be at least 32767.
+[7.22.2.2 The srand function] If srand is then called with the same seed value, the sequence of pseudo-random numbers shall be repeated.
+[7.22.2.2 The srand function] If rand is called before any calls to srand have been made, the same sequence shall be generated as when srand is first called with a seed value of 1.
+[7.22.2.2 The srand function] The implementation shall behave as if no library function calls the srand function.
+[7.22.2.2 The srand function] Applications with particular requirements should use a generator that is known to be sufficient for their needs.
+[7.22.3 Memory management functions] Each such allocation shall yield a pointer to an object disjoint from any other object.
+[7.22.3 Memory management functions] If the space cannot be allocated, a null pointer is returned.
+[7.22.3 Memory management functions] If the size of the space requested is zero, the behavior is implementation-defined: either a null pointer is returned, or the behavior is as if the size were some nonzero value, except that the returned pointer shall not be used to access an object.
+[7.22.3.1 The aligned_alloc function] The value of alignment shall be a valid alignment supported by the implementation and the value of size shall be an integral multiple of alignment.
+[7.22.3.3 The free function] If ptr is a null pointer, no action occurs.
+[7.22.3.5 The realloc function] The contents of the new object shall be the same as that of the old object prior to deallocation, up to the lesser of the new and old sizes.
+[7.22.3.5 The realloc function] If ptr is a null pointer, the realloc function behaves like the malloc function for the specified size.
+[7.22.3.5 The realloc function] If memory for the new object cannot be allocated, the old object is not deallocated and its value is unchanged.
+[7.22.4.1 The abort function] An implementation-defined form of the status unsuccessful termination is returned to the host environment by means of the function call raise(SIGABRT).
+[7.22.4.2 The atexit function] The implementation shall support the registration of at least 32 functions.
+[7.22.4.3 The at_quick_exit function] he implementation shall support the registration of at least 32 functions.
+[7.22.4.4 The exit function] If a program calls the exit function more than once, or calls the quick_exit function in addition to the exit function, the behavior is undefined.
+[7.22.4.4 The exit function] If, during the call to any such function, a call to the longjmp function is made that would terminate the call to the registered function, the behavior is undefined.
+[7.22.4.4 The exit function] Each function is called as many times as it was registered, and in the correct order with respect to other registered functions.
+[7.22.4.4 The exit function] If the value of status is zero or EXIT_SUCCESS, an implementation-defined form of the status successful termination is returned.
+[7.22.4.4 The exit function] If the value of status is EXIT_FAILURE, an implementation-defined form of the status unsuccessful termination is returned.
+[7.22.4.6 The getenv function] The implementation shall behave as if no library function calls the getenv function.
+[7.22.4.6 The getenv function] The string pointed to shall not be modified by the program, but may be overwritten by a subsequent call to the getenv function.
+[7.22.4.6 The getenv function] If the specified name cannot be found, a null pointer is returned.
+[7.22.4.7 The quick_exit function] If a program calls the quick_exit function more than once, or calls the exit function in addition to the quick_exit function, the behavior is undefined.
+[7.22.4.7 The quick_exit function] If a signal is raised while the quick_exit function is executing, the behavior is undefined.
+[7.22.4.7 The quick_exit function] If, during the call to any such function, a call to the longjmp function is made that would terminate the call to the registered function, the behavior is undefined.
+[7.22.4.8 The system function] If string is a null pointer, the system function determines whether the host environment has a command processor.
+[7.22.4.8 The system function] If string is not a null pointer, the system 301) Each function is called as many times as it was registered, and in the correct order with respect to other registered functions.
+[7.22.4.8 The system function] If the argument is a null pointer, the system function returns nonzero only if a command processor is available.
+[7.22.4.8 The system function] If the argument is not a null pointer, and the system function does return, it returns an implementation-defined value.
+[7.22.5 Searching and sorting utilities] The implementation shall ensure that the second argument of the comparison function (when called from bsearch), or both arguments (when called from qsort), are pointers to elements of the array.
+[7.22.5 Searching and sorting utilities] The comparison function shall not alter the contents of the array.
+[7.22.5 Searching and sorting utilities] When the same objects (consisting of size bytes, irrespective of their current positions in the array) are passed more than once to the comparison function, the results shall be consistent with one another.
+[7.22.5 Searching and sorting utilities] A sequence point occurs immediately before and immediately after each call to the comparison function, and also between any call to the comparison function and any movement of the objects passed as arguments to that call.
+[7.22.5.1 The bsearch function] The comparison function pointed to by compar is called with two arguments that point to the key object and to an array element, in that order.
+[7.22.5.1 The bsearch function] The array shall consist of: all the elements that compare less than, all the elements that compare equal to, and all the elements that compare greater than the key object, in that order.
+[7.22.5.1 The bsearch function] If two elements compare as equal, which element is matched is unspecified.
+[7.22.5.2 The qsort function] The contents of the array are sorted into ascending order according to a comparison function pointed to by compar, which is called with two arguments that point to the objects being compared.
+[7.22.5.2 The qsort function] If two elements compare as equal, their order in the resulting sorted array is unspecified.
+[7.22.6.1 The abs, labs and llabs functions] If the result cannot be represented, the behavior is undefined.
+[7.22.6.2 The div, ldiv, and lldiv functions] The structures shall contain (in either order) the members quot (the quotient) and rem (the remainder), each of which has the same type as the arguments numer and denom.
+[7.22.6.2 The div, ldiv, and lldiv functions] If either part of the result cannot be represented, the behavior is undefined.
+[7.22.7 Multibyte/wide character conversion functions] A call with s as a null pointer causes these functions to return a nonzero value if encodings have state dependency, and zero otherwise.
+[7.22.7.1 The mblen function] If s is not a null pointer, the mblen function determines the number of bytes contained in the multibyte character pointed to by s.
+[7.22.7.1 The mblen function] If s is a null pointer, the mblen function returns a nonzero or zero value, if multibyte character encodings, respectively, do or do not have state-dependent encodings.
+[7.22.7.1 The mblen function] If s is not a null pointer, the mblen function either returns 0 (if s points to the null character), or returns the number of bytes that are contained in the multibyte character (if the next n or fewer bytes form a valid multibyte character), or returns -1 (if they do not form a valid multibyte character).
+[7.22.7.1 The mblen function] If the locale employs special bytes to change the shift state, these bytes do not produce separate wide character codes, but are grouped with an adjacent multibyte character.
+[7.22.7.2 The mbtowc function] If s is not a null pointer, the mbtowc function inspects at most n bytes beginning with the byte pointed to by s to determine the number of bytes needed to complete the next multibyte character (including any shift sequences).
+[7.22.7.2 The mbtowc function] If the function determines that the next multibyte character is complete and valid, it determines the value of the corresponding wide character and then, if pwc is not a null pointer, stores that value in the object pointed to by pwc.
+[7.22.7.2 The mbtowc function] If the corresponding wide character is the null wide character, the function is left in the initial conversion state.
+[7.22.7.2 The mbtowc function] If s is a null pointer, the mbtowc function returns a nonzero or zero value, if multibyte character encodings, respectively, do or do not have state-dependent encodings.
+[7.22.7.2 The mbtowc function] If s is not a null pointer, the mbtowc function either returns 0 (if s points to the null character), or returns the number of bytes that are contained in the converted multibyte character (if the next n or fewer bytes form a valid multibyte character), or returns -1 (if they do not form a valid multibyte character).
+[7.22.7.3 The wctomb function] If wc is a null wide character, a null byte is stored, preceded by any shift sequence needed to restore the initial shift state, and the function is left in the initial conversion state.
+[7.22.7.3 The wctomb function] If s is a null pointer, the wctomb function returns a nonzero or zero value, if multibyte character encodings, respectively, do or do not have state-dependent encodings.
+[7.22.7.3 The wctomb function] If s is not a null pointer, the wctomb function returns -1 if the value of wc does not correspond to a valid multibyte character, or returns the number of bytes that are contained in the multibyte character corresponding to the value of wc.
+[7.22.8.1 The mbstowcs function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.22.8.1 The mbstowcs function] If an invalid multibyte character is encountered, the mbstowcs function returns (size_t)(-1).
+[7.22.8.2 The wcstombs function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.22.8.2 The wcstombs function] If a wide character is encountered that does not correspond to a valid multibyte character, the wcstombs function returns (size_t)(-1).
+[7.24.1 String function conventions] If an array is accessed beyond the end of an object, the behavior is undefined.
+[7.24.1 String function conventions] Unless explicitly stated otherwise in the description of a particular function in this subclause, pointer arguments on such a call shall still have valid values [...].
+[7.24.1 String function conventions] For all functions in this subclause, each character shall be interpreted as if it had the type unsigned char (and therefore every possible object representation is valid and has a different value).
+[7.24.2.1 The memcpy function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.24.2.3 The strcpy function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.24.2.4 The strncpy function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.24.2.4 The strncpy function] If the array pointed to by s2 is a string that is shorter than n characters, null characters are appended to the copy in the array pointed to by s1, until n characters in all have been written.
+[7.24.3.1 The strcat function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.24.3.2 The strncat function] A terminating null character is always appended to the result.
+[7.24.3.2 The strncpy function] [...] if there is no null character in the first n characters of the array pointed to by s2, the result will not be null-terminated.
+[7.24.4.5 The strxfrm function] If n is zero, s1 is permitted to be a null pointer.
+[7.24.4.5 The strxfrm function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.24.4.5 The strxfrm function] If the value returned is n or more, the contents of the array pointed to by s1 are indeterminate.
+[7.24.5.1 The memchr function] The implementation shall behave as if it reads the characters sequentially and stops as soon as a matching character is found.
+[7.24.5.7 The strstr function] If s2 points to a string with zero length, the function returns s1.
+[7.24.5.8 The strtok function] A sequence of calls to the strtok function breaks the string pointed to by s1 into a sequence of tokens, each of which is delimited by a character from the string pointed to by s2.
+[7.24.5.8 The strtok function] If such a character is found, it is overwritten by a null character, which terminates the current token.
+[7.24.6.2 The strerror function] Typically, the values for errnum come from errno, but strerror shall map any value of type int to a message.
+[7.24.6.2 The strerror function] The array pointed to shall not be modified by the program, but may be overwritten by a subsequent call to the strerror function.
+[7.25 Type-generic math <tgmath.h>] If the type of the argument is not compatible with the type of the parameter for the selected function, the behavior is undefined.
+[7.25 Type-generic math <tgmath.h>] If at least one argument for a generic parameter is complex, then use of the macro invokes a complex function; otherwise, use of the macro invokes a real function.
+[7.25 Type-generic math <tgmath.h>] If all arguments for generic parameters are real, then use of the macro invokes a real function; otherwise, use of the macro results in undefined behavior.
+[7.26.3.1 The cnd_broadcast function] If no threads are blocked on the condition variable pointed to by cond at the time of the call, the function does nothing.
+[7.26.3.3 The cnd_init function] If it succeeds it sets the variable pointed to by cond to a value that uniquely identifies the newly created condition variable.
+[7.26.3.4 The cnd_signal function] If no threads are blocked on the condition variable at the time of the call, the function does nothing and return success.
+[7.26.4.2 The mtx_init function] If the mtx_init function succeeds, it sets the mutex pointed to by mtx to a value that uniquely identifies the newly created mutex.
+[7.26.4.3 The mtx_lock function] If the mutex is non-recursive, it shall not be locked by the calling thread.
+[7.26.4.4 The mtx_timedlock function] The specified mutex shall support timeout.
+[7.26.4.4 The mtx_timedlock function] If the operation succeeds, prior calls to mtx_unlock on the same mutex shall synchronize with this operation.
+[7.26.4.5 The mtx_trylock function] If the mutex is already locked, the function returns without blocking.
+[7.26.4.5 The mtx_trylock function] If the operation succeeds, prior calls to mtx_unlock on the same mutex shall synchronize with this operation.
+[7.26.4.6 The mtx_unlock function] The mutex pointed to by mtx shall be locked by the calling thread.
+[7.26.5.1 The thrd_create function] If the thrd_create function succeeds, it sets the object pointed to by thr to the identifier of the newly created thread.
+[7.26.5.3 The thrd_detach function] The thread identified by thr shall not have been previously detached or joined with another thread.
+[7.26.5.5 The thrd_exit function] The program shall terminate normally after the last thread has been terminated.
+[7.26.5.6 The thrd_join function] If the parameter res is not a null pointer, it stores the thread's result code in the integer pointed to by res.
+[7.26.5.6 The thrd_join function] The thread identified by thr shall not have been previously detached or joined with another thread.
+[7.26.5.7 The thrd_sleep function] If interrupted by a signal and the remaining argument is not null, the amount of time remaining (the requested interval minus the time actually slept) is stored in the interval it points to.
+[7.26.5.7 The thrd_sleep function] But, except for the case of being interrupted by a signal, the suspension time shall not be less than that specified, as measured by the system clock TIME_UTC.
+[7.26.6.1 The tss_create function] If the tss_create function is successful, it sets the thread-specific storage pointed to by key to a value that uniquely identifies the newly created pointer and returns thrd_success; otherwise, thrd_error is returned and the thread-specific storage pointed to by key is set to an undefined value.
+[7.27.2.1 The clock function] If the processor time used is not available or its value cannot be represented, the function returns the value (clock_t)(-1).
+[7.27.2.3 The mktime function] If the calendar time cannot be represented, the function returns the value (time_t)(-1).
+[7.27.2.3 The mktime function] A negative value causes it to attempt to determine whether Daylight Saving Time is in effect for the specified time.
+[7.27.2.4 The time function] If timer is not a null pointer, the return value is also assigned to the object it points to.
+[7.27.2.5 The timespec_get function] If base is TIME_UTC, the tv_sec member is set to the number of seconds since an implementation defined epoch, truncated to a whole value and the tv_nsec member is set to the integral number of nanoseconds, rounded to the resolution of the system clock.
+[7.27.2.5 The timespec_get function] If the timespec_get function is successful it returns the nonzero value base; otherwise, it returns zero.
+[7.27.3.1 The asctime function] If any of the members of the broken-down time contain values that are outside their normal ranges,323) the behavior of the asctime function is undefined.
+[7.27.3.5 The strftime function] The format shall be a multibyte character sequence, beginning and ending in its initial shift state.
+[7.27.3.5 The strftime function] A conversion specifier consists of a % character, possibly followed by an E or O modifier character (described below), followed by a character that determines the behavior of the conversion specifier.
+[7.27.3.5 The strftime function] If copying takes place between objects that overlap, the behavior is undefined.
+[7.27.3.5 The strftime function] If any of the specified values is outside the normal range, the characters stored are unspecified.
+[7.27.3.5 The strftime function] If the alternative format or specification does not exist for the current locale, the modifier is ignored.
+[7.27.3.5 The strftime function] If the first Monday of January is the 2nd, 3rd, or 4th, the preceding days are part of the last week of the preceding year; thus, for Saturday 2nd January 1999, %G is replaced by 1998 and %V is replaced by 53.
+[7.27.3.5 The strftime function] If December 29th, 30th, or 31st is a Monday, it and any following days are part of week 1 of the following year.
+[7.27.3.5 The strftime function] If a conversion specifier is not one of the above, the behavior is undefined.
+[7.27.3.5 The strftime function] If the total number of resulting characters including the terminating null character is not more than maxsize, the strftime function returns the number of characters placed into the array pointed to by s not including the terminating null character.
+[D.2 Ranges of characters disallowed initially] The minimum magnitudes shown shall be replaced by implementation-defined magnitudes with the same sign.
+[D.2 Ranges of characters disallowed initially] All integer values, except FLT_ROUNDS, shall be constant expressions suitable for use in #if preprocessing directives; all floating values shall be constant expressions.
+[F.1 Introduction] An implementation that defines _ _STDC_IEC_559_ _ shall conform to the specifications in this annex.
+[F.2 Types] Any non-IEC 60559 extended format used for the long double type shall have more precision than IEC 60559 double and at least the range of IEC 60559 double.
+[F.2 Types] A non-IEC 60559 long double type is required to provide infinity and NaNs, as its values include all double values.
+[F.5 Binary-decimal conversion] If the minimum-width IEC 60559 extended format (64 bits of precision) is supported, DECIMAL_DIG shall be at least 21.
+[F.5 Binary-decimal conversion] If IEC 60559 double (53 bits of precision) is the widest IEC 60559 format supported, then DECIMAL_DIG shall be at least 17.
+[F.6 The return statement] If the return expression is evaluated in a floating-point format different from the return type, the expression is converted as if by assignment362) to the return type of the function and the resulting value is returned to the caller.
+[F.7 Contracted expressions] A contracted expression is correctly rounded (once) and treats infinities, NaNs, signed zeros, subnormals, and the rounding directions in a manner consistent with the basic arithmetic operations covered by IEC 60559.
+[F.7 Contracted expressions] A contracted expression should raise floating-point exceptions in a manner generally consistent with the basic arithmetic operations.
+[F.8.1 Environment management] If the state for the FENV_ACCESS pragma is ``off'', the implementation is free to assume the floating-point control modes will be the default ones and the floating-point status flags will not be tested, which allows certain optimizations [...].
+[F.8.4 Constant expressions] An arithmetic constant expression of floating type, other than one in an initializer for an object that has static or thread storage duration, is evaluated (as if) during execution; thus, it is affected by any operative floating-point control modes and raises floating-point exceptions as required by IEC 60559 (provided the state for the FENV_ACCESS pragma is ``on'').
+[F.9.3 Relational operators] The sense of relational operators shall be maintained.
+[F.10 Mathematics <math.h>] The expression math_errhandling & MATH_ERREXCEPT shall evaluate to a nonzero value.
+[F.10 Mathematics <math.h>] If a function with one or more NaN arguments returns a NaN result, the result should be the same as one of the NaN arguments (after possible type conversion), except perhaps for the sign.
+[F.10.3.5 The ilogb functions] If the correct result is outside the range of the return type, the numeric result is unspecified and the ``invalid'' floating-point exception is raised.
+[F.10.3.13 The scalbn and scalbln functions] If the calculation does not overflow or underflow, the returned value is exact and independent of the current rounding direction mode.
+[F.10.6.5 The lrint and llrint functions] If the rounded value is outside the range of the return type, the numeric result is unspecified and the ``invalid'' floating-point exception is raised.
+[F.10.9.2 The fmax functions] If just one argument is a NaN, the fmax functions return the other argument (if both arguments are NaNs, the functions return a NaN).
+[G.1 Introduction] An implementation that defines _ _STDC_IEC_559_COMPLEX_ _ shall conform to the specifications in this annex.
+[G.3 Conventions] A complex or imaginary value with at least one infinite part is regarded as an infinity (even if its other part is a NaN).
+[G.3 Conventions] A complex or imaginary value is a finite number if each of its parts is a finite number (neither infinite nor NaN).
+[G.3 Conventions] A complex or imaginary value is a zero if each of its parts is a zero.
+[G.5.1 Multiplicative operators] If one operand has real type and the other operand has imaginary type, then the result has imaginary type.
+[G.5.1 Multiplicative operators] If both operands have imaginary type, then the result has real type.
+[G.5.1 Multiplicative operators] If either operand has complex type, then the result has complex type.
+[G.5.1 Multiplicative operators] If both operands of the * operator are complex or if the second operand of the / operator is complex, the operator raises floating-point exceptions if appropriate for the calculation of the parts of the result, and may raise spurious floating-point exceptions.
+[G.5.2 Additive operators] If both operands have imaginary type, then the result has imaginary type.
+[G.5.2 Additive operators] If one operand has real type and the other operand has imaginary type, or if either operand has complex type, then the result has complex type.
+[H.2.2 Integer types] If an implementation adds support for the LIA-1 exceptional values ``integer_overflow'' and ``undefined'', then those types are LIA-1 conformant types.
+[H.2.3 Floating-point types] If an implementation adds support for the LIA-1 exceptional values ``underflow'', ``floating_overflow'', and ``"undefined'', then those types are conformant with LIA-1.
+[H.2.4 Type conversions] For out-of-range values, the conversions shall silently wrap for the modulo types.
+[H.3.1 Notification alternatives] An implementation may support the ability to switch between notification alternatives during execution, but is not required to do so.
+[H.3.1 Notification alternatives] An implementation can provide separate selection for each kind of notification, but this is not required.
+[H.3.1.1 Indicators] C allows an implementation to provide the following LIA-1 required behavior: at program termination if any indicator is set the implementation shall send an unambiguous and ``hard to ignore'' message [...].
