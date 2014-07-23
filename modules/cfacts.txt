@@ -180,9 +180,7 @@
 [6.4.4.4 Character constants] An integer character constant is a sequence of one or more multibyte characters enclosed in single-quotes, as in 'x'. A wide character constant is the same, except prefixed by the letter L, u, or U.
 [6.4.4.4 Character constants] If an integer character constant contains a single character or escape sequence, its value is the one that results when an object with type char whose value is that of the single character or escape sequence is converted to type int.
 [6.4.4.4 Character constants] If any other character follows a backslash, the result is not a token and a diagnostic is required.
-[6.4.5 String literals] A character string literal is a sequence of zero or more multibyte characters enclosed in double-quotes, as in "xyz".
-[6.4.5 String literals] A UTF-8 string literal is the same, except prefixed by u8.
-[6.4.5 String literals] A wide string literal is the same, except prefixed by the letter L, u, or U.
+[6.4.5 String literals] A character string literal is a sequence of zero or more multibyte characters enclosed in double-quotes, as in "xyz". A UTF-8 string literal is the same, except prefixed by u8. A wide string literal is the same, except prefixed by the letter L, u, or U.
 [6.4.5 String literals] If any of the tokens has an encoding prefix, the resulting multibyte character sequence is treated as having the same prefix; otherwise, it is treated as a character string literal.
 [6.4.5 String literals] If the program attempts to modify such an array, the behavior is undefined.
 [6.4.6 Punctuators] A punctuator is a symbol that has independent syntactic and semantic significance.
@@ -226,10 +224,9 @@
 [6.5.2.5 Compound literals] If the type name specifies an array of unknown size, the size is determined by the initializer list [...].
 [6.5.2.5 Compound literals] If the compound literal occurs outside the body of a function, the object has static storage duration; otherwise, it has automatic storage duration associated with the enclosing block.
 [6.5.3.2 Address and indirection operators] The operand of the unary * operator shall have pointer type.
-[6.5.3.2 Address and indirection operators] If the operand has type ``type'', the result has type ``pointer to type''.
-[6.5.3.2 Address and indirection operators] If the operand is the result of a unary * operator, neither that operator nor the & operator is evaluated and the result is as if both were omitted, except that the constraints on the operators still apply and the result is not an lvalue.
-[6.5.3.2 Address and indirection operators] If the operand points to a function, the result is a function designator; if it points to an object, the result is an lvalue designating the object.
-[6.5.3.2 Address and indirection operators] If the operand has type ``pointer to type'', the result has type ``type''.
+[6.5.3.2 Address and indirection operators] The unary * operator denotes indirection. If the operand has type ``type'', the result has type ``pointer to type''.
+[6.5.3.2 Address and indirection operators] The unary & operator yields the address of its operand. If the operand is the result of a unary * operator, neither that operator nor the & operator is evaluated and the result is as if both were omitted, except that the constraints on the operators still apply and the result is not an lvalue.
+[6.5.3.2 Address and indirection operators] The unary * operator denotes indirection. If the operand points to a function, the result is a function designator; if it points to an object, the result is an lvalue designating the object.
 [6.5.3.2 Address and indirection operators] If an invalid value has been assigned to the pointer, the behavior of the unary * operator is undefined.
 [6.5.3.3 Unary arithmetic operators] If the promoted type is an unsigned type, the expression ~E is equivalent to the maximum value representable in that type minus E.
 [6.5.3.3 Unary arithmetic operators] If *P is an lvalue and T is the name of an object pointer type, *(T)P is an lvalue that has a type compatible with that to which T points.
@@ -242,10 +239,8 @@
 [6.5.6 Additive operators] If both operands have arithmetic type, the usual arithmetic conversions are performed on them.
 [6.5.6 Additive operators] If the pointer operand points to an element of an array object, and the array is large enough, the result points to an element offset from the original element such that the difference of the subscripts of the resulting and original array elements equals the integer expression.
 [6.5.6 Additive operators] If both the pointer operand and the result point to elements of the same array object, or one past the last element of the array object, the evaluation shall not produce an overflow; otherwise, the behavior is undefined.
-[6.5.6 Additive operators] If the result points one past the last element of the array object, it shall not be used as the operand of a unary * operator that is evaluated.
-[6.5.6 Additive operators] If the result is not representable in an object of that type, the behavior is undefined.
-[6.5.7 Bitwise shift operators] If E1 has an unsigned type or if E1 has a signed type and a nonnegative value, the value of the result is the integral part of the quotient of E1 / 2E2.
-[6.5.6 Additive operators] If E1 has a signed type and a negative value, the resulting value is implementation-defined.
+[6.5.6 Additive operators] When an expression that has integer type is added to or subtracted from a pointer, the result has the type of the pointer operand. If the result points one past the last element of the array object, it shall not be used as the operand of a unary * operator that is evaluated.
+[6.5.7 Bitwise shift operators] The result of E1 >> E2 is E1 right-shifted E2 bit positions. If E1 has a signed type and a negative value, the resulting value is implementation-defined.
 [6.5.8 Relational operators] If both of the operands have arithmetic type, the usual arithmetic conversions are performed on them.
 [6.5.8 Relational operators] If two pointers to object types both point to the same object, or both point one past the last element of the same array object, they compare equal.
 [6.5.8 Relational operators] If the objects pointed to are members of the same aggregate object, pointers to structure members declared later compare greater than pointers to members declared earlier in the structure, and pointers to array elements with larger subscript values compare greater than pointers to elements of the same array with lower subscript values.
@@ -277,7 +272,6 @@
 [6.6 Constant expressions] An integer constant expression is required in a number of contexts such as the size of a bit-field member of a structure, the value of an enumeration constant, and the size of a non-variable length array.
 [6.6 Constant expressions] An arithmetic constant expression shall have arithmetic type and shall only have operands that are integer constants, floating constants, enumeration constants, character constants, sizeof expressions whose results are integer constants, and _Alignof expressions.
 [6.6 Constant expressions] An address constant is a null pointer, a pointer to an lvalue designating an object of static storage duration, or a pointer to a function designator; it shall be created explicitly using the unary & operator or an integer constant cast to pointer type, or implicitly by the use of an expression of array or function type.
-[6.6 Constant expressions] and -> operators, the address & and indirection * unary operators, and pointer casts may be used in the creation of an address constant, but the value of an object shall not be accessed by use of these operators.
 [6.7 Declarations] All declarations in the same scope that refer to the same object or function shall specify compatible types.
 [6.7 Declarations] A definition of an identifier is a declaration for that identifier that: --for an object, causes storage to be reserved for that object; --for a function, includes the function body; --for an enumeration constant, is the (only) declaration of the identifier; --for a typedef name, is the first (or only) declaration of the identifier.
 [6.7 Declarations] If an identifier for an object is declared with no linkage, the type for the object shall be complete by the end of its declarator, or by the end of its init-declarator if it has an initializer; in the case of function parameters (including in prototypes), it is the adjusted type that is required to be complete.
