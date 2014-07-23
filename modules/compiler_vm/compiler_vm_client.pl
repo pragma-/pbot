@@ -121,7 +121,6 @@ sub compile {
 
   my $date = time;
 
-  sleep 1;
   print $compiler "compile:$lang:$args:$input:$date\n";
   print $compiler "$code\n";
   print $compiler "compile:end\n";
@@ -896,6 +895,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   # look for potential functions to extract
   while($preprecode =~ /$func_regex/ms) {
     my ($pre_ret, $pre_ident, $pre_params, $pre_potential_body) = ($1, $2, $3, $4);
+    my $precode_code;
 
     print "looking for functions, found [$pre_ret][$pre_ident][$pre_params][$pre_potential_body], has main: $has_main\n" if $debug >= 1;
 
@@ -912,6 +912,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
     $precode = substr($precode, 0, $extract_pos);
     print "precode: [$precode]\n" if $debug;
+    $precode_code = $precode;
 
     $tmpcode =~ m/$func_regex/ms;
     my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
@@ -945,12 +946,18 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
       exit;
     } else {
       $body = $extract[0];
-      $preprecode .= $extract[1];
-      $precode .= $extract[1];
+      $preprecode = $extract[1];
+      $precode = $extract[1];
     }
 
     print "final extract: [$ret][$ident][$params][$body]\n" if $debug;
-    $code .= "$ret $ident($params) $body\n\n";
+    $code .= "$precode_code\n$ret $ident($params) $body\n\n";
+
+    if($debug >= 2) { print '-' x 20 . "\n" }
+    print "     code: [$code]\n" if $debug >= 2;
+    if($debug >= 2) { print '-' x 20 . "\n" }
+    print "  precode: [$precode]\n" if $debug >= 2;
+
     $has_main = 1 if $ident =~ m/^\s*\(?\s*main\s*\)?\s*$/;
   }
 
@@ -960,11 +967,10 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   $precode =~ s/^{(.*)}$/$1/s;
 
   if(not $has_main and not $got_nomain) {
-    $code = "$prelude\n$code" . "int main(void) {\n$precode\n;\nreturn 0;\n}\n";
+    $code = "$prelude\n$code\n" . "int main(void) {\n$precode\n;\nreturn 0;\n}\n";
     $nooutput = "No warnings, errors or output.";
   } else {
-    print "code: [$code]; precode: [$precode]\n" if $debug;
-    $code = "$prelude\n$precode\n\n$code\n";
+    $code = "$prelude\n$code\n";
     $nooutput = "No warnings, errors or output.";
   }
 } else {
