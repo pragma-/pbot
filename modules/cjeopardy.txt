@@ -1,0 +1,209 @@
+[3. Terms, definitions, and symbols] An example of this kind of behavior is the propagation of the high-order bit when a signed integer is shifted right.|implementation-defined|implementation-defined behavior
+[3. Terms, definitions, and symbols] An example of this kind of behavior is whether the islower function returns true for characters other than the 26 lowercase Latin letters.|locale-specific|locale-specific behavior
+[3. Terms, definitions, and symbols] An example of this kind of behavior is the behavior on integer overflow.|undefined|undefined behavior
+[3. Terms, definitions, and symbols] An example of this kind of behavior is the order in which the arguments to a function are evaluated.|unspecified|unspecified behavior
+[3. Terms, definitions, and symbols] A byte is composed of a contiguous sequence of bits, the number of which is...|implementation-defined|implementation-defined behavior
+[4. Conformance] If a ``shall'' or ``shall not'' requirement that appears outside of a constraint or runtime-constraint is violated, the behavior is this kind of behavior.|undefined|undefined behavior
+[4. Conformance] A program that is correct in all other aspects, operating on correct data, containing unspecified behavior shall be this kind of program.|correct|correct program|conforming|conforming program
+[4. Conformance] The implementation shall not successfully translate a preprocessing translation unit containing this preprocessing directive unless it is part of a group skipped by conditional inclusion.|#error
+[4. Conformance] This kind of program shall use only those features of the language and library specified in this International Standard.|strictly conforming|conforming|strictly conforming program|conforming program
+[4. Conformance] This kind of program is one that is acceptable to a conforming implementation.|conforming|strictly conforming|strictly conforming program|conforming program
+[5. Environment] An implementation translates C source files and executes C programs in two data-processing-system environments, which will be called these.|translation environment and execution environment|execution environment and translation environment
+[5.1.1.1 Program structure] A source file together with all the headers and source files included via the preprocessing directive #include is known as this.|preprocessing translation unit
+[5.1.1.2 Translation phases] A source file that is not empty shall end with this.|new-line character|new-line|\n
+[5.1.1.3 Diagnostics] A conforming implementation shall produce at least one of this (identified in an implementation-defined manner) if a preprocessing translation unit or translation unit contains a violation of any syntax rule or constraint, even if the behavior is also explicitly specified as undefined or implementation-defined.|diagnostic message
+[5.1.1.3 Diagnostics] An implementation shall issue this for the translation unit: char i; int i; because in those cases where wording in this International Standard describes the behavior for a construct as being both a constraint error and resulting in undefined behavior, the constraint error shall be diagnosed.|diagnostic|diagnostic message
+[5.1.2 Execution environments] Program startup occurs when this is called by the execution environment.|designated C function|designated function
+[5.1.2.2.1 Program startup] If the value of argc is this, the array members argv[0] through argv[argc-1] inclusive shall contain pointers to strings, which are given implementation-defined values by the host environment prior to program startup.|greater than zero|nonzero|greater than 0
+[5.1.2.2.1 Program startup] If the host environment is not capable of supplying strings with letters in both uppercase and lowercase, the implementation shall ensure that the strings are received in this case.|lowercase|lower
+[5.1.2.2.1 Program startup] If the value of argc is greater than zero, the string pointed to by argv[0] represents the program name; argv[0][0] shall be this if the program name is not available from the host environment.|the null character|null character
+[5.1.2.2.1 Program startup] If the value of argc is this, the strings pointed to by argv[1] through argv[argc-1] represent the program parameters.|greater than one
+[5.1.2.2.3 Program termination] If the return type of the main function is a type compatible with this type, a return from the initial call to the main function is equivalent to calling the exit function with the value returned by the main function as its argument.|int
+[5.1.2.2.3 Program termination] Reaching the } that terminates the main function returns this value.|0|zero|EXIT_SUCCESS
+[5.1.2.2.3 Program termination] If the return type is not compatible with int, the termination status returned to the host environment is this value.|unspecified
+[5.1.2.4 Multi-threaded executions and data races] A synchronization operation on one or more memory locations is either an acquire operation, a release operation, both an acquire and release operation, or this kind of operation.|consume operation|consume
+[5.1.2.4 Multi-threaded executions and data races] A synchronization operation without this is a fence and can be either an acquire fence, a release fence, or both an acquire and release fence.|associated memory location
+[5.1.2.4 Multi-threaded executions and data races] If there is ambiguity about which side effect to a non-atomic object is visible, then this occurs and the behavior is undefined.|data race|race condition|race hazard
+[5.2.1 Character sets] In a character constant or string literal, members of the execution character set shall be represented by corresponding members of the source character set or by escape sequences consisting of this character followed by one or more characters.|backslash|\
+[5.2.1 Character sets] A byte with all bits set to 0 is called this.|null character
+[5.2.1 Character sets] The representation of each member of the source and execution basic character sets shall fit in this.|byte|char
+[5.2.1 Character sets] In source files, there shall be some way of indicating the end of each line of text; this International Standard treats such an end-of-line indicator as if it were a single one of this character.|new-line|new-line character
+[5.2.1 Character sets] If any other characters are encountered in a source file (except in an identifier, a character constant, a string literal, a header name, a comment, or a preprocessing token that is never converted to a token), this kind of behavior occurs.|undefined|undefined behavior
+[5.2.1.2 Multibyte characters] The basic character set shall be present and each character shall be encoded as a single one of this.|byte
+[5.2.1.2 Multibyte characters] A byte with all bits set to this shall be interpreted as a null character independent of shift state.|zero|0
+[5.2.1.2 Multibyte characters] An identifier, comment, string literal, character constant, or header name shall consist of a sequence of this kind of valid characters.|multibyte|multibyte character
+[5.2.2 Character display semantics] If the active position is at the final position of a line (if there is one), the behavior of the display device is this kind of behavior.|unspecified|unspecified behavior
+[5.2.2 Character display semantics] If the active position is at the initial position of a line, the behavior of the display device is this kind of behavior.|unspecified|unspecified behavior
+[5.2.2 Character display semantics] If the active position is at or past the last defined horizontal tabulation position, the behavior of the display device is this kind of behavior.|unspecified|unspecified behavior
+[5.2.2 Character display semantics] If the active position is at or past the last defined vertical tabulation position, the behavior of the display device is this kind of behavior.|unspecified|unspecified behavior
+[5.2.4.2.2 Characteristics of floating types <float.h>] This is an encoding signifying Not-a-Number.|NaN
+[5.2.4.2.2 Characteristics of floating types <float.h>] Wherever such values are unsigned, any requirement in this International Standard to retrieve the sign shall produce this kind of sign, and any requirement to set the sign shall be ignored.|unspecified
+[5.2.4.2.2 Characteristics of floating types <float.h>] If a type wider than double were supported, then DECIMAL_DIG would be greater than this value.|17
+[6.2.1 Scopes of identifiers] A member of an enumeration is called this.|enumeration constant
+[6.2.1 Scopes of identifiers] This is a declaration of a function that declares the types of its parameters.|function prototype|prototype
+[6.2.1 Scopes of identifiers] This is the only kind of identifier that has function scope.|label name|label
+[6.2.1 Scopes of identifiers] If the declarator or type specifier that declares the identifier appears outside of any block or list of parameters, the identifier has this kind of scope.|file|file scope
+[6.2.1 Scopes of identifiers] If the declarator or type specifier that declares the identifier appears inside a block or within the list of parameter declarations in a function definition, the identifier has this kind of scope.|block|block scope
+[6.2.1 Scopes of identifiers] If the declarator or type specifier that declares the identifier appears within the list of parameter declarations in a function prototype (not part of a function definition), the identifier has this kind of scope.|function prototype|prototype
+[6.2.1 Scopes of identifiers] If an identifier designates two different entities in the same name space, the scopes might do this.|overlap
+[6.2.2 Linkages of identifiers] If the declaration of a file scope identifier for an object or a function contains the storage-class specifier static, the identifier has this kind of linkage.|internal|internal linkage
+[6.2.2 Linkages of identifiers] If no prior declaration is visible, or if the prior declaration specifies no linkage, then the identifier has this kind of linkage.|external|external linkage
+[6.2.2 Linkages of identifiers] If the declaration of an identifier for a function has no storage-class specifier, its linkage is determined exactly as if it were declared with this storage-class specifier.|extern
+[6.2.2 Linkages of identifiers] If the declaration of an identifier for an object has file scope and no storage-class specifier, its linkage is this kind of linkage.|external|external linkage
+[6.2.2 Linkages of identifiers] If, within a translation unit, the same identifier appears with both internal and external linkage, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.2.3 Name spaces of identifiers] If more than one declaration of a particular identifier is visible at any point in this, the syntactic context disambiguates uses that refer to different entities.|translation unit
+[6.2.3 Name spaces of identifiers] A function declaration can contain this storage-class specifier only if it is at file scope.|static
+[6.2.4 Storage durations of objects] If an object is referred to outside of its lifetime, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.2.4 Storage durations of objects] An object whose identifier is declared without the storage-class specifier _Thread_local, and either with external or internal linkage or with the storage-class specifier static, has this kind of storage duration.|static|static storage duration
+[6.2.4 Storage durations of objects] An object whose identifier is declared with the storage-class specifier _Thread_local has this kind of storage duration.|thread
+[6.2.4 Storage durations of objects] An object whose identifier is declared with no linkage and without the storage-class specifier static has this kind of storage duration.|automatic
+[6.2.4 Storage durations of objects] If an initialization is specified for the object, it is performed each time the declaration or compound literal is reached in the execution of the block; otherwise, the value becomes this value each time the declaration is reached.|indeterminate
+[6.2.5 Types] An object declared as this type can only store the values 0 and 1.|_Bool
+[6.2.5 Types] An object declared as this type is just large enough to store any member of the basic execution character set.|char
+[6.2.5 Types] If a member of the basic execution character set is stored in a char object, its value is guaranteed to be this.|nonnegative.
+[6.2.5 Types] A computation involving unsigned operands can never do this, because a result that cannot be represented by the resulting unsigned integer type is reduced modulo the number that is one greater than the largest value that can be represented by the resulting type.|overflow
+[6.2.5 Types] This comprises a set of named integer constant values.|enumeration
+[6.2.5 Types] The element type shall be complete whenever this kind of type is specified.|array
+[6.2.5 Types] An array type is said to be derived from its element type, and if its element type is T , the array type is sometimes called this.|array of T
+[6.2.5 Types] This kind of type describes a sequentially allocated nonempty set of member objects (and, in certain circumstances, an incomplete array), each of which has an optionally specified name and possibly distinct type.|structure|struct
+[6.2.5 Types] This kind of type describes an overlapping nonempty set of member objects, each of which has an optionally specified name and possibly distinct type.|union|union type
+[6.2.5 Types] This kind of type is characterized by its return type and the number and types of its parameters.|function|function type
+[6.2.5 Types] A function type is said to be derived from its return type, and if its return type is T , the function type is sometimes called this.|function returning T
+[6.2.5 Types] A pointer type derived from the referenced type T is sometimes called this.|pointer to T
+[6.2.5 Types] An array type of unknown size is this kind of type.|incomplete|incomplete type
+[6.2.5 Types] A type has this kind of size if the type is not incomplete and is not a variable length array type.|constant
+[6.2.5 Types] A pointer to void shall have the same representation and alignment requirements as a pointer to this type.|char|character
+[6.2.5 Types] Values stored in unsigned bit-fields and objects of type unsigned char shall be represented using this kind of notation.|pure binary|binary
+[6.2.5 Types] Certain object representations need not represent a value of the object type. If the stored value of an object has such a representation and is read by an lvalue expression that does not have character type, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.2.5 Types] Certain object representations need not represent a value of the object type. If such a representation is produced by a side effect that modifies all or any part of the object by an lvalue expression that does not have character type, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.2.6.2 Integer types] For signed integer types, the bits of the object representation shall be divided into three groups: value bits, padding bits, and the sign bit.  This type shall not have any padding bits.|signed char|char
+[6.2.7 Compatible type and composite type] All declarations that refer to the same object or function shall have this kind of type; otherwise, the behavior is undefined.|compatible|compatible type
+[6.2.8 Alignment of objects] This is an implementation-defined integer value representing the number of bytes between successive addresses at which a given object can be allocated.|alignment
+[6.2.8 Alignment of objects] This is a type having an extended alignment requirement.|over-aligned|over-aligned type.
+[6.2.8 Alignment of objects] Every valid alignment value shall be a value in this domain.|nonnegative integral power of two|nonnegative integral power of 2|integral power of two|integral power of 2|power of two|power of 2
+[6.2.8 Alignment of objects] This type shall have the weakest alignment requirement.|char|signed char|unsigned char
+[6.3.1.1 Boolean, characters, and integers] If an int can represent all values of the original type (as restricted by the width, for a bit-field), the value is converted to an int; otherwise, it is converted to this.|unsigned int
+[6.3.1.4 Real floating and integer] If the value of the integral part cannot be represented by the integer type, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.3.1.4 Real floating and integer] If the value being converted is in the range of values that can be represented but cannot be represented exactly, the result is either the nearest higher or nearest lower representable value, chosen in this manner.|implementation-defined|implementation-defined manner
+[6.3.1.4 Real floating and integer] If the value being converted is outside the range of values that can be represented, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.3.2.1 Lvalues, arrays, and function designators] This is an expression (with an object type other than void) that potentially designates an object.|lvalue
+[6.3.2.1 Lvalues, arrays, and function designators] This is an lvalue that does not have array type, does not have an incomplete type, does not have a const-qualified type, and if it is a structure or union, does not have any member (including, recursively, any member or element of all contained aggregates or unions) with a const-qualified type.|modifiable lvalue
+[6.3.2.1 Lvalues, arrays, and function designators] If an lvalue has an incomplete type and does not have array type, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.3.2.1 Lvalues, arrays, and function designators] If an lvalue designates an object of automatic storage duration that could have been declared with the register storage class (never had its address taken), and that object is uninitialized (not declared with an initializer and no assignment to it has been performed prior to use), the behavior is this kind of behavior.|undefined|undefined behavior
+[6.3.2.1 Lvalues, arrays, and function designators] If an array object has register storage class, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.3.2.1 Lvalues, arrays, and function designators] A function designator is an expression that has this kind of type.|function|function type
+[6.3.2.1 Lvalues, arrays, and function designators] An obvious example of this is an identifier of an object.|lvalue
+[6.3.2.2 void] If an expression of any other type is evaluated as a void expression, this is what happens to its value or designator.|discarded
+[6.3.2.2 void] A void expression is evaluated for this.|its side effects|side effects
+[6.3.2.3 Pointers] A pointer to any object type may be converted to this and back again; the result shall compare equal to the original pointer.|pointer to void|void pointer
+[6.3.2.3 Pointers] An integer constant expression with the value 0, or such an expression cast to type void *, is called this.|null pointer constant
+[6.3.2.3 Pointers] If a null pointer constant is converted to a pointer type, the resulting pointer is called this.|null pointer
+[6.3.2.3 Pointers] Any two null pointers shall compare as this.|equal
+[6.3.2.3 Pointers] If a converted pointer is used to call a function whose type is not compatible with the referenced type, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.4 Lexical elements] This is the minimal lexical element of the language in translation phases 7 and 8.|token
+[6.4 Lexical elements] This is the minimal lexical element of the language in translation phases 3 through 6.|preprocessing token
+[6.4.4.1 Integer constants] This constant begins with a nonzero digit and consists of a sequence of decimal digits.|decimal
+[6.4.4.1 Integer constants] This constant consists of the prefix 0 optionally followed by a sequence of the digits 0 through 7 only.|octal
+[6.4.4.1 Integer constants] This constant consists of the prefix 0x or 0X followed by a sequence of the decimal digits and the letters a (or A) through f (or F) with values 10 through 15 respectively.|hexadecimal
+[6.4.4.2 Floating constants] If a floating constant is suffixed by the letter f or F, it has this type.|float
+[6.4.4.2 Floating constants] If a floating constant is suffixed by the letter l or L, it has this type.|long double
+[6.4.4.4 Character constants] This is a sequence of one or more multibyte characters enclosed in single-quotes.|integer character constant|character constant
+[6.4.5 String literals] This is a sequence of zero or more multibyte characters enclosed in double-quotes.|character string literal|string literal
+[6.4.5 String literals] This is a sequence of zero or more multibyte characters enclosed in double-quotes prefixed with u8.|UTF-8 string literal|UTF8 string literal
+[6.4.5 String literals] This is a sequence of zero or more multibyte characters enclosed in double-quotes prefixed with L, u, or U.|wide string literal
+[6.4.5 String literals] If the program attempts to modify a string literal, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.4.6 Punctuators] This is an entity on which an operator acts.|operand
+[6.5 Expressions] This is a sequence of operators and operands that specifies computation of a value, or that designates an object or a function, or that generates side effects, or that performs a combination thereof.|expression
+[6.5 Expressions] If a side effect on a scalar object is unsequenced relative to either a different side effect on the same scalar object or a value computation using the value of the same scalar object, the behavior is this kind behavior.|undefined|undefined behavior
+[6.5 Expressions] If an exceptional condition occurs during the evaluation of an expression (that is, if the result is not mathematically defined or not in the range of representable values for its type), the behavior is this kind of behavior.|undefined|undefined behavior
+[6.5 Expressions] If a value is stored into an object having no declared type through an lvalue having a type that is not a character type, then the type of the lvalue becomes this type of the object for that access and for subsequent accesses that do not modify the stored value.|effective|effective type
+[6.5.1 Primary expressions] An identifier is this kind of expression, provided it has been declared as designating an object (in which case it is an lvalue) or a function (in which case it is a function designator).|primary|primary expression
+[6.5.1 Primary expressions] A constant is this kind of expression.|primary|primary expression
+[6.5.1 Primary expressions] A string literal is this kind of expression.|primary|primary expression
+[6.5.1.1 Generic selection] A generic selection shall have no more than this many default generic associations.|one
+[6.5.2.1 Array subscripting] A postfix expression followed by an expression in these is a subscripted designation of an element of an array object.|square brackets|brackets|[]
+[6.5.2.2 Function calls] If the expression that denotes the called function has a type that includes this, the number of arguments shall agree with the number of parameters.|prototype
+[6.5.2.2 Function calls] This is a postfix expression followed by parentheses () containing a possibly empty, comma-separated list of expressions.|function call
+[6.5.2.2 Function calls] If the expression that denotes the called function has a type that does not include a prototype, the integer promotions are performed on each argument, and arguments that have type float are promoted to this type.|double
+[6.5.2.2 Function calls] If the number of arguments of a called function does not equal the number of parameters, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.5.2.2 Function calls] A parameter of a called function declared to have array or function type is adjusted to have this type.|pointer|pointer type
+[6.5.2.3 Structure and union members] If the member used to read the contents of this kind of object is not the same as the member last used to store a value in the object, the appropriate part of the object representation of the value is reinterpreted as an object representation in the new type.|union
+[6.5.2.5 Compound literals] This is postfix expression that consists of a parenthesized type name followed by a brace-enclosed list of initializers.|compound literal.
+[6.5.2.5 Compound literals] If the type name specifies an array of unknown size, the size is determined by this.|initializer list|initializer
+[6.5.3.2 Address and indirection operators] The operand of the unary * operator shall have this kind of type.|pointer
+[6.5.3.2 Address and indirection operators] This is denoted by unary * operator. If the operand has type ``type'', the result has type ``pointer to type''.|indirection
+[6.5.3.2 Address and indirection operators] The unary & operator yields this of its operand.|the address|address
+[6.5.3.2 Address and indirection operators] If an invalid value has been assigned to the pointer, the behavior of the unary * operator is this kind of behavior.|undefined|undefined behavior
+[6.5.3.4 The sizeof and _Alignof operators] If the type of the operand of sizeof or _Alignof is this kind of type, the operand is evaluated; otherwise, the operand is not evaluated and the result is an integer constant.|variable length array|vla|variable length array type|vla type
+[6.5.5 Multiplicative operators] The operands of the % operator shall have this kind of type.|integer|integer type
+[6.5.7 Bitwise shift operators] The result of E1 >> E2 is E1 right-shifted E2 bit positions. If E1 has a signed type and a negative value, the resulting value is this value.|implementation-defined|implementation-defined value
+[6.5.13 Logical AND operator] If the first operand of this operator compares equal to 0, the second operand is not evaluated.|&&|logical and|and
+[6.5.14 Logical OR operator] If the first operand of this operator compares unequal to 0, the second operand is not evaluated.|logical or|or|\|\|
+[6.5.15 Conditional operator] If both operands of the conditional operator have void type, the result has this type.|void|void type
+[6.6 Constant expressions] Cast operators in an integer constant expression shall only convert arithmetic types to integer types, except as part of an operand to this operator.|sizeof|_Alignof
+[6.6 Constant expressions] This kind of expression is required in a number of contexts such as the size of a bit-field member of a structure, the value of an enumeration constant, and the size of a non-variable length array.|integer constant|integer constant expression|ice
+[6.6 Constant expressions] This kind of expression shall have arithmetic type and shall only have operands that are integer constants, floating constants, enumeration constants, character constants, sizeof expressions whose results are integer constants, and _Alignof expressions.|arithmetic|arithmetic constant|arithmetic constant expression
+[6.6 Constant expressions] This kind of constant is a null pointer, a pointer to an lvalue designating an object of static storage duration, or a pointer to a function designator.|address|address constant
+[6.7 Declarations] This is a declaration that: --for an object, causes storage to be reserved for that object; --for a function, includes the function body; --for an enumeration constant, is the (only) declaration of the identifier; --for a typedef name, is the first (or only) declaration of the identifier.|definition
+[6.7.1 Storage-class specifiers] A declaration of an identifier for an object with this storage-class specifier suggests that access to the object be as fast as possible.|register
+[6.7.1 Storage-class specifiers] If an aggregate or union object is declared with a storage-class specifier other than this specifier, the properties resulting from the storage-class specifier, except with respect to linkage, also apply to the members of the object, and so on recursively for any aggregate or union member objects.|typedef
+[6.7.2.1 Structure and union specifiers] A struct-declaration that does not declare an anonymous structure or anonymous union shall contain this.|struct-declarator-list
+[6.7.2.1 Structure and union specifiers] If a struct-declaration-list does not contain any of this, either directly or via an anonymous structure or anonymous union, the behavior is undefined.|named members
+[6.7.2.1 Structure and union specifiers] A structure member may be declared to consist of a specified number of bits (including a sign bit, if any). Such a member is called this.|bit-field
+[6.7.2.1 Structure and union specifiers] This is an unnamed structure member whose type specifier is a structure specifier with no tag.|anonymous structure
+[6.7.2.1 Structure and union specifiers] The last element of a structure with more than one named member may have an incomplete array type; it is called this.|flexible array member|fam
+[6.7.2.2 Enumeration specifiers] If the first enumerator of an enumeration has no =, this is the value of its enumeration constant.|zero|0
+[6.7.3 Type qualifiers] The implementation may place a const object that is not volatile in this region of storage.|read-only
+[6.7.3 Type qualifiers] If an attempt is made to modify an object defined with a const-qualified type through use of an lvalue with non-const-qualified type, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.7.3 Type qualifiers] If an attempt is made to refer to an object defined with a volatile-qualified type through use of an lvalue with non-volatile-qualified type, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.7.3 Type qualifiers] A function declared with this function specifier is an inline function.|inline
+[6.7.5 Alignment specifier] If declarations of an object in different translation units have different alignment specifiers, the behavior is this kind of behavior.|undefined|undefined behavior
+[6.7.6 Declarators] This declarator is a declarator that is not part of another declarator.|full|full declarator
+[6.7.6 Declarators] If, in the nested sequence of declarators in a full declarator, there is a declarator specifying a variable length array type, the type specified by the full declarator is said to be this.|variably modified
+[6.7.6.1 Pointer declarators] For two pointer types to be this, both shall be identically qualified and both shall be pointers to compatible types.|compatible
+[6.7.6.2 Array declarators] If an array is declared to be an object with this storage duration, it shall not have a variable length array type.|static|thread
+[6.7.6.2 Array declarators] If the size is not present, the array type is this kind of type.|incomplete|incomplete type
+[6.7.6.2 Array declarators] If the size of an array type is an expression that is not an integer constant expression and the element type does not have a known constant size, the array type is this kind of type.|variable length array type|variable length array|vla type|vla
+[6.7.6.2 Array declarators] A function declarator shall not specify a return type that is this kind of type.|function type|array type|function|array
+[6.7.6.2 Array declarators] This specifies the types of, and may declare identifiers for, the parameters of the function.|parameter type list
+[6.7.6.2 Array declarators] In a function parameter list, if this keyword appears within the [ and ] of the array type derivation, then for each call to the function, the value of the corresponding actual argument shall provide access to the first element of an array with at least as many elements as specified by the size expression.|static
+[6.7.6.2 Array declarators] If the declaration occurs outside of any function, the identifiers have this scope.|file|file scope
+[6.7.8 Type definitions] If a typedef name specifies a variably modified type then it shall have this scope.|block|block scope
+[6.7.9 Initialization] All the expressions in an initializer for an object that has static or thread storage duration shall be this.|constant|constant expressions
+[6.7.9 Initialization] If an object that has automatic storage duration is not initialized explicitly, its value is this.|indeterminate
+[6.7.9 Initialization] If there are fewer initializers in a brace-enclosed list than there are elements or members of an aggregate, or fewer characters in a string literal used to initialize an array of known size than there are elements in the array, the remainder of the aggregate shall be initialized implicitly the same as objects that have this storage duration.|static|static storage duration
+[6.7.10 Static assertions] If the value of the constant expression of a static assertion compares in this way to 0, the declaration has no effect.|unequal|not equal
+[6.8 Statements and blocks] This kind of expression is an expression that is not part of another expression or of a declarator.|full|full expression
+[6.8.3 Expression and null statements] This statement performs no operations.|null statement|null
+[6.8.3 Expression and null statements] If a function call is evaluated as an expression statement for its side effects only, the discarding of its value may be made explicit by using this.|void cast|cast to void
+[6.8.5 Iteration statements] An omitted controlling expression of a for loop is replaced by this.|nonzero constant
+[6.8.6.2 The continue statement] This statement causes a jump to the loop-continuation portion of the smallest enclosing iteration statement; that is, to the end of the loop body.|continue|continue statement
+[6.8.6.4 The return statement] A return statement with an expression shall not appear in a function whose return type is this.|void
+[6.8.6.4 The return statement] A return statement without an expression shall only appear in a function whose return type is this.|void
+[6.9 External definitions] There shall be no more than this many external definitions for each identifier declared with internal linkage in a translation unit.|one|1
+[6.9.1 Function definitions] A function that accepts a variable number of arguments is defined with a parameter type list that ends with this.|the ellipsis notation|ellipsis|...
+[6.10 Preprocessing directives] A new-line character ends the preprocessing directive even if it occurs within what would otherwise be an invocation of a function-like macro. Thus, preprocessing directives are commonly called this.|lines
+[6.10.3 Macro replacement] This shall be between the identifier and the replacement list in the definition of an object-like macro.|white-space
+[7.1.1 Definitions of terms] This is a contiguous sequence of characters terminated by and including the first null character.|string
+[7.1.1 Definitions of terms] This is a contiguous sequence of wide characters terminated by and including the first null wide character.|wide string
+[7.1.1 Definitions of terms] This is a contiguous sequence of bytes within a multibyte string that (potentially) causes a change in shift state.|shift sequence
+[7.1.2 Standard headers] Any declaration of a library function shall have this linkage.|external|external linkage
+[7.2 Diagnostics <assert.h>] If this is defined as a macro name at the point in the source file where <assert.h> is included, the assert macro is defined simply as #define assert(ignore) ((void)0)|NDEBUG
+[7.6 Floating-point environment <fenv.h>] This is a system variable whose value is set (but never cleared) when a floating-point exception is raised, which occurs as a side effect of exceptional floating-point arithmetic to provide auxiliary information.|floating-point status flag|status flag
+[7.6 Floating-point environment <fenv.h>] This is a system variable whose value may be set by the user to affect the subsequent behavior of floating-point arithmetic.|floating-point control mode|control mode
+[7.14.1.1 The signal function] An invocation of function because of a signal, or (recursively) of any further functions called by that invocation (other than functions in the standard library), is called this.|signal handler
+[7.16 Variable arguments <stdarg.h>] If access to the stdarg arguments is desired, the called function shall declare an object having this type.|va_list
+[7.16.1.4 The va_start macro] Neither the va_start nor va_copy macro shall be invoked to reinitialize a va_list without an intervening invocation of this macro for the same va_list.|va_end
+[7.21.2 Streams] This kind of stream is an ordered sequence of characters composed into lines, each line consisting of zero or more characters plus a terminating new-line character.|text|text stream
+[7.21.2 Streams] This kind of stream is an ordered sequence of characters that can transparently record internal data.|binary|binary stream
+[7.21.4.1 The remove function] If the file is open, the behavior of the remove function is this kind of behavior.|implementation-defined|implementation-defined behavior
+[7.21.4.2 The rename function] If a file named by the string pointed to by new exists prior to the call to the rename function, the behavior is this kind of behavior.|implementation-defined|implementation-defined behavior
+[7.21.4.3 The tmpfile function] If the program terminates abnormally, whether an open temporary file is removed is this kind of behavior.|implementation-defined
+[7.21.7.1 The fgetc function] If the end-of-file indicator for the stream is set, or if the stream is at end-of-file, the end-of-file indicator for the stream is set and the fgetc function returns this value.|EOF
+[7.21.7.2 The fgets function] For the fgets function, if end-of-file is encountered and no characters have been read into the array, the contents of the array are this and a null pointer is returned.|unchanged
+[7.21.7.2 The fgets function] For the fgets function, if a read error occurs during the operation, the array contents are this and a null pointer is returned.|indeterminate
+[7.22.3 Memory management functions] If the size of the space requested by a memory allocation function is zero, the behavior is this kind of behavior.|implementation-defined|implementation-defined behavior
+[7.22.3.5 The realloc function] If ptr is a null pointer, the realloc function behaves like this function for the specified size.|malloc
+[G.5.1 Multiplicative operators] If one multiplicative operand has real type and the other operand has imaginary type, then the result has this type.|imaginary|imaginary type
+[G.5.1 Multiplicative operators] If both multiplicative operands have imaginary type, then the result has this type.|real|real type
+[G.5.2 Additive operators] If one additive operand has real type and the other operand has imaginary type then the result has this type.|complex|complex type
