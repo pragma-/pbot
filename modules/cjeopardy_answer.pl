@@ -35,7 +35,7 @@ open my $fh, "<", "$CJEOPARDY_DATA-$channel" or print "There is no open C Jeopar
 @data = <$fh>;
 close $fh;
 
-my @valid_answers = map { lc decode $_ } split /\|/, encode $data[0];
+my @valid_answers = map { lc decode $_ } split /\|/, encode $data[1];
 
 foreach my $answer (@valid_answers) {
   chomp $answer;
