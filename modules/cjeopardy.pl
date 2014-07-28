@@ -6,9 +6,9 @@ use strict;
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration qw/duration/;
 
-my $CJEOPARDY_FILE = 'cjeopardy.txt';
-my $CJEOPARDY_DATA = 'cjeopardy.dat';
-my $CJEOPARDY_SQL  = 'cjeopardy.sqlite3';
+my $CJEOPARDY_FILE    = 'cjeopardy.txt';
+my $CJEOPARDY_DATA    = 'cjeopardy.dat';
+my $CJEOPARDY_SHUFFLE = 'cjeopardy.shuffle';
 
 my $TIMELIMIT = 300;
 
@@ -28,9 +28,34 @@ if (defined $ret) {
   
   if (scalar gettimeofday - $last_timestamp <= $TIMELIMIT) {
     my $duration = duration($TIMELIMIT - scalar gettimeofday - $last_timestamp);
-    print "The current question is: $last_question You will be able to request a new question in $duration.\n";
+    print "The current question is: $last_question You may request a new question in $duration.\n";
     close $fh;
     exit;
+  }
+}
+
+my $question_index;
+
+if (not length $text) {
+  $ret = open $fh, "<", "$CJEOPARDY_SHUFFLE-$channel";
+  if (defined $ret) {
+    my @indices = <$fh>;
+    $question_index = shift @indices;
+    close $fh;
+
+    if (not @indices) {
+      print "(Shuffling.)\n";
+      shuffle_questions(0);
+    } else {
+      open my $fh, ">", "$CJEOPARDY_SHUFFLE-$channel" or print "Failed to shuffle questions.\n" and exit;
+      foreach my $index (@indices) {
+        print $fh $index;
+      }
+      close $fh;
+    }
+  } else {
+    print "(Shuffling!)\n";
+    $question_index = shuffle_questions(1);
   }
 }
 
@@ -48,7 +73,11 @@ if (not @questions) {
   exit;
 }
 
-my $question = $questions[int rand(@questions)];
+if (length $text) {
+  $question_index = int rand(@questions);
+}
+
+my $question = $questions[$question_index];
 
 my ($q, $a) = split /\|/, $question, 2;
 chomp $q;
@@ -62,3 +91,31 @@ print $fh "$q\n";
 print $fh "$a\n";
 print $fh scalar gettimeofday, "\n";
 close $fh;
+
+
+sub shuffle_questions {
+  my $return_index = shift @_;
+
+  open my $fh, "<", $CJEOPARDY_FILE or die "Could not open $CJEOPARDY_FILE: $!";
+  my (@indices, $i);
+  while (<$fh>) {
+    push @indices, $i++;
+  }
+  close $fh;
+
+  open $fh, ">", "$CJEOPARDY_SHUFFLE-$channel" or die "Could not open $CJEOPARDY_FILE: $!";
+  while (@indices) {
+    my $random_index = int rand(@indices);
+    my $index = $indices[$random_index];
+    print $fh "$index\n";
+    splice @indices, $random_index, 1;
+
+    if ($return_index and @indices == 1) {
+      close $fh;
+      return $indices[0];
+    }
+  }
+  close $fh;
+}
+
+
