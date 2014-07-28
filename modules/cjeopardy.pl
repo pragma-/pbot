@@ -103,7 +103,7 @@ sub shuffle_questions {
   }
   close $fh;
 
-  open $fh, ">", "$CJEOPARDY_SHUFFLE-$channel" or die "Could not open $CJEOPARDY_FILE: $!";
+  open $fh, ">", "$CJEOPARDY_SHUFFLE-$channel" or die "Could not open $CJEOPARDY_SHUFFLE-$channel: $!";
   while (@indices) {
     my $random_index = int rand(@indices);
     my $index = $indices[$random_index];
