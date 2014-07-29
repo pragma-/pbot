@@ -37,13 +37,13 @@ open my $fh, "<", "$CJEOPARDY_DATA-$channel" or print "There is no open C Jeopar
 @data = <$fh>;
 close $fh;
 
-my @valid_answers = map { lc decode $_ } split /\|/, encode $data[1];
+my @valid_answers = map { decode $_ } split /\|/, encode $data[1];
 
 foreach my $answer (@valid_answers) {
   chomp $answer;
   $answer =~ s/\\\|/|/g;
 
-  my $distance = fastdistance($text, $answer);
+  my $distance = fastdistance($text, lc $answer);
   my $length = (length($text) > length($answer)) ? length $text : length $answer;
 
   if ($distance / $length < 0.15) {
@@ -54,7 +54,7 @@ foreach my $answer (@valid_answers) {
       $correctness = "close enough to '$answer'. You are correct!"
     }
 
-    print "'$text' is $correctness\n";
+    print "'$answer' is $correctness\n";
     unlink "$CJEOPARDY_DATA-$channel";
     unlink "$CJEOPARDY_HINT-$channel";
 
