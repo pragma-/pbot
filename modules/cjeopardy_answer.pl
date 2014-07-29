@@ -47,14 +47,12 @@ foreach my $answer (@valid_answers) {
   my $length = (length($text) > length($answer)) ? length $text : length $answer;
 
   if ($distance / $length < 0.15) {
-    my $correctness;
     if ($distance == 0) {
-      $correctness = "correct!";
+      print "'$answer' is correct!\n";
     } else {
-      $correctness = "close enough to '$answer'. You are correct!"
+      print "'$text' is close enough to '$answer'. You are correct!\n"
     }
 
-    print "'$answer' is $correctness\n";
     unlink "$CJEOPARDY_DATA-$channel";
     unlink "$CJEOPARDY_HINT-$channel";
 
