@@ -3,12 +3,14 @@
 use warnings;
 use strict;
 
-use Text::Levenshtein qw(fastdistance);
+use Time::HiRes qw/gettimeofday/;
+use Time::Duration qw/duration/;
 
 my $CJEOPARDY_DATA = 'cjeopardy.dat';
 my $CJEOPARDY_HINT = 'cjeopardy.hint';
 
 my @hints = (0.90, 0.75, 0.50, 0.25, 0.10);
+my $timeout = 60;
 
 my $channel = shift @ARGV;
 
@@ -37,17 +39,26 @@ foreach my $answer (@valid_answers) {
   }
 }
 
-my $hint_counter;
+my ($hint_counter, $last_timeout);
 my $ret = open $fh, "<", "$CJEOPARDY_HINT-$channel";
 if (defined $ret) {
   $hint_counter = <$fh>;
+  $last_timeout = <$fh>;
   close $fh;
+}
+
+my $duration = scalar gettimeofday - $last_timeout;
+if ($duration < $timeout) {
+  $duration = duration($timeout - $duration);
+  print "Please wait $duration before requesting another hint.\n";
+  exit;
 }
 
 $hint_counter++;
 
 open $fh, ">", "$CJEOPARDY_HINT-$channel" or die "Couldn't open $CJEOPARDY_HINT-$channel: $!";
 print $fh "$hint_counter\n";
+print $fh scalar gettimeofday, "\n";
 close $fh;
 
 my $hidden_character_count = int length ($hint) * $hints[$hint_counter > $#hints ? $#hints : $hint_counter];
