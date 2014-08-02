@@ -1,11 +1,13 @@
-#!/bin/env perl
+#!/usr/bin/env perl
 
 # quick and dirty
 
 use warnings;
 use strict;
 
-my $STD = 'n1570-cfact.txt';
+use HTML::Entities;
+
+my $STD = 'n1570.html';
 
 my $text;
 {
@@ -17,17 +19,28 @@ my $text;
 
 my $cfact_regex = qr/
                       (
-                        A(n)?\s+[^.]+is[^.]+\.
-                       |\.\s+[^.]+shall[^.]+\.
-                       |If[^.]+\.
-                       |\.\s+[^.]+is\s+known[^.]+\.
-                       |\.\s+[^.]+is\s+called[^.]+\.
+                        \s+\S+\s+which\s+is.*?
+                       |\s+\S+\s+which\s+expand.*?
+                       |(?:\-\-\s+|\s+|<pre>\s*\d*\s*(EXAMPLE\s*|NOTE\s*)?)An?\s+[^.]+describes.*?
+                       |(?:\-\-\s+|\s+|<pre>\s*\d*\s*(EXAMPLE\s*|NOTE\s*))An?\s+[^.]+is.*?
+                       |(?:\-\-\s+|\s+|<pre>\s*\d*\s*)[^.]+shall.*?
+                       |(?:\-\-\s+|\s+|<pre>\s*\d*\s*)If.*?
+                       |(?:\-\-\s+|\s+|<pre>\s*\d*\s*)[^.]+is\s+named.*?
+                       |(?:\-\-\s+|\s+|<pre>\s*\d*\s*)[^.]+is\s+known.*?
+                       |(?:\-\-\s+|\s+|<pre>\s*\d*\s*)[^.]+are\s+known.*?
+                       |(?:\-\-\s+|\s+|<pre>\s*\d*\s*)[^.]+is\s+called.*?
+                       |(?:\-\-\s+|\s+|<pre>\s*\d*\s*)[^.]+are\s+called.*?
+                       |(?:\-\-\s+|\s+|<pre>\s*\d*\s*)When.*?
+                       |(?:\-\-\s+|\s+|<pre>\s*\d*\s*)The\s+\S+\s+function.*?
                       )
+                      (?:\.(?!(\d|h))|<\/pre>)
                     /msx;
 
 my @sections;
-while ($text =~ /^\s{4}([A-Z\d]+\.[0-9\.]* +.*?)\r\n/mg) {
-  unshift @sections, [pos $text, $1];
+while ($text =~ /^<h3>(.*?)<\/h3>/mg) {
+  my $section = $1;
+  $section =~ s/[\[\]]//g;
+  unshift @sections, [pos $text, $section];
 }
 
 while ($text =~ /$cfact_regex/gms) {
@@ -41,6 +54,11 @@ while ($text =~ /$cfact_regex/gms) {
   $fact =~ s/^\d+\s*//;
   $fact =~ s/- ([a-z])/-$1/g;
   $fact =~ s/\s+\././g;
+  $fact =~ s/^\s*<pre>\s*\d*\s*//;
+  $fact =~ s/^\s*EXAMPLE\s*//;
+  $fact =~ s/^\s*NOTE\s*//;
+  $fact =~ s/^\s+//;
+  $fact =~ s/\s+$//;
 
   my $section = '';
   foreach my $s (@sections) {
@@ -50,7 +68,8 @@ while ($text =~ /$cfact_regex/gms) {
     }
   }
 
-  next if length "$section$fact" > 400;
+  $fact = decode_entities($fact);
+  $fact =~ s/[a-z;,.]\K\d+\)//g; # remove footnote markers
 
-  print "$section$fact\n";
+  print "$section$fact.\n";
 }
