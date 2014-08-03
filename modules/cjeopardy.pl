@@ -15,6 +15,9 @@ my $TIMELIMIT = 300;
 my $channel = shift @ARGV;
 my $text = join(' ', @ARGV);
 
+sub encode { my $str = shift; $str =~ s/\\(.)/{sprintf "\\%03d", ord($1)}/ge; return $str; }
+sub decode { my $str = shift; $str =~ s/\\(\d{3})/{"\\" . chr($1)}/ge; return $str }
+
 if ($channel !~ /^#/) {
   print "Sorry, C Jeopardy must be played in a channel.\n";
   exit;
@@ -28,7 +31,8 @@ if (defined $ret) {
   
   if (scalar gettimeofday - $last_timestamp <= $TIMELIMIT) {
     my $duration = duration($TIMELIMIT - scalar gettimeofday - $last_timestamp);
-    print "The current question is: $last_question You may request a new question in $duration.\n";
+    print "The current question is: $last_question";
+    print "You may request a new question in $duration.\n";
     close $fh;
     exit;
   }
@@ -62,7 +66,8 @@ if (not length $text) {
 my @questions;
 open $fh, "<", $CJEOPARDY_FILE or die "Could not open $CJEOPARDY_FILE: $!";
 while (my $question = <$fh>) {
-  my ($question_only) = split /\|/, $question, 2;
+  my ($question_only) = map { decode $_ } split /\|/, encode($question), 2;
+  $question_only =~ s/\\\|/|/g;
   next if length $text and $question_only !~ /\Q$text\E/i;
   push @questions, $question;
 }
@@ -79,11 +84,13 @@ if (length $text) {
 
 my $question = $questions[$question_index];
 
-my ($q, $a) = split /\|/, $question, 2;
+my ($q, $a) = map { decode $_ } split /\|/, encode($question), 2;
 chomp $q;
 chomp $a;
 
+$q =~ s/\\\|/|/g;
 $q =~ s/^\[.*?\]\s+//;
+
 print "$q\n";
 
 open $fh, ">", "$CJEOPARDY_DATA-$channel" or die "Could not open $CJEOPARDY_DATA-$channel: $!";

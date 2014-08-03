@@ -27,12 +27,18 @@ open my $fh, "<", "$CJEOPARDY_DATA-$channel" or print "There is no open C Jeopar
 @data = <$fh>;
 close $fh;
 
-my @valid_answers = map { lc decode $_ } split /\|/, encode $data[1];
+my @valid_answers = map { decode $_ } split /\|/, encode $data[1];
 
 my ($hint, $length) = ('', 0);
 foreach my $answer (@valid_answers) {
   chomp $answer;
   $answer =~ s/\\\|/|/g;
+
+  my $supplemental_text;
+  if ($answer =~ s/\s*{(.*)}\s*$//) {
+    $supplemental_text = $1;
+  }
+
   if (length $answer > $length) {
     $length = length $answer;
     $hint = $answer;
@@ -47,11 +53,15 @@ if (defined $ret) {
   close $fh;
 }
 
+$last_timeout = 0 if not defined $last_timeout;
+
 my $duration = scalar gettimeofday - $last_timeout;
 if ($duration < $timeout) {
   $duration = duration($timeout - $duration);
-  print "Please wait $duration before requesting another hint.\n";
-  exit;
+  unless ($duration eq 'just now') {
+    print "Please wait $duration before requesting another hint.\n";
+    exit;
+  }
 }
 
 $hint_counter++;
@@ -63,11 +73,16 @@ close $fh;
 
 my $hidden_character_count = int length ($hint) * $hints[$hint_counter > $#hints ? $#hints : $hint_counter];
 my $spaces = () = $hint =~ / /g;
+my $dashes = () = $hint =~ /-/g;
+my $underscores = () = $hint =~ /_/g;
 
 my @indices;
-while (@indices <= $hidden_character_count) {
+while (@indices <= $hidden_character_count - $spaces - $dashes - $underscores) {
   my $index = int rand($length);
-  next if substr($hint, $index, 1) eq ' ';
+  my $char = substr($hint, $index, 1);
+  next if $char eq ' ';
+  next if $char eq '-';
+  next if $char eq '_';
   next if grep { $index eq $_ } @indices;
   push @indices, $index; 
 }

@@ -8,6 +8,8 @@ use Text::Levenshtein qw(fastdistance);
 my $CJEOPARDY_DATA = 'cjeopardy.dat';
 my $CJEOPARDY_HINT = 'cjeopardy.hint';
 
+my $hint_only_mode = 0;
+
 my $channel = shift @ARGV;
 my $text = join(' ', @ARGV);
 
@@ -19,15 +21,15 @@ if ($channel !~ /^#/) {
   exit;
 }
 
-$text = lc $text;
-$text =~ s/^\s*is\s*//;
-$text =~ s/^\s*are\s*//;
-$text =~ s/^(a|an)\s+//;
+$text =~ s/^\s*is\s*//i;
+$text =~ s/^\s*are\s*//i;
+$text =~ s/^(a|an)\s+//i;
 $text =~ s/\s*\?*$//;
 $text =~ s/^\s+//;
 $text =~ s/\s+$//;
+my $lctext = lc $text;
 
-if (not length $text) {
+if (not length $lctext) {
   print "What?\n";
   exit;
 }
@@ -43,14 +45,25 @@ foreach my $answer (@valid_answers) {
   chomp $answer;
   $answer =~ s/\\\|/|/g;
 
-  my $distance = fastdistance($text, lc $answer);
-  my $length = (length($text) > length($answer)) ? length $text : length $answer;
+  my $supplemental_text;
+  if ($answer =~ s/\s*{(.*)}\s*$//) {
+    $supplemental_text = $1;
+  }
+
+  my $distance = fastdistance($lctext, lc $answer);
+  my $length = (length($lctext) > length($answer)) ? length $lctext : length $answer;
 
   if ($distance / $length < 0.15) {
     if ($distance == 0) {
-      print "'$answer' is correct!\n";
+      print "'$answer' is correct!";
     } else {
-      print "'$text' is close enough to '$answer'. You are correct!\n"
+      print "'$text' is close enough to '$answer'. You are correct!"
+    }
+
+    if (defined $supplemental_text) {
+      print " $supplemental_text\n";
+    } else {
+      print "\n";
     }
 
     unlink "$CJEOPARDY_DATA-$channel";
@@ -58,7 +71,14 @@ foreach my $answer (@valid_answers) {
 
     if ($channel eq '#cjeopardy') {
       my $question = `./cjeopardy.pl $channel`;
-      print "Next question: $question\n";
+      
+      if ($hint_only_mode) {
+        my $hint = `./cjeopardy_hint.pl $channel`;
+        $hint =~ s/^Hint: //;
+        print "Next hint: $hint\n";
+      } else {
+        print "Next question: $question\n";
+      }
     }
     exit;
   }
