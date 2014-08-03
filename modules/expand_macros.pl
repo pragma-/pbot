@@ -286,7 +286,7 @@ open my $fh, ">prog.c" or die "Couldn't write prog.c: $!";
 print $fh $code;
 close $fh;
 
-my ($ret, $result) = execute(5, "gcc -E prog.c");
+my ($ret, $result) = execute(2, "bash -c \"ulimit -t 1; gcc -E prog.c\"");
 
 $result =~ s/.*# \d+ "prog.c"(\s+\d+)*//ms;
 $result =~ s/^#.*$//gm;
