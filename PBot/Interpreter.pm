@@ -147,11 +147,9 @@ sub handle_result {
   }
 
   my $original_result = $result;
-  $result =~ s/[\n\r]/ /g;
 
   if($preserve_whitespace == 0 && defined $command) {
     my ($cmd, $args) = split / /, $command, 2;
-    #$self->{pbot}->{logger}->log("calling find_factoid in Interpreter.pm, process_line() for preserve_whitespace\n");
     my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $cmd, $args, 0, 1);
     if(defined $trigger) {
       $preserve_whitespace = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};
@@ -159,35 +157,52 @@ sub handle_result {
     }
   }
 
-  $result =~ s/\s+/ /g unless $preserve_whitespace;
-  $result = $self->truncate_result($from, $nick, $text, $original_result, $result, 1);
-  $pbot->{logger}->log("Final result: [$result]\n");
+  my $preserve_newlines = $self->{pbot}->{registry}->get_value($from, 'preserve_newlines');
 
-  if($result =~ s/^\/say\s+//i) {
-    $pbot->{conn}->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
-  } elsif($result =~ s/^\/me\s+//i) {
-    $pbot->{conn}->me($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
-  } elsif($result =~ s/^\/msg\s+([^\s]+)\s+//i) {
-    my $to = $1;
-    if($to =~ /,/) {
-      $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$nick!$user\@$host] [$command] [$result]\n");
+  $result =~ s/[\n\r]/ /g unless $preserve_newlines;
+  $result =~ s/\s+/ /g unless $preserve_whitespace;
+
+  my $lines = 0;
+  foreach my $line (split /[\n\r]/, $result) {
+    if (++$lines >= 4) {
+      $pbot->{conn}->privmsg($from, "And that's all I have to say about that.");
+      last;
     }
-    elsif($to =~ /.*serv$/i) {
-      $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$nick!$user\@$host] [$command] [$result]\n");
-    }
-    elsif($result =~ s/^\/me\s+//i) {
-      $pbot->{conn}->me($to, $result) if $to !~ /\Q$mynick\E/i;
-      $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $result, 0, 0, 0) if $checkflood;
+
+    if ($preserve_newlines) {
+      $line = $self->truncate_result($from, $nick, $text, $line, $line, 1);
     } else {
-      $result =~ s/^\/say\s+//i;
-      $pbot->{conn}->privmsg($to, $result) if $to !~ /\Q$mynick\E/i;
-      $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
+      $line = $self->truncate_result($from, $nick, $text, $original_result, $line, 1);
     }
-  } else {
-    $pbot->{conn}->privmsg($from, $result) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $result, 0, 0, 0) if $checkflood;
+
+    $pbot->{logger}->log("Final result: [$line]\n");
+
+    if($line =~ s/^\/say\s+//i) {
+      $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
+      $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+    } elsif($line =~ s/^\/me\s+//i) {
+      $pbot->{conn}->me($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
+      $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
+    } elsif($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
+      my $to = $1;
+      if($to =~ /,/) {
+        $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$nick!$user\@$host] [$command] [$line]\n");
+      }
+      elsif($to =~ /.*serv$/i) {
+        $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$nick!$user\@$host] [$command] [$line]\n");
+      }
+      elsif($line =~ s/^\/me\s+//i) {
+        $pbot->{conn}->me($to, $line) if $to !~ /\Q$mynick\E/i;
+        $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
+      } else {
+        $line =~ s/^\/say\s+//i;
+        $pbot->{conn}->privmsg($to, $line) if $to !~ /\Q$mynick\E/i;
+        $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+      }
+    } else {
+      $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
+      $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+    }
   }
   $pbot->{logger}->log("---------------------------------------------\n");
 }
@@ -214,19 +229,6 @@ sub interpret {
     ($keyword, $arguments, $tonick) = ($2, $3, $1);
   } elsif($command =~ /^tell\s+(.{1,20})\s+about\s+(.*)$/i) {
     ($keyword, $tonick) = ($2, $1);
-  } elsif($command =~ /^([^ ]+)\s+is\s+also\s+(.*)$/i) {
-    ($keyword, $arguments) = ("change", "$1 s|\$| - $2|");
-  } elsif($command =~ /^([^ ]+)\s+is\s+(.*)$/i) {
-    my ($k, $a) = ($1, $2);
-
-    $self->{pbot}->{logger}->log("calling find_factoid in Interpreter.pm, interpret() for factadd\n");
-    my ($channel, $trigger) = $pbot->{factoids}->find_factoid($from, $k, $a, 1);
-    
-    if(defined $trigger) {
-      ($keyword, $arguments) = ($k, "is $a");
-    } else {
-      ($keyword, $arguments) = ("factadd", (defined $from ? $from : '.*' ) . " $k is $a");
-    }
   } elsif($command =~ /^(.*?)\s+(.*)$/) {
     ($keyword, $arguments) = ($1, $2);
   } else {
