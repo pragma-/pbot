@@ -43,7 +43,7 @@
 [5.1.2.2.1 Program startup] In this execution environment, the function called at program startup is named main.|hosted
 [5.1.2.2.1 Program startup] In a hosted execution environment, the function called at program startup is named this.|main
 [5.1.2.2.1 Program startup] The main function shall be defined with a return type of this.|int{It can also be defined in some other implementation-defined manner!}
-[5.1.2.2.1 Program startup] If they are declared, the parameters to the main function shall obey the following constraints: The value of argc shall be this; argv[argc] shall be a null pointer.|nonnegative|positive|>=0
+[5.1.2.2.1 Program startup] If they are declared, the parameters to the main function shall obey the following constraints: The value of argc shall be this; argv[argc] shall be a null pointer.|nonnegative|>=0
 [5.1.2.2.1 Program startup] If they are declared, the parameters to the main function shall obey the following constraints: The value of argc shall be nonnegative; argv[argc] shall be this.|null pointer
 [5.1.2.2.1 Program startup] If the value of argc is this, the array members argv[0] through argv[argc-1] inclusive shall contain pointers to strings, which are given implementation-defined values by the host environment prior to program startup.|greater than zero|greater than 0|>0
 [5.1.2.2.1 Program startup] If the host environment is not capable of supplying strings with letters in both uppercase and lowercase, the implementation shall ensure that the strings are received in this case.|lowercase|lower
@@ -153,10 +153,10 @@
 [5.2.4.2.1 Sizes of integer types <limits.h>] If the value of an object of type char is treated as an unsigned integer when used in an expression, the value of CHAR_MAX shall be the same as that of this macro.|UCHAR_MAX
 [5.2.4.2.2 Characteristics of floating types <float.h>] This is an encoding signifying Not-a-Number.|NaN
 [5.2.4.2.2 Characteristics of floating types <float.h>] A NaN is an encoding signifying this.|Not-a-Number
-[5.2.4.2.2 Characteristics of floating types <float.h>] A quiet NaN propagates through almost every arithmetic operation without raising this kind of exception.|floating-point
-[5.2.4.2.2 Characteristics of floating types <float.h>] A signaling NaN generally raises this kind of exception when occurring as an arithmetic operand.|floating-point
-[5.2.4.2.2 Characteristics of floating types <float.h>] This kind of NaN propagates through almost every arithmetic operation without raising a floating-point exception.|quiet
-[5.2.4.2.2 Characteristics of floating types <float.h>] This kind of NaN generally raises a floating-point exception when occurring as an arithmetic operand.|signaling
+[5.2.4.2.2 Characteristics of floating types <float.h>] A quiet NaN propagates through almost every arithmetic operation without raising this kind of exception.|floating-point|floating-point exception
+[5.2.4.2.2 Characteristics of floating types <float.h>] A signaling NaN generally raises this kind of exception when occurring as an arithmetic operand.|floating-point|floating-point exception
+[5.2.4.2.2 Characteristics of floating types <float.h>] This kind of NaN propagates through almost every arithmetic operation without raising a floating-point exception.|quiet|quiet NaN
+[5.2.4.2.2 Characteristics of floating types <float.h>] This kind of NaN generally raises a floating-point exception when occurring as an arithmetic operand.|signaling|signaling NaN
 [5.2.4.2.2 Characteristics of floating types <float.h>] Wherever floating-point values such as 0, infinity or NaN are unsigned, any requirement to retrieve the sign shall produce this sign.|unspecified
 [5.2.4.2.2 Characteristics of floating types <float.h>] Wherever floating-point values such as 0, infinity or NaN are unsigned, any requirement to set the sign shall be this.|ignored
 [5.2.4.2.2 Characteristics of floating types <float.h>] The rounding mode for floating-point addition is characterized by the implementation-defined value of this macro.|FLT_ROUNDS
@@ -208,7 +208,7 @@
 [5.2.4.2.2 Characteristics of floating types <float.h>] Regarding floating types, this macro represents the minimum positive floating-point number.|FLT_TRUE_MIN
 [5.2.4.2.2 Characteristics of floating types <float.h>] Regarding floating types, this macro represents the minimum positive double-precision floating-point number.|DBL_TRUE_MIN
 [5.2.4.2.2 Characteristics of floating types <float.h>] Regarding floating types, this macro represents the minimum positive long double-precision floating-point number.|LDBL_TRUE_MIN
-[5.2.4.2.2 Characteristics of floating types <float.h>] If the presence or absence of these numbers is indeterminable, then the value is intended to be a positive number no greater than the minimum normalized positive number for the type.|subnormal
+[5.2.4.2.2 Characteristics of floating types <float.h>] If the presence or absence of these numbers is indeterminable, then the value of the minimum positive floating-point number is intended to be a positive number no greater than the minimum normalized positive number for the type.|subnormal
 [5.2.4.2.2 Characteristics of floating types <float.h>] If a type wider than double were supported, then DECIMAL_DIG would be greater than this value.|17
 [5.2.4.2.2 Characteristics of floating types <float.h>] If a type wider than double were supported, then this macro would be greater than 17.|DECIMAL_DIG
 [6.2.1 Scopes of identifiers] A member of this is called an enumeration constant.|enumeration
@@ -229,7 +229,7 @@
 [6.2.2 Linkages of identifiers] If the declaration of an identifier for an object has file scope and no storage-class specifier, it has this linkage.|external
 [6.2.2 Linkages of identifiers] If the declaration of an identifier for an object has this scope and no storage-class specifier, its linkage is external.|file
 [6.2.2 Linkages of identifiers] If, within a translation unit, the same identifier appears with both internal and external linkage, the behavior is this.|undefined
-[6.2.3 Name spaces of identifiers] If more than one declaration of a particular identifier is visible at any point in a translation unit, this disambiguates uses that refer to different entities.|syntactic context
+[6.2.3 Name spaces of identifiers] If more than one declaration of a particular identifier is visible at any point in a translation unit, this context disambiguates uses that refer to different entities.|syntactic context|syntactic|syntax
 [6.2.4 Storage durations of objects] This exists, has a constant address, and retains its last-stored value throughout its lifetime.|object
 [6.2.4 Storage durations of objects] An object whose identifier is declared without the storage-class specifier _Thread_local, and either with external or internal linkage or with the storage-class specifier static, has this storage duration.|static
 [6.2.4 Storage durations of objects] An object whose identifier is declared with this storage-class specifier has thread storage duration.|_Thread_local
@@ -243,7 +243,7 @@
 [6.2.4 Storage durations of objects] If an initialization is specified for an object with automatic storage duration, it is performed each time the declaration or compound literal is reached in the execution of a block; otherwise, the value becomes this each time the declaration is reached.|indeterminate
 [6.2.5 Types] An object declared as this type is just large enough to store the values 0 and 1.|_Bool
 [6.2.5 Types] An object declared as this type is just large enough to store any member of the basic execution character set.|char
-[6.2.5 Types] If a member of the basic execution character set is stored in a char object, its value is guaranteed to be this.|nonnegative|positive
+[6.2.5 Types] If a member of the basic execution character set is stored in a char object, its value is guaranteed to be this.|nonnegative
 [6.2.5 Types] There are these many standard signed integer types.|5{They are designated as signed char, short int, int, long int, and long long int.}|five{They are designated as signed char, short int, int, long int, and long long int.}
 [6.2.5 Types] A computation involving unsigned operands can never do this.|overflow{This is because a result that cannot be represented by the resulting unsigned integer type is reduced modulo the number that is one greater than the largest value that can be represented by the resulting type.}
 [6.2.5 Types] The standard and extended signed integer types are collectively called this.|signed integer types
@@ -441,7 +441,7 @@
 [6.5.6 Additive operators] For addition, either both operands shall have this type, or one operand shall be a pointer to a complete object type and the other shall have integer type.|arithmetic
 [6.5.6 Additive operators] For addition, either both operands shall have arithmetic type, or one operand shall be a pointer to a complete object type and the other shall have this type.|integer
 [6.5.6 Additive operators] When an expression that has integer type is added to or subtracted from a pointer, the result has the type of this operand.|pointer
-[6.5.6 Additive operators] When this happens to two pointers, both shall point to elements of the same array object, or one past the last element of the array object; the result is the difference of the subscripts of the two array elements.|subtracted
+[6.5.6 Additive operators] When this happens to two pointers, both shall point to elements of the same array object, or one past the last element of the array object; the result is the difference of the subscripts of the two array elements.|subtracted|subtraction
 [6.5.7 Bitwise shift operators] Each of the operands for the bitwise shift operators shall have this kind type.|integer
 [6.5.7 Bitwise shift operators] If the value of the right operand of a bitwise shift operator is this or is greater than or equal to the width of the promoted left operand, the behavior is undefined.|negative
 [6.5.7 Bitwise shift operators] The result of E1 << E2 is E1 left-shifted E2 bit positions; vacated bits are filled with these.|zeros|zero|0
@@ -683,7 +683,7 @@
 [7.1.2 Standard headers] Any declaration of a library function shall have this linkage.|external
 [7.1.3 Reserved identifiers] All identifiers that begin with an underscore and either this or another underscore are always reserved for any use.|uppercase letter
 [7.1.4 Use of library functions] Implementations may share their own internal objects between threads if the objects are not visible to users and are protected against this.|data race|race condition|race hazard
-[7.2 Diagnostics <assert.h>] This macro is defined as a macro name at the point in the source file where <assert.h> is included, the assert macro is defined simply as #define assert(ignore) ((void)0).|NDEBUG
+[7.2 Diagnostics <assert.h>] If this macro is defined as a macro name at the point in the source file where <assert.h> is included, the assert macro is defined simply as #define assert(ignore) ((void)0).|NDEBUG
 [7.2.1.1 The assert macro] When it is executed, if expression is false, the assert macro writes information about the particular call that failed on this stream in an implementation-defined format.|standard error|error|stderr
 [7.2.1.1 The assert macro] When it is executed, if expression is false, the assert macro writes information about the particular call that failed. It then calls this function.|abort
 [7.3.2 Conventions] Values of complex arithmetic are not interpreted as degrees, but as this.|radians|radian
@@ -812,9 +812,9 @@
 [7.12.11.2 The nan functions] This function returns a quiet NaN, if available, with content indicated through its argument. If the implementation does not support quiet NaNs, the functions return zero.|nan
 [7.12.11.3 The nextafter functions] This function determines the next representable value, in the type of the function, after x in the direction of y, where x and y are first converted to the type of the function.|nextafter
 [7.12.11.4 The nexttoward functions] This function is equivalent to the nextafter function except that the second parameter has type long double and the function returns y converted to the type of the function if x equals y.|nexttoward
-[7.12.12.1 The fdim functions] This function determines the positive difference between their arguments.|fdim
-[7.12.12.2 The fmax functions] This function determines the maximum numeric value of their arguments|fmax
-[7.12.12.3 The fmin functions] This function determines the minimum numeric value of their arguments.|fmin
+[7.12.12.1 The fdim functions] This function determines the positive difference between its arguments.|fdim
+[7.12.12.2 The fmax functions] This function determines the maximum numeric value of its arguments|fmax
+[7.12.12.3 The fmin functions] This function determines the minimum numeric value of its arguments.|fmin
 [7.12.13.1 The fma functions] This function computes (x * y) + z, rounded as one ternary operation.|fma
 [7.13 Nonlocal jumps <setjmp.h>] This header defines the macro setjmp, and declares one function and one type, for bypassing the normal function call and return discipline.|setjmp.h
 [7.13 Nonlocal jumps <setjmp.h>] This type is an array type suitable for holding the information needed to restore a calling setjmp environment.|jmp_buf
@@ -831,7 +831,7 @@
 [7.14 Signal handling <signal.h>] This macro is a signal number denoting the receipt of an interactive attention signal.|SIGINT
 [7.14 Signal handling <signal.h>] This macro is a signal number denoting an invalid access to storage.|SIGSEGV
 [7.14 Signal handling <signal.h>] This macro is a signal number denoting a termination request sent to the program.|SIGTERM
-[7.14 Signal handling <signal.h>] The complete set of signals, their semantics, and their default handling is implementation-defined; all signal numbers shall be this kind value.|nonnegative|positive
+[7.14 Signal handling <signal.h>] The complete set of signals, their semantics, and their default handling is implementation-defined; all signal numbers shall be this kind value.|nonnegative
 [7.14.1.1 The signal function] If the value of the function passed to signal() is this, default handling for that signal will occur.|SIG_DFL
 [7.14.1.1 The signal function] If the value of the function passed to signal() is this, the signal will be ignored.|SIG_IGN
 [7.14.1.1 The signal function] An invocation of a function because of a signal, or (recursively) of any further functions called by that invocation (other than functions in the standard library), is called this.|signal handler
@@ -926,11 +926,11 @@
 [7.21.5.3 The fopen function] If fopen's mode string is this, the file is opened as a text file for reading.|"r"|r
 [7.21.5.3 The fopen function] If fopen's mode string is this, the file is created as a text file for writing and truncated to zero length if it already exists.|"w"|w
 [7.21.5.3 The fopen function] If fopen's mode string is this, the file is created as a text file for writing or an error is returned if it already exists.|"wx"|wx
-[7.21.5.3 The fopen function] If fopen's mode string is this, the file is opened for appending; that is, open or create text file for writing at end-of-file.|"a"|a
+[7.21.5.3 The fopen function] If fopen's mode string is this, the file is opened for appending; that is, opened or created as a text file for writing at end-of-file.|"a"|a
 [7.21.5.3 The fopen function] If fopen's mode string is this, the file is opened as binary file for reading|"rb"|rb
 [7.21.5.3 The fopen function] If fopen's mode string is this, the file is created as a binary file for writing and truncated to zero length if it already exists.|"wb"|wb
 [7.21.5.3 The fopen function] If fopen's mode string is this, the file is created as a binary file for writing or an error is returned if it already exists.|"wbx"|wbx
-[7.21.5.3 The fopen function] If fopen's mode string is this, the file is opened as a binary file for appending; that is, open or create binary file for writing at end-of-file.|"ab"|ab
+[7.21.5.3 The fopen function] If fopen's mode string is this, the file is opened as a binary file for appending; that is, opened or created as a binary file for writing at end-of-file.|"ab"|ab
 [7.21.5.3 The fopen function] If fopen's mode string is this, the file is opened as a text file for updating (reading and writing).|"r+"|r+
 [7.21.5.3 The fopen function] If fopen's mode string is this, the file is created as a text file for updating (reading and writing) and truncated to zero length if it already exists.|"w+"|w+
 [7.21.5.3 The fopen function] If fopen's mode string is this, the file is created as a text file for updating (reading and writing) or an error is returned if it already exists.|"w+x"|w+x
@@ -1085,11 +1085,11 @@
 [7.26.1 Introduction] This enumeration constant is passed to mtx_init to create a mutex object that supports neither timeout nor test and return.|mtx_plain
 [7.26.1 Introduction] This enumeration constant is passed to mtx_init to create a mutex object that supports recursive locking.|mtx_recursive
 [7.26.1 Introduction] This enumeration constant is passed to mtx_init to create a mutex object that supports timeout.|mtx_timed
-[7.26.1 Introduction] This enumeration constant is returned by a timed wait function to indicate that the time specified in the call was reached without acquiring the requested resource.|thrd_timedout
-[7.26.1 Introduction] This enumeration constant is returned by a function to indicate that the requested operation succeeded.|thrd_success
-[7.26.1 Introduction] This enumeration constant is returned by a function to indicate that the requested operation failed because a resource requested by a test and return function is already in use.|thrd_busy
-[7.26.1 Introduction] This enumeration constant is returned by a function to indicate that the requested operation failed.|thrd_error
-[7.26.1 Introduction] This enumeration constant is returned by a function to indicate that the requested operation failed because it was unable to allocate memory.|thrd_nomem
+[7.26.1 Introduction] This enumeration constant is returned by a timed wait threads.h function to indicate that the time specified in the call was reached without acquiring the requested resource.|thrd_timedout
+[7.26.1 Introduction] This enumeration constant is returned by a threads.h function to indicate that the requested operation succeeded.|thrd_success
+[7.26.1 Introduction] This enumeration constant is returned by a threads.h function to indicate that the requested operation failed because a resource requested by a test and return function is already in use.|thrd_busy
+[7.26.1 Introduction] This enumeration constant is returned by a threads.h function to indicate that the requested operation failed.|thrd_error
+[7.26.1 Introduction] This enumeration constant is returned by a threads.h function to indicate that the requested operation failed because it was unable to allocate memory.|thrd_nomem
 [7.26.2.1 The call_once function] This function uses the once_flag pointed to by flag to ensure that func is called exactly once, the first time the call_once function is called with that value of flag.|call_once
 [7.26.3.1 The cnd_broadcast function] This function unblocks all of the threads that are blocked on the condition variable pointed to by cond at the time of the call.|cnd_broadcast
 [7.26.3.1 The cnd_broadcast function] The cnd_broadcast function returns this value on success.|thrd_success
@@ -1126,7 +1126,7 @@
 [7.27.2.2 The difftime function] This function computes the difference between two calendar times: time1 -time0.|difftime
 [7.27.2.2 The difftime function] This function returns the difference of time expressed in seconds as a double.|difftime
 [7.27.2.3 The mktime function] This function converts the broken-down time, expressed as local time, in the structure pointed to by timeptr into a calendar time value with the same encoding as that of the values returned by the time function.|mktime
-[7.27.2.3 The mktime function] This value causes the mktime to attempt to determine whether Daylight Saving Time is in effect for the specified time.|negative
+[7.27.2.3 The mktime function] This value causes the mktime function to attempt to determine whether Daylight Saving Time is in effect for the specified time.|negative
 [7.27.2.3 The mktime function] The mktime function returns the specified calendar time encoded as a value of this type.|time_t
 [7.27.2.4 The time function] This function determines the current calendar time.|time
 [7.27.2.4 The time function] This function returns the implementation's best approximation to the current calendar time.|time
@@ -1192,7 +1192,7 @@
 [7.29.6.2.1 The mbsinit function] If the argument is not a null pointer, this function determines whether the referenced mbstate_t object describes an initial conversion state.|mbsinit
 [7.29.6.3.1 The mbrlen function] This function is equivalent to the call: mbrtowc(NULL, s, n, ps != NULL ? ps : &internal) where internal is the mbstate_t object for the mbrlen function, except that the expression designated by ps is evaluated only once.|mbrlen
 [7.29.6.3.2 The mbrtowc function] This function returns the first of the following that applies (given the current conversion state): 0 if the next n or fewer bytes complete the multibyte character that corresponds to the null wide character (which is the value stored).|mbrtowc
-[7.29.6.3.3 The wcrtomb function] This function returns the number of bytes stored in the array object (including any shift sequences).|wcrtomb
+[7.29.6.3.3 The wcrtomb function] This function converts the wide character wc to its multibyte representation (including any shift sequences).|wcrtomb
 [7.29.6.4.1 The mbsrtowcs function] This function converts a sequence of multibyte characters that begins in the conversion state described by the object pointed to by ps, from the array indirectly pointed to by src into a sequence of corresponding wide characters.|mbsrtowcs
 [7.29.6.4.2 The wcsrtombs function] This function converts a sequence of wide characters from the array indirectly pointed to by src into a sequence of corresponding multibyte characters that begins in the conversion state described by the object pointed to by ps.|wcsrtombs
 [7.30.1 Introduction] This type is a scalar type that can hold values which represent locale-specific character mappings.|wctrans_t
@@ -1254,38 +1254,38 @@
 [I. Common warnings] An example of this is when a statement with no apparent effect is encountered.|common warning
 [I. Common warnings] An example of this is when a constant expression is used as the controlling expression of a selection statement.|common warning
 [I. Common warnings] An example of this is when an incorrectly formed preprocessing group is encountered while skipping a preprocessing group.|common warning
-[J.1 Unspecified behavior] An example of this is when a fully expanded macro replacement list contains a function-like macro name as its last preprocessing token and the next preprocessing token from the source file is a (, and the fully expanded replacement of that macro ends with the name of the first macro and another (, whether that is considered a nested replacement.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is whether a call to the atexit function that does not happen before the exit function is called will succeed.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is whether a call to the at_quick_exit function that does not happen before the quick_exit function is called will succeed.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the manner and timing of static initialization.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the termination status returned to the hosted environment if the return type of main is not compatible with int.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the values of objects that are neither lock-free atomic objects nor of type volatile sig_atomic_t and the state of the floating-point environment, when the processing of the abstract machine is interrupted by receipt of a signal.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the behavior of the display device if a printing character is written when the active position is at the final position of a line.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the behavior of the display device if a backspace character is written when the active position is at the initial position of a line.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the behavior of the display device if a horizontal tab character is written when the active position is at or past the last defined horizontal tabulation position.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the behavior of the display device if a vertical tab character is written when the active position is at or past the last defined vertical tabulation position.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the value of padding bytes when storing values in structures or unions.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the values of bytes that correspond to union members other than the one last stored into.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the representation used when storing a value in an object that has more than one object representation for that value.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the values of any padding bits in integer representations.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is whether certain operators can generate negative zeros and whether a negative zero becomes a normal zero when stored in an object.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is whether two string literals result in distinct arrays.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the order in which subexpressions are evaluated and the order in which side effects take place, except as specified for the function-call (), &&, \|\|, ? :, and comma operators.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the order in which the function designator, arguments, and subexpressions within the arguments are evaluated in a function call.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the order of side effects among compound literal initialization list expressions.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the order in which the operands of an assignment operator are evaluated.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the alignment of the addressable storage unit allocated to hold a bit-field.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is whether a call to an inline function uses the inline definition or the external definition of the function.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the order in which any side effects occur among the initialization list expressions in an initializer.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the layout of storage for function parameters.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the order in which # and ## operations are evaluated during macro substitution.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the details of the value stored by the fgetpos function.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the details of the value returned by the ftell function for a text stream.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the order and contiguity of storage allocated by successive calls to the calloc, malloc, and realloc functions.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the amount of storage allocated by a successful call to the calloc, malloc, or realloc function when 0 bytes was requested.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is which of two elements that compare as equal is matched by the bsearch function.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the order of two elements that compare as equal in an array sorted by the qsort function.|unspecified behavior
-[J.1 Unspecified behavior] An example of this is the encoding of the calendar time returned by the time function.|unspecified behavior
+[J.1 Unspecified behavior] An example of this behavior is when a fully expanded macro replacement list contains a function-like macro name as its last preprocessing token and the next preprocessing token from the source file is a (, and the fully expanded replacement of that macro ends with the name of the first macro and another (, whether that is considered a nested replacement.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is whether a call to the atexit function that does not happen before the exit function is called will succeed.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is whether a call to the at_quick_exit function that does not happen before the quick_exit function is called will succeed.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the manner and timing of static initialization.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the termination status returned to the hosted environment if the return type of main is not compatible with int.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the values of objects that are neither lock-free atomic objects nor of type volatile sig_atomic_t and the state of the floating-point environment, when the processing of the abstract machine is interrupted by receipt of a signal.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the behavior of the display device if a printing character is written when the active position is at the final position of a line.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the behavior of the display device if a backspace character is written when the active position is at the initial position of a line.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the behavior of the display device if a horizontal tab character is written when the active position is at or past the last defined horizontal tabulation position.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the behavior of the display device if a vertical tab character is written when the active position is at or past the last defined vertical tabulation position.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the value of padding bytes when storing values in structures or unions.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the values of bytes that correspond to union members other than the one last stored into.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the representation used when storing a value in an object that has more than one object representation for that value.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the values of any padding bits in integer representations.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is whether certain operators can generate negative zeros and whether a negative zero becomes a normal zero when stored in an object.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is whether two string literals result in distinct arrays.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the order in which subexpressions are evaluated and the order in which side effects take place, except as specified for the function-call (), &&, \|\|, ? :, and comma operators.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the order in which the function designator, arguments, and subexpressions within the arguments are evaluated in a function call.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the order of side effects among compound literal initialization list expressions.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the order in which the operands of an assignment operator are evaluated.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the alignment of the addressable storage unit allocated to hold a bit-field.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is whether a call to an inline function uses the inline definition or the external definition of the function.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the order in which any side effects occur among the initialization list expressions in an initializer.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the layout of storage for function parameters.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the order in which # and ## operations are evaluated during macro substitution.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the details of the value stored by the fgetpos function.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the details of the value returned by the ftell function for a text stream.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the order and contiguity of storage allocated by successive calls to the calloc, malloc, and realloc functions.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the amount of storage allocated by a successful call to the calloc, malloc, or realloc function when 0 bytes was requested.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is which of two elements that compare as equal is matched by the bsearch function.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the order of two elements that compare as equal in an array sorted by the qsort function.|unspecified behavior|unspecified
+[J.1 Unspecified behavior] An example of this behavior is the encoding of the calendar time returned by the time function.|unspecified behavior|unspecified
 [J.2 Undefined behavior] An example of this is when a nonempty source file does not end in a new-line character which is not immediately preceded by a backslash character or ends in a partial preprocessing token or comment.|undefined behavior
 [J.2 Undefined behavior] An example of this is when an object is referred to outside of its lifetime.|undefined behavior
 [J.2 Undefined behavior] An example of this is when a pointer is converted to other than an integer or pointer type.|undefined behavior
@@ -1302,27 +1302,27 @@
 [J.2 Undefined behavior] An example of this is when a complex argument is supplied for a generic parameter of a type-generic macro that has no corresponding complex function.|undefined behavior
 [J.3 Implementation-defined behavior] A conforming implementation is required to do this for its choice of behavior for implementation-defined behavior.|document
 [J.3 Implementation-defined behavior] A conforming implementation is required to document its choice of behavior for this kind of behavior.|implementation-defined
-[J.3 Implementation-defined behavior] An example of this is the result of converting a pointer to an integer or vice versa.|implementation-defined behavior
-[J.3 Implementation-defined behavior] An example of this is the size of the result of subtracting two pointers to elements of the same array.|implementation-defined behavior
-[J.3 Implementation-defined behavior] An example of this is the extent to which suggestions made by using the register storage-class specifier are effective.|implementation-defined behavior
-[J.3 Implementation-defined behavior] An example of this is the extent to which suggestions made by using the inline function specifier are effective.|implementation-defined behavior
-[J.3 Implementation-defined behavior] An example of this is what constitutes an access to an object that has volatile-qualified type.|implementation-defined behavior
-[J.3 Implementation-defined behavior] An example of this is whether the calloc, malloc, and realloc functions return a null pointer or a pointer to an allocated object when the size requested is zero.|implementation-defined behavior
-[J.3 Implementation-defined behavior] An example of this is whether or not the strtod, strtof, strtold, wcstod, wcstof, or wcstold function sets errno to ERANGE when underflow occurs.|implementation-defined behavior
-[J.3 Implementation-defined behavior] An example of this is the value to which the macro errno is set by the fgetpos, fsetpos, or ftell functions on failure.|implementation-defined behavior
-[J.3 Implementation-defined behavior] An example of this is the number of bits in a byte.|implementation-defined behavior
-[J.3.12 Library functions] An example of this is whether open streams with unwritten buffered data are flushed, open streams are closed, or temporary files are removed when the abort or _Exit function is called.|implementation-defined behavior
-[J.4 Locale-specific behavior] An example of this is the presence, meaning, and representation of additional multibyte characters in the execution character set beyond the basic character set.|locale-specific behavior
-[J.4 Locale-specific behavior] An example of this is the direction of writing of successive printing characters.|locale-specific behavior
-[J.4 Locale-specific behavior] An example of this is the decimal-point character.|locale-specific behavior
-[J.4 Locale-specific behavior] An example of this is the sets of characters tested for by the isalpha, isblank, islower, ispunct, isspace, isupper, iswalpha, iswblank, iswlower, iswpunct, iswspace, or iswupper functions.|locale-specific behavior
-[J.4 Locale-specific behavior] An example of this is additional subject sequences accepted by the numeric conversion functions.|locale-specific behavior
-[J.4 Locale-specific behavior] An example of this is the collation sequence of the execution character set.|locale-specific behavior
-[J.4 Locale-specific behavior] An example of this is the formats for time and date.|locale-specific behavior
-[J.5.5 Writable string literals] An example of this is modifiable/writable string-literals being allowed.|common-extension
-[J.5.6 Other arithmetic types] An example of this is defining additional arithmetic types such as __int128 or double double.|common-extension
-[J.5.7 Function pointer casts] An example of this is casting a pointer to an object or to void to a pointer to a function, allowing data to be invoked as a function.|common-extension
-[J.5.7 Function pointer casts] An example of this is casting a pointer to a function to a pointer to an object or to void, allowing a function to be inspected or modified (for example, by a debugger).|common-extension
+[J.3 Implementation-defined behavior] An example of this behavior is the result of converting a pointer to an integer or vice versa.|implementation-defined behavior|implementation-defined
+[J.3 Implementation-defined behavior] An example of this behavior is the size of the result of subtracting two pointers to elements of the same array.|implementation-defined behavior|implementation-defined
+[J.3 Implementation-defined behavior] An example of this behavior is the extent to which suggestions made by using the register storage-class specifier are effective.|implementation-defined behavior|implementation-defined
+[J.3 Implementation-defined behavior] An example of this behavior is the extent to which suggestions made by using the inline function specifier are effective.|implementation-defined behavior|implementation-defined
+[J.3 Implementation-defined behavior] An example of this behavior is what constitutes an access to an object that has volatile-qualified type.|implementation-defined behavior|implementation-defined
+[J.3 Implementation-defined behavior] An example of this behavior is whether the calloc, malloc, and realloc functions return a null pointer or a pointer to an allocated object when the size requested is zero.|implementation-defined behavior|implementation-defined
+[J.3 Implementation-defined behavior] An example of this behavior is whether or not the strtod, strtof, strtold, wcstod, wcstof, or wcstold function sets errno to ERANGE when underflow occurs.|implementation-defined behavior|implementation-defined
+[J.3 Implementation-defined behavior] An example of this behavior is the value to which the macro errno is set by the fgetpos, fsetpos, or ftell functions on failure.|implementation-defined behavior|implementation-defined
+[J.3 Implementation-defined behavior] An example of this behavior is the number of bits in a byte.|implementation-defined behavior|implementation-defined
+[J.3.12 Library functions] An example of this behavior is whether open streams with unwritten buffered data are flushed, open streams are closed, or temporary files are removed when the abort or _Exit function is called.|implementation-defined behavior|implementation-defined
+[J.4 Locale-specific behavior] An example of this behavior is the presence, meaning, and representation of additional multibyte characters in the execution character set beyond the basic character set.|locale-specific behavior|locale-specific
+[J.4 Locale-specific behavior] An example of this behavior is the direction of writing of successive printing characters.|locale-specific behavior|locale-specific
+[J.4 Locale-specific behavior] An example of this behavior is the decimal-point character.|locale-specific behavior|locale-specific
+[J.4 Locale-specific behavior] An example of this behavior is the sets of characters tested for by the isalpha, isblank, islower, ispunct, isspace, isupper, iswalpha, iswblank, iswlower, iswpunct, iswspace, or iswupper functions.|locale-specific behavior|locale-specific
+[J.4 Locale-specific behavior] An example of this behavior is additional subject sequences accepted by the numeric conversion functions.|locale-specific behavior|locale-specific
+[J.4 Locale-specific behavior] An example of this behavior is the collation sequence of the execution character set.|locale-specific behavior|locale-specific
+[J.4 Locale-specific behavior] An example of this behavior is the formats for time and date.|locale-specific behavior|locale-specific
+[J.5.5 Writable string literals] An example of this is modifiable/writable string-literals being allowed.|common-extension|extension
+[J.5.6 Other arithmetic types] An example of this is defining additional arithmetic types such as __int128 or double double.|common-extension|extension
+[J.5.7 Function pointer casts] An example of this is casting a pointer to an object or to void to a pointer to a function, allowing data to be invoked as a function.|common-extension|extension
+[J.5.7 Function pointer casts] An example of this is casting a pointer to a function to a pointer to an object or to void, allowing a function to be inspected or modified (for example, by a debugger).|common-extension|extension
 [J.5.10 The asm keyword] This keyword may be used to insert assembly language directly into the translator output.|asm{This is a common-extension and not a standard requirement.}
 [J.5.9 The fortran keyword] This function specifier may be used in a function declaration to indicate that calls suitable for FORTRAN should be generated, or that a different representation for the external name is to be generated.|fortran{This is a common-extension, not a standard requirement.}
 [J.5.13 Floating-point status flags] If any floating-point status flags are set on normal termination after all calls to functions registered by the this function have been made, the implementation writes some diagnostics indicating the fact to the stderr stream, if it is still open.|atexit
