@@ -21,8 +21,8 @@ if ($channel !~ /^#/) {
   exit;
 }
 
-$text =~ s/^\s*is\s*//i;
-$text =~ s/^\s*are\s*//i;
+$text =~ s/^\s*is\s+//i;
+$text =~ s/^\s*are\s+//i;
 $text =~ s/^(a|an)\s+//i;
 $text =~ s/\s*\?*$//;
 $text =~ s/^\s+//;
