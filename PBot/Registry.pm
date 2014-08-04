@@ -78,7 +78,7 @@ sub add {
   $self->{registry}->hash->{$section}->{$item}->{type}  = $type;
 
   $self->process_trigger($section, $item, $value) unless $is_default;
-  $self->save_registry unless $is_default;
+  $self->save unless $is_default;
 }
 
 sub remove {
@@ -93,7 +93,7 @@ sub remove {
     delete $self->{registry}->hash->{$section};
   }
 
-  $self->save_registry;
+  $self->save;
 }
 
 sub set {
