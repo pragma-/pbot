@@ -162,12 +162,14 @@ sub handle_result {
   $result =~ s/[\n\r]/ /g unless $preserve_newlines;
   $result =~ s/[ \t]+/ /g unless $preserve_whitespace;
 
+  my $max_lines = $self->{pbot}->{registry}->get_value($from, 'max_newlines');
+  $max_lines = 4 if not defined $max_lines;
   my $lines = 0;
+
   foreach my $line (split /[\n\r]/, $result) {
-    if (++$lines >= 4) {
+    if (++$lines >= $max_lines) {
       my $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
-      $line = "And that's all I have to say about that. See $link for full text.";
-      $pbot->{conn}->privmsg($from, $line);
+      $pbot->{conn}->privmsg($from, "And that's all I have to say about that. See $link for full text.");
       last;
     }
 
