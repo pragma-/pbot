@@ -800,7 +800,7 @@ declaration:
                     $item{declaration_specifiers} = '';
                   }
 
-                  if (@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
+                  if (@identifiers == 1 and $first_qualifier !~ /^(an|a)\s+/) {
                     $return .= $first_qualifier =~ m/^[aeiou]/ ? 'an ' : 'a ';
                   } elsif (@identifiers > 1 and not $typedef) {
                     $first_qualifier =~ s/pointer/pointers/;
@@ -809,7 +809,7 @@ declaration:
                   $return .= "$first_qualifier";
                   $return .= " $item{declaration_specifiers}" if $item{declaration_specifiers};
                 } else {
-                  if (@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
+                  if (@identifiers == 1 and $item{declaration_specifiers} !~ /^(an|a)\s+/) {
                     $return .= $item{declaration_specifiers} =~ m/^[aeiou]/ ? 'an ' : 'a ';
                   }
                   $return .= $item{declaration_specifiers};
@@ -839,7 +839,7 @@ declaration:
                     $first_qualifier =~ s/ returning$//;
                   }
 
-                  if (@identifiers == 1 and $first_qualifier !~ /^(a|an)\s+/) {
+                  if (@identifiers == 1 and $first_qualifier !~ /^(an|a)\s+/) {
                     $return .= $first_qualifier =~ m/^[aeiou]/ ? 'an ' : 'a ';
                   } elsif (@identifiers > 1 and not $typedef) {
                     $first_qualifier =~ s/pointer/pointers/;
@@ -848,7 +848,7 @@ declaration:
                   $return .= "$first_qualifier ";
                   $return .= $item{declaration_specifiers};
                 } else {
-                  if (@identifiers == 1 and $item{declaration_specifiers} !~ /^(a|an)\s+/) {
+                  if (@identifiers == 1 and $item{declaration_specifiers} !~ /^(an|a)\s+/) {
                     $return .= $item{declaration_specifiers} =~ m/^[aeiou]/ ? 'an ' : 'a ';
                   }
                   $return .= $item{declaration_specifiers};
@@ -1731,7 +1731,7 @@ struct_or_union_specifier:
           }
     | struct_or_union identifier
           {
-            $item{struct_or_union} =~ s/^(a|an)//;
+            $item{struct_or_union} =~ s/^(an|a)\s+//;
             $return = $item{identifier} =~ m/^`[aeiou]/ ? 'an' : 'a';
             $return .= " $item{identifier} $item{struct_or_union}";
           }
