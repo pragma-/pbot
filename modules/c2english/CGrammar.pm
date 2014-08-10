@@ -628,6 +628,7 @@ logical_OR_AND_expression:
                 and $expression =~ / /
                 and $expression !~ /^the .*? number \S+$/i
                 and $expression !~ /the size of/i
+                and $expression !~ /the offset/i
                 and $expression !~ /^the result of the/) {
               $return = 'the result of the expression ^L';
             }
@@ -1037,6 +1038,10 @@ unary_expression:
           }
     | Alignof '(' type_name ')'
           { $return = "the alignment of the type $item{type_name}"; }
+    | 'offsetof' '(' type_name[context => 'offsetof'] ',' identifier ')'
+          {
+            $return = "the offset, in bytes, of member $item{identifier} from the beginning of $item{type_name}";
+          }
 
 Alignof:
       '_Alignof'
@@ -1925,5 +1930,5 @@ reserved:
     /(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto
        |if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef
        |union|unsigned|void|volatile|while|_Alignas|alignas|_Alignof|alignof|_Atomic|_Bool|_Complex|_Generic
-       |_Imaginary|_Noreturn|noreturn|_Static_assert|static_assert|_Thread_local)\b/x
+       |_Imaginary|_Noreturn|noreturn|_Static_assert|static_assert|_Thread_local|offsetof)\b/x
 
