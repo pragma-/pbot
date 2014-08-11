@@ -166,7 +166,13 @@ sub handle_result {
   $max_lines = 4 if not defined $max_lines;
   my $lines = 0;
 
-  foreach my $line (split /[\n\r]/, $result) {
+  my $stripped_line;
+  foreach my $line (split /[\n\r]+/, $result) {
+    $stripped_line = $line;
+    $stripped_line =~ s/^\s+//;
+    $stripped_line =~ s/\s+$//;
+    next if not length $stripped_line;
+
     if (++$lines >= $max_lines) {
       my $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
       $pbot->{conn}->privmsg($from, "And that's all I have to say about that. See $link for full text.");
