@@ -87,7 +87,7 @@ sub list_also_known_as {
 
   my @akas = $self->{database}->get_also_known_as(@$args[0]);
   if(@akas) {
-    my $result = "@$args[0] also known as: ";
+    my $result = "@$args[0] also known as:\n";
 
     my %uniq;
     foreach my $aka (@akas) {
