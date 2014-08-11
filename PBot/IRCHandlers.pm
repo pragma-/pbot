@@ -10,6 +10,7 @@ use strict;
 
 use Carp();
 use Time::HiRes qw(gettimeofday);
+use Data::Dumper;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -32,8 +33,14 @@ sub initialize {
   $self->{pbot} = $pbot;
 }
 
-# IRC related subroutines
-#################################################
+sub default_handler {
+  my ($self, $conn, $event) = @_;
+
+  if ($self->{pbot}->{registry}->get_value('irc', 'log_default_handler')) {
+    my $dump = Dumper $event;
+    $self->{pbot}->{logger}->log($dump);
+  }
+}
 
 sub on_connect {
   my ($self, $conn) = @_;
@@ -56,6 +63,16 @@ sub on_init {
   my (@args) = ($event->args);
   shift (@args);
   $self->{pbot}->{logger}->log("*** @args\n");
+}
+
+sub on_motd {
+  my ($self, $conn, $event) = @_;
+
+  if ($self->{pbot}->{registry}->get_value('irc', 'show_motd')) {
+    my $server = $event->{from};
+    my $msg    = $event->{args}[1];
+    $self->{pbot}->{logger}->log("MOTD from $server :: $msg\n");
+  }
 }
 
 sub on_public {
@@ -145,6 +162,7 @@ sub on_mode {
       if($mode eq "+o") {
         $self->{pbot}->{logger}->log("$nick opped me in $channel\n");
         $self->{pbot}->{chanops}->{is_opped}->{$channel}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('general', 'deop_timeout');;
+        delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
         $self->{pbot}->{chanops}->perform_op_commands($channel);
       } 
       elsif($mode eq "-o") {
@@ -159,8 +177,10 @@ sub on_mode {
     else {  # bot not targeted
       if($mode eq "+b") {
         if($nick eq "ChanServ") {
-          $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout');
-          $self->{pbot}->{chanops}->{unban_timeout}->save;
+          if (exists $self->{pbot}->{channels}->{channels}->hash->{$channel} and $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop}) {
+            $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout');
+            $self->{pbot}->{chanops}->{unban_timeout}->save;
+          }
         }
       } 
       elsif($mode eq "+e" && $channel eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {

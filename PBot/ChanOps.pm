@@ -37,6 +37,7 @@ sub initialize {
 
   $self->{op_commands} = {};
   $self->{is_opped} = {};
+  $self->{op_requested} = {};
 
   $self->{commands} = PBot::ChanOpCommands->new(pbot => $self->{pbot});
 
@@ -50,9 +51,12 @@ sub gain_ops {
   my $self = shift;
   my $channel = shift;
   
+  return if exists $self->{op_requested}->{$channel};
+  return if not exists $self->{pbot}->{channels}->{channels}->hash->{$channel} or not $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop};
+
   if(not exists $self->{is_opped}->{$channel}) {
     $self->{pbot}->{conn}->privmsg("chanserv", "op $channel");
-    $self->{is_opped}->{$channel}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('general', 'deop_timeout'); # assume we're going to be opped
+    $self->{op_requested}->{$channel} = scalar gettimeofday;
   } else {
     $self->perform_op_commands($channel);
   }
@@ -78,7 +82,7 @@ sub perform_op_commands {
   while(my $command = shift @{ $self->{op_commands}->{$channel} }) {
     if($command =~ /^mode (.*?) (.*)/i) {
       $self->{pbot}->{conn}->mode($1, $2);
-      $self->{pbot}->{logger}->log("  executing mode $1 $2\n");
+      $self->{pbot}->{logger}->log("  executing mode [$1] [$2]\n");
     } elsif($command =~ /^kick (.*?) (.*?) (.*)/i) {
       $self->{pbot}->{conn}->kick($1, $2, $3) unless $1 =~ /\Q$botnick\E/i;
       $self->{pbot}->{logger}->log("  executing kick on $1 $2 $3\n");
@@ -143,6 +147,14 @@ sub check_opped_timeouts {
     } else {
       # my $timediff = $self->{is_opped}->{$channel}{timeout} - $now;
       # $self->{pbot}->{logger}->log("deop $channel in $timediff seconds\n");
+    }
+  }
+
+  foreach my $channel (keys %{ $self->{op_requested} }) {
+    if ($now - $self->{op_requested}->{$channel} > 60 * 5) {
+      $self->{pbot}->{logger}->log("5 minutes since OP request for $channel and no OP yet; trying again ...\n");
+      delete $self->{op_requested}->{$channel};
+      $self->gain_ops($channel);
     }
   }
 }

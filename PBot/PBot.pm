@@ -78,6 +78,7 @@ sub initialize {
   $self->{registry}->add_default('text', 'general', 'trigger',     delete $conf{trigger}     // '!');
 
   $self->{registry}->add_default('text', 'irc',     'debug',       delete $conf{irc_debug}   // 0);
+  $self->{registry}->add_default('text', 'irc',     'show_motd',   delete $conf{show_motd}   // 1);
   $self->{registry}->add_default('text', 'irc',     'max_msg_len', delete $conf{max_msg_len} // 425);
   $self->{registry}->add_default('text', 'irc',     'ircserver',   delete $conf{ircserver}   // "irc.freenode.net");
   $self->{registry}->add_default('text', 'irc',     'port',        delete $conf{port}        // 6667);
@@ -88,6 +89,7 @@ sub initialize {
   $self->{registry}->add_default('text', 'irc',     'username',    delete $conf{username}    // "pbot3");
   $self->{registry}->add_default('text', 'irc',     'ircname',     delete $conf{ircname}     // "http://code.google.com/p/pbot2-pl/");
   $self->{registry}->add_default('text', 'irc',     'identify_password', delete $conf{identify_password} // 'none');
+  $self->{registry}->add_default('text', 'irc',     'log_default_handler', 1);
   
   $self->{registry}->set('irc', 'SSL_ca_file',       'private', 1);
   $self->{registry}->set('irc', 'SSL_ca_path',       'private', 1);
@@ -167,10 +169,13 @@ sub connect {
 
   $self->{connected} = 1;
 
-  #set up default handlers for the IRC engine
+  #set up handlers for the IRC engine
+  $self->{conn}->add_default_handler(sub { $self->{irchandlers}->default_handler(@_) }, 1);
+
   $self->{conn}->add_handler([ 251,252,253,254,302,255 ], sub { $self->{irchandlers}->on_init(@_)         });
   $self->{conn}->add_handler(376                        , sub { $self->{irchandlers}->on_connect(@_)      });
   $self->{conn}->add_handler('disconnect'               , sub { $self->{irchandlers}->on_disconnect(@_)   });
+  $self->{conn}->add_handler('motd'                     , sub { $self->{irchandlers}->on_motd(@_)         });
   $self->{conn}->add_handler('notice'                   , sub { $self->{irchandlers}->on_notice(@_)       });
   $self->{conn}->add_handler('caction'                  , sub { $self->{irchandlers}->on_action(@_)       });
   $self->{conn}->add_handler('public'                   , sub { $self->{irchandlers}->on_public(@_)       });
@@ -188,6 +193,17 @@ sub connect {
   $self->{conn}->add_handler(728                        , sub { $self->{bantracker}->on_quietlist_entry(@_) });
   $self->{conn}->add_handler('bannickchange'            , sub { $self->{irchandlers}->on_bannickchange(@_) });
   $self->{conn}->add_handler('notregistered'            , sub { $self->{irchandlers}->on_notregistered(@_) });
+
+  # ignore these events
+  $self->{conn}->add_handler(['whoisuser', 
+                              'whoisserver', 
+                              'whoiscountry', 
+                              'whoischannels',
+                              'whoisidle',
+                              'endofwhois', 
+                              'motdstart',
+                              'away',
+                              'endofbanlist'], sub {});
 }
 
 #main loop
