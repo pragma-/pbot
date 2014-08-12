@@ -645,14 +645,17 @@ sub get_channel_datas_with_enter_abuses {
 }
 
 sub devalidate_all_channels {
-  my ($self, $id) = @_;
+  my ($self, $id, $mode) = @_;
+
+  $mode = 0 if not defined $mode;
 
   my $where = '';
   $where = 'WHERE id = ?' if defined $id;
 
   eval {
-    my $sth = $self->{dbh}->prepare("UPDATE Channels SET validated = 0 $where");
-    $sth->bind_param(1, $id) if defined $id;
+    my $sth = $self->{dbh}->prepare("UPDATE Channels SET validated = ? $where");
+    $sth->bind_param(1, $mode);
+    $sth->bind_param(2, $id) if defined $id;
     $sth->execute();
     $self->{new_entries}++;
   };

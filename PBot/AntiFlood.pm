@@ -190,6 +190,10 @@ sub check_flood {
     if($newnick =~ m/^Guest\d+$/) {
       # Don't enforce for services-mandated change to guest account
     } else {
+      $mask = "$newnick!$user\@$host";
+      $account = $self->{pbot}->{messagehistory}->get_message_account($newnick, $user, $host);
+      $nick = $newnick;
+
       $self->{nickflood}->{$account}->{changes}++;
     }
   } else {
@@ -252,7 +256,9 @@ sub check_flood {
   # check for ban evasion if channel begins with # (not private message) and hasn't yet been validated against ban evasion
   if($channel =~ m/^#/ and not $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'validated')->{'validated'} & $self->{NICKSERV_VALIDATED}) {
     if($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
-      # don't check for evasion on PART/KICK
+      # don't check for evasion on PART/KICK 
+    } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+      $self->{pbot}->{conn}->whois($nick);
     } else {
       $self->{pbot}->{conn}->whois($nick);
       $self->check_bans($account, $mask, $channel);
@@ -703,6 +709,7 @@ sub check_nickserv_accounts {
   $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($message_account);
   my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($message_account);
   foreach my $channel (@channels) {
+    next unless $channel =~ /^#/;
     my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
     if($force_validation or $channel_data->{validated} & $self->{NEEDS_CHECKBAN}) {
       $self->{pbot}->{logger}->log("anti-flood: [check-account] $nick [nickserv: $account] needs check-ban validation for $hostmask in $channel.\n");
@@ -751,7 +758,7 @@ sub adjust_offenses {
   }
 
   foreach my $account (keys %{ $self->{nickflood} }) {
-    if($self->{nickflood}->{$account}->{offenses} and gettimeofday - $self->{nickflood}->{$account}->{timestamp} >= 60 * 60 * 24) {
+    if($self->{nickflood}->{$account}->{offenses} and gettimeofday - $self->{nickflood}->{$account}->{timestamp} >= 60 * 60 * 48) {
       $self->{nickflood}->{$account}->{offenses}--;
 
       if($self->{nickflood}->{$account}->{offenses} == 0) {
