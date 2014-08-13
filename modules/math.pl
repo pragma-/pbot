@@ -17,6 +17,10 @@ if ($#ARGV < 0)
 }
 
 $arguments = join(' ', @ARGV);
+my $orig_arguments = $arguments;
+
+$arguments =~ s/answer.*question of life(,? the universe and everything)?\s?/42/gi;
+$arguments =~ s/meaning of (life|existence|everything)?/42/gi;
 
 if($arguments =~ m/([\$`\|{}"'#@=])/) {
   $invalid = $1;
@@ -45,4 +49,4 @@ if($@) {
   exit 1;
 }
 
-print "$arguments = $response\n";
+print "$orig_arguments = $response\n";
