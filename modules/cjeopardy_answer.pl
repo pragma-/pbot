@@ -20,7 +20,7 @@ sub encode { my $str = shift; $str =~ s/\\(.)/{sprintf "\\%03d", ord($1)}/ge; re
 sub decode { my $str = shift; $str =~ s/\\(\d{3})/{"\\" . chr($1)}/ge; return $str }
 
 if ($channel !~ /^#/) {
-  print "Sorry, C Jeopardy must be played in a channel.\n";
+  print "Sorry, C Jeopardy must be played in a channel. Feel free to join #cjeopardy.\n";
   exit;
 }
 
@@ -105,6 +105,8 @@ if (not @data) {
 
 my @valid_answers = map { decode $_ } split /\|/, encode $data[1];
 
+my $incorrect_percentage = 100;
+
 foreach my $answer (@valid_answers) {
   chomp $answer;
   $answer =~ s/\\\|/|/g;
@@ -117,7 +119,13 @@ foreach my $answer (@valid_answers) {
   my $distance = fastdistance($lctext, lc $answer);
   my $length = (length($lctext) > length($answer)) ? length $lctext : length $answer;
 
-  if ($distance / $length < 0.15) {
+  my $percentage = $distance / $length * 100;
+
+  if ($percentage < $incorrect_percentage) {
+    $incorrect_percentage = $percentage; 
+  }
+
+  if ($percentage < 15) {
     if ($distance == 0) {
       print "'$answer' is correct!";
     } else {
@@ -153,4 +161,13 @@ foreach my $answer (@valid_answers) {
   }
 }
 
-print "Sorry, '$text' is incorrect.\n";
+my $correct_percentage = 100 - $incorrect_percentage;
+if ($correct_percentage >= 80) {
+  printf "Sorry, '$text' is %.1f%% correct. So close!\n", $correct_percentage;
+} elsif ($correct_percentage >= 70) {
+  printf "Sorry, '$text' is %.1f%% correct. Almost.\n", $correct_percentage;
+} elsif ($correct_percentage >= 50) {
+  printf "Sorry, '$text' is only %.1f%% correct.\n", $correct_percentage;
+} else {
+  print "Sorry, '$text' is incorrect.\n";
+}

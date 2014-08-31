@@ -18,7 +18,7 @@ sub encode { my $str = shift; $str =~ s/\\(.)/{sprintf "\\%03d", ord($1)}/ge; re
 sub decode { my $str = shift; $str =~ s/\\(\d{3})/{"\\" . chr($1)}/ge; return $str }
 
 if ($channel !~ /^#/) {
-  print "Sorry, C Jeopardy must be played in a channel.\n";
+  print "Sorry, C Jeopardy must be played in a channel. Feel free to join #cjeopardy.\n";
   exit;
 }
 
@@ -88,7 +88,7 @@ while (@indices <= $hidden_character_count - $spaces - $dashes - $underscores) {
 }
 
 foreach my $index (@indices) {
-  substr $hint, $index, 1, '?';
+  substr $hint, $index, 1, '.';
 }
 
 print "Hint: $hint\n";
