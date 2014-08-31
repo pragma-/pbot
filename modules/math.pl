@@ -22,7 +22,7 @@ my $orig_arguments = $arguments;
 $arguments =~ s/answer.*question of life(,? the universe and everything)?\s?/42/gi;
 $arguments =~ s/meaning of (life|existence|everything)?/42/gi;
 
-if($arguments =~ m/([\$`\|{}"'#@=])/) {
+if($arguments =~ m/([\$`\|{}"'#@=?\[\]])/ or $arguments =~ m/(~~)/) {
   $invalid = $1;
 } else {
   while($arguments =~ /([a-zA-Z0-9]+)/g) {
