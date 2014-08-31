@@ -71,7 +71,7 @@
 [5.1.2.4 Multi-threaded executions and data races] This kind of operation on one or more memory locations is either an acquire operation, a release operation, both an acquire and release operation, or a consume operation.|synchronization
 [5.1.2.4 Multi-threaded executions and data races] A synchronization operation without this is a fence and can be either an acquire fence, a release fence, or both an acquire and release fence.|associated memory location
 [5.1.2.4 Multi-threaded executions and data races] A synchronization operation without an associated memory location is this and can be either an acquire this, a release this, or both an acquire and release this.|fence
-[5.1.2.4 Multi-threaded executions and data races] Performing a this operation on a mutex forces prior side effects on other memory locations to become visible to other threads that later perform an acquire or consume operation on the mutex.|release
+[5.1.2.4 Multi-threaded executions and data races] Performing this operation on a mutex forces prior side effects on other memory locations to become visible to other threads that later perform an acquire or consume operation on the mutex.|release
 [5.1.2.4 Multi-threaded executions and data races] Performing a release operation on this forces prior side effects on other memory locations to become visible to other threads that later perform an acquire or consume operation on it.|mutex
 [5.1.2.4 Multi-threaded executions and data races] A release sequence headed by a release operation A on an atomic object M is a maximal contiguous sub-sequence of side effects in the modification order of M, where the first operation is A and every subsequent operation either is performed by the same thread that performed the release or is this kind of atomic operation.|read-modify-write|RMW{RMW stands for read-modify-write.}
 [5.1.2.4 Multi-threaded executions and data races] If there is ambiguity about which side effect to a non-atomic object is visible, then this occurs and the behavior is undefined.|data race|race condition|race hazard
@@ -300,7 +300,7 @@
 [6.3.1.1 Boolean, characters, and integers] The rank of a signed integer type shall compare as this to the rank of any signed integer type with less precision.|greater|larger|bigger
 [6.3.1.1 Boolean, characters, and integers] The rank of this type shall be less than the rank of all other standard integer types.|_Bool
 [6.3.1.1 Boolean, characters, and integers] If an int can represent all values of the original integer type (as restricted by the width, for a bit-field), the value is converted to an int; otherwise, it is converted to an unsigned int. This conversion is called this.|integer promotions|integer promotion
-[6.3.1.2 Boolean type] When any scalar value is converted to _Bool, the result is 0 if the value compares equal to 0; otherwise, the result is this.|1{Yeah, that was an easy one.}|one{Yeah, that was an easy one.}
+[6.3.1.2 Boolean type] When any scalar value is converted to _Bool, the result is 0 if the value compares equal to 0; otherwise, the result is this.|1{That was an easy one.}|one{That was an easy one.}
 [6.3.1.3 Signed and unsigned integers] When a value with integer type is converted to another integer type other than _Bool, if the value can be represented by the new type, it is unchanged. Otherwise, if the new type is this, the value is converted by repeatedly adding or subtracting one more than the maximum value that can be represented in the new type until the value is in its range.|unsigned
 [6.3.1.4 Real floating and integer] When a finite value of real floating type is converted to an integer type other than _Bool, this part of the value is discarded.|fractional
 [6.3.1.4 Real floating and integer] If the value of integer type being converted to a real floating type is in the range of values that can be represented but cannot be represented exactly, the result is either the nearest higher or nearest lower representable value, chosen in this manner.|implementation-defined
@@ -355,7 +355,7 @@
 [6.4.6 Punctuators] A punctuator may specify an operation to be performed (which in turn may yield a value or a function designator, produce a side effect, or some combination thereof) in which case it is known as this.|operator
 [6.4.6 Punctuators] This is an entity on which an operator acts.|operand
 [6.4.6 Punctuators] The following tokens, <: :> <% %> %: and %:%:, are known as these.|digraphs
-[6.4.7 Header names] If the characters ', \, ", //, or /* occur in the sequence between the < and > delimiters of this directive, the behavior is undefined.|#include
+[6.4.7 Header names] If the characters ', \, ", //, or /* occur in the sequence between the < and > delimiters of this preprocessing directive, the behavior is undefined.|#include
 [6.5 Expressions] A sequence of operators and operands that specifies computation of a value, or that designates an object or a function, or that generates side effects, or that performs a combination thereof, is called this.|expression
 [6.5 Expressions] If a side effect on a scalar object is this relative to either a different side effect on the same scalar object or a value computation using the value of the same scalar object, the behavior is undefined.|unsequenced
 [6.5 Expressions] If a side effect on a scalar object is unsequenced relative to either a different side effect on the same scalar object or a value computation using the value of the same scalar object, the behavior is this.|undefined
@@ -380,13 +380,13 @@
 [6.5.1.1 Generic selection] If a generic selection does not have one of this, its controlling expression shall have type compatible with exactly one of the types named in its generic association list.|default generic association|default association
 [6.5.2.1 Array subscripting] One of the expressions of an array subscript shall have type ``pointer to complete object type'', the other expression shall have this type, and the result has type ``type''.|integer
 [6.5.2.1 Array subscripting] A postfix expression followed by an expression in these is a subscripted designation of an element of an array object.|square brackets|[]|brackets
-[6.5.2.1 Array subscripting] Regarding array subscripting, the expression x[i] is equivalent to this (no spaces).|(*((x)+(i)))|*((x)+(y))
+[6.5.2.1 Array subscripting] Regarding array subscripting, the expression x[i] is equivalent to this (no spaces).|(*((x)+(i)))|*((x)+(i))
 [6.5.2.1 Array subscripting] Regarding array subscripting, this expression is equivalent to (*((x)+(i))).|x[i]
 [6.5.2.2 Function calls] If the expression that denotes the called function has a type that includes this, the number of arguments shall agree with the number of parameters.|prototype
 [6.5.2.2 Function calls] A postfix expression followed by parentheses () containing a possibly empty, comma-separated list of expressions is called this.|function call
 [6.5.2.2 Function calls] If the expression that denotes the called function has a type that does not include a prototype, the integer promotions are performed on each argument, and arguments that have type float are promoted to double. These are called this.|default argument promotions
 [6.5.2.2 Function calls] If the expression that denotes the called function has a type that does not include this, the integer promotions are performed on each argument, and arguments that have type float are promoted to double. These are called the default argument promotions.|prototype
-[6.5.2.2 Function calls] If the expression that denotes the called function has a type that does include a this, the arguments are implicitly converted, as if by assignment, to the types of the corresponding parameters, taking the type of each parameter to be the unqualified version of its declared type.|prototype
+[6.5.2.2 Function calls] If the expression that denotes the called function has a type that does include this, the arguments are implicitly converted, as if by assignment, to the types of the corresponding parameters, taking the type of each parameter to be the unqualified version of its declared type.|prototype
 [6.5.2.2 Function calls] If the expression that denotes the called function has a type that does include a prototype, the arguments are implicitly converted, as if by this, to the types of the corresponding parameters, taking the type of each parameter to be the unqualified version of its declared type.|assignment
 [6.5.2.2 Function calls] This kind of function call shall be permitted, both directly and indirectly through any chain of other functions.|recursive
 [6.5.2.2 Function calls] In the function call (*pf[f1()]) (f2(), f3() + f4()) the functions f1, f2, f3, and f4 may be called in any order. However, all of these must be completed before the function pointed to by pf[f1()] is called.|side effects
@@ -462,7 +462,7 @@
 [6.5.15 Conditional operator] The first operand of the ?: operator shall have this kind of type.|scalar
 [6.5.15 Conditional operator] The ?: operator is called this.|conditional operator|conditional
 [6.5.15 Conditional operator] If both the second and third operands of the ?: operator have this type, the result has void type.|void
-[6.5.16 Assignment operators] An assignment operator shall have a this as its left operand.|modifiable lvalue
+[6.5.16 Assignment operators] An assignment operator shall have this as its left operand.|modifiable lvalue
 [6.5.16 Assignment operators] An assignment expression has the value of the left operand after the assignment, but is not this.|lvalue
 [6.5.16.2 Compound assignment] An assignment of the form E1 op = E2 is equivalent to the simple assignment expression E1 = E1 op (E2) and is called this.|compound assignment
 [6.6 Constant expressions] This kind of expression shall not contain assignment, increment, decrement, function-call, or comma operators, except when they are contained within a subexpression that is not evaluated.|constant expression|constant
@@ -511,17 +511,17 @@
 [6.7.3 Type qualifiers] If other qualifiers appear along with the this qualifier in a specifier-qualifier-list, the resulting type is the so-qualified atomic type.|_Atomic
 [6.7.3 Type qualifiers] If an attempt is made to modify an object defined with a const-qualified type through use of an lvalue with non-const-qualified type, the behavior is this.|undefined
 [6.7.3 Type qualifiers] If an attempt is made to refer to an object defined with a volatile-qualified type through use of an lvalue with non-volatile-qualified type, the behavior is this.|undefined
-[6.7.3 Type qualifiers] What constitutes an access to an object that has volatile-qualified type is this.|implemention-defined
-[6.7.3 Type qualifiers] What constitutes an access to an object that has this qualified type is implemention-defined.|volatile
+[6.7.3 Type qualifiers] What constitutes an access to an object that has volatile-qualified type is this.|implementation-defined
+[6.7.3 Type qualifiers] What constitutes an access to an object that has this qualified type is implementation-defined.|volatile
 [6.7.3 Type qualifiers] Actions on objects declared with this type qualifier shall not be ``optimized out'' by an implementation or reordered except as permitted by the rules for evaluating expressions.|volatile
 [6.7.3 Type qualifiers] An object that is accessed through a pointer qualified with this type qualifier has a special association with that pointer. This association requires that all accesses to that object use, directly or indirectly, the value of that particular pointer.|restrict{The intended use of the restrict qualifier is to promote optimization.}
 [6.7.3 Type qualifiers] If the specification of an array type includes any type qualifiers, this type is so-qualified, not the array type.|element type|element
 [6.7.3 Type qualifiers] If the specification of a function type includes any type qualifiers, the behavior is this.|undefined
 [6.7.3.1 Formal definition of restrict] A translator is free to ignore any or all aliasing implications of uses of this type qualifier.|restrict
-[6.7.4 Function specifiers] Function specifiers shall be used only in the declaration of an identifier for this.|function{Yeah, that was kind of obvious, wasn't it?}
+[6.7.4 Function specifiers] Function specifiers shall be used only in the declaration of an identifier for this.|function{That was kind of obvious, wasn't it?}
 [6.7.4 Function specifiers] In a hosted environment, no function specifier(s) shall appear in a declaration of this function.|main
 [6.7.4 Function specifiers] A function specifier may appear more than once; the behavior is the same as if it appeared this many times.|1|one|once
-[6.7.4 Function specifiers] A function declared with this function specifier is an inline function.|inline{Yeah, that was kind of obvious, wasn't it?}
+[6.7.4 Function specifiers] A function declared with this function specifier is an inline function.|inline{That was kind of obvious, wasn't it?}
 [6.7.4 Function specifiers] If a function with external linkage is declared with this function specifier, then it shall also be defined in the same translation unit.|inline
 [6.7.4 Function specifiers] A function declared with this function specifier shall not return to its caller.|_Noreturn
 [6.7.5 Alignment specifier] This attribute shall not be specified in a declaration of a typedef, or a bit-field, or a function, or a parameter, or an object declared with the register storage-class specifier.|alignment
@@ -623,7 +623,7 @@
 [6.10 Preprocessing directives] The implementation can process and skip sections of source files conditionally, include other source files, and replace macros. These capabilities are called this, because conceptually they occur before translation of the resulting translation unit.|preprocessing
 [6.10.1 Conditional inclusion] Prior to evaluation, macro invocations in the list of preprocessing tokens that will become the controlling constant expression has this happen to them, except for those macro names modified by the defined unary operator), just as in normal text.|replaced
 [6.10.1 Conditional inclusion] If a conditional inclusion's condition evaluates to false (zero), the group that it controls has this happen to it.|skipped|ignored
-[6.10.1 Conditional inclusion] If none of the conditions of a conditional inclusion evaluates to true, and there is this directive, the group controlled by that directive is processed.|#else
+[6.10.1 Conditional inclusion] If none of the conditions of a conditional inclusion evaluates to true, and there is this preprocessing directive, the group controlled by that directive is processed.|#else
 [6.10.1 Conditional inclusion] As indicated by the syntax, a preprocessing token shall not follow a #else or #endif directive before this character which terminates the directive.|new-line|newline|\n
 [6.10.2 Source file inclusion] This preprocessing directive shall identify a header or source file that can be processed by the implementation.|#include
 [6.10.2 Source file inclusion] The method by which a sequence of preprocessing tokens between a < and a > preprocessing token pair or a pair of " characters is combined into a single header name preprocessing token is this kind of behavior.|implementation-defined
@@ -645,7 +645,7 @@
 [6.10.3.3 The ## operator] If, in the replacement list of a function-like macro, an argument consists of no preprocessing tokens, the parameter is replaced by this preprocessing token.|placemarker{Placemarker preprocessing tokens do not appear in the syntax because they are temporary entities that exist only within translation phase 4.}
 [6.10.3.3 The ## operator] These preprocessing tokens do not appear in the syntax because they are temporary entities that exist only within translation phase 4.|placemarker
 [6.10.3.3 The ## operator] Placemarker preprocessing tokens do not appear in the syntax because they are temporary entities that exist only within this translation phase.|4|four
-[6.10.3.5 Scope of macro definitions] A macro definition lasts (independent of block structure) until this directive that corresponds to it is encountered or (if none is encountered) until the end of the preprocessing translation unit.|#undef
+[6.10.3.5 Scope of macro definitions] A macro definition lasts (independent of block structure) until this preprocessing directive that corresponds to it is encountered or (if none is encountered) until the end of the preprocessing translation unit.|#undef
 [6.10.3.5 Scope of macro definitions] A macro definition lasts (independent of block structure) until a corresponding #undef directive is encountered or (if none is encountered) until the end of this.|preprocessing translation unit
 [6.10.4 Line control] The string literal of a #line directive, if present, shall be this kind of string literal.|character string literal|character
 [6.10.4 Line control] The digit sequence of a #line directive shall not specify zero, nor a number greater than this.|2147483647
@@ -955,9 +955,9 @@
 [7.21.6.1 The fprintf function] This fprintf length modifier specifies that a following conversion specifier applies to a ptrdiff_t or the corresponding unsigned integer type argument.|t
 [7.21.6.1 The fprintf function] This fprintf length modifier specifies that a following conversion specifier applies to a long double argument.|L
 [7.21.6.2 The fscanf function] This function reads input from the stream pointed to by its stream argument, under control of the string pointed to by its format argument that specifies the admissible input sequences and how they are to be converted for assignment, using subsequent arguments as pointers to the objects to receive the converted input.|fscanf
-[7.21.6.2 The fscanf function] A directive composed of this kind of character(s) is executed by reading input up to the first non-white-space character (which remains unread), or until no more characters can be read.|white-space|whitespace
-[7.21.6.2 The fscanf function] If the fscanf input item is not a matching sequence, the execution of the directive fails: this condition is called this.|matching failure
-[7.21.6.2 The fscanf function] If an encoding error or a read error prevented handling of an input item from a fscanf stream, the execution of the directive fails: this condition is called this.|input failure
+[7.21.6.2 The fscanf function] A fscanf directive composed of this kind of character(s) is executed by reading input up to the first non-white-space character (which remains unread), or until no more characters can be read.|white-space|whitespace
+[7.21.6.2 The fscanf function] If the fscanf input item is not a matching sequence, the execution of the fscanf directive fails: this condition is called this.|matching failure
+[7.21.6.2 The fscanf function] If an encoding error or a read error prevented handling of an input item from a fscanf stream, the execution of the fscanf directive fails: this condition is called this.|input failure
 [7.21.6.2 The fscanf function] The fscanf function returns this value if an input failure occurs before the first conversion (if any) has completed.|EOF
 [7.21.6.3 The printf function] This function is equivalent to fprintf with the argument stdout interposed before its arguments.|printf
 [7.21.6.4 The scanf function] This function is equivalent to fscanf with the argument stdin interposed before its arguments.|scanf
@@ -1230,7 +1230,7 @@
 [G.2 Types] This type specifier is used to specify complex types.|_Complex
 [G.2 Types] This type is used to specify imaginary types.|_Imaginary
 [G.3 Conventions] A complex or imaginary value with at least one infinite part is regarded as this (even if its other part is a NaN).|infinity|inf
-[G.4.2 Real and imaginary] When a value of imaginary type is converted to a real type other than _Bool, the result is this.|a positive zero
+[G.4.2 Real and imaginary] When a value of imaginary type is converted to a real type other than _Bool, the result is this.|positive zero
 [G.4.2 Real and imaginary] When a value of real type is converted to an imaginary type, the result is this value.|positive imaginary zero
 [G.4.3 Imaginary and complex] When a value of imaginary type is converted to a complex type, the real part of the complex result value is this value and the imaginary part of the complex result value is determined by the conversion rules for the corresponding real types.|positive zero
 [G.4.3 Imaginary and complex] When a value of complex type is converted to an imaginary type, this part of the complex value is discarded.|real
