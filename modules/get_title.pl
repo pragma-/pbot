@@ -15,29 +15,31 @@ if ($#ARGV <= 0)
 my $nick = shift(@ARGV);
 $arguments = join("%20", @ARGV);
 
-exit if($arguments =~ m/stackoverflow.com/i);
-exit if($arguments =~ m/scratch.mit.edu/i);
-exit if($arguments =~ m/imgur.com/i);
-exit if($arguments =~ m/sprunge.us/i);
-exit if($arguments =~ m/pastebin.ws/i);
-exit if($arguments =~ m/hastebin.com/i);
-exit if($arguments =~ m/lmgtfy.com/i);
-exit if($arguments =~ m/gyazo/i);
-exit if($arguments =~ m/imagebin/i);
-exit if($arguments =~ m/\/wiki\//i);
-exit if($arguments =~ m/github.com/i);
-exit if($arguments =~ m/wiki.osdev.org/i);
-exit if($arguments =~ m/wikipedia.org/i);
-exit if($arguments =~ m/everfall.com/i);
-exit if($arguments =~ m/fukung.net/i);
-exit if($arguments =~ m/\/paste\//i);
-exit if($arguments =~ m/paste\./i);
-exit if($arguments =~ m/pastie/i);
-exit if($arguments =~ m/ideone.com/i);
-exit if($arguments =~ m/codepad.org/i);
-exit if($arguments =~ m/^http\:\/\/past(e|ing)\./i);
-exit if($arguments =~ m/paste.*\.(?:com|org|net|ch|ca|de|uk|info)/i);
-exit if($arguments =~ m/pasting.*\.(?:com|org|net|ca|de|uk|info|ch)/i);
+exit if $arguments =~ m/explosm.net/i;
+exit if $arguments =~ m/stackoverflow.com/i;
+exit if $arguments =~ m/scratch.mit.edu/i;
+exit if $arguments =~ m/c-faq.com/i;
+exit if $arguments =~ m/imgur.com/i;
+exit if $arguments =~ m/sprunge.us/i;
+exit if $arguments =~ m/pastebin.ws/i;
+exit if $arguments =~ m/hastebin.com/i;
+exit if $arguments =~ m/lmgtfy.com/i;
+exit if $arguments =~ m/gyazo/i;
+exit if $arguments =~ m/imagebin/i;
+exit if $arguments =~ m/\/wiki\//i;
+exit if $arguments =~ m/github.com/i;
+exit if $arguments =~ m/wiki.osdev.org/i;
+exit if $arguments =~ m/wikipedia.org/i;
+exit if $arguments =~ m/everfall.com/i;
+exit if $arguments =~ m/fukung.net/i;
+exit if $arguments =~ m/\/paste\//i;
+exit if $arguments =~ m/paste\./i;
+exit if $arguments =~ m/pastie/i;
+exit if $arguments =~ m/ideone.com/i;
+exit if $arguments =~ m/codepad.org/i;
+exit if $arguments =~ m/^http\:\/\/past(e|ing)\./i;
+exit if $arguments =~ m/paste.*\.(?:com|org|net|ch|ca|de|uk|info)/i;
+exit if $arguments =~ m/pasting.*\.(?:com|org|net|ca|de|uk|info|ch)/i;
 
 my $ua = LWP::UserAgent->new;
 $ua->agent("Mozilla/5.0");
@@ -48,6 +50,8 @@ my $response = $ua->get("$arguments");
 if (not $response->is_success)
 {
   #print "Couldn't get link.\n";
+  use Data::Dumper;
+  print STDERR Dumper $response;
   die "Couldn't get link: $arguments";
 }
 
