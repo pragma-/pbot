@@ -4112,7 +4112,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
               };
 
      Forward references: declarators (6.7.6), tags (6.7.2.3).
-   6.7.2.2 Enumeration specifiers
+    6.7.2.2 Enumeration specifiers
      Syntax
 1             enum-specifier:
                     enum identifieropt { enumerator-list }

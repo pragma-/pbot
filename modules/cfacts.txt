@@ -111,7 +111,7 @@
 [5.2.4.1 Translation limits] The implementation shall be able to translate and execute at least one program that contains the following limit: 1023 case labels for a switch statement (excluding those for any nested switch statements).
 [5.2.4.1 Translation limits] The implementation shall be able to translate and execute at least one program that contains the following limit: 1023 members in a single structure or union.
 [5.2.4.1 Translation limits] The implementation shall be able to translate and execute at least one program that contains the following limit: 1023 enumeration constants in a single enumeration.
-[5.2.4.1 Translation limits] The implementation shall be able to translate and execute at least one program that contains the following limit: 63 levels of nested structure or union definitions in a single struct-declaration-list..
+[5.2.4.1 Translation limits] The implementation shall be able to translate and execute at least one program that contains the following limit: 63 levels of nested structure or union definitions in a single struct-declaration-list.
 [5.2.4.2 Numerical limits] An implementation is required to document all the numerical limits specified in the headers <limits.h> and <float.h>.
 [5.2.4.2.1 Sizes of integer types <limits.h>] CHAR_BIT is the number of bits for smallest object that is not a bit-field (byte).
 [5.2.4.2.1 Sizes of integer types <limits.h>] SCHAR_MIN is the minimum value for an object of type signed char.
@@ -251,7 +251,7 @@
 [6.2.5 Types] All pointers to union types shall have the same representation and alignment requirements as each other.
 [6.2.6.1 General] Values stored in unsigned bit-fields and objects of type unsigned char shall be represented using a pure binary notation.
 [6.2.6.1 General] A value may be copied into an object of type unsigned char [n] (e.g., by memcpy); the resulting set of bytes is called the object representation of the value.
-[6.2.6.1 General] If the stored value of an object has such a representation and is read by an lvalue expression that does not have character type, the behavior is undefined.
+[6.2.6.1 General] Certain object representations need not represent a value of the object type. If the stored value of an object has such a representation and is read by an lvalue expression that does not have character type, the behavior is undefined.
 [6.2.6.1 General] Certain object representations need not represent a value of the object type. If such a representation is produced by a side effect that modifies all or any part of the object by an lvalue expression that does not have character type, the behavior is undefined.
 [6.2.6.1 General] Certain object representations need not represent a value of the object type. Such a representation is called a trap representation.
 [6.2.6.1 General] When a value is stored in an object of structure or union type, including in a member object, the bytes of the object representation that correspond to any padding bytes take unspecified values. The value of a structure or union object is never a trap representation, even though the value of a member of the structure or union object may be a trap representation.
@@ -278,7 +278,7 @@
 [6.2.8 Alignment of objects] An alignment is an implementation-defined integer value representing the number of bytes between successive addresses at which a given object can be allocated.
 [6.2.8 Alignment of objects] A fundamental alignment is represented by an alignment less than or equal to the greatest alignment supported by the implementation in all contexts, which is equal to _Alignof (max_align_t).
 [6.2.8 Alignment of objects] An extended alignment is represented by an alignment greater than _Alignof (max_align_t).
-[6.2.8 Alignment of objects] A type having an extended alignment requirement is an over-aligned type..
+[6.2.8 Alignment of objects] A type having an extended alignment requirement is an over-aligned type.
 [6.2.8 Alignment of objects] Every valid alignment value shall be a nonnegative integral power of two.
 [6.2.8 Alignment of objects] An address that satisfies an alignment requirement also satisfies any weaker valid alignment requirement.
 [6.2.8 Alignment of objects] The types char, signed char, and unsigned char shall have the weakest alignment requirement.
@@ -292,7 +292,7 @@
 [6.3.1.1 Boolean, characters, and integers] The rank of _Bool shall be less than the rank of all other standard integer types.
 [6.3.1.1 Boolean, characters, and integers] The rank of any enumerated type shall equal the rank of the compatible integer type.
 [6.3.1.1 Boolean, characters, and integers] If an int can represent all values of the original integer type (as restricted by the width, for a bit-field), the value is converted to an int; otherwise, it is converted to an unsigned int. These are called the integer promotions.
-[6.3.1.2 Boolean type] When any scalar value is converted to _Bool, the result is 0 if the value compares equal to 0; otherwise, the result is 1..
+[6.3.1.2 Boolean type] When any scalar value is converted to _Bool, the result is 0 if the value compares equal to 0; otherwise, the result is 1.
 [6.3.1.3 Signed and unsigned integers] When a value with integer type is converted to another integer type other than _Bool, if the value can be represented by the new type, it is unchanged. Otherwise, if the new type is unsigned, the value is converted by repeatedly adding or subtracting one more than the maximum value that can be represented in the new type until the value is in its range.
 [6.3.1.4 Real floating and integer] When a finite value of real floating type is converted to an integer type other than _Bool, the fractional part is discarded (i.e., the value is truncated towards zero). If the value of the integral part cannot be represented by the integer type, the behavior is undefined.
 [6.3.1.4 Real floating and integer] If the value of integer type being converted to a real floating type is in the range of values that can be represented but cannot be represented exactly, the result is either the nearest higher or nearest lower representable value, chosen in an implementation-defined manner.
@@ -663,7 +663,7 @@
 [6.10 Preprocessing directives] A new-line character ends the preprocessing directive even if it occurs within what would otherwise be an invocation of a function-like macro.
 [6.10 Preprocessing directives] The only white-space characters that shall appear between preprocessing tokens within a preprocessing directive (from just after the introducing # preprocessing token through just before the terminating new-line character) are space and horizontal-tab (including spaces that have replaced comments or possibly other white-space characters in translation phase 3).
 [6.10 Preprocessing directives] The implementation can process and skip sections of source files conditionally, include other source files, and replace macros. These capabilities are called preprocessing, because conceptually they occur before translation of the resulting translation unit.
-[6.10.1 Conditional inclusion] The expression that controls conditional inclusion shall be an integer constant expression except that: identifiers (including those lexically identical to keywords) are interpreted as described below; and it may contain unary operator expressions which evaluate to 1 if the identifier is currently defined as a macro name, 0 if it is not.
+[6.10.1 Conditional inclusion] The expression that controls conditional inclusion shall be an integer constant expression except that: identifiers (including those lexically identical to keywords) are interpreted appropriately; and it may contain unary operator expressions which evaluate to 1 if the identifier is currently defined as a macro name, 0 if it is not.
 [6.10.1 Conditional inclusion] Each preprocessing token that remains (in the list of preprocessing tokens that will become the controlling expression) after all macro replacements have occurred shall be in the lexical form of a token.
 [6.10.1 Conditional inclusion] Prior to evaluation, macro invocations in the list of preprocessing tokens that will become the controlling constant expression are replaced (except for those macro names modified by the defined unary operator), just as in normal text.
 [6.10.1 Conditional inclusion] If a conditional inclusion's condition evaluates to false (zero), the group that it controls is skipped: directives are processed only through the name that determines the directive in order to keep track of the level of nested conditionals; the rest of the directives' preprocessing tokens are ignored, as are the other preprocessing tokens in the group.
@@ -890,7 +890,7 @@
 [7.13.2.1 The longjmp function] The longjmp function that returns control back to the point of the setjmp invocation might cause memory associated with a variable length array object to be squandered.
 [7.14 Signal handling <signal.h>] The header <signal.h> declares a type and two functions and defines several macros, for handling various signals (conditions that may be reported during program execution)
 [7.14 Signal handling <signal.h>] sig_atomic_t is the (possibly volatile-qualified) integer type of an object that can be accessed as an atomic entity, even in the presence of asynchronous interrupts.
-[7.14 Signal handling <signal.h>] The macro is a signal number denoting abnormal termination, such as is initiated by the abort function.
+[7.14 Signal handling <signal.h>] The macro SIGABRT is a signal number denoting abnormal termination, such as is initiated by the abort function.
 [7.14 Signal handling <signal.h>] The macro SIGFPE is a signal number denoting an erroneous arithmetic operation, such as zero divide or an operation resulting in overflow.
 [7.14 Signal handling <signal.h>] The macro SIGILL is a signal number denoting the detection of an invalid function image, such as an invalid instruction.
 [7.14 Signal handling <signal.h>] The macro SIGINT is a signal number denoting the receipt of an interactive attention signal.
@@ -1019,24 +1019,6 @@
 [7.21.5.6 The setvbuf function] The setvbuf function may be used only after the stream pointed to by stream has been associated with an open file and before any other operation (other than an unsuccessful call to setvbuf) is performed on the stream.
 [7.21.5.6 The setvbuf function] If buf is not a null pointer, the array it points to may be used instead of a buffer allocated by the setvbuf function and the argument size specifies the size of the array; otherwise, size may determine the size of a buffer allocated by the setvbuf function.
 [7.21.6 Formatted input/output functions] The formatted input/output functions shall behave as if there is a sequence point after the actions associated with each specifier.
-[7.21.6.1 The fprintf function] The fprintf function writes output to the stream pointed to by stream, under control of the string pointed to by format that specifies how subsequent arguments are converted for output.
-[7.21.6.1 The fprintf function] If the format is exhausted while arguments remain, the excess arguments are evaluated (as always) but are otherwise ignored.
-[7.21.6.1 The fprintf function] The fprintf function returns when the end of the format string is encountered.
-[7.21.6.1 The fprintf function] The format shall be a multibyte character sequence, beginning and ending in its initial shift state.
-[7.21.6.1 The fprintf function] The arguments specifying field width, or precision, or both, shall appear (in that order) before the argument (if any) to be converted.
-[7.21.6.1 The fprintf function] A negative field width argument is taken as a -flag followed by a positive field width.
-[7.21.6.1 The fprintf function] A negative precision argument is taken as if the precision were omitted.
-[7.21.6.1 The fprintf function] If the first character of a signed conversion is not a sign, or if a signed conversion results in no characters, a space is prefixed to the result.
-[7.21.6.1 The fprintf function] The following fprintf length modifier hh specifies that a following d, i, o, u, x, or X conversion specifier applies to a signed char or unsigned char argument.
-[7.21.6.1 The fprintf function] The following fprintf length modifier h specifies that a following d, i, o, u, x, or X conversion specifier applies to a short int or unsigned short int argument.
-[7.21.6.1 The fprintf function] The following fprintf length modifier l (ell) specifies that a following d, i, o, u, x, or X conversion specifier applies to a long int or unsigned long int argument
-[7.21.6.1 The fprintf function] The following fprintf length modifier ll (ell-ell) specifies that a following d, i, o, u, x, or X conversion specifier applies to a long long int or unsigned long long int argument; or that a following n conversion specifier applies to a pointer to a long long int argument.
-[7.21.6.1 The fprintf function] The following fprintf length modifier j specifies that a following d, i, o, u, x, or X conversion specifier applies to an intmax_t or uintmax_t argument; or that a following n conversion specifier applies to a pointer to an intmax_t argument.
-[7.21.6.1 The fprintf function] The following fprintf length modifier z specifies that a following d, i, o, u, x, or X conversion specifier applies to a size_t or the corresponding signed integer type argument; or that a following n conversion specifier applies to a pointer to a signed integer type corresponding to size_t argument.
-[7.21.6.1 The fprintf function] The following fprintf length modifier t specifies that a following d, i, o, u, x, or X conversion specifier applies to a ptrdiff_t or the corresponding unsigned integer type argument; or that a following n conversion specifier applies to a pointer to a ptrdiff_t argument.
-[7.21.6.1 The fprintf function] The following fprintf length modifier L specifies that a following a, A, e, E, f, F, g, or G conversion specifier applies to a long double argument.
-[7.21.6.1 The fprintf function] A double argument representing an infinity is converted in one of the styles [-]inf or [-]infinity -- which style is implementation-defined.
-[7.21.6.1 The fprintf function] A double argument representing a NaN is converted in one of the styles [-]nan or [-]nan(n-char-sequence) -- which style, and the meaning of any n-char-sequence, is implementation-defined.
 [7.21.6.2 The fscanf function] The fscanf function reads input from the stream pointed to by stream, under control of the string pointed to by format that specifies the admissible input sequences and how they are to be converted for assignment, using subsequent arguments as pointers to the objects to receive the converted input.
 [7.21.6.2 The fscanf function] If the format is exhausted while arguments remain, the excess arguments are evaluated (as always) but are otherwise ignored.
 [7.21.6.2 The fscanf function] When all directives have been executed, or if a directive fails, the function returns.
@@ -1131,8 +1113,8 @@
 [7.21.10.3 The ferror function] The ferror function returns nonzero if and only if the error indicator is set for stream.
 [7.21.10.4 The perror function] The perror function maps the error number in the integer expression errno to an error message.
 [7.21.10.4 The perror function] The perror function returns no value.
-[7.22 General utilities <stdlib.h>] The macro EXIT_FAILURE expands to a integer constant expressions that can be used as the argument to the exit function to return unsuccessful termination status, respectively, to the host environment;
-[7.22 General utilities <stdlib.h>] The macro EXIT_SUCCESS expands to a integer constant expressions that can be used as the argument to the exit function to return successful termination status, respectively, to the host environment;
+[7.22 General utilities <stdlib.h>] The macro EXIT_FAILURE expands to a integer constant expressions that can be used as the argument to the exit function to return unsuccessful termination status to the host environment.
+[7.22 General utilities <stdlib.h>] The macro EXIT_SUCCESS expands to a integer constant expressions that can be used as the argument to the exit function to return successful termination status to the host environment.
 [7.22 General utilities <stdlib.h>] The RAND_MAX macro expands to an integer constant expression that is the maximum value returned by the rand function.
 [7.22 General utilities <stdlib.h>] The MB_CUR_MAX macro expands to a positive integer expression with type size_t that is the maximum number of bytes in a multibyte character for the extended character set specified by the current locale (category LC_CTYPE).
 [7.22.1.1 The atof function] The atof function converts the initial portion of the string pointed to by its argument to double representation.
@@ -1351,7 +1333,7 @@
 [7.27.1 Components of time] The timespec structure shall contain at least the following members, in any order: time_t tv_sec; long tv_nsec.
 [7.27.2.1 The clock function] The clock function determines the processor time used.
 [7.27.2.1 The clock function] The clock function returns the implementation's best approximation to the processor time used by the program since the beginning of an implementation-defined era related only to the program invocation.
-[7.27.2.1 The clock function] If the processor time used is not available or its value cannot be represented, the function returns the value (clock_t)(-1)..
+[7.27.2.1 The clock function] If the processor time used is not available or its value cannot be represented, the function returns the value (clock_t)(-1).
 [7.27.2.2 The difftime function] The difftime function computes the difference between two calendar times: time1 -time0.
 [7.27.2.2 The difftime function] The difftime function returns the difference expressed in seconds as a double.
 [7.27.2.3 The mktime function] The mktime function converts the broken-down time, expressed as local time, in the structure pointed to by timeptr into a calendar time value with the same encoding as that of the values returned by the time function.
@@ -1380,86 +1362,40 @@
 [7.27.3.5 The strftime function] If copying takes place between objects that overlap, the behavior is undefined.
 [7.27.3.5 The strftime function] If any of the specified values is outside the normal range, the characters stored are unspecified.
 [7.27.3.5 The strftime function] If the alternative format or specification does not exist for the current locale, the modifier is ignored.
-[7.27.3.5 The strftime function] 4th, which is also the week that includes the first Thursday of the year, and is also the first week that contains at least four days in the year.
-[7.27.3.5 The strftime function] If the first Monday of January is the 2nd, 3rd, or 4th, the preceding days are part of the last week of the preceding year; thus, for Saturday 2nd January 1999, %G is replaced by 1998 and %V is replaced by 53.
-[7.27.3.5 The strftime function] If December 29th, 30th, or 31st is a Monday, it and any following days are part of week 1 of the following year.
-[7.27.3.5 The strftime function] If a conversion specifier is not one of the above, the behavior is undefined.
 [7.27.3.5 The strftime function] If the total number of resulting characters including the terminating null character is not more than maxsize, the strftime function returns the number of characters placed into the array pointed to by s not including the terminating null character.
 [7.28 Unicode utilities <uchar.h>] The type char16_t is an unsigned integer type used for 16-bit Unicode characters.
 [7.28 Unicode utilities <uchar.h>] The type char32_t is an unsigned integer type used for 32-bit Unicode characters.
 [7.29.1 Introduction] The type mbstate_t is a complete object type other than an array type that can hold the conversion state information necessary to convert between sequences of multibyte characters and wide characters.
 [7.29.1 Introduction] The type wint_t is an integer type unchanged by default argument promotions that can hold any value corresponding to members of the extended character set, as well as at least one value that does not correspond to any member of the extended character set.
 [7.29.1 Introduction] The type struct tm holds the components of a calendar time, called the broken-down time.
-[7.29.1 Introduction] WEOF which expands to a constant expression of type wint_t whose value does not correspond to any member of the extended character set. It is accepted (and returned) by several functions in this subclause to indicate end-of-file, that is, no more input from a stream.
-[7.29.1 Introduction] Such values shall be processed according to the specified semantics, except that it is unspecified whether an encoding error occurs if such a value appears in the format string for a function in 7.29.2 or 7.29.5 and the specified semantics do not require that value to be processed by wcrtomb.
-[7.29.2 Formatted wide character input/output functions] The formatted wide character input/output functions shall behave as if there is a sequence point after the actions associated with each specifier..
+[7.29.1 Introduction] The macro WEOF expands to a constant expression of type wint_t whose value does not correspond to any member of the extended character set. It is accepted (and returned) by several functions in this subclause to indicate end-of-file, that is, no more input from a stream.
+[7.29.2 Formatted wide character input/output functions] The formatted wide character input/output functions shall behave as if there is a sequence point after the actions associated with each specifier.
 [7.29.2 Formatted wide character input/output functions] The fwprintf functions perform writes to memory for the %n specifier.
 [7.29.2.1 The fwprintf function] The fwprintf function writes output to the stream pointed to by stream, under control of the wide string pointed to by format that specifies how subsequent arguments are converted for output.
 [7.29.2.1 The fwprintf function] If there are insufficient arguments for the format, the behavior is undefined.
 [7.29.2.1 The fwprintf function] If the format is exhausted while arguments remain, the excess arguments are evaluated (as always) but are otherwise ignored.
 [7.29.2.1 The fwprintf function] The number of wide characters that can be produced by any single conversion shall be at least 4095.
 [7.29.2.2 The fwscanf function] The fwscanf function reads input from the stream pointed to by stream, under control of the wide string pointed to by format that specifies the admissible input sequences and how they are to be converted for assignment, using subsequent arguments as pointers to the objects to receive the converted input.
-[7.29.2.2 The fwscanf function] If there are insufficient arguments for the format, the behavior is undefined.
 [7.29.2.2 The fwscanf function] If the format is exhausted while arguments remain, the excess arguments are evaluated (as always) but are otherwise ignored.
-[7.29.2.2 The fwscanf function] The fwscanf function executes each directive of the format in turn.
-[7.29.2.2 The fwscanf function] When all directives have been executed, or if a directive fails (as detailed below), the function returns.
-[7.29.2.2 The fwscanf function] A directive composed of white-space wide character(s) is executed by reading input up to the first non-white-space wide character (which remains unread), or until no more wide characters can be read.
-[7.29.2.2 The fwscanf function] A directive that is an ordinary wide character is executed by reading the next wide character of the stream.
-[7.29.2.2 The fwscanf function] If that wide character differs from the directive, the directive fails and the differing and subsequent wide characters remain unread.
-[7.29.2.2 The fwscanf function] A directive that is a conversion specification defines a set of matching input sequences, as described below for each specifier.
-[7.29.2.2 The fwscanf function] A conversion specification is executed in the following steps:.
-[7.29.2.2 The fwscanf function] An input item is read from the stream, unless the specification includes an n specifier.
 [7.29.2.2 The fwscanf function] An input item is defined as the longest sequence of input wide characters which does not exceed any specified field width and which is, or is a prefix of, a matching input sequence. The first wide character, if any, after the input item remains unread.
 [7.29.2.2 The fwscanf function] If the length of the input item is zero, the execution of the directive fails; this condition is a matching failure unless end-of-file, an encoding error, or a read error prevented input from the stream, in which case it is an input failure.
 [7.29.2.2 The fwscanf function] If the input item is not a matching sequence, the execution of the directive fails: this condition is a matching failure.
-[7.29.2.2 The fwscanf function] If this object does not have an appropriate type, or if the result of the conversion cannot be represented in the object, the behavior is undefined.
-[7.29.2.2 The fwscanf function] If a length modifier appears with any conversion specifier other than as specified above, the behavior is undefined.
-[7.29.2.2 The fwscanf function] The corresponding argument shall be a pointer to signed integer.
-[7.29.2.2 The fwscanf function] The corresponding argument shall be a pointer to signed integer.
-[7.29.2.2 The fwscanf function] The corresponding argument shall be a pointer to unsigned integer.
-[7.29.2.2 The fwscanf function] The corresponding argument shall be a pointer to unsigned integer.
-[7.29.2.2 The fwscanf function] The corresponding argument shall be a pointer to unsigned integer.
-[7.29.2.2 The fwscanf function] The corresponding argument shall be a pointer to floating.
-[7.29.2.2 The fwscanf function] If no l length modifier is present, characters from the input field are converted as if by repeated calls to the wcrtomb function, with the conversion state described by an mbstate_t object initialized to zero before the first wide character is converted.
-[7.29.2.2 The fwscanf function] The corresponding argument shall be a pointer to the initial element of a character array large enough to accept the sequence.
-[7.29.2.2 The fwscanf function] If an l length modifier is present, the corresponding argument shall be a pointer to the initial element of an array of wchar_t large enough to accept the sequence.
-[7.29.2.2 The fwscanf function] If no l length modifier is present, characters from the input field are converted as if by repeated calls to the wcrtomb function, with the conversion state described by an mbstate_t object initialized to zero before the first wide character is converted.
-[7.29.2.2 The fwscanf function] The corresponding argument shall be a pointer to the initial element of a character array large enough to accept the sequence and a terminating null character, which will be added automatically.
-[7.29.2.2 The fwscanf function] If an l length modifier is present, the corresponding argument shall be a pointer to the initial element of an array of wchar_t large enough to accept the sequence and the terminating null wide character, which will be added automatically.
-[7.29.2.2 The fwscanf function] If no l length modifier is present, characters from the input field are converted as if by repeated calls to the wcrtomb function, with the conversion state described by an mbstate_t object initialized to zero before the first wide character is converted.
-[7.29.2.2 The fwscanf function] The corresponding argument shall be a pointer to the initial element of a character array large enough to accept the sequence and a terminating null character, which will be added automatically.
-[7.29.2.2 The fwscanf function] If an l length modifier is present, the corresponding argument shall be a pointer to the initial element of an array of wchar_t large enough to accept the sequence and the terminating null wide character, which will be added automatically.
-[7.29.2.2 The fwscanf function] If the conversion specifier begins with [] or [^], the right bracket wide character is in the scanlist and the next following right bracket wide character is the matching right bracket that ends the specification; otherwise the first following right bracket wide character is the one that ends the specification.
-[7.29.2.2 The fwscanf function] If a -wide character is in the scanlist and is not the first, nor the second where the first wide character is a ^, nor the last character, the behavior is implementation-defined.
-[7.29.2.2 The fwscanf function] The corresponding argument shall be a pointer to a pointer to void.
-[7.29.2.2 The fwscanf function] If the input item is a value converted earlier during the same program execution, the pointer that results shall compare equal to that value; otherwise the behavior of the %p conversion is undefined.
-[7.29.2.2 The fwscanf function] The corresponding argument shall be a pointer to signed integer into which is to be written the number of wide characters read from the input stream so far by this call to the fwscanf function.
-[7.29.2.2 The fwscanf function] If the conversion specification includes an assignment-suppressing wide character or a field width, the behavior is undefined.
-[7.29.2.2 The fwscanf function] The complete conversion specification shall be %%.
-[7.29.2.2 The fwscanf function] If a conversion specification is invalid, the behavior is undefined..
 [7.29.2.2 The fwscanf function] The fwscanf function returns the value of the macro EOF if an input failure occurs before the first conversion (if any) has completed.
 [7.29.2.3 The swprintf function] The swprintf function is equivalent to fwprintf, except that the argument s specifies an array of wide characters into which the generated output is to be written, rather than written to a stream.
-[7.29.2.3 The swprintf function] character, which is always added (unless n is zero).
 [7.29.2.3 The swprintf function] The swprintf function returns the number of wide characters written in the array, not counting the terminating null wide character, or a negative value if an encoding error occurred or if n or more wide characters were requested to be written.
 [7.29.2.4 The swscanf function] The swscanf function is equivalent to fwscanf, except that the argument s specifies a wide string from which the input is to be obtained, rather than from a stream.
 [7.29.2.4 The swscanf function] The swscanf function returns the value of the macro EOF if an input failure occurs before the first conversion (if any) has completed.
 [7.29.2.5 The vfwprintf function] The vfwprintf function is equivalent to fwprintf, with the variable argument list replaced by arg, which shall have been initialized by the va_start macro (and possibly subsequent va_arg calls).
-[7.29.2.5 The vfwprintf function] The vfwprintf function does not invoke the va_end macro. Returns.
 [7.29.2.5 The vfwprintf function] The vfwprintf function returns the number of wide characters transmitted, or a negative value if an output or encoding error occurred.
 [7.29.2.6 The vfwscanf function] The vfwscanf function is equivalent to fwscanf, with the variable argument list replaced by arg, which shall have been initialized by the va_start macro (and possibly subsequent va_arg calls).
-[7.29.2.6 The vfwscanf function] The vfwscanf function does not invoke the va_end macro. Returns.
 [7.29.2.6 The vfwscanf function] The vfwscanf function returns the value of the macro EOF if an input failure occurs before the first conversion (if any) has completed.
 [7.29.2.7 The vswprintf function] The vswprintf function is equivalent to swprintf, with the variable argument list replaced by arg, which shall have been initialized by the va_start macro (and possibly subsequent va_arg calls).
-[7.29.2.7 The vswprintf function] The vswprintf function does not invoke the va_end macro. Returns.
 [7.29.2.7 The vswprintf function] The vswprintf function returns the number of wide characters written in the array, not counting the terminating null wide character, or a negative value if an encoding error occurred or if n or more wide characters were requested to be generated.
 [7.29.2.8 The vswscanf function] The vswscanf function is equivalent to swscanf, with the variable argument list replaced by arg, which shall have been initialized by the va_start macro (and possibly subsequent va_arg calls).
-[7.29.2.8 The vswscanf function] The vswscanf function does not invoke the va_end macro. Returns.
 [7.29.2.8 The vswscanf function] The vswscanf function returns the value of the macro EOF if an input failure occurs before the first conversion (if any) has completed.
 [7.29.2.9 The vwprintf function] The vwprintf function is equivalent to wprintf, with the variable argument list replaced by arg, which shall have been initialized by the va_start macro (and possibly subsequent va_arg calls).
-[7.29.2.9 The vwprintf function] The vwprintf function does not invoke the va_end macro. Returns.
 [7.29.2.9 The vwprintf function] The vwprintf function returns the number of wide characters transmitted, or a negative value if an output or encoding error occurred.
 [7.29.2.10 The vwscanf function] The vwscanf function is equivalent to wscanf, with the variable argument list replaced by arg, which shall have been initialized by the va_start macro (and possibly subsequent va_arg calls).
-[7.29.2.10 The vwscanf function] The vwscanf function does not invoke the va_end macro. Returns.
 [7.29.2.10 The vwscanf function] The vwscanf function returns the value of the macro EOF if an input failure occurs before the first conversion (if any) has completed.
 [7.29.2.11 The wprintf function] The wprintf function is equivalent to fwprintf with the argument stdout interposed before the arguments to wprintf.
 [7.29.2.11 The wprintf function] The wprintf function returns the number of wide characters transmitted, or a negative value if an output or encoding error occurred.
@@ -1468,7 +1404,7 @@
 [7.29.3.1 The fgetwc function] If the end-of-file indicator for the input stream pointed to by stream is not set and a next wide character is present, the fgetwc function obtains that wide character as a wchar_t converted to a wint_t and advances the associated file position indicator for the stream (if defined).
 [7.29.3.1 The fgetwc function] If the end-of-file indicator for the stream is set, or if the stream is at end-of-file, the end-of-file indicator for the stream is set and the fgetwc function returns WEOF.
 [7.29.3.1 The fgetwc function] If a read error occurs, the error indicator for the stream is set and the fgetwc function returns WEOF.
-[7.29.3.1 The fgetwc function] If an encoding error occurs (including too few bytes), the value of the macro EILSEQ is stored in errno and the fgetwc function returns WEOF..
+[7.29.3.1 The fgetwc function] If an encoding error occurs (including too few bytes), the value of the macro EILSEQ is stored in errno and the fgetwc function returns WEOF.
 [7.29.3.1 The fgetwc function] An end-of-file and a read error can be distinguished by use of the feof and ferror functions.
 [7.29.3.2 The fgetws function] The fgetws function reads at most one less than the number of wide characters specified by n from the stream pointed to by stream into the array pointed to by s.
 [7.29.3.2 The fgetws function] A null wide character is written immediately after the last wide character read into the array.
@@ -1521,7 +1457,7 @@
 [7.29.4.1.2 The wcstol, wcstoll, wcstoul, and wcstoull functions] If the correct value is outside the range of representable values, LONG_MIN, LONG_MAX, LLONG_MIN, LLONG_MAX, ULONG_MAX, or ULLONG_MAX is returned (according to the return type sign of the value, if any), and the value of the macro ERANGE is stored in errno.
 [7.29.4.2.1 The wcscpy function] The wcscpy function copies the wide string pointed to by s2 (including the terminating null wide character) into the array pointed to by s1.
 [7.29.4.2.1 The wcscpy function] The wcscpy function returns the value of s1.
-[7.29.4.2.2 The wcsncpy function] The wcsncpy function copies not more than n wide characters (those that follow a null wide character are not copied) from the array pointed to by s2 to the array pointed to by s1..
+[7.29.4.2.2 The wcsncpy function] The wcsncpy function copies not more than n wide characters (those that follow a null wide character are not copied) from the array pointed to by s2 to the array pointed to by s1.
 [7.29.4.2.2 The wcsncpy function] If the array pointed to by s2 is a wide string that is shorter than n wide characters, null wide characters are appended to the copy in the array pointed to by s1, until n wide characters in all have been written.
 [7.29.4.2.2 The wcsncpy function] The wcsncpy function returns the value of s1.
 [7.29.4.2.3 The wmemcpy function] The wmemcpy function copies n wide characters from the object pointed to by s2 to the object pointed to by s1.
@@ -1576,7 +1512,7 @@
 [7.29.5.1 The wcsftime function] The wcsftime function is equivalent to the strftime function, except that: -- The argument s points to the initial element of an array of wide characters into which the generated output is to be placed.
 [7.29.5.1 The wcsftime function] If the total number of resulting wide characters including the terminating null wide character is not more than maxsize, the wcsftime function returns the number of wide characters placed into the array pointed to by s not including the terminating null wide character.
 [7.29.6 Extended multibyte/wide character conversion utilities] A zero-valued mbstate_t object is (at least) one way to describe an initial conversion state.
-[7.29.6 Extended multibyte/wide character conversion utilities] If an mbstate_t object has been altered by any of the functions described in this subclause, and is then used with a different multibyte character sequence, or in the other conversion direction, or with a different LC_CTYPE category setting than on earlier function calls, the behavior is undefined..
+[7.29.6 Extended multibyte/wide character conversion utilities] If an mbstate_t object has been altered by any of the functions described in this subclause, and is then used with a different multibyte character sequence, or in the other conversion direction, or with a different LC_CTYPE category setting than on earlier function calls, the behavior is undefined.
 [7.29.6.1.1 The btowc function] The btowc function determines whether c constitutes a valid single-byte character in the initial shift state.
 [7.29.6.1.1 The btowc function] The btowc function returns WEOF if c has the value EOF or if (unsigned char)c does not constitute a valid single-byte character in the initial shift state.
 [7.29.6.1.2 The wctob function] The wctob function determines whether c corresponds to a member of the extended character set whose multibyte character representation is a single byte when in the initial shift state.
@@ -1601,13 +1537,11 @@
 [7.29.6.4 Restartable multibyte/wide string conversion functions] When the function is storing the results of conversions (that is, when dst is not a null pointer), the pointer object pointed to by this parameter is updated to reflect the amount of the source processed by that invocation.
 [7.29.6.4.1 The mbsrtowcs function] The mbsrtowcs function converts a sequence of multibyte characters that begins in the conversion state described by the object pointed to by ps, from the array indirectly pointed to by src into a sequence of corresponding wide characters.
 [7.29.6.4.1 The mbsrtowcs function] If dst is not a null pointer, the converted characters are stored into the array pointed to by dst.
-[7.29.6.4.1 The mbsrtowcs function] character, which is also stored.
 [7.29.6.4.1 The mbsrtowcs function] If dst is not a null pointer, the pointer object pointed to by src is assigned either a null pointer (if conversion stopped due to reaching a terminating null character) or the address just past the last multibyte character converted (if any).
 [7.29.6.4.1 The mbsrtowcs function] If conversion stopped due to reaching a terminating null character and if dst is not a null pointer, the resulting state described is the initial conversion state.
 [7.29.6.4.1 The mbsrtowcs function] If the input conversion encounters a sequence of bytes that do not form a valid multibyte character, an encoding error occurs: the mbsrtowcs function stores the value of the macro EILSEQ in errno and returns (size_t)(-1); the conversion state is unspecified.
 [7.29.6.4.2 The wcsrtombs function] The wcsrtombs function converts a sequence of wide characters from the array indirectly pointed to by src into a sequence of corresponding multibyte characters that begins in the conversion state described by the object pointed to by ps.
 [7.29.6.4.2 The wcsrtombs function] If dst is not a null pointer, the converted characters are then stored into the array pointed to by dst.
-[7.29.6.4.2 The wcsrtombs function] character, which is also stored.
 [7.29.6.4.2 The wcsrtombs function] If conversion stops because a terminating null wide character has been reached, the bytes stored include those necessary to reach the initial shift state immediately before the null byte.
 [7.29.6.4.2 The wcsrtombs function] If dst is not a null pointer, the pointer object pointed to by src is assigned either a null pointer (if conversion stopped due to reaching a terminating null wide character) or the address just past the last wide character converted (if any).
 [7.29.6.4.2 The wcsrtombs function] If conversion stopped due to reaching a terminating null wide character, the resulting state described is the initial conversion state.
@@ -1616,17 +1550,17 @@
 [7.30.1 Introduction] For all functions described in this subclause that accept an argument of type wint_t, the value shall be representable as a wchar_t or shall equal the value of the macro WEOF.
 [7.30.1 Introduction] If this argument has any other value, the behavior is undefined.
 [7.30.2.1.1 The iswalnum function] The iswalnum function tests for any wide character for which iswalpha or iswdigit is true.
-[7.30.2.1.2 The iswalpha function] The iswalpha function tests for any wide character for which iswupper or iswlower is true, or any wide character that is one of a locale-specific set of alphabetic wide characters for which none of iswcntrl, iswdigit, iswpunct, or iswspace is true..
+[7.30.2.1.2 The iswalpha function] The iswalpha function tests for any wide character for which iswupper or iswlower is true, or any wide character that is one of a locale-specific set of alphabetic wide characters for which none of iswcntrl, iswdigit, iswpunct, or iswspace is true.
 [7.30.2.1.3 The iswblank function] The iswblank function tests for any wide character that is a standard blank wide character or is one of a locale-specific set of wide characters for which iswspace is true and that is used to separate words within a line of text.
 [7.30.2.1.4 The iswcntrl function] The iswcntrl function tests for any control wide character.
-[7.30.2.1.5 The iswdigit function] The iswdigit function tests for any wide character that corresponds to a decimal-digit character (as defined in 5.2..
-[7.30.2.1.6 The iswgraph function] The iswgraph function tests for any wide character for which iswprint is true and iswspace is false..
+[7.30.2.1.5 The iswdigit function] The iswdigit function tests for any wide character that corresponds to a decimal-digit character.
+[7.30.2.1.6 The iswgraph function] The iswgraph function tests for any wide character for which iswprint is true and iswspace is false.
 [7.30.2.1.7 The iswlower function] The iswlower function tests for any wide character that corresponds to a lowercase letter or is one of a locale-specific set of wide characters for which none of iswcntrl, iswdigit, iswpunct, or iswspace is true.
 [7.30.2.1.8 The iswprint function] The iswprint function tests for any printing wide character.
-[7.30.2.1.9 The iswpunct function] The iswpunct function tests for any printing wide character that is one of a locale-specific set of punctuation wide characters for which neither iswspace nor iswalnum is true..
+[7.30.2.1.9 The iswpunct function] The iswpunct function tests for any printing wide character that is one of a locale-specific set of punctuation wide characters for which neither iswspace nor iswalnum is true.
 [7.30.2.1.10 The iswspace function] The iswspace function tests for any wide character that corresponds to a locale-specific set of white-space wide characters for which none of iswalnum, iswgraph, or iswpunct is true.
 [7.30.2.1.11 The iswupper function] The iswupper function tests for any wide character that corresponds to an uppercase letter or is one of a locale-specific set of wide characters for which none of iswcntrl, iswdigit, iswpunct, or iswspace is true.
-[7.30.2.1.12 The iswxdigit function] The iswxdigit function tests for any wide character that corresponds to a hexadecimal-digit character (as defined in 6.4.4..
+[7.30.2.1.12 The iswxdigit function] The iswxdigit function tests for any wide character that corresponds to a hexadecimal-digit character.
 [7.30.2.2.1 The iswctype function] The iswctype function determines whether the wide character wc has the property described by desc.
 [7.30.2.2.1 The iswctype function] The current setting of the LC_CTYPE category shall be the same as during the call to wctype that returned the value desc.
 [7.30.2.2.1 The iswctype function] The iswctype function returns nonzero (true) if and only if the value of the wide character wc has the property described by desc.
@@ -1652,7 +1586,6 @@
 [F.7 Contracted expressions] A contracted expression should raise floating-point exceptions in a manner generally consistent with the basic arithmetic operations.
 [F.8.6 Changing the environment] If the argument to the feraiseexcept function in <fenv.h> represents IEC 60559 valid coincident floating-point exceptions for atomic operations (namely ``overflow'' and ``inexact'', or ``underflow'' and ``inexact''), then ``overflow'' or ``underflow'' is raised before ``inexact''.
 [F.9.1 Global transformations] Floating-point arithmetic operations and external function calls may entail side effects which optimization shall honor, at least where the state of the FENV_ACCESS pragma is ``on''.
-[F.9.3 Relational operators] The sense of relational operators shall be maintained.
 [F.9.4 Constant arithmetic] The implementation shall honor floating-point exceptions raised by execution-time constant arithmetic wherever the state of the FENV_ACCESS pragma is ``on''.
 [F.10 Mathematics <math.h>] The other functions in <math.h> treat infinities, NaNs, signed zeros, subnormals, and (provided the state of the FENV_ACCESS pragma is ``on'') the floating-point status flags in a manner consistent with the basic arithmetic operations covered by IEC 60559.
 [F.10 Mathematics <math.h>] If a function with one or more NaN arguments returns a NaN result, the result should be the same as one of the NaN arguments (after possible type conversion), except perhaps for the sign.
@@ -1685,7 +1618,7 @@
 [G.5.1 Multiplicative operators] If one operand of a multiplicative operator has real type and the other operand has imaginary type, then the result has imaginary type.
 [G.5.1 Multiplicative operators] If both operands of a multiplicative operator have imaginary type, then the result has real type.
 [G.5.2 Additive operators] If both operands of the additive operators have imaginary type, then the result has imaginary type.
-[G.6.4.1 The cpow functions] The cpow functions raise floating-point exceptions if appropriate for the calculation of the parts of the result, and may also raise spurious floating-point exceptions..
+[G.6.4.1 The cpow functions] The cpow functions raise floating-point exceptions if appropriate for the calculation of the parts of the result, and may also raise spurious floating-point exceptions.
 [H.2.2 Integer types] If an implementation adds support for the LIA-1 exceptional values ``integer_overflow'' and ``undefined'', then those types are LIA-1 conformant types.
 [H.2.3 Floating-point types] If an implementation adds support for the LIA-1 exceptional values ``underflow'', ``floating_overflow'', and ``"undefined'', then those types are conformant with LIA-1.
 [H.2.4 Type conversions] The fmod() function is useful for doing silent wrapping to unsigned integer types.
@@ -1750,8 +1683,7 @@
 [J.2 Undefined behavior] An example of undefined behavior is when an output operation on an update stream is followed by an input operation without an intervening call to the fflush function or a file positioning function, or an input operation on an update stream is followed by an output operation with an intervening call to a file positioning function.
 [J.2 Undefined behavior] An example of undefined behavior is when a partial element read by a call to the fread function is used.
 [J.2 Undefined behavior] An example of undefined behavior is when the fseek function is called for a text stream with a nonzero offset and either the offset was not returned by a previous successful call to the ftell function on a stream associated with the same file or whence is not SEEK_SET.
-[J.2 Undefined behavior] An example of undefined behavior is when the fsetpos function is called to set a position that was not returned by a previous successful call to the fgetpos function on a stream associated with the same file (7.21.9..
-[J.2 Undefined behavior] A non-null pointer returned by a call to the calloc, malloc, or realloc function with a zero requested size is used to access an object (7.22..
+[J.2 Undefined behavior] An example of undefined behavior is when the fsetpos function is called to set a position that was not returned by a previous successful call to the fgetpos function on a stream associated with the same file.
 [J.2 Undefined behavior] An example of undefined behavior is when a signal is raised while the quick_exit function is executing.
 [J.2 Undefined behavior] An example of undefined behavior is when a complex argument is supplied for a generic parameter of a type-generic macro that has no corresponding complex function.
 [J.3 Implementation-defined behavior] A conforming implementation is required to document its choice of behavior for implementation-defined behavior.
@@ -1784,5 +1716,5 @@
 [K.3.1.4 Runtime-constraint violations] If a runtime-constraint is violated, the implementation shall call the currently registered runtime-constraint handler (see set_constraint_handler_s in <stdlib.h>).
 [K.3.1.4 Runtime-constraint violations] If the runtime-constraints section for a function ending with _s states an action to be performed when a runtime-constraint violation occurs, the function shall perform the action before calling the runtime-constraint handler.
 [K.3.1.4 Runtime-constraint violations] If the runtime-constraints section lists actions that are prohibited when a runtime-constraint violation occurs, then such actions are prohibited to the function both before calling the handler and after the handler returns.
-[K.3.1.4 Runtime-constraint violations] If the handler does return, the library function whose runtime-constraint was violated shall return some indication of failure as given by the returns section in the function's specification.
+[K.3.1.4 Runtime-constraint violations] If the runtime-constraint handler does return, the library function whose runtime-constraint was violated shall return some indication of failure as given by the returns section in the function's specification.
 [L.3 Requirements] If the program performs a trap, the implementation is permitted to invoke a runtime-constraint handler. Such semantics are implementation-defined.
