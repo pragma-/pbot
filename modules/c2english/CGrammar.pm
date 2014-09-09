@@ -629,6 +629,7 @@ logical_OR_AND_expression:
                 and $expression !~ /^the .*? number \S+$/i
                 and $expression !~ /the size of/i
                 and $expression !~ /the offset/i
+                and $expression !~ /the address of/i
                 and $expression !~ /^the result of the/) {
               $return = 'the result of the expression ^L';
             }
@@ -961,7 +962,7 @@ designator:
               }
               $expression = "the $expression element";
             } else {
-              $expression = "the element at location $expression";
+              $expression = "the element at location ^L$expression^L";
             }
 
             $return = $expression;
@@ -1112,7 +1113,7 @@ postfix_productions:
                 my $plural = $expression == 1 ? '' : 's';
                 $return = "the location $expression element$plural backwards from where ^L$arg{primary_expression} points^L";
               } else {
-                $return = "the element at location ^L$expression^L of";
+                $return = "the element at location ^L$expression of^L";
                 $return .= " $arg{primary_expression}" if $arg{primary_expression};
               }
             }
@@ -1288,7 +1289,7 @@ primary_expression:
             if ($arg{context} =~ /statement$/) {
               $return = "Evaluate the expression ";
             } else {
-              $return = "The result of the expression ";
+              #$return = "The result of the expression ";
             }
             $return .= '(' x $repeats;
             $return .= "^L$expression";
