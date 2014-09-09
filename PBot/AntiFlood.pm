@@ -184,7 +184,7 @@ sub check_flood {
   my $account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
 
   if($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
-    $self->{pbot}->{logger}->log(sprintf("%-14s | %-65s | %s\n", "NICKCHANGE", $mask, $text));
+    $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", "NICKCHANGE", $mask, $text));
 
     my ($newnick) = $text =~ m/NICKCHANGE (.*)/;
     if($newnick =~ m/^Guest\d+$/) {
@@ -197,7 +197,7 @@ sub check_flood {
       $self->{nickflood}->{$account}->{changes}++;
     }
   } else {
-    $self->{pbot}->{logger}->log(sprintf("%-14s | %-65s | %s\n", $channel eq $mask ? "QUIT" : $channel, $mask, $text));
+    $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", lc $channel eq lc $mask ? "QUIT" : $channel, $mask, $text));
   }
 
   # handle QUIT events
