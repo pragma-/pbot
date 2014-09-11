@@ -41,7 +41,7 @@ my %languages = (
 
 my %preludes = ( 
   'C99'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <complex.h>\n#include <math.h>\n#include <tgmath.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <locale.h>\n#include <wchar.h>\n#include <fenv.h>\n#inclue <iso646.h>\n#include <setjmp.h>\n#include <signal.h>\n#include <prelude.h>\n\n",
-  'C11'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <complex.h>\n#include <setjmp.h>\n#include <wchar.h>\n#include <wctype.h>\n#include <tgmath.h>\n#include <fenv.h>\n#include <locale.h>\n#include <iso646.h>\n#include <signal.h>\n#include <prelude.h>\n\n",
+  'C11'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n#include <stdarg.h>\n#include <stdnoreturn.h>\n#include <stdalign.h>\n#include <ctype.h>\n#include <inttypes.h>\n#include <float.h>\n#include <errno.h>\n#include <time.h>\n#include <assert.h>\n#include <complex.h>\n#include <setjmp.h>\n#include <wchar.h>\n#include <wctype.h>\n#include <tgmath.h>\n#include <fenv.h>\n#include <locale.h>\n#include <iso646.h>\n#include <signal.h>\n#include <uchar.h>\n#include <prelude.h>\n\n",
   'C89'  => "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <locale.h>\n#include <setjmp.h>\n#include <signal.h>\n#include <prelude.h>\n\n",
 );
 
@@ -100,6 +100,12 @@ sub paste_sprunge {
   my $result = $response->content;
   $result =~ s/^\s+//;
   $result =~ s/\s+$/?c/;
+
+  # 2014/7/23 -- sprunge.us suddenly stops producing URLs and only produces paste id
+  if ($result !~ /sprunge.us/) {
+    $result = "http://sprunge.us/$result";
+  }
+
   return $result;
 }
 
@@ -637,6 +643,22 @@ if($subcode =~ m/^\s*(?:and\s+)?(run|paste)\s*$/i) {
 my $lang = "C11";
 $lang = uc $1 if $code =~ s/-lang=([^\b\s]+)//i;
 
+if($save_last_code) {
+  if($unshift_last_code) {
+    unshift @last_code, $code;
+  }
+
+  open FILE, "> history/$channel.hist";
+
+  my $i = 0;
+  foreach my $line (@last_code) {
+    last if(++$i > $MAX_UNDO_HISTORY);
+    print FILE "$line\n";
+  }
+
+  close FILE;
+}
+
 my $input = "";
 $input = $1 if $code =~ s/-(?:input|stdin)=(.*)$//i;
 
@@ -658,22 +680,6 @@ $args .= "$1 " while $code =~ s/^\s*(-[^ ]+)\s*//;
 $args =~ s/\s+$//;
 
 $code = "$include_args$code";
-
-if($save_last_code) {
-  if($unshift_last_code) {
-    unshift @last_code, $extracted_args . (length $args ? $args . ' ' . $code : $code);
-  }
-
-  open FILE, "> history/$channel.hist";
-
-  my $i = 0;
-  foreach my $line (@last_code) {
-    last if(++$i > $MAX_UNDO_HISTORY);
-    print FILE "$line\n";
-  }
-
-  close FILE;
-}
 
 if($only_show) {
   print "$nick: $code\n";
@@ -951,7 +957,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     }
 
     print "final extract: [$ret][$ident][$params][$body]\n" if $debug;
-    $code .= "$precode_code\n$ret $ident($params) $body\n\n";
+    $code .= "$precode_code\n$ret $ident($params) $body\n";
 
     if($debug >= 2) { print '-' x 20 . "\n" }
     print "     code: [$code]\n" if $debug >= 2;
@@ -994,6 +1000,8 @@ $input = `fortune -u -s` if not length $input;
 $input =~ s/[\n\r\t]/ /msg;
 $input =~ s/:/ - /g;
 $input =~ s/\s+/ /g;
+$input =~ s/^\s+//;
+$input =~ s/\s+$//;
 
 print FILE "$nick: [lang:$lang][args:$args][input:$input]\n", pretty($code), "\n" unless $got_run and $copy_code;
 
@@ -1065,7 +1073,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/\\0"/"/g;
   $output =~ s/"\\0/"/g;
   $output =~ s/\.\.\.>/>/g;
-  $output =~ s/(\\\d{3})+//g;
+#  $output =~ s/(?<!')(\\\d{3})+//g;
   $output =~ s/<\s*included at \/home\/compiler\/>\s*//g;
   $output =~ s/\s*compilation terminated due to -Wfatal-errors\.//g;
   $output =~ s/^======= Backtrace.*\[vsyscall\]\s*$//ms;
@@ -1077,7 +1085,7 @@ if($output =~ m/^\s*$/) {
   $output =~ s/In function\s*`main':\s*\/home\/compiler\/ undefined reference to/error: undefined reference to/g;
   $output =~ s/\/home\/compiler\///g;
   $output =~ s/compilation terminated.//;
-  $output =~ s/<'(.*)' = char>/<'$1' = int>/g;
+  $output =~ s/'(.*?)' = char/'$1' = int/g; $output =~ s/(\(\s*char\s*\)\s*'.*?') = int/$1 = char/; # gdb thinks 'a' is type char, which is not true for C
   $output =~ s/= (-?\d+) ''/= $1/g;
   $output =~ s/, <incomplete sequence >//g;
   $output =~ s/\s*warning: shadowed declaration is here \[-Wshadow\]//g unless $got_paste or $got_run eq 'paste';
@@ -1137,6 +1145,22 @@ if($output =~ m/^\s*$/) {
   $output =~ s/\](\d+:\d+:\s*)*error:/]\n$1error:/g;
   $output =~ s/\s+no output/ no output/;
   $output =~ s/^\s+no output/no output/;
+
+  # backspace
+  my $boutput = "";
+  my $active_position = 0;
+  $output =~ s/\n$//;
+  while($output =~ /(.)/gms) {
+    my $c = $1;
+    if($c eq "\b") {
+      if(--$active_position <= 0) {
+        $active_position = 0;
+      }
+      next;
+    }
+    substr($boutput, $active_position++, 1) = $c;
+  }
+  $output = $boutput;
 }
 
 if($warn_unterminated_define == 1) {
