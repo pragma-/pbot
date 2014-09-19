@@ -695,9 +695,10 @@ Static_assert:
     | 'static_assert'
 
 static_assert_declaration:
-      Static_assert '(' constant_expression[context => 'static_assert'] ',' string ')' ';'
+      Static_assert '(' constant_expression[context => 'static assert'] ',' string ')' ';'
           {
-            $return = "Halt compilation and produce the diagnostic $item{string} unless $item{constant_expression}.\n";
+            my $expression  = ::istrue $item{constant_expression};
+            $return = "Halt compilation and produce the diagnostic $item{string} unless $expression.\n";
           }
 
 declaration_list: 

@@ -101,19 +101,24 @@ sub flatten {
   map { ref eq 'ARRAY' ? flatten(@$_) : $_ } @_
 }
 
+sub isfalse {
+  return istrue($_[0], 'zero');
+}
+
 sub istrue {
   my @parts = split /(?<!,) and /, $_[0];
+  my $truthy = defined $_[1] ? $_[1] : 'nonzero';
   my ($result, $and) = ('', '');
   foreach my $part (@parts) {
     $result .= $and;
     if($part !~ /(discard the result|result discarded|greater|less|equal|false$)/) {
-      $result .= "$part is nonzero";
+      $result .= "$part is $truthy";
     } else {
       $result .= $part;
     }
     $and = ' and ';
   }
-  $result =~ s/is nonzero and the result discarded/is evaluated and the result discarded/g;
+  $result =~ s/is $truthy and the result discarded/is evaluated and the result discarded/g;
   $result =~ s/is ((?:(?!evaluated).)+) and the result discarded/is evaluated to be $1 and the result discarded/g;
   return $result;
 }

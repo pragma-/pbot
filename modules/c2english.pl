@@ -19,7 +19,7 @@ if($code =~ s/^-f\s+//) {
 }
 
 my ($has_function, $has_main, $got_nomain);
-my $prelude_base = "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <stdnoreturn.h>\n#include <stdbool.h>\n#include <stdalign.h>\n#include <time.h>\n#define _Atomic\n#define _Static_assert(a, b)\n\n";
+my $prelude_base = "#define _XOPEN_SOURCE 9001\n#define __USE_XOPEN\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n#include <errno.h>\n#include <ctype.h>\n#include <assert.h>\n#include <stdnoreturn.h>\n#include <stdbool.h>\n#include <stdalign.h>\n#include <time.h>\n#include <stddef.h>\n#define _Atomic\n#define _Static_assert(a, b)\n\n";
 my $prelude = $prelude_base;
 
 print "code before: [$code]\n" if $debug;
@@ -309,6 +309,9 @@ my ($ret, $result) = execute(10, "gcc -std=c11 -pedantic -Werror -Wno-unused -fs
 if(not $force and $ret != 0) {
   $output = $result;
 
+  #print STDERR "output: [$output]\n";
+
+  $output =~ s/\s*In file included from\s+.*?:\d+:\d+:\s*//g;
   $output =~ s/code\.c:\d+:\d+://g;
   $output =~ s/code\.c://g;
   $output =~ s/error=edantic/error=pedantic/g;
