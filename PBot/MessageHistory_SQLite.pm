@@ -242,6 +242,7 @@ sub find_message_account_by_nick {
   my ($id, $hostmask) = eval {
     my $sth = $self->{dbh}->prepare('SELECT id,hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" LIMIT 1');
     my $qnick = quotemeta $nick;
+    $qnick =~ s/_/\\_/g;
     $sth->bind_param(1, "$qnick!%");
     $sth->execute();
     my $row = $sth->fetchrow_hashref();
@@ -270,6 +271,7 @@ sub find_message_accounts_by_mask {
   my ($self, $mask) = @_;
 
   my $qmask = quotemeta $mask;
+  $qmask =~ s/_/\\_/g;
   $qmask =~ s/\\\*/%/g;
   $qmask =~ s/\\\?/_/g;
   $qmask =~ s/\\\$.*$//;
@@ -294,6 +296,7 @@ sub get_message_account {
   my $rows = eval {
     my $sth = $self->{dbh}->prepare('SELECT id,hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC');
     my $qnick = quotemeta $nick;
+    $qnick =~ s/_/\\_/g;
     $sth->bind_param(1, "$qnick!%");
     $sth->execute();
     my $rows = $sth->fetchall_arrayref({});
@@ -366,6 +369,7 @@ sub update_hostmask_data {
     }
 
     my $qmask = quotemeta $mask;
+    $qmask =~ s/_/\\_/g;
     $sth->bind_param($param, $qmask);
     $sth->execute();
     $self->{new_entries}++;
@@ -671,6 +675,7 @@ sub get_also_known_as {
     my %aka_hostmasks;
     my $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC');
     my $qnick = quotemeta $nick;
+    $qnick =~ s/_/\\_/g;
     $sth->bind_param(1, "$qnick!%");
     $sth->execute();
     my $rows = $sth->fetchall_arrayref({});
