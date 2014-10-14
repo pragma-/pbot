@@ -31,11 +31,11 @@ sub initialize {
 
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
-  $self->{pbot}->{registry}->add_default('text',  'general', 'show_url_titles',          $conf{show_url_titles} // 1);
-  $self->{pbot}->{registry}->add_default('array', 'general', 'show_url_titles_channels', $conf{show_url_titles_channels} // '.*');
+  $self->{pbot}->{registry}->add_default('text',  'general', 'show_url_titles',                 $conf{show_url_titles}                 // 1);
+  $self->{pbot}->{registry}->add_default('array', 'general', 'show_url_titles_channels',        $conf{show_url_titles_channels}        // '.*');
   $self->{pbot}->{registry}->add_default('array', 'general', 'show_url_titles_ignore_channels', $conf{show_url_titles_ignore_channels} // 'none');
-  $self->{pbot}->{registry}->add_default('text',  'general', 'compile_blocks',           $conf{compile_blocks} // 1);
-  $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',  $conf{compile_blocks_channels}  // '.*');
+  $self->{pbot}->{registry}->add_default('text',  'general', 'compile_blocks',                  $conf{compile_blocks}                  // 1);
+  $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',         $conf{compile_blocks_channels}         // '.*');
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_ignore_channels',  $conf{compile_blocks_ignore_channels}  // 'none');
   $self->{pbot}->{registry}->add_default('text',  'interpreter', 'max_recursion',  10);
 }
