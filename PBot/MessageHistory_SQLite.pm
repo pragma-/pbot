@@ -10,6 +10,7 @@ use strict;
 
 use DBI;
 use Carp qw(shortmess);
+use Time::HiRes qw(gettimeofday);
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -322,6 +323,7 @@ sub get_message_account {
     $self->{pbot}->{logger}->log("message-history: [get-account] $nick!$user\@$host linked to $rows->[0]->{hostmask} with id $rows->[0]->{id}\n");
     $self->add_message_account("$nick!$user\@$host", $rows->[0]->{id});
     $self->devalidate_all_channels($rows->[0]->{id});
+    $self->update_hostmask_data("$nick!$user\@$host", { last_seen => scalar gettimeofday });
     my @nickserv_accounts = $self->get_nickserv_accounts($rows->[0]->{id});
     foreach my $nickserv_account (@nickserv_accounts) {
       $self->{pbot}->{logger}->log("$nick!$user\@$host [$rows->[0]->{id}] seen with nickserv account [$nickserv_account]\n");
