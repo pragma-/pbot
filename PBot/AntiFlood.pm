@@ -240,7 +240,7 @@ sub check_flood {
   return if ($channel =~ /^#/) and (not exists $self->{pbot}->{channels}->{channels}->hash->{$channel} or $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop} == 0);
 
   if($channel =~ /^#/ and $mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
-    # remove validation on PART so we check for ban-evasion when user returns at a later time
+    # remove validation on PART or KICK so we check for ban-evasion when user returns at a later time
     my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'validated');
     if($channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
       $channel_data->{validated} &= ~$self->{NICKSERV_VALIDATED};

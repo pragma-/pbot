@@ -232,13 +232,13 @@ sub recall_message {
     my $ago = ago(gettimeofday - $message->{timestamp});
 
     if(not defined $recall_text) {
-      if($text =~ s/^\/me\s+//) {
+      if($text =~ s/^\/me\s+// or $text =~ m/^KICKED /) {
         $recall_text = "[$ago] * $found_nick $text";
       } else {
         $recall_text = "[$ago] <$found_nick> $text";
       }
     } else {
-      if($text =~ s/^\/me\s+//) {
+      if($text =~ s/^\/me\s+// or $text =~ m/^KICKED /) {
         $recall_text .= " [$ago] * $found_nick $text";
       } else {
         $recall_text .= " [$ago] <$found_nick> $text";

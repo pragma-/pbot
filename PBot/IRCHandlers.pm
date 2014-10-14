@@ -217,17 +217,25 @@ sub on_kick {
 
   my ($message_account) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($target);
 
+  my $hostmask;
   if(defined $message_account) {
-    my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($message_account);
+    $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($message_account);
 
     my ($target_nick, $target_user, $target_host) = $hostmask =~ m/^([^!]+)!([^@]+)@(.*)/;
     my $text = "KICKED by $nick!$user\@$host ($reason)";
 
-    $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
+    $self->{pbot}->{messagehistory}->add_message($message_account, $hostmask, $channel, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
     $self->{pbot}->{antiflood}->check_flood($channel, $target_nick, $target_user, $target_host, $text, 
       $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_threshold'),
       $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_time_threshold'),
       $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
+  }
+
+  $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account_id("$nick!$user\@$host");
+  
+  if(defined $message_account) {
+    my $text = "KICKED " . (defined $hostmask ? $hostmask : $target) . " from $channel ($reason)";
+    $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_CHAT});
   }
 }
 
