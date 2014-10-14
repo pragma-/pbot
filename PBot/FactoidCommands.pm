@@ -772,7 +772,7 @@ sub factfind {
         if($factoids->{$chan}->{$trigger}->{type} eq 'text' or $factoids->{$chan}->{$trigger}->{type} eq 'regex') {
           if($factoids->{$chan}->{$trigger}->{owner} =~ /$owner/i 
             && $factoids->{$chan}->{$trigger}->{ref_user} =~ /$refby/i
-            && $factoids->{$chan}->{$trigger}->{edited_by} =~ /$editby/i) {
+            && (exists $factoids->{$chan}->{$trigger}->{edited_by} ? $factoids->{$chan}->{$trigger}->{edited_by} =~ /$editby/i : 1)) {
             next if($arguments ne "" && $factoids->{$chan}->{$trigger}->{action} !~ /$arguments/i && $trigger !~ /$arguments/i);
 
             $i++;

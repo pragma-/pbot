@@ -244,18 +244,19 @@ sub find_factoid {
 
   $self->{pbot}->{logger}->log("from: $from\n") if $debug;
 
-  my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
+  my $string = $keyword . (defined $arguments ? " $arguments" : "");
 
   $self->{pbot}->{logger}->log("string: $string\n") if $debug;
 
   my @result = eval {
     foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
       if($exact_channel) {
-        next unless $from eq lc $channel;
+        next unless $from eq lc $channel or $channel eq '.*';
       }
 
       foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
         if(not $exact_trigger and $self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'regex') {
+          $self->{pbot}->{logger}->log("checking regex $string =~ m/$trigger/i\n") if $debug;
           if($string =~ m/$trigger/i) {
             $self->{pbot}->{logger}->log("return regex $channel: $trigger\n") if $debug;
             return ($channel, $trigger);
@@ -291,7 +292,7 @@ sub interpreter {
 
   $from = lc $from;
 
-  #$self->{pbot}->{logger}->log("factoids interpreter: from: [$from], ref_from: [" . (defined $ref_from ? $ref_from : "undef") . "]\n");
+  #$self->{pbot}->{logger}->log("factoids interpreter: kw: [$keyword] args: [$arguments] from: [$from], ref_from: [" . (defined $ref_from ? $ref_from : "undef") . "]\n");
 
   # search for factoid against global channel and current channel (from unless ref_from is defined)
   my $original_keyword = $keyword;
@@ -312,15 +313,18 @@ sub interpreter {
 
   # if no match found, attempt to call factoid from another channel if it exists there
   if(not defined $keyword) {
-    my $chans = "";
+    my $string = "$original_keyword $arguments";
+    my $lc_keyword = lc $original_keyword;
     my $comma = "";
     my $found = 0;
+    my $chans = "";
     my ($fwd_chan, $fwd_trig);
 
     # build string of which channels contain the keyword, keeping track of the last one and count
     foreach my $chan (keys %{ $self->{factoids}->hash }) {
       foreach my $trig (keys %{ $self->{factoids}->hash->{$chan} }) {
-        if(lc $trig eq lc $original_keyword) {
+        my $type = $self->{factoids}->hash->{$chan}->{$trig}->{type};
+        if(($type eq 'text' or $type eq 'module') and lc $trig eq $lc_keyword) {
           $chans .= $comma . $chan;
           $comma = ", ";
           $found++;
@@ -338,7 +342,6 @@ sub interpreter {
     # if there's just one other channel that has this keyword, trigger that instance
     elsif($found == 1) {
       $pbot->{logger}->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
-
       return $pbot->{factoids}->interpreter($from, $nick, $user, $host, ++$count, $fwd_trig, $arguments, $tonick, $fwd_chan);
     } 
     # otherwise keyword hasn't been found, display similiar matches for all channels
@@ -552,7 +555,7 @@ sub interpreter {
 
     if($@) {
       $self->{pbot}->{logger}->log("Regex fail: $@\n");
-      return "/msg $nick $ref_from" . "Fail.";
+      return "";
     }
 
     return $ref_from . $result;
