@@ -249,22 +249,34 @@ sub find_factoid {
   $self->{pbot}->{logger}->log("string: $string\n") if $debug;
 
   my @result = eval {
+    # check factoids
     foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
       if($exact_channel) {
         next unless $from eq lc $channel or $channel eq '.*';
       }
 
       foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
-        if(not $exact_trigger and $self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'regex') {
-          $self->{pbot}->{logger}->log("checking regex $string =~ m/$trigger/i\n") if $debug;
-          if($string =~ m/$trigger/i) {
-            $self->{pbot}->{logger}->log("return regex $channel: $trigger\n") if $debug;
-            return ($channel, $trigger);
-          }
-        } else {
-          if($keyword =~ m/^\Q$trigger\E$/i) {
-            $self->{pbot}->{logger}->log("return $channel: $trigger\n") if $debug;
-            return ($channel, $trigger);
+        if($keyword =~ m/^\Q$trigger\E$/i) {
+          $self->{pbot}->{logger}->log("return $channel: $trigger\n") if $debug;
+          return ($channel, $trigger);
+        }
+      }
+    }
+
+    # then check regex factoids
+    if(not $exact_trigger) {
+      foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
+        if($exact_channel) {
+          next unless $from eq lc $channel or $channel eq '.*';
+        }
+
+        foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
+          if($self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'regex') {
+            $self->{pbot}->{logger}->log("checking regex $string =~ m/$trigger/i\n") if $debug;
+            if($string =~ m/$trigger/i) {
+              $self->{pbot}->{logger}->log("return regex $channel: $trigger\n") if $debug;
+              return ($channel, $trigger);
+            }
           }
         }
       }
