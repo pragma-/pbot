@@ -73,6 +73,8 @@ sub initialize {
 
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'debug_checkban',             $conf{debug_checkban}             //  0);
 
+  $self->{pbot}->{registry}->add_default('text',  'antiflood', 'bad_away_nicks',             $conf{bad_away_nicks}             // '[[:punct:]](afk|away|sleep|z+|work|gone)[[:punct:]]*$');
+
   $self->{pbot}->{commands}->register(sub { return $self->unbanme(@_)   },  "unbanme",   0);
   $self->{pbot}->{commands}->register(sub { return $self->whitelist(@_) },  "whitelist", 10);
 }
@@ -195,6 +197,18 @@ sub check_flood {
       $nick = $newnick;
 
       $self->{nickflood}->{$account}->{changes}++;
+    }
+
+    my $bad_away_nicks = $self->{pbot}->{registry}->get_value('antiflood', 'bad_away_nicks');
+    if($newnick =~ m/$bad_away_nicks/i) {
+      $self->{pbot}->{logger}->log("$newnick matches bad away nick regex, kicking...\n");
+      my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
+      foreach my $chan (@channels) {
+        if($chan =~ m/^#/) {
+          $self->{pbot}->{chanops}->add_op_command($chan, "kick $chan $newnick No away nicks: http://sackheads.org/~bnaylor/spew/away_msgs.html");
+          $self->{pbot}->{chanops}->gain_ops($chan);
+        }
+      }
     }
   } else {
     $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", lc $channel eq lc $mask ? "QUIT" : $channel, $mask, $text));
