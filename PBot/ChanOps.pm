@@ -70,6 +70,7 @@ sub lose_ops {
 
 sub add_op_command {
   my ($self, $channel, $command) = @_;
+  return if not exists $self->{pbot}->{channels}->{channels}->hash->{$channel} or not $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop};
   push @{ $self->{op_commands}->{$channel} }, $command;
 }
 
