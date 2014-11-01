@@ -30,6 +30,7 @@ use PBot::Registry;
 use PBot::SelectHandler;
 use PBot::StdinReader;
 use PBot::IRC;
+use PBot::EventDispatcher;
 use PBot::IRCHandlers;
 use PBot::Channels;
 use PBot::BanTracker;
@@ -98,20 +99,21 @@ sub initialize {
   $self->{registry}->add_trigger('irc', 'botnick', sub { $self->change_botnick_trigger(@_) });
   $self->{registry}->add_trigger('irc', 'debug',   sub { $self->irc_debug_trigger(@_)      });
  
-  $self->{select_handler} = PBot::SelectHandler->new(pbot => $self, %conf);
-  $self->{stdin_reader}   = PBot::StdinReader->new(pbot => $self, %conf);
-  $self->{admins}         = PBot::BotAdmins->new(pbot => $self, filename => delete $conf{admins_file}, %conf);
-  $self->{bantracker}     = PBot::BanTracker->new(pbot => $self, %conf);
-  $self->{lagchecker}     = PBot::LagChecker->new(pbot => $self, %conf);
-  $self->{messagehistory} = PBot::MessageHistory->new(pbot => $self, filename => delete $conf{messagehistory_file}, %conf);
-  $self->{antiflood}      = PBot::AntiFlood->new(pbot => $self, %conf);
-  $self->{ignorelist}     = PBot::IgnoreList->new(pbot => $self, filename => delete $conf{ignorelist_file}, %conf);
-  $self->{irc}            = PBot::IRC->new();
-  $self->{irchandlers}    = PBot::IRCHandlers->new(pbot => $self, %conf);
-  $self->{channels}       = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file}, %conf);
-  $self->{chanops}        = PBot::ChanOps->new(pbot => $self, %conf);
+  $self->{event_dispatcher} = PBot::EventDispatcher->new(pbot => $self, %conf);
+  $self->{select_handler}   = PBot::SelectHandler->new(pbot => $self, %conf);
+  $self->{stdin_reader}     = PBot::StdinReader->new(pbot => $self, %conf);
+  $self->{admins}           = PBot::BotAdmins->new(pbot => $self, filename => delete $conf{admins_file}, %conf);
+  $self->{bantracker}       = PBot::BanTracker->new(pbot => $self, %conf);
+  $self->{lagchecker}       = PBot::LagChecker->new(pbot => $self, %conf);
+  $self->{messagehistory}   = PBot::MessageHistory->new(pbot => $self, filename => delete $conf{messagehistory_file}, %conf);
+  $self->{antiflood}        = PBot::AntiFlood->new(pbot => $self, %conf);
+  $self->{ignorelist}       = PBot::IgnoreList->new(pbot => $self, filename => delete $conf{ignorelist_file}, %conf);
+  $self->{irc}              = PBot::IRC->new();
+  $self->{irchandlers}      = PBot::IRCHandlers->new(pbot => $self, %conf);
+  $self->{channels}         = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file}, %conf);
+  $self->{chanops}          = PBot::ChanOps->new(pbot => $self, %conf);
 
-  $self->{interpreter}    = PBot::Interpreter->new(pbot => $self, %conf);
+  $self->{interpreter}      = PBot::Interpreter->new(pbot => $self, %conf);
   $self->{interpreter}->register(sub { return $self->{commands}->interpreter(@_); });
   $self->{interpreter}->register(sub { return $self->{factoids}->interpreter(@_); });
 
@@ -156,43 +158,24 @@ sub connect {
 
   $self->{logger}->log("Connecting to $server ...\n");
 
-  $self->{conn} = $self->{irc}->newconn( 
-    Nick         => $self->{registry}->get_value('irc', 'botnick'),
-    Username     => $self->{registry}->get_value('irc', 'username'),
-    Ircname      => $self->{registry}->get_value('irc', 'ircname'),
-    Server       => $server,
-    SSL          => $self->{registry}->get_value('irc', 'SSL'),
-    SSL_ca_file  => $self->{registry}->get_value('irc', 'SSL_ca_file'),
-    SSL_ca_path  => $self->{registry}->get_value('irc', 'SSL_ca_path'),
-    Port         => $self->{registry}->get_value('irc', 'port'))
-    or Carp::croak "$0: Can't connect to IRC server.\n";
+  while (not $self->{conn} = $self->{irc}->newconn( 
+      Nick         => $self->{registry}->get_value('irc', 'botnick'),
+      Username     => $self->{registry}->get_value('irc', 'username'),
+      Ircname      => $self->{registry}->get_value('irc', 'ircname'),
+      Server       => $server,
+      SSL          => $self->{registry}->get_value('irc', 'SSL'),
+      SSL_ca_file  => $self->{registry}->get_value('irc', 'SSL_ca_file'),
+      SSL_ca_path  => $self->{registry}->get_value('irc', 'SSL_ca_path'),
+      Port         => $self->{registry}->get_value('irc', 'port'))) {
+    $self->{logger}->log("$0: Can't connect to IRC server. Retrying in 15 seconds...\n");
+    sleep 15;
+  }
 
   $self->{connected} = 1;
 
   #set up handlers for the IRC engine
   $self->{conn}->add_default_handler(sub { $self->{irchandlers}->default_handler(@_) }, 1);
-
-  $self->{conn}->add_handler([ 251,252,253,254,302,255 ], sub { $self->{irchandlers}->on_init(@_)         });
-  $self->{conn}->add_handler(376                        , sub { $self->{irchandlers}->on_connect(@_)      });
-  $self->{conn}->add_handler('disconnect'               , sub { $self->{irchandlers}->on_disconnect(@_)   });
-  $self->{conn}->add_handler('motd'                     , sub { $self->{irchandlers}->on_motd(@_)         });
-  $self->{conn}->add_handler('notice'                   , sub { $self->{irchandlers}->on_notice(@_)       });
-  $self->{conn}->add_handler('caction'                  , sub { $self->{irchandlers}->on_action(@_)       });
-  $self->{conn}->add_handler('public'                   , sub { $self->{irchandlers}->on_public(@_)       });
-  $self->{conn}->add_handler('msg'                      , sub { $self->{irchandlers}->on_msg(@_)          });
-  $self->{conn}->add_handler('mode'                     , sub { $self->{irchandlers}->on_mode(@_)         });
-  $self->{conn}->add_handler('part'                     , sub { $self->{irchandlers}->on_departure(@_)    });
-  $self->{conn}->add_handler('join'                     , sub { $self->{irchandlers}->on_join(@_)         });
-  $self->{conn}->add_handler('kick'                     , sub { $self->{irchandlers}->on_kick(@_)         });
-  $self->{conn}->add_handler('quit'                     , sub { $self->{irchandlers}->on_departure(@_)    });
-  $self->{conn}->add_handler('nick'                     , sub { $self->{irchandlers}->on_nickchange(@_)   });
-  $self->{conn}->add_handler('pong'                     , sub { $self->{lagchecker}->on_pong(@_)          });
-  $self->{conn}->add_handler('whoisaccount'             , sub { $self->{antiflood}->on_whoisaccount(@_)   });
-  $self->{conn}->add_handler('banlist'                  , sub { $self->{bantracker}->on_banlist_entry(@_) });
-  $self->{conn}->add_handler('endofnames'               , sub { $self->{bantracker}->get_banlist(@_)      });
-  $self->{conn}->add_handler(728                        , sub { $self->{bantracker}->on_quietlist_entry(@_) });
-  $self->{conn}->add_handler('bannickchange'            , sub { $self->{irchandlers}->on_bannickchange(@_) });
-  $self->{conn}->add_handler('notregistered'            , sub { $self->{irchandlers}->on_notregistered(@_) });
+  $self->{conn}->add_handler([ 251,252,253,254,255,302 ], sub { $self->{irchandlers}->on_init(@_) });
 
   # ignore these events
   $self->{conn}->add_handler(['whoisuser', 
@@ -202,6 +185,7 @@ sub connect {
                               'whoisidle',
                               'endofwhois', 
                               'motdstart',
+                              'endofmotd',
                               'away',
                               'endofbanlist'], sub {});
 }
@@ -215,8 +199,10 @@ sub do_one_loop {
 
 sub start {
   my $self = shift;
-  $self->connect() if not $self->{connected};
-  while(1) { $self->do_one_loop(); }
+  while(1) { 
+    $self->connect() if not $self->{connected};
+    $self->do_one_loop() if $self->{connected}; 
+  }
 }
 
 sub register_signal_handlers {

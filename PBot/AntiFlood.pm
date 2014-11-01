@@ -77,6 +77,8 @@ sub initialize {
 
   $self->{pbot}->{commands}->register(sub { return $self->unbanme(@_)   },  "unbanme",   0);
   $self->{pbot}->{commands}->register(sub { return $self->whitelist(@_) },  "whitelist", 10);
+
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisaccount', sub { $self->on_whoisaccount(@_) });
 }
 
 sub ban_whitelisted {
@@ -735,12 +737,13 @@ sub check_nickserv_accounts {
 }
 
 sub on_whoisaccount {
-  my ($self, $conn, $event) = @_;
-  my $nick    = $event->{args}[1];
-  my $account = lc $event->{args}[2];
+  my ($self, $event_type, $event) = @_;
+  my $nick    =    $event->{event}->{args}[1];
+  my $account = lc $event->{event}->{args}[2];
 
   $self->{pbot}->{logger}->log("$nick is using NickServ account [$account]\n");
   $self->check_nickserv_accounts($nick, $account);
+  return 0;
 }
 
 sub adjust_offenses {

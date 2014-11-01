@@ -31,14 +31,16 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to BanTracker");
-  $self->{pbot} = $pbot;
-
+  $self->{pbot}    = delete $conf{pbot} // Carp::croak("Missing pbot reference to BanTracker");
   $self->{banlist} = {};
 
   $self->{pbot}->{registry}->add_default('text', 'bantracker', 'chanserv_ban_timeout', '604800');
 
-  $pbot->{commands}->register(sub { return $self->dumpbans(@_) }, "dumpbans", 60);
+  $self->{pbot}->{commands}->register(sub { $self->dumpbans(@_) }, "dumpbans", 60);
+
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.endofnames', sub { $self->get_banlist(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.banlist',    sub { $self->on_banlist_entry(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.quietlist',  sub { $self->on_quietlist_entry(@_) });
 }
 
 sub dumpbans {
@@ -49,14 +51,43 @@ sub dumpbans {
 }
 
 sub get_banlist {
-  my ($self, $conn, $event) = @_;
-  my $channel = lc $event->{args}[1];
+  my ($self, $event_type, $event) = @_;
+  my $channel = lc $event->{event}->{args}[1];
 
   delete $self->{banlist}->{$channel};
 
   $self->{pbot}->{logger}->log("Retrieving banlist for $channel.\n");
-  $conn->sl("mode $channel +b");
-  $conn->sl("mode $channel +q");
+  $event->{conn}->sl("mode $channel +b");
+  $event->{conn}->sl("mode $channel +q");
+  return 0;
+}
+
+sub on_banlist_entry {
+  my ($self, $event_type, $event) = @_;
+  my $channel   = lc $event->{event}->{args}[1];
+  my $target    = lc $event->{event}->{args}[2];
+  my $source    = lc $event->{event}->{args}[3];
+  my $timestamp =    $event->{event}->{args}[4];
+
+  my $ago = ago(gettimeofday - $timestamp);
+
+  $self->{pbot}->{logger}->log("ban-tracker: [banlist entry] $channel: $target banned by $source $ago.\n");
+  $self->{banlist}->{$channel}->{'+b'}->{$target} = [ $source, $timestamp ];
+  return 0;
+}
+
+sub on_quietlist_entry {
+  my ($self, $event_type, $event) = @_;
+  my $channel   = lc $event->{event}->{args}[1];
+  my $target    = lc $event->{event}->{args}[3];
+  my $source    = lc $event->{event}->{args}[4];
+  my $timestamp =    $event->{event}->{args}[5];
+
+  my $ago = ago(gettimeofday - $timestamp);
+
+  $self->{pbot}->{logger}->log("ban-tracker: [quietlist entry] $channel: $target quieted by $source $ago.\n");
+  $self->{banlist}->{$channel}->{'+q'}->{$target} = [ $source, $timestamp ];
+  return 0;
 }
 
 sub get_baninfo {
@@ -100,32 +131,6 @@ sub get_baninfo {
   }
 
   return $bans;
-}
-
-sub on_quietlist_entry {
-  my ($self, $conn, $event) = @_;
-  my $channel   = lc $event->{args}[1];
-  my $target    = lc $event->{args}[3];
-  my $source    = lc $event->{args}[4];
-  my $timestamp =    $event->{args}[5];
-
-  my $ago = ago(gettimeofday - $timestamp);
-
-  $self->{pbot}->{logger}->log("ban-tracker: [quietlist entry] $channel: $target quieted by $source $ago.\n");
-  $self->{banlist}->{$channel}->{'+q'}->{$target} = [ $source, $timestamp ];
-}
-
-sub on_banlist_entry {
-  my ($self, $conn, $event) = @_;
-  my $channel   = lc $event->{args}[1];
-  my $target    = lc $event->{args}[2];
-  my $source    = lc $event->{args}[3];
-  my $timestamp =    $event->{args}[4];
-
-  my $ago = ago(gettimeofday - $timestamp);
-
-  $self->{pbot}->{logger}->log("ban-tracker: [banlist entry] $channel: $target banned by $source $ago.\n");
-  $self->{banlist}->{$channel}->{'+b'}->{$target} = [ $source, $timestamp ];
 }
 
 sub track_mode {

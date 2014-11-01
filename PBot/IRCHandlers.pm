@@ -14,7 +14,7 @@ use Data::Dumper;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to IRCHandlers should be key/value pairs, not hash reference");
+    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
   my ($class, %conf) = @_;
@@ -27,34 +27,34 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
  
-  my $pbot = delete $conf{pbot};
-  Carp::croak("Missing pbot parameter to IRCHandlers") if not defined $pbot;
+  $self->{pbot} = delete $conf{pbot};
+  Carp::croak("Missing pbot parameter to " . __FILE__) if not defined $self->{pbot};
 
-  $self->{pbot} = $pbot;
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.welcome',       sub { $self->on_connect(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.disconnect',    sub { $self->on_disconnect(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.motd',          sub { $self->on_motd(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.notice',        sub { $self->on_notice(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.public',        sub { $self->on_public(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.caction',       sub { $self->on_action(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.msg',           sub { $self->on_msg(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.mode',          sub { $self->on_mode(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.part',          sub { $self->on_departure(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.join',          sub { $self->on_join(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',          sub { $self->on_kick(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',          sub { $self->on_departure(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',          sub { $self->on_nickchange(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.bannickchange', sub { $self->on_bannickchange(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.notregistered', sub { $self->on_notregistered(@_) });
 }
 
 sub default_handler {
   my ($self, $conn, $event) = @_;
 
-  if ($self->{pbot}->{registry}->get_value('irc', 'log_default_handler')) {
-    my $dump = Dumper $event;
-    $self->{pbot}->{logger}->log($dump);
-  }
-}
-
-sub on_connect {
-  my ($self, $conn) = @_;
-  $self->{pbot}->{logger}->log("Connected!\n");
-  $conn->{connected} = 1;
-}
-
-sub on_disconnect {
-  my ($self, $conn, $event) = @_;
-  $self->{pbot}->{logger}->log("Disconnected, attempting to reconnect...\n");
-  $conn->connect();
-  if(not $conn->connected) {
-    sleep(5);
-    $self->on_disconnect($self, $conn, $event);
+  if(not defined $self->{pbot}->{event_dispatcher}->dispatch_event("irc.$event->{type}", { conn => $conn, event => $event })) {
+    if ($self->{pbot}->{registry}->get_value('irc', 'log_default_handler')) {
+      my $dump = Dumper $event;
+      $self->{pbot}->{logger}->log($dump);
+    }
   }
 }
 
@@ -65,76 +65,95 @@ sub on_init {
   $self->{pbot}->{logger}->log("*** @args\n");
 }
 
+sub on_connect {
+  my ($self, $event_type, $event) = @_;
+  $self->{pbot}->{logger}->log("Connected!\n");
+  $event->{conn}->{connected} = 1;
+  return 0;
+}
+
+sub on_disconnect {
+  my ($self, $event_type, $event) = @_;
+  $self->{pbot}->{logger}->log("Disconnected...\n");
+  $self->{pbot}->{connected} = 0;
+  return 0;
+}
+
 sub on_motd {
-  my ($self, $conn, $event) = @_;
+  my ($self, $event_type, $event) = @_;
 
   if ($self->{pbot}->{registry}->get_value('irc', 'show_motd')) {
-    my $server = $event->{from};
-    my $msg    = $event->{args}[1];
+    my $server = $event->{event}->{from};
+    my $msg    = $event->{event}->{args}[1];
     $self->{pbot}->{logger}->log("MOTD from $server :: $msg\n");
   }
+  return 0;
 }
 
 sub on_public {
-  my ($self, $conn, $event) = @_;
+  my ($self, $event_type, $event) = @_;
   
-  my $from = $event->{to}[0];
-  my $nick = $event->nick;
-  my $user = $event->user;
-  my $host = $event->host;
-  my $text = $event->{args}[0];
+  my $from = $event->{event}->{to}[0];
+  my $nick = $event->{event}->nick;
+  my $user = $event->{event}->user;
+  my $host = $event->{event}->host;
+  my $text = $event->{event}->{args}[0];
 
   $self->{pbot}->{interpreter}->process_line($from, $nick, $user, $host, $text);
+  return 0;
 }
 
 sub on_msg {
-  my ($self, $conn, $event) = @_;
-  my ($nick, $host) = ($event->nick, $event->host);
-  my $text = $event->{args}[0];
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $host) = ($event->{event}->nick, $event->{event}->host);
+  my $text = $event->{event}->{args}[0];
   my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
 
   $text =~ s/^\Q$bot_trigger\E?(.*)/$bot_trigger$1/;
-  $event->{to}[0]   = $nick;
-  $event->{args}[0] = $text;
-  $self->on_public($conn, $event);
+  $event->{event}->{to}[0]   = $nick;
+  $event->{event}->{args}[0] = $text;
+  $self->on_public($event_type, $event);
+  return 0;
 }
 
 sub on_notice {
-  my ($self, $conn, $event) = @_;
-  my ($nick, $host) = ($event->nick, $event->host);
-  my $text = $event->{args}[0];
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $host) = ($event->{event}->nick, $event->{event}->host);
+  my $text = $event->{event}->{args}[0];
 
   $self->{pbot}->{logger}->log("Received NOTICE from $nick $host '$text'\n");
 
-  if($nick eq "NickServ" && $text =~ m/This nickname is registered/) {
+  if($nick eq 'NickServ' && $text =~ m/This nickname is registered/) {
     $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
-    $conn->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+    $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
   }
   
-  if($nick eq "NickServ" && $text =~ m/You are now identified/) {
+  if($nick eq 'NickServ' && $text =~ m/You are now identified/) {
     foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
       if($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
         $self->{pbot}->{logger}->log("Joining channel: $chan\n");
-        $conn->join($chan);
+        $event->{conn}->join($chan);
       }
     }
     $self->{pbot}->{joined_channels} = 1;
   }
+  return 0;
 }
 
 sub on_action {
-  my ($self, $conn, $event) = @_;
+  my ($self, $event_type, $event) = @_;
 
-  $event->{args}[0] = "/me " . $event->{args}[0];
+  $event->{event}->{args}[0] = "/me " . $event->{event}->{args}[0];
   
-  $self->on_public($conn, $event);
+  $self->on_public($event_type, $event);
+  return 0;
 }
 
 sub on_mode {
-  my ($self, $conn, $event) = @_;
-  my ($nick, $user, $host) = ($event->nick, $event->user, $event->host);
-  my $mode_string = $event->{args}[0];
-  my $channel = $event->{to}[0];
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
+  my $mode_string = $event->{event}->{args}[0];
+  my $channel = $event->{event}->{to}[0];
   $channel = lc $channel;
 
   my ($mode, $modifier);
@@ -150,7 +169,7 @@ sub on_mode {
     }
 
     $mode = $modifier . $char;
-    $target = $event->{args}[++$i];
+    $target = $event->{event}->{args}[++$i];
 
     $self->{pbot}->{logger}->log("Got mode: source: $nick!$user\@$host, mode: $mode, target: " . (defined $target ? $target : "(undef)") . ", channel: $channel\n");
 
@@ -171,7 +190,7 @@ sub on_mode {
       }
       elsif($mode eq "+b") {
         $self->{pbot}->{logger}->log("Got banned in $channel, attempting unban.");
-        $conn->privmsg("chanserv", "unban $channel");
+        $event->{conn}->privmsg("chanserv", "unban $channel");
       }    
     } 
     else {  # bot not targeted
@@ -187,19 +206,19 @@ sub on_mode {
         foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
           if($self->{channels}->{channels}->hash->{$chan}{enabled}) {
             $self->{pbot}->{logger}->log("Joining channel: $chan\n");
-            $self->{pbot}->{conn}->join($chan);
+            $event->{conn}->join($chan);
           }
         }
-
         $self->{pbot}->{joined_channels} = 1;
       }
     }
   }
+  return 0;
 }
 
 sub on_join {
-  my ($self, $conn, $event) = @_;
-  my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
 
   my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
   $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "JOIN", $self->{pbot}->{messagehistory}->{MSG_JOIN});
@@ -207,11 +226,12 @@ sub on_join {
     $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_threshold'), 
     $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_time_threshold'),
     $self->{pbot}->{messagehistory}->{MSG_JOIN});
+  return 0;
 }
 
 sub on_kick {
-  my ($self, $conn, $event) = @_;
-  my ($nick, $user, $host, $target, $channel, $reason) = ($event->nick, $event->user, $event->host, $event->to, $event->{args}[0], $event->{args}[1]);
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host, $target, $channel, $reason) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0], $event->{event}->{args}[1]);
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host kicked $target from $channel ($reason)\n");
 
@@ -237,13 +257,14 @@ sub on_kick {
     my $text = "KICKED " . (defined $hostmask ? $hostmask : $target) . " from $channel ($reason)";
     $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_CHAT});
   }
+  return 0;
 }
 
 sub on_departure {
-  my ($self, $conn, $event) = @_;
-  my ($nick, $user, $host, $channel, $args) = ($event->nick, $event->user, $event->host, $event->to, $event->args);
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host, $channel, $args) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->args);
 
-  my $text = uc $event->type;
+  my $text = uc $event->{event}->type;
   $text .= " $args";
 
   my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
@@ -270,31 +291,12 @@ sub on_departure {
     $self->{pbot}->{logger}->log("Logged out $nick.\n");
     delete $admin->{loggedin};
   }
-}
-
-sub on_notregistered {
-  my ($self, $conn, $event) = @_;
-  my ($addr, $msg) = $event->args;
-
-  $self->{pbot}->{logger}->log("Received NOTREGISTERED from $addr: $msg\n");
-  $conn->privmsg("nickserv", "ghost " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-  $conn->privmsg("nickserv", "release " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-  $conn->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-}
-
-sub on_bannickchange {
-  my ($self, $conn, $event) = @_;
-  my ($addr, $nick, $msg) = $event->args;
-
-  $self->{pbot}->{logger}->log("Received BANNICKCHANGE from $addr: $nick ($msg)\n");
-  $conn->privmsg("nickserv", "ghost " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-  $conn->privmsg("nickserv", "release " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-  $conn->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  return 0;
 }
 
 sub on_nickchange {
-  my ($self, $conn, $event) = @_;
-  my ($nick, $user, $host, $newnick) = ($event->nick, $event->user, $event->host, $event->args);
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host, $newnick) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host changed nick to $newnick\n");
 
@@ -314,6 +316,30 @@ sub on_nickchange {
     $self->{pbot}->{registry}->get_value('antiflood', 'nick_flood_threshold'),
     $self->{pbot}->{registry}->get_value('antiflood', 'nick_flood_time_threshold'),
     $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
+  return 0;
+}
+
+# todo: fix the following two subroutines so they work properly (e.g., change nick to randomly generated nick and await responses)
+sub on_notregistered {
+  my ($self, $event_type, $event) = @_;
+  my ($addr, $msg) = $event->{event}->args;
+
+  $self->{pbot}->{logger}->log("Received NOTREGISTERED from $addr: $msg\n");
+  $event->{conn}->privmsg("nickserv", "ghost " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  $event->{conn}->privmsg("nickserv", "release " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  return 0;
+}
+
+sub on_bannickchange {
+  my ($self, $event_type, $event) = @_;
+  my ($addr, $nick, $msg) = $event->{event}->args;
+
+  $self->{pbot}->{logger}->log("Received BANNICKCHANGE from $addr: $nick ($msg)\n");
+  $event->{conn}->privmsg("nickserv", "ghost " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  $event->{conn}->privmsg("nickserv", "release " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  return 0;
 }
 
 1;

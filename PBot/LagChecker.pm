@@ -33,6 +33,12 @@ sub initialize {
   my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to LagChecker");
   $self->{pbot} = $pbot;
 
+  $self->{lag_average}    = undef;     # average of entries in lag history, in seconds
+  $self->{lag_string}     = undef;     # string representation of lag history and lag average
+  $self->{lag_history}    = [];        # history of previous PING/PONG timings
+  $self->{pong_received}  = undef;     # tracks pong replies; undef if no ping sent; 0 if ping sent but no pong reply yet; 1 if ping/pong completed
+  $self->{ping_send_time} = undef;     # when last ping was sent
+
   # maximum number of lag history entries to retain
   $pbot->{registry}->add_default('text', 'lagchecker', 'lag_history_max',      $conf{lag_history_max}      //  3); 
   # lagging is true if lag_average reaches or exceeds this threshold, in seconds
@@ -42,12 +48,6 @@ sub initialize {
 
   $pbot->{registry}->add_trigger('lagchecker', 'lag_history_interval', sub { $self->lag_history_interval_trigger(@_) });
 
-  $self->{lag_average} = undef;        # average of entries in lag history, in seconds
-  $self->{lag_string} = undef;         # string representation of lag history and lag average
-  $self->{lag_history} = [];           # history of previous PING/PONG timings
-  $self->{pong_received} = undef;      # tracks pong replies; undef if no ping sent; 0 if ping sent but no pong reply yet; 1 if ping/pong completed
-  $self->{ping_send_time} = undef;     # when last ping was sent
-
   $pbot->{timer}->register(
     sub { $self->send_ping },
     $pbot->{registry}->get_value('lagchecker', 'lag_history_interval'),
@@ -55,6 +55,8 @@ sub initialize {
   );
 
   $pbot->{commands}->register(sub { return $self->lagcheck(@_) }, "lagcheck", 0);
+
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.pong', sub { $self->on_pong(@_) });
 }
 
 sub lag_history_interval_trigger {
@@ -104,6 +106,7 @@ sub on_pong {
 
   $self->{lag_average} = $lag_total / $len;
   $self->{lag_string} .= "; average: $self->{lag_average}";
+  return 0;
 }
 
 sub lagging {

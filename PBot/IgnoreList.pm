@@ -148,6 +148,7 @@ sub check_ignore {
       }
     }
 
+=cut
     if(exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 5) {
       $self->{commands}->ignore_user("", "floodcontrol", "", "", ".* $channel 300");
       $self->{ignore_flood_counter}->{$channel} = 0;
@@ -157,6 +158,7 @@ sub check_ignore {
         return 1;
       } 
     }
+=cut
   }
 
   foreach my $ignored (keys %{ $self->{ignore_list} }) {
