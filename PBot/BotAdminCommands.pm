@@ -136,6 +136,7 @@ sub join_channel {
 
   foreach my $channel (split /\s+/, $arguments) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host made me join $channel\n");
+    $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.join', { channel => $channel });
     $self->{pbot}->{conn}->join($channel);
   }
 
@@ -150,6 +151,7 @@ sub part_channel {
 
   foreach my $channel (split /\s+/, $arguments) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host made me part $channel\n");
+    $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.part', { channel => $channel });
     $self->{pbot}->{conn}->part($channel);
   }
 

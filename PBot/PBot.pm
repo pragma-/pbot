@@ -34,6 +34,7 @@ use PBot::EventDispatcher;
 use PBot::IRCHandlers;
 use PBot::Channels;
 use PBot::BanTracker;
+use PBot::NickList;
 use PBot::LagChecker;
 use PBot::MessageHistory;
 use PBot::AntiFlood;
@@ -104,6 +105,7 @@ sub initialize {
   $self->{stdin_reader}     = PBot::StdinReader->new(pbot => $self, %conf);
   $self->{admins}           = PBot::BotAdmins->new(pbot => $self, filename => delete $conf{admins_file}, %conf);
   $self->{bantracker}       = PBot::BanTracker->new(pbot => $self, %conf);
+  $self->{nicklist}         = PBot::NickList->new(pbot => $self, %conf);
   $self->{lagchecker}       = PBot::LagChecker->new(pbot => $self, %conf);
   $self->{messagehistory}   = PBot::MessageHistory->new(pbot => $self, filename => delete $conf{messagehistory_file}, %conf);
   $self->{antiflood}        = PBot::AntiFlood->new(pbot => $self, %conf);
