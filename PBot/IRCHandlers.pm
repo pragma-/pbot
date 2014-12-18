@@ -132,8 +132,7 @@ sub on_notice {
     foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
       if($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
         $self->{pbot}->{logger}->log("Joining channel: $chan\n");
-        $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.join', { channel => $chan });
-        $event->{conn}->join($chan);
+        $self->{pbot}->{chanops}->join_channel($chan);
       }
     }
     $self->{pbot}->{joined_channels} = 1;

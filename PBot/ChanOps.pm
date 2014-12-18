@@ -121,6 +121,32 @@ sub ban_user_timed {
   $self->{unban_timeout}->save;
 }
 
+sub join_channel {
+  my ($self, $channel) = @_;
+
+  $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.join', { channel => $channel });
+  $self->{pbot}->{conn}->join($channel);
+
+  delete $self->{is_opped}->{$channel};
+  delete $self->{op_requested}->{$channel};
+
+  if (exists $self->{pbot}->{channels}->{channels}->hash->{$channel} 
+      and exists $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop} 
+      and $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}) {
+    $self->gain_ops($channel);
+  }
+}
+
+sub part_channel {
+  my ($self, $channel) = @_;
+
+  $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.part', { channel => $channel });
+  $self->{pbot}->{conn}->part($channel);
+
+  delete $self->{is_opped}->{$channel};
+  delete $self->{op_requested}->{$channel};
+}
+
 sub check_unban_timeouts {
   my $self = shift;
 
@@ -143,8 +169,12 @@ sub check_opped_timeouts {
 
   foreach my $channel (keys %{ $self->{is_opped} }) {
     if($self->{is_opped}->{$channel}{timeout} < $now) {
-      $self->lose_ops($channel);
-      delete $self->{is_opped}->{$channel}; # assume chanserv is alive and deop will succeed
+      unless (exists $self->{pbot}->{channels}->{channels}->hash->{$channel} 
+          and exists $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop} 
+          and $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}) {
+        $self->lose_ops($channel);
+        delete $self->{is_opped}->{$channel}; # assume chanserv is alive and deop will succeed
+      }
     } else {
       # my $timediff = $self->{is_opped}->{$channel}{timeout} - $now;
       # $self->{pbot}->{logger}->log("deop $channel in $timediff seconds\n");

@@ -70,6 +70,7 @@ sub add {
   my $hash = {};
   $hash->{enabled} = 1;
   $hash->{chanop} = 0;
+  $hash->{permop} = 0;
 
   return $self->{channels}->add($arguments, $hash);
 }
