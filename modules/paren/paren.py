@@ -4,7 +4,7 @@ from __future__ import print_function
 import sys
 
 from pycparser import c_parser, c_generator, c_ast, plyparser
-from pycparser.ply import yacc 
+from pycparser.ply import yacc
 
 with open("paren/stddef") as f:
     STDDEF = f.read()
@@ -19,7 +19,7 @@ class CParser(c_parser.CParser):
             errorlog=yacc.NullLogger(),
             optimize=kw.get('yacc_optimize', True),
             tabmodule=kw.get('yacctab', 'yacctab'))
-    
+
     def parse(self, text, filename='', debuglevel=0):
         self.clex.filename = filename
         self.clex.reset_lineno()
@@ -35,6 +35,9 @@ class CParser(c_parser.CParser):
 
 
 class CGenerator(c_generator.CGenerator):
+    def _is_simple_node(self, n):
+        return isinstance(n, (c_ast.Constant, c_ast.ID, c_ast.FuncCall))
+
     def visit_UnaryOp(self, n):
         # don't parenthesize an operand to sizeof if it's not a type
         if n.op == 'sizeof':
@@ -79,4 +82,3 @@ if __name__ == "__main__":
         print("Usage: paren <expression>")
     else:
         print('error')
-
