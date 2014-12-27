@@ -46,6 +46,7 @@ use PBot::BotAdmins;
 use PBot::IgnoreList;
 use PBot::Quotegrabs;
 use PBot::Timer;
+use PBot::AntiAway;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -114,6 +115,7 @@ sub initialize {
   $self->{irchandlers}      = PBot::IRCHandlers->new(pbot => $self, %conf);
   $self->{channels}         = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file}, %conf);
   $self->{chanops}          = PBot::ChanOps->new(pbot => $self, %conf);
+  $self->{antiaway}         = PBot::AntiAway->new(pbot => $self, %conf);
 
   $self->{interpreter}      = PBot::Interpreter->new(pbot => $self, %conf);
   $self->{interpreter}->register(sub { return $self->{commands}->interpreter(@_); });
