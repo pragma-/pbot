@@ -35,6 +35,7 @@ sub initialize {
   $self->{banlist} = {};
 
   $self->{pbot}->{registry}->add_default('text', 'bantracker', 'chanserv_ban_timeout', '604800');
+  $self->{pbot}->{registry}->add_default('text', 'bantracker', 'debug',                '0');
 
   $self->{pbot}->{commands}->register(sub { $self->dumpbans(@_) }, "dumpbans", 60);
 
@@ -97,7 +98,9 @@ sub get_baninfo {
   $account = undef if $account eq '-1';
   $account = lc $account if defined $account;
 
-  $self->{pbot}->{logger}->log("[get-baninfo] Getting baninfo for $mask in $channel using account " . (defined $account ? $account : "[undefined]") . "\n");
+  if ($self->{pbot}->{registry}->get_value('bantracker', 'debug')) {
+    $self->{pbot}->{logger}->log("[get-baninfo] Getting baninfo for $mask in $channel using account " . (defined $account ? $account : "[undefined]") . "\n");
+  }
 
   foreach my $mode (keys %{ $self->{banlist}{$channel} }) {
     foreach my $banmask (keys %{ $self->{banlist}{$channel}{$mode} }) {
