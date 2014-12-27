@@ -8,7 +8,6 @@ package PBot::AntiAway;
 use warnings;
 use strict;
 
-use Data::Dumper;
 use Carp ();
 
 sub new {
@@ -52,19 +51,16 @@ sub on_nickchange {
 
 sub on_action {
   my ($self, $event_type, $event) = @_;
-  my ($nick, $user, $host, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->{args}[0]);
+  my ($nick, $user, $host, $msg, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->{args}[0], $event->{event}->{to}[0]);
 
-  print "antiaway got action [$msg]\n";
+  return 0 if $channel !~ /^#/;
+
   my $bad_actions = $self->{pbot}->{registry}->get_value('antiaway', 'bad_actions');
-  print "antiaway got action [$msg]\nbad_actions: [$bad_actions]\n";
   if($msg =~ m/$bad_actions/i) {
     $self->{pbot}->{logger}->log("$nick $msg matches bad away actions regex, kicking...\n");
     my $kick_msg = $self->{pbot}->{registry}->get_value('antiaway', 'kick_msg');
-    my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
-    foreach my $chan (@$channels) {
-      $self->{pbot}->{chanops}->add_op_command($chan, "kick $chan $nick $kick_msg");
-      $self->{pbot}->{chanops}->gain_ops($chan);
-    }
+    $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick $kick_msg");
+    $self->{pbot}->{chanops}->gain_ops($channel);
   }
 
   return 0;
