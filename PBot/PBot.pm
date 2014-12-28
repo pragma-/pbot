@@ -47,6 +47,7 @@ use PBot::IgnoreList;
 use PBot::Quotegrabs;
 use PBot::Timer;
 use PBot::AntiAway;
+use PBot::AntiKickAutoRejoin;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -101,23 +102,24 @@ sub initialize {
   $self->{registry}->add_trigger('irc', 'botnick', sub { $self->change_botnick_trigger(@_) });
   $self->{registry}->add_trigger('irc', 'debug',   sub { $self->irc_debug_trigger(@_)      });
  
-  $self->{event_dispatcher} = PBot::EventDispatcher->new(pbot => $self, %conf);
-  $self->{select_handler}   = PBot::SelectHandler->new(pbot => $self, %conf);
-  $self->{stdin_reader}     = PBot::StdinReader->new(pbot => $self, %conf);
-  $self->{admins}           = PBot::BotAdmins->new(pbot => $self, filename => delete $conf{admins_file}, %conf);
-  $self->{bantracker}       = PBot::BanTracker->new(pbot => $self, %conf);
-  $self->{nicklist}         = PBot::NickList->new(pbot => $self, %conf);
-  $self->{lagchecker}       = PBot::LagChecker->new(pbot => $self, %conf);
-  $self->{messagehistory}   = PBot::MessageHistory->new(pbot => $self, filename => delete $conf{messagehistory_file}, %conf);
-  $self->{antiflood}        = PBot::AntiFlood->new(pbot => $self, %conf);
-  $self->{ignorelist}       = PBot::IgnoreList->new(pbot => $self, filename => delete $conf{ignorelist_file}, %conf);
-  $self->{irc}              = PBot::IRC->new();
-  $self->{irchandlers}      = PBot::IRCHandlers->new(pbot => $self, %conf);
-  $self->{channels}         = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file}, %conf);
-  $self->{chanops}          = PBot::ChanOps->new(pbot => $self, %conf);
-  $self->{antiaway}         = PBot::AntiAway->new(pbot => $self, %conf);
+  $self->{event_dispatcher}   = PBot::EventDispatcher->new(pbot => $self, %conf);
+  $self->{select_handler}     = PBot::SelectHandler->new(pbot => $self, %conf);
+  $self->{stdin_reader}       = PBot::StdinReader->new(pbot => $self, %conf);
+  $self->{admins}             = PBot::BotAdmins->new(pbot => $self, filename => delete $conf{admins_file}, %conf);
+  $self->{bantracker}         = PBot::BanTracker->new(pbot => $self, %conf);
+  $self->{nicklist}           = PBot::NickList->new(pbot => $self, %conf);
+  $self->{lagchecker}         = PBot::LagChecker->new(pbot => $self, %conf);
+  $self->{messagehistory}     = PBot::MessageHistory->new(pbot => $self, filename => delete $conf{messagehistory_file}, %conf);
+  $self->{antiflood}          = PBot::AntiFlood->new(pbot => $self, %conf);
+  $self->{ignorelist}         = PBot::IgnoreList->new(pbot => $self, filename => delete $conf{ignorelist_file}, %conf);
+  $self->{irc}                = PBot::IRC->new();
+  $self->{irchandlers}        = PBot::IRCHandlers->new(pbot => $self, %conf);
+  $self->{channels}           = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file}, %conf);
+  $self->{chanops}            = PBot::ChanOps->new(pbot => $self, %conf);
+  $self->{antiaway}           = PBot::AntiAway->new(pbot => $self, %conf);
+  $self->{antikickautorejoin} = PBot::AntiKickAutoRejoin->new(pbot => $self, %conf);
 
-  $self->{interpreter}      = PBot::Interpreter->new(pbot => $self, %conf);
+  $self->{interpreter}        = PBot::Interpreter->new(pbot => $self, %conf);
   $self->{interpreter}->register(sub { return $self->{commands}->interpreter(@_); });
   $self->{interpreter}->register(sub { return $self->{factoids}->interpreter(@_); });
 
