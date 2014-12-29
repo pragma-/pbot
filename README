@@ -1,0 +1,20 @@
+PBot is a versatile IRC Bot written in Perl for the ##C channel on Freenode.net
+
+Features
+--------
+
+* Factoids
+* Quotegrabs
+* Loadable modules that are simple programs based on stdin and stdout
+* Lots of default modules, including a code compiler and debugger, C-to-English translator, C precedence analyzer, and much more
+* Channel management
+* User hostmask and message tracking
+* Ban evasion detection
+* Flood detection
+* Enter-abuse detection
+* Auto-away detection
+* Auto-rejoin after kick detection
+* Registry-based customization
+
+See http://www.iso-9899.info/wiki/Candide for more information.
+
