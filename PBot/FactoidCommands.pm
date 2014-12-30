@@ -53,6 +53,8 @@ sub initialize {
   }
 
   $self->{pbot} = $pbot;
+
+  $pbot->{registry}->add_default('text', 'general', 'module_repo', $conf{module_repo} // 'https://github.com/pragma-/pbot/blob/master/modules/');
   
   $pbot->{commands}->register(sub { return $self->factadd(@_)         },       "learn",        0);
   $pbot->{commands}->register(sub { return $self->factadd(@_)         },       "factadd",      0);
@@ -587,7 +589,8 @@ sub factinfo {
 
   # module
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
-    return "$trigger: Module loaded by " . $factoids->{$channel}->{$trigger}->{owner} . " for $chan on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago] -> http://code.google.com/p/pbot2-pl/source/browse/trunk/modules/" . $factoids->{$channel}->{$trigger}->{action} . ", used " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
+    my $module_repo = $self->{pbot}->{registry}->get_value('general', 'module_repo');
+    return "$trigger: Module loaded by " . $factoids->{$channel}->{$trigger}->{owner} . " for $chan on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago] -> $module_repo" . $factoids->{$channel}->{$trigger}->{action} . ", used " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
   }
 
   # regex
