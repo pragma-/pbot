@@ -10,7 +10,7 @@ my $CJEOPARDY_DATA = 'cjeopardy.dat';
 my $CJEOPARDY_HINT = 'cjeopardy.hint';
 
 my @hints = (0.90, 0.75, 0.50, 0.25, 0.10);
-my $timeout = 60;
+my $timeout = 30;
 
 my $channel = shift @ARGV;
 

@@ -53,7 +53,7 @@
 [5.1.2.2.1 Program startup] If the value of argc is this, the strings pointed to by argv[1] through argv[argc-1] represent the program parameters.|greater than one|greater than 1|>1
 [5.1.2.2.1 Program startup] If the value of argc is greater than one, the strings pointed to by argv[1] through argv[argc-1] represent this.|program parameters|parameters
 [5.1.2.2.3 Program termination] If the return type of the main function is a type compatible with this, a return from the initial call to the main function is equivalent to calling the exit function with the value returned by the main function as its argument.|int
-[5.1.2.2.3 Program termination] If the return type of the main function is a type compatible with int, a return from the initial call to the main function is equivalent to calling the this function with the value returned by the main function as its argument.|exit
+[5.1.2.2.3 Program termination] If the return type of the main function is a type compatible with int, a return from the initial call to the main function is equivalent to calling this function with the value returned by the main function as its argument.|exit
 [5.1.2.2.3 Program termination] Reaching the } that terminates the main function returns this value.|0|zero
 [5.1.2.2.3 Program termination] If the return type is not compatible with int, the termination status returned to the host environment is this.|unspecified
 [5.1.2.3 Program execution] The semantic descriptions in the standard describe the behavior of this in which issues of optimization are irrelevant.|abstract machine
@@ -79,7 +79,7 @@
 [5.2.1 Character sets] Two sets of characters and their associated collating sequences shall be defined: the set in which these are written, and the set interpreted in the execution environment.|source files{It is called the source character set.}
 [5.2.1 Character sets] Two sets of characters and their associated collating sequences shall be defined: the set in which source files are written, and the set interpreted in this environment.|execution{It is called the execution character set.}
 [5.2.1 Character sets] In a character constant or string literal, members of the execution character set shall be represented by corresponding members of the source character set or by escape sequences consisting of this character followed by one or more characters.|backslash|\
-[5.2.1 Character sets] A byte with all bits set to this is called the null character; it shall exist in the basic execution character set.|zero{It is used to terminated a string, for instance.}|0{It is used to terminate a string, for instance.}
+[5.2.1 Character sets] A byte with all bits set to this is called the null character; it shall exist in the basic execution character set.|zero{It is used to terminate a string, for instance.}|0{It is used to terminate a string, for instance.}
 [5.2.1 Character sets] A byte with all bits set to 0 is called this.|null character{It is used to terminate a string, for instance.}
 [5.2.1 Character sets] A byte with all bits set to 0, called the null character, is used to terminate this.|string
 [5.2.1 Character sets] The representation of each member of the source and execution basic character sets shall fit in this.|char|byte
@@ -87,7 +87,7 @@
 [5.2.1 Character sets] In both the source and execution basic character sets, the value of each character after 0 in the list of decimal digits shall be exactly this than the value of the previous.|one greater
 [5.2.1 Character sets] In source files, there shall be some way of indicating the end of each line of text; the standard treats such an end-of-line indicator as if it were a single one of this character.|new-line|newline|\n
 [5.2.1 Character sets] In the basic execution character set, there shall be characters representing alert, backspace, carriage return, and new line. These are called this kind of character.|control|control character
-[5.2.1 Character sets] A letter is an uppercase letter or a lowercase letter as defined in the this alphabet; in the standard, the term does not include other characters that are letters in other alphabets.|Latin|Latin alphabet
+[5.2.1 Character sets] A letter is an uppercase letter or a lowercase letter as defined in this alphabet; in the standard, the term does not include other characters that are letters in other alphabets.|Latin|Latin alphabet
 [5.2.1.1 Trigraph sequences] These sequences enable the input of characters that are not defined in the Invariant Code Set as described in ISO/IEC 646, which is a subset of the seven-bit US ASCII code set.|trigraph sequences{Their use is discouraged in modern C.}|trigraphs{Their use is discouraged in modern C.}
 [5.2.1.1 Trigraph sequences] The following tokens, ??= ??) ??! ??( ??' ??> ??/ ??< and ??-, are known as these.|trigraph sequences{Their use is discouraged in modern C.}|trigraphs{Their use is discouraged in modern C.}
 [5.2.1.2 Multibyte characters] The source character set and the execution character set may both contain multibyte characters. If so, this character set shall be present and each character shall be encoded as a single byte.|basic character set|basic
@@ -152,7 +152,7 @@
 [5.2.4.2.1 Sizes of integer types <limits.h>] If the value of an object of type char is treated as an unsigned integer when used in an expression, the value of CHAR_MIN shall be this.|0|zero
 [5.2.4.2.1 Sizes of integer types <limits.h>] If the value of an object of type char is treated as an unsigned integer when used in an expression, the value of CHAR_MAX shall be the same as that of this macro.|UCHAR_MAX
 [5.2.4.2.2 Characteristics of floating types <float.h>] This is an encoding signifying Not-a-Number.|NaN
-[5.2.4.2.2 Characteristics of floating types <float.h>] A NaN is an encoding signifying this.|Not-a-Number
+[5.2.4.2.2 Characteristics of floating types <float.h>] A NaN is an encoding signifying this.|Not-a-Number|Not a Number
 [5.2.4.2.2 Characteristics of floating types <float.h>] A quiet NaN propagates through almost every arithmetic operation without raising this kind of exception.|floating-point|floating-point exception
 [5.2.4.2.2 Characteristics of floating types <float.h>] A signaling NaN generally raises this kind of exception when occurring as an arithmetic operand.|floating-point|floating-point exception
 [5.2.4.2.2 Characteristics of floating types <float.h>] This kind of NaN propagates through almost every arithmetic operation without raising a floating-point exception.|quiet|quiet NaN
@@ -506,9 +506,9 @@
 [6.7.2.4 Atomic type specifiers] Atomic type specifiers shall not be used if the implementation does not support this kind of types.|atomic{That was kind of obvious, wasn't it?}
 [6.7.2.4 Atomic type specifiers] If the _Atomic keyword is immediately followed by this, it is interpreted as a type specifier (with a type name), not as a type qualifier.|left parenthesis
 [6.7.3 Type qualifiers] Types other than pointer types whose referenced type is an object type shall not be qualified with this type qualifier.|restrict
-[6.7.3 Type qualifiers] The type modified by the this type qualifier shall not be an array type or a function type.|_Atomic
+[6.7.3 Type qualifiers] The type modified by this type qualifier shall not be an array type or a function type.|_Atomic
 [6.7.3 Type qualifiers] If the same qualifier appears more than once in the same specifier-qualifier-list, either directly or via one or more typedefs, the behavior is the same as if it appeared this many times.|1|one|once
-[6.7.3 Type qualifiers] If other qualifiers appear along with the this qualifier in a specifier-qualifier-list, the resulting type is the so-qualified atomic type.|_Atomic
+[6.7.3 Type qualifiers] If other qualifiers appear along with this qualifier in a specifier-qualifier-list, the resulting type is the so-qualified atomic type.|_Atomic
 [6.7.3 Type qualifiers] If an attempt is made to modify an object defined with a const-qualified type through use of an lvalue with non-const-qualified type, the behavior is this.|undefined
 [6.7.3 Type qualifiers] If an attempt is made to refer to an object defined with a volatile-qualified type through use of an lvalue with non-volatile-qualified type, the behavior is this.|undefined
 [6.7.3 Type qualifiers] What constitutes an access to an object that has volatile-qualified type is this.|implementation-defined
@@ -1221,7 +1221,7 @@
 [F.5 Binary-decimal conversion] If IEC 60559 double (53 bits of precision) is the widest IEC 60559 format supported, then DECIMAL_DIG shall be at least this value.|21
 [F.9.4 Constant arithmetic] The implementation shall honor floating-point exceptions raised by execution-time constant arithmetic wherever the state of the FENV_ACCESS pragma is this value.|on
 [F.10 Mathematics <math.h>] If a function with one or more NaN arguments returns this result, the result should be the same as one of the NaN arguments (after possible type conversion), except perhaps for the sign.|NaN
-[F.10.3.5 The ilogb functions] If the correct result if the ilogb is outside the range of the return type, the numeric result is unspecified and this floating-point exception is raised.|invalid
+[F.10.3.5 The ilogb functions] If the correct result of the ilogb function is outside the range of the return type, the numeric result is unspecified and this floating-point exception is raised.|invalid
 [F.10.6.1 The ceil functions] The ceil functions may, but are not required to, raise this floating-point exception for finite non-integer arguments.|inexact
 [F.10.6.2 The floor functions] The floor functions may, but are not required to, raise this floating-point exception for finite non-integer arguments.|inexact
 [F.10.6.5 The lrint and llrint functions] If the rounded value returned by the lrint and llrint functions is outside the range of the return type, the numeric result is unspecified and this floating-point exception is raised.|invalid
@@ -1297,7 +1297,7 @@
 [J.2 Undefined behavior] An example of this is when an output operation on an update stream is followed by an input operation without an intervening call to the fflush function or a file positioning function, or an input operation on an update stream is followed by an output operation with an intervening call to a file positioning function.|undefined behavior
 [J.2 Undefined behavior] An example of this is when a partial element read by a call to the fread function is used.|undefined behavior
 [J.2 Undefined behavior] An example of this is when the fseek function is called for a text stream with a nonzero offset and either the offset was not returned by a previous successful call to the ftell function on a stream associated with the same file or whence is not SEEK_SET.|undefined behavior
-[J.2 Undefined behavior] An example of this is when the fsetpos function is called to set a position that was not returned by a previous successful call to the fgetpos function on a stream associated with the same file (7.21.9..|undefined behavior
+[J.2 Undefined behavior] An example of this is when the fsetpos function is called to set a position that was not returned by a previous successful call to the fgetpos function on a stream associated with the same file.|undefined behavior
 [J.2 Undefined behavior] An example of this is when a signal is raised while the quick_exit function is executing.|undefined behavior
 [J.2 Undefined behavior] An example of this is when a complex argument is supplied for a generic parameter of a type-generic macro that has no corresponding complex function.|undefined behavior
 [J.3 Implementation-defined behavior] A conforming implementation is required to do this for its choice of behavior for implementation-defined behavior.|document
@@ -1325,7 +1325,7 @@
 [J.5.7 Function pointer casts] An example of this is casting a pointer to a function to a pointer to an object or to void, allowing a function to be inspected or modified (for example, by a debugger).|common-extension|extension
 [J.5.10 The asm keyword] This keyword may be used to insert assembly language directly into the translator output.|asm{This is a common-extension and not a standard requirement.}
 [J.5.9 The fortran keyword] This function specifier may be used in a function declaration to indicate that calls suitable for FORTRAN should be generated, or that a different representation for the external name is to be generated.|fortran{This is a common-extension, not a standard requirement.}
-[J.5.13 Floating-point status flags] If any floating-point status flags are set on normal termination after all calls to functions registered by the this function have been made, the implementation writes some diagnostics indicating the fact to the stderr stream, if it is still open.|atexit
+[J.5.13 Floating-point status flags] If any floating-point status flags are set on normal termination after all calls to functions registered by this function have been made, the implementation writes some diagnostics indicating the fact to the stderr stream, if it is still open.|atexit
 [K.3.1.4 Runtime-constraint violations] Implementations shall verify that these for a function ending with _s are not violated by the program.|run-time constraints
 [K.3.1.4 Runtime-constraint violations] If the runtime-constraint handler does return, the library function whose runtime-constraint was violated shall return this as given by the returns section in the function's specification.|indication of failure
 [L.3 Requirements] If the program performs a trap, the implementation is permitted to invoke this.|runtime-constraint handler{Such semantics are implementation-defined.}
