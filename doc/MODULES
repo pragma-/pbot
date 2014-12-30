@@ -1,12 +1,15 @@
 AppConfig::Std
 Data::Dumper
 DBD::SQLite
+Games::Dice
 Getopt::Std
+Google::Search
 HTML::Entities
 HTML::FormatText
 HTML::Parse
 IPC::Shareable
 IPC::Open2
+LWP::Protocol::https
 LWP::Simple
 LWP::UserAgent
 LWP::UserAgent::WithCache
@@ -16,7 +19,9 @@ Text::Autoformat
 Text::Balanced
 Text::Levenshtein
 Text::WordDiff
+Time::Duration
 re::engine::RE2
 URI::Escape
 WWW::Wikipedia
+XML::Parser
 XML::RSS
