@@ -5,8 +5,10 @@ use strict;
 
 use POSIX qw(strftime);
 
-my $svn_info = `svn info -r head`;
-my ($rev) = $svn_info =~ /Last Changed Rev: (\d+)/;
+# my $svn_info = `svn info -r head` or die "Couldn't get revision: $!";
+# my ($rev) = $svn_info =~ /Last Changed Rev: (\d+)/;
+
+my $rev = `git rev-list --count HEAD`;
 my $date = strftime "%Y-%m-%d", localtime;
 
 $rev++;
