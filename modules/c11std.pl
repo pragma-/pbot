@@ -86,7 +86,9 @@ if($list_only) {
   $result = "Sections containing '$search':\n    ";
 }
 
-$search =~ s/\s/\\s+/g;
+my $qsearch = quotemeta $search;
+$qsearch =~ s/\\ / /g;
+$qsearch =~ s/\s+/\\s+/g;
 
 while($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
   $this_section = $1;
@@ -138,7 +140,7 @@ while($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
 
     if(length $search) {
       eval {
-        if($t =~ m/\b$search/mis or $section_title =~ m/\b$search/mis) {
+        if($t =~ m/\b$qsearch\b/mis or $section_title =~ m/\b$qsearch\b/mis) {
           $matches++;
           if($matches >= $match) {
             if($list_only) {
