@@ -21,7 +21,7 @@ my ($section, $paragraph, $section_specified, $paragraph_specified, $match, $lis
 $section_specified = 0;
 $paragraph_specified = 0;
 
-if($search =~ s/-section\s*([A-Z0-9\.p]+)//i or $search =~ s/\b([A-Z0-9]+\.[0-9\.p]*)//i) {
+if($search =~ s/-section\s*([A-Z0-9\.p]+)//i or $search =~ s/\b([A-Z0-9]+\.[0-9\.p]+)//i) {
   $section = $1;
 
   if($section =~ s/p(\d+)//i) {
@@ -31,7 +31,7 @@ if($search =~ s/-section\s*([A-Z0-9\.p]+)//i or $search =~ s/\b([A-Z0-9]+\.[0-9\
     $paragraph = 1;
   }
 
-  $section = "$section." if $section =~ m/^[A-Z0-9]+$/;
+  $section = "$section." if $section =~ m/^[A-Z0-9]+$/i;
 
   $section_specified = 1;
 }
@@ -97,7 +97,7 @@ while($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
   print "Processing section [$this_section]\n" if $debug;
 
 
-  if($section_specified and $this_section !~ m/^$section/) {
+  if($section_specified and $this_section !~ m/^$section/i) {
     print "No section match, skipping.\n" if $debug >= 4;
     next;
   }
@@ -111,9 +111,9 @@ while($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
     last;
   }
 
-  if($section =~ /FOOTNOTE/) {
+  if($section =~ /FOOTNOTE/i) {
     $section_text =~ s/^\s{4}//ms;
-    $section_text =~ s/^\s{4}FOOTNOTE.*//ms;
+    $section_text =~ s/^\s{4}FOOTNOTE.*//msi;
     $section_text =~ s/^\d.*//ms;
   } elsif ($section_text =~ m/(.*?)$/msg) {
     $section_title = $1 if length $1;
@@ -123,7 +123,7 @@ while($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
 
   print "$this_section [$section_title]\n" if $debug >= 2;
 
-  while($section_text =~ m/^(\d+)\s(.*?)^(?=\d)/msgc or $section_text =~ m/^(\d+)\s(.*)/msg) {
+  while($section_text =~ m/^(\d+)\s(.*?)^(?=\d)/msgic or $section_text =~ m/^(\d+)\s(.*)/msgi) {
     my $p = $1 ;
     my $t = $2;
 
