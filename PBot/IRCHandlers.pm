@@ -43,8 +43,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',          sub { $self->on_kick(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',          sub { $self->on_departure(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',          sub { $self->on_nickchange(@_) });
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.bannickchange', sub { $self->on_bannickchange(@_) });
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.notregistered', sub { $self->on_notregistered(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.nicknameinuse', sub { $self->on_nicknameinuse(@_) });
 }
 
 sub default_handler {
@@ -69,6 +68,10 @@ sub on_connect {
   my ($self, $event_type, $event) = @_;
   $self->{pbot}->{logger}->log("Connected!\n");
   $event->{conn}->{connected} = 1;
+
+  $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
+  $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+
   return 0;
 }
 
@@ -122,20 +125,23 @@ sub on_notice {
   my $text = $event->{event}->{args}[0];
 
   $self->{pbot}->{logger}->log("Received NOTICE from $nick $host '$text'\n");
-
-  if($nick eq 'NickServ' && $text =~ m/This nickname is registered/) {
-    $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
-    $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-  }
-  
-  if($nick eq 'NickServ' && $text =~ m/You are now identified/) {
-    foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
-      if($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
-        $self->{pbot}->{logger}->log("Joining channel: $chan\n");
-        $self->{pbot}->{chanops}->join_channel($chan);
+ 
+  if($nick eq 'NickServ') {
+    if($text =~ m/This nickname is registered/) {
+      $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
+      $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+    } elsif($text =~ m/You are now identified/) {
+      $event->{conn}->nick($self->{pbot}->{registry}->get_value('irc', 'botnick'));
+      foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
+        if($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
+          $self->{pbot}->{logger}->log("Joining channel: $chan\n");
+          $self->{pbot}->{chanops}->join_channel($chan);
+        }
       }
+      $self->{pbot}->{joined_channels} = 1;
+    } elsif($text =~ m/has been ghosted/) {
+      $event->{conn}->nick($self->{pbot}->{registry}->get_value('irc', 'botnick'));
     }
-    $self->{pbot}->{joined_channels} = 1;
   }
   return 0;
 }
@@ -319,26 +325,13 @@ sub on_nickchange {
   return 0;
 }
 
-# todo: fix the following two subroutines so they work properly (e.g., change nick to randomly generated nick and await responses)
-sub on_notregistered {
+sub on_nicknameinuse {
   my ($self, $event_type, $event) = @_;
-  my ($addr, $msg) = $event->{event}->args;
+  my ($unused, $nick, $msg) = $event->{event}->args;
+  my $from = $event->{event}->from;
 
-  $self->{pbot}->{logger}->log("Received NOTREGISTERED from $addr: $msg\n");
-  $event->{conn}->privmsg("nickserv", "ghost " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-  $event->{conn}->privmsg("nickserv", "release " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-  $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-  return 0;
-}
-
-sub on_bannickchange {
-  my ($self, $event_type, $event) = @_;
-  my ($addr, $nick, $msg) = $event->{event}->args;
-
-  $self->{pbot}->{logger}->log("Received BANNICKCHANGE from $addr: $nick ($msg)\n");
-  $event->{conn}->privmsg("nickserv", "ghost " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-  $event->{conn}->privmsg("nickserv", "release " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-  $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  $self->{pbot}->{logger}->log("Received nicknameinuse for nick $nick from $from: $msg\n");
+  $event->{conn}->privmsg("nickserv", "ghost $nick " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
   return 0;
 }
 

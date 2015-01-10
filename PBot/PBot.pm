@@ -151,8 +151,14 @@ sub initialize {
   $self->{timer}->start();
 }
 
-# TODO: add disconnect subroutine
+sub random_nick {
+  my @chars = ("A".."Z", "a".."z", "0".."9");
+  my $nick;
+  $nick .= $chars[rand @chars] for 1..10;
+  return $nick;
+}
 
+# TODO: add disconnect subroutine
 sub connect {
   my ($self, $server) = @_;
 
@@ -165,7 +171,7 @@ sub connect {
   $self->{logger}->log("Connecting to $server ...\n");
 
   while (not $self->{conn} = $self->{irc}->newconn( 
-      Nick         => $self->{registry}->get_value('irc', 'botnick'),
+      Nick         => random_nick,
       Username     => $self->{registry}->get_value('irc', 'username'),
       Ircname      => $self->{registry}->get_value('irc', 'ircname'),
       Server       => $server,
