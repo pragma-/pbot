@@ -1,34 +1,33 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use warnings;
 use strict;
 
+use File::Basename;
+
 my $USE_LOCAL = defined $ENV{'CC_LOCAL'}; 
 
-my %languages = (
-  'C89' => {
-    'cmdline' => 'gcc $file $args -o prog -ggdb -g3',
-    'args' => '-Wextra -Wall -Wno-unused -std=gnu89 -lm -Wfloat-equal -Wshadow -Wfatal-errors',
-    'file' => 'prog.c',
-  },
-  'C++' => {
-    'cmdline' => 'g++ $file $args -o prog -ggdb',
-    'args' => '-lm',
-    'file' => 'prog.cpp',
-  },
-  'C99' => {
-    'cmdline' => 'gcc $file $args -o prog -ggdb -g3',
-    'args' => '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c99 -lm -Wfatal-errors',
-    'file' => 'prog.c',
-  },
-  'C11' => {
-    'cmdline' => 'gcc $file $args -o prog -ggdb -g3',
-    'args' => '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c11 -lm -Wfatal-errors',
-    'file' => 'prog.c',
-  },
-);
+# uncomment the following if installed to the virtual machine
+# use constant MOD_DIR => '/usr/local/share/compiler_vm/languages';
 
-sub runserver {
+use constant MOD_DIR => 'languages/server';
+
+use lib MOD_DIR;
+
+my %languages;
+
+sub load_modules {
+  my @files = glob MOD_DIR . "/*.pm";
+  foreach my $mod (@files){
+    print "Loading module $mod\n";
+    my $filename = basename($mod);
+    require $filename;
+    $filename =~ s/\.pm$//;
+    $languages{$filename} = 1;
+  }
+}
+
+sub run_server {
   my ($input, $output, $heartbeat);
 
   if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
@@ -42,8 +41,10 @@ sub runserver {
 
   my $date;
   my $lang;
+  my $sourcefile;
+  my $execfile;
   my $code;
-  my $user_args;
+  my $cmdline;
   my $user_input;
 
   print "Waiting for input...\n";
@@ -62,13 +63,11 @@ sub runserver {
 
         print "Attempting compile [$lang] ...\n";
 
-        my $result = interpret($lang, $code, $user_args, $user_input, $date);
+        my $result = interpret($lang, $sourcefile, $execfile, $code, $cmdline, $user_input, $date);
 
         print "Done compiling; result: [$result]\n";
         print $output "result:$result\n";
         print $output "result:end\n";
-
-        #system("rm prog");
 
         if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
           print "input: ";
@@ -80,18 +79,22 @@ sub runserver {
 
       if($line =~ m/^compile:\s*(.*)/) {
         my $options = $1;
-        $user_args = undef;
+        $cmdline = undef;
         $user_input = undef;
         $lang = undef;
+        $sourcefile = undef;
+        $execfile = undef;
 
-        ($lang, $user_args, $user_input, $date) = split /:/, $options;
+        ($lang, $sourcefile, $execfile, $cmdline, $user_input, $date) = split /:/, $options;
 
         $code = "";
-        $lang = "C11" if not defined $lang;
-        $user_args = "" if not defined $user_args;
+        $sourcefile = "/dev/null" if not defined $sourcefile;
+        $execfile = "/dev/null" if not defined $execfile;
+        $lang = "unknown" if not defined $lang;
+        $cmdline = "echo No cmdline specified!" if not defined $cmdline;
         $user_input = "" if not defined $user_input;
 
-        print "Setting lang [$lang]; [$user_args]; [$user_input]; [$date]\n";
+        print "Setting lang [$lang]; [$sourcefile]; [$cmdline]; [$user_input]; [$date]\n";
         next;
       }
 
@@ -110,128 +113,34 @@ sub runserver {
 }
 
 sub interpret {
-  my ($lang, $code, $user_args, $user_input, $date) = @_;
+  my ($lang, $sourcefile, $execfile, $code, $cmdline, $input, $date) = @_;
 
-  print "lang: [$lang], code: [$code], user_args: [$user_args], input: [$user_input], date: [$date]\n";
+  print "lang: [$lang], sourcefile: [$sourcefile], execfile [$execfile], code: [$code], cmdline: [$cmdline], input: [$input], date: [$date]\n";
 
-  $lang = uc $lang;
-
-  if(not exists $languages{$lang}) {
-    return "No support for language '$lang' at this time.\n";
-  }
+  $lang = '_default' if not exists $languages{$lang};
 
   system("chmod -R 755 /home/compiler");
 
-  open(my $fh, '>', $languages{$lang}{'file'}) or die $!;
-  print $fh $code . "\n";
-  close $fh;
+  my $mod = $lang->new(sourcefile => $sourcefile, execfile => $execfile, code => $code, 
+    cmdline => $cmdline, input => $input, date => $date);
 
-  my $cmdline = $languages{$lang}{'cmdline'};
+  $mod->preprocess;
 
-  my $diagnostics_caret;
-  if($user_args =~ s/\s+-paste//) {
-    $diagnostics_caret = '-fdiagnostics-show-caret';
-  } else {
-    $diagnostics_caret = '-fno-diagnostics-show-caret';
+  if($cmdline =~ m/-?-version/) {
+    # cmdline contained version request, so don't postprocess and just return the version output
+    $mod->{output} =~ s/\s+\(Ubuntu.*-\d+ubuntu\d+\)//;
+    return $mod->{output};
   }
 
-  if(length $user_args) {
-    print "Replacing args with $user_args\n";
-    my $user_args_quoted = quotemeta($user_args);
-    $user_args_quoted =~ s/\\ / /g;
-    $cmdline =~ s/\$args/$user_args_quoted $diagnostics_caret/;
-  } else {
-    $cmdline =~ s/\$args/$languages{$lang}{'args'} $diagnostics_caret/;
+  $mod->postprocess if not $mod->{error};
+
+  if (not length $mod->{output}) {
+    $mod->{output} = "Success (no output).\n" if not $mod->{error};
+    $mod->{output} = "Success (exit code $mod->{error}).\n" if $mod->{error};
   }
 
-  $cmdline =~ s/\$file/$languages{$lang}{'file'}/;
-
-  print "Executing [$cmdline]\n";
-  my ($ret, $result) = execute(60, $cmdline);
-  # print "Got result: ($ret) [$result]\n";
-
-  # if exit code was not 0, then there was a problem compiling, such as an error diagnostic
-  # so return the compiler output
-  if($ret != 0) {
-    return $result;
-  }
-
-  if($user_args =~ m/--version/) {
-    # arg contained --version, so don't compile and just return the version output
-    $result =~ s/\s+\(Ubuntu.*-\d+ubuntu\d+\)//;
-    return $result;
-  }
-
-  # no errors compiling, but if $result contains something, it must be a warning message
-  # so prepend it to the output
-  my $output = "";
-  if(length $result) {
-    $result =~ s/^\s+//;
-    $result =~ s/\s+$//;
-    $output = "[$result]\n";
-  }
-
-  print "Executing gdb\n";
-  my $user_input_quoted = quotemeta $user_input;
-  $user_input_quoted =~ s/\\"/"'\\"'"/g;
-  ($ret, $result) = execute(60, "bash -c \"date -s \@$date; ulimit -t 1; compiler_watchdog.pl $user_input_quoted > .output\"");
-
-  $result = "";
-
-  open(FILE, '.output');
-  while(<FILE>) {
-    $result .= $_;
-    last if length $result >= 2048 * 20;
-  }
-  close(FILE);
- 
-  $result =~ s/\s+$//;
-
-  # print "Executed prog; got result: ($ret) [$result]\n";
-
-  if(not length $result) {
-    $result = "Success (no output).\n" if $ret == 0;
-    $result = "Success (exit code $ret).\n" if $ret != 0;
-  }
-
-  return $output . "\n" . $result;
+  return $mod->{output};
 }
 
-sub execute {
-  my $timeout = shift @_;
-  my ($cmdline) = @_;
-
-  my ($ret, $result);
-
-  ($ret, $result) = eval {
-    print "eval\n";
-
-    my $result = '';
-
-    my $pid = open(my $fh, '-|', "$cmdline 2>&1");
-
-    local $SIG{ALRM} = sub { print "Time out\n"; kill 'TERM', $pid; die "$result [Timed-out]\n"; };
-    alarm($timeout);
-
-    while(my $line = <$fh>) {
-      $result .= $line;
-    }
-
-    close $fh;
-    my $ret = $? >> 8;
-    alarm 0;
-    return ($ret, $result);
-  };
-
-  print "done eval\n";
-  alarm 0;
-
-  if($@ =~ /Timed-out/) {
-    return (-1, $@);
-  }
-
-  print "[$ret, $result]\n";
-  return ($ret, $result);
-}
-
-runserver;
+load_modules;
+run_server;
