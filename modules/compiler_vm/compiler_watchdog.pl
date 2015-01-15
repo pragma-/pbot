@@ -76,7 +76,7 @@ sub execute {
                         $bracket--;
 
                         if($bracket == 0 and not $main_ended) {
-                            $break = $line_number;
+                            $break = $line_number - 1;
                             $main_ended = 1;
                             last;
                         }
