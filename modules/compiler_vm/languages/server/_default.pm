@@ -44,6 +44,7 @@ sub preprocess {
 }
 
 sub postprocess {
+  print "_default postprocessing\n";
 }
 
 sub execute {

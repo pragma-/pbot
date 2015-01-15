@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-package c99;
-use parent '_c_base';
+package clang;
+use parent 'clang11';
 
 1;

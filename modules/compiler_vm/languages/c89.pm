@@ -4,14 +4,14 @@ use warnings;
 use strict;
 
 package c89;
-use parent 'c11';
+use parent '_c_base';
 
 sub initialize {
   my ($self, %conf) = @_;
 
   $self->{sourcefile}      = 'prog.c';
   $self->{execfile}        = 'prog';
-  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c89 -lm -Wfatal-errors';
+  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c89 -lm -Wfatal-errors -fsanitize=bounds -fsanitize=alignment';
   $self->{cmdline}         = 'gcc -ggdb -g3 $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';

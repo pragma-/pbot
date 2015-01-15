@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-package c11;
+package clang11;
 use parent '_c_base';
 
 sub initialize {
@@ -11,8 +11,8 @@ sub initialize {
 
   $self->{sourcefile}      = 'prog.c';
   $self->{execfile}        = 'prog';
-  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c11 -lm -Wfatal-errors -fsanitize=bounds -fsanitize=alignment';
-  $self->{cmdline}         = 'gcc -ggdb -g3 $sourcefile $options -o $execfile';
+  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c11 -lm -Wfatal-errors -fsanitize=address -fsanitize=bounds -fsanitize=integer -fsanitize=bounds -fsanitize=undefined';
+  $self->{cmdline}         = 'clang -g $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';
 #define _XOPEN_SOURCE 9001
