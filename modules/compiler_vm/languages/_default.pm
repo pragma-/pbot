@@ -14,7 +14,7 @@ use LWP::UserAgent;
 use Time::HiRes qw/gettimeofday/;
 use Text::Balanced qw/extract_delimited/;
 
-my $EXECUTE_PORT = '6333';
+my $EXECUTE_PORT = '3333';
 
 sub new {
   my ($class, %conf) = @_;
@@ -109,7 +109,7 @@ sub show_output {
     $output =~ s/\s+$//;
     $pretty_code .= "\n/************* OUTPUT *************\n$output\n************** OUTPUT *************/\n"; 
 
-    my $uri = paste_sprunge($pretty_code);
+    my $uri = $self->paste_sprunge($pretty_code);
 
     print "$self->{nick}: $uri\n";
     exit 0;
@@ -277,6 +277,19 @@ sub add_option {
 sub process_standard_options {
   my $self = shift;
   my $code = $self->{code};
+
+  if ($code =~ s/(?:^|(?<=\s))-info\s*//i) {
+    my $cmdline = $self->{cmdline};
+    if (length $self->{default_options}) {
+      $cmdline =~ s/\$options/$self->{default_options}/;
+    } else {
+      $cmdline =~ s/\$options\s+//;
+    }
+    $cmdline =~ s/\$sourcefile/$self->{sourcefile}/g;
+    $cmdline =~ s/\$execfile/$self->{execfile}/g;
+    print "$self->{nick}: $self->{lang} cmdline: $cmdline\n";
+    exit;
+  }
 
   if ($code =~ s/-(?:input|stdin)=(.*)$//i) {
     $self->add_option("-input", $1);
