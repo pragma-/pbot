@@ -9,8 +9,6 @@ use parent '_default';
 sub postprocess {
   my $self = shift;
 
-  print "c11 postprocessing\n";
-
   # no errors compiling, but if output contains something, it must be diagnostic messages
   if(length $self->{output}) {
     $self->{output} =~ s/^\s+//;
