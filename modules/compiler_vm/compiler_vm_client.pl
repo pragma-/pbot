@@ -3,6 +3,8 @@
 use warnings;
 use strict;
 
+use File::Basename;
+
 my $language = shift @ARGV // 'c11';
 $language = lc $language;
 
@@ -11,7 +13,20 @@ eval {
   require "$language.pm";
 } or do {
   print "Language '$language' is not supported.\n";
-  die $@;
+
+  my @languages = glob 'languages/*.pm';
+  my $comma = '';
+  print "Supported languages are: ";
+  foreach my $lang (sort @languages) {
+    $lang = basename($lang);
+    next if $lang =~ m/^_/;
+    $lang =~ s/\.pm$//;
+    print "$comma$lang";
+    $comma = ', ';
+  }
+  print "\n";
+
+  exit;
 };
 
 my $nick    = shift @ARGV // (print "Missing nick argument.\n" and die);
