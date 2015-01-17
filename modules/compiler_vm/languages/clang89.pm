@@ -11,7 +11,9 @@ sub initialize {
 
   $self->{sourcefile}      = 'prog.c';
   $self->{execfile}        = 'prog';
-  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c89 -lm -Wfatal-errors -fsanitize=integer -fsanitize=bounds -fsanitize=undefined -fno-caret-diagnostics';
+  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c89 -lm -Wfatal-errors -fsanitize=integer -fsanitize=bounds -fsanitize=undefined';
+  $self->{options_paste}   = '-fcaret-diagnostics';
+  $self->{options_nopaste} = '-fno-caret-diagnostics';
   $self->{cmdline}         = 'clang -ggdb -g3 $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';
@@ -30,6 +32,9 @@ sub initialize {
 #include <locale.h>
 #include <setjmp.h>
 #include <signal.h>
+#include <time.h>
+#include <stdarg.h>
+#include <stddef.h>
 #include <prelude.h>
 
 END

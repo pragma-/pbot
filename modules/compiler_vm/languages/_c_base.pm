@@ -17,6 +17,8 @@ sub initialize {
   $self->{sourcefile}      = 'prog.c';
   $self->{execfile}        = 'prog';
   $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c11 -lm -Wfatal-errors';
+  $self->{options_paste}   = '-fdiagnostics-show-caret';
+  $self->{options_nopaste} = '-fno-diagnostics-show-caret';
   $self->{cmdline}         = 'gcc -ggdb -g3 $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';

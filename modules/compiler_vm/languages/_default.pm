@@ -91,14 +91,22 @@ sub show_output {
     $cmdline =~ s/\$sourcefile/$self->{sourcefile}/g;
     $cmdline =~ s/\$execfile/$self->{execfile}/g;
 
+    my $options;
     if (length $self->{cmdline_options}) {
-      $cmdline =~ s/\$options/$self->{cmdline_options}/g;
+      $options = $self->{cmdline_options};
     } else {
-      if (length $self->{default_options}) {
-        $cmdline =~ s/\$options/$self->{default_options}/g;
-      } else {
-        $cmdline =~ s/\$options\s+//g;
-      }
+      $options = $self->{default_options};
+    }
+
+    if (exists $self->{options_paste}) {
+      $options .= ' ' if length $options;
+      $options .= $self->{options_paste};
+    }
+
+    if (length $options) {
+      $cmdline =~ s/\$options/$options/;
+    } else {
+      $cmdline =~ s/\$options\s+//;
     }
 
     my $pretty_code = $self->pretty_format($self->{code});
@@ -218,10 +226,29 @@ sub execute {
   $cmdline =~ s/\$sourcefile/$self->{sourcefile}/g;
   $cmdline =~ s/\$execfile/$self->{execfile}/g;
 
+  my $options;
   if (length $self->{cmdline_options}) {
-    $cmdline =~ s/\$options/$self->{cmdline_options}/g;
+    $options = $self->{cmdline_options};
   } else {
-    $cmdline =~ s/\$options/$self->{default_options}/g;
+    $options = $self->{default_options};
+  }
+
+  if ((not exists $self->{options}->{'-paste'}) and (not defined $self->{got_run} or $self->{got_run} ne 'paste')) {
+    if (exists $self->{options_nopaste}) {
+      $options .= ' ' if length $options;
+      $options .= $self->{options_nopaste};
+    }
+  } else {
+    if (exists $self->{options_paste}) {
+      $options .= ' ' if length $options;
+      $options .= $self->{options_paste};
+    }
+  }
+
+  if (length $options) {
+    $cmdline =~ s/\$options/$options/;
+  } else {
+    $cmdline =~ s/\$options\s+//;
   }
 
   open FILE, ">> log.txt";
