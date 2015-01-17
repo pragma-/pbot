@@ -30,6 +30,8 @@ sub postprocess {
 
   $result =~ s/\s+$//;
 
+  $self->{no_output} = 1 if not length $result;
+
   $self->{output} .= $result;
 }
 
