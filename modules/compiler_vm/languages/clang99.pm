@@ -11,12 +11,11 @@ sub initialize {
 
   $self->{sourcefile}      = 'prog.c';
   $self->{execfile}        = 'prog';
-  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c99 -lm -Wfatal-errors -fsanitize=integer -fsanitize=bounds -fsanitize=undefined';
+  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c99 -lm -Wfatal-errors -fsanitize=integer -fsanitize=bounds -fsanitize=undefined -fno-caret-diagnostics';
   $self->{cmdline}         = 'clang -ggdb -g3 $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';
 #define _XOPEN_SOURCE 9001
-#define __USE_XOPEN
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,7 +38,7 @@ sub initialize {
 #include <locale.h>
 #include <wchar.h>
 #include <fenv.h>
-#inclue <iso646.h>
+#include <iso646.h>
 #include <setjmp.h>
 #include <signal.h>
 #include <prelude.h>
