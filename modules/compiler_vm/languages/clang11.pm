@@ -11,7 +11,7 @@ sub initialize {
 
   $self->{sourcefile}      = 'prog.c';
   $self->{execfile}        = 'prog';
-  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c11 -lm -Wfatal-errors -fsanitize=address -fsanitize=bounds -fsanitize=integer -fsanitize=bounds -fsanitize=undefined';
+  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c11 -lm -Wfatal-errors -fsanitize=integer -fsanitize=bounds -fsanitize=undefined';
   $self->{cmdline}         = 'clang -g $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';
