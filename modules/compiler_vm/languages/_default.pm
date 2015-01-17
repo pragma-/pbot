@@ -86,25 +86,24 @@ sub show_output {
   }
 
   if(exists $self->{options}->{'-paste'}  or (defined $self->{got_run} and $self->{got_run} eq "paste")) {
-    my $flags = "";
+    my $cmdline = $self->{cmdline};
 
-=cut
-    $extracted_args =~ s/-paste //g;
-    if(length $extracted_args) {
-      $extracted_args =~ s/\s*$//;
-      $flags .= '[' . $extracted_args . '] ';
-    }
+    $cmdline =~ s/\$sourcefile/$self->{sourcefile}/g;
+    $cmdline =~ s/\$execfile/$self->{execfile}/g;
 
-    if(length $args) {
-      $flags .= "gcc " . $args . " -o $self->{execfile} $self->{sourcefile}";
+    if (length $self->{cmdline_options}) {
+      $cmdline =~ s/\$options/$self->{cmdline_options}/g;
     } else {
-      $flags .= $languages{$lang} . " -o $self->{execfile} $self->{sourcefile}"; 
+      if (length $self->{default_options}) {
+        $cmdline =~ s/\$options/$self->{default_options}/g;
+      } else {
+        $cmdline =~ s/\$options\s+//g;
+      }
     }
-=cut
 
     my $pretty_code = $self->pretty_format($self->{code});
 
-    $pretty_code .= "\n\n/************* COMPILER FLAGS *************\n$flags\n************** COMPILER FLAGS *************/\n"; 
+    $pretty_code .= "\n\n/************* CMDLINE *************\n$cmdline\n************** CMDLINE *************/\n"; 
 
     $output =~ s/\s+$//;
     $pretty_code .= "\n/************* OUTPUT *************\n$output\n************** OUTPUT *************/\n"; 
@@ -215,7 +214,6 @@ sub execute {
   my $pretty_code = $self->pretty_format($self->{code});
 
   my $cmdline = $self->{cmdline};
-  $cmdline .= ' -paste' if exists $self->{options}->{'-paste'};
 
   $cmdline =~ s/\$sourcefile/$self->{sourcefile}/g;
   $cmdline =~ s/\$execfile/$self->{execfile}/g;
