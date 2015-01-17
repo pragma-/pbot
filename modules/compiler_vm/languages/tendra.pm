@@ -11,12 +11,10 @@ sub initialize {
 
   $self->{sourcefile}      = 'prog.c';
   $self->{execfile}        = 'prog';
-  $self->{default_options} = '-Xp';
+  $self->{default_options} = '-Xp -Yansi';
   $self->{cmdline}         = 'tcc -Wa,-32 -Wl,-melf_i386 -g $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';
-#define _XOPEN_SOURCE 9001
-#define __USE_XOPEN
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,6 +28,19 @@ sub initialize {
 #include <signal.h>
 
 END
+}
+
+sub postprocess_output {
+  my $self = shift;
+  $self->SUPER::postprocess_output;
+
+  $self->{output} =~ s/^\[Warning: Directory 'c89' already defined.\]\s*//;
+  $self->{output} =~ s/\s*Warning: Directory 'c89' already defined.//g;
+
+  if (not exists $self->{options}->{'-paste'} or not (defined $self->{got_run} and $self->{got_run} eq 'paste')) {
+    $self->{output} =~ s/"$self->{sourcefile}", line \d+:\s*//g;
+    $self->{output} =~ s/Warning:\s+\[/Warning: [/g;
+  }
 }
 
 1;
