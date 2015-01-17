@@ -18,6 +18,7 @@ sub initialize {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 #include <math.h>
 #include <limits.h>
 #include <errno.h>
@@ -26,6 +27,9 @@ sub initialize {
 #include <locale.h>
 #include <setjmp.h>
 #include <signal.h>
+#include <time.h>
+#include <stdarg.h>
+#include <stddef.h>
 
 END
 }
