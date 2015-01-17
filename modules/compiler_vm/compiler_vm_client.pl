@@ -33,6 +33,11 @@ my $nick    = shift @ARGV // (print "Missing nick argument.\n" and die);
 my $channel = shift @ARGV // (print "Missing channel argument.\n" and die);
 my $code    = join(' ', @ARGV);
 
+if (not length $code) {
+  print "$nick: Usage: cc [-paste] [-nomain] [-lang=<language>] [-info] [language options] <code> [-input=<stdin input>]\n";
+  exit;
+}
+
 my $lang = $language->new(nick => $nick, channel => $channel, lang => $language, code => $code);
 
 $lang->process_interactive_edit;
