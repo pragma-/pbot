@@ -134,9 +134,10 @@ sub interpret {
 
   $mod->postprocess if not $mod->{error};
 
-  if (not length $mod->{output}) {
-    $mod->{output} = "Success (no output).\n" if not $mod->{error};
-    $mod->{output} = "Success (exit code $mod->{error}).\n" if $mod->{error};
+  if (exists $mod->{no_output} or not length $mod->{output}) {
+    $mod->{output} .= "\n" if length $mod->{output};
+    $mod->{output} .= "Success (no output).\n" if not $mod->{error};
+    $mod->{output} .= "Success (exit code $mod->{error}).\n" if $mod->{error};
   }
 
   return $mod->{output};
