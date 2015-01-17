@@ -41,7 +41,7 @@ sub initialize {
 #include <locale.h>
 #include <wchar.h>
 #include <fenv.h>
-#inclue <iso646.h>
+#include <iso646.h>
 #include <setjmp.h>
 #include <signal.h>
 #include <prelude.h>
