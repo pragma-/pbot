@@ -34,11 +34,14 @@ sub postprocess_output {
   my $self = shift;
   $self->SUPER::postprocess_output;
 
+  $self->{output} =~ s/^\n+//mg;
+
   $self->{output} =~ s/^\[Warning: Directory 'c89' already defined.\]\s*//;
   $self->{output} =~ s/\s*Warning: Directory 'c89' already defined.//g;
 
-  if (not exists $self->{options}->{'-paste'} or not (defined $self->{got_run} and $self->{got_run} eq 'paste')) {
+  if ((not exists $self->{options}->{'-paste'}) and (not defined $self->{got_run} or $self->{got_run} ne 'paste')) {
     $self->{output} =~ s/"$self->{sourcefile}", line \d+:\s*//g;
+    $self->{output} =~ s/Error:\s+\[/Error: [/g;
     $self->{output} =~ s/Warning:\s+\[/Warning: [/g;
   }
 }
