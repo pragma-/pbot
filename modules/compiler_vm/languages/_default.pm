@@ -30,6 +30,12 @@ sub new {
   $self->{default_options} = '';
   $self->{cmdline}         = 'echo Hello, world!';
 
+  # remove leading and trailing whitespace
+  $self->{nick}    =~ s/^\s+|\s+$//g;
+  $self->{channel} =~ s/^\s+|\s+$//g;
+  $self->{lang}    =~ s/^\s+|\s+$//g;
+  $self->{code}    =~ s/^\s+|\s+$//g;
+
   $self->initialize(%conf);
 
   return $self;
