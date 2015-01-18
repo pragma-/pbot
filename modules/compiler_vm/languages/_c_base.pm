@@ -432,7 +432,8 @@ sub postprocess_output {
       $output =~ s/(\d+:\d+:\s*)*\s?In function .main.:\s?/In function 'main':/g;
     }
   }
-  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat=?\]\s+(\d+:\d+:\s*)*warning: too many arguments for format \[-Wformat-extra-args\]/info: %b is a candide extension/g;
+  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat=?\]\s+(\d+:\d+:\s*)*warning: too many arguments for format \[-Wformat-extra-args\]/info: %b is a candide extension/g; #gcc
+  $output =~ s/(\d+:\d+:\s*)*warning: invalid conversion specifier 'b' \[-Wformat-invalid-specifier\]/info: %b is a candide extension/g; #clang
   $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat=?\]//g;
   $output =~ s/\s\(core dumped\)/./;
   $output =~ s/ \[enabled by default\]//g;
