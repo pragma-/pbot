@@ -19,7 +19,7 @@ eval {
   print "Supported languages are: ";
   foreach my $lang (sort @languages) {
     $lang = basename($lang);
-    next if $lang =~ m/^_/;
+    next if $lang =~ m/^_|~$/g;
     $lang =~ s/\.pm$//;
     print "$comma$lang";
     $comma = ', ';
