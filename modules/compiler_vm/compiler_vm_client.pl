@@ -15,7 +15,6 @@ eval {
   print "Language '$language' is not supported.\n";
 
   my @languages = glob 'languages/*.pm';
-  my $comma = '';
   print "Supported languages are: ";
   print join(", ", grep { $_ = basename $_; $_ =~ s/.pm$//; $_ !~ m/^_/ } sort @languages);
   print "\n";
