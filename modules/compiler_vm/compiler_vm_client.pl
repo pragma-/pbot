@@ -17,13 +17,7 @@ eval {
   my @languages = glob 'languages/*.pm';
   my $comma = '';
   print "Supported languages are: ";
-  foreach my $lang (sort @languages) {
-    $lang = basename($lang);
-    next if $lang =~ m/^_|~$/g;
-    $lang =~ s/\.pm$//;
-    print "$comma$lang";
-    $comma = ', ';
-  }
+  print join(", ", grep { $_ = basename $_; $_ =~ s/.pm$//; $_ !~ m/^_/ } sort @languages);
   print "\n";
 
   exit;
