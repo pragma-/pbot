@@ -47,6 +47,7 @@ sub postprocess_output {
     $self->{output} =~ s/"$self->{sourcefile}", line \d+:\s*//g;
     $self->{output} =~ s/Error:\s+\[/Error: [/g;
     $self->{output} =~ s/Warning:\s+\[/Warning: [/g;
+    $self->{output} =~ s/^\[\s+(Warning|Error)/[$1/;
   }
 }
 
