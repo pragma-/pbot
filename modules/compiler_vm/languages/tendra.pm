@@ -12,7 +12,7 @@ sub initialize {
   $self->{sourcefile}      = 'prog.c';
   $self->{execfile}        = 'prog';
   $self->{default_options} = '-Xp -Yansi';
-  $self->{cmdline}         = 'tcc -Wa,-32 -Wl,-melf_i386 -g $sourcefile $options -o $execfile';
+  $self->{cmdline}         = 'tcc $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';
 #include <stdio.h>
