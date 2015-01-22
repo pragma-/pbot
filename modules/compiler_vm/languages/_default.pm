@@ -140,7 +140,7 @@ sub show_output {
       }
       close FILE;
 
-      if($last_output eq $output) {
+      if(defined $last_output and $last_output eq $output) {
         print "$self->{nick}: Same output.\n";
         exit 0;
       }
