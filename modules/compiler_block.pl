@@ -27,10 +27,10 @@ my $code = join ' ', @ARGV;
 #$code = "{ $code";
 $code =~ s/\s*}\s*$//;
 
-my $lang = "C11";
+my $lang = "c11";
 
 if($code =~ s/-lang=([^ ]+)//) {
-  $lang = uc $1;
+  $lang = lc $1;
 }
 
 print $sock "compile:$nick:$channel:$lang\n";
