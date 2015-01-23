@@ -123,7 +123,7 @@ sub recall_message {
     return "";
   }
 
-  my $usage = 'Usage: recall [nick [history [channel]]] [-c,channel <channel>] [-t,text,h,history <history>] [-b,before <context before>] [-a,after <context after>] [+ ...]';
+  my $usage = 'Usage: recall [nick [history [channel]]] [-c,channel <channel>] [-t,text,h,history <history>] [-b,before <context before>] [-a,after <context after>] [-x,context <nick>] [+ ...]';
 
   if(not defined $arguments or not length $arguments) {
     return $usage; 
@@ -142,13 +142,14 @@ sub recall_message {
   my $recall_text;
 
   foreach my $recall (@recalls) {
-    my ($recall_nick, $recall_history, $recall_channel, $recall_before, $recall_after);
+    my ($recall_nick, $recall_history, $recall_channel, $recall_before, $recall_after, $recall_context);
 
     my ($ret, $args) = GetOptionsFromString($recall,
       'channel|c=s'        => \$recall_channel,
       'text|t|history|h=s' => \$recall_history,
       'before|b=s'         => \$recall_before,
-      'after|a=s'          => \$recall_after);
+      'after|a=s'          => \$recall_after,
+      'context|x=s'        => \$recall_context);
 
     return "$getopt_error -- $usage" if defined $getopt_error;
 
@@ -183,6 +184,10 @@ sub recall_message {
 
     # set channel to current channel if not specified
     $recall_channel = $from if not defined $recall_channel;
+
+    if (not defined $recall_nick and defined $recall_context) {
+      $recall_nick = $recall_context;
+    }
 
     my ($account, $found_nick);
 
@@ -228,7 +233,17 @@ sub recall_message {
       return "You may only select 200 lines of surrounding context.";
     }
 
-    my $messages = $self->{database}->get_message_context($message, $recall_before, $recall_after);
+    my $context_account;
+
+    if (defined $recall_context) {
+      ($context_account) = $self->{database}->find_message_account_by_nick($recall_context);
+
+      if(not defined $context_account) {
+        return "I don't know anybody named $recall_context.";
+      }
+    }
+
+    my $messages = $self->{database}->get_message_context($message, $recall_before, $recall_after, $context_account);
 
     foreach my $msg (@$messages) {
       $self->{pbot}->{logger}->log("$nick ($from) recalled <$msg->{nick}/$msg->{channel}> $msg->{msg}\n");

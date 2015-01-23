@@ -442,16 +442,25 @@ SQL
 }
 
 sub get_message_context {
-  my ($self, $message, $before, $after) = @_;
+  my ($self, $message, $before, $after, $context_id) = @_;
 
   my ($messages_before, $messages_after);
 
   if (defined $before and $before > 0) {
     $messages_before = eval {
-      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND timestamp < ? AND mode != 1 ORDER BY timestamp DESC LIMIT ?');
-      $sth->bind_param(1, $message->{channel});
-      $sth->bind_param(2, $message->{timestamp});
-      $sth->bind_param(3, $before);
+      my $sth;
+      if (defined $context_id) {
+        $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND timestamp < ? AND mode != 1 ORDER BY timestamp DESC LIMIT ?');
+        $sth->bind_param(1, $context_id);
+        $sth->bind_param(2, $message->{channel});
+        $sth->bind_param(3, $message->{timestamp});
+        $sth->bind_param(4, $before);
+      } else {
+        $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND timestamp < ? AND mode != 1 ORDER BY timestamp DESC LIMIT ?');
+        $sth->bind_param(1, $message->{channel});
+        $sth->bind_param(2, $message->{timestamp});
+        $sth->bind_param(3, $before);
+      }
       $sth->execute();
       return [reverse @{$sth->fetchall_arrayref({})}];
     };
@@ -460,10 +469,19 @@ sub get_message_context {
 
   if (defined $after and $after > 0) {
     $messages_after = eval {
-      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND timestamp > ? AND mode != 1 LIMIT ?');
-      $sth->bind_param(1, $message->{channel});
-      $sth->bind_param(2, $message->{timestamp});
-      $sth->bind_param(3, $after);
+      my $sth;
+      if (defined $context_id) {
+        $sth  = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND timestamp > ? AND mode != 1 LIMIT ?');
+        $sth->bind_param(1, $context_id);
+        $sth->bind_param(2, $message->{channel});
+        $sth->bind_param(3, $message->{timestamp});
+        $sth->bind_param(4, $after);
+      } else {
+        $sth  = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND timestamp > ? AND mode != 1 LIMIT ?');
+        $sth->bind_param(1, $message->{channel});
+        $sth->bind_param(2, $message->{timestamp});
+        $sth->bind_param(3, $after);
+      }
       $sth->execute();
       return $sth->fetchall_arrayref({});
     };
