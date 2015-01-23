@@ -7,7 +7,7 @@ my ($arguments, $response, $invalid);
 my @valid_keywords = (
   'sin', 'cos', 'tan', 'atan', 'exp', 'int', 'hex', 'oct', 'log', 'sqrt', 
   'floor', 'ceil', 'asin', 'acos', 'log10', 'sinh', 'cosh', 'tanh', 'abs',
-  'pi', 'deg2rad', 'rad2deg', 'atan2' 
+  'pi', 'deg2rad', 'rad2deg', 'atan2', 'cbrt'
 );
 
 if ($#ARGV < 0)
@@ -19,7 +19,7 @@ if ($#ARGV < 0)
 $arguments = join(' ', @ARGV);
 my $orig_arguments = $arguments;
 
-$arguments =~ s/answer.*question of life(,? the universe and everything)?\s?/42/gi;
+$arguments =~ s/(the )*answer.*question of life(,? the universe and everything)?\s?/42/gi;
 $arguments =~ s/meaning of (life|existence|everything)?/42/gi;
 
 if($arguments =~ m/([\$`\|{}"'#@=?\[\]])/ or $arguments =~ m/(~~)/) {
