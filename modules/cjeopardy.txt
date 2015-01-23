@@ -973,7 +973,7 @@
 [7.21.6.14 The vsscanf function] This function is equivalent to sscanf, with a variable argument list.|vsscanf
 [7.21.7.1 The fgetc function] If the end-of-file indicator for the input stream pointed to by stream is not set and a next character is present, this function obtains that character as an unsigned char converted to an int and advances the associated file position indicator for the stream (if defined).|fgetc
 [7.21.7.1 The fgetc function] An end-of-file and a read error can be distinguished by use of these functions (name both, separated by "and").|feof and ferror|ferror and feof
-[7.21.7.2 The fgets function] The fgets function reads at most one less than the number of characters specified by its n argument from the stream pointed to by its stream argument into the array pointed to by its s argument.|fgets
+[7.21.7.2 The fgets function] This function reads at most one less than the number of characters specified by its n argument from the stream pointed to by its stream argument into the array pointed to by its s argument.|fgets
 [7.21.7.2 The fgets function] This character is written immediately after the last character read into the array by the fgets function.|null character|0|'\0'
 [7.21.7.2 The fgets function] If end-of-file is encountered by fgets and no characters have been read into the array, this value is returned.|NULL|null pointer|0
 [7.21.7.2 The fgets function] If end-of-file is encountered by fgets and no characters have been read into the array, the contents of the array are this.|unchanged
