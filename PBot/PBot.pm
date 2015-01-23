@@ -179,7 +179,7 @@ sub connect {
       SSL_ca_file  => $self->{registry}->get_value('irc', 'SSL_ca_file'),
       SSL_ca_path  => $self->{registry}->get_value('irc', 'SSL_ca_path'),
       Port         => $self->{registry}->get_value('irc', 'port'))) {
-    $self->{logger}->log("$0: Can't connect to IRC server. Retrying in 15 seconds...\n");
+    $self->{logger}->log("$0: Can't connect to $server:" . $self->{registry}->get_value('irc', 'port') . ". Retrying in 15 seconds...\n");
     sleep 15;
   }
 
