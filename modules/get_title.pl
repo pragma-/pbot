@@ -13,7 +13,9 @@ if ($#ARGV <= 0)
 }
 
 my $nick = shift(@ARGV);
-$arguments = join("%20", @ARGV);
+my $arguments = join("%20", @ARGV);
+
+$arguments =~ s/\W$//;
 
 exit if $arguments =~ m/explosm.net/i;
 exit if $arguments =~ m/stackoverflow.com/i;
