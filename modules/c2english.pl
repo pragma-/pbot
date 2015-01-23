@@ -11,6 +11,12 @@ no if $] >= 5.018, warnings => 'experimental::smartmatch';
 my $debug = 0;
 
 my $code = join ' ', @ARGV;
+
+if (not length $code) {
+  print "Usage: english <any C11 code>\n";
+  exit;
+}
+
 my $output;
 
 my $force;
@@ -304,7 +310,7 @@ print $fh $code;
 close $fh;
 
 #my ($ret, $result) = execute(10, "gcc -std=c89 -pedantic -Werror -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
-my ($ret, $result) = execute(10, "gcc -std=c11 -pedantic -Werror -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
+my ($ret, $result) = execute(10, "gcc -std=c11 -pedantic -Werror -Wno-implicit -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
 
 if(not $force and $ret != 0) {
   $output = $result;
@@ -348,7 +354,7 @@ if(not $force and $ret != 0) {
   $output =~ s/\\0"/"/g;
   $output =~ s/"\\0/"/g;
   $output =~ s/\.\.\.>/>/g;
-  $output =~ s/(\\\d{3})+//g;
+#  $output =~ s/(\\\d{3})+//g;
   $output =~ s/<\s*included at \/home\/compiler\/>\s*//g;
   $output =~ s/\s*compilation terminated due to -Wfatal-errors\.//g;
   $output =~ s/^======= Backtrace.*\[vsyscall\]\s*$//ms;
