@@ -35,6 +35,7 @@ sub nickometer ($) {
 		      'sh[i1]t'			=> 500,
 		      'coo[l1]'			=> 500,
 		      'kew[l1]'			=> 500,
+          'sw[a4]g'     => 500,
 		      'lame'			=> 500,
 		      'dood'			=> 500,
 		      'dude'			=> 500,
@@ -46,9 +47,7 @@ sub nickometer ($) {
 		      'h[o0]rny'		=> 700,
 		      'pr[o0]n'			=> 1000,
 		      'w[4a]r[e3]z'		=> 1000,
-		      'xx'			=> 300,
-		      '\[rkx]0'			=> 1000,
-		      '\0[rkx]'			=> 1000,
+		      'xx'			=> 450,
 		     );
 
   foreach my $special (keys %special_cost) {
