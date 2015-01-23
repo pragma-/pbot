@@ -441,6 +441,53 @@ SQL
   return $messages;
 }
 
+sub get_message_context {
+  my ($self, $message, $before, $after) = @_;
+
+  my ($messages_before, $messages_after);
+
+  if (defined $before and $before > 0) {
+    $messages_before = eval {
+      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND timestamp < ? AND mode != 1 ORDER BY timestamp DESC LIMIT ?');
+      $sth->bind_param(1, $message->{channel});
+      $sth->bind_param(2, $message->{timestamp});
+      $sth->bind_param(3, $before);
+      $sth->execute();
+      return [reverse @{$sth->fetchall_arrayref({})}];
+    };
+    $self->{pbot}->{logger}->log($@) if $@;
+  }
+
+  if (defined $after and $after > 0) {
+    $messages_after = eval {
+      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND timestamp > ? AND mode != 1 LIMIT ?');
+      $sth->bind_param(1, $message->{channel});
+      $sth->bind_param(2, $message->{timestamp});
+      $sth->bind_param(3, $after);
+      $sth->execute();
+      return $sth->fetchall_arrayref({});
+    };
+    $self->{pbot}->{logger}->log($@) if $@;
+  }
+
+  my @messages;
+  push(@messages, @$messages_before) if defined $messages_before;
+  push(@messages, $message);
+  push(@messages, @$messages_after)  if defined $messages_after;
+
+  my %nicks;
+  foreach my $msg (@messages) {
+    if (not exists $nicks{$msg->{id}}) {
+      my $hostmask = $self->find_most_recent_hostmask($msg->{id});
+      my ($nick) = $hostmask =~ m/^([^!]+)/;
+      $nicks{$msg->{id}} = $nick;
+    }
+    $msg->{nick} = $nicks{$msg->{id}};
+  }
+
+  return \@messages;
+}
+
 sub recall_message_by_count {
   my ($self, $id, $channel, $count, $ignore_command) = @_;
 
@@ -448,7 +495,7 @@ sub recall_message_by_count {
 
   if(defined $id) {
     $messages = eval {
-      my $sth = $self->{dbh}->prepare('SELECT msg, mode, timestamp FROM Messages WHERE id = ? AND channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
+      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
       $sth->bind_param(1, $id);
       $sth->bind_param(2, $channel);
       $sth->bind_param(3, $count);
@@ -457,7 +504,7 @@ sub recall_message_by_count {
     };
   } else {
     $messages = eval {
-      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp FROM Messages WHERE channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
+      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
       $sth->bind_param(1, $channel);
       $sth->bind_param(2, $count);
       $sth->execute();
@@ -489,7 +536,7 @@ sub recall_message_by_text {
 
   if(defined $id) {
     $messages = eval {
-      my $sth = $self->{dbh}->prepare('SELECT msg,mode,timestamp FROM Messages WHERE id = ? AND channel = ? AND msg LIKE ? ORDER BY timestamp DESC LIMIT 10');
+      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg LIKE ? ORDER BY timestamp DESC LIMIT 10');
       $sth->bind_param(1, $id);
       $sth->bind_param(2, $channel);
       $sth->bind_param(3, "%$text%");
@@ -498,7 +545,7 @@ sub recall_message_by_text {
     };
   } else {
     $messages = eval {
-      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp FROM Messages WHERE channel = ? AND msg LIKE ? ORDER BY timestamp DESC LIMIT 10');
+      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg LIKE ? ORDER BY timestamp DESC LIMIT 10');
       $sth->bind_param(1, $channel);
       $sth->bind_param(2, "%$text%");
       $sth->execute();

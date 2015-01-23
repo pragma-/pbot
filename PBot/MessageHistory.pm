@@ -123,7 +123,7 @@ sub recall_message {
     return "";
   }
 
-  my $usage = 'Usage: recall [nick [history [channel]]] [-c,channel <channel>] [-t,text,h,history <history>] [+ ...]';
+  my $usage = 'Usage: recall [nick [history [channel]]] [-c,channel <channel>] [-t,text,h,history <history>] [-b,before <context before>] [-a,after <context after>] [+ ...]';
 
   if(not defined $arguments or not length $arguments) {
     return $usage; 
@@ -142,11 +142,13 @@ sub recall_message {
   my $recall_text;
 
   foreach my $recall (@recalls) {
-    my ($recall_nick, $recall_history, $recall_channel);
+    my ($recall_nick, $recall_history, $recall_channel, $recall_before, $recall_after);
 
     my ($ret, $args) = GetOptionsFromString($recall,
-      'channel|c=s' => \$recall_channel,
-      'text|t|history|h=s' => \$recall_history);
+      'channel|c=s'        => \$recall_channel,
+      'text|t|history|h=s' => \$recall_history,
+      'before|b=s'         => \$recall_before,
+      'after|a=s'          => \$recall_after);
 
     return "$getopt_error -- $usage" if defined $getopt_error;
 
@@ -156,6 +158,8 @@ sub recall_message {
     $recall_nick = shift @$args;
     $recall_history = shift @$args if not defined $recall_history;
     $recall_channel = shift @$args if not defined $recall_channel;
+    $recall_before = 0 if not defined $recall_before;
+    $recall_after = 0 if not defined $recall_after;
 
     # swap nick and channel if recall nick looks like channel and channel wasn't specified
     if(not $channel_arg and $recall_nick =~ m/^#/) {
@@ -220,28 +224,30 @@ sub recall_message {
       }
     }
 
-    if(defined $message->{id}) {
-      my $hostmask = $self->{database}->find_most_recent_hostmask($message->{id}); 
-      ($found_nick) = $hostmask =~ m/^([^!]+)/;
-      $recall_nick = $found_nick;
+    if ($recall_before + $recall_after > 200) {
+      return "You may only select 200 lines of surrounding context.";
     }
 
-    $self->{pbot}->{logger}->log("$nick ($from) recalled <$recall_nick/$recall_channel> $message->{msg}\n");
+    my $messages = $self->{database}->get_message_context($message, $recall_before, $recall_after);
 
-    my $text = $message->{msg};
-    my $ago = ago(gettimeofday - $message->{timestamp});
+    foreach my $msg (@$messages) {
+      $self->{pbot}->{logger}->log("$nick ($from) recalled <$msg->{nick}/$msg->{channel}> $msg->{msg}\n");
 
-    if(not defined $recall_text) {
-      if($text =~ s/^\/me\s+// or $text =~ m/^KICKED /) {
-        $recall_text = "[$ago] * $found_nick $text";
+      my $text = $msg->{msg};
+      my $ago = ago(gettimeofday - $msg->{timestamp});
+
+      if(not defined $recall_text) {
+        if($text =~ s/^\/me\s+// or $text =~ m/^KICKED /) {
+          $recall_text = "[$ago] * $msg->{nick} $text\n";
+        } else {
+          $recall_text = "[$ago] <$msg->{nick}> $text\n";
+        }
       } else {
-        $recall_text = "[$ago] <$found_nick> $text";
-      }
-    } else {
-      if($text =~ s/^\/me\s+// or $text =~ m/^KICKED /) {
-        $recall_text .= " [$ago] * $found_nick $text";
-      } else {
-        $recall_text .= " [$ago] <$found_nick> $text";
+        if($text =~ s/^\/me\s+// or $text =~ m/^KICKED /) {
+          $recall_text .= "[$ago] * $msg->{nick} $text\n";
+        } else {
+          $recall_text .= "[$ago] <$msg->{nick}> $text\n";
+        }
       }
     }
   }
