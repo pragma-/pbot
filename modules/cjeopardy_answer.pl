@@ -114,6 +114,16 @@ foreach my $answer (@valid_answers) {
     $supplemental_text = $1;
   }
 
+  if ($answer =~ /^[0-9]+$/ and $lctext =~ /^[0-9]+$/) {
+    if ($lctext > $answer) {
+      print "$lctext is too big!\n";
+      exit;
+    } elsif ($lctext < $answer) {
+      print "$lctext is too small!\n";
+      exit;
+    }
+  }
+
   my $distance = fastdistance($lctext, lc $answer);
   my $length = (length($lctext) > length($answer)) ? length $lctext : length $answer;
 
