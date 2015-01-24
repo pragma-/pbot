@@ -117,10 +117,22 @@ sub show_output {
 
     my $pretty_code = $self->pretty_format($self->{code});
 
-    $pretty_code .= "\n\n/************* CMDLINE *************\n$cmdline\n************** CMDLINE *************/\n"; 
+    my $cmdline_opening_comment = $self->{cmdline_opening_comment} // "/************* CMDLINE *************\n";
+    my $cmdline_closing_comment = $self->{cmdline_closing_comment} // "************** CMDLINE *************/\n";
+
+    my $output_opening_comment = $self->{output_opening_comment} // "/************* OUTPUT *************\n";
+    my $output_closing_comment = $self->{output_closing_comment} // "************** OUTPUT *************/\n";
+
+    $pretty_code .= "\n\n";
+    $pretty_code .= $cmdline_opening_comment;
+    $pretty_code .= "$cmdline\n";
+    $pretty_code .= $cmdline_closing_comment;
 
     $output =~ s/\s+$//;
-    $pretty_code .= "\n/************* OUTPUT *************\n$output\n************** OUTPUT *************/\n"; 
+    $pretty_code .= "\n";
+    $pretty_code .= $output_opening_comment;
+    $pretty_code .= "$output\n";
+    $pretty_code .= $output_closing_comment;
 
     my $uri = $self->paste_sprunge($pretty_code);
 
@@ -128,11 +140,11 @@ sub show_output {
     exit 0;
   }
 
-  if(length $output > 22 and open FILE, "< history/$self->{channel}-$self->{lang}.last-output") {
+  if($self->{channel} =~ m/^#/ and length $output > 22 and open FILE, "< history/$self->{channel}-$self->{lang}.last-output") {
     my $last_output;
     my $time = <FILE>;
 
-    if(gettimeofday - $time > 60 * 10) {
+    if(gettimeofday - $time > 60 * 4) {
       close FILE;
     } else {
       while(my $line = <FILE>) {
@@ -195,7 +207,10 @@ sub paste_sprunge {
 
   my $result = $response->content;
   $result =~ s/^\s+//;
-  $result =~ s/\s+$/?c/;
+
+  my $lexer = $self->{sprunge_lexer};
+  ($lexer) = $self->{sourcefile} =~ /\.(.*)$/ if not defined $lexer;
+  $result =~ s/\s+$/?$lexer/;
 
   return $result;
 }
