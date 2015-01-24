@@ -21,6 +21,12 @@ sub postprocess_output {
 
   $self->{output} =~ s/\s+at $self->{sourcefile} line \d+, near ".*?"//;
   $self->{output} =~ s/\s*Execution of $self->{sourcefile} aborted due to compilation errors.//;
+
+  $self->{cmdline_opening_comment} = "=cut =============== CMDLINE ===============\n";
+  $self->{cmdline_closing_comment} = "=cut\n";
+
+  $self->{output_opening_comment} = "=cut =============== OUTPUT ===============\n";
+  $self->{output_closing_comment} = "=cut\n";
 }
 
 1;
