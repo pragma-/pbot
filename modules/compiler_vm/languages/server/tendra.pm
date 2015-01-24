@@ -20,6 +20,8 @@ sub postprocess {
   $input_quoted =~ s/\\"/"'\\"'"/g;
   my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 1; /home/compiler/prog <<< echo $input_quoted > .output\"");
 
+  $self->{error} = $retval;
+
   $result = "";
   open(FILE, '.output');
   while(<FILE>) {
