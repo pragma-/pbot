@@ -16,9 +16,11 @@ sub postprocess {
     $self->{output} = "[$self->{output}]\n";
   }
 
-  my $input_quoted = quotemeta $self->{input};
-  $input_quoted =~ s/\\"/"'\\"'"/g;
-  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 1; /home/compiler/prog <<< echo $input_quoted > .output\"");
+  open my $fh, '>', '.input';
+  print $fh $self->{input};
+  close $fh;
+
+  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 1; cat .input | /home/compiler/prog > .output\"");
 
   $self->{error} = $retval;
 
