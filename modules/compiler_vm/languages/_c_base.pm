@@ -63,6 +63,7 @@ sub process_custom_options {
   $self->{code} = $self->{code};
 
   $self->add_option("-nomain") if $self->{code} =~ s/(?:^|(?<=\s))-nomain\s*//i;
+  $self->add_option("-noheaders") if $self->{code} =~ s/(?:^|(?<=\s))-noheaders\s*//i;
 
   $self->{include_options} = "";
   while ($self->{code} =~ s/(?:^|(?<=\s))-include\s+(\S+)\s+//) {
@@ -97,7 +98,7 @@ sub preprocess_code {
   my $self = shift;
   $self->SUPER::preprocess_code;
 
-  my $default_prelude = $self->{prelude};
+  my $default_prelude = exists $self->{options}->{'-noheaders'} ? '' : $self->{prelude};
 
   $self->{code} = $self->{include_options} . $self->{code};
 
