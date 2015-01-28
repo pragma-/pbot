@@ -142,9 +142,11 @@ sub execute_module {
       Carp::croak("Could not chdir to '$module_dir': $!");
     }
 
-    # $self->{pbot}->{logger}->log("module arguments: [$arguments]\n");
+    if(exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{workdir}) {
+      chdir $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{workdir};
+    }
 
-    $text = `$module_dir/$module $arguments`;
+    $text = `./$module $arguments 2>> $module-stderr`;
 
     if(defined $tonick) {
       $self->{pbot}->{logger}->log("($from): $nick!$user\@$host) sent to $tonick\n");
