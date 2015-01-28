@@ -1,1 +1,0 @@
-./view_message_history.pl > mh.txt && less mh.txt
