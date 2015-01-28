@@ -8,6 +8,8 @@ use strict;
 use DBI;
 use Carp qw(shortmess);
 
+my $debug = 0;
+
 sub new {
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
@@ -23,7 +25,7 @@ sub initialize {
 sub begin {
   my $self = shift;
 
-  print STDERR "Opening scores SQLite database: $self->{filename}\n";
+  print STDERR "Opening scores SQLite database: $self->{filename}\n" if $debug;
 
   $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0 }) or die $DBI::errstr;
 
@@ -58,7 +60,7 @@ SQL
 sub end {
   my $self = shift;
 
-  print STDERR "Closing scores SQLite database\n";
+  print STDERR "Closing scores SQLite database\n" if $debug;
 
   if(exists $self->{dbh} and defined $self->{dbh}) {
     $self->{dbh}->disconnect();
@@ -121,6 +123,7 @@ sub get_player_data {
     $sth->execute();
     return $sth->fetchrow_hashref();
   };
+  print STDERR $@ if $@;
   return $player_data;
 }
 
@@ -148,6 +151,19 @@ sub update_player_data {
     $sth->bind_param($param, $id);
     $sth->execute();
   };
+}
+
+sub get_all_correct_streaks {
+  my ($self, $channel) = @_;
+
+  my $streakers = eval {
+    my $sth = $self->{dbh}->prepare('SELECT * FROM Scores WHERE channel = ? AND correct_streak > 0');
+    $sth->bind_param(1, $channel);
+    $sth->execute();
+    return $sth->fetchall_arrayref({});
+  };
+  print STDERR $@ if $@;
+  return $streakers;
 }
 
 1;

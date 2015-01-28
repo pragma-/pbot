@@ -18,8 +18,6 @@ my $timeout = 30;
 my $nick    = shift @ARGV;
 my $channel = shift @ARGV;
 
-print STDERR "nick: $nick, channel: $channel\n";
-
 sub encode { my $str = shift; $str =~ s/\\(.)/{sprintf "\\%03d", ord($1)}/ge; return $str; }
 sub decode { my $str = shift; $str =~ s/\\(\d{3})/{"\\" . chr($1)}/ge; return $str }
 

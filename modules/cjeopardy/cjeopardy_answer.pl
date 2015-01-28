@@ -158,26 +158,19 @@ foreach my $answer (@valid_answers) {
       print "\n";
     }
 
-    unlink "$CJEOPARDY_DATA-$channel";
-    unlink "$CJEOPARDY_HINT-$channel";
+    my $streakers = $scores->get_all_correct_streaks($channel);
 
-    open $fh, ">", "$CJEOPARDY_LAST_ANSWER-$channel" or die "Couldn't open $CJEOPARDY_LAST_ANSWER-$channel: $!";
-    my $time = scalar gettimeofday;
-    print $fh "$nick\n$data[1]$time\n";
-    close $fh;
+    foreach my $streaker (@$streakers) {
+      next if $streaker->{nick} eq $nick;
 
-    if ($channel eq '#cjeopardy') {
-      my $question = `./cjeopardy/cjeopardy.pl $channel`;
-      
-      if ($hint_only_mode) {
-        my $hint = `./cjeopardy/cjeopardy_hint.pl $channel`;
-        $hint =~ s/^Hint: //;
-        print "Next hint: $hint\n";
-      } else {
-        print "$color{green}Next question$color{reset}: $question\n";
+      if ($streaker->{correct_streak} >= 3) {
+        print "$color{orange}$nick$color{red} ended $color{orange}$streaker->{nick}$color{red}'s $color{orange}$streaker->{correct_streak}$color{red} correct answer streak!$color{reset}\n";
       }
+
+      $streaker->{correct_streak} = 0;
+      $scores->update_player_data($streaker->{id}, $streaker);
     }
-    
+
     $player_data->{correct_answers}++;
     $player_data->{lifetime_correct_answers}++;
     $player_data->{correct_streak}++;
@@ -192,8 +185,44 @@ foreach my $answer (@valid_answers) {
       $player_data->{lifetime_highest_correct_streak} = $player_data->{highest_correct_streak};
     }
 
+    my %streaks = (
+      3 => "$color{orange}$nick$color{green} is on a $color{orange}3$color{green} correct answer streak!",
+      5 => "$color{orange}$nick$color{green} is hot with a $color{orange}5$color{green} correct answer streak!",
+      8 => "$color{orange}$nick$color{green} is on fire with an $color{orange}8$color{green} correct answer streak!",
+      12 => "$color{orange}$nick$color{green} is on fire with a $color{orange}12$color{green} correct answer streak!",
+      16 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}16$color{green} correct answer streak!",
+      20 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}20$color{green} correct answer streak!",
+      25 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}25$color{green} correct answer streak!",
+      30 => "$color{orange}$nick$color{green} IS UNTOUCHABLE WITH A $color{orange}30$color{green} CORRECT ANSWER STREAK! ARE THEY PLAYING WITH THEMSELVES?!"
+    );
+
+    if (exists $streaks{$player_data->{correct_streak}}) {
+      print "$streaks{$player_data->{correct_streak}}$color{reset}\n";
+    }
+
     $scores->update_player_data($player_id, $player_data);
     $scores->end;
+
+    unlink "$CJEOPARDY_DATA-$channel";
+    unlink "$CJEOPARDY_HINT-$channel";
+
+    open $fh, ">", "$CJEOPARDY_LAST_ANSWER-$channel" or die "Couldn't open $CJEOPARDY_LAST_ANSWER-$channel: $!";
+    my $time = scalar gettimeofday;
+    print $fh "$nick\n$data[1]$time\n";
+    close $fh;
+
+    if ($channel eq '#cjeopardy') {
+      my $question = `./cjeopardy.pl $channel`;
+      
+      if ($hint_only_mode) {
+        my $hint = `./cjeopardy_hint.pl $channel`;
+        $hint =~ s/^Hint: //;
+        print "Next hint: $hint\n";
+      } else {
+        print "$color{green}Next question$color{reset}: $question\n";
+      }
+    }
+
     exit;
   }
 }
@@ -222,6 +251,21 @@ if ($player_data->{wrong_streak} > $player_data->{highest_wrong_streak}) {
 
 if ($player_data->{highest_wrong_streak} > $player_data->{lifetime_highest_wrong_streak}) {
   $player_data->{lifetime_highest_wrong_streak} = $player_data->{highest_wrong_streak};
+}
+
+my %streaks = (
+  3 => "$color{red}Try a little bit harder, $color{orange}$nick$color{red}.",
+  5 => "$color{red}Guessing, are we, $color{orange}$nick$color{red}?",
+  8 => "$color{red}Please use better guesses, $color{orange}$nick!",
+  12 => "$color{red}Are you even trying, $color{orange}$nick$color{red}?!",
+  16 => "$color{red}Have you been checked for mental retardation yet, $color{orange}$nick$color{red}?",
+  20 => "$color{red}Are you sure you weren't dropped on your head, $color{orange}$nick$color{red}?",
+  25 => "$color{red}Maybe you should go look it up, $color{orange}$nick$color{red}.",
+  30 => "$color{red}FOR FUCK'S SAKE, GO LOOK IT UP ALREADY, $color{orange}$nick$color{red}!"
+);
+
+if (exists $streaks{$player_data->{wrong_streak}}) {
+  print "$streaks{$player_data->{wrong_streak}}$color{reset}\n";
 }
 
 $scores->update_player_data($player_id, $player_data);
