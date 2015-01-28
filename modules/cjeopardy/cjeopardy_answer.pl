@@ -189,11 +189,11 @@ foreach my $answer (@valid_answers) {
       3 => "$color{orange}$nick$color{green} is on a $color{orange}3$color{green} correct answer streak!",
       5 => "$color{orange}$nick$color{green} is hot with a $color{orange}5$color{green} correct answer streak!",
       8 => "$color{orange}$nick$color{green} is on fire with an $color{orange}8$color{green} correct answer streak!",
-      12 => "$color{orange}$nick$color{green} is on fire with a $color{orange}12$color{green} correct answer streak!",
+      12 => "$color{orange}$nick$color{green} is ON FIRE with a $color{orange}12$color{green} correct answer streak!",
       16 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}16$color{green} correct answer streak!",
       20 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}20$color{green} correct answer streak!",
       25 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}25$color{green} correct answer streak!",
-      30 => "$color{orange}$nick$color{green} IS UNTOUCHABLE WITH A $color{orange}30$color{green} CORRECT ANSWER STREAK! ARE THEY PLAYING WITH THEMSELVES?!"
+      30 => "$color{orange}$nick$color{green} IS UNTOUCHABLE WITH A $color{orange}30$color{green} CORRECT ANSWER STREAK!"
     );
 
     if (exists $streaks{$player_data->{correct_streak}}) {
@@ -258,8 +258,8 @@ my %streaks = (
   5 => "$color{red}Guessing, are we, $color{orange}$nick$color{red}?",
   8 => "$color{red}Please use better guesses, $color{orange}$nick!",
   12 => "$color{red}Are you even trying, $color{orange}$nick$color{red}?!",
-  16 => "$color{red}Have you been checked for mental retardation yet, $color{orange}$nick$color{red}?",
-  20 => "$color{red}Are you sure you weren't dropped on your head, $color{orange}$nick$color{red}?",
+  16 => "$color{red}Are you sure you weren't dropped on your head, $color{orange}$nick$color{red}?",
+  20 => "$color{red}Have you been checked for mental retardation yet, $color{orange}$nick$color{red}?",
   25 => "$color{red}Maybe you should go look it up, $color{orange}$nick$color{red}.",
   30 => "$color{red}FOR FUCK'S SAKE, GO LOOK IT UP ALREADY, $color{orange}$nick$color{red}!"
 );
