@@ -33,8 +33,8 @@ sub begin {
     $self->{dbh}->do(<< 'SQL');
 CREATE TABLE IF NOT EXISTS Scores (
    id                               INTEGER PRIMARY KEY,
-   nick                             TEXT NOT NULL,
-   channel                          TEXT NOT NULL,
+   nick                             TEXT NOT NULL COLLATE NOCASE,
+   channel                          TEXT NOT NULL COLLATE NOCASE,
    correct_answers                  INTEGER DEFAULT 0,
    wrong_answers                    INTEGER DEFAULT 0,
    lifetime_correct_answers         INTEGER DEFAULT 0,
@@ -84,7 +84,7 @@ sub add_player {
 }
 
 sub get_player_id {
-  my ($self, $nick, $channel) = @_;
+  my ($self, $nick, $channel, $dont_create_new) = @_;
 
   my $id = eval {
     my $sth = $self->{dbh}->prepare('SELECT id FROM Scores WHERE nick = ? AND channel = ?');
@@ -97,7 +97,7 @@ sub get_player_id {
 
   print STDERR $@ if $@;
 
-  $id = $self->add_player($nick, $channel) if not defined $id;
+  $id = $self->add_player($nick, $channel) if not defined $id and not $dont_create_new;
   return $id;
 }
 
@@ -151,6 +151,7 @@ sub update_player_data {
     $sth->bind_param($param, $id);
     $sth->execute();
   };
+  print STDERR $@ if $@;
 }
 
 sub get_all_correct_streaks {
