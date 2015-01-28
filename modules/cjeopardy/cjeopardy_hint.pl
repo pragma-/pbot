@@ -6,13 +6,19 @@ use strict;
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration qw/duration/;
 
-my $CJEOPARDY_DATA = 'cjeopardy.dat';
-my $CJEOPARDY_HINT = 'cjeopardy.hint';
+use Scorekeeper;
+use IRCColors;
+
+my $CJEOPARDY_DATA   = 'data/cjeopardy.dat';
+my $CJEOPARDY_HINT   = 'data/cjeopardy.hint';
 
 my @hints = (0.90, 0.75, 0.50, 0.25, 0.10);
 my $timeout = 30;
 
+my $nick    = shift @ARGV;
 my $channel = shift @ARGV;
+
+print STDERR "nick: $nick, channel: $channel\n";
 
 sub encode { my $str = shift; $str =~ s/\\(.)/{sprintf "\\%03d", ord($1)}/ge; return $str; }
 sub decode { my $str = shift; $str =~ s/\\(\d{3})/{"\\" . chr($1)}/ge; return $str }
@@ -59,7 +65,7 @@ my $duration = scalar gettimeofday - $last_timeout;
 if ($duration < $timeout) {
   $duration = duration($timeout - $duration);
   unless ($duration eq 'just now') {
-    print "Please wait $duration before requesting another hint.\n";
+    print "$color{red}Please wait $duration before requesting another hint.$color{reset}\n";
     exit;
   }
 }
@@ -91,4 +97,13 @@ foreach my $index (@indices) {
   substr $hint, $index, 1, '.';
 }
 
-print "Hint: $hint\n";
+print "$color{lightgreen}Hint$color{reset}: $hint\n";
+
+my $scores = Scorekeeper->new;
+$scores->begin;
+my $id = $scores->get_player_id($nick, $channel);
+my $player_data = $scores->get_player_data($id, 'hints', 'lifetime_hints');
+$player_data->{hints}++;
+$player_data->{lifetime_hints}++;
+$scores->update_player_data($id, $player_data);
+$scores->end;

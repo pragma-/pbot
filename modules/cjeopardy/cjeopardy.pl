@@ -6,9 +6,11 @@ use strict;
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration qw/duration/;
 
+use IRCColors;
+
 my $CJEOPARDY_FILE    = 'cjeopardy.txt';
-my $CJEOPARDY_DATA    = 'cjeopardy.dat';
-my $CJEOPARDY_SHUFFLE = 'cjeopardy.shuffle';
+my $CJEOPARDY_DATA    = 'data/cjeopardy.dat';
+my $CJEOPARDY_SHUFFLE = 'data/cjeopardy.shuffle';
 
 my $TIMELIMIT = 300;
 
@@ -31,8 +33,8 @@ if (defined $ret) {
   
   if (scalar gettimeofday - $last_timestamp <= $TIMELIMIT) {
     my $duration = duration($TIMELIMIT - scalar gettimeofday - $last_timestamp);
-    print "The current question is: $last_question";
-    print "You may request a new question in $duration.\n";
+    print "$color{green}The current question is$color{reset}: $last_question";
+    print "$color{red}You may request a new question in $duration.$color{reset}\n";
     close $fh;
     exit;
   }
@@ -48,7 +50,7 @@ if (not length $text) {
     close $fh;
 
     if (not @indices) {
-      print "(Shuffling.)\n";
+      print "$color{teal}(Shuffling.)$color{reset}\n";
       shuffle_questions(0);
     } else {
       open my $fh, ">", "$CJEOPARDY_SHUFFLE-$channel" or print "Failed to shuffle questions.\n" and exit;
@@ -58,7 +60,7 @@ if (not length $text) {
       close $fh;
     }
   } else {
-    print "(Shuffling!)\n";
+    print "$color{teal}(Shuffling!)$color{reset}\n";
     $question_index = shuffle_questions(1);
   }
 }
@@ -91,6 +93,7 @@ chomp $a;
 $q =~ s/\\\|/|/g;
 $q =~ s/^\[.*?\]\s+//;
 
+$q =~ s/(this keyword|this operator|this behavior|this preprocessing directive|this escape sequence|this mode|this function specifier|this function|this macro|this predefined macro|this header|this pragma|this fprintf length modifier|this type qualifier|this type|this value|this operand|this many|this|these)/$color{bold}$1$color{reset}/gi;
 print "$q\n";
 
 open $fh, ">", "$CJEOPARDY_DATA-$channel" or die "Could not open $CJEOPARDY_DATA-$channel: $!";

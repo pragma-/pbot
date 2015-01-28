@@ -8,8 +8,8 @@
 [3.6 Terms, definitions, and symbols] A byte is composed of a contiguous sequence of bits, the number of which is this.|implementation-defined{Bet you thought it was 8!}
 [3.6 Terms, definitions, and symbols] The least significant bit is called this.|low-order bit|low-order
 [3.6 Terms, definitions, and symbols] The most significant bit is called this.|high-order bit|high-order
-[3.6 Terms, definitions, and symbols] The the low-order bit is also known as this.|least significant bit|least significant
-[3.6 Terms, definitions, and symbols] The the high-order bit is also known as this.|most significant bit|most significant
+[3.6 Terms, definitions, and symbols] The low-order bit is also known as this.|least significant bit|least significant
+[3.6 Terms, definitions, and symbols] The high-order bit is also known as this.|most significant bit|most significant
 [3.15 Terms, definitions, and symbols] This is a region of data storage in the execution environment, the contents of which can represent values.|object
 [3.15 Terms, definitions, and symbols] An object is a region of data storage in the execution environment, the contents of which can represent these.|values
 [4. Conformance] In the standard, ``shall'' is to be interpreted as this on an implementation, or on a program.|requirement{If violated, the behavior is undefined.}
@@ -272,7 +272,7 @@
 [6.2.5 Types] The construction of a pointer type from a referenced type is called this.|pointer type derivation
 [6.2.5 Types] This type describes the type designated by the construct _Atomic (type-name).|atomic
 [6.2.5 Types] An array type of unknown size is this kind of type.|incomplete
-[6.2.5 Types] A type has known constant size if the type is not incomplete and is not this type of array.|VLA{VLA stands for variable length array.}|variable length array
+[6.2.5 Types] A type has known constant size if the type is not incomplete and is not this type of array.|VLA{VLA stands for variable length array.}|variable length|variable length array
 [6.2.5 Types] A pointer to void shall have the same representation and alignment requirements as a pointer to this type.|char|character
 [6.2.6.1 General] Values stored in unsigned bit-fields and objects of type unsigned char shall be represented using this notation.|binary|pure binary|pure binary notation
 [6.2.6.1 General] A value may be copied into an object of type unsigned char [n] (e.g., by memcpy); the resulting set of bytes is called this.|object representation
@@ -997,7 +997,8 @@
 [7.21.9.2 The fseek function] This function sets the file position indicator for the stream pointed to by its stream argument.|fseek
 [7.21.9.2 The fseek function] For a text stream, offset argument shall be either zero or a value returned by an earlier successful call to the ftell function on a stream associated with the same file and its whence argument shall be this.|SEEK_SET
 [7.21.9.2 The fseek function] The fseek function returns this value for a request that cannot be satisfied.|nonzero|!0
-[7.21.9.3 The fsetpos function] This function sets the mbstate_t object (if any) and file position indicator for the stream pointed to by stream according to the value of the object pointed to by pos, which shall be a value obtained from an earlier successful call to this function on a stream associated with the same file.|fsetpos
+[7.21.9.3 The fsetpos function] This function sets the mbstate_t object (if any) and file position indicator for the stream pointed to by stream according to the value of the object pointed to by pos.|fsetpos
+[7.21.9.3 The fsetpos function] The fsetpos function sets the mbstate_t object (if any) and file position indicator for the stream pointed to by stream according to the value of the object pointed to by pos, which shall be a value obtained from an earlier successful call to this function on a stream associated with the same file.|fgetpos
 [7.21.9.4 The ftell function] This function obtains the current value of the file position indicator for the stream pointed to by stream.|ftell
 [7.21.9.5 The rewind function] This function sets the file position indicator for the stream pointed to by stream to the beginning of the file.|rewind
 [7.21.10.1 The clearerr function] This function clears the end-of-file and error indicators for the stream pointed to by stream.|clearerr

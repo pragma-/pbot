@@ -6,14 +6,17 @@ use strict;
 use Text::Levenshtein qw(fastdistance);
 use Time::HiRes qw(gettimeofday);
 
-my $CJEOPARDY_DATA = 'cjeopardy.dat';
-my $CJEOPARDY_HINT = 'cjeopardy.hint';
-my $CJEOPARDY_LAST_ANSWER = 'cjeopardy.last_ans';
+use Scorekeeper;
+use IRCColors;
+
+my $CJEOPARDY_DATA        = 'data/cjeopardy.dat';
+my $CJEOPARDY_HINT        = 'data/cjeopardy.hint';
+my $CJEOPARDY_LAST_ANSWER = 'data/cjeopardy.last_ans';
 
 my $hint_only_mode = 0;
 
-my $channel = shift @ARGV;
 my $nick = shift @ARGV;
+my $channel = shift @ARGV;
 my $text = join(' ', @ARGV);
 
 sub encode { my $str = shift; $str =~ s/\\(.)/{sprintf "\\%03d", ord($1)}/ge; return $str; }
@@ -85,9 +88,9 @@ if (defined $ret) {
 
       if ($distance / $length < 0.15) {
         if ($last_nick eq $nick) {
-          print "Er, you already correctly answered that question.\n";
+          print "$color{red}Er, you already correctly answered that question.$color{reset}\n";
         } else {
-          print "Too slow! $last_nick got the correct answer.\n";
+          print "$color{red}Too slow! $color{orange}$last_nick$color{red} got the correct answer.$color{reset}\n";
         }
         exit;
       }
@@ -100,6 +103,11 @@ if (not @data) {
   @data = <$fh>;
   close $fh;
 }
+
+my $scores = Scorekeeper->new;
+$scores->begin;
+my $player_id = $scores->get_player_id($nick, $channel);
+my $player_data = $scores->get_player_data($player_id);
 
 my @valid_answers = map { decode $_ } split /\|/, encode $data[1];
 
@@ -115,13 +123,17 @@ foreach my $answer (@valid_answers) {
   }
 
   if ($answer =~ /^[0-9]+$/ and $lctext =~ /^[0-9]+$/) {
+    my $is_wrong = 0;
+
     if ($lctext > $answer) {
-      print "$lctext is too big!\n";
-      exit;
+      print "$color{red}$lctext is too high!$color{reset}\n";
+      $is_wrong = 1;
     } elsif ($lctext < $answer) {
-      print "$lctext is too small!\n";
-      exit;
+      print "$color{red}$lctext is too low!$color{reset}\n";
+      $is_wrong = 1;
     }
+
+    goto WRONG_ANSWER if $is_wrong;
   }
 
   my $distance = fastdistance($lctext, lc $answer);
@@ -135,13 +147,13 @@ foreach my $answer (@valid_answers) {
 
   if ($percentage < 15) {
     if ($distance == 0) {
-      print "'$answer' is correct!";
+      print "'$color{green}$answer$color{reset}' is correct!";
     } else {
-      print "'$text' is close enough to '$answer'. You are correct!"
+      print "'$color{green}$text$color{reset}' is close enough to '$color{green}$answer$color{reset}'. You are correct!"
     }
 
     if (defined $supplemental_text) {
-      print " $supplemental_text\n";
+      print " $color{teal}$supplemental_text$color{reset}\n";
     } else {
       print "\n";
     }
@@ -155,27 +167,62 @@ foreach my $answer (@valid_answers) {
     close $fh;
 
     if ($channel eq '#cjeopardy') {
-      my $question = `./cjeopardy.pl $channel`;
+      my $question = `./cjeopardy/cjeopardy.pl $channel`;
       
       if ($hint_only_mode) {
-        my $hint = `./cjeopardy_hint.pl $channel`;
+        my $hint = `./cjeopardy/cjeopardy_hint.pl $channel`;
         $hint =~ s/^Hint: //;
         print "Next hint: $hint\n";
       } else {
-        print "Next question: $question\n";
+        print "$color{green}Next question$color{reset}: $question\n";
       }
     }
+    
+    $player_data->{correct_answers}++;
+    $player_data->{lifetime_correct_answers}++;
+    $player_data->{correct_streak}++;
+    $player_data->{last_correct_timestamp} = scalar gettimeofday;
+    $player_data->{wrong_streak} = 0;
+
+    if ($player_data->{correct_streak} > $player_data->{highest_correct_streak}) {
+      $player_data->{highest_correct_streak} = $player_data->{correct_streak};
+    }
+
+    if ($player_data->{highest_correct_streak} > $player_data->{lifetime_highest_correct_streak}) {
+      $player_data->{lifetime_highest_correct_streak} = $player_data->{highest_correct_streak};
+    }
+
+    $scores->update_player_data($player_id, $player_data);
+    $scores->end;
     exit;
   }
 }
 
 my $correct_percentage = 100 - $incorrect_percentage;
 if ($correct_percentage >= 80) {
-  printf "Sorry, '$text' is %.1f%% correct. So close!\n", $correct_percentage;
+  printf "Sorry, '$color{red}$text$color{reset}' is %.1f%% correct. So close!\n", $correct_percentage;
 } elsif ($correct_percentage >= 70) {
-  printf "Sorry, '$text' is %.1f%% correct. Almost.\n", $correct_percentage;
+  printf "Sorry, '$color{red}$text$color{reset}' is %.1f%% correct. Almost.\n", $correct_percentage;
 } elsif ($correct_percentage >= 50) {
-  printf "Sorry, '$text' is only %.1f%% correct.\n", $correct_percentage;
+  printf "Sorry, '$color{red}$text$color{reset}' is only %.1f%% correct.\n", $correct_percentage;
 } else {
-  print "Sorry, '$text' is incorrect.\n";
+  print "Sorry, '$color{red}$text$color{reset}' is incorrect.\n";
 }
+
+WRONG_ANSWER:
+$player_data->{wrong_answers}++;
+$player_data->{lifetime_wrong_answers}++;
+$player_data->{wrong_streak}++;
+$player_data->{last_wrong_timestamp} = scalar gettimeofday;
+$player_data->{correct_streak} = 0;
+
+if ($player_data->{wrong_streak} > $player_data->{highest_wrong_streak}) {
+  $player_data->{highest_wrong_streak} = $player_data->{wrong_streak};
+}
+
+if ($player_data->{highest_wrong_streak} > $player_data->{lifetime_highest_wrong_streak}) {
+  $player_data->{lifetime_highest_wrong_streak} = $player_data->{highest_wrong_streak};
+}
+
+$scores->update_player_data($player_id, $player_data);
+$scores->end;
