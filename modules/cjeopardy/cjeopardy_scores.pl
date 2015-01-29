@@ -8,8 +8,6 @@ use Time::HiRes qw(gettimeofday);
 use Scorekeeper;
 use IRCColors;
 
-my $hint_only_mode = 0;
-
 my $nick      = shift @ARGV;
 my $channel   = shift @ARGV;
 my $command   = shift @ARGV;
@@ -36,7 +34,7 @@ if (not defined $player_id) {
 my $player_data = $scores->get_player_data($player_id);
 
 if (lc $command eq 'score') {
-  my $score = "$color{orange}$player_data->{nick}$color{reset}: ";
+  my $score = "$color{orange}$player_data->{nick}$color{reset}: " unless lc $nick eq lc $player_nick;
 
   $score .= "$color{green}correct: $color{orange}$player_data->{correct_answers}" . ($player_data->{lifetime_correct_answers} > $player_data->{correct_answers} ? " [$player_data->{lifetime_correct_answers}]" : "") . "$color{green}, ";
   $score .= "current streak: $color{orange}$player_data->{correct_streak}$color{green}, ";
