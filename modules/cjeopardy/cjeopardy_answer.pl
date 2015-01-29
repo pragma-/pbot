@@ -187,13 +187,13 @@ foreach my $answer (@valid_answers) {
 
     my %streaks = (
       3 => "$color{orange}$nick$color{green} is on a $color{orange}3$color{green} correct answer streak!",
-      5 => "$color{orange}$nick$color{green} is hot with a $color{orange}5$color{green} correct answer streak!",
-      8 => "$color{orange}$nick$color{green} is on fire with an $color{orange}8$color{green} correct answer streak!",
-      12 => "$color{orange}$nick$color{green} is ON FIRE with a $color{orange}12$color{green} correct answer streak!",
-      16 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}16$color{green} correct answer streak!",
-      20 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}20$color{green} correct answer streak!",
-      25 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}25$color{green} correct answer streak!",
-      30 => "$color{orange}$nick$color{green} IS UNTOUCHABLE WITH A $color{orange}30$color{green} CORRECT ANSWER STREAK!"
+      4 => "$color{orange}$nick$color{green} is hot with a $color{orange}4$color{green} correct answer streak!",
+      5 => "$color{orange}$nick$color{green} is on fire with an $color{orange}5$color{green} correct answer streak!",
+      6 => "$color{orange}$nick$color{green} is ON FIRE with a $color{orange}6$color{green} correct answer streak!",
+      7 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}7$color{green} correct answer streak!",
+      8 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}8$color{green} correct answer streak!",
+      9 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}9$color{green} correct answer streak!",
+      10 => "$color{orange}$nick$color{green} IS UNTOUCHABLE WITH A $color{orange}10$color{green} CORRECT ANSWER STREAK!"
     );
 
     if (exists $streaks{$player_data->{correct_streak}}) {
@@ -255,13 +255,13 @@ if ($player_data->{highest_wrong_streak} > $player_data->{lifetime_highest_wrong
 
 my %streaks = (
   3 => "$color{red}Try a little bit harder, $color{orange}$nick$color{red}.",
-  5 => "$color{red}Guessing, are we, $color{orange}$nick$color{red}?",
-  8 => "$color{red}Please use better guesses, $color{orange}$nick!",
-  12 => "$color{red}Are you even trying, $color{orange}$nick$color{red}?!",
-  16 => "$color{red}Are you sure you weren't dropped on your head, $color{orange}$nick$color{red}?",
-  20 => "$color{red}Have you been checked for mental retardation yet, $color{orange}$nick$color{red}?",
-  25 => "$color{red}Maybe you should go look it up, $color{orange}$nick$color{red}.",
-  30 => "$color{red}FOR FUCK'S SAKE, GO LOOK IT UP ALREADY, $color{orange}$nick$color{red}!"
+  4 => "$color{red}Guessing, are we, $color{orange}$nick$color{red}?",
+  5 => "$color{red}Please use better guesses, $color{orange}$nick!",
+  6 => "$color{red}Are you even trying, $color{orange}$nick$color{red}?!",
+  7 => "$color{red}Maybe you should go look it up, $color{orange}$nick$color{red}.",
+  8 => "$color{red}For fuck's sake, go look it up already, $color{orange}$nick$color{red}!",
+  9 => "$color{red}Are you sure you weren't dropped on your head, $color{orange}$nick$color{red}?",
+  10 => "$color{red}Have you been checked for mental retardation yet, $color{orange}$nick$color{red}?"
 );
 
 if (exists $streaks{$player_data->{wrong_streak}}) {
