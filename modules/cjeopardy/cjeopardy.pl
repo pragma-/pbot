@@ -5,6 +5,7 @@ use strict;
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration qw/duration/;
+use Fcntl qw(:flock);
 
 use IRCColors;
 
@@ -24,6 +25,9 @@ if ($channel !~ /^#/) {
   print "Sorry, C Jeopardy must be played in a channel. Feel free to join #cjeopardy.\n";
   exit;
 }
+
+open my $semaphore, ">", "$CJEOPARDY_DATA-$channel.lock" or die "Couldn't create semaphore lock: $!";
+flock $semaphore, LOCK_EX;
 
 my $ret = open my $fh, "<", "$CJEOPARDY_DATA-$channel";
 if (defined $ret) {

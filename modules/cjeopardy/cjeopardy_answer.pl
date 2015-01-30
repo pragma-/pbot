@@ -5,6 +5,7 @@ use strict;
 
 use Text::Levenshtein qw(fastdistance);
 use Time::HiRes qw(gettimeofday);
+use Fcntl qw(:flock);
 
 use Scorekeeper;
 use IRCColors;
@@ -39,6 +40,9 @@ if (not length $lctext) {
 }
 
 my @data;
+
+open my $semaphore, ">", "$CJEOPARDY_DATA-$channel.lock" or die "Couldn't create semaphore lock: $!";
+flock $semaphore, LOCK_EX;
 
 my $ret = open my $fh, "<", "$CJEOPARDY_LAST_ANSWER-$channel";
 if (defined $ret) {
@@ -186,13 +190,13 @@ foreach my $answer (@valid_answers) {
     }
 
     my %streaks = (
-      3 => "$color{orange}$nick$color{green} is on a $color{orange}3$color{green} correct answer streak!",
-      4 => "$color{orange}$nick$color{green} is hot with a $color{orange}4$color{green} correct answer streak!",
-      5 => "$color{orange}$nick$color{green} is on fire with an $color{orange}5$color{green} correct answer streak!",
-      6 => "$color{orange}$nick$color{green} is ON FIRE with a $color{orange}6$color{green} correct answer streak!",
-      7 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}7$color{green} correct answer streak!",
-      8 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}8$color{green} correct answer streak!",
-      9 => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}9$color{green} correct answer streak!",
+      3  => "$color{orange}$nick$color{green} is on a $color{orange}3$color{green} correct answer streak!",
+      4  => "$color{orange}$nick$color{green} is hot with a $color{orange}4$color{green} correct answer streak!",
+      5  => "$color{orange}$nick$color{green} is on fire with a $color{orange}5$color{green} correct answer streak!",
+      6  => "$color{orange}$nick$color{green} is ON FIRE with a $color{orange}6$color{green} correct answer streak!",
+      7  => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}7$color{green} correct answer streak!",
+      8  => "$color{orange}$nick$color{green} is DOMINATING with an $color{orange}8$color{green} correct answer streak!",
+      9  => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}9$color{green} correct answer streak!",
       10 => "$color{orange}$nick$color{green} IS UNTOUCHABLE WITH A $color{orange}10$color{green} CORRECT ANSWER STREAK!"
     );
 
@@ -210,6 +214,8 @@ foreach my $answer (@valid_answers) {
     my $time = scalar gettimeofday;
     print $fh "$nick\n$data[1]$time\n";
     close $fh;
+
+    close $semaphore;
 
     if ($channel eq '#cjeopardy') {
       my $question = `./cjeopardy.pl $channel`;
@@ -254,13 +260,13 @@ if ($player_data->{highest_wrong_streak} > $player_data->{lifetime_highest_wrong
 }
 
 my %streaks = (
-  3 => "$color{red}Try a little bit harder, $color{orange}$nick$color{red}.",
-  4 => "$color{red}Guessing, are we, $color{orange}$nick$color{red}?",
-  5 => "$color{red}Please use better guesses, $color{orange}$nick!",
-  6 => "$color{red}Are you even trying, $color{orange}$nick$color{red}?!",
-  7 => "$color{red}Maybe you should go look it up, $color{orange}$nick$color{red}.",
-  8 => "$color{red}For fuck's sake, go look it up already, $color{orange}$nick$color{red}!",
-  9 => "$color{red}Are you sure you weren't dropped on your head, $color{orange}$nick$color{red}?",
+  3  => "$color{red}Guessing, are we, $color{orange}$nick$color{red}?",
+  4  => "$color{red}Please use better guesses, $color{orange}$nick!",
+  5  => "$color{red}Are you even trying, $color{orange}$nick$color{red}?!",
+  6  => "$color{red}Try a little bit harder, $color{orange}$nick$color{red}.",
+  7  => "$color{red}Maybe you should go look it up, $color{orange}$nick$color{red}.",
+  8  => "$color{red}For fuck's sake, go look it up already, $color{orange}$nick$color{red}!",
+  9  => "$color{red}Are you sure you weren't dropped on your head, $color{orange}$nick$color{red}?",
   10 => "$color{red}Have you been checked for mental retardation yet, $color{orange}$nick$color{red}?"
 );
 
