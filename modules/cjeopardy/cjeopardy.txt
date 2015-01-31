@@ -8,8 +8,8 @@
 [3.6 Terms, definitions, and symbols] A byte is composed of a contiguous sequence of bits, the number of which is this.|implementation-defined{Bet you thought it was 8!}
 [3.6 Terms, definitions, and symbols] The least significant bit is called this.|low-order bit|low-order
 [3.6 Terms, definitions, and symbols] The most significant bit is called this.|high-order bit|high-order
-[3.6 Terms, definitions, and symbols] The low-order bit is also known as this.|least significant bit|least significant
-[3.6 Terms, definitions, and symbols] The high-order bit is also known as this.|most significant bit|most significant
+[3.6 Terms, definitions, and symbols] The low-order bit is also known as this.|least significant bit|least significant|lsb{It stands for least significant bit.}
+[3.6 Terms, definitions, and symbols] The high-order bit is also known as this.|most significant bit|most significant|msb{It stands for most significant bit.}
 [3.15 Terms, definitions, and symbols] This is a region of data storage in the execution environment, the contents of which can represent values.|object
 [3.15 Terms, definitions, and symbols] An object is a region of data storage in the execution environment, the contents of which can represent these.|values
 [4. Conformance] In the standard, ``shall'' is to be interpreted as this on an implementation, or on a program.|requirement{If violated, the behavior is undefined.}
@@ -34,7 +34,7 @@
 [5.1.1.2 Translation phases] A source file that is not empty shall end with this character.|new-line|newline|\n
 [5.1.1.2 Translation phases] A source file shall not end in a partial this.|preprocessing token{Nor in a partial comment, either.}|comment{Nor in a partial preprocessing token, either.}
 [5.1.1.2 Translation phases] If a character sequence that matches the syntax of a universal character name is produced by token concatenation, the behavior is this.|undefined
-[5.1.1.2 Translation phases] Source files, translation units, and translated translation units need not necessarily be stored as this.|file
+[5.1.1.2 Translation phases] Source files, translation units, and translated translation units need not necessarily be stored as this.|files|file
 [5.1.1.3 Diagnostics] A conforming implementation shall produce at least one of this (identified in an implementation-defined manner) if a preprocessing translation unit or translation unit contains a violation of any syntax rule or constraint, even if the behavior is also explicitly specified as undefined or implementation-defined.|diagnostic message|diagnostic
 [5.1.1.3 Diagnostics] An implementation shall issue this for the translation unit: char i; int i; because in those cases where wording in this International Standard describes the behavior for a construct as being both a constraint error and resulting in undefined behavior, the constraint error shall be diagnosed.|diagnostic|diagnostic message
 [5.1.2 Execution environments] Two execution environments are defined: freestanding and hosted. In both cases, program startup occurs when this is called by the execution environment.|designated C function|designated function
@@ -92,7 +92,7 @@
 [5.2.1.1 Trigraph sequences] The following tokens, ??= ??) ??! ??( ??' ??> ??/ ??< and ??-, are known as these.|trigraph sequences{Their use is discouraged in modern C.}|trigraphs{Their use is discouraged in modern C.}
 [5.2.1.2 Multibyte characters] The source character set and the execution character set may both contain multibyte characters. If so, this character set shall be present and each character shall be encoded as a single byte.|basic character set|basic
 [5.2.1.2 Multibyte characters] This character shall not occur as part of any other multibyte character.|null character|null|'\0'|0
-[5.2.1.2 Multibyte characters] An identifier, comment, string literal, character constant, or header name shall consist of a sequence of this kind of valid characters.|multibyte
+[5.2.1.2 Multibyte characters] An identifier, comment, string literal, character constant, or header name shall consist of a sequence of this kind of valid character.|multibyte
 [5.2.2 Character display semantics] This position is the location on a display device where the next character output by the fputc function would appear.|active|active position
 [5.2.2 Character display semantics] The active position is that location on a display device where the next character output by this function would appear.|fputc
 [5.2.2 Character display semantics] An example of this behavior is the direction of writing characters to the display.|locale-specific
@@ -211,8 +211,8 @@
 [5.2.4.2.2 Characteristics of floating types <float.h>] If the presence or absence of these numbers is indeterminable, then the value of the minimum positive floating-point number is intended to be a positive number no greater than the minimum normalized positive number for the type.|subnormal
 [5.2.4.2.2 Characteristics of floating types <float.h>] If a type wider than double were supported, then DECIMAL_DIG would be greater than this value.|17
 [5.2.4.2.2 Characteristics of floating types <float.h>] If a type wider than double were supported, then this macro would be greater than 17.|DECIMAL_DIG
-[6.2.1 Scopes of identifiers] A member of this is called an enumeration constant.|enumeration
-[6.2.1 Scopes of identifiers] A member of an enumeration is called this.|enumeration constant
+[6.2.1 Scopes of identifiers] A member of this is called an enumeration constant.|enumeration|enum
+[6.2.1 Scopes of identifiers] A member of an enumeration is called this.|enumeration constant|enum constant
 [6.2.1 Scopes of identifiers] This is the only kind of identifier that has function scope.|label name|label
 [6.2.1 Scopes of identifiers] A label name is the only kind of identifier that has this scope.|function
 [6.2.1 Scopes of identifiers] If the declarator or type specifier that declares the identifier appears outside of any block or list of parameters, the identifier has this scope.|file{File scope identifiers terminate at the end of the translation unit.}
@@ -255,7 +255,7 @@
 [6.2.5 Types] The type char, the signed and unsigned integer types, and the floating types are collectively called this.|basic types
 [6.2.5 Types] The three types char, signed char, and unsigned char are collectively called this.|character types
 [6.2.5 Types] The implementation shall define this to have the same range, representation, and behavior as either signed char or unsigned char.|char
-[6.2.5 Types] This comprises a set of named integer constant values.|enumeration
+[6.2.5 Types] This comprises a set of named integer constant values.|enumeration|enum
 [6.2.5 Types] An enumeration comprises a set of these.|named integer constant values
 [6.2.5 Types] This type describes a contiguously allocated nonempty set of objects with a particular member object type, called the element type.|array
 [6.2.5 Types] An array type describes a contiguously allocated nonempty set of objects with a particular member object type, called this type.|element
