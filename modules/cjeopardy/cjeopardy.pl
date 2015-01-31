@@ -37,7 +37,7 @@ if (defined $ret) {
   
   if (scalar gettimeofday - $last_timestamp <= $TIMELIMIT) {
     my $duration = duration($TIMELIMIT - scalar gettimeofday - $last_timestamp);
-    print "$color{green}The current question is$color{reset}: $last_question";
+    print "$color{magneta}The current question is$color{reset}: $last_question";
     print "$color{red}You may request a new question in $duration.$color{reset}\n";
     close $fh;
     exit;

@@ -157,7 +157,7 @@ foreach my $answer (@valid_answers) {
     }
 
     if (defined $supplemental_text) {
-      print " $color{teal}$supplemental_text$color{reset}\n";
+      print " $color{purple}$supplemental_text$color{reset}\n";
     } else {
       print "\n";
     }
@@ -190,18 +190,20 @@ foreach my $answer (@valid_answers) {
     }
 
     my %streaks = (
-      3  => "$color{orange}$nick$color{green} is on a $color{orange}3$color{green} correct answer streak!",
-      4  => "$color{orange}$nick$color{green} is hot with a $color{orange}4$color{green} correct answer streak!",
-      5  => "$color{orange}$nick$color{green} is on fire with a $color{orange}5$color{green} correct answer streak!",
-      6  => "$color{orange}$nick$color{green} is ON FIRE with a $color{orange}6$color{green} correct answer streak!",
-      7  => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}7$color{green} correct answer streak!",
-      8  => "$color{orange}$nick$color{green} is DOMINATING with an $color{orange}8$color{green} correct answer streak!",
-      9  => "$color{orange}$nick$color{green} is DOMINATING with a $color{orange}9$color{green} correct answer streak!",
-      10 => "$color{orange}$nick$color{green} IS UNTOUCHABLE WITH A $color{orange}10$color{green} CORRECT ANSWER STREAK!"
+      3  => "$color{orange}$nick$color{cyan} is on a $color{orange}3$color{cyan} correct answer streak!",
+      4  => "$color{orange}$nick$color{cyan} is hot with a $color{orange}4$color{cyan} correct answer streak!",
+      5  => "$color{orange}$nick$color{cyan} is on fire with a $color{orange}5$color{cyan} correct answer streak!",
+      6  => "$color{orange}$nick$color{cyan} is ON FIRE with a $color{orange}6$color{cyan} correct answer streak!",
+      7  => "$color{orange}$nick$color{cyan} is DOMINATING with a $color{orange}7$color{cyan} correct answer streak!",
+      8  => "$color{orange}$nick$color{cyan} is DOMINATING with an $color{orange}8$color{cyan} correct answer streak!",
+      9  => "$color{orange}$nick$color{cyan} is DOMINATING with a $color{orange}9$color{cyan} correct answer streak!",
+      10 => "$color{orange}$nick$color{cyan} IS UNTOUCHABLE WITH A $color{orange}10$color{cyan} CORRECT ANSWER STREAK!"
     );
 
     if (exists $streaks{$player_data->{correct_streak}}) {
       print "$streaks{$player_data->{correct_streak}}$color{reset}\n";
+    } elsif ($player_data->{correct_streak} > 10) {
+      print "$color{orange}$nick$color{cyan} IS UNTOUCHABLE WITH A $color{orange}$player_data->{correct_streak}$color{cyan} CORRECT ANSWER STREAK$color{reset}\n";
     }
 
     $scores->update_player_data($player_id, $player_data);
@@ -225,7 +227,7 @@ foreach my $answer (@valid_answers) {
         $hint =~ s/^Hint: //;
         print "Next hint: $hint\n";
       } else {
-        print "$color{green}Next question$color{reset}: $question\n";
+        print "$color{magneta}Next question$color{reset}: $question\n";
       }
     }
 

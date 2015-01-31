@@ -67,7 +67,7 @@ my $duration = scalar gettimeofday - $last_timeout;
 if ($duration < $timeout) {
   $duration = duration($timeout - $duration);
   unless ($duration eq 'just now') {
-    print "$color{red}Please wait $duration before requesting another hint.$color{reset}\n";
+    print "$color{red}Please wait $color{orange}$duration$color{red} before requesting another hint.$color{reset}\n";
     exit;
   }
 }
