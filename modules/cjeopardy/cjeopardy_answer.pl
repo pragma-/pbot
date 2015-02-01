@@ -5,6 +5,7 @@ use strict;
 
 use Text::Levenshtein qw(fastdistance);
 use Time::HiRes qw(gettimeofday);
+use Time::Duration qw(duration);
 use Fcntl qw(:flock);
 
 use Scorekeeper;
@@ -94,7 +95,14 @@ if (defined $ret) {
         if ($last_nick eq $nick) {
           print "$color{red}Er, you already correctly answered that question.$color{reset}\n";
         } else {
-          print "$color{red}Too slow! $color{orange}$last_nick$color{red} got the correct answer.$color{reset}\n";
+          my $elapsed = scalar gettimeofday - $last_timestamp;
+          my $duration;
+          if ($elapsed < 2) {
+            $duration = sprintf("%.2f", $elapsed);
+          } else {
+            $duration = sprintf("%d", $elapsed);
+          }
+          print "$color{red}Too slow by $color{orange}$duration $color{red}second" . ($duration != 1 ? "s" : "") .  "! $color{orange}$last_nick$color{red} got the correct answer.$color{reset}\n";
         }
         exit;
       }
@@ -126,7 +134,7 @@ foreach my $answer (@valid_answers) {
     $supplemental_text = $1;
   }
 
-  if ($answer =~ /^[0-9]+$/ and $lctext =~ /^[0-9]+$/) {
+  if ($answer =~ /^[+-]*[0-9]+$/ and $lctext =~ /^[+-]*[0-9]+$/) {
     my $is_wrong = 0;
 
     if ($lctext > $answer) {
@@ -157,9 +165,15 @@ foreach my $answer (@valid_answers) {
     }
 
     if (defined $supplemental_text) {
-      print " $color{purple}$supplemental_text$color{reset}\n";
+      print " $color{purple}$supplemental_text$color{reset}";
+    }
+
+    my $elapsed = scalar gettimeofday - $data[2];
+    if ($elapsed < 60) {
+      printf " It took %.2f seconds to answer that question!\n", $elapsed;
     } else {
-      print "\n";
+      my $duration = duration($elapsed);
+      print " It took $duration to answer that question.\n";
     }
 
     my $streakers = $scores->get_all_correct_streaks($channel);
@@ -180,6 +194,10 @@ foreach my $answer (@valid_answers) {
     $player_data->{correct_streak}++;
     $player_data->{last_correct_timestamp} = scalar gettimeofday;
     $player_data->{wrong_streak} = 0;
+
+    if ($player_data->{quickest_correct} == 0 or $elapsed < $player_data->{quickest_correct}) {
+      $player_data->{quickest_correct} = $elapsed;
+    }
 
     if ($player_data->{correct_streak} > $player_data->{highest_correct_streak}) {
       $player_data->{highest_correct_streak} = $player_data->{correct_streak};
@@ -261,6 +279,7 @@ if ($player_data->{highest_wrong_streak} > $player_data->{lifetime_highest_wrong
   $player_data->{lifetime_highest_wrong_streak} = $player_data->{highest_wrong_streak};
 }
 
+=cut
 my %streaks = (
   3  => "$color{red}Guessing, are we, $color{orange}$nick$color{red}?",
   4  => "$color{red}Please use better guesses, $color{orange}$nick!",
@@ -275,6 +294,7 @@ my %streaks = (
 if (exists $streaks{$player_data->{wrong_streak}}) {
   print "$streaks{$player_data->{wrong_streak}}$color{reset}\n";
 }
+=cut
 
 $scores->update_player_data($player_id, $player_data);
 $scores->end;

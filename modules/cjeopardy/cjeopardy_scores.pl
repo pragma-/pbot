@@ -4,6 +4,7 @@ use warnings;
 use strict;
 
 use Time::HiRes qw(gettimeofday);
+use Time::Duration qw(duration);
 
 use Scorekeeper;
 use IRCColors;
@@ -40,6 +41,18 @@ if (lc $command eq 'score') {
   $score .= "current streak: $color{orange}$player_data->{correct_streak}$color{green}, ";
   $score .= "$color{green}highest streak: $color{orange}$player_data->{highest_correct_streak}" . ($player_data->{lifetime_highest_correct_streak} > $player_data->{highest_correct_streak} ? " [$player_data->{lifetime_highest_correct_streak}]" : "") . "$color{green}, ";
   
+  $score .= "quickest answer: $color{orange}";
+
+  if ($player_data->{quickest_correct} == 0) {
+    $score .= "N/A";
+  } elsif ($player_data->{quickest_correct} < 60) {
+    $score .= sprintf("%.2f seconds", $player_data->{quickest_correct});
+  } else {
+    $score .= duration($player_data->{quickest_correct});
+  }
+
+  $score .= "$color{green}, ";
+
   $score .= "$color{red}wrong: $color{orange}$player_data->{wrong_answers}" . ($player_data->{lifetime_wrong_answers} > $player_data->{wrong_answers} ? " [$player_data->{lifetime_wrong_answers}]" : "") . "$color{red}, ";
   $score .= "current streak: $color{orange}$player_data->{wrong_streak}$color{red}, ";
   $score .= "$color{red}highest streak: $color{orange}$player_data->{highest_wrong_streak}" . ($player_data->{lifetime_highest_wrong_streak} > $player_data->{highest_wrong_streak} ? " [$player_data->{lifetime_highest_wrong_streak}]" : "") . "$color{red}, ";
