@@ -778,7 +778,7 @@
 [7.12.6.1 The exp functions] This function computes the base-e exponential of x.|exp
 [7.12.6.2 The exp2 functions] This function computes the base-2 exponential of x.|exp2
 [7.12.6.3 The expm1 functions] This function computes the base-e exponential of the argument, minus 1.|expm1
-[7.12.6.4 The frexp functions] This function break as floating-point number into a normalized fraction and an integral power of 2.|frexp
+[7.12.6.4 The frexp functions] This function breaks a floating-point number into a normalized fraction and an integral power of 2.|frexp
 [7.12.6.5 The ilogb functions] This function extracts the exponent of x as a signed int value.|ilogb
 [7.12.6.5 The ilogb functions] If the argument of the ilogb functions is zero they compute this value.|FP_ILOGB0
 [7.12.6.5 The ilogb functions] If the argument of the ilogb functions is infinite they compute this value.|INT_MAX
