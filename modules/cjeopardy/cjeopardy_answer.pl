@@ -138,10 +138,10 @@ foreach my $answer (@valid_answers) {
     my $is_wrong = 0;
 
     if ($lctext > $answer) {
-      print "$color{red}$lctext is too high!$color{reset}\n";
+      print "$color{red}$lctext is too high!$color{reset}";
       $is_wrong = 1;
     } elsif ($lctext < $answer) {
-      print "$color{red}$lctext is too low!$color{reset}\n";
+      print "$color{red}$lctext is too low!$color{reset}";
       $is_wrong = 1;
     }
 
@@ -255,13 +255,13 @@ foreach my $answer (@valid_answers) {
 
 my $correct_percentage = 100 - $incorrect_percentage;
 if ($correct_percentage >= 80) {
-  printf "Sorry, '$color{red}$text$color{reset}' is %.1f%% correct. So close!\n", $correct_percentage;
+  printf "Sorry, '$color{red}$text$color{reset}' is %.1f%% correct. So close!", $correct_percentage;
 } elsif ($correct_percentage >= 70) {
-  printf "Sorry, '$color{red}$text$color{reset}' is %.1f%% correct. Almost.\n", $correct_percentage;
+  printf "Sorry, '$color{red}$text$color{reset}' is %.1f%% correct. Almost.", $correct_percentage;
 } elsif ($correct_percentage >= 50) {
-  printf "Sorry, '$color{red}$text$color{reset}' is only %.1f%% correct.\n", $correct_percentage;
+  printf "Sorry, '$color{red}$text$color{reset}' is only %.1f%% correct.", $correct_percentage;
 } else {
-  print "Sorry, '$color{red}$text$color{reset}' is incorrect.\n";
+  print "Sorry, '$color{red}$text$color{reset}' is incorrect.";
 }
 
 WRONG_ANSWER:
@@ -269,6 +269,13 @@ $player_data->{wrong_answers}++;
 $player_data->{lifetime_wrong_answers}++;
 $player_data->{wrong_streak}++;
 $player_data->{last_wrong_timestamp} = scalar gettimeofday;
+
+if ($player_data->{correct_streak} >= 3) {
+  print " $color{red}You just ended your $color{orange}$player_data->{correct_streak} $color{red}correct answer streak!$color{reset}\n";
+} else {
+  print "\n";
+}
+
 $player_data->{correct_streak} = 0;
 
 if ($player_data->{wrong_streak} > $player_data->{highest_wrong_streak}) {
