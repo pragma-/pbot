@@ -167,4 +167,17 @@ sub get_all_correct_streaks {
   return $streakers;
 }
 
+sub get_all_players {
+  my ($self, $channel) = @_;
+
+  my $players = eval {
+    my $sth = $self->{dbh}->prepare('SELECT * FROM Scores WHERE channel = ?');
+    $sth->bind_param(1, $channel);
+    $sth->execute();
+    return $sth->fetchall_arrayref({});
+  };
+  print STDERR $@ if $@;
+  return $players;
+}
+
 1;
