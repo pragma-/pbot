@@ -149,7 +149,7 @@ if (lc $command eq 'rank') {
     print "Usage: rank [+-]<keyword>; available keywords: ";
     print join ', ', sort keys %ranks;
     print ".\n";
-    print "For example, to rank by correct answers in descending order: rank -correct\n";
+    print "For example, to rank by correct answers in ascending order: rank -correct\n";
     goto END;
   }
 
