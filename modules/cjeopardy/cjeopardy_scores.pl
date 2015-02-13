@@ -137,13 +137,13 @@ sub print_quickest {
 
 if (lc $command eq 'rank') {
   my %ranks = (
-    correct       => { sort => \&sort_correct,       print => \&print_correct },
-    wrong         => { sort => \&sort_wrong,         print => \&print_wrong },
-    quickest      => { sort => \&sort_quickest,      print => \&print_quickest },
-    ratio         => { sort => \&sort_ratio,         print => \&print_ratio },
-    correctstreak => { sort => \&sort_correctstreak, print => \&print_correctstreak },
-    wrongstreak   => { sort => \&sort_wrongstreak,   print => \&print_wrongstreak },
-    hints         => { sort => \&sort_hints,         print => \&print_hints },
+    correct       => { sort => \&sort_correct,       print => \&print_correct,        title => 'correct answers'        } ,
+    wrong         => { sort => \&sort_wrong,         print => \&print_wrong,          title => 'wrong answers'          } ,
+    quickest      => { sort => \&sort_quickest,      print => \&print_quickest,       title => 'quickest answer'        } ,
+    ratio         => { sort => \&sort_ratio,         print => \&print_ratio,          title => 'correct/wrong ratio'    } ,
+    correctstreak => { sort => \&sort_correctstreak, print => \&print_correctstreak,  title => 'correct answer streak'  } ,
+    wrongstreak   => { sort => \&sort_wrongstreak,   print => \&print_wrongstreak,    title => 'wrong answer streak'    } ,
+    hints         => { sort => \&sort_hints,         print => \&print_hints,          title => 'hints used'             } ,
   );
 
   if (not defined $opt) {
@@ -162,6 +162,7 @@ if (lc $command eq 'rank') {
 
   if (not exists $ranks{$opt}) {
     my $player_id = $scores->get_player_id($opt, $channel, 1);
+    my $player_nick = $scores->get_player_data($player_id, 'nick');
 
     if (not defined $player_id) {
       print "I don't know anybody named $opt\n";
@@ -176,17 +177,26 @@ if (lc $command eq 'rank') {
       @$players = sort $sort_method @$players;
 
       my $rank = 0;
+      my $stats;
       foreach my $player (@$players) {
-        $rank++ if defined $ranks{$key}->{print}->($player);
+        next if $player->{nick} eq 'keep2play';
+        $stats = $ranks{$key}->{print}->($player);
+        $rank++ if defined $stats;
         last if lc $player->{nick} eq $opt;
       }
       if ($rank == 0) {
         push @rankings, "$key: N/A";
       } else {
-        push @rankings, "$key: #$rank";
+        $stats =~ s/[^:]+:\s+//;
+        push @rankings, "$ranks{$key}->{title}: #$rank ($stats)";
       }
     }
 
+    if (lc $nick ne $opt) {
+      print "$player_nick->{nick}'s rankings: " 
+    } else {
+      print "Your rankings: " 
+    }
     print join ', ', @rankings;
     print "\n";
 
@@ -200,6 +210,7 @@ if (lc $command eq 'rank') {
 
   my @ranking;
   foreach my $player (@$players) {
+    next if $player->{nick} eq 'keep2play';
     my $entry = $ranks{$opt}->{print}->($player);
     push @ranking, $entry if defined $entry;
     last if scalar @ranking >= 15;
@@ -208,6 +219,7 @@ if (lc $command eq 'rank') {
   if (not scalar @ranking) {
     print "No rankings available for $channel yet.\n";
   } else {
+    print "Rankings for $ranks{$opt}->{title}: ";
     print join ', ', @ranking;
     print "\n";
   }
