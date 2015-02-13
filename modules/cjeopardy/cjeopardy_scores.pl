@@ -40,9 +40,9 @@ sub print_correct {
 
 sub sort_wrong {
   if ($rank_direction eq '+') {
-    return $b->{lifetime_wrong_answers} <=> $a->{lifetime_wrong_answers};
-  } else {
     return $a->{lifetime_wrong_answers} <=> $b->{lifetime_wrong_answers};
+  } else {
+    return $b->{lifetime_wrong_answers} <=> $a->{lifetime_wrong_answers};
   }
 }
 
@@ -53,27 +53,28 @@ sub print_wrong {
 }
 
 sub sort_ratio {
-  $a->{lifetime_wrong_answers} = 1 if $a->{lifetime_wrong_answers} == 0;
-  $b->{lifetime_wrong_answers} = 1 if $b->{lifetime_wrong_answers} == 0;
+  my $wrong_a = $a->{lifetime_wrong_answers} ? $a->{lifetime_wrong_answers} : 1;
+  my $wrong_b = $b->{lifetime_wrong_answers} ? $b->{lifetime_wrong_answers} : 1;
   if ($rank_direction eq '+') {
-    return $b->{lifetime_correct_answers} / $b->{lifetime_wrong_answers} <=> $a->{lifetime_correct_answers} / $a->{lifetime_wrong_answers};
+    return $b->{lifetime_correct_answers} / $wrong_b <=> $a->{lifetime_correct_answers} / $wrong_a;
   } else {
-    return $a->{lifetime_correct_answers} / $a->{lifetime_wrong_answers} <=> $b->{lifetime_correct_answers} / $b->{lifetime_wrong_answers};
+    return $a->{lifetime_correct_answers} / $wrong_a <=> $b->{lifetime_correct_answers} / $wrong_b;
   }
 }
 
 sub print_ratio {
   my $player = shift @_;
-  my $ratio = $player->{lifetime_correct_answers} / $player->{lifetime_wrong_answers};
+  my $wrong = $player->{lifetime_wrong_answers} ? $player->{lifetime_wrong_answers} : 1;
+  my $ratio = $player->{lifetime_correct_answers} / $wrong;
   return undef if $ratio == 0;
   return sprintf "$player->{nick}: %.2f", $ratio;
 }
 
 sub sort_hints {
   if ($rank_direction eq '+') {
-    return $b->{lifetime_hints} <=> $a->{lifetime_hints};
-  } else {
     return $a->{lifetime_hints} <=> $b->{lifetime_hints};
+  } else {
+    return $b->{lifetime_hints} <=> $a->{lifetime_hints};
   }
 }
 
@@ -99,9 +100,9 @@ sub print_correctstreak {
 
 sub sort_wrongstreak {
   if ($rank_direction eq '+') {
-    return $b->{lifetime_highest_wrong_streak} <=> $a->{lifetime_highest_wrong_streak};
-  } else {
     return $a->{lifetime_highest_wrong_streak} <=> $b->{lifetime_highest_wrong_streak};
+  } else {
+    return $b->{lifetime_highest_wrong_streak} <=> $a->{lifetime_highest_wrong_streak};
   }
 }
 
@@ -146,10 +147,10 @@ if (lc $command eq 'rank') {
   );
 
   if (not defined $opt) {
-    print "Usage: rank [+-]<keyword>; available keywords: ";
+    print "Usage: rank [+-]<keyword> or rank <nick>; available keywords: ";
     print join ', ', sort keys %ranks;
     print ".\n";
-    print "For example, to rank by correct answers in ascending order: rank -correct\n";
+    print "For example, to rank by quickest answers in descending order: rank -quickest\n";
     goto END;
   }
 
@@ -160,21 +161,48 @@ if (lc $command eq 'rank') {
   }
 
   if (not exists $ranks{$opt}) {
-    print "Unknown rank keyword '$opt'; available keywords: ";
-    print join ', ', sort keys %ranks;
-    print ".\n";
+    my $player_id = $scores->get_player_id($opt, $channel, 1);
+
+    if (not defined $player_id) {
+      print "I don't know anybody named $opt\n";
+      goto END;
+    }
+
+    my $players = $scores->get_all_players($channel);
+    my @rankings;
+
+    foreach my $key (sort keys %ranks) {
+      my $sort_method = $ranks{$key}->{sort};
+      @$players = sort $sort_method @$players;
+
+      my $rank = 0;
+      foreach my $player (@$players) {
+        $rank++ if defined $ranks{$key}->{print}->($player);
+        last if lc $player->{nick} eq $opt;
+      }
+      if ($rank == 0) {
+        push @rankings, "$key: N/A";
+      } else {
+        push @rankings, "$key: #$rank";
+      }
+    }
+
+    print join ', ', @rankings;
+    print "\n";
+
     goto END;
   }
 
   my $players = $scores->get_all_players($channel);
 
   my $sort_method = $ranks{$opt}->{sort};
-  @$players = sort $sort_method  @$players;
+  @$players = sort $sort_method @$players;
 
   my @ranking;
   foreach my $player (@$players) {
     my $entry = $ranks{$opt}->{print}->($player);
     push @ranking, $entry if defined $entry;
+    last if scalar @ranking >= 15;
   }
 
   if (not scalar @ranking) {
