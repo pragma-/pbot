@@ -153,8 +153,8 @@ sub initialize {
 
 sub random_nick {
   my @chars = ("A".."Z", "a".."z", "0".."9");
-  my $nick;
-  $nick .= $chars[rand @chars] for 1..10;
+  my $nick = $chars[rand @chars - 10]; # nicks cannot start with a digit
+  $nick .= $chars[rand @chars] for 1..9;
   return $nick;
 }
 
