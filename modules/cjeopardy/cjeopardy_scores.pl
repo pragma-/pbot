@@ -178,10 +178,15 @@ if (lc $command eq 'rank') {
 
       my $rank = 0;
       my $stats;
+      my $last_value = -1;
       foreach my $player (@$players) {
         next if $player->{nick} eq 'keep2play';
         $stats = $ranks{$key}->{print}->($player);
-        $rank++ if defined $stats;
+        if (defined $stats) {
+          my ($value) = $stats =~ /[^:]+:\s+(.*)/;
+          $rank++ if $value ne $last_value;
+          $last_value = $value;
+        }
         last if lc $player->{nick} eq $opt;
       }
       if ($rank == 0) {
