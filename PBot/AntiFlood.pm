@@ -184,6 +184,7 @@ sub check_flood {
 
   my $mask = "$nick!$user\@$host";
   my $account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
+  my $oldnick = $nick;
 
   if($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
     $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", "NICKCHANGE", $mask, $text));
@@ -206,8 +207,8 @@ sub check_flood {
   # (these events come from $channel nick!user@host, not a specific channel or nick,
   # so they need to be dispatched to all channels the nick has been seen on)
   if($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE} and $text =~ /^QUIT/) {
-    my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
-    foreach my $chan (@channels) {
+    my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
+    foreach my $chan (@$channels) {
       next if $chan !~ m/^#/;
       $self->check_join_watch($account, $chan, $text, $mode);
     }
@@ -416,8 +417,8 @@ sub check_flood {
         if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
           my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'nick_flood_punishment', $self->{nickflood}->{$account}->{offenses} - 1);
 
-          my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($account);
-          foreach my $chan (@channels) {
+          my $channels = $self->{pbot}->{nicklist}->get_channels($oldnick);
+          foreach my $chan (@$channels) {
             next if $chan !~ /^#/;
             next if not exists $self->{pbot}->{channels}->{channels}->hash->{$chan} or $self->{pbot}->{channels}->{channels}->hash->{$chan}{chanop} == 0;
             $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $chan, $length);
@@ -714,6 +715,7 @@ sub check_nickserv_accounts {
   my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($message_account);
   foreach my $channel (@channels) {
     next unless $channel =~ /^#/;
+    next unless $self->{pbot}->{nicklist}->is_present($channel, $nick);
     my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
     if($force_validation or $channel_data->{validated} & $self->{NEEDS_CHECKBAN}) {
       $self->{pbot}->{logger}->log("anti-flood: [check-account] $nick [nickserv: $account] needs check-ban validation for $hostmask in $channel.\n");
