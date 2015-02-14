@@ -1881,30 +1881,37 @@ constant:
             $return .= "long " while $item[-1] =~ s/[Ll]//; 
             $return .= $item[-1];
           } 
-    | /(?:\'((?:\\\'|(?!\').)*)\')/ # character constant
+    | /[LuU]?(?:\'(?:\\\'|(?!\').)*\')/ # character constant
           {
             my $constant = $item[1];
+            my $modifier = "";
+
+            $modifier = 'wide character ' if $constant =~ s/^L//;
+            $modifier = '16-bit character ' if $constant =~ s/^u//;
+            $modifier = '32-bit character ' if $constant =~ s/^U//;
 
             if ($constant eq q('\n')) {
-              $return = 'a newline';
+              $return = "a $modifier" . 'newline';
             } elsif ($constant eq q('\f')) {
-              $return = 'a form-feed character';
+              $return = "a $modifier" . 'form-feed character';
             } elsif ($constant eq q('\t')) {
-              $return = 'a tab';
+              $return = "a $modifier" . 'tab';
             } elsif ($constant eq q('\v')) {
-              $return = 'a vertical tab';
+              $return = "a $modifier" . 'vertical tab';
             } elsif ($constant eq q('\b')) {
-              $return = 'an alert character';
+              $return = 'an alert character' if not length $modifier;
+              $return = "a $modifier" . 'alert character' if length $modifier;
             } elsif ($constant eq q('\r')) {
-              $return = 'a carriage-return';
+              $return = "a $modifier" . 'carriage-return';
             } elsif ($constant eq q('\b')) {
-              $return = 'a backspace character';
+              $return = "a $modifier" . 'backspace character';
             } elsif ($constant eq q('\'')) {
-              $return = 'a single-quote';
+              $return = "a $modifier" . 'single-quote';
             } elsif ($constant eq q(' ')) {
-              $return = 'a space';
+              $return = "a $modifier" . 'space';
             } else {
-              $return = $constant;
+              $return = $constant if not length $modifier;
+              $return = "a $modifier$constant" if length $modifier;
             }
           }
  
@@ -1913,19 +1920,26 @@ identifier_word:
           { $return = "`$item[-1]`"; }
 
 string:
-      (/(?:\"(?:\\\"|(?!\").)*\")/)(s)
+      (/(u8|u|U|L)?(?:\"(?:\\\"|(?!\").)*\")/)(s)
           {
-            if (@{$item[-1]} == 1) {
-              $return = @{$item[-1]}[0];
-            } else {
-              $return = '"';
-              foreach my $string (@{$item[-1]}) {
-                $string =~ s/^"//;
-                $string =~ s/"$//;
-                $return .= $string; 
+            my $final_string = "";
+            foreach my $string (@{$item[-1]}) {
+              if (not length $final_string) {
+                my $modifier = "";
+                $modifier = 'an UTF-8 string ' if $string =~ s/^u8//;
+                $modifier = 'a wide character string ' if $string =~ s/^L//;
+                $modifier = 'a 16-bit character string ' if $string =~ s/^u//;
+                $modifier = 'a 32-bit character string ' if $string =~ s/^U//;
+                $final_string = $modifier;
+                $final_string .= '"';
               }
-              $return .= '"';
+
+              $string =~ s/^"//;
+              $string =~ s/"$//;
+              $final_string .= $string;
             }
+            $final_string .= '"';
+            $return = $final_string;
           }
 
 reserved: 

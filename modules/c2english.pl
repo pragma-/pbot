@@ -377,6 +377,7 @@ if(not $force and $ret != 0) {
   $output =~ s/\s*note: use option -std=c99 or -std=gnu99 to compile your code//g;
   $output =~ s/\s*\(declared at .*?\)//g;
   $output =~ s/, note: declared here//g;
+  $output =~ s#/usr/include/.*?.h:\d+:\d+:/##g;
 
   # don't error about undeclared objects
   $output =~ s/error: '[^']+' undeclared\s*//g;
