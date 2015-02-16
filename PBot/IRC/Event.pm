@@ -95,11 +95,11 @@ sub args {
 sub dump {
     my ($self, $arg, $counter) = (shift, undef, 0);   # heh heh!
 
-    printf "TYPE: %-30s    FORMAT: %-30s\n", $self->type, $self->format;
-    print "FROM: ", $self->from, "\n";
-    print "TO: ", join(", ", @{$self->to}), "\n";
+    printf STDERR "TYPE: %-30s    FORMAT: %-30s\n", $self->type, $self->format;
+    print STDERR "FROM: ", $self->from, "\n";
+    print STDERR "TO: ", join(", ", @{$self->to}), "\n";
     foreach $arg ($self->args) {
-		print "Arg ", $counter++, ": ", $arg, "\n";
+		print STDERR "Arg ", $counter++, ": ", $arg, "\n";
     }
 }
 

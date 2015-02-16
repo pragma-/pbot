@@ -499,12 +499,12 @@ sub handler {
     croak "Not enough arguments to handler()";
   }
   
-  print "Trying to handle event '$ev'.\n" if $self->{_debug};
+  print STDERR "Trying to handle event '$ev'.\n" if $self->{_debug};
 
   
   if($self->{_debug}) {
     use Data::Dumper;
-    print "ev: ", Dumper($ev), "\nevent: ", Dumper($event), "\n";
+    print STDERR "ev: ", Dumper($ev), "\nevent: ", Dumper($event), "\n";
   }
   
   my $handler = undef;
@@ -531,7 +531,7 @@ sub handler {
     confess "Bad parameter passed to handler(): rp=$rp";
   }
   
-  print "Handler for '$ev' called.\n" if $self->{_debug};
+  print STDERR "Handler for '$ev' called.\n" if $self->{_debug};
   
   return 1;
 }
@@ -895,7 +895,7 @@ sub parse {
    $line =~ s/[\012\015]+$//;
    next unless $line;
    
-   print "<<< $line\n" if $self->{_debug};
+   print STDERR "<<< $line\n" if $self->{_debug};
    
    # Like the RFC says: "respond as quickly as possible..."
    if ($line =~ /^PING/) {
@@ -935,7 +935,7 @@ sub parse {
      # ($from, $line) = split ":", $line, 2;
      ($from, $line) = $line =~ /^(?:|)(\S+\s+[^:]+):?(.*)/;
 
-     print "from: [$from], line: [$line]\n" if $self->{_debug};
+     print STDERR "from: [$from], line: [$line]\n" if $self->{_debug};
      
      ($from, $type, @stuff) = split /\s+/, $from;
      $type = lc $type;
@@ -1309,6 +1309,7 @@ sub schedule {
     croak 'Second argument to schedule() isn\'t a coderef';
   }
 
+  print STDERR "Scheduling event with time [$time]\n";
   $time += time;
   $self->parent->enqueue_scheduled_event($time, $coderef, $self, @_);
 }
@@ -1325,6 +1326,7 @@ sub schedule_output_event {
     croak 'Second argument to schedule() isn\'t a coderef';
   }
 
+  print STDERR "Scheduling output event with time [$time]\n";
   $time += time;
   $self->parent->enqueue_output_event($time, $coderef, $self, @_);
 }
@@ -1400,9 +1402,11 @@ sub sl {
   
   ### DEBUG DEBUG DEBUG
   if ($self->{_debug}) {
-    print "S-> $seconds $line\n";
+    print STDERR "S-> $seconds $line\n";
   }
   
+  print STDERR "S-> $seconds $line\n";
+
   $self->schedule_output_event($seconds, \&sl_real, $line);
 }
 
@@ -1420,7 +1424,7 @@ sub sl_real {
   
   ### DEBUG DEBUG DEBUG
   if ($self->{_debug}) {
-    print ">>> $line\n";
+    print STDERR ">>> $line\n";
   }
 
   return unless defined $self->socket;
