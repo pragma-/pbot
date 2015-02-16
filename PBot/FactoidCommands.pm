@@ -131,6 +131,8 @@ sub factset {
     }
   }
 
+  $channel = '.*' if $channel !~ /^#/;
+
   my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1);
 
   if(defined $owner_channel) {
@@ -175,6 +177,8 @@ sub factunset {
       return "You must be at least level $meta_level to unset '$key'";
     }
   }
+
+  $channel = '.*' if $channel !~ /^#/;
 
   my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1);
 
@@ -371,6 +375,9 @@ sub factmove {
   delete $factoids->{$found_src_channel}->{$found_source};
 
   $self->{pbot}->{factoids}->save_factoids;
+
+  $found_src_channel = 'global' if $found_src_channel eq '.*';
+  $target_channel = 'global' if $target_channel eq '.*';
 
   if($src_channel eq $target_channel) {
     return "[$found_src_channel] $found_source renamed to $target";  
