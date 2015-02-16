@@ -40,7 +40,7 @@ sub remove_reader {
 
 sub do_select {
   my ($self) = @_;
-  my @ready = $self->{select}->can_read(.5);
+  my @ready = $self->{select}->can_read(0);
   foreach my $fh (@ready) {
     my $ret = sysread($fh, my $buf, 8192);
 
