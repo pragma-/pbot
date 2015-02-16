@@ -88,6 +88,7 @@ sub add_factoid {
   my ($type, $channel, $owner, $trigger, $action, $dont_save) = @_;
 
   $type = lc $type;
+  $channel = '.*' if $channel !~ /^#/;
   $channel = lc $channel;
 
   $self->{factoids}->hash->{$channel}->{$trigger}->{enabled}    = 1;
@@ -106,6 +107,7 @@ sub remove_factoid {
   my $self = shift;
   my ($channel, $trigger) = @_;
 
+  $channel = '.*' if $channel !~ /^#/;
   $channel = lc $channel;
 
   delete $self->{factoids}->hash->{$channel}->{$trigger};
