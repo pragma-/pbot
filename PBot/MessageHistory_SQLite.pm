@@ -117,6 +117,9 @@ CREATE TABLE IF NOT EXISTS Messages (
 )
 SQL
 
+
+    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS MsgIdx1 ON Messages(id, channel, mode)');
+
     $self->{dbh}->begin_work();
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -302,18 +305,22 @@ sub get_message_account {
     $sth->execute();
     my $rows = $sth->fetchall_arrayref({});
 
+=cut
     foreach my $row (@$rows) {
       $self->{pbot}->{logger}->log("Found matching nick $row->{hostmask} with id $row->{id}\n");
     }
+=cut
 
     if(not defined $rows->[0]) {
       $sth->bind_param(1, "%!$user\@$host");
       $sth->execute();
       $rows = $sth->fetchall_arrayref({});
 
+=cut
       foreach my $row (@$rows) {
         $self->{pbot}->{logger}->log("Found matching user\@host mask $row->{hostmask} with id $row->{id}\n");
       }
+=cut
     }
     return $rows;
   };
