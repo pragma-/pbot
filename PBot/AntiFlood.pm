@@ -274,6 +274,9 @@ sub check_flood {
     return;
   } 
 
+  # do not do flood enforcement for logged in bot admins
+  return if $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+
   # check for enter abuse
   if($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT} and $channel =~ m/^#/) {
     my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'enter_abuse', 'enter_abuses', 'offenses');
@@ -352,7 +355,7 @@ sub check_flood {
     #$self->{pbot}->{logger}->log("last: [$last->{timestamp}] $last->{msg}\n");
     #$self->{pbot}->{logger}->log("Comparing message timestamps $last->{timestamp} - $msg->{timestamp} = " . ($last->{timestamp} - $msg->{timestamp}) . " against max_time $max_time\n");
 
-    if($last->{timestamp} - $msg->{timestamp} <= $max_time && not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+    if ($last->{timestamp} - $msg->{timestamp} <= $max_time) {
       if($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN}) {
         my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'offenses', 'last_offense', 'join_watch');
         #$self->{pbot}->{logger}->log("$account offenses $channel_data->{offenses}, join watch $channel_data->{join_watch}, max messages $max_messages\n");
