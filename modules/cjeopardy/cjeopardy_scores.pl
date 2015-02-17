@@ -12,7 +12,7 @@ use IRCColors;
 my $nick      = shift @ARGV;
 my $channel   = shift @ARGV;
 my $command   = shift @ARGV;
-my $opt       = shift @ARGV;
+my $opt       = join ' ', @ARGV;
 
 if ($channel !~ /^#/) {
   print "Sorry, C Jeopardy must be played in a channel. Feel free to join #cjeopardy.\n";
@@ -146,11 +146,11 @@ if (lc $command eq 'rank') {
     hints         => { sort => \&sort_hints,         print => \&print_hints,          title => 'hints used'             } ,
   );
 
-  if (not defined $opt) {
-    print "Usage: rank [+-]<keyword> or rank <nick>; available keywords: ";
+  if (not $opt) {
+    print "Usage: rank [-]<keyword> [offset] or rank [-]<nick>; available keywords: ";
     print join ', ', sort keys %ranks;
     print ".\n";
-    print "For example, to rank by quickest answers in descending order: rank -quickest\n";
+    print "Prefixing the keyword or nick with a dash will invert the sort direction for each category. Specifying an offset will start ranking at that offset.\n";
     goto END;
   }
 
@@ -158,6 +158,11 @@ if (lc $command eq 'rank') {
 
   if ($opt =~ s/^([+-])//) {
     $rank_direction = $1;
+  }
+
+  my $offset = 1;
+  if ($opt =~ s/\s+(\d+)$//) {
+    $offset = $1;
   }
 
   if (not exists $ranks{$opt}) {
@@ -214,15 +219,23 @@ if (lc $command eq 'rank') {
   @$players = sort $sort_method @$players;
 
   my @ranking;
+  my $i = 0;
+  $offset--;
   foreach my $player (@$players) {
     next if $player->{nick} eq 'keep2play';
+    next if $i++ < $offset;
     my $entry = $ranks{$opt}->{print}->($player);
-    push @ranking, $entry if defined $entry;
+    push @ranking, "#$i $entry" if defined $entry;
     last if scalar @ranking >= 15;
   }
 
   if (not scalar @ranking) {
-    print "No rankings available for $channel yet.\n";
+    if ($offset) {
+      $offset++;
+      print "No rankings available for $channel at offset #$offset.\n";
+    } else {
+      print "No rankings available for $channel yet.\n";
+    }
   } else {
     print "Rankings for $ranks{$opt}->{title}: ";
     print join ', ', @ranking;
