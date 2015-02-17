@@ -219,19 +219,23 @@ if (lc $command eq 'rank') {
   @$players = sort $sort_method @$players;
 
   my @ranking;
-  my $i = 0;
-  $offset--;
+  my $rank = 0;
+  my $last_value = -1;
   foreach my $player (@$players) {
     next if $player->{nick} eq 'keep2play';
-    next if $i++ < $offset;
     my $entry = $ranks{$opt}->{print}->($player);
-    push @ranking, "#$i $entry" if defined $entry;
-    last if scalar @ranking >= 15;
+    if (defined $entry) {
+      my ($value) = $entry =~ /[^:]+:\s+(.*)/;
+      $rank++ if $value ne $last_value;
+      $last_value = $value;
+      next if $rank < $offset;
+      push @ranking, "#$rank $entry" if defined $entry;
+      last if scalar @ranking >= 15;
+    }
   }
 
   if (not scalar @ranking) {
     if ($offset) {
-      $offset++;
       print "No rankings available for $channel at offset #$offset.\n";
     } else {
       print "No rankings available for $channel yet.\n";
