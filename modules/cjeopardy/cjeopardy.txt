@@ -768,7 +768,7 @@
 [7.12.4.4 The atan2 functions] This function computes the value of the arc tangent of y/x, using the signs of both arguments to determine the quadrant of the return value and return arc tangent y/x in the interval [-pi, +pi] radians.|atan2
 [7.12.4.5 The cos functions] This function computes the cosine of x (measured in radians).|cos
 [7.12.4.6 The sin functions] This function computes the sine of x (measured in radians).|sin
-[7.12.4.7 The tan functions] This function return sthe tangent of x (measured in radians).|tan
+[7.12.4.7 The tan functions] This function returns the tangent of x (measured in radians).|tan
 [7.12.5.1 The acosh functions] This function computes the (nonnegative) arc hyperbolic cosine of x and return a value in the interval [0, +pi].|acosh
 [7.12.5.2 The asinh functions] This function computes the arc hyperbolic sine of x.|asinh
 [7.12.5.3 The atanh functions] This function computes the arc hyperbolic tangent of x.|atanh
@@ -1168,7 +1168,7 @@
 [7.29.3.10 The ungetwc function] This function pushes the wide character specified by c back onto the input stream pointed to by stream.|ungetwc
 [7.29.3.10 The ungetwc function] If the ungetwc function is called too many times on the same stream without an intervening read or file positioning operation on that stream, the operation may do this.|fail
 [7.29.4.2.1 The wcscpy function] This function copies the wide string pointed to by s2 (including the terminating null wide character) into the array pointed to by s1.|wcscpy
-[7.29.4.2.2 The wcsncpy function] This function copies not more than n wide characters (those that follow a null wide character are not copied) from the array pointed to by s2 to the array pointed to by s1..|wcsncpy
+[7.29.4.2.2 The wcsncpy function] This function copies not more than n wide characters (those that follow a null wide character are not copied) from the array pointed to by s2 to the array pointed to by s1.|wcsncpy
 [7.29.4.2.3 The wmemcpy function] This function copies n wide characters from the object pointed to by s2 to the object pointed to by s1 including any null wide characters.|wmemcpy
 [7.29.4.3.1 The wcscat function] This function appends a copy of the wide string pointed to by s2 (including the terminating null wide character) to the end of the wide string pointed to by s1.|wcscat
 [7.29.4.3.2 The wcsncat function] This function appends not more than n wide characters (a null wide character and those that follow it are not appended) from the array pointed to by s2 to the end of the wide string pointed to by s1.|wcsncat
@@ -1206,7 +1206,7 @@
 [7.30.2.1.6 The iswgraph function] This function tests for any wide character for which iswprint is true and iswspace is false.|iswgraph
 [7.30.2.1.7 The iswlower function] This function tests for any wide character that corresponds to a lowercase letter or is one of a locale-specific set of wide characters for which none of iswcntrl, iswdigit, iswpunct, or iswspace is true.|iswlower
 [7.30.2.1.8 The iswprint function] This function tests for any printing wide character.|iswprint
-[7.30.2.1.9 The iswpunct function] This function tests for any printing wide character that is one of a locale-specific set of punctuation wide characters for which neither iswspace nor iswalnum is true..|iswpunct
+[7.30.2.1.9 The iswpunct function] This function tests for any printing wide character that is one of a locale-specific set of punctuation wide characters for which neither iswspace nor iswalnum is true.|iswpunct
 [7.30.2.1.10 The iswspace function] This function tests for any wide character that corresponds to a locale-specific set of white-space wide characters for which none of iswalnum, iswgraph, or iswpunct is true.|iswspace
 [7.30.2.1.11 The iswupper function] This function tests for any wide character that corresponds to an uppercase letter or is one of a locale-specific set of wide characters for which none of iswcntrl, iswdigit, iswpunct, or iswspace is true.|iswupper
 [7.30.2.1.12 The iswxdigit function] This function tests for any wide character that corresponds to a hexadecimal-digit character.|iswxdigit
