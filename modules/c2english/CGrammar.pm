@@ -622,7 +622,6 @@ logical_OR_AND_expression:
         log_OR_AND_bit_or_and_eq
         rel_add_mul_shift_expression[context => 'logical_OR_AND_expression']>
           {
-            if (defined $arg{context} and $arg{context} eq 'for conditional') { print STDERR "hmm2\n"; }
             my $expression = join('', @{$item[1]});
             if($arg{context} =~ /initializer expression$/
                 and $expression =~ / /
@@ -1924,12 +1923,13 @@ string:
           {
             my $final_string = "";
             foreach my $string (@{$item[-1]}) {
+              my $modifier = "";
+              $modifier = 'an UTF-8 string ' if $string =~ s/^u8//;
+              $modifier = 'a wide character string ' if $string =~ s/^L//;
+              $modifier = 'a 16-bit character string ' if $string =~ s/^u//;
+              $modifier = 'a 32-bit character string ' if $string =~ s/^U//;
+
               if (not length $final_string) {
-                my $modifier = "";
-                $modifier = 'an UTF-8 string ' if $string =~ s/^u8//;
-                $modifier = 'a wide character string ' if $string =~ s/^L//;
-                $modifier = 'a 16-bit character string ' if $string =~ s/^u//;
-                $modifier = 'a 32-bit character string ' if $string =~ s/^U//;
                 $final_string = $modifier;
                 $final_string .= '"';
               }

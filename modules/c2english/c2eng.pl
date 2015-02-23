@@ -74,8 +74,10 @@ foreach my $arg (@ARGV) {
     $output =~ s/the a /the /g;
     $output =~ s/Then if it has the value/If it has the value/g;
     $output =~ s/result of the expression a generic-selection/result of a generic-selection/g;
+    $output =~ s/the result of the expression (an?) (16-bit character|32-bit character|wide character|UTF-8) string/$1 $2 string/gi;
     $output =~ s/the function a generic-selection/the function resulting from a generic-selection/g;
     $output =~ s/\.\s+Then exit switch block/ and then exit switch block/g;
+    $output =~ s/,\././g;
  
     foreach my $quote (@quotes) {
       next unless $quote;
