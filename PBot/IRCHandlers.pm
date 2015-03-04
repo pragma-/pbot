@@ -292,7 +292,7 @@ sub on_departure {
     $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
 
   my $admin = $self->{pbot}->{admins}->find_admin($channel, "$nick!$user\@$host");
-  if(defined $admin and $admin->{loggedin}) {
+  if(defined $admin and $admin->{loggedin} and not $admin->{stayloggedin}) {
     $self->{pbot}->{logger}->log("Whoops, $nick left while still logged in.\n");
     $self->{pbot}->{logger}->log("Logged out $nick.\n");
     delete $admin->{loggedin};
