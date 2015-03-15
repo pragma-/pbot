@@ -103,6 +103,9 @@ $config{channels_file}   = "$config{config_dir}/channels";
 # Location of file containing ignorelist entries
 $config{ignorelist_file} = "$config{config_dir}/ignorelist";
 
+# Location of file containing shitlist entries
+$config{shitlist_file} = "$config{config_dir}/shitlist";
+
 # Location of file containing factoids and modules
 $config{factoids_file}   = "$config{data_dir}/factoids";
 

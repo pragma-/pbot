@@ -202,6 +202,14 @@ sub check_flood {
     $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", lc $channel eq lc $mask ? "QUIT" : $channel, $mask, $text));
   }
 
+  # do not do flood processing for bot messages
+  if($nick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+    foreach my $channel (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
+      $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+    }
+    return;
+  }
+
   # handle QUIT events
   # (these events come from $channel nick!user@host, not a specific channel or nick,
   # so they need to be dispatched to all channels the nick has been seen on)
@@ -224,14 +232,6 @@ sub check_flood {
   } else {
     $self->check_join_watch($account, $channel, $text, $mode);
     push @$channels, $channel;
-  }
-  
-  # do not do flood processing for bot messages
-  if($nick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
-    foreach my $channel (@$channels) {
-      $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
-    }
-    return;
   }
 
   foreach my $channel (@$channels) {
@@ -408,6 +408,7 @@ sub check_flood {
             $self->{pbot}->{conn}->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");
           }
         } elsif($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} and $self->{nickflood}->{$account}->{changes} >= $max_messages) {
+          next if $channel !~ /^#/;
           ($nick) = $text =~ m/NICKCHANGE (.*)/;
 
           $self->{nickflood}->{$account}->{offenses}++;
@@ -582,6 +583,18 @@ sub check_bans {
 
     CHECKBAN:
     if($check_ban) {
+      $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking shitlist for $hostmask->{hostmask} in channel $channel\n") if $debug_checkban >= 4;
+      if ($self->{pbot}->{shitlist}->check_shitlist($hostmask->{hostmask}, $channel)) {
+        my $baninfo = {};
+        $baninfo->{banmask} = $hostmask->{hostmask};
+        $baninfo->{channel} = $channel;
+        $baninfo->{owner} = 'shitlist';
+        $baninfo->{when} = 0;
+        $baninfo->{type} = 'shitlist';
+        push @$bans, $baninfo;
+        next;
+      }
+
       $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans in $channel on $hostmask->{hostmask} using $hostmask->{nickserv}\n") if $debug_checkban >= 4;
       my $baninfos = $self->{pbot}->{bantracker}->get_baninfo($hostmask->{hostmask}, $channel, $hostmask->{nickserv});
 
@@ -649,7 +662,11 @@ sub check_bans {
       $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
       my ($bannick) = $mask =~ m/^([^!]+)/;
       if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-        $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Ban evasion");
+        if ($baninfo->{type} eq 'shitlist') {
+          $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick I don't think so");
+        } else {
+          $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Ban evasion");
+        }
         $self->{pbot}->{chanops}->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 12);
       }
       my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
