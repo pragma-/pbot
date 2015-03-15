@@ -52,7 +52,7 @@ sub remove {
   $hostmask = lc $hostmask;
 
   if (exists $self->{shitlist}->{$channel}) { 
-    delete $$self->{shitlist}->{$channel}->{$hostmask};
+    delete $self->{shitlist}->{$channel}->{$hostmask};
   }
 
   if (keys $self->{shitlist}->{$channel} == 0) {
@@ -181,7 +181,7 @@ sub shitlist_user {
 sub unshitlist_user {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($channel, $target) = split /\s+/, $arguments if $arguments;
+  my ($target, $channel) = split /\s+/, $arguments if $arguments;
 
   if(not defined $target) {
     return "Usage: unshitlist <hostmask regex> [channel]";
