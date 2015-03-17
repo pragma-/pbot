@@ -187,7 +187,7 @@ sub blacklist {
 
             $channel = '.*' if not defined $channel;
 
-            if(not exists $self->{blacklist}->{$channel} and not exists $self->{blacklist}->{$channel}->{$mask}) {
+            if(exists $self->{blacklist}->{$channel} and not exists $self->{blacklist}->{$channel}->{$mask}) {
               $self->{pbot}->{logger}->log("$nick attempt to remove nonexistent [$mask][$channel] from blacklist\n");
               return "$mask not found in blacklist for channel $channel (use `blacklist list` to display blacklist)";
             }

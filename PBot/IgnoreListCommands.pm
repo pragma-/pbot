@@ -88,7 +88,7 @@ sub unignore_user {
     $channel = ".*";
   }
   
-  if(not exists ${ $self->{pbot}->{ignorelist}->{ignore_list} }{$target}{$channel}) {
+  if(exists $self->{pbot}->{ignorelist}->{ignore_list}->{$target} and not exists $self->{pbot}->{ignorelist}->{ignore_list}->{$target}->{$channel}) {
     $self->{pbot}->{logger}->log("$nick attempt to remove nonexistent [$target][$channel] from ignore list\n");
     return "/msg $nick [$target][$channel] not found in ignore list (use `ignore list` to list ignores)";
   }
