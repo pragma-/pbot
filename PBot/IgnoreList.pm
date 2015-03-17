@@ -13,7 +13,7 @@ use Time::HiRes qw(gettimeofday);
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to Commands should be key/value pairs, not hash reference");
+    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
   my ($class, %conf) = @_;
@@ -26,7 +26,7 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to Channels");
+  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{filename} = delete $conf{filename};
 
   $self->{ignore_list}          = {};
@@ -45,9 +45,9 @@ sub add {
   my ($hostmask, $channel, $length) = @_;
 
   if($length == -1) {
-    ${ $self->{ignore_list} }{$hostmask}{$channel} = -1;
+    $self->{ignore_list}->{$hostmask}->{$channel} = -1;
   } else {
-    ${ $self->{ignore_list} }{$hostmask}{$channel} = gettimeofday + $length;
+    $self->{ignore_list}->{$hostmask}->{$channel} = gettimeofday + $length;
   }
 
   $self->save_ignores();
@@ -57,7 +57,12 @@ sub remove {
   my $self = shift;
   my ($hostmask, $channel) = @_;
 
-  delete ${ $self->{ignore_list} }{$hostmask}{$channel};
+  delete $self->{ignore_list}->{$hostmask}->{$channel};
+
+  if (not keys %{ $self->{ignore_list}->{$hostmask} }) {
+    delete $self->{ignore_list}->{$hostmask};
+  }
+
   $self->save_ignores();
 }
 
@@ -94,7 +99,7 @@ sub load_ignores {
       Carp::croak "Duplicate ignore [$hostmask][$channel] found in $filename around line $i\n";
     }
 
-    ${ $self->{ignore_list} }{$hostmask}{$channel} = $length;
+    $self->{ignore_list}->{$hostmask}->{$channel} = $length;
   }
 
   $self->{pbot}->{logger}->log("  $i entries in ignorelist\n");
@@ -114,10 +119,10 @@ sub save_ignores {
 
   open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
 
-  foreach my $ignored (keys %{ $self->{ignore_list} }) {
-    foreach my $ignored_channel (keys %{ ${ $self->{ignore_list} }{$ignored} }) {
-      my $length = $self->{ignore_list}->{$ignored}{$ignored_channel};
-      print FILE "$ignored $ignored_channel $length\n";
+  foreach my $hostmask (keys %{ $self->{ignore_list} }) {
+    foreach my $channel (keys %{ $self->{ignore_list}->{$hostmask} }) {
+      my $length = $self->{ignore_list}->{$hostmask}->{$channel};
+      print FILE "$hostmask $channel $length\n";
     }
   }
 
@@ -162,8 +167,7 @@ sub check_ignore {
   }
 
   foreach my $ignored (keys %{ $self->{ignore_list} }) {
-    foreach my $ignored_channel (keys %{ ${ $self->{ignore_list} }{$ignored} }) {
-      #$self->{pbot}->{logger}->log("check_ignore: comparing '$hostmask' against '$ignored' for channel '$channel'\n");
+    foreach my $ignored_channel (keys %{ $self->{ignore_list}->{$ignored} }) {
       my $ignored_channel_escaped = quotemeta $ignored_channel;
       my $ignored_escaped = quotemeta $ignored;
 
@@ -185,16 +189,14 @@ sub check_ignore_timeouts {
 
   foreach my $hostmask (keys %{ $self->{ignore_list} }) {
     foreach my $channel (keys %{ $self->{ignore_list}->{$hostmask} }) {
-      next if($self->{ignore_list}->{$hostmask}{$channel} == -1); #permanent ignore
+      next if($self->{ignore_list}->{$hostmask}->{$channel} == -1); #permanent ignore
 
-      if($self->{ignore_list}->{$hostmask}{$channel} < $now) {
-        $self->{commands}->unignore_user("", "floodcontrol", "", "", "$hostmask $channel");
+      if($self->{ignore_list}->{$hostmask}->{$channel} < $now) {
+        $self->{pbot}->{logger}->log("Unignoring $hostmask in channel $channel.\n");
+        $self->remove($hostmask, $channel);
         if($hostmask eq ".*") {
           $self->{pbot}->{conn}->me($channel, "awakens.");
         }
-      } else {
-        #my $timediff = $ignore_list{$host}{$channel} - $now;
-        #${logger}->log "ignore: $host has $timediff seconds remaining\n"
       }
     }
   }

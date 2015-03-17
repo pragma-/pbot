@@ -393,7 +393,7 @@ sub check_flood {
             $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
           }
           else { # private message flood
-            next if exists ${ $self->{pbot}->{ignorelist}->{ignore_list} }{"$nick!$user\@$host"}{$channel};
+            next if exists $self->{pbot}->{ignorelist}->{ignore_list}->{".*!$user\@$host"}->{$channel};
 
             my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'offenses', 'last_offense');
             $channel_data->{offenses}++;
@@ -402,7 +402,7 @@ sub check_flood {
 
             my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $channel_data->{offenses} - 1);
 
-            $self->{pbot}->{ignorelist}->{commands}->ignore_user("", "floodcontrol", "", "", "$nick!$user\@$host $channel $length");
+            $self->{pbot}->{ignorelist}->add(".*!$user\@$host", $channel, $length);
             $length = duration($length);
             $self->{pbot}->{logger}->log("$nick msg flood offense " . $channel_data->{offenses} . " earned $length ignore\n");
             $self->{pbot}->{conn}->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");
@@ -583,14 +583,14 @@ sub check_bans {
 
     CHECKBAN:
     if($check_ban) {
-      $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking shitlist for $hostmask->{hostmask} in channel $channel\n") if $debug_checkban >= 4;
-      if ($self->{pbot}->{shitlist}->check_shitlist($hostmask->{hostmask}, $channel)) {
+      $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking blacklist for $hostmask->{hostmask} in channel $channel\n") if $debug_checkban >= 4;
+      if ($self->{pbot}->{blacklist}->check_blacklist($hostmask->{hostmask}, $channel)) {
         my $baninfo = {};
         $baninfo->{banmask} = $hostmask->{hostmask};
         $baninfo->{channel} = $channel;
-        $baninfo->{owner} = 'shitlist';
+        $baninfo->{owner} = 'blacklist';
         $baninfo->{when} = 0;
-        $baninfo->{type} = 'shitlist';
+        $baninfo->{type} = 'blacklist';
         push @$bans, $baninfo;
         next;
       }
@@ -662,7 +662,7 @@ sub check_bans {
       $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
       my ($bannick) = $mask =~ m/^([^!]+)/;
       if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-        if ($baninfo->{type} eq 'shitlist') {
+        if ($baninfo->{type} eq 'blacklist') {
           $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick I don't think so");
         } else {
           $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Ban evasion");

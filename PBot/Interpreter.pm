@@ -92,7 +92,7 @@ sub process_line {
     if((defined $command && $command !~ /^login/i) || defined $has_url || defined $has_code) {
       if(defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from) && not $pbot->{admins}->loggedin($from, "$nick!$user\@$host")) {
         # ignored hostmask
-        $pbot->{logger}->log("ignored text: [$from][$nick!$user\@$host\[$text\]\n");
+        $pbot->{logger}->log("ignored message: $from <$nick!$user\@$host> $text\n");
         return;
       }
     }

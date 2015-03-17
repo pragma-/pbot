@@ -44,7 +44,7 @@ use PBot::ChanOps;
 use PBot::Factoids; 
 use PBot::BotAdmins;
 use PBot::IgnoreList;
-use PBot::ShitList;
+use PBot::BlackList;
 use PBot::Quotegrabs;
 use PBot::Timer;
 use PBot::AntiAway;
@@ -113,7 +113,7 @@ sub initialize {
   $self->{messagehistory}     = PBot::MessageHistory->new(pbot => $self, filename => delete $conf{messagehistory_file}, %conf);
   $self->{antiflood}          = PBot::AntiFlood->new(pbot => $self, %conf);
   $self->{ignorelist}         = PBot::IgnoreList->new(pbot => $self, filename => delete $conf{ignorelist_file}, %conf);
-  $self->{shitlist}           = PBot::ShitList->new(pbot => $self, filename => delete $conf{shitlist_file}, %conf);
+  $self->{blacklist}          = PBot::BlackList->new(pbot => $self, filename => delete $conf{blacklist_file}, %conf);
   $self->{irc}                = PBot::IRC->new();
   $self->{irchandlers}        = PBot::IRCHandlers->new(pbot => $self, %conf);
   $self->{channels}           = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file}, %conf);
