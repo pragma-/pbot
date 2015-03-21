@@ -161,12 +161,16 @@ sub blacklist {
         when($_ eq "list" or $_ eq "show") {
             my $text = "Blacklist:\n";
             my $entries = 0;
-            foreach my $channel (keys %{ $self->{blacklist} }) {
+            foreach my $channel (sort keys %{ $self->{blacklist} }) {
+              if ($channel eq '.*') {
+                $text .= "  all channels:\n";
+              } else {
                 $text .= "  $channel:\n";
-                foreach my $mask (keys %{ $self->{blacklist}->{$channel} }) {
-                    $text .= "    $mask,\n";
-                    $entries++;
-                }
+              }
+              foreach my $mask (sort keys %{ $self->{blacklist}->{$channel} }) {
+                $text .= "    $mask,\n";
+                $entries++;
+              }
             }
             $text .= "none" if $entries == 0;
             return $text;

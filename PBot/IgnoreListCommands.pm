@@ -9,6 +9,7 @@ use warnings;
 use strict;
 
 use Time::HiRes qw(gettimeofday);
+use Time::Duration;
 use Carp ();
 
 sub new {
@@ -53,9 +54,9 @@ sub ignore_user {
     my $text = "Ignored: ";
     my $sep = "";
 
-    foreach my $ignored (keys %{ $self->{pbot}->{ignorelist}->{ignore_list} }) {
-      foreach my $channel (keys %{ ${ $self->{pbot}->{ignorelist}->{ignore_list} }{$ignored} }) {
-        $text .= $sep . "[$ignored]->[$channel]->[" . (${ $self->{pbot}->{ignorelist}->{ignore_list} }{$ignored}{$channel} == -1 ? -1 : int(gettimeofday - ${ $self->{pbot}->{ignorelist}->{ignore_list} }{$ignored}{$channel})) . "]";
+    foreach my $ignored (sort keys %{ $self->{pbot}->{ignorelist}->{ignore_list} }) {
+      foreach my $channel (sort keys %{ ${ $self->{pbot}->{ignorelist}->{ignore_list} }{$ignored} }) {
+        $text .= $sep . "$ignored [$channel] " . ($self->{pbot}->{ignorelist}->{ignore_list}->{$ignored}->{$channel} < 0 ? "perm" : duration($self->{pbot}->{ignorelist}->{ignore_list}->{$ignored}->{$channel} - gettimeofday));
         $sep = ";\n";
       }
     }
@@ -70,9 +71,16 @@ sub ignore_user {
     $length = -1; # permanently
   }
 
-  $self->{pbot}->{logger}->log("$nick added [$target][$channel] to ignore list for $length seconds\n");
   $self->{pbot}->{ignorelist}->add($target, $channel, $length);
-  return "/msg $nick [$target][$channel] added to ignore list for $length seconds";
+
+  if ($length >= 0) {
+    $length = "for " . duration($length);
+  } else {
+    $length = "permanently";
+  }
+
+  $self->{pbot}->{logger}->log("$nick added [$target][$channel] to ignore list $length\n");
+  return "/msg $nick [$target][$channel] added to ignore list $length";
 }
 
 sub unignore_user {

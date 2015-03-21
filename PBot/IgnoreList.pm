@@ -44,7 +44,7 @@ sub add {
   my $self = shift;
   my ($hostmask, $channel, $length) = @_;
 
-  if($length == -1) {
+  if($length < 0) {
     $self->{ignore_list}->{$hostmask}->{$channel} = -1;
   } else {
     $self->{ignore_list}->{$hostmask}->{$channel} = gettimeofday + $length;
