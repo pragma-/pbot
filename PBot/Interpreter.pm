@@ -69,12 +69,17 @@ sub process_line {
   my $cmd_text = $text;
   $cmd_text =~ s/^\/me\s+//;
 
-  my $bot_trigger = $pbot->{registry}->get_value('general', 'trigger');
+  # get channel-specific trigger if available
+  my $bot_trigger = $pbot->{registry}->get_value($from, 'trigger');
+
+  if (not defined $bot_trigger) {
+    $bot_trigger = $pbot->{registry}->get_value('general', 'trigger');
+  }
 
   if($cmd_text =~ /^$bot_trigger?\s*{\s*(.*)\s*}\s*$/) {
     $has_code = $1 if length $1;
     $preserve_whitespace = 1;
-  } elsif($cmd_text =~ /^\Q$bot_trigger\E(.*)$/) {
+  } elsif($cmd_text =~ /^$bot_trigger(.*)$/) {
     $command = $1;
   } elsif($cmd_text =~ /^.?$mynick.?\s+(.*?)$/i) {
     $command = $1;
