@@ -110,9 +110,11 @@ sub on_msg {
   my ($self, $event_type, $event) = @_;
   my ($nick, $host) = ($event->{event}->nick, $event->{event}->host);
   my $text = $event->{event}->{args}[0];
-  my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
 
-  $text =~ s/^\Q$bot_trigger\E?(.*)/$bot_trigger$1/;
+  my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
+  my $bot_nick    = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+
+  $text =~ s/^$bot_trigger?\s*(.*)/$bot_nick $1/;
   $event->{event}->{to}[0]   = $nick;
   $event->{event}->{args}[0] = $text;
   $self->on_public($event_type, $event);
