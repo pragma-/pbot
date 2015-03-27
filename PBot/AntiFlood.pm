@@ -447,6 +447,8 @@ sub unbanme {
   my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
   my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
 
+  push @nickserv_accounts, undef;
+
   foreach my $nickserv_account (@nickserv_accounts) {
     my $baninfos = $self->{pbot}->{bantracker}->get_baninfo("$nick!$user\@$host", $channel, $nickserv_account);
 
@@ -554,17 +556,22 @@ sub check_bans {
 
   my $hostmasks = $self->{pbot}->{messagehistory}->{database}->get_hostmasks_for_channel($channel);
 
+  foreach my $nickserv_account (@nickserv_accounts) {
+    my $nickserv_hostmasks = $self->{pbot}->{messagehistory}->{database}->get_hostmasks_for_nickserv($nickserv_account);
+    push @$hostmasks, @$nickserv_hostmasks;
+  }
+
   my ($do_not_validate, $bans);
   foreach my $hostmask (@$hostmasks) {
     my $check_ban = 0;
 
     # check if nickserv accounts match
-    foreach my $nickserv_account (@nickserv_accounts) {
-      if($hostmask->{nickserv} eq $nickserv_account) {
-        $self->{pbot}->{logger}->log("anti-flood: [check-bans] nickserv account for $hostmask->{hostmask} matches $nickserv_account\n") if $debug_checkban;
-        $check_ban = 1;
-        goto CHECKBAN;
-      }
+    if (exists $hostmask->{nickserv}) {
+      $self->{pbot}->{logger}->log("anti-flood: [check-bans] nickserv account for $hostmask->{hostmask} matches $hostmask->{nickserv}\n") if $debug_checkban;
+      $check_ban = 1;
+      goto CHECKBAN;
+    } else {
+      $hostmask->{nickserv} = undef;
     }
 
     # check if hosts match
@@ -597,7 +604,7 @@ sub check_bans {
         next;
       }
 
-      $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans in $channel on $hostmask->{hostmask} using $hostmask->{nickserv}\n") if $debug_checkban >= 4;
+      $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans in $channel on $hostmask->{hostmask} using account " . (defined $hostmask->{nickserv} ? $hostmask->{nickserv} : "[undefined]") . "\n") if $debug_checkban >= 4;
       my $baninfos = $self->{pbot}->{bantracker}->get_baninfo($hostmask->{hostmask}, $channel, $hostmask->{nickserv});
 
       if(defined $baninfos) {

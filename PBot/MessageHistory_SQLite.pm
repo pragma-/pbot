@@ -386,16 +386,44 @@ sub update_hostmask_data {
   $self->{pbot}->{logger}->log($@) if $@;
 }
 
+sub get_nickserv_accounts_for_hostmask {
+  my ($self, $hostmask) = @_;
+
+  my $nickservs = eval {
+    my $sth = $self->{dbh}->prepare('SELECT nickserv FROM Hostmasks, Nickserv WHERE nickserv.id = hostmasks.id AND hostmasks.hostmask = ?');
+    $sth->bind_param(1, $hostmask);
+    $sth->execute();
+    return $sth->fetchall_arrayref();
+  };
+
+  $self->{pbot}->{logger}->log($@) if $@;
+  return map {$_->[0]} @$nickservs;
+}
+
 sub get_hostmasks_for_channel {
   my ($self, $channel) = @_;
 
   my $hostmasks = eval {
-    my $sth = $self->{dbh}->prepare('SELECT hostmasks.id, hostmask, nickserv FROM Hostmasks, Nickserv, Channels WHERE nickserv.id = hostmasks.id AND channels.id = hostmasks.id AND channel = ?');
+    my $sth = $self->{dbh}->prepare('SELECT hostmasks.id, hostmask FROM Hostmasks, Channels WHERE channels.id = hostmasks.id AND channel = ?');
     $sth->bind_param(1, $channel);
     $sth->execute();
     return $sth->fetchall_arrayref({});
   };
   
+  $self->{pbot}->{logger}->log($@) if $@;
+  return $hostmasks;
+}
+
+sub get_hostmasks_for_nickserv {
+  my ($self, $nickserv) = @_;
+
+  my $hostmasks = eval {
+    my $sth = $self->{dbh}->prepare('SELECT hostmasks.id, hostmask, nickserv FROM Hostmasks, Nickserv WHERE nickserv.id = hostmasks.id AND nickserv = ?');
+    $sth->bind_param(1, $nickserv);
+    $sth->execute();
+    return $sth->fetchall_arrayref({});
+  };
+
   $self->{pbot}->{logger}->log($@) if $@;
   return $hostmasks;
 }
