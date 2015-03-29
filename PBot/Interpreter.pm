@@ -10,6 +10,7 @@ use strict;
 
 use base 'PBot::Registerable';
 
+use Time::HiRes qw/gettimeofday/;
 use LWP::UserAgent;
 use Carp ();
 
@@ -38,6 +39,10 @@ sub initialize {
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',         $conf{compile_blocks_channels}         // '.*');
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_ignore_channels',  $conf{compile_blocks_ignore_channels}  // 'none');
   $self->{pbot}->{registry}->add_default('text',  'interpreter', 'max_recursion',  10);
+
+  $self->{output_queue} = [];
+
+  $self->{pbot}->{timer}->register(sub { $self->process_output_queue }, 1);
 }
 
 sub process_line {
@@ -145,20 +150,26 @@ sub truncate_result {
 
 sub handle_result {
   my ($self, $from, $nick, $user, $host, $text, $command, $result, $checkflood, $preserve_whitespace) = @_;
-  my ($pbot, $mynick) = ($self->{pbot}, $self->{pbot}->{registry}->get_value('irc', 'botnick'));
 
-  if(not defined $result or length $result == 0) {
+  if (not defined $result or length $result == 0) {
     return;
   }
 
   my $original_result = $result;
 
-  if($preserve_whitespace == 0 && defined $command) {
+  my $use_output_queue = 0;
+
+  if (defined $command) {
     my ($cmd, $args) = split / /, $command, 2;
-    my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $cmd, $args, 0, 1);
+    my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $cmd, $args, 0, 0, 1);
     if(defined $trigger) {
-      $preserve_whitespace = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};
-      $preserve_whitespace = 0 if not defined $preserve_whitespace;
+      if ($preserve_whitespace == 0) {
+        $preserve_whitespace = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};
+        $preserve_whitespace = 0 if not defined $preserve_whitespace;
+      }
+
+      $use_output_queue = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{use_output_queue};
+      $use_output_queue = 0 if not defined $use_output_queue;
     }
   }
 
@@ -180,7 +191,17 @@ sub handle_result {
 
     if (++$lines >= $max_lines) {
       my $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
-      $pbot->{conn}->privmsg($from, "And that's all I have to say about that. See $link for full text.");
+      if ($use_output_queue) {
+        my $message = {
+          from => $from, nick => $nick, user => $user, host => $host, command => $command,
+          message => "And that's all I have to say about that. See $link for full text.",
+          when => gettimeofday,
+          checkflood => $checkflood
+        };
+        $self->add_message_to_output_queue($message);
+      } else {
+        $self->{pbot}->{conn}->privmsg($from, "And that's all I have to say about that. See $link for full text.");
+      }
       last;
     }
 
@@ -190,36 +211,53 @@ sub handle_result {
       $line = $self->truncate_result($from, $nick, $text, $original_result, $line, 1);
     }
 
-    $pbot->{logger}->log("Final result: [$line]\n");
+    $self->{pbot}->{logger}->log("Final result: [$line]\n");
 
-    if($line =~ s/^\/say\s+//i) {
-      $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
-      $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
-    } elsif($line =~ s/^\/me\s+//i) {
-      $pbot->{conn}->me($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
-      $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
-    } elsif($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
-      my $to = $1;
-      if($to =~ /,/) {
-        $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$nick!$user\@$host] [$command] [$line]\n");
-      }
-      elsif($to =~ /.*serv$/i) {
-        $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$nick!$user\@$host] [$command] [$line]\n");
-      }
-      elsif($line =~ s/^\/me\s+//i) {
-        $pbot->{conn}->me($to, $line) if $to !~ /\Q$mynick\E/i;
-        $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
-      } else {
-        $line =~ s/^\/say\s+//i;
-        $pbot->{conn}->privmsg($to, $line) if $to !~ /\Q$mynick\E/i;
-        $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
-      }
+    if ($use_output_queue) {
+      my $delay = (rand 10) + 5;    # initial delay for reading/processing user's message
+      $delay += (length $line) / 4; # additional delay of 4 characters per second typing speed
+      my $message = {
+        from => $from, nick => $nick, user => $user, host => $host, command => $command,
+        when => gettimeofday + $delay, message => $line, checkflood => $checkflood
+      };
+      $self->add_message_to_output_queue($message);
     } else {
-      $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
-      $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+      $self->output_result($from, $nick, $user, $host, $command, $line, $checkflood);
     }
   }
-  $pbot->{logger}->log("---------------------------------------------\n");
+  $self->{pbot}->{logger}->log("---------------------------------------------\n");
+}
+
+sub output_result {
+  my ($self, $from, $nick, $user, $host, $command, $line, $checkflood) = @_;
+  my ($pbot, $mynick) = ($self->{pbot}, $self->{pbot}->{registry}->get_value('irc', 'botnick'));
+
+  if($line =~ s/^\/say\s+//i) {
+    $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
+    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+  } elsif($line =~ s/^\/me\s+//i) {
+    $pbot->{conn}->me($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
+    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
+  } elsif($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
+    my $to = $1;
+    if($to =~ /,/) {
+      $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$nick!$user\@$host] [$command] [$line]\n");
+    }
+    elsif($to =~ /.*serv$/i) {
+      $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$nick!$user\@$host] [$command] [$line]\n");
+    }
+    elsif($line =~ s/^\/me\s+//i) {
+      $pbot->{conn}->me($to, $line) if $to !~ /\Q$mynick\E/i;
+      $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
+    } else {
+      $line =~ s/^\/say\s+//i;
+      $pbot->{conn}->privmsg($to, $line) if $to !~ /\Q$mynick\E/i;
+      $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+    }
+  } else {
+    $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
+    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+  }
 }
 
 sub interpret {
@@ -252,6 +290,10 @@ sub interpret {
 
   if($keyword ne "factadd" 
       and $keyword ne "add"
+      and $keyword ne "factfind"
+      and $keyword ne "find"
+      and $keyword ne "factshow"
+      and $keyword ne "show"
       and $keyword ne "factset"
       and $keyword ne "factchange"
       and $keyword ne "change"
@@ -290,6 +332,23 @@ sub paste_codepad {
   }
 
   return $response->request->uri;
+}
+
+sub add_message_to_output_queue {
+  my ($self, $message) = @_;
+  push @{$self->{output_queue}}, $message;
+}
+
+sub process_output_queue {
+  my $self = shift;
+
+  for (my $i = 0; $i < @{$self->{output_queue}}; $i++) {
+    my $message = $self->{output_queue}->[$i];
+    if (gettimeofday >= $message->{when}) {
+      $self->output_result($message->{from}, $message->{nick}, $message->{user}, $message->{host}, $message->{command}, $message->{message}, $message->{checkflood});
+      splice @{$self->{output_queue}}, $i--, 1;
+    }
+  }
 }
 
 sub paste_sprunge {
