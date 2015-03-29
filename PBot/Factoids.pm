@@ -235,7 +235,7 @@ sub export_factoids {
 }
 
 sub find_factoid {
-  my ($self, $from, $keyword, $arguments, $exact_channel, $exact_trigger) = @_;
+  my ($self, $from, $keyword, $arguments, $exact_channel, $exact_trigger, $find_alias) = @_;
 
   my $debug = 0;
 
@@ -251,37 +251,62 @@ sub find_factoid {
   $self->{pbot}->{logger}->log("string: $string\n") if $debug;
 
   my @result = eval {
-    # check factoids
-    foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
-      if($exact_channel) {
-        next unless $from eq lc $channel or $channel eq '.*';
-      }
-
-      foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
-        if($keyword =~ m/^\Q$trigger\E$/i) {
-          $self->{pbot}->{logger}->log("return $channel: $trigger\n") if $debug;
-          return ($channel, $trigger);
-        }
-      }
-    }
-
-    # then check regex factoids
-    if(not $exact_trigger) {
+    for (my $depth = 0; $depth < 5; $depth++) {
+      # check factoids
       foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
         if($exact_channel) {
           next unless $from eq lc $channel or $channel eq '.*';
         }
 
         foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
-          if($self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'regex') {
-            $self->{pbot}->{logger}->log("checking regex $string =~ m/$trigger/i\n") if $debug;
-            if($string =~ m/$trigger/i) {
-              $self->{pbot}->{logger}->log("return regex $channel: $trigger\n") if $debug;
-              return ($channel, $trigger);
+          if($keyword =~ m/^\Q$trigger\E$/i) {
+            $self->{pbot}->{logger}->log("return $channel: $trigger\n") if $debug;
+
+            if($find_alias && $self->{factoids}->hash->{$channel}->{$trigger}->{action} =~ /^\/call\s+(.*)$/) {
+              my $command;
+              if(length $arguments) {
+                $command = "$1 $arguments";
+              } else {
+                $command = $1;
+              }
+              ($keyword, $arguments) = split / /, $command, 2;
+              goto NEXT_DEPTH;
+            }
+
+            return ($channel, $trigger);
+          }
+        }
+      }
+
+      # then check regex factoids
+      if(not $exact_trigger) {
+        foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
+          if($exact_channel) {
+            next unless $from eq lc $channel or $channel eq '.*';
+          }
+
+          foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
+            if($self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'regex') {
+              $self->{pbot}->{logger}->log("checking regex $string =~ m/$trigger/i\n") if $debug;
+              if($string =~ m/$trigger/i) {
+                $self->{pbot}->{logger}->log("return regex $channel: $trigger\n") if $debug;
+
+                if($find_alias) {
+                  my $command = $self->{factoids}->hash->{$channel}->{$trigger}->{action};
+                  ($keyword, $arguments) = split / /, $command, 2;
+                  $string = $keyword . (length $arguments ? " $arguments" : "");
+                  goto NEXT_DEPTH;
+                }
+
+                return ($channel, $trigger);
+              }
             }
           }
         }
       }
+
+      NEXT_DEPTH:
+      last if not $find_alias;
     }
 
     $self->{pbot}->{logger}->log("find_factoid: no match\n") if $debug;
