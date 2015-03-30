@@ -40,7 +40,7 @@ sub initialize {
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_ignore_channels',  $conf{compile_blocks_ignore_channels}  // 'none');
   $self->{pbot}->{registry}->add_default('text',  'interpreter', 'max_recursion',  10);
 
-  $self->{output_queue} = [];
+  $self->{output_queue} = {};
 
   $self->{pbot}->{timer}->register(sub { $self->process_output_queue }, 1);
 }
@@ -193,12 +193,11 @@ sub handle_result {
       my $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
       if ($use_output_queue) {
         my $message = {
-          from => $from, nick => $nick, user => $user, host => $host, command => $command,
+          nick => $nick, user => $user, host => $host, command => $command,
           message => "And that's all I have to say about that. See $link for full text.",
-          when => gettimeofday,
           checkflood => $checkflood
         };
-        $self->add_message_to_output_queue($message);
+        $self->add_message_to_output_queue($from, $message, 0);
       } else {
         $self->{pbot}->{conn}->privmsg($from, "And that's all I have to say about that. See $link for full text.");
       }
@@ -215,12 +214,12 @@ sub handle_result {
 
     if ($use_output_queue) {
       my $delay = (rand 10) + 5;    # initial delay for reading/processing user's message
-      $delay += (length $line) / 4; # additional delay of 4 characters per second typing speed
+      $delay += (length $line) / 7; # additional delay of 7 characters per second typing speed
       my $message = {
-        from => $from, nick => $nick, user => $user, host => $host, command => $command,
-        when => gettimeofday + $delay, message => $line, checkflood => $checkflood
+        nick => $nick, user => $user, host => $host, command => $command,
+        message => $line, checkflood => $checkflood
       };
-      $self->add_message_to_output_queue($message);
+      $self->add_message_to_output_queue($from, $message, $delay);
     } else {
       $self->output_result($from, $nick, $user, $host, $command, $line, $checkflood);
     }
@@ -335,18 +334,32 @@ sub paste_codepad {
 }
 
 sub add_message_to_output_queue {
-  my ($self, $message) = @_;
-  push @{$self->{output_queue}}, $message;
+  my ($self, $channel, $message, $delay) = @_;
+
+  if (exists $self->{output_queue}->{$channel}) {
+    my $last_when = $self->{output_queue}->{$channel}->[-1]->{when};
+    $message->{when} = $last_when + $delay;
+  } else {
+    $message->{when} = gettimeofday + $delay;
+  }
+
+  push @{$self->{output_queue}->{$channel}}, $message;
 }
 
 sub process_output_queue {
   my $self = shift;
 
-  for (my $i = 0; $i < @{$self->{output_queue}}; $i++) {
-    my $message = $self->{output_queue}->[$i];
-    if (gettimeofday >= $message->{when}) {
-      $self->output_result($message->{from}, $message->{nick}, $message->{user}, $message->{host}, $message->{command}, $message->{message}, $message->{checkflood});
-      splice @{$self->{output_queue}}, $i--, 1;
+  foreach my $channel (keys %{$self->{output_queue}}) {
+    for (my $i = 0; $i < @{$self->{output_queue}->{$channel}}; $i++) {
+      my $message = $self->{output_queue}->{$channel}->[$i];
+      if (gettimeofday >= $message->{when}) {
+        $self->output_result($channel, $message->{nick}, $message->{user}, $message->{host}, $message->{command}, $message->{message}, $message->{checkflood});
+        splice @{$self->{output_queue}->{$channel}}, $i--, 1;
+      }
+    }
+
+    if (not @{$self->{output_queue}->{$channel}}) {
+      delete $self->{output_queue}->{$channel};
     }
   }
 }
