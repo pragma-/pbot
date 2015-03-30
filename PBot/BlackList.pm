@@ -132,16 +132,16 @@ sub check_blacklist {
 
   return 0 if not defined $channel;
 
-  foreach my $shit_channel (keys %{ $self->{blacklist} }) {
-    foreach my $shit_hostmask (keys %{ $self->{blacklist}->{$shit_channel} }) {
-      my $shit_channel_escaped = quotemeta $shit_channel;
-      my $shit_hostmask_escaped = quotemeta $shit_hostmask;
+  foreach my $black_channel (keys %{ $self->{blacklist} }) {
+    foreach my $black_hostmask (keys %{ $self->{blacklist}->{$black_channel} }) {
+      my $black_channel_escaped = quotemeta $black_channel;
+      my $black_hostmask_escaped = quotemeta $black_hostmask;
 
-      $shit_channel_escaped  =~ s/\\(\.|\*)/$1/g;
-      $shit_hostmask_escaped =~ s/\\(\.|\*)/$1/g;
+      $black_channel_escaped  =~ s/\\(\.|\*)/$1/g;
+      $black_hostmask_escaped =~ s/\\(\.|\*)/$1/g;
 
-      if(($channel =~ /$shit_channel_escaped/i) && ($hostmask =~ /$shit_hostmask_escaped/i)) {
-        $self->{pbot}->{logger}->log("$hostmask blacklisted in channel $channel (matches [$shit_hostmask] host and [$shit_channel] channel)\n");
+      if(($channel =~ /$black_channel_escaped/i) && ($hostmask =~ /$black_hostmask_escaped/i)) {
+        $self->{pbot}->{logger}->log("$hostmask blacklisted in channel $channel (matches [$black_hostmask] host and [$black_channel] channel)\n");
         return 1;
       }
     }
