@@ -11,6 +11,7 @@ use strict;
 use base 'PBot::Registerable';
 
 use Time::HiRes qw/gettimeofday/;
+use Time::Duration;
 use LWP::UserAgent;
 use Carp ();
 
@@ -125,6 +126,67 @@ sub process_line {
   }
 }
 
+sub interpret {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $count, $command, $tonick) = @_;
+  my ($keyword, $arguments) = ("", "");
+  my $text;
+  my $pbot = $self->{pbot};
+
+  $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $from ? $from : "(undef)") . "][$nick!$user\@$host][$count][$command]\n");
+
+  return "Too many levels of recursion, aborted." if(++$count > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
+
+  if(not defined $nick || not defined $user || not defined $host ||
+     not defined $command) {
+    $pbot->{logger}->log("Error 1, bad parameters to interpret_command\n");
+    return undef;
+  }
+
+  if($command =~ /^tell\s+(.{1,20})\s+about\s+(.*?)\s+(.*)$/i) 
+  {
+    ($keyword, $arguments, $tonick) = ($2, $3, $1);
+  } elsif($command =~ /^tell\s+(.{1,20})\s+about\s+(.*)$/i) {
+    ($keyword, $tonick) = ($2, $1);
+  } elsif($command =~ /^(.*?)\s+(.*)$/) {
+    ($keyword, $arguments) = ($1, $2);
+  } else {
+    $keyword = $command;
+  }
+
+  if($keyword ne "factadd" 
+      and $keyword ne "add"
+      and $keyword ne "factfind"
+      and $keyword ne "find"
+      and $keyword ne "factshow"
+      and $keyword ne "show"
+      and $keyword ne "factset"
+      and $keyword ne "factchange"
+      and $keyword ne "change"
+      and $keyword ne "msg") {
+    $keyword =~ s/(\w+)([?!.]+)$/$1/;
+    $arguments =~ s/(\w+)([?!.]+)$/$1/;
+    $arguments =~ s/(?<![\w\/\-])me\b/$nick/gi if defined $arguments;
+  }
+
+  if(defined $arguments && $arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i) {
+    my $delay = (rand 10) + 8;
+    my $message = {
+      nick => $nick, user => $user, host => $host, command => $command, checkflood => 1,
+      message => "Why would I want to do that to myself?"
+    };
+    $self->add_message_to_output_queue($from, $message, $delay);
+    return undef;
+  }
+
+  if(not defined $keyword) {
+    $pbot->{logger}->log("Error 2, no keyword\n");
+    return undef;
+  }
+
+  return $self->SUPER::execute_all($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick);
+}
+
 sub truncate_result {
   my ($self, $from, $nick, $text, $original_result, $result, $paste) = @_;
   my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
@@ -210,8 +272,6 @@ sub handle_result {
       $line = $self->truncate_result($from, $nick, $text, $original_result, $line, 1);
     }
 
-    $self->{pbot}->{logger}->log("Final result: [$line]\n");
-
     if ($use_output_queue) {
       my $delay = (rand 10) + 5;    # initial delay for reading/processing user's message
       $delay += (length $line) / 7; # additional delay of 7 characters per second typing speed
@@ -220,8 +280,11 @@ sub handle_result {
         message => $line, checkflood => $checkflood
       };
       $self->add_message_to_output_queue($from, $message, $delay);
+      $delay = duration($delay);
+      $self->{pbot}->{logger}->log("Final result ($delay delay) [$line]\n");
     } else {
       $self->output_result($from, $nick, $user, $host, $command, $line, $checkflood);
+      $self->{pbot}->{logger}->log("Final result: [$line]\n");
     }
   }
   $self->{pbot}->{logger}->log("---------------------------------------------\n");
@@ -259,80 +322,6 @@ sub output_result {
   }
 }
 
-sub interpret {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $count, $command, $tonick) = @_;
-  my ($keyword, $arguments) = ("", "");
-  my $text;
-  my $pbot = $self->{pbot};
-
-  $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $from ? $from : "(undef)") . "][$nick!$user\@$host][$count][$command]\n");
-
-  return "Too many levels of recursion, aborted." if(++$count > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
-
-  if(not defined $nick || not defined $user || not defined $host ||
-     not defined $command) {
-    $pbot->{logger}->log("Error 1, bad parameters to interpret_command\n");
-    return undef;
-  }
-
-  if($command =~ /^tell\s+(.{1,20})\s+about\s+(.*?)\s+(.*)$/i) 
-  {
-    ($keyword, $arguments, $tonick) = ($2, $3, $1);
-  } elsif($command =~ /^tell\s+(.{1,20})\s+about\s+(.*)$/i) {
-    ($keyword, $tonick) = ($2, $1);
-  } elsif($command =~ /^(.*?)\s+(.*)$/) {
-    ($keyword, $arguments) = ($1, $2);
-  } else {
-    $keyword = $command;
-  }
-
-  if($keyword ne "factadd" 
-      and $keyword ne "add"
-      and $keyword ne "factfind"
-      and $keyword ne "find"
-      and $keyword ne "factshow"
-      and $keyword ne "show"
-      and $keyword ne "factset"
-      and $keyword ne "factchange"
-      and $keyword ne "change"
-      and $keyword ne "msg") {
-    $keyword =~ s/(\w+)([?!.]+)$/$1/;
-    $arguments =~ s/(\w+)([?!.]+)$/$1/;
-    $arguments =~ s/(?<![\w\/\-])me\b/$nick/gi if defined $arguments;
-  }
-
-  if(defined $arguments && $arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i) {
-    return "Why would I want to do that to myself?";
-  }
-
-  if(not defined $keyword) {
-    $pbot->{logger}->log("Error 2, no keyword\n");
-    return undef;
-  }
-
-  return $self->SUPER::execute_all($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick);
-}
-
-sub paste_codepad {
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $ua = LWP::UserAgent->new();
-  $ua->agent("Mozilla/5.0");
-  push @{ $ua->requests_redirectable }, 'POST';
-
-  my %post = ( 'lang' => 'Plain Text', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
-  my $response = $ua->post("http://codepad.org", \%post);
-
-  if(not $response->is_success) {
-    return $response->status_line;
-  }
-
-  return $response->request->uri;
-}
-
 sub add_message_to_output_queue {
   my ($self, $channel, $message, $delay) = @_;
 
@@ -362,6 +351,25 @@ sub process_output_queue {
       delete $self->{output_queue}->{$channel};
     }
   }
+}
+
+sub paste_codepad {
+  my $text = join(' ', @_);
+
+  $text =~ s/(.{120})\s/$1\n/g;
+
+  my $ua = LWP::UserAgent->new();
+  $ua->agent("Mozilla/5.0");
+  push @{ $ua->requests_redirectable }, 'POST';
+
+  my %post = ( 'lang' => 'Plain Text', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
+  my $response = $ua->post("http://codepad.org", \%post);
+
+  if(not $response->is_success) {
+    return $response->status_line;
+  }
+
+  return $response->request->uri;
 }
 
 sub paste_sprunge {
