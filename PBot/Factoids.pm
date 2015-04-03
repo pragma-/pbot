@@ -481,26 +481,24 @@ sub interpreter {
   $action =~ s/\$nick/$nick/g;
   $action =~ s/\$channel/$from/g;
 
-  my $adlib_recursion = 0;
-  while ($action =~ /[^\\]\$([a-zA-Z0-9_\-]+)/ and ++$adlib_recursion < 5) {
-    while ($action =~ /[^\\]\$([a-zA-Z0-9_\-]+)/g) {
-      my $v = $1;
-      next if $v =~ m/^[0-9]+$/;
-      my ($var_chan, $var) = $self->find_factoid($from, $v, undef, 0, 1);
+  while ($action =~ /(?<!\\)\$([a-zA-Z0-9_\-]+)/g) {
+    my $v = $1;
+    print "v = [$v]\n";
+    next if $v =~ m/^[0-9]+$/;
+    my ($var_chan, $var) = $self->find_factoid($from, $v, undef, 0, 1);
 
-      if(defined $var && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
-        my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
-        my @list = split(/\s|(".*?")/, $change);
-        my @mylist;
-        for(my $i = 0; $i <= $#list; $i++) {
-          push @mylist, $list[$i] if $list[$i];
-        }
-        my $line = int(rand($#mylist + 1));
-        $mylist[$line] =~ s/"//g;
-        $action =~ s/\$$var/$mylist[$line]/;
-      } else {
-        $action =~ s/\$$var/$var/g;
+    if(defined $var && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
+      my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
+      my @list = split(/\s|(".*?")/, $change);
+      my @mylist;
+      for(my $i = 0; $i <= $#list; $i++) {
+        push @mylist, $list[$i] if $list[$i];
       }
+      my $line = int(rand($#mylist + 1));
+      $mylist[$line] =~ s/"//g;
+      $action =~ s/\$$var/$mylist[$line]/;
+    } else {
+      $action =~ s/\$$var/$var/g;
     }
   }
 
