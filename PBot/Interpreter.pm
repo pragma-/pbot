@@ -128,14 +128,14 @@ sub process_line {
 
 sub interpret {
   my $self = shift;
-  my ($from, $nick, $user, $host, $count, $command, $tonick) = @_;
+  my ($from, $nick, $user, $host, $depth, $command, $tonick) = @_;
   my ($keyword, $arguments) = ("", "");
   my $text;
   my $pbot = $self->{pbot};
 
-  $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $from ? $from : "(undef)") . "][$nick!$user\@$host][$count][$command]\n");
+  $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $from ? $from : "(undef)") . "][$nick!$user\@$host][$depth][$command]\n");
 
-  return "Too many levels of recursion, aborted." if(++$count > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
+  return "Too many levels of recursion, aborted." if(++$depth > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
 
   if(not defined $nick || not defined $user || not defined $host ||
      not defined $command) {
@@ -165,7 +165,6 @@ sub interpret {
       and $keyword ne "change"
       and $keyword ne "msg") {
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
-    $arguments =~ s/(\w+)([?!.]+)$/$1/;
     $arguments =~ s/(?<![\w\/\-])me\b/$nick/gi if defined $arguments;
   }
 
@@ -184,7 +183,7 @@ sub interpret {
     return undef;
   }
 
-  return $self->SUPER::execute_all($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick);
+  return $self->SUPER::execute_all($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick);
 }
 
 sub truncate_result {
