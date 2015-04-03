@@ -479,26 +479,22 @@ sub interpreter {
   $action =~ s/\$channel/$from/g;
 
   while ($action =~ /[^\\]\$([a-zA-Z0-9_\-]+)/g) { 
-    #$self->{pbot}->{logger}->log("adlib: looking for [$1]\n");
-    #$self->{pbot}->{logger}->log("calling find_factoid in Factoids.pm, interpreter() to look for adlib");
-    my ($var_chan, $var) = $self->find_factoid($from, $1, undef, 0, 1);
+    my $v = $1;
+    next if $v =~ m/^[0-9]+$/;
+    my ($var_chan, $var) = $self->find_factoid($from, $v, undef, 0, 1);
 
     if(defined $var && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
       my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
       my @list = split(/\s|(".*?")/, $change);
       my @mylist;
-      #$self->{pbot}->{logger}->log("adlib: list [". join(':', @mylist) ."]\n");
       for(my $i = 0; $i <= $#list; $i++) {
-        #$self->{pbot}->{logger}->log("adlib: pushing $i $list[$i]\n");
         push @mylist, $list[$i] if $list[$i];
       }
       my $line = int(rand($#mylist + 1));
       $mylist[$line] =~ s/"//g;
       $action =~ s/\$$var/$mylist[$line]/;
-      #$self->{pbot}->{logger}->log("adlib: found: change: $action\n");
     } else {
       $action =~ s/\$$var/$var/g;
-      #$self->{pbot}->{logger}->log("adlib: not found: change: $action\n");
     }
   }
 
