@@ -252,6 +252,10 @@ sub find_factoid {
 
   my @result = eval {
     for (my $depth = 0; $depth < 5; $depth++) {
+      if ($self->{pbot}->{commands}->exists($keyword)) {
+        return undef;
+      }
+
       # check factoids
       foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
         if($exact_channel) {
@@ -483,7 +487,6 @@ sub interpreter {
 
   while ($action =~ /(?<!\\)\$([a-zA-Z0-9_\-]+)/g) {
     my $v = $1;
-    print "v = [$v]\n";
     next if $v =~ m/^[0-9]+$/;
     my ($var_chan, $var) = $self->find_factoid($from, $v, undef, 0, 1);
 
@@ -498,7 +501,7 @@ sub interpreter {
       $mylist[$line] =~ s/"//g;
       $action =~ s/\$$var/$mylist[$line]/;
     } else {
-      $action =~ s/\$$var/$var/g;
+      $action =~ s/(?<!\\)\$$var/$var/;
     }
   }
 

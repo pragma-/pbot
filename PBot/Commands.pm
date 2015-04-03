@@ -74,6 +74,16 @@ sub unregister_by_name {
   @{ $self->{handlers} } = grep { $_->{name} ne $name } @{ $self->{handlers} };
 }
 
+sub exists {
+  my $self = shift;
+  my ($keyword) = @_;
+
+  foreach my $ref (@{ $self->{handlers} }) {
+    return 1 if $ref->{name} eq $keyword;
+  }
+  return 0;
+}
+
 sub interpreter {
   my $self = shift;
   my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick) = @_;

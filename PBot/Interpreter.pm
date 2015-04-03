@@ -222,15 +222,17 @@ sub handle_result {
 
   if (defined $command) {
     my ($cmd, $args) = split / /, $command, 2;
-    my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $cmd, $args, 0, 0, 1);
-    if(defined $trigger) {
-      if ($preserve_whitespace == 0) {
-        $preserve_whitespace = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};
-        $preserve_whitespace = 0 if not defined $preserve_whitespace;
-      }
+    if (not $self->{pbot}->{commands}->exists($cmd)) {
+      my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $cmd, $args, 0, 0, 1);
+      if(defined $trigger) {
+        if ($preserve_whitespace == 0) {
+          $preserve_whitespace = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};
+          $preserve_whitespace = 0 if not defined $preserve_whitespace;
+        }
 
-      $use_output_queue = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{use_output_queue};
-      $use_output_queue = 0 if not defined $use_output_queue;
+        $use_output_queue = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{use_output_queue};
+        $use_output_queue = 0 if not defined $use_output_queue;
+      }
     }
   }
 
