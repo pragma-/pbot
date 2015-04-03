@@ -96,7 +96,7 @@ sub call_factoid {
     return "No such factoid '$keyword' exists for channel '$chan'";
   }
 
-  return $self->{pbot}->{factoids}->interpreter($channel, $nick, $user, $host, 1, $trigger, $args);
+  return $self->{pbot}->{factoids}->interpreter($from, $nick, $user, $host, 1, $trigger, $args);
 }
 
 sub factset {
