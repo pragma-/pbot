@@ -285,7 +285,7 @@ sub find_factoid {
             next unless $from eq lc $channel or $channel eq '.*';
           }
 
-          foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
+          foreach my $trigger (sort keys %{ $self->{factoids}->hash->{$channel} }) {
             if($self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'regex') {
               $self->{pbot}->{logger}->log("checking regex $string =~ m/$trigger/i\n") if $debug;
               if($string =~ m/$trigger/i) {
@@ -323,11 +323,12 @@ sub find_factoid {
 
 sub interpreter {
   my $self = shift;
-  my ($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick, $ref_from) = @_;
+  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $ref_from) = @_;
   my ($result, $channel);
   my $pbot = $self->{pbot};
 
-  return undef if not length $keyword or $count > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
+  $self->{pbot}->{logger}->log("enter factoid interpreter [$keyword][$arguments]\n");
+  return undef if not length $keyword or $depth > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
 
   $from = lc $from;
 
@@ -381,12 +382,12 @@ sub interpreter {
     # if there's just one other channel that has this keyword, trigger that instance
     elsif($found == 1) {
       $pbot->{logger}->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
-      return $pbot->{factoids}->interpreter($from, $nick, $user, $host, ++$count, $fwd_trig, $arguments, $tonick, $fwd_chan);
+      return $pbot->{factoids}->interpreter($from, $nick, $user, $host, ++$depth, $fwd_trig, $arguments, $tonick, $fwd_chan);
     } 
     # otherwise keyword hasn't been found, display similiar matches for all channels
     else {
       # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, don't say anything
-      return "" if length $arguments and $arguments !~ /^[^.+-, ]{1,20}$/;
+      return "" if length $arguments and not $self->{pbot}->{nicklist}->is_present($from, $arguments);
       
       my $matches = $self->{commands}->factfind($from, $nick, $user, $host, quotemeta $original_keyword);
 
@@ -423,6 +424,8 @@ sub interpreter {
   $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
 
   my $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action};
+
+  $self->{pbot}->{logger}->log("got action [$action]\n");
 
   if(length $arguments) {
     if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args}) {
@@ -478,23 +481,26 @@ sub interpreter {
   $action =~ s/\$nick/$nick/g;
   $action =~ s/\$channel/$from/g;
 
-  while ($action =~ /[^\\]\$([a-zA-Z0-9_\-]+)/g) { 
-    my $v = $1;
-    next if $v =~ m/^[0-9]+$/;
-    my ($var_chan, $var) = $self->find_factoid($from, $v, undef, 0, 1);
+  my $adlib_recursion = 0;
+  while ($action =~ /[^\\]\$([a-zA-Z0-9_\-]+)/ and ++$adlib_recursion < 5) {
+    while ($action =~ /[^\\]\$([a-zA-Z0-9_\-]+)/g) {
+      my $v = $1;
+      next if $v =~ m/^[0-9]+$/;
+      my ($var_chan, $var) = $self->find_factoid($from, $v, undef, 0, 1);
 
-    if(defined $var && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
-      my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
-      my @list = split(/\s|(".*?")/, $change);
-      my @mylist;
-      for(my $i = 0; $i <= $#list; $i++) {
-        push @mylist, $list[$i] if $list[$i];
+      if(defined $var && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
+        my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
+        my @list = split(/\s|(".*?")/, $change);
+        my @mylist;
+        for(my $i = 0; $i <= $#list; $i++) {
+          push @mylist, $list[$i] if $list[$i];
+        }
+        my $line = int(rand($#mylist + 1));
+        $mylist[$line] =~ s/"//g;
+        $action =~ s/\$$var/$mylist[$line]/;
+      } else {
+        $action =~ s/\$$var/$var/g;
       }
-      my $line = int(rand($#mylist + 1));
-      $mylist[$line] =~ s/"//g;
-      $action =~ s/\$$var/$mylist[$line]/;
-    } else {
-      $action =~ s/\$$var/$var/g;
     }
   }
 
@@ -510,7 +516,7 @@ sub interpreter {
     }
 
     $pbot->{logger}->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
-    return $pbot->{interpreter}->interpret($from, $nick, $user, $host, $count, $command, $tonick);
+    return $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $command, $tonick);
   }
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{enabled} == 0) {
@@ -574,7 +580,7 @@ sub interpreter {
         $cmd = $action;
       }
 
-      $result = $pbot->{interpreter}->interpret($from, $nick, $user, $host, $count, $cmd, $tonick);
+      $result = $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $cmd, $tonick);
       return $result;
     };
 
