@@ -76,7 +76,7 @@ sub unregister_by_name {
 
 sub interpreter {
   my $self = shift;
-  my ($from, $nick, $user, $host, $count, $keyword, $arguments, $tonick) = @_;
+  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick) = @_;
   my $result;
 
   my $pbot = $self->{pbot};
