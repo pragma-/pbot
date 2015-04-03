@@ -405,10 +405,107 @@ sub interpreter {
     }
   }
 
+  if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on}) {
+    if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in}) {
+      if($self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in} eq $from) {
+        if(gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on} < $self->{factoids}->hash->{$channel}->{$keyword}->{rate_limit}) {
+          return "/msg $nick $ref_from'$keyword' is rate-limited; try again in " . ($self->{factoids}->hash->{$channel}->{$keyword}->{rate_limit} - int(gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on})) . " seconds.";
+        }
+      }
+    }
+  }
+
   my $type = $self->{factoids}->hash->{$channel}->{$keyword}->{type};
 
+  $self->{factoids}->hash->{$channel}->{$keyword}->{ref_count}++;
+  $self->{factoids}->hash->{$channel}->{$keyword}->{ref_user} = "$nick!$user\@$host";
+  $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
+  $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
+
+  my $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action};
+
+  if(length $arguments) {
+    if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args}) {
+      $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args};
+    }
+
+    my $newargs = $arguments;
+
+    if($action =~ m/\$args/i) {
+      $newargs = "";
+    }
+
+    if(not $action =~ s/\$args/$arguments/gi and not exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args} and $type eq 'text') {
+      if($self->{pbot}->{nicklist}->is_present($from, $arguments)) {
+        if($action =~ /^\/.+? /) {
+          $action =~ s/^(\/.+?) /$1 $arguments: /;
+        } else {
+          $action =~ s/^/\/say $arguments: $keyword is / unless defined $tonick;
+        }
+      }
+    }
+
+    $arguments = $newargs;
+  } else {
+    # no arguments supplied
+    if(defined $tonick) {
+      $action =~ s/\$args/$tonick/gi;
+    } else {
+      $action =~ s/\$args/$nick/gi;
+    }
+  }
+
+  if(defined $tonick) { # !tell foo about bar
+    $self->{pbot}->{logger}->log("($from): $nick!$user\@$host) sent to $tonick\n");
+    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+
+    # get rid of original caller's nick
+    $action =~ s/^\/([^ ]+) \Q$nick\E:\s+/\/$1 /;
+    $action =~ s/^\Q$nick\E:\s+//;
+
+    if($action =~ s/^\/say\s+//i || $action =~ s/^\/me\s+/* $botnick /i
+      || $action =~ /^\/msg\s+/i) {
+      $action = "/say $tonick: $action";
+    } else {
+      $action = "/say $tonick: $keyword is $action";
+    }
+
+    $self->{pbot}->{logger}->log("result set to [$action]\n");
+  }
+
+  $self->{pbot}->{logger}->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: $keyword: Displaying text \"$action\"\n");
+
+  $action =~ s/\$nick/$nick/g;
+  $action =~ s/\$channel/$from/g;
+
+  while ($action =~ /[^\\]\$([a-zA-Z0-9_\-]+)/g) { 
+    #$self->{pbot}->{logger}->log("adlib: looking for [$1]\n");
+    #$self->{pbot}->{logger}->log("calling find_factoid in Factoids.pm, interpreter() to look for adlib");
+    my ($var_chan, $var) = $self->find_factoid($from, $1, undef, 0, 1);
+
+    if(defined $var && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
+      my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
+      my @list = split(/\s|(".*?")/, $change);
+      my @mylist;
+      #$self->{pbot}->{logger}->log("adlib: list [". join(':', @mylist) ."]\n");
+      for(my $i = 0; $i <= $#list; $i++) {
+        #$self->{pbot}->{logger}->log("adlib: pushing $i $list[$i]\n");
+        push @mylist, $list[$i] if $list[$i];
+      }
+      my $line = int(rand($#mylist + 1));
+      $mylist[$line] =~ s/"//g;
+      $action =~ s/\$$var/$mylist[$line]/;
+      #$self->{pbot}->{logger}->log("adlib: found: change: $action\n");
+    } else {
+      $action =~ s/\$$var/$var/g;
+      #$self->{pbot}->{logger}->log("adlib: not found: change: $action\n");
+    }
+  }
+
+  $action =~ s/\\\$/\$/g;
+
   # Check if it's an alias
-  if($self->{factoids}->hash->{$channel}->{$keyword}->{action} =~ /^\/call\s+(.*)$/) {
+  if($action =~ /^\/call\s+(.*)$/) {
     my $command;
     if(length $arguments) {
       $command = "$1 $arguments";
@@ -417,39 +514,16 @@ sub interpreter {
     }
 
     $pbot->{logger}->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
-
-    $self->{factoids}->hash->{$channel}->{$keyword}->{ref_count}++;
-    $self->{factoids}->hash->{$channel}->{$keyword}->{ref_user} = "$nick!$user\@$host";
-    $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
-
     return $pbot->{interpreter}->interpret($from, $nick, $user, $host, $count, $command, $tonick);
-  }
-
-  my $last_ref_in = 0;
-
-  if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on}) {
-    if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in}) {
-      if($self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in} eq $from) {
-        $last_ref_in = 1;
-      }
-    }
-
-    if(($last_ref_in == 1) and (gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on} < $self->{factoids}->hash->{$channel}->{$keyword}->{rate_limit})) {
-      return "/msg $nick $ref_from'$keyword' is rate-limited; try again in " . ($self->{factoids}->hash->{$channel}->{$keyword}->{rate_limit} - int(gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on})) . " seconds.";
-    }
   }
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{enabled} == 0) {
     $self->{pbot}->{logger}->log("$keyword disabled.\n");
     return "/msg $nick $ref_from$keyword is currently disabled.";
-  } 
-  elsif($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'module') {
-    $self->{pbot}->{logger}->log("Found module\n");
+  }
 
-    $self->{factoids}->hash->{$channel}->{$keyword}->{ref_count}++;
-    $self->{factoids}->hash->{$channel}->{$keyword}->{ref_user} = "$nick!$user\@$host";
-    $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
-    $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
+  if($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'module') {
+    $self->{pbot}->{logger}->log("Found module\n");
 
     my $preserve_whitespace = $self->{factoids}->hash->{$channel}->{$keyword}->{preserve_whitespace};
     $preserve_whitespace = 0 if not defined $preserve_whitespace;
@@ -460,107 +534,23 @@ sub interpreter {
     $self->{pbot}->{logger}->log("Found factoid\n");
 
     # Don't allow user-custom /msg factoids, unless factoid triggered by admin
-    if(($self->{factoids}->hash->{$channel}->{$keyword}->{action} =~ m/^\/msg/i) and (not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host"))) {
-      $self->{pbot}->{logger}->log("[ABUSE] Bad factoid (contains /msg): " . $self->{factoids}->hash->{$channel}->{$keyword}->{action} . "\n");
+    if(($action =~ m/^\/msg/i) and (not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host"))) {
+      $self->{pbot}->{logger}->log("[ABUSE] Bad factoid (contains /msg): $action\n");
       return "You must login to use this command."
     }
 
-    $self->{factoids}->hash->{$channel}->{$keyword}->{ref_count}++;
-    $self->{factoids}->hash->{$channel}->{$keyword}->{ref_user} = "$nick!$user\@$host";
-    $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
-    $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
-
-    $result = $self->{factoids}->hash->{$channel}->{$keyword}->{action};
-
-    if(length $arguments) {
-      if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args}) {
-        $result = $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args};
-      }
-      
-      if(not $result =~ s/\$args/$arguments/gi and not exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args}) {
-        # factoid doesn't take an argument, so assume argument is a nick if it is a single-word 20 characters or less 
-        # TODO - maintain list of channel nicks and compare against this list to ensure nick exists
-        if($arguments =~ /^[^.+-, ]{1,20}$/) {
-          # might be a nick
-          if($result =~ /^\/.+? /) {
-            $result =~ s/^(\/.+?) /$1 $arguments: /;
-          } else {
-            $result =~ s/^/\/say $arguments: $keyword is / unless defined $tonick;
-          }                  
-        } else {
-          # return "";
-        }
-      }
-    } else {
-      # no arguments supplied
-      if(defined $tonick) {
-        $result =~ s/\$args/$tonick/gi;
-      } else {
-        $result =~ s/\$args/$nick/gi;
-      }
-    }
-
-    if(defined $tonick) { # !tell foo about bar
-      $self->{pbot}->{logger}->log("($from): $nick!$user\@$host) sent to $tonick\n");
-      my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-
-      # get rid of original caller's nick
-      $result =~ s/^\/([^ ]+) \Q$nick\E:\s+/\/$1 /;
-      $result =~ s/^\Q$nick\E:\s+//;
-
-      if($result =~ s/^\/say\s+//i || $result =~ s/^\/me\s+/* $botnick /i
-        || $result =~ /^\/msg\s+/i) {
-        $result = "/say $tonick: $result";
-      } else {
-        $result = "/say $tonick: $keyword is $result";
-      }
-
-      $self->{pbot}->{logger}->log("result set to [$result]\n");
-    }
-
-    $self->{pbot}->{logger}->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: $keyword: Displaying text \"" . $result . "\"\n");
-
-    $result =~ s/\$nick/$nick/g;
-    $result =~ s/\$channel/$from/g;
-
-    while ($result =~ /[^\\]\$([a-zA-Z0-9_\-]+)/g) { 
-      #$self->{pbot}->{logger}->log("adlib: looking for [$1]\n");
-      #$self->{pbot}->{logger}->log("calling find_factoid in Factoids.pm, interpreter() to look for adlib");
-      my ($var_chan, $var) = $self->find_factoid($from, $1, undef, 0, 1);
-
-      if(defined $var && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
-        my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
-        my @list = split(/\s|(".*?")/, $change);
-        my @mylist;
-        #$self->{pbot}->{logger}->log("adlib: list [". join(':', @mylist) ."]\n");
-        for(my $i = 0; $i <= $#list; $i++) {
-          #$self->{pbot}->{logger}->log("adlib: pushing $i $list[$i]\n");
-          push @mylist, $list[$i] if $list[$i];
-        }
-        my $line = int(rand($#mylist + 1));
-        $mylist[$line] =~ s/"//g;
-        $result =~ s/\$$var/$mylist[$line]/;
-        #$self->{pbot}->{logger}->log("adlib: found: change: $result\n");
-      } else {
-        $result =~ s/\$$var/$var/g;
-        #$self->{pbot}->{logger}->log("adlib: not found: change: $result\n");
-      }
-    }
-
-    $result =~ s/\\\$/\$/g;
-
     if($ref_from) {
-      if($result =~ s/^\/say\s+/$ref_from/i || $result =~ s/^\/me\s+(.*)/\/me $1 $ref_from/i
-        || $result =~ s/^\/msg\s+([^ ]+)/\/msg $1 $ref_from/i) {
-        return $result;
+      if($action =~ s/^\/say\s+/$ref_from/i || $action =~ s/^\/me\s+(.*)/\/me $1 $ref_from/i
+        || $action =~ s/^\/msg\s+([^ ]+)/\/msg $1 $ref_from/i) {
+        return $action;
       } else {
-        return $ref_from . "$keyword is $result";
+        return $ref_from . "$keyword is $action";
       }
     } else {
-      if($result =~ m/^\/say/i || $result =~ m/^\/me/i || $result =~ m/^\/msg/i) {
-        return $result;
+      if($action =~ m/^\/say/i || $action =~ m/^\/me/i || $action =~ m/^\/msg/i) {
+        return $action;
       } else {
-        return "$keyword is $result";
+        return "$keyword is $action";
       }
     }
   } elsif($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'regex') {
@@ -568,8 +558,8 @@ sub interpreter {
       my $string = "$original_keyword" . (defined $arguments ? " $arguments" : "");
       my $cmd;
       if($string =~ m/$keyword/i) {
-        $self->{pbot}->{logger}->log("[$string] matches [$keyword] - calling [" . $self->{factoids}->hash->{$channel}->{$keyword}->{action} . "$']\n");
-        $cmd = $self->{factoids}->hash->{$channel}->{$keyword}->{action} . $';
+        $self->{pbot}->{logger}->log("[$string] matches [$keyword] - calling [" . $action . "$']\n");
+        $cmd = $action . $';
         my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
         $cmd =~ s/\$1/$a/g;
         $cmd =~ s/\$2/$b/g;
@@ -585,7 +575,7 @@ sub interpreter {
         $cmd =~ s/^\s+//;
         $cmd =~ s/\s+$//;
       } else {
-        $cmd = $self->{factoids}->hash->{$channel}->{$keyword}->{action}; 
+        $cmd = $action;
       }
 
       $result = $pbot->{interpreter}->interpret($from, $nick, $user, $host, $count, $cmd, $tonick);
@@ -602,10 +592,6 @@ sub interpreter {
     $self->{pbot}->{logger}->log("($from): $nick!$user\@$host): Unknown command type for '$keyword'\n"); 
     return "/me blinks." . " $ref_from";
   }
-
-  # should never be reached; if it has, something has gone horribly wrong.
-  # (advanced notification of corruption or a waste of space?)
-  return "/me wrinkles her nose." . " $ref_from";
 }
 
 sub export_path {
