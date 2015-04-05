@@ -85,7 +85,8 @@ sub pretty_format {
   print $fh $code;
   close $fh;
 
-  system("astyle", "-UHfenq", $self->{sourcefile});
+  system("indent", "-kr", $self->{sourcefile});
+  system("astyle", "-A3 -UHpnfq", $self->{sourcefile});
 
   open $fh, "<$self->{sourcefile}" or die "Couldn't read $self->{sourcefile}: $!";
   $result = join '', <$fh>;
@@ -104,71 +105,12 @@ sub preprocess_code {
 
   print "code before: [$self->{code}]\n" if $self->{debug};
 
-  # replace \n outside of quotes with literal newline
-  my $new_code = "";
-
-  use constant {
-    NORMAL        => 0,
-    DOUBLE_QUOTED => 1,
-    SINGLE_QUOTED => 2,
-  };
-
-  my $state = NORMAL;
-  my $escaped = 0;
-
-  while($self->{code} =~ m/(.)/gs) {
-    my $ch = $1;
-
-    given ($ch) {
-      when ('\\') {
-        if($escaped == 0) {
-          $escaped = 1;
-          next;
-        }
-      }
-
-      if($state == NORMAL) {
-        when ($_ eq '"' and not $escaped) {
-          $state = DOUBLE_QUOTED;
-        }
-
-        when ($_ eq "'" and not $escaped) {
-          $state = SINGLE_QUOTED;
-        }
-
-        when ($_ eq 'n' and $escaped == 1) {
-          $ch = "\n";
-          $escaped = 0;
-        }
-      }
-
-      if($state == DOUBLE_QUOTED) {
-        when ($_ eq '"' and not $escaped) {
-          $state = NORMAL;
-        }
-      }
-
-      if($state == SINGLE_QUOTED) {
-        when ($_ eq "'" and not $escaped) {
-          $state = NORMAL;
-        }
-      }
-    }
-
-    $new_code .= '\\' and $escaped = 0 if $escaped;
-    $new_code .= $ch;
-  }
-
-  $self->{code} = $new_code;
-
-  print "code after \\n replacement: [$self->{code}]\n" if $self->{debug};
-
   # add newlines to ends of statements and #includes
   my $single_quote = 0;
   my $double_quote = 0;
   my $parens = 0;
   my $cpp = 0; # preprocessor
-  $escaped = 0;
+  my $escaped = 0;
 
   while($self->{code} =~ m/(.)/msg) {
     my $ch = $1;
@@ -294,7 +236,7 @@ sub preprocess_code {
 
   print "looking for functions, has main: $has_main\n" if $self->{debug} >= 2;
 
-  my $func_regex = qr/^([ *\w]+)\s+([ ()*\w]+)\s*\(([^;{]*)\s*\)\s*({.*|<%.*|\?\?<.*)/ims;
+  my $func_regex = qr/^([ *\w]+)\s+([ ()*\w:]+)\s*\(([^;{]*)\s*\)\s*({.*|<%.*|\?\?<.*)/ims;
 
   # look for potential functions to extract
   while($preprecode =~ /$func_regex/ms) {
@@ -470,13 +412,18 @@ sub postprocess_output {
   $output =~ s/cc1: all warnings being treated as; errors//g;
   $output =~ s/, note: this is the location of the previous definition//g;
   $output =~ s/ called by gdb \(\) at statement: void gdb\(\) { __asm__\(""\); }//g;
+  $output =~ s/called by \?\? \(\) //g;
+  $output =~ s/\s0x[a-z0-9]+: note: pointer points here.*?\^//gms;
 
   my $removed_warning = 0;
 
-  $removed_warning++ if $output =~ s/warning: ISO C forbids nested functions \[-pedantic\]\s*//g;
+  $removed_warning++ if $output =~ s/\s*warning: ISO C forbids nested functions \[-pedantic\]\s*/ /g;
+  $removed_warning++ if $output =~ s/\s*warning: too many arguments in call to 'gdb'\s+note: expanded from macro '.*?'\s*/ /msg;
 
   if($removed_warning) {
-    $output =~ s/^\[\]\s*//;
+    $output =~ s/^\[\s*\]\s//;
+    $output =~ s/^\[\s+/[/m;
+    $output =~ s/\s+\]$/]/m;
   }
 
   $output =~ s/^\[\s+(warning:|info:)/[$1/;  # remove leading spaces in first warning/info
