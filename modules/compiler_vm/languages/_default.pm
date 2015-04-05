@@ -31,10 +31,10 @@ sub new {
   $self->{cmdline}         = 'echo Hello, world!';
 
   # remove leading and trailing whitespace
-  $self->{nick}    =~ s/^\s+|\s+$//g;
-  $self->{channel} =~ s/^\s+|\s+$//g;
-  $self->{lang}    =~ s/^\s+|\s+$//g;
-  $self->{code}    =~ s/^\s+|\s+$//g;
+  $self->{nick}    =~ s/^\s+|\s+$//g if defined $self->{nick};
+  $self->{channel} =~ s/^\s+|\s+$//g if defined $self->{channel};
+  $self->{lang}    =~ s/^\s+|\s+$//g if defined $self->{lang};
+  $self->{code}    =~ s/^\s+|\s+$//g if defined $self->{code};
 
   $self->initialize(%conf);
 
@@ -64,6 +64,63 @@ sub preprocess_code {
     print FILE "$self->{nick} $self->{channel}: " . $self->{cmdline_options} . "$self->{code}\n";
     close FILE;
   }
+
+  # replace \n outside of quotes with literal newline
+  my $new_code = "";
+
+  use constant {
+    NORMAL        => 0,
+    DOUBLE_QUOTED => 1,
+    SINGLE_QUOTED => 2,
+  };
+
+  my $state = NORMAL;
+  my $escaped = 0;
+
+  while($self->{code} =~ m/(.)/gs) {
+    my $ch = $1;
+
+    given ($ch) {
+      when ('\\') {
+        if($escaped == 0) {
+          $escaped = 1;
+          next;
+        }
+      }
+
+      if($state == NORMAL) {
+        when ($_ eq '"' and not $escaped) {
+          $state = DOUBLE_QUOTED;
+        }
+
+        when ($_ eq "'" and not $escaped) {
+          $state = SINGLE_QUOTED;
+        }
+
+        when ($_ eq 'n' and $escaped == 1) {
+          $ch = "\n";
+          $escaped = 0;
+        }
+      }
+
+      if($state == DOUBLE_QUOTED) {
+        when ($_ eq '"' and not $escaped) {
+          $state = NORMAL;
+        }
+      }
+
+      if($state == SINGLE_QUOTED) {
+        when ($_ eq "'" and not $escaped) {
+          $state = NORMAL;
+        }
+      }
+    }
+
+    $new_code .= '\\' and $escaped = 0 if $escaped;
+    $new_code .= $ch;
+  }
+
+  $self->{code} = $new_code;
 }
 
 sub postprocess_output {
@@ -589,6 +646,7 @@ sub process_interactive_edit {
           $from =~ s/^'//;
           $from =~ s/'$//;
           $from = quotemeta $from;
+          $from =~ s/\\ / /g;
           $subcode = $r;
           $subcode =~ s/\s*with\s*//i;
         } else {
@@ -775,13 +833,13 @@ sub process_interactive_edit {
           $last_char = $1 if $from =~ m/(.)$/;
 
           if($first_char =~ /\W/) {
-            $first_bound = '.';
+            $first_bound = '.?';
           } else {
             $first_bound = '\b';
           }
 
           if($last_char =~ /\W/) {
-            $last_bound = '\B';
+            $last_bound = '.?';
           } else {
             $last_bound = '\b';
           }
