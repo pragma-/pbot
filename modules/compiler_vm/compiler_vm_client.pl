@@ -12,14 +12,32 @@ eval {
   use lib 'languages';
   require "$language.pm";
 } or do {
-  print "Language '$language' is not supported.\n";
+  my @modules = glob 'languages/*.pm';
+  my $found = 0;
+  my ($languages, $comma) = ('', '');
 
-  my @languages = glob 'languages/*.pm';
-  print "Supported languages are: ";
-  print join(", ", grep { $_ = basename $_; $_ =~ s/.pm$//; $_ !~ m/^_/ } sort @languages);
-  print "\n";
+  foreach my $module (sort @modules) {
+    $module = basename $module;
+    $module =~ s/.pm$//;
+    next if $module =~ m/^_/;
+    require "$module.pm";
+    my $mod = $module->new;
 
-  exit;
+    if (exists $mod->{name} and $mod->{name} eq $language) {
+      $language = $module;
+      $found = 1;
+      last;
+    }
+
+    $module = $mod->{name} if exists $mod->{name};
+    $languages .= "$comma$module";
+    $comma = ', ';
+  }
+
+  if (not $found) {
+    print "Language '$language' is not supported.\nSupported languages are: $languages\n";
+    exit;
+  }
 };
 
 my $nick    = shift @ARGV // (print "Missing nick argument.\n" and die);
