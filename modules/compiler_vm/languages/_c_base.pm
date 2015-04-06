@@ -85,7 +85,6 @@ sub pretty_format {
   print $fh $code;
   close $fh;
 
-  system("indent", "-kr", $self->{sourcefile});
   system("astyle", "-A3 -UHpnfq", $self->{sourcefile});
 
   open $fh, "<$self->{sourcefile}" or die "Couldn't read $self->{sourcefile}: $!";
