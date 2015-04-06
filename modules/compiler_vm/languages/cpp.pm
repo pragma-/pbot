@@ -12,7 +12,7 @@ sub initialize {
   $self->{name}            = 'c++';
   $self->{sourcefile}      = 'prog.cpp';
   $self->{execfile}        = 'prog';
-  $self->{default_options} = '-std=c++11 -Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -lm -Wfatal-errors';
+  $self->{default_options} = '-std=c++14 -Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -lm -Wfatal-errors -fsanitize=bounds -fsanitize=alignment -fsanitize=undefined';
   $self->{options_paste}   = '-fdiagnostics-show-caret';
   $self->{options_nopaste} = '-fno-diagnostics-show-caret';
   $self->{cmdline}         = 'g++ -ggdb -g3 $sourcefile $options -o $execfile';
@@ -34,6 +34,8 @@ sub initialize {
 #include <functional>
 #include <tuple>
 #include <prelude.h>
+
+using namespace std;
 
 END
 }
