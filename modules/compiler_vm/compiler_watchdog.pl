@@ -6,6 +6,9 @@ use strict;
 use IPC::Open2;
 
 my $stdin_input = (join ' ', @ARGV) || "Lorem ipsum dolor sit amet.\n";
+$stdin_input =~ s/\\n/\n/g;
+$stdin_input =~ s/\\r/\r/g;
+$stdin_input =~ s/\\t/\t/g;
 open my $fh, '>', '.input' or die "Couldn't open .input: $!";
 print $fh $stdin_input;
 close $fh;
@@ -40,6 +43,7 @@ sub execute {
 
         next if not length $line;
         <$out> and next if $line =~ m/^\(gdb\) No line \d+ in/;
+        next if $line =~ m/^\(gdb\) No symbol table/;
         next if $line =~ m/^\[New Thread/;
         next if $line =~ m/^\(gdb\) Continuing/;
         next if $line =~ m/^\(gdb\) \$\d+ = "Ok\."/;
@@ -49,6 +53,8 @@ sub execute {
         next if $line =~ m/^(\(gdb\) )*Starting program/;
         next if $line =~ m/PRETTY_FUNCTION__ =/;
         next if $line =~ m/libc_start_main/;
+        next if $line =~ m/Thread debugging using libthread_db enabled/;
+        next if $line =~ m/Using host libthread_db library/;
 
         if($line =~ m/^\d+: (.*? = .*)/) {
             print "$opening$1$closing";
@@ -143,6 +149,12 @@ sub execute {
             $line = <$out>;
             print "ignored $line\n" if $debug >= 2;
             next;
+        }
+
+        if($line =~ m/^Breakpoint \d+, _(.*?) at/) {
+           <$out>;
+           gdb $in, "cont\n";
+           next;
         }
 
         if($line =~ m/^Breakpoint \d+, (.*?) at/) {
