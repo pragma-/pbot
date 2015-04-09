@@ -312,6 +312,10 @@ sub preprocess_code {
   $precode =~ s/^{(.*)}$/$1/s;
 
   if(not $has_main and not exists $self->{options}->{'-nomain'}) {
+    if ($precode =~ s/^(};?)//) {
+      $self->{code} .= $1;
+    }
+
     $self->{code} = "$prelude\n$self->{code}\n" . "int main(void) {\n$precode\n;\nreturn 0;\n}\n";
   } else {
     $self->{code} = "$prelude\n$self->{code}\n";
