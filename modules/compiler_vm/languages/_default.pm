@@ -390,7 +390,8 @@ sub process_standard_options {
     }
     $cmdline =~ s/\$sourcefile/$self->{sourcefile}/g;
     $cmdline =~ s/\$execfile/$self->{execfile}/g;
-    print "$self->{nick}: $self->{lang} cmdline: $cmdline\n";
+    my $name = exists $self->{name} ? $self->{name} : $self->{lang};
+    print "$self->{nick}: $name cmdline: $cmdline\n";
     exit;
   }
 
