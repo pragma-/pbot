@@ -90,13 +90,13 @@ sub call_factoid {
     return "Usage: fact <channel> <keyword> [arguments]";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $keyword, $args, 1);
+  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $keyword, $args, 1, 1);
 
   if(not defined $trigger) {
     return "No such factoid '$keyword' exists for channel '$chan'";
   }
 
-  return $self->{pbot}->{factoids}->interpreter($from, $nick, $user, $host, 1, $trigger, $args);
+  return $self->{pbot}->{factoids}->interpreter($from, $nick, $user, $host, 1, $trigger, $args, undef, $channel);
 }
 
 sub factset {
@@ -133,7 +133,7 @@ sub factset {
 
   $channel = '.*' if $channel !~ /^#/;
 
-  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1);
+  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1, 1);
 
   if(defined $owner_channel) {
     my $factoid = $self->{pbot}->{factoids}->{factoids}->hash->{$owner_channel}->{$owner_trigger};
@@ -180,7 +180,7 @@ sub factunset {
 
   $channel = '.*' if $channel !~ /^#/;
 
-  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1);
+  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1, 1);
 
   if(defined $owner_channel) {
     my $factoid = $self->{pbot}->{factoids}->{factoids}->hash->{$owner_channel}->{$owner_trigger};
@@ -397,7 +397,7 @@ sub factalias {
 
   $chan = '.*' if $chan !~ /^#/;
 
-  my ($channel, $alias_trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $alias, undef, 1);
+  my ($channel, $alias_trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $alias, undef, 1, 1);
   
   if(defined $alias_trigger) {
     $self->{pbot}->{logger}->log("attempt to overwrite existing command\n");
@@ -433,7 +433,7 @@ sub add_regex {
     return "Usage: regex <regex> <command>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $keyword, undef, 1);
+  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $keyword, undef, 1, 1);
 
   if(defined $trigger) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to overwrite $trigger\n");
@@ -837,7 +837,7 @@ sub factchange {
     return "Usage: factchange <channel> <keyword> s/<pattern>/<replacement>/";
   }
 
-  ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $keyword, undef, 0, 1);
+  ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $keyword, undef, 1, 1);
 
   if(not defined $trigger) {
     return "$keyword not found in channel $from.";

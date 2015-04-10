@@ -259,7 +259,11 @@ sub find_factoid {
       # check factoids
       foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
         if($exact_channel) {
-          next unless $from eq lc $channel or $channel eq '.*';
+          if($exact_trigger) {
+            next unless $from eq lc $channel;
+          } else {
+            next unless $from eq lc $channel or $channel eq '.*';
+          }
         }
 
         foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
@@ -331,7 +335,7 @@ sub interpreter {
   my ($result, $channel);
   my $pbot = $self->{pbot};
 
-  $self->{pbot}->{logger}->log("enter factoid interpreter [$keyword][$arguments]\n");
+  $self->{pbot}->{logger}->log("enter factoid interpreter [$keyword][" . (defined $arguments ? $arguments : '') . "]\n");
   return undef if not length $keyword or $depth > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
 
   $from = lc $from;
@@ -443,7 +447,7 @@ sub interpreter {
     }
 
     if(not $action =~ s/\$args/$arguments/gi and not exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args} and $type eq 'text') {
-      if($self->{pbot}->{nicklist}->is_present($from, $arguments)) {
+      if(not $action =~ m/^\/call/ and $self->{pbot}->{nicklist}->is_present($from, $arguments)) {
         if($action =~ /^\/.+? /) {
           $action =~ s/^(\/.+?) /$1 $arguments: /;
         } else {
