@@ -9,6 +9,9 @@ use warnings;
 use strict;
 
 use Carp ();
+use Time::HiRes qw/gettimeofday/;
+use Time::Duration;
+use Time::ParseDate;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -40,30 +43,46 @@ sub initialize {
 sub ban_user {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($target, $length) = split(/\s+/, $arguments);
+  my ($target, $channel, $length) = split(/\s+/, $arguments, 3);
 
-   if(not defined $from) {
+  if(not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 
- if(not $from =~ /^#/) { #not a channel
-    return "/msg $nick This command must be used in the channel.";
-  }
+  $channel = $from if not defined $channel;
 
   if(not defined $target) {
-    return "/msg $nick Usage: ban <mask> [timeout seconds (default: 3600 or 1 hour)]"; 
+    return "/msg $nick Usage: ban <mask> [channel [timeout (default: 24 hours)]]"; 
   }
 
   if(not defined $length) {
-    $length = 60 * 60; # one hour
+    $length = 60 * 60 * 24; # 24 hours
+  } else {
+    my $now = gettimeofday;
+    my @inputs = split /(?:,?\s+and\s+|\s*,\s*)/, $length;
+
+    my $seconds = 0;
+    foreach my $input (@inputs) {
+      $input .= ' seconds' if $input =~ m/^\d+$/;
+      my $parse = parsedate($input, NOW => $now);
+
+      if (not defined $parse) {
+        return "I don't know what '$input' means.\n";
+      } else {
+        $seconds += $parse - $now;
+      }
+    }
+
+    $length = $seconds;
   }
 
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   return "" if $target =~ /\Q$botnick\E/i;
 
-  $self->{pbot}->{chanops}->ban_user_timed($target, $from, $length);    
-  return "/msg $nick $target banned in $from for $length seconds";
+  $self->{pbot}->{chanops}->ban_user_timed($target, $channel, $length);
+  $length = duration($length);
+  return "/msg $nick $target banned in $channel for $length";
 }
 
 sub unban_user {
@@ -83,7 +102,7 @@ sub unban_user {
 
   $channel = $from if not defined $channel;
   
-  return "/msg $nick Usage for /msg: !unban $target <channel>" if $channel !~ /^#/;
+  return "/msg $nick Usage for /msg: unban $target <channel>" if $channel !~ /^#/;
 
   $self->{pbot}->{chanops}->unban_user($target, $channel);
   return "/msg $nick $target has been unbanned from $channel.";

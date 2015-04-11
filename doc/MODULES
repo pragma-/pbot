@@ -20,6 +20,7 @@ Text::Balanced
 Text::Levenshtein
 Text::WordDiff
 Time::Duration
+Time::ParseDate
 re::engine::RE2
 URI::Escape
 WWW::Wikipedia
