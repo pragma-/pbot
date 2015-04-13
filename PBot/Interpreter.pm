@@ -274,7 +274,7 @@ sub handle_result {
     }
 
     if ($use_output_queue) {
-      my $delay = (rand 10) + 5;    # initial delay for reading/processing user's message
+      my $delay = (rand 5) + 5;     # initial delay for reading/processing user's message
       $delay += (length $line) / 7; # additional delay of 7 characters per second typing speed
       my $message = {
         nick => $nick, user => $user, host => $host, command => $command,
