@@ -9,9 +9,9 @@ use warnings;
 use strict;
 
 use Carp ();
-use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
-use Time::ParseDate;
+
+use PBot::Utils::ParseDate;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -59,22 +59,9 @@ sub ban_user {
   if(not defined $length) {
     $length = 60 * 60 * 24; # 24 hours
   } else {
-    my $now = gettimeofday;
-    my @inputs = split /(?:,?\s+and\s+|\s*,\s*)/, $length;
-
-    my $seconds = 0;
-    foreach my $input (@inputs) {
-      $input .= ' seconds' if $input =~ m/^\d+$/;
-      my $parse = parsedate($input, NOW => $now);
-
-      if (not defined $parse) {
-        return "I don't know what '$input' means.\n";
-      } else {
-        $seconds += $parse - $now;
-      }
-    }
-
-    $length = $seconds;
+    my $error;
+    ($length, $error) = parsedate($length);
+    return $error if defined $error;
   }
 
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');

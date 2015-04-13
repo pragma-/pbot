@@ -12,6 +12,8 @@ use Time::HiRes qw(gettimeofday);
 use Time::Duration;
 use Carp ();
 
+use PBot::Utils::ParseDate;
+
 sub new {
   if(ref($_[1]) eq 'HASH') {
     Carp::croak("Options to IgnoreListCommands should be key/value pairs, not hash reference");
@@ -44,7 +46,7 @@ sub ignore_user {
 
   return "/msg $nick Usage: ignore nick!user\@host [channel] [timeout]" if not defined $arguments;
 
-  my ($target, $channel, $length) = split /\s+/, $arguments;
+  my ($target, $channel, $length) = split /\s+/, $arguments, 3;
 
   if(not defined $target) {
      return "/msg $nick Usage: ignore host [channel] [timeout]";
@@ -69,6 +71,10 @@ sub ignore_user {
   
   if(not defined $length) {
     $length = -1; # permanently
+  } else {
+    my $error;
+    ($length, $error) = parsedate($length);
+    return $error if defined $error;
   }
 
   $self->{pbot}->{ignorelist}->add($target, $channel, $length);
