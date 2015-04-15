@@ -466,6 +466,19 @@ sub interpreter {
     }
   }
 
+  # Check if it's an alias
+  if($action =~ /^\/call\s+(.*)$/) {
+    my $command;
+    if(length $arguments) {
+      $command = "$1 $arguments";
+    } else {
+      $command = $1;
+    }
+
+    $pbot->{logger}->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
+    return $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $command, $tonick);
+  }
+
   if(defined $tonick) { # !tell foo about bar
     $self->{pbot}->{logger}->log("($from): $nick!$user\@$host) sent to $tonick\n");
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
@@ -510,19 +523,6 @@ sub interpreter {
   }
 
   $action =~ s/\\\$/\$/g;
-
-  # Check if it's an alias
-  if($action =~ /^\/call\s+(.*)$/) {
-    my $command;
-    if(length $arguments) {
-      $command = "$1 $arguments";
-    } else {
-      $command = $1;
-    }
-
-    $pbot->{logger}->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
-    return $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $command, $tonick);
-  }
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{enabled} == 0) {
     $self->{pbot}->{logger}->log("$keyword disabled.\n");
