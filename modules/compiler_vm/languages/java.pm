@@ -256,29 +256,4 @@ sub preprocess_code {
   print "final code: [$self->{code}]\n" if $self->{debug};
 }
 
-sub postprocess_output {
-  my $self = shift;
-  $self->SUPER::postprocess_output;
-
-  my $output = $self->{output};
-
-  # backspace
-  my $boutput = "";
-  my $active_position = 0;
-  $output =~ s/\n$//;
-  while($output =~ /(.)/gms) {
-    my $c = $1;
-    if($c eq "\b") {
-      if(--$active_position <= 0) {
-        $active_position = 0;
-      }
-      next;
-    }
-    substr($boutput, $active_position++, 1) = $c;
-  }
-  $output = $boutput;
-
-  $self->{output} = $output;
-}
-
 1;

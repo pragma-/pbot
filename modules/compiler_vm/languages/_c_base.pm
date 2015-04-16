@@ -202,7 +202,7 @@ sub preprocess_code {
   my $has_main = 0;
 
   my $prelude = '';
-  while($precode =~ s/^\s*(#.*\n{1,2})//g) {
+  while($precode =~ s/^\s*(#.*\n{1,2}|using.*\n{1,2})//g) {
     $prelude .= $1;
   }
 
@@ -417,6 +417,8 @@ sub postprocess_output {
   $output =~ s/ called by gdb \(\) at statement: void gdb\(\) { __asm__\(""\); }//g;
   $output =~ s/called by \?\? \(\) //g;
   $output =~ s/\s0x[a-z0-9]+: note: pointer points here.*?\^//gms;
+  $output =~ s/\s0x[a-z0-9]+: note: pointer points here\s+<memory cannot be printed>//gms;
+  $output =~ s/store to address 0x[a-z0-9]+ with insufficient space/store to location with insufficient space/gms;
 
   my $removed_warning = 0;
 
@@ -430,22 +432,6 @@ sub postprocess_output {
   }
 
   $output =~ s/^\[\s+(warning:|info:)/[$1/;  # remove leading spaces in first warning/info
-
-  # backspace
-  my $boutput = "";
-  my $active_position = 0;
-  $output =~ s/\n$//;
-  while($output =~ /(.)/gms) {
-    my $c = $1;
-    if($c eq "\b") {
-      if(--$active_position <= 0) {
-        $active_position = 0;
-      }
-      next;
-    }
-    substr($boutput, $active_position++, 1) = $c;
-  }
-  $output = $boutput;
 
   if($self->{warn_unterminated_define} == 1) {
     if($output =~ m/^\[(warning:|info:)/) {

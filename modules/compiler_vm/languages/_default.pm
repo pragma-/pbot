@@ -133,6 +133,22 @@ sub postprocess_output {
     print FILE "$self->{output}\n";
     close FILE;
   }
+
+  # backspace
+  my $boutput = "";
+  my $active_position = 0;
+  $self->{output} =~ s/\n$//;
+  while($self->{output} =~ /(.)/gms) {
+    my $c = $1;
+    if($c eq "\b") {
+      if(--$active_position <= 0) {
+        $active_position = 0;
+      }
+      next;
+    }
+    substr($boutput, $active_position++, 1) = $c;
+  }
+  $self->{output} = $boutput;
 }
 
 sub show_output {
