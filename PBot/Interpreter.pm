@@ -54,7 +54,7 @@ sub process_line {
   my $has_url;
   my $has_code;
   my $nick_override;
-  my $mynick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+  my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
   $from = lc $from if defined $from;
 
@@ -82,14 +82,14 @@ sub process_line {
     $bot_trigger = $pbot->{registry}->get_value('general', 'trigger');
   }
 
-  if($cmd_text =~ /^$bot_trigger?\s*{\s*(.*)\s*}\s*$/) {
+  if($cmd_text =~ /^(?:$bot_trigger|$botnick.?)?\s*{\s*(.*)\s*}\s*$/) {
     $has_code = $1 if length $1;
     $preserve_whitespace = 1;
   } elsif($cmd_text =~ /^$bot_trigger(.*)$/) {
     $command = $1;
-  } elsif($cmd_text =~ /^.?$mynick.?\s+(.*?)$/i) {
+  } elsif($cmd_text =~ /^.?$botnick.?\s+(.*?)$/i) {
     $command = $1;
-  } elsif($cmd_text =~ /^(.*?),?\s+$mynick[?!.]*$/i) {
+  } elsif($cmd_text =~ /^(.*?),?\s+$botnick[?!.]*$/i) {
     $command = $1;
   } elsif($cmd_text =~ /https?:\/\/([^\s]+)/i) {
     $has_url = $1;
@@ -109,16 +109,16 @@ sub process_line {
     }
 
     if(defined $has_url) {
-      if($self->{pbot}->{registry}->get_value('general', 'show_url_titles')
-          and not grep { $from =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_ignore_channels')
-          and grep { $from =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_channels')) {
-        $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
+      if($pbot->{registry}->get_value('general', 'show_url_titles') and not $pbot->{registry}->get_value($from, 'no_url_titles')
+          and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_ignore_channels')
+          and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_channels')) {
+        $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
       }
     } elsif(defined $has_code) {
-      if($self->{pbot}->{registry}->get_value('general', 'compile_blocks')
-          and not grep { $from =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'compile_blocks_ignore_channels')
-          and grep { $from =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'compile_blocks_channels')) {
-        $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
+      if($pbot->{registry}->get_value('general', 'compile_blocks') and not $pbot->{registry}->get_value($from, 'no_compile_blocks')
+          and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_ignore_channels')
+          and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_channels')) {
+        $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
       }
     } else {
       $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command), 1, $preserve_whitespace); 
@@ -293,14 +293,14 @@ sub handle_result {
 
 sub output_result {
   my ($self, $from, $nick, $user, $host, $command, $line, $checkflood) = @_;
-  my ($pbot, $mynick) = ($self->{pbot}, $self->{pbot}->{registry}->get_value('irc', 'botnick'));
+  my ($pbot, $botnick) = ($self->{pbot}, $self->{pbot}->{registry}->get_value('irc', 'botnick'));
 
   if($line =~ s/^\/say\s+//i) {
-    $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+    $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$botnick\E/i;
+    $pbot->{antiflood}->check_flood($from, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
   } elsif($line =~ s/^\/me\s+//i) {
-    $pbot->{conn}->me($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
+    $pbot->{conn}->me($from, $line) if defined $from && $from !~ /\Q$botnick\E/i;
+    $pbot->{antiflood}->check_flood($from, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
   } elsif($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
     my $to = $1;
     if($to =~ /,/) {
@@ -310,16 +310,16 @@ sub output_result {
       $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$nick!$user\@$host] [$command] [$line]\n");
     }
     elsif($line =~ s/^\/me\s+//i) {
-      $pbot->{conn}->me($to, $line) if $to !~ /\Q$mynick\E/i;
-      $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
+      $pbot->{conn}->me($to, $line) if $to !~ /\Q$botnick\E/i;
+      $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
     } else {
       $line =~ s/^\/say\s+//i;
-      $pbot->{conn}->privmsg($to, $line) if $to !~ /\Q$mynick\E/i;
-      $pbot->{antiflood}->check_flood($to, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+      $pbot->{conn}->privmsg($to, $line) if $to !~ /\Q$botnick\E/i;
+      $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
     }
   } else {
-    $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$mynick\E/i;
-    $pbot->{antiflood}->check_flood($from, $mynick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+    $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$botnick\E/i;
+    $pbot->{antiflood}->check_flood($from, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
   }
 }
 
