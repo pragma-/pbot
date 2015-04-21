@@ -43,7 +43,7 @@ while (1) {
       if ($pids->{$ppid}->{fname} eq 'compiler_server') {
         my $pctcpu = `top -b -n 1 -p $p | tail -n 1 | awk '{print \$9}'`;
         $pctcpu =~ s/^\s+|\s+$//g;
-        print scalar localtime, " :: Got compiler qemu pid: $p; using $pctcpu cpu\n";
+        print scalar localtime, " :: Got compiler qemu pid: $p; using $pctcpu cpu\n" if $pctcpu > 0;
 
         if ($pctcpu >= $last_pctcpu and $last_pctcpu >= $MAX_PCTCPU) {
           reset_vm;
