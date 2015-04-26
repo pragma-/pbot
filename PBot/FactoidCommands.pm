@@ -552,7 +552,7 @@ sub factshow {
     return "Usage: factshow <channel> <trigger>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
+  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 1, 1);
 
   if(not defined $trigger) {
     return "$trig not found in channel $chan";
@@ -578,7 +578,7 @@ sub factinfo {
     return "Usage: factinfo <channel> <trigger>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
+  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 1, 1);
 
   if(not defined $trigger) {
     return "$trig not found in channel $chan";
