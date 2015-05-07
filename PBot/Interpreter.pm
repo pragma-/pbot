@@ -387,8 +387,7 @@ sub paste_sprunge {
   my $rate_limit = $self->{pbot}->{registry}->get_value('general', 'sprunge_ratelimit');
   my $now = gettimeofday;
 
-  my $ret = open my $fh, '<', "$data_dir/lastsprunge";
-  if (defined $ret) {
+  if (open my $fh, '<', "$data_dir/lastsprunge") {
     my $time = <$fh>;
     close $fh;
     if ($now - $time < $rate_limit) {
@@ -396,7 +395,7 @@ sub paste_sprunge {
     }
   }
 
-  open $fh, '>', "$data_dir/lastsprunge";
+  open my $fh, '>', "$data_dir/lastsprunge";
   print $fh "$now\n";
   close $fh;
 
@@ -412,7 +411,7 @@ sub paste_sprunge {
   my $response = $ua->post("http://sprunge.us", \%post);
 
   if(not $response->is_success) {
-    return "error pasting: $response->status_line";
+    return "error pasting: " . $response->status_line;
   }
 
   my $result = $response->content;
