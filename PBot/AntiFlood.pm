@@ -204,9 +204,7 @@ sub check_flood {
 
   # do not do flood processing for bot messages
   if($nick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
-    foreach my $channel (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
-      $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
-    }
+    $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
     return;
   }
 
@@ -268,16 +266,21 @@ sub check_flood {
     # do not do flood enforcement for this event if bot is lagging
     if($self->{pbot}->{lagchecker}->lagging) {
       $self->{pbot}->{logger}->log("Disregarding enforcement of anti-flood due to lag: " . $self->{pbot}->{lagchecker}->lagstring . "\n");
+      $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
       return;
     }
 
     # do not do flood enforcement for logged in bot admins
-    next if $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+    if ($self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+      $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+      next;
+    }
 
     # check for enter abuse
     if($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT} and $channel =~ m/^#/) {
       my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'enter_abuse', 'enter_abuses', 'offenses');
       my $other_offenses = delete $channel_data->{offenses};
+      my $debug_enter_abuse = $self->{pbot}->{registry}->get_value('antiflood', 'debug_enter_abuse');
 
       if(defined $self->{channels}->{$channel}->{last_spoken_nick} and $nick eq $self->{channels}->{$channel}->{last_spoken_nick}) {
         my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, 2, $self->{pbot}->{messagehistory}->{MSG_CHAT});
@@ -298,25 +301,28 @@ sub check_flood {
                 $self->{pbot}->{logger}->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
                 $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in $ban_length.");
                 $channel_data->{last_offense} = gettimeofday;
+                $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+                return;
               }
             } else {
-              #$self->{pbot}->{logger}->log("$nick $channel enter abuses counter incremented to " . $channel_data->{enter_abuses} . "\n");
+              $self->{pbot}->{logger}->log("$nick $channel enter abuses counter incremented to " . $channel_data->{enter_abuses} . "\n") if $debug_enter_abuse;
             }
           } else {
-            #$self->{pbot}->{logger}->log("$nick $channel enter abuse counter incremented to " . $channel_data->{enter_abuse} . "\n");
+            $self->{pbot}->{logger}->log("$nick $channel enter abuse counter incremented to " . $channel_data->{enter_abuse} . "\n") if $debug_enter_abuse;
           }
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
         } else {
           if($channel_data->{enter_abuse} > 0) {
-            #$self->{pbot}->{logger}->log("$nick $channel more than $enter_abuse_time_threshold seconds since last message, enter abuse counter reset\n");
+            $self->{pbot}->{logger}->log("$nick $channel more than $enter_abuse_time_threshold seconds since last message, enter abuse counter reset\n") if $debug_enter_abuse;
             $channel_data->{enter_abuse} = 0;
             $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
           }
         }
       } else {
         $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+        $self->{pbot}->{logger}->log("last spoken nick set to $nick\n") if $debug_enter_abuse;
         if($channel_data->{enter_abuse} > 0) {
-          #$self->{pbot}->{logger}->log("$nick $channel enter abuse counter reset\n"); 
+          $self->{pbot}->{logger}->log("$nick $channel enter abuse counter reset\n") if $debug_enter_abuse;
           $channel_data->{enter_abuse} = 0;
           $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
         }
