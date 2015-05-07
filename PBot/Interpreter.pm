@@ -39,6 +39,7 @@ sub initialize {
   $self->{pbot}->{registry}->add_default('text',  'general', 'compile_blocks',                  $conf{compile_blocks}                  // 1);
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',         $conf{compile_blocks_channels}         // '.*');
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_ignore_channels',  $conf{compile_blocks_ignore_channels}  // 'none');
+  $self->{pbot}->{registry}->add_default('text',  'general', 'sprunge_ratelimit',               $conf{sprunge_ratelimit}               // 60);
   $self->{pbot}->{registry}->add_default('text',  'interpreter', 'max_recursion',  10);
 
   $self->{output_queue} = {};
@@ -193,12 +194,18 @@ sub truncate_result {
   if(length $result > $max_msg_len) {
     my $link;
     if($paste) {
-      $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
+      $link = $self->paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
     } else {
       $link = 'undef';
     }
 
-    my $trunc = "... [truncated; see $link for full text.]";
+    my $trunc = "... [truncated; ";
+    if ($link =~ m/^http/) {
+      $trunc .= "see $link for full text.]";
+    } else {
+      $trunc .= "$link]";
+    }
+
     $self->{pbot}->{logger}->log("Message truncated -- pasted to $link\n") if $paste;
 
     my $trunc_len = length $result < $max_msg_len ? length $result : $max_msg_len;
@@ -253,7 +260,7 @@ sub handle_result {
     next if not length $stripped_line;
 
     if (++$lines >= $max_lines) {
-      my $link = paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
+      my $link = $self->paste_sprunge("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
       if ($use_output_queue) {
         my $message = {
           nick => $nick, user => $user, host => $host, command => $command,
@@ -374,6 +381,25 @@ sub paste_codepad {
 }
 
 sub paste_sprunge {
+  my $self = shift;
+
+  my $data_dir   = $self->{pbot}->{registry}->get_value('general', 'data_dir');
+  my $rate_limit = $self->{pbot}->{registry}->get_value('general', 'sprunge_ratelimit');
+  my $now = gettimeofday;
+
+  my $ret = open my $fh, '<', "$data_dir/lastsprunge";
+  if (defined $ret) {
+    my $time = <$fh>;
+    close $fh;
+    if ($now - $time < $rate_limit) {
+      return "paste rate-limited, try again in " . ($rate_limit - int($now - $time)) . " seconds";
+    }
+  }
+
+  open $fh, '>', "$data_dir/lastsprunge";
+  print $fh "$now\n";
+  close $fh;
+
   my $text = join(' ', @_);
 
   $text =~ s/(.{120})\s/$1\n/g;
@@ -386,7 +412,7 @@ sub paste_sprunge {
   my $response = $ua->post("http://sprunge.us", \%post);
 
   if(not $response->is_success) {
-    return $response->status_line;
+    return "error pasting: $response->status_line";
   }
 
   my $result = $response->content;
