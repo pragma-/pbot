@@ -116,10 +116,12 @@ sub ban_user_timed {
   my $self = shift;
   my ($mask, $channel, $length) = @_;
 
-  $mask .= '!*@*' if $mask !~ m/[!@]/;
+  $mask .= '!*@*' if $mask !~ m/[\$!@]/;
   $self->ban_user($mask, $channel);
-  $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
-  $self->{unban_timeout}->save;
+  if ($length > 0) {
+    $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
+    $self->{unban_timeout}->save;
+  }
 }
 
 sub join_channel {

@@ -65,10 +65,16 @@ sub ban_user {
   }
 
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-  return "" if $target =~ /\Q$botnick\E/i;
+  return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
 
   $self->{pbot}->{chanops}->ban_user_timed($target, $channel, $length);
-  $length = duration($length);
+
+  if ($length > 0) {
+    $length = duration($length);
+  } else {
+    $length = 'all eternity';
+  }
+
   return "/msg $nick $target banned in $channel for $length";
 }
 
