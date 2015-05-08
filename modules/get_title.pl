@@ -17,6 +17,12 @@ my $arguments = join("%20", @ARGV);
 
 $arguments =~ s/\W$//;
 
+exit if $arguments =~ m/notabug.org/i;
+exit if $arguments =~ m/flickr.com/i;
+exit if $arguments =~ m{www.open-std.org/jtc1/sc22/wg14/www/docs/dr}i;
+exit if $arguments =~ m/cheezburger/i;
+exit if $arguments =~ m/rafb.me/i;
+exit if $arguments =~ m/rextester.com/i;
 exit if $arguments =~ m/explosm.net/i;
 exit if $arguments =~ m/stackoverflow.com/i;
 exit if $arguments =~ m/scratch.mit.edu/i;
@@ -116,7 +122,12 @@ if($distance / $length < 0.75) {
     exit;
 }
 
+exit if $t !~ m/\s/; # exit if title is only one word -- this isn't usually interesting
 exit if $t =~ m/^Gerrit Code Review$/i;
+exit if $t =~ m/^Public Git Hosting -/i;
 exit if $t =~ m/pastebin/i;
+exit if $t =~ m/paste/i;
+exit if $t =~ m/^[0-9_-]+$/;
+exit if $t =~ m/^Index of \S+$/;
 
 print "Title of $nick\'s link: $t\n" if length $t;
