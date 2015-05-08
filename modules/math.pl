@@ -2,7 +2,9 @@
 
 # Quick and dirty by :pragma
 
-my ($arguments, $response, $invalid);
+use Math::Units qw(convert);
+
+my ($arguments, $response, $invalid, @conversion);
 
 my @valid_keywords = (
   'sin', 'cos', 'tan', 'atan', 'exp', 'int', 'hex', 'oct', 'log', 'sqrt', 
@@ -21,6 +23,10 @@ my $orig_arguments = $arguments;
 
 $arguments =~ s/(the )*answer.*question of life(,? the universe and everything)?\s?/42/gi;
 $arguments =~ s/meaning of (life|existence|everything)?/42/gi;
+
+if ($arguments =~ s/([^ ]+)\s+to\s+([^ ]+)\s*$//) {
+  @conversion = ($1, $2);
+}
 
 if($arguments =~ m/([\$`\|{}"'#@=?\[\]])/ or $arguments =~ m/(~~)/) {
   $invalid = $1;
@@ -47,6 +53,15 @@ if($@) {
   $error =~ s/Died at .*//;
   print $error;
   exit 1;
+}
+
+if (@conversion) {
+  my $result = eval { convert($response, $conversion[0], $conversion[1]); };
+  if ($@) {
+    print "Unknown conversion from $conversion[0] to $conversion[1]. Units are case-sensitive (Hz, not hz).\n";
+    exit 1;
+  }
+  $response = "$result $conversion[1]";
 }
 
 print "$orig_arguments = $response\n";
