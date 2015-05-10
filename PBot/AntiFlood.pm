@@ -43,8 +43,9 @@ sub initialize {
   $self->{NICKSERV_VALIDATED}       = (1<<0); 
   $self->{NEEDS_CHECKBAN}           = (1<<1); 
 
-  $self->{channels}  = {}; # per-channel statistics, e.g. for optimized tracking of last spoken nick for enter-abuse detection, etc
-  $self->{nickflood} = {}; # statistics to track nickchange flooding
+  $self->{channels}      = {}; # per-channel statistics, e.g. for optimized tracking of last spoken nick for enter-abuse detection, etc
+  $self->{nickflood}     = {}; # statistics to track nickchange flooding
+  $self->{whois_pending} = {}; # prevents multiple whois for nick joining multiple channels at once
 
   my $filename = delete $conf{banwhitelist_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/ban_whitelist';
   $self->{ban_whitelist} = PBot::DualIndexHashObject->new(name => 'BanWhitelist', filename => $filename);
@@ -77,6 +78,7 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { return $self->whitelist(@_) },  "whitelist", 10);
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisaccount', sub { $self->on_whoisaccount(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.endofwhois',   sub { $self->on_endofwhois(@_)   });
 }
 
 sub ban_whitelisted {
@@ -256,9 +258,11 @@ sub check_flood {
       if($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
         # don't check for evasion on PART/KICK
       } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
-        $self->{pbot}->{conn}->whois($nick);
+        $self->{pbot}->{conn}->whois($nick) unless exists $self->{whois_pending}->{$nick};
+        $self->{whois_pending}->{$nick} = gettimeofday;
       } else {
-        $self->{pbot}->{conn}->whois($nick);
+        $self->{pbot}->{conn}->whois($nick) unless exists $self->{whois_pending}->{$nick};
+        $self->{whois_pending}->{$nick} = gettimeofday;
         $self->check_bans($account, $mask, $channel);
       }
     }
@@ -750,11 +754,19 @@ sub check_nickserv_accounts {
   }
 }
 
+sub on_endofwhois {
+  my ($self, $event_type, $event) = @_;
+  my $nick = $event->{event}->{args}[1];
+  delete $self->{whois_pending}->{$nick};
+  return 0;
+}
+
 sub on_whoisaccount {
   my ($self, $event_type, $event) = @_;
   my $nick    =    $event->{event}->{args}[1];
   my $account = lc $event->{event}->{args}[2];
 
+  delete $self->{whois_pending}->{$nick};
   $self->{pbot}->{logger}->log("$nick is using NickServ account [$account]\n");
   $self->check_nickserv_accounts($nick, $account);
   return 0;

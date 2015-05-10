@@ -197,7 +197,6 @@ sub connect {
                               'whoiscountry', 
                               'whoischannels',
                               'whoisidle',
-                              'endofwhois', 
                               'motdstart',
                               'endofmotd',
                               'away',
