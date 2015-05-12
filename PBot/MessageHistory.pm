@@ -49,6 +49,8 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { $self->recall_message(@_)     },  "recall",          0);
   $self->{pbot}->{commands}->register(sub { $self->list_also_known_as(@_) },  "aka",             0);
   $self->{pbot}->{commands}->register(sub { $self->rebuild_aliases(@_)    },  "rebuildaliases", 90);
+  $self->{pbot}->{commands}->register(sub { $self->aka_link(@_)           },  "akalink",        60);
+  $self->{pbot}->{commands}->register(sub { $self->aka_unlink(@_)         },  "akaunlink",      60);
 
   $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
 }
@@ -67,6 +69,60 @@ sub rebuild_aliases {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
   $self->{database}->rebuild_aliases_table;
+}
+
+sub aka_link {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  my ($id, $alias) = split /\s+/, $arguments;
+
+  if (not $id or not $alias) {
+    return "Usage: link <target id> <alias id>";
+  }
+
+  my $source = $self->{database}->find_most_recent_hostmask($id);
+  my $target = $self->{database}->find_most_recent_hostmask($alias);
+
+  if (not $source) {
+    return "No such id $id found.";
+  }
+
+  if (not $target) {
+    return "No such id $alias found.";
+  }
+
+  if ($self->{database}->link_alias($id, $alias)) {
+    return "$source linked to $target.";
+  } else {
+    return "Link failed.";
+  }
+}
+
+sub aka_unlink {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  my ($id, $alias) = split /\s+/, $arguments;
+
+  if (not $id or not $alias) {
+    return "Usage: unlink <target id> <alias id>";
+  }
+
+  my $source = $self->{database}->find_most_recent_hostmask($id);
+  my $target = $self->{database}->find_most_recent_hostmask($alias);
+
+  if (not $source) {
+    return "No such id $id found.";
+  }
+
+  if (not $target) {
+    return "No such id $alias found.";
+  }
+
+  if ($self->{database}->unlink_alias($id, $alias)) {
+    return "$source unlinked from $target.";
+  } else {
+    return "Unlink failed.";
+  }
 }
 
 sub list_also_known_as {

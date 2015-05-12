@@ -840,6 +840,68 @@ sub link_aliases {
   $self->{pbot}->{logger}->log($@) if $@;
 }
 
+sub link_alias {
+  my ($self, $id, $alias) = @_;
+
+  my $ret = eval {
+    my $ret = 0;
+    my $sth = $self->{dbh}->prepare('INSERT INTO Aliases SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM Aliases WHERE id = ? AND alias = ?)');
+    $sth->bind_param(1, $alias);
+    $sth->bind_param(2, $id);
+    $sth->bind_param(3, $alias);
+    $sth->bind_param(4, $id);
+    $sth->execute();
+    if ($sth->rows) {
+      $self->{new_entries}++;
+      $ret = 1;
+    }
+
+    $sth->bind_param(1, $id);
+    $sth->bind_param(2, $alias);
+    $sth->bind_param(3, $id);
+    $sth->bind_param(4, $alias);
+    $sth->execute();
+    if ($sth->rows) {
+      $self->{new_entries}++;
+      $ret = 1;
+    } else {
+      $ret = 0;
+    }
+    return $ret;
+  };
+  $self->{pbot}->{logger}->log($@) if $@;
+  return $ret;
+}
+
+sub unlink_alias {
+  my ($self, $id, $alias) = @_;
+
+  my $ret = eval {
+    my $ret = 0;
+    my $sth = $self->{dbh}->prepare('DELETE FROM Aliases WHERE id = ? AND alias = ?');
+    $sth->bind_param(1, $id);
+    $sth->bind_param(2, $alias);
+    $sth->execute();
+    if ($sth->rows) {
+      $self->{new_entries}++;
+      $ret = 1;
+    }
+
+    $sth->bind_param(1, $alias);
+    $sth->bind_param(2, $id);
+    $sth->execute();
+    if ($sth->rows) {
+      $self->{new_entries}++;
+      $ret = 1;
+    } else {
+      $ret = 0;
+    }
+    return $ret;
+  };
+  $self->{pbot}->{logger}->log($@) if $@;
+  return $ret;
+}
+
 sub vacuum {
   my $self = shift;
 
