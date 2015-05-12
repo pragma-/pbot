@@ -542,7 +542,6 @@ sub check_bans {
 
   $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans on $mask in $channel\n") if $debug_checkban >= 3; 
 
-  my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
   my $current_nickserv_account = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
 
   if($current_nickserv_account) {
@@ -562,60 +561,36 @@ sub check_bans {
     $self->{pbot}->{logger}->log("anti-flood: [check-bans] no account for $mask; marking for later validation\n") if $debug_checkban >= 2;
   }
 
-  my ($nick, $host) = $mask =~ m/^([^!]+)![^@]+\@(.*)$/;
-
-  my $hostmasks = $self->{pbot}->{messagehistory}->{database}->get_hostmasks_for_channel($channel);
-
-  foreach my $nickserv_account (@nickserv_accounts) {
-    my $nickserv_hostmasks = $self->{pbot}->{messagehistory}->{database}->get_hostmasks_for_nickserv($nickserv_account);
-    push @$hostmasks, @$nickserv_hostmasks;
-  }
+  my ($nick) = $mask =~ m/^([^!]+)/;
+  my %aliases = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($nick);
 
   my ($do_not_validate, $bans);
-  foreach my $hostmask (@$hostmasks) {
-    my $check_ban = 0;
+  foreach my $alias (keys %aliases) {
+    next if $alias =~ /^Guest\d+(?:!.*)?$/;
 
-    # check if nickserv accounts match
-    if (exists $hostmask->{nickserv}) {
-      $self->{pbot}->{logger}->log("anti-flood: [check-bans] nickserv account for $hostmask->{hostmask} matches $hostmask->{nickserv}\n") if $debug_checkban;
-      $check_ban = 1;
-      goto CHECKBAN;
+    $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking blacklist for $alias in channel $channel\n") if $debug_checkban >= 4;
+    if ($self->{pbot}->{blacklist}->check_blacklist($alias, $channel)) {
+      my $baninfo = {};
+      $baninfo->{banmask} = $alias;
+      $baninfo->{channel} = $channel;
+      $baninfo->{owner} = 'blacklist';
+      $baninfo->{when} = 0;
+      $baninfo->{type} = 'blacklist';
+      push @$bans, $baninfo;
+      next;
+    }
+
+    my @nickservs;
+
+    if (exists $aliases{$alias}->{nickserv}) {
+      @nickservs = split /,/, $aliases{$alias}->{nickserv};
     } else {
-      $hostmask->{nickserv} = undef;
+      @nickservs = (undef);
     }
 
-    # check if hosts match
-    my ($account_host) = $hostmask->{hostmask} =~ m/\@(.*)$/;
-    if($host eq $account_host) {
-      $self->{pbot}->{logger}->log("anti-flood: [check-bans] host for $hostmask->{hostmask} matches $mask\n") if $debug_checkban;
-      $check_ban = 1;
-      goto CHECKBAN;
-    }
-
-    # check if nicks match
-    my ($account_nick) = $hostmask->{hostmask} =~ m/^([^!]+)/;
-    if($nick eq $account_nick) {
-      $self->{pbot}->{logger}->log("anti-flood: [check-bans] nick for $hostmask->{hostmask} matches $mask\n") if $debug_checkban;
-      $check_ban = 1;
-      goto CHECKBAN;
-    }
-
-    CHECKBAN:
-    if($check_ban) {
-      $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking blacklist for $hostmask->{hostmask} in channel $channel\n") if $debug_checkban >= 4;
-      if ($self->{pbot}->{blacklist}->check_blacklist($hostmask->{hostmask}, $channel)) {
-        my $baninfo = {};
-        $baninfo->{banmask} = $hostmask->{hostmask};
-        $baninfo->{channel} = $channel;
-        $baninfo->{owner} = 'blacklist';
-        $baninfo->{when} = 0;
-        $baninfo->{type} = 'blacklist';
-        push @$bans, $baninfo;
-        next;
-      }
-
-      $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans in $channel on $hostmask->{hostmask} using account " . (defined $hostmask->{nickserv} ? $hostmask->{nickserv} : "[undefined]") . "\n") if $debug_checkban >= 4;
-      my $baninfos = $self->{pbot}->{bantracker}->get_baninfo($hostmask->{hostmask}, $channel, $hostmask->{nickserv});
+    foreach my $nickserv (@nickservs) {
+      $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans in $channel on $alias using nickserv " . (defined $nickserv ? $nickserv : "[undefined]") . "\n") if $debug_checkban >= 4;
+      my $baninfos = $self->{pbot}->{bantracker}->get_baninfo($alias, $channel, $nickserv);
 
       if(defined $baninfos) {
         foreach my $baninfo (@$baninfos) {
@@ -649,17 +624,10 @@ sub check_bans {
             next;
           }
 
-          my $skip_quiet_nickserv_mask = 0;
-          foreach my $nickserv_account (@nickserv_accounts) {
-            if($baninfo->{type} eq '+q' and $baninfo->{banmask} =~ /^\$a:(.*)/ and lc $1 eq $nickserv_account and $nickserv_account eq $current_nickserv_account) {
-              $self->{pbot}->{logger}->log("anti-flood: [check-bans] Hostmask ($mask) matches quiet on account ($nickserv_account), disregarding\n");
-              $skip_quiet_nickserv_mask = 1;
-            } elsif($baninfo->{type} eq '+b' and $baninfo->{banmask} =~ /^\$a:(.*)/ and lc $1 eq $nickserv_account) {
-              $skip_quiet_nickserv_mask = 0;
-              last;
-            }
+          if(defined $nickserv and $baninfo->{type} eq '+q' and $baninfo->{banmask} =~ /^\$a:(.*)/ and lc $1 eq $nickserv and $nickserv eq $current_nickserv_account) {
+            $self->{pbot}->{logger}->log("anti-flood: [check-bans] Hostmask ($mask) matches quiet on account ($nickserv), disregarding\n");
+            next;
           }
-          next if $skip_quiet_nickserv_mask;
 
           if(not defined $bans) {
             $bans = [];
@@ -758,6 +726,11 @@ sub on_endofwhois {
   my ($self, $event_type, $event) = @_;
   my $nick = $event->{event}->{args}[1];
   delete $self->{whois_pending}->{$nick};
+
+  my ($id, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
+  $self->{pbot}->{logger}->log("endofwhois: Found [$id][$hostmask] for [$nick]\n");
+  $self->{pbot}->{messagehistory}->{database}->link_aliases($id, $hostmask) if $id;
+
   return 0;
 }
 
@@ -769,6 +742,11 @@ sub on_whoisaccount {
   delete $self->{whois_pending}->{$nick};
   $self->{pbot}->{logger}->log("$nick is using NickServ account [$account]\n");
   $self->check_nickserv_accounts($nick, $account);
+
+  my ($id, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
+  $self->{pbot}->{logger}->log("whoisaccount: Found [$id][$hostmask][$account] for [$nick]\n");
+  $self->{pbot}->{messagehistory}->{database}->link_aliases($id, undef, $account) if $id;
+
   return 0;
 }
 

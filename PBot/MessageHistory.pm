@@ -46,8 +46,9 @@ sub initialize {
 
   $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_messages', $conf{max_messages} // 32);
 
-  $self->{pbot}->{commands}->register(sub { $self->recall_message(@_)     },  "recall",  0);
-  $self->{pbot}->{commands}->register(sub { $self->list_also_known_as(@_) },  "aka",     0);
+  $self->{pbot}->{commands}->register(sub { $self->recall_message(@_)     },  "recall",          0);
+  $self->{pbot}->{commands}->register(sub { $self->list_also_known_as(@_) },  "aka",             0);
+  $self->{pbot}->{commands}->register(sub { $self->rebuild_aliases(@_)    },  "rebuildaliases", 90);
 
   $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
 }
@@ -62,10 +63,16 @@ sub add_message {
   $self->{database}->add_message($account, $mask, $channel, { timestamp => scalar gettimeofday, msg => $text, mode => $mode });
 }
 
+sub rebuild_aliases {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  $self->{database}->rebuild_aliases_table;
+}
+
 sub list_also_known_as {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  my $usage = "Usage: aka [-h] <nick>";
+  my $usage = "Usage: aka [-h] [-i] [-n] <nick>; -h show hostmasks; -i show ids; -n show nickserv accounts";
 
   if(not length $arguments) {
     return $usage;
@@ -77,33 +84,38 @@ sub list_also_known_as {
     chomp $getopt_error;
   };
 
-  my $show_hostmasks;
+  my ($show_hostmasks, $show_nickserv, $show_id, $dont_use_aliases_table);
   my ($ret, $args) = GetOptionsFromString($arguments,
-    'h' => \$show_hostmasks);
+    'h'  => \$show_hostmasks,
+    'n'  => \$show_nickserv,
+    'nt' => \$dont_use_aliases_table,
+    'i'  => \$show_id);
 
   return "$getopt_error -- $usage" if defined $getopt_error;
   return "Too many arguments -- $usage" if @$args > 1;
   return "Missing argument -- $usage" if @$args != 1;
 
-  my @akas = $self->{database}->get_also_known_as(@$args[0]);
-  if(@akas) {
+  my %akas = $self->{database}->get_also_known_as(@$args[0], $dont_use_aliases_table);
+
+  if(%akas) {
     my $result = "@$args[0] also known as:\n";
 
-    my %uniq;
-    foreach my $aka (@akas) {
-      if (not $show_hostmasks) {
-        my ($nick) = $aka =~ /^([^!]+)!/;
-        $uniq{$nick} = $nick;
-      } else {
-        $uniq{$aka} = $aka;
-      }
-    }
-
+    my %nicks;
     my $sep = "";
-    foreach my $aka (sort keys %uniq) {
-      next if $aka =~ /^Guest\d+(!.*)?$/;
-      $result .= "$sep$aka";
-      if ($show_hostmasks) {
+    foreach my $aka (sort keys %akas) {
+      next if $aka =~ /^Guest\d+(?:!.*)?$/;
+
+      if (not $show_hostmasks) {
+        my ($nick) = $aka =~ m/([^!]+)/;
+        next if exists $nicks{$nick} and $nicks{$nick}->{id} == $akas{$aka}->{id};
+        $nicks{$nick}->{id} = $akas{$aka}->{id};
+        $result .= "$sep$nick";
+      } else {
+        $result .= "$sep$aka";
+      }
+      $result .= " ($akas{$aka}->{nickserv})" if $show_nickserv and exists $akas{$aka}->{nickserv};
+      $result .= " [$akas{$aka}->{id}]" if $show_id;
+      if ($show_hostmasks or $show_nickserv or $show_id) {
         $sep = ",\n";
       } else {
         $sep = ", ";
@@ -197,6 +209,8 @@ sub recall_message {
       if(not defined $account) {
         return "I don't know anybody named $recall_nick.";
       }
+
+      $found_nick =~ s/!.*$//;
     }
 
     my $message;

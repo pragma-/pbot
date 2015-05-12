@@ -186,6 +186,8 @@ sub grab_quotegrab {
       return "I don't know anybody named $grab_nick";
     }
 
+    $found_nick =~ s/!.*$//;
+
     $grab_nick = $found_nick; # convert nick to proper casing
 
     my $message;
