@@ -568,7 +568,7 @@ sub check_bans {
   foreach my $alias (keys %aliases) {
     next if $alias =~ /^Guest\d+(?:!.*)?$/;
 
-    $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking blacklist for $alias in channel $channel\n") if $debug_checkban >= 4;
+    $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking blacklist for $alias in channel $channel\n") if $debug_checkban >= 5;
     if ($self->{pbot}->{blacklist}->check_blacklist($alias, $channel)) {
       my $baninfo = {};
       $baninfo->{banmask} = $alias;
@@ -728,7 +728,7 @@ sub on_endofwhois {
   delete $self->{whois_pending}->{$nick};
 
   my ($id, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
-  $self->{pbot}->{logger}->log("endofwhois: Found [$id][$hostmask] for [$nick]\n");
+  # $self->{pbot}->{logger}->log("endofwhois: Found [$id][$hostmask] for [$nick]\n");
   $self->{pbot}->{messagehistory}->{database}->link_aliases($id, $hostmask) if $id;
 
   return 0;
@@ -744,7 +744,7 @@ sub on_whoisaccount {
   $self->check_nickserv_accounts($nick, $account);
 
   my ($id, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
-  $self->{pbot}->{logger}->log("whoisaccount: Found [$id][$hostmask][$account] for [$nick]\n");
+  # $self->{pbot}->{logger}->log("whoisaccount: Found [$id][$hostmask][$account] for [$nick]\n");
   $self->{pbot}->{messagehistory}->{database}->link_aliases($id, undef, $account) if $id;
 
   return 0;
