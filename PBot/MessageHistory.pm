@@ -128,7 +128,7 @@ sub aka_unlink {
 sub list_also_known_as {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  my $usage = "Usage: aka [-h] [-i] [-n] <nick>; -h show hostmasks; -i show ids; -n show nickserv accounts";
+  my $usage = "Usage: aka [-h] [-i] [-n] [-r] <nick>; -h show hostmasks; -i show ids; -n show nickserv accounts; -r show relationships";
 
   if(not length $arguments) {
     return $usage;
@@ -140,10 +140,11 @@ sub list_also_known_as {
     chomp $getopt_error;
   };
 
-  my ($show_hostmasks, $show_nickserv, $show_id, $dont_use_aliases_table);
+  my ($show_hostmasks, $show_nickserv, $show_id, $show_relationship, $dont_use_aliases_table);
   my ($ret, $args) = GetOptionsFromString($arguments,
     'h'  => \$show_hostmasks,
     'n'  => \$show_nickserv,
+    'r'  => \$show_relationship,
     'nt' => \$dont_use_aliases_table,
     'i'  => \$show_id);
 
@@ -170,8 +171,18 @@ sub list_also_known_as {
         $result .= "$sep$aka";
       }
       $result .= " ($akas{$aka}->{nickserv})" if $show_nickserv and exists $akas{$aka}->{nickserv};
-      $result .= " [$akas{$aka}->{id}]" if $show_id;
-      if ($show_hostmasks or $show_nickserv or $show_id) {
+
+      if ($show_relationship) {
+        if ($akas{$aka}->{id} == $akas{$aka}->{alias}) {
+          $result .= " [$akas{$aka}->{id}]";
+        } else {
+          $result .= " [$akas{$aka}->{id} -> $akas{$aka}->{alias}]";
+        }
+      } elsif ($show_id) {
+        $result .= " [$akas{$aka}->{id}]";
+      }
+
+      if ($show_hostmasks or $show_nickserv or $show_id or $show_relationship) {
         $sep = ",\n";
       } else {
         $sep = ", ";

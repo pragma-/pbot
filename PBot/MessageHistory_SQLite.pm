@@ -956,14 +956,13 @@ sub get_also_known_as {
   my %akas = eval {
     my (%akas, %hostmasks, %ids);
 
-    if (not $dont_use_aliases_table) {
+    unless ($dont_use_aliases_table) {
       my ($id, $hostmask) = $self->find_message_account_by_nick($nick);
 
       if (not defined $id) {
         return %akas;
       }
 
-      $akas{$hostmask} = { hostmask => $hostmask, id => $id };
       $ids{$id} = $id;
 
       my $sth = $self->{dbh}->prepare('SELECT alias FROM Aliases WHERE id = ?');
@@ -972,7 +971,18 @@ sub get_also_known_as {
       my $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
-        $ids{$row->{alias}} = $row->{alias};
+        $ids{$row->{alias}} = $id;
+      }
+
+      foreach my $id (keys %ids) {
+        my $sth = $self->{dbh}->prepare('SELECT alias FROM Aliases WHERE id = ?');
+        $sth->bind_param(1, $id);
+        $sth->execute();
+        my $rows = $sth->fetchall_arrayref({});
+
+        foreach my $row (@$rows) {
+          $ids{$row->{alias}} = $id;
+        }
       }
 
       foreach my $id (keys %ids) {
@@ -982,7 +992,7 @@ sub get_also_known_as {
         $rows = $sth->fetchall_arrayref({});
 
         foreach my $row (@$rows) {
-          $akas{$row->{hostmask}} = { hostmask => $row->{hostmask}, id => $id };
+          $akas{$row->{hostmask}} = { hostmask => $row->{hostmask}, id => $id, alias => $ids{$id} };
         }
 
         $sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE id = ?');
