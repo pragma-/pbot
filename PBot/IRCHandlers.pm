@@ -134,13 +134,6 @@ sub on_notice {
       $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
     } elsif($text =~ m/You are now identified/) {
       $event->{conn}->nick($self->{pbot}->{registry}->get_value('irc', 'botnick'));
-      foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
-        if($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
-          $self->{pbot}->{logger}->log("Joining channel: $chan\n");
-          $self->{pbot}->{chanops}->join_channel($chan);
-        }
-      }
-      $self->{pbot}->{joined_channels} = 1;
     } elsif($text =~ m/has been ghosted/) {
       $event->{conn}->nick($self->{pbot}->{registry}->get_value('irc', 'botnick'));
     }
@@ -185,7 +178,7 @@ sub on_mode {
       $self->{pbot}->{bantracker}->track_mode("$nick!$user\@$host", $mode, $target, $channel);
     }
 
-    if(defined $target && $target eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) { # bot targeted
+    if(defined $target && $target eq $event->{conn}->nick) { # bot targeted
       if($mode eq "+o") {
         $self->{pbot}->{logger}->log("$nick opped me in $channel\n");
         $self->{pbot}->{chanops}->{is_opped}->{$channel}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('general', 'deop_timeout');;
@@ -210,7 +203,7 @@ sub on_mode {
           }
         }
       } 
-      elsif($mode eq "+e" && $channel eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+      elsif($mode eq "+e" && $channel eq $event->{conn}->nick) {
         foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
           if($self->{channels}->{channels}->hash->{$chan}{enabled}) {
             $self->{pbot}->{logger}->log("Joining channel: $chan\n");
@@ -307,6 +300,16 @@ sub on_nickchange {
   my ($nick, $user, $host, $newnick) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host changed nick to $newnick\n");
+
+  if ($newnick eq $self->{pbot}->{registry}->get_value('irc', 'botnick') and not $self->{pbot}->{joined_channels}) {
+    foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
+      if($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
+        $self->{pbot}->{logger}->log("Joining channel: $chan\n");
+        $self->{pbot}->{chanops}->join_channel($chan);
+      }
+    }
+    $self->{pbot}->{joined_channels} = 1;
+  }
 
   my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
   $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($message_account, $self->{pbot}->{antiflood}->{NEEDS_CHECKBAN});
