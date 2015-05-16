@@ -57,7 +57,7 @@ sub initialize {
 
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'join_flood_threshold',      $conf{join_flood_threshold}      //  4);
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'join_flood_time_threshold', $conf{join_flood_time_threshold} //  60 * 30);
-  $self->{pbot}->{registry}->add_default('array', 'antiflood', 'join_flood_punishment',     $conf{join_flood_punishment}     // '28800,86400,604800,2419200,14515200');
+  $self->{pbot}->{registry}->add_default('array', 'antiflood', 'join_flood_punishment',     $conf{join_flood_punishment}     // '28800,3600,86400,604800,2419200,14515200');
 
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'chat_flood_threshold',      $conf{chat_flood_threshold}      //  4);
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'chat_flood_time_threshold', $conf{chat_flood_time_threshold} // 10);
@@ -478,8 +478,8 @@ sub unbanme {
   }
 
   my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'offenses');
-  if($channel_data->{offenses} > 2) {
-    return "/msg $nick You may only use unbanme for the first two offenses. You will be automatically unbanned in a few hours, and your offense counter will decrement once every 24 hours.";
+  if($channel_data->{offenses} > 1) {
+    return "/msg $nick You may only use unbanme for the first offense. You will be automatically unbanned in a few hours, and your offense counter will decrement once every 24 hours.";
   }
 
   $self->{pbot}->{chanops}->unban_user($mask, $channel);
