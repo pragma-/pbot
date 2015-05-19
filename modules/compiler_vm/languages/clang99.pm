@@ -11,10 +11,10 @@ sub initialize {
 
   $self->{sourcefile}      = 'prog.c';
   $self->{execfile}        = 'prog';
-  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c99 -lm -Wfatal-errors -fsanitize=integer -fsanitize=bounds -fsanitize=undefined';
+  $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c99 -lm -Wfatal-errors -fsanitize=integer,undefined,alignment,address';
   $self->{options_paste}   = '-fcaret-diagnostics';
   $self->{options_nopaste} = '-fno-caret-diagnostics';
-  $self->{cmdline}         = 'clang -ggdb -g3 $sourcefile $options -o $execfile';
+  $self->{cmdline}         = 'clang-3.7 -ggdb -g3 $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';
 #define _XOPEN_SOURCE 9001
