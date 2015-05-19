@@ -6,6 +6,15 @@ use strict;
 package java; 
 use parent '_default';
 
+sub preprocess {
+  my $self = shift;
+  $self->SUPER::preprocess;
+
+  if ($self->{cmdline} =~ m/-version/) {
+    $self->{done} = 1;
+  }
+}
+
 sub postprocess {
   my $self = shift;
 

@@ -126,13 +126,7 @@ sub interpret {
 
   $mod->preprocess;
 
-  if($cmdline =~ m/-?-version/) {
-    # cmdline contained version request, so don't postprocess and just return the version output
-    $mod->{output} =~ s/\s+\(Ubuntu.*-\d+ubuntu\d+\)//;
-    return $mod->{output};
-  }
-
-  $mod->postprocess if not $mod->{error};
+  $mod->postprocess if not $mod->{error} and not $mod->{done};
 
   if (exists $mod->{no_output} or not length $mod->{output}) {
     $mod->{output} .= "\n" if length $mod->{output};

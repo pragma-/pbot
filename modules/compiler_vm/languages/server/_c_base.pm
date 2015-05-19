@@ -6,6 +6,15 @@ use strict;
 package _c_base; 
 use parent '_default';
 
+sub preprocess {
+  my $self = shift;
+  $self->SUPER::preprocess;
+
+  if ($self->{cmdline} =~ m/--(?:version|analyze)/) {
+    $self->{done} = 1;
+  }
+}
+
 sub postprocess {
   my $self = shift;
 
