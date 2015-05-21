@@ -98,6 +98,31 @@ sub print_correctstreak {
   return "$player->{nick}: $player->{lifetime_highest_correct_streak}";
 }
 
+sub sort_quickeststreak {
+  my $streak_a = $a->{lifetime_highest_quick_correct_streak} ? $a->{lifetime_highest_quick_correct_streak} : 1;
+  my $streak_b = $b->{lifetime_highest_quick_correct_streak} ? $b->{lifetime_highest_quick_correct_streak} : 1;
+
+  if ($rank_direction eq '+') {
+    if ($a->{lifetime_highest_quick_correct_streak} == $b->{lifetime_highest_quick_correct_streak}) {
+      return $a->{lifetime_quickest_correct_streak} / $streak_a <=> $b->{lifetime_quickest_correct_streak} / $streak_b;
+    } else {
+      return $a->{lifetime_quickest_correct_streak} / $streak_a <=> $b->{lifetime_quickest_correct_streak } / $streak_b;
+    }
+  } else {
+    if ($b->{lifetime_highest_quick_correct_streak} == $a->{lifetime_highest_quick_correct_streak}) {
+      return $b->{lifetime_quickest_correct_streak} / $streak_b <=> $a->{lifetime_quickest_correct_streak} / $streak_a;
+    } else {
+      return $b->{lifetime_quickest_correct_streak} / $streak_b <=> $a->{lifetime_quickest_correct_streak } / $streak_a;
+    }
+  }
+}
+
+sub print_quickeststreak {
+  my $player = shift @_;
+  return undef if $player->{lifetime_highest_quick_correct_streak} == 0;
+  return "$player->{nick}: $player->{lifetime_highest_quick_correct_streak} in " . duration $player->{lifetime_quickest_correct_streak};
+}
+
 sub sort_wrongstreak {
   if ($rank_direction eq '+') {
     return $a->{lifetime_highest_wrong_streak} <=> $b->{lifetime_highest_wrong_streak};
@@ -137,13 +162,14 @@ sub print_quickest {
 
 if (lc $command eq 'rank') {
   my %ranks = (
-    correct       => { sort => \&sort_correct,       print => \&print_correct,        title => 'correct answers'        } ,
-    wrong         => { sort => \&sort_wrong,         print => \&print_wrong,          title => 'wrong answers'          } ,
-    quickest      => { sort => \&sort_quickest,      print => \&print_quickest,       title => 'quickest answer'        } ,
-    ratio         => { sort => \&sort_ratio,         print => \&print_ratio,          title => 'correct/wrong ratio'    } ,
-    correctstreak => { sort => \&sort_correctstreak, print => \&print_correctstreak,  title => 'correct answer streak'  } ,
-    wrongstreak   => { sort => \&sort_wrongstreak,   print => \&print_wrongstreak,    title => 'wrong answer streak'    } ,
-    hints         => { sort => \&sort_hints,         print => \&print_hints,          title => 'hints used'             } ,
+    correct        => { sort => \&sort_correct,        print => \&print_correct,         title => 'correct answers'                },
+    wrong          => { sort => \&sort_wrong,          print => \&print_wrong,           title => 'wrong answers'                  },
+    quickest       => { sort => \&sort_quickest,       print => \&print_quickest,        title => 'quickest answer'                },
+    ratio          => { sort => \&sort_ratio,          print => \&print_ratio,           title => 'correct/wrong ratio'            },
+    correctstreak  => { sort => \&sort_correctstreak , print => \&print_correctstreak,   title => 'correct answer streak'          },
+    quickeststreak => { sort => \&sort_quickeststreak, print => \&print_quickeststreak,  title => 'quickest correct answer streak' },
+    wrongstreak    => { sort => \&sort_wrongstreak,    print => \&print_wrongstreak,     title => 'wrong answer streak'            },
+    hints          => { sort => \&sort_hints,          print => \&print_hints,           title => 'hints used'                     },
   );
 
   if (not $opt) {
@@ -185,7 +211,8 @@ if (lc $command eq 'rank') {
       my $stats;
       my $last_value = -1;
       foreach my $player (@$players) {
-        next if $player->{nick} eq 'keep2play';
+        next if $player->{nick} eq 'lern2play' and $opt ne 'lern2play';
+        next if $player->{nick} eq 'keep2play' and $opt ne 'keep2play';
         $stats = $ranks{$key}->{print}->($player);
         if (defined $stats) {
           my ($value) = $stats =~ /[^:]+:\s+(.*)/;
@@ -222,6 +249,7 @@ if (lc $command eq 'rank') {
   my $rank = 0;
   my $last_value = -1;
   foreach my $player (@$players) {
+    next if $player->{nick} eq 'lern2play';
     next if $player->{nick} eq 'keep2play';
     my $entry = $ranks{$opt}->{print}->($player);
     if (defined $entry) {
@@ -250,7 +278,7 @@ if (lc $command eq 'rank') {
 }
 
 my $player_nick = $nick;
-$player_nick = $opt if defined $opt and lc $command eq 'score';
+$player_nick = $opt if $opt and lc $command eq 'score';
 
 my $player_id = $scores->get_player_id($player_nick, $channel, 1);
 
@@ -262,13 +290,15 @@ if (not defined $player_id) {
 my $player_data = $scores->get_player_data($player_id);
 
 if (lc $command eq 'score') {
-  my $score = "$color{orange}$player_data->{nick}$color{reset}: " unless lc $nick eq lc $player_nick;
+  my $score = "$player_data->{nick}: " unless lc $nick eq lc $player_nick;
 
-  $score .= "$color{green}correct: $color{orange}$player_data->{correct_answers}" . ($player_data->{lifetime_correct_answers} > $player_data->{correct_answers} ? " [$player_data->{lifetime_correct_answers}]" : "") . "$color{green}, ";
-  $score .= "current streak: $color{orange}$player_data->{correct_streak}$color{green}, ";
-  $score .= "$color{green}highest streak: $color{orange}$player_data->{highest_correct_streak}" . ($player_data->{lifetime_highest_correct_streak} > $player_data->{highest_correct_streak} ? " [$player_data->{lifetime_highest_correct_streak}]" : "") . "$color{green}, ";
+  $score .= "correct: $player_data->{correct_answers}" . ($player_data->{lifetime_correct_answers} > $player_data->{correct_answers} ? " [$player_data->{lifetime_correct_answers}]" : "") . ", ";
+  $score .= "current streak: $player_data->{correct_streak}, ";
+  $score .= "highest streak: $player_data->{highest_correct_streak}" . ($player_data->{lifetime_highest_correct_streak} > $player_data->{highest_correct_streak} ? " [$player_data->{lifetime_highest_correct_streak}]" : "") . ", ";
+  $score .= "quickest streak: ";
+  $score .= ($player_data->{highest_quick_correct_streak} > 0 ? "$player_data->{highest_quick_correct_streak} in " . (duration $player_data->{quickest_correct_streak}) : "N/A") . ($player_data->{lifetime_highest_quick_correct_streak} > $player_data->{highest_quick_correct_streak} ? " [$player_data->{lifetime_highest_quick_correct_streak} in " . (duration $player_data->{lifetime_quickest_correct_streak}) . "]" : "") . ", ";
   
-  $score .= "quickest answer: $color{orange}";
+  $score .= "quickest answer: ";
 
   if ($player_data->{quickest_correct} == 0) {
     $score .= "N/A";
@@ -278,23 +308,26 @@ if (lc $command eq 'score') {
     $score .= duration($player_data->{quickest_correct});
   }
 
-  $score .= "$color{green}, ";
+  $score .= ", ";
 
-  $score .= "$color{red}wrong: $color{orange}$player_data->{wrong_answers}" . ($player_data->{lifetime_wrong_answers} > $player_data->{wrong_answers} ? " [$player_data->{lifetime_wrong_answers}]" : "") . "$color{red}, ";
-  $score .= "current streak: $color{orange}$player_data->{wrong_streak}$color{red}, ";
-  $score .= "$color{red}highest streak: $color{orange}$player_data->{highest_wrong_streak}" . ($player_data->{lifetime_highest_wrong_streak} > $player_data->{highest_wrong_streak} ? " [$player_data->{lifetime_highest_wrong_streak}]" : "") . "$color{red}, ";
+  $score .= "wrong: $player_data->{wrong_answers}" . ($player_data->{lifetime_wrong_answers} > $player_data->{wrong_answers} ? " [$player_data->{lifetime_wrong_answers}]" : "") . ", ";
+  $score .= "current streak: $player_data->{wrong_streak}, ";
+  $score .= "highest streak: $player_data->{highest_wrong_streak}" . ($player_data->{lifetime_highest_wrong_streak} > $player_data->{highest_wrong_streak} ? " [$player_data->{lifetime_highest_wrong_streak}]" : "") . ", ";
 
-  $score .= "$color{lightgreen}hints: $color{orange}$player_data->{hints}" . ($player_data->{lifetime_hints} > $player_data->{hints} ? " [$player_data->{lifetime_hints}]" : "") . "$color{reset}\n";
+  $score .= "hints: $player_data->{hints}" . ($player_data->{lifetime_hints} > $player_data->{hints} ? " [$player_data->{lifetime_hints}]" : "") . "\n";
 
   print $score;
 } elsif (lc $command eq 'reset') {
-  $player_data->{correct_answers}      = 0;
-  $player_data->{wrong_answers}        = 0;
-  $player_data->{correct_streak}       = 0;
-  $player_data->{wrong_streak}         = 0;
-  $player_data->{highest_correct_streak} = 0;
-  $player_data->{highest_wrong_streak} = 0;
-  $player_data->{hints}                = 0;
+  $player_data->{correct_answers}              = 0;
+  $player_data->{wrong_answers}                = 0;
+  $player_data->{correct_streak}               = 0;
+  $player_data->{wrong_streak}                 = 0;
+  $player_data->{highest_correct_streak}       = 0;
+  $player_data->{highest_wrong_streak}         = 0;
+  $player_data->{hints}                        = 0;
+  $player_data->{correct_streak_timestamp}     = 0;
+  $player_data->{highest_quick_correct_streak} = 0;
+  $player_data->{quickest_correct_streak}      = 0;
   $scores->update_player_data($player_id, $player_data);
   print "Your scores for this session have been reset.\n";
 }
