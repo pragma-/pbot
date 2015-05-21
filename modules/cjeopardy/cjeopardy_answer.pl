@@ -98,6 +98,7 @@ if (defined $ret) {
           my $elapsed = scalar gettimeofday - $last_timestamp;
           my $duration;
           if ($elapsed < 2) {
+            $elapsed = 0.01 if $elapsed <= 0.01;
             $duration = sprintf("%.2f", $elapsed);
           } else {
             $duration = sprintf("%d", $elapsed);
@@ -207,21 +208,46 @@ foreach my $answer (@valid_answers) {
       $player_data->{lifetime_highest_correct_streak} = $player_data->{highest_correct_streak};
     }
 
-    my %streaks = (
-      3  => "$color{orange}$nick$color{cyan} is on a $color{orange}3$color{cyan} correct answer streak!",
-      4  => "$color{orange}$nick$color{cyan} is hot with a $color{orange}4$color{cyan} correct answer streak!",
-      5  => "$color{orange}$nick$color{cyan} is on fire with a $color{orange}5$color{cyan} correct answer streak!",
-      6  => "$color{orange}$nick$color{cyan} is ON FIRE with a $color{orange}6$color{cyan} correct answer streak!",
-      7  => "$color{orange}$nick$color{cyan} is DOMINATING with a $color{orange}7$color{cyan} correct answer streak!",
-      8  => "$color{orange}$nick$color{cyan} is DOMINATING with an $color{orange}8$color{cyan} correct answer streak!",
-      9  => "$color{orange}$nick$color{cyan} is DOMINATING with a $color{orange}9$color{cyan} correct answer streak!",
-      10 => "$color{orange}$nick$color{cyan} IS UNTOUCHABLE WITH A $color{orange}10$color{cyan} CORRECT ANSWER STREAK!"
-    );
+    if ($player_data->{correct_streak} == 1) {
+      $player_data->{correct_streak_timestamp} = scalar gettimeofday;
+    }
 
-    if (exists $streaks{$player_data->{correct_streak}}) {
-      print "$streaks{$player_data->{correct_streak}}$color{reset}\n";
-    } elsif ($player_data->{correct_streak} > 10) {
-      print "$color{orange}$nick$color{cyan} IS UNTOUCHABLE WITH A $color{orange}$player_data->{correct_streak}$color{cyan} CORRECT ANSWER STREAK$color{reset}\n";
+    my $dont_print_streak = 0;
+
+    if (($player_data->{correct_streak} > $player_data->{highest_quick_correct_streak})
+        or ($player_data->{correct_streak} == $player_data->{highest_quick_correct_streak}
+          and (gettimeofday - $player_data->{correct_streak_timestamp} < $player_data->{quickest_correct_streak}))) {
+      $player_data->{highest_quick_correct_streak} = $player_data->{correct_streak};
+      $player_data->{quickest_correct_streak} = gettimeofday - $player_data->{correct_streak_timestamp};
+
+      if ($player_data->{highest_quick_correct_streak} > $player_data->{lifetime_highest_quick_correct_streak}) {
+        $player_data->{lifetime_highest_quick_correct_streak} = $player_data->{highest_quick_correct_streak};
+        $player_data->{lifetime_quickest_correct_streak} = $player_data->{quickest_correct_streak};
+      }
+
+      if ($player_data->{highest_quick_correct_streak} >= 3) {
+        print "$color{orange}$nick$color{cyan} just set a new personal quickest correct answer streak of $color{orange}$player_data->{highest_quick_correct_streak} $color{cyan}correct answers in $color{orange}", duration($player_data->{quickest_correct_streak}), "$color{cyan}!$color{reset}\n";
+        $dont_print_streak = 1;
+      }
+    }
+
+    unless ($dont_print_streak) {
+      my %streaks = (
+        3  => "$color{orange}$nick$color{cyan} is on a $color{orange}3$color{cyan} correct answer streak!",
+        4  => "$color{orange}$nick$color{cyan} is hot with a $color{orange}4$color{cyan} correct answer streak!",
+        5  => "$color{orange}$nick$color{cyan} is on fire with a $color{orange}5$color{cyan} correct answer streak!",
+        6  => "$color{orange}$nick$color{cyan} is ON FIRE with a $color{orange}6$color{cyan} correct answer streak!",
+        7  => "$color{orange}$nick$color{cyan} is DOMINATING with a $color{orange}7$color{cyan} correct answer streak!",
+        8  => "$color{orange}$nick$color{cyan} is DOMINATING with an $color{orange}8$color{cyan} correct answer streak!",
+        9  => "$color{orange}$nick$color{cyan} is DOMINATING with a $color{orange}9$color{cyan} correct answer streak!",
+        10 => "$color{orange}$nick$color{cyan} IS UNTOUCHABLE WITH A $color{orange}10$color{cyan} CORRECT ANSWER STREAK!"
+      );
+
+      if (exists $streaks{$player_data->{correct_streak}}) {
+        print "$streaks{$player_data->{correct_streak}}$color{reset}\n";
+      } elsif ($player_data->{correct_streak} > 10) {
+        print "$color{orange}$nick$color{cyan} IS UNTOUCHABLE WITH A $color{orange}$player_data->{correct_streak}$color{cyan} CORRECT ANSWER STREAK!$color{reset}\n";
+      }
     }
 
     $scores->update_player_data($player_id, $player_data);
@@ -241,7 +267,7 @@ foreach my $answer (@valid_answers) {
       my $question = `./cjeopardy.pl $channel`;
       
       if ($hint_only_mode) {
-        my $hint = `./cjeopardy_hint.pl $channel`;
+        my $hint = `./cjeopardy_hint.pl candide $channel`;
         $hint =~ s/^Hint: //;
         print "Next hint: $hint\n";
       } else {
@@ -286,22 +312,14 @@ if ($player_data->{highest_wrong_streak} > $player_data->{lifetime_highest_wrong
   $player_data->{lifetime_highest_wrong_streak} = $player_data->{highest_wrong_streak};
 }
 
-=cut
 my %streaks = (
-  3  => "$color{red}Guessing, are we, $color{orange}$nick$color{red}?",
-  4  => "$color{red}Please use better guesses, $color{orange}$nick!",
-  5  => "$color{red}Are you even trying, $color{orange}$nick$color{red}?!",
-  6  => "$color{red}Try a little bit harder, $color{orange}$nick$color{red}.",
-  7  => "$color{red}Maybe you should go look it up, $color{orange}$nick$color{red}.",
-  8  => "$color{red}For fuck's sake, go look it up already, $color{orange}$nick$color{red}!",
-  9  => "$color{red}Are you sure you weren't dropped on your head, $color{orange}$nick$color{red}?",
-  10 => "$color{red}Have you been checked for mental retardation yet, $color{orange}$nick$color{red}?"
+  5  => "Guessing, are we, $nick?",
+  7  => "Think of your correct/incorrect ratio! Use a hint, $nick!",
 );
 
 if (exists $streaks{$player_data->{wrong_streak}}) {
   print "$streaks{$player_data->{wrong_streak}}$color{reset}\n";
 }
-=cut
 
 $scores->update_player_data($player_id, $player_data);
 $scores->end;

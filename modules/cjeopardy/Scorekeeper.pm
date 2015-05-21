@@ -32,24 +32,29 @@ sub begin {
   eval {
     $self->{dbh}->do(<< 'SQL');
 CREATE TABLE IF NOT EXISTS Scores (
-   id                               INTEGER PRIMARY KEY,
-   nick                             TEXT NOT NULL COLLATE NOCASE,
-   channel                          TEXT NOT NULL COLLATE NOCASE,
-   correct_answers                  INTEGER DEFAULT 0,
-   wrong_answers                    INTEGER DEFAULT 0,
-   lifetime_correct_answers         INTEGER DEFAULT 0,
-   lifetime_wrong_answers           INTEGER DEFAULT 0,
-   correct_streak                   INTEGER DEFAULT 0,
-   wrong_streak                     INTEGER DEFAULT 0,
-   lifetime_highest_correct_streak  INTEGER DEFAULT 0,
-   lifetime_highest_wrong_streak    INTEGER DEFAULT 0,
-   highest_correct_streak           INTEGER DEFAULT 0,
-   highest_wrong_streak             INTEGER DEFAULT 0,
-   hints                            INTEGER DEFAULT 0,
-   lifetime_hints                   INTEGER DEFAULT 0,
-   last_wrong_timestamp             NUMERIC DEFAULT 0,
-   last_correct_timestamp           NUMERIC DEFAULT 0,
-   quickest_correct                 NUMERIC DEFAULT 0
+   id                                    INTEGER PRIMARY KEY,
+   nick                                  TEXT NOT NULL COLLATE NOCASE,
+   channel                               TEXT NOT NULL COLLATE NOCASE,
+   correct_answers                       INTEGER DEFAULT 0,
+   wrong_answers                         INTEGER DEFAULT 0,
+   lifetime_correct_answers              INTEGER DEFAULT 0,
+   lifetime_wrong_answers                INTEGER DEFAULT 0,
+   correct_streak                        INTEGER DEFAULT 0,
+   wrong_streak                          INTEGER DEFAULT 0,
+   lifetime_highest_correct_streak       INTEGER DEFAULT 0,
+   lifetime_highest_wrong_streak         INTEGER DEFAULT 0,
+   highest_correct_streak                INTEGER DEFAULT 0,
+   highest_wrong_streak                  INTEGER DEFAULT 0,
+   hints                                 INTEGER DEFAULT 0,
+   lifetime_hints                        INTEGER DEFAULT 0,
+   last_wrong_timestamp                  NUMERIC DEFAULT 0,
+   last_correct_timestamp                NUMERIC DEFAULT 0,
+   quickest_correct                      NUMERIC DEFAULT 0,
+   correct_streak_timestamp              NUMERIC DEFAULT 0,
+   highest_quick_correct_streak          INTEGER DEFAULT 0,
+   quickest_correct_streak               NUMERIC DEFAULT 0,
+   lifetime_highest_quick_correct_streak INTEGER_DEFAULT 0,
+   lifetime_quickest_correct_streak      NUMERIC DEFAULT 0
 )
 SQL
   };
