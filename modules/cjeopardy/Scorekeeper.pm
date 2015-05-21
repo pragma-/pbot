@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS Scores (
    correct_streak_timestamp              NUMERIC DEFAULT 0,
    highest_quick_correct_streak          INTEGER DEFAULT 0,
    quickest_correct_streak               NUMERIC DEFAULT 0,
-   lifetime_highest_quick_correct_streak INTEGER_DEFAULT 0,
+   lifetime_highest_quick_correct_streak INTEGER DEFAULT 0,
    lifetime_quickest_correct_streak      NUMERIC DEFAULT 0
 )
 SQL
