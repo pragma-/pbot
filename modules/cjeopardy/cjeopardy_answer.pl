@@ -214,21 +214,25 @@ foreach my $answer (@valid_answers) {
 
     my $dont_print_streak = 0;
 
-    if (($player_data->{correct_streak} > $player_data->{highest_quick_correct_streak})
-        or ($player_data->{correct_streak} == $player_data->{highest_quick_correct_streak}
-          and (gettimeofday - $player_data->{correct_streak_timestamp} < $player_data->{quickest_correct_streak}))) {
+    my $t1 = $player_data->{lifetime_quickest_correct_streak} ? $player_data->{lifetime_quickest_correct_streak} : 32767;
+    my $t2 = gettimeofday - $player_data->{correct_streak_timestamp};
+    my $a1 = $player_data->{lifetime_highest_quick_correct_streak} ? $player_data->{lifetime_highest_quick_correct_streak} : 1;
+    my $a2 = $player_data->{correct_streak} ? $player_data->{correct_streak} : 1;
+
+    my $ratio1 = ($t1 + $t1) / $a1;
+    my $ratio2 = ($t2 + $t1) / $a2;
+
+    print STDERR "nick: $nick, t1 = $t1, t2 = $t2, a1 = $a1, a2 = $a2, ratio1 = $ratio1, ratio2 = $ratio2\n";
+
+    if ($ratio2 < $ratio1 and $player_data->{correct_streak} >= 3) {
       $player_data->{highest_quick_correct_streak} = $player_data->{correct_streak};
       $player_data->{quickest_correct_streak} = gettimeofday - $player_data->{correct_streak_timestamp};
 
-      if ($player_data->{highest_quick_correct_streak} > $player_data->{lifetime_highest_quick_correct_streak}) {
-        $player_data->{lifetime_highest_quick_correct_streak} = $player_data->{highest_quick_correct_streak};
-        $player_data->{lifetime_quickest_correct_streak} = $player_data->{quickest_correct_streak};
-      }
+      $player_data->{lifetime_highest_quick_correct_streak} = $player_data->{highest_quick_correct_streak};
+      $player_data->{lifetime_quickest_correct_streak} = $player_data->{quickest_correct_streak};
 
-      if ($player_data->{highest_quick_correct_streak} >= 3) {
-        print "$color{orange}$nick$color{cyan} just set a new personal quickest correct answer streak of $color{orange}$player_data->{highest_quick_correct_streak} $color{cyan}correct answers in $color{orange}", duration($player_data->{quickest_correct_streak}), "$color{cyan}!$color{reset}\n";
-        $dont_print_streak = 1;
-      }
+      print "$color{orange}$nick$color{cyan} just set a new personal quickest correct answer streak of $color{orange}$player_data->{highest_quick_correct_streak} $color{cyan}correct answers in $color{orange}", duration($player_data->{quickest_correct_streak}), "$color{cyan}!$color{reset}\n";
+      $dont_print_streak = 1;
     }
 
     unless ($dont_print_streak) {
