@@ -97,7 +97,7 @@ chomp $a;
 $q =~ s/\\\|/|/g;
 $q =~ s/^\[.*?\]\s+//;
 
-$q =~ s/(this keyword|this operator|this behavior|this preprocessing directive|this escape sequence|this mode|this function specifier|this function|this macro|this predefined macro|this header|this pragma|this fprintf length modifier|this storage duration|this type qualifier|this type|this value|this operand|this many|this|these)/$color{bold}$1$color{reset}/gi;
+$q =~ s/\b(this keyword|this operator|this behavior|this preprocessing directive|this escape sequence|this mode|this function specifier|this function|this macro|this predefined macro|this header|this pragma|this fprintf length modifier|this storage duration|this type qualifier|this type|this value|this operand|this many|this|these)\b/$color{bold}$1$color{reset}/gi;
 print "$q\n";
 
 open $fh, ">", "$CJEOPARDY_DATA-$channel" or die "Could not open $CJEOPARDY_DATA-$channel: $!";
