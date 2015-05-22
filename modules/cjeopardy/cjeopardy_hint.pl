@@ -14,7 +14,7 @@ my $CJEOPARDY_DATA   = 'data/cjeopardy.dat';
 my $CJEOPARDY_HINT   = 'data/cjeopardy.hint';
 
 my @hints = (0.90, 0.75, 0.50, 0.25, 0.10);
-my $timeout = 30;
+my $timeout = 20;
 
 my $nick    = shift @ARGV;
 my $channel = shift @ARGV;
@@ -100,6 +100,8 @@ foreach my $index (@indices) {
 }
 
 print "$color{lightgreen}Hint$color{reset}: $hint\n";
+
+exit if $nick eq 'candide'; # hint_only_mode
 
 my $scores = Scorekeeper->new;
 $scores->begin;
