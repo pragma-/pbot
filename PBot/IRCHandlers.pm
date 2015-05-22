@@ -319,7 +319,7 @@ sub on_nickchange {
     $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "NICKCHANGE $newnick", $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
   }
 
-  my $newnick_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($newnick, $user, $host);
+  my $newnick_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($newnick, $user, $host, $nick);
   $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($newnick_account, $self->{pbot}->{antiflood}->{NEEDS_CHECKBAN});
   $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($newnick_account, { last_seen => scalar gettimeofday });
 
@@ -327,6 +327,7 @@ sub on_nickchange {
     $self->{pbot}->{registry}->get_value('antiflood', 'nick_flood_threshold'),
     $self->{pbot}->{registry}->get_value('antiflood', 'nick_flood_time_threshold'),
     $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
+
   return 0;
 }
 
