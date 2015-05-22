@@ -31,6 +31,8 @@ sub initialize {
   $self->{filename}  = delete $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/message_history.sqlite3';
   $self->{new_entries} = 0;
 
+  $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'debug_link',             0);
+  $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'debug_aka',              0);
   $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'sqlite_commit_interval', 30);
   $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'sqlite_debug',           $conf{sqlite_debug} // 0);
 
@@ -125,6 +127,8 @@ CREATE TABLE IF NOT EXISTS Aliases (
 SQL
 
     $self->{dbh}->do('CREATE INDEX IF NOT EXISTS MsgIdx1 ON Messages(id, channel, mode)');
+    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS AliasIdx1 ON Aliases(id, alias)');
+    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS AliasIdx2 ON Aliases(alias, id)');
 
     $self->{dbh}->begin_work();
   };
@@ -296,15 +300,15 @@ sub find_message_accounts_by_mask {
 }
 
 sub get_message_account {
-  my ($self, $nick, $user, $host) = @_;
+  my ($self, $nick, $user, $host, $link_nick) = @_;
 
   my $mask = "$nick!$user\@$host";
   my $id = $self->get_message_account_id($mask);
   return $id if defined $id;
 
   my $rows = eval {
-    my $sth = $self->{dbh}->prepare('SELECT id,hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC');
-    my $qnick = quotemeta $nick;
+    my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC');
+    my $qnick = quotemeta (defined $link_nick ? $link_nick : $nick);
     $qnick =~ s/_/\\_/g;
     $sth->bind_param(1, "$qnick!%");
     $sth->execute();
@@ -776,7 +780,9 @@ sub devalidate_all_channels {
 sub link_aliases {
   my ($self, $account, $hostmask, $nickserv) = @_;
 
-  # $self->{pbot}->{logger}->log("Linking [$account][" . ($hostmask?$hostmask:'undef') . "][" . ($nickserv?$nickserv:'undef') . "]\n");
+  my $debug_link = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_link');
+
+  $self->{pbot}->{logger}->log("Linking [$account][" . ($hostmask?$hostmask:'undef') . "][" . ($nickserv?$nickserv:'undef') . "]\n") if $debug_link;
 
   eval {
     my %ids;
@@ -794,7 +800,7 @@ sub link_aliases {
 
         foreach my $row (@$rows) {
           $ids{$row->{id}} = $row->{id};
-          # $self->{pbot}->{logger}->log("found matching id $row->{id} for nick [$qnick]\n");
+          $self->{pbot}->{logger}->log("found matching id $row->{id} for nick [$qnick]\n") if $debug_link;
         }
       }
 
@@ -806,7 +812,7 @@ sub link_aliases {
 
       foreach my $row (@$rows) {
         $ids{$row->{id}} = $row->{id};
-        # $self->{pbot}->{logger}->log("found matching id $row->{id} for host [$host]\n");
+        $self->{pbot}->{logger}->log("found matching id $row->{id} for host [$host]\n") if $debug_link;
       }
     }
 
@@ -818,7 +824,7 @@ sub link_aliases {
 
       foreach my $row (@$rows) {
         $ids{$row->{id}} = $row->{id};
-        # $self->{pbot}->{logger}->log("found matching id $row->{id} for nickserv [$nickserv]\n");
+        $self->{pbot}->{logger}->log("found matching id $row->{id} for nickserv [$nickserv]\n") if $debug_link;
       }
     }
 
@@ -832,7 +838,7 @@ sub link_aliases {
       $sth->bind_param(4, $id);
       $sth->execute();
       if ($sth->rows) {
-        # $self->{pbot}->{logger}->log("Linked $account to $id\n");
+        $self->{pbot}->{logger}->log("Linked $account to $id\n") if $debug_link;
         $self->{new_entries}++;
       }
     }
@@ -950,8 +956,9 @@ sub rebuild_aliases_table {
 
 sub get_also_known_as {
   my ($self, $nick, $dont_use_aliases_table) = @_;
+  my $debug = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_aka');
 
-  # $self->{pbot}->{logger}->log("Looking for AKAs for nick [$nick]\n");
+  $self->{pbot}->{logger}->log("Looking for AKAs for nick [$nick]\n") if $debug;
 
   my %akas = eval {
     my (%akas, %hostmasks, %ids);
@@ -964,6 +971,8 @@ sub get_also_known_as {
       }
 
       $ids{$id} = $id;
+      $self->{pbot}->{logger}->log("Adding $id -> $id\n") if $debug;
+
 
       my $sth = $self->{dbh}->prepare('SELECT alias FROM Aliases WHERE id = ?');
       $sth->bind_param(1, $id);
@@ -972,33 +981,48 @@ sub get_also_known_as {
 
       foreach my $row (@$rows) {
         $ids{$row->{alias}} = $id;
+        $self->{pbot}->{logger}->log("[$id] Adding $row->{alias} -> $id\n") if $debug;
       }
 
-      foreach my $id (keys %ids) {
-        my $sth = $self->{dbh}->prepare('SELECT alias FROM Aliases WHERE id = ?');
-        $sth->bind_param(1, $id);
-        $sth->execute();
-        my $rows = $sth->fetchall_arrayref({});
+      my %seen_id;
+      $sth = $self->{dbh}->prepare('SELECT id FROM Aliases WHERE alias = ?');
 
-        foreach my $row (@$rows) {
-          $ids{$row->{alias}} = $id;
+      while (1) {
+        my $new_aliases = 0;
+        foreach my $id (keys %ids) {
+          next if exists $seen_id{$id};
+          $seen_id{$id} = $id;
+
+          $sth->bind_param(1, $id);
+          $sth->execute();
+          my $rows = $sth->fetchall_arrayref({});
+
+          foreach my $row (@$rows) {
+            next if exists $ids{$row->{id}};
+            $ids{$row->{id}} = $id;
+            $new_aliases++;
+            $self->{pbot}->{logger}->log("[$id] Adding $row->{id} -> $id\n") if $debug;
+          }
         }
+        last if not $new_aliases;
       }
 
+      my $hostmask_sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE id = ?');
+      my $nickserv_sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE id = ?');
+
       foreach my $id (keys %ids) {
-        $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE id = ?');
-        $sth->bind_param(1, $id);
-        $sth->execute();
-        $rows = $sth->fetchall_arrayref({});
+        $hostmask_sth->bind_param(1, $id);
+        $hostmask_sth->execute();
+        $rows = $hostmask_sth->fetchall_arrayref({});
 
         foreach my $row (@$rows) {
           $akas{$row->{hostmask}} = { hostmask => $row->{hostmask}, id => $id, alias => $ids{$id} };
+          $self->{pbot}->{logger}->log("[$id] Adding hostmask $row->{hostmask} -> $ids{$id}\n") if $debug;
         }
 
-        $sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE id = ?');
-        $sth->bind_param(1, $id);
-        $sth->execute();
-        $rows = $sth->fetchall_arrayref({});
+        $nickserv_sth->bind_param(1, $id);
+        $nickserv_sth->execute();
+        $rows = $nickserv_sth->fetchall_arrayref({});
 
         foreach my $row (@$rows) {
           foreach my $aka (keys %akas) {
