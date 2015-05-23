@@ -56,7 +56,7 @@ SQL
     $self->{dbh}->do(<< 'SQL');
 CREATE TABLE IF NOT EXISTS WrongAnswers (
    id        INTEGER,
-   answer    TEXT UNIQUE NOT NULL COLLATE NOCASE,
+   answer    TEXT NOT NULL COLLATE NOCASE,
    count     INTEGER DEFAULT 1
 )
 SQL
