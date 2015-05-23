@@ -8,6 +8,7 @@ use Time::Duration qw/duration/;
 use Fcntl qw(:flock);
 
 use IRCColors;
+use QStatskeeper;
 
 my $CJEOPARDY_FILE    = 'cjeopardy.txt';
 my $CJEOPARDY_DATA    = 'data/cjeopardy.dat';
@@ -95,7 +96,8 @@ chomp $q;
 chomp $a;
 
 $q =~ s/\\\|/|/g;
-$q =~ s/^\[.*?\]\s+//;
+$q =~ s/^(\d+)\) \[.*?\]\s+/$1) /;
+my $id = $1;
 
 $q =~ s/\b(this keyword|this operator|this behavior|this preprocessing directive|this escape sequence|this mode|this function specifier|this function|this macro|this predefined macro|this header|this pragma|this fprintf length modifier|this storage duration|this type qualifier|this type|this value|this operand|this many|this|these)\b/$color{bold}$1$color{reset}/gi;
 print "$q\n";
@@ -105,6 +107,19 @@ print $fh "$q\n";
 print $fh "$a\n";
 print $fh scalar gettimeofday, "\n";
 close $fh;
+
+my $qstats = QStatskeeper->new;
+$qstats->begin;
+
+my $qdata = $qstats->get_question_data($id);
+
+$qdata->{asked_count}++;
+$qdata->{last_asked} = gettimeofday;
+$qdata->{last_touched} = gettimeofday;
+$qdata->{wrong_streak} = 0;
+
+$qstats->update_question_data($id, $qdata);
+$qstats->end;
 
 
 sub shuffle_questions {

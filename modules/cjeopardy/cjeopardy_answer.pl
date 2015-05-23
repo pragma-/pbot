@@ -8,6 +8,7 @@ use Time::HiRes qw(gettimeofday);
 use Time::Duration qw(duration);
 use Fcntl qw(:flock);
 
+use QStatskeeper;
 use Scorekeeper;
 use IRCColors;
 
@@ -122,7 +123,14 @@ $scores->begin;
 my $player_id = $scores->get_player_id($nick, $channel);
 my $player_data = $scores->get_player_data($player_id);
 
+my ($id) = $data[0] =~ m/^(\d+)/;
 my @valid_answers = map { decode $_ } split /\|/, encode $data[1];
+
+my $qstats = QStatskeeper->new;
+$qstats->begin;
+my $qdata = $qstats->get_question_data($id);
+
+$qdata->{last_touched} = gettimeofday;
 
 my $incorrect_percentage = 100;
 
@@ -175,6 +183,25 @@ foreach my $answer (@valid_answers) {
     } else {
       my $duration = duration($elapsed);
       print " It took $duration to answer that question.\n";
+    }
+
+    $qdata->{correct}++;
+    $qdata->{last_correct_time} = gettimeofday;
+    $qdata->{last_correct_nick} = $nick;
+
+    if (gettimeofday - $qdata->{last_touched} < 60 * 5) {
+      $qdata->{average_answer_time} += $elapsed;
+      $qdata->{average_answer_time} /= $qdata->{correct};
+    }
+
+    if ($qdata->{quickest_answer_time} == 0 or $elapsed < $qdata->{quickest_answer_time}) {
+      $qdata->{quickest_answer_time} = $elapsed;
+      $qdata->{quickest_answer_nick} = $nick;
+    }
+
+    if ($elapsed > $qdata->{longest_answer_time}) {
+      $qdata->{longest_answer_time} = $elapsed;
+      $qdata->{longest_answer_nick} = $nick;
     }
 
     my $streakers = $scores->get_all_correct_streaks($channel);
@@ -257,6 +284,9 @@ foreach my $answer (@valid_answers) {
     $scores->update_player_data($player_id, $player_data);
     $scores->end;
 
+    $qstats->update_question_data($id, $qdata);
+    $qstats->end;
+
     unlink "$CJEOPARDY_DATA-$channel";
     unlink "$CJEOPARDY_HINT-$channel";
 
@@ -316,6 +346,15 @@ if ($player_data->{highest_wrong_streak} > $player_data->{lifetime_highest_wrong
   $player_data->{lifetime_highest_wrong_streak} = $player_data->{highest_wrong_streak};
 }
 
+$qdata->{wrong}++;
+$qdata->{wrong_streak}++;
+
+if ($qdata->{wrong_streak} > $qdata->{highest_wrong_streak}) {
+  $qdata->{highest_wrong_streak} = $qdata->{wrong_streak};
+}
+
+$qstats->add_wrong_answer($id, $lctext);
+
 my %streaks = (
   5  => "Guessing, are we, $nick?",
   7  => "Think of your correct/incorrect ratio! Use a hint, $nick!",
@@ -327,3 +366,6 @@ if (exists $streaks{$player_data->{wrong_streak}}) {
 
 $scores->update_player_data($player_id, $player_data);
 $scores->end;
+
+$qstats->update_question_data($id, $qdata);
+$qstats->end;

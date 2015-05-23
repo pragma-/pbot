@@ -8,6 +8,7 @@ use Time::Duration qw/duration/;
 use Fcntl qw(:flock);
 
 use Scorekeeper;
+use QStatskeeper;
 use IRCColors;
 
 my $CJEOPARDY_DATA   = 'data/cjeopardy.dat';
@@ -111,3 +112,12 @@ $player_data->{hints}++;
 $player_data->{lifetime_hints}++;
 $scores->update_player_data($id, $player_data);
 $scores->end;
+
+($id) = $data[0] =~ m/^(\d+)/;
+my $qstats = QStatskeeper->new;
+$qstats->begin;
+my $qdata = $qstats->get_question_data($id);
+$qdata->{last_touched} = gettimeofday;
+$qdata->{hints}++;
+$qstats->update_question_data($id, $qdata);
+$qstats->end;
