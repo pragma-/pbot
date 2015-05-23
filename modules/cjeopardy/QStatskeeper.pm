@@ -44,8 +44,10 @@ CREATE TABLE IF NOT EXISTS QStats (
    highest_wrong_streak  INTEGER DEFAULT 0,
    hints                 INTEGER DEFAULT 0,
    quickest_answer_time  NUMERIC DEFAULT 0,
+   quickest_answer_date  NUMERIC DEFAULT 0,
    quickest_answer_nick  TEXT COLLATE NOCASE DEFAULT NULL,
    longest_answer_time   NUMERIC DEFAULT 0,
+   longest_answer_date   NUMERIC DEFAULT 0,
    longest_answer_nick   TEXT COLLATE NOCASE DEFAULT NULL,
    average_answer_time   NUMERIC DEFAULT 0
 )
@@ -72,6 +74,19 @@ sub end {
     $self->{dbh}->disconnect();
     delete $self->{dbh};
   }
+}
+
+sub find_question {
+  my ($self, $id) = @_;
+
+  my $exists = eval {
+    my $sth = $self->{dbh}->prepare('SELECT 1 FROM QStats WHERE id = ?');
+    $sth->bind_param(1, $id);
+    $sth->execute();
+    return $sth->fetchrow_hashref();
+  };
+  print STDERR $@ if $@;
+  return $exists;
 }
 
 sub add_question {

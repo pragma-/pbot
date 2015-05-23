@@ -197,11 +197,13 @@ foreach my $answer (@valid_answers) {
 
     if ($qdata->{quickest_answer_time} == 0 or $elapsed < $qdata->{quickest_answer_time}) {
       $qdata->{quickest_answer_time} = $elapsed;
+      $qdata->{quickest_answer_date} = gettimeofday;
       $qdata->{quickest_answer_nick} = $nick;
     }
 
     if ($elapsed > $qdata->{longest_answer_time}) {
       $qdata->{longest_answer_time} = $elapsed;
+      $qdata->{longest_answer_date} = gettimeofday;
       $qdata->{longest_answer_nick} = $nick;
     }
 
