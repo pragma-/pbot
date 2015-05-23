@@ -99,21 +99,13 @@ sub print_correctstreak {
 }
 
 sub sort_quickeststreak {
-  my $streak_a = $a->{lifetime_highest_quick_correct_streak} ? $a->{lifetime_highest_quick_correct_streak} : 1;
-  my $streak_b = $b->{lifetime_highest_quick_correct_streak} ? $b->{lifetime_highest_quick_correct_streak} : 1;
+  my $streak_a = $a->{lifetime_highest_quick_correct_streak} ? $a->{lifetime_highest_quick_correct_streak} : -1000;
+  my $streak_b = $b->{lifetime_highest_quick_correct_streak} ? $b->{lifetime_highest_quick_correct_streak} : -1000;
 
   if ($rank_direction eq '+') {
-    if ($a->{lifetime_highest_quick_correct_streak} == $b->{lifetime_highest_quick_correct_streak}) {
-      return $a->{lifetime_quickest_correct_streak} / $streak_a <=> $b->{lifetime_quickest_correct_streak} / $streak_b;
-    } else {
-      return $a->{lifetime_quickest_correct_streak} / $streak_a <=> $b->{lifetime_quickest_correct_streak } / $streak_b;
-    }
+    return $streak_b - $b->{lifetime_quickest_correct_streak} / $streak_b <=> $streak_a - $a->{lifetime_quickest_correct_streak} / $streak_a;
   } else {
-    if ($b->{lifetime_highest_quick_correct_streak} == $a->{lifetime_highest_quick_correct_streak}) {
-      return $b->{lifetime_quickest_correct_streak} / $streak_b <=> $a->{lifetime_quickest_correct_streak} / $streak_a;
-    } else {
-      return $b->{lifetime_quickest_correct_streak} / $streak_b <=> $a->{lifetime_quickest_correct_streak } / $streak_a;
-    }
+    return $streak_a - $a->{lifetime_quickest_correct_streak} / $streak_a <=> $streak_b - $b->{lifetime_quickest_correct_streak} / $streak_b;
   }
 }
 
@@ -213,19 +205,28 @@ if (lc $command eq 'rank') {
       foreach my $player (@$players) {
         next if $player->{nick} eq 'lern2play' and $opt ne 'lern2play';
         next if $player->{nick} eq 'keep2play' and $opt ne 'keep2play';
+
         $stats = $ranks{$key}->{print}->($player);
+
         if (defined $stats) {
           my ($value) = $stats =~ /[^:]+:\s+(.*)/;
           $rank++ if $value ne $last_value;
           $last_value = $value;
+        } else {
+          $rank++ if lc $player->{nick} eq $opt;
         }
+
         last if lc $player->{nick} eq $opt;
       }
-      if ($rank == 0) {
-        push @rankings, "$key: N/A";
+      if (not $rank) {
+        push @rankings, "$ranks{key}->{title}: N/A";
       } else {
-        $stats =~ s/[^:]+:\s+//;
-        push @rankings, "$ranks{$key}->{title}: #$rank ($stats)";
+        if (not $stats) {
+          push @rankings, "$ranks{$key}->{title}: #$rank (N/A)";
+        } else {
+          $stats =~ s/[^:]+:\s+//;
+          push @rankings, "$ranks{$key}->{title}: #$rank ($stats)";
+        }
       }
     }
 
@@ -263,7 +264,7 @@ if (lc $command eq 'rank') {
   }
 
   if (not scalar @ranking) {
-    if ($offset) {
+    if ($offset > 1) {
       print "No rankings available for $channel at offset #$offset.\n";
     } else {
       print "No rankings available for $channel yet.\n";
