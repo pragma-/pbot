@@ -190,6 +190,7 @@ foreach my $answer (@valid_answers) {
     $qdata->{last_correct_nick} = $nick;
 
     if (gettimeofday - $qdata->{last_touched} < 60 * 5) {
+      $qdata->{average_answer_time} *= $qdata->{correct} - 1;
       $qdata->{average_answer_time} += $elapsed;
       $qdata->{average_answer_time} /= $qdata->{correct};
     }
