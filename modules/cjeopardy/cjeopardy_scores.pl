@@ -4,7 +4,7 @@ use warnings;
 use strict;
 
 use Time::HiRes qw(gettimeofday);
-use Time::Duration qw(duration);
+use Time::Duration qw(concise duration);
 
 use Scorekeeper;
 use IRCColors;
@@ -112,7 +112,11 @@ sub sort_quickeststreak {
 sub print_quickeststreak {
   my $player = shift @_;
   return undef if $player->{lifetime_highest_quick_correct_streak} == 0;
-  return "$player->{nick}: $player->{lifetime_highest_quick_correct_streak} in " . duration $player->{lifetime_quickest_correct_streak};
+  if ($player->{lifetime_quickest_correct_streak} < 60) {
+    return "$player->{nick}: $player->{lifetime_highest_quick_correct_streak} in " . sprintf("%.2fs", $player->{lifetime_quickest_correct_streak});
+  } else {
+    return "$player->{nick}: $player->{lifetime_highest_quick_correct_streak} in " . concise duration $player->{lifetime_quickest_correct_streak};
+  }
 }
 
 sub sort_wrongstreak {
