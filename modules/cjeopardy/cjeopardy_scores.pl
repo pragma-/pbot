@@ -103,9 +103,9 @@ sub sort_quickeststreak {
   my $streak_b = $b->{lifetime_highest_quick_correct_streak} ? $b->{lifetime_highest_quick_correct_streak} : -1000;
 
   if ($rank_direction eq '+') {
-    return $streak_b - $b->{lifetime_quickest_correct_streak} / $streak_b <=> $streak_a - $a->{lifetime_quickest_correct_streak} / $streak_a;
+    return $streak_b - $b->{lifetime_quickest_correct_streak} / ($streak_b / 2) <=> $streak_a - $a->{lifetime_quickest_correct_streak} / ($streak_a / 2);
   } else {
-    return $streak_a - $a->{lifetime_quickest_correct_streak} / $streak_a <=> $streak_b - $b->{lifetime_quickest_correct_streak} / $streak_b;
+    return $streak_a - $a->{lifetime_quickest_correct_streak} / ($streak_a / 2) <=> $streak_b - $b->{lifetime_quickest_correct_streak} / ($streak_b / 2);
   }
 }
 
