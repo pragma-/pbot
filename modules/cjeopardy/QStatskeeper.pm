@@ -57,6 +57,7 @@ SQL
 CREATE TABLE IF NOT EXISTS WrongAnswers (
    id        INTEGER,
    answer    TEXT NOT NULL COLLATE NOCASE,
+   nick      TEXT NOT NULL COLLATE NOCASE,
    count     INTEGER DEFAULT 1
 )
 SQL
@@ -170,7 +171,7 @@ sub get_wrong_answers {
 }
 
 sub add_wrong_answer {
-  my ($self, $id, $answer) = @_;
+  my ($self, $id, $answer, $nick) = @_;
 
   $answer = lc $answer;
   $answer =~ s/^\s+|\s+$//g;
@@ -187,19 +188,21 @@ sub add_wrong_answer {
 
   if (not $found_ans) {
     eval {
-      my $sth = $self->{dbh}->prepare("INSERT INTO WrongAnswers (id, answer) VALUES (?, ?)");
+      my $sth = $self->{dbh}->prepare("INSERT INTO WrongAnswers (id, answer, nick) VALUES (?, ?, ?)");
       $sth->bind_param(1, $id);
       $sth->bind_param(2, $answer);
+      $sth->bind_param(3, $nick);
       $sth->execute();
     };
     print STDERR $@ if $@;
   } else {
     $found_ans->{count}++;
     eval {
-      my $sth = $self->{dbh}->prepare("UPDATE WrongAnswers SET count = ? WHERE id = ? AND answer = ?");
+      my $sth = $self->{dbh}->prepare("UPDATE WrongAnswers SET count = ?, nick = ? WHERE id = ? AND answer = ?");
       $sth->bind_param(1, $found_ans->{count});
-      $sth->bind_param(2, $id);
-      $sth->bind_param(3, $answer);
+      $sth->bind_param(2, $nick);
+      $sth->bind_param(3, $id);
+      $sth->bind_param(4, $answer);
       $sth->execute();
     };
     print STDERR $@ if $@;

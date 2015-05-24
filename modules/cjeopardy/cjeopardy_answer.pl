@@ -189,7 +189,7 @@ foreach my $answer (@valid_answers) {
     $qdata->{last_correct_time} = gettimeofday;
     $qdata->{last_correct_nick} = $nick;
 
-    if (gettimeofday - $qdata->{last_touched} < 60 * 5) {
+    if (gettimeofday - $qdata->{last_asked} < 60 * 10) {
       $qdata->{average_answer_time} *= $qdata->{correct} - 1;
       $qdata->{average_answer_time} += $elapsed;
       $qdata->{average_answer_time} /= $qdata->{correct};
@@ -356,7 +356,7 @@ if ($qdata->{wrong_streak} > $qdata->{highest_wrong_streak}) {
   $qdata->{highest_wrong_streak} = $qdata->{wrong_streak};
 }
 
-$qstats->add_wrong_answer($id, $lctext);
+$qstats->add_wrong_answer($id, $lctext, $nick);
 
 my %streaks = (
   5  => "Guessing, are we, $nick?",
