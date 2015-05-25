@@ -316,6 +316,14 @@ if (lc $command eq 'score') {
   $score .= ", ";
 
   $score .= "wrong: $player_data->{wrong_answers}" . ($player_data->{lifetime_wrong_answers} > $player_data->{wrong_answers} ? " [$player_data->{lifetime_wrong_answers}]" : "") . ", ";
+  $score .= "ratio: ";
+  my $wrong = $player_data->{wrong_answers} ? $player_data->{wrong_answers} : 1;
+  $score .= sprintf("%.2f", $player_data->{correct_answers} / $wrong);
+  if ($player_data->{lifetime_correct_answers} > 0) {
+    $wrong = $player_data->{lifetime_wrong_answers} ? $player_data->{lifetime_wrong_answers} : 1;
+    $score .= sprintf(" [%.2f]", $player_data->{lifetime_correct_answers} / $wrong);
+  }
+  $score .= ", ";
   $score .= "current streak: $player_data->{wrong_streak}, ";
   $score .= "highest streak: $player_data->{highest_wrong_streak}" . ($player_data->{lifetime_highest_wrong_streak} > $player_data->{highest_wrong_streak} ? " [$player_data->{lifetime_highest_wrong_streak}]" : "") . ", ";
 
