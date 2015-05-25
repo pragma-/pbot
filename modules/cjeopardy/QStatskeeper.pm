@@ -209,4 +209,16 @@ sub add_wrong_answer {
   }
 }
 
+sub get_all_questions {
+  my ($self) = @_;
+
+  my $qdatas = eval {
+    my $sth = $self->{dbh}->prepare('SELECT * FROM QStats');
+    $sth->execute();
+    return $sth->fetchall_arrayref({});
+  };
+  print STDERR $@ if $@;
+  return $qdatas;
+}
+
 1;
