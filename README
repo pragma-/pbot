@@ -6,7 +6,7 @@ Features
 * Factoids
 * Quotegrabs
 * Loadable modules that are simple programs based on stdin and stdout
-* Lots of default modules, including a code compiler and debugger, C-to-English translator, C precedence analyzer, and much more
+* Lots of default modules, including a code compiler and debugger, C-to-English translator, C precedence analyzer, trivia and much more
 * Channel management
 * User hostmask and message tracking
 * Ban evasion detection
