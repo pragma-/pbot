@@ -139,10 +139,10 @@ if (lc $command eq 'rank') {
   );
 
   if (not $opt) {
-    print "Usage: rank [-]<keyword> [offset] or rank [-]<question id>; available keywords: ";
+    print "Usage: qstats rank [-]<keyword> [offset] or rank [-]<question id>; available keywords: ";
     print join ', ', sort keys %ranks;
     print ".\n";
-    print "Prefixing the keyword or nick with a dash will invert the sort direction for each category. Specifying an offset will start ranking at that offset.\n";
+    print "Prefixing the keyword or question id with a dash will invert the sort direction for each category. Specifying an offset will start ranking at that offset.\n";
     exit;
   }
 
