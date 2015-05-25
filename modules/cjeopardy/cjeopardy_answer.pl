@@ -189,7 +189,7 @@ foreach my $answer (@valid_answers) {
     $qdata->{last_correct_time} = gettimeofday;
     $qdata->{last_correct_nick} = $nick;
 
-    if (gettimeofday - $qdata->{last_asked} < 60 * 10) {
+    if (gettimeofday - $qdata->{last_asked} < 60 * 15) {
       $qdata->{average_answer_time} *= $qdata->{correct} - 1;
       $qdata->{average_answer_time} += $elapsed;
       $qdata->{average_answer_time} /= $qdata->{correct};
