@@ -3,10 +3,6 @@
 use warnings;
 use strict;
 
-use Time::HiRes qw/gettimeofday/;
-use Time::Duration qw/duration/;
-use Fcntl qw(:flock);
-
 use IRCColors;
 use QStatskeeper;
 
