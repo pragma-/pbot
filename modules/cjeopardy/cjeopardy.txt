@@ -291,8 +291,8 @@
 291) [6.2.7 Compatible type and composite type] For two enumerations to be compatible, corresponding members shall have the same this.|values|value
 292) [6.2.7 Compatible type and composite type] This kind of type can be constructed from two types that are compatible; it is a type that is compatible with both of the two types.|composite|composite type
 293) [6.2.8 Alignment of objects] This is an implementation-defined integer value representing the number of bytes between successive addresses at which a given object can be allocated.|alignment
-294) [6.2.8 Alignment of objects] This kind of alignment is represented by an alignment less than or equal to the greatest alignment supported by the implementation in all contexts, which is equal to _Alignof (max_align_t).|fundamental
-295) [6.2.8 Alignment of objects] This kind of alignment is represented by an alignment greater than _Alignof (max_align_t).|extended
+294) [6.2.8 Alignment of objects] This kind of alignment is represented by an alignment less than or equal to the greatest alignment supported by the implementation in all contexts, which is equal to _Alignof (max_align_t).|fundamental|fundamental alignment
+295) [6.2.8 Alignment of objects] This kind of alignment is represented by an alignment greater than _Alignof (max_align_t).|extended|extended alignment
 296) [6.2.8 Alignment of objects] A type having an extended alignment requirement is called this.|over-aligned|over-aligned type
 297) [6.2.8 Alignment of objects] Every valid alignment value shall be in this domain.|nonnegative integral power of two|positive integral power of two|integral power of two|power of two|power of 2|nonnegative integral power of 2|positive integral power of 2|integral power of 2
 298) [6.2.8 Alignment of objects] This type shall have the weakest alignment requirement.|char{In any of its variants: plain, unsigned or signed.}
