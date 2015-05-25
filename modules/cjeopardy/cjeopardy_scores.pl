@@ -148,9 +148,9 @@ sub print_quickest {
 
   my $quickest;
   if ($player->{quickest_correct} < 60) {
-    $quickest = sprintf("%.2f seconds", $player->{quickest_correct});
+    $quickest = sprintf("%.2fs", $player->{quickest_correct});
   } else {
-    $quickest = duration($player->{quickest_correct});
+    $quickest = concise duration($player->{quickest_correct});
   }
 
   return "$player->{nick}: $quickest";
@@ -298,24 +298,27 @@ if (lc $command eq 'score') {
   my $score = "$player_data->{nick}: " unless lc $nick eq lc $player_nick;
 
   $score .= "correct: $player_data->{correct_answers}" . ($player_data->{lifetime_correct_answers} > $player_data->{correct_answers} ? " [$player_data->{lifetime_correct_answers}]" : "") . ", ";
-  $score .= "current streak: $player_data->{correct_streak}, ";
-  $score .= "highest streak: $player_data->{highest_correct_streak}" . ($player_data->{lifetime_highest_correct_streak} > $player_data->{highest_correct_streak} ? " [$player_data->{lifetime_highest_correct_streak}]" : "") . ", ";
-  $score .= "quickest streak: ";
-  $score .= ($player_data->{highest_quick_correct_streak} > 0 ? "$player_data->{highest_quick_correct_streak} in " . (duration $player_data->{quickest_correct_streak}) : "N/A") . ($player_data->{lifetime_highest_quick_correct_streak} > $player_data->{highest_quick_correct_streak} ? " [$player_data->{lifetime_highest_quick_correct_streak} in " . (duration $player_data->{lifetime_quickest_correct_streak}) . "]" : "") . ", ";
+  $score .= "current correct streak: $player_data->{correct_streak}, ";
+  $score .= "highest correct streak: $player_data->{highest_correct_streak}" . ($player_data->{lifetime_highest_correct_streak} > $player_data->{highest_correct_streak} ? " [$player_data->{lifetime_highest_correct_streak}]" : "") . ", ";
+  $score .= "quickest correct streak: ";
+  $score .= ($player_data->{highest_quick_correct_streak} > 0 ? "$player_data->{highest_quick_correct_streak} in " . (concise duration $player_data->{quickest_correct_streak}) : "N/A") . ($player_data->{lifetime_highest_quick_correct_streak} > $player_data->{highest_quick_correct_streak} ? " [$player_data->{lifetime_highest_quick_correct_streak} in " . (concise duration $player_data->{lifetime_quickest_correct_streak}) . "]" : "") . ", ";
   
   $score .= "quickest answer: ";
 
   if ($player_data->{quickest_correct} == 0) {
     $score .= "N/A";
   } elsif ($player_data->{quickest_correct} < 60) {
-    $score .= sprintf("%.2f seconds", $player_data->{quickest_correct});
+    $score .= sprintf("%.2fs", $player_data->{quickest_correct});
   } else {
-    $score .= duration($player_data->{quickest_correct});
+    $score .= concise duration($player_data->{quickest_correct});
   }
 
   $score .= ", ";
 
   $score .= "wrong: $player_data->{wrong_answers}" . ($player_data->{lifetime_wrong_answers} > $player_data->{wrong_answers} ? " [$player_data->{lifetime_wrong_answers}]" : "") . ", ";
+  $score .= "current wrong streak: $player_data->{wrong_streak}, ";
+  $score .= "highest wrong streak: $player_data->{highest_wrong_streak}" . ($player_data->{lifetime_highest_wrong_streak} > $player_data->{highest_wrong_streak} ? " [$player_data->{lifetime_highest_wrong_streak}]" : "") . ", ";
+
   $score .= "ratio: ";
   my $wrong = $player_data->{wrong_answers} ? $player_data->{wrong_answers} : 1;
   $score .= sprintf("%.2f", $player_data->{correct_answers} / $wrong);
@@ -324,8 +327,6 @@ if (lc $command eq 'score') {
     $score .= sprintf(" [%.2f]", $player_data->{lifetime_correct_answers} / $wrong);
   }
   $score .= ", ";
-  $score .= "current streak: $player_data->{wrong_streak}, ";
-  $score .= "highest streak: $player_data->{highest_wrong_streak}" . ($player_data->{lifetime_highest_wrong_streak} > $player_data->{highest_wrong_streak} ? " [$player_data->{lifetime_highest_wrong_streak}]" : "") . ", ";
 
   $score .= "hints: $player_data->{hints}" . ($player_data->{lifetime_hints} > $player_data->{hints} ? " [$player_data->{lifetime_hints}]" : "") . "\n";
 
