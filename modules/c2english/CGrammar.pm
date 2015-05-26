@@ -1680,7 +1680,7 @@ atomic_type_specifier:
 
 type_specifier:
       <skip:''> /\s*/
-        (typedef_name | 'void' | 'double' | 'float' | 'char' | 'short' | 'int' | 'long'
+        ('void'
           | 'signed' | 'unsigned'
           | 'FILE' | 'fpos_t'
           | 'bool' | '_Bool'
@@ -1703,7 +1703,8 @@ type_specifier:
           | 'clock_t' | 'time_t'
           | <skip:'[\s]*'> struct_or_union_specifier
           | <skip:'[\s]*'> enum_specifier
-          | <skip:'[\s]*'> atomic_type_specifier
+          | <skip:'[\s]*'> atomic_type_specifier | typedef_name
+          | 'double' | 'float' | 'char' | 'short' | 'int' | 'long'
         ) .../\W/
           { $return = $item[3]; }
 
