@@ -89,9 +89,9 @@ sub process_line {
     $preserve_whitespace = 1;
   } elsif($cmd_text =~ /^$bot_trigger(.*)$/) {
     $command = $1;
-  } elsif($cmd_text =~ /^.?$botnick.?\s+(.*?)$/i) {
+  } elsif($cmd_text =~ /^.?$botnick.?\s*(.*?)$/i) {
     $command = $1;
-  } elsif($cmd_text =~ /^(.*?),?\s+$botnick[?!.]*$/i) {
+  } elsif($cmd_text =~ /^(.*?),?\s*$botnick[?!.]*$/i) {
     $command = $1;
   } elsif($cmd_text =~ /https?:\/\/([^\s]+)/i) {
     $has_url = $1;
