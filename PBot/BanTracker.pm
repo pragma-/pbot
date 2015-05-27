@@ -157,6 +157,11 @@ sub track_mode {
         $self->{pbot}->{chanops}->{unban_timeout}->remove($channel, "$target\$##stop_join_flood");
       }
     }
+    elsif($mode eq "-q") {
+      if($self->{pbot}->{chanops}->{unmute_timeout}->find_index($channel, $target)) {
+        $self->{pbot}->{chanops}->{unmute_timeout}->remove($channel, $target);
+      }
+    }
   } else {
     $self->{pbot}->{logger}->log("BanTracker: Unknown mode '$mode'\n");
   }
