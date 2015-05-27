@@ -21,7 +21,7 @@ sub parsedate {
   my $seconds = 0;
   foreach my $input (@inputs) {
     return -1 if $input =~ m/forever/i;
-    $input .= ' seconds' if $input =~ m/^\d+$/;
+    $input .= ' seconds' if $input =~ m/^\s*\d+\s*$/;
 
     my $parse = Time::ParseDate::parsedate($input, NOW => $now);
 
