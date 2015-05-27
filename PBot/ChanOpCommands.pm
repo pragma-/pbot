@@ -37,6 +37,8 @@ sub initialize {
   
   $pbot->{commands}->register(sub { return $self->ban_user(@_)      },       "ban",        10);
   $pbot->{commands}->register(sub { return $self->unban_user(@_)    },       "unban",      10);
+  $pbot->{commands}->register(sub { return $self->mute_user(@_)     },       "mute",       10);
+  $pbot->{commands}->register(sub { return $self->unmute_user(@_)   },       "unmute",     10);
   $pbot->{commands}->register(sub { return $self->kick_user(@_)     },       "kick",       10);
 }
 
@@ -50,10 +52,15 @@ sub ban_user {
     return "";
   }
 
+  if ($channel !~ m/^#/) {
+    $length = "$channel $length";
+    $channel = $from;
+  }
+
   $channel = $from if not defined $channel;
 
   if(not defined $target) {
-    return "/msg $nick Usage: ban <mask> [channel [timeout (default: 24 hours)]]"; 
+    return "/msg $nick Usage: ban <mask> [channel [timeout (default: 24 hours)]]";
   }
 
   if(not defined $length) {
@@ -99,6 +106,72 @@ sub unban_user {
 
   $self->{pbot}->{chanops}->unban_user($target, $channel);
   return "/msg $nick $target has been unbanned from $channel.";
+}
+
+sub mute_user {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($target, $channel, $length) = split(/\s+/, $arguments, 3);
+
+  if(not defined $from) {
+    $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
+    return "";
+  }
+
+  if ($channel !~ m/^#/) {
+    $length = "$channel $length";
+    $channel = $from;
+  }
+
+  $channel = $from if not defined $channel;
+
+  if(not defined $target) {
+    return "/msg $nick Usage: mute <mask> [channel [timeout (default: 24 hours)]]";
+  }
+
+  if(not defined $length) {
+    $length = 60 * 60 * 24; # 24 hours
+  } else {
+    my $error;
+    ($length, $error) = parsedate($length);
+    return $error if defined $error;
+  }
+
+  my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+  return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
+
+  $self->{pbot}->{chanops}->mute_user_timed($target, $channel, $length);
+
+  if ($length > 0) {
+    $length = duration($length);
+  } else {
+    $length = 'all eternity';
+  }
+
+  return "/msg $nick $target muted in $channel for $length";
+}
+
+sub unmute_user {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+
+  if(not defined $from) {
+    $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
+    return "";
+  }
+
+  my ($target, $channel) = split / /, $arguments;
+
+  if(not defined $target) {
+    return "/msg $nick Usage: unmute <mask> [channel]";
+  }
+
+  $channel = $from if not defined $channel;
+
+  return "/msg $nick Usage for /msg: unmute $target <channel>" if $channel !~ /^#/;
+
+  $self->{pbot}->{chanops}->unmute_user($target, $channel);
+  return "/msg $nick $target has been unmuted in $channel.";
 }
 
 sub kick_user {

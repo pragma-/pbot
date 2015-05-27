@@ -35,6 +35,14 @@ sub initialize {
 
   $self->{unban_timeout}->load;
 
+  $self->{unmute_timeout} = PBot::DualIndexHashObject->new(
+    pbot => $self->{pbot},
+    name => 'Unmute Timeouts',
+    filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/unmute_timeouts'
+  );
+
+  $self->{unmute_timeout}->load;
+
   $self->{op_commands} = {};
   $self->{is_opped} = {};
   $self->{op_requested} = {};
@@ -43,8 +51,9 @@ sub initialize {
 
   $self->{pbot}->{registry}->add_default('text', 'general', 'deop_timeout', $conf{'deop_timeout'} // 300);
 
-  $self->{pbot}->{timer}->register(sub { $self->check_opped_timeouts }, 10);
-  $self->{pbot}->{timer}->register(sub { $self->check_unban_timeouts }, 10);
+  $self->{pbot}->{timer}->register(sub { $self->check_opped_timeouts  }, 10);
+  $self->{pbot}->{timer}->register(sub { $self->check_unban_timeouts  }, 10);
+  $self->{pbot}->{timer}->register(sub { $self->check_unmute_timeouts }, 10);
 }
 
 sub gain_ops {
@@ -124,6 +133,38 @@ sub ban_user_timed {
   }
 }
 
+sub mute_user {
+  my $self = shift;
+  my ($mask, $channel) = @_;
+
+  $self->add_op_command($channel, "mode $channel +q $mask");
+  $self->gain_ops($channel);
+}
+
+sub unmute_user {
+  my $self = shift;
+  my ($mask, $channel) = @_;
+  $self->{pbot}->{logger}->log("Unmuting $channel $mask\n");
+  if($self->{unmute_timeout}->find_index($channel, $mask)) {
+    $self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + 7200; # try again in 2 hours if unmute doesn't immediately succeed
+    $self->{unmute_timeout}->save;
+  }
+  $self->add_op_command($channel, "mode $channel -q $mask");
+  $self->gain_ops($channel);
+}
+
+sub mute_user_timed {
+  my $self = shift;
+  my ($mask, $channel, $length) = @_;
+
+  $mask .= '!*@*' if $mask !~ m/[\$!@]/;
+  $self->mute_user($mask, $channel);
+  if ($length > 0) {
+    $self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
+    $self->{unmute_timeout}->save;
+  }
+}
+
 sub join_channel {
   my ($self, $channel) = @_;
 
@@ -161,6 +202,22 @@ sub check_unban_timeouts {
     foreach my $mask (keys %{ $self->{unban_timeout}->hash->{$channel} }) {
       if($self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} < $now) {
         $self->unban_user($mask, $channel);
+      }
+    }
+  }
+}
+
+sub check_unmute_timeouts {
+  my $self = shift;
+
+  return if not $self->{pbot}->{joined_channels};
+
+  my $now = gettimeofday();
+
+  foreach my $channel (keys %{ $self->{unmute_timeout}->hash }) {
+    foreach my $mask (keys %{ $self->{unmute_timeout}->hash->{$channel} }) {
+      if($self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} < $now) {
+        $self->unmute_user($mask, $channel);
       }
     }
   }
