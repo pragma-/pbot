@@ -35,6 +35,7 @@ sub initialize {
   $self->{banlist} = {};
 
   $self->{pbot}->{registry}->add_default('text', 'bantracker', 'chanserv_ban_timeout', '604800');
+  $self->{pbot}->{registry}->add_default('text', 'bantracker', 'mute_timeout',         '604800');
   $self->{pbot}->{registry}->add_default('text', 'bantracker', 'debug',                '0');
 
   $self->{pbot}->{commands}->register(sub { $self->dumpbans(@_) }, "dumpbans", 60);

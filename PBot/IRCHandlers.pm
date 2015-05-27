@@ -203,6 +203,14 @@ sub on_mode {
           }
         }
       } 
+      elsif($mode eq "+q") {
+        if($nick ne $event->{conn}->nick) {
+          if (exists $self->{pbot}->{channels}->{channels}->hash->{$channel} and $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop}) {
+            $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'mute_timeout');
+            $self->{pbot}->{chanops}->{unmute_timeout}->save;
+          }
+        }
+      }
       elsif($mode eq "+e" && $channel eq $event->{conn}->nick) {
         foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
           if($self->{channels}->{channels}->hash->{$chan}{enabled}) {
