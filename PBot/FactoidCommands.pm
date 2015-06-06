@@ -108,7 +108,17 @@ sub factset {
     return "Usage: factset <channel> <factoid> [key [value]]";
   }
 
-  my $admininfo = $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host");
+  $channel = '.*' if $channel !~ /^#/;
+
+  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1, 1);
+
+  my $admininfo;
+
+  if (defined $owner_channel) {
+    $admininfo  = $self->{pbot}->{admins}->loggedin($owner_channel, "$nick!$user\@$host");
+  } else {
+    $admininfo  = $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host");
+  }
 
   my $level = 0;
   my $meta_level = 0;
@@ -130,10 +140,6 @@ sub factset {
       }
     }
   }
-
-  $channel = '.*' if $channel !~ /^#/;
-
-  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1, 1);
 
   if(defined $owner_channel) {
     my $factoid = $self->{pbot}->{factoids}->{factoids}->hash->{$owner_channel}->{$owner_trigger};
@@ -157,7 +163,17 @@ sub factunset {
     return "Usage: factunset <channel> <factoid> <key>"
   }
 
-  my $admininfo = $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host");
+  $channel = '.*' if $channel !~ /^#/;
+
+  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1, 1);
+
+  my $admininfo;
+
+  if (defined $owner_channel) {
+    $admininfo = $self->{pbot}->{admins}->loggedin($owner_channel, "$nick!$user\@$host");
+  } else {
+    $admininfo = $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host");
+  }
 
   my $level = 0;
   my $meta_level = 0;
@@ -177,10 +193,6 @@ sub factunset {
       return "You must be at least level $meta_level to unset '$key'";
     }
   }
-
-  $channel = '.*' if $channel !~ /^#/;
-
-  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1, 1);
 
   if(defined $owner_channel) {
     my $factoid = $self->{pbot}->{factoids}->{factoids}->hash->{$owner_channel}->{$owner_trigger};
@@ -353,7 +365,7 @@ sub factmove {
 
   my ($owner) = $factoids->{$found_src_channel}->{$found_source}->{'owner'} =~ m/([^!]+)/;
 
-  if((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host"))) {
+  if((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($found_src_channel, "$nick!$user\@$host"))) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to move [$found_src_channel] $found_source (not owner)\n");
     my $chan = ($found_src_channel eq '.*' ? 'the global channel' : $found_src_channel);
     return "You are not the owner of $found_source for $chan";
@@ -498,7 +510,7 @@ sub factrem {
 
   my ($owner) = $factoids->{$channel}->{$trigger}->{'owner'} =~ m/([^!]+)/;
 
-  if((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host"))) {
+  if((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host"))) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to remove $trigger [not owner]\n");
     my $chan = ($channel eq '.*' ? 'the global channel' : $channel);
     return "You are not the owner of $trigger for $chan";
