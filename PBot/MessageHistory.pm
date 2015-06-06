@@ -164,7 +164,7 @@ sub list_also_known_as {
 
       if (not $show_hostmasks) {
         my ($nick) = $aka =~ m/([^!]+)/;
-        next if exists $nicks{$nick} and $nicks{$nick}->{id} == $akas{$aka}->{id};
+        next if exists $nicks{$nick};
         $nicks{$nick}->{id} = $akas{$aka}->{id};
         $result .= "$sep$nick";
       } else {
