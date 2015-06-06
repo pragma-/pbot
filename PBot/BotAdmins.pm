@@ -157,7 +157,7 @@ sub find_admin {
 
           return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if($from =~ m/$nick/i and $hostmask =~ m/$hostmask_regex/i);
         }
-      } elsif($from =~ m/$channel_regex/i) {
+      } elsif($from =~ m/^$channel_regex$/i) {
         foreach my $hostmask_regex (keys %{ $self->{admins}->hash->{$channel_regex} }) {
           return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/$hostmask_regex/i;
         }
