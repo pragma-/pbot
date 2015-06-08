@@ -130,6 +130,10 @@ sub ban_user_timed {
   if ($length > 0) {
     $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
     $self->{unban_timeout}->save;
+  } else {
+    if ($self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, $mask)) {
+      $self->{pbot}->{chanops}->{unban_timeout}->remove($channel, $mask);
+    }
   }
 }
 
@@ -162,6 +166,10 @@ sub mute_user_timed {
   if ($length > 0) {
     $self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
     $self->{unmute_timeout}->save;
+  } else {
+    if ($self->{pbot}->{chanops}->{unmute_timeout}->find_index($channel, $mask)) {
+      $self->{pbot}->{chanops}->{unmute_timeout}->remove($channel, $mask);
+    }
   }
 }
 
