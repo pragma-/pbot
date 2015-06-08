@@ -58,6 +58,7 @@ sub execute_module {
 
   $arguments =~ s/\$nick/$nick/g;
   $arguments =~ s/\$channel/$from/g;
+  $arguments =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
 
   $arguments = quotemeta($arguments);
 

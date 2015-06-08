@@ -84,10 +84,25 @@ sub get_channels {
 sub is_present {
   my ($self, $channel, $nick) = @_;
 
-  if (exists $self->{nicklist}->{lc $channel} and exists $self->{nicklist}->{lc $channel}->{lc $nick}) {
+  $channel = lc $channel;
+
+  if (exists $self->{nicklist}->{$channel} and exists $self->{nicklist}->{$channel}->{lc $nick}) {
     return 1;
   } else {
     return 0;
+  }
+}
+
+sub random_nick {
+  my ($self, $channel) = @_;
+
+  $channel = lc $channel;
+
+  if (exists $self->{nicklist}->{$channel}) {
+    my @nicks = keys $self->{nicklist}->{$channel};
+    return $nicks[rand @nicks];
+  } else {
+    return undef;
   }
 }
 

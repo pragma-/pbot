@@ -501,6 +501,7 @@ sub interpreter {
 
   $action =~ s/\$nick/$nick/g;
   $action =~ s/\$channel/$from/g;
+  $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
 
   while ($action =~ /(?<!\\)\$([a-zA-Z0-9_\-]+)/g) {
     my $v = $1;
