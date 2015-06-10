@@ -54,6 +54,7 @@ sub ban_user {
 
   if ($channel !~ m/^#/) {
     $length = "$channel $length";
+    $length = undef if $length eq ' ';
     $channel = $from;
   }
 
@@ -120,6 +121,7 @@ sub mute_user {
 
   if ($channel !~ m/^#/) {
     $length = "$channel $length";
+    $length = undef if $length eq ' ';
     $channel = $from;
   }
 
