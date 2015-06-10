@@ -100,7 +100,8 @@ sub random_nick {
 
   if (exists $self->{nicklist}->{$channel}) {
     my @nicks = keys $self->{nicklist}->{$channel};
-    return $nicks[rand @nicks];
+    my $nick = $nicks[rand @nicks];
+    return $self->{nicklist}->{$channel}->{$nick}->{nick};
   } else {
     return undef;
   }
