@@ -102,6 +102,8 @@ sub get_baninfo {
     $self->{pbot}->{logger}->log("[get-baninfo] Getting baninfo for $mask in $channel using account " . (defined $account ? $account : "[undefined]") . "\n");
   }
 
+  my ($nick, $user, $host) = $mask =~ m/([^!]+)!([^@]+)@(.*)/;
+
   foreach my $mode (keys %{ $self->{banlist}{$channel} }) {
     foreach my $banmask (keys %{ $self->{banlist}{$channel}{$mode} }) {
       if($banmask =~ m/^\$a:(.*)/) {
@@ -115,7 +117,20 @@ sub get_baninfo {
       $banmask =~ s/\\\*/.*?/g;
       $banmask =~ s/\\\?/./g;
 
-      if((defined $account and $account eq $ban_account) or $mask =~ m/^$banmask$/i) {
+      my $banned;
+
+      $banned = 1 if defined $account and $account eq $ban_account;
+      $banned = 1 if $mask =~ m/^$banmask$/i;
+
+      if ($banmask_key =~ m{\@gateway/web/irccloud.com} and $host =~ m{^gateway/web/irccloud.com}) {
+        my ($bannick, $banuser, $banhost) = $banmask_key =~ m/([^!]+)!([^@]+)@(.*)/;
+
+        if (lc $user eq lc $banuser) {
+          $banned = 1;
+        }
+      }
+
+      if ($banned) {
         if(not defined $bans) {
           $bans = [];
         }

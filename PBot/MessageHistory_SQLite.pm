@@ -308,6 +308,16 @@ sub get_message_account {
 
   my $rows = eval {
     my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC');
+
+    if ($host =~ m{^gateway/web/irccloud.com}) {
+      $sth->bind_param(1, "%!$user\@gateway/web/irccloud.com/%");
+      $sth->execute();
+      my $rows = $sth->fetchall_arrayref({});
+      if (defined $rows->[0]) {
+        return $rows;
+      }
+    }
+
     my $qnick = quotemeta (defined $link_nick ? $link_nick : $nick);
     $qnick =~ s/_/\\_/g;
     $sth->bind_param(1, "$qnick!%");
