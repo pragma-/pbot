@@ -279,7 +279,13 @@ sub check_flood {
     }
 
     # do not do flood enforcement for logged in bot admins
-    if ($self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+    if ($self->{pbot}->{registry}->get_value('antiflood', 'dont_enforce_admins') and $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+      $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+      next;
+    }
+
+    # do not do flood enforcement for channels that do not want it
+    if ($self->{pbot}->{registry}->get_value($channel, 'dont_enforce_antiflood')) {
       $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
       next;
     }
