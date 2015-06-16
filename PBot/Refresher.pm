@@ -9,8 +9,6 @@ package PBot::Refresher;
 use warnings;
 use strict;
 
-use feature 'switch';
-
 use Module::Refresh;
 use Carp ();
 
