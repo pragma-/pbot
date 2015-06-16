@@ -49,6 +49,7 @@ use PBot::Quotegrabs;
 use PBot::Timer;
 use PBot::AntiAway;
 use PBot::AntiKickAutoRejoin;
+use PBot::Refresher;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -71,6 +72,8 @@ sub initialize {
   $self->{atexit}   = PBot::Registerable->new(%conf);
   $self->{timer}    = PBot::Timer->new(timeout => 10, %conf);
   $self->{commands} = PBot::Commands->new(pbot => $self, %conf);
+
+  $self->{refresher} = PBot::Refresher->new(pbot => $self);
 
   my $config_dir = delete $conf{config_dir} // "$ENV{HOME}/pbot/config";
 
