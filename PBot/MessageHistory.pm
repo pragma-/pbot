@@ -202,7 +202,7 @@ sub recall_message {
     return "";
   }
 
-  my $usage = 'Usage: recall [nick [history [channel]]] [-c,channel <channel>] [-t,text,h,history <history>] [-b,before <context before>] [-a,after <context after>] [-x,context <nick>] [+ ...]';
+  my $usage = 'Usage: recall [nick [history [channel]]] [-c,channel <channel>] [-t,text,h,history <history>] [-b,before <context before>] [-a,after <context after>] [-x,context <nick>] [-n,count <count>] [+ ...]';
 
   if(not defined $arguments or not length $arguments) {
     return $usage; 
@@ -221,14 +221,15 @@ sub recall_message {
   my $recall_text;
 
   foreach my $recall (@recalls) {
-    my ($recall_nick, $recall_history, $recall_channel, $recall_before, $recall_after, $recall_context);
+    my ($recall_nick, $recall_history, $recall_channel, $recall_before, $recall_after, $recall_context, $recall_count);
 
     my ($ret, $args) = GetOptionsFromString($recall,
-      'channel|c=s'        => \$recall_channel,
-      'text|t|history|h=s' => \$recall_history,
-      'before|b=s'         => \$recall_before,
-      'after|a=s'          => \$recall_after,
-      'context|x=s'        => \$recall_context);
+      'channel|c:s'        => \$recall_channel,
+      'text|t|history|h:s' => \$recall_history,
+      'before|b:i'         => \$recall_before,
+      'after|a:i'          => \$recall_after,
+      'count|n:i'          => \$recall_count,
+      'context|x:s'        => \$recall_context);
 
     return "$getopt_error -- $usage" if defined $getopt_error;
 
@@ -238,8 +239,17 @@ sub recall_message {
     $recall_nick = shift @$args;
     $recall_history = shift @$args if not defined $recall_history;
     $recall_channel = shift @$args if not defined $recall_channel;
-    $recall_before = 0 if not defined $recall_before;
-    $recall_after = 0 if not defined $recall_after;
+
+    $recall_count = 1 if $recall_count <= 0;
+    return "You may only select a count of up to 50 messages." if $recall_count > 50;
+
+    if ($recall_before + $recall_after > 200) {
+      return "You may only select up to 200 lines of surrounding context.";
+    }
+
+    if ($recall_count > 1 and ($recall_before > 0 or $recall_after > 0)) {
+      return "The `count` and `context before/after` options cannot be used together.";
+    }
 
     # swap nick and channel if recall nick looks like channel and channel wasn't specified
     if(not $channel_arg and $recall_nick =~ m/^#/) {
@@ -310,10 +320,6 @@ sub recall_message {
       }
     }
 
-    if ($recall_before + $recall_after > 200) {
-      return "You may only select 200 lines of surrounding context.";
-    }
-
     my $context_account;
 
     if (defined $recall_context) {
@@ -324,7 +330,7 @@ sub recall_message {
       }
     }
 
-    my $messages = $self->{database}->get_message_context($message, $recall_before, $recall_after, $context_account);
+    my $messages = $self->{database}->get_message_context($message, $recall_before, $recall_after, $recall_count, $recall_history, $context_account);
 
     foreach my $msg (@$messages) {
       $self->{pbot}->{logger}->log("$nick ($from) recalled <$msg->{nick}/$msg->{channel}> $msg->{msg}\n");
