@@ -38,20 +38,29 @@ sub initialize {
 sub refresh {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  eval {
+  my $result = eval {
     if (not $arguments) {
       $self->{pbot}->{logger}->log("Refreshing all modified modules\n");
       $self->{refresher}->refresh;
+      return "Refreshed all modified modules.\n";
     } else {
       $self->{pbot}->{logger}->log("Refreshing module $arguments\n");
       if ($self->{refresher}->refresh_module_if_modified($arguments)) {
         $self->{pbot}->{logger}->log("Refreshed module.\n");
+        return "Refreshed module.\n";
       } else {
         $self->{pbot}->{logger}->log("Module had no changes; not refreshed.\n");
+        return "Module had no changes; not refreshed.\n";
       }
     }
   };
-  $self->{pbot}->{logger}->log("Error refreshing: $@\n") if $@;
+
+  if ($@) {
+    $self->{pbot}->{logger}->log("Error refreshing: $@\n");
+    return $@;
+  }
+
+  return $result;
 }
 
 1;
