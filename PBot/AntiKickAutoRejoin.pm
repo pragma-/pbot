@@ -38,6 +38,8 @@ sub on_kick {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $target, $channel, $reason) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0], $event->{event}->{args}[1]);
 
+  return 0 if not exists $self->{pbot}->{channels}->{channels}->hash->{$channel} or not $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop};
+
   if (not exists $self->{kicks}->{$channel}
       or not exists $self->{kicks}->{$channel}->{$target}) {
     $self->{kicks}->{$channel}->{$target}->{rejoins} = 0;
@@ -51,6 +53,8 @@ sub on_kick {
 sub on_join {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
+
+  return 0 if not exists $self->{pbot}->{channels}->{channels}->hash->{$channel} or not $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop};
 
   if (exists $self->{kicks}->{$channel}
       and exists $self->{kicks}->{$channel}->{$nick}) {
