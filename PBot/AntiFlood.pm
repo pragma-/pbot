@@ -647,12 +647,13 @@ sub check_bans {
 
           $self->{pbot}->{logger}->log("anti-flood: [check-bans] Hostmask ($mask [$alias" . (defined $nickserv ? "/$nickserv" : "") . "]) matches $baninfo->{type} $baninfo->{banmask}, adding ban\n");
           push @$bans, $baninfo;
-          last;
+          goto GOT_BAN;
         }
       }
     }
   }
 
+  GOT_BAN:
   if(defined $bans) {
     foreach my $baninfo (@$bans) {
       my $banmask;
@@ -757,7 +758,9 @@ sub on_whoisaccount {
   my $nick    =    $event->{event}->{args}[1];
   my $account = lc $event->{event}->{args}[2];
 
-  $self->{pbot}->{logger}->log("$nick is using NickServ account [$account]\n");
+  if ($self->{pbot}->{registry}->get_value('antiflood', 'debug_checkban')) {
+    $self->{pbot}->{logger}->log("$nick is using NickServ account [$account]\n");
+  }
 
   my ($id, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
   # $self->{pbot}->{logger}->log("whoisaccount: Found [$id][$hostmask][$account] for [$nick]\n");
