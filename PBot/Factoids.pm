@@ -335,7 +335,7 @@ sub interpreter {
   my ($result, $channel);
   my $pbot = $self->{pbot};
 
-  $self->{pbot}->{logger}->log("enter factoid interpreter [$keyword][" . (defined $arguments ? $arguments : '') . "]\n");
+  #$self->{pbot}->{logger}->log("enter factoid interpreter [$keyword][" . (defined $arguments ? $arguments : '') . "]\n");
   return undef if not length $keyword or $depth > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
 
   $from = lc $from;
@@ -433,8 +433,6 @@ sub interpreter {
 
   my $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action};
 
-  $self->{pbot}->{logger}->log("got action [$action]\n");
-
   if(length $arguments) {
     if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args}) {
       $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args};
@@ -497,7 +495,7 @@ sub interpreter {
     $self->{pbot}->{logger}->log("result set to [$action]\n");
   }
 
-  $self->{pbot}->{logger}->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: $keyword: Displaying text \"$action\"\n");
+  $self->{pbot}->{logger}->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: $keyword: action: \"$action\"\n");
 
   $action =~ s/\$nick/$nick/g;
   $action =~ s/\$channel/$from/g;
@@ -531,8 +529,6 @@ sub interpreter {
   }
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'module') {
-    $self->{pbot}->{logger}->log("Found module\n");
-
     my $preserve_whitespace = $self->{factoids}->hash->{$channel}->{$keyword}->{preserve_whitespace};
     $preserve_whitespace = 0 if not defined $preserve_whitespace;
 
