@@ -12,6 +12,7 @@ use HTML::Entities;
 use Time::HiRes qw(gettimeofday);
 use Carp ();
 use POSIX qw(strftime);
+use Text::ParseWords;
 
 use PBot::PBot qw($VERSION);
 use PBot::FactoidCommands;
@@ -329,6 +330,84 @@ sub find_factoid {
   return @result;
 }
 
+sub expand_action_arguments {
+  my ($self, $action, $input, $nick) = @_;
+
+  my @args = shellwords($input);
+
+  if (not defined $input or $input eq '') {
+    $action =~ s/\$args/$nick/g;
+  } else {
+    $action =~ s/\$args/$input/g;
+  }
+
+  while ($action =~ m/\$arg\[([^]]+)]/g) {
+    my $arg = $1;
+
+    if ($arg eq '*') {
+      if (not defined $input or $input eq '') {
+        $action =~ s/\$arg\[\*\]/$nick/;
+      } else {
+        $action =~ s/\$arg\[\*\]/$input/;
+      }
+      next;
+    }
+
+    if ($arg =~ m/([^:]*):(.*)/) {
+      my $arg1 = $1;
+      my $arg2 = $2;
+
+      my $arg1i = $arg1;
+      my $arg2i = $arg2;
+
+      $arg1i = 0 if $arg1i eq '';
+      $arg2i = $#args if $arg2i eq '';
+      $arg2i = $#args if $arg2i > $#args;
+
+      my @values = eval {
+        local $SIG{__WARN__} = sub {};
+        return @args[$arg1i .. $arg2i];
+      };
+
+      if ($@) {
+        next;
+      } else {
+        my $string = join(' ', @values);
+
+        if ($string eq '') {
+          $action =~ s/\s*\$arg\[$arg1:$arg2\]//;
+        } else {
+          $action =~ s/\$arg\[$arg1:$arg2\]/$string/;
+        }
+      }
+
+      next;
+    }
+
+    my $value = eval {
+      local $SIG{__WARN__} = sub {};
+      return $args[$arg];
+    };
+
+    if ($@) {
+      next;
+    } else {
+
+      if (not defined $value) {
+        if ($arg == 0) {
+          $action =~ s/\$arg\[$arg\]/$nick/;
+        } else {
+          $action =~ s/\s*\$arg\[$arg\]//;
+        }
+      } else {
+        $action =~ s/\$arg\[$arg\]/$value/;
+      }
+    }
+  }
+
+  return $action;
+}
+
 sub interpreter {
   my $self = shift;
   my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $ref_from) = @_;
@@ -418,7 +497,7 @@ sub interpreter {
     if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in}) {
       if($self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in} eq $from) {
         if(gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on} < $self->{factoids}->hash->{$channel}->{$keyword}->{rate_limit}) {
-          return "/msg $nick $ref_from'$keyword' is rate-limited; try again in " . ($self->{factoids}->hash->{$channel}->{$keyword}->{rate_limit} - int(gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on})) . " seconds.";
+          return "/msg $nick $ref_from'$keyword' is rate-limited; try again in " . ($self->{factoids}->hash->{$channel}->{$keyword}->{rate_limit} - int(gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on})) . " seconds." unless $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
         }
       }
     }
@@ -438,29 +517,24 @@ sub interpreter {
       $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args};
     }
 
-    my $newargs = $arguments;
-
-    if($action =~ m/\$args/i) {
-      $newargs = "";
-    }
-
-    if(not $action =~ s/\$args/$arguments/gi and not exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args} and $type eq 'text') {
-      if(not $action =~ m/^\/call/ and $self->{pbot}->{nicklist}->is_present($from, $arguments)) {
-        if($action =~ /^\/.+? /) {
-          $action =~ s/^(\/.+?) /$1 $arguments: /;
-        } else {
+    if ($action =~ m/\$args/ or $action =~ m/\$arg\[/) {
+      $action = $self->expand_action_arguments($action, $arguments, defined $tonick ? $tonick : $nick);
+      $arguments = "";
+    } else {
+      if($action !~ /^\/.+? /) {
+        if ($self->{pbot}->{nicklist}->is_present($from, $arguments)) {
           $action =~ s/^/\/say $arguments: $keyword is / unless defined $tonick;
+        } else {
+          $action =~ s/^/\/say $keyword is / unless defined $tonick;
         }
       }
     }
-
-    $arguments = $newargs;
   } else {
     # no arguments supplied
     if(defined $tonick) {
-      $action =~ s/\$args/$tonick/gi;
+      $action = $self->expand_action_arguments($action, undef, $tonick);
     } else {
-      $action =~ s/\$args/$nick/gi;
+      $action = $self->expand_action_arguments($action, undef, $nick);
     }
   }
 
