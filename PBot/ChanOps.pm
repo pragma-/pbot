@@ -56,12 +56,17 @@ sub initialize {
   $self->{pbot}->{timer}->register(sub { $self->check_unmute_timeouts }, 10);
 }
 
+sub can_gain_ops {
+  my ($self, $channel) = @_;
+  return exists $self->{pbot}->{channels}->{channels}->hash->{$channel} && $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop};
+}
+
 sub gain_ops {
   my $self = shift;
   my $channel = shift;
   
   return if exists $self->{op_requested}->{$channel};
-  return if not exists $self->{pbot}->{channels}->{channels}->hash->{$channel} or not $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop};
+  return if not $self->can_gain_ops($channel);
 
   if(not exists $self->{is_opped}->{$channel}) {
     $self->{pbot}->{conn}->privmsg("chanserv", "op $channel");
@@ -79,7 +84,7 @@ sub lose_ops {
 
 sub add_op_command {
   my ($self, $channel, $command) = @_;
-  return if not exists $self->{pbot}->{channels}->{channels}->hash->{$channel} or not $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop};
+  return if not $self->can_gain_ops($channel);
   push @{ $self->{op_commands}->{$channel} }, $command;
 }
 
@@ -198,6 +203,17 @@ sub part_channel {
   delete $self->{is_opped}->{$channel};
   delete $self->{op_requested}->{$channel};
 }
+
+sub has_ban_timeout {
+  my ($self, $channel, $mask) = @_;
+  return exists $self->{unban_timeout}->hash->{$channel}->{$mask};
+}
+
+sub has_mute_timeout {
+  my ($self, $channel, $mask) = @_;
+  return exists $self->{unmute_timeout}->hash->{$channel}->{$mask};
+}
+
 
 sub check_unban_timeouts {
   my $self = shift;
