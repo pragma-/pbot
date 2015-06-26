@@ -313,7 +313,7 @@ sub check_flood {
             $channel_data->{enter_abuse} = $enter_abuse_threshold / 2 - 1;
             if(++$channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
               if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-                if ($self->{pbot}->{chanops}->has_unban_timeout($channel, "*!$user\@" . address_to_mask($host))) {
+                if ($self->{pbot}->{chanops}->has_ban_timeout($channel, "*!$user\@" . address_to_mask($host))) {
                   $self->{pbot}->{logger}->log("$nick $channel enter abuse offense disregarded due to existing ban\n");
                   next;
                 }
@@ -405,7 +405,7 @@ sub check_flood {
         } elsif($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
           if($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
             # don't increment offenses again if already banned
-            if ($self->{pbot}->{chanops}->has_unban_timeout($channel, "*!$user\@" . address_to_mask($host))) {
+            if ($self->{pbot}->{chanops}->has_ban_timeout($channel, "*!$user\@" . address_to_mask($host))) {
               $self->{pbot}->{logger}->log("$nick $channel flood offense disregarded due to existing ban\n");
               next;
             }
@@ -680,7 +680,7 @@ sub check_bans {
       $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
       my ($bannick) = $mask =~ m/^([^!]+)/;
       if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-        if ($self->{pbot}->{chanops}->has_unban_timeout($baninfo->{channel}, $banmask)) {
+        if ($self->{pbot}->{chanops}->has_ban_timeout($baninfo->{channel}, $banmask)) {
           $self->{pbot}->{logger}->log("anti-flood: [check-bans] $banmask already banned in $channel, disregarding\n");
           return;
         }
