@@ -112,6 +112,8 @@ sub set {
     $self->process_trigger($section, $item, $value);
   }
 
+  $self->save if $result =~ m/set to/;
+
   return $result;
 }
 
@@ -122,7 +124,9 @@ sub unset {
   $item = lc $item;
   $key = lc $key;
 
-  return $self->{registry}->unset($section, $item, $key);
+  my $result = $self->{registry}->unset($section, $item, $key);
+  $self->save;
+  return $result;
 }
 
 sub get_value {
