@@ -333,6 +333,7 @@ sub find_factoid {
 sub expand_action_arguments {
   my ($self, $action, $input, $nick) = @_;
 
+  $input =~ s/'/\\'/g;
   my @args = shellwords($input);
 
   if (not defined $input or $input eq '') {
@@ -521,7 +522,7 @@ sub interpreter {
       $action = $self->expand_action_arguments($action, $arguments, defined $tonick ? $tonick : $nick);
       $arguments = "";
     } else {
-      if($action !~ /^\/.+? /) {
+      if($action !~ /^\/.+? / and $self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
         if ($self->{pbot}->{nicklist}->is_present($from, $arguments)) {
           $action =~ s/^/\/say $arguments: $keyword is / unless defined $tonick;
         } else {
