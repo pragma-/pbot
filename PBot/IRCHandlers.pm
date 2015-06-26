@@ -197,7 +197,7 @@ sub on_mode {
     else {  # bot not targeted
       if($mode eq "+b") {
         if($nick eq "ChanServ") {
-          if (exists $self->{pbot}->{channels}->{channels}->hash->{$channel} and $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop}) {
+          if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
             $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout');
             $self->{pbot}->{chanops}->{unban_timeout}->save;
           }
@@ -205,7 +205,7 @@ sub on_mode {
       } 
       elsif($mode eq "+q") {
         if($nick ne $event->{conn}->nick) {
-          if (exists $self->{pbot}->{channels}->{channels}->hash->{$channel} and $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop}) {
+          if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
             $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'mute_timeout');
             $self->{pbot}->{chanops}->{unmute_timeout}->save;
           }

@@ -55,7 +55,7 @@ sub on_action {
   my ($nick, $user, $host, $msg, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->{args}[0], $event->{event}->{to}[0]);
 
   return 0 if $channel !~ /^#/;
-  return 0 if not exists $self->{pbot}->{channels}->{channels}->hash->{$channel} or not $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop};
+  return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 
   my $bad_actions = $self->{pbot}->{registry}->get_value('antiaway', 'bad_actions');
   if($msg =~ m/$bad_actions/i) {
