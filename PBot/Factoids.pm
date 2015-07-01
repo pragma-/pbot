@@ -333,14 +333,14 @@ sub find_factoid {
 sub expand_action_arguments {
   my ($self, $action, $input, $nick) = @_;
 
-  $input =~ s/'/\\'/g;
-  my @args = shellwords($input);
-
   if (not defined $input or $input eq '') {
     $action =~ s/\$args/$nick/g;
   } else {
     $action =~ s/\$args/$input/g;
   }
+
+  $input =~ s/'/\\'/g;
+  my @args = shellwords($input);
 
   while ($action =~ m/\$arg\[([^]]+)]/g) {
     my $arg = $1;
@@ -522,11 +522,22 @@ sub interpreter {
       $action = $self->expand_action_arguments($action, $arguments, defined $tonick ? $tonick : $nick);
       $arguments = "";
     } else {
-      if($action !~ /^\/.+? / and $self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
-        if ($self->{pbot}->{nicklist}->is_present($from, $arguments)) {
-          $action =~ s/^/\/say $arguments: $keyword is / unless defined $tonick;
+      if ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
+        my $target = $self->{pbot}->{nicklist}->is_present($from, $arguments);
+        if ($target) {
+          if ($action !~ m/^(\/[^ ]+) /) {
+            $action =~ s/^/\/say $target: $keyword is / unless defined $tonick;
+          } else {
+            if ($1 eq '/say') {
+              $action =~ s/^\/say /\/say $target: /;
+            } elsif ($1 ne '/call') {
+              $action =~ s/$/ ($target)/;
+            }
+          }
         } else {
-          $action =~ s/^/\/say $keyword is / unless defined $tonick;
+          if ($action !~ m/^\/.+ /) {
+            $action =~ s/^/\/say $keyword is / unless defined $tonick;
+          }
         }
       }
     }
