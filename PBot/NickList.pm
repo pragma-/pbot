@@ -85,9 +85,10 @@ sub is_present {
   my ($self, $channel, $nick) = @_;
 
   $channel = lc $channel;
+  $nick = lc $nick;
 
-  if (exists $self->{nicklist}->{$channel} and exists $self->{nicklist}->{$channel}->{lc $nick}) {
-    return 1;
+  if (exists $self->{nicklist}->{$channel} and exists $self->{nicklist}->{$channel}->{$nick}) {
+    return $self->{nicklist}->{$channel}->{$nick}->{nick};
   } else {
     return 0;
   }
