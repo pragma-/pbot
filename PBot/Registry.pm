@@ -96,8 +96,13 @@ sub remove {
   $self->save;
 }
 
-sub set {
+sub set_default {
   my ($self, $section, $item, $key, $value) = @_;
+  $self->set($section, $item, $key, $value, 1);
+}
+
+sub set {
+  my ($self, $section, $item, $key, $value, $is_default) = @_;
 
   $section = lc $section;
   $item = lc $item;
@@ -112,7 +117,7 @@ sub set {
     $self->process_trigger($section, $item, $value);
   }
 
-  $self->save if $result =~ m/set to/;
+  $self->save if $result =~ m/set to/ && not $is_default;
 
   return $result;
 }
@@ -158,6 +163,7 @@ sub get_array_value {
 
 sub add_trigger {
   my ($self, $section, $item, $subref) = @_;
+
   $self->{triggers}->{$section}->{$item} = $subref;
 }
 
