@@ -99,9 +99,9 @@ sub initialize {
   $self->{registry}->add_default('text', 'irc',     'identify_password', delete $conf{identify_password} // 'none');
   $self->{registry}->add_default('text', 'irc',     'log_default_handler', 1);
   
-  $self->{registry}->set('irc', 'SSL_ca_file',       'private', 1);
-  $self->{registry}->set('irc', 'SSL_ca_path',       'private', 1);
-  $self->{registry}->set('irc', 'identify_password', 'private', 1);
+  $self->{registry}->set_default('irc', 'SSL_ca_file',       'private', 1);
+  $self->{registry}->set_default('irc', 'SSL_ca_path',       'private', 1);
+  $self->{registry}->set_default('irc', 'identify_password', 'private', 1);
 
   $self->{registry}->add_trigger('irc', 'botnick', sub { $self->change_botnick_trigger(@_) });
   $self->{registry}->add_trigger('irc', 'debug',   sub { $self->irc_debug_trigger(@_)      });
