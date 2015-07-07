@@ -330,6 +330,34 @@ sub find_factoid {
   return @result;
 }
 
+sub expand_factoid_vars {
+  my ($self, $from, $action) = @_;
+
+  while ($action =~ /(?<!\\)\$([a-zA-Z0-9_\-]+)/g) {
+    my $v = $1;
+    next if $v =~ m/^[0-9]+$/;
+    my ($var_chan, $var) = $self->find_factoid($from, $v, undef, 0, 1);
+
+    if(defined $var && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
+      my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
+      my @list = split(/\s|(".*?")/, $change);
+      my @mylist;
+      for(my $i = 0; $i <= $#list; $i++) {
+        push @mylist, $list[$i] if $list[$i];
+      }
+      my $line = int(rand($#mylist + 1));
+      $mylist[$line] =~ s/"//g;
+      $action =~ s/\$$var/$mylist[$line]/;
+    } else {
+      $action =~ s/(?<!\\)\$$var/$var/;
+    }
+  }
+
+  $action =~ s/\\\$/\$/g;
+
+  return $action;
+}
+
 sub expand_action_arguments {
   my ($self, $action, $input, $nick) = @_;
 
@@ -552,11 +580,9 @@ sub interpreter {
 
   # Check if it's an alias
   if($action =~ /^\/call\s+(.*)$/) {
-    my $command;
+    my $command = $self->expand_factoid_vars($from, $1);
     if(length $arguments) {
-      $command = "$1 $arguments";
-    } else {
-      $command = $1;
+      $command = "$command $arguments";
     }
 
     $pbot->{logger}->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
@@ -587,27 +613,7 @@ sub interpreter {
   $action =~ s/\$channel/$from/g;
   $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
 
-  while ($action =~ /(?<!\\)\$([a-zA-Z0-9_\-]+)/g) {
-    my $v = $1;
-    next if $v =~ m/^[0-9]+$/;
-    my ($var_chan, $var) = $self->find_factoid($from, $v, undef, 0, 1);
-
-    if(defined $var && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
-      my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
-      my @list = split(/\s|(".*?")/, $change);
-      my @mylist;
-      for(my $i = 0; $i <= $#list; $i++) {
-        push @mylist, $list[$i] if $list[$i];
-      }
-      my $line = int(rand($#mylist + 1));
-      $mylist[$line] =~ s/"//g;
-      $action =~ s/\$$var/$mylist[$line]/;
-    } else {
-      $action =~ s/(?<!\\)\$$var/$var/;
-    }
-  }
-
-  $action =~ s/\\\$/\$/g;
+  $action = $self->expand_factoid_vars($from, $action);
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{enabled} == 0) {
     $self->{pbot}->{logger}->log("$keyword disabled.\n");
