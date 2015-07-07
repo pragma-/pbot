@@ -348,8 +348,6 @@ sub expand_factoid_vars {
       my $line = int(rand($#mylist + 1));
       $mylist[$line] =~ s/"//g;
       $action =~ s/\$$var/$mylist[$line]/;
-    } else {
-      $action =~ s/(?<!\\)\$$var/$var/;
     }
   }
 
@@ -582,7 +580,7 @@ sub interpreter {
   if($action =~ /^\/call\s+(.*)$/) {
     my $command = $self->expand_factoid_vars($from, $1);
     if(length $arguments) {
-      $command = "$command $arguments";
+      $command .= " $arguments";
     }
 
     $pbot->{logger}->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
