@@ -65,9 +65,14 @@ sub process_line {
   my $message_account = $pbot->{messagehistory}->get_message_account($nick, $user, $host);
   $pbot->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $from, $text, $pbot->{messagehistory}->{MSG_CHAT});
 
+  my $flood_threshold      = $pbot->{registry}->get_value($from, 'chat_flood_threshold');
+  my $flood_time_threshold = $pbot->{registry}->get_value($from, 'chat_flood_time_threshold');
+
+  $flood_threshold      = $pbot->{registry}->get_value('antiflood', 'chat_flood_threshold')      if not defined $flood_threshold;
+  $flood_time_threshold = $pbot->{registry}->get_value('antiflood', 'chat_flood_time_threshold') if not defined $flood_time_threshold;
+
   $pbot->{antiflood}->check_flood($from, $nick, $user, $host, $text,
-    $pbot->{registry}->get_value('antiflood', 'chat_flood_threshold'),
-    $pbot->{registry}->get_value('antiflood', 'chat_flood_time_threshold'),
+    $flood_threshold, $flood_time_threshold,
     $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
 
   $text =~ s/^\s+//;
