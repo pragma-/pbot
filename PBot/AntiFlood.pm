@@ -304,9 +304,13 @@ sub check_flood {
       if(defined $self->{channels}->{$channel}->{last_spoken_nick} and $nick eq $self->{channels}->{$channel}->{last_spoken_nick}) {
         my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, 2, $self->{pbot}->{messagehistory}->{MSG_CHAT});
 
-        my $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_threshold');
-        my $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_time_threshold');
-        my $enter_abuse_max_offenses   = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_offenses');
+        my $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_threshold');
+        my $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_time_threshold');
+        my $enter_abuse_max_offenses   = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_max_offenses');
+
+        $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_threshold') if not defined $enter_abuse_threshold;
+        $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_time_threshold') if not defined $enter_abuse_time_threshold;
+        $enter_abuse_max_offenses   = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_offenses') if not defined $enter_abuse_max_offenses;
 
         if($messages->[1]->{timestamp} - $messages->[0]->{timestamp} <= $enter_abuse_time_threshold) {
           if(++$channel_data->{enter_abuse} >= $enter_abuse_threshold - 1) {
@@ -809,7 +813,7 @@ sub adjust_offenses {
     my $id = delete $channel_data->{id};
     my $channel = delete $channel_data->{channel};
     my $last_offense = delete $channel_data->{last_offense};
-    if(gettimeofday - $last_offense >= 60 * 60 * 24) {
+    if(gettimeofday - $last_offense >= 60 * 60 * 2) {
       $channel_data->{enter_abuses}--;
       #$self->{pbot}->{logger}->log("[adjust-offenses] [$id][$channel] decreasing enter abuse offenses to $channel_data->{enter_abuses}\n");
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($id, $channel, $channel_data);
