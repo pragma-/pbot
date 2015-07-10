@@ -81,8 +81,10 @@ sub adminadd {
 
   if(not defined $name or not defined $channel or not defined $hostmask or not defined $level
     or not defined $password) {
-    return "/msg $nick Usage: adminadd name channel hostmask level password";
+    return "/msg $nick Usage: adminadd <name> <channel> <hostmask> <level> <password>";
   }
+
+  $channel = '.*' if lc $channel eq 'global';
 
   $self->{pbot}->{admins}->add_admin($name, $channel, $hostmask, $level, $password);
   return "Admin added.";
@@ -95,7 +97,23 @@ sub adminrem {
   my ($channel, $hostmask) = split / /, $arguments, 2;
 
   if(not defined $channel or not defined $hostmask) {
-    return "/msg $nick Usage: adminrem channel hostmask";
+    return "/msg $nick Usage: adminrem <channel> <hostmask/name>";
+  }
+
+  $channel = lc $channel;
+  $hostmask = lc $hostmask;
+
+  $channel = '.*' if $channel eq 'global';
+
+  if (exists $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
+    if (not exists $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}) {
+      foreach my $mask (keys $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
+        if ($self->{pbot}->{admins}->{admins}->hash->{$channel}->{$mask}->{name} eq $hostmask) {
+          $hostmask = $mask;
+          last;
+        }
+      }
+    }
   }
 
   if($self->{pbot}->{admins}->remove_admin($channel, $hostmask)) {
@@ -111,7 +129,23 @@ sub adminset {
   my ($channel, $hostmask, $key, $value) = split / /, $arguments, 4 if defined $arguments;
 
   if(not defined $channel or not defined $hostmask) {
-    return "Usage: adminset <channel> <hostmask> <key> <value>";
+    return "Usage: adminset <channel> <hostmask/name> <key> <value>";
+  }
+
+  $channel = lc $channel;
+  $hostmask = lc $hostmask;
+
+  $channel = '.*' if $channel eq 'global';
+
+  if (exists $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
+    if (not exists $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}) {
+      foreach my $mask (keys $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
+        if ($self->{pbot}->{admins}->{admins}->hash->{$channel}->{$mask}->{name} eq $hostmask) {
+          $hostmask = $mask;
+          last;
+        }
+      }
+    }
   }
 
   return $self->{pbot}->{admins}->{admins}->set($channel, $hostmask, $key, $value);
@@ -123,7 +157,23 @@ sub adminunset {
   my ($channel, $hostmask, $key) = split / /, $arguments, 3 if defined $arguments;
 
   if(not defined $channel or not defined $hostmask) {
-    return "Usage: adminunset <channel> <hostmask> <key>";
+    return "Usage: adminunset <channel> <hostmask/name> <key>";
+  }
+
+  $channel = lc $channel;
+  $hostmask = lc $hostmask;
+
+  $channel = '.*' if $channel eq 'global';
+
+  if (exists $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
+    if (not exists $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}) {
+      foreach my $mask (keys $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
+        if ($self->{pbot}->{admins}->{admins}->hash->{$channel}->{$mask}->{name} eq $hostmask) {
+          $hostmask = $mask;
+          last;
+        }
+      }
+    }
   }
 
   return $self->{pbot}->{admins}->{admins}->unset($channel, $hostmask, $key);
