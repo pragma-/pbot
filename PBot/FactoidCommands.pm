@@ -321,7 +321,7 @@ sub list {
       }
       foreach my $hostmask (sort keys %{ $self->{pbot}->{admins}->{admins}->hash->{$channel} }) {
         $text .= $sep;
-        $text .= "*" if exists $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}->{loggedin};
+        $text .= "*" if $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}->{loggedin};
         $text .= $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}->{name} . " (" . $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}->{level} . ")";
         $sep = "; ";
       }
