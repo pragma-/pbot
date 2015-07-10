@@ -335,7 +335,7 @@ sub expand_factoid_vars {
 
   while ($action =~ /(?<!\\)\$([a-zA-Z0-9_\-]+)/g) {
     my $v = $1;
-    next if $v =~ m/^[0-9]+$/;
+    next if $v =~ m/^(nick|channel|randomnick)$/; # don't override special variables
     my ($var_chan, $var) = $self->find_factoid($from, $v, undef, 0, 1);
 
     if(defined $var && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
