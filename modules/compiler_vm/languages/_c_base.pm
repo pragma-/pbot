@@ -316,6 +316,19 @@ sub preprocess_code {
       $self->{code} .= $1;
     }
 
+    if ($self->{code} !~ m/\b(?:ptype|dump|print|trace|watch|gdb)\b/ && $precode =~ m/(\n?)\s*(.*?);?$/) {
+      my $stmt = $2;
+      if ($stmt !~ m/\b(?:\w*scanf|fgets|printf|puts|while|for|do|if|ptype|dump|print|trace|watch|gdb)\b/
+        && $stmt !~ m/^\w+\s+(?<!sizeof )\w+/  # don't match `int a` but do match `sizeof a`
+        && $stmt !~ m/[#{}]/                   # don't match preprocessor or structs/functions
+        && $stmt !~ m{(?:/\*|\*/)}             # don't match comments
+        && $stmt !~ m/\?\?/                    # don't match diagraphs
+        && $stmt =~ m/\w/                      # must contain at least one word character
+        && $stmt !~ m/(?:\b|\s)=(?:\b|\s)/) {  # don't match assignments, but do match equality (==)
+        $precode =~ s/(\n?)\s*(.*?);?$/$1 print_last_statement($2);/;
+      }
+    }
+
     $self->{code} = "$prelude\n$self->{code}\n" . "int main(void) {\n$precode\n;\nreturn 0;\n}\n";
   } else {
     $self->{code} = "$prelude\n$self->{code}\n";
@@ -341,6 +354,7 @@ sub postprocess_output {
 
   my $output = $self->{output};
 
+  $output =~ s/In file included from .*?from \/usr\/include\/prelude.h.*?from $self->{sourcefile}:\d+.\s*//msg;
   $output =~ s/In file included from .*?:\d+:\d+.\s*from $self->{sourcefile}:\d+.\s*//msg;
   $output =~ s/In file included from .*?:\d+:\d+.\s*//msg;
   $output =~ s/\s*from $self->{sourcefile}:\d+.\s*//g;
@@ -378,9 +392,9 @@ sub postprocess_output {
       $output =~ s/(\d+:\d+:\s*)*\s?In function .main.:\s?/In function 'main':/g;
     }
   }
-  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat=?\]\s+(\d+:\d+:\s*)*warning: too many arguments for format \[-Wformat-extra-args\]/info: %b is a candide extension/g; #gcc
-  $output =~ s/(\d+:\d+:\s*)*warning: invalid conversion specifier 'b' \[-Wformat-invalid-specifier\]/info: %b is a candide extension/g; #clang
-  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat=?\]//g;
+  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat=?\]\s+(\d+:\d+:\s*)*warning: too many arguments for format \[-Wformat-extra-args\]/note: %b is a candide extension/g; #gcc
+  $output =~ s/(\d+:\d+:\s*)*warning: invalid conversion specifier 'b' \[-Wformat-invalid-specifier\]/note: %b is a candide extension/g; #clang
+  $output =~ s/(\d+:\d+:\s*)*warning: unknown conversion type character 'b' in format \[-Wformat=?\]/note: %b is a candide extension/g;
   $output =~ s/\s\(core dumped\)/./;
   $output =~ s/ \[enabled by default\]//g;
   $output =~ s/initializer\s+warning: \(near/initializer (near/g;
@@ -418,7 +432,15 @@ sub postprocess_output {
   $output =~ s/called by \?\? \(\) //g;
   $output =~ s/\s0x[a-z0-9]+: note: pointer points here.*?\^//gms;
   $output =~ s/\s0x[a-z0-9]+: note: pointer points here\s+<memory cannot be printed>//gms;
-  $output =~ s/store to address 0x[a-z0-9]+ with insufficient space/store to location with insufficient space/gms;
+  $output =~ s/store to address 0x[a-z0-9]+ with insufficient space/store to address with insufficient space/gms;
+  $output =~ s/load of misaligned address 0x[a-z0-9]+ for type/load of misaligned address for type/gms;
+  $output =~ s/=+\s+==\d+==ERROR: (.*?) on address.*==\d+==ABORTING\s*/$1\n/gms;
+  $output =~ s/Copyright \(C\) 2015 Free Software Foundation.*//ms;
+  $output =~ s/==\d+==WARNING: unexpected format specifier in printf interceptor: %[^\s]+\s*//gms;
+  $output =~ s/(Defined at .*?)\s+included at/$1/msg;
+
+  $output =~ s/(note: %b is a candide extension\s*)+/note: %b is a candide extension  /g;
+  $output =~ s/candide extension\s+\]/candide extension]/;
 
   my $removed_warning = 0;
 
@@ -431,10 +453,10 @@ sub postprocess_output {
     $output =~ s/\s+\]$/]/m;
   }
 
-  $output =~ s/^\[\s+(warning:|info:)/[$1/;  # remove leading spaces in first warning/info
+  $output =~ s/^\[\s+(warning:|note:)/[$1/;  # remove leading spaces in first warning/info
 
   if($self->{warn_unterminated_define} == 1) {
-    if($output =~ m/^\[(warning:|info:)/) {
+    if($output =~ m/^\[(warning:|note:)/) {
       $output =~ s/^\[/[warning: preprocessor directive not terminated by \\n, the remainder of the line will be part of this directive /;
     } else {
       $output =~ s/^/[warning: preprocessor directive not terminated by \\n, the remainder of the line will be part of this directive] /;

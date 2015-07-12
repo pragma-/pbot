@@ -289,11 +289,12 @@ sub paste_sprunge {
 }
 
 sub execute {
-  my ($self, $local) = @_;
+  my ($self) = @_;
 
   my ($compiler, $compiler_output, $pid);
 
-  if(defined $local and $local != 0) {
+  delete $self->{local};
+  if(exists $self->{local} and $self->{local} != 0) {
     print "Using local compiler instead of virtual machine\n";
     $pid = open2($compiler_output, $compiler, './compiler_vm_server.pl') || die "repl failed: $@\n";
     print "Started compiler, pid: $pid\n";
