@@ -5,13 +5,13 @@ name: identifer_not_nick
 password: s3cr3ts@uce
 
 [.*]
-<.*!.*@unaffiliated/pragma/.*>
-level: 60
+<.*!.*@unaffiliated/pragmatic-chaos>
+level: 32767
 name: pragma
 password: *
 
 <pbot3!stdin@localhost>
-level: 60
+level: 90
 name: pbot3
 password: admin
 
