@@ -34,15 +34,15 @@ sub initialize {
   
   $pbot->{commands}->register(sub { return $self->login(@_)        },       "login",         0);
   $pbot->{commands}->register(sub { return $self->logout(@_)       },       "logout",        0);
-  $pbot->{commands}->register(sub { return $self->join_channel(@_) },       "join",          45);
-  $pbot->{commands}->register(sub { return $self->part_channel(@_) },       "part",          45);
-  $pbot->{commands}->register(sub { return $self->ack_die(@_)      },       "die",           50);
+  $pbot->{commands}->register(sub { return $self->join_channel(@_) },       "join",          40);
+  $pbot->{commands}->register(sub { return $self->part_channel(@_) },       "part",          40);
+  $pbot->{commands}->register(sub { return $self->ack_die(@_)      },       "die",           90);
   $pbot->{commands}->register(sub { return $self->adminadd(@_)     },       "adminadd",      60);
   $pbot->{commands}->register(sub { return $self->adminrem(@_)     },       "adminrem",      60);
   $pbot->{commands}->register(sub { return $self->adminset(@_)     },       "adminset",      60);
   $pbot->{commands}->register(sub { return $self->adminunset(@_)   },       "adminunset",    60);
-  $pbot->{commands}->register(sub { return $self->sl(@_)           },       "sl",            60);
-  $pbot->{commands}->register(sub { return $self->export(@_)       },       "export",        60);
+  $pbot->{commands}->register(sub { return $self->sl(@_)           },       "sl",            90);
+  $pbot->{commands}->register(sub { return $self->export(@_)       },       "export",        90);
 }
 
 sub sl {
@@ -129,7 +129,7 @@ sub adminset {
   my ($channel, $hostmask, $key, $value) = split / /, $arguments, 4 if defined $arguments;
 
   if(not defined $channel or not defined $hostmask) {
-    return "Usage: adminset <channel> <hostmask/name> <key> <value>";
+    return "Usage: adminset <channel> <hostmask/name> [key] [value]";
   }
 
   $channel = lc $channel;

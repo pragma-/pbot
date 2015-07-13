@@ -43,7 +43,7 @@ sub set {
   my ($channel, $key, $value) = split / /, $arguments, 3;
 
   if(not defined $channel) {
-    return "Usage: chanset <channel> [key <value>]";
+    return "Usage: chanset <channel> [key [value]]";
   }
 
   return $self->{channels}->set($channel, $key, $value);

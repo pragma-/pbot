@@ -26,18 +26,18 @@ sub new {
 
 # TODO - move this someplace better so it can be more accessible to user-customisation
 my %factoid_metadata_levels = (
-  created_on                  => 999,
+  created_on                  => 90,
   enabled                     => 10,
-  last_referenced_in          => 60,
-  last_referenced_on          => 60,
-  modulelauncher_subpattern   => 60,
-  owner                       => 60,
+  last_referenced_in          => 90,
+  last_referenced_on          => 90,
+  modulelauncher_subpattern   => 90,
+  owner                       => 90,
   rate_limit                  => 10,
-  ref_count                   => 60,
-  ref_user                    => 60,
-  type                        => 60,
-  edited_by                   => 60,
-  edited_on                   => 60,
+  ref_count                   => 90,
+  ref_user                    => 90,
+  type                        => 90,
+  edited_by                   => 90,
+  edited_on                   => 90,
   locked                      => 10,
   add_nick                    => 10,
   nooverride                  => 10,
@@ -71,8 +71,8 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->factfind(@_)        },       "factfind",     0);
   $pbot->{commands}->register(sub { return $self->list(@_)            },       "list",         0);
   $pbot->{commands}->register(sub { return $self->top20(@_)           },       "top20",        0);
-  $pbot->{commands}->register(sub { return $self->load_module(@_)     },       "load",        60);
-  $pbot->{commands}->register(sub { return $self->unload_module(@_)   },       "unload",      60);
+  $pbot->{commands}->register(sub { return $self->load_module(@_)     },       "load",        90);
+  $pbot->{commands}->register(sub { return $self->unload_module(@_)   },       "unload",      90);
   $pbot->{commands}->register(sub { return $self->histogram(@_)       },       "histogram",    0);
   $pbot->{commands}->register(sub { return $self->count(@_)           },       "count",        0);
 
