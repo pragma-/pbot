@@ -55,8 +55,8 @@ my %config = (
   # (channels will not be auto-joined until identified)
   identify_password  => '*',
 
-  # The bot is triggered by using its name, or the following trigger SINGLE character
-  trigger => '.',
+  # The bot is triggered by using its name, or the following trigger
+  trigger => '[!]',
 
   # -----------------------------------------------------
   # The bot can export the latest factoids and quotegrabs to an HTML
