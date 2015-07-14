@@ -531,6 +531,8 @@ sub address_to_mask {
     $banmask = "*.$1";
   } elsif($address =~ m{^gateway/([^/]+)/([^/]+)/}) {
     $banmask = "gateway/$1/$2/*";
+  } elsif($address =~ m{^nat/([^/]+)/}) {
+    $banmask = "nat/$1/*";
   } elsif($address =~ m/^([^:]+):([^:]*):([^:]*):([^:]*):([^:]*):([^:]*):([^:]*):([^:]*)$/) {
     $banmask = "$1:$2:*";
   } else {
