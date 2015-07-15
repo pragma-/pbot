@@ -74,10 +74,12 @@ sub rebuild_aliases {
 sub aka_link {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  my ($id, $alias) = split /\s+/, $arguments;
+  my ($id, $alias, $type) = split /\s+/, $arguments;
+
+  $type = $self->{messagehistory}->{alias_type}->{STRONG} if not defined $type;
 
   if (not $id or not $alias) {
-    return "Usage: link <target id> <alias id>";
+    return "Usage: link <target id> <alias id> [type]";
   }
 
   my $source = $self->{database}->find_most_recent_hostmask($id);
@@ -91,8 +93,8 @@ sub aka_link {
     return "No such id $alias found.";
   }
 
-  if ($self->{database}->link_alias($id, $alias)) {
-    return "$source linked to $target.";
+  if ($self->{database}->link_alias($id, $alias, $type)) {
+    return "$source " . ($type == $self->{messagehistory}->{alias_type}->{WEAK} ? "weakly" : "strongly") . " linked to $target.";
   } else {
     return "Link failed.";
   }
@@ -128,7 +130,7 @@ sub aka_unlink {
 sub list_also_known_as {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  my $usage = "Usage: aka [-h] [-i] [-n] [-r] <nick>; -h show hostmasks; -i show ids; -n show nickserv accounts; -r show relationships";
+  my $usage = "Usage: aka [-h] [-i] [-n] [-r] [-w] <nick>; -h show hostmasks; -i show ids; -n show nickserv accounts; -r show relationships; -w show weak links";
 
   if(not length $arguments) {
     return $usage;
@@ -140,11 +142,12 @@ sub list_also_known_as {
     chomp $getopt_error;
   };
 
-  my ($show_hostmasks, $show_nickserv, $show_id, $show_relationship, $dont_use_aliases_table);
+  my ($show_hostmasks, $show_nickserv, $show_id, $show_relationship, $show_weak, $dont_use_aliases_table);
   my ($ret, $args) = GetOptionsFromString($arguments,
     'h'  => \$show_hostmasks,
     'n'  => \$show_nickserv,
     'r'  => \$show_relationship,
+    'w'  => \$show_weak,
     'nt' => \$dont_use_aliases_table,
     'i'  => \$show_id);
 
@@ -161,6 +164,7 @@ sub list_also_known_as {
     my $sep = "";
     foreach my $aka (sort keys %akas) {
       next if $aka =~ /^Guest\d+(?:!.*)?$/;
+      next if $akas{$aka}->{type} == $self->{messagehistory}->{alias_type}->{WEAK} && not $show_weak;
 
       if (not $show_hostmasks) {
         my ($nick) = $aka =~ m/([^!]+)/;
@@ -181,6 +185,8 @@ sub list_also_known_as {
       } elsif ($show_id) {
         $result .= " [$akas{$aka}->{id}]";
       }
+
+      $result .= " [WEAK]" if $akas{$aka}->{type} == $self->{messagehistory}->{alias_type}->{WEAK};
 
       if ($show_hostmasks or $show_nickserv or $show_id or $show_relationship) {
         $sep = ",\n";

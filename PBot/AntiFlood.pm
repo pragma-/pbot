@@ -601,6 +601,11 @@ sub check_bans {
   foreach my $alias (keys %aliases) {
     next if $alias =~ /^Guest\d+(?:!.*)?$/;
 
+    if ($aliases{$alias}->{type} == $self->{messagehistory}->{alias_type}->{WEAK}) {
+      $self->{pbot}->{logger}->log("anti-flood: [check-bans] skipping WEAK alias $alias in channel $channel\n") if $debug_checkban >= 2;
+      next;
+    }
+
     $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking blacklist for $alias in channel $channel\n") if $debug_checkban >= 5;
     if ($self->{pbot}->{blacklist}->check_blacklist($alias, $channel)) {
       my $baninfo = {};

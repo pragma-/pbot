@@ -44,6 +44,9 @@ sub initialize {
     $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_commit_interval'),
     'messagehistory_sqlite_commit_interval'
   );
+
+  $self->{alias_type}->{WEAK}   = 0;
+  $self->{alias_type}->{STRONG} = 1;
 }
 
 sub sqlite_commit_interval_trigger {
@@ -122,13 +125,14 @@ SQL
     $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Aliases (
   id          INTEGER,
-  alias       INTEGER
+  alias       INTEGER,
+  type        INTEGER
 )
 SQL
 
     $self->{dbh}->do('CREATE INDEX IF NOT EXISTS MsgIdx1 ON Messages(id, channel, mode)');
-    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS AliasIdx1 ON Aliases(id, alias)');
-    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS AliasIdx2 ON Aliases(alias, id)');
+    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS AliasIdx1 ON Aliases(id, alias, type)');
+    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS AliasIdx2 ON Aliases(alias, id, type)');
 
     $self->{dbh}->begin_work();
   };
@@ -826,6 +830,24 @@ sub link_aliases {
     my %ids;
 
     if ($hostmask) {
+      my ($host) = $hostmask =~ /(\@.*)$/;
+      my $sth = $self->{dbh}->prepare('SELECT id, last_seen FROM Hostmasks WHERE hostmask LIKE ?');
+      $sth->bind_param(1, "\%$host");
+      $sth->execute();
+      my $rows = $sth->fetchall_arrayref({});
+
+      my $now = gettimeofday;
+
+      foreach my $row (@$rows) {
+        if ($now - $row->{last_seen} <= 60 * 60 * 48) {
+          $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} };
+          $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for host [$host]\n") if $debug_link;
+        } else {
+          $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{WEAK} };
+          $self->{pbot}->{logger}->log("found WEAK matching id $row->{id} for host [$host]\n") if $debug_link;
+        }
+      }
+
       my ($nick) = $hostmask =~ m/([^!]+)/;
       unless ($nick =~ m/^Guest\d+$/) {
         my $qnick = quotemeta $nick;
@@ -837,20 +859,9 @@ sub link_aliases {
         my $rows = $sth->fetchall_arrayref({});
 
         foreach my $row (@$rows) {
-          $ids{$row->{id}} = $row->{id};
-          $self->{pbot}->{logger}->log("found matching id $row->{id} for nick [$qnick]\n") if $debug_link;
+          $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} };
+          $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for nick [$qnick]\n") if $debug_link;
         }
-      }
-
-      my ($host) = $hostmask =~ /(\@.*)$/;
-      my $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE hostmask LIKE ?');
-      $sth->bind_param(1, "\%$host");
-      $sth->execute();
-      my $rows = $sth->fetchall_arrayref({});
-
-      foreach my $row (@$rows) {
-        $ids{$row->{id}} = $row->{id};
-        $self->{pbot}->{logger}->log("found matching id $row->{id} for host [$host]\n") if $debug_link;
       }
     }
 
@@ -861,22 +872,30 @@ sub link_aliases {
       my $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
-        $ids{$row->{id}} = $row->{id};
-        $self->{pbot}->{logger}->log("found matching id $row->{id} for nickserv [$nickserv]\n") if $debug_link;
+        $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} };
+        $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for nickserv [$nickserv]\n") if $debug_link;
       }
     }
 
-    my $sth = $self->{dbh}->prepare('INSERT INTO Aliases SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM Aliases WHERE id = ? AND alias = ?)');
-    $sth->bind_param(1, $account);
-    $sth->bind_param(3, $account);
+    my $sth = $self->{dbh}->prepare('REPLACE INTO Aliases (id, alias, type) VALUES (?, ?, ?)');
 
     foreach my $id (sort keys %ids) {
       next if $account == $id;
+      $sth->bind_param(1, $account);
       $sth->bind_param(2, $id);
-      $sth->bind_param(4, $id);
+      $sth->bind_param(3, $ids{$id}->{type});
       $sth->execute();
       if ($sth->rows) {
-        $self->{pbot}->{logger}->log("Linked $account to $id\n") if $debug_link;
+        $self->{pbot}->{logger}->log("Linked $account to $id [$ids{$id}->{type}]\n") if $debug_link;
+        $self->{new_entries}++;
+      }
+
+      $sth->bind_param(1, $id);
+      $sth->bind_param(2, $account);
+      $sth->bind_param(3, $ids{$id}->{type});
+      $sth->execute();
+      if ($sth->rows) {
+        $self->{pbot}->{logger}->log("Linked $id to $account [$ids{$id}->{type}]\n") if $debug_link;
         $self->{new_entries}++;
       }
     }
@@ -885,31 +904,55 @@ sub link_aliases {
 }
 
 sub link_alias {
-  my ($self, $id, $alias) = @_;
+  my ($self, $id, $alias, $type) = @_;
 
   my $ret = eval {
     my $ret = 0;
-    my $sth = $self->{dbh}->prepare('INSERT INTO Aliases SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM Aliases WHERE id = ? AND alias = ?)');
+
+    my $sth = $self->{dbh}->prepare('INSERT INTO Aliases SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Aliases WHERE id = ? AND alias = ?)');
     $sth->bind_param(1, $alias);
     $sth->bind_param(2, $id);
-    $sth->bind_param(3, $alias);
-    $sth->bind_param(4, $id);
-    $sth->execute();
-    if ($sth->rows) {
-      $self->{new_entries}++;
-      $ret = 1;
-    }
-
-    $sth->bind_param(1, $id);
-    $sth->bind_param(2, $alias);
-    $sth->bind_param(3, $id);
+    $sth->bind_param(3, $type);
     $sth->bind_param(4, $alias);
+    $sth->bind_param(5, $id);
     $sth->execute();
     if ($sth->rows) {
       $self->{new_entries}++;
       $ret = 1;
     } else {
-      $ret = 0;
+      $sth = $self->{dbh}->prepare('UPDATE Aliases SET type = ? WHERE id = ? AND alias = ?');
+      $sth->bind_param(1, $type);
+      $sth->bind_param(2, $id);
+      $sth->bind_param(3, $alias);
+      $sth->execute();
+      if ($sth->rows) {
+        $self->{new_entries}++;
+        $ret = 1;
+      }
+    }
+
+    $sth = $self->{dbh}->prepare('INSERT INTO Aliases SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Aliases WHERE id = ? AND alias = ?)');
+    $sth->bind_param(1, $id);
+    $sth->bind_param(2, $alias);
+    $sth->bind_param(3, $type);
+    $sth->bind_param(4, $id);
+    $sth->bind_param(5, $alias);
+    $sth->execute();
+    if ($sth->rows) {
+      $self->{new_entries}++;
+      $ret = 1;
+    } else {
+      $sth = $self->{dbh}->prepare('UPDATE Aliases SET type = ? WHERE id = ? AND alias = ?');
+      $sth->bind_param(1, $type);
+      $sth->bind_param(2, $alias);
+      $sth->bind_param(3, $id);
+      $sth->execute();
+      if ($sth->rows) {
+        $self->{new_entries}++;
+        $ret = 1;
+      } else {
+        $ret = 0;
+      }
     }
     return $ret;
   };
@@ -1008,22 +1051,22 @@ sub get_also_known_as {
         return %akas;
       }
 
-      $ids{$id} = $id;
+      $ids{$id} = { id => $id, type => $self->{alias_type}->{STRONG} };
       $self->{pbot}->{logger}->log("Adding $id -> $id\n") if $debug;
 
 
-      my $sth = $self->{dbh}->prepare('SELECT alias FROM Aliases WHERE id = ?');
+      my $sth = $self->{dbh}->prepare('SELECT alias, type FROM Aliases WHERE id = ?');
       $sth->bind_param(1, $id);
       $sth->execute();
       my $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
-        $ids{$row->{alias}} = $id;
-        $self->{pbot}->{logger}->log("[$id] Adding $row->{alias} -> $id\n") if $debug;
+        $ids{$row->{alias}} = { id => $id, type => $row->{type} };
+        $self->{pbot}->{logger}->log("[$id] Adding $row->{alias} -> $id [type $row->{type}]\n") if $debug;
       }
 
       my %seen_id;
-      $sth = $self->{dbh}->prepare('SELECT id FROM Aliases WHERE alias = ?');
+      $sth = $self->{dbh}->prepare('SELECT id, type FROM Aliases WHERE alias = ?');
 
       while (1) {
         my $new_aliases = 0;
@@ -1037,9 +1080,9 @@ sub get_also_known_as {
 
           foreach my $row (@$rows) {
             next if exists $ids{$row->{id}};
-            $ids{$row->{id}} = $id;
+            $ids{$row->{id}} = { id => $id, type => $row->{type} };
             $new_aliases++;
-            $self->{pbot}->{logger}->log("[$id] Adding $row->{id} -> $id\n") if $debug;
+            $self->{pbot}->{logger}->log("[$id] Adding $row->{id} -> $id [type $row->{type}]\n") if $debug;
           }
         }
         last if not $new_aliases;
@@ -1054,8 +1097,8 @@ sub get_also_known_as {
         $rows = $hostmask_sth->fetchall_arrayref({});
 
         foreach my $row (@$rows) {
-          $akas{$row->{hostmask}} = { hostmask => $row->{hostmask}, id => $id, alias => $ids{$id} };
-          $self->{pbot}->{logger}->log("[$id] Adding hostmask $row->{hostmask} -> $ids{$id}\n") if $debug;
+          $akas{$row->{hostmask}} = { hostmask => $row->{hostmask}, id => $id, alias => $ids{$id}->{id}, type => $ids{$id}->{type} };
+          $self->{pbot}->{logger}->log("[$id] Adding hostmask $row->{hostmask} -> $ids{$id}->{id} [type $ids{$id}->{type}]\n") if $debug;
         }
 
         $nickserv_sth->bind_param(1, $id);
