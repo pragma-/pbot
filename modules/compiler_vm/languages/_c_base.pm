@@ -214,6 +214,10 @@ sub preprocess_code {
     }
   }
 
+  if (not $self->{no_gdb_extensions} and $prelude !~ m/^#include <prelude.h>/mg) {
+    $prelude .= "\n#include <prelude.h>\n";
+  }
+
   print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $self->{debug};
 
   my $preprecode = $precode;
@@ -316,16 +320,18 @@ sub preprocess_code {
       $self->{code} .= $1;
     }
 
-    if ($self->{code} !~ m/\b(?:ptype|dump|print|trace|watch|gdb)\b/ && $precode =~ m/(\n?)\s*(.*?);?$/) {
-      my $stmt = $2;
-      if ($stmt !~ m/\b(?:\w*scanf|fgets|printf|puts|while|for|do|if|ptype|dump|print|trace|watch|gdb)\b/
-        && $stmt !~ m/^\w+\s+(?<!sizeof )\w+/  # don't match `int a` but do match `sizeof a`
-        && $stmt !~ m/[#{}]/                   # don't match preprocessor or structs/functions
-        && $stmt !~ m{(?:/\*|\*/)}             # don't match comments
-        && $stmt !~ m/\?\?/                    # don't match diagraphs
-        && $stmt =~ m/\w/                      # must contain at least one word character
-        && $stmt !~ m/(?:\b|\s)=(?:\b|\s)/) {  # don't match assignments, but do match equality (==)
-        $precode =~ s/(\n?)\s*(.*?);?$/$1 print_last_statement($2);/;
+    unless ($self->{no_gdb_extensions}) {
+      if ($self->{code} !~ m/\b(?:ptype|dump|print|trace|watch|gdb)\b/ && $precode =~ m/(\n?)\s*(.*?);?$/) {
+        my $stmt = $2;
+        if ($stmt !~ m/\b(?:\w*scanf|fgets|printf|puts|while|for|do|if|ptype|dump|print|trace|watch|gdb|assert)\b/
+          && $stmt !~ m/^\w+\s+(?<!sizeof )\w+/  # don't match `int a` but do match `sizeof a`
+          && $stmt !~ m/[#{}]/                   # don't match preprocessor or structs/functions
+          && $stmt !~ m{(?:/\*|\*/|//)}          # don't match comments
+          && $stmt !~ m/\?\?/                    # don't match diagraphs
+          && $stmt =~ m/\w/                      # must contain at least one word character
+          && $stmt !~ m/(?:\b|\s)=(?:\b|\s)/) {  # don't match assignments, but do match equality (==)
+          $precode =~ s/(\n?)\s*(.*?);?$/$1 print_last_statement($2);/;
+        }
       }
     }
 

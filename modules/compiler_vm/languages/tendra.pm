@@ -14,6 +14,8 @@ sub initialize {
   $self->{default_options} = '-Xp -Yansi';
   $self->{cmdline}         = 'tcc $sourcefile $options -o $execfile';
 
+  $self->{no_gdb_extensions} = 1;
+
   $self->{prelude} = <<'END';
 #include <stdio.h>
 #include <stdlib.h>
