@@ -15,7 +15,7 @@ sub initialize {
   $self->{default_options} = '-std=c++14 -Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -lm -Wfatal-errors -fsanitize=alignment,undefined';
   $self->{options_paste}   = '-fdiagnostics-show-caret';
   $self->{options_nopaste} = '-fno-diagnostics-show-caret';
-  $self->{cmdline}         = 'g++ -ggdb -g2 $sourcefile $options -o $execfile';
+  $self->{cmdline}         = 'g++ -ggdb -g3 $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';
 #if 0
