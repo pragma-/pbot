@@ -161,16 +161,6 @@ sub preprocess_code {
         $cpp = 0;
       }
       $escaped = 0;
-    } elsif($ch eq '{' and not $cpp and not $single_quote and not $double_quote) {
-      if(not substr($self->{code}, $pos, 1) =~ m/[\n\r]/) {
-        substr ($self->{code}, $pos, 0) = "\n";
-        pos $self->{code} = $pos + 1;
-      }
-    } elsif($ch eq '}' and not $cpp and not $single_quote and not $double_quote) {
-      if(not substr($self->{code}, $pos, 1) =~ m/[\n\r;]/) {
-        substr ($self->{code}, $pos, 0) = "\n";
-        pos $self->{code} = $pos + 1;
-      }
     } elsif($ch eq "\n" and $cpp and not $single_quote and not $double_quote) {
       $cpp = 0;
     } else {
@@ -323,7 +313,7 @@ sub preprocess_code {
     unless ($self->{no_gdb_extensions}) {
       if ($self->{code} !~ m/\b(?:ptype|dump|print|trace|watch|gdb)\b/ && $precode =~ m/(\n?)\s*(.*?);?$/) {
         my $stmt = $2;
-        if ($stmt !~ m/\b(?:\w*scanf|fgets|printf|puts|while|for|do|if|ptype|dump|print|trace|watch|gdb|assert)\b/
+        if ($stmt !~ m/\b(?:\w*scanf|fgets|printf|puts|while|for|do|if|ptype|dump|print|trace|watch|gdb|assert|return)\b/
           && $stmt !~ m/^\w+\s+(?<!sizeof )\w+/  # don't match `int a` but do match `sizeof a`
           && $stmt !~ m/[#{}]/                   # don't match preprocessor or structs/functions
           && $stmt !~ m{(?:/\*|\*/|//)}          # don't match comments

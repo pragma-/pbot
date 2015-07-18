@@ -8,6 +8,7 @@ use parent '_default';
 
 sub postprocess {
   my $self = shift;
+  $self->SUPER::postprocess;
 
   # no errors compiling, but if output contains something, it must be diagnostic messages
   if(length $self->{output}) {
@@ -16,11 +17,7 @@ sub postprocess {
     $self->{output} = "[$self->{output}]\n";
   }
 
-  open my $fh, '>', '.input';
-  print $fh $self->{input};
-  close $fh;
-
-  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 1; cat .input | /home/compiler/prog > .output\"");
+  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 5; cat .input | /home/compiler/prog > .output\"");
 
   $self->{error} = $retval;
 

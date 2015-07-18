@@ -307,12 +307,14 @@ sub execute {
   my $date = time;
   my $input = $self->{options}->{'-input'};
 
-  $input = `fortune -u -s` if not length $input;
-  $input =~ s/[\n\r\t]/ /msg;
-  $input =~ s/:/ - /g;
-  $input =~ s/\s+/ /g;
-  $input =~ s/^\s+//;
-  $input =~ s/\s+$//;
+  if (not length $input) {
+    $input = `fortune -u -s`;
+    $input =~ s/[\n\r\t]/ /msg;
+    $input =~ s/:/ - /g;
+    $input =~ s/\s+/ /g;
+    $input =~ s/^\s+//;
+    $input =~ s/\s+$//;
+  }
 
   my $pretty_code = $self->pretty_format($self->{code});
 

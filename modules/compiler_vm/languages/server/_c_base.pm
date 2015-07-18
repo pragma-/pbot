@@ -11,12 +11,15 @@ sub preprocess {
   $self->SUPER::preprocess;
 
   if ($self->{cmdline} =~ m/--(?:version|analyze)/) {
+    $self->{output} =~ s/Ubuntu //;
+    $self->{output} =~ s/-\d+ubuntu\d+//;
     $self->{done} = 1;
   }
 }
 
 sub postprocess {
   my $self = shift;
+  $self->SUPER::postprocess;
 
   # no errors compiling, but if output contains something, it must be diagnostic messages
   if(length $self->{output}) {
@@ -26,9 +29,7 @@ sub postprocess {
   }
 
   print "Executing gdb\n";
-  my $input_quoted = quotemeta $self->{input};
-  $input_quoted =~ s/\\"/"'\\"'"/g;
-  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 1; compiler_watchdog.pl $input_quoted > .output\"");
+  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 5; compiler_watchdog.pl > .output\"");
 
   $result = "";
   open(FILE, '.output');

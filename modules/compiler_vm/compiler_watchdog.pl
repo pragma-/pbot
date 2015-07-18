@@ -5,14 +5,6 @@ use strict;
 
 use IPC::Open2;
 
-my $stdin_input = (join ' ', @ARGV) || "Lorem ipsum dolor sit amet.\n";
-$stdin_input =~ s/\\n/\n/g;
-$stdin_input =~ s/\\r/\r/g;
-$stdin_input =~ s/\\t/\t/g;
-open my $fh, '>', '.input' or die "Couldn't open .input: $!";
-print $fh $stdin_input;
-close $fh;
-
 my $debug = $ENV{DEBUG} // 0;
 
 #my $opening = "<";
@@ -273,7 +265,7 @@ sub execute {
           if ($line =~ m/^\$\d+ = "Ok."/) {
             last;
           } elsif ($line =~ m/^\$\d+ = (.*)/) {
-            unless ($1 eq 'void') {
+            unless ($1 eq 'void' || $args eq $1) {
               $last_statement = "$args = $1";
               print "got last statement [$last_statement]\n" if $debug;
             }

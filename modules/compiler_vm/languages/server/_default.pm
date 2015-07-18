@@ -44,6 +44,20 @@ sub preprocess {
 }
 
 sub postprocess {
+  my $self = shift;
+
+  my $input = $self->{input};
+
+  $input =~ s/(?<!\\)\\n/\n/mg;
+  $input =~ s/(?<!\\)\\r/\r/mg;
+  $input =~ s/(?<!\\)\\t/\t/mg;
+  $input =~ s/(?<!\\)\\b/\b/mg;
+
+  $input =~ s/\\\\/\\/mg;
+
+  open(my $fh, '>', '.input');
+  print $fh "$input\n";
+  close $fh;
 }
 
 sub execute {
