@@ -252,6 +252,7 @@ sub find_factoid {
   $self->{pbot}->{logger}->log("string: $string\n") if $debug;
 
   my @result = eval {
+    my @results;
     for (my $depth = 0; $depth < 5; $depth++) {
       if ($self->{pbot}->{commands}->exists($keyword)) {
         return undef;
@@ -282,7 +283,11 @@ sub find_factoid {
               goto NEXT_DEPTH;
             }
 
-            return ($channel, $trigger);
+            if ($exact_channel) {
+              return ($channel, $trigger);
+            } else {
+              push @results, [$channel, $trigger];
+            }
           }
         }
       }
@@ -296,7 +301,7 @@ sub find_factoid {
 
           foreach my $trigger (sort keys %{ $self->{factoids}->hash->{$channel} }) {
             if($self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'regex') {
-              $self->{pbot}->{logger}->log("checking regex $string =~ m/$trigger/i\n") if $debug;
+              $self->{pbot}->{logger}->log("checking regex $string =~ m/$trigger/i\n") if $debug >= 2;
               if($string =~ m/$trigger/i) {
                 $self->{pbot}->{logger}->log("return regex $channel: $trigger\n") if $debug;
 
@@ -307,7 +312,11 @@ sub find_factoid {
                   goto NEXT_DEPTH;
                 }
 
-                return ($channel, $trigger);
+                if ($exact_channel) {
+                  return ($channel, $trigger);
+                } else {
+                  push @results, [$channel, $trigger];
+                }
               }
             }
           }
@@ -318,8 +327,14 @@ sub find_factoid {
       last if not $find_alias;
     }
 
-    $self->{pbot}->{logger}->log("find_factoid: no match\n") if $debug;
-    return undef;
+    if ($debug) {
+      if (not @results) {
+        $self->{pbot}->{logger}->log("find_factoid: no match\n");
+      } else {
+        $self->{pbot}->{logger}->log("find_factoid: got results: " . (join ', ', map { "$_->[0] -> $_->[1]" } @results) . "\n");
+      }
+    }
+    return @results;
   };
 
   if($@) {
@@ -336,9 +351,11 @@ sub expand_factoid_vars {
   while ($action =~ /(?<!\\)\$([a-zA-Z0-9_\-]+)/g) {
     my $v = $1;
     next if $v =~ m/^(nick|channel|randomnick)$/; # don't override special variables
-    my ($var_chan, $var) = $self->find_factoid($from, $v, undef, 0, 1);
+    my @factoids = $self->find_factoid($from, $v, undef, 0, 1);
+    next if not @factoids;
+    my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
 
-    if(defined $var && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
+    if(@factoids && $self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
       my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
       my @list = split(/\s|(".*?")/, $change);
       my @mylist;

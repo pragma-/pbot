@@ -560,14 +560,43 @@ sub factshow {
 
   my ($chan, $trig) = split / /, $arguments;
 
-  if(not defined $chan or not defined $trig) {
-    return "Usage: factshow <channel> <trigger>";
+  if(not defined $chan and not defined $trig) {
+    return "Usage: factshow [channel] <trigger>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 1, 1);
+  my $needs_disambig;
 
-  if(not defined $trigger) {
+  if (not defined $trig) {
+    $trig = $chan;
+    $chan = '.*';
+    $needs_disambig = 1;
+  }
+
+  $chan = '.*' if $chan eq 'global';
+
+  $chan = lc $chan;
+
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig);
+
+  if(not @factoids) {
     return "$trig not found in channel $chan";
+  }
+
+  my ($channel, $trigger);
+
+  if (@factoids > 1) {
+    if ($needs_disambig or not grep { $_->[0] eq $chan } @factoids) {
+      return "$trig found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `factshow <channel> $trig` to disambiguate.";
+    } else {
+      foreach my $factoid (@factoids) {
+        if ($factoid->[0] eq $chan) {
+          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
+          last;
+        }
+      }
+    }
+  } else {
+    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
   }
 
   my $result = "$trigger: " . $factoids->{$channel}->{$trigger}->{action};
@@ -586,14 +615,43 @@ sub factinfo {
 
   my ($chan, $trig) = split / /, $arguments;
 
-  if(not defined $chan or not defined $trig) {
-    return "Usage: factinfo <channel> <trigger>";
+  if(not defined $chan and not defined $trig) {
+    return "Usage: factinfo [channel] <trigger>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 1, 1);
+  my $needs_disambig;
 
-  if(not defined $trigger) {
+  if (not defined $trig) {
+    $trig = $chan;
+    $chan = '.*';
+    $needs_disambig = 1;
+  }
+
+  $chan = '.*' if $chan eq 'global';
+
+  $chan = lc $chan;
+
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig);
+
+  if(not @factoids) {
     return "$trig not found in channel $chan";
+  }
+
+  my ($channel, $trigger);
+
+  if (@factoids > 1) {
+    if ($needs_disambig or not grep { $_->[0] eq $chan } @factoids) {
+      return "$trig found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `factinfo <channel> $trig` to disambiguate.";
+    } else {
+      foreach my $factoid (@factoids) {
+        if ($factoid->[0] eq $chan) {
+          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
+          last;
+        }
+      }
+    }
+  } else {
+    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
   }
 
   my $created_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{created_on});

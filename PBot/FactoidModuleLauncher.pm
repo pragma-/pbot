@@ -44,12 +44,15 @@ sub execute_module {
 
   $arguments = "" if not defined $arguments;
 
-  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $keyword);
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($from, $keyword);
 
-  if(not defined $trigger) {
+
+  if(not @factoids) {
     $self->{pbot}->{interpreter}->handle_result($from, $nick, $user, $host, $command, "$keyword $arguments", "/msg $nick Failed to find module for '$keyword' in channel $from\n", 1, 0);
     return;
   }
+
+  my ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
 
   my $module = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{action};
   my $module_dir = $self->{pbot}->{registry}->get_value('general', 'module_dir');
