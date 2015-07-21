@@ -315,7 +315,8 @@ sub check_flood {
         if($messages->[1]->{timestamp} - $messages->[0]->{timestamp} <= $enter_abuse_time_threshold) {
           if(++$channel_data->{enter_abuse} >= $enter_abuse_threshold - 1) {
             $channel_data->{enter_abuse} = $enter_abuse_threshold / 2 - 1;
-            if(++$channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
+            $channel_data->{enter_abuses}++;
+            if($channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
               if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
                 if ($self->{pbot}->{chanops}->has_ban_timeout($channel, "*!$user\@" . address_to_mask($host))) {
                   $self->{pbot}->{logger}->log("$nick $channel enter abuse offense disregarded due to existing ban\n");
@@ -334,6 +335,11 @@ sub check_flood {
               }
             } else {
               $self->{pbot}->{logger}->log("$nick $channel enter abuses counter incremented to " . $channel_data->{enter_abuses} . "\n") if $debug_enter_abuse;
+              if ($channel_data->{enter_abuses} == $enter_abuse_max_offenses - 1 && $channel_data->{enter_abuse} == $enter_abuse_threshold / 2 - 1) {
+                if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
+                  $self->{pbot}->{conn}->privmsg($channel, "$nick: Please stop abusing the enter key. Feel free to type longer messages and to take a moment to think of anything else to say before you hit that enter key.");
+                }
+              }
             }
           } else {
             $self->{pbot}->{logger}->log("$nick $channel enter abuse counter incremented to " . $channel_data->{enter_abuse} . "\n") if $debug_enter_abuse;
@@ -527,14 +533,14 @@ sub address_to_mask {
       when($_ <= 191) { $banmask = "$a.$b.*"; }
       default { $banmask = "$a.$b.$c.*"; }
     }
-  } elsif($address =~ m/[^.]+\.([^.]+\.[^.]+)$/) {
-    $banmask = "*.$1";
   } elsif($address =~ m{^gateway/([^/]+)/([^/]+)/}) {
     $banmask = "gateway/$1/$2/*";
   } elsif($address =~ m{^nat/([^/]+)/}) {
     $banmask = "nat/$1/*";
   } elsif($address =~ m/^([^:]+):([^:]*):([^:]*):([^:]*):([^:]*):([^:]*):([^:]*):([^:]*)$/) {
     $banmask = "$1:$2:*";
+  } elsif($address =~ m/[^.]+\.([^.]+\.[a-zA-Z]+)$/) {
+    $banmask = "*.$1";
   } else {
     $banmask = $address;
   }
