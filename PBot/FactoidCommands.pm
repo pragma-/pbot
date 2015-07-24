@@ -493,14 +493,48 @@ sub factrem {
 
   my ($from_chan, $from_trigger) = split / /, $arguments;
 
-  if(not defined $from_chan or not defined $from_trigger) {
-    return "Usage: factrem <channel> <keyword>";
+  if(not defined $from_chan and not defined $from_trigger) {
+    return "Usage: factrem [channel] <keyword>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, undef, 1, 1);
+  my $needs_disambig;
 
-  if(not defined $trigger) {
-    return "$from_trigger not found in channel $from_chan.";
+  if (not defined $from_trigger) {
+    $from_trigger = $from_chan;
+    $from_chan = '.*';
+    $needs_disambig = 1;
+  }
+
+  $from_chan = '.*' if $from_chan eq 'global';
+
+  $from_chan = lc $from_chan;
+
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, undef, 0, 1);
+
+  if(not @factoids) {
+    if ($needs_disambig) {
+      return "$from_trigger not found";
+    } else {
+      $from_chan = 'global channel' if $from_chan eq '.*';
+      return "$from_trigger not found in $from_chan";
+    }
+  }
+
+  my ($channel, $trigger);
+
+  if (@factoids > 1) {
+    if ($needs_disambig or not grep { $_->[0] eq $from_chan } @factoids) {
+      return "$from_trigger found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `factrem <channel> $from_trigger` to disambiguate.";
+    } else {
+      foreach my $factoid (@factoids) {
+        if ($factoid->[0] eq $from_chan) {
+          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
+          last;
+        }
+      }
+    }
+  } else {
+    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
   }
 
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
@@ -576,10 +610,15 @@ sub factshow {
 
   $chan = lc $chan;
 
-  my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig);
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
 
-  if(not @factoids) {
-    return "$trig not found in channel $chan";
+  if (not @factoids) {
+    if ($needs_disambig) {
+      return "$trig not found";
+    } else {
+      $chan = 'global channel' if $chan eq '.*';
+      return "$trig not found in $chan";
+    }
   }
 
   my ($channel, $trigger);
@@ -631,10 +670,15 @@ sub factinfo {
 
   $chan = lc $chan;
 
-  my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig);
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
 
   if(not @factoids) {
-    return "$trig not found in channel $chan";
+    if ($needs_disambig) {
+      return "$trig not found";
+    } else {
+      $chan = 'global channel' if $chan eq '.*';
+      return "$trig not found in $chan";
+    }
   }
 
   my ($channel, $trigger);
