@@ -405,7 +405,7 @@ sub check_flood {
               my $duration = duration($timeout);
               my $banmask = address_to_mask($host);
 
-              $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$banmask\$##stop_join_flood", $channel, $timeout);
+              $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$banmask\$##stop_join_flood", $channel . '-floodbans', $timeout);
               $self->{pbot}->{logger}->log("$nick!$user\@$banmask banned for $duration due to join flooding (offense #" . $channel_data->{offenses} . ").\n");
               $self->{pbot}->{conn}->privmsg($nick, "You have been banned from $channel due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with: unbanme $channel, otherwise you will be automatically unbanned in $duration.");
             }
@@ -485,7 +485,7 @@ sub unbanme {
 
   my $mask = "*!$user\@$banmask\$##stop_join_flood";
 
-  if(not $self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, $mask)) {
+  if(not $self->{pbot}->{chanops}->{unban_timeout}->find_index($channel . '-floodbans', $mask)) {
     return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
   }
 
@@ -517,7 +517,7 @@ sub unbanme {
     return "/msg $nick You may only use unbanme for the first offense. You will be automatically unbanned in a few hours, and your offense counter will decrement once every 24 hours.";
   }
 
-  $self->{pbot}->{chanops}->unban_user($mask, $channel);
+  $self->{pbot}->{chanops}->unban_user($mask, $channel . '-floodbans');
 
   return "/msg $nick You have been unbanned from $channel.";
 }
@@ -607,7 +607,7 @@ sub check_bans {
   foreach my $alias (keys %aliases) {
     next if $alias =~ /^Guest\d+(?:!.*)?$/;
 
-    if ($aliases{$alias}->{type} == $self->{messagehistory}->{alias_type}->{WEAK}) {
+    if ($aliases{$alias}->{type} == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK}) {
       $self->{pbot}->{logger}->log("anti-flood: [check-bans] skipping WEAK alias $alias in channel $channel\n") if $debug_checkban >= 2;
       next;
     }
@@ -834,7 +834,7 @@ sub adjust_offenses {
   }
 
   foreach my $account (keys %{ $self->{nickflood} }) {
-    if($self->{nickflood}->{$account}->{offenses} and gettimeofday - $self->{nickflood}->{$account}->{timestamp} >= 60 * 60 * 24) {
+    if($self->{nickflood}->{$account}->{offenses} and gettimeofday - $self->{nickflood}->{$account}->{timestamp} >= 60 * 60 * 3) {
       $self->{nickflood}->{$account}->{offenses}--;
 
       if($self->{nickflood}->{$account}->{offenses} == 0) {
