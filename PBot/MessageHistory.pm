@@ -76,7 +76,7 @@ sub aka_link {
 
   my ($id, $alias, $type) = split /\s+/, $arguments;
 
-  $type = $self->{messagehistory}->{alias_type}->{STRONG} if not defined $type;
+  $type = $self->{database}->{alias_type}->{STRONG} if not defined $type;
 
   if (not $id or not $alias) {
     return "Usage: link <target id> <alias id> [type]";
@@ -94,7 +94,7 @@ sub aka_link {
   }
 
   if ($self->{database}->link_alias($id, $alias, $type)) {
-    return "$source " . ($type == $self->{messagehistory}->{alias_type}->{WEAK} ? "weakly" : "strongly") . " linked to $target.";
+    return "$source " . ($type == $self->{database}->{alias_type}->{WEAK} ? "weakly" : "strongly") . " linked to $target.";
   } else {
     return "Link failed.";
   }
@@ -164,7 +164,7 @@ sub list_also_known_as {
     my $sep = "";
     foreach my $aka (sort keys %akas) {
       next if $aka =~ /^Guest\d+(?:!.*)?$/;
-      next if $akas{$aka}->{type} == $self->{messagehistory}->{alias_type}->{WEAK} && not $show_weak;
+      next if $akas{$aka}->{type} == $self->{database}->{alias_type}->{WEAK} && not $show_weak;
 
       if (not $show_hostmasks) {
         my ($nick) = $aka =~ m/([^!]+)/;
@@ -186,7 +186,7 @@ sub list_also_known_as {
         $result .= " [$akas{$aka}->{id}]";
       }
 
-      $result .= " [WEAK]" if $akas{$aka}->{type} == $self->{messagehistory}->{alias_type}->{WEAK};
+      $result .= " [WEAK]" if $akas{$aka}->{type} == $self->{database}->{alias_type}->{WEAK};
 
       if ($show_hostmasks or $show_nickserv or $show_id or $show_relationship) {
         $sep = ",\n";
