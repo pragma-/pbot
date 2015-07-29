@@ -179,18 +179,21 @@ sub mute_user_timed {
 }
 
 sub join_channel {
-  my ($self, $channel) = @_;
+  my ($self, $channels) = @_;
 
-  $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.join', { channel => $channel });
-  $self->{pbot}->{conn}->join($channel);
+  $self->{pbot}->{conn}->join($channels);
 
-  delete $self->{is_opped}->{$channel};
-  delete $self->{op_requested}->{$channel};
+  foreach my $channel (split /,/, $channels) {
+    $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.join', { channel => $channel });
 
-  if (exists $self->{pbot}->{channels}->{channels}->hash->{$channel} 
-      and exists $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop} 
-      and $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}) {
-    $self->gain_ops($channel);
+    delete $self->{is_opped}->{$channel};
+    delete $self->{op_requested}->{$channel};
+
+    if (exists $self->{pbot}->{channels}->{channels}->hash->{$channel}
+        and exists $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}
+        and $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}) {
+      $self->gain_ops($channel);
+    }
   }
 }
 
