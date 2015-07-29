@@ -211,15 +211,6 @@ sub on_mode {
           }
         }
       }
-      elsif($mode eq "+e" && $channel eq $event->{conn}->nick) {
-        foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
-          if($self->{channels}->{channels}->hash->{$chan}{enabled}) {
-            $self->{pbot}->{logger}->log("Joining channel: $chan\n");
-            $event->{conn}->join($chan);
-          }
-        }
-        $self->{pbot}->{joined_channels} = 1;
-      }
     }
   }
   return 0;
@@ -310,12 +301,14 @@ sub on_nickchange {
   $self->{pbot}->{logger}->log("$nick!$user\@$host changed nick to $newnick\n");
 
   if ($newnick eq $self->{pbot}->{registry}->get_value('irc', 'botnick') and not $self->{pbot}->{joined_channels}) {
+    my $chans;
     foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
       if($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
-        $self->{pbot}->{logger}->log("Joining channel: $chan\n");
-        $self->{pbot}->{chanops}->join_channel($chan);
+        $chans .= "$chan,";
       }
     }
+    $self->{pbot}->{logger}->log("Joining channels: $chans\n");
+    $self->{pbot}->{chanops}->join_channel($chans);
     $self->{pbot}->{joined_channels} = 1;
   }
 
