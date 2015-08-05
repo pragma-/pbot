@@ -898,7 +898,7 @@ sub factfind {
           if($factoids->{$chan}->{$trigger}->{owner} =~ /$owner/i 
             && $factoids->{$chan}->{$trigger}->{ref_user} =~ /$refby/i
             && (exists $factoids->{$chan}->{$trigger}->{edited_by} ? $factoids->{$chan}->{$trigger}->{edited_by} =~ /$editby/i : 1)) {
-            next if($arguments ne "" && $factoids->{$chan}->{$trigger}->{action} !~ /$arguments/i && $trigger !~ /$arguments/i);
+            next if($arguments ne "" && $factoids->{$chan}->{$trigger}->{action} !~ /\b$arguments\b/i && $trigger !~ /\b$arguments\b/i);
 
             $i++;
             

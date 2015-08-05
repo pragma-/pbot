@@ -67,6 +67,9 @@ sub begin {
 
   $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr; 
 
+  $self->{dbh}->sqlite_enable_load_extension(my $_enabled = 1);
+  $self->{dbh}->prepare("SELECT load_extension('/usr/lib/sqlite3/pcre.so')");
+
   eval {
     my $sqlite_debug = $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_debug');
     use PBot::SQLiteLoggerLayer;
@@ -505,23 +508,21 @@ sub get_message_context {
   my ($messages_before, $messages_after, $messages_count);
 
   if (defined $count and $count > 1) {
-    $text =~ s/\.?\*\??/%/g;
-    $text =~ s/\./_/g;
-    print "got count [$count] and text [$text]\n";
+    my $regex = '\b' . quotemeta($text) . '\b';
 
     $messages_count = eval {
       my $sth;
       if (defined $context_id) {
-        $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg LIKE ? AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
+        $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg REGEXP ? AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
         $sth->bind_param(1, $context_id);
         $sth->bind_param(2, $message->{channel});
-        $sth->bind_param(3, "%$text%");
+        $sth->bind_param(3, $regex);
         $sth->bind_param(4, $message->{timestamp});
         $sth->bind_param(5, $count);
       } else {
-        $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg LIKE ? AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
+        $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg REGEXP ? AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
         $sth->bind_param(1, $message->{channel});
-        $sth->bind_param(2, "%$text%");
+        $sth->bind_param(2, $regex);
         $sth->bind_param(3, $message->{timestamp});
         $sth->bind_param(4, $count);
       }
@@ -633,25 +634,24 @@ sub recall_message_by_count {
 sub recall_message_by_text {
   my ($self, $id, $channel, $text, $ignore_command) = @_;
   
-  $text =~ s/\.?\*\??/%/g;
-  $text =~ s/\./_/g;
+  my $regex = '\b' . quotemeta($text) . '\b';
 
   my $messages;
 
   if(defined $id) {
     $messages = eval {
-      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg LIKE ? ORDER BY timestamp DESC LIMIT 10');
+      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg REGEXP ? ORDER BY timestamp DESC LIMIT 10');
       $sth->bind_param(1, $id);
       $sth->bind_param(2, $channel);
-      $sth->bind_param(3, "%$text%");
+      $sth->bind_param(3, $regex);
       $sth->execute();
       return $sth->fetchall_arrayref({});
     };
   } else {
     $messages = eval {
-      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg LIKE ? ORDER BY timestamp DESC LIMIT 10');
+      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg REGEXP ? ORDER BY timestamp DESC LIMIT 10');
       $sth->bind_param(1, $channel);
-      $sth->bind_param(2, "%$text%");
+      $sth->bind_param(2, $regex);
       $sth->execute();
       return $sth->fetchall_arrayref({});
     };
