@@ -108,9 +108,12 @@ sub process_line {
 
   if(defined $command || defined $has_url || defined $has_code) {
     if((defined $command && $command !~ /^login/i) || defined $has_url || defined $has_code) {
-      if(defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from) && not $pbot->{admins}->loggedin($from, "$nick!$user\@$host")) {
-        # ignored hostmask
-        return;
+      if(defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
+        my $admin = $pbot->{admins}->loggedin($from, "$nick!$user\@$host");
+        if (!defined $admin || $admin->{level} < 10) {
+          # ignored hostmask
+          return;
+        }
       }
     }
 
