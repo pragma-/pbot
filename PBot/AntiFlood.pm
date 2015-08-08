@@ -192,14 +192,10 @@ sub check_flood {
     $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", "NICKCHANGE", $mask, $text));
 
     my ($newnick) = $text =~ m/NICKCHANGE (.*)/;
-    if($newnick =~ m/^Guest\d+$/) {
-      # Don't enforce for services-mandated change to guest account
-    } else {
-      $mask = "$newnick!$user\@$host";
-      $account = $self->{pbot}->{messagehistory}->get_message_account($newnick, $user, $host);
-      $nick = $newnick;
-      $self->{nickflood}->{$account}->{changes}++;
-    }
+    $mask = "$newnick!$user\@$host";
+    $account = $self->{pbot}->{messagehistory}->get_message_account($newnick, $user, $host);
+    $nick = $newnick;
+    $self->{nickflood}->{$account}->{changes}++;
   } else {
     $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", lc $channel eq lc $mask ? "QUIT" : $channel, $mask, $text));
   }
