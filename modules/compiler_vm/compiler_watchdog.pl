@@ -16,17 +16,53 @@ my $closing = "\n\n";
 my $watching = 0;
 my $got_output = 0;
 my $local_vars = "";
-
+my $locals_start;
+my $locals_end;
 my $last_statement;
-
+my ($main_start, $main_end);
 sub flushall;
 sub gdb;
+
+my ($out, $in);
+
+sub getlocals {
+  print "getting locals\n" if $debug >= 5;
+  gdb $in, "print \"Go.\"\ninfo locals\nprint \"Ok.\"\n";
+
+  while(my $peep = <$out>) {
+    chomp $peep;
+    print "got peep: [$peep]\n" if $debug >= 5;
+    last if $peep =~ m/\(gdb\) \$\d+ = "Go."/;
+
+    # fix this
+    $peep =~ s/^\d+: (.*?) =/$1 =/;
+    print "$opening$peep$closing";
+    $got_output = 1;
+  }
+
+  my $result = {};
+
+  while(my $line = <$out>) {
+    chomp $line;
+    print "got: [$line]\n" if $debug >= 5;
+    last if $line =~ m/\(gdb\) \$\d+ = "Ok."/;
+    if($line =~ m/([^=]+)=\s+(.*)/) {
+      my $var = $1;
+      my $value = $2;
+      $var =~ s/^\(gdb\)\s+//;
+      $var =~ s/\s+$//;
+      $result->{$var} = $value;
+      print "  got local: $var = $value\n" if $debug >= 4;
+    }
+  }
+
+  return $result;
+}
 
 sub execute {
   my ($cmdline) = @_;
   my ($ret, $result);
 
-  my ($out, $in);
   open2($out, $in, "$cmdline 2>&1");
 
   while(my $line = <$out>) {
@@ -61,22 +97,23 @@ sub execute {
 
       gdb $in, "list main,9001\n";
       gdb $in, "\nprint \"Ok.\"\n";
-      my $break = 0;
-      my $bracket = 0;
-      my $main_ended = 0;
+      my ($bracket, $main_ended) = (0);
       while(my $line = <$out>) {
         chomp $line;
         print "list got: [$line]\n" if $debug >= 4;
-        my ($line_number) = $line =~ m/^(\d+)/g;
+        my ($line_number) = $line =~ m/^(?:\(gdb\)\s+)?(\d+)/g;
         while($line =~ m/(.)/g) {
           my $char = $1;
-          if($char eq '{') {
+          if($char eq '{' and not $main_ended) {
+            if ($bracket == 0) {
+              $main_start = $line_number;
+            }
             $bracket++;
           } elsif($char eq '}') {
             $bracket--;
 
             if($bracket == 0 and not $main_ended) {
-              $break = $line_number - 1;
+              $main_end = $line_number - 1;
               $main_ended = 1;
               last;
             }
@@ -86,7 +123,8 @@ sub execute {
         last if $line =~ m/^\(gdb\) \$\d+ = "Ok."/;
       }
 
-      gdb $in, "break $break\n";
+      gdb $in, "break $main_start\n";
+      gdb $in, "break $main_end\n";
       gdb $in, "set width 0\n";
       gdb $in, "set height 0\n";
       gdb $in, "run < .input\n";
@@ -96,41 +134,21 @@ sub execute {
     if($line =~ m/^Breakpoint \d+, main/) {
       my $line = <$out>;
       print "== got: $line\n" if $debug >= 5;
-      if($line =~ m/^\d+\s+return.*?;\s*$/ or $line =~ m/^\d+\s+}\s*$/) {
+      if ($line =~ m/^\d+\s+return.*?;\s*$/ or $line =~ m/^\d+\s+}\s*$/) {
         if($got_output == 0) {
-          print "no output, checking locals\n" if $debug >= 5;
-          gdb $in, "print \"Go.\"\ninfo locals\nprint \"Ok.\"\n";
+          $locals_end = getlocals();
 
-          while(my $peep = <$out>) {
-            chomp $peep;
-            last if $peep =~ m/\(gdb\) \$\d+ = "Go."/;
-
-            # fix this
-            $peep =~ s/^\d+: (.*?) =/$1 =/;
-            print "$opening$peep$closing";
-            $got_output = 1;
-          }
-
-          my $result = "";
-          my $vars = "";
-          my $varsep = "";
-
-          while(my $line = <$out>) {
-            chomp $line;
-            print "got: [$line]\n" if $debug >= 5;
-            last if $line =~ m/\(gdb\) \$\d+ = "Ok."/;
-            if($line =~ m/([^=]+)=\s+(.*)/) {
-              $vars .= "$varsep$1= $2";
-              $varsep = "; ";
+          my $sep = '';
+          foreach my $var (keys %$locals_end) {
+            print "checking local $var...\n" if $debug >= 4;
+            if ($locals_start->{$var} ne $locals_end->{$var}) {
+              $local_vars .= "$sep$var = $locals_end->{$var}";
+              $sep = '; ';
             }
           }
-
-          $result =~ s/^\s+//;
-          $result =~ s/\s+$//;
-
-          $vars =~ s/\(gdb\)\s*//g;
-          $local_vars = $vars if length $vars;
         }
+      } elsif ($line =~ m/^$main_start\s+/) {
+        $locals_start = getlocals();
       }
 
       gdb $in, "cont\n";
@@ -260,14 +278,17 @@ sub execute {
 
         while (my $line = <$out>) {
           chomp $line;
-          print "-- print-last-statement: read [$line]\n" if $debug;
           $line =~ s/^\(gdb\)\s*//;
           if ($line =~ m/^\$\d+ = "Ok."/) {
             last;
-          } elsif ($line =~ m/^\$\d+ = (.*)/) {
+          } elsif ($line =~ s/\$\d+ = (.*)$//) {
             unless ($1 eq 'void' || $args eq $1) {
               $last_statement = "$args = $1";
               print "got last statement [$last_statement]\n" if $debug;
+            }
+            if (length $line) {
+              print "$line\n";
+              $got_output = 1;
             }
           } else {
             $line =~ s/\$\d+ = \d+$//;
