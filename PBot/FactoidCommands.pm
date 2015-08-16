@@ -891,6 +891,10 @@ sub factfind {
   $last_chan = "";
   $i = 0;
   eval {
+    my $regex = ($arguments =~ m/^\w/) ? '\b' : '\B';
+    $regex .= quotemeta $arguments;
+    $regex .= ($arguments =~ m/\w$/) ? '\b' : '\B';
+
     foreach my $chan (sort keys %{ $factoids }) {
       next if defined $channel and $chan !~ /$channel/i;
       foreach my $trigger (sort keys %{ $factoids->{$chan} }) {
@@ -898,7 +902,7 @@ sub factfind {
           if($factoids->{$chan}->{$trigger}->{owner} =~ /$owner/i 
             && $factoids->{$chan}->{$trigger}->{ref_user} =~ /$refby/i
             && (exists $factoids->{$chan}->{$trigger}->{edited_by} ? $factoids->{$chan}->{$trigger}->{edited_by} =~ /$editby/i : 1)) {
-            next if($arguments ne "" && $factoids->{$chan}->{$trigger}->{action} !~ /\b$arguments\b/i && $trigger !~ /\b$arguments\b/i);
+            next if($arguments ne "" && $factoids->{$chan}->{$trigger}->{action} !~ /$regex/i && $trigger !~ /$regex/i);
 
             $i++;
             

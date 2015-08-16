@@ -508,7 +508,10 @@ sub get_message_context {
   my ($messages_before, $messages_after, $messages_count);
 
   if (defined $count and $count > 1) {
-    my $regex = '\b' . quotemeta($text) . '\b';
+    my $regex = '(?i)';
+    $regex .= ($text =~ m/^\w/) ? '\b' : '\B';
+    $regex .= quotemeta $text;
+    $regex .= ($text =~ m/\w$/) ? '\b' : '\B';
 
     $messages_count = eval {
       my $sth;
@@ -518,13 +521,13 @@ sub get_message_context {
         $sth->bind_param(2, $message->{channel});
         $sth->bind_param(3, $regex);
         $sth->bind_param(4, $message->{timestamp});
-        $sth->bind_param(5, $count);
+        $sth->bind_param(5, $count - 1);
       } else {
         $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg REGEXP ? AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
         $sth->bind_param(1, $message->{channel});
         $sth->bind_param(2, $regex);
         $sth->bind_param(3, $message->{timestamp});
-        $sth->bind_param(4, $count);
+        $sth->bind_param(4, $count - 1);
       }
       $sth->execute();
       return [reverse @{$sth->fetchall_arrayref({})}];
@@ -634,7 +637,10 @@ sub recall_message_by_count {
 sub recall_message_by_text {
   my ($self, $id, $channel, $text, $ignore_command) = @_;
   
-  my $regex = '\b' . quotemeta($text) . '\b';
+  my $regex = '(?i)';
+  $regex .= ($text =~ m/^\w/) ? '\b' : '\B';
+  $regex .= quotemeta $text;
+  $regex .= ($text =~ m/\w$/) ? '\b' : '\B';
 
   my $messages;
 
