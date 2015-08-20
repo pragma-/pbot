@@ -117,12 +117,31 @@ sub ban_user {
 sub unban_user {
   my $self = shift;
   my ($mask, $channel) = @_;
-  $self->{pbot}->{logger}->log("Unbanning $channel $mask\n");
-  if($self->{unban_timeout}->find_index($channel, $mask)) {
-    $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + 7200; # try again in 2 hours if unban doesn't immediately succeed
-    $self->{unban_timeout}->save;
+
+  my $bans;
+
+  if ($mask !~ m/[!@]/) {
+    my ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($mask);
+
+    if (defined $hostmask) {
+      $bans = $self->{pbot}->{bantracker}->get_baninfo($hostmask, $channel);
+    }
   }
-  $self->add_op_command($channel, "mode $channel -b $mask");
+
+  if (not defined $bans) {
+    my $baninfo = {};
+    $baninfo->{banmask} = $mask;
+    push @$bans, $baninfo;
+  }
+
+  foreach my $baninfo (@$bans) {
+    $self->{pbot}->{logger}->log("Unbanning $channel $baninfo->{banmask}\n");
+    if($self->{unban_timeout}->find_index($channel, $baninfo->{banmask})) {
+      $self->{unban_timeout}->hash->{$channel}->{$baninfo->{banmask}}{timeout} = gettimeofday + 7200; # try again in 2 hours if unban doesn't immediately succeed
+      $self->{unban_timeout}->save;
+    }
+    $self->add_op_command($channel, "mode $channel -b $baninfo->{banmask}");
+  }
   $self->gain_ops($channel);
 }
 
