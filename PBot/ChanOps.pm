@@ -124,7 +124,8 @@ sub unban_user {
     my ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($mask);
 
     if (defined $hostmask) {
-      $bans = $self->{pbot}->{bantracker}->get_baninfo($hostmask, $channel);
+      my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
+      $bans = $self->{pbot}->{bantracker}->get_baninfo($hostmask, $channel, $nickserv);
     }
   }
 
@@ -149,7 +150,21 @@ sub ban_user_timed {
   my $self = shift;
   my ($mask, $channel, $length) = @_;
 
-  $mask .= '!*@*' if $mask !~ m/[\$!@]/;
+  if ($mask !~ m/[!@]/) {
+    my ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($mask);
+    if (defined $hostmask) {
+      my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
+      if (defined $nickserv && length $nickserv) {
+        $mask = '$a:' . $nickserv;
+      } else {
+        my ($nick, $user, $host) = $hostmask =~ m/([^!]+)!([^@]+)@(.*)/;
+        $mask = "*!$user\@" . PBot::AntiFlood::address_to_mask($host);
+      }
+    } else {
+      $mask .= '!*@*';
+    }
+  }
+
   $self->ban_user($mask, $channel);
   if ($length > 0) {
     $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
