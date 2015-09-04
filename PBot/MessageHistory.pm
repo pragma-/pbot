@@ -246,8 +246,11 @@ sub recall_message {
     $recall_history = shift @$args if not defined $recall_history;
     $recall_channel = shift @$args if not defined $recall_channel;
 
-    $recall_count = 1 if $recall_count <= 0;
+    $recall_count = 1 if (not defined $recall_count) || ($recall_count <= 0);
     return "You may only select a count of up to 50 messages." if $recall_count > 50;
+
+    $recall_before = 0 if not defined $recall_before;
+    $recall_after = 0 if not defined $recall_after;
 
     if ($recall_before + $recall_after > 200) {
       return "You may only select up to 200 lines of surrounding context.";
@@ -263,6 +266,8 @@ sub recall_message {
       $recall_nick = $recall_channel;
       $recall_channel = $temp;
     }
+
+    $recall_history = 1 if not defined $recall_history;
 
     # swap history and channel if history looks like a channel and neither history or channel were specified
     if(not $channel_arg and not $history_arg and $recall_history =~ m/^#/) {
