@@ -11,16 +11,17 @@ use strict;
 use IO::Socket;
 
 my $sock = IO::Socket::INET->new(
-  PeerAddr => '127.0.0.1', 
+  PeerAddr => '127.0.0.1',
   PeerPort => 9000, 
   Proto => 'tcp');
 
 if(not defined $sock) {
-  print "Fatal error compiling: $!; try the !cc2 command instead\n";
+  print "Fatal error compiling: $!; try again later\n";
   die $!;
 }
 
 my $nick = shift @ARGV;
+my $channel = shift @ARGV;
 my $code = join ' ', @ARGV;
 
 my $lang = "c11";
@@ -29,7 +30,7 @@ if($code =~ s/-lang=([^ ]+)//) {
   $lang = lc $1;
 }
 
-print $sock "compile:$nick:$lang\n";
+print $sock "compile:$nick:$channel:$lang\n";
 print $sock "$code\n";
 print $sock "compile:end\n";
 

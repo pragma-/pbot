@@ -100,6 +100,7 @@ sub preprocess_code {
 
   my $default_prelude = exists $self->{options}->{'-noheaders'} ? '' : $self->{prelude};
 
+#  $self->{debug} = 10;
   $self->{code} = $self->{include_options} . $self->{code};
 
   print "code before: [$self->{code}]\n" if $self->{debug};
@@ -247,6 +248,7 @@ sub preprocess_code {
 
     # create tmpcode object that starts from extract pos, to skip any quoted code
     my $tmpcode = substr($precode, $extract_pos);
+    $tmpcode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/# #gs;
     print "tmpcode: [$tmpcode]\n" if $self->{debug};
 
     $precode = substr($precode, 0, $extract_pos);
@@ -310,10 +312,11 @@ sub preprocess_code {
       $self->{code} .= $1;
     }
 
+    print "pc: [$precode]\n" if $self->{debug};
     unless ($self->{no_gdb_extensions}) {
       if ($self->{code} !~ m/\b(?:ptype|dump|print|trace|watch|gdb)\b/ && $precode =~ m/(\n?)\s*(.*?);?$/) {
         my $stmt = $2;
-        if ($stmt !~ m/\b(?:\w*scanf|fgets|printf|puts|while|for|do|if|ptype|dump|print|trace|watch|gdb|assert|return)\b/
+        if ($stmt !~ m/\b(?:\w*scanf|fgets|printf|puts|while|for|do|if|switch|ptype|dump|print|trace|watch|gdb|assert|return)\b/
           && $stmt !~ m/^\w+\s+(?<!sizeof )\w+/  # don't match `int a` but do match `sizeof a`
           && $stmt !~ m/[#{}]/                   # don't match preprocessor or structs/functions
           && $stmt !~ m{(?:/\*|\*/|//)}          # don't match comments
@@ -424,6 +427,7 @@ sub postprocess_output {
   $output =~ s/<No symbol table is loaded.  Use the "file" command.>\s*//g;
   $output =~ s/cc1: all warnings being treated as; errors//g;
   $output =~ s/, note: this is the location of the previous definition//g;
+  $output =~ s/\s+note: previous declaration of '.*?' was here//g;
   $output =~ s/ called by gdb \(\) at statement: void gdb\(\) { __asm__\(""\); }//g;
   $output =~ s/called by \?\? \(\) //g;
   $output =~ s/\s0x[a-z0-9]+: note: pointer points here.*?\^//gms;

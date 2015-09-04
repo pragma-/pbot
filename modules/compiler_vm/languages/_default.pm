@@ -517,6 +517,7 @@ sub process_interactive_edit {
       exit 0;
     } else {
       $code = $last_code[0];
+      $prevchange = $last_code[0];
       $got_undo = 1;
     }
   }

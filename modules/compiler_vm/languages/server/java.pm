@@ -17,7 +17,6 @@ sub preprocess {
 
 sub postprocess {
   my $self = shift;
-  $self->SUPER::postprocess;
 
   # no errors compiling, but if output contains something, it must be diagnostic messages
   if(length $self->{output}) {
@@ -27,7 +26,9 @@ sub postprocess {
   }
 
   print "Executing java\n";
-  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 5; cat .input | java prog > .output\"");
+  my $input_quoted = quotemeta $self->{input};
+  $input_quoted =~ s/\\"/"'\\"'"/g;
+  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 5; echo $input_quoted | java prog > .output\"");
 
   $result = "";
   open(FILE, '.output');

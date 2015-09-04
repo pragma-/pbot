@@ -32,15 +32,40 @@ sub initialize {
 sub preprocess {
   my $self = shift;
 
-  open(my $fh, '>', $self->{sourcefile}) or die $!;
-  print $fh $self->{code} . "\n";
-  close $fh;
+  if ($self->{code} =~ m/print_last_statement\(.*\);$/m) {
+    # remove print_last_statement wrapper in order to get warnings/errors from last statement line
+    my $code = $self->{code};
+    $code =~ s/print_last_statement\((.*)\);$/$1;/mg;
+    open(my $fh, '>', $self->{sourcefile}) or die $!;
+    print $fh $code . "\n";
+    close $fh;
 
-  print "Executing [$self->{cmdline}]\n";
-  my ($retval, $result) = $self->execute(60, $self->{cmdline});
+    print "Executing [$self->{cmdline}] without print_last_statement\n";
+    my ($retval, $result) = $self->execute(60, $self->{cmdline});
 
-  $self->{output} = $result;
-  $self->{error}  = $retval;
+    $self->{output} = $result;
+    $self->{error}  = $retval;
+
+    # now compile with print_last_statement intact, ignoring compile results
+    if (not $self->{error}) {
+      open(my $fh, '>', $self->{sourcefile}) or die $!;
+      print $fh $self->{code} . "\n";
+      close $fh;
+
+      print "Executing [$self->{cmdline}] with print_last_statement\n";
+      $self->execute(60, $self->{cmdline});
+    }
+  } else {
+    open(my $fh, '>', $self->{sourcefile}) or die $!;
+    print $fh $self->{code} . "\n";
+    close $fh;
+
+    print "Executing [$self->{cmdline}]\n";
+    my ($retval, $result) = $self->execute(60, $self->{cmdline});
+
+    $self->{output} = $result;
+    $self->{error}  = $retval;
+  }
 }
 
 sub postprocess {
