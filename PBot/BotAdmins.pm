@@ -145,17 +145,8 @@ sub find_admin {
   my $result = eval {
     foreach my $channel_regex (keys %{ $self->{admins}->hash }) {
       if($from !~ m/^#/) {
-        # if not from a channel, make sure that nick portion of hostmask matches $from
         foreach my $hostmask_regex (keys %{ $self->{admins}->hash->{$channel_regex} }) {
-          my $nick;
-
-          if($hostmask_regex =~ m/^([^!]+)!.*/) {
-            $nick = $1;
-          } else {
-            $nick = $hostmask_regex;
-          }
-
-          return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if($from =~ m/$nick/i and $hostmask =~ m/$hostmask_regex/i);
+          return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/$hostmask_regex/i;
         }
       } elsif($from =~ m/^$channel_regex$/i) {
         foreach my $hostmask_regex (keys %{ $self->{admins}->hash->{$channel_regex} }) {

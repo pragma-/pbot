@@ -117,7 +117,7 @@ sub factset {
   if (defined $owner_channel) {
     $admininfo  = $self->{pbot}->{admins}->loggedin($owner_channel, "$nick!$user\@$host");
   } else {
-    $admininfo  = $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host");
+    $admininfo  = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
   }
 
   my $level = 0;
@@ -172,7 +172,7 @@ sub factunset {
   if (defined $owner_channel) {
     $admininfo = $self->{pbot}->{admins}->loggedin($owner_channel, "$nick!$user\@$host");
   } else {
-    $admininfo = $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host");
+    $admininfo = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
   }
 
   my $level = 0;
@@ -955,13 +955,14 @@ sub factchange {
     return "Usage: factchange <channel> <keyword> s/<pattern>/<replacement>/";
   }
 
+  my $chan = $channel;
   ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $keyword, undef, 1, 1);
 
   if(not defined $trigger) {
-    return "$keyword not found in channel $from.";
+    return "$keyword not found in channel $chan.";
   }
 
-  if(not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host") and $factoids->{$channel}->{$trigger}->{'locked'}) {
+  if(not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host") and $factoids->{$channel}->{$trigger}->{'locked'}) {
     return "$trigger is locked and cannot be changed.";
   }
 
