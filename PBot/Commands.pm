@@ -86,7 +86,7 @@ sub exists {
 
 sub interpreter {
   my $self = shift;
-  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick) = @_;
+  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $unused, $referenced) = @_;
   my $result;
 
   my $pbot = $self->{pbot};
@@ -98,8 +98,13 @@ sub interpreter {
   foreach my $ref (@{ $self->{handlers} }) {
     if($ref->{name} eq $keyword) {
       if($level >= $ref->{level}) {
-        return &{ $ref->{subref} }($from, $nick, $user, $host, $arguments);
+        my $result = &{ $ref->{subref} }($from, $nick, $user, $host, $arguments);
+        if ($referenced) {
+          return undef if $result =~ m/(?:usage:|no results)/i;
+        }
+        return $result;
       } else {
+        return undef if $referenced;
         if($level == 0) {
           return "/msg $nick You must login to use this command.";
         } else {

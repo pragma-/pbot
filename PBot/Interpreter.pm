@@ -89,24 +89,44 @@ sub process_line {
     $bot_trigger = $pbot->{registry}->get_value('general', 'trigger');
   }
 
-  if($cmd_text =~ /^(?:$bot_trigger|$botnick.?)?\s*{\s*(.*)\s*}\s*$/) {
-    $has_code = $1 if length $1;
-    $preserve_whitespace = 1;
-  } elsif($cmd_text =~ /^$bot_trigger(.*)$/) {
-    $command = $1;
-  } elsif($cmd_text =~ /^.?$botnick.?\s*(.*?)$/i) {
-    $command = $1;
-  } elsif($cmd_text =~ /^(.*?),?\s*$botnick[?!.]*$/i) {
-    $command = $1;
-  } elsif($cmd_text =~ /https?:\/\/([^\s]+)/i) {
-    $has_url = $1;
-  } elsif($cmd_text =~ /^\s*([^,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$/) {
-    $nick_override = $1;
-    $has_code = $2 if length $2 and $nick_override ne 'enum' and $nick_override ne 'struct';
-    $preserve_whitespace = 1;
-  }
+  my $referenced;
+  my $count = 0;
+  while (++$count <= 3) {
+    $referenced = 0;
+    $command = undef;
+    $has_url = undef;
+    $has_code = undef;
 
-  if(defined $command || defined $has_url || defined $has_code) {
+    if($cmd_text =~ s/^(?:$bot_trigger|$botnick.?)?\s*{\s*(.*)\s*}\s*$//) {
+      $has_code = $1 if length $1;
+      $preserve_whitespace = 1;
+    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
+      $command = $1;
+    } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
+      $command = $1;
+    } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
+      $command = $1;
+    } elsif($cmd_text =~ s/https?:\/\/([^\s]+)//i) {
+      $has_url = $1;
+    } elsif($cmd_text =~ s/^\s*([^,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$//) {
+      $nick_override = $1;
+      $has_code = $2 if length $2 and $nick_override ne 'enum' and $nick_override ne 'struct';
+      $preserve_whitespace = 1;
+    } elsif ($cmd_text =~ s/\B$bot_trigger([^ ]+)//) {
+      my $cmd = $1;
+      $cmd =~ s/(.)[.!?;,)]$/$1/;
+      my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
+      $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
+      if ($nick) {
+        $command = "tell $nick about $cmd";
+      } else {
+        $command = $cmd;
+      }
+      $referenced = 1;
+    }
+
+    last if not defined $command and not defined $has_url and not defined $has_code;
+
     if((defined $command && $command !~ /^login/i) || defined $has_url || defined $has_code) {
       if(defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
         my $admin = $pbot->{admins}->loggedin($from, "$nick!$user\@$host");
@@ -115,31 +135,31 @@ sub process_line {
           return;
         }
       }
-    }
 
-    if(defined $has_url) {
-      if($pbot->{registry}->get_value('general', 'show_url_titles') and not $pbot->{registry}->get_value($from, 'no_url_titles')
-          and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_ignore_channels')
-          and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_channels')) {
-        $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
-      }
-    } elsif(defined $has_code) {
-      if($pbot->{registry}->get_value('general', 'compile_blocks') and not $pbot->{registry}->get_value($from, 'no_compile_blocks')
-          and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_ignore_channels')
-          and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_channels')) {
-        if (not defined $nick_override or (defined $nick_override and $self->{pbot}->{nicklist}->is_present($from, $nick_override))) {
-          $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
+      if(defined $has_url) {
+        if($pbot->{registry}->get_value('general', 'show_url_titles') and not $pbot->{registry}->get_value($from, 'no_url_titles')
+            and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_ignore_channels')
+            and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_channels')) {
+          $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
         }
+      } elsif(defined $has_code) {
+        if($pbot->{registry}->get_value('general', 'compile_blocks') and not $pbot->{registry}->get_value($from, 'no_compile_blocks')
+            and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_ignore_channels')
+            and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_channels')) {
+          if (not defined $nick_override or (defined $nick_override and $self->{pbot}->{nicklist}->is_present($from, $nick_override))) {
+            $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
+          }
+        }
+      } else {
+        $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command, undef, $referenced), 1, $preserve_whitespace);
       }
-    } else {
-      $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command), 1, $preserve_whitespace); 
     }
   }
 }
 
 sub interpret {
   my $self = shift;
-  my ($from, $nick, $user, $host, $depth, $command, $tonick) = @_;
+  my ($from, $nick, $user, $host, $depth, $command, $tonick, $referenced) = @_;
   my ($keyword, $arguments) = ("", "");
   my $text;
   my $pbot = $self->{pbot};
@@ -194,7 +214,7 @@ sub interpret {
     return undef;
   }
 
-  return $self->SUPER::execute_all($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick);
+  return $self->SUPER::execute_all($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, undef, $referenced);
 }
 
 sub truncate_result {

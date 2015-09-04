@@ -454,11 +454,11 @@ sub expand_action_arguments {
 
 sub interpreter {
   my $self = shift;
-  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $ref_from) = @_;
+  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $ref_from, $referenced) = @_;
   my ($result, $channel);
   my $pbot = $self->{pbot};
 
-  #$self->{pbot}->{logger}->log("enter factoid interpreter [$keyword][" . (defined $arguments ? $arguments : '') . "]\n");
+  #$self->{pbot}->{logger}->log("enter factoid interpreter [$keyword][" . (defined $arguments ? $arguments : '') . "] referenced = $referenced\n");
   return undef if not length $keyword or $depth > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
 
   $from = lc $from;
@@ -508,22 +508,24 @@ sub interpreter {
 
     # if multiple channels have this keyword, then ask user to disambiguate
     if($found > 1) {
+      return undef if $referenced;
       return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple channels (use 'fact <channel> <keyword>' to choose one): $chans";
     } 
     # if there's just one other channel that has this keyword, trigger that instance
     elsif($found == 1) {
       $pbot->{logger}->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
-      return $pbot->{factoids}->interpreter($from, $nick, $user, $host, ++$depth, $fwd_trig, $arguments, $tonick, $fwd_chan);
+      return $pbot->{factoids}->interpreter($from, $nick, $user, $host, ++$depth, $fwd_trig, $arguments, $tonick, $fwd_chan, $referenced);
     } 
     # otherwise keyword hasn't been found, display similiar matches for all channels
     else {
       # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, don't say anything
-      return "" if length $arguments and not $self->{pbot}->{nicklist}->is_present($from, $arguments);
+      return undef if length $arguments and not $self->{pbot}->{nicklist}->is_present($from, $arguments);
       
       my $matches = $self->{commands}->factfind($from, $nick, $user, $host, quotemeta $original_keyword);
 
       # found factfind matches
       if($matches !~ m/^No factoids/) {
+        return undef if $referenced;
         return "No such factoid '$original_keyword'; $matches";
       }
 
@@ -532,10 +534,13 @@ sub interpreter {
 
       # don't say anything if nothing similiar was found
       return undef if $matches eq 'none';
+      return undef if $referenced;
 
       return $ref_from . "No such factoid '$original_keyword'; did you mean $matches?";
     }
   }
+
+  return undef if $referenced and $self->{factoids}->hash->{$channel}->{$keyword}->{noembed};
 
   if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on}) {
     if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in}) {
@@ -567,7 +572,7 @@ sub interpreter {
     } else {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
         my $target = $self->{pbot}->{nicklist}->is_present($from, $arguments);
-        if ($target) {
+        if ($target and $action !~ /\$nick/) {
           if ($action !~ m/^(\/[^ ]+) /) {
             $action =~ s/^/\/say $target: $keyword is / unless defined $tonick;
           } else {
@@ -601,7 +606,7 @@ sub interpreter {
     }
 
     $pbot->{logger}->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
-    return $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $command, $tonick);
+    return $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $command, $tonick, $referenced);
   }
 
   if(defined $tonick) { # !tell foo about bar
@@ -624,6 +629,11 @@ sub interpreter {
 
   $self->{pbot}->{logger}->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: $keyword: action: \"$action\"\n");
 
+  if ($referenced) {
+    return undef if $action =~ m/\$(?:nick|arg)/;
+    return undef if $arguments =~ m/\$(?:nick|arg)/;
+  }
+
   $action =~ s/\$nick/$nick/g;
   $action =~ s/\$channel/$from/g;
   $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
@@ -639,7 +649,7 @@ sub interpreter {
     my $preserve_whitespace = $self->{factoids}->hash->{$channel}->{$keyword}->{preserve_whitespace};
     $preserve_whitespace = 0 if not defined $preserve_whitespace;
 
-    return $ref_from . $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, "$keyword $arguments", $keyword, $arguments, $preserve_whitespace);
+    return $ref_from . $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, "$keyword $arguments", $keyword, $arguments, $preserve_whitespace, $referenced);
   }
   elsif($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
     $self->{pbot}->{logger}->log("Found factoid\n");
@@ -689,7 +699,7 @@ sub interpreter {
         $cmd = $action;
       }
 
-      $result = $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $cmd, $tonick);
+      $result = $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $cmd, $tonick, $referenced);
       return $result;
     };
 

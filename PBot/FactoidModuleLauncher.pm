@@ -39,7 +39,7 @@ sub initialize {
 }
 
 sub execute_module {
-  my ($self, $from, $tonick, $nick, $user, $host, $command, $keyword, $arguments, $preserve_whitespace) = @_;
+  my ($self, $from, $tonick, $nick, $user, $host, $command, $keyword, $arguments, $preserve_whitespace, $referenced) = @_;
   my $text;
 
   $arguments = "" if not defined $arguments;
@@ -151,6 +151,10 @@ sub execute_module {
     }
 
     $text = `./$module $arguments 2>> $module-stderr`;
+
+    if ($referenced) {
+      exit 0 if $text =~ m/(?:no results)/i;
+    }
 
     if(defined $tonick) {
       $self->{pbot}->{logger}->log("($from): $nick!$user\@$host) sent to $tonick\n");
