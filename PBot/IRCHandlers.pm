@@ -123,10 +123,10 @@ sub on_msg {
 
 sub on_notice {
   my ($self, $event_type, $event) = @_;
-  my ($nick, $host) = ($event->{event}->nick, $event->{event}->host);
+  my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
   my $text = $event->{event}->{args}[0];
 
-  $self->{pbot}->{logger}->log("Received NOTICE from $nick $host '$text'\n");
+  $self->{pbot}->{logger}->log("Received NOTICE from $nick!$user\@$host to $event->{event}->{to}[0] '$text'\n");
  
   if($nick eq 'NickServ') {
     if($text =~ m/This nickname is registered/) {
@@ -137,6 +137,11 @@ sub on_notice {
     } elsif($text =~ m/has been ghosted/) {
       $event->{conn}->nick($self->{pbot}->{registry}->get_value('irc', 'botnick'));
     }
+  } else {
+    if ($event->{event}->{to}[0] eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+      $event->{event}->{to}[0] = $nick;
+    }
+    $self->on_public($event_type, $event);
   }
   return 0;
 }
