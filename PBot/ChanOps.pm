@@ -120,7 +120,7 @@ sub unban_user {
 
   my $bans;
 
-  if ($mask !~ m/[!@]/) {
+  if ($mask !~ m/[!@\$]/) {
     my ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($mask);
 
     if (defined $hostmask) {
@@ -150,7 +150,7 @@ sub ban_user_timed {
   my $self = shift;
   my ($mask, $channel, $length) = @_;
 
-  if ($mask !~ m/[!@]/) {
+  if ($mask !~ m/[!@\$]/) {
     my ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($mask);
     if (defined $hostmask) {
       my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
