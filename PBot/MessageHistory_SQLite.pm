@@ -512,6 +512,7 @@ sub get_message_context {
     $regex .= ($text =~ m/^\w/) ? '\b' : '\B';
     $regex .= quotemeta $text;
     $regex .= ($text =~ m/\w$/) ? '\b' : '\B';
+    $regex =~ s/\\\*/.*?/g;
 
     $messages_count = eval {
       my $sth;
@@ -641,6 +642,7 @@ sub recall_message_by_text {
   $regex .= ($text =~ m/^\w/) ? '\b' : '\B';
   $regex .= quotemeta $text;
   $regex .= ($text =~ m/\w$/) ? '\b' : '\B';
+  $regex =~ s/\\\*/.*?/g;
 
   my $messages;
 
@@ -1067,8 +1069,9 @@ sub get_also_known_as {
       my $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
+        next if $row->{type} == $self->{alias_type}->{WEAK};
         $ids{$row->{alias}} = { id => $id, type => $row->{type} };
-        $self->{pbot}->{logger}->log("[$id] Adding $row->{alias} -> $id [type $row->{type}]\n") if $debug;
+        $self->{pbot}->{logger}->log("[$id] 1) Adding $row->{alias} -> $id [type $row->{type}]\n") if $debug;
       }
 
       my %seen_id;
@@ -1086,9 +1089,10 @@ sub get_also_known_as {
 
           foreach my $row (@$rows) {
             next if exists $ids{$row->{id}};
+            next if $row->{type} == $self->{alias_type}->{WEAK};
             $ids{$row->{id}} = { id => $id, type => $row->{type} };
             $new_aliases++;
-            $self->{pbot}->{logger}->log("[$id] Adding $row->{id} -> $id [type $row->{type}]\n") if $debug;
+            $self->{pbot}->{logger}->log("[$id] 2) Adding $row->{id} -> $id [type $row->{type}]\n") if $debug;
           }
         }
         last if not $new_aliases;
