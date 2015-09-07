@@ -31,14 +31,38 @@ sub dispatch_event {
   my $ret = undef;
 
   if (exists $self->{handlers}->{$event_type}) {
-    foreach my $handler (@{$self->{handlers}->{$event_type}}) {
-      $ret = $handler->($event_type, $event_data);
+    for (my $i = 0; $i < @{$self->{handlers}->{$event_type}}; $i++) {
+      my $handler = @{$self->{handlers}->{$event_type}}[$i];
+
+      eval {
+        $ret = $handler->($event_type, $event_data);
+      };
+
+      if ($@) {
+        chomp $@;
+        $self->{pbot}->{logger}->log("Error in event handler: $@\n");
+        $self->{pbot}->{logger}->log("Removing handler.\n");
+        splice @{$self->{handlers}->{$event_type}}, $i--, 1;
+      }
+
       return $ret if $ret;
     }
   }
 
-  foreach my $handler (@{$self->{handlers}->{any}}) {
-    $ret = $handler->($event_type, $event_data);
+  for (my $i = 0; $i < @{$self->{handlers}->{any}}; $i++) {
+    my $handler = @{$self->{handlers}->{any}}[$i];
+
+    eval {
+      $ret = $handler->($event_type, $event_data);
+    };
+
+    if ($@) {
+      chomp $@;
+      $self->{pbot}->{logger}->log("Error in event handler: $@\n");
+      $self->{pbot}->{logger}->log("Removing handler.\n");
+      splice @{$self->{handlers}->{any}}, $i--, 1;
+    }
+
     return $ret if $ret;
   }
 

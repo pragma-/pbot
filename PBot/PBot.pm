@@ -50,6 +50,7 @@ use PBot::Timer;
 use PBot::AntiAway;
 use PBot::AntiKickAutoRejoin;
 use PBot::Refresher;
+use PBot::Pluggable;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -143,6 +144,8 @@ sub initialize {
     export_site => delete $conf{export_quotegrabs_site},
     %conf
   );
+
+  $self->{pluggable} = PBot::Pluggable->new(pbot => $self, %conf);
 
   # load registry entries from file to overwrite defaults
   $self->{registry}->load;
