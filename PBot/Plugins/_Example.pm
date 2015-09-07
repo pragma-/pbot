@@ -1,5 +1,5 @@
 
-package PBot::Pluggable::_Example;
+package PBot::Plugins::_Example;
 
 use warnings;
 use strict;
