@@ -34,11 +34,11 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { $self->unload_cmd(@_) },  "unplug",   90);
   $self->{pbot}->{commands}->register(sub { $self->list_cmd(@_)   },  "pluglist",  0);
 
-  $self->autoload();
+  $self->autoload(%conf);
 }
 
 sub autoload {
-  my $self = shift;
+  my ($self, %conf) = @_;
 
   $self->{pbot}->{logger}->log("Loading pluggable modules ...\n");
   my $module_count = 0;
@@ -52,14 +52,14 @@ sub autoload {
     # do not load modules that begin with an underscore
     next if $module =~ m/^_/;
 
-    $module_count++ if $self->load($module)
+    $module_count++ if $self->load($module, %conf)
   }
 
   $self->{pbot}->{logger}->log("$module_count module" . ($module_count == 1 ? '' : 's') . " loaded.\n");
 }
 
 sub load {
-  my ($self, $module) = @_;
+  my ($self, $module, %conf) = @_;
 
   $self->unload($module);
 
@@ -77,7 +77,7 @@ sub load {
     }
 
     $self->{pbot}->{logger}->log("Loading $module\n");
-    my $mod = $class->new(pbot => $self->{pbot});
+    my $mod = $class->new(pbot => $self->{pbot}, %conf);
     $self->{modules}->{$module} = $mod;
     $self->{pbot}->{refresher}->{refresher}->update_cache("PBot/Pluggable/$module.pm");
     return 1;
