@@ -48,7 +48,7 @@ use PBot::BlackList;
 use PBot::Quotegrabs;
 use PBot::Timer;
 use PBot::Refresher;
-use PBot::Pluggable;
+use PBot::Plugins;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -141,7 +141,7 @@ sub initialize {
     %conf
   );
 
-  $self->{pluggable} = PBot::Pluggable->new(pbot => $self, %conf);
+  $self->{plugins} = PBot::Plugins->new(pbot => $self, %conf);
 
   # load registry entries from file to overwrite defaults
   $self->{registry}->load;

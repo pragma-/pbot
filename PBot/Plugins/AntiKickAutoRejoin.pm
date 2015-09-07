@@ -3,7 +3,7 @@
 #
 # Purpose: Temporarily bans people who immediately auto-rejoin after a kick.
 
-package PBot::Pluggable::AntiKickAutoRejoin;
+package PBot::Plugins::AntiKickAutoRejoin;
 
 use warnings;
 use strict;

@@ -1,9 +1,9 @@
-# File: Pluggable.pm
+# File: Plugins.pm
 # Author: pragma-
 #
-# Purpose: Loads and manages pluggable modules.
+# Purpose: Loads and manages plugins.
 
-package PBot::Pluggable;
+package PBot::Plugins;
 
 use warnings;
 use strict;
@@ -28,7 +28,7 @@ sub initialize {
 
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
-  $self->{modules} = {};
+  $self->{plugins} = {};
 
   $self->{pbot}->{commands}->register(sub { $self->load_cmd(@_)   },  "plug",     90);
   $self->{pbot}->{commands}->register(sub { $self->unload_cmd(@_) },  "unplug",   90);
@@ -40,52 +40,52 @@ sub initialize {
 sub autoload {
   my ($self, %conf) = @_;
 
-  $self->{pbot}->{logger}->log("Loading pluggable modules ...\n");
-  my $module_count = 0;
+  $self->{pbot}->{logger}->log("Loading plugins ...\n");
+  my $plugin_count = 0;
 
-  my @modules = glob 'PBot/Pluggable/*.pm';
+  my @plugins = glob 'PBot/Plugins/*.pm';
 
-  foreach my $module (sort @modules) {
-    $module = basename $module;
-    $module =~ s/.pm$//;
+  foreach my $plugin (sort @plugins) {
+    $plugin = basename $plugin;
+    $plugin =~ s/.pm$//;
 
-    # do not load modules that begin with an underscore
-    next if $module =~ m/^_/;
+    # do not load plugins that begin with an underscore
+    next if $plugin =~ m/^_/;
 
-    $module_count++ if $self->load($module, %conf)
+    $plugin_count++ if $self->load($plugin, %conf)
   }
 
-  $self->{pbot}->{logger}->log("$module_count module" . ($module_count == 1 ? '' : 's') . " loaded.\n");
+  $self->{pbot}->{logger}->log("$plugin_count plugin" . ($plugin_count == 1 ? '' : 's') . " loaded.\n");
 }
 
 sub load {
-  my ($self, $module, %conf) = @_;
+  my ($self, $plugin, %conf) = @_;
 
-  $self->unload($module);
+  $self->unload($plugin);
 
-  my $class = "PBot::Pluggable::$module";
+  my $class = "PBot::Plugins::$plugin";
 
-  $self->{pbot}->{refresher}->{refresher}->refresh_module("PBot/Pluggable/$module.pm");
+  $self->{pbot}->{refresher}->{refresher}->refresh_module("PBot/Plugins/$plugin.pm");
 
   my $ret = eval { 
     eval "require $class";
 
     if ($@) {
       chomp $@;
-      $self->{pbot}->{logger}->log("Error loading $module: $@\n");
+      $self->{pbot}->{logger}->log("Error loading $plugin: $@\n");
       return 0;
     }
 
-    $self->{pbot}->{logger}->log("Loading $module\n");
+    $self->{pbot}->{logger}->log("Loading $plugin\n");
     my $mod = $class->new(pbot => $self->{pbot}, %conf);
-    $self->{modules}->{$module} = $mod;
-    $self->{pbot}->{refresher}->{refresher}->update_cache("PBot/Pluggable/$module.pm");
+    $self->{plugins}->{$plugin} = $mod;
+    $self->{pbot}->{refresher}->{refresher}->update_cache("PBot/Plugins/$plugin.pm");
     return 1;
   };
 
   if ($@) {
     chomp $@;
-    $self->{pbot}->{logger}->log("Error loading $module: $@\n");
+    $self->{pbot}->{logger}->log("Error loading $plugin: $@\n");
     return 0;
   }
 
@@ -93,21 +93,21 @@ sub load {
 }
 
 sub unload {
-  my ($self, $module) = @_;
+  my ($self, $plugin) = @_;
 
-  $self->{pbot}->{refresher}->{refresher}->unload_module("PBot::Pluggable::$module");
-  $self->{pbot}->{refresher}->{refresher}->unload_subs("PBot/Pluggable/$module.pm");
+  $self->{pbot}->{refresher}->{refresher}->unload_module("PBot::Plugins::$plugin");
+  $self->{pbot}->{refresher}->{refresher}->unload_subs("PBot/Plugins/$plugin.pm");
 
-  if (exists $self->{modules}->{$module}) {
+  if (exists $self->{plugins}->{$plugin}) {
     eval {
-      $self->{modules}->{$module}->unload;
-      delete $self->{modules}->{$module};
+      $self->{plugins}->{$plugin}->unload;
+      delete $self->{plugins}->{$plugin};
     };
     if ($@) {
       chomp $@;
-      $self->{pbot}->{logger}->log("Warning: got error unloading module $module: $@\n");
+      $self->{pbot}->{logger}->log("Warning: got error unloading plugin $plugin: $@\n");
     }
-    $self->{pbot}->{logger}->log("Pluggable module $module unloaded.\n");
+    $self->{pbot}->{logger}->log("Plugin $plugin unloaded.\n");
     return 1;
   } else {
     return 0;
@@ -149,7 +149,7 @@ sub list_cmd {
    my $count = 0;
    my $comma = '';
 
-   foreach my $plugin (sort keys $self->{modules}) {
+   foreach my $plugin (sort keys $self->{plugins}) {
      $result .= $comma . $plugin;
      $count++;
      $comma = ', ';
