@@ -124,7 +124,7 @@ sub load_cmd {
    if ($self->load($arguments)) {
      return "Loaded $arguments plugin.";
    } else {
-     return "Plugin $arguments not found.";
+     return "Plugin $arguments failed to load.";
    }
 }
 
@@ -138,7 +138,7 @@ sub unload_cmd {
    if ($self->unload($arguments)) {
      return "Unloaded $arguments plugin.";
    } else {
-     return "Plugin $arguments not found.";
+     return "Plugin $arguments failed to load.";
    }
 }
 
