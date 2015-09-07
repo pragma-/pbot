@@ -138,7 +138,7 @@ sub unload_cmd {
    if ($self->unload($arguments)) {
      return "Unloaded $arguments plugin.";
    } else {
-     return "Plugin $arguments failed to load.";
+     return "Plugin $arguments not found.";
    }
 }
 
