@@ -3,7 +3,7 @@
 #
 # Purpose: Kicks people that visibly auto-away with ACTIONs or nick-changes
 
-package PBot::AntiAway;
+package PBot::Pluggable::AntiAway;
 
 use warnings;
 use strict;

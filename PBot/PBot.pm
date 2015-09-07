@@ -47,8 +47,6 @@ use PBot::IgnoreList;
 use PBot::BlackList;
 use PBot::Quotegrabs;
 use PBot::Timer;
-use PBot::AntiAway;
-use PBot::AntiKickAutoRejoin;
 use PBot::Refresher;
 use PBot::Pluggable;
 
@@ -122,8 +120,6 @@ sub initialize {
   $self->{irchandlers}        = PBot::IRCHandlers->new(pbot => $self, %conf);
   $self->{channels}           = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file}, %conf);
   $self->{chanops}            = PBot::ChanOps->new(pbot => $self, %conf);
-  $self->{antiaway}           = PBot::AntiAway->new(pbot => $self, %conf);
-  $self->{antikickautorejoin} = PBot::AntiKickAutoRejoin->new(pbot => $self, %conf);
 
   $self->{interpreter}        = PBot::Interpreter->new(pbot => $self, %conf);
   $self->{interpreter}->register(sub { return $self->{commands}->interpreter(@_); });
