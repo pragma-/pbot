@@ -13,7 +13,7 @@ use PBot::HashObject;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
-     Carp::croak ("Options to Commands should be key/value pairs, not hash reference");
+     Carp::croak ("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
   my ($class, %conf) = @_;
@@ -26,7 +26,7 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to Channels");
+  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{channels} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => delete $conf{filename});
   $self->load_channels;
