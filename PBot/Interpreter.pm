@@ -127,32 +127,30 @@ sub process_line {
 
     last if not defined $command and not defined $has_url and not defined $has_code;
 
-    if((defined $command && $command !~ /^login/i) || defined $has_url || defined $has_code) {
-      if(defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
-        my $admin = $pbot->{admins}->loggedin($from, "$nick!$user\@$host");
-        if (!defined $admin || $admin->{level} < 10) {
-          # ignored hostmask
-          return;
-        }
+    if((!defined $command || $command !~ /^login/) && defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
+      my $admin = $pbot->{admins}->loggedin($from, "$nick!$user\@$host");
+      if (!defined $admin || $admin->{level} < 10) {
+        # ignored hostmask
+        return;
       }
+    }
 
-      if(defined $has_url) {
-        if($pbot->{registry}->get_value('general', 'show_url_titles') and not $pbot->{registry}->get_value($from, 'no_url_titles')
-            and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_ignore_channels')
-            and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_channels')) {
-          $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
-        }
-      } elsif(defined $has_code) {
-        if($pbot->{registry}->get_value('general', 'compile_blocks') and not $pbot->{registry}->get_value($from, 'no_compile_blocks')
-            and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_ignore_channels')
-            and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_channels')) {
-          if (not defined $nick_override or (defined $nick_override and $self->{pbot}->{nicklist}->is_present($from, $nick_override))) {
-            $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
-          }
-        }
-      } else {
-        $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command, undef, $referenced), 1, $preserve_whitespace);
+    if(defined $has_url) {
+      if($pbot->{registry}->get_value('general', 'show_url_titles') and not $pbot->{registry}->get_value($from, 'no_url_titles')
+          and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_ignore_channels')
+          and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_channels')) {
+        $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
       }
+    } elsif(defined $has_code) {
+      if($pbot->{registry}->get_value('general', 'compile_blocks') and not $pbot->{registry}->get_value($from, 'no_compile_blocks')
+          and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_ignore_channels')
+          and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_channels')) {
+        if (not defined $nick_override or (defined $nick_override and $self->{pbot}->{nicklist}->is_present($from, $nick_override))) {
+          $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
+        }
+      }
+    } else {
+      $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command, undef, $referenced), 1, $preserve_whitespace);
     }
   }
 }
