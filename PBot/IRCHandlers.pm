@@ -51,8 +51,7 @@ sub default_handler {
 
   if(not defined $self->{pbot}->{event_dispatcher}->dispatch_event("irc.$event->{type}", { conn => $conn, event => $event })) {
     if ($self->{pbot}->{registry}->get_value('irc', 'log_default_handler')) {
-      my $dump = Dumper $event;
-      $self->{pbot}->{logger}->log($dump);
+      $self->{pbot}->{logger}->log(Dumper $event);
     }
   }
 }
@@ -127,6 +126,8 @@ sub on_notice {
   my $text = $event->{event}->{args}[0];
 
   $self->{pbot}->{logger}->log("Received NOTICE from $nick!$user\@$host to $event->{event}->{to}[0] '$text'\n");
+
+  return 0 if not length $host;
  
   if($nick eq 'NickServ') {
     if($text =~ m/This nickname is registered/) {
@@ -201,7 +202,7 @@ sub on_mode {
     } 
     else {  # bot not targeted
       if($mode eq "+b") {
-        if($nick eq "ChanServ") {
+        if($nick eq "ChanServ" or $target =~ m/##fix_your_connection$/i) {
           if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
             $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout');
             $self->{pbot}->{chanops}->{unban_timeout}->save;
