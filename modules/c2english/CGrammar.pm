@@ -171,6 +171,12 @@ function_definition:
                 $return_type = "which shouldn't return to its caller yet does mysteriously return $return_type";
               }
             }
+
+            if (ref $name eq 'ARRAY') {
+              my @a = @$name;
+              $name = shift @a;
+              $parameter_list = join(' ', @a) . " $parameter_list";
+            }
             
             $return = "\nLet $name be a $parameter_list $return_type.\n";
             
@@ -625,7 +631,7 @@ logical_OR_AND_expression:
             my $expression = join('', @{$item[1]});
             if($arg{context} =~ /initializer expression$/
                 and $expression =~ / /
-                and $expression !~ /^the .*? number \S+$/i
+                and $expression !~ /^the .*? constant \S+$/i
                 and $expression !~ /the size of/i
                 and $expression !~ /the offset/i
                 and $expression !~ /the address of/i
@@ -1111,7 +1117,7 @@ postfix_productions:
               } elsif ($expression =~ /^-\s*\d+$/) {
                 $expression *= -1;
                 my $plural = $expression == 1 ? '' : 's';
-                $return = "the location $expression element$plural backwards from where ^L$arg{primary_expression} points^L";
+                $return = "the element $expression element$plural backwards from where ^L$arg{primary_expression} points^L";
               } else {
                 $return = "the element at location ^L$expression of^L";
                 $return .= " $arg{primary_expression}" if $arg{primary_expression};
@@ -1343,7 +1349,7 @@ declarator:
             if (@direct_declarator == 1) {
               $return = $direct_declarator[0]; 
             } else {
-              $return = $item{'direct_declarator(s)'}; 
+              $return = $item{'direct_declarator(s)'};
             }
           }
     | pointer direct_declarator(s)
@@ -1855,7 +1861,7 @@ constant:
       /-?[0-9]*\.[0-9]*[lf]{0,2}/i
           {
             if ($item[1] =~ s/f$//i) { 
-              $return = "the floating point number $item[1]";
+              $return = "the floating point constant $item[1]";
             } elsif ($item[1] =~ s/l$//i) {
               $return = "long double $item[1]";
             } else {
@@ -1867,13 +1873,13 @@ constant:
           { 
             $return .= 'unsigned ' if $item[1] =~ s/[Uu]//; 
             $return .= 'long ' while $item[1] =~ s/[Ll]//; 
-            $return = "the $return" . "hexadecimal number $item[1]";
+            $return = "the $return" . "hexadecimal constant $item[1]";
           } 
     | /0\d+[lu]{0,3}/i
           {
             $return .= 'unsigned ' if $item[1] =~ s/[Uu]//; 
             $return .= 'long ' while $item[1] =~ s/[Ll]//; 
-            $return = "the $return" . "octal number $item[1]";
+            $return = "the $return" . "octal constant $item[1]";
           }
     | /-?[0-9]+[lu]{0,3}/i # integer constant
           {
