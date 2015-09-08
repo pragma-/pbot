@@ -5,6 +5,7 @@
 use LWP::UserAgent;
 use HTML::Entities;
 use Text::Levenshtein qw(fastdistance);
+use Time::HiRes qw(gettimeofday);
 
 if ($#ARGV <= 0)
 {
@@ -17,6 +18,11 @@ my $arguments = join("%20", @ARGV);
 
 $arguments =~ s/\W$//;
 
+exit if $arguments =~ m{ebay.com/itm}i;
+exit if $arguments =~ m/prntscr.com/i;
+exit if $arguments =~ m/imgbin.org/i;
+exit if $arguments =~ m/jsfiddle.net/i;
+exit if $arguments =~ m/port70.net/i;
 exit if $arguments =~ m/notabug.org/i;
 exit if $arguments =~ m/flickr.com/i;
 exit if $arguments =~ m{www.open-std.org/jtc1/sc22/wg14/www/docs/dr}i;
@@ -129,5 +135,19 @@ exit if $t =~ m/pastebin/i;
 exit if $t =~ m/paste/i;
 exit if $t =~ m/^[0-9_-]+$/;
 exit if $t =~ m/^Index of \S+$/;
+
+my @data;
+if (open my $fh, "<", "last-title-$nick.dat") {
+  @data = <$fh>;
+  close $fh;
+
+  chomp $data[0];
+  exit if $t eq $data[0] and scalar gettimeofday - $data[1] < 60;
+}
+
+open my $fh, ">", "last-title-$nick.dat";
+print $fh "$t\n";
+print $fh scalar gettimeofday, "\n";
+close $fh;
 
 print "Title of $nick\'s link: $t\n" if length $t;
