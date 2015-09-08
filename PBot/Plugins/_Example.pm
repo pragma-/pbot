@@ -34,6 +34,11 @@ sub on_public {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
   
+  if ($event->{interpreted}) {
+    $self->{pbot}->{logger}->log("Message was already handled by the interpreter.\n");
+    return 0;
+  }
+
   $self->{pbot}->{logger}->log("_Example plugin: got message from $nick!$user\@$host: $msg\n");
 
   return 0;
