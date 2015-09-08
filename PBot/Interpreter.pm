@@ -33,9 +33,6 @@ sub initialize {
 
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
-  $self->{pbot}->{registry}->add_default('text',  'general', 'show_url_titles',                 $conf{show_url_titles}                 // 1);
-  $self->{pbot}->{registry}->add_default('array', 'general', 'show_url_titles_channels',        $conf{show_url_titles_channels}        // '.*');
-  $self->{pbot}->{registry}->add_default('array', 'general', 'show_url_titles_ignore_channels', $conf{show_url_titles_ignore_channels} // 'none');
   $self->{pbot}->{registry}->add_default('text',  'general', 'compile_blocks',                  $conf{compile_blocks}                  // 1);
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',         $conf{compile_blocks_channels}         // '.*');
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_ignore_channels',  $conf{compile_blocks_ignore_channels}  // 'none');
@@ -53,10 +50,10 @@ sub process_line {
   my ($from, $nick, $user, $host, $text) = @_;
 
   my $command;
-  my $has_url;
   my $has_code;
   my $nick_override;
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+  my $processed = 0;
 
   $from = lc $from if defined $from;
 
@@ -75,9 +72,10 @@ sub process_line {
     $flood_threshold, $flood_time_threshold,
     $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
 
+  my $preserve_whitespace = 0;
+
   $text =~ s/^\s+//;
   $text =~ s/\s+$//;
-  my $preserve_whitespace = 0;
 
   my $cmd_text = $text;
   $cmd_text =~ s/^\/me\s+//;
@@ -94,24 +92,26 @@ sub process_line {
   while (++$count <= 3) {
     $referenced = 0;
     $command = undef;
-    $has_url = undef;
     $has_code = undef;
 
     if($cmd_text =~ s/^(?:$bot_trigger|$botnick.?)?\s*{\s*(.*)\s*}\s*$//) {
       $has_code = $1 if length $1;
       $preserve_whitespace = 1;
-    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
-      $command = $1;
-    } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
-      $command = $1;
-    } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
-      $command = $1;
-    } elsif($cmd_text =~ s/https?:\/\/([^\s]+)//i) {
-      $has_url = $1;
+      $processed += 100;
     } elsif($cmd_text =~ s/^\s*([^,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$//) {
       $nick_override = $1;
-      $has_code = $2 if length $2 and $nick_override ne 'enum' and $nick_override ne 'struct';
+      $has_code = $2 if length $2 and $nick_override !~ /^(?:enum|struct|union)$/;
       $preserve_whitespace = 1;
+      $processed += 100;
+    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
+      $command = $1;
+      $processed += 100;
+    } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
+      $command = $1;
+      $processed += 100;
+    } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
+      $command = $1;
+      $processed += 100;
     } elsif ($cmd_text =~ s/\B$bot_trigger([^ ]+)//) {
       my $cmd = $1;
       $cmd =~ s/(.)[.!?;,)]$/$1/;
@@ -125,23 +125,18 @@ sub process_line {
       $referenced = 1;
     }
 
-    last if not defined $command and not defined $has_url and not defined $has_code;
+    last if not defined $command and not defined $has_code;
 
-    if((!defined $command || $command !~ /^login/) && defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
+    if((!defined $command || $command !~ /^login /) && defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
       my $admin = $pbot->{admins}->loggedin($from, "$nick!$user\@$host");
       if (!defined $admin || $admin->{level} < 10) {
         # ignored hostmask
-        return;
+        return 1;
       }
     }
 
-    if(defined $has_url) {
-      if($pbot->{registry}->get_value('general', 'show_url_titles') and not $pbot->{registry}->get_value($from, 'no_url_titles')
-          and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_ignore_channels')
-          and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'show_url_titles_channels')) {
-        $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "title", "$nick http://$has_url", $preserve_whitespace);
-      }
-    } elsif(defined $has_code) {
+    if(defined $has_code) {
+      $processed += 100; # ensure no other plugins try to parse this message
       if($pbot->{registry}->get_value('general', 'compile_blocks') and not $pbot->{registry}->get_value($from, 'no_compile_blocks')
           and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_ignore_channels')
           and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_channels')) {
@@ -150,9 +145,10 @@ sub process_line {
         }
       }
     } else {
-      $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command, undef, $referenced), 1, $preserve_whitespace);
+      $processed++ if $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command, undef, $referenced), 1, $preserve_whitespace);
     }
   }
+  return $processed;
 }
 
 sub interpret {
@@ -248,7 +244,7 @@ sub handle_result {
   my ($self, $from, $nick, $user, $host, $text, $command, $result, $checkflood, $preserve_whitespace) = @_;
 
   if (not defined $result or length $result == 0) {
-    return;
+    return 0;
   }
 
   my $original_result = $result;
@@ -324,6 +320,7 @@ sub handle_result {
     }
   }
   $self->{pbot}->{logger}->log("---------------------------------------------\n");
+  return 1;
 }
 
 sub output_result {

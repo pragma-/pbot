@@ -101,7 +101,7 @@ sub on_public {
   my $host = $event->{event}->host;
   my $text = $event->{event}->{args}[0];
 
-  $self->{pbot}->{interpreter}->process_line($from, $nick, $user, $host, $text);
+  $event->{interpreted} = $self->{pbot}->{interpreter}->process_line($from, $nick, $user, $host, $text);
   return 0;
 }
 
