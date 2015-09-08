@@ -1484,23 +1484,17 @@
 [7.29.4.5.1 The wcschr function] The wcschr function locates the first occurrence of c in the wide string pointed to by s.
 [7.29.4.5.1 The wcschr function] The wcschr function returns a pointer to the located wide character, or a null pointer if the wide character does not occur in the wide string.
 [7.29.4.5.2 The wcscspn function] The wcscspn function computes the length of the maximum initial segment of the wide string pointed to by s1 which consists entirely of wide characters not from the wide string pointed to by s2.
-[7.29.4.5.2 The wcscspn function] The wcscspn function returns the length of the segment.
 [7.29.4.5.3 The wcspbrk function] The wcspbrk function locates the first occurrence in the wide string pointed to by s1 of any wide character from the wide string pointed to by s2.
 [7.29.4.5.3 The wcspbrk function] The wcspbrk function returns a pointer to the wide character in s1, or a null pointer if no wide character from s2 occurs in s1.
 [7.29.4.5.4 The wcsrchr function] The wcsrchr function locates the last occurrence of c in the wide string pointed to by s.
 [7.29.4.5.4 The wcsrchr function] The wcsrchr function returns a pointer to the wide character, or a null pointer if c does not occur in the wide string.
 [7.29.4.5.5 The wcsspn function] The wcsspn function computes the length of the maximum initial segment of the wide string pointed to by s1 which consists entirely of wide characters from the wide string pointed to by s2.
-[7.29.4.5.5 The wcsspn function] The wcsspn function returns the length of the segment.
 [7.29.4.5.6 The wcsstr function] The wcsstr function locates the first occurrence in the wide string pointed to by s1 of the sequence of wide characters (excluding the terminating null wide character) in the wide string pointed to by s2.
 [7.29.4.5.6 The wcsstr function] The wcsstr function returns a pointer to the located wide string, or a null pointer if the wide string is not found.
 [7.29.4.5.6 The wcsstr function] If s2 points to a wide string with zero length, the function returns s1.
 [7.29.4.5.7 The wcstok function] A sequence of calls to the wcstok function breaks the wide string pointed to by s1 into a sequence of tokens, each of which is delimited by a wide character from the wide string pointed to by s2.
-[7.29.4.5.7 The wcstok function] sequence, which is then updated.
 [7.29.4.5.7 The wcstok function] If no such wide character is found, then there are no tokens in the wide string pointed to by s1 and the wcstok function returns a null pointer.
-[7.29.4.5.7 The wcstok function] If such a wide character is found, it is the start of the first token.
-[7.29.4.5.7 The wcstok function] The wcstok function then searches from there for a wide character that is contained in the current separator wide string.
 [7.29.4.5.7 The wcstok function] If no such wide character is found, the current token extends to the end of the wide string pointed to by s1, and subsequent searches in the same wide string for a token return a null pointer.
-[7.29.4.5.7 The wcstok function] If such a wide character is found, it is overwritten by a null wide character, which terminates the current token.
 [7.29.4.5.7 The wcstok function] In all cases, the wcstok function stores sufficient information in the pointer pointed to by ptr so that subsequent calls, with a null pointer for s1 and the unmodified pointer value for ptr, shall start searching just past the element overwritten by a null wide character (if any).
 [7.29.4.5.7 The wcstok function] The wcstok function returns a pointer to the first wide character of a token, or a null pointer if there is no token.
 [7.29.4.5.8 The wmemchr function] The wmemchr function locates the first occurrence of c in the initial n wide characters of the object pointed to by s.
@@ -1508,7 +1502,6 @@
 [7.29.4.6.1 The wcslen function] The wcslen function computes the length of the wide string pointed to by s.
 [7.29.4.6.1 The wcslen function] The wcslen function returns the number of wide characters that precede the terminating null wide character.
 [7.29.4.6.2 The wmemset function] The wmemset function copies the value of c into each of the first n wide characters of the object pointed to by s.
-[7.29.4.6.2 The wmemset function] The wmemset function returns the value of s.
 [7.29.5.1 The wcsftime function] The wcsftime function is equivalent to the strftime function, except that: -- The argument s points to the initial element of an array of wide characters into which the generated output is to be placed.
 [7.29.5.1 The wcsftime function] If the total number of resulting wide characters including the terminating null wide character is not more than maxsize, the wcsftime function returns the number of wide characters placed into the array pointed to by s not including the terminating null wide character.
 [7.29.6 Extended multibyte/wide character conversion utilities] A zero-valued mbstate_t object is (at least) one way to describe an initial conversion state.
