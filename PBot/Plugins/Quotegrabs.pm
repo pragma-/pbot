@@ -1,7 +1,7 @@
 # File: Quotegrabs.pm
 # Author: pragma_
 #
-# Purpose: Allows users to "grab" quotes from anti-flood history and store them for later retreival.
+# Purpose: Allows users to "grab" quotes from message history and store them for later retrieval.
 
 package PBot::Plugins::Quotegrabs;
 
