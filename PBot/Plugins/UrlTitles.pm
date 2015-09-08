@@ -41,6 +41,8 @@ sub show_url_titles {
   my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
   my $msg = $event->{event}->{args}[0];
 
+  return 0 if not $msg =~ m/https?:\/\/[^\s]/;
+
   if ($self->{pbot}->{ignorelist}->check_ignore($nick, $user, $host, $channel)) {
     my $admin = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
     if (!defined $admin || $admin->{level} < 10) {
