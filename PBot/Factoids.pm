@@ -382,7 +382,7 @@ sub expand_action_arguments {
     $action =~ s/\$args/$input/g;
   }
 
-  $input =~ s/'/\\'/g;
+  $input =~ s/'/\\'/g if defined $input;
   my @args = shellwords($input);
 
   while ($action =~ m/\$arg\[([^]]+)]/g) {
