@@ -48,12 +48,13 @@ sub show_url_titles {
     }
   }
 
-  while ($msg =~ s/(https?:\/\/[^\s]+)//i && ++$event->{interpreted} <= 3) {
-    my $url = $1;
-    if($self->{pbot}->{registry}->get_value('general', 'show_url_titles') and not $self->{pbot}->{registry}->get_value($channel, 'no_url_titles')
-        and not grep { $channel =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_ignore_channels')
-        and grep { $channel =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_channels')) {
-      $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($channel, undef, $nick, $user, $host, $msg, "title", "$nick $url");
+  if($self->{pbot}->{registry}->get_value('general', 'show_url_titles')
+      and not $self->{pbot}->{registry}->get_value($channel, 'no_url_titles')
+      and not grep { $channel =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_ignore_channels')
+      and grep { $channel =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_channels')) {
+
+    while ($msg =~ s/(https?:\/\/[^\s]+)//i && ++$event->{interpreted} <= 3) {
+      $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($channel, undef, $nick, $user, $host, $msg, "title", "$nick $1");
     }
   }
 
