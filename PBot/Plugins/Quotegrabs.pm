@@ -3,7 +3,7 @@
 #
 # Purpose: Allows users to "grab" quotes from anti-flood history and store them for later retreival.
 
-package PBot::Quotegrabs;
+package PBot::Plugins::Quotegrabs;
 
 use warnings;
 use strict;
@@ -13,8 +13,8 @@ use Time::Duration;
 use Time::HiRes qw(gettimeofday);
 use Getopt::Long qw(GetOptionsFromString);
 
-use PBot::Quotegrabs_SQLite;      # use SQLite backend for quotegrabs database
-#use PBot::Quotegrabs_Hashtable;   # use Perl hashtable backend for quotegrabs database
+use PBot::Plugins::Quotegrabs::Quotegrabs_SQLite;      # use SQLite backend for quotegrabs database
+#use PBot::Plugins::Quotegrabs::Quotegrabs_Hashtable;  # use Perl hashtable backend for quotegrabs database
 
 use POSIX qw(strftime);
 
@@ -33,10 +33,10 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference in Quotegrabs");
-  $self->{filename} = delete $conf{filename};
-  $self->{export_path} = delete $conf{export_path};
-  $self->{export_site} = delete $conf{export_site};
+  $self->{pbot}        = delete $conf{pbot} // Carp::croak("Missing pbot reference in Quotegrabs");
+  $self->{filename}    = delete $conf{quotegrabs_file};
+  $self->{export_path} = delete $conf{export_quotegrabs_path};
+  $self->{export_site} = delete $conf{export_quotegrabs_site};
 
   $self->{database} = PBot::Quotegrabs_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
   #$self->{database} = PBot::Quotegrabs_Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
@@ -44,9 +44,6 @@ sub initialize {
 
   $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
 
-  #-------------------------------------------------------------------------------------
-  # The following could be in QuotegrabsCommands.pm, or they could be kept in here?
-  #-------------------------------------------------------------------------------------
   $self->{pbot}->{commands}->register(sub { $self->grab_quotegrab(@_)        },  "grab",  0);
   $self->{pbot}->{commands}->register(sub { $self->show_quotegrab(@_)        },  "getq",  0);
   $self->{pbot}->{commands}->register(sub { $self->delete_quotegrab(@_)      },  "delq",  0);
@@ -57,7 +54,7 @@ sub uniq { my %seen; grep !$seen{$_}++, @_ }
 
 sub export_quotegrabs { 
   my $self = shift;
-  return "Not enabled" if not defined $self->{export_path};
+  return "Quotegrabs exporting not enabled." if not defined $self->{export_path};
 
   my $quotegrabs = $self->{database}->get_all_quotegrabs();
 
@@ -147,10 +144,6 @@ sub export_quotegrabs {
   close(FILE);
   return "$i quotegrabs exported to " . $self->{export_site};
 }
-
-# ----------------------------------------------------------------------------------------
-# The following subroutines could be in QuotegrabCommands.pm . . . 
-# ----------------------------------------------------------------------------------------
 
 sub grab_quotegrab {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;

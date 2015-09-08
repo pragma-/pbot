@@ -45,7 +45,6 @@ use PBot::Factoids;
 use PBot::BotAdmins;
 use PBot::IgnoreList;
 use PBot::BlackList;
-use PBot::Quotegrabs;
 use PBot::Timer;
 use PBot::Refresher;
 use PBot::Plugins;
@@ -130,14 +129,6 @@ sub initialize {
     filename    => delete $conf{factoids_file},
     export_path => delete $conf{export_factoids_path},
     export_site => delete $conf{export_factoids_site}, 
-    %conf
-  );
-
-  $self->{quotegrabs} = PBot::Quotegrabs->new(
-    pbot        => $self, 
-    filename    => delete $conf{quotegrabs_file},
-    export_path => delete $conf{export_quotegrabs_path},
-    export_site => delete $conf{export_quotegrabs_site},
     %conf
   );
 
