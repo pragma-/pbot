@@ -3,7 +3,7 @@
 #
 # Purpose: Hashtable backend for storing and retreiving quotegrabs
 
-package PBot::Quotegrabs_Hashtable;
+package PBot::Plugins::Quotegrabs::Quotegrabs_Hashtable;
 
 use warnings;
 use strict;

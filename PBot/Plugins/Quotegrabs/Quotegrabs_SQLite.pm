@@ -3,7 +3,7 @@
 #
 # Purpose: SQLite back-end for storing and retreiving quotegrabs
 
-package PBot::Quotegrabs_SQLite;
+package PBot::Plugins::Quotegrabs::Quotegrabs_SQLite;
 
 use warnings;
 use strict;

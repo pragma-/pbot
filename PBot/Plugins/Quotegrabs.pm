@@ -38,8 +38,8 @@ sub initialize {
   $self->{export_path} = delete $conf{export_quotegrabs_path};
   $self->{export_site} = delete $conf{export_quotegrabs_site};
 
-  $self->{database} = PBot::Quotegrabs_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
-  #$self->{database} = PBot::Quotegrabs_Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
+  $self->{database} = PBot::Plugins::Quotegrabs::Quotegrabs_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
+  #$self->{database} = PBot::Plugins::Quotegrabs::Quotegrabs_Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
   $self->{database}->begin();
 
   $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
