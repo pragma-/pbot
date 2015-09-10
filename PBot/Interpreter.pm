@@ -190,7 +190,7 @@ sub interpret {
       and $keyword ne "change"
       and $keyword ne "msg") {
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
-    $arguments =~ s/(?<![\w\/\-])me\b/$nick/gi if defined $arguments;
+    $arguments =~ s/(?<![\w\/\-])me\b/$nick/gi if defined $arguments && $depth <= 2;
   }
 
   if(defined $arguments && $arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i) {
