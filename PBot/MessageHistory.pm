@@ -308,6 +308,24 @@ sub recall_message {
       if(defined $account) {
         my $max_messages = $self->{database}->get_max_messages($account, $recall_channel);
         if($recall_history < 1 || $recall_history > $max_messages) {
+          if ($max_messages == 0) {
+            my @channels = $self->{database}->get_channels($account);
+            my $result = "No messages for $recall_nick in $recall_channel; I have messages for them in ";
+            my $comma = '';
+            my $count = 0;
+            foreach my $channel (sort @channels) {
+              next if $channel !~ /^#/;
+              $result .= "$comma$channel";
+              $comma = ', ';
+              $count++;
+            }
+            if ($count == 0) {
+              return "I have no messages for $recall_nick.";
+            } else {
+              return "$result.";
+            }
+          }
+        } else {
           return "Please choose a history between 1 and $max_messages";
         }
       }
