@@ -65,6 +65,8 @@ foreach my $arg (@ARGV) {
     my @quotes;
     $output =~ s/(?:\"((?:\\\"|(?!\").)*)\")/push @quotes, $1; '"' . ('-' x length $1) . '"'/ge;
 
+    $output =~ s/\ban un/a un/g;
+    $output =~ s/\ban UTF/a UTF/g;
     $output =~ s/the value the expression/the value of the expression/g;
     $output =~ s/the value the member/the value of the member/g;
     $output =~ s/the value the/the/g;
