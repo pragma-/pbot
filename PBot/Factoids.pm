@@ -8,6 +8,9 @@ package PBot::Factoids;
 use warnings;
 use strict;
 
+use feature 'switch';
+no if $] >= 5.018, warnings => "experimental::smartmatch";
+
 use HTML::Entities;
 use Time::HiRes qw(gettimeofday);
 use Carp ();
@@ -348,11 +351,18 @@ sub find_factoid {
 sub expand_factoid_vars {
   my ($self, $from, $action) = @_;
 
-  while ($action =~ /(?<!\\)\$([a-zA-Z0-9_\-]+)/g) {
+  while ($action =~ /(?<!\\)\$([a-zA-Z0-9_:\-]+)/g) {
     my $v = $1;
     next if $v =~ m/^(nick|channel|randomnick)$/; # don't override special variables
+
+    my $modifier = '';
+    if ($v =~ s/(:.*)$//) {
+      $modifier = $1;
+    }
+
     my @factoids = $self->find_factoid($from, $v, undef, 0, 1);
     next if not @factoids;
+
     my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
 
     if ($self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
@@ -364,7 +374,27 @@ sub expand_factoid_vars {
       }
       my $line = int(rand($#mylist + 1));
       $mylist[$line] =~ s/"//g;
-      $action =~ s/\$$var/$mylist[$line]/;
+
+
+      foreach my $mod (split /:/, $modifier) {
+        given ($mod) {
+          when ('uc') {
+            $mylist[$line] = uc $mylist[$line];
+          }
+          when ('lc') {
+            $mylist[$line] = lc $mylist[$line];
+          }
+          when ('ucfirst') {
+            $mylist[$line] = ucfirst $mylist[$line];
+          }
+          when ('title') {
+            $mylist[$line] = lc $mylist[$line];
+            $mylist[$line] = ucfirst $mylist[$line];
+          }
+        }
+      }
+
+      $action =~ s/\$$var$modifier/$mylist[$line]/;
     }
   }
 
@@ -640,6 +670,8 @@ sub interpreter {
     $self->{pbot}->{logger}->log("$keyword disabled.\n");
     return "/msg $nick $ref_from$keyword is currently disabled.";
   }
+
+  $action = $self->expand_factoid_vars($from, $action);
 
   $action =~ s/\$nick/$nick/g;
   $action =~ s/\$channel/$from/g;
