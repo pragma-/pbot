@@ -387,8 +387,7 @@ sub expand_factoid_vars {
             $mylist[$line] = ucfirst $mylist[$line];
           }
           when ('title') {
-            $mylist[$line] = lc $mylist[$line];
-            $mylist[$line] = ucfirst $mylist[$line];
+            $mylist[$line] = ucfirst lc $mylist[$line];
           }
         }
       }
