@@ -375,7 +375,6 @@ sub expand_factoid_vars {
       my $line = int(rand($#mylist + 1));
       $mylist[$line] =~ s/"//g;
 
-
       foreach my $mod (split /:/, $modifier) {
         given ($mod) {
           when ('uc') {
