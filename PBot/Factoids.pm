@@ -561,6 +561,8 @@ sub interpreter {
 
   my $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action};
 
+  $action = $self->expand_factoid_vars($from, $action);
+
   if(length $arguments) {
     if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args}) {
       $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args};
@@ -634,16 +636,14 @@ sub interpreter {
     return undef if $arguments =~ m/\$(?:nick|arg)/;
   }
 
-  $action =~ s/\$nick/$nick/g;
-  $action =~ s/\$channel/$from/g;
-  $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
-
-  $action = $self->expand_factoid_vars($from, $action);
-
   if($self->{factoids}->hash->{$channel}->{$keyword}->{enabled} == 0) {
     $self->{pbot}->{logger}->log("$keyword disabled.\n");
     return "/msg $nick $ref_from$keyword is currently disabled.";
   }
+
+  $action =~ s/\$nick/$nick/g;
+  $action =~ s/\$channel/$from/g;
+  $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'module') {
     my $preserve_whitespace = $self->{factoids}->hash->{$channel}->{$keyword}->{preserve_whitespace};
