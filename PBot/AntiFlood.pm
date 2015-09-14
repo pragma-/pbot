@@ -291,74 +291,6 @@ sub check_flood {
       next;
     }
 
-    # check for enter abuse
-    if($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT} and $channel =~ m/^#/) {
-      my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'enter_abuse', 'enter_abuses', 'offenses');
-      my $other_offenses = delete $channel_data->{offenses};
-      my $debug_enter_abuse = $self->{pbot}->{registry}->get_value('antiflood', 'debug_enter_abuse');
-
-      if(defined $self->{channels}->{$channel}->{last_spoken_nick} and $nick eq $self->{channels}->{$channel}->{last_spoken_nick}) {
-        my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, 2, $self->{pbot}->{messagehistory}->{MSG_CHAT});
-
-        my $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_threshold');
-        my $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_time_threshold');
-        my $enter_abuse_max_offenses   = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_max_offenses');
-
-        $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_threshold') if not defined $enter_abuse_threshold;
-        $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_time_threshold') if not defined $enter_abuse_time_threshold;
-        $enter_abuse_max_offenses   = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_offenses') if not defined $enter_abuse_max_offenses;
-
-        if($messages->[1]->{timestamp} - $messages->[0]->{timestamp} <= $enter_abuse_time_threshold) {
-          if(++$channel_data->{enter_abuse} >= $enter_abuse_threshold - 1) {
-            $channel_data->{enter_abuse} = $enter_abuse_threshold / 2 - 1;
-            $channel_data->{enter_abuses}++;
-            if($channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
-              if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-                if ($self->{pbot}->{chanops}->has_ban_timeout($channel, "*!$user\@" . address_to_mask($host))) {
-                  $self->{pbot}->{logger}->log("$nick $channel enter abuse offense disregarded due to existing ban\n");
-                  next;
-                }
-
-                my $offenses = $channel_data->{enter_abuses} - $enter_abuse_max_offenses + 1 + $other_offenses;
-                my $ban_length = $self->{pbot}->{registry}->get_array_value('antiflood', 'enter_abuse_punishment', $offenses - 1);
-                $self->{pbot}->{chanops}->ban_user_timed("*!$user\@" . address_to_mask($host), $channel, $ban_length);
-                $ban_length = duration($ban_length);
-                $self->{pbot}->{logger}->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
-                $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in $ban_length.");
-                $channel_data->{last_offense} = gettimeofday;
-                $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
-                next;
-              }
-            } else {
-              $self->{pbot}->{logger}->log("$nick $channel enter abuses counter incremented to " . $channel_data->{enter_abuses} . "\n") if $debug_enter_abuse;
-              if ($channel_data->{enter_abuses} == $enter_abuse_max_offenses - 1 && $channel_data->{enter_abuse} == $enter_abuse_threshold / 2 - 1) {
-                if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-                  $self->{pbot}->{conn}->privmsg($channel, "$nick: Please stop abusing the enter key. Feel free to type longer messages and to take a moment to think of anything else to say before you hit that enter key.");
-                }
-              }
-            }
-          } else {
-            $self->{pbot}->{logger}->log("$nick $channel enter abuse counter incremented to " . $channel_data->{enter_abuse} . "\n") if $debug_enter_abuse;
-          }
-          $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
-        } else {
-          if($channel_data->{enter_abuse} > 0) {
-            $self->{pbot}->{logger}->log("$nick $channel more than $enter_abuse_time_threshold seconds since last message, enter abuse counter reset\n") if $debug_enter_abuse;
-            $channel_data->{enter_abuse} = 0;
-            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
-          }
-        }
-      } else {
-        $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
-        $self->{pbot}->{logger}->log("last spoken nick set to $nick\n") if $debug_enter_abuse;
-        if($channel_data->{enter_abuse} > 0) {
-          $self->{pbot}->{logger}->log("$nick $channel enter abuse counter reset\n") if $debug_enter_abuse;
-          $channel_data->{enter_abuse} = 0;
-          $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
-        }
-      }
-    }
-
     # check for chat/join/private message flooding
     if($max_messages > 0 and $self->{pbot}->{messagehistory}->{database}->get_max_messages($account, $channel) >= $max_messages) {
       my $msg;
@@ -448,6 +380,7 @@ sub check_flood {
             $self->{pbot}->{logger}->log("$nick msg flood offense " . $channel_data->{offenses} . " earned $length ignore\n");
             $self->{pbot}->{conn}->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");
           }
+          next;
         } elsif($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} and $self->{nickflood}->{$account}->{changes} >= $max_messages) {
           next if $channel !~ /^#/;
           ($nick) = $text =~ m/NICKCHANGE (.*)/;
@@ -463,6 +396,74 @@ sub check_flood {
             $self->{pbot}->{logger}->log("$nick nickchange flood offense " . $self->{nickflood}->{$account}->{offenses} . " earned $length ban\n");
             $self->{pbot}->{conn}->privmsg($nick, "You have been temporarily banned due to nick-change flooding.  You will be unbanned in $length.");
           }
+        }
+      }
+    }
+
+    # check for enter abuse
+    if($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT} and $channel =~ m/^#/) {
+      my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'enter_abuse', 'enter_abuses', 'offenses');
+      my $other_offenses = delete $channel_data->{offenses};
+      my $debug_enter_abuse = $self->{pbot}->{registry}->get_value('antiflood', 'debug_enter_abuse');
+
+      if(defined $self->{channels}->{$channel}->{last_spoken_nick} and $nick eq $self->{channels}->{$channel}->{last_spoken_nick}) {
+        my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, 2, $self->{pbot}->{messagehistory}->{MSG_CHAT});
+
+        my $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_threshold');
+        my $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_time_threshold');
+        my $enter_abuse_max_offenses   = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_max_offenses');
+
+        $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_threshold') if not defined $enter_abuse_threshold;
+        $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_time_threshold') if not defined $enter_abuse_time_threshold;
+        $enter_abuse_max_offenses   = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_offenses') if not defined $enter_abuse_max_offenses;
+
+        if($messages->[1]->{timestamp} - $messages->[0]->{timestamp} <= $enter_abuse_time_threshold) {
+          if(++$channel_data->{enter_abuse} >= $enter_abuse_threshold - 1) {
+            $channel_data->{enter_abuse} = $enter_abuse_threshold / 2 - 1;
+            $channel_data->{enter_abuses}++;
+            if($channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
+              if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
+                if ($self->{pbot}->{chanops}->has_ban_timeout($channel, "*!$user\@" . address_to_mask($host))) {
+                  $self->{pbot}->{logger}->log("$nick $channel enter abuse offense disregarded due to existing ban\n");
+                  next;
+                }
+
+                my $offenses = $channel_data->{enter_abuses} - $enter_abuse_max_offenses + 1 + $other_offenses;
+                my $ban_length = $self->{pbot}->{registry}->get_array_value('antiflood', 'enter_abuse_punishment', $offenses - 1);
+                $self->{pbot}->{chanops}->ban_user_timed("*!$user\@" . address_to_mask($host), $channel, $ban_length);
+                $ban_length = duration($ban_length);
+                $self->{pbot}->{logger}->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
+                $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in $ban_length.");
+                $channel_data->{last_offense} = gettimeofday;
+                $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+                next;
+              }
+            } else {
+              $self->{pbot}->{logger}->log("$nick $channel enter abuses counter incremented to " . $channel_data->{enter_abuses} . "\n") if $debug_enter_abuse;
+              if ($channel_data->{enter_abuses} == $enter_abuse_max_offenses - 1 && $channel_data->{enter_abuse} == $enter_abuse_threshold / 2 - 1) {
+                if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
+                  $self->{pbot}->{conn}->privmsg($channel, "$nick: Please stop abusing the enter key. Feel free to type longer messages and to take a moment to think of anything else to say before you hit that enter key.");
+                }
+              }
+            }
+          } else {
+            $self->{pbot}->{logger}->log("$nick $channel enter abuse counter incremented to " . $channel_data->{enter_abuse} . "\n") if $debug_enter_abuse;
+          }
+          $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+        } else {
+          if($channel_data->{enter_abuse} > 0) {
+            $self->{pbot}->{logger}->log("$nick $channel more than $enter_abuse_time_threshold seconds since last message, enter abuse counter reset\n") if $debug_enter_abuse;
+            $channel_data->{enter_abuse} = 0;
+            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+          }
+        }
+      } else {
+        $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+        $self->{pbot}->{logger}->log("last spoken nick set to $nick\n") if $debug_enter_abuse;
+        if($channel_data->{enter_abuse} > 0) {
+          $self->{pbot}->{logger}->log("$nick $channel enter abuse counter reset\n") if $debug_enter_abuse;
+          $channel_data->{enter_abuse} = 0;
+          $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
         }
       }
     }
