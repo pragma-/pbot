@@ -41,9 +41,17 @@ sub postprocess {
 
   $result =~ s/\s+$//;
 
-  $self->{no_output} = 1 if not length $result;
-
-  $self->{output} .= $result;
+  if (not length $result) {
+    $self->{no_output} = 1;
+  } elsif ($self->{code} =~ m/print_last_statement\(.*\);$/m
+    && ($result =~ m/A syntax error in expression/ || $result =~ m/No symbol.*in current context/)) {
+    # strip print_last_statement and rebuild/re-run
+    $self->{code} =~ s/print_last_statement\((.*)\);/$1;/mg;
+    $self->preprocess;
+    $self->postprocess;
+  } else {
+    $self->{output} .= $result;
+  }
 }
 
 1;
