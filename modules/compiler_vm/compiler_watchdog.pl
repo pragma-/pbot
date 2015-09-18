@@ -27,7 +27,7 @@ my ($out, $in);
 
 sub getlocals {
   print "getting locals\n" if $debug >= 5;
-  gdb $in, "print \"Go.\"\ninfo locals\nprint \"Ok.\"\n";
+  gdb $in, "print \"Go.\"\ninfo locals\nprint \"~Ok.~\"\n";
 
   while(my $peep = <$out>) {
     chomp $peep;
@@ -45,7 +45,7 @@ sub getlocals {
   while(my $line = <$out>) {
     chomp $line;
     print "got: [$line]\n" if $debug >= 5;
-    last if $line =~ m/\(gdb\) \$\d+ = "Ok."/;
+    last if $line =~ m/\(gdb\) \$\d+ = "~Ok.~"/;
     if($line =~ m/([^=]+)=\s+(.*)/) {
       my $var = $1;
       my $value = $2;
@@ -76,7 +76,7 @@ sub execute {
     next if $line =~ m/^\(gdb\) No symbol table/;
     next if $line =~ m/^\[New Thread/;
     next if $line =~ m/^\(gdb\) Continuing/;
-    next if $line =~ m/^\(gdb\) \$\d+ = "Ok\."/;
+    next if $line =~ m/^\(gdb\) \$\d+ = "~Ok\.~"/;
     next if $line =~ m/^(\(gdb\) )*Breakpoint \d+ at 0x/;
     next if $line =~ m/^\(gdb\) Breakpoint \d+ at 0x/;
     next if $line =~ m/^\(gdb\) Note: breakpoint \d+ also set/;
@@ -96,7 +96,7 @@ sub execute {
       gdb $in, "break gdb\n";
 
       gdb $in, "list main,9001\n";
-      gdb $in, "\nprint \"Ok.\"\n";
+      gdb $in, "\nprint \"~Ok.~\"\n";
       my ($bracket, $main_ended) = (0);
       while(my $line = <$out>) {
         chomp $line;
@@ -120,7 +120,7 @@ sub execute {
           }
         }
 
-        last if $line =~ m/^\(gdb\) \$\d+ = "Ok."/;
+        last if $line =~ m/^\(gdb\) \$\d+ = "~Ok.~"/;
       }
 
       gdb $in, "break $main_start\n";
@@ -274,12 +274,13 @@ sub execute {
 
       if ($cmd eq "print_last_statement") {
         $command =~ s/;$//;
-        gdb $in, "print $args\nprint \"Ok.\"\n";
+        gdb $in, "print $args\nprint \"~Ok.~\"\n";
 
-        while (my $line = <$out>) {
+        while ($line = <$out>) {
           chomp $line;
+          print "got last output line: [$line]\n" if $debug >= 10;
           $line =~ s/^\(gdb\)\s*//;
-          if ($line =~ m/^\$\d+ = "Ok."/) {
+          if ($line =~ m/^\$\d+ = "~Ok.~"/) {
             last;
           } elsif ($line =~ s/\$\d+ = (.*)$//) {
             unless ($1 eq 'void' || $args eq $1) {
@@ -291,6 +292,12 @@ sub execute {
               $got_output = 1;
             }
           } else {
+            if ($line =~ m/Program received signal/) {
+              print "GOT SIGNAL!\n" if $debug;
+              goto SIGNAL;
+              last;
+            }
+
             $line =~ s/\$\d+ = \d+$//;
             print "$line\n";
             $got_output = 1;
@@ -304,7 +311,7 @@ sub execute {
         $ignore_response = 1;
 
         gdb $in, "list $args,9001\n";
-        gdb $in, "print \"Ok.\"\n";
+        gdb $in, "print \"~Ok.~\"\n";
         my $break = 0;
         my $bracket = 0;
         my $func_ended = 0;
@@ -328,7 +335,7 @@ sub execute {
             }
           }
 
-          last if $line =~ m/^\(gdb\) \$\d+ = "Ok."/;
+          last if $line =~ m/^\(gdb\) \$\d+ = "~Ok.~"/;
         }
       }
 
@@ -340,13 +347,13 @@ sub execute {
       }
 
       my $final_closing = "";
-      gdb $in, "$command\nprint \"Ok.\"\n";
+      gdb $in, "$command\nprint \"~Ok.~\"\n";
       while(my $next_line = <$out>) {
         chomp $next_line;
         print "nextline: $next_line\n" if $debug >= 1;
 
-        print $final_closing and last if $next_line =~ m/\$\d+ = "Ok."/;
-        $next_line =~ s/^\(gdb\)\s*\(gdb\)\s+\$\d+ = "Ok."//;
+        print $final_closing and last if $next_line =~ m/\$\d+ = "~Ok.~"/;
+        $next_line =~ s/^\(gdb\)\s*\(gdb\)\s+\$\d+ = "~Ok.~"//;
         $next_line =~ s/^\(gdb\)\s+\$\d+//;
         $next_line =~ s/^\(gdb\)\s+type//;
         $next_line =~ s/^\(gdb\)\s*//;
@@ -479,6 +486,8 @@ sub execute {
       next;
     }
 
+    SIGNAL:
+    #print "SIGNAL - testing line [$line]\n" if $debug;
     if($line =~ m/Program received signal/) {
       my $result = "";
       my $vars = "";
@@ -496,8 +505,10 @@ sub execute {
         print "signal got: [$line]\n" if $debug >= 5;
 
         next if $line =~ m/__PRETTY_FUNCTION__ =/;
+        gdb $in, "up\n" and next if $line =~ m{^\#\d+\s+<function called from gdb>};
+        <$out> and gdb $in, "up\n" and next if $line =~ m/^\#\d+\s+gdb \(\)/;
 
-        if($line =~ s/^(#\d+\s+)?0x[0-9A-Fa-f]+\s//) {
+        if($line =~ s/^(#\d+\s+)?0x[0-9A-Fa-f]+\s// || $line =~ m/\w+ \(\) (at|in) /) {
           $line =~ s/\s+at .*:\d+//;
           $line =~ s/\s+from \/lib.*//;
 
@@ -517,18 +528,22 @@ sub execute {
             gdb $in, "info locals\n";
           }
         }
-        elsif($line =~ m/^No symbol table info available/) {
+        elsif($line =~ m/^No symbol table info available/ || $line =~ m/^No locals/) {
           gdb $in, "up\n";
         }
         elsif($line =~ s/^\d+\s+//) {
           next if $line =~ /No such file/;
 
+          $line = $1 if $line =~ m/print_last_statement\((.*)\)/;
+
           $result .= "at statement: $line ";
           gdb $in, "up\n";
         }
         elsif($line =~ m/([^=]+)=\s+(.*)/) {
-          $vars .= "$varsep$1= $2";
-          $varsep = "; ";
+          unless ($2 =~ m/~Ok\.~/) {
+            $vars .= "$varsep$1= $2";
+            $varsep = "; ";
+          }
         }
         elsif($line =~ m/^Initial frame selected; you cannot go up/) {
           last;
@@ -571,16 +586,19 @@ sub gdb {
 sub flushall {
   my ($in, $out) = @_;
 
-  gdb $in, "call fflush(0)\nprint \"Ok.\"\n";
+  gdb $in, "call fflush(0)\nprint \"~Ok.~\"\n";
   while(my $line = <$out>) {
     chomp $line;
     $line =~ s/^\(gdb\)\s*//;
     $line =~ s/\$\d+ = 0$//;
-    last if $line =~ m/\$\d+ = "Ok."/;
+    last if $line =~ m/\$\d+ = "~Ok.~"/;
     next unless length $line;
     $got_output = 1;
     print "$line\n";
   }
 }
+
+$SIG{ALRM} = sub { print "\n"; exit 1; };
+alarm 8;
 
 execute("LIBC_FATAL_STDERR=1 MALLOC_CHECK_=1 gdb -silent -q -nx -iex 'set auto-load safe-path /' ./prog 2>&1");
