@@ -511,7 +511,7 @@ sub factrem {
 
   my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, undef, 0, 1);
 
-  if(not @factoids) {
+  if (not @factoids or not $factoids[0]) {
     if ($needs_disambig) {
       return "$from_trigger not found";
     } else {
@@ -612,7 +612,7 @@ sub factshow {
 
   my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
 
-  if (not @factoids) {
+  if (not @factoids or not $factoids[0]) {
     if ($needs_disambig) {
       return "$trig not found";
     } else {
@@ -672,7 +672,7 @@ sub factinfo {
 
   my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
 
-  if(not @factoids) {
+  if (not @factoids or not $factoids[0]) {
     if ($needs_disambig) {
       return "$trig not found";
     } else {
@@ -720,7 +720,7 @@ sub factinfo {
     return "$trigger: Regex created by " . $factoids->{$channel}->{$trigger}->{owner} . " for $chan on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago], " . (defined $factoids->{$channel}->{$trigger}->{edited_by} ? "last edited by $factoids->{$channel}->{$trigger}->{edited_by} on " . localtime($factoids->{$channel}->{$trigger}->{edited_on}) . " [" . ago(gettimeofday - $factoids->{$channel}->{$trigger}->{edited_on}) . "], " : "") . " used " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
   }
 
-  return "$trigger is not a factoid or a module";
+  return "$arguments is not a factoid or a module";
 }
 
 sub top20 {

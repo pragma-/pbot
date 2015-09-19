@@ -361,7 +361,7 @@ sub expand_factoid_vars {
     }
 
     my @factoids = $self->find_factoid($from, $v, undef, 0, 1);
-    next if not @factoids;
+    next if not @factoids or not $factoids[0];
 
     my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
 

@@ -47,7 +47,7 @@ sub execute_module {
   my @factoids = $self->{pbot}->{factoids}->find_factoid($from, $keyword);
 
 
-  if(not @factoids) {
+  if(not @factoids or not $factoids[0]) {
     $self->{pbot}->{interpreter}->handle_result($from, $nick, $user, $host, $command, "$keyword $arguments", "/msg $nick Failed to find module for '$keyword' in channel $from\n", 1, 0);
     return;
   }
