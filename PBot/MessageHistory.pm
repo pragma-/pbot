@@ -307,7 +307,7 @@ sub recall_message {
       # integral history
       if(defined $account) {
         my $max_messages = $self->{database}->get_max_messages($account, $recall_channel);
-        if($recall_history < 1 || $recall_history > $max_messages) {
+        if ($recall_history < 1 || $recall_history > $max_messages) {
           if ($max_messages == 0) {
             my @channels = $self->{database}->get_channels($account);
             my $result = "No messages for $recall_nick in $recall_channel; I have messages for them in ";
@@ -324,9 +324,9 @@ sub recall_message {
             } else {
               return "$result.";
             }
+          } else {
+            return "Please choose a history between 1 and $max_messages";
           }
-        } else {
-          return "Please choose a history between 1 and $max_messages";
         }
       }
 
