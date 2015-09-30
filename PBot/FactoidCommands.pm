@@ -943,6 +943,8 @@ sub factchange {
       $keyword = $2; 
       $delim = $3;
     }
+
+    $delim = quotemeta $delim;
     
     if($arguments =~ /$delim(.*?)$delim(.*)$delim(.*)?$/) {
       $tochange = $1; 
