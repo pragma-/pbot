@@ -183,16 +183,21 @@ sub export_factoids {
         print FILE "<td>" . $self->{factoids}->hash->{$channel}->{$trigger}->{ref_count} . "</td>\n";
 
         my $action = $self->{factoids}->hash->{$channel}->{$trigger}->{action};
-        $action =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http" . encode_entities($2) . "'>http" . encode_entities($2) . "<\/a>"/ge;
-        $action =~ s/(.*)<\/a>(.*$)/"$1<\/a>" . encode_entities($2)/e;
+
+        if ($action =~ m/https?:\/\/[^ ]+/) {
+          $action =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http" . encode_entities($2) . "'>http" . encode_entities($2) . "<\/a>"/ge;
+          $action =~ s/(.*)<\/a>(.*$)/"$1<\/a>" . encode_entities($2)/e;
+        } else {
+          $action = encode_entities($action);
+        }
 
         if(exists $self->{factoids}->hash->{$channel}->{$trigger}->{action_with_args}) {
           my $with_args = $self->{factoids}->hash->{$channel}->{$trigger}->{action_with_args};
           $with_args =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http" . encode_entities($2) . "'>http" . encode_entities($2) . "<\/a>"/ge;
           $with_args =~ s/(.*)<\/a>(.*$)/"$1<\/a>" . encode_entities($2)/e;
-          print FILE "<td width=100%><b>" . encode_entities($trigger) . "</b> is " . encode_entities($action) . "<br><br><b>with_args:</b> " . encode_entities($with_args) . "</td>\n";
+          print FILE "<td width=100%><b>" . encode_entities($trigger) . "</b> is $action<br><br><b>with_args:</b> " . encode_entities($with_args) . "</td>\n";
         } else {
-          print FILE "<td width=100%><b>" . encode_entities($trigger) . "</b> is " . encode_entities($action) . "</td>\n";
+          print FILE "<td width=100%><b>" . encode_entities($trigger) . "</b> is $action</td>\n";
         }
 
         if(exists $self->{factoids}->hash->{$channel}->{$trigger}->{edited_by}) { 
