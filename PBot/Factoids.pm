@@ -269,7 +269,7 @@ sub find_factoid {
       # check factoids
       foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
         if($exact_channel) {
-          if($exact_trigger) {
+          if($exact_trigger == 1) {
             next unless $from eq lc $channel;
           } else {
             next unless $from eq lc $channel or $channel eq '.*';
@@ -291,7 +291,7 @@ sub find_factoid {
               goto NEXT_DEPTH;
             }
 
-            if ($exact_channel) {
+            if ($exact_channel == 1) {
               return ($channel, $trigger);
             } else {
               push @results, [$channel, $trigger];
@@ -320,7 +320,7 @@ sub find_factoid {
                   goto NEXT_DEPTH;
                 }
 
-                if ($exact_channel) {
+                if ($exact_channel == 1) {
                   return ($channel, $trigger);
                 } else {
                   push @results, [$channel, $trigger];
@@ -358,14 +358,19 @@ sub expand_factoid_vars {
 
   while ($action =~ /(?<!\\)\$([a-zA-Z0-9_:\-]+)/g) {
     my $v = $1;
-    next if $v =~ m/^(nick|channel|randomnick)$/; # don't override special variables
+    next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\])$/; # don't override special variables
 
     my $modifier = '';
     if ($v =~ s/(:.*)$//) {
       $modifier = $1;
     }
 
-    my @factoids = $self->find_factoid($from, $v, undef, 0, 1);
+    if ($modifier =~ m/^:(#.*|global)$/i) {
+      $from = $1;
+      $from = '.*' if lc $from eq 'global';
+    }
+
+    my @factoids = $self->find_factoid($from, $v, undef, 2, 2);
     next if not @factoids or not $factoids[0];
 
     my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
