@@ -356,7 +356,7 @@ sub find_factoid {
 sub expand_factoid_vars {
   my ($self, $from, $action) = @_;
 
-  while ($action =~ /(?<!\\)\$([a-zA-Z0-9_:\-]+)/g) {
+  while ($action =~ /(?<!\\)\$([a-zA-Z0-9_:\-#]+)/g) {
     my $v = $1;
     next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\])$/; # don't override special variables
 
@@ -365,7 +365,7 @@ sub expand_factoid_vars {
       $modifier = $1;
     }
 
-    if ($modifier =~ m/^:(#.*|global)$/i) {
+    if ($modifier =~ m/^:(#[^:]+|global)/i) {
       $from = $1;
       $from = '.*' if lc $from eq 'global';
     }
