@@ -669,11 +669,6 @@ sub interpreter {
 
   $self->{pbot}->{logger}->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: $keyword: action: \"$action\"\n");
 
-  if ($referenced) {
-    return undef if $action =~ m/\$(?:nick|arg)/;
-    return undef if $arguments =~ m/\$(?:nick|arg)/;
-  }
-
   if($self->{factoids}->hash->{$channel}->{$keyword}->{enabled} == 0) {
     $self->{pbot}->{logger}->log("$keyword disabled.\n");
     return "/msg $nick $ref_from$keyword is currently disabled.";
