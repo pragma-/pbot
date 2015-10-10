@@ -112,7 +112,7 @@ sub process_line {
     } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
       $command = $1;
       $processed += 100;
-    } elsif ($cmd_text =~ s/\B$bot_trigger([^ ]+)//) {
+    } elsif ($cmd_text =~ s/\B$bot_trigger`([^`]+)// || $cmd_text =~ s/\B$bot_trigger\{([^}]+)//) {
       my $cmd = $1;
       $cmd =~ s/(.)[.!?;,)]$/$1/;
       my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
