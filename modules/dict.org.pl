@@ -67,7 +67,7 @@ if (@ARGV > 0)
     }
 =cut
 } else {
-      print "Usage: dict [-d database] [-n start from definition number] [-t first letter of word class type (n]oun, v]erb, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
+      print "Usage: dict [-d database] [-n start from definition number] [-t abbreviation of word class type (n]oun, v]erb, adv]erb, adj]ective, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
   exit 0;
 }
 
@@ -82,60 +82,80 @@ exit 0;
 #=======================================================================
 sub define_word
 {
-    my $word = shift;
-    my $eref;
-    my $entry;
-    my ($db, $def);
+  my $word = shift;
+  my $eref;
+  my $entry;
+  my ($db, $def);
 
 
-    $eref = $dict->define($word);
+  $eref = $dict->define($word);
 
-    if (@$eref == 0)
+  if (@$eref == 0)
+  {
+    _no_definitions($word);
+  }
+  else
+  {
+    foreach $entry (@$eref)
     {
-        _no_definitions($word);
-    }
-    else
-    {
-        foreach $entry (@$eref)
-        {
-            ($db, $def) = @$entry;
+      ($db, $def) = @$entry;
 
-            my $defs = dict_hash($def);
-            print "$defs->{word}: ";
+      my $defs = dict_hash($def);
+      print "$defs->{word}: ";
 
-            my $comma = '';
-            my $def_type = $config->def_type;
-            my $def_contains = $config->def_contains;
+      my $comma = '';
+      my $def_type = $config->def_type;
+      my $def_contains = $config->def_contains;
 
-            # normalize '*' to '.*'
-            $def_type =~ s/\.\*/*/g;
-            $def_type =~ s/\*/.*/g;
+      # normalize '*' to '.*'
+      $def_type =~ s/\.\*/*/g;
+      $def_type =~ s/\*/.*/g;
 
-            # normalize '*' to '.*'
-            $def_contains =~ s/\.\*/*/g;
-            $def_contains =~ s/\*/.*/g;
+      # normalize '*' to '.*'
+      $def_contains =~ s/\.\*/*/g;
+      $def_contains =~ s/\*/.*/g;
 
-            eval {
-              foreach my $type (keys %$defs) {
-                next if $type eq 'word';
-                next unless $type =~ m/$def_type/i;
-                print "$comma$type: " if length $type;
-                foreach my $number (sort { $a <=> $b } keys %{ $defs->{$type} }) {
-                  next unless $number >= $config->def_number;
-                  next unless $defs->{$type}{$number} =~ m/$def_contains/i;
-                  print "$comma" unless $number == 1;
-                  print "$number) $defs->{$type}{$number}";
-                  $comma = ",\n\n";
-                }
-              }
-            };
+      my $defined = 0;
 
-            if($@) {
-              print "Error in -t parameter.  Use v, n, *, etc.\n";
-              exit 0;
-            }
+      eval {
+        foreach my $type (keys %$defs) {
+          next if $type eq 'word';
+          next unless $type =~ m/$def_type/i;
+          print "$comma$type: " if length $type;
+          foreach my $number (sort { $a <=> $b } keys %{ $defs->{$type} }) {
+            next unless $number >= $config->def_number;
+            next unless $defs->{$type}{$number} =~ m/$def_contains/i;
+            print "$comma" unless $number == 1;
+            print "$number) $defs->{$type}{$number}";
+            $comma = ",\n\n";
+            $defined = 1;
+          }
         }
+      };
+
+      if($@) {
+        print "Error in -t parameter.  Use v, n, *, etc.\n";
+        exit 0;
+      }
+
+      if (not $defined && $def_type ne '*') {
+        my $types = '';
+        $comma = '';
+        foreach my $type (sort keys %$defs) {
+          next if $type eq 'word';
+          $types .= "$comma$type";
+          $comma = ', ';
+        }
+        if (length $types) {
+          print "no `$def_type` definition found; available definitions: $types.\n";
+        } else {
+          print "no definition found.\n";
+        }
+      } elsif (not $defined) {
+        print "no definition found.\n";
+      }
     }
+  }
 }
 
 sub dict_hash {
@@ -155,7 +175,7 @@ sub dict_hash {
     $line =~ s/\s+$//;
     $line =~ s/\s+/ /g;
 
-    if($line =~ m/^([a-z]) (\d+): (.*)/i) {
+    if($line =~ m/^([a-z]+) (\d+): (.*)/i) {
       ($type, $number, $text) = ($1, $2, $3);
     }
     elsif($line =~ m/^(\d+): (.*)/i) {
@@ -354,7 +374,7 @@ sub initialise
 =cut
 
     if(not $config->args(\@ARGV)) {
-      print "Usage : dict [-d database] [-n start from definition number] [-t first letter of word class type (n]oun, v]erb, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
+      print "Usage : dict [-d database] [-n start from definition number] [-t abbreviation of word class type (n]oun, v]erb, adv]erb, adj]ective, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
       exit;
     }
 
