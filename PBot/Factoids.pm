@@ -269,7 +269,7 @@ sub find_factoid {
       # check factoids
       foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
         if($exact_channel) {
-          if($exact_trigger == 1) {
+          if(defined $exact_trigger && $exact_trigger == 1) {
             next unless $from eq lc $channel;
           } else {
             next unless $from eq lc $channel or $channel eq '.*';
