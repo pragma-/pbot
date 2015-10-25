@@ -291,7 +291,7 @@ sub find_factoid {
               goto NEXT_DEPTH;
             }
 
-            if ($exact_channel == 1) {
+            if (defined $exact_channel && $exact_channel == 1) {
               return ($channel, $trigger);
             } else {
               push @results, [$channel, $trigger];
