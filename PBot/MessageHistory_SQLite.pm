@@ -1062,7 +1062,6 @@ sub get_also_known_as {
       $ids{$id} = { id => $id, type => $self->{alias_type}->{STRONG} };
       $self->{pbot}->{logger}->log("Adding $id -> $id\n") if $debug;
 
-
       my $sth = $self->{dbh}->prepare('SELECT alias, type FROM Aliases WHERE id = ?');
       $sth->bind_param(1, $id);
       $sth->execute();
