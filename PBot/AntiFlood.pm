@@ -478,45 +478,57 @@ sub unbanme {
     return "/msg $nick Usage: unbanme <channel>";
   }
 
-  my $banmask = address_to_mask($host);
+  my %unbanned;
 
-  my $mask = "*!$user\@$banmask\$##stop_join_flood";
+  my %aliases = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($nick);
 
-  if(not $self->{pbot}->{chanops}->{unban_timeout}->find_index($channel . '-floodbans', $mask)) {
-    return "/msg $nick There is no temporary ban set for $mask in channel $channel.";
-  }
+  foreach my $alias (keys %aliases) {
+    next if $aliases{$alias}->{type} == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK};
 
-  my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-  my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
+    my ($anick, $auser, $ahost) = $alias =~ m/([^!]+)!([^@]+)@(.*)/;
+    my $banmask = address_to_mask($ahost);
 
-  push @nickserv_accounts, undef;
+    my $mask = "*!$auser\@$banmask\$##stop_join_flood";
+    next if exists $unbanned{$mask};
+    next if not $self->{pbot}->{chanops}->{unban_timeout}->find_index($channel . '-floodbans', $mask);
 
-  foreach my $nickserv_account (@nickserv_accounts) {
-    my $baninfos = $self->{pbot}->{bantracker}->get_baninfo("$nick!$user\@$host", $channel, $nickserv_account);
+    my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($anick, $auser, $ahost);
+    my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
 
-    if(defined $baninfos) {
-      foreach my $baninfo (@$baninfos) {
-        if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
-          $self->{pbot}->{logger}->log("anti-flood: [unbanme] $nick!$user\@$host banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
-        } else {
-          if($channel eq lc $baninfo->{channel}) {
-            my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
-            $self->{pbot}->{logger}->log("anti-flood: [unbanme] $nick!$user\@$host $mode as $baninfo->{banmask} in $baninfo->{channel} by $baninfo->{owner}, unbanme rejected\n");
-            return "/msg $nick You have been $mode as $baninfo->{banmask} by $baninfo->{owner}, unbanme will not work until it is removed.";
+    push @nickserv_accounts, undef;
+
+    foreach my $nickserv_account (@nickserv_accounts) {
+      my $baninfos = $self->{pbot}->{bantracker}->get_baninfo("$anick!$auser\@$ahost", $channel, $nickserv_account);
+
+      if(defined $baninfos) {
+        foreach my $baninfo (@$baninfos) {
+          if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
+            $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+          } else {
+            if($channel eq lc $baninfo->{channel}) {
+              my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
+              $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost $mode as $baninfo->{banmask} in $baninfo->{channel} by $baninfo->{owner}, unbanme rejected\n");
+              return "/msg $nick You have been $mode as $baninfo->{banmask} by $baninfo->{owner}, unbanme will not work until it is removed.";
+            }
           }
         }
       }
     }
+
+    my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'offenses');
+    if($channel_data->{offenses} > 1) {
+      return "/msg $nick You may only use unbanme for the first offense. You will be automatically unbanned in a few hours, and your offense counter will decrement once every 24 hours.";
+    }
+
+    $self->{pbot}->{chanops}->unban_user($mask, $channel . '-floodbans');
+    $unbanned{$mask}++;
   }
 
-  my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'offenses');
-  if($channel_data->{offenses} > 1) {
-    return "/msg $nick You may only use unbanme for the first offense. You will be automatically unbanned in a few hours, and your offense counter will decrement once every 24 hours.";
+  if (keys %unbanned) {
+    return "/msg $nick You have been unbanned from $channel.";
+  } else {
+    return "/msg $nick There is no temporary join-flooding ban set for you in channel $channel.";
   }
-
-  $self->{pbot}->{chanops}->unban_user($mask, $channel . '-floodbans');
-
-  return "/msg $nick You have been unbanned from $channel.";
 }
 
 sub address_to_mask {
