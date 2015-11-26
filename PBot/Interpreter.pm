@@ -114,7 +114,6 @@ sub process_line {
       $processed += 100;
     } elsif ($cmd_text =~ s/\B$bot_trigger`([^`]+)// || $cmd_text =~ s/\B$bot_trigger\{([^}]+)//) {
       my $cmd = $1;
-      $cmd =~ s/(.)[.!?;,)]$/$1/;
       my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
       $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
       if ($nick) {
