@@ -105,6 +105,10 @@ sub add_factoid {
   $self->{factoids}->hash->{$channel}->{$trigger}->{rate_limit} = $self->{pbot}->{registry}->get_value('factoids', 'default_rate_limit');
 
   $self->save_factoids unless $dont_save;
+
+  unless ($dont_save) {
+    $self->{commands}->log_factoid($channel, $trigger, $owner, "created: $action");
+  }
 }
 
 sub remove_factoid {

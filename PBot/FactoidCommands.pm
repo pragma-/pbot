@@ -99,6 +99,25 @@ sub call_factoid {
   return $self->{pbot}->{factoids}->interpreter($from, $nick, $user, $host, 1, $trigger, $args, undef, $channel);
 }
 
+sub log_factoid {
+  my $self = shift;
+  my ($channel, $trigger, $hostmask, $msg) = @_;
+
+  $channel = 'global' if $channel eq '.*';
+
+  my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
+  open my $fh, ">> $path/$trigger.$channel";
+
+  if (not $fh) {
+    $self->{pbot}->{logger}->log("Failed to open factlog for $channel/$trigger: $!\n");
+    return;
+  }
+
+  my $now = gettimeofday;
+  print $fh "$now $hostmask $msg\n";
+  close $fh;
+}
+
 sub factset {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
@@ -151,7 +170,19 @@ sub factset {
     }
   }
 
-  return $self->{pbot}->{factoids}->{factoids}->set($channel, $trigger, $key, $value);
+  my $oldvalue = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{$key};
+
+  my $result = $self->{pbot}->{factoids}->{factoids}->set($channel, $trigger, $key, $value);
+
+  if ($result =~ m/set to/) {
+    if (defined $oldvalue and $oldvalue ne $value) {
+      $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "set $key from $oldvalue to $value");
+    } else {
+      $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "set $key to $value");
+    }
+  }
+
+  return $result;
 }
 
 sub factunset {
@@ -204,7 +235,14 @@ sub factunset {
     }
   }
 
-  return $self->{pbot}->{factoids}->{factoids}->unset($channel, $trigger, $key);
+  my $oldvalue = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{$key};
+  my $result = $self->{pbot}->{factoids}->{factoids}->unset($channel, $trigger, $key);
+
+  if ($result =~ m/unset/) {
+    $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "unset $key (value: $oldvalue)");
+  }
+
+  return $result;
 }
 
 sub list {
@@ -391,9 +429,16 @@ sub factmove {
   $found_src_channel = 'global' if $found_src_channel eq '.*';
   $target_channel = 'global' if $target_channel eq '.*';
 
+  my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
+  if (not rename "$path/$found_source.$found_src_channel", "$path/$target.$target_channel") {
+    $self->{pbot}->{logger}->log("Failed to move factlog $found_source.$found_src_channel to $target.$target_channel: $!\n");
+  }
+
   if($src_channel eq $target_channel) {
+    $self->log_factoid($target_channel, $target, "$nick!$user\@$host", "renamed from $found_source to $target");
     return "[$found_src_channel] $found_source renamed to $target";  
   } else {
+    $self->log_factoid($target_channel, $target, "$nick!$user\@$host", "moved from $found_src_channel/$found_source to $target_channel/$target");
     return "[$found_src_channel] $found_source moved to [$target_channel] $target";
   }
 }
@@ -537,6 +582,8 @@ sub factrem {
     ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
   }
 
+  $channel = '.*' if $channel eq 'global';
+
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to remove $trigger [not factoid]\n");
     return "$trigger is not a factoid.";
@@ -556,6 +603,7 @@ sub factrem {
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host removed [$channel][$trigger][" . $factoids->{$channel}->{$trigger}->{action} . "]\n");
   $self->{pbot}->{factoids}->remove_factoid($channel, $trigger);
+  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "deleted");
   return "$trigger removed from " . ($channel eq '.*' ? 'the global channel' : $channel) . ".";
 }
 
@@ -978,6 +1026,7 @@ sub factchange {
       $factoids->{$channel}->{$trigger}->{edited_by} = "$nick!$user\@$host";
       $factoids->{$channel}->{$trigger}->{edited_on} = gettimeofday;
       $self->{pbot}->{factoids}->save_factoids();
+      $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "changed action to $factoids->{$channel}->{$trigger}->{action}");
       return "Changed: $trigger is " . $factoids->{$channel}->{$trigger}->{action};
     }
   };
