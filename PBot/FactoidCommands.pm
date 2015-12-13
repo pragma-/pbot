@@ -62,6 +62,7 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->factrem(@_)         },       "factrem",      0);
   $pbot->{commands}->register(sub { return $self->factshow(@_)        },       "factshow",     0);
   $pbot->{commands}->register(sub { return $self->factinfo(@_)        },       "factinfo",     0);
+  $pbot->{commands}->register(sub { return $self->factlog(@_)         },       "factlog",      0);
   $pbot->{commands}->register(sub { return $self->factset(@_)         },       "factset",      0);
   $pbot->{commands}->register(sub { return $self->factunset(@_)       },       "factunset",    0);
   $pbot->{commands}->register(sub { return $self->factchange(@_)      },       "factchange",   0);
@@ -692,6 +693,74 @@ sub factshow {
     $result .= ' [module]';
   }
 
+  return $result;
+}
+
+sub factlog {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+
+  my ($chan, $trig) = split / /, $arguments;
+
+  if(not defined $chan and not defined $trig) {
+    return "Usage: factlog [channel] <trigger>";
+  }
+
+  my $needs_disambig;
+
+  if (not defined $trig) {
+    $trig = $chan;
+    $chan = '.*';
+    $needs_disambig = 1;
+  }
+
+  $chan = '.*' if $chan eq 'global';
+
+  $chan = lc $chan;
+
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
+
+  if (not @factoids or not $factoids[0]) {
+    if ($needs_disambig) {
+      return "$trig not found";
+    } else {
+      $chan = 'global channel' if $chan eq '.*';
+      return "$trig not found in $chan";
+    }
+  }
+
+  my ($channel, $trigger);
+
+  if (@factoids > 1) {
+    if ($needs_disambig or not grep { $_->[0] eq $chan } @factoids) {
+      return "$trig found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `factinfo <channel> $trig` to disambiguate.";
+    } else {
+      foreach my $factoid (@factoids) {
+        if ($factoid->[0] eq $chan) {
+          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
+          last;
+        }
+      }
+    }
+  } else {
+    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
+  }
+
+  my $result;
+  my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
+
+  $channel = 'global' if $channel eq '.*';
+  open my $fh, "< $path/$trigger.$channel" or do {
+    $channel = 'the global channel' if $channel eq 'global';
+    return "No factlog available for $trigger in $channel.";
+  };
+
+  while (my $line = <$fh>) {
+    my ($timestamp, $hostmask, $msg) = split / /, $line, 3;
+    $result .= "[" . ago(gettimeofday - $timestamp) . "] $hostmask $msg\n";
+  }
+
+  close $fh;
   return $result;
 }
 
