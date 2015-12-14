@@ -107,12 +107,10 @@ sub log_factoid {
   $channel = 'global' if $channel eq '.*';
 
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
-  open my $fh, ">> $path/$trigger.$channel";
-
-  if (not $fh) {
+  open my $fh, ">> $path/$trigger.$channel" or do {
     $self->{pbot}->{logger}->log("Failed to open factlog for $channel/$trigger: $!\n");
     return;
-  }
+  };
 
   my $now = gettimeofday;
   print $fh "$now $hostmask $msg\n";
