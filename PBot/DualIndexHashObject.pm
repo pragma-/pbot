@@ -154,9 +154,9 @@ sub find_index {
 
   return undef if not defined $primary_index_key;
 
-  return $primary_index_key if not $secondary_index_key;
-
   return undef if not exists $self->hash->{$primary_index_key};
+
+  return $primary_index_key if not defined $secondary_index_key;
 
   foreach my $index (keys %{ $self->hash->{$primary_index_key} }) {
     return $index if $secondary_index_key eq lc $index;

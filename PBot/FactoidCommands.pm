@@ -161,6 +161,8 @@ sub factset {
     }
   }
 
+  my $oldvalue;
+
   if(defined $owner_channel) {
     my $factoid = $self->{pbot}->{factoids}->{factoids}->hash->{$owner_channel}->{$owner_trigger};
 
@@ -169,9 +171,9 @@ sub factset {
     if(lc $nick ne lc $owner and $level == 0) {
       return "You are not the owner of $trigger.";
     }
-  }
 
-  my $oldvalue = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{$key};
+    $oldvalue = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{$key};
+  }
 
   my $result = $self->{pbot}->{factoids}->{factoids}->set($channel, $trigger, $key, $value);
 
@@ -226,6 +228,8 @@ sub factunset {
     }
   }
 
+  my $oldvalue;
+
   if(defined $owner_channel) {
     my $factoid = $self->{pbot}->{factoids}->{factoids}->hash->{$owner_channel}->{$owner_trigger};
 
@@ -234,9 +238,9 @@ sub factunset {
     if(lc $nick ne lc $owner and $level == 0) {
       return "You are not the owner of $trigger.";
     }
+    $oldvalue = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{$key};
   }
 
-  my $oldvalue = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{$key};
   my $result = $self->{pbot}->{factoids}->{factoids}->unset($channel, $trigger, $key);
 
   if ($result =~ m/unset/) {
