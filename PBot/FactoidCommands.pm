@@ -724,15 +724,6 @@ sub factlog {
 
   my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
 
-  if (not @factoids or not $factoids[0]) {
-    if ($needs_disambig) {
-      return "$trig not found";
-    } else {
-      $chan = 'global channel' if $chan eq '.*';
-      return "$trig not found in $chan";
-    }
-  }
-
   my ($channel, $trigger);
 
   if (@factoids > 1) {
@@ -746,8 +737,10 @@ sub factlog {
         }
       }
     }
-  } else {
+  } elsif (@factoids and $factoids[0]) {
     ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
+  } else {
+    ($channel, $trigger) = ($chan, $trig);
   }
 
   my $result;
@@ -755,6 +748,7 @@ sub factlog {
 
   $channel = 'global' if $channel eq '.*';
   open my $fh, "< $path/$trigger.$channel" or do {
+    $self->{pbot}->{logger}->log("Could not open $path/$trigger.$channel: $!\n");
     $channel = 'the global channel' if $channel eq 'global';
     return "No factlog available for $trigger in $channel.";
   };
