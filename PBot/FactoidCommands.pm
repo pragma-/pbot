@@ -728,7 +728,7 @@ sub factlog {
 
   if (@factoids > 1) {
     if ($needs_disambig or not grep { $_->[0] eq $chan } @factoids) {
-      return "$trig found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `factinfo <channel> $trig` to disambiguate.";
+      return "$trig found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `factlog <channel> $trig` to disambiguate.";
     } else {
       foreach my $factoid (@factoids) {
         if ($factoid->[0] eq $chan) {
