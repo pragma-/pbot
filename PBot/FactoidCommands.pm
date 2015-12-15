@@ -11,6 +11,8 @@ use strict;
 use Carp ();
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
+use Getopt::Long qw(GetOptionsFromString);
+use POSIX qw(strftime);
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -702,10 +704,29 @@ sub factlog {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  my ($chan, $trig) = split / /, $arguments;
+  my $usage = "Usage: factlog [-h] [-t] [channel] <keyword>; -h show full hostmask; -t show actual timestamp instead of relative";
+
+  return $usage if not $arguments;
+
+  my $getopt_error;
+  local $SIG{__WARN__} = sub {
+    $getopt_error = shift;
+    chomp $getopt_error;
+  };
+
+  my ($show_hostmask, $actual_timestamp);
+  my ($ret, $args) = GetOptionsFromString($arguments,
+    'h'  => \$show_hostmask,
+    't'  => \$actual_timestamp);
+
+  return "$getopt_error -- $usage" if defined $getopt_error;
+  return "Too many arguments -- $usage" if @$args > 2;
+  return "Missing argument -- $usage" if not @$args;
+
+  my ($chan, $trig) = (@$args[0], @$args[1]);
 
   if(not defined $chan and not defined $trig) {
-    return "Usage: factlog [channel] <trigger>";
+    return $usage;
   }
 
   my $needs_disambig;
@@ -753,7 +774,18 @@ sub factlog {
 
   while (my $line = <$fh>) {
     my ($timestamp, $hostmask, $msg) = split / /, $line, 3;
-    $result .= "[" . ago(gettimeofday - $timestamp) . "] $hostmask $msg\n";
+
+    if (not $show_hostmask) {
+      $hostmask =~ s/!.*$//;
+    }
+
+    if ($actual_timestamp) {
+      $timestamp = strftime "%a %b %e %H:%M:%S %Z %Y", localtime $timestamp;
+    } else {
+      $timestamp = concise ago gettimeofday - $timestamp;
+    }
+
+    $result .= "[$timestamp] $hostmask $msg\n";
   }
 
   close $fh;
