@@ -177,7 +177,7 @@ sub factset {
 
   my $result = $self->{pbot}->{factoids}->{factoids}->set($channel, $trigger, $key, $value);
 
-  if ($result =~ m/set to/) {
+  if (defined $value and $result =~ m/set to/) {
     if (defined $oldvalue and $oldvalue ne $value) {
       $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "set $key from $oldvalue to $value");
     } else {
@@ -896,15 +896,15 @@ sub top20 {
       $text = "Top $i referenced factoids for $channel: $text" if $i > 0;
       return $text;
     }
-
   } else {
-
     if(lc $args eq "recent") {
       foreach my $chan (sort keys %{ $factoids }) {
         next if lc $chan ne lc $channel;
         foreach my $command (sort { $factoids->{$chan}->{$b}{created_on} <=> $factoids->{$chan}->{$a}{created_on} } keys %{ $factoids->{$chan} }) {
-          my $ago = ago(gettimeofday - $factoids->{$chan}->{$command}->{created_on});
-          $text .= "   $command [$ago by $factoids->{$chan}->{$command}->{owner}]\n";
+          my $ago = concise ago gettimeofday - $factoids->{$chan}->{$command}->{created_on};
+          my $owner = $factoids->{$chan}->{$command}->{owner};
+          $owner =~ s/!.*$//;
+          $text .= "   $command [$ago by $owner]\n";
           $i++;
           last if $i >= 50;
         }
@@ -1123,7 +1123,7 @@ sub factchange {
       $factoids->{$channel}->{$trigger}->{edited_by} = "$nick!$user\@$host";
       $factoids->{$channel}->{$trigger}->{edited_on} = gettimeofday;
       $self->{pbot}->{factoids}->save_factoids();
-      $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "changed action to $factoids->{$channel}->{$trigger}->{action}");
+      $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "changed to $factoids->{$channel}->{$trigger}->{action}");
       return "Changed: $trigger is " . $factoids->{$channel}->{$trigger}->{action};
     }
   };
