@@ -376,7 +376,7 @@
 376) [6.5 Expressions] This pragma in <math.h> provides a way to disallow contracted expressions.|FP_CONTRACT
 377) [6.5.1.1 Generic selection] A generic selection shall have no more than this many default generic associations.|one|1
 378) [6.5.1.1 Generic selection] The type name in a generic association shall specify a complete object type other than this kind of type.|variably modified type|variably modified
-379) [6.5.1.1 Generic selection] No two generic associations in the same generic selection shall specify this kind types.|compatible
+379) [6.5.1.1 Generic selection] No two generic associations in the same generic selection shall specify this kind of types.|compatible
 380) [6.5.1.1 Generic selection] If a generic selection does not have one of this, its controlling expression shall have type compatible with exactly one of the types named in its generic association list.|default generic association|default association
 381) [6.5.2.1 Array subscripting] One of the expressions of an array subscript shall have type ``pointer to complete object type'', the other expression shall have this type, and the result has type ``type''.|integer
 382) [6.5.2.1 Array subscripting] A postfix expression followed by an expression in these is a subscripted designation of an element of an array object.|square brackets|[]|brackets
@@ -417,7 +417,7 @@
 417) [6.5.3.3 Unary arithmetic operators] The operand of the unary ! operator shall have this kind of type.|scalar
 418) [6.5.3.3 Unary arithmetic operators] If the type of the ~ operator is this kind of type, the expression ~E is equivalent to the maximum value representable in that type minus E.|unsigned
 419) [6.5.3.4 The sizeof and _Alignof operators] This operator shall not be applied to an expression that has function type or an incomplete type, to the parenthesized name of such a type, or to an expression that designates a bit-field member.|sizeof|_Alignof
-420) [6.5.3.4 The sizeof and _Alignof operators] If the type of the operand of sizeof is this kind type, the operand is evaluated; otherwise, the operand is not evaluated and the result is an integer constant.|variable length array|VLA{VLA stands for variable length array.}
+420) [6.5.3.4 The sizeof and _Alignof operators] If the type of the operand of sizeof is this kind of type, the operand is evaluated; otherwise, the operand is not evaluated and the result is an integer constant.|variable length array|VLA{VLA stands for variable length array.}
 421) [6.5.3.4 The sizeof and _Alignof operators] If the type of the operand of sizeof is a variable length array type, the operand is evaluated; otherwise, the operand is not evaluated and the result is this.|integer constant
 422) [6.5.3.4 The sizeof and _Alignof operators] When this operator is applied to an array type, the result is the alignment requirement of the element type.|_Alignof
 423) [6.5.3.4 The sizeof and _Alignof operators] When the sizeof operator is applied to an operand that has type char, unsigned char, or signed char, (or a qualified version thereof) the result is this.|1|one
@@ -442,7 +442,7 @@
 442) [6.5.6 Additive operators] For addition, either both operands shall have arithmetic type, or one operand shall be a pointer to a complete object type and the other shall have this type.|integer
 443) [6.5.6 Additive operators] When an expression that has integer type is added to or subtracted from a pointer, the result has the type of this operand.|pointer
 444) [6.5.6 Additive operators] When this happens to two pointers, both shall point to elements of the same array object, or one past the last element of the array object; the result is the difference of the subscripts of the two array elements.|subtracted|subtraction
-445) [6.5.7 Bitwise shift operators] Each of the operands for the bitwise shift operators shall have this kind type.|integer
+445) [6.5.7 Bitwise shift operators] Each of the operands for the bitwise shift operators shall have this kind of type.|integer
 446) [6.5.7 Bitwise shift operators] If the value of the right operand of a bitwise shift operator is this or is greater than or equal to the width of the promoted left operand, the behavior is undefined.|negative
 447) [6.5.7 Bitwise shift operators] The result of E1 << E2 is E1 left-shifted E2 bit positions; vacated bits are filled with these.|zeros|zero|0
 448) [6.5.7 Bitwise shift operators] The result of E1 << E2 is E1 left-shifted E2 bit positions. If E1 has a signed type and a negative value, the resulting value is this.|implementation-defined
