@@ -18,7 +18,7 @@ if($rolls =~ s/\s*-show\s*//) {
   $show = 1;
 }
 
-if($rolls =~ m/^\s*(\d+)d\d+(?:\+\d+)?\s*$/) {
+if($rolls =~ m/^\s*(\d+)d\d+(?:\+?-?\d+)?\s*$/) {
   if($1 > 100) {
     print "Sorry, maximum of 100 rolls.\n";
     die;
