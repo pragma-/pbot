@@ -84,14 +84,17 @@ my $hidden_character_count = int length ($hint) * $hints[$hint_counter > $#hints
 my $spaces = () = $hint =~ / /g;
 my $dashes = () = $hint =~ /-/g;
 my $underscores = () = $hint =~ /_/g;
+my $dquotes = () = $hint =~ /"/g;
+
 
 my @indices;
-while (@indices <= $hidden_character_count - $spaces - $dashes - $underscores) {
+while (@indices <= $hidden_character_count - $spaces - $dashes - $underscores - $dquotes) {
   my $index = int rand($length);
   my $char = substr($hint, $index, 1);
   next if $char eq ' ';
   next if $char eq '-';
   next if $char eq '_';
+  next if $char eq '"';
   next if grep { $index eq $_ } @indices;
   push @indices, $index; 
 }
