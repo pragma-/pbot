@@ -18,6 +18,7 @@ my $arguments = join("%20", @ARGV);
 
 $arguments =~ s/\W$//;
 
+exit if $arguments =~ m{wandbox}i;
 exit if $arguments =~ m{ebay.com/itm}i;
 exit if $arguments =~ m/prntscr.com/i;
 exit if $arguments =~ m/imgbin.org/i;
@@ -131,10 +132,14 @@ if($distance / $length < 0.75) {
 exit if $t !~ m/\s/; # exit if title is only one word -- this isn't usually interesting
 exit if $t =~ m/^Gerrit Code Review$/i;
 exit if $t =~ m/^Public Git Hosting -/i;
+exit if $t =~ m/- Google Search$/;
+exit if $t =~ m/linux cross reference/i;
+exit if $t =~ m/screenshot/i;
 exit if $t =~ m/pastebin/i;
 exit if $t =~ m/paste/i;
 exit if $t =~ m/^[0-9_-]+$/;
 exit if $t =~ m/^Index of \S+$/;
+exit if $t =~ m/(?:sign up|login)/i;
 
 my @data;
 if (open my $fh, "<", "last-title-$nick.dat") {
