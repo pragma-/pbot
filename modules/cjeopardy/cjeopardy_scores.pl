@@ -64,6 +64,7 @@ sub sort_ratio {
 
 sub print_ratio {
   my $player = shift @_;
+  return undef if $player->{lifetime_wrong_answers} + $player->{lifetime_correct_answers} < 50;
   my $wrong = $player->{lifetime_wrong_answers} ? $player->{lifetime_wrong_answers} : 1;
   my $ratio = $player->{lifetime_correct_answers} / $wrong;
   return undef if $ratio == 0;
@@ -189,7 +190,7 @@ if (lc $command eq 'rank') {
 
   if (not exists $ranks{$opt}) {
     my $player_id = $scores->get_player_id($opt, $channel, 1);
-    my $player_nick = $scores->get_player_data($player_id, 'nick');
+    my $player_data = $scores->get_player_data($player_id);
 
     if (not defined $player_id) {
       print "I don't know anybody named $opt\n";
@@ -200,6 +201,12 @@ if (lc $command eq 'rank') {
     my @rankings;
 
     foreach my $key (sort keys %ranks) {
+      if ($key eq 'ratio' && $player_data->{lifetime_correct_answers} + $player_data->{lifetime_wrong_answers} < 50) {
+        my $needed_answers = 50 - ($player_data->{lifetime_correct_answers} + $player_data->{lifetime_wrong_answers});
+        push @rankings, "$ranks{$key}->{title}: ($needed_answers more answers for rank)";
+        next;
+      }
+
       my $sort_method = $ranks{$key}->{sort};
       @$players = sort $sort_method @$players;
 
@@ -226,7 +233,7 @@ if (lc $command eq 'rank') {
         push @rankings, "$ranks{key}->{title}: N/A";
       } else {
         if (not $stats) {
-          push @rankings, "$ranks{$key}->{title}: #$rank (N/A)";
+          push @rankings, "$ranks{$key}->{title}: N/A";
         } else {
           $stats =~ s/[^:]+:\s+//;
           push @rankings, "$ranks{$key}->{title}: #$rank ($stats)";
@@ -235,9 +242,9 @@ if (lc $command eq 'rank') {
     }
 
     if (lc $nick ne $opt) {
-      print "$player_nick->{nick}'s rankings: " 
+      print "$player_data->{nick}'s rankings: ";
     } else {
-      print "Your rankings: " 
+      print "Your rankings: ";
     }
     print join ', ', @rankings;
     print "\n";
