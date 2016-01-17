@@ -478,6 +478,7 @@ sub unbanme {
     return "/msg $nick Usage: unbanme <channel>";
   }
 
+  my $warning = '';
   my %unbanned;
 
   my %aliases = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($nick);
@@ -515,9 +516,19 @@ sub unbanme {
       }
     }
 
-    my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'offenses');
-    if($channel_data->{offenses} > 1) {
-      return "/msg $nick You may only use unbanme for the first offense. You will be automatically unbanned in a few hours, and your offense counter will decrement once every 24 hours.";
+    my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'unbanmes');
+    if ($channel_data->{unbanmes} > 1) {
+      return "/msg $nick You may only use unbanme for the first two offenses. You will be automatically unbanned in a few hours, and your offense counter will decrement once every 24 hours.";
+    }
+
+    $channel_data->{unbanmes}++;
+
+    $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
+
+    if ($channel_data->{unbanmes} == 1) {
+      $warning = ' You may use `unbanme` only one more time today; use it wisely.';
+    } else {
+      $warning = ' You may not use `unbanme` any longer today; please ensure that your client or connection issues are resolved, otherwise leave the channel until they are or you will be temporarily banned for several hours.';
     }
 
     $self->{pbot}->{chanops}->unban_user($mask, $channel . '-floodbans');
@@ -525,7 +536,7 @@ sub unbanme {
   }
 
   if (keys %unbanned) {
-    return "/msg $nick You have been unbanned from $channel.";
+    return "/msg $nick You have been unbanned from $channel.$warning";
   } else {
     return "/msg $nick There is no temporary join-flooding ban set for you in channel $channel.";
   }
@@ -820,12 +831,22 @@ sub adjust_offenses {
   # decrease offenses counter if 24 hours have elapsed since latest offense
   my $channel_datas = $self->{pbot}->{messagehistory}->{database}->get_channel_datas_where_last_offense_older_than(gettimeofday - 60 * 60 * 24);
   foreach my $channel_data (@$channel_datas) {
-    if($channel_data->{offenses} > 0) {
-      my $id = delete $channel_data->{id};
-      my $channel = delete $channel_data->{channel};
+    my $id = delete $channel_data->{id};
+    my $channel = delete $channel_data->{channel};
+    my $update = 0;
+
+    if ($channel_data->{offenses} > 0) {
       $channel_data->{offenses}--;
+      $update = 1;
+    }
+
+    if ($channel_data->{unbanmes} > 0) {
+      $channel_data->{unbanmes}--;
+      $update = 1;
+    }
+
+    if ($update) {
       $channel_data->{last_offense} = gettimeofday;
-      #$self->{pbot}->{logger}->log("[adjust-offenses] [$id][$channel] 24 hours since last offense/decrease -- decreasing offenses to $channel_data->{offenses}\n");
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($id, $channel, $channel_data);
     }
   }

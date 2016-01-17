@@ -111,7 +111,8 @@ CREATE TABLE IF NOT EXISTS Channels (
   last_offense    NUMERIC,
   last_seen       NUMERIC,
   validated       INTEGER,
-  join_watch      INTEGER
+  join_watch      INTEGER,
+  unbanmes        INTEGER
 )
 SQL
 
@@ -700,7 +701,7 @@ sub create_channel {
   my ($self, $id, $channel) = @_;
 
   eval {
-    my $sth = $self->{dbh}->prepare('INSERT INTO Channels SELECT ?, ?, 0, 0, 0, 0, 0, 0, 0 WHERE NOT EXISTS (SELECT 1 FROM Channels WHERE id = ? AND channel = ?)');
+    my $sth = $self->{dbh}->prepare('INSERT INTO Channels SELECT ?, ?, 0, 0, 0, 0, 0, 0, 0, 0 WHERE NOT EXISTS (SELECT 1 FROM Channels WHERE id = ? AND channel = ?)');
     $sth->bind_param(1, $id);
     $sth->bind_param(2, $channel);
     $sth->bind_param(3, $id);
@@ -788,7 +789,7 @@ sub get_channel_datas_where_last_offense_older_than {
   my ($self, $timestamp) = @_;
 
   my $channel_datas = eval {
-    my $sth = $self->{dbh}->prepare('SELECT id, channel, offenses, last_offense FROM Channels WHERE last_offense > 0 AND last_offense <= ?');
+    my $sth = $self->{dbh}->prepare('SELECT id, channel, offenses, last_offense, unbanmes FROM Channels WHERE last_offense > 0 AND last_offense <= ?');
     $sth->bind_param(1, $timestamp);
     $sth->execute();
     return $sth->fetchall_arrayref({});
