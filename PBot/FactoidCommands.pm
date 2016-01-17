@@ -510,7 +510,7 @@ sub add_regex {
 sub factadd {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($from_chan, $keyword, $text) = $arguments =~ /^(\S+)\s+(\S+)\s+is\s+(.*)$/i if defined $arguments;
+  my ($from_chan, $keyword, $text) = $arguments =~ /^(\S+)\s+(\S+)\s+(?:is\s+)?(.*)$/i if defined $arguments;
 
   if(not defined $from_chan or not defined $text or not defined $keyword) {
     return "Usage: factadd <channel> <keyword> is <factoid>";
