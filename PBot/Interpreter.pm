@@ -94,25 +94,7 @@ sub process_line {
     $command = undef;
     $has_code = undef;
 
-    if($cmd_text =~ s/^(?:$bot_trigger|$botnick.?)?\s*{\s*(.*)\s*}\s*$//) {
-      $has_code = $1 if length $1;
-      $preserve_whitespace = 1;
-      $processed += 100;
-    } elsif($cmd_text =~ s/^\s*([^,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$//) {
-      $nick_override = $1;
-      $has_code = $2 if length $2 and $nick_override !~ /^(?:enum|struct|union)$/;
-      $preserve_whitespace = 1;
-      $processed += 100;
-    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
-      $command = $1;
-      $processed += 100;
-    } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
-      $command = $1;
-      $processed += 100;
-    } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
-      $command = $1;
-      $processed += 100;
-    } elsif ($cmd_text =~ s/\B$bot_trigger`([^`]+)// || $cmd_text =~ s/\B$bot_trigger\{([^}]+)//) {
+    if ($cmd_text =~ s/\B$bot_trigger`([^`]+)// || $cmd_text =~ s/\B$bot_trigger\{([^}]+)//) {
       my $cmd = $1;
       my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
       $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
@@ -122,6 +104,24 @@ sub process_line {
         $command = $cmd;
       }
       $referenced = 1;
+    } elsif($cmd_text =~ s/^(?:$bot_trigger|$botnick.?)?\s*{\s*(.*)\s*}\s*$//) {
+      $has_code = $1 if length $1;
+      $preserve_whitespace = 1;
+      $processed += 100;
+    } elsif($cmd_text =~ s/^\s*([^,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$//) {
+      $nick_override = $1;
+      $has_code = $2 if length $2 and $nick_override !~ /^(?:enum|struct|union)$/;
+      $preserve_whitespace = 1;
+      $processed += 100;
+    } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
+      $command = $1;
+      $processed += 100;
+    } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
+      $command = $1;
+      $processed += 100;
+    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
+      $command = $1;
+      $processed += 100;
     }
 
     last if not defined $command and not defined $has_code;
