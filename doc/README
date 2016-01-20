@@ -1,46 +1,34 @@
 See also: http://www.iso-9899.info/wiki/Candide
---------------------------
-PBot requires Perl 5.10, especially for !cc 
---------------------------
+
+PBot requires at least Perl 5.10, especially for !cc.
+
 PBot is intended for the Freenode IRC network.  As such, it has not been
-tested on other networks.  Some IRC features, such as NickServ auto-join, may need adjusting.
---------------------------
+tested on other networks.  Some IRC features, such as NickServ auto-join,
+may need adjusting.
+
 The first thing you'll want to do is edit pbot.pl and change the default
 settings: 
 
   * If you did not extract/checkout PBot into ~/pbot (where ~/pbot/PBot 
-contains the PBot.pm module), you'll want to change $pbothome in pbot.pl 
+contains the PBot.pm module), you'll want to change $bothome in pbot.pl 
 to point to the directory that contains the PBot, config, data, etc directories.
 
   * Change the IRC settings in pbot.pl so that the bot-nick and identify password are
 associated with a registered NickServ account, if you want channel auto-join to succeed.
---------------------------
+
 Then you'll need to get several modules from CPAN.  If you do not have root access, see
 http://perl.jonallen.info/writing/articles/install-perl-modules-without-root
 
 The list of modules to install can be found in the modules file located in the same
 directory as this README file.  You can install the modules with the following command:
 
-$ cpan $(cat MODULES)
---------------------------
+  $ cpan $(cat MODULES)
+
 Some quick-and-dirty info on using stdin (pbot shell after running pbot.sh):
 
-You can type in the bot's stdin to talk in channels as the bot, 
-e.g. by typing 'msg #pbot2 hi' from the bot's stdin.
+You can type in the bot's stdin to talk in channels as the bot, e.g. by typing 
+'msg #pbot2 hi' from the bot's stdin.
 
-You can send bot commands to channel by using: ~channel command
-
-For instance, the kick command must be run in a channel:
-
-~#pbot2 kick somenick Example reason
+You can send bot commands to channel by using: ~<channel> <command>
 
 The bot may be backgrounded via ^Z.
---------------------------
-Coming soon to README:
-
-* Description of each PBot module, for dev customisation.
---------------------------
-Todo:
-
-* Add SSL and port options to pbot.pl.
-* Use DualIndexHashObject as base for a Registry class?
