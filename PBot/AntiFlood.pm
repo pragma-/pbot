@@ -82,12 +82,32 @@ sub initialize {
 }
 
 sub ban_whitelisted {
-    my ($self, $channel, $mask) = @_;
+    my ($self, $channel, $banmask, $hostmask) = @_;
     $channel = lc $channel;
-    $mask = lc $mask;
+    $banmask = lc $banmask;
 
-    #$self->{pbot}->{logger}->log("whitelist check: $channel, $mask\n");
-    return (exists $self->{ban_whitelist}->hash->{$channel}->{$mask} and defined $self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted}) ? 1 : 0;
+    return 1 if exists $self->{ban_whitelist}->hash->{$channel}
+      and exists $self->{ban_whitelist}->hash->{$channel}->{$banmask}
+      and defined $self->{ban_whitelist}->hash->{$channel}->{$banmask}->{ban_whitelisted};
+    return 0 if not defined $hostmask;
+
+    my $ret = eval {
+      foreach my $chan (keys %{ $self->{ban_whitelist}->hash }) {
+        next unless $channel =~ m/^$chan$/i;
+        foreach my $mask (keys %{ $self->{ban_whitelist}->hash->{$chan} }) {
+          next unless defined $self->{ban_whitelist}->hash->{$chan}->{$mask}->{user_whitelisted};
+          return 1 if $hostmask =~ m/^$mask$/i;
+        }
+      }
+      return 0;
+    };
+
+    if ($@) {
+      $self->{pbot}->{logger}->log("Error in whitelist: $@");
+      return 0;
+    }
+
+    return $ret;
 }
 
 sub whitelist {
@@ -105,7 +125,10 @@ sub whitelist {
             foreach my $channel (keys %{ $self->{ban_whitelist}->hash }) {
                 $text .= "  $channel:\n";
                 foreach my $mask (keys %{ $self->{ban_whitelist}->hash->{$channel} }) {
-                    $text .= "    $mask,\n";
+                    my $mode = 'unknown';
+                    $mode = 'u' if defined $self->{ban_whitelist}->hash->{$channel}->{$mask}->{user_whitelisted};
+                    $mode = 'b' if defined $self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted};
+                    $text .= "    $mask [$mode],\n";
                     $entries++;
                 }
             }
@@ -113,10 +136,16 @@ sub whitelist {
             return $text;
         }
         when("add") {
-            my ($channel, $mask) = split / /, $args, 2;
-            return "Usage: whitelist add <channel> <mask>" if not defined $channel or not defined $mask;
+            my ($channel, $mask, $mode) = split / /, $args, 3;
+            return "Usage: whitelist add <channel> <mask> [mode]" if not defined $channel or not defined $mask;
 
-            $self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted} = 1;
+            $mode = 'user' if not defined $mode;
+
+            if ($mode eq 'user') {
+              $self->{ban_whitelist}->hash->{$channel}->{$mask}->{user_whitelisted} = 1;
+            } else {
+              $self->{ban_whitelist}->hash->{$channel}->{$mask}->{ban_whitelisted} = 1;
+            }
             $self->{ban_whitelist}->hash->{$channel}->{$mask}->{owner} = "$nick!$user\@$host";
             $self->{ban_whitelist}->hash->{$channel}->{$mask}->{created_on} = gettimeofday;
 
@@ -503,7 +532,7 @@ sub unbanme {
 
       if(defined $baninfos) {
         foreach my $baninfo (@$baninfos) {
-          if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
+          if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask}, "$nick!$user\@$host")) {
             $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
           } else {
             if($channel eq lc $baninfo->{channel}) {
@@ -669,7 +698,7 @@ sub check_bans {
             next;
           }
 
-          if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask})) {
+          if($self->ban_whitelisted($baninfo->{channel}, $baninfo->{banmask}, $mask)) {
             $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
             next;
           } 
@@ -722,6 +751,11 @@ sub check_bans {
           return;
         }
 
+        if (exists $self->{nickflood}->{$message_account}) {
+          $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evading nick-flood ban, disregarding\n");
+          return;
+        }
+
         if ($baninfo->{type} eq 'blacklist') {
           $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick I don't think so");
         } else {
@@ -729,7 +763,7 @@ sub check_bans {
           $owner =~ s/!.*$//;
           $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Evaded $baninfo->{banmask} set by $owner");
         }
-        $self->{pbot}->{chanops}->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 24 * 3);
+        $self->{pbot}->{chanops}->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 24 * 31);
       }
       my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
       if($channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
@@ -840,7 +874,7 @@ sub adjust_offenses {
       $update = 1;
     }
 
-    if ($channel_data->{unbanmes} > 0) {
+    if (defined $channel_data->{unbanmes} and $channel_data->{unbanmes} > 0) {
       $channel_data->{unbanmes}--;
       $update = 1;
     }
