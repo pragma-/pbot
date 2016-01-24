@@ -663,6 +663,11 @@ sub check_bans {
 
     $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking blacklist for $alias in channel $channel\n") if $debug_checkban >= 5;
     if ($self->{pbot}->{blacklist}->check_blacklist($alias, $channel)) {
+      if($self->ban_whitelisted($channel, $alias, $mask)) {
+        $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded blacklist in $channel, but allowed through whitelist\n");
+        next;
+      }
+
       my $baninfo = {};
       $baninfo->{banmask} = $alias;
       $baninfo->{channel} = $channel;
