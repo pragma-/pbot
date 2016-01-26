@@ -20,6 +20,7 @@ use PBot::LagChecker;
 
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
+use POSIX qw/strftime/;
 use Carp ();
 
 sub new {
@@ -82,9 +83,10 @@ sub initialize {
 }
 
 sub ban_whitelisted {
-    my ($self, $channel, $banmask, $hostmask) = @_;
+    my ($self, $channel, $banmask, $hostmask, $mode) = @_;
     $channel = lc $channel;
     $banmask = lc $banmask;
+    $mode = 'user_whitelisted' if not defined $mode;
 
     return 1 if exists $self->{ban_whitelist}->hash->{$channel}
       and exists $self->{ban_whitelist}->hash->{$channel}->{$banmask}
@@ -96,7 +98,7 @@ sub ban_whitelisted {
         next unless $channel =~ m/^$chan$/i;
         foreach my $mask (keys %{ $self->{ban_whitelist}->hash->{$chan} }) {
           next unless defined $self->{ban_whitelist}->hash->{$chan}->{$mask}->{user_whitelisted};
-          return 1 if $hostmask =~ m/^$mask$/i;
+          return 1 if $hostmask =~ m/^$mask$/i and $self->{ban_whitelist}->hash->{$chan}->{$mask}->{$mode};
         }
       }
       return 0;
@@ -116,7 +118,7 @@ sub whitelist {
 
     my ($command, $args) = split / /, $arguments, 2;
 
-    return "Usage: whitelist <command>, where commands are: list/show, add, remove" if not defined $command;
+    return "Usage: whitelist <command>, where commands are: list/show, add, remove, set, unset" if not defined $command;
 
     given($command) {
         when($_ eq "list" or $_ eq "show") {
@@ -135,9 +137,70 @@ sub whitelist {
             $text .= "none" if $entries == 0;
             return $text;
         }
+        when("set") {
+            my ($channel, $mask, $flag, $value) = split / /, $args, 4;
+            return "Usage: whitelist set <channel> <mask> [flag] [value]" if not defined $channel or not defined $mask;
+
+            if (not exists $self->{ban_whitelist}->hash->{$channel}) {
+              return "There is no such channel `$channel` in the whitelist.";
+            }
+
+            if (not exists $self->{ban_whitelist}->hash->{$channel}->{$mask}) {
+              return "There is no such mask `$mask` for channel `$channel` in the whitelist.";
+            }
+
+            if (not defined $flag) {
+              my $text = "Flags:\n";
+              my $comma = '';
+              foreach $flag (keys %{ $self->{ban_whitelist}->hash->{$channel}->{$mask} }) {
+                if ($flag eq 'created_on') {
+                  my $timestamp = strftime "%a %b %e %H:%M:%S %Z %Y", localtime $self->{ban_whitelist}->hash->{$channel}->{$mask}->{$flag};
+                  $text .= $comma . "created_on: $timestamp";
+                } else {
+                  $value = $self->{ban_whitelist}->hash->{$channel}->{$mask}->{$flag};
+                  $text .= $comma .  "$flag: $value";
+                }
+                $comma = ",\n  ";
+              }
+              return $text;
+            }
+
+            if (not defined $value) {
+              $value = $self->{ban_whitelist}->hash->{$channel}->{$mask}->{$flag};
+              if (not defined $value) {
+                return "$flag is not set.";
+              } else {
+                return "$flag is set to $value";
+              }
+            }
+
+            $self->{ban_whitelist}->hash->{$channel}->{$mask}->{$flag} = $value;
+            $self->{ban_whitelist}->save;
+            return "Flag set.";
+        }
+        when("unset") {
+            my ($channel, $mask, $flag) = split / /, $args, 3;
+            return "Usage: whitelist unset <channel> <mask> <flag>" if not defined $channel or not defined $mask or not defined $flag;
+
+            if (not exists $self->{ban_whitelist}->hash->{$channel}) {
+              return "There is no such channel `$channel` in the whitelist.";
+            }
+
+            if (not exists $self->{ban_whitelist}->hash->{$channel}->{$mask}) {
+              return "There is no such mask `$mask` for channel `$channel` in the whitelist.";
+            }
+
+            if (not exists $self->{ban_whitelist}->hash->{$channel}->{$mask}->{$flag}) {
+              return "There is no such flag `$flag` for mask `$mask` for channel `$channel` in the whitelist.";
+            }
+
+            delete $self->{ban_whitelist}->hash->{$channel}->{$mask}->{$flag};
+            $self->{ban_whitelist}->save;
+            return "Flag unset.";
+        }
         when("add") {
             my ($channel, $mask, $mode) = split / /, $args, 3;
-            return "Usage: whitelist add <channel> <mask> [mode]" if not defined $channel or not defined $mask;
+            return "Usage: whitelist add <channel> <mask> [mode (user or ban, default: user)]" if not defined $channel or not defined $mask;
 
             $mode = 'user' if not defined $mode;
 
@@ -270,6 +333,10 @@ sub check_flood {
         $channel_data->{validated} &= ~$self->{NICKSERV_VALIDATED};
         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
       }
+      next;
+    }
+
+    if($self->ban_whitelisted($channel, 0, "$nick!$user\@$host", 'antiflood')) {
       next;
     }
 
@@ -555,7 +622,7 @@ sub unbanme {
     $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
 
     if ($channel_data->{unbanmes} == 1) {
-      $warning = ' You may use `unbanme` only one more time today; use it wisely.';
+      $warning = ' You may use `unbanme` only one more time today; please ensure that your client or connection issues are resolved before using your final `unbanme`.';
     } else {
       $warning = ' You may not use `unbanme` any longer today; please ensure that your client or connection issues are resolved, otherwise leave the channel until they are or you will be temporarily banned for several hours.';
     }
