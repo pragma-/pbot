@@ -164,17 +164,15 @@ sub register {
 
 sub unregister {
   my $self = shift;
-  my $ref;
+  my $id;
 
   if(@_) {
-    $ref = shift;
+    $id = shift;
   } else {
-    Carp::croak("Must pass subroutine reference to unregister()");
+    Carp::croak("Must pass timer id to unregister()");
   }
 
-  # print "-- Removing timer $ref\n";
-
-  @{ $self->{handlers} } = grep { $_->{subref} != $ref } @{ $self->{handlers} };
+  @{ $self->{handlers} } = grep { $_->{id} ne $id } @{ $self->{handlers} };
 }
 
 sub update_interval {
