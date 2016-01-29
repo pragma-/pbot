@@ -74,6 +74,10 @@ sub add {
   $section = lc $section;
   $item = lc $item;
 
+  if ($is_default) {
+    return if exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$item};
+  }
+
   $self->{registry}->hash->{$section}->{$item}->{value} = $value;
   $self->{registry}->hash->{$section}->{$item}->{type}  = $type;
 
@@ -107,6 +111,12 @@ sub set {
   $section = lc $section;
   $item = lc $item;
   $key = lc $key if defined $key;
+
+  if ($is_default) {
+    return if exists $self->{registry}->hash->{$section}
+      and exists $self->{registry}->hash->{$section}->{$item}
+      and exists $self->{registry}->hash->{$section}->{$item}->{$key};
+  }
 
   my $oldvalue = $self->get_value($section, $item, 1) if defined $value;
   $oldvalue = '' if not defined $oldvalue;
