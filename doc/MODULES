@@ -18,6 +18,7 @@ Module::Refresh
 Net::Dict
 Proc::ProcessTable
 SOAP::Lite
+String::LCSS
 Text::Autoformat
 Text::Balanced
 Text::Levenshtein
