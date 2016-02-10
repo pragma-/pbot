@@ -1169,7 +1169,7 @@ sub get_also_known_as {
       my $nickserv_sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE id = ?');
       my $gecos_sth    = $self->{dbh}->prepare('SELECT gecos FROM Gecos WHERE id = ?');
 
-      my $csv = Text::CSV->new;
+      my $csv = Text::CSV->new({binary => 1});
 
       foreach my $id (keys %ids) {
         $hostmask_sth->bind_param(1, $id);
@@ -1329,7 +1329,7 @@ sub get_also_known_as {
     return %akas;
   };
 
-  $self->{pbot}->{logger}->log($@) if $@;
+  $self->{pbot}->{logger}->log("bad aka: $@") if $@;
   return %akas;
 }
 

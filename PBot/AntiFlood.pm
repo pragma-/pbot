@@ -729,7 +729,7 @@ sub check_bans {
   my ($nick) = $mask =~ m/^([^!]+)/;
   my %aliases = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($nick);
 
-  my $csv = Text::CSV->new;
+  my $csv = Text::CSV->new({binary => 1});
 
   my ($do_not_validate, $bans);
   foreach my $alias (keys %aliases) {
