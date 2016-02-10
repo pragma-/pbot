@@ -11,6 +11,7 @@ use strict;
 use DBI;
 use Carp qw(shortmess);
 use Time::HiRes qw(gettimeofday);
+use Text::CSV;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -1168,6 +1169,8 @@ sub get_also_known_as {
       my $nickserv_sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE id = ?');
       my $gecos_sth    = $self->{dbh}->prepare('SELECT gecos FROM Gecos WHERE id = ?');
 
+      my $csv = Text::CSV->new;
+
       foreach my $id (keys %ids) {
         $hostmask_sth->bind_param(1, $id);
         $hostmask_sth->execute();
@@ -1202,9 +1205,15 @@ sub get_also_known_as {
           foreach my $aka (keys %akas) {
             if ($akas{$aka}->{id} == $id) {
               if (exists $akas{$aka}->{gecos}) {
-                $akas{$aka}->{gecos} .= ",$row->{gecos}";
+                $csv->parse($akas{$aka}->{gecos});
+                my @gecos = $csv->fields;
+                push @gecos, $row->{gecos};
+                $csv->combine(@gecos);
+                $akas{$aka}->{gecos} = $csv->string;
               } else {
-                $akas{$aka}->{gecos} = $row->{gecos};
+                my @gecos = ($row->{gecos});
+                $csv->combine(@gecos);
+                $akas{$aka}->{gecos} = $csv->string;
               }
             }
           }

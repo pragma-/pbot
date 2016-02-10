@@ -21,6 +21,7 @@ use PBot::LagChecker;
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
 use POSIX qw/strftime/;
+use Text::CSV;
 use Carp ();
 
 sub new {
@@ -728,6 +729,8 @@ sub check_bans {
   my ($nick) = $mask =~ m/^([^!]+)/;
   my %aliases = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($nick);
 
+  my $csv = Text::CSV->new;
+
   my ($do_not_validate, $bans);
   foreach my $alias (keys %aliases) {
     next if $alias =~ /^Guest\d+(?:!.*)?$/;
@@ -748,7 +751,8 @@ sub check_bans {
     foreach my $nickserv (@nickservs) {
       my @gecoses;
       if (exists $aliases{$alias}->{gecos}) {
-        @gecoses = split /,/, $aliases{$alias}->{gecos};
+        $csv->parse($aliases{$alias}->{gecos});
+        @gecoses = $csv->fields;
       } else {
         @gecoses = (undef);
       }
