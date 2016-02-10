@@ -102,6 +102,14 @@ CREATE TABLE IF NOT EXISTS Nickserv (
 SQL
 
     $self->{dbh}->do(<<SQL);
+CREATE TABLE IF NOT EXISTS Gecos (
+  id         INTEGER,
+  gecos      TEXT,
+  timestamp  NUMERIC
+)
+SQL
+
+    $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Channels (
   id              INTEGER,
   channel         TEXT,
@@ -153,6 +161,19 @@ sub end {
     $self->{dbh}->disconnect();
     delete $self->{dbh};
   }
+}
+
+sub get_gecos {
+  my ($self, $id) = @_;
+
+  my $gecos = eval {
+    my $sth = $self->{dbh}->prepare('SELECT gecos FROM Gecos WHERE ID = ?');
+    $sth->bind_param(1, $id);
+    $sth->execute();
+    return $sth->fetchall_arrayref();
+  };
+  $self->{pbot}->{logger}->log($@) if $@;
+  return map {$_->[0]} @$gecos;
 }
 
 sub get_nickserv_accounts {
@@ -221,6 +242,37 @@ sub update_nickserv_account {
     $sth->bind_param(1, $timestamp);
     $sth->bind_param(2, $id);
     $sth->bind_param(3, $nickserv);
+    $sth->execute();
+    $self->{new_entries}++;
+  };
+  $self->{pbot}->{logger}->log($@) if $@;
+}
+
+sub create_gecos {
+  my ($self, $id, $gecos) = @_;
+
+  eval {
+    my $sth = $self->{dbh}->prepare('INSERT INTO Gecos SELECT ?, ?, 0 WHERE NOT EXISTS (SELECT 1 FROM Gecos WHERE id = ? AND gecos = ?)');
+    $sth->bind_param(1, $id);
+    $sth->bind_param(2, $gecos);
+    $sth->bind_param(3, $id);
+    $sth->bind_param(4, $gecos);
+    my $rv = $sth->execute();
+    $self->{new_entries}++ if $sth->rows;
+  };
+  $self->{pbot}->{logger}->log($@) if $@;
+}
+
+sub update_gecos {
+  my ($self, $id, $gecos, $timestamp) = @_;
+
+  $self->create_gecos($id, $gecos);
+
+  eval {
+    my $sth = $self->{dbh}->prepare('UPDATE Gecos SET timestamp = ? WHERE id = ? AND gecos = ?');
+    $sth->bind_param(1, $timestamp);
+    $sth->bind_param(2, $id);
+    $sth->bind_param(3, $gecos);
     $sth->execute();
     $self->{new_entries}++;
   };
@@ -425,6 +477,20 @@ sub get_nickserv_accounts_for_hostmask {
 
   $self->{pbot}->{logger}->log($@) if $@;
   return map {$_->[0]} @$nickservs;
+}
+
+sub get_gecos_for_hostmask {
+  my ($self, $hostmask) = @_;
+
+  my $gecos = eval {
+    my $sth = $self->{dbh}->prepare('SELECT gecos FROM Hostmasks, Gecos WHERE gecos.id = hostmasks.id AND hostmasks.hostmask = ?');
+    $sth->bind_param(1, $hostmask);
+    $sth->execute();
+    return $sth->fetchall_arrayref();
+  };
+
+  $self->{pbot}->{logger}->log($@) if $@;
+  return map {$_->[0]} @$gecos;
 }
 
 sub get_hostmasks_for_channel {
@@ -1100,6 +1166,7 @@ sub get_also_known_as {
 
       my $hostmask_sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE id = ?');
       my $nickserv_sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE id = ?');
+      my $gecos_sth    = $self->{dbh}->prepare('SELECT gecos FROM Gecos WHERE id = ?');
 
       foreach my $id (keys %ids) {
         $hostmask_sth->bind_param(1, $id);
@@ -1122,6 +1189,22 @@ sub get_also_known_as {
                 $akas{$aka}->{nickserv} .= ",$row->{nickserv}";
               } else {
                 $akas{$aka}->{nickserv} = $row->{nickserv};
+              }
+            }
+          }
+        }
+
+        $gecos_sth->bind_param(1, $id);
+        $gecos_sth->execute();
+        $rows = $gecos_sth->fetchall_arrayref({});
+
+        foreach my $row (@$rows) {
+          foreach my $aka (keys %akas) {
+            if ($akas{$aka}->{id} == $id) {
+              if (exists $akas{$aka}->{gecos}) {
+                $akas{$aka}->{gecos} .= ",$row->{gecos}";
+              } else {
+                $akas{$aka}->{gecos} = $row->{gecos};
               }
             }
           }

@@ -130,7 +130,7 @@ sub aka_unlink {
 sub list_also_known_as {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  my $usage = "Usage: aka [-h] [-i] [-n] [-r] [-w] <nick>; -h show hostmasks; -i show ids; -n show nickserv accounts; -r show relationships; -w show weak links";
+  my $usage = "Usage: aka [-h] [-i] [-n] [-g] [-r] [-w] <nick>; -h show hostmasks; -i show ids; -n show nickserv accounts; -g show gecos, -r show relationships; -w show weak links";
 
   if(not length $arguments) {
     return $usage;
@@ -142,11 +142,12 @@ sub list_also_known_as {
     chomp $getopt_error;
   };
 
-  my ($show_hostmasks, $show_nickserv, $show_id, $show_relationship, $show_weak, $dont_use_aliases_table);
+  my ($show_hostmasks, $show_gecos, $show_nickserv, $show_id, $show_relationship, $show_weak, $dont_use_aliases_table);
   my ($ret, $args) = GetOptionsFromString($arguments,
     'h'  => \$show_hostmasks,
     'n'  => \$show_nickserv,
     'r'  => \$show_relationship,
+    'g'  => \$show_gecos,
     'w'  => \$show_weak,
     'nt' => \$dont_use_aliases_table,
     'i'  => \$show_id);
@@ -175,6 +176,7 @@ sub list_also_known_as {
         $result .= "$sep$aka";
       }
       $result .= " ($akas{$aka}->{nickserv})" if $show_nickserv and exists $akas{$aka}->{nickserv};
+      $result .= " {$akas{$aka}->{gecos}}" if $show_gecos and exists $akas{$aka}->{gecos};
 
       if ($show_relationship) {
         if ($akas{$aka}->{id} == $akas{$aka}->{alias}) {
@@ -188,7 +190,7 @@ sub list_also_known_as {
 
       $result .= " [WEAK]" if $akas{$aka}->{type} == $self->{database}->{alias_type}->{WEAK};
 
-      if ($show_hostmasks or $show_nickserv or $show_id or $show_relationship) {
+      if ($show_hostmasks or $show_nickserv or $show_gecos or $show_id or $show_relationship) {
         $sep = ",\n";
       } else {
         $sep = ", ";

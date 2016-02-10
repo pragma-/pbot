@@ -185,8 +185,7 @@ sub connect {
   $self->{conn}->add_handler([ 251,252,253,254,255,302 ], sub { $self->{irchandlers}->on_init(@_) });
 
   # ignore these events
-  $self->{conn}->add_handler(['whoisuser', 
-                              'whoisserver', 
+  $self->{conn}->add_handler(['whoisserver', 
                               'whoiscountry', 
                               'whoischannels',
                               'whoisidle',

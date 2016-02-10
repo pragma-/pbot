@@ -79,6 +79,7 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { return $self->whitelist(@_) },  "whitelist", 10);
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisaccount', sub { $self->on_whoisaccount(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisuser',    sub { $self->on_whoisuser(@_)    });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.endofwhois',   sub { $self->on_endofwhois(@_)   });
 }
 
@@ -736,23 +737,6 @@ sub check_bans {
       next;
     }
 
-    $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking blacklist for $alias in channel $channel\n") if $debug_checkban >= 5;
-    if ($self->{pbot}->{blacklist}->check_blacklist($alias, $channel)) {
-      if($self->whitelisted($channel, $mask, 'user')) {
-        $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] blacklisted in $channel, but allowed through whitelist\n");
-        next;
-      }
-
-      my $baninfo = {};
-      $baninfo->{banmask} = $alias;
-      $baninfo->{channel} = $channel;
-      $baninfo->{owner} = 'blacklist';
-      $baninfo->{when} = 0;
-      $baninfo->{type} = 'blacklist';
-      push @$bans, $baninfo;
-      next;
-    }
-
     my @nickservs;
 
     if (exists $aliases{$alias}->{nickserv}) {
@@ -762,6 +746,34 @@ sub check_bans {
     }
 
     foreach my $nickserv (@nickservs) {
+      my @gecoses;
+      if (exists $aliases{$alias}->{gecos}) {
+        @gecoses = split /,/, $aliases{$alias}->{gecos};
+      } else {
+        @gecoses = (undef);
+      }
+
+      foreach my $gecos (@gecoses) {
+        my $tgecos = defined $gecos ? $gecos : "[undefined]";
+        my $tnickserv = defined $nickserv ? $nickserv : "[undefined]";
+        $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking blacklist for $alias in channel $channel using gecos '$tgecos' and nickserv '$tnickserv'\n") if $debug_checkban >= 5;
+        if ($self->{pbot}->{blacklist}->check_blacklist($alias, $channel, $nickserv, $gecos)) {
+          if($self->whitelisted($channel, $mask, 'user')) {
+            $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] blacklisted in $channel, but allowed through whitelist\n");
+            next;
+          }
+
+          my $baninfo = {};
+          $baninfo->{banmask} = $alias;
+          $baninfo->{channel} = $channel;
+          $baninfo->{owner} = 'blacklist';
+          $baninfo->{when} = 0;
+          $baninfo->{type} = 'blacklist';
+          push @$bans, $baninfo;
+          next;
+        }
+      }
+
       $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans in $channel on $alias using nickserv " . (defined $nickserv ? $nickserv : "[undefined]") . "\n") if $debug_checkban >= 2;
       my $baninfos = $self->{pbot}->{bantracker}->get_baninfo($alias, $channel, $nickserv);
 
@@ -917,6 +929,21 @@ sub on_endofwhois {
   }
 
   return 0;
+}
+
+sub on_whoisuser {
+  my ($self, $event_type, $event) = @_;
+  my $nick    =    $event->{event}->{args}[1];
+  my $gecos   = lc $event->{event}->{args}[5];
+
+
+  my ($id) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
+
+  if ($self->{pbot}->{registry}->get_value('antiflood', 'debug_checkban')) {
+    $self->{pbot}->{logger}->log("Got gecos for $nick ($id): '$gecos'\n");
+  }
+
+  $self->{pbot}->{messagehistory}->{database}->update_gecos($id, $gecos, scalar gettimeofday);
 }
 
 sub on_whoisaccount {

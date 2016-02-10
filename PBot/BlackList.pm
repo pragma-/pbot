@@ -128,19 +128,28 @@ sub save_blacklist {
 
 sub check_blacklist {
   my $self = shift;
-  my ($hostmask, $channel) = @_;
+  my ($hostmask, $channel, $nickserv, $gecos) = @_;
 
   return 0 if not defined $channel;
 
   foreach my $black_channel (keys %{ $self->{blacklist} }) {
     foreach my $black_hostmask (keys %{ $self->{blacklist}->{$black_channel} }) {
+      my $flag = '';
+      $flag = $1 if $black_hostmask =~ s/^\$(.)://;
+
       my $black_channel_escaped = quotemeta $black_channel;
       my $black_hostmask_escaped = quotemeta $black_hostmask;
 
       $black_channel_escaped  =~ s/\\(\.|\*)/$1/g;
       $black_hostmask_escaped =~ s/\\(\.|\*)/$1/g;
 
-      if(($channel =~ /$black_channel_escaped/i) && ($hostmask =~ /$black_hostmask_escaped/i)) {
+      if ($flag eq 'a' && defined $nickserv && $nickserv =~ /$black_hostmask_escaped/i) {
+        $self->{pbot}->{logger}->log("$hostmask nickserv $nickserv blacklisted in channel $channel (matches [\$a:$black_hostmask] host and [$black_channel] channel)\n");
+        return 1;
+      } elsif ($flag eq 'r' && defined $gecos && $gecos =~ /$black_hostmask_escaped/i) {
+        $self->{pbot}->{logger}->log("$hostmask GECOS $gecos blacklisted in channel $channel (matches [\$r:$black_hostmask] host and [$black_channel] channel)\n");
+        return 1;
+      } elsif ($flag eq '' && $channel =~ /$black_channel_escaped/i && $hostmask =~ /$black_hostmask_escaped/i) {
         $self->{pbot}->{logger}->log("$hostmask blacklisted in channel $channel (matches [$black_hostmask] host and [$black_channel] channel)\n");
         return 1;
       }
