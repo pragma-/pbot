@@ -95,9 +95,6 @@ sub load {
 sub unload {
   my ($self, $plugin) = @_;
 
-  $self->{pbot}->{refresher}->{refresher}->unload_module("PBot::Plugins::$plugin");
-  $self->{pbot}->{refresher}->{refresher}->unload_subs("PBot/Plugins/$plugin.pm");
-
   if (exists $self->{plugins}->{$plugin}) {
     eval {
       $self->{plugins}->{$plugin}->unload;
@@ -107,6 +104,10 @@ sub unload {
       chomp $@;
       $self->{pbot}->{logger}->log("Warning: got error unloading plugin $plugin: $@\n");
     }
+
+    $self->{pbot}->{refresher}->{refresher}->unload_module("PBot::Plugins::$plugin");
+    $self->{pbot}->{refresher}->{refresher}->unload_subs("PBot/Plugins/$plugin.pm");
+
     $self->{pbot}->{logger}->log("Plugin $plugin unloaded.\n");
     return 1;
   } else {
