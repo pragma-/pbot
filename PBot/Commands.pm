@@ -44,9 +44,7 @@ sub initialize {
 }
 
 sub register {
-  my $self = shift;
-
-  my ($subref, $name, $level) = @_;
+  my ($self, $subref, $name, $level) = @_;
 
   if((not defined $subref) || (not defined $name) || (not defined $level)) {
     Carp::croak("Missing parameters to Commands::register");
@@ -62,7 +60,7 @@ sub register {
   return $ref;
 }
 
-sub unregister_by_name {
+sub unregister {
   my ($self, $name) = @_;
 
   if(not defined $name) {
