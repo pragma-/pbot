@@ -588,8 +588,8 @@ sub on_public {
 
   my $message = "$nick!$user\@$host $msg";
 
-  eval {
-    foreach my $trigger (@triggers) {
+  foreach my $trigger (@triggers) {
+    eval {
       if ($message =~ m/$trigger->{trigger}/i) {
         my ($desc, $timestamp) = $self->reset_counter($channel, $trigger->{target});
 
@@ -600,11 +600,11 @@ sub on_public {
           }
         }
       }
-    }
-  };
+    };
 
-  if ($@) {
-    $self->{pbot}->{logger}->log("Error in counter trigger: $@");
+    if ($@) {
+      $self->{pbot}->{logger}->log("Skipping bad trigger $trigger->{trigger}: $@");
+    }
   }
 
   $self->dbi_end;
