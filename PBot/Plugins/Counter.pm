@@ -25,12 +25,12 @@ sub initialize {
 
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
-  $self->{pbot}->{commands}->register(sub { $self->counteradd(@_)      }, 'counteradd',     0);
-  $self->{pbot}->{commands}->register(sub { $self->counterdel(@_)      }, 'counterdel',     0);
-  $self->{pbot}->{commands}->register(sub { $self->counterreset(@_)    }, 'counterreset',   0);
-  $self->{pbot}->{commands}->register(sub { $self->countershow(@_)     }, 'countershow',    0);
-  $self->{pbot}->{commands}->register(sub { $self->counterlist(@_)     }, 'counterlist',    0);
-  $self->{pbot}->{commands}->register(sub { $self->countertrigger(@_)  }, 'countertrigger', 0);
+  $self->{pbot}->{commands}->register(sub { $self->counteradd(@_)      }, 'counteradd',      0);
+  $self->{pbot}->{commands}->register(sub { $self->counterdel(@_)      }, 'counterdel',      0);
+  $self->{pbot}->{commands}->register(sub { $self->counterreset(@_)    }, 'counterreset',    0);
+  $self->{pbot}->{commands}->register(sub { $self->countershow(@_)     }, 'countershow',     0);
+  $self->{pbot}->{commands}->register(sub { $self->counterlist(@_)     }, 'counterlist',     0);
+  $self->{pbot}->{commands}->register(sub { $self->countertrigger(@_)  }, 'countertrigger', 10);
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->on_public(@_) });
 
@@ -377,7 +377,7 @@ sub counterreset {
   my ($description, $timestamp) = $self->reset_counter($channel, $name);
   if (defined $description) {
     my $ago = duration gettimeofday - $timestamp;
-    $result = "It had been $ago since $description. Not any more.";
+    $result = "It had been $ago since $description.";
   } else {
     $result = "No such counter.";
   }
@@ -596,7 +596,7 @@ sub on_public {
         if (defined $desc) {
           if (gettimeofday - $timestamp >= 60 * 60) {
             my $ago = duration gettimeofday - $timestamp;
-            $event->{conn}->privmsg($channel, "It had been $ago since $desc. Not any more.");
+            $event->{conn}->privmsg($channel, "It had been $ago since $desc.");
           }
         }
       }
