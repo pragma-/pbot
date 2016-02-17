@@ -1136,7 +1136,7 @@ sub get_also_known_as {
       my $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
-        next if $row->{type} == $self->{alias_type}->{WEAK};
+#        next if $row->{type} == $self->{alias_type}->{WEAK};
         $ids{$row->{alias}} = { id => $id, type => $row->{type} };
         $self->{pbot}->{logger}->log("[$id] 1) Adding $row->{alias} -> $id [type $row->{type}]\n") if $debug;
       }
@@ -1147,6 +1147,7 @@ sub get_also_known_as {
       while (1) {
         my $new_aliases = 0;
         foreach my $id (keys %ids) {
+          next if $ids{$id}->{type} == $self->{alias_type}->{WEAK};
           next if exists $seen_id{$id};
           $seen_id{$id} = $id;
 
@@ -1156,8 +1157,8 @@ sub get_also_known_as {
 
           foreach my $row (@$rows) {
             next if exists $ids{$row->{id}};
-            next if $row->{type} == $self->{alias_type}->{WEAK};
-            $ids{$row->{id}} = { id => $id, type => $row->{type} };
+            #next if $row->{type} == $self->{alias_type}->{WEAK};
+            $ids{$row->{id}} = { id => $id, type => $ids{$id}->{type} == $self->{alias_type}->{WEAK} ? $self->{alias_type}->{WEAK} : $row->{type} };
             $new_aliases++;
             $self->{pbot}->{logger}->log("[$id] 2) Adding $row->{id} -> $id [type $row->{type}]\n") if $debug;
           }
