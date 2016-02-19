@@ -44,10 +44,10 @@ sub initialize {
   $self->{MSG_DEPARTURE}  = 2;  # PART, QUIT, KICK
   $self->{MSG_NICKCHANGE} = 3;  # CHANGED NICK
 
-  $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_recall_time', $conf{max_recall_time} // 60 * 60 * 1);
+  $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_recall_time', $conf{max_recall_time} // undef);
 
   $self->{pbot}->{commands}->register(sub { $self->recall_message(@_)     },  "recall",          0);
-  $self->{pbot}->{commands}->register(sub { $self->list_also_known_as(@_) },  "aka",            10);
+  $self->{pbot}->{commands}->register(sub { $self->list_also_known_as(@_) },  "aka",             0);
   $self->{pbot}->{commands}->register(sub { $self->rebuild_aliases(@_)    },  "rebuildaliases", 90);
   $self->{pbot}->{commands}->register(sub { $self->aka_link(@_)           },  "akalink",        60);
   $self->{pbot}->{commands}->register(sub { $self->aka_unlink(@_)         },  "akaunlink",      60);
