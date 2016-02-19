@@ -44,10 +44,10 @@ sub initialize {
   $self->{MSG_DEPARTURE}  = 2;  # PART, QUIT, KICK
   $self->{MSG_NICKCHANGE} = 3;  # CHANGED NICK
 
-  $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_messages', $conf{max_messages} // 32);
+  $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_recall_time', $conf{max_recall_time} // 60 * 60 * 1);
 
   $self->{pbot}->{commands}->register(sub { $self->recall_message(@_)     },  "recall",          0);
-  $self->{pbot}->{commands}->register(sub { $self->list_also_known_as(@_) },  "aka",             0);
+  $self->{pbot}->{commands}->register(sub { $self->list_also_known_as(@_) },  "aka",            10);
   $self->{pbot}->{commands}->register(sub { $self->rebuild_aliases(@_)    },  "rebuildaliases", 90);
   $self->{pbot}->{commands}->register(sub { $self->aka_link(@_)           },  "akalink",        60);
   $self->{pbot}->{commands}->register(sub { $self->aka_unlink(@_)         },  "akaunlink",      60);
@@ -226,7 +226,7 @@ sub recall_message {
     chomp $getopt_error;
   };
 
-  my $recall_text;
+  my $recall_text = '';
 
   foreach my $recall (@recalls) {
     my ($recall_nick, $recall_history, $recall_channel, $recall_before, $recall_after, $recall_context, $recall_count);
@@ -363,24 +363,24 @@ sub recall_message {
 
     my $messages = $self->{database}->get_message_context($message, $recall_before, $recall_after, $recall_count, $recall_history, $context_account);
 
+    my $max_recall_time = $self->{pbot}->{registry}->get_value('messagehistory', 'max_recall_time');
+
     foreach my $msg (@$messages) {
       $self->{pbot}->{logger}->log("$nick ($from) recalled <$msg->{nick}/$msg->{channel}> $msg->{msg}\n");
+
+      if (defined $max_recall_time && gettimeofday - $msg->{timestamp} > $max_recall_time && not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host")) {
+        $max_recall_time = duration($max_recall_time);
+        $recall_text .= "Sorry, you can not recall messages older than $max_recall_time.";
+        return $recall_text;
+      }
 
       my $text = $msg->{msg};
       my $ago = ago(gettimeofday - $msg->{timestamp});
 
-      if(not defined $recall_text) {
-        if($text =~ s/^\/me\s+// or $text =~ m/^KICKED /) {
-          $recall_text = "[$ago] * $msg->{nick} $text\n";
-        } else {
-          $recall_text = "[$ago] <$msg->{nick}> $text\n";
-        }
+      if($text =~ s/^\/me\s+// or $text =~ m/^KICKED /) {
+        $recall_text .= "[$ago] * $msg->{nick} $text\n";
       } else {
-        if($text =~ s/^\/me\s+// or $text =~ m/^KICKED /) {
-          $recall_text .= "[$ago] * $msg->{nick} $text\n";
-        } else {
-          $recall_text .= "[$ago] <$msg->{nick}> $text\n";
-        }
+        $recall_text .= "[$ago] <$msg->{nick}> $text\n";
       }
     }
   }
