@@ -61,7 +61,10 @@ CREATE TABLE IF NOT EXISTS Counters (
   channel     TEXT,
   name        TEXT,
   description TEXT,
-  timestamp   NUMERIC
+  timestamp   NUMERIC,
+  created_on  NUMERIC,
+  created_by  TEXT,
+  counter     NUMERIC
 )
 SQL
 
@@ -99,7 +102,7 @@ sub dbi_end {
 }
 
 sub add_counter {
-  my ($self, $channel, $name, $description) = @_;
+  my ($self, $owner, $channel, $name, $description) = @_;
 
   my ($desc, $timestamp) = $self->get_counter($channel, $name);
   if (defined $desc) {
@@ -107,11 +110,14 @@ sub add_counter {
   }
 
   eval {
-    my $sth = $self->{dbh}->prepare('INSERT INTO Counters (channel, name, description, timestamp) VALUES (?, ?, ?, ?)');
+    my $sth = $self->{dbh}->prepare('INSERT INTO Counters (channel, name, description, timestamp, created_on, created_by, counter) VALUES (?, ?, ?, ?, ?, ?, ?)');
     $sth->bind_param(1, lc $channel);
     $sth->bind_param(2, lc $name);
     $sth->bind_param(3, $description);
     $sth->bind_param(4, scalar gettimeofday);
+    $sth->bind_param(5, scalar gettimeofday);
+    $sth->bind_param(6, $owner);
+    $sth->bind_param(7, 0);
     $sth->execute();
   };
 
@@ -126,16 +132,17 @@ sub add_counter {
 sub reset_counter {
   my ($self, $channel, $name) = @_;
 
-  my ($description, $timestamp) = $self->get_counter($channel, $name);
+  my ($description, $timestamp, $counter) = $self->get_counter($channel, $name);
   if (not defined $description) {
     return (undef, undef);
   }
 
   eval {
-    my $sth = $self->{dbh}->prepare('UPDATE Counters SET timestamp = ? WHERE channel = ? AND name = ?');
+    my $sth = $self->{dbh}->prepare('UPDATE Counters SET timestamp = ?, counter = ? WHERE channel = ? AND name = ?');
     $sth->bind_param(1, scalar gettimeofday);
-    $sth->bind_param(2, lc $channel);
-    $sth->bind_param(3, lc $name);
+    $sth->bind_param(2, ++$counter);
+    $sth->bind_param(3, lc $channel);
+    $sth->bind_param(4, lc $name);
     $sth->execute();
   };
 
@@ -191,13 +198,13 @@ sub list_counters {
 sub get_counter {
   my ($self, $channel, $name) = @_;
 
-  my ($description, $time) = eval {
-    my $sth = $self->{dbh}->prepare('SELECT description, timestamp FROM Counters WHERE channel = ? AND name = ?');
+  my ($description, $time, $counter, $created_on, $created_by) = eval {
+    my $sth = $self->{dbh}->prepare('SELECT description, timestamp, counter, created_on, created_by FROM Counters WHERE channel = ? AND name = ?');
     $sth->bind_param(1, lc $channel);
     $sth->bind_param(2, lc $name);
     $sth->execute();
     my $row = $sth->fetchrow_hashref();
-    return ($row->{description}, $row->{timestamp});
+    return ($row->{description}, $row->{timestamp}, $row->{counter}, $row->{created_on}, $row->{created_by});
   };
 
   if ($@) {
@@ -205,7 +212,7 @@ sub get_counter {
     return undef;
   }
 
-  return ($description, $time);
+  return ($description, $time, $counter, $created_on, $created_by);
 }
 
 sub add_trigger {
@@ -308,7 +315,7 @@ sub counteradd {
   }
 
   my $result;
-  if ($self->add_counter($channel, $name, $description)) {
+  if ($self->add_counter("$nick!$user\@$host", $channel, $name, $description)) {
     $result = "Counter added.";
   } else {
     $result = "Counter '$name' already exists.";
@@ -409,10 +416,11 @@ sub countershow {
   }
 
   my $result;
-  my ($description, $timestamp) = $self->get_counter($channel, $name);
+  my ($description, $timestamp, $counter, $created_on) = $self->get_counter($channel, $name);
   if (defined $description) {
     my $ago = duration gettimeofday - $timestamp;
-    $result = "It has been $ago since $description.";
+    $created_on = duration gettimeofday - $created_on;
+    $result = "It has been $ago since $description. It has been reset $counter time" . ($counter == 1 ? '' : 's') . " since its creation $created_on ago.";
   } else {
     $result = "No such counter.";
   }
@@ -586,10 +594,17 @@ sub on_public {
 
   my @triggers = $self->list_triggers($channel);
 
-  my $message = "$nick!$user\@$host $msg";
+  my $hostmask = "$nick!$user\@$host";
 
   foreach my $trigger (@triggers) {
     eval {
+      my $message;
+      if ($trigger->{trigger} =~ m/^\^/) {
+        $message = "$hostmask $msg";
+      } else {
+        $message = $msg;
+      }
+
       if ($message =~ m/$trigger->{trigger}/i) {
         my ($desc, $timestamp) = $self->reset_counter($channel, $trigger->{target});
 
