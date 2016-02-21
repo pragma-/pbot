@@ -1265,7 +1265,7 @@ argument_expression_list:
             my $last = ''; 
             if (@arg_exp_list > 2) {
               $last = pop @arg_exp_list; 
-              $return = 's ' . join(', ^L', @arg_exp_list) . ", and ^L$last";
+              $return = 's ' . join(', ^L', @arg_exp_list) . " and ^L$last";
             } elsif (@arg_exp_list == 2 ) { 
               $return = "s ^L$arg_exp_list[0] and ^L$arg_exp_list[1]";  
             } else {
@@ -1443,7 +1443,7 @@ identifier_list:
           {
             my @identifier_list = @{$item[1]}; 
             if ($#identifier_list > 1) {
-              $return = join(', ', @identifier_list) . ', and ' . $item{identifier};  
+              $return = join(', ', @identifier_list) . ' and ' . $item{identifier};
             } elsif ($#identifier_list == 1) { 
               $return = $identifier_list[1] . ' and ' . $item{identifier};  
             } else { 
@@ -1751,7 +1751,7 @@ struct_declaration_list:
             my @declarations = @{$item{'struct_declaration(s)'}}; 
             if ($#declarations > 1) { 
               $finaldec = pop @declarations; 
-              $return = join(', ', @declarations ) . ', and ' . $finaldec ; 
+              $return = join(', ', @declarations ) . ' and ' . $finaldec;
             } elsif ($#declarations == 1) { 
               $return = join(' and ', @declarations);
             } else { 
@@ -1810,7 +1810,7 @@ enum_specifier:
               $return .= " comprising $enumerator_list[0]";
             } else {
               my $last = pop @enumerator_list; 
-              $return .= ' comprising ' . join(', ', @enumerator_list) . ", and $last"; 
+              $return .= ' comprising ' . join(', ', @enumerator_list) . " and $last";
             }
 
           }
@@ -1904,7 +1904,7 @@ constant:
               $return = "a $modifier" . 'tab';
             } elsif ($constant eq q('\v')) {
               $return = "a $modifier" . 'vertical tab';
-            } elsif ($constant eq q('\b')) {
+            } elsif ($constant eq q('\a')) {
               $return = 'an alert character' if not length $modifier;
               $return = "a $modifier" . 'alert character' if length $modifier;
             } elsif ($constant eq q('\r')) {
