@@ -588,6 +588,13 @@ sub on_public {
   my ($nick, $user, $host, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
   my $channel = $event->{event}->{to}[0];
 
+  if ($self->{pbot}->{ignorelist}->check_ignore($nick, $user, $host, $channel, 1)) {
+    my $admin = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+    if (!defined $admin || $admin->{level} < 10) {
+      return 0;
+    }
+  }
+
   if (not $self->dbi_begin) {
     return 0;
   }
