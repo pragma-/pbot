@@ -104,8 +104,8 @@ sub get_baninfo {
 
   my ($nick, $user, $host) = $mask =~ m/([^!]+)!([^@]+)@(.*)/;
 
-  foreach my $mode (keys %{ $self->{banlist}{$channel} }) {
-    foreach my $banmask (keys %{ $self->{banlist}{$channel}{$mode} }) {
+  foreach my $mode (keys %{ $self->{banlist}->{$channel} }) {
+    foreach my $banmask (keys %{ $self->{banlist}->{$channel}->{$mode} }) {
       if($banmask =~ m/^\$a:(.*)/) {
         $ban_account = lc $1;
       } else {
@@ -138,8 +138,8 @@ sub get_baninfo {
         my $baninfo = {};
         $baninfo->{banmask} = $banmask_key;
         $baninfo->{channel} = $channel;
-        $baninfo->{owner} = $self->{banlist}{$channel}{$mode}{$banmask_key}[0];
-        $baninfo->{when} = $self->{banlist}{$channel}{$mode}{$banmask_key}[1];
+        $baninfo->{owner} = $self->{banlist}->{$channel}->{$mode}->{$banmask_key}->[0];
+        $baninfo->{when} = $self->{banlist}->{$channel}->{$mode}->{$banmask_key}->[1];
         $baninfo->{type} = $mode;
         $self->{pbot}->{logger}->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
 
