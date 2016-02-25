@@ -131,7 +131,7 @@ sub save_ignores {
 
 sub check_ignore {
   my $self = shift;
-  my ($nick, $user, $host, $channel) = @_;
+  my ($nick, $user, $host, $channel, $silent) = @_;
   my $pbot = $self->{pbot};
   $channel = lc $channel;
 
@@ -175,7 +175,7 @@ sub check_ignore {
       $ignored_escaped =~ s/\\(\.|\*)/$1/g;
 
       if(($channel =~ /$ignored_channel_escaped/i) && ($hostmask =~ /$ignored_escaped/i)) {
-        $self->{pbot}->{logger}->log("$nick!$user\@$host message ignored in channel $channel (matches [$ignored] host and [$ignored_channel] channel)\n");
+        $self->{pbot}->{logger}->log("$nick!$user\@$host message ignored in channel $channel (matches [$ignored] host and [$ignored_channel] channel)\n") unless $silent;
         return 1;
       }
     }
