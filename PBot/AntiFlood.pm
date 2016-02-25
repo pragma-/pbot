@@ -803,8 +803,8 @@ sub check_bans {
           $banmask_regex =~ s/\\\*/.*/g;
           $banmask_regex =~ s/\\\?/./g;
 
-          if($baninfo->{type} eq '+q' and $mask =~ /^$banmask_regex$/i) {
-            $self->{pbot}->{logger}->log("anti-flood: [check-bans] Hostmask ($mask) matches quiet banmask ($banmask_regex), disregarding\n");
+          if($mask =~ /^$banmask_regex$/i) {
+            $self->{pbot}->{logger}->log("anti-flood: [check-bans] Hostmask ($mask) matches $baninfo->{type} banmask ($banmask_regex), disregarding\n");
             next;
           }
 
@@ -836,7 +836,8 @@ sub check_bans {
       } elsif ($current_nickserv_account and $baninfo->{banmask} !~ m/^\$a:/i) {
         $banmask = "\$a:$current_nickserv_account";
       } else {
-        $banmask = "*!$user@" . address_to_mask($host);
+        $banmask = "*!*\@$host";
+        #$banmask = "*!$user@" . address_to_mask($host);
       }
 
       $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
@@ -943,7 +944,7 @@ sub on_whoisuser {
 
   my ($id) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
 
-  if ($self->{pbot}->{registry}->get_value('antiflood', 'debug_checkban')) {
+  if ($self->{pbot}->{registry}->get_value('antiflood', 'debug_checkban') >= 2) {
     $self->{pbot}->{logger}->log("Got gecos for $nick ($id): '$gecos'\n");
   }
 
