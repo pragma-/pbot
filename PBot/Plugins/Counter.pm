@@ -606,17 +606,24 @@ sub on_public {
   foreach my $trigger (@triggers) {
     eval {
       my $message;
+
       if ($trigger->{trigger} =~ m/^\^/) {
         $message = "$hostmask $msg";
       } else {
         $message = $msg;
       }
 
+      my $silent = 0;
+
+      if ($trigger->{trigger} =~ s/:silent$//i) {
+        $silent = 1;
+      }
+
       if ($message =~ m/$trigger->{trigger}/i) {
         my ($desc, $timestamp) = $self->reset_counter($channel, $trigger->{target});
 
         if (defined $desc) {
-          if (gettimeofday - $timestamp >= 60 * 60) {
+          if (not $silent and gettimeofday - $timestamp >= 60 * 60) {
             my $ago = duration gettimeofday - $timestamp;
             $event->{conn}->privmsg($channel, "It had been $ago since $desc.");
           }
