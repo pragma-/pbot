@@ -316,7 +316,7 @@ sub preprocess_code {
     unless ($self->{no_gdb_extensions}) {
       if ($self->{code} !~ m/\b(?:ptype|dump|print|trace|watch|gdb)\b/ && $precode =~ m/(\n?)\s*(.*?);?$/) {
         my $stmt = $2;
-        if ($stmt !~ m/\b(?:\w*scanf|fgets|printf|puts|while|for|do|if|switch|ptype|dump|print|trace|watch|gdb|assert|return)\b/
+        if ($stmt !~ m/\b(?:\w*scanf|fgets|memset|printf|puts|while|for|do|if|switch|ptype|dump|print|trace|watch|gdb|assert|main|return|exec[lvpe]+)\b/
           && $stmt !~ m/^\w+\s+(?<!sizeof )\w+/  # don't match `int a` but do match `sizeof a`
           && $stmt !~ m/[#{}]/                   # don't match preprocessor or structs/functions
           && $stmt !~ m{(?:/\*|\*/|//)}          # don't match comments
@@ -328,7 +328,7 @@ sub preprocess_code {
       }
     }
 
-    $self->{code} = "$prelude\n$self->{code}\n" . "int main(void) {\n$precode\n;\nreturn 0;\n}\n";
+    $self->{code} = "$prelude\n$self->{code}\n" . "int main(int argc, char *argv[]) {\n$precode\n;\nreturn 0;\n}\n";
   } else {
     $self->{code} = "$prelude\n$self->{code}\n";
   }
@@ -419,6 +419,8 @@ sub postprocess_output {
   $output =~ s/\/home\/compiler\///g;
   $output =~ s/compilation terminated.//;
   $output =~ s/'(.*?)' = char/'$1' = int/g; $output =~ s/(\(\s*char\s*\)\s*'.*?') = int/$1 = char/; # gdb thinks 'a' is type char, which is not true for C
+  $output =~ s/sizeof '(.*?)' = 1/sizeof '$1' = 4/g; # gdb thinks sizeof 'a' is sizeof char, which is not true for C
+  $output =~ s/sizeof\('(.*?)'\) = 1/sizeof('$1') = 4/g; # gdb thinks sizeof 'a' is sizeof char, which is not true for C
   $output =~ s/= (-?\d+) ''/= $1/g;
   $output =~ s/, <incomplete sequence >//g;
   $output =~ s/\s*warning: shadowed declaration is here \[-Wshadow\]//g unless exists $self->{options}->{'-paste'} or (defined $self->{got_run} and $self->{got_run} eq 'paste');
@@ -438,6 +440,8 @@ sub postprocess_output {
   $output =~ s/Copyright \(C\) 2015 Free Software Foundation.*//ms;
   $output =~ s/==\d+==WARNING: unexpected format specifier in printf interceptor: %[^\s]+\s*//gms;
   $output =~ s/(Defined at .*?)\s+included at/$1/msg;
+  $output =~ s/^\nno output/no output/ms;
+  $output =~ s/expand ([^\s]+)expands to/expand $1 expands to/g;
 
   $output =~ s/(note: %b is a candide extension\s*)+/note: %b is a candide extension  /g;
   $output =~ s/candide extension\s+\]/candide extension]/;

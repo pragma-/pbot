@@ -44,7 +44,7 @@ sub postprocess {
   if (not length $result) {
     $self->{no_output} = 1;
   } elsif ($self->{code} =~ m/print_last_statement\(.*\);$/m
-    && ($result =~ m/A syntax error in expression/ || $result =~ m/No symbol.*in current context/)) {
+    && ($result =~ m/A syntax error in expression/ || $result =~ m/No symbol.*in current context/ || $result =~ m/Can't take address of.*which isn't an lvalue/)) {
     # strip print_last_statement and rebuild/re-run
     $self->{code} =~ s/print_last_statement\((.*)\);/$1;/mg;
     $self->preprocess;
