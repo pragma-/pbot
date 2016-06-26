@@ -113,13 +113,13 @@ sub process_line {
       $has_code = $2 if length $2 and $nick_override !~ /^(?:enum|struct|union)$/;
       $preserve_whitespace = 1;
       $processed += 100;
+    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
+      $command = $1;
+      $processed += 100;
     } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
       $command = $1;
       $processed += 100;
     } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
-      $command = $1;
-      $processed += 100;
-    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
       $command = $1;
       $processed += 100;
     }
