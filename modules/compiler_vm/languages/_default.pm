@@ -149,6 +149,8 @@ sub postprocess_output {
     substr($boutput, $active_position++, 1) = $c;
   }
   $self->{output} = $boutput;
+
+  $self->{output} =~ s/\007/*BEEP*/g;
 }
 
 sub show_output {
@@ -208,6 +210,10 @@ sub show_output {
     $pretty_code .= $output_closing_comment;
 
     my $uri = $self->paste_sprunge($pretty_code);
+
+    if (not $uri =~ m/^http/) {
+      $uri = $self->paste_codepad($pretty_code);
+    }
 
     print "$self->{nick}: $uri\n";
     exit 0;
@@ -532,7 +538,7 @@ sub process_interactive_edit {
       last;
     }
 
-    if($subcode =~ m/^\s*(?:and\s+)?(run|paste)\b/i) {
+    if($subcode =~ m/^\s*(?:and\s+)?(again|run|paste)\b/i) {
       $self->{got_run} = lc $1;
       $self->{only_show} = 0;
       if ($prevchange) {
