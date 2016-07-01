@@ -394,12 +394,7 @@ sub process_output_queue {
 sub add_to_command_queue {
   my ($self, $channel, $command, $delay) = @_;
 
-  if (exists $self->{command_queue}->{$channel}) {
-    my $last_when = $self->{command_queue}->{$channel}->[-1]->{when};
-    $command->{when} = $last_when + $delay;
-  } else {
-    $command->{when} = gettimeofday + $delay;
-  }
+  $command->{when} = gettimeofday + $delay;
 
   push @{$self->{command_queue}->{$channel}}, $command;
 }
