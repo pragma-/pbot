@@ -101,6 +101,18 @@ sub list {
   return $result;
 }
 
+sub is_active {
+  my ($self, $channel) = @_;
+
+  return exists $self->{channels}->hash->{$channel} && $self->{channels}->hash->{$channel}->{enabled};
+}
+
+sub is_active_op {
+  my ($self, $channel) = @_;
+
+  return $self->is_active($channel) && $self->{channels}->hash->{$channel}->{chanop};
+}
+
 sub load_channels {
   my $self = shift;
 
