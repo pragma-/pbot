@@ -39,10 +39,12 @@ sub initialize {
   $self->{pbot}->{registry}->add_default('text',  'general', 'paste_ratelimit',                 $conf{paste_ratelimit}                 // 60);
   $self->{pbot}->{registry}->add_default('text',  'interpreter', 'max_recursion',  10);
 
-  $self->{output_queue} = {};
-  $self->{last_paste}   = 0;
+  $self->{output_queue}  = {};
+  $self->{command_queue} = {};
+  $self->{last_paste}    = 0;
 
-  $self->{pbot}->{timer}->register(sub { $self->process_output_queue }, 1);
+  $self->{pbot}->{timer}->register(sub { $self->process_output_queue  }, 1);
+  $self->{pbot}->{timer}->register(sub { $self->process_command_queue }, 1);
 }
 
 sub process_line {
@@ -201,6 +203,8 @@ sub interpret {
       message => "$nick: Why would I want to do that to myself?"
     };
     $self->add_message_to_output_queue($from, $message, $delay);
+    $delay = duration($delay);
+    $self->{pbot}->{logger}->log("Final result ($delay delay) [$message->{message}]\n");
     return undef;
   }
 
@@ -383,6 +387,50 @@ sub process_output_queue {
 
     if (not @{$self->{output_queue}->{$channel}}) {
       delete $self->{output_queue}->{$channel};
+    }
+  }
+}
+
+sub add_to_command_queue {
+  my ($self, $channel, $command, $delay) = @_;
+
+  if (exists $self->{command_queue}->{$channel}) {
+    my $last_when = $self->{command_queue}->{$channel}->[-1]->{when};
+    $command->{when} = $last_when + $delay;
+  } else {
+    $command->{when} = gettimeofday + $delay;
+  }
+
+  push @{$self->{command_queue}->{$channel}}, $command;
+}
+
+sub add_botcmd_to_command_queue {
+  my ($self, $channel, $command, $delay) = @_;
+
+  my $botcmd = {
+    nick => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
+    user => 'stdin',
+    host => 'localhost',
+    command => $command
+  };
+
+  $self->add_to_command_queue($channel, $botcmd, $delay);
+}
+
+sub process_command_queue {
+  my $self = shift;
+
+  foreach my $channel (keys %{$self->{command_queue}}) {
+    for (my $i = 0; $i < @{$self->{command_queue}->{$channel}}; $i++) {
+      my $command = $self->{command_queue}->{$channel}->[$i];
+      if (gettimeofday >= $command->{when}) {
+        $self->interpret($channel, $command->{nick}, $command->{user}, $command->{host}, 0, $command->{command});
+        splice @{$self->{command_queue}->{$channel}}, $i--, 1;
+      }
+    }
+
+    if (not @{$self->{command_queue}->{$channel}}) {
+      delete $self->{command_queue}->{$channel};
     }
   }
 }
