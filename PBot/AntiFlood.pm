@@ -799,6 +799,12 @@ sub check_bans {
             next;
           } 
 
+          # special case for twkm clone bans
+          if ($baninfo->{banmask} =~ m/\?\*!\*@\*$/) {
+            $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{banmask} in $baninfo->{channel}, but disregarded due to clone ban\n");
+            next;
+          }
+
           my $banmask_regex = quotemeta $baninfo->{banmask};
           $banmask_regex =~ s/\\\*/.*/g;
           $banmask_regex =~ s/\\\?/./g;
@@ -836,8 +842,14 @@ sub check_bans {
       } elsif ($current_nickserv_account and $baninfo->{banmask} !~ m/^\$a:/i) {
         $banmask = "\$a:$current_nickserv_account";
       } else {
-        $banmask = "*!*\@$host";
-        #$banmask = "*!$user@" . address_to_mask($host);
+        if ($host =~ m{^gateway/web/irccloud.com/}) {
+          $banmask = "*!$user\@gateway/web/irccloud.com/*";
+        } elsif ($host =~ m{^nat/([^/]+)/}) {
+          $banmask = "*!$user\@nat/$1/*";
+        } else {
+          $banmask = "*!*\@$host";
+          #$banmask = "*!$user@" . address_to_mask($host);
+        }
       }
 
       $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
@@ -848,7 +860,7 @@ sub check_bans {
           return;
         }
 
-        if (exists $self->{nickflood}->{$message_account}) {
+        if (exists $self->{nickflood}->{$message_account} and $baninfo->{type} ne 'blacklist') {
           $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evading nick-flood ban, disregarding\n");
           return;
         }
@@ -1002,7 +1014,7 @@ sub adjust_offenses {
     my $id = delete $channel_data->{id};
     my $channel = delete $channel_data->{channel};
     my $last_offense = delete $channel_data->{last_offense};
-    if(gettimeofday - $last_offense >= 60 * 60 * 2) {
+    if(gettimeofday - $last_offense >= 60 * 60 * 3) {
       $channel_data->{enter_abuses}--;
       #$self->{pbot}->{logger}->log("[adjust-offenses] [$id][$channel] decreasing enter abuse offenses to $channel_data->{enter_abuses}\n");
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($id, $channel, $channel_data);
@@ -1010,10 +1022,10 @@ sub adjust_offenses {
   }
 
   foreach my $account (keys %{ $self->{nickflood} }) {
-    if($self->{nickflood}->{$account}->{offenses} and gettimeofday - $self->{nickflood}->{$account}->{timestamp} >= 60 * 60 * 3) {
+    if($self->{nickflood}->{$account}->{offenses} and gettimeofday - $self->{nickflood}->{$account}->{timestamp} >= 60 * 60) {
       $self->{nickflood}->{$account}->{offenses}--;
 
-      if($self->{nickflood}->{$account}->{offenses} == 0) {
+      if($self->{nickflood}->{$account}->{offenses} <= 0) {
         delete $self->{nickflood}->{$account};
       } else {
         $self->{nickflood}->{$account}->{timestamp} = gettimeofday;
