@@ -155,6 +155,10 @@ sub track_mode {
   my $self = shift;
   my ($source, $mode, $target, $channel) = @_;
 
+  $mode = lc $mode;
+  $target = lc $target;
+  $channel = lc $channel;
+
   if($mode eq "+b" or $mode eq "+q") {
     $self->{pbot}->{logger}->log("ban-tracker: $target " . ($mode eq '+b' ? 'banned' : 'quieted') . " by $source in $channel.\n");
     $self->{banlist}->{$channel}->{$mode}->{$target} = [ $source, gettimeofday ];
