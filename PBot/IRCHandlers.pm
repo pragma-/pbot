@@ -44,6 +44,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',          sub { $self->on_departure(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',          sub { $self->on_nickchange(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.nicknameinuse', sub { $self->on_nicknameinuse(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.invite',        sub { $self->on_invite(@_) });
 }
 
 sub default_handler {
@@ -232,6 +233,21 @@ sub on_join {
     $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_threshold'), 
     $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_time_threshold'),
     $self->{pbot}->{messagehistory}->{MSG_JOIN});
+  return 0;
+}
+
+sub on_invite {
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host, $target, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0]);
+
+  $self->{pbot}->{logger}->log("$nick!$user\@$host invited $target to $channel!\n");
+
+  if ($target eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+    if ($self->{pbot}->{channels}->is_active($channel)) {
+      $self->{pbot}->{interpreter}->add_botcmd_to_command_queue($channel, "join $channel", 0);
+    }
+  }
+
   return 0;
 }
 
