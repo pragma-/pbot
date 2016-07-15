@@ -860,9 +860,11 @@ sub check_bans {
           return;
         }
 
-        if (exists $self->{nickflood}->{$message_account} and $baninfo->{type} ne 'blacklist') {
-          $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evading nick-flood ban, disregarding\n");
-          return;
+        if (exists $self->{nickflood}->{$message_account} and $self->{nickflood}->{$message_account}->{offenses} > 0 and $baninfo->{type} ne 'blacklist') {
+          if (gettimeofday - $self->{nickflood}->{$message_account}->{timestamp} < 60 * 15) {
+            $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evading nick-flood ban, disregarding\n");
+            return;
+          }
         }
 
         if ($baninfo->{type} eq 'blacklist') {
