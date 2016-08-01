@@ -1,50 +1,47 @@
 #!/usr/bin/perl
 
-# Quick and dirty by :pragma
-
 use warnings;
 use strict;
 
-use Google::Search;
+use WWW::Google::CustomSearch;
 use HTML::Entities;
+
+my $api_key = '';
+my $cx      = '';
 
 my ($nick, $arguments, $matches);
 
 $matches = 3;
 $nick = shift @ARGV;
 
-if ($#ARGV < 0)
-{
+if ($#ARGV < 0) {
   print "Usage: google [number of results] query\n";
-  die;
+  exit;
 }
 
-$arguments = join(" ", @ARGV);
+$arguments = join ' ', @ARGV;
 
-if($arguments =~ m/^([0-9]+)/)
-{
+if($arguments =~ s/^([0-9]+)//) {
   $matches = $1;
-  $arguments =~ s/^$1//;
 }
 
-my $search = Google::Search->Web(query => $arguments, referrer => 'http://blackshell.com');
+my $engine  = WWW::Google::CustomSearch->new(api_key => $api_key, cx => $cx, quotaUser => $nick);
+my $result  = $engine->search($arguments);
 
 print "$nick: ";
 
-if(not $search->first) {
-  if($search->error) {
-    print $search->error->reason, "\n";
-  } else {
-    print "No results found\n";
-  }
-    exit;
+print '(', $result->formattedTotalResults, " results)\n";
+
+if (not @{$result->items}) {
+  print "No results found\n";
+  exit;
 }
 
 my $comma = "";
-while( my $result = $search->next) {
-    print $comma, decode_entities $result->titleNoFormatting, ": ", $result->uri;
-    $comma = " -- ";
-    last if --$matches <= 0;
+foreach my $item (@{$result->items}) {
+  print $comma, decode_entities $item->title, ': <', $item->link, ">\n";
+  $comma = " -- ";
+  last if --$matches <= 0;
 }
 
 print "\n";
