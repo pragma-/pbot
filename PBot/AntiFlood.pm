@@ -48,6 +48,7 @@ sub initialize {
   $self->{channels}      = {}; # per-channel statistics, e.g. for optimized tracking of last spoken nick for enter-abuse detection, etc
   $self->{nickflood}     = {}; # statistics to track nickchange flooding
   $self->{whois_pending} = {}; # prevents multiple whois for nick joining multiple channels at once
+  $self->{changinghost}  = {}; # tracks nicks changing hosts/identifying to strongly link them
 
   my $filename = delete $conf{whitelist_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/whitelist';
   $self->{whitelist} = PBot::DualIndexHashObject->new(name => 'Whitelist', filename => $filename);
@@ -128,8 +129,8 @@ sub whitelist {
 
   return "Usage: whitelist <command>, where commands are: list/show, add, remove, set, unset" if not defined $command;
 
-  given($command) {
-    when($_ eq "list" or $_ eq "show") {
+  given ($command) {
+    when ($_ eq "list" or $_ eq "show") {
       my $text = "Whitelist:\n";
       my $entries = 0;
       foreach my $channel (keys %{ $self->{whitelist}->hash }) {
@@ -147,7 +148,7 @@ sub whitelist {
       $text .= "none" if $entries == 0;
       return $text;
     }
-    when("set") {
+    when ("set") {
       my ($channel, $mask, $flag, $value) = split / /, $args, 4;
       return "Usage: whitelist set <channel> <mask> [flag] [value]" if not defined $channel or not defined $mask;
 
@@ -188,7 +189,7 @@ sub whitelist {
       $self->{whitelist}->save;
       return "Flag set.";
     }
-    when("unset") {
+    when ("unset") {
       my ($channel, $mask, $flag) = split / /, $args, 3;
       return "Usage: whitelist unset <channel> <mask> <flag>" if not defined $channel or not defined $mask or not defined $flag;
 
@@ -208,7 +209,7 @@ sub whitelist {
       $self->{whitelist}->save;
       return "Flag unset.";
     }
-    when("add") {
+    when ("add") {
       my ($channel, $mask, $mode) = split / /, $args, 3;
       return "Usage: whitelist add <channel> <mask> [mode (user or ban, default: user)]" if not defined $channel or not defined $mask;
 
@@ -225,7 +226,7 @@ sub whitelist {
       $self->{whitelist}->save;
       return "$mask whitelisted in channel $channel";
     }
-    when("remove") {
+    when ("remove") {
       my ($channel, $mask) = split / /, $args, 2;
       return "Usage: whitelist remove <channel> <mask>" if not defined $channel or not defined $mask;
 
@@ -287,8 +288,39 @@ sub check_flood {
   $channel = lc $channel;
 
   my $mask = "$nick!$user\@$host";
-  my $account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
   my $oldnick = $nick;
+  my $account;
+
+  if ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN} and exists $self->{changinghost}->{$nick}) {
+    $self->{pbot}->{logger}->log("Finalizing changinghost for $nick!\n");
+    $account = delete $self->{changinghost}->{$nick};
+
+    my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_id($mask);
+    if (defined $id) {
+      if ($id != $account) {
+        $self->{pbot}->{logger}->log("Linking $mask [$id] to account $account\n");
+        $self->{pbot}->{messagehistory}->{database}->unlink_alias($account, $id);
+        $self->{pbot}->{messagehistory}->{database}->link_alias($account, $id, $self->{pbot}->{messagehistory}->{database}->{alias_type}->{STRONG});
+      } else {
+        $self->{pbot}->{logger}->log("New hostmask already belongs to original account.\n");
+      }
+      $account = $id;
+    } else {
+      $self->{pbot}->{logger}->log("Adding $mask to account $account\n");
+      $self->{pbot}->{messagehistory}->{database}->add_message_account($mask, $account, $self->{pbot}->{messagehistory}->{database}->{alias_type}->{STRONG});
+    }
+
+    $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($account);
+    my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($account);
+    foreach my $nickserv_account (@nickserv_accounts) {
+      $self->{pbot}->{logger}->log("$nick!$user\@$host [$account] seen with nickserv account [$nickserv_account]\n");
+      $self->check_nickserv_accounts($nick, $nickserv_account, "$nick!$user\@$host");
+    }
+  } else {
+    $account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
+  }
+
+  $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($mask, { last_seen => scalar gettimeofday });
 
   if($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
     $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", "NICKCHANGE", $mask, $text));
@@ -319,6 +351,12 @@ sub check_flood {
     }
 
     $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($account);
+
+    if ($text eq 'QUIT Changing host') {
+      $self->{pbot}->{logger}->log("$mask [$account] changing host!\n");
+      $self->{changinghost}->{$nick} = $account;
+    }
+
     # don't do flood processing for QUIT events
     return;
   }
@@ -591,6 +629,7 @@ sub unbanme {
 
   foreach my $alias (keys %aliases) {
     next if $aliases{$alias}->{type} == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK};
+    next if $aliases{$alias}->{nickchange} == 1;
 
     my ($anick, $auser, $ahost) = $alias =~ m/([^!]+)!([^@]+)@(.*)/;
     my $banmask = address_to_mask($ahost);
@@ -654,9 +693,9 @@ sub address_to_mask {
 
   if($address =~ m/^([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$/) {
     my ($a, $b, $c, $d) = ($1, $2, $3, $4);
-    given($a) {
-      when($_ <= 127) { $banmask = "$a.*"; }
-      when($_ <= 191) { $banmask = "$a.$b.*"; }
+    given ($a) {
+      when ($_ <= 127) { $banmask = "$a.*"; }
+      when ($_ <= 191) { $banmask = "$a.$b.*"; }
       default { $banmask = "$a.$b.$c.*"; }
     }
   } elsif($address =~ m{^gateway/([^/]+)/([^/]+)/}) {
@@ -709,7 +748,7 @@ sub check_bans {
 
   my $current_nickserv_account = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
 
-  if ($current_nickserv_account) {
+  if (defined $current_nickserv_account and length $current_nickserv_account) {
     $self->{pbot}->{logger}->log("anti-flood: [check-bans] current nickserv [$current_nickserv_account] found for $mask\n") if $debug_checkban >= 2;
     my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
     if ($channel_data->{validated} & $self->{NEEDS_CHECKBAN}) {

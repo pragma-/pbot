@@ -176,6 +176,8 @@ sub list_also_known_as {
       } else {
         $result .= "$sep$aka";
       }
+
+      $result .= "!" if $akas{$aka}->{nickchange} == 1;
       $result .= " ($akas{$aka}->{nickserv})" if $show_nickserv and exists $akas{$aka}->{nickserv};
       $result .= " {$akas{$aka}->{gecos}}" if $show_gecos and exists $akas{$aka}->{gecos};
 
