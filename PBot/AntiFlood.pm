@@ -299,8 +299,7 @@ sub check_flood {
     if (defined $id) {
       if ($id != $account) {
         $self->{pbot}->{logger}->log("Linking $mask [$id] to account $account\n");
-        $self->{pbot}->{messagehistory}->{database}->unlink_alias($account, $id);
-        $self->{pbot}->{messagehistory}->{database}->link_alias($account, $id, $self->{pbot}->{messagehistory}->{database}->{alias_type}->{STRONG});
+        $self->{pbot}->{messagehistory}->{database}->link_alias($account, $id, $self->{pbot}->{messagehistory}->{database}->{alias_type}->{STRONG}, 1);
       } else {
         $self->{pbot}->{logger}->log("New hostmask already belongs to original account.\n");
       }

@@ -1067,57 +1067,51 @@ sub link_aliases {
       }
     }
 
-    #my $sth = $self->{dbh}->prepare('REPLACE INTO Aliases (id, alias, type) VALUES (?, ?, ?)');
-
     foreach my $id (sort keys %ids) {
       next if $account == $id;
-
-      if (exists $ids{$id}->{force}) {
-        $self->{pbot}->{logger}->log("Forcing link of $account and $id!\n");
-        $self->unlink_alias($account, $id);
-      }
-
-      $self->link_alias($account, $id, $ids{$id}->{type});
-
-=cut
-      $sth->bind_param(1, $account);
-      $sth->bind_param(2, $id);
-      $sth->bind_param(3, $ids{$id}->{type});
-      $sth->execute();
-      if ($sth->rows) {
-        $self->{pbot}->{logger}->log("Linked $account to $id [$ids{$id}->{type}]\n") if $debug_link;
-        $self->{new_entries}++;
-      }
-
-      $sth->bind_param(1, $id);
-      $sth->bind_param(2, $account);
-      $sth->bind_param(3, $ids{$id}->{type});
-      $sth->execute();
-      if ($sth->rows) {
-        $self->{pbot}->{logger}->log("Linked $id to $account [$ids{$id}->{type}]\n") if $debug_link;
-        $self->{new_entries}++;
-      }
-=cut
+      $self->link_alias($account, $id, $ids{$id}->{type}, $ids{$id}->{force});
     }
   };
   $self->{pbot}->{logger}->log($@) if $@;
 }
 
 sub link_alias {
-  my ($self, $id, $alias, $type) = @_;
+  my ($self, $id, $alias, $type, $force) = @_;
 
-  $self->{pbot}->{logger}->log("Attempting to " . ($type == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " link $id to $alias\n");
+  $self->{pbot}->{logger}->log("Attempting to " . ($force ? "forcefully " : "") . ($type == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " link $id to $alias\n");
 
   my $ret = eval {
-    my $sth = $self->{dbh}->prepare('SELECT * FROM Aliases WHERE id = ? AND alias = ? LIMIT 1');
+    my $sth = $self->{dbh}->prepare('SELECT type FROM Aliases WHERE id = ? AND alias = ? LIMIT 1');
     $sth->bind_param(1, $alias);
     $sth->bind_param(2, $id);
     $sth->execute();
 
     my $row = $sth->fetchrow_hashref();
+
     if (defined $row) {
-      $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n");
-      return 0;
+      if ($force) {
+        if ($row->{'type'} != $type) {
+          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, forcing override\n");
+
+          $sth = $self->{dbh}->prepare('UPDATE Aliases SET type = ? WHERE alias = ? AND id = ?');
+          $sth->bind_param(1, $type);
+          $sth->bind_param(2, $id);
+          $sth->bind_param(3, $alias);
+          $sth->execute();
+
+          $sth->bind_param(2, $alias);
+          $sth->bind_param(3, $id);
+          $sth->execute();
+
+          return 1;
+        } else {
+          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n");
+          return 0;
+        }
+      } else {
+        $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n");
+        return 0;
+      }
     }
 
     $sth = $self->{dbh}->prepare('INSERT INTO Aliases VALUES (?, ?, ?)');
@@ -1130,10 +1124,10 @@ sub link_alias {
     $sth->bind_param(2, $alias);
     $sth->execute();
 
-    $self->{pbot}->{logger}->log("Linked.\n");
     return 1;
   };
   $self->{pbot}->{logger}->log($@) if $@;
+  $self->{pbot}->{logger}->log("Linked.\n") if $ret;
   return $ret;
 }
 
