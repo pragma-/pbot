@@ -1067,13 +1067,29 @@ sub link_aliases {
         $sth->execute();
         my $rows = $sth->fetchall_arrayref({});
 
+        my ($account1) = $host =~ m{/([^/]+)$};
+        $account1 = '' if not defined $account1;
+
+        my $hostip = undef;
+        if ($host =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
+          $hostip = $1;
+          $hostip =~ s/[[:punct:]]/./g;
+        }
+
         foreach my $row (@$rows) {
           next if $row->{id} == $account;
           my ($thost) = $row->{hostmask} =~ m/@(.*)$/;
 
-          if ($thost =~ m{(^unaffiliated|/staff/|/member/)} and $host ne $thost) {
-            $self->{pbot}->{logger}->log("Skipping non-matching cloaked hosts: $host vs $thost\n");
-            next;
+          if ($thost =~ m{(^unaffiliated|/staff/|/member/)}) {
+            my ($account2) = $thost =~ m{/([^/]+)$};
+
+            if ($account1 ne $account2) {
+              $self->{pbot}->{logger}->log("Skipping non-matching cloaked hosts: $host vs $thost\n");
+              next;
+            } else {
+              $self->{pbot}->{logger}->log("Cloaked hosts match: $host vs $thost\n");
+              $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG}, force => 1 };
+            }
           }
 
           my $distance = fastdistance($host, $thost);
@@ -1084,6 +1100,17 @@ sub link_aliases {
           if ($length != 0 && $distance / $length < 0.50) {
             $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} };  # don't force linking
             $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for nick [$qnick]\n") if $debug_link;
+          } else {
+            # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
+            if (defined $hostip) {
+              $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} } if $hostip eq $thost;  # don't force linking
+              $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+            } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
+              my $thostip = $1;
+              $thostip =~ s/[[:punct:]]/./g;
+              $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} } if $thostip eq $host;  # don't force linking
+              $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+            }
           }
         }
       }
