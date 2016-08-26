@@ -501,13 +501,17 @@ sub get_message_account {
       } else {
         # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
         if (defined $hostip) {
-          $match = 1 if $hostip eq $thost;
-          $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+          if ($hostip eq $thost) {
+            $match = 1;
+            $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+          }
         } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
           my $thostip = $1;
           $thostip =~ s/[[:punct:]]/./g;
-          $match = 1 if $thostip eq $host;
-          $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+          if ($thostip eq $host) {
+            $match = 1;
+            $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+          }
         }
       }
 
@@ -1103,13 +1107,17 @@ sub link_aliases {
           } else {
             # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
             if (defined $hostip) {
-              $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} } if $hostip eq $thost;  # don't force linking
-              $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+              if ($hostip eq $thost) {
+                $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} };  # don't force linking
+                $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+              }
             } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
               my $thostip = $1;
               $thostip =~ s/[[:punct:]]/./g;
-              $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} } if $thostip eq $host;  # don't force linking
-              $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+              if ($thostip eq $host) {
+                $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} };  # don't force linking
+                $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+              }
             }
           }
         }
