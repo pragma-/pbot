@@ -463,13 +463,30 @@ sub get_message_account {
     $sth->execute();
     my $rows = $sth->fetchall_arrayref({});
 
+    my ($account1) = $host =~ m{/([^/]+)$};
+    $account1 = '' if not defined $account1;
+
+    my $hostip = undef;
+    if ($host =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
+      $hostip = $1;
+      $hostip =~ s/[[:punct:]]/./g;
+    }
+
     foreach my $row (@$rows) {
       $self->{pbot}->{logger}->log("Found matching nick $row->{hostmask} with id $row->{id}\n");
       my ($thost) = $row->{hostmask} =~ m/@(.*)$/;
 
-      if ($thost =~ m{(^unaffiliated|/staff/|/member/)} and $host ne $thost) {
-        $self->{pbot}->{logger}->log("Skipping non-matching cloaked hosts: $host vs $thost\n");
-        next;
+      if ($thost =~ m{(^unaffiliated|/staff/|/member/)}) {
+        my ($account2) = $thost =~ m{/([^/]+)$};
+
+        if ($account1 ne $account2) {
+          $self->{pbot}->{logger}->log("Skipping non-matching cloaked hosts: $host vs $thost\n");
+          next;
+        } else {
+          $self->{pbot}->{logger}->log("Cloaked hosts match: $host vs $thost\n");
+          $rows->[0] = $row;
+          return ($rows, $self->{alias_type}->{STRONG});
+        }
       }
 
       my $distance = fastdistance($host, $thost);
@@ -477,7 +494,24 @@ sub get_message_account {
 
       $self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
 
+      my $match = 0;
+
       if ($length != 0 && $distance / $length < 0.50) {
+        $match = 1;
+      } else {
+        # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
+        if (defined $hostip) {
+          $match = 1 if $hostip eq $thost;
+          $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+        } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
+          my $thostip = $1;
+          $thostip =~ s/[[:punct:]]/./g;
+          $match = 1 if $thostip eq $host;
+          $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+        }
+      }
+
+      if ($match) {
         $rows->[0] = $row; 
         return ($rows, $self->{alias_type}->{STRONG});
       }
