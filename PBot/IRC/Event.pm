@@ -470,6 +470,8 @@ sub trans {
      'nick' => 'nick',
      'pong' => 'pong',
      'invite' => 'invite',
+     'cap' => 'cap',
+     'account' => 'account',
 	  );
 
 

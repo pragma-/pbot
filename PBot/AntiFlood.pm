@@ -80,9 +80,10 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { return $self->unbanme(@_)   },  "unbanme",   0);
   $self->{pbot}->{commands}->register(sub { return $self->whitelist(@_) },  "whitelist", 10);
 
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisaccount', sub { $self->on_whoisaccount(@_) });
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisuser',    sub { $self->on_whoisuser(@_)    });
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.endofwhois',   sub { $self->on_endofwhois(@_)   });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisaccount', sub { $self->on_whoisaccount(@_)  });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisuser',    sub { $self->on_whoisuser(@_)     });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.endofwhois',   sub { $self->on_endofwhois(@_)    });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.account',      sub { $self->on_accountnotify(@_) });
 }
 
 sub whitelisted {
@@ -270,7 +271,9 @@ sub update_join_watch {
     }
     # check QUIT message for Ping timeout or Excess Flood
     elsif($text =~ /^QUIT Ping timeout/ or $text =~ /^QUIT Excess Flood/) {
-      # ignore these (used to treat aggressively)
+      # treat these as an extra join so they're snagged more quickly since these usually will keep flooding
+      $channel_data->{join_watch}++;
+      $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
     } else {
       # some other type of QUIT or PART
     }
@@ -993,7 +996,6 @@ sub on_whoisuser {
   my $nick    =    $event->{event}->{args}[1];
   my $gecos   = lc $event->{event}->{args}[5];
 
-
   my ($id) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
 
   if ($self->{pbot}->{registry}->get_value('antiflood', 'debug_checkban') >= 2) {
@@ -1019,6 +1021,32 @@ sub on_whoisaccount {
   $self->check_nickserv_accounts($nick, $account);
 
   return 0;
+}
+
+sub on_accountnotify {
+  my ($self, $event_type, $event) = @_;
+
+  if ($event->{event}->{args}[0] eq '*') {
+    $self->{pbot}->{logger}->log("$event->{event}->{from} logged out of NickServ\n");
+  } else {
+    $self->{pbot}->{logger}->log("$event->{event}->{from} logged into NickServ account $event->{event}->{args}[0]\n");
+
+    my $nick = $event->{event}->nick;
+    my ($id, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
+    $self->{pbot}->{messagehistory}->{database}->link_aliases($id, undef, $event->{event}->{args}[0]) if $id;
+    $self->check_nickserv_accounts($nick, $event->{event}->{args}[0]);
+
+    $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($id);
+
+    my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
+    foreach my $channel (@$channels) {
+      next unless $channel =~ /^#/;
+      my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($id, $channel, 'validated');
+      if ($channel_data->{validated} & $self->{NEEDS_CHECKBAN} or not $channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
+        $self->check_bans($id, $hostmask, $channel);
+      }
+    }
+  }
 }
 
 sub adjust_offenses {

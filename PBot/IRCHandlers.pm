@@ -45,6 +45,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',          sub { $self->on_nickchange(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.nicknameinuse', sub { $self->on_nicknameinuse(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.invite',        sub { $self->on_invite(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.cap',           sub { $self->on_cap(@_) });
 }
 
 sub default_handler {
@@ -68,6 +69,9 @@ sub on_connect {
   my ($self, $event_type, $event) = @_;
   $self->{pbot}->{logger}->log("Connected!\n");
   $event->{conn}->{connected} = 1;
+
+  $self->{pbot}->{logger}->log("Requesting account-notify and extended-join . . .\n");
+  $event->{conn}->sl("CAP REQ :account-notify extended-join");
 
   $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
   $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
@@ -229,7 +233,24 @@ sub on_join {
 
   my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
   $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "JOIN", $self->{pbot}->{messagehistory}->{MSG_JOIN});
-  $self->{pbot}->{antiflood}->check_flood($channel, $nick, $user, $host, "JOIN", 
+
+  my $msg = 'JOIN';
+
+  if (exists $self->{pbot}->{capabilities}->{'extended-join'}) {
+    $msg .= " $event->{event}->{args}[0] :$event->{event}->{args}[1]";
+
+    $self->{pbot}->{messagehistory}->{database}->update_gecos($message_account, $event->{event}->{args}[1], scalar gettimeofday);
+
+    if ($event->{event}->{args}[0] ne '*') {
+      $self->{pbot}->{messagehistory}->{database}->link_aliases($message_account, undef, $event->{event}->{args}[0]);
+      $self->{pbot}->{antiflood}->check_nickserv_accounts($nick, $event->{event}->{args}[0]);
+
+      $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($message_account);
+      $self->{pbot}->{antiflood}->check_bans($message_account, $event->{event}->from, $channel);
+    }
+  }
+
+  $self->{pbot}->{antiflood}->check_flood($channel, $nick, $user, $host, $msg, 
     $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_threshold'), 
     $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_time_threshold'),
     $self->{pbot}->{messagehistory}->{MSG_JOIN});
@@ -314,6 +335,21 @@ sub on_departure {
     delete $admin->{loggedin};
   }
   return 0;
+}
+
+sub on_cap {
+  my ($self, $event_type, $event) = @_;
+
+  if ($event->{event}->{args}->[0] eq 'ACK') {
+    $self->{pbot}->{logger}->log("Client capabilities granted: " . $event->{event}->{args}->[1] . "\n");
+
+    my @caps = split / /, $event->{event}->{args}->[1];
+    foreach my $cap (@caps) {
+      $self->{pbot}->{capabilities}->{$cap} = 1;
+    }
+  } else {
+    $self->{pbot}->{logger}->log(Dumper $event->{event});
+  }
 }
 
 sub on_nickchange {

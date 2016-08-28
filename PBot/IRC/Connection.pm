@@ -997,7 +997,8 @@ sub parse {
      }  elsif ($type eq "public" or $type eq "msg"   or
                $type eq "notice" or $type eq "mode"  or
                $type eq "join"   or $type eq "part"  or
-               $type eq "topic"  or $type eq "invite" or $type eq "whoisaccount" ) {
+               $type eq "topic"  or $type eq "invite" or
+               $type eq "whoisaccount" or $type eq "cap") {
        
        $ev = PBot::IRC::Event->new( $type, # pragma_ 2011/21/01
                                    $from,
@@ -1005,7 +1006,7 @@ sub parse {
                                    $type,
                                    @stuff,
                                    );
-     } elsif ($type eq "quit" or $type eq "nick") {
+     } elsif ($type eq "quit" or $type eq "nick" or $type eq "account") {
        
        $ev = PBot::IRC::Event->new( $type, # pragma_ 2011/21/01
                                    $from,
