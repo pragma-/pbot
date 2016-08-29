@@ -185,26 +185,39 @@ sub kick_user {
     return "";
   }
 
-  # used in private message
+  my ($channel, $victim, $reason);
+
   if(not $from =~ /^#/) {
-    if(not $arguments =~ /(^#\S+) (\S+) (.*)/) {
-      $self->{pbot}->{logger}->log("$nick!$user\@$host: invalid arguments to kick\n");
-      return "/msg $nick Usage from private message: kick <channel> <nick> <reason>";
+    # used in private message
+    if(not $arguments =~ s/^(^#\S+) (\S+)\s*//) {
+      return "/msg $nick Usage from private message: kick <channel> <nick> [reason]";
     }
-    $self->{pbot}->{chanops}->add_op_command($1, "kick $1 $2 $3");
-    $self->{pbot}->{chanops}->gain_ops($1);
-    return "/msg $nick Kicking $2 from $1 with reason '$3'";
+    ($channel, $victim) = ($1, $2);
+  } else {
+    # used in channel
+    if(not $arguments =~ s/^(\S+)\s*//) {
+      return "/msg $nick Usage: kick <nick> [reason]";
+    }
+    $victim = $1;
+    $channel = $from;
   }
 
-  # used in channel
-  if(not $arguments =~ /(.*?) (.*)/) {
-    $self->{pbot}->{logger}->log("$nick!$user\@$host: invalid arguments to kick\n");
-    return "/msg $nick Usage: kick <nick> <reason>";
+  $reason = $arguments;
+
+  if (not length $reason) {
+    if (open my $fh, '<',  $self->{pbot}->{registry}->get_value('general', 'module_dir') . '/insults.txt') {
+      my @insults = <$fh>;
+      close $fh;
+      $reason = $insults[rand @insults];
+      chomp $reason;
+    } else {
+      $reason = 'Bye!';
+    }
   }
 
-  $self->{pbot}->{chanops}->add_op_command($from, "kick $from $1 $2");
-  $self->{pbot}->{chanops}->gain_ops($from);
-  return "/msg $nick Kicking $1 from $from with reason '$2'";
+  $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $victim $reason");
+  $self->{pbot}->{chanops}->gain_ops($channel);
+  return "/msg $nick Kicking $victim channel $channel with reason '$reason'";
 }
 
 1;
