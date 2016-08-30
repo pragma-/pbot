@@ -270,7 +270,7 @@ sub update_join_watch {
       }
     }
     # check QUIT message for Ping timeout or Excess Flood
-    elsif($text =~ /^QUIT Ping timeout/ or $text =~ /^QUIT Excess Flood/) {
+    elsif($text =~ /^QUIT Ping timeout/ or $text =~ /^QUIT Excess Flood/ or $text =~ /^QUIT Max SendQ exceeded/) {
       # treat these as an extra join so they're snagged more quickly since these usually will keep flooding
       $channel_data->{join_watch}++;
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
@@ -409,10 +409,14 @@ sub check_flood {
             $self->{whois_pending}->{$nick} = gettimeofday;
           }
         } else {
-          if (not exists $self->{whois_pending}->{$nick}) {
-            $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($account, '');
-            $self->{pbot}->{conn}->whois($nick);
-            $self->{whois_pending}->{$nick} = gettimeofday;
+          if ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN} && exists $self->{pbot}->{capabilities}->{'extended-join'}) {
+            # don't WHOIS joins if extended-join capability is active
+          } else {
+            if (not exists $self->{whois_pending}->{$nick}) {
+              $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($account, '');
+              $self->{pbot}->{conn}->whois($nick);
+              $self->{whois_pending}->{$nick} = gettimeofday;
+            }
           }
         }
       }
@@ -746,9 +750,9 @@ sub check_bans {
 
   my $debug_checkban = $self->{pbot}->{registry}->get_value('antiflood', 'debug_checkban');
 
-  $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans on $mask in $channel\n") if $debug_checkban >= 1;
-
   my $current_nickserv_account = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
+
+  $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans on $mask " . (defined $current_nickserv_account and length $current_nickserv_account ? "[$current_nickserv_account] " : "") .  "in $channel\n");
 
   if (defined $current_nickserv_account and length $current_nickserv_account) {
     $self->{pbot}->{logger}->log("anti-flood: [check-bans] current nickserv [$current_nickserv_account] found for $mask\n") if $debug_checkban >= 2;
