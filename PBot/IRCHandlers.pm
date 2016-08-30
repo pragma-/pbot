@@ -244,10 +244,10 @@ sub on_join {
     if ($event->{event}->{args}[0] ne '*') {
       $self->{pbot}->{messagehistory}->{database}->link_aliases($message_account, undef, $event->{event}->{args}[0]);
       $self->{pbot}->{antiflood}->check_nickserv_accounts($nick, $event->{event}->{args}[0]);
-
-      $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($message_account);
-      $self->{pbot}->{antiflood}->check_bans($message_account, $event->{event}->from, $channel);
     }
+
+    $self->{pbot}->{messagehistory}->{database}->devalidate_channel($message_account, $channel);
+    $self->{pbot}->{antiflood}->check_bans($message_account, $event->{event}->from, $channel);
   }
 
   $self->{pbot}->{antiflood}->check_flood($channel, $nick, $user, $host, $msg, 

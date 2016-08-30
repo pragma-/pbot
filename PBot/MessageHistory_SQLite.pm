@@ -1015,6 +1015,22 @@ sub get_channel_datas_with_enter_abuses {
   return $channel_datas;
 }
 
+sub devalidate_channel {
+  my ($self, $id, $channel, $mode) = @_;
+
+  $mode = 0 if not defined $mode;
+
+  eval {
+    my $sth = $self->{dbh}->prepare("UPDATE Channels SET validated = ? WHERE id = ? AND channel = ?");
+    $sth->bind_param(1, $mode);
+    $sth->bind_param(2, $id);
+    $sth->bind_param(3, $channel);
+    $sth->execute();
+    $self->{new_entries}++;
+  };
+  $self->{pbot}->{logger}->log($@) if $@;
+}
+
 sub devalidate_all_channels {
   my ($self, $id, $mode) = @_;
 
