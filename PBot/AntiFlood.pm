@@ -411,7 +411,7 @@ sub check_flood {
         } else {
           if ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN} && exists $self->{pbot}->{capabilities}->{'extended-join'}) {
             # don't WHOIS joins if extended-join capability is active
-          } else {
+          } elsif (not exists $self->{pbot}->{capabilities}->{'account-notify'}) {
             if (not exists $self->{whois_pending}->{$nick}) {
               $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($account, '');
               $self->{pbot}->{conn}->whois($nick);
@@ -744,7 +744,7 @@ sub devalidate_accounts {
 }
 
 sub check_bans {
-  my ($self, $message_account, $mask, $channel) = @_;
+  my ($self, $message_account, $mask, $channel, $dry_run) = @_;
 
   return if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 
@@ -912,6 +912,11 @@ sub check_bans {
           }
         }
 
+        if (defined $dry_run && $dry_run != 0) {
+          $self->{pbot}->{logger}->log("Skipping ban due to dry-run.\n");
+          return;
+        }
+
         if ($baninfo->{type} eq 'blacklist') {
           $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick I don't think so");
         } else {
@@ -1045,10 +1050,7 @@ sub on_accountnotify {
     my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
     foreach my $channel (@$channels) {
       next unless $channel =~ /^#/;
-      my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($id, $channel, 'validated');
-      if ($channel_data->{validated} & $self->{NEEDS_CHECKBAN} or not $channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
-        $self->check_bans($id, $hostmask, $channel);
-      }
+      $self->check_bans($id, $hostmask, $channel);
     }
   }
 }
