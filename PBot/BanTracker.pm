@@ -141,7 +141,8 @@ sub get_baninfo {
         $baninfo->{owner} = $self->{banlist}->{$channel}->{$mode}->{$banmask_key}->[0];
         $baninfo->{when} = $self->{banlist}->{$channel}->{$mode}->{$banmask_key}->[1];
         $baninfo->{type} = $mode;
-        $self->{pbot}->{logger}->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
+        #$self->{pbot}->{logger}->log("get-baninfo: dump: " . Dumper($baninfo) . "\n");
+        $self->{pbot}->{logger}->log("get-baninfo: $baninfo->{banmask} $baninfo->{type} in $baninfo->{channel} by $baninfo->{owner} on $baninfo->{when}\n");
 
         push @$bans, $baninfo;
       }
