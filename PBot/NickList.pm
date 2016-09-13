@@ -234,6 +234,7 @@ sub send_who {
     if (not exists $who_cache{$id}) {
       $who_cache{$id} = $channel;
       $who_queue{$id} = $channel;
+      $last_who_id = $id;
       last;
     }
   }
