@@ -131,7 +131,7 @@ sub aka_unlink {
 sub list_also_known_as {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  my $usage = "Usage: aka [-h] [-i] [-n] [-g] [-r] [-w] <nick>; -h show hostmasks; -i show ids; -n show nickserv accounts; -g show gecos, -r show relationships; -w show weak links";
+  my $usage = "Usage: aka [-hingr] <nick>; -h show hostmasks; -i show ids; -n show nickserv accounts; -g show gecos, -r show relationships";
 
   if(not length $arguments) {
     return $usage;
