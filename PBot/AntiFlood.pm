@@ -270,7 +270,7 @@ sub update_join_watch {
       }
     }
     # check QUIT message for Ping timeout or Excess Flood
-    elsif($text =~ /^QUIT Ping timeout/ or $text =~ /^QUIT Excess Flood/ or $text =~ /^QUIT Max SendQ exceeded/) {
+    elsif($text =~ /^QUIT Excess Flood/ or $text =~ /^QUIT Max SendQ exceeded/) {
       # treat these as an extra join so they're snagged more quickly since these usually will keep flooding
       $channel_data->{join_watch}++;
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
@@ -677,9 +677,9 @@ sub unbanme {
     $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
 
     if ($channel_data->{unbanmes} == 1) {
-      $warning = ' You may use `unbanme` only one more time today; please ensure that your client or connection issues are resolved before using your final `unbanme`.';
+      $warning = ' You may use `unbanme` one more time today; please ensure that your client or connection issues are resolved before using your final `unbanme`.';
     } else {
-      $warning = ' You may not use `unbanme` any longer today; please ensure that your client or connection issues are resolved, otherwise leave the channel until they are or you will be temporarily banned for several hours.';
+      $warning = ' You may not use `unbanme` again for several hours; ensure that your client or connection issues are resolved, otherwise leave the channel until they are or you will be temporarily banned for several hours if you join-flood.';
     }
 
     $self->{pbot}->{chanops}->unban_user($mask, $channel . '-floodbans');
