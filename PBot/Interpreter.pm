@@ -99,7 +99,7 @@ sub process_line {
     if ($cmd_text =~ s/\B$bot_trigger`([^`]+)// || $cmd_text =~ s/\B$bot_trigger\{([^}]+)//) {
       my $cmd = $1;
       my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
-      $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
+      $nick = $self->{pbot}->{nicklist}->is_present_similar($from, $nick);
       if ($nick) {
         $command = "tell $nick about $cmd";
       } else {
@@ -114,6 +114,8 @@ sub process_line {
       $nick_override = $1;
       $has_code = $2 if length $2 and $nick_override !~ /^(?:enum|struct|union)$/;
       $preserve_whitespace = 1;
+      my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
+      $nick_override = $similar if $similar;
       $processed += 100;
     } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
       $command = $1;
@@ -172,8 +174,12 @@ sub interpret {
   if($command =~ /^tell\s+(.{1,20})\s+about\s+(.*?)\s+(.*)$/i) 
   {
     ($keyword, $arguments, $tonick) = ($2, $3, $1);
+    my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $tonick);
+    $tonick = $similar if $similar;
   } elsif($command =~ /^tell\s+(.{1,20})\s+about\s+(.*)$/i) {
     ($keyword, $tonick) = ($2, $1);
+    my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $tonick);
+    $tonick = $similar if $similar;
   } elsif($command =~ /^(.*?)\s+(.*)$/) {
     ($keyword, $arguments) = ($1, $2);
   } else {

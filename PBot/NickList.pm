@@ -10,8 +10,10 @@ package PBot::NickList;
 use warnings;
 use strict;
 
+use Text::Levenshtein qw/fastdistance/;
 use Data::Dumper;
 use Carp ();
+use Time::HiRes qw/gettimeofday/;
 
 sub new {
   Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
@@ -37,6 +39,8 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',      sub { $self->on_quit(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',      sub { $self->on_kick(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',      sub { $self->on_nickchange(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.public',    sub { $self->on_activity(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.caction',   sub { $self->on_activity(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.whospcrpl', sub { $self->on_whospcrpl(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.endofwho',  sub { $self->on_endofwho(@_) });
   
@@ -53,6 +57,16 @@ sub dumpnicks {
   return $nicklist;
 }
 
+sub update_timestamp {
+  my ($self, $channel, $nick) = @_;
+  $channel = lc $channel;
+  $nick = lc $nick;
+
+  if (exists $self->{nicklist}->{$channel} and exists $self->{nicklist}->{$channel}->{$nick}) {
+    $self->{nicklist}->{$channel}->{$nick}->{timestamp} = gettimeofday;
+  }
+}
+
 sub remove_channel {
   my ($self, $channel) = @_;
   delete $self->{nicklist}->{lc $channel};
@@ -61,7 +75,7 @@ sub remove_channel {
 sub add_nick {
   my ($self, $channel, $nick) = @_;
   $self->{pbot}->{logger}->log("Adding nick '$nick' to channel '$channel'\n") if $self->{pbot}->{registry}->get_value('nicklist', 'debug');
-  $self->{nicklist}->{lc $channel}->{lc $nick} = { nick => $nick };
+  $self->{nicklist}->{lc $channel}->{lc $nick} = { nick => $nick, timestamp => 0 };
 }
 
 sub remove_nick {
@@ -98,6 +112,35 @@ sub is_present {
   }
 }
 
+sub is_present_similar {
+  my ($self, $channel, $nick) = @_;
+
+  $channel = lc $channel;
+  $nick = lc $nick;
+
+  return 0 if not exists $self->{nicklist}->{$channel};
+  return $nick if $self->is_present($channel, $nick);
+
+  my $percentage = $self->{pbot}->{registry}->get_value('interpreter', 'nick_similarity');
+  $percentage = 0.20 if not defined $percentage;
+
+  foreach my $person (sort { $self->{nicklist}->{$channel}->{$b}->{timestamp} <=> $self->{nicklist}->{$channel}->{$a}->{timestamp} } keys $self->{nicklist}->{$channel}) {
+    my $distance = fastdistance($nick, $person);
+    my $length = length $nick > length $person ? length $nick : length $person;
+
+=cut
+    my $p = $length != 0 ? $distance / $length : 0;
+    $self->{pbot}->{logger}->log("[$percentage] $nick <-> $person: $p %\n");
+=cut
+
+    if ($length != 0 && $distance / $length <= $percentage) {
+      return $self->{nicklist}->{$channel}->{$person}->{nick};
+    }
+  }
+
+  return 0;
+}
+
 sub random_nick {
   my ($self, $channel) = @_;
 
@@ -122,6 +165,12 @@ sub on_namreply {
   }
 
   return 0;
+}
+
+sub on_activity {
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->{to}[0]);
+  $self->update_timestamp($channel, $nick);
 }
 
 sub on_join {
