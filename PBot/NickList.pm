@@ -118,8 +118,17 @@ sub is_present_similar {
   $channel = lc $channel;
   $nick = lc $nick;
 
+=cut
+  use Devel::StackTrace;
+  my $trace = Devel::StackTrace->new(indent => 1, ignore_class => ['PBot::PBot', 'PBot::IRC']);
+  $self->{pbot}->{logger}->log("is_present_similar stacktrace: " . $trace->as_string() . "\n");
+=cut
+
   return 0 if not exists $self->{nicklist}->{$channel};
   return $self->{nicklist}->{$channel}->{$nick}->{nick} if $self->is_present($channel, $nick);
+
+  # return original argument if it's not nick-like so special variables and such still work properly
+  return $nick if $nick =~ m/(?:^\$|\s)/;
 
   my $percentage = $self->{pbot}->{registry}->get_value('interpreter', 'nick_similarity');
   $percentage = 0.20 if not defined $percentage;
