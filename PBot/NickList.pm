@@ -119,7 +119,7 @@ sub is_present_similar {
   $nick = lc $nick;
 
   return 0 if not exists $self->{nicklist}->{$channel};
-  return $nick if $self->is_present($channel, $nick);
+  return $self->{nicklist}->{$channel}->{$nick}->{nick} if $self->is_present($channel, $nick);
 
   my $percentage = $self->{pbot}->{registry}->get_value('interpreter', 'nick_similarity');
   $percentage = 0.20 if not defined $percentage;
