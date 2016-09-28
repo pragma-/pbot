@@ -180,6 +180,7 @@ sub on_activity {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->{to}[0]);
   $self->update_timestamp($channel, $nick);
+  return 0;
 }
 
 sub on_join {
