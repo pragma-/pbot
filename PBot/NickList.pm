@@ -126,9 +126,7 @@ sub is_present_similar {
 
   return 0 if not exists $self->{nicklist}->{$channel};
   return $self->{nicklist}->{$channel}->{$nick}->{nick} if $self->is_present($channel, $nick);
-
-  # return original argument if it's not nick-like so special variables and such still work properly
-  return $nick if $nick =~ m/(?:^\$|\s)/;
+  return 0 if $nick =~ m/(?:^\$|\s)/;  # not nick-like
 
   my $percentage = $self->{pbot}->{registry}->get_value('interpreter', 'nick_similarity');
   $percentage = 0.20 if not defined $percentage;

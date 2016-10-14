@@ -99,7 +99,7 @@ sub process_line {
     if ($cmd_text =~ s/\B$bot_trigger`([^`]+)// || $cmd_text =~ s/\B$bot_trigger\{([^}]+)//) {
       my $cmd = $1;
       my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
-      $nick = $self->{pbot}->{nicklist}->is_present_similar($from, $nick);
+      $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
       if ($nick) {
         $command = "tell $nick about $cmd";
       } else {
@@ -117,8 +117,20 @@ sub process_line {
       my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
       $nick_override = $similar if $similar;
       $processed += 100;
-    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
-      $command = $1;
+    } elsif($cmd_text =~ s/^\s*([^,:\(\)\+\*\/ ]+)?[,:]*\s*$bot_trigger(.*)$//) {
+      $nick_override = $1;
+      $command = $2;
+
+      if (defined $nick_override) {
+        my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
+        if ($similar) {
+          $nick_override = $similar;
+        } else {
+          $self->{pbot}->{logger}->log("No similar nick for $nick_override\n");
+          return 0;
+        }
+      }
+
       $processed += 100;
     } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
       $command = $1;
@@ -148,7 +160,7 @@ sub process_line {
         }
       }
     } else {
-      $processed++ if $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command, undef, $referenced), 1, $preserve_whitespace);
+      $processed++ if $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command, $nick_override, $referenced), 1, $preserve_whitespace);
     }
   }
   return $processed;

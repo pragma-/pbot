@@ -616,6 +616,15 @@ sub interpreter {
     } else {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
         my $target = $self->{pbot}->{nicklist}->is_present_similar($from, $arguments);
+
+        if (not $target) {
+         if ($arguments =~ m/\$/) {
+            $target = $arguments;
+          } elsif ($action !~ m{^/call\s}) {
+            return "/me blinks at $nick.";
+          }
+        }
+
         if ($target and $action !~ /\$nick/) {
           if ($action !~ m/^(\/[^ ]+) /) {
             $action =~ s/^/\/say $target: $keyword is / unless defined $tonick;
