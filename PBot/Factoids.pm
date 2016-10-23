@@ -621,7 +621,7 @@ sub interpreter {
          if ($arguments =~ m/\$/) {
             $target = $arguments;
           } elsif ($action !~ m{^/call\s}) {
-            return "/me blinks at $nick.";
+            #return "/me blinks at $nick.";
           }
         }
 
