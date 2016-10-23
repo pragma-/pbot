@@ -117,20 +117,21 @@ sub process_line {
       my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
       $nick_override = $similar if $similar;
       $processed += 100;
-    } elsif($cmd_text =~ s/^\s*([^,:\(\)\+\*\/ ]+)?[,:]*\s*$bot_trigger(.*)$//) {
+    } elsif($cmd_text =~ s/^\s*([^,:\(\)\+\*\/ ]+)[,:]?\s+$bot_trigger(.*)$//) {
       $nick_override = $1;
       $command = $2;
 
-      if (defined $nick_override) {
-        my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
-        if ($similar) {
-          $nick_override = $similar;
-        } else {
-          $self->{pbot}->{logger}->log("No similar nick for $nick_override\n");
-          return 0;
-        }
+      my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
+      if ($similar) {
+        $nick_override = $similar;
+      } else {
+        $self->{pbot}->{logger}->log("No similar nick for $nick_override\n");
+        return 0;
       }
 
+      $processed += 100;
+    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
+      $command = $1;
       $processed += 100;
     } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
       $command = $1;
