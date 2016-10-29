@@ -58,12 +58,14 @@ sub initialize {
 
 sub can_gain_ops {
   my ($self, $channel) = @_;
+  $channel = lc $channel;
   return exists $self->{pbot}->{channels}->{channels}->hash->{$channel} && $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop};
 }
 
 sub gain_ops {
   my $self = shift;
   my $channel = shift;
+  $channel = lc $channel;
   
   return if exists $self->{op_requested}->{$channel};
   return if not $self->can_gain_ops($channel);
@@ -79,11 +81,13 @@ sub gain_ops {
 sub lose_ops {
   my $self = shift;
   my $channel = shift;
+  $channel = lc $channel;
   $self->{pbot}->{conn}->privmsg("chanserv", "op $channel -" . $self->{pbot}->{registry}->get_value('irc', 'botnick'));
 }
 
 sub add_op_command {
   my ($self, $channel, $command) = @_;
+  $channel = lc $channel;
   return if not $self->can_gain_ops($channel);
   push @{ $self->{op_commands}->{$channel} }, $command;
 }
@@ -91,6 +95,7 @@ sub add_op_command {
 sub perform_op_commands {
   my $self = shift;
   my $channel = shift;
+  $channel = lc $channel;
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
   $self->{pbot}->{logger}->log("Performing op commands...\n");
@@ -150,6 +155,9 @@ sub ban_user_timed {
   my $self = shift;
   my ($mask, $channel, $length) = @_;
 
+  $channel = lc $channel;
+  $mask = lc $mask;
+
   if ($mask !~ m/[!@\$]/) {
     my ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($mask);
     if (defined $hostmask) {
@@ -187,6 +195,8 @@ sub mute_user {
 sub unmute_user {
   my $self = shift;
   my ($mask, $channel) = @_;
+  $mask = lc $mask;
+  $channel = lc $channel;
   $self->{pbot}->{logger}->log("Unmuting $channel $mask\n");
   if($self->{unmute_timeout}->find_index($channel, $mask)) {
     $self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + 7200; # try again in 2 hours if unmute doesn't immediately succeed
@@ -199,6 +209,9 @@ sub unmute_user {
 sub mute_user_timed {
   my $self = shift;
   my ($mask, $channel, $length) = @_;
+
+  $channel = lc $channel;
+  $mask = lc $mask;
 
   $mask .= '!*@*' if $mask !~ m/[\$!@]/;
   $self->mute_user($mask, $channel);
@@ -218,6 +231,7 @@ sub join_channel {
   $self->{pbot}->{conn}->join($channels);
 
   foreach my $channel (split /,/, $channels) {
+    $channel = lc $channel;
     $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.join', { channel => $channel });
 
     delete $self->{is_opped}->{$channel};
@@ -234,6 +248,8 @@ sub join_channel {
 sub part_channel {
   my ($self, $channel) = @_;
 
+  $channel = lc $channel;
+
   $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.part', { channel => $channel });
   $self->{pbot}->{conn}->part($channel);
 
@@ -243,12 +259,12 @@ sub part_channel {
 
 sub has_ban_timeout {
   my ($self, $channel, $mask) = @_;
-  return exists $self->{unban_timeout}->hash->{$channel}->{$mask};
+  return exists $self->{unban_timeout}->hash->{lc $channel}->{lc $mask};
 }
 
 sub has_mute_timeout {
   my ($self, $channel, $mask) = @_;
-  return exists $self->{unmute_timeout}->hash->{$channel}->{$mask};
+  return exists $self->{unmute_timeout}->hash->{lc $channel}->{lc $mask};
 }
 
 
