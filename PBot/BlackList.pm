@@ -55,10 +55,10 @@ sub remove {
 
   if (exists $self->{blacklist}->{$channel}) { 
     delete $self->{blacklist}->{$channel}->{$hostmask};
-  }
 
-  if (keys $self->{blacklist}->{$channel} == 0) {
-    delete $self->{blacklist}->{$channel};
+    if (keys %{ $self->{blacklist}->{$channel} } == 0) {
+      delete $self->{blacklist}->{$channel};
+    }
   }
 
   $self->save_blacklist();
