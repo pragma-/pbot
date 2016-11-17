@@ -724,7 +724,7 @@ sub interpreter {
           return "/say $nick: I don't have the effective-level to do that.";
         }
         my $level = 10;
-        if ($level >= $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'}) {
+        if ($self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'} >= $level) {
           return "/$self->{pbot}->{secretstuff}kick " . $action;
         } else {
           return "/say $nick: My effective-level isn't high enough to do that.";
