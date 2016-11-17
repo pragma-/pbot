@@ -119,6 +119,10 @@ sub mute_user {
     return "";
   }
 
+  if (not defined $channel and $from !~ m/^#/) {
+    return "/msg $nick Usage from private message: mute <mask> <channel> [timeout (default: 24 hours)]";
+  }
+
   if ($channel !~ m/^#/) {
     $length = "$channel $length";
     $length = undef if $length eq ' ';
@@ -126,6 +130,10 @@ sub mute_user {
   }
 
   $channel = $from if not defined $channel;
+
+  if ($channel !~ m/^#/) {
+    return "/msg $nick Please specify a channel.";
+  }
 
   if(not defined $target) {
     return "/msg $nick Usage: mute <mask> [channel [timeout (default: 24 hours)]]";
