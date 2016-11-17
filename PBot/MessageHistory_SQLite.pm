@@ -1163,7 +1163,9 @@ sub link_aliases {
 sub link_alias {
   my ($self, $id, $alias, $type, $force) = @_;
 
-  $self->{pbot}->{logger}->log("Attempting to " . ($force ? "forcefully " : "") . ($type == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " link $id to $alias\n");
+  my $debug_link = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_link');
+
+  $self->{pbot}->{logger}->log("Attempting to " . ($force ? "forcefully " : "") . ($type == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " link $id to $alias\n") if $debug_link;
 
   my $ret = eval {
     my $sth = $self->{dbh}->prepare('SELECT type FROM Aliases WHERE id = ? AND alias = ? LIMIT 1');
@@ -1176,7 +1178,7 @@ sub link_alias {
     if (defined $row) {
       if ($force) {
         if ($row->{'type'} != $type) {
-          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, forcing override\n");
+          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, forcing override\n") if $debug_link;
 
           $sth = $self->{dbh}->prepare('UPDATE Aliases SET type = ? WHERE alias = ? AND id = ?');
           $sth->bind_param(1, $type);
@@ -1190,11 +1192,11 @@ sub link_alias {
 
           return 1;
         } else {
-          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n");
+          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n") if $debug_link;
           return 0;
         }
       } else {
-        $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n");
+        $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n") if $debug_link;
         return 0;
       }
     }
@@ -1212,7 +1214,7 @@ sub link_alias {
     return 1;
   };
   $self->{pbot}->{logger}->log($@) if $@;
-  $self->{pbot}->{logger}->log("Linked.\n") if $ret;
+  $self->{pbot}->{logger}->log("Linked.\n") if $ret and $debug_link;
   return $ret;
 }
 
