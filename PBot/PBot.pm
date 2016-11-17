@@ -137,6 +137,9 @@ sub initialize {
   # load registry entries from file to overwrite defaults
   $self->{registry}->load;
 
+  my @chars = ("A".."Z", "a".."z", "0".."9");
+  $self->{secretstuff} = $chars[rand @chars] for 1..32;
+
   # create implicit bot-admin account for bot
   my $botnick = $self->{registry}->get_value('irc', 'botnick');
   $self->{admins}->add_admin($botnick, '.*', "$botnick!stdin\@localhost", 90, 'admin', 1);

@@ -670,9 +670,10 @@ sub interpreter {
     $action =~ s/^\/([^ ]+) \Q$nick\E:\s+/\/$1 /;
     $action =~ s/^\Q$nick\E:\s+//;
 
-    if($action =~ s/^\/say\s+//i || $action =~ s/^\/me\s+/* $botnick /i
+    if ($action =~ s/^\/say\s+//i || $action =~ s/^\/me\s+/* $botnick /i
       || $action =~ /^\/msg\s+/i) {
       $action = "/say $tonick: $action";
+    } elsif ($action =~ m/^\/kick\s+/i) {
     } else {
       $action = "/say $tonick: $keyword is $action";
     }
@@ -716,8 +717,18 @@ sub interpreter {
         return $ref_from . "$keyword is $action";
       }
     } else {
-      if($action =~ m/^\/say/i || $action =~ m/^\/me/i || $action =~ m/^\/msg/i) {
+      if ($action =~ m/^\/(?:say|me|msg)/i) {
         return $action;
+      } elsif ($action =~ s/^\/kick\s+//) {
+        if (not exists $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'}) {
+          return "/say $nick: I don't have the effective-level to do that.";
+        }
+        my $level = 10;
+        if ($level >= $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'}) {
+          return "/$self->{pbot}->{secretstuff}kick " . $action;
+        } else {
+          return "/say $nick: My effective-level isn't high enough to do that.";
+        }
       } else {
         return "$keyword is $action";
       }

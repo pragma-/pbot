@@ -114,8 +114,7 @@ sub process_line {
       $nick_override = $1;
       $has_code = $2 if length $2 and $nick_override !~ /^(?:enum|struct|union)$/;
       $preserve_whitespace = 1;
-      my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
-      $nick_override = $similar if $similar;
+      my $nick_override = $self->{pbot}->{nicklist}->is_present($from, $nick_override);
       $processed += 100;
     } elsif($cmd_text =~ s/^\s*([^,:\(\)\+\*\/ ]+)[,:]?\s+$bot_trigger(.*)$//) {
       $nick_override = $1;
@@ -372,6 +371,27 @@ sub output_result {
       $line =~ s/^\/say\s+//i;
       $pbot->{conn}->privmsg($to, $line) if $to !~ /\Q$botnick\E/i;
       $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+    }
+  } elsif($line =~ s/^\/$self->{pbot}->{secretstuff}kick\s+//) {
+    $pbot->{antiflood}->check_flood($from, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/kick ' . $line, 0, 0, 0) if $checkflood;
+    my ($victim, $reason) = split / /, $line, 2;
+
+    if (not defined $reason) {
+      if (open my $fh, '<',  $self->{pbot}->{registry}->get_value('general', 'module_dir') . '/insults.txt') {
+        my @insults = <$fh>;
+        close $fh;
+        $reason = $insults[rand @insults];
+        chomp $reason;
+      } else {
+        $reason = 'Bye!';
+      }
+    }
+
+    if ($self->{pbot}->{chanops}->can_gain_ops($from)) {
+      $self->{pbot}->{chanops}->add_op_command($from, "kick $from $victim $reason");
+      $self->{pbot}->{chanops}->gain_ops($from);
+    } else {
+      $pbot->{conn}->privmsg($from, "$victim: $reason") if defined $from && $from !~ /\Q$botnick\E/i;
     }
   } else {
     $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$botnick\E/i;

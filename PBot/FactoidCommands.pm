@@ -43,6 +43,7 @@ my %factoid_metadata_levels = (
   locked                      => 10,
   add_nick                    => 10,
   nooverride                  => 10,
+  effective_level             => 20,
   # all others are allowed to be factset by anybody/default to level 0
 );
 
@@ -159,6 +160,22 @@ sub factset {
         return "You must be at least level $meta_level to set '$key'";
       }
     }
+
+    if (lc $key eq 'effective-level' and defined $value and $level > 0) {
+      if ($value > $level) {
+        return "You cannot set `effective-level` greater than your level, which is $level.";
+      } elsif ($value < 0) {
+        return "You cannot set a negative effective-level.";
+      }
+
+      $self->{pbot}->{factoids}->{factoids}->set($channel, $trigger, 'locked', '1');
+    }
+
+    if (lc $key eq 'locked' and exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{'effective-level'}) {
+      if ($level < $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{'effective-level'}) {
+        return "You cannot unlock this factoid because its effective-level is greater than your level.";
+      }
+    }
   }
 
   my $oldvalue;
@@ -225,6 +242,20 @@ sub factunset {
       return "You must login to unset '$key'";
     } elsif($level < $meta_level) {
       return "You must be at least level $meta_level to unset '$key'";
+    }
+  }
+
+  if (exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{'effective-level'}) {
+    if (lc $key eq 'locked') {
+      if ($level >= $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{'effective-level'}) {
+        $self->{pbot}->{factoids}->{factoids}->unset($channel, $trigger, 'effective-level');
+      } else {
+        return "You cannot unlock this factoid because its effective-level is higher than your level.";
+      }
+    } elsif (lc $key eq 'effective-level') {
+      if ($level < $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{'effective-level'}) {
+        return "You cannot unset the effective-level because it is higher than your level.";
+      }
     }
   }
 
@@ -1109,8 +1140,14 @@ sub factchange {
     return "$keyword not found in channel $chan.";
   }
 
-  if(not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host") and $factoids->{$channel}->{$trigger}->{'locked'}) {
-    return "$trigger is locked and cannot be changed.";
+  my $admininfo = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+  if ($factoids->{$channel}->{$trigger}->{'locked'}) {
+    return "$trigger is locked and cannot be changed." if not defined $admininfo;
+
+    if (exists $factoids->{$channel}->{$trigger}->{'effective-level'}
+        and $admininfo->{level} < $factoids->{$channel}->{$trigger}->{'effective-level'}) {
+      return "$trigger is locked with an effective-level higher than your level and cannot be changed.";
+    }
   }
 
   my $ret = eval {
