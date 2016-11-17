@@ -760,7 +760,7 @@ sub factlog {
     return $usage;
   }
 
-  my $needs_disambig;
+  my $needs_disambig = 0;
 
   if (not defined $trig) {
     $trig = $chan;
@@ -788,7 +788,11 @@ sub factlog {
       }
     }
   } elsif (@factoids and $factoids[0]) {
-    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
+    if ($chan eq '.*') {
+      ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
+    } else {
+      ($channel, $trigger) = ($chan, $trig);
+    }
   } else {
     ($channel, $trigger) = ($chan, $trig);
   }
