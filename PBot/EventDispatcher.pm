@@ -23,7 +23,10 @@ sub initialize {
 sub register_handler {
   my ($self, $event_type, $sub) = @_;
 
-  push @{$self->{handlers}->{$event_type}}, $sub;
+  my ($package, $filename, $line, $subroutine) = caller(1);
+  my $info = "$filename:$line; $subroutine";
+  $self->{pbot}->{logger}->log("Adding handler for $event_type: $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug');
+  push @{$self->{handlers}->{$event_type}}, [$sub, $info];
 }
 
 sub dispatch_event {
@@ -32,7 +35,9 @@ sub dispatch_event {
 
   if (exists $self->{handlers}->{$event_type}) {
     for (my $i = 0; $i < @{$self->{handlers}->{$event_type}}; $i++) {
-      my $handler = @{$self->{handlers}->{$event_type}}[$i];
+      my $ref = @{$self->{handlers}->{$event_type}}[$i];
+      my ($handler, $info) = ($ref->[0], $ref->[1]);
+      $self->{pbot}->{logger}->log("Dispatching $event_type to handler $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug');
 
       eval {
         $ret = $handler->($event_type, $event_data);
@@ -41,8 +46,8 @@ sub dispatch_event {
       if ($@) {
         chomp $@;
         $self->{pbot}->{logger}->log("Error in event handler: $@\n");
-        $self->{pbot}->{logger}->log("Removing handler.\n");
-        splice @{$self->{handlers}->{$event_type}}, $i--, 1;
+        #$self->{pbot}->{logger}->log("Removing handler.\n");
+        #splice @{$self->{handlers}->{$event_type}}, $i--, 1;
       }
 
       return $ret if $ret;
@@ -50,7 +55,9 @@ sub dispatch_event {
   }
 
   for (my $i = 0; $i < @{$self->{handlers}->{any}}; $i++) {
-    my $handler = @{$self->{handlers}->{any}}[$i];
+    my $ref = @{$self->{handlers}->{any}}[$i];
+    my ($handler, $info) = ($ref->[0], $ref->[1]);
+    $self->{pbot}->{logger}->log("Dispatching any to handler $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug');
 
     eval {
       $ret = $handler->($event_type, $event_data);
@@ -59,8 +66,8 @@ sub dispatch_event {
     if ($@) {
       chomp $@;
       $self->{pbot}->{logger}->log("Error in event handler: $@\n");
-      $self->{pbot}->{logger}->log("Removing handler.\n");
-      splice @{$self->{handlers}->{any}}, $i--, 1;
+      #$self->{pbot}->{logger}->log("Removing handler.\n");
+      #splice @{$self->{handlers}->{any}}, $i--, 1;
     }
 
     return $ret if $ret;
