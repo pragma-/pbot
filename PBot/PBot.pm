@@ -138,7 +138,7 @@ sub initialize {
   $self->{registry}->load;
 
   my @chars = ("A".."Z", "a".."z", "0".."9");
-  $self->{secretstuff} = $chars[rand @chars] for 1..32;
+  $self->{secretstuff} .= $chars[rand @chars] for 1..64;
 
   # create implicit bot-admin account for bot
   my $botnick = $self->{registry}->get_value('irc', 'botnick');
