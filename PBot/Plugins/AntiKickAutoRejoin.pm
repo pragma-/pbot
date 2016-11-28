@@ -38,7 +38,9 @@ sub on_kick {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $target, $channel, $reason) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0], $event->{event}->{args}[1]);
 
+  $channel = lc $channel;
   return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
+  return 0 if $reason eq '*BANG!*';
 
   if (not exists $self->{kicks}->{$channel}
       or not exists $self->{kicks}->{$channel}->{$target}) {
@@ -54,6 +56,7 @@ sub on_join {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
 
+  $channel = lc $channel;
   return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 
   if (exists $self->{kicks}->{$channel}
