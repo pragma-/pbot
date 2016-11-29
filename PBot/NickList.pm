@@ -261,6 +261,7 @@ sub on_whospcrpl {
   $self->{pbot}->{logger}->log("WHO id: $id, hostmask: $hostmask, $nickserv, $gecos.\n");
 
   my $account_id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+  $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($hostmask, { last_seen => scalar gettimeofday });
 
   if ($nickserv ne '0') {
     $self->{pbot}->{messagehistory}->{database}->link_aliases($account_id, undef, $nickserv);
