@@ -231,8 +231,12 @@ sub on_join {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
 
+  $channel = lc $channel;
+
   my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
   $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "JOIN", $self->{pbot}->{messagehistory}->{MSG_JOIN});
+
+  $self->{pbot}->{messagehistory}->{database}->devalidate_channel($message_account, $channel);
 
   my $msg = 'JOIN';
 
@@ -244,9 +248,10 @@ sub on_join {
     if ($event->{event}->{args}[0] ne '*') {
       $self->{pbot}->{messagehistory}->{database}->link_aliases($message_account, undef, $event->{event}->{args}[0]);
       $self->{pbot}->{antiflood}->check_nickserv_accounts($nick, $event->{event}->{args}[0]);
+    } else {
+      $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($message_account, '');
     }
 
-    $self->{pbot}->{messagehistory}->{database}->devalidate_channel($message_account, $channel);
     $self->{pbot}->{antiflood}->check_bans($message_account, $event->{event}->from, $channel);
   }
 
@@ -260,6 +265,8 @@ sub on_join {
 sub on_invite {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $target, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0]);
+
+  $channel = lc $channel;
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host invited $target to $channel!\n");
 
@@ -275,6 +282,7 @@ sub on_invite {
 sub on_kick {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $target, $channel, $reason) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0], $event->{event}->{args}[1]);
+  $channel = lc $channel;
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host kicked $target from $channel ($reason)\n");
 
@@ -306,6 +314,7 @@ sub on_kick {
 sub on_departure {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $channel, $args) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->args);
+  $channel = lc $channel;
 
   my $text = uc $event->{event}->type;
   $text .= " $args";
@@ -350,13 +359,14 @@ sub on_cap {
   } else {
     $self->{pbot}->{logger}->log(Dumper $event->{event});
   }
+  return 0;
 }
 
 sub on_nickchange {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $newnick) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
 
-  $self->{pbot}->{logger}->log("$nick!$user\@$host changed nick to $newnick\n");
+  $self->{pbot}->{logger}->log("[NICKCHANGE] $nick!$user\@$host changed nick to $newnick\n");
 
   if ($newnick eq $self->{pbot}->{registry}->get_value('irc', 'botnick') and not $self->{pbot}->{joined_channels}) {
     my $chans;
@@ -368,6 +378,7 @@ sub on_nickchange {
     $self->{pbot}->{logger}->log("Joining channels: $chans\n");
     $self->{pbot}->{chanops}->join_channel($chans);
     $self->{pbot}->{joined_channels} = 1;
+    return 0;
   }
 
   my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
