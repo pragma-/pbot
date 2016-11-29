@@ -389,13 +389,26 @@ sub get_message_account {
   my $id = $self->get_message_account_id($mask);
   return $id if defined $id;
 
+  $self->{pbot}->{logger}->log("Getting new message account for $nick!$user\@$host...\n");
+  $self->{pbot}->{logger}->log("It's a nick-change!\n") if defined $orig_nick;
+
   my $do_nothing = 0;
 
   my ($rows, $link_type) = eval {
     my $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC');
 
+    my ($account1) = $host =~ m{/([^/]+)$};
+    $account1 = '' if not defined $account1;
+
+    my $hostip = undef;
+    if ($host =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
+      $hostip = $1;
+      $hostip =~ s/[[:punct:]]/./g;
+    }
+
     if (defined $orig_nick) {
       my $orig_id = $self->get_message_account_id("$orig_nick!$user\@$host");
+      my @orig_nickserv_accounts = $self->get_nickserv_accounts($orig_id);
 
       my $qnick = quotemeta $nick;
       $qnick =~ s/_/\\_/g;
@@ -408,13 +421,89 @@ sub get_message_account {
         return ($rows, $self->{alias_type}->{STRONG});
       }
 
+      my %processed_nicks;
+      my %processed_akas;
       foreach my $row (@$rows) {
         $self->{pbot}->{logger}->log("Found matching nickchange account: [$row->{id}] $row->{hostmask}\n");
+        my ($tnick) = $row->{hostmask} =~ m/^([^!]+)!/;
 
-        if ($row->{id} == $orig_id || $row->{hostmask} =~ m/^.*!\Q$nick\E\@\Q$host\E$/i) {
-          $self->{pbot}->{logger}->log("Using this match.\n");
-          $rows->[0] = { id => $orig_id, hostmask => $row->{hostmask} };
-          return ($rows, $self->{alias_type}->{STRONG});
+        next if exists $processed_nicks{lc $tnick};
+        $processed_nicks{lc $tnick} = 1;
+
+        my %akas = $self->get_also_known_as($tnick);
+        foreach my $aka (keys %akas) {
+          next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+          next if $akas{$aka}->{nickchange} == 1;
+
+          next if exists $processed_akas{$akas{$aka}->{id}};
+          $processed_akas{$akas{$aka}->{id}} = 1;
+
+          $self->{pbot}->{logger}->log("Testing alias [$akas{$aka}->{id}] $aka\n");
+          my $match = 0;
+
+          if ($akas{$aka}->{id} == $orig_id || $aka =~ m/^.*!\Q$user\E\@\Q$host\E$/i) {
+            $match = 1;
+            goto MATCH;
+          }
+
+          if (@orig_nickserv_accounts) {
+            my @nickserv_accounts = $self->get_nickserv_accounts($akas{$aka}->{id});
+            foreach my $ns1 (@orig_nickserv_accounts) {
+              foreach my $ns2 (@nickserv_accounts) {
+                if ($ns1 eq $ns2) {
+                  $self->{pbot}->{logger}->log("Got matching nickserv: $ns1\n");
+                  $match = 1;
+                  goto MATCH;
+                }
+              }
+            }
+          }
+
+          my ($thost) = $aka =~ m/@(.*)$/;
+
+          if ($thost =~ m{(^unaffiliated|/staff/|/member/)}) {
+            my ($account2) = $thost =~ m{/([^/]+)$};
+
+            if ($account1 ne $account2) {
+              $self->{pbot}->{logger}->log("Skipping non-matching cloaked hosts: $host vs $thost\n");
+              next;
+            } else {
+              $self->{pbot}->{logger}->log("Cloaked hosts match: $host vs $thost\n");
+              $rows->[0] = { id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka };
+              return ($rows, $self->{alias_type}->{STRONG});
+            }
+          }
+
+          my $distance = fastdistance($host, $thost);
+          my $length = (length($host) > length($thost)) ? length $host : length $thost;
+
+          $self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
+
+          if ($length != 0 && $distance / $length < 0.50) {
+            $match = 1;
+          } else {
+            # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
+            if (defined $hostip) {
+              if ($hostip eq $thost) {
+                $match = 1;
+                $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+              }
+            } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
+              my $thostip = $1;
+              $thostip =~ s/[[:punct:]]/./g;
+              if ($thostip eq $host) {
+                $match = 1;
+                $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+              }
+            }
+          }
+
+          MATCH:
+          if ($match) {
+            $self->{pbot}->{logger}->log("Using this match.\n");
+            $rows->[0] = { id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka };
+            return ($rows, $self->{alias_type}->{STRONG});
+          }
         }
       }
 
@@ -422,7 +511,7 @@ sub get_message_account {
 
       my $new_id = $self->add_message_account($mask);
       $self->link_alias($orig_id, $new_id, $self->{alias_type}->{WEAK});
-      $self->update_hostmask_data($mask, { nickchange => 1 });
+      $self->update_hostmask_data($mask, { nickchange => 1, last_seen => scalar gettimeofday });
 
       $do_nothing = 1;
       $rows->[0] = { id => $new_id };
@@ -463,61 +552,71 @@ sub get_message_account {
     $sth->execute();
     my $rows = $sth->fetchall_arrayref({});
 
-    my ($account1) = $host =~ m{/([^/]+)$};
-    $account1 = '' if not defined $account1;
-
-    my $hostip = undef;
-    if ($host =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
-      $hostip = $1;
-      $hostip =~ s/[[:punct:]]/./g;
-    }
+    my %processed_nicks;
+    my %processed_akas;
 
     foreach my $row (@$rows) {
       $self->{pbot}->{logger}->log("Found matching nick $row->{hostmask} with id $row->{id}\n");
-      my ($thost) = $row->{hostmask} =~ m/@(.*)$/;
+      my ($tnick) = $row->{hostmask} =~ m/^([^!]+)!/;
 
-      if ($thost =~ m{(^unaffiliated|/staff/|/member/)}) {
-        my ($account2) = $thost =~ m{/([^/]+)$};
+      next if exists $processed_nicks{lc $tnick};
+      $processed_nicks{lc $tnick} = 1;
 
-        if ($account1 ne $account2) {
-          $self->{pbot}->{logger}->log("Skipping non-matching cloaked hosts: $host vs $thost\n");
-          next;
+      my %akas = $self->get_also_known_as($tnick);
+      foreach my $aka (keys %akas) {
+        next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+        next if $akas{$aka}->{nickchange} == 1;
+
+        next if exists $processed_akas{$akas{$aka}->{id}};
+        $processed_akas{$akas{$aka}->{id}} = 1;
+
+        $self->{pbot}->{logger}->log("Testing alias [$akas{$aka}->{id}] $aka\n");
+
+        my ($thost) = $aka =~ m/@(.*)$/;
+
+        if ($thost =~ m{(^unaffiliated|/staff/|/member/)}) {
+          my ($account2) = $thost =~ m{/([^/]+)$};
+
+          if ($account1 ne $account2) {
+            $self->{pbot}->{logger}->log("Skipping non-matching cloaked hosts: $host vs $thost\n");
+            next;
+          } else {
+            $self->{pbot}->{logger}->log("Cloaked hosts match: $host vs $thost\n");
+            $rows->[0] = { id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka };
+            return ($rows, $self->{alias_type}->{STRONG});
+          }
+        }
+
+        my $distance = fastdistance($host, $thost);
+        my $length = (length($host) > length($thost)) ? length $host : length $thost;
+
+        $self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
+
+        my $match = 0;
+
+        if ($length != 0 && $distance / $length < 0.50) {
+          $match = 1;
         } else {
-          $self->{pbot}->{logger}->log("Cloaked hosts match: $host vs $thost\n");
-          $rows->[0] = $row;
+          # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
+          if (defined $hostip) {
+            if ($hostip eq $thost) {
+              $match = 1;
+              $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+            }
+          } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
+            my $thostip = $1;
+            $thostip =~ s/[[:punct:]]/./g;
+            if ($thostip eq $host) {
+              $match = 1;
+              $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+            }
+          }
+        }
+
+        if ($match) {
+          $rows->[0] = { id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka }; 
           return ($rows, $self->{alias_type}->{STRONG});
         }
-      }
-
-      my $distance = fastdistance($host, $thost);
-      my $length = (length($host) > length($thost)) ? length $host : length $thost;
-
-      $self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
-
-      my $match = 0;
-
-      if ($length != 0 && $distance / $length < 0.50) {
-        $match = 1;
-      } else {
-        # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
-        if (defined $hostip) {
-          if ($hostip eq $thost) {
-            $match = 1;
-            $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
-          }
-        } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
-          my $thostip = $1;
-          $thostip =~ s/[[:punct:]]/./g;
-          if ($thostip eq $host) {
-            $match = 1;
-            $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
-          }
-        }
-      }
-
-      if ($match) {
-        $rows->[0] = $row; 
-        return ($rows, $self->{alias_type}->{STRONG});
       }
     }
 
@@ -1054,7 +1153,7 @@ sub link_aliases {
 
   my $debug_link = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_link');
 
-  $self->{pbot}->{logger}->log("Linking [$account][" . ($hostmask?$hostmask:'undef') . "][" . ($nickserv?$nickserv:'undef') . "]\n") if $debug_link;
+  $self->{pbot}->{logger}->log("Linking [$account][" . ($hostmask?$hostmask:'undef') . "][" . ($nickserv?$nickserv:'undef') . "]\n") if $debug_link >= 2;
 
   eval {
     my %ids;
@@ -1071,10 +1170,10 @@ sub link_aliases {
       foreach my $row (@$rows) {
         if ($now - $row->{last_seen} <= 60 * 60 * 48) {
           $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG}, force => 1 };
-          $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for host [$host]\n") if $debug_link && $row->{id} != $account;
+          $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for host [$host]\n") if $debug_link >= 2 && $row->{id} != $account;
         } else {
           $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{WEAK} };
-          $self->{pbot}->{logger}->log("found WEAK matching id $row->{id} for host [$host]\n") if $debug_link && $row->{id} != $account;
+          $self->{pbot}->{logger}->log("found WEAK matching id $row->{id} for host [$host]\n") if $debug_link >= 2 && $row->{id} != $account;
         }
       }
 
@@ -1119,7 +1218,7 @@ sub link_aliases {
 
           if ($length != 0 && $distance / $length < 0.50) {
             $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} };  # don't force linking
-            $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for nick [$qnick]\n") if $debug_link;
+            $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for nick [$qnick]\n") if $debug_link >= 2;
           } else {
             # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
             if (defined $hostip) {
@@ -1148,7 +1247,7 @@ sub link_aliases {
 
       foreach my $row (@$rows) {
         $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG}, force => 1 };
-        $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for nickserv [$nickserv]\n") if $debug_link && $row->{id} != $account;
+        $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for nickserv [$nickserv]\n") if $debug_link >= 2 && $row->{id} != $account;
       }
     }
 
@@ -1165,7 +1264,7 @@ sub link_alias {
 
   my $debug_link = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_link');
 
-  $self->{pbot}->{logger}->log("Attempting to " . ($force ? "forcefully " : "") . ($type == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " link $id to $alias\n") if $debug_link;
+  $self->{pbot}->{logger}->log("Attempting to " . ($force ? "forcefully " : "") . ($type == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " link $id to $alias\n") if $debug_link >= 2;
 
   my $ret = eval {
     my $sth = $self->{dbh}->prepare('SELECT type FROM Aliases WHERE id = ? AND alias = ? LIMIT 1');
@@ -1178,7 +1277,7 @@ sub link_alias {
     if (defined $row) {
       if ($force) {
         if ($row->{'type'} != $type) {
-          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, forcing override\n") if $debug_link;
+          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, forcing override\n") if $debug_link >= 2;
 
           $sth = $self->{dbh}->prepare('UPDATE Aliases SET type = ? WHERE alias = ? AND id = ?');
           $sth->bind_param(1, $type);
@@ -1192,11 +1291,11 @@ sub link_alias {
 
           return 1;
         } else {
-          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n") if $debug_link;
+          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n") if $debug_link >= 2;
           return 0;
         }
       } else {
-        $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n") if $debug_link;
+        $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n") if $debug_link >= 2;
         return 0;
       }
     }
@@ -1214,7 +1313,7 @@ sub link_alias {
     return 1;
   };
   $self->{pbot}->{logger}->log($@) if $@;
-  $self->{pbot}->{logger}->log("Linked.\n") if $ret and $debug_link;
+  $self->{pbot}->{logger}->log(($type == $self->{alias_type}->{STRONG} ? "Strongly" : "Weakly") . " linked $id to $alias.\n") if $ret and $debug_link;
   return $ret;
 }
 
@@ -1514,6 +1613,23 @@ sub get_also_known_as {
 
   $self->{pbot}->{logger}->log("bad aka: $@") if $@;
   return %akas;
+}
+
+sub get_ancestor_id {
+  my ($self, $id) = @_;
+
+  my $ancestor = eval {
+    my $sth = $self->{dbh}->prepare('SELECT id FROM Aliases WHERE alias = ? ORDER BY id LIMIT 1');
+    $sth->bind_param(1, $id);
+    $sth->execute();
+    my $row = $sth->fetchrow_hashref();
+    return defined $row ? $row->{id} : 0;
+  };
+
+  $self->{pbot}->{logger}->log($@) if $@;
+
+  return $id if not $ancestor;
+  return $ancestor < $id ? $ancestor : $id;
 }
 
 # End of public API, the remaining are internal support routines for this module
