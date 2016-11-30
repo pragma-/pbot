@@ -330,7 +330,6 @@ sub check_flood {
     my ($newnick) = $text =~ m/NICKCHANGE (.*)/;
     $mask = "$newnick!$user\@$host";
     $account = $self->{pbot}->{messagehistory}->get_message_account($newnick, $user, $host);
-    $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($mask, { last_seen => scalar gettimeofday });
     $nick = $newnick;
   } else {
     $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", lc $channel eq lc $mask ? "QUIT" : $channel, $mask, $text));
@@ -342,16 +341,12 @@ sub check_flood {
     return;
   }
 
-  $self->{pbot}->{logger}->log("Processing anti-flood account $account for mask $mask\n");
   my $ancestor = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
-  if ($ancestor != $account) {
-    $self->{pbot}->{logger}->log("Using ancestor id $ancestor\n");
-    $account = $ancestor;
-  }
+  $self->{pbot}->{logger}->log("Processing anti-flood account $account " . ($ancestor != $account ? "[ancestor $ancestor] " : '') . "for mask $mask\n") if $self->{pbot}->{registry}->get_value('antiflood', 'debug_account');
 
   if ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
-    $self->{nickflood}->{$account}->{changes}++;
-    $self->{pbot}->{logger}->log("account $account has $self->{nickflood}->{$account}->{changes} nickchanges\n");
+    $self->{nickflood}->{$ancestor}->{changes}++;
+    $self->{pbot}->{logger}->log("account $ancestor has $self->{nickflood}->{$ancestor}->{changes} nickchanges\n");
   }
 
   # handle QUIT events
@@ -379,7 +374,7 @@ sub check_flood {
 
   if($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
     $channels = $self->{pbot}->{nicklist}->get_channels($nick);
-    $self->{pbot}->{logger}->log("Nick changes for $account: $self->{nickflood}->{$account}->{changes}\n");
+    $self->{pbot}->{logger}->log("Nick changes for $ancestor: $self->{nickflood}->{$ancestor}->{changes}\n");
   } else {
     $self->update_join_watch($account, $channel, $text, $mode);
     push @$channels, $channel;
@@ -551,19 +546,19 @@ sub check_flood {
             $self->{pbot}->{conn}->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");
           }
           next;
-        } elsif($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} and $self->{nickflood}->{$account}->{changes} >= $max_messages) {
+        } elsif($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} and $self->{nickflood}->{$ancestor}->{changes} >= $max_messages) {
           next if $channel !~ /^#/;
           ($nick) = $text =~ m/NICKCHANGE (.*)/;
 
-          $self->{nickflood}->{$account}->{offenses}++;
-          $self->{nickflood}->{$account}->{changes} = $max_messages - 2; # allow 1 more change (to go back to original nick)
-          $self->{nickflood}->{$account}->{timestamp} = gettimeofday;
+          $self->{nickflood}->{$ancestor}->{offenses}++;
+          $self->{nickflood}->{$ancestor}->{changes} = $max_messages - 2; # allow 1 more change (to go back to original nick)
+          $self->{nickflood}->{$ancestor}->{timestamp} = gettimeofday;
 
           if($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-            my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'nick_flood_punishment', $self->{nickflood}->{$account}->{offenses} - 1);
+            my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'nick_flood_punishment', $self->{nickflood}->{$ancestor}->{offenses} - 1);
             $self->{pbot}->{chanops}->ban_user_timed("*!$user\@" . address_to_mask($host), $channel, $length);
             $length = duration($length);
-            $self->{pbot}->{logger}->log("$nick nickchange flood offense " . $self->{nickflood}->{$account}->{offenses} . " earned $length ban\n");
+            $self->{pbot}->{logger}->log("$nick nickchange flood offense " . $self->{nickflood}->{$ancestor}->{offenses} . " earned $length ban\n");
             $self->{pbot}->{conn}->privmsg($nick, "You have been temporarily banned due to nick-change flooding.  You will be unbanned in $length.");
           }
         }
@@ -937,8 +932,9 @@ sub check_bans {
           return;
         }
 
-        if (exists $self->{nickflood}->{$message_account} and $self->{nickflood}->{$message_account}->{offenses} > 0 and $baninfo->{type} ne 'blacklist') {
-          if (gettimeofday - $self->{nickflood}->{$message_account}->{timestamp} < 60 * 15) {
+        my $ancestor = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($message_account);
+        if (exists $self->{nickflood}->{$ancestor} and $self->{nickflood}->{$ancestor}->{offenses} > 0 and $baninfo->{type} ne 'blacklist') {
+          if (gettimeofday - $self->{nickflood}->{$ancestor}->{timestamp} < 60 * 15) {
             $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evading nick-flood ban, disregarding\n");
             return;
           }
