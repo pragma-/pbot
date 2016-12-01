@@ -801,15 +801,15 @@ sub get_recent_messages {
 
     my $ids;
     my %seen_id;
-    my $and = '';
+    my $or = '';
     foreach my $aka (keys %akas) {
       next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
       next if $akas{$aka}->{nickchange} == 1;
       next if exists $seen_id{$akas{$aka}->{id}};
       $seen_id{$akas{$aka}->{id}} = 1;
 
-      $ids .= "${and}id = ?";
-      $and = ' AND ';
+      $ids .= "${or}id = ?";
+      $or = ' OR ';
     }
 
     $sql .= "$ids AND channel = ? $mode_query ORDER BY timestamp ASC LIMIT ? OFFSET (SELECT COUNT(*) FROM Messages WHERE $ids AND channel = ? $mode_query) - ?";
@@ -1040,15 +1040,15 @@ sub get_max_messages {
 
     my $ids;
     my %seen_id;
-    my $and = '';
+    my $or = '';
     foreach my $aka (keys %akas) {
       next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
       next if $akas{$aka}->{nickchange} == 1;
       next if exists $seen_id{$akas{$aka}->{id}};
       $seen_id{$akas{$aka}->{id}} = 1;
 
-      $ids .= "${and}id = ?";
-      $and = ' AND ';
+      $ids .= "${or}id = ?";
+      $or = ' OR ';
     }
 
     $sql .= $ids;
