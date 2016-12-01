@@ -453,7 +453,7 @@ sub check_flood {
     }
 
     # check for chat/join/private message flooding
-    if($max_messages > 0 and $self->{pbot}->{messagehistory}->{database}->get_max_messages($account, $channel) >= $max_messages) {
+    if($max_messages > 0 and $self->{pbot}->{messagehistory}->{database}->get_max_messages($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} ? $ancestor : $account, $channel) >= $max_messages) {
       my $msg;
       if($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
         $msg = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $channel, $max_messages - 1)
@@ -463,7 +463,7 @@ sub check_flood {
         $msg = $joins->[0];
       }
       elsif($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
-        my $nickchanges = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, $max_messages, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
+        my $nickchanges = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($ancestor, $channel, $max_messages, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
         $msg = $nickchanges->[0];
       }
       elsif($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
@@ -475,7 +475,7 @@ sub check_flood {
         return;
       }
 
-      my $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $channel, 0);
+      my $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} ? $ancestor : $account, $channel, 0);
 
       #$self->{pbot}->{logger}->log(" msg: [$msg->{timestamp}] $msg->{msg}\n");
       #$self->{pbot}->{logger}->log("last: [$last->{timestamp}] $last->{msg}\n");
