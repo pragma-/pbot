@@ -812,7 +812,7 @@ sub get_recent_messages {
       $or = ' OR ';
     }
 
-    $sql .= "$ids AND channel = ? $mode_query ORDER BY timestamp ASC LIMIT ? OFFSET (SELECT COUNT(*) FROM Messages WHERE $ids AND channel = ? $mode_query) - ?";
+    $sql .= "($ids) AND channel = ? $mode_query ORDER BY timestamp ASC LIMIT ? OFFSET (SELECT COUNT(*) FROM Messages WHERE ($ids) AND channel = ? $mode_query) - ?";
     my $sth = $self->{dbh}->prepare($sql);
 
     my $param = 1;
@@ -1051,7 +1051,7 @@ sub get_max_messages {
       $or = ' OR ';
     }
 
-    $sql .= $ids;
+    $sql .= "($ids)";
 
     my $sth = $self->{dbh}->prepare($sql);
     my $param = 1;
