@@ -383,11 +383,12 @@ sub on_nickchange {
 
   my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
   $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($message_account, $self->{pbot}->{antiflood}->{NEEDS_CHECKBAN});
-  my $channels = $self->{pbot}->{nicklist}->get_channels($newnick);
+  my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
   foreach my $channel (@$channels) {
     next if $channel !~ m/^#/;
     $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "NICKCHANGE $newnick", $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE});
   }
+  $self->{pbot}->{messagehistory}->{database}->update_hostmask_data("$nick!$user\@$host", { last_seen => scalar gettimeofday });
 
   my $newnick_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($newnick, $user, $host, $nick);
   $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($newnick_account, $self->{pbot}->{antiflood}->{NEEDS_CHECKBAN});
