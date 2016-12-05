@@ -944,18 +944,53 @@ sub get_message_context {
 }
 
 sub recall_message_by_count {
-  my ($self, $id, $channel, $count, $ignore_command) = @_;
+  my ($self, $id, $channel, $count, $ignore_command, $use_aliases) = @_;
 
   my $messages;
 
   if(defined $id) {
     $messages = eval {
-      my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
-      $sth->bind_param(1, $id);
-      $sth->bind_param(2, $channel);
-      $sth->bind_param(3, $count);
-      $sth->execute();
-      return $sth->fetchall_arrayref({});
+      if (defined $use_aliases) {
+        my %akas = $self->get_also_known_as($use_aliases);
+        my %seen_id;
+        my $ids;
+        my $or = '';
+        foreach my $aka (keys %akas) {
+          next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+          next if $akas{$aka}->{nickchange} == 1;
+          next if exists $seen_id{$akas{$aka}->{id}};
+          $seen_id{$akas{$aka}->{id}} = 1;
+
+          $ids .= "${or}id = ?";
+          $or = ' OR ';
+        }
+
+        my $sql = "SELECT id, msg, mode, timestamp, channel FROM Messages WHERE ($ids) AND channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?";
+        my $sth = $self->{dbh}->prepare($sql);
+
+        my $param = 1;
+        %seen_id = ();
+        foreach my $aka (keys %akas) {
+          next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+          next if $akas{$aka}->{nickchange} == 1;
+          next if exists $seen_id{$akas{$aka}->{id}};
+          $seen_id{$akas{$aka}->{id}} = 1;
+
+          $sth->bind_param($param++, $akas{$aka}->{id});
+        }
+
+        $sth->bind_param($param++, $channel);
+        $sth->bind_param($param++, $count);
+        $sth->execute();
+        return $sth->fetchall_arrayref({});
+      } else {
+        my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
+        $sth->bind_param(1, $id);
+        $sth->bind_param(2, $channel);
+        $sth->bind_param(3, $count);
+        $sth->execute();
+        return $sth->fetchall_arrayref({});
+      }
     };
   } else {
     $messages = eval {

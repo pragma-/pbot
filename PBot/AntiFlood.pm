@@ -373,8 +373,7 @@ sub check_flood {
   my $channels;
 
   if($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
-    $channels = $self->{pbot}->{nicklist}->get_channels($nick);
-    $self->{pbot}->{logger}->log("Nick changes for $ancestor: $self->{nickflood}->{$ancestor}->{changes}\n");
+    $channels = $self->{pbot}->{nicklist}->get_channels($oldnick);
   } else {
     $self->update_join_watch($account, $channel, $text, $mode);
     push @$channels, $channel;
@@ -476,11 +475,12 @@ sub check_flood {
         return;
       }
 
-      my $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} ? $ancestor : $account, $channel, 0);
-
-      #$self->{pbot}->{logger}->log(" msg: [$msg->{timestamp}] $msg->{msg}\n");
-      #$self->{pbot}->{logger}->log("last: [$last->{timestamp}] $last->{msg}\n");
-      #$self->{pbot}->{logger}->log("Comparing message timestamps $last->{timestamp} - $msg->{timestamp} = " . ($last->{timestamp} - $msg->{timestamp}) . " against max_time $max_time\n");
+      my $last;
+      if ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+        $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($ancestor, $channel, 0, undef, $nick);
+      } else {
+        $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $channel, 0);
+      }
 
       if ($last->{timestamp} - $msg->{timestamp} <= $max_time) {
         if($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN}) {
