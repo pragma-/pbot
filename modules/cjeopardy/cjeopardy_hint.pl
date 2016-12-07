@@ -116,6 +116,8 @@ $player_data->{lifetime_hints}++;
 $scores->update_player_data($id, $player_data);
 $scores->end;
 
+print "(You can use !hint again to reveal more characters.)\n" if $player_data->{hints} <= 1;
+
 ($id) = $data[0] =~ m/^(\d+)/;
 my $qstats = QStatskeeper->new;
 $qstats->begin;
