@@ -308,6 +308,9 @@ foreach my $answer (@valid_answers) {
         $hint =~ s/^Hint: //;
         print "Next hint: $hint\n";
       } else {
+        if ($question =~ s/^(\[Filter active[^\n]+\n)//) {
+          print $1;
+        }
         print "$color{magneta}Next question$color{reset}: $question\n";
       }
     }

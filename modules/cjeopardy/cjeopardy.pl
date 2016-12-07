@@ -12,6 +12,7 @@ use QStatskeeper;
 
 my $CJEOPARDY_FILE    = 'cjeopardy.txt';
 my $CJEOPARDY_DATA    = 'data/cjeopardy.dat';
+my $CJEOPARDY_FILTER  = 'data/cjeopardy.filter';
 my $CJEOPARDY_HINT    = 'data/cjeopardy.hint';
 my $CJEOPARDY_SHUFFLE = 'data/cjeopardy.shuffle';
 
@@ -44,9 +45,41 @@ if (defined $ret) {
     close $fh;
     exit;
   }
+  close $fh;
+}
+
+my $filter_regex;
+my $filter_text;
+$ret = open $fh, "<", "$CJEOPARDY_FILTER-$channel";
+if (defined $ret) {
+  my $words = <$fh>;
+  close $fh;
+
+  chomp $words;
+
+  $filter_text = $words;
+  $filter_text =~ s/,/, /g;
+  $filter_text =~ s/, ([^,]+)$/ or $1/;
+
+  print "[Filter active! Skipping questions containing $filter_text.]\n";
+
+  my @w = split /,/, $words;
+  my $sep = '';
+  $filter_regex .= '(?:';
+  foreach my $word (@w) {
+    $filter_regex .= $sep;
+    $filter_regex .= $word =~ m/^\w/ ? '\b' : '\B';
+    $filter_regex .= quotemeta $word;
+    $filter_regex .= $word =~ m/\w$/ ? '\b' : '\B';
+    $sep = '|';
+  }
+  $filter_regex .= ')';
 }
 
 my $question_index;
+my $shuffles = 0;
+
+NEXT_QUESTION:
 
 if (not length $text) {
   $ret = open $fh, "<", "$CJEOPARDY_SHUFFLE-$channel";
@@ -58,6 +91,7 @@ if (not length $text) {
     if (not @indices) {
       print "$color{teal}(Shuffling.)$color{reset}\n";
       shuffle_questions(0);
+      $shuffles++;
     } else {
       open my $fh, ">", "$CJEOPARDY_SHUFFLE-$channel" or print "Failed to shuffle questions.\n" and exit;
       foreach my $index (@indices) {
@@ -68,6 +102,7 @@ if (not length $text) {
   } else {
     print "$color{teal}(Shuffling!)$color{reset}\n";
     $question_index = shuffle_questions(1);
+    $shuffles++;
   }
 }
 
@@ -77,12 +112,21 @@ while (my $question = <$fh>) {
   my ($question_only) = map { decode $_ } split /\|/, encode($question), 2;
   $question_only =~ s/\\\|/|/g;
   next if length $text and $question_only !~ /\Q$text\E/i;
+  next if defined $filter_regex and $question_only =~ /$filter_regex/i;
   push @questions, $question;
 }
 close $fh;
 
 if (not @questions) {
-  print "No questions containing '$text' found.\n";
+  if (length $text) {
+    print "No questions containing '$text' found.\n";
+  } else {
+    if ($shuffles <= 1) {
+      goto NEXT_QUESTION;
+    } else {
+      print "No questions available.\n";
+    }
+  }
   exit;
 }
 
@@ -91,6 +135,10 @@ if (length $text) {
 }
 
 my $question = $questions[$question_index];
+
+if (not defined $question) {
+  goto NEXT_QUESTION;
+}
 
 my ($q, $a) = map { decode $_ } split /\|/, encode($question), 2;
 chomp $q;
