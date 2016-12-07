@@ -621,7 +621,7 @@
 621) [6.10 Preprocessing directives] This character ends the preprocessing directive even if it occurs within what would otherwise be an invocation of a function-like macro.|new-line|newline|\n
 622) [6.10 Preprocessing directives] The only white-space characters that shall appear between preprocessing tokens within a preprocessing directive (from just after the introducing # preprocessing token through just before the terminating new-line character) are these (name both, separated by "and").|space and horizontal-tab|horizontal-tab and space
 623) [6.10 Preprocessing directives] The implementation can process and skip sections of source files conditionally, include other source files, and replace macros. These capabilities are called this, because conceptually they occur before translation of the resulting translation unit.|preprocessing
-624) [6.10.1 Conditional inclusion] Prior to evaluation, macro invocations in the list of preprocessing tokens that will become the controlling constant expression has this happen to them, except for those macro names modified by the defined unary operator), just as in normal text.|replaced
+624) [6.10.1 Conditional inclusion] Prior to evaluation, macro invocations in the list of preprocessing tokens that will become the controlling constant expression has this happen to them, except for those macro names modified by the defined unary operator), just as in normal text.|replaced|replacement
 625) [6.10.1 Conditional inclusion] If a conditional inclusion's condition evaluates to false (zero), the group that it controls has this happen to it.|skipped|ignored
 626) [6.10.1 Conditional inclusion] If none of the conditions of a conditional inclusion evaluates to true, and there is this preprocessing directive, the group controlled by that directive is processed.|#else
 627) [6.10.1 Conditional inclusion] As indicated by the syntax, a preprocessing token shall not follow a #else or #endif directive before this character which terminates the directive.|new-line|newline|\n
@@ -1039,7 +1039,7 @@
 1039) [7.22.4.7 The quick_exit function] If a signal is raised while the quick_exit function is executing, the behavior is this.|undefined
 1040) [7.22.4.8 The system function] If the argument of the system function is this, the system function determines whether the host environment has a command processor and returns nonzero if so.|null pointer|NULL|0
 1041) [7.22.4.8 The system function] If the argument of the system function is a null pointer, the system function determines whether the host environment has this and returns nonzero if so.|command processor
-1042) [7.22.4.8 The system function] If the argument is not a null pointer, this function passes the string pointed to by its argument to the host environment's command processor to be executed in a manner which the implementation shall document; this might then cause the program calling system to behave in a non-conforming manner or to terminate.|system
+1042) [7.22.4.8 The system function] If the argument is not a null pointer, this function passes the string pointed to by its argument to the host environment's command processor to be executed in a manner which the implementation shall document.|system
 1043) [7.22.5.1 The bsearch function] This function searches an array of nmemb objects, the initial element of which is pointed to by base, for an element that matches the object pointed to by key.|bsearch
 1044) [7.22.5.2 The qsort function] This function sorts an array of nmemb objects, the initial element of which is pointed to by base. The contents of the array are sorted into ascending order according to a comparison function pointed to by compar, which is called with two arguments that point to the objects being compared.|qsort
 1045) [7.22.7.1 The mblen function] This function determines the number of bytes contained in the multibyte character.|mblen
@@ -1091,7 +1091,7 @@
 1091) [7.26.1 Introduction] This enumeration constant is returned by a threads.h function to indicate that the requested operation failed because a resource requested by a test and return function is already in use.|thrd_busy
 1092) [7.26.1 Introduction] This enumeration constant is returned by a threads.h function to indicate that the requested operation failed.|thrd_error
 1093) [7.26.1 Introduction] This enumeration constant is returned by a threads.h function to indicate that the requested operation failed because it was unable to allocate memory.|thrd_nomem
-1094) [7.26.2.1 The call_once function] This function uses the once_flag pointed to by flag to ensure that func is called exactly once, the first time the call_once function is called with that value of flag.|call_once
+1094) [7.26.2.1 The call_once function] This function uses the once_flag pointed to by flag to ensure that func is called exactly once.|call_once
 1095) [7.26.3.1 The cnd_broadcast function] This function unblocks all of the threads that are blocked on the condition variable pointed to by cond at the time of the call.|cnd_broadcast
 1096) [7.26.3.1 The cnd_broadcast function] The cnd_broadcast function returns this value on success.|thrd_success
 1097) [7.26.3.1 The cnd_broadcast function] The cnd_broadcast function returns this value if the request could not be honored.|thrd_error
