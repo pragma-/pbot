@@ -210,7 +210,7 @@ foreach my $answer (@valid_answers) {
     my $streakers = $scores->get_all_correct_streaks($channel);
 
     foreach my $streaker (@$streakers) {
-      next if $streaker->{nick} eq $nick;
+      next if lc $streaker->{nick} eq lc $nick;
 
       if ($streaker->{correct_streak} >= 3) {
         print "$color{orange}$nick$color{red} ended $color{orange}$streaker->{nick}$color{red}'s $color{orange}$streaker->{correct_streak}$color{red} correct answer streak!$color{reset}\n";
@@ -359,6 +359,7 @@ if ($qdata->{wrong_streak} > $qdata->{highest_wrong_streak}) {
 $qstats->add_wrong_answer($id, $lctext, $nick);
 
 my %streaks = (
+  4  => "Maybe try asking for a hint, $nick?",
   5  => "Guessing, are we, $nick?",
   7  => "Think of your correct/incorrect ratio! Use a hint, $nick!",
 );
