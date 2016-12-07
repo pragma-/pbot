@@ -12,6 +12,7 @@ use QStatskeeper;
 
 my $CJEOPARDY_FILE    = 'cjeopardy.txt';
 my $CJEOPARDY_DATA    = 'data/cjeopardy.dat';
+my $CJEOPARDY_HINT    = 'data/cjeopardy.hint';
 my $CJEOPARDY_SHUFFLE = 'data/cjeopardy.shuffle';
 
 my $TIMELIMIT = 300;
@@ -108,6 +109,8 @@ print $fh "$a\n";
 print $fh scalar gettimeofday, "\n";
 close $fh;
 
+unlink "$CJEOPARDY_HINT-$channel";
+
 my $qstats = QStatskeeper->new;
 $qstats->begin;
 
@@ -121,6 +124,12 @@ $qdata->{wrong_streak} = 0;
 $qstats->update_question_data($id, $qdata);
 $qstats->end;
 
+close $semaphore;
+
+=cut
+my $hint = `./cjeopardy_hint.pl candide $channel`;
+print $hint;
+=cut
 
 sub shuffle_questions {
   my $return_index = shift @_;
