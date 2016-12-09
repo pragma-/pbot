@@ -1052,7 +1052,7 @@ sub recall_message_by_text {
     my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
     my $botnick     = $self->{pbot}->{registry}->get_value('irc',     'botnick');
     foreach my $message (@$messages) {
-      next if $message->{msg} =~ m/^$botnick.? $ignore_command/ or $message->{msg} =~ m/^$bot_trigger$ignore_command/;
+      next if $message->{msg} =~ m/^$botnick.? $ignore_command/i or $message->{msg} =~ m/^(?:\s*[^,:\(\)\+\*\/ ]+[,:]?\s+)?$bot_trigger$ignore_command/i or $message->{msg} =~ m/^\s*$ignore_command.? $botnick$/i;
       return $message;
     }
     return undef;
