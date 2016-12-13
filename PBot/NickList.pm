@@ -59,11 +59,15 @@ sub dumpnicks {
 
 sub update_timestamp {
   my ($self, $channel, $nick) = @_;
+  my $orig_nick = $nick;
   $channel = lc $channel;
   $nick = lc $nick;
 
   if (exists $self->{nicklist}->{$channel} and exists $self->{nicklist}->{$channel}->{$nick}) {
     $self->{nicklist}->{$channel}->{$nick}->{timestamp} = gettimeofday;
+  } else {
+    $self->{pbot}->{logger}->log("Adding nick '$orig_nick' to channel '$channel'\n") if $self->{pbot}->{registry}->get_value('nicklist', 'debug');
+    $self->{nicklist}->{$channel}->{$nick} = { nick => $orig_nick, timestamp => gettimeofday };
   }
 }
 
@@ -131,7 +135,9 @@ sub is_present_similar {
   my $percentage = $self->{pbot}->{registry}->get_value('interpreter', 'nick_similarity');
   $percentage = 0.20 if not defined $percentage;
 
+  my $now = gettimeofday;
   foreach my $person (sort { $self->{nicklist}->{$channel}->{$b}->{timestamp} <=> $self->{nicklist}->{$channel}->{$a}->{timestamp} } keys $self->{nicklist}->{$channel}) {
+    return 0 if $now - $self->{nicklist}->{$channel}->{$person}->{timestamp} > 3600; # 1 hour
     my $distance = fastdistance($nick, $person);
     my $length = length $nick > length $person ? length $nick : length $person;
 
