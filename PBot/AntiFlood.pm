@@ -1084,6 +1084,7 @@ sub on_accountnotify {
       $self->check_bans($id, $hostmask, $channel);
     }
   }
+  return 0;
 }
 
 sub adjust_offenses {
