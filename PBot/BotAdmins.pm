@@ -169,7 +169,7 @@ sub loggedin {
 
   my $admin = $self->find_admin($channel, $hostmask);
 
-  if(defined $admin && exists $admin->{loggedin}) {
+  if(defined $admin && $admin->{loggedin}) {
     return $admin;
   } else {
     return undef;
