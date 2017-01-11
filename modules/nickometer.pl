@@ -216,11 +216,6 @@ if(not defined $nick) {
   exit 1;
 }
 
-if($nick =~ m/pragma/) {
-  print "$nick is a really awesome nick!";
-  exit 0;
-}
-
 my $percentage = nickometer($nick);
 
 if($percentage > 0) {
