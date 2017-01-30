@@ -547,6 +547,13 @@ sub factadd {
     return "Usage: factadd <channel> <keyword> is <factoid>";
   }
 
+  if ($from_chan !~ /^#/) {
+    if (lc $from_chan ne 'global' and $from_chan ne '.*') {
+      return "Usage: factadd <channel> <keyword> <text>";
+    }
+  }
+
+  $from_chan = '.*' if lc $from_chan eq 'global';
   $from_chan = '.*' if not $from_chan =~ m/^#/;
 
   my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, undef, 1, 1);
@@ -1125,8 +1132,8 @@ sub factchange {
     }
 
     $delim = quotemeta $delim;
-    
-    if($arguments =~ /$delim(.*?)$delim(.*)$delim(.*)?$/) {
+
+    if($arguments =~ /\Q$keyword\E s$delim(.*?)$delim(.*)$delim(.*)?$/) {
       $tochange = $1; 
       $changeto = $2;
       $modifier  = $3;
