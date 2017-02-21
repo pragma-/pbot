@@ -58,6 +58,7 @@ sub on_public {
           $event->{conn}->privmsg($nick, "$nick: Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly. You were warned. You will be allowed to speak again in $length.");
         }
       }
+      last;
     }
   }
   return 0;
