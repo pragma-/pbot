@@ -61,16 +61,16 @@ if (defined $ret) {
   $filter_text =~ s/,/, /g;
   $filter_text =~ s/, ([^,]+)$/ or $1/;
 
-  print "[Filter active! Skipping questions containing $filter_text.]\n";
+  print "[Filter active! To view or change, use the `filter` command.]\n";
 
   my @w = split /,/, $words;
   my $sep = '';
   $filter_regex .= '(?:';
   foreach my $word (@w) {
     $filter_regex .= $sep;
-    $filter_regex .= $word =~ m/^\w/ ? '\b' : '\B';
+    $filter_regex .= $word =~ m/^[a-zA-Z0-9]/ ? '\b' : '\B';
     $filter_regex .= quotemeta $word;
-    $filter_regex .= $word =~ m/\w$/ ? '\b' : '\B';
+    $filter_regex .= $word =~ m/[a-zA-Z0-9]$/ ? '\b' : '\B';
     $sep = '|';
   }
   $filter_regex .= ')';
