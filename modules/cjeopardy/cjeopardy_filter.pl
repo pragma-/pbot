@@ -5,7 +5,7 @@ use strict;
 
 use Fcntl qw(:flock);
 
-my $MAX_WORDS = 3;
+my $MAX_WORDS = 15;
 
 my $CJEOPARDY_DATA   = 'data/cjeopardy.dat';
 my $CJEOPARDY_FILTER = 'data/cjeopardy.filter';
@@ -28,7 +28,7 @@ if (not length $filter) {
   my $words = <$fh>;
   close $fh;
   chomp $words;
-  $words =~ s/,/, /;
+  $words =~ s/,/, /g;
   $words =~ s/, ([^,]+)$/ or $1/;
   print "Filter active. Questions containing $words will be skipped. Usage: filter <comma or space separated list of words> or `filter clear` to clear.\n";
   exit;
