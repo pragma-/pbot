@@ -45,13 +45,18 @@ sub on_public {
     if ($self->{pbot}->{nicklist}->is_present($channel, $n)) {
       $self->{offenses}->{$channel}->{$nick}->{offenses}++;
       $self->{offenses}->{$channel}->{$nick}->{time} = gettimeofday;
+      
+      $self->{pbot}->{logger}->log("$nick!$user\@$host is a twit. $self->{offenses}->{$channel}->{$nick}->{offenses} offenses. Msg: $msg\n");
 
       given ($self->{offenses}->{$channel}->{$nick}->{offenses}) {
         when (1) {
+          $event->{conn}->privmsg($nick, "$nick: Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly.");
+        }
+        when (2) {
           $event->{conn}->privmsg($nick, "$nick: Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly. Doing this again will result in a temporary ban.");
         }
         default {
-          my $offenses = $self->{offenses}->{$channel}->{$nick}->{offenses} - 1;
+          my $offenses = $self->{offenses}->{$channel}->{$nick}->{offenses} - 2;
           my $length = 60 * ($offenses * $offenses + 1);
           $self->{pbot}->{chanops}->ban_user_timed("*!*\@$host", $channel, $length);
           $self->{pbot}->{chanops}->gain_ops($channel);
