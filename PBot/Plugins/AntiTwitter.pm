@@ -40,9 +40,9 @@ sub on_public {
   $channel = lc $channel;
   return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 
-  while ($msg =~ m/@([^,;: ]+)/g) {
+  while ($msg =~ m/@([a-z0-9_^{}\-\\\[\]\|]+)/g) {
     my $n = $1;
-    if ($self->{pbot}->{nicklist}->is_present($channel, $n)) {
+    if ($self->{pbot}->{nicklist}->is_present_similar($channel, $n)) {
       $self->{offenses}->{$channel}->{$nick}->{offenses}++;
       $self->{offenses}->{$channel}->{$nick}->{time} = gettimeofday;
       
