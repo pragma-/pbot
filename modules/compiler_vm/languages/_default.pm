@@ -150,7 +150,9 @@ sub postprocess_output {
   }
   $self->{output} = $boutput;
 
-  $self->{output} =~ s/\007/*BEEP*/g;
+  my @beeps = qw/*BEEP* *BING* *DING* *DONG* *CLUNK* *BONG* *PING* *BOOP* *BLIP* *BOP* *WHIRR*/;
+
+  $self->{output} =~ s/\007/$beeps[rand @beeps]/g;
 }
 
 sub show_output {
