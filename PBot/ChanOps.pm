@@ -132,6 +132,19 @@ sub unban_user {
       my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
       $bans = $self->{pbot}->{bantracker}->get_baninfo($hostmask, $channel, $nickserv);
     }
+
+    my %akas = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($mask);
+
+    foreach my $aka (keys %akas) {
+      next if $akas{$aka}->{type} == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK};
+      next if $akas{$aka}->{nickchange} == 1;
+
+      my $b = $self->{pbot}->{bantracker}->get_baninfo($aka, $channel);
+      if (defined $b) {
+        $bans = {} if not defined $bans;
+        push @$bans,  @$b;
+      }
+    }
   }
 
   if (not defined $bans) {
@@ -140,14 +153,33 @@ sub unban_user {
     push @$bans, $baninfo;
   }
 
+  my $count = 0;
+  my %unbanned;
+  my $mode = '-';
+  my $list = '';
+
   foreach my $baninfo (@$bans) {
+    next if exists $unbanned{$baninfo->{banmask}};
+    $unbanned{$baninfo->{banmask}} = 1;
+
     $self->{pbot}->{logger}->log("Unbanning $channel $baninfo->{banmask}\n");
     if($self->{unban_timeout}->find_index($channel, $baninfo->{banmask})) {
       $self->{unban_timeout}->hash->{$channel}->{$baninfo->{banmask}}{timeout} = gettimeofday + 7200; # try again in 2 hours if unban doesn't immediately succeed
       $self->{unban_timeout}->save;
     }
-    $self->add_op_command($channel, "mode $channel -b $baninfo->{banmask}");
+
+    $mode .= 'b';
+    $list .= " $baninfo->{banmask}";
+    $count++;
+
+    if ($count == 4) {
+      $self->add_op_command($channel, "mode $channel $mode $list");
+      $count = 0;
+      $mode = '-';
+      $list = '';
+    }
   }
+  $self->add_op_command($channel, "mode $channel $mode $list");
   $self->gain_ops($channel);
 }
 
