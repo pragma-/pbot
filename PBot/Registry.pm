@@ -4,6 +4,10 @@
 # Purpose: Provides a centralized registry of configuration settings that can
 # easily be examined and updated via set/unset commands without restarting.
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 package PBot::Registry;
 
 use warnings;

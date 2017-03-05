@@ -5,6 +5,10 @@
 # Used to retrieve list of channels a nick is present in or to 
 # determine if a nick is present in a channel.
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 package PBot::NickList;
 
 use warnings;
