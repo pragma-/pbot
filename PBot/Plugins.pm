@@ -154,7 +154,7 @@ sub list_cmd {
    my $count = 0;
    my $comma = '';
 
-   foreach my $plugin (sort keys $self->{plugins}) {
+   foreach my $plugin (sort keys %{ $self->{plugins} }) {
      $result .= $comma . $plugin;
      $count++;
      $comma = ', ';

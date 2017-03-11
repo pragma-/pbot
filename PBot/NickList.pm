@@ -98,7 +98,7 @@ sub get_channels {
 
   $nick = lc $nick;
 
-  foreach my $channel (keys $self->{nicklist}) {
+  foreach my $channel (keys %{ $self->{nicklist} }) {
     if (exists $self->{nicklist}->{$channel}->{$nick}) {
       push @channels, $channel;
     }
@@ -140,7 +140,7 @@ sub is_present_similar {
   $percentage = 0.20 if not defined $percentage;
 
   my $now = gettimeofday;
-  foreach my $person (sort { $self->{nicklist}->{$channel}->{$b}->{timestamp} <=> $self->{nicklist}->{$channel}->{$a}->{timestamp} } keys $self->{nicklist}->{$channel}) {
+  foreach my $person (sort { $self->{nicklist}->{$channel}->{$b}->{timestamp} <=> $self->{nicklist}->{$channel}->{$a}->{timestamp} } keys %{ $self->{nicklist}->{$channel} }) {
     return 0 if $now - $self->{nicklist}->{$channel}->{$person}->{timestamp} > 3600; # 1 hour
     my $distance = fastdistance($nick, $person);
     my $length = length $nick > length $person ? length $nick : length $person;
@@ -164,7 +164,7 @@ sub random_nick {
   $channel = lc $channel;
 
   if (exists $self->{nicklist}->{$channel}) {
-    my @nicks = keys $self->{nicklist}->{$channel};
+    my @nicks = keys %{ $self->{nicklist}->{$channel} };
     my $nick = $nicks[rand @nicks];
     return $self->{nicklist}->{$channel}->{$nick}->{nick};
   } else {
@@ -209,7 +209,7 @@ sub on_quit {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
 
-  foreach my $channel (keys $self->{nicklist}) {
+  foreach my $channel (keys %{ $self->{nicklist} }) {
     if ($self->is_present($channel, $nick)) {
       $self->remove_nick($channel, $nick);
     }
@@ -229,7 +229,7 @@ sub on_nickchange {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $newnick) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
 
-  foreach my $channel (keys $self->{nicklist}) {
+  foreach my $channel (keys %{ $self->{nicklist} }) {
     if ($self->is_present($channel, $nick)) {
       $self->remove_nick($channel, $nick);
       $self->add_nick($channel, $newnick);
