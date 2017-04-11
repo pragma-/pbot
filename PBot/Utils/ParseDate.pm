@@ -30,7 +30,8 @@ sub parsedate {
     my $parse = Time::ParseDate::parsedate($input, NOW => $now);
 
     if (not defined $parse) {
-      return (0, "I don't know what '$input' means.\n");
+      $input =~ s/\s+$//;
+      return (0, "I don't know what '$input' means. I expected a time duration like '5 minutes' or '24 hours' or 'next tuesday'.\n");
     } else {
       $seconds += $parse - $now;
     }
