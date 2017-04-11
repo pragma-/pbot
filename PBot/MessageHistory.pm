@@ -294,6 +294,12 @@ sub recall_message {
     # set channel to current channel if not specified
     $recall_channel = $from if not defined $recall_channel;
 
+    # another sanity check for people using it wrong
+    if ($recall_channel !~ m/^#/) {
+      $recall_history = "$recall_channel $recall_history";
+      $recall_channel = $from;
+    }
+
     if (not defined $recall_nick and defined $recall_context) {
       $recall_nick = $recall_context;
     }
@@ -351,9 +357,9 @@ sub recall_message {
 
       if(not defined $message) {
         if(defined $account) {
-          return "No such message for nick $found_nick in channel $recall_channel containing text '$recall_history'";
+          return "No message for nick $found_nick in channel $recall_channel containing \"$recall_history\"";
         } else {
-          return "No such message in channel $recall_channel containing text '$recall_history'";
+          return "No message in channel $recall_channel containing \"$recall_history\".";
         }
       }
     }
