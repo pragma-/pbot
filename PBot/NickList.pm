@@ -164,7 +164,8 @@ sub random_nick {
   $channel = lc $channel;
 
   if (exists $self->{nicklist}->{$channel}) {
-    my @nicks = keys $self->{nicklist}->{$channel};
+    my $now = gettimeofday;
+    my @nicks = grep { $now - $self->{nicklist}->{$channel}->{$_}->{timestamp} < 3600 * 2 } keys $self->{nicklist}->{$channel};
     my $nick = $nicks[rand @nicks];
     return $self->{nicklist}->{$channel}->{$nick}->{nick};
   } else {
