@@ -25,8 +25,8 @@ if ($#ARGV < 0)
 $arguments = join(' ', @ARGV);
 my $orig_arguments = $arguments;
 
-$arguments =~ s/(the )*answer.*question of life(,? the universe and everything)?\s?/42/gi;
-$arguments =~ s/meaning of (life|existence|everything)?/42/gi;
+$arguments =~ s/(the )*answer.*question of life(,? the universe,? and everything)?\s?/42/gi;
+$arguments =~ s/(the )*meaning of (life|existence|everything)?/42/gi;
 
 if ($arguments =~ s/([^ ]+)\s+to\s+([^ ]+)\s*$//) {
   @conversion = ($1, $2);

@@ -77,11 +77,13 @@ sub postprocess {
 
   my $input = $self->{input};
 
+  print "writing input [$input]\n";
+
   $input =~ s/(?<!\\)\\n/\n/mg;
   $input =~ s/(?<!\\)\\r/\r/mg;
   $input =~ s/(?<!\\)\\t/\t/mg;
   $input =~ s/(?<!\\)\\b/\b/mg;
-
+ 
   $input =~ s/\\\\/\\/mg;
 
   open(my $fh, '>', '.input');

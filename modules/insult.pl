@@ -8,9 +8,9 @@ use strict;
 use LWP::Simple;
  
 $_ = get("http://www.randominsults.net/");
-if (/<strong><i>(.*?)<\/i><\/strong>/) {
+if (/<strong><i>(.*?)\s*<\/i><\/strong>/) {
         print @ARGV,': ' if @ARGV;
-        print $1;
+        print "$1\n";
 }
 else {
         print "yo momma!";
