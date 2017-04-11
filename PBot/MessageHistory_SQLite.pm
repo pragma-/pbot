@@ -482,7 +482,7 @@ sub get_message_account {
           my $distance = fastdistance($host, $thost);
           my $length = (length($host) > length($thost)) ? length $host : length $thost;
 
-          $self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
+          #$self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
 
           if ($length != 0 && $distance / $length < 0.50) {
             $match = 1;
@@ -595,7 +595,7 @@ sub get_message_account {
         my $distance = fastdistance($host, $thost);
         my $length = (length($host) > length($thost)) ? length $host : length $thost;
 
-        $self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
+        #$self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
 
         my $match = 0;
 
@@ -1329,7 +1329,7 @@ sub link_aliases {
           my $distance = fastdistance($host, $thost);
           my $length = (length($host) > length($thost)) ? length $host : length $thost;
 
-          $self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
+          #$self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
 
           if ($length != 0 && $distance / $length < 0.50) {
             $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} };  # don't force linking
