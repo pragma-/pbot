@@ -124,7 +124,7 @@ sub remove_factoid {
 
   delete $self->{factoids}->hash->{$channel}->{$trigger};
 
-  if(not scalar keys $self->{factoids}->hash->{$channel}) {
+  if(not scalar keys %{ $self->{factoids}->hash->{$channel} }) {
     delete $self->{factoids}->hash->{$channel};
   }
 

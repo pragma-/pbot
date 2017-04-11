@@ -111,7 +111,7 @@ sub adminrem {
 
   if (exists $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
     if (not exists $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}) {
-      foreach my $mask (keys $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
+      foreach my $mask (keys %{ $self->{pbot}->{admins}->{admins}->hash->{$channel} }) {
         if ($self->{pbot}->{admins}->{admins}->hash->{$channel}->{$mask}->{name} eq $hostmask) {
           $hostmask = $mask;
           last;
@@ -143,7 +143,7 @@ sub adminset {
 
   if (exists $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
     if (not exists $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}) {
-      foreach my $mask (keys $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
+      foreach my $mask (keys %{ $self->{pbot}->{admins}->{admins}->hash->{$channel} }) {
         if ($self->{pbot}->{admins}->{admins}->hash->{$channel}->{$mask}->{name} eq $hostmask) {
           $hostmask = $mask;
           last;
@@ -171,7 +171,7 @@ sub adminunset {
 
   if (exists $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
     if (not exists $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}) {
-      foreach my $mask (keys $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
+      foreach my $mask (keys %{ $self->{pbot}->{admins}->{admins}->hash->{$channel} }) {
         if ($self->{pbot}->{admins}->{admins}->hash->{$channel}->{$mask}->{name} eq $hostmask) {
           $hostmask = $mask;
           last;
