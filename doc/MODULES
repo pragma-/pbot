@@ -3,7 +3,6 @@ Data::Dumper
 DBD::SQLite
 Games::Dice
 Getopt::Std
-Google::Search
 HTML::Entities
 HTML::FormatText
 HTML::Parse
@@ -21,12 +20,14 @@ SOAP::Lite
 String::LCSS
 Text::Autoformat
 Text::Balanced
+Text::CSV
 Text::Levenshtein
 Text::WordDiff
 Time::Duration
 Time::ParseDate
 re::engine::RE2
 URI::Escape
+WWW::Google::CustomSearch
 WWW::Wikipedia
 XML::Parser
 XML::RSS
