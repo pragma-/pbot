@@ -22,6 +22,11 @@ my $arguments = join("%20", @ARGV);
 
 $arguments =~ s/\W$//;
 
+exit if $arguments =~ m{https?://www.irccloud.com/pastebin}i;
+exit if $arguments =~ m{http://smuj.ca/cl/}i;
+exit if $arguments =~ m{/man\d+/}i;
+exit if $arguments =~ m{godbolt.org}i;
+exit if $arguments =~ m{man\.cgi}i;
 exit if $arguments =~ m{wandbox}i;
 exit if $arguments =~ m{ebay.com/itm}i;
 exit if $arguments =~ m/prntscr.com/i;
@@ -136,11 +141,13 @@ if($distance / $length < 0.75) {
 exit if $t !~ m/\s/; # exit if title is only one word -- this isn't usually interesting
 exit if $t =~ m/^Gerrit Code Review$/i;
 exit if $t =~ m/^Public Git Hosting -/i;
+exit if $t =~ m/git\/blob/i;
+exit if $t =~ m/\sdiff\s/i;
 exit if $t =~ m/- Google Search$/;
 exit if $t =~ m/linux cross reference/i;
 exit if $t =~ m/screenshot/i;
 exit if $t =~ m/pastebin/i;
-exit if $t =~ m/paste/i;
+exit if $t =~ m/past[ea]/i;
 exit if $t =~ m/^[0-9_-]+$/;
 exit if $t =~ m/^Index of \S+$/;
 exit if $t =~ m/(?:sign up|login)/i;
@@ -151,7 +158,7 @@ if (open my $fh, "<", "last-title-$nick.dat") {
   close $fh;
 
   chomp $data[0];
-  exit if $t eq $data[0] and scalar gettimeofday - $data[1] < 60;
+  exit if $t eq $data[0] and scalar gettimeofday - $data[1] < 1800;
 }
 
 open my $fh, ">", "last-title-$nick.dat";

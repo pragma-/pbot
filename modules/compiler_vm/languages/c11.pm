@@ -20,6 +20,8 @@ sub initialize {
   $self->{options_nopaste} = '-fno-diagnostics-show-caret';
   $self->{cmdline}         = 'gcc -ggdb -g3 $sourcefile $options -o $execfile';
 
+  $self->{default_options} .= ' -Werror' if defined $self->{nick} && $self->{nick} =~ m/marchelz/i;
+
   $self->{prelude} = <<'END';
 #define _XOPEN_SOURCE 9001
 #define __USE_XOPEN

@@ -11,6 +11,11 @@ my $args = join ' ', @ARGV;
 
 my $qargs = quotemeta $args;
 
+if (not length $qargs) {
+  print "Usage: qalc <expression>\n";
+  exit;
+}
+
 my $result = `qalc $qargs`;
 
 $result =~ s/^.*approx.\s+//;

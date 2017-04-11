@@ -131,6 +131,7 @@ sub execute {
       gdb $in, "break $main_end\n";
       gdb $in, "set width 0\n";
       gdb $in, "set height 0\n";
+      gdb $in, "catch exec\n";
       gdb $in, "run < .input\n";
       next;
     }

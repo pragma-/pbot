@@ -51,6 +51,9 @@ sub ban_user {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my ($target, $channel, $length) = split(/\s+/, $arguments, 3);
 
+  $channel = '' if not defined $channel;
+  $length = '' if not defined $length;
+
   if(not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
@@ -62,7 +65,7 @@ sub ban_user {
     $channel = $from;
   }
 
-  $channel = $from if not defined $channel;
+  $channel = $from if not defined $channel or not length $channel;
 
   if(not defined $target) {
     return "/msg $nick Usage: ban <mask> [channel [timeout (default: 24 hours)]]";

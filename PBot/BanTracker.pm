@@ -100,6 +100,7 @@ sub get_baninfo {
   my ($self, $mask, $channel, $account) = @_;
   my ($bans, $ban_account);
 
+  $account = undef if not length $account;
   $account = lc $account if defined $account;
 
   if ($self->{pbot}->{registry}->get_value('bantracker', 'debug')) {

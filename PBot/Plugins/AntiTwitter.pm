@@ -44,13 +44,13 @@ sub on_public {
   $channel = lc $channel;
   return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 
-  while ($msg =~ m/@([a-z0-9_^{}\-\\\[\]\|]+)/g) {
+  while ($msg =~ m/[＠@]\s*([a-z0-9_^{}\-\\\[\]\|]+)/g) {
     my $n = $1;
     if ($self->{pbot}->{nicklist}->is_present_similar($channel, $n)) {
       $self->{offenses}->{$channel}->{$nick}->{offenses}++;
       $self->{offenses}->{$channel}->{$nick}->{time} = gettimeofday;
       
-      $self->{pbot}->{logger}->log("$nick!$user\@$host is a twit. $self->{offenses}->{$channel}->{$nick}->{offenses} offenses. Msg: $msg\n");
+      $self->{pbot}->{logger}->log("$nick!$user\@$host is a twit. ($self->{offenses}->{$channel}->{$nick}->{offenses} offenses) $channel: $msg\n");
 
       given ($self->{offenses}->{$channel}->{$nick}->{offenses}) {
         when (1) {
@@ -80,7 +80,7 @@ sub adjust_offenses {
 
   foreach my $channel (keys $self->{offenses}) {
     foreach my $nick (keys $self->{offenses}->{$channel}) {
-      if ($now - $self->{offenses}->{$channel}->{$nick}->{time} >= 60 * 60 * 5) {
+      if ($now - $self->{offenses}->{$channel}->{$nick}->{time} >= 60 * 60 * 24 * 7) {
         if (--$self->{offenses}->{$channel}->{$nick}->{offenses} <= 0) {
           delete $self->{offenses}->{$channel}->{$nick};
           delete $self->{offenses}->{$channel} if not keys $self->{offenses}->{$channel};
