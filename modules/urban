@@ -1,5 +1,9 @@
 #!/usr/bin/env perl
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 use warnings;
 use strict;
 
@@ -31,7 +35,7 @@ print "Missing phrase -- $usage" and exit if @$args == 0;
 $args = join(' ', @$args);
 
 my $ud = WebService::UrbanDictionary->new;
-my $results = $ud->request($args); 
+my $results = $ud->request($args);
 
 sub sort_entries {
   if (defined $sort) {
@@ -90,7 +94,7 @@ if (defined $show_all or defined $match) {
 
   if ($@) {
     my $err = $@;
-    
+
     $err =~ s/; marked by <-- HERE.*/: $match/;
 
     print "Oops, $err\n";
