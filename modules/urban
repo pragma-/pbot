@@ -79,7 +79,7 @@ sub show_definition {
     print "$num/$num_entries: ";
   }
 
-  print "($entry->{'thumbs_up'}/$entry->{'thumbs_down'}) $entry->{'definition'}\n";
+  print "(+$entry->{'thumbs_up'}/-$entry->{'thumbs_down'}) $entry->{'definition'}\n";
   print "$entry->{'example'}\n" if $entry->{'example'};
 }
 
@@ -101,9 +101,7 @@ if (defined $show_all or defined $match) {
 
   if ($@) {
     my $err = $@;
-
     $err =~ s/; marked by <-- HERE.*/: $match/;
-
     print "Oops, $err\n";
     exit;
   }
