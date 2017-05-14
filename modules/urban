@@ -56,11 +56,13 @@ if ($num_entries == 0) {
   print "$args: no definition found.\n";
   exit;
 } else {
-=cut
-  if ($num_entries > 1 and not defined $entry) {
-    print "$num_entries entries:\n";
+  if ($num_entries > 1) {
+    if (defined $entry) {
+      print "$entry/$num_entries:\n";
+    } else {
+      print "1/$num_entries:\n";
+    }
   }
-=cut
 }
 
 if (defined $entry) {
