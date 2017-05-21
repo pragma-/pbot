@@ -121,7 +121,7 @@ sub is_present {
 }
 
 sub is_present_similar {
-  my ($self, $channel, $nick) = @_;
+  my ($self, $channel, $nick, $similar) = @_;
 
   $channel = lc $channel;
   $nick = lc $nick;
@@ -138,6 +138,8 @@ sub is_present_similar {
 
   my $percentage = $self->{pbot}->{registry}->get_value('interpreter', 'nick_similarity');
   $percentage = 0.20 if not defined $percentage;
+
+  $percentage = $similar if defined $similar;
 
   my $now = gettimeofday;
   foreach my $person (sort { $self->{nicklist}->{$channel}->{$b}->{timestamp} <=> $self->{nicklist}->{$channel}->{$a}->{timestamp} } keys %{ $self->{nicklist}->{$channel} }) {
@@ -244,7 +246,7 @@ sub on_nickchange {
 sub on_join_channel {
   my ($self, $event_type, $event) = @_;
   $self->remove_channel($event->{channel}); # clear nicklist to remove any stale nicks before repopulating with namreplies
-  $self->send_who($event->{channel});
+  #$self->send_who($event->{channel});
   return 0;
 }
 
