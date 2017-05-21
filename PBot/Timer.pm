@@ -16,7 +16,7 @@ use strict;
 
 use Carp ();
 
-our $min_timeout = 10;
+our $min_timeout = 1;
 our $max_seconds = 1000000;
 our $seconds = 0;
 our @timer_funcs;
