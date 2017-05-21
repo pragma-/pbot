@@ -147,6 +147,8 @@ sub list_also_known_as {
     chomp $getopt_error;
   };
 
+  Getopt::Long::Configure ("bundling");
+
   my ($show_hostmasks, $show_gecos, $show_nickserv, $show_id, $show_relationship, $show_weak, $dont_use_aliases_table);
   my ($ret, $args) = GetOptionsFromString($arguments,
     'h'  => \$show_hostmasks,
