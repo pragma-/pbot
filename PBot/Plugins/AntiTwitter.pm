@@ -46,7 +46,7 @@ sub on_public {
 
   while ($msg =~ m/[＠@]\s*([a-z0-9_^{}\-\\\[\]\|]+)/g) {
     my $n = $1;
-    if ($self->{pbot}->{nicklist}->is_present_similar($channel, $n)) {
+    if ($self->{pbot}->{nicklist}->is_present_similar($channel, $n, 0.05)) {
       $self->{offenses}->{$channel}->{$nick}->{offenses}++;
       $self->{offenses}->{$channel}->{$nick}->{time} = gettimeofday;
       
