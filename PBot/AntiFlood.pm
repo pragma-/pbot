@@ -529,7 +529,7 @@ sub check_flood {
               $self->{pbot}->{chanops}->ban_user_timed("*!$user\@" . address_to_mask($host), $channel, $length);
               $length = duration($length);
               $self->{pbot}->{logger}->log("$nick $channel flood offense " . $channel_data->{offenses} . " earned $length ban\n");
-              $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in $length.");
+              $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in approximately $length.");
             }
             $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
           }
@@ -603,7 +603,7 @@ sub check_flood {
                 $self->{pbot}->{chanops}->ban_user_timed("*!$user\@" . address_to_mask($host), $channel, $ban_length);
                 $ban_length = duration($ban_length);
                 $self->{pbot}->{logger}->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
-                $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in $ban_length.");
+                $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in approximately $ban_length.");
                 $channel_data->{last_offense} = gettimeofday;
                 $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
                 next;
@@ -703,7 +703,7 @@ sub unbanme {
     }
 
     if ($self->{pbot}->{channels}->is_active_op("${channel}-floodbans")) {
-      $self->{pbot}->{chanops}->unban_user($mask, $channel . '-floodbans');
+      $self->{pbot}->{chanops}->unban_user($mask, $channel . '-floodbans', 1);
       $unbanned{$mask}++;
     }
   }
@@ -957,7 +957,7 @@ sub check_bans {
           $owner =~ s/!.*$//;
           $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Evaded $baninfo->{banmask} set by $owner");
         }
-        $self->{pbot}->{chanops}->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 24 * 31);
+        $self->{pbot}->{chanops}->ban_user_timed($banmask, $baninfo->{channel}, 60 * 60 * 24 * 14);
       }
       my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
       if($channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
