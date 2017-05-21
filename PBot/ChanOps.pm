@@ -60,7 +60,7 @@ sub initialize {
   $self->{pbot}->{timer}->register(sub { $self->check_opped_timeouts  }, 10);
   $self->{pbot}->{timer}->register(sub { $self->check_unban_timeouts  }, 10);
   $self->{pbot}->{timer}->register(sub { $self->check_unmute_timeouts }, 10);
-  $self->{pbot}->{timer}->register(sub { $self->check_unban_queue     }, 10);
+  $self->{pbot}->{timer}->register(sub { $self->check_unban_queue     }, 30);
 }
 
 sub can_gain_ops {
@@ -128,7 +128,7 @@ sub ban_user {
 
 sub unban_user {
   my $self = shift;
-  my ($mask, $channel) = @_;
+  my ($mask, $channel, $immediately) = @_;
 
   my $bans;
 
@@ -166,7 +166,13 @@ sub unban_user {
     next if $baninfo->{type} ne '+b';
     next if exists $unbanned{$baninfo->{banmask}};
     $unbanned{$baninfo->{banmask}} = 1;
-    $self->add_to_unban_queue($channel, 'b', $baninfo->{banmask});
+
+    if ($immediately) {
+      $self->add_op_command($channel, "mode $channel -b $baninfo->{banmask}");
+      $self->gain_ops($channel);
+    } else {
+      $self->add_to_unban_queue($channel, 'b', $baninfo->{banmask});
+    }
   }
 }
 
@@ -213,15 +219,22 @@ sub mute_user {
 
 sub unmute_user {
   my $self = shift;
-  my ($mask, $channel) = @_;
+  my ($mask, $channel, $immediately) = @_;
   $mask = lc $mask;
   $channel = lc $channel;
   $self->{pbot}->{logger}->log("Unmuting $channel $mask\n");
+
   if ($self->{unmute_timeout}->find_index($channel, $mask)) {
     $self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + 7200; # try again in 2 hours if unmute doesn't immediately succeed
     $self->{unmute_timeout}->save;
   }
-  $self->add_to_unban_queue($channel, 'q', $mask);
+
+  if ($immediately) {
+    $self->add_op_command($channel, "mode $channel -q $mask");
+    $self->gain_ops($channel);
+  } else {
+    $self->add_to_unban_queue($channel, 'q', $mask);
+  }
 }
 
 sub mute_user_timed {
@@ -296,47 +309,32 @@ sub check_unban_queue {
 
   foreach my $channel (keys %{$self->{unban_queue}}) {
     my ($list, $count, $modes);
+    $list = '';
+    $modes = '-';
+    $count = 0;
 
     foreach my $mode (keys %{$self->{unban_queue}->{$channel}}) {
-      $list = '';
-      $modes = '-';
-      $count = 0;
-
       while (@{$self->{unban_queue}->{$channel}->{$mode}}) {
         my $target = pop @{$self->{unban_queue}->{$channel}->{$mode}};
-
-        my $rem = @{$self->{unban_queue}->{$channel}->{$mode}};
-
-        if ($mode eq 'b') {
-          $self->{pbot}->{logger}->log("Unbanning $target in $channel\n");
-          if ($self->has_ban_timeout($channel, $target)) {
-            $self->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + 7200; # try again in 2 hours if unban doesn't immediately succeed
-            $self->{unban_timeout}->save;
-          }
-        } elsif ($mode eq 'q') {
-          $self->{pbot}->{logger}->log("Unmuting $target in $channel\n");
-        } else {
-          $self->{pbot}->{logger}->log("Unknown mode [$mode] in unban queue\n");
-          continue;
-        }
-
         $list .= " $target";
         $modes .= $mode;
-        last if ++$count == 4; # FIXME: get value from ircd
-      }
-
-      if ($count) {
-        $self->add_op_command($channel, "mode $channel $modes $list");
-        $self->gain_ops($channel);
+        last if ++$count >= $self->{pbot}->{ircd}->{MODES};
       }
 
       if (not @{$self->{unban_queue}->{$channel}->{$mode}}) {
         delete $self->{unban_queue}->{$channel}->{$mode};
       }
+
+      last if $count == $self->{pbot}->{ircd}->{MODES};
     }
 
     if (not keys $self->{unban_queue}->{$channel}) {
       delete $self->{unban_queue}->{$channel};
+    }
+
+    if ($count) {
+      $self->add_op_command($channel, "mode $channel $modes $list");
+      $self->gain_ops($channel);
     }
   }
 }
@@ -351,6 +349,7 @@ sub check_unban_timeouts {
   foreach my $channel (keys %{ $self->{unban_timeout}->hash }) {
     foreach my $mask (keys %{ $self->{unban_timeout}->hash->{$channel} }) {
       if($self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} < $now) {
+        $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = $now + 7200;
         $self->unban_user($mask, $channel);
       }
     }
@@ -367,6 +366,7 @@ sub check_unmute_timeouts {
   foreach my $channel (keys %{ $self->{unmute_timeout}->hash }) {
     foreach my $mask (keys %{ $self->{unmute_timeout}->hash->{$channel} }) {
       if($self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} < $now) {
+        $self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} = $now + 7200;
         $self->unmute_user($mask, $channel);
       }
     }
