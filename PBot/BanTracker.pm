@@ -79,6 +79,23 @@ sub on_banlist_entry {
 
   $self->{pbot}->{logger}->log("ban-tracker: [banlist entry] $channel: $target banned by $source $ago.\n");
   $self->{banlist}->{$channel}->{'+b'}->{$target} = [ $source, $timestamp ];
+
+  if ($target =~ m/^\*!\*@/ or $target =~ m/^\*!.*\@gateway\/web/i) {
+    my $timeout = 60 * 60 * 24 * 7;
+
+    if ($target =~ m/\// and $target !~ m/\@gateway/) {
+      $timeout = 0; # permanent bans for cloaks that aren't gateway
+    }
+
+    if ($timeout && $self->{pbot}->{chanops}->can_gain_ops($channel)) {
+      if (not exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}) {
+        $self->{pbot}->{logger}->log("Temp ban for $target in $channel.\n");
+        $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $timeout;
+        $self->{pbot}->{chanops}->{unban_timeout}->save;
+      }
+    }
+  }
+
   return 0;
 }
 

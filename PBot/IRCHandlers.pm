@@ -50,6 +50,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.nicknameinuse', sub { $self->on_nicknameinuse(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.invite',        sub { $self->on_invite(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.cap',           sub { $self->on_cap(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.map',           sub { $self->on_map(@_) });
 }
 
 sub default_handler {
@@ -216,6 +217,18 @@ sub on_mode {
             $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout');
             $self->{pbot}->{chanops}->{unban_timeout}->save;
           }
+        } elsif ($target =~ m/^\*!\*@/ or $target =~ m/^\*!.*\@gateway\/web/i) {
+          my $timeout = 60 * 60 * 24 * 7;
+
+          if ($target =~ m/\// and $target !~ m/\@gateway/) {
+            $timeout = 0; # permanent bans for cloaks that aren't gateway
+          }
+
+          if ($timeout && $self->{pbot}->{chanops}->can_gain_ops($channel)) {
+            $self->{pbot}->{logger}->log("Temp ban for $target in $channel.\n");
+            $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $timeout;
+            $self->{pbot}->{chanops}->{unban_timeout}->save;
+          }
         }
       } 
       elsif($mode eq "+q") {
@@ -348,6 +361,21 @@ sub on_departure {
     delete $admin->{loggedin};
   }
   return 0;
+}
+
+sub on_map {
+  my ($self, $event_type, $event) = @_;
+
+  # remove and discard first and last elements
+  shift @{ $event->{event}->{args} };
+  pop @{ $event->{event}->{args} };
+
+  foreach my $arg (@{ $event->{event}->{args} }) {
+    my ($key, $value) = split /=/, $arg;
+    $self->{pbot}->{ircd}->{$key} = $value;
+    $self->{pbot}->{logger}->log("  $key\n")        if not defined $value;
+    $self->{pbot}->{logger}->log("  $key=$value\n") if defined $value;
+  }
 }
 
 sub on_cap {
