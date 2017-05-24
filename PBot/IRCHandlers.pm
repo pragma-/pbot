@@ -225,9 +225,11 @@ sub on_mode {
           }
 
           if ($timeout && $self->{pbot}->{chanops}->can_gain_ops($channel)) {
-            $self->{pbot}->{logger}->log("Temp ban for $target in $channel.\n");
-            $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $timeout;
-            $self->{pbot}->{chanops}->{unban_timeout}->save;
+            if (not exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{lc $channel}->{lc $target}) {
+              $self->{pbot}->{logger}->log("Temp ban for $target in $channel.\n");
+              $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $timeout;
+              $self->{pbot}->{chanops}->{unban_timeout}->save;
+            }
           }
         }
       } 
