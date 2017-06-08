@@ -65,7 +65,7 @@ if (defined $ret) {
   $filter_text =~ s/,/, /g;
   $filter_text =~ s/, ([^,]+)$/ or $1/;
 
-  print "[Filter active! To view or change, use the `filter` command.]\n";
+#  print "[Filter active!]\n";
 
   my @w = split /,/, $words;
   my $sep = '';

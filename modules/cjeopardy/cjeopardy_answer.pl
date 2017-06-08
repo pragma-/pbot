@@ -9,7 +9,7 @@ use strict;
 
 use Text::Levenshtein qw(fastdistance);
 use Time::HiRes qw(gettimeofday);
-use Time::Duration qw(duration);
+use Time::Duration qw(duration concise);
 use Fcntl qw(:flock);
 
 use QStatskeeper;
@@ -21,6 +21,7 @@ my $CJEOPARDY_HINT        = 'data/cjeopardy.hint';
 my $CJEOPARDY_LAST_ANSWER = 'data/cjeopardy.last_ans';
 
 my $hint_only_mode = 0;
+my $concise_duration = 1;
 
 my $nick = shift @ARGV;
 my $channel = shift @ARGV;
@@ -182,11 +183,21 @@ foreach my $answer (@valid_answers) {
     }
 
     my $elapsed = scalar gettimeofday - $data[2];
-    if ($elapsed < 60) {
-      printf " It took %.2f seconds to answer that question!\n", $elapsed;
+
+    if ($concise_duration) {
+      if ($elapsed < 60) {
+        printf " (%ds)\n", $elapsed;
+      } else {
+        my $duration = concise duration($elapsed);
+        print " ($duration)\n";
+      }
     } else {
-      my $duration = duration($elapsed);
-      print " It took $duration to answer that question.\n";
+      if ($elapsed < 60) {
+        printf " It took %.2f seconds to answer that question!\n", $elapsed;
+      } else {
+        my $duration = duration($elapsed);
+        print " It took $duration to answer that question.\n";
+      }
     }
 
     $qdata->{correct}++;

@@ -316,7 +316,7 @@
 316) [6.3.2.3 Pointers] A pointer to any object type may be converted to this and back again; the result shall compare equal to the original pointer.|pointer to void|void *|void*
 317) [6.3.2.3 Pointers] An integer constant expression with the value 0, or such an expression cast to type void *, is called this.|null pointer constant
 318) [6.3.2.3 Pointers] If a null pointer constant is converted to a pointer type, the resulting pointer is called this.|null pointer
-319) [6.3.2.3 Pointers] If a null pointer constant is converted to a pointer type, the resulting pointer, called a null pointer, is guaranteed to compare as this to a pointer to any object or function.|unequal|not equal
+319) [6.3.2.3 Pointers] If a null pointer constant is converted to a pointer type, the resulting pointer, called a null pointer, is guaranteed to compare as this to a pointer to any object or function.|unequal|not equal|!=
 320) [6.3.2.3 Pointers] The mapping functions for converting a pointer to an integer or an integer to a pointer are intended to be consistent with this of the execution environment.|addressing structure
 321) [6.3.2.3 Pointers] An integer may be converted to any pointer type. The result for an integer other than zero is this kind of behavior, might not be correctly aligned, might not point to an entity of the referenced type, and might be a trap representation.|implementation defined
 322) [6.3.2.3 Pointers] When a pointer to an object is converted to a pointer to a character type, the result points to this addressed byte of the object.|lowest|first
@@ -452,12 +452,12 @@
 452) [6.5.8 Relational operators] Each of the operators < (less than), > (greater than), <= (less than or equal to), and >= (greater than or equal to) shall yield 1 if the specified relation is true and 0 if it is false. The result has this type.|int
 453) [6.5.9 Equality operators] Two pointers compare as this if one is a pointer to one past the end of one array object and the other is a pointer to the start of a different array object that happens to immediately follow the first array object in the address space.|equal
 454) [6.5.13 Logical AND operator] Each of the operands of the && operator shall have this kind of type.|scalar
-455) [6.5.13 Logical AND operator] The && operator shall yield 1 if both of its operands compare as this to 0; otherwise, it yields 0.|unequal|not equal
+455) [6.5.13 Logical AND operator] The && operator shall yield 1 if both of its operands compare as this to 0; otherwise, it yields 0.|unequal|not equal|!=
 456) [6.5.13 Logical AND operator] If the first operand of the && operator compares as this to 0, the second operand is not evaluated.|equal
 457) [6.5.13 Logical AND operator] If the first operand of this operator compares as equal to 0, the second operand is not evaluated.|&&
 458) [6.5.14 Logical OR operator] Each of the operands of the \|\| operator shall have this type.|scalar
-459) [6.5.14 Logical OR operator] The \|\| operator shall yield 1 if either of its operands compare as this to 0; otherwise, it yields 0.|unequal|not equal
-460) [6.5.14 Logical OR operator] If the first operand of the \|\| operator compares as this to 0, the second operand is not evaluated.|unequal|not equal
+459) [6.5.14 Logical OR operator] The \|\| operator shall yield 1 if either of its operands compare as this to 0; otherwise, it yields 0.|unequal|not equal|!=
+460) [6.5.14 Logical OR operator] If the first operand of the \|\| operator compares as this to 0, the second operand is not evaluated.|unequal|not equal|!=
 461) [6.5.14 Logical OR operator] If the first operand of this operator compares unequal to 0, the second operand is not evaluated.|\|\|
 462) [6.5.15 Conditional operator] The first operand of the ?: operator shall have this kind of type.|scalar
 463) [6.5.15 Conditional operator] The ?: operator is called this.|conditional operator|conditional
@@ -540,7 +540,7 @@
 540) [6.7.6.2 Array declarators] If the size is this instead of being an expression, the array type is a variable length array type of unspecified size, which can only be used in declarations or type names with function prototype scope; such arrays are nonetheless complete types.|*
 541) [6.7.6.2 Array declarators] If the size of an array is not an integer constant expression and the element type does not have a known constant size, but is not incomplete, the array type is this kind of type.|variable length array|VLA{VLA stands for variable length array.}
 542) [6.7.6.2 Array declarators] For two array types to be this, both shall have compatible element types, and if both size specifiers are present, and are integer constant expressions, then both size specifiers shall have the same constant value.|compatible
-543) [6.7.6.2 Array declarators] If the two array types are used in a context which requires them to be compatible, it is undefined behavior if the two size specifiers evaluate to compare as this.|unequal|not equal
+543) [6.7.6.2 Array declarators] If the two array types are used in a context which requires them to be compatible, it is undefined behavior if the two size specifiers evaluate to compare as this.|unequal|not equal|!=
 544) [6.7.6.3 Function declarators (including prototypes)] A function declarator shall not specify a return type that is this kind of type.|function type{Also, array type.}|array type{Also, function type.}|function{Also, array type.}|array{Also, function type.}
 545) [6.7.6.3 Function declarators (including prototypes)] The only storage-class specifier that shall occur in a parameter declaration is this.|register
 546) [6.7.6.3 Function declarators (including prototypes)] An identifier list in a function declarator that is not part of a definition of that function shall be this.|empty
@@ -573,7 +573,7 @@
 573) [6.7.9 Initialization] The initialization shall occur in initializer list order, each initializer provided for a particular subobject overriding any previously listed initializer for the same subobject; all subobjects that are not initialized explicitly shall be initialized implicitly the same as objects that have this storage duration.|static
 574) [6.7.9 Initialization] If there are fewer initializers in a brace-enclosed list than there are elements or members of an aggregate, or fewer characters in a string literal used to initialize an array of known size than there are elements in the array, the remainder of the aggregate shall be initialized implicitly the same as objects that have this storage duration.|static
 575) [6.7.9 Initialization] If an array of unknown size is initialized, its size is determined by the largest indexed element with this.|explicit initializer|initializer
-576) [6.7.10 Static assertions] If the value of the constant expression of a static assertion compares as this to 0, the declaration has no effect.|unequal|not equal
+576) [6.7.10 Static assertions] If the value of the constant expression of a static assertion compares as this to 0, the declaration has no effect.|unequal|not equal|!=
 577) [6.8 Statements and blocks] This specifies an action to be performed.|statement
 578) [6.8 Statements and blocks] This allows a set of declarations and statements to be grouped into one syntactic unit.|block
 579) [6.8 Statements and blocks] This is an expression that is not part of another expression or of a declarator.|full expression|full
