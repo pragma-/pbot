@@ -104,7 +104,8 @@ SQL
 CREATE TABLE IF NOT EXISTS Nickserv (
   id         INTEGER, 
   nickserv   TEXT,
-  timestamp  NUMERIC
+  timestamp  NUMERIC,
+  UNIQUE (id, nickserv)
 )
 SQL
 
@@ -112,7 +113,8 @@ SQL
 CREATE TABLE IF NOT EXISTS Gecos (
   id         INTEGER,
   gecos      TEXT,
-  timestamp  NUMERIC
+  timestamp  NUMERIC,
+  UNIQUE (id, gecos)
 )
 SQL
 
@@ -127,7 +129,8 @@ CREATE TABLE IF NOT EXISTS Channels (
   last_seen       NUMERIC,
   validated       INTEGER,
   join_watch      INTEGER,
-  unbanmes        INTEGER
+  unbanmes        INTEGER,
+  UNIQUE (id, channel)
 )
 SQL
 
@@ -175,8 +178,7 @@ sub get_gecos {
 
   my $gecos = eval {
     my $sth = $self->{dbh}->prepare('SELECT gecos FROM Gecos WHERE ID = ?');
-    $sth->bind_param(1, $id);
-    $sth->execute();
+    $sth->execute($id);
     return $sth->fetchall_arrayref();
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -188,8 +190,7 @@ sub get_nickserv_accounts {
 
   my $nickserv_accounts = eval {
     my $sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE ID = ?');
-    $sth->bind_param(1, $id);
-    $sth->execute();
+    $sth->execute($id);
     return $sth->fetchall_arrayref();
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -201,9 +202,7 @@ sub set_current_nickserv_account {
 
   eval {
     my $sth = $self->{dbh}->prepare('UPDATE Accounts SET nickserv = ? WHERE id = ?');
-    $sth->bind_param(1, $nickserv);
-    $sth->bind_param(2, $id);
-    $sth->execute();
+    $sth->execute($nickserv, $id);
     $self->{new_entries}++;
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -214,8 +213,7 @@ sub get_current_nickserv_account {
 
   my $nickserv = eval {
     my $sth = $self->{dbh}->prepare('SELECT nickserv FROM Accounts WHERE id = ?');
-    $sth->bind_param(1, $id);
-    $sth->execute();
+    $sth->execute($id);
     my $row = $sth->fetchrow_hashref();
     if (defined $row) {
       return $row->{'nickserv'};
@@ -231,13 +229,9 @@ sub create_nickserv {
   my ($self, $id, $nickserv) = @_;
 
   eval {
-    my $sth = $self->{dbh}->prepare('INSERT INTO Nickserv SELECT ?, ?, 0 WHERE NOT EXISTS (SELECT 1 FROM Nickserv WHERE id = ? AND nickserv = ?)');
-    $sth->bind_param(1, $id);
-    $sth->bind_param(2, $nickserv);
-    $sth->bind_param(3, $id);
-    $sth->bind_param(4, $nickserv);
-    my $rv = $sth->execute();
-    $self->{new_entries}++ if $sth->rows;
+    my $sth = $self->{dbh}->prepare('INSERT OR IGNORE INTO Nickserv VALUES (?, ?, 0)');
+    my $rv = $sth->execute($id, $nickserv);
+    $self->{new_entries}++;
   };
   $self->{pbot}->{logger}->log($@) if $@;
 }
@@ -251,10 +245,7 @@ sub update_nickserv_account {
 
   eval {
     my $sth = $self->{dbh}->prepare('UPDATE Nickserv SET timestamp = ? WHERE id = ? AND nickserv = ?');
-    $sth->bind_param(1, $timestamp);
-    $sth->bind_param(2, $id);
-    $sth->bind_param(3, $nickserv);
-    $sth->execute();
+    $sth->execute($timestamp, $id, $nickserv);
     $self->{new_entries}++;
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -264,12 +255,8 @@ sub create_gecos {
   my ($self, $id, $gecos) = @_;
 
   eval {
-    my $sth = $self->{dbh}->prepare('INSERT INTO Gecos SELECT ?, ?, 0 WHERE NOT EXISTS (SELECT 1 FROM Gecos WHERE id = ? AND gecos = ?)');
-    $sth->bind_param(1, $id);
-    $sth->bind_param(2, $gecos);
-    $sth->bind_param(3, $id);
-    $sth->bind_param(4, $gecos);
-    my $rv = $sth->execute();
+    my $sth = $self->{dbh}->prepare('INSERT OR IGNORE INTO Gecos VALUES (?, ?, 0)');
+    my $rv = $sth->execute($id, $gecos);
     $self->{new_entries}++ if $sth->rows;
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -282,10 +269,7 @@ sub update_gecos {
 
   eval {
     my $sth = $self->{dbh}->prepare('UPDATE Gecos SET timestamp = ? WHERE id = ? AND gecos = ?');
-    $sth->bind_param(1, $timestamp);
-    $sth->bind_param(2, $id);
-    $sth->bind_param(3, $gecos);
-    $sth->execute();
+    $sth->execute($timestamp, $id, $gecos);
     $self->{new_entries}++;
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -304,18 +288,12 @@ sub add_message_account {
 
   eval {
     my $sth = $self->{dbh}->prepare('INSERT INTO Hostmasks VALUES (?, ?, ?, 0)');
-    $sth->bind_param(1, $mask);
-    $sth->bind_param(2, $id);
-    $sth->bind_param(3, scalar gettimeofday);
-    $sth->execute();
+    $sth->execute($mask, $id, scalar gettimeofday);
     $self->{new_entries}++;
 
     if((not defined $link_id) || ((defined $link_id) && ($link_type == $self->{alias_type}->{WEAK}))) {
       $sth = $self->{dbh}->prepare('INSERT INTO Accounts VALUES (?, ?, ?)');
-      $sth->bind_param(1, $id);
-      $sth->bind_param(2, $mask);
-      $sth->bind_param(3, "");
-      $sth->execute();
+      $sth->execute($id, $mask, "");
       $self->{new_entries}++;
 
       $self->{pbot}->{logger}->log("Added new account $id for mask $mask\n");
@@ -339,8 +317,7 @@ sub find_message_account_by_nick {
     my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC LIMIT 1');
     my $qnick = quotemeta $nick;
     $qnick =~ s/_/\\_/g;
-    $sth->bind_param(1, "$qnick!%");
-    $sth->execute();
+    $sth->execute("$qnick!%");
     my $row = $sth->fetchrow_hashref();
     return ($row->{id}, $row->{hostmask});
   };
@@ -354,8 +331,7 @@ sub find_message_accounts_by_nickserv {
 
   my $accounts = eval {
     my $sth = $self->{dbh}->prepare('SELECT id FROM Nickserv WHERE nickserv = ?');
-    $sth->bind_param(1, $nickserv);
-    $sth->execute();
+    $sth->execute($nickserv);
     return $sth->fetchall_arrayref();
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -373,8 +349,7 @@ sub find_message_accounts_by_mask {
 
   my $accounts = eval {
     my $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\"');
-    $sth->bind_param(1, $qmask);
-    $sth->execute();
+    $sth->execute($qmask);
     return $sth->fetchall_arrayref();
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -417,8 +392,7 @@ sub get_message_account {
 
       my $qnick = quotemeta $nick;
       $qnick =~ s/_/\\_/g;
-      $sth->bind_param(1, "$qnick!%");
-      $sth->execute();
+      $sth->execute("$qnick!%");
       my $rows = $sth->fetchall_arrayref({});
 
       if (not defined $rows->[0]) {
@@ -524,8 +498,7 @@ sub get_message_account {
     }
 
     if ($host =~ m{^gateway/web/irccloud.com}) {
-      $sth->bind_param(1, "%!$user\@gateway/web/irccloud.com/%");
-      $sth->execute();
+      $sth->execute("%!$user\@gateway/web/irccloud.com/%");
       my $rows = $sth->fetchall_arrayref({});
       if (defined $rows->[0]) {
         return ($rows, $self->{alias_type}->{STRONG});
@@ -533,8 +506,7 @@ sub get_message_account {
     }
 
     if ($host =~ m{^nat/([^/]+)/}) {
-      $sth->bind_param(1, "$nick!$user\@nat/$1/%");
-      $sth->execute();
+      $sth->execute("$nick!$user\@nat/$1/%");
       my $rows = $sth->fetchall_arrayref({});
       if (defined $rows->[0]) {
         return ($rows, $self->{alias_type}->{STRONG});
@@ -542,8 +514,7 @@ sub get_message_account {
     }
  
     if ($host =~ m{^unaffiliated/}) {
-      $sth->bind_param(1, "%\@$host");
-      $sth->execute();
+      $sth->execute("%\@$host");
       my $rows = $sth->fetchall_arrayref({});
       if (defined $rows->[0]) {
         return ($rows, $self->{alias_type}->{STRONG});
@@ -553,8 +524,7 @@ sub get_message_account {
     my $link_type = $self->{alias_type}->{WEAK};
     my $qnick = quotemeta $nick;
     $qnick =~ s/_/\\_/g;
-    $sth->bind_param(1, "$qnick!%");
-    $sth->execute();
+    $sth->execute("$qnick!%");
     my $rows = $sth->fetchall_arrayref({});
 
     my %processed_nicks;
@@ -627,8 +597,7 @@ sub get_message_account {
 
     if (not defined $rows->[0]) {
       $link_type = $self->{alias_type}->{STRONG};
-      $sth->bind_param(1, "%!$user\@$host");
-      $sth->execute();
+      $sth->execute("%!$user\@$host");
       $rows = $sth->fetchall_arrayref({});
 
       if (defined $rows->[0] and gettimeofday - $rows->[0]->{last_seen} > 60 * 60 * 48) {
@@ -670,8 +639,7 @@ sub find_most_recent_hostmask {
 
   my $hostmask = eval {
     my $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE ID = ? ORDER BY last_seen DESC LIMIT 1');
-    $sth->bind_param(1, $id);
-    $sth->execute();
+    $sth->execute($id);
     return $sth->fetchrow_hashref()->{'hostmask'};
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -690,7 +658,7 @@ sub update_hostmask_data {
       $comma = ', ';
     }
 
-    $sql .= ' WHERE hostmask LIKE ? ESCAPE "\"';
+    $sql .= ' WHERE hostmask == ?';
 
     my $sth = $self->{dbh}->prepare($sql);
 
@@ -699,9 +667,7 @@ sub update_hostmask_data {
       $sth->bind_param($param++, $data->{$key});
     }
 
-    my $qmask = quotemeta $mask;
-    $qmask =~ s/_/\\_/g;
-    $sth->bind_param($param, $qmask);
+    $sth->bind_param($param, $mask);
     $sth->execute();
     $self->{new_entries}++;
   };
@@ -713,8 +679,7 @@ sub get_nickserv_accounts_for_hostmask {
 
   my $nickservs = eval {
     my $sth = $self->{dbh}->prepare('SELECT nickserv FROM Hostmasks, Nickserv WHERE nickserv.id = hostmasks.id AND hostmasks.hostmask = ?');
-    $sth->bind_param(1, $hostmask);
-    $sth->execute();
+    $sth->execute($hostmask);
     return $sth->fetchall_arrayref();
   };
 
@@ -727,8 +692,7 @@ sub get_gecos_for_hostmask {
 
   my $gecos = eval {
     my $sth = $self->{dbh}->prepare('SELECT gecos FROM Hostmasks, Gecos WHERE gecos.id = hostmasks.id AND hostmasks.hostmask = ?');
-    $sth->bind_param(1, $hostmask);
-    $sth->execute();
+    $sth->execute($hostmask);
     return $sth->fetchall_arrayref();
   };
 
@@ -741,8 +705,7 @@ sub get_hostmasks_for_channel {
 
   my $hostmasks = eval {
     my $sth = $self->{dbh}->prepare('SELECT hostmasks.id, hostmask FROM Hostmasks, Channels WHERE channels.id = hostmasks.id AND channel = ?');
-    $sth->bind_param(1, $channel);
-    $sth->execute();
+    $sth->execute($channel);
     return $sth->fetchall_arrayref({});
   };
   
@@ -755,8 +718,7 @@ sub get_hostmasks_for_nickserv {
 
   my $hostmasks = eval {
     my $sth = $self->{dbh}->prepare('SELECT hostmasks.id, hostmask, nickserv FROM Hostmasks, Nickserv WHERE nickserv.id = hostmasks.id AND nickserv = ?');
-    $sth->bind_param(1, $nickserv);
-    $sth->execute();
+    $sth->execute($nickserv);
     return $sth->fetchall_arrayref({});
   };
 
@@ -771,12 +733,7 @@ sub add_message {
 
   eval {
     my $sth = $self->{dbh}->prepare('INSERT INTO Messages VALUES (?, ?, ?, ?, ?)');
-    $sth->bind_param(1, $id);
-    $sth->bind_param(2, $channel);
-    $sth->bind_param(3, $message->{msg});
-    $sth->bind_param(4, $message->{timestamp});
-    $sth->bind_param(5, $message->{mode});
-    $sth->execute();
+    $sth->execute($id, $channel, $message->{msg}, $message->{timestamp}, $message->{mode});
     $self->{new_entries}++;
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -999,9 +956,7 @@ sub recall_message_by_count {
   } else {
     $messages = eval {
       my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
-      $sth->bind_param(1, $channel);
-      $sth->bind_param(2, $count);
-      $sth->execute();
+      $sth->execute($channel, $count);
       return $sth->fetchall_arrayref({});
     };
   }
@@ -1034,18 +989,13 @@ sub recall_message_by_text {
   if(defined $id) {
     $messages = eval {
       my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg REGEXP ? ORDER BY timestamp DESC LIMIT 10');
-      $sth->bind_param(1, $id);
-      $sth->bind_param(2, $channel);
-      $sth->bind_param(3, $regex);
-      $sth->execute();
+      $sth->execute($id, $channel, $regex);
       return $sth->fetchall_arrayref({});
     };
   } else {
     $messages = eval {
       my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg REGEXP ? ORDER BY timestamp DESC LIMIT 10');
-      $sth->bind_param(1, $channel);
-      $sth->bind_param(2, $regex);
-      $sth->execute();
+      $sth->execute($channel, $regex);
       return $sth->fetchall_arrayref({});
     };
   }
@@ -1120,13 +1070,9 @@ sub create_channel {
   my ($self, $id, $channel) = @_;
 
   eval {
-    my $sth = $self->{dbh}->prepare('INSERT INTO Channels SELECT ?, ?, 0, 0, 0, 0, 0, 0, 0, 0 WHERE NOT EXISTS (SELECT 1 FROM Channels WHERE id = ? AND channel = ?)');
-    $sth->bind_param(1, $id);
-    $sth->bind_param(2, $channel);
-    $sth->bind_param(3, $id);
-    $sth->bind_param(4, $channel);
-    my $rv = $sth->execute();
-    $self->{new_entries}++ if $sth->rows;
+    my $sth = $self->{dbh}->prepare('INSERT OR IGNORE INTO Channels VALUES (?, ?, 0, 0, 0, 0, 0, 0, 0, 0)');
+    my $rv = $sth->execute($id, $channel);
+    $self->{new_entries}++;
   };
   $self->{pbot}->{logger}->log($@) if $@;
 }
@@ -1136,8 +1082,7 @@ sub get_channels {
 
   my $channels = eval {
     my $sth = $self->{dbh}->prepare('SELECT channel FROM Channels WHERE id = ?');
-    $sth->bind_param(1, $id);
-    $sth->execute();
+    $sth->execute($id);
     return $sth->fetchall_arrayref();
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -1164,9 +1109,7 @@ sub get_channel_data {
 
     $sql .= ' FROM Channels WHERE id = ? AND channel = ?';
     my $sth = $self->{dbh}->prepare($sql);
-    $sth->bind_param(1, $id);
-    $sth->bind_param(2, $channel);
-    $sth->execute();
+    $sth->execute($id, $channel);
     return $sth->fetchrow_hashref();
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -1209,8 +1152,7 @@ sub get_channel_datas_where_last_offense_older_than {
 
   my $channel_datas = eval {
     my $sth = $self->{dbh}->prepare('SELECT id, channel, offenses, last_offense, unbanmes FROM Channels WHERE last_offense > 0 AND last_offense <= ?');
-    $sth->bind_param(1, $timestamp);
-    $sth->execute();
+    $sth->execute($timestamp);
     return $sth->fetchall_arrayref({});
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -1236,10 +1178,7 @@ sub devalidate_channel {
 
   eval {
     my $sth = $self->{dbh}->prepare("UPDATE Channels SET validated = ? WHERE id = ? AND channel = ?");
-    $sth->bind_param(1, $mode);
-    $sth->bind_param(2, $id);
-    $sth->bind_param(3, $channel);
-    $sth->execute();
+    $sth->execute($mode, $id, $channel);
     $self->{new_entries}++;
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -1276,8 +1215,7 @@ sub link_aliases {
     if ($hostmask) {
       my ($nick, $host) = $hostmask =~ /^([^!]+)![^@]+@(.*)$/;
       my $sth = $self->{dbh}->prepare('SELECT id, last_seen FROM Hostmasks WHERE hostmask LIKE ?');
-      $sth->bind_param(1, "\%\@$host");
-      $sth->execute();
+      $sth->execute("\%\@$host");
       my $rows = $sth->fetchall_arrayref({});
 
       my $now = gettimeofday;
@@ -1297,8 +1235,7 @@ sub link_aliases {
         $qnick =~ s/_/\\_/g;
 
         my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\"');
-        $sth->bind_param(1, "$qnick!%");
-        $sth->execute();
+        $sth->execute("$qnick!%");
         my $rows = $sth->fetchall_arrayref({});
 
         my ($account1) = $host =~ m{/([^/]+)$};
@@ -1356,8 +1293,7 @@ sub link_aliases {
 
     if ($nickserv) {
       my $sth = $self->{dbh}->prepare('SELECT id FROM Nickserv WHERE nickserv = ?');
-      $sth->bind_param(1, $nickserv);
-      $sth->execute();
+      $sth->execute($nickserv);
       my $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
@@ -1383,9 +1319,7 @@ sub link_alias {
 
   my $ret = eval {
     my $sth = $self->{dbh}->prepare('SELECT type FROM Aliases WHERE id = ? AND alias = ? LIMIT 1');
-    $sth->bind_param(1, $alias);
-    $sth->bind_param(2, $id);
-    $sth->execute();
+    $sth->execute($alias, $id);
 
     my $row = $sth->fetchrow_hashref();
 
@@ -1395,15 +1329,8 @@ sub link_alias {
           $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, forcing override\n") if $debug_link >= 2;
 
           $sth = $self->{dbh}->prepare('UPDATE Aliases SET type = ? WHERE alias = ? AND id = ?');
-          $sth->bind_param(1, $type);
-          $sth->bind_param(2, $id);
-          $sth->bind_param(3, $alias);
-          $sth->execute();
-
-          $sth->bind_param(2, $alias);
-          $sth->bind_param(3, $id);
-          $sth->execute();
-
+          $sth->execute($type, $id, $alias);
+          $sth->execute($type, $alias, $id);
           return 1;
         } else {
           $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n") if $debug_link >= 2;
@@ -1416,15 +1343,8 @@ sub link_alias {
     }
 
     $sth = $self->{dbh}->prepare('INSERT INTO Aliases VALUES (?, ?, ?)');
-    $sth->bind_param(1, $alias);
-    $sth->bind_param(2, $id);
-    $sth->bind_param(3, $type);
-    $sth->execute();
-
-    $sth->bind_param(1, $id);
-    $sth->bind_param(2, $alias);
-    $sth->execute();
-
+    $sth->execute($alias, $id, $type);
+    $sth->execute($id, $alias, $type);
     return 1;
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -1438,17 +1358,13 @@ sub unlink_alias {
   my $ret = eval {
     my $ret = 0;
     my $sth = $self->{dbh}->prepare('DELETE FROM Aliases WHERE id = ? AND alias = ?');
-    $sth->bind_param(1, $id);
-    $sth->bind_param(2, $alias);
-    $sth->execute();
+    $sth->execute($id, $alias);
     if ($sth->rows) {
       $self->{new_entries}++;
       $ret = 1;
     }
 
-    $sth->bind_param(1, $alias);
-    $sth->bind_param(2, $id);
-    $sth->execute();
+    $sth->execute($alias, $id);
     if ($sth->rows) {
       $self->{new_entries}++;
       $ret = 1;
@@ -1494,8 +1410,7 @@ sub rebuild_aliases_table {
 
       $self->link_aliases($row->{id}, $row->{hostmask});
 
-      $sth->bind_param(1, $row->{id});
-      $sth->execute();
+      $sth->execute($row->{id});
       my $nrows = $sth->fetchall_arrayref({});
 
       foreach my $nrow (@$nrows) {
@@ -1527,8 +1442,7 @@ sub get_also_known_as {
       $self->{pbot}->{logger}->log("Adding $id -> $id\n") if $debug;
 
       my $sth = $self->{dbh}->prepare('SELECT alias, type FROM Aliases WHERE id = ?');
-      $sth->bind_param(1, $id);
-      $sth->execute();
+      $sth->execute($id);
       my $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
@@ -1547,8 +1461,7 @@ sub get_also_known_as {
           next if exists $seen_id{$id};
           $seen_id{$id} = $id;
 
-          $sth->bind_param(1, $id);
-          $sth->execute();
+          $sth->execute($id);
           my $rows = $sth->fetchall_arrayref({});
 
           foreach my $row (@$rows) {
@@ -1569,8 +1482,7 @@ sub get_also_known_as {
       my $csv = Text::CSV->new({binary => 1});
 
       foreach my $id (keys %ids) {
-        $hostmask_sth->bind_param(1, $id);
-        $hostmask_sth->execute();
+        $hostmask_sth->execute($id);
         $rows = $hostmask_sth->fetchall_arrayref({});
 
         foreach my $row (@$rows) {
@@ -1578,8 +1490,7 @@ sub get_also_known_as {
           $self->{pbot}->{logger}->log("[$id] Adding hostmask $row->{hostmask} -> $ids{$id}->{id} [type $ids{$id}->{type}]\n") if $debug;
         }
 
-        $nickserv_sth->bind_param(1, $id);
-        $nickserv_sth->execute();
+        $nickserv_sth->execute($id);
         $rows = $nickserv_sth->fetchall_arrayref({});
 
         foreach my $row (@$rows) {
@@ -1594,8 +1505,7 @@ sub get_also_known_as {
           }
         }
 
-        $gecos_sth->bind_param(1, $id);
-        $gecos_sth->execute();
+        $gecos_sth->execute($id);
         $rows = $gecos_sth->fetchall_arrayref({});
 
         foreach my $row (@$rows) {
@@ -1623,8 +1533,7 @@ sub get_also_known_as {
     my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC');
     my $qnick = quotemeta $nick;
     $qnick =~ s/_/\\_/g;
-    $sth->bind_param(1, "$qnick!%");
-    $sth->execute();
+    $sth->execute("$qnick!%");
     my $rows = $sth->fetchall_arrayref({});
 
     foreach my $row (@$rows) {
@@ -1637,8 +1546,7 @@ sub get_also_known_as {
     foreach my $hostmask (keys %hostmasks) {
       my ($host) = $hostmask =~ /(\@.*)$/;
       $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE hostmask LIKE ?');
-      $sth->bind_param(1, "\%$host");
-      $sth->execute();
+      $sth->execute("\%$host");
       $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
@@ -1646,8 +1554,7 @@ sub get_also_known_as {
         $ids{$row->{id}} = $row->{id};
 
         $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE id == ?');
-        $sth->bind_param(1, $row->{id});
-        $sth->execute();
+        $sth->execute($row->{id});
         my $rows = $sth->fetchall_arrayref({});
 
         foreach my $nrow (@$rows) {
@@ -1661,8 +1568,7 @@ sub get_also_known_as {
     my %nickservs;
     foreach my $id (keys %ids) {
       $sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE id == ?');
-      $sth->bind_param(1, $id);
-      $sth->execute();
+      $sth->execute($id);
       $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
@@ -1682,8 +1588,7 @@ sub get_also_known_as {
       }
 
       $sth = $self->{dbh}->prepare('SELECT id FROM Nickserv WHERE nickserv == ?');
-      $sth->bind_param(1, $nickserv);
-      $sth->execute();
+      $sth->execute($nickserv);
       $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
@@ -1691,8 +1596,7 @@ sub get_also_known_as {
         $ids{$row->{id}} = $row->{id};
 
         $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE id == ?');
-        $sth->bind_param(1, $row->{id});
-        $sth->execute();
+        $sth->execute($row->{id});
         my $rows = $sth->fetchall_arrayref({});
 
         foreach my $nrow (@$rows) {
@@ -1712,8 +1616,7 @@ sub get_also_known_as {
 
     foreach my $id (keys %ids) {
       $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE id == ?');
-      $sth->bind_param(1, $id);
-      $sth->execute();
+      $sth->execute($id);
       $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
@@ -1735,8 +1638,7 @@ sub get_ancestor_id {
 
   my $ancestor = eval {
     my $sth = $self->{dbh}->prepare('SELECT id FROM Aliases WHERE alias = ? ORDER BY id LIMIT 1');
-    $sth->bind_param(1, $id);
-    $sth->execute();
+    $sth->execute($id);
     my $row = $sth->fetchrow_hashref();
     return defined $row ? $row->{id} : 0;
   };
@@ -1768,8 +1670,7 @@ sub get_message_account_id {
 
   my $id = eval {
     my $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE hostmask == ?');
-    $sth->bind_param(1, $mask);
-    $sth->execute();
+    $sth->execute($mask);
     my $row = $sth->fetchrow_hashref();
     return $row->{id};
   };
