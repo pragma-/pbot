@@ -480,7 +480,7 @@ sub get_message_account {
               $thostip =~ s/[[:punct:]]/./g;
               if ($thostip eq $host) {
                 $match = 1;
-                $self->{pbot}->{logger}->log("4: IP vs hostname match: $host vs $thostip\n");
+                $self->{pbot}->{logger}->log("4: IP vs hostname match: $host vs $thost\n");
               }
             }
           }
@@ -599,7 +599,7 @@ sub get_message_account {
             $thostip =~ s/[[:punct:]]/./g;
             if ($thostip eq $host) {
               $match = 1;
-              $self->{pbot}->{logger}->log("9: IP vs hostname match: $host vs $thostip\n");
+              $self->{pbot}->{logger}->log("9: IP vs hostname match: $host vs $thost\n");
             }
           }
         }
