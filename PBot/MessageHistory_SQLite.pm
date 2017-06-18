@@ -85,25 +85,28 @@ sub begin {
 
     $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Hostmasks (
-  hostmask    TEXT PRIMARY KEY UNIQUE,
+  hostmask    TEXT PRIMARY KEY UNIQUE COLLATE NOCASE,
   id          INTEGER,
   last_seen   NUMERIC,
-  nickchange  INTEGER
+  nickchange  INTEGER,
+  nick        TEXT COLLATE NOCASE,
+  user        TEXT COLLATE NOCASE,
+  host        TEXT COLLATE NOCASE
 )
 SQL
 
     $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Accounts (
   id           INTEGER PRIMARY KEY,
-  hostmask     TEXT UNIQUE,
-  nickserv     TEXT
+  hostmask     TEXT UNIQUE COLLATE NOCASE,
+  nickserv     TEXT COLLATE NOCASE
 )
 SQL
 
     $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Nickserv (
   id         INTEGER, 
-  nickserv   TEXT,
+  nickserv   TEXT COLLATE NOCASE,
   timestamp  NUMERIC,
   UNIQUE (id, nickserv)
 )
@@ -112,7 +115,7 @@ SQL
     $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Gecos (
   id         INTEGER,
-  gecos      TEXT,
+  gecos      TEXT COLLATE NOCASE,
   timestamp  NUMERIC,
   UNIQUE (id, gecos)
 )
@@ -121,7 +124,7 @@ SQL
     $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Channels (
   id              INTEGER,
-  channel         TEXT,
+  channel         TEXT COLLATE NOCASE,
   enter_abuse     INTEGER,
   enter_abuses    INTEGER,
   offenses        INTEGER,
@@ -137,7 +140,7 @@ SQL
     $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Messages (
   id         INTEGER,
-  channel    TEXT,
+  channel    TEXT COLLATE NOCASE,
   msg        TEXT,
   timestamp  NUMERIC,
   mode       INTEGER
@@ -155,6 +158,12 @@ SQL
     $self->{dbh}->do('CREATE INDEX IF NOT EXISTS MsgIdx1 ON Messages(id, channel, mode)');
     $self->{dbh}->do('CREATE INDEX IF NOT EXISTS AliasIdx1 ON Aliases(id, alias, type)');
     $self->{dbh}->do('CREATE INDEX IF NOT EXISTS AliasIdx2 ON Aliases(alias, id, type)');
+
+    $self->{dbh}->do('CREATE INDEX hostmask_nick_idx on Hostmasks (nick)');
+    $self->{dbh}->do('CREATE INDEX hostmask_host_idx on Hostmasks (host)');
+    $self->{dbh}->do('CREATE INDEX hostmasks_id_idx on Hostmasks (id)');
+    $self->{dbh}->do('CREATE INDEX gecos_id_idx on Gecos (id)');
+    $self->{dbh}->do('CREATE INDEX nickserv_id_idx on Nickserv (id)');
 
     $self->{dbh}->begin_work();
   };
@@ -278,6 +287,7 @@ sub update_gecos {
 sub add_message_account {
   my ($self, $mask, $link_id, $link_type) = @_;
   my $id;
+  my ($nick, $user, $host) = $mask =~ m/^([^!]+)!([^@]+)@(.*)/;
 
   if(defined $link_id and $link_type == $self->{alias_type}->{STRONG}) {
     $id = $link_id;
@@ -287,8 +297,8 @@ sub add_message_account {
   }
 
   eval {
-    my $sth = $self->{dbh}->prepare('INSERT INTO Hostmasks VALUES (?, ?, ?, 0)');
-    $sth->execute($mask, $id, scalar gettimeofday);
+    my $sth = $self->{dbh}->prepare('INSERT INTO Hostmasks VALUES (?, ?, ?, 0, ?, ?, ?)');
+    $sth->execute($mask, $id, scalar gettimeofday, $nick, $user, $host);
     $self->{new_entries}++;
 
     if((not defined $link_id) || ((defined $link_id) && ($link_type == $self->{alias_type}->{WEAK}))) {
@@ -314,10 +324,8 @@ sub find_message_account_by_nick {
   my ($self, $nick) = @_;
 
   my ($id, $hostmask) = eval {
-    my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC LIMIT 1');
-    my $qnick = quotemeta $nick;
-    $qnick =~ s/_/\\_/g;
-    $sth->execute("$qnick!%");
+    my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE nick = ? ORDER BY last_seen DESC LIMIT 1');
+    $sth->execute($nick);
     my $row = $sth->fetchrow_hashref();
     return ($row->{id}, $row->{hostmask});
   };
@@ -373,10 +381,9 @@ sub get_message_account {
   $self->{pbot}->{logger}->log("It's a nick-change!\n") if defined $orig_nick;
 
   my $do_nothing = 0;
+  my $sth;
 
   my ($rows, $link_type) = eval {
-    my $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC');
-
     my ($account1) = $host =~ m{/([^/]+)$};
     $account1 = '' if not defined $account1;
 
@@ -390,9 +397,8 @@ sub get_message_account {
       my $orig_id = $self->get_message_account_id("$orig_nick!$user\@$host");
       my @orig_nickserv_accounts = $self->get_nickserv_accounts($orig_id);
 
-      my $qnick = quotemeta $nick;
-      $qnick =~ s/_/\\_/g;
-      $sth->execute("$qnick!%");
+      $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE nick = ? ORDER BY last_seen DESC');
+      $sth->execute($nick);
       my $rows = $sth->fetchall_arrayref({});
 
       if (not defined $rows->[0]) {
@@ -421,6 +427,7 @@ sub get_message_account {
           my $match = 0;
 
           if ($akas{$aka}->{id} == $orig_id || $aka =~ m/^.*!\Q$user\E\@\Q$host\E$/i) {
+            $self->{pbot}->{logger}->log("1: match: $akas{$aka}->{id} vs $orig_id // $aka vs *!$user\@$host\n");
             $match = 1;
             goto MATCH;
           }
@@ -440,7 +447,7 @@ sub get_message_account {
 
           my ($thost) = $aka =~ m/@(.*)$/;
 
-          if ($thost =~ m{(^unaffiliated|/staff/|/member/)}) {
+          if ($thost =~ m{/}) {
             my ($account2) = $thost =~ m{/([^/]+)$};
 
             if ($account1 ne $account2) {
@@ -459,20 +466,21 @@ sub get_message_account {
           #$self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
 
           if ($length != 0 && $distance / $length < 0.50) {
+            $self->{pbot}->{logger}->log("2: distance match: $host vs $thost == " . ($distance / $length) . "\n");
             $match = 1;
           } else {
             # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
             if (defined $hostip) {
               if ($hostip eq $thost) {
                 $match = 1;
-                $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+                $self->{pbot}->{logger}->log("3: IP vs hostname match: $host vs $thost\n");
               }
             } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
               my $thostip = $1;
               $thostip =~ s/[[:punct:]]/./g;
               if ($thostip eq $host) {
                 $match = 1;
-                $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+                $self->{pbot}->{logger}->log("4: IP vs hostname match: $host vs $thostip\n");
               }
             }
           }
@@ -498,35 +506,42 @@ sub get_message_account {
     }
 
     if ($host =~ m{^gateway/web/irccloud.com}) {
-      $sth->execute("%!$user\@gateway/web/irccloud.com/%");
+      $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE host = ? ORDER BY last_seen DESC');
+      $sth->execute("gateway/web/irccloud.com/x-$user");
       my $rows = $sth->fetchall_arrayref({});
       if (defined $rows->[0]) {
+        $self->{pbot}->{logger}->log("5: irccloud match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
         return ($rows, $self->{alias_type}->{STRONG});
       }
     }
 
     if ($host =~ m{^nat/([^/]+)/}) {
-      $sth->execute("$nick!$user\@nat/$1/%");
+      my $nat = $1;
+      $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE nick = ? AND host = ? ORDER BY last_seen DESC');
+      $sth->execute($nick, "nat/$nat/x-$user");
       my $rows = $sth->fetchall_arrayref({});
       if (defined $rows->[0]) {
+        $self->{pbot}->{logger}->log("6: nat match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
         return ($rows, $self->{alias_type}->{STRONG});
       }
     }
  
-    if ($host =~ m{^unaffiliated/}) {
-      $sth->execute("%\@$host");
+    # cloaked hostmask
+    if ($host =~ m{/}) {
+      $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE host = ? ORDER BY last_seen DESC');
+      $sth->execute($host);
       my $rows = $sth->fetchall_arrayref({});
       if (defined $rows->[0]) {
+        $self->{pbot}->{logger}->log("6: cloak match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
         return ($rows, $self->{alias_type}->{STRONG});
       }
     }
 
-    my $link_type = $self->{alias_type}->{WEAK};
-    my $qnick = quotemeta $nick;
-    $qnick =~ s/_/\\_/g;
-    $sth->execute("$qnick!%");
+    $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE nick = ? ORDER BY last_seen DESC');
+    $sth->execute($nick);
     my $rows = $sth->fetchall_arrayref({});
 
+    my $link_type = $self->{alias_type}->{WEAK};
     my %processed_nicks;
     my %processed_akas;
 
@@ -549,7 +564,7 @@ sub get_message_account {
 
         my ($thost) = $aka =~ m/@(.*)$/;
 
-        if ($thost =~ m{(^unaffiliated|/staff/|/member/)}) {
+        if ($thost =~ m{/}) {
           my ($account2) = $thost =~ m{/([^/]+)$};
 
           if ($account1 ne $account2) {
@@ -570,20 +585,21 @@ sub get_message_account {
         my $match = 0;
 
         if ($length != 0 && $distance / $length < 0.50) {
+          $self->{pbot}->{logger}->log("7: distance match: $host vs $thost == " . ($distance / $length) . "\n");
           $match = 1;
         } else {
           # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
           if (defined $hostip) {
             if ($hostip eq $thost) {
               $match = 1;
-              $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+              $self->{pbot}->{logger}->log("8: IP vs hostname match: $host vs $thost\n");
             }
           } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
             my $thostip = $1;
             $thostip =~ s/[[:punct:]]/./g;
             if ($thostip eq $host) {
               $match = 1;
-              $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
+              $self->{pbot}->{logger}->log("9: IP vs hostname match: $host vs $thostip\n");
             }
           }
         }
@@ -597,7 +613,9 @@ sub get_message_account {
 
     if (not defined $rows->[0]) {
       $link_type = $self->{alias_type}->{STRONG};
-      $sth->execute("%!$user\@$host");
+
+      $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE user = ? AND host = ? ORDER BY last_seen DESC');
+      $sth->execute($user, $host);
       $rows = $sth->fetchall_arrayref({});
 
       if (defined $rows->[0] and gettimeofday - $rows->[0]->{last_seen} > 60 * 60 * 48) {
@@ -611,6 +629,10 @@ sub get_message_account {
       }
 =cut
     }
+    if (defined $rows->[0]) {
+      $self->{pbot}->{logger}->log("10: matching *!user\@host: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
+    }
+
     return ($rows, $link_type);
   };
   $self->{pbot}->{logger}->log($@) if $@;
@@ -618,6 +640,21 @@ sub get_message_account {
   return $rows->[0]->{id} if $do_nothing;
 
   if (defined $rows->[0]) {
+    if ($link_type == $self->{alias_type}->{STRONG}) {
+      my $host1 = lc "$nick!$user\@$host";
+      my $host2 = lc $rows->[0]->{hostmask};
+      my ($nick1) = $host1 =~ m/^([^!]+)!/;
+      my ($nick2) = $host2 =~ m/^([^!]+)!/;
+      my $distance = fastdistance($nick1, $nick2);
+      my $length = (length $nick1 > length $nick2) ? length $nick1 : length $nick2;
+      if ($distance > 1 && ($nick1 !~ /^guest/ && $nick2 !~ /^guest/) && ($host1 !~ /unaffiliated/ || $host2 !~ /unaffiliated/)) {
+        my $id = $rows->[0]->{id};
+        $self->{pbot}->{logger}->log("[$nick1][$nick2] $distance / $length\n");
+        $self->{pbot}->{conn}->privmsg("pragma-", "Possible bogus account: ($id) $host1 vs ($id) $host2");
+        $self->{pbot}->{logger}->log("Possible bogus account: ($id) $host1 vs ($id) $host2\n");
+      }
+    }
+
     $self->{pbot}->{logger}->log("message-history: [get-account] $nick!$user\@$host " . ($link_type == $self->{alias_type}->{WEAK} ? "weakly linked to" : "added to account") . " $rows->[0]->{hostmask} with id $rows->[0]->{id}\n");
     $self->add_message_account("$nick!$user\@$host", $rows->[0]->{id}, $link_type);
     $self->devalidate_all_channels($rows->[0]->{id});
@@ -1207,35 +1244,33 @@ sub link_aliases {
 
   my $debug_link = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_link');
 
-  $self->{pbot}->{logger}->log("Linking [$account][" . ($hostmask?$hostmask:'undef') . "][" . ($nickserv?$nickserv:'undef') . "]\n") if $debug_link >= 2;
+  $self->{pbot}->{logger}->log("Linking [$account][" . ($hostmask?$hostmask:'undef') . "][" . ($nickserv?$nickserv:'undef') . "]\n") if $debug_link >= 3;
 
   eval {
     my %ids;
 
     if ($hostmask) {
       my ($nick, $host) = $hostmask =~ /^([^!]+)![^@]+@(.*)$/;
-      my $sth = $self->{dbh}->prepare('SELECT id, last_seen FROM Hostmasks WHERE hostmask LIKE ?');
-      $sth->execute("\%\@$host");
+      my $sth = $self->{dbh}->prepare('SELECT id, last_seen FROM Hostmasks WHERE host = ?');
+      $sth->execute($host);
       my $rows = $sth->fetchall_arrayref({});
 
       my $now = gettimeofday;
 
       foreach my $row (@$rows) {
+        my $idhost = $self->find_most_recent_hostmask($row->{id}) if $debug_link >= 2 && $row->{id} != $account;
         if ($now - $row->{last_seen} <= 60 * 60 * 48) {
           $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG}, force => 1 };
-          $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for host [$host]\n") if $debug_link >= 2 && $row->{id} != $account;
+          $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} ($idhost) for host [$host]\n") if $debug_link >= 2 && $row->{id} != $account;
         } else {
           $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{WEAK} };
-          $self->{pbot}->{logger}->log("found WEAK matching id $row->{id} for host [$host]\n") if $debug_link >= 2 && $row->{id} != $account;
+          $self->{pbot}->{logger}->log("found WEAK matching id $row->{id} ($idhost) for host [$host]\n") if $debug_link >= 2 && $row->{id} != $account;
         }
       }
 
       unless ($nick =~ m/^Guest\d+$/) {
-        my $qnick = quotemeta $nick;
-        $qnick =~ s/_/\\_/g;
-
-        my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\"');
-        $sth->execute("$qnick!%");
+        my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE nick = ?');
+        $sth->execute($nick);
         my $rows = $sth->fetchall_arrayref({});
 
         my ($account1) = $host =~ m{/([^/]+)$};
@@ -1249,9 +1284,10 @@ sub link_aliases {
 
         foreach my $row (@$rows) {
           next if $row->{id} == $account;
+          $self->{pbot}->{logger}->log("Processing row $row->{hostmask}\n");
           my ($thost) = $row->{hostmask} =~ m/@(.*)$/;
 
-          if ($thost =~ m{(^unaffiliated|/staff/|/member/)}) {
+          if ($thost =~ m{/}) {
             my ($account2) = $thost =~ m{/([^/]+)$};
 
             if ($account1 ne $account2) {
@@ -1269,8 +1305,9 @@ sub link_aliases {
           #$self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
 
           if ($length != 0 && $distance / $length < 0.50) {
+            $self->{pbot}->{logger}->log("11: distance match: $host vs $thost == " . ($distance / $length) . "\n");
             $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG} };  # don't force linking
-            $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for nick [$qnick]\n") if $debug_link >= 2;
+            $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} ($row->{hostmask}) for nick [$nick]\n") if $debug_link >= 2;
           } else {
             # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
             if (defined $hostip) {
@@ -1297,8 +1334,9 @@ sub link_aliases {
       my $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {
+        my $idhost = $self->find_most_recent_hostmask($row->{id}) if $debug_link >= 2 && $row->{id} != $account;
         $ids{$row->{id}} = { id => $row->{id}, type => $self->{alias_type}->{STRONG}, force => 1 };
-        $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} for nickserv [$nickserv]\n") if $debug_link >= 2 && $row->{id} != $account;
+        $self->{pbot}->{logger}->log("12: found STRONG matching id $row->{id} ($idhost) for nickserv [$nickserv]\n") if $debug_link >= 2 && $row->{id} != $account;
       }
     }
 
@@ -1315,7 +1353,7 @@ sub link_alias {
 
   my $debug_link = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_link');
 
-  $self->{pbot}->{logger}->log("Attempting to " . ($force ? "forcefully " : "") . ($type == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " link $id to $alias\n") if $debug_link >= 2;
+  $self->{pbot}->{logger}->log("Attempting to " . ($force ? "forcefully " : "") . ($type == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " link $id to $alias\n") if $debug_link >= 3;
 
   my $ret = eval {
     my $sth = $self->{dbh}->prepare('SELECT type FROM Aliases WHERE id = ? AND alias = ? LIMIT 1');
@@ -1326,18 +1364,18 @@ sub link_alias {
     if (defined $row) {
       if ($force) {
         if ($row->{'type'} != $type) {
-          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, forcing override\n") if $debug_link >= 2;
+          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, forcing override\n") if $debug_link >= 1;
 
           $sth = $self->{dbh}->prepare('UPDATE Aliases SET type = ? WHERE alias = ? AND id = ?');
           $sth->execute($type, $id, $alias);
           $sth->execute($type, $alias, $id);
           return 1;
         } else {
-          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n") if $debug_link >= 2;
+          $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n") if $debug_link >= 4;
           return 0;
         }
       } else {
-        $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n") if $debug_link >= 2;
+        $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n") if $debug_link >= 4;
         return 0;
       }
     }
@@ -1348,7 +1386,26 @@ sub link_alias {
     return 1;
   };
   $self->{pbot}->{logger}->log($@) if $@;
-  $self->{pbot}->{logger}->log(($type == $self->{alias_type}->{STRONG} ? "Strongly" : "Weakly") . " linked $id to $alias.\n") if $ret and $debug_link;
+
+  my $host1 = $self->find_most_recent_hostmask($id);
+  my $host2 = $self->find_most_recent_hostmask($alias);
+
+  $self->{pbot}->{logger}->log(($type == $self->{alias_type}->{STRONG} ? "Strongly" : "Weakly") . " linked $id ($host1) to $alias ($host2).\n") if $ret and $debug_link;
+
+  if ($ret) {
+    $host1 = lc $host1;
+    $host2 = lc $host2;
+    my ($nick1) = $host1 =~ m/^([^!]+)!/;
+    my ($nick2) = $host2 =~ m/^([^!]+)!/;
+    my $distance = fastdistance($nick1, $nick2);
+    my $length = (length $nick1 > length $nick2) ? length $nick1 : length $nick2;
+    if ($distance > 1 && ($nick1 !~ /^guest/ && $nick2 !~ /^guest/) && ($host1 !~ /unaffiliated/ || $host2 !~ /unaffiliated/)) {
+      $self->{pbot}->{logger}->log("[$nick1][$nick2] $distance / $length\n");
+      $self->{pbot}->{conn}->privmsg("pragma-", "Possible bogus link: ($id) $host1 vs ($alias) $host2");
+      $self->{pbot}->{logger}->log("Possible bogus link: ($id) $host1 vs ($alias) $host2\n");
+    }
+  }
+
   return $ret;
 }
 
@@ -1530,10 +1587,8 @@ sub get_also_known_as {
       return %akas;
     }
 
-    my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" ORDER BY last_seen DESC');
-    my $qnick = quotemeta $nick;
-    $qnick =~ s/_/\\_/g;
-    $sth->execute("$qnick!%");
+    my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE nick = ? ORDER BY last_seen DESC');
+    $sth->execute($nick);
     my $rows = $sth->fetchall_arrayref({});
 
     foreach my $row (@$rows) {
@@ -1545,8 +1600,8 @@ sub get_also_known_as {
 
     foreach my $hostmask (keys %hostmasks) {
       my ($host) = $hostmask =~ /(\@.*)$/;
-      $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE hostmask LIKE ?');
-      $sth->execute("\%$host");
+      $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE host = ?');
+      $sth->execute($host);
       $rows = $sth->fetchall_arrayref({});
 
       foreach my $row (@$rows) {

@@ -56,6 +56,8 @@ sub on_public {
   my ($nick, $user, $host, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
   my $channel = $event->{event}->{to}[0];
 
+  ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
+
   return 0 if not $self->{pbot}->{registry}->get_value('antiflood', 'antirepeat');
 
   my $antirepeat = $self->{pbot}->{registry}->get_value($channel, 'antirepeat');

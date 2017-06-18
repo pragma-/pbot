@@ -111,6 +111,8 @@ sub on_public {
   my $host = $event->{event}->host;
   my $text = $event->{event}->{args}[0];
 
+  ($nick, $user, $host) = $self->normalize_hostmask($nick, $user, $host);
+
   $event->{interpreted} = $self->{pbot}->{interpreter}->process_line($from, $nick, $user, $host, $text);
   return 0;
 }
@@ -172,6 +174,8 @@ sub on_mode {
   my $mode_string = $event->{event}->{args}[0];
   my $channel = $event->{event}->{to}[0];
   $channel = lc $channel;
+
+  ($nick, $user, $host) = $self->normalize_hostmask($nick, $user, $host);
 
   my ($mode, $modifier);
   my $i = 0;
@@ -250,6 +254,8 @@ sub on_join {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
 
+  ($nick, $user, $host) = $self->normalize_hostmask($nick, $user, $host);
+
   $channel = lc $channel;
 
   my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
@@ -285,6 +291,8 @@ sub on_invite {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $target, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0]);
 
+  ($nick, $user, $host) = $self->normalize_hostmask($nick, $user, $host);
+
   $channel = lc $channel;
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host invited $target to $channel!\n");
@@ -302,6 +310,8 @@ sub on_kick {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $target, $channel, $reason) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0], $event->{event}->{args}[1]);
   $channel = lc $channel;
+
+  ($nick, $user, $host) = $self->normalize_hostmask($nick, $user, $host);
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host kicked $target from $channel ($reason)\n");
 
@@ -334,6 +344,8 @@ sub on_departure {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $channel, $args) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->args);
   $channel = lc $channel;
+
+  ($nick, $user, $host) = $self->normalize_hostmask($nick, $user, $host);
 
   my $text = uc $event->{event}->type;
   $text .= " $args";
@@ -400,6 +412,8 @@ sub on_nickchange {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $newnick) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
 
+  ($nick, $user, $host) = $self->normalize_hostmask($nick, $user, $host);
+
   $self->{pbot}->{logger}->log("[NICKCHANGE] $nick!$user\@$host changed nick to $newnick\n");
 
   if ($newnick eq $self->{pbot}->{registry}->get_value('irc', 'botnick') and not $self->{pbot}->{joined_channels}) {
@@ -444,6 +458,16 @@ sub on_nicknameinuse {
   $self->{pbot}->{logger}->log("Received nicknameinuse for nick $nick from $from: $msg\n");
   $event->{conn}->privmsg("nickserv", "ghost $nick " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
   return 0;
+}
+
+sub normalize_hostmask {
+  my ($self, $nick, $user, $host) = @_;
+
+  if ($host =~ m{^(gateway|nat)/(.*)/x-[^/]+$}) {
+    $host = "$1/$2/x-$user";
+  }
+
+  return ($nick, $user, $host);
 }
 
 1;

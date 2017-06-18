@@ -246,7 +246,7 @@ sub on_nickchange {
 sub on_join_channel {
   my ($self, $event_type, $event) = @_;
   $self->remove_channel($event->{channel}); # clear nicklist to remove any stale nicks before repopulating with namreplies
-  #$self->send_who($event->{channel});
+  $self->send_who($event->{channel});
   return 0;
 }
 
@@ -265,6 +265,7 @@ sub on_whospcrpl {
   my ($self, $event_type, $event) = @_;
 
   my ($ignored, $id, $user, $host, $nick, $nickserv, $gecos) = @{$event->{event}->{args}};
+  ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
   $last_who_id = $id;
   my $hostmask = "$nick!$user\@$host";
   my $channel = $who_cache{$id};
