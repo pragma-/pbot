@@ -43,7 +43,10 @@ sub log_message {
   my $self = shift;
   my $now = gettimeofday;
   my $elapsed = $now - $self->{timestamp};
-  $elapsed = sprintf '%10.4f', $elapsed;
+  if ($elapsed >= 0.100) {
+    $self->{pbot}->{logger}->log("^^^ SLOW SQL ^^^\n");
+  }
+  $elapsed = sprintf '%10.3f', $elapsed;
   $self->{pbot}->{logger}->log("$elapsed : $self->{buf}");
   $self->{timestamp} = $now;
 }
