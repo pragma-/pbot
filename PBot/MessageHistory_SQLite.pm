@@ -159,11 +159,11 @@ SQL
     $self->{dbh}->do('CREATE INDEX IF NOT EXISTS AliasIdx1 ON Aliases(id, alias, type)');
     $self->{dbh}->do('CREATE INDEX IF NOT EXISTS AliasIdx2 ON Aliases(alias, id, type)');
 
-    $self->{dbh}->do('CREATE INDEX hostmask_nick_idx on Hostmasks (nick)');
-    $self->{dbh}->do('CREATE INDEX hostmask_host_idx on Hostmasks (host)');
-    $self->{dbh}->do('CREATE INDEX hostmasks_id_idx on Hostmasks (id)');
-    $self->{dbh}->do('CREATE INDEX gecos_id_idx on Gecos (id)');
-    $self->{dbh}->do('CREATE INDEX nickserv_id_idx on Nickserv (id)');
+    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS hostmask_nick_idx on Hostmasks (nick)');
+    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS hostmask_host_idx on Hostmasks (host)');
+    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS hostmasks_id_idx on Hostmasks (id)');
+    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS gecos_id_idx on Gecos (id)');
+    $self->{dbh}->do('CREATE INDEX IF NOT EXISTS nickserv_id_idx on Nickserv (id)');
 
     $self->{dbh}->begin_work();
   };
