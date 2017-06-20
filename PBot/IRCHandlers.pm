@@ -467,6 +467,8 @@ sub normalize_hostmask {
     $host = "$1/$2/x-$user";
   }
 
+  $host =~ s{/session$}{/x-$user};
+
   return ($nick, $user, $host);
 }
 
