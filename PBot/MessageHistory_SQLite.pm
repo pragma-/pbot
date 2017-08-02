@@ -17,6 +17,7 @@ use Carp qw(shortmess);
 use Time::HiRes qw(gettimeofday);
 use Text::CSV;
 use Text::Levenshtein qw/fastdistance/;
+use Time::Duration;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -397,6 +398,22 @@ sub get_message_account {
       my $orig_id = $self->get_message_account_id("$orig_nick!$user\@$host");
       my @orig_nickserv_accounts = $self->get_nickserv_accounts($orig_id);
 
+      if ($nick =~ m/^Guest\d+$/) {
+        $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE user = ? and host = ? ORDER BY last_seen DESC');
+        $sth->execute($user, $host);
+        my $rows = $sth->fetchall_arrayref({});
+        if (defined $rows->[0]) {
+          my $link_type = $self->{alias_type}->{STRONG};
+          if (gettimeofday - $rows->[0]->{last_seen} > 60 * 60 * 48) {
+            $link_type = $self->{alias_type}->{WEAK};
+            $self->{pbot}->{logger}->log("Longer than 48 hours (" . concise duration(gettimeofday - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
+          }
+          $self->{pbot}->{logger}->log("6: nick-change guest match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
+          $orig_nick = undef;
+          return ($rows, $link_type);
+        }
+      }
+
       $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE nick = ? ORDER BY last_seen DESC');
       $sth->execute($nick);
       my $rows = $sth->fetchall_arrayref({});
@@ -537,6 +554,22 @@ sub get_message_account {
       }
     }
 
+    # guests
+    if ($nick =~ m/^Guest\d+$/) {
+      $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE user = ? and host = ? ORDER BY last_seen DESC');
+      $sth->execute($user, $host);
+      my $rows = $sth->fetchall_arrayref({});
+      if (defined $rows->[0]) {
+        my $link_type = $self->{alias_type}->{STRONG};
+        if (gettimeofday - $rows->[0]->{last_seen} > 60 * 60 * 48) {
+          $link_type = $self->{alias_type}->{WEAK};
+          $self->{pbot}->{logger}->log("Longer than 48 hours (" . concise duration(gettimeofday - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
+        }
+        $self->{pbot}->{logger}->log("6: guest match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
+        return ($rows, $link_type);
+      }
+    }
+
     $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE nick = ? ORDER BY last_seen DESC');
     $sth->execute($nick);
     my $rows = $sth->fetchall_arrayref({});
@@ -620,7 +653,7 @@ sub get_message_account {
 
       if (defined $rows->[0] and gettimeofday - $rows->[0]->{last_seen} > 60 * 60 * 48) {
         $link_type = $self->{alias_type}->{WEAK};
-        $self->{pbot}->{logger}->log("Longer than 48 hours (" . (gettimeofday - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
+        $self->{pbot}->{logger}->log("Longer than 48 hours (" . concise duration(gettimeofday - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
       }
 
 =cut
@@ -639,7 +672,7 @@ sub get_message_account {
 
   return $rows->[0]->{id} if $do_nothing;
 
-  if (defined $rows->[0]) {
+  if (defined $rows->[0] and not defined $orig_nick) {
     if ($link_type == $self->{alias_type}->{STRONG}) {
       my $host1 = lc "$nick!$user\@$host";
       my $host2 = lc $rows->[0]->{hostmask};
@@ -650,7 +683,6 @@ sub get_message_account {
       if ($distance > 1 && ($nick1 !~ /^guest/ && $nick2 !~ /^guest/) && ($host1 !~ /unaffiliated/ || $host2 !~ /unaffiliated/)) {
         my $id = $rows->[0]->{id};
         $self->{pbot}->{logger}->log("[$nick1][$nick2] $distance / $length\n");
-        $self->{pbot}->{conn}->privmsg("pragma-", "Possible bogus account: ($id) $host1 vs ($id) $host2");
         $self->{pbot}->{logger}->log("Possible bogus account: ($id) $host1 vs ($id) $host2\n");
       }
     }
@@ -1401,7 +1433,6 @@ sub link_alias {
     my $length = (length $nick1 > length $nick2) ? length $nick1 : length $nick2;
     if ($distance > 1 && ($nick1 !~ /^guest/ && $nick2 !~ /^guest/) && ($host1 !~ /unaffiliated/ || $host2 !~ /unaffiliated/)) {
       $self->{pbot}->{logger}->log("[$nick1][$nick2] $distance / $length\n");
-      $self->{pbot}->{conn}->privmsg("pragma-", "Possible bogus link: ($id) $host1 vs ($alias) $host2");
       $self->{pbot}->{logger}->log("Possible bogus link: ($id) $host1 vs ($alias) $host2\n");
     }
   }
