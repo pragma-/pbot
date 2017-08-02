@@ -431,7 +431,8 @@ sub expand_action_arguments {
   $input =~ s/'/\\'/g if defined $input;
   my @args = shellwords($input);
 
-  while ($action =~ m/\$arg\[([^]]+)]/g) {
+  my $const_action = $action;
+  while ($const_action =~ m/\$arg\[([^]]+)]/g) {
     my $arg = $1;
 
     if ($arg eq '*') {
