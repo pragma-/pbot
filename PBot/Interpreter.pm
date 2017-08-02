@@ -202,18 +202,14 @@ sub interpret {
     $keyword = $command;
   }
 
-  if($keyword ne "factadd" 
-      and $keyword ne "add"
-      and $keyword ne "factfind"
-      and $keyword ne "find"
-      and $keyword ne "factshow"
-      and $keyword ne "show"
-      and $keyword ne "factset"
-      and $keyword ne "factchange"
-      and $keyword ne "change"
-      and $keyword ne "msg") {
+  $tonick = $nick if $tonick eq 'me';
+
+  if ($keyword !~ /^(factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell)/) {
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
-    $arguments =~ s/(?<![\w\/\-])me\b/$nick/gi if defined $arguments && $depth <= 2;
+    $arguments =~ s/(?<![\w\/\-\\])me\b/$nick/gi if defined $arguments && $depth <= 2;
+    $arguments =~ s/(?<![\w\/\-\\])my\b/${nick}'s/gi if defined $arguments && $depth <= 2;
+    $arguments =~ s/\\my\b/my/gi if defined $arguments && $depth <= 2;
+    $arguments =~ s/\\me\b/me/gi if defined $arguments && $depth <= 2;
   }
 
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
