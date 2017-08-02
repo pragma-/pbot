@@ -51,6 +51,13 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.invite',        sub { $self->on_invite(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.cap',           sub { $self->on_cap(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.map',           sub { $self->on_map(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.whospcrpl',     sub { $self->on_whospcrpl(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.endofwho',      sub { $self->on_endofwho(@_) });
+
+  $self->{pbot}->{event_dispatcher}->register_handler('pbot.join',         sub { $self->on_self_join(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('pbot.part',         sub { $self->on_self_part(@_) });
+
+  $self->{pbot}->{timer}->register(sub { $self->check_pending_whos }, 10);
 }
 
 sub default_handler {
@@ -99,6 +106,17 @@ sub on_motd {
     my $msg    = $event->{event}->{args}[1];
     $self->{pbot}->{logger}->log("MOTD from $server :: $msg\n");
   }
+  return 0;
+}
+
+sub on_self_join {
+  my ($self, $event_type, $event) = @_;
+  $self->send_who($event->{channel});
+  return 0;
+}
+
+sub on_self_part {
+  my ($self, $event_type, $event) = @_;
   return 0;
 }
 
@@ -201,7 +219,8 @@ sub on_mode {
     if(defined $target && $target eq $event->{conn}->nick) { # bot targeted
       if($mode eq "+o") {
         $self->{pbot}->{logger}->log("$nick opped me in $channel\n");
-        $self->{pbot}->{chanops}->{is_opped}->{$channel}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('general', 'deop_timeout');;
+        my $timeout = $self->{pbot}->{registry}->get_value($channel, 'deop_timeout') // $self->{pbot}->{registry}->get_value('general', 'deop_timeout');
+        $self->{pbot}->{chanops}->{is_opped}->{$channel}{timeout} = gettimeofday + $timeout;
         delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
         $self->{pbot}->{chanops}->perform_op_commands($channel);
       } 
@@ -470,6 +489,74 @@ sub normalize_hostmask {
   $host =~ s{/session$}{/x-$user};
 
   return ($nick, $user, $host);
+}
+
+my %who_queue;
+my %who_cache;
+my $last_who_id;
+my $who_pending = 0;
+
+sub on_whospcrpl {
+  my ($self, $event_type, $event) = @_;
+
+  my ($ignored, $id, $user, $host, $nick, $nickserv, $gecos) = @{$event->{event}->{args}};
+  ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
+  $last_who_id = $id;
+  my $hostmask = "$nick!$user\@$host";
+  my $channel = $who_cache{$id};
+  delete $who_queue{$id};
+
+  return 0 if not defined $channel;
+
+  $self->{pbot}->{logger}->log("WHO id: $id, hostmask: $hostmask, $nickserv, $gecos.\n");
+
+  my $account_id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+  $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($hostmask, { last_seen => scalar gettimeofday });
+
+  if ($nickserv ne '0') {
+    $self->{pbot}->{messagehistory}->{database}->link_aliases($account_id, undef, $nickserv);
+    $self->{pbot}->{antiflood}->check_nickserv_accounts($nick, $nickserv);
+  }
+
+  $self->{pbot}->{messagehistory}->{database}->link_aliases($account_id, $hostmask, undef);
+
+  $self->{pbot}->{messagehistory}->{database}->devalidate_channel($account_id, $channel);
+  $self->{pbot}->{antiflood}->check_bans($account_id, $hostmask, $channel);
+
+  return 0;
+}
+
+sub on_endofwho {
+  my ($self, $event_type, $event) = @_;
+  $self->{pbot}->{logger}->log("WHO session $last_who_id ($who_cache{$last_who_id}) completed.\n");
+  delete $who_cache{$last_who_id};
+  $who_pending = 0;
+  return 0;
+}
+
+sub send_who {
+  my ($self, $channel) = @_;
+  $self->{pbot}->{logger}->log("pending WHO to $channel\n");
+
+  for (my $id = 1; $id < 99; $id++) {
+    if (not exists $who_cache{$id}) {
+      $who_cache{$id} = $channel;
+      $who_queue{$id} = $channel;
+      $last_who_id = $id;
+      last;
+    }
+  }
+}
+
+sub check_pending_whos {
+  my $self = shift;
+  return if $who_pending;
+  foreach my $id (keys %who_queue) {
+    $self->{pbot}->{logger}->log("sending WHO to $who_queue{$id} [$id]\n");
+    $self->{pbot}->{conn}->sl("WHO $who_queue{$id} %tuhnar,$id");
+    $who_pending = 1;
+    last;
+  }
 }
 
 1;

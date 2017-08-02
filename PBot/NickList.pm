@@ -45,14 +45,10 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',      sub { $self->on_nickchange(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.public',    sub { $self->on_activity(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.caction',   sub { $self->on_activity(@_) });
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.whospcrpl', sub { $self->on_whospcrpl(@_) });
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.endofwho',  sub { $self->on_endofwho(@_) });
   
   # handlers for the bot itself joining/leaving channels
   $self->{pbot}->{event_dispatcher}->register_handler('pbot.join',    sub { $self->on_join_channel(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('pbot.part',    sub { $self->on_part_channel(@_) });
-
-  $self->{pbot}->{timer}->register(sub { $self->check_pending_whos }, 10);
 }
 
 sub dumpnicks {
@@ -246,7 +242,6 @@ sub on_nickchange {
 sub on_join_channel {
   my ($self, $event_type, $event) = @_;
   $self->remove_channel($event->{channel}); # clear nicklist to remove any stale nicks before repopulating with namreplies
-  $self->send_who($event->{channel});
   return 0;
 }
 
@@ -254,74 +249,6 @@ sub on_part_channel {
   my ($self, $event_type, $event) = @_;
   $self->remove_channel($event->{channel});
   return 0;
-}
-
-my %who_queue;
-my %who_cache;
-my $last_who_id;
-my $who_pending = 0;
-
-sub on_whospcrpl {
-  my ($self, $event_type, $event) = @_;
-
-  my ($ignored, $id, $user, $host, $nick, $nickserv, $gecos) = @{$event->{event}->{args}};
-  ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
-  $last_who_id = $id;
-  my $hostmask = "$nick!$user\@$host";
-  my $channel = $who_cache{$id};
-  delete $who_queue{$id};
-
-  return 0 if not defined $channel;
-
-  $self->{pbot}->{logger}->log("WHO id: $id, hostmask: $hostmask, $nickserv, $gecos.\n");
-
-  my $account_id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-  $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($hostmask, { last_seen => scalar gettimeofday });
-
-  if ($nickserv ne '0') {
-    $self->{pbot}->{messagehistory}->{database}->link_aliases($account_id, undef, $nickserv);
-    $self->{pbot}->{antiflood}->check_nickserv_accounts($nick, $nickserv);
-  }
-
-  $self->{pbot}->{messagehistory}->{database}->link_aliases($account_id, $hostmask, undef);
-
-  $self->{pbot}->{messagehistory}->{database}->devalidate_channel($account_id, $channel);
-  $self->{pbot}->{antiflood}->check_bans($account_id, $hostmask, $channel);
-
-  return 0;
-}
-
-sub on_endofwho {
-  my ($self, $event_type, $event) = @_;
-  $self->{pbot}->{logger}->log("WHO session $last_who_id ($who_cache{$last_who_id}) completed.\n");
-  delete $who_cache{$last_who_id};
-  $who_pending = 0;
-  return 0;
-}
-
-sub send_who {
-  my ($self, $channel) = @_;
-  $self->{pbot}->{logger}->log("pending WHO to $channel\n");
-
-  for (my $id = 1; $id < 99; $id++) {
-    if (not exists $who_cache{$id}) {
-      $who_cache{$id} = $channel;
-      $who_queue{$id} = $channel;
-      $last_who_id = $id;
-      last;
-    }
-  }
-}
-
-sub check_pending_whos {
-  my $self = shift;
-  return if $who_pending;
-  foreach my $id (keys %who_queue) {
-    $self->{pbot}->{logger}->log("sending WHO to $who_queue{$id} [$id]\n");
-    $self->{pbot}->{conn}->sl("WHO $who_queue{$id} %tuhnar,$id");
-    $who_pending = 1;
-    last;
-  }
 }
 
 1;
