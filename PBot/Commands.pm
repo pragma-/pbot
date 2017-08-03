@@ -81,7 +81,7 @@ sub exists {
   my ($keyword) = @_;
 
   foreach my $ref (@{ $self->{handlers} }) {
-    return 1 if $ref->{name} eq $keyword;
+    return 1 if $ref->{name} eq lc $keyword;
   }
   return 0;
 }
@@ -96,6 +96,8 @@ sub interpreter {
   my $admin = $pbot->{admins}->loggedin($from, "$nick!$user\@$host");
 
   my $level = defined $admin ? $admin->{level} : 0;
+
+  my $keyword = lc $keyword;
 
   foreach my $ref (@{ $self->{handlers} }) {
     if($ref->{name} eq $keyword) {
