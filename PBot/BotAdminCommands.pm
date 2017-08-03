@@ -54,6 +54,7 @@ sub sl {
   my ($from, $nick, $user, $host, $arguments) = @_;
 
   $self->{pbot}->{conn}->sl($arguments);
+  return "";
 }
 
 sub login {
