@@ -270,10 +270,6 @@ sub find_factoid {
   my @result = eval {
     my @results;
     for (my $depth = 0; $depth < 5; $depth++) {
-      if ($self->{pbot}->{commands}->exists($keyword)) {
-        return undef;
-      }
-
       # check factoids
       foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
         if($exact_channel) {
