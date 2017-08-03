@@ -726,7 +726,7 @@ sub interpreter {
         return $action;
       } elsif ($action =~ s/^\/kick\s+//) {
         if (not exists $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'}) {
-          return "/say $nick: I don't have the effective-level to do that.";
+          return "/say $nick: $keyword doesn't have the effective-level to do that.";
         }
         my $level = 10;
         if ($self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'} >= $level) {
