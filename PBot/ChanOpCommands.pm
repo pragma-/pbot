@@ -112,7 +112,7 @@ sub unban_user {
   
   return "/msg $nick Usage for /msg: unban <nick/mask> <channel>" if $channel !~ /^#/;
 
-  $self->{pbot}->{chanops}->unban_user($target, $channel, 1);
+  $self->{pbot}->{chanops}->unban_user($target, $channel);
   return "/msg $nick $target has been unbanned from $channel.";
 }
 
@@ -187,7 +187,7 @@ sub unmute_user {
 
   return "/msg $nick Usage for /msg: unmute <mask> <channel>" if $channel !~ /^#/;
 
-  $self->{pbot}->{chanops}->unmute_user($target, $channel, 1);
+  $self->{pbot}->{chanops}->unmute_user($target, $channel);
   return "/msg $nick $target has been unmuted in $channel.";
 }
 

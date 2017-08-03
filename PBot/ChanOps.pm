@@ -128,7 +128,7 @@ sub ban_user {
 
 sub unban_user {
   my $self = shift;
-  my ($mask, $channel, $immediately) = @_;
+  my ($mask, $channel) = @_;
 
   my $bans;
 
@@ -166,14 +166,9 @@ sub unban_user {
     next if $baninfo->{type} ne '+b';
     next if exists $unbanned{$baninfo->{banmask}};
     $unbanned{$baninfo->{banmask}} = 1;
-
-    if ($immediately) {
-      $self->add_op_command($channel, "mode $channel -b $baninfo->{banmask}");
-      $self->gain_ops($channel);
-    } else {
-      $self->add_to_unban_queue($channel, 'b', $baninfo->{banmask});
-    }
+    $self->add_to_unban_queue($channel, 'b', $baninfo->{banmask});
   }
+  $self->check_unban_queue;
 }
 
 sub ban_user_timed {
@@ -219,7 +214,7 @@ sub mute_user {
 
 sub unmute_user {
   my $self = shift;
-  my ($mask, $channel, $immediately) = @_;
+  my ($mask, $channel) = @_;
   $mask = lc $mask;
   $channel = lc $channel;
   $self->{pbot}->{logger}->log("Unmuting $channel $mask\n");
@@ -229,12 +224,8 @@ sub unmute_user {
     $self->{unmute_timeout}->save;
   }
 
-  if ($immediately) {
-    $self->add_op_command($channel, "mode $channel -q $mask");
-    $self->gain_ops($channel);
-  } else {
-    $self->add_to_unban_queue($channel, 'q', $mask);
-  }
+  $self->add_to_unban_queue($channel, 'q', $mask);
+  $self->check_unban_queue;
 }
 
 sub mute_user_timed {
@@ -307,34 +298,43 @@ sub add_to_unban_queue {
 sub check_unban_queue {
   my $self = shift;
 
+  my $MAX_COMMANDS = 4;
+  my $commands = 0;
+
   foreach my $channel (keys %{$self->{unban_queue}}) {
-    my ($list, $count, $modes);
-    $list = '';
-    $modes = '-';
-    $count = 0;
+    my $done = 0;
+    while (not $done) {
+      my ($list, $count, $modes);
+      $list = '';
+      $modes = '-';
+      $count = 0;
 
-    foreach my $mode (keys %{$self->{unban_queue}->{$channel}}) {
-      while (@{$self->{unban_queue}->{$channel}->{$mode}}) {
-        my $target = pop @{$self->{unban_queue}->{$channel}->{$mode}};
-        $list .= " $target";
-        $modes .= $mode;
-        last if ++$count >= $self->{pbot}->{ircd}->{MODES};
+      foreach my $mode (keys %{$self->{unban_queue}->{$channel}}) {
+        while (@{$self->{unban_queue}->{$channel}->{$mode}}) {
+          my $target = pop @{$self->{unban_queue}->{$channel}->{$mode}};
+          $list .= " $target";
+          $modes .= $mode;
+          last if ++$count >= $self->{pbot}->{ircd}->{MODES};
+        }
+
+        if (not @{$self->{unban_queue}->{$channel}->{$mode}}) {
+          delete $self->{unban_queue}->{$channel}->{$mode};
+        }
+
+        last if $count >= $self->{pbot}->{ircd}->{MODES};
       }
 
-      if (not @{$self->{unban_queue}->{$channel}->{$mode}}) {
-        delete $self->{unban_queue}->{$channel}->{$mode};
+      if (not keys $self->{unban_queue}->{$channel}) {
+        delete $self->{unban_queue}->{$channel};
+        $done = 1;
       }
 
-      last if $count == $self->{pbot}->{ircd}->{MODES};
-    }
+      if ($count) {
+        $self->add_op_command($channel, "mode $channel $modes $list");
+        $self->gain_ops($channel);
 
-    if (not keys $self->{unban_queue}->{$channel}) {
-      delete $self->{unban_queue}->{$channel};
-    }
-
-    if ($count) {
-      $self->add_op_command($channel, "mode $channel $modes $list");
-      $self->gain_ops($channel);
+        return if ++$commands >= $MAX_COMMANDS;
+      }
     }
   }
 }
