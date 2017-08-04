@@ -128,7 +128,7 @@ sub ban_user {
 
 sub unban_user {
   my $self = shift;
-  my ($mask, $channel) = @_;
+  my ($mask, $channel, $immediately) = @_;
 
   my $bans;
 
@@ -168,7 +168,7 @@ sub unban_user {
     $unbanned{$baninfo->{banmask}} = 1;
     $self->add_to_unban_queue($channel, 'b', $baninfo->{banmask});
   }
-  $self->check_unban_queue;
+  $self->check_unban_queue if $immediately;
 }
 
 sub ban_user_timed {
@@ -214,7 +214,7 @@ sub mute_user {
 
 sub unmute_user {
   my $self = shift;
-  my ($mask, $channel) = @_;
+  my ($mask, $channel, $immediately) = @_;
   $mask = lc $mask;
   $channel = lc $channel;
   $self->{pbot}->{logger}->log("Unmuting $channel $mask\n");
@@ -225,7 +225,7 @@ sub unmute_user {
   }
 
   $self->add_to_unban_queue($channel, 'q', $mask);
-  $self->check_unban_queue;
+  $self->check_unban_queue if $immediately;
 }
 
 sub mute_user_timed {
