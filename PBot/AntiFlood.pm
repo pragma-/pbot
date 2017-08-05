@@ -684,7 +684,7 @@ sub unbanme {
       }
 
       my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'unbanmes');
-      if ($channel_data->{unbanmes} <= 1) {
+      if ($channel_data->{unbanmes} <= 2) {
         $channel_data->{unbanmes}++;
         $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
       }
@@ -738,7 +738,11 @@ sub unbanme {
       $warning .= " You may not use `unbanme` again for several hours for $channels_disabled; ensure that your client or connection issues are resolved, otherwise leave the channel until they are or you will be temporarily banned for several hours if you join-flood again during this period.";
     }
 
-    return "/msg $nick You have been unbanned from $channels.$warning";
+    if (length $channels) {
+      return "/msg $nick You have been unbanned from $channels.$warning";
+    } else {
+      return "/msg $nick You were not unbanned at this time.$warning";
+    }
   } else {
     return "/msg $nick There is no temporary join-flooding ban set for you.";
   }
