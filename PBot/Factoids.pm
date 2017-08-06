@@ -61,7 +61,6 @@ sub initialize {
   $self->{pbot}->{atexit}->register(sub { $self->save_factoids; return; });
 
   $self->load_factoids;
-  $self->add_factoid('text', '.*', $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'version', "/say $VERSION", 1);
 }
 
 sub load_factoids {
@@ -83,6 +82,13 @@ sub load_factoids {
 
   $self->{pbot}->{logger}->log("  " . ($text + $regex + $modules) . " factoids loaded ($text text, $regex regexs, $modules modules).\n");
   $self->{pbot}->{logger}->log("Done.\n");
+
+  $self->add_default_factoids();
+}
+
+sub add_default_factoids {
+  my $self = shift;
+  $self->add_factoid('text', '.*', $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'version', "/say $VERSION", 1);
 }
 
 sub save_factoids {
