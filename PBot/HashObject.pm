@@ -57,7 +57,7 @@ sub load_hash_add {
   return undef;
 }
 
-sub load_hash {
+sub load {
   my $self = shift;
   my $filename;
 
@@ -118,7 +118,7 @@ sub load_hash {
   $self->{pbot}->{logger}->log("Done.\n");
 }
 
-sub save_hash {
+sub save {
   my $self = shift;
   my $filename;
 
@@ -140,6 +140,11 @@ sub save_hash {
     print FILE "\n";
   }
   close(FILE);
+}
+
+sub clear {
+  my $self = shift;
+  $self->{hash} = {};
 }
 
 sub find_hash {
@@ -216,7 +221,7 @@ sub set {
     $value = $self->hash->{$hash_index}{$key};
   } else {
     $self->hash->{$hash_index}{$key} = $value;
-    $self->save_hash();
+    $self->save();
   }
 
   return "[$self->{name}] $hash_index: '$key' " . (defined $value ? "set to '$value'" : "is not set.");
@@ -234,7 +239,7 @@ sub unset {
   }
 
   delete $self->hash->{$hash_index}{$key};
-  $self->save_hash();
+  $self->save();
 
   return "[$self->{name}] $hash_index: '$key' unset.";
 }
@@ -243,7 +248,7 @@ sub add {
   my ($self, $index_key, $hash) = @_;
 
   if($self->load_hash_add($index_key, $hash, 0)) {
-    $self->save_hash();
+    $self->save_();
   } else {
     return "Error occurred adding new $self->{name} object.";
   }
@@ -263,7 +268,7 @@ sub remove {
   }
 
   delete $self->hash->{$hash_index};
-  $self->save_hash();
+  $self->save();
 
   return "'$hash_index' removed from $self->{name}.";
 }

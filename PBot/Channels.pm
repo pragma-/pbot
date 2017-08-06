@@ -120,13 +120,13 @@ sub is_active_op {
 sub load_channels {
   my $self = shift;
 
-  $self->{channels}->load_hash();
+  $self->{channels}->load();
 }
 
 sub save_channels {
   my $self = shift;
 
-  $self->{channels}->save_hash();
+  $self->{channels}->save();
 }
 
 sub channels {
