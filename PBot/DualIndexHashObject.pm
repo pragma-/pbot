@@ -152,6 +152,11 @@ sub save {
   close FILE;
 }
 
+sub clear {
+  my $self = shift;
+  $self->{hash} = {};
+}
+
 sub find_index {
   my $self = shift;
   my ($primary_index_key, $secondary_index_key) = map {lc} @_;
