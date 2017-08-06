@@ -68,6 +68,11 @@ sub remove {
   $self->save_blacklist();
 }
 
+sub clear_blacklist {
+  my $self = shift;
+  $self->{blacklist} = {};
+}
+
 sub load_blacklist {
   my $self = shift;
   my $filename;

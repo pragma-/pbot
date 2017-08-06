@@ -70,6 +70,11 @@ sub remove {
   $self->save_ignores();
 }
 
+sub clear_ignores {
+  my $self = shift;
+  $self->{ignore_list} = {};
+}
+
 sub load_ignores {
   my $self = shift;
   my $filename;

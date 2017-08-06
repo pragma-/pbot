@@ -12,6 +12,9 @@ package PBot::BotAdminCommands;
 use warnings;
 use strict;
 
+use feature 'switch';
+no if $] >= 5.018, warnings => "experimental::smartmatch";
+
 use Carp ();
 
 sub new {
@@ -47,6 +50,7 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->adminunset(@_)   },       "adminunset",    60);
   $pbot->{commands}->register(sub { return $self->sl(@_)           },       "sl",            90);
   $pbot->{commands}->register(sub { return $self->export(@_)       },       "export",        90);
+  $pbot->{commands}->register(sub { return $self->reload(@_)       },       "reload",        90);
 }
 
 sub sl {
@@ -238,6 +242,71 @@ sub export {
 
   if($arguments =~ /^admins$/i) {
     return "/msg $nick Coming soon.";
+  }
+}
+
+sub reload {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+
+  given ($arguments) {
+    when ("blacklist") {
+      $self->{pbot}->{blacklist}->clear_blacklist;
+      $self->{pbot}->{blacklist}->load_blacklist;
+      return "Blacklist reloaded.";
+    }
+
+    when ("whitelist") {
+      $self->{pbot}->{antiflood}->{whitelist}->clear;
+      $self->{pbot}->{antiflood}->{whitelist}->load;
+      return "Whitelist reloaded.";
+    }
+
+    when ("ignores") {
+      $self->{pbot}->{ignorelist}->clear_ignores;
+      $self->{pbot}->{ignorelist}->load_ignores;
+      return "Ignore list reloaded.";
+    }
+
+    when ("admins") {
+      $self->{pbot}->{admins}->{admins}->clear;
+      $self->{pbot}->{admins}->load_admins;
+      return "Admins reloaded.";
+    }
+
+    when ("channels") {
+      $self->{pbot}->{channels}->{channels}->clear;
+      $self->{pbot}->{channels}->load_channels;
+      return "Channels reloaded.";
+    }
+
+    when ("bantimeouts") {
+      $self->{pbot}->{chanops}->{unban_timeout}->clear;
+      $self->{pbot}->{chanops}->{unban_timeout}->load;
+      return "Ban timeouts reloaded.";
+    }
+
+    when ("mutetimeouts") {
+      $self->{pbot}->{chanops}->{unmute_timeout}->clear;
+      $self->{pbot}->{chanops}->{unmute_timeout}->load;
+      return "Mute timeouts reloaded.";
+    }
+
+    when ("registry") {
+      $self->{pbot}->{registry}->{registry}->clear;
+      $self->{pbot}->{registry}->load;
+      return "Registry reloaded.";
+    }
+
+    when ("factoids") {
+      $self->{pbot}->{factoids}->{factoids}->clear;
+      $self->{pbot}->{factoids}->load_factoids;
+      return "Factoids reloaded.";
+    }
+
+    default {
+      return "Usage: reload <blacklist|whitelist|ignores|admins|channels|bantimeouts|mutetimeouts|registry|factoids>";
+    }
   }
 }
 

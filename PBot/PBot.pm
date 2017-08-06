@@ -69,7 +69,7 @@ sub initialize {
   my ($self, %conf) = @_;
 
   # logger created first to allow other modules to log things
-  $self->{logger}   = PBot::Logger->new(log_file => delete $conf{log_file}, %conf);
+  $self->{logger}   = PBot::Logger->new(log_file => $conf{log_file}, %conf);
 
   $self->{atexit}   = PBot::Registerable->new(%conf);
   $self->{timer}    = PBot::Timer->new(timeout => 10, %conf);
@@ -77,28 +77,28 @@ sub initialize {
 
   $self->{refresher} = PBot::Refresher->new(pbot => $self);
 
-  my $config_dir = delete $conf{config_dir} // "$ENV{HOME}/pbot/config";
+  my $config_dir = $conf{config_dir} // "$ENV{HOME}/pbot/config";
 
   # registry created, but not yet loaded, to allow modules to create default values and triggers
-  $self->{registry} = PBot::Registry->new(pbot => $self, filename => delete $conf{registry_file} // "$config_dir/registry", %conf);
+  $self->{registry} = PBot::Registry->new(pbot => $self, filename => $conf{registry_file} // "$config_dir/registry", %conf);
 
   $self->{registry}->add_default('text', 'general', 'config_dir',  $config_dir);
-  $self->{registry}->add_default('text', 'general', 'data_dir',    delete $conf{data_dir}    // "$ENV{HOME}/pbot/data");
-  $self->{registry}->add_default('text', 'general', 'module_dir',  delete $conf{module_dir}  // "$ENV{HOME}/pbot/modules");
-  $self->{registry}->add_default('text', 'general', 'trigger',     delete $conf{trigger}     // '!');
+  $self->{registry}->add_default('text', 'general', 'data_dir',    $conf{data_dir}    // "$ENV{HOME}/pbot/data");
+  $self->{registry}->add_default('text', 'general', 'module_dir',  $conf{module_dir}  // "$ENV{HOME}/pbot/modules");
+  $self->{registry}->add_default('text', 'general', 'trigger',     $conf{trigger}     // '!');
 
-  $self->{registry}->add_default('text', 'irc',     'debug',       delete $conf{irc_debug}   // 0);
-  $self->{registry}->add_default('text', 'irc',     'show_motd',   delete $conf{show_motd}   // 1);
-  $self->{registry}->add_default('text', 'irc',     'max_msg_len', delete $conf{max_msg_len} // 425);
-  $self->{registry}->add_default('text', 'irc',     'ircserver',   delete $conf{ircserver}   // "irc.freenode.net");
-  $self->{registry}->add_default('text', 'irc',     'port',        delete $conf{port}        // 6667);
-  $self->{registry}->add_default('text', 'irc',     'SSL',         delete $conf{SSL}         // 0);
-  $self->{registry}->add_default('text', 'irc',     'SSL_ca_file', delete $conf{SSL_ca_file} // 'none');
-  $self->{registry}->add_default('text', 'irc',     'SSL_ca_path', delete $conf{SSL_ca_path} // 'none');
-  $self->{registry}->add_default('text', 'irc',     'botnick',     delete $conf{botnick}     // "pbot3");
-  $self->{registry}->add_default('text', 'irc',     'username',    delete $conf{username}    // "pbot3");
-  $self->{registry}->add_default('text', 'irc',     'ircname',     delete $conf{ircname}     // "http://code.google.com/p/pbot2-pl/");
-  $self->{registry}->add_default('text', 'irc',     'identify_password', delete $conf{identify_password} // 'none');
+  $self->{registry}->add_default('text', 'irc',     'debug',       $conf{irc_debug}   // 0);
+  $self->{registry}->add_default('text', 'irc',     'show_motd',   $conf{show_motd}   // 1);
+  $self->{registry}->add_default('text', 'irc',     'max_msg_len', $conf{max_msg_len} // 425);
+  $self->{registry}->add_default('text', 'irc',     'ircserver',   $conf{ircserver}   // "irc.freenode.net");
+  $self->{registry}->add_default('text', 'irc',     'port',        $conf{port}        // 6667);
+  $self->{registry}->add_default('text', 'irc',     'SSL',         $conf{SSL}         // 0);
+  $self->{registry}->add_default('text', 'irc',     'SSL_ca_file', $conf{SSL_ca_file} // 'none');
+  $self->{registry}->add_default('text', 'irc',     'SSL_ca_path', $conf{SSL_ca_path} // 'none');
+  $self->{registry}->add_default('text', 'irc',     'botnick',     $conf{botnick}     // "pbot3");
+  $self->{registry}->add_default('text', 'irc',     'username',    $conf{username}    // "pbot3");
+  $self->{registry}->add_default('text', 'irc',     'ircname',     $conf{ircname}     // "http://code.google.com/p/pbot2-pl/");
+  $self->{registry}->add_default('text', 'irc',     'identify_password', $conf{identify_password} // 'none');
   $self->{registry}->add_default('text', 'irc',     'log_default_handler', 1);
   
   $self->{registry}->set_default('irc', 'SSL_ca_file',       'private', 1);
@@ -112,15 +112,15 @@ sub initialize {
   $self->{irchandlers}        = PBot::IRCHandlers->new(pbot => $self, %conf);
   $self->{select_handler}     = PBot::SelectHandler->new(pbot => $self, %conf);
   $self->{stdin_reader}       = PBot::StdinReader->new(pbot => $self, %conf);
-  $self->{admins}             = PBot::BotAdmins->new(pbot => $self, filename => delete $conf{admins_file}, %conf);
+  $self->{admins}             = PBot::BotAdmins->new(pbot => $self, filename => $conf{admins_file}, %conf);
   $self->{bantracker}         = PBot::BanTracker->new(pbot => $self, %conf);
   $self->{lagchecker}         = PBot::LagChecker->new(pbot => $self, %conf);
-  $self->{messagehistory}     = PBot::MessageHistory->new(pbot => $self, filename => delete $conf{messagehistory_file}, %conf);
+  $self->{messagehistory}     = PBot::MessageHistory->new(pbot => $self, filename => $conf{messagehistory_file}, %conf);
   $self->{antiflood}          = PBot::AntiFlood->new(pbot => $self, %conf);
-  $self->{ignorelist}         = PBot::IgnoreList->new(pbot => $self, filename => delete $conf{ignorelist_file}, %conf);
-  $self->{blacklist}          = PBot::BlackList->new(pbot => $self, filename => delete $conf{blacklist_file}, %conf);
+  $self->{ignorelist}         = PBot::IgnoreList->new(pbot => $self, filename => $conf{ignorelist_file}, %conf);
+  $self->{blacklist}          = PBot::BlackList->new(pbot => $self, filename => $conf{blacklist_file}, %conf);
   $self->{irc}                = PBot::IRC->new();
-  $self->{channels}           = PBot::Channels->new(pbot => $self, filename => delete $conf{channels_file}, %conf);
+  $self->{channels}           = PBot::Channels->new(pbot => $self, filename => $conf{channels_file}, %conf);
   $self->{chanops}            = PBot::ChanOps->new(pbot => $self, %conf);
   $self->{nicklist}           = PBot::NickList->new(pbot => $self, %conf);
 
@@ -130,16 +130,21 @@ sub initialize {
 
   $self->{factoids} = PBot::Factoids->new(
     pbot        => $self,
-    filename    => delete $conf{factoids_file},
-    export_path => delete $conf{export_factoids_path},
-    export_site => delete $conf{export_factoids_site}, 
+    filename    => $conf{factoids_file},
+    export_path => $conf{export_factoids_path},
+    export_site => $conf{export_factoids_site},
     %conf
   );
 
   $self->{plugins} = PBot::Plugins->new(pbot => $self, %conf);
 
-  # load registry entries from file to overwrite defaults
-  $self->{registry}->load;
+  if (not -e $self->{registry}->{registry}->{filename}) {
+    # save new defaults to file if file doesn't exist
+    $self->{registry}->save;
+  } else {
+    # load existing registry entries from file to overwrite defaults
+    $self->{registry}->load;
+  }
 
   my @chars = ("A".."Z", "a".."z", "0".."9");
   $self->{secretstuff} .= $chars[rand @chars] for 1..64;
