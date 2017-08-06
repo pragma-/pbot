@@ -702,7 +702,7 @@ sub unbanme {
     my $channels_disabled = '';
     my $sep_disabled = '';
     foreach my $channel (keys %$unbanned) {
-      foreach my $mask (keys $unbanned->{$channel}) {
+      foreach my $mask (keys %{ $unbanned->{$channel} }) {
         if ($self->{pbot}->{channels}->is_active_op("${channel}-floodbans")) {
 
           if ($unbanned->{$channel}->{$mask} <= 2) {
