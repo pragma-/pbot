@@ -548,7 +548,7 @@ sub factadd {
   my ($from_chan, $keyword, $text);
 
   if (defined $arguments) {
-    if ($arguments =~ /^(#\S+)\s+(\S+)\s+(?:is\s+)?(.*)$/i) {
+    if ($arguments =~ /^(#\S+|global|\.\*)\s+(\S+)\s+(?:is\s+)?(.*)$/i) {
       ($from_chan, $keyword, $text) = ($1, $2, $3);
     } elsif ($arguments =~ /^(\S+)\s+(?:is\s+)?(.*)$/i) {
       ($from_chan, $keyword, $text) = ($from, $1, $2);
@@ -638,6 +638,7 @@ sub factrem {
   }
 
   $channel = '.*' if $channel eq 'global';
+  $from_chan = '.*' if $channel eq 'global';
 
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to remove $trigger [not factoid]\n");
@@ -1140,15 +1141,19 @@ sub factchange {
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
   my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier);
 
+  my $needs_disambig;
+
   if (defined $arguments) {
     if ($arguments =~ /^([^\s]+) ([^\s]+)\s+s(.)/) {
       $channel = $1;
       $keyword = $2; 
       $delim = $3;
+      $needs_disambig = 0;
     } elsif ($arguments =~ /^([^\s]+)\s+s(.)/) {
       $keyword = $1;
       $delim = $2;
       $channel = $from;
+      $needs_disambig = 1;
     }
 
     $delim = quotemeta $delim;
@@ -1164,15 +1169,37 @@ sub factchange {
     return "Usage: factchange [channel] <keyword> s/<pattern>/<replacement>/";
   }
 
-  my $chan = $channel;
-  ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $keyword, undef, 1, 1);
+  my ($from_trigger, $from_chan) = ($keyword, $channel);
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, undef, 0, 1);
 
-  if (not defined $trigger) {
-    return "$keyword not found in channel $chan.";
+  if (not @factoids or not $factoids[0]) {
+    $from_chan = 'global channel' if $from_chan eq '.*';
+    return "$keyword not found in $from_chan";
   }
 
-  if ($channel !~ /^#/ and $chan !~ /^#/ and $channel ne $chan) {
-    return "$trigger belongs to $channel, but this is $chan. Please switch to $channel or use /msg to change this factoid.";
+  if (@factoids > 1) {
+    if (not grep { $_->[0] eq $from_chan } @factoids) {
+      return "$from_trigger found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `factchange <channel> $from_trigger` to disambiguate.";
+    } else {
+      foreach my $factoid (@factoids) {
+        if ($factoid->[0] eq $from_chan) {
+          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
+          last;
+        }
+      }
+    }
+  } else {
+    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
+  }
+
+  if (not defined $trigger) {
+    return "$keyword not found in channel $from_chan.";
+  }
+
+  $from_chan = '.*' if $from_chan eq 'global';
+
+  if ($channel =~ /^#/ and $from_chan =~ /^#/ and $channel ne $from_chan) {
+    return "$trigger belongs to $channel, but this is $from_chan. Please switch to $channel or use /msg to change this factoid.";
   }
 
   my $admininfo = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
