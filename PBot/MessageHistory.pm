@@ -236,6 +236,7 @@ sub recall_message {
   };
 
   my $recall_text = '';
+  Getopt::Long::Configure ("bundling");
 
   foreach my $recall (@recalls) {
     my ($recall_nick, $recall_history, $recall_channel, $recall_before, $recall_after, $recall_context, $recall_count);
