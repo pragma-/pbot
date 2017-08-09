@@ -324,7 +324,7 @@ sub check_unban_queue {
         last if $count >= $self->{pbot}->{ircd}->{MODES};
       }
 
-      if (not keys $self->{unban_queue}->{$channel}) {
+      if (not keys %{ $self->{unban_queue}->{$channel} }) {
         delete $self->{unban_queue}->{$channel};
         $done = 1;
       }

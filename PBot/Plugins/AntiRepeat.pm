@@ -156,7 +156,7 @@ sub adjust_offenses {
 
         if ($self->{offenses}->{$account}->{$channel}->{offenses} <= 0) {
           delete $self->{offenses}->{$account}->{$channel};
-          if (keys $self->{offenses}->{$account} == 0) {
+          if (keys %{ $self->{offenses}->{$account} } == 0) {
             delete $self->{offenses}->{$account};
           }
         } else {
