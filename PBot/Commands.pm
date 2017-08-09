@@ -97,7 +97,7 @@ sub interpreter {
 
   my $level = defined $admin ? $admin->{level} : 0;
 
-  my $keyword = lc $keyword;
+  $keyword = lc $keyword;
 
   foreach my $ref (@{ $self->{handlers} }) {
     if($ref->{name} eq $keyword) {
