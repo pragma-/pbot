@@ -202,7 +202,7 @@ sub interpret {
     $keyword = $command;
   }
 
-  $tonick = $nick if $tonick eq 'me';
+  $tonick = $nick if defined $tonick and $tonick eq 'me';
 
   if ($keyword !~ /^(factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell)/) {
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
