@@ -103,6 +103,19 @@ sub get_channels {
   return \@channels;
 }
 
+sub is_present_any_channel {
+  my ($self, $nick) = @_;
+
+  $nick = lc $nick;
+
+  foreach my $channel (keys %{ $self->{nicklist} }) {
+    if (exists $self->{nicklist}->{$channel}->{$nick}) {
+      return $self->{nicklist}->{$channel}->{$nick}->{nick};
+    }
+  }
+  return 0;
+}
+
 sub is_present {
   my ($self, $channel, $nick) = @_;
 
