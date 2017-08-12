@@ -64,6 +64,8 @@ CREATE TABLE IF NOT EXISTS Reminders (
   target      TEXT,
   text        TEXT,
   alarm       NUMERIC,
+  repeat      INTEGER,
+  duration    NUMERIC,
   created_on  NUMERIC,
   created_by  TEXT
 )
@@ -96,11 +98,11 @@ sub dbi_end {
 }
 
 sub add_reminder {
-  my ($self, $account, $target, $text, $alarm, $owner) = @_;
+  my ($self, $account, $target, $text, $alarm, $duration, $repeat, $owner) = @_;
 
   eval {
-    my $sth = $self->{dbh}->prepare('INSERT INTO Reminders (account, target, text, alarm, created_on, created_by) VALUES (?, ?, ?, ?, ?, ?)');
-    $sth->execute($account, $target, $text, $alarm, scalar gettimeofday, $owner);
+    my $sth = $self->{dbh}->prepare('INSERT INTO Reminders (account, target, text, alarm, duration, repeat, created_on, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    $sth->execute($account, $target, $text, $alarm, $duration, $repeat, scalar gettimeofday, $owner);
   };
 
   if ($@) {
@@ -108,6 +110,34 @@ sub add_reminder {
     return 0;
   }
   return 1;
+}
+
+sub update_reminder {
+  my ($self, $id, $data) = @_;
+
+
+  eval {
+    my $sql = 'UPDATE Reminders SET ';
+
+    my $comma = '';
+    foreach my $key (keys %$data) {
+      $sql .= "$comma$key = ?";
+      $comma = ', ';
+    }
+
+    $sql .= ' WHERE id = ?';
+
+    my $sth = $self->{dbh}->prepare($sql);
+
+    my $param = 1;
+    foreach my $key (keys %$data) {
+      $sth->bind_param($param++, $data->{$key});
+    }
+
+    $sth->bind_param($param++, $id);
+    $sth->execute();
+  };
+  $self->{pbot}->{logger}->log($@) if $@;
 }
 
 sub get_reminder {
@@ -167,11 +197,11 @@ sub remindme {
     return "Internal error.";
   }
 
-  my $usage = "Usage: remindme [-c channel] message -t time | remindme -l [nick] | remindme -d id";
+  my $usage = "Usage: remindme [-c channel] [-r count]  message -t time | remindme -l [nick] | remindme -d id";
 
   return $usage if not length $arguments;
 
-  my ($target, $text, $alarm, $list_reminders, $delete_id);
+  my ($target, $repeat, $text, $alarm, $list_reminders, $delete_id);
 
   my $getopt_error;
   local $SIG{__WARN__} = sub {
@@ -182,6 +212,7 @@ sub remindme {
   $arguments =~ s/'/\\'/g;
 
   my ($ret, $args) = GetOptionsFromString($arguments,
+    'r:i' => \$repeat,
     't:s' => \$alarm,
     'c:s' => \$target,
     'm:s' => \$text,
@@ -290,6 +321,18 @@ sub remindme {
     return "Come on now, I'll be dead by then.";
   }
 
+  if (not defined $admininfo and $length < 60) {
+    return "Time must be a minimum of 60 seconds.";
+  }
+
+  if (not defined $admininfo and $repeat > 5) {
+    return "You may only set up to 5 repeats.";
+  }
+
+  if ($repeat < 0) {
+    return "Repeats must be 0 or greater.";
+  }
+
   $alarm = gettimeofday + $length;
 
   my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
@@ -302,7 +345,7 @@ sub remindme {
     }
   }
 
-  if ($self->add_reminder($account, $target, $text, $alarm, "$nick!$user\@$host")) {
+  if ($self->add_reminder($account, $target, $text, $alarm, $length, $repeat, "$nick!$user\@$host")) {
     return "Reminder added.";
   } else {
     return "Failed to add reminder.";
@@ -344,7 +387,15 @@ sub check_reminders {
     my $text = "Reminder: $reminder->{text} (Set $duration ago)";
     my $target = $reminder->{target} // $nick;
     $self->{pbot}->{conn}->privmsg($target, $text);
-    $self->delete_reminder($reminder->{id});
+
+    if ($reminder->{repeat} > 0) {
+      $reminder->{repeat}--;
+      $reminder->{alarm} = gettimeofday + $reminder->{duration};
+      my $data = { repeat => $reminder->{repeat}, alarm => $reminder->{alarm} };
+      $self->update_reminder($reminder->{id}, $data);
+    } else {
+      $self->delete_reminder($reminder->{id});
+    }
   }
 }
 
