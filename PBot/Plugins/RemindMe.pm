@@ -171,7 +171,7 @@ sub remindme {
 
   return $usage if not length $arguments;
 
-  my ($target, $text, $alarm, $list_reminders, $nick_override, $delete_id);
+  my ($target, $text, $alarm, $list_reminders, $delete_id);
 
   my $getopt_error;
   local $SIG{__WARN__} = sub {
