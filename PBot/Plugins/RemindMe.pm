@@ -167,7 +167,7 @@ sub remindme {
     return "Internal error.";
   }
 
-  my $usage = "Usage: remindme [-c channel] message -t time | remindme -l [nick] | remindme -d <id>";
+  my $usage = "Usage: remindme [-c channel] message -t time | remindme -l [nick] | remindme -d id";
 
   return $usage if not length $arguments;
 
@@ -298,7 +298,7 @@ sub remindme {
   if (not defined $admininfo) {
     my $reminders = $self->get_reminders($account);
     if (@$reminders >= 3) {
-      return "You may only set 3 reminders at a time. Use `remindme -d <id>` to remove a reminder.";
+      return "You may only set 3 reminders at a time. Use `remindme -d id` to remove a reminder.";
     }
   }
 
@@ -329,6 +329,13 @@ sub check_reminders {
     # ensures we get the current nick of the person
     my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($reminder->{account});
     my ($nick) = $hostmask =~ /^([^!]+)!/;
+
+    # delete this reminder if it's expired by 31 days
+    if (gettimeofday - $reminder->{alarm} >= 86400 * 31) {
+      $self->{pbot}->{logger}->log("Deleting expired reminder: $reminder->{id}) $reminder->{text} set by $reminder->{created_by}\n");
+      $self->delete_reminder($reminder->{id});
+      next;
+    }
 
     # don't execute this reminder if the person isn't around yet
     next if not $self->{pbot}->{nicklist}->is_present_any_channel($nick);
