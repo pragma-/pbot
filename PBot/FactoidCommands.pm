@@ -752,6 +752,8 @@ sub factshow {
     $result .= ' [module]';
   }
 
+  $result = "[$channel] $result" if $channel ne $chan;
+
   return $result;
 }
 
