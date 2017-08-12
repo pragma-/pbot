@@ -12,7 +12,7 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 use Carp ();
 use DBI;
-use Time::Duration qw/duration/;
+use Time::Duration qw/concise duration/;
 use Time::HiRes qw/gettimeofday/;
 use Getopt::Long qw(GetOptionsFromString);
 use PBot::Utils::ParseDate;
@@ -107,8 +107,41 @@ sub add_reminder {
     $self->{pbot}->{logger}->log("Add reminder failed: $@");
     return 0;
   }
-
   return 1;
+}
+
+sub get_reminder {
+  my ($self, $id) = @_;
+
+  my $reminder = eval {
+    my $sth = $self->{dbh}->prepare('SELECT * FROM Reminders WHERE id = ?');
+    $sth->execute($id);
+    return $sth->fetchrow_hashref();
+  };
+
+  if ($@) {
+    $self->{pbot}->{logger}->log("List reminders failed: $@");
+    return undef;
+  }
+
+  return $reminder;
+}
+
+sub get_reminders {
+  my ($self, $account) = @_;
+
+  my $reminders = eval {
+    my $sth = $self->{dbh}->prepare('SELECT * FROM Reminders WHERE account = ? ORDER BY id');
+    $sth->execute($account);
+    return $sth->fetchall_arrayref({});
+  };
+
+  if ($@) {
+    $self->{pbot}->{logger}->log("List reminders failed: $@");
+    return [];
+  }
+
+  return $reminders;
 }
 
 sub delete_reminder {
@@ -124,7 +157,6 @@ sub delete_reminder {
     $self->{pbot}->{logger}->log("Delete reminder $id failed: $@");
     return 0;
   }
-
   return 1;
 }
 
@@ -135,11 +167,11 @@ sub remindme {
     return "Internal error.";
   }
 
-  my $usage = "Usage: remindme [-c channel] <message> <-t time>";
+  my $usage = "Usage: remindme [-c channel] message -t time | remindme -l [nick] | remindme -d <id>";
 
   return $usage if not length $arguments;
 
-  my ($target, $text, $alarm);
+  my ($target, $text, $alarm, $list_reminders, $nick_override, $delete_id);
 
   my $getopt_error;
   local $SIG{__WARN__} = sub {
@@ -147,29 +179,128 @@ sub remindme {
     chomp $getopt_error;
   };
 
+  $arguments =~ s/'/\\'/g;
+
   my ($ret, $args) = GetOptionsFromString($arguments,
-    't=s' => \$alarm,
-    'c=s' => \$target,
-    'm=s' => \$text);
+    't:s' => \$alarm,
+    'c:s' => \$target,
+    'm:s' => \$text,
+    'l:s' => \$list_reminders,
+    'd:i' => \$delete_id);
 
   return "$getopt_error -- $usage" if defined $getopt_error;
 
+  if (defined $list_reminders) {
+    my $nick_override = $list_reminders if length $list_reminders;
+    my $account;
+    if ($nick_override) {
+      my $hostmask;
+      ($account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick_override);
+
+      if (not $account) {
+        return "I don't know anybody named $nick_override.";
+      }
+
+      ($nick_override) = $hostmask =~ m/^([^!]+)!/;
+    } else {
+      $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+    }
+    $account = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
+
+    my $reminders = $self->get_reminders($account);
+    my $count = 0;
+    my $text = '';
+    my $now = scalar gettimeofday;
+
+    foreach my $reminder (@$reminders) {
+      my $duration = concise duration $reminder->{alarm} - $now;
+      $text .= "$reminder->{id}) [in $duration] $reminder->{text}\n";
+      $count++;
+    }
+
+    if (not $count) {
+      if ($nick_override) {
+        return "$nick_override has no reminders.";
+      } else {
+        return "You have no reminders.";
+      }
+    }
+
+    $reminders = $count == 1 ? 'reminder' : 'reminders';
+    return "$count $reminders: $text";
+  }
+
+  if ($delete_id) {
+    my $admininfo = $self->{pbot}->{admins}->loggedin($target ? $target : $from, "$nick!$user\@$host");
+
+    # admins can delete any reminders (perhaps check admin levels against owner level?)
+    if ($admininfo) {
+      if (not $self->get_reminder($delete_id)) {
+        return "Reminder $delete_id does not exist.";
+      }
+
+      if ($self->delete_reminder($delete_id)) {
+        return "Reminder $delete_id deleted.";
+      } else {
+        return "Could not delete reminder $delete_id.";
+      }
+    }
+
+    my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+    $account = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
+    my $reminder = $self->get_reminder($delete_id);
+
+    if (not $reminder) {
+      return "Reminder $delete_id does not exist.";
+    }
+
+    if ($reminder->{account} != $account) {
+      return "Reminder $delete_id does not belong to you.";
+    }
+
+    if ($self->delete_reminder($delete_id)) {
+      return "Reminder $delete_id deleted.";
+    } else {
+      return "Could not delete reminder $delete_id.";
+    }
+  }
+
   $text = join ' ', @$args if not defined $text;
 
-  return "Please specify a point in time for this reminder." if not defined $alarm;
-  return "Please specify a reminder message." if not length $text;
+  return "Please specify a point in time for this reminder." if not $alarm;
+  return "Please specify a reminder message." if not $text;
 
-  if (defined $target) {
-    my $admininfo = $self->{pbot}->{admins}->loggedin($target, "$nick!$user\@$host");
-    return "Only admins can create channel reminders." if not defined $admininfo;
+  my $admininfo = $self->{pbot}->{admins}->loggedin($target ? $target : $from, "$nick!$user\@$host");
+
+  if ($target) {
+    if (not defined $admininfo) {
+      return "Only admins can create channel reminders.";
+    }
+
+    if (not $self->{pbot}->{channels}->is_active($target)) {
+      return "I'm not active in channel $target.";
+    }
   }
 
   my ($length, $error) = parsedate($alarm);
   return $error if $error;
 
+  # I don't know how I feel about enforcing arbitrary time restrictions
+  if ($length > 31536000 * 10) {
+    return "Come on now, I'll be dead by then.";
+  }
+
   $alarm = gettimeofday + $length;
 
   my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+  $account = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
+
+  if (not defined $admininfo) {
+    my $reminders = $self->get_reminders($account);
+    if (@$reminders >= 3) {
+      return "You may only set 3 reminders at a time. Use `remindme -d <id>` to remove a reminder.";
+    }
+  }
 
   if ($self->add_reminder($account, $target, $text, $alarm, "$nick!$user\@$host")) {
     return "Reminder added.";
@@ -195,21 +326,17 @@ sub check_reminders {
   }
 
   foreach my $reminder (@$reminders) {
+    # ensures we get the current nick of the person
     my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($reminder->{account});
     my ($nick) = $hostmask =~ /^([^!]+)!/;
 
+    # don't execute this reminder if the person isn't around yet
     next if not $self->{pbot}->{nicklist}->is_present_any_channel($nick);
 
-    use Data::Dumper;
-    print Dumper $reminder;
-    print "nick: $nick\n";
-
-    if (defined $reminder->{target}) {
-      $self->{pbot}->{conn}->privmsg($reminder->{target}, "Reminder: " . $reminder->{text}); 
-    } else {
-      $self->{pbot}->{conn}->privmsg($nick, "Reminder: " . $reminder->{text}); 
-    }
-
+    my $duration = duration gettimeofday - $reminder->{created_on};
+    my $text = "Reminder: $reminder->{text} (Set $duration ago)";
+    my $target = $reminder->{target} // $nick;
+    $self->{pbot}->{conn}->privmsg($target, $text);
     $self->delete_reminder($reminder->{id});
   }
 }
