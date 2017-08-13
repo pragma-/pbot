@@ -458,7 +458,7 @@ sub process_command_queue {
     for (my $i = 0; $i < @{$self->{command_queue}->{$channel}}; $i++) {
       my $command = $self->{command_queue}->{$channel}->[$i];
       if (gettimeofday >= $command->{when}) {
-        $self->interpret($channel, $command->{nick}, $command->{user}, $command->{host}, 0, $command->{command});
+        $self->handle_result($channel, $command->{nick}, $command->{user}, $command->{host}, $command->{command}, $command->{command}, $self->interpret($channel, $command->{nick}, $command->{user}, $command->{host}, 0, $command->{command}), 0, 0);
         splice @{$self->{command_queue}->{$channel}}, $i--, 1;
       }
     }
