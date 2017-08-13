@@ -245,7 +245,9 @@ sub remindme {
 
     foreach my $reminder (@$reminders) {
       my $duration = concise duration $reminder->{alarm} - $now;
-      $text .= "$reminder->{id}) [in $duration] $reminder->{text}\n";
+      $text .= "$reminder->{id}) [in $duration]";
+      $text .= " ($reminder->{repeat} repeats left)" if $reminder->{repeat};
+      $text .= " $reminder->{text}\n";
       $count++;
     }
 
@@ -325,8 +327,8 @@ sub remindme {
     return "Time must be a minimum of 60 seconds.";
   }
 
-  if (not defined $admininfo and $repeat > 5) {
-    return "You may only set up to 5 repeats.";
+  if (not defined $admininfo and $repeat > 10) {
+    return "You may only set up to 10 repeats.";
   }
 
   if ($repeat < 0) {
@@ -383,8 +385,7 @@ sub check_reminders {
     # don't execute this reminder if the person isn't around yet
     next if not $self->{pbot}->{nicklist}->is_present_any_channel($nick);
 
-    my $duration = duration gettimeofday - $reminder->{created_on};
-    my $text = "Reminder: $reminder->{text} (Set $duration ago)";
+    my $text = "Reminder: $reminder->{text}";
     my $target = $reminder->{target} // $nick;
     $self->{pbot}->{conn}->privmsg($target, $text);
 
