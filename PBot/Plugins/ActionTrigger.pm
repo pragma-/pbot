@@ -300,7 +300,7 @@ sub on_departure {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $channel, $args) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->args);
   $channel = lc $channel;
-  $self->check_trigger($nick, $user, $host, $channel, uc $event->{event}->type . " $args");
+  $self->check_trigger($nick, $user, $host, $channel, (uc $event->{event}->type) . " $args");
   return 0;
 }
 
