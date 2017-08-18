@@ -51,6 +51,7 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->sl(@_)           },       "sl",            90);
   $pbot->{commands}->register(sub { return $self->export(@_)       },       "export",        90);
   $pbot->{commands}->register(sub { return $self->reload(@_)       },       "reload",        90);
+  $pbot->{commands}->register(sub { return $self->evalcmd(@_)      },       "eval",          99);
 }
 
 sub sl {
@@ -243,6 +244,24 @@ sub export {
   if($arguments =~ /^admins$/i) {
     return "/msg $nick Coming soon.";
   }
+}
+
+sub evalcmd {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  $self->{pbot}->{logger}->log("[$from] $nick!$user\@$host Evaluating [$arguments]\n");
+
+  my $ret;
+  my $result = eval $arguments;
+  if ($@) {
+    if (length $result) {
+      $ret .= "[Error: $@] ";
+    } else {
+      $ret .= "Error: $@";
+    }
+    $ret =~ s/ at \(eval \d+\) line 1.//;
+  }
+  return "$ret $result";
 }
 
 sub reload {
