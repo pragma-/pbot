@@ -263,7 +263,7 @@ sub actiontrigger {
     }
 
     default {
-      $result = "Usage: actiontrigger <list/add/delete> [arguments]";
+      $result = "Usage: actiontrigger list | actiontrigger add <regex> <trigger> | actiontrigger delete <regex>";
     }
   }
 
@@ -317,7 +317,7 @@ sub check_trigger {
 
   foreach my $trigger (@triggers) {
     eval {
-      if ($text  =~ m/$trigger->{trigger}/i) {
+      if ($text  =~ m/$trigger->{trigger}/) {
         my $action = $trigger->{action};
         my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
         my $i;
