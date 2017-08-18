@@ -100,7 +100,7 @@ sub on_public {
         next if $self->{offenses}->{$account}->{$channel}->{last_offense} >= $string2->{timestamp};
       }
 
-      my $string = lcss($string1->{msg}, $string2->{msg});
+      my $string = lcss(lc $string1->{msg}, lc $string2->{msg});
 
       if (defined $string) {
         my $length = length $string;
