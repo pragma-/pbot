@@ -367,58 +367,66 @@ sub find_factoid {
 sub expand_factoid_vars {
   my ($self, $from, $action) = @_;
 
-  while ($action =~ /(?<!\\)\$([a-zA-Z0-9_:\-#]+)/g) {
-    my $v = $1;
-    next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\])$/; # don't override special variables
+  my $depth = 0;
+  while (1) {
+    last if ++$depth >= 10;
+    my $matches = 0;
+    my $const_action = $action;
+    while ($const_action =~ /(?<!\\)\$([a-zA-Z0-9_:\-#]+)/g) {
+      my $v = $1;
+      next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\])$/; # don't override special variables
 
-    my $modifier = '';
-    if ($v =~ s/(:.*)$//) {
-      $modifier = $1;
-    }
+      $matches++;
 
-    if ($modifier =~ m/^:(#[^:]+|global)/i) {
-      $from = $1;
-      $from = '.*' if lc $from eq 'global';
-    }
-
-    my @factoids = $self->find_factoid($from, $v, undef, 2, 2);
-    next if not @factoids or not $factoids[0];
-
-    my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
-
-    if ($self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
-      my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
-      my @list = split(/\s|(".*?")/, $change);
-      my @mylist;
-      for (my $i = 0; $i <= $#list; $i++) {
-        push @mylist, $list[$i] if $list[$i];
+      my $modifier = '';
+      if ($v =~ s/(:.*)$//) {
+        $modifier = $1;
       }
-      my $line = int(rand($#mylist + 1));
-      $mylist[$line] =~ s/"//g;
 
-      foreach my $mod (split /:/, $modifier) {
-        given ($mod) {
-          when ('uc') {
-            $mylist[$line] = uc $mylist[$line];
-          }
-          when ('lc') {
-            $mylist[$line] = lc $mylist[$line];
-          }
-          when ('ucfirst') {
-            $mylist[$line] = ucfirst $mylist[$line];
-          }
-          when ('title') {
-            $mylist[$line] = ucfirst lc $mylist[$line];
+      if ($modifier =~ m/^:(#[^:]+|global)/i) {
+        $from = $1;
+        $from = '.*' if lc $from eq 'global';
+      }
+
+      my @factoids = $self->find_factoid($from, $v, undef, 2, 2);
+      next if not @factoids or not $factoids[0];
+
+      my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
+
+      if ($self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
+        my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
+        my @list = split(/\s|(".*?")/, $change);
+        my @mylist;
+        for (my $i = 0; $i <= $#list; $i++) {
+          push @mylist, $list[$i] if $list[$i];
+        }
+        my $line = int(rand($#mylist + 1));
+        $mylist[$line] =~ s/"//g;
+
+        foreach my $mod (split /:/, $modifier) {
+          given ($mod) {
+            when ('uc') {
+              $mylist[$line] = uc $mylist[$line];
+            }
+            when ('lc') {
+              $mylist[$line] = lc $mylist[$line];
+            }
+            when ('ucfirst') {
+              $mylist[$line] = ucfirst $mylist[$line];
+            }
+            when ('title') {
+              $mylist[$line] = ucfirst lc $mylist[$line];
+            }
           }
         }
-      }
 
-      $action =~ s/\$$var$modifier/$mylist[$line]/;
+        $action =~ s/\$$var$modifier/$mylist[$line]/;
+      }
     }
+    last if $matches == 0;
   }
 
   $action =~ s/\\\$/\$/g;
-
   return $action;
 }
 
