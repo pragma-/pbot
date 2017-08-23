@@ -274,7 +274,7 @@ sub update_join_watch {
       }
     }
     # check QUIT message for Ping timeout or Excess Flood
-    elsif($text =~ /^QUIT Excess Flood/ or $text =~ /^QUIT Max SendQ exceeded/) {
+    elsif($text =~ /^QUIT Excess Flood/ or $text =~ /^QUIT Max SendQ exceeded/ or $text =~ /^QUIT Ping timeout/) {
       # treat these as an extra join so they're snagged more quickly since these usually will keep flooding
       $channel_data->{join_watch}++;
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
