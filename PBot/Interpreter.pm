@@ -100,17 +100,7 @@ sub process_line {
     $command = undef;
     $has_code = undef;
 
-    if ($cmd_text =~ s/\B$bot_trigger`([^`]+)// || $cmd_text =~ s/\B$bot_trigger\{([^}]+)//) {
-      my $cmd = $1;
-      my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
-      $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
-      if ($nick) {
-        $command = "tell $nick about $cmd";
-      } else {
-        $command = $cmd;
-      }
-      $referenced = 1;
-    } elsif($cmd_text =~ s/^(?:$bot_trigger|$botnick.?)?\s*{\s*(.*)\s*}\s*$//) {
+    if($cmd_text =~ s/^(?:$bot_trigger|$botnick.?)?\s*{\s*(.*)\s*}\s*$//) {
       $has_code = $1 if length $1;
       $preserve_whitespace = 1;
       $processed += 100;
@@ -142,6 +132,16 @@ sub process_line {
     } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
       $command = $1;
       $processed += 100;
+    } elsif ($cmd_text =~ s/\B$bot_trigger`([^`]+)// || $cmd_text =~ s/\B$bot_trigger\{([^}]+)//) {
+      my $cmd = $1;
+      my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
+      $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
+      if ($nick) {
+        $command = "tell $nick about $cmd";
+      } else {
+        $command = $cmd;
+      }
+      $referenced = 1;
     }
 
     last if not defined $command and not defined $has_code;
