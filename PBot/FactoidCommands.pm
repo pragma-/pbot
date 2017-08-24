@@ -460,6 +460,7 @@ sub factmove {
   }
 
   $target_channel = lc $target_channel;
+  $target_channel = '.*' if $target_channel !~ /^#/;
 
   $factoids->{$target_channel}->{$target} = $factoids->{$found_src_channel}->{$found_source};
   delete $factoids->{$found_src_channel}->{$found_source};
@@ -710,11 +711,11 @@ sub factshow {
 
   if (not defined $trig) {
     $trig = $chan;
-    $chan = '.*';
+    $chan = $from;
     $needs_disambig = 1;
   }
 
-  $chan = '.*' if $chan eq 'global';
+  $chan = '.*' if $chan !~ /^#/;
 
   $chan = lc $chan;
 
@@ -751,6 +752,9 @@ sub factshow {
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
     $result .= ' [module]';
   }
+
+  $channel = 'global' if $channel eq '.*';
+  $chan = 'global' if $chan eq '.*';
 
   $result = "[$channel] $result" if $channel ne $chan;
 
