@@ -1220,11 +1220,22 @@ sub factchange {
 
   my $ret = eval {
     use re::engine::RE2 -strict => 1;
-    if(not $factoids->{$channel}->{$trigger}->{action} =~ s|$tochange|$changeto|) {
+    my $action = $factoids->{$channel}->{$trigger}->{action};
+    if(not $action =~ s|$tochange|$changeto|) {
       $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change '$trigger' 's$delim$tochange$delim$changeto$delim\n");
       return "Change $trigger failed.";
     } else {
+      if (length $action > 400 and not defined $admininfo) {
+        return "Change $trigger failed; result is too long.";
+      }
+
+      if (not length $action) {
+        return "Change $trigger failed; factoids cannot be empty.";
+      }
+
       $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: changed '$trigger' 's/$tochange/$changeto/\n");
+
+      $factoids->{$channel}->{$trigger}->{action}    = $action;
       $factoids->{$channel}->{$trigger}->{edited_by} = "$nick!$user\@$host";
       $factoids->{$channel}->{$trigger}->{edited_on} = gettimeofday;
       $self->{pbot}->{factoids}->save_factoids();
