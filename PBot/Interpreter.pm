@@ -241,6 +241,7 @@ sub truncate_result {
   if(length $result > $max_msg_len) {
     my $link;
     if($paste) {
+      $original_result = substr $original_result, 0, 8000;
       $link = $self->paste("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
     } else {
       $link = 'undef';
