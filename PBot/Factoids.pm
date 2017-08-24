@@ -22,6 +22,8 @@ use Carp ();
 use POSIX qw(strftime);
 use Text::ParseWords;
 
+use Safe;
+
 use PBot::PBot qw($VERSION);
 use PBot::FactoidCommands;
 use PBot::FactoidModuleLauncher;
@@ -60,6 +62,7 @@ sub initialize {
 
   $self->{pbot}->{atexit}->register(sub { $self->save_factoids; return; });
 
+  $self->{compartments} = {};
   $self->load_factoids;
 }
 
@@ -619,6 +622,72 @@ sub interpreter {
 
   my $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action};
 
+  if ($action =~ m/^\{\s*(.*)\s*\}$/) {
+    my $code = $1;
+
+    my %signals = %SIG;
+    alarm 0;
+
+    my $safe;
+    my $new_compartment;
+
+    if ($self->{factoids}->hash->{$channel}->{$keyword}->{'persist-key'}) {
+      my $key = $self->{factoids}->hash->{$channel}->{$keyword}->{'persist-key'};
+      if ($self->{compartments}->{$key}) {
+        $safe = $self->{compartments}->{$key};
+      } else {
+        $new_compartment = $key;
+      }
+    }
+
+    if (not defined $safe) {
+      $safe = Safe->new;
+      #$safe->permit_only(qw/:base_core rv2gv padany concat subst join sort enteriter iter unstack grepwhile mapwhile leaveloop/);
+      $safe->permit_only(qw/:base_core rv2gv padany concat subst join sort mapstart grepstart/);
+      $safe->deny(qw/entersub/);
+
+      # some default stuff
+      $safe->reval('$" = " ";');
+
+      $self->{compartments}->{$new_compartment} = $safe if $new_compartment;
+    }
+
+    local our @args = $self->{pbot}->{commands}->parse_arguments($arguments);
+    local our $nick = defined $tonick ? $tonick : $nick;
+    local our $channel = $from;
+
+    @args = ($nick) if not @args;
+    $arguments = '';
+
+    $safe->share(qw/@args $nick $channel/);
+
+    $action = eval {
+      $self->{pbot}->{logger}->log("evaling [$code]\n");
+      my $result = $safe->reval($code);
+
+      if ($@) {
+        my $error = $@;
+        chomp $error;
+        $error =~ s/trapped by operation.*/operation disallowed (we're still fine-tuning this; let us know if you think this should be allowed)/;
+        $error =~ s/at \(eval \d+\) line 1.//g;
+        $error = "$error (did you forget to use quotes around factoid variables?)" if $error =~ /syntax error/;
+        return "/say Error in factoid code: $error";
+      } else {
+        return $result;
+      }
+    };
+
+    if ($@) {
+      my $error = $@;
+      chomp $error;
+      $error =~ s/at \(eval \d+\) line 1.//g;
+      $action = "/say Error in factoid: $error";
+    }
+
+    %SIG = %signals;
+    alarm 1;
+  }
+
   $action = $self->expand_factoid_vars($from, $action);
 
   if(length $arguments) {
@@ -703,6 +772,8 @@ sub interpreter {
     $self->{pbot}->{logger}->log("$keyword disabled.\n");
     return "/msg $nick $ref_from$keyword is currently disabled.";
   }
+
+  return "" if not length $action;
 
   $action = $self->expand_factoid_vars($from, $action);
 

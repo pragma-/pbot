@@ -30,8 +30,7 @@ sub new {
   return $self;
 }
 
-# TODO - move this someplace better so it can be more accessible to user-customisation
-my %factoid_metadata_levels = (
+our %factoid_metadata_levels = (
   created_on                  => 90,
   enabled                     => 10,
   last_referenced_in          => 90,
@@ -48,6 +47,7 @@ my %factoid_metadata_levels = (
   add_nick                    => 10,
   nooverride                  => 10,
   'effective-level'           => 20,
+  'persist-key'               => 20,
   # all others are allowed to be factset by anybody/default to level 0
 );
 
