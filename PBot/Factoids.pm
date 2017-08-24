@@ -372,9 +372,9 @@ sub expand_factoid_vars {
     last if ++$depth >= 10;
     my $matches = 0;
     my $const_action = $action;
-    while ($const_action =~ /(?<!\\)\$([a-zA-Z0-9_:\-#]+)/g) {
+    while ($const_action =~ /(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/g) {
       my $v = $1;
-      next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\])$/; # don't override special variables
+      next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\]):?$/i; # don't override special variables
 
       $matches++;
 
