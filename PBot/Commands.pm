@@ -123,6 +123,7 @@ sub interpreter {
 
 sub parse_arguments {
   my ($self, $arguments) = @_;
+  $arguments =~ s/(?<!\\)'/\\'/g;
   return shellwords($arguments);
 }
 
