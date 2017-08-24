@@ -684,6 +684,8 @@ sub interpreter {
       $action = "/say Error in factoid: $error";
     }
 
+    $action = substr $action, 0, 400;
+
     %SIG = %signals;
     alarm 1;
   }
