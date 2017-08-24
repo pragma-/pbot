@@ -133,10 +133,10 @@ sub process_line {
       }
 
       $processed += 100;
-    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
+    } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
       $command = $1;
       $processed += 100;
-    } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
+    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
       $command = $1;
       $processed += 100;
     } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
@@ -204,7 +204,7 @@ sub interpret {
 
   $tonick = $nick if defined $tonick and $tonick eq 'me';
 
-  if ($keyword !~ /^(factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell)/) {
+  if ($keyword !~ /^(factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell|cc|eval|u|udict|ud|actiontrigger|urban|perl)/) {
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
     $arguments =~ s/(?<![\w\/\-\\])me\b/$nick/gi if defined $arguments && $depth <= 2;
     $arguments =~ s/(?<![\w\/\-\\])my\b/${nick}'s/gi if defined $arguments && $depth <= 2;
