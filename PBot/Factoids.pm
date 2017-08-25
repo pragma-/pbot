@@ -22,6 +22,7 @@ use Carp ();
 use POSIX qw(strftime);
 use Text::ParseWords;
 
+use PPI;
 use Safe;
 
 use PBot::PBot qw($VERSION);
@@ -368,7 +369,7 @@ sub find_factoid {
 }
 
 sub expand_factoid_vars {
-  my ($self, $from, $action) = @_;
+  my ($self, $from, $action, @exclude) = @_;
 
   my $depth = 0;
   while (1) {
@@ -378,6 +379,7 @@ sub expand_factoid_vars {
     while ($const_action =~ /(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/g) {
       my $v = $1;
       next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\]):?$/i; # don't override special variables
+      next if @exclude && grep { $v =~ m/^$_$/i } @exclude;
 
       $matches++;
 
@@ -624,6 +626,12 @@ sub interpreter {
 
   if ($action =~ m/^\{\s*(.*)\s*\}$/) {
     my $code = $1;
+
+    my $ppi = PPI::Document->new(\$code, readonly => 1);
+    my $vars = $ppi->find(sub { $_[1]->isa('PPI::Token::Symbol') });
+    my @names = map { $_->symbol =~ /^[\%\@\$]+(.*)/; $1 } @$vars if $vars;
+
+    $code = $self->expand_factoid_vars($from, $code, @names);
 
     my %signals = %SIG;
     alarm 0;
