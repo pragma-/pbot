@@ -30,6 +30,8 @@ use PBot::FactoidCommands;
 use PBot::FactoidModuleLauncher;
 use PBot::DualIndexHashObject;
 
+use PBot::Utils::Indefinite;
+
 sub new {
   if(ref($_[1]) eq 'HASH') {
     Carp::croak("Options to Factoids should be key/value pairs, not hash reference");
@@ -376,8 +378,8 @@ sub expand_factoid_vars {
     last if ++$depth >= 10;
     my $matches = 0;
     my $const_action = $action;
-    while ($const_action =~ /(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/g) {
-      my $v = $1;
+    while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
+      my ($a, $v) = ($1, $2);
       next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\]):?$/i; # don't override special variables
       next if @exclude && grep { $v =~ m/^$_$/i } @exclude;
 
@@ -425,7 +427,12 @@ sub expand_factoid_vars {
           }
         }
 
-        $action =~ s/\$$var$modifier/$mylist[$line]/;
+        if ($a) {
+          my $fixed_a = select_indefinite_article $mylist[$line];
+          $action =~ s/$a\$$var$modifier/$fixed_a $mylist[$line]/;
+        } else {
+          $action =~ s/\$$var$modifier/$mylist[$line]/;
+        }
       }
     }
     last if $matches == 0;
