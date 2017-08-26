@@ -204,26 +204,26 @@ sub interpret {
 
   $tonick = $nick if defined $tonick and $tonick eq 'me';
 
-  if ($keyword !~ /^(factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell|cc|eval|u|udict|ud|actiontrigger|urban|perl)/) {
+  if ($keyword !~ /^(factrem|forget|factdel|factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell|cc|eval|u|udict|ud|actiontrigger|urban|perl)/) {
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
     $arguments =~ s/(?<![\w\/\-\\])me\b/$nick/gi if defined $arguments && $depth <= 2;
     $arguments =~ s/(?<![\w\/\-\\])my\b/${nick}'s/gi if defined $arguments && $depth <= 2;
     $arguments =~ s/\\my\b/my/gi if defined $arguments && $depth <= 2;
     $arguments =~ s/\\me\b/me/gi if defined $arguments && $depth <= 2;
-  }
 
-  my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
-  if (defined $arguments && ($arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i || $arguments =~ m/^$botnick$/i)) {
-    my $delay = (rand 10) + 8;
-    my $message = {
-      nick => $nick, user => $user, host => $host, command => $command, checkflood => 1,
-      message => "$nick: Why would I want to do that to myself?"
-    };
-    $self->add_message_to_output_queue($from, $message, $delay);
-    $delay = duration($delay);
-    $self->{pbot}->{logger}->log("Final result ($delay delay) [$message->{message}]\n");
-    return undef;
+    if (defined $arguments && ($arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i || $arguments =~ m/^$botnick$/i)) {
+      my $delay = (rand 10) + 8;
+      my $message = {
+        nick => $nick, user => $user, host => $host, command => $command, checkflood => 1,
+        message => "$nick: Why would I want to do that to myself?"
+      };
+      $self->add_message_to_output_queue($from, $message, $delay);
+      $delay = duration($delay);
+      $self->{pbot}->{logger}->log("Final result ($delay delay) [$message->{message}]\n");
+      return undef;
+    }
   }
 
   if(not defined $keyword) {
