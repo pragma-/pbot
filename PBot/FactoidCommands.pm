@@ -17,6 +17,7 @@ use Time::Duration;
 use Time::HiRes qw(gettimeofday);
 use Getopt::Long qw(GetOptionsFromString);
 use POSIX qw(strftime);
+use Storable;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -70,6 +71,8 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->factshow(@_)        },       "factshow",     0);
   $pbot->{commands}->register(sub { return $self->factinfo(@_)        },       "factinfo",     0);
   $pbot->{commands}->register(sub { return $self->factlog(@_)         },       "factlog",      0);
+  $pbot->{commands}->register(sub { return $self->factundo(@_)        },       "factundo",     0);
+  $pbot->{commands}->register(sub { return $self->factredo(@_)        },       "factredo",     0);
   $pbot->{commands}->register(sub { return $self->factset(@_)         },       "factset",      0);
   $pbot->{commands}->register(sub { return $self->factunset(@_)       },       "factunset",    0);
   $pbot->{commands}->register(sub { return $self->factchange(@_)      },       "factchange",   0);
@@ -109,7 +112,7 @@ sub call_factoid {
 
 sub log_factoid {
   my $self = shift;
-  my ($channel, $trigger, $hostmask, $msg) = @_;
+  my ($channel, $trigger, $hostmask, $msg, $dont_save_undo) = @_;
 
   $channel = 'global' if $channel eq '.*';
 
@@ -122,6 +125,142 @@ sub log_factoid {
   my $now = gettimeofday;
   print $fh "$now $hostmask $msg\n";
   close $fh;
+
+  return if $dont_save_undo;
+
+  my $undos = eval { retrieve("$path/$trigger.$channel.undo"); };
+
+  if (not $undos) {
+    $undos = {
+      idx  => -1,
+      list => []
+    };
+  }
+
+  # TODO: use registry instead of hardcoded 20... meh
+  if (@{$undos->{list}} > 20) {
+    shift @{$undos->{list}};
+    $undos->{idx}--;
+  }
+
+  if ($undos->{idx} > -1 and @{$undos->{list}} > $undos->{idx} + 1) {
+    splice @{$undos->{list}}, $undos->{idx} + 1;
+  }
+
+  push @{$undos->{list}}, $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger};
+  $undos->{idx}++;
+
+  store $undos, "$path/$trigger.$channel.undo";
+}
+
+sub find_factoid_with_optional_channel {
+  my ($self, $from, $arguments, $command) = @_;
+  my ($from_chan, $from_trigger) = split / /, $arguments;
+
+  if(not defined $from_chan and not defined $from_trigger) {
+    return "Usage: $command [channel] <keyword>";
+  }
+
+  my $needs_disambig;
+
+  if (not defined $from_trigger) {
+    $from_trigger = $from_chan;
+    $from_chan = $from;
+    #$needs_disambig = 1;
+  }
+
+  $from_chan = '.*' if $from_chan !~ /^#/;
+
+  $from_chan = lc $from_chan;
+
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, undef, 0, 1);
+
+  if (not @factoids or not $factoids[0]) {
+    if ($needs_disambig) {
+      return "$from_trigger not found";
+    } else {
+      $from_chan = 'global channel' if $from_chan eq '.*';
+      return "$from_trigger not found in $from_chan";
+    }
+  }
+
+  my ($channel, $trigger);
+
+  if (@factoids > 1) {
+    if ($needs_disambig or not grep { $_->[0] eq $from_chan } @factoids) {
+      return "$from_trigger found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `$command <channel> $from_trigger` to disambiguate.";
+    } else {
+      foreach my $factoid (@factoids) {
+        if ($factoid->[0] eq $from_chan) {
+          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
+          last;
+        }
+      }
+    }
+  } else {
+    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
+  }
+
+  $channel = '.*' if $channel eq 'global';
+  $from_chan = '.*' if $channel eq 'global';
+
+  if ($channel =~ /^#/ and $from_chan =~ /^#/ and $channel ne $from_chan) {
+    return "$trigger belongs to $channel, not $from_chan. Please switch to or explicitly specify $channel.";
+  }
+
+  return ($channel, $trigger);
+}
+
+sub factundo {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo');
+  return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
+
+  my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
+  my $undos = eval { retrieve("$path/$trigger.$channel.undo"); };
+
+  if (not $undos) {
+    return "There are no undos available for [$channel] $trigger.";
+  }
+
+  if ($undos->{idx} == 0) {
+    return "There are no more undos remaining for [$channel] $trigger.";
+  }
+
+  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (undo) to revision ". ($undos->{idx} + 1), 1);
+
+  $undos->{idx}--;
+  store $undos, "$path/$trigger.$channel.undo";
+  $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
+  return "[$channel] $trigger reverted to revision " . ($undos->{idx} + 1);
+}
+
+sub factredo {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo');
+  return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
+
+  my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
+  my $undos = eval { retrieve("$path/$trigger.$channel.undo"); };
+
+  if (not $undos) {
+    return "There are no redos available for [$channel] $trigger.";
+  }
+
+  if ($undos->{idx} + 1 == @{$undos->{list}}) {
+    return "There are no more redos reamining for [$channel] $trigger.";
+  }
+
+  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (redo) to revision ". ($undos->{idx} + 1), 1);
+
+  $undos->{idx}++;
+  store $undos, "$path/$trigger.$channel.undo";
+  $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
+  return "[$channel] $trigger reverted to revision " . ($undos->{idx} + 1);
 }
 
 sub factset {
@@ -664,7 +803,7 @@ sub factrem {
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host removed [$channel][$trigger][" . $factoids->{$channel}->{$trigger}->{action} . "]\n");
   $self->{pbot}->{factoids}->remove_factoid($channel, $trigger);
-  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "deleted");
+  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "deleted", 1);
   return "$trigger removed from " . ($channel eq '.*' ? 'the global channel' : $channel) . ".";
 }
 
