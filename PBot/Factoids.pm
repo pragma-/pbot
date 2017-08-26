@@ -639,6 +639,7 @@ sub interpreter {
     my @names = map { $_->symbol =~ /^[\%\@\$]+(.*)/; $1 } @$vars if $vars;
 
     $code = $self->expand_factoid_vars($from, $code, @names);
+    $code =~ s/"\$0"/$root_keyword/g;
 
     my %signals = %SIG;
     alarm 0;
