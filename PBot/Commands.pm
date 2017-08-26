@@ -88,7 +88,7 @@ sub exists {
 
 sub interpreter {
   my $self = shift;
-  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $unused, $referenced) = @_;
+  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $unused, $referenced, $root_keyword) = @_;
   my $result;
 
   my $pbot = $self->{pbot};

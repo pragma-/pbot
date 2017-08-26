@@ -172,7 +172,7 @@ sub process_line {
 
 sub interpret {
   my $self = shift;
-  my ($from, $nick, $user, $host, $depth, $command, $tonick, $referenced) = @_;
+  my ($from, $nick, $user, $host, $depth, $command, $tonick, $referenced, $root_keyword) = @_;
   my ($keyword, $arguments) = ("", "");
   my $text;
   my $pbot = $self->{pbot};
@@ -231,7 +231,7 @@ sub interpret {
     return undef;
   }
 
-  return $self->SUPER::execute_all($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, undef, $referenced);
+  return $self->SUPER::execute_all($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, undef, $referenced, defined $root_keyword ? $root_keyword : $keyword);
 }
 
 sub truncate_result {

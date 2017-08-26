@@ -524,7 +524,7 @@ sub expand_action_arguments {
 
 sub interpreter {
   my $self = shift;
-  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $ref_from, $referenced) = @_;
+  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $ref_from, $referenced, $root_keyword) = @_;
   my ($result, $channel);
   my $pbot = $self->{pbot};
 
@@ -584,7 +584,7 @@ sub interpreter {
     # if there's just one other channel that has this keyword, trigger that instance
     elsif($found == 1) {
       $pbot->{logger}->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
-      return $pbot->{factoids}->interpreter($from, $nick, $user, $host, ++$depth, $fwd_trig, $arguments, $tonick, $fwd_chan, $referenced);
+      return $pbot->{factoids}->interpreter($from, $nick, $user, $host, ++$depth, $fwd_trig, $arguments, $tonick, $fwd_chan, $referenced, $root_keyword);
     } 
     # otherwise keyword hasn't been found, display similiar matches for all channels
     else {
@@ -761,7 +761,7 @@ sub interpreter {
     }
 
     $pbot->{logger}->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
-    return $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $command, $tonick, $referenced);
+    return $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $command, $tonick, $referenced, $root_keyword);
   }
 
   if(defined $tonick) { # !tell foo about bar
@@ -797,6 +797,7 @@ sub interpreter {
   $action =~ s/\$nick/$nick/g;
   $action =~ s/\$channel/$from/g;
   $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
+  $action =~ s/\$0\b/$root_keyword/g;
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'module') {
     my $preserve_whitespace = $self->{factoids}->hash->{$channel}->{$keyword}->{preserve_whitespace};
@@ -862,7 +863,7 @@ sub interpreter {
         $cmd = $action;
       }
 
-      $result = $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $cmd, $tonick, $referenced);
+      $result = $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $cmd, $tonick, $referenced, $root_keyword);
       return $result;
     };
 
