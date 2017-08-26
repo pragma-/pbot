@@ -380,8 +380,9 @@ sub expand_factoid_vars {
     my $const_action = $action;
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
       my ($a, $v) = ($1, $2);
-      next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\]):?$/i; # don't override special variables
-      next if @exclude && grep { $v =~ m/^$_$/i } @exclude;
+      $v =~ s/(.):$/$1/;
+      next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\])$/i; # don't override special variables
+      next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
 
       $matches++;
 
@@ -637,6 +638,8 @@ sub interpreter {
     my $ppi = PPI::Document->new(\$code, readonly => 1);
     my $vars = $ppi->find(sub { $_[1]->isa('PPI::Token::Symbol') });
     my @names = map { $_->symbol =~ /^[\%\@\$]+(.*)/; $1 } @$vars if $vars;
+    my %uniq = map { $_, 1 } @names;
+    @names = keys %uniq;
 
     $code = $self->expand_factoid_vars($from, $code, @names);
     $code =~ s/"\$0"/$root_keyword/g;
