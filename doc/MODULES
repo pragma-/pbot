@@ -15,9 +15,12 @@ LWP::UserAgent::WithCache
 Math::Units
 Module::Refresh
 Net::Dict
+PPI
 Proc::ProcessTable
+Safe
 SOAP::Lite
 String::LCSS
+Storable
 Text::Autoformat
 Text::Balanced
 Text::CSV
