@@ -114,10 +114,11 @@ sub log_factoid {
   my $self = shift;
   my ($channel, $trigger, $hostmask, $msg, $dont_save_undo) = @_;
 
-  $channel = 'global' if $channel eq '.*';
+  my $channel_path = $channel;
+  $channel_path = 'global' if $channel_path eq '.*';
 
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
-  open my $fh, ">> $path/$trigger.$channel" or do {
+  open my $fh, ">> $path/$trigger.$channel_path" or do {
     $self->{pbot}->{logger}->log("Failed to open factlog for $channel/$trigger: $!\n");
     return;
   };
@@ -128,7 +129,7 @@ sub log_factoid {
 
   return if $dont_save_undo;
 
-  my $undos = eval { retrieve("$path/$trigger.$channel.undo"); };
+  my $undos = eval { retrieve("$path/$trigger.$channel_path.undo"); };
 
   if (not $undos) {
     $undos = {
@@ -150,7 +151,9 @@ sub log_factoid {
   push @{$undos->{list}}, $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger};
   $undos->{idx}++;
 
-  store $undos, "$path/$trigger.$channel.undo";
+  print "storing undo [$channel][$trigger]\n";
+
+  store $undos, "$path/$trigger.$channel_path.undo";
 }
 
 sub find_factoid_with_optional_channel {
@@ -218,8 +221,13 @@ sub factundo {
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo');
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
+
+  my $channel_path = $channel;
+  $channel_path  = 'global' if $channel_path eq '.*';
+  print "channel: [$channel][$channel_path]\n";
+
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
-  my $undos = eval { retrieve("$path/$trigger.$channel.undo"); };
+  my $undos = eval { retrieve("$path/$trigger.$channel_path.undo"); };
 
   if (not $undos) {
     return "There are no undos available for [$channel] $trigger.";
@@ -229,11 +237,12 @@ sub factundo {
     return "There are no more undos remaining for [$channel] $trigger.";
   }
 
-  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (undo) to revision ". ($undos->{idx} + 1), 1);
-
   $undos->{idx}--;
-  store $undos, "$path/$trigger.$channel.undo";
+  store $undos, "$path/$trigger.$channel_path.undo";
+
   $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
+
+  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (undo) to revision ". ($undos->{idx} + 1), 1);
   return "[$channel] $trigger reverted to revision " . ($undos->{idx} + 1);
 }
 
@@ -244,8 +253,11 @@ sub factredo {
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo');
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
+  my $channel_path = $channel;
+  $channel_path  = 'global' if $channel_path eq '.*';
+
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
-  my $undos = eval { retrieve("$path/$trigger.$channel.undo"); };
+  my $undos = eval { retrieve("$path/$trigger.$channel_path.undo"); };
 
   if (not $undos) {
     return "There are no redos available for [$channel] $trigger.";
@@ -258,7 +270,7 @@ sub factredo {
   $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (redo) to revision ". ($undos->{idx} + 1), 1);
 
   $undos->{idx}++;
-  store $undos, "$path/$trigger.$channel.undo";
+  store $undos, "$path/$trigger.$channel_path.undo";
   $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
   return "[$channel] $trigger reverted to revision " . ($undos->{idx} + 1);
 }
