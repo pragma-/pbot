@@ -1,15 +1,4 @@
-[#channel/regex]
-<nick!user@host/regex>
-level: 10
-name: identifer_not_nick
-password: s3cr3ts@uce
-
 [.*]
-<.*!.*@unaffiliated/pragmatic-chaos>
-level: 32767
-name: pragma
-password: *
-
 <pbot3!stdin@localhost>
 level: 90
 name: pbot3
