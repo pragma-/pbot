@@ -264,11 +264,13 @@ sub factredo {
     return "There are no more redos reamining for [$channel] $trigger.";
   }
 
-  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (redo) to revision ". ($undos->{idx} + 1), 1);
 
   $undos->{idx}++;
   store $undos, "$path/$trigger.$channel_path.undo";
+
   $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
+
+  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (redo) to revision ". ($undos->{idx} + 1), 1);
   return "[$channel] $trigger reverted to revision " . ($undos->{idx} + 1);
 }
 
