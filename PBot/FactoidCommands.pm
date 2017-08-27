@@ -296,7 +296,7 @@ sub factset {
     $args .= " $rest" if defined $rest;
   }
 
-  my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factset', 'Usage: factset <channel> <factoid> [key [value]]');
+  my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factset', 'Usage: factset [channel] <factoid> [key [value]]');
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my ($key, $value) = split / /, $arguments, 2;
