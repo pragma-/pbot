@@ -710,23 +710,22 @@ sub interpreter {
   $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
   $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in} = $from || "stdin";
 
-  my $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action};
+  my $action;
+
+  if (length $arguments and exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args}) {
+    $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args};
+  } else {
+    $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action};
+  }
 
   if ($action =~ m/^\{\s*(.*)\s*\}$/) {
     my $code = $1;
     $action = $self->execute_code_factoid($nick, $from, $channel, $root_keyword, $keyword, $arguments, $code, $tonick);
   }
 
+  return "" if not length $action;
+
   if (length $arguments) {
-    if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args}) {
-      $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args};
-    }
-
-    if ($action =~ m/^\{\s*(.*)\s*\}$/) {
-      my $code = $1;
-      $action = $self->execute_code_factoid($nick, $from, $channel, $root_keyword, $keyword, $arguments, $code, $tonick);
-    }
-
     if ($action =~ m/\$args/ or $action =~ m/\$arg\[/) {
       $action = $self->expand_action_arguments($action, $arguments, defined $tonick ? $tonick : $nick);
       $arguments = "";
@@ -758,12 +757,8 @@ sub interpreter {
       }
     }
   } else {
-    # no arguments supplied
-    if(defined $tonick) {
-      $action = $self->expand_action_arguments($action, undef, $tonick);
-    } else {
-      $action = $self->expand_action_arguments($action, undef, $nick);
-    }
+    # no arguments supplied, replace $args with $nick/$tonick, etc
+    $action = $self->expand_action_arguments($action, undef, $tonick ? $tonick : $nick);
   }
 
   # Check if it's an alias
@@ -802,8 +797,6 @@ sub interpreter {
     $self->{pbot}->{logger}->log("$keyword disabled.\n");
     return "/msg $nick $ref_from$keyword is currently disabled.";
   }
-
-  return "" if not length $action;
 
   $action =~ s/\$nick/$nick/g;
   $action =~ s/\$channel/$from/g;
