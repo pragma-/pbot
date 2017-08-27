@@ -25,6 +25,7 @@ Text::Autoformat
 Text::Balanced
 Text::CSV
 Text::Levenshtein
+Text::ParseWords
 Text::WordDiff
 Time::Duration
 Time::ParseDate
