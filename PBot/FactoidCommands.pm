@@ -151,8 +151,6 @@ sub log_factoid {
   push @{$undos->{list}}, $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger};
   $undos->{idx}++;
 
-  print "storing undo [$channel][$trigger]\n";
-
   store $undos, "$path/$trigger.$channel_path.undo";
 }
 
@@ -224,7 +222,6 @@ sub factundo {
 
   my $channel_path = $channel;
   $channel_path  = 'global' if $channel_path eq '.*';
-  print "channel: [$channel][$channel_path]\n";
 
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
   my $undos = eval { retrieve("$path/$trigger.$channel_path.undo"); };
