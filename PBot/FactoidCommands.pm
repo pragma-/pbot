@@ -155,11 +155,12 @@ sub log_factoid {
 }
 
 sub find_factoid_with_optional_channel {
-  my ($self, $from, $arguments, $command) = @_;
-  my ($from_chan, $from_trigger) = split / /, $arguments;
+  my ($self, $from, $arguments, $command, $usage) = @_;
+  my ($from_chan, $from_trigger, $remaining_args) = split / /, $arguments, 3;
 
   if(not defined $from_chan and not defined $from_trigger) {
-    return "Usage: $command [channel] <keyword>";
+    return "Usage: $command [channel] <keyword>" if not $usage;
+    return $usage;
   }
 
   my $needs_disambig;
@@ -167,6 +168,7 @@ sub find_factoid_with_optional_channel {
   if (not defined $from_trigger) {
     $from_trigger = $from_chan;
     $from_chan = $from;
+    $remaining_args = "";
     #$needs_disambig = 1;
   }
 
@@ -209,7 +211,7 @@ sub find_factoid_with_optional_channel {
     return "$trigger belongs to $channel, not $from_chan. Please switch to or explicitly specify $channel.";
   }
 
-  return ($channel, $trigger);
+  return ($channel, $trigger, $remaining_args);
 }
 
 sub factundo {
@@ -218,7 +220,6 @@ sub factundo {
 
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo');
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
-
 
   my $channel_path = $channel;
   $channel_path  = 'global' if $channel_path eq '.*';
@@ -264,7 +265,6 @@ sub factredo {
     return "There are no more redos reamining for [$channel] $trigger.";
   }
 
-
   $undos->{idx}++;
   store $undos, "$path/$trigger.$channel_path.undo";
 
@@ -276,12 +276,30 @@ sub factredo {
 
 sub factset {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($channel, $trigger, $key, $value) = split / /, $arguments, 4 if defined $arguments;
+  my ($from, $nick, $user, $host, $args) = @_;
 
-  if(not defined $channel or not defined $trigger) {
-    return "Usage: factset <channel> <factoid> [key [value]]";
+  my ($chan, $trig, $rest) = split / /, $args, 3;
+
+  if (not defined $trig and defined $chan) {
+    $trig = $chan;
+    $chan = $from;
   }
+
+  if (defined $chan) {
+    if ($chan eq $nick) {
+      $args = $trig;
+    } elsif ($chan =~ /(?:^#|^\.\*$)/) {
+      $args = "$chan $trig";
+    } else {
+      $args = "$from $chan $trig";
+    }
+    $args .= " $rest" if defined $rest;
+  }
+
+  my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factset', 'Usage: factset <channel> <factoid> [key [value]]');
+  return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
+
+  my ($key, $value) = split / /, $arguments, 2;
 
   $channel = '.*' if $channel !~ /^#/;
 
@@ -742,51 +760,15 @@ sub factrem {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
-  my ($from_chan, $from_trigger) = split / /, $arguments;
+  my ($from_chan, $from_trig) = split / /, $arguments;
 
-  if(not defined $from_chan and not defined $from_trigger) {
-    return "Usage: factrem [channel] <keyword>";
-  }
-
-  my $needs_disambig;
-
-  if (not defined $from_trigger) {
-    $from_trigger = $from_chan;
+  if (not defined $from_trig) {
+    $from_trig = $from_chan;
     $from_chan = $from;
-    #$needs_disambig = 1;
   }
 
-  $from_chan = '.*' if $from_chan !~ /^#/;
-
-  $from_chan = lc $from_chan;
-
-  my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, undef, 0, 1);
-
-  if (not @factoids or not $factoids[0]) {
-    if ($needs_disambig) {
-      return "$from_trigger not found";
-    } else {
-      $from_chan = 'global channel' if $from_chan eq '.*';
-      return "$from_trigger not found in $from_chan";
-    }
-  }
-
-  my ($channel, $trigger);
-
-  if (@factoids > 1) {
-    if ($needs_disambig or not grep { $_->[0] eq $from_chan } @factoids) {
-      return "$from_trigger found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `factrem <channel> $from_trigger` to disambiguate.";
-    } else {
-      foreach my $factoid (@factoids) {
-        if ($factoid->[0] eq $from_chan) {
-          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
-          last;
-        }
-      }
-    }
-  } else {
-    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
-  }
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factrem');
+  return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   $channel = '.*' if $channel eq 'global';
   $from_chan = '.*' if $channel eq 'global';
@@ -853,49 +835,13 @@ sub factshow {
 
   my ($chan, $trig) = split / /, $arguments;
 
-  if(not defined $chan and not defined $trig) {
-    return "Usage: factshow [channel] <trigger>";
-  }
-
-  my $needs_disambig;
-
   if (not defined $trig) {
     $trig = $chan;
     $chan = $from;
-    $needs_disambig = 1;
   }
 
-  $chan = '.*' if $chan !~ /^#/;
-
-  $chan = lc $chan;
-
-  my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
-
-  if (not @factoids or not $factoids[0]) {
-    if ($needs_disambig) {
-      return "$trig not found";
-    } else {
-      $chan = 'global channel' if $chan eq '.*';
-      return "$trig not found in $chan";
-    }
-  }
-
-  my ($channel, $trigger);
-
-  if (@factoids > 1) {
-    if ($needs_disambig or not grep { $_->[0] eq $chan } @factoids) {
-      return "$trig found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `factshow <channel> $trig` to disambiguate.";
-    } else {
-      foreach my $factoid (@factoids) {
-        if ($factoid->[0] eq $chan) {
-          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
-          last;
-        }
-      }
-    }
-  } else {
-    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
-  }
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factshow');
+  return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my $result = "$trigger: " . $factoids->{$channel}->{$trigger}->{action};
 
@@ -934,48 +880,8 @@ sub factlog {
   return "Too many arguments -- $usage" if @$args > 2;
   return "Missing argument -- $usage" if not @$args;
 
-  my ($chan, $trig) = (@$args[0], @$args[1]);
-
-  if(not defined $chan and not defined $trig) {
-    return $usage;
-  }
-
-  my $needs_disambig = 0;
-
-  if (not defined $trig) {
-    $trig = $chan;
-    $chan = '.*';
-    $needs_disambig = 1;
-  }
-
-  $chan = '.*' if $chan eq 'global';
-
-  $chan = lc $chan;
-
-  my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
-
-  my ($channel, $trigger);
-
-  if (@factoids > 1) {
-    if ($needs_disambig or not grep { $_->[0] eq $chan } @factoids) {
-      return "$trig found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `factlog <channel> $trig` to disambiguate.";
-    } else {
-      foreach my $factoid (@factoids) {
-        if ($factoid->[0] eq $chan) {
-          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
-          last;
-        }
-      }
-    }
-  } elsif (@factoids and $factoids[0]) {
-    if ($chan eq '.*') {
-      ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
-    } else {
-      ($channel, $trigger) = ($chan, $trig);
-    }
-  } else {
-    ($channel, $trigger) = ($chan, $trig);
-  }
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel(@$args[0], @$args[1], 'factlog', $usage);
+  return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my $result;
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
@@ -1014,49 +920,13 @@ sub factinfo {
 
   my ($chan, $trig) = split / /, $arguments;
 
-  if(not defined $chan and not defined $trig) {
-    return "Usage: factinfo [channel] <trigger>";
-  }
-
-  my $needs_disambig;
-
   if (not defined $trig) {
     $trig = $chan;
-    $chan = '.*';
-    $needs_disambig = 1;
+    $chan = $from;
   }
 
-  $chan = '.*' if $chan eq 'global';
-
-  $chan = lc $chan;
-
-  my @factoids = $self->{pbot}->{factoids}->find_factoid($chan, $trig, undef, 0, 1);
-
-  if (not @factoids or not $factoids[0]) {
-    if ($needs_disambig) {
-      return "$trig not found";
-    } else {
-      $chan = 'global channel' if $chan eq '.*';
-      return "$trig not found in $chan";
-    }
-  }
-
-  my ($channel, $trigger);
-
-  if (@factoids > 1) {
-    if ($needs_disambig or not grep { $_->[0] eq $chan } @factoids) {
-      return "$trig found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `factinfo <channel> $trig` to disambiguate.";
-    } else {
-      foreach my $factoid (@factoids) {
-        if ($factoid->[0] eq $chan) {
-          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
-          last;
-        }
-      }
-    }
-  } else {
-    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
-  }
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factinfo');
+  return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my $created_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{created_on});
   my $ref_ago = ago(gettimeofday - $factoids->{$channel}->{$trigger}->{last_referenced_on}) if defined $factoids->{$channel}->{$trigger}->{last_referenced_on};
