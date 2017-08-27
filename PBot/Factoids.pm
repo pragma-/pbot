@@ -381,7 +381,7 @@ sub expand_factoid_vars {
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
       my ($a, $v) = ($1, $2);
       $v =~ s/(.):$/$1/;
-      next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\])$/i; # don't override special variables
+      next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\]|[_0])$/i; # don't override special variables
       next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
 
       $matches++;
@@ -523,6 +523,86 @@ sub expand_action_arguments {
   return $action;
 }
 
+sub execute_code_factoid {
+  my ($self, $nick, $from, $chan, $root_keyword, $keyword, $arguments, $code, $tonick) = @_;
+
+  my $ppi = PPI::Document->new(\$code, readonly => 1);
+  return "/say $nick: I don't feel so good." if not $ppi;
+  my $vars = $ppi->find(sub { $_[1]->isa('PPI::Token::Symbol') });
+  my @names = map { $_->symbol =~ /^[\%\@\$]+(.*)/; $1 } @$vars if $vars;
+  my %uniq = map { $_, 1 } @names;
+  @names = keys %uniq;
+
+  $code = $self->expand_factoid_vars($from, $code, @names);
+  $code =~ s/\$0\b/$root_keyword/g;
+
+  my %signals = %SIG;
+  alarm 0;
+
+  my $safe;
+  my $new_compartment;
+
+  if ($self->{factoids}->hash->{$chan}->{$keyword}->{'persist-key'}) {
+    my $key = $self->{factoids}->hash->{$chan}->{$keyword}->{'persist-key'};
+    if ($self->{compartments}->{$key}) {
+      $safe = $self->{compartments}->{$key};
+    } else {
+      $new_compartment = $key;
+    }
+  }
+
+  if (not defined $safe) {
+    $safe = Safe->new;
+    $safe->permit_only(qw/:base_core rv2gv padany concat subst join sort mapstart grepstart/);
+    $safe->deny(qw/entersub/);
+
+    # some default stuff
+    $safe->reval('$" = " ";');
+
+    $self->{compartments}->{$new_compartment} = $safe if $new_compartment;
+  }
+
+  local our @args = $self->{pbot}->{commands}->parse_arguments($arguments);
+  local our $nick = defined $tonick ? $tonick : $nick;
+  local our $channel = $from;
+
+  @args = ($nick) if not @args;
+  $arguments = '';
+
+  $safe->share(qw/@args $nick $channel/);
+
+  my $action = eval {
+    $self->{pbot}->{logger}->log("evaling [$code]\n");
+    my $result = $safe->reval($code);
+
+    if ($@) {
+      my $error = $@;
+      chomp $error;
+      $error =~ s/trapped by operation.*/operation disallowed (we're still fine-tuning this; let us know if you think this should be allowed)/;
+      $error =~ s/at \(eval \d+\) line 1.//g;
+      $error = "$error (did you forget to use quotes around factoid variables?)" if $error =~ /syntax error/;
+      return "/say Error in factoid code: $error";
+    } else {
+      return $result;
+    }
+  };
+
+  if ($@) {
+    my $error = $@;
+    chomp $error;
+    $error =~ s/at \(eval \d+\) line 1.//g;
+    $action = "/say Error in factoid: $error";
+  }
+
+  $action = substr $action, 0, 400;
+
+  %SIG = %signals;
+  alarm 1;
+
+  $action = $self->expand_factoid_vars($from, $action);
+  return $action;
+}
+
 sub interpreter {
   my $self = shift;
   my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $ref_from, $referenced, $root_keyword) = @_;
@@ -634,86 +714,17 @@ sub interpreter {
 
   if ($action =~ m/^\{\s*(.*)\s*\}$/) {
     my $code = $1;
-
-    my $ppi = PPI::Document->new(\$code, readonly => 1);
-    my $vars = $ppi->find(sub { $_[1]->isa('PPI::Token::Symbol') });
-    my @names = map { $_->symbol =~ /^[\%\@\$]+(.*)/; $1 } @$vars if $vars;
-    my %uniq = map { $_, 1 } @names;
-    @names = keys %uniq;
-
-    $code = $self->expand_factoid_vars($from, $code, @names);
-    $code =~ s/"\$0"/$root_keyword/g;
-
-    my %signals = %SIG;
-    alarm 0;
-
-    my $safe;
-    my $new_compartment;
-
-    if ($self->{factoids}->hash->{$channel}->{$keyword}->{'persist-key'}) {
-      my $key = $self->{factoids}->hash->{$channel}->{$keyword}->{'persist-key'};
-      if ($self->{compartments}->{$key}) {
-        $safe = $self->{compartments}->{$key};
-      } else {
-        $new_compartment = $key;
-      }
-    }
-
-    if (not defined $safe) {
-      $safe = Safe->new;
-      #$safe->permit_only(qw/:base_core rv2gv padany concat subst join sort enteriter iter unstack grepwhile mapwhile leaveloop/);
-      $safe->permit_only(qw/:base_core rv2gv padany concat subst join sort mapstart grepstart/);
-      $safe->deny(qw/entersub/);
-
-      # some default stuff
-      $safe->reval('$" = " ";');
-
-      $self->{compartments}->{$new_compartment} = $safe if $new_compartment;
-    }
-
-    local our @args = $self->{pbot}->{commands}->parse_arguments($arguments);
-    local our $nick = defined $tonick ? $tonick : $nick;
-    local our $channel = $from;
-
-    @args = ($nick) if not @args;
-    $arguments = '';
-
-    $safe->share(qw/@args $nick $channel/);
-
-    $action = eval {
-      $self->{pbot}->{logger}->log("evaling [$code]\n");
-      my $result = $safe->reval($code);
-
-      if ($@) {
-        my $error = $@;
-        chomp $error;
-        $error =~ s/trapped by operation.*/operation disallowed (we're still fine-tuning this; let us know if you think this should be allowed)/;
-        $error =~ s/at \(eval \d+\) line 1.//g;
-        $error = "$error (did you forget to use quotes around factoid variables?)" if $error =~ /syntax error/;
-        return "/say Error in factoid code: $error";
-      } else {
-        return $result;
-      }
-    };
-
-    if ($@) {
-      my $error = $@;
-      chomp $error;
-      $error =~ s/at \(eval \d+\) line 1.//g;
-      $action = "/say Error in factoid: $error";
-    }
-
-    $action = substr $action, 0, 400;
-
-    %SIG = %signals;
-    alarm 1;
+    $action = $self->execute_code_factoid($nick, $from, $channel, $root_keyword, $keyword, $arguments, $code, $tonick);
   }
 
-  $action = $self->expand_factoid_vars($from, $action);
-
-  if(length $arguments) {
+  if (length $arguments) {
     if(exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args}) {
       $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args};
+    }
+
+    if ($action =~ m/^\{\s*(.*)\s*\}$/) {
+      my $code = $1;
+      $action = $self->execute_code_factoid($nick, $from, $channel, $root_keyword, $keyword, $arguments, $code, $tonick);
     }
 
     if ($action =~ m/\$args/ or $action =~ m/\$arg\[/) {
@@ -737,8 +748,6 @@ sub interpreter {
           } else {
             if ($1 eq '/say') {
               $action =~ s/^\/say /\/say $target: /;
-            } elsif ($1 ne '/call') {
-              $action =~ s/$/ ($target)/;
             }
           }
         } else {
@@ -796,12 +805,12 @@ sub interpreter {
 
   return "" if not length $action;
 
-  $action = $self->expand_factoid_vars($from, $action);
-
   $action =~ s/\$nick/$nick/g;
   $action =~ s/\$channel/$from/g;
   $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
   $action =~ s/\$0\b/$root_keyword/g;
+
+  $action = $self->expand_factoid_vars($from, $action);
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'module') {
     my $preserve_whitespace = $self->{factoids}->hash->{$channel}->{$keyword}->{preserve_whitespace};
