@@ -1769,6 +1769,8 @@ sub get_message_account_id {
 sub commit_message_history {
   my $self = shift;
 
+  return if not $self->{dbh};
+
   if($self->{new_entries} > 0) {
     # $self->{pbot}->{logger}->log("Commiting $self->{new_entries} messages to SQLite\n");
     eval {
