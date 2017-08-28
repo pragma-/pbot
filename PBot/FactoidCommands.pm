@@ -876,7 +876,6 @@ sub factlog {
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, "@$args", 'factlog', $usage);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
-  my $result;
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
 
   $channel = 'global' if $channel eq '.*';
@@ -886,6 +885,7 @@ sub factlog {
     return "No factlog available for $trigger in $channel.";
   };
 
+  my @entries;
   while (my $line = <$fh>) {
     my ($timestamp, $hostmask, $msg) = split / /, $line, 3;
 
@@ -899,10 +899,11 @@ sub factlog {
       $timestamp = concise ago gettimeofday - $timestamp;
     }
 
-    $result .= "[$timestamp] $hostmask $msg\n";
+    push @entries, "[$timestamp] $hostmask $msg\n";
   }
-
   close $fh;
+
+  my $result = join "", reverse @entries;
   return $result;
 }
 
