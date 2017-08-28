@@ -379,7 +379,7 @@ sub expand_factoid_vars {
   while (1) {
     last if ++$depth >= 10;
     my $matches = 0;
-    $action =~ s/\$0/\$$root_keyword/g;
+    $action =~ s/\$0/$root_keyword/g;
     my $const_action = $action;
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
       my ($a, $v) = ($1, $2);
