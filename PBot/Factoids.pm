@@ -371,12 +371,15 @@ sub find_factoid {
 }
 
 sub expand_factoid_vars {
-  my ($self, $from, $action, @exclude) = @_;
+  my ($self, $from, $root_keyword, $action, @exclude) = @_;
+
+  $root_keyword = lc $root_keyword;
 
   my $depth = 0;
   while (1) {
     last if ++$depth >= 10;
     my $matches = 0;
+    $action =~ s/\$0/\$$root_keyword$1/g;
     my $const_action = $action;
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
       my ($a, $v) = ($1, $2);
@@ -396,10 +399,19 @@ sub expand_factoid_vars {
         $from = '.*' if lc $from eq 'global';
       }
 
-      my @factoids = $self->find_factoid($from, $v, undef, 2, 2);
+      my $recurse = 0;
+      my $test_v = $v;
+      ALIAS:
+      my @factoids = $self->find_factoid($from, $test_v, undef, 2, 2);
       next if not @factoids or not $factoids[0];
 
       my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
+
+      if ($self->{factoids}->hash->{$var_chan}->{$var}->{action} =~ m{^/call (.*)}) {
+        $test_v = $1;
+        next if ++$recurse > 10;
+        goto ALIAS;
+      }
 
       if ($self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
         my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
@@ -430,9 +442,9 @@ sub expand_factoid_vars {
 
         if ($a) {
           my $fixed_a = select_indefinite_article $mylist[$line];
-          $action =~ s/$a\$$var$modifier/$fixed_a $mylist[$line]/;
+          $action =~ s/$a\$$v$modifier/$fixed_a $mylist[$line]/;
         } else {
-          $action =~ s/\$$var$modifier/$mylist[$line]/;
+          $action =~ s/\$$v$modifier/$mylist[$line]/;
         }
       }
     }
@@ -533,8 +545,7 @@ sub execute_code_factoid {
   my %uniq = map { $_, 1 } @names;
   @names = keys %uniq;
 
-  $code = $self->expand_factoid_vars($from, $code, @names);
-  $code =~ s/\$0\b/$root_keyword/g;
+  $code = $self->expand_factoid_vars($from, $root_keyword, $code, @names);
 
   my %signals = %SIG;
   alarm 0;
@@ -599,7 +610,7 @@ sub execute_code_factoid {
   %SIG = %signals;
   alarm 1;
 
-  $action = $self->expand_factoid_vars($from, $action);
+  $action = $self->expand_factoid_vars($from, $root_keyword, $action);
   return $action;
 }
 
@@ -763,7 +774,7 @@ sub interpreter {
 
   # Check if it's an alias
   if($action =~ /^\/call\s+(.*)$/) {
-    my $command = $self->expand_factoid_vars($from, $1);
+    my $command = $self->expand_factoid_vars($from, $root_keyword, $1);
     if(length $arguments) {
       $command .= " $arguments";
     }
@@ -803,7 +814,7 @@ sub interpreter {
   $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
   $action =~ s/\$0\b/$root_keyword/g;
 
-  $action = $self->expand_factoid_vars($from, $action);
+  $action = $self->expand_factoid_vars($from, $root_keyword, $action);
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'module') {
     my $preserve_whitespace = $self->{factoids}->hash->{$channel}->{$keyword}->{preserve_whitespace};
