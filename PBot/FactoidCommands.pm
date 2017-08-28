@@ -158,7 +158,7 @@ sub find_factoid_with_optional_channel {
   my ($self, $from, $arguments, $command, $usage) = @_;
   my ($from_chan, $from_trigger, $remaining_args) = split / /, $arguments, 3;
 
-  if(not defined $from_chan and not defined $from_trigger) {
+  if (not defined $from_chan or (not defined $from_chan and not defined $from_trigger)) {
     return "Usage: $command [channel] <keyword>" if not $usage;
     return $usage;
   }
@@ -166,14 +166,23 @@ sub find_factoid_with_optional_channel {
   my $needs_disambig;
 
   if (not defined $from_trigger) {
+    # cmd arg1, so insert $from as channel
     $from_trigger = $from_chan;
     $from_chan = $from;
     $remaining_args = "";
     #$needs_disambig = 1;
+  } else {
+    # cmd arg1 arg2 [...?]
+    if ($from_chan !~ /^#/ and lc $from_chan ne 'global' and $from_chan ne '.*') {
+      # not a channel or global, so must be a keyword
+      my $keyword = $from_chan;
+      $from_chan = $from;
+      $remaining_args = $from_trigger . ($remaining_args ? " $remaining_args" : "");
+      $from_trigger = $keyword;
+    }
   }
 
   $from_chan = '.*' if $from_chan !~ /^#/;
-
   $from_chan = lc $from_chan;
 
   my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, undef, 0, 1);
@@ -278,24 +287,6 @@ sub factset {
   my $self = shift;
   my ($from, $nick, $user, $host, $args) = @_;
 
-  my ($chan, $trig, $rest) = split / /, $args, 3;
-
-  if (not defined $trig and defined $chan) {
-    $trig = $chan;
-    $chan = $from;
-  }
-
-  if (defined $chan) {
-    if ($chan eq $nick) {
-      $args = $trig;
-    } elsif ($chan =~ /(?:^#|^\.\*$)/) {
-      $args = "$chan $trig";
-    } else {
-      $args = "$from $chan $trig";
-    }
-    $args .= " $rest" if defined $rest;
-  }
-
   my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factset', 'Usage: factset [channel] <factoid> [key [value]]');
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
@@ -379,14 +370,14 @@ sub factset {
 
 sub factunset {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($channel, $trigger, $key) = split / /, $arguments, 3 if defined $arguments;
+  my ($from, $nick, $user, $host, $args) = @_;
 
-  if(not defined $channel or not defined $trigger or not defined $key) {
-    return "Usage: factunset <channel> <factoid> <key>"
-  }
+  my $usage = 'Usage: factunset [channel] <factoid> <key>';
 
-  $channel = '.*' if $channel !~ /^#/;
+  my ($channel, $trigger, $key) = $self->find_factoid_with_optional_channel($from, $args, 'factset', $usage);
+  return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
+
+  return $usage if not length $key;
 
   my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1, 1);
 
@@ -443,6 +434,8 @@ sub factunset {
     }
     $oldvalue = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{$key};
   }
+
+  return "[$channel] $trigger: key '$key' does not exist." if not defined $oldvalue;
 
   my $result = $self->{pbot}->{factoids}->{factoids}->unset($channel, $trigger, $key);
 
@@ -880,7 +873,7 @@ sub factlog {
   return "Too many arguments -- $usage" if @$args > 2;
   return "Missing argument -- $usage" if not @$args;
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel(@$args[0], @$args[1], 'factlog', $usage);
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, "@$args", 'factlog', $usage);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my $result;
