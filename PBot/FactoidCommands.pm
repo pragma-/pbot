@@ -223,6 +223,37 @@ sub find_factoid_with_optional_channel {
   return ($channel, $trigger, $remaining_args);
 }
 
+sub hash_differences_as_string {
+  my ($self, $old, $new) = @_;
+
+  my @exclude = qw/created_on last_referenced_in last_referenced_on ref_count ref_user edited_by edited_on/;
+
+  my %diff;
+
+  foreach my $key (keys %$new) {
+    next if grep { $key eq $_ } @exclude;
+
+    if (not exists $old->{$key} or $old->{$key} ne $new->{$key}) {
+      $diff{$key} = $new->{$key};
+    }
+  }
+
+
+  if (not keys %diff) {
+    return "No change.";
+  }
+
+  my $changes = "";
+
+  my $comma = "";
+  foreach my $key (sort keys %diff) {
+    $changes .= "$comma$key => $diff{$key}";
+    $comma = ", ";
+  }
+
+  return $changes
+}
+
 sub factundo {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
@@ -249,8 +280,9 @@ sub factundo {
 
   $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
 
-  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (undo) to revision ". ($undos->{idx} + 1), 1);
-  return "[$channel] $trigger reverted to revision " . ($undos->{idx} + 1);
+  my $changes = $self->hash_differences_as_string($undos->{list}->[$undos->{idx} + 1], $undos->{list}->[$undos->{idx}]);
+  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (undo): $changes", 1);
+  return "[$channel] $trigger reverted (revision " . ($undos->{idx} + 1) . "): $changes\n";
 }
 
 sub factredo {
@@ -279,8 +311,10 @@ sub factredo {
 
   $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
 
-  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (redo) to revision ". ($undos->{idx} + 1), 1);
-  return "[$channel] $trigger reverted to revision " . ($undos->{idx} + 1);
+
+  my $changes = $self->hash_differences_as_string($undos->{list}->[$undos->{idx} - 1], $undos->{list}->[$undos->{idx}]);
+  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (redo): $changes", 1);
+  return "[$channel] $trigger restored (revision " . ($undos->{idx} + 1) . "): $changes\n";
 }
 
 sub factset {
