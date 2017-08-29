@@ -371,7 +371,7 @@ sub find_factoid {
 }
 
 sub expand_factoid_vars {
-  my ($self, $from, $root_keyword, $action, @exclude) = @_;
+  my ($self, $from, $nick, $root_keyword, $action, @exclude) = @_;
 
   $root_keyword = lc $root_keyword;
 
@@ -452,6 +452,12 @@ sub expand_factoid_vars {
   }
 
   $action =~ s/\\\$/\$/g;
+
+  $action =~ s/\$nick/$nick/g;
+  $action =~ s/\$channel/$from/g;
+  $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
+  $action =~ s/\$0\b/$root_keyword/g;
+
   return $action;
 }
 
@@ -545,7 +551,7 @@ sub execute_code_factoid {
   my %uniq = map { $_, 1 } @names;
   @names = keys %uniq;
 
-  $code = $self->expand_factoid_vars($from, $root_keyword, $code, @names);
+  $code = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $code, @names);
 
   my %signals = %SIG;
   alarm 0;
@@ -564,7 +570,7 @@ sub execute_code_factoid {
 
   if (not defined $safe) {
     $safe = Safe->new;
-    $safe->permit_only(qw/:base_core rv2gv padany concat subst join sort mapstart grepstart/);
+    $safe->permit_only(qw/:base_core rv2gv padany rand srand concat subst join sort mapstart grepstart/);
     $safe->deny(qw/entersub/);
 
     # some default stuff
@@ -610,7 +616,8 @@ sub execute_code_factoid {
   %SIG = %signals;
   alarm 1;
 
-  $action = $self->expand_factoid_vars($from, $root_keyword, $action);
+  $action = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $action);
+  $action = $self->expand_action_arguments($action, $arguments, $tonick ? $tonick : $nick);
   return $action;
 }
 
@@ -774,7 +781,7 @@ sub interpreter {
 
   # Check if it's an alias
   if($action =~ /^\/call\s+(.*)$/) {
-    my $command = $self->expand_factoid_vars($from, $root_keyword, $1);
+    my $command = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $1);
     if(length $arguments) {
       $command .= " $arguments";
     }
@@ -809,12 +816,8 @@ sub interpreter {
     return "/msg $nick $ref_from$keyword is currently disabled.";
   }
 
-  $action =~ s/\$nick/$nick/g;
-  $action =~ s/\$channel/$from/g;
-  $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
-  $action =~ s/\$0\b/$root_keyword/g;
-
-  $action = $self->expand_factoid_vars($from, $root_keyword, $action);
+  $action = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $action);
+  $action = $self->expand_action_arguments($action, $arguments, $tonick ? $tonick : $nick);
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'module') {
     my $preserve_whitespace = $self->{factoids}->hash->{$channel}->{$keyword}->{preserve_whitespace};
