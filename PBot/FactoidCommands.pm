@@ -303,7 +303,7 @@ sub factredo {
   }
 
   if ($undos->{idx} + 1 == @{$undos->{list}}) {
-    return "There are no more redos reamining for [$channel] $trigger.";
+    return "There are no more redos remaining for [$channel] $trigger.";
   }
 
   $undos->{idx}++;
