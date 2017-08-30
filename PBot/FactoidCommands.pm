@@ -657,15 +657,11 @@ sub factmove {
   $found_src_channel = 'global' if $found_src_channel eq '.*';
   $target_channel = 'global' if $target_channel eq '.*';
 
-  my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
-  if (not rename "$path/$found_source.$found_src_channel", "$path/$target.$target_channel") {
-    $self->{pbot}->{logger}->log("Failed to move factlog $found_source.$found_src_channel to $target.$target_channel: $!\n");
-  }
-
   if($src_channel eq $target_channel) {
     $self->log_factoid($target_channel, $target, "$nick!$user\@$host", "renamed from $found_source to $target");
     return "[$found_src_channel] $found_source renamed to $target";  
   } else {
+    $self->log_factoid($found_src_channel, $found_source, "$nick!$user\@$host", "moved from $found_src_channel/$found_source to $target_channel/$target");
     $self->log_factoid($target_channel, $target, "$nick!$user\@$host", "moved from $found_src_channel/$found_source to $target_channel/$target");
     return "[$found_src_channel] $found_source moved to [$target_channel] $target";
   }
