@@ -322,6 +322,7 @@ sub show_random_quotegrab {
       chomp $getopt_error;
     };
 
+    $arguments =~ s/(?<!\\)'/\\'/g;
     my ($ret, $args) = GetOptionsFromString($arguments, 
       'channel|c=s' => \$channel_search, 
       'text|t=s'    => \$text_search);

@@ -149,6 +149,7 @@ sub list_also_known_as {
 
   Getopt::Long::Configure ("bundling");
 
+  $arguments =~ s/(?<!\\)'/\\'/g;
   my ($show_hostmasks, $show_gecos, $show_nickserv, $show_id, $show_relationship, $show_weak, $dont_use_aliases_table);
   my ($ret, $args) = GetOptionsFromString($arguments,
     'h'  => \$show_hostmasks,
@@ -241,6 +242,7 @@ sub recall_message {
   foreach my $recall (@recalls) {
     my ($recall_nick, $recall_history, $recall_channel, $recall_before, $recall_after, $recall_context, $recall_count);
 
+    $recall =~ s/(?<!\\)'/\\'/g;
     my ($ret, $args) = GetOptionsFromString($recall,
       'channel|c:s'        => \$recall_channel,
       'text|t|history|h:s' => \$recall_history,

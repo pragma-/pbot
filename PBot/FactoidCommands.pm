@@ -890,6 +890,7 @@ sub factlog {
     chomp $getopt_error;
   };
 
+  $arguments =~ s/(?<!\\)'/\\'/g;
   my ($show_hostmask, $actual_timestamp);
   my ($ret, $args) = GetOptionsFromString($arguments,
     'h'  => \$show_hostmask,

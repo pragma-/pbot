@@ -209,8 +209,7 @@ sub remindme {
     chomp $getopt_error;
   };
 
-  $arguments =~ s/'/\\'/g;
-
+  $arguments =~ s/(?<!\\)'/\\'/g;
   my ($ret, $args) = GetOptionsFromString($arguments,
     'r:i' => \$repeat,
     't:s' => \$alarm,
