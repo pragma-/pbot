@@ -453,10 +453,12 @@ sub expand_factoid_vars {
 
   $action =~ s/\\\$/\$/g;
 
-  $action =~ s/\$nick/$nick/g;
-  $action =~ s/\$channel/$from/g;
-  $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
-  $action =~ s/\$0\b/$root_keyword/g;
+  unless (@exclude) {
+    $action =~ s/\$nick/$nick/g;
+    $action =~ s/\$channel/$from/g;
+    $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
+    $action =~ s/\$0\b/$root_keyword/g;
+  }
 
   return $action;
 }
@@ -547,11 +549,18 @@ sub execute_code_factoid {
   my $ppi = PPI::Document->new(\$code, readonly => 1);
   return "/say $nick: I don't feel so good." if not $ppi;
   my $vars = $ppi->find(sub { $_[1]->isa('PPI::Token::Symbol') });
+
+
+  use Data::Dumper;
+  print "got vars: ", Dumper $vars;
+
   my @names = map { $_->symbol =~ /^[\%\@\$]+(.*)/; $1 } @$vars if $vars;
   my %uniq = map { $_, 1 } @names;
   @names = keys %uniq;
 
-  $code = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $code, @names);
+  unless ($self->{factoids}->hash->{$chan}->{$keyword}->{interpolate} eq '0') {
+    $code = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $code, @names);
+  }
 
   my %signals = %SIG;
   alarm 0;
@@ -616,8 +625,10 @@ sub execute_code_factoid {
   %SIG = %signals;
   alarm 1;
 
-  $action = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $action);
-  $action = $self->expand_action_arguments($action, $arguments, $tonick ? $tonick : $nick);
+  unless ($self->{factoids}->hash->{$chan}->{$keyword}->{interpolate} eq '0') {
+    $action = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $action);
+    $action = $self->expand_action_arguments($action, $arguments, $tonick ? $tonick : $nick);
+  }
   return $action;
 }
 
@@ -743,9 +754,15 @@ sub interpreter {
 
   return "" if not length $action;
 
+  unless ($self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
+    $action = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $action);
+  }
+
   if (length $arguments) {
     if ($action =~ m/\$args/ or $action =~ m/\$arg\[/) {
-      $action = $self->expand_action_arguments($action, $arguments, defined $tonick ? $tonick : $nick);
+      unless ($self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
+        $action = $self->expand_action_arguments($action, $arguments, defined $tonick ? $tonick : $nick);
+      }
       $arguments = "";
     } else {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
@@ -816,8 +833,10 @@ sub interpreter {
     return "/msg $nick $ref_from$keyword is currently disabled.";
   }
 
-  $action = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $action);
-  $action = $self->expand_action_arguments($action, $arguments, $tonick ? $tonick : $nick);
+  unless ($self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
+    $action = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $action);
+    $action = $self->expand_action_arguments($action, $arguments, $tonick ? $tonick : $nick);
+  }
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'module') {
     my $preserve_whitespace = $self->{factoids}->hash->{$channel}->{$keyword}->{preserve_whitespace};
