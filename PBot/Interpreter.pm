@@ -278,7 +278,7 @@ sub handle_result {
   if (defined $command) {
     my ($cmd, $args) = split / /, $command, 2;
     if (not $self->{pbot}->{commands}->exists($cmd)) {
-      my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $cmd, $args, 1);
+      my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $cmd, $args, 1, 0, 1);
       if(defined $trigger) {
         if ($preserve_whitespace == 0) {
           $preserve_whitespace = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};
