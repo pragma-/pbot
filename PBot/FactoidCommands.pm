@@ -155,7 +155,7 @@ sub log_factoid {
 }
 
 sub find_factoid_with_optional_channel {
-  my ($self, $from, $arguments, $command, $usage) = @_;
+  my ($self, $from, $arguments, $command, $usage, $explicit) = @_;
   my ($from_chan, $from_trigger, $remaining_args) = split / /, $arguments, 3;
 
   if (not defined $from_chan or (not defined $from_chan and not defined $from_trigger)) {
@@ -200,7 +200,16 @@ sub find_factoid_with_optional_channel {
 
   if (@factoids > 1) {
     if ($needs_disambig or not grep { $_->[0] eq $from_chan } @factoids) {
-      return "$from_trigger found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `$command <channel> $from_trigger` to disambiguate.";
+      unless ($explicit) {
+        foreach my $factoid (@factoids) {
+          if ($factoid->[0] eq '.*') {
+            ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
+          }
+        }
+      }
+      if (not defined $channel) {
+        return "$from_trigger found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `$command <channel> $from_trigger` to disambiguate.";
+      }
     } else {
       foreach my $factoid (@factoids) {
         if ($factoid->[0] eq $from_chan) {
@@ -216,7 +225,7 @@ sub find_factoid_with_optional_channel {
   $channel = '.*' if $channel eq 'global';
   $from_chan = '.*' if $channel eq 'global';
 
-  if ($channel =~ /^#/ and $from_chan =~ /^#/ and $channel ne $from_chan) {
+  if ($explicit and $channel =~ /^#/ and $from_chan =~ /^#/ and $channel ne $from_chan) {
     return "$trigger belongs to $channel, not $from_chan. Please switch to or explicitly specify $channel.";
   }
 
@@ -258,7 +267,7 @@ sub factundo {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo');
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo', undef, 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my $channel_path = $channel;
@@ -289,7 +298,7 @@ sub factredo {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo');
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo', undef, 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my $channel_path = $channel;
@@ -320,7 +329,7 @@ sub factset {
   my $self = shift;
   my ($from, $nick, $user, $host, $args) = @_;
 
-  my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factset', 'Usage: factset [channel] <factoid> [key [value]]');
+  my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factset', 'Usage: factset [channel] <factoid> [key [value]]', 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my ($key, $value) = split / /, $arguments, 2;
@@ -399,7 +408,7 @@ sub factunset {
 
   my $usage = 'Usage: factunset [channel] <factoid> <key>';
 
-  my ($channel, $trigger, $key) = $self->find_factoid_with_optional_channel($from, $args, 'factset', $usage);
+  my ($channel, $trigger, $key) = $self->find_factoid_with_optional_channel($from, $args, 'factset', $usage, 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   return $usage if not length $key;
@@ -714,7 +723,7 @@ sub factrem {
     $from_chan = $from;
   }
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factrem');
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factrem', undef, 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   $channel = '.*' if $channel eq 'global';
