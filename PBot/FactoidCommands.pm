@@ -311,7 +311,6 @@ sub factredo {
 
   $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
 
-
   my $changes = $self->hash_differences_as_string($undos->{list}->[$undos->{idx} - 1], $undos->{list}->[$undos->{idx}]);
   $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "reverted (redo): $changes", 1);
   return "[$channel] $trigger restored (revision " . ($undos->{idx} + 1) . "): $changes\n";
@@ -480,73 +479,6 @@ sub list {
   if(not defined $arguments) {
     return "Usage: list <modules|factoids|commands|admins>";
   }
-
-  # TODO - update this to use new MessageHistory API
-=cut
-  if($arguments =~/^messages\s+(.*)$/) {
-    my ($mask_search, $channel_search, $text_search) = split / /, $1;
-
-    return "/msg $nick Usage: list messages <hostmask or nick regex> <channel regex> [text regex]" if not defined $channel_search;
-    $text_search = '.*' if not defined $text_search;
-
-    my @results = eval {
-      my @ret;
-      foreach my $history_mask (keys %{ $self->{pbot}->{antiflood}->message_history }) {
-        my $nickserv = "(undef)";
-
-        $nickserv = $self->{pbot}->{antiflood}->message_history->{$history_mask}->{nickserv_account} if exists $self->{pbot}->{antiflood}->message_history->{$history_mask}->{nickserv_account};
-        
-        if($history_mask =~ m/$mask_search/i) {
-          my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
-          foreach my $history_channel (keys %{ $self->{pbot}->{antiflood}->message_history->{$history_mask}->{channels} }) {
-            if($history_channel =~ m/$channel_search/i) {
-              my @messages = @{ $self->{pbot}->{antiflood}->message_history->{$history_mask}->{channels}->{$history_channel}{messages} };
-              for(my $i = 0; $i <= $#messages; $i++) {
-                next if $messages[$i]->{msg} =~ /^\Q$bot_trigger\E?login/; # don't reveal login passwords
-
-                print "$history_mask, $history_channel\n";
-                print "joinwatch: ", $self->{pbot}->{antiflood}->message_history->{$history_mask}->{channels}->{$history_channel}{join_watch}, "\n";
-
-                push @ret, { 
-                  offenses => $self->{pbot}->{antiflood}->message_history->{$history_mask}->{channels}->{$history_channel}{offenses}, 
-                  last_offense_timestamp => $self->{pbot}->{antiflood}->message_history->{$history_mask}->{channels}->{$history_channel}{last_offense_timestamp}, 
-                  join_watch => $self->{pbot}->{antiflood}->message_history->{$history_mask}->{channels}->{$history_channel}{join_watch}, 
-                  text => $messages[$i]->{msg}, 
-                  timestamp => $messages[$i]->{timestamp}, 
-                  mask => $history_mask, 
-                  nickserv => $nickserv, 
-                  channel => $history_channel 
-                } if $messages[$i]->{msg} =~ m/$text_search/i;
-              }
-            }
-          }
-        }
-      }
-      return @ret;
-    };
-
-    if($@) {
-      $self->{pbot}->{logger}->log("Error in search parameters: $@\n");
-      return "Error in search parameters: $@";
-    }
-
-    my $text = "";
-    my %seen_masks = ();
-    my @sorted = sort { $a->{timestamp} <=> $b->{timestamp} } @results;
-
-    foreach my $msg (@sorted) {
-      if(not exists $seen_masks{$msg->{mask}}) {
-        $seen_masks{$msg->{mask}} = 1;
-        $text .= "--- [$msg->{mask} [$msg->{nickserv}]: join counter: $msg->{join_watch}; offenses: $msg->{offenses}; last offense/decrease: " . ($msg->{last_offense_timestamp} > 0 ? ago(gettimeofday - $msg->{last_offense_timestamp}) : "unknown") . "]\n";
-      }
-
-      $text .= "[$msg->{channel}] " . localtime($msg->{timestamp}) . " <$msg->{mask}> " . $msg->{text} . "\n";
-    }
-
-    $self->{pbot}->{logger}->log($text);
-    return "Messages:\n\n$text";
-  }
-=cut
 
   if($arguments =~ /^modules$/i) {
     $from = '.*' if not defined $from or $from !~ /^#/;
