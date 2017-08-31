@@ -177,7 +177,7 @@ sub find_factoid_with_optional_channel {
       # not a channel or global, so must be a keyword
       my $keyword = $from_chan;
       $from_chan = $from;
-      $remaining_args = $from_trigger . ($remaining_args ? " $remaining_args" : "");
+      $remaining_args = $from_trigger . (length $remaining_args ? " $remaining_args" : "");
       $from_trigger = $keyword;
     }
   }
