@@ -36,6 +36,8 @@ sub log {
   my ($self, $text) = @_;
   my $time = localtime;
 
+  $text =~ s/(?:[\01-\010]|[\016-\037])/^/g;
+
   if(defined $self->{log_file}) {
     print PLOG_FILE "$time :: $text";
   } 
