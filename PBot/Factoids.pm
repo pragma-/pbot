@@ -418,7 +418,7 @@ sub expand_factoid_vars {
         my @list = split(/\s|(".*?")/, $change);
         my @mylist;
         for (my $i = 0; $i <= $#list; $i++) {
-          push @mylist, $list[$i] if $list[$i];
+          push @mylist, $list[$i] if defined $list[$i];
         }
         my $line = int(rand($#mylist + 1));
         $mylist[$line] =~ s/"//g;
