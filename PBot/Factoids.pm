@@ -415,10 +415,10 @@ sub expand_factoid_vars {
 
       if ($self->{factoids}->hash->{$var_chan}->{$var}->{type} eq 'text') {
         my $change = $self->{factoids}->hash->{$var_chan}->{$var}->{action};
-        my @list = split(/\s+|(".*?")/, $change);
+        my @list = split(/\s|(".*?")/, $change);
         my @mylist;
         for (my $i = 0; $i <= $#list; $i++) {
-          push @mylist, $list[$i] if defined $list[$i];
+          push @mylist, $list[$i] if defined $list[$i] and length $list[$i];
         }
         my $line = int(rand($#mylist + 1));
         $mylist[$line] =~ s/"//g;
