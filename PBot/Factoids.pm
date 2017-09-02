@@ -621,6 +621,7 @@ sub execute_code_factoid {
   }
 
   $action = substr $action, 0, 400;
+  $action =~ s/([\01-\010]|[\016-\037])/'\\' . ord $1/ge;
 
   %SIG = %signals;
   alarm 1;
