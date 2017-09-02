@@ -269,7 +269,18 @@ sub factundo {
   my ($from, $nick, $user, $host, $arguments) = @_;
 
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo', undef, 1);
-  return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
+  my $deleted;
+
+  if (not defined $trigger) {
+    # factoid not found or some error, try to continue and load undo file if it exists
+    $deleted = 1;
+    ($channel, $trigger) = split /\s+/, $arguments, 2;
+    if (not defined $trigger) {
+      $trigger = $channel;
+      $channel = $from;
+    }
+    $channel = '.*' if $channel !~ m/^#/;
+  }
 
   my $channel_path = $channel;
   $channel_path  = 'global' if $channel_path eq '.*';
@@ -285,8 +296,10 @@ sub factundo {
     return "There are no more undos remaining for [$channel] $trigger.";
   }
 
-  $undos->{idx}--;
-  store $undos, "$path/$trigger.$channel_path.undo";
+  unless ($deleted) {
+    $undos->{idx}--;
+    store $undos, "$path/$trigger.$channel_path.undo";
+  }
 
   $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
 
@@ -839,7 +852,16 @@ sub factlog {
   return "Missing argument -- $usage" if not @$args;
 
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, "@$args", 'factlog', $usage);
-  return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
+
+  if (not defined $trigger) {
+    # factoid not found or some error, try to continue and load factlog file if it exists
+    ($channel, $trigger) = split /\s+/, "@$args", 2;
+    if (not defined $trigger) {
+      $trigger = $channel;
+      $channel = $from;
+    }
+    $channel = '.*' if $channel !~ m/^#/;
+  }
 
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
 
