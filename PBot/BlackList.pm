@@ -173,7 +173,7 @@ sub blacklist {
     my ($self, $from, $nick, $user, $host, $arguments) = @_;
     $arguments = lc $arguments;
 
-    my ($command, $args) = split / /, $arguments, 2;
+    my ($command, $args) = split /\s+/, $arguments, 2;
 
     return "Usage: blacklist <command>, where commands are: list/show, add, remove" if not defined $command;
 
@@ -196,7 +196,7 @@ sub blacklist {
             return $text;
         }
         when("add") {
-            my ($mask, $channel) = split / /, $args, 2;
+            my ($mask, $channel) = split /\s+/, $args, 2;
             return "Usage: blacklist add <hostmask regex> [channel]" if not defined $mask;
 
             $channel = '.*' if not defined $channel;
@@ -206,7 +206,7 @@ sub blacklist {
             return "/say $mask blacklisted in channel $channel";
         }
         when("remove") {
-            my ($mask, $channel) = split / /, $args, 2;
+            my ($mask, $channel) = split /\s+/, $args, 2;
             return "Usage: blacklist remove <hostmask regex> [channel]" if not defined $mask;
 
             $channel = '.*' if not defined $channel;

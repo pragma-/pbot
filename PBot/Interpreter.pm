@@ -277,7 +277,7 @@ sub handle_result {
   my $use_output_queue = 0;
 
   if (defined $command) {
-    my ($cmd, $args) = split / /, $command, 2;
+    my ($cmd, $args) = split /\s+/, $command, 2;
     if (not $self->{pbot}->{commands}->exists($cmd)) {
       my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $cmd, $args, 1, 0, 1);
       if(defined $trigger) {
@@ -376,7 +376,7 @@ sub output_result {
     }
   } elsif($line =~ s/^\/$self->{pbot}->{secretstuff}kick\s+//) {
     $pbot->{antiflood}->check_flood($from, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/kick ' . $line, 0, 0, 0) if $checkflood;
-    my ($victim, $reason) = split / /, $line, 2;
+    my ($victim, $reason) = split /\s+/, $line, 2;
 
     if (not defined $reason) {
       if (open my $fh, '<',  $self->{pbot}->{registry}->get_value('general', 'module_dir') . '/insults.txt') {

@@ -86,7 +86,7 @@ sub adminadd {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  my ($name, $channel, $hostmask, $level, $password) = split / /, $arguments, 5;
+  my ($name, $channel, $hostmask, $level, $password) = split /\s+/, $arguments, 5;
 
   if(not defined $name or not defined $channel or not defined $hostmask or not defined $level
     or not defined $password) {
@@ -103,7 +103,7 @@ sub adminrem {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  my ($channel, $hostmask) = split / /, $arguments, 2;
+  my ($channel, $hostmask) = split /\s+/, $arguments, 2;
 
   if(not defined $channel or not defined $hostmask) {
     return "/msg $nick Usage: adminrem <channel> <hostmask/name>";
@@ -135,7 +135,7 @@ sub adminrem {
 sub adminset {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($channel, $hostmask, $key, $value) = split / /, $arguments, 4 if defined $arguments;
+  my ($channel, $hostmask, $key, $value) = split /\s+/, $arguments, 4 if defined $arguments;
 
   if(not defined $channel or not defined $hostmask) {
     return "Usage: adminset <channel> <hostmask/name> [key] [value]";
@@ -163,7 +163,7 @@ sub adminset {
 sub adminunset {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($channel, $hostmask, $key) = split / /, $arguments, 3 if defined $arguments;
+  my ($channel, $hostmask, $key) = split /\s+/, $arguments, 3 if defined $arguments;
 
   if(not defined $channel or not defined $hostmask) {
     return "Usage: adminunset <channel> <hostmask/name> <key>";

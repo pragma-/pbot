@@ -44,7 +44,7 @@ sub initialize {
 
 sub set {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  my ($channel, $key, $value) = split / /, $arguments, 3;
+  my ($channel, $key, $value) = split /\s+/, $arguments, 3;
 
   if(not defined $channel) {
     return "Usage: chanset <channel> [key [value]]";
@@ -55,7 +55,7 @@ sub set {
 
 sub unset {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  my ($channel, $key) = split / /, $arguments;
+  my ($channel, $key) = split /\s+/, $arguments;
 
   if(not defined $channel or not defined $key) {
     return "Usage: chanunset <channel> <key>";

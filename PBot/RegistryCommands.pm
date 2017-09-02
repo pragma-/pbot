@@ -43,7 +43,7 @@ sub initialize {
 sub regset {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($section, $item, $key, $value) = split / /, $arguments, 4 if defined $arguments;
+  my ($section, $item, $key, $value) = split /\s+/, $arguments, 4 if defined $arguments;
 
   if(not defined $section or not defined $item) {
     return "Usage: regset <section> <item> [key [value]]";
@@ -58,7 +58,7 @@ sub regset {
 sub regunset {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($section, $item, $key) = split / /, $arguments, 3 if defined $arguments;
+  my ($section, $item, $key) = split /\s+/, $arguments, 3 if defined $arguments;
 
   if(not defined $section or not defined $item or not defined $key) {
     return "Usage: regunset <section> <item> <key>"
@@ -70,7 +70,7 @@ sub regunset {
 sub regadd {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($section, $item, $value) = split / /, $arguments, 3 if defined $arguments;
+  my ($section, $item, $value) = split /\s+/, $arguments, 3 if defined $arguments;
 
   if(not defined $section or not defined $item or not defined $value) {
     return "Usage: regadd <section> <item> <value>";
@@ -85,7 +85,7 @@ sub regadd {
 sub regrem {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($section, $item) = split / /, $arguments if defined $arguments;
+  my ($section, $item) = split /\s+/, $arguments if defined $arguments;
 
   if(not defined $section or not defined $item) {
     return "Usage: regrem <section> <item>";
@@ -109,7 +109,7 @@ sub regshow {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $registry = $self->{pbot}->{registry}->{registry}->hash;
 
-  my ($section, $item) = split / /, $arguments if defined $arguments;
+  my ($section, $item) = split /\s+/, $arguments if defined $arguments;
 
   if(not defined $section or not defined $item) {
     return "Usage: regshow <section> <item>";

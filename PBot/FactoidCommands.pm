@@ -96,7 +96,7 @@ sub initialize {
 sub call_factoid {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($chan, $keyword, $args) = split / /, $arguments, 3;
+  my ($chan, $keyword, $args) = split /\s+/, $arguments, 3;
 
   if(not defined $chan or not defined $keyword) {
     return "Usage: fact <channel> <keyword> [arguments]";
@@ -157,7 +157,7 @@ sub log_factoid {
 
 sub find_factoid_with_optional_channel {
   my ($self, $from, $arguments, $command, $usage, $explicit) = @_;
-  my ($from_chan, $from_trigger, $remaining_args) = split / /, $arguments, 3;
+  my ($from_chan, $from_trigger, $remaining_args) = split /\s+/, $arguments, 3;
 
   if (not defined $from_chan or (not defined $from_chan and not defined $from_trigger)) {
     return "Usage: $command [channel] <keyword>" if not $usage;
@@ -333,7 +333,7 @@ sub factset {
   my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factset', 'Usage: factset [channel] <factoid> [key [value]]', 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
-  my ($key, $value) = split / /, $arguments, 2;
+  my ($key, $value) = split /\s+/, $arguments, 2;
 
   $channel = '.*' if $channel !~ /^#/;
 
@@ -541,7 +541,7 @@ sub list {
 sub factmove {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($src_channel, $source, $target_channel, $target) = split / /, $arguments, 4 if $arguments;
+  my ($src_channel, $source, $target_channel, $target) = split /\s+/, $arguments, 4 if $arguments;
   
   my $usage = "Usage: factmove <source channel> <source factoid> <target channel/factoid> [target factoid]";
 
@@ -612,7 +612,7 @@ sub factmove {
 sub factalias {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($chan, $alias, $command) = split / /, $arguments, 3 if defined $arguments;
+  my ($chan, $alias, $command) = split /\s+/, $arguments, 3 if defined $arguments;
   
   if(not defined $command) {
     return "Usage: factalias <channel> <keyword> <command>";
@@ -717,7 +717,7 @@ sub factrem {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
-  my ($from_chan, $from_trig) = split / /, $arguments;
+  my ($from_chan, $from_trig) = split /\s+/, $arguments;
 
   if (not defined $from_trig) {
     $from_trig = $from_chan;
@@ -790,7 +790,7 @@ sub factshow {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
-  my ($chan, $trig) = split / /, $arguments;
+  my ($chan, $trig) = split /\s+/, $arguments;
 
   if (not defined $trig) {
     $trig = $chan;
@@ -852,7 +852,7 @@ sub factlog {
 
   my @entries;
   while (my $line = <$fh>) {
-    my ($timestamp, $hostmask, $msg) = split / /, $line, 3;
+    my ($timestamp, $hostmask, $msg) = split /\s+/, $line, 3;
 
     if (not $show_hostmask) {
       $hostmask =~ s/!.*$//;
@@ -877,7 +877,7 @@ sub factinfo {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
-  my ($chan, $trig) = split / /, $arguments;
+  my ($chan, $trig) = split /\s+/, $arguments;
 
   if (not defined $trig) {
     $trig = $chan;
@@ -920,7 +920,7 @@ sub top20 {
   my $text = "";
   my $i = 0;
 
-  my ($channel, $args) = split / /, $arguments, 2 if defined $arguments;
+  my ($channel, $args) = split /\s+/, $arguments, 2 if defined $arguments;
 
   if(not defined $channel) {
     return "Usage: top20 <channel> [nick or 'recent']";

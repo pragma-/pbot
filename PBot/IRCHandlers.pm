@@ -417,7 +417,7 @@ sub on_cap {
   if ($event->{event}->{args}->[0] eq 'ACK') {
     $self->{pbot}->{logger}->log("Client capabilities granted: " . $event->{event}->{args}->[1] . "\n");
 
-    my @caps = split / /, $event->{event}->{args}->[1];
+    my @caps = split /\s+/, $event->{event}->{args}->[1];
     foreach my $cap (@caps) {
       $self->{pbot}->{capabilities}->{$cap} = 1;
     }

@@ -102,7 +102,7 @@ sub unban_user {
     return "";
   }
 
-  my ($target, $channel) = split / /, $arguments;
+  my ($target, $channel) = split /\s+/, $arguments;
 
   if(not defined $target) {
     return "/msg $nick Usage: unban <mask> [channel]";
@@ -177,7 +177,7 @@ sub unmute_user {
     return "";
   }
 
-  my ($target, $channel) = split / /, $arguments;
+  my ($target, $channel) = split /\s+/, $arguments;
 
   if(not defined $target) {
     return "/msg $nick Usage: unmute <mask> [channel]";

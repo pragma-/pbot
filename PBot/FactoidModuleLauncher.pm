@@ -195,7 +195,7 @@ sub execute_module {
 
 sub module_pipe_reader {
   my ($self, $buf) = @_;
-  my ($channel, $text) = split / /, $buf, 2;
+  my ($channel, $text) = split /\s+/, $buf, 2;
   return if not defined $text or not length $text;
   $text = $self->{pbot}->{interpreter}->truncate_result($channel, $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'undef', $text, $text, 0);
   $self->{pbot}->{antiflood}->check_flood($channel, $self->{pbot}->{registry}->get_value('irc', 'botnick'), $self->{pbot}->{registry}->get_value('irc', 'username'), 'localhost', $text, 0, 0, 0);
