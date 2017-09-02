@@ -82,6 +82,7 @@ sub process_line {
 
   $text =~ s/^\s+//;
   $text =~ s/\s+$//;
+  $text =~ s/([\01-\010]|[\016-\037])/'\\' . ord $1/ge;
 
   my $cmd_text = $text;
   $cmd_text =~ s/^\/me\s+//;
