@@ -261,7 +261,7 @@ sub evalcmd {
     }
     $ret =~ s/ at \(eval \d+\) line 1.//;
   }
-  return "$ret $result";
+  return "/say $ret $result";
 }
 
 sub reload {

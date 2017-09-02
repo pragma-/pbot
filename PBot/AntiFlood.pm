@@ -184,9 +184,9 @@ sub whitelist {
       if (not defined $value) {
         $value = $self->{whitelist}->hash->{$channel}->{$mask}->{$flag};
         if (not defined $value) {
-          return "$flag is not set.";
+          return "/say $flag is not set.";
         } else {
-          return "$flag is set to $value";
+          return "/say $flag is set to $value";
         }
       }
 
@@ -229,7 +229,7 @@ sub whitelist {
       $self->{whitelist}->hash->{$channel}->{$mask}->{created_on} = gettimeofday;
 
       $self->{whitelist}->save;
-      return "$mask whitelisted in channel $channel";
+      return "/say $mask whitelisted in channel $channel";
     }
     when ("remove") {
       my ($channel, $mask) = split / /, $args, 2;
@@ -246,7 +246,7 @@ sub whitelist {
       delete $self->{whitelist}->hash->{$channel}->{$mask};
       delete $self->{whitelist}->hash->{$channel} if keys %{ $self->{whitelist}->hash->{$channel} } == 0;
       $self->{whitelist}->save;
-      return "$mask whitelist removed from channel $channel";
+      return "/say $mask whitelist removed from channel $channel";
     }
     default {
       return "Unknown command '$command'; commands are: list/show, add, remove";

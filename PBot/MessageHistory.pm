@@ -99,7 +99,7 @@ sub aka_link {
   }
 
   if ($self->{database}->link_alias($id, $alias, $type)) {
-    return "$source " . ($type == $self->{database}->{alias_type}->{WEAK} ? "weakly" : "strongly") . " linked to $target.";
+    return "/say $source " . ($type == $self->{database}->{alias_type}->{WEAK} ? "weakly" : "strongly") . " linked to $target.";
   } else {
     return "Link failed.";
   }
@@ -126,7 +126,7 @@ sub aka_unlink {
   }
 
   if ($self->{database}->unlink_alias($id, $alias)) {
-    return "$source unlinked from $target.";
+    return "/say $source unlinked from $target.";
   } else {
     return "Unlink failed.";
   }
@@ -160,7 +160,7 @@ sub list_also_known_as {
     'nt' => \$dont_use_aliases_table,
     'i'  => \$show_id);
 
-  return "$getopt_error -- $usage" if defined $getopt_error;
+  return "/say $getopt_error -- $usage" if defined $getopt_error;
   return "Too many arguments -- $usage" if @$args > 1;
   return "Missing argument -- $usage" if @$args != 1;
 
@@ -251,7 +251,7 @@ sub recall_message {
       'count|n:i'          => \$recall_count,
       'context|x:s'        => \$recall_context);
 
-    return "$getopt_error -- $usage" if defined $getopt_error;
+    return "/say $getopt_error -- $usage" if defined $getopt_error;
 
     my $channel_arg = 1 if defined $recall_channel;
     my $history_arg = 1 if defined $recall_history;
@@ -342,7 +342,7 @@ sub recall_message {
             if ($count == 0) {
               return "I have no messages for $recall_nick.";
             } else {
-              return "$result.";
+              return "/say $result.";
             }
           } else {
             return "Please choose a history between 1 and $max_messages";

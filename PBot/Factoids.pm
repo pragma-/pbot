@@ -261,7 +261,7 @@ sub export_factoids {
   close(FILE);
   
   #$self->{pbot}->{logger}->log("$i factoids exported to path: " . $self->export_path . ", site: " . $self->export_site . "\n");
-  return "$i factoids exported to " . $self->export_site;
+  return "/say $i factoids exported to " . $self->export_site;
 }
 
 sub find_factoid {
@@ -874,7 +874,7 @@ sub interpreter {
           return "/say $nick: My effective-level isn't high enough to do that.";
         }
       } else {
-        return "$keyword is $action";
+        return "/say $keyword is $action";
       }
     }
   } elsif($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'regex') {

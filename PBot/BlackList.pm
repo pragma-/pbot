@@ -203,7 +203,7 @@ sub blacklist {
 
             $self->{pbot}->{logger}->log("$nick!$user\@$host added [$mask] to blacklist for channel [$channel]\n");
             $self->add($channel, $mask);
-            return "$mask blacklisted in channel $channel";
+            return "/say $mask blacklisted in channel $channel";
         }
         when("remove") {
             my ($mask, $channel) = split / /, $args, 2;
@@ -213,12 +213,12 @@ sub blacklist {
 
             if(exists $self->{blacklist}->{$channel} and not exists $self->{blacklist}->{$channel}->{$mask}) {
               $self->{pbot}->{logger}->log("$nick attempt to remove nonexistent [$mask][$channel] from blacklist\n");
-              return "$mask not found in blacklist for channel $channel (use `blacklist list` to display blacklist)";
+              return "/say $mask not found in blacklist for channel $channel (use `blacklist list` to display blacklist)";
             }
 
             $self->remove($channel, $mask);
             $self->{pbot}->{logger}->log("$nick!$user\@$host removed [$mask] from blacklist for channel [$channel]\n");
-            return "$mask removed from blacklist for channel $channel";
+            return "/say $mask removed from blacklist for channel $channel";
         }
         default {
             return "Unknown command '$command'; commands are: list/show, add, remove";
