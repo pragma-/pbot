@@ -546,6 +546,8 @@ sub expand_action_arguments {
 sub execute_code_factoid {
   my ($self, $nick, $from, $chan, $root_keyword, $keyword, $arguments, $code, $tonick) = @_;
 
+  return "/say code-factoids are temporarily disabled.";
+
   my $ppi = PPI::Document->new(\$code, readonly => 1);
   return "/say $nick: I don't feel so good." if not $ppi;
   my $vars = $ppi->find(sub { $_[1]->isa('PPI::Token::Symbol') });
