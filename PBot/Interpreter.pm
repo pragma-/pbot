@@ -19,6 +19,8 @@ use Time::Duration;
 use LWP::UserAgent;
 use Carp ();
 
+use PBot::Utils::ValidateString;
+
 sub new {
   if(ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
@@ -82,7 +84,7 @@ sub process_line {
 
   $text =~ s/^\s+//;
   $text =~ s/\s+$//;
-  $text =~ s/([\01-\010]|[\016-\037])/'\\' . ord $1/ge;
+  $text = validate_string($text, 0);
 
   my $cmd_text = $text;
   $cmd_text =~ s/^\/me\s+//;
@@ -188,12 +190,11 @@ sub interpret {
     return undef;
   }
 
-  if($command =~ /^tell\s+(.{1,20})\s+about\s+(.*?)\s+(.*)$/i) 
-  {
+  if($command =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*?)\s+(.*)$/i) {
     ($keyword, $arguments, $tonick) = ($2, $3, $1);
     my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $tonick);
     $tonick = $similar if $similar;
-  } elsif($command =~ /^tell\s+(.{1,20})\s+about\s+(.*)$/i) {
+  } elsif($command =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*)$/i) {
     ($keyword, $tonick) = ($2, $1);
     my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $tonick);
     $tonick = $similar if $similar;

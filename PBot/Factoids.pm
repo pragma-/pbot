@@ -31,6 +31,7 @@ use PBot::FactoidModuleLauncher;
 use PBot::DualIndexHashObject;
 
 use PBot::Utils::Indefinite;
+use PBot::Utils::ValidateString;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -380,6 +381,7 @@ sub expand_factoid_vars {
     last if ++$depth >= 10;
     my $matches = 0;
     $action =~ s/\$0/$root_keyword/g;
+    $action = validate_string($action);
     my $const_action = $action;
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
       my ($a, $v) = ($1, $2);
@@ -460,11 +462,14 @@ sub expand_factoid_vars {
     $action =~ s/\$0\b/$root_keyword/g;
   }
 
-  return $action;
+  return validate_string($action);
 }
 
 sub expand_action_arguments {
   my ($self, $action, $input, $nick) = @_;
+
+  $action = validate_string($action);
+  $input = validate_string($input);
 
   if (not defined $input or $input eq '') {
     $action =~ s/\$args/$nick/g;
@@ -622,16 +627,16 @@ sub execute_code_factoid {
     $action = "/say Error in factoid: $error";
   }
 
-  $action = substr $action, 0, 400;
-  $action =~ s/([\01-\010]|[\016-\037])/'\\' . ord $1/ge;
-
   %SIG = %signals;
   alarm 1;
 
   unless ($self->{factoids}->hash->{$chan}->{$keyword}->{interpolate} eq '0') {
     $action = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $action);
     $action = $self->expand_action_arguments($action, $arguments, $tonick ? $tonick : $nick);
+  } else {
+    $action = validate_string($action);
   }
+
   return $action;
 }
 

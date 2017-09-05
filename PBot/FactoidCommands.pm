@@ -20,6 +20,7 @@ use POSIX qw(strftime);
 use Storable;
 
 use PBot::Utils::SafeFilename;
+use PBot::Utils::ValidateString;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -357,6 +358,8 @@ sub factset {
   my $self = shift;
   my ($from, $nick, $user, $host, $args) = @_;
 
+  $args = validate_string($args);
+
   my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factset', 'Usage: factset [channel] <factoid> [key [value]]', 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
@@ -568,8 +571,9 @@ sub list {
 sub factmove {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
+  $arguments = validate_string($arguments);
   my ($src_channel, $source, $target_channel, $target) = split /\s+/, $arguments, 4 if $arguments;
-  
+
   my $usage = "Usage: factmove <source channel> <source factoid> <target channel/factoid> [target factoid]";
 
   if(not defined $target_channel) {
@@ -587,6 +591,14 @@ sub factmove {
     if(not defined $target) {
       $target = $source;
     }
+  }
+
+  if (length $target > 20) {
+    return "/say $nick: I don't think the factoid name needs to be that long.";
+  }
+
+  if (length $target_channel > 20) {
+    return "/say $nick: I don't think the channel name needs to be that long.";
   }
 
   my ($found_src_channel, $found_source) = $self->{pbot}->{factoids}->find_factoid($src_channel, $source, undef, 1, 1);
@@ -639,6 +651,7 @@ sub factmove {
 sub factalias {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
+  $arguments = validate_string($arguments);
   my ($chan, $alias, $command) = split /\s+/, $arguments, 3 if defined $arguments;
   
   if(not defined $command) {
@@ -646,6 +659,14 @@ sub factalias {
   }
 
   $chan = '.*' if $chan !~ /^#/;
+
+  if (length $alias > 20) {
+    return "/say $nick: I don't think the factoid name needs to be that long.";
+  }
+
+  if (length $chan > 20) {
+    return "/say $nick: I don't think the channel name needs to be that long.";
+  }
 
   my ($channel, $alias_trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $alias, undef, 1, 1);
   
@@ -665,6 +686,7 @@ sub add_regex {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
+  $arguments = validate_string($arguments);
   my ($keyword, $text) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
 
   $from = '.*' if not defined $from or $from !~ /^#/;
@@ -700,6 +722,8 @@ sub factadd {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my ($from_chan, $keyword, $text);
 
+  $arguments = validate_string($arguments);
+
   if (defined $arguments) {
     if ($arguments =~ /^(#\S+|global|\.\*)\s+(\S+)\s+(?:is\s+)?(.*)$/i) {
       ($from_chan, $keyword, $text) = ($1, $2, $3);
@@ -716,6 +740,14 @@ sub factadd {
     if (lc $from_chan ne 'global' and $from_chan ne '.*') {
       return "Usage: factadd [channel] <keyword> <text>";
     }
+  }
+
+  if (length $keyword > 20) {
+    return "/say $nick: I don't think the factoid name needs to be that long.";
+  }
+
+  if (length $from_chan > 20) {
+    return "/say $nick: I don't think the channel needs to be that long.";
   }
 
   $from_chan = '.*' if lc $from_chan eq 'global';
@@ -1113,7 +1145,7 @@ sub factfind {
   }
 
   if(not defined $argtype) {
-    return "Usage: factfind [-channel] [-owner regex] [-refby regex] [-editby regex] [text]";
+    return "Usage: factfind [-channel regex] [-owner regex] [-refby regex] [-editby regex] [text]";
   }
 
   my ($text, $last_trigger, $last_chan, $i);
@@ -1165,6 +1197,8 @@ sub factchange {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
   my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier);
+
+  $arguments = validate_string($arguments);
 
   my $needs_disambig;
 
