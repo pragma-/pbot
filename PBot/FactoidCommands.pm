@@ -19,6 +19,8 @@ use Getopt::Long qw(GetOptionsFromString);
 use POSIX qw(strftime);
 use Storable;
 
+use PBot::Utils::SafeFilename;
+
 sub new {
   if(ref($_[1]) eq 'HASH') {
     Carp::croak("Options to FactoidCommands should be key/value pairs, not hash reference");
@@ -118,8 +120,11 @@ sub log_factoid {
   my $channel_path = $channel;
   $channel_path = 'global' if $channel_path eq '.*';
 
+  my $channel_path_safe = safe_filename $channel_path;
+  my $trigger_safe = safe_filename $trigger;
+
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
-  open my $fh, ">> $path/$trigger.$channel_path" or do {
+  open my $fh, ">> $path/$trigger_safe.$channel_path_safe" or do {
     $self->{pbot}->{logger}->log("Failed to open factlog for $channel/$trigger: $!\n");
     return;
   };
@@ -130,7 +135,7 @@ sub log_factoid {
 
   return if $dont_save_undo;
 
-  my $undos = eval { retrieve("$path/$trigger.$channel_path.undo"); };
+  my $undos = eval { retrieve("$path/$trigger_safe.$channel_path_safe.undo"); };
 
   if (not $undos) {
     $undos = {
@@ -152,7 +157,8 @@ sub log_factoid {
   push @{$undos->{list}}, $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger};
   $undos->{idx}++;
 
-  store $undos, "$path/$trigger.$channel_path.undo";
+  eval { store $undos, "$path/$trigger_safe.$channel_path_safe.undo"; };
+  $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
 }
 
 sub find_factoid_with_optional_channel {
@@ -285,8 +291,11 @@ sub factundo {
   my $channel_path = $channel;
   $channel_path  = 'global' if $channel_path eq '.*';
 
+  my $channel_path_safe = safe_filename $channel_path;
+  my $trigger_safe = safe_filename $trigger;
+
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
-  my $undos = eval { retrieve("$path/$trigger.$channel_path.undo"); };
+  my $undos = eval { retrieve("$path/$trigger_safe.$channel_path_safe.undo"); };
 
   if (not $undos) {
     return "There are no undos available for [$channel] $trigger.";
@@ -298,7 +307,8 @@ sub factundo {
 
   unless ($deleted) {
     $undos->{idx}--;
-    store $undos, "$path/$trigger.$channel_path.undo";
+    eval { store $undos, "$path/$trigger_safe.$channel_path_safe.undo"; };
+    $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
   }
 
   $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
@@ -318,8 +328,11 @@ sub factredo {
   my $channel_path = $channel;
   $channel_path  = 'global' if $channel_path eq '.*';
 
+  my $channel_path_safe = safe_filename $channel_path;
+  my $trigger_safe = safe_filename $trigger;
+
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
-  my $undos = eval { retrieve("$path/$trigger.$channel_path.undo"); };
+  my $undos = eval { retrieve("$path/$trigger_safe.$channel_path_safe.undo"); };
 
   if (not $undos) {
     return "There are no redos available for [$channel] $trigger.";
@@ -330,7 +343,8 @@ sub factredo {
   }
 
   $undos->{idx}++;
-  store $undos, "$path/$trigger.$channel_path.undo";
+  eval { store $undos, "$path/$trigger_safe.$channel_path_safe.undo"; };
+  $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
 
   $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
 
@@ -866,7 +880,11 @@ sub factlog {
   my $path = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
 
   $channel = 'global' if $channel eq '.*';
-  open my $fh, "< $path/$trigger.$channel" or do {
+
+  my $channel_safe = safe_filename $channel;
+  my $trigger_safe = safe_filename $trigger;
+
+  open my $fh, "< $path/$trigger_safe.$channel_safe" or do {
     $self->{pbot}->{logger}->log("Could not open $path/$trigger.$channel: $!\n");
     $channel = 'the global channel' if $channel eq 'global';
     return "No factlog available for $trigger in $channel.";
