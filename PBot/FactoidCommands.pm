@@ -302,6 +302,17 @@ sub factundo {
     return "There are no undos available for [$channel] $trigger.";
   }
 
+  my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
+  my $admininfo = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+  if ($factoids->{$channel}->{$trigger}->{'locked'}) {
+    return "/say $trigger is locked and cannot be reverted." if not defined $admininfo;
+
+    if (exists $factoids->{$channel}->{$trigger}->{'effective-level'}
+        and $admininfo->{level} < $factoids->{$channel}->{$trigger}->{'effective-level'}) {
+      return "/say $trigger is locked with an effective-level higher than your level and cannot be reverted.";
+    }
+  }
+
   if ($undos->{idx} == 0) {
     return "There are no more undos remaining for [$channel] $trigger.";
   }
@@ -337,6 +348,17 @@ sub factredo {
 
   if (not $undos) {
     return "There are no redos available for [$channel] $trigger.";
+  }
+
+  my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
+  my $admininfo = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+  if ($factoids->{$channel}->{$trigger}->{'locked'}) {
+    return "/say $trigger is locked and cannot be reverted." if not defined $admininfo;
+
+    if (exists $factoids->{$channel}->{$trigger}->{'effective-level'}
+        and $admininfo->{level} < $factoids->{$channel}->{$trigger}->{'effective-level'}) {
+      return "/say $trigger is locked with an effective-level higher than your level and cannot be reverted.";
+    }
   }
 
   if ($undos->{idx} + 1 == @{$undos->{list}}) {
