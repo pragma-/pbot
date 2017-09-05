@@ -36,7 +36,7 @@ sub log {
   my ($self, $text) = @_;
   my $time = localtime;
 
-  $text =~ s/([\01-\010]|[\016-\037])/'\\' . ord $1/ge;
+  $text =~ s/(\P{PosixGraph})/my $ch = $1; if ($ch =~ m{[\s]}) { $ch } else { sprintf "\\x%02X", ord $ch }/ge;
 
   if(defined $self->{log_file}) {
     print PLOG_FILE "$time :: $text";
