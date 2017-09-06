@@ -566,7 +566,7 @@ sub execute_code_factoid {
   @names = keys %uniq;
 
   unless ($self->{factoids}->hash->{$chan}->{$keyword}->{interpolate} eq '0') {
-    $code = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $code, @names);
+    $code = $self->expand_factoid_vars($from, $nick, $root_keyword, $code, @names);
   }
 
   my %signals = %SIG;
@@ -596,7 +596,7 @@ sub execute_code_factoid {
   }
 
   local our @args = $self->{pbot}->{commands}->parse_arguments($arguments);
-  local our $nick = defined $tonick ? $tonick : $nick;
+  local our $nick = $nick;
   local our $channel = $from;
 
   @args = ($nick) if not @args;
@@ -631,8 +631,8 @@ sub execute_code_factoid {
   alarm 1;
 
   unless ($self->{factoids}->hash->{$chan}->{$keyword}->{interpolate} eq '0') {
-    $action = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $action);
-    $action = $self->expand_action_arguments($action, $arguments, $tonick ? $tonick : $nick);
+    $action = $self->expand_factoid_vars($from, $nick, $root_keyword, $action);
+    $action = $self->expand_action_arguments($action, $arguments, $nick);
   } else {
     $action = validate_string($action);
   }
@@ -763,13 +763,13 @@ sub interpreter {
   return "" if not length $action;
 
   unless ($self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
-    $action = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $action);
+    $action = $self->expand_factoid_vars($from, $nick, $root_keyword, $action);
   }
 
   if (length $arguments) {
     if ($action =~ m/\$args/ or $action =~ m/\$arg\[/) {
       unless ($self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
-        $action = $self->expand_action_arguments($action, $arguments, defined $tonick ? $tonick : $nick);
+        $action = $self->expand_action_arguments($action, $arguments, $nick);
       }
       $arguments = "";
     } else {
@@ -792,21 +792,17 @@ sub interpreter {
               $action =~ s/^\/say /\/say $target: /;
             }
           }
-        } else {
-          if ($action !~ m/^\/.+ /) {
-            $action =~ s/^/\/say $keyword is / unless defined $tonick;
-          }
         }
       }
     }
   } else {
     # no arguments supplied, replace $args with $nick/$tonick, etc
-    $action = $self->expand_action_arguments($action, undef, $tonick ? $tonick : $nick);
+    $action = $self->expand_action_arguments($action, undef, $nick);
   }
 
   # Check if it's an alias
   if($action =~ /^\/call\s+(.*)$/) {
-    my $command = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $1);
+    my $command = $self->expand_factoid_vars($from, $nick, $root_keyword, $1);
     if(length $arguments) {
       $command .= " $arguments";
     }
@@ -842,8 +838,8 @@ sub interpreter {
   }
 
   unless ($self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
-    $action = $self->expand_factoid_vars($from, $tonick ? $tonick : $nick, $root_keyword, $action);
-    $action = $self->expand_action_arguments($action, $arguments, $tonick ? $tonick : $nick);
+    $action = $self->expand_factoid_vars($from, $nick, $root_keyword, $action);
+    $action = $self->expand_action_arguments($action, $arguments, $nick);
   }
 
   if($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'module') {
