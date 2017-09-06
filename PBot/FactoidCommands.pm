@@ -53,6 +53,7 @@ our %factoid_metadata_levels = (
   'effective-level'           => 20,
   'persist-key'               => 20,
   'interpolate'               => 10,
+  'action'                    => 10,
   # all others are allowed to be factset by anybody/default to level 0
 );
 
