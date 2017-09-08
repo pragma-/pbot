@@ -89,6 +89,9 @@ sub execute {
     next if $line =~ m/libc_start_main/;
     next if $line =~ m/Thread debugging using libthread_db enabled/;
     next if $line =~ m/Using host libthread_db library/;
+    next if $line =~ m/\s*Catchpoint \d+/;
+    next if $line =~ m/Missing separate debuginfo/;
+    next if $line =~ m/^Try: dnf/;
 
     if($line =~ m/^\d+: (.*? = .*)/) {
       print "$opening$1$closing";
@@ -571,7 +574,7 @@ sub execute {
       next;
     }
 
-    next if $line =~ m/^\d+\s+void gdb\(\) {}/;
+    next if $line =~ m/^\d+\s+void gdb\(\) \{\}/;
 
     next if not length $line;
 
