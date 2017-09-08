@@ -49,7 +49,11 @@ sub execute {
 
   print "execute($cmdline)\n";
 
+  my @list = split / /, $cmdline;
+
   my ($ret, $result);
+
+  $SIG{CHLD} = 'IGNORE';
 
   my $child = fork;
 
@@ -57,7 +61,7 @@ sub execute {
     ($ret, $result) = eval {
       my $result = '';
 
-      my $pid = open(my $fh, '-|', "$cmdline 2>&1");
+      my $pid = open(my $fh, '-|', @list);
 
       local $SIG{ALRM} = sub { print "Time out\n"; kill 9, $pid; print "sent KILL to $pid\n"; die "Timed-out: $result\n"; };
       alarm($COMPILE_TIMEOUT);
@@ -206,7 +210,7 @@ sub compiler_server {
               print "Attempting compile...\n";
               alarm 0;
 
-              my ($ret, $result) = execute("./compiler_vm_client.pl \Q$lang\E \Q$nick\E \Q$channel\E \Q$code\E");
+              my ($ret, $result) = execute("perl compiler_vm_client.pl $lang $nick $channel $code");
 
               if(not defined $ret) {
                 #print "parent continued\n";
