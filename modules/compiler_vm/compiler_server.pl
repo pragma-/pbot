@@ -10,6 +10,7 @@ use strict;
 use IO::Socket;
 use Net::hostent;
 use IPC::Shareable;
+use Time::HiRes qw/gettimeofday/;
 
 my $SERVER_PORT    = 9000;
 my $MONITOR_PORT   = 3335;
@@ -127,6 +128,8 @@ sub compiler_server {
   tie $heartbeat, 'IPC::Shareable', 'dat1', { create => 1 };
   tie $running,   'IPC::Shareable', 'dat2', { create => 1 };
 
+  my $last_wait = 0;
+
   while(1) {
     $running = 1;
     $heartbeat = 0;
@@ -142,27 +145,55 @@ sub compiler_server {
       tie $running,   'IPC::Shareable', 'dat2', { create => 1 };
 
       $heartbeat_monitor = undef;
-      while(not $heartbeat_monitor) {
+      my $attempts = 0;
+      while((not $heartbeat_monitor) and $attempts < 5) {
         print "Connecting to heartbeat ...";
         $heartbeat_monitor = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => $HEARTBEAT_PORT, Proto => 'tcp', Type => SOCK_STREAM);
         if(not $heartbeat_monitor) {
           print " failed.\n";
+          ++$attempts;
           sleep 2;
         } else {
           print " success!\n";
         }
       }
 
-      #print "child: running: $running\n";
+      if ($attempts >= 5) {
+        print "heart not beating... restarting\n";
+        $heartbeat = -1;
+        sleep 5;
+        next;
+      }
+
+      print "child: running: $running\n";
 
       while($running and <$heartbeat_monitor>) {
         $heartbeat = 1;
         #print "child: got heartbeat\n";
       }
 
-      #print "child no longer running\n";
+      print "child no longer running\n";
       exit;
     } else {
+
+      while ($heartbeat <= 0) {
+        if ($heartbeat == -1) {
+          print "heartbeat died\n";
+          last;
+        }
+        print "sleeping for heartbeat...\n";
+        sleep 1;
+      }
+
+      if ($heartbeat == -1) {
+        print "fucking dead, restarting\n";
+        waitpid $heartbeat_pid, 0;
+        vm_stop $vm_pid;
+        next;
+      }
+
+      print "K, got heartbeat, here we go...\n";
+
       if(not defined $server) {
         print "Starting compiler server on port $SERVER_PORT\n";
         $server = server_listen($SERVER_PORT);
@@ -170,7 +201,7 @@ sub compiler_server {
         print "Compiler server already listening on port $SERVER_PORT\n";
       }
 
-      #print "parent: running: $running\n";
+      print "parent: running: $running\n";
 
       while ($running and my $client = $server->accept()) {
         $client->autoflush(1);
@@ -196,9 +227,10 @@ sub compiler_server {
             print "got: [$line]\n";
 
             if($line =~ m/^compile:end$/) {
-              if($heartbeat == 0) {
+              if($heartbeat <= 0) {
                 print "No heartbeat yet, ignoring compile attempt.\n";
-                print $client "$nick: Recovering from previous snippet, please wait.\n";
+                print $client "$nick: Recovering from previous snippet, please wait.\n" if gettimeofday - $last_wait > 60;
+                $last_wait = gettimeofday;
                 last;
               }
 
@@ -233,7 +265,7 @@ sub compiler_server {
               $ret = -14 if $killed;
 
               # child exit
-              # print "child exit\n";
+               print "child exit\n";
               exit $ret;
             }
 
@@ -256,14 +288,14 @@ sub compiler_server {
         close $client;
 
         #next unless ($timed_out or $killed);
-        next unless $timed_out;
+        #next unless $timed_out;
 
         print "stopping vm $vm_pid\n";
         vm_stop $vm_pid;
         $running = 0;
         last;
       } 
-      #print "Compiler server no longer running, restarting...\n";
+      print "Compiler server no longer running, restarting...\n";
     }
     waitpid($heartbeat_pid, 0);
   }
