@@ -15,6 +15,7 @@ LWP::UserAgent::WithCache
 Math::Units
 Module::Refresh
 Net::Dict
+Parse::RecDescent
 PPI
 Proc::ProcessTable
 Safe
