@@ -8,13 +8,15 @@ use warnings;
 use strict;
 
 use File::Basename;
+use POSIX;
 
+my $USERNAME = 'compiler';
 my $USE_LOCAL = defined $ENV{'CC_LOCAL'}; 
 
 # uncomment the following if installed to the virtual machine
 # use constant MOD_DIR => '/usr/local/share/compiler_vm/languages';
 
-use constant MOD_DIR => 'languages/server';
+use constant MOD_DIR => '/usr/local/share/compiler_vm/languages';
 
 use lib MOD_DIR;
 
@@ -67,11 +69,33 @@ sub run_server {
 
         print "Attempting compile [$lang] ...\n";
 
-        my $result = interpret($lang, $sourcefile, $execfile, $code, $cmdline, $user_input, $date);
+        my $pid = fork;
 
-        print "Done compiling; result: [$result]\n";
-        print $output "result:$result\n";
-        print $output "result:end\n";
+        if (not defined $pid) {
+          print "fork failed: $!\n";
+          next;
+        }
+
+        if ($pid == 0) {
+          my ($uid, $gid) = (getpwnam $USERNAME)[2, 3];
+          if (not $uid and not $gid) {
+            print "Could not find user $USERNAME: $!\n";
+            exit;
+          }
+
+
+          POSIX::setgid($gid);
+          POSIX::setuid($uid);
+
+          my $result = interpret($lang, $sourcefile, $execfile, $code, $cmdline, $user_input, $date);
+
+          print "Done compiling; result: [$result]\n";
+          print $output "result:$result\n";
+          print $output "result:end\n";
+          exit;
+        } else {
+          waitpid $pid, 0;
+        }
 
         if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
           print "input: ";
@@ -125,6 +149,7 @@ sub interpret {
   $lang = '_default' if not exists $languages{$lang};
 
   system("chmod -R 755 /home/compiler");
+  system("rm -rf /home/compiler/prog*");
 
   my $mod = $lang->new(sourcefile => $sourcefile, execfile => $execfile, code => $code, 
     cmdline => $cmdline, input => $input, date => $date);
