@@ -1175,6 +1175,7 @@ sub factfind {
   $last_chan = "";
   $i = 0;
   eval {
+    use re::engine::RE2 -strict => 1;
     my $regex = ($arguments =~ m/^\w/) ? '\b' : '\B';
     $regex .= quotemeta $arguments;
     $regex .= ($arguments =~ m/\w$/) ? '\b' : '\B';

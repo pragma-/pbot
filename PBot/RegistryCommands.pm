@@ -164,6 +164,7 @@ sub regfind {
   $last_section = "";
   $i = 0;
   eval {
+    use re::engine::RE2 -strict => 1;
     foreach my $section_key (sort keys %{ $registry }) {
       next if defined $section and $section_key !~ /^$section$/i;
       foreach my $item_key (sort keys %{ $registry->{$section_key} }) {
