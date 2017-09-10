@@ -187,11 +187,11 @@ sub actiontrigger {
       if (not @triggers) {
         $result = "No counter triggers set for $channel.";
       } else {
-        $result = "Triggers for $channel: ";
+        $result = "Triggers for $channel:\n";
         my $comma = '';
         foreach my $trigger (@triggers) {
           $result .= "$comma$trigger->{trigger} -> $trigger->{action}";
-          $comma = ', ';
+          $comma = ",\n";
         }
       }
     }
