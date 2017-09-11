@@ -33,7 +33,7 @@ sub rand_factoid {
   my ($channel, $args) = @_;
 
   # pick random channel unless given one
-  if ($channel == undef) {
+  unless (defined $channel) {
       my @channels = keys %{ $self->{pbot}->{factoids}->hash };
       $channel = @channels[int rand @channels];
   }
