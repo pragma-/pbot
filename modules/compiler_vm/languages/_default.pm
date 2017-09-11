@@ -58,7 +58,7 @@ sub preprocess_code {
   my $self = shift;
 
   if ($self->{only_show}) {
-    print "$self->{nick}: $self->{code}\n";
+    print "$self->{code}\n";
     exit;
   }
 
@@ -221,7 +221,7 @@ sub show_output {
       $uri = $self->paste_codepad($pretty_code);
     }
 
-    print "$self->{nick}: $uri\n";
+    print "$uri\n";
     exit 0;
   }
 
@@ -238,13 +238,13 @@ sub show_output {
       close FILE;
 
       if(defined $last_output and $last_output eq $output) {
-        print "$self->{nick}: Same output.\n";
+        print "Same output.\n";
         exit 0;
       }
     }
   }
 
-  print "$self->{nick}: $output\n";
+  print "$output\n";
 
   open FILE, "> history/$self->{channel}-$self->{lang}.last-output" or die "Couldn't open $self->{channel}-$self->{lang}.last-output: $!";
   my $now = gettimeofday;
@@ -405,7 +405,7 @@ sub add_option {
   $self->{options_order} = [] if not exists $self->{options_order};
 
   $self->{options}->{$option} = $value;
-  push $self->{options_order}, $option;
+  push @{$self->{options_order}}, $option;
 }
 
 sub process_standard_options {
@@ -422,7 +422,7 @@ sub process_standard_options {
     $cmdline =~ s/\$sourcefile/$self->{sourcefile}/g;
     $cmdline =~ s/\$execfile/$self->{execfile}/g;
     my $name = exists $self->{name} ? $self->{name} : $self->{lang};
-    print "$self->{nick}: $name cmdline: $cmdline\n";
+    print "$name cmdline: $cmdline\n";
     exit;
   }
 
@@ -482,7 +482,7 @@ sub process_interactive_edit {
     goto COPY_SUCCESS;
 
     COPY_ERROR:
-    print "$self->{nick}: No history for $copy.\n";
+    print "No history for $copy.\n";
     exit 0;
 
     COPY_SUCCESS:
@@ -507,9 +507,9 @@ sub process_interactive_edit {
 
   if($subcode =~ m/^\s*(?:and\s+)?show(?:\s+\S+)?\s*$/i) {
     if(defined $last_code[0]) {
-      print "$self->{nick}: $last_code[0]\n";
+      print "$last_code[0]\n";
     } else {
-      print "$self->{nick}: No recent code to show.\n"
+      print "No recent code to show.\n"
     }
     exit 0;
   }
@@ -525,7 +525,7 @@ sub process_interactive_edit {
   while($subcode =~ s/^\s*(and)?\s*undo//) {
     splice @last_code, 0, 1;
     if(not defined $last_code[0]) {
-      print "$self->{nick}: No more undos remaining.\n";
+      print "No more undos remaining.\n";
       exit 0;
     } else {
       $code = $last_code[0];
@@ -550,7 +550,7 @@ sub process_interactive_edit {
       if ($prevchange) {
         $code = $prevchange;
       } else {
-        print "$self->{nick}: No recent code to $self->{got_run}.\n";
+        print "No recent code to $self->{got_run}.\n";
         exit 0;
       }
     } 
@@ -574,7 +574,7 @@ sub process_interactive_edit {
         $text =~ s/'$//;
         $subcode = "replace $modifier '$text' with ''$r";
       } else {
-        print "$self->{nick}: Unbalanced single quotes.  Usage: cc remove [all, first, .., tenth, last] 'text' [and ...]\n";
+        print "Unbalanced single quotes.  Usage: cc remove [all, first, .., tenth, last] 'text' [and ...]\n";
         exit 0;
       }
       next;
@@ -598,7 +598,7 @@ sub process_interactive_edit {
         $got_changes = 1;
 
         if(not defined $prevchange) {
-          print "$self->{nick}: No recent code to prepend to.\n";
+          print "No recent code to prepend to.\n";
           exit 0;
         }
 
@@ -606,7 +606,7 @@ sub process_interactive_edit {
         $code =~ s/^/$text /;
         $prevchange = $code;
       } else {
-        print "$self->{nick}: Unbalanced single quotes.  Usage: cc prepend 'text' [and ...]\n";
+        print "Unbalanced single quotes.  Usage: cc prepend 'text' [and ...]\n";
         exit 0;
       }
       next;
@@ -630,7 +630,7 @@ sub process_interactive_edit {
         $got_changes = 1;
 
         if(not defined $prevchange) {
-          print "$self->{nick}: No recent code to append to.\n";
+          print "No recent code to append to.\n";
           exit 0;
         }
 
@@ -638,7 +638,7 @@ sub process_interactive_edit {
         $code =~ s/$/ $text/;
         $prevchange = $code;
       } else {
-        print "$self->{nick}: Unbalanced single quotes.  Usage: cc append 'text' [and ...]\n";
+        print "Unbalanced single quotes.  Usage: cc append 'text' [and ...]\n";
         exit 0;
       }
       next;
@@ -666,7 +666,7 @@ sub process_interactive_edit {
         $subcode = $r;
         $subcode =~ s/\s*with\s*//i;
       } else {
-        print "$self->{nick}: Unbalanced single quotes.  Usage: cc replace 'from' with 'to' [and ...]\n";
+        print "Unbalanced single quotes.  Usage: cc replace 'from' with 'to' [and ...]\n";
         exit 0;
       }
 
@@ -678,7 +678,7 @@ sub process_interactive_edit {
         $to =~ s/'$//;
         $subcode = $r;
       } else {
-        print "$self->{nick}: Unbalanced single quotes.  Usage: cc replace 'from' with 'to' [and replace ... with ... [and ...]]\n";
+        print "Unbalanced single quotes.  Usage: cc replace 'from' with 'to' [and replace ... with ... [and ...]]\n";
         exit 0;
       }
 
@@ -695,7 +695,7 @@ sub process_interactive_edit {
         when($_ eq 'eighth' ) { $modifier = 8; }
         when($_ eq 'nineth' ) { $modifier = 9; }
         when($_ eq 'tenth'  ) { $modifier = 10; }
-        default { print "$self->{nick}: Bad replacement modifier '$modifier'; valid modifiers are 'all', 'first', 'second', ..., 'tenth', 'last'\n"; exit 0; }
+        default { print "Bad replacement modifier '$modifier'; valid modifiers are 'all', 'first', 'second', ..., 'tenth', 'last'\n"; exit 0; }
       }
 
       my $replacement = {};
@@ -721,7 +721,7 @@ sub process_interactive_edit {
         $regex =~ s/\/$//;
         $subcode = "/$r";
       } else {
-        print "$self->{nick}: Unbalanced slashes.  Usage: cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+        print "Unbalanced slashes.  Usage: cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
         exit 0;
       }
 
@@ -733,7 +733,7 @@ sub process_interactive_edit {
         $to =~ s/\/$//;
         $subcode = $r;
       } else {
-        print "$self->{nick}: Unbalanced slashes.  Usage: cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
+        print "Unbalanced slashes.  Usage: cc s/regex/substitution/[gi] [and s/.../.../ [and ...]]\n";
         exit 0;
       }
 
@@ -741,13 +741,13 @@ sub process_interactive_edit {
       $suffix = $1 if $subcode =~ s/^([^ ]+)//;
 
       if(length $suffix and $suffix =~ m/[^gi]/) {
-        print "$self->{nick}: Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
+        print "Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
         exit 0;
       }
       if(defined $prevchange) {
         $code = $prevchange;
       } else {
-        print "$self->{nick}: No recent code to change.\n";
+        print "No recent code to change.\n";
         exit 0;
       }
 
@@ -796,7 +796,7 @@ sub process_interactive_edit {
       if($@) {
         my $error = $@;
         $error =~ s/ at .* line \d+\.\s*$//;
-        print "$self->{nick}: $error\n";
+        print "$error\n";
         exit 0;
       }
 
@@ -808,7 +808,7 @@ sub process_interactive_edit {
     }
 
     if ($got_sub and not $got_changes) {
-      print "$self->{nick}: No substitutions made.\n";
+      print "No substitutions made.\n";
       exit 0;
     } elsif ($got_sub and $got_changes) {
       next;
@@ -837,7 +837,7 @@ sub process_interactive_edit {
       if(defined $prevchange) {
         $code = $prevchange;
       } else {
-        print "$self->{nick}: No recent code to change.\n";
+        print "No recent code to change.\n";
         exit 0;
       }
 
@@ -882,7 +882,7 @@ sub process_interactive_edit {
       if($@) {
         my $error = $@;
         $error =~ s/ at .* line \d+\.\s*$//;
-        print "$self->{nick}: $error\n";
+        print "$error\n";
         exit 0;
       }
 
@@ -897,7 +897,7 @@ sub process_interactive_edit {
     }
 
     if(not $got_changes) {
-      print "$self->{nick}: No replacements made.\n";
+      print "No replacements made.\n";
       exit 0;
     }
   }
@@ -932,7 +932,7 @@ sub process_interactive_edit {
 
   if ($got_diff) {
     if($#last_code < 1) {
-      print "$self->{nick}: Not enough recent code to diff.\n"
+      print "Not enough recent code to diff.\n"
     } else {
       use Text::WordDiff;
       my $diff = word_diff(\$last_code[1], \$last_code[0], { STYLE => 'Diff' });
@@ -947,7 +947,7 @@ sub process_interactive_edit {
         $diff =~ s/<ins>(.*?)<\/ins>/`inserted $1`/g;
       }
 
-      print "$self->{nick}: $diff\n";
+      print "$diff\n";
     }
     exit 0;
   }

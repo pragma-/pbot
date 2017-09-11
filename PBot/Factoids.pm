@@ -386,7 +386,7 @@ sub expand_factoid_vars {
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
       my ($a, $v) = ($1, $2);
       $v =~ s/(.):$/$1/;
-      next if $v =~ m/^(nick|channel|randomnick|args|arg\[.+\]|[_0])$/i; # don't override special variables
+      next if $v =~ m/^(nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])$/i; # don't override special variables
       next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
 
       $matches++;
@@ -477,8 +477,11 @@ sub expand_action_arguments {
     $action =~ s/\$args/$input/g;
   }
 
-  $input =~ s/(?<!\\)'/\\'/g if defined $input;
-  my @args = shellwords($input);
+  my $qinput = quotemeta $input;
+  $qinput =~ s/\\ / /g;
+  my @args = shellwords($qinput);
+
+  $action =~ s/\$arglen\b/scalar @args/eg;
 
   my $const_action = $action;
   while ($const_action =~ m/\$arg\[([^]]+)]/g) {
@@ -548,18 +551,14 @@ sub expand_action_arguments {
   return $action;
 }
 
-sub execute_code_factoid {
-  my ($self, $nick, $from, $chan, $root_keyword, $keyword, $arguments, $code, $tonick) = @_;
+sub execute_code_factoid_using_safe {
+  my ($self, $nick, $user, $host, $from, $chan, $root_keyword, $keyword, $arguments, $lang, $code, $tonick) = @_;
 
   return "/say code-factoids are temporarily disabled.";
 
   my $ppi = PPI::Document->new(\$code, readonly => 1);
   return "/say $nick: I don't feel so good." if not $ppi;
   my $vars = $ppi->find(sub { $_[1]->isa('PPI::Token::Symbol') });
-
-
-  use Data::Dumper;
-  print "got vars: ", Dumper $vars;
 
   my @names = map { $_->symbol =~ /^[\%\@\$]+(.*)/; $1 } @$vars if $vars;
   my %uniq = map { $_, 1 } @names;
@@ -595,9 +594,11 @@ sub execute_code_factoid {
     $self->{compartments}->{$new_compartment} = $safe if $new_compartment;
   }
 
+  no warnings;
   local our @args = $self->{pbot}->{commands}->parse_arguments($arguments);
   local our $nick = $nick;
   local our $channel = $from;
+  use warnings;
 
   @args = ($nick) if not @args;
   $arguments = '';
@@ -638,6 +639,22 @@ sub execute_code_factoid {
   }
 
   return $action;
+}
+
+sub execute_code_factoid_using_vm {
+  my ($self, $nick, $user, $host, $from, $chan, $root_keyword, $keyword, $arguments, $lang, $code, $tonick) = @_;
+
+  unless (exists $self->{factoids}->hash->{$chan}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$chan}->{$keyword}->{interpolate} eq '0') {
+    $code = $self->expand_factoid_vars($from, $nick, $root_keyword, $code);
+    $code = $self->expand_action_arguments($code, $arguments, $nick);
+  }
+
+  $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, "code-factoid", $chan, $root_keyword, "compiler", "$nick $from -lang=$lang $code", 0);
+  return "";
+}
+
+sub execute_code_factoid {
+  return execute_code_factoid_using_vm(@_);
 }
 
 sub interpreter {
@@ -755,14 +772,21 @@ sub interpreter {
     $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action};
   }
 
-  if ($action =~ m/^\{\s*(.*)\s*\}$/) {
-    my $code = $1;
-    $action = $self->execute_code_factoid($nick, $from, $channel, $root_keyword, $keyword, $arguments, $code, $tonick);
+  if ($action =~ m{^/code\s+([^\s]+)\s+(.+)$}i) {
+    my ($lang, $code) = ($1, $2);
+    $self->execute_code_factoid($nick, $user, $host, $from, $channel, $root_keyword, $keyword, $arguments, $lang, $code, $tonick);
+    return "";
   }
+
+  return $self->handle_action($nick, $user, $host, $from, $channel, $root_keyword, $keyword, $arguments, $action, $tonick, $depth, $referenced, $ref_from, $original_keyword);
+}
+
+sub handle_action {
+  my ($self, $nick, $user, $host, $from, $channel, $root_keyword, $keyword, $arguments, $action, $tonick, $depth, $referenced, $ref_from, $original_keyword) = @_;
 
   return "" if not length $action;
 
-  unless ($self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
+  unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
     $action = $self->expand_factoid_vars($from, $nick, $root_keyword, $action);
   }
 
@@ -776,15 +800,8 @@ sub interpreter {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
         my $target = $self->{pbot}->{nicklist}->is_present_similar($from, $arguments);
 
-        if (not $target) {
-         if ($arguments =~ m/\$/) {
-            $target = $arguments;
-          } elsif ($action !~ m{^/call\s}) {
-            #return "/me blinks at $nick.";
-          }
-        }
 
-        if ($target and $action !~ /\$nick/) {
+        if ($target and $action !~ /\$(?:nick|args)\b/) {
           if ($action !~ m/^(\/[^ ]+) /) {
             $action =~ s/^/\/say $target: $keyword is / unless defined $tonick;
           } else {
@@ -807,8 +824,8 @@ sub interpreter {
       $command .= " $arguments";
     }
 
-    $pbot->{logger}->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
-    return $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $command, $tonick, $referenced, $root_keyword);
+    $self->{pbot}->{logger}->log("[" . (defined $from ? $from : "stdin") . "] ($nick!$user\@$host) [$keyword] aliased to: [$command]\n");
+    return $self->{pbot}->{interpreter}->interpret($from, $nick, $user, $host, $depth, $command, $tonick, $referenced, $root_keyword);
   }
 
   if(defined $tonick) { # !tell foo about bar
@@ -816,8 +833,8 @@ sub interpreter {
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
     # get rid of original caller's nick
-    $action =~ s/^\/([^ ]+) \Q$nick\E:\s+/\/$1 /;
-    $action =~ s/^\Q$nick\E:\s+//;
+    $action =~ s/^\/([^ ]+) \Q$nick\E.\s+/\/$1 /;
+    $action =~ s/^\Q$nick\E.\s+//;
 
     if ($action =~ s/^\/say\s+//i || $action =~ s/^\/me\s+/* $botnick /i
       || $action =~ /^\/msg\s+/i) {
@@ -837,7 +854,7 @@ sub interpreter {
     return "/msg $nick $ref_from$keyword is currently disabled.";
   }
 
-  unless ($self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
+  unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
     $action = $self->expand_factoid_vars($from, $nick, $root_keyword, $action);
     $action = $self->expand_action_arguments($action, $arguments, $nick);
   }
@@ -846,7 +863,7 @@ sub interpreter {
     my $preserve_whitespace = $self->{factoids}->hash->{$channel}->{$keyword}->{preserve_whitespace};
     $preserve_whitespace = 0 if not defined $preserve_whitespace;
 
-    return $ref_from . $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, "$keyword $arguments", $keyword, $arguments, $preserve_whitespace, $referenced);
+    return $ref_from . $self->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, "$keyword $arguments", $channel, $root_keyword, $keyword, $arguments, $preserve_whitespace, $referenced);
   }
   elsif($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
     $self->{pbot}->{logger}->log("Found factoid\n");
@@ -882,7 +899,7 @@ sub interpreter {
       }
     }
   } elsif($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'regex') {
-    $result = eval {
+    my $result = eval {
       my $string = "$original_keyword" . (defined $arguments ? " $arguments" : "");
       my $cmd;
       if($string =~ m/$keyword/i) {
@@ -906,8 +923,7 @@ sub interpreter {
         $cmd = $action;
       }
 
-      $result = $pbot->{interpreter}->interpret($from, $nick, $user, $host, $depth, $cmd, $tonick, $referenced, $root_keyword);
-      return $result;
+      return $self->{pbot}->{interpreter}->interpret($from, $nick, $user, $host, $depth, $cmd, $tonick, $referenced, $root_keyword);
     };
 
     if($@) {

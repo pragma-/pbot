@@ -112,7 +112,7 @@ sub call_factoid {
     return "No such factoid '$keyword' exists for channel '$chan'";
   }
 
-  return $self->{pbot}->{factoids}->interpreter($from, $nick, $user, $host, 1, $trigger, $args, undef, $channel);
+  return $self->{pbot}->{factoids}->interpreter($from, $nick, $user, $host, 1, $trigger, $args, undef, $channel, undef, $trigger);
 }
 
 sub log_factoid {
@@ -1302,7 +1302,7 @@ sub factchange {
       $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change '$trigger' 's$delim$tochange$delim$changeto$delim\n");
       return "Change $trigger failed.";
     } else {
-      if (length $action > 400 and not defined $admininfo) {
+      if (length $action > 1000 and not defined $admininfo) {
         return "Change $trigger failed; result is too long.";
       }
 

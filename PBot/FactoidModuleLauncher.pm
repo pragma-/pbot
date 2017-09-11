@@ -43,7 +43,7 @@ sub initialize {
 }
 
 sub execute_module {
-  my ($self, $from, $tonick, $nick, $user, $host, $command, $keyword, $arguments, $preserve_whitespace, $referenced) = @_;
+  my ($self, $from, $tonick, $nick, $user, $host, $command, $root_channel, $root_keyword, $keyword, $arguments, $preserve_whitespace, $referenced) = @_;
   my $text;
 
   $arguments = "" if not defined $arguments;
@@ -159,6 +159,10 @@ sub execute_module {
       exit 0 if $text =~ m/(?:no results)/i;
     }
 
+    if ($command eq 'code-factoid') {
+      $text = $self->{pbot}->{factoids}->handle_action($nick, $user, $host, $from, $root_channel, $root_keyword, $root_keyword, $arguments, $text, $tonick, 0, $referenced, undef, $root_keyword);
+    }
+
     if(defined $tonick) {
       $self->{pbot}->{logger}->log("($from): $nick!$user\@$host) sent to $tonick\n");
       if(defined $text && length $text > 0) {
@@ -171,7 +175,7 @@ sub execute_module {
       }
       exit 0;
     } else {
-      if(exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{add_nick} and $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{add_nick} != 0) {
+      if($command ne 'code-factoid' and exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{add_nick} and $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{add_nick} != 0) {
         print $writer "$from $nick: $text";
         $self->{pbot}->{interpreter}->handle_result($from, $nick, $user, $host, $command, "$keyword $arguments", "$nick: $text", 0, $preserve_whitespace);
       } else {

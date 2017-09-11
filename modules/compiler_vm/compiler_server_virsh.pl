@@ -63,6 +63,11 @@ sub execute {
 
       my $pid = open(my $fh, '-|', @list);
 
+      if (not defined $pid) {
+        print "Couldn't fork: $!\n";
+        return (-13, "[Fatal error]");
+      }
+
       local $SIG{ALRM} = sub { print "Time out\n"; kill 9, $pid; print "sent KILL to $pid\n"; die "Timed-out: $result\n"; };
       alarm($COMPILE_TIMEOUT);
       
@@ -202,7 +207,7 @@ sub compiler_server {
             if($line =~ m/^compile:end$/) {
               if($heartbeat <= 0) {
                 print "No heartbeat yet, ignoring compile attempt.\n";
-                print $client "$nick: Recovering from previous snippet, please wait.\n" if gettimeofday - $last_wait > 60;
+                print $client "Recovering from previous snippet, please wait.\n" if gettimeofday - $last_wait > 60;
                 $last_wait = gettimeofday;
                 last;
               }
@@ -226,10 +231,6 @@ sub compiler_server {
               if($result =~ m/\[Killed\]$/) {
                 print "Process was killed\n";
                 $killed = 1;
-              }
-
-              if($ret == -13) {
-                print $client "$nick: ";
               }
 
               print $client $result . "\n";
