@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Author: Joey Pabalinas <alyptik@protonmain.com>
+# Author: Joey Pabalinas <alyptik@protonmail.com>
 
 package PBot::Plugins::RandomFact;
 
