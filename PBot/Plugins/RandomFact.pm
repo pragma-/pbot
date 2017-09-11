@@ -32,7 +32,7 @@ sub unload {
 
 sub rand_factoid {
   my $self = shift;
-  my ($channel, $args) = @_;
+  my ($channel) = @_;
 
   # pick random channel unless given one
   unless (defined $channel) {
