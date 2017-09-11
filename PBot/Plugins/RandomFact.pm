@@ -46,7 +46,7 @@ sub rand_factoid {
   my $owner = $self->{factoids}->hash->{$channel}->{$trigger}->{owner};
   my $action = $self->{factoids}->hash->{$channel}->{$trigger}->{action};
 
-  return "$trigger is “$action” (created by $owner [$channel])";
+  return "$trigger is \"$action\" (created by $owner [$channel])";
 }
 
 1;
