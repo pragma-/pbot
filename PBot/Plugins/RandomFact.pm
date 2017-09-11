@@ -33,16 +33,20 @@ sub rand_factoid {
   my ($channel, $args) = @_;
 
   # pick random channel unless given one
-  my @channels = keys %{ $self->{pbot}->{factoids}->hash } unless defined $channel;
-  $channel = @channels[int rand @channels] unless defined $channel;
+  if ($channel == undef) {
+      my @channels = keys %{ $self->{pbot}->{factoids}->hash };
+      $channel = @channels[int rand @channels];
+  }
+
   # pick random trigger
   my @triggers = keys %{ $self->{pbot}->{triggers}->hash->{$channel} };
   my $trigger = @triggers[int rand @triggers];
+
   # populate other vars
   my $owner = $self->{factoids}->hash->{$channel}->{$trigger}->{owner};
   my $action = $self->{factoids}->hash->{$channel}->{$trigger}->{action};
 
-  return "[$channel] $trigger is “$action” (created by $owner)";
+  return "$trigger is “$action” (created by $owner [$channel])";
 }
 
 1;
