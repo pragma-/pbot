@@ -32,23 +32,25 @@ sub unload {
 
 sub rand_factoid {
   my $self = shift;
-  my ($channel) = @_;
+  my ($chan) = @_;
+  my $usage = "Usage: rfact [<channel>]";
+  my @channels = keys %{ $self->{pbot}->{factoids}->hash };
+  my @triggers = keys %{ $self->{pbot}->{triggers}->hash->{$chan} };
 
   # pick random channel unless given one
-  unless (defined $channel) {
-      my @channels = keys %{ $self->{pbot}->{factoids}->hash };
-      $channel = $channels[int rand @channels];
+  if (defined $chan) {
+    # show usage if given an invalid channel
+    map { return $usage unless m/$chan/; } @channels;
+  } else {
+    $chan = $channels[int rand @channels];
   }
 
   # pick random trigger
-  my @triggers = keys %{ $self->{pbot}->{triggers}->hash->{$channel} };
-  my $trigger = $triggers[int rand @triggers];
+  my $trig = $triggers[int rand @triggers];
+  my $owner = $self->{factoids}->hash->{$chan}->{$trig}->{owner};
+  my $action = $self->{factoids}->hash->{$chan}->{$trig}->{action};
 
-  # populate other vars
-  my $owner = $self->{factoids}->hash->{$channel}->{$trigger}->{owner};
-  my $action = $self->{factoids}->hash->{$channel}->{$trigger}->{action};
-
-  return "$trigger is \"$action\" (created by $owner [$channel])";
+  return "$trig is \"$action\" (created by $owner [$chan])";
 }
 
 1;
