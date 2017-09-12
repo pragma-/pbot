@@ -10,13 +10,44 @@ use strict;
 package perl;
 use parent '_default';
 
+use Text::ParseWords qw(shellwords);
+
 sub initialize {
   my ($self, %conf) = @_;
 
   $self->{sourcefile}      = 'prog.pl';
   $self->{execfile}        = 'prog.pl';
-  $self->{default_options} = '';
+  $self->{default_options} = '-w';
   $self->{cmdline}         = 'perl $options $sourcefile';
+}
+
+sub preprocess_code {
+  my $self = shift;
+  $self->SUPER::preprocess_code;
+
+  if (defined $self->{arguments}) {
+    my $qargs = quotemeta $self->{arguments};
+    $qargs =~ s/\\ / /g;
+    my @args = shellwords($self->{arguments});
+    my $prelude .= "\nmy \$arglen = " . (scalar @args) . ";\n";
+
+    if (@args) {
+      $prelude .= "my \@args = (";
+
+      my $comma = "";
+      foreach my $arg (@args) {
+        $arg = quotemeta $arg;
+        $prelude .= "$comma\"$arg\"";
+        $comma = ", ";
+      }
+
+      $prelude .= ");\n";
+    } else {
+      $prelude .= "my \@args;\n";
+    }
+
+    $self->{code} = "$prelude\n$self->{code}";
+  }
 }
 
 sub postprocess_output {

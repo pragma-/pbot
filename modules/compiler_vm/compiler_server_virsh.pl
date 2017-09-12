@@ -190,11 +190,6 @@ sub compiler_server {
         my $killed = 0;
 
         eval {
-          my $lang;
-          my $nick;
-          my $channel;
-          my $code = "";
-
           local $SIG{ALRM} = sub { die 'Timed-out'; };
           alarm 5;
 
@@ -204,54 +199,42 @@ sub compiler_server {
             alarm 5;
             print "got: [$line]\n";
 
-            if($line =~ m/^compile:end$/) {
-              if($heartbeat <= 0) {
-                print "No heartbeat yet, ignoring compile attempt.\n";
-                print $client "Recovering from previous snippet, please wait.\n" if gettimeofday - $last_wait > 60;
-                $last_wait = gettimeofday;
-                last;
-              }
-
-              print "Attempting compile...\n";
-              alarm 0;
-
-              my ($ret, $result) = execute("perl compiler_vm_client.pl $lang $nick $channel $code");
-
-              if(not defined $ret) {
-                #print "parent continued\n";
-                print "parent continued [$result]\n";
-                $timed_out = 1 if $result == 243; # -13 == 243
-                $killed = 1 if $result == 242; # -14 = 242
-                last;
-              }
-
-              $result =~ s/\s+$//;
-              print "Ret: $ret; result: [$result]\n";
-
-              if($result =~ m/\[Killed\]$/) {
-                print "Process was killed\n";
-                $killed = 1;
-              }
-
-              print $client $result . "\n";
-              close $client;
-
-              $ret = -14 if $killed;
-
-              # child exit
-               print "child exit\n";
-              exit $ret;
+            if($heartbeat <= 0) {
+              print "No heartbeat yet, ignoring compile attempt.\n";
+              print $client "Recovering from previous snippet, please wait.\n" if gettimeofday - $last_wait > 60;
+              $last_wait = gettimeofday;
+              last;
             }
 
-            if($line =~ /compile:([^:]+):([^:]+):(.*)$/) {
-              $nick = $1;
-              $channel = $2;
-              $lang = $3;
-              $code = "";
-              next;
+            print "Attempting compile...\n";
+            alarm 0;
+
+            my ($ret, $result) = execute("perl compiler_vm_client.pl $line");
+
+            if(not defined $ret) {
+              #print "parent continued\n";
+              print "parent continued [$result]\n";
+              $timed_out = 1 if $result == 243; # -13 == 243
+              $killed = 1 if $result == 242; # -14 = 242
+              last;
             }
 
-            $code .= $line . "\n";
+            $result =~ s/\s+$//;
+            print "Ret: $ret; result: [$result]\n";
+
+            if($result =~ m/\[Killed\]$/) {
+              print "Process was killed\n";
+              $killed = 1;
+            }
+
+            print $client $result . "\n";
+            close $client;
+
+            $ret = -14 if $killed;
+
+            # child exit
+            print "child exit\n";
+            exit $ret;
           }
 
           alarm 0;

@@ -8,14 +8,19 @@ use warnings;
 use strict;
 
 use File::Basename;
+use JSON;
 
-my $language = shift @ARGV // 'c11';
-$language = lc $language;
+my $json = join ' ', @ARGV;
+my $h = decode_json $json;
+
+my $language = lc $h->{lang};
 
 eval {
   use lib 'languages';
   require "$language.pm";
 } or do {
+  $language =~ s/^cfact_//;
+
   my @modules = glob 'languages/*.pm';
   my $found = 0;
   my ($languages, $comma) = ('', '');
@@ -44,16 +49,16 @@ eval {
   }
 };
 
-my $nick    = shift @ARGV // (print "Missing nick argument.\n" and die);
-my $channel = shift @ARGV // (print "Missing channel argument.\n" and die);
-my $code    = join(' ', @ARGV);
-
-if (not length $code) {
-  print "$nick: Usage: cc [-paste] [-lang=<language>] [-info] [language options] <code> [-input=<stdin input>]\n";
+if (not length $h->{code}) {
+  if (exists $h->{usage}) {
+    print "$h->{usage}\n";
+  } else {
+    print "Usage: cc [-paste] [-lang=<language>] [-info] [language options] <code> [-input=<stdin input>]\n";
+  }
   exit;
 }
 
-my $lang = $language->new(nick => $nick, channel => $channel, lang => $language, code => $code);
+my $lang = $language->new(%$h);
 
 $lang->{local} = $ENV{CC_LOCAL};
 

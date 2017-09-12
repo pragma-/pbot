@@ -21,6 +21,7 @@ use Time::Duration qw(duration);
 use Carp ();
 use POSIX qw(strftime);
 use Text::ParseWords;
+use JSON;
 
 use PPI;
 use Safe;
@@ -386,7 +387,7 @@ sub expand_factoid_vars {
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
       my ($a, $v) = ($1, $2);
       $v =~ s/(.):$/$1/;
-      next if $v =~ m/^(nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])$/i; # don't override special variables
+      next if $v =~ m/^(nick|channel|randomnick|arglen|jargs|args|arg\[.+\]|[_0])$/i; # don't override special variables
       next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
 
       $matches++;
@@ -471,10 +472,22 @@ sub expand_action_arguments {
   $action = validate_string($action);
   $input = validate_string($input);
 
+  my %h;
   if (not defined $input or $input eq '') {
-    $action =~ s/\$args/$nick/g;
+    %h = (args => $nick);
   } else {
-    $action =~ s/\$args/$input/g;
+    %h = (args => $input);
+  }
+  my $jsonargs = encode_json \%h;
+  $jsonargs =~ s/^{".*":"//;
+  $jsonargs =~ s/"}$//;
+
+  if (not defined $input or $input eq '') {
+    $action =~ s/\$args(?![[\w])/$nick/g;
+    $action =~ s/\$jargs(?![[\w])/$jsonargs/ge;
+  } else {
+    $action =~ s/\$args(?![[\w])/$input/g;
+    $action =~ s/\$jargs(?![[\w])/$jsonargs/g;
   }
 
   my $qinput = quotemeta $input;
@@ -649,7 +662,9 @@ sub execute_code_factoid_using_vm {
     $code = $self->expand_action_arguments($code, $arguments, $nick);
   }
 
-  $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, "code-factoid", $chan, $root_keyword, "compiler", "$nick $from -lang=$lang $code", 0);
+  my %h = (nick => $nick, channel => $from, lang => $lang, code => $code, arguments => $arguments);
+  my $json = encode_json \%h;
+  $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, 'code-factoid', $chan, $root_keyword, "compiler", $json, 0);
   return "";
 }
 
@@ -791,7 +806,7 @@ sub handle_action {
   }
 
   if (length $arguments) {
-    if ($action =~ m/\$args/ or $action =~ m/\$arg\[/) {
+    if ($action =~ m/\$j?args/ or $action =~ m/\$arg\[/) {
       unless ($self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
         $action = $self->expand_action_arguments($action, $arguments, $nick);
       }

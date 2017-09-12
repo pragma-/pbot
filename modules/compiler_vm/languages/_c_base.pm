@@ -14,6 +14,7 @@ package _c_base;
 use parent '_default';
 
 use Text::Balanced qw/extract_bracketed/;
+use Text::ParseWords qw/shellwords/;
 
 sub initialize {
   my ($self, %conf) = @_;
@@ -64,7 +65,6 @@ END
 
 sub process_custom_options {
   my $self = shift;
-  $self->{code} = $self->{code};
 
   $self->add_option("-nomain") if $self->{code} =~ s/(?:^|(?<=\s))-nomain\s*//i;
   $self->add_option("-noheaders") if $self->{code} =~ s/(?:^|(?<=\s))-noheaders\s*//i;
@@ -74,8 +74,6 @@ sub process_custom_options {
     $self->{include_options} .= "#include <$1> ";
     $self->add_option("-include $1");
   }
-
-  $self->{code} = $self->{code};
 }
 
 sub pretty_format {
@@ -211,6 +209,28 @@ sub preprocess_code {
 
   if (not $self->{no_gdb_extensions} and $prelude !~ m/^#include <prelude.h>/mg) {
     $prelude .= "\n#include <prelude.h>\n";
+  }
+
+  if (defined $self->{arguments}) {
+    my $qargs = quotemeta $self->{arguments};
+    $qargs =~ s/\\ / /g;
+    my @args = shellwords($self->{arguments});
+    $prelude .= "\nint arglen = " . (scalar @args) . ";\n";
+
+    if (@args) {
+      $prelude .= "char *args[] = { ";
+
+      my $comma = "";
+      foreach my $arg (@args) {
+        $arg =~ s/"/\\"/g;
+        $prelude .= "$comma\"$arg\"";
+        $comma = ", ";
+      }
+
+      $prelude .= " };\n";
+    } else {
+      $prelude .= "char *args[] = {0};\n";
+    }
   }
 
   print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $self->{debug};
@@ -434,7 +454,7 @@ sub postprocess_output {
   $output =~ s/cc1: all warnings being treated as; errors//g;
   $output =~ s/, note: this is the location of the previous definition//g;
   $output =~ s/\s+note: previous declaration of '.*?' was here//g;
-  $output =~ s/ called by gdb \(\) at statement: void gdb\(\) { __asm__\(""\); }//g;
+  $output =~ s/ called by gdb \(\) at statement: void gdb\(\) \{ __asm__\(""\); \}//g;
   $output =~ s/called by \?\? \(\) //g;
   $output =~ s/\s0x[a-z0-9]+: note: pointer points here.*?\^//gms;
   $output =~ s/\s0x[a-z0-9]+: note: pointer points here\s+<memory cannot be printed>//gms;
@@ -470,6 +490,8 @@ sub postprocess_output {
       $output =~ s/^/[warning: preprocessor directive not terminated by \\n, the remainder of the line will be part of this directive] /;
     }
   }
+
+  $output =~ s/preprocessor macro\s+at/preprocessor macro/g;
 
   $self->{output} = $output;
 }

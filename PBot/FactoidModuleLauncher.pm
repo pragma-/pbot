@@ -68,7 +68,7 @@ sub execute_module {
 
   $arguments = quotemeta($arguments);
 
-  if(exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{unquote_spaces}) {
+  if($command eq 'code-factoid' or exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{unquote_spaces}) {
     $arguments =~ s/\\ / /g;
   }
 

@@ -30,6 +30,7 @@ sub new {
   $self->{lang}        = $conf{lang};
   $self->{code}        = $conf{code};
   $self->{max_history} = $conf{max_history} // 10000;
+  $self->{arguments}   = $conf{arguments};
 
   $self->{default_options} = '';
   $self->{cmdline}         = 'echo Hello, world!';
