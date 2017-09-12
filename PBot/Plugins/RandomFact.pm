@@ -39,8 +39,11 @@ sub rand_factoid {
 
   # pick random channel unless given one
   if (defined $chan) {
+    my $flag = 0;
+    # iterate over known channels
+    map { $flag = 1 if m/$chan/; } @channels;
     # show usage if given an invalid channel
-    map { return $usage unless m/$chan/; } @channels;
+    return $usage unless $flag;
   } else {
     $chan = $channels[int rand @channels];
   }
