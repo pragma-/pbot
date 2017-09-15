@@ -19,6 +19,10 @@ sub initialize {
   $self->{execfile}        = 'prog.pl';
   $self->{default_options} = '-w';
   $self->{cmdline}         = 'perl $options $sourcefile';
+
+  if (length $self->{arguments}) {
+    $self->{cmdline} .= " $self->{arguments}";
+  }
 }
 
 sub preprocess_code {
@@ -26,8 +30,6 @@ sub preprocess_code {
   $self->SUPER::preprocess_code;
 
   if (defined $self->{arguments}) {
-    my $qargs = quotemeta $self->{arguments};
-    $qargs =~ s/\\ / /g;
     my @args = shellwords($self->{arguments});
     my $prelude .= "\nmy \$arglen = " . (scalar @args) . ";\n";
 

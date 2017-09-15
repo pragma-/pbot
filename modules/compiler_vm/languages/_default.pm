@@ -32,6 +32,7 @@ sub new {
   $self->{code}        = $conf{code};
   $self->{max_history} = $conf{max_history} // 10000;
   $self->{arguments}   = $conf{arguments};
+  $self->{factoid}     = $conf{factoid};
 
   $self->{default_options} = '';
   $self->{cmdline}         = 'echo Hello, world!';
@@ -41,6 +42,9 @@ sub new {
   $self->{channel} =~ s/^\s+|\s+$//g if defined $self->{channel};
   $self->{lang}    =~ s/^\s+|\s+$//g if defined $self->{lang};
   $self->{code}    =~ s/^\s+|\s+$//g if defined $self->{code};
+
+  $self->{arguments} = quotemeta $self->{arguments};
+  $self->{arguments} =~ s/\\ / /g;
 
   $self->initialize(%conf);
 
@@ -239,7 +243,7 @@ sub show_output {
       }
       close FILE;
 
-      if(defined $last_output and $last_output eq $output) {
+      if((not $self->{factoid}) and defined $last_output and $last_output eq $output) {
         print "Same output.\n";
         exit 0;
       }

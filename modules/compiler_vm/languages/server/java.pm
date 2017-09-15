@@ -32,7 +32,7 @@ sub postprocess {
   print "Executing java\n";
   my $input_quoted = quotemeta $self->{input};
   $input_quoted =~ s/\\"/"'\\"'"/g;
-  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 5; echo $input_quoted | java prog > .output\"");
+  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 5; echo $input_quoted | java prog $self->{arguments} > .output\"");
 
   $result = "";
   open(FILE, '.output');

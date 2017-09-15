@@ -16,7 +16,11 @@ sub initialize {
   $self->{sourcefile}      = 'prog.go';
   $self->{execfile}        = 'prog';
   $self->{default_options} = '';
-  $self->{cmdline}         = 'golang-go $options run $sourcefile';
+  $self->{cmdline}         = 'go $options run $sourcefile';
+
+  if (length $self->{arguments}) {
+    $self->{cmdline} .= " $self->{arguments}";
+  }
 }
 
 1;

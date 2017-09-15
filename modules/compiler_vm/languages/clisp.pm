@@ -18,6 +18,10 @@ sub initialize {
   $self->{default_options} = '';
   $self->{cmdline}         = 'clisp $options $sourcefile';
 
+  if (length $self->{arguments}) {
+    $self->{cmdline} .= " $self->{arguments}";
+  }
+
   $self->{sprunge_lexer}   = 'cl';
 
   $self->{cmdline_opening_comment} = "#|=============== CMDLINE ===============\n";

@@ -662,7 +662,7 @@ sub execute_code_factoid_using_vm {
     $code = $self->expand_action_arguments($code, $arguments, $nick);
   }
 
-  my %h = (nick => $nick, channel => $from, lang => $lang, code => $code, arguments => $arguments);
+  my %h = (nick => $nick, channel => $from, lang => $lang, code => $code, arguments => $arguments, factoid => "$chan:$keyword");
   my $json = encode_json \%h;
   $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, 'code-factoid', $chan, $root_keyword, "compiler", $json, 0);
   return "";

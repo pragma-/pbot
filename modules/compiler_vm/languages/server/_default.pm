@@ -23,6 +23,8 @@ sub new {
   $self->{cmdline}     = $conf{cmdline};
   $self->{input}       = $conf{input};
   $self->{date}        = $conf{date};
+  $self->{arguments}   = $conf{arguments};
+  $self->{factoid}     = $conf{factoid};
 
   $self->initialize(%conf);
 
@@ -104,6 +106,7 @@ sub execute {
     my $pid = open(my $fh, '-|', "$cmdline 2>&1");
 
     local $SIG{ALRM} = sub { print "Time out\n"; kill 'TERM', $pid; die "$result [Timed-out]\n"; };
+    local $SIG{CHLD} = 'IGNORE';
     alarm($timeout);
 
     while(my $line = <$fh>) {

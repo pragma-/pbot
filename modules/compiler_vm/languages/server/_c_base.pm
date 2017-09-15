@@ -15,8 +15,6 @@ sub preprocess {
   $self->SUPER::preprocess;
 
   if ($self->{cmdline} =~ m/--(?:version|analyze)/) {
-    $self->{output} =~ s/Ubuntu //;
-    $self->{output} =~ s/-\d+ubuntu\d+//;
     $self->{done} = 1;
   }
 }
@@ -33,7 +31,7 @@ sub postprocess {
   }
 
   print "Executing gdb\n";
-  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 5; compiler_watchdog.pl > .output\"");
+  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 5; compiler_watchdog.pl $self->{arguments} > .output\"");
 
   $result = "";
   open(FILE, '.output');

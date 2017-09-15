@@ -136,7 +136,7 @@ sub execute {
       gdb $in, "set height 0\n";
       gdb $in, "set auto-solib-add off\n";
       gdb $in, "catch exec\n";
-      gdb $in, "run < .input\n";
+      gdb $in, "run @ARGV < .input\n";
       next;
     }
 
