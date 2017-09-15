@@ -9,6 +9,7 @@ use strict;
 
 use File::Basename;
 use POSIX;
+use JSON;
 
 my $USERNAME = 'compiler';
 my $USE_LOCAL = defined $ENV{'CC_LOCAL'}; 
@@ -62,72 +63,49 @@ sub run_server {
     while(my $line = <$input>) {
       chomp $line;
 
+      print "-" x 40, "\n";
       print "Got [$line]\n";
 
-      if($line =~ m/^compile:\s*end/) {
-        next if not defined $lang or not defined $code;
+      my $compile_in = decode_json($line);
 
-        print "Attempting compile [$lang] ...\n";
+      print "Attempting compile [$compile_in->{lang}] ...\n";
 
-        my $pid = fork;
+      my $pid = fork;
 
-        if (not defined $pid) {
-          print "fork failed: $!\n";
-          next;
-        }
-
-        if ($pid == 0) {
-          my ($uid, $gid) = (getpwnam $USERNAME)[2, 3];
-          if (not $uid and not $gid) {
-            print "Could not find user $USERNAME: $!\n";
-            exit;
-          }
-
-
-          POSIX::setgid($gid);
-          POSIX::setuid($uid);
-
-          my $result = interpret($lang, $sourcefile, $execfile, $code, $cmdline, $user_input, $date);
-
-          print "Done compiling; result: [$result]\n";
-          print $output "result:$result\n";
-          print $output "result:end\n";
-          exit;
-        } else {
-          waitpid $pid, 0;
-        }
-
-        if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
-          print "input: ";
-          next;
-        } else {
-          exit;
-        }
-      }
-
-      if($line =~ m/^compile:\s*(.*)/) {
-        my $options = $1;
-        $cmdline = undef;
-        $user_input = undef;
-        $lang = undef;
-        $sourcefile = undef;
-        $execfile = undef;
-
-        ($lang, $sourcefile, $execfile, $cmdline, $user_input, $date) = split /:/, $options;
-
-        $code = "";
-        $sourcefile = "/dev/null" if not defined $sourcefile;
-        $execfile = "/dev/null" if not defined $execfile;
-        $lang = "unknown" if not defined $lang;
-        $cmdline = "echo No cmdline specified!" if not defined $cmdline;
-        $user_input = "" if not defined $user_input;
-
-        print "Setting lang [$lang]; [$sourcefile]; [$cmdline]; [$user_input]; [$date]\n";
-
+      if (not defined $pid) {
+        print "fork failed: $!\n";
         next;
       }
 
-      $code .= $line . "\n";
+      if ($pid == 0) {
+        my ($uid, $gid) = (getpwnam $USERNAME)[2, 3];
+        if (not $uid and not $gid) {
+          print "Could not find user $USERNAME: $!\n";
+          exit;
+        }
+
+        POSIX::setgid($gid);
+        POSIX::setuid($uid);
+
+        my $result = interpret(%$compile_in);
+
+        my $compile_out = { result => $result };
+        my $json = encode_json($compile_out);
+
+        print "Done compiling; result: [$result] [$json]\n";
+        print $output "result:$json\n";
+        print $output "result:end\n";
+        exit;
+      } else {
+        waitpid $pid, 0;
+      }
+
+      if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
+        print "input: ";
+        next;
+      } else {
+        exit;
+      }
     }
   } else {
     while(1) {
@@ -142,17 +120,16 @@ sub run_server {
 }
 
 sub interpret {
-  my ($lang, $sourcefile, $execfile, $code, $cmdline, $input, $date) = @_;
+  my %h = @_;
 
-  print "lang: [$lang], sourcefile: [$sourcefile], execfile [$execfile], code: [$code], cmdline: [$cmdline], input: [$input], date: [$date]\n";
+  print "lang: [$h{lang}], sourcefile: [$h{sourcefile}], execfile [$h{execfile}], code: [$h{code}], cmdline: [$h{cmdline}], input: [$h{input}], date: [$h{date}]\n";
 
-  $lang = '_default' if not exists $languages{$lang};
+  $h{lang} = '_default' if not exists $languages{$h{lang}};
 
   system("chmod -R 755 /home/compiler");
   system("rm -rf /home/compiler/prog*");
 
-  my $mod = $lang->new(sourcefile => $sourcefile, execfile => $execfile, code => $code, 
-    cmdline => $cmdline, input => $input, date => $date);
+  my $mod = $h{lang}->new(%h);
 
   $mod->preprocess;
 

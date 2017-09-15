@@ -17,6 +17,7 @@ use IO::Socket;
 use LWP::UserAgent;
 use Time::HiRes qw/gettimeofday/;
 use Text::Balanced qw/extract_delimited/;
+use JSON;
 
 my $EXECUTE_PORT = '3333';
 
@@ -367,21 +368,28 @@ sub execute {
   print FILE "$cmdline\n$input\n$pretty_code\n";
   close FILE;
 
-  print $compiler "compile:$self->{lang}:$self->{sourcefile}:$self->{execfile}:$cmdline:$input:$date\n";
-  print $compiler "$pretty_code\n";
-  print $compiler "compile:end\n";
+  my $compile_in = { lang => $self->{lang}, sourcefile => $self->{sourcefile}, execfile => $self->{execfile},
+    cmdline => $cmdline, input => $input, date => $date, arguments => $self->{arguments}, code => $pretty_code };
+  my $compile_json = encode_json($compile_in);
+
+  #print STDERR "Sending [$compile_json] to vm_server\n";
+
+  print $compiler "$compile_json\n";
 
   my $result = "";
   my $got_result = 0;
 
   while(my $line = <$compiler_output>) {
-    $line =~ s/[\r\n]+$//;
 
+    #print STDERR "Read [$line]\n";
+
+    $line =~ s/[\r\n]+$//;
     last if $line =~ /^result:end$/;
 
     if($line =~ /^result:/) {
       $line =~ s/^result://;
-      $result .= "$line\n";
+      my $compile_out = decode_json($line);
+      $result .= "$compile_out->{result}\n";
       $got_result = 1;
       next;
     }
