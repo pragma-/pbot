@@ -33,6 +33,7 @@ sub new {
   $self->{max_history} = $conf{max_history} // 10000;
   $self->{arguments}   = $conf{arguments};
   $self->{factoid}     = $conf{factoid};
+  $self->{'persist-key'} = $conf{'persist-key'};
 
   $self->{default_options} = '';
   $self->{cmdline}         = 'echo Hello, world!';
@@ -374,6 +375,10 @@ sub execute {
 
   my $compile_in = { lang => $self->{lang}, sourcefile => $self->{sourcefile}, execfile => $self->{execfile},
     cmdline => $cmdline, input => $input, date => $date, arguments => $self->{arguments}, code => $pretty_code };
+
+  $compile_in->{'factoid'} = $self->{'factoid'} if length $self->{'factoid'};
+  $compile_in->{'persist-key'} = $self->{'persist-key'} if length $self->{'persist-key'};
+
   my $compile_json = encode_json($compile_in);
 
   #print STDERR "Sending [$compile_json] to vm_server\n";

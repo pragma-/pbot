@@ -60,7 +60,7 @@ sub execute_module {
   my $module = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{action};
   my $module_dir = $self->{pbot}->{registry}->get_value('general', 'module_dir');
 
-  $self->{pbot}->{logger}->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: Executing module $module $arguments\n");
+  $self->{pbot}->{logger}->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: Executing module [$command] $module $arguments\n");
 
   $arguments =~ s/\$nick/$nick/g;
   $arguments =~ s/\$channel/$from/g;
@@ -160,6 +160,8 @@ sub execute_module {
     }
 
     if ($command eq 'code-factoid') {
+      $text =~ s/\s+$//g;
+      $self->{pbot}->{logger}->log("No text result from code-factoid.\n") and exit 0 if not length $text;
       $text = $self->{pbot}->{factoids}->handle_action($nick, $user, $host, $from, $root_channel, $root_keyword, $root_keyword, $arguments, $text, $tonick, 0, $referenced, undef, $root_keyword);
     }
 

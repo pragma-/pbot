@@ -8,7 +8,6 @@ use warnings;
 use strict;
 
 use File::Basename;
-use POSIX;
 use JSON;
 
 my $USERNAME = 'compiler';
@@ -84,8 +83,19 @@ sub run_server {
           exit;
         }
 
-        POSIX::setgid($gid);
-        POSIX::setuid($uid);
+        if ($compile_in->{'persist-key'}) {
+          system("mount /dev/vdb1 /root/factdata");
+          system("mkdir /root/factdata/$compile_in->{'persist-key'}");
+          system("cp -R -p /root/factdata/$compile_in->{'persist-key'}/* /home/compiler/");
+        }
+
+        system("chown -R compiler /home/compiler/*");
+        system("chgrp -R compiler /home/compiler/*");
+        system("chmod -R 755 /home/compiler");
+        system("rm -rf /home/compiler/prog*");
+
+        $( = $gid;
+        $< = $uid;
 
         my $result = interpret(%$compile_in);
 
@@ -95,6 +105,16 @@ sub run_server {
         print "Done compiling; result: [$result] [$json]\n";
         print $output "result:$json\n";
         print $output "result:end\n";
+
+        $( = 0;
+        $< = 0;
+
+        if ($compile_in->{'persist-key'}) {
+          system("id");
+          system("cp -R -p /home/compiler/* /root/factdata/$compile_in->{'persist-key'}/");
+          system("umount /root/factdata");
+        }
+
         exit;
       } else {
         waitpid $pid, 0;
@@ -126,8 +146,7 @@ sub interpret {
 
   $h{lang} = '_default' if not exists $languages{$h{lang}};
 
-  system("chmod -R 755 /home/compiler");
-  system("rm -rf /home/compiler/prog*");
+  chdir("/home/compiler");
 
   my $mod = $h{lang}->new(%h);
 
@@ -136,9 +155,13 @@ sub interpret {
   $mod->postprocess if not $mod->{error} and not $mod->{done};
 
   if (exists $mod->{no_output} or not length $mod->{output}) {
-    $mod->{output} .= "\n" if length $mod->{output};
-    $mod->{output} .= "Success (no output).\n" if not $mod->{error};
-    $mod->{output} .= "Success (exit code $mod->{error}).\n" if $mod->{error};
+    if ($h{factoid}) {
+      $mod->{output} = "";
+    } else {
+      $mod->{output} .= "\n" if length $mod->{output};
+      $mod->{output} .= "Success (no output).\n" if not $mod->{error};
+      $mod->{output} .= "Success (exit code $mod->{error}).\n" if $mod->{error};
+    }
   }
 
   return $mod->{output};

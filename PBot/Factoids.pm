@@ -663,6 +663,11 @@ sub execute_code_factoid_using_vm {
   }
 
   my %h = (nick => $nick, channel => $from, lang => $lang, code => $code, arguments => $arguments, factoid => "$chan:$keyword");
+
+  if (exists $self->{factoids}->hash->{$chan}->{$keyword}->{'persist-key'}) {
+    $h{'persist-key'} = $self->{factoids}->hash->{$chan}->{$keyword}->{'persist-key'};
+  }
+
   my $json = encode_json \%h;
   $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($from, $tonick, $nick, $user, $host, 'code-factoid', $chan, $root_keyword, "compiler", $json, 0);
   return "";

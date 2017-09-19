@@ -25,6 +25,7 @@ sub new {
   $self->{date}        = $conf{date};
   $self->{arguments}   = $conf{arguments};
   $self->{factoid}     = $conf{factoid};
+  $self->{'persist-key'} = $conf{'persist-key'};
 
   $self->initialize(%conf);
 

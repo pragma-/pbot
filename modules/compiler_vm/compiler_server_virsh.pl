@@ -40,7 +40,9 @@ sub vm_start {
 }
 
 sub vm_reset {
+  system("virsh detach-disk $DOMAIN_NAME vdb");
   system("virsh snapshot-revert $DOMAIN_NAME 1");
+  system("virsh attach-disk $DOMAIN_NAME --source /var/lib/libvirt/images/factdata.qcow2 --target vdb");
   print "Reset vm\n";
 }
 
