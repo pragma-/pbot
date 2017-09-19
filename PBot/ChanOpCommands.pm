@@ -232,7 +232,7 @@ sub kick_user {
 
   $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $victim $reason");
   $self->{pbot}->{chanops}->gain_ops($channel);
-  return "/msg $nick Kicking $victim channel $channel with reason '$reason'";
+  return "";
 }
 
 1;
