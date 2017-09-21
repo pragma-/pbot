@@ -123,7 +123,7 @@ sub interpreter {
 
 sub parse_arguments {
   my ($self, $arguments) = @_;
-  my $args = quoetemeta $arguments;
+  my $args = quotemeta $arguments;
   $args =~ s/\\ / /g;
   return shellwords($args);
 }
