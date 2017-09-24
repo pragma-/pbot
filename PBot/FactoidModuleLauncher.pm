@@ -62,10 +62,7 @@ sub execute_module {
 
   $self->{pbot}->{logger}->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: Executing module [$command] $module $arguments\n");
 
-  $arguments =~ s/\$nick/$nick/g;
-  $arguments =~ s/\$channel/$from/g;
-  $arguments =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
-
+  $arguments = $self->{pbot}->{factoids}->expand_factoid_vars($from, $nick, $root_keyword, $arguments);
   $arguments = quotemeta($arguments);
 
   if($command eq 'code-factoid' or exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{unquote_spaces}) {

@@ -372,6 +372,15 @@ sub find_factoid {
   return @result;
 }
 
+sub escape_json {
+  my ($self, $text) = @_;
+  my $thing = {thing => $text};
+  my $json = encode_json $thing;
+  $json =~ s/^{".*":"//;
+  $json =~ s/"}$//;
+  return $json;
+}
+
 sub expand_factoid_vars {
   my ($self, $from, $nick, $root_keyword, $action, @exclude) = @_;
 
@@ -381,13 +390,13 @@ sub expand_factoid_vars {
   while (1) {
     last if ++$depth >= 10;
     my $matches = 0;
-    $action =~ s/\$0/$root_keyword/g;
-    $action = validate_string($action);
+    $action =~ s/\$0\b/$root_keyword/g;
     my $const_action = $action;
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
       my ($a, $v) = ($1, $2);
       $v =~ s/(.):$/$1/;
-      next if $v =~ m/^(nick|channel|randomnick|arglen|jargs|args|arg\[.+\]|[_0])$/i; # don't override special variables
+      next if $v =~ m/^_/; # underscore-prefixed vars reserved for code-factoids
+      next if $v =~ m/^(nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])$/i; # don't override special variables
       next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
 
       $matches++;
@@ -440,6 +449,9 @@ sub expand_factoid_vars {
             when ('title') {
               $mylist[$line] = ucfirst lc $mylist[$line];
             }
+            when ('json') {
+              $mylist[$line] = $self->escape_json($mylist[$line]);
+            }
           }
         }
 
@@ -457,6 +469,11 @@ sub expand_factoid_vars {
   $action =~ s/\\\$/\$/g;
 
   unless (@exclude) {
+    $action =~ s/\$nick:json/$self->escape_json($nick)/ge;
+    $action =~ s/\$channel:json/$self->escape_json($from)/ge;
+    $action =~ s/\$randomnick:json/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $self->escape_json($random) : $self->escape_json($nick)/ge;
+    $action =~ s/\$0:json/$self->escape_json($root_keyword)/ge;
+
     $action =~ s/\$nick/$nick/g;
     $action =~ s/\$channel/$from/g;
     $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
@@ -483,11 +500,11 @@ sub expand_action_arguments {
   $jsonargs =~ s/"}$//;
 
   if (not defined $input or $input eq '') {
+    $action =~ s/\$args:json/$jsonargs/ge;
     $action =~ s/\$args(?![[\w])/$nick/g;
-    $action =~ s/\$jargs(?![[\w])/$jsonargs/ge;
   } else {
+    $action =~ s/\$args:json/$jsonargs/g;
     $action =~ s/\$args(?![[\w])/$input/g;
-    $action =~ s/\$jargs(?![[\w])/$jsonargs/g;
   }
 
   my $qinput = quotemeta $input;
