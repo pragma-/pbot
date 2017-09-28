@@ -30,16 +30,36 @@ if($arguments =~ s/^([0-9]+)//) {
 }
 
 my $engine  = WWW::Google::CustomSearch->new(api_key => $api_key, cx => $cx, quotaUser => $nick);
-my $result  = $engine->search($arguments);
 
 print "$nick: ";
 
-print '(', $result->formattedTotalResults, " results)\n";
+if ($arguments =~ m/(.*)\svs\s(.*)/i) {
+  my ($a, $b) = ($1, $2);
+  my $result1 = $engine->search($a);
+  my $result2 = $engine->search($b);
+
+  if (not @{$result1->items}) {
+    print "No results for $a\n";
+    exit;
+  }
+
+  if (not @{$result2->items}) {
+    print "No results for $b\n";
+    exit;
+  }
+
+  print "$a: (", $result1->formattedTotalResults, ") ", decode_entities $result1->items->[0]->title, " <", $result1->items->[0]->link, "> VS $b: (", $result2->formattedTotalResults, ") ", decode_entities $result2->items->[0]->title, " <", $result2->items->[0]->link, ">\n";
+  exit;
+}
+
+my $result  = $engine->search($arguments);
 
 if (not @{$result->items}) {
   print "No results found\n";
   exit;
 }
+
+print '(', $result->formattedTotalResults, " results)\n";
 
 my $comma = "";
 foreach my $item (@{$result->items}) {
