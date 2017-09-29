@@ -51,34 +51,74 @@ sub unload {
   $self->{pbot}->{commands}->unregister('rfact');
 }
 
-sub rand_factoid {
+sub on_kick {
   my $self = shift;
-  my ($chan) = @_;
-  my $usage = "Usage: rfact [<channel>]";
-  my @channels = keys %{ $self->{pbot}->{factoids}->hash };
-  my @triggers = keys %{ $self->{pbot}->{triggers}->hash->{$chan} };
-  my $flag = 0;
+  my $ktd = \$self->{pbot}->{states}->{randomfact}->{kneads_until_death};
+  my $tod = \$self->{pbot}->{states}->{randomfact}->{time_of_death};
+  my $lregen = \$self->{pbot}->{states}->{randomfact}->{last_regen};
+  $$ktd = $self->{pbot}->{registry}->get_value('randomfact', 'knead_max');
+  $$lregen = $$tod = gettimeofday;
 
-  if (length($chan) > 1) {
+  return 0;
+}
+
+sub rand_factoid {
+  my ($self, $from, $nick, $user, $host, $channel) = @_;
+  my $usage = "Usage: rfact [<channel>]";
+  my $flag = 0;
+  my @channels = keys %{ $self->{pbot}->{factoids}->hash };
+  my @triggers = keys %{ $self->{pbot}->{triggers}->hash->{$channel} };
+
+  if (length($channel) > 1) {
     for (@channels) {
       last if ($flag);
-      $flag = 1 if (m/^$chan$/)
+      $flag = 1 if (m/^$channel$/)
     }
   }
 
   my $idx = scalar @channels;
   until ($flag or $idx < 0) {
-    $chan = $channels[int rand $idx--];
-    $flag = 1 if (length($chan) > 1);
+    $channel = $channels[int rand $idx--];
+    $flag = 1 if (length($channel) > 1);
   }
 
   return $usage unless ($flag);
+
   my $trig = $triggers[int rand @triggers];
   my ($owner, $action) =
-    ($self->{factoids}->hash->{$chan}->{$trig}->{owner},
-    $self->{factoids}->hash->{$chan}->{$trig}->{action});
+    ($self->{factoids}->hash->{$channel}->{$trig}->{owner},
+    $self->{factoids}->hash->{$channel}->{$trig}->{action});
 
-  return "$trig is \"$action\" (created by $owner [$chan])";
+  $self->knead_of_death(@_);
+
+  return "$trig is \"$action\" (created by $owner [$channel])";
+}
+
+sub knead_of_death {
+  my ($self, $from, $nick, $user, $host, $channel) = @_;
+
+  $channel = lc $channel;
+  return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
+  return 0 unless (exists $self->{kicks}->{$channel} and exists $self->{kicks}->{$channel}->{$nick});
+
+  my $ktd = \$self->{pbot}->{states}->{randomfact}->{kneads_until_death};
+  my $tod = \$self->{pbot}->{states}->{randomfact}->{time_of_death};
+  my $lregen = \$self->{pbot}->{states}->{randomfact}->{last_regen};
+  my $now = gettimeofday;
+  my $time_diff = $now - $$lregen;
+
+  if ($time_diff > $self->{pbot}->{registry}->get_value('randomfact', 'hp_regen')) {
+    $$ktd++;
+    $$lregen = gettimeofday;
+  }
+
+  # 50% chance of a decrement scaled by savageosity
+  $$ktd -= (((gettimeofday())[1]) % 2) * $self->{pbot}->{registry}->get_value('randomfact', 'savageosity');
+  if ($$ktd < 0) {
+    # rip.
+    $self->{pbot}->{chanops}->gain_ops($channel);
+    $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick *BANG!*");
+  }
 }
 
 1;
