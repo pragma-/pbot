@@ -21,6 +21,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
+
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { $self->rand_factoid(@_) }, 'rfact', 0);
 }
@@ -36,19 +37,22 @@ sub rand_factoid {
   my $usage = "Usage: rfact [<channel>]";
   my @channels = keys %{ $self->{pbot}->{factoids}->hash };
   my @triggers = keys %{ $self->{pbot}->{triggers}->hash->{$chan} };
+  my $flag = 0;
 
-  # pick random channel unless given one
-  if (defined $chan) {
-    my $flag = 0;
-    # iterate over known channels
-    map { $flag = 1 if m/^$chan$/; } @channels;
-    # show usage if given an invalid channel
-    return $usage unless $flag;
-  } else {
-    $chan = $channels[int rand @channels];
+  if (length($chan) > 1) {
+    for (@channels) {
+      last if ($flag);
+      $flag = 1 if (m/^$chan$/)
+    }
   }
 
-  # pick random trigger
+  my $idx = scalar @channels;
+  until ($flag or $idx < 0) {
+    $chan = $channels[int rand $idx--];
+    $flag = 1 if (length($chan) > 1);
+  }
+
+  return $usage unless ($flag);
   my $trig = $triggers[int rand @triggers];
   my $owner = $self->{factoids}->hash->{$chan}->{$trig}->{owner};
   my $action = $self->{factoids}->hash->{$chan}->{$trig}->{action};
