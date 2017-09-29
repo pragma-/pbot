@@ -1241,7 +1241,7 @@ sub factchange {
 
     $delim = quotemeta $delim;
 
-    if ($arguments =~ /\Q$keyword\E s$delim(.*?)$delim(.*)$delim(.*)?$/) {
+    if ($arguments =~ /\Q$keyword\E s$delim(.*?)$delim(.*)$delim(.*)$/) {
       $tochange = $1; 
       $changeto = $2;
       $modifier  = $3;
@@ -1298,11 +1298,38 @@ sub factchange {
   my $ret = eval {
     use re::engine::RE2 -strict => 1;
     my $action = $factoids->{$channel}->{$trigger}->{action};
-    if(not $action =~ s|$tochange|$changeto|) {
+    my $changed;
+
+    if ($modifier eq 'gi' or $modifier eq 'ig') {
+      $changed = $action =~ s|$tochange|$changeto|gi;
+    } elsif ($modifier eq 'g') {
+      $changed = $action =~ s|$tochange|$changeto|g;
+    } elsif ($modifier eq 'i') {
+      $changed = $action =~ s|$tochange|$changeto|i;
+    } else {
+      $changed = $action =~ s|$tochange|$changeto|;
+    }
+
+    if (not $changed) {
       $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change '$trigger' 's$delim$tochange$delim$changeto$delim\n");
       return "Change $trigger failed.";
     } else {
-      if (length $action > 1000 and not defined $admininfo) {
+      my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
+      $action =~ s/\$1/$a/g;
+      $action =~ s/\$2/$b/g;
+      $action =~ s/\$3/$c/g;
+      $action =~ s/\$4/$d/g;
+      $action =~ s/\$5/$e/g;
+      $action =~ s/\$6/$f/g;
+      $action =~ s/\$7/$g/g;
+      $action =~ s/\$8/$h/g;
+      $action =~ s/\$9/$i/g;
+      $action =~ s/\$`/$before/g;
+      $action =~ s/\$'/$after/g;
+      $action =~ s/^\s+//;
+      $action =~ s/\s+$//;
+
+      if (length $action > 8000 and not defined $admininfo) {
         return "Change $trigger failed; result is too long.";
       }
 
