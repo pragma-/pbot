@@ -113,6 +113,19 @@ sub process_line {
       $preserve_whitespace = 1;
       my $nick_override = $self->{pbot}->{nicklist}->is_present($from, $nick_override);
       $processed += 100;
+    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
+      $command = $1;
+      $processed += 100;
+    } elsif ($cmd_text =~ s/\B$bot_trigger`([^`]+)// || $cmd_text =~ s/\B$bot_trigger\{([^}]+)//) {
+      my $cmd = $1;
+      my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
+      $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
+      if ($nick) {
+        $command = "tell $nick about $cmd";
+      } else {
+        $command = $cmd;
+      }
+      $referenced = 1;
     } elsif($cmd_text =~ s/^\s*([^,:\(\)\+\*\/ ]+)[,:]?\s+$bot_trigger(.*)$//) {
       $nick_override = $1;
       $command = $2;
@@ -135,16 +148,6 @@ sub process_line {
     } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
       $command = $1;
       $processed += 100;
-    } elsif ($cmd_text =~ s/\B$bot_trigger`([^`]+)// || $cmd_text =~ s/\B$bot_trigger\{([^}]+)//) {
-      my $cmd = $1;
-      my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
-      $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
-      if ($nick) {
-        $command = "tell $nick about $cmd";
-      } else {
-        $command = $cmd;
-      }
-      $referenced = 1;
     }
 
     last if not defined $command and not defined $has_code;
