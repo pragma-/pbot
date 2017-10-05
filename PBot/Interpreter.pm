@@ -492,12 +492,39 @@ sub paste {
   my $text = join(' ', @_);
   $text =~ s/(.{120})\s/$1\n/g;
 
-  my $result = $self->paste_sprunge($text);
+  my $result = $self->paste_ixio($text);
 
   if ($result =~ m/error pasting/) {
     $result = $self->paste_codepad($text);
   }
 
+  return $result;
+}
+
+sub paste_ixio {
+  my $self = shift;
+  my $text = join(' ', @_);
+
+  $text =~ s/(.{120})\s/$1\n/g;
+
+  my $ua = LWP::UserAgent->new();
+  $ua->agent("Mozilla/5.0");
+  push @{ $ua->requests_redirectable }, 'POST';
+  $ua->timeout(10);
+
+  my %post = ('f:1' => $text);
+  my $response = $ua->post("http://ix.io", \%post);
+
+  use Data::Dumper;
+  print Dumper $response;
+
+  if(not $response->is_success) {
+    return "error pasting: " . $response->status_line;
+  }
+
+  my $result = $response->content;
+  $result =~ s/^\s+//;
+  $result =~ s/\s+$//;
   return $result;
 }
 
@@ -510,6 +537,7 @@ sub paste_codepad {
   my $ua = LWP::UserAgent->new();
   $ua->agent("Mozilla/5.0");
   push @{ $ua->requests_redirectable }, 'POST';
+  $ua->timeout(10);
 
   my %post = ( 'lang' => 'Plain Text', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
   my $response = $ua->post("http://codepad.org", \%post);
@@ -530,6 +558,7 @@ sub paste_sprunge {
   my $ua = LWP::UserAgent->new();
   $ua->agent("Mozilla/5.0");
   $ua->requests_redirectable([ ]);
+  $ua->timeout(10);
 
   my %post = ( 'sprunge' => $text, 'submit' => 'Submit' );
   my $response = $ua->post("http://sprunge.us", \%post);
