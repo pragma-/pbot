@@ -314,11 +314,8 @@ sub factundo {
     }
   }
 
-  if ($undos->{idx} == 0) {
-    return "There are no more undos remaining for [$channel] $trigger.";
-  }
-
   unless ($deleted) {
+    return "There are no more undos remaining for [$channel] $trigger." if not $undos->{idx};
     $undos->{idx}--;
     eval { store $undos, "$path/$trigger_safe.$channel_path_safe.undo"; };
     $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
