@@ -1296,41 +1296,21 @@ sub factchange {
     use re::engine::RE2 -strict => 1;
     my $action = $factoids->{$channel}->{$trigger}->{action};
     my $changed;
-     my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after);
 
     if ($modifier eq 'gi' or $modifier eq 'ig') {
       $changed = $action =~ s|$tochange|$changeto|gi;
-     ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
     } elsif ($modifier eq 'g') {
       $changed = $action =~ s|$tochange|$changeto|g;
-     ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
     } elsif ($modifier eq 'i') {
       $changed = $action =~ s|$tochange|$changeto|i;
-     ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
     } else {
       $changed = $action =~ s|$tochange|$changeto|;
-     ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
     }
-
 
     if (not $changed) {
       $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change '$trigger' 's$delim$tochange$delim$changeto$delim\n");
       return "Change $trigger failed.";
     } else {
-      $action =~ s/\$1/$a/g;
-      $action =~ s/\$2/$b/g;
-      $action =~ s/\$3/$c/g;
-      $action =~ s/\$4/$d/g;
-      $action =~ s/\$5/$e/g;
-      $action =~ s/\$6/$f/g;
-      $action =~ s/\$7/$g/g;
-      $action =~ s/\$8/$h/g;
-      $action =~ s/\$9/$i/g;
-      $action =~ s/\$`/$before/g;
-      $action =~ s/\$'/$after/g;
-      $action =~ s/^\s+//;
-      $action =~ s/\s+$//;
-
       if (length $action > 8000 and not defined $admininfo) {
         return "Change $trigger failed; result is too long.";
       }
