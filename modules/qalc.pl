@@ -9,14 +9,12 @@ use strict;
 
 my $args = join ' ', @ARGV;
 
-my $qargs = quotemeta $args;
-
-if (not length $qargs) {
+if (not length $args) {
   print "Usage: qalc <expression>\n";
   exit;
 }
 
-my $result = `qalc $qargs`;
+my $result = `ulimit -t 2; qalc '$args'`;
 
 $result =~ s/^.*approx.\s+//;
 $result =~ s/^.*=\s+//;
