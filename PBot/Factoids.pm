@@ -380,6 +380,22 @@ sub escape_json {
   return $json;
 }
 
+sub expand_special_vars {
+  my ($self, $from, $nick, $root_keyword, $action) = @_;
+
+  $action =~ s/\$nick:json/$self->escape_json($nick)/ge;
+  $action =~ s/\$channel:json/$self->escape_json($from)/ge;
+  $action =~ s/\$randomnick:json/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $self->escape_json($random) : $self->escape_json($nick)/ge;
+  $action =~ s/\$0:json/$self->escape_json($root_keyword)/ge;
+
+  $action =~ s/\$nick/$nick/g;
+  $action =~ s/\$channel/$from/g;
+  $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
+  $action =~ s/\$0\b/$root_keyword/g;
+
+  return validate_string($action);
+}
+
 sub expand_factoid_vars {
   my ($self, $from, $nick, $root_keyword, $action, @exclude) = @_;
 
@@ -389,7 +405,7 @@ sub expand_factoid_vars {
   while (1) {
     last if ++$depth >= 10;
     my $matches = 0;
-    $action =~ s/\$0\b/$root_keyword/g;
+    $action =~ s/\$0/$root_keyword/g;
     my $const_action = $action;
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
       my ($a, $v) = ($1, $2);
@@ -468,15 +484,7 @@ sub expand_factoid_vars {
   $action =~ s/\\\$/\$/g;
 
   unless (@exclude) {
-    $action =~ s/\$nick:json/$self->escape_json($nick)/ge;
-    $action =~ s/\$channel:json/$self->escape_json($from)/ge;
-    $action =~ s/\$randomnick:json/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $self->escape_json($random) : $self->escape_json($nick)/ge;
-    $action =~ s/\$0:json/$self->escape_json($root_keyword)/ge;
-
-    $action =~ s/\$nick/$nick/g;
-    $action =~ s/\$channel/$from/g;
-    $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
-    $action =~ s/\$0\b/$root_keyword/g;
+    $action = $self->expand_special_vars($from, $nick, $root_keyword, $action);
   }
 
   return validate_string($action);
@@ -827,7 +835,7 @@ sub handle_action {
   }
 
   if (length $arguments) {
-    if ($action =~ m/\$j?args/ or $action =~ m/\$arg\[/) {
+    if ($action =~ m/\$args/ or $action =~ m/\$arg\[/) {
       unless ($self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
         $action = $self->expand_action_arguments($action, $arguments, $nick);
       }
