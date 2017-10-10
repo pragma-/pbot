@@ -78,12 +78,12 @@ sub adjust_offenses {
   my $self = shift;
   my $now = gettimeofday;
 
-  foreach my $channel (keys $self->{offenses}) {
-    foreach my $nick (keys $self->{offenses}->{$channel}) {
+  foreach my $channel (keys %{ $self->{offenses} }) {
+    foreach my $nick (keys %{ $self->{offenses}->{$channel} }) {
       if ($now - $self->{offenses}->{$channel}->{$nick}->{time} >= 60 * 60 * 24 * 7) {
         if (--$self->{offenses}->{$channel}->{$nick}->{offenses} <= 0) {
           delete $self->{offenses}->{$channel}->{$nick};
-          delete $self->{offenses}->{$channel} if not keys $self->{offenses}->{$channel};
+          delete $self->{offenses}->{$channel} if not keys %{ $self->{offenses}->{$channel} };
         }
       }
     }
