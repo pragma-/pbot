@@ -388,6 +388,8 @@ sub check_reminders {
     my $target = $reminder->{target} // $nick;
     $self->{pbot}->{conn}->privmsg($target, $text);
 
+    $self->{pbot}->{logger}->log("Reminded $target about \"$text\"\n");
+
     if ($reminder->{repeat} > 0) {
       $reminder->{repeat}--;
       $reminder->{alarm} = gettimeofday + $reminder->{duration};
