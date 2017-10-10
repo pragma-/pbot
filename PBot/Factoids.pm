@@ -278,13 +278,12 @@ sub find_factoid {
 
   $self->{pbot}->{logger}->log("from: $from\n") if $debug;
 
-  my $string = $keyword . (defined $arguments ? " $arguments" : "");
-
-  $self->{pbot}->{logger}->log("string: $string\n") if $debug;
-
   my @result = eval {
     my @results;
     for (my $depth = 0; $depth < 5; $depth++) {
+      my $string = $keyword . (defined $arguments ? " $arguments" : "");
+      $self->{pbot}->{logger}->log("string: $string\n") if $debug;
+      return undef if $self->{pbot}->{commands}->exists($keyword);
       # check factoids
       foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
         if($exact_channel) {

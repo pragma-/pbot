@@ -515,9 +515,6 @@ sub paste_ixio {
   my %post = ('f:1' => $text);
   my $response = $ua->post("http://ix.io", \%post);
 
-  use Data::Dumper;
-  print Dumper $response;
-
   if(not $response->is_success) {
     return "error pasting: " . $response->status_line;
   }
