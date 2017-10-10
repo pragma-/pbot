@@ -28,25 +28,29 @@ sub initialize {
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference in SelectHandler");
   $self->{select} = IO::Select->new();
   $self->{readers} = {};
+  $self->{buffers} = {};
 }
 
 sub add_reader {
   my ($self, $handle, $sub) = @_;
   $self->{select}->add($handle);
   $self->{readers}->{$handle} = $sub;
+  $self->{buffers}->{$handle} = "";
 }
 
 sub remove_reader {
   my ($self, $handle) = @_;
   $self->{select}->remove($handle);
   delete $self->{readers}->{$handle};
+  delete $self->{buffers}->{$handle};
 }
 
 sub do_select {
   my ($self) = @_;
+  my $length = 8192;
   my @ready = $self->{select}->can_read(0);
   foreach my $fh (@ready) {
-    my $ret = sysread($fh, my $buf, 8192);
+    my $ret = sysread($fh, my $buf, $length);
 
     if(not defined $ret) {
       $self->{pbot}->{logger}->log("Error with $fh: $!\n");
@@ -55,16 +59,22 @@ sub do_select {
     }
 
     if($ret == 0) {
+      if (length $self->{buffers}->{$fh}) {
+        $self->{readers}->{$fh}->($self->{buffers}->{$fh});
+      }
       $self->remove_reader($fh);
       next;
     }
 
-    chomp $buf;
+    $self->{buffers}->{$fh} .= $buf;
 
     if(not exists $self->{readers}->{$fh}) {
       $self->{pbot}->{logger}->log("Error: no reader for $fh\n");
     } else {
-      $self->{readers}->{$fh}->($buf);
+      if ($ret < $length) {
+        $self->{readers}->{$fh}->($self->{buffers}->{$fh});
+        $self->{buffers}->{$fh} = "";
+      }
     }
   }
 }
