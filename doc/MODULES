@@ -8,6 +8,8 @@ HTML::FormatText
 HTML::Parse
 IPC::Shareable
 IPC::Open2
+JSON
+JSON::XS
 LWP::Protocol::https
 LWP::Simple
 LWP::UserAgent
@@ -32,6 +34,7 @@ Time::Duration
 Time::ParseDate
 re::engine::RE2
 URI::Escape
+WebService::UrbanDictionary
 WWW::Google::CustomSearch
 WWW::Wikipedia
 XML::Parser
