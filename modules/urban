@@ -23,6 +23,8 @@ my $usage = "Usage: udict [-m <show definition matching this regex>] [-n <entry 
 my ($entry, $sort, $match, $show_all);
 my $arguments = join(' ', @ARGV);
 
+$arguments =~ s/'/\\'/g;
+
 my ($ret, $args) = GetOptionsFromString($arguments,
   'a'   => \$show_all,
   'm=s' => \$match,
@@ -30,9 +32,24 @@ my ($ret, $args) = GetOptionsFromString($arguments,
   's=s' => \$sort);
 
 print "$getopt_error -- $usage"  and exit if defined $getopt_error;
-print "Missing phrase -- $usage" and exit if @$args == 0;
+print "Missing phrase -- $usage" and exit if @$args == 0 and not $match and not $entry;
 
-$args = join(' ', @$args);
+
+if (@$args == 0) {
+  open my $fh, "<", "udict.last";
+  if ($fh) {
+    $args = <$fh>;
+    chomp $args;
+    close $fh;
+  } else {
+    $args = "wtf";
+  }
+} else {
+  $args = join(' ', @$args);
+  open my $fh, ">", "udict.last";
+  print $fh "$args\n";
+  close $fh;
+}
 
 my $ud = WebService::UrbanDictionary->new;
 my $results = $ud->request($args);
@@ -78,6 +95,9 @@ sub show_definition {
   if ($num_entries > 1) {
     print "$num/$num_entries: ";
   }
+
+  $entry->{'definition'} =~ s/\[(.*?)\]/$1/g;
+  $entry->{'example'} =~ s/\[(.*?)\]/$1/g if $entry->{'example'};
 
   print "(+$entry->{'thumbs_up'}/-$entry->{'thumbs_down'}) $entry->{'definition'}\n";
   print "$entry->{'example'}\n" if $entry->{'example'};
