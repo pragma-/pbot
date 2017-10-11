@@ -52,8 +52,6 @@ sub execute_module {
   my %stuff = (from => $from, tonick => $tonick, nick => $nick, user => $user, host => $host, command => $command, root_channel => $root_channel,
     root_keyword => $root_keyword, keyword => $keyword, arguments => $arguments, preserve_whitespace => $preserve_whitespace, referenced => $referenced);
 
-  $self->{pbot}->{logger}->log("enter fml: [$from] [$keyword] [$command] [$arguments] [$root_channel] [$root_keyword]\n");
-
   my @factoids = $self->{pbot}->{factoids}->find_factoid($from, $keyword, undef, 2, 2);
 
   if(not @factoids or not $factoids[0]) {
@@ -159,7 +157,6 @@ sub execute_module {
       chdir $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{workdir};
     }
 
-
     $stuff{result} = `./$module $arguments 2>> $module-stderr`;
     chomp $stuff{result};
 
@@ -191,12 +188,10 @@ sub module_pipe_reader {
   if ($stuff->{command} eq 'code-factoid') {
     $stuff->{result} =~ s/\s+$//g;
     $self->{pbot}->{logger}->log("No text result from code-factoid.\n") and return if not length $stuff->{result};
-    $self->{pbot}->{logger}->log("fml, cf: text: [$stuff->{result}]\n");
 
     $stuff->{result} = $self->{pbot}->{factoids}->handle_action($stuff->{nick}, $stuff->{user}, $stuff->{host},
         $stuff->{from}, $stuff->{root_channel}, $stuff->{root_keyword}, $stuff->{root_keyword}, $stuff->{arguments},
         $stuff->{result}, $stuff->{tonick}, 0, $stuff->{referenced}, undef, $stuff->{root_keyword});
-    $self->{pbot}->{logger}->log("fml, after handle action: [$stuff->{result}]\n");
   }
 
   if (defined $stuff->{tonick}) {
