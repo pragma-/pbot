@@ -12,7 +12,7 @@
 use warnings;
 use strict;
 
-use IO::Socket;
+use IO::Socket::INET;
 use JSON;
 
 my $sock = IO::Socket::INET->new(
