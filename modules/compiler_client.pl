@@ -16,7 +16,7 @@ use IO::Socket::INET;
 use JSON;
 
 my $sock = IO::Socket::INET->new(
-  PeerAddr => '192.168.0.42', 
+  PeerAddr => '127.0.0.1',
   PeerPort => 9000, 
   Proto => 'tcp');
 
