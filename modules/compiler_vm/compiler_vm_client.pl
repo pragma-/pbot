@@ -43,6 +43,8 @@ eval {
     $comma = ', ';
   }
 
+  $found = 0 unless $languages =~ m/\b$language\b/;
+
   if (not $found) {
     print "Language '$language' is not supported.\nSupported languages are: $languages\n";
     exit;
