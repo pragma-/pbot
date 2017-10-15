@@ -18,7 +18,7 @@ eval 'exec /usr/bin/perl -w -S $0 ${1+"$@"}'
 
 use strict;
 use Net::Dict;
-use AppConfig::Std;
+use AppConfig;
 
 use vars qw($VERSION);
 $VERSION = sprintf("%d.%d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
@@ -346,7 +346,7 @@ sub initialise
     #-------------------------------------------------------------------
     # Create AppConfig::Std, define parameters, and parse command-line
     #-------------------------------------------------------------------
-    $config = AppConfig::Std->new({ CASE => 1 })
+    $config = AppConfig->new({ CASE => 1 })
         || die "failed to create AppConfig::Std: $!\n";
 
     $config->define('host',       { ARGCOUNT => 1, ALIAS => 'h' });
