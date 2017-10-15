@@ -38,12 +38,14 @@ sub initialize {
 
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { $self->rand_factoid(@_) }, 'rfact', 0);
+  $self->{pbot}->{commands}->register(sub { $self->knead_of_death(@_) }, 'rfact', 0);
 
   $self->{pbot}->{registry}->add_default('text', 'randomfact', 'savageosity',  '1');
   $self->{pbot}->{registry}->add_default('text', 'randomfact', 'hp_regen',  '30');
   $self->{pbot}->{registry}->add_default('text', 'randomfact', 'knead_max', '6');
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick', sub { $self->on_kick(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->knead_of_death(@_) });
 }
 
 sub unload {
@@ -66,8 +68,7 @@ sub rand_factoid {
   my ($self, $from, $nick, $user, $host, $channel) = @_;
   my $usage = "Usage: rfact [<channel>]";
   my $flag = 0;
-  my @channels = keys %{ $self->{pbot}->{factoids}->hash };
-  my @triggers = keys %{ $self->{pbot}->{triggers}->hash->{$channel} };
+  my @channels = keys %{ $self->{pbot}->{factoids}->{factoids}->hash };
 
   if (length($channel) > 1) {
     for (@channels) {
@@ -84,18 +85,24 @@ sub rand_factoid {
 
   return $usage unless ($flag);
 
+  my @triggers = keys %{ $self->{pbot}->{factoids}->{factoids}->hash->{$channel} };
   my $trig = $triggers[int rand @triggers];
   my ($owner, $action) =
-    ($self->{factoids}->hash->{$channel}->{$trig}->{owner},
-    $self->{factoids}->hash->{$channel}->{$trig}->{action});
+    ($self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trig}->{owner},
+    $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trig}->{action});
 
-  $self->knead_of_death(@_);
+  # $self->knead_of_death(@_);
 
   return "$trig is \"$action\" (created by $owner [$channel])";
 }
 
 sub knead_of_death {
-  my ($self, $from, $nick, $user, $host, $channel) = @_;
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
+  my $channel = $event->{event}->{to}[0];
+  ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
+
+  # my ($self, $from, $nick, $user, $host, $channel) = @_;
 
   $channel = lc $channel;
   return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
