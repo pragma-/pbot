@@ -95,6 +95,16 @@ sub adminadd {
 
   $channel = '.*' if lc $channel eq 'global';
 
+  my $admin  = $self->{pbot}->{admins}->find_admin($from, "$nick!$user\@$host");
+
+  if (not $admin) {
+    return "You are not an admin in $from.\n";
+  }
+
+  if ($admin->{level} < 90 and $level > 60) {
+    return "You may not set admin level higher than 60.\n";
+  }
+
   $self->{pbot}->{admins}->add_admin($name, $channel, $hostmask, $level, $password);
   return "Admin added.";
 }
@@ -155,6 +165,25 @@ sub adminset {
         }
       }
     }
+  }
+
+  my $admin  = $self->{pbot}->{admins}->find_admin($from, "$nick!$user\@$host");
+  my $target = $self->{pbot}->{admins}->find_admin($channel, $hostmask);
+
+  if (not $admin) {
+    return "You are not an admin in $from.";
+  }
+
+  if (not $target) {
+    return "There is no admin $hostmask in channel $channel.";
+  }
+
+  if ($key eq 'level' && $admin->{level} < 90 and $value > 60) {
+    return "You may not set admin level higher than 60.\n";
+  }
+
+  if ($target->{level} > $admin->{level}) {
+    return "You may not modify admins higher in level than you.";
   }
 
   return $self->{pbot}->{admins}->{admins}->set($channel, $hostmask, $key, $value);
