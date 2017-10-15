@@ -6,6 +6,7 @@ use LWP::UserAgent;
 use Encode qw/ decode is_utf8 /;
 use CGI qw/escape unescapeHTML/;
 use utf8;
+use HTML::Entities;
 
 my $VERSION = '1.0.2';
 
@@ -158,7 +159,7 @@ sub urban_search {
         }
     }
 
-    return $definition;
+    return decode_entities($definition);
 }
 
 ##
