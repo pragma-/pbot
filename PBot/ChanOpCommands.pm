@@ -82,6 +82,10 @@ sub ban_user {
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
 
+  if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+    return "/msg $nick You are not an admin for $channel.";
+  }
+
   $self->{pbot}->{chanops}->ban_user_timed($target, $channel, $length);
 
   if ($length > 0) {
@@ -111,6 +115,10 @@ sub unban_user {
   $channel = $from if not defined $channel;
   
   return "/msg $nick Usage for /msg: unban <nick/mask> <channel>" if $channel !~ /^#/;
+
+  if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+    return "/msg $nick You are not an admin for $channel.";
+  }
 
   $self->{pbot}->{chanops}->unban_user($target, $channel, 1);
   return "/msg $nick $target has been unbanned from $channel.";
@@ -157,6 +165,10 @@ sub mute_user {
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
 
+  if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+    return "/msg $nick You are not an admin for $channel.";
+  }
+
   $self->{pbot}->{chanops}->mute_user_timed($target, $channel, $length);
 
   if ($length > 0) {
@@ -186,6 +198,10 @@ sub unmute_user {
   $channel = $from if not defined $channel;
 
   return "/msg $nick Usage for /msg: unmute <mask> <channel>" if $channel !~ /^#/;
+
+  if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+    return "/msg $nick You are not an admin for $channel.";
+  }
 
   $self->{pbot}->{chanops}->unmute_user($target, $channel, 1);
   return "/msg $nick $target has been unmuted in $channel.";
@@ -228,6 +244,10 @@ sub kick_user {
     } else {
       $reason = 'Bye!';
     }
+  }
+
+  if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+    return "/msg $nick You are not an admin for $channel.";
   }
 
   $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $victim $reason");
