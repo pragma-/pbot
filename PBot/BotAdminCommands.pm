@@ -65,12 +65,22 @@ sub sl {
 sub login {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
+  my $channel = $from;
 
-  if($self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host")) {
-    return "/msg $nick You are already logged into channel $from.";
+  if (not $arguments) {
+    return "Usage: login [channel] password";
   }
 
-  my $result = $self->{pbot}->{admins}->login($from, "$nick!$user\@$host", $arguments);
+  if ($arguments =~ m/^([^ ]+)\s+(.+)/) {
+    $channel = $1;
+    $arguments = $2;
+  }
+
+  if($self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+    return "/msg $nick You are already logged into channel $channel.";
+  }
+
+  my $result = $self->{pbot}->{admins}->login($channel, "$nick!$user\@$host", $arguments);
   return "/msg $nick $result";
 }
 
