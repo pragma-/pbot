@@ -1,8 +1,4 @@
 [#pbot2]
-chanop: 1
-enabled: 1
-
-[#pbot2-test]
 chanop: 0
 enabled: 1
 
