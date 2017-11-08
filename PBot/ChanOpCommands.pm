@@ -106,13 +106,14 @@ sub unban_user {
     return "";
   }
 
-  my ($target, $channel) = split /\s+/, $arguments;
+  my ($target, $channel, $immediately) = split /\s+/, $arguments;
 
   if(not defined $target) {
     return "/msg $nick Usage: unban <mask> [channel]";
   }
 
   $channel = $from if not defined $channel;
+  $immediately = 1 if not defined $immediately;
   
   return "/msg $nick Usage for /msg: unban <nick/mask> <channel>" if $channel !~ /^#/;
 
@@ -120,7 +121,13 @@ sub unban_user {
     return "/msg $nick You are not an admin for $channel.";
   }
 
-  $self->{pbot}->{chanops}->unban_user($target, $channel, 1);
+  my @targets = split /,/, $target;
+  $immediately = 0 if @targets > 2;
+
+  foreach my $t (@targets) {
+    $self->{pbot}->{chanops}->unban_user($t, $channel, $immediately);
+  }
+
   return "/msg $nick $target has been unbanned from $channel.";
 }
 
