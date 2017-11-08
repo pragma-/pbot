@@ -109,13 +109,13 @@ sub unban_user {
   my ($target, $channel, $immediately) = split /\s+/, $arguments;
 
   if(not defined $target) {
-    return "/msg $nick Usage: unban <mask> [channel]";
+    return "/msg $nick Usage: unban <mask> [[channel] [true value to use unban queue]]";
   }
 
   $channel = $from if not defined $channel;
   $immediately = 1 if not defined $immediately;
   
-  return "/msg $nick Usage for /msg: unban <nick/mask> <channel>" if $channel !~ /^#/;
+  return "/msg $nick Usage for /msg: unban <nick/mask> <channel> [true value to use unban queue]" if $channel !~ /^#/;
 
   if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
