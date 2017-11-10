@@ -86,14 +86,18 @@ sub rand_factoid
     my $factoid_action = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{action};
 
     if ($factoid_text) {
-      my $cnt = 50000;
-      until ($factoid_action =~ m/$factoid_text/ or $factoid_trigger =~ m/$factoid_text/ or $cnt-- < 0) {
-        $factoid_channel = $channels[int rand @channels];
-        @triggers = keys %{$self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}};
-        $factoid_trigger = $triggers[int rand @triggers];
-        $factoid_owner = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
-        $factoid_action = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{action};
-      }
+      # my $cnt = 50000;
+      @triggers = grep {
+        $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$_}->{action} =~ m/$factoid_text/;
+      } @triggers;
+      $factoid_trigger = $triggers[int rand @triggers];
+      $factoid_owner = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
+      $factoid_action = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{action};
+      # until ($factoid_action =~ m/$factoid_text/ or $factoid_trigger =~ m/$factoid_text/ or $cnt-- < 0) {
+      #   $factoid_channel = $channels[int rand @channels];
+      #   @triggers = keys %{$self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}};
+      #   $factoid_trigger = $triggers[int rand @triggers];
+      # }
     }
 
     return "$factoid_trigger is \"$factoid_action\" (created by $factoid_owner [$factoid_channel])";
