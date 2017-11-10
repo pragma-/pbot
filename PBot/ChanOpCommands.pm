@@ -18,7 +18,7 @@ use Time::Duration;
 use PBot::Utils::ParseDate;
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to ChanOpCommands should be key/value pairs, not hash reference");
   }
 
@@ -33,12 +33,12 @@ sub initialize {
   my ($self, %conf) = @_;
 
   my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
+  if (not defined $pbot) {
     Carp::croak("Missing pbot reference to ChanOpCommands");
   }
 
   $self->{pbot} = $pbot;
-  
+
   $pbot->{commands}->register(sub { return $self->ban_user(@_)      },       "ban",        10);
   $pbot->{commands}->register(sub { return $self->unban_user(@_)    },       "unban",      10);
   $pbot->{commands}->register(sub { return $self->mute_user(@_)     },       "mute",       10);
@@ -54,7 +54,7 @@ sub ban_user {
   $channel = '' if not defined $channel;
   $length = '' if not defined $length;
 
-  if(not defined $from) {
+  if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
@@ -67,11 +67,11 @@ sub ban_user {
 
   $channel = $from if not defined $channel or not length $channel;
 
-  if(not defined $target) {
+  if (not defined $target) {
     return "/msg $nick Usage: ban <mask> [channel [timeout (default: 24 hours)]]";
   }
 
-  if(not defined $length) {
+  if (not defined $length) {
     $length = 60 * 60 * 24; # 24 hours
   } else {
     my $error;
@@ -97,19 +97,19 @@ sub unban_user {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  if(not defined $from) {
+  if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 
   my ($target, $channel) = split /\s+/, $arguments;
 
-  if(not defined $target) {
+  if (not defined $target) {
     return "/msg $nick Usage: unban <mask> [channel]";
   }
 
   $channel = $from if not defined $channel;
-  
+
   return "/msg $nick Usage for /msg: unban <nick/mask> <channel>" if $channel !~ /^#/;
 
   $self->{pbot}->{chanops}->unban_user($target, $channel, 1);
@@ -121,7 +121,7 @@ sub mute_user {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my ($target, $channel, $length) = split(/\s+/, $arguments, 3);
 
-  if(not defined $from) {
+  if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
@@ -142,11 +142,11 @@ sub mute_user {
     return "/msg $nick Please specify a channel.";
   }
 
-  if(not defined $target) {
+  if (not defined $target) {
     return "/msg $nick Usage: mute <mask> [channel [timeout (default: 24 hours)]]";
   }
 
-  if(not defined $length) {
+  if (not defined $length) {
     $length = 60 * 60 * 24; # 24 hours
   } else {
     my $error;
@@ -172,14 +172,14 @@ sub unmute_user {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  if(not defined $from) {
+  if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 
   my ($target, $channel) = split /\s+/, $arguments;
 
-  if(not defined $target) {
+  if (not defined $target) {
     return "/msg $nick Usage: unmute <mask> [channel]";
   }
 
@@ -195,29 +195,38 @@ sub kick_user {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  if(not defined $from) {
+  if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 
   my ($channel, $victim, $reason);
 
-  if(not $from =~ /^#/) {
+  if (not $from =~ /^#/) {
     # used in private message
-    if(not $arguments =~ s/^(^#\S+) (\S+)\s*//) {
+    if (not $arguments =~ s/^(^#\S+) (\S+)\s*//) {
       return "/msg $nick Usage from private message: kick <channel> <nick> [reason]";
     }
     ($channel, $victim) = ($1, $2);
   } else {
     # used in channel
-    if(not $arguments =~ s/^(\S+)\s*//) {
-      return "/msg $nick Usage: kick <nick> [reason]";
+    if ($arguments =~ s/^(#\S+)\s+(\S+)\s*//) {
+      ($channel, $victim) = ($1, $2);
+    } elsif ($arguments =~ s/^(\S+)\s*//) {
+      ($victim, $channel) = ($1, $from);
+    } else {
+      return "/msg $nick Usage: kick [channel] <nick> [reason]";
     }
-    $victim = $1;
-    $channel = $from;
   }
 
   $reason = $arguments;
+
+  # If the user is too stupid to remember the order of the arguments,
+  # we can help them out by seeing if they put the channel in the
+  # reason.
+  if ($reason =~ s/^(#\S+)\s*//) {
+    $channel = $1;
+  }
 
   if (not length $reason) {
     if (open my $fh, '<',  $self->{pbot}->{registry}->get_value('general', 'module_dir') . '/insults.txt') {
@@ -232,6 +241,7 @@ sub kick_user {
 
   $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $victim $reason");
   $self->{pbot}->{chanops}->gain_ops($channel);
+
   return "";
 }
 
