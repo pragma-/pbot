@@ -245,8 +245,7 @@ sub kick_user {
   $reason = $arguments;
 
   # If the user is too stupid to remember the order of the arguments,
-  # we can help them out by seeing if they put the channel in the
-  # reason.
+  # we can help them out by seeing if they put the channel in the reason.
   if ($reason =~ s/^(#\S+)\s*//) {
     $channel = $1;
   }
