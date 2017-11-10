@@ -70,9 +70,10 @@ sub rand_factoid
 
     return "/say $getopt_error -- $usage" if defined $getopt_error;
 
-    $factoid_channel = shift @$args if not defined $factoid_channel;
-
     my @channels = keys %{$self->{pbot}->{factoids}->{factoids}->hash};
+
+    $factoid_channel = shift @$args if not defined $factoid_channel;
+    $factoid_channel = '.*'if $factoid_channel =~ m/\./;
 
     if ($factoid_channel) {
       return $usage unless join(" ", @channels) =~ m/$factoid_channel/;
@@ -81,25 +82,22 @@ sub rand_factoid
     }
 
     my @triggers = keys %{$self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}};
-    my $factoid_trigger = $triggers[int rand @triggers];
-    my $factoid_owner = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
-    my $factoid_action = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{action};
+    my $factoid_trigger;
 
     if ($factoid_text) {
-      # my $cnt = 50000;
-      @triggers = grep {
-        $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$_}->{action} =~ m/$factoid_text/;
+      my @filtered = grep {
+          $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$_}->{action} =~ m/$factoid_text/;
       } @triggers;
+      if (scalar @filtered == 0) {
+        return "\"$factoid_text\" not found.";
+      }
+      $factoid_trigger = $filtered[int rand @filtered];
+    } else {
       $factoid_trigger = $triggers[int rand @triggers];
-      $factoid_owner = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
-      $factoid_action = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{action};
-      # until ($factoid_action =~ m/$factoid_text/ or $factoid_trigger =~ m/$factoid_text/ or $cnt-- < 0) {
-      #   $factoid_channel = $channels[int rand @channels];
-      #   @triggers = keys %{$self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}};
-      #   $factoid_trigger = $triggers[int rand @triggers];
-      # }
     }
 
+    my $factoid_owner = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
+    my $factoid_action = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{action};
     return "$factoid_trigger is \"$factoid_action\" (created by $factoid_owner [$factoid_channel])";
   }
 }
