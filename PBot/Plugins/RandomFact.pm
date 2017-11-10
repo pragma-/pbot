@@ -122,9 +122,17 @@ sub rand_factoid
   my @triggers = keys %{$self->{pbot}->{triggers}->hash->{$factoid_channel}};
   my $factoid_trigger = $triggers[int rand @triggers];
   my $factoid_owner = $self->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
-  my $action = $self->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{action};
 
-  return "$factoid_trigger is \"$action\" (created by $factoid_owner [$factoid_channel])";
+  if ($factoid_nick) {
+    until ($factoid_owner =~ m/$factoid_nick/) {
+      $factoid_owner = $self->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
+      $factoid_owner = $self->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
+    }
+  }
+
+  my $factoid_action = $self->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{factoid_action};
+
+  return "$factoid_trigger is \"$factoid_action\" (created by $factoid_owner [$factoid_channel])";
  }
 }
 
