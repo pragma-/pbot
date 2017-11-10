@@ -66,78 +66,38 @@ sub rand_factoid
     $factoid =~ s/(?<!\\)'/\\'/g;
     my ($ret, $args) = GetOptionsFromString($factoid,
       "channel|c:s"        => \$factoid_channel,
-      "text|t:s"           => \$factoid_history,
-      "context|x:s"        => \$factoid_context);
+      "text|t:s"           => \$factoid_text);
 
     return "/say $getopt_error -- $usage" if defined $getopt_error;
 
-    my $channel_arg = 1 if defined $factoid_channel;
-    my $history_arg = 1 if defined $factoid_history;
-
     $factoid_channel = shift @$args if not defined $factoid_channel;
 
-    # swap nick and channel if factoid nick looks like channel and channel wasn't specified
-    if(not $channel_arg and $factoid_nick =~ m/^#/) {
-      my $temp = $factoid_nick;
-      $factoid_nick = $factoid_channel;
-      $factoid_channel = $temp;
+    my @channels = keys %{$self->{pbot}->{factoids}->{factoids}->hash};
+
+    if ($factoid_channel) {
+      return $usage unless join(" ", @channels) =~ m/$factoid_channel/;
+    } else {
+      $factoid_channel = $channels[int rand @channels];
     }
 
-    $factoid_history = 1 if not defined $factoid_history;
+    my @triggers = keys %{$self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}};
+    my $factoid_trigger = $triggers[int rand @triggers];
+    my $factoid_owner = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
+    my $factoid_action = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{action};
 
-    # swap history and channel if history looks like a channel and neither history or channel were specified
-    if(not $channel_arg and not $history_arg and $factoid_history =~ m/^#/) {
-      my $temp = $factoid_history;
-      $factoid_history = $factoid_channel;
-      $factoid_channel = $temp;
-    }
-
-    # skip factoid command if factoiding self without arguments
-    $factoid_history = $nick eq $factoid_nick ? 2 : 1 if defined $factoid_nick and not defined $factoid_history;
-
-    # set history to most recent message if not specified
-    $factoid_history = "1" if not defined $factoid_history;
-
-    # set channel to current channel if not specified
-    $factoid_channel = $from if not defined $factoid_channel;
-
-    # another sanity check for people using it wrong
-    if ($factoid_channel !~ m/^#/) {
-      $factoid_history = "$factoid_channel $factoid_history";
-      $factoid_channel = $from;
-    }
-
-    if (not defined $factoid_nick and defined $factoid_context) {
-      $factoid_nick = $factoid_context;
-    }
-
-  my @channels = keys %{$self->{pbot}->{factoids}->hash};
-
-  if ($factoid_channel) {
-    return $usage unless join(" ", @channels) =~ m/$factoid_channel/;
-  } else {
-    $factoid_channel = $channels[int rand @channels];
-  }
-
-  my @triggers = keys %{$self->{pbot}->{triggers}->hash->{$factoid_channel}};
-  my $factoid_trigger = $triggers[int rand @triggers];
-  my $factoid_owner = $self->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
-  my $factoid_action = "";
-
-  if ($factoid_text) {
-    until ($factoid_action =~ m/$factoid_text/) {
-      if ($factoid_nick) {
-	until ($factoid_owner =~ m/$factoid_nick/) {
-	  $factoid_owner = $self->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
-	  $factoid_owner = $self->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
-	}
+    if ($factoid_text) {
+      my $cnt = 50000;
+      until ($factoid_action =~ m/$factoid_text/ or $factoid_trigger =~ m/$factoid_text/ or $cnt-- < 0) {
+        $factoid_channel = $channels[int rand @channels];
+        @triggers = keys %{$self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}};
+        $factoid_trigger = $triggers[int rand @triggers];
+        $factoid_owner = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{owner};
+        $factoid_action = $self->{pbot}->{factoids}->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{action};
       }
-      $factoid_action = $self->{factoids}->hash->{$factoid_channel}->{$factoid_trigger}->{factoid_action};
     }
-  }
 
-  return "$factoid_trigger is \"$factoid_action\" (created by $factoid_owner [$factoid_channel])";
- }
+    return "$factoid_trigger is \"$factoid_action\" (created by $factoid_owner [$factoid_channel])";
+  }
 }
 
 1;
