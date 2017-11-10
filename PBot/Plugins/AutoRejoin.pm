@@ -42,7 +42,9 @@ sub rejoin_channel {
 
   $self->{rejoins}->{$channel}->{rejoins} = 0 if not exists $self->{rejoins}->{$channel};
 
-  my $delay = $self->{pbot}->{registry}->get_array_value('autorejoin', 'rejoin_delay', $self->{rejoins}->{$channel}->{rejoins});
+  my $delay = $self->{pbot}->{registry}->get_array_value($channel, 'rejoin_delay', $self->{rejoins}->{$channel}->{rejoins});
+  $delay = $self->{pbot}->{registry}->get_array_value('autorejoin', 'rejoin_delay', $self->{rejoins}->{$channel}->{rejoins}) if not defined $delay;
+
   $self->{pbot}->{interpreter}->add_botcmd_to_command_queue($channel, "join $channel", $delay);
 
   $delay = duration $delay;

@@ -185,7 +185,7 @@ sub actiontrigger {
       my @triggers = $self->list_triggers($channel);
 
       if (not @triggers) {
-        $result = "No counter triggers set for $channel.";
+        $result = "No action triggers set for $channel.";
       } else {
         $result = "Triggers for $channel:\n";
         my $comma = '';
