@@ -243,7 +243,7 @@ sub preprocess_code {
 
     $self->{code} = "$prelude\nclass prog {\n$self->{code}\n" . "public static void main(String[] args) {\n$precode\n;\n}\n}\n";
   } else {
-    $self->{code} = "$prelude\n$self->{code}\n";
+    $self->{code} = "$prelude\n$self->{code}";
   }
 
   print "after func extract, code: [$self->{code}]\n" if $self->{debug};
