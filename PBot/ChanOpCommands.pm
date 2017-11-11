@@ -250,22 +250,31 @@ sub kick_user {
     $channel = $1;
   }
 
+  if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+    return "/msg $nick You are not an admin for $channel.";
+  }
+
+  my @insults;
   if (not length $reason) {
     if (open my $fh, '<',  $self->{pbot}->{registry}->get_value('general', 'module_dir') . '/insults.txt') {
-      my @insults = <$fh>;
+      @insults = <$fh>;
       close $fh;
       $reason = $insults[rand @insults];
-      chomp $reason;
+      $reason =~ s/\s+$//;
     } else {
       $reason = 'Bye!';
     }
   }
 
-  if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
-    return "/msg $nick You are not an admin for $channel.";
+  my @nicks = split /,/, $victim;
+  foreach my $n (@nicks) {
+    $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $n $reason");
+    if (@insults) {
+      $reason = $insults[rand @insults];
+      $reason =~ s/\s+$//;
+    }
   }
 
-  $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $victim $reason");
   $self->{pbot}->{chanops}->gain_ops($channel);
 
   return "";
