@@ -395,9 +395,9 @@ sub recall_message {
       my $text = $msg->{msg};
       my $ago = concise ago(gettimeofday - $msg->{timestamp});
 
-      if ($text =~ s/^(NICKCHANGE) /changed nick to / or
-          $text =~ s/^(KICKED|QUIT) /lc "$1 "/e or
-          $text =~ s/^(JOIN|PART) /lc "$1ed "/e) {
+      if ($text =~ s/^(NICKCHANGE)\b/changed nick to/ or
+          $text =~ s/^(KICKED|QUIT)\b/lc "$1"/e or
+          $text =~ s/^(JOIN|PART)\b/lc "$1ed"/e) {
         $recall_text .= "[$ago] $msg->{nick} $text\n";
       } elsif ($text =~ s/^\/me\s+//) {
         $recall_text .= "[$ago] * $msg->{nick} $text\n";
