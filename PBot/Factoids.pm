@@ -403,11 +403,12 @@ sub expand_factoid_vars {
 
   my $depth = 0;
   while (1) {
-    last if ++$depth >= 10;
+    last if ++$depth >= 20;
     my $matches = 0;
     $action =~ s/\$0/$root_keyword/g;
     my $const_action = $action;
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
+      last if ++$depth >= 20;
       my ($a, $v) = ($1, $2);
       $v =~ s/(.):$/$1/;
       next if $v =~ m/^_/; # underscore-prefixed vars reserved for code-factoids
@@ -520,9 +521,12 @@ sub expand_action_arguments {
 
   $action =~ s/\$arglen\b/scalar @args/eg;
 
+  my $depth = 0;
   my $const_action = $action;
   while ($const_action =~ m/\$arg\[([^]]+)]/g) {
     my $arg = $1;
+
+    last if ++$depth >= 20;
 
     if ($arg eq '*') {
       if (not defined $input or $input eq '') {
