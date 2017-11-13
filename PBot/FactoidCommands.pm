@@ -1131,6 +1131,8 @@ sub factfind {
   $arguments =~ s/\s+$//;
   $arguments =~ s/\s+/ /g;
 
+  $arguments = substr($arguments, 0, 30);
+
   my $argtype = undef;
 
   if($owner ne '.*') {

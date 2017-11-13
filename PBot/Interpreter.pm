@@ -207,6 +207,12 @@ sub interpret {
     $keyword = $command;
   }
 
+  if (length $keyword > 30) {
+    $keyword = substr($keyword, 0, 30);
+    $self->{pbot}->{logger}->log("Truncating keyword to 30 chars: $keyword\n");
+  }
+
+
   $tonick = $nick if defined $tonick and $tonick eq 'me';
 
   if ($keyword !~ /^(?:factrem|forget|set|factdel|factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell|cc|eval|u|udict|ud|actiontrigger|urban|perl)$/) {
