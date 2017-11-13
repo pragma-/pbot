@@ -267,12 +267,14 @@ sub kick_user {
   }
 
   my @nicks = split /,/, $victim;
+  my $i = 0;
   foreach my $n (@nicks) {
     $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $n $reason");
     if (@insults) {
       $reason = $insults[rand @insults];
       $reason =~ s/\s+$//;
     }
+    last if ++$i >= 5;
   }
 
   $self->{pbot}->{chanops}->gain_ops($channel);
