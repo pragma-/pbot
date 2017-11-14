@@ -103,30 +103,17 @@ sub process_line {
     $command = undef;
     $has_code = undef;
 
-    if($cmd_text =~ s/^(?:$bot_trigger|$botnick.?)?\s*{\s*(.*)\s*}\s*$//) {
+    if($cmd_text =~ s/^(?:$botnick.?)?\s*{\s*(.*)\s*}\s*$//) {
       $has_code = $1 if length $1;
       $preserve_whitespace = 1;
       $processed += 100;
-    } elsif($cmd_text =~ s/^\s*([^,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$//) {
+    } elsif($cmd_text =~ s/^\s*([^!,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$//) {
       $nick_override = $1;
       $has_code = $2 if length $2 and $nick_override !~ /^(?:enum|struct|union)$/;
       $preserve_whitespace = 1;
       my $nick_override = $self->{pbot}->{nicklist}->is_present($from, $nick_override);
       $processed += 100;
-    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
-      $command = $1;
-      $processed += 100;
-    } elsif ($cmd_text =~ s/\B$bot_trigger`([^`]+)// || $cmd_text =~ s/\B$bot_trigger\{([^}]+)//) {
-      my $cmd = $1;
-      my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
-      $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
-      if ($nick) {
-        $command = "tell $nick about $cmd";
-      } else {
-        $command = $cmd;
-      }
-      $referenced = 1;
-    } elsif($cmd_text =~ s/^\s*([^,:\(\)\+\*\/ ]+)[,:]?\s+$bot_trigger(.*)$//) {
+    } elsif($cmd_text =~ s/^\s*([^!,:\(\)\+\*\/ ]+)[,:]?\s+$bot_trigger[`\{](.+?)[\}`]\s*//) {
       $nick_override = $1;
       $command = $2;
 
@@ -138,11 +125,36 @@ sub process_line {
         return 0;
       }
 
+      $cmd_text = "$nick_override: $cmd_text";
       $processed += 100;
-    } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
-      $command = $1;
+    } elsif($cmd_text =~ s/^\s*([^!,:\(\)\+\*\/ ]+)[,:]?\s+$bot_trigger(.+)$//) {
+      $nick_override = $1;
+      $command = $2;
+
+      my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
+      if ($similar) {
+        $nick_override = $similar;
+      } else {
+        $self->{pbot}->{logger}->log("No similar nick for $nick_override\n");
+        return 0;
+      }
+
+      $cmd_text = "$nick_override: $cmd_text";
       $processed += 100;
     } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
+      $command = $1;
+      $processed += 100;
+    } elsif ($cmd_text =~ s/$bot_trigger`([^`]+)`\s*// || $cmd_text =~ s/$bot_trigger\{([^}]+)\}\s*//) {
+      my $cmd = $1;
+      my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
+      $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
+      if ($nick) {
+        $command = "tell $nick about $cmd";
+      } else {
+        $command = $cmd;
+      }
+      $referenced = 1;
+    } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
       $command = $1;
       $processed += 100;
     } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
@@ -242,7 +254,25 @@ sub interpret {
     return undef;
   }
 
-  return $self->SUPER::execute_all($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, undef, $referenced, defined $root_keyword ? $root_keyword : $keyword);
+  my $result;
+
+  if (defined $arguments && $arguments =~ m/\|\s*\{\s*[^}]+\}/) {
+    $arguments =~ m/(.*?)\s*\|\s*\{\s*([^}]+)\}(.*)/;
+    my ($args, $pipe, $rest) = ($1, $2, $3);
+
+    $self->{pbot}->{logger}->log("piping: [$args][$pipe][$rest]\n");
+    
+    $result = $self->SUPER::execute_all($from, $nick, $user, $host, $depth, $keyword, $args, $tonick, undef, $referenced, defined $root_keyword ? $root_keyword : $keyword);
+    $self->{pbot}->{logger}->log("piping: first result: [$result]\n");
+
+    $result = $self->interpret($from, $nick, $user, $host, $depth + 1, "$pipe $result$rest", $tonick, $referenced, defined $root_keyword ? $root_keyword : $keyword);
+    $self->{pbot}->{logger}->log("piping: second result: [$result]\n");
+  } 
+  else {
+    $result = $self->SUPER::execute_all($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, undef, $referenced, defined $root_keyword ? $root_keyword : $keyword);
+  }
+
+  return $result;
 }
 
 sub truncate_result {
