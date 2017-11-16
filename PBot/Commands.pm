@@ -87,32 +87,33 @@ sub exists {
 }
 
 sub interpreter {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $unused, $referenced, $root_keyword) = @_;
+  my ($self, $stuff) = @_;
+  #my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $unused, $referenced, $root_keyword) = @_;
   my $result;
 
-  my $pbot = $self->{pbot};
+  use Data::Dumper;
+  $Data::Dumper::Sortkeys  = 1;
+  $self->{pbot}->{logger}->log("Commands::interpreter\n");
+  $self->{pbot}->{logger}->log(Dumper $stuff);
 
-  my $admin = $pbot->{admins}->loggedin($from, "$nick!$user\@$host");
-
+  my $admin = $self->{pbot}->{admins}->loggedin($stuff->{from}, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
   my $level = defined $admin ? $admin->{level} : 0;
-
-  $keyword = lc $keyword;
+  my $keyword = lc $stuff->{keyword};
 
   foreach my $ref (@{ $self->{handlers} }) {
-    if($ref->{name} eq $keyword) {
-      if($level >= $ref->{level}) {
-        my $result = &{ $ref->{subref} }($from, $nick, $user, $host, $arguments);
-        if ($referenced) {
+    if ($ref->{name} eq $keyword) {
+      if ($level >= $ref->{level}) {
+        my $result = &{ $ref->{subref} }($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{arguments}, $stuff);
+        if ($stuff->{referenced}) {
           return undef if $result =~ m/(?:usage:|no results)/i;
         }
         return $result;
       } else {
-        return undef if $referenced;
-        if($level == 0) {
-          return "/msg $nick You must login to use this command.";
+        return undef if $stuff->{referenced};
+        if ($level == 0) {
+          return "/msg $stuff->{nick} You must login to use this command.";
         } else {
-          return "/msg $nick You are not authorized to use this command.";
+          return "/msg $stuff->{nick} You are not authorized to use this command.";
         }
       }
     }

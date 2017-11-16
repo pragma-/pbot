@@ -44,68 +44,67 @@ sub initialize {
 }
 
 sub execute_module {
-  my ($self, $from, $tonick, $nick, $user, $host, $command, $root_channel, $root_keyword, $keyword, $arguments, $preserve_whitespace, $referenced) = @_;
+#  my ($self, $from, $tonick, $nick, $user, $host, $command, $root_channel, $root_keyword, $keyword, $arguments, $preserve_whitespace, $referenced) = @_;
+  my ($self, $stuff) = @_;
   my $text;
 
-  $arguments = "" if not defined $arguments;
+  $stuff->{arguments} = "" if not defined $stuff->{arguments};
 
-  my %stuff = (from => $from, tonick => $tonick, nick => $nick, user => $user, host => $host, command => $command, root_channel => $root_channel,
-    root_keyword => $root_keyword, keyword => $keyword, arguments => $arguments, preserve_whitespace => $preserve_whitespace, referenced => $referenced);
-
-  my @factoids = $self->{pbot}->{factoids}->find_factoid($from, $keyword, undef, 2, 2);
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $stuff->{keyword}, undef, 2, 2);
 
   if(not @factoids or not $factoids[0]) {
-    $self->{pbot}->{interpreter}->handle_result($from, $nick, $user, $host, $command, "$keyword $arguments", "/msg $nick Failed to find module for '$keyword' in channel $from\n", 1, 0);
+    $stuff->{checkflood} = 1;
+    $self->{pbot}->{interpreter}->handle_result($stuff, "/msg $stuff->{nick} Failed to find module for '$stuff->{keyword}' in channel $stuff->{from}\n");
     return;
   }
 
   my ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
 
-  $stuff{channel} = $channel;
-  $stuff{trigger} = $trigger;
+  $stuff->{channel} = $channel;
+  $stuff->{keyword} = $trigger;
+  $stuff->{trigger} = $trigger;
 
   my $module = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{action};
   my $module_dir = $self->{pbot}->{registry}->get_value('general', 'module_dir');
 
-  $self->{pbot}->{logger}->log("(" . (defined $from ? $from : "(undef)") . "): $nick!$user\@$host: Executing module [$command] $module $arguments\n");
+  $self->{pbot}->{logger}->log("(" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "): $stuff->{nick}!$stuff->{user}\@$stuff->{host}: Executing module [$stuff->{command}] $module $stuff->{arguments}\n");
 
-  $arguments = $self->{pbot}->{factoids}->expand_special_vars($from, $nick, $root_keyword, $arguments);
-  $arguments = quotemeta($arguments);
+  $stuff->{arguments} = $self->{pbot}->{factoids}->expand_special_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $stuff->{arguments});
+  $stuff->{arguments} = quotemeta $stuff->{arguments};
 
-  if($command eq 'code-factoid' or exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{unquote_spaces}) {
-    $arguments =~ s/\\ / /g;
+  if ($stuff->{command} eq 'code-factoid' or exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{unquote_spaces}) {
+    $stuff->{arguments} =~ s/\\ / /g;
   }
 
-  if(exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}) {
-    if($self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\/(.*)/) {
+  if (exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}) {
+    if ($self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\/(.*)/) {
       my ($p1, $p2, $p3) = ($1, $2, $3);
       my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after);
       if($p3 eq 'g') {
-        $arguments =~ s/$p1/$p2/g;
+        $stuff->{arguments} =~ s/$p1/$p2/g;
         ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
       } else {
-        $arguments =~ s/$p1/$p2/;
+        $stuff->{arguments} =~ s/$p1/$p2/;
         ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
       }
-      $arguments =~ s/\$1/$a/g if defined $a;
-      $arguments =~ s/\$2/$b/g if defined $b;
-      $arguments =~ s/\$3/$c/g if defined $c;
-      $arguments =~ s/\$4/$d/g if defined $d;
-      $arguments =~ s/\$5/$e/g if defined $e;
-      $arguments =~ s/\$6/$f/g if defined $f;
-      $arguments =~ s/\$7/$g/g if defined $g;
-      $arguments =~ s/\$8/$h/g if defined $h;
-      $arguments =~ s/\$9/$i/g if defined $i;
-      $arguments =~ s/\$`/$before/g if defined $before;
-      $arguments =~ s/\$'/$after/g if defined $after;
-      #$self->{pbot}->{logger}->log("arguments subpattern: $arguments\n");
+      $stuff->{arguments} =~ s/\$1/$a/g if defined $a;
+      $stuff->{arguments} =~ s/\$2/$b/g if defined $b;
+      $stuff->{arguments} =~ s/\$3/$c/g if defined $c;
+      $stuff->{arguments} =~ s/\$4/$d/g if defined $d;
+      $stuff->{arguments} =~ s/\$5/$e/g if defined $e;
+      $stuff->{arguments} =~ s/\$6/$f/g if defined $f;
+      $stuff->{arguments} =~ s/\$7/$g/g if defined $g;
+      $stuff->{arguments} =~ s/\$8/$h/g if defined $h;
+      $stuff->{arguments} =~ s/\$9/$i/g if defined $i;
+      $stuff->{arguments} =~ s/\$`/$before/g if defined $before;
+      $stuff->{arguments} =~ s/\$'/$after/g if defined $after;
     } else {
       $self->{pbot}->{logger}->log("Invalid module substitution pattern [" . $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}. "], ignoring.\n");
     }
   }
 
-  my $argsbuf = $arguments;
-  $arguments = "";
+  my $argsbuf = $self->{arguments};
+  $self->{arguments} = "";
 
   my $lr;
   while(1) {
@@ -118,11 +117,11 @@ sub execute_module {
       $e =~ s/'/'\\''/g;
       $e =~ s/^'\\''/'/;
       $e =~ s/'\\''$/'/;
-      $arguments .= $p;
-      $arguments .= $e;
+      $stuff->{arguments} .= $p;
+      $stuff->{arguments} .= $e;
       $lr = $r;
     } else {
-      $arguments .= $lr;
+      $stuff->{arguments} .= $lr;
       last;
     }
   }
@@ -134,7 +133,8 @@ sub execute_module {
     $self->{pbot}->{logger}->log("Could not fork module: $!\n");
     close $reader;
     close $writer;
-    $self->{pbot}->{interpreter}->handle_result($from, $nick, $user, $host, $command, "$keyword $arguments", "/me groans loudly.\n", 1, 0);
+    $stuff->{checkflood} = 1;
+    $self->{pbot}->{interpreter}->handle_result($stuff, "/me groans loudly.\n");
     return; 
   }
 
@@ -157,10 +157,10 @@ sub execute_module {
       chdir $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{workdir};
     }
 
-    $stuff{result} = `./$module $arguments 2>> $module-stderr`;
-    chomp $stuff{result};
+    $stuff->{result} = `./$module $stuff->{arguments} 2>> $module-stderr`;
+    chomp $stuff->{result};
 
-    my $json = encode_json \%stuff;
+    my $json = encode_json $stuff;
     print $writer "$json\n";
     exit 0;
   } # end child block
@@ -189,27 +189,29 @@ sub module_pipe_reader {
     $stuff->{result} =~ s/\s+$//g;
     $self->{pbot}->{logger}->log("No text result from code-factoid.\n") and return if not length $stuff->{result};
 
-    $stuff->{result} = $self->{pbot}->{factoids}->handle_action($stuff->{nick}, $stuff->{user}, $stuff->{host},
-        $stuff->{from}, $stuff->{root_channel}, $stuff->{root_keyword}, $stuff->{root_keyword}, $stuff->{arguments},
-        $stuff->{result}, $stuff->{tonick}, 0, $stuff->{referenced}, undef, $stuff->{root_keyword});
+    $stuff->{original_keyword} = $stuff->{root_keyword};
+
+    $stuff->{result} = $self->{pbot}->{factoids}->handle_action($stuff, $stuff->{result});
   }
 
-  if (defined $stuff->{tonick}) {
-    $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}) sent to $stuff->{tonick}\n");
+  $stuff->{checkflood} = 0;
+
+  if (defined $stuff->{nickoverride}) {
+    $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}) sent to $stuff->{nickoverride}\n");
       # get rid of original caller's nick
       $stuff->{result} =~ s/^\/([^ ]+) \Q$stuff->{nick}\E:\s+/\/$1 /;
       $stuff->{result} =~ s/^\Q$stuff->{nick}\E:\s+//;
-      $self->{pbot}->{interpreter}->handle_result($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{command}, "$stuff->{keyword} $stuff->{arguments}", "$stuff->{tonick}: $stuff->{result}", 0, $stuff->{preserve_whitespace});
+      $self->{pbot}->{interpreter}->handle_result($stuff, "$stuff->{nickoverride}: $stuff->{result}");
   } else {
     if ($stuff->{command} ne 'code-factoid' and exists $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} and $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} != 0) {
-      $self->{pbot}->{interpreter}->handle_result($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{command}, "$stuff->{keyword} $stuff->{arguments}", "$stuff->{nick}: $stuff->{result}", 0, $stuff->{preserve_whitespace});
+      $self->{pbot}->{interpreter}->handle_result($stuff, "$stuff->{nick}: $stuff->{result}");
     } else {
-      $self->{pbot}->{interpreter}->handle_result($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{command}, "$stuff->{keyword} $stuff->{arguments}", $stuff->{result}, 0, $stuff->{preserve_whitespace});
+      $self->{pbot}->{interpreter}->handle_result($stuff, $stuff->{result});
     }
   }
 
   my $text = $self->{pbot}->{interpreter}->truncate_result($stuff->{channel}, $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'undef', $stuff->{result}, $stuff->{result}, 0);
-  $self->{pbot}->{antiflood}->check_flood($stuff->{channel}, $self->{pbot}->{registry}->get_value('irc', 'botnick'), $self->{pbot}->{registry}->get_value('irc', 'username'), 'localhost', $text, 0, 0, 0);
+  $self->{pbot}->{antiflood}->check_flood($stuff->{from}, $self->{pbot}->{registry}->get_value('irc', 'botnick'), $self->{pbot}->{registry}->get_value('irc', 'username'), 'localhost', $text, 0, 0, 0);
 }
 
 1;

@@ -65,10 +65,14 @@ sub process_line {
 
   $from = lc $from if defined $from;
 
+  my $stuff = { from => $from, nick => $nick, user => $user, host => $host, text => $text };
+
   my $pbot = $self->{pbot};
 
   my $message_account = $pbot->{messagehistory}->get_message_account($nick, $user, $host);
   $pbot->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $from, $text, $pbot->{messagehistory}->{MSG_CHAT});
+
+  $stuff->{message_account} = $message_account;
 
   my $flood_threshold      = $pbot->{registry}->get_value($from, 'chat_flood_threshold');
   my $flood_time_threshold = $pbot->{registry}->get_value($from, 'chat_flood_time_threshold');
@@ -111,7 +115,7 @@ sub process_line {
       $nick_override = $1;
       $has_code = $2 if length $2 and $nick_override !~ /^(?:enum|struct|union)$/;
       $preserve_whitespace = 1;
-      my $nick_override = $self->{pbot}->{nicklist}->is_present($from, $nick_override);
+      $nick_override = $self->{pbot}->{nicklist}->is_present($from, $nick_override);
       $processed += 100;
     } elsif($cmd_text =~ s/^\s*([^!,:\(\)\+\*\/ ]+)[,:]?\s+$bot_trigger[`\{](.+?)[\}`]\s*//) {
       $nick_override = $1;
@@ -182,41 +186,62 @@ sub process_line {
         }
       }
     } else {
-      $processed++ if $self->handle_result($from, $nick, $user, $host, $text, $command, $self->interpret($from, $nick, $user, $host, 1, $command, $nick_override, $referenced), 1, $preserve_whitespace);
+      $stuff->{text} = $text;
+      $stuff->{command} = $command;
+      $stuff->{nickoverride} = $nick_override if $nick_override;
+      $stuff->{referenced} = $referenced;
+      $stuff->{interpret_depth} = 1;
+      $stuff->{preserve_whitespace} = $preserve_whitespace;
+
+      my $result = $self->interpret($stuff);
+      $stuff->{result} = $result;
+      $processed++ if $self->handle_result($stuff, $result);
     }
   }
   return $processed;
 }
 
 sub interpret {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $depth, $command, $tonick, $referenced, $root_keyword) = @_;
+  my ($self, $stuff) = @_;
+#  my ($from, $nick, $user, $host, $depth, $command, $tonick, $referenced, $root_keyword) = @_;
   my ($keyword, $arguments) = ("", "");
   my $text;
   my $pbot = $self->{pbot};
 
-  $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $from ? $from : "(undef)") . "][$nick!$user\@$host][$depth][$command]\n");
+  $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "][$stuff->{nick}!$stuff->{user}\@$stuff->{host}][$stuff->{interpret_depth}][$stuff->{command}]\n");
 
-  return "Too many levels of recursion, aborted." if(++$depth > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
+  use Data::Dumper;
+  $Data::Dumper::Sortkeys  = 1;
+  $self->{pbot}->{logger}->log("Interpreter::interpret\n");
+  $self->{pbot}->{logger}->log(Dumper $stuff);
 
-  if(not defined $nick || not defined $user || not defined $host ||
-     not defined $command) {
+  return "Too many levels of recursion, aborted." if(++$stuff->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
+
+  if (not defined $stuff->{nick} || not defined $stuff->{user} || not defined $stuff->{host} || not defined $stuff->{command}) {
     $pbot->{logger}->log("Error 1, bad parameters to interpret_command\n");
     return undef;
   }
 
-  if($command =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*?)\s+(.*)$/i) {
-    ($keyword, $arguments, $tonick) = ($2, $3, $1);
-    my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $tonick);
-    $tonick = $similar if $similar;
-  } elsif($command =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*)$/i) {
-    ($keyword, $tonick) = ($2, $1);
-    my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $tonick);
-    $tonick = $similar if $similar;
-  } elsif($command =~ /^(.*?)\s+(.*)$/) {
+  if ($stuff->{command} =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*?)\s+(.*)$/i) {
+    ($keyword, $arguments, $stuff->{nickoverride}) = ($2, $3, $1);
+    my $similar = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{nickoverride});
+    if ($similar) {
+      $stuff->{nickoverride} = $similar;
+    } else {
+      $stuff->{nickoverride} = undef;
+    }
+  } elsif ($stuff->{command} =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*)$/i) {
+    ($keyword, $stuff->{nickoverride}) = ($2, $1);
+    my $similar = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{nickoverride});
+    if ($similar) {
+      $stuff->{nickoverride} = $similar;
+    } else {
+      $stuff->{nickoverride} = undef;
+    }
+  } elsif ($stuff->{command} =~ /^(.*?)\s+(.*)$/) {
     ($keyword, $arguments) = ($1, $2);
   } else {
-    $keyword = $command;
+    $keyword = $stuff->{command};
   }
 
   if (length $keyword > 30) {
@@ -224,25 +249,24 @@ sub interpret {
     $self->{pbot}->{logger}->log("Truncating keyword to 30 chars: $keyword\n");
   }
 
-
-  $tonick = $nick if defined $tonick and $tonick eq 'me';
+  $stuff->{nickoverride} = $stuff->{nick} if defined $stuff->{nickoverride} and $stuff->{nickoverride} eq 'me';
 
   if ($keyword !~ /^(?:factrem|forget|set|factdel|factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell|cc|eval|u|udict|ud|actiontrigger|urban|perl)$/) {
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
-    $arguments =~ s/(?<![\w\/\-\\])me\b/$nick/gi if defined $arguments && $depth <= 2;
-    $arguments =~ s/(?<![\w\/\-\\])my\b/${nick}'s/gi if defined $arguments && $depth <= 2;
-    $arguments =~ s/\\my\b/my/gi if defined $arguments && $depth <= 2;
-    $arguments =~ s/\\me\b/me/gi if defined $arguments && $depth <= 2;
+    $arguments =~ s/(?<![\w\/\-\\])me\b/$stuff->{nick}/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
+    $arguments =~ s/(?<![\w\/\-\\])my\b/$stuff->{nick}'s/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
+    $arguments =~ s/\\my\b/my/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
+    $arguments =~ s/\\me\b/me/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
 
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
     if (defined $arguments && ($arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i || $arguments =~ m/^$botnick$/i)) {
       my $delay = (rand 10) + 8;
       my $message = {
-        nick => $nick, user => $user, host => $host, command => $command, checkflood => 1,
-        message => "$nick: Why would I want to do that to myself?"
+        nick => $stuff->{nick}, user => $stuff->{user}, host => $stuff->{host}, command => $stuff->{command}, checkflood => 1,
+        message => "$stuff->{nick}: Why would I want to do that to myself?"
       };
-      $self->add_message_to_output_queue($from, $message, $delay);
+      $self->add_message_to_output_queue($stuff->{from}, $message, $delay);
       $delay = duration($delay);
       $self->{pbot}->{logger}->log("Final result ($delay delay) [$message->{message}]\n");
       return undef;
@@ -254,25 +278,27 @@ sub interpret {
     return undef;
   }
 
+  $stuff->{keyword} = $keyword;
+  if (not exists $stuff->{root_keyword}) {
+    $stuff->{root_keyword} = $keyword;
+  }
+  $stuff->{arguments} = $arguments;
+
   my $result;
 
   if (defined $arguments && $arguments =~ m/\|\s*\{\s*[^}]+\}/) {
     $arguments =~ m/(.*?)\s*\|\s*\{\s*([^}]+)\}(.*)/;
     my ($args, $pipe, $rest) = ($1, $2, $3);
+    $pipe =~ s/\s+$//;
 
     $self->{pbot}->{logger}->log("piping: [$args][$pipe][$rest]\n");
-    
-    $result = $self->SUPER::execute_all($from, $nick, $user, $host, $depth, $keyword, $args, $tonick, undef, $referenced, defined $root_keyword ? $root_keyword : $keyword);
-    $self->{pbot}->{logger}->log("piping: first result: [$result]\n");
 
-    $result = $self->interpret($from, $nick, $user, $host, $depth + 1, "$pipe $result$rest", $tonick, $referenced, defined $root_keyword ? $root_keyword : $keyword);
-    $self->{pbot}->{logger}->log("piping: second result: [$result]\n");
-  } 
-  else {
-    $result = $self->SUPER::execute_all($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, undef, $referenced, defined $root_keyword ? $root_keyword : $keyword);
+    $stuff->{arguments} = $args;
+    $stuff->{pipe} = $pipe;
+    $stuff->{pipe_rest} = $rest;
   }
 
-  return $result;
+  return $self->SUPER::execute_all($stuff);
 }
 
 sub truncate_result {
@@ -306,26 +332,68 @@ sub truncate_result {
 }
 
 sub handle_result {
-  my ($self, $from, $nick, $user, $host, $text, $command, $result, $checkflood, $preserve_whitespace) = @_;
+  my ($self, $stuff, $result) = @_;
+#  my ($self, $from, $nick, $user, $host, $text, $command, $result, $checkflood, $preserve_whitespace) = @_;
 
-  $preserve_whitespace = 0 if not defined $preserve_whitespace;
+  $stuff->{preserve_whitespace} = 0 if not defined $stuff->{preserve_whitespace};
+
+  use Data::Dumper;
+  $Data::Dumper::Sortkeys  = 1;
+  $self->{pbot}->{logger}->log("Interpreter::handle_result [$result]\n");
+  $self->{pbot}->{logger}->log(Dumper $stuff);
+
+  $result = $stuff->{result} if not defined $result;
 
   if (not defined $result or length $result == 0) {
     return 0;
+  }
+
+  if ($stuff->{pipe}) {
+    my ($pipe, $pipe_rest) = ($stuff->{pipe}, $stuff->{pipe_rest});
+
+    delete $stuff->{pipe};
+    delete $stuff->{pipe_rest};
+
+    $self->{pbot}->{logger}->log("Handling pipe [$result][$pipe][$pipe_rest]\n");
+
+    if ($result =~ s{^(/say |/me )}{}i) {
+      $stuff->{prepend} = $1;
+    } elsif ($result =~ s{^/msg ([^ ]+) }{}i) {
+      $stuff->{prepend} = "/msg $1 ";
+    }
+
+    $stuff->{command} = "$pipe $result$pipe_rest";
+
+    $result = $self->interpret($stuff);
+    $stuff->{result} = $result;
+    $self->handle_result($stuff, $result);
+    return 0;
+  }
+
+  if ($stuff->{prepend}) {
+    # FIXME: do this better
+    if ($result =~ s{^(/say |/me )}{}i) {
+      #$stuff->{prepend} = $1;
+    } elsif ($result =~ s{^/msg ([^ ]+) }{}i) {
+      #$stuff->{prepend} = "/msg $1 ";
+    }
+
+    $result = "$stuff->{prepend}$result";
+    $self->{pbot}->{logger}->log("Prepending [$stuff->{prepend}] to result [$result]\n");
   }
 
   my $original_result = $result;
 
   my $use_output_queue = 0;
 
-  if (defined $command) {
-    my ($cmd, $args) = split /\s+/, $command, 2;
+  if (defined $stuff->{command}) {
+    my ($cmd, $args) = split /\s+/, $stuff->{command}, 2;
     if (not $self->{pbot}->{commands}->exists($cmd)) {
-      my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $cmd, $args, 1, 0, 1);
+      my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $cmd, $args, 1, 0, 1);
       if(defined $trigger) {
-        if ($preserve_whitespace == 0) {
-          $preserve_whitespace = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};
-          $preserve_whitespace = 0 if not defined $preserve_whitespace;
+        if ($stuff->{preserve_whitespace} == 0) {
+          $stuff->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};
+          $stuff->{preserve_whitespace} = 0 if not defined $stuff->{preserve_whitespace};
         }
 
         $use_output_queue = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{use_output_queue};
@@ -334,12 +402,12 @@ sub handle_result {
     }
   }
 
-  my $preserve_newlines = $self->{pbot}->{registry}->get_value($from, 'preserve_newlines');
+  my $preserve_newlines = $self->{pbot}->{registry}->get_value($stuff->{from}, 'preserve_newlines');
 
   $result =~ s/[\n\r]/ /g unless $preserve_newlines;
-  $result =~ s/[ \t]+/ /g unless $preserve_whitespace;
+  $result =~ s/[ \t]+/ /g unless $self->{preserve_whitespace};
 
-  my $max_lines = $self->{pbot}->{registry}->get_value($from, 'max_newlines');
+  my $max_lines = $self->{pbot}->{registry}->get_value($stuff->{from}, 'max_newlines');
   $max_lines = 4 if not defined $max_lines;
   my $lines = 0;
 
@@ -351,38 +419,39 @@ sub handle_result {
     next if not length $stripped_line;
 
     if (++$lines >= $max_lines) {
-      my $link = $self->paste("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
+      my $link = $self->paste("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] <$stuff->{nick}> $stuff->{text}\n\n$original_result");
       if ($use_output_queue) {
         my $message = {
-          nick => $nick, user => $user, host => $host, command => $command,
+          nick => $stuff->{nick}, user => $stuff->{user}, host => $stuff->{host}, command => $stuff->{command},
           message => "And that's all I have to say about that. See $link for full text.",
-          checkflood => $checkflood
+          checkflood => $stuff->{checkflood}
         };
-        $self->add_message_to_output_queue($from, $message, 0);
+        $self->add_message_to_output_queue($stuff->{from}, $message, 0);
       } else {
-        $self->{pbot}->{conn}->privmsg($from, "And that's all I have to say about that. See $link for full text.");
+        $self->{pbot}->{conn}->privmsg($stuff->{from}, "And that's all I have to say about that. See $link for full text.");
       }
       last;
     }
 
     if ($preserve_newlines) {
-      $line = $self->truncate_result($from, $nick, $text, $line, $line, 1);
+      $line = $self->truncate_result($stuff->{from}, $stuff->{nick}, $stuff->{text}, $line, $line, 1);
     } else {
-      $line = $self->truncate_result($from, $nick, $text, $original_result, $line, 1);
+      $line = $self->truncate_result($stuff->{from}, $stuff->{nick}, $stuff->{text}, $original_result, $line, 1);
     }
 
     if ($use_output_queue) {
       my $delay = (rand 5) + 5;     # initial delay for reading/processing user's message
       $delay += (length $line) / 7; # additional delay of 7 characters per second typing speed
       my $message = {
-        nick => $nick, user => $user, host => $host, command => $command,
-        message => $line, checkflood => $checkflood
+        nick => $stuff->{nick}, user => $stuff->{user}, host => $stuff->{host}, command => $stuff->{command},
+        message => $line, checkflood => $stuff->{checkflood}
       };
-      $self->add_message_to_output_queue($from, $message, $delay);
+      $self->add_message_to_output_queue($stuff->{from}, $message, $delay);
       $delay = duration($delay);
       $self->{pbot}->{logger}->log("Final result ($delay delay) [$line]\n");
     } else {
-      $self->output_result($from, $nick, $user, $host, $command, $line, $checkflood);
+      $stuff->{line} = $line;
+      $self->output_result($stuff);
       $self->{pbot}->{logger}->log("Final result: [$line]\n");
     }
   }
@@ -391,33 +460,41 @@ sub handle_result {
 }
 
 sub output_result {
-  my ($self, $from, $nick, $user, $host, $command, $line, $checkflood) = @_;
+  my ($self, $stuff) = @_;
+#  my ($self, $from, $nick, $user, $host, $command, $line, $checkflood) = @_;
   my ($pbot, $botnick) = ($self->{pbot}, $self->{pbot}->{registry}->get_value('irc', 'botnick'));
 
-  if($line =~ s/^\/say\s+//i) {
-    $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$botnick\E/i;
-    $pbot->{antiflood}->check_flood($from, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
-  } elsif($line =~ s/^\/me\s+//i) {
-    $pbot->{conn}->me($from, $line) if defined $from && $from !~ /\Q$botnick\E/i;
-    $pbot->{antiflood}->check_flood($from, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
-  } elsif($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
+  use Data::Dumper;
+  $Data::Dumper::Sortkeys  = 1;
+  $self->{pbot}->{logger}->log("Interpreter::output_result\n");
+  $self->{pbot}->{logger}->log(Dumper $stuff);
+
+  my $line = $stuff->{line};
+
+  return if not defined $line or not length $line;
+
+  if ($line =~ s/^\/say\s+//i) {
+    $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
+    $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $stuff->{checkflood};
+  } elsif ($line =~ s/^\/me\s+//i) {
+    $pbot->{conn}->me($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
+    $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $stuff->{checkflood};
+  } elsif ($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
     my $to = $1;
-    if($to =~ /,/) {
-      $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$nick!$user\@$host] [$command] [$line]\n");
-    }
-    elsif($to =~ /.*serv$/i) {
-      $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$nick!$user\@$host] [$command] [$line]\n");
-    }
-    elsif($line =~ s/^\/me\s+//i) {
+    if ($to =~ /,/) {
+      $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$stuff->{nick}!$stuff->{user}\@$stuff->{host}] [$stuff->{command}] [$line]\n");
+    } elsif ($to =~ /.*serv$/i) {
+      $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$stuff->{nick}!$stuff->{user}\@$stuff->{host}] [$stuff->{command}] [$line]\n");
+    } elsif ($line =~ s/^\/me\s+//i) {
       $pbot->{conn}->me($to, $line) if $to !~ /\Q$botnick\E/i;
-      $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $checkflood;
+      $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $stuff->{checkflood};
     } else {
       $line =~ s/^\/say\s+//i;
       $pbot->{conn}->privmsg($to, $line) if $to !~ /\Q$botnick\E/i;
-      $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+      $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $stuff->{checkflood};
     }
-  } elsif($line =~ s/^\/$self->{pbot}->{secretstuff}kick\s+//) {
-    $pbot->{antiflood}->check_flood($from, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/kick ' . $line, 0, 0, 0) if $checkflood;
+  } elsif ($line =~ s/^\/$self->{pbot}->{secretstuff}kick\s+//) {
+    $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/kick ' . $line, 0, 0, 0) if $stuff->{checkflood};
     my ($victim, $reason) = split /\s+/, $line, 2;
 
     if (not defined $reason) {
@@ -431,15 +508,15 @@ sub output_result {
       }
     }
 
-    if ($self->{pbot}->{chanops}->can_gain_ops($from)) {
-      $self->{pbot}->{chanops}->add_op_command($from, "kick $from $victim $reason");
-      $self->{pbot}->{chanops}->gain_ops($from);
+    if ($self->{pbot}->{chanops}->can_gain_ops($stuff->{from})) {
+      $self->{pbot}->{chanops}->add_op_command($stuff->{from}, "kick $stuff->{from} $victim $reason");
+      $self->{pbot}->{chanops}->gain_ops($stuff->{from});
     } else {
-      $pbot->{conn}->privmsg($from, "$victim: $reason") if defined $from && $from !~ /\Q$botnick\E/i;
+      $pbot->{conn}->privmsg($stuff->{from}, "$victim: $reason") if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     }
   } else {
-    $pbot->{conn}->privmsg($from, $line) if defined $from && $from !~ /\Q$botnick\E/i;
-    $pbot->{antiflood}->check_flood($from, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $checkflood;
+    $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
+    $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $stuff->{checkflood};
   }
 }
 
@@ -463,7 +540,17 @@ sub process_output_queue {
     for (my $i = 0; $i < @{$self->{output_queue}->{$channel}}; $i++) {
       my $message = $self->{output_queue}->{$channel}->[$i];
       if (gettimeofday >= $message->{when}) {
-        $self->output_result($channel, $message->{nick}, $message->{user}, $message->{host}, $message->{command}, $message->{message}, $message->{checkflood});
+        my $stuff = {
+          from => $channel,
+          nick => $message->{nick},
+          user => $message->{user},
+          host => $message->{host},
+          line => $message->{message},
+          command => $message->{command},
+          checkflood => $message->{checkflood}
+        };
+
+        $self->output_result($stuff);
         splice @{$self->{output_queue}->{$channel}}, $i--, 1;
       }
     }
@@ -502,7 +589,20 @@ sub process_command_queue {
     for (my $i = 0; $i < @{$self->{command_queue}->{$channel}}; $i++) {
       my $command = $self->{command_queue}->{$channel}->[$i];
       if (gettimeofday >= $command->{when}) {
-        $self->handle_result($channel, $command->{nick}, $command->{user}, $command->{host}, $command->{command}, $command->{command}, $self->interpret($channel, $command->{nick}, $command->{user}, $command->{host}, 0, $command->{command}), 0, 0);
+        my $stuff = {
+          from => $channel,
+          nick => $command->{nick},
+          user => $command->{user},
+          host => $command->{host},
+          command => $command->{command},
+          interpret_depth => 0,
+          checkflood => 0,
+          preserve_whitespace => 0
+        };
+
+        my $result = $self->interpret($stuff);
+        $stuff->{result} = $result;
+        $self->handle_result($stuff, $result);
         splice @{$self->{command_queue}->{$channel}}, $i--, 1;
       }
     }
