@@ -222,7 +222,7 @@ sub interpret {
     return undef;
   }
 
-  if ($stuff->{command} =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*?)\s+(.*)$/i) {
+  if ($stuff->{command} =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*?)\s+(.*)$/is) {
     ($keyword, $arguments, $stuff->{nickoverride}) = ($2, $3, $1);
     my $similar = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{nickoverride});
     if ($similar) {
@@ -230,7 +230,7 @@ sub interpret {
     } else {
       $stuff->{nickoverride} = undef;
     }
-  } elsif ($stuff->{command} =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*)$/i) {
+  } elsif ($stuff->{command} =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*)$/is) {
     ($keyword, $stuff->{nickoverride}) = ($2, $1);
     my $similar = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{nickoverride});
     if ($similar) {
@@ -238,7 +238,7 @@ sub interpret {
     } else {
       $stuff->{nickoverride} = undef;
     }
-  } elsif ($stuff->{command} =~ /^(.*?)\s+(.*)$/) {
+  } elsif ($stuff->{command} =~ /^(.*?)\s+(.*)$/s) {
     ($keyword, $arguments) = ($1, $2);
   } else {
     $keyword = $stuff->{command};
@@ -249,9 +249,21 @@ sub interpret {
     $self->{pbot}->{logger}->log("Truncating keyword to 30 chars: $keyword\n");
   }
 
+  if (defined $arguments && $arguments =~ m/\|\s*\{\s*[^}]+\}\s*$/) {
+    $arguments =~ m/(.*?)\s*\|\s*\{\s*([^}]+)\}(.*)/;
+    my ($args, $pipe, $rest) = ($1, $2, $3);
+    $pipe =~ s/\s+$//;
+
+    $self->{pbot}->{logger}->log("piping: [$args][$pipe][$rest]\n");
+
+    $stuff->{arguments} = $args;
+    $stuff->{pipe} = $pipe;
+    $stuff->{pipe_rest} = $rest;
+  }
+
   $stuff->{nickoverride} = $stuff->{nick} if defined $stuff->{nickoverride} and $stuff->{nickoverride} eq 'me';
 
-  if ($keyword !~ /^(?:factrem|forget|set|factdel|factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell|cc|eval|u|udict|ud|actiontrigger|urban|perl)$/) {
+  if ((not exists $stuff->{pipe}) and $keyword !~ /^(?:factrem|forget|set|factdel|factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell|cc|eval|u|udict|ud|actiontrigger|urban|perl)$/) {
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
     $arguments =~ s/(?<![\w\/\-\\])me\b/$stuff->{nick}/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
     $arguments =~ s/(?<![\w\/\-\\])my\b/$stuff->{nick}'s/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
@@ -282,21 +294,8 @@ sub interpret {
   if (not exists $stuff->{root_keyword}) {
     $stuff->{root_keyword} = $keyword;
   }
-  $stuff->{arguments} = $arguments;
 
-  my $result;
-
-  if (defined $arguments && $arguments =~ m/\|\s*\{\s*[^}]+\}/) {
-    $arguments =~ m/(.*?)\s*\|\s*\{\s*([^}]+)\}(.*)/;
-    my ($args, $pipe, $rest) = ($1, $2, $3);
-    $pipe =~ s/\s+$//;
-
-    $self->{pbot}->{logger}->log("piping: [$args][$pipe][$rest]\n");
-
-    $stuff->{arguments} = $args;
-    $stuff->{pipe} = $pipe;
-    $stuff->{pipe_rest} = $rest;
-  }
+  $stuff->{arguments} = $arguments unless exists $stuff->{pipe};
 
   return $self->SUPER::execute_all($stuff);
 }
@@ -372,14 +371,12 @@ sub handle_result {
 
   if ($stuff->{prepend}) {
     # FIXME: do this better
-    if ($result =~ s{^(/say |/me )}{}i) {
-      #$stuff->{prepend} = $1;
-    } elsif ($result =~ s{^/msg ([^ ]+) }{}i) {
-      #$stuff->{prepend} = "/msg $1 ";
+    if ($result =~ m{^(/say |/me )}i) {
+    } elsif ($result =~ m{^/msg ([^ ]+) }i) {
+    } else {
+      $result = "$stuff->{prepend}$result";
+      $self->{pbot}->{logger}->log("Prepending [$stuff->{prepend}] to result [$result]\n");
     }
-
-    $result = "$stuff->{prepend}$result";
-    $self->{pbot}->{logger}->log("Prepending [$stuff->{prepend}] to result [$result]\n");
   }
 
   my $original_result = $result;
@@ -474,12 +471,15 @@ sub output_result {
   return if not defined $line or not length $line;
 
   if ($line =~ s/^\/say\s+//i) {
+    $line =~ s/\Q$self->{pbot}->{secretstuff}\E//g;
     $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $stuff->{checkflood};
   } elsif ($line =~ s/^\/me\s+//i) {
+    $line =~ s/\Q$self->{pbot}->{secretstuff}\E//g;
     $pbot->{conn}->me($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $stuff->{checkflood};
   } elsif ($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
+    $line =~ s/\Q$self->{pbot}->{secretstuff}\E//g;
     my $to = $1;
     if ($to =~ /,/) {
       $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$stuff->{nick}!$stuff->{user}\@$stuff->{host}] [$stuff->{command}] [$line]\n");
@@ -515,6 +515,7 @@ sub output_result {
       $pbot->{conn}->privmsg($stuff->{from}, "$victim: $reason") if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     }
   } else {
+    $line =~ s/\Q$self->{pbot}->{secretstuff}\E//g;
     $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $stuff->{checkflood};
   }
