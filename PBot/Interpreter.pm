@@ -373,6 +373,7 @@ sub handle_result {
     # FIXME: do this better
     if ($result =~ m{^(/say |/me )}i) {
     } elsif ($result =~ m{^/msg ([^ ]+) }i) {
+    } elsif ($result =~ m{^/kick }i) {
     } else {
       $result = "$stuff->{prepend}$result";
       $self->{pbot}->{logger}->log("Prepending [$stuff->{prepend}] to result [$result]\n");
