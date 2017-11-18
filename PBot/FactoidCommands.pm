@@ -1077,8 +1077,8 @@ sub count {
   my $i = 0;
   my $total = 0;
 
-  if(not defined $arguments) {
-    return "Usage:  count <nick|factoids>";
+  if (not length $arguments) {
+    return "Usage: count <nick|factoids>";
   }
 
   $arguments = ".*" if($arguments =~ /^factoids$/);
@@ -1088,7 +1088,7 @@ sub count {
       foreach my $command (keys %{ $factoids->{$channel} }) {
         next if $factoids->{$channel}->{$command}->{type} ne 'text';
         $total++; 
-        if($factoids->{$channel}->{$command}->{owner} =~ /\Q$arguments\E/i) {
+        if($factoids->{$channel}->{$command}->{owner} =~ /^\Q$arguments\E$/i) {
           $i++;
         }
       }
