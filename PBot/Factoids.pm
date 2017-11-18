@@ -971,12 +971,15 @@ sub handle_action {
         return $action;
       } elsif ($action =~ s/^\/kick\s+//) {
         if (not exists $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'}) {
+          $stuff->{authorized} = 0;
           return "/say $stuff->{nick}: $keyword doesn't have the effective-level to do that.";
         }
         my $level = 10;
         if ($self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'} >= $level) {
-          return "/$self->{pbot}->{secretstuff}kick " . $action;
+          $stuff->{authorized} = 1;
+          return "/kick " . $action;
         } else {
+          $stuff->{authorized} = 0;
           return "/say $stuff->{nick}: My effective-level isn't high enough to do that.";
         }
       } else {

@@ -471,15 +471,12 @@ sub output_result {
   return if not defined $line or not length $line;
 
   if ($line =~ s/^\/say\s+//i) {
-    $line =~ s/\Q$self->{pbot}->{secretstuff}\E//g;
     $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $stuff->{checkflood};
   } elsif ($line =~ s/^\/me\s+//i) {
-    $line =~ s/\Q$self->{pbot}->{secretstuff}\E//g;
     $pbot->{conn}->me($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $stuff->{checkflood};
   } elsif ($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
-    $line =~ s/\Q$self->{pbot}->{secretstuff}\E//g;
     my $to = $1;
     if ($to =~ /,/) {
       $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$stuff->{nick}!$stuff->{user}\@$stuff->{host}] [$stuff->{command}] [$line]\n");
@@ -493,7 +490,7 @@ sub output_result {
       $pbot->{conn}->privmsg($to, $line) if $to !~ /\Q$botnick\E/i;
       $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $stuff->{checkflood};
     }
-  } elsif ($line =~ s/^\/$self->{pbot}->{secretstuff}kick\s+//) {
+  } elsif ($stuff->{authorized} && $line =~ s/^\/kick\s+//) {
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/kick ' . $line, 0, 0, 0) if $stuff->{checkflood};
     my ($victim, $reason) = split /\s+/, $line, 2;
 
@@ -515,7 +512,6 @@ sub output_result {
       $pbot->{conn}->privmsg($stuff->{from}, "$victim: $reason") if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     }
   } else {
-    $line =~ s/\Q$self->{pbot}->{secretstuff}\E//g;
     $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $stuff->{checkflood};
   }
