@@ -170,14 +170,14 @@ sub export_factoids {
     next if not scalar keys %{ $self->{factoids}->hash->{$channel} };
     my $chan = $channel eq '.*' ? 'global' : $channel;
 
-    print FILE "<a href='#" . $chan . "'>" . encode_entities($chan) . "</a><br>\n";
+    print FILE "<a href='#" . encode_entities($chan) . "'>" . encode_entities($chan) . "</a><br>\n";
   }
 
   foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
     next if not scalar keys %{ $self->{factoids}->hash->{$channel} };
     my $chan = $channel eq '.*' ? 'global' : $channel;
-    print FILE "<a name='$chan'></a>\n";
-    print FILE "<hr>\n<h3>$chan</h3>\n<hr>\n";
+    print FILE "<a name='" . encode_entities($chan) . "'></a>\n";
+    print FILE "<hr>\n<h3>" . encode_entities($chan) . "</h3>\n<hr>\n";
     print FILE "<table border=\"0\" id=\"table$table_id\" class=\"tablesorter\">\n";
     print FILE "<thead>\n<tr>\n";
     print FILE "<th>owner</th>\n";
@@ -508,6 +508,7 @@ sub expand_action_arguments {
   $jsonargs =~ s/"}$//;
 
   if (not defined $input or $input eq '') {
+    $input = "";
     $action =~ s/\$args:json/$jsonargs/ge;
     $action =~ s/\$args(?![[\w])/$nick/g;
   } else {
