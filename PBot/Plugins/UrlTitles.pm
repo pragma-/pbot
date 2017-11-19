@@ -62,7 +62,7 @@ sub show_url_titles {
     while ($msg =~ s/(https?:\/\/[^\s]+)//i && ++$event->{interpreted} <= 3) {
       my $stuff = {
         from => $channel, nick => $nick, user => $user, host => $host,
-        command => $msg, root_channel => $channel, root_keyword => "title",
+        command => "title $nick $1", root_channel => $channel, root_keyword => "title",
         keyword => "title", arguments => "$nick $1"
       };
 
