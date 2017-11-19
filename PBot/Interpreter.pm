@@ -249,6 +249,8 @@ sub interpret {
     $self->{pbot}->{logger}->log("Truncating keyword to 30 chars: $keyword\n");
   }
 
+  my $got_pipe = 0;
+
   if (defined $arguments && $arguments =~ m/\|\s*\{\s*[^}]+\}\s*$/) {
     $arguments =~ m/(.*?)\s*\|\s*\{\s*([^}]+)\}(.*)/;
     my ($args, $pipe, $rest) = ($1, $2, $3);
@@ -259,6 +261,7 @@ sub interpret {
     $stuff->{arguments} = $args;
     $stuff->{pipe} = $pipe;
     $stuff->{pipe_rest} = $rest;
+    $got_pipe = 1;
   }
 
   $stuff->{nickoverride} = $stuff->{nick} if defined $stuff->{nickoverride} and $stuff->{nickoverride} eq 'me';
@@ -295,7 +298,7 @@ sub interpret {
     $stuff->{root_keyword} = $keyword;
   }
 
-  $stuff->{arguments} = $arguments unless exists $stuff->{pipe};
+  $stuff->{arguments} = $arguments unless $got_pipe;
 
   return $self->SUPER::execute_all($stuff);
 }
