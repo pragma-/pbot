@@ -44,9 +44,15 @@ sub initialize {
 }
 
 sub execute_module {
-#  my ($self, $from, $tonick, $nick, $user, $host, $command, $root_channel, $root_keyword, $keyword, $arguments, $preserve_whitespace, $referenced) = @_;
   my ($self, $stuff) = @_;
   my $text;
+
+  if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
+    use Data::Dumper;
+    $Data::Dumper::Sortkeys  = 1;
+    $self->{pbot}->{logger}->log("FML::execute_module\n");
+    $self->{pbot}->{logger}->log(Dumper $stuff);
+  }
 
   $stuff->{arguments} = "" if not defined $stuff->{arguments};
 
@@ -174,7 +180,10 @@ sub execute_module {
 sub module_pipe_reader {
   my ($self, $buf) = @_;
 
-  my $stuff = decode_json $buf or return;
+  my $stuff = decode_json $buf or do {
+    $self->{pbot}->{logger}->log("Failed to decode bad json: [$buf]\n");
+    return;
+  };
 
   if (not defined $stuff->{result} or not length $stuff->{result}) {
     $self->{pbot}->{logger}->log("No result from module.\n");

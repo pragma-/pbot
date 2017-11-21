@@ -88,13 +88,14 @@ sub exists {
 
 sub interpreter {
   my ($self, $stuff) = @_;
-  #my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $unused, $referenced, $root_keyword) = @_;
   my $result;
 
-  use Data::Dumper;
-  $Data::Dumper::Sortkeys  = 1;
-  $self->{pbot}->{logger}->log("Commands::interpreter\n");
-  $self->{pbot}->{logger}->log(Dumper $stuff);
+  if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
+    use Data::Dumper;
+    $Data::Dumper::Sortkeys  = 1;
+    $self->{pbot}->{logger}->log("Commands::interpreter\n");
+    $self->{pbot}->{logger}->log(Dumper $stuff);
+  }
 
   my $admin = $self->{pbot}->{admins}->loggedin($stuff->{from}, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
   my $level = defined $admin ? $admin->{level} : 0;

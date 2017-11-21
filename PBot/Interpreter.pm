@@ -203,17 +203,18 @@ sub process_line {
 
 sub interpret {
   my ($self, $stuff) = @_;
-#  my ($from, $nick, $user, $host, $depth, $command, $tonick, $referenced, $root_keyword) = @_;
   my ($keyword, $arguments) = ("", "");
   my $text;
   my $pbot = $self->{pbot};
 
   $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "][$stuff->{nick}!$stuff->{user}\@$stuff->{host}][$stuff->{interpret_depth}][$stuff->{command}]\n");
 
-  use Data::Dumper;
-  $Data::Dumper::Sortkeys  = 1;
-  $self->{pbot}->{logger}->log("Interpreter::interpret\n");
-  $self->{pbot}->{logger}->log(Dumper $stuff);
+  if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
+    use Data::Dumper;
+    $Data::Dumper::Sortkeys  = 1;
+    $self->{pbot}->{logger}->log("Interpreter::interpret\n");
+    $self->{pbot}->{logger}->log(Dumper $stuff);
+  }
 
   return "Too many levels of recursion, aborted." if(++$stuff->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
 
@@ -335,14 +336,15 @@ sub truncate_result {
 
 sub handle_result {
   my ($self, $stuff, $result) = @_;
-#  my ($self, $from, $nick, $user, $host, $text, $command, $result, $checkflood, $preserve_whitespace) = @_;
 
   $stuff->{preserve_whitespace} = 0 if not defined $stuff->{preserve_whitespace};
 
-  use Data::Dumper;
-  $Data::Dumper::Sortkeys  = 1;
-  $self->{pbot}->{logger}->log("Interpreter::handle_result [$result]\n");
-  $self->{pbot}->{logger}->log(Dumper $stuff);
+  if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
+    use Data::Dumper;
+    $Data::Dumper::Sortkeys  = 1;
+    $self->{pbot}->{logger}->log("Interpreter::handle_result [$result]\n");
+    $self->{pbot}->{logger}->log(Dumper $stuff);
+  }
 
   $result = $stuff->{result} if not defined $result;
 
@@ -462,13 +464,14 @@ sub handle_result {
 
 sub output_result {
   my ($self, $stuff) = @_;
-#  my ($self, $from, $nick, $user, $host, $command, $line, $checkflood) = @_;
   my ($pbot, $botnick) = ($self->{pbot}, $self->{pbot}->{registry}->get_value('irc', 'botnick'));
 
-  use Data::Dumper;
-  $Data::Dumper::Sortkeys  = 1;
-  $self->{pbot}->{logger}->log("Interpreter::output_result\n");
-  $self->{pbot}->{logger}->log(Dumper $stuff);
+  if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
+    use Data::Dumper;
+    $Data::Dumper::Sortkeys  = 1;
+    $self->{pbot}->{logger}->log("Interpreter::output_result\n");
+    $self->{pbot}->{logger}->log(Dumper $stuff);
+  }
 
   my $line = $stuff->{line};
 

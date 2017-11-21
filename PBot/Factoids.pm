@@ -715,16 +715,14 @@ sub execute_code_factoid {
 
 sub interpreter {
   my ($self, $stuff) = @_;
-=cut
-  my $self = shift;
-  my ($from, $nick, $user, $host, $depth, $keyword, $arguments, $tonick, $ref_from, $referenced, $root_keyword) = @_;
-=cut
   my $pbot = $self->{pbot};
 
-  use Data::Dumper;
-  $Data::Dumper::Sortkeys  = 1;
-  $self->{pbot}->{logger}->log("Factoids::interpreter\n");
-  $self->{pbot}->{logger}->log(Dumper $stuff);
+  if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
+    use Data::Dumper;
+    $Data::Dumper::Sortkeys  = 1;
+    $self->{pbot}->{logger}->log("Factoids::interpreter\n");
+    $self->{pbot}->{logger}->log(Dumper $stuff);
+  }
 
   #$self->{pbot}->{logger}->log("enter factoid interpreter [$keyword][" . (defined $arguments ? $arguments : '') . "] referenced = $referenced\n");
   return undef if not length $stuff->{keyword} or $stuff->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
@@ -855,13 +853,14 @@ sub interpreter {
 }
 
 sub handle_action {
-#  my ($self, $nick, $user, $host, $from, $channel, $root_keyword, $keyword, $arguments, $action, $tonick, $depth, $referenced, $ref_from, $original_keyword) = @_;
   my ($self, $stuff, $action) = @_;
 
-  use Data::Dumper;
-  $Data::Dumper::Sortkeys  = 1;
-  $self->{pbot}->{logger}->log("Factoids::handle_action [$action]\n");
-  $self->{pbot}->{logger}->log(Dumper $stuff);
+  if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
+    use Data::Dumper;
+    $Data::Dumper::Sortkeys  = 1;
+    $self->{pbot}->{logger}->log("Factoids::handle_action [$action]\n");
+    $self->{pbot}->{logger}->log(Dumper $stuff);
+  }
 
   return "" if not length $action;
 
