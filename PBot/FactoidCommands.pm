@@ -592,7 +592,7 @@ sub factmove {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   $arguments = validate_string($arguments);
-  my ($src_channel, $source, $target_channel, $target) = split /\s+/, $arguments, 4 if $arguments;
+  my ($src_channel, $source, $target_channel, $target) = split /\s+/, $arguments, 5 if length $arguments;
 
   my $usage = "Usage: factmove <source channel> <source factoid> <target channel/factoid> [target factoid]";
 
