@@ -738,8 +738,6 @@ sub interpreter {
 
   if (not $stuff->{ref_from} or $stuff->{ref_from} eq '.*') {
     $stuff->{ref_from} = "";
-  } else {
-    $stuff->{ref_from} = "[$stuff->{ref_from}] ";
   }
 
   if (defined $channel and not $channel eq '.*' and not lc $channel eq $stuff->{from}) {
@@ -950,7 +948,12 @@ sub handle_action {
     $stuff->{root_keyword} = $keyword unless defined $stuff->{root_keyword};
     $stuff->{root_channel} = $channel;
 
-    return $stuff->{ref_from} . $self->{factoidmodulelauncher}->execute_module($stuff);
+    my $result = $self->{factoidmodulelauncher}->execute_module($stuff);
+    if (length $result) {
+      return $stuff->{ref_from} . $result;
+    } else {
+      return "";
+    }
   }
   elsif ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
     # Don't allow user-custom /msg factoids, unless factoid triggered by admin
@@ -1020,7 +1023,11 @@ sub handle_action {
       return "";
     }
 
-    return $stuff->{ref_from} . $result;
+    if (length $result) {
+      return $stuff->{ref_from} . $result;
+    } else {
+      return "";
+    }
   } else {
     $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}): Unknown command type for '$keyword'\n"); 
     return "/me blinks." . " $stuff->{ref_from}";
