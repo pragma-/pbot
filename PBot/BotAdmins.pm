@@ -145,6 +145,7 @@ sub find_admin {
 
   $from = $self->{pbot}->{registry}->get_value('irc', 'botnick') if not defined $from;
   $hostmask = '.*' if not defined $hostmask;
+  $hostmask = lc $hostmask;
 
   my $result = eval {
     foreach my $channel_regex (keys %{ $self->{admins}->hash }) {
@@ -154,7 +155,7 @@ sub find_admin {
         }
       } elsif($from =~ m/^$channel_regex$/i) {
         foreach my $hostmask_regex (keys %{ $self->{admins}->hash->{$channel_regex} }) {
-          return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/$hostmask_regex/i;
+          return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/$hostmask_regex/i or $hostmask eq lc $hostmask_regex;
         }
       }
     }
