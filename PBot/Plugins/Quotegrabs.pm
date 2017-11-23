@@ -19,6 +19,7 @@ use Getopt::Long qw(GetOptionsFromString);
 
 use PBot::Plugins::Quotegrabs::Quotegrabs_SQLite;      # use SQLite backend for quotegrabs database
 #use PBot::Plugins::Quotegrabs::Quotegrabs_Hashtable;  # use Perl hashtable backend for quotegrabs database
+use PBot::Utils::ValidateString;
 
 use POSIX qw(strftime);
 
@@ -77,7 +78,7 @@ sub export_quotegrabs {
   my $last_channel = "";
   foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or $$a{nick} cmp $$b{nick} } @$quotegrabs) {
     if(not $quotegrab->{channel} =~ /^$last_channel$/i) {
-      print FILE "<a href='#" . $quotegrab->{channel} . "'>" . encode_entities($quotegrab->{channel}) . "</a><br>\n";
+      print FILE "<a href='#" . encode_entities($quotegrab->{channel}) . "'>" . encode_entities($quotegrab->{channel}) . "</a><br>\n";
       $last_channel = $quotegrab->{channel};
     }
   }
@@ -86,8 +87,8 @@ sub export_quotegrabs {
   foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or lc $$a{nick} cmp lc $$b{nick} } @$quotegrabs) {
     if(not $quotegrab->{channel} =~ /^$last_channel$/i) {
       print FILE "</tbody>\n</table>\n" if $had_table;
-      print FILE "<a name='" . $quotegrab->{channel} . "'></a>\n";
-      print FILE "<hr><h3>$quotegrab->{channel}</h3><hr>\n";
+      print FILE "<a name='" . encode_entities($quotegrab->{channel}) . "'></a>\n";
+      print FILE "<hr><h3>" . encode_entities($quotegrab->{channel}) . "</h3><hr>\n";
       print FILE "<table border=\"0\" id=\"table$table_id\" class=\"tablesorter\">\n";
       print FILE "<thead>\n<tr>\n";
       print FILE "<th>id&nbsp;&nbsp;&nbsp;&nbsp;</th>\n";
@@ -234,7 +235,7 @@ sub grab_quotegrab {
   $quotegrab->{channel} = $channel;
   $quotegrab->{timestamp} = gettimeofday;
   $quotegrab->{grabbed_by} = "$nick!$user\@$host";
-  $quotegrab->{text} = $grab_text;
+  $quotegrab->{text} = validate_string($grab_text);
   $quotegrab->{id} = undef;
   
   $quotegrab->{id} = $self->{database}->add_quotegrab($quotegrab);
