@@ -99,7 +99,7 @@ sub initialize {
 
 sub call_factoid {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($chan, $keyword, $args) = split /\s+/, $arguments, 3;
 
   if(not defined $chan or not defined $keyword) {
@@ -112,7 +112,10 @@ sub call_factoid {
     return "No such factoid '$keyword' exists for channel '$chan'";
   }
 
-  return $self->{pbot}->{factoids}->interpreter($from, $nick, $user, $host, 1, $trigger, $args, undef, $channel, undef, $trigger);
+  $stuff->{keyword} = $trigger;
+  $stuff->{arguments} = $args;
+
+  return $self->{pbot}->{factoids}->interpreter($stuff);
 }
 
 sub log_factoid {
@@ -613,7 +616,7 @@ sub factmove {
     }
   }
 
-  if (length $target > 20) {
+  if (length $target > 30) {
     return "/say $nick: I don't think the factoid name needs to be that long.";
   }
 
@@ -680,7 +683,7 @@ sub factalias {
 
   $chan = '.*' if $chan !~ /^#/;
 
-  if (length $alias > 20) {
+  if (length $alias > 30) {
     return "/say $nick: I don't think the factoid name needs to be that long.";
   }
 
@@ -762,7 +765,7 @@ sub factadd {
     }
   }
 
-  if (length $keyword > 20) {
+  if (length $keyword > 30) {
     return "/say $nick: I don't think the factoid name needs to be that long.";
   }
 
