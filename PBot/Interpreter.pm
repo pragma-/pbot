@@ -259,6 +259,8 @@ sub interpret {
 
     $self->{pbot}->{logger}->log("piping: [$args][$pipe][$rest]\n");
 
+    $stuff->{prepend} = '/say ' unless exists $self->{pipe};
+
     $stuff->{arguments} = $args;
     $stuff->{pipe} = $pipe;
     $stuff->{pipe_rest} = $rest;
@@ -352,7 +354,7 @@ sub handle_result {
     return 0;
   }
 
-  if ($stuff->{pipe}) {
+  if ($stuff->{pipe} and not $stuff->{authorized}) {
     my ($pipe, $pipe_rest) = ($stuff->{pipe}, $stuff->{pipe_rest});
 
     delete $stuff->{pipe};
@@ -362,10 +364,12 @@ sub handle_result {
 
     if ($result =~ s{^(/say |/me )}{}i) {
       $stuff->{prepend} = $1;
-    } elsif ($result =~ s{^/msg ([^ ]+) }{}i) {
+    }
+=cut
+    elsif ($result =~ s{^/msg ([^ ]+) }{}i) {
       $stuff->{prepend} = "/msg $1 ";
     }
-
+=cut
     $stuff->{command} = "$pipe $result$pipe_rest";
 
     $result = $self->interpret($stuff);
@@ -377,7 +381,7 @@ sub handle_result {
   if ($stuff->{prepend}) {
     # FIXME: do this better
     if ($result =~ m{^(/say |/me )}i) {
-    } elsif ($result =~ m{^/msg ([^ ]+) }i) {
+#    } elsif ($result =~ m{^/msg ([^ ]+) }i) {
     } elsif ($result =~ m{^/kick }i) {
     } else {
       $result = "$stuff->{prepend}$result";
