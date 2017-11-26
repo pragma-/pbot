@@ -880,13 +880,7 @@ sub handle_action {
 
 
         if ($target and $action !~ /\$(?:nick|args)\b/) {
-          if ($action !~ m/^(\/[^ ]+) /) {
-            $action =~ s/^/\/say $target: $keyword is / unless defined $stuff->{nickoverride};
-          } else {
-            if ($1 eq '/say') {
-              $action =~ s/^\/say /\/say $target: /;
-            }
-          }
+          $stuff->{nickoverride} = $target;
         }
       }
     }
@@ -906,24 +900,6 @@ sub handle_action {
 
     $self->{pbot}->{logger}->log("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] ($stuff->{nick}!$stuff->{user}\@$stuff->{host}) [$keyword] aliased to: [$command]\n");
     return $self->{pbot}->{interpreter}->interpret($stuff);
-  }
-
-  if (defined $stuff->{nickoverride}) { # !tell foo about bar
-    $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}) sent to $stuff->{nickoverride}\n");
-    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-
-    # get rid of original caller's nick
-    $action =~ s/^\/([^ ]+) \Q$stuff->{nick}\E.\s+/\/$1 /;
-    $action =~ s/^\Q$stuff->{nick}\E.\s+//;
-
-    if ($action =~ s/^\/say\s+//i || $action =~ s/^\/me\s+/* $botnick /i || $action =~ /^\/msg\s+/i) {
-      $action = "/say $stuff->{nickoverride}: $action";
-    } elsif ($action =~ m/^\/kick\s+/i) {
-    } else {
-      $action = "/say $stuff->{nickoverride}: $stuff->{original_keyword} is $action";
-    }
-
-    $self->{pbot}->{logger}->log("result set to [$action]\n");
   }
 
   $self->{pbot}->{logger}->log("(" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "): $stuff->{nick}!$stuff->{user}\@$stuff->{host}: $keyword: action: \"$action\"\n");

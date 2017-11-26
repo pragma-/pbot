@@ -206,17 +206,31 @@ sub module_pipe_reader {
   $stuff->{checkflood} = 0;
 
   if (defined $stuff->{nickoverride}) {
-    $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}) sent to $stuff->{nickoverride}\n");
-      # get rid of original caller's nick
-      $stuff->{result} =~ s/^\/([^ ]+) \Q$stuff->{nick}\E:\s+/\/$1 /;
-      $stuff->{result} =~ s/^\Q$stuff->{nick}\E:\s+//;
-      $self->{pbot}->{interpreter}->handle_result($stuff, "$stuff->{nickoverride}: $stuff->{result}");
+    $self->{pbot}->{interpreter}->handle_result($stuff, $stuff->{result});
   } else {
+    # don't override nick if already set
     if ($stuff->{command} ne 'code-factoid' and exists $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} and $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} != 0) {
-      $self->{pbot}->{interpreter}->handle_result($stuff, "$stuff->{nick}: $stuff->{result}");
+      $stuff->{nickoverride} = $stuff->{nick};
     } else {
-      $self->{pbot}->{interpreter}->handle_result($stuff, $stuff->{result});
+      # extract nick-like thing from module result 
+      if ($stuff->{result} =~ s/^(\S+): //) {
+        my $nick = $1;
+        if (lc $nick eq "usage") {
+          # put it back on result if it's a usage message
+          $stuff->{result} = "$nick: $stuff->{result}";
+        } else {
+          my $present = $self->{pbot}->{nicklist}->is_present($nick);
+          if ($present) {
+            # nick is present in channel
+            $stuff->{nickoverride} = $present;
+          } else {
+            # nick not present, put it back on result
+            $stuff->{result} = "$nick: $stuff->{result}";
+          }
+        }
+      }
     }
+    $self->{pbot}->{interpreter}->handle_result($stuff, $stuff->{result});
   }
 
   my $text = $self->{pbot}->{interpreter}->truncate_result($stuff->{channel}, $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'undef', $stuff->{result}, $stuff->{result}, 0);

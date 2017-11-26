@@ -267,7 +267,7 @@ sub interpret {
     $got_pipe = 1;
   }
 
-  $stuff->{nickoverride} = $stuff->{nick} if defined $stuff->{nickoverride} and $stuff->{nickoverride} eq 'me';
+  $stuff->{nickoverride} = $stuff->{nick} if defined $stuff->{nickoverride} and lc $stuff->{nickoverride} eq 'me';
 
   if ((not exists $stuff->{pipe}) and $keyword !~ /^(?:factrem|forget|set|factdel|factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell|cc|eval|u|udict|ud|actiontrigger|urban|perl)$/) {
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
@@ -482,9 +482,15 @@ sub output_result {
   return if not defined $line or not length $line;
 
   if ($line =~ s/^\/say\s+//i) {
+    if (defined $stuff->{nickoverride}) {
+      $line = "$stuff->{nickoverride}: $line";
+    }
     $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $stuff->{checkflood};
   } elsif ($line =~ s/^\/me\s+//i) {
+    if (defined $stuff->{nickoverride}) {
+      $line = "$line (for $stuff->{nickoverride})";
+    }
     $pbot->{conn}->me($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $stuff->{checkflood};
   } elsif ($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
@@ -494,10 +500,16 @@ sub output_result {
     } elsif ($to =~ /.*serv$/i) {
       $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$stuff->{nick}!$stuff->{user}\@$stuff->{host}] [$stuff->{command}] [$line]\n");
     } elsif ($line =~ s/^\/me\s+//i) {
+      if (defined $stuff->{nickoverride}) {
+        $line = "$line (for $stuff->{nickoverride})";
+      }
       $pbot->{conn}->me($to, $line) if $to !~ /\Q$botnick\E/i;
       $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $stuff->{checkflood};
     } else {
       $line =~ s/^\/say\s+//i;
+      if (defined $stuff->{nickoverride}) {
+        $line = "$stuff->{nickoverride}: $line";
+      }
       $pbot->{conn}->privmsg($to, $line) if $to !~ /\Q$botnick\E/i;
       $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $stuff->{checkflood};
     }
@@ -523,6 +535,9 @@ sub output_result {
       $pbot->{conn}->privmsg($stuff->{from}, "$victim: $reason") if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     }
   } else {
+    if (defined $stuff->{nickoverride}) {
+      $line = "$stuff->{nickoverride}: $line";
+    }
     $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', $line, 0, 0, 0) if $stuff->{checkflood};
   }
