@@ -34,6 +34,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.join',    sub { $self->on_join(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.part',    sub { $self->on_departure(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',    sub { $self->on_departure(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
 
   $self->{filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/triggers.sqlite3';
 
@@ -268,6 +269,16 @@ sub actiontrigger {
   }
 
   return $result;
+}
+
+sub on_kick {
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
+  my ($victim, $reason) = ($event->{event}->to, $event->{event}->{args}[1]);
+  my $channel = $event->{event}->{args}[0];
+  return 0 if $event->{interpreted};
+  $self->check_trigger($nick, $user, $host, $channel, "KICK $victim $reason");
+  return 0;
 }
 
 sub on_action {
