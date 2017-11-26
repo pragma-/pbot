@@ -374,7 +374,7 @@ sub initialise
 =cut
 
     if(not $config->args(\@ARGV)) {
-      print "Usage : dict [-d database] [-n start from definition number] [-t abbreviation of word class type (n]oun, v]erb, adv]erb, adj]ective, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
+      print "Usage: dict [-d database] [-n start from definition number] [-t abbreviation of word class type (n]oun, v]erb, adv]erb, adj]ective, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
       exit;
     }
 
