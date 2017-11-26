@@ -252,8 +252,9 @@ sub interpret {
 
   my $got_pipe = 0;
 
-  if (defined $arguments && $arguments =~ m/\|\s*\{\s*[^}]+\}\s*$/) {
-    $arguments =~ m/(.*?)\s*\|\s*\{\s*([^}]+)\}(.*)/;
+  # parse out a pipe unless escaped
+  if (defined $arguments && $arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
+    $arguments =~ m/(.*?)\s*(?<!\\)\|\s*\{\s*([^}]+)\}(.*)/;
     my ($args, $pipe, $rest) = ($1, $2, $3);
     $pipe =~ s/\s+$//;
 
@@ -266,6 +267,9 @@ sub interpret {
     $stuff->{pipe_rest} = $rest;
     $got_pipe = 1;
   }
+
+  # unescape any escaped pipes
+  $arguments =~ s/\\\|\s*\{/| {/g if defined $arguments;
 
   $stuff->{nickoverride} = $stuff->{nick} if defined $stuff->{nickoverride} and lc $stuff->{nickoverride} eq 'me';
 
