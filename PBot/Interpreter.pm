@@ -262,7 +262,7 @@ sub interpret {
 
     $stuff->{prepend} = '/say ' unless exists $self->{pipe};
 
-    $stuff->{arguments} = $args;
+    $arguments = $args;
     $stuff->{pipe} = $pipe;
     $stuff->{pipe_rest} = $rest;
     $got_pipe = 1;
@@ -273,7 +273,7 @@ sub interpret {
 
   $stuff->{nickoverride} = $stuff->{nick} if defined $stuff->{nickoverride} and lc $stuff->{nickoverride} eq 'me';
 
-  if ((not exists $stuff->{pipe}) and $keyword !~ /^(?:factrem|forget|set|factdel|factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell|cc|eval|u|udict|ud|actiontrigger|urban|perl)$/) {
+  if ($keyword !~ /^(?:factrem|forget|set|factdel|factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|tell|cc|eval|u|udict|ud|actiontrigger|urban|perl)$/) {
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
     $arguments =~ s/(?<![\w\/\-\\])me\b/$stuff->{nick}/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
     $arguments =~ s/(?<![\w\/\-\\])my\b/$stuff->{nick}'s/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
@@ -300,12 +300,12 @@ sub interpret {
     return undef;
   }
 
-  $stuff->{keyword} = $keyword;
   if (not exists $stuff->{root_keyword}) {
     $stuff->{root_keyword} = $keyword;
   }
 
-  $stuff->{arguments} = $arguments unless $got_pipe;
+  $stuff->{keyword} = $keyword;
+  $stuff->{arguments} = $arguments;
 
   return $self->SUPER::execute_all($stuff);
 }

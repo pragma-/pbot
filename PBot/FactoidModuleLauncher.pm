@@ -78,7 +78,7 @@ sub execute_module {
   $stuff->{arguments} = $self->{pbot}->{factoids}->expand_special_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $stuff->{arguments});
   $stuff->{arguments} = quotemeta $stuff->{arguments};
 
-  if ($stuff->{command} eq 'code-factoid' or exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{unquote_spaces}) {
+  if ($stuff->{special} eq 'code-factoid' or exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{unquote_spaces}) {
     $stuff->{arguments} =~ s/\\ / /g;
   }
 
@@ -194,7 +194,7 @@ sub module_pipe_reader {
     return if $stuff->{result} =~ m/(?:no results)/i;
   }
 
-  if ($stuff->{command} eq 'code-factoid') {
+  if ($stuff->{special} eq 'code-factoid') {
     $stuff->{result} =~ s/\s+$//g;
     $self->{pbot}->{logger}->log("No text result from code-factoid.\n") and return if not length $stuff->{result};
 
@@ -209,7 +209,7 @@ sub module_pipe_reader {
     $self->{pbot}->{interpreter}->handle_result($stuff, $stuff->{result});
   } else {
     # don't override nick if already set
-    if ($stuff->{command} ne 'code-factoid' and exists $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} and $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} != 0) {
+    if ($stuff->{special} ne 'code-factoid' and exists $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} and $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} != 0) {
       $stuff->{nickoverride} = $stuff->{nick};
     } else {
       # extract nick-like thing from module result 

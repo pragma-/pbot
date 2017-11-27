@@ -684,7 +684,6 @@ sub execute_code_factoid_using_safe {
 }
 
 sub execute_code_factoid_using_vm {
-#  my ($self, $nick, $user, $host, $from, $chan, $root_keyword, $keyword, $arguments, $lang, $code, $tonick) = @_;
   my ($self, $stuff) = @_;
 
   unless (exists $self->{factoids}->hash->{$stuff->{channel}}->{$stuff->{keyword}}->{interpolate} and $self->{factoids}->hash->{$stuff->{channel}}->{$stuff->{keyword}}->{interpolate} eq '0') {
@@ -700,7 +699,7 @@ sub execute_code_factoid_using_vm {
 
   my $json = encode_json \%h;
 
-  $stuff->{command} = 'code-factoid';
+  $stuff->{special} = 'code-factoid';
   $stuff->{root_channel} = $stuff->{channel};
   $stuff->{keyword} = 'compiler';
   $stuff->{arguments} = $json;
@@ -710,7 +709,8 @@ sub execute_code_factoid_using_vm {
 }
 
 sub execute_code_factoid {
-  return execute_code_factoid_using_vm(@_);
+  my ($self, @args) = @_;
+  return $self->execute_code_factoid_using_vm(@args);
 }
 
 sub interpreter {
@@ -728,8 +728,7 @@ sub interpreter {
   return undef if not length $stuff->{keyword} or $stuff->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
 
   $stuff->{from} = lc $stuff->{from};
-
-  #$self->{pbot}->{logger}->log("factoids interpreter: kw: [$keyword] args: [$arguments] from: [$from], ref_from: [" . (defined $ref_from ? $ref_from : "undef") . "]\n");
+  $self->{special} = "";
 
   # search for factoid against global channel and current channel (from unless ref_from is defined)
   my $original_keyword = $stuff->{keyword};
@@ -807,6 +806,11 @@ sub interpreter {
     }
   }
 
+  $stuff->{keyword} = $keyword;
+  $stuff->{trigger} = $keyword;
+  $stuff->{channel} = $channel;
+  $stuff->{original_keyword} = $original_keyword;
+
   return undef if $stuff->{referenced} and $self->{factoids}->hash->{$channel}->{$keyword}->{noembed};
 
   if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on}) {
@@ -836,16 +840,11 @@ sub interpreter {
 
   if ($action =~ m{^/code\s+([^\s]+)\s+(.+)$}i) {
     my ($lang, $code) = ($1, $2);
-    $stuff->{channel} = $channel;
     $stuff->{lang} = $lang;
     $stuff->{code} = $code;
     $self->execute_code_factoid($stuff);
     return "";
   }
-
-  $stuff->{channel} = $channel;
-  $stuff->{keyword} = $keyword;
-  $stuff->{original_keyword} = $original_keyword;
 
   return $self->handle_action($stuff, $action);
 }
@@ -862,7 +861,7 @@ sub handle_action {
 
   return "" if not length $action;
 
-  my ($channel, $keyword) = ($stuff->{channel}, $stuff->{keyword});
+  my ($channel, $keyword) = ($stuff->{channel}, $stuff->{trigger});
 
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
     $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $action);
@@ -914,7 +913,7 @@ sub handle_action {
     $action = $self->expand_action_arguments($action, $stuff->{arguments}, $stuff->{nick});
   }
 
-  return $action if $stuff->{command} eq 'code-factoid';
+  return $action if $stuff->{special} eq 'code-factoid';
 
   if ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'module') {
     my $preserve_whitespace = $self->{factoids}->hash->{$channel}->{$keyword}->{preserve_whitespace};
