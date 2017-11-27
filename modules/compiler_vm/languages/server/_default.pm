@@ -48,7 +48,7 @@ sub preprocess {
     close $fh;
 
     print "Executing [$self->{cmdline}] without print_last_statement\n";
-    my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date} > /dev/null; ulimit -t 5; $self->{cmdline}\"");
+    my ($retval, $result) = $self->execute(60, "date -s \@$self->{date} > /dev/null; ulimit -t 5; $self->{cmdline}");
     $self->{output} = $result;
     $self->{error}  = $retval;
 
@@ -59,7 +59,7 @@ sub preprocess {
       close $fh;
 
       print "Executing [$self->{cmdline}] with print_last_statement\n";
-      my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date} > /dev/null; ulimit -t 5; $self->{cmdline}\"");
+      my ($retval, $result) = $self->execute(60, "date -s \@$self->{date} > /dev/null; ulimit -t 5; $self->{cmdline}");
     }
   } else {
     open(my $fh, '>', $self->{sourcefile}) or die $!;
@@ -67,7 +67,7 @@ sub preprocess {
     close $fh;
 
     print "Executing [$self->{cmdline}]\n";
-    my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date} > /dev/null; ulimit -t 5; $self->{cmdline}\"");
+    my ($retval, $result) = $self->execute(60, "date -s \@$self->{date} > /dev/null; ulimit -t 5; $self->{cmdline}");
     $self->{output} = $result;
     $self->{error}  = $retval;
   }
