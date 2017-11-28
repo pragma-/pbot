@@ -697,6 +697,11 @@ sub execute_code_factoid_using_vm {
     $h{'persist-key'} = $self->{factoids}->hash->{$stuff->{channel}}->{$stuff->{keyword}}->{'persist-key'};
   }
 
+  # not sure why we need this here, but it seems to stop strange
+  # text encoding issues in the following encode_json call
+  use Encode;
+  $h{arguments} = decode('utf8', $h{arguments});
+
   my $json = encode_json \%h;
 
   $stuff->{special} = 'code-factoid';
