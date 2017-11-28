@@ -194,7 +194,7 @@ sub module_pipe_reader {
     return if $stuff->{result} =~ m/(?:no results)/i;
   }
 
-  if ($stuff->{special} eq 'code-factoid') {
+  if (exists $stuff->{special} and $stuff->{special} eq 'code-factoid') {
     $stuff->{result} =~ s/\s+$//g;
     $self->{pbot}->{logger}->log("No text result from code-factoid.\n") and return if not length $stuff->{result};
 
@@ -209,7 +209,7 @@ sub module_pipe_reader {
     $self->{pbot}->{interpreter}->handle_result($stuff, $stuff->{result});
   } else {
     # don't override nick if already set
-    if ($stuff->{special} ne 'code-factoid' and exists $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} and $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} != 0) {
+    if (exists $stuff->{special} and $stuff->{special} ne 'code-factoid' and exists $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} and $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} != 0) {
       $stuff->{nickoverride} = $stuff->{nick};
     } else {
       # extract nick-like thing from module result 
@@ -219,7 +219,7 @@ sub module_pipe_reader {
           # put it back on result if it's a usage message
           $stuff->{result} = "$nick: $stuff->{result}";
         } else {
-          my $present = $self->{pbot}->{nicklist}->is_present($nick);
+          my $present = $self->{pbot}->{nicklist}->is_present($stuff->{channel}, $nick);
           if ($present) {
             # nick is present in channel
             $stuff->{nickoverride} = $present;
