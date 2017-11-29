@@ -252,8 +252,6 @@ sub interpret {
     $self->{pbot}->{logger}->log("Truncating keyword to 30 chars: $keyword\n");
   }
 
-  my $got_pipe = 0;
-
   # parse out a pipe unless escaped
   if (defined $arguments && $arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
     $arguments =~ m/(.*?)\s*(?<!\\)\|\s*\{\s*([^}]+)\}(.*)/;
@@ -265,9 +263,14 @@ sub interpret {
     $stuff->{prepend} = '/say ' unless exists $self->{pipe};
 
     $arguments = $args;
-    $stuff->{pipe} = $pipe;
-    $stuff->{pipe_rest} = $rest;
-    $got_pipe = 1;
+
+    if (exists $stuff->{pipe}) {
+      $stuff->{pipe_rest} = "$rest | { $stuff->{pipe} }$stuff->{pipe_rest}";
+      $stuff->{pipe} = $pipe;
+    } else {
+      $stuff->{pipe} = $pipe;
+      $stuff->{pipe_rest} = $rest;
+    }
   }
 
   # unescape any escaped pipes
