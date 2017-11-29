@@ -650,6 +650,12 @@ sub factmove {
     return "Target factoid $target already exists in channel $target_channel";
   }
 
+  my ($overchannel, $overtrigger) = $self->{pbot}->{factoids}->find_factoid('.*', $target, undef, 1, 1);
+  if(defined $overtrigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$overtrigger}->{'nooverride'}) {
+    $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $target\n");
+    return "/say $target already exists for the global channel and cannot be overridden for " . ($target_channel eq '.*' ? 'the global channel' : $target_channel) . ".";
+  }
+
   $target_channel = lc $target_channel;
   $target_channel = '.*' if $target_channel !~ /^#/;
 
@@ -697,7 +703,13 @@ sub factalias {
     $self->{pbot}->{logger}->log("attempt to overwrite existing command\n");
     return "'$alias_trigger' already exists for channel $channel";
   }
-  
+
+  my ($overchannel, $overtrigger) = $self->{pbot}->{factoids}->find_factoid('.*', $alias, undef, 1, 1);
+  if(defined $overtrigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$overtrigger}->{'nooverride'}) {
+    $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $alias\n");
+    return "/say $alias already exists for the global channel and cannot be overridden for " . ($chan eq '.*' ? 'the global channel' : $chan) . ".";
+  }
+
   $self->{pbot}->{factoids}->add_factoid('text', $chan, "$nick!$user\@$host", $alias, "/call $command");
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host [$chan] aliased $alias => $command\n");
