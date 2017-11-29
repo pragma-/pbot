@@ -266,11 +266,10 @@ sub interpret {
 
     if (exists $stuff->{pipe}) {
       $stuff->{pipe_rest} = "$rest | { $stuff->{pipe} }$stuff->{pipe_rest}";
-      $stuff->{pipe} = $pipe;
     } else {
-      $stuff->{pipe} = $pipe;
       $stuff->{pipe_rest} = $rest;
     }
+    $stuff->{pipe} = $pipe;
   }
 
   # unescape any escaped pipes
