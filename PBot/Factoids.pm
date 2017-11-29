@@ -411,7 +411,7 @@ sub expand_factoid_vars {
       last if ++$depth >= 100;
       my ($a, $v) = ($1, $2);
       $v =~ s/(.):$/$1/;
-      next if $v =~ m/^[\W]/; # special character prefix skipped for shell/code-factoids/etc
+      next if $v =~ m/^[\W_]/; # special character prefix skipped for shell/code-factoids/etc
       next if $v =~ m/^(nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])$/i; # don't override special variables
       next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
 
