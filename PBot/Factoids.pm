@@ -733,7 +733,6 @@ sub interpreter {
   return undef if not length $stuff->{keyword} or $stuff->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
 
   $stuff->{from} = lc $stuff->{from};
-  $self->{special} = "";
 
   # search for factoid against global channel and current channel (from unless ref_from is defined)
   my $original_keyword = $stuff->{keyword};
