@@ -230,16 +230,18 @@ sub interpret {
     my $similar = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{nickoverride});
     if ($similar) {
       $stuff->{nickoverride} = $similar;
+      $stuff->{force_nickoverride} = 1;
     } else {
-      $stuff->{nickoverride} = undef;
+      delete $stuff->{nickoverride};
     }
   } elsif ($stuff->{command} =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*)$/is) {
     ($keyword, $stuff->{nickoverride}) = ($2, $1);
     my $similar = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{nickoverride});
     if ($similar) {
       $stuff->{nickoverride} = $similar;
+      $stuff->{force_nickoverride} = 1;
     } else {
-      $stuff->{nickoverride} = undef;
+      delete $stuff->{nickoverride};
     }
   } elsif ($stuff->{command} =~ /^(.*?)\s+(.*)$/s) {
     ($keyword, $arguments) = ($1, $2);
