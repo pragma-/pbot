@@ -256,7 +256,7 @@ sub interpret {
 
   # parse out a pipe unless escaped
   if (defined $arguments && $arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
-    $arguments =~ m/(.*?)\s*(?<!\\)\|\s*\{\s*([^}]+)\}(.*)/;
+    $arguments =~ m/(.*?)\s*(?<!\\)\|\s*\{\s*([^}]+)\}(.*)/s;
     my ($args, $pipe, $rest) = ($1, $2, $3);
     $pipe =~ s/\s+$//;
 
