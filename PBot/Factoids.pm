@@ -374,6 +374,10 @@ sub find_factoid {
 sub escape_json {
   my ($self, $text) = @_;
   my $thing = {thing => $text};
+  # not sure why we need this here, but it seems to stop strange
+  # text encoding issues in the following encode_json call
+  use Encode;
+  $thing->{thing} = decode('utf8', $thing->{thing});
   my $json = encode_json $thing;
   $json =~ s/^{".*":"//;
   $json =~ s/"}$//;
@@ -503,6 +507,12 @@ sub expand_action_arguments {
   } else {
     %h = (args => $input);
   }
+
+  # not sure why we need this here, but it seems to stop strange
+  # text encoding issues in the following encode_json call
+  use Encode;
+  $h{args} = decode('utf8', $h{args});
+
   my $jsonargs = encode_json \%h;
   $jsonargs =~ s/^{".*":"//;
   $jsonargs =~ s/"}$//;
