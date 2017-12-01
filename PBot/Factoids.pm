@@ -907,10 +907,8 @@ sub handle_action {
 
   # Check if it's an alias
   if ($action =~ /^\/call\s+(.*)$/) {
-    my $command = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $1);
-    if (length $stuff->{arguments}) {
-      $command .= " $stuff->{arguments}";
-    }
+    my $command = $1;
+    $command .= " $stuff->{arguments}" if length $stuff->{arguments};
 
     $stuff->{command} = $command;
 
