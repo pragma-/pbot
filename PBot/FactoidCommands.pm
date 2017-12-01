@@ -113,7 +113,10 @@ sub call_factoid {
   }
 
   $stuff->{keyword} = $trigger;
+  $stuff->{trigger} = $trigger;
+  $stuff->{ref_from} = $channel;
   $stuff->{arguments} = $args;
+  $stuff->{root_keyword} = $trigger;
 
   return $self->{pbot}->{factoids}->interpreter($stuff);
 }
