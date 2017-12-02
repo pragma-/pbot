@@ -40,6 +40,7 @@ sub vm_start {
 }
 
 sub vm_reset {
+  return if $ENV{NORESET};
   system("virsh detach-disk $DOMAIN_NAME vdb");
   system("virsh snapshot-revert $DOMAIN_NAME 1");
   system("virsh attach-disk $DOMAIN_NAME --source /var/lib/libvirt/images/factdata.qcow2 --target vdb");
@@ -55,7 +56,7 @@ sub execute {
 
   my ($ret, $result);
 
-  $SIG{CHLD} = 'IGNORE';
+  #$SIG{CHLD} = 'IGNORE';
 
   my $child = fork;
 
@@ -216,8 +217,8 @@ sub compiler_server {
             if(not defined $ret) {
               #print "parent continued\n";
               print "parent continued [$result]\n";
-              $timed_out = 1 if $result == 243; # -13 == 243
-              $killed = 1 if $result == 242; # -14 = 242
+              $timed_out = 1 if $result == 243 or $result == -13; # -13 == 243
+              $killed = 1 if $result == 242 or $result == -14; # -14 = 242
               last;
             }
 
@@ -246,11 +247,10 @@ sub compiler_server {
 
         close $client;
 
+        next unless ($timed_out or $killed);
+
         vm_reset;
         next;
-
-        #next unless ($timed_out or $killed);
-        #next unless $timed_out;
 
         print "stopping vm\n";
         vm_stop;
