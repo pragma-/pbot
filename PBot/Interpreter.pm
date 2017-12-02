@@ -351,7 +351,7 @@ sub handle_result {
 
   $stuff->{preserve_whitespace} = 0 if not defined $stuff->{preserve_whitespace};
 
-  if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
+  if ($self->{pbot}->{registry}->get_value('general', 'debugcontext') and length $stuff->{result}) {
     use Data::Dumper;
     $Data::Dumper::Sortkeys  = 1;
     $self->{pbot}->{logger}->log("Interpreter::handle_result [$result]\n");
