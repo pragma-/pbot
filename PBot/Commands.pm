@@ -80,8 +80,9 @@ sub exists {
   my $self = shift;
   my ($keyword) = @_;
 
+  $keyword = lc $keyword;
   foreach my $ref (@{ $self->{handlers} }) {
-    return 1 if $ref->{name} eq lc $keyword;
+    return 1 if $ref->{name} eq $keyword;
   }
   return 0;
 }
