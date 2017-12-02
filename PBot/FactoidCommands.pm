@@ -659,6 +659,10 @@ sub factmove {
     return "/say $target already exists for the global channel and cannot be overridden for " . ($target_channel eq '.*' ? 'the global channel' : $target_channel) . ".";
   }
 
+  if ($self->{pbot}->{commands}->exists($target)) {
+    return "/say $target already exists as a built-in command.";
+  }
+
   $target_channel = lc $target_channel;
   $target_channel = '.*' if $target_channel !~ /^#/;
 
@@ -711,6 +715,10 @@ sub factalias {
   if(defined $overtrigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$overtrigger}->{'nooverride'}) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $alias\n");
     return "/say $alias already exists for the global channel and cannot be overridden for " . ($chan eq '.*' ? 'the global channel' : $chan) . ".";
+  }
+
+  if ($self->{pbot}->{commands}->exists($alias)) {
+    return "/say $alias already exists as a built-in command.";
   }
 
   $self->{pbot}->{factoids}->add_factoid('text', $chan, "$nick!$user\@$host", $alias, "/call $command");
@@ -801,6 +809,10 @@ sub factadd {
   if(defined $trigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$trigger}->{'nooverride'}) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $keyword\n");
     return "/say $keyword already exists for the global channel and cannot be overridden for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
+  }
+
+  if ($self->{pbot}->{commands}->exists($keyword)) {
+    return "/say $keyword already exists as a built-in command.";
   }
 
   $self->{pbot}->{factoids}->add_factoid('text', $from_chan, "$nick!$user\@$host", $keyword, $text);
