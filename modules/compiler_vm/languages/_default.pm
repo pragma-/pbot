@@ -44,8 +44,10 @@ sub new {
   $self->{lang}    =~ s/^\s+|\s+$//g if defined $self->{lang};
   $self->{code}    =~ s/^\s+|\s+$//g if defined $self->{code};
 
-  $self->{arguments} = quotemeta $self->{arguments};
-  $self->{arguments} =~ s/\\ / /g;
+  if (defined $self->{arguments}) {
+    $self->{arguments} = quotemeta $self->{arguments};
+    $self->{arguments} =~ s/\\ / /g;
+  }
 
   $self->initialize(%conf);
 
@@ -371,7 +373,6 @@ sub execute {
   print FILE "------------------------------------------------------------------------\n";
   print FILE localtime() . "\n";
   print FILE "$cmdline\n$input\n$pretty_code\n";
-  close FILE;
 
   my $compile_in = { lang => $self->{lang}, sourcefile => $self->{sourcefile}, execfile => $self->{execfile},
     cmdline => $cmdline, input => $input, date => $date, arguments => $self->{arguments}, code => $pretty_code };
@@ -380,10 +381,42 @@ sub execute {
   $compile_in->{'persist-key'} = $self->{'persist-key'} if length $self->{'persist-key'};
 
   my $compile_json = encode_json($compile_in);
+  $compile_json .= "\n:end:\n";
 
-  #print STDERR "Sending [$compile_json] to vm_server\n";
+  my $length = length $compile_json;
+  my $sent = 0;
+  my $chunk_max = 4096;
+  my $chunk_size = $length < $chunk_max ? $length : $chunk_max;
+  my $chunks_sent;
 
-  print $compiler "$compile_json\n";
+  #print FILE "Sending $length bytes [$compile_json] to vm_server\n";
+
+  $chunk_size -= 1; # account for newline in syswrite
+
+  while ($chunks_sent < $length) {
+    my $chunk = substr $compile_json, $chunks_sent, $chunk_size;
+    #print FILE "Sending chunk [$chunk]\n";
+    $chunks_sent += length $chunk;
+
+    my $ret = syswrite($compiler, "$chunk\n");
+
+    if (not defined $ret) {
+      print FILE "Error sending: $!\n";
+      last;
+    }
+
+    if ($ret == 0) {
+      print FILE "Sent 0 bytes. Sleep 1 sec and try again\n";
+      sleep 1;
+      next;
+    }
+
+    $sent += $ret;
+    print FILE "Sent $ret bytes, so far $sent ...\n";
+  }
+
+  #print FILE "Done sending!\n";
+  close FILE;
 
   my $result = "";
   my $got_result = 0;

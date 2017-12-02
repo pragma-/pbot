@@ -53,13 +53,44 @@ sub run_server {
   my $cmdline;
   my $user_input;
 
-  print "Waiting for input...\n";
-
   my $pid = fork;
   die "Fork failed: $!" if not defined $pid;
 
   if($pid == 0) {
-    while(my $line = <$input>) {
+    my $buffer = "";
+    my $length = 4096;
+    my $line;
+    my $total_read = 0;
+
+    while (1) {
+      print "Waiting for input...\n";
+      my $ret = sysread($input, my $buf, $length);
+
+      if (not defined $ret) {
+        print "Error reading: $!\n";
+        next;
+      }
+
+      $total_read += $ret;
+
+      if ($ret == 0) {
+        print "input  ded?\n";
+        print "got buffer [$buffer]\n";
+        exit;
+      }
+
+      chomp $buf;
+      print "read $ret bytes [$total_read so far] [$buf]\n";
+      $buffer.= $buf;
+
+      if ($buffer =~ s/\s*:end:\s*$//m) {
+        $line = $buffer;
+        $buffer = "";
+        $total_read = 0;
+      } else {
+        next;
+      }
+
       chomp $line;
 
       print "-" x 40, "\n";
@@ -89,9 +120,9 @@ sub run_server {
           system("cp -R -p /root/factdata/$compile_in->{'persist-key'}/* /home/compiler/");
         }
 
+        system("chmod -R 755 /home/compiler");
         system("chown -R compiler /home/compiler/*");
         system("chgrp -R compiler /home/compiler/*");
-        system("chmod -R 755 /home/compiler");
         system("rm -rf /home/compiler/prog*");
 
         $( = $gid;
@@ -113,6 +144,7 @@ sub run_server {
           system("id");
           system("cp -R -p /home/compiler/* /root/factdata/$compile_in->{'persist-key'}/");
           system("umount /root/factdata");
+          system ("rm -rf /home/compiler/*");
         }
 
         exit;
@@ -121,6 +153,7 @@ sub run_server {
       }
 
       if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
+        print "=" x 40, "\n";
         print "input: ";
         next;
       } else {
