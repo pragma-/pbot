@@ -11,7 +11,7 @@ sub validate_string {
   $max_length = 2000 if not defined $max_length;
   $string = substr $string, 0, $max_length unless $max_length <= 0;
 #  $string =~ s/(\P{PosixGraph})/my $ch = $1; if ($ch =~ m{[\s\x03\x02\x1d\x1f\x16\x0f]}) { $ch } else { sprintf "\\x%02X", ord $ch }/ge;
-  $string = substr $string, 0, $max_length unless $max_length <= 0;
+#  $string = substr $string, 0, $max_length unless $max_length <= 0;
   return $string;
 }
 
