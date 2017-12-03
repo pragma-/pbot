@@ -249,10 +249,16 @@ sub grab_quotegrab {
   my $text = $quotegrab->{text};
   ($grab_nick) = split /\+/, $grab_nicks, 2;
 
-  if($text =~ s/^\/me\s+//) {
-      return "Quote grabbed: $quotegrab->{id}: * $grab_nick $text";
+  if ($text =~ s/^(NICKCHANGE)\b/changed nick to/ or
+      $text =~ s/^(KICKED|QUIT)\b/lc "$1"/e or
+      $text =~ s/^(JOIN|PART)\b/lc "$1ed"/e) {
+    # fix ugly "[nick] quit Quit: Leaving." messages
+    $text =~ s/^(quit) (.*)/$1 ($2)/;
+    return "Quote grabbed: $quotegrab->{id}: $grab_nick $text";
+  } elsif ($text =~ s/^\/me\s+//) {
+    return "Quote grabbed: $quotegrab->{id}: * $grab_nick $text";
   } else {
-      return "Quote grabbed: $quotegrab->{id}: <$grab_nick> $text";
+    return "Quote grabbed: $quotegrab->{id}: <$grab_nick> $text";
   }
 }
 
