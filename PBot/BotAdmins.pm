@@ -100,7 +100,7 @@ sub load_admins {
   $self->{pbot}->{logger}->log("Loading admins from $filename ...\n");
 
   $self->{admins}->load;
-  
+
   my $i = 0;
 
   foreach my $channel (keys %{ $self->{admins}->hash } ) {
@@ -125,7 +125,7 @@ sub load_admins {
 
 sub save_admins {
   my $self = shift;
-  
+
   $self->{admins}->save;
   $self->export_admins;
 }
