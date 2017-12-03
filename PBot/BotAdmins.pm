@@ -100,7 +100,7 @@ sub load_admins {
   $self->{pbot}->{logger}->log("Loading admins from $filename ...\n");
 
   $self->{admins}->load;
-  
+
   my $i = 0;
 
   foreach my $channel (keys %{ $self->{admins}->hash } ) {
@@ -125,7 +125,7 @@ sub load_admins {
 
 sub save_admins {
   my $self = shift;
-  
+
   $self->{admins}->save;
   $self->export_admins;
 }
@@ -151,7 +151,7 @@ sub find_admin {
     foreach my $channel_regex (keys %{ $self->{admins}->hash }) {
       if($from !~ m/^#/) {
         foreach my $hostmask_regex (keys %{ $self->{admins}->hash->{$channel_regex} }) {
-          return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/$hostmask_regex/i;
+          return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/$hostmask_regex/i or $hostmask eq lc $hostmask_regex;
         }
       } elsif($from =~ m/^$channel_regex$/i) {
         foreach my $hostmask_regex (keys %{ $self->{admins}->hash->{$channel_regex} }) {
