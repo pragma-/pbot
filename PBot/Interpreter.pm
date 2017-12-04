@@ -507,7 +507,7 @@ sub output_result {
     my $to = $1;
     if ($to =~ /,/) {
       $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$stuff->{nick}!$stuff->{user}\@$stuff->{host}] [$stuff->{command}] [$line]\n");
-    } elsif ($to =~ /.*serv$/i) {
+    } elsif ($to =~ /.*serv(?:@.*)?$/i) {
       $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$stuff->{nick}!$stuff->{user}\@$stuff->{host}] [$stuff->{command}] [$line]\n");
     } elsif ($line =~ s/^\/me\s+//i) {
       if (defined $stuff->{nickoverride}) {
