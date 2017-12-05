@@ -254,6 +254,17 @@ sub interpret {
     $self->{pbot}->{logger}->log("Truncating keyword to 30 chars: $keyword\n");
   }
 
+  # parse out a substituted command
+  if (defined $arguments && $arguments =~ s/(?<!\\)&\{\s*([^}]+)\}/&{subcmd}/) {
+    my $command = $1;
+    push @{$stuff->{subcmd}}, "$keyword $arguments";
+    $stuff->{command} = $command;
+    my $result = $self->interpret($stuff);
+    $stuff->{result} = $result;
+    return $result;
+  }
+
+
   # parse out a pipe unless escaped
   if (defined $arguments && $arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
     $arguments =~ m/(.*?)\s*(?<!\\)\|\s*\{\s*([^}]+)\}(.*)/s;
@@ -361,6 +372,22 @@ sub handle_result {
   $result = $stuff->{result} if not defined $result;
 
   if (not defined $result or length $result == 0) {
+    return 0;
+  }
+
+  if (exists $stuff->{subcmd}) {
+    my $command = pop @{$stuff->{subcmd}};
+
+    if (@{$stuff->{subcmd}} == 0) {
+      delete $stuff->{subcmd};
+    }
+
+    $command =~ s/&\{subcmd\}/$result/;
+
+    $stuff->{command} = $command;
+    $result = $self->interpret($stuff);
+    $stuff->{result}= $result;
+    $self->handle_result($stuff);
     return 0;
   }
 
