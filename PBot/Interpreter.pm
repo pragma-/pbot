@@ -264,6 +264,8 @@ sub interpret {
     return $result;
   }
 
+  # unescape any escaped substituted commands
+  $arguments =~ s/\\&\{/&{/g if defined $arguments;
 
   # parse out a pipe unless escaped
   if (defined $arguments && $arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
