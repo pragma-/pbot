@@ -166,6 +166,8 @@ sub execute_module {
     $stuff->{result} = `./$module $stuff->{arguments} 2>> $module-stderr`;
     chomp $stuff->{result};
 
+    $stuff->{result} = "/say $stuff->{result}";
+
     my $json = encode_json $stuff;
     print $writer "$json\n";
     exit 0;

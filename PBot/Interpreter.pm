@@ -275,8 +275,6 @@ sub interpret {
 
     $self->{pbot}->{logger}->log("piping: [$args][$pipe][$rest]\n");
 
-    $stuff->{prepend} = '/say ' unless exists $self->{pipe};
-
     $arguments = $args;
 
     if (exists $stuff->{pipe}) {
@@ -377,6 +375,12 @@ sub handle_result {
     return 0;
   }
 
+  if ($result =~ s#^(/say|/me) ##) {
+    $stuff->{prepend} = $1;
+  } elsif ($result =~ s#^(/msg \S+) ##) {
+    $stuff->{prepend} = $1;
+  }
+
   if (exists $stuff->{subcmd}) {
     my $command = pop @{$stuff->{subcmd}};
 
@@ -389,28 +393,15 @@ sub handle_result {
     $stuff->{command} = $command;
     $result = $self->interpret($stuff);
     $stuff->{result}= $result;
+    $self->{pbot}->{logger}->log("subcmd result [$result]\n");
     $self->handle_result($stuff);
     return 0;
   }
 
   if ($stuff->{pipe} and not $stuff->{authorized}) {
-    my ($pipe, $pipe_rest) = ($stuff->{pipe}, $stuff->{pipe_rest});
-
-    delete $stuff->{pipe};
-    delete $stuff->{pipe_rest};
-
+    my ($pipe, $pipe_rest) = (delete $stuff->{pipe}, delete $stuff->{pipe_rest});
     $self->{pbot}->{logger}->log("Handling pipe [$result][$pipe][$pipe_rest]\n");
-
-    if ($result =~ s{^(/say |/me )}{}i) {
-      $stuff->{prepend} = $1;
-    }
-=cut
-    elsif ($result =~ s{^/msg ([^ ]+) }{}i) {
-      $stuff->{prepend} = "/msg $1 ";
-    }
-=cut
     $stuff->{command} = "$pipe $result$pipe_rest";
-
     $result = $self->interpret($stuff);
     $stuff->{result} = $result;
     $self->handle_result($stuff, $result);
@@ -418,14 +409,8 @@ sub handle_result {
   }
 
   if ($stuff->{prepend}) {
-    # FIXME: do this better
-    if ($result =~ m{^(/say |/me )}i) {
-#    } elsif ($result =~ m{^/msg ([^ ]+) }i) {
-    } elsif ($result =~ m{^/kick }i) {
-    } else {
-      $result = "$stuff->{prepend}$result";
-      $self->{pbot}->{logger}->log("Prepending [$stuff->{prepend}] to result [$result]\n");
-    }
+    $result = "$stuff->{prepend} $result";
+    $self->{pbot}->{logger}->log("Prepending [$stuff->{prepend}] to result [$result]\n");
   }
 
   my $original_result = $result;
