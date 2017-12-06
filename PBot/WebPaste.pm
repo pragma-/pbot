@@ -62,9 +62,7 @@ sub paste {
   my $result;
 
   for (my $tries = 5; $tries > 0; $tries--) {
-    $self->{pbot}->{logger}->log("try $tries...\n");
     my $paste_site = $self->get_paste_site;
-
     $result = $paste_site->($text);
 
     if ($result !~ m/error pasting/) {
@@ -78,8 +76,6 @@ sub paste {
 sub paste_ixio {
   my $self = shift;
   my $text = join(' ', @_);
-
-  print "paste ixio?\n";
 
   $text =~ s/(.{120})\s/$1\n/g;
 
