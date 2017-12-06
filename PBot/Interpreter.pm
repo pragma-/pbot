@@ -16,7 +16,6 @@ use base 'PBot::Registerable';
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
-use LWP::UserAgent;
 use Carp ();
 
 use PBot::Utils::ValidateString;
@@ -42,12 +41,10 @@ sub initialize {
   $self->{pbot}->{registry}->add_default('text',  'general', 'compile_blocks',                  $conf{compile_blocks}                  // 1);
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',         $conf{compile_blocks_channels}         // '.*');
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_ignore_channels',  $conf{compile_blocks_ignore_channels}  // 'none');
-  $self->{pbot}->{registry}->add_default('text',  'general', 'paste_ratelimit',                 $conf{paste_ratelimit}                 // 60);
   $self->{pbot}->{registry}->add_default('text',  'interpreter', 'max_recursion',  10);
 
   $self->{output_queue}  = {};
   $self->{command_queue} = {};
-  $self->{last_paste}    = 0;
 
   $self->{pbot}->{timer}->register(sub { $self->process_output_queue  }, 1);
   $self->{pbot}->{timer}->register(sub { $self->process_command_queue }, 1);
@@ -335,7 +332,7 @@ sub truncate_result {
     my $link;
     if($paste) {
       $original_result = substr $original_result, 0, 8000;
-      $link = $self->paste("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
+      $link = $self->{pbot}->{webpaste}->paste("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
     } else {
       $link = 'undef';
     }
@@ -450,7 +447,7 @@ sub handle_result {
     next if not length $stripped_line;
 
     if (++$lines >= $max_lines) {
-      my $link = $self->paste("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] <$stuff->{nick}> $stuff->{text}\n\n$original_result");
+      my $link = $self->{pbot}->{webpaste}->paste("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] <$stuff->{nick}> $stuff->{text}\n\n$original_result");
       if ($use_output_queue) {
         my $message = {
           nick => $stuff->{nick}, user => $stuff->{user}, host => $stuff->{host}, command => $stuff->{command},
@@ -658,99 +655,6 @@ sub process_command_queue {
       delete $self->{command_queue}->{$channel};
     }
   }
-}
-
-sub paste {
-  my $self = shift;
-
-  my $rate_limit = $self->{pbot}->{registry}->get_value('general', 'paste_ratelimit');
-  my $now = gettimeofday;
-
-  if ($now - $self->{last_paste} < $rate_limit) {
-    return "paste rate-limited, try again in " . ($rate_limit - int($now - $self->{last_paste})) . " seconds";
-  }
-
-  $self->{last_paste} = $now;
-
-  my $text = join(' ', @_);
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $result = $self->paste_ixio($text);
-
-  if ($result =~ m/error pasting/) {
-    $result = $self->paste_codepad($text);
-  }
-
-  return $result;
-}
-
-sub paste_ixio {
-  my $self = shift;
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $ua = LWP::UserAgent->new();
-  $ua->agent("Mozilla/5.0");
-  push @{ $ua->requests_redirectable }, 'POST';
-  $ua->timeout(10);
-
-  my %post = ('f:1' => $text);
-  my $response = $ua->post("http://ix.io", \%post);
-
-  if(not $response->is_success) {
-    return "error pasting: " . $response->status_line;
-  }
-
-  my $result = $response->content;
-  $result =~ s/^\s+//;
-  $result =~ s/\s+$//;
-  return $result;
-}
-
-sub paste_codepad {
-  my $self = shift;
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $ua = LWP::UserAgent->new();
-  $ua->agent("Mozilla/5.0");
-  push @{ $ua->requests_redirectable }, 'POST';
-  $ua->timeout(10);
-
-  my %post = ( 'lang' => 'Plain Text', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
-  my $response = $ua->post("http://codepad.org", \%post);
-
-  if(not $response->is_success) {
-    return "error pasting: " . $response->status_line;
-  }
-
-  return $response->request->uri;
-}
-
-sub paste_sprunge {
-  my $self = shift;
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $ua = LWP::UserAgent->new();
-  $ua->agent("Mozilla/5.0");
-  $ua->requests_redirectable([ ]);
-  $ua->timeout(10);
-
-  my %post = ( 'sprunge' => $text, 'submit' => 'Submit' );
-  my $response = $ua->post("http://sprunge.us", \%post);
-
-  if(not $response->is_success) {
-    return "error pasting: " . $response->status_line;
-  }
-
-  my $result = $response->content;
-  $result =~ s/^\s+//;
-  $result =~ s/\s+$//;
-  return $result;
 }
 
 1;
