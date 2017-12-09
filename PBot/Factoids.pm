@@ -887,7 +887,6 @@ sub handle_action {
         $action = $self->expand_action_arguments($action, $stuff->{arguments}, $stuff->{nick});
       }
       $stuff->{arguments} = "";
-      delete $stuff->{nickoverride} unless $stuff->{force_nickoverride};
     } else {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
         my $target = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{arguments});
@@ -895,8 +894,6 @@ sub handle_action {
 
         if ($target and $action !~ /\$(?:nick|args)\b/) {
           $stuff->{nickoverride} = $target unless $stuff->{force_nickoverride};
-        } else {
-          delete $stuff->{nickoverride} unless $stuff->{force_nickoverride};
         }
       }
     }

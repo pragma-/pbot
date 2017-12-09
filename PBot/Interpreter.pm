@@ -102,10 +102,10 @@ sub process_line {
     $has_code = $1;
     $preserve_whitespace = 1;
   } elsif ($cmd_text =~ m/^\s*($nick_regex)[,:]*\s*{\s*(.+)\s*}\s*$/) {
-    $nick_override = $1;
-    $has_code = $2 if $nick_override !~ /^(?:enum|struct|union)$/;
+    my $possible_nick_override = $1;
+    $has_code = $2 if $possible_nick_override !~ /^(?:enum|struct|union)$/;
     $preserve_whitespace = 1;
-    $nick_override = $self->{pbot}->{nicklist}->is_present($from, $nick_override);
+    $nick_override = $self->{pbot}->{nicklist}->is_present($from, $possible_nick_override);
   }
 
   if (defined $has_code) {
@@ -130,14 +130,14 @@ sub process_line {
   } elsif ($cmd_text =~ m/^\s*$bot_trigger\{\s*(.+?)\s*\}\s*$/) {
     goto CHECK_EMBEDDED_CMD;
   } elsif ($cmd_text =~ m/^\s*($nick_regex)[,:]\s+$bot_trigger\s*(.+)$/) {
-    $nick_override = $1;
+    my $possible_nick_override = $1;
     $command = $2;
 
-    my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
+    my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $possible_nick_override);
     if ($similar) {
       $nick_override = $similar;
     } else {
-      $self->{pbot}->{logger}->log("No similar nick for $nick_override\n");
+      $self->{pbot}->{logger}->log("No similar nick for $possible_nick_override\n");
       return 0;
     }
   } elsif ($cmd_text =~ m/^$bot_trigger\s*(.+)$/) {
@@ -152,12 +152,10 @@ sub process_line {
   CHECK_EMBEDDED_CMD:
   if (not defined $command or $command =~ m/^\{.*\}/) {
     if ($cmd_text =~ s/^\s*($nick_regex)[,:]\s+//) {
-      $nick_override = $1;
-      my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
+      my $possible_nick_override = $1;
+      my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $possible_nick_override);
       if ($similar) {
         $nick_override = $similar;
-      } else {
-        $nick_override = 0;
       }
     }
 
@@ -228,6 +226,7 @@ sub interpret {
       $stuff->{force_nickoverride} = 1;
     } else {
       delete $stuff->{nickoverride};
+      delete $stuff->{force_nickoverride};
     }
   } elsif ($stuff->{command} =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*)$/is) {
     ($keyword, $stuff->{nickoverride}) = ($2, $1);
@@ -237,6 +236,7 @@ sub interpret {
       $stuff->{force_nickoverride} = 1;
     } else {
       delete $stuff->{nickoverride};
+      delete $stuff->{force_nickoverride};
     }
   } elsif ($stuff->{command} =~ /^(.*?)\s+(.*)$/s) {
     ($keyword, $arguments) = ($1, $2);
