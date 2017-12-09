@@ -16,6 +16,7 @@ use base 'PBot::Registerable';
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
+use Text::Balanced qw/extract_codeblock/;
 use Carp ();
 
 use PBot::Utils::ValidateString;
@@ -53,22 +54,13 @@ sub initialize {
 sub process_line {
   my $self = shift;
   my ($from, $nick, $user, $host, $text) = @_;
-
-  my $command;
-  my $has_code;
-  my $nick_override;
-  my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-  my $processed = 0;
-
   $from = lc $from if defined $from;
 
   my $stuff = { from => $from, nick => $nick, user => $user, host => $host, text => $text };
-
   my $pbot = $self->{pbot};
 
   my $message_account = $pbot->{messagehistory}->get_message_account($nick, $user, $host);
   $pbot->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $from, $text, $pbot->{messagehistory}->{MSG_CHAT});
-
   $stuff->{message_account} = $message_account;
 
   my $flood_threshold      = $pbot->{registry}->get_value($from, 'chat_flood_threshold');
@@ -81,6 +73,20 @@ sub process_line {
     $flood_threshold, $flood_time_threshold,
     $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
 
+  my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+
+  # get channel-specific trigger if available
+  my $bot_trigger = $pbot->{registry}->get_value($from, 'trigger');
+
+  # otherwise get general trigger
+  if (not defined $bot_trigger) {
+    $bot_trigger = $pbot->{registry}->get_value('general', 'trigger');
+  }
+
+  my $nick_regex = qr/[^%!,:\(\)\+\*\/ ]+/;
+
+  my $nick_override;
+  my $processed = 0;
   my $preserve_whitespace = 0;
 
   $text =~ s/^\s+//;
@@ -90,110 +96,103 @@ sub process_line {
   my $cmd_text = $text;
   $cmd_text =~ s/^\/me\s+//;
 
-  # get channel-specific trigger if available
-  my $bot_trigger = $pbot->{registry}->get_value($from, 'trigger');
-
-  if (not defined $bot_trigger) {
-    $bot_trigger = $pbot->{registry}->get_value('general', 'trigger');
+  # check for code compiler invocation
+  my $has_code;
+  if ($cmd_text =~ m/^(?:$botnick.?)?\s*{\s*(.+)\s*}\s*$/) {
+    $has_code = $1;
+    $preserve_whitespace = 1;
+  } elsif ($cmd_text =~ m/^\s*($nick_regex)[,:]*\s*{\s*(.+)\s*}\s*$/) {
+    $nick_override = $1;
+    $has_code = $2 if $nick_override !~ /^(?:enum|struct|union)$/;
+    $preserve_whitespace = 1;
+    $nick_override = $self->{pbot}->{nicklist}->is_present($from, $nick_override);
   }
 
-  my $referenced;
-  my $count = 0;
-  while (++$count <= 3) {
-    $referenced = 0;
-    $command = undef;
-    $has_code = undef;
+  if (defined $has_code) {
+    $processed += 1000; # hint to other plugins that this message has been handled
+    if($pbot->{registry}->get_value('general', 'compile_blocks') and not $pbot->{registry}->get_value($from, 'no_compile_blocks')
+        and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_ignore_channels')
+        and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_channels')) {
+      if (not defined $nick_override or (defined $nick_override and $nick_override != 0)) {
+        return "Using {} to compile code is temporarily disabled. Use the `cc` command instead.";
+        #return $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", $from, '{', (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
+      }
+    }
+  }
 
-    if($cmd_text =~ s/^(?:$botnick.?)?\s*{\s*(.*)\s*}\s*$//) {
-      $has_code = $1 if length $1;
-      $preserve_whitespace = 1;
-      $processed += 100;
-    } elsif($cmd_text =~ s/^\s*([^!,:\(\)\+\*\/ ]+)[,:]*\s*{\s*(.*)\s*}\s*$//) {
-      $nick_override = $1;
-      $has_code = $2 if length $2 and $nick_override !~ /^(?:enum|struct|union)$/;
-      $preserve_whitespace = 1;
-      $nick_override = $self->{pbot}->{nicklist}->is_present($from, $nick_override);
-      $processed += 100;
-    } elsif($cmd_text =~ s/^\s*([^!,:\(\)\+\*\/ ]+)[,:]?\s+$bot_trigger[`\{](.+?)[\}`]\s*//) {
-      $nick_override = $1;
-      $command = $2;
+  # check for bot command invocation
+  my @commands;
+  my $command;
+  my $embedded = 0;
 
+  if ($cmd_text =~ m/^\s*($nick_regex)[,:]?\s+$bot_trigger\{\s*(.+?)\s*\}\s*$/) {
+    goto CHECK_EMBEDDED_CMD;
+  } elsif ($cmd_text =~ m/^\s*$bot_trigger\{\s*(.+?)\s*\}\s*$/) {
+    goto CHECK_EMBEDDED_CMD;
+  } elsif ($cmd_text =~ m/^\s*($nick_regex)[,:]\s+$bot_trigger\s*(.+)$/) {
+    $nick_override = $1;
+    $command = $2;
+
+    my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
+    if ($similar) {
+      $nick_override = $similar;
+    } else {
+      $self->{pbot}->{logger}->log("No similar nick for $nick_override\n");
+      return 0;
+    }
+  } elsif ($cmd_text =~ m/^$bot_trigger\s*(.+)$/) {
+    $command = $1;
+  } elsif ($cmd_text =~ m/^.?$botnick.?\s*(.+)$/i) {
+    $command = $1;
+  } elsif ($cmd_text =~ m/^(.+?),?\s*$botnick[?!.]*$/i) {
+    $command = $1;
+  }
+
+  # check for embedded commands
+  CHECK_EMBEDDED_CMD:
+  if (not defined $command or $command =~ m/^\{.*\}/) {
+    if ($cmd_text =~ s/^\s*($nick_regex)[,:]\s+//) {
+      $nick_override = $1;
       my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
       if ($similar) {
         $nick_override = $similar;
       } else {
-        $self->{pbot}->{logger}->log("No similar nick for $nick_override\n");
-        return 0;
+        $nick_override = 0;
       }
-
-      $cmd_text = "$nick_override: $cmd_text";
-      $processed += 100;
-    } elsif($cmd_text =~ s/^\s*([^!,:\(\)\+\*\/ ]+)[,:]?\s+$bot_trigger(.+)$//) {
-      $nick_override = $1;
-      $command = $2;
-
-      my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $nick_override);
-      if ($similar) {
-        $nick_override = $similar;
-      } else {
-        $self->{pbot}->{logger}->log("No similar nick for $nick_override\n");
-        return 0;
-      }
-
-      $cmd_text = "$nick_override: $cmd_text";
-      $processed += 100;
-    } elsif($cmd_text =~ s/^$bot_trigger(.*)$//) {
-      $command = $1;
-      $processed += 100;
-    } elsif ($cmd_text =~ s/$bot_trigger`([^`]+)`\s*// || $cmd_text =~ s/$bot_trigger\{([^}]+)\}\s*//) {
-      my $cmd = $1;
-      my ($nick) = $cmd_text =~ m/^([^ ,:;]+)/;
-      $nick = $self->{pbot}->{nicklist}->is_present($from, $nick);
-      if ($nick) {
-        $command = "tell $nick about $cmd";
-      } else {
-        $command = $cmd;
-      }
-      $referenced = 1;
-    } elsif($cmd_text =~ s/^.?$botnick.?\s*(.*?)$//i) {
-      $command = $1;
-      $processed += 100;
-    } elsif($cmd_text =~ s/^(.*?),?\s*$botnick[?!.]*$//i) {
-      $command = $1;
-      $processed += 100;
     }
 
-    last if not defined $command and not defined $has_code;
+    for (my $count = 0; $count < 3; $count++) {
+      my ($extracted) = extract_codeblock $cmd_text, '{}', "(?s).*?$bot_trigger";
+      last if not defined $extracted;
+      $extracted =~ s/^\{\s*//;
+      $extracted =~ s/\s*\}$//;
+      $self->{pbot}->{logger}->log("Extracted embedded command [$extracted]\n");
+      push @commands, $extracted;
+      $embedded = 1;
+    }
+  } else {
+    push @commands, $command;
+  }
 
-    if((!defined $command || $command !~ /^login /) && defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
+  foreach $command (@commands) {
+    # check if user is ignored (and command isn't `login`)
+    if ($command !~ /^login / && defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
       my $admin = $pbot->{admins}->loggedin($from, "$nick!$user\@$host");
       if (!defined $admin || $admin->{level} < 10) {
-        # ignored hostmask
+        # hostmask ignored
         return 1;
       }
     }
 
-    if(defined $has_code) {
-      $processed += 100; # ensure no other plugins try to parse this message
-      if($pbot->{registry}->get_value('general', 'compile_blocks') and not $pbot->{registry}->get_value($from, 'no_compile_blocks')
-          and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_ignore_channels')
-          and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_channels')) {
-        if (not defined $nick_override or (defined $nick_override and $self->{pbot}->{nicklist}->is_present($from, $nick_override))) {
-          $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", $from, '{', (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
-        }
-      }
-    } else {
-      $stuff->{text} = $text;
-      $stuff->{command} = $command;
-      $stuff->{nickoverride} = $nick_override if $nick_override;
-      $stuff->{referenced} = $referenced;
-      $stuff->{interpret_depth} = 1;
-      $stuff->{preserve_whitespace} = $preserve_whitespace;
+    $stuff->{text} = $text;
+    $stuff->{command} = $command;
+    $stuff->{nickoverride} = $nick_override if $nick_override;
+    $stuff->{referenced} = $embedded;
+    $stuff->{interpret_depth} = 1;
+    $stuff->{preserve_whitespace} = $preserve_whitespace;
 
-      my $result = $self->interpret($stuff);
-      $stuff->{result} = $result;
-      $processed++ if $self->handle_result($stuff, $result);
-    }
+    $stuff->{result} = $self->interpret($stuff);
+    $processed++ if $self->handle_result($stuff);
   }
   return $processed;
 }
@@ -356,7 +355,7 @@ sub truncate_result {
 
 sub handle_result {
   my ($self, $stuff, $result) = @_;
-
+  $result = $stuff->{result} if not defined $result;
   $stuff->{preserve_whitespace} = 0 if not defined $stuff->{preserve_whitespace};
 
   if ($self->{pbot}->{registry}->get_value('general', 'debugcontext') and length $stuff->{result}) {
@@ -365,8 +364,6 @@ sub handle_result {
     $self->{pbot}->{logger}->log("Interpreter::handle_result [$result]\n");
     $self->{pbot}->{logger}->log(Dumper $stuff);
   }
-
-  $result = $stuff->{result} if not defined $result;
 
   if (not defined $result or length $result == 0) {
     return 0;
