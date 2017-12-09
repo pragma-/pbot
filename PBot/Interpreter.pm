@@ -189,7 +189,8 @@ sub process_line {
     $stuff->{preserve_whitespace} = $preserve_whitespace;
 
     $stuff->{result} = $self->interpret($stuff);
-    $processed++ if $self->handle_result($stuff);
+    $self->handle_result($stuff);
+    $processed++;
   }
   return $processed;
 }
