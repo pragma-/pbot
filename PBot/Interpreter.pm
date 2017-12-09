@@ -166,7 +166,6 @@ sub process_line {
       last if not defined $extracted;
       $extracted =~ s/^\{\s*//;
       $extracted =~ s/\s*\}$//;
-      $self->{pbot}->{logger}->log("Extracted embedded command [$extracted]\n");
       push @commands, $extracted;
       $embedded = 1;
     }
@@ -251,23 +250,32 @@ sub interpret {
   }
 
   # parse out a substituted command
-  if (defined $arguments && $arguments =~ s/(?<!\\)&\{\s*([^}]+)\}/&{subcmd}/) {
-    my $command = $1;
-    push @{$stuff->{subcmd}}, "$keyword $arguments";
-    $stuff->{command} = $command;
-    my $result = $self->interpret($stuff);
-    $stuff->{result} = $result;
-    return $result;
+  if (defined $arguments && $arguments =~ m/(?<!\\)&\{/) {
+    my ($command) = extract_codeblock $arguments, '{}', '(?s).*?(?<!\\\\)&';
+
+    if (defined $command) {
+      $arguments =~ s/&\Q$command\E/&{subcmd}/;
+
+      $command =~ s/^\{\s*//;
+      $command =~ s/\s*\}$//;
+
+      push @{$stuff->{subcmd}}, "$keyword $arguments";
+      $stuff->{command} = $command;
+      $stuff->{result} = $self->interpret($stuff);
+      return $stuff->{result};
+    }
   }
 
   # unescape any escaped substituted commands
   $arguments =~ s/\\&\{/&{/g if defined $arguments;
 
-  # parse out a pipe unless escaped
+  # parse out a pipe
   if (defined $arguments && $arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
-    $arguments =~ m/(.*?)\s*(?<!\\)\|\s*\{\s*([^}]+)\}(.*)/s;
-    my ($args, $pipe, $rest) = ($1, $2, $3);
-    $pipe =~ s/\s+$//;
+    my ($pipe, $rest, $args) = extract_codeblock $arguments, '{}', '(?s).*?(?<!\\\\)\|\s*';
+
+    $pipe =~ s/^\{\s*//;
+    $pipe =~ s/\s*\}$//;
+    $args =~ s/\s*(?<!\\)\|\s*//;
 
     $self->{pbot}->{logger}->log("piping: [$args][$pipe][$rest]\n");
 
