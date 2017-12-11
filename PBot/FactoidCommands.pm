@@ -697,13 +697,24 @@ sub factalias {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   $arguments = validate_string($arguments);
+
   my ($chan, $alias, $command) = split /\s+/, $arguments, 3 if defined $arguments;
   
-  if(not defined $command) {
-    return "Usage: factalias <channel> <keyword> <command>";
+  if (defined $chan and not ($chan eq '.*' or $chan =~ m/^#/)) {
+    # $chan doesn't look like a channel, so shift everything right
+    # and replace $chan with $from
+    if (defined $command and length $command) {
+      $command = "$alias $command";
+    } else {
+      $command = $alias;
+    }
+    $alias = $chan;
+    $chan = $from;
   }
 
-  $chan = '.*' if $chan !~ /^#/;
+  if (not length $alias or not length $command) {
+    return "Usage: factalias [channel] <keyword> <command>";
+  }
 
   if (length $alias > 30) {
     return "/say $nick: I don't think the factoid name needs to be that long.";
