@@ -170,7 +170,7 @@ sub log_factoid {
 }
 
 sub find_factoid_with_optional_channel {
-  my ($self, $from, $arguments, $command, $usage, $explicit) = @_;
+  my ($self, $from, $arguments, $command, $usage, $explicit, $exact_channel) = @_;
   my ($from_chan, $from_trigger, $remaining_args) = split /\s+/, $arguments, 3;
 
   if (not defined $from_chan or (not defined $from_chan and not defined $from_trigger)) {
@@ -200,41 +200,50 @@ sub find_factoid_with_optional_channel {
   $from_chan = '.*' if $from_chan !~ /^#/;
   $from_chan = lc $from_chan;
 
-  my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, undef, 0, 1);
-
-  if (not @factoids or not $factoids[0]) {
-    if ($needs_disambig) {
-      return "/say $from_trigger not found";
-    } else {
-      $from_chan = 'global channel' if $from_chan eq '.*';
-      return "/say $from_trigger not found in $from_chan";
-    }
-  }
-
   my ($channel, $trigger);
 
-  if (@factoids > 1) {
-    if ($needs_disambig or not grep { $_->[0] eq $from_chan } @factoids) {
-      unless ($explicit) {
+  if (defined $exact_channel and $exact_channel == 1) {
+    ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, undef, 1, 1);
+
+    if (not defined $channel) {
+      $from_chan = 'the global channel' if $from_chan eq '.*';
+      return "/say $from_trigger not found in $from_chan.";
+    }
+  } else {
+    my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, undef, 0, 1);
+
+    if (not @factoids or not $factoids[0]) {
+      if ($needs_disambig) {
+        return "/say $from_trigger not found";
+      } else {
+        $from_chan = 'global channel' if $from_chan eq '.*';
+        return "/say $from_trigger not found in $from_chan";
+      }
+    }
+
+    if (@factoids > 1) {
+      if ($needs_disambig or not grep { $_->[0] eq $from_chan } @factoids) {
+        unless ($explicit) {
+          foreach my $factoid (@factoids) {
+            if ($factoid->[0] eq '.*') {
+              ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
+            }
+          }
+        }
+        if (not defined $channel) {
+          return "/say $from_trigger found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `$command <channel> $from_trigger` to disambiguate.";
+        }
+      } else {
         foreach my $factoid (@factoids) {
-          if ($factoid->[0] eq '.*') {
+          if ($factoid->[0] eq $from_chan) {
             ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
+            last;
           }
         }
       }
-      if (not defined $channel) {
-        return "/say $from_trigger found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `$command <channel> $from_trigger` to disambiguate.";
-      }
     } else {
-      foreach my $factoid (@factoids) {
-        if ($factoid->[0] eq $from_chan) {
-          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
-          last;
-        }
-      }
+      ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
     }
-  } else {
-    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
   }
 
   $channel = '.*' if $channel eq 'global';
@@ -947,7 +956,7 @@ sub factlog {
   return "Too many arguments -- $usage" if @$args > 2;
   return "Missing argument -- $usage" if not @$args;
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, "@$args", 'factlog', $usage);
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, "@$args", 'factlog', $usage, 0, 1);
 
   if (not defined $trigger) {
     # factoid not found or some error, try to continue and load factlog file if it exists
@@ -967,7 +976,7 @@ sub factlog {
   my $trigger_safe = safe_filename $trigger;
 
   open my $fh, "< $path/$trigger_safe.$channel_safe" or do {
-    $self->{pbot}->{logger}->log("Could not open $path/$trigger.$channel: $!\n");
+    $self->{pbot}->{logger}->log("Could not open $path/$trigger_safe.$channel_safe: $!\n");
     $channel = 'the global channel' if $channel eq 'global';
     return "No factlog available for $trigger in $channel.";
   };
