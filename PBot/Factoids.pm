@@ -830,7 +830,7 @@ sub interpreter {
   if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on}) {
     if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in}) {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in} eq $stuff->{from}) {
-        my $ratelimit = $self->{pbot}->{registry}->get_value($channel, 'ratelimit_override');
+        my $ratelimit = $self->{pbot}->{registry}->get_value($stuff->{from}, 'ratelimit_override');
         $ratelimit = $self->{factoids}->hash->{$channel}->{$keyword}->{rate_limit} if not defined $ratelimit;
         if (gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on} < $ratelimit) {
           return "/msg $stuff->{nick} $stuff->{ref_from}'$keyword' is rate-limited; try again in " . duration ($ratelimit - int(gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on})) . "." unless $self->{pbot}->{admins}->loggedin($channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
