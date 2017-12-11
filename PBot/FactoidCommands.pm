@@ -291,7 +291,7 @@ sub factundo {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo', undef, 1);
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo', undef, 1, 1);
   my $deleted;
 
   if (not defined $trigger) {
@@ -347,7 +347,7 @@ sub factredo {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo', undef, 1);
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo', undef, 1, 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my $channel_path = $channel;
