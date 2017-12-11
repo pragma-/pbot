@@ -59,7 +59,8 @@ CREATE TABLE IF NOT EXISTS Triggers (
   channel     TEXT,
   trigger     TEXT,
   action      TEXT,
-  owner       TEXT
+  owner       TEXT,
+  level       INTEGER
 )
 SQL
 
@@ -90,16 +91,17 @@ sub dbi_end {
 }
 
 sub add_trigger {
-  my ($self, $channel, $trigger, $action, $owner) = @_;
+  my ($self, $channel, $trigger, $action, $owner, $level) = @_;
 
   return 0 if $self->get_trigger($channel, $trigger);
 
   eval {
-    my $sth = $self->{dbh}->prepare('INSERT INTO Triggers (channel, trigger, action, owner) VALUES (?, ?, ?, ?)');
+    my $sth = $self->{dbh}->prepare('INSERT INTO Triggers (channel, trigger, action, owner, level) VALUES (?, ?, ?, ?, ?)');
     $sth->bind_param(1, lc $channel);
     $sth->bind_param(2, $trigger);
     $sth->bind_param(3, $action);
     $sth->bind_param(4, $owner);
+    $sth->bind_param(5, $level);
     $sth->execute();
   };
 
@@ -174,13 +176,11 @@ sub actiontrigger {
 
   given ($command) {
     when ('list') {
-      if ($from =~ m/^#/) {
+      ($channel) = split / /, $arguments, 1;
+      if (not defined $channel) {
         $channel = $from;
-      } else {
-        ($channel) = split / /, $arguments, 1;
-        if ($channel !~ m/^#/) {
-          return "Usage from private message: actiontrigger list <channel>";
-        }
+      } elsif ($channel !~ m/^#/) {
+        return "Usage: actiontrigger list [channel]";
       }
 
       my @triggers = $self->list_triggers($channel);
@@ -192,6 +192,7 @@ sub actiontrigger {
         my $comma = '';
         foreach my $trigger (@triggers) {
           $result .= "$comma$trigger->{trigger} -> $trigger->{action}";
+          $result .= " ($trigger->{level})" if $trigger->{level} != 0;
           $comma = ",\n";
         }
       }
@@ -207,14 +208,13 @@ sub actiontrigger {
         }
       }
 
-
-      my ($trigger, $action) = split / /, $arguments, 2;
+      my ($level, $trigger, $action) = split / /, $arguments, 3;
 
       if (not defined $trigger or not defined $action) {
         if ($from !~ m/^#/) {
-          $result = "Usage from private message: actiontrigger add <channel> <regex> <action>";
+          $result = "Usage from private message: actiontrigger add <channel> <level> <regex> <action>";
         } else {
-          $result = "Usage: actiontrigger add <regex> <action>";
+          $result = "Usage: actiontrigger add <level> <regex> <action>";
         }
         return $result;
       }
@@ -225,7 +225,18 @@ sub actiontrigger {
         return "Trigger already exists.";
       }
 
-      if ($self->add_trigger($channel, $trigger, $action, "$nick!$user\@$host")) {
+      if ($level > 0) {
+        my $admin = $self->{pbot}->{admins}->find_admin($channel, "$nick!$user\@$host");
+        if (not defined $admin or $level > $admin->{level}) {
+          return "You may not set a level higher than your own.";
+        }
+      }
+
+      if ($level < 0) {
+        return "Please be serious.";
+      }
+
+      if ($self->add_trigger($channel, $trigger, $action, "$nick!$user\@$host", $level)) {
         $result = "Trigger added.";
       } else {
         $result = "Failed to add trigger.";
@@ -264,7 +275,7 @@ sub actiontrigger {
     }
 
     default {
-      $result = "Usage: actiontrigger list | actiontrigger add <regex> <trigger> | actiontrigger delete <regex>";
+      $result = "Usage: actiontrigger list | actiontrigger add <level> <regex> <trigger> | actiontrigger delete <regex>";
     }
   }
 
@@ -325,6 +336,7 @@ sub check_trigger {
   my @triggers = $self->list_triggers($channel);
 
   $text = "$nick!$user\@$host $text";
+  # $self->{pbot}->{logger}->log("Checking action trigger: [$text]\n");
 
   foreach my $trigger (@triggers) {
     eval {
@@ -338,12 +350,13 @@ sub check_trigger {
 
         my ($n, $u, $h) = $trigger->{owner} =~ /^([^!]+)!([^@]+)\@(.*)$/;
         my $command = { 
-          nick => $n,
-          user => $u,
-          host => $h,
-          command => $action
+          nick => $nick,
+          user => $user,
+          host => $host,
+          command => $action,
+          level => $trigger->{level} // 0
         };
-        $self->{pbot}->{logger}->log("ActionTrigger: ($channel) $trigger->{trigger} -> $action\n");
+        $self->{pbot}->{logger}->log("ActionTrigger: ($channel) $trigger->{trigger} -> $action [$command->{level}]\n");
         $self->{pbot}->{interpreter}->add_to_command_queue($channel, $command, $delay);
       }
     };
@@ -352,7 +365,6 @@ sub check_trigger {
       $self->{pbot}->{logger}->log("Skipping bad trigger $trigger->{trigger}: $@");
     }
   }
-
 
   return 0;
 }
