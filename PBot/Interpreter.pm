@@ -650,6 +650,11 @@ sub process_command_queue {
           preserve_whitespace => 0
         };
 
+        if (exists $command->{level}) {
+          $self->{pbot}->{logger}->log("Override command effective-level to $command->{level}\n");
+          $stuff->{'effective-level'} = $command->{level};
+        }
+
         my $result = $self->interpret($stuff);
         $stuff->{result} = $result;
         $self->handle_result($stuff, $result);

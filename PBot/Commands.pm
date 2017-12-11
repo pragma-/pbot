@@ -102,6 +102,11 @@ sub interpreter {
   my $level = defined $admin ? $admin->{level} : 0;
   my $keyword = lc $stuff->{keyword};
 
+  if (exists $stuff->{'effective-level'}) {
+    $self->{pbot}->{logger}->log("override level to $stuff->{'effective-level'}\n");
+    $level = $stuff->{'effective-level'};
+  }
+
   foreach my $ref (@{ $self->{handlers} }) {
     if ($ref->{name} eq $keyword) {
       if ($level >= $ref->{level}) {
