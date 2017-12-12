@@ -275,7 +275,7 @@ sub actiontrigger {
     }
 
     default {
-      $result = "Usage: actiontrigger list | actiontrigger add <level> <regex> <trigger> | actiontrigger delete <regex>";
+      $result = "Usage: actiontrigger list [channel] | actiontrigger add <level> <regex> <trigger> | actiontrigger delete <regex>";
     }
   }
 
