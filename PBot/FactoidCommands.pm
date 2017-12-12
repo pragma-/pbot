@@ -287,9 +287,53 @@ sub hash_differences_as_string {
   return $changes
 }
 
+sub list_undo_history {
+  my ($self, $undos) = @_;
+
+  my $result = "";
+  if ($undos->{idx} == 0) {
+    $result .= "*1*: ";
+  } else {
+    $result .= "1: ";
+  }
+  $result .= $self->hash_differences_as_string({}, $undos->{list}->[0]) . ";\n";
+
+  for (my $i = 1; $i < @{$undos->{list}}; $i++) {
+    if ($i == $undos->{idx}) {
+      $result .= "*" . ($i + 1) . "*: ";
+    } else {
+      $result .= ($i + 1) . ": ";
+    }
+    $result .= $self->hash_differences_as_string($undos->{list}->[$i - 1], $undos->{list}->[$i]);
+    $result .= ";\n";
+  }
+
+  return $result;
+}
+
 sub factundo {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
+
+  my $usage = "Usage: factundo [-l] [-r N] [channel] <keyword> (-l list undo history; -r jump to revision N)";
+
+  my $getopt_error;
+  local $SIG{__WARN__} = sub {
+    $getopt_error = shift;
+    chomp $getopt_error;
+  };
+
+  $arguments =~ s/(?<!\\)'/\\'/g;
+  my ($list_undos, $goto_revision);
+  my ($ret, $args) = GetOptionsFromString($arguments,
+    'l'  => \$list_undos,
+    'r=i' => \$goto_revision);
+
+  return "/say $getopt_error -- $usage" if defined $getopt_error;
+  return $usage if @$args > 2;
+  return $usage if not @$args;
+
+  $arguments = join ' ', @$args;
 
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo', undef, 1, 1);
   my $deleted;
@@ -318,6 +362,10 @@ sub factundo {
     return "There are no undos available for [$channel] $trigger.";
   }
 
+  if ($list_undos) {
+    return $self->list_undo_history($undos);
+  }
+
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
   my $admininfo = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
   if ($factoids->{$channel}->{$trigger}->{'locked'}) {
@@ -329,11 +377,30 @@ sub factundo {
     }
   }
 
-  unless ($deleted) {
-    return "There are no more undos remaining for [$channel] $trigger." if not $undos->{idx};
-    $undos->{idx}--;
+  if (defined $goto_revision) {
+    return "Don't be absurd." if $goto_revision < 1;
+    if ($goto_revision > @{$undos->{list}}) {
+      if (@{$undos->{list}} == 1) {
+        return "There is only one revision available for [$channel] $trigger.";
+      } else {
+        return "There are " . @{$undos->{list}} . " revisions available for [$channel] $trigger.";
+      }
+    }
+
+    if ($goto_revision == $undos->{idx} + 1) {
+      return "[$channel] $trigger is already at revision $goto_revision.";
+    }
+
+    $undos->{idx} = $goto_revision - 1;
     eval { store $undos, "$path/$trigger_safe.$channel_path_safe.undo"; };
     $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
+  } else {
+    unless ($deleted) {
+      return "There are no more undos remaining for [$channel] $trigger." if not $undos->{idx};
+      $undos->{idx}--;
+      eval { store $undos, "$path/$trigger_safe.$channel_path_safe.undo"; };
+      $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
+    }
   }
 
   $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
@@ -346,6 +413,26 @@ sub factundo {
 sub factredo {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
+
+  my $usage = "Usage: factredo [-l] [-r N] [channel] <keyword> (-l list undo history; -r jump to revision N)";
+
+  my $getopt_error;
+  local $SIG{__WARN__} = sub {
+    $getopt_error = shift;
+    chomp $getopt_error;
+  };
+
+  $arguments =~ s/(?<!\\)'/\\'/g;
+  my ($list_undos, $goto_revision);
+  my ($ret, $args) = GetOptionsFromString($arguments,
+    'l'  => \$list_undos,
+    'r=i' => \$goto_revision);
+
+  return "/say $getopt_error -- $usage" if defined $getopt_error;
+  return $usage if @$args > 2;
+  return $usage if not @$args;
+
+  $arguments = join ' ', @$args;
 
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo', undef, 1, 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
@@ -363,6 +450,10 @@ sub factredo {
     return "There are no redos available for [$channel] $trigger.";
   }
 
+  if ($list_undos) {
+    return $self->list_undo_history($undos);
+  }
+
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
   my $admininfo = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
   if ($factoids->{$channel}->{$trigger}->{'locked'}) {
@@ -374,13 +465,32 @@ sub factredo {
     }
   }
 
-  if ($undos->{idx} + 1 == @{$undos->{list}}) {
+  if (not defined $goto_revision and $undos->{idx} + 1 == @{$undos->{list}}) {
     return "There are no more redos remaining for [$channel] $trigger.";
   }
 
-  $undos->{idx}++;
-  eval { store $undos, "$path/$trigger_safe.$channel_path_safe.undo"; };
-  $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
+  if (defined $goto_revision) {
+    return "Don't be absurd." if $goto_revision < 1;
+    if ($goto_revision > @{$undos->{list}}) {
+      if (@{$undos->{list}} == 1) {
+        return "There is only one revision available for [$channel] $trigger.";
+      } else {
+        return "There are " . @{$undos->{list}} . " revisions available for [$channel] $trigger.";
+      }
+    }
+
+    if ($goto_revision == $undos->{idx} + 1) {
+      return "[$channel] $trigger is already at revision $goto_revision.";
+    }
+
+    $undos->{idx} = $goto_revision - 1;
+    eval { store $undos, "$path/$trigger_safe.$channel_path_safe.undo"; };
+    $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
+  } else {
+    $undos->{idx}++;
+    eval { store $undos, "$path/$trigger_safe.$channel_path_safe.undo"; };
+    $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
+  }
 
   $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger} = $undos->{list}->[$undos->{idx}];
 
