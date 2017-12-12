@@ -288,24 +288,38 @@ sub hash_differences_as_string {
 }
 
 sub list_undo_history {
-  my ($self, $undos) = @_;
+  my ($self, $undos, $start_from) = @_;
+
+  $start_from-- if defined $start_from;
+  $start_from = 0 if not defined $start_from or $start_from < 0;
 
   my $result = "";
-  if ($undos->{idx} == 0) {
-    $result .= "*1*: ";
-  } else {
-    $result .= "1: ";
+  if ($start_from > @{$undos->{list}}) {
+    if (@{$undos->{list}} == 1) {
+      return "But there is only one revision available.";
+    } else {
+      return "But there are only " . @{$undos->{list}} . " revisions available.";
+    }
   }
-  $result .= $self->hash_differences_as_string({}, $undos->{list}->[0]) . ";\n";
 
-  for (my $i = 1; $i < @{$undos->{list}}; $i++) {
+  if ($start_from == 0) {
+    if ($undos->{idx} == 0) {
+      $result .= "*1*: ";
+    } else {
+      $result .= "1: ";
+    }
+    $result .= $self->hash_differences_as_string({}, $undos->{list}->[0]) . ";\n\n";
+    $start_from++;
+  }
+
+  for (my $i = $start_from; $i < @{$undos->{list}}; $i++) {
     if ($i == $undos->{idx}) {
       $result .= "*" . ($i + 1) . "*: ";
     } else {
       $result .= ($i + 1) . ": ";
     }
     $result .= $self->hash_differences_as_string($undos->{list}->[$i - 1], $undos->{list}->[$i]);
-    $result .= ";\n";
+    $result .= ";\n\n";
   }
 
   return $result;
@@ -315,7 +329,7 @@ sub factundo {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  my $usage = "Usage: factundo [-l] [-r N] [channel] <keyword> (-l list undo history; -r jump to revision N)";
+  my $usage = "Usage: factundo [-l [N]] [-r N] [channel] <keyword> (-l list undo history, optionally starting from N; -r jump to revision N)";
 
   my $getopt_error;
   local $SIG{__WARN__} = sub {
@@ -326,7 +340,7 @@ sub factundo {
   $arguments =~ s/(?<!\\)'/\\'/g;
   my ($list_undos, $goto_revision);
   my ($ret, $args) = GetOptionsFromString($arguments,
-    'l'  => \$list_undos,
+    'l:i'  => \$list_undos,
     'r=i' => \$goto_revision);
 
   return "/say $getopt_error -- $usage" if defined $getopt_error;
@@ -362,8 +376,9 @@ sub factundo {
     return "There are no undos available for [$channel] $trigger.";
   }
 
-  if ($list_undos) {
-    return $self->list_undo_history($undos);
+  if (defined $list_undos) {
+    $list_undos = 1 if $list_undos == 0;
+    return $self->list_undo_history($undos, $list_undos);
   }
 
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
@@ -414,7 +429,7 @@ sub factredo {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  my $usage = "Usage: factredo [-l] [-r N] [channel] <keyword> (-l list undo history; -r jump to revision N)";
+  my $usage = "Usage: factredo [-l [N]] [-r N] [channel] <keyword> (-l list undo history, optionally starting from N; -r jump to revision N)";
 
   my $getopt_error;
   local $SIG{__WARN__} = sub {
@@ -425,7 +440,7 @@ sub factredo {
   $arguments =~ s/(?<!\\)'/\\'/g;
   my ($list_undos, $goto_revision);
   my ($ret, $args) = GetOptionsFromString($arguments,
-    'l'  => \$list_undos,
+    'l:i'  => \$list_undos,
     'r=i' => \$goto_revision);
 
   return "/say $getopt_error -- $usage" if defined $getopt_error;
@@ -450,8 +465,9 @@ sub factredo {
     return "There are no redos available for [$channel] $trigger.";
   }
 
-  if ($list_undos) {
-    return $self->list_undo_history($undos);
+  if (defined $list_undos) {
+    $list_undos = 1 if $list_undos == 0;
+    return $self->list_undo_history($undos, $list_undos);
   }
 
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
