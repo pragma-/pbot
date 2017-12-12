@@ -7,6 +7,7 @@ Features
 * Quotegrabs
 * Loadable modules that are simple programs based on stdin and stdout
 * Lots of default modules, including a code compiler and debugger, C-to-English translator, C precedence analyzer, trivia and much more
+* Optional plugins
 * Channel management
 * User hostmask and message tracking
 * Ban evasion detection
@@ -15,6 +16,9 @@ Features
 * Auto-away detection
 * Auto-rejoin after kick detection
 * Registry-based customization
+* Advanced factoid-based variable interpolation
+* Command piping and substitution
+* Much, much more
 
 See http://www.iso-9899.info/wiki/Candide for more information.
 
