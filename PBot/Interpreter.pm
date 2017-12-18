@@ -96,6 +96,7 @@ sub process_line {
   my $cmd_text = $text;
   $cmd_text =~ s/^\/me\s+//;
 
+=cut
   # check for code compiler invocation
   my $has_code;
   if ($cmd_text =~ m/^(?:$botnick.?)?\s*{\s*(.+)\s*}\s*$/) {
@@ -119,6 +120,7 @@ sub process_line {
       }
     }
   }
+=cut
 
   # check for bot command invocation
   my @commands;
@@ -160,7 +162,7 @@ sub process_line {
     }
 
     for (my $count = 0; $count < 3; $count++) {
-      my ($extracted) = extract_codeblock $cmd_text, '{}', "(?s).*?$bot_trigger";
+      my ($extracted) = extract_codeblock $cmd_text, '{}', "(?s).*?$bot_trigger(?=\{)";
       last if not defined $extracted;
       $extracted =~ s/^\{\s*//;
       $extracted =~ s/\s*\}$//;
