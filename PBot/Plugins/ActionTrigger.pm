@@ -204,7 +204,7 @@ sub actiontrigger {
       } else {
         ($channel, $arguments) = split / /, $arguments, 2;
         if ($channel !~ m/^#/) {
-          return "Usage from private message: actiontrigger add <channel> <regex> <action>";
+          return "Usage from private message: actiontrigger add <channel> <level> <regex> <action>";
         }
       }
 
@@ -350,9 +350,9 @@ sub check_trigger {
 
         my ($n, $u, $h) = $trigger->{owner} =~ /^([^!]+)!([^@]+)\@(.*)$/;
         my $command = { 
-          nick => $nick,
-          user => $user,
-          host => $host,
+          nick => $n,
+          user => $u,
+          host => $h,
           command => $action,
           level => $trigger->{level} // 0
         };
