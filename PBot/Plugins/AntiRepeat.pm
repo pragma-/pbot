@@ -87,7 +87,7 @@ sub on_public {
   foreach my $string1 (@$messages) {
     next if $now - $string1->{timestamp} > 60 * 60 * 2;
     next if $allow_bot and $string1->{msg} =~ m/^(?:$bot_trigger|$botnick.?)/;
-    next if length $string1 <= 5; # allow really short messages since "yep" "ok" etc are so common
+    next if length $string1->{msg} <= 5; # allow really short messages since "yep" "ok" etc are so common
 
     if (exists $self->{offenses}->{$account} and exists $self->{offenses}->{$account}->{$channel}) {
       next if $self->{offenses}->{$account}->{$channel}->{last_offense} >= $string1->{timestamp};
@@ -96,7 +96,7 @@ sub on_public {
     foreach my $string2 (@$messages) {
       next if $now - $string2->{timestamp} > 60 * 60 * 2;
       next if $allow_bot and $string2->{msg} =~ m/^(?:$bot_trigger|$botnick.?)/;
-      next if length $string2 <= 5; # allow really short messages since "yep" "ok" etc are so common
+      next if length $string2->{msg} <= 5; # allow really short messages since "yep" "ok" etc are so common
 
       if (exists $self->{offenses}->{$account} and exists $self->{offenses}->{$account}->{$channel}) {
         next if $self->{offenses}->{$account}->{$channel}->{last_offense} >= $string2->{timestamp};
@@ -124,6 +124,8 @@ sub on_public {
       $self->{offenses}->{$account}->{$channel}->{last_offense} = gettimeofday;
       $self->{offenses}->{$account}->{$channel}->{last_adjustment} = gettimeofday;
       $self->{offenses}->{$account}->{$channel}->{offenses}++;
+
+      $self->{pbot}->{logger}->log("$nick!$user\@$host triggered anti-repeat; offense $self->{offenses}->{$account}->{$channel}->{offenses}\n");
 
       given ($self->{offenses}->{$account}->{$channel}->{offenses}) {
         when (1) {
