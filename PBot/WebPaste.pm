@@ -38,6 +38,7 @@ sub initialize {
                            sub { $self->paste_ixio(@_) },
                            sub { $self->paste_ptpb(@_) },
                            sub { $self->paste_gehidore(@_) },
+                           sub { $self->paste_aringa(@_) },
                          ];
 
   $self->{current_site} = 0;
@@ -187,6 +188,31 @@ sub paste_gehidore {
   my $result = $response->content;
   $result =~ s/^\s+//;
   $result =~ s/\s+$//;
+  return $result;
+}
+
+sub paste_aringa {
+  my $self = shift;
+  my $text = join(' ', @_);
+
+  $text =~ s/(.{120})\s/$1\n/g;
+
+  my $ua = LWP::UserAgent->new();
+  $ua->agent("Mozilla/5.0");
+  push @{ $ua->requests_redirectable }, 'POST';
+  $ua->timeout(10);
+
+  my %post = ( 'aringa' => $text, 'submit' => 'Submit' );
+  my $response = $ua->post("https://arin.ga", \%post);
+
+  if(not $response->is_success) {
+    return "error pasting: " . $response->status_line;
+  }
+
+  my $result = $response->request->uri;
+  $result =~ s/^\s+//;
+  $result =~ s/\s+$//;
+  $result .= '/raw';
   return $result;
 }
 
