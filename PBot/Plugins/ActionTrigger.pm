@@ -225,7 +225,7 @@ sub actiontrigger {
         return "Trigger already exists.";
       }
 
-      if ($level !~ m/\d+/) {
+      if ($level !~ m/^\d+$/) {
         return "$nick: Missing level argument?\n";
       }
 
