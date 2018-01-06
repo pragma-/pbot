@@ -225,6 +225,10 @@ sub actiontrigger {
         return "Trigger already exists.";
       }
 
+      if ($level !~ m/\d+/) {
+        return "$nick: Missing level argument?\n";
+      }
+
       if ($level > 0) {
         my $admin = $self->{pbot}->{admins}->find_admin($channel, "$nick!$user\@$host");
         if (not defined $admin or $level > $admin->{level}) {
