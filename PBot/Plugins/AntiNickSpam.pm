@@ -62,15 +62,18 @@ sub check_flood {
 
   return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 
-  my @words = split /\s+/, $msg;
   $channel = lc $channel;
-
+  my @words = split /\s+/, $msg;
   my @nicks;
+  my $severity = 0; # increasing severity for each additional unique nick in a single message
 
   foreach my $word (@words) {
     $word =~ s/[:;\+,\.!?\@\%\$]+$//g;
     if ($self->{pbot}->{nicklist}->is_present($channel, $word) and not grep { $_ eq $word } @nicks) {
-      push @{$self->{nicks}->{$channel}}, [scalar gettimeofday, $word];
+      $severity++;
+      for (my $i = 0; $i < $severity; $i++) {
+        push @{$self->{nicks}->{$channel}}, [scalar gettimeofday, $word];
+      }
       push @nicks, $word;
     }
   }
@@ -90,8 +93,7 @@ sub clear_old_nicks {
 
   return if not exists $self->{nicks}->{$channel};
 
-  my $i = 50;
-  while (--$i > 0) {
+  while (1) {
     if (@{$self->{nicks}->{$channel}} and $self->{nicks}->{$channel}->[0]->[0] <= $now - 15) {
       shift @{$self->{nicks}->{$channel}};
     } else {
