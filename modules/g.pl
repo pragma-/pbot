@@ -38,12 +38,12 @@ if ($arguments =~ m/(.*)\svs\s(.*)/i) {
   my $result1 = $engine->search($a);
   my $result2 = $engine->search($b);
 
-  if (not @{$result1->items}) {
+  if (not defined $result1 or not defined $result1->items or not @{$result1->items}) {
     print "No results for $a\n";
     exit;
   }
 
-  if (not @{$result2->items}) {
+  if (not defined $result2 or not defined $result2->items or not @{$result2->items}) {
     print "No results for $b\n";
     exit;
   }
