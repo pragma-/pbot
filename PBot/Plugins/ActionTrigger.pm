@@ -236,10 +236,6 @@ sub actiontrigger {
         }
       }
 
-      if ($level < 0) {
-        return "Please be serious.";
-      }
-
       if ($self->add_trigger($channel, $trigger, $action, "$nick!$user\@$host", $level)) {
         $result = "Trigger added.";
       } else {
