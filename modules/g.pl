@@ -54,7 +54,7 @@ if ($arguments =~ m/(.*)\svs\s(.*)/i) {
 
 my $result  = $engine->search($arguments);
 
-if (not @{$result->items}) {
+if (not defined $result or not defined $result->items or not @{$result->items}) {
   print "No results found\n";
   exit;
 }
