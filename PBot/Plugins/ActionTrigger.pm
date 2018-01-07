@@ -179,7 +179,7 @@ sub actiontrigger {
       ($channel) = split / /, $arguments, 1;
       if (not defined $channel) {
         $channel = $from;
-      } elsif ($channel !~ m/^#/) {
+      } elsif ($channel !~ m/^#/ and $channel ne 'global') {
         return "Usage: actiontrigger list [channel]";
       }
 
@@ -203,7 +203,7 @@ sub actiontrigger {
         $channel = $from;
       } else {
         ($channel, $arguments) = split / /, $arguments, 2;
-        if ($channel !~ m/^#/) {
+        if ($channel !~ m/^#/ and $channel ne 'global') {
           return "Usage from private message: actiontrigger add <channel> <level> <regex> <action>";
         }
       }
@@ -248,7 +248,7 @@ sub actiontrigger {
         $channel = $from;
       } else {
         ($channel, $arguments) = split / /, $arguments, 2;
-        if ($channel !~ m/^#/) {
+        if ($channel !~ m/^#/ and $channel ne 'global') {
           return "Usage from private message: actiontrigger delete <channel> <regex>";
         }
       }
@@ -334,6 +334,9 @@ sub check_trigger {
   }
 
   my @triggers = $self->list_triggers($channel);
+  my @globals = $self->list_triggers('global');
+
+  push @triggers, @globals;
 
   $text = "$nick!$user\@$host $text";
   # $self->{pbot}->{logger}->log("Checking action trigger: [$text]\n");
