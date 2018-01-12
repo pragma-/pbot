@@ -133,16 +133,33 @@ sub unban_user {
 
 sub mute_user {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($target, $channel, $length) = split(/\s+/, $arguments, 3);
+  my ($from, $mask, $user, $host, $arguments) = @_;
+  my  ($victim, $channel, $length);
 
   if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 
+  if (not $from =~ /^#/) {
+    # used in private message
+    if (not $arguments =~ s/^(#\S+)\s+(\S+)\s*(\S+|)//) {
+      return "/msg $mask Usage from private message: mute <channel> <nick> [timeout (default: 24 hours)]";
+    }
+    ($channel, $victim, $length) = ($1, $2, $3);
+  } else {
+    # used in channel
+    if ($arguments =~ s/^(#\S+)\s+(\S+)\s*(\S+|)//) {
+      ($channel, $victim, $length) = ($1, $2, $3);
+    } elsif ($arguments =~ s/^(\S+)\s*//) {
+      ($channel, $victim) = ($from, $1);
+    } else {
+      return "/msg $mask Usage: mute [channel] <nick> [timeout (default: 24 hours)]";
+    }
+  }
+
   if (not defined $channel and $from !~ m/^#/) {
-    return "/msg $nick Usage from private message: mute <mask> <channel> [timeout (default: 24 hours)]";
+    return "/msg $mask Usage from private message: mute <channel> <nick> [timeout (default: 24 hours)]";
   }
 
   if ($channel !~ m/^#/) {
@@ -157,8 +174,8 @@ sub mute_user {
     return "/msg $nick Please specify a channel.";
   }
 
-  if (not defined $target) {
-    return "/msg $nick Usage: mute <mask> [channel [timeout (default: 24 hours)]]";
+  if (not defined $victim) {
+    return "/msg $mask Usage: mute [channel] <nick> [timeout (default: 24 hours)]";
   }
 
   if (not defined $length) {
@@ -170,13 +187,13 @@ sub mute_user {
   }
 
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-  return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
+  return "I don't think so." if $victim =~ /^\Q$botnick\E!/i;
 
   if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
-  $self->{pbot}->{chanops}->mute_user_timed($target, $channel, $length);
+  $self->{pbot}->{chanops}->mute_user_timed($victim, $channel, $length);
 
   if ($length > 0) {
     $length = duration($length);
@@ -184,7 +201,7 @@ sub mute_user {
     $length = 'all eternity';
   }
 
-  return "/msg $nick $target muted in $channel for $length";
+  return "/msg $nick $victim muted in $channel for $length";
 }
 
 sub unmute_user {
