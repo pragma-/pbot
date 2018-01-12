@@ -207,16 +207,33 @@ sub mute_user {
 sub unmute_user {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($victim, $channel);
 
   if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 
-  my ($target, $channel) = split /\s+/, $arguments;
+  if (not $from =~ /^#/) {
+    # used in private message
+    if (not $arguments =~ s/^(#\S+)\s+(\S+)\s*//) {
+      return "/msg $nick Usage from private message: unmute <channel> <mask>";
+    }
+    ($channel, $victim) = ($1, $2);
+  } else {
+    # used in channel
+    if ($arguments =~ s/^(#\S+)\s+(\S+)\s*//) {
+      ($channel, $victim) = ($1, $2);
+    } elsif ($arguments =~ s/^(\S+)\s*//) {
+      ($channel, $victim) = ($from, $1);
+    } else {
+      return "/msg $mask Usage: unmute [channel] <mask>";
+    }
+  }
 
-  if (not defined $target) {
-    return "/msg $nick Usage: unmute <mask> [channel]";
+
+  if (not defined $victim) {
+    return "/msg $nick Usage: unmute [channel] <mask>";
   }
 
   $channel = $from if not defined $channel;
@@ -227,8 +244,8 @@ sub unmute_user {
     return "/msg $nick You are not an admin for $channel.";
   }
 
-  $self->{pbot}->{chanops}->unmute_user($target, $channel, 1);
-  return "/msg $nick $target has been unmuted in $channel.";
+  $self->{pbot}->{chanops}->unmute_user($victim, $channel, 1);
+  return "/msg $nick $victim has been unmuted in $channel.";
 }
 
 sub kick_user {
