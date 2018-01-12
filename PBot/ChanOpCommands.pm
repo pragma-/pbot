@@ -144,7 +144,7 @@ sub mute_user {
   if (not $from =~ /^#/) {
     # used in private message
     if (not $arguments =~ s/^(#\S+)\s+(\S+)\s*(\S+|)//) {
-      return "/msg $mask Usage from private message: mute <channel> <nick> [timeout (default: 24 hours)]";
+      return "/msg $mask Usage from private message: mute <channel> <mask> [timeout (default: 24 hours)]";
     }
     ($channel, $victim, $length) = ($1, $2, $3);
   } else {
@@ -154,12 +154,12 @@ sub mute_user {
     } elsif ($arguments =~ s/^(\S+)\s*//) {
       ($channel, $victim) = ($from, $1);
     } else {
-      return "/msg $mask Usage: mute [channel] <nick> [timeout (default: 24 hours)]";
+      return "/msg $mask Usage: mute [channel] <mask> [timeout (default: 24 hours)]";
     }
   }
 
   if (not defined $channel and $from !~ m/^#/) {
-    return "/msg $mask Usage from private message: mute <channel> <nick> [timeout (default: 24 hours)]";
+    return "/msg $mask Usage from private message: mute <channel> <mask> [timeout (default: 24 hours)]";
   }
 
   if ($channel !~ m/^#/) {
@@ -175,7 +175,7 @@ sub mute_user {
   }
 
   if (not defined $victim) {
-    return "/msg $mask Usage: mute [channel] <nick> [timeout (default: 24 hours)]";
+    return "/msg $mask Usage: mute [channel] <mask> [timeout (default: 24 hours)]";
   }
 
   if (not defined $length) {
