@@ -131,44 +131,27 @@ sub unban_user {
   return "/msg $nick $target has been unbanned from $channel.";
 }
 
+
 sub mute_user {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($victim, $channel, $length);
+  my ($channel, $victim, $length) = split(/\s+/, $arguments, 3);
 
   if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 
-  if (not $from =~ /^#/) {
-    # used in private message
-    if (not $arguments =~ s/^(#\S+)\s+(\S+)\s*(\S+|)//) {
-      return "/msg $nick Usage from private message: mute <channel> <mask> [timeout (default: 24 hours)]";
-    }
-    ($channel, $victim, $length) = ($1, $2, $3);
-  } else {
-    # used in channel
-    if ($arguments =~ s/^(#\S+)\s+(\S+)\s*(\S+|)//) {
-      ($channel, $victim, $length) = ($1, $2, $3);
-    } elsif ($arguments =~ s/^(\S+)\s*//) {
-      ($channel, $victim) = ($from, $1);
-    } else {
-      return "/msg $nick Usage: mute [channel] <mask> [timeout (default: 24 hours)]";
-    }
+  if ($channel !~ m/^#/) {
+    $length = "$victim $length";
+    $length = undef if $length eq ' ';
+    $victim = $channel;
+    $channel = $from;
   }
 
   if (not defined $channel and $from !~ m/^#/) {
     return "/msg $nick Usage from private message: mute <channel> <mask> [timeout (default: 24 hours)]";
   }
-
-  if ($channel !~ m/^#/) {
-    $length = "$channel $length";
-    $length = undef if $length eq ' ';
-    $channel = $from;
-  }
-
-  $channel = $from if not defined $channel;
 
   if ($channel !~ m/^#/) {
     return "/msg $nick Please specify a channel.";
@@ -207,38 +190,25 @@ sub mute_user {
 sub unmute_user {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($victim, $channel);
+  my ($channel, $victim, $rest) = split(/\s+/, $arguments, 3);
 
   if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 
-  if (not $from =~ /^#/) {
-    # used in private message
-    if (not $arguments =~ s/^(#\S+)\s+(\S+)\s*//) {
-      return "/msg $nick Usage from private message: unmute <channel> <mask>";
-    }
-    ($channel, $victim) = ($1, $2);
-  } else {
-    # used in channel
-    if ($arguments =~ s/^(#\S+)\s+(\S+)\s*//) {
-      ($channel, $victim) = ($1, $2);
-    } elsif ($arguments =~ s/^(\S+)\s*//) {
-      ($channel, $victim) = ($from, $1);
-    } else {
-      return "/msg $nick Usage: unmute [channel] <mask>";
-    }
+  if (not defined $victim and $channel !~ m/^#/) {
+    $victim = $channel;
+    $channel = $from;
   }
 
-
-  if (not defined $victim) {
+  if (not defined $victim or defined $rest) {
     return "/msg $nick Usage: unmute [channel] <mask>";
   }
 
-  $channel = $from if not defined $channel;
-
-  return "/msg $nick Usage for /msg: unmute <mask> <channel>" if $channel !~ /^#/;
+  if (not defined $channel and $from !~ m/^#/) {
+    return "/msg $nick Usage for /msg: unmute <mask> <channel>";
+  }
 
   if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
