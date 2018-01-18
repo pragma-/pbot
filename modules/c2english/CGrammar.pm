@@ -1781,6 +1781,11 @@ specifier_qualifier_list:
             $return = $item{type_specifier};
             $return .= ' ' . join('', @{$item{'specifier_qualifier_list(?)'}}) if @{$item{'specifier_qualifier_list(?)'}};
           }
+    | type_qualifier specifier_qualifier_list(?) 
+          { 
+            $return = $item{type_qualifier};
+            $return .= ' ' . join('', @{$item{'specifier_qualifier_list(?)'}}) if @{$item{'specifier_qualifier_list(?)'}};
+          }
 
 struct_or_union:
       comment(?) ('struct' 
