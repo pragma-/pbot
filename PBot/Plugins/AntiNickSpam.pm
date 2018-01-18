@@ -65,15 +65,11 @@ sub check_flood {
   $channel = lc $channel;
   my @words = split /\s+/, $msg;
   my @nicks;
-  my $severity = 0; # increasing severity for each additional unique nick in a single message
 
   foreach my $word (@words) {
     $word =~ s/[:;\+,\.!?\@\%\$]+$//g;
     if ($self->{pbot}->{nicklist}->is_present($channel, $word) and not grep { $_ eq $word } @nicks) {
-      $severity++;
-      for (my $i = 0; $i < $severity; $i++) {
-        push @{$self->{nicks}->{$channel}}, [scalar gettimeofday, $word];
-      }
+      push @{$self->{nicks}->{$channel}}, [scalar gettimeofday, $word];
       push @nicks, $word;
     }
   }
