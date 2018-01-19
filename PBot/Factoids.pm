@@ -477,6 +477,7 @@ sub expand_factoid_vars {
 
         if ($a) {
           my $fixed_a = select_indefinite_article $mylist[$line];
+          $fixed_a = ucfirst $fixed_a if $a =~ m/^A/;
           $action =~ s/$a\$$v$modifier/$fixed_a $mylist[$line]/;
         } else {
           $action =~ s/\$$v$modifier/$mylist[$line]/;
