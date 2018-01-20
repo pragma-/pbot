@@ -2150,11 +2150,11 @@ action_with_args: /call c11std
 created_on: 1325645454.02711
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1516407696.18008
+last_referenced_on: 1516440864.05559
 owner: pragma_
 rate_limit: 0
-ref_count: 1576
-ref_user: dho!~dho@veep.9vx.org
+ref_count: 1577
+ref_user: jp!ayy@youlosethega.me
 type: text
 
 <c11diffs>
@@ -4554,12 +4554,12 @@ type: text
 action: /say Chapter 1: A Tutorial Introduction; Exercise 1-16. Revise the main routine of the longest-line program so it will correctly print the length of arbitrary long input lines, and as much as possible of the text.
 created_on: 1436132320.52224
 enabled: 1
-last_referenced_in: cousteau
-last_referenced_on: 1491077032.17698
+last_referenced_in: ##c
+last_referenced_on: 1516436847.62685
 owner: pragma-!chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 12
-ref_user: cousteau!~cousteau@unaffiliated/cousteau
+ref_count: 13
+ref_user: jp!ayy@youlosethega.me
 type: text
 
 <kr1-17>
@@ -4746,12 +4746,12 @@ type: text
 action: /say Chapter 1: A Tutorial Introduction; Exercise 1-9. Write a program to copy its input to its output, replacing each string of one or more blanks by a single blank.
 created_on: 1436132320.52224
 enabled: 1
-last_referenced_in: pragma-
-last_referenced_on: 1487986193.72448
+last_referenced_in: ##c
+last_referenced_on: 1516436944.57407
 owner: pragma-!chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 7
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 8
+ref_user: jp!ayy@youlosethega.me
 type: text
 
 <kr2>
@@ -30796,11 +30796,11 @@ edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1444035579.82241
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516396112.52518
+last_referenced_on: 1516452774.23616
 owner: pragma_
 rate_limit: 0
-ref_count: 4779
-ref_user: clumsy_boy!~leoni@181.26.8.127
+ref_count: 4780
+ref_user: VLetrmx!~VLetrmx@unaffiliated/vletrmx
 type: text
 use_output_queue: 1
 
@@ -31656,11 +31656,11 @@ created_on: 1514925172.65279
 edited_by: jp!ayy@youlosethega.me
 edited_on: 1514925212.65162
 enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1516154202.68314
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1516444860.13728
 owner: jp!ayy@youlosethega.me
 rate_limit: 15
-ref_count: 40
+ref_count: 41
 ref_user: jp!ayy@youlosethega.me
 type: text
 
@@ -31705,11 +31705,11 @@ type: module
 action: /call factadd
 created_on: 1505460785.43151
 enabled: 1
-last_referenced_in: jp
-last_referenced_on: 1516418151.35218
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1516453894.17818
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 268
+ref_count: 275
 ref_user: jp!ayy@youlosethega.me
 type: text
 
@@ -32299,12 +32299,12 @@ type: text
 action: /call slap
 created_on: 1275116449
 enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1516395843.00905
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1516444664.37852
 owner: pragma_
 rate_limit: 15
-ref_count: 32
-ref_user: jp!ayy@youlosethega.me
+ref_count: 33
+ref_user: mnrmnaugh!~mnrmnaugh@unaffiliated/mnrmnaugh
 type: text
 
 <attack_adverbs>
@@ -32330,10 +32330,10 @@ ref_user: nobody
 type: text
 
 <attack_verbs>
-action: hits smashes crushes attacks whacks stabs slices misses misses "barely whiffs" immolates slams
+action: hits smashes crushes attacks whacks stabs slices misses misses "barely whiffs" immolates slams $attacks
 created_on: 1516406087.52906
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
-edited_on: 1516415709.26257
+edited_on: 1516459639.00672
 enabled: 1
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
@@ -32744,12 +32744,12 @@ type: text
 action: me wiggles her butt.
 created_on: 1195532640
 enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1489922263.92858
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1516444881.92038
 owner: pragma_
 rate_limit: 0
-ref_count: 5
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 6
+ref_user: jp!ayy@youlosethega.me
 type: regex
 
 <bot_reply>
@@ -32997,12 +32997,12 @@ action: c11std.pl
 created_on: 1326727233.54048
 enabled: 1
 last_referenced_in: ##c
-last_referenced_on: 1516407696.20141
+last_referenced_on: 1516440864.0637
 nooverride: 1
 owner: pragma_
 rate_limit: 0
-ref_count: 4464
-ref_user: dho!~dho@veep.9vx.org
+ref_count: 4465
+ref_user: jp!ayy@youlosethega.me
 type: module
 
 <c2english>
@@ -33143,14 +33143,14 @@ created_on: 1272176634
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1506224959.99807
 enabled: 1
-last_referenced_in: la_putin
-last_referenced_on: 1516419384.7374
+last_referenced_in: jp
+last_referenced_on: 1516453653.41666
 locked: 1
 owner: pragma_
 preserve_whitespace: 1
 rate_limit: 0
-ref_count: 96632
-ref_user: la_putin!~universal@CPE-121-223-9-154.lnse2.cha.bigpond.net.au
+ref_count: 96692
+ref_user: jp!ayy@youlosethega.me
 type: text
 
 <cc2>
@@ -33222,10 +33222,10 @@ action: /call factchange
 created_on: 1277259441.33026
 enabled: 1
 last_referenced_in: #pbot2
-last_referenced_on: 1516419597.65829
+last_referenced_on: 1516460318.79588
 owner: pbot3
 rate_limit: 0
-ref_count: 2704
+ref_count: 2714
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -33372,13 +33372,13 @@ edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1406470904.86333
 enabled: 1
 last_referenced_in: #cjeopardy
-last_referenced_on: 1516269939.08786
+last_referenced_on: 1516421936.31738
 modulelauncher_subpattern: s/(\S+)\\ (\S+)\\ /a b /
 nooverride: 0
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 10
-ref_count: 3642
-ref_user: haavard!root@haavard.me
+ref_count: 3644
+ref_user: aksh!b753c0dd@gateway/web/freenode/ip.183.83.192.221
 type: text
 
 <cjeopardy_answer_module>
@@ -33439,14 +33439,14 @@ add_nick: 1
 created_on: 1406470527.29871
 enabled: 1
 last_referenced_in: #cjeopardy
-last_referenced_on: 1516269939.09159
+last_referenced_on: 1516421936.32798
 modulelauncher_subpattern: s/(\S+)\\ (\S+)/$1 $2/
 nooverride: 1
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 preserve_whitespace: 1
 rate_limit: 0
-ref_count: 3656
-ref_user: haavard!root@haavard.me
+ref_count: 3658
+ref_user: aksh!b753c0dd@gateway/web/freenode/ip.183.83.192.221
 type: module
 unquote_spaces: 1
 workdir: cjeopardy
@@ -33473,10 +33473,10 @@ action: /call cc -lang=clang
 created_on: 1421454505.33853
 enabled: 1
 last_referenced_in: dorp
-last_referenced_on: 1516284405.5342
+last_referenced_on: 1516441905.90097
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 0
-ref_count: 811
+ref_count: 841
 ref_user: dorp!~dorp@bzq-84-111-138-241.cablep.bezeqint.net
 type: text
 
@@ -33760,15 +33760,15 @@ add_nick: 1
 created_on: 1291939583.25391
 enabled: 1
 interpolate: 0
-last_referenced_in: la_putin
-last_referenced_on: 1516419385.12991
+last_referenced_in: jp
+last_referenced_on: 1516453653.75819
 locked: 1
 nooverride: 1
 owner: pragma_
 preserve_whitespace: 1
 rate_limit: 0
-ref_count: 89351
-ref_user: la_putin!~universal@CPE-121-223-9-154.lnse2.cha.bigpond.net.au
+ref_count: 89411
+ref_user: jp!ayy@youlosethega.me
 type: module
 
 <compiler_block>
@@ -34524,11 +34524,11 @@ action: /say $rpg_ans
 created_on: 1231873978
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516417989.06701
+last_referenced_on: 1516444937.73713
 owner: pragma_
 rate_limit: 15
-ref_count: 107
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 108
+ref_user: mnrmnaugh!~mnrmnaugh@unaffiliated/mnrmnaugh
 type: text
 
 <eat>
@@ -34536,11 +34536,11 @@ action: $rpg_eat_actions
 created_on: 1516389047.58156
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516417980.79673
+last_referenced_on: 1516458389.43949
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 68
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 81
+ref_user: sdfgsdfg!~fgfsdfgsd@unaffiliated/sdfgsdfg
 type: text
 
 <eat_actions>
@@ -34788,11 +34788,11 @@ action: /say You equip the $args.
 created_on: 1516388841.99786
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516407445.05767
+last_referenced_on: 1516444474.34187
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 9
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 10
+ref_user: jp!ayy@youlosethega.me
 type: text
 
 <errors>
@@ -35086,11 +35086,11 @@ action: /call hit
 created_on: 1516407187.73081
 enabled: 1
 last_referenced_in: #pbot2
-last_referenced_on: 1516419506.67422
+last_referenced_on: 1516419685.20531
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 12
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 13
+ref_user: k!~krok@unaffiliated/krok
 type: text
 
 <filter>
@@ -35386,11 +35386,11 @@ action: /call google
 created_on: 1240680519
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516415875.73506
+last_referenced_on: 1516455352.70944
 noembed: 1
 owner: pragma_
 rate_limit: 15
-ref_count: 2419
+ref_count: 2420
 ref_user: jp!ayy@youlosethega.me
 type: text
 
@@ -35424,12 +35424,12 @@ created_on: 1104389164
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1421546559.17301
 enabled: 1
-last_referenced_in: ##c
-last_referenced_on: 1515330911.46781
+last_referenced_in: dorp
+last_referenced_on: 1516441224.87748
 owner: pragma_
 rate_limit: 0
-ref_count: 396
-ref_user: dorp!~dorp@bzq-84-111-138-241.red.bezeqint.net
+ref_count: 400
+ref_user: dorp!~dorp@bzq-84-111-138-241.cablep.bezeqint.net
 type: text
 
 <gcc-macros>
@@ -35498,11 +35498,11 @@ action: /call take
 created_on: 1516407269.14243
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516407439.98223
+last_referenced_on: 1516444650.25772
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 2
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 3
+ref_user: mnrmnaugh!~mnrmnaugh@unaffiliated/mnrmnaugh
 type: text
 
 <ghi>
@@ -35608,11 +35608,11 @@ edited_by: jp!ayy@youlosethega.me
 edited_on: 1515894516.74385
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516388469.17655
+last_referenced_on: 1516458376.32324
 owner: jp!ayy@youlosethega.me
 rate_limit: 15
-ref_count: 51
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 53
+ref_user: sdfgsdfg!~fgfsdfgsd@unaffiliated/sdfgsdfg
 type: text
 
 <goddammit>
@@ -35713,10 +35713,10 @@ action: /call google_search $nick
 created_on: 1322955668.41469
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516415875.73965
+last_referenced_on: 1516455352.71989
 owner: pragma_
 rate_limit: 15
-ref_count: 2955
+ref_count: 2956
 ref_user: jp!ayy@youlosethega.me
 type: text
 
@@ -35725,12 +35725,12 @@ action: g.pl
 created_on: 1322955852.0967
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516415875.74302
+last_referenced_on: 1516455352.7308
 modulelauncher_subpattern: s/(\S+)\\ /$1 /
 nooverride: 1
 owner: pragma_
 rate_limit: 15
-ref_count: 2920
+ref_count: 2921
 ref_user: jp!ayy@youlosethega.me
 type: module
 
@@ -36171,17 +36171,14 @@ ref_user: jp!ayy@youlosethega.me
 type: text
 
 <hit>
-action: /code perl print "$nick" cmp "atk" ? substr("$rpg_swing", 5 ) : substr("$rpg_crit_fail", 5)
-created_on: 1516405719.07186
-edited_by: jp!ayy@youlosethega.me
-edited_on: 1516413929.03076
+action: /code perl $_r = ""; if ("$nick" cmp "atk") { $_r = "$rpg_swing"; } else { $_r = "$rpg_crit_fail"; } $_r =~ s{^/say }{}; print $_r;
+created_on: 1516459965.49578
 enabled: 1
 last_referenced_in: #pbot2
-last_referenced_on: 1516419506.67806
+last_referenced_on: 1516460221.60608
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
-persist-key: rpg
 rate_limit: 15
-ref_count: 147
+ref_count: 20
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -37046,11 +37043,11 @@ type: text
 action: /call hit
 created_on: 1516405762.4886
 enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1516414660.16068
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1516445002.33383
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 7
+ref_count: 11
 ref_user: jp!ayy@youlosethega.me
 type: text
 
@@ -37110,11 +37107,11 @@ created_on: 1513386629.65744
 edited_by: jp!ayy@youlosethega.me
 edited_on: 1514925329.04728
 enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1516154202.67448
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1516444860.12669
 owner: jp!ayy@107.170.203.174
 rate_limit: 15
-ref_count: 29
+ref_count: 30
 ref_user: jp!ayy@youlosethega.me
 type: text
 
@@ -37321,11 +37318,11 @@ edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1442246499.9617
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516407463.71928
+last_referenced_on: 1516444820.06378
 owner: edk!~edk@spy/edk0
 rate_limit: 15
-ref_count: 178
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 179
+ref_user: mnrmnaugh!~mnrmnaugh@unaffiliated/mnrmnaugh
 type: text
 
 <lick_action>
@@ -37683,14 +37680,14 @@ type: module
 action: /me $args
 created_on: 1500103179.38187
 enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1516390676.59812
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1516444881.92844
 locked: 1
 nooverride: 1
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 283
-ref_user: k!~krok@unaffiliated/krok
+ref_count: 285
+ref_user: jp!ayy@youlosethega.me
 type: text
 
 <milkshake>
@@ -37832,12 +37829,12 @@ type: text
 action: /msg $args
 created_on: 1109820572
 enabled: 1
-last_referenced_in: k
-last_referenced_on: 1516416748.51063
+last_referenced_in: jp
+last_referenced_on: 1516458907.08208
 owner: pragma_
 rate_limit: 0
-ref_count: 268
-ref_user: k!~krok@unaffiliated/krok
+ref_count: 286
+ref_user: jp!ayy@youlosethega.me
 type: text
 
 <muffin_type>
@@ -38242,11 +38239,11 @@ action: /say $rpg_ans
 created_on: 1231873805
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516417985.2336
+last_referenced_on: 1516444638.30735
 owner: pragma_
 rate_limit: 15
-ref_count: 118
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 120
+ref_user: mnrmnaugh!~mnrmnaugh@unaffiliated/mnrmnaugh
 type: text
 
 <northeast>
@@ -38336,11 +38333,11 @@ action: /call take
 created_on: 1516407233.91753
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516407238.80236
+last_referenced_on: 1516458372.64957
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 1
-ref_user: jp!ayy@youlosethega.me
+ref_count: 6
+ref_user: sdfgsdfg!~fgfsdfgsd@unaffiliated/sdfgsdfg
 type: text
 
 <ocaml>
@@ -38701,11 +38698,11 @@ created_on: 1273693148
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1421474530.39403
 enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1516413890.10565
+last_referenced_in: jp
+last_referenced_on: 1516453653.40857
 owner: pragma_
 rate_limit: 0
-ref_count: 1711
+ref_count: 1713
 ref_user: jp!ayy@youlosethega.me
 type: text
 
@@ -38750,11 +38747,11 @@ action: $rpg_pet_reaction
 created_on: 1516390101.32331
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516417968.53952
+last_referenced_on: 1516452745.04788
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 29
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 33
+ref_user: VLetrmx!~VLetrmx@unaffiliated/vletrmx
 type: text
 
 <pets>
@@ -38858,10 +38855,10 @@ action: /say pong
 created_on: 1109821018
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516408831.19355
+last_referenced_on: 1516454885.83489
 owner: pragma_
 rate_limit: 15
-ref_count: 281
+ref_count: 282
 ref_user: jp!ayy@youlosethega.me
 type: text
 
@@ -39414,13 +39411,13 @@ type: text
 action: random_quote.pl
 created_on: 1258699440
 enabled: 1
-last_referenced_in: iy
-last_referenced_on: 1510554413.0213
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1516444904.73738
 nooverride: 1
 owner: pragma_
 rate_limit: 0
-ref_count: 2672
-ref_user: iy!~iy@181.118.73.163
+ref_count: 2673
+ref_user: mnrmnaugh!~mnrmnaugh@unaffiliated/mnrmnaugh
 type: module
 
 <quotegrabs>
@@ -39738,11 +39735,11 @@ edited_by: e!e@freenode/staff/spy.edk
 edited_on: 1504175952.31843
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516349232.11228
+last_referenced_on: 1516444745.10433
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 60
-ref_count: 463
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 464
+ref_user: jp!ayy@youlosethega.me
 type: text
 
 <reprot>
@@ -39982,10 +39979,10 @@ ref_user: nobody
 type: text
 
 <rpg_attack_response>
-action: "$attack_types $nick. $nick is $rpg_attack_death" "is dead! R.I.P."
+action: "$attack_types $nick. $nick is $rpg_attack_death" "is dead! R.I.P." "$attack_types $nick. $args is $rpg_attack_death"
 created_on: 1516406173.08598
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
-edited_on: 1516419597.69237
+edited_on: 1516459736.68804
 enabled: 1
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
@@ -39994,10 +39991,10 @@ ref_user: nobody
 type: text
 
 <rpg_crit>
-action: "/say $nick takes aim at $args. $args instantly shatters into 1048576 pieces." "/say $nick $attack_adverbs bifurcates $args." "/say $nick lunges at $args, mace drawn, and crushes their bones into dust." "/say $nick gashes $args through the neck, dealing ~0ULL damage. $args explodes violently into a fine, pink mist." "/say Before $nick can do anything, their pet $animal_types $attack_adverbs bites off $args's head." "$args &{
+action: "/say $nick takes aim at $args. $args instantly shatters into 1048576 pieces." "/say $nick $attack_adverbs bifurcates $args. The two halves of $args slowly peel away from each other and splut onto the ground in a spray of blood and gore." "/say $nick lunges at $args, mace drawn, and crushes their bones into dust." "/say $nick gashes $args through the neck, dealing ~0ULL damage. $args explodes violently into a fine, pink mist." "/say Before $nick can do anything, their pet $animal_types $attack_adverbs bites off $args's $body_part."
 created_on: 1516407692.11959
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
-edited_on: 1516416540.57428
+edited_on: 1516460318.82899
 enabled: 1
 owner: e!e@enucs/spy.edk
 rate_limit: 15
@@ -40397,12 +40394,12 @@ action: /say $args
 created_on: 1251663502
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516416686.64194
+last_referenced_on: 1516437403.005
 locked: 1
 nooverride: 1
 owner: pragma_
 rate_limit: 0
-ref_count: 2651
+ref_count: 2652
 ref_user: k!~krok@unaffiliated/krok
 type: text
 use_output_queue: 1
@@ -40846,10 +40843,10 @@ edited_by: jp!ayy@youlosethega.me
 edited_on: 1515894869.6708
 enabled: 1
 last_referenced_in: #pbot2
-last_referenced_on: 1516419529.17976
+last_referenced_on: 1516460228.77099
 owner: kg!~krok@unaffiliated/krok/x-1434802
 rate_limit: 0
-ref_count: 2212
+ref_count: 2233
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -40949,12 +40946,12 @@ type: text
 action: /me $attacks $args with a $sizes $animal_adjectives $animals!
 created_on: 1108932778
 enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1516395843.01376
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1516444794.01553
 owner: pragma_
 rate_limit: 15
-ref_count: 215
-ref_user: jp!ayy@youlosethega.me
+ref_count: 217
+ref_user: naturelid!~phillid@oh.not.bad.aye.yeah.nah.nz
 type: text
 
 <slaps>
@@ -41140,11 +41137,11 @@ action: /say $rpg_ans
 created_on: 1231873967
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516417993.60608
+last_referenced_on: 1516444761.42818
 owner: pragma_
 rate_limit: 15
-ref_count: 74
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 76
+ref_user: jp!ayy@youlosethega.me
 type: text
 
 <southeast>
@@ -41661,11 +41658,11 @@ action: /say You take the $args.
 created_on: 1231874071
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516407439.98704
+last_referenced_on: 1516458372.65718
 owner: pragma_
 rate_limit: 15
-ref_count: 59
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 65
+ref_user: sdfgsdfg!~fgfsdfgsd@unaffiliated/sdfgsdfg
 type: text
 
 <talking>
@@ -43018,11 +43015,11 @@ action: /say $rpg_ans
 created_on: 1231873982
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516417960.3266
+last_referenced_on: 1516444781.38566
 owner: pragma_
 rate_limit: 15
-ref_count: 99
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 100
+ref_user: jp!ayy@youlosethega.me
 type: text
 
 <whacks>
@@ -43044,12 +43041,12 @@ edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1430088157.77518
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1516099170.49989
+last_referenced_on: 1516444436.75279
 noembed: 1
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 210
-ref_user: clumsy_boy!~leoni@190.175.100.235
+ref_count: 211
+ref_user: clumsy_boy!~leoni@181.26.8.127
 type: text
 use_output_queue: 1
 
@@ -43319,6 +43316,20 @@ ref_count: 288
 ref_user: dho!~dho@veep.9vx.org
 type: text
 
+<wot>
+action: /code perl package Wat; sub new { my ($pkg,$self) = (shift,shift); bless \ $self,$pkg; return \ $self; } sub TIESCALAR { my $self = shift; return $self; } sub mk { my $_i = 0; return sub { return ++$_i; }; }; our $_it = mk; sub FETCH { my $self = $_it; return $self->(); } my $waat = Wat->new(); my $wut; tie $wut, $waat; print "wtf equals" if ($wut == 1 and $wut == 2 and $wut == 3); print ' - $wut is now: ' . $wut;
+created_on: 1516453894.19686
+edited_by: jp!ayy@youlosethega.me
+edited_on: 1516456549.15943
+enabled: 1
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1516456553.2232
+owner: jp!ayy@youlosethega.me
+rate_limit: 15
+ref_count: 4
+ref_user: jp!ayy@youlosethega.me
+type: text
+
 <wotsit>
 action: http://www.wotsit.org, loads of file type resources!
 created_on: 1199573903
@@ -43479,11 +43490,11 @@ type: text
 action: /call 8ball
 created_on: 1375924361.56038
 enabled: 1
-last_referenced_in: vletrmx
-last_referenced_on: 1516364425.62709
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1516452774.227
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 0
-ref_count: 93
+ref_count: 94
 ref_user: VLetrmx!~VLetrmx@unaffiliated/vletrmx
 type: text
 
