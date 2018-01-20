@@ -947,9 +947,12 @@ sub handle_action {
   }
   elsif ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
     # Don't allow user-custom /msg factoids, unless factoid triggered by admin
-    if (($action =~ m/^\/msg/i) and (not $self->{pbot}->{admins}->loggedin($stuff->{from}, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}"))) {
-      $self->{pbot}->{logger}->log("[ABUSE] Bad factoid (contains /msg): $action\n");
-      return "You must login to use this command.";
+    if ($action =~ m/^\/msg/i) {
+      my $admin = $self->{pbot}->{admins}->loggedin($stuff->{from}, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+      if (not $admin or $admin->{level} < 60) {
+        $self->{pbot}->{logger}->log("[ABUSE] Bad factoid (contains /msg): $action\n");
+        return "You are not powerful enough to do this.";
+      }
     }
 
     if ($stuff->{ref_from}) {
