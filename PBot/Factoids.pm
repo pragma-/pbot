@@ -412,12 +412,12 @@ sub expand_factoid_vars {
     $action =~ s/\$0/$root_keyword/g;
     my $const_action = $action;
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
-      last if ++$depth >= 100;
       my ($a, $v) = ($1, $2);
       $v =~ s/(.):$/$1/;
       next if $v =~ m/^[\W_]/; # special character prefix skipped for shell/code-factoids/etc
       next if $v =~ m/^(nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])$/i; # don't override special variables
       next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
+      last if ++$depth >= 100;
 
       $matches++;
 
