@@ -413,7 +413,7 @@ sub expand_factoid_vars {
     my $matches = 0;
     $action =~ s/\$0/$root_keyword/g;
     my $const_action = $action;
-    while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:\-#\[\]]+)/gi) {
+    while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:#\[\]]+)/gi) {
       my ($a, $v) = ($1, $2);
       $v =~ s/(.):$/$1/;
       next if $v =~ m/^[\W_]/; # special character prefix skipped for shell/code-factoids/etc
