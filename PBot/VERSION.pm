@@ -14,11 +14,28 @@ package PBot::VERSION;
 use strict;
 use warnings;
 
+BEGIN {
+  use Exporter;
+  our @ISA = 'Exporter';
+  our @EXPORT_OK = qw(version);
+}
+
 # These are set automatically by the build/commit script
 use constant {
   BUILD_NAME     => "PBot",
   BUILD_REVISION => 1945,
   BUILD_DATE     => "2018-01-22",
 };
+
+sub new {
+  my ($class, %conf) = @_;
+  my $self = bless {}, $class;
+  $self->{pbot}  = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  return $self;
+}
+
+sub version {
+  return BUILD_NAME . " revision " . BUILD_REVISION . " " . BUILD_DATE;
+}
 
 1;

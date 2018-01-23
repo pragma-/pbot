@@ -14,22 +14,12 @@ package PBot::PBot;
 use strict;
 use warnings;
 
-use PBot::VERSION;
-
-BEGIN {
-  use Exporter;
-  our @ISA = 'Exporter';
-  our @EXPORT = qw($VERSION);
-
-  our $VERSION = PBot::VERSION::BUILD_NAME . " revision " . PBot::VERSION::BUILD_REVISION . " " . PBot::VERSION::BUILD_DATE;
-  print "$VERSION\n";
-}
-
 # unbuffer stdout
 STDOUT->autoflush(1);
 
 use Carp ();
 use PBot::Logger;
+use PBot::VERSION;
 use PBot::Registry;
 use PBot::SelectHandler;
 use PBot::StdinReader;
@@ -71,6 +61,9 @@ sub initialize {
 
   # logger created first to allow other modules to log things
   $self->{logger}   = PBot::Logger->new(log_file => $conf{log_file}, %conf);
+
+  $self->{version}  = PBot::VERSION->new(pbot => $self, %conf);
+  $self->{logger}->log($self->{version}->version . "\n");
 
   $self->{atexit}   = PBot::Registerable->new(%conf);
   $self->{timer}    = PBot::Timer->new(timeout => 10, %conf);

@@ -26,7 +26,7 @@ use JSON;
 use PPI;
 use Safe;
 
-use PBot::PBot qw($VERSION);
+use PBot::VERSION qw/version/;
 use PBot::FactoidCommands;
 use PBot::FactoidModuleLauncher;
 use PBot::DualIndexHashObject;
@@ -82,6 +82,7 @@ sub load_factoids {
 
   foreach my $channel (keys %{ $self->{factoids}->hash }) {
     foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
+      $self->{pbot}->{logger}->log("Missing type for $channel->$trigger\n") if not $self->{factoids}->hash->{$channel}->{$trigger}->{type};
       $text++   if $self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'text';
       $regex++  if $self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'regex';
       $modules++ if $self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'module';
@@ -96,7 +97,8 @@ sub load_factoids {
 
 sub add_default_factoids {
   my $self = shift;
-  $self->add_factoid('text', '.*', $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'version', "/say $VERSION", 1);
+  my $version = version();
+  $self->add_factoid('text', '.*', $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'version', "/say $version", 1);
 }
 
 sub save_factoids {

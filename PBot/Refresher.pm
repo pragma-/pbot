@@ -49,13 +49,9 @@ sub refresh {
       return "Refreshed all modified modules.\n";
     } else {
       $self->{pbot}->{logger}->log("Refreshing module $arguments\n");
-      if ($self->{refresher}->refresh_module_if_modified($arguments)) {
-        $self->{pbot}->{logger}->log("Refreshed module.\n");
-        return "Refreshed module.\n";
-      } else {
-        $self->{pbot}->{logger}->log("Module had no changes; not refreshed.\n");
-        return "Module had no changes; not refreshed.\n";
-      }
+      $self->{refresher}->refresh_module($arguments);
+      $self->{pbot}->{logger}->log("Refreshed module.\n");
+      return "Refreshed module.\n";
     }
   };
 
@@ -65,9 +61,11 @@ sub refresh {
   }
 
   # update version factoid
-  use PBot::VERSION;
-  my $version = PBot::VERSION::BUILD_NAME . " revision " . PBot::VERSION::BUILD_REVISION . " " . PBot::VERSION::BUILD_DATE;
-  $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{'version'}->{'action'} = "/say $version";
+  my $version = $self->{pbot}->{version}->version();
+  if ($self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{'version'}->{'action'} ne "/say $version") {
+    $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{'version'}->{'action'} = "/say $version";
+    $self->{pbot}->{logger}->log("New version: $version\n");
+  }
 
   return $result;
 }
