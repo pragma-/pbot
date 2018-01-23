@@ -213,6 +213,8 @@ sub module_pipe_reader {
     # don't override nick if already set
     if (exists $stuff->{special} and $stuff->{special} ne 'code-factoid' and exists $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} and $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} != 0) {
       $stuff->{nickoverride} = $stuff->{nick};
+      $stuff->{no_nickoverride} = 0;
+      $stuff->{force_nickoverride} = 1;
     } else {
       # extract nick-like thing from module result 
       if ($stuff->{result} =~ s/^(\S+): //) {

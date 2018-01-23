@@ -186,6 +186,7 @@ sub process_line {
     $stuff->{text} = $text;
     $stuff->{command} = $command;
     $stuff->{nickoverride} = $nick_override if $nick_override;
+    $stuff->{force_nickoverride} = 1 if $nick_override;
     $stuff->{referenced} = $embedded;
     $stuff->{interpret_depth} = 1;
     $stuff->{preserve_whitespace} = $preserve_whitespace;
@@ -511,7 +512,8 @@ sub output_result {
   return if not defined $line or not length $line;
 
   if ($line =~ s/^\/say\s+//i) {
-    if (defined $stuff->{nickoverride}) {
+
+    if (defined $stuff->{nickoverride} and ($stuff->{no_nickoverride} == 0 or $stuff->{force_nickoverride} == 1)) {
       $line = "$stuff->{nickoverride}: $line";
     }
     $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
@@ -536,7 +538,7 @@ sub output_result {
       $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'localhost', '/me ' . $line, 0, 0, 0) if $stuff->{checkflood};
     } else {
       $line =~ s/^\/say\s+//i;
-      if (defined $stuff->{nickoverride}) {
+      if (defined $stuff->{nickoverride} and ($stuff->{no_nickoverride} == 0 or $stuff->{force_nickoverride} == 1)) {
         $line = "$stuff->{nickoverride}: $line";
       }
       $pbot->{conn}->privmsg($to, $line) if $to !~ /\Q$botnick\E/i;
@@ -564,7 +566,7 @@ sub output_result {
       $pbot->{conn}->privmsg($stuff->{from}, "$victim: $reason") if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
     }
   } else {
-    if (defined $stuff->{nickoverride}) {
+    if (defined $stuff->{nickoverride} and ($stuff->{no_nickoverride} == 0 or $stuff->{force_nickoverride} == 1)) {
       $line = "$stuff->{nickoverride}: $line";
     }
     $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;

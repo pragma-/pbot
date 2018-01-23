@@ -110,6 +110,7 @@ sub interpreter {
   foreach my $ref (@{ $self->{handlers} }) {
     if ($ref->{name} eq $keyword) {
       if ($level >= $ref->{level}) {
+        $stuff->{no_nickoverride} = 1;
         my $result = &{ $ref->{subref} }($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{arguments}, $stuff);
         if ($stuff->{referenced}) {
           return undef if $result =~ m/(?:usage:|no results)/i;

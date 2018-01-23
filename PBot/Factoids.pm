@@ -700,8 +700,15 @@ sub execute_code_factoid_using_vm {
   my ($self, $stuff) = @_;
 
   unless (exists $self->{factoids}->hash->{$stuff->{channel}}->{$stuff->{keyword}}->{interpolate} and $self->{factoids}->hash->{$stuff->{channel}}->{$stuff->{keyword}}->{interpolate} eq '0') {
+    if ($stuff->{code} =~ m/(?:\$nick\b|\$args\b|\$arg\[)/ and length $stuff->{arguments}) {
+      $stuff->{no_nickoverride} = 1;
+    } else {
+      $stuff->{no_nickoverride} = 0;
+    }
     $stuff->{code} = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $stuff->{code});
     $stuff->{code} = $self->expand_action_arguments($stuff->{code}, $stuff->{arguments}, $stuff->{nick});
+  } else {
+    $stuff->{no_nickoverride} = 0;
   }
 
   my %h = (nick => $stuff->{nick}, channel => $stuff->{from}, lang => $stuff->{lang}, code => $stuff->{code}, arguments => $stuff->{arguments}, factoid => "$stuff->{channel}:$stuff->{keyword}");
@@ -842,8 +849,6 @@ sub interpreter {
     }
   }
 
-  my $type = $self->{factoids}->hash->{$channel}->{$keyword}->{type};
-
   $self->{factoids}->hash->{$channel}->{$keyword}->{ref_count}++;
   $self->{factoids}->hash->{$channel}->{$keyword}->{ref_user} = "$stuff->{nick}!$stuff->{user}\@$stuff->{host}";
   $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on} = gettimeofday;
@@ -890,6 +895,9 @@ sub handle_action {
     if ($action =~ m/\$args/ or $action =~ m/\$arg\[/) {
       unless (defined $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
         $action = $self->expand_action_arguments($action, $stuff->{arguments}, $stuff->{nick});
+        $stuff->{no_nickoverride} = 1;
+      } else {
+        $stuff->{no_nickoverride} = 0;
       }
       $stuff->{arguments} = "";
     } else {
@@ -899,12 +907,16 @@ sub handle_action {
 
         if ($target and $action !~ /\$(?:nick|args)\b/) {
           $stuff->{nickoverride} = $target unless $stuff->{force_nickoverride};
+          $stuff->{no_nickoverride} = 0;
+        } else {
+          $stuff->{no_nickoverride} = 1;
         }
       }
     }
   } else {
     # no arguments supplied, replace $args with $nick/$tonick, etc
     $action = $self->expand_action_arguments($action, undef, $stuff->{nick});
+    $stuff->{no_nickoverride} = 0;
   }
 
   # Check if it's an alias
@@ -913,6 +925,7 @@ sub handle_action {
     $command .= " $stuff->{arguments}" if length $stuff->{arguments};
 
     $stuff->{command} = $command;
+    $stuff->{aliased} = 1;
 
     $self->{pbot}->{logger}->log("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] ($stuff->{nick}!$stuff->{user}\@$stuff->{host}) [$keyword] aliased to: [$command]\n");
     return $self->{pbot}->{interpreter}->interpret($stuff);
