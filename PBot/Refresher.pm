@@ -64,6 +64,11 @@ sub refresh {
     return $@;
   }
 
+  # update version factoid
+  use PBot::VERSION;
+  my $version = PBot::VERSION::BUILD_NAME . " revision " . PBot::VERSION::BUILD_REVISION . " " . PBot::VERSION::BUILD_DATE;
+  $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{'version'}->{'action'} = "/say $version";
+
   return $result;
 }
 
