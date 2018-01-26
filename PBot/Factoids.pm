@@ -482,7 +482,11 @@ sub expand_factoid_vars {
           $fixed_a = ucfirst $fixed_a if $a =~ m/^A/;
           $action =~ s/$a\$$v$modifier/$fixed_a $mylist[$line]/;
         } else {
-          $action =~ s/\$$v$modifier/$mylist[$line]/;
+          if (not length $mylist[$line]) {
+            $action =~ s/\s+\$$v$modifier//;
+          } else {
+            $action =~ s/\$$v$modifier/$mylist[$line]/;
+          }
         }
       }
     }
