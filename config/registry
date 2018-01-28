@@ -1,0 +1,300 @@
+[#chee-fanclub]
+<trigger>
+type: text
+
+[antiaway]
+<bad_actions>
+type: text
+value: ^/me (is (away|gone)|.*auto.?away)
+
+<bad_nicks>
+type: text
+value: ([[:punct:]](afk|brb|bbl|away|sleep|z+|work|gone|study|out|home|busy|off)[[:punct:]]*$|.+\[.*\]$)
+
+<kick_msg>
+type: text
+value: http://sackheads.org/~bnaylor/spew/away_msgs.html
+
+[antiflood]
+<antirepeat>
+type: text
+value: 1
+
+<antirepeat_allow_bot>
+type: text
+value: 1
+
+<antirepeat_match>
+type: text
+value: 0.5
+
+<antirepeat_threshold>
+type: text
+value: 2.5
+
+<chat_flood_punishment>
+type: array
+value: 60,300,3600,86400,604800,2419200
+
+<chat_flood_threshold>
+type: text
+value: 4
+
+<chat_flood_time_threshold>
+type: text
+value: 10
+
+<debug_checkban>
+type: text
+value: 0
+
+<enforce>
+type: text
+value: 1
+
+<enter_abuse_max_offenses>
+type: text
+value: 3
+
+<enter_abuse_punishment>
+type: array
+value: 60,300,3600,86400,604800,2419200
+
+<enter_abuse_threshold>
+type: text
+value: 4
+
+<enter_abuse_time_threshold>
+type: text
+value: 20
+
+<join_flood_punishment>
+type: array
+value: 28800,3600,86400,604800,2419200,14515200
+
+<join_flood_threshold>
+type: text
+value: 4
+
+<join_flood_time_threshold>
+type: text
+value: 1800
+
+<nick_flood_punishment>
+type: array
+value: 60,300,3600,86400,604800,2419200
+
+<nick_flood_threshold>
+type: text
+value: 3
+
+<nick_flood_time_threshold>
+type: text
+value: 1800
+
+[antikickautorejoin]
+<punishment>
+type: array
+value: 300,900,1800,3600,28800
+
+<threshold>
+type: text
+value: 4
+
+[autorejoin]
+<rejoin_delay>
+type: array
+value: 900,1800,3600
+
+[bantracker]
+<chanserv_ban_timeout>
+type: text
+value: 604800
+
+<debug>
+type: text
+value: 0
+
+<mute_timeout>
+type: text
+value: 604800
+
+[factoids]
+<default_rate_limit>
+type: text
+value: 15
+
+[general]
+<compile_blocks>
+type: text
+value: 1
+
+<compile_blocks_channels>
+type: array
+value: .*
+
+<compile_blocks_ignore_channels>
+type: array
+value: none
+
+<config_dir>
+type: text
+value: /home/alyptik/pbot/config
+
+<data_dir>
+type: text
+value: /home/alyptik/pbot/data
+
+<deop_timeout>
+type: text
+value: 300
+
+<module_dir>
+type: text
+value: /home/alyptik/pbot/modules
+
+<module_repo>
+type: text
+value: https://github.com/pragma-/pbot/blob/master/modules/
+
+<paste_ratelimit>
+type: text
+value: 60
+
+<show_url_titles>
+type: text
+value: 0
+
+<show_url_titles_channels>
+type: array
+value: .*
+
+<show_url_titles_ignore_channels>
+type: array
+value: none
+
+<trigger>
+type: text
+value: (?:\.|gay)
+
+[interpreter]
+<max_recursion>
+type: text
+value: 10
+
+[irc]
+<botnick>
+type: text
+value: shpongle
+
+<debug>
+type: text
+value: 0
+
+<identify_password>
+private: 1
+type: text
+value: yazmine1
+
+<ircname>
+type: text
+value: http://www.iso-9899.info/wiki/Candide
+
+<ircserver>
+type: text
+value: irc.freenode.net
+
+<log_default_handler>
+type: text
+value: 1
+
+<max_msg_len>
+type: text
+value: 425
+
+<nick>
+type: text
+value: alyptik
+
+<port>
+type: text
+value: 6667
+
+<show_motd>
+type: text
+value: 1
+
+<ssl>
+type: text
+value: 0
+
+<ssl_ca_file>
+private: 1
+type: text
+value: none
+
+<ssl_ca_path>
+private: 1
+type: text
+value: none
+
+<username>
+type: text
+value: alyptik
+
+[lagchecker]
+<lag_history_interval>
+type: text
+value: 10
+
+<lag_history_max>
+type: text
+value: 3
+
+<lag_threshold>
+type: text
+value: 2
+
+[messagehistory]
+<debug_aka>
+type: text
+value: 0
+
+<debug_link>
+type: text
+value: 0
+
+<max_messages>
+type: text
+value: 32
+
+<max_recall_time>
+type: text
+value: 0
+
+<sqlite_commit_interval>
+type: text
+value: 30
+
+<sqlite_debug>
+type: text
+value: 0
+
+[nicklist]
+<debug>
+type: text
+value: 0
+
+[randomfact]
+<hp_regen>
+type: text
+value: 30
+
+<knead_max>
+type: text
+value: 6
+
+<savageosity>
+type: text
+value: 1
+
