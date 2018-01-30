@@ -30,6 +30,10 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { $self->spinach_cmd(@_) }, 'spinach', 0);
 
   $self->{pbot}->{timer}->register(sub { $self->spinach_timer }, 1, 'spinach timer');
+
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.part',    sub { $self->on_departure(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',    sub { $self->on_departure(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
   
   $self->{leaderboard_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinachlb.sqlite3';
   $self->{questions_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinachq.json';
@@ -45,6 +49,24 @@ sub unload {
   my $self = shift;
   $self->{pbot}->{commands}->unregister('spinach');
   $self->{pbot}->{timer}->unregister('spinach timer');
+}
+
+sub on_kick {
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
+  my ($victim, $reason) = ($event->{event}->to, $event->{event}->{args}[1]);
+  my $channel = $event->{event}->{args}[0];
+  return 0 if lc $channel ne $self->{channel};
+  $self->player_left($nick, $user, $host);
+  return 0;
+}
+
+sub on_departure {
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host, $channel, $args) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->args);
+  return 0 if lc $channel ne $self->{channel};
+  $self->player_left($nick, $user, $host);
+  return 0;
 }
 
 sub load_questions {
@@ -473,6 +495,19 @@ my %color = (
 
   reset      => "\x0F",
 );
+
+sub player_left {
+  my ($self, $nick, $user, $host) = @_;
+
+  my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+
+  for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
+    if ($self->{state_data}->{players}->[$i]->{id} == $id) {
+      splice @{$self->{state_data}->{players}}, $i--, 1;
+      $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$nick has left the game!$color{reset}");
+    }
+  }
+}
 
 sub run_one_state {
   my $self = shift;
