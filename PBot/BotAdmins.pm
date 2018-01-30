@@ -76,6 +76,11 @@ sub remove_admin {
   my ($channel, $hostmask) = @_;
 
   my $admin = delete $self->{admins}->hash->{$channel}->{$hostmask};
+
+  if (not keys %{$self->{admins}->hash->{$channel}}) {
+    delete $self->{admins}->hash->{$channel};
+  }
+
   if(defined $admin) {
     $self->{pbot}->{logger}->log("Removed level $admin->{level} admin [$admin->{name}] [$hostmask] from channel [$channel]\n");
     $self->save_admins;
