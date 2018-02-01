@@ -43,6 +43,9 @@ sub initialize {
   $self->load_questions;
 
   $self->{channel} = '##spinach';
+
+  $self->{choosecategory_max_count} = 2;
+  $self->{picktruth_max_count} = 4;
 }
 
 sub unload {
@@ -142,6 +145,32 @@ sub dbi_end {
   $self->{dbh}->disconnect;
 }
 
+my %color = (
+  white      => "\x0300",
+  black      => "\x0301",
+  blue       => "\x0302",
+  green      => "\x0303",
+  red        => "\x0304",
+  maroon     => "\x0305",
+  purple     => "\x0306",
+  orange     => "\x0307",
+  yellow     => "\x0308",
+  lightgreen => "\x0309",
+  teal       => "\x0310",
+  cyan       => "\x0311",
+  lightblue  => "\x0312",
+  magneta    => "\x0313",
+  gray       => "\x0314",
+  lightgray  => "\x0315",
+
+  bold       => "\x02",
+  italics    => "\x1D",
+  underline  => "\x1F",
+  reverse    => "\x16",
+
+  reset      => "\x0F",
+);
+
 sub spinach_cmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   $arguments = lc $arguments;
@@ -181,6 +210,10 @@ sub spinach_cmd {
         }
 
         when ('kick') {
+          return "Help is coming soon.";
+        }
+
+        when ('score') {
           return "Help is coming soon.";
         }
 
@@ -228,6 +261,20 @@ sub spinach_cmd {
       } else {
         return "Spinach is already started.";
       }
+    }
+
+    when ('score') {
+      if (not @{$self->{state_data}->{players}}) {
+        return "There is nobody playing right now.";
+      }
+
+      my $text = '';
+      my $comma = '';
+      foreach my $player (sort { $b->{score} <=> $a->{score} } @{$self->{state_data}->{players}}) {
+        $text .= "$comma$player->{name}: $player->{score}";
+        $comma = '; ';
+      }
+      return $text;
     }
 
     when ('join') {
@@ -294,6 +341,25 @@ sub spinach_cmd {
 
       $self->{current_state} = 'gameover';
       return "/msg $self->{channel} $nick: The game has been aborted.";
+    }
+
+    when ('players') {
+      if ($self->{current_state} ne 'getplayers') {
+        return "This command can only be used during the 'Waiting for players' stage. Try the `score` command.";
+      }
+
+      my @names;
+      foreach my $player (@{$self->{state_data}->{players}}) {
+        if (not $player->{ready}) {
+          push @names, "$player->{name} $color{red}(not ready)$color{reset}$color{bold}";
+        } else {
+          push @names, $player->{name};
+        }
+      }
+
+      my $players = join ', ', @names;
+      $players = 'none' if not @names;
+      return "Current players: $players";
     }
 
     when ('stop') {
@@ -400,9 +466,14 @@ sub spinach_cmd {
         return "$nick: You found the truth! Please submit a different lie.";
       }
 
+      my $changed = exists $player->{lie};
       $player->{lie} = uc $arguments;
 
-      return "/msg $self->{channel} $nick has submitted a lie!";
+      if ($changed) {
+        return "/msg $self->{channel} $nick has changed their lie!";
+      } else {
+        return "/msg $self->{channel} $nick has submitted a lie!";
+      }
     }
 
     when ('truth') {
@@ -438,6 +509,7 @@ sub spinach_cmd {
         return "$nick: Selection out of range. Please select a valid truth: $self->{state_data}->{current_choices_text}";
       }
 
+      my $changed = exists $player->{truth};
       $player->{truth} = uc $self->{state_data}->{current_choices}->[$arguments];
 
       if ($player->{truth} eq $player->{lie}) {
@@ -445,7 +517,11 @@ sub spinach_cmd {
         return "$nick: You cannot select your own lie!";
       }
 
-      return "/msg $self->{channel} $nick has selected a truth!";
+      if ($changed) {
+        return "/msg $self->{channel} $nick has selected a different truth!";
+      } else {
+        return "/msg $self->{channel} $nick has selected a truth!";
+      }
     }
 
     when ('show') {
@@ -470,32 +546,6 @@ sub spinach_timer {
   $self->run_one_state;
 }
 
-my %color = (
-  white      => "\x0300",
-  black      => "\x0301",
-  blue       => "\x0302",
-  green      => "\x0303",
-  red        => "\x0304",
-  maroon     => "\x0305",
-  purple     => "\x0306",
-  orange     => "\x0307",
-  yellow     => "\x0308",
-  lightgreen => "\x0309",
-  teal       => "\x0310",
-  cyan       => "\x0311",
-  lightblue  => "\x0312",
-  magneta    => "\x0313",
-  gray       => "\x0314",
-  lightgray  => "\x0315",
-
-  bold       => "\x02",
-  italics    => "\x1D",
-  underline  => "\x1F",
-  reverse    => "\x16",
-
-  reset      => "\x0F",
-);
-
 sub player_left {
   my ($self, $nick, $user, $host) = @_;
 
@@ -506,6 +556,43 @@ sub player_left {
       splice @{$self->{state_data}->{players}}, $i--, 1;
       $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$nick has left the game!$color{reset}");
     }
+  }
+}
+
+sub add_new_suggestions {
+  my ($self, $state) = @_;
+
+  my $question = undef;
+  my $modified = 0;
+
+  foreach my $player (@{$state->{players}}) {
+    if ($player->{deceived}) {
+      $self->{pbot}->{logger}->log("Adding new suggestion for $state->{current_question}->{id}: $player->{deceived}\n");
+
+      if (not grep { lc $_ eq lc $player->{deceived} } @{$state->{current_question}->{suggestions}}) {
+        if (not defined $question) {
+          foreach my $q (@{$self->{questions}->{normal}}) {
+            if ($q->{id} == $state->{current_question}->{id}) {
+              $question = $q;
+              last;
+            }
+          }
+        }
+
+        push @{$question->{suggestions}}, uc $player->{deceived};
+        $modified = 1;
+      }
+    }
+  }
+
+  if ($modified) {
+    my $json = encode_json $self->{questions};
+    open my $fh, '>', $self->{questions_filename} or do {
+      $self->{pbot}->{logger}->log("Failed to open Spinach file: $!\n");
+      return;
+    };
+    print $fh "$json\n";
+    close $fh;
   }
 }
 
@@ -884,7 +971,7 @@ sub choosecategory {
         push @choices, $cat;
       }
 
-      last if @choices == 15;
+      last if @choices == 6;
       last if ++$no_infinite_loops > 200;
     }
 
@@ -910,7 +997,7 @@ sub choosecategory {
 
   if ($state->{ticks} % $tock == 0) {
     delete $state->{first_tock};
-    if (++$state->{counter} >= 8) {
+    if (++$state->{counter} > $state->{max_count}) {
       $state->{players}->[$state->{current_player}]->{missedinputs}++;
       my $name = $state->{players}->[$state->{current_player}]->{name};
       my $category = $state->{category_options}->[rand @{$state->{category_options}}];
@@ -920,7 +1007,7 @@ sub choosecategory {
     }
 
     my $name = $state->{players}->[$state->{current_player}]->{name};
-    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$name: Choose a category from: $state->{categories_text}$color{reset}");
+    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$name: $state->{counter}/$state->{max_count} Choose a category from: $state->{categories_text}$color{reset}");
     return 'wait';
   }
 
@@ -953,7 +1040,7 @@ sub showquestion {
   my ($self, $state) = @_;
 
   if (exists $state->{current_question}) {
-    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Current question: $state->{current_question}->{question}$color{reset}");
+    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$color{green}Current question:$color{reset}$color{bold} $state->{current_question}->{question}$color{reset}");
   } else {
     $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}There is no current question.$color{reset}");
   }
@@ -969,8 +1056,19 @@ sub getlies {
     $tock = 15;
   }
 
-  if ($state->{ticks} % 15 == 0) {
-    if (++$state->{counter} >= 8) {
+  my @nolies;
+  foreach my $player (@{$state->{players}}) {
+    if (not exists $player->{lie}) {
+      push @nolies, $player->{name};
+    }
+  }
+
+  return 'next' if not @nolies;
+
+  if ($state->{ticks} % $tock == 0) {
+    delete $state->{first_tock};
+
+    if (++$state->{counter} > $state->{max_count}) {
       my @missedinputs;
       foreach my $player (@{$state->{players}}) {
         if (not exists $player->{lie}) {
@@ -985,21 +1083,9 @@ sub getlies {
       }
       return 'next';
     }
-  }
 
-  my @nolies;
-  foreach my $player (@{$state->{players}}) {
-    if (not exists $player->{lie}) {
-      push @nolies, $player->{name};
-    }
-  }
-
-  return 'next' if not @nolies;
-
-  if ($state->{ticks} % $tock == 0) {
-    delete $state->{first_tock};
     my $players = join ', ', @nolies;
-    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$players: Submit your lie now via /msg candide lie!$color{reset}");
+    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$players: $state->{counter}/$state->{max_count} Submit your lie now via /msg candide lie!$color{reset}");
   }
 
   return 'wait';
@@ -1013,24 +1099,6 @@ sub findtruth {
     $tock = 3;
   } else {
     $tock = 15;
-  }
-
-  if ($state->{ticks} % 15 == 0) {
-    if (++$state->{counter} >= 8) {
-      my @missedinputs;
-      foreach my $player (@{$state->{players}}) {
-        if (not exists $player->{truth}) {
-          push @missedinputs, $player->{name};
-          $player->{missedinputs}++;
-        }
-      }
-
-      if (@missedinputs) {
-        my $missed = join ', ', @missedinputs;
-        $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$missed failed to find the truth in time!$color{reset}");
-      }
-      return 'next';
-    }
   }
 
   my @notruth;
@@ -1072,7 +1140,8 @@ sub findtruth {
 
         if (@suggestions) {
           my $random = rand @suggestions;
-          push @choices, uc $suggestions[$random];
+          my $suggestion = uc $suggestions[$random];
+          push @choices, $suggestion if not grep { $_ eq $suggestion } @choices;
           splice @suggestions, $random, 1;
           next;
         }
@@ -1096,8 +1165,24 @@ sub findtruth {
       $state->{current_choices} = \@choices;
     }
 
+    if (++$state->{counter} > $state->{max_count}) {
+      my @missedinputs;
+      foreach my $player (@{$state->{players}}) {
+        if (not exists $player->{truth}) {
+          push @missedinputs, $player->{name};
+          $player->{missedinputs}++;
+        }
+      }
+
+      if (@missedinputs) {
+        my $missed = join ', ', @missedinputs;
+        $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$missed failed to find the truth in time!$color{reset}");
+      }
+      return 'next';
+    }
+
     my $players = join ', ', @notruth;
-    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$players: Find the truth now via /msg candide truth! $state->{current_choices_text}$color{reset}");
+    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$players: $state->{counter}/$state->{max_count} Find the truth now via /msg candide truth! $state->{current_choices_text}$color{reset}");
   }
 
   return 'wait';
@@ -1135,9 +1220,10 @@ sub showlies {
       last if @liars;
 
       if ($player->{truth} ne $state->{correct_answer}) {
-        $player->{score} -= $state->{lie_points};
-        $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$player->{name} fell for my lie: \"$player->{truth}\". -$state->{lie_points} points!$color{reset}");
-        $player->{deceived} = 1;
+        my $points = $state->{lie_points} * 0.25;
+        $player->{score} -= $points;
+        $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$player->{name} fell for my lie: \"$player->{truth}\". -$points points!$color{reset}");
+        $player->{deceived} = $player->{truth};
       }
     }
 
@@ -1156,7 +1242,7 @@ sub showlies {
       }
 
       $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$player->{name} fell for $liars_text lie: \"$lie\". $liars_no_apostrophe $gains +$state->{lie_points} points!$color{reset}");
-      $player->{deceived} = 1;
+      $player->{deceived} = $lie;
     }
 
     return 'next' if $state->{current_lie_player} >= @{$state->{players}};
@@ -1188,6 +1274,8 @@ sub showtruth {
     } else {
       $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Nobody found the truth! Better luck next time...$color{reset}");
     }
+
+    $self->add_new_suggestions($state);
 
     return 'next';
   } else {
@@ -1228,7 +1316,7 @@ sub showscore {
 
     $text = "none" if not length $text;
 
-    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Scores: $text$color{reset}");
+    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$color{green}Scores: $color{reset}$color{bold}$text$color{reset}");
     return 'next';
   } else {
     return 'wait';
@@ -1253,7 +1341,7 @@ sub getplayers {
 
   foreach my $player (@$players) {
     if (not $player->{ready}) {
-      push @names, "$player->{name} (not ready)";
+      push @names, "$player->{name} $color{red}(not ready)$color{reset}$color{bold}";
     } else {
       $unready--;
       push @names, $player->{name};
@@ -1272,7 +1360,7 @@ sub getplayers {
     if ($state->{first_tock}) {
       $tock = 2;
     } else {
-      $tock = 30;
+      $tock = 90;
     }
 
     if ($state->{ticks} % $tock == 0) {
@@ -1287,9 +1375,9 @@ sub getplayers {
 
 sub round1 {
   my ($self, $state) = @_;
-  $state->{truth_points} = 1000;
-  $state->{lie_points} = 500;
-  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 1! $state->{lie_points} for each lie. $state->{truth_points} for finding the truth.$color{reset}");
+  $state->{truth_points} = 500;
+  $state->{lie_points} = 1000;
+  $state->{my_lie_points} = $state->{lie_points} * 0.25;
   $state->{result} = 'next';
   return $state;
 }
@@ -1298,7 +1386,9 @@ sub round1q1 {
   my ($self, $state) = @_;
   $state->{init} = 1;
   $state->{counter} = 0;
+  $state->{max_count} = $self->{choosecategory_max_count};
   $state->{result} = 'next';
+  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 1/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth. -$state->{my_lie_points} for my lie.$color{reset}");
   return $state;
 }
 
@@ -1314,6 +1404,7 @@ sub r1q1showquestion {
 
   if ($result eq 'next') {
     $self->showquestion($state);
+    $state->{max_count} = $self->{picktruth_max_count};
     $state->{counter} = 0;
     $state->{init} = 1;
     $state->{current_lie_player} = 0;
@@ -1370,7 +1461,9 @@ sub round1q2 {
   my ($self, $state) = @_;
   $state->{init} = 1;
   $state->{counter} = 0;
+  $state->{max_count} = $self->{choosecategory_max_count};
   $state->{result} = 'next';
+  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 1/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth. -$state->{my_lie_points} for my lie.$color{reset}");
   return $state;
 }
 
@@ -1386,6 +1479,7 @@ sub r1q2showquestion {
 
   if ($result eq 'next') {
     $self->showquestion($state);
+    $state->{max_count} = $self->{picktruth_max_count};
     $state->{counter} = 0;
     $state->{init} = 1;
     $state->{current_lie_player} = 0;
@@ -1441,8 +1535,10 @@ sub r1q2showscore {
 sub round1q3 {
   my ($self, $state) = @_;
   $state->{init} = 1;
+  $state->{max_count} = $self->{choosecategory_max_count};
   $state->{counter} = 0;
   $state->{result} = 'next';
+  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 1/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth. -$state->{my_lie_points} for my lie.$color{reset}");
   return $state;
 }
 
@@ -1458,6 +1554,7 @@ sub r1q3showquestion {
 
   if ($result eq 'next') {
     $self->showquestion($state);
+    $state->{max_count} = $self->{picktruth_max_count};
     $state->{counter} = 0;
     $state->{init} = 1;
     $state->{current_lie_player} = 0;
@@ -1512,9 +1609,9 @@ sub r1q3showscore {
 
 sub round2 {
   my ($self, $state) = @_;
-  $state->{truth_points} = 1500;
-  $state->{lie_points} = 1000;
-  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 2! $state->{lie_points} for each lie. $state->{truth_points} for finding the truth.$color{reset}");
+  $state->{truth_points} = 750;
+  $state->{lie_points} = 1500;
+  $state->{my_lie_points} = $state->{lie_points} * 0.25;
   $state->{result} = 'next';
   return $state;
 }
@@ -1522,8 +1619,10 @@ sub round2 {
 sub round2q1 {
   my ($self, $state) = @_;
   $state->{init} = 1;
+  $state->{max_count} = $self->{choosecategory_max_count};
   $state->{counter} = 0;
   $state->{result} = 'next';
+  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 2/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth. -$state->{my_lie_points} for my lie.$color{reset}");
   return $state;
 }
 
@@ -1539,6 +1638,7 @@ sub r2q1showquestion {
 
   if ($result eq 'next') {
     $self->showquestion($state);
+    $state->{max_count} = $self->{picktruth_max_count};
     $state->{counter} = 0;
     $state->{init} = 1;
     $state->{current_lie_player} = 0;
@@ -1594,8 +1694,10 @@ sub r2q1showscore {
 sub round2q2 {
   my ($self, $state) = @_;
   $state->{init} = 1;
+  $state->{max_count} = $self->{choosecategory_max_count};
   $state->{counter} = 0;
   $state->{result} = 'next';
+  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 2/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth. -$state->{my_lie_points} for my lie.$color{reset}");
   return $state;
 }
 
@@ -1611,6 +1713,7 @@ sub r2q2showquestion {
 
   if ($result eq 'next') {
     $self->showquestion($state);
+    $state->{max_count} = $self->{picktruth_max_count};
     $state->{counter} = 0;
     $state->{init} = 1;
     $state->{current_lie_player} = 0;
@@ -1666,8 +1769,10 @@ sub r2q2showscore {
 sub round2q3 {
   my ($self, $state) = @_;
   $state->{init} = 1;
+  $state->{max_count} = $self->{choosecategory_max_count};
   $state->{counter} = 0;
   $state->{result} = 'next';
+  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 2/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth. -$state->{my_lie_points} for my lie.$color{reset}");
   return $state;
 }
 
@@ -1683,6 +1788,7 @@ sub r2q3showquestion {
 
   if ($result eq 'next') {
     $self->showquestion($state);
+    $state->{max_count} = $self->{picktruth_max_count};
     $state->{counter} = 0;
     $state->{init} = 1;
     $state->{current_lie_player} = 0;
@@ -1737,9 +1843,9 @@ sub r2q3showscore {
 
 sub round3 {
   my ($self, $state) = @_;
-  $state->{truth_points} = 2000;
-  $state->{lie_points} = 1500;
-  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 3! $state->{lie_points} for each lie. $state->{truth_points} for finding the truth.$color{reset}");
+  $state->{truth_points} = 1000;
+  $state->{lie_points} = 2000;
+  $state->{my_lie_points} = $state->{lie_points} * 0.25;
   $state->{result} = 'next';
   return $state;
 }
@@ -1747,8 +1853,10 @@ sub round3 {
 sub round3q1 {
   my ($self, $state) = @_;
   $state->{init} = 1;
+  $state->{max_count} = $self->{choosecategory_max_count};
   $state->{counter} = 0;
   $state->{result} = 'next';
+  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 3/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth. -$state->{my_lie_points} for my lie.$color{reset}");
   return $state;
 }
 
@@ -1764,6 +1872,7 @@ sub r3q1showquestion {
 
   if ($result eq 'next') {
     $self->showquestion($state);
+    $state->{max_count} = $self->{picktruth_max_count};
     $state->{counter} = 0;
     $state->{init} = 1;
     $state->{current_lie_player} = 0;
@@ -1819,8 +1928,10 @@ sub r3q1showscore {
 sub round3q2 {
   my ($self, $state) = @_;
   $state->{init} = 1;
+  $state->{max_count} = $self->{choosecategory_max_count};
   $state->{counter} = 0;
   $state->{result} = 'next';
+  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 3/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth. -$state->{my_lie_points} for my lie.$color{reset}");
   return $state;
 }
 
@@ -1836,6 +1947,7 @@ sub r3q2showquestion {
 
   if ($result eq 'next') {
     $self->showquestion($state);
+    $state->{max_count} = $self->{picktruth_max_count};
     $state->{counter} = 0;
     $state->{init} = 1;
     $state->{current_lie_player} = 0;
@@ -1891,8 +2003,10 @@ sub r3q2showscore {
 sub round3q3 {
   my ($self, $state) = @_;
   $state->{init} = 1;
+  $state->{max_count} = $self->{choosecategory_max_count};
   $state->{counter} = 0;
   $state->{result} = 'next';
+  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Round 3/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth. -$state->{my_lie_points} for my lie.$color{reset}");
   return $state;
 }
 
@@ -1908,6 +2022,7 @@ sub r3q3showquestion {
 
   if ($result eq 'next') {
     $self->showquestion($state);
+    $state->{max_count} = $self->{picktruth_max_count};
     $state->{counter} = 0;
     $state->{init} = 1;
     $state->{current_lie_player} = 0;
@@ -1962,9 +2077,9 @@ sub r3q3showscore {
 
 sub round4 {
   my ($self, $state) = @_;
-  $state->{truth_points} = 3000;
-  $state->{lie_points} = 2000;
-  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}FINAL ROUND! FINAL QUESTION! $state->{lie_points} for each lie. $state->{truth_points} for finding the truth.$color{reset}");
+  $state->{truth_points} = 2000;
+  $state->{lie_points} = 4000;
+  $state->{my_lie_points} = $state->{lie_points} * 0.25;
   $state->{result} = 'next';
   return $state;
 }
@@ -1972,8 +2087,10 @@ sub round4 {
 sub round4q1 {
   my ($self, $state) = @_;
   $state->{init} = 1;
+  $state->{max_count} = $self->{choosecategory_max_count};
   $state->{counter} = 0;
   $state->{result} = 'next';
+  $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}FINAL ROUND! FINAL QUESTION! $state->{lie_points} for each lie. $state->{truth_points} for the truth. -$state->{my_lie_points} for my lie.$color{reset}");
   return $state;
 }
 
@@ -1989,6 +2106,7 @@ sub r4q1showquestion {
 
   if ($result eq 'next') {
     $self->showquestion($state);
+    $state->{max_count} = $self->{picktruth_max_count};
     $state->{counter} = 0;
     $state->{init} = 1;
     $state->{current_lie_player} = 0;
