@@ -66,8 +66,9 @@ sub on_kick {
 
 sub on_departure {
   my ($self, $event_type, $event) = @_;
-  my ($nick, $user, $host, $channel, $args) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->args);
-  return 0 if lc $channel ne $self->{channel};
+  my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
+  my $type = uc $event->{event}->type;
+  return 0 if $type ne 'QUIT' and lc $channel ne $self->{channel};
   $self->player_left($nick, $user, $host);
   return 0;
 }
@@ -77,7 +78,7 @@ sub load_questions {
 
   my $contents = do {
     open my $fh, '<', $self->{questions_filename} or do {
-      $self->{pbot}->{ogger}->log("Spinach: Failed to open $self->{questions_filename}: $!\n");
+      $self->{pbot}->{logger}->log("Spinach: Failed to open $self->{questions_filename}: $!\n");
       return;
     };
     local $/;
@@ -175,7 +176,7 @@ sub spinach_cmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   $arguments = lc $arguments;
 
-  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|kick|choose|lie|truth|score|show|leaderboard; for more information about a command: spinach help <command>";
+  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|players|kick|choose|lie|truth|score|show|leaderboard; for more information about a command: spinach help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
@@ -213,7 +214,15 @@ sub spinach_cmd {
           return "Help is coming soon.";
         }
 
+        when ('players') {
+          return "Help is coming soon.";
+        }
+
         when ('score') {
+          return "Help is coming soon.";
+        }
+
+        when ('leaderboard') {
           return "Help is coming soon.";
         }
 
@@ -257,10 +266,15 @@ sub spinach_cmd {
       if ($self->{current_state} eq 'nogame') {
         $self->{current_state} = 'getplayers';
         $self->{previous_state} = 'nogame';
+        $self->{state_data} = { players => [], counter => 0 };
         return "/msg $self->{channel} Starting Spinach.";
       } else {
         return "Spinach is already started.";
       }
+    }
+
+    when ('leaderboard') {
+      return "Coming soon.";
     }
 
     when ('score') {
@@ -294,6 +308,7 @@ sub spinach_cmd {
       
       my $player = { id => $id, name => $nick, score => 0, ready => 0, missedinputs => 0 };
       push @{$self->{state_data}->{players}}, $player;
+      $self->{state_data}->{counter} = 0;
       return "/msg $self->{channel} $nick has joined the game!";
     }
 
@@ -328,6 +343,9 @@ sub spinach_cmd {
       }
 
       if ($removed) {
+        if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) {
+          $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1
+        }
         return "/msg $self->{channel} $nick has left the game!";
       } else {
         return "$nick: But you are not even playing the game.";
@@ -368,7 +386,6 @@ sub spinach_cmd {
       }
 
       $self->{current_state} = 'nogame';
-      $self->{state_data} = { players => [] };
       return "/msg $self->{channel} $nick: The game has been stopped.";
     }
 
@@ -391,6 +408,9 @@ sub spinach_cmd {
       }
 
       if ($removed) {
+        if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) {
+          $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1
+        }
         return "/msg $self->{channel} $nick: $arguments has been kicked from the game.";
       } else {
         return "$nick: $arguments isn't even in the game.";
@@ -408,7 +428,7 @@ sub spinach_cmd {
 
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
 
-      if ($id != $self->{state_data}->{players}->[$self->{state_data}->{current_player}]->{id}) {
+      if (not @{$self->{state_data}->{players}} or $id != $self->{state_data}->{players}->[$self->{state_data}->{current_player}]->{id}) {
         return "$nick: It is not your turn to choose a category.";
       } 
       
@@ -455,7 +475,7 @@ sub spinach_cmd {
         $found_truth = 1;
       }
 
-      foreach my $alt (@{$self->{state_data}->{current_question}->{alternateSpellings}}) {
+      foreach my $alt (@{$self->{state_data}->{current_question}->{alternativeSpellings}}) {
         if ($arguments eq lc $alt) {
           $found_truth = 1;
           last;
@@ -550,12 +570,21 @@ sub player_left {
   my ($self, $nick, $user, $host) = @_;
 
   my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+  my $removed = 0;
 
   for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
     if ($self->{state_data}->{players}->[$i]->{id} == $id) {
       splice @{$self->{state_data}->{players}}, $i--, 1;
       $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$nick has left the game!$color{reset}");
+      $removed = 1;
     }
+  }
+
+  if ($removed) {
+    if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) {
+      $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1
+    }
+    return "/msg $self->{channel} $nick has left the game!";
   }
 }
 
@@ -571,7 +600,7 @@ sub add_new_suggestions {
 
       if (not grep { lc $_ eq lc $player->{deceived} } @{$state->{current_question}->{suggestions}}) {
         if (not defined $question) {
-          foreach my $q (@{$self->{questions}->{normal}}) {
+          foreach my $q (@{$self->{questions}->{questions}}) {
             if ($q->{id} == $state->{current_question}->{id}) {
               $question = $q;
               last;
@@ -651,6 +680,7 @@ sub create_states {
 
 
   $self->{states}{'getplayers'}{sub} = sub { $self->getplayers(@_) };
+  $self->{states}{'getplayers'}{trans}{stop} = 'nogame';
   $self->{states}{'getplayers'}{trans}{wait} = 'getplayers';
   $self->{states}{'getplayers'}{trans}{allready} = 'round1';
 
@@ -988,6 +1018,10 @@ sub choosecategory {
     delete $state->{init};
   }
 
+  if (exists $state->{current_category} or not @{$state->{players}}) {
+    return 'next';
+  }
+
   my $tock;
   if ($state->{first_tock}) {
     $tock = 3;
@@ -997,8 +1031,18 @@ sub choosecategory {
 
   if ($state->{ticks} % $tock == 0) {
     delete $state->{first_tock};
+
+    if (exists $state->{random_category}) {
+      delete $state->{random_category};
+      my $category = $state->{category_options}->[rand @{$state->{category_options}}];
+      $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Category: $category!$color{reset}");
+      $state->{current_category} = $category;
+      return 'next';
+    }
+
+
     if (++$state->{counter} > $state->{max_count}) {
-      $state->{players}->[$state->{current_player}]->{missedinputs}++;
+      $state->{players}->[$state->{current_player}]->{missedinputs}++ ;
       my $name = $state->{players}->[$state->{current_player}]->{name};
       my $category = $state->{category_options}->[rand @{$state->{category_options}}];
       $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$name took too long to choose. Randomly choosing: $category!$color{reset}");
@@ -1022,7 +1066,7 @@ sub getnewquestion {
   my ($self, $state) = @_;
 
   if ($state->{ticks} % 3 == 0) {
-    my @questions = grep { $_->{category} eq $state->{current_category} } @{$self->{questions}->{normal}};
+    my @questions = grep { $_->{category} eq $state->{current_category} } @{$self->{questions}->{questions}};
     $state->{current_question} = $questions[rand @questions];
 
     foreach my $player (@{$state->{players}}) {
@@ -1224,6 +1268,11 @@ sub showlies {
         $player->{score} -= $points;
         $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$player->{name} fell for my lie: \"$player->{truth}\". -$points points!$color{reset}");
         $player->{deceived} = $player->{truth};
+        if ($state->{current_lie_player} < @{$state->{players}}) {
+          return 'wait';
+        } else {
+          return 'next';
+        }
       }
     }
 
@@ -1255,7 +1304,7 @@ sub showlies {
 sub showtruth {
   my ($self, $state) = @_;
 
-  if ($state->{ticks} % 7 == 0) {
+  if ($state->{ticks} % 6 == 0) {
     my $players;
     my $comma = '';
     my $count = 0;
@@ -1349,27 +1398,34 @@ sub getplayers {
   }
 
   if (not $unready) {
+    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}All players ready!$color{reset}");
     $state->{result} = 'allready';
-    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}All players ready!$color{reset}")
+    return $state;
+  }
+
+  my $tock;
+  if ($state->{first_tock}) {
+    $tock = 2;
   } else {
+    $tock = 90;
+  }
+
+  if ($state->{ticks} % $tock == 0) {
+    delete $state->{first_tock};
+
+    if (++$state->{counter} > 4) {
+      $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Not all players were ready in time. The game has been stopped.$color{reset}");
+      $state->{result} = 'stop';
+      return $state;
+    }
+
     $players = join ', ', @names;
     $players = 'none' if not @names;
     my $msg = "Waiting for more players or for all players to ready up. Current players: $players";
-
-    my $tock;
-    if ($state->{first_tock}) {
-      $tock = 2;
-    } else {
-      $tock = 90;
-    }
-
-    if ($state->{ticks} % $tock == 0) {
-      delete $state->{first_tock};
-      $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$msg$color{reset}");
-    }
-    $state->{result} = 'wait';
+    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$msg$color{reset}");
   }
 
+  $state->{result} = 'wait';
   return $state;
 }
 
@@ -2087,6 +2143,7 @@ sub round4 {
 sub round4q1 {
   my ($self, $state) = @_;
   $state->{init} = 1;
+  $state->{random_category} = 1;
   $state->{max_count} = $self->{choosecategory_max_count};
   $state->{counter} = 0;
   $state->{result} = 'next';
