@@ -129,7 +129,14 @@ sub list_triggers {
   my ($self, $channel) = @_;
 
   my $triggers = eval {
-    my $sth = $self->{dbh}->prepare('SELECT * FROM Triggers WHERE channel = ?');
+    my $sth;
+
+    if ($channel eq '*') {
+      $sth = $self->{dbh}->prepare('SELECT * FROM Triggers WHERE channel != ?');
+      $channel = 'global';
+    } else {
+      $sth = $self->{dbh}->prepare('SELECT * FROM Triggers WHERE channel = ?');
+    }
     $sth->bind_param(1, lc $channel);
     $sth->execute();
     return $sth->fetchall_arrayref({});
@@ -333,7 +340,7 @@ sub check_trigger {
     return 0;
   }
 
-  my @triggers = $self->list_triggers($channel);
+  my @triggers = $text =~ m/^QUIT/ ? $self->list_triggers('*') : $self->list_triggers($channel);
   my @globals = $self->list_triggers('global');
 
   push @triggers, @globals;
