@@ -17,8 +17,8 @@ use JSON;
 use Lingua::EN::Fractions qw/fraction2words/;
 use Lingua::EN::Numbers qw/num2en num2en_ordinal/;
 use Lingua::EN::Numbers::Years qw/year2en/;
-
 use Lingua::Stem qw/stem/;
+use Lingua::EN::ABC qw/b2a/;
 
 use Data::Dumper;
 
@@ -995,31 +995,52 @@ sub normalize_text {
   $text =~ s/^\s+|\s+$//g;
   $text =~ s/\s+/ /g;
 
-  $text = substr($text, 0, 60);
+  $text = lc substr($text, 0, 80);
 
-  my @words = split /\b/, $text;
+  $text =~ s/\$\s+(\d)/\$$1/g;
+  $text =~ s/(\d)\s+%/$1%/g;
+
+  my @words = split / /, $text;
   my @result;
 
   foreach my $word (@words) {
+    my $punct = $1 if $word =~ s/(\p{PosixPunct}+)$//;
     my $newword = $word;
 
     if ($word =~ m/^\d{4}$/ and $word >= 1700 and $word <= 2100) {
       $newword = year2en($word);
     } elsif ($word =~ m/^\d+$/) {
       $newword = num2en($word);
+
+      if (defined $punct and $punct eq '%') {
+        $newword .= " percent";
+        $punct = undef;
+      }
     } elsif ($word =~ m/^(\d+)(?:st|nd|rd|th)$/i) {
       $newword = num2en_ordinal($1);
+    } elsif ($word =~ m/^\$(\d+)(\.\d+)?$/i) {
+      my ($dollars, $cents) = ($1, $2);
+      $word = num2en($dollars);
+      $newword = "$word " . ($dollars == 1 ? "dollar" : "dollars");
+
+      if (defined $cents) {
+        $cents =~ s/^\.0*//;
+        $word = num2en($cents);
+        $newword .= " and $word cent" if $cents == 1;
+        $newword .= " and $word cents" if $cents > 1;
+      }
     } elsif ($word =~ m/^(\d+\.\d+)(?:st|nd|rd|th)?$/i) {
       $newword = num2en($1);
     } elsif ($word =~ m{^(\d+\s*/\s*\d+)(?:st|nd|rd|th)?$}i) {
       $newword = fraction2words($1);
     }
 
+    $newword .= $punct if defined $punct;
     push @result, $newword;
   }
 
-  $text = uc join '', @result;
-  return substr $text, 0, 60;
+  $text = uc b2a join ' ', @result;
+  return substr $text, 0, 80;
 }
 
 sub validate_lie {
@@ -1517,6 +1538,7 @@ sub getplayers {
     if (++$state->{counter} > 4) {
       $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}Not all players were ready in time. The game has been stopped.$color{reset}");
       $state->{result} = 'stop';
+      $state->{players} = [];
       return $state;
     }
 
