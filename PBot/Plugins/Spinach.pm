@@ -184,7 +184,7 @@ sub spinach_cmd {
   $arguments = lc $arguments;
   $arguments =~ s/^\s+|\s+$//g;
 
-  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|players|kick|choose|lie|truth|score|show; for more information about a command: spinach help <command>";
+  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|unready|players|kick|choose|lie|truth|score|show; for more information about a command: spinach help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
@@ -336,6 +336,25 @@ sub spinach_cmd {
           $player->{ready} = 1;
           $player->{score} = 0;
           return "/msg $self->{channel} $nick is ready!";
+        }
+      }
+
+      return "$nick: You haven't joined this game yet.";
+    }
+
+    when ('unready') {
+      if ($self->{current_state} eq 'nogame') {
+        return "There is no game started. Use `start` to begin a new game.";
+      } elsif ($self->{current_state} ne 'getplayers') {
+        return "There is a game in progress. Use `join` to play!";
+      }
+
+      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+
+      foreach my $player (@{$self->{state_data}->{players}}) {
+        if ($player->{id} == $id) {
+          $player->{ready} = 0;
+          return "/msg $self->{channel} $nick is no longer ready!";
         }
       }
 
