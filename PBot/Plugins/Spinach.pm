@@ -41,7 +41,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.part',    sub { $self->on_departure(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',    sub { $self->on_departure(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
-  
+
   $self->{leaderboard_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/spinachlb.sqlite3';
   $self->{questions_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/spinachq.json';
 
@@ -184,7 +184,7 @@ sub spinach_cmd {
   $arguments = lc $arguments;
   $arguments =~ s/^\s+|\s+$//g;
 
-  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|players|kick|choose|lie|truth|score|show; for more information about a command: spinach help <command>";
+  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|unready|players|kick|choose|lie|truth|score|show; for more information about a command: spinach help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
@@ -315,7 +315,7 @@ sub spinach_cmd {
           return "$nick: You have already joined this game.";
         }
       }
-      
+
       my $player = { id => $id, name => $nick, score => 0, ready => $self->{current_state} eq 'getplayers' ? 0 : 1, missedinputs => 0 };
       push @{$self->{state_data}->{players}}, $player;
       $self->{state_data}->{counter} = 0;
@@ -326,7 +326,7 @@ sub spinach_cmd {
       if ($self->{current_state} eq 'nogame') {
         return "There is no game started. Use `start` to begin a new game.";
       } elsif ($self->{current_state} ne 'getplayers') {
-        return "There is a game in progress. You may join after the game is over.";
+        return "There is a game in progress. Use `join` to play!";
       }
 
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
@@ -336,6 +336,19 @@ sub spinach_cmd {
           $player->{ready} = 1;
           $player->{score} = 0;
           return "/msg $self->{channel} $nick is ready!";
+        }
+      }
+
+      return "$nick: You haven't joined this game yet.";
+    }
+
+    when ('unready') {
+      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+
+      foreach my $player (@{$self->{state_data}->{players}}) {
+        if ($player->{id} == $id) {
+          $player->{ready} = 0;
+          return "/msg $self->{channel} $nick is no longer ready!";
         }
       }
 
@@ -441,8 +454,8 @@ sub spinach_cmd {
 
       if (not @{$self->{state_data}->{players}} or $id != $self->{state_data}->{players}->[$self->{state_data}->{current_player}]->{id}) {
         return "$nick: It is not your turn to choose a category.";
-      } 
-      
+      }
+
       if ($arguments !~ /^[0-9]+$/) {
         return "$nick: Please choose a category number. $self->{state_data}->{categories_text}";
       }
