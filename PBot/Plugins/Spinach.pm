@@ -326,7 +326,7 @@ sub spinach_cmd {
       if ($self->{current_state} eq 'nogame') {
         return "There is no game started. Use `start` to begin a new game.";
       } elsif ($self->{current_state} ne 'getplayers') {
-        return "There is a game in progress. You may join after the game is over.";
+        return "There is a game in progress. Use `join` to play!";
       }
 
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
