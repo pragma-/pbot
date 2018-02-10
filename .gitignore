@@ -1,0 +1,4 @@
+config/*
+!config/*.template
+data/factoids
+log/*

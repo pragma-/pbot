@@ -3,5 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+export PERL_USE_UNSAFE_INC=1
+
 mv log/log log/log-`date +%Y%m%d-%H:%M.%N` 2> /dev/null
-perl pbot.pl 2>> log/log
+perl -I. pbot.pl 2>> log/log
