@@ -335,7 +335,7 @@ sub spinach_cmd {
         if ($player->{id} == $id) {
           $player->{ready} = 1;
           $player->{score} = 0;
-          return "/msg $self->{channel} $player->{name} is ready!";
+          return "/msg $self->{channel} $nick is ready!";
         }
       }
 
@@ -348,7 +348,7 @@ sub spinach_cmd {
       foreach my $player (@{$self->{state_data}->{players}}) {
         if ($player->{id} == $id) {
           $player->{ready} = 0;
-          return "/msg $self->{channel} $player->{name} is no longer ready!";
+          return "/msg $self->{channel} $nick is no longer ready!";
         }
       }
 
