@@ -44,10 +44,12 @@ sub initialize {
 
   $self->{leaderboard_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/spinachlb.sqlite3';
   $self->{questions_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/spinachq.json';
+  $self->{stopwords_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/stopwords';
 
   $self->create_database;
   $self->create_states;
   $self->load_questions;
+  $self->load_stopwords;
 
   $self->{channel} = '##spinach';
 
@@ -110,6 +112,21 @@ sub load_questions {
   }
 
   $self->{pbot}->{logger}->log("Spinach: Loaded $questions questions in $categories categories.\n");
+}
+
+sub load_stopwords {
+  my $self = shift;
+
+  open my $fh, '<', $self->{stopwords_filename} or do {
+    $self->{pbot}->{logger}->log("Spinach: Failed to open $self->{stopwords_filename}: $!\n");
+    return;
+  };
+
+  foreach my $word (<$fh>) {
+    chomp $word;
+    $self->{stopwords}{$word} = 1;
+  }
+  close $fh;
 }
 
 sub create_database {
@@ -468,6 +485,15 @@ sub spinach_cmd {
 
       $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
       return "/msg $self->{channel} $nick has chosen $self->{state_data}->{current_category}!";
+    }
+
+    when ('n') {
+      return $self->normalize_text($arguments);
+    }
+
+    when ('v') {
+      my ($truth, $lie) = split /;/, $arguments;
+      return $self->validate_lie($self->normalize_text($truth), $self->normalize_text($lie));
     }
 
     when ('lie') {
@@ -1059,10 +1085,10 @@ sub normalize_text {
 sub validate_lie {
   my ($self, $truth, $lie) = @_;
 
-  my %truth_words = @{stem map { $_ => 1 } grep { /^\w+$/ } split /\b/, $truth};
+  my %truth_words = @{stem map { $_ => 1 } grep { /^\w+$/ and not exists $self->{stopwords}{lc $_} } split /\b/, $truth};
   my $truth_word_count = keys %truth_words;
 
-  my %lie_words = @{stem map { $_ => 1 } grep { /^\w+$/ } split /\b/, $lie};
+  my %lie_words = @{stem map { $_ => 1 } grep { /^\w+$/ and not exists $self->{stopwords}{lc $_} } split /\b/, $lie};
   my $lie_word_count = keys %lie_words;
 
   my $count = 0;
@@ -1083,7 +1109,7 @@ sub validate_lie {
     }
   }
 
-  if ($count == $truth_word_count) {
+  if ($count == $lie_word_count) {
     return 0;
   }
 
