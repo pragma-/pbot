@@ -1048,29 +1048,35 @@ sub normalize_text {
 
     if ($word =~ m/^\d{4}$/ and $word >= 1700 and $word <= 2100) {
       $newword = year2en($word);
-    } elsif ($word =~ m/^\d+$/) {
+    } elsif ($word =~ m/^-?\d+$/) {
       $newword = num2en($word);
 
       if (defined $punct and $punct eq '%') {
         $newword .= " percent";
         $punct = undef;
       }
-    } elsif ($word =~ m/^(\d+)(?:st|nd|rd|th)$/i) {
+    } elsif ($word =~ m/^(-?\d+)(?:st|nd|rd|th)$/i) {
       $newword = num2en_ordinal($1);
-    } elsif ($word =~ m/^\$(\d+)(\.\d+)?$/i) {
-      my ($dollars, $cents) = ($1, $2);
-      $word = num2en($dollars);
-      $newword = "$word " . ($dollars == 1 ? "dollar" : "dollars");
+    } elsif ($word =~ m/^(-)?\$(\d+)?(\.\d+)?$/i) {
+      my ($neg, $dollars, $cents) = ($1, $2, $3);
+      $newword = '';
+      $dollars = "$neg$dollars" if defined $neg and defined $dollars;
+
+      if (defined $dollars) {
+        $word = num2en($dollars);
+        $newword = "$word " . (abs $dollars == 1 ? "dollar" : "dollars");
+      }
 
       if (defined $cents) {
         $cents =~ s/^\.0*//;
+        $cents = "$neg$cents" if defined $neg and not defined $dollars;
         $word = num2en($cents);
-        $newword .= " and $word cent" if $cents == 1;
-        $newword .= " and $word cents" if $cents > 1;
+        $newword .= " and " if defined $dollars;
+        $newword .= (abs $cents == 1 ? "$word cent" : "$word cents");
       }
-    } elsif ($word =~ m/^(\d+\.\d+)(?:st|nd|rd|th)?$/i) {
+    } elsif ($word =~ m/^(-?\d*\.\d+)(?:st|nd|rd|th)?$/i) {
       $newword = num2en($1);
-    } elsif ($word =~ m{^(\d+\s*/\s*\d+)(?:st|nd|rd|th)?$}i) {
+    } elsif ($word =~ m{^(-?\d+\s*/\s*-?\d+)(?:st|nd|rd|th)?$}i) {
       $newword = fraction2words($1);
     }
 
@@ -1102,6 +1108,7 @@ sub validate_lie {
     return 0;
   }
 
+=cut
   $count = 0;
   foreach my $word (keys %lie_words) {
     if (exists $truth_words{$word}) {
@@ -1112,6 +1119,7 @@ sub validate_lie {
   if ($count == $lie_word_count) {
     return 0;
   }
+=cut
 
   my $stripped_truth = $truth;
   $stripped_truth =~ s/(?:\s|\p{PosixPunct})+//g;
