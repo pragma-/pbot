@@ -201,7 +201,7 @@ sub spinach_cmd {
   $arguments = lc $arguments;
   $arguments =~ s/^\s+|\s+$//g;
 
-  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|unready|players|kick|choose|lie|truth|score|show; for more information about a command: spinach help <command>";
+  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|unready|players|kick|choose|lie|score|show; for more information about a command: spinach help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
@@ -306,20 +306,6 @@ sub spinach_cmd {
       return "Coming soon.";
     }
 
-    when ('score') {
-      if (not @{$self->{state_data}->{players}}) {
-        return "There is nobody playing right now.";
-      }
-
-      my $text = '';
-      my $comma = '';
-      foreach my $player (sort { $b->{score} <=> $a->{score} } @{$self->{state_data}->{players}}) {
-        $text .= "$comma$player->{name}: $player->{score}";
-        $comma = '; ';
-      }
-      return $text;
-    }
-
     when ('join') {
       if ($self->{current_state} eq 'nogame') {
         $self->{current_state} = 'getplayers';
@@ -340,23 +326,25 @@ sub spinach_cmd {
     }
 
     when ('ready') {
-      if ($self->{current_state} eq 'nogame') {
-        return "There is no game started. Use `start` to begin a new game.";
-      } elsif ($self->{current_state} ne 'getplayers') {
-        return "There is a game in progress. Use `join` to play!";
-      }
-
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
 
       foreach my $player (@{$self->{state_data}->{players}}) {
         if ($player->{id} == $id) {
-          $player->{ready} = 1;
-          $player->{score} = 0;
-          return "/msg $self->{channel} $nick is ready!";
+          if ($self->{current_state} ne 'getplayers') {
+            return "/msg $nick This is not the time to use `ready`.";
+          }
+
+          if ($player->{ready} == 0) {
+            $player->{ready} = 1;
+            $player->{score} = 0;
+            return "/msg $self->{channel} $nick is ready!";
+          } else {
+            return "/msg $nick You are already ready.";
+          }
         }
       }
 
-      return "$nick: You haven't joined this game yet.";
+      return "$nick: You haven't joined this game yet. Use `j` to play now!";
     }
 
     when ('unready') {
@@ -364,12 +352,20 @@ sub spinach_cmd {
 
       foreach my $player (@{$self->{state_data}->{players}}) {
         if ($player->{id} == $id) {
-          $player->{ready} = 0;
-          return "/msg $self->{channel} $nick is no longer ready!";
+          if ($self->{current_state} ne 'getplayers') {
+            return "/msg $nick This is not the time to use `unready`.";
+          }
+
+          if ($player->{ready} != 0) {
+            $player->{ready} = 0;
+            return "/msg $self->{channel} $nick is no longer ready!";
+          } else {
+            return "/msg $nick You are already not ready.";
+          }
         }
       }
 
-      return "$nick: You haven't joined this game yet.";
+      return "$nick: You haven't joined this game yet. Use `j` to play now!";
     }
 
     when ('exit') {
@@ -402,23 +398,34 @@ sub spinach_cmd {
       return "/msg $self->{channel} $nick: The game has been aborted.";
     }
 
-    when ('players') {
-      if ($self->{current_state} ne 'getplayers') {
-        return "This command can only be used during the 'Waiting for players' stage. Try the `score` command.";
-      }
-
-      my @names;
-      foreach my $player (@{$self->{state_data}->{players}}) {
-        if (not $player->{ready}) {
-          push @names, "$player->{name} $color{red}(not ready)$color{reset}";
-        } else {
-          push @names, $player->{name};
+    when ($_ eq 'score' or $_ eq 'players') {
+      if ($self->{current_state} eq 'getplayers') {
+        my @names;
+        foreach my $player (@{$self->{state_data}->{players}}) {
+          if (not $player->{ready}) {
+            push @names, "$player->{name} $color{red}(not ready)$color{reset}";
+          } else {
+            push @names, $player->{name};
+          }
         }
+
+        my $players = join ', ', @names;
+        $players = 'none' if not @names;
+        return "Current players: $players";
       }
 
-      my $players = join ', ', @names;
-      $players = 'none' if not @names;
-      return "Current players: $players";
+      # score
+      if (not @{$self->{state_data}->{players}}) {
+        return "There is nobody playing right now.";
+      }
+
+      my $text = '';
+      my $comma = '';
+      foreach my $player (sort { $b->{score} <=> $a->{score} } @{$self->{state_data}->{players}}) {
+        $text .= "$comma$player->{name}: $player->{score}";
+        $comma = '; ';
+      }
+      return $text;
     }
 
     when ('stop') {
@@ -458,35 +465,6 @@ sub spinach_cmd {
       }
     }
 
-    when ('choose') {
-      if ($self->{current_state} !~ /choosecategory$/) {
-        return "$nick: It is not time to choose a category.";
-      }
-
-      if (not length $arguments) {
-        return "Usage: spinach choose <integer>";
-      }
-
-      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-
-      if (not @{$self->{state_data}->{players}} or $id != $self->{state_data}->{players}->[$self->{state_data}->{current_player}]->{id}) {
-        return "$nick: It is not your turn to choose a category.";
-      }
-
-      if ($arguments !~ /^[0-9]+$/) {
-        return "$nick: Please choose a category number. $self->{state_data}->{categories_text}";
-      }
-
-      $arguments--;
-
-      if ($arguments < 0 or $arguments >= @{$self->{state_data}->{category_options}}) {
-        return "$nick: Choice out of range. Please choose a valid category. $self->{state_data}->{categories_text}";
-      }
-
-      $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
-      return "/msg $self->{channel} $nick has chosen $self->{state_data}->{current_category}!";
-    }
-
     when ('n') {
       return $self->normalize_text($arguments);
     }
@@ -496,105 +474,126 @@ sub spinach_cmd {
       return $self->validate_lie($self->normalize_text($truth), $self->normalize_text($lie));
     }
 
-    when ('lie') {
-      if ($self->{current_state} !~ /getlies$/) {
-        return "$nick: It is not time to submit a lie!";
-      }
-
-      if (not length $arguments) {
-        return "Usage: spinach lie <text>";
-      }
-
-      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-
-      my $player;
-      foreach my $i (@{$self->{state_data}->{players}}) {
-        if ($i->{id} == $id) {
-          $player = $i;
-          last;
+    when ($_ eq 'lie' or $_ eq 'truth' or $_ eq 'choose') {
+      if ($self->{current_state} =~ /choosecategory$/) {
+        if (not length $arguments) {
+          return "Usage: spinach choose <integer>";
         }
+
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+
+        if (not @{$self->{state_data}->{players}} or $id != $self->{state_data}->{players}->[$self->{state_data}->{current_player}]->{id}) {
+          return "$nick: It is not your turn to choose a category.";
+        }
+
+        if ($arguments !~ /^[0-9]+$/) {
+          return "$nick: Please choose a category number. $self->{state_data}->{categories_text}";
+        }
+
+        $arguments--;
+
+        if ($arguments < 0 or $arguments >= @{$self->{state_data}->{category_options}}) {
+          return "$nick: Choice out of range. Please choose a valid category. $self->{state_data}->{categories_text}";
+        }
+
+        $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
+        return "/msg $self->{channel} $nick has chosen $self->{state_data}->{current_category}!";
       }
 
-      if (not $player) {
-        return "$nick: You are not playing in this game. Please wait until the next game.";
-      }
+      if ($self->{current_state} =~ /getlies$/) {
+        if (not length $arguments) {
+          return "Usage: spinach lie <text>";
+        }
 
-      $arguments = $self->normalize_text($arguments);
-      $self->{pbot}->{logger}->log("Normalized lie: [$arguments]\n");
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
 
-      my $found_truth = 0;
+        my $player;
+        foreach my $i (@{$self->{state_data}->{players}}) {
+          if ($i->{id} == $id) {
+            $player = $i;
+            last;
+          }
+        }
 
-      if (not $self->validate_lie($self->{state_data}->{current_question}->{answer}, $arguments)) {
-        $found_truth = 1;
-      }
+        if (not $player) {
+          return "$nick: You are not playing in this game. Use `join` to start playing now!";
+        }
 
-      foreach my $alt (@{$self->{state_data}->{current_question}->{alternativeSpellings}}) {
-        if (not $self->validate_lie($alt, $arguments)) {
+        $arguments = $self->normalize_text($arguments);
+        $self->{pbot}->{logger}->log("Normalized lie: [$arguments]\n");
+
+        my $found_truth = 0;
+
+        if (not $self->validate_lie($self->{state_data}->{current_question}->{answer}, $arguments)) {
           $found_truth = 1;
-          last;
+        }
+
+        foreach my $alt (@{$self->{state_data}->{current_question}->{alternativeSpellings}}) {
+          if (not $self->validate_lie($alt, $arguments)) {
+            $found_truth = 1;
+            last;
+          }
+        }
+
+        if ($found_truth) {
+          return "$nick: Your lie is too similar to the truth! Please submit a different lie.";
+        }
+
+        my $changed = exists $player->{lie};
+        $player->{lie} = $arguments;
+
+        if ($changed) {
+          return "/msg $self->{channel} $nick has changed their lie!";
+        } else {
+          return "/msg $self->{channel} $nick has submitted a lie!";
         }
       }
 
-      if ($found_truth) {
-        return "$nick: Your lie is too similar to the truth! Please submit a different lie.";
-      }
+      if ($self->{current_state} =~ /findtruth$/) {
+        if (not length $arguments) {
+          return "Usage: spinach truth <integer>";
+        }
 
-      my $changed = exists $player->{lie};
-      $player->{lie} = $arguments;
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
 
-      if ($changed) {
-        return "/msg $self->{channel} $nick has changed their lie!";
-      } else {
-        return "/msg $self->{channel} $nick has submitted a lie!";
-      }
-    }
+        my $player;
+        foreach my $i (@{$self->{state_data}->{players}}) {
+          if ($i->{id} == $id) {
+            $player = $i;
+            last;
+          }
+        }
 
-    when ('truth') {
-      if ($self->{current_state} !~ /findtruth$/) {
-        return "$nick: It is not time to find the truth!";
-      }
+        if (not $player) {
+          return "$nick: You are not playing in this game. Please wait until the next game.";
+        }
 
-      if (not length $arguments) {
-        return "Usage: spinach truth <integer>";
-      }
+        if ($arguments !~ /^[0-9]+$/) {
+          return "$nick: Please select a truth number. $self->{state_data}->{current_choices_text}";
+        }
 
-      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+        $arguments--;
 
-      my $player;
-      foreach my $i (@{$self->{state_data}->{players}}) {
-        if ($i->{id} == $id) {
-          $player = $i;
-          last;
+        if ($arguments < 0 or $arguments >= @{$self->{state_data}->{current_choices}}) {
+          return "$nick: Selection out of range. Please select a valid truth: $self->{state_data}->{current_choices_text}";
+        }
+
+        my $changed = exists $player->{truth};
+        $player->{truth} = uc $self->{state_data}->{current_choices}->[$arguments];
+
+        if ($player->{truth} eq $player->{lie}) {
+          delete $player->{truth};
+          return "$nick: You cannot select your own lie!";
+        }
+
+        if ($changed) {
+          return "/msg $self->{channel} $nick has selected a different truth!";
+        } else {
+          return "/msg $self->{channel} $nick has selected a truth!";
         }
       }
 
-      if (not $player) {
-        return "$nick: You are not playing in this game. Please wait until the next game.";
-      }
-
-      if ($arguments !~ /^[0-9]+$/) {
-        return "$nick: Please select a truth number. $self->{state_data}->{current_choices_text}";
-      }
-
-      $arguments--;
-
-      if ($arguments < 0 or $arguments >= @{$self->{state_data}->{current_choices}}) {
-        return "$nick: Selection out of range. Please select a valid truth: $self->{state_data}->{current_choices_text}";
-      }
-
-      my $changed = exists $player->{truth};
-      $player->{truth} = uc $self->{state_data}->{current_choices}->[$arguments];
-
-      if ($player->{truth} eq $player->{lie}) {
-        delete $player->{truth};
-        return "$nick: You cannot select your own lie!";
-      }
-
-      if ($changed) {
-        return "/msg $self->{channel} $nick has selected a different truth!";
-      } else {
-        return "/msg $self->{channel} $nick has selected a truth!";
-      }
+      return "$nick: It is not time to use this command.";
     }
 
     when ('show') {
@@ -1210,7 +1209,7 @@ sub choosecategory {
 
     my $name = $state->{players}->[$state->{current_player}]->{name};
     my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
-    $self->{pbot}->{conn}->privmsg($self->{channel}, "$name: $red$color{bold}$state->{counter}/$state->{max_count} Choose a category via `/msg candide choose`:");
+    $self->{pbot}->{conn}->privmsg($self->{channel}, "$name: $red$color{bold}$state->{counter}/$state->{max_count} Choose a category via `/msg me c <number>`:");
     $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$state->{categories_text}$color{reset}");
     return 'wait';
   }
@@ -1295,7 +1294,7 @@ sub getlies {
 
     my $players = join ', ', @nolies;
     my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
-    $self->{pbot}->{conn}->privmsg($self->{channel}, "$players: $red$color{bold}$state->{counter}/$state->{max_count} Submit your lie now via `/msg candide lie`!$color{reset}");
+    $self->{pbot}->{conn}->privmsg($self->{channel}, "$players: $red$color{bold}$state->{counter}/$state->{max_count} Submit your lie now via `/msg me lie <your lie>`!$color{reset}");
   }
 
   return 'wait';
@@ -1394,7 +1393,7 @@ sub findtruth {
 
     my $players = join ', ', @notruth;
     my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
-    $self->{pbot}->{conn}->privmsg($self->{channel}, "$players: $red$color{bold}$state->{counter}/$state->{max_count} Find the truth now via `/msg candide truth`!");
+    $self->{pbot}->{conn}->privmsg($self->{channel}, "$players: $red$color{bold}$state->{counter}/$state->{max_count} Find the truth now via `/msg me c <number>`!");
     $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$state->{current_choices_text}$color{reset}");
   }
 
