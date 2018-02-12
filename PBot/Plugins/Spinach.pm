@@ -516,7 +516,7 @@ sub spinach_cmd {
         }
 
         if (not $player) {
-          return "$nick: You are not playing in this game. Use `join` to start playing now!";
+          return "$nick: You are not playing in this game. Use `j` to start playing now!";
         }
 
         $arguments = $self->normalize_text($arguments);
@@ -565,7 +565,7 @@ sub spinach_cmd {
         }
 
         if (not $player) {
-          return "$nick: You are not playing in this game. Please wait until the next game.";
+          return "$nick: You are not playing in this game. Use `j` to start playing now!";
         }
 
         if ($arguments !~ /^[0-9]+$/) {
@@ -1166,7 +1166,7 @@ sub choosecategory {
     my $i = 1;
     my $comma = '';
     foreach my $choice (@choices) {
-      $state->{categories_text} .= "$comma$i) $choice";
+      $state->{categories_text} .= "$comma$i) " . uc $choice;
       $i++;
       $comma = "; ";
     }
