@@ -100,14 +100,15 @@ sub load_questions {
   my $questions;
   foreach my $key (keys %{$self->{questions}}) {
     foreach my $question (@{$self->{questions}->{$key}}) {
-      $self->{categories}{$question->{category}}++;
+      $self->{categories}{$question->{category}}{$question->{id}} = $question;
       $questions++;
     }
   }
 
   my $categories;
   foreach my $category (sort keys %{$self->{categories}}) {
-    #$self->{pbot}->{logger}->log("Category [$category]: $self->{categories}{$category}\n");
+    my $count = keys %{$self->{categories}{$category}};
+    $self->{pbot}->{logger}->log("Category [$category]: $count\n");
     $categories++;
   }
 
@@ -201,7 +202,7 @@ sub spinach_cmd {
   $arguments = lc $arguments;
   $arguments =~ s/^\s+|\s+$//g;
 
-  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|unready|players|kick|choose|lie|score|show; for more information about a command: spinach help <command>";
+  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|unready|kick|choose|lie|score|show; for more information about a command: spinach help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
@@ -279,6 +280,54 @@ sub spinach_cmd {
           }
         }
       }
+    }
+
+    when ('edit') {
+      my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
+
+      if (not $admin) {
+        return "$nick: Sorry, only admins may edit questions.";
+      }
+
+      my ($id, $key, $value) = split /\s+/, $arguments, 3;
+
+      if (not defined $id) {
+        return "Usage: spinach edit <question id> [key] [value]";
+      }
+
+      my $question;
+      foreach my $q (@{$self->{questions}->{questions}}) {
+        if ($q->{id} == $id) {
+          $question = $q;
+          last;
+        }
+      }
+
+      if (not defined $question) {
+        return "$nick: No such question.";
+      }
+
+      if (not defined $key) {
+        my $dump = Dumper $question;
+        return "$nick: Question $id: $dump";
+      }
+
+      if (not defined $value) {
+        my $v = $question->{$key} // 'unset';
+        return "$nick: Question $id: $key => $v";
+      }
+
+      $question->{$key} = $value;
+      return "$nick: Question $id: $key set to $value";
+
+      my $json = encode_json $self->{questions};
+      open my $fh, '>', $self->{questions_filename} or do {
+        $self->{pbot}->{logger}->log("Failed to open Spinach file: $!\n");
+        return;
+      };
+      print $fh "$json\n";
+      close $fh;
+      $self->load_questions;
     }
 
     when ('load') {
@@ -1027,6 +1076,13 @@ sub create_states {
   $self->{states}{'gameover'}{trans}{next} = 'getplayers';
 }
 
+sub commify {
+  my $self = shift;
+  my $text = reverse $_[0];
+  $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
+  return scalar reverse $text;
+}
+
 sub normalize_text {
   my ($self, $text) = @_;
 
@@ -1152,13 +1208,14 @@ sub choosecategory {
     while (1) {
       my $cat = $categories[rand @categories];
 
-      $self->{pbot}->{logger}->log("random cat: [$cat]\n");
+      my $count = keys %{$self->{categories}{$cat}};
+      $self->{pbot}->{logger}->log("random cat: [$cat] $count questions\n");
 
       if (not grep { $_ eq $cat } @choices) {
         push @choices, $cat;
       }
 
-      last if @choices == 6;
+      last if @choices == 8;
       last if ++$no_infinite_loops > 200;
     }
 
@@ -1166,6 +1223,7 @@ sub choosecategory {
     my $i = 1;
     my $comma = '';
     foreach my $choice (@choices) {
+      my $count = keys %{$self->{categories}{$choice}};
       $state->{categories_text} .= "$comma$i) " . uc $choice;
       $i++;
       $comma = "; ";
@@ -1225,8 +1283,9 @@ sub getnewquestion {
   my ($self, $state) = @_;
 
   if ($state->{ticks} % 3 == 0) {
-    my @questions = grep { $_->{category} eq $state->{current_category} } @{$self->{questions}->{questions}};
-    $state->{current_question} = $questions[rand @questions];
+    my @questions = keys %{$self->{categories}{$state->{current_category}}};
+    $self->{pbot}->{logger}->log("current cat: $state->{current_category}: " . (scalar @questions) . " total questions\n");
+    $state->{current_question} = $self->{categories}{$state->{current_category}}{$questions[rand @questions]};
 
     $state->{current_question}->{answer} = $self->normalize_text($state->{current_question}->{answer});
 
@@ -1248,7 +1307,7 @@ sub showquestion {
   my ($self, $state) = @_;
 
   if (exists $state->{current_question}) {
-    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$color{green}Current question:$color{reset}$color{bold} $state->{current_question}->{question}$color{reset}");
+    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$color{green}Current question:$color{reset}$color{bold} " . $self->commify($state->{current_question}->{id}) . ") $state->{current_question}->{question}$color{reset}");
   } else {
     $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}There is no current question.$color{reset}");
   }
@@ -1527,7 +1586,7 @@ sub showscore {
     my $text = '';
     my $comma = '';
     foreach my $player (sort { $b->{score} <=> $a->{score} } @{$state->{players}}) {
-      $text .= "$comma$player->{name}: $player->{score}";
+      $text .= "$comma$player->{name}: " . $self->commify($player->{score});
       $comma = '; ';
     }
 
