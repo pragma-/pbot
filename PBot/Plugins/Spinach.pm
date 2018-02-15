@@ -13,7 +13,6 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 use Carp ();
 use DBI;
 use JSON;
-use POSIX;
 
 use Lingua::EN::Fractions qw/fraction2words/;
 use Lingua::EN::Numbers qw/num2en num2en_ordinal/;
@@ -101,13 +100,14 @@ sub load_questions {
   my $questions;
   foreach my $key (keys %{$self->{questions}}) {
     foreach my $question (@{$self->{questions}->{$key}}) {
+      $question->{category} = uc $question->{category};
       $self->{categories}{$question->{category}}{$question->{id}} = $question;
       $questions++;
     }
   }
 
   my $categories;
-  foreach my $category (sort keys %{$self->{categories}}) {
+  foreach my $category (sort { keys %{$self->{categories}{$b}} <=> keys %{$self->{categories}{$a}} } keys %{$self->{categories}}) {
     my $count = keys %{$self->{categories}{$category}};
     $self->{pbot}->{logger}->log("Category [$category]: $count\n");
     $categories++;
@@ -234,7 +234,7 @@ sub spinach_cmd {
         }
 
         when ('skip') {
-          return "Use `skip` to skip a question and return to the \"choose category\" stage. Half or more of the players must agree to skip.";
+          return "Use `skip` to skip a question and return to the \"choose category\" stage. A majority of the players must agree to skip.";
         }
 
         when ('abort') {
@@ -550,7 +550,7 @@ sub spinach_cmd {
           return "$nick: You are not playing in this game. Use `j` to start playing now!";
         }
 
-        my $needed = ceil (@{$self->{state_data}->{players}} / 2);
+        my $needed = int (@{$self->{state_data}->{players}} / 2) + 1;
         $needed -= $skipped;
 
         my $votes_needed;
@@ -1279,7 +1279,7 @@ sub choosecategory {
     my $comma = '';
     foreach my $choice (@choices) {
       my $count = keys %{$self->{categories}{$choice}};
-      $state->{categories_text} .= "$comma$i) " . uc $choice;
+      $state->{categories_text} .= "$comma$i) " . $choice;
       $i++;
       $comma = "; ";
     }
@@ -1396,7 +1396,7 @@ sub getlies {
   }
 
   if (@skips) {
-    my $needed = ceil (@{$state->{players}} / 2);
+    my $needed = int (@{$state->{players}} / 2) + 1;
     $needed -= @skips;
     return 'skip' if $needed <= 0;
   }
