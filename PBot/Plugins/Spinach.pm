@@ -552,8 +552,8 @@ sub spinach_cmd {
 
         my $needed = ceil (@{$self->{state_data}->{players}} / 2);
         $needed -= $skipped;
-        my $votes_needed;
 
+        my $votes_needed;
         if ($needed == 1) {
           $votes_needed = "$needed more vote to skip!";
         } elsif ($needed > 1) {
@@ -1397,13 +1397,8 @@ sub getlies {
 
   if (@skips) {
     my $needed = ceil (@{$state->{players}} / 2);
-    $self->{pbot}->{logger}->log("getlies: needed: $needed, skips: " . (scalar @skips) . "\n");
     $needed -= @skips;
-    $self->{pbot}->{logger}->log("getlies: needed after: $needed\n");
-
-    if ($needed <= 0) {
-      return 'skip';
-    }
+    return 'skip' if $needed <= 0;
   }
 
   if ($state->{ticks} % $tock == 0) {
