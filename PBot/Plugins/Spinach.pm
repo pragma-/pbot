@@ -13,6 +13,7 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 use Carp ();
 use DBI;
 use JSON;
+use POSIX;
 
 use Lingua::EN::Fractions qw/fraction2words/;
 use Lingua::EN::Numbers qw/num2en num2en_ordinal/;
@@ -199,13 +200,13 @@ my %color = (
 
 sub spinach_cmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  $arguments = lc $arguments;
   $arguments =~ s/^\s+|\s+$//g;
 
-  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|unready|kick|choose|lie|score|show; for more information about a command: spinach help <command>";
+  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|unready|kick|choose|lie|skip|score|show; for more information about a command: spinach help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
+  $command = lc $command;
 
   my ($channel, $result);
 
@@ -230,6 +231,10 @@ sub spinach_cmd {
 
         when ('exit') {
           return "Help is coming soon.";
+        }
+
+        when ('skip') {
+          return "Use `skip` to skip a question and return to the \"choose category\" stage. Half or more of the players must agree to skip.";
         }
 
         when ('abort') {
@@ -318,7 +323,6 @@ sub spinach_cmd {
       }
 
       $question->{$key} = $value;
-      return "$nick: Question $id: $key set to $value";
 
       my $json = encode_json $self->{questions};
       open my $fh, '>', $self->{questions_filename} or do {
@@ -327,7 +331,10 @@ sub spinach_cmd {
       };
       print $fh "$json\n";
       close $fh;
+
       $self->load_questions;
+
+      return "$nick: Question $id: $key set to $value";
     }
 
     when ('load') {
@@ -471,7 +478,7 @@ sub spinach_cmd {
       my $text = '';
       my $comma = '';
       foreach my $player (sort { $b->{score} <=> $a->{score} } @{$self->{state_data}->{players}}) {
-        $text .= "$comma$player->{name}: $player->{score}";
+        $text .= "$comma$player->{name}: " . $self->commify($player->{score});
         $comma = '; ';
       }
       return $text;
@@ -523,7 +530,46 @@ sub spinach_cmd {
       return $self->validate_lie($self->normalize_text($truth), $self->normalize_text($lie));
     }
 
+    when ('skip') {
+      if ($self->{current_state} =~ /getlies$/) {
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+
+        my $player;
+        my $skipped = 0;
+        foreach my $i (@{$self->{state_data}->{players}}) {
+          if ($i->{id} == $id) {
+            $i->{skip} = 1;
+            $skipped++;
+            $player = $i;
+          } elsif ($i->{skip}) {
+            $skipped++;
+          }
+        }
+
+        if (not $player) {
+          return "$nick: You are not playing in this game. Use `j` to start playing now!";
+        }
+
+        my $needed = ceil (@{$self->{state_data}->{players}} / 2);
+        $needed -= $skipped;
+        my $votes_needed;
+
+        if ($needed == 1) {
+          $votes_needed = "$needed more vote to skip!";
+        } elsif ($needed > 1) {
+          $votes_needed = "$needed more votes to skip!";
+        } else {
+          $votes_needed = "Skipping...";
+        }
+
+        return "/msg $self->{channel} $nick has voted to skip this question! $votes_needed";
+      } else {
+        return "$nick: This command can be used only during the \"submit lies\" stage.";
+      }
+    }
+
     when ($_ eq 'lie' or $_ eq 'truth' or $_ eq 'choose') {
+      $arguments = lc $arguments;
       if ($self->{current_state} =~ /choosecategory$/) {
         if (not length $arguments) {
           return "Usage: spinach choose <integer>";
@@ -569,7 +615,6 @@ sub spinach_cmd {
         }
 
         $arguments = $self->normalize_text($arguments);
-        $self->{pbot}->{logger}->log("Normalized lie: [$arguments]\n");
 
         my $found_truth = 0;
 
@@ -798,6 +843,7 @@ sub create_states {
   $self->{states}{'r1q1showquestion'}{trans}{wait} = 'r1q1showquestion';
   $self->{states}{'r1q1showquestion'}{trans}{next} = 'r1q1getlies';
   $self->{states}{'r1q1getlies'}{sub} = sub { $self->r1q1getlies(@_) };
+  $self->{states}{'r1q1getlies'}{trans}{skip} = 'round1q1';
   $self->{states}{'r1q1getlies'}{trans}{wait} = 'r1q1getlies';
   $self->{states}{'r1q1getlies'}{trans}{next} = 'r1q1findtruth';
   $self->{states}{'r1q1findtruth'}{sub} = sub { $self->r1q1findtruth(@_) };
@@ -825,6 +871,7 @@ sub create_states {
   $self->{states}{'r1q2showquestion'}{trans}{wait} = 'r1q2showquestion';
   $self->{states}{'r1q2showquestion'}{trans}{next} = 'r1q2getlies';
   $self->{states}{'r1q2getlies'}{sub} = sub { $self->r1q2getlies(@_) };
+  $self->{states}{'r1q2getlies'}{trans}{skip} = 'round1q2';
   $self->{states}{'r1q2getlies'}{trans}{wait} = 'r1q2getlies';
   $self->{states}{'r1q2getlies'}{trans}{next} = 'r1q2findtruth';
   $self->{states}{'r1q2findtruth'}{sub} = sub { $self->r1q2findtruth(@_) };
@@ -852,6 +899,7 @@ sub create_states {
   $self->{states}{'r1q3showquestion'}{trans}{wait} = 'r1q3showquestion';
   $self->{states}{'r1q3showquestion'}{trans}{next} = 'r1q3getlies';
   $self->{states}{'r1q3getlies'}{sub} = sub { $self->r1q3getlies(@_) };
+  $self->{states}{'r1q3getlies'}{trans}{skip} = 'round1q3';
   $self->{states}{'r1q3getlies'}{trans}{wait} = 'r1q3getlies';
   $self->{states}{'r1q3getlies'}{trans}{next} = 'r1q3findtruth';
   $self->{states}{'r1q3findtruth'}{sub} = sub { $self->r1q3findtruth(@_) };
@@ -883,6 +931,7 @@ sub create_states {
   $self->{states}{'r2q1showquestion'}{trans}{wait} = 'r2q1showquestion';
   $self->{states}{'r2q1showquestion'}{trans}{next} = 'r2q1getlies';
   $self->{states}{'r2q1getlies'}{sub} = sub { $self->r2q1getlies(@_) };
+  $self->{states}{'r2q1getlies'}{trans}{skip} = 'round2q1';
   $self->{states}{'r2q1getlies'}{trans}{wait} = 'r2q1getlies';
   $self->{states}{'r2q1getlies'}{trans}{next} = 'r2q1findtruth';
   $self->{states}{'r2q1findtruth'}{sub} = sub { $self->r2q1findtruth(@_) };
@@ -910,6 +959,7 @@ sub create_states {
   $self->{states}{'r2q2showquestion'}{trans}{wait} = 'r2q2showquestion';
   $self->{states}{'r2q2showquestion'}{trans}{next} = 'r2q2getlies';
   $self->{states}{'r2q2getlies'}{sub} = sub { $self->r2q2getlies(@_) };
+  $self->{states}{'r2q2getlies'}{trans}{skip} = 'round2q2';
   $self->{states}{'r2q2getlies'}{trans}{wait} = 'r2q2getlies';
   $self->{states}{'r2q2getlies'}{trans}{next} = 'r2q2findtruth';
   $self->{states}{'r2q2findtruth'}{sub} = sub { $self->r2q2findtruth(@_) };
@@ -937,6 +987,7 @@ sub create_states {
   $self->{states}{'r2q3showquestion'}{trans}{wait} = 'r2q3showquestion';
   $self->{states}{'r2q3showquestion'}{trans}{next} = 'r2q3getlies';
   $self->{states}{'r2q3getlies'}{sub} = sub { $self->r2q3getlies(@_) };
+  $self->{states}{'r2q3getlies'}{trans}{skip} = 'round2q3';
   $self->{states}{'r2q3getlies'}{trans}{wait} = 'r2q3getlies';
   $self->{states}{'r2q3getlies'}{trans}{next} = 'r2q3findtruth';
   $self->{states}{'r2q3findtruth'}{sub} = sub { $self->r2q3findtruth(@_) };
@@ -968,6 +1019,7 @@ sub create_states {
   $self->{states}{'r3q1showquestion'}{trans}{wait} = 'r3q1showquestion';
   $self->{states}{'r3q1showquestion'}{trans}{next} = 'r3q1getlies';
   $self->{states}{'r3q1getlies'}{sub} = sub { $self->r3q1getlies(@_) };
+  $self->{states}{'r3q1getlies'}{trans}{skip} = 'round3q1';
   $self->{states}{'r3q1getlies'}{trans}{wait} = 'r3q1getlies';
   $self->{states}{'r3q1getlies'}{trans}{next} = 'r3q1findtruth';
   $self->{states}{'r3q1findtruth'}{sub} = sub { $self->r3q1findtruth(@_) };
@@ -995,6 +1047,7 @@ sub create_states {
   $self->{states}{'r3q2showquestion'}{trans}{wait} = 'r3q2showquestion';
   $self->{states}{'r3q2showquestion'}{trans}{next} = 'r3q2getlies';
   $self->{states}{'r3q2getlies'}{sub} = sub { $self->r3q2getlies(@_) };
+  $self->{states}{'r3q2getlies'}{trans}{skip} = 'round3q2';
   $self->{states}{'r3q2getlies'}{trans}{wait} = 'r3q2getlies';
   $self->{states}{'r3q2getlies'}{trans}{next} = 'r3q2findtruth';
   $self->{states}{'r3q2findtruth'}{sub} = sub { $self->r3q2findtruth(@_) };
@@ -1022,6 +1075,7 @@ sub create_states {
   $self->{states}{'r3q3showquestion'}{trans}{wait} = 'r3q3showquestion';
   $self->{states}{'r3q3showquestion'}{trans}{next} = 'r3q3getlies';
   $self->{states}{'r3q3getlies'}{sub} = sub { $self->r3q3getlies(@_) };
+  $self->{states}{'r3q3getlies'}{trans}{skip} = 'round3q3';
   $self->{states}{'r3q3getlies'}{trans}{wait} = 'r3q3getlies';
   $self->{states}{'r3q3getlies'}{trans}{next} = 'r3q3findtruth';
   $self->{states}{'r3q3findtruth'}{sub} = sub { $self->r3q3findtruth(@_) };
@@ -1053,6 +1107,7 @@ sub create_states {
   $self->{states}{'r4q1showquestion'}{trans}{wait} = 'r4q1showquestion';
   $self->{states}{'r4q1showquestion'}{trans}{next} = 'r4q1getlies';
   $self->{states}{'r4q1getlies'}{sub} = sub { $self->r4q1getlies(@_) };
+  $self->{states}{'r4q1getlies'}{trans}{skip} = 'round4q1';
   $self->{states}{'r4q1getlies'}{trans}{wait} = 'r4q1getlies';
   $self->{states}{'r4q1getlies'}{trans}{next} = 'r4q1findtruth';
   $self->{states}{'r4q1findtruth'}{sub} = sub { $self->r4q1findtruth(@_) };
@@ -1296,6 +1351,7 @@ sub getnewquestion {
       delete $player->{lie};
       delete $player->{truth};
       delete $player->{deceived};
+      delete $player->{skip};
     }
     return 'next';
   } else {
@@ -1331,6 +1387,24 @@ sub getlies {
   }
 
   return 'next' if not @nolies;
+
+  my @skips;
+  foreach my $player (@{$state->{players}}) {
+    if ($player->{skip}) {
+      push @skips, $player->{name};
+    }
+  }
+
+  if (@skips) {
+    my $needed = ceil (@{$state->{players}} / 2);
+    $self->{pbot}->{logger}->log("getlies: needed: $needed, skips: " . (scalar @skips) . "\n");
+    $needed -= @skips;
+    $self->{pbot}->{logger}->log("getlies: needed after: $needed\n");
+
+    if ($needed <= 0) {
+      return 'skip';
+    }
+  }
 
   if ($state->{ticks} % $tock == 0) {
     delete $state->{first_tock};
