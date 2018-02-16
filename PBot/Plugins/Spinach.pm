@@ -300,6 +300,8 @@ sub spinach_cmd {
         return "Usage: spinach edit <question id> [key] [value]";
       }
 
+      $id =~ s/,//g;
+
       my $question;
       foreach my $q (@{$self->{questions}->{questions}}) {
         if ($q->{id} == $id) {
@@ -562,7 +564,7 @@ sub spinach_cmd {
           $votes_needed = "Skipping...";
         }
 
-        return "/msg $self->{channel} $nick has voted to skip this question! $votes_needed";
+        return "/msg $self->{channel} $color{red}$nick has voted to skip this question! $color{reset}$votes_needed";
       } else {
         return "$nick: This command can be used only during the \"submit lies\" stage.";
       }
@@ -774,9 +776,26 @@ sub add_new_suggestions {
 sub run_one_state {
   my $self = shift;
 
-  if (not @{$self->{state_data}->{players}} and $self->{current_state} =~ /r\dq\d/) {
-    $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}All players have left the game!$color{reset}");
-    $self->{current_state} = 'nogame';
+  if ($self->{current_state} =~ /r\dq\d/) {
+    my $removed = 0;
+    for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
+      if ($self->{state_data}->{players}->[$i]->{missedinputs} >= 3) {
+        $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{red}$self->{state_data}->{players}->[$i]->{name} has missed too many inputs and has been ejected from the game!$color{reset}");
+        splice @{$self->{state_data}->{players}}, $i--, 1;
+        $removed = 1;
+      }
+    }
+
+    if ($removed) {
+      if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) {
+        $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1
+      }
+    }
+
+    if (not @{$self->{state_data}->{players}}) {
+      $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}All players have left the game!$color{reset}");
+      $self->{current_state} = 'nogame';
+    }
   }
 
   my $current_state = $self->{current_state};
@@ -1312,7 +1331,7 @@ sub choosecategory {
 
 
     if (++$state->{counter} > $state->{max_count}) {
-      $state->{players}->[$state->{current_player}]->{missedinputs}++ ;
+      $state->{players}->[$state->{current_player}]->{missedinputs}++;
       my $name = $state->{players}->[$state->{current_player}]->{name};
       my $category = $state->{category_options}->[rand @{$state->{category_options}}];
       $self->{pbot}->{conn}->privmsg($self->{channel}, "$color{bold}$name took too long to choose. Randomly choosing: $category!$color{reset}");
