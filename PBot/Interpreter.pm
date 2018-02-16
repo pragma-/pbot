@@ -463,7 +463,7 @@ sub handle_result {
         my $message = {
           nick => $stuff->{nick}, user => $stuff->{user}, host => $stuff->{host}, command => $stuff->{command},
           message => "And that's all I have to say about that. See $link for full text.",
-          checkflood => $stuff->{checkflood}
+          checkflood => 1
         };
         $self->add_message_to_output_queue($stuff->{from}, $message, 0);
       } else {
@@ -483,7 +483,7 @@ sub handle_result {
       $delay += (length $line) / 7; # additional delay of 7 characters per second typing speed
       my $message = {
         nick => $stuff->{nick}, user => $stuff->{user}, host => $stuff->{host}, command => $stuff->{command},
-        message => $line, checkflood => $stuff->{checkflood}
+        message => $line, checkflood => 1
       };
       $self->add_message_to_output_queue($stuff->{from}, $message, $delay);
       $delay = duration($delay);
