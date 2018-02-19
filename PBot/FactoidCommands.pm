@@ -1475,10 +1475,42 @@ sub factchange {
     my $action = $factoids->{$channel}->{$trigger}->{action};
     my $changed;
 
-    if ($modifier eq 'gi' or $modifier eq 'ig') {
-      $changed = $action =~ s|$tochange|$changeto|gi;
-    } elsif ($modifier eq 'g') {
-      $changed = $action =~ s|$tochange|$changeto|g;
+    if ($modifier eq 'gi' or $modifier eq 'ig' or $modifier eq 'g') {
+      my @chars = ("A".."Z", "a".."z", "0".."9");
+      my $magic = '';
+      $magic .= $chars[rand @chars] for 1..(10 * rand) + 10;
+      my $insensitive = index ($modifier, 'i') + 1;
+      my $count = 0;
+      my $max = 50;
+
+      while (1) {
+        if ($count == 0) {
+          if ($insensitive) {
+            $changed = $action =~ s|$tochange|$changeto$magic|i;
+          } else {
+            $changed = $action =~ s|$tochange|$changeto$magic|;
+          }
+        } else {
+          if ($insensitive) {
+            $changed = $action =~ s|$tochange|$1$changeto$magic|i;
+          } else {
+            $changed = $action =~ s|$tochange|$1$changeto$magic|;
+          }
+        }
+
+        if ($changed) {
+          $count++;
+          if ($count == $max) {
+            $action =~ s/$magic//;
+            last;
+          }
+          $tochange = "$magic(.*?)$tochange" if $count == 1;
+        } else {
+          $changed = $count;
+          $action =~ s/$magic// if $changed;
+          last;
+        }
+      }
     } elsif ($modifier eq 'i') {
       $changed = $action =~ s|$tochange|$changeto|i;
     } else {
