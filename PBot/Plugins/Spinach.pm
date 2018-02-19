@@ -316,6 +316,8 @@ sub spinach_cmd {
 
       if (not defined $key) {
         my $dump = Dumper $question;
+        $dump =~ s/\$VAR\d+ = \{\s*//;
+        $dump =~ s/ \};\s*$//;
         return "$nick: Question $id: $dump";
       }
 
