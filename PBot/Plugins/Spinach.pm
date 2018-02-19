@@ -366,6 +366,7 @@ sub spinach_cmd {
 
     when ('join') {
       if ($self->{current_state} eq 'nogame') {
+        $self->{state_data} = { players => [], counter => 0 };
         $self->{current_state} = 'getplayers';
       }
 
@@ -791,7 +792,7 @@ sub run_one_state {
     my $removed = 0;
     for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
       if ($self->{state_data}->{players}->[$i]->{missedinputs} >= 3) {
-        $self->send_message($self->{channel}, "$color{red}$self->{state_data}->{players}->[$i]->{name} has missed too many inputs and has been ejected from the game!$color{reset}");
+        $self->send_message($self->{channel}, "$color{red}$self->{state_data}->{players}->[$i]->{name} has missed too many prompts and has been ejected from the game!$color{reset}");
         splice @{$self->{state_data}->{players}}, $i--, 1;
         $removed = 1;
       }
@@ -1171,13 +1172,14 @@ sub commify {
 sub normalize_text {
   my ($self, $text) = @_;
 
+  $text=~ s/&/ AND /g;
   $text =~ s/^\s+|\s+$//g;
   $text =~ s/\s+/ /g;
 
   $text = lc substr($text, 0, 80);
 
   $text =~ s/\$\s+(\d)/\$$1/g;
-  $text =~ s/(\d)\s+%/$1%/g;
+  $text =~ s/\s*%$//;
 
   my @words = split / /, $text;
   my @result;
@@ -1225,6 +1227,11 @@ sub normalize_text {
   }
 
   $text = uc b2a join ' ', @result;
+
+  $text =~ s/([A-Z])\./$1/g;
+  $text =~ s/-/ /g;
+  $text =~ s/["'?!]//g;
+
   return substr $text, 0, 80;
 }
 
@@ -1248,7 +1255,6 @@ sub validate_lie {
     return 0;
   }
 
-=cut
   $count = 0;
   foreach my $word (keys %lie_words) {
     if (exists $truth_words{$word}) {
@@ -1256,10 +1262,9 @@ sub validate_lie {
     }
   }
 
-  if ($count == $lie_word_count) {
+  if ($count >= 2 and $count == $lie_word_count) {
     return 0;
   }
-=cut
 
   my $stripped_truth = $truth;
   $stripped_truth =~ s/(?:\s|\p{PosixPunct})+//g;
