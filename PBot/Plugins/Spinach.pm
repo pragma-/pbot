@@ -1357,7 +1357,7 @@ sub choosecategory {
 
     my $name = $state->{players}->[$state->{current_player}]->{name};
     my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
-    $self->send_message($self->{channel}, "$name: $red$color{bold}$state->{counter}/$state->{max_count} Choose a category via `/msg me c <number>`:");
+    $self->send_message($self->{channel}, "$name: $red$color{bold}$state->{counter}/$state->{max_count} Choose a category via `/msg me c <number>`:$color{reset}");
     $self->send_message($self->{channel}, "$color{bold}$state->{categories_text}$color{reset}");
     return 'wait';
   }
@@ -1556,7 +1556,7 @@ sub findtruth {
 
     my $players = join ', ', @notruth;
     my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
-    $self->send_message($self->{channel}, "$players: $red$color{bold}$state->{counter}/$state->{max_count} Find the truth now via `/msg me c <number>`!");
+    $self->send_message($self->{channel}, "$players: $red$color{bold}$state->{counter}/$state->{max_count} Find the truth now via `/msg me c <number>`!$color{reset}");
     $self->send_message($self->{channel}, "$color{bold}$state->{current_choices_text}$color{reset}");
   }
 
