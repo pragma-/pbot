@@ -99,8 +99,8 @@ print STDERR "Categorizing documents\n";
 for my $i (0 .. $#lines) {
   print STDERR "$i\n";
 
-	# Remove/fix stupid things
-	$lines[$i] =~ s/\s*Category:\s*//g;
+  # Remove/fix stupid things
+  $lines[$i] =~ s/\s*Category:\s*//g;
   $lines[$i] =~ s/(\w:)(\w)/$1 $2/g;
   $lines[$i] =~ s{/}{ / }g;
   $lines[$i] =~ s{&}{ & }g;
@@ -112,26 +112,26 @@ for my $i (0 .. $#lines) {
 
   my @l = split /`/, $lines[$i];
 
-	# If the question has an obvious category, use that
+  # If the question has an obvious category, use that
   if ($l[0] =~ m/^(.{4,}?)\s*[:-]/) {
-		my $cat = $1;
-		my $nspc = () = $cat =~ m/\s+/g;
-		if ($nspc < 3) {
-			if (length $cat >= 3 and $cat !~ m/(general|^A |_+)/i) {
-				$cat =~ s/^\s+|\s+$//g;
-				$cat = uc $cat;
+    my $cat = $1;
+    my $nspc = () = $cat =~ m/\s+/g;
+    if ($nspc < 3) {
+      if (length $cat >= 3 and $cat !~ m/(general|^A |_+)/i) {
+        $cat =~ s/^\s+|\s+$//g;
+        $cat = uc $cat;
         $cat =~ s/'//g;
         $cat =~ s/\.//g;
-				$cat =~ s/(?:\s+$|\R|^"|"$|^-|^\[|\]$)//g;
-				$cat =~ s/\s+/ /g;
+        $cat =~ s/(?:\s+$|\R|^"|"$|^-|^\[|\]$)//g;
+        $cat =~ s/\s+/ /g;
         $cat =~ s/(\d+)S/$1'S/g;
 
         $cat =~ s/^SPORT(?!S)/SPORTS/;
-				$cat =~ s/ (?:AND|N|'N) / & /;
+        $cat =~ s/ (?:AND|N|'N) / & /;
         #$cat =~ s/\s*\/\s*/\//;
 
         $cat =~ s/^GEOGRAPH.*/GEOGRAPHY/;
-				$cat = 'STAR TREK' if ($cat =~ m/^STAR TREK/);
+        $cat = 'STAR TREK' if ($cat =~ m/^STAR TREK/);
 
         $cat = 'GUESS THE WORD' if $l[0] =~ m/.*: '.*\.'/;
 
@@ -142,23 +142,23 @@ for my $i (0 .. $#lines) {
           }
         }
 
-				print STDERR "Using obvious $cat for doc $i: $l[0] ($l[1])\n";
-				push @{$docs{$cat}}, $i;
-				next;
-			}
-		}
-	}
+        print STDERR "Using obvious $cat for doc $i: $l[0] ($l[1])\n";
+        push @{$docs{$cat}}, $i;
+        next;
+      }
+    }
+  }
 
   my $found = 0;
-	foreach my $rule (@rules) {
-		if ($l[0] =~ m/$rule->{regex}/) {
+  foreach my $rule (@rules) {
+    if ($l[0] =~ m/$rule->{regex}/) {
       my $cat = uc $rule->{'category'};
       push @{$docs{$cat}}, $i;
       $found = 1;
       print STDERR "Using rules $cat for doc $i: $l[0] ($l[1])\n";
-			last;
-		}
-	}
+      last;
+    }
+  }
 
   next if $found;
 
