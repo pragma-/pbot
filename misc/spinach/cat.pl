@@ -6,12 +6,12 @@ use warnings;
 my %docs;
 my @uncat;
 
-my $minimum_category_size = 8;
+my $minimum_category_size = 6;
 
 open my $handle, '<dedup_questions' or die $@;
 chomp(my @lines = <$handle>); close $handle;
 
-my @rules = (
+my @doc_rules = (
   { regex => qr/(?:james bond| 007)/i, category => 'JAMES BOND' },
   { regex => qr/^194\d /, category => "THE 1940'S" },
   { regex => qr/^195\d /, category => "THE 1950'S" },
@@ -49,6 +49,8 @@ my @rules = (
   { regex => qr/chess/i, category => "CHESS" },
   { regex => qr/sherlock holmes/i, category => "SHERLOCK HOLMES" },
   { regex => qr/stephen king/i, category => "STEPHEN KING" },
+  { regex => qr/wizard of oz/i, category => "WIZARD OF OZ" },
+  { regex => qr/philosoph/i, category => "PHILOSOPHY" },
 );
 
 my @rename_rules = (
@@ -103,6 +105,7 @@ my @rename_rules = (
   { old => qr/^AUTHOR$/, new => "AUTHORS" },
   { old => qr/^ART$/, new => "ARTS" },
   { old => qr/^BOOZE/, new => "BOOZE" },
+  { old => qr/CHIEFLY BRITISH/, new => "BRITISH SLANG" },
   { old => qr/^SCIFI/, new => "SCI-FI" },
   { old => qr/^HITCHHIKER/, new => "HITCHHIKER'S GUIDE" },
   { old => qr/^SCIENCE FANTASY/, new => "SCI-FI" },
@@ -130,15 +133,32 @@ my @rename_rules = (
   { old => qr/CONFUSCIOUS SAY/, new => "CONFUCIUS SAY" },
   { old => qr/NOVELTY SONGS/, new => "NOVELTY SONGS" },
   { old => qr/NAME THE MOVIE WITH THE SONG/, new => "NAME THE MOVIE FROM THE SONG" },
-  { old => qr/SCI FI AUTHORS/, new => "SCI FI" },
+  { old => qr/SCI.?FI AUTHORS/, new => "SCI-FI" },
+  { old => qr/SCI.?FI/, new => "SCI-FI" },
   { old => qr/ON THIS DAY IN JANUARY/, new => "ON THIS DAY IN JANUARY" },
   { old => qr/MYTHOLOGY/, new => "MYTHOLOGY" },
-  { old => qr/x-men/, new => "X-MEN" },
+  { old => qr/X-MEN/, new => "X-MEN" },
+  { old => qr/US CAPITIALS/, new => "US CAPITALS" },
+  { old => qr/^SCI$/, new => "SCI-FI" },
+  { old => qr/SCIENCE.?FICTION/, new => "SCI-FI" },
+  { old => qr/WHO RULED ROME/, new => "ROMAN RULERS" },
+  { old => qr/^WHO DIRECTED/, new => "NAME THE DIRECTOR" },
+  { old => qr/PHILOSOPHER/, new => "PHILOSOPHY" },
+  { old => qr/^SIMILI?ES/, new => "SIMILES" },
+  { old => qr/^SCIENCE /, new => "SCIENCE" },
+  { old => qr/^ROMEO & JULIET/, new => "SHAKESPEARE" },
+  { old => qr/^SAYINGS & SMILES$/, new => "SAYINGS & SIMILES" },
+  { old => qr/^SAYING$/, new => "SAYINGS & SIMILES" },
+  { old => qr/^EPL$/, new => "SOCCER" },
+  { old => qr/^NZ$/, new => "NEW ZEALAND" },
+  { old => qr/^NZ /, new => "NEW ZEALAND" },
 );
 
 my @not_a_category = (
   qr/CHIEFLY BRITISH/,
   qr/^SLANG \w+/,
+  qr/^IN 1987 18/,
+  qr/^WHO CO$/,
 );
 
 my %refilter_rules = (
@@ -162,6 +182,7 @@ my %refilter_rules = (
     { regex => qr/box(?:ing|er)/i, category => "BOXING" },
     { regex => qr/swim/i, category => "SWIMMING" },
     { regex => qr/wimbledon/i, category => "TENNIS" },
+    { regex => qr/rugby/i, category => "RUGBY" },
   ],
   "ART & LITERATURE" => [
     { regex => qr/Lotr:/, category => "LORD OF THE RINGS" },
@@ -191,13 +212,14 @@ for my $i (0 .. $#lines) {
   $lines[$i] =~ s/^(?:\(|\[)(.*?)(?:\)|\])\s*/$1: /;
   $lines[$i] =~ s/star\s?wars/Star Wars/ig;
   $lines[$i] =~ s/^sport\s*[:-]\s*(.*?)\s*[:-]/$1: /i;
-  $lines[$i] =~ s/^trivia\s*[:;-]\s*//;
+  $lines[$i] =~ s/^trivia\s*[:;-]\s*//i;
+  $lines[$i] =~ s/^triv\s*[:;-]\s*//i;
 
   my @l = split /`/, $lines[$i];
 
   # If the question has an obvious category, use that
-  if ($l[0] =~ m/^(.{3,30}?)\s*[:-]/ or $l[0] =~ m/^(.{3,30}?)\s*\./) {
-    my $cat = $1;
+  if ($l[0] =~ m/^(.{3,30}?)\s*[:;-]/ or $l[0] =~ m/^(.{3,30}?)\s*\./) {
+    my $cat = uc $1;
     my $max_spaces = 5;
     $max_spaces = 3 if $cat =~ s/\.$//;
     my $nspc = () = $cat =~ m/\s+/g;
@@ -245,7 +267,7 @@ for my $i (0 .. $#lines) {
   }
 
   my $found = 0;
-  foreach my $rule (@rules) {
+  foreach my $rule (@doc_rules) {
     if ($l[0] =~ m/$rule->{regex}/) {
       my $cat = uc $rule->{'category'};
       push @{$docs{$cat}}, $i;
