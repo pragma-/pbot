@@ -596,8 +596,15 @@ sub spinach_cmd {
           return "$nick: Choice out of range. Please choose a valid category. $self->{state_data}->{categories_text}";
         }
 
-        $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
-        return "/msg $self->{channel} $nick has chosen $self->{state_data}->{current_category}!";
+        if ($arguments == @{$self->{state_data}->{category_options}} - 1) {
+          $arguments = (@{$self->{state_data}->{category_options}} - 1) * rand;
+          $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
+          return "/msg $self->{channel} $nick has chosen RANDOM! Randomly choosing category: $self->{state_data}->{current_category}!";
+        } else {
+          $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
+          return "/msg $self->{channel} $nick has chosen $self->{state_data}->{current_category}!";
+        }
+
       }
 
       if ($self->{current_state} =~ /getlies$/) {
@@ -674,7 +681,7 @@ sub spinach_cmd {
         $arguments--;
 
         if ($arguments < 0 or $arguments >= @{$self->{state_data}->{current_choices}}) {
-          return "$nick: Selection out of range. Please select a valid truth: $self->{state_data}->{current_choices_text}";
+          return "$nick: Selection out of range. Please select a valid truth. $self->{state_data}->{current_choices_text}";
         }
 
         my $changed = exists $player->{truth};
@@ -823,6 +830,7 @@ sub run_one_state {
   if ($self->{previous_state} ne $self->{current_state}) {
     $state_data->{newstate} = 1;
     $state_data->{ticks} = 1;
+    $state_data->{ticks} += $state_data->{tick_drift} if exists $state_data->{tick_drift};
     $state_data->{first_tock} = 1;
   } else {
     $state_data->{newstate} = 0;
@@ -1307,9 +1315,11 @@ sub choosecategory {
         push @choices, $cat;
       }
 
-      last if @choices == 8;
+      last if @choices == 7;
       last if ++$no_infinite_loops > 200;
     }
+
+    push @choices, 'RANDOM';
 
     $state->{categories_text} = '';
     my $i = 1;
@@ -1341,7 +1351,7 @@ sub choosecategory {
 
     if (exists $state->{random_category}) {
       delete $state->{random_category};
-      my $category = $state->{category_options}->[rand @{$state->{category_options}}];
+      my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 1)];
       $self->send_message($self->{channel}, "$color{bold}Category: $category!$color{reset}");
       $state->{current_category} = $category;
       return 'next';
@@ -1349,9 +1359,9 @@ sub choosecategory {
 
 
     if (++$state->{counter} > $state->{max_count}) {
-      $state->{players}->[$state->{current_player}]->{missedinputs}++;
+      # $state->{players}->[$state->{current_player}]->{missedinputs}++;
       my $name = $state->{players}->[$state->{current_player}]->{name};
-      my $category = $state->{category_options}->[rand @{$state->{category_options}}];
+      my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 1)];
       $self->send_message($self->{channel}, "$color{bold}$name took too long to choose. Randomly choosing: $category!$color{reset}");
       $state->{current_category} = $category;
       return 'next';
@@ -1390,6 +1400,7 @@ sub getnewquestion {
       delete $player->{deceived};
       delete $player->{skip};
     }
+    $state->{current_choices_text} = "";
     return 'next';
   } else {
     return 'wait';
@@ -1484,61 +1495,61 @@ sub findtruth {
 
   return 'next' if not @notruth;
 
-  if ($state->{ticks} % $tock == 0) {
-    delete $state->{first_tock};
-    if ($state->{init}) {
-      delete $state->{init};
+  if ($state->{init}) {
+    delete $state->{init};
 
-      my @choices;
-      my @suggestions = @{$state->{current_question}->{suggestions}};
-      my @lies;
+    my @choices;
+    my @suggestions = @{$state->{current_question}->{suggestions}};
+    my @lies;
 
-      foreach my $player (@{$state->{players}}) {
-        if ($player->{lie}) {
-          if (not grep { $_ eq $player->{lie} } @lies) {
-            push @lies, uc $player->{lie};
-          }
+    foreach my $player (@{$state->{players}}) {
+      if ($player->{lie}) {
+        if (not grep { $_ eq $player->{lie} } @lies) {
+          push @lies, uc $player->{lie};
         }
       }
-
-      while (1) {
-        my $limit = @{$state->{players}} < 5 ? 5 : @{$state->{players}};
-        last if @choices >= $limit;
-
-        if (@lies) {
-          my $random = rand @lies;
-          push @choices, $lies[$random];
-          splice @lies, $random, 1;
-          next;
-        }
-
-        if (@suggestions) {
-          my $random = rand @suggestions;
-          my $suggestion = uc $suggestions[$random];
-          push @choices, $suggestion if not grep { $_ eq $suggestion } @choices;
-          splice @suggestions, $random, 1;
-          next;
-        }
-
-        last;
-      }
-
-      splice @choices, rand @choices, 0, uc $state->{current_question}->{answer};
-      $state->{correct_answer} = uc $state->{current_question}->{answer};
-
-      my $i = 0;
-      my $comma = '';
-      my $text = '';
-      foreach my $choice (@choices) {
-        ++$i;
-        $text .= "$comma$i) $choice";
-        $comma = '; ';
-      }
-
-      $state->{current_choices_text} = $text;
-      $state->{current_choices} = \@choices;
     }
 
+    while (1) {
+      my $limit = @{$state->{players}} < 5 ? 5 : @{$state->{players}};
+      last if @choices >= $limit;
+
+      if (@lies) {
+        my $random = rand @lies;
+        push @choices, $lies[$random];
+        splice @lies, $random, 1;
+        next;
+      }
+
+      if (@suggestions) {
+        my $random = rand @suggestions;
+        my $suggestion = uc $suggestions[$random];
+        push @choices, $suggestion if not grep { $_ eq $suggestion } @choices;
+        splice @suggestions, $random, 1;
+        next;
+      }
+
+      last;
+    }
+
+    splice @choices, rand @choices, 0, uc $state->{current_question}->{answer};
+    $state->{correct_answer} = uc $state->{current_question}->{answer};
+
+    my $i = 0;
+    my $comma = '';
+    my $text = '';
+    foreach my $choice (@choices) {
+      ++$i;
+      $text .= "$comma$i) $choice";
+      $comma = '; ';
+    }
+
+    $state->{current_choices_text} = $text;
+    $state->{current_choices} = \@choices;
+  }
+
+  if ($state->{ticks} % $tock == 0) {
+    delete $state->{first_tock};
     if (++$state->{counter} > $state->{max_count}) {
       my @missedinputs;
       foreach my $player (@{$state->{players}}) {
@@ -1627,8 +1638,16 @@ sub showlies {
       $player->{deceived} = $lie;
     }
 
-    return 'next' if $state->{current_lie_player} >= @{$state->{players}};
-    return 'wait';
+    if ($state->{current_lie_player} >= @{$state->{players}}) {
+      if (@liars) {
+        delete $state->{tick_drift};
+      } else {
+        $state->{tick_drift} = $tock - 1;
+      }
+      return 'next';
+    } else {
+      return 'wait';
+    }
   }
 
   return 'wait';
