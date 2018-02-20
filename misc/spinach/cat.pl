@@ -10,7 +10,7 @@ open my $handle, '<dedup_questions' or die $@;
 chomp(my @lines = <$handle>); close $handle;
 
 my @rules = (
-  { regex => qr/james bond/i, category => '007' },
+  { regex => qr/(?:james bond| 007)/i, category => 'JAMES BOND' },
   { regex => qr/^194\d /, category => "THE 1940'S" },
   { regex => qr/^195\d /, category => "THE 1950'S" },
   { regex => qr/^196\d /, category => "THE 1960'S" },
@@ -39,9 +39,12 @@ my @rules = (
   { regex => qr/science/i, category => "SCIENCE" },
   { regex => qr/technolog/i, category => "TECHNOLOGY" },
   { regex => qr/^games /i, category => "GAMES" },
+  { regex => qr/x[ -]?men/i, category => "COMICS" },
+  { regex => qr/beatles/i, category => "BEATLES" },
 );
 
 my @rename_rules = (
+  { old => qr/^007$/,  new => "JAMES BOND" },
   { old => qr/^191\d/, new => "THE 1910'S" },
   { old => qr/^192\d/, new => "THE 1920'S" },
   { old => qr/^193\d/, new => "THE 1930'S" },
@@ -92,13 +95,31 @@ my @rename_rules = (
   { old => qr/^SCIFI/, new => "SCI-FI" },
   { old => qr/^HITCHHIKER/, new => "HITCHHIKER'S GUIDE" },
   { old => qr/^SCIENCE FANTASY/, new => "SCI-FI" },
+  { old => qr/^ANATOMY$/, new => "ANATOMY & MEDICAL" },
+  { old => qr/^THE BODY$/, new => "ANATOMY & MEDICAL" },
+  { old => qr/^BEATLES FIRST WORDS$/, new => "BEATLES" },
+  { old => qr/^MUSIC LEGENDS$/, new => "MUSIC ARTISTS" },
+  { old => qr/^TOYS GAMES$/, new => "TOYS & GAMES" },
+  { old => qr/^PEANUTS COMICS$/, new => "COMICS" },
+  { old => qr/^COMPUTER GAMES$/, new => "VIDEO GAMES" },
+  { old => qr/^ABBR$/, new => "ABBREVIATIONS" },
+  { old => qr/^BABY NAMES BEG/, new => "BABY NAMES" },
+  { old => qr/^CURRENCY & FLAGS$/, new => "CURRENCIES & FLAGS" },
+  { old => qr/^CURRENCIES$/, new => "CURRENCIES & FLAGS" },
+  { old => qr/^FUN$/, new => "FUN & GAMES" }, 
+  { old => qr/^GAMES$/, new => "FUN & GAMES" }, 
+  { old => qr/^HOBBIES & LEISURE$/, new => "FUN & GAMES" },
+  { old => qr/^MISC GAMES$/, new => "FUN & GAMES" },
+  { old => qr/^SIMPSONS$/, new => "THE SIMPSONS" },
+  { old => qr/^SMURFS$/, new => "THE SMURFS" },
+  { old => qr/^MLB$/, new => "BASEBALL" },
+  { old => qr/ENTERTAINMENT/, new => "ENTERTAINMENT" },
+  { old => qr/CONFUSCIOUS SAY/, new => "CONFUCIUS SAY" },
 );
 
 print STDERR "Categorizing documents\n";
 
 for my $i (0 .. $#lines) {
-  print STDERR "$i\n";
-
   # Remove/fix stupid things
   $lines[$i] =~ s/\s*Category:\s*//g;
   $lines[$i] =~ s/(\w:)(\w)/$1 $2/g;
@@ -106,18 +127,23 @@ for my $i (0 .. $#lines) {
   $lines[$i] =~ s{&}{ & }g;
   $lines[$i] =~ s/\s+/ /g;
   $lines[$i] =~ s/^Useless Trivia: What word means/Definitions: What word means/i;
-  $lines[$i] =~ s/^useless triv \d+/Useless Trivia/;
+  $lines[$i] =~ s/^useless triv \d+/Useless Trivia/i;
+  $lines[$i] =~ s/^general\s*(?:knowledge)?\s*\p{PosixPunct}\s*//i;
+  $lines[$i] =~ s/^(?:\(|\[)(.*?)(?:\)|\])\s*/$1: /;
+  $lines[$i] =~ s/star\s?wars/Star Wars/ig;
 
   $lines[$i] =~ s/^sport\s*[:-]\s*(.*?)\s*[:-]/$1: /i;
 
   my @l = split /`/, $lines[$i];
 
   # If the question has an obvious category, use that
-  if ($l[0] =~ m/^(.{4,}?)\s*[:-]/) {
+  if ($l[0] =~ m/^(.{3,30}?)\s*[:-]/ or $l[0] =~ m/^(.{3,30}?)\s*\./) {
     my $cat = $1;
+    my $max_spaces = 5;
+    $max_spaces = 3 if $cat =~ s/\.$//;
     my $nspc = () = $cat =~ m/\s+/g;
-    if ($nspc < 3) {
-      if (length $cat >= 3 and $cat !~ m/(general|^A |_+)/i) {
+    if ($nspc <= $max_spaces) {
+      if ($cat !~ m/(general|^A |_+| u$| "c$)/i) {
         $cat =~ s/^\s+|\s+$//g;
         $cat = uc $cat;
         $cat =~ s/'//g;
@@ -189,16 +215,6 @@ print STDERR "-" x 80, "\n";
 print STDERR "Small categories: $small; total cats: ", (scalar keys %docs) - $small, " with $total questions.\n";
 print STDERR "-" x 80, "\n";
 
-foreach my $cat (sort keys %docs) {
-  print STDERR "  $cat: ", scalar @{$docs{$cat}}, "\n";
-}
-
-print STDERR "Uncategorized: ", scalar @uncat, "\n";
-
-foreach my $i (@uncat) {
-  print STDERR "uncategorized: $lines[$i]\n";
-}
-
 foreach my $cat (sort @approved) {
   print STDERR "Printing $cat ... ";
 
@@ -210,3 +226,15 @@ foreach my $cat (sort @approved) {
 
   print STDERR "$count questions.\n";
 }
+
+print STDERR "Uncategorized: ", scalar @uncat, "\n";
+
+foreach my $cat (sort keys %docs) {
+  print STDERR "  $cat: ", scalar @{$docs{$cat}}, "\n" if @{$docs{$cat}} < 10;
+}
+
+foreach my $i (sort { $lines[$a] cmp $lines[$b] } @uncat) {
+  print STDERR "uncategorized: $lines[$i]\n";
+}
+
+
