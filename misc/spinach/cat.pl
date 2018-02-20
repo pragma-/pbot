@@ -6,6 +6,8 @@ use warnings;
 my %docs;
 my @uncat;
 
+my $minimum_category_size = 8;
+
 open my $handle, '<dedup_questions' or die $@;
 chomp(my @lines = <$handle>); close $handle;
 
@@ -24,16 +26,16 @@ my @rules = (
   { regex => qr/What (?:one word|word links)/i, category => 'GUESS THE WORD' },
   { regex => qr/^(If [Yy]ou [Ww]ere [Bb]orn|Astrology)/i, category => 'Astrology' },
   { regex => qr/[Oo]lympics/, category => 'Olympics' },
-  { regex => qr/^How many/, category => 'HOW MANY' },
+  { regex => qr/^How many/i, category => 'HOW MANY' },
   { regex => qr/(?:^What is a group|Group Nouns)/, category => 'animal groups' },
   { regex => qr/(?:[Ww]hat is the fear|phobia is (?:a|the) fear|Phobias)/, category => 'Phobias' },
   { regex => qr/who won the oscar/i, category => 'Oscars' },
   { regex => qr/(?:area code|country code)/, category => 'Phone COUNTRY Codes' },
-  { regex => qr/17th century/i, category => "17TH CENTURY" },
-  { regex => qr/18th century/i, category => "18TH CENTURY" },
-  { regex => qr/19th century/i, category => "19TH CENTURY" },
+  { regex => qr/17th.century/i, category => "17TH CENTURY" },
+  { regex => qr/18th.century/i, category => "18TH CENTURY" },
+  { regex => qr/19th.century/i, category => "19TH CENTURY" },
   { regex => qr/shakespear/i, category => "SHAKESPEARE" },
-  { regex => qr/world cup/i, category => "WORLD CUP" },
+  { regex => qr/world.cup/i, category => "WORLD CUP" },
   { regex => qr/computer science/i, category => "COMPUTER SCIENCE" },
   { regex => qr/computer/i, category => "COMPUTERS" },
   { regex => qr/science/i, category => "SCIENCE" },
@@ -41,6 +43,12 @@ my @rules = (
   { regex => qr/^games /i, category => "GAMES" },
   { regex => qr/x[ -]?men/i, category => "COMICS" },
   { regex => qr/beatles/i, category => "BEATLES" },
+  { regex => qr/^chiefly british/i, category => "BRITISH SLANG" },
+  { regex => qr/^SLANG /i, category => "SLANG" },
+  { regex => qr/^US SLANG$/i, category => "SLANG" },
+  { regex => qr/chess/i, category => "CHESS" },
+  { regex => qr/sherlock holmes/i, category => "SHERLOCK HOLMES" },
+  { regex => qr/stephen king/i, category => "STEPHEN KING" },
 );
 
 my @rename_rules = (
@@ -83,6 +91,9 @@ my @rename_rules = (
   { old => qr/ANIMAL TRIVIA/, new => "ANIMAL KINGDOM" },
   { old => qr/^ANIA?MALS$/, new => "ANIMAL KINGDOM" },
   { old => qr/^ADS$/, new => "ADVERTISING" },
+  { old => qr/^AD JINGLES$/, new => "ADVERTISING" },
+  { old => qr/^AD SLOGANS$/, new => "ADVERTISING" },
+  { old => qr/SLOGAN/, new => "ADVERTISING" },
   { old => qr/^TELEVISION$/, new => "TV" },
   { old => qr/^QUICK QUICK$/, new => "QUICK! QUICK!" },
   { old => qr/^QUOTES$/, new => "QUOTATIONS" },
@@ -96,6 +107,8 @@ my @rename_rules = (
   { old => qr/^HITCHHIKER/, new => "HITCHHIKER'S GUIDE" },
   { old => qr/^SCIENCE FANTASY/, new => "SCI-FI" },
   { old => qr/^ANATOMY$/, new => "ANATOMY & MEDICAL" },
+  { old => qr/^SECRETIONS$/, new => "ANATOMY & MEDICAL" },
+  { old => qr/^PHYSIOLOGY$/, new => "ANATOMY & MEDICAL" },
   { old => qr/^THE BODY$/, new => "ANATOMY & MEDICAL" },
   { old => qr/^BEATLES FIRST WORDS$/, new => "BEATLES" },
   { old => qr/^MUSIC LEGENDS$/, new => "MUSIC ARTISTS" },
@@ -115,6 +128,52 @@ my @rename_rules = (
   { old => qr/^MLB$/, new => "BASEBALL" },
   { old => qr/ENTERTAINMENT/, new => "ENTERTAINMENT" },
   { old => qr/CONFUSCIOUS SAY/, new => "CONFUCIUS SAY" },
+  { old => qr/NOVELTY SONGS/, new => "NOVELTY SONGS" },
+  { old => qr/NAME THE MOVIE WITH THE SONG/, new => "NAME THE MOVIE FROM THE SONG" },
+  { old => qr/SCI FI AUTHORS/, new => "SCI FI" },
+  { old => qr/ON THIS DAY IN JANUARY/, new => "ON THIS DAY IN JANUARY" },
+  { old => qr/MYTHOLOGY/, new => "MYTHOLOGY" },
+  { old => qr/x-men/, new => "X-MEN" },
+);
+
+my @not_a_category = (
+  qr/CHIEFLY BRITISH/,
+  qr/^SLANG \w+/,
+);
+
+my %refilter_rules = (
+  "SPORTS" => [
+    { regex => qr/baseball/i, category => "BASEBALL" },
+    { regex => qr/world series/i, category => "BASEBALL" },
+    { regex => qr/super.?bowl/i, category => "FOOTBALL" },
+    { regex => qr/N\.?B\.?A\.?/i, category => "BASKETBALL" },
+    { regex => qr/N\.?F\.?L\.?/i, category => "FOOTBALL" },
+    { regex => qr/N\.?H\.?L\.?/i, category => "HOCKEY" },
+    { regex => qr/basketball/i, category => "BASKETBALL" },
+    { regex => qr/cricket/i, category => "CRICKET" },
+    { regex => qr/golf/i, category => "GOLF" },
+    { regex => qr/hockey/i, category => "HOCKEY" },
+    { regex => qr/association football/, category => "SOCCER" },
+    { regex => qr/soccer/, category => "SOCCER" },
+    { regex => qr/football/i, category => "FOOTBALL" },
+    { regex => qr/bowling/i, category => "BOWLING" },
+    { regex => qr/olympics/i, category => "OLYMPICS" },
+    { regex => qr/tennis/i, category => "TENNIS" },
+    { regex => qr/box(?:ing|er)/i, category => "BOXING" },
+    { regex => qr/swim/i, category => "SWIMMING" },
+    { regex => qr/wimbledon/i, category => "TENNIS" },
+  ],
+  "ART & LITERATURE" => [
+    { regex => qr/Lotr:/, category => "LORD OF THE RINGS" },
+    { regex => qr/shakespear/i, category => "SHAKESPEARE" },
+    { regex => qr/sherlock holmes/i, category => "SHERLOCK HOLMES" },
+    { regex => qr/stephen king/i, category => "STEPHEN KING" },
+  ],
+  "CARTOON TRIVIA" => [
+    { regex => qr/disney/i, category => "DISNEY" },
+    { regex => qr/x-men/i, category => "X-MEN" },
+    { regex => qr/dc comics/i, category => "DC COMICS" },
+  ],
 );
 
 print STDERR "Categorizing documents\n";
@@ -131,8 +190,8 @@ for my $i (0 .. $#lines) {
   $lines[$i] =~ s/^general\s*(?:knowledge)?\s*\p{PosixPunct}\s*//i;
   $lines[$i] =~ s/^(?:\(|\[)(.*?)(?:\)|\])\s*/$1: /;
   $lines[$i] =~ s/star\s?wars/Star Wars/ig;
-
   $lines[$i] =~ s/^sport\s*[:-]\s*(.*?)\s*[:-]/$1: /i;
+  $lines[$i] =~ s/^trivia\s*[:;-]\s*//;
 
   my @l = split /`/, $lines[$i];
 
@@ -144,33 +203,43 @@ for my $i (0 .. $#lines) {
     my $nspc = () = $cat =~ m/\s+/g;
     if ($nspc <= $max_spaces) {
       if ($cat !~ m/(general|^A |_+| u$| "c$)/i) {
-        $cat =~ s/^\s+|\s+$//g;
-        $cat = uc $cat;
-        $cat =~ s/'//g;
-        $cat =~ s/\.//g;
-        $cat =~ s/(?:\s+$|\R|^"|"$|^-|^\[|\]$)//g;
-        $cat =~ s/\s+/ /g;
-        $cat =~ s/(\d+)S/$1'S/g;
-
-        $cat =~ s/^SPORT(?!S)/SPORTS/;
-        $cat =~ s/ (?:AND|N|'N) / & /;
-        #$cat =~ s/\s*\/\s*/\//;
-
-        $cat =~ s/^GEOGRAPH.*/GEOGRAPHY/;
-        $cat = 'STAR TREK' if ($cat =~ m/^STAR TREK/);
-
-        $cat = 'GUESS THE WORD' if $l[0] =~ m/.*: '.*\.'/;
-
-        foreach my $rule (@rename_rules) {
-          if ($cat =~ m/$rule->{old}/) {
-            $cat = uc $rule->{new};
+        my $pass = 1;
+        foreach my $regex (@not_a_category) {
+          if ($cat =~ m/$regex/) {
+            $pass = 0;
             last;
           }
         }
 
-        print STDERR "Using obvious $cat for doc $i: $l[0] ($l[1])\n";
-        push @{$docs{$cat}}, $i;
-        next;
+        if ($pass) {
+          $cat =~ s/^\s+|\s+$//g;
+          $cat = uc $cat;
+          $cat =~ s/'//g;
+          $cat =~ s/\.//g;
+          $cat =~ s/(?:\s+$|\R|^"|"$|^-|^\[|\]$)//g;
+          $cat =~ s/\s+/ /g;
+          $cat =~ s/(\d+)S/$1'S/g;
+
+          $cat =~ s/^SPORT(?!S)/SPORTS/;
+          $cat =~ s/ (?:AND|N|'N) / & /;
+          #$cat =~ s/\s*\/\s*/\//;
+
+          $cat =~ s/^GEOGRAPH.*/GEOGRAPHY/;
+          $cat = 'STAR TREK' if ($cat =~ m/^STAR TREK/);
+
+          $cat = 'GUESS THE WORD' if $l[0] =~ m/.*: '.*\.'/;
+
+          foreach my $rule (@rename_rules) {
+            if ($cat =~ m/$rule->{old}/) {
+              $cat = uc $rule->{new};
+              last;
+            }
+          }
+
+          print STDERR "Using obvious $cat for doc $i: $l[0] ($l[1])\n";
+          push @{$docs{$cat}}, $i;
+          next;
+        }
       }
     }
   }
@@ -193,6 +262,20 @@ for my $i (0 .. $#lines) {
   push @uncat, $i;
 }
 
+foreach my $key (keys %refilter_rules) {
+  for (my $i = 0; $i < @{$docs{$key}}; $i++) {
+    my $doc = $docs{$key}->[$i];
+    my @l = split /`/, $lines[$doc];
+    foreach my $rule (@{$refilter_rules{$key}}) {
+      if ($l[0] =~ m/$rule->{regex}/) {
+        print STDERR "Refiltering doc $doc from $key to $rule->{category} $l[0] ($l[1])\n";
+        push @{$docs{$rule->{category}}}, $doc;
+        splice @{$docs{$key}}, $i--, 1;
+      }
+    }
+  }
+}
+
 print STDERR "Done phase 1\n";
 print STDERR "Generated ", scalar keys %docs, " categories.\n";
 
@@ -203,7 +286,7 @@ my @approved;
 foreach my $cat (sort { @{$docs{$b}} <=> @{$docs{$a}} } keys %docs) {
   print STDERR "  $cat: ", scalar @{$docs{$cat}}, "\n";
 
-  if (@{$docs{$cat}} < 10) {
+  if (@{$docs{$cat}} < $minimum_category_size) {
     $small++ 
   } else {
     $total += @{$docs{$cat}};
@@ -216,7 +299,7 @@ print STDERR "Small categories: $small; total cats: ", (scalar keys %docs) - $sm
 print STDERR "-" x 80, "\n";
 
 foreach my $cat (sort @approved) {
-  print STDERR "Printing $cat ... ";
+  print STDERR "$cat ... ";
 
   my $count = 0;
   foreach my $i (@{$docs{$cat}}) {
@@ -230,7 +313,7 @@ foreach my $cat (sort @approved) {
 print STDERR "Uncategorized: ", scalar @uncat, "\n";
 
 foreach my $cat (sort keys %docs) {
-  print STDERR "  $cat: ", scalar @{$docs{$cat}}, "\n" if @{$docs{$cat}} < 10;
+  print STDERR "  $cat: ", scalar @{$docs{$cat}}, "\n" if @{$docs{$cat}} < $minimum_category_size;
 }
 
 foreach my $i (sort { $lines[$a] cmp $lines[$b] } @uncat) {
