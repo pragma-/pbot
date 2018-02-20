@@ -3,23 +3,33 @@
 use strict;
 use warnings;
 
+use Lingua::Stem qw/stem/;
+
 my %docs;
 my @uncat;
 
 my $minimum_category_size = 6;
 
-open my $handle, '<dedup_questions' or die $@;
+open my $handle, '<dedup_questions' or die $!;
 chomp(my @lines = <$handle>); close $handle;
+
+my %stopwords;
+open $handle, '<stopwords' or die $!;
+foreach my $word (<$handle>) {
+  chomp $word;
+  $stopwords{$word} = 1;
+}
+close $handle;
 
 my @doc_rules = (
   { regex => qr/(?:james bond| 007)/i, category => 'JAMES BOND' },
-  { regex => qr/^194\d /, category => "THE 1940'S" },
-  { regex => qr/^195\d /, category => "THE 1950'S" },
-  { regex => qr/^196\d /, category => "THE 1960'S" },
-  { regex => qr/^197\d /, category => "THE 1970'S" },
-  { regex => qr/^198\d /, category => "THE 1980'S" },
-  { regex => qr/^199\d /, category => "THE 1990'S" },
-  { regex => qr/^200\d /, category => "THE 2000'S" },
+  { regex => qr/^(?:in (?:the year )?)?194\d /i, category => "THE 1940'S" },
+  { regex => qr/^(?:in (?:the year )?)?195\d /i, category => "THE 1950'S" },
+  { regex => qr/^(?:in (?:the year )?)?196\d /i, category => "THE 1960'S" },
+  { regex => qr/^(?:in (?:the year )?)?197\d /i, category => "THE 1970'S" },
+  { regex => qr/^(?:in (?:the year )?)?198\d /i, category => "THE 1980'S" },
+  { regex => qr/^(?:in (?:the year )?)?199\d /i, category => "THE 1990'S" },
+  { regex => qr/^(?:in (?:the year )?)?20\d\d /i, category => "THE 2000'S" },
   { regex => qr/(?:Name The Year|In what year)/, category => 'NAME THE YEAR' },
   { regex => qr/baby names/i, category => 'BABY NAMES' },
   { regex => qr/what word mean/i, category => 'Definitions' },
@@ -38,19 +48,27 @@ my @doc_rules = (
   { regex => qr/world.cup/i, category => "WORLD CUP" },
   { regex => qr/computer science/i, category => "COMPUTER SCIENCE" },
   { regex => qr/computer/i, category => "COMPUTERS" },
+  { regex => qr/science fict/i, category => "SCI-FI" },
   { regex => qr/science/i, category => "SCIENCE" },
   { regex => qr/technolog/i, category => "TECHNOLOGY" },
   { regex => qr/^games /i, category => "GAMES" },
-  { regex => qr/x[ -]?men/i, category => "COMICS" },
+  { regex => qr/x.?men/i, category => "X-MEN" },
   { regex => qr/beatles/i, category => "BEATLES" },
   { regex => qr/^chiefly british/i, category => "BRITISH SLANG" },
   { regex => qr/^SLANG /i, category => "SLANG" },
   { regex => qr/^US SLANG$/i, category => "SLANG" },
-  { regex => qr/chess/i, category => "CHESS" },
+  { regex => qr/\bchess\b/i, category => "CHESS" },
   { regex => qr/sherlock holmes/i, category => "SHERLOCK HOLMES" },
   { regex => qr/stephen king/i, category => "STEPHEN KING" },
   { regex => qr/wizard of oz/i, category => "WIZARD OF OZ" },
   { regex => qr/philosoph/i, category => "PHILOSOPHY" },
+  { regex => qr/.*: '.*\.'/, category => "GUESS THE WORD" },
+  { regex => qr/monty python/i, category => "MONTY PYTHON" },
+  { regex => qr/musical/i, category => "MUSICALS" },
+  { regex => qr/^the name/, category => "NAME THAT THING" },
+  { regex => qr/hit single/, category => "HIT SINGLES" },
+  { regex => qr/^a group of/, category => "A GROUP OF IS CALLED" },
+  { regex => qr/^music/, category => "MUSIC" },
 );
 
 my @rename_rules = (
@@ -144,7 +162,7 @@ my @rename_rules = (
   { old => qr/WHO RULED ROME/, new => "ROMAN RULERS" },
   { old => qr/^WHO DIRECTED/, new => "NAME THE DIRECTOR" },
   { old => qr/PHILOSOPHER/, new => "PHILOSOPHY" },
-  { old => qr/^SIMILI?ES/, new => "SIMILES" },
+  { old => qr/^SIMILI?ES?/, new => "SIMILES" },
   { old => qr/^SCIENCE /, new => "SCIENCE" },
   { old => qr/^ROMEO & JULIET/, new => "SHAKESPEARE" },
   { old => qr/^SAYINGS & SMILES$/, new => "SAYINGS & SIMILES" },
@@ -152,6 +170,20 @@ my @rename_rules = (
   { old => qr/^EPL$/, new => "SOCCER" },
   { old => qr/^NZ$/, new => "NEW ZEALAND" },
   { old => qr/^NZ /, new => "NEW ZEALAND" },
+  { old => qr/[NB]URSERY RHYME/, new => "FAIRYTALES & NURSERY RHYMES" }, 
+  { old => qr/NURESRY RHYME/, new => "FAIRYTALES & NURSERY RHYMES" }, 
+  { old => qr/^GEOGRAPH/, new => "GEOGRAPHY" },
+  { old => qr/TREKKIE/, new => "STAR TREK" },
+  { old => qr/^STAR TREK/, new => "STAR TREK" },
+  { old => qr/^SPORT(?!S)/, new => "SPORTS" },
+  { old => qr/WORDS CONTAINING/, new => "GUESS THE WORD" },
+  { old => qr/MONTY PYTHON/, new => "MONTY PYTHON" },
+  { old => qr/BARBIE/, new => "BARBIE DOLL" },
+  { old => qr/(?:AMERICAN|INTL) BEER/, new => "BEER" },
+);
+
+my @skip_rules = (
+  qr/true or false/i,
 );
 
 my @not_a_category = (
@@ -201,7 +233,7 @@ print STDERR "Categorizing documents\n";
 
 for my $i (0 .. $#lines) {
   # Remove/fix stupid things
-  $lines[$i] =~ s/\s*Category:\s*//g;
+  $lines[$i] =~ s/\s*category:\s*//gi;
   $lines[$i] =~ s/(\w:)(\w)/$1 $2/g;
   $lines[$i] =~ s{/}{ / }g;
   $lines[$i] =~ s{&}{ & }g;
@@ -216,6 +248,16 @@ for my $i (0 .. $#lines) {
   $lines[$i] =~ s/^triv\s*[:;-]\s*//i;
 
   my @l = split /`/, $lines[$i];
+
+  my $skip = 0;
+  foreach my $rule (@skip_rules) {
+    if ($l[0] =~ m/$rule/) {
+      print STDERR "Skipping doc $i (matches $rule): $l[0] ($l[1])\n";
+      $skip = 1;
+      last;
+    }
+  }
+  next if $skip;
 
   # If the question has an obvious category, use that
   if ($l[0] =~ m/^(.{3,30}?)\s*[:;-]/ or $l[0] =~ m/^(.{3,30}?)\s*\./) {
@@ -241,15 +283,7 @@ for my $i (0 .. $#lines) {
           $cat =~ s/(?:\s+$|\R|^"|"$|^-|^\[|\]$)//g;
           $cat =~ s/\s+/ /g;
           $cat =~ s/(\d+)S/$1'S/g;
-
-          $cat =~ s/^SPORT(?!S)/SPORTS/;
           $cat =~ s/ (?:AND|N|'N) / & /;
-          #$cat =~ s/\s*\/\s*/\//;
-
-          $cat =~ s/^GEOGRAPH.*/GEOGRAPHY/;
-          $cat = 'STAR TREK' if ($cat =~ m/^STAR TREK/);
-
-          $cat = 'GUESS THE WORD' if $l[0] =~ m/.*: '.*\.'/;
 
           foreach my $rule (@rename_rules) {
             if ($cat =~ m/$rule->{old}/) {
@@ -320,6 +354,68 @@ print STDERR "-" x 80, "\n";
 print STDERR "Small categories: $small; total cats: ", (scalar keys %docs) - $small, " with $total questions.\n";
 print STDERR "-" x 80, "\n";
 
+foreach my $cat (sort keys %docs) {
+  print STDERR "  $cat: ", scalar @{$docs{$cat}}, "\n" if @{$docs{$cat}} < $minimum_category_size;
+}
+
+print STDERR "Uncategorized: ", scalar @uncat, "\n";
+
+my @remaining_uncat;
+my $i = 0;
+$total = @uncat;
+foreach my $doc (sort { $lines[$a] cmp $lines[$b] } @uncat) {
+  print STDERR "$i / $total\n" if $i % 1000 == 0;
+  $i++;
+  my @l = split /`/, $lines[$doc];
+  my @doc_words = split / /, $l[0];
+  @doc_words = map { local $_ = $_; s/\p{PosixPunct}//g; lc $_ } @doc_words;
+  @doc_words = @{ stem grep { length $_ and not exists $stopwords{$_} } @doc_words};
+
+  #print STDERR "doc words for $doc: $l[0]: @doc_words\n";
+
+  my $categorized = 0;
+  foreach my $cat (sort { length $b <=> length $a } @approved) {
+    next if $cat =~ m/ANIMAL IN YOU/;
+    next if $cat =~ m/BOXING/;
+
+    my @cat_words = split / /, $cat;
+    @cat_words = map { local $_ = $_; s/\p{PosixPunct}//g; lc $_ } @cat_words;
+    @cat_words = @{ stem grep { length $_ and not exists $stopwords{$_} } @cat_words};
+
+    my %matches;
+    foreach my $cat_word (@cat_words) {
+      foreach my $doc_word (@doc_words) {
+        if ($cat_word eq $doc_word) {
+          $matches{$cat_word} = 1;
+          goto MATCH if keys %matches == @cat_words;
+        }
+      }
+    }
+
+    MATCH:
+    if (keys %matches == @cat_words) {
+      print STDERR "Adding doc $doc to $cat: $l[0] ($l[1])\n";
+      push @{$docs{$cat}}, $doc;
+      $categorized = 1;
+      last;
+    }
+  }
+
+  if (not $categorized) {
+    push @remaining_uncat, $doc;
+  }
+}
+
+$total = 0;
+
+foreach my $cat (@approved) {
+  $total += @{$docs{$cat}};
+}
+
+print STDERR "-" x 80, "\n";
+print STDERR "Categories: ", scalar @approved, " with $total questions.\n";
+print STDERR "-" x 80, "\n";
+
 foreach my $cat (sort @approved) {
   print STDERR "$cat ... ";
 
@@ -332,14 +428,10 @@ foreach my $cat (sort @approved) {
   print STDERR "$count questions.\n";
 }
 
-print STDERR "Uncategorized: ", scalar @uncat, "\n";
+print STDERR "-" x 80, "\n";
 
-foreach my $cat (sort keys %docs) {
-  print STDERR "  $cat: ", scalar @{$docs{$cat}}, "\n" if @{$docs{$cat}} < $minimum_category_size;
-}
+print STDERR "Remaining uncategorized: ", scalar @remaining_uncat, "\n";
 
-foreach my $i (sort { $lines[$a] cmp $lines[$b] } @uncat) {
+foreach my $i (sort { $lines[$a] cmp $lines[$b] } @remaining_uncat) {
   print STDERR "uncategorized: $lines[$i]\n";
 }
-
-
