@@ -109,7 +109,7 @@ sub unban_user {
   my ($target, $channel, $immediately) = split /\s+/, $arguments;
 
   if(not defined $target) {
-    return "/msg $nick Usage: unban <mask> [[channel] [true value to use unban queue]]";
+    return "/msg $nick Usage: unban <mask> [[channel] [false value to use unban queue]]";
   }
 
   $channel = exists $stuff->{as_admin} ? $stuff->{as_admin} : $from if not defined $channel;
