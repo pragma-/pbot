@@ -48,7 +48,7 @@ sub initialize {
 
 sub ban_user {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($target, $channel, $length) = split(/\s+/, $arguments, 3);
 
   $channel = '' if not defined $channel;
@@ -62,10 +62,10 @@ sub ban_user {
   if ($channel !~ m/^#/) {
     $length = "$channel $length";
     $length = undef if $length eq ' ';
-    $channel = $from;
+    $channel = exists $stuff->{as_admin} ? $stuff->{as_admin} : $from;
   }
 
-  $channel = $from if not defined $channel or not length $channel;
+  $channel = exists $stuff->{as_admin} ? $stuff->{as_admin} : $from if not defined $channel or not length $channel;
 
   if (not defined $target) {
     return "/msg $nick Usage: ban <mask> [channel [timeout (default: 24 hours)]]";
@@ -99,7 +99,7 @@ sub ban_user {
 
 sub unban_user {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
 
   if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
@@ -112,7 +112,7 @@ sub unban_user {
     return "/msg $nick Usage: unban <mask> [[channel] [true value to use unban queue]]";
   }
 
-  $channel = $from if not defined $channel;
+  $channel = exists $stuff->{as_admin} ? $stuff->{as_admin} : $from if not defined $channel;
   $immediately = 1 if not defined $immediately;
 
   return "/msg $nick Usage for /msg: unban <nick/mask> <channel> [true value to use unban queue]" if $channel !~ /^#/;
@@ -133,7 +133,7 @@ sub unban_user {
 
 sub mute_user {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($target, $channel, $length) = split(/\s+/, $arguments, 3);
 
   if (not defined $from) {
@@ -148,10 +148,10 @@ sub mute_user {
   if ($channel !~ m/^#/) {
     $length = "$channel $length";
     $length = undef if $length eq ' ';
-    $channel = $from;
+    $channel = exists $stuff->{as_admin} ? $stuff->{as_admin} : $from;
   }
 
-  $channel = $from if not defined $channel;
+  $channel = exists $stuff->{as_admin} ? $stuff->{as_admin} : $from if not defined $channel;
 
   if ($channel !~ m/^#/) {
     return "/msg $nick Please specify a channel.";
@@ -189,7 +189,7 @@ sub mute_user {
 
 sub unmute_user {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
 
   if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
@@ -202,7 +202,7 @@ sub unmute_user {
     return "/msg $nick Usage: unmute <mask> [channel]";
   }
 
-  $channel = $from if not defined $channel;
+  $channel = exists $stuff->{as_admin} ? $stuff->{as_admin} : $from if not defined $channel;
 
   return "/msg $nick Usage for /msg: unmute <mask> <channel>" if $channel !~ /^#/;
 
@@ -216,7 +216,7 @@ sub unmute_user {
 
 sub kick_user {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
 
   if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
@@ -236,7 +236,7 @@ sub kick_user {
     if ($arguments =~ s/^(#\S+)\s+(\S+)\s*//) {
       ($channel, $victim) = ($1, $2);
     } elsif ($arguments =~ s/^(\S+)\s*//) {
-      ($victim, $channel) = ($1, $from);
+      ($victim, $channel) = ($1, exists $stuff->{as_admin} ? $stuff->{as_admin} : $from);
     } else {
       return "/msg $nick Usage: kick [channel] <nick> [reason]";
     }
