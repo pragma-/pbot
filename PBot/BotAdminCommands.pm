@@ -41,7 +41,7 @@ sub initialize {
   
   $pbot->{commands}->register(sub { return $self->login(@_)        },       "login",         0);
   $pbot->{commands}->register(sub { return $self->logout(@_)       },       "logout",        0);
-  $pbot->{commands}->register(sub { return $self->in_channel(@_)   },       "in",            1);
+  $pbot->{commands}->register(sub { return $self->in_channel(@_)   },       "in",            0);
   $pbot->{commands}->register(sub { return $self->join_channel(@_) },       "join",          40);
   $pbot->{commands}->register(sub { return $self->part_channel(@_) },       "part",          40);
   $pbot->{commands}->register(sub { return $self->ack_die(@_)      },       "die",           90);
