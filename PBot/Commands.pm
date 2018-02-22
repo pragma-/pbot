@@ -98,7 +98,8 @@ sub interpreter {
     $self->{pbot}->{logger}->log(Dumper $stuff);
   }
 
-  my $admin = $self->{pbot}->{admins}->loggedin($stuff->{from}, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+  my $from = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $stuff->{from};
+  my $admin = $self->{pbot}->{admins}->loggedin($from, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
   my $level = defined $admin ? $admin->{level} : 0;
   my $keyword = lc $stuff->{keyword};
 

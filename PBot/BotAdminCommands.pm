@@ -41,7 +41,7 @@ sub initialize {
   
   $pbot->{commands}->register(sub { return $self->login(@_)        },       "login",         0);
   $pbot->{commands}->register(sub { return $self->logout(@_)       },       "logout",        0);
-  $pbot->{commands}->register(sub { return $self->as_admin(@_)     },       "as",            0);
+  $pbot->{commands}->register(sub { return $self->in_channel(@_)   },       "in",            1);
   $pbot->{commands}->register(sub { return $self->join_channel(@_) },       "join",          40);
   $pbot->{commands}->register(sub { return $self->part_channel(@_) },       "part",          40);
   $pbot->{commands}->register(sub { return $self->ack_die(@_)      },       "die",           90);
@@ -63,10 +63,10 @@ sub sl {
   return "";
 }
 
-sub as_admin {
+sub in_channel {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  my $usage = "Usage: as <channel> <command>";
+  my $usage = "Usage: in <channel> <command>";
 
   if (not $arguments) {
     return $usage;
@@ -75,7 +75,7 @@ sub as_admin {
   my ($channel, $command) = split / /, $arguments, 2;
   return $usage if not defined $channel or not defined $command;
 
-  $stuff->{as_admin} = $channel;
+  $stuff->{admin_channel_override} = $channel;
   $stuff->{command} = $command;
   return $self->{pbot}->{interpreter}->interpret($stuff);
 }
