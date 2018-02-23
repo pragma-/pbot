@@ -155,10 +155,12 @@ sub reload_cmd {
      return "Usage: replug <plugin>";
    }
 
-   if ($self->unload($arguments) and $self->load($arguments)) {
-     return "Reloaded $arguments plugin.";
+   if (not $self->unload($arguments)) {
+     return "Plugin $arguments not loaded."
+   } elsif (not $self->load($arguments)) {
+     return "Plugin $arguments failed to load.";
    } else {
-     return "Plugin $arguments failed to reload.";
+     return "Reloaded $arguments plugin.";
    }
 }
 
