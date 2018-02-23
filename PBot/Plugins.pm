@@ -36,6 +36,7 @@ sub initialize {
 
   $self->{pbot}->{commands}->register(sub { $self->load_cmd(@_)   },  "plug",     90);
   $self->{pbot}->{commands}->register(sub { $self->unload_cmd(@_) },  "unplug",   90);
+  $self->{pbot}->{commands}->register(sub { $self->reload_cmd(@_) },  "replug",   90);
   $self->{pbot}->{commands}->register(sub { $self->list_cmd(@_)   },  "pluglist",  0);
 
   $self->autoload(%conf);
@@ -144,6 +145,20 @@ sub unload_cmd {
      return "Unloaded $arguments plugin.";
    } else {
      return "Plugin $arguments not found.";
+   }
+}
+
+sub reload_cmd {
+   my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+   if (not length $arguments) {
+     return "Usage: replug <plugin>";
+   }
+
+   if ($self->unload($arguments) and $self->load($arguments)) {
+     return "Reloaded $arguments plugin.";
+   } else {
+     return "Plugin $arguments failed to reload.";
    }
 }
 
