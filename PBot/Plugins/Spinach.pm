@@ -20,7 +20,11 @@ use Lingua::EN::Numbers::Years qw/year2en/;
 use Lingua::Stem qw/stem/;
 use Lingua::EN::ABC qw/b2a/;
 
+use Time::Duration qw/concise duration/;
+
 use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
+$Data::Dumper::Useqq = 1;
 
 sub new {
   Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
@@ -326,6 +330,10 @@ sub spinach_cmd {
         return "$nick: Question $id: $key => $v";
       }
 
+      if ($key !~ m/^(?:question|answer|category)$/i) {
+        return "$nick: You may not edit that key.";
+      }
+
       $question->{$key} = $value;
 
       my $json = encode_json $self->{questions};
@@ -604,7 +612,6 @@ sub spinach_cmd {
           $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
           return "/msg $self->{channel} $nick has chosen $self->{state_data}->{current_category}!";
         }
-
       }
 
       if ($self->{current_state} =~ /getlies$/) {
@@ -848,16 +855,28 @@ sub run_one_state {
 
   if ($state_data->{newstate}) {
     $self->{pbot}->{logger}->log("Spinach: New state: $self->{current_state}\n" . Dumper $state_data);
+  } elsif ($self->{current_state} ne 'nogame') {
+    $self->{pbot}->{logger}->log("Spinach: $self->{current_state} - Tick $state_data->{ticks}\n" . Dumper $state_data);
   }
 
+  # run one state/tick
   $state_data = $self->{states}{$current_state}{sub}($state_data);
 
-  $state_data->{previous_result} = $state_data->{result};
+  if ($state_data->{tocked}) {
+    delete $state_data->{tocked};
+    delete $state_data->{first_tock};
+    $state_data->{ticks} = 0;
+  }
 
+  $self->{pbot}->{logger}->log("Spinach: result: $state_data->{previous_result} => $state_data->{result}\n") if $self->{current_state} ne 'nogame';
+
+  # transform to next state
+  $state_data->{previous_result} = $state_data->{result};
   $self->{previous_state} = $self->{current_state};
   $self->{current_state} = $self->{states}{$current_state}{trans}{$state_data->{result}};
   $self->{state_data} = $state_data;
 
+  # next tick
   $self->{state_data}->{ticks}++;
 }
 
@@ -1211,6 +1230,8 @@ sub normalize_text {
 
   $text =~ s/\$\s+(\d)/\$$1/g;
   $text =~ s/\s*%$//;
+  $text =~ s/(\d),(\d\d\d)/$1$2/g;
+  $text =~ s/(\D,)(\D)/$1 $2/g;
 
   my @words = split / /, $text;
   my @result;
@@ -1327,17 +1348,22 @@ sub choosecategory {
 
     my $no_infinite_loops = 0;
     while (1) {
+      last if ++$no_infinite_loops > 200;
       my $cat = $categories[rand @categories];
 
       my $count = keys %{$self->{categories}{$cat}};
       $self->{pbot}->{logger}->log("random cat: [$cat] $count questions\n");
+
+      if (not $count) {
+        $self->{pbot}->{logger}->log("no count for random cat!\n" . (Dumper $self->{categories}));
+        next;
+      }
 
       if (not grep { $_ eq $cat } @choices) {
         push @choices, $cat;
       }
 
       last if @choices == 7;
-      last if ++$no_infinite_loops > 200;
     }
 
     push @choices, 'RANDOM';
@@ -1346,8 +1372,7 @@ sub choosecategory {
     my $i = 1;
     my $comma = '';
     foreach my $choice (@choices) {
-      my $count = keys %{$self->{categories}{$choice}};
-      $state->{categories_text} .= "$comma$i) " . $choice;
+      $state->{categories_text} .= "$comma$color{green}$i)$color{reset}$color{bold} " . $choice;
       $i++;
       $comma = "; ";
     }
@@ -1368,7 +1393,7 @@ sub choosecategory {
   }
 
   if ($state->{ticks} % $tock == 0) {
-    delete $state->{first_tock};
+    $state->{tocked} = 1;
 
     if (exists $state->{random_category}) {
       delete $state->{random_category};
@@ -1377,7 +1402,6 @@ sub choosecategory {
       $state->{current_category} = $category;
       return 'next';
     }
-
 
     if (++$state->{counter} > $state->{max_count}) {
       # $state->{players}->[$state->{current_player}]->{missedinputs}++;
@@ -1390,7 +1414,12 @@ sub choosecategory {
 
     my $name = $state->{players}->[$state->{current_player}]->{name};
     my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
-    $self->send_message($self->{channel}, "$name: $red$color{bold}$state->{counter}/$state->{max_count} Choose a category via `/msg me c <number>`:$color{reset}");
+
+    my $remaining = 15 * $state->{max_count};
+    $remaining -= 15 * ($state->{counter} - 1);
+    $remaining = "(" . (concise duration $remaining) . " remaining)";
+
+    $self->send_message($self->{channel}, "$name: $red$color{bold}$remaining Choose a category via `/msg me c <number>`:$color{reset}");
     $self->send_message($self->{channel}, "$color{bold}$state->{categories_text}$color{reset}");
     return 'wait';
   }
@@ -1407,6 +1436,11 @@ sub getnewquestion {
 
   if ($state->{ticks} % 3 == 0) {
     my @questions = keys %{$self->{categories}{$state->{current_category}}};
+
+    if (not @questions) {
+      $self->{pbot}->{logger}->log("Zero questions for [$state->{current_category}]!\n");
+    }
+
     $self->{pbot}->{logger}->log("current cat: $state->{current_category}: " . (scalar @questions) . " total questions\n");
     $state->{current_question} = $self->{categories}{$state->{current_category}}{$questions[rand @questions]};
 
@@ -1472,7 +1506,7 @@ sub getlies {
   }
 
   if ($state->{ticks} % $tock == 0) {
-    delete $state->{first_tock};
+    $state->{tocked} = 1;
 
     if (++$state->{counter} > $state->{max_count}) {
       my @missedinputs;
@@ -1492,7 +1526,12 @@ sub getlies {
 
     my $players = join ', ', @nolies;
     my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
-    $self->send_message($self->{channel}, "$players: $red$color{bold}$state->{counter}/$state->{max_count} Submit your lie now via `/msg me lie <your lie>`!$color{reset}");
+
+    my $remaining = 15 * $state->{max_count};
+    $remaining -= 15 * ($state->{counter} - 1);
+    $remaining = "(" . (concise duration $remaining) . " remaining)";
+
+    $self->send_message($self->{channel}, "$players: $red$color{bold}$remaining Submit your lie now via `/msg me lie <your lie>`!$color{reset}");
   }
 
   return 'wait';
@@ -1562,7 +1601,7 @@ sub findtruth {
     my $text = '';
     foreach my $choice (@choices) {
       ++$i;
-      $text .= "$comma$i) $choice";
+      $text .= "$comma$color{green}$i) $color{reset}$color{bold}$choice";
       $comma = '; ';
     }
 
@@ -1571,7 +1610,7 @@ sub findtruth {
   }
 
   if ($state->{ticks} % $tock == 0) {
-    delete $state->{first_tock};
+    $state->{tocked} = 1;
     if (++$state->{counter} > $state->{max_count}) {
       my @missedinputs;
       foreach my $player (@{$state->{players}}) {
@@ -1591,7 +1630,12 @@ sub findtruth {
 
     my $players = join ', ', @notruth;
     my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
-    $self->send_message($self->{channel}, "$players: $red$color{bold}$state->{counter}/$state->{max_count} Find the truth now via `/msg me c <number>`!$color{reset}");
+
+    my $remaining = 15 * $state->{max_count};
+    $remaining -= 15 * ($state->{counter} - 1);
+    $remaining = "(" . (concise duration $remaining) . " remaining)";
+
+    $self->send_message($self->{channel}, "$players: $red$color{bold}$remaining Find the truth now via `/msg me c <number>`!$color{reset}");
     $self->send_message($self->{channel}, "$color{bold}$state->{current_choices_text}$color{reset}");
   }
 
@@ -1612,7 +1656,7 @@ sub showlies {
   }
 
   if ($state->{ticks} % $tock == 0) {
-    delete $state->{first_tock};
+    $state->{tocked} = 1;
     while ($state->{current_lie_player} < @{$state->{players}}) {
       $player = $state->{players}->[$state->{current_lie_player}];
       $state->{current_lie_player}++;
@@ -1750,25 +1794,55 @@ sub showfinalscore {
   my ($self, $state) = @_;
 
   if ($state->{newstate}) {
+    my $mentions = "";
+    my $text = "";
+    my $comma = "";
+    my $i = @{$state->{players}};
     $state->{finalscores} = [];
-    foreach my $player (sort { $b->{score} <=> $a->{score} } @{$state->{players}}) {
-      push @{$state->{finalscores}}, "$player->{name}: " . $self->commify($player->{score});
+    foreach my $player (sort { $a->{score} <=> $b->{score} } @{$state->{players}}) {
+      if ($i >= 4) {
+        $mentions = "$player->{name}: " . $self->commify($player->{score}) . "$comma$mentions"; 
+        $comma = "; ";
+        if ($i == 4) {
+          $mentions = "Honorable mentions: $mentions";
+        }
+        $i--;
+        next;
+      } elsif ($i == 3) {
+        $text = sprintf("%15s%-13s%7s", "Third place: ", $player->{name}, $self->commify($player->{score}));
+      } elsif ($i == 2) {
+        $text = sprintf("%15s%-13s%7s", "Second place: ", $player->{name}, $self->commify($player->{score}));
+      } elsif ($i == 1) {
+        $text = sprintf("%15s%-13s%7s", "WINNER: ", $player->{name}, $self->commify($player->{score}));
+      }
+
+      push @{$state->{finalscores}}, $text;
+      $i--;
     }
+    push @{$state->{finalscores}}, $mentions if length $mentions;
   }
 
-  if ($state->{ticks} % 3 == 0) {
+  my $tocks;
+  if ($state->{first_tock}) {
+    $tocks = 2;
+  } else {
+    $tocks = 5;
+  }
+
+  if ($state->{ticks} % $tocks == 0) {
+    $state->{tocked} = 1;
+
     if (not @{$state->{finalscores}}) {
-      $self->send_message($self->{channel}, "$color{bold}$color{green}Scores: $color{reset}$color{bold}none$color{reset}");
+      $self->send_message($self->{channel}, "$color{bold}$color{green}Final scores: $color{reset}$color{bold}none$color{reset}");
       return 'next';
     }
 
     if ($state->{first_tock}) {
-      delete $state->{first_tock};
-      $self->send_message($self->{channel}, "$color{bold}$color{green}Final Scores:$color{reset}");
+      $self->send_message($self->{channel}, "$color{bold}$color{green}Final scores:$color{reset}");
       return 'wait';
     }
 
-    my $text = pop @{$state->{finalscores}};
+    my $text = shift @{$state->{finalscores}};
     $self->send_message($self->{channel}, "$color{bold}$text$color{reset}");
 
     if (not @{$state->{finalscores}}) {
@@ -1820,7 +1894,7 @@ sub getplayers {
   }
 
   if ($state->{ticks} % $tock == 0) {
-    delete $state->{first_tock};
+    $state->{tocked} = 1;
 
     if (++$state->{counter} > 4) {
       $self->send_message($self->{channel}, "$color{bold}Not all players were ready in time. The game has been stopped.$color{reset}");
