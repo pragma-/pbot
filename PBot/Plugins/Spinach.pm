@@ -206,7 +206,7 @@ sub spinach_cmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   $arguments =~ s/^\s+|\s+$//g;
 
-  my $usage = "Usage: spinach start|stop|abort|join|exit|ready|unready|kick|choose|lie|skip|score|show; for more information about a command: spinach help <command>";
+  my $usage = "Usage: spinach join|exit|ready|unready|choose|lie|reroll|skip|score|show|kick|abort; for more information about a command: spinach help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
@@ -219,10 +219,6 @@ sub spinach_cmd {
       given ($arguments) {
         when ('help') {
           return "Seriously?";
-        }
-
-        when ('start') {
-          return "Help is coming soon.";
         }
 
         when ('join') {
@@ -245,8 +241,8 @@ sub spinach_cmd {
           return "Help is coming soon.";
         }
 
-        when ('stop') {
-          return "Help is coming soon.";
+        when ('reroll') {
+          return "Use `reroll` to get a different question from the same category.";
         }
 
         when ('kick') {
@@ -357,17 +353,6 @@ sub spinach_cmd {
       }
 
       $self->load_questions;
-    }
-
-    when ('start') {
-      if ($self->{current_state} eq 'nogame') {
-        $self->{current_state} = 'getplayers';
-        $self->{previous_state} = 'nogame';
-        $self->{state_data} = { players => [], counter => 0 };
-        return "/msg $self->{channel} Starting Spinach.";
-      } else {
-        return "Spinach is already started.";
-      }
     }
 
     when ('leaderboard') {
@@ -497,15 +482,6 @@ sub spinach_cmd {
       return $text;
     }
 
-    when ('stop') {
-      if ($self->{current_state} ne 'getplayers') {
-        return "This command can only be used during the 'Waiting for players' stage. To stop a game in progress, use the `abort` command.";
-      }
-
-      $self->{current_state} = 'nogame';
-      return "/msg $self->{channel} $nick: The game has been stopped.";
-    }
-
     when ('kick') {
       if (not $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host")) {
         return "$nick: Sorry, only admins may kick people from the game.";
@@ -543,6 +519,44 @@ sub spinach_cmd {
       return $self->validate_lie($self->normalize_text($truth), $self->normalize_text($lie));
     }
 
+    when ('reroll') {
+      if ($self->{current_state} =~ /getlies$/) {
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+
+        my $player;
+        my $rerolled = 0;
+        foreach my $i (@{$self->{state_data}->{players}}) {
+          if ($i->{id} == $id) {
+            $i->{reroll} = 1;
+            $rerolled++;
+            $player = $i;
+          } elsif ($i->{reroll}) {
+            $rerolled++;
+          }
+        }
+
+        if (not $player) {
+          return "$nick: You are not playing in this game. Use `j` to start playing now!";
+        }
+
+        my $needed = int (@{$self->{state_data}->{players}} / 2) + 1;
+        $needed -= $rerolled;
+
+        my $votes_needed;
+        if ($needed == 1) {
+          $votes_needed = "$needed more vote to reroll!";
+        } elsif ($needed > 1) {
+          $votes_needed = "$needed more votes to reroll!";
+        } else {
+          $votes_needed = "Rerolling...";
+        }
+
+        return "/msg $self->{channel} $color{red}$nick has voted to reroll for another question from the same category! $color{reset}$votes_needed";
+      } else {
+        return "$nick: This command can be used only during the \"submit lies\" stage.";
+      }
+    }
+
     when ('skip') {
       if ($self->{current_state} =~ /getlies$/) {
         my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
@@ -575,7 +589,7 @@ sub spinach_cmd {
           $votes_needed = "Skipping...";
         }
 
-        return "/msg $self->{channel} $color{red}$nick has voted to skip this question! $color{reset}$votes_needed";
+        return "/msg $self->{channel} $color{red}$nick has voted to skip this category and let the next person pick a new category! $color{reset}$votes_needed";
       } else {
         return "$nick: This command can be used only during the \"submit lies\" stage.";
       }
@@ -745,7 +759,7 @@ sub player_left {
   for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
     if ($self->{state_data}->{players}->[$i]->{id} == $id) {
       splice @{$self->{state_data}->{players}}, $i--, 1;
-      $self->send_message($self->{channel}, "$color{bold}$nick has left the game!$color{reset}");
+      $self->send_message($self->{channel}, "$nick has left the game!");
       $removed = 1;
     }
   }
@@ -826,16 +840,16 @@ sub run_one_state {
     }
 
     if (not @{$self->{state_data}->{players}}) {
-      $self->send_message($self->{channel}, "$color{bold}All players have left the game!$color{reset}");
+      $self->send_message($self->{channel}, "All players have left the game!");
       $self->{current_state} = 'nogame';
     }
   }
 
-  my $current_state = $self->{current_state};
   my $state_data = $self->{state_data};
 
-  if (not defined $current_state) {
+  if (not defined $self->{current_state}) {
     $self->{pbot}->{logger}->log("Spinach state broke.\n");
+    $self->{current_state} = 'nogame';
     return;
   }
 
@@ -860,7 +874,7 @@ sub run_one_state {
   }
 
   # run one state/tick
-  $state_data = $self->{states}{$current_state}{sub}($state_data);
+  $state_data = $self->{states}{$self->{current_state}}{sub}($state_data);
 
   if ($state_data->{tocked}) {
     delete $state_data->{tocked};
@@ -873,7 +887,7 @@ sub run_one_state {
   # transform to next state
   $state_data->{previous_result} = $state_data->{result};
   $self->{previous_state} = $self->{current_state};
-  $self->{current_state} = $self->{states}{$current_state}{trans}{$state_data->{result}};
+  $self->{current_state} = $self->{states}{$self->{current_state}}{trans}{$state_data->{result}};
   $self->{state_data} = $state_data;
 
   # next tick
@@ -914,6 +928,7 @@ sub create_states {
   $self->{states}{'r1q1showquestion'}{trans}{wait} = 'r1q1showquestion';
   $self->{states}{'r1q1showquestion'}{trans}{next} = 'r1q1getlies';
   $self->{states}{'r1q1getlies'}{sub} = sub { $self->r1q1getlies(@_) };
+  $self->{states}{'r1q1getlies'}{trans}{reroll} = 'r1q1showquestion';
   $self->{states}{'r1q1getlies'}{trans}{skip} = 'round1q1';
   $self->{states}{'r1q1getlies'}{trans}{wait} = 'r1q1getlies';
   $self->{states}{'r1q1getlies'}{trans}{next} = 'r1q1findtruth';
@@ -943,6 +958,7 @@ sub create_states {
   $self->{states}{'r1q2showquestion'}{trans}{wait} = 'r1q2showquestion';
   $self->{states}{'r1q2showquestion'}{trans}{next} = 'r1q2getlies';
   $self->{states}{'r1q2getlies'}{sub} = sub { $self->r1q2getlies(@_) };
+  $self->{states}{'r1q2getlies'}{trans}{reroll} = 'r1q2showquestion';
   $self->{states}{'r1q2getlies'}{trans}{skip} = 'round1q2';
   $self->{states}{'r1q2getlies'}{trans}{wait} = 'r1q2getlies';
   $self->{states}{'r1q2getlies'}{trans}{next} = 'r1q2findtruth';
@@ -972,6 +988,7 @@ sub create_states {
   $self->{states}{'r1q3showquestion'}{trans}{wait} = 'r1q3showquestion';
   $self->{states}{'r1q3showquestion'}{trans}{next} = 'r1q3getlies';
   $self->{states}{'r1q3getlies'}{sub} = sub { $self->r1q3getlies(@_) };
+  $self->{states}{'r1q3getlies'}{trans}{reroll} = 'r1q3showquestion';
   $self->{states}{'r1q3getlies'}{trans}{skip} = 'round1q3';
   $self->{states}{'r1q3getlies'}{trans}{wait} = 'r1q3getlies';
   $self->{states}{'r1q3getlies'}{trans}{next} = 'r1q3findtruth';
@@ -1005,6 +1022,7 @@ sub create_states {
   $self->{states}{'r2q1showquestion'}{trans}{wait} = 'r2q1showquestion';
   $self->{states}{'r2q1showquestion'}{trans}{next} = 'r2q1getlies';
   $self->{states}{'r2q1getlies'}{sub} = sub { $self->r2q1getlies(@_) };
+  $self->{states}{'r2q1getlies'}{trans}{reroll} = 'r2q1showquestion';
   $self->{states}{'r2q1getlies'}{trans}{skip} = 'round2q1';
   $self->{states}{'r2q1getlies'}{trans}{wait} = 'r2q1getlies';
   $self->{states}{'r2q1getlies'}{trans}{next} = 'r2q1findtruth';
@@ -1034,6 +1052,7 @@ sub create_states {
   $self->{states}{'r2q2showquestion'}{trans}{wait} = 'r2q2showquestion';
   $self->{states}{'r2q2showquestion'}{trans}{next} = 'r2q2getlies';
   $self->{states}{'r2q2getlies'}{sub} = sub { $self->r2q2getlies(@_) };
+  $self->{states}{'r2q2getlies'}{trans}{reroll} = 'r2q2showquestion';
   $self->{states}{'r2q2getlies'}{trans}{skip} = 'round2q2';
   $self->{states}{'r2q2getlies'}{trans}{wait} = 'r2q2getlies';
   $self->{states}{'r2q2getlies'}{trans}{next} = 'r2q2findtruth';
@@ -1063,6 +1082,7 @@ sub create_states {
   $self->{states}{'r2q3showquestion'}{trans}{wait} = 'r2q3showquestion';
   $self->{states}{'r2q3showquestion'}{trans}{next} = 'r2q3getlies';
   $self->{states}{'r2q3getlies'}{sub} = sub { $self->r2q3getlies(@_) };
+  $self->{states}{'r2q3getlies'}{trans}{reroll} = 'r2q3showquestion';
   $self->{states}{'r2q3getlies'}{trans}{skip} = 'round2q3';
   $self->{states}{'r2q3getlies'}{trans}{wait} = 'r2q3getlies';
   $self->{states}{'r2q3getlies'}{trans}{next} = 'r2q3findtruth';
@@ -1096,6 +1116,7 @@ sub create_states {
   $self->{states}{'r3q1showquestion'}{trans}{wait} = 'r3q1showquestion';
   $self->{states}{'r3q1showquestion'}{trans}{next} = 'r3q1getlies';
   $self->{states}{'r3q1getlies'}{sub} = sub { $self->r3q1getlies(@_) };
+  $self->{states}{'r3q1getlies'}{trans}{reroll} = 'r3q1showquestion';
   $self->{states}{'r3q1getlies'}{trans}{skip} = 'round3q1';
   $self->{states}{'r3q1getlies'}{trans}{wait} = 'r3q1getlies';
   $self->{states}{'r3q1getlies'}{trans}{next} = 'r3q1findtruth';
@@ -1125,6 +1146,7 @@ sub create_states {
   $self->{states}{'r3q2showquestion'}{trans}{wait} = 'r3q2showquestion';
   $self->{states}{'r3q2showquestion'}{trans}{next} = 'r3q2getlies';
   $self->{states}{'r3q2getlies'}{sub} = sub { $self->r3q2getlies(@_) };
+  $self->{states}{'r3q2getlies'}{trans}{reroll} = 'r3q2showquestion';
   $self->{states}{'r3q2getlies'}{trans}{skip} = 'round3q2';
   $self->{states}{'r3q2getlies'}{trans}{wait} = 'r3q2getlies';
   $self->{states}{'r3q2getlies'}{trans}{next} = 'r3q2findtruth';
@@ -1154,6 +1176,7 @@ sub create_states {
   $self->{states}{'r3q3showquestion'}{trans}{wait} = 'r3q3showquestion';
   $self->{states}{'r3q3showquestion'}{trans}{next} = 'r3q3getlies';
   $self->{states}{'r3q3getlies'}{sub} = sub { $self->r3q3getlies(@_) };
+  $self->{states}{'r3q3getlies'}{trans}{reroll} = 'r3q3showquestion';
   $self->{states}{'r3q3getlies'}{trans}{skip} = 'round3q3';
   $self->{states}{'r3q3getlies'}{trans}{wait} = 'r3q3getlies';
   $self->{states}{'r3q3getlies'}{trans}{next} = 'r3q3findtruth';
@@ -1187,6 +1210,7 @@ sub create_states {
   $self->{states}{'r4q1showquestion'}{trans}{wait} = 'r4q1showquestion';
   $self->{states}{'r4q1showquestion'}{trans}{next} = 'r4q1getlies';
   $self->{states}{'r4q1getlies'}{sub} = sub { $self->r4q1getlies(@_) };
+  $self->{states}{'r4q1getlies'}{trans}{reroll} = 'r4q1showquestion';
   $self->{states}{'r4q1getlies'}{trans}{skip} = 'round4q1';
   $self->{states}{'r4q1getlies'}{trans}{wait} = 'r4q1getlies';
   $self->{states}{'r4q1getlies'}{trans}{next} = 'r4q1findtruth';
@@ -1372,7 +1396,7 @@ sub choosecategory {
     my $i = 1;
     my $comma = '';
     foreach my $choice (@choices) {
-      $state->{categories_text} .= "$comma$color{green}$i)$color{reset}$color{bold} " . $choice;
+      $state->{categories_text} .= "$comma$color{green}$i)$color{reset} " . $choice;
       $i++;
       $comma = "; ";
     }
@@ -1398,7 +1422,7 @@ sub choosecategory {
     if (exists $state->{random_category}) {
       delete $state->{random_category};
       my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 1)];
-      $self->send_message($self->{channel}, "$color{bold}Category: $category!$color{reset}");
+      $self->send_message($self->{channel}, "Category: $category!");
       $state->{current_category} = $category;
       return 'next';
     }
@@ -1407,7 +1431,7 @@ sub choosecategory {
       # $state->{players}->[$state->{current_player}]->{missedinputs}++;
       my $name = $state->{players}->[$state->{current_player}]->{name};
       my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 1)];
-      $self->send_message($self->{channel}, "$color{bold}$name took too long to choose. Randomly choosing: $category!$color{reset}");
+      $self->send_message($self->{channel}, "$name took too long to choose. Randomly choosing: $category!");
       $state->{current_category} = $category;
       return 'next';
     }
@@ -1419,8 +1443,8 @@ sub choosecategory {
     $remaining -= 15 * ($state->{counter} - 1);
     $remaining = "(" . (concise duration $remaining) . " remaining)";
 
-    $self->send_message($self->{channel}, "$name: $red$color{bold}$remaining Choose a category via `/msg me c <number>`:$color{reset}");
-    $self->send_message($self->{channel}, "$color{bold}$state->{categories_text}$color{reset}");
+    $self->send_message($self->{channel}, "$name: $red$remaining Choose a category via `/msg me c <number>`:$color{reset}");
+    $self->send_message($self->{channel}, "$state->{categories_text}");
     return 'wait';
   }
 
@@ -1437,17 +1461,34 @@ sub getnewquestion {
   if ($state->{ticks} % 3 == 0) {
     my @questions = keys %{$self->{categories}{$state->{current_category}}};
 
-    if (not @questions) {
-      $self->{pbot}->{logger}->log("Zero questions for [$state->{current_category}]!\n");
+    if (exists $state->{seen_questions}->{$state->{current_category}}) {
+      my @seen = keys %{$state->{seen_questions}->{$state->{current_category}}};
+      my %seen = map { $_ => 1 } @seen;
+      @questions = grep { !defined $seen{$_} } @questions;
     }
 
-    $self->{pbot}->{logger}->log("current cat: $state->{current_category}: " . (scalar @questions) . " total questions\n");
-    $state->{current_question} = $self->{categories}{$state->{current_category}}{$questions[rand @questions]};
+    if (not @questions) {
+      $self->{pbot}->{logger}->log("Zero questions for [$state->{current_category}]!\n");
+      $self->send_message($self->{channel}, "Seen all questions in category $state->{current_category}! Shuffling...");
+      delete $state->{seen_questions}->{$state->{current_category}};
+      @questions = keys %{$self->{categories}{$state->{current_category}}};
+    }
 
+    $self->{pbot}->{logger}->log("current cat: $state->{current_category}: " . (scalar @questions) . " total questions remaining\n");
+
+    if ($state->{reroll_question}) {
+      delete $state->{reroll_question};
+      my $count = @questions;
+      $self->send_message($self->{channel}, "Rerolling new question from $state->{current_category}: " . $self->commify($count) . " question" . ($count == 1 ? '' : 's') . " remaining.\n");
+    }
+
+    $state->{current_question} = $self->{categories}{$state->{current_category}}{$questions[rand @questions]};
     $state->{current_question}->{answer} = $self->normalize_text($state->{current_question}->{answer});
 
     my @alts = map { $self->normalize_text($_) } @{$state->{current_question}->{alternativeSpellings}};
     $state->{current_question}->{alternativeSpellings} = \@alts;
+
+    $state->{seen_questions}->{$state->{current_category}}->{$state->{current_question}->{id}} = 1;
 
     foreach my $player (@{$state->{players}}) {
       delete $player->{lie};
@@ -1455,6 +1496,7 @@ sub getnewquestion {
       delete $player->{truth};
       delete $player->{deceived};
       delete $player->{skip};
+      delete $player->{reroll};
     }
     $state->{current_choices_text} = "";
     return 'next';
@@ -1467,9 +1509,9 @@ sub showquestion {
   my ($self, $state) = @_;
 
   if (exists $state->{current_question}) {
-    $self->send_message($self->{channel}, "$color{bold}$color{green}Current question:$color{reset}$color{bold} " . $self->commify($state->{current_question}->{id}) . ") $state->{current_question}->{question}$color{reset}");
+    $self->send_message($self->{channel}, "$color{green}Current question:$color{reset} " . $self->commify($state->{current_question}->{id}) . ") $state->{current_question}->{question}");
   } else {
-    $self->send_message($self->{channel}, "$color{bold}There is no current question.$color{reset}");
+    $self->send_message($self->{channel}, "There is no current question.");
   }
 }
 
@@ -1491,6 +1533,22 @@ sub getlies {
   }
 
   return 'next' if not @nolies;
+
+  my @rerolls;
+  foreach my $player (@{$state->{players}}) {
+    if ($player->{reroll}) {
+      push @rerolls, $player->{name};
+    }
+  }
+
+  if (@rerolls) {
+    my $needed = int (@{$state->{players}} / 2) + 1;
+    $needed -= @rerolls;
+    if ($needed <= 0) {
+      $state->{reroll_question} = 1;
+      return 'reroll'; 
+    }
+  }
 
   my @skips;
   foreach my $player (@{$state->{players}}) {
@@ -1519,7 +1577,7 @@ sub getlies {
 
       if (@missedinputs) {
         my $missed = join ', ', @missedinputs;
-        $self->send_message($self->{channel}, "$color{bold}$missed failed to submit a lie in time!$color{reset}");
+        $self->send_message($self->{channel}, "$missed failed to submit a lie in time!");
       }
       return 'next';
     }
@@ -1531,7 +1589,7 @@ sub getlies {
     $remaining -= 15 * ($state->{counter} - 1);
     $remaining = "(" . (concise duration $remaining) . " remaining)";
 
-    $self->send_message($self->{channel}, "$players: $red$color{bold}$remaining Submit your lie now via `/msg me lie <your lie>`!$color{reset}");
+    $self->send_message($self->{channel}, "$players: $red$remaining Submit your lie now via `/msg me lie <your lie>`!");
   }
 
   return 'wait';
@@ -1601,7 +1659,7 @@ sub findtruth {
     my $text = '';
     foreach my $choice (@choices) {
       ++$i;
-      $text .= "$comma$color{green}$i) $color{reset}$color{bold}$choice";
+      $text .= "$comma$color{green}$i) $color{reset}$choice";
       $comma = '; ';
     }
 
@@ -1623,7 +1681,7 @@ sub findtruth {
 
       if (@missedinputs) {
         my $missed = join ', ', @missedinputs;
-        $self->send_message($self->{channel}, "$color{bold}$missed failed to find the truth in time! They lose $state->{lie_points} points!$color{reset}");
+        $self->send_message($self->{channel}, "$missed failed to find the truth in time! They lose $state->{lie_points} points!");
       }
       return 'next';
     }
@@ -1635,8 +1693,8 @@ sub findtruth {
     $remaining -= 15 * ($state->{counter} - 1);
     $remaining = "(" . (concise duration $remaining) . " remaining)";
 
-    $self->send_message($self->{channel}, "$players: $red$color{bold}$remaining Find the truth now via `/msg me c <number>`!$color{reset}");
-    $self->send_message($self->{channel}, "$color{bold}$state->{current_choices_text}$color{reset}");
+    $self->send_message($self->{channel}, "$players: $red$remaining Find the truth now via `/msg me c <number>`!$color{reset}");
+    $self->send_message($self->{channel}, "$state->{current_choices_text}");
   }
 
   return 'wait';
@@ -1676,7 +1734,7 @@ sub showlies {
       if ($player->{truth} ne $state->{correct_answer}) {
         my $points = $state->{lie_points} * 0.25;
         $player->{score} -= $points;
-        $self->send_message($self->{channel}, "$color{bold}$player->{name} fell for my lie: \"$player->{truth}\". -$points points!$color{reset}");
+        $self->send_message($self->{channel}, "$player->{name} fell for my lie: \"$player->{truth}\". -$points points!");
         $player->{deceived} = $player->{truth};
         if ($state->{current_lie_player} < @{$state->{players}}) {
           return 'wait';
@@ -1700,7 +1758,7 @@ sub showlies {
         $liar->{score} += $state->{lie_points};
       }
 
-      $self->send_message($self->{channel}, "$color{bold}$player->{name} fell for $liars_text lie: \"$lie\". $liars_no_apostrophe $gains +$state->{lie_points} points!$color{reset}");
+      $self->send_message($self->{channel}, "$player->{name} fell for $liars_text lie: \"$lie\". $liars_no_apostrophe $gains +$state->{lie_points} points!");
       $player->{deceived} = $lie;
     }
 
@@ -1737,9 +1795,9 @@ sub showtruth {
     }
 
     if ($count) {
-      $self->send_message($self->{channel}, "$color{bold}$players got the correct answer: \"$state->{correct_answer}\". +$state->{truth_points} points!$color{reset}");
+      $self->send_message($self->{channel}, "$players got the correct answer: \"$state->{correct_answer}\". +$state->{truth_points} points!");
     } else {
-      $self->send_message($self->{channel}, "$color{bold}Nobody found the truth! The answer was: $state->{correct_answer}$color{reset}");
+      $self->send_message($self->{channel}, "Nobody found the truth! The answer was: $state->{correct_answer}");
     }
 
     $self->add_new_suggestions($state);
@@ -1762,7 +1820,7 @@ sub reveallies {
       $comma = '; ';
     }
 
-    $self->send_message($self->{channel}, "$color{bold}$text$color{reset}");
+    $self->send_message($self->{channel}, "$text");
 
     return 'next';
   } else {
@@ -1783,7 +1841,7 @@ sub showscore {
 
     $text = "none" if not length $text;
 
-    $self->send_message($self->{channel}, "$color{bold}$color{green}Scores: $color{reset}$color{bold}$text$color{reset}");
+    $self->send_message($self->{channel}, "$color{green}Scores:$color{reset} $text");
     return 'next';
   } else {
     return 'wait';
@@ -1822,28 +1880,28 @@ sub showfinalscore {
     push @{$state->{finalscores}}, $mentions if length $mentions;
   }
 
-  my $tocks;
+  my $tock;
   if ($state->{first_tock}) {
-    $tocks = 2;
+    $tock = 2;
   } else {
-    $tocks = 5;
+    $tock = 5;
   }
 
-  if ($state->{ticks} % $tocks == 0) {
+  if ($state->{ticks} % $tock == 0) {
     $state->{tocked} = 1;
 
     if (not @{$state->{finalscores}}) {
-      $self->send_message($self->{channel}, "$color{bold}$color{green}Final scores: $color{reset}$color{bold}none$color{reset}");
+      $self->send_message($self->{channel}, "$color{green}Final scores: $color{reset}none");
       return 'next';
     }
 
     if ($state->{first_tock}) {
-      $self->send_message($self->{channel}, "$color{bold}$color{green}Final scores:$color{reset}");
+      $self->send_message($self->{channel}, "$color{green}Final scores:$color{reset}");
       return 'wait';
     }
 
     my $text = shift @{$state->{finalscores}};
-    $self->send_message($self->{channel}, "$color{bold}$text$color{reset}");
+    $self->send_message($self->{channel}, "$text");
 
     if (not @{$state->{finalscores}}) {
       return 'next';
@@ -1873,7 +1931,7 @@ sub getplayers {
 
   foreach my $player (@$players) {
     if (not $player->{ready}) {
-      push @names, "$player->{name} $color{red}(not ready)$color{reset}$color{bold}";
+      push @names, "$player->{name} $color{red}(not ready)$color{reset}";
     } else {
       $unready--;
       push @names, $player->{name};
@@ -1881,7 +1939,7 @@ sub getplayers {
   }
 
   if (not $unready) {
-    $self->send_message($self->{channel}, "$color{bold}All players ready!$color{reset}");
+    $self->send_message($self->{channel}, "All players ready!");
     $state->{result} = 'allready';
     return $state;
   }
@@ -1896,17 +1954,28 @@ sub getplayers {
   if ($state->{ticks} % $tock == 0) {
     $state->{tocked} = 1;
 
-    if (++$state->{counter} > 4) {
-      $self->send_message($self->{channel}, "$color{bold}Not all players were ready in time. The game has been stopped.$color{reset}");
+    if (++$state->{counter} > 6) {
+      $self->send_message($self->{channel}, "Not all players were ready in time. The game has been stopped.");
       $state->{result} = 'stop';
       $state->{players} = [];
       return $state;
     }
 
     $players = join ', ', @names;
-    $players = 'none' if not @names;
+
+    if (not @names) {
+      $players = 'none';
+
+      if ($state->{counter} >= 2) {
+        $self->send_message($self->{channel}, "All players have left the queue. The game has been stopped.");
+        $self->{current_state} = 'nogame';
+        $self->{result} = 'nogame';
+        return $state;
+      }
+    }
+
     my $msg = "Waiting for more players or for all players to ready up. Current players: $players";
-    $self->send_message($self->{channel}, "$color{bold}$msg$color{reset}");
+    $self->send_message($self->{channel}, "$msg");
   }
 
   $state->{result} = 'wait';
@@ -1928,7 +1997,7 @@ sub round1q1 {
     $state->{init} = 1;
     $state->{counter} = 0;
     $state->{max_count} = $self->{choosecategory_max_count};
-    $self->send_message($self->{channel}, "$color{bold}Round 1/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.$color{reset}");
+    $self->send_message($self->{channel}, "Round 1/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2007,7 +2076,7 @@ sub round1q2 {
     $state->{init} = 1;
     $state->{counter} = 0;
     $state->{max_count} = $self->{choosecategory_max_count};
-    $self->send_message($self->{channel}, "$color{bold}Round 1/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.$color{reset}");
+    $self->send_message($self->{channel}, "Round 1/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2087,7 +2156,7 @@ sub round1q3 {
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
     $state->{result} = 'wait';
-    $self->send_message($self->{channel}, "$color{bold}Round 1/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.$color{reset}");
+    $self->send_message($self->{channel}, "Round 1/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
   } else {
     $state->{result} = 'next';
   }
@@ -2174,7 +2243,7 @@ sub round2q1 {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "$color{bold}Round 2/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.$color{reset}");
+    $self->send_message($self->{channel}, "Round 2/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2253,7 +2322,7 @@ sub round2q2 {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "$color{bold}Round 2/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.$color{reset}");
+    $self->send_message($self->{channel}, "Round 2/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2332,7 +2401,7 @@ sub round2q3 {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "$color{bold}Round 2/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.$color{reset}");
+    $self->send_message($self->{channel}, "Round 2/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2420,7 +2489,7 @@ sub round3q1 {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "$color{bold}Round 3/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.$color{reset}");
+    $self->send_message($self->{channel}, "Round 3/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2499,7 +2568,7 @@ sub round3q2 {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "$color{bold}Round 3/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.$color{reset}");
+    $self->send_message($self->{channel}, "Round 3/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2578,7 +2647,7 @@ sub round3q3 {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "$color{bold}Round 3/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.$color{reset}");
+    $self->send_message($self->{channel}, "Round 3/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2667,7 +2736,7 @@ sub round4q1 {
     $state->{random_category} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "$color{bold}FINAL ROUND! FINAL QUESTION! $state->{lie_points} for each lie. $state->{truth_points} for the truth.$color{reset}");
+    $self->send_message($self->{channel}, "FINAL ROUND! FINAL QUESTION! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2744,7 +2813,7 @@ sub gameover {
   my ($self, $state) = @_;
 
   if ($state->{ticks} % 3 == 0) {
-    $self->send_message($self->{channel}, "$color{bold}Game over!$color{reset}");
+    $self->send_message($self->{channel}, "Game over!");
 
     my $players = $state->{players};
     foreach my $player (@$players) {
