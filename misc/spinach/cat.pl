@@ -13,7 +13,7 @@ my $minimum_category_size = 6;
 open my $handle, '<dedup_questions' or die $!;
 chomp(my @lines = <$handle>); close $handle;
 
-my @doc_rules = (
+my @uncategorized_rules = (
   { regex => qr/(?:james bond| 007)/i, category => 'JAMES BOND' },
   { regex => qr/192\d.?s/i, category => "THE 1920'S" },
   { regex => qr/193\d.?s/i, category => "THE 1930'S" },
@@ -34,8 +34,12 @@ my @doc_rules = (
   { regex => qr/^(?:in (?:the year )?)?20\d\d\p{PosixPunct}?/i, category => "THE 2000'S" },
   { regex => qr/(?:Name The Year|In what year)/i, category => 'NAME THE YEAR' },
   { regex => qr/baby names/i, category => 'BABY NAMES' },
-  { regex => qr/what word mean/i, category => 'Definitions' },
-  { regex => qr/What (?:one word|word links)/i, category => 'GUESS THE WORD' },
+  { regex => qr/southpark/i, category => "SOUTHPARK" },
+  { regex => qr/what word mean/i, category => 'DEFINITIONS' },
+  { regex => qr/gone with the wind/i, category => "GONE WITH THE WIND" },
+  { regex => qr/harry potter/i, category => "HARRY POTTER" },
+  { regex => qr/What word links/i, category => 'WHAT WORD LINKS THESE WORDS' },
+  { regex => qr/What one word/i, category => 'GUESS THE WORD' },
   { regex => qr/^(If [Yy]ou [Ww]ere [Bb]orn|Astrology)/i, category => 'Astrology' },
   { regex => qr/[Oo]lympics/i, category => 'Olympics' },
   { regex => qr/^How many/i, category => 'HOW MANY' },
@@ -48,7 +52,10 @@ my @doc_rules = (
   { regex => qr/19th.century/i, category => "19TH CENTURY" },
   { regex => qr/shakespear/i, category => "SHAKESPEARE" },
   { regex => qr/world.cup/i, category => "WORLD CUP" },
+  { regex => qr/card game/i, category => "CARD GAMES" },
+  { regex => qr/board game/i, category => "BOARD GAMES" },
   { regex => qr/computer science/i, category => "COMPUTER SCIENCE" },
+  { regex => qr/computer game/i, category => "COMPUTER GAMES" },
   { regex => qr/computer/i, category => "COMPUTERS" },
   { regex => qr/science fict/i, category => "SCI-FI" },
   { regex => qr/science/i, category => "SCIENCE" },
@@ -72,12 +79,15 @@ my @doc_rules = (
   { regex => qr/^music/i, category => "MUSIC" },
   { regex => qr/(?:canada|canadian)/i, category => "CANADA" },
   { regex => qr/who (is|was) the author/i, category => "NAME THE AUTHOR" },
+  { regex => qr/dinosaur/i, category => "DINOSAURS" },
   { regex => qr/who.?s the author/i, category => "NAME THE AUTHOR" },
   { regex => qr/which.*author wrote/i, category => "NAME THE AUTHOR" },
   { regex => qr/\bmusic\b/i, category => "MUSIC" },
   { regex => qr/\bauthor\b/i, category => "AUTHORS" },
+  { regex => qr/greek alphabet/i, category => "GREEK ALPHABET" },
   { regex => qr/bitish slang/i, category => "BRITISH SLANG" },
   { regex => qr/australian slang/i, category => "AUSSIE SLANG" },
+  { regex => qr/constellation/i, category => "CONSTELLATIONS" },
   { regex => qr/aussie slang/i, category => "AUSSIE SLANG" },
   { regex => qr/slang term/i, category => "SLANG" },
   { regex => qr/\bslang\b/i, category => "SLANG" },
@@ -121,6 +131,8 @@ my @rename_rules = (
   { old => qr/^007$/,  new => "JAMES BOND" },
   { old => qr/^191\d/, new => "THE 1910'S" },
   { old => qr/^192\d/, new => "THE 1920'S" },
+  { old => qr/^ARCHAIC$/, new => "ARCHAIC DEFINITIONS" },
+  { old => qr/^INFORMAL$/, new => "INFORMAL DEFINITIONS" },
   { old => qr/^193\d/, new => "THE 1930'S" },
   { old => qr/^194\d/, new => "THE 1940'S" },
   { old => qr/^195\d/, new => "THE 1950'S" },
@@ -179,11 +191,16 @@ my @rename_rules = (
   { old => qr/^SECRETIONS$/, new => "ANATOMY & MEDICAL" },
   { old => qr/^PHYSIOLOGY$/, new => "ANATOMY & MEDICAL" },
   { old => qr/^THE BODY$/, new => "ANATOMY & MEDICAL" },
-  { old => qr/^BEATLES FIRST WORDS$/, new => "BEATLES" },
   { old => qr/^MUSIC LEGENDS$/, new => "MUSIC ARTISTS" },
+  { old => qr/^WORLD$/, new => "THE WORLD" },
   { old => qr/^TOYS GAMES$/, new => "TOYS & GAMES" },
   { old => qr/^PEANUTS COMICS$/, new => "COMICS" },
-  { old => qr/^COMPUTER GAMES$/, new => "VIDEO GAMES" },
+  { old => qr/^THESE LETTERS DEFINE WHAT/, new => "ACRONYMS" },
+#  { old => qr/^COMPUTER GAMES$/, new => "VIDEO GAMES" },
+  { old => qr/^ARTIST$/, new => "ARTISTS" },
+  { old => qr/^THIS IS POPRB$/, new => "POPRB" },
+  { old => qr/^US CAPTIALS$/, new => "US CAPITALS" },
+  { old => qr/^MOVIE THAT FEATURES/, new => "MOVIE THAT FEATURES..." },
   { old => qr/^ABBR$/, new => "ABBREVIATIONS" },
   { old => qr/^BABY NAMES BEG/, new => "BABY NAMES" },
   { old => qr/^CURRENCY & FLAGS$/, new => "CURRENCIES & FLAGS" },
@@ -233,10 +250,14 @@ my @rename_rules = (
   { old => qr/^MISCELLANEOUS$/, new => "MISC" },
   { old => qr/CRAP JOKES/, new => "CRAPPY JOKES" },
   { old => qr/IF YOU WERE BORN ON/, new => "BIRTHS" },
+  { old => qr/^ACADAMY AWARDS$/, new => "ACADEMY AWARDS" },
 );
 
 my @skip_rules = (
   qr/true or false/i,
+  qr/^Definitions: What word means:/,
+  qr/Word Scramble/,
+  qr/Unscramble this word/,
 );
 
 my @not_a_category = (
@@ -251,9 +272,9 @@ my %refilter_rules = (
     { regex => qr/baseball/i, category => "BASEBALL" },
     { regex => qr/world series/i, category => "BASEBALL" },
     { regex => qr/super.?bowl/i, category => "FOOTBALL" },
-    { regex => qr/N\.?B\.?A\.?/i, category => "BASKETBALL" },
-    { regex => qr/N\.?F\.?L\.?/i, category => "FOOTBALL" },
-    { regex => qr/N\.?H\.?L\.?/i, category => "HOCKEY" },
+    { regex => qr/\bN\.?B\.?A\.?\b/i, category => "BASKETBALL" },
+    { regex => qr/\bN\.?F\.?L\.?\b/i, category => "FOOTBALL" },
+    { regex => qr/\bN\.?H\.?L\.?\b/i, category => "HOCKEY" },
     { regex => qr/basketball/i, category => "BASKETBALL" },
     { regex => qr/cricket/i, category => "CRICKET" },
     { regex => qr/golf/i, category => "GOLF" },
@@ -268,17 +289,24 @@ my %refilter_rules = (
     { regex => qr/swim/i, category => "SWIMMING" },
     { regex => qr/wimbledon/i, category => "TENNIS" },
     { regex => qr/rugby/i, category => "RUGBY" },
+    { regex => qr/location of the summer olympic/, category => "OLYMPICS LOCATIONS" },
+    { regex => qr/olympics/, category => "OLYMPICS" },
+    { regex => qr/card game/i, category => "CARD GAMES" },
+    { regex => qr/board game/i, category => "BOARD GAMES" },
   ],
   "ART & LITERATURE" => [
     { regex => qr/Lotr:/, category => "LORD OF THE RINGS" },
     { regex => qr/shakespear/i, category => "SHAKESPEARE" },
     { regex => qr/sherlock holmes/i, category => "SHERLOCK HOLMES" },
     { regex => qr/stephen king/i, category => "STEPHEN KING" },
+    { regex => qr/hitchhiker.?s? guide/i, category => "HITCHHIKER'S GUIDE" },
   ],
   "CARTOON TRIVIA" => [
     { regex => qr/disney/i, category => "DISNEY" },
     { regex => qr/x-men/i, category => "X-MEN" },
     { regex => qr/dc comics/i, category => "DC COMICS" },
+    { regex => qr/wonder woman/i, category => "WONDER WOMAN" },
+    { regex => qr/popeye/i, category => "POPEYE THE SAILOR" },
   ],
   "SONGS" => [
     { regex => qr/theme song/i, category => "THEME SONGS" },
@@ -319,6 +347,8 @@ my %refilter_rules = (
     { regex => qr/80s tune/i, category => "1980'S MUSIC" },
     { regex => qr/90s tune/i, category => "1990'S MUSIC" },
     { regex => qr/musicals/i, category => "MUSICALS" },
+    { regex => qr/80's tune: performed by/i, category => "80'S TUNE PERFORMED BY" },
+    { regex => qr/bob dylan/i, category => "BOB DYLAN" },
     { regex => qr/grease:/i, category => "GREASE" },
     { regex => qr/terms:/i, category => "MUSIC TERMS" },
     { regex => qr/animaniacs/i, category => "ANIMANIACS" },
@@ -449,6 +479,7 @@ my %refilter_rules = (
   "TV / MOVIES" => [
     { regex => qr/007:/i, category => "JAMES BOND" },
     { regex => qr/charlie chaplin/i, category => "CHARLIE CHAPLIN" },
+    { regex => qr/- starred in this movie:/i, category => "NAME THE MOVIE" },
     { regex => qr/starred in this movie/i, category => "NAME THE ACTOR" },
     { regex => qr/w[io]n the oscar/i, category => "WHICH FILM WON THE OSCAR FOR..." },
     { regex => qr/\b191\d/i, category => "1910'S TV / MOVIES" },
@@ -479,9 +510,14 @@ my %refilter_rules = (
     { regex => qr/BATMAN/i, category => "BATMAN" },
     { regex => qr/BLADE RUNNER/i, category => "BLADE RUNNER" },
     { regex => qr/90210/i, category => "BEVERLY HILLS 90210" },
+    { regex => qr/the goonies/i, category => "THE GOONIES" },
     { regex => qr/BLAZING SADDLES/i, category => "BLAZING SADDLES" },
     { regex => qr/BLUES BROTHERS/i, category => "BLUES BROTHERS" },
     { regex => qr/B MOVIES/i, category => "B MOVIES" },
+    { regex => qr/FRIENDS:/i, category => "FRIENDS" },
+    { regex => qr/evil dead/i, category => "EVIL DEAD" },
+    { regex => qr/buffy/i, category => "BUFFY THE VAMPIRE SLAYER" },
+    { regex => qr/80s films/, category => "80'S FILMS" },
     { regex => qr/BRADY MANIA/i, category => "BRADY MANIA" },
     { regex => qr/CARTOON SIDEKICKS/i, category => "CARTOON SIDEKICKS" },
     { regex => qr/CHEERS TRIVIA/i, category => "CHEERS TRIVIA" },
@@ -528,6 +564,9 @@ my %refilter_rules = (
     { regex => qr/ROBOTECH/i, category => "ROBOTECH" },
     { regex => qr/ROCKY HORROR/i, category => "ROCKY HORROR" },
     { regex => qr/SCI FI MOVIES/i, category => "SCI FI MOVIES" },
+    { regex => qr/quotes:/i, category => "MOVIE QUOTES" },
+    { regex => qr/gone with the wind/i, category => "GONE WITH THE WIND" },
+    { regex => qr/harry potter/i, category => "HARRY POTTER" },
     { regex => qr/RUSH LIMBAUGH/i, category => "RUSH LIMBAUGH" },
     { regex => qr/SIDEKICK/i, category => "SIDEKICKS" },
     { regex => qr/SIMPSONS/i, category => "THE SIMPSONS" },
@@ -550,18 +589,79 @@ my %refilter_rules = (
     { regex => qr/CLIVE BARKER/i, category => "CLIVE BARKER" },
     { regex => qr/COMEDY/i, category => "COMEDIES" },
     { regex => qr/who (?:play|star|was)/i, category => "NAME THE ACTOR" },
+    { regex => qr/bill ted/i, category => "BILL AND TED" },
+    { regex => qr/bill (?:&|and) ted/i, category => "BILL AND TED" },
+    { regex => qr/bleeding heart movies/i, category => "BLEEDING HEART MOVIES" },
+    { regex => qr/theme song/i, category => "THEME SONGS" },
+    { regex => qr/quotes/i, category => "MOVIE QUOTES" },
+    { regex => qr/\bSNL\b/i, category => "SATURDAY NIGHT LIVE" },
+    { regex => qr/southpark/i, category => "SOUTHPARK" },
+    { regex => qr/star wars/i, category => "STAR WARS" },
   ],
   "SCIENCE" => [
     { regex => qr/computer/i, category => "COMPUTERS" },
     { regex => qr/science & nature/i, category => "SCIENCE & NATURE" },
     { regex => qr/science & technology/i, category => "SCIENCE & TECHNOLOGY" },
     { regex => qr/periodic table/i, category => "PERIODIC TABLE" },
+    { regex => qr/chemical/i, category => "CHEMISTRY" },
+  ],
+  "SCIENCE & TECHNOLOGY" => [
+    { regex => qr/in computing/i, category => "COMPUTER SCIENCE" },
+    { regex => qr/mathemat/i, category => "MATHEMATICS" },
+    { regex => qr/chemistry/i, category => "CHEMISTRY" },
+    { regex => qr/what does \w+ stand for/i, category => "TECHNICAL ACRONYMS" },
+    { regex => qr/vitamin/i, category => "VITAMINS" },
+    { regex => qr/chemical/i, category => "CHEMISTRY" },
+    { regex => qr/operating system/i, category => "COMPUTER SCIENCE" },
+    { regex => qr/video.*game/i, category => "VIDEO GAMES" },
+  ],
+  "SCIENCE & NATURE" => [
+    { regex => qr/planet/i, category => "PLANETS" },
+    { regex => qr/\bplant/i, category => "PLANTS" },
+    { regex => qr/chemical/i, category => "CHEMISTRY" },
+    { regex => qr/fruit/i, category => "FRUITS" },
+    { regex => qr/periodic table/i, category => "PERIODIC TABLE" },
+    { regex => qr/the young of this animal/i, category => "BABY ANIMAL NAMES" },
+    { regex => qr/: the study of/i, category => "THE STUDY OF..." },
+    { regex => qr/constellation/i, category => "CONSTELLATIONS" },
+    { regex => qr/atomic number/i, category => "ATOMIC NUMBER / MASS" },
+    { regex => qr/atomic mass/i, category => "ATOMIC NUMBER / MASS" },
+    { regex => qr/group nouns/i, category => "ANIMAL GROUP NOUNS" },
+    { regex => qr/fish breeds/i, category => "FISH BREEDS" },
+    { regex => qr/cat breeds/i, category => "CAT BREEDS" },
+    { regex => qr/dog breeds/i, category => "DOG BREEDS" },
+    { regex => qr/dinosaur/i, category => "DINOSAURS" },
+    { regex => qr/cats (?:have|were)/i, category => "CATS" },
+  ],
+  "GAMES" => [
+    { regex => qr/card game/i, category => "CARD GAMES" },
+    { regex => qr/board game/i, category => "BOARD GAMES" },
+  ],
+  "MOVIES" => [
+  ],
+  "LANGUAGE & LINGUISTICS" => [
+    { regex => qr/are the major languages in/i, category => "MAJOR LANGUAGES IN..." },
+    { regex => qr/official language of/i, category => "OFFICIAL LANGUAGE OF..." },
+    { regex => qr/greek alphabet/i, category => "GREEK ALPHABET" },
+  ],
+  "LANGUAGE" => [
+  ],
+  "ENTERTAINMENT" => [
   ],
 );
+
+push @{$refilter_rules{"GAMES"}}, @{$refilter_rules{"SPORTS"}};
+push @{$refilter_rules{"MOVIES"}}, @{$refilter_rules{"TV / MOVIES"}};
+push @{$refilter_rules{"FILM"}}, @{$refilter_rules{"TV / MOVIES"}};
+push @{$refilter_rules{"TV"}}, @{$refilter_rules{"TV / MOVIES"}};
+push @{$refilter_rules{"LANGUAGE"}}, @{$refilter_rules{"LANGUAGE & LINGUISTICS"}};
+push @{$refilter_rules{"ENTERTAINMENT"}}, @{$refilter_rules{"TV / MOVIES"}};
+
 
 my @disregard_rules = (
   qr/ANIMAL IN YOU/,
   qr/BOXING/,
+  qr/THE WHO/,
   qr/ON THIS DAY/,
   qr/AUTHORITY/,
   qr/PHYSICS/,
@@ -588,6 +688,7 @@ for my $i (0 .. $#lines) {
   $lines[$i] =~ s/^sport\s*[:-]\s*(.*?)\s*[:-]/$1: /i;
   $lines[$i] =~ s/^trivia\s*[:;-]\s*//i;
   $lines[$i] =~ s/^triv\s*[:;-]\s*//i;
+  $lines[$i] =~ s/^93 94\p{PosixPunct}?\s*//;
 
   my @l = split /`/, $lines[$i];
 
@@ -651,7 +752,7 @@ for my $i (0 .. $#lines) {
 
   # No obvious category to extract, use rule-based filtering
   my $found = 0;
-  foreach my $rule (@doc_rules) {
+  foreach my $rule (@uncategorized_rules) {
     if ($l[0] =~ m/$rule->{regex}/) {
       my $cat = uc $rule->{'category'};
       push @{$docs{$cat}}, $i;
@@ -672,6 +773,7 @@ my %approved;
 
 # refilter questions from certain categories into better sub-categories
 foreach my $key (keys %refilter_rules) {
+  print STDERR "Refiltering [$key]\n";
   for (my $i = 0; $i < @{$docs{$key}}; $i++) {
     my $doc = $docs{$key}->[$i];
     my @l = split /`/, $lines[$doc];
@@ -788,7 +890,7 @@ foreach my $doc (sort { $lines[$a] cmp $lines[$b] } @uncat) {
 }
 
 # filter remaining uncategorized questions by uncat rules
-my @new_uncat;
+my %new_uncat;
 foreach my $doc (@remaining_uncat) {
   my @l = split /`/, $lines[$doc];
   foreach my $rule (@remaining_uncat_rules) {
@@ -800,11 +902,11 @@ foreach my $doc (@remaining_uncat) {
      } 
      print STDERR "Using uncat rules $cat for doc $i: $l[0] ($l[1])\n";
     } else {
-      push @new_uncat, $doc;
+      $new_uncat{$doc} = 1;
     }
   }
 }
-@remaining_uncat = @new_uncat;
+@remaining_uncat = keys %new_uncat;
 
 # refilter questions in certain categories to other categories instead
 foreach my $key (keys %refilter_rules) {
@@ -830,9 +932,9 @@ foreach my $cat (keys %approved) {
 }
 
 # write the final questions to stdout, dump categories and counts to stderr
-print STDERR "-" x 80, "\n";
+print STDERR "=" x 80, "\n";
 print STDERR "Categories: ", scalar keys %approved, " with $total questions.\n";
-print STDERR "-" x 80, "\n";
+print STDERR "=" x 80, "\n";
 
 foreach my $cat (sort keys %approved) {
   print STDERR "$cat ... ";
