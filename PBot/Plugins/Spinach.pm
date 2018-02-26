@@ -618,10 +618,17 @@ sub spinach_cmd {
           return "$nick: Choice out of range. Please choose a valid category. $self->{state_data}->{categories_text}";
         }
 
-        if ($arguments == @{$self->{state_data}->{category_options}} - 1) {
-          $arguments = (@{$self->{state_data}->{category_options}} - 1) * rand;
+        if ($arguments == @{$self->{state_data}->{category_options}} - 2) {
+          $arguments = (@{$self->{state_data}->{category_options}} - 2) * rand;
           $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
-          return "/msg $self->{channel} $nick has chosen RANDOM! Randomly choosing category: $self->{state_data}->{current_category}!";
+          return "/msg $self->{channel} $nick has chosen RANDOM CATEGORY! Randomly choosing category: $self->{state_data}->{current_category}!";
+        } elsif ($arguments == @{$self->{state_data}->{category_options}} - 1) {
+          if (++$self->{state_data}->{category_rerolls} >= 3) {
+            return "/msg $self->{channel} $nick has chosen REROLL CATEGORIES! But they have exceeded the number of times they may reroll!";
+          } else {
+            $self->{state_data}->{reroll_category} = 1;
+            return "/msg $self->{channel} $nick has chosen REROLL CATEGORIES! Rerolling categories...";
+          }
         } else {
           $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
           return "/msg $self->{channel} $nick has chosen $self->{state_data}->{current_category}!";
@@ -1359,9 +1366,9 @@ sub validate_lie {
 sub choosecategory {
   my ($self, $state) = @_;
 
-  if ($state->{init}) {
+  if ($state->{init} or $state->{reroll_category}) {
     delete $state->{current_category};
-    $state->{current_player}++;
+    $state->{current_player}++ unless $state->{reroll_category};
 
     if ($state->{current_player} >= @{$state->{players}}) {
       $state->{current_player} = 0;
@@ -1387,10 +1394,11 @@ sub choosecategory {
         push @choices, $cat;
       }
 
-      last if @choices == 7;
+      last if @choices == 8;
     }
 
-    push @choices, 'RANDOM';
+    push @choices, 'RANDOM CATEGORY';
+    push @choices, 'REROLL CATEGORIES';
 
     $state->{categories_text} = '';
     my $i = 1;
@@ -1401,8 +1409,14 @@ sub choosecategory {
       $comma = "; ";
     }
 
+    if ($state->{reroll_category}) {
+      $self->send_message($self->{channel}, "$state->{categories_text}");
+    }
+
     $state->{category_options} = \@choices;
+    $state->{category_rerolls} = 0 if $state->{init};
     delete $state->{init};
+    delete $state->{reroll_category};
   }
 
   if (exists $state->{current_category} or not @{$state->{players}}) {
