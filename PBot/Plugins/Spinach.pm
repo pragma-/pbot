@@ -87,16 +87,24 @@ sub on_departure {
 }
 
 sub load_questions {
-  my $self = shift;
+  my ($self, $filename) = @_;
+
+  if (not defined $filename) {
+    $filename = exists $self->{loaded_filename} ? $self->{loaded_filename} : $self->{questions_filename};
+  } else {
+    $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . "/spinach/$filename";
+  }
 
   my $contents = do {
-    open my $fh, '<', $self->{questions_filename} or do {
-      $self->{pbot}->{logger}->log("Spinach: Failed to open $self->{questions_filename}: $!\n");
-      return;
+    open my $fh, '<', $filename or do {
+      $self->{pbot}->{logger}->log("Spinach: Failed to open $filename: $!\n");
+      return "Failed to load $filename";
     };
     local $/;
     <$fh>;
   };
+
+  $self->{loaded_filename} = $filename;
 
   $self->{questions} = decode_json $contents;
   $self->{categories} = ();
@@ -118,6 +126,7 @@ sub load_questions {
   }
 
   $self->{pbot}->{logger}->log("Spinach: Loaded $questions questions in $categories categories.\n");
+  return "Loaded $questions questions in $categories categories.";
 }
 
 sub load_stopwords {
@@ -333,8 +342,9 @@ sub spinach_cmd {
       $question->{$key} = $value;
 
       my $json = encode_json $self->{questions};
-      open my $fh, '>', $self->{questions_filename} or do {
-        $self->{pbot}->{logger}->log("Failed to open Spinach file: $!\n");
+      my $filename = exists $self->{loaded_filename} ? $self->{loaded_filename} : $self->{questions_filename};
+      open my $fh, '>', $filename or do {
+        $self->{pbot}->{logger}->log("Failed to open Spinach file $filename: $!\n");
         return;
       };
       print $fh "$json\n";
@@ -352,7 +362,8 @@ sub spinach_cmd {
         return "$nick: Sorry, only very powerful admins may reload the questions.";
       }
 
-      $self->load_questions;
+      $arguments = undef if not length $arguments;
+      return $self->load_questions($arguments);
     }
 
     when ('leaderboard') {
@@ -624,7 +635,7 @@ sub spinach_cmd {
           return "/msg $self->{channel} $nick has chosen RANDOM CATEGORY! Randomly choosing category: $self->{state_data}->{current_category}!";
         } elsif ($arguments == @{$self->{state_data}->{category_options}} - 1) {
           if (++$self->{state_data}->{category_rerolls} >= 3) {
-            return "/msg $self->{channel} $nick has chosen REROLL CATEGORIES! But they have exceeded the number of times they may reroll!";
+            return "/msg $self->{channel} $nick has chosen REROLL CATEGORIES! But they have exceeded the number of times they may reroll this turn.";
           } else {
             $self->{state_data}->{reroll_category} = 1;
             return "/msg $self->{channel} $nick has chosen REROLL CATEGORIES! Rerolling categories...";
@@ -818,8 +829,9 @@ sub add_new_suggestions {
 
   if ($modified) {
     my $json = encode_json $self->{questions};
-    open my $fh, '>', $self->{questions_filename} or do {
-      $self->{pbot}->{logger}->log("Failed to open Spinach file: $!\n");
+    my $filename = exists $self->{loaded_filename} ? $self->{loaded_filename} : $self->{questions_filename};
+    open my $fh, '>', $filename or do {
+      $self->{pbot}->{logger}->log("Failed to open Spinach file $filename: $!\n");
       return;
     };
     print $fh "$json\n";
