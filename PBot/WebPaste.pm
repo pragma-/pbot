@@ -33,13 +33,10 @@ sub initialize {
 
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
-  $self->{paste_sites} = [ sub { $self->paste_sprunge(@_) },
-                           sub { $self->paste_codepad(@_) },
-                           sub { $self->paste_ixio(@_) },
-                           sub { $self->paste_ptpb(@_) },
-                           sub { $self->paste_gehidore(@_) },
-                           sub { $self->paste_aringa(@_) },
-                         ];
+  $self->{paste_sites} = [
+    sub { $self->paste_ixio(@_) },
+    sub { $self->paste_ptpb(@_) },
+  ];
 
   $self->{current_site} = 0;
 }
@@ -98,51 +95,6 @@ sub paste_ixio {
   return $result;
 }
 
-sub paste_codepad {
-  my $self = shift;
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $ua = LWP::UserAgent->new();
-  $ua->agent("Mozilla/5.0");
-  push @{ $ua->requests_redirectable }, 'POST';
-  $ua->timeout(10);
-
-  my %post = ( 'lang' => 'Plain Text', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
-  my $response = $ua->post("http://codepad.org", \%post);
-
-  if(not $response->is_success) {
-    return "error pasting: " . $response->status_line;
-  }
-
-  return $response->request->uri;
-}
-
-sub paste_sprunge {
-  my $self = shift;
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $ua = LWP::UserAgent->new();
-  $ua->agent("Mozilla/5.0");
-  $ua->requests_redirectable([ ]);
-  $ua->timeout(10);
-
-  my %post = ( 'sprunge' => $text, 'submit' => 'Submit' );
-  my $response = $ua->post("http://sprunge.us", \%post);
-
-  if(not $response->is_success) {
-    return "error pasting: " . $response->status_line;
-  }
-
-  my $result = $response->content;
-  $result =~ s/^\s+//;
-  $result =~ s/\s+$//;
-  return $result;
-}
-
 sub paste_ptpb {
   my $self = shift;
   my $text = join(' ', @_);
@@ -164,55 +116,6 @@ sub paste_ptpb {
   my $result = $response->content;
   $result =~ s/^\s+//;
   $result =~ s/\s+$//;
-  return $result;
-}
-
-sub paste_gehidore {
-  my $self = shift;
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $ua = LWP::UserAgent->new();
-  $ua->agent("Mozilla/5.0");
-  $ua->requests_redirectable([ ]);
-  $ua->timeout(10);
-
-  my %post = ( 'c' => $text, 'submit' => 'Submit' );
-  my $response = $ua->post("https://pb.gehidore.net/?u=1", \%post);
-
-  if(not $response->is_success) {
-    return "error pasting: " . $response->status_line;
-  }
-
-  my $result = $response->content;
-  $result =~ s/^\s+//;
-  $result =~ s/\s+$//;
-  return $result;
-}
-
-sub paste_aringa {
-  my $self = shift;
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $ua = LWP::UserAgent->new();
-  $ua->agent("Mozilla/5.0");
-  push @{ $ua->requests_redirectable }, 'POST';
-  $ua->timeout(10);
-
-  my %post = ( 'aringa' => $text, 'submit' => 'Submit' );
-  my $response = $ua->post("https://arin.ga", \%post);
-
-  if(not $response->is_success) {
-    return "error pasting: " . $response->status_line;
-  }
-
-  my $result = $response->request->uri;
-  $result =~ s/^\s+//;
-  $result =~ s/\s+$//;
-  $result .= '/raw';
   return $result;
 }
 
