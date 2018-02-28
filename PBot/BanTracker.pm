@@ -18,6 +18,7 @@ use strict;
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
 use Carp ();
 
 sub new {
@@ -60,11 +61,12 @@ sub get_banlist {
   my ($self, $event_type, $event) = @_;
   my $channel = lc $event->{event}->{args}[1];
 
+  return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
+
   delete $self->{banlist}->{$channel};
 
   $self->{pbot}->{logger}->log("Retrieving banlist for $channel.\n");
-  $event->{conn}->sl("mode $channel +b");
-  $event->{conn}->sl("mode $channel +q");
+  $event->{conn}->sl("mode $channel +bq");
   return 0;
 }
 

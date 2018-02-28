@@ -16,6 +16,7 @@ use strict;
 
 use Text::Levenshtein qw/fastdistance/;
 use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
 use Carp ();
 use Time::HiRes qw/gettimeofday/;
 

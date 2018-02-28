@@ -15,6 +15,7 @@ use strict;
 use Carp();
 use Time::HiRes qw(gettimeofday);
 use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {

@@ -248,7 +248,7 @@ sub add {
   my ($self, $index_key, $hash) = @_;
 
   if($self->load_hash_add($index_key, $hash, 0)) {
-    $self->save_();
+    $self->save();
   } else {
     return "Error occurred adding new $self->{name} object.";
   }
