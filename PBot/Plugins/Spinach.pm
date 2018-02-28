@@ -680,13 +680,13 @@ sub spinach_cmd {
           }
         }
 
+        if (not $found_truth and ++$player->{lie_count} > 2) {
+          return "/msg $nick You cannot change your lie again this round.";
+        }
+
         if ($found_truth) {
           $self->send_message($self->{channel}, "$color{yellow}$nick has found the truth!$color{reset}");
           return "$nick: Your lie is too similar to the truth! Please submit a different lie.";
-        }
-
-        if (++$player->{lie_count} > 2) {
-          return "/msg $nick You cannot change your lie again this round.";
         }
 
         my $changed = exists $player->{lie};
@@ -1406,7 +1406,7 @@ sub choosecategory {
         push @choices, $cat;
       }
 
-      last if @choices == 8;
+      last if @choices == 6;
     }
 
     push @choices, 'RANDOM CATEGORY';
@@ -1447,7 +1447,7 @@ sub choosecategory {
 
     if (exists $state->{random_category}) {
       delete $state->{random_category};
-      my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 1)];
+      my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 2)];
       $self->send_message($self->{channel}, "Category: $category!");
       $state->{current_category} = $category;
       return 'next';
