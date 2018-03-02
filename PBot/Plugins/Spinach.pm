@@ -23,7 +23,7 @@ use Lingua::EN::ABC qw/b2a/;
 use Time::Duration qw/concise duration/;
 
 use Data::Dumper;
-$Data::Dumper::Sortkeys = 1;
+$Data::Dumper::Sortkeys = sub { my ($h) = @_; my @a = sort grep { not /^(?:seen_questions|alternativeSpellings)$/ } keys %$h; \@a };
 $Data::Dumper::Useqq = 1;
 
 sub new {
@@ -809,7 +809,7 @@ sub add_new_suggestions {
 
   foreach my $player (@{$state->{players}}) {
     if ($player->{deceived}) {
-      $self->{pbot}->{logger}->log("Adding new suggestion for $state->{current_question}->{id}: $player->{deceived}\n");
+      $self->{pbot}->{logger}->log("Adding new suggestion for $state->{current_question}->{id}: $state->{current_question}->{question}: $player->{deceived}\n");
 
       if (not grep { lc $_ eq lc $player->{deceived} } @{$state->{current_question}->{suggestions}}) {
         if (not defined $question) {
@@ -842,6 +842,7 @@ sub add_new_suggestions {
 sub run_one_state {
   my $self = shift;
 
+  # check for naughty or missing players
   if ($self->{current_state} =~ /r\dq\d/) {
     my $removed = 0;
     for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
@@ -866,12 +867,14 @@ sub run_one_state {
 
   my $state_data = $self->{state_data};
 
+  # this shouldn't happen
   if (not defined $self->{current_state}) {
     $self->{pbot}->{logger}->log("Spinach state broke.\n");
     $self->{current_state} = 'nogame';
     return;
   }
 
+  # transistioned to a brand new state; prepare first tock
   if ($self->{previous_state} ne $self->{current_state}) {
     $state_data->{newstate} = 1;
     $state_data->{ticks} = 1;
@@ -886,10 +889,9 @@ sub run_one_state {
     $state_data->{newstate} = 0;
   }
 
+  # dump new state data for logging/debugging
   if ($state_data->{newstate}) {
     $self->{pbot}->{logger}->log("Spinach: New state: $self->{current_state}\n" . Dumper $state_data);
-  } elsif ($self->{current_state} ne 'nogame') {
-    $self->{pbot}->{logger}->log("Spinach: $self->{current_state} - Tick $state_data->{ticks}\n" . Dumper $state_data);
   }
 
   # run one state/tick
@@ -900,8 +902,6 @@ sub run_one_state {
     delete $state_data->{first_tock};
     $state_data->{ticks} = 0;
   }
-
-  $self->{pbot}->{logger}->log("Spinach: result: $state_data->{previous_result} => $state_data->{result}\n") if $self->{current_state} ne 'nogame';
 
   # transform to next state
   $state_data->{previous_result} = $state_data->{result};
