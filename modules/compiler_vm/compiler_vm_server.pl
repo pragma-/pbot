@@ -120,7 +120,6 @@ sub run_server {
         system("chmod -R 755 /home/compiler");
         system("chown -R compiler /home/compiler");
         system("chgrp -R compiler /home/compiler");
-        system("rm -rf /home/compiler/prog*");
 
         $( = $gid;
         $< = $uid;
@@ -141,7 +140,6 @@ sub run_server {
           system("id");
           system("umount /home/compiler");
           system("umount /root/factdata");
-          system ("rm -rf /home/compiler/*");
         }
 
         exit;
