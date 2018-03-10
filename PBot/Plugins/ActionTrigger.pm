@@ -282,7 +282,15 @@ sub actiontrigger {
     }
 
     default {
-      $result = "Usage: actiontrigger list [channel] | actiontrigger add <level> <regex> <trigger> | actiontrigger delete <regex>";
+      if ($from !~ m/^#/) {
+        $result = "Usage from private message: actiontrigger list [channel] |";
+        $result .= "actiontrigger add <channel> <level> <regex> <trigger> | ";
+        $result .= "actiontrigger delete <channel> <regex>";
+      } else {
+        $result = "Usage: actiontrigger list [channel] | ";
+        $result .= "actiontrigger add <level> <regex> <trigger> | ";
+        $result .= "actiontrigger delete <regex>";
+      }
     }
   }
 
