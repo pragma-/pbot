@@ -7,6 +7,8 @@
 use warnings;
 use strict;
 
+use lib ".";
+
 use IRCColors;
 use QStatskeeper;
 

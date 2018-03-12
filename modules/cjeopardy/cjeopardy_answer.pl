@@ -12,6 +12,8 @@ use Time::HiRes qw(gettimeofday);
 use Time::Duration qw(duration concise);
 use Fcntl qw(:flock);
 
+use lib ".";
+
 use QStatskeeper;
 use Scorekeeper;
 use IRCColors;

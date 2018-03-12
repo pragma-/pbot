@@ -10,6 +10,8 @@ use strict;
 use Time::HiRes qw(gettimeofday);
 use Time::Duration qw(concise duration);
 
+use lib ".";
+
 use Scorekeeper;
 use IRCColors;
 

@@ -25,7 +25,7 @@ if ($channel !~ /^#/) {
 if (not length $filter) {
   my $ret = open my $fh, '<', "$CJEOPARDY_FILTER-$channel";
   if (not defined $ret) {
-    print "There is no filter active for $channel. Usage: filter <comma or space separated list of words> or `filter clear` to clear.\n";
+    print "There is no filter active for $channel. Usage: filter <comma separated list of words> or `filter clear` to clear.\n";
     exit;
   }
 
@@ -34,7 +34,7 @@ if (not length $filter) {
   chomp $words;
   $words =~ s/,/, /g;
   $words =~ s/, ([^,]+)$/ or $1/;
-  print "Filter active. Questions containing $words will be skipped. Usage: filter <comma or space separated list of words> or `filter clear` to clear.\n";
+  print "Filter active. Questions containing $words will be skipped. Usage: filter <comma separated list of words> or `filter clear` to clear.\n";
   exit;
 }
 
@@ -50,7 +50,7 @@ if ($filter eq 'clear') {
 }
 
 $filter =~ s/(^\s+|\s+$)//g;
-my @words = split /[ ,]+/, $filter;
+my @words = split /\s*,\s*/, $filter;
 
 if (not @words) {
   print "What?\n";

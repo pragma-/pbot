@@ -11,6 +11,8 @@ use Time::HiRes qw(gettimeofday);
 use Time::Duration qw(duration concise);
 use POSIX 'strftime';
 
+use lib ".";
+
 use QStatskeeper;
 
 my $command   = shift @ARGV;
