@@ -7,6 +7,8 @@
 use strict;
 use warnings;
 
+use lib ".";
+
 use Parse::RecDescent;
 use Getopt::Std;
 use Data::Dumper;
@@ -84,6 +86,7 @@ foreach my $arg (@ARGV) {
     $output =~ s/the function a generic-selection/the function resulting from a generic-selection/g;
     $output =~ s/\.\s+Then exit switch block/ and then exit switch block/g;
     $output =~ s/,\././g;
+    $output =~ s/of unspecified length //g;
     while($output =~ s/const const/const/g){};
  
     foreach my $quote (@quotes) {

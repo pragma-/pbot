@@ -15,6 +15,7 @@ my $VERSION = "1.0.0";
 use strict;
 use warnings;
 
+use lib ".";
 use PBot::PBot;
 
 # Be sure to set $bothome to the location PBot was extracted (default assumes ~/pbot).  
