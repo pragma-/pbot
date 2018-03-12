@@ -10,6 +10,11 @@ IPC::Shareable
 IPC::Open2
 JSON
 JSON::XS
+Lingua::EN::ABC
+Lingua::EN::Fractions
+Lingua::EN::Numbers
+Lingua::EN::Numbers::Years
+Lingua::Stem
 LWP::Protocol::https
 LWP::Simple
 LWP::UserAgent
