@@ -224,10 +224,10 @@ sub show_output {
     $pretty_code .= "$output\n";
     $pretty_code .= $output_closing_comment;
 
-    my $uri = $self->paste_sprunge($pretty_code);
+    my $uri = $self->paste_ixio($pretty_code);
 
     if (not $uri =~ m/^http/) {
-      $uri = $self->paste_codepad($pretty_code);
+      $uri = $self->paste_ptpb($pretty_code);
     }
 
     print "$uri\n";
@@ -262,7 +262,7 @@ sub show_output {
   close FILE;
 }
 
-sub paste_codepad {
+sub paste_ixio {
   my $self = shift;
   my $text = join(' ', @_);
 
@@ -271,18 +271,22 @@ sub paste_codepad {
   my $ua = LWP::UserAgent->new();
   $ua->agent("Mozilla/5.0");
   push @{ $ua->requests_redirectable }, 'POST';
+  $ua->timeout(10);
 
-  my %post = ( 'lang' => 'C', 'code' => $text, 'private' => 'True', 'submit' => 'Submit' );
-  my $response = $ua->post("http://codepad.org", \%post);
+  my %post = ('f:1' => $text);
+  my $response = $ua->post("http://ix.io", \%post);
 
   if(not $response->is_success) {
-    return $response->status_line;
+    return "error pasting: " . $response->status_line;
   }
 
-  return $response->request->uri;
+  my $result = $response->content;
+  $result =~ s/^\s+//;
+  $result =~ s/\s+$//;
+  return $result;
 }
 
-sub paste_sprunge {
+sub paste_ptpb {
   my $self = shift;
   my $text = join(' ', @_);
 
@@ -291,21 +295,18 @@ sub paste_sprunge {
   my $ua = LWP::UserAgent->new();
   $ua->agent("Mozilla/5.0");
   $ua->requests_redirectable([ ]);
+  $ua->timeout(10);
 
-  my %post = ( 'sprunge' => $text, 'submit' => 'Submit' );
-  my $response = $ua->post("http://sprunge.us", \%post);
+  my %post = ( 'c' => $text, 'submit' => 'Submit' );
+  my $response = $ua->post("https://ptpb.pw/?u=1", \%post);
 
   if(not $response->is_success) {
-    return $response->status_line;
+    return "error pasting: " . $response->status_line;
   }
 
   my $result = $response->content;
   $result =~ s/^\s+//;
-
-  my $lexer = $self->{sprunge_lexer};
-  ($lexer) = $self->{sourcefile} =~ /\.(.*)$/ if not defined $lexer;
-  $result =~ s/\s+$/?$lexer/;
-
+  $result =~ s/\s+$//;
   return $result;
 }
 
