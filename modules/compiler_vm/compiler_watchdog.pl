@@ -38,6 +38,7 @@ sub getlocals {
     print "got peep: [$peep]\n" if $debug >= 5;
     last if $peep =~ m/\(gdb\) \$\d+ = "Go."/;
 
+    next if $peep =~ m/Missing separate debug/;
     # fix this
     $peep =~ s/^\d+: (.*?) =/$1 =/;
     print "$opening$peep$closing";
@@ -134,7 +135,7 @@ sub execute {
       gdb $in, "break $main_end\n";
       gdb $in, "set width 0\n";
       gdb $in, "set height 0\n";
-      gdb $in, "set auto-solib-add off\n";
+#      gdb $in, "set auto-solib-add off\n";
       gdb $in, "catch exec\n";
       gdb $in, "run @ARGV < .input\n";
       next;
@@ -595,11 +596,11 @@ sub gdb {
 sub flushall {
   my ($in, $out) = @_;
 
-  gdb $in, "call fflush(0)\nprint \"~Ok.~\"\n";
+  gdb $in, "call (int(*)(FILE *)) fflush(0)\nprint \"~Ok.~\"\n";
   while(my $line = <$out>) {
     chomp $line;
     $line =~ s/^\(gdb\)\s*//;
-    $line =~ s/\$\d+ = 0$//;
+    $line =~ s/\$\d+ = \Q(int (*)(FILE *)) 0x0\E$//;
     last if $line =~ m/\$\d+ = "~Ok.~"/;
     next unless length $line;
     $got_output = 1;
@@ -610,4 +611,4 @@ sub flushall {
 $SIG{ALRM} = sub { print "\n"; exit 1; };
 alarm 8;
 
-execute("LIBC_FATAL_STDERR=1 MALLOC_CHECK_=1 gdb -silent -q -nx -iex 'set auto-load safe-path /' ./prog 2>&1");
+execute("LIBC_FATAL_STDERR=1 MALLOC_CHECK_=1 gdb -silent -q -nx -iex 'set auto-load safe-path /' ./prog");
