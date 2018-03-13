@@ -31,7 +31,7 @@ sub postprocess {
   }
 
   print "Executing gdb\n";
-  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 5; compiler_watchdog.pl $self->{arguments} > .output\"");
+  my ($retval, $result) = $self->execute(60, "date -s \@$self->{date}; ulimit -t 5; compiler_watchdog.pl $self->{arguments} > .output");
 
   $result = "";
   open(FILE, '.output');
