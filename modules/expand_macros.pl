@@ -300,8 +300,8 @@ $result =~ s/\s+/ /gm;
 print "result: [$result]\n" if $debug;
 
 if(not $has_main) {
-  $result =~ s/\s*int main\(void\) {//;
-  $result =~ s/\s*}\s*$//;
+  $result =~ s/\s*int main\(void\) \{//;
+  $result =~ s/\s*\}\s*$//;
 }
 
 $output = length $result ? $result : $nooutput;
