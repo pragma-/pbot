@@ -57,7 +57,7 @@ sub initialize {
 
   $self->{channel} = '##spinach';
 
-  $self->{choosecategory_max_count} = 2;
+  $self->{choosecategory_max_count} = 4;
   $self->{picktruth_max_count} = 4;
 }
 
