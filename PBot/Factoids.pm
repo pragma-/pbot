@@ -413,9 +413,10 @@ sub expand_factoid_vars {
     my $matches = 0;
     $action =~ s/\$0/$root_keyword/g;
     my $const_action = $action;
-    while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:#\[\]]+)/gi) {
+    my $offset = 0;
+    while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:#]+)/gi) {
       my ($a, $v) = ($1, $2);
-      $v =~ s/(.):$/$1/;
+      $v =~ s/(.):$/$1/; # remove trailing : only if at least one character precedes it
       next if $v =~ m/^[\W_]/; # special character prefix skipped for shell/code-factoids/etc
       next if $v =~ m/^(nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])$/i; # don't override special variables
       next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
@@ -480,14 +481,15 @@ sub expand_factoid_vars {
         if ($a) {
           my $fixed_a = select_indefinite_article $mylist[$line];
           $fixed_a = ucfirst $fixed_a if $a =~ m/^A/;
-          $action =~ s/$a\$$v$modifier/$fixed_a $mylist[$line]/;
-        } else {
-          if (not length $mylist[$line]) {
-            $action =~ s/\s+\$$v$modifier//;
-          } else {
-            $action =~ s/\$$v$modifier/$mylist[$line]/;
-          }
+          $mylist[$line] = "$fixed_a $mylist[$line]";
         }
+
+        if (not length $mylist[$line]) {
+          substr($action, $offset) =~ s/\s+\$$v$modifier//;
+        } else {
+          substr($action, $offset) =~ s/\$$v$modifier/$mylist[$line]/;
+        }
+        $offset = $+[0];
       }
     }
     last if $matches == 0;
