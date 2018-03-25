@@ -1,6 +1,28 @@
 [.*]
-<pbot3!stdin@localhost>
+<jp!.*@.*>
+level: 32767
+loggedin: 1
+name: alyptik
+password: alpha01
+
+<k!*@*>
+level: 31132
+loggedin: 1
+name: owl
+password: ILOVEWANG
+stayloggedin: 1
+
+<pragma-!~chaos@unaffiliated/pragmatic-chaos$>
+level: 32613
+loggedin: 1
+name: rolypoly
+password: iamfkingpencil
+stay_loggedin: 1
+stayloggedin: 1
+
+<shpongle!stdin@localhost>
 level: 90
-name: pbot3
+loggedin: 1
+name: shpongle
 password: admin
 

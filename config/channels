@@ -1,4 +1,14 @@
-[#pbot2]
+[#chee-botabuse]
 chanop: 0
 enabled: 1
+permop: 0
+
+[#chee-fanclub]
+chanop: 0
+enabled: 1
+permop: 0
+
+[#pbot2]
+chanop: 0
+enabled: 0
 

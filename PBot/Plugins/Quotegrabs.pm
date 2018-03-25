@@ -57,7 +57,7 @@ sub initialize {
 
 sub uniq { my %seen; grep !$seen{$_}++, @_ }
 
-sub export_quotegrabs { 
+sub export_quotegrabs {
   my $self = shift;
   return "Quotegrabs exporting not enabled." if not defined $self->{export_path};
 
@@ -125,9 +125,9 @@ sub export_quotegrabs {
       $nick = "<$nicks[0]>";
     }
 
-    $text = "<td><b>". encode_entities($nick) . "</b> " . encode_entities($text) . "</td>\n"; 
+    $text = "<td><b>". encode_entities($nick) . "</b> " . encode_entities($text) . "</td>\n";
     print FILE $text;
-    
+
 
     print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %a %H:%M:%S", localtime $quotegrab->{timestamp}) . "</td>\n";
     print FILE "<td>" . encode_entities($quotegrab->{grabbed_by}) . "</td>\n";
@@ -237,7 +237,7 @@ sub grab_quotegrab {
   $quotegrab->{grabbed_by} = "$nick!$user\@$host";
   $quotegrab->{text} = validate_string($grab_text);
   $quotegrab->{id} = undef;
-  
+
   $quotegrab->{id} = $self->{database}->add_quotegrab($quotegrab);
 
   if(not defined $quotegrab->{id}) {
@@ -245,7 +245,7 @@ sub grab_quotegrab {
   }
 
   $self->export_quotegrabs();
-  
+
   my $text = $quotegrab->{text};
   ($grab_nick) = split /\+/, $grab_nicks, 2;
 
@@ -330,8 +330,8 @@ sub show_random_quotegrab {
     };
 
     $arguments =~ s/(?<!\\)'/\\'/g;
-    my ($ret, $args) = GetOptionsFromString($arguments, 
-      'channel|c=s' => \$channel_search, 
+    my ($ret, $args) = GetOptionsFromString($arguments,
+      'channel|c=s' => \$channel_search,
       'text|t=s'    => \$text_search);
 
     return "$getopt_error -- $usage" if defined $getopt_error;
@@ -354,7 +354,7 @@ sub show_random_quotegrab {
   $channel_search = undef if defined $channel_search and $channel_search !~ /^#/;
 
   my $quotegrab = $self->{database}->get_random_quotegrab($nick_search, $channel_search, $text_search);
-  
+
   if(not defined $quotegrab) {
     my $result = "No quotes grabbed ";
 
@@ -365,7 +365,7 @@ sub show_random_quotegrab {
     if(defined $channel_search) {
       $result .= "in channel $channel_search ";
     }
-   
+
     if(defined $text_search) {
       $result .= "matching text '$text_search' ";
     }
