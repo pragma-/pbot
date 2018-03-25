@@ -485,9 +485,9 @@ sub expand_factoid_vars {
         }
 
         if (not length $mylist[$line]) {
-          substr($action, $offset) =~ s/\s+\$$v$modifier//;
+          substr($action, $offset) =~ s/\s*$a\$$v$modifier//;
         } else {
-          substr($action, $offset) =~ s/\$$v$modifier/$mylist[$line]/;
+          substr($action, $offset) =~ s/$a\$$v$modifier/$mylist[$line]/;
         }
         $offset = $+[0];
       }
