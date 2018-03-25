@@ -121,10 +121,10 @@ sub get_random_quotegrab {
 
     if(defined $nick) {
       $sql .= $where . 'nick LIKE ? ';
-      push @params, "%$nick%";
+      push @params, "$nick";
       $where = '';
       $and = 'AND ';
-    } 
+    }
 
     if(defined $channel) {
       $sql .= $where . $and . 'channel LIKE ? ';
