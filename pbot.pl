@@ -18,6 +18,17 @@ use warnings;
 use lib ".";
 use PBot::PBot;
 
+# !! NOTICE !!
+#
+# The configuration values in this file are written to $bothome/config/registry
+# after the first run!
+#
+# Subsequent edits to this file will not take effect! You must edit the
+# $bothome/config/registry file instead or use the registry commands in
+# the bot (regadd, regset, regchange, etc).
+#
+# !! NOTICE !!
+
 # Be sure to set $bothome to the location PBot was extracted (default assumes ~/pbot).  
 # This location must contain the PBot directory, among others configured below.
 my $bothome = "$ENV{HOME}/pbot";
