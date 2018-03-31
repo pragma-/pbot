@@ -416,6 +416,7 @@ sub expand_factoid_vars {
     my $offset = 0;
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:#]+)/gi) {
       my ($a, $v) = ($1, $2);
+      $a = '' if not defined $a;
       $v =~ s/(.):$/$1/; # remove trailing : only if at least one character precedes it
       next if $v =~ m/^[\W_]/; # special character prefix skipped for shell/code-factoids/etc
       next if $v =~ m/^(nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])$/i; # don't override special variables
@@ -489,7 +490,7 @@ sub expand_factoid_vars {
         } else {
           substr($action, $offset) =~ s/$a\$$v$modifier/$mylist[$line]/;
         }
-        $offset = $+[0];
+        $offset = $-[0];
       }
     }
     last if $matches == 0;
