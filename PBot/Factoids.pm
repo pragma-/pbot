@@ -492,18 +492,32 @@ sub expand_factoid_vars {
 
         if (not length $mylist[$line]) {
           $self->{pbot}->{logger}->log("No length!\n") if $debug;
+          if ($debug) {
+            $self->{pbot}->{logger}->log("before: v: $v, offset: $offset\n");
+            $self->{pbot}->{logger}->log("$action\n");
+            $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
+          }
+
           substr($action, $offset) =~ s/\s*$a\$$v$modifier//;
           $offset += $-[0];
+
           if ($debug) {
-            $self->{pbot}->{logger}->log("after: \$-[0]: $-[0], offset: $offset\n");
+            $self->{pbot}->{logger}->log("after: \$-[0]: $-[0], offset: $offset, r: EMPTY\n");
             $self->{pbot}->{logger}->log("$action\n");
             $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
           }
         } else {
-          substr($action, $offset) =~ s/$a\$$v$modifier/$mylist[$line]/;
-          $offset += $-[0];
           if ($debug) {
-            $self->{pbot}->{logger}->log("after: \$-[0]: $-[0], offset: $offset\n");
+            $self->{pbot}->{logger}->log("before: v: $v, offset: $offset\n");
+            $self->{pbot}->{logger}->log("$action\n");
+            $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
+          }
+
+          substr($action, $offset) =~ s/($a\$$v$modifier)/$mylist[$line]/;
+          $offset += $-[0] + length $mylist[$line];
+
+          if ($debug) {
+            $self->{pbot}->{logger}->log("after: \$-[0]: $-[0], offset: $offset, r: $mylist[$line]\n");
             $self->{pbot}->{logger}->log("$action\n");
             $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
           }
