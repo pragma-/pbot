@@ -513,7 +513,7 @@ sub expand_factoid_vars {
             $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
           }
 
-          substr($action, $offset) =~ s/($a\$$v$modifier)/$mylist[$line]/;
+          substr($action, $offset) =~ s/$a\$$v$modifier/$mylist[$line]/;
           $offset += $-[0] + length $mylist[$line];
 
           if ($debug) {
