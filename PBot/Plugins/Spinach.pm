@@ -634,12 +634,8 @@ sub spinach_cmd {
           $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
           return "/msg $self->{channel} $nick has chosen RANDOM CATEGORY! Randomly choosing category: $self->{state_data}->{current_category}!";
         } elsif ($arguments == @{$self->{state_data}->{category_options}} - 1) {
-          if (++$self->{state_data}->{category_rerolls} >= 3) {
-            return "/msg $self->{channel} $nick has chosen REROLL CATEGORIES! But they have exceeded the number of times they may reroll this turn.";
-          } else {
-            $self->{state_data}->{reroll_category} = 1;
-            return "/msg $self->{channel} $nick has chosen REROLL CATEGORIES! Rerolling categories...";
-          }
+          $self->{state_data}->{reroll_category} = 1;
+          return "/msg $self->{channel} $nick has chosen REROLL CATEGORIES! Rerolling categories...";
         } else {
           $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
           return "/msg $self->{channel} $nick has chosen $self->{state_data}->{current_category}!";
