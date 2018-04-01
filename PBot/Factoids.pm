@@ -407,13 +407,16 @@ sub expand_factoid_vars {
 
   $root_keyword = lc $root_keyword;
 
+  my $debug = 0;
   my $depth = 0;
   while (1) {
     last if ++$depth >= 100;
+
+    my $offset = 0;
     my $matches = 0;
     $action =~ s/\$0/$root_keyword/g;
     my $const_action = $action;
-    my $offset = 0;
+
     while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:#]+)/gi) {
       my ($a, $v) = ($1, $2);
       $a = '' if not defined $a;
@@ -422,6 +425,8 @@ sub expand_factoid_vars {
       next if $v =~ m/^(nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])$/i; # don't override special variables
       next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
       last if ++$depth >= 100;
+
+      $self->{pbot}->{logger}->log("v: [$v]\n") if $debug;
 
       $matches++;
 
@@ -486,11 +491,23 @@ sub expand_factoid_vars {
         }
 
         if (not length $mylist[$line]) {
+          $self->{pbot}->{logger}->log("No length!\n") if $debug;
           substr($action, $offset) =~ s/\s*$a\$$v$modifier//;
+          $offset += $-[0];
+          if ($debug) {
+            $self->{pbot}->{logger}->log("after: \$-[0]: $-[0], offset: $offset\n");
+            $self->{pbot}->{logger}->log("$action\n");
+            $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
+          }
         } else {
           substr($action, $offset) =~ s/$a\$$v$modifier/$mylist[$line]/;
+          $offset += $-[0];
+          if ($debug) {
+            $self->{pbot}->{logger}->log("after: \$-[0]: $-[0], offset: $offset\n");
+            $self->{pbot}->{logger}->log("$action\n");
+            $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
+          }
         }
-        $offset = $-[0];
       }
     }
     last if $matches == 0;
