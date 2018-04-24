@@ -35,8 +35,8 @@ print "$nick: ";
 
 if ($arguments =~ m/(.*)\svs\s(.*)/i) {
   my ($a, $b) = ($1, $2);
-  my $result1 = $engine->search($a);
-  my $result2 = $engine->search($b);
+  my $result1 = $engine->search("\"$a\" -\"$b\"");
+  my $result2 = $engine->search("\"$b\" -\"$a\"");
 
   if (not defined $result1 or not defined $result1->items or not @{$result1->items}) {
     print "No results for $a\n";
