@@ -14,16 +14,16 @@ use Getopt::Std;
 use Data::Dumper;
 
 our ($opt_T, $opt_t, $opt_o, $opt_P);
-getopts('TPto:'); 
+getopts('TPto:');
 
 if ($opt_T ) {
   $::RD_TRACE = 1;
 } else {
-  undef $::RD_TRACE  ; 
+  undef $::RD_TRACE  ;
 }
 
 $::RD_HINT = 1;
-$Parse::RecDescent::skip = '\s*'; 
+$Parse::RecDescent::skip = '\s*';
 
 my $parser;
 
@@ -34,13 +34,13 @@ if($opt_P or !eval { require PCGrammar }) {
 
 $parser = PCGrammar->new() or die "Bad grammar!\n";
 
-if ($opt_o) { 
-  open(OUTFILE, ">>$opt_o"); 
-  *STDOUT = *OUTFILE{IO}; 
+if ($opt_o) {
+  open(OUTFILE, ">>$opt_o");
+  *STDOUT = *OUTFILE{IO};
 }
 
 my $text = "";
-foreach my $arg (@ARGV) { 
+foreach my $arg (@ARGV) {
   print STDERR "Opening file $arg\n";
 
   open(CFILE, "$arg") or die "Could not open $arg.\n";
@@ -48,14 +48,14 @@ foreach my $arg (@ARGV) {
   $text = <CFILE>;
   close(CFILE);
 
-  print STDERR "parsing...\n"; 
+  print STDERR "parsing...\n";
 
   # for debugging...
-  if ($opt_t) { 
+  if ($opt_t) {
     $::RD_TRACE = 1;
   } else {
     undef $::RD_TRACE;
-  } 
+  }
 
   my $result = $parser->startrule(\$text) or die "Bad text!\n$text\n";
 
@@ -88,7 +88,7 @@ foreach my $arg (@ARGV) {
     $output =~ s/,\././g;
     $output =~ s/of unspecified length //g;
     while($output =~ s/const const/const/g){};
- 
+
     foreach my $quote (@quotes) {
       next unless $quote;
       $output =~ s/"-+"/"$quote"/;
