@@ -11,10 +11,7 @@ use File::Basename;
 use JSON;
 
 my $USERNAME = 'compiler';
-my $USE_LOCAL = defined $ENV{'CC_LOCAL'}; 
-
-# uncomment the following if installed to the virtual machine
-# use constant MOD_DIR => '/usr/local/share/compiler_vm/languages';
+my $USE_LOCAL = defined $ENV{'CC_LOCAL'};
 
 use constant MOD_DIR => '/usr/local/share/compiler_vm/languages';
 
@@ -116,14 +113,13 @@ sub run_server {
 
         if ($compile_in->{'persist-key'}) {
           system("mount /dev/vdb1 /root/factdata");
-          system("mkdir /root/factdata/$compile_in->{'persist-key'}");
-          system("cp -R -p /root/factdata/$compile_in->{'persist-key'}/* /home/compiler/");
+          system("mkdir -p \"/root/factdata/$compile_in->{'persist-key'}\"");
+          system("mount --bind \"/root/factdata/$compile_in->{'persist-key'}\" /home/compiler");
         }
 
         system("chmod -R 755 /home/compiler");
-        system("chown -R compiler /home/compiler/*");
-        system("chgrp -R compiler /home/compiler/*");
-        system("rm -rf /home/compiler/prog*");
+        system("chown -R compiler /home/compiler");
+        system("chgrp -R compiler /home/compiler");
 
         $( = $gid;
         $< = $uid;
@@ -142,9 +138,8 @@ sub run_server {
 
         if ($compile_in->{'persist-key'}) {
           system("id");
-          system("cp -R -p /home/compiler/* /root/factdata/$compile_in->{'persist-key'}/");
+          system("umount /home/compiler");
           system("umount /root/factdata");
-          system ("rm -rf /home/compiler/*");
         }
 
         exit;
