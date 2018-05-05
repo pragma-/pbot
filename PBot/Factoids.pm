@@ -858,7 +858,7 @@ sub interpreter {
       }
 
       # otherwise find levenshtein closest matches from all channels
-      $matches = $self->{factoids}->levenshtein_matches('.*', lc $original_keyword);
+      $matches = $self->{factoids}->levenshtein_matches('.*', lc $original_keyword, 0.40);
 
       # don't say anything if nothing similiar was found
       return undef if $matches eq 'none';
