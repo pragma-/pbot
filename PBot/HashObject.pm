@@ -171,12 +171,14 @@ sub find_hash {
 }
 
 sub levenshtein_matches {
-  my ($self, $keyword) = @_;
+  my ($self, $keyword, $distance) = @_;
   my $comma = '';
   my $result = "";
+
+  $distance = 0.60 if not defined $distance;
   
   foreach my $index (sort keys %{ $self->hash }) {
-    my $distance = fastdistance($keyword, $index);
+    my $fast_distance = fastdistance($keyword, $index);
 
     # print "Distance $distance for $keyword (" , (length $keyword) , ") vs $index (" , length $index , ")\n";
     
@@ -184,7 +186,7 @@ sub levenshtein_matches {
 
     # print "Percentage: ", $distance / $length, "\n";
 
-    if($length != 0 && $distance / $length < 0.50) {
+    if($length != 0 && $fast_distance / $length < $distance) {
       $result .= $comma . $index;
       $comma = ", ";
     }
