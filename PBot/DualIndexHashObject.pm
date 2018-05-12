@@ -175,7 +175,7 @@ sub find_index {
 }
 
 sub levenshtein_matches {
-  my ($self, $primary_index_key, $secondary_index_key, $distance) = @_;
+  my ($self, $primary_index_key, $secondary_index_key, $distance, $strictnamespace) = @_;
   my $comma = '';
   my $result = "";
 
@@ -206,6 +206,10 @@ sub levenshtein_matches {
     foreach my $index1 (sort keys %{ $self->hash }) {
       $header = "[$index1] ";
       $header = "[global channel] " if $header eq "[.*] ";
+
+      if ($strictnamespace) {
+        next unless $index1 eq '.*' or $index1 eq $primary;
+      }
 
       foreach my $index2 (sort keys %{ $self->hash->{$index1} }) {
         my $distance_result = fastdistance($secondary_index_key, $index2);

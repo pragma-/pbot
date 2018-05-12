@@ -792,6 +792,12 @@ sub interpreter {
 
   $stuff->{from} = lc $stuff->{from};
 
+  my $strictnamespace = $self->{pbot}->{registry}->get_value($stuff->{from}, 'strictnamespace');
+
+  if (not defined $strictnamespace) {
+    $strictnamespace = $self->{pbot}->{registry}->get_value('general', 'strictnamespace');
+  }
+
   # search for factoid against global channel and current channel (from unless ref_from is defined)
   my $original_keyword = $stuff->{keyword};
   #$self->{pbot}->{logger}->log("calling find_factoid in Factoids.pm, interpreter() to search for factoid against global/current\n");
@@ -849,7 +855,15 @@ sub interpreter {
       # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, don't say anything
       return undef if length $stuff->{arguments} and not $self->{pbot}->{nicklist}->is_present($stuff->{from}, $stuff->{arguments});
       
-      my $matches = $self->{commands}->factfind($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, quotemeta $original_keyword);
+      my $namespace = $strictnamespace ? $stuff->{from} : '.*';
+      $namespace = '.*' if $namespace !~ /^#/;
+
+      my $namespace_regex = $namespace;
+      if ($strictnamespace) {
+        $namespace_regex = "(?:" . (quotemeta $namespace) . '|\\.\\*)';
+      }
+
+      my $matches = $self->{commands}->factfind($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, quotemeta($original_keyword) . " -channel $namespace_regex");
 
       # found factfind matches
       if ($matches !~ m/^No factoids/) {
@@ -857,8 +871,8 @@ sub interpreter {
         return "No such factoid '$original_keyword'; $matches";
       }
 
-      # otherwise find levenshtein closest matches from all channels
-      $matches = $self->{factoids}->levenshtein_matches('.*', lc $original_keyword);
+      # otherwise find levenshtein closest matches
+      $matches = $self->{factoids}->levenshtein_matches($namespace, lc $original_keyword, 0.50, $strictnamespace);
 
       # don't say anything if nothing similiar was found
       return undef if $matches eq 'none';

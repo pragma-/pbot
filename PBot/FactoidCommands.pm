@@ -1356,12 +1356,12 @@ sub factfind {
     $regex .= ($arguments =~ m/\w$/) ? '\b' : '\B';
 
     foreach my $chan (sort keys %{ $factoids }) {
-      next if defined $channel and $chan !~ /$channel/i;
+      next if defined $channel and $chan !~ /^$channel$/i;
       foreach my $trigger (sort keys %{ $factoids->{$chan} }) {
         if($factoids->{$chan}->{$trigger}->{type} eq 'text' or $factoids->{$chan}->{$trigger}->{type} eq 'regex') {
-          if($factoids->{$chan}->{$trigger}->{owner} =~ /$owner/i 
-            && $factoids->{$chan}->{$trigger}->{ref_user} =~ /$refby/i
-            && (exists $factoids->{$chan}->{$trigger}->{edited_by} ? $factoids->{$chan}->{$trigger}->{edited_by} =~ /$editby/i : 1)) {
+          if($factoids->{$chan}->{$trigger}->{owner} =~ /^$owner$/i
+            && $factoids->{$chan}->{$trigger}->{ref_user} =~ /^$refby$/i
+            && (exists $factoids->{$chan}->{$trigger}->{edited_by} ? $factoids->{$chan}->{$trigger}->{edited_by} =~ /^$editby$/i : 1)) {
             next if($arguments ne "" && $factoids->{$chan}->{$trigger}->{action} !~ /$regex/i && $trigger !~ /$regex/i);
 
             $i++;
