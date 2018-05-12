@@ -61,7 +61,7 @@ sub unset {
     return "Usage: chanunset <channel> <key>";
   }
 
-  return "msg $nick " . $self->{channels}->unset($channel, $key);
+  return $self->{channels}->unset($channel, $key);
 }
 
 sub add {
