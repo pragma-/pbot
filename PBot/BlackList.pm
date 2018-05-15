@@ -193,7 +193,7 @@ sub blacklist {
               }
             }
             $text .= "none" if $entries == 0;
-            return $text;
+            return "/msg $nick $text";
         }
         when("add") {
             my ($mask, $channel) = split /\s+/, $args, 2;
