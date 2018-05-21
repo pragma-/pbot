@@ -1336,24 +1336,13 @@ sub validate_lie {
   my $lie_word_count = keys %lie_words;
 
   my $count = 0;
-  foreach my $word (keys %truth_words) {
-    if (exists $lie_words{$word}) {
-      $count++;
-    }
-  }
-
-  if ($count == $truth_word_count) {
-    return 0;
-  }
-
-  $count = 0;
   foreach my $word (keys %lie_words) {
     if (exists $truth_words{$word}) {
       $count++;
     }
   }
 
-  if ($count >= 2 and $count == $lie_word_count) {
+  if ($count) {
     return 0;
   }
 
@@ -1960,7 +1949,7 @@ sub getplayers {
     }
   }
 
-  if (not $unready) {
+  if (@$players > 1 and not $unready) {
     $self->send_message($self->{channel}, "All players ready!");
     $state->{result} = 'allready';
     return $state;
@@ -1975,6 +1964,10 @@ sub getplayers {
 
   if ($state->{ticks} % $tock == 0) {
     $state->{tocked} = 1;
+
+    if (not $unready) {
+      $self->send_message($self->{channel}, "Game cannot begin with only one player.");
+    }
 
     if (++$state->{counter} > 6) {
       $self->send_message($self->{channel}, "Not all players were ready in time. The game has been stopped.");
@@ -2745,7 +2738,7 @@ sub r3q3showscore {
 sub round4 {
   my ($self, $state) = @_;
   $state->{truth_points} = 2000;
-  $state->{lie_points} = 4000;
+  $state->{lie_points} = 3000;
   $state->{my_lie_points} = $state->{lie_points} * 0.25;
   $state->{result} = 'next';
   return $state;
