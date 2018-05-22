@@ -444,7 +444,7 @@ sub handle_result {
   my $preserve_newlines = $self->{pbot}->{registry}->get_value($stuff->{from}, 'preserve_newlines');
 
   $result =~ s/[\n\r]/ /g unless $preserve_newlines;
-  $result =~ s/[ \t]+/ /g unless $self->{preserve_whitespace};
+  $result =~ s/[ \t]+/ /g unless $stuff->{preserve_whitespace};
 
   my $max_lines = $self->{pbot}->{registry}->get_value($stuff->{from}, 'max_newlines');
   $max_lines = 4 if not defined $max_lines;
