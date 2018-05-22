@@ -270,9 +270,6 @@ sub interpret {
     }
   }
 
-  # unescape any escaped substituted commands
-  $arguments =~ s/\\&\{/&{/g if defined $arguments;
-
   # parse out a pipe
   if (defined $arguments && $arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
     my ($pipe, $rest, $args) = extract_codeblock $arguments, '{}', '(?s).*?(?<!\\\\)\|\s*';
@@ -292,9 +289,6 @@ sub interpret {
     }
     $stuff->{pipe} = $pipe;
   }
-
-  # unescape any escaped pipes
-  $arguments =~ s/\\\|\s*\{/| {/g if defined $arguments;
 
   $stuff->{nickoverride} = $stuff->{nick} if defined $stuff->{nickoverride} and lc $stuff->{nickoverride} eq 'me';
 
@@ -332,6 +326,14 @@ sub interpret {
   }
 
   $stuff->{keyword} = $keyword;
+  $stuff->{original_arguments} = $arguments;
+
+  # unescape any escaped substituted commands
+  $arguments =~ s/\\&\{/&{/g if defined $arguments;
+
+  # unescape any escaped pipes
+  $arguments =~ s/\\\|\s*\{/| {/g if defined $arguments;
+
   $stuff->{arguments} = $arguments;
 
   return $self->SUPER::execute_all($stuff);

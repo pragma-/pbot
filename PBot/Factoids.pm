@@ -952,6 +952,7 @@ sub handle_action {
         $stuff->{no_nickoverride} = 0;
       }
       $stuff->{arguments} = "";
+      $stuff->{original_arguments} = "";
     } else {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
         my $target = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{arguments});
@@ -974,7 +975,7 @@ sub handle_action {
   # Check if it's an alias
   if ($action =~ /^\/call\s+(.*)$/) {
     my $command = $1;
-    $command .= " $stuff->{arguments}" if length $stuff->{arguments};
+    $command .= " $stuff->{original_arguments}" if length $stuff->{original_arguments};
 
     $stuff->{command} = $command;
     $stuff->{aliased} = 1;
