@@ -287,7 +287,16 @@ sub preprocess_code {
     $ret =~ s/^\s+//;
     $ret =~ s/\s+$//;
 
-    if(not length $ret or $ret eq "else" or $ret eq "while" or $ret eq "if" or $ret eq "for" or $ident eq "for" or $ident eq "while" or $ident eq "if") {
+    if(not length $ret
+       or $ret eq "switch"
+       or $ret eq "else"
+       or $ret eq "while"
+       or $ret eq "if"
+       or $ret eq "for"
+       or $ident eq "switch"
+       or $ident eq "for"
+       or $ident eq "while"
+       or $ident eq "if") {
       $precode .= "$ret $ident ($params) $potential_body";
       next;
     } else {
