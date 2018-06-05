@@ -108,6 +108,12 @@ sub unban_user {
 
   my ($target, $channel, $immediately) = split /\s+/, $arguments;
 
+  if (defined $target and defined $channel and $channel !~ /^#/) {
+    my $temp = $target;
+    $target = $channel;
+    $channel = $temp;
+  }
+
   if(not defined $target) {
     return "/msg $nick Usage: unban <mask> [[channel] [false value to use unban queue]]";
   }
@@ -197,6 +203,12 @@ sub unmute_user {
   }
 
   my ($target, $channel) = split /\s+/, $arguments;
+
+  if (defined $target and defined $channel and $channel !~ /^#/) {
+    my $temp = $target;
+    $target = $channel;
+    $channel = $temp;
+  }
 
   if (not defined $target) {
     return "/msg $nick Usage: unmute <mask> [channel]";
