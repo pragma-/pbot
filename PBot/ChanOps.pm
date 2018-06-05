@@ -126,7 +126,7 @@ sub ban_user {
   $self->gain_ops($channel);
 }
 
-sub get_akas {
+sub get_bans {
   my ($self, $mask, $channel) = @_;
   my $masks;
 
@@ -155,31 +155,39 @@ sub get_akas {
   return $masks
 }
 
-sub unban_user {
-  my $self = shift;
-  my ($mask, $channel, $immediately) = @_;
+sub unmode_user {
+  my ($self, $mask, $channel, $immediately, $mode) = @_;
 
   $mask = lc $mask;
   $channel = lc $channel;
-  $self->{pbot}->{logger}->log("Unbanning $channel $mask\n");
+  $self->{pbot}->{logger}->log("Removing mode $mode from $mask in $channel\n");
 
-  my $bans = $self->get_akas($mask, $channel);
+  my $bans = $self->get_bans($mask, $channel);
+  my %unbanned;
 
   if (not defined $bans) {
     my $baninfo = {};
     $baninfo->{banmask} = $mask;
-    $baninfo->{type} = '+b';
+    $baninfo->{type} = '+' . $mode;
     push @$bans, $baninfo;
   }
 
-  my %unbanned;
   foreach my $baninfo (@$bans) {
-    next if $baninfo->{type} ne '+b';
+    next if $baninfo->{type} ne '+' . $mode;
     next if exists $unbanned{$baninfo->{banmask}};
     $unbanned{$baninfo->{banmask}} = 1;
-    $self->add_to_unban_queue($channel, 'b', $baninfo->{banmask});
+    $self->add_to_unban_queue($channel, $mode, $baninfo->{banmask});
   }
+
   $self->check_unban_queue if $immediately;
+}
+
+sub unban_user {
+  my ($self, $mask, $channel, $immediately) = @_;
+  $mask = lc $mask;
+  $channel = lc $channel;
+  $self->{pbot}->{logger}->log("Unbanning $channel $mask\n");
+  $self->unmode_user($mask, $channel, $immediately, 'b');
 }
 
 sub ban_user_timed {
@@ -224,31 +232,11 @@ sub mute_user {
 }
 
 sub unmute_user {
-  my $self = shift;
-  my ($mask, $channel, $immediately) = @_;
-
+  my ($self, $mask, $channel, $immediately) = @_;
   $mask = lc $mask;
   $channel = lc $channel;
   $self->{pbot}->{logger}->log("Unmuting $channel $mask\n");
-
-  my $mutes = $self->get_akas($mask, $channel);
-
-  if (not defined $mutes) {
-    my $muteinfo = {};
-    $muteinfo->{banmask} = $mask;
-    $muteinfo->{type} = '+q';
-    push @$mutes, $muteinfo;
-  }
-
-  my %unmutes;
-  foreach my $muteinfo (@$mutes) {
-    next if $muteinfo->{type} ne '+q';
-    next if exists $unmutes{$muteinfo->{banmask}};
-    $unmutes{$muteinfo->{banmask}} = 1;
-    $self->add_to_unban_queue($channel, 'q', $muteinfo->{banmask});
-  }
-
-  $self->check_unban_queue if $immediately;
+  $self->unmode_user($mask, $channel, $immediately, 'q');
 }
 
 sub mute_user_timed {
