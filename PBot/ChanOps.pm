@@ -73,7 +73,7 @@ sub gain_ops {
   my $self = shift;
   my $channel = shift;
   $channel = lc $channel;
-  
+
   return if exists $self->{op_requested}->{$channel};
   return if not $self->can_gain_ops($channel);
 
@@ -126,18 +126,16 @@ sub ban_user {
   $self->gain_ops($channel);
 }
 
-sub unban_user {
-  my $self = shift;
-  my ($mask, $channel, $immediately) = @_;
-
-  my $bans;
+sub get_akas {
+  my ($self, $mask, $channel) = @_;
+  my $masks;
 
   if ($mask !~ m/[!@\$]/) {
     my ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($mask);
 
     if (defined $hostmask) {
       my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
-      $bans = $self->{pbot}->{bantracker}->get_baninfo($hostmask, $channel, $nickserv);
+      $masks = $self->{pbot}->{bantracker}->get_baninfo($hostmask, $channel, $nickserv);
     }
 
     my %akas = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($mask);
@@ -148,11 +146,24 @@ sub unban_user {
 
       my $b = $self->{pbot}->{bantracker}->get_baninfo($aka, $channel);
       if (defined $b) {
-        $bans = {} if not defined $bans;
-        push @$bans,  @$b;
+        $masks = {} if not defined $masks;
+        push @$masks,  @$b;
       }
     }
   }
+
+  return $masks
+}
+
+sub unban_user {
+  my $self = shift;
+  my ($mask, $channel, $immediately) = @_;
+
+  $mask = lc $mask;
+  $channel = lc $channel;
+  $self->{pbot}->{logger}->log("Unbanning $channel $mask\n");
+
+  my $bans = $self->get_akas($mask, $channel);
 
   if (not defined $bans) {
     my $baninfo = {};
@@ -215,16 +226,28 @@ sub mute_user {
 sub unmute_user {
   my $self = shift;
   my ($mask, $channel, $immediately) = @_;
+
   $mask = lc $mask;
   $channel = lc $channel;
   $self->{pbot}->{logger}->log("Unmuting $channel $mask\n");
 
-  if ($self->{unmute_timeout}->find_index($channel, $mask)) {
-    $self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + 7200; # try again in 2 hours if unmute doesn't immediately succeed
-    $self->{unmute_timeout}->save;
+  my $mutes = $self->get_akas($mask, $channel);
+
+  if (not defined $mutes) {
+    my $muteinfo = {};
+    $muteinfo->{banmask} = $mask;
+    $muteinfo->{type} = '+q';
+    push @$mutes, $muteinfo;
   }
 
-  $self->add_to_unban_queue($channel, 'q', $mask);
+  my %unmutes;
+  foreach my $muteinfo (@$mutes) {
+    next if $muteinfo->{type} ne '+q';
+    next if exists $unmutes{$muteinfo->{banmask}};
+    $unmutes{$muteinfo->{banmask}} = 1;
+    $self->add_to_unban_queue($channel, 'q', $muteinfo->{banmask});
+  }
+
   $self->check_unban_queue if $immediately;
 }
 
@@ -379,8 +402,8 @@ sub check_opped_timeouts {
 
   foreach my $channel (keys %{ $self->{is_opped} }) {
     if($self->{is_opped}->{$channel}{timeout} < $now) {
-      unless (exists $self->{pbot}->{channels}->{channels}->hash->{$channel} 
-          and exists $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop} 
+      unless (exists $self->{pbot}->{channels}->{channels}->hash->{$channel}
+          and exists $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}
           and $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}) {
         $self->lose_ops($channel);
         delete $self->{is_opped}->{$channel}; # assume chanserv is alive and deop will succeed
