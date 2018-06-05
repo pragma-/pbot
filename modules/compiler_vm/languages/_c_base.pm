@@ -63,12 +63,14 @@ sub initialize {
 END
 }
 
+$main_sig = "int main(int argc, char *argv[]) {";
+$main_ret = "return 0;\n}\n";
+
 sub process_custom_options {
   my $self = shift;
 
   $self->add_option("-nomain") if $self->{code} =~ s/(?:^|(?<=\s))-nomain\s*//i;
   $self->add_option("-noheaders") if $self->{code} =~ s/(?:^|(?<=\s))-noheaders\s*//i;
-
   $self->{include_options} = "";
   while ($self->{code} =~ s/(?:^|(?<=\s))-include\s+(\S+)\s+//) {
     $self->{include_options} .= "#include <$1> ";
@@ -333,6 +335,17 @@ sub preprocess_code {
     print "  precode: [$precode]\n" if $self->{debug} >= 2;
 
     $has_main = 1 if $ident =~ m/^\s*\(?\s*main\s*\)?\s*$/;
+
+    # use a lone "@" to separate prelude from code to put
+    # inside main() since there is no way to make that valid
+    # C aside from inside string literals or macros (can be
+    # special cased later if false positives become a problem).
+    if ($self->{code} =~ /(?:^|(?<=\s)@\s*/) {
+      $has_main = 1;
+      $self->{code} =~ s/(?:^|(?<=\s)@\s*/\n;\n$main_sig\n$precode\n;\n$main_ret/;
+      # only allow first @ to be the sentinel
+      $self->{code} =~ s/(?:^|(?<=\s)@\s*//g;
+    }
   }
 
   $precode =~ s/^\s+//;
@@ -361,7 +374,7 @@ sub preprocess_code {
       }
     }
 
-    $self->{code} = "$prelude\n$self->{code}\n" . "int main(int argc, char *argv[]) {\n$precode\n;\nreturn 0;\n}\n";
+    $self->{code} = "$prelude\n$self->{code}\n" . "$main_sig\n$precode\n;\n$main_ret\n";
   } else {
     $self->{code} = "$prelude\n$self->{code}\n";
   }
