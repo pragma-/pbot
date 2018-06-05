@@ -1237,7 +1237,7 @@ postfix_expression:
       '(' type_name ')' '{' initializer_list '}' postfix_productions[context => "$arg{context}|compound literal"](?)
           {
             my $postfix = $item[-1]->[0];
-            $return = "A compound-literal of type $item{type_name} initialized to {$item{initializer_list}}";
+            $return = "A compound literal of type $item{type_name} initialized to {$item{initializer_list}}";
             $return = "$postfix $return" if $postfix;
           }
     | primary_expression postfix_productions[primary_expression => $item[1], context => $arg{context}]
