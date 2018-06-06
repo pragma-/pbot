@@ -86,7 +86,10 @@ sub ban_user {
     return "/msg $nick You are not an admin for $channel.";
   }
 
-  $self->{pbot}->{chanops}->ban_user_timed($target, $channel, $length);
+  my @targets = split /,/, $target;
+  foreach my $t (@targets) {
+    $self->{pbot}->{chanops}->ban_user_timed($t, $channel, $length);
+  }
 
   if ($length > 0) {
     $length = duration($length);
@@ -115,13 +118,13 @@ sub unban_user {
   }
 
   if(not defined $target) {
-    return "/msg $nick Usage: unban <mask> [[channel] [false value to use unban queue]]";
+    return "/msg $nick Usage: unban <nick/mask> [[channel] [false value to use unban queue]]";
   }
 
   $channel = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $from if not defined $channel;
   $immediately = 1 if not defined $immediately;
 
-  return "/msg $nick Usage for /msg: unban <nick/mask> <channel> [true value to use unban queue]" if $channel !~ /^#/;
+  return "/msg $nick Usage for /msg: unban <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
   if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
@@ -182,7 +185,10 @@ sub mute_user {
     return "/msg $nick You are not an admin for $channel.";
   }
 
-  $self->{pbot}->{chanops}->mute_user_timed($target, $channel, $length);
+  my @targets = split /,/, $target;
+  foreach my $t (@targets) {
+    $self->{pbot}->{chanops}->mute_user_timed($t, $channel, $length);
+  }
 
   if ($length > 0) {
     $length = duration($length);
@@ -202,7 +208,7 @@ sub unmute_user {
     return "";
   }
 
-  my ($target, $channel) = split /\s+/, $arguments;
+  my ($target, $channel, $immediately) = split /\s+/, $arguments;
 
   if (defined $target and defined $channel and $channel !~ /^#/) {
     my $temp = $target;
@@ -210,19 +216,25 @@ sub unmute_user {
     $channel = $temp;
   }
 
-  if (not defined $target) {
-    return "/msg $nick Usage: unmute <mask> [channel]";
+  if(not defined $target) {
+    return "/msg $nick Usage: unmute <nick/mask> [[channel] [false value to use unban queue]]";
   }
 
   $channel = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $from if not defined $channel;
+  $immediately = 1 if not defined $immediately;
 
-  return "/msg $nick Usage for /msg: unmute <mask> <channel>" if $channel !~ /^#/;
+  return "/msg $nick Usage for /msg: unmute <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
   if (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
-  $self->{pbot}->{chanops}->unmute_user($target, $channel, 1);
+  my @targets = split /,/, $target;
+  $immediately = 0 if @targets > 2;
+
+  foreach my $t (@targets) {
+    $self->{pbot}->{chanops}->unmute_user($t, $channel, $immediately);
+  }
   return "/msg $nick $target has been unmuted in $channel.";
 }
 
