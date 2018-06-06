@@ -87,8 +87,13 @@ sub ban_user {
   }
 
   my @targets = split /,/, $target;
+  my $immediately = @targets > 1 ? 0 : 1;
   foreach my $t (@targets) {
-    $self->{pbot}->{chanops}->ban_user_timed($t, $channel, $length);
+    $self->{pbot}->{chanops}->ban_user_timed($t, $channel, $length, $immediately);
+  }
+
+  if (not $immediately) {
+    $self->{pbot}->{chanops}->check_ban_queue;
   }
 
   if ($length > 0) {
@@ -131,10 +136,14 @@ sub unban_user {
   }
 
   my @targets = split /,/, $target;
-  $immediately = 0 if @targets > 2;
+  $immediately = 0 if @targets > 1;
 
   foreach my $t (@targets) {
     $self->{pbot}->{chanops}->unban_user($t, $channel, $immediately);
+  }
+
+  if (@targets > 1) {
+    $self->{pbot}->{chanops}->check_unban_queue;
   }
 
   return "/msg $nick $target has been unbanned from $channel.";
@@ -186,8 +195,13 @@ sub mute_user {
   }
 
   my @targets = split /,/, $target;
+  my $immediately = @targets > 1 ? 0 : 1;
   foreach my $t (@targets) {
-    $self->{pbot}->{chanops}->mute_user_timed($t, $channel, $length);
+    $self->{pbot}->{chanops}->mute_user_timed($t, $channel, $length, $immediately);
+  }
+
+  if (not $immediately) {
+    $self->{pbot}->{chanops}->check_ban_queue;
   }
 
   if ($length > 0) {
@@ -230,11 +244,16 @@ sub unmute_user {
   }
 
   my @targets = split /,/, $target;
-  $immediately = 0 if @targets > 2;
+  $immediately = 0 if @targets > 1;
 
   foreach my $t (@targets) {
     $self->{pbot}->{chanops}->unmute_user($t, $channel, $immediately);
   }
+
+  if (@targets > 1) {
+    $self->{pbot}->{chanops}->check_unban_queue;
+  }
+
   return "/msg $nick $target has been unmuted in $channel.";
 }
 

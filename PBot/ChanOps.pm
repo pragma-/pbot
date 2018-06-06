@@ -47,6 +47,7 @@ sub initialize {
 
   $self->{unmute_timeout}->load;
 
+  $self->{ban_queue} = {};
   $self->{unban_queue} = {};
 
   $self->{op_commands} = {};
@@ -120,10 +121,13 @@ sub perform_op_commands {
 
 sub ban_user {
   my $self = shift;
-  my ($mask, $channel) = @_;
+  my ($mask, $channel, $immediately) = @_;
 
-  $self->add_op_command($channel, "mode $channel +b $mask");
-  $self->gain_ops($channel);
+  $self->add_to_ban_queue($channel, 'b', $mask);
+
+  if (not defined $immediately or $immediately != 0) {
+    $self->check_ban_queue;
+  }
 }
 
 sub get_bans {
@@ -192,7 +196,7 @@ sub unban_user {
 
 sub ban_user_timed {
   my $self = shift;
-  my ($mask, $channel, $length) = @_;
+  my ($mask, $channel, $length, $immediately) = @_;
 
   $channel = lc $channel;
   $mask = lc $mask;
@@ -212,7 +216,8 @@ sub ban_user_timed {
     }
   }
 
-  $self->ban_user($mask, $channel);
+  $self->ban_user($mask, $channel, $immediately);
+
   if ($length > 0) {
     $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
     $self->{unban_timeout}->save;
@@ -225,10 +230,13 @@ sub ban_user_timed {
 
 sub mute_user {
   my $self = shift;
-  my ($mask, $channel) = @_;
+  my ($mask, $channel, $immediately) = @_;
 
-  $self->add_op_command($channel, "mode $channel +q $mask");
-  $self->gain_ops($channel);
+  $self->add_to_ban_queue($channel, 'q', $mask);
+
+  if (not defined $immediately or $immediately != 0) {
+    $self->check_ban_queue;
+  }
 }
 
 sub unmute_user {
@@ -241,13 +249,13 @@ sub unmute_user {
 
 sub mute_user_timed {
   my $self = shift;
-  my ($mask, $channel, $length) = @_;
+  my ($mask, $channel, $length, $immediately) = @_;
 
   $channel = lc $channel;
   $mask = lc $mask;
 
   $mask .= '!*@*' if $mask !~ m/[\$!@]/;
-  $self->mute_user($mask, $channel);
+  $self->mute_user($mask, $channel, $immediately);
   if ($length > 0) {
     $self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
     $self->{unmute_timeout}->save;
@@ -298,6 +306,56 @@ sub has_ban_timeout {
 sub has_mute_timeout {
   my ($self, $channel, $mask) = @_;
   return exists $self->{unmute_timeout}->hash->{lc $channel}->{lc $mask};
+}
+
+sub add_to_ban_queue {
+  my ($self, $channel, $mode, $target) = @_;
+  push @{$self->{ban_queue}->{$channel}->{$mode}}, $target;
+  $self->{pbot}->{logger}->log("Added +$mode $target for $channel to ban queue.\n");
+}
+
+sub check_ban_queue {
+  my $self = shift;
+
+  my $MAX_COMMANDS = 4;
+  my $commands = 0;
+
+  foreach my $channel (keys %{$self->{ban_queue}}) {
+    my $done = 0;
+    while (not $done) {
+      my ($list, $count, $modes);
+      $list = '';
+      $modes = '+';
+      $count = 0;
+
+      foreach my $mode (keys %{$self->{ban_queue}->{$channel}}) {
+        while (@{$self->{ban_queue}->{$channel}->{$mode}}) {
+          my $target = pop @{$self->{ban_queue}->{$channel}->{$mode}};
+          $list .= " $target";
+          $modes .= $mode;
+          last if ++$count >= $self->{pbot}->{ircd}->{MODES};
+        }
+
+        if (not @{$self->{ban_queue}->{$channel}->{$mode}}) {
+          delete $self->{ban_queue}->{$channel}->{$mode};
+        }
+
+        last if $count >= $self->{pbot}->{ircd}->{MODES};
+      }
+
+      if (not keys %{ $self->{ban_queue}->{$channel} }) {
+        delete $self->{ban_queue}->{$channel};
+        $done = 1;
+      }
+
+      if ($count) {
+        $self->add_op_command($channel, "mode $channel $modes $list");
+        $self->gain_ops($channel);
+
+        return if ++$commands >= $MAX_COMMANDS;
+      }
+    }
+  }
 }
 
 sub add_to_unban_queue {
