@@ -174,6 +174,7 @@ sub connect {
       Username     => $self->{registry}->get_value('irc', 'username'),
       Ircname      => $self->{registry}->get_value('irc', 'ircname'),
       Server       => $server,
+      Pacing       => 1,
       SSL          => $self->{registry}->get_value('irc', 'SSL'),
       SSL_ca_file  => $self->{registry}->get_value('irc', 'SSL_ca_file'),
       SSL_ca_path  => $self->{registry}->get_value('irc', 'SSL_ca_path'),
