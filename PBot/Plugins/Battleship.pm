@@ -12,6 +12,9 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 use Carp ();
 use Time::Duration qw/concise duration/;
+use Data::Dumper;
+$Data::Dumper::Useqq = 1;
+$Data::Dumper::Sortkeys = 1;
 
 sub new {
   Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
@@ -156,7 +159,7 @@ sub battleship_cmd {
       $player = { id => $id, name => $challengee, missedinputs => 0 };
       push @{$self->{state_data}->{players}}, $player;
 
-      return "/msg $self->{channel} $nick has challenged $challengee to Battleship!";
+      return "/msg $self->{channel} $nick has challenged $challengee to Battleship! Use `accept` to accept their challenge.";
     }
 
     when ('accept') {
@@ -884,15 +887,15 @@ sub show_battlefield {
   }
 
   if ($player == 0) {
-    $self->send_message($self->{player}->[$player]->{nick}, "Player One Legend: ships: [|/-]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
+    $self->send_message($self->{player}->[$player]->{nick}, "Player One Legend: ships: [| -]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
   } elsif ($player == 1) {
-    $self->send_message($self->{player}->[$player]->{nick}, "Player Two Legend: ships: [I/=]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
+    $self->send_message($self->{player}->[$player]->{nick}, "Player Two Legend: ships: [I =]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
   } elsif ($player == 2) {
     $self->send_message($self->{channel}, "Spectator Legend: ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
   } elsif ($player == 3) {
-    $self->send_message($self->{channel}, "Final Board Legend: player one ships: [|/-] player two ships: [I/=]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
+    $self->send_message($self->{channel}, "Final Board Legend: player one ships: [| -] player two ships: [I =]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
   } else {
-    $self->send_message($nick, "Full Board Legend: player one ships: [|/-] player two ships: [I/=]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
+    $self->send_message($nick, "Full Board Legend: player one ships: [| -] player two ships: [I =]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
   }
 
   foreach my $line (split /\n/, $buf) {
@@ -1011,7 +1014,7 @@ sub showboard {
   $self->show_battlefield(0);
   $self->send_message($self->{channel}, "Showing battlefield to player two...");
   $self->show_battlefield(1);
-  $self->send_message($self->{channel}, "Fight!");
+  $self->send_message($self->{channel}, "Fight! Anybody (players and spectators) can use `board` at any time to see latest version of the board!");
   $state->{result} = 'next';
   return $state;
 }
