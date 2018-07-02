@@ -274,6 +274,10 @@ sub battleship_cmd {
     when ('bomb') {
       $self->{pbot}->{logger}->log("Battleship: bomb state: $self->{current_state}\n" . Dumper $self->{state_data});
 
+      if ($self->{current_state} ne 'playermove') {
+        return "$nick: It's not time to do that now.";
+      }
+
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
       my $player;
 
@@ -298,12 +302,18 @@ sub battleship_cmd {
       }
 
       if ($self->bomb($player, uc $arguments)) {
-        $self->{player}->[$player]->{done} = 1;
-        $self->{player}->[!$player]->{done} = 0;
-        $self->{state_data}->{current_player} = !$player;
-        $self->{state_data}->{ticks} = 1;
-        $self->{state_data}->{first_tock} = 1;
-        $self->{state_data}->{counter} = 0;
+        if ($self->{player}->[$player]->{won}) {
+          $self->{previous_state} = $self->{current_state};
+          $self->{current_state} = 'checkplayer';
+          $self->run_one_state;
+        } else {
+          $self->{player}->[$player]->{done} = 1;
+          $self->{player}->[!$player]->{done} = 0;
+          $self->{state_data}->{current_player} = !$player;
+          $self->{state_data}->{ticks} = 1;
+          $self->{state_data}->{first_tock} = 1;
+          $self->{state_data}->{counter} = 0;
+        }
       }
     }
 
