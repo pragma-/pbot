@@ -127,7 +127,16 @@ sub battleship_cmd {
       }
 
       if (not length $arguments) {
-        return "Usage: battleship challenge <nick>";
+        $self->{current_state} = 'accept';
+        $self->{state_data} = { players => [], counter => 0 };
+
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+        my $player = { id => $id, name => $nick, missedinputs => 0 };
+        push @{$self->{state_data}->{players}}, $player;
+
+        $player = { id => -1, name => undef, missedinputs => 0 };
+        push @{$self->{state_data}->{players}}, $player;
+        return "/msg $self->{channel} $nick has made an open challenge!  Use `accept` to accept their challenge.";
       }
 
       my $challengee = $self->{pbot}->{nicklist}->is_present($self->{channel}, $arguments);
@@ -151,14 +160,20 @@ sub battleship_cmd {
     }
 
     when ('accept') {
+      if ($self->{current_state} ne 'accept') {
+        return "/msg $nick This is not the time to use `accept`.";
+      }
+
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
       my $player = $self->{state_data}->{players}->[1];
 
-      if ($player->{id} == $id) {
-        if ($self->{current_state} ne 'accept') {
-          return "/msg $nick This is not the time to use `accept`.";
-        }
+      # open challenge
+      if ($player->{id} == -1) {
+        $player->{id} = $id;
+        $player->{name} = $nick;
+      }
 
+      if ($player->{id} == $id) {
         $player->{accepted} = 1;
         return "/msg $self->{channel} $nick has accepted $self->{state_data}->{players}->[0]->{name}'s challenge!";
       } else {
@@ -266,11 +281,11 @@ sub battleship_cmd {
       }
 
       if ($self->{state_data}->{current_player} != $player) {
-        return "$nick: It is not your turn to bomb!";
+        return "$nick: It is not your turn to attack!";
       }
 
       if ($self->{player}->[$player]->{done}) {
-        return "$nick: You have already bombed this turn.";
+        return "$nick: You have already attacked this turn.";
       }
 
       if ($arguments !~ m/^[a-zA-Z][0-9]+$/) {
@@ -961,13 +976,21 @@ sub accept {
     $state->{tocked} = 1;
 
     if (++$state->{counter} > $state->{max_count}) {
-      $self->send_message($self->{channel}, "$state->{players}->[1]->{name} has failed to accept $state->{players}->[0]->{name}'s challenge.");
+      if ($state->{players}->[1]->{id} == -1) {
+        $self->send_message($self->{channel}, "Nobody has accepted $state->{players}->[0]->{name}'s challenge.");
+      } else {
+        $self->send_message($self->{channel}, "$state->{players}->[1]->{name} has failed to accept $state->{players}->[0]->{name}'s challenge.");
+      }
       $state->{result} = 'stop';
       $state->{players} = [];
       return $state;
     }
 
-    $self->send_message($self->{channel}, "$state->{players}->[1]->{name}: $state->{players}->[0]->{name} has challenged you! Use `accept` to accept their challenge.");
+    if ($state->{players}->[1]->{id} == -1) {
+      $self->send_message($self->{channel}, "$state->{players}->[0]->{name} has made an open challenge! Use `accept` to accept their challenge.");
+    } else {
+      $self->send_message($self->{channel}, "$state->{players}->[1]->{name}: $state->{players}->[0]->{name} has challenged you! Use `accept` to accept their challenge.");
+    }
   }
 
   $state->{result} = 'wait';
