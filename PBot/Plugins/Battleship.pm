@@ -272,6 +272,8 @@ sub battleship_cmd {
     }
 
     when ('bomb') {
+      $self->{pbot}->{logger}->log("Battleship: bomb state: $self->{current_state}\n" . Dumper $self->{state_data});
+
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
       my $player;
 
@@ -299,6 +301,9 @@ sub battleship_cmd {
         $self->{player}->[$player]->{done} = 1;
         $self->{player}->[!$player]->{done} = 0;
         $self->{state_data}->{current_player} = !$player;
+        $self->{state_data}->{ticks} = 1;
+        $self->{state_data}->{first_tock} = 1;
+        $self->{state_data}->{counter} = 0;
       }
     }
 
@@ -491,23 +496,15 @@ sub create_states {
   $self->{states}{'genboard'}{trans}{next} = 'showboard';
 
   $self->{states}{'showboard'}{sub} = sub { $self->showboard(@_) };
-  $self->{states}{'showboard'}{trans}{next} = 'player1move';
+  $self->{states}{'showboard'}{trans}{next} = 'playermove';
 
-  $self->{states}{'player1move'}{sub} = sub { $self->player1move(@_) };
-  $self->{states}{'player1move'}{trans}{wait} = 'player1move';
-  $self->{states}{'player1move'}{trans}{next} = 'checkplayer1';
+  $self->{states}{'playermove'}{sub} = sub { $self->playermove(@_) };
+  $self->{states}{'playermove'}{trans}{wait} = 'playermove';
+  $self->{states}{'playermove'}{trans}{next} = 'checkplayer';
 
-  $self->{states}{'checkplayer1'}{sub} = sub { $self->checkplayer1(@_) };
-  $self->{states}{'checkplayer1'}{trans}{sunk} = 'gameover';
-  $self->{states}{'checkplayer1'}{trans}{next} = 'player2move';
-
-  $self->{states}{'player2move'}{sub} = sub { $self->player2move(@_) };
-  $self->{states}{'player2move'}{trans}{wait} = 'player2move';
-  $self->{states}{'player2move'}{trans}{next} = 'checkplayer2';
-
-  $self->{states}{'checkplayer2'}{sub} = sub { $self->checkplayer2(@_) };
-  $self->{states}{'checkplayer2'}{trans}{sunk} = 'gameover';
-  $self->{states}{'checkplayer2'}{trans}{next} = 'player1move';
+  $self->{states}{'checkplayer'}{sub} = sub { $self->checkplayer(@_) };
+  $self->{states}{'checkplayer'}{trans}{sunk} = 'gameover';
+  $self->{states}{'checkplayer'}{trans}{next} = 'playermove';
 
   $self->{states}{'gameover'}{sub} = sub { $self->gameover(@_) };
   $self->{states}{'gameover'}{trans}{wait} = 'gameover';
@@ -909,52 +906,6 @@ sub show_battlefield {
   }
 }
 
-# generic state subroutines
-
-sub playermove {
-  my ($self, $state, $player) = @_;
-
-  my $tock;
-  if ($state->{first_tock}) {
-    $tock = 3;
-  } else {
-    $tock = 15;
-  }
-
-  if ($self->{player}->[$player]->{done}) {
-    return 'next';
-  }
-
-  if ($state->{ticks} % $tock == 0) {
-    $state->{tocked} = 1;
-    if (++$state->{counter} > $state->{max_count}) {
-      $state->{players}->[$player]->{missedinputs}++;
-      $self->send_message($self->{channel}, "$state->{players}->[$player]->{name} failed to launch an attack in time. They forfeit their turn!");
-      $state->{current_player} = !$state->{current_player};
-      return 'next';
-    }
-
-    my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
-
-    my $remaining = 15 * $state->{max_count};
-    $remaining -= 15 * ($state->{counter} - 1);
-    $remaining = "(" . (concise duration $remaining) . " remaining)";
-
-    $self->send_message($self->{channel}, "$state->{players}->[$player]->{name}: $red$remaining Launch an attack now via `bomb <location>`!$color{reset}");
-  }
-
-  return 'wait';
-}
-
-sub checkplayer {
-  my ($self, $state, $player) = @_;
-  if ($self->{player}->[$player]->{won}) {
-    return 'sunk';
-  } else {
-    return 'next';
-  }
-}
-
 # state subroutines
 
 sub nogame {
@@ -1019,29 +970,55 @@ sub showboard {
   return $state;
 }
 
-sub player1move {
+sub playermove {
   my ($self, $state) = @_;
-  $state->{current_player} = 0;
-  $state->{result} = $self->playermove($state, 0);
+
+  my $tock;
+  if ($state->{first_tock}) {
+    $tock = 3;
+  } else {
+    $tock = 15;
+  }
+
+  if ($self->{player}->[$state->{current_player}]->{done}) {
+    $self->{pbot}->{logger}->log("playermove: player $state->{current_player} done, nexting\n");
+    $state->{result} = 'next';
+    return $state;
+  }
+
+  if ($state->{ticks} % $tock == 0) {
+    $state->{tocked} = 1;
+    if (++$state->{counter} > $state->{max_count}) {
+      $state->{players}->[$state->{current_player}]->{missedinputs}++;
+      $self->send_message($self->{channel}, "$state->{players}->[$state->{current_player}]->{name} failed to launch an attack in time. They forfeit their turn!");
+      $self->{player}->[$state->{current_player}]->{done} = 1;
+      $self->{player}->[!$state->{current_player}]->{done} = 0;
+      $state->{current_player} = !$state->{current_player};
+      $state->{result} = 'next';
+      return $state;
+    }
+
+    my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
+
+    my $remaining = 15 * $state->{max_count};
+    $remaining -= 15 * ($state->{counter} - 1);
+    $remaining = "(" . (concise duration $remaining) . " remaining)";
+
+    $self->send_message($self->{channel}, "$state->{players}->[$state->{current_player}]->{name}: $red$remaining Launch an attack now via `bomb <location>`!$color{reset}");
+  }
+
+  $state->{result} = 'wait';
   return $state;
 }
 
-sub checkplayer1 {
+sub checkplayer {
   my ($self, $state) = @_;
-  $state->{result} = $self->checkplayer($state, 0);
-  return $state;
-}
 
-sub player2move {
-  my ($self, $state) = @_;
-  $state->{current_player} = 1;
-  $state->{result} = $self->playermove($state, 1);
-  return $state;
-}
-
-sub checkplayer2 {
-  my ($self, $state) = @_;
-  $state->{result} = $self->checkplayer($state, 1);
+  if ($self->{player}->[$state->{current_player}]->{won}) {
+    $state->{result} = 'sunk';
+  } else {
+    $state->{result} = 'next';
+  }
   return $state;
 }
 
