@@ -11,13 +11,7 @@ use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 use Carp ();
-use DBI;
-use JSON;
-
 use Time::Duration qw/concise duration/;
-
-use Data::Dumper;
-$Data::Dumper::Useqq = 1;
 
 sub new {
   Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
@@ -39,12 +33,8 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',    sub { $self->on_departure(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
 
-  $self->{leaderboard_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/battleship/battleshiplb.sqlite3';
-
-  $self->create_database;
-  $self->create_states;
-
   $self->{channel} = '##battleship';
+  $self->create_states;
 }
 
 sub unload {
@@ -70,47 +60,6 @@ sub on_departure {
   return 0 if $type ne 'QUIT' and lc $channel ne $self->{channel};
   $self->player_left($nick, $user, $host);
   return 0;
-}
-
-sub create_database {
-  my $self = shift;
-
-  eval {
-    $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{leaderboard_filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr;
-
-    $self->{dbh}->do(<<SQL);
-CREATE TABLE IF NOT EXISTS Leaderboard (
-  userid      NUMERIC,
-  created_on  NUMERIC,
-  wins        NUMERIC,
-  highscore   NUMERIC,
-  avgscore    NUMERIC
-)
-SQL
-
-    $self->{dbh}->disconnect;
-  };
-
-  $self->{pbot}->{logger}->log("Battleship create database failed: $@") if $@;
-}
-
-sub dbi_begin {
-  my ($self) = @_;
-  eval {
-    $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{leaderboard_filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr;
-  };
-
-  if ($@) {
-    $self->{pbot}->{logger}->log("Error opening Battleship database: $@");
-    return 0;
-  } else {
-    return 1;
-  }
-}
-
-sub dbi_end {
-  my ($self) = @_;
-  $self->{dbh}->disconnect;
 }
 
 my %color = (
@@ -217,7 +166,7 @@ sub battleship_cmd {
       }
     }
 
-    when ('quit') {
+    when ($_ eq 'decline' or $_ eq 'quit' or $_ eq 'forfeit' or $_ eq 'concede') {
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
       my $removed = 0;
 
@@ -254,11 +203,13 @@ sub battleship_cmd {
           $self->{player}->[0]->{nick}, $self->{player}->[0]->{bombs},
           $self->{player}->[0]->{hit}, $self->{player}->[0]->{miss},
           $self->{player}->[0]->{sunk}, $self->{player}->[0]->{destroyed}, $self->count_ship_sections(1));
-        $buf .= sprintf("%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d",
+        $self->send_message($self->{channel}, $buf);
+        $buf = sprintf("%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d",
           $self->{player}->[1]->{nick}, $self->{player}->[1]->{bombs},
           $self->{player}->[1]->{hit}, $self->{player}->[1]->{miss},
           $self->{player}->[1]->{sunk}, $self->{player}->[1]->{destroyed}, $self->count_ship_sections(0));
-        return $buf;
+        $self->send_message($self->{channel}, $buf);
+        return;
       } else {
         return "There is no game going on right now.";
       }
@@ -333,10 +284,15 @@ sub battleship_cmd {
       }
     }
 
-    when ('board') {
+    when ($_ eq 'specboard' or $_ eq 'board') {
       if ($self->{current_state} eq 'nogame' or $self->{current_state} eq 'accept'
           or $self->{current_state} eq 'genboard' or $self->{current_state} eq 'gameover') {
         return "$nick: There is no board to show right now.";
+      }
+
+      if ($_ eq 'specboard') {
+        $self->show_battlefield(2);
+        return;
       }
 
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
@@ -575,7 +531,7 @@ sub count_ship_sections {
           $sections++;
         }
       } else {
-        if ($self->{board}->[$x][$y] eq '|' || $self->{board}->[$x][$y] eq '-') {
+        if ($self->{board}->[$x][$y] eq '|' || $self->{board}->[$x][$y] eq '―') {
           $sections++;
         }
       }
@@ -659,7 +615,7 @@ sub generate_ships {
       }
 
       for (my $i = 0; $i < $l; $i++) {
-        $self->{board}->[$x += $o ? $xd : 0][$y += $o ? 0 : $yd] = $player ? ($o ? 'I' : '=') : ($o ? '|' : '-');
+        $self->{board}->[$x += $o ? $xd : 0][$y += $o ? 0 : $yd] = $player ? ($o ? 'I' : '=') : ($o ? '|' : '―');
       }
 
       return;
@@ -714,9 +670,9 @@ sub check_sunk {
       return 1;
     }
 
-    when ($_ eq '-' or $_ eq '=') {
+    when ($_ eq '―' or $_ eq '=') {
       for ($i = $y + 1; $i < $self->{N_X}; $i++) {
-        if (($self->{board}->[$x][$i] eq '-' && $player) || ($self->{board}->[$x][$i] eq '=' && !$player)) {
+        if (($self->{board}->[$x][$i] eq '―' && $player) || ($self->{board}->[$x][$i] eq '=' && !$player)) {
           return 0;
         }
 
@@ -726,7 +682,7 @@ sub check_sunk {
       }
 
       for ($i = $y - 1; $i >= 0; $i--) {
-        if (($self->{board}->[$x][$i] eq '-' && $player) || ($self->{board}->[$x][$i] eq '=' && !$player)) {
+        if (($self->{board}->[$x][$i] eq '―' && $player) || ($self->{board}->[$x][$i] eq '=' && !$player)) {
           return 0;
         }
 
@@ -765,7 +721,7 @@ sub bomb {
       $hit = 1;
     }
   } else {
-    if ($self->{board}->[$x][$y] eq '|' || $self->{board}->[$x][$y] eq '-') {
+    if ($self->{board}->[$x][$y] eq '|' || $self->{board}->[$x][$y] eq '―') {
       $hit = 1;
     }
   }
@@ -804,7 +760,7 @@ sub bomb {
     if ($sunk) {
       $self->{player}->[$player]->{sunk}++;
       my $remaining = $self->count_ship_sections($player);
-      $self->send_message($self->{channel}, "$nick1 has sunk ${nick2}'s ship! $remaining ship section" . ($remaining != 1 ? 's' : '') . " remaining!");
+      $self->send_message($self->{channel}, "$color{red}$nick1 has sunk ${nick2}'s ship! $remaining ship section" . ($remaining != 1 ? 's' : '') . " remaining!$color{reset}");
 
       if ($remaining == 0) {
         $self->send_message($self->{channel}, "$nick1 has WON the game of Battleship!");
@@ -824,14 +780,28 @@ sub show_battlefield {
 
   $self->{pbot}->{logger}->log("showing battlefield for player $player\n");
 
-  $buf = sprintf("$color{cyan}  123456789$color{yellow}0$color{cyan}123456789$color{yellow}0$color{cyan}123456$color{reset}\n");
+  $buf = "$color{cyan}  ";
+  
+  for($x = 1; $x < $self->{N_X} + 1; $x++) {
+    if ($x % 10 == 0) {
+      $buf .= $color{yellow};
+      $buf .= $x % 10;
+      $buf .= ' ';
+      $buf .= $color{cyan};
+    } else {
+      $buf .= $x % 10;
+      $buf .= ' ';
+    }
+  }
+
+  $buf .= "\n";
 
   for ($y = 0; $y < $self->{N_Y}; $y++) {
     $buf .= sprintf("$color{cyan}%c ", 97 + $y);
     for ($x = 0; $x < $self->{N_X}; $x++) {
       if ($player == 0) {
         if ($self->{board}->[$y][$x] eq 'I' || $self->{board}->[$y][$x] eq '=') {
-          $buf .= "$color{blue}~";
+          $buf .= "$color{blue}~ ";
           next;
         } else {
           if ($self->{board}->[$y][$x] eq '1' || $self->{board}->[$y][$x] eq '2') {
@@ -839,15 +809,16 @@ sub show_battlefield {
           } elsif ($self->{board}->[$y][$x] eq 'o' || $self->{board}->[$y][$x] eq '*') {
             $buf .= "$color{cyan}";
           } elsif ($self->{board}->[$y][$x] eq '~') {
-            $buf .= "$color{blue}";
+            $buf .= "$color{blue}~ ";
+            next;
           } else {
             $buf .= "$color{white}";
           }
-          $buf .= $self->{board}->[$y][$x];
+          $buf .= "$self->{board}->[$y][$x] ";
         }
       } elsif ($player == 1) {
-        if ($self->{board}->[$y][$x] eq '|' || $self->{board}->[$y][$x] eq '-') {
-          $buf .= "$color{blue}~";
+        if ($self->{board}->[$y][$x] eq '|' || $self->{board}->[$y][$x] eq '―') {
+          $buf .= "$color{blue}~ ";
           next;
         } else {
           if ($self->{board}->[$y][$x] eq '1' || $self->{board}->[$y][$x] eq '2') {
@@ -855,16 +826,17 @@ sub show_battlefield {
           } elsif ($self->{board}->[$y][$x] eq 'o' || $self->{board}->[$y][$x] eq '*') {
             $buf .= "$color{cyan}";
           } elsif ($self->{board}->[$y][$x] eq '~') {
-            $buf .= "$color{blue}";
+            $buf .= "$color{blue}~ ";
+            next;
           } else {
             $buf .= "$color{white}";
           }
-          $buf .= $self->{board}->[$y][$x];
+          $buf .= "$self->{board}->[$y][$x] ";
         }
       } elsif ($player == 2) {
-        if ($self->{board}->[$y][$x] eq '|' || $self->{board}->[$y][$x] eq '-' 
+        if ($self->{board}->[$y][$x] eq '|' || $self->{board}->[$y][$x] eq '―' 
           || $self->{board}->[$y][$x] eq 'I' || $self->{board}->[$y][$x] eq '=') {
-          $buf .= "$color{blue}~";
+          $buf .= "$color{blue}~ ";
           next;
         } else {
           if ($self->{board}->[$y][$x] eq '1' || $self->{board}->[$y][$x] eq '2') {
@@ -872,11 +844,12 @@ sub show_battlefield {
           } elsif ($self->{board}->[$y][$x] eq 'o' || $self->{board}->[$y][$x] eq '*') {
             $buf .= "$color{cyan}";
           } elsif ($self->{board}->[$y][$x] eq '~') {
-            $buf .= "$color{blue}";
+            $buf .= "$color{blue}~ ";
+            next;
           } else {
             $buf .= "$color{white}";
           }
-          $buf .= $self->{board}->[$y][$x];
+          $buf .= "$self->{board}->[$y][$x] ";
         }
       } else {
         if ($self->{board}->[$y][$x] eq '1' || $self->{board}->[$y][$x] eq '2') {
@@ -884,11 +857,12 @@ sub show_battlefield {
         } elsif ($self->{board}->[$y][$x] eq 'o' || $self->{board}->[$y][$x] eq '*') {
           $buf .= "$color{cyan}";
         } elsif ($self->{board}->[$y][$x] eq '~') {
-          $buf .= "$color{blue}";
+          $buf .= "$color{blue}~ ";
+          next;
         } else {
           $buf .= "$color{white}";
         }
-        $buf .= $self->{board}->[$y][$x];
+        $buf .= "$self->{board}->[$y][$x] ";
       }
     }
     $buf .= "$color{reset}\n";
