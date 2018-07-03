@@ -164,7 +164,7 @@ sub export_factoids {
   print FILE '<script type="text/javascript" src="js/picnet.table.filter.min.js"></script>' . "\n";
   print FILE "</head>\n<body><i>Last updated at $time</i>\n";
   print FILE "<hr><h2>Candide's factoids</h2>\n";
-  
+
   my $i = 0;
   my $table_id = 1;
 
@@ -201,7 +201,7 @@ sub export_factoids {
         } else {
           print FILE "<tr>\n";
         }
-        
+
         print FILE "<td>" . encode_entities($self->{factoids}->hash->{$channel}->{$trigger}->{owner}) . "</td>\n";
         print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $self->{factoids}->hash->{$channel}->{$trigger}->{created_on}) . "</td>\n";
 
@@ -225,7 +225,7 @@ sub export_factoids {
           print FILE "<td width=100%><b>" . encode_entities($trigger) . "</b> is $action</td>\n";
         }
 
-        if(exists $self->{factoids}->hash->{$channel}->{$trigger}->{edited_by}) { 
+        if(exists $self->{factoids}->hash->{$channel}->{$trigger}->{edited_by}) {
           print FILE "<td>" . $self->{factoids}->hash->{$channel}->{$trigger}->{edited_by} . "</td>\n";
           print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $self->{factoids}->hash->{$channel}->{$trigger}->{edited_on}) . "</td>\n";
         } else {
@@ -240,7 +240,7 @@ sub export_factoids {
         } else {
           print FILE "<td></td>\n";
         }
- 
+
         print FILE "</tr>\n";
       }
     }
@@ -261,9 +261,9 @@ sub export_factoids {
   print FILE "});\n";
   print FILE "</script>\n";
   print FILE "</body>\n</html>\n";
-  
+
   close(FILE);
-  
+
   #$self->{pbot}->{logger}->log("$i factoids exported to path: " . $self->export_path . ", site: " . $self->export_site . "\n");
   return "/say $i factoids exported to " . $self->export_site;
 }
@@ -803,7 +803,7 @@ sub interpreter {
   #$self->{pbot}->{logger}->log("calling find_factoid in Factoids.pm, interpreter() to search for factoid against global/current\n");
   my ($channel, $keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{keyword}, $stuff->{arguments}, 1);
 
-  if (not $stuff->{ref_from} or $stuff->{ref_from} eq '.*') {
+  if (not $stuff->{ref_from} or $stuff->{ref_from} eq '.*' or $stuff->{ref_from} eq $stuff->{from}) {
     $stuff->{ref_from} = "";
   }
 
@@ -841,7 +841,7 @@ sub interpreter {
     if ($found > 1) {
       return undef if $stuff->{referenced};
       return $stuff->{ref_from} . "Ambiguous keyword '$original_keyword' exists in multiple channels (use 'fact <channel> <keyword>' to choose one): $chans";
-    } 
+    }
     # if there's just one other channel that has this keyword, trigger that instance
     elsif ($found == 1) {
       $pbot->{logger}->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
@@ -849,12 +849,12 @@ sub interpreter {
       $stuff->{interpret_depth}++;
       $stuff->{ref_from} = $fwd_chan;
       return $pbot->{factoids}->interpreter($stuff);
-    } 
+    }
     # otherwise keyword hasn't been found, display similiar matches for all channels
     else {
       # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, don't say anything
       return undef if length $stuff->{arguments} and not $self->{pbot}->{nicklist}->is_present($stuff->{from}, $stuff->{arguments});
-      
+
       my $namespace = $strictnamespace ? $stuff->{from} : '.*';
       $namespace = '.*' if $namespace !~ /^#/;
 
@@ -1090,7 +1090,7 @@ sub handle_action {
       return "";
     }
   } else {
-    $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}): Unknown command type for '$keyword'\n"); 
+    $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}): Unknown command type for '$keyword'\n");
     return "/me blinks." . " $stuff->{ref_from}";
   }
 }
