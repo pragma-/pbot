@@ -1391,6 +1391,10 @@ sub sl {
   if (! $self->pacing) {
     return $self->sl_real($line);
   }
+
+  if (++$self->{_slcount} <= 8) {
+    return $self->schedule_output_event(0, \&sl_real, $line);
+  }
   
   # calculate how long to wait before sending this line
   my $time = time;
@@ -1406,7 +1410,9 @@ sub sl {
     print STDERR "S-> $seconds $line\n";
   }
   
-  print STDERR "S-> $seconds $line\n";
+  if ($seconds == 0) {
+    $self->{_slcount} = 0;
+  }
 
   $self->schedule_output_event($seconds, \&sl_real, $line);
 }
