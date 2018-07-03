@@ -803,7 +803,7 @@ sub interpreter {
   #$self->{pbot}->{logger}->log("calling find_factoid in Factoids.pm, interpreter() to search for factoid against global/current\n");
   my ($channel, $keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{keyword}, $stuff->{arguments}, 1);
 
-  if (not $stuff->{ref_from} or $stuff->{ref_from} eq '.*') {
+  if (not $stuff->{ref_from} or $stuff->{ref_from} eq '.*' or $stuff->{ref_from} eq $stuff->{from}) {
     $stuff->{ref_from} = "";
   }
 
