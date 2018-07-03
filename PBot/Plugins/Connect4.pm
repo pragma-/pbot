@@ -755,7 +755,7 @@ sub genboard {
 sub showboard {
   my ($self, $state) = @_;
   $self->send_message($self->{channel}, "Showing board ...");
-  $self->show_board
+  $self->show_board;
   $self->send_message($self->{channel}, "Fight! Anybody (players and spectators) can use `board` at any time to see latest version of the board!");
   $state->{result} = 'next';
   return $state;
