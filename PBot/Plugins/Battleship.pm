@@ -217,15 +217,30 @@ sub battleship_cmd {
     when ('score') {
       if (@{$self->{state_data}->{players}} == 2) {
         my $buf;
-        $buf = sprintf("%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d; ",
+
+        my $p1sections = $self->count_ship_sections(1);
+        my $p2sections = $self->count_ship_sections(0);
+
+        my $p1win = "";
+        my $p2win = "";
+
+        if ($p1sections > $p2sections) {
+          $p1win = "$color{bold}$color{lightgreen} * $color{reset}";
+          $p2win = "   ";
+        } elsif ($p1sections < $p2sections) {
+          $p1win = "   ";
+          $p2win = "$color{bold}$color{lightgreen} * $color{reset}";
+        }
+
+        $buf = sprintf("$p1win%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d; ",
           $self->{player}->[0]->{nick}, $self->{player}->[0]->{bombs},
           $self->{player}->[0]->{hit}, $self->{player}->[0]->{miss},
-          $self->{player}->[0]->{sunk}, $self->{player}->[0]->{destroyed}, $self->count_ship_sections(1));
+          $self->{player}->[0]->{sunk}, $self->{player}->[0]->{destroyed}, $p1sections);
         $self->send_message($self->{channel}, $buf);
-        $buf = sprintf("%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d",
+        $buf = sprintf("$p2win%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d",
           $self->{player}->[1]->{nick}, $self->{player}->[1]->{bombs},
           $self->{player}->[1]->{hit}, $self->{player}->[1]->{miss},
-          $self->{player}->[1]->{sunk}, $self->{player}->[1]->{destroyed}, $self->count_ship_sections(0));
+          $self->{player}->[1]->{sunk}, $self->{player}->[1]->{destroyed}, $p2sections);
         $self->send_message($self->{channel}, $buf);
         return;
       } else {
@@ -289,16 +304,36 @@ sub battleship_cmd {
         return "You are not playing in this game.";
       }
 
-      if ($self->{state_data}->{current_player} != $player) {
-        return "$nick: It is not your turn to attack!";
-      }
-
-      if ($self->{player}->[$player]->{done}) {
-        return "$nick: You have already attacked this turn.";
+      if (not length $arguments) {
+        if (delete $self->{state_data}->{players}->[$player]->{location}) {
+          return "$nick: Attack location cleared.";
+        } else {
+          return "$nick: Usage: bomb <location>";
+        }
       }
 
       if ($arguments !~ m/^[a-zA-Z][0-9]+$/) {
         return "$nick: Usage: battleship bomb <location>; <location> must be in the form of A15, B3, C9, etc.";
+      }
+
+      my ($x, $y);
+      ($x) = uc($arguments) =~ m/^(.)/;
+      ($y) = $arguments =~ m/^.(.*)/;
+
+      $x = ord($x) - 65;;
+
+      if ($x < 0 || $x > $self->{N_Y} || $y < 0 || $y > $self->{N_X}) {
+        return "$nick: Target out of range, try again.";
+      }
+
+
+      if ($self->{state_data}->{current_player} != $player) {
+        $self->{state_data}->{players}->[$player]->{location} = $arguments;
+        return "$nick: You will attack $arguments when it is your turn.";
+      }
+
+      if ($self->{player}->[$player]->{done}) {
+        return "$nick: You have already attacked this turn.";
       }
 
       if ($self->bomb($player, uc $arguments)) {
@@ -428,7 +463,7 @@ sub run_one_state {
     }
 
     if (not @{$self->{state_data}->{players}} == 2) {
-      $self->send_message($self->{channel}, "A player has left the game! The game is now over.");
+      $self->send_message($self->{channel}, "The game is now over.");
       $self->{current_state} = 'nogame';
     }
   }
@@ -526,9 +561,13 @@ sub create_states {
 sub init_game {
   my ($self, $nick1, $nick2) = @_;
 
-  $self->{N_X} = 26;
-  $self->{N_Y} = 5;
+  $self->{N_X} = 20;
+  $self->{N_Y} = 6;
   $self->{SHIPS} = 8;
+
+  for (my $x = 0; $x < $self->{SHIPS}; $x++) {
+    $self->{ship_length}->[$x] = 0;
+  }
 
   $self->{board} = [];
 
@@ -604,11 +643,12 @@ sub number {
   return int(rand($upper - $lower)) + $lower;
 }
 
-sub generate_ships {
-  my ($self, $player) = @_;
+sub generate_ship {
+  my ($self, $player, $ship) = @_;
   my ($x, $y, $o, $d, $i, $l);
   my ($yd, $xd) = (0, 0);
 
+  my $fail = 0;
   while (1) {
     $x = $self->number(0, $self->{N_Y});
     $y = $self->number(0, $self->{N_X});
@@ -616,9 +656,13 @@ sub generate_ships {
     $o = $self->number(1, 10) < 6;
     $d = $self->number(1, 10) < 6;
 
-    $l = $self->number(3, 5);
+    if (not $self->{ship_length}->[$ship]) {
+      $l = $self->number(3, 6);
+    } else {
+      $l = $self->{ship_length}->[$ship];
+    }
 
-    $self->{pbot}->{logger}->log("generate ships player $player: $x,$y  $o,$d  $l\n");
+    $self->{pbot}->{logger}->log("generate ships player $player: ship $ship x,y: $x,$y  o,d: $o,$d length: $l\n");
 
     if ($self->check_ship($x, $y, $o, $d, $l)) {
       if (!$o) {
@@ -643,7 +687,15 @@ sub generate_ships {
         $self->{board}->[$x += $o ? $xd : 0][$y += $o ? 0 : $yd] = $player ? ($o ? 'I' : '=') : ($o ? '|' : '―');
       }
 
-      return;
+      $self->{ship_length}->[$ship] = $l;
+      return 1; 
+    }
+
+    if (++$fail >= 50) {
+      $self->{pbot}->{logger}->log("Failed to generate ship\n");
+      $self->send_message($self->{channel}, "Failed to place a ship. I cannot continue. Game over.");
+      $self->{current_state} = 'nogame';
+      return 0;
     }
   }
 }
@@ -659,9 +711,11 @@ sub generate_battlefield {
   }
 
   for ($x = 0; $x < $self->{SHIPS}; $x++) {
-    $self->generate_ships(0);
-    $self->generate_ships(1);
+    if (!$self->generate_ship(0, $x) || !$self->generate_ship(1, $x)) {
+      return 0;
+    }
   }
+  return 1;
 }
 
 sub check_sunk {
@@ -996,6 +1050,19 @@ sub playermove {
     return $state;
   }
 
+  my $player = $state->{current_player};
+  my $location = delete $state->{players}->[$player]->{location};
+
+  if (defined $location) {
+    if ($self->bomb($player, uc $location)) {
+      $self->{player}->[$player]->{done} = 1;
+      $self->{player}->[!$player]->{done} = 0;
+      $self->{state_data}->{current_player} = !$player;
+      $state->{result} = 'next';
+      return $state;
+    }
+  }
+
   if ($state->{ticks} % $tock == 0) {
     $state->{tocked} = 1;
     if (++$state->{counter} > $state->{max_count}) {
@@ -1024,7 +1091,7 @@ sub playermove {
 sub checkplayer {
   my ($self, $state) = @_;
 
-  if ($self->{player}->[$state->{current_player}]->{won}) {
+  if ($self->{player}->[0]->{won} or $self->{player}->[1]->{won}) {
     $state->{result} = 'sunk';
   } else {
     $state->{result} = 'next';
@@ -1036,16 +1103,30 @@ sub gameover {
   my ($self, $state) = @_;
   if ($state->{ticks} % 2 == 0) {
     $self->show_battlefield(3);
-    my $buf;
-    $buf = sprintf("%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d",
+
+    my $p1sections = $self->count_ship_sections(1);
+    my $p2sections = $self->count_ship_sections(0);
+
+    my $p1win = "";
+    my $p2win = "";
+
+    if ($p1sections > $p2sections) {
+      $p1win = "$color{bold}$color{lightgreen} * $color{reset}";
+      $p2win = "   ";
+    } elsif ($p1sections < $p2sections) {
+      $p1win = "   ";
+      $p2win = "$color{bold}$color{lightgreen} * $color{reset}";
+    }
+
+    my $buf = sprintf("$p1win%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d",
       $self->{player}->[0]->{nick}, $self->{player}->[0]->{bombs},
       $self->{player}->[0]->{hit}, $self->{player}->[0]->{miss},
-      $self->{player}->[0]->{sunk}, $self->{player}->[0]->{destroyed}, $self->count_ship_sections(1));
+      $self->{player}->[0]->{sunk}, $self->{player}->[0]->{destroyed}, $p1sections);
     $self->send_message($self->{channel}, $buf);
-    $buf = sprintf("%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d",
+    $buf = sprintf("$p2win%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d",
       $self->{player}->[1]->{nick}, $self->{player}->[1]->{bombs},
       $self->{player}->[1]->{hit}, $self->{player}->[1]->{miss},
-      $self->{player}->[1]->{sunk}, $self->{player}->[1]->{destroyed}, $self->count_ship_sections(0));
+      $self->{player}->[1]->{sunk}, $self->{player}->[1]->{destroyed}, $p2sections);
     $self->send_message($self->{channel}, $buf);
     $self->send_message($self->{channel}, "Game over!");
     $state->{players} = [];
