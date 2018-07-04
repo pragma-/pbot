@@ -23,8 +23,8 @@ BEGIN {
 # These are set automatically by the build/commit script
 use constant {
   BUILD_NAME     => "PBot",
-  BUILD_REVISION => 2144,
-  BUILD_DATE     => "2018-07-03",
+  BUILD_REVISION => 2146,
+  BUILD_DATE     => "2018-07-04",
 };
 
 sub new {
