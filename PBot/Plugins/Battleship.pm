@@ -190,7 +190,7 @@ sub battleship_cmd {
 
       for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
         if ($self->{state_data}->{players}->[$i]->{id} == $id) {
-          splice @{$self->{state_data}->{players}}, $i--, 1;
+          $self->{state_data}->{players}->[$i]->{removed} = 1;
           $removed = 1;
         }
       }
@@ -271,7 +271,7 @@ sub battleship_cmd {
 
       for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
         if (lc $self->{state_data}->{players}->[$i]->{name} eq $arguments) {
-          splice @{$self->{state_data}->{players}}, $i--, 1;
+          $self->{state_data}->{players}->[$i]->{removed} = 1;
           $removed = 1;
         }
       }
@@ -419,7 +419,7 @@ sub player_left {
 
   for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
     if ($self->{state_data}->{players}->[$i]->{id} == $id) {
-      splice @{$self->{state_data}->{players}}, $i--, 1;
+      $self->{state_data}->{players}->[$i]->{removed} = 1;
       $self->send_message($self->{channel}, "$nick has left the game!");
       $removed = 1;
     }
@@ -453,7 +453,7 @@ sub run_one_state {
     for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
       if ($self->{state_data}->{players}->[$i]->{missedinputs} >= 3) {
         $self->send_message($self->{channel}, "$color{red}$self->{state_data}->{players}->[$i]->{name} has missed too many prompts and has been ejected from the game!$color{reset}");
-        splice @{$self->{state_data}->{players}}, $i--, 1;
+        $self->{state_data}->{players}->[$i]->{removed} = 1;
         $removed = 1;
       }
     }
@@ -464,9 +464,8 @@ sub run_one_state {
       }
     }
 
-    if (not @{$self->{state_data}->{players}} == 2) {
-      $self->send_message($self->{channel}, "The game is now over.");
-      $self->{current_state} = 'nogame';
+    if ($self->{state_data}->{players}->[0]->{removed} or $self->{state_data}->{players}->[1]->{removed}) {
+      $self->{current_state} = 'gameover';
     }
   }
 
@@ -563,9 +562,9 @@ sub create_states {
 sub init_game {
   my ($self, $nick1, $nick2) = @_;
 
-  $self->{N_X} = 20;
-  $self->{N_Y} = 6;
-  $self->{SHIPS} = 8;
+  $self->{N_X} = 10;
+  $self->{N_Y} = 7;
+  $self->{SHIPS} = 6;
 
   for (my $x = 0; $x < $self->{SHIPS}; $x++) {
     $self->{ship_length}->[$x] = 0;
@@ -693,7 +692,7 @@ sub generate_ship {
       return 1; 
     }
 
-    if (++$fail >= 50) {
+    if (++$fail >= 5000) {
       $self->{pbot}->{logger}->log("Failed to generate ship\n");
       $self->send_message($self->{channel}, "Failed to place a ship. I cannot continue. Game over.");
       $self->{current_state} = 'nogame';
@@ -865,10 +864,10 @@ sub show_battlefield {
   
   for($x = 1; $x < $self->{N_X} + 1; $x++) {
     if ($x % 10 == 0) {
-      $buf .= $color{yellow};
+      $buf .= $color{yellow} if $self->{N_X} > 10;
       $buf .= $x % 10;
       $buf .= ' ';
-      $buf .= $color{cyan};
+      $buf .= $color{cyan} if $self->{N_X} > 10;
     } else {
       $buf .= $x % 10;
       $buf .= ' ';
@@ -949,16 +948,19 @@ sub show_battlefield {
     $buf .= "$color{reset}\n";
   }
 
+  my $player1 = $self->{player}->[0]->{nick};
+  my $player2 = $self->{player}->[1]->{nick};
+
   if ($player == 0) {
-    $self->send_message($self->{player}->[$player]->{nick}, "Player One Legend: ships: [| -]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
+    $self->send_message($self->{player}->[$player]->{nick}, "Player One Legend: ships: [| -]  ocean: [$color{blue}~$color{reset}]  $player1 miss: [$color{cyan}*$color{reset}]  $player2 miss: [$color{cyan}o$color{reset}]  $player1 hit: [$color{red}"."1"."$color{reset}]  $player2 hit: [$color{red}2$color{reset}]");
   } elsif ($player == 1) {
-    $self->send_message($self->{player}->[$player]->{nick}, "Player Two Legend: ships: [I =]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
+    $self->send_message($self->{player}->[$player]->{nick}, "Player Two Legend: ships: [I =]  ocean: [$color{blue}~$color{reset}]  $player1 miss: [$color{cyan}*$color{reset}]  $player2 miss: [$color{cyan}o$color{reset}]  $player1 hit: [$color{red}"."1"."$color{reset}]  $player2 hit: [$color{red}2$color{reset}]");
   } elsif ($player == 2) {
-    $self->send_message($self->{channel}, "Spectator Legend: ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
+    $self->send_message($self->{channel}, "Spectator Legend: ocean: [$color{blue}~$color{reset}]  $player1 miss: [$color{cyan}*$color{reset}]  $player2 miss: [$color{cyan}o$color{reset}]  $player1 hit: [$color{red}"."1"."$color{reset}]  $player2 hit: [$color{red}2$color{reset}]");
   } elsif ($player == 3) {
-    $self->send_message($self->{channel}, "Final Board Legend: player one ships: [| -] player two ships: [I =]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
+    $self->send_message($self->{channel}, "Final Board Legend: $player1 ships: [| -] $player2 ships: [I =]  ocean: [$color{blue}~$color{reset}]  $player1 miss: [$color{cyan}*$color{reset}]  $player2 miss: [$color{cyan}o$color{reset}]  $player1 hit: [$color{red}"."1"."$color{reset}]  $player2 hit: [$color{red}2$color{reset}]");
   } else {
-    $self->send_message($nick, "Full Board Legend: player one ships: [| -] player two ships: [I =]  ocean: [$color{blue}~$color{reset}]  player one miss: [$color{cyan}*$color{reset}]  player two miss: [$color{cyan}o$color{reset}]  player one hit: [$color{red}"."1"."$color{reset}]  player two hit: [$color{red}2$color{reset}]");
+    $self->send_message($nick, "Full Board Legend: $player1 ships: [| -] $player2 ships: [I =]  ocean: [$color{blue}~$color{reset}]  $player1 miss: [$color{cyan}*$color{reset}]  $player2 miss: [$color{cyan}o$color{reset}]  $player1 hit: [$color{red}"."1"."$color{reset}]  $player2 hit: [$color{red}2$color{reset}]");
   }
 
   foreach my $line (split /\n/, $buf) {
