@@ -289,7 +289,7 @@ sub battleship_cmd {
     when ('bomb') {
       $self->{pbot}->{logger}->log("Battleship: bomb state: $self->{current_state}\n" . Dumper $self->{state_data});
 
-      if ($self->{current_state} ne 'playermove') {
+      if ($self->{current_state} ne 'playermove' and $self->{current_state} ne 'checkplayer') {
         return "$nick: It's not time to do that now.";
       }
 
@@ -316,8 +316,10 @@ sub battleship_cmd {
         return "$nick: Usage: battleship bomb <location>; <location> must be in the form of A15, B3, C9, etc.";
       }
 
+      $arguments = uc $arguments;
+
       my ($x, $y);
-      ($x) = uc($arguments) =~ m/^(.)/;
+      ($x) = $arguments =~ m/^(.)/;
       ($y) = $arguments =~ m/^.(.*)/;
 
       $x = ord($x) - 65;;
