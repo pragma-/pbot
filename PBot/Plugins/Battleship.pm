@@ -1062,9 +1062,9 @@ sub genboard {
 
 sub showboard {
   my ($self, $state) = @_;
-  $self->send_message($self->{channel}, "Showing battlefield to player one...");
+  $self->send_message($self->{channel}, "Showing battlefield to $self->{player}->[0]->{nick}...");
   $self->show_battlefield(0);
-  $self->send_message($self->{channel}, "Showing battlefield to player two...");
+  $self->send_message($self->{channel}, "Showing battlefield to $self->{player}->[1]->{nick}...");
   $self->show_battlefield(1);
   $self->send_message($self->{channel}, "Fight! Anybody (players and spectators) can use `board` at any time to see latest version of the board!");
   $state->{result} = 'next';
@@ -1138,7 +1138,7 @@ sub checkplayer {
 
 sub gameover {
   my ($self, $state) = @_;
-  if ($state->{ticks} % 2 == 0) {
+  if ($state->{ticks} % 5 == 0) {
     if ($state->{players}->[1]->{id} != -1 && $state->{players}->[1]->{accepted}) {
       $self->show_battlefield(3);
       $self->show_scoreboard;
