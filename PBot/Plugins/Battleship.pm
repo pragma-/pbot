@@ -977,8 +977,26 @@ sub show_battlefield {
         $buf .= "$self->{board}->[$y][$x] ";
       }
     }
+    $buf .= sprintf("$color{cyan}%c", 97 + $y);
     $buf .= "$color{reset}\n";
   }
+
+  # bottom border
+  $buf .= "$color{cyan}  ";
+  
+  for($x = 1; $x < $self->{N_X} + 1; $x++) {
+    if ($x % 10 == 0) {
+      $buf .= $color{yellow} if $self->{N_X} > 10;
+      $buf .= $x % 10;
+      $buf .= ' ';
+      $buf .= $color{cyan} if $self->{N_X} > 10;
+    } else {
+      $buf .= $x % 10;
+      $buf .= ' ';
+    }
+  }
+
+  $buf .= "\n";
 
   my $player1 = $self->{player}->[0]->{nick};
   my $player2 = $self->{player}->[1]->{nick};
