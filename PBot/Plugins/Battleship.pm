@@ -199,7 +199,12 @@ sub battleship_cmd {
         if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) {
           $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1
         }
-        return "/msg $self->{channel} $nick has left the game!";
+
+        if (@{$self->{state_data}->{players}} == 2 and ($self->{state_data}->{players}->[1]->{id} == -1 || not $self->{state_data}->{players}->[1]->{accepted})) {
+          return "/msg $self->{channel} $nick declined the challenge.";
+        } else {
+          return "/msg $self->{channel} $nick has left the game!";
+        }
       } else {
         return "$nick: But you are not even playing the game.";
       }
@@ -216,32 +221,7 @@ sub battleship_cmd {
 
     when ('score') {
       if (@{$self->{state_data}->{players}} == 2) {
-        my $buf;
-
-        my $p1sections = $self->count_ship_sections(1);
-        my $p2sections = $self->count_ship_sections(0);
-
-        my $p1win = "";
-        my $p2win = "";
-
-        if ($p1sections > $p2sections) {
-          $p1win = "$color{bold}$color{lightgreen} * $color{reset}";
-          $p2win = "   ";
-        } elsif ($p1sections < $p2sections) {
-          $p1win = "   ";
-          $p2win = "$color{bold}$color{lightgreen} * $color{reset}";
-        }
-
-        $buf = sprintf("$p1win%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d; ",
-          $self->{player}->[0]->{nick}, $self->{player}->[0]->{bombs},
-          $self->{player}->[0]->{hit}, $self->{player}->[0]->{miss},
-          $self->{player}->[0]->{sunk}, $self->{player}->[0]->{destroyed}, $p1sections);
-        $self->send_message($self->{channel}, $buf);
-        $buf = sprintf("$p2win%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d",
-          $self->{player}->[1]->{nick}, $self->{player}->[1]->{bombs},
-          $self->{player}->[1]->{hit}, $self->{player}->[1]->{miss},
-          $self->{player}->[1]->{sunk}, $self->{player}->[1]->{destroyed}, $p2sections);
-        $self->send_message($self->{channel}, $buf);
+        $self->show_scoreboard;
         return;
       } else {
         return "There is no game going on right now.";
@@ -562,8 +542,8 @@ sub create_states {
 sub init_game {
   my ($self, $nick1, $nick2) = @_;
 
-  $self->{N_X} = 10;
-  $self->{N_Y} = 7;
+  $self->{N_X} = 15;
+  $self->{N_Y} = 8;
   $self->{SHIPS} = 6;
 
   for (my $x = 0; $x < $self->{SHIPS}; $x++) {
@@ -854,6 +834,58 @@ sub bomb {
   return 1;
 }
 
+sub show_scoreboard {
+  my ($self) = @_;
+
+  my $buf;
+  my $p1sections = $self->count_ship_sections(1);
+  my $p2sections = $self->count_ship_sections(0);
+
+  my $p1win = "";
+  my $p2win = "";
+
+  if ($p1sections > $p2sections) {
+    $p1win = "$color{bold}$color{lightgreen} * ";
+    $p2win = "$color{red}   ";
+  } elsif ($p1sections < $p2sections) {
+    $p1win = "$color{red}   ";
+    $p2win = "$color{bold}$color{lightgreen} * ";
+  }
+
+  my $length_a = length $self->{player}->[0]->{nick};
+  my $length_b = length $self->{player}->[1]->{nick};
+  my $longest = $length_a > $length_b ? $length_a : $length_b;
+
+  my $bombslen = ($self->{player}->[0]->{bombs} > 10 || $self->{player}->[1]->{bombs} > 10) ? 2 : 1;
+  my $hitlen = ($self->{player}->[0]->{hit} > 10 || $self->{player}->[1]->{hit} > 10) ? 2 : 1;
+  my $misslen = ($self->{player}->[0]->{miss} > 10 || $self->{player}->[1]->{miss} > 10) ? 2 : 1;
+  my $sunklen = ($self->{player}->[0]->{sunk} > 10 || $self->{player}->[1]->{sunk} > 10) ? 2 : 1;
+  my $intactlen = ($p1sections > 10 || $p2sections > 10) ? 2 : 1;
+
+  my $p1bombscolor = $self->{player}->[0]->{bombs} > $self->{player}->[1]->{bombs} ? $color{green} : $color{red};
+  my $p1hitcolor = $self->{player}->[0]->{hit} > $self->{player}->[1]->{hit} ? $color{green} : $color{red};
+  my $p1misscolor = $self->{player}->[0]->{miss} < $self->{player}->[1]->{miss} ? $color{green} : $color{red};
+  my $p1sunkcolor = $self->{player}->[0]->{sunk} > $self->{player}->[1]->{sunk} ? $color{green} : $color{red};
+  my $p1intactcolor = $p1sections > $p2sections ? $color{green} : $color{red};
+
+  my $p2bombscolor = $self->{player}->[0]->{bombs} < $self->{player}->[1]->{bombs} ? $color{green} : $color{red};
+  my $p2hitcolor = $self->{player}->[0]->{hit} < $self->{player}->[1]->{hit} ? $color{green} : $color{red};
+  my $p2misscolor = $self->{player}->[0]->{miss} > $self->{player}->[1]->{miss} ? $color{green} : $color{red};
+  my $p2sunkcolor = $self->{player}->[0]->{sunk} < $self->{player}->[1]->{sunk} ? $color{green} : $color{red};
+  my $p2intactcolor = $p1sections < $p2sections ? $color{green} : $color{red};
+
+  $buf = sprintf("$p1win%*s$color{reset}: bomb: $p1bombscolor%*d$color{reset}, hit: $p1hitcolor%*d$color{reset}, miss: $p1misscolor%*d$color{reset}, sunk: $p1sunkcolor%*d$color{reset}, sections left: $p1intactcolor%*d$color{reset}",
+    $longest, $self->{player}->[0]->{nick}, $bombslen, $self->{player}->[0]->{bombs},
+    $hitlen, $self->{player}->[0]->{hit}, $misslen, $self->{player}->[0]->{miss},
+    $sunklen, $self->{player}->[0]->{sunk}, $intactlen, $p1sections);
+  $self->send_message($self->{channel}, $buf);
+  $buf = sprintf("$p2win%*s$color{reset}: bomb: $p2bombscolor%*d$color{reset}, hit: $p2hitcolor%*d$color{reset}, miss: $p2misscolor%*d$color{reset}, sunk: $p2sunkcolor%*d$color{reset}, sections left: $p2intactcolor%*d$color{reset}",
+    $longest, $self->{player}->[1]->{nick}, $bombslen, $self->{player}->[1]->{bombs},
+    $hitlen, $self->{player}->[1]->{hit}, $misslen, $self->{player}->[1]->{miss},
+    $sunklen, $self->{player}->[1]->{sunk}, $intactlen, $p2sections);
+  $self->send_message($self->{channel}, $buf);
+}
+
 sub show_battlefield {
   my ($self, $player, $nick) = @_;
   my ($x, $y, $buf);
@@ -1022,6 +1054,7 @@ sub accept {
 sub genboard {
   my ($self, $state) = @_;
   $self->init_game($state->{players}->[0]->{name}, $state->{players}->[1]->{name});
+  $state->{current_player} = 0;
   $state->{max_count} = 3;
   $state->{result} = 'next';
   return $state;
@@ -1106,33 +1139,11 @@ sub checkplayer {
 sub gameover {
   my ($self, $state) = @_;
   if ($state->{ticks} % 2 == 0) {
-    $self->show_battlefield(3);
-
-    my $p1sections = $self->count_ship_sections(1);
-    my $p2sections = $self->count_ship_sections(0);
-
-    my $p1win = "";
-    my $p2win = "";
-
-    if ($p1sections > $p2sections) {
-      $p1win = "$color{bold}$color{lightgreen} * $color{reset}";
-      $p2win = "   ";
-    } elsif ($p1sections < $p2sections) {
-      $p1win = "   ";
-      $p2win = "$color{bold}$color{lightgreen} * $color{reset}";
+    if ($state->{players}->[1]->{id} != -1 && $state->{players}->[1]->{accepted}) {
+      $self->show_battlefield(3);
+      $self->show_scoreboard;
+      $self->send_message($self->{channel}, "Game over!");
     }
-
-    my $buf = sprintf("$p1win%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d",
-      $self->{player}->[0]->{nick}, $self->{player}->[0]->{bombs},
-      $self->{player}->[0]->{hit}, $self->{player}->[0]->{miss},
-      $self->{player}->[0]->{sunk}, $self->{player}->[0]->{destroyed}, $p1sections);
-    $self->send_message($self->{channel}, $buf);
-    $buf = sprintf("$p2win%s: bombs: %d, hits: %d, misses: %d, enemy ships sunk: %d, enemy sections destroyed: %d, own sections intact: %d",
-      $self->{player}->[1]->{nick}, $self->{player}->[1]->{bombs},
-      $self->{player}->[1]->{hit}, $self->{player}->[1]->{miss},
-      $self->{player}->[1]->{sunk}, $self->{player}->[1]->{destroyed}, $p2sections);
-    $self->send_message($self->{channel}, $buf);
-    $self->send_message($self->{channel}, "Game over!");
     $state->{players} = [];
     $state->{counter} = 0;
     $state->{result} = 'next';
