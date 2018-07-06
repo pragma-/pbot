@@ -129,7 +129,7 @@ sub connect4_cmd {
       if (not length $arguments || $arguments =~ m/^[4-9]$/) {
         $self->{current_state} = 'accept';
         $self->{state_data} = { players => [], counter => 0 };
-	$self->{CONNECTIONS} = not length $arguments ? 4 : $arguments;
+	$self->{CONNECTIONS} = ((not length $arguments) ? 4 : $arguments);
 
         my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
         my $player = { id => $id, name => $nick, missedinputs => 0 };
@@ -148,7 +148,7 @@ sub connect4_cmd {
 
       $self->{current_state} = 'accept';
       $self->{state_data} = { players => [], counter => 0 };
-      $self->{CONNECTIONS} = not length $options ? 4 : $options;
+      $self->{CONNECTIONS} = ((not length $options) ? 4 : $options);
 
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
       my $player = { id => $id, name => $nick, missedinputs => 0 };
@@ -312,7 +312,7 @@ sub connect4_cmd {
       }
 
       if ($_ eq 'specboard') {
-        $self->show_board;
+        $self->show_board(2);
         return;
       }
 
@@ -320,11 +320,11 @@ sub connect4_cmd {
       for (my $i = 0; $i < 2; $i++) {
         if ($self->{state_data}->{players}->[$i]->{id} == $id) {
           $self->send_message($self->{channel}, "$nick surveys the board!");
-          $self->show_board;
+          $self->show_board($i);
           return;
         }
       }
-      $self->show_board;
+      $self->show_board(2);
     }
 
     default {
@@ -497,8 +497,6 @@ sub init_game {
   $self->{chips} = 0;
   $self->{draw} = 0;
 
-  $self->{adjacent} = [];
-
   $self->{board} = [];
 
   $self->{player} = [
@@ -518,100 +516,125 @@ sub generate_board {
 
   for ($y = 0; $y < $self->{N_Y}; $y++) {
     for ($x = 0; $x < $self->{N_X}; $x++) {
-      $self->{board}->[$x][$y] = ' ';
-
-      # down, down left, down right, left, right
-      $self->{adjacent}->[$x][$y] = { 
-	      d => 0, dl => 0, dr => 0, 
-	      ul => 0, ur => 0, 
-	      l => 0, r => 0
-      };
+      $self->{board}->[$y][$x] = ' ';
     }
   }
 }
 
-sub connect_cell {
-  my ($self, $x, $y) = @_;
-  my ($n, $i, $j);
+sub connected {
+  my ($self) = @_;
+  my ($i, $j, $row, $col, $prev) = (0, 0, 0, 0, 0);
+  my ($tis, $n) = (0, 0);
 
-  $n = 0;
-  $self->{adjacent}->[$x][$y] = {
-    d => 1, dl => 1, dr => 1, 
-    ul => 1, ur => 1, l => 1, lr => 1,
-  };
+  for ($row = 0; $row < $self->{N_Y}; $row++) {
+    $n = 0;
+    $prev = ' ';
+    for ($i = $row, $j = $self->{N_X}-1; $i < $self->{N_Y} && $j >= 0; $i++, $j--) {
+      $tis = $self->{board}[$i][$j];
 
-  # l
-  $i = $x - 1; $j = $y;
-  if ($i < $self->{N_X} && $i >= 0) {
-	$n = $self->{adjacent}->[$x][$y]->{l} = 
-		$self->{adjacent}->[$i][$j]->{l} + 1;
+      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
+
+      if ($tis eq ' ') { $n = 0; }
+
+      if ($n == $self->{CONNECTIONS}) {
+        return 1;
+      }
+
+      $prev = $tis;
+    } 
   }
+	
+  for ($col = $self->{N_X} - 1; $col >= 0; $col--) {
+    $n = 0;
+    $prev = ' ';
+    for ($i = 0, $j = $col; $i < $self->{N_Y} && $j >= 0; $i++, $j--) {
+      $tis = $self->{board}[$i][$j];
 
-  if ($n == $self->{CONNECTIONS}) {
-	  return 1;
-  }
+      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
+      
+      if ($tis eq ' ') { $n = 0; }
+		
+      if ($n == $self->{CONNECTIONS}) {
+        return 2;
+      }
 
-  # r
-  $i = $x + 1; $j = $y;
-  if ($i < $self->{N_X} && $i >= 0) {
-	$n = $self->{adjacent}->[$x][$y]->{r} = 
-		$self->{adjacent}->[$i][$j]->{r} + 1;
-  }
-
-  if ($n == $self->{CONNECTIONS}) {
-	  return 1;
-  }
-
-  # d
-  $i = $x; $j = $y - 1;
-  if ($j < $self->{N_Y} && $j >= 0) {
-	$n = $self->{adjacent}->[$x][$y]->{d} =
-		$self->{adjacent}->[$i][$j]->{d} + 1;
-  }
-
-  if ($n == $self->{CONNECTIONS}) {
-	  return 1;
+      $prev = $tis;
+    }
   }
 
-  # dl
-  $i = $x - 1; $j = $y - 1;
-  if ($i < $self->{N_X} && $i >= 0 && $j < $self->{N_Y} && $j >= 0) {
-	$n = $self->{adjacent}->[$x][$y]->{dl} =
-		$self->{adjacent}->[$i][$j]->{dl} + 1;
+  for ($row = 0; $row < $self->{N_Y}; $row++) {
+    $n = 0;
+    $prev = ' ';
+    for ($i = $row, $j = 0; $i < $self->{N_Y}; $i++, $j++) {
+      $tis = $self->{board}[$i][$j];
+
+      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
+		
+      if ($tis eq ' ') { $n = 0; }
+
+      if ($n == $self->{CONNECTIONS}) {
+        return 3;
+      }
+
+      $prev = $tis;
+    }
   }
 
-  if ($n == $self->{CONNECTIONS}) {
-	  return 1;
+  for ($col = 0; $col < $self->{N_X}; $col++) {
+    $n = 0;
+    $prev = ' ';
+    for ($i = 0, $j = $col; $i < $self->{N_Y} && $j < $self->{N_X}; $i++, $j++) {
+      $tis = $self->{board}[$i][$j];
+
+      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
+		
+      if ($tis eq ' ') { $n = 0; }
+		
+      if ($n == $self->{CONNECTIONS}) {
+        return 4;
+      }
+
+      $prev = $tis;
+    }
   }
-  
-  # ul
-  $i = $x - 1; $j = $y + 1;
-  if ($i < $self->{N_X} && $i >= 0 && $j < $self->{N_Y} && $j >= 0) {
-	$n = $self->{adjacent}->[$x][$y]->{ul} =
-		$self->{adjacent}->[$i][$j]->{ul} + 1;
+	
+  for ($row = 0; $row < $self->{N_Y}; $row++) {
+    $n = 0;
+    $prev = ' ';
+    for ($col = 0; $col < $self->{N_X}; $col++) {
+      $tis = $self->{board}[$row][$col];
+
+      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
+      
+      if ($tis eq ' ') { $n = 0; }
+		
+      if ($n == $self->{CONNECTIONS}) {
+        return 5;
+      }
+
+      $prev = $tis;
+    }
+  }
+	
+  for ($col = 0; $col < $self->{N_X}; $col++) {
+    $n = 0;
+    $prev = ' ';
+    for ($row = $self->{N_Y} - 1; $row >= 0; $row--) {
+      $tis = $self->{board}[$row][$col];
+
+      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
+
+      if ($tis eq ' ') { $n = 0; }
+
+      if ($n == $self->{CONNECTIONS}) {
+        return 6;
+      }
+
+      $prev = $tis;
+    }
   }
 
-  if ($n == $self->{CONNECTIONS}) {
-	  return 1;
-  }
- 
-  # ur
-  $i = $x + 1; $j = $y + 1;
-  if ($i < $self->{N_X} && $i >= 0 && $j < $self->{N_Y} && $j >= 0) {
-	$n = $self->{adjacent}->[$x][$y]->{ur} =
-		$self->{adjacent}->[$i][$j]->{ur} + 1;
-  }
-  if ($n == $self->{CONNECTIONS}) {
-	  return 1;
-  }
-
-  # dr
-  $i = $x + 1; $j = $y - 1;
-  if ($i < $self->{N_X} && $i >= 0 && $j < $self->{N_Y} && $j >= 0) {
-	$n = $self->{adjacent}->[$x][$y]->{dr} =
-		$self->{adjacent}->[$i][$j]->{dr} + 1;
-  }
-  return $n == $self->{CONNECTIONS};
+  return 0;
 }
 
 sub column_top {
@@ -619,8 +642,8 @@ sub column_top {
   my $y;
 
   for ($y = 0; $y < $self->{N_Y}; $y++) {
-	  if ($self->{board}->[$x][$y] == ' ') {
-		return $y;
+	  if ($self->{board}->[$y][$x] ne ' ') {
+		return $y - 1;
 	  }
   }
   return -1; # shouldnt happen
@@ -634,17 +657,17 @@ sub play {
 
   $self->{pbot}->{logger}->log("play player $player: $x\n");
 
-  if ($x < 0 || $x >= $self->{N_X} || $self->{board}[$x][0] != ' ') {
+  if ($x < 0 || $x >= $self->{N_X} || $self->{board}[0][$x] != ' ') {
     $self->send_message($self->{channel}, "Target illegal/out of range, try again.");
     return 0;
   }
 
   $y = $self->column_top($x);
  
-  $self->{board}->[$x][$y] = $player ? 'O' : 'X';
+  $self->{board}->[$y][$x] = $player ? 'O' : 'X';
   $self->{chips}++;
 
-  $c4 = $self->connect_cell($x, $y);
+  $c4 = $self->connected;
   $draw = $self->{chips} == $self->{N_X} * $self->{N_Y};
  
   my $nick1 = $self->{player}->[$player]->{nick};
@@ -664,12 +687,12 @@ sub play {
 }
 
 sub show_board {
-  my ($self) = @_;
+  my ($self, $player) = @_;
   my ($x, $y, $buf, $chip, $c);
 
   $self->{pbot}->{logger}->log("showing board\n");
 
-  $buf = "$color{cyan}";
+  $buf = "$color{blue}";
 
   for($x = 1; $x < $self->{N_X} + 1; $x++) {
     if ($x % 10 == 0) {
@@ -677,7 +700,7 @@ sub show_board {
       $buf .= ' ';
       $buf .= $x % 10;
       $buf .= ' ';
-      $buf .= $color{cyan};
+      $buf .= $color{blue};
     } else {
       $buf .= " " . $x % 10 . " ";
     }
@@ -687,15 +710,19 @@ sub show_board {
 
   for ($y = 0; $y < $self->{N_Y}; $y++) {
     for ($x = 0; $x < $self->{N_X}; $x++) {
-	    $chip = $self->{board}->[$x][$y];
-	    $c = $chip == 'O' ? $color{red} : $color{cyan};
+	    $chip = $self->{board}->[$y][$x];
+	    $c = $chip eq 'O' ? $color{red} : $color{cyan};
 	    $buf .= "[$c$chip$color{reset}]";
     }
     $buf .= "\n";
   }
 
-  foreach my $line (split /\n/, $buf) {
+  foreach my $line (split /\n/, $buf) { 
+    if ($player != 2) {
+      $self->send_message($self->{player}->[$player]->{nick}, $line);
+    } else {
       $self->send_message($self->{channel}, $line);
+    }
   }
 }
 
@@ -755,7 +782,7 @@ sub genboard {
 sub showboard {
   my ($self, $state) = @_;
   $self->send_message($self->{channel}, "Showing board ...");
-  $self->show_board;
+  $self->show_board(2);
   $self->send_message($self->{channel}, "Fight! Anybody (players and spectators) can use `board` at any time to see latest version of the board!");
   $state->{result} = 'next';
   return $state;
@@ -817,7 +844,7 @@ sub gameover {
   my ($self, $state) = @_;
   my $buf;
   if ($state->{ticks} % 2 == 0) {
-    $self->show_board;
+    $self->show_board(2);
     $self->send_message($self->{channel}, $buf);
     $self->send_message($self->{channel}, "Game over!");
     $state->{players} = [];
