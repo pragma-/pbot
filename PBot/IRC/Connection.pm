@@ -1310,7 +1310,7 @@ sub schedule {
     croak 'Second argument to schedule() isn\'t a coderef';
   }
 
-  print STDERR "Scheduling event with time [$time]\n";
+  print STDERR "Scheduling event with time [$time]\n" if $self->{_debug};
   $time += time;
   $self->parent->enqueue_scheduled_event($time, $coderef, $self, @_);
 }
@@ -1327,7 +1327,7 @@ sub schedule_output_event {
     croak 'Second argument to schedule() isn\'t a coderef';
   }
 
-  print STDERR "Scheduling output event with time [$time]\n";
+  print STDERR "Scheduling output event with time [$time] [$_[0]]\n" if $self->{_debug};
   $time += time;
   $self->parent->enqueue_output_event($time, $coderef, $self, @_);
 }
@@ -1392,10 +1392,12 @@ sub sl {
     return $self->sl_real($line);
   }
 
-  if (++$self->{_slcount} <= 8) {
+  if ($self->{_slcount} < 14) {
+    $self->{_slcount}++;
+    $self->{_lastsl} = time;
     return $self->schedule_output_event(0, \&sl_real, $line);
   }
-  
+
   # calculate how long to wait before sending this line
   my $time = time;
   if ($time - $self->{_lastsl} > $self->pacing) {
@@ -1403,15 +1405,16 @@ sub sl {
   } else {
     $self->{_lastsl} += $self->pacing;
   }
+
   my $seconds = $self->{_lastsl} - $time;
+
+  if ($seconds == 0) {
+    $self->{_slcount} = 0;
+  }
   
   ### DEBUG DEBUG DEBUG
   if ($self->{_debug}) {
     print STDERR "S-> $seconds $line\n";
-  }
-  
-  if ($seconds == 0) {
-    $self->{_slcount} = 0;
   }
 
   $self->schedule_output_event($seconds, \&sl_real, $line);
