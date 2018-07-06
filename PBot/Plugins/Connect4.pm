@@ -213,14 +213,6 @@ sub connect4_cmd {
       return "/msg $self->{channel} $nick: The game has been aborted.";
     }
 
-    when ('stats') { # XXX
-      if (@{$self->{state_data}->{players}} == 2) {
-        return "soon.";
-      } else {
-        return "There is no game going on right now.";
-      }
-    }
-
     when ('players') {
       if ($self->{current_state} eq 'accept') {
         return "$self->{state_data}->{players}->[0]->{name} has challenged $self->{state_data}->{players}->[1]->{name}!";
@@ -479,7 +471,7 @@ sub create_states {
   $self->{states}{'playermove'}{trans}{next} = 'checkplayer';
 
   $self->{states}{'checkplayer'}{sub} = sub { $self->checkplayer(@_) };
-  $self->{states}{'checkplayer'}{trans}{sunk} = 'gameover';
+  $self->{states}{'checkplayer'}{trans}{end} = 'gameover';
   $self->{states}{'checkplayer'}{trans}{next} = 'playermove';
 
   $self->{states}{'gameover'}{sub} = sub { $self->gameover(@_) };
@@ -833,7 +825,7 @@ sub checkplayer {
   my ($self, $state) = @_;
 
   if ($self->{player}->[$state->{current_player}]->{won} || $self->{draw}) {
-    $state->{result} = 'sunk'; # XXX won
+    $state->{result} = 'end';
   } else {
     $state->{result} = 'next';
   }
