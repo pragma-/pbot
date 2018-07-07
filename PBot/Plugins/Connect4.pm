@@ -96,7 +96,7 @@ sub connect4_cmd {
   $arguments =~ s/^\s+|\s+$//g;
 
   my $usage = "Usage: connect4 challenge|accept|play|board|quit|players|kick|abort; for more information about a command: connect4 help <command>";
-  
+
   my $options;
   my $command;
   ($command, $arguments, $options) = split / /, $arguments, 3;
@@ -138,18 +138,18 @@ sub connect4_cmd {
         $self->{N_Y} = (not length $4) ? 6 : $4;
         $self->{CONNECTIONS} = (not length $1) ? 4 : $1;
 
-	if ((not length $2) && ($self->{CONNECTIONS} >= $self->{N_X} || $self->{CONNECTIONS} >= $self->{N_Y})) {
-	  $self->{N_X} = $self->{CONNECTIONS} * 2 - 1;
-	  $self->{N_Y} = $self->{CONNECTIONS} * 2 - 2;
-	}
+        if ((not length $2) && ($self->{CONNECTIONS} >= $self->{N_X} || $self->{CONNECTIONS} >= $self->{N_Y})) {
+          $self->{N_X} = $self->{CONNECTIONS} * 2 - 1;
+          $self->{N_Y} = $self->{CONNECTIONS} * 2 - 2;
+        }
 
-	if ($self->{N_X} > 32 || $self->{N_X} < $self->{CONNECTIONS}) {
-	  return "Wrong board-X size";
-	}
+        if ($self->{N_X} > 32 || $self->{N_X} < $self->{CONNECTIONS}) {
+          return "Wrong board-X size";
+        }
 
-	if ($self->{N_Y} > 32 || $self->{N_Y} < $self->{CONNECTIONS}) {
-	  return "Wrong board-Y size";
-	}
+        if ($self->{N_Y} > 32 || $self->{N_Y} < $self->{CONNECTIONS}) {
+          return "Wrong board-Y size";
+        }
 
         my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
         my $player = { id => $id, name => $nick, missedinputs => 0 };
@@ -158,7 +158,7 @@ sub connect4_cmd {
         $player = { id => -1, name => undef, missedinputs => 0 };
         push @{$self->{state_data}->{players}}, $player;
         return "/msg $self->{channel} $nick has made an open challenge (Connect-$self->{CONNECTIONS} @ " .
-		 "$self->{N_X}x$self->{N_Y} board)! Use `accept` to accept their challenge.";
+        "$self->{N_X}x$self->{N_Y} board)! Use `accept` to accept their challenge.";
       }
 
       my $challengee = $self->{pbot}->{nicklist}->is_present($self->{channel}, $arguments);
@@ -172,22 +172,22 @@ sub connect4_cmd {
 
       if (length $options) {
         if ($options =~ m/^([3-9])(:(\d+)x(\d+))?$/) {
-      	  $self->{N_X} = (not length $3) ? 7 : $3;
+          $self->{N_X} = (not length $3) ? 7 : $3;
           $self->{N_Y} = (not length $4) ? 6 : $4;
-	  $self->{CONNECTIONS} = (not length $1) ? 4: $1;
+          $self->{CONNECTIONS} = (not length $1) ? 4: $1;
 
-	  if ((not length $2) && ($self->{CONNECTIONS} >= $self->{N_X} || $self->{CONNECTIONS} >= $self->{N_Y})) {
-	    $self->{N_X} = $self->{CONNECTIONS} * 2 - 1;
-	    $self->{N_Y} = $self->{CONNECTIONS} * 2 - 2;
-	  }
+          if ((not length $2) && ($self->{CONNECTIONS} >= $self->{N_X} || $self->{CONNECTIONS} >= $self->{N_Y})) {
+            $self->{N_X} = $self->{CONNECTIONS} * 2 - 1;
+            $self->{N_Y} = $self->{CONNECTIONS} * 2 - 2;
+          }
 
-	  if ($self->{N_X} > 32 || $self->{N_X} < $self->{CONNECTIONS}) {
-	    return "Wrong board-X size";
-	  }
+          if ($self->{N_X} > 32 || $self->{N_X} < $self->{CONNECTIONS}) {
+            return "Wrong board-X size";
+          }
 
-	  if ($self->{N_Y} > 32 || $self->{N_Y} < $self->{CONNECTIONS}) {
-	    return "Wrong board-Y size";
-	  }
+          if ($self->{N_Y} > 32 || $self->{N_Y} < $self->{CONNECTIONS}) {
+            return "Wrong board-Y size";
+          }
 
         } else { return "wrong options: '$options'; use <C:ROWSxCOLS>"; }
       }
@@ -201,7 +201,7 @@ sub connect4_cmd {
       push @{$self->{state_data}->{players}}, $player;
 
       return "/msg $self->{channel} $nick has challenged $challengee to " .
-	      "Connect-$self->{CONNECTIONS} @ $self->{N_X}x$self->{N_Y} board! Use `accept` to accept their challenge.";
+      "Connect-$self->{CONNECTIONS} @ $self->{N_X}x$self->{N_Y} board! Use `accept` to accept their challenge.";
     }
 
     when ('accept') {
@@ -653,9 +653,9 @@ sub column_top {
   my $y;
 
   for ($y = 0; $y < $self->{N_Y}; $y++) {
-	  if ($self->{board}->[$y][$x] ne ' ') {
-		return $y - 1;
-	  }
+    if ($self->{board}->[$y][$x] ne ' ') {
+      return $y - 1;
+    }
   }
   return -1; # shouldnt happen
 }
@@ -674,13 +674,13 @@ sub play {
   }
 
   $y = $self->column_top($x);
- 
+
   $self->{board}->[$y][$x] = $player ? 'O' : 'X';
   $self->{chips}++;
 
   $c4 = $self->connected;
   $draw = $self->{chips} == $self->{N_X} * $self->{N_Y};
-  
+
   my $nick1 = $self->{player}->[$player]->{nick};
   my $nick2 = $self->{player}->[$player ? 0 : 1]->{nick};
 
@@ -727,21 +727,21 @@ sub show_board {
 
   for ($y = 0; $y < $self->{N_Y}; $y++) {
     for ($x = 0; $x < $self->{N_X}; $x++) {
-	    $chip = $self->{board}->[$y][$x];
-	    my $rc = "$y, $x";
+      $chip = $self->{board}->[$y][$x];
+      my $rc = "$y, $x";
 
-	    $c = $chip eq 'O' ? $color{red} : $color{yellow};
-	    if (grep(/^$rc$/, @{$self->{winner_line}})) {
-	      $c .= $color{bold};
-	    }
+      $c = $chip eq 'O' ? $color{red} : $color{yellow};
+      if (grep(/^$rc$/, @{$self->{winner_line}})) {
+        $c .= $color{bold};
+      }
 
-	    $buf .= "$color{blue}\[$c$chip$color{blue}]$color{reset}";
+      $buf .= "$color{blue}\[$c$chip$color{blue}]$color{reset}";
     }
     $buf .= "\n";
   }
 
   foreach my $line (split /\n/, $buf) {
-      $self->send_message($self->{channel}, $line);
+    $self->send_message($self->{channel}, $line);
   }
 }
 
