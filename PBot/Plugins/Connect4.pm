@@ -96,7 +96,7 @@ sub connect4_cmd {
   $arguments =~ s/^\s+|\s+$//g;
 
   my $usage = "Usage: connect4 challenge|accept|play|board|quit|players|kick|abort; for more information about a command: connect4 help <command>";
- 
+  
   my $options;
   my $command;
   ($command, $arguments, $options) = split / /, $arguments, 3;
@@ -126,10 +126,30 @@ sub connect4_cmd {
         return "There is already a game of connect4 underway.";
       }
 
-      if (not length $arguments || $arguments =~ m/^[4-9]$/) {
+      $self->{N_X} = 7;
+      $self->{N_Y} = 6;
+      $self->{CONNECTIONS} = 4;
+
+      if ((not length $arguments) || ($arguments =~ m/^([3-9])(:(\d+)x(\d+))?$/)) {
         $self->{current_state} = 'accept';
         $self->{state_data} = { players => [], counter => 0 };
-        $self->{CONNECTIONS} = ((not length $arguments) ? 4 : $arguments);
+
+        $self->{N_X} = (not length $3) ? 7 : $3;
+        $self->{N_Y} = (not length $4) ? 6 : $4;
+        $self->{CONNECTIONS} = (not length $1) ? 4 : $1;
+
+	if ((not length $2) && ($self->{CONNECTIONS} >= $self->{N_X} || $self->{CONNECTIONS} >= $self->{N_Y})) {
+	  $self->{N_X} = $self->{CONNECTIONS} * 2 - 1;
+	  $self->{N_Y} = $self->{CONNECTIONS} * 2 - 2;
+	}
+
+	if ($self->{N_X} > 32 || $self->{N_X} < $self->{CONNECTIONS}) {
+	  return "Wrong board-X size";
+	}
+
+	if ($self->{N_Y} > 32 || $self->{N_Y} < $self->{CONNECTIONS}) {
+	  return "Wrong board-Y size";
+	}
 
         my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
         my $player = { id => $id, name => $nick, missedinputs => 0 };
@@ -137,7 +157,8 @@ sub connect4_cmd {
 
         $player = { id => -1, name => undef, missedinputs => 0 };
         push @{$self->{state_data}->{players}}, $player;
-        return "/msg $self->{channel} $nick has made an open challenge (connect-$self->{CONNECTIONS})! Use `accept` to accept their challenge.";
+        return "/msg $self->{channel} $nick has made an open challenge (Connect-$self->{CONNECTIONS} @ " .
+		 "$self->{N_X}x$self->{N_Y} board)! Use `accept` to accept their challenge.";
       }
 
       my $challengee = $self->{pbot}->{nicklist}->is_present($self->{channel}, $arguments);
@@ -148,7 +169,28 @@ sub connect4_cmd {
 
       $self->{current_state} = 'accept';
       $self->{state_data} = { players => [], counter => 0 };
-      $self->{CONNECTIONS} = ((not length $options) ? 4 : $options);
+
+      if (length $options) {
+        if ($options =~ m/^([3-9])(:(\d+)x(\d+))?$/) {
+      	  $self->{N_X} = (not length $3) ? 7 : $3;
+          $self->{N_Y} = (not length $4) ? 6 : $4;
+	  $self->{CONNECTIONS} = (not length $1) ? 4: $1;
+
+	  if ((not length $2) && ($self->{CONNECTIONS} >= $self->{N_X} || $self->{CONNECTIONS} >= $self->{N_Y})) {
+	    $self->{N_X} = $self->{CONNECTIONS} * 2 - 1;
+	    $self->{N_Y} = $self->{CONNECTIONS} * 2 - 2;
+	  }
+
+	  if ($self->{N_X} > 32 || $self->{N_X} < $self->{CONNECTIONS}) {
+	    return "Wrong board-X size";
+	  }
+
+	  if ($self->{N_Y} > 32 || $self->{N_Y} < $self->{CONNECTIONS}) {
+	    return "Wrong board-Y size";
+	  }
+
+        } else { return "wrong options: '$options'; use <C:ROWSxCOLS>"; }
+      }
 
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
       my $player = { id => $id, name => $nick, missedinputs => 0 };
@@ -158,7 +200,8 @@ sub connect4_cmd {
       $player = { id => $id, name => $challengee, missedinputs => 0 };
       push @{$self->{state_data}->{players}}, $player;
 
-      return "/msg $self->{channel} $nick has challenged $challengee to Connect4! Use `accept` to accept their challenge.";
+      return "/msg $self->{channel} $nick has challenged $challengee to " .
+	      "Connect-$self->{CONNECTIONS} @ $self->{N_X}x$self->{N_Y} board! Use `accept` to accept their challenge.";
     }
 
     when ('accept') {
@@ -277,8 +320,8 @@ sub connect4_cmd {
         return "$nick: You have already played this turn.";
       }
 
-      if ($arguments !~ m/^[1-7]$/) {
-        return "$nick: Usage: connect4 play <location>; <location> must be in the 1..7 range etc.";
+      if ($arguments !~ m/^\d+$/) {
+        return "$nick: Usage: connect4 play <location>; <location> must be in the [1, $self->{N_X}] range.";
       }
 
       if ($self->play($player, uc $arguments)) {
@@ -303,20 +346,16 @@ sub connect4_cmd {
         return "$nick: There is no board to show right now.";
       }
 
-      if ($_ eq 'specboard') {
-        $self->show_board(2);
-        return;
-      }
-
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
       for (my $i = 0; $i < 2; $i++) {
         if ($self->{state_data}->{players}->[$i]->{id} == $id) {
           $self->send_message($self->{channel}, "$nick surveys the board!");
-          $self->show_board($i);
+          $self->show_board;
           return;
         }
       }
-      $self->show_board(2);
+
+      $self->show_board;
     }
 
     default {
@@ -484,12 +523,11 @@ sub create_states {
 sub init_game {
   my ($self, $nick1, $nick2) = @_;
 
-  $self->{N_X} = 7;
-  $self->{N_Y} = 6;
   $self->{chips} = 0;
   $self->{draw} = 0;
 
   $self->{board} = [];
+  $self->{winner_line} = [];
 
   $self->{player} = [
     { nick => $nick1, done => 0 },
@@ -513,44 +551,53 @@ sub generate_board {
   }
 }
 
+sub check_one {
+  my ($self, $n, $y, $x, $prev) = @_;
+
+  my $chip = $self->{board}[$y][$x];
+
+  $n = $n + 1;
+
+  push @{$self->{winner_line}}, "$y, $x";
+
+  if (!(($chip eq $prev) && $prev ne ' ')) {
+    $self->{winner_line} = [ "$y, $x" ];
+    $n = 1;
+  }
+
+  if ($chip eq ' ') { $n = 0; }
+
+  if ($n == $self->{CONNECTIONS}) {
+    return (1, $n, $prev);
+  }
+
+  return (0, $n, $chip);
+}
+
 sub connected {
   my ($self) = @_;
-  my ($i, $j, $row, $col, $prev) = (0, 0, 0, 0, 0);
-  my ($tis, $n) = (0, 0);
+  my ($i, $j, $row, $col, $prev, $n) = (0, 0, 0, 0, 0, 0);
+  my $rv;
 
   for ($row = 0; $row < $self->{N_Y}; $row++) {
     $n = 0;
     $prev = ' ';
-    for ($i = $row, $j = $self->{N_X}-1; $i < $self->{N_Y} && $j >= 0; $i++, $j--) {
-      $tis = $self->{board}[$i][$j];
-
-      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
-
-      if ($tis eq ' ') { $n = 0; }
-
-      if ($n == $self->{CONNECTIONS}) {
+    for ($i = $row, $j = $self->{N_X} - 1; $i < $self->{N_Y} && $j >= 0; $i++, $j--) {
+      ($rv, $n, $prev) = $self->check_one($n, $i, $j, $prev);
+      if ($rv) {
         return 1;
       }
-
-      $prev = $tis;
-    } 
+    }
   }
-	
+
   for ($col = $self->{N_X} - 1; $col >= 0; $col--) {
     $n = 0;
     $prev = ' ';
     for ($i = 0, $j = $col; $i < $self->{N_Y} && $j >= 0; $i++, $j--) {
-      $tis = $self->{board}[$i][$j];
-
-      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
-      
-      if ($tis eq ' ') { $n = 0; }
-		
-      if ($n == $self->{CONNECTIONS}) {
+      ($rv, $n, $prev) = $self->check_one($n, $i, $j, $prev);
+      if ($rv) {
         return 2;
       }
-
-      $prev = $tis;
     }
   }
 
@@ -558,17 +605,10 @@ sub connected {
     $n = 0;
     $prev = ' ';
     for ($i = $row, $j = 0; $i < $self->{N_Y}; $i++, $j++) {
-      $tis = $self->{board}[$i][$j];
-
-      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
-		
-      if ($tis eq ' ') { $n = 0; }
-
-      if ($n == $self->{CONNECTIONS}) {
+      ($rv, $n, $prev) = $self->check_one($n, $i, $j, $prev);
+      if ($rv) {
         return 3;
       }
-
-      $prev = $tis;
     }
   }
 
@@ -576,53 +616,32 @@ sub connected {
     $n = 0;
     $prev = ' ';
     for ($i = 0, $j = $col; $i < $self->{N_Y} && $j < $self->{N_X}; $i++, $j++) {
-      $tis = $self->{board}[$i][$j];
-
-      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
-		
-      if ($tis eq ' ') { $n = 0; }
-		
-      if ($n == $self->{CONNECTIONS}) {
+      ($rv, $n, $prev) = $self->check_one($n, $i, $j, $prev);
+      if ($rv) {
         return 4;
       }
-
-      $prev = $tis;
     }
   }
-	
+
   for ($row = 0; $row < $self->{N_Y}; $row++) {
     $n = 0;
     $prev = ' ';
     for ($col = 0; $col < $self->{N_X}; $col++) {
-      $tis = $self->{board}[$row][$col];
-
-      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
-      
-      if ($tis eq ' ') { $n = 0; }
-		
-      if ($n == $self->{CONNECTIONS}) {
+      ($rv, $n, $prev) = $self->check_one($n, $row, $col, $prev);
+      if ($rv) {
         return 5;
       }
-
-      $prev = $tis;
     }
   }
-	
+
   for ($col = 0; $col < $self->{N_X}; $col++) {
     $n = 0;
     $prev = ' ';
     for ($row = $self->{N_Y} - 1; $row >= 0; $row--) {
-      $tis = $self->{board}[$row][$col];
-
-      $n = (($tis eq $prev) && $prev ne ' ') ? $n+1 : 1;
-
-      if ($tis eq ' ') { $n = 0; }
-
-      if ($n == $self->{CONNECTIONS}) {
+      ($rv, $n, $prev) = $self->check_one($n, $row, $col, $prev);
+      if ($rv) {
         return 6;
       }
-
-      $prev = $tis;
     }
   }
 
@@ -649,7 +668,7 @@ sub play {
 
   $self->{pbot}->{logger}->log("play player $player: $x\n");
 
-  if ($x < 0 || $x >= $self->{N_X} || $self->{board}[0][$x] != ' ') {
+  if ($x < 0 || $x >= $self->{N_X} || $self->{board}[0][$x] ne ' ') {
     $self->send_message($self->{channel}, "Target illegal/out of range, try again.");
     return 0;
   }
@@ -661,7 +680,7 @@ sub play {
 
   $c4 = $self->connected;
   $draw = $self->{chips} == $self->{N_X} * $self->{N_Y};
- 
+  
   my $nick1 = $self->{player}->[$player]->{nick};
   my $nick2 = $self->{player}->[$player ? 0 : 1]->{nick};
 
@@ -679,12 +698,12 @@ sub play {
 }
 
 sub show_board {
-  my ($self, $player) = @_;
+  my ($self) = @_;
   my ($x, $y, $buf, $chip, $c);
 
   $self->{pbot}->{logger}->log("showing board\n");
 
-  $buf = "$color{blue}";
+  $buf = "$color{bold}";
 
   for($x = 1; $x < $self->{N_X} + 1; $x++) {
     if ($x % 10 == 0) {
@@ -703,18 +722,26 @@ sub show_board {
   for ($y = 0; $y < $self->{N_Y}; $y++) {
     for ($x = 0; $x < $self->{N_X}; $x++) {
 	    $chip = $self->{board}->[$y][$x];
-	    $c = $chip eq 'O' ? $color{red} : $color{cyan};
-	    $buf .= "[$c$chip$color{reset}]";
+	    my $rc = "$y, $x";
+
+	    $c = $chip eq 'O' ? $color{red} : $color{yellow};
+	    if (grep(/^$rc$/, @{$self->{winner_line}})) {
+	      $c .= $color{bold};
+	    }
+
+	    $buf .= "$color{blue}\[$c$chip$color{blue}]$color{reset}";
     }
     $buf .= "\n";
   }
 
-  foreach my $line (split /\n/, $buf) { 
-    if ($player != 2) {
-      $self->send_message($self->{player}->[$player]->{nick}, $line);
-    } else {
+  my $nick1 = $self->{player}->[0]->{nick};
+  my $nick2 = $self->{player}->[1]->{nick};
+
+  $buf .= sprintf("  %s: %s ", $nick1, "$color{yellow}X$color{reset}");
+  $buf .= sprintf("%s: %s\n", $nick2, "$color{red}O$color{reset}");
+
+  foreach my $line (split /\n/, $buf) {
       $self->send_message($self->{channel}, $line);
-    }
   }
 }
 
@@ -774,7 +801,7 @@ sub genboard {
 sub showboard {
   my ($self, $state) = @_;
   $self->send_message($self->{channel}, "Showing board ...");
-  $self->show_board(2);
+  $self->show_board;
   $self->send_message($self->{channel}, "Fight! Anybody (players and spectators) can use `board` at any time to see latest version of the board!");
   $state->{result} = 'next';
   return $state;
@@ -836,7 +863,7 @@ sub gameover {
   my ($self, $state) = @_;
   my $buf;
   if ($state->{ticks} % 2 == 0) {
-    $self->show_board(2);
+    $self->show_board;
     $self->send_message($self->{channel}, $buf);
     $self->send_message($self->{channel}, "Game over!");
     $state->{players} = [];
