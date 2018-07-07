@@ -703,7 +703,13 @@ sub show_board {
 
   $self->{pbot}->{logger}->log("showing board\n");
 
-  $buf = "$color{bold}";
+  my $nick1 = $self->{player}->[0]->{nick};
+  my $nick2 = $self->{player}->[1]->{nick};
+
+  $buf  = sprintf("%s: %s ", $nick1, "$color{yellow}X$color{reset}");
+  $buf .= sprintf("%s: %s\n", $nick2, "$color{red}O$color{reset}");
+
+  $buf .= "$color{bold}";
 
   for($x = 1; $x < $self->{N_X} + 1; $x++) {
     if ($x % 10 == 0) {
@@ -733,12 +739,6 @@ sub show_board {
     }
     $buf .= "\n";
   }
-
-  my $nick1 = $self->{player}->[0]->{nick};
-  my $nick2 = $self->{player}->[1]->{nick};
-
-  $buf .= sprintf("  %s: %s ", $nick1, "$color{yellow}X$color{reset}");
-  $buf .= sprintf("%s: %s\n", $nick2, "$color{red}O$color{reset}");
 
   foreach my $line (split /\n/, $buf) {
       $self->send_message($self->{channel}, $line);
