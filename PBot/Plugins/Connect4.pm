@@ -552,38 +552,28 @@ sub generate_board {
 }
 
 sub check_one {
-  my ($self, $n, $y, $x, $prev) = @_;
-
+  my ($self, $y, $x, $prev) = @_;
   my $chip = $self->{board}[$y][$x];
 
-  $n = $n + 1;
+  push @{$self->{winner_line}}, "$y $x";
 
-  push @{$self->{winner_line}}, "$y, $x";
-
-  if (!(($chip eq $prev) && $prev ne ' ')) {
-    $self->{winner_line} = [ "$y, $x" ];
-    $n = 1;
+  if ($chip eq ' ' || $chip ne $prev) {
+    $self->{winner_line} = ($chip eq ' ') ? [] : [ "$y $x" ];
   }
 
-  if ($chip eq ' ') { $n = 0; }
-
-  if ($n == $self->{CONNECTIONS}) {
-    return (1, $n, $prev);
-  }
-
-  return (0, $n, $chip);
+  return (scalar @{$self->{winner_line}} == $self->{CONNECTIONS}, $chip);
 }
 
 sub connected {
   my ($self) = @_;
-  my ($i, $j, $row, $col, $prev, $n) = (0, 0, 0, 0, 0, 0);
+  my ($i, $j, $row, $col, $prev) = (0, 0, 0, 0, 0);
   my $rv;
 
   for ($row = 0; $row < $self->{N_Y}; $row++) {
-    $n = 0;
     $prev = ' ';
+    $self->{winner_line} = [];
     for ($i = $row, $j = $self->{N_X} - 1; $i < $self->{N_Y} && $j >= 0; $i++, $j--) {
-      ($rv, $n, $prev) = $self->check_one($n, $i, $j, $prev);
+      ($rv, $prev) = $self->check_one($i, $j, $prev);
       if ($rv) {
         return 1;
       }
@@ -591,10 +581,10 @@ sub connected {
   }
 
   for ($col = $self->{N_X} - 1; $col >= 0; $col--) {
-    $n = 0;
     $prev = ' ';
+    $self->{winner_line} = [];
     for ($i = 0, $j = $col; $i < $self->{N_Y} && $j >= 0; $i++, $j--) {
-      ($rv, $n, $prev) = $self->check_one($n, $i, $j, $prev);
+      ($rv, $prev) = $self->check_one($i, $j, $prev);
       if ($rv) {
         return 2;
       }
@@ -602,10 +592,10 @@ sub connected {
   }
 
   for ($row = 0; $row < $self->{N_Y}; $row++) {
-    $n = 0;
     $prev = ' ';
+    $self->{winner_line} = [];
     for ($i = $row, $j = 0; $i < $self->{N_Y}; $i++, $j++) {
-      ($rv, $n, $prev) = $self->check_one($n, $i, $j, $prev);
+      ($rv, $prev) = $self->check_one($i, $j, $prev);
       if ($rv) {
         return 3;
       }
@@ -613,10 +603,10 @@ sub connected {
   }
 
   for ($col = 0; $col < $self->{N_X}; $col++) {
-    $n = 0;
     $prev = ' ';
+    $self->{winner_line} = [];
     for ($i = 0, $j = $col; $i < $self->{N_Y} && $j < $self->{N_X}; $i++, $j++) {
-      ($rv, $n, $prev) = $self->check_one($n, $i, $j, $prev);
+      ($rv, $prev) = $self->check_one($i, $j, $prev);
       if ($rv) {
         return 4;
       }
@@ -624,10 +614,10 @@ sub connected {
   }
 
   for ($row = 0; $row < $self->{N_Y}; $row++) {
-    $n = 0;
     $prev = ' ';
+    $self->{winner_line} = [];
     for ($col = 0; $col < $self->{N_X}; $col++) {
-      ($rv, $n, $prev) = $self->check_one($n, $row, $col, $prev);
+      ($rv, $prev) = $self->check_one($row, $col, $prev);
       if ($rv) {
         return 5;
       }
@@ -635,16 +625,17 @@ sub connected {
   }
 
   for ($col = 0; $col < $self->{N_X}; $col++) {
-    $n = 0;
     $prev = ' ';
+    $self->{winner_line} = [];
     for ($row = $self->{N_Y} - 1; $row >= 0; $row--) {
-      ($rv, $n, $prev) = $self->check_one($n, $row, $col, $prev);
+      ($rv, $prev) = $self->check_one($row, $col, $prev);
       if ($rv) {
         return 6;
       }
     }
   }
 
+  $self->{winner_line} = [];
   return 0;
 }
 
@@ -728,15 +719,19 @@ sub show_board {
   for ($y = 0; $y < $self->{N_Y}; $y++) {
     for ($x = 0; $x < $self->{N_X}; $x++) {
       $chip = $self->{board}->[$y][$x];
-      my $rc = "$y, $x";
+      my $rc = "$y $x";
 
       $c = $chip eq 'O' ? $color{red} : $color{yellow};
       if (grep(/^$rc$/, @{$self->{winner_line}})) {
         $c .= $color{bold};
       }
 
-      $buf .= "$color{blue}\[$c$chip$color{blue}]$color{reset}";
+      $buf .= $color{blue} . "[";
+      $buf .= $c . $chip . $color{reset};
+      $buf .= $color{blue} . "]";
     }
+
+    $buf .= $color{reset};
     $buf .= "\n";
   }
 
