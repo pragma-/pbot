@@ -91,14 +91,57 @@ my %color = (
   reset      => "\x0F",
 );
 
+my $DEFAULT_NX = 7;
+my $DEFAULT_NY = 6;
+my $DEFAULT_CONNECTIONS = 4;
+my $MAX_NX = 32;
+my $MAX_NY = 32;
+
+# challenge options: CONNS:ROWSxCOLS
+
+sub parse_challenge {
+  my ($self, $options) = @_;
+  my ($conns, $xy, $nx, $ny);
+
+  "x" =~ /x/; # clear $1, $2 ...
+  if ($options !~ m/^([3-9])(:(\d+)x(\d+))?$/) {
+    return "Wrong options '$options', use: <CONNS:ROWSxCOLS>";
+  }
+
+  $conns = $1;
+  $xy = $2;
+  $ny = $3;
+  $nx = $4;
+
+  $self->{N_X} = (not length $nx) ? $DEFAULT_NX : $nx;
+  $self->{N_Y} = (not length $ny) ? $DEFAULT_NY : $ny;
+  $self->{CONNECTIONS} = (not length $conns) ? $DEFAULT_CONNECTIONS : $conns;
+
+  # auto adjust board size for `challenge N'
+  if ((not length $xy) && ($self->{CONNECTIONS} >= $self->{N_X} || $self->{CONNECTIONS} >= $self->{N_Y})) {
+    $self->{N_X} = $self->{CONNECTIONS} * 2 - 1;
+    $self->{N_Y} = $self->{CONNECTIONS} * 2 - 2;
+  }
+
+  if ($self->{N_X} > $MAX_NX || $self->{N_X} < $self->{CONNECTIONS}) {
+    return "Wrong board-X size";
+  }
+
+  if ($self->{N_Y} > $MAX_NY || $self->{N_Y} < $self->{CONNECTIONS}) {
+    return "Wrong board-Y size";
+  }
+
+  return 0;
+}
+
 sub connect4_cmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
+  my ($options, $command, $err);
+
   $arguments =~ s/^\s+|\s+$//g;
 
   my $usage = "Usage: connect4 challenge|accept|play|board|quit|players|kick|abort; for more information about a command: connect4 help <command>";
 
-  my $options;
-  my $command;
   ($command, $arguments, $options) = split / /, $arguments, 3;
   $command = lc $command;
 
@@ -126,30 +169,13 @@ sub connect4_cmd {
         return "There is already a game of connect4 underway.";
       }
 
-      $self->{N_X} = 7;
-      $self->{N_Y} = 6;
-      $self->{CONNECTIONS} = 4;
+      $self->{N_X} = $DEFAULT_NX;
+      $self->{N_Y} = $DEFAULT_NY;
+      $self->{CONNECTIONS} = $DEFAULT_CONNECTIONS;
 
-      if ((not length $arguments) || ($arguments =~ m/^([3-9])(:(\d+)x(\d+))?$/)) {
+      if ((not length $arguments) || ($arguments =~ m/^\d+.*$/ && not ($err = $self->parse_challenge($arguments))))  {
         $self->{current_state} = 'accept';
         $self->{state_data} = { players => [], counter => 0 };
-
-        $self->{N_X} = (not length $3) ? 7 : $3;
-        $self->{N_Y} = (not length $4) ? 6 : $4;
-        $self->{CONNECTIONS} = (not length $1) ? 4 : $1;
-
-        if ((not length $2) && ($self->{CONNECTIONS} >= $self->{N_X} || $self->{CONNECTIONS} >= $self->{N_Y})) {
-          $self->{N_X} = $self->{CONNECTIONS} * 2 - 1;
-          $self->{N_Y} = $self->{CONNECTIONS} * 2 - 2;
-        }
-
-        if ($self->{N_X} > 32 || $self->{N_X} < $self->{CONNECTIONS}) {
-          return "Wrong board-X size";
-        }
-
-        if ($self->{N_Y} > 32 || $self->{N_Y} < $self->{CONNECTIONS}) {
-          return "Wrong board-Y size";
-        }
 
         my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
         my $player = { id => $id, name => $nick, missedinputs => 0 };
@@ -159,6 +185,10 @@ sub connect4_cmd {
         push @{$self->{state_data}->{players}}, $player;
         return "/msg $self->{channel} $nick has made an open challenge (Connect-$self->{CONNECTIONS} @ " .
         "$self->{N_X}x$self->{N_Y} board)! Use `accept` to accept their challenge.";
+      }
+
+      if ($err) {
+        return $err;
       }
 
       my $challengee = $self->{pbot}->{nicklist}->is_present($self->{channel}, $arguments);
@@ -171,25 +201,9 @@ sub connect4_cmd {
       $self->{state_data} = { players => [], counter => 0 };
 
       if (length $options) {
-        if ($options =~ m/^([3-9])(:(\d+)x(\d+))?$/) {
-          $self->{N_X} = (not length $3) ? 7 : $3;
-          $self->{N_Y} = (not length $4) ? 6 : $4;
-          $self->{CONNECTIONS} = (not length $1) ? 4: $1;
-
-          if ((not length $2) && ($self->{CONNECTIONS} >= $self->{N_X} || $self->{CONNECTIONS} >= $self->{N_Y})) {
-            $self->{N_X} = $self->{CONNECTIONS} * 2 - 1;
-            $self->{N_Y} = $self->{CONNECTIONS} * 2 - 2;
-          }
-
-          if ($self->{N_X} > 32 || $self->{N_X} < $self->{CONNECTIONS}) {
-            return "Wrong board-X size";
-          }
-
-          if ($self->{N_Y} > 32 || $self->{N_Y} < $self->{CONNECTIONS}) {
-            return "Wrong board-Y size";
-          }
-
-        } else { return "wrong options: '$options'; use <C:ROWSxCOLS>"; }
+        if ($err = $self->parse_challenge($options)) {
+          return $err;
+        }
       }
 
       my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
