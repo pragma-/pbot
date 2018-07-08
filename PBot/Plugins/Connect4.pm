@@ -728,8 +728,10 @@ sub show_board {
 
       $buf .= $color{blue} . "[";
       $buf .= $c . $chip . $color{reset};
-      $buf .= $color{blue} . "]" . $color{reset};
+      $buf .= $color{blue} . "]";
     }
+
+    $buf .= $color{reset};
     $buf .= "\n";
   }
 
