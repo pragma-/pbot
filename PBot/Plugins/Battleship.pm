@@ -310,8 +310,14 @@ sub battleship_cmd {
 
 
       if ($self->{state_data}->{current_player} != $player) {
+        my $msg;
+        if (not exists $self->{state_data}->{players}->[$player]->{location}) {
+          $msg = "$nick: You will attack $arguments when it is your turn.";
+        } else {
+          $msg = "$nick: You will now attack $arguments instead of $self->{state_data}->{players}->[$player]->{location} when it is your turn.";
+        }
         $self->{state_data}->{players}->[$player]->{location} = $arguments;
-        return "$nick: You will attack $arguments when it is your turn.";
+        return $msg;
       }
 
       if ($self->{player}->[$player]->{done}) {
@@ -1084,7 +1090,7 @@ sub showboard {
   $self->show_battlefield(0);
   $self->send_message($self->{channel}, "Showing battlefield to $self->{player}->[1]->{nick}...");
   $self->show_battlefield(1);
-  $self->send_message($self->{channel}, "Fight! Anybody (players and spectators) can use `board` at any time to see latest version of the board!");
+  $self->send_message($self->{channel}, "Fight! Anybody (players and spectators) can use `board` at any time to see the battlefield.");
   $state->{result} = 'next';
   return $state;
 }
