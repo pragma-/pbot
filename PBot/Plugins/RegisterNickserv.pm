@@ -65,7 +65,7 @@ sub on_public {
   }
 
   $self->{pbot}->{logger}->log("RegisterNickserv: Notifying $nick to register with NickServ in $channel.\n");
-  $event->{conn}->privmsg($nick, "Please register your nick to speak in $channel. https://freenode.net/kb/answer/registration");
+  $event->{conn}->privmsg($nick, "Please register your nick to speak in $channel. See https://freenode.net/kb/answer/registration and https://freenode.net/kb/answer/sasl");
 
   # don't relay unregistered chat unless enabled
   return 0 if not $self->{pbot}->{registry}->get_value($channel, 'relay_unregistered_chat');
