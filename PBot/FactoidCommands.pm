@@ -928,11 +928,7 @@ sub factadd {
     return "Usage: factadd [channel] <keyword> <factoid>";
   }
 
-  if ($from_chan !~ /^#/) {
-    if (lc $from_chan ne 'global' and $from_chan ne '.*') {
-      return "Usage: factadd [channel] <keyword> <text>";
-    }
-  }
+  $from_chan = '.*' if $from_chan !~ /^#/;
 
   if (length $keyword > 30) {
     return "/say $nick: I don't think the factoid name needs to be that long.";
