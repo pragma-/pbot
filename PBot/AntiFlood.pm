@@ -907,7 +907,7 @@ sub check_bans {
           }
 
           if($self->whitelisted($baninfo->{channel}, $baninfo->{banmask}, 'ban') || $self->whitelisted($baninfo->{channel}, $mask, 'user')) {
-            $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+            #$self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
             next;
           } 
 
@@ -1107,6 +1107,9 @@ sub on_accountnotify {
 
   if ($event->{event}->{args}[0] eq '*') {
     $self->{pbot}->{logger}->log("$event->{event}->{from} logged out of NickServ\n");
+    my ($nick, $user, $host) = $event->{event}->{from} =~ m/^([^!]+)!([^@]+)@(.*)/;
+    my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+    $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($message_account, '');
   } else {
     $self->{pbot}->{logger}->log("$event->{event}->{from} logged into NickServ account $event->{event}->{args}[0]\n");
 
