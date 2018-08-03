@@ -66,6 +66,8 @@ sub on_public {
     }
   }
 
+  return 0 if $self->{pbot}->{nicklist}->get_meta($channel, $nick, '+v');
+
   $self->{pbot}->{logger}->log("RegisterNickserv: Notifying $nick to register with NickServ in $channel.\n");
   $event->{conn}->privmsg($nick, "Please register your nick to speak in $channel. See https://freenode.net/kb/answer/registration and https://freenode.net/kb/answer/sasl");
 
