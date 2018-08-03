@@ -54,7 +54,20 @@ sub initialize {
 
 sub dumpnicks {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  my $nicklist = Dumper($self->{nicklist});
+  my $nicklist;
+
+  if (not length $arguments) {
+    $nicklist = Dumper($self->{nicklist});
+  } else {
+    my @args = split / /, $arguments;
+
+    if (@args == 1) {
+      $nicklist = Dumper($self->{nicklist}->{$arguments});
+    } else {
+      $nicklist = Dumper($self->{nicklist}->{$args[0]}->{$args[1]});
+    }
+  }
+
   return $nicklist;
 }
 
@@ -102,6 +115,51 @@ sub get_channels {
   }
   
   return \@channels;
+}
+
+sub set_meta {
+  my ($self, $channel, $nick, $key, $value) = @_;
+
+  $channel = lc $channel;
+  $nick = lc $nick;
+
+  if (not exists $self->{nicklist}->{$channel} or not exists $self->{nicklist}->{$channel}->{$nick}) {
+    $self->{pbot}->{logger}->log("Nicklist: Attempt to set invalid meta ($key => $value) for $nick in $channel.\n");
+    return 0;
+  }
+
+  $self->{nicklist}->{$channel}->{$nick}->{$key} = $value;
+  return 1;
+}
+
+sub delete_meta {
+  my ($self, $channel, $nick, $key) = @_;
+
+  $channel = lc $channel;
+  $nick = lc $nick;
+
+  if (not exists $self->{nicklist}->{$channel}
+      or not exists $self->{nicklist}->{$channel}->{$nick}
+      or not exists $self->{nicklist}->{$channel}->{$nick}->{$key}) {
+    return undef;
+  }
+
+  return delete $self->{nicklist}->{$channel}->{$nick}->{$key};
+}
+
+sub get_meta {
+  my ($self, $channel, $nick, $key) = @_;
+
+  $channel = lc $channel;
+  $nick = lc $nick;
+
+  if (not exists $self->{nicklist}->{$channel}
+      or not exists $self->{nicklist}->{$channel}->{$nick}
+      or not exists $self->{nicklist}->{$channel}->{$nick}->{$key}) {
+    return undef;
+  }
+
+  return $self->{nicklist}->{$channel}->{$nick}->{$key};
 }
 
 sub is_present_any_channel {
@@ -189,10 +247,23 @@ sub random_nick {
 sub on_namreply {
   my ($self, $event_type, $event) = @_;
   my ($channel, $nicks) = ($event->{event}->{args}[2], $event->{event}->{args}[3]);
-  
+
   foreach my $nick (split ' ', $nicks) {
-    $nick =~ s/^[@+%]//; # remove OP/Voice/etc indicator from nick
-    $self->add_nick($channel, $nick);
+    my $stripped_nick = $nick;
+    $stripped_nick =~ s/^[@+%]//g; # remove OP/Voice/etc indicator from nick
+    $self->add_nick($channel, $stripped_nick);
+
+    if ($nick =~ m/\@/) {
+      $self->set_meta($channel, $stripped_nick, '+o', 1);
+    }
+
+    if ($nick =~ m/\+/) {
+      $self->set_meta($channel, $stripped_nick, '+v', 1);
+    }
+
+    if ($nick =~ m/\%/) {
+      $self->set_meta($channel, $stripped_nick, '+h', 1);
+    }
   }
 
   return 0;
@@ -245,8 +316,10 @@ sub on_nickchange {
 
   foreach my $channel (keys %{ $self->{nicklist} }) {
     if ($self->is_present($channel, $nick)) {
-      $self->remove_nick($channel, $nick);
-      $self->add_nick($channel, $newnick);
+      my $meta = delete $self->{nicklist}->{$channel}->{lc $nick};
+      $meta->{nick} = $newnick;
+      $meta->{timestamp} = gettimeofday;
+      $self->{nicklist}->{$channel}->{lc $newnick} = $meta;
     }
   }
 

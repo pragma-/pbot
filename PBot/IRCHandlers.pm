@@ -18,7 +18,7 @@ use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -64,7 +64,7 @@ sub initialize {
 sub default_handler {
   my ($self, $conn, $event) = @_;
 
-  if(not defined $self->{pbot}->{event_dispatcher}->dispatch_event("irc.$event->{type}", { conn => $conn, event => $event })) {
+  if (not defined $self->{pbot}->{event_dispatcher}->dispatch_event("irc.$event->{type}", { conn => $conn, event => $event })) {
     if ($self->{pbot}->{registry}->get_value('irc', 'log_default_handler')) {
       $self->{pbot}->{logger}->log(Dumper $event);
     }
@@ -160,13 +160,13 @@ sub on_notice {
 
   return 0 if not length $host;
  
-  if($nick eq 'NickServ') {
-    if($text =~ m/This nickname is registered/) {
+  if ($nick eq 'NickServ') {
+    if ($text =~ m/This nickname is registered/) {
       $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
       $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
-    } elsif($text =~ m/You are now identified/) {
+    } elsif ($text =~ m/You are now identified/) {
       $event->{conn}->nick($self->{pbot}->{registry}->get_value('irc', 'botnick'));
-    } elsif($text =~ m/has been ghosted/) {
+    } elsif ($text =~ m/has been ghosted/) {
       $event->{conn}->nick($self->{pbot}->{registry}->get_value('irc', 'botnick'));
     }
   } else {
@@ -196,47 +196,56 @@ sub on_mode {
 
   ($nick, $user, $host) = $self->normalize_hostmask($nick, $user, $host);
 
-  my ($mode, $modifier);
+  my ($mode, $mode_char, $modifier);
   my $i = 0;
   my $target;
 
   while($mode_string =~ m/(.)/g) {
     my $char = $1;
 
-    if($char eq '-' or $char eq '+') {
+    if ($char eq '-' or $char eq '+') {
       $modifier = $char;
       next;
     }
 
     $mode = $modifier . $char;
+    $mode_char = $char;
     $target = $event->{event}->{args}[++$i];
 
     $self->{pbot}->{logger}->log("Got mode: source: $nick!$user\@$host, mode: $mode, target: " . (defined $target ? $target : "(undef)") . ", channel: $channel\n");
 
-    if($mode eq "-b" or $mode eq "+b" or $mode eq "-q" or $mode eq "+q") {
+    if ($mode eq "-b" or $mode eq "+b" or $mode eq "-q" or $mode eq "+q") {
       $self->{pbot}->{bantracker}->track_mode("$nick!$user\@$host", $mode, $target, $channel);
     }
 
-    if(defined $target && $target eq $event->{conn}->nick) { # bot targeted
-      if($mode eq "+o") {
+    if (defined $target) {
+      if ($modifier eq '-') {
+        $self->{pbot}->{nicklist}->delete_meta($channel, $target, "+$mode_char");
+      } else {
+        $self->{pbot}->{nicklist}->set_meta($channel, $target, $mode, 1);
+      }
+    }
+
+    if (defined $target && $target eq $event->{conn}->nick) { # bot targeted
+      if ($mode eq "+o") {
         $self->{pbot}->{logger}->log("$nick opped me in $channel\n");
         my $timeout = $self->{pbot}->{registry}->get_value($channel, 'deop_timeout') // $self->{pbot}->{registry}->get_value('general', 'deop_timeout');
         $self->{pbot}->{chanops}->{is_opped}->{$channel}{timeout} = gettimeofday + $timeout;
         delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
         $self->{pbot}->{chanops}->perform_op_commands($channel);
       } 
-      elsif($mode eq "-o") {
+      elsif ($mode eq "-o") {
         $self->{pbot}->{logger}->log("$nick removed my ops in $channel\n");
         delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
       }
-      elsif($mode eq "+b") {
+      elsif ($mode eq "+b") {
         $self->{pbot}->{logger}->log("Got banned in $channel, attempting unban.");
         $event->{conn}->privmsg("chanserv", "unban $channel");
       }    
     } 
     else {  # bot not targeted
-      if($mode eq "+b") {
-        if($nick eq "ChanServ" or $target =~ m/##fix_your_connection$/i) {
+      if ($mode eq "+b") {
+        if ($nick eq "ChanServ" or $target =~ m/##fix_your_connection$/i) {
           if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
             $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout');
             $self->{pbot}->{chanops}->{unban_timeout}->save;
@@ -257,8 +266,8 @@ sub on_mode {
           }
         }
       } 
-      elsif($mode eq "+q") {
-        if($nick ne $event->{conn}->nick) {
+      elsif ($mode eq "+q") {
+        if ($nick ne $event->{conn}->nick) { # bot muted
           if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
             $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'mute_timeout');
             $self->{pbot}->{chanops}->{unmute_timeout}->save;
@@ -338,7 +347,7 @@ sub on_kick {
   my ($message_account) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($target);
 
   my $hostmask;
-  if(defined $message_account) {
+  if (defined $message_account) {
     $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($message_account);
 
     my ($target_nick, $target_user, $target_host) = $hostmask =~ m/^([^!]+)!([^@]+)@(.*)/;
@@ -353,7 +362,7 @@ sub on_kick {
 
   $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account_id("$nick!$user\@$host");
   
-  if(defined $message_account) {
+  if (defined $message_account) {
     my $text = "KICKED " . (defined $hostmask ? $hostmask : $target) . " from $channel ($reason)";
     $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_CHAT});
   }
@@ -372,7 +381,7 @@ sub on_departure {
 
   my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
 
-  if($text =~ m/^QUIT/) {
+  if ($text =~ m/^QUIT/) {
     # QUIT messages must be dispatched to each channel the user is on
     my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
     foreach my $chan (@$channels) {
@@ -389,7 +398,7 @@ sub on_departure {
     $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
 
   my $admin = $self->{pbot}->{admins}->find_admin($channel, "$nick!$user\@$host");
-  if(defined $admin and $admin->{loggedin} and not $admin->{stayloggedin}) {
+  if (defined $admin and $admin->{loggedin} and not $admin->{stayloggedin}) {
     $self->{pbot}->{logger}->log("Whoops, $nick left while still logged in.\n");
     $self->{pbot}->{logger}->log("Logged out $nick.\n");
     delete $admin->{loggedin};
@@ -439,7 +448,7 @@ sub on_nickchange {
   if ($newnick eq $self->{pbot}->{registry}->get_value('irc', 'botnick') and not $self->{pbot}->{joined_channels}) {
     my $chans;
     foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
-      if($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
+      if ($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
         $chans .= "$chan,";
       }
     }
