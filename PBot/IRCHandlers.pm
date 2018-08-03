@@ -540,6 +540,7 @@ sub on_endofwho {
   my ($self, $event_type, $event) = @_;
   $self->{pbot}->{logger}->log("WHO session $last_who_id ($who_cache{$last_who_id}) completed.\n");
   delete $who_cache{$last_who_id};
+  delete $who_queue{$last_who_id};
   $who_pending = 0;
   return 0;
 }
@@ -565,6 +566,7 @@ sub check_pending_whos {
     $self->{pbot}->{logger}->log("sending WHO to $who_queue{$id} [$id]\n");
     $self->{pbot}->{conn}->sl("WHO $who_queue{$id} %tuhnar,$id");
     $who_pending = 1;
+    $last_who_id = $id;
     last;
   }
 }
