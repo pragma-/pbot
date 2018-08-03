@@ -78,7 +78,7 @@ sub execute_module {
   $stuff->{arguments} = $self->{pbot}->{factoids}->expand_special_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $stuff->{arguments});
   $stuff->{arguments} = quotemeta $stuff->{arguments};
 
-  if ($stuff->{special} eq 'code-factoid' or exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{unquote_spaces}) {
+  if ((exists $self->{special} and $stuff->{special} eq 'code-factoid') or exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{unquote_spaces}) {
     $stuff->{arguments} =~ s/\\ / /g;
   }
 
