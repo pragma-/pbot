@@ -43,15 +43,15 @@ sub initialize {
 }
 
 sub is_spam {
-  my ($self, $channel, $text) = @_;
+  my ($self, $namespace, $text, $all_namespaces) = @_;
 
   return 0 if not $self->{pbot}->{registry}->get_value('antispam', 'enforce');
-  return 0 if $self->{pbot}->{registry}->get_value($channel, 'dont_enforce_antispam');
+  return 0 if $self->{pbot}->{registry}->get_value($namespace, 'dont_enforce_antispam');
 
   my $ret = eval {
-    foreach my $chan (keys %{ $self->{keywords}->hash }) {
-      next unless $channel =~ m/^$chan$/i;
-      foreach my $keyword (keys %{ $self->{keywords}->hash->{$chan} }) {
+    foreach my $space (keys %{ $self->{keywords}->hash }) {
+      next unless not $all_namespaces and $namespace =~ m/^$space$/i;
+      foreach my $keyword (keys %{ $self->{keywords}->hash->{$space} }) {
         return 1 if $text =~ m/$keyword/i;
       }
     }
@@ -78,9 +78,9 @@ sub antispam_cmd {
     when ($_ eq "list" or $_ eq "show") {
       my $text = "Spam keywords:\n";
       my $entries = 0;
-      foreach my $channel (keys %{ $self->{keywords}->hash }) {
-        $text .= "  $channel:\n";
-        foreach my $keyword (keys %{ $self->{keywords}->hash->{$channel} }) {
+      foreach my $namespace (keys %{ $self->{keywords}->hash }) {
+        $text .= "  $namespace:\n";
+        foreach my $keyword (keys %{ $self->{keywords}->hash->{$namespace} }) {
           $text .= "    $keyword,\n";
           $entries++;
         }
@@ -89,26 +89,26 @@ sub antispam_cmd {
       return $text;
     }
     when ("set") {
-      my ($channel, $keyword, $flag, $value) = split /\s+/, $args, 4;
-      return "Usage: keywords set <channel> <keyword> [flag] [value]" if not defined $channel or not defined $keyword;
+      my ($namespace, $keyword, $flag, $value) = split /\s+/, $args, 4;
+      return "Usage: keywords set <namespace> <keyword> [flag] [value]" if not defined $namespace or not defined $keyword;
 
-      if (not exists $self->{keywords}->hash->{$channel}) {
-        return "There is no such channel `$channel` in the keywords.";
+      if (not exists $self->{keywords}->hash->{$namespace}) {
+        return "There is no such namespace `$namespace` in the keywords.";
       }
 
-      if (not exists $self->{keywords}->hash->{$channel}->{$keyword}) {
-        return "There is no such keyword `$keyword` for channel `$channel` in the keywords.";
+      if (not exists $self->{keywords}->hash->{$namespace}->{$keyword}) {
+        return "There is no such keyword `$keyword` for namespace `$namespace` in the keywords.";
       }
 
       if (not defined $flag) {
         my $text = "Flags:\n";
         my $comma = '';
-        foreach $flag (keys %{ $self->{keywords}->hash->{$channel}->{$keyword} }) {
+        foreach $flag (keys %{ $self->{keywords}->hash->{$namespace}->{$keyword} }) {
           if ($flag eq 'created_on') {
-            my $timestamp = strftime "%a %b %e %H:%M:%S %Z %Y", localtime $self->{keywords}->hash->{$channel}->{$keyword}->{$flag};
+            my $timestamp = strftime "%a %b %e %H:%M:%S %Z %Y", localtime $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag};
             $text .= $comma . "created_on: $timestamp";
           } else {
-            $value = $self->{keywords}->hash->{$channel}->{$keyword}->{$flag};
+            $value = $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag};
             $text .= $comma .  "$flag: $value";
           }
           $comma = ",\n  ";
@@ -117,7 +117,7 @@ sub antispam_cmd {
       }
 
       if (not defined $value) {
-        $value = $self->{keywords}->hash->{$channel}->{$keyword}->{$flag};
+        $value = $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag};
         if (not defined $value) {
           return "/say $flag is not set.";
         } else {
@@ -125,52 +125,52 @@ sub antispam_cmd {
         }
       }
 
-      $self->{keywords}->hash->{$channel}->{$keyword}->{$flag} = $value;
+      $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag} = $value;
       $self->{keywords}->save;
       return "Flag set.";
     }
     when ("unset") {
-      my ($channel, $keyword, $flag) = split /\s+/, $args, 3;
-      return "Usage: keywords unset <channel> <keyword> <flag>" if not defined $channel or not defined $keyword or not defined $flag;
+      my ($namespace, $keyword, $flag) = split /\s+/, $args, 3;
+      return "Usage: keywords unset <namespace> <keyword> <flag>" if not defined $namespace or not defined $keyword or not defined $flag;
 
-      if (not exists $self->{keywords}->hash->{$channel}) {
-        return "There is no such channel `$channel` in the keywords.";
+      if (not exists $self->{keywords}->hash->{$namespace}) {
+        return "There is no such namespace `$namespace` in the keywords.";
       }
 
-      if (not exists $self->{keywords}->hash->{$channel}->{$keyword}) {
-        return "There is no such keyword `$keyword` for channel `$channel` in the keywords.";
+      if (not exists $self->{keywords}->hash->{$namespace}->{$keyword}) {
+        return "There is no such keyword `$keyword` for namespace `$namespace` in the keywords.";
       }
 
-      if (not exists $self->{keywords}->hash->{$channel}->{$keyword}->{$flag}) {
-        return "There is no such flag `$flag` for keyword `$keyword` for channel `$channel` in the keywords.";
+      if (not exists $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag}) {
+        return "There is no such flag `$flag` for keyword `$keyword` for namespace `$namespace` in the keywords.";
       }
 
-      delete $self->{keywords}->hash->{$channel}->{$keyword}->{$flag};
+      delete $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag};
       $self->{keywords}->save;
       return "Flag unset.";
     }
     when ("add") {
-      my ($channel, $keyword) = split /\s+/, $args, 2;
-      return "Usage: keywords add <channel> <keyword>" if not defined $channel or not defined $keyword;
-      $self->{keywords}->hash->{$channel}->{$keyword}->{owner} = "$nick!$user\@$host";
-      $self->{keywords}->hash->{$channel}->{$keyword}->{created_on} = gettimeofday;
+      my ($namespace, $keyword) = split /\s+/, $args, 2;
+      return "Usage: keywords add <namespace> <keyword>" if not defined $namespace or not defined $keyword;
+      $self->{keywords}->hash->{$namespace}->{$keyword}->{owner} = "$nick!$user\@$host";
+      $self->{keywords}->hash->{$namespace}->{$keyword}->{created_on} = gettimeofday;
       $self->{keywords}->save;
       return "/say Added.";
     }
     when ("remove") {
-      my ($channel, $keyword) = split /\s+/, $args, 2;
-      return "Usage: keywords remove <channel> <keyword>" if not defined $channel or not defined $keyword;
+      my ($namespace, $keyword) = split /\s+/, $args, 2;
+      return "Usage: keywords remove <namespace> <keyword>" if not defined $namespace or not defined $keyword;
 
-      if(not defined $self->{keywords}->hash->{$channel}) {
-        return "No entries for channel $channel";
+      if(not defined $self->{keywords}->hash->{$namespace}) {
+        return "No entries for namespace $namespace";
       }
 
-      if(not defined $self->{keywords}->hash->{$channel}->{$keyword}) {
-        return "No such entry for channel $channel";
+      if(not defined $self->{keywords}->hash->{$namespace}->{$keyword}) {
+        return "No such entry for namespace $namespace";
       }
 
-      delete $self->{keywords}->hash->{$channel}->{$keyword};
-      delete $self->{keywords}->hash->{$channel} if keys %{ $self->{keywords}->hash->{$channel} } == 0;
+      delete $self->{keywords}->hash->{$namespace}->{$keyword};
+      delete $self->{keywords}->hash->{$namespace} if keys %{ $self->{keywords}->hash->{$namespace} } == 0;
       $self->{keywords}->save;
       return "/say Removed.";
     }
