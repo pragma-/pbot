@@ -32,6 +32,7 @@ use PBot::NickList;
 use PBot::LagChecker;
 use PBot::MessageHistory;
 use PBot::AntiFlood;
+use PBot::AntiSpam;
 use PBot::Interpreter;
 use PBot::Commands;
 use PBot::ChanOps;
@@ -111,6 +112,7 @@ sub initialize {
   $self->{lagchecker}         = PBot::LagChecker->new(pbot => $self, %conf);
   $self->{messagehistory}     = PBot::MessageHistory->new(pbot => $self, filename => $conf{messagehistory_file}, %conf);
   $self->{antiflood}          = PBot::AntiFlood->new(pbot => $self, %conf);
+  $self->{antispam}           = PBot::AntiSpam->new(pbot => $self, %conf);
   $self->{ignorelist}         = PBot::IgnoreList->new(pbot => $self, filename => $conf{ignorelist_file}, %conf);
   $self->{blacklist}          = PBot::BlackList->new(pbot => $self, filename => $conf{blacklist_file}, %conf);
   $self->{irc}                = PBot::IRC->new();
