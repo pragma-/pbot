@@ -73,6 +73,16 @@ sub process_line {
     $flood_threshold, $flood_time_threshold,
     $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
 
+  if (defined $from and $from =~ m/^#/) {
+    my $chanmodes = $self->{pbot}->{channels}->get_meta($from, 'MODE');
+    if (defined $chanmodes and $chanmodes =~ m/z/) {
+      if ($self->{pbot}->{bantracker}->is_banned($nick, $user, $host, $from)) {
+        $self->{pbot}->{logger}->log("Disregarding banned user message (channel $from is +z).\n");
+        return 1;
+      }
+    }
+  }
+
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
   # get channel-specific trigger if available
