@@ -20,7 +20,6 @@ use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 use PBot::DualIndexHashObject;
-use PBot::LagChecker;
 
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
