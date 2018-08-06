@@ -50,9 +50,10 @@ sub is_spam {
 
   my $ret = eval {
     foreach my $space (keys %{ $self->{keywords}->hash }) {
-      next unless $all_namespaces and $namespace =~ m/^$space$/i;
-      foreach my $keyword (keys %{ $self->{keywords}->hash->{$space} }) {
-        return 1 if $text =~ m/$keyword/i;
+      if ($all_namespaces or $namespace =~ m/^$space$/i) {
+        foreach my $keyword (keys %{ $self->{keywords}->hash->{$space} }) {
+          return 1 if $text =~ m/$keyword/i;
+        }
       }
     }
     return 0;
