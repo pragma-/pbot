@@ -22,8 +22,22 @@ my $arguments = join("%20", @ARGV);
 
 $arguments =~ s/\W$//;
 
+exit if $arguments =~ m{https://freenode.net/news/spam-shake}i;
+exit if $arguments =~ m{https://twitter.com/ISCdotORG}i;
+exit if $arguments =~ m{https://evestigatorsucks.com}i;
+exit if $arguments =~ m{https://MattSTrout.com}i;
+exit if $arguments =~ m{https://encyclopediadramatica.rs/Freenodegate}i;
+exit if $arguments =~ m{https://bryanostergaard.com}i;
+exit if $arguments =~ m{https://williampitcock.com}i;
+exit if $arguments =~ m{https?://coliru\..*}i;
+exit if $arguments =~ m{https://www.youtube.com/user/l0de/live}i;
+exit if $arguments =~ m{localhost}i;
+exit if $arguments =~ m{127}i;
+exit if $arguments =~ m{192.168}i;
+exit if $arguments =~ m{file://}i;
+exit if $arguments =~ m{\.\.}i;
 exit if $arguments =~ m{https?://www.irccloud.com/pastebin}i;
-exit if $arguments =~ m{http://smuj.ca/cl/}i;
+exit if $arguments =~ m{http://smuj.ca/cl}i;
 exit if $arguments =~ m{/man\d+/}i;
 exit if $arguments =~ m{godbolt.org}i;
 exit if $arguments =~ m{man\.cgi}i;
@@ -139,6 +153,12 @@ if($distance / $length < 0.75) {
 }
 
 exit if $t !~ m/\s/; # exit if title is only one word -- this isn't usually interesting
+exit if $t =~ m{Freenode head of infrastructure}i;
+exit if $t =~ m{ISC on Twitter}i;
+exit if $t =~ m{spambot.*freenode}i;
+exit if $t =~ m{freenode.*spambot}i;
+exit if $t =~ m{christel};
+exit if $t =~ m/^Coliru Viewer$/i;
 exit if $t =~ m/^Gerrit Code Review$/i;
 exit if $t =~ m/^Public Git Hosting -/i;
 exit if $t =~ m/git\/blob/i;
