@@ -176,6 +176,36 @@ sub get_baninfo {
   return $bans;
 }
 
+sub is_banned {
+  my ($self, $nick, $user, $host, $channel) = @_;
+
+  my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+  my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
+  push @nickserv_accounts, undef;
+
+  my $banned = undef;
+
+  foreach my $nickserv_account (@nickserv_accounts) {
+    my $baninfos = $self->get_baninfo("$nick!$user\@$host", $channel, $nickserv_account);
+
+    if (defined $baninfos) {
+      foreach my $baninfo (@$baninfos) {
+        if ($self->{pbot}->{antiflood}->whitelisted($baninfo->{channel}, $baninfo->{banmask}, 'ban') || $self->{pbot}->{antiflood}->whitelisted($baninfo->{channel}, "$nick!$user\@$host", 'user')) {
+          $self->{pbot}->{logger}->log("[BanTracker] is_banned: $nick!$user\@$host banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+        } else {
+          if ($channel eq lc $baninfo->{channel}) {
+            my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
+            $self->{pbot}->{logger}->log("[BanTracker] is_banned: $nick!$user\@$host $mode as $baninfo->{banmask} in $baninfo->{channel} by $baninfo->{owner}\n");
+            $banned = $baninfo;
+            last;
+          }
+        }
+      }
+    }
+  }
+  return $banned;
+}
+
 sub track_mode {
   my $self = shift;
   my ($source, $mode, $target, $channel) = @_;
