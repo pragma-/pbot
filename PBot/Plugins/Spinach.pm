@@ -1342,7 +1342,7 @@ sub validate_lie {
     }
   }
 
-  if ($count) {
+  if ($count == $truth_word_count) {
     return 0;
   }
 
