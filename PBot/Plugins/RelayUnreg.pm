@@ -37,6 +37,10 @@ sub on_public {
   # exit if channel hasn't muted $~a
   return 0 if not exists $self->{pbot}->{bantracker}->{banlist}->{$channel}->{'+q'}->{'$~a'};
 
+  # exit if channel isn't +z
+  my $chanmodes = $self->{pbot}->{channels}->get_meta($channel, 'MODE');
+  return 0 if not defined $chanmodes or not $chanmodes =~ m/z/;
+
   my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
   my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($account);
 
@@ -61,6 +65,7 @@ sub on_public {
     qr{eVestigator},
   );
 
+  # don't notify/relay for spammers
   foreach my $filter (@filters) {
     if ($msg =~ m/$filter/i) {
       $self->{pbot}->{logger}->log("RelayUnreg: Ignoring filtered message.\n");
@@ -68,6 +73,10 @@ sub on_public {
     }
   }
 
+  # don't notify/relay for spammers
+  return 0 if $self->{pbot}->{antispam}->is_spam($channel, $msg);
+
+  # don't notify/relay if user is voiced
   return 0 if $self->{pbot}->{nicklist}->get_meta($channel, $nick, '+v');
 
   $self->{pbot}->{logger}->log("RelayUnreg: Notifying $nick to register with NickServ in $channel.\n");
@@ -95,32 +104,9 @@ sub check_queue {
     # if nick is still present in channel, send the message
     if ($self->{pbot}->{nicklist}->is_present($channel, $nick)) {
       # ensure they're not banned (+z allows us to see +q/+b messages as normal ones)
-      my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-      my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
-      push @nickserv_accounts, undef;
-
-      my $no_relay = 0;
-
-      foreach my $nickserv_account (@nickserv_accounts) {
-        my $baninfos = $self->{pbot}->{bantracker}->get_baninfo("$nick!$user\@$host", $channel, $nickserv_account);
-
-        if(defined $baninfos) {
-          foreach my $baninfo (@$baninfos) {
-            if($self->{pbot}->{antiflood}->whitelisted($baninfo->{channel}, $baninfo->{banmask}, 'ban') || $self->{pbot}->{antiflood}->whitelisted($baninfo->{channel}, "$nick!$user\@$host", 'user')) {
-              $self->{pbot}->{logger}->log("[RelayUnreg] $nick!$user\@$host banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
-            } else {
-              if($channel eq lc $baninfo->{channel}) {
-                my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
-                $self->{pbot}->{logger}->log("[RelayUnreg] $nick!$user\@$host $mode as $baninfo->{banmask} in $baninfo->{channel} by $baninfo->{owner}, not relaying unregistered message\n");
-                $no_relay = 1;
-                last;
-              }
-            }
-          }
-        }
-      }
-
-      $self->{pbot}->{conn}->privmsg($channel, "(unreg) <$nick> $msg") unless $no_relay;
+      my $banned = $self->{pbot}->{bantracker}->is_banned($nick, $user, $host, $channel);
+      $self->{pbot}->{logger}->log("[RelayUnreg] $nick!$user\@$host $banned->{mode} as $banned->{banmask} in $banned->{channel} by $banned->{owner}, not relaying unregistered message\n") if $banned;
+      $self->{pbot}->{conn}->privmsg($channel, "(unreg) <$nick> $msg") unless $banned;
     }
     shift @{$self->{queue}};
   }
