@@ -74,7 +74,7 @@ sub on_public {
   }
 
   # don't notify/relay for spammers
-  return 0 if $self->{pbot}->{antispam}->is_spam($channel, $msg);
+  return 0 if $self->{pbot}->{antispam}->is_spam($channel, $msg, 1);
 
   # don't notify/relay if user is voiced
   return 0 if $self->{pbot}->{nicklist}->get_meta($channel, $nick, '+v');
