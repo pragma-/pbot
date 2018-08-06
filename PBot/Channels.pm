@@ -107,25 +107,28 @@ sub list {
 
 sub is_active {
   my ($self, $channel) = @_;
-
   return exists $self->{channels}->hash->{$channel} && $self->{channels}->hash->{$channel}->{enabled};
 }
 
 sub is_active_op {
   my ($self, $channel) = @_;
-
   return $self->is_active($channel) && $self->{channels}->hash->{$channel}->{chanop};
+}
+
+sub get_meta {
+  my ($self, $channel, $key) = @_;
+  my $index = $self->{channels}->find_hash($channel);
+  return undef if not defined $index;
+  return $self->{channels}->{hash}->{$index}->{$key};
 }
 
 sub load_channels {
   my $self = shift;
-
   $self->{channels}->load();
 }
 
 sub save_channels {
   my $self = shift;
-
   $self->{channels}->save();
 }
 
