@@ -59,10 +59,13 @@ sub show_url_titles {
       and not grep { $channel =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_ignore_channels')
       and grep { $channel =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_channels')) {
 
-    return 0 if $self->{pbot}->{antispam}->is_spam('url', $msg);
-
     while ($msg =~ s/(https?:\/\/[^\s]+)//i && ++$event->{interpreted} <= 3) {
       my $url = $1;
+
+      if ($self->{pbot}->{antispam}->is_spam('url', $url)) {
+        $self->{pbot}->{logger}->log("Ignoring spam URL $url\n");
+        next;
+      }
 
       my $stuff = {
         from => $channel, nick => $nick, user => $user, host => $host,
