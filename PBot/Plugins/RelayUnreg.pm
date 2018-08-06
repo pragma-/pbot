@@ -1,5 +1,5 @@
 
-package PBot::Plugins::RegisterNickserv;
+package PBot::Plugins::RelayUnreg;
 
 use warnings;
 use strict;
@@ -21,12 +21,12 @@ sub initialize {
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->on_public(@_) });
   $self->{queue} = [];
-  $self->{pbot}->{timer}->register(sub { $self->check_queue }, 1, 'RegisterNickserv');
+  $self->{pbot}->{timer}->register(sub { $self->check_queue }, 1, 'RelayUnreg');
 }
 
 sub unload {
   my $self = shift;
-  $self->{pbot}->{timer}->unregister('RegisterNickserv');
+  $self->{pbot}->{timer}->unregister('RelayUnreg');
 }
 
 sub on_public {
@@ -42,7 +42,7 @@ sub on_public {
 
   # debug
   # my $nickserv_text = $nickserv ? "is logged into $nickserv" : "is not logged in";
-  # $self->{pbot}->{logger}->log("RegisterNickserv: $nick!$user\@$host ($account) $nickserv_text.\n");
+  # $self->{pbot}->{logger}->log("RelayUnreg: $nick!$user\@$host ($account) $nickserv_text.\n");
 
   # exit if user is identified
   return 0 if defined $nickserv && length $nickserv;
@@ -57,25 +57,27 @@ sub on_public {
     qr{Achievement Method},
     qr{perceived death signal},
     qr{efnet},
+    qr{https://evestigatorsucks.com},
+    qr{eVestigator},
   );
 
   foreach my $filter (@filters) {
     if ($msg =~ m/$filter/i) {
-      $self->{pbot}->{logger}->log("RegisterNickserv: Ignoring filtered message.\n");
+      $self->{pbot}->{logger}->log("RelayUnreg: Ignoring filtered message.\n");
       return 0;
     }
   }
 
   return 0 if $self->{pbot}->{nicklist}->get_meta($channel, $nick, '+v');
 
-  $self->{pbot}->{logger}->log("RegisterNickserv: Notifying $nick to register with NickServ in $channel.\n");
+  $self->{pbot}->{logger}->log("RelayUnreg: Notifying $nick to register with NickServ in $channel.\n");
   $event->{conn}->privmsg($nick, "Please register your nick to speak in $channel. See https://freenode.net/kb/answer/registration and https://freenode.net/kb/answer/sasl");
 
   # don't relay unregistered chat unless enabled
   return 0 if not $self->{pbot}->{registry}->get_value($channel, 'relay_unregistered_chat');
 
   # add message to delay send queue to see if Sigyn kills them first (or if they leave)
-  $self->{pbot}->{logger}->log("RegisterNickserv: Queuing unregistered message for $channel: <$nick> $msg\n");
+  $self->{pbot}->{logger}->log("RelayUnreg: Queuing unregistered message for $channel: <$nick> $msg\n");
   push @{$self->{queue}}, [gettimeofday + 10, $channel, $nick, $user, $host, $msg];
 
   return 0;
@@ -105,11 +107,11 @@ sub check_queue {
         if(defined $baninfos) {
           foreach my $baninfo (@$baninfos) {
             if($self->{pbot}->{antiflood}->whitelisted($baninfo->{channel}, $baninfo->{banmask}, 'ban') || $self->{pbot}->{antiflood}->whitelisted($baninfo->{channel}, "$nick!$user\@$host", 'user')) {
-              $self->{pbot}->{logger}->log("[RegisterNickserv] $nick!$user\@$host banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+              $self->{pbot}->{logger}->log("[RelayUnreg] $nick!$user\@$host banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
             } else {
               if($channel eq lc $baninfo->{channel}) {
                 my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
-                $self->{pbot}->{logger}->log("[RegisterNickserv] $nick!$user\@$host $mode as $baninfo->{banmask} in $baninfo->{channel} by $baninfo->{owner}, not relaying unregistered message\n");
+                $self->{pbot}->{logger}->log("[RelayUnreg] $nick!$user\@$host $mode as $baninfo->{banmask} in $baninfo->{channel} by $baninfo->{owner}, not relaying unregistered message\n");
                 $no_relay = 1;
                 last;
               }
