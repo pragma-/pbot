@@ -148,9 +148,7 @@ sub clear {
 }
 
 sub find_hash {
-  my ($self, $keyword, $arguments) = @_;
-
-  my $string = "$keyword" . (defined $arguments ? " $arguments" : "");
+  my ($self, $keyword) = @_;
 
   my $result = eval {
     foreach my $index (keys %{ $self->hash }) {
@@ -196,7 +194,7 @@ sub levenshtein_matches {
 }
 
 sub set {
-  my ($self, $index, $key, $value) = @_;
+  my ($self, $index, $key, $value, $dont_save) = @_;
 
   my $hash_index = $self->find_hash($index);
 
@@ -221,7 +219,7 @@ sub set {
     $value = $self->hash->{$hash_index}{$key};
   } else {
     $self->hash->{$hash_index}{$key} = $value;
-    $self->save();
+    $self->save() unless $dont_save;
   }
 
   return "[$self->{name}] $hash_index: '$key' " . (defined $value ? "set to '$value'" : "is not set.");
