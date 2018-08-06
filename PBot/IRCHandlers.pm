@@ -54,6 +54,9 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.map',           sub { $self->on_map(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.whospcrpl',     sub { $self->on_whospcrpl(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.endofwho',      sub { $self->on_endofwho(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.channelmodeis', sub { $self->on_channelmodeis(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.topic',         sub { $self->on_topic(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.topicinfo',     sub { $self->on_topicinfo(@_) });
 
   $self->{pbot}->{event_dispatcher}->register_handler('pbot.join',         sub { $self->on_self_join(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('pbot.part',         sub { $self->on_self_part(@_) });
@@ -187,6 +190,8 @@ sub on_action {
   return 0;
 }
 
+# FIXME: on_mode doesn't handle chanmodes that have parameters, e.g. +l
+
 sub on_mode {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
@@ -200,7 +205,7 @@ sub on_mode {
   my $i = 0;
   my $target;
 
-  while($mode_string =~ m/(.)/g) {
+  while ($mode_string =~ m/(.)/g) {
     my $char = $1;
 
     if ($char eq '-' or $char eq '+') {
@@ -218,11 +223,22 @@ sub on_mode {
       $self->{pbot}->{bantracker}->track_mode("$nick!$user\@$host", $mode, $target, $channel);
     }
 
-    if (defined $target) {
+    if (defined $target and length $target) {
       if ($modifier eq '-') {
         $self->{pbot}->{nicklist}->delete_meta($channel, $target, "+$mode_char");
       } else {
         $self->{pbot}->{nicklist}->set_meta($channel, $target, $mode, 1);
+      }
+    } else {
+      my $modes = $self->{pbot}->{channels}->get_meta($channel, 'MODE');
+      if (defined $modes) {
+        if ($modifier eq '+') {
+          $modes = '+' if not length $modes;
+          $modes .= $mode_char;
+        } else {
+          $modes =~ s/\Q$mode_char\E//g;
+        }
+        $self->{pbot}->{channels}->{channels}->set($channel, 'MODE', $modes, 1);
       }
     }
 
@@ -481,12 +497,47 @@ sub on_nickchange {
 
 sub on_nicknameinuse {
   my ($self, $event_type, $event) = @_;
-  my ($unused, $nick, $msg) = $event->{event}->args;
+  my (undef, $nick, $msg) = $event->{event}->args;
   my $from = $event->{event}->from;
 
   $self->{pbot}->{logger}->log("Received nicknameinuse for nick $nick from $from: $msg\n");
   $event->{conn}->privmsg("nickserv", "ghost $nick " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
   return 0;
+}
+
+sub on_channelmodeis {
+  my ($self, $event_type, $event) = @_;
+  my (undef, $channel, $modes) = $event->{event}->args;
+  $self->{pbot}->{channels}->{channels}->set($channel, 'MODE', $modes, 1);
+}
+
+sub on_topic {
+  my ($self, $event_type, $event) = @_;
+
+  if (not length $event->{event}->{to}->[0]) {
+    # on join
+    my (undef, $channel, $topic) = $event->{event}->args;
+    $self->{pbot}->{logger}->log("Topic for $channel: $topic\n");
+    $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC', $topic, 1);
+  } else {
+    # user changing topic
+    my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
+    my $channel = $event->{event}->{to}->[0];
+    my $topic = $event->{event}->{args}->[0];
+
+    $self->{pbot}->{logger}->log("$nick!$user\@$host changed topic for $channel to: $topic\n");
+    $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC', $topic, 1);
+    $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_BY', "$nick!$user\@$host", 1);
+    $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_ON', gettimeofday);
+  }
+}
+
+sub on_topicinfo {
+  my ($self, $event_type, $event) = @_;
+  my (undef, $channel, $by, $timestamp) = $event->{event}->args;
+  $self->{pbot}->{logger}->log("Topic for $channel set by $by on $timestamp\n");
+  $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_BY', $by, 1);
+  $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_ON', $timestamp, 1);
 }
 
 sub normalize_hostmask {

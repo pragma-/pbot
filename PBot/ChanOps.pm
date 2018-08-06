@@ -283,6 +283,8 @@ sub join_channel {
         and $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}) {
       $self->gain_ops($channel);
     }
+
+    $self->{pbot}->{conn}->mode($channel);
   }
 }
 
