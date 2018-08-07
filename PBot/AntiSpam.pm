@@ -68,10 +68,11 @@ sub is_spam {
 }
 
 sub antispam_cmd {
-  my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  $arguments = lc $arguments;
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  my ($command, $args) = split /\s+/, $arguments, 2;
+  my @pargs = @{$stuff->{argumentspos}};
+
+  my $command = shift @pargs;
 
   return "Usage: antispam <command>, where commands are: list/show, add, remove, set, unset" if not defined $command;
 
@@ -90,15 +91,15 @@ sub antispam_cmd {
       return $text;
     }
     when ("set") {
-      my ($namespace, $keyword, $flag, $value) = split /\s+/, $args, 4;
-      return "Usage: keywords set <namespace> <keyword> [flag] [value]" if not defined $namespace or not defined $keyword;
+      my ($namespace, $keyword, $flag, $value) = $self->{pbot}->{interpreter}->split_args(\@pargs, 4);
+      return "Usage: antispam set <namespace> <regex> [flag] [value]" if not defined $namespace or not defined $keyword;
 
       if (not exists $self->{keywords}->hash->{$namespace}) {
-        return "There is no such namespace `$namespace` in the keywords.";
+        return "There is no such namespace `$namespace`.";
       }
 
       if (not exists $self->{keywords}->hash->{$namespace}->{$keyword}) {
-        return "There is no such keyword `$keyword` for namespace `$namespace` in the keywords.";
+        return "There is no such regex `$keyword` for namespace `$namespace`.";
       }
 
       if (not defined $flag) {
@@ -131,19 +132,19 @@ sub antispam_cmd {
       return "Flag set.";
     }
     when ("unset") {
-      my ($namespace, $keyword, $flag) = split /\s+/, $args, 3;
-      return "Usage: keywords unset <namespace> <keyword> <flag>" if not defined $namespace or not defined $keyword or not defined $flag;
+      my ($namespace, $keyword, $flag) = $self->{pbot}->{interpreter}->split_args(\@pargs, 3);
+      return "Usage: antispam unset <namespace> <regex> <flag>" if not defined $namespace or not defined $keyword or not defined $flag;
 
       if (not exists $self->{keywords}->hash->{$namespace}) {
-        return "There is no such namespace `$namespace` in the keywords.";
+        return "There is no such namespace `$namespace`.";
       }
 
       if (not exists $self->{keywords}->hash->{$namespace}->{$keyword}) {
-        return "There is no such keyword `$keyword` for namespace `$namespace` in the keywords.";
+        return "There is no such keyword `$keyword` for namespace `$namespace`.";
       }
 
       if (not exists $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag}) {
-        return "There is no such flag `$flag` for keyword `$keyword` for namespace `$namespace` in the keywords.";
+        return "There is no such flag `$flag` for regex `$keyword` for namespace `$namespace`.";
       }
 
       delete $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag};
@@ -151,16 +152,16 @@ sub antispam_cmd {
       return "Flag unset.";
     }
     when ("add") {
-      my ($namespace, $keyword) = split /\s+/, $args, 2;
-      return "Usage: keywords add <namespace> <keyword>" if not defined $namespace or not defined $keyword;
+      my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args(\@pargs, 2);
+      return "Usage: antispam add <namespace> <regex>" if not defined $namespace or not defined $keyword;
       $self->{keywords}->hash->{$namespace}->{$keyword}->{owner} = "$nick!$user\@$host";
       $self->{keywords}->hash->{$namespace}->{$keyword}->{created_on} = gettimeofday;
       $self->{keywords}->save;
-      return "/say Added.";
+      return "/say Added `$keyword`.";
     }
     when ("remove") {
-      my ($namespace, $keyword) = split /\s+/, $args, 2;
-      return "Usage: keywords remove <namespace> <keyword>" if not defined $namespace or not defined $keyword;
+      my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args(\@pargs, 2);
+      return "Usage: antispam remove <namespace> <regex>" if not defined $namespace or not defined $keyword;
 
       if(not defined $self->{keywords}->hash->{$namespace}) {
         return "No entries for namespace $namespace";
@@ -173,7 +174,7 @@ sub antispam_cmd {
       delete $self->{keywords}->hash->{$namespace}->{$keyword};
       delete $self->{keywords}->hash->{$namespace} if keys %{ $self->{keywords}->hash->{$namespace} } == 0;
       $self->{keywords}->save;
-      return "/say Removed.";
+      return "/say Removed `$keyword`.";
     }
     default {
       return "Unknown command '$command'; commands are: list/show, add, remove";
