@@ -16,7 +16,7 @@ use base 'PBot::Registerable';
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
-use Text::Balanced qw/extract_bracketed/;
+use Text::Balanced qw/extract_bracketed extract_quotelike/;
 use Carp ();
 
 use PBot::Utils::ValidateString;
@@ -105,32 +105,6 @@ sub process_line {
 
   my $cmd_text = $text;
   $cmd_text =~ s/^\/me\s+//;
-
-=cut
-  # check for code compiler invocation
-  my $has_code;
-  if ($cmd_text =~ m/^(?:$botnick.?)?\s*{\s*(.+)\s*}\s*$/) {
-    $has_code = $1;
-    $preserve_whitespace = 1;
-  } elsif ($cmd_text =~ m/^\s*($nick_regex)[,:]*\s*{\s*(.+)\s*}\s*$/) {
-    my $possible_nick_override = $1;
-    $has_code = $2 if $possible_nick_override !~ /^(?:enum|struct|union)$/;
-    $preserve_whitespace = 1;
-    $nick_override = $self->{pbot}->{nicklist}->is_present($from, $possible_nick_override);
-  }
-
-  if (defined $has_code) {
-    $processed += 1000; # hint to other plugins that this message has been handled
-    if($pbot->{registry}->get_value('general', 'compile_blocks') and not $pbot->{registry}->get_value($from, 'no_compile_blocks')
-        and not grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_ignore_channels')
-        and grep { $from =~ /$_/i } $pbot->{registry}->get_value('general', 'compile_blocks_channels')) {
-      if (not defined $nick_override or (defined $nick_override and $nick_override != 0)) {
-        return "Using {} to compile code is temporarily disabled. Use the `cc` command instead.";
-        #return $pbot->{factoids}->{factoidmodulelauncher}->execute_module($from, undef, $nick, $user, $host, $text, "compiler_block", $from, '{', (defined $nick_override ? $nick_override : $nick) . " $from $has_code }", $preserve_whitespace);
-      }
-    }
-  }
-=cut
 
   # check for bot command invocation
   my @commands;
@@ -344,9 +318,59 @@ sub interpret {
   # unescape any escaped pipes
   $arguments =~ s/\\\|\s*\{/| {/g if defined $arguments;
 
+  # set arguments as a plain string
   $stuff->{arguments} = $arguments;
 
+  # set arguments as a positional array
+  my @args = split / /, $arguments;
+  my @pargs;
+
+  while (@args) {
+    my $arg = shift @args;
+
+    if ($arg =~ /^["']/) {
+      my $string = $arg;
+      if (@args) {
+        $string .= ' ';
+        $string .= join(' ', @args);
+      }
+      my ($extracted, $rest) = extract_quotelike $string;
+      if (defined $extracted) {
+        # strip quote characters
+        $extracted =~ s/^(.)//;
+        $extracted =~ s/$1$//;
+        push @pargs, $extracted;
+        $rest =~ s/^ //;
+        @args = split / /, $rest;
+      } else {
+        # mismatched quotes, shove the remainder as the last positional argument
+        push @pargs, $rest;
+        last;
+      }
+    } else {
+      push @pargs, $arg;
+    }
+  }
+
+  $stuff->{argumentspos} = \@pargs;
+
   return $self->SUPER::execute_all($stuff);
+}
+
+# splits array of arguments into array with overflow arguments filling up last position
+# split_args(qw/dog cat bird hamster/, 3) => ("dog", "cat", "bird hamster")
+sub split_args {
+  my ($self, $args, $count) = @_;
+  my @result;
+
+  while (--$count) {
+    my $arg = shift @$args;
+    push @result, $arg;
+  }
+
+  my $rest = join ' ', @$args;
+  push @result, $rest;
+  return @result;
 }
 
 sub truncate_result {
