@@ -16,7 +16,7 @@ use base 'PBot::Registerable';
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
-use Text::Balanced qw/extract_codeblock/;
+use Text::Balanced qw/extract_bracketed/;
 use Carp ();
 
 use PBot::Utils::ValidateString;
@@ -172,7 +172,7 @@ sub process_line {
     }
 
     for (my $count = 0; $count < 3; $count++) {
-      my ($extracted) = extract_codeblock $cmd_text, '{}', "(?s).*?$bot_trigger(?=\{)";
+      my ($extracted) = extract_bracketed $cmd_text, '{"\'}', "(?s).*?$bot_trigger(?=\{)";
       last if not defined $extracted;
       $extracted =~ s/^\{\s*//;
       $extracted =~ s/\s*\}$//;
@@ -265,7 +265,7 @@ sub interpret {
 
   # parse out a substituted command
   if (defined $arguments && $arguments =~ m/(?<!\\)&\{/) {
-    my ($command) = extract_codeblock $arguments, '{}', '(?s).*?(?<!\\\\)&';
+    my ($command) = extract_bracketed $arguments, '{"\'}', '(?s).*?(?<!\\\\)&';
 
     if (defined $command) {
       $arguments =~ s/&\Q$command\E/&{subcmd}/;
@@ -282,7 +282,7 @@ sub interpret {
 
   # parse out a pipe
   if (defined $arguments && $arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
-    my ($pipe, $rest, $args) = extract_codeblock $arguments, '{}', '(?s).*?(?<!\\\\)\|\s*';
+    my ($pipe, $rest, $args) = extract_bracketed $arguments, '{"\'}', '(?s).*?(?<!\\\\)\|\s*';
 
     $pipe =~ s/^\{\s*//;
     $pipe =~ s/\s*\}$//;
