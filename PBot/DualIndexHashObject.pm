@@ -17,7 +17,7 @@ use Text::Levenshtein qw(fastdistance);
 use Carp ();
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to DualIndexHashObject should be key/value pairs, not hash reference");
   }
 
@@ -41,9 +41,9 @@ sub initialize {
 sub load_hash_add {
   my ($self, $primary_index_key, $secondary_index_key, $hash, $i, $filename) = @_;
 
-  if(defined $hash) {
-    if(not $self->{ignore_duplicates} and exists $self->hash->{$primary_index_key}->{$secondary_index_key}) {
-      if($i) {
+  if (defined $hash) {
+    if (not $self->{ignore_duplicates} and exists $self->hash->{$primary_index_key}->{$secondary_index_key}) {
+      if ($i) {
         Carp::croak "Duplicate secondary_index_key '$secondary_index_key' found in $filename around line $i\n";
       } else {
         return undef;
@@ -63,12 +63,12 @@ sub load {
 
   $filename = $self->filename if not defined $filename;
 
-  if(not defined $filename) {
+  if (not defined $filename) {
     Carp::carp "No $self->{name} filename specified -- skipping loading from file";
     return;
   }
 
-  if(not open(FILE, "< $filename")) {
+  if (not open(FILE, "< $filename")) {
     Carp::carp "Skipping loading from file: Couldn't open $filename: $!\n";
     return;
   }
@@ -82,22 +82,22 @@ sub load {
     $line =~ s/^\s+//;
     $line =~ s/\s+$//;
 
-    if($line =~ /^\[(.*)\]$/) {
+    if ($line =~ /^\[(.*)\]$/) {
       $primary_index_key = $1;
       next;
     }
 
-    if($line =~ /^<(.*)>$/) {
+    if ($line =~ /^<(.*)>$/) {
       $secondary_index_key = $1;
 
-      if(not $self->{ignore_duplicates} and exists $self->hash->{$primary_index_key}->{$secondary_index_key}) {
+      if (not $self->{ignore_duplicates} and exists $self->hash->{$primary_index_key}->{$secondary_index_key}) {
         Carp::croak "Duplicate secondary_index_key '$secondary_index_key' at line $i of $filename\n";
       }
 
       next;
     }
 
-    if($line eq '') {
+    if ($line eq '') {
       # store the old hash
       $self->load_hash_add($primary_index_key, $secondary_index_key, $hash, $i, $filename);
 
@@ -113,7 +113,7 @@ sub load {
     $value =~ s/^\s+//;
     $value =~ s/\s+$//;
 
-    if(not length $key or not length $value) {
+    if (not length $key or not length $value) {
       Carp::croak "Missing key or value at line $i of $filename\n";
     }
 
@@ -127,9 +127,9 @@ sub save {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->filename; }
+  if (@_) { $filename = shift; } else { $filename = $self->filename; }
 
-  if(not defined $filename) {
+  if (not defined $filename) {
     Carp::carp "No $self->{name} filename specified -- skipping saving to file.\n";
     return;
   }
@@ -183,12 +183,12 @@ sub levenshtein_matches {
 
   $primary_index_key = '.*' if not defined $primary_index_key;
   
-  if(not $secondary_index_key) {
+  if (not $secondary_index_key) {
     foreach my $index (sort keys %{ $self->hash }) {
       my $distance_result = fastdistance($primary_index_key, $index);
       my $length = (length($primary_index_key) > length($index)) ? length $primary_index_key : length $index;
 
-      if($distance_result / $length < $distance) {
+      if ($distance_result / $length < $distance) {
         if ($index =~ / /) {
           $result .= $comma . "\"$index\"";
         } else {
@@ -200,7 +200,7 @@ sub levenshtein_matches {
   } else {
     my $primary = $self->find_index($primary_index_key);
 
-    if(not $primary) {
+    if (not $primary) {
       return 'none';
     }
 
@@ -220,7 +220,7 @@ sub levenshtein_matches {
         my $distance_result = fastdistance($secondary_index_key, $index2);
         my $length = (length($secondary_index_key) > length($index2)) ? length $secondary_index_key : length $index2;
 
-        if($distance_result / $length < $distance) {
+        if ($distance_result / $length < $distance) {
           $header = "" if $last_header eq $header;
           $last_header = $header;
           $comma = '; ' if $comma ne '' and $header ne '';
@@ -245,7 +245,7 @@ sub set {
 
   my $primary = $self->find_index($primary_index_key);
 
-  if(not $primary) {
+  if (not $primary) {
     my $result = "No such $self->{name} object [$primary_index_key]; similiar matches: ";
     $result .= $self->levenshtein_matches($primary_index_key);
     return $result;
@@ -253,24 +253,26 @@ sub set {
 
   my $secondary = $self->find_index($primary, $secondary_index_key);
 
-  if(not $secondary) {
-    my $result = "No such $self->{name} object [$primary_index_key] $secondary_index_key; similiar matches: ";
+  if (not $secondary) {
+    my $secondary_text = $secondary_index_key =~ / / ? "\"$secondary_index_key\"" : $secondary_index_key;
+    my $result = "No such $self->{name} object [$primary_index_key] $secondary_text; similiar matches: ";
     $result .= $self->levenshtein_matches($primary, $secondary_index_key);
     return $result;
   }
 
-  if(not defined $key) {
-    my $result = "[" . ($primary eq '.*' ? 'global' : $primary) . "] $secondary keys:\n";
+  if (not defined $key) {
+    my $secondary_text = $secondary =~ / / ? "\"$secondary\"" : $secondary;
+    my $result = "[" . ($primary eq '.*' ? 'global' : $primary) . "] $secondary_text keys:\n";
     my $comma = '';
     foreach my $key (sort keys %{ $self->hash->{$primary}->{$secondary} }) {
       $result .= $comma . "$key => " . $self->hash->{$primary}->{$secondary}->{$key};
       $comma = ";\n";
     }
-    $result .= "none" if($comma eq '');
+    $result .= "none" if ($comma eq '');
     return $result;
   }
 
-  if(not defined $value) {
+  if (not defined $value) {
     $value = $self->hash->{$primary}->{$secondary}->{$key};
   } else {
     $self->hash->{$primary}->{$secondary}->{$key} = $value;
@@ -278,6 +280,7 @@ sub set {
   }
 
   $primary = 'global' if $primary eq '.*';
+  $secondary = "\"$secondary\"" if $secondary =~ / /;
   return "[$primary] $secondary: '$key' " . (defined $value ? "set to '$value'" : "is not set.");
 }
 
@@ -286,7 +289,7 @@ sub unset {
 
   my $primary = $self->find_index($primary_index_key);
 
-  if(not $primary) {
+  if (not $primary) {
     my $result = "No such $self->{name} object group '$primary_index_key'; similiar matches: ";
     $result .= $self->levenshtein_matches($primary_index_key);
     return $result;
@@ -294,7 +297,7 @@ sub unset {
 
   my $secondary = $self->find_index($primary, $secondary_index_key);
 
-  if(not $secondary) {
+  if (not $secondary) {
     my $result = "No such $self->{name} object '$secondary_index_key'; similiar matches: ";
     $result .= $self->levenshtein_matches($primary, $secondary_index_key);
     return $result;
@@ -304,13 +307,14 @@ sub unset {
   $self->save();
 
   $primary = 'global' if $primary eq '.*';
+  $secondary = "\"$secondary\"" if $secondary =~ / /;
   return "[$self->{name}] ($primary) $secondary: '$key' unset.";
 }
 
 sub add {
   my ($self, $primary_index_key, $secondary_index_key, $hash) = @_;
 
-  if($self->load_hash_add($primary_index_key, $secondary_index_key, $hash, 0)) {
+  if ($self->load_hash_add($primary_index_key, $secondary_index_key, $hash, 0)) {
     $self->save();
   } else {
     return "Error occurred adding new $self->{name} object.";
@@ -324,13 +328,13 @@ sub remove {
 
   my $primary = $self->find_index($primary_index_key);
 
-  if(not $primary) {
+  if (not $primary) {
     my $result = "No such $self->{name} object group '$primary_index_key'; similiar matches: ";
     $result .= $self->levenshtein_matches($primary_index_key);
     return $result;
   }
 
-  if(not $secondary_index_key) {
+  if (not $secondary_index_key) {
     delete $self->hash->{$primary};
     $self->save;
     return "'$primary' group removed from $self->{name}.";
@@ -338,7 +342,7 @@ sub remove {
 
   my $secondary = $self->find_index($primary, $secondary_index_key);
 
-  if(not $secondary) {
+  if (not $secondary) {
     my $result = "No such $self->{name} object '$secondary_index_key'; similiar matches: ";
     $result .= $self->levenshtein_matches($primary, $secondary_index_key);
     return $result;
@@ -347,7 +351,7 @@ sub remove {
   delete $self->hash->{$primary}->{$secondary};
 
   # remove primary group if no more secondaries
-  if(scalar keys %{ $self->hash->{$primary} } == 0) {
+  if (scalar keys %{ $self->hash->{$primary} } == 0) {
       delete $self->hash->{$primary};
   }
 
@@ -365,7 +369,7 @@ sub hash {
 sub filename {
   my $self = shift;
 
-  if(@_) { $self->{filename} = shift; }
+  if (@_) { $self->{filename} = shift; }
   return $self->{filename};
 }
 
