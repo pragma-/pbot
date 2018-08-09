@@ -938,6 +938,7 @@ sub handle_action {
   return "" if not length $action;
 
   my ($channel, $keyword) = ($stuff->{channel}, $stuff->{trigger});
+  my $keyword_text = $keyword =~ / / ? "\"$keyword\"" : $keyword;
 
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
     $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $action);
@@ -980,15 +981,15 @@ sub handle_action {
     $stuff->{command} = $command;
     $stuff->{aliased} = 1;
 
-    $self->{pbot}->{logger}->log("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] ($stuff->{nick}!$stuff->{user}\@$stuff->{host}) [$keyword] aliased to: [$command]\n");
+    $self->{pbot}->{logger}->log("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] ($stuff->{nick}!$stuff->{user}\@$stuff->{host}) [$keyword_text] aliased to: [$command]\n");
     return $self->{pbot}->{interpreter}->interpret($stuff);
   }
 
-  $self->{pbot}->{logger}->log("(" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "): $stuff->{nick}!$stuff->{user}\@$stuff->{host}: $keyword: action: \"$action\"\n");
+  $self->{pbot}->{logger}->log("(" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "): $stuff->{nick}!$stuff->{user}\@$stuff->{host}: $keyword_text: action: \"$action\"\n");
 
   if ($self->{factoids}->hash->{$channel}->{$keyword}->{enabled} == 0) {
-    $self->{pbot}->{logger}->log("$keyword disabled.\n");
-    return "/msg $stuff->{nick} $stuff->{ref_from}$keyword is currently disabled.";
+    $self->{pbot}->{logger}->log("$keyword_text disabled.\n");
+    return "/msg $stuff->{nick} $stuff->{ref_from}$keyword_text is currently disabled.";
   }
 
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
@@ -1028,7 +1029,7 @@ sub handle_action {
         || $action =~ s/^\/msg\s+([^ ]+)/\/msg $1 $stuff->{ref_from}/i) {
         return $action;
       } else {
-        return $stuff->{ref_from} . "$keyword is $action";
+        return $stuff->{ref_from} . "$keyword_text is $action";
       }
     } else {
       if ($action =~ m/^\/(?:say|me|msg)/i) {
@@ -1036,7 +1037,7 @@ sub handle_action {
       } elsif ($action =~ s/^\/kick\s+//) {
         if (not exists $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'}) {
           $stuff->{authorized} = 0;
-          return "/say $stuff->{nick}: $keyword doesn't have the effective-level to do that.";
+          return "/say $stuff->{nick}: $keyword_text doesn't have the effective-level to do that.";
         }
         my $level = 10;
         if ($self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'} >= $level) {
@@ -1047,7 +1048,7 @@ sub handle_action {
           return "/say $stuff->{nick}: My effective-level isn't high enough to do that.";
         }
       } else {
-        return "/say $keyword is $action";
+        return "/say $keyword_text is $action";
       }
     }
   } elsif($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'regex') {
@@ -1090,7 +1091,7 @@ sub handle_action {
       return "";
     }
   } else {
-    $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}): Unknown command type for '$keyword'\n"); 
+    $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}): Unknown command type for '$keyword_text'\n"); 
     return "/me blinks." . " $stuff->{ref_from}";
   }
 }

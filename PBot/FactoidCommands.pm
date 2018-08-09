@@ -944,26 +944,28 @@ sub factadd {
   $from_chan = '.*' if lc $from_chan eq 'global';
   $from_chan = '.*' if not $from_chan =~ m/^#/;
 
+  my $keyword_text = $keyword =~ / / ? "\"$keyword\"" : $keyword;
+
   my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, undef, 1, 1);
   if(defined $trigger) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to overwrite $keyword\n");
-    return "/say $keyword already exists for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
+    return "/say $keyword_text already exists for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
   }
 
   ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid('.*', $keyword, undef, 1, 1);
   if(defined $trigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$trigger}->{'nooverride'}) {
-    $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $keyword\n");
-    return "/say $keyword already exists for the global channel and cannot be overridden for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
+    $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $keyword_text\n");
+    return "/say $keyword_text already exists for the global channel and cannot be overridden for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
   }
 
   if ($self->{pbot}->{commands}->exists($keyword)) {
-    return "/say $keyword already exists as a built-in command.";
+    return "/say $keyword_text already exists as a built-in command.";
   }
 
   $self->{pbot}->{factoids}->add_factoid('text', $from_chan, "$nick!$user\@$host", $keyword, $text);
   
-  $self->{pbot}->{logger}->log("$nick!$user\@$host added [$from_chan] $keyword => $text\n");
-  return "/say $keyword added to " . ($from_chan eq '.*' ? 'global channel' : $from_chan) . ".";
+  $self->{pbot}->{logger}->log("$nick!$user\@$host added [$from_chan] $keyword_text => $text\n");
+  return "/say $keyword_text added to " . ($from_chan eq '.*' ? 'global channel' : $from_chan) . ".";
 }
 
 sub factrem {
@@ -984,31 +986,33 @@ sub factrem {
   $channel = '.*' if $channel eq 'global';
   $from_chan = '.*' if $channel eq 'global';
 
+  my $trigger_text = $trigger =~ / / ? "\"$trigger\"" : $trigger;;
+
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
-    $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to remove $trigger [not factoid]\n");
-    return "/say $trigger is not a factoid.";
+    $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to remove $trigger_text [not factoid]\n");
+    return "/say $trigger_text is not a factoid.";
   }
 
   if ($channel =~ /^#/ and $from_chan =~ /^#/ and $channel ne $from_chan) {
-    return "/say $trigger belongs to $channel, but this is $from_chan. Please switch to $channel or /msg to remove this factoid.";
+    return "/say $trigger_text belongs to $channel, but this is $from_chan. Please switch to $channel or /msg to remove this factoid.";
   }
 
   my ($owner) = $factoids->{$channel}->{$trigger}->{'owner'} =~ m/([^!]+)/;
 
   if((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host"))) {
-    $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to remove $trigger [not owner]\n");
+    $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to remove $trigger_text [not owner]\n");
     my $chan = ($channel eq '.*' ? 'the global channel' : $channel);
-    return "You are not the owner of $trigger for $chan";
+    return "You are not the owner of $trigger_text for $chan";
   }
 
   if($factoids->{$channel}->{$trigger}->{'locked'}) {
-    return "/say $trigger is locked; unlock before deleting.";
+    return "/say $trigger_text is locked; unlock before deleting.";
   }
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host removed [$channel][$trigger][" . $factoids->{$channel}->{$trigger}->{action} . "]\n");
   $self->{pbot}->{factoids}->remove_factoid($channel, $trigger);
   $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "deleted", 1);
-  return "/say $trigger removed from " . ($channel eq '.*' ? 'the global channel' : $channel) . ".";
+  return "/say $trigger_text removed from " . ($channel eq '.*' ? 'the global channel' : $channel) . ".";
 }
 
 sub histogram {
@@ -1054,7 +1058,9 @@ sub factshow {
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factshow');
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
-  my $result = "$trigger: " . $factoids->{$channel}->{$trigger}->{action};
+  my $trigger_text = $trigger =~ / / ? "\"$trigger\"" : $trigger;
+
+  my $result = "$trigger_text: " . $factoids->{$channel}->{$trigger}->{action};
 
   if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
     $result .= ' [module]';
