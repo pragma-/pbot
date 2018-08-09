@@ -126,10 +126,12 @@ sub whitelisted {
 }
 
 sub whitelist {
-  my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  $arguments = lc $arguments;
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  my ($command, $args) = split /\s+/, $arguments, 2;
+  my $arglist = $stuff->{arglist};
+  $self->{pbot}->{interpreter}->lc_args($arglist);
+
+  my $command = $self->{pbot}->{interpreter}->shift_arg($arglist);
 
   return "Usage: whitelist <command>, where commands are: list/show, add, remove, set, unset" if not defined $command;
 
@@ -153,7 +155,7 @@ sub whitelist {
       return $text;
     }
     when ("set") {
-      my ($channel, $mask, $flag, $value) = split /\s+/, $args, 4;
+      my ($channel, $mask, $flag, $value) = $self->{pbot}->{interpreter}->split_args($arglist, 4);
       return "Usage: whitelist set <channel> <mask> [flag] [value]" if not defined $channel or not defined $mask;
 
       if (not exists $self->{whitelist}->hash->{$channel}) {
@@ -194,7 +196,7 @@ sub whitelist {
       return "Flag set.";
     }
     when ("unset") {
-      my ($channel, $mask, $flag) = split /\s+/, $args, 3;
+      my ($channel, $mask, $flag) = $self->{pbot}->{interpreter}->split_args($arglist, 3);
       return "Usage: whitelist unset <channel> <mask> <flag>" if not defined $channel or not defined $mask or not defined $flag;
 
       if (not exists $self->{whitelist}->hash->{$channel}) {
@@ -214,7 +216,7 @@ sub whitelist {
       return "Flag unset.";
     }
     when ("add") {
-      my ($channel, $mask, $mode) = split /\s+/, $args, 3;
+      my ($channel, $mask, $mode) = $self->{pbot}->{interpreter}->split_args($arglist, 3);
       return "Usage: whitelist add <channel> <mask> [mode (user or ban, default: user)]" if not defined $channel or not defined $mask;
 
       $mode = 'user' if not defined $mode;
@@ -231,7 +233,7 @@ sub whitelist {
       return "/say $mask whitelisted in channel $channel";
     }
     when ("remove") {
-      my ($channel, $mask) = split /\s+/, $args, 2;
+      my ($channel, $mask) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
       return "Usage: whitelist remove <channel> <mask>" if not defined $channel or not defined $mask;
 
       if(not defined $self->{whitelist}->hash->{$channel}) {

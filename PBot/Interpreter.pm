@@ -206,8 +206,12 @@ sub interpret {
     return undef;
   }
 
-  if ($stuff->{command} =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*?)\s+(.*)$/is) {
-    ($keyword, $arguments, $stuff->{nickoverride}) = ($2, $3, $1);
+  my $cmdlist = $self->make_args($stuff->{command});
+
+  if ($self->arglist_size($cmdlist) >= 4 and lc $cmdlist->[0] eq 'tell' and lc $cmdlist->[2] eq 'about') {
+    $stuff->{nickoverride} = $cmdlist->[1];
+    ($keyword, $arguments) = $self->split_args($cmdlist, 2, 3);
+    $arguments = '' if not defined $arguments;
     my $similar = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{nickoverride});
     if ($similar) {
       $stuff->{nickoverride} = $similar;
@@ -216,25 +220,15 @@ sub interpret {
       delete $stuff->{nickoverride};
       delete $stuff->{force_nickoverride};
     }
-  } elsif ($stuff->{command} =~ /^tell\s+(\p{PosixGraph}{1,20})\s+about\s+(.*)$/is) {
-    ($keyword, $stuff->{nickoverride}) = ($2, $1);
-    my $similar = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{nickoverride});
-    if ($similar) {
-      $stuff->{nickoverride} = $similar;
-      $stuff->{force_nickoverride} = 1;
-    } else {
-      delete $stuff->{nickoverride};
-      delete $stuff->{force_nickoverride};
-    }
-  } elsif ($stuff->{command} =~ /^(.*?)\s+(.*)$/s) {
-    ($keyword, $arguments) = ($1, $2);
   } else {
-    $keyword = $stuff->{command};
+    ($keyword, $arguments) = $self->split_args($cmdlist, 2);
+    $arguments = "" if not defined $arguments;
   }
 
-  if (length $keyword > 30) {
-    $keyword = substr($keyword, 0, 30);
-    $self->{pbot}->{logger}->log("Truncating keyword to 30 chars: $keyword\n");
+  # FIXME: make this a registry item
+  if (length $keyword > 128) {
+    $keyword = substr($keyword, 0, 128);
+    $self->{pbot}->{logger}->log("Truncating keyword to 128 chars: $keyword\n");
   }
 
   # parse out a substituted command
@@ -318,16 +312,30 @@ sub interpret {
   # unescape any escaped pipes
   $arguments =~ s/\\\|\s*\{/| {/g if defined $arguments;
 
+  $arguments = validate_string($arguments);
+
   # set arguments as a plain string
   $stuff->{arguments} = $arguments;
 
-  # set arguments as a positional array
-  my @args = split / /, $arguments;
-  my @pargs;
+  # set arguments as an array
+  $stuff->{arglist} = $self->make_args($arguments);
+
+  # handle this shit
+  return $self->SUPER::execute_all($stuff);
+}
+
+# creates an array of arguments from a string
+sub make_args {
+  my ($self, $string) = @_;
+
+  my @args = split / /, $string;
+  my @arglist;
+  my @arglist_quotes;
 
   while (@args) {
     my $arg = shift @args;
 
+    # is this a quoted argument?
     if ($arg =~ /^["']/) {
       my $string = $arg;
       if (@args) {
@@ -336,41 +344,71 @@ sub interpret {
       }
       my ($extracted, $rest) = extract_quotelike $string;
       if (defined $extracted) {
+        # preserve quotes for $rest in split_args()
+        push @arglist_quotes, $extracted;
+
         # strip quote characters
         $extracted =~ s/^(.)//;
         $extracted =~ s/$1$//;
-        push @pargs, $extracted;
+        push @arglist, $extracted;
+
         $rest =~ s/^ //;
         @args = split / /, $rest;
       } else {
         # mismatched quotes, shove the remainder as the last positional argument
-        push @pargs, $rest;
+        push @arglist, $rest;
         last;
       }
     } else {
-      push @pargs, $arg;
+      push @arglist, $arg;
+      push @arglist_quotes, $arg;
     }
   }
 
-  $stuff->{argumentspos} = \@pargs;
+  # copy original args with quotes intact to end of arglist
+  push @arglist, @arglist_quotes;
+  return \@arglist;
+}
 
-  return $self->SUPER::execute_all($stuff);
+# returns size of array of arguments
+sub arglist_size {
+  my ($self, $args) = @_;
+  return @$args / 2;
+}
+
+# shifts first argument off array of arguments
+sub shift_arg {
+  my ($self, $args) = @_;
+  splice @$args, @$args / 2, 1; # remove original quoted argument
+  return shift @$args;
 }
 
 # splits array of arguments into array with overflow arguments filling up last position
 # split_args(qw/dog cat bird hamster/, 3) => ("dog", "cat", "bird hamster")
 sub split_args {
-  my ($self, $args, $count) = @_;
+  my ($self, $args, $count, $offset) = @_;
   my @result;
 
-  while (--$count) {
-    my $arg = shift @$args;
-    push @result, $arg;
-  }
+  my $max = $self->arglist_size($args);
 
-  my $rest = join ' ', @$args;
-  push @result, $rest;
+  my $i = $offset // 0;
+  do {
+    my $arg = $args->[$i++];
+    push @result, $arg;
+  } while (--$count > 1 and $i < $max);
+
+  # get rest from 2nd half of arglist, which contains original quotes
+  my $rest = join ' ', @$args[@$args / 2 + $i .. @$args - 1];
+  push @result, $rest if length $rest;
   return @result;
+}
+
+# lowercases array of arguments
+sub lc_args {
+  my ($self, $args) = @_;
+  for (my $i = 0; $i < @$args; $i++) {
+    $args->[$i] = lc $args->[$i];
+  }
 }
 
 sub truncate_result {

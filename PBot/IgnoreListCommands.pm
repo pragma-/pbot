@@ -46,11 +46,11 @@ sub initialize {
 
 sub ignore_user {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
 
   return "/msg $nick Usage: ignore nick!user\@host [channel] [timeout]" if not defined $arguments;
 
-  my ($target, $channel, $length) = split /\s+/, $arguments, 3;
+  my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if(not defined $target) {
      return "/msg $nick Usage: ignore host [channel] [timeout]";
@@ -95,8 +95,8 @@ sub ignore_user {
 
 sub unignore_user {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($target, $channel) = split /\s+/, $arguments if defined $arguments;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if(not defined $target) {
     return "/msg $nick Usage: unignore host [channel]";

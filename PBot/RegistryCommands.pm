@@ -42,8 +42,8 @@ sub initialize {
 
 sub regset {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($section, $item, $key, $value) = split /\s+/, $arguments, 4 if defined $arguments;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($section, $item, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4);
 
   if(not defined $section or not defined $item) {
     return "Usage: regset <section> <item> [key [value]]";
@@ -57,8 +57,8 @@ sub regset {
 
 sub regunset {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($section, $item, $key) = split /\s+/, $arguments, 3 if defined $arguments;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($section, $item, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if(not defined $section or not defined $item or not defined $key) {
     return "Usage: regunset <section> <item> <key>"
@@ -69,8 +69,8 @@ sub regunset {
 
 sub regadd {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($section, $item, $value) = split /\s+/, $arguments, 3 if defined $arguments;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($section, $item, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if(not defined $section or not defined $item or not defined $value) {
     return "Usage: regadd <section> <item> <value>";
@@ -84,8 +84,8 @@ sub regadd {
 
 sub regrem {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($section, $item) = split /\s+/, $arguments if defined $arguments;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($section, $item) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if(not defined $section or not defined $item) {
     return "Usage: regrem <section> <item>";
@@ -106,10 +106,10 @@ sub regrem {
 
 sub regshow {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $registry = $self->{pbot}->{registry}->{registry}->hash;
 
-  my ($section, $item) = split /\s+/, $arguments if defined $arguments;
+  my ($section, $item) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if(not defined $section or not defined $item) {
     return "Usage: regshow <section> <item>";

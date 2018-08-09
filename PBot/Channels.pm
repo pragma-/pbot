@@ -43,8 +43,8 @@ sub initialize {
 }
 
 sub set {
-  my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  my ($channel, $key, $value) = split /\s+/, $arguments, 3;
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($channel, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if(not defined $channel) {
     return "Usage: chanset <channel> [key [value]]";
@@ -54,8 +54,8 @@ sub set {
 }
 
 sub unset {
-  my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  my ($channel, $key) = split /\s+/, $arguments;
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($channel, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if(not defined $channel or not defined $key) {
     return "Usage: chanunset <channel> <key>";

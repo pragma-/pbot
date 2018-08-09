@@ -20,7 +20,6 @@ use POSIX qw(strftime);
 use Storable;
 
 use PBot::Utils::SafeFilename;
-use PBot::Utils::ValidateString;
 
 sub new {
   if(ref($_[1]) eq 'HASH') {
@@ -100,7 +99,7 @@ sub initialize {
 sub call_factoid {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my ($chan, $keyword, $args) = split /\s+/, $arguments, 3;
+  my ($chan, $keyword, $args) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if(not defined $chan or not defined $keyword) {
     return "Usage: fact <channel> <keyword> [arguments]";
@@ -171,7 +170,9 @@ sub log_factoid {
 
 sub find_factoid_with_optional_channel {
   my ($self, $from, $arguments, $command, $usage, $explicit, $exact_channel) = @_;
-  my ($from_chan, $from_trigger, $remaining_args) = split /\s+/, $arguments, 3;
+
+  my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
+  my ($from_chan, $from_trigger, $remaining_args) = $self->{pbot}->{interpreter}->split_args($arglist, 3);
 
   if (not defined $from_chan or (not defined $from_chan and not defined $from_trigger)) {
     return "Usage: $command [channel] <keyword>" if not $usage;
@@ -192,8 +193,8 @@ sub find_factoid_with_optional_channel {
       # not a channel or global, so must be a keyword
       my $keyword = $from_chan;
       $from_chan = $from;
-      $remaining_args = $from_trigger . (length $remaining_args ? " $remaining_args" : "");
       $from_trigger = $keyword;
+      (undef, $remaining_args) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
     }
   }
 
@@ -326,8 +327,7 @@ sub list_undo_history {
 }
 
 sub factundo {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
   my $usage = "Usage: factundo [-l [N]] [-r N] [channel] <keyword> (-l list undo history, optionally starting from N; -r jump to revision N)";
 
@@ -348,6 +348,7 @@ sub factundo {
   return $usage if not @$args;
 
   $arguments = join ' ', @$args;
+  my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
 
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo', undef, 1, 1);
   my $deleted;
@@ -355,7 +356,7 @@ sub factundo {
   if (not defined $trigger) {
     # factoid not found or some error, try to continue and load undo file if it exists
     $deleted = 1;
-    ($channel, $trigger) = split /\s+/, $arguments, 2;
+    ($channel, $trigger) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
     if (not defined $trigger) {
       $trigger = $channel;
       $channel = $from;
@@ -519,19 +520,16 @@ sub factset {
   my $self = shift;
   my ($from, $nick, $user, $host, $args) = @_;
 
-  $args = validate_string($args);
-
   my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factset', 'Usage: factset [channel] <factoid> [key [value]]', 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
-  my ($key, $value) = split /\s+/, $arguments, 2;
+  my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
+  my ($key, $value) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
 
   $channel = '.*' if $channel !~ /^#/;
-
   my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1, 1);
 
   my $admininfo;
-
   if (defined $owner_channel) {
     $admininfo  = $self->{pbot}->{admins}->loggedin($owner_channel, "$nick!$user\@$host");
   } else {
@@ -600,8 +598,11 @@ sub factunset {
 
   my $usage = 'Usage: factunset [channel] <factoid> <key>';
 
-  my ($channel, $trigger, $key) = $self->find_factoid_with_optional_channel($from, $args, 'factset', $usage, 1);
+  my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factunset', $usage, 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
+
+  my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
+  my ($key) = $self->{pbot}->{interpreter}->split_args($arglist, 1);
 
   return $usage if not length $key;
 
@@ -731,9 +732,8 @@ sub list {
 
 sub factmove {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  $arguments = validate_string($arguments);
-  my ($src_channel, $source, $target_channel, $target) = split /\s+/, $arguments, 5 if length $arguments;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($src_channel, $source, $target_channel, $target) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 5);
 
   my $usage = "Usage: factmove <source channel> <source factoid> <target channel/factoid> [target factoid]";
 
@@ -821,11 +821,10 @@ sub factmove {
 
 sub factalias {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  $arguments = validate_string($arguments);
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  my ($chan, $alias, $command) = split /\s+/, $arguments, 3 if defined $arguments;
-  
+  my ($chan, $alias, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+
   if (defined $chan and not ($chan eq '.*' or $chan =~ m/^#/)) {
     # $chan doesn't look like a channel, so shift everything right
     # and replace $chan with $from
@@ -837,6 +836,8 @@ sub factalias {
     $alias = $chan;
     $chan = $from;
   }
+
+  $chan = '.*' if $chan !~ /^#/;
 
   if (not length $alias or not length $command) {
     return "Usage: factalias [channel] <keyword> <command>";
@@ -878,7 +879,6 @@ sub add_regex {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
-  $arguments = validate_string($arguments);
   my ($keyword, $text) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
 
   $from = '.*' if not defined $from or $from !~ /^#/;
@@ -911,16 +911,19 @@ sub add_regex {
 
 sub factadd {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($from_chan, $keyword, $text);
 
-  $arguments = validate_string($arguments);
+  my @arglist = @{$stuff->{arglist}};
 
-  if (defined $arguments) {
-    if ($arguments =~ /^(#\S+|global|\.\*)\s+(\S+)\s+(?:is\s+)?(.*)$/i) {
-      ($from_chan, $keyword, $text) = ($1, $2, $3);
-    } elsif ($arguments =~ /^(\S+)\s+(?:is\s+)?(.*)$/i) {
-      ($from_chan, $keyword, $text) = ($from, $1, $2);
+  if (@arglist) {
+    if ($arglist[0] =~ m/(?:^#|^global$|^\.\*$)/i) {
+      splice @arglist, 2, 1 if lc $arglist[2] eq 'is';
+      ($from_chan, $keyword, $text) = $self->{pbot}->{interpreter}->split_args(\@arglist, 3);
+    } else {
+      $from_chan = $from;
+      splice @arglist, 1, 1 if lc $arglist[1] eq 'is';
+      ($keyword, $text) = $self->{pbot}->{interpreter}->split_args(\@arglist, 2);
     }
   }
 
@@ -965,10 +968,10 @@ sub factadd {
 
 sub factrem {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
-  my ($from_chan, $from_trig) = split /\s+/, $arguments;
+  my ($from_chan, $from_trig) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if (not defined $from_trig) {
     $from_trig = $from_chan;
@@ -1038,10 +1041,10 @@ sub histogram {
 
 sub factshow {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
-  my ($chan, $trig) = split /\s+/, $arguments;
+  my ($chan, $trig) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if (not defined $trig) {
     $trig = $chan;
@@ -1093,7 +1096,8 @@ sub factlog {
 
   if (not defined $trigger) {
     # factoid not found or some error, try to continue and load factlog file if it exists
-    ($channel, $trigger) = split /\s+/, "@$args", 2;
+    my $arglist = $self->{pbot}->{interpreter}->make_args("@$args");
+    ($channel, $trigger) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
     if (not defined $trigger) {
       $trigger = $channel;
       $channel = $from;
@@ -1138,10 +1142,10 @@ sub factlog {
 
 sub factinfo {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
-  my ($chan, $trig) = split /\s+/, $arguments;
+  my ($chan, $trig) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if (not defined $trig) {
     $trig = $chan;
@@ -1178,13 +1182,13 @@ sub factinfo {
 
 sub top20 {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
   my %hash = ();
   my $text = "";
   my $i = 0;
 
-  my ($channel, $args) = split /\s+/, $arguments, 2 if defined $arguments;
+  my ($channel, $args) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if(not defined $channel) {
     return "Usage: top20 <channel> [nick or 'recent']";
@@ -1366,7 +1370,11 @@ sub factfind {
               $text .= $chan eq '.*' ? "[global channel] " : "[$chan] ";
               $last_chan = $chan;
             }
-            $text .= "$trigger ";
+            if ($trigger =~ / /) {
+              $text .= "\"$trigger\" ";
+            } else {
+              $text .= "$trigger ";
+            }
             $last_trigger = $trigger;
           }
         }
@@ -1392,8 +1400,6 @@ sub factchange {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
   my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier);
-
-  $arguments = validate_string($arguments);
 
   my $needs_disambig;
 

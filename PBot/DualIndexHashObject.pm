@@ -189,7 +189,11 @@ sub levenshtein_matches {
       my $length = (length($primary_index_key) > length($index)) ? length $primary_index_key : length $index;
 
       if($distance_result / $length < $distance) {
-        $result .= $comma . $index;
+        if ($index =~ / /) {
+          $result .= $comma . "\"$index\"";
+        } else {
+          $result .= $comma . $index;
+        }
         $comma = ", ";
       }
     }
@@ -220,7 +224,11 @@ sub levenshtein_matches {
           $header = "" if $last_header eq $header;
           $last_header = $header;
           $comma = '; ' if $comma ne '' and $header ne '';
-          $result .= $comma . $header . $index2;
+          if ($index2 =~ / /) {
+            $result .= $comma . $header . "\"$index2\"";
+          } else {
+            $result .= $comma . $header . $index2;
+          }
           $comma = ", ";
         }
       }

@@ -72,7 +72,7 @@ sub in_channel {
     return $usage;
   }
 
-  my ($channel, $command) = split / /, $arguments, 2;
+  my ($channel, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
   return $usage if not defined $channel or not defined $command;
 
   $stuff->{admin_channel_override} = $channel;
@@ -112,9 +112,9 @@ sub logout {
 
 sub adminadd {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  my ($name, $channel, $hostmask, $level, $password) = split /\s+/, $arguments, 5;
+  my ($name, $channel, $hostmask, $level, $password) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 5);
 
   if(not defined $name or not defined $channel or not defined $hostmask or not defined $level
     or not defined $password) {
@@ -139,9 +139,9 @@ sub adminadd {
 
 sub adminrem {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  my ($channel, $hostmask) = split /\s+/, $arguments, 2;
+  my ($channel, $hostmask) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if(not defined $channel or not defined $hostmask) {
     return "/msg $nick Usage: adminrem <channel> <hostmask/name>";
@@ -172,8 +172,8 @@ sub adminrem {
 
 sub adminset {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($channel, $hostmask, $key, $value) = split /\s+/, $arguments, 4 if defined $arguments;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($channel, $hostmask, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4);
 
   if(not defined $channel or not defined $hostmask) {
     return "Usage: adminset <channel> <hostmask/name> [key] [value]";
@@ -219,8 +219,8 @@ sub adminset {
 
 sub adminunset {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($channel, $hostmask, $key) = split /\s+/, $arguments, 3 if defined $arguments;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($channel, $hostmask, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if(not defined $channel or not defined $hostmask) {
     return "Usage: adminunset <channel> <hostmask/name> <key>";
@@ -250,7 +250,7 @@ sub join_channel {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  foreach my $channel (split /\s+/, $arguments) {
+  foreach my $channel (split /[\s+,]/, $arguments) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host made me join $channel\n");
     $self->{pbot}->{chanops}->join_channel($channel);
   }
@@ -264,7 +264,7 @@ sub part_channel {
 
   $arguments = $from if not $arguments;
 
-  foreach my $channel (split /\s+/, $arguments) {
+  foreach my $channel (split /[\s+,]/, $arguments) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host made me part $channel\n");
     $self->{pbot}->{chanops}->part_channel($channel);
   }

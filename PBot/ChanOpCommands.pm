@@ -49,7 +49,7 @@ sub initialize {
 sub ban_user {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my ($target, $channel, $length) = split(/\s+/, $arguments, 3);
+  my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   $channel = '' if not defined $channel;
   $length = '' if not defined $length;
@@ -114,7 +114,7 @@ sub unban_user {
     return "";
   }
 
-  my ($target, $channel, $immediately) = split /\s+/, $arguments;
+  my ($target, $channel, $immediately) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if (defined $target and defined $channel and $channel !~ /^#/) {
     my $temp = $target;
@@ -152,7 +152,7 @@ sub unban_user {
 sub mute_user {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my ($target, $channel, $length) = split(/\s+/, $arguments, 3);
+  my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
@@ -222,7 +222,7 @@ sub unmute_user {
     return "";
   }
 
-  my ($target, $channel, $immediately) = split /\s+/, $arguments;
+  my ($target, $channel, $immediately) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if (defined $target and defined $channel and $channel !~ /^#/) {
     my $temp = $target;

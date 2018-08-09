@@ -70,9 +70,9 @@ sub is_spam {
 sub antispam_cmd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  my @pargs = @{$stuff->{argumentspos}};
+  my $arglist = $stuff->{arglist};
 
-  my $command = shift @pargs;
+  my $command = $self->{pbot}->{interpreter}->shift_arg($arglist);
 
   return "Usage: antispam <command>, where commands are: list/show, add, remove, set, unset" if not defined $command;
 
@@ -91,7 +91,7 @@ sub antispam_cmd {
       return $text;
     }
     when ("set") {
-      my ($namespace, $keyword, $flag, $value) = $self->{pbot}->{interpreter}->split_args(\@pargs, 4);
+      my ($namespace, $keyword, $flag, $value) = $self->{pbot}->{interpreter}->split_args($arglist, 4);
       return "Usage: antispam set <namespace> <regex> [flag] [value]" if not defined $namespace or not defined $keyword;
 
       if (not exists $self->{keywords}->hash->{$namespace}) {
@@ -132,7 +132,7 @@ sub antispam_cmd {
       return "Flag set.";
     }
     when ("unset") {
-      my ($namespace, $keyword, $flag) = $self->{pbot}->{interpreter}->split_args(\@pargs, 3);
+      my ($namespace, $keyword, $flag) = $self->{pbot}->{interpreter}->split_args($arglist, 3);
       return "Usage: antispam unset <namespace> <regex> <flag>" if not defined $namespace or not defined $keyword or not defined $flag;
 
       if (not exists $self->{keywords}->hash->{$namespace}) {
@@ -152,7 +152,7 @@ sub antispam_cmd {
       return "Flag unset.";
     }
     when ("add") {
-      my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args(\@pargs, 2);
+      my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
       return "Usage: antispam add <namespace> <regex>" if not defined $namespace or not defined $keyword;
       $self->{keywords}->hash->{$namespace}->{$keyword}->{owner} = "$nick!$user\@$host";
       $self->{keywords}->hash->{$namespace}->{$keyword}->{created_on} = gettimeofday;
@@ -160,7 +160,7 @@ sub antispam_cmd {
       return "/say Added `$keyword`.";
     }
     when ("remove") {
-      my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args(\@pargs, 2);
+      my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
       return "Usage: antispam remove <namespace> <regex>" if not defined $namespace or not defined $keyword;
 
       if(not defined $self->{keywords}->hash->{$namespace}) {
