@@ -207,8 +207,8 @@ sub interpret {
   }
 
   my $cmdlist = $self->make_args($stuff->{command});
-
   if ($self->arglist_size($cmdlist) >= 4 and lc $cmdlist->[0] eq 'tell' and lc $cmdlist->[2] eq 'about') {
+    # tell nick about cmd [args]
     $stuff->{nickoverride} = $cmdlist->[1];
     ($keyword, $arguments) = $self->split_args($cmdlist, 2, 3);
     $arguments = '' if not defined $arguments;
@@ -221,6 +221,7 @@ sub interpret {
       delete $stuff->{force_nickoverride};
     }
   } else {
+    # normal command
     ($keyword, $arguments) = $self->split_args($cmdlist, 2);
     $arguments = "" if not defined $arguments;
   }
@@ -492,7 +493,6 @@ sub handle_result {
 
   if ($stuff->{prepend}) {
     $result = "$stuff->{prepend} $result";
-    $self->{pbot}->{logger}->log("Prepending [$stuff->{prepend}] to result [$result]\n");
   }
 
   my $original_result = $result;
@@ -500,7 +500,8 @@ sub handle_result {
   my $use_output_queue = 0;
 
   if (defined $stuff->{command}) {
-    my ($cmd, $args) = split /\s+/, $stuff->{command}, 2;
+    my $cmdlist = $self->make_args($stuff->{command});
+    my ($cmd, $args) = $self->split_args($cmdlist, 2);
     if (not $self->{pbot}->{commands}->exists($cmd)) {
       my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $cmd, $args, 1, 0, 1);
       if(defined $trigger) {
