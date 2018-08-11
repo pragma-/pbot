@@ -54,6 +54,14 @@ sub show_url_titles {
     }
   }
 
+  # no titles for unidentified users in +z channels
+  my $chanmodes = $self->{pbot}->{channels}->get_meta($channel, 'MODE');
+  if (defined $chanmodes and $chanmodes =~ m/z/) {
+    my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+    my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($account);
+    return 0 if not defined $nickserv or not length $nickserv;
+  }
+
   if($self->{pbot}->{registry}->get_value('general', 'show_url_titles')
       and not $self->{pbot}->{registry}->get_value($channel, 'no_url_titles')
       and not grep { $channel =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_ignore_channels')
