@@ -368,6 +368,8 @@ sub find_message_accounts_by_mask {
 sub get_message_account {
   my ($self, $nick, $user, $host, $orig_nick) = @_;
 
+  ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
+
 =cut
   use Devel::StackTrace;
   my $trace = Devel::StackTrace->new(indent => 1, ignore_class => ['PBot::PBot', 'PBot::IRC']);
