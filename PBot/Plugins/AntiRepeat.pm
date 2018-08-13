@@ -54,7 +54,7 @@ sub unload {
 sub on_public {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
-  my $channel = $event->{event}->{to}[0];
+  my $channel = lc $event->{event}->{to}[0];
 
   ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
@@ -68,6 +68,14 @@ sub on_public {
   return 0 if $self->{pbot}->{antiflood}->whitelisted($channel, "$nick!$user\@$host", 'antiflood');
 
   my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+
+  # don't enforce anti-repeat for unreg spam
+  my $chanmodes = $self->{pbot}->{channels}->get_meta($channel, 'MODE');
+  if (defined $chanmodes and $chanmodes =~ m/z/ and exists $self->{pbot}->{bantracker}->{banlist}->{$channel}->{'+q'}->{'$~a'}) {
+    my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($account);
+    return 0 if not defined $nickserv or not length $nickserv;
+  }
+
   my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, 6, $self->{pbot}->{messagehistory}->{MSG_CHAT});
 
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
