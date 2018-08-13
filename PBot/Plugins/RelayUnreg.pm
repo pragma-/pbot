@@ -21,6 +21,7 @@ sub initialize {
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->on_public(@_) });
   $self->{queue} = [];
+  $self->{notified} = {};
   $self->{pbot}->{timer}->register(sub { $self->check_queue }, 1, 'RelayUnreg');
 }
 
@@ -33,6 +34,9 @@ sub on_public {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
   my $channel = lc $event->{event}->{to}[0];
+
+  $msg =~ s/^\s+|\s+$//g;
+  return 0 if not length $msg;
 
   # exit if channel hasn't muted $~a
   return 0 if not exists $self->{pbot}->{bantracker}->{banlist}->{$channel}->{'+q'}->{'$~a'};
@@ -79,8 +83,11 @@ sub on_public {
   # don't notify/relay if user is voiced
   return 0 if $self->{pbot}->{nicklist}->get_meta($channel, $nick, '+v');
 
-  $self->{pbot}->{logger}->log("RelayUnreg: Notifying $nick to register with NickServ in $channel.\n");
-  $event->{conn}->privmsg($nick, "Please register your nick to speak in $channel. See https://freenode.net/kb/answer/registration and https://freenode.net/kb/answer/sasl");
+  unless (exists $self->{notified}->{lc $nick}) {
+    $self->{pbot}->{logger}->log("RelayUnreg: Notifying $nick to register with NickServ in $channel.\n");
+    $event->{conn}->privmsg($nick, "Please register your nick to speak in $channel. See https://freenode.net/kb/answer/registration and https://freenode.net/kb/answer/sasl");
+    $self->{notified}->{lc $nick} = gettimeofday;
+  }
 
   # don't relay unregistered chat unless enabled
   return 0 if not $self->{pbot}->{registry}->get_value($channel, 'relay_unregistered_chat');
@@ -109,6 +116,14 @@ sub check_queue {
       $self->{pbot}->{conn}->privmsg($channel, "(unreg) <$nick> $msg") unless $banned;
     }
     shift @{$self->{queue}};
+  }
+
+  # check notification timeouts here too, why not?
+  my $timeout = gettimeofday + 60 * 15;
+  foreach my $nick (keys %{$self->{notified}}) {
+    if ($self->{notified}->{$nick} >= $timeout) {
+      delete $self->{notified}->{$nick};
+    }
   }
 }
 
