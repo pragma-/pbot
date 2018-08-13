@@ -69,18 +69,30 @@ sub process_line {
   $flood_threshold      = $pbot->{registry}->get_value('antiflood', 'chat_flood_threshold')      if not defined $flood_threshold;
   $flood_time_threshold = $pbot->{registry}->get_value('antiflood', 'chat_flood_time_threshold') if not defined $flood_time_threshold;
 
-  $pbot->{antiflood}->check_flood($from, $nick, $user, $host, $text,
-    $flood_threshold, $flood_time_threshold,
-    $pbot->{messagehistory}->{MSG_CHAT}) if defined $from;
-
   if (defined $from and $from =~ m/^#/) {
     my $chanmodes = $self->{pbot}->{channels}->get_meta($from, 'MODE');
     if (defined $chanmodes and $chanmodes =~ m/z/) {
+      $stuff->{'chan-z'} = 1;
+      if (exists $self->{pbot}->{bantracker}->{banlist}->{$from}->{'+q'}->{'$~a'}) {
+        my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
+        if (not defined $nickserv or not length $nickserv) {
+          $stuff->{unidentified} = 1;
+        }
+      }
+
       if ($self->{pbot}->{bantracker}->is_banned($nick, $user, $host, $from)) {
-        $self->{pbot}->{logger}->log("Disregarding banned user message (channel $from is +z).\n");
-        return 1;
+        $stuff->{banned} = 1;
       }
     }
+  }
+
+  $pbot->{antiflood}->check_flood($from, $nick, $user, $host, $text,
+    $flood_threshold, $flood_time_threshold,
+    $pbot->{messagehistory}->{MSG_CHAT}, $stuff) if defined $from;
+
+  if ($stuff->{banned}) {
+    $self->{pbot}->{logger}->log("Disregarding banned user message (channel $from is +z).\n");
+    return 1;
   }
 
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');

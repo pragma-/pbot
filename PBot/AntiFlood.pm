@@ -292,7 +292,7 @@ sub update_join_watch {
 }
 
 sub check_flood {
-  my ($self, $channel, $nick, $user, $host, $text, $max_messages, $max_time, $mode) = @_;
+  my ($self, $channel, $nick, $user, $host, $text, $max_messages, $max_time, $mode, $stuff) = @_;
   $channel = lc $channel;
 
   my $mask = "$nick!$user\@$host";
@@ -343,6 +343,11 @@ sub check_flood {
   # do not do flood processing for bot messages
   if($nick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
     $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+    return;
+  }
+
+  # don't do flood processing for unidentified or banned users in +z channels
+  if (defined $stuff and $stuff->{'chan-z'} and ($stuff->{'unidentified'} or $stuff->{'banned'})) {
     return;
   }
 
