@@ -90,8 +90,8 @@ sub process_line {
     $flood_threshold, $flood_time_threshold,
     $pbot->{messagehistory}->{MSG_CHAT}, $stuff) if defined $from;
 
-  if ($stuff->{banned}) {
-    $self->{pbot}->{logger}->log("Disregarding banned user message (channel $from is +z).\n");
+  if ($stuff->{banned} or $stuff->{unidentified}) {
+    $self->{pbot}->{logger}->log("Disregarding banned/unidentified user message (channel $from is +z).\n");
     return 1;
   }
 
