@@ -103,26 +103,28 @@ sub check_queue {
   my $self = shift;
   my $now = gettimeofday;
 
-  return if not @{$self->{queue}};
+  if (@{$self->{queue}}) {
+    my ($time, $channel, $nick, $user, $host, $msg) = @{$self->{queue}->[0]};
 
-  my ($time, $channel, $nick, $user, $host, $msg) = @{$self->{queue}->[0]};
-
-  if ($now >= $time) {
-    # if nick is still present in channel, send the message
-    if ($self->{pbot}->{nicklist}->is_present($channel, $nick)) {
-      # ensure they're not banned (+z allows us to see +q/+b messages as normal ones)
-      my $banned = $self->{pbot}->{bantracker}->is_banned($nick, $user, $host, $channel);
-      $self->{pbot}->{logger}->log("[RelayUnreg] $nick!$user\@$host $banned->{mode} as $banned->{banmask} in $banned->{channel} by $banned->{owner}, not relaying unregistered message\n") if $banned;
-      $self->{pbot}->{conn}->privmsg($channel, "(unreg) <$nick> $msg") unless $banned;
+    if ($now >= $time) {
+      # if nick is still present in channel, send the message
+      if ($self->{pbot}->{nicklist}->is_present($channel, $nick)) {
+        # ensure they're not banned (+z allows us to see +q/+b messages as normal ones)
+        my $banned = $self->{pbot}->{bantracker}->is_banned($nick, $user, $host, $channel);
+        $self->{pbot}->{logger}->log("[RelayUnreg] $nick!$user\@$host $banned->{mode} as $banned->{banmask} in $banned->{channel} by $banned->{owner}, not relaying unregistered message\n") if $banned;
+        $self->{pbot}->{conn}->privmsg($channel, "(unreg) <$nick> $msg") unless $banned;
+      }
+      shift @{$self->{queue}};
     }
-    shift @{$self->{queue}};
   }
 
   # check notification timeouts here too, why not?
-  my $timeout = gettimeofday + 60 * 15;
-  foreach my $nick (keys %{$self->{notified}}) {
-    if ($self->{notified}->{$nick} >= $timeout) {
-      delete $self->{notified}->{$nick};
+  if (keys %{$self->{notified}}) {
+    my $timeout = gettimeofday - 60 * 15;
+    foreach my $nick (keys %{$self->{notified}}) {
+      if ($self->{notified}->{$nick} <= $timeout) {
+        delete $self->{notified}->{$nick};
+      }
     }
   }
 }
