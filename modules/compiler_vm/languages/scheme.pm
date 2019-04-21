@@ -16,7 +16,7 @@ sub initialize {
   $self->{sourcefile}      = 'prog.scm';
   $self->{execfile}        = 'prog.scm';
   $self->{default_options} = '';
-  $self->{cmdline}         = 'scm $options < $sourcefile';
+  $self->{cmdline}         = 'guile $options $sourcefile';
 
   $self->{cmdline_opening_comment} = "#|=============== CMDLINE ===============\n";
   $self->{cmdline_closing_comment} = "================= CMDLINE ===============|#\n";
