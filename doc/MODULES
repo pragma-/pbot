@@ -1,4 +1,5 @@
 AppConfig::Std
+CGI
 Data::Dumper
 DBD::SQLite
 Games::Dice
