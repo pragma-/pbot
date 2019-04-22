@@ -215,7 +215,7 @@ sub spinach_cmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   $arguments =~ s/^\s+|\s+$//g;
 
-  my $usage = "Usage: spinach join|exit|ready|unready|choose|lie|reroll|skip|score|show|kick|abort; for more information about a command: spinach help <command>";
+  my $usage = "Usage: spinach join|exit|ready|unready|choose|lie|reroll|skip|score|show|categories|filter|kick|abort; for more information about a command: spinach help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
@@ -283,6 +283,14 @@ sub spinach_cmd {
         }
 
         when ('show') {
+          return "Show the current question again.";
+        }
+
+        when ('categories') {
+           return "Help is coming soon.";
+        }
+
+        when ('filter') {
           return "Help is coming soon.";
         }
 
@@ -749,6 +757,76 @@ sub spinach_cmd {
       }
 
       return "$nick: There is nothing to show right now.";
+    }
+
+    when ('categories') {
+      if (not length $arguments) {
+        return "Usage: spinach categories <regex>";
+      }
+
+      my $result = eval {
+        use re::engine::RE2 -strict => 1;
+        my @categories = grep { /$arguments/i } keys %{$self->{categories}};
+        if (not @categories) {
+          return "No categories found.";
+        }
+
+        my $text = "";
+        my $comma = "";
+        foreach my $cat (sort @categories) {
+          $text .= "$comma$cat: " . keys %{$self->{categories}{$cat}};
+          $comma = ", ";
+        }
+        return $text;
+      };
+
+      return "$arguments: $@" if $@;
+      return $result;
+    }
+
+    when ('filter') {
+      my ($cmd, $args) = split / /, $arguments, 2;
+      $cmd = lc $cmd;
+
+      if (not length $cmd) {
+        return "Usage: spinach filter set <regex> | show | clear";
+      }
+
+      given ($cmd) {
+        when ('set') {
+          if (not length $args) {
+            return "Usage: spinach filter set <regex>";
+          }
+
+          eval { "" =~ /$args/ };
+          return "Bad filter $args: $@" if $@;
+
+          my @categories = grep { /$args/i } keys %{$self->{categories}};
+          if (not @categories) {
+            return "Bad filter: No categories match. Try again.";
+          }
+
+          $self->{category_filter} = $args;
+          return "Spinach filter set.";
+        }
+
+        when ('clear') {
+          delete $self->{category_filter};
+          return "Spinach filter cleared.";
+        }
+
+        when ('show') {
+          if (not exists $self->{category_filter}) {
+            return "There is no Spinach filter set.";
+          }
+
+          return "Spinach filter set to: " . $self->{category_filter};
+        }
+
+        default {
+          return "Unknown filter command '$cmd'.";
+        }
+      }
     }
 
     default {
@@ -1372,7 +1450,13 @@ sub choosecategory {
     }
 
     my @choices;
-    my @categories = keys %{$self->{categories}};
+    my @categories;
+
+    if (exists $self->{category_filter}) {
+      @categories = grep { /$self->{category_filter}/i } keys %{$self->{categories}};
+    } else {
+      @categories = keys %{$self->{categories}};
+    }
 
     my $no_infinite_loops = 0;
     while (1) {
@@ -1391,7 +1475,7 @@ sub choosecategory {
         push @choices, $cat;
       }
 
-      last if @choices == 6;
+      last if @choices == 7;
     }
 
     push @choices, 'RANDOM CATEGORY';
@@ -1966,7 +2050,7 @@ sub getplayers {
     $state->{tocked} = 1;
 
     if (not $unready) {
-      $self->send_message($self->{channel}, "Game cannot begin with only one player.");
+      $self->send_message($self->{channel}, "Game cannot begin with one player.");
     }
 
     if (++$state->{counter} > 6) {
