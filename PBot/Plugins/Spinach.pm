@@ -47,13 +47,15 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
 
   $self->{leaderboard_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/spinachlb.sqlite3';
-  $self->{questions_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/trivia.json';
-  $self->{stopwords_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/stopwords';
+  $self->{questions_filename}   = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/trivia.json';
+  $self->{stopwords_filename}   = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/stopwords';
+  $self->{filter_filename}      = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/filter';
 
   $self->create_database;
   $self->create_states;
   $self->load_questions;
   $self->load_stopwords;
+  $self->load_filter;
 
   $self->{channel} = '##spinach';
 
@@ -141,6 +143,34 @@ sub load_stopwords {
     chomp $word;
     $self->{stopwords}{$word} = 1;
   }
+  close $fh;
+}
+
+sub load_filter {
+  my $self = shift;
+
+  open my $fh, '<', $self->{filter_filename} or do {
+    return;
+  };
+
+  chomp ($self->{category_include_filter} = <$fh>);
+  chomp ($self->{category_exclude_filter} = <$fh>);
+  close $fh;
+
+  delete $self->{category_include_filter} if not length $self->{category_include_filter};
+  delete $self->{category_exclude_filter} if not length $self->{category_exclude_filter};
+}
+
+sub save_filter {
+  my $self = shift;
+
+  open my $fh, '>', $self->{filter_filename} or do {
+    $self->{pbot}->{logger}->log("Spinach: Failed to open $self->{filter_filename}: $!\n");
+    return;
+  };
+
+  print $fh "$self->{category_include_filter}\n";
+  print $fh "$self->{category_exclude_filter}\n";
   close $fh;
 }
 
@@ -807,12 +837,14 @@ sub spinach_cmd {
           }
 
           $self->{"category_" . $_ . "_filter"} = $args;
+          $self->save_filter;
           return "Spinach $_ filter set.";
         }
 
         when ('clear') {
           delete $self->{category_include_filter};
           delete $self->{category_exclude_filter};
+          unlink $self->{filter_filename};
           return "Spinach filter cleared.";
         }
 
