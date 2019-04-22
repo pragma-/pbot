@@ -789,13 +789,13 @@ sub spinach_cmd {
       $cmd = lc $cmd;
 
       if (not length $cmd) {
-        return "Usage: spinach filter set <regex> | show | clear";
+        return "Usage: spinach filter include <regex> | exclude <regex> | show | clear";
       }
 
       given ($cmd) {
-        when ('set') {
+        when ($_ eq 'include' or $_ eq 'exclude') {
           if (not length $args) {
-            return "Usage: spinach filter set <regex>";
+            return "Usage: spinach filter $_ <regex>";
           }
 
           eval { "" =~ /$args/ };
@@ -806,21 +806,34 @@ sub spinach_cmd {
             return "Bad filter: No categories match. Try again.";
           }
 
-          $self->{category_filter} = $args;
-          return "Spinach filter set.";
+          $self->{"category_" . $_ . "_filter"} = $args;
+          return "Spinach $_ filter set.";
         }
 
         when ('clear') {
-          delete $self->{category_filter};
+          delete $self->{category_include_filter};
+          delete $self->{category_exclude_filter};
           return "Spinach filter cleared.";
         }
 
         when ('show') {
-          if (not exists $self->{category_filter}) {
+          if (not exists $self->{category_include_filter} and not exists $self->{category_exclude_filter}) {
             return "There is no Spinach filter set.";
           }
 
-          return "Spinach filter set to: " . $self->{category_filter};
+          my $text = "Spinach ";
+          my $comma = "";
+
+          if (exists $self->{category_include_filter}) {
+            $text .= "include filter set to: " . $self->{category_include_filter};
+            $comma = "; ";
+          }
+
+          if (exists $self->{category_exclude_filter}) {
+            $text .= $comma . "exclude filter set to: " . $self->{category_exclude_filter};
+          }
+
+          return $text;
         }
 
         default {
@@ -1452,10 +1465,14 @@ sub choosecategory {
     my @choices;
     my @categories;
 
-    if (exists $self->{category_filter}) {
-      @categories = grep { /$self->{category_filter}/i } keys %{$self->{categories}};
+    if (exists $self->{category_include_filter}) {
+      @categories = grep { /$self->{category_include_filter}/i } keys %{$self->{categories}};
     } else {
       @categories = keys %{$self->{categories}};
+    }
+
+    if (exists $self->{category_exclude_filter}) {
+      @categories = grep { $_ !~ /$self->{category_exclude_filter}/i } @categories;
     }
 
     my $no_infinite_loops = 0;
@@ -1467,7 +1484,7 @@ sub choosecategory {
       $self->{pbot}->{logger}->log("random cat: [$cat] $count questions\n");
 
       if (not $count) {
-        $self->{pbot}->{logger}->log("no count for random cat!\n" . (Dumper $self->{categories}));
+        $self->{pbot}->{logger}->log("no count for random cat!\n");
         next;
       }
 
@@ -1525,7 +1542,7 @@ sub choosecategory {
     if (++$state->{counter} > $state->{max_count}) {
       # $state->{players}->[$state->{current_player}]->{missedinputs}++;
       my $name = $state->{players}->[$state->{current_player}]->{name};
-      my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 1)];
+      my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 2)];
       $self->send_message($self->{channel}, "$name took too long to choose. Randomly choosing: $category!");
       $state->{current_category} = $category;
       return 'next';
