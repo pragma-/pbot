@@ -7,11 +7,13 @@ package PBot::Plugins::Spinach;
 use warnings;
 use strict;
 
+use FindBin;
+use lib "$FindBin::RealBin/../..";
+
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 use Carp ();
-use DBI;
 use JSON;
 
 use Lingua::EN::Fractions qw/fraction2words/;
@@ -26,9 +28,10 @@ use Data::Dumper;
 $Data::Dumper::Sortkeys = sub { my ($h) = @_; my @a = sort grep { not /^(?:seen_questions|alternativeSpellings)$/ } keys %$h; \@a };
 $Data::Dumper::Useqq = 1;
 
-use FindBin;
-use lib "$FindBin::RealBin/../..";
 use PBot::HashObject;
+
+use PBot::Plugins::Spinach::Statskeeper;
+use PBot::Plugins::Spinach::Stats;
 
 sub new {
   Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
@@ -50,20 +53,22 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',    sub { $self->on_departure(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
 
-  $self->{leaderboard_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/spinachlb.sqlite3';
+  $self->{channel} = '##spinach';
+
   $self->{questions_filename}   = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/trivia.json';
   $self->{stopwords_filename}   = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/stopwords';
   $self->{metadata_filename}    = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/metadata';
+  $self->{stats_filename}       = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/stats.sqlite';
 
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Spinach Metadata', filename => $self->{metadata_filename});
   $self->load_metadata;
 
-  $self->create_database;
+  $self->{stats} = PBot::Plugins::Spinach::Statskeeper->new(filename => $self->{stats_filename});
+  $self->{statscmd} = PBot::Plugins::Spinach::Stats->new(pbot => $self->{pbot}, channel => $self->{channel}, filename => $self->{stats_filename});
+
   $self->create_states;
   $self->load_questions;
   $self->load_stopwords;
-
-  $self->{channel} = '##spinach';
 
   $self->{choosecategory_max_count} = 4;
   $self->{picktruth_max_count} = 4;
@@ -73,6 +78,7 @@ sub unload {
   my $self = shift;
   $self->{pbot}->{commands}->unregister('spinach');
   $self->{pbot}->{timer}->unregister('spinach timer');
+  $self->{stats}->end if $self->{stats_running};
 }
 
 sub on_kick {
@@ -166,47 +172,6 @@ sub save_metadata {
   $self->{metadata}->save;
 }
 
-sub create_database {
-  my $self = shift;
-
-  eval {
-    $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{leaderboard_filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr;
-
-    $self->{dbh}->do(<<SQL);
-CREATE TABLE IF NOT EXISTS Leaderboard (
-  userid      NUMERIC,
-  created_on  NUMERIC,
-  wins        NUMERIC,
-  highscore   NUMERIC,
-  avgscore    NUMERIC
-)
-SQL
-
-    $self->{dbh}->disconnect;
-  };
-
-  $self->{pbot}->{logger}->log("Spinach create database failed: $@") if $@;
-}
-
-sub dbi_begin {
-  my ($self) = @_;
-  eval {
-    $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{leaderboard_filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr;
-  };
-
-  if ($@) {
-    $self->{pbot}->{logger}->log("Error opening Spinach database: $@");
-    return 0;
-  } else {
-    return 1;
-  }
-}
-
-sub dbi_end {
-  my ($self) = @_;
-  $self->{dbh}->disconnect;
-}
-
 my %color = (
   white      => "\x0300",
   black      => "\x0301",
@@ -237,7 +202,7 @@ sub spinach_cmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   $arguments =~ s/^\s+|\s+$//g;
 
-  my $usage = "Usage: spinach join|exit|ready|unready|choose|lie|reroll|skip|score|show|categories|filter|set|unset|kick|abort; for more information about a command: spinach help <command>";
+  my $usage = "Usage: spinach join|exit|ready|unready|choose|lie|reroll|skip|score|show|rank|categories|filter|set|unset|kick|abort; for more information about a command: spinach help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
@@ -288,10 +253,6 @@ sub spinach_cmd {
           return "Help is coming soon.";
         }
 
-        when ('leaderboard') {
-          return "Help is coming soon.";
-        }
-
         when ('choose') {
           return "Help is coming soon.";
         }
@@ -321,6 +282,10 @@ sub spinach_cmd {
         }
 
         when ('unset') {
+          return "Help is coming soon.";
+        }
+
+        when ('rank') {
           return "Help is coming soon.";
         }
 
@@ -402,10 +367,6 @@ sub spinach_cmd {
 
       $arguments = undef if not length $arguments;
       return $self->load_questions($arguments);
-    }
-
-    when ('leaderboard') {
-      return "Coming soon.";
     }
 
     when ('join') {
@@ -890,6 +851,10 @@ sub spinach_cmd {
         return "Usage: spinach unset <metadata> <key>";
       }
       return $self->{metadata}->unset($index, $key);
+    }
+
+    when ('rank') {
+      return $self->{statscmd}->rank($arguments);
     }
 
     default {
@@ -1656,6 +1621,7 @@ sub getnewquestion {
       delete $player->{lie};
       delete $player->{lie_count};
       delete $player->{truth};
+      delete $player->{good_lie};
       delete $player->{deceived};
       delete $player->{skip};
       delete $player->{reroll};
@@ -1894,6 +1860,11 @@ sub showlies {
       last if @liars;
 
       if ($player->{truth} ne $state->{correct_answer}) {
+        my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
+        my $player_data = $self->{stats}->get_player_data($player_id);
+        $player_data->{bad_guesses}++;
+        $self->{stats}->update_player_data($player_id, $player_data);
+
         my $points = $state->{lie_points} * 0.25;
         $player->{score} -= $points;
         $self->send_message($self->{channel}, "$player->{name} fell for my lie: \"$player->{truth}\". -$points points!");
@@ -1914,11 +1885,22 @@ sub showlies {
       my $comma = '';
 
       foreach my $liar (@liars) {
+        my $player_id = $self->{stats}->get_player_id($liar->{name}, $self->{channel});
+        my $player_data = $self->{stats}->get_player_data($player_id);
+        $player_data->{players_deceived}++;
+        $self->{stats}->update_player_data($player_id, $player_data);
+
         $liars_text .= "$comma$liar->{name}'s";
         $liars_no_apostrophe .= "$comma$liar->{name}";
         $comma = ', ';
         $liar->{score} += $state->{lie_points};
+        $liar->{good_lie} = 1;
       }
+
+      my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
+      my $player_data = $self->{stats}->get_player_data($player_id);
+      $player_data->{bad_guesses}++;
+      $self->{stats}->update_player_data($player_id, $player_data);
 
       $self->send_message($self->{channel}, "$player->{name} fell for $liars_text lie: \"$lie\". $liars_no_apostrophe $gains +$state->{lie_points} points!");
       $player->{deceived} = $lie;
@@ -1943,12 +1925,25 @@ sub showtruth {
   my ($self, $state) = @_;
 
   if ($state->{ticks} % 4 == 0) {
+    my $player_id;
+    my $player_data;
     my $players;
     my $comma = '';
     my $count = 0;
     foreach my $player (@{$state->{players}}) {
-      next if exists $player->{deceived};
+      $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
+      $player_data = $self->{stats}->get_player_data($player_id);
+
+      $player_data->{questions_played}++;
+
+      if (exists $player->{deceived}) {
+        $self->{stats}->update_player_data($player_id, $player_data);
+        next;
+      }
+
       if (exists $player->{truth} and $player->{truth} eq $state->{correct_answer}) {
+        $player_data->{good_guesses}++;
+        $self->{stats}->update_player_data($player_id, $player_data);
         $count++;
         $players .= "$comma$player->{name}";
         $comma = ', ';
@@ -1980,6 +1975,13 @@ sub reveallies {
       next if not exists $player->{lie};
       $text .= "$comma$player->{name}: $player->{lie}";
       $comma = '; ';
+
+      if ($player->{good_lie}) {
+        my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
+        my $player_data = $self->{stats}->get_player_data($player_id);
+        $player_data->{good_lies}++;
+        $self->{stats}->update_player_data($player_id, $player_data);
+      }
     }
 
     $self->send_message($self->{channel}, "$text");
@@ -2014,12 +2016,28 @@ sub showfinalscore {
   my ($self, $state) = @_;
 
   if ($state->{newstate}) {
+    my $player_id;
+    my $player_data;
     my $mentions = "";
     my $text = "";
     my $comma = "";
     my $i = @{$state->{players}};
     $state->{finalscores} = [];
     foreach my $player (sort { $a->{score} <=> $b->{score} } @{$state->{players}}) {
+      $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
+      $player_data = $self->{stats}->get_player_data($player_id);
+
+      $player_data->{games_played}++;
+      $player_data->{avg_score} += $player->{score};
+      $player_data->{avg_score} /= $player_data->{games_played};
+      $player_data->{low_score} = $player->{score} if $player_data->{low_score} == 0;
+
+      if ($player->{score} > $player_data->{high_score}) {
+        $player_data->{high_score} = $player->{score};
+      } elsif ($player->{score} < $player_data->{low_score}) {
+        $player_data->{low_score} = $player->{score};
+      }
+
       if ($i >= 4) {
         $mentions = "$player->{name}: " . $self->commify($player->{score}) . "$comma$mentions"; 
         $comma = "; ";
@@ -2029,13 +2047,17 @@ sub showfinalscore {
         $i--;
         next;
       } elsif ($i == 3) {
+        $player_data->{times_third}++;
         $text = sprintf("%15s%-13s%7s", "Third place: ", $player->{name}, $self->commify($player->{score}));
       } elsif ($i == 2) {
+        $player_data->{times_second}++;
         $text = sprintf("%15s%-13s%7s", "Second place: ", $player->{name}, $self->commify($player->{score}));
       } elsif ($i == 1) {
+        $player_data->{times_first}++;
         $text = sprintf("%15s%-13s%7s", "WINNER: ", $player->{name}, $self->commify($player->{score}));
       }
 
+      $self->{stats}->update_player_data($player_id, $player_data);
       push @{$state->{finalscores}}, $text;
       $i--;
     }
@@ -2079,6 +2101,7 @@ sub showfinalscore {
 
 sub nogame {
   my ($self, $state) = @_;
+  $self->{stats}->end if $self->{stats_running};
   $state->{result} = 'nogame';
   return $state;
 }
@@ -2152,6 +2175,8 @@ sub getplayers {
 
 sub round1 {
   my ($self, $state) = @_;
+  $self->{stats}->begin;
+  $self->{stats_running} = 1;
   $state->{truth_points} = 500;
   $state->{lie_points} = 1000;
   $state->{my_lie_points} = $state->{lie_points} * 0.25;
