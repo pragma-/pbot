@@ -26,6 +26,10 @@ use Data::Dumper;
 $Data::Dumper::Sortkeys = sub { my ($h) = @_; my @a = sort grep { not /^(?:seen_questions|alternativeSpellings)$/ } keys %$h; \@a };
 $Data::Dumper::Useqq = 1;
 
+use FindBin;
+use lib "$FindBin::RealBin/../..";
+use PBot::HashObject;
+
 sub new {
   Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
   my ($class, %conf) = @_;
@@ -49,13 +53,15 @@ sub initialize {
   $self->{leaderboard_filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/spinachlb.sqlite3';
   $self->{questions_filename}   = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/trivia.json';
   $self->{stopwords_filename}   = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/stopwords';
-  $self->{filter_filename}      = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/filter';
+  $self->{metadata_filename}    = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/metadata';
+
+  $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Spinach Metadata', filename => $self->{metadata_filename});
+  $self->load_metadata;
 
   $self->create_database;
   $self->create_states;
   $self->load_questions;
   $self->load_stopwords;
-  $self->load_filter;
 
   $self->{channel} = '##spinach';
 
@@ -146,32 +152,14 @@ sub load_stopwords {
   close $fh;
 }
 
-sub load_filter {
+sub load_metadata {
   my $self = shift;
-
-  open my $fh, '<', $self->{filter_filename} or do {
-    return;
-  };
-
-  chomp ($self->{category_include_filter} = <$fh>);
-  chomp ($self->{category_exclude_filter} = <$fh>);
-  close $fh;
-
-  delete $self->{category_include_filter} if not length $self->{category_include_filter};
-  delete $self->{category_exclude_filter} if not length $self->{category_exclude_filter};
+  $self->{metadata}->load;
 }
 
-sub save_filter {
+sub save_metadata {
   my $self = shift;
-
-  open my $fh, '>', $self->{filter_filename} or do {
-    $self->{pbot}->{logger}->log("Spinach: Failed to open $self->{filter_filename}: $!\n");
-    return;
-  };
-
-  print $fh "$self->{category_include_filter}\n";
-  print $fh "$self->{category_exclude_filter}\n";
-  close $fh;
+  $self->{metadata}->save;
 }
 
 sub create_database {
@@ -836,33 +824,33 @@ sub spinach_cmd {
             return "Bad filter: No categories match. Try again.";
           }
 
-          $self->{"category_" . $_ . "_filter"} = $args;
-          $self->save_filter;
+          $self->{metadata}->hash->{filter}->{"category_" . $_ . "_filter"} = $args;
+          $self->save_metadata;
           return "Spinach $_ filter set.";
         }
 
         when ('clear') {
-          delete $self->{category_include_filter};
-          delete $self->{category_exclude_filter};
-          unlink $self->{filter_filename};
+          delete $self->{metadata}->hash->{filter};
+          $self->save_metadata;
           return "Spinach filter cleared.";
         }
 
         when ('show') {
-          if (not exists $self->{category_include_filter} and not exists $self->{category_exclude_filter}) {
+          if (not exists $self->{metadata}->hash->{filter}->{category_include_filter}
+              and not exists $self->{metadata}->hash->{filter}->{category_exclude_filter}) {
             return "There is no Spinach filter set.";
           }
 
           my $text = "Spinach ";
           my $comma = "";
 
-          if (exists $self->{category_include_filter}) {
-            $text .= "include filter set to: " . $self->{category_include_filter};
+          if (exists $self->{metadata}->hash->{filter}->{category_include_filter}) {
+            $text .= "include filter set to: " . $self->{metadata}->hash->{filter}->{category_include_filter};
             $comma = "; ";
           }
 
-          if (exists $self->{category_exclude_filter}) {
-            $text .= $comma . "exclude filter set to: " . $self->{category_exclude_filter};
+          if (exists $self->{metadata}->hash->{filter}->{category_exclude_filter}) {
+            $text .= $comma . "exclude filter set to: " . $self->{metadata}->hash->{filter}->{category_exclude_filter};
           }
 
           return $text;
@@ -1497,14 +1485,14 @@ sub choosecategory {
     my @choices;
     my @categories;
 
-    if (exists $self->{category_include_filter}) {
-      @categories = grep { /$self->{category_include_filter}/i } keys %{$self->{categories}};
+    if (exists $self->{metadata}->{hash}->{filter}->{category_include_filter}) {
+      @categories = grep { /$self->{metadata}->{hash}->{filter}->{category_include_filter}/i } keys %{$self->{categories}};
     } else {
       @categories = keys %{$self->{categories}};
     }
 
-    if (exists $self->{category_exclude_filter}) {
-      @categories = grep { $_ !~ /$self->{category_exclude_filter}/i } @categories;
+    if (exists $self->{metadata}->{hash}->{filter}->{category_exclude_filter}) {
+      @categories = grep { $_ !~ /$self->{metadata}->{hash}->{filter}->{category_exclude_filter}/i } @categories;
     }
 
     my $no_infinite_loops = 0;
