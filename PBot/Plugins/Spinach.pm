@@ -155,6 +155,10 @@ sub load_stopwords {
 sub load_metadata {
   my $self = shift;
   $self->{metadata}->load;
+
+  if (not exists $self->{metadata}->hash->{settings}) {
+    $self->{metadata}->hash->{settings} = {};
+  }
 }
 
 sub save_metadata {
@@ -1577,7 +1581,7 @@ sub choosecategory {
   if ($state->{ticks} % $tock == 0) {
     $state->{tocked} = 1;
 
-    if (exists $state->{random_category}) {
+    if (exists $state->{random_category} or $self->{metadata}->{hash}->{settings}->{category_autopick}) {
       delete $state->{random_category};
       my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 2)];
       $self->send_message($self->{channel}, "Category: $category!");
@@ -2096,7 +2100,9 @@ sub getplayers {
     }
   }
 
-  if (@$players > 1 and not $unready) {
+  my $min_players = $self->{metadata}->{hash}->{settings}->{min_players} // 2;
+
+  if (@$players >= $min_players and not $unready) {
     $self->send_message($self->{channel}, "All players ready!");
     $state->{result} = 'allready';
     return $state;
