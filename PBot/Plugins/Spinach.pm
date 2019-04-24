@@ -233,7 +233,7 @@ sub spinach_cmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   $arguments =~ s/^\s+|\s+$//g;
 
-  my $usage = "Usage: spinach join|exit|ready|unready|choose|lie|reroll|skip|score|show|categories|filter|kick|abort; for more information about a command: spinach help <command>";
+  my $usage = "Usage: spinach join|exit|ready|unready|choose|lie|reroll|skip|score|show|categories|filter|set|unset|kick|abort; for more information about a command: spinach help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
@@ -309,6 +309,14 @@ sub spinach_cmd {
         }
 
         when ('filter') {
+          return "Help is coming soon.";
+        }
+
+        when ('set') {
+          return "Help is coming soon.";
+        }
+
+        when ('unset') {
           return "Help is coming soon.";
         }
 
@@ -860,6 +868,24 @@ sub spinach_cmd {
           return "Unknown filter command '$cmd'.";
         }
       }
+    }
+
+    when ('set') {
+      my ($index, $key, $value) = split /\s+/, $arguments;
+
+      if (not defined $index) {
+        return "Usage: spinach set <metadata> [key [value]]";
+      }
+      return $self->{metadata}->set($index, $key, $value);
+    }
+
+    when ('unset') {
+      my ($index, $key) = split /\s+/, $arguments;
+
+      if (not defined $index or not defined $key) {
+        return "Usage: spinach unset <metadata> <key>";
+      }
+      return $self->{metadata}->unset($index, $key);
     }
 
     default {
