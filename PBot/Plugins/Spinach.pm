@@ -30,8 +30,8 @@ $Data::Dumper::Useqq = 1;
 
 use PBot::HashObject;
 
-use PBot::Plugins::Spinach::Statskeeper;
 use PBot::Plugins::Spinach::Stats;
+use PBot::Plugins::Spinach::Rank;
 
 sub new {
   Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
@@ -63,8 +63,8 @@ sub initialize {
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Spinach Metadata', filename => $self->{metadata_filename});
   $self->load_metadata;
 
-  $self->{stats} = PBot::Plugins::Spinach::Statskeeper->new(filename => $self->{stats_filename});
-  $self->{statscmd} = PBot::Plugins::Spinach::Stats->new(pbot => $self->{pbot}, channel => $self->{channel}, filename => $self->{stats_filename});
+  $self->{stats}   = PBot::Plugins::Spinach::Stats->new(filename => $self->{stats_filename});
+  $self->{rankcmd} = PBot::Plugins::Spinach::Rank->new(pbot => $self->{pbot}, channel => $self->{channel}, filename => $self->{stats_filename});
 
   $self->create_states;
   $self->load_questions;
@@ -854,7 +854,7 @@ sub spinach_cmd {
     }
 
     when ('rank') {
-      return $self->{statscmd}->rank($arguments);
+      return $self->{rankcmd}->rank($arguments);
     }
 
     default {
@@ -2044,6 +2044,7 @@ sub showfinalscore {
         if ($i == 4) {
           $mentions = "Honorable mentions: $mentions";
         }
+        $self->{stats}->update_player_data($player_id, $player_data);
         $i--;
         next;
       } elsif ($i == 3) {
