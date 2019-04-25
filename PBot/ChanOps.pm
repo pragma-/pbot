@@ -67,7 +67,9 @@ sub initialize {
 sub can_gain_ops {
   my ($self, $channel) = @_;
   $channel = lc $channel;
-  return exists $self->{pbot}->{channels}->{channels}->hash->{$channel} && $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop};
+  return exists $self->{pbot}->{channels}->{channels}->hash->{$channel}
+  && $self->{pbot}->{channels}->{channels}->hash->{$channel}{chanop}
+  && $self->{pbot}->{channels}->{channels}->hash->{$channel}{enabled};
 }
 
 sub gain_ops {
@@ -464,9 +466,15 @@ sub check_opped_timeouts {
 
   foreach my $channel (keys %{ $self->{op_requested} }) {
     if ($now - $self->{op_requested}->{$channel} > 60 * 5) {
-      $self->{pbot}->{logger}->log("5 minutes since OP request for $channel and no OP yet; trying again ...\n");
-      delete $self->{op_requested}->{$channel};
-      $self->gain_ops($channel);
+      if (exists $self->{pbot}->{channels}->{channels}->hash->{$channel}
+          and $self->{pbot}->{channels}->{channels}->hash->{$channel}{enabled}) {
+        $self->{pbot}->{logger}->log("5 minutes since OP request for $channel and no OP yet; trying again ...\n");
+        delete $self->{op_requested}->{$channel};
+        $self->gain_ops($channel);
+      } else {
+        $self->{pbot}->{logger}->log("Disregarding OP request for $channel (channel is disabled)\n");
+        delete $self->{op_requested}->{$channel};
+      }
     }
   }
 }
