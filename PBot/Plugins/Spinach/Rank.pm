@@ -45,6 +45,14 @@ sub print_generic {
   return "$player->{nick}: $player->{$key}";
 }
 
+sub print_avg_score {
+  my ($self, $player) = @_;
+  return undef if $player->{games_played} == 0;
+  my $result = int $player->{avg_score};
+  return "$player->{nick}: $result";
+}
+
+
 sub sort_bad_lies {
   my ($self) = @_;
   if ($self->{rank_direction} eq '+') {
@@ -85,7 +93,7 @@ sub rank {
   my %ranks = (
     highscore     => { sort => sub { $self->sort_generic('high_score', @_) },        print => sub { $self->print_generic('high_score', @_) },       title => 'high score' },
     lowscore      => { sort => sub { $self->sort_generic('low_score', @_) },         print => sub { $self->print_generic('low_score', @_) },        title => 'low score' },
-    avgscore      => { sort => sub { $self->sort_generic('avg_score', @_) },         print => sub { $self->print_generic('avg_score', @_) },        title => 'average score' },
+    avgscore      => { sort => sub { $self->sort_generic('avg_score', @_) },         print => sub { $self->print_avg_score(@_) },                   title => 'average score' },
     goodlies      => { sort => sub { $self->sort_generic('good_lies', @_) },         print => sub { $self->print_generic('good_lies', @_) },        title => 'good lies' },
     badlies       => { sort => sub { $self->sort_bad_lies(@_) },                     print => sub { $self->print_bad_lies(@_) },                    title => 'bad lies' }, 
     first         => { sort => sub { $self->sort_generic('times_first', @_) },       print => sub { $self->print_generic('times_first', @_) },      title => 'first place' },
