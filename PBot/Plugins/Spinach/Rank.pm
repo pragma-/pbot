@@ -13,6 +13,7 @@ use FindBin;
 use lib "$FindBin::RealBin/../../..";
 
 use PBot::Plugins::Spinach::Stats;
+use Math::Expression::Evaluator;
 
 sub new {
   Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
@@ -87,6 +88,91 @@ sub print_mentions {
   return "$player->{nick}: $result";
 }
 
+sub sort_expr {
+  my ($self) = @_;
+
+  my $result = eval {
+    my $result_a = $self->{expr}->val({
+        highscore   => $a->{high_score},
+        lowscore    => $a->{low_score},
+        avgscore    => $a->{avg_score},
+        goodlies    => $a->{good_lies},
+        badlies     => $a->{questions_played} - $a->{good_lies},
+        first       => $a->{times_first},
+        second      => $a->{times_second},
+        third       => $a->{times_third},
+        mentions    => $a->{games_played} - $a->{times_first} - $a->{times_second} - $a->{times_third},
+        games       => $a->{games_played},
+        questions   => $a->{questions_played},
+        goodguesses => $a->{good_guesses},
+        badguesses  => $a->{bad_guesses},
+        deceptions  => $a->{players_deceived}
+      });
+
+    my $result_b = $self->{expr}->val({
+        highscore   => $b->{high_score},
+        lowscore    => $b->{low_score},
+        avgscore    => $b->{avg_score},
+        goodlies    => $b->{good_lies},
+        badlies     => $b->{questions_played} - $b->{good_lies},
+        first       => $b->{times_first},
+        second      => $b->{times_second},
+        third       => $b->{times_third},
+        mentions    => $b->{games_played} - $b->{times_first} - $b->{times_second} - $b->{times_third},
+        games       => $b->{games_played},
+        questions   => $b->{questions_played},
+        goodguesses => $b->{good_guesses},
+        badguesses  => $b->{bad_guesses},
+        deceptions  => $b->{players_deceived}
+      });
+
+    if ($self->{rank_direction} eq '+') {
+      return $result_b <=> $result_a;
+    } else {
+      return $result_a <=> $result_b;
+    }
+  };
+
+  if ($@) {
+    $self->{pbot}->{logger}->log("expr sort error: $@\n");
+    return 0;
+  }
+
+  return $result;
+}
+
+sub print_expr {
+  my ($self, $player) = @_;
+
+  return undef if $player->{games_played} == 0;
+
+  my $result = eval {
+    $self->{expr}->val({
+        highscore   => $player->{high_score},
+        lowscore    => $player->{low_score},
+        avgscore    => $player->{avg_score},
+        goodlies    => $player->{good_lies},
+        badlies     => $player->{questions_played} - $player->{good_lies},
+        first       => $player->{times_first},
+        second      => $player->{times_second},
+        third       => $player->{times_third},
+        mentions    => $player->{games_played} - $player->{times_first} - $player->{times_second} - $player->{times_third},
+        games       => $player->{games_played},
+        questions   => $player->{questions_played},
+        goodguesses => $player->{good_guesses},
+        badguesses  => $player->{bad_guesses},
+        deceptions  => $player->{players_deceived}
+      });
+  };
+
+  if ($@) {
+    $self->{pbot}->{logger}->log("Error in expr print: $@\n");
+    return undef;
+  }
+
+  return "$player->{nick}: $result";
+}
+
 sub rank {
   my ($self, $arguments) = @_;
 
@@ -105,9 +191,10 @@ sub rank {
     goodguesses   => { sort => sub { $self->sort_generic('good_guesses', @_) },      print => sub { $self->print_generic('good_guesses', @_) },     title => 'good guesses' },
     badguesses    => { sort => sub { $self->sort_generic('bad_guesses', @_) },       print => sub { $self->print_generic('bad_guesses', @_) },      title => 'bad guesses' },
     deceptions    => { sort => sub { $self->sort_generic('players_deceived', @_) },  print => sub { $self->print_generic('players_deceived', @_) }, title => 'players deceived' },
+    expr          => { sort => sub { $self->sort_expr(@_) },                         print => sub { $self->print_expr(@_) },                        title => 'expr' },
   );
 
-  my @order = qw/highscore lowscore avgscore first second third mentions games questions goodlies badlies deceptions goodguesses badguesses/;
+  my @order = qw/highscore lowscore avgscore first second third mentions games questions goodlies badlies deceptions goodguesses badguesses expr/;
 
   if (not $arguments) {
     my $result = "Usage: rank [-]<keyword> [offset] or rank [-]<nick>; available keywords: ";
@@ -130,6 +217,15 @@ sub rank {
     $offset = $1;
   }
 
+  my $opt_arg;
+  if ($arguments =~ /^expr/) {
+    if ($arguments =~ s/^expr (.+)$/expr/) {
+      $opt_arg = $1;
+    } else {
+      return "Usage: spinach rank expr <expression>";
+    }
+  }
+
   if (not exists $ranks{$arguments}) {
     $self->{stats}->begin;
     my $player_id = $self->{stats}->get_player_id($arguments, $self->{channel}, 1);
@@ -144,6 +240,7 @@ sub rank {
     my @rankings;
 
     foreach my $key (@order) {
+      next if $key eq 'expr';
       my $sort_method = $ranks{$key}->{sort};
       @$players = sort $sort_method @$players;
 
@@ -185,6 +282,16 @@ sub rank {
   $self->{stats}->begin;
   my $players = $self->{stats}->get_all_players($self->{channel});
 
+  if ($arguments eq 'expr') {
+    $self->{expr} = eval { Math::Expression::Evaluator->new($opt_arg) };
+    if ($@) {
+      my $error = $@;
+      $error =~ s/ at .*//ms;
+      return "Bad expression: $error";
+    }
+    $self->{expr}->optimize;
+  }
+
   my $sort_method = $ranks{$arguments}->{sort};
   @$players = sort $sort_method @$players;
 
@@ -192,7 +299,9 @@ sub rank {
   my $rank = 0;
   my $last_value = -1;
   foreach my $player (@$players) {
-    my $entry = $ranks{$arguments}->{print}->($player);
+    my $entry;
+    $entry  = $ranks{$arguments}->{print}->($player);
+
     if (defined $entry) {
       my ($value) = $entry =~ /[^:]+:\s+(.*)/;
       $rank++ if $value ne $last_value;
