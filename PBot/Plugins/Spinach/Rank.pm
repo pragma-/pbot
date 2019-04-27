@@ -299,9 +299,7 @@ sub rank {
   my $rank = 0;
   my $last_value = -1;
   foreach my $player (@$players) {
-    my $entry;
-    $entry  = $ranks{$arguments}->{print}->($player);
-
+    my $entry = $ranks{$arguments}->{print}->($player);
     if (defined $entry) {
       my ($value) = $entry =~ /[^:]+:\s+(.*)/;
       $rank++ if $value ne $last_value;
