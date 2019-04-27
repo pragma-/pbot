@@ -1367,9 +1367,10 @@ sub commify {
 sub normalize_text {
   my ($self, $text) = @_;
 
-  $text=~ s/&/ AND /g;
   $text =~ s/^\s+|\s+$//g;
   $text =~ s/\s+/ /g;
+  $text =~ s/&/ AND /g;
+  $text =~ s/^(the|a|an) //i;
 
   $text = lc substr($text, 0, 80);
 
@@ -2028,6 +2029,7 @@ sub showfinalscore {
       $player_data = $self->{stats}->get_player_data($player_id);
 
       $player_data->{games_played}++;
+      $player_data->{avg_score} *= $player_data->{games_played} - 1;
       $player_data->{avg_score} += $player->{score};
       $player_data->{avg_score} /= $player_data->{games_played};
       $player_data->{low_score} = $player->{score} if $player_data->{low_score} == 0;
