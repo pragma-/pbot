@@ -100,7 +100,7 @@ sub execute {
       next;
     }
 
-    if($line =~ m/^Reading symbols from.*done\.$/) {
+    if($line =~ m/^Reading symbols from/) {
       gdb $in, "break gdb\n";
 
       gdb $in, "list main,9001\n";
