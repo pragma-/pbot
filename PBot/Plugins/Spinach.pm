@@ -841,6 +841,11 @@ sub spinach_cmd {
       if (not defined $index) {
         return "Usage: spinach set <metadata> [key [value]]";
       }
+
+      if (lc $index eq 'settings' and $key and lc $key eq 'stats' and defined $value and $self->{current_state} ne 'nogame') {
+        return "Spinach stats setting cannot be modified while a game is in progress.";
+      }
+
       return $self->{metadata}->set($index, $key, $value);
     }
 
@@ -850,6 +855,11 @@ sub spinach_cmd {
       if (not defined $index or not defined $key) {
         return "Usage: spinach unset <metadata> <key>";
       }
+
+      if (lc $index eq 'settings' and lc $key eq 'stats' and $self->{current_state} ne 'nogame') {
+        return "Spinach stats setting cannot be modified while a game is in progress.";
+      }
+
       return $self->{metadata}->unset($index, $key);
     }
 
@@ -1550,7 +1560,8 @@ sub choosecategory {
     if (exists $state->{random_category} or $self->{metadata}->{hash}->{settings}->{category_autopick}) {
       delete $state->{random_category};
       my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 2)];
-      $self->send_message($self->{channel}, "Category: $category!");
+      my $questions = scalar keys %{ $self->{categories}{$category} };
+      $self->send_message($self->{channel}, "Category: $category! ($questions questions)");
       $state->{current_category} = $category;
       return 'next';
     }
@@ -1565,13 +1576,20 @@ sub choosecategory {
     }
 
     my $name = $state->{players}->[$state->{current_player}]->{name};
-    my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
+    my $warning;
+    if ($state->{counter} == $state->{max_count}) {
+      $warning = $color{red};
+    } elsif ($state->{counter} == $state->{max_count} - 1) {
+      $warning = $color{yellow};
+    } else {
+      $warning = '';
+    }
 
     my $remaining = 15 * $state->{max_count};
     $remaining -= 15 * ($state->{counter} - 1);
     $remaining = "(" . (concise duration $remaining) . " remaining)";
 
-    $self->send_message($self->{channel}, "$name: $red$remaining Choose a category via `/msg me c <number>`:$color{reset}");
+    $self->send_message($self->{channel}, "$name: $warning$remaining Choose a category via `/msg me c <number>`:$color{reset}");
     $self->send_message($self->{channel}, "$state->{categories_text}");
     return 'wait';
   }
@@ -1712,13 +1730,21 @@ sub getlies {
     }
 
     my $players = join ', ', @nolies;
-    my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
+
+    my $warning;
+    if ($state->{counter} == $state->{max_count}) {
+      $warning = $color{red};
+    } elsif ($state->{counter} == $state->{max_count} - 1) {
+      $warning = $color{yellow};
+    } else {
+      $warning = '';
+    }
 
     my $remaining = 15 * $state->{max_count};
     $remaining -= 15 * ($state->{counter} - 1);
     $remaining = "(" . (concise duration $remaining) . " remaining)";
 
-    $self->send_message($self->{channel}, "$players: $red$remaining Submit your lie now via `/msg me lie <your lie>`!");
+    $self->send_message($self->{channel}, "$players: $warning$remaining Submit your lie now via `/msg me lie <your lie>`!");
   }
 
   return 'wait';
@@ -1816,13 +1842,21 @@ sub findtruth {
     }
 
     my $players = join ', ', @notruth;
-    my $red = $state->{counter} == $state->{max_count} ? $color{red} : '';
+
+    my $warning;
+    if ($state->{counter} == $state->{max_count}) {
+      $warning = $color{red};
+    } elsif ($state->{counter} == $state->{max_count} - 1) {
+      $warning = $color{yellow};
+    } else {
+      $warning = '';
+    }
 
     my $remaining = 15 * $state->{max_count};
     $remaining -= 15 * ($state->{counter} - 1);
     $remaining = "(" . (concise duration $remaining) . " remaining)";
 
-    $self->send_message($self->{channel}, "$players: $red$remaining Find the truth now via `/msg me c <number>`!$color{reset}");
+    $self->send_message($self->{channel}, "$players: $warning$remaining Find the truth now via `/msg me c <number>`!$color{reset}");
     $self->send_message($self->{channel}, "$state->{current_choices_text}");
   }
 
@@ -1861,10 +1895,12 @@ sub showlies {
       last if @liars;
 
       if ($player->{truth} ne $state->{correct_answer}) {
-        my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
-        my $player_data = $self->{stats}->get_player_data($player_id);
-        $player_data->{bad_guesses}++;
-        $self->{stats}->update_player_data($player_id, $player_data);
+        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+          my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
+          my $player_data = $self->{stats}->get_player_data($player_id);
+          $player_data->{bad_guesses}++;
+          $self->{stats}->update_player_data($player_id, $player_data);
+        }
 
         my $points = $state->{lie_points} * 0.25;
         $player->{score} -= $points;
@@ -1886,10 +1922,12 @@ sub showlies {
       my $comma = '';
 
       foreach my $liar (@liars) {
-        my $player_id = $self->{stats}->get_player_id($liar->{name}, $self->{channel});
-        my $player_data = $self->{stats}->get_player_data($player_id);
-        $player_data->{players_deceived}++;
-        $self->{stats}->update_player_data($player_id, $player_data);
+        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+          my $player_id = $self->{stats}->get_player_id($liar->{name}, $self->{channel});
+          my $player_data = $self->{stats}->get_player_data($player_id);
+          $player_data->{players_deceived}++;
+          $self->{stats}->update_player_data($player_id, $player_data);
+        }
 
         $liars_text .= "$comma$liar->{name}'s";
         $liars_no_apostrophe .= "$comma$liar->{name}";
@@ -1898,10 +1936,12 @@ sub showlies {
         $liar->{good_lie} = 1;
       }
 
-      my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
-      my $player_data = $self->{stats}->get_player_data($player_id);
-      $player_data->{bad_guesses}++;
-      $self->{stats}->update_player_data($player_id, $player_data);
+      if ($self->{metadata}->{hash}->{settings}->{stats}) {
+        my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
+        my $player_data = $self->{stats}->get_player_data($player_id);
+        $player_data->{bad_guesses}++;
+        $self->{stats}->update_player_data($player_id, $player_data);
+      }
 
       $self->send_message($self->{channel}, "$player->{name} fell for $liars_text lie: \"$lie\". $liars_no_apostrophe $gains +$state->{lie_points} points!");
       $player->{deceived} = $lie;
@@ -1932,19 +1972,25 @@ sub showtruth {
     my $comma = '';
     my $count = 0;
     foreach my $player (@{$state->{players}}) {
-      $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
-      $player_data = $self->{stats}->get_player_data($player_id);
+      if ($self->{metadata}->{hash}->{settings}->{stats}) {
+        $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
+        $player_data = $self->{stats}->get_player_data($player_id);
 
-      $player_data->{questions_played}++;
+        $player_data->{questions_played}++;
+      }
 
       if (exists $player->{deceived}) {
-        $self->{stats}->update_player_data($player_id, $player_data);
+        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+          $self->{stats}->update_player_data($player_id, $player_data);
+        }
         next;
       }
 
       if (exists $player->{truth} and $player->{truth} eq $state->{correct_answer}) {
-        $player_data->{good_guesses}++;
-        $self->{stats}->update_player_data($player_id, $player_data);
+        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+          $player_data->{good_guesses}++;
+          $self->{stats}->update_player_data($player_id, $player_data);
+        }
         $count++;
         $players .= "$comma$player->{name}";
         $comma = ', ';
@@ -1978,10 +2024,12 @@ sub reveallies {
       $comma = '; ';
 
       if ($player->{good_lie}) {
-        my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
-        my $player_data = $self->{stats}->get_player_data($player_id);
-        $player_data->{good_lies}++;
-        $self->{stats}->update_player_data($player_id, $player_data);
+        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+          my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
+          my $player_data = $self->{stats}->get_player_data($player_id);
+          $player_data->{good_lies}++;
+          $self->{stats}->update_player_data($player_id, $player_data);
+        }
       }
     }
 
@@ -2025,19 +2073,21 @@ sub showfinalscore {
     my $i = @{$state->{players}};
     $state->{finalscores} = [];
     foreach my $player (sort { $a->{score} <=> $b->{score} } @{$state->{players}}) {
-      $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
-      $player_data = $self->{stats}->get_player_data($player_id);
+      if ($self->{metadata}->{hash}->{settings}->{stats}) {
+        $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
+        $player_data = $self->{stats}->get_player_data($player_id);
 
-      $player_data->{games_played}++;
-      $player_data->{avg_score} *= $player_data->{games_played} - 1;
-      $player_data->{avg_score} += $player->{score};
-      $player_data->{avg_score} /= $player_data->{games_played};
-      $player_data->{low_score} = $player->{score} if $player_data->{low_score} == 0;
+        $player_data->{games_played}++;
+        $player_data->{avg_score} *= $player_data->{games_played} - 1;
+        $player_data->{avg_score} += $player->{score};
+        $player_data->{avg_score} /= $player_data->{games_played};
+        $player_data->{low_score} = $player->{score} if $player_data->{low_score} == 0;
 
-      if ($player->{score} > $player_data->{high_score}) {
-        $player_data->{high_score} = $player->{score};
-      } elsif ($player->{score} < $player_data->{low_score}) {
-        $player_data->{low_score} = $player->{score};
+        if ($player->{score} > $player_data->{high_score}) {
+          $player_data->{high_score} = $player->{score};
+        } elsif ($player->{score} < $player_data->{low_score}) {
+          $player_data->{low_score} = $player->{score};
+        }
       }
 
       if ($i >= 4) {
@@ -2046,7 +2096,11 @@ sub showfinalscore {
         if ($i == 4) {
           $mentions = "Honorable mentions: $mentions";
         }
-        $self->{stats}->update_player_data($player_id, $player_data);
+
+        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+          $self->{stats}->update_player_data($player_id, $player_data);
+        }
+
         $i--;
         next;
       } elsif ($i == 3) {
@@ -2060,7 +2114,10 @@ sub showfinalscore {
         $text = sprintf("%15s%-13s%7s", "WINNER: ", $player->{name}, $self->commify($player->{score}));
       }
 
-      $self->{stats}->update_player_data($player_id, $player_data);
+      if ($self->{metadata}->{hash}->{settings}->{stats}) {
+        $self->{stats}->update_player_data($player_id, $player_data);
+      }
+
       push @{$state->{finalscores}}, $text;
       $i--;
     }
@@ -2178,8 +2235,10 @@ sub getplayers {
 
 sub round1 {
   my ($self, $state) = @_;
-  $self->{stats}->begin;
-  $self->{stats_running} = 1;
+  if ($self->{metadata}->{hash}->{settings}->{stats}) {
+    $self->{stats}->begin;
+    $self->{stats_running} = 1;
+  }
   $state->{truth_points} = 500;
   $state->{lie_points} = 1000;
   $state->{my_lie_points} = $state->{lie_points} * 0.25;
