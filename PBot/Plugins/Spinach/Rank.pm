@@ -319,7 +319,11 @@ sub rank {
       $result = "No rankings available for $self->{channel} yet.\n";
     }
   } else {
-    $result = "Rankings for $ranks{$arguments}->{title}: ";
+    if ($arguments eq 'expr') {
+      $result = "Rankings for $opt_arg: ";
+    } else {
+      $result = "Rankings for $ranks{$arguments}->{title}: ";
+    }
     $result .= join ', ', @ranking;
   }
 
