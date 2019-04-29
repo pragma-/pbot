@@ -25,7 +25,7 @@ sub nickometer ($) {
 
   # Deal with special cases (precede with \ to prevent de-k3wlt0k)
   my %special_cost = (
-		      '__'			=> 200,
+		      '_'			=> 50,
 		      '69'			=> 500,
 		      'dea?th'			=> 500,
 		      'dark'			=> 400,
@@ -60,6 +60,10 @@ sub nickometer ($) {
     while($nick =~ /$special_pattern/ig) {
       &punish($special_cost{$special}, "matched special case /$special_pattern/")
     }
+  }
+
+  if ($_ =~ m/^.$/) {
+    &punish(1000, "single letter nick");
   }
   
   while(m/[A-Z]([^A-Z]+)\b/g) {
@@ -210,6 +214,14 @@ sub punish ($$) {
 }
 
 my $nick = $ARGV[0];
+
+if ($nick =~ s/ verbose$//) {
+  $verbose = 1;
+}
+
+if ($ARGV[1] and $ARGV[1] eq 'verbose') {
+  $verbose = 1;
+}
 
 if(not defined $nick) {
   print "Usage: nickometer <nick>\n";
