@@ -953,7 +953,12 @@ sub handle_action {
   my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
 
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
-    my $kw = length $self->{factoids}->hash->{$channel}->{$stuff->{root_keyword}}->{keyword_override} ? $self->{factoids}->hash->{$channel}->{$stuff->{root_keyword}}->{keyword_override} : $stuff->{root_keyword};
+    my ($root_channel, $root_keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{root_keyword}, $stuff->{arguments}, 1);
+    if (not defined $root_channel or not defined $root_keyword) {
+      $self->{pbot}->{logger}->log("Could not find root channel/keyword.\n");
+      return "/me trips over its feet.";
+    }
+    my $kw = length $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} ? $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} : $stuff->{root_keyword};
     $kw = $stuff->{keyword_override} if length $stuff->{keyword_override};
     $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $kw, $action);
   }
@@ -1011,7 +1016,12 @@ sub handle_action {
   }
 
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
-    my $kw = length $self->{factoids}->hash->{$channel}->{$stuff->{root_keyword}}->{keyword_override} ? $self->{factoids}->hash->{$channel}->{$stuff->{root_keyword}}->{keyword_override} : $stuff->{root_keyword};
+    my ($root_channel, $root_keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{root_keyword}, $stuff->{arguments}, 1);
+    if (not defined $root_channel or not defined $root_keyword) {
+      $self->{pbot}->{logger}->log("Could not find root channel/keyword.\n");
+      return "/me trips over its feet.";
+    }
+    my $kw = length $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} ? $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} : $stuff->{root_keyword};
     $kw = $stuff->{keyword_override} if length $stuff->{keyword_override};
     $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $kw, $action);
     $action = $self->expand_action_arguments($action, $stuff->{arguments}, $stuff->{nick});
