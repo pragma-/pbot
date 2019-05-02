@@ -599,7 +599,7 @@ sub spinach_cmd {
           $votes_needed = "Skipping...";
         }
 
-        return "/msg $self->{channel} $color{red}$nick has voted to skip this category and let the next person pick a new category! $color{reset}$votes_needed";
+        return "/msg $self->{channel} $color{red}$nick has voted to skip this category! $color{reset}$votes_needed";
       } else {
         return "$nick: This command can be used only during the \"submit lies\" stage.";
       }
@@ -1374,13 +1374,31 @@ sub commify {
   return scalar reverse $text;
 }
 
+sub normalize_question {
+  my ($self, $text) = @_;
+
+  my @words = split / /, $text;
+  my $uc = 0;
+  foreach my $word (@words) {
+    if ($word =~ m/^[A-Z]/) {
+      $uc++;
+    }
+  }
+
+  if ($uc >= @words * .8) {
+    $text = ucfirst lc $text;
+  }
+
+  return $text;
+}
+
 sub normalize_text {
   my ($self, $text) = @_;
 
   $text =~ s/^\s+|\s+$//g;
   $text =~ s/\s+/ /g;
-  $text =~ s/&/ AND /g;
   $text =~ s/^(the|a|an) //i;
+  $text =~ s/&/ AND /g;
 
   $text = lc substr($text, 0, 80);
 
@@ -1629,6 +1647,7 @@ sub getnewquestion {
     }
 
     $state->{current_question} = $self->{categories}{$state->{current_category}}{$questions[rand @questions]};
+    $state->{current_question}->{question} = $self->normalize_question($state->{current_question}->{question});
     $state->{current_question}->{answer} = $self->normalize_text($state->{current_question}->{answer});
 
     my @alts = map { $self->normalize_text($_) } @{$state->{current_question}->{alternativeSpellings}};
