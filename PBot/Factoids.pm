@@ -800,7 +800,7 @@ sub interpreter {
 
   # search for factoid against global channel and current channel (from unless ref_from is defined)
   my $original_keyword = $stuff->{keyword};
-  #$self->{pbot}->{logger}->log("calling find_factoid in Factoids.pm, interpreter() to search for factoid against global/current\n");
+  # $self->{pbot}->{logger}->log("calling find_factoid in Factoids.pm, interpreter()\n");
   my ($channel, $keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{keyword}, $stuff->{arguments}, 1);
 
   if (not $stuff->{ref_from} or $stuff->{ref_from} eq '.*' or $stuff->{ref_from} eq $stuff->{from}) {
@@ -808,7 +808,7 @@ sub interpreter {
   }
 
   if (defined $channel and not $channel eq '.*' and not lc $channel eq $stuff->{from}) {
-    $stuff->{ref_from} = "[$channel] ";
+    $stuff->{ref_from} = $channel;
   }
 
   $stuff->{arguments} = "" if not defined $stuff->{arguments};
@@ -837,10 +837,12 @@ sub interpreter {
       }
     }
 
+    my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
+
     # if multiple channels have this keyword, then ask user to disambiguate
     if ($found > 1) {
       return undef if $stuff->{referenced};
-      return $stuff->{ref_from} . "Ambiguous keyword '$original_keyword' exists in multiple channels (use 'fact <channel> <keyword>' to choose one): $chans";
+      return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple channels (use 'fact <channel> <keyword>' to choose one): $chans";
     } 
     # if there's just one other channel that has this keyword, trigger that instance
     elsif ($found == 1) {
@@ -878,7 +880,8 @@ sub interpreter {
       return undef if $matches eq 'none';
       return undef if $stuff->{referenced};
 
-      return $stuff->{ref_from} . "No such factoid '$original_keyword'; did you mean $matches?";
+      my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
+      return $ref_from . "No such factoid '$original_keyword'; did you mean $matches?";
     }
   }
 
@@ -895,7 +898,8 @@ sub interpreter {
         my $ratelimit = $self->{pbot}->{registry}->get_value($stuff->{from}, 'ratelimit_override');
         $ratelimit = $self->{factoids}->hash->{$channel}->{$keyword}->{rate_limit} if not defined $ratelimit;
         if (gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on} < $ratelimit) {
-          return "/msg $stuff->{nick} $stuff->{ref_from}'$keyword' is rate-limited; try again in " . duration ($ratelimit - int(gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on})) . "." unless $self->{pbot}->{admins}->loggedin($channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+          my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
+          return "/msg $stuff->{nick} $ref_from'$keyword' is rate-limited; try again in " . duration ($ratelimit - int(gettimeofday - $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on})) . "." unless $self->{pbot}->{admins}->loggedin($channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
         }
       }
     }
@@ -940,6 +944,8 @@ sub handle_action {
   my ($channel, $keyword) = ($stuff->{channel}, $stuff->{trigger});
   my $keyword_text = $keyword =~ / / ? "\"$keyword\"" : $keyword;
 
+  my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
+
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
     $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $action);
   }
@@ -976,7 +982,7 @@ sub handle_action {
   # Check if it's an alias
   if ($action =~ /^\/call\s+(.*)$/) {
     my $command = $1;
-    $command .= " $stuff->{original_arguments}" if length $stuff->{original_arguments};
+    $command .= " $stuff->{original_arguments}" if length $stuff->{original_arguments} and not $stuff->{aliased};
 
     $stuff->{command} = $command;
     $stuff->{aliased} = 1;
@@ -989,7 +995,7 @@ sub handle_action {
 
   if ($self->{factoids}->hash->{$channel}->{$keyword}->{enabled} == 0) {
     $self->{pbot}->{logger}->log("$keyword_text disabled.\n");
-    return "/msg $stuff->{nick} $stuff->{ref_from}$keyword_text is currently disabled.";
+    return "/msg $stuff->{nick} ${ref_from}$keyword_text is currently disabled.";
   }
 
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
@@ -1009,7 +1015,7 @@ sub handle_action {
 
     my $result = $self->{factoidmodulelauncher}->execute_module($stuff);
     if (length $result) {
-      return $stuff->{ref_from} . $result;
+      return $ref_from . $result;
     } else {
       return "";
     }
@@ -1024,12 +1030,12 @@ sub handle_action {
       }
     }
 
-    if ($stuff->{ref_from}) {
-      if ($action =~ s/^\/say\s+/$stuff->{ref_from}/i || $action =~ s/^\/me\s+(.*)/\/me $1 $stuff->{ref_from}/i
-        || $action =~ s/^\/msg\s+([^ ]+)/\/msg $1 $stuff->{ref_from}/i) {
+    if ($ref_from) {
+      if ($action =~ s/^\/say\s+/$ref_from/i || $action =~ s/^\/me\s+(.*)/\/me $1 $ref_from/i
+        || $action =~ s/^\/msg\s+([^ ]+)/\/msg $1 $ref_from/i) {
         return $action;
       } else {
-        return $stuff->{ref_from} . "$keyword_text is $action";
+        return $ref_from . "$keyword_text is $action";
       }
     } else {
       if ($action =~ m/^\/(?:say|me|msg)/i) {
@@ -1086,13 +1092,13 @@ sub handle_action {
     }
 
     if (length $result) {
-      return $stuff->{ref_from} . $result;
+      return $ref_from . $result;
     } else {
       return "";
     }
   } else {
     $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}): Unknown command type for '$keyword_text'\n"); 
-    return "/me blinks." . " $stuff->{ref_from}";
+    return "/me blinks." . " $ref_from";
   }
 }
 
