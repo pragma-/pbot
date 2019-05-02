@@ -280,6 +280,12 @@ sub find_factoid {
 
   $self->{pbot}->{logger}->log("from: $from\n") if $debug;
 
+  if ($keyword =~ /^([^ ]+) (.*)/) {
+    $self->{pbot}->{logger}->log("chopping keyword\n");
+    $keyword = $1;
+    $arguments = $2;
+  }
+
   my @result = eval {
     my @results;
     for (my $depth = 0; $depth < 5; $depth++) {
@@ -947,7 +953,9 @@ sub handle_action {
   my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
 
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
-    $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $action);
+    my $kw = length $self->{factoids}->hash->{$channel}->{$stuff->{root_keyword}}->{keyword_override} ? $self->{factoids}->hash->{$channel}->{$stuff->{root_keyword}}->{keyword_override} : $stuff->{root_keyword};
+    $kw = $stuff->{keyword_override} if length $stuff->{keyword_override};
+    $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $kw, $action);
   }
 
   if (length $stuff->{arguments}) {
@@ -984,6 +992,10 @@ sub handle_action {
     my $command = $1;
     $command .= " $stuff->{original_arguments}" if length $stuff->{original_arguments} and not $stuff->{aliased};
 
+    if ($command =~ s/\s*--keyword-override=([^ ]+)\s*//) {
+      $stuff->{keyword_override} = $1;
+    }
+
     $stuff->{command} = $command;
     $stuff->{aliased} = 1;
 
@@ -999,7 +1011,9 @@ sub handle_action {
   }
 
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
-    $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $action);
+    my $kw = length $self->{factoids}->hash->{$channel}->{$stuff->{root_keyword}}->{keyword_override} ? $self->{factoids}->hash->{$channel}->{$stuff->{root_keyword}}->{keyword_override} : $stuff->{root_keyword};
+    $kw = $stuff->{keyword_override} if length $stuff->{keyword_override};
+    $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $kw, $action);
     $action = $self->expand_action_arguments($action, $stuff->{arguments}, $stuff->{nick});
   }
 
