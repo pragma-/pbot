@@ -128,6 +128,11 @@ sub load_questions {
     foreach my $question (@{$self->{questions}->{$key}}) {
       $question->{category} = uc $question->{category};
       $self->{categories}{$question->{category}}{$question->{id}} = $question;
+
+      if (not exists $question->{seen_timestamp}) {
+        $question->{seen_timestamp} = 0;
+      }
+
       $questions++;
     }
   }
@@ -141,6 +146,18 @@ sub load_questions {
 
   $self->{pbot}->{logger}->log("Spinach: Loaded $questions questions in $categories categories.\n");
   return "Loaded $questions questions in $categories categories.";
+}
+
+sub save_questions {
+  my $self = shift;
+  my $json = encode_json $self->{questions};
+  my $filename = exists $self->{loaded_filename} ? $self->{loaded_filename} : $self->{questions_filename};
+  open my $fh, '>', $filename or do {
+    $self->{pbot}->{logger}->log("Failed to open Spinach file $filename: $!\n");
+    return;
+  };
+  print $fh "$json\n";
+  close $fh;
 }
 
 sub load_stopwords {
@@ -163,7 +180,13 @@ sub load_metadata {
   $self->{metadata}->load;
 
   if (not exists $self->{metadata}->hash->{settings}) {
-    $self->{metadata}->hash->{settings} = {};
+    $self->{metadata}->hash->{settings} = {
+      category_choices => 7,
+      category_autopick => 0,
+      min_players => 2,
+      stats => 1,
+      seen_expiry => 432000
+    };
   }
 }
 
@@ -940,14 +963,7 @@ sub add_new_suggestions {
   }
 
   if ($modified) {
-    my $json = encode_json $self->{questions};
-    my $filename = exists $self->{loaded_filename} ? $self->{loaded_filename} : $self->{questions_filename};
-    open my $fh, '>', $filename or do {
-      $self->{pbot}->{logger}->log("Failed to open Spinach file $filename: $!\n");
-      return;
-    };
-    print $fh "$json\n";
-    close $fh;
+    $self->save_questions;
   }
 }
 
@@ -1536,7 +1552,7 @@ sub choosecategory {
         push @choices, $cat;
       }
 
-      last if @choices == 7;
+      last if @choices == $self->{metadata}->{hash}->{settings}->{category_choices} or @categories < $self->{metadata}->{hash}->{settings}->{category_choices};;
     }
 
     push @choices, 'RANDOM CATEGORY';
@@ -1551,7 +1567,7 @@ sub choosecategory {
       $comma = "; ";
     }
 
-    if ($state->{reroll_category}) {
+    if ($state->{reroll_category} and not $self->{metadata}->{hash}->{settings}->{category_autopick}) {
       $self->send_message($self->{channel}, "$state->{categories_text}");
     }
 
@@ -1631,11 +1647,20 @@ sub getnewquestion {
       @questions = grep { !defined $seen{$_} } @questions;
     }
 
+    @questions = sort { $self->{categories}{$state->{current_category}}{$a}->{seen_timestamp} <=> $self->{categories}{$state->{current_category}}{$b}->{seen_timestamp} } @questions;
+    my $now = time;
+    @questions = grep { $now - $self->{categories}{$state->{current_category}}{$_}->{seen_timestamp} >= $self->{metadata}->{hash}->{settings}->{seen_expiry} } @questions;
+
+    use Data::Dumper;
+    my $dump = Dumper @questions;
+    $self->{pbot}->{logger}->log("questions dump: $dump\n");
+
     if (not @questions) {
       $self->{pbot}->{logger}->log("Zero questions for [$state->{current_category}]!\n");
-      $self->send_message($self->{channel}, "Seen all questions in category $state->{current_category}! Shuffling...");
+      $self->send_message($self->{channel}, "Seen all questions in category $state->{current_category}! Picking new category...");
       delete $state->{seen_questions}->{$state->{current_category}};
       @questions = keys %{$self->{categories}{$state->{current_category}}};
+      $state->{reroll_category} = 1;
     }
 
     $self->{pbot}->{logger}->log("current cat: $state->{current_category}: " . (scalar @questions) . " total questions remaining\n");
@@ -1646,9 +1671,18 @@ sub getnewquestion {
       $self->send_message($self->{channel}, "Rerolling new question from $state->{current_category}: " . $self->commify($count) . " question" . ($count == 1 ? '' : 's') . " remaining.\n");
     }
 
-    $state->{current_question} = $self->{categories}{$state->{current_category}}{$questions[rand @questions]};
+    $state->{current_question} = $self->{categories}{$state->{current_category}}{$questions[0]};
     $state->{current_question}->{question} = $self->normalize_question($state->{current_question}->{question});
     $state->{current_question}->{answer} = $self->normalize_text($state->{current_question}->{answer});
+
+    $state->{current_question}->{seen_timestamp} = time;
+
+    foreach my $q (@{$self->{questions}->{questions}}) {
+      if ($q->{id} == $state->{current_question}->{id}) {
+        $q->{seen_timestamp} = $state->{current_question}->{seen_timestamp};
+        last;
+      }
+    }
 
     my @alts = map { $self->normalize_text($_) } @{$state->{current_question}->{alternativeSpellings}};
     $state->{current_question}->{alternativeSpellings} = \@alts;
@@ -1674,6 +1708,8 @@ sub getnewquestion {
 sub showquestion {
   my ($self, $state) = @_;
 
+  return if $state->{reroll_category};
+
   if (exists $state->{current_question}) {
     $self->send_message($self->{channel}, "$color{green}Current question:$color{reset} " . $self->commify($state->{current_question}->{id}) . ") $state->{current_question}->{question}");
   } else {
@@ -1683,6 +1719,8 @@ sub showquestion {
 
 sub getlies {
   my ($self, $state) = @_;
+
+  return 'skip' if $state->{reroll_category};
 
   my $tock;
   if ($state->{first_tock}) {
@@ -2267,11 +2305,11 @@ sub round1 {
 
 sub round1q1 {
   my ($self, $state) = @_;
-  if ($state->{ticks} % 2 == 0) {
+  if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
     $state->{init} = 1;
     $state->{counter} = 0;
     $state->{max_count} = $self->{choosecategory_max_count};
-    $self->send_message($self->{channel}, "Round 1/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
+    $self->send_message($self->{channel}, "Round 1/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.") unless $state->{reroll_category};
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2346,11 +2384,11 @@ sub r1q1showscore {
 
 sub round1q2 {
   my ($self, $state) = @_;
-  if ($state->{ticks} % 2 == 0) {
+  if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
     $state->{init} = 1;
     $state->{counter} = 0;
     $state->{max_count} = $self->{choosecategory_max_count};
-    $self->send_message($self->{channel}, "Round 1/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
+    $self->send_message($self->{channel}, "Round 1/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.") unless $state->{reroll_category};
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2425,12 +2463,12 @@ sub r1q2showscore {
 
 sub round1q3 {
   my ($self, $state) = @_;
-  if ($state->{ticks} % 2) {
+  if ($state->{ticks} % 2 || $state->{reroll_category}) {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
     $state->{result} = 'wait';
-    $self->send_message($self->{channel}, "Round 1/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
+    $self->send_message($self->{channel}, "Round 1/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.") unless $state->{reroll_category};
   } else {
     $state->{result} = 'next';
   }
@@ -2513,11 +2551,11 @@ sub round2 {
 
 sub round2q1 {
   my ($self, $state) = @_;
-  if ($state->{ticks} % 2 == 0) {
+  if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "Round 2/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
+    $self->send_message($self->{channel}, "Round 2/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.") unless $state->{reroll_category};
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2592,11 +2630,11 @@ sub r2q1showscore {
 
 sub round2q2 {
   my ($self, $state) = @_;
-  if ($state->{ticks} % 2 == 0) {
+  if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "Round 2/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
+    $self->send_message($self->{channel}, "Round 2/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.") unless $state->{reroll_category};
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2671,11 +2709,11 @@ sub r2q2showscore {
 
 sub round2q3 {
   my ($self, $state) = @_;
-  if ($state->{ticks} % 2 == 0) {
+  if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "Round 2/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
+    $self->send_message($self->{channel}, "Round 2/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.") unless $state->{reroll_category};
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2759,11 +2797,11 @@ sub round3 {
 
 sub round3q1 {
   my ($self, $state) = @_;
-  if ($state->{ticks} % 2 == 0) {
+  if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "Round 3/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
+    $self->send_message($self->{channel}, "Round 3/3, question 1/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.") unless $state->{reroll_category};
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2838,11 +2876,11 @@ sub r3q1showscore {
 
 sub round3q2 {
   my ($self, $state) = @_;
-  if ($state->{ticks} % 2 == 0) {
+  if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "Round 3/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
+    $self->send_message($self->{channel}, "Round 3/3, question 2/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.") unless $state->{reroll_category};
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -2917,11 +2955,11 @@ sub r3q2showscore {
 
 sub round3q3 {
   my ($self, $state) = @_;
-  if ($state->{ticks} % 2 == 0) {
+  if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
     $state->{init} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "Round 3/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
+    $self->send_message($self->{channel}, "Round 3/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.") unless $state->{reroll_category};
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -3005,12 +3043,12 @@ sub round4 {
 
 sub round4q1 {
   my ($self, $state) = @_;
-  if ($state->{ticks} % 2 == 0) {
+  if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
     $state->{init} = 1;
     $state->{random_category} = 1;
     $state->{max_count} = $self->{choosecategory_max_count};
     $state->{counter} = 0;
-    $self->send_message($self->{channel}, "FINAL ROUND! FINAL QUESTION! $state->{lie_points} for each lie. $state->{truth_points} for the truth.");
+    $self->send_message($self->{channel}, "FINAL ROUND! FINAL QUESTION! $state->{lie_points} for each lie. $state->{truth_points} for the truth.") unless $state->{reroll_category};
     $state->{result} = 'next';
   } else {
     $state->{result} = 'wait';
@@ -3094,6 +3132,9 @@ sub gameover {
       $player->{ready} = 0;
       $player->{missedinputs} = 0;
     }
+
+    # save updated seen_timestamps
+    $self->save_questions;
 
     $state->{counter} = 0;
     $state->{result} = 'next';
