@@ -351,14 +351,14 @@ sub recall_message {
       }
 
       $recall_history--;
-      $message = $self->{database}->recall_message_by_count($account, $recall_channel, $recall_history, 'recall');
+      $message = $self->{database}->recall_message_by_count($account, $recall_channel, $recall_history, '(?:recall|mock)');
 
       if(not defined $message) {
         return "No message found at index $recall_history in channel $recall_channel.";
       }
     } else {
       # regex history
-      $message = $self->{database}->recall_message_by_text($account, $recall_channel, $recall_history, 'recall');
+      $message = $self->{database}->recall_message_by_text($account, $recall_channel, $recall_history, '(?:recall|mock)');
 
       if(not defined $message) {
         if(defined $account) {
