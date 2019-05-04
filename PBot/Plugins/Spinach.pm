@@ -1651,10 +1651,6 @@ sub getnewquestion {
     my $now = time;
     @questions = grep { $now - $self->{categories}{$state->{current_category}}{$_}->{seen_timestamp} >= $self->{metadata}->{hash}->{settings}->{seen_expiry} } @questions;
 
-    use Data::Dumper;
-    my $dump = Dumper @questions;
-    $self->{pbot}->{logger}->log("questions dump: $dump\n");
-
     if (not @questions) {
       $self->{pbot}->{logger}->log("Zero questions for [$state->{current_category}]!\n");
       $self->send_message($self->{channel}, "Seen all questions in category $state->{current_category}! Picking new category...");
