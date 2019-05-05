@@ -1791,10 +1791,9 @@ sub getlies {
     }
   }
 
-  my $needed = int (@{$state->{players}} / 2) + 1;
-  $needed += @keeps;
-
   if (@rerolls) {
+    my $needed = int (@{$state->{players}} / 2) + 1;
+    $needed += @keeps;
     $needed -= @rerolls;
     if ($needed <= 0) {
       $state->{reroll_question} = 1;
@@ -1804,6 +1803,7 @@ sub getlies {
 
   if (@skips) {
     my $needed = int (@{$state->{players}} / 2) + 1;
+    $needed += @keeps;
     $needed -= @skips;
     return 'skip' if $needed <= 0;
   }
