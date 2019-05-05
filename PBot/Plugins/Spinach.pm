@@ -225,7 +225,7 @@ sub spinach_cmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   $arguments =~ s/^\s+|\s+$//g;
 
-  my $usage = "Usage: spinach join|exit|ready|unready|choose|lie|reroll|skip|score|show|rank|categories|filter|set|unset|kick|abort; for more information about a command: spinach help <command>";
+  my $usage = "Usage: spinach join|exit|ready|unready|choose|lie|reroll|skip|keep|score|show|rank|categories|filter|set|unset|kick|abort; for more information about a command: spinach help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
@@ -254,6 +254,10 @@ sub spinach_cmd {
 
         when ('skip') {
           return "Use `skip` to skip a question and return to the \"choose category\" stage. A majority of the players must agree to skip.";
+        }
+
+        when ('keep') {
+          return "Use `keep` to vote to prevent the current question from being rerolled or skipped.";
         }
 
         when ('abort') {
@@ -558,13 +562,17 @@ sub spinach_cmd {
 
         my $player;
         my $rerolled = 0;
+        my $keep;
         foreach my $i (@{$self->{state_data}->{players}}) {
           if ($i->{id} == $id) {
             $i->{reroll} = 1;
+            delete $i->{keep};
             $rerolled++;
             $player = $i;
           } elsif ($i->{reroll}) {
             $rerolled++;
+          } elsif ($i->{keep}) {
+            $keep++;
           }
         }
 
@@ -574,6 +582,7 @@ sub spinach_cmd {
 
         my $needed = int (@{$self->{state_data}->{players}} / 2) + 1;
         $needed -= $rerolled;
+        $needed += $keep;
 
         my $votes_needed;
         if ($needed == 1) {
@@ -596,13 +605,17 @@ sub spinach_cmd {
 
         my $player;
         my $skipped = 0;
+        my $keep = 0;
         foreach my $i (@{$self->{state_data}->{players}}) {
           if ($i->{id} == $id) {
             $i->{skip} = 1;
+            delete $i->{keep};
             $skipped++;
             $player = $i;
           } elsif ($i->{skip}) {
             $skipped++;
+          } elsif ($i->{keep}) {
+            $keep++;
           }
         }
 
@@ -612,6 +625,7 @@ sub spinach_cmd {
 
         my $needed = int (@{$self->{state_data}->{players}} / 2) + 1;
         $needed -= $skipped;
+        $needed += $keep;
 
         my $votes_needed;
         if ($needed == 1) {
@@ -623,6 +637,31 @@ sub spinach_cmd {
         }
 
         return "/msg $self->{channel} $color{red}$nick has voted to skip this category! $color{reset}$votes_needed";
+      } else {
+        return "$nick: This command can be used only during the \"submit lies\" stage.";
+      }
+    }
+
+    when ('keep') {
+      if ($self->{current_state} =~ /getlies$/) {
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+
+        my $player;
+        foreach my $i (@{$self->{state_data}->{players}}) {
+          if ($i->{id} == $id) {
+            $i->{keep} = 1;
+            delete $i->{skip};
+            delete $i->{reroll};
+            $player = $i;
+            last;
+          }
+        }
+
+        if (not $player) {
+          return "$nick: You are not playing in this game. Use `j` to start playing now!";
+        }
+
+        return "/msg $self->{channel} $color{green}$nick has voted to keep playing the current question!";
       } else {
         return "$nick: This command can be used only during the \"submit lies\" stage.";
       }
@@ -1693,6 +1732,7 @@ sub getnewquestion {
       delete $player->{deceived};
       delete $player->{skip};
       delete $player->{reroll};
+      delete $player->{keep};
     }
     $state->{current_choices_text} = "";
     return 'next';
@@ -1734,26 +1774,31 @@ sub getlies {
 
   return 'next' if not @nolies;
 
+  my @keeps;
   my @rerolls;
+  my @skips;
   foreach my $player (@{$state->{players}}) {
     if ($player->{reroll}) {
       push @rerolls, $player->{name};
     }
+
+    if ($player->{skip}) {
+      push @skips, $player->{name};
+    }
+
+    if ($player->{keep}) {
+      push @keeps, $player->{name};
+    }
   }
 
+  my $needed = int (@{$state->{players}} / 2) + 1;
+  $needed += @keeps;
+
   if (@rerolls) {
-    my $needed = int (@{$state->{players}} / 2) + 1;
     $needed -= @rerolls;
     if ($needed <= 0) {
       $state->{reroll_question} = 1;
       return 'reroll'; 
-    }
-  }
-
-  my @skips;
-  foreach my $player (@{$state->{players}}) {
-    if ($player->{skip}) {
-      push @skips, $player->{name};
     }
   }
 
