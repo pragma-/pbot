@@ -55,7 +55,8 @@ sub initialize {
 
   $self->{channel} = '##spinach';
 
-  $self->{questions_filename}   = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/trivia.json';
+  my $default_file = $self->{pbot}->{registry}->get_value('spinach', 'file') // 'trivia.json';
+  $self->{questions_filename}   = $self->{pbot}->{registry}->get_value('general', 'data_dir') . "/spinach/$default_file";
   $self->{stopwords_filename}   = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/stopwords';
   $self->{metadata_filename}    = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/metadata';
   $self->{stats_filename}       = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/stats.sqlite';
@@ -131,6 +132,10 @@ sub load_questions {
 
       if (not exists $question->{seen_timestamp}) {
         $question->{seen_timestamp} = 0;
+      }
+
+      if (not exists $question->{value}) {
+        $question->{value} = 0;
       }
 
       $questions++;
@@ -805,7 +810,7 @@ sub spinach_cmd {
 
     when ('show') {
       if ($self->{current_state} =~ /(?:getlies|findtruth|showlies)$/) {
-        $self->showquestion($self->{state_data});
+        $self->showquestion($self->{state_data}, 1);
         return;
       }
 
@@ -1512,6 +1517,7 @@ sub normalize_text {
   $text =~ s/([A-Z])\./$1/g;
   $text =~ s/-/ /g;
   $text =~ s/["'?!]//g;
+  $text =~ s/\s+/ /g;
 
   return substr $text, 0, 80;
 }
@@ -1634,7 +1640,7 @@ sub choosecategory {
       delete $state->{random_category};
       my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 2)];
       my $questions = scalar keys %{ $self->{categories}{$category} };
-      $self->send_message($self->{channel}, "Category: $category! ($questions questions)");
+      $self->send_message($self->{channel}, "$color{green}Category:$color{reset} $category! ($questions questions)");
       $state->{current_category} = $category;
       return 'next';
     }
@@ -1690,9 +1696,20 @@ sub getnewquestion {
     my $now = time;
     @questions = grep { $now - $self->{categories}{$state->{current_category}}{$_}->{seen_timestamp} >= $self->{metadata}->{hash}->{settings}->{seen_expiry} } @questions;
 
+    if (exists $self->{metadata}->{hash}->{settings}->{min_difficulty}) {
+      @questions = grep { $self->{categories}{$state->{current_category}}{$_}->{value} >= $self->{metadata}->{hash}->{settings}->{min_difficulty} } @questions;
+    }
+
+    if (exists $self->{metadata}->{hash}->{settings}->{max_difficulty}) {
+      @questions = grep { $self->{categories}{$state->{current_category}}{$_}->{value} <= $self->{metadata}->{hash}->{settings}->{max_difficulty} } @questions;
+    }
+
     if (not @questions) {
+      my $min = $self->{metadata}->{hash}->{settings}->{min_difficulty};
+      my $max = $self->{metadata}->{hash}->{settings}->{max_difficulty};
+      my $expiry = $self->{metadata}->{hash}->{settings}->{seen_expiry};
       $self->{pbot}->{logger}->log("Zero questions for [$state->{current_category}]!\n");
-      $self->send_message($self->{channel}, "Seen all questions in category $state->{current_category}! Picking new category...");
+      $self->send_message($self->{channel}, "No questions available in category $state->{current_category} (min/max difficulty: $min/$max; seen expiry: $expiry)! Pickin new category...");
       delete $state->{seen_questions}->{$state->{current_category}};
       @questions = keys %{$self->{categories}{$state->{current_category}}};
       $state->{reroll_category} = 1;
@@ -1710,14 +1727,7 @@ sub getnewquestion {
     $state->{current_question}->{question} = $self->normalize_question($state->{current_question}->{question});
     $state->{current_question}->{answer} = $self->normalize_text($state->{current_question}->{answer});
 
-    $state->{current_question}->{seen_timestamp} = time;
-
-    foreach my $q (@{$self->{questions}->{questions}}) {
-      if ($q->{id} == $state->{current_question}->{id}) {
-        $q->{seen_timestamp} = $state->{current_question}->{seen_timestamp};
-        last;
-      }
-    }
+    $state->{current_question}->{seen_timestamp} = time unless $state->{reroll_category};
 
     my @alts = map { $self->normalize_text($_) } @{$state->{current_question}->{alternativeSpellings}};
     $state->{current_question}->{alternativeSpellings} = \@alts;
@@ -1742,12 +1752,23 @@ sub getnewquestion {
 }
 
 sub showquestion {
-  my ($self, $state) = @_;
+  my ($self, $state, $show_category) = @_;
 
   return if $state->{reroll_category};
 
   if (exists $state->{current_question}) {
-    $self->send_message($self->{channel}, "$color{green}Current question:$color{reset} " . $self->commify($state->{current_question}->{id}) . ") $state->{current_question}->{question}");
+    my $category = "";
+    my $value = "";
+
+    if ($show_category) {
+      $category = "[$state->{current_category}] ";
+    }
+
+    if ($state->{current_question}->{value}) {
+      $value = "[$state->{current_question}->{value}] ";
+    }
+
+    $self->send_message($self->{channel}, "$color{green}Current question:$color{reset} " . $self->commify($state->{current_question}->{id}) . ") $category$value$state->{current_question}->{question}");
   } else {
     $self->send_message($self->{channel}, "There is no current question.");
   }
@@ -2315,7 +2336,7 @@ sub getplayers {
     if (not @names) {
       $players = 'none';
 
-      if ($state->{counter} >= 2) {
+      if ($state->{counter} >= 0) {
         $self->send_message($self->{channel}, "All players have left the queue. The game has been stopped.");
         $self->{current_state} = 'nogame';
         $self->{result} = 'nogame';
