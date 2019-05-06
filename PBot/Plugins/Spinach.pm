@@ -1709,7 +1709,7 @@ sub getnewquestion {
       my $max = $self->{metadata}->{hash}->{settings}->{max_difficulty};
       my $expiry = $self->{metadata}->{hash}->{settings}->{seen_expiry};
       $self->{pbot}->{logger}->log("Zero questions for [$state->{current_category}]!\n");
-      $self->send_message($self->{channel}, "No questions available in category $state->{current_category} (min/max difficulty: $min/$max; seen expiry: $expiry)! Pickin new category...");
+      $self->send_message($self->{channel}, "No questions available in category $state->{current_category} (min/max difficulty: $min/$max; seen expiry: $expiry)! Picking new category...");
       delete $state->{seen_questions}->{$state->{current_category}};
       @questions = keys %{$self->{categories}{$state->{current_category}}};
       $state->{reroll_category} = 1;
