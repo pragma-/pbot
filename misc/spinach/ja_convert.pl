@@ -12,10 +12,9 @@ my $questions = { questions => [] };
 
 my $debug = 0;
 my $kill_id = 9999999;
-#my $kill_id = 10;
+#$kill_id = 10;
 
 my @files = glob '*game*.html';
-#my @files = glob '*game-1022.html';
 
 my $id = 0;
 
@@ -131,11 +130,13 @@ foreach my $file (@files) {
       $question =~ s/^\s+|\s+$//g;
       $answer =~ s/^\s+|\s+$//g;
 
-      if ($clue_value =~ m/\$(\d+,?\d+)/) {
+      if ($clue_value =~ m/(\d+,?\d+)$/) {
         $clue_value = $1;
-      } elsif ($clue_value =~ m/^(\d+)$/) {
+      } elsif ($clue_value =~ m/(\d+)$/) {
         $clue_value = $1;
       }
+
+      $clue_value =~ s/,//g;
 
       if (not $clue_value) {
         print "Bad clue value.\n";
@@ -150,6 +151,10 @@ foreach my $file (@files) {
       if (@alternates) {
         print "Has alternates: [$answer] ", join (', ', @alternates), "\n";
       }
+
+      # "numify" values for JSON
+      $id += 0;
+      $clue_value += 0;
 
       my $new_question = {
         alternativeSpellings => \@alternates,
