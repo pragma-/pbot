@@ -484,7 +484,13 @@ sub spinach_cmd {
         if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) {
           $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1
         }
-        return "/msg $self->{channel} $nick has left the game!";
+
+        if (not @{$self->{state_data}->{players}}) {
+          $self->{current_state} = 'nogame';
+          return "/msg $self->{channel} $nick has left the game! All players have left. The game has been stopped.";
+        } else {
+          return "/msg $self->{channel} $nick has left the game!";
+        }
       } else {
         return "$nick: But you are not even playing the game.";
       }
@@ -961,7 +967,6 @@ sub player_left {
   for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
     if ($self->{state_data}->{players}->[$i]->{id} == $id) {
       splice @{$self->{state_data}->{players}}, $i--, 1;
-      $self->send_message($self->{channel}, "$nick has left the game!");
       $removed = 1;
     }
   }
@@ -970,7 +975,7 @@ sub player_left {
     if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) {
       $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1
     }
-    return "/msg $self->{channel} $nick has left the game!";
+    $self->send_message($self->{channel}, "$nick has left the game!");
   }
 }
 
