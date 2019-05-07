@@ -1582,22 +1582,41 @@ sub choosecategory {
 
     my $no_infinite_loops = 0;
     while (1) {
-      last if ++$no_infinite_loops > 200;
+      last if ++$no_infinite_loops > 10000;
       my $cat = $categories[rand @categories];
 
-      my $count = keys %{$self->{categories}{$cat}};
-      $self->{pbot}->{logger}->log("random cat: [$cat] $count questions\n");
+      my @questions = keys %{$self->{categories}{$cat}};
 
-      if (not $count) {
-        $self->{pbot}->{logger}->log("no count for random cat!\n");
+      if (not @questions) {
+        $self->{pbot}->{logger}->log("No questions for category $cat\n");
         next;
       }
+
+      if (exists $self->{metadata}->{hash}->{settings}->{min_difficulty}) {
+        @questions = grep { $self->{categories}{$cat}{$_}->{value} >= $self->{metadata}->{hash}->{settings}->{min_difficulty} } @questions;
+      }
+
+      if (exists $self->{metadata}->{hash}->{settings}->{max_difficulty}) {
+        @questions = grep { $self->{categories}{$cat}{$_}->{value} <= $self->{metadata}->{hash}->{settings}->{max_difficulty} } @questions;
+      }
+
+      if (exists $self->{metadata}->{hash}->{settings}->{seen_expiry}) {
+        my $now = time;
+        @questions = grep { $now - $self->{categories}{$cat}{$_}->{seen_timestamp} >= $self->{metadata}->{hash}->{settings}->{seen_expiry} } @questions;
+      }
+
+      next if not @questions;
 
       if (not grep { $_ eq $cat } @choices) {
         push @choices, $cat;
       }
 
       last if @choices == $self->{metadata}->{hash}->{settings}->{category_choices} or @categories < $self->{metadata}->{hash}->{settings}->{category_choices};;
+    }
+
+    if (not @choices) {
+      $self->{pbot}->{logger}->log("Out of questions with current settings!\n");
+      # XXX: do something useful here
     }
 
     push @choices, 'RANDOM CATEGORY';
@@ -2084,7 +2103,7 @@ sub showlies {
 sub showtruth {
   my ($self, $state) = @_;
 
-  if ($state->{ticks} % 4 == 0) {
+  if ($state->{ticks} % 3 == 0) {
     my $player_id;
     my $player_data;
     my $players;
@@ -2247,7 +2266,7 @@ sub showfinalscore {
   if ($state->{first_tock}) {
     $tock = 2;
   } else {
-    $tock = 5;
+    $tock = 3;
   }
 
   if ($state->{ticks} % $tock == 0) {
