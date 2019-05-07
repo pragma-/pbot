@@ -24,6 +24,9 @@ use Lingua::EN::ABC qw/b2a/;
 
 use Time::Duration qw/concise duration/;
 
+use Text::Unidecode;
+use Encode;
+
 use Data::Dumper;
 $Data::Dumper::Sortkeys = sub { my ($h) = @_; my @a = sort grep { not /^(?:seen_questions|alternativeSpellings)$/ } keys %$h; \@a };
 $Data::Dumper::Useqq = 1;
@@ -190,7 +193,9 @@ sub load_metadata {
       category_autopick => 0,
       min_players => 2,
       stats => 1,
-      seen_expiry => 432000
+      seen_expiry => 432000,
+      min_difficulty => 0,
+      max_difficulty => 25000
     };
   }
 }
@@ -1455,6 +1460,8 @@ sub normalize_question {
 sub normalize_text {
   my ($self, $text) = @_;
 
+  $text = unidecode decode('utf8', $text);
+
   $text =~ s/^\s+|\s+$//g;
   $text =~ s/\s+/ /g;
   $text =~ s/^(the|a|an) //i;
@@ -1512,7 +1519,7 @@ sub normalize_text {
     push @result, $newword;
   }
 
-  $text = uc b2a join ' ', @result;
+  $text = uc b2a ("@result", s => 1);
 
   $text =~ s/([A-Z])\./$1/g;
   $text =~ s/-/ /g;
@@ -1724,22 +1731,19 @@ sub getnewquestion {
     }
 
     if (not @questions) {
-      my $min = $self->{metadata}->{hash}->{settings}->{min_difficulty};
-      my $max = $self->{metadata}->{hash}->{settings}->{max_difficulty};
-      my $expiry = $self->{metadata}->{hash}->{settings}->{seen_expiry};
-      $self->{pbot}->{logger}->log("Zero questions for [$state->{current_category}]!\n");
-      $self->send_message($self->{channel}, "No questions available in category $state->{current_category} (min/max difficulty: $min/$max; seen expiry: $expiry)! Picking new category...");
+      $self->send_message($self->{channel}, "No more questions available in category $state->{current_category}! Picking new category...");
       delete $state->{seen_questions}->{$state->{current_category}};
       @questions = keys %{$self->{categories}{$state->{current_category}}};
       $state->{reroll_category} = 1;
     }
 
-    $self->{pbot}->{logger}->log("current cat: $state->{current_category}: " . (scalar @questions) . " total questions remaining\n");
-
     if ($state->{reroll_question}) {
       delete $state->{reroll_question};
-      my $count = @questions;
-      $self->send_message($self->{channel}, "Rerolling new question from $state->{current_category}: " . $self->commify($count) . " question" . ($count == 1 ? '' : 's') . " remaining.\n");
+
+      unless ($state->{reroll_category}) {
+        my $count = @questions;
+        $self->send_message($self->{channel}, "Rerolling new question from $state->{current_category}: " . $self->commify($count) . " question" . ($count == 1 ? '' : 's') . " remaining.\n");
+      }
     }
 
     $state->{current_question} = $self->{categories}{$state->{current_category}}{$questions[0]};
@@ -2011,7 +2015,7 @@ sub showlies {
   if ($state->{first_tock}) {
     $tock = 3;
   } else {
-    $tock = 5;
+    $tock = 3;
   }
 
   if ($state->{ticks} % $tock == 0) {
