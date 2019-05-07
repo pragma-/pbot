@@ -37,6 +37,7 @@ Text::CSV
 Text::Levenshtein
 Text::ParseWords
 Text::WordDiff
+Text::Unidecode
 Time::Duration
 Time::ParseDate
 re::engine::RE2
