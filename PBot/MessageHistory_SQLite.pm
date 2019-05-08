@@ -365,6 +365,13 @@ sub find_message_accounts_by_mask {
   return map {$_->[0]} @$accounts;
 }
 
+sub get_message_account_ancestor {
+  my $self = shift;
+  my $id = $self->get_message_account(@_);
+  $id = $self->get_ancestor_id($id);
+  return $id;
+}
+
 sub get_message_account {
   my ($self, $nick, $user, $host, $orig_nick) = @_;
 
