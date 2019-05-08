@@ -113,6 +113,8 @@ sub load_questions {
     $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . "/spinach/$filename";
   }
 
+  $self->{pbot}->{logger}->log("Spinach: Loading questions from $filename...\n");
+
   my $contents = do {
     open my $fh, '<', $filename or do {
       $self->{pbot}->{logger}->log("Spinach: Failed to open $filename: $!\n");
@@ -148,7 +150,7 @@ sub load_questions {
   my $categories;
   foreach my $category (sort { keys %{$self->{categories}{$b}} <=> keys %{$self->{categories}{$a}} } keys %{$self->{categories}}) {
     my $count = keys %{$self->{categories}{$category}};
-    $self->{pbot}->{logger}->log("Category [$category]: $count\n");
+    # $self->{pbot}->{logger}->log("Category [$category]: $count\n");
     $categories++;
   }
 
@@ -397,7 +399,6 @@ sub spinach_cmd {
 
     when ('load') {
       my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
-
       if (not $admin or $admin->{level} < 90) {
         return "$nick: Sorry, only very powerful admins may reload the questions.";
       }
@@ -913,6 +914,46 @@ sub spinach_cmd {
       }
     }
 
+    when ('state') {
+      my ($command, $args) = split /\s+/, $arguments;
+
+      if ($command eq 'show') {
+        return "Previous state: $self->{previous_state}; Current state: $self->{current_state}; previous result: $self->{state_data}->{previous_result}";
+      }
+
+      if ($command eq 'set') {
+        if (not length $args) {
+          return "Usage: spinach state set <new state>";
+        }
+
+        my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
+        if (not $admin or $admin->{level} < 90) {
+          return "$nick: Sorry, only very powerful admins may set game state.";
+        }
+
+        $self->{previous_state} = $self->{current_state};
+        $self->{current_state} = $args;
+        return "State set to $args";
+      }
+
+      if ($command eq 'result') {
+        if (not length $args) {
+          return "Usage: spinach state result <current state result>";
+        }
+
+        my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
+        if (not $admin or $admin->{level} < 90) {
+          return "$nick: Sorry, only very powerful admins may set game state.";
+        }
+
+        $self->{state_data}->{previous_result} = $self->{state_data}->{result};
+        $self->{state_data}->{result} = $args;
+        return "State result set to $args";
+      }
+
+      return "Usage: spinach state show | set <new state> | result <current state result>";
+    }
+
     when ('set') {
       my ($index, $key, $value) = split /\s+/, $arguments;
 
@@ -922,6 +963,11 @@ sub spinach_cmd {
 
       if (lc $index eq 'settings' and $key and lc $key eq 'stats' and defined $value and $self->{current_state} ne 'nogame') {
         return "Spinach stats setting cannot be modified while a game is in progress.";
+      }
+
+      my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
+      if (not $admin or $admin->{level} <= 0) {
+        return "$nick: Sorry, only Spinach admins may set game settings.";
       }
 
       return $self->{metadata}->set($index, $key, $value);
@@ -936,6 +982,11 @@ sub spinach_cmd {
 
       if (lc $index eq 'settings' and lc $key eq 'stats' and $self->{current_state} ne 'nogame') {
         return "Spinach stats setting cannot be modified while a game is in progress.";
+      }
+
+      my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
+      if (not $admin or $admin->{level} <= 0) {
+        return "$nick: Sorry, only Spinach admins may set game settings.";
       }
 
       return $self->{metadata}->unset($index, $key);
@@ -1073,7 +1124,7 @@ sub run_one_state {
 
   # dump new state data for logging/debugging
   if ($state_data->{newstate}) {
-    $self->{pbot}->{logger}->log("Spinach: New state: $self->{current_state}\n" . Dumper $state_data);
+    $self->{pbot}->{logger}->log("Spinach: New state: $self->{previous_state} ($state_data->{previous_result}) --> $self->{current_state}\n" . Dumper $state_data);
   }
 
   # run one state/tick
@@ -1088,6 +1139,12 @@ sub run_one_state {
   # transform to next state
   $state_data->{previous_result} = $state_data->{result};
   $self->{previous_state} = $self->{current_state};
+
+  if (not exists $self->{states}{$self->{current_state}}{trans}{$state_data->{result}}) {
+    $self->{pbot}->{logger}->log("Spinach: State broke: no such transistion to $state_data->{result} for state $self->{current_state}\n");
+    # XXX: do something here
+  }
+
   $self->{current_state} = $self->{states}{$self->{current_state}}{trans}{$state_data->{result}};
   $self->{state_data} = $state_data;
 
