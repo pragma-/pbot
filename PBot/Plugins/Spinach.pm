@@ -966,7 +966,7 @@ sub spinach_cmd {
       }
 
       my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
-      if (not $admin or $admin->{level} <= 0) {
+      if (defined $value and (not $admin or $admin->{level} <= 0)) {
         return "$nick: Sorry, only Spinach admins may set game settings.";
       }
 
