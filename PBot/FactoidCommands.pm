@@ -52,7 +52,6 @@ our %factoid_metadata_levels = (
   'effective-level'           => 20,
   'persist-key'               => 20,
   'interpolate'               => 10,
-  'action'                    => 10,
   # all others are allowed to be factset by anybody/default to level 0
 );
 
@@ -573,12 +572,12 @@ sub factset {
     }
   }
 
-  if(defined $owner_channel) {
+  if (defined $owner_channel) {
     my $factoid = $self->{pbot}->{factoids}->{factoids}->hash->{$owner_channel}->{$owner_trigger};
 
     my ($owner) = $factoid->{'owner'} =~ m/([^!]+)/;
 
-    if(lc $nick ne lc $owner and $level == 0) {
+    if ((defined $value and $key ne 'action') and lc $nick ne lc $owner and $level == 0) {
       return "You are not the owner of $trigger.";
     }
   }
