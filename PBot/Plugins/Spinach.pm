@@ -413,7 +413,7 @@ sub spinach_cmd {
         $self->{current_state} = 'getplayers';
       }
 
-      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
 
       foreach my $player (@{$self->{state_data}->{players}}) {
         if ($player->{id} == $id) {
@@ -428,7 +428,7 @@ sub spinach_cmd {
     }
 
     when ('ready') {
-      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
 
       foreach my $player (@{$self->{state_data}->{players}}) {
         if ($player->{id} == $id) {
@@ -450,7 +450,7 @@ sub spinach_cmd {
     }
 
     when ('unready') {
-      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
 
       foreach my $player (@{$self->{state_data}->{players}}) {
         if ($player->{id} == $id) {
@@ -471,7 +471,7 @@ sub spinach_cmd {
     }
 
     when ('exit') {
-      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+      my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
       my $removed = 0;
 
       for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
@@ -575,7 +575,7 @@ sub spinach_cmd {
 
     when ('reroll') {
       if ($self->{current_state} =~ /getlies$/) {
-        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
 
         my $player;
         my $rerolled = 0;
@@ -618,7 +618,7 @@ sub spinach_cmd {
 
     when ('skip') {
       if ($self->{current_state} =~ /getlies$/) {
-        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
 
         my $player;
         my $skipped = 0;
@@ -661,7 +661,7 @@ sub spinach_cmd {
 
     when ('keep') {
       if ($self->{current_state} =~ /getlies$/) {
-        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
 
         my $player;
         foreach my $i (@{$self->{state_data}->{players}}) {
@@ -691,7 +691,7 @@ sub spinach_cmd {
           return "Usage: spinach choose <integer>";
         }
 
-        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
 
         if (not @{$self->{state_data}->{players}} or $id != $self->{state_data}->{players}->[$self->{state_data}->{current_player}]->{id}) {
           return "$nick: It is not your turn to choose a category.";
@@ -725,7 +725,7 @@ sub spinach_cmd {
           return "Usage: spinach lie <text>";
         }
 
-        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
 
         my $player;
         foreach my $i (@{$self->{state_data}->{players}}) {
@@ -778,7 +778,7 @@ sub spinach_cmd {
           return "Usage: spinach truth <integer>";
         }
 
-        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+        my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
 
         my $player;
         foreach my $i (@{$self->{state_data}->{players}}) {
@@ -1012,7 +1012,7 @@ sub spinach_timer {
 sub player_left {
   my ($self, $nick, $user, $host) = @_;
 
-  my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+  my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
   my $removed = 0;
 
   for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
