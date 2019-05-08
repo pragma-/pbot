@@ -955,8 +955,8 @@ sub handle_action {
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
     my ($root_channel, $root_keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{root_keyword}, $stuff->{arguments}, 1);
     if (not defined $root_channel or not defined $root_keyword) {
-      $self->{pbot}->{logger}->log("Could not find root channel/keyword.\n");
-      return "/me trips over its feet.";
+      $root_channel = $channel;
+      $root_keyword = $keyword;
     }
     my $kw = length $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} ? $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} : $stuff->{root_keyword};
     $kw = $stuff->{keyword_override} if length $stuff->{keyword_override};
@@ -1018,8 +1018,8 @@ sub handle_action {
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
     my ($root_channel, $root_keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{root_keyword}, $stuff->{arguments}, 1);
     if (not defined $root_channel or not defined $root_keyword) {
-      $self->{pbot}->{logger}->log("Could not find root channel/keyword.\n");
-      return "/me trips over its feet.";
+      $root_channel = $channel;
+      $root_keyword = $keyword;
     }
     my $kw = length $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} ? $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} : $stuff->{root_keyword};
     $kw = $stuff->{keyword_override} if length $stuff->{keyword_override};
