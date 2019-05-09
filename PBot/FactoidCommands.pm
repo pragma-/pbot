@@ -753,7 +753,7 @@ sub factmove {
     }
   }
 
-  if (length $target > 30) {
+  if (length $target > 60) {
     return "/say $nick: I don't think the factoid name needs to be that long.";
   }
 
@@ -842,7 +842,7 @@ sub factalias {
     return "Usage: factalias [channel] <keyword> <command>";
   }
 
-  if (length $alias > 30) {
+  if (length $alias > 60) {
     return "/say $nick: I don't think the factoid name needs to be that long.";
   }
 
@@ -932,7 +932,7 @@ sub factadd {
 
   $from_chan = '.*' if $from_chan !~ /^#/;
 
-  if (length $keyword > 30) {
+  if (length $keyword > 60) {
     return "/say $nick: I don't think the factoid name needs to be that long.";
   }
 
