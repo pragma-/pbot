@@ -36,7 +36,7 @@ sub initialize {
 
 sub unload {
   my $self = shift;
-  $self->{pbot}->{commands}->unload("pd");
+  $self->{pbot}->{commands}->unregister("pd");
 }
 
 sub pd {

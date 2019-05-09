@@ -31,7 +31,7 @@ sub initialize {
 
 sub unload {
   my $self = shift;
-  $self->{pbot}->{commands}->unload("mc");
+  $self->{pbot}->{commands}->unregister("mc");
 }
 
 sub magic {
