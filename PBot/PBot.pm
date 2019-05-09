@@ -143,6 +143,9 @@ sub initialize {
     $self->{registry}->load;
   }
 
+  # load available plugins
+  $self->{plugins}->autoload(%conf);
+
   # create implicit bot-admin account for bot
   my $botnick = $self->{registry}->get_value('irc', 'botnick');
   $self->{admins}->add_admin($botnick, '.*', "$botnick!stdin\@localhost", 90, 'admin', 1);
