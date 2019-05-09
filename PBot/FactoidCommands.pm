@@ -1294,15 +1294,16 @@ sub factfind {
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
   if(not defined $arguments) {
-    return "Usage: factfind [-channel channel] [-owner regex] [-editby regex] [-refby regex] [text]";
+    return "Usage: factfind [-channel channel] [-owner regex] [-editby regex] [-refby regex] [-regex] [text]";
   }
 
-  my ($channel, $owner, $refby, $editby);
+  my ($channel, $owner, $refby, $editby, $use_regex);
 
-  $channel = $1 if $arguments =~ s/-channel\s+([^\b\s]+)//i;
-  $owner = $1 if $arguments =~ s/-owner\s+([^\b\s]+)//i;
-  $refby = $1 if $arguments =~ s/-refby\s+([^\b\s]+)//i;
-  $editby = $1 if $arguments =~ s/-editby\s+([^\b\s]+)//i;
+  $channel = $1 if $arguments =~ s/\s*-channel\s+([^\b\s]+)//i;
+  $owner = $1 if $arguments =~ s/\s*-owner\s+([^\b\s]+)//i;
+  $refby = $1 if $arguments =~ s/\s*-refby\s+([^\b\s]+)//i;
+  $editby = $1 if $arguments =~ s/\s*-editby\s+([^\b\s]+)//i;
+  $use_regex = 1 if $arguments =~ s/\s*-regex\b//i;
 
   $owner = '.*' if not defined $owner;
   $refby = '.*' if not defined $refby;
@@ -1356,9 +1357,14 @@ sub factfind {
   $i = 0;
   eval {
     use re::engine::RE2 -strict => 1;
-    my $regex = ($arguments =~ m/^\w/) ? '\b' : '\B';
-    $regex .= quotemeta $arguments;
-    $regex .= ($arguments =~ m/\w$/) ? '\b' : '\B';
+    my $regex;
+    if ($use_regex) {
+      $regex = $arguments;
+    } else {
+      $regex = ($arguments =~ m/^\w/) ? '\b' : '\B';
+      $regex .= quotemeta $arguments;
+      $regex .= ($arguments =~ m/\w$/) ? '\b' : '\B';
+    }
 
     foreach my $chan (sort keys %{ $factoids }) {
       next if defined $channel and $chan !~ /^$channel$/i;
