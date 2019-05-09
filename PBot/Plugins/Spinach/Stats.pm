@@ -12,8 +12,6 @@ use strict;
 use DBI;
 use Carp qw(shortmess);
 
-my $debug = 0;
-
 sub new {
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
@@ -23,13 +21,14 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
+  $self->{pbot}     = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{filename} = $conf{filename} // 'stats.sqlite';
 }
 
 sub begin {
   my $self = shift;
 
-  print STDERR "Opening stats SQLite database: $self->{filename}\n" if $debug;
+  $self->{pbot}->{logger}->log("Opening Spinach stats SQLite database: $self->{filename}\n");
 
   $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0 }) or die $DBI::errstr;
 
@@ -55,55 +54,63 @@ CREATE TABLE IF NOT EXISTS Stats (
 SQL
   };
 
-  print STDERR $@ if $@;
+  $self->{pbot}->{logger}->log("Error creating database: $@\n") if $@;
 }
 
 sub end {
   my $self = shift;
 
-  print STDERR "Closing stats SQLite database\n" if $debug;
-
   if(exists $self->{dbh} and defined $self->{dbh}) {
+    $self->{pbot}->{logger}->log("Closing stats SQLite database\n");
     $self->{dbh}->disconnect();
     delete $self->{dbh};
   }
 }
 
 sub add_player {
-  my ($self, $nick, $channel) = @_;
+  my ($self, $id, $nick, $channel) = @_;
 
-  my $id = eval {
-    my $sth = $self->{dbh}->prepare('INSERT INTO Stats (nick, channel) VALUES (?, ?)');
-    $sth->bind_param(1, $nick) ;
-    $sth->bind_param(2, $channel) ;
-    $sth->execute();
-    return $self->{dbh}->sqlite_last_insert_rowid();
+  eval {
+    my $sth = $self->{dbh}->prepare('INSERT INTO Stats (id, nick, channel) VALUES (?, ?, ?)');
+    $sth->execute($id, $nick, $channel);
   };
 
-  print STDERR $@ if $@;
+  if ($@) {
+    $self->{pbot}->{logger}->log("Spinach stats: failed to add new player ($id, $nick $channel): $@\n");
+    return 0;
+  }
+
   return $id;
 }
 
 sub get_player_id {
   my ($self, $nick, $channel, $dont_create_new) = @_;
 
+  my ($account_id) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
+  $account_id = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account_id);
+
+  return undef if not $account_id;
+
   my $id = eval {
-    my $sth = $self->{dbh}->prepare('SELECT id FROM Stats WHERE nick = ? AND channel = ?');
-    $sth->bind_param(1, $nick);
-    $sth->bind_param(2, $channel);
-    $sth->execute();
+    my $sth = $self->{dbh}->prepare('SELECT id FROM Stats WHERE id = ? AND channel = ?');
+    $sth->execute($account_id, $channel);
     my $row = $sth->fetchrow_hashref();
     return $row->{id};
   };
 
-  print STDERR $@ if $@;
+  if ($@) {
+    $self->{pbot}->{logger}->log("Spinach stats: failed to get player id: $@\n");
+    return undef;
+  }
 
-  $id = $self->add_player($nick, $channel) if not defined $id and not $dont_create_new;
+  $id = $self->add_player($account_id, $nick, $channel) if not defined $id and not $dont_create_new;
   return $id;
 }
 
 sub get_player_data {
   my ($self, $id, @columns) = @_;
+
+  return undef if not $id;
 
   my $player_data = eval {
     my $sql = 'SELECT ';
@@ -120,8 +127,7 @@ sub get_player_data {
 
     $sql .= ' FROM Stats WHERE id = ?';
     my $sth = $self->{dbh}->prepare($sql);
-    $sth->bind_param(1, $id);
-    $sth->execute();
+    $sth->execute($id);
     return $sth->fetchrow_hashref();
   };
   print STDERR $@ if $@;
@@ -160,11 +166,10 @@ sub get_all_players {
 
   my $players = eval {
     my $sth = $self->{dbh}->prepare('SELECT * FROM Stats WHERE channel = ?');
-    $sth->bind_param(1, $channel);
-    $sth->execute();
+    $sth->execute($channel);
     return $sth->fetchall_arrayref({});
   };
-  print STDERR $@ if $@;
+  $self->{pbot}->{logger}->log($@) if $@;
   return $players;
 }
 

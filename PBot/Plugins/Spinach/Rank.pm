@@ -28,7 +28,7 @@ sub initialize {
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{channel} = $conf{channel} // Carp::croak("Missing channel reference to " . __FILE__);
   $self->{filename} = $conf{filename} // 'stats.sqlite';
-  $self->{stats} = PBot::Plugins::Spinach::Stats->new(filename => $self->{filename});
+  $self->{stats} = PBot::Plugins::Spinach::Stats->new(pbot => $self->{pbot}, filename => $self->{filename});
 }
 
 sub sort_generic {

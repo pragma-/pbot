@@ -67,7 +67,7 @@ sub initialize {
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Spinach Metadata', filename => $self->{metadata_filename});
   $self->load_metadata;
 
-  $self->{stats}   = PBot::Plugins::Spinach::Stats->new(filename => $self->{stats_filename});
+  $self->{stats}   = PBot::Plugins::Spinach::Stats->new(pbot => $self->{pbot}, filename => $self->{stats_filename});
   $self->{rankcmd} = PBot::Plugins::Spinach::Rank->new(pbot => $self->{pbot}, channel => $self->{channel}, filename => $self->{stats_filename});
 
   $self->create_states;
@@ -1158,6 +1158,7 @@ sub create_states {
   $self->{pbot}->{logger}->log("Spinach: Creating game state machine\n");
 
   $self->{previous_state} = '';
+  $self->{previous_result} = '';
   $self->{current_state} = 'nogame';
   $self->{state_data} = { players => [], ticks => 0, newstate => 1 };
 
@@ -2185,6 +2186,7 @@ sub showtruth {
         $player_data = $self->{stats}->get_player_data($player_id);
 
         $player_data->{questions_played}++;
+        $player_data->{nick} = $player->{name}; # update nick in stats database once per question (nick changes, etc)
       }
 
       if (exists $player->{deceived}) {
@@ -2369,7 +2371,10 @@ sub showfinalscore {
 
 sub nogame {
   my ($self, $state) = @_;
-  $self->{stats}->end if $self->{stats_running};
+  if ($self->{stats_running}) {
+    $self->{stats}->end;
+    delete $self->{stats_running};
+  }
   $state->{result} = 'nogame';
   return $state;
 }
