@@ -1903,6 +1903,8 @@ sub getlies {
     $needed -= @rerolls;
     if ($needed <= 0) {
       $state->{reroll_question} = 1;
+      my $answer = uc $state->{current_question}->{answer};
+      $self->send_message($self->{channel}, "The answer was: $answer");
       return 'reroll'; 
     }
   }
@@ -1911,6 +1913,8 @@ sub getlies {
     my $needed = int (@{$state->{players}} / 2) + 1;
     $needed += @keeps;
     $needed -= @skips;
+    my $answer = uc $state->{current_question}->{answer};
+    $self->send_message($self->{channel}, "The answer was: $answer");
     return 'skip' if $needed <= 0;
   }
 
