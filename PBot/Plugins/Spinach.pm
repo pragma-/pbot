@@ -1903,7 +1903,7 @@ sub getlies {
     $needed -= @rerolls;
     if ($needed <= 0) {
       $state->{reroll_question} = 1;
-      $self->send_message($self->{channel}, "The answer was:" . uc $state->{current_question}->{answer});
+      $self->send_message($self->{channel}, "The answer was: " . uc $state->{current_question}->{answer});
       return 'reroll'; 
     }
   }
@@ -1913,7 +1913,7 @@ sub getlies {
     $needed += @keeps;
     $needed -= @skips;
     if ($needed <= 0) {
-      $self->send_message($self->{channel}, "The answer was:" . uc $state->{current_question}->{answer});
+      $self->send_message($self->{channel}, "The answer was: " . uc $state->{current_question}->{answer});
       return 'skip';
     }
   }
