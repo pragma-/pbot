@@ -1804,7 +1804,7 @@ sub getnewquestion {
 
       unless ($state->{reroll_category}) {
         my $count = @questions;
-        $self->send_message($self->{channel}, "Rerolling new question from $state->{current_category}: " . $self->commify($count) . " question" . ($count == 1 ? '' : 's') . " remaining.\n");
+        $self->send_message($self->{channel}, "Rerolling new question from $state->{current_category} (" . $self->commify($count) . " question" . ($count == 1 ? '' : 's') . " remaining)\n");
       }
     }
 
@@ -1903,8 +1903,7 @@ sub getlies {
     $needed -= @rerolls;
     if ($needed <= 0) {
       $state->{reroll_question} = 1;
-      my $answer = uc $state->{current_question}->{answer};
-      $self->send_message($self->{channel}, "The answer was: $answer");
+      $self->send_message($self->{channel}, "The answer was:" . uc $state->{current_question}->{answer});
       return 'reroll'; 
     }
   }
@@ -1913,9 +1912,10 @@ sub getlies {
     my $needed = int (@{$state->{players}} / 2) + 1;
     $needed += @keeps;
     $needed -= @skips;
-    my $answer = uc $state->{current_question}->{answer};
-    $self->send_message($self->{channel}, "The answer was: $answer");
-    return 'skip' if $needed <= 0;
+    if ($needed <= 0) {
+      $self->send_message($self->{channel}, "The answer was:" . uc $state->{current_question}->{answer});
+      return 'skip';
+    }
   }
 
   if ($state->{ticks} % $tock == 0) {
