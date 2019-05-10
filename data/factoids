@@ -10206,12 +10206,12 @@ created_on: 1519329546.29214
 edited_by: jp!ayy@youlosethega.me
 edited_on: 1519329648.8265
 enabled: 1
-last_referenced_in: jp
-last_referenced_on: 1522022334.6273
+last_referenced_in: pragma-
+last_referenced_on: 1557460305.76774
 owner: jp!ayy@youlosethega.me
 rate_limit: 15
-ref_count: 4
-ref_user: jp!ayy@youlosethega.me
+ref_count: 5
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <ddf>
@@ -10435,12 +10435,12 @@ type: text
 action: /code perl print "/say arglen: $arglen"
 created_on: 1505075285.77262
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1505254577.17507
+last_referenced_in: pragma-
+last_referenced_on: 1557460333.63524
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 9
-ref_user: whoisxy!~whoisxy@83.137.254.176
+ref_count: 11
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <foo bar baz>
@@ -30937,12 +30937,12 @@ type: text
 action: /code c11 printf("/say"); while (*++argv) printf(" <%s>", *argv);
 created_on: 1512335413.76725
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1556594856.86753
+last_referenced_in: pragma-
+last_referenced_on: 1557460390.19908
 owner: cousteau!~cousteau@unaffiliated/cousteau
 rate_limit: 15
-ref_count: 7
-ref_user: iamgarp!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 10
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <TESTempty>
@@ -32730,20 +32730,6 @@ ref_user: n00p
 type: text
 
 [.*]
-<(?:yo)?u[\s']*a?re?\s+(.*?)(?:(?:\s+and|[[:punct:]])\s+.*)?$>
-action: echo I am $1? $reaction
-created_on: 1557371253.74151
-edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
-edited_on: 1557452777.49108
-enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557454109.43677
-owner: iamgarp!~chaos@unaffiliated/pragmatic-chaos
-rate_limit: 15
-ref_count: 35
-ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
-type: regex
-
 <(y)>
 action: /say ( y ) is MSN Messenger for the "Thumbs Up" emoticon. It's not an IRC thing. No IRC clients translate it. Pidgin is not an IRC client. It's an instant messenger with a proof-of-concept half-arsed IRC plugin. Knock it off.
 created_on: 1488150003.71609
@@ -32847,12 +32833,12 @@ created_on: 1193948417
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1444035579.82241
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557443260.45267
+last_referenced_in: pragma-
+last_referenced_on: 1557461358.36318
 locked: 1
 owner: pragma_
 rate_limit: 0
-ref_count: 4032
+ref_count: 4035
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 use_output_queue: 1
@@ -33776,12 +33762,12 @@ type: module
 action: /call factadd
 created_on: 1505460785.43151
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557371253.72565
+last_referenced_in: pragma-
+last_referenced_on: 1557461398.25147
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 10
-ref_user: iamgarp!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 34
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <adjective>
@@ -34008,11 +33994,11 @@ type: text
 action: /call factalias
 created_on: 1277259091.375
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557436824.65304
+last_referenced_in: pragma-
+last_referenced_on: 1557460998.56601
 owner: pbot3
 rate_limit: 0
-ref_count: 771
+ref_count: 780
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -35560,13 +35546,13 @@ type: text
 action: /call $args
 created_on: 1504047286.39198
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1556817809.67191
+last_referenced_in: pragma-
+last_referenced_on: 1557461358.35312
 locked: 1
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 472
-ref_user: nai!~naim@monade.li
+ref_count: 475
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <callgraph>
@@ -35632,13 +35618,13 @@ edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1506224959.99807
 enabled: 1
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1557445651.69191
+last_referenced_on: 1557454235.12834
 locked: 1
 owner: pragma_
 preserve_whitespace: 1
 rate_limit: 0
-ref_count: 109030
-ref_user: nil!~n@monade.li
+ref_count: 109031
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <cc2>
@@ -35743,11 +35729,11 @@ type: text
 action: /call factchange
 created_on: 1277259441.33026
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557452777.46538
+last_referenced_in: pragma-
+last_referenced_on: 1557461439.17993
 owner: pbot3
 rate_limit: 0
-ref_count: 4367
+ref_count: 4380
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -36604,14 +36590,14 @@ created_on: 1291939583.25391
 enabled: 1
 interpolate: 0
 last_referenced_in: ##c-offtopic
-last_referenced_on: 1557445652.184
+last_referenced_on: 1557454235.65572
 locked: 1
 nooverride: 1
 owner: pragma_
 preserve_whitespace: 1
 rate_limit: 0
-ref_count: 101751
-ref_user: nil!~n@monade.li
+ref_count: 101752
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: module
 
 <compiler_block>
@@ -37129,12 +37115,12 @@ type: text
 action: /call sh date
 created_on: 1505165738.63328
 enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1557348222.40546
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1557454235.10545
 owner: praggy!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 144
-ref_user: nil!~n@monade.li
+ref_count: 145
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <ddd>
@@ -37724,14 +37710,14 @@ type: text
 action: /say $args
 created_on: 1442248876.76632
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557454110.1092
+last_referenced_in: pragma-
+last_referenced_on: 1557461407.35199
 locked: 1
 nooverride: 1
 owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 preserve_whitespace: 1
 rate_limit: 0
-ref_count: 4565
+ref_count: 4603
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -38380,11 +38366,11 @@ type: text
 action: /call factfind
 created_on: 1277784994.65625
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557453516.55641
+last_referenced_in: pragma-
+last_referenced_on: 1557460624.26882
 owner: pbot3
 rate_limit: 0
-ref_count: 1581
+ref_count: 1584
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -39612,12 +39598,12 @@ created_on: 1109044278
 edited_by: nai!~naim@monade.li
 edited_on: 1555617003.76797
 enabled: 1
-last_referenced_in: dho
-last_referenced_on: 1557352870.29334
+last_referenced_in: pragma-
+last_referenced_on: 1557460359.94885
 owner: pragma_
 rate_limit: 0
-ref_count: 2667
-ref_user: dho!~dho@freenode/staff/dho
+ref_count: 2668
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 use_output_queue: 1
 
@@ -40096,11 +40082,11 @@ type: text
 action: /call factinfo
 created_on: 1277259101.38088
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557437830.49616
+last_referenced_in: pragma-
+last_referenced_on: 1557460687.15551
 owner: pbot3
 rate_limit: 0
-ref_count: 1470
+ref_count: 1472
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -41792,12 +41778,12 @@ type: text
 action: /call factmove
 created_on: 1513477895.76561
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557272769.75689
+last_referenced_in: pragma-
+last_referenced_on: 1557460652.92333
 owner: jp!ayy@youlosethega.me
 rate_limit: 15
-ref_count: 92
-ref_user: iamgarp!~chaos@unaffiliated/pragmatic-chaos
+ref_count: 93
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <msg>
@@ -43873,10 +43859,10 @@ ref_user: jp!ayy@youlosethega.me
 type: text
 
 <reaction>
-action: "If you say so." "Why, thanks." "Are you sure about that?" "YES!" "Mission accomplished." "Takes one to know one!" "Pot calling the kettle!"  "You wish." 
+action: "If you say so." "Why, thanks." "Are you sure about that?" "YES!" "Mission accomplished." "Takes one to know one!" "Pot calling the kettle!"  "You wish."  "I'm $sorry_modifier sorry."  "How about that!" "Is that what you think?" Fascinating. Intruiging. "I don't think so." "Are you sure?"  "$answers" "$answers" 
 created_on: 1194383902
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
-edited_on: 1557451684.49215
+edited_on: 1557461439.20562
 enabled: 1
 last_referenced_in: ##c-offtopic
 last_referenced_on: 1557443452.41082
@@ -45574,13 +45560,13 @@ type: text
 action: /say $args
 created_on: 1251663502
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557452727.19743
+last_referenced_in: pragma-
+last_referenced_on: 1557461006.19045
 locked: 1
 nooverride: 1
 owner: pragma_
 rate_limit: 0
-ref_count: 3118
+ref_count: 3123
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 use_output_queue: 1
@@ -45883,12 +45869,12 @@ created_on: 1275822098
 edited_by: iamgarp!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1556837685.7757
 enabled: 1
-last_referenced_in: #pbot2
-last_referenced_on: 1557348222.41636
+last_referenced_in: ##c-offtopic
+last_referenced_on: 1557454235.11732
 owner: pragma_
 rate_limit: 0
-ref_count: 6989
-ref_user: nil!~n@monade.li
+ref_count: 6990
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <sh0w>
@@ -46073,11 +46059,11 @@ created_on: 1504988015.53202
 edited_by: jp!ayy@youlosethega.me
 edited_on: 1515894869.6708
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557445074.67879
+last_referenced_in: pragma-
+last_referenced_on: 1557461400.84416
 owner: kg!~krok@unaffiliated/krok/x-1434802
 rate_limit: 0
-ref_count: 4611
+ref_count: 4636
 ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
@@ -46551,6 +46537,16 @@ ref_user: disconnect3d!~disconnec@unaffiliated/disconnected
 type: text
 use_output_queue: 1
 
+<sorry_modifier>
+action: so not very slightly "definitely not"
+created_on: 1557461154.88355
+enabled: 1
+owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
 <sorry_replies>
 action: "It's okay." "Don't worry about it." "That's alright." "It happens."
 created_on: 1429159734.03199
@@ -46671,6 +46667,18 @@ owner: k!~krok@unaffiliated/krok
 rate_limit: 15
 ref_count: 2
 ref_user: k!~krok@unaffiliated/krok
+type: text
+
+<spellu>
+action: /say plz learn how 2 spl "you"! http://i.imgur.com/HL1ZR.jpg
+created_on: 1252559062
+enabled: 1
+last_referenced_in: ##spinach
+last_referenced_on: 1556390276.28033
+owner: Wulf_
+rate_limit: 15
+ref_count: 145
+ref_user: sjohnson!~sjohnson@cow.sj.rfc1459.net
 type: text
 
 <spengebab>
@@ -48266,15 +48274,15 @@ ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <u>
-action: /say plz learn how 2 spl "you"! http://i.imgur.com/HL1ZR.jpg
-created_on: 1252559062
+action: /call you
+created_on: 1557460732.24692
 enabled: 1
-last_referenced_in: ##spinach
-last_referenced_on: 1556390276.28033
-owner: Wulf_
+last_referenced_in: pragma-
+last_referenced_on: 1557460828.00678
+owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
 rate_limit: 15
-ref_count: 145
-ref_user: sjohnson!~sjohnson@cow.sj.rfc1459.net
+ref_count: 3
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <u10>
@@ -48762,6 +48770,18 @@ ref_count: 31
 ref_user: Learath2!~learath2@unaffiliated/learath2
 type: text
 
+<ur>
+action: /call you're
+created_on: 1557460992.77801
+enabled: 1
+last_referenced_in: pragma-
+last_referenced_on: 1557461004.42558
+owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
+rate_limit: 15
+ref_count: 1
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+type: text
+
 <urban>
 action: urban
 created_on: 1255045031
@@ -48774,6 +48794,16 @@ rate_limit: 0
 ref_count: 19999
 ref_user: nil!~n@monade.li
 type: module
+
+<ure>
+action: /call you're
+created_on: 1557460998.58519
+enabled: 1
+owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
 
 <uses>
 action: /call 8ball
@@ -48910,7 +48940,7 @@ ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <version>
-action: /say PBot revision 2310 2019-05-09
+action: /say PBot revision 2313 2019-05-09
 created_on: 1557449801.43019
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1516690175.14733
@@ -49420,12 +49450,12 @@ created_on: 1194258443
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1428107102.27173
 enabled: 1
-last_referenced_in: ##c-offtopic
-last_referenced_on: 1557348732.68481
+last_referenced_in: pragma-
+last_referenced_on: 1557457640.18651
 owner: pragma_
 rate_limit: 0
-ref_count: 309
-ref_user: nil!~n@monade.li
+ref_count: 310
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 use_output_queue: 1
 
@@ -49820,6 +49850,32 @@ ref_count: 26
 ref_user: k!~krok@unaffiliated/krok
 type: text
 
+<you>
+action: /code perl no warnings; $_s = "@ARGV" ; $_n = quotemeta "$nick" ; $_s =~ s/\bmy\b/your/gi; $_s =~ s/\bmyself\b/yourself/gi; $_s =~ s/\bme\b/you/gi; $_s =~ s/(\W|^)$_n\'s(\W|$)/$1your$2/gi; $_s =~ s/(\W|^)$_n(\W|$)/$1you$2/gi; if ($_s =~ /^a?re?\s+(.*?)(?:(?:\s+and|[[:punct:]])\s+.*)?$/i) { print "/call say I am $1? \$reaction" ; exit; } if ($_s =~ /(.*?)(?:(?:\s+and|[[:punct:]])\s+.*)?$/i) { print "/call say I $1? $reaction" ; }
+created_on: 1557460561.60297
+edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
+edited_on: 1557460967.5223
+enabled: 1
+last_referenced_in: pragma-
+last_referenced_on: 1557460828.01647
+owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
+rate_limit: 15
+ref_count: 7
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+type: text
+
+<you're>
+action: /code perl no warnings; $_s = "@ARGV" ; $_n = quotemeta "$nick" ; $_s =~ s/\bmy\b/your/gi; $_s =~ s/\bmyself\b/yourself/gi; $_s =~ s/\bme\b/you/gi; $_s =~ s/(\W|^)$_n\'s(\W|$)/$1your$2/gi; $_s =~ s/(\W|^)$_n(\W|$)/$1you$2/gi; if ($_s =~ /(.*?)(?:(?:\s+and|[[:punct:]])\s+.*)?$/i) { print "/call say I am $1? $reaction" ; }
+created_on: 1557460940.7208
+enabled: 1
+last_referenced_in: pragma-
+last_referenced_on: 1557461004.444
+owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
+rate_limit: 15
+ref_count: 2
+ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
+type: text
+
 <you\sremind\sme\sof\sthe\s(.*)>
 action: say $nick: What $1?
 created_on: 1196905060
@@ -49829,6 +49885,26 @@ rate_limit: 0
 ref_count: 0
 ref_user: nobody
 type: regex
+
+<your>
+action: /call you're
+created_on: 1557460989.61953
+enabled: 1
+owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
+
+<youre>
+action: /call you
+created_on: 1557460767.56095
+enabled: 1
+owner: pragma-!~chaos@unaffiliated/pragmatic-chaos
+rate_limit: 15
+ref_count: 0
+ref_user: nobody
+type: text
 
 <youredoingitwrong>
 action: /say This is you:  http://www.doingitwrong.com/
