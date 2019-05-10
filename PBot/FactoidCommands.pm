@@ -753,11 +753,11 @@ sub factmove {
     }
   }
 
-  if (length $target > 60) {
+  if (length $target > $self->{pbot}->{registry}->get_value('factoids', 'max_name_length')) {
     return "/say $nick: I don't think the factoid name needs to be that long.";
   }
 
-  if (length $target_channel > 20) {
+  if (length $target_channel > $self->{pbot}->{registry}->get_value('factoids', 'max_channel_length')) {
     return "/say $nick: I don't think the channel name needs to be that long.";
   }
 
@@ -842,11 +842,11 @@ sub factalias {
     return "Usage: factalias [channel] <keyword> <command>";
   }
 
-  if (length $alias > 60) {
+  if (length $alias > $self->{pbot}->{registry}->get_value('factoids', 'max_name_length')) {
     return "/say $nick: I don't think the factoid name needs to be that long.";
   }
 
-  if (length $chan > 20) {
+  if (length $chan > $self->{pbot}->{registry}->get_value('factoids', 'max_channel_length')) {
     return "/say $nick: I don't think the channel name needs to be that long.";
   }
 
@@ -932,11 +932,11 @@ sub factadd {
 
   $from_chan = '.*' if $from_chan !~ /^#/;
 
-  if (length $keyword > 60) {
+  if (length $keyword > $self->{pbot}->{registry}->get_value('factoids', 'max_name_length')) {
     return "/say $nick: I don't think the factoid name needs to be that long.";
   }
 
-  if (length $from_chan > 20) {
+  if (length $from_chan > $self->{pbot}->{registry}->get_value('factoids', 'max_channel_length')) {
     return "/say $nick: I don't think the channel needs to be that long.";
   }
 

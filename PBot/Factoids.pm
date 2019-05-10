@@ -63,7 +63,10 @@ sub initialize {
   $self->{commands}              = PBot::FactoidCommands->new(pbot => $pbot);
   $self->{factoidmodulelauncher} = PBot::FactoidModuleLauncher->new(pbot => $pbot);
 
-  $self->{pbot}->{registry}->add_default('text', 'factoids', 'default_rate_limit', '15');
+  $self->{pbot}->{registry}->add_default('text', 'factoids', 'default_rate_limit',  15);
+  $self->{pbot}->{registry}->add_default('text', 'factoids', 'max_name_length',     100);
+  $self->{pbot}->{registry}->add_default('text', 'factoids', 'max_content_length',  1024 * 8);
+  $self->{pbot}->{registry}->add_default('text', 'factoids', 'max_channel_length',  20);
 
   $self->{pbot}->{atexit}->register(sub { $self->save_factoids; return; });
 
@@ -405,7 +408,7 @@ sub expand_special_vars {
   $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
   $action =~ s/\$0\b/$root_keyword/g;
 
-  return validate_string($action);
+  return validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
 
 sub expand_factoid_vars {
@@ -539,14 +542,14 @@ sub expand_factoid_vars {
     $action = $self->expand_special_vars($from, $nick, $root_keyword, $action);
   }
 
-  return validate_string($action);
+  return validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
 
 sub expand_action_arguments {
   my ($self, $action, $input, $nick) = @_;
 
-  $action = validate_string($action);
-  $input = validate_string($input);
+  $action = validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
+  $input = validate_string($input, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 
   my %h;
   if (not defined $input or $input eq '') {
@@ -734,7 +737,7 @@ sub execute_code_factoid_using_safe {
     $action = $self->expand_factoid_vars($from, $nick, $root_keyword, $action);
     $action = $self->expand_action_arguments($action, $arguments, $nick);
   } else {
-    $action = validate_string($action);
+    $action = validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
   }
 
   return $action;
