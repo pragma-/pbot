@@ -79,6 +79,7 @@ sub execute {
     next if not length $line;
     <$out> and next if $line =~ m/^\(gdb\) No line \d+ in/;
     next if $line =~ m/^\(gdb\) No symbol table/;
+    next if $line =~ m/^\[Detaching from/;
     next if $line =~ m/^\[New Thread/;
     next if $line =~ m/^\(gdb\) Continuing/;
     next if $line =~ m/^\(gdb\) \$\d+ = "~Ok\.~"/;
