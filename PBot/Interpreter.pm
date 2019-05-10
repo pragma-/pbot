@@ -202,7 +202,7 @@ sub interpret {
 
   $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "][$stuff->{nick}!$stuff->{user}\@$stuff->{host}][$stuff->{interpret_depth}][$stuff->{command}]\n");
 
-  $stuff->{special} = "";
+  $stuff->{special} = "" unless exists $self->{special};
 
   if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
     use Data::Dumper;
