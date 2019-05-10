@@ -1731,6 +1731,8 @@ sub get_also_known_as {
 sub get_ancestor_id {
   my ($self, $id) = @_;
 
+  $id = 0 if not defined $id;
+
   my $ancestor = eval {
     my $sth = $self->{dbh}->prepare('SELECT id FROM Aliases WHERE alias = ? ORDER BY id LIMIT 1');
     $sth->execute($id);
