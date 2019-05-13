@@ -1004,7 +1004,9 @@ sub handle_action {
   # Check if it's an alias
   if ($action =~ /^\/call\s+(.*)$/) {
     my $command = $1;
-    $command .= " $stuff->{original_arguments}" if length $stuff->{original_arguments} and not $stuff->{aliased} and not $stuff->{special} eq 'code-factoid';
+    unless ($self->{factoids}->hash->{$channel}->{$keyword}->{'require_explicit_args'}) {
+      $command .= " $stuff->{original_arguments}" if length $stuff->{original_arguments} and not $stuff->{aliased} and not $stuff->{special} eq 'code-factoid';
+    }
 
     if ($command =~ s/\s*--keyword-override=([^ ]+)\s*//) {
       $stuff->{keyword_override} = $1;
