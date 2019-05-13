@@ -901,6 +901,12 @@ sub interpreter {
 
   return undef if $stuff->{referenced} and $self->{factoids}->hash->{$channel}->{$keyword}->{noembed};
 
+  if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{locked_to_channel}) {
+    if ($stuff->{ref_from} ne "") { # called from annother channel
+      return "$keyword may be invoked only in $stuff->{ref_from}.";
+    }
+  }
+
   if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_on}) {
     if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in}) {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{last_referenced_in} eq $stuff->{from}) {
@@ -1008,6 +1014,16 @@ sub handle_action {
     $stuff->{aliased} = 1;
 
     $self->{pbot}->{logger}->log("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] ($stuff->{nick}!$stuff->{user}\@$stuff->{host}) [$keyword_text] aliased to: [$command]\n");
+
+    if (defined $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'}) {
+        if ($self->{factoids}->hash->{$channel}->{$keyword}->{'locked'}) {
+          $self->{pbot}->{logger}->log("Effective-level set to $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'}\n");
+          $stuff->{'effective-level'} = $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'};
+        } else {
+          $self->{pbot}->{logger}->log("Ignoring effective-level of $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'} on unlocked factoid\n");
+        }
+    }
+
     return $self->{pbot}->{interpreter}->interpret($stuff);
   }
 
