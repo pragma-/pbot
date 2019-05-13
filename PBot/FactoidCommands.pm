@@ -49,7 +49,7 @@ our %factoid_metadata_levels = (
   locked                      => 10,
   add_nick                    => 10,
   nooverride                  => 10,
-  'effective-level'           => 20,
+  'effective-level'           => 40,
   'persist-key'               => 20,
   'interpolate'               => 10,
   # all others are allowed to be factset by anybody/default to level 0
@@ -1293,8 +1293,10 @@ sub factfind {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
+  my $usage = "Usage: factfind [-channel channel] [-owner regex] [-editby regex] [-refby regex] [-regex] [text]";
+
   if(not defined $arguments) {
-    return "Usage: factfind [-channel channel] [-owner regex] [-editby regex] [-refby regex] [-regex] [text]";
+    return $usage;
   }
 
   my ($channel, $owner, $refby, $editby, $use_regex);
@@ -1349,7 +1351,7 @@ sub factfind {
   }
 
   if(not defined $argtype) {
-    return "Usage: factfind [-channel regex] [-owner regex] [-refby regex] [-editby regex] [text]";
+    return $usage;
   }
 
   my ($text, $last_trigger, $last_chan, $i);
