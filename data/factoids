@@ -50115,7 +50115,7 @@ ref_user: k!~krok@unaffiliated/krok
 type: text
 
 <you>
-action: /code perl no warnings; $_s = "@ARGV"; $_s =~ s/[[:punct:]]+$//; $_n = quotemeta "$nick" ; $_s =~ s/\bmy\b/xbyourxb/gi; $_s =~ s/\bmyself\b/xbyourselfxb/gi; $_s =~ s/\bme\b/xbyouxb/gi; $_s =~ s/(\W|^)$_n\'s(\W|$)/$1xbyourxb$2/gi; $_s =~ s/(\W|^)$_n(\W|$)/$1xbyouxb$2/gi; $_s =~ s/\byour\b/my/gi; $_s =~ s/\byourself\b/myself/gi; $_s =~ s/\byou\b/me/gi; $_s =~ s/xb(\w+)xb/$1/g; if ($_s =~ /^a?re?\s+(.*?)(?:(?:\s+and|[[:punct:]])\s+.*)?$/i) { print "/call say I am $1? \$reaction" ; exit; } if ($_s =~ /(.*?)(?:(?:\s+and|[[:punct:]])\s+.*)?$/i) { print "/call say I $1? $reaction" ; }
+action: /code perl no warnings; $_s = lc "@ARGV"; $_s =~ s/[[:punct:]]+$//; $_n = quotemeta "$nick" ; $_s =~ s/\bmy\b/xbyourxb/gi; $_s =~ s/\bmyself\b/xbyourselfxb/gi; $_s =~ s/\bme\b|\bi\b/xbyouxb/gi; $_s =~ s/(\W|^)$_n\'s(\W|$)/$1xbyourxb$2/gi; $_s =~ s/(\W|^)$_n(\W|$)/$1xbyouxb$2/gi; $_s =~ s/\byour\b/my/gi; $_s =~ s/\byourself\b/myself/gi; $_s =~ s/\byou\b/I/gi; $_s =~ s/xb(\w+)xb/$1/g; if ($_s =~ /^a?re?\s+(.*?)(?:(?:\s+and|[[:punct:]])\s+.*)?$/i) { print "/call say I am $1? \$reaction" ; exit; } if ($_s =~ /(.*?)(?:(?:\s+and|[[:punct:]])\s+.*)?$/i) { print "/call say I $1? $reaction" ; }
 created_on: 1557460561.60297
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1557674606.40806
@@ -50129,7 +50129,7 @@ ref_user: pragma-!~chaos@unaffiliated/pragmatic-chaos
 type: text
 
 <you're>
-action: /code perl no warnings; $_s = "@ARGV"; $_s =~ s/[[:punct:]]+$//; $_n = quotemeta "$nick" ; $_s =~ s/\bmy\b/xbyourxb/gi; $_s =~ s/\bmyself\b/xbyourselfxb/gi; $_s =~ s/\bme\b/xbyouxb/gi; $_s =~ s/(\W|^)$_n\'s(\W|$)/$1xbyourxb$2/gi; $_s =~ s/(\W|^)$_n(\W|$)/$1xbyouxb$2/gi; $_s =~ s/\byour\b/my/gi; $_s =~ s/\byourself\b/myself/gi; $_s =~ s/\byou\b/me/gi; $_s =~ s/xb(\w+)xb/$1/g; if ($_s =~ /(.*?)(?:(?:\s+and|[[:punct:]])\s+.*)?$/i) { print "/call say I am $1? $reaction" ; }
+action: /code perl no warnings; $_s = lc "@ARGV"; $_s =~ s/[[:punct:]]+$//; $_n = quotemeta "$nick" ; $_s =~ s/\bmy\b/xbyourxb/gi; $_s =~ s/\bmyself\b/xbyourselfxb/gi; $_s =~ s/\bme\b|\bi\b/xbyouxb/gi; $_s =~ s/(\W|^)$_n\'s(\W|$)/$1xbyourxb$2/gi; $_s =~ s/(\W|^)$_n(\W|$)/$1xbyouxb$2/gi; $_s =~ s/\byour\b/my/gi; $_s =~ s/\byourself\b/myself/gi; $_s =~ s/\byou\b/I/gi; $_s =~ s/xb(\w+)xb/$1/g; if ($_s =~ /(.*?)(?:(?:\s+and|[[:punct:]])\s+.*)?$/i) { print "/call say I am $1? $reaction" ; }
 created_on: 1557460940.7208
 edited_by: pragma-!~chaos@unaffiliated/pragmatic-chaos
 edited_on: 1557674771.97267
