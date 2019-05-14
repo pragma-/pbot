@@ -189,16 +189,25 @@ sub load_metadata {
   my $self = shift;
   $self->{metadata}->load;
 
+  my $defaults = {
+    category_choices => 7,
+    category_autopick => 0,
+    min_players => 2,
+    stats => 1,
+    seen_expiry => 432000,
+    min_difficulty => 0,
+    max_difficulty => 25000,
+    max_missed_inputs => 3,
+  };
+
   if (not exists $self->{metadata}->hash->{settings}) {
-    $self->{metadata}->hash->{settings} = {
-      category_choices => 7,
-      category_autopick => 0,
-      min_players => 2,
-      stats => 1,
-      seen_expiry => 432000,
-      min_difficulty => 0,
-      max_difficulty => 25000
-    };
+    $self->{metadata}->hash->{settings} = $defaults;
+  } else {
+    foreach my $key (keys %$defaults) {
+      if (not exists $self->{metadata}->hash->{settings}->{$key}) {
+        $self->{metadata}->hash->{settings}->{$key} = $defaults->{$key};
+      }
+    }
   }
 }
 
@@ -741,6 +750,13 @@ sub spinach_cmd {
 
         $arguments = $self->normalize_text($arguments);
 
+        my @truth_count = split /\b/, $self->{state_data}->{current_question}->{answer};
+        my @lie_count = split /b/, $arguments;
+
+        if (@truth_count > 1 and @lie_count == 1) {
+          return "/msg $nick Your lie cannot be one word for this question. Please try again.";
+        }
+
         my $found_truth = 0;
 
         if (not $self->validate_lie($self->{state_data}->{current_question}->{answer}, $arguments)) {
@@ -1079,7 +1095,7 @@ sub run_one_state {
   if ($self->{current_state} =~ /r\dq\d/) {
     my $removed = 0;
     for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
-      if ($self->{state_data}->{players}->[$i]->{missedinputs} >= 3) {
+      if ($self->{state_data}->{players}->[$i]->{missedinputs} >= $self->{metadata}->{hash}->{settings}->{max_missed_inputs}) {
         $self->send_message($self->{channel}, "$color{red}$self->{state_data}->{players}->[$i]->{name} has missed too many prompts and has been ejected from the game!$color{reset}");
         splice @{$self->{state_data}->{players}}, $i--, 1;
         $removed = 1;
@@ -1588,6 +1604,7 @@ sub normalize_text {
   $text =~ s/-/ /g;
   $text =~ s/["'?!]//g;
   $text =~ s/\s+/ /g;
+  $text =~ s/^\s+|\s+$//g;
 
   return substr $text, 0, 80;
 }
@@ -1873,18 +1890,21 @@ sub getlies {
   }
 
   my @nolies;
-  foreach my $player (@{$state->{players}}) {
-    if (not exists $player->{lie}) {
-      push @nolies, $player->{name};
-    }
-  }
-
-  return 'next' if not @nolies;
-
+  my $reveallies = ". Revealing lies! ";
+  my $lies = 0;
+  my $comma = '';
   my @keeps;
   my @rerolls;
   my @skips;
   foreach my $player (@{$state->{players}}) {
+    if (not exists $player->{lie}) {
+      push @nolies, $player->{name};
+    } else {
+      $lies++;
+      $reveallies .= "$comma$player->{name}: $player->{lie}";
+      $comma = '; ';
+    }
+
     if ($player->{reroll}) {
       push @rerolls, $player->{name};
     }
@@ -1898,13 +1918,17 @@ sub getlies {
     }
   }
 
+  return 'next' if not @nolies;
+
+  $reveallies = "" if not $lies;
+
   if (@rerolls) {
     my $needed = int (@{$state->{players}} / 2) + 1;
     $needed += @keeps;
     $needed -= @rerolls;
     if ($needed <= 0) {
       $state->{reroll_question} = 1;
-      $self->send_message($self->{channel}, "The answer was: " . uc $state->{current_question}->{answer});
+      $self->send_message($self->{channel}, "The answer was: " . uc ($state->{current_question}->{answer}) . $reveallies);
       return 'reroll'; 
     }
   }
@@ -1914,7 +1938,7 @@ sub getlies {
     $needed += @keeps;
     $needed -= @skips;
     if ($needed <= 0) {
-      $self->send_message($self->{channel}, "The answer was: " . uc $state->{current_question}->{answer});
+      $self->send_message($self->{channel}, "The answer was: " . uc ($state->{current_question}->{answer}) . $reveallies);
       return 'skip';
     }
   }
