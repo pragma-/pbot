@@ -750,8 +750,8 @@ sub spinach_cmd {
 
         $arguments = $self->normalize_text($arguments);
 
-        my @truth_count = split /\b/, $self->{state_data}->{current_question}->{answer};
-        my @lie_count = split /b/, $arguments;
+        my @truth_count = split /\s/, $self->{state_data}->{current_question}->{answer};
+        my @lie_count = split /\s/, $arguments;
 
         if (@truth_count > 1 and @lie_count == 1) {
           return "/msg $nick Your lie cannot be one word for this question. Please try again.";
