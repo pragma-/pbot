@@ -197,7 +197,8 @@ sub load_metadata {
     seen_expiry => 432000,
     min_difficulty => 0,
     max_difficulty => 25000,
-    max_missed_inputs => 3,
+    max_missed_inputs => 3
+    debug_state => 0,
   };
 
   if (not exists $self->{metadata}->hash->{settings}) {
@@ -1139,7 +1140,7 @@ sub run_one_state {
   }
 
   # dump new state data for logging/debugging
-  if ($state_data->{newstate}) {
+  if ($state_data->{newstate} and $self->{metadata}->{hash}->{settings}->{debug_state}) {
     $self->{pbot}->{logger}->log("Spinach: New state: $self->{previous_state} ($state_data->{previous_result}) --> $self->{current_state}\n" . Dumper $state_data);
   }
 
