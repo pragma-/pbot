@@ -370,6 +370,7 @@ sub make_args {
       } else {
         # mismatched quotes, shove the remainder as the last positional argument
         push @arglist, $rest;
+        push @arglist_quotes, $rest;
         last;
       }
     } else {
