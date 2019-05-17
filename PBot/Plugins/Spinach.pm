@@ -197,7 +197,7 @@ sub load_metadata {
     seen_expiry => 432000,
     min_difficulty => 0,
     max_difficulty => 25000,
-    max_missed_inputs => 3
+    max_missed_inputs => 3,
     debug_state => 0,
   };
 
