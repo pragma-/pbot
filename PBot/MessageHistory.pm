@@ -256,15 +256,26 @@ sub recall_message {
     my $channel_arg = 1 if defined $recall_channel;
     my $history_arg = 1 if defined $recall_history;
 
-    $recall_nick = shift @$args;
-    $recall_history = shift @$args if not defined $recall_history;
-    $recall_channel = shift @$args if not defined $recall_channel;
+    $recall_nick = shift @$args if @$args;
+    $recall_history = shift @$args if @$args and not defined $recall_history;
+    $recall_channel = "@$args" if @$args and not defined $recall_channel;
 
     $recall_count = 1 if (not defined $recall_count) || ($recall_count <= 0);
     return "You may only select a count of up to 50 messages." if $recall_count > 50;
 
     $recall_before = 0 if not defined $recall_before;
     $recall_after = 0 if not defined $recall_after;
+
+    # imply -x if -n > 1 and no history
+    if ($recall_count > 1 and not defined $recall_history) {
+      $recall_context = $recall_nick;
+    }
+
+    # make -n behave like -b if -n > 1 and nick is context
+    if ((defined $recall_context or not defined $recall_history) and $recall_count > 1) {
+      $recall_before = $recall_count - 1;
+      $recall_count = 0;
+    }
 
     if ($recall_before + $recall_after > 200) {
       return "You may only select up to 200 lines of surrounding context.";
@@ -275,7 +286,7 @@ sub recall_message {
     }
 
     # swap nick and channel if recall nick looks like channel and channel wasn't specified
-    if(not $channel_arg and $recall_nick =~ m/^#/) {
+    if (not $channel_arg and $recall_nick =~ m/^#/) {
       my $temp = $recall_nick;
       $recall_nick = $recall_channel;
       $recall_channel = $temp;
@@ -284,7 +295,7 @@ sub recall_message {
     $recall_history = 1 if not defined $recall_history;
 
     # swap history and channel if history looks like a channel and neither history or channel were specified
-    if(not $channel_arg and not $history_arg and $recall_history =~ m/^#/) {
+    if (not $channel_arg and not $history_arg and $recall_history =~ m/^#/) {
       my $temp = $recall_history;
       $recall_history = $recall_channel;
       $recall_channel = $temp;
@@ -301,7 +312,7 @@ sub recall_message {
 
     # another sanity check for people using it wrong
     if ($recall_channel !~ m/^#/) {
-      $recall_history = "$recall_channel $recall_history";
+      $recall_history = "$recall_history $recall_channel";
       $recall_channel = $from;
     }
 
