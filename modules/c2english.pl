@@ -382,6 +382,8 @@ if(not $force and $ret != 0) {
   $output =~ s/\s*\(declared at .*?\)//g;
   $output =~ s/, note: declared here//g;
   $output =~ s#/usr/include/.*?.h:\d+:\d+:/##g;
+  $output =~ s/\s*error: storage size of.*?isn't known\s*//g;
+  $output =~ s/; did you mean '.*?'\?//g;
 
   # don't error about undeclared objects
   $output =~ s/error: '[^']+' undeclared\s*//g;
