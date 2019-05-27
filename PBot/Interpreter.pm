@@ -17,6 +17,7 @@ use base 'PBot::Registerable';
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use Text::Balanced qw/extract_bracketed extract_quotelike/;
+use Text::ParseWords;
 use Carp ();
 
 use PBot::Utils::ValidateString;
@@ -341,7 +342,7 @@ sub interpret {
 sub make_args {
   my ($self, $string) = @_;
 
-  my @args = split / /, $string;
+  my @args = parse_line(' ', 1, $string);
   my @arglist;
   my @arglist_quotes;
 
