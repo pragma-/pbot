@@ -20,7 +20,7 @@ use Getopt::Long qw(GetOptionsFromString);
 use POSIX qw(strftime);
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -51,7 +51,7 @@ sub load_quotegrabs {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->{filename}; }
+  if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
   return if not defined $filename;
 
   $self->{pbot}->{logger}->log("Loading quotegrabs from $filename ...\n");
@@ -65,7 +65,7 @@ sub load_quotegrabs {
     chomp $line;
     $i++;
     my ($nick, $channel, $timestamp, $grabbed_by, $text) = split(/\s+/, $line, 5);
-    if(not defined $nick || not defined $channel || not defined $timestamp
+    if (not defined $nick || not defined $channel || not defined $timestamp
        || not defined $grabbed_by || not defined $text) {
       die "Syntax error around line $i of $filename\n";
     }
@@ -87,7 +87,7 @@ sub save_quotegrabs {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->{filename}; }
+  if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
   return if not defined $filename;
 
   open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
@@ -112,7 +112,7 @@ sub add_quotegrab {
 sub delete_quotegrab {
   my ($self, $id) = @_;
 
-  if($id < 1 || $id > $#{ $self->{quotegrabs} } + 1) {
+  if ($id < 1 || $id > $#{ $self->{quotegrabs} } + 1) {
     return undef;
   }
 
@@ -128,7 +128,7 @@ sub delete_quotegrab {
 sub get_quotegrab {
   my ($self, $id) = @_;
 
-  if($id < 1 || $id > $#{ $self->{quotegrabs} } + 1) {
+  if ($id < 1 || $id > $#{ $self->{quotegrabs} } + 1) {
     return undef;
   }
 
@@ -147,19 +147,19 @@ sub get_random_quotegrab {
   eval {
     for(my $i = 0; $i <= $#{ $self->{quotegrabs} }; $i++) {
       my $hash = $self->{quotegrabs}[$i];
-      if($hash->{channel} =~ /$channel/i && $hash->{nick} =~ /$nick/i && $hash->{text} =~ /$text/i) {
+      if ($hash->{channel} =~ /$channel/i && $hash->{nick} =~ /$nick/i && $hash->{text} =~ /$text/i) {
         $hash->{id} = $i + 1;
         push @quotes, $hash;
       }
     }
   };
 
-  if($@) {
+  if ($@) {
     $self->{pbot}->{logger}->log("Error in show_random_quotegrab parameters: $@\n");
     return undef;
   }
   
-  if($#quotes < 0) {
+  if ($#quotes < 0) {
     return undef;
   }
 

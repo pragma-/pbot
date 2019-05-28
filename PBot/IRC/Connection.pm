@@ -26,7 +26,7 @@ use Carp;
 # sometimes even perl is braindead...
 
 eval 'use Time::HiRes qw(time)';
-if(!$@) {
+if (!$@) {
   sub time ();
   use subs 'time';
   require Time::HiRes;
@@ -264,10 +264,10 @@ sub connect {
     $self->quit("Changing servers");
   }
   
-  if($self->ssl) {
+  if ($self->ssl) {
     require IO::Socket::SSL;
 
-    if($self->ssl_ca_file) {
+    if ($self->ssl_ca_file) {
       $self->socket(IO::Socket::SSL->new(PeerAddr  => $self->server,
           PeerPort        => $self->port,
           Proto           => "tcp",
@@ -275,7 +275,7 @@ sub connect {
           SSL_verify_mode => IO::Socket::SSL->SSL_VERIFY_PEER,
           SSL_ca_file     => $self->ssl_ca_file,
         ));
-    } elsif($self->ssl_ca_path) {
+    } elsif ($self->ssl_ca_path) {
       $self->socket(IO::Socket::SSL->new(PeerAddr  => $self->server,
           PeerPort        => $self->port,
           Proto           => "tcp",
@@ -300,7 +300,7 @@ sub connect {
                                         ));
   }
   
-  if(!$self->socket) {
+  if (!$self->socket) {
     carp (sprintf "Can't connect to %s:%s!",
           $self->server, $self->port);
     $self->error(1);
@@ -502,7 +502,7 @@ sub handler {
   print STDERR "Trying to handle event '$ev'.\n" if $self->{_debug};
 
   
-  if($self->{_debug}) {
+  if ($self->{_debug}) {
     use Data::Dumper;
     print STDERR "ev: ", Dumper($ev), "\nevent: ", Dumper($event), "\n";
   }
@@ -842,7 +842,7 @@ sub notice {
   
   my ($buf, $length, $line) = (CORE::join("", @_), $self->{_maxlinelen});
   
-  while(length($buf) > 0) {
+  while (length($buf) > 0) {
     ($line, $buf) = unpack("a$length a*", $buf);
     $self->sl("NOTICE $to :$line");
   }
@@ -941,7 +941,7 @@ sub parse {
      $type = lc $type;
 
      # fix splitting of IPv6 hostnames in modes -- pragma- 2013/07/30
-     if($type eq "mode" and $#stuff > -1 and length $line) {
+     if ($type eq "mode" and $#stuff > -1 and length $line) {
        my @other_stuff = split /\s+/, $line;
        $stuff[$#stuff] .= ':' . shift @other_stuff;
        push @stuff, @other_stuff;
@@ -1236,12 +1236,12 @@ sub privmsg {
   my $line;
   
   if (ref($to) =~ /^(GLOB|IO::Socket)/) {
-    while(length($buf) > 0) {
+    while (length($buf) > 0) {
       ($line, $buf) = unpack("a$length a*", $buf);
       send($to, $line . "\012", 0);
     } 
   } else {
-    while(length($buf) > 0) {
+    while (length($buf) > 0) {
       ($line, $buf) = unpack("a$length a*", $buf);
       if (ref $to eq 'ARRAY') {
         $self->sl("PRIVMSG ", CORE::join(',', @$to), " :$line");
@@ -1303,10 +1303,10 @@ sub schedule {
   my $time = shift;
   my $coderef = shift;
 
-  unless($coderef) {
+  unless ($coderef) {
     croak 'Not enough arguments to Connection->schedule()';
   }
-  unless(ref($coderef) eq 'CODE') {
+  unless (ref($coderef) eq 'CODE') {
     croak 'Second argument to schedule() isn\'t a coderef';
   }
 
@@ -1320,10 +1320,10 @@ sub schedule_output_event {
   my $time = shift;
   my $coderef = shift;
 
-  unless($coderef) {
+  unless ($coderef) {
     croak 'Not enough arguments to Connection->schedule()';
   }
-  unless(ref($coderef) eq 'CODE') {
+  unless (ref($coderef) eq 'CODE') {
     croak 'Second argument to schedule() isn\'t a coderef';
   }
 

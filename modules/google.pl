@@ -22,7 +22,7 @@ if ($#ARGV < 0)
 
 $arguments = join("+", @ARGV);
 
-if($arguments =~ m/([0-9]+)\+/)
+if ($arguments =~ m/([0-9]+)\+/)
 {
   $matches = $1;
   $arguments =~ s/$1//;
@@ -43,19 +43,19 @@ $text = $response->content;
 
 $arguments =~ s/\+/ /g;
 
-if($text =~ m/No pages were found/)
+if ($text =~ m/No pages were found/)
 {
   print "No results found for '$arguments'.\n";
   die;
 }
 
-if($text =~ m/Results/g)
+if ($text =~ m/Results/g)
 {
   $text =~ m/1<\/b> - .*?<\/b> of (about )?<b>(.*?)<\/b>/g;
   $header = $2;
 }
 
-if($text =~ m/Did you mean\:/g)
+if ($text =~ m/Did you mean\:/g)
 {
   $text =~ m/<i>(.*?)<\/i>/g;
   $footer = "Alternatively, try '$1' for more results.";
@@ -64,14 +64,14 @@ if($text =~ m/Did you mean\:/g)
 print "$arguments ($header): ";
 
 
-if($text =~ m/Showing web page information/g)
+if ($text =~ m/Showing web page information/g)
 {
   $text =~ m/<p class=g>(.*?)<br>/g;
   $header = $1;
   $header =~ s/<.*?>//g;
   print "$header";
  
-  if($text =~ m/Description:(.*?)<br>/)
+  if ($text =~ m/Description:(.*?)<br>/)
   {
     $header = $1;
     $header =~ s/<.*?>//g;
@@ -81,7 +81,7 @@ if($text =~ m/Showing web page information/g)
 }
 
 
-$matches = 5 if($matches > 5);
+$matches = 5 if ($matches > 5);
 
 my $i = 0;
 
@@ -89,9 +89,9 @@ my $quote = chr(226) . chr(128) . chr(156);
 my $quote2 = chr(226) . chr(128) . chr(157);
 my $dash = chr(226) . chr(128) . chr(147);
 
-while($text =~ m/<li class=g><h3 class=r><a href=\"(.*?)\".*?>(.*?)<\/a>/g && $i < $matches)
+while ($text =~ m/<li class=g><h3 class=r><a href=\"(.*?)\".*?>(.*?)<\/a>/g && $i < $matches)
 {
-  if($i > 0)
+  if ($i > 0)
   {
     $t = ", $2: [$1]";
   }
@@ -115,7 +115,7 @@ while($text =~ m/<li class=g><h3 class=r><a href=\"(.*?)\".*?>(.*?)<\/a>/g && $i
   print $t;
   $i++;
 
-#while($t =~ m/(.)/g)
+#while ($t =~ m/(.)/g)
 #{
 #  print "($1) = " . ord($1). "\n";
 #}

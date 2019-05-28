@@ -73,16 +73,20 @@ sub execute {
 
       local $SIG{ALRM} = sub { print "Time out\n"; kill 9, $pid; print "sent KILL to $pid\n"; die "Timed-out: $result\n"; };
       alarm($COMPILE_TIMEOUT);
-      
+
+      print "Reading...\n";
       while(my $line = <$fh>) {
+        print "read [$line]\n";
         $result .= $line;
       }
 
       close $fh;
+      print "Done reading.\n";
 
       my $ret = $? >> 8;
       alarm 0;
-      #print "[$ret, $result]\n";
+      
+      print "[$ret, $result]\n";
       return ($ret, $result);
     };
 
@@ -94,6 +98,7 @@ sub execute {
     return ($ret, $result);
   } else {
     waitpid($child, 0);
+    print "?: $?\n";
     my $result = $? >> 8;
     print "child exited, parent continuing [result = $result]\n";
     return (undef, $result);
@@ -247,6 +252,7 @@ sub compiler_server {
 
         close $client;
 
+        print "timed out: $timed_out; killed: $killed\n";
         next unless ($timed_out or $killed);
 
         vm_reset;

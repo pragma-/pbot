@@ -122,7 +122,7 @@ sub unban_user {
     $channel = $temp;
   }
 
-  if(not defined $target) {
+  if (not defined $target) {
     return "/msg $nick Usage: unban <nick/mask> [[channel] [false value to use unban queue]]";
   }
 
@@ -230,7 +230,7 @@ sub unmute_user {
     $channel = $temp;
   }
 
-  if(not defined $target) {
+  if (not defined $target) {
     return "/msg $nick Usage: unmute <nick/mask> [[channel] [false value to use unban queue]]";
   }
 

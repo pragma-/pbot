@@ -18,10 +18,10 @@ use Text::Balanced qw(extract_delimited);
 use JSON;
 
 # automatically reap children processes in background
-$SIG{CHLD} = sub { while(waitpid(-1, WNOHANG) > 0) {} };
+$SIG{CHLD} = sub { while (waitpid(-1, WNOHANG) > 0) {} };
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to Commands should be key/value pairs, not hash reference");
   }
 
@@ -36,7 +36,7 @@ sub initialize {
   my ($self, %conf) = @_;
 
   my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
+  if (not defined $pbot) {
     Carp::croak("Missing pbot reference to PBot::FactoidModuleLauncher");
   }
 
@@ -58,7 +58,7 @@ sub execute_module {
 
   my @factoids = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $stuff->{keyword}, undef, 2, 2);
 
-  if(not @factoids or not $factoids[0]) {
+  if (not @factoids or not $factoids[0]) {
     $stuff->{checkflood} = 1;
     $self->{pbot}->{interpreter}->handle_result($stuff, "/msg $stuff->{nick} Failed to find module for '$stuff->{keyword}' in channel $stuff->{from}\n");
     return;
@@ -86,7 +86,7 @@ sub execute_module {
     if ($self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\/(.*)/) {
       my ($p1, $p2, $p3) = ($1, $2, $3);
       my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after);
-      if($p3 eq 'g') {
+      if ($p3 eq 'g') {
         $stuff->{arguments} =~ s/$p1/$p2/g;
         ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
       } else {
@@ -113,12 +113,12 @@ sub execute_module {
   $self->{arguments} = "";
 
   my $lr;
-  while(1) {
+  while (1) {
     my ($e, $r, $p) = extract_delimited($argsbuf, "'", "[^']+");
 
     $lr = $r if not defined $lr;
 
-    if(defined $e) {
+    if (defined $e) {
       $e =~ s/\\([^\w])/$1/g;
       $e =~ s/'/'\\''/g;
       $e =~ s/^'\\''/'/;
@@ -135,7 +135,7 @@ sub execute_module {
   pipe(my $reader, my $writer);
   my $pid = fork;
 
-  if(not defined $pid) {
+  if (not defined $pid) {
     $self->{pbot}->{logger}->log("Could not fork module: $!\n");
     close $reader;
     close $writer;
@@ -146,7 +146,7 @@ sub execute_module {
 
   # FIXME -- add check to ensure $module exists
 
-  if($pid == 0) { # start child block
+  if ($pid == 0) { # start child block
     close $reader;
     
     # don't quit the IRC client when the child dies
@@ -154,12 +154,12 @@ sub execute_module {
     *PBot::IRC::Connection::DESTROY = sub { return; };
     use warnings;
 
-    if(not chdir $module_dir) {
+    if (not chdir $module_dir) {
       $self->{pbot}->{logger}->log("Could not chdir to '$module_dir': $!\n");
       Carp::croak("Could not chdir to '$module_dir': $!");
     }
 
-    if(exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{workdir}) {
+    if (exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{workdir}) {
       chdir $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{workdir};
     }
 

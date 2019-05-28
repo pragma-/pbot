@@ -34,11 +34,11 @@ sub dequeue {
   my $event = shift;
   my $result;
 
-  if(!$event) { # we got passed nothing, so return the first event
+  if (!$event) { # we got passed nothing, so return the first event
     $event = $self->head();
     delete $self->queue->{$event->id};
     $result = $event;
-  } elsif(!ref($event)) { # we got passed an id
+  } elsif (!ref($event)) { # we got passed an id
     $result = $self->queue->{$event};
     delete $self->queue->{$event};
   } else { # we got passed an actual event object

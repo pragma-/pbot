@@ -190,7 +190,7 @@ sub new {
 
     $fh = defined $handle ? $handle : IO::File->new(">$filename");
 
-    unless(defined $fh) {
+    unless (defined $fh) {
         carp "Can't open $filename for writing: $!";
         $sock = new IO::Socket::INET( Proto    => "tcp",
 				      PeerAddr => "$address:$port" ) and
@@ -254,7 +254,7 @@ sub parse {
     my $line = $self->_getline($_[0], 'BLOCKS');
 
     next unless defined $line;
-    unless(print {$self->{_fh}} $line) {
+    unless (print {$self->{_fh}} $line) {
 	carp ("Error writing to " . $self->{_filename} . ": $!");
 	close $self->{_fh};
 	$self->{_parent}->parent->removeconn($self);
@@ -482,7 +482,7 @@ sub parse {
         return;
     }
 
-    unless($self->{_socket}->send($buf)) {
+    unless ($self->{_socket}->send($buf)) {
 
 	if ($self->{_debug}) {
 	    warn "send() failed horribly in DCC SEND"

@@ -18,12 +18,12 @@ if ($#ARGV <0)
 
 $rolls = join("", @ARGV);
 
-if($rolls =~ s/\s*-show\s*//) {
+if ($rolls =~ s/\s*-show\s*//) {
   $show = 1;
 }
 
-if($rolls =~ m/^\s*(\d+)d\d+(?:\+?-?\d+)?\s*$/) {
-  if($1 > 100) {
+if ($rolls =~ m/^\s*(\d+)d\d+(?:\+?-?\d+)?\s*$/) {
+  if ($1 > 100) {
     print "Sorry, maximum of 100 rolls.\n";
     die;
   }
@@ -32,7 +32,7 @@ if($rolls =~ m/^\s*(\d+)d\d+(?:\+?-?\d+)?\s*$/) {
   die;
 }
 
-if($show) {
+if ($show) {
   my @results = roll_array $rolls;
   $result = 0;
   foreach my $n (@results) {

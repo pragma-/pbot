@@ -37,7 +37,7 @@ if ($channel !~ /^#/) {
   exit;
 }
 
-while($text =~ s/^\s*(is|are|the|a|an)\s+//i){};
+while ($text =~ s/^\s*(is|are|the|a|an)\s+//i){};
 $text =~ s/\s*\?*$//;
 $text =~ s/^\s+//;
 $text =~ s/\s+$//;
@@ -62,7 +62,7 @@ if (defined $ret) {
 
   chomp $last_nick;
 
-  if(scalar gettimeofday - $last_timestamp <= 15) {
+  if (scalar gettimeofday - $last_timestamp <= 15) {
     $ret = open $fh, "<", "$CJEOPARDY_DATA-$channel";
     if (defined $ret) {
       @data = <$fh>;

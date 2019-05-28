@@ -15,7 +15,7 @@ use strict;
 use Carp ();
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -45,7 +45,7 @@ sub regset {
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($section, $item, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4);
 
-  if(not defined $section or not defined $item) {
+  if (not defined $section or not defined $item) {
     return "Usage: regset <section> <item> [key [value]]";
   }
 
@@ -60,7 +60,7 @@ sub regunset {
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($section, $item, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
-  if(not defined $section or not defined $item or not defined $key) {
+  if (not defined $section or not defined $item or not defined $key) {
     return "Usage: regunset <section> <item> <key>"
   }
 
@@ -72,7 +72,7 @@ sub regadd {
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($section, $item, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
-  if(not defined $section or not defined $item or not defined $value) {
+  if (not defined $section or not defined $item or not defined $value) {
     return "Usage: regadd <section> <item> <value>";
   }
 
@@ -87,15 +87,15 @@ sub regrem {
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($section, $item) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
-  if(not defined $section or not defined $item) {
+  if (not defined $section or not defined $item) {
     return "Usage: regrem <section> <item>";
   }
 
-  if(not exists $self->{pbot}->{registry}->{registry}->hash->{$section}) {
+  if (not exists $self->{pbot}->{registry}->{registry}->hash->{$section}) {
     return "No such registry section $section.";
   }
 
-  if(not exists $self->{pbot}->{registry}->{registry}->hash->{$section}->{$item}) {
+  if (not exists $self->{pbot}->{registry}->{registry}->hash->{$section}->{$item}) {
     return "No such item $item in section $section.";
   }
 
@@ -111,25 +111,25 @@ sub regshow {
 
   my ($section, $item) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
-  if(not defined $section or not defined $item) {
+  if (not defined $section or not defined $item) {
     return "Usage: regshow <section> <item>";
   }
 
-  if(not exists $registry->{$section}) {
+  if (not exists $registry->{$section}) {
     return "No such registry section $section.";
   }
 
-  if(not exists $registry->{$section}->{$item}) {
+  if (not exists $registry->{$section}->{$item}) {
     return "No such registry item $item in section $section.";
   }
 
-  if($registry->{$section}->{$item}->{private}) {
+  if ($registry->{$section}->{$item}->{private}) {
     return "[$section] $item: <private>";
   }
 
   my $result = "[$section] $item: $registry->{$section}->{$item}->{value}";
 
-  if($registry->{$section}->{$item}->{type} eq 'array') {
+  if ($registry->{$section}->{$item}->{type} eq 'array') {
     $result .= ' [array]';
   }
 
@@ -143,7 +143,7 @@ sub regfind {
 
   my $usage = "Usage: regfind [-showvalues] [-section section] <regex>";
 
-  if(not defined $arguments) {
+  if (not defined $arguments) {
     return $usage;
   }
 
@@ -156,7 +156,7 @@ sub regfind {
   $arguments =~ s/\s+$//;
   $arguments =~ s/\s+/ /g;
 
-  if($arguments eq "") {
+  if ($arguments eq "") {
     return $usage;
   }
 
@@ -168,7 +168,7 @@ sub regfind {
     foreach my $section_key (sort keys %{ $registry }) {
       next if defined $section and $section_key !~ /^$section$/i;
       foreach my $item_key (sort keys %{ $registry->{$section_key} }) {
-        if($registry->{$section_key}->{$item_key}->{private}) {
+        if ($registry->{$section_key}->{$item_key}->{private}) {
           # do not match on value if private
           next if $item_key !~ /$arguments/i;
         } else {
@@ -177,12 +177,12 @@ sub regfind {
 
         $i++;
 
-        if($section_key ne $last_section) {
+        if ($section_key ne $last_section) {
           $text .= "[$section_key]\n";
           $last_section = $section_key;
         }
-        if($showvalues) {
-          if($registry->{$section_key}->{$item_key}->{private}) {
+        if ($showvalues) {
+          if ($registry->{$section_key}->{$item_key}->{private}) {
             $text .= "  $item_key = <private>\n";
           } else {
             $text .= "  $item_key = $registry->{$section_key}->{$item_key}->{value}" . ($registry->{$section_key}->{$item_key}->{type} eq 'array' ? " [array]\n" : "\n");
@@ -197,9 +197,9 @@ sub regfind {
 
   return "/msg $nick $arguments: $@" if $@;
 
-  if($i == 1) {
+  if ($i == 1) {
     chop $text;
-    if($registry->{$last_section}->{$last_item}->{private}) {
+    if ($registry->{$last_section}->{$last_item}->{private}) {
       return "Found one registry entry: [$last_section] $last_item: <private>";
     } else {
       return "Found one registry entry: [$last_section] $last_item: $registry->{$last_section}->{$last_item}->{value}" . ($registry->{$last_section}->{$last_item}->{type} eq 'array' ? ' [array]' : '');
@@ -217,37 +217,37 @@ sub regchange {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my ($section, $item, $delim, $tochange, $changeto, $modifier);
 
-  if(defined $arguments) {
-    if($arguments =~ /^([^\s]+) ([^\s]+)\s+s(.)/) {
+  if (defined $arguments) {
+    if ($arguments =~ /^([^\s]+) ([^\s]+)\s+s(.)/) {
       $section = $1;
       $item = $2; 
       $delim = $3;
     }
     
-    if($arguments =~ /$delim(.*?)$delim(.*)$delim(.*)?$/) {
+    if ($arguments =~ /$delim(.*?)$delim(.*)$delim(.*)?$/) {
       $tochange = $1; 
       $changeto = $2;
       $modifier  = $3;
     }
   }
 
-  if(not defined $section or not defined $item or not defined $changeto) {
+  if (not defined $section or not defined $item or not defined $changeto) {
     return "Usage: regchange <section> <item> s/<pattern>/<replacement>/";
   }
 
   my $registry = $self->{pbot}->{registry}->{registry}->hash;
 
-  if(not exists $registry->{$section}) {
+  if (not exists $registry->{$section}) {
     return "No such registry section $section.";
   }
 
-  if(not exists $registry->{$section}->{$item}) {
+  if (not exists $registry->{$section}->{$item}) {
     return "No such registry item $item in section $section.";
   }
 
   my $ret = eval {
     use re::engine::RE2 -strict => 1;
-    if(not $registry->{$section}->{$item}->{value} =~ s|$tochange|$changeto|) {
+    if (not $registry->{$section}->{$item}->{value} =~ s|$tochange|$changeto|) {
       $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change [$section] $item 's$delim$tochange$delim$changeto$delim$modifier\n");
       return "/msg $nick Change [$section] $item failed.";
     } else {

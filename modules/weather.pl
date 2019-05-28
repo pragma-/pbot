@@ -8,7 +8,7 @@ use LWP::Simple;
 
 my ($text, $weather, $location, $date, $i, $day, @days);
 
-if($#ARGV < 0)
+if ($#ARGV < 0)
 {
   print "Try again. Please specify the location you would like weather for.\n";
   die;
@@ -18,7 +18,7 @@ $location = join("+", @ARGV);
 
 $location =~ s/,/%2C/;
 
-if($location =~ m/\+-(.*)/)
+if ($location =~ m/\+-(.*)/)
 {
   $date = $1;
   $location =~ s/\+-.*//;
@@ -31,7 +31,7 @@ $text = get("http://weather.yahoo.com/search/weather2?p=$location");
 $location =~ s/\+/ /g;
 $location =~ s/%2C/,/g;
 
-if($text =~ m/No match found/)
+if ($text =~ m/No match found/)
 {
   print "$location is not a valid location for this service.\n"; 
   die;
@@ -41,11 +41,11 @@ my $found = 0;
 my $buf;
 
 
-if($text =~ m/location matches\:/g)
+if ($text =~ m/location matches\:/g)
 {
   $buf = "Multiple locations found: ";
 
-  while($text =~ m/<a\shref="\/forecast\/(.*?)">(.*?)<\/a>/g)
+  while ($text =~ m/<a\shref="\/forecast\/(.*?)">(.*?)<\/a>/g)
   {
     $i = $1;
     $weather = $2;
@@ -56,7 +56,7 @@ if($text =~ m/location matches\:/g)
 
     $buf = $buf . "$weather - "; 
 
-    if($location =~ m/$weather/i)
+    if ($location =~ m/$weather/i)
     {
       $text = get("http://weather.yahoo.com/forecast/$i");
       $found = 1;
@@ -78,13 +78,13 @@ if($text =~ m/location matches\:/g)
   $text =~ m/<a href=.*?>(.*?)<\/a>\s>/g;
   $country = $1;
 
-  if($country eq "North America")
+  if ($country eq "North America")
   {
     $text =~ m/<a href=.*?>(.*?)<\/a>\s>/g;
     $country = $1;
   }
 
-  if($country ne "Canada") 
+  if ($country ne "Canada") 
   {
     $text =~ m/<a href=.*?>(.*?)<\/a>\s>/g;
     $state = $1;
@@ -97,7 +97,7 @@ if($text =~ m/location matches\:/g)
     if $text =~ m/at:\s(.*?)<\/font><\/td>/gi;
 
 
-  while($text =~ 
+  while ($text =~ 
 m/<td\swidth\=\".*?align\=center\scolspan\=.*?\sface\=.*?\s.*?<b>(.*?)<\/b>/g)
   {
     push(@days, $1);
@@ -105,7 +105,7 @@ m/<td\swidth\=\".*?align\=center\scolspan\=.*?\sface\=.*?\s.*?<b>(.*?)<\/b>/g)
 
   foreach $day (@days)
   {
-    if($date =~ m/$day/i)
+    if ($date =~ m/$day/i)
     {
       $date = $i;
       last;
@@ -113,7 +113,7 @@ m/<td\swidth\=\".*?align\=center\scolspan\=.*?\sface\=.*?\s.*?<b>(.*?)<\/b>/g)
     $i = $i + 1; 
   }
 
-  if($i > 4 && $date ne "")
+  if ($i > 4 && $date ne "")
   {
     print("\'$date\' is not a valid day, valid days for $country, $state, $city are: ",
           join(" ", @days[1,2,3,4]), "\n");
@@ -122,9 +122,9 @@ m/<td\swidth\=\".*?align\=center\scolspan\=.*?\sface\=.*?\s.*?<b>(.*?)<\/b>/g)
 
   $text =~ m/Currently:/g;
   $temp = $1
-  if($text =~ m/<b>(.*?)&deg/g);
+  if ($text =~ m/<b>(.*?)&deg/g);
 
-  if($date == 0)
+  if ($date == 0)
   {
     $text =~ m/Arial\ssize=2>(.*?)</g;
     $cond = $1
@@ -138,7 +138,7 @@ m/<td\swidth\=\".*?align\=center\scolspan\=.*?\sface\=.*?\s.*?<b>(.*?)<\/b>/g)
     }
   }
 
-  if($cond eq "Unknown")
+  if ($cond eq "Unknown")
   {
     for($i = 0; $i <= $date; $i++)
     {
@@ -161,31 +161,31 @@ m/<td\salign=right\scolspan=1.*?face=Arial>Low\:.*?size=3\sface=Arial>\n\s(.*?)\
     $low = $1;
   }
 
-  if($text =~ m/More Current Conditions<\/b>/g)
+  if ($text =~ m/More Current Conditions<\/b>/g)
   {
 
   $text =~ m/Feels Like:/g;
   $feels = $1
-  if($text =~ m/size=2>\n(.*?)&deg/sg);
+  if ($text =~ m/size=2>\n(.*?)&deg/sg);
 
   $text =~ m/Wind:/g;
   $wind = $1
-  if($text =~ m/size=2>\n(.*?)</sg);
+  if ($text =~ m/size=2>\n(.*?)</sg);
 
   $wind =~ s/\n//g;
   $wind =~ s/\r//g;
 
   $text =~ m/Humidity:/g;
   $humid = $1
-  if($text =~ m/size=2>\n(.*?)\n/sg);
+  if ($text =~ m/size=2>\n(.*?)\n/sg);
 
   $text =~ m/Sunrise:/g;
   $sunup = $1
-  if($text =~ m/size=2>\n(.*?)</sg);
+  if ($text =~ m/size=2>\n(.*?)</sg);
 
   $text =~ m/Sunset:/g;
   $sundown = $1
-  if($text =~ m/size=2>\n(.*?)</sg);
+  if ($text =~ m/size=2>\n(.*?)</sg);
   }
 
   $today = "Today: $1"
@@ -199,7 +199,7 @@ m/<td\salign=right\scolspan=1.*?face=Arial>Low\:.*?size=3\sface=Arial>\n\s(.*?)\
   $highc = int(5/9*($high - 32));
   $lowc  = int(5/9*($low - 32));
 
-  if($date > 0)
+  if ($date > 0)
   {
     $date = "[".$days[$date]."] ";
   }
@@ -213,7 +213,7 @@ m/<td\salign=right\scolspan=1.*?face=Arial>Low\:.*?size=3\sface=Arial>\n\s(.*?)\
   $date =~ s/Sun/Sunday/i;
 
 
-  if($date eq "")
+  if ($date eq "")
   {
   print "$country, $state, $city (Updated $update): Temp: ".$temp."F/".$tempc."C (Feels like: $feels"."F/".$feelsc."C), ".
         "High: ".$high."F/".$highc."C, Low: ".$low."F/".$lowc."C, ".

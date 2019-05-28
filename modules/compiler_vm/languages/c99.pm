@@ -1,9 +1,5 @@
 #!/usr/bin/perl
 
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 use warnings;
 use strict;
 
@@ -20,7 +16,7 @@ sub initialize {
   $self->{options_nopaste} = '-fno-diagnostics-show-caret';
   $self->{cmdline}         = 'gcc -ggdb -g3 $sourcefile $options -o $execfile';
 
-  $self->{default_options} .= ' -Werror' if defined $self->{nick} && $self->{nick} =~ m/marchelz/i;
+#  $self->{default_options} .= ' -Werror' if defined $self->{nick} && $self->{nick} =~ m/marchelz/i;
 
   $self->{prelude} = <<'END';
 #define _XOPEN_SOURCE 9001

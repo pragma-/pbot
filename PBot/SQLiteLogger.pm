@@ -33,7 +33,7 @@ sub log
 
   # DBI feeds us pieces at a time, so accumulate a complete line
   # before outputing
-  if($self->{buf} =~ tr/\n//) {
+  if ($self->{buf} =~ tr/\n//) {
     $self->log_message;
     $self->{buf} = '';
   }
@@ -53,7 +53,7 @@ sub log_message {
 
 sub close {
   my $self = shift;
-  if($self->{buf}) {
+  if ($self->{buf}) {
     $self->log_message;
     $self->{buf} = '';
   }

@@ -29,6 +29,8 @@ sub parsedate {
 
     my $parse = Time::ParseDate::parsedate($input, NOW => $now);
 
+    print "parsedate: now => $now, input => $input, parse => $parse\n";
+
     if (not defined $parse) {
       $input =~ s/\s+$//;
       return (0, "I don't know what '$input' means. I expected a time duration like '5 minutes' or '24 hours' or 'next tuesday'.\n");

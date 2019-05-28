@@ -57,7 +57,7 @@ sub nickometer ($) {
     unless ($raw) {
       $nick =~ tr/023457+8/ozeasttb/;
     }
-    while($nick =~ /$special_pattern/ig) {
+    while ($nick =~ /$special_pattern/ig) {
       &punish($special_cost{$special}, "matched special case /$special_pattern/")
     }
   }
@@ -66,7 +66,7 @@ sub nickometer ($) {
     &punish(1000, "single letter nick");
   }
   
-  while(m/[A-Z]([^A-Z]+)\b/g) {
+  while (m/[A-Z]([^A-Z]+)\b/g) {
     &punish(250, "length 1 between capitals") if length $1 == 1;
   }
 
@@ -223,19 +223,19 @@ if ($ARGV[1] and $ARGV[1] eq 'verbose') {
   $verbose = 1;
 }
 
-if(not defined $nick) {
+if (not defined $nick) {
   print "Usage: nickometer <nick>\n";
   exit 1;
 }
 
-if($nick =~ m/pragma/) {
+if ($nick =~ m/pragma/) {
   print "$nick is a really awesome nick!";
   exit 0;
 }
 
 my $percentage = nickometer($nick);
 
-if($percentage > 0) {
+if ($percentage > 0) {
   print "$nick is $percentage% lame.\n";
 } else {
   print "$nick isn't lame.\n";

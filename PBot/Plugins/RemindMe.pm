@@ -314,7 +314,11 @@ sub remindme {
     }
   }
 
+  print "alarm: $alarm\n";
+
   my ($length, $error) = parsedate($alarm);
+
+  print "length: $length, error: $error!\n";
   return $error if $error;
 
   # I don't know how I feel about enforcing arbitrary time restrictions

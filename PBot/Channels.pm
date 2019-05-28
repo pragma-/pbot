@@ -16,7 +16,7 @@ use Carp ();
 use PBot::HashObject;
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
      Carp::croak ("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -46,7 +46,7 @@ sub set {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($channel, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
-  if(not defined $channel) {
+  if (not defined $channel) {
     return "Usage: chanset <channel> [key [value]]";
   }
 
@@ -57,7 +57,7 @@ sub unset {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($channel, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
-  if(not defined $channel or not defined $key) {
+  if (not defined $channel or not defined $key) {
     return "Usage: chanunset <channel> <key>";
   }
 
@@ -67,7 +67,7 @@ sub unset {
 sub add {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  if(not defined $arguments or not length $arguments) {
+  if (not defined $arguments or not length $arguments) {
     return "Usage: chanadd <channel>";
   }
 
@@ -82,7 +82,7 @@ sub add {
 sub remove {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  if(not defined $arguments or not length $arguments) {
+  if (not defined $arguments or not length $arguments) {
     return "Usage: chanrem <channel>";
   }
 

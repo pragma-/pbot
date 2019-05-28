@@ -19,7 +19,7 @@ $manpage = join("+", @ARGV);
 $section = 8;
 my $loop = 1;
 
-if($manpage =~ m/([0-9]+)\+(.*)/) {
+if ($manpage =~ m/([0-9]+)\+(.*)/) {
   $section = $1;
   $manpage = $2;
   $loop = 0;
@@ -37,13 +37,13 @@ do {
   $text = substr($get_text, 0, 5000);
 #  print '['.length($text).']'."\n";
   
-  if($text =~ m/Sorry, no data found/)
+  if ($text =~ m/Sorry, no data found/)
   {
     $section--;
 
-    if($section == 0 || $loop == 0) {
+    if ($section == 0 || $loop == 0) {
       $section++;
-      if($section == 1 && $loop == 1) {
+      if ($section == 1 && $loop == 1) {
         print "No information found for $manpage in any of the sections.\n";
       } else {
         print "No information found for $manpage in section $section.\n";
@@ -51,33 +51,33 @@ do {
       exit 0;
     }
   } else { $loop = 0; }
-} while($loop);
+} while ($loop);
 
 $text =~ m/^\s+NAME/gsm;
-if($text =~ m/(.*?)SYNOPSIS/gsi) {
+if ($text =~ m/(.*?)SYNOPSIS/gsi) {
   $name = $1;
 }
 
 my $i = 0;
 while ($text =~ m/#include <(.*?)>/gsi) {
-  if(not $includes =~ /$1/) {
-    $includes .= ", " if($i > 0);
+  if (not $includes =~ /$1/) {
+    $includes .= ", " if ($i > 0);
     $includes .= "$1";
     $i++;
   }
 }
 
 $prototype = "$1 $2$manpage($3);"
-  if($text =~ m/SYNOPSIS.*^\s+(.*?)\s+(\*?)$manpage\s*\((.*?)\)\;?\n.*DESC/ms);
+  if ($text =~ m/SYNOPSIS.*^\s+(.*?)\s+(\*?)$manpage\s*\((.*?)\)\;?\n.*DESC/ms);
 
-if($text =~ m/DESCRIPTION(.*?)$manpage(.*?)\./si) {
+if ($text =~ m/DESCRIPTION(.*?)$manpage(.*?)\./si) {
   my $foo = $1;
   my $bar = $2;
   $foo =~ s/\r//g;
   $foo =~ s/\n//g;
   $foo =~ s/\s+/ /g;
   $foo =~ s/^\s+//;
-  if($foo =~ /^NOTE/) {
+  if ($foo =~ /^NOTE/) {
     $description = "$foo$manpage$bar";
   } else {
     $description = "$manpage$bar";
@@ -101,7 +101,7 @@ $result .= "$prototype - " if (defined $prototype);
 
 $result .= $description;
 
-if($section == 3) {
+if ($section == 3) {
   $result .= " - http://www.iso-9899.info/man?$manpage";
 } else {
   $result .= " - http://www.freebsd.org/cgi/man.cgi?sektion=$section&query=$manpage";

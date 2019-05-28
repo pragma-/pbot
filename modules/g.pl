@@ -10,12 +10,12 @@ use strict;
 use WWW::Google::CustomSearch;
 use HTML::Entities;
 
-my $api_key = '';
-my $cx      = '';
+my $api_key = 'AIzaSyCps6lKe6-WGvPawx7BphCYb-xM0rdevKQ';
+my $cx      = '003394693865260357751:kmvdeoslok4';
 
 my ($nick, $arguments, $matches);
 
-$matches = 3;
+$matches = 1;
 $nick = shift @ARGV;
 
 if ($#ARGV < 0) {
@@ -25,7 +25,7 @@ if ($#ARGV < 0) {
 
 $arguments = join ' ', @ARGV;
 
-if($arguments =~ s/^([0-9]+)//) {
+if ($arguments =~ s/^([0-9]+)//) {
   $matches = $1;
 }
 

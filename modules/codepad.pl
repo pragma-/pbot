@@ -21,7 +21,7 @@ my %preludes = ( 'C' => "#include <stdio.h>\n#include <stdlib.h>\n#include <stri
                  'C++' => "#include <iostream>\n#include <cstdio>\n",
                );
 
-if($#ARGV <= 0) {
+if ($#ARGV <= 0) {
   print "Usage: cc [-lang=<language>] <code>\n";
   exit 0;
 }
@@ -42,14 +42,14 @@ $show_url = 1 if $code =~ s/-showurl//i;
 
 my $found = 0;
 foreach my $l (@languages) {
-  if(uc $lang eq uc $l) {
+  if (uc $lang eq uc $l) {
     $lang = $l;
     $found = 1;
     last;
   }
 }
 
-if(not $found) {
+if (not $found) {
   print "$nick: Invalid language '$lang'.  Supported languages are: @languages\n";
   exit 0;
 }
@@ -66,18 +66,18 @@ $code =~ s/#([\w\d_]+)\\n/\n#$1\n/g;
 my $precode = $preludes{$lang} . $code;
 $code = '';
 
-if($lang eq "C" or $lang eq "C++") {
+if ($lang eq "C" or $lang eq "C++") {
   my $has_main = 0;
   
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
 
-  while($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
+  while ($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
     my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
     
     my @extract = extract_codeblock($potential_body, '{}');
     my $body;
-    if(not defined $extract[0]) {
+    if (not defined $extract[0]) {
       $output .= "<pre>error: unmatched brackets for function '$ident'; </pre>";
       $body = $extract[1];
     } else {
@@ -91,7 +91,7 @@ if($lang eq "C" or $lang eq "C++") {
   $precode =~ s/^\s+//;
   $precode =~ s/\s+$//;
 
-  if(not $has_main) {
+  if (not $has_main) {
     $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) { $precode\n;\n  return 0;}\n";
   } else {
     $code = "$prelude\n\n$precode\n\n$code\n";
@@ -100,7 +100,7 @@ if($lang eq "C" or $lang eq "C++") {
   $code = $precode;
 }
 
-if($lang eq "C" or $lang eq "C++") {
+if ($lang eq "C" or $lang eq "C++") {
 #  $code = pretty($code);
 }
 
@@ -110,7 +110,7 @@ $code =~ s/\s+$//;
 my %post = ( 'lang' => $lang, 'code' => $code, 'private' => 'True', 'run' => 'True', 'submit' => 'Submit' );
 my $response = $ua->post("http://codepad.org", \%post);
 
-if(not $response->is_success) {
+if (not $response->is_success) {
   print "There was an error compiling the code.\n";
   die $response->status_line;
 }
@@ -121,7 +121,7 @@ my $url = $response->request->uri;
 # remove line numbers
 $text =~ s/<a style="" name="output-line-\d+">\d+<\/a>//g;
 
-if($text =~ /<span class="heading">Output:<\/span>.+?<div class="code">(.*)<\/div>.+?<\/table>/si) {
+if ($text =~ /<span class="heading">Output:<\/span>.+?<div class="code">(.*)<\/div>.+?<\/table>/si) {
   $output .= "$1";
 } else {
   $output .= "<pre>No output.</pre>";
@@ -141,7 +141,7 @@ print FILE localtime() . "\n";
 print FILE "$nick: [ $url ] $output\n\n";
 close FILE;
 
-if($show_url) {
+if ($show_url) {
   print "$nick: [ $url ] $output\n";
 } else {
   print "$nick: $output\n";
@@ -154,7 +154,7 @@ sub pretty {
   my $pid = open2(\*IN, \*OUT, 'astyle -Upf');
   print OUT "$code\n";
   close OUT;
-  while(my $line = <IN>) {
+  while (my $line = <IN>) {
     $result .= $line;
   }
   close IN;

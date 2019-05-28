@@ -28,28 +28,28 @@ my $orig_arguments = $arguments;
 $arguments =~ s/(the )*answer.*question of life(,? the universe,? and everything)?\s?/42/gi;
 $arguments =~ s/(the )*meaning of (life|existence|everything)?/42/gi;
 
-if ($arguments =~ s/([^ ]+)\s+to\s+([^ ]+)\s*$//) {
-  @conversion = ($1, $2);
+if ($arguments =~ s/(\d+\s?)([^ ]+)\s+to\s+([^ ]+)\s*$/$1/) {
+  @conversion = ($2, $3);
 }
 
-if($arguments =~ m/([\$`\|{}"'#@=?\[\]])/ or $arguments =~ m/(~~)/) {
+if ($arguments =~ m/([\$`\|{}"'#@=?\[\]])/ or $arguments =~ m/(~~)/) {
   $invalid = $1;
 } else {
-  while($arguments =~ /([a-zA-Z0-9]+)/g) {
+  while ($arguments =~ /([a-zA-Z0-9]+)/g) {
     my $keyword = $1;
     next if $keyword =~ m/^[0-9]+$/;
     $invalid = $keyword and last if not grep { /^$keyword$/ } @valid_keywords;
   }
 }
 
-if($invalid) {
+if ($invalid) {
   print "Illegal symbol '$invalid' in equation\n";
   exit 1;
 }
 
 $response = eval("use POSIX qw/ceil floor/; use Math::Trig; use Math::Complex;" . $arguments);
 
-if($@) {
+if ($@) {
   my $error = $@;
   $error =~ s/[\n\r]+//g;
   $error =~ s/ at \(eval \d+\) line \d+.//;

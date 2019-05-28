@@ -69,7 +69,7 @@ sub args {
   my $self = shift;
   my $args = shift;
 
-  if($args) {  
+  if ($args) {  
     my (@q, $i, $ct) = @{$args};       # This line is solemnly dedicated to \mjd.
 
     $self->{'args'} = [ ];

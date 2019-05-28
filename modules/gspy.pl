@@ -15,7 +15,7 @@ defined $html or die "Oops, couldn't get the data.";
 
 print "Recent search queries: ";
 
-while($html =~ m/redir\.htm\?qkw\=(.*?)\"/g)
+while ($html =~ m/redir\.htm\?qkw\=(.*?)\"/g)
 {
   print "$1, ";
 }

@@ -20,7 +20,7 @@ use Text::Levenshtein qw/fastdistance/;
 use Time::Duration;
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -176,7 +176,7 @@ sub end {
 
   $self->{pbot}->{logger}->log("Closing message history SQLite database\n");
 
-  if(exists $self->{dbh} and defined $self->{dbh}) {
+  if (exists $self->{dbh} and defined $self->{dbh}) {
     $self->{dbh}->commit() if $self->{new_entries};
     $self->{dbh}->disconnect();
     delete $self->{dbh};
@@ -290,7 +290,7 @@ sub add_message_account {
   my $id;
   my ($nick, $user, $host) = $mask =~ m/^([^!]+)!([^@]+)@(.*)/;
 
-  if(defined $link_id and $link_type == $self->{alias_type}->{STRONG}) {
+  if (defined $link_id and $link_type == $self->{alias_type}->{STRONG}) {
     $id = $link_id;
   } else {
     $id = $self->get_new_account_id();
@@ -302,7 +302,7 @@ sub add_message_account {
     $sth->execute($mask, $id, scalar gettimeofday, $nick, $user, $host);
     $self->{new_entries}++;
 
-    if((not defined $link_id) || ((defined $link_id) && ($link_type == $self->{alias_type}->{WEAK}))) {
+    if ((not defined $link_id) || ((defined $link_id) && ($link_type == $self->{alias_type}->{WEAK}))) {
       $sth = $self->{dbh}->prepare('INSERT INTO Accounts VALUES (?, ?, ?)');
       $sth->execute($id, $mask, "");
       $self->{new_entries}++;
@@ -987,7 +987,7 @@ sub recall_message_by_count {
 
   my $messages;
 
-  if(defined $id) {
+  if (defined $id) {
     $messages = eval {
       if (defined $use_aliases) {
         my %akas = $self->get_also_known_as($use_aliases);
@@ -1041,7 +1041,7 @@ sub recall_message_by_count {
 
   $self->{pbot}->{logger}->log($@) if $@;
 
-  if(defined $ignore_command) {
+  if (defined $ignore_command) {
     my $botnick     = $self->{pbot}->{registry}->get_value('irc',     'botnick');
     my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
     foreach my $message (@$messages) {
@@ -1064,7 +1064,7 @@ sub recall_message_by_text {
 
   my $messages;
 
-  if(defined $id) {
+  if (defined $id) {
     $messages = eval {
       my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg REGEXP ? ORDER BY timestamp DESC LIMIT 10');
       $sth->execute($id, $channel, $regex);
@@ -1080,7 +1080,7 @@ sub recall_message_by_text {
 
   $self->{pbot}->{logger}->log($@) if $@;
 
-  if(defined $ignore_command) {
+  if (defined $ignore_command) {
     my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
     my $botnick     = $self->{pbot}->{registry}->get_value('irc',     'botnick');
     foreach my $message (@$messages) {
@@ -1175,7 +1175,7 @@ sub get_channel_data {
   my $channel_data = eval {
     my $sql = 'SELECT ';
 
-    if(not @columns) {
+    if (not @columns) {
       $sql .= '*';
     } else {
       my $comma = '';
@@ -1782,7 +1782,7 @@ sub commit_message_history {
 
   return if not $self->{dbh};
 
-  if($self->{new_entries} > 0) {
+  if ($self->{new_entries} > 0) {
     # $self->{pbot}->{logger}->log("Commiting $self->{new_entries} messages to SQLite\n");
     eval {
       $self->{dbh}->commit();

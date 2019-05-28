@@ -35,7 +35,7 @@ $SIG{ALRM} = sub {
 };
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to Timer should be key/value pairs, not hash reference");
   }
 
@@ -87,14 +87,14 @@ sub on_tick_handler {
   # print "-----\n";
   # print "on tick handler for $self->{name}\n";
 
-  if($self->{enabled}) {
-    if($#{ $self->{handlers} } > -1) {
+  if ($self->{enabled}) {
+    if ($#{ $self->{handlers} } > -1) {
       # call handlers supplied via register() if timeout for each has elapsed
       foreach my $func (@{ $self->{handlers} }) {
-        if(defined $func->{last}) {
+        if (defined $func->{last}) {
           $func->{last} -= $max_seconds if $seconds < $func->{last}; # handle wrap-around of $seconds
 
-          if($seconds - $func->{last} >= $func->{timeout}) {
+          if ($seconds - $func->{last} >= $func->{timeout}) {
             $func->{last} = $seconds;
             $elapsed = 1;
           }
@@ -103,19 +103,19 @@ sub on_tick_handler {
           $elapsed = 1;
         }
 
-        if($elapsed) {
+        if ($elapsed) {
           &{ $func->{subref} }($self);
           $elapsed = 0;
         }
       }
     } else {
       # call default overridable handler if timeout has elapsed
-      if(defined $self->{last}) {
+      if (defined $self->{last}) {
         # print "$self->{name} last = $self->{last}, seconds: $seconds, timeout: $self->{timeout} " . ($seconds - $self->{last}) . "\n";
 
         $self->{last} -= $max_seconds if $seconds < $self->{last}; # handle wrap-around
 
-        if($seconds - $self->{last} >= $self->{timeout}) {
+        if ($seconds - $self->{last} >= $self->{timeout}) {
           $elapsed = 1;
           $self->{last} = $seconds;
         }
@@ -125,7 +125,7 @@ sub on_tick_handler {
         $self->{last} = $seconds;
       }
 
-      if($elapsed) {
+      if ($elapsed) {
         $self->on_tick();
         $elapsed = 0;
       }
@@ -157,11 +157,11 @@ sub register {
 
   # print "-- Registering timer $ref [$id] at $timeout seconds\n";
 
-  if($timeout < $min_timeout) {
+  if ($timeout < $min_timeout) {
     $min_timeout = $timeout;
   }
 
-  if($self->{enabled}) {
+  if ($self->{enabled}) {
     alarm $min_timeout;
   }
 }
@@ -170,7 +170,7 @@ sub unregister {
   my $self = shift;
   my $id;
 
-  if(@_) {
+  if (@_) {
     $id = shift;
   } else {
     Carp::croak("Must pass timer id to unregister()");
@@ -183,7 +183,7 @@ sub update_interval {
   my ($self, $id, $interval) = @_;
 
   foreach my $h (@{ $self->{handlers} }) {
-    if($h->{id} eq $id) {
+    if ($h->{id} eq $id) {
       $h->{timeout} = $interval;
       last;
     }

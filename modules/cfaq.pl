@@ -19,7 +19,7 @@ $query =~ s/^\*/\\*/g;
 $query =~ s/\[/\\[/g;
 $query =~ s/\]/\\]/g;
 
-if($query =~ /^(\d+)\.\*\?/) {
+if ($query =~ /^(\d+)\.\*\?/) {
   $match = $1;
   $query =~ s/^\d+\.\*\?//;
 }
@@ -31,19 +31,19 @@ close(FILE);
 my ($heading, $question_full, $question_link, $question_number, $question_text, $result);
 
 foreach my $line (@contents) {
-  if($line =~ m/^<H4>(.*?)<\/H4>/) {
+  if ($line =~ m/^<H4>(.*?)<\/H4>/) {
     $heading = $1;
     next;
   }
 
-  if($line =~ m/<p><a href="(.*?)" rel=subdocument>(.*?)<\/a>/) {
+  if ($line =~ m/<p><a href="(.*?)" rel=subdocument>(.*?)<\/a>/) {
     ($question_link, $question_number) = ($1, $2);
 
-    if(defined $question_full) {
-      if($question_full =~ m/$query/i) {
+    if (defined $question_full) {
+      if ($question_full =~ m/$query/i) {
         $matches++;
         $found = 1;
-        if($match == $matches) {
+        if ($match == $matches) {
           $question_text =~ s/\s+/ /g;
           $result = $question_text;
         }
@@ -55,7 +55,7 @@ foreach my $line (@contents) {
     next;
   }
 
-  if(defined $question_full) {
+  if (defined $question_full) {
     $line =~ s/[\n\r]/ /g;
     $line =~ s/(<pre>|<\/pre>|<TT>|<\/TT>|<\/a>|<br>)//g;
     $line =~ s/<a href=".*?">//g;
@@ -69,8 +69,8 @@ foreach my $line (@contents) {
   }
 }
 
-if($found == 1) {
-  print "But there are $matches results...\n" and exit if($match > $matches);
+if ($found == 1) {
+  print "But there are $matches results...\n" and exit if ($match > $matches);
 
   print "$matches results, displaying #$match: " if ($matches > 1);
 

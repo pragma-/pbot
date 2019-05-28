@@ -46,7 +46,7 @@ use PBot::Plugins;
 use PBot::WebPaste;
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to PBot should be key/value pairs, not hash reference");
   }
 
@@ -166,7 +166,7 @@ sub random_nick {
 sub connect {
   my ($self, $server) = @_;
 
-  if($self->{connected}) {
+  if ($self->{connected}) {
     # TODO: disconnect, clean-up, etc
   }
 
@@ -214,7 +214,7 @@ sub do_one_loop {
 
 sub start {
   my $self = shift;
-  while(1) { 
+  while (1) { 
     $self->connect() if not $self->{connected};
     $self->do_one_loop() if $self->{connected}; 
   }

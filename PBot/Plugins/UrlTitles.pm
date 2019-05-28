@@ -62,7 +62,7 @@ sub show_url_titles {
     return 0 if not defined $nickserv or not length $nickserv;
   }
 
-  if($self->{pbot}->{registry}->get_value('general', 'show_url_titles')
+  if ($self->{pbot}->{registry}->get_value('general', 'show_url_titles')
       and not $self->{pbot}->{registry}->get_value($channel, 'no_url_titles')
       and not grep { $channel =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_ignore_channels')
       and grep { $channel =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_channels')) {

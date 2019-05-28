@@ -22,7 +22,7 @@ $Data::Dumper::Sortkeys = 1;
 use Carp ();
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to BanTracker should be key/value pairs, not hash reference");
   }
 
@@ -130,7 +130,7 @@ sub get_baninfo {
 
   foreach my $mode (keys %{ $self->{banlist}->{$channel} }) {
     foreach my $banmask (keys %{ $self->{banlist}->{$channel}->{$mode} }) {
-      if($banmask =~ m/^\$a:(.*)/) {
+      if ($banmask =~ m/^\$a:(.*)/) {
         $ban_account = lc $1;
       } else {
         $ban_account = "";
@@ -155,7 +155,7 @@ sub get_baninfo {
       }
 
       if ($banned) {
-        if(not defined $bans) {
+        if (not defined $bans) {
           $bans = [];
         }
 
@@ -214,25 +214,25 @@ sub track_mode {
   $target = lc $target;
   $channel = lc $channel;
 
-  if($mode eq "+b" or $mode eq "+q") {
+  if ($mode eq "+b" or $mode eq "+q") {
     $self->{pbot}->{logger}->log("ban-tracker: $target " . ($mode eq '+b' ? 'banned' : 'quieted') . " by $source in $channel.\n");
     $self->{banlist}->{$channel}->{$mode}->{$target} = [ $source, gettimeofday ];
     $self->{pbot}->{antiflood}->devalidate_accounts($target, $channel);
   }
-  elsif($mode eq "-b" or $mode eq "-q") {
+  elsif ($mode eq "-b" or $mode eq "-q") {
     $self->{pbot}->{logger}->log("ban-tracker: $target " . ($mode eq '-b' ? 'unbanned' : 'unquieted') . " by $source in $channel.\n");
     delete $self->{banlist}->{$channel}->{$mode eq "-b" ? "+b" : "+q"}->{$target};
 
-    if($mode eq "-b") {
-      if($self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, $target)) {
+    if ($mode eq "-b") {
+      if ($self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, $target)) {
         $self->{pbot}->{chanops}->{unban_timeout}->remove($channel, $target);
-      } elsif($self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, "$target\$##stop_join_flood")) {
+      } elsif ($self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, "$target\$##stop_join_flood")) {
         # freenode strips channel forwards from unban result if no ban exists with a channel forward
         $self->{pbot}->{chanops}->{unban_timeout}->remove($channel, "$target\$##stop_join_flood");
       }
     }
-    elsif($mode eq "-q") {
-      if($self->{pbot}->{chanops}->{unmute_timeout}->find_index($channel, $target)) {
+    elsif ($mode eq "-q") {
+      if ($self->{pbot}->{chanops}->{unmute_timeout}->find_index($channel, $target)) {
         $self->{pbot}->{chanops}->{unmute_timeout}->remove($channel, $target);
       }
     }

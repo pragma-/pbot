@@ -24,7 +24,7 @@ if (not length $code) {
 my $output;
 
 my $force;
-if($code =~ s/^-f\s+//) {
+if ($code =~ s/^-f\s+//) {
   $force = 1;
 }
 
@@ -46,18 +46,18 @@ use constant {
 my $state = NORMAL;
 my $escaped = 0;
 
-while($code =~ m/(.)/gs) {
+while ($code =~ m/(.)/gs) {
   my $ch = $1;
 
   given ($ch) {
     when ('\\') {
-      if($escaped == 0) {
+      if ($escaped == 0) {
         $escaped = 1;
         next;
       }
     }
 
-    if($state == NORMAL) {
+    if ($state == NORMAL) {
       when ($_ eq '"' and not $escaped) {
         $state = DOUBLE_QUOTED;
       }
@@ -72,13 +72,13 @@ while($code =~ m/(.)/gs) {
       }
     }
 
-    if($state == DOUBLE_QUOTED) {
+    if ($state == DOUBLE_QUOTED) {
       when ($_ eq '"' and not $escaped) {
         $state = NORMAL;
       }
     }
 
-    if($state == SINGLE_QUOTED) {
+    if ($state == SINGLE_QUOTED) {
       when ($_ eq "'" and not $escaped) {
         $state = NORMAL;
       }
@@ -99,18 +99,18 @@ my $parens = 0;
 $escaped = 0;
 my $cpp = 0; # preprocessor
 
-while($code =~ m/(.)/msg) {
+while ($code =~ m/(.)/msg) {
   my $ch = $1;
   my $pos = pos $code;
 
   print "adding newlines, ch = [$ch], parens: $parens, cpp: $cpp, single: $single_quote, double: $double_quote, escaped: $escaped, pos: $pos\n" if $debug >= 10;
 
-  if($ch eq '\\') {
+  if ($ch eq '\\') {
     $escaped = not $escaped;
-  } elsif($ch eq '#' and not $cpp and not $escaped and not $single_quote and not $double_quote) {
+  } elsif ($ch eq '#' and not $cpp and not $escaped and not $single_quote and not $double_quote) {
     $cpp = 1;
 
-    if($code =~ m/include\s*[<"]([^>"]*)[>"]/msg) {
+    if ($code =~ m/include\s*[<"]([^>"]*)[>"]/msg) {
       my $match = $1;
       $pos = pos $code;
       substr ($code, $pos, 0) = "\n";
@@ -119,41 +119,41 @@ while($code =~ m/(.)/msg) {
     } else {
       pos $code = $pos;
     }
-  } elsif($ch eq '"') {
+  } elsif ($ch eq '"') {
     $double_quote = not $double_quote unless $escaped or $single_quote;
     $escaped = 0;
-  } elsif($ch eq '(' and not $single_quote and not $double_quote) {
+  } elsif ($ch eq '(' and not $single_quote and not $double_quote) {
     $parens++;
-  } elsif($ch eq ')' and not $single_quote and not $double_quote) {
+  } elsif ($ch eq ')' and not $single_quote and not $double_quote) {
     $parens--;
     $parens = 0 if $parens < 0;
-  } elsif($ch eq ';' and not $cpp and not $single_quote and not $double_quote and $parens == 0) {
-    if(not substr($code, $pos, 1) =~ m/[\n\r]/) {
+  } elsif ($ch eq ';' and not $cpp and not $single_quote and not $double_quote and $parens == 0) {
+    if (not substr($code, $pos, 1) =~ m/[\n\r]/) {
       substr ($code, $pos, 0) = "\n";
       pos $code = $pos + 1;
     }
-  } elsif($ch eq "'") {
+  } elsif ($ch eq "'") {
     $single_quote = not $single_quote unless $escaped or $double_quote;
     $escaped = 0;
-  } elsif($ch eq 'n' and $escaped) {
-    if(not $single_quote and not $double_quote) {
+  } elsif ($ch eq 'n' and $escaped) {
+    if (not $single_quote and not $double_quote) {
       print "added newline\n" if $debug >= 10;
       substr ($code, $pos - 2, 2) = "\n";
       pos $code = $pos;
       $cpp = 0;
     }
     $escaped = 0;
-  } elsif($ch eq '{' and not $cpp and not $single_quote and not $double_quote) {
-    if(not substr($code, $pos, 1) =~ m/[\n\r]/) {
+  } elsif ($ch eq '{' and not $cpp and not $single_quote and not $double_quote) {
+    if (not substr($code, $pos, 1) =~ m/[\n\r]/) {
       substr ($code, $pos, 0) = "\n";
       pos $code = $pos + 1;
     }
-  } elsif($ch eq '}' and not $cpp and not $single_quote and not $double_quote) {
-    if(not substr($code, $pos, 1) =~ m/[\n\r;]/) {
+  } elsif ($ch eq '}' and not $cpp and not $single_quote and not $double_quote) {
+    if (not substr($code, $pos, 1) =~ m/[\n\r;]/) {
       substr ($code, $pos, 0) = "\n";
       pos $code = $pos + 1;
     }
-  } elsif($ch eq "\n" and $cpp and not $single_quote and not $double_quote) {
+  } elsif ($ch eq "\n" and $cpp and not $single_quote and not $double_quote) {
     $cpp = 0;
   } else {
     $escaped = 0;
@@ -168,7 +168,7 @@ $white_code =~ s/(?:\"((?:\\\"|(?!\").)*)\")/'"' . ('-' x length $1) . '"'/ge;
 $white_code =~ s/(?:\'((?:\\\'|(?!\').)*)\')/"'" . ('-' x length $1) . "'"/ge;
 
 my $precode;
-if($white_code =~ m/#include/) {
+if ($white_code =~ m/#include/) {
   $precode = $code; 
 } else {
   $precode = $prelude . $code;
@@ -180,16 +180,16 @@ print "--- precode: [$precode]\n" if $debug;
 
 my $lang = 'C89';
 
-if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
+if ($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   my $prelude = '';
-  while($precode =~ s/^\s*(#.*\n{1,2})//g) {
+  while ($precode =~ s/^\s*(#.*\n{1,2})//g) {
     $prelude .= $1;
   }
 
-  if($precode =~ m/^\s*(#.*)/ms) {
+  if ($precode =~ m/^\s*(#.*)/ms) {
     my $line = $1;
 
-    if($line !~ m/\n/) {
+    if ($line !~ m/\n/) {
       $warn_unterminated_define = 1;
     }
   }
@@ -203,7 +203,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   $preprecode =~ s/(?:\'((?:\\\'|(?!\').)*)\')/"'" . ('-' x length $1) . "'"/ge;
 
   # strip C and C++ style comments
-  if($lang eq 'C89') {
+  if ($lang eq 'C89') {
     $preprecode =~ s#/\*[^*]*\*+([^/*][^*]*\*+)*/# #gs;
     $preprecode =~ s#|//([^\\]|[^\n][\n]?)*?\n|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)#defined $2 ? $2 : ""#gse;
   } else {
@@ -218,7 +218,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
   my $func_regex = qr/^([ *\w]+)\s+([ ()*\w]+)\s*\(([^;{]*)\s*\)\s*({.*|<%.*|\?\?<.*)/ims;
 
   # look for potential functions to extract
-  while($preprecode =~ /$func_regex/ms) {
+  while ($preprecode =~ /$func_regex/ms) {
     my ($pre_ret, $pre_ident, $pre_params, $pre_potential_body) = ($1, $2, $3, $4);
 
     print "looking for functions, found [$pre_ret][$pre_ident][$pre_params][$pre_potential_body], has main: $has_main\n" if $debug >= 1;
@@ -245,7 +245,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     $ret =~ s/^\s+//;
     $ret =~ s/\s+$//;
 
-    if(not length $ret or $ret eq "else" or $ret eq "while" or $ret eq "if" or $ret eq "for" or $ident eq "for" or $ident eq "while" or $ident eq "if") {
+    if (not length $ret or $ret eq "else" or $ret eq "while" or $ret eq "if" or $ret eq "for" or $ident eq "for" or $ident eq "while" or $ident eq "if") {
       $precode .= "$ret $ident ($params) $potential_body";
       next;
     } else {
@@ -259,8 +259,8 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
     my @extract = extract_bracketed($potential_body, '{}');
     my $body;
-    if(not defined $extract[0]) {
-        if($debug == 0) {
+    if (not defined $extract[0]) {
+        if ($debug == 0) {
             print "error: unmatched brackets\n";
         } else {
             print "error: unmatched brackets for function '$ident';\n";
@@ -284,7 +284,7 @@ if($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
   $precode =~ s/^{(.*)}$/$1/s;
 
-  if(not $has_main and not $got_nomain) {
+  if (not $has_main and not $got_nomain) {
     $code = "$prelude\n$code" . "int main(void) {\n$precode\n;\n}\n";
   } else {
     print "code: [$code]; precode: [$precode]\n" if $debug;
@@ -316,7 +316,7 @@ close $fh;
 #my ($ret, $result) = execute(10, "gcc -std=c89 -pedantic -Werror -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
 my ($ret, $result) = execute(10, "gcc -std=c11 -pedantic -Werror -Wno-implicit -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
 
-if(not $force and $ret != 0) {
+if (not $force and $ret != 0) {
   $output = $result;
 
   #print STDERR "output: [$output]\n";
@@ -388,7 +388,7 @@ if(not $force and $ret != 0) {
   # don't error about undeclared objects
   $output =~ s/error: '[^']+' undeclared\s*//g;
 
-  if(length $output) {
+  if (length $output) {
     print "$output\n";
     exit 0;
   } else {
@@ -404,7 +404,7 @@ close $fh;
 
 $output = `./c2eng.pl code2eng.c` if not defined $output;
 
-if(not $has_function and not $has_main) {
+if (not $has_function and not $has_main) {
   $output =~ s/Let .main. be a function taking no arguments and returning int.\s*When called, the function will.\s*(do nothing.)?//i;
   $output =~ s/\s*Return 0.\s*End of function .main..\s*//;
   $output =~ s/\s*Finally, return 0.$//;
@@ -412,14 +412,14 @@ if(not $has_function and not $has_main) {
   $output =~ s/\s*Do nothing.\s*$//;
   $output =~ s/^\s*(.)/\U$1/;
   $output =~ s/\.\s+(\S)/. \U$1/g;
-} elsif($has_function and not $has_main) {
+} elsif ($has_function and not $has_main) {
   $output =~ s/\s*Let `main` be a function taking no arguments and returning int.\s*When called, the function will do nothing.//;
   $output =~ s/\s*Finally, return 0.$//;
   $output =~ s/\s*and then return 0.$/./;
 }
 
 $output =~ s/\s+/ /;
-if(not $output) {
+if (not $output) {
   $output = "Does not compute; I only understand valid C11 code.\n";
 }
 
@@ -439,7 +439,7 @@ sub execute {
     local $SIG{ALRM} = sub { kill 'TERM', $pid; die "$result [Timed-out]\n"; };
     alarm($timeout);
 
-    while(my $line = <$fh>) {
+    while (my $line = <$fh>) {
       $result .= $line;
     }
 
@@ -451,7 +451,7 @@ sub execute {
 
   alarm 0;
 
-  if($@ =~ /Timed-out/) {
+  if ($@ =~ /Timed-out/) {
     return (-1, $@);
   }
 

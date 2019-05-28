@@ -15,7 +15,7 @@ use strict;
 use Carp ();
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to Registerable should be key/value pairs, not hash reference");
   }
 
@@ -44,12 +44,12 @@ sub execute {
   my $self = shift;
   my $ref = shift;
 
-  if(not defined $ref) {
+  if (not defined $ref) {
     Carp::croak("Missing reference parameter to Registerable::execute");
   }
 
   foreach my $func (@{ $self->{handlers} }) {
-    if($ref == $func || $ref == $func->{subref}) {
+    if ($ref == $func || $ref == $func->{subref}) {
       return &{ $func->{subref} }(@_);
     }
   }
@@ -60,7 +60,7 @@ sub register {
   my $self = shift;
   my $subref;
 
-  if(@_) {
+  if (@_) {
     $subref = shift;
   } else {
     Carp::croak("Must pass subroutine reference to register()");
@@ -76,7 +76,7 @@ sub unregister {
   my $self = shift;
   my $ref;
 
-  if(@_) {
+  if (@_) {
     $ref = shift;
   } else {
     Carp::croak("Must pass subroutine reference to unregister()");

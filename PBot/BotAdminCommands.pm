@@ -18,7 +18,7 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 use Carp ();
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to BotAdminCommands should be key/value pairs, not hash reference");
   }
 
@@ -33,7 +33,7 @@ sub initialize {
   my ($self, %conf) = @_;
 
   my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
+  if (not defined $pbot) {
     Carp::croak("Missing pbot reference to BotAdminCommands");
   }
 
@@ -94,7 +94,7 @@ sub login {
     $arguments = $2;
   }
 
-  if($self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+  if ($self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are already logged into channel $channel.";
   }
 
@@ -105,7 +105,7 @@ sub login {
 sub logout {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  return "/msg $nick Uh, you aren't logged into channel $from." if(not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host"));
+  return "/msg $nick Uh, you aren't logged into channel $from." if (not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host"));
   $self->{pbot}->{admins}->logout($from, "$nick!$user\@$host");
   return "/msg $nick Good-bye, $nick.";
 }
@@ -116,7 +116,7 @@ sub adminadd {
 
   my ($name, $channel, $hostmask, $level, $password) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 5);
 
-  if(not defined $name or not defined $channel or not defined $hostmask or not defined $level
+  if (not defined $name or not defined $channel or not defined $hostmask or not defined $level
     or not defined $password) {
     return "/msg $nick Usage: adminadd <name> <channel> <hostmask> <level> <password>";
   }
@@ -143,7 +143,7 @@ sub adminrem {
 
   my ($channel, $hostmask) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
-  if(not defined $channel or not defined $hostmask) {
+  if (not defined $channel or not defined $hostmask) {
     return "/msg $nick Usage: adminrem <channel> <hostmask/name>";
   }
 
@@ -163,7 +163,7 @@ sub adminrem {
     }
   }
 
-  if($self->{pbot}->{admins}->remove_admin($channel, $hostmask)) {
+  if ($self->{pbot}->{admins}->remove_admin($channel, $hostmask)) {
     return "Admin removed.";
   } else {
     return "No such admin found.";
@@ -175,7 +175,7 @@ sub adminset {
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($channel, $hostmask, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4);
 
-  if(not defined $channel or not defined $hostmask) {
+  if (not defined $channel or not defined $hostmask) {
     return "Usage: adminset <channel> <hostmask/name> [key] [value]";
   }
 
@@ -222,7 +222,7 @@ sub adminunset {
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($channel, $hostmask, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
-  if(not defined $channel or not defined $hostmask) {
+  if (not defined $channel or not defined $hostmask) {
     return "Usage: adminunset <channel> <hostmask/name> <key>";
   }
 
@@ -286,19 +286,19 @@ sub export {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  if(not defined $arguments) {
+  if (not defined $arguments) {
     return "/msg $nick Usage: export <modules|factoids|admins>";
   }
 
-  if($arguments =~ /^modules$/i) {
+  if ($arguments =~ /^modules$/i) {
     return "/msg $nick Coming soon.";
   }
 
-  if($arguments =~ /^factoids$/i) {
+  if ($arguments =~ /^factoids$/i) {
     return $self->{pbot}->{factoids}->export_factoids; 
   }
 
-  if($arguments =~ /^admins$/i) {
+  if ($arguments =~ /^admins$/i) {
     return "/msg $nick Coming soon.";
   }
 }

@@ -26,8 +26,8 @@ my @quotes;
 #print "$#ARGV\n";
 #print "$#quotes\n";
 
-while(1) {
-  if($#ARGV < 0) {
+while (1) {
+  if ($#ARGV < 0) {
     my %post = ( 'number' => '4', 'collection[]' => 'mgm', 'collection[]' => 'motivate' );
     $response = $ua->post("http://www.quotationspage.com/random.php3", \%post);
   } else {
@@ -37,18 +37,18 @@ while(1) {
     $arguments =~ s/\$nick/me/gi;
     $arguments =~ s/\s/+/g;
 
-    if($arguments =~ m/\-\-author[\s\+]+(.*)/i) {
+    if ($arguments =~ m/\-\-author[\s\+]+(.*)/i) {
       $author = $1;
       $arguments =~ s/\-\-author[\s\+]+(.*)//i;
     }
 
     # print "search: [$arguments]; author: [$author]\n";
-    if((length $arguments < 3) && ($author eq "")) {
+    if ((length $arguments < 3) && ($author eq "")) {
       print "Quote search parameter too small.\n";
       exit;
     }
 
-    if((length $author > 0) && (length $author < 3)) {
+    if ((length $author > 0) && (length $author < 3)) {
       print "Quote author parameter too small.\n";
       exit;
     }
@@ -68,15 +68,15 @@ while(1) {
 
   $text = $response->content;
 
-  while($text =~ m/<dt class="quote"><a.*?>(.*?)<\/a>.*?<dd class="author"><div.*?><a.*?>.*?<b>(.*?)<\/b>/g) {
+  while ($text =~ m/<dt class="quote"><a.*?>(.*?)<\/a>.*?<dd class="author"><div.*?><a.*?>.*?<b>(.*?)<\/b>/g) {
     $t = "\"$1\" -- $2.";
     push @quotes, $t;
     #print "Added '$t'\n";
     #print "$#quotes\n";
-    last if($#ARGV < 0);
+    last if ($#ARGV < 0);
   } 
 
-  if($text =~ m/Page \d+ of (\d+)/) {
+  if ($text =~ m/Page \d+ of (\d+)/) {
     $pages = $1;
     $page++;
     last if $page > $pages;
@@ -85,17 +85,17 @@ while(1) {
     last;
   }
   
-  if($#quotes < 0) {
+  if ($#quotes < 0) {
     print "No results found.\n";
     exit;
   }
 
-  last if($#ARGV < 0);
+  last if ($#ARGV < 0);
 }
 
 # print "Total quotes: ", $#quotes + 1, "\n";
 
-if($#quotes < 0) {
+if ($#quotes < 0) {
   print "No results found.\n";
   exit;
 }
@@ -103,8 +103,8 @@ if($#quotes < 0) {
 
 $t = $quotes[int rand($#quotes + 1)];
 
-if($#ARGV > -1) {
-  if($#quotes + 1 > 1) {
+if ($#ARGV > -1) {
+  if ($#quotes + 1 > 1) {
     $t = "" . ($#quotes + 1) . " matching quote" . (($#quotes + 1) != 1 ? "s" : "") . " found. $t";
   }
 }

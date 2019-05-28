@@ -19,7 +19,7 @@ use Carp ();
 use PBot::Utils::ParseDate;
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to IgnoreListCommands should be key/value pairs, not hash reference");
   }
 
@@ -34,7 +34,7 @@ sub initialize {
   my ($self, %conf) = @_;
 
   my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
+  if (not defined $pbot) {
     Carp::croak("Missing pbot reference to IgnoreListCommands");
   }
 
@@ -52,11 +52,11 @@ sub ignore_user {
 
   my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
-  if(not defined $target) {
+  if (not defined $target) {
      return "/msg $nick Usage: ignore host [channel] [timeout]";
   }
 
-  if($target =~ /^list$/i) {
+  if ($target =~ /^list$/i) {
     my $text = "Ignored: ";
     my $sep = "";
 
@@ -69,11 +69,11 @@ sub ignore_user {
     return "/msg $nick $text";
   }
 
-  if(not defined $channel) {
+  if (not defined $channel) {
     $channel = ".*"; # all channels
   }
   
-  if(not defined $length) {
+  if (not defined $length) {
     $length = -1; # permanently
   } else {
     my $error;
@@ -98,15 +98,15 @@ sub unignore_user {
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
-  if(not defined $target) {
+  if (not defined $target) {
     return "/msg $nick Usage: unignore host [channel]";
   }
 
-  if(not defined $channel) {
+  if (not defined $channel) {
     $channel = ".*";
   }
   
-  if(exists $self->{pbot}->{ignorelist}->{ignore_list}->{$target} and not exists $self->{pbot}->{ignorelist}->{ignore_list}->{$target}->{$channel}) {
+  if (exists $self->{pbot}->{ignorelist}->{ignore_list}->{$target} and not exists $self->{pbot}->{ignorelist}->{ignore_list}->{$target}->{$channel}) {
     $self->{pbot}->{logger}->log("$nick attempt to remove nonexistent [$target][$channel] from ignore list\n");
     return "/msg $nick [$target][$channel] not found in ignore list (use `ignore list` to list ignores)";
   }

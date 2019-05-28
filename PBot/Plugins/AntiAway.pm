@@ -40,7 +40,7 @@ sub on_nickchange {
   my ($nick, $user, $host, $newnick) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
 
   my $bad_nicks = $self->{pbot}->{registry}->get_value('antiaway', 'bad_nicks');
-  if($newnick =~ m/$bad_nicks/i) {
+  if ($newnick =~ m/$bad_nicks/i) {
     my $kick_msg = $self->{pbot}->{registry}->get_value('antiaway', 'kick_msg');
     my $channels = $self->{pbot}->{nicklist}->get_channels($newnick);
     foreach my $chan (@$channels) {
@@ -62,7 +62,7 @@ sub on_action {
   return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 
   my $bad_actions = $self->{pbot}->{registry}->get_value('antiaway', 'bad_actions');
-  if($msg =~ m/$bad_actions/i) {
+  if ($msg =~ m/$bad_actions/i) {
     $self->{pbot}->{logger}->log("$nick $msg matches bad away actions regex, kicking...\n");
     my $kick_msg = $self->{pbot}->{registry}->get_value('antiaway', 'kick_msg');
     $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick $kick_msg");

@@ -19,7 +19,7 @@ use Carp ();
 use Time::HiRes qw(gettimeofday);
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -77,9 +77,9 @@ sub load_blacklist {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->{filename}; }
+  if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
 
-  if(not defined $filename) {
+  if (not defined $filename) {
     Carp::carp "No blacklist path specified -- skipping loading of blacklist";
     return;
   }
@@ -98,11 +98,11 @@ sub load_blacklist {
 
     my ($channel, $hostmask) = split(/\s+/, $line);
     
-    if(not defined $hostmask || not defined $channel) {
+    if (not defined $hostmask || not defined $channel) {
          Carp::croak "Syntax error around line $i of $filename\n";
     }
     
-    if(exists $self->{blacklist}->{$channel}->{$hostmask}) {
+    if (exists $self->{blacklist}->{$channel}->{$hostmask}) {
       Carp::croak "Duplicate blacklist entry [$hostmask][$channel] found in $filename around line $i\n";
     }
 
@@ -117,9 +117,9 @@ sub save_blacklist {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->{filename}; }
+  if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
 
-  if(not defined $filename) {
+  if (not defined $filename) {
     Carp::carp "No blacklist path specified -- skipping saving of blacklist\n";
     return;
   }
@@ -213,7 +213,7 @@ sub blacklist {
 
             $channel = '.*' if not defined $channel;
 
-            if(exists $self->{blacklist}->{$channel} and not exists $self->{blacklist}->{$channel}->{$mask}) {
+            if (exists $self->{blacklist}->{$channel} and not exists $self->{blacklist}->{$channel}->{$mask}) {
               $self->{pbot}->{logger}->log("$nick attempt to remove nonexistent [$mask][$channel] from blacklist\n");
               return "/say $mask not found in blacklist for channel $channel (use `blacklist list` to display blacklist)";
             }

@@ -6,7 +6,7 @@
 
 use strict;
 
-if($#ARGV != 0)
+if ($#ARGV != 0)
 {
   print "Usage: !seen nick\n";
   exit 0;
@@ -25,25 +25,25 @@ my $pos = tell(FILE) - 2;
 my $char;
 my $result;
 
-while(seek(FILE, $pos--, 0))
+while (seek(FILE, $pos--, 0))
 {
   read(FILE, $char, 1);
-  if($char eq "\n")
+  if ($char eq "\n")
   {
     my $line = <FILE>;
     chomp $line;
 
     next if not defined $line;
 
-    if($line =~ m/^(\d\d:\d\d) -!- $nick (.*?)$/i)
+    if ($line =~ m/^(\d\d:\d\d) -!- $nick (.*?)$/i)
     {
       $result = "date at $1: $nick $2\n"; 
     }
-    elsif($line =~ m/^(\d\d:\d\d) <\s*$nick> (.*?)$/i)
+    elsif ($line =~ m/^(\d\d:\d\d) <\s*$nick> (.*?)$/i)
     {
       $result = "date at $1: <$nick> $2\n";
     }
-    elsif($line =~ m/^(\d\d:\d\d)  * $nick (.*?)$/i)
+    elsif ($line =~ m/^(\d\d:\d\d)  * $nick (.*?)$/i)
     {
       $result = "date at $1: $nick $2\n";
     }
@@ -51,24 +51,24 @@ while(seek(FILE, $pos--, 0))
   }
 }
 
-if(defined $result)
+if (defined $result)
 {
   my $date;
 
-  while(seek(FILE, $pos--, 0))
+  while (seek(FILE, $pos--, 0))
   {
     read(FILE, $char, 1);
-    if($char eq "\n")
+    if ($char eq "\n")
     {
       my $line = <FILE>;
       chomp($line);
 
-      if($line =~ m/^--- Log opened (.*?) \d\d:\d\d:\d\d(.*?)$/)
+      if ($line =~ m/^--- Log opened (.*?) \d\d:\d\d:\d\d(.*?)$/)
       {
         $date = $1 . $2;
         last;
       }
-      elsif($line =~ m/^--- Day changed (.*?)$/)
+      elsif ($line =~ m/^--- Day changed (.*?)$/)
       {
         $date = $1;
         last;

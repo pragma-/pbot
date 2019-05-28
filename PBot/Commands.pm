@@ -21,7 +21,7 @@ use Carp ();
 use Text::ParseWords qw(shellwords);
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to Commands should be key/value pairs, not hash reference");
   }
 
@@ -38,7 +38,7 @@ sub initialize {
   $self->SUPER::initialize(%conf);
 
   my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
+  if (not defined $pbot) {
     Carp::croak("Missing pbot reference to PBot::Commands");
   }
 
@@ -50,7 +50,7 @@ sub initialize {
 sub register {
   my ($self, $subref, $name, $level) = @_;
 
-  if((not defined $subref) || (not defined $name) || (not defined $level)) {
+  if ((not defined $subref) || (not defined $name) || (not defined $level)) {
     Carp::croak("Missing parameters to Commands::register");
   }
 
@@ -67,7 +67,7 @@ sub register {
 sub unregister {
   my ($self, $name) = @_;
 
-  if(not defined $name) {
+  if (not defined $name) {
     Carp::croak("Missing name parameter to Commands::unregister");
   }
 

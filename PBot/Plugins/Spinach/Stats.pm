@@ -60,7 +60,7 @@ SQL
 sub end {
   my $self = shift;
 
-  if(exists $self->{dbh} and defined $self->{dbh}) {
+  if (exists $self->{dbh} and defined $self->{dbh}) {
     $self->{pbot}->{logger}->log("Closing stats SQLite database\n");
     $self->{dbh}->disconnect();
     delete $self->{dbh};
@@ -115,7 +115,7 @@ sub get_player_data {
   my $player_data = eval {
     my $sql = 'SELECT ';
 
-    if(not @columns) {
+    if (not @columns) {
       $sql .= '*';
     } else {
       my $comma = '';

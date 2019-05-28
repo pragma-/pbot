@@ -35,7 +35,7 @@ use PBot::Utils::Indefinite;
 use PBot::Utils::ValidateString;
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to Factoids should be key/value pairs, not hash reference");
   }
 
@@ -144,7 +144,7 @@ sub remove_factoid {
 
   delete $self->{factoids}->hash->{$channel}->{$trigger};
 
-  if(not scalar keys %{ $self->{factoids}->hash->{$channel} }) {
+  if (not scalar keys %{ $self->{factoids}->hash->{$channel} }) {
     delete $self->{factoids}->hash->{$channel};
   }
 
@@ -155,7 +155,7 @@ sub export_factoids {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->export_path; }
+  if (@_) { $filename = shift; } else { $filename = $self->export_path; }
   return if not defined $filename;
 
   open FILE, "> $filename" or return "Could not open export path.";
@@ -197,9 +197,9 @@ sub export_factoids {
     $table_id++;
 
     foreach my $trigger (sort keys %{ $self->{factoids}->hash->{$channel} }) {
-      if($self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'text') {
+      if ($self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'text') {
         $i++;
-        if($i % 2) {
+        if ($i % 2) {
           print FILE "<tr bgcolor=\"#dddddd\">\n";
         } else {
           print FILE "<tr>\n";
@@ -219,7 +219,7 @@ sub export_factoids {
           $action = encode_entities($action);
         }
 
-        if(exists $self->{factoids}->hash->{$channel}->{$trigger}->{action_with_args}) {
+        if (exists $self->{factoids}->hash->{$channel}->{$trigger}->{action_with_args}) {
           my $with_args = $self->{factoids}->hash->{$channel}->{$trigger}->{action_with_args};
           $with_args =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http" . encode_entities($2) . "'>http" . encode_entities($2) . "<\/a>"/ge;
           $with_args =~ s/(.*)<\/a>(.*$)/"$1<\/a>" . encode_entities($2)/e;
@@ -228,7 +228,7 @@ sub export_factoids {
           print FILE "<td width=100%><b>" . encode_entities($trigger) . "</b> is $action</td>\n";
         }
 
-        if(exists $self->{factoids}->hash->{$channel}->{$trigger}->{edited_by}) { 
+        if (exists $self->{factoids}->hash->{$channel}->{$trigger}->{edited_by}) { 
           print FILE "<td>" . $self->{factoids}->hash->{$channel}->{$trigger}->{edited_by} . "</td>\n";
           print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $self->{factoids}->hash->{$channel}->{$trigger}->{edited_on}) . "</td>\n";
         } else {
@@ -238,7 +238,7 @@ sub export_factoids {
 
         print FILE "<td>" . encode_entities($self->{factoids}->hash->{$channel}->{$trigger}->{ref_user}) . "</td>\n";
 
-        if(exists $self->{factoids}->hash->{$channel}->{$trigger}->{last_referenced_on}) {
+        if (exists $self->{factoids}->hash->{$channel}->{$trigger}->{last_referenced_on}) {
           print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $self->{factoids}->hash->{$channel}->{$trigger}->{last_referenced_on}) . "</td>\n";
         } else {
           print FILE "<td></td>\n";
@@ -256,7 +256,7 @@ sub export_factoids {
   print FILE "<script type='text/javascript'>\n";
   $table_id--;
   print FILE '$(document).ready(function() {' . "\n";
-  while($table_id > 0) {
+  while ($table_id > 0) {
     print FILE '$("#table' . $table_id . '").tablesorter();' . "\n";
     print FILE '$("#table' . $table_id . '").tableFilter();' . "\n";
     $table_id--;
@@ -297,8 +297,8 @@ sub find_factoid {
       return undef if $self->{pbot}->{commands}->exists($keyword);
       # check factoids
       foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
-        if($exact_channel) {
-          if(defined $exact_trigger && $exact_trigger == 1) {
+        if ($exact_channel) {
+          if (defined $exact_trigger && $exact_trigger == 1) {
             next unless $from eq lc $channel;
           } else {
             next unless $from eq lc $channel or $channel eq '.*';
@@ -306,12 +306,12 @@ sub find_factoid {
         }
 
         foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
-          if($keyword =~ m/^\Q$trigger\E$/i) {
+          if ($keyword =~ m/^\Q$trigger\E$/i) {
             $self->{pbot}->{logger}->log("return $channel: $trigger\n") if $debug;
 
-            if($find_alias && $self->{factoids}->hash->{$channel}->{$trigger}->{action} =~ /^\/call\s+(.*)$/) {
+            if ($find_alias && $self->{factoids}->hash->{$channel}->{$trigger}->{action} =~ /^\/call\s+(.*)$/) {
               my $command;
-              if(length $arguments) {
+              if (length $arguments) {
                 $command = "$1 $arguments";
               } else {
                 $command = $1;
@@ -330,19 +330,19 @@ sub find_factoid {
       }
 
       # then check regex factoids
-      if(not $exact_trigger) {
+      if (not $exact_trigger) {
         foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
-          if($exact_channel) {
+          if ($exact_channel) {
             next unless $from eq lc $channel or $channel eq '.*';
           }
 
           foreach my $trigger (sort keys %{ $self->{factoids}->hash->{$channel} }) {
-            if($self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'regex') {
+            if ($self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'regex') {
               $self->{pbot}->{logger}->log("checking regex $string =~ m/$trigger/i\n") if $debug >= 2;
-              if($string =~ m/$trigger/i) {
+              if ($string =~ m/$trigger/i) {
                 $self->{pbot}->{logger}->log("return regex $channel: $trigger\n") if $debug;
 
-                if($find_alias) {
+                if ($find_alias) {
                   my $command = $self->{factoids}->hash->{$channel}->{$trigger}->{action};
                   ($keyword, $arguments) = split /\s+/, $command, 2;
                   $string = $keyword . (length $arguments ? " $arguments" : "");
@@ -374,7 +374,7 @@ sub find_factoid {
     return @results;
   };
 
-  if($@) {
+  if ($@) {
     $self->{pbot}->{logger}->log("find_factoid: bad regex: $@\n");
     return undef;
   }
@@ -419,7 +419,7 @@ sub expand_factoid_vars {
   my $debug = 0;
   my $depth = 0;
   while (1) {
-    last if ++$depth >= 100;
+    last if ++$depth >= 1000;
 
     my $offset = 0;
     my $matches = 0;
@@ -1104,7 +1104,7 @@ sub handle_action {
         return "/say $keyword_text is $action";
       }
     }
-  } elsif($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'regex') {
+  } elsif ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'regex') {
     my $result = eval {
       my $string = "$stuff->{original_keyword}" . (defined $stuff->{arguments} ? " $stuff->{arguments}" : "");
       my $cmd;
@@ -1133,7 +1133,7 @@ sub handle_action {
       return $self->{pbot}->{interpreter}->interpret($stuff);
     };
 
-    if($@) {
+    if ($@) {
       $self->{pbot}->{logger}->log("Regex fail: $@\n");
       return "";
     }
@@ -1152,19 +1152,19 @@ sub handle_action {
 sub export_path {
   my $self = shift;
 
-  if(@_) { $self->{export_path} = shift; }
+  if (@_) { $self->{export_path} = shift; }
   return $self->{export_path};
 }
 
 sub logger {
   my $self = shift;
-  if(@_) { $self->{logger} = shift; }
+  if (@_) { $self->{logger} = shift; }
   return $self->{logger};
 }
 
 sub export_site {
   my $self = shift;
-  if(@_) { $self->{export_site} = shift; }
+  if (@_) { $self->{export_site} = shift; }
   return $self->{export_site};
 }
 
@@ -1176,7 +1176,7 @@ sub factoids {
 sub filename {
   my $self = shift;
 
-  if(@_) { $self->{filename} = shift; }
+  if (@_) { $self->{filename} = shift; }
   return $self->{filename};
 }
 

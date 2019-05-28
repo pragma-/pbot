@@ -17,7 +17,7 @@ use Text::Levenshtein qw(fastdistance);
 use Carp ();
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to HashObject should be key/value pairs, not hash reference");
   }
 
@@ -40,9 +40,9 @@ sub initialize {
 sub load_hash_add {
   my ($self, $index_key, $hash, $i, $filename) = @_;
 
-  if(defined $hash) {
-    if(exists $self->hash->{$index_key}) {
-      if($i) {
+  if (defined $hash) {
+    if (exists $self->hash->{$index_key}) {
+      if ($i) {
         Carp::croak "Duplicate hash '$index_key' found in $filename around line $i\n";
       } else {
         return undef;
@@ -61,16 +61,16 @@ sub load {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->filename; }
+  if (@_) { $filename = shift; } else { $filename = $self->filename; }
 
-  if(not defined $filename) {
+  if (not defined $filename) {
     Carp::carp "No $self->{name} filename specified -- skipping loading from file";
     return;
   }
 
   $self->{pbot}->{logger}->log("Loading $self->{name} objects from $filename ...\n");
 
-  if(not open(FILE, "< $filename")) {
+  if (not open(FILE, "< $filename")) {
     Carp::carp "Couldn't open $filename: $!\n";
     Carp::carp "Skipping loading from file.\n";
     return;
@@ -85,12 +85,12 @@ sub load {
     $line =~ s/^\s+//;
     $line =~ s/\s+$//;
 
-    if($line =~ /^\[(.*)\]$/) {
+    if ($line =~ /^\[(.*)\]$/) {
       $index_key = $1;
       next;
     }
 
-    if($line eq '') {
+    if ($line eq '') {
       # store the old hash
       $self->load_hash_add($index_key, $hash, $i, $filename);
 
@@ -101,7 +101,7 @@ sub load {
 
     my ($key, $value) = split /\:/, $line, 2;
 
-    if(not defined $key or not defined $value) {
+    if (not defined $key or not defined $value) {
       Carp::croak "Error around line $i of $filename\n";
     }
 
@@ -122,9 +122,9 @@ sub save {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->filename; }
+  if (@_) { $filename = shift; } else { $filename = $self->filename; }
 
-  if(not defined $filename) {
+  if (not defined $filename) {
     Carp::carp "No $self->{name} filename specified -- skipping saving to file.\n";
     return;
   }
@@ -152,7 +152,7 @@ sub find_hash {
 
   my $result = eval {
     foreach my $index (keys %{ $self->hash }) {
-      if($keyword =~ m/^\Q$index\E$/i) {
+      if ($keyword =~ m/^\Q$index\E$/i) {
         return $index;
       }
     }
@@ -160,7 +160,7 @@ sub find_hash {
     return undef;
   };
 
-  if($@) {
+  if ($@) {
     $self->{pbot}->{logger}->log("find_hash: bad regex: $@\n");
     return undef;
   }
@@ -182,7 +182,7 @@ sub levenshtein_matches {
 
     # print "Percentage: ", $distance / $length, "\n";
 
-    if($length != 0 && $distance / $length < 0.50) {
+    if ($length != 0 && $distance / $length < 0.50) {
       $result .= $comma . $index;
       $comma = ", ";
     }
@@ -198,24 +198,24 @@ sub set {
 
   my $hash_index = $self->find_hash($index);
 
-  if(not $hash_index) {
+  if (not $hash_index) {
     my $result = "No such $self->{name} object '$index'; similiar matches: ";
     $result .= $self->levenshtein_matches($index);
     return $result;
   }
 
-  if(not defined $key) {
+  if (not defined $key) {
     my $result = "[$self->{name}] $hash_index keys: ";
     my $comma = '';
     foreach my $k (sort keys %{ $self->hash->{$hash_index} }) {
       $result .= $comma . "$k => " . $self->hash->{$hash_index}{$k};
       $comma = "; ";
     }
-    $result .= "none" if($comma eq '');
+    $result .= "none" if ($comma eq '');
     return $result;
   }
 
-  if(not defined $value) {
+  if (not defined $value) {
     $value = $self->hash->{$hash_index}{$key};
   } else {
     $self->hash->{$hash_index}{$key} = $value;
@@ -230,7 +230,7 @@ sub unset {
 
   my $hash_index = $self->find_hash($index);
 
-  if(not $hash_index) {
+  if (not $hash_index) {
     my $result = "No such $self->{name} object '$index'; similiar matches: ";
     $result .= $self->levenshtein_matches($index);
     return $result;
@@ -245,7 +245,7 @@ sub unset {
 sub add {
   my ($self, $index_key, $hash) = @_;
 
-  if($self->load_hash_add($index_key, $hash, 0)) {
+  if ($self->load_hash_add($index_key, $hash, 0)) {
     $self->save();
   } else {
     return "Error occurred adding new $self->{name} object.";
@@ -259,7 +259,7 @@ sub remove {
 
   my $hash_index = $self->find_hash($index);
 
-  if(not $hash_index) {
+  if (not $hash_index) {
     my $result = "No such $self->{name} object '$index'; similiar matches: ";
     $result .= $self->levenshtein_matches($index);
     return $result;
@@ -281,7 +281,7 @@ sub hash {
 sub filename {
   my $self = shift;
 
-  if(@_) { $self->{filename} = shift; }
+  if (@_) { $self->{filename} = shift; }
   return $self->{filename};
 }
 

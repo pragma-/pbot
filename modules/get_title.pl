@@ -22,6 +22,9 @@ my $arguments = join("%20", @ARGV);
 
 $arguments =~ s/\W$//;
 
+exit if $arguments =~ m{https?://git}i;
+exit if $arguments =~ m{https://.*swissborg.com}i;
+exit if $arguments =~ m{https://matrix.org}i;
 exit if $arguments =~ m{https://freenode.net/news/spam-shake}i;
 exit if $arguments =~ m{https://twitter.com/ISCdotORG}i;
 exit if $arguments =~ m{https://evestigatorsucks.com}i;
@@ -95,7 +98,7 @@ if (not $response->is_success)
 
 my $text = $response->content;
 
-if($text =~ m/<title>(.*?)<\/title>/msi)
+if ($text =~ m/<title>(.*?)<\/title>/msi)
 {
   $t = $1;
 } else {
@@ -130,7 +133,7 @@ $t =~ s/&bull;/-/g;
 $t =~ s/<em>//g;
 $t =~ s/<\/em>//g;
 
-if(length $t > 150) {
+if (length $t > 150) {
   $t = substr($t, 0, 150);
   $t = "$t [...]";
 }
@@ -148,11 +151,14 @@ $file =~ s/[_-]/ /g;
 my $distance = fastdistance(lc $file, lc $t);
 my $length = (length $file > length $t) ? length $file : length $t;
 
-if($distance / $length < 0.75) {
+if ($distance / $length < 0.75) {
     exit;
 }
 
 exit if $t !~ m/\s/; # exit if title is only one word -- this isn't usually interesting
+exit if $t =~ m{christel}i;
+exit if $t =~ m{freenode}i;
+exit if $t =~ m{ico scam}i;
 exit if $t =~ m{Freenode head of infrastructure}i;
 exit if $t =~ m{ISC on Twitter}i;
 exit if $t =~ m{spambot.*freenode}i;

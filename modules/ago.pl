@@ -8,7 +8,7 @@ use Time::Duration;
 
 my ($ago) = @ARGV;
 
-if(not defined $ago) {
+if (not defined $ago) {
   print "Usage: ago <seconds>\n";
   exit 0;
 }

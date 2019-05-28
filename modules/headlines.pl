@@ -47,7 +47,7 @@ my $key;
 my $value;
 
 
-if($args =~ /^links\s+(.*)/i) {
+if ($args =~ /^links\s+(.*)/i) {
   $args = $1;
   $links = 1;
 }
@@ -57,7 +57,7 @@ $args = quotemeta($args);
 foreach $key (keys %news_sites) {
   $value = $news_sites{$key}->[0];
 
-  if($key =~ /$args/i) {
+  if ($key =~ /$args/i) {
     check_news($value, $links, $news_sites{$key}->[1]);
     exit(0);
   }
@@ -81,11 +81,11 @@ sub check_news {
 
   my $content = get($site);
 
-  if($content) {
+  if ($content) {
     eval {
       $rss->parse($content);
     };
-    if(my $error = $@) {
+    if (my $error = $@) {
        $error =~ s/\n//g;   
        print "Got error: $error\n";
        return 0;
@@ -95,7 +95,7 @@ sub check_news {
     foreach my $item (@{$rss->{'items'}}) {
       next unless defined($item->{'title'}) && defined($item->{'link'});
   
-      if($links == 1)
+      if ($links == 1)
       {
         $text = " $item->{'title'} : ( $item->{'link'} )";
         $text =~ s/\n//g; 

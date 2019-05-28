@@ -15,7 +15,7 @@ defined $html or die "Oops, couldn't get the data.";
 
 print "Top 10 Google search queries: ";
 
-while($html =~ m/<td class="bodytext2" .*?<a class="style10".*?>(.*?)<\/a>/g)
+while ($html =~ m/<td class="bodytext2" .*?<a class="style10".*?>(.*?)<\/a>/g)
 {
   print "$1, ";
 }

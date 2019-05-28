@@ -34,20 +34,20 @@ $text = $response->content;
 
 $acro =~ s/\+/ /g;
 
-if($text =~ m/No result found/)
+if ($text =~ m/No result found/)
 {
   print "Sorry, couldn't figure out what '$acro' stood for.\n";
   die;
 }
 
 $entries = 1;
-$entries = $1 if($text =~ m/"2">(.*?) results? found/gi);
+$entries = $1 if ($text =~ m/"2">(.*?) results? found/gi);
 
 print "$acro ($entries entries): ";
 
 $acro="";
 
-while($text =~ m/<td width=.*?>(.*?)<\/td>/gsi)
+while ($text =~ m/<td width=.*?>(.*?)<\/td>/gsi)
 {
   $acro = "$acro$1; ";
 }

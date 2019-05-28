@@ -18,7 +18,7 @@ use LWP::UserAgent;
 use Carp ();
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -85,7 +85,7 @@ sub paste_ixio {
   my %post = ('f:1' => $text);
   my $response = $ua->post("http://ix.io", \%post);
 
-  if(not $response->is_success) {
+  if (not $response->is_success) {
     return "error pasting: " . $response->status_line;
   }
 
@@ -109,7 +109,7 @@ sub paste_ptpb {
   my %post = ( 'c' => $text, 'submit' => 'Submit' );
   my $response = $ua->post("https://ptpb.pw/?u=1", \%post);
 
-  if(not $response->is_success) {
+  if (not $response->is_success) {
     return "error pasting: " . $response->status_line;
   }
 

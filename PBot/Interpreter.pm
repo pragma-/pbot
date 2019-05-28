@@ -23,7 +23,7 @@ use Carp ();
 use PBot::Utils::ValidateString;
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -212,7 +212,7 @@ sub interpret {
     $self->{pbot}->{logger}->log(Dumper $stuff);
   }
 
-  return "Too many levels of recursion, aborted." if(++$stuff->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
+  return "Too many levels of recursion, aborted." if (++$stuff->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
 
   if (not defined $stuff->{nick} || not defined $stuff->{user} || not defined $stuff->{host} || not defined $stuff->{command}) {
     $pbot->{logger}->log("Error 1, bad parameters to interpret_command\n");
@@ -308,7 +308,7 @@ sub interpret {
     }
   }
 
-  if(not defined $keyword) {
+  if (not defined $keyword) {
     $pbot->{logger}->log("Error 2, no keyword\n");
     return undef;
   }
@@ -430,9 +430,9 @@ sub truncate_result {
   my ($self, $from, $nick, $text, $original_result, $result, $paste) = @_;
   my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
 
-  if(length $result > $max_msg_len) {
+  if (length $result > $max_msg_len) {
     my $link;
-    if($paste) {
+    if ($paste) {
       $original_result = substr $original_result, 0, 8000;
       $link = $self->{pbot}->{webpaste}->paste("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
     } else {
@@ -518,7 +518,7 @@ sub handle_result {
     my ($cmd, $args) = $self->split_args($cmdlist, 2);
     if (not $self->{pbot}->{commands}->exists($cmd)) {
       my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $cmd, $args, 1, 0, 1);
-      if(defined $trigger) {
+      if (defined $trigger) {
         if ($stuff->{preserve_whitespace} == 0) {
           $stuff->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};
           $stuff->{preserve_whitespace} = 0 if not defined $stuff->{preserve_whitespace};

@@ -5,6 +5,7 @@ use LWP::Simple;
 use LWP::UserAgent;
 use Encode qw/ decode is_utf8 /;
 use CGI qw/escape unescapeHTML/;
+use HTML::Entities;
 use utf8;
 
 my $VERSION = '1.0.2';
@@ -158,7 +159,7 @@ sub urban_search {
         }
     }
 
-    return $definition;
+    return decode_entities($definition);
 }
 
 ##
@@ -423,9 +424,11 @@ sub horoscope_search {
     my ($line) = $content =~ m|CHANGE $term HERE -->(.+)<!-- END $term HERE|i;
     $line =~ s/  +/ /g;
 
-    if($line eq "") {
+    if ($line eq "") {
       return "No results found; signs of the Zodiac are Aquarius, Pisces, Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn";
     }
+
+    $line =~ s/<ins class.*$//;
 
     return $line;
 }
@@ -437,7 +440,7 @@ sub horrorscope_search {
     my $content = shift;
     my $term = shift;
 
-    if($term eq"") {
+    if ($term eq"") {
       return "Usage: horrorscope sign; signs of the Zodiac are Aquarius, Pisces, Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn";
     }
 
@@ -445,7 +448,7 @@ sub horrorscope_search {
     my ($line) = $content =~ m|<tr>.*?$term.*?</td>(.*?)</tr>|i;
     $line =~ s/  +/ /g;
 
-    if($line eq "") {
+    if ($line eq "") {
       return "No results found; signs of the Zodiac are Aquarius, Pisces, Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn";
     }
 
@@ -735,12 +738,12 @@ sub main {
   $trigger = shift(@ARGV);
   $term = join(' ', @ARGV);
 
-  if(not defined $trigger) {
+  if (not defined $trigger) {
     print "Usage: $0 <trigger> [terms]";
     exit 1;
   }
 
-  if($trigger eq "list") {
+  if ($trigger eq "list") {
     my $comma = "Triggers: ";
     foreach my $key (sort keys(%ENGINES)) {
       print "$comma$key";
@@ -756,7 +759,7 @@ sub main {
 
   my $result = join(' ', @lines);
 
-  if($term ne "") {
+  if ($term ne "") {
     print "$term: ";
   }
 

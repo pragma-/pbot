@@ -20,7 +20,7 @@ use Time::Duration;
 use Carp ();
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to LagChecker should be key/value pairs, not hash reference");
   }
 
@@ -90,7 +90,7 @@ sub on_pong {
 
   my $lag_history_max = $self->{pbot}->{registry}->get_value('lagchecker', 'lag_history_max');
 
-  while($len > $lag_history_max) {
+  while ($len > $lag_history_max) {
     shift @{ $self->{lag_history} };
     $len--;
   }
@@ -116,7 +116,7 @@ sub on_pong {
 sub lagging {
   my $self = shift;
 
-  if(defined $self->{pong_received} and $self->{pong_received} == 0) {
+  if (defined $self->{pong_received} and $self->{pong_received} == 0) {
       # a ping has been sent (pong_received is not undef) and no pong has been received yet
       my $elapsed = tv_interval($self->{ping_send_time});
       return $elapsed >= $self->{pbot}->{registry}->get_value('lagchecker', 'lag_threshold');
@@ -136,7 +136,7 @@ sub lagstring {
 sub lagcheck {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  if(defined $self->{pong_received} and $self->{pong_received} == 0) {
+  if (defined $self->{pong_received} and $self->{pong_received} == 0) {
       # a ping has been sent (pong_received is not undef) and no pong has been received yet
       my $elapsed = tv_interval($self->{ping_send_time});
       my $lag_total = $elapsed;

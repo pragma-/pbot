@@ -6,60 +6,37 @@
 
 use strict;
 use WWW::Wikipedia;
-use Text::Autoformat;
-use Getopt::Std;
-
-my %options;
-getopts( 'l:', \%options );
+use HTML::Parse;
+use HTML::FormatText;
 
 my $term = join(' ', @ARGV);
 
-if(not $term) {
+if (not $term) {
   print "Usage: !wikipedia <term>\n";
   exit;
 }
 
-# upper-case first letter and lowercase remainder of each word
-# $term =~ s/(.)(\w*)(\s?)/\u$1\l$2$3/g;
+my $wiki = WWW::Wikipedia->new(language => 'en');
+my $entry = $wiki->search($term);
 
-my $wiki = WWW::Wikipedia->new( language => $options{ l } || 'en' );
-my $entry = $wiki->search( $term );
-
-if ( $entry ) {
+if ($entry) {
     my $text = $entry->text();
     
-    if ( $text ) { 
-      $text =~ s/[\n\r]/ /msg;
-      $text =~ s/\[otheruses.*?\]//gsi;
-      $text =~ s/\[fixbunching.*?\]//gsi;
-      $text =~ s/\[wiktionary.*?\]//gsi;
-      $text =~ s/\[TOC.*?\]//gsi;
-      $text =~ s/\[.*?sidebar\]//gsi;
-      $text =~ s/\[pp.*?\]//gsi;
-      $text =~ s/'''//gs;
-      
-      1 while $text =~ s/{{[^{}]*}}//gs;
-      1 while $text =~ s/\[quote[^\]]*\]//gsi;
-      1 while $text =~ s/\[\[Image:[^\[\]]*\]\]//gsi;
-      1 while $text =~ s/\[\[(File:)?([^\[\]]*)\]\]//gsi;
-      
-      $text =~ s/\[\[.*?\|(.*?)\]\]/$1/gs;
-      $text =~ s/\[\[(.*?)\]\]/$1/gs;
-      $text =~ s/<!--.*?--\s?>//gs;
-      $text =~ s/\s+/ /gs;
-      $text =~ s/^\s+//;
-      $text =~ s/\<.*?\>.*?\<\/.*?\>//gs;
-      $text =~ s/\<.*?\/\>//gs;
-      
-      $text =~ s/&ndash;/-/;
-      
+    if ($text) { 
+      $text =~ s/{{.*?}}//msg;
+      $text =~ s/\[\[//g;
+      $text =~ s/\]\]//g;
+      $text =~ s/<ref>.*?<\/ref>//g;
+      $text =~ s/__[A-Z]+__//g;
+      $text =~ s/\s+\(\)//msg;
+      $text = HTML::FormatText->new->format(parse_html($text));
       print $text; 
-    }
-    else {
+    } else {
         print "Specific entry not found, see also: ";
         my $semi = "";
-        foreach ( $entry->related() ) { print "$_$semi"; $semi = "; "; }
+        foreach ($entry->related()) { print "$semi$_"; $semi = "; "; }
     }
+} else { 
+  print qq("$term" not found in Wikipedia\n) 
 }
-else { print qq("$term" not found in wikipedia\n) }
 

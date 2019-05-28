@@ -22,7 +22,7 @@ use Storable;
 use PBot::Utils::SafeFilename;
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to FactoidCommands should be key/value pairs, not hash reference");
   }
 
@@ -59,7 +59,7 @@ sub initialize {
   my ($self, %conf) = @_;
 
   my $pbot = delete $conf{pbot};
-  if(not defined $pbot) {
+  if (not defined $pbot) {
     Carp::croak("Missing pbot reference to FactoidCommands");
   }
 
@@ -100,13 +100,13 @@ sub call_factoid {
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($chan, $keyword, $args) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
-  if(not defined $chan or not defined $keyword) {
+  if (not defined $chan or not defined $keyword) {
     return "Usage: fact <channel> <keyword> [arguments]";
   }
 
   my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $keyword, $args, 1, 1);
 
-  if(not defined $trigger) {
+  if (not defined $trigger) {
     return "No such factoid '$keyword' exists for channel '$chan'";
   }
 
@@ -538,19 +538,19 @@ sub factset {
   my $level = 0;
   my $meta_level = 0;
 
-  if(defined $admininfo) {
+  if (defined $admininfo) {
     $level = $admininfo->{level};
   }
 
-  if(defined $key) {
-    if(defined $factoid_metadata_levels{$key}) {
+  if (defined $key) {
+    if (defined $factoid_metadata_levels{$key}) {
       $meta_level = $factoid_metadata_levels{$key};
     }
 
-    if($meta_level > 0) {
-      if($level == 0) {
+    if ($meta_level > 0) {
+      if ($level == 0) {
         return "You must login to set '$key'";
-      } elsif($level < $meta_level) {
+      } elsif ($level < $meta_level) {
         return "You must be at least level $meta_level to set '$key'";
       }
     }
@@ -622,18 +622,18 @@ sub factunset {
   my $level = 0;
   my $meta_level = 0;
 
-  if(defined $admininfo) {
+  if (defined $admininfo) {
     $level = $admininfo->{level};
   }
 
-  if(defined $factoid_metadata_levels{$key}) {
+  if (defined $factoid_metadata_levels{$key}) {
     $meta_level = $factoid_metadata_levels{$key};
   }
 
-  if($meta_level > 0) {
-    if($level == 0) {
+  if ($meta_level > 0) {
+    if ($level == 0) {
       return "You must login to unset '$key'";
-    } elsif($level < $meta_level) {
+    } elsif ($level < $meta_level) {
       return "You must be at least level $meta_level to unset '$key'";
     }
   }
@@ -654,12 +654,12 @@ sub factunset {
 
   my $oldvalue;
 
-  if(defined $owner_channel) {
+  if (defined $owner_channel) {
     my $factoid = $self->{pbot}->{factoids}->{factoids}->hash->{$owner_channel}->{$owner_trigger};
 
     my ($owner) = $factoid->{'owner'} =~ m/([^!]+)/;
 
-    if(lc $nick ne lc $owner and $level == 0) {
+    if (lc $nick ne lc $owner and $level == 0) {
       return "You are not the owner of $trigger.";
     }
     $oldvalue = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{$key};
@@ -681,16 +681,16 @@ sub list {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $text;
   
-  if(not defined $arguments) {
+  if (not defined $arguments) {
     return "Usage: list <modules|factoids|commands|admins>";
   }
 
-  if($arguments =~ /^modules$/i) {
+  if ($arguments =~ /^modules$/i) {
     $from = '.*' if not defined $from or $from !~ /^#/;
     $text = "Loaded modules for channel $from: ";
     foreach my $channel (sort keys %{ $self->{pbot}->{factoids}->{factoids}->hash }) {
       foreach my $command (sort keys %{ $self->{pbot}->{factoids}->{factoids}->hash->{$channel} }) {
-        if($self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$command}->{type} eq 'module') {
+        if ($self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$command}->{type} eq 'module') {
           $text .= "$command ";
         }
       }
@@ -698,7 +698,7 @@ sub list {
     return $text;
   }
 
-  if($arguments =~ /^commands$/i) {
+  if ($arguments =~ /^commands$/i) {
     $text = "Registered commands: ";
     foreach my $command (sort { $a->{name} cmp $b->{name} } @{ $self->{pbot}->{commands}->{handlers} }) {
       $text .= "$command->{name} ";
@@ -707,16 +707,16 @@ sub list {
     return $text;
   }
 
-  if($arguments =~ /^factoids$/i) {
+  if ($arguments =~ /^factoids$/i) {
     return "For a list of factoids see " . $self->{pbot}->{factoids}->export_site;
   }
 
-  if($arguments =~ /^admins$/i) {
+  if ($arguments =~ /^admins$/i) {
     $text = "Admins: ";
     my $last_channel = "";
     my $sep = "";
     foreach my $channel (sort keys %{ $self->{pbot}->{admins}->{admins}->hash }) {
-      if($last_channel ne $channel) {
+      if ($last_channel ne $channel) {
         $text .= $sep . "Channel " . ($channel eq ".*" ? "all" : $channel) . ": ";
         $last_channel = $channel;
         $sep = "";
@@ -740,19 +740,19 @@ sub factmove {
 
   my $usage = "Usage: factmove <source channel> <source factoid> <target channel/factoid> [target factoid]";
 
-  if(not defined $target_channel) {
+  if (not defined $target_channel) {
     return $usage;
   }
 
-  if($target_channel !~ /^#/ and $target_channel ne '.*') {
-    if(defined $target) {
+  if ($target_channel !~ /^#/ and $target_channel ne '.*') {
+    if (defined $target) {
       return "Unexpected argument '$target' when renaming to '$target_channel'. Perhaps '$target_channel' is missing #s? $usage";
     }
 
     $target = $target_channel;
     $target_channel = $src_channel;
   } else {
-    if(not defined $target) {
+    if (not defined $target) {
       $target = $source;
     }
   }
@@ -767,7 +767,7 @@ sub factmove {
 
   my ($found_src_channel, $found_source) = $self->{pbot}->{factoids}->find_factoid($src_channel, $source, undef, 1, 1);
 
-  if(not defined $found_src_channel) {
+  if (not defined $found_src_channel) {
     return "Source factoid $source not found in channel $src_channel";
   }
 
@@ -775,24 +775,24 @@ sub factmove {
 
   my ($owner) = $factoids->{$found_src_channel}->{$found_source}->{'owner'} =~ m/([^!]+)/;
 
-  if((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($found_src_channel, "$nick!$user\@$host"))) {
+  if ((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($found_src_channel, "$nick!$user\@$host"))) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to move [$found_src_channel] $found_source (not owner)\n");
     my $chan = ($found_src_channel eq '.*' ? 'the global channel' : $found_src_channel);
     return "You are not the owner of $found_source for $chan";
   }
 
-  if($factoids->{$found_src_channel}->{$found_source}->{'locked'}) {
+  if ($factoids->{$found_src_channel}->{$found_source}->{'locked'}) {
     return "/say $found_source is locked; unlock before moving.";
   }
 
   my ($found_target_channel, $found_target) = $self->{pbot}->{factoids}->find_factoid($target_channel, $target, undef, 1, 1);
 
-  if(defined $found_target_channel) {
+  if (defined $found_target_channel) {
     return "Target factoid $target already exists in channel $target_channel";
   }
 
   my ($overchannel, $overtrigger) = $self->{pbot}->{factoids}->find_factoid('.*', $target, undef, 1, 1);
-  if(defined $overtrigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$overtrigger}->{'nooverride'}) {
+  if (defined $overtrigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$overtrigger}->{'nooverride'}) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $target\n");
     return "/say $target already exists for the global channel and cannot be overridden for " . ($target_channel eq '.*' ? 'the global channel' : $target_channel) . ".";
   }
@@ -812,7 +812,7 @@ sub factmove {
   $found_src_channel = 'global' if $found_src_channel eq '.*';
   $target_channel = 'global' if $target_channel eq '.*';
 
-  if($src_channel eq $target_channel) {
+  if ($src_channel eq $target_channel) {
     $self->log_factoid($target_channel, $target, "$nick!$user\@$host", "renamed from $found_source to $target");
     return "[$found_src_channel] $found_source renamed to $target";  
   } else {
@@ -856,13 +856,13 @@ sub factalias {
 
   my ($channel, $alias_trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $alias, undef, 1, 1);
   
-  if(defined $alias_trigger) {
+  if (defined $alias_trigger) {
     $self->{pbot}->{logger}->log("attempt to overwrite existing command\n");
     return "'$alias_trigger' already exists for channel $channel";
   }
 
   my ($overchannel, $overtrigger) = $self->{pbot}->{factoids}->find_factoid('.*', $alias, undef, 1, 1);
-  if(defined $overtrigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$overtrigger}->{'nooverride'}) {
+  if (defined $overtrigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$overtrigger}->{'nooverride'}) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $alias\n");
     return "/say $alias already exists for the global channel and cannot be overridden for " . ($chan eq '.*' ? 'the global channel' : $chan) . ".";
   }
@@ -886,23 +886,23 @@ sub add_regex {
 
   $from = '.*' if not defined $from or $from !~ /^#/;
 
-  if(not defined $keyword) {
+  if (not defined $keyword) {
     $text = "";
     foreach my $trigger (sort keys %{ $factoids->{$from} }) {
-      if($factoids->{$from}->{$trigger}->{type} eq 'regex') {
+      if ($factoids->{$from}->{$trigger}->{type} eq 'regex') {
         $text .= $trigger . " ";
       }
     }
     return "Stored regexs for channel $from: $text";
   }
 
-  if(not defined $text) {
+  if (not defined $text) {
     return "Usage: regex <regex> <command>";
   }
 
   my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $keyword, undef, 1, 1);
 
-  if(defined $trigger) {
+  if (defined $trigger) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to overwrite $trigger\n");
     return "/say $trigger already exists for channel $channel.";
   }
@@ -930,7 +930,7 @@ sub factadd {
     }
   }
 
-  if(not defined $from_chan or not defined $text or not defined $keyword) {
+  if (not defined $from_chan or not defined $text or not defined $keyword) {
     return "Usage: factadd [channel] <keyword> <factoid>";
   }
 
@@ -950,13 +950,13 @@ sub factadd {
   my $keyword_text = $keyword =~ / / ? "\"$keyword\"" : $keyword;
 
   my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, undef, 1, 1);
-  if(defined $trigger) {
+  if (defined $trigger) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to overwrite $keyword\n");
     return "/say $keyword_text already exists for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
   }
 
   ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid('.*', $keyword, undef, 1, 1);
-  if(defined $trigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$trigger}->{'nooverride'}) {
+  if (defined $trigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$trigger}->{'nooverride'}) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $keyword_text\n");
     return "/say $keyword_text already exists for the global channel and cannot be overridden for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
   }
@@ -991,7 +991,7 @@ sub factrem {
 
   my $trigger_text = $trigger =~ / / ? "\"$trigger\"" : $trigger;;
 
-  if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
+  if ($factoids->{$channel}->{$trigger}->{type} eq 'module') {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to remove $trigger_text [not factoid]\n");
     return "/say $trigger_text is not a factoid.";
   }
@@ -1002,13 +1002,13 @@ sub factrem {
 
   my ($owner) = $factoids->{$channel}->{$trigger}->{'owner'} =~ m/([^!]+)/;
 
-  if((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host"))) {
+  if ((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host"))) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to remove $trigger_text [not owner]\n");
     my $chan = ($channel eq '.*' ? 'the global channel' : $channel);
     return "You are not the owner of $trigger_text for $chan";
   }
 
-  if($factoids->{$channel}->{$trigger}->{'locked'}) {
+  if ($factoids->{$channel}->{$trigger}->{'locked'}) {
     return "/say $trigger_text is locked; unlock before deleting.";
   }
 
@@ -1027,7 +1027,7 @@ sub histogram {
 
   foreach my $channel (keys %$factoids) {
     foreach my $command (keys %{ $factoids->{$channel} }) {
-      if($factoids->{$channel}->{$command}->{type} eq 'text') {
+      if ($factoids->{$channel}->{$command}->{type} eq 'text') {
         $hash{$factoids->{$channel}->{$command}->{owner}}++;
         $factoid_count++;
       }
@@ -1065,7 +1065,7 @@ sub factshow {
 
   my $result = "$trigger_text: " . $factoids->{$channel}->{$trigger}->{action};
 
-  if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
+  if ($factoids->{$channel}->{$trigger}->{type} eq 'module') {
     $result .= ' [module]';
   }
 
@@ -1170,19 +1170,19 @@ sub factinfo {
   $chan = ($channel eq '.*' ? 'global channel' : $channel);
 
   # factoid
-  if($factoids->{$channel}->{$trigger}->{type} eq 'text') {
+  if ($factoids->{$channel}->{$trigger}->{type} eq 'text') {
     return "/say $trigger: Factoid submitted by " . $factoids->{$channel}->{$trigger}->{owner} . " for $chan on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago], " . (defined $factoids->{$channel}->{$trigger}->{edited_by} ? "last edited by $factoids->{$channel}->{$trigger}->{edited_by} on " . localtime($factoids->{$channel}->{$trigger}->{edited_on}) . " [" . ago(gettimeofday - $factoids->{$channel}->{$trigger}->{edited_on}) . "], " : "") . "referenced " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
   }
 
   # module
-  if($factoids->{$channel}->{$trigger}->{type} eq 'module') {
+  if ($factoids->{$channel}->{$trigger}->{type} eq 'module') {
     my $module_repo = $self->{pbot}->{registry}->get_value('general', 'module_repo');
     $module_repo .= "$factoids->{$channel}->{$trigger}->{workdir}/" if exists $factoids->{$channel}->{$trigger}->{workdir};
     return "/say $trigger: Module loaded by " . $factoids->{$channel}->{$trigger}->{owner} . " for $chan on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago] -> $module_repo" . $factoids->{$channel}->{$trigger}->{action} . ", used " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
   }
 
   # regex
-  if($factoids->{$channel}->{$trigger}->{type} eq 'regex') {
+  if ($factoids->{$channel}->{$trigger}->{type} eq 'regex') {
     return "/say $trigger: Regex created by " . $factoids->{$channel}->{$trigger}->{owner} . " for $chan on " . localtime($factoids->{$channel}->{$trigger}->{created_on}) . " [$created_ago], " . (defined $factoids->{$channel}->{$trigger}->{edited_by} ? "last edited by $factoids->{$channel}->{$trigger}->{edited_by} on " . localtime($factoids->{$channel}->{$trigger}->{edited_on}) . " [" . ago(gettimeofday - $factoids->{$channel}->{$trigger}->{edited_on}) . "], " : "") . " used " . $factoids->{$channel}->{$trigger}->{ref_count} . " times (last by " . $factoids->{$channel}->{$trigger}->{ref_user} . (exists $factoids->{$channel}->{$trigger}->{last_referenced_on} ? " on " . localtime($factoids->{$channel}->{$trigger}->{last_referenced_on}) . " [$ref_ago]" : "") . ")"; 
   }
 
@@ -1199,15 +1199,15 @@ sub top20 {
 
   my ($channel, $args) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
-  if(not defined $channel) {
+  if (not defined $channel) {
     return "Usage: top20 <channel> [nick or 'recent']";
   }
 
-  if(not defined $args) {
+  if (not defined $args) {
     foreach my $chan (sort keys %{ $factoids }) {
       next if lc $chan ne lc $channel;
       foreach my $command (sort {$factoids->{$chan}->{$b}{ref_count} <=> $factoids->{$chan}->{$a}{ref_count}} keys %{ $factoids->{$chan} }) {
-        if($factoids->{$chan}->{$command}{ref_count} > 0 and $factoids->{$chan}->{$command}{type} eq 'text') {
+        if ($factoids->{$chan}->{$command}{ref_count} > 0 and $factoids->{$chan}->{$command}{type} eq 'text') {
           $text .= "$command ($factoids->{$chan}->{$command}{ref_count}) ";
           $i++;
           last if $i >= 20;
@@ -1218,7 +1218,7 @@ sub top20 {
       return $text;
     }
   } else {
-    if(lc $args eq "recent") {
+    if (lc $args eq "recent") {
       foreach my $chan (sort keys %{ $factoids }) {
         next if lc $chan ne lc $channel;
         foreach my $command (sort { $factoids->{$chan}->{$b}{created_on} <=> $factoids->{$chan}->{$a}{created_on} } keys %{ $factoids->{$chan} }) {
@@ -1239,8 +1239,8 @@ sub top20 {
     foreach my $chan (sort keys %{ $factoids }) {
       next if lc $chan ne lc $channel;
       foreach my $command (sort { ($factoids->{$chan}->{$b}{last_referenced_on} || 0) <=> ($factoids->{$chan}->{$a}{last_referenced_on} || 0) } keys %{ $factoids->{$chan} }) {
-        if($factoids->{$chan}->{$command}{ref_user} =~ /\Q$args\E/i) {
-          if($user ne lc $factoids->{$chan}->{$command}{ref_user} && not $user =~ /$factoids->{$chan}->{$command}{ref_user}/i) {
+        if ($factoids->{$chan}->{$command}{ref_user} =~ /\Q$args\E/i) {
+          if ($user ne lc $factoids->{$chan}->{$command}{ref_user} && not $user =~ /$factoids->{$chan}->{$command}{ref_user}/i) {
             $user .= " ($factoids->{$chan}->{$command}{ref_user})";
           }
           my $ago = $factoids->{$chan}->{$command}{last_referenced_on} ? ago(gettimeofday - $factoids->{$chan}->{$command}{last_referenced_on}) : "unknown";
@@ -1266,14 +1266,14 @@ sub count {
     return "Usage: count <nick|factoids>";
   }
 
-  $arguments = ".*" if($arguments =~ /^factoids$/);
+  $arguments = ".*" if ($arguments =~ /^factoids$/);
 
   eval {
     foreach my $channel (keys %{ $factoids }) {
       foreach my $command (keys %{ $factoids->{$channel} }) {
         next if $factoids->{$channel}->{$command}->{type} ne 'text';
         $total++; 
-        if($factoids->{$channel}->{$command}->{owner} =~ /^\Q$arguments\E$/i) {
+        if ($factoids->{$channel}->{$command}->{owner} =~ /^\Q$arguments\E$/i) {
           $i++;
         }
       }
@@ -1283,7 +1283,7 @@ sub count {
 
   return "I have $i factoids." if $arguments eq ".*";
 
-  if($i > 0) {
+  if ($i > 0) {
     my $percent = int($i / $total * 100);
     $percent = 1 if $percent == 0;
     return "/say $arguments has submitted $i factoids out of $total ($percent"."%)";
@@ -1299,7 +1299,7 @@ sub factfind {
 
   my $usage = "Usage: factfind [-channel channel] [-owner regex] [-editby regex] [-refby regex] [-regex] [text]";
 
-  if(not defined $arguments) {
+  if (not defined $arguments) {
     return $usage;
   }
 
@@ -1323,38 +1323,38 @@ sub factfind {
 
   my $argtype = undef;
 
-  if($owner ne '.*') {
+  if ($owner ne '.*') {
     $argtype = "owned by $owner";
   }
 
-  if($refby ne '.*') {
-    if(not defined $argtype) {
+  if ($refby ne '.*') {
+    if (not defined $argtype) {
       $argtype = "last referenced by $refby";
     } else {
       $argtype .= " and last referenced by $refby";
     }
   }
 
-  if($editby ne '.*') {
-    if(not defined $argtype) {
+  if ($editby ne '.*') {
+    if (not defined $argtype) {
       $argtype = "last edited by $editby";
     } else {
       $argtype .= " and last edited by $editby";
     }
   }
 
-  if($arguments ne "") {
+  if ($arguments ne "") {
     my $unquoted_args = $arguments;
     $unquoted_args =~ s/(?:\\(?!\\))//g;
     $unquoted_args =~ s/(?:\\\\)/\\/g;
-    if(not defined $argtype) {
+    if (not defined $argtype) {
       $argtype = "with text containing '$unquoted_args'";
     } else {
       $argtype .= " and with text containing '$unquoted_args'";
     }
   }
 
-  if(not defined $argtype) {
+  if (not defined $argtype) {
     return $usage;
   }
 
@@ -1375,15 +1375,15 @@ sub factfind {
     foreach my $chan (sort keys %{ $factoids }) {
       next if defined $channel and $chan !~ /^$channel$/i;
       foreach my $trigger (sort keys %{ $factoids->{$chan} }) {
-        if($factoids->{$chan}->{$trigger}->{type} eq 'text' or $factoids->{$chan}->{$trigger}->{type} eq 'regex') {
-          if($factoids->{$chan}->{$trigger}->{owner} =~ /^$owner$/i
+        if ($factoids->{$chan}->{$trigger}->{type} eq 'text' or $factoids->{$chan}->{$trigger}->{type} eq 'regex') {
+          if ($factoids->{$chan}->{$trigger}->{owner} =~ /^$owner$/i
             && $factoids->{$chan}->{$trigger}->{ref_user} =~ /^$refby$/i
             && (exists $factoids->{$chan}->{$trigger}->{edited_by} ? $factoids->{$chan}->{$trigger}->{edited_by} =~ /^$editby$/i : 1)) {
-            next if($arguments ne "" && $factoids->{$chan}->{$trigger}->{action} !~ /$regex/i && $trigger !~ /$regex/i);
+            next if ($arguments ne "" && $factoids->{$chan}->{$trigger}->{action} !~ /$regex/i && $trigger !~ /$regex/i);
 
             $i++;
             
-            if($chan ne $last_chan) {
+            if ($chan ne $last_chan) {
               $text .= $chan eq '.*' ? "[global channel] " : "[$chan] ";
               $last_chan = $chan;
             }
@@ -1401,7 +1401,7 @@ sub factfind {
 
   return "/msg $nick $arguments: $@" if $@;
 
-  if($i == 1) {
+  if ($i == 1) {
     chop $text;
     return "Found one factoid submitted for " . ($last_chan eq '.*' ? 'global channel' : $last_chan) . " " . $argtype . ": $last_trigger is $factoids->{$last_chan}->{$last_trigger}->{action}";
   } else {
@@ -1568,11 +1568,11 @@ sub load_module {
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
   my ($keyword, $module) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
 
-  if(not defined $module) {
+  if (not defined $module) {
     return "Usage: load <keyword> <module>";
   }
 
-  if(not exists($factoids->{'.*'}->{$keyword})) {
+  if (not exists($factoids->{'.*'}->{$keyword})) {
     $self->{pbot}->{factoids}->add_factoid('module', '.*', "$nick!$user\@$host", $keyword, $module);
     $factoids->{'.*'}->{$keyword}->{add_nick} = 1;
     $factoids->{'.*'}->{$keyword}->{nooverride} = 1;
@@ -1589,11 +1589,11 @@ sub unload_module {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
-  if(not defined $arguments) {
+  if (not defined $arguments) {
     return "Usage: unload <keyword>";
-  } elsif(not exists $factoids->{'.*'}->{$arguments}) {
+  } elsif (not exists $factoids->{'.*'}->{$arguments}) {
     return "/say $arguments not found.";
-  } elsif($factoids->{'.*'}->{$arguments}{type} ne 'module') {
+  } elsif ($factoids->{'.*'}->{$arguments}{type} ne 'module') {
     return "/say $arguments is not a module.";
   } else {
     delete $factoids->{'.*'}->{$arguments};

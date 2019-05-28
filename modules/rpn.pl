@@ -12,18 +12,18 @@ sub rpn2exp {
   my %tops = map{ $_ => undef } qw[ % MOD + ADD * MULT / DIV ** POW - SUB ];
   my @stack;
   my $expr;
-  while( @_ ) {
+  while ( @_ ) {
     my $item = shift @_;
     push( @stack, $item ), next
     unless exists $tops{ $item } or $item =~ m[\(\)$];
-    if( exists $tops{ $item } ) {
+    if ( exists $tops{ $item } ) {
       my $arg2 = pop @stack;
       my $arg1 = pop @stack;
       push @stack, "($arg1 $item $arg2)";
     }
-    elsif( my( $func ) = $item =~ m[^(.*)\(\)$] ) {
+    elsif ( my( $func ) = $item =~ m[^(.*)\(\)$] ) {
       my $args = pop @stack;
-      if($args > 4) {
+      if ($args > 4) {
         print "Too many function arguments.\n";
         exit 1;
       }
@@ -53,7 +53,7 @@ my @varargs;
 sub exp2rpn {
   my( $exp, $aStack, $aBits ) = @_;
   print "Unbalanced parens: '$exp'" and exit 1 unless nestedOk $exp;
-  if( $exp =~ m/^$re_term$/ and $exp !~ m/\{\d+\}/ ) {
+  if ( $exp =~ m/^$re_term$/ and $exp !~ m/\{\d+\}/ ) {
     push @$aStack, $exp;
   }
   else {{
@@ -66,7 +66,7 @@ sub exp2rpn {
 
       for ( $left, $right ) {
         next unless $_;
-        if( my( $func, $subex ) = m[^ ( $re_var )? \{ ( \d+ ) \} $]x ) {
+        if ( my( $func, $subex ) = m[^ ( $re_var )? \{ ( \d+ ) \} $]x ) {
           push @varargs, 1 if $func;
           exp2rpn( $aBits->[ $subex ], $aStack, $aBits );
           push @$aStack, pop( @varargs ), "$func()" if $func;
@@ -105,12 +105,12 @@ sub parseExp {
 my $mode = shift @ARGV;
 my $args = join ' ', @ARGV;
 
-if(not $args) {
+if (not $args) {
   print "Missing arguments.\n";
   exit 1;
 }
 
-if($mode eq 'rpn') {
+if ($mode eq 'rpn') {
   my @rpn = parseExp $args;
   print join(', ', @rpn), "\n";
 } else {

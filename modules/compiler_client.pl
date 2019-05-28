@@ -20,12 +20,16 @@ my $sock = IO::Socket::INET->new(
   PeerPort => 9000, 
   Proto => 'tcp');
 
-if(not defined $sock) {
+if (not defined $sock) {
   print "Fatal error compiling: $!; try again later\n";
   die $!;
 }
 
 my $json = join ' ', @ARGV;
+my $length = length $json;
+  
+print STDERR "got $length bytes of argv json: [$json]\n";
+
 my $h = decode_json $json;
 my $lang = $h->{lang} // "c11";
 
@@ -36,9 +40,13 @@ if ($h->{code} =~ s/-lang=([^ ]+)//) {
 $h->{lang} = $lang;
 $json = encode_json $h;
 
-print $sock "$json\n";
+$length = length $json;
 
-while(my $line = <$sock>) {
+print STDERR "got $length bytes of json: [$json]\n";
+
+syswrite($sock, "$json\n");
+
+while (my $line = <$sock>) {
   print "$line";
 }
 

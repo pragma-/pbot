@@ -16,7 +16,7 @@ use PBot::ChanOpCommands;
 use Time::HiRes qw(gettimeofday);
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -80,7 +80,7 @@ sub gain_ops {
   return if exists $self->{op_requested}->{$channel};
   return if not $self->can_gain_ops($channel);
 
-  if(not exists $self->{is_opped}->{$channel}) {
+  if (not exists $self->{is_opped}->{$channel}) {
     $self->{pbot}->{conn}->privmsg("chanserv", "op $channel");
     $self->{op_requested}->{$channel} = scalar gettimeofday;
   } else {
@@ -109,11 +109,11 @@ sub perform_op_commands {
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
   $self->{pbot}->{logger}->log("Performing op commands...\n");
-  while(my $command = shift @{ $self->{op_commands}->{$channel} }) {
-    if($command =~ /^mode (.*?) (.*)/i) {
+  while (my $command = shift @{ $self->{op_commands}->{$channel} }) {
+    if ($command =~ /^mode (.*?) (.*)/i) {
       $self->{pbot}->{conn}->mode($1, $2);
       $self->{pbot}->{logger}->log("  executing mode [$1] [$2]\n");
-    } elsif($command =~ /^kick (.*?) (.*?) (.*)/i) {
+    } elsif ($command =~ /^kick (.*?) (.*?) (.*)/i) {
       $self->{pbot}->{conn}->kick($1, $2, $3) unless $1 =~ /\Q$botnick\E/i;
       $self->{pbot}->{logger}->log("  executing kick on $1 $2 $3\n");
     }
@@ -421,7 +421,7 @@ sub check_unban_timeouts {
 
   foreach my $channel (keys %{ $self->{unban_timeout}->hash }) {
     foreach my $mask (keys %{ $self->{unban_timeout}->hash->{$channel} }) {
-      if($self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} < $now) {
+      if ($self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} < $now) {
         $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = $now + 7200;
         $self->unban_user($mask, $channel);
       }
@@ -438,7 +438,7 @@ sub check_unmute_timeouts {
 
   foreach my $channel (keys %{ $self->{unmute_timeout}->hash }) {
     foreach my $mask (keys %{ $self->{unmute_timeout}->hash->{$channel} }) {
-      if($self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} < $now) {
+      if ($self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} < $now) {
         $self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} = $now + 7200;
         $self->unmute_user($mask, $channel);
       }
@@ -451,7 +451,7 @@ sub check_opped_timeouts {
   my $now = gettimeofday();
 
   foreach my $channel (keys %{ $self->{is_opped} }) {
-    if($self->{is_opped}->{$channel}{timeout} < $now) {
+    if ($self->{is_opped}->{$channel}{timeout} < $now) {
       unless (exists $self->{pbot}->{channels}->{channels}->hash->{$channel}
           and exists $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}
           and $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}) {

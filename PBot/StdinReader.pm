@@ -11,7 +11,7 @@ use POSIX qw(tcgetpgrp getpgrp);  # to check whether process is in background or
 use Carp ();
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to StdinReader should be key/value pairs, not hash reference");
   }
 
@@ -45,7 +45,7 @@ sub stdin_reader {
 
   my ($from, $text);
 
-  if($input =~ m/^~([^ ]+)\s+(.*)/) {
+  if ($input =~ m/^~([^ ]+)\s+(.*)/) {
     $from = $1;
     $text = $self->{pbot}->{registry}->get_value('irc', 'botnick') . " $2";
   } else {

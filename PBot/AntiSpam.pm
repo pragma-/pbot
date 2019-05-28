@@ -163,11 +163,11 @@ sub antispam_cmd {
       my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
       return "Usage: antispam remove <namespace> <regex>" if not defined $namespace or not defined $keyword;
 
-      if(not defined $self->{keywords}->hash->{$namespace}) {
+      if (not defined $self->{keywords}->hash->{$namespace}) {
         return "No entries for namespace $namespace";
       }
 
-      if(not defined $self->{keywords}->hash->{$namespace}->{$keyword}) {
+      if (not defined $self->{keywords}->hash->{$namespace}->{$keyword}) {
         return "No such entry for namespace $namespace";
       }
 

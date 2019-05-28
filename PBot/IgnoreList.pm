@@ -16,7 +16,7 @@ use PBot::IgnoreListCommands;
 use Time::HiRes qw(gettimeofday);
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -48,7 +48,7 @@ sub add {
   my $self = shift;
   my ($hostmask, $channel, $length) = @_;
 
-  if($length < 0) {
+  if ($length < 0) {
     $self->{ignore_list}->{$hostmask}->{$channel} = -1;
   } else {
     $self->{ignore_list}->{$hostmask}->{$channel} = gettimeofday + $length;
@@ -79,9 +79,9 @@ sub load_ignores {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->{filename}; }
+  if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
 
-  if(not defined $filename) {
+  if (not defined $filename) {
     Carp::carp "No ignorelist path specified -- skipping loading of ignorelist";
     return;
   }
@@ -100,11 +100,11 @@ sub load_ignores {
 
     my ($hostmask, $channel, $length) = split(/\s+/, $line);
     
-    if(not defined $hostmask || not defined $channel || not defined $length) {
+    if (not defined $hostmask || not defined $channel || not defined $length) {
          Carp::croak "Syntax error around line $i of $filename\n";
     }
     
-    if(exists ${ $self->{ignore_list} }{$hostmask}{$channel}) {
+    if (exists ${ $self->{ignore_list} }{$hostmask}{$channel}) {
       Carp::croak "Duplicate ignore [$hostmask][$channel] found in $filename around line $i\n";
     }
 
@@ -119,9 +119,9 @@ sub save_ignores {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->{filename}; }
+  if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
 
-  if(not defined $filename) {
+  if (not defined $filename) {
     Carp::carp "No ignorelist path specified -- skipping saving of ignorelist\n";
     return;
   }
@@ -148,25 +148,25 @@ sub check_ignore {
 
   my $now = gettimeofday;
 
-  if(defined $channel) { # do not execute following if text is coming from STDIN ($channel undef)
-    if($channel =~ /^#/) {
+  if (defined $channel) { # do not execute following if text is coming from STDIN ($channel undef)
+    if ($channel =~ /^#/) {
       $self->{ignore_flood_counter}->{$channel}++;
     }
 
-    if(not exists $self->{last_timestamp}->{$channel}) {
+    if (not exists $self->{last_timestamp}->{$channel}) {
       $self->{last_timestamp}->{$channel} = $now;
-    } elsif($now - $self->{last_timestamp}->{$channel} >= 30) {
+    } elsif ($now - $self->{last_timestamp}->{$channel} >= 30) {
       $self->{last_timestamp}->{$channel} = $now;
-      if(exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 0) {
+      if (exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 0) {
         $self->{ignore_flood_counter}->{$channel} = 0;
       }
     }
 
 =cut
-    if(exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 5) {
+    if (exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 5) {
       $self->{commands}->ignore_user("", "floodcontrol", "", "", ".* $channel 300");
       $self->{ignore_flood_counter}->{$channel} = 0;
-      if($channel =~ /^#/) {
+      if ($channel =~ /^#/) {
         $pbot->{conn}->me($channel, "has been overwhelmed.");
         $pbot->{conn}->me($channel, "lies down and falls asleep."); 
         return 1;
@@ -183,7 +183,7 @@ sub check_ignore {
       $ignored_channel_escaped =~ s/\\(\.|\*)/$1/g;
       $ignored_escaped =~ s/\\(\.|\*)/$1/g;
 
-      if(($channel =~ /$ignored_channel_escaped/i) && ($hostmask =~ /$ignored_escaped/i)) {
+      if (($channel =~ /$ignored_channel_escaped/i) && ($hostmask =~ /$ignored_escaped/i)) {
         $self->{pbot}->{logger}->log("$nick!$user\@$host message ignored in channel $channel (matches [$ignored] host and [$ignored_channel] channel)\n") unless $silent;
         return 1;
       }
@@ -198,12 +198,12 @@ sub check_ignore_timeouts {
 
   foreach my $hostmask (keys %{ $self->{ignore_list} }) {
     foreach my $channel (keys %{ $self->{ignore_list}->{$hostmask} }) {
-      next if($self->{ignore_list}->{$hostmask}->{$channel} == -1); #permanent ignore
+      next if ($self->{ignore_list}->{$hostmask}->{$channel} == -1); #permanent ignore
 
-      if($self->{ignore_list}->{$hostmask}->{$channel} < $now) {
+      if ($self->{ignore_list}->{$hostmask}->{$channel} < $now) {
         $self->{pbot}->{logger}->log("Unignoring $hostmask in channel $channel.\n");
         $self->remove($hostmask, $channel);
-        if($hostmask eq ".*") {
+        if ($hostmask eq ".*") {
           $self->{pbot}->{conn}->me($channel, "awakens.");
         }
       }

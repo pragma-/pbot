@@ -18,7 +18,7 @@ use PBot::BotAdminCommands;
 use Carp ();
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -37,8 +37,8 @@ sub initialize {
   my $export_site    = delete $conf{export_site};
   my $export_timeout = delete $conf{export_timeout};
 
-  if(not defined $export_timeout) {
-    if(defined $export_path) {
+  if (not defined $export_timeout) {
+    if (defined $export_path) {
       $export_timeout = 300; # every 5 minutes
     } else {
       $export_timeout = -1;
@@ -81,7 +81,7 @@ sub remove_admin {
     delete $self->{admins}->hash->{$channel};
   }
 
-  if(defined $admin) {
+  if (defined $admin) {
     $self->{pbot}->{logger}->log("Removed level $admin->{level} admin [$admin->{name}] [$hostmask] from channel [$channel]\n");
     $self->save_admins;
     return 1;
@@ -95,9 +95,9 @@ sub load_admins {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->{admins}->filename; }
+  if (@_) { $filename = shift; } else { $filename = $self->{admins}->filename; }
 
-  if(not defined $filename) {
+  if (not defined $filename) {
     Carp::carp "No admins path specified -- skipping loading of admins";
     return;
   }
@@ -116,7 +116,7 @@ sub load_admins {
       my $level = $self->{admins}->hash->{$channel}->{$hostmask}->{level};
       my $password = $self->{admins}->hash->{$channel}->{$hostmask}->{password};
 
-      if(not defined $name or not defined $level or not defined $password) {
+      if (not defined $name or not defined $level or not defined $password) {
         Carp::croak "Syntax error around line $i of $filename\n";
       }
 
@@ -139,7 +139,7 @@ sub export_admins {
   my $self = shift;
   my $filename;
 
-  if(@_) { $filename = shift; } else { $filename = $self->export_path; }
+  if (@_) { $filename = shift; } else { $filename = $self->export_path; }
 
   return if not defined $filename;
   return;
@@ -163,7 +163,7 @@ sub find_admin {
     return undef;
   };
 
-  if($@) {
+  if ($@) {
     $self->{pbot}->{logger}->log("Error in find_admin parameters: $@\n");
   }
 
@@ -175,7 +175,7 @@ sub loggedin {
 
   my $admin = $self->find_admin($channel, $hostmask);
 
-  if(defined $admin && $admin->{loggedin}) {
+  if (defined $admin && $admin->{loggedin}) {
     return $admin;
   } else {
     return undef;
@@ -187,12 +187,12 @@ sub login {
 
   my $admin = $self->find_admin($channel, $hostmask);
 
-  if(not defined $admin) {
+  if (not defined $admin) {
     $self->{pbot}->{logger}->log("Attempt to login non-existent [$channel][$hostmask] failed\n");
     return "You do not have an account in $channel.";
   }
 
-  if($admin->{password} ne $password) {
+  if ($admin->{password} ne $password) {
     $self->{pbot}->{logger}->log("Bad login password for [$channel][$hostmask]\n");
     return "I don't think so.";
   }
@@ -215,20 +215,20 @@ sub logout {
 sub export_path {
   my $self = shift;
 
-  if(@_) { $self->{export_path} = shift; }
+  if (@_) { $self->{export_path} = shift; }
   return $self->{export_path};
 }
 
 sub export_timeout {
   my $self = shift;
 
-  if(@_) { $self->{export_timeout} = shift; }
+  if (@_) { $self->{export_timeout} = shift; }
   return $self->{export_timeout};
 }
 
 sub export_site {
   my $self = shift;
-  if(@_) { $self->{export_site} = shift; }
+  if (@_) { $self->{export_site} = shift; }
   return $self->{export_site};
 }
 
@@ -240,7 +240,7 @@ sub admins {
 sub filename {
   my $self = shift;
 
-  if(@_) { $self->{filename} = shift; }
+  if (@_) { $self->{filename} = shift; }
   return $self->{filename};
 }
 

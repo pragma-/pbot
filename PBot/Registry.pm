@@ -20,7 +20,7 @@ use PBot::DualIndexHashObject;
 use PBot::RegistryCommands;
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be item/value pairs, not hash reference");
   }
 
@@ -97,7 +97,7 @@ sub remove {
 
   delete $self->{registry}->hash->{$section}->{$item};
   
-  if(not scalar keys %{ $self->{registry}->hash->{$section} }) {
+  if (not scalar keys %{ $self->{registry}->hash->{$section} }) {
     delete $self->{registry}->hash->{$section};
   }
 
@@ -127,7 +127,7 @@ sub set {
 
   my $result = $self->{registry}->set($section, $item, $key, $value, 1);
 
-  if(defined $key and $key eq 'value' and defined $value and $oldvalue ne $value) {
+  if (defined $key and $key eq 'value' and defined $value and $oldvalue ne $value) {
     $self->process_trigger($section, $item, $value);
   }
 
@@ -151,8 +151,8 @@ sub unset {
 sub get_value {
   my ($self, $section, $item, $as_text) = @_;
 
-  if(exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$item}) {
-    if(not $as_text and $self->{registry}->hash->{$section}->{$item}->{type} eq 'array') {
+  if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$item}) {
+    if (not $as_text and $self->{registry}->hash->{$section}->{$item}->{type} eq 'array') {
       return split /\s*,\s*/, $self->{registry}->hash->{$section}->{$item}->{value};
     } else {
       return $self->{registry}->hash->{$section}->{$item}->{value};
@@ -164,8 +164,8 @@ sub get_value {
 sub get_array_value {
   my ($self, $section, $item, $index) = @_;
 
-  if(exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$item}) {
-    if($self->{registry}->hash->{$section}->{$item}->{type} eq 'array') {
+  if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$item}) {
+    if ($self->{registry}->hash->{$section}->{$item}->{type} eq 'array') {
       my @array = split /\s*,\s*/, $self->{registry}->hash->{$section}->{$item}->{value};
       return $array[$index >= $#array ? $#array : $index];
     } else {
@@ -185,7 +185,7 @@ sub process_trigger {
   my $self = shift;
   my ($section, $item) = @_;
 
-  if(exists $self->{triggers}->{$section} and exists $self->{triggers}->{$section}->{$item}) {
+  if (exists $self->{triggers}->{$section} and exists $self->{triggers}->{$section}->{$item}) {
     return &{ $self->{triggers}->{$section}->{$item} }(@_);
   }
   return undef;

@@ -19,12 +19,12 @@ if ($#ARGV < 0) {
 $manpage = join("+", @ARGV);
 $section = "3";
 
-if($manpage =~ m/([0-9]+)\+(.*)/) {
+if ($manpage =~ m/([0-9]+)\+(.*)/) {
   $section = $1;
   $manpage = $2;
 }
 
-if(!($section == 2 || $section == 3))
+if (!($section == 2 || $section == 3))
 {
   print "I'm only interested in displaying information about sections 2 or 3.\n";
   exit 0;
@@ -34,28 +34,28 @@ $text = get("http://node1.yo-linux.com/cgi-bin/man2html?cgi_command=$manpage&cgi
 
 $manpage =~ s/\+/ /g;
 
-if($text =~ m/No.*?entry\sfor(.*)/i) {
+if ($text =~ m/No.*?entry\sfor(.*)/i) {
   print "No entry for$1";
   die;
 }
 
 #$text =~ m/<\/A>.*?NAME\n/gs;
 
-if($text =~ m/(.*?)SYNOPSIS/gsi) {
+if ($text =~ m/(.*?)SYNOPSIS/gsi) {
   $name = $1;
 }
 
 my $i = 0;
 while ($text =~ m/#include &lt;(.*?)&gt;/gsi) {
-  $includes .= ", " if($i > 0);
+  $includes .= ", " if ($i > 0);
   $includes .= "$1";
   $i++;
 }
 
 $prototype = "$1 $2$manpage($3);"
-  if($text =~ m/SYNOPSIS.*^\s+(.*?)\s+(\*?)$manpage\s*\((.*?)\)\;?\n.*DESC/ms);
+  if ($text =~ m/SYNOPSIS.*^\s+(.*?)\s+(\*?)$manpage\s*\((.*?)\)\;?\n.*DESC/ms);
 
-$description = "$manpage $1" if($text =~ m/DESCRIPTION.*?$manpage(.*?)\./gsi);
+$description = "$manpage $1" if ($text =~ m/DESCRIPTION.*?$manpage(.*?)\./gsi);
 $description =~ s/\-\s+//g;
 
 if (not defined $prototype) {

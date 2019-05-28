@@ -125,9 +125,9 @@ sub do_one_loop {
 
   $time = time();             # no use calling time() all the time.
 
-  if(!$self->outputqueue->is_empty) {
+  if (!$self->outputqueue->is_empty) {
     my $outputevent = undef;
-    while(defined($outputevent = $self->outputqueue->head)
+    while (defined($outputevent = $self->outputqueue->head)
           && $outputevent->time <= $time) {
       $outputevent = $self->outputqueue->dequeue();
       $outputevent->content->{coderef}->(@{$outputevent->content->{args}});
@@ -141,13 +141,13 @@ sub do_one_loop {
   return if $caller eq 'PBot::IRC::flush_output_queue'; # pragma_ 2011/01/21
 
   # Check the queue for scheduled events to run.
-  if(!$self->schedulequeue->is_empty) {
+  if (!$self->schedulequeue->is_empty) {
     my $scheduledevent = undef;
-    while(defined($scheduledevent = $self->schedulequeue->head) && $scheduledevent->time <= $time) {
+    while (defined($scheduledevent = $self->schedulequeue->head) && $scheduledevent->time <= $time) {
       $scheduledevent = $self->schedulequeue->dequeue();
       $scheduledevent->content->{coderef}->(@{$scheduledevent->content->{args}});
     }
-    if(!$self->schedulequeue->is_empty()
+    if (!$self->schedulequeue->is_empty()
        && $nexttimer
        && $self->schedulequeue->head->time < $nexttimer) {
       $nexttimer = $self->schedulequeue->head->time;
@@ -183,7 +183,7 @@ sub do_one_loop {
 sub flush_output_queue {
   my $self = shift;
 
-  while(!$self->outputqueue->is_empty()) {
+  while (!$self->outputqueue->is_empty()) {
     $self->do_one_loop();
   }
 }

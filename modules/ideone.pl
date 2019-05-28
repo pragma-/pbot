@@ -97,7 +97,7 @@ my %preludes = (
                  '1'   => "#include <iostream>\n#include <cstdio>\n",
                );
 
-if($#ARGV <= 0) {
+if ($#ARGV <= 0) {
   print "Usage: cc [-lang=<language>] <code>\n";
   exit 0;
 }
@@ -106,16 +106,16 @@ my $nick = shift @ARGV;
 my $code = join ' ', @ARGV;
 my @last_code;
 
-if(open FILE, "< ideone_last_code.txt") {
-  while(my $line = <FILE>) {
+if (open FILE, "< ideone_last_code.txt") {
+  while (my $line = <FILE>) {
     chomp $line;
     push @last_code, $line;
   }
   close FILE;
 }
 
-if($code =~ m/^\s*show\s*$/i) {
-  if(defined $last_code[0]) {
+if ($code =~ m/^\s*show\s*$/i) {
+  if (defined $last_code[0]) {
     print "$nick: $last_code[0]\n";
   } else {
     print "$nick: No recent code to show.\n"
@@ -125,8 +125,8 @@ if($code =~ m/^\s*show\s*$/i) {
 
 my $got_run;
 
-if($code =~ m/^\s*run\s*$/i) {
-  if(defined $last_code[0]) {
+if ($code =~ m/^\s*run\s*$/i) {
+  if (defined $last_code[0]) {
     $code = $last_code[0];
     $got_run = 1;
   } else {
@@ -138,9 +138,9 @@ if($code =~ m/^\s*run\s*$/i) {
   my $got_undo = 0;
   my $got_sub = 0;
 
-  while($subcode =~ s/^\s*(and)?\s*undo//) {
+  while ($subcode =~ s/^\s*(and)?\s*undo//) {
     splice @last_code, 0, 1;
-    if(not defined $last_code[0]) {
+    if (not defined $last_code[0]) {
       print "$nick: No more undos remaining.\n";
       exit 0;
     } else {
@@ -153,11 +153,11 @@ if($code =~ m/^\s*run\s*$/i) {
   my $prevchange = $last_code[0];
   my $got_changes = 0;
 
-  while(1) {
+  while (1) {
     $got_sub = 0;
     $got_changes = 0;
 
-    if($subcode =~ m/^\s*(and)?\s*remove \s*([^']+)?\s*'/) {
+    if ($subcode =~ m/^\s*(and)?\s*remove \s*([^']+)?\s*'/) {
       my $modifier = 'first';
 
       $subcode =~ s/^\s*(and)?\s*//;
@@ -169,7 +169,7 @@ if($code =~ m/^\s*run\s*$/i) {
 
       my $text;
 
-      if(defined $e) {
+      if (defined $e) {
         $text = $e;
         $text =~ s/^'//;
         $text =~ s/'$//;
@@ -181,14 +181,14 @@ if($code =~ m/^\s*run\s*$/i) {
       next;
     }
 
-    if($subcode =~ s/^\s*(and)?\s*add '//) {
+    if ($subcode =~ s/^\s*(and)?\s*add '//) {
       $subcode = "'$subcode";
 
       my ($e, $r) = extract_delimited($subcode, "'");
 
       my $text;
 
-      if(defined $e) {
+      if (defined $e) {
         $text = $e;
         $text =~ s/^'//;
         $text =~ s/'$//;
@@ -197,7 +197,7 @@ if($code =~ m/^\s*run\s*$/i) {
         $got_sub = 1;
         $got_changes = 1;
 
-        if(not defined $prevchange) {
+        if (not defined $prevchange) {
           print "$nick: No recent code to append to.\n";
           exit 0;
         }
@@ -212,7 +212,7 @@ if($code =~ m/^\s*run\s*$/i) {
       next;
     }
 
-    if($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
+    if ($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*'/i) {
       $got_sub = 1;
       my $modifier = 'first';
 
@@ -224,7 +224,7 @@ if($code =~ m/^\s*run\s*$/i) {
       my ($from, $to);
       my ($e, $r) = extract_delimited($subcode, "'");
 
-      if(defined $e) {
+      if (defined $e) {
         $from = $e;
         $from =~ s/^'//;
         $from =~ s/'$//;
@@ -238,7 +238,7 @@ if($code =~ m/^\s*run\s*$/i) {
 
       ($e, $r) = extract_delimited($subcode, "'");
 
-      if(defined $e) {
+      if (defined $e) {
         $to = $e;
         $to =~ s/^'//;
         $to =~ s/'$//;
@@ -273,14 +273,14 @@ if($code =~ m/^\s*run\s*$/i) {
       next;
     }
 
-    if($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
+    if ($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
       $got_sub = 1;
       $subcode =~ s/^\s*(and)?\s*s//;
 
       my ($regex, $to);
       my ($e, $r) = extract_delimited($subcode, '/');
 
-      if(defined $e) {
+      if (defined $e) {
         $regex = $e;
         $regex =~ s/^\///;
         $regex =~ s/\/$//;
@@ -292,7 +292,7 @@ if($code =~ m/^\s*run\s*$/i) {
 
       ($e, $r) = extract_delimited($subcode, '/');
 
-      if(defined $e) {
+      if (defined $e) {
         $to = $e;
         $to =~ s/^\///;
         $to =~ s/\/$//;
@@ -305,11 +305,11 @@ if($code =~ m/^\s*run\s*$/i) {
       my $suffix;
       $suffix = $1 if $subcode =~ s/^([^ ]+)//;
 
-      if(length $suffix and $suffix =~ m/[^gi]/) {
+      if (length $suffix and $suffix =~ m/[^gi]/) {
         print "$nick: Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
         exit 0;
       }
-      if(defined $prevchange) {
+      if (defined $prevchange) {
         $code = $prevchange;
       } else {
         print "$nick: No recent code to change.\n";
@@ -330,7 +330,7 @@ if($code =~ m/^\s*run\s*$/i) {
         my $before;
         my $after;
 
-        if(not length $suffix) {
+        if (not length $suffix) {
           $ret = $code =~ s|$regex|$to|;
           $a = $1;
           $b = $2;
@@ -343,7 +343,7 @@ if($code =~ m/^\s*run\s*$/i) {
           $i = $9;
           $before = $`;
           $after = $';
-        } elsif($suffix =~ /^i$/) {
+        } elsif ($suffix =~ /^i$/) {
           $ret = $code =~ s|$regex|$to|i; 
           $a = $1;
           $b = $2;
@@ -356,7 +356,7 @@ if($code =~ m/^\s*run\s*$/i) {
           $i = $9;
           $before = $`;
           $after = $';
-        } elsif($suffix =~ /^g$/) {
+        } elsif ($suffix =~ /^g$/) {
           $ret = $code =~ s|$regex|$to|g;
           $a = $1;
           $b = $2;
@@ -369,7 +369,7 @@ if($code =~ m/^\s*run\s*$/i) {
           $i = $9;
           $before = $`;
           $after = $';
-        } elsif($suffix =~ /^ig$/ or $suffix =~ /^gi$/) {
+        } elsif ($suffix =~ /^ig$/ or $suffix =~ /^gi$/) {
           $ret = $code =~ s|$regex|$to|gi;
           $a = $1;
           $b = $2;
@@ -384,7 +384,7 @@ if($code =~ m/^\s*run\s*$/i) {
           $after = $';
         }
 
-        if($ret) {
+        if ($ret) {
           $code =~ s/\$1/$a/g;
           $code =~ s/\$2/$b/g;
           $code =~ s/\$3/$c/g;
@@ -401,29 +401,29 @@ if($code =~ m/^\s*run\s*$/i) {
         return $ret;
       };
 
-      if($@) {
+      if ($@) {
         print "$nick: $@\n";
         exit 0;
       }
 
-      if($ret) {
+      if ($ret) {
         $got_changes = 1;
       }
 
       $prevchange = $code;
     }
 
-    if($got_sub and not $got_changes) {
+    if ($got_sub and not $got_changes) {
       print "$nick: No substitutions made.\n";
       exit 0;
-    } elsif($got_sub and $got_changes) {
+    } elsif ($got_sub and $got_changes) {
       next;
     }
 
     last;
   }
 
-  if($#replacements > -1) {
+  if ($#replacements > -1) {
     @replacements = sort { $a->{'from'} cmp $b->{'from'} or $a->{'modifier'} <=> $b->{'modifier'} } @replacements;
 
     my ($previous_from, $previous_modifier);
@@ -433,13 +433,13 @@ if($code =~ m/^\s*run\s*$/i) {
       my $to = $replacement->{'to'};
       my $modifier = $replacement->{'modifier'};
 
-      if(defined $previous_from) {
-        if($previous_from eq $from and $previous_modifier =~ /^\d+$/) {
+      if (defined $previous_from) {
+        if ($previous_from eq $from and $previous_modifier =~ /^\d+$/) {
           $modifier -= $modifier - $previous_modifier;
         }
       }
 
-      if(defined $prevchange) {
+      if (defined $prevchange) {
         $code = $prevchange;
       } else {
         print "$nick: No recent code to change.\n";
@@ -453,43 +453,43 @@ if($code =~ m/^\s*run\s*$/i) {
         $first_char = $1 if $from =~ m/^(.)/;
         $last_char = $1 if $from =~ m/(.)$/;
 
-        if($first_char =~ /\W/) {
+        if ($first_char =~ /\W/) {
           $first_bound = '.';
         } else {
           $first_bound = '\b';
         }
 
-        if($last_char =~ /\W/) {
+        if ($last_char =~ /\W/) {
           $last_bound = '\B';
         } else {
           $last_bound = '\b';
         }
 
-        if($modifier eq 'all') {
-          while($code =~ s/($first_bound)$from($last_bound)/$1$to$2/) {
+        if ($modifier eq 'all') {
+          while ($code =~ s/($first_bound)$from($last_bound)/$1$to$2/) {
             $got_change = 1;
           }
-        } elsif($modifier eq 'last') {
-          if($code =~ s/(.*)($first_bound)$from($last_bound)/$1$2$to$3/) {
+        } elsif ($modifier eq 'last') {
+          if ($code =~ s/(.*)($first_bound)$from($last_bound)/$1$2$to$3/) {
             $got_change = 1;
           }
         } else {
           my $count = 0;
           my $unescaped = $from;
           $unescaped =~ s/\\//g;
-          if($code =~ s/($first_bound)$from($last_bound)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$unescaped$2"; }/gex) {
+          if ($code =~ s/($first_bound)$from($last_bound)/if (++$count == $modifier) { "$1$to$2"; } else { "$1$unescaped$2"; }/gex) {
             $got_change = 1;
           }
         }
         return $got_change;
       };
 
-      if($@) {
+      if ($@) {
         print "$nick: $@\n";
         exit 0;
       }
 
-      if($ret) {
+      if ($ret) {
         $got_sub = 1;
         $got_changes = 1;
       }
@@ -499,7 +499,7 @@ if($code =~ m/^\s*run\s*$/i) {
       $previous_modifier = $modifier;
     }
 
-    if($got_sub and not $got_changes) {
+    if ($got_sub and not $got_changes) {
       print "$nick: No replacements made.\n";
       exit 0;
     }
@@ -513,18 +513,18 @@ if($code =~ m/^\s*run\s*$/i) {
 
   my $i = 0;
   foreach my $line (@last_code) {
-    last if(++$i > $MAX_UNDO_HISTORY);
+    last if (++$i > $MAX_UNDO_HISTORY);
     print FILE "$line\n";
   }
   close FILE;
 
-  if($got_undo and not $got_sub) {
+  if ($got_undo and not $got_sub) {
     print "$nick: $code\n";
     exit 0;
   }
 }
 
-unless($got_run) {
+unless ($got_run) {
   open FILE, ">> ideone_log.txt";
   print FILE "$nick: $code\n";
 }
@@ -541,13 +541,13 @@ my $found = 0;
 my @langs;
 foreach my $l (sort { uc $a cmp uc $b } keys %languages) {
   push @langs, sprintf("      %-30s => %s", $l, $languages{$l}{'name'});
-  if(uc $lang eq uc $l) {
+  if (uc $lang eq uc $l) {
     $lang = $l;
     $found = 1;
   }
 }
 
-if(not $found) {
+if (not $found) {
   print "$nick: Invalid language '$lang'.  Supported languages are:\n", (join ",\n", @langs), "\n";
   exit 0;
 }
@@ -562,18 +562,18 @@ $code =~ s/#([\w\d_]+)\\n/\n#$1\n/g;
 my $precode = $preludes{$languages{$lang}{'id'}} . $code;
 $code = '';
 
-if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$lang}{'id'} == 34) {
+if ($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$lang}{'id'} == 34) {
   my $has_main = 0;
   
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
   
-  while($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
+  while ($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
     my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
 
     my @extract = extract_codeblock($potential_body, '{}');
     my $body;
-    if(not defined $extract[0]) {
+    if (not defined $extract[0]) {
       $output .= "error: unmatched brackets for function '$ident';\n";
       $body = $extract[1];
     } else {
@@ -587,7 +587,7 @@ if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$
   $precode =~ s/^\s+//;
   $precode =~ s/\s+$//;
 
-  if(not $has_main) {
+  if (not $has_main) {
     $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) { $precode\n;\n return 0;}\n";
     $nooutput = "Success [no output].";
   } else {
@@ -598,7 +598,7 @@ if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$
   $code = $precode;
 }
 
-if($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$lang}{'id'} == 35
+if ($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$lang}{'id'} == 35
      or $languages{$lang}{'id'} == 27 or $languages{$lang}{'id'} == 10 or $languages{$lang}{'id'} == 34) {
   $code = pretty($code) 
 }
@@ -614,7 +614,7 @@ $result = get_result($soap->createSubmission($user, $pass, $code, $languages{$la
 my $url = $result->{link};
 
 # wait for compilation/execution to complete
-while(1) {
+while (1) {
   $result = get_result($soap->getSubmissionStatus($user, $pass, $url));
   last if $result->{status} == 0;
   sleep 1;
@@ -702,35 +702,35 @@ $signame[66] = 'SIGCLD';
 $signame[67] = 'SIGPOLL';
 $signame[68] = 'SIGUNUSED';
 
-if($result->{result} != $SUCCESSFUL or $languages{$lang}{'id'} == 13) {
+if ($result->{result} != $SUCCESSFUL or $languages{$lang}{'id'} == 13) {
   $output .= $result->{cmpinfo};
   $output =~ s/[\n\r]/ /g;
 }
 
-  if($result->{result} == $RUNTIME_ERROR) {
+  if ($result->{result} == $RUNTIME_ERROR) {
     $output .= "\n[Runtime error]";
-    if($result->{signal}) {
+    if ($result->{signal}) {
       $output .= "\n[Signal: $signame[$result->{signal}] ($result->{signal})]";
     }
   } else {
-    if($result->{signal}) {
+    if ($result->{signal}) {
       $output .= "\n[Exit code: $result->{signal}]";
     }
   }
 
-if($result->{result} == $TIMELIMIT) {
+if ($result->{result} == $TIMELIMIT) {
   $output .= "\n[Time limit exceeded]";
 }
 
-if($result->{result} == $MEMORYLIMIT) {
+if ($result->{result} == $MEMORYLIMIT) {
   $output .= "\n[Out of memory]";
 }
 
-if($result->{result} == $ILLEGAL_SYSCALL) {
+if ($result->{result} == $ILLEGAL_SYSCALL) {
   $output .= "\n[Disallowed system call]";
 }
 
-if($result->{result} == $INTERNAL_ERROR) {
+if ($result->{result} == $INTERNAL_ERROR) {
   $output .= "\n[Internal error]";
 }
 
@@ -754,13 +754,13 @@ $output =~ s/$right_quote/'/g;
 
 $output = $nooutput if $output =~ m/^\s+$/;
 
-unless($got_run) {
+unless ($got_run) {
   print FILE localtime() . "\n";
   print FILE "$nick: [ http://ideone.com/$url ] $output\n\n";
   close FILE;
 }
 
-if($show_link) {
+if ($show_link) {
   print "$nick: [ http://ideone.com/$url ] $output\n";
 } else {
   print "$nick: $output\n";
@@ -773,11 +773,11 @@ sub get_result {
 
   use Data::Dumper;
 
-  if($result->fault) {
+  if ($result->fault) {
     print join ', ', $result->faultcode, $result->faultstring, $result->faultdetail;
     exit 0;
   } else {
-    if($result->result->{error} ne "OK") {
+    if ($result->result->{error} ne "OK") {
       print "error\n";
       print Dumper($result->result->{error});
       exit 0;
@@ -794,7 +794,7 @@ sub pretty {
   my $pid = open2(\*IN, \*OUT, 'astyle -xUpf');
   print OUT "$code\n";
   close OUT;
-  while(my $line = <IN>) {
+  while (my $line = <IN>) {
     $result .= $line;
   }
   close IN;

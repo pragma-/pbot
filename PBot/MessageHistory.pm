@@ -24,7 +24,7 @@ use Carp ();
 use PBot::MessageHistory_SQLite;
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -137,7 +137,7 @@ sub list_also_known_as {
 
   my $usage = "Usage: aka [-hingr] <nick>; -h show hostmasks; -i show ids; -n show nickserv accounts; -g show gecos, -r show relationships";
 
-  if(not length $arguments) {
+  if (not length $arguments) {
     return $usage;
   }
 
@@ -166,7 +166,7 @@ sub list_also_known_as {
 
   my %akas = $self->{database}->get_also_known_as(@$args[0], $dont_use_aliases_table);
 
-  if(%akas) {
+  if (%akas) {
     my $result = "@$args[0] also known as:\n";
 
     my %nicks;
@@ -215,14 +215,14 @@ sub list_also_known_as {
 sub recall_message {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-  if(not defined $from) {
+  if (not defined $from) {
     $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
     return "";
   }
 
   my $usage = 'Usage: recall [nick [history [channel]]] [-c,channel <channel>] [-t,text,h,history <history>] [-b,before <context before>] [-a,after <context after>] [-x,context <nick>] [-n,count <count>] [+ ...]';
 
-  if(not defined $arguments or not length $arguments) {
+  if (not defined $arguments or not length $arguments) {
     return $usage; 
   }
 
@@ -322,10 +322,10 @@ sub recall_message {
 
     my ($account, $found_nick);
 
-    if(defined $recall_nick) {
+    if (defined $recall_nick) {
       ($account, $found_nick) = $self->{database}->find_message_account_by_nick($recall_nick);
 
-      if(not defined $account) {
+      if (not defined $account) {
         return "I don't know anybody named $recall_nick.";
       }
 
@@ -334,9 +334,9 @@ sub recall_message {
 
     my $message;
 
-    if($recall_history =~ /^\d+$/) {
+    if ($recall_history =~ /^\d+$/) {
       # integral history
-      if(defined $account) {
+      if (defined $account) {
         my $max_messages = $self->{database}->get_max_messages($account, $recall_channel);
         if ($recall_history < 1 || $recall_history > $max_messages) {
           if ($max_messages == 0) {
@@ -364,15 +364,15 @@ sub recall_message {
       $recall_history--;
       $message = $self->{database}->recall_message_by_count($account, $recall_channel, $recall_history, '(?:recall|mock)');
 
-      if(not defined $message) {
+      if (not defined $message) {
         return "No message found at index $recall_history in channel $recall_channel.";
       }
     } else {
       # regex history
       $message = $self->{database}->recall_message_by_text($account, $recall_channel, $recall_history, '(?:recall|mock)');
 
-      if(not defined $message) {
-        if(defined $account) {
+      if (not defined $message) {
+        if (defined $account) {
           return "No message for nick $found_nick in channel $recall_channel containing \"$recall_history\"";
         } else {
           return "No message in channel $recall_channel containing \"$recall_history\".";
@@ -385,7 +385,7 @@ sub recall_message {
     if (defined $recall_context) {
       ($context_account) = $self->{database}->find_message_account_by_nick($recall_context);
 
-      if(not defined $context_account) {
+      if (not defined $context_account) {
         return "I don't know anybody named $recall_context.";
       }
     }

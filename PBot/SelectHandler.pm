@@ -11,7 +11,7 @@ use IO::Select;
 use Carp ();
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to SelectHandler should be key/value pairs, not hash reference");
   }
 
@@ -52,13 +52,13 @@ sub do_select {
   foreach my $fh (@ready) {
     my $ret = sysread($fh, my $buf, $length);
 
-    if(not defined $ret) {
+    if (not defined $ret) {
       $self->{pbot}->{logger}->log("Error with $fh: $!\n");
       $self->remove_reader($fh);
       next;
     }
 
-    if($ret == 0) {
+    if ($ret == 0) {
       if (length $self->{buffers}->{$fh}) {
         $self->{readers}->{$fh}->($self->{buffers}->{$fh});
       }
@@ -68,7 +68,7 @@ sub do_select {
 
     $self->{buffers}->{$fh} .= $buf;
 
-    if(not exists $self->{readers}->{$fh}) {
+    if (not exists $self->{readers}->{$fh}) {
       $self->{pbot}->{logger}->log("Error: no reader for $fh\n");
     } else {
       if ($ret < $length) {

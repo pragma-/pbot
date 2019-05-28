@@ -1,9 +1,5 @@
 #!/usr/bin/perl
 
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 use warnings;
 use strict;
 
@@ -15,10 +11,10 @@ sub initialize {
 
   $self->{sourcefile}      = 'prog.c';
   $self->{execfile}        = 'prog';
-  $self->{default_options} = '-Wextra -Wall -Wno-unused -Wno-unused-parameter -pedantic -Wfloat-equal -Wshadow -std=c11 -lm -Wfatal-errors -fsanitize=integer,undefined,address,alignment';
+  $self->{default_options} = '-Wextra -Wall -Wno-unused -Wno-unused-parameter -pedantic -Wfloat-equal -Wshadow -std=c11 -lm -Wfatal-errors -fsanitize=integer,undefined,alignment';
   $self->{options_paste}   = '-fcaret-diagnostics';
   $self->{options_nopaste} = '-fno-caret-diagnostics';
-  $self->{cmdline}         = 'clang-3.7 -ggdb -g3 $sourcefile $options -o $execfile';
+  $self->{cmdline}         = 'clang -ggdb -g3 $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';
 #define _XOPEN_SOURCE 9001

@@ -1,9 +1,5 @@
 #!/usr/bin/perl
 
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 use warnings;
 use strict;
 use feature "switch";
@@ -393,7 +389,7 @@ sub execute {
   #print FILE "Sending $length bytes [$compile_json] to vm_server\n";
 
   $chunk_size -= 1; # account for newline in syswrite
-
+  
   while ($chunks_sent < $length) {
     my $chunk = substr $compile_json, $chunks_sent, $chunk_size;
     #print FILE "Sending chunk [$chunk]\n";
@@ -423,8 +419,7 @@ sub execute {
   my $got_result = 0;
 
   while(my $line = <$compiler_output>) {
-
-    #print STDERR "Read [$line]\n";
+    print STDERR "Read [$line]\n";
 
     $line =~ s/[\r\n]+$//;
     last if $line =~ /^result:end$/;

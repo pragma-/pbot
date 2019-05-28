@@ -22,7 +22,7 @@ $phrase = join("+", @ARGV);
  
 $entry = 1;
  
-if($phrase =~ m/([0-9]+)\+(.*)/)
+if ($phrase =~ m/([0-9]+)\+(.*)/)
 {
   $entry = $1;
   $phrase = $2;
@@ -38,7 +38,7 @@ if (not $response->is_success) {
 }
  
 $text = $response->content;
-if($text =~ m/No definitions were found/i)
+if ($text =~ m/No definitions were found/i)
 {
   print "No entry found for '$phrase'. ";
   print "\n";
@@ -49,9 +49,9 @@ print "$phrase: ";
  
 $i = $entry;
  
-while($i <= $entry + 5)
+while ($i <= $entry + 5)
 {
-  if($text =~ m/<li>(.*?)<br>/gs)
+  if ($text =~ m/<li>(.*?)<br>/gs)
   {
     push @defs, $1;
   }

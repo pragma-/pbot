@@ -16,7 +16,7 @@ use DBI;
 use Carp qw(shortmess);
 
 sub new {
-  if(ref($_[1]) eq 'HASH') {
+  if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
   }
 
@@ -62,7 +62,7 @@ sub end {
 
   $self->{pbot}->{logger}->log("Closing quotegrabs SQLite database\n");
 
-  if(exists $self->{dbh} and defined $self->{dbh}) {
+  if (exists $self->{dbh} and defined $self->{dbh}) {
     $self->{dbh}->disconnect();
     delete $self->{dbh};
   }
@@ -119,21 +119,21 @@ sub get_random_quotegrab {
     my $where = 'WHERE ';
     my $and = '';
 
-    if(defined $nick) {
+    if (defined $nick) {
       $sql .= $where . 'nick LIKE ? ';
       push @params, "$nick";
       $where = '';
       $and = 'AND ';
     } 
 
-    if(defined $channel) {
+    if (defined $channel) {
       $sql .= $where . $and . 'channel LIKE ? ';
       push @params, $channel;
       $where = '';
       $and = 'AND ';
     }
 
-    if(defined $text) {
+    if (defined $text) {
       $sql .= $where . $and . 'text LIKE ? ';
       push @params, "%$text%";
     }
