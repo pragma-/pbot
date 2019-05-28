@@ -364,6 +364,7 @@ sub split_line {
         $i = $pos;
         $ignore_quote = 1;
         $quote = undef;
+        $last_ch = ' ';
         $token = '';
       } else {
         # add final token and exit
@@ -375,7 +376,7 @@ sub split_line {
     $ch = $chars[$i++];
 
     if ($escaped) {
-      $token .= $ch;
+      $token .= "\\$ch";
       $escaped = 0;
       next;
     }
