@@ -17,7 +17,6 @@ use base 'PBot::Registerable';
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use Text::Balanced qw/extract_bracketed extract_quotelike/;
-use Text::ParseWords;
 use Carp ();
 
 use PBot::Utils::ValidateString;
@@ -338,49 +337,123 @@ sub interpret {
   return $self->SUPER::execute_all($stuff);
 }
 
+# splits line into quoted arguments while preserving quotes. handles
+# unbalanced quotes gracefully by treating them as part of the argument
+# they were found within.
+sub split_line {
+  my ($self, $line) = @_;
+
+  my @chars = split //, $line;
+
+  my @args;
+  my $escaped = 0;
+  my $quote;
+  my $token = '';
+  my $ch = ' ';
+  my $last_ch;
+  my $i = 0;
+  my $pos;
+  my $ignore_quote = 0;
+
+  while (1) {
+    $last_ch = $ch;
+
+    if ($i >= @chars) {
+      if (defined $quote) {
+        # reached end, but unbalanced quote... reset to beginning of quote and ignore it
+        $i = $pos;
+        $ignore_quote = 1;
+        $quote = undef;
+        $token = '';
+      } else {
+        # add final token and exit
+        push @args, $token if length $token;
+        last;
+      }
+    }
+
+    $ch = $chars[$i++];
+
+    if ($escaped) {
+      $token .= $ch;
+      $escaped = 0;
+      next;
+    }
+
+    if ($ch eq '\\') {
+      $escaped = 1;
+      next;
+    }
+
+    if (defined $quote) {
+      if ($ch eq $quote) {
+        # closing quote
+        $token .= $ch;
+        push @args, $token;
+        $quote = undef;
+        $token = '';
+      } else {
+        # still within quoted argument
+        $token .= $ch;
+      }
+      next;
+    }
+
+    if ($last_ch eq ' ' and not defined $quote and ($ch eq "'" or $ch eq '"')) {
+      if ($ignore_quote) {
+        # treat unbalanced quote as part of this argument
+        $token .= $ch;
+        $ignore_quote = 0;
+      } else {
+        # begin potential quoted argument
+        $pos = $i - 1;
+        $quote = $ch;
+        $token .= $ch;
+      }
+      next;
+    }
+
+    if ($ch eq ' ') {
+      push @args, $token if length $token;
+      $token = '';
+      next;
+    }
+
+    $token .= $ch;
+  }
+
+  return @args;
+}
+
 # creates an array of arguments from a string
 sub make_args {
   my ($self, $string) = @_;
 
-  my @args = parse_line(' ', 1, $string);
+  my @args = $self->split_line($string);
+
   my @arglist;
   my @arglist_quotes;
 
   while (@args) {
     my $arg = shift @args;
 
-    # is this a quoted argument?
-    if ($arg =~ /^["']/) {
-      my $string = $arg;
-      if (@args) {
-        $string .= ' ';
-        $string .= join(' ', @args);
-      }
-      my ($extracted, $rest) = extract_quotelike $string;
-      if (defined $extracted) {
-        # preserve quotes for $rest in split_args()
-        push @arglist_quotes, $extracted;
+    # add argument with quotes preserved
+    push @arglist_quotes, $arg;
 
-        # strip quote characters
-        $extracted =~ s/^(.)//;
-        $extracted =~ s/$1$//;
-        push @arglist, $extracted;
-
-        $rest =~ s/^ //;
-        @args = split / /, $rest;
-      } else {
-        # mismatched quotes, shove the remainder as the last positional argument
-        push @arglist, $rest;
-        push @arglist_quotes, $rest;
-        last;
-      }
-    } else {
-      push @arglist, $arg;
-      push @arglist_quotes, $arg;
+    # strip quotes from argument
+    if ($arg =~ m/^'(.*)'$/) {
+      $arg =~ s/^'//;
+      $arg =~ s/'$//;
+    } elsif ($arg =~ m/^"(.*)"$/) {
+      $arg =~ s/^"//;
+      $arg =~ s/"$//;
     }
+
+    # add unquoted argument
+    push @arglist, $arg;
   }
 
-  # copy original args with quotes intact to end of arglist
+  # copy quoted arguments to end of arglist
   push @arglist, @arglist_quotes;
   return \@arglist;
 }
