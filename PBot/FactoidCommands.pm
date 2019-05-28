@@ -555,6 +555,10 @@ sub factset {
       }
     }
 
+    if (defined $value and !$level and $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{'locked'}) {
+      return "/say $trigger is locked; unlock before setting.";
+    }
+
     if (lc $key eq 'effective-level' and defined $value and $level > 0) {
       if ($value > $level) {
         return "You cannot set `effective-level` greater than your level, which is $level.";
