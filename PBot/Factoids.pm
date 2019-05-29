@@ -423,6 +423,7 @@ sub expand_factoid_vars {
 
     my $offset = 0;
     my $matches = 0;
+    my $expansions = 0;
     $action =~ s/\$0/$root_keyword/g;
     my $const_action = $action;
 
@@ -431,9 +432,9 @@ sub expand_factoid_vars {
       $a = '' if not defined $a;
       $v =~ s/(.):$/$1/; # remove trailing : only if at least one character precedes it
       next if $v =~ m/^[\W_]/; # special character prefix skipped for shell/code-factoids/etc
-      next if $v =~ m/^(nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])$/i; # don't override special variables
+      next if $v =~ m/^(?:nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])(?:\:json)*$/i; # don't override special variables
       next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
-      last if ++$depth >= 100;
+      last if ++$depth >= 1000;
 
       $self->{pbot}->{logger}->log("v: [$v]\n") if $debug;
 
@@ -459,7 +460,7 @@ sub expand_factoid_vars {
 
       if ($self->{factoids}->hash->{$var_chan}->{$var}->{action} =~ m{^/call (.*)}) {
         $test_v = $1;
-        next if ++$recurse > 10;
+        next if ++$recurse > 100;
         goto ALIAS;
       }
 
@@ -531,9 +532,10 @@ sub expand_factoid_vars {
             $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
           }
         }
+        $expansions++;
       }
     }
-    last if $matches == 0;
+    last if $matches == 0 or $expansions == 0;
   }
 
   $action =~ s/\\\$/\$/g;
