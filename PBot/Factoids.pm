@@ -1007,9 +1007,9 @@ sub handle_action {
   if ($action =~ /^\/call\s+(.*)$/) {
     my $command = $1;
     unless ($self->{factoids}->hash->{$channel}->{$keyword}->{'require_explicit_args'}) {
-      my $args = $stuff->{original_arguments};
-      $args = $stuff->{arguments} if exists $stuff->{arguments};
-      $command .= " $args" if length $args and not $stuff->{aliased} and not $stuff->{special} eq 'code-factoid';
+      my $args = $stuff->{arguments};
+      $command .= " $args" if length $args and not $stuff->{special} eq 'code-factoid';
+      $stuff->{arguments} = '';
     }
 
     if ($command =~ s/\s*--keyword-override=([^ ]+)\s*//) {
