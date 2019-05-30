@@ -346,8 +346,6 @@ sub extract_bracketed {
     @prefix_group = split //, $1;
   }
 
-  #push @prefix_group, ' ' if $allow_whitespace;
-
   my @prefixes = split //, $optional_prefix;
   my @opens = split //, $open_bracket;
   my @closes = split //, $close_bracket;
@@ -370,139 +368,139 @@ sub extract_bracketed {
   my $bracket_pos;
   my $bracket_level = 0;
   my $ignore_quote = 0;
-    my $prefix_group_match = @prefix_group ? 0 : 1;
-    my $prefix_match = @prefixes ? 0 : 1;
-    my $match = 0;
+  my $prefix_group_match = @prefix_group ? 0 : 1;
+  my $prefix_match = @prefixes ? 0 : 1;
+  my $match = 0;
 
-    my @chars = split //, $string;
+  my @chars = split //, $string;
 
-    my $state = 'prefixgroup';
+  my $state = 'prefixgroup';
 
-    while (1) {
-      $last_ch = $ch;
+  while (1) {
+    $last_ch = $ch;
 
-      if ($i >= @chars) {
-        if (defined $quote) {
-          # reached end, but unbalanced quote... reset to beginning of quote and ignore it
-          $i = $quote_pos;
-          $ignore_quote = 1;
-          $quote = undef;
-          $last_ch = ' ';
-          $token = '';
-        } elsif ($extracting) {
-          # reached end, but unbalanced brackets... reset to beginning and ignore them
-          $i = $bracket_pos;
-          $bracket_level = 0;
-          $state = 'prefixgroup';
-          $extracting = 0;
-          $last_ch = ' ';
-          $token = '';
-          $result = '';
-        } else {
-          # add final token and exit
-          $rest .= $token if $extracted;
-          last;
-        }
-      }
-
-      $ch = $chars[$i++];
-
-      if ($escaped) {
-        $token .= "\\$ch" if $extracting or $extracted;
-        $escaped = 0;
-        next;
-      }
-
-      if ($ch eq '\\') {
-        $escaped = 1;
-        next;
-      }
-
+    if ($i >= @chars) {
       if (defined $quote) {
-        if ($ch eq $quote) {
-          # closing quote
-          $token .= $ch if $extracting or $extracted;
-          $result .= $token if $extracting;
-          $rest .= $token if $extracted;
-          $quote = undef;
-          $token = '';
-        } else {
-          # still within quoted argument
-          $token .= $ch if $extracting or $extracted;
-        }
-        next;
+        # reached end, but unbalanced quote... reset to beginning of quote and ignore it
+        $i = $quote_pos;
+        $ignore_quote = 1;
+        $quote = undef;
+        $last_ch = ' ';
+        $token = '';
+      } elsif ($extracting) {
+        # reached end, but unbalanced brackets... reset to beginning and ignore them
+        $i = $bracket_pos;
+        $bracket_level = 0;
+        $state = 'prefixgroup';
+        $extracting = 0;
+        $last_ch = ' ';
+        $token = '';
+        $result = '';
+      } else {
+        # add final token and exit
+        $rest .= $token if $extracted;
+        last;
       }
+    }
 
-      if ($last_ch eq ' ' and not defined $quote and ($ch eq "'" or $ch eq '"')) {
-        if ($ignore_quote) {
-          # treat unbalanced quote as part of this argument
-          $token .= $ch if $extracting or $extracted;
-          $ignore_quote = 0;
-        } else {
-          # begin potential quoted argument
-          $quote_pos = $i - 1;
-          $quote = $ch;
-          $token .= $ch if $extracting or $extracted;
-        }
-        next;
+    $ch = $chars[$i++];
+
+    if ($escaped) {
+      $token .= "\\$ch" if $extracting or $extracted;
+      $escaped = 0;
+      next;
+    }
+
+    if ($ch eq '\\') {
+      $escaped = 1;
+      next;
+    }
+
+    if (defined $quote) {
+      if ($ch eq $quote) {
+        # closing quote
+        $token .= $ch if $extracting or $extracted;
+        $result .= $token if $extracting;
+        $rest .= $token if $extracted;
+        $quote = undef;
+        $token = '';
+      } else {
+        # still within quoted argument
+        $token .= $ch if $extracting or $extracted;
       }
+      next;
+    }
 
-      if (not $extracted) {
-        if ($state eq 'prefixgroup' and @prefix_group and not $extracting) {
-          foreach my $prefix_ch (@prefix_group) {
-            if ($ch eq $prefix_ch) {
-              $prefix_group_match = 1;
-              $state = 'prefixes';
-              last;
-            } else {
-              $prefix_group_match = 0;
-            }
-          }
-          next if $prefix_group_match;
-        } elsif ($state eq 'prefixgroup' and not @prefix_group) {
-          $state = 'prefixes';
-          $prefix_index = 0;
-        }
+    if ($last_ch eq ' ' and not defined $quote and ($ch eq "'" or $ch eq '"')) {
+      if ($ignore_quote) {
+        # treat unbalanced quote as part of this argument
+        $token .= $ch if $extracting or $extracted;
+        $ignore_quote = 0;
+      } else {
+        # begin potential quoted argument
+        $quote_pos = $i - 1;
+        $quote = $ch;
+        $token .= $ch if $extracting or $extracted;
+      }
+      next;
+    }
 
-        if ($state eq 'prefixes') {
-          if (@prefixes and $ch eq $prefixes[$prefix_index]) {
-            $token .= $ch if $extracting;
-            $prefix_match = 1;
-            $prefix_index++;
-            $state = 'openbracket';
-            next;
-          } elsif ($state eq 'prefixes' and not @prefixes) {
-            $state = 'openbracket';
-          }
-        }
-
-        if ($state eq 'openbracket' and $prefix_group_match and $prefix_match) {
-          $prefix_index = 0;
-          if ($ch eq $opens[$open_index]) {
-            $match = 1;
-            $open_index++;
+    if (not $extracted) {
+      if ($state eq 'prefixgroup' and @prefix_group and not $extracting) {
+        foreach my $prefix_ch (@prefix_group) {
+          if ($ch eq $prefix_ch) {
+            $prefix_group_match = 1;
+            $state = 'prefixes';
+            last;
           } else {
-            if ($allow_whitespace and $ch eq ' ') {
-              next;
-            } else {
-              $state = 'prefixgroup';
-              next;
-            }
+            $prefix_group_match = 0;
           }
         }
+        next if $prefix_group_match;
+      } elsif ($state eq 'prefixgroup' and not @prefix_group) {
+        $state = 'prefixes';
+        $prefix_index = 0;
+      }
 
-        if ($match) {
-          $state = 'prefixgroup';
-          $prefix_group_match = 0 unless not @prefix_group;
-          $prefix_match = 0 unless not @prefixes;
-          $match = 0;
-          $bracket_pos = $i if not $extracting;
-          if ($open_index == @opens) {
-            $extracting = 1;
-            $token .= $ch if $bracket_level > 0;
-            $bracket_level++;
-            $open_index = 0;
+      if ($state eq 'prefixes') {
+        if (@prefixes and $ch eq $prefixes[$prefix_index]) {
+          $token .= $ch if $extracting;
+          $prefix_match = 1;
+          $prefix_index++;
+          $state = 'openbracket';
+          next;
+        } elsif ($state eq 'prefixes' and not @prefixes) {
+          $state = 'openbracket';
+        }
+      }
+
+      if ($extracting or ($state eq 'openbracket' and $prefix_group_match and $prefix_match)) {
+        $prefix_index = 0;
+        if ($ch eq $opens[$open_index]) {
+          $match = 1;
+          $open_index++;
+        } else {
+          if ($allow_whitespace and $ch eq ' ' and not $extracting) {
+            next;
+          } elsif (not $extracting) {
+            $state = 'prefixgroup';
+            next;
           }
+        }
+      }
+
+      if ($match) {
+        $state = 'prefixgroup';
+        $prefix_group_match = 0 unless not @prefix_group;
+        $prefix_match = 0 unless not @prefixes;
+        $match = 0;
+        $bracket_pos = $i if not $extracting;
+        if ($open_index == @opens) {
+          $extracting = 1;
+          $token .= $ch if $bracket_level > 0;
+          $bracket_level++;
+          $open_index = 0;
+        }
         next;
       } else {
         $open_index = 0;
