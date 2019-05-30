@@ -16,7 +16,6 @@ use base 'PBot::Registerable';
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
-use Text::Balanced qw/extract_bracketed extract_quotelike/;
 use Carp ();
 
 use PBot::Utils::ValidateString;
@@ -157,11 +156,12 @@ sub process_line {
       }
     }
 
+    my $rest;
     for (my $count = 0; $count < 3; $count++) {
-      my ($extracted) = extract_bracketed $cmd_text, '{"\'}', "(?s).*?$bot_trigger(?=\{)";
-      last if not defined $extracted;
-      $extracted =~ s/^\{\s*//;
-      $extracted =~ s/\s*\}$//;
+      my ($extracted, $rest) = $self->extract_bracketed($cmd_text, '{', '}', $bot_trigger);
+      last if not length $extracted;
+      $cmd_text = $rest;
+      $extracted =~ s/^\s+|\s+$//g;
       push @commands, $extracted;
       $embedded = 1;
     }
@@ -245,16 +245,13 @@ sub interpret {
   }
 
   # parse out a substituted command
-  if (defined $arguments && $arguments =~ m/(?<!\\)&\{/) {
-    my ($command) = extract_bracketed $arguments, '{"\'}', '(?s).*?(?<!\\\\)&';
+  if (defined $arguments && $arguments =~ m/(?<!\\)&\s*\{/) {
+    my ($command) = $self->extract_bracketed($arguments, '{', '}', '&', 1);
 
-    if (defined $command) {
-      $arguments =~ s/&\Q$command\E/&{subcmd}/;
-
-      $command =~ s/^\{\s*//;
-      $command =~ s/\s*\}$//;
-
+    if (length $command) {
+      $arguments =~ s/&\s*\{\Q$command\E\}/&{subcmd}/;
       push @{$stuff->{subcmd}}, "$keyword $arguments";
+      $command =~ s/^\s+|\s+$//g;
       $stuff->{command} = $command;
       $stuff->{result} = $self->interpret($stuff);
       return $stuff->{result};
@@ -263,15 +260,10 @@ sub interpret {
 
   # parse out a pipe
   if (defined $arguments && $arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
-    my ($pipe, $rest, $args) = extract_bracketed $arguments, '{"\'}', '(?s).*?(?<!\\\\)\|\s*';
+    my ($pipe, $rest) = $self->extract_bracketed($arguments, '{', '}', '|', 1);
 
-    $pipe =~ s/^\{\s*//;
-    $pipe =~ s/\s*\}$//;
-    $args =~ s/\s*(?<!\\)\|\s*//;
-
-    $self->{pbot}->{logger}->log("piping: [$args][$pipe][$rest]\n");
-
-    $arguments = $args;
+    $arguments =~ s/\s*(?<!\\)\|\s*{(\Q$pipe\E)}.*$//;
+    $pipe =~ s/^\s+|\s+$//g;
 
     if (exists $stuff->{pipe}) {
       $stuff->{pipe_rest} = "$rest | { $stuff->{pipe} }$stuff->{pipe_rest}";
@@ -320,7 +312,7 @@ sub interpret {
   $stuff->{original_arguments} = $arguments;
 
   # unescape any escaped substituted commands
-  $arguments =~ s/\\&\{/&{/g if defined $arguments;
+  $arguments =~ s/\\&\s*\{/&{/g if defined $arguments;
 
   # unescape any escaped pipes
   $arguments =~ s/\\\|\s*\{/| {/g if defined $arguments;
@@ -335,6 +327,214 @@ sub interpret {
 
   # handle this shit
   return $self->SUPER::execute_all($stuff);
+}
+
+# extracts a bracketed substring, gracefully handling unbalanced quotes
+# or brackets. opening and closing brackets may each be more than one character.
+# optional prefix may be or begin with a character group.
+sub extract_bracketed {
+  my ($self, $string, $open_bracket, $close_bracket, $optional_prefix, $allow_whitespace) = @_;
+
+  $open_bracket = '{' if not defined $open_bracket;
+  $close_bracket = '}' if not defined $close_bracket;
+  $optional_prefix = '' if not defined $optional_prefix;
+  $allow_whitespace = 0 if not defined $allow_whitespace;
+
+  my @prefix_group;
+
+  if ($optional_prefix =~ s/^\[(.*?)\]//) {
+    @prefix_group = split //, $1;
+  }
+
+  #push @prefix_group, ' ' if $allow_whitespace;
+
+  my @prefixes = split //, $optional_prefix;
+  my @opens = split //, $open_bracket;
+  my @closes = split //, $close_bracket;
+
+  my $prefix_index = 0;
+  my $open_index = 0;
+  my $close_index = 0;
+
+  my $result = '';
+  my $rest = '';
+  my $extracting = 0;
+  my $extracted = 0;
+  my $escaped = 0;
+  my $quote;
+  my $token = '';
+  my $ch = ' ';
+  my $last_ch;
+  my $i = 0;
+  my $quote_pos;
+  my $bracket_pos;
+  my $bracket_level = 0;
+  my $ignore_quote = 0;
+    my $prefix_group_match = @prefix_group ? 0 : 1;
+    my $prefix_match = @prefixes ? 0 : 1;
+    my $match = 0;
+
+    my @chars = split //, $string;
+
+    my $state = 'prefixgroup';
+
+    while (1) {
+      $last_ch = $ch;
+
+      if ($i >= @chars) {
+        if (defined $quote) {
+          # reached end, but unbalanced quote... reset to beginning of quote and ignore it
+          $i = $quote_pos;
+          $ignore_quote = 1;
+          $quote = undef;
+          $last_ch = ' ';
+          $token = '';
+        } elsif ($extracting) {
+          # reached end, but unbalanced brackets... reset to beginning and ignore them
+          $i = $bracket_pos;
+          $bracket_level = 0;
+          $state = 'prefixgroup';
+          $extracting = 0;
+          $last_ch = ' ';
+          $token = '';
+          $result = '';
+        } else {
+          # add final token and exit
+          $rest .= $token if $extracted;
+          last;
+        }
+      }
+
+      $ch = $chars[$i++];
+
+      if ($escaped) {
+        $token .= "\\$ch" if $extracting or $extracted;
+        $escaped = 0;
+        next;
+      }
+
+      if ($ch eq '\\') {
+        $escaped = 1;
+        next;
+      }
+
+      if (defined $quote) {
+        if ($ch eq $quote) {
+          # closing quote
+          $token .= $ch if $extracting or $extracted;
+          $result .= $token if $extracting;
+          $rest .= $token if $extracted;
+          $quote = undef;
+          $token = '';
+        } else {
+          # still within quoted argument
+          $token .= $ch if $extracting or $extracted;
+        }
+        next;
+      }
+
+      if ($last_ch eq ' ' and not defined $quote and ($ch eq "'" or $ch eq '"')) {
+        if ($ignore_quote) {
+          # treat unbalanced quote as part of this argument
+          $token .= $ch if $extracting or $extracted;
+          $ignore_quote = 0;
+        } else {
+          # begin potential quoted argument
+          $quote_pos = $i - 1;
+          $quote = $ch;
+          $token .= $ch if $extracting or $extracted;
+        }
+        next;
+      }
+
+      if (not $extracted) {
+        if ($state eq 'prefixgroup' and @prefix_group and not $extracting) {
+          foreach my $prefix_ch (@prefix_group) {
+            if ($ch eq $prefix_ch) {
+              $prefix_group_match = 1;
+              $state = 'prefixes';
+              last;
+            } else {
+              $prefix_group_match = 0;
+            }
+          }
+          next if $prefix_group_match;
+        } elsif ($state eq 'prefixgroup' and not @prefix_group) {
+          $state = 'prefixes';
+          $prefix_index = 0;
+        }
+
+        if ($state eq 'prefixes') {
+          if (@prefixes and $ch eq $prefixes[$prefix_index]) {
+            $token .= $ch if $extracting;
+            $prefix_match = 1;
+            $prefix_index++;
+            $state = 'openbracket';
+            next;
+          } elsif ($state eq 'prefixes' and not @prefixes) {
+            $state = 'openbracket';
+          }
+        }
+
+        if ($state eq 'openbracket' and $prefix_group_match and $prefix_match) {
+          $prefix_index = 0;
+          if ($ch eq $opens[$open_index]) {
+            $match = 1;
+            $open_index++;
+          } else {
+            if ($allow_whitespace and $ch eq ' ') {
+              next;
+            } else {
+              $state = 'prefixgroup';
+              next;
+            }
+          }
+        }
+
+        if ($match) {
+          $state = 'prefixgroup';
+          $prefix_group_match = 0 unless not @prefix_group;
+          $prefix_match = 0 unless not @prefixes;
+          $match = 0;
+          $bracket_pos = $i if not $extracting;
+          if ($open_index == @opens) {
+            $extracting = 1;
+            $token .= $ch if $bracket_level > 0;
+            $bracket_level++;
+            $open_index = 0;
+          }
+        next;
+      } else {
+        $open_index = 0;
+      }
+
+      if ($ch eq $closes[$close_index]) {
+        if ($extracting or $extracted) {
+          $close_index++;
+          if ($close_index == @closes) {
+            $close_index = 0;
+            if (--$bracket_level == 0) {
+              $extracting = 0;
+              $extracted = 1;
+              $result .= $token;
+              $token = '';
+            } else {
+              $token .= $ch;
+            }
+          }
+        }
+        next;
+      } else {
+        $close_index = 0;
+      }
+    }
+
+    if ($extracting or $extracted) {
+      $token .= $ch;
+    }
+  }
+
+  return ($result, $rest);
 }
 
 # splits line into quoted arguments while preserving quotes. handles
