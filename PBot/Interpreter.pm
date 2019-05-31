@@ -156,7 +156,6 @@ sub process_line {
       }
     }
 
-    my $rest;
     for (my $count = 0; $count < 3; $count++) {
       my ($extracted, $rest) = $self->extract_bracketed($cmd_text, '{', '}', $bot_trigger);
       last if not length $extracted;
