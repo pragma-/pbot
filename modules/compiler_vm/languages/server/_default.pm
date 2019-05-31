@@ -35,6 +35,20 @@ sub initialize {
 sub preprocess {
   my $self = shift;
 
+  my $input = $self->{input};
+  $input = "" if not defined $input;
+
+  print "writing input [$input]\n";
+
+  $input =~ s/(?<!\\)\\n/\n/mg;
+  $input =~ s/(?<!\\)\\r/\r/mg;
+  $input =~ s/(?<!\\)\\t/\t/mg;
+  $input =~ s/(?<!\\)\\b/\b/mg;
+
+  open(my $fh, '>', '.input');
+  print $fh "$input\n";
+  close $fh;
+
   if ($self->{code} =~ m/print_last_statement\(.*\);$/m) {
     # remove print_last_statement wrapper in order to get warnings/errors from last statement line
     my $code = $self->{code};
@@ -63,7 +77,7 @@ sub preprocess {
     close $fh;
 
     print "Executing [$self->{cmdline}]\n";
-    my ($retval, $result) = $self->execute(60, "date -s \@$self->{date} > /dev/null; ulimit -t 5; $self->{cmdline}");
+    my ($retval, $result) = $self->execute(60, "date -s \@$self->{date} > /dev/null; ulimit -t 5; $self->{cmdline} < .input");
     $self->{output} = $result;
     $self->{error}  = $retval;
   }
@@ -71,21 +85,6 @@ sub preprocess {
 
 sub postprocess {
   my $self = shift;
-
-  my $input = $self->{input};
-
-  print "writing input [$input]\n";
-
-  $input =~ s/(?<!\\)\\n/\n/mg;
-  $input =~ s/(?<!\\)\\r/\r/mg;
-  $input =~ s/(?<!\\)\\t/\t/mg;
-  $input =~ s/(?<!\\)\\b/\b/mg;
- 
-  $input =~ s/\\\\/\\/mg;
-
-  open(my $fh, '>', '.input');
-  print $fh "$input\n";
-  close $fh;
 }
 
 sub execute {
