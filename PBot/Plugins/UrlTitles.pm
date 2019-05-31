@@ -46,6 +46,7 @@ sub show_url_titles {
   my $msg = $event->{event}->{args}[0];
 
   return 0 if not $msg =~ m/https?:\/\/[^\s]/;
+  return 0 if $event->{interpreted};
 
   if ($self->{pbot}->{ignorelist}->check_ignore($nick, $user, $host, $channel)) {
     my $admin = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
@@ -67,7 +68,8 @@ sub show_url_titles {
       and not grep { $channel =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_ignore_channels')
       and grep { $channel =~ /$_/i } $self->{pbot}->{registry}->get_value('general', 'show_url_titles_channels')) {
 
-    while ($msg =~ s/(https?:\/\/[^\s]+)//i && ++$event->{interpreted} <= 3) {
+    my $count = 0;
+    while ($msg =~ s/(https?:\/\/[^\s]+)//i && ++$count <= 3) {
       my $url = $1;
 
       if ($self->{pbot}->{antispam}->is_spam('url', $url)) {
