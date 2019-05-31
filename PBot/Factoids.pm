@@ -1012,8 +1012,10 @@ sub handle_action {
       $stuff->{arguments} = '';
     }
 
-    if ($command =~ s/\s*--keyword-override=([^ ]+)\s*//) {
-      $stuff->{keyword_override} = $1;
+    unless ($self->{factoids}->hash->{$channel}->{$keyword}->{'no_keyword_override'}) {
+      if ($command =~ s/\s*--keyword-override=([^ ]+)\s*//) {
+        $stuff->{keyword_override} = $1;
+      }
     }
 
     $stuff->{command} = $command;
