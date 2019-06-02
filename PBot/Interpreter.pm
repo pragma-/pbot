@@ -286,7 +286,7 @@ sub interpret {
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
     if (defined $arguments && ($arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i || $arguments =~ m/^$botnick$/i)) {
-      my $delay = (rand 10) + 5;
+      my $delay = rand (10) + 5;
       my $message = {
         nick => $stuff->{nick}, user => $stuff->{user}, host => $stuff->{host}, command => $stuff->{command}, checkflood => 1,
         message => "$stuff->{nick}: Why would I want to do that to myself?"
@@ -839,7 +839,7 @@ sub handle_result {
     }
 
     if ($use_output_queue) {
-      my $delay = (rand 10) + 5;
+      my $delay = rand (10) + 5;
       my $message = {
         nick => $stuff->{nick}, user => $stuff->{user}, host => $stuff->{host}, command => $stuff->{command},
         message => $line, checkflood => 1
