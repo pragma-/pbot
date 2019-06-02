@@ -945,6 +945,11 @@ sub interpreter {
 
   if ($action =~ m{^/code\s+([^\s]+)\s+(.+)$}i) {
     my ($lang, $code) = ($1, $2);
+
+    if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments}) {
+      return $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
+    }
+
     $stuff->{lang} = $lang;
     $stuff->{code} = $code;
     $self->execute_code_factoid($stuff);
@@ -1007,10 +1012,14 @@ sub handle_action {
     }
   } else {
     # no arguments supplied, replace $args with $nick/$tonick, etc
-    if ($self->{factoids}->hash->{$channel}->{$keyword}->{'allow_empty_args'}) {
-      $action = $self->expand_action_arguments($action, undef, '');
+    if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage}) {
+      $action = "/say " . $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
     } else {
-      $action = $self->expand_action_arguments($action, undef, $stuff->{nick});
+      if ($self->{factoids}->hash->{$channel}->{$keyword}->{'allow_empty_args'}) {
+        $action = $self->expand_action_arguments($action, undef, '');
+      } else {
+        $action = $self->expand_action_arguments($action, undef, $stuff->{nick});
+      }
     }
     $stuff->{no_nickoverride} = 0;
   }
