@@ -260,7 +260,6 @@ sub hash_differences_as_string {
   my ($self, $old, $new) = @_;
 
   my @exclude = qw/created_on last_referenced_in last_referenced_on ref_count ref_user edited_by edited_on/;
-
   my %diff;
 
   foreach my $key (keys %$new) {
@@ -271,6 +270,13 @@ sub hash_differences_as_string {
     }
   }
 
+  foreach my $key (keys %$old) {
+    next if grep { $key eq $_ } @exclude;
+
+    if (not exists $new->{$key}) {
+      $diff{"deleted $key"} = undef;
+    }
+  }
 
   if (not keys %diff) {
     return "No change.";
@@ -280,7 +286,11 @@ sub hash_differences_as_string {
 
   my $comma = "";
   foreach my $key (sort keys %diff) {
-    $changes .= "$comma$key => $diff{$key}";
+    if (defined $diff{$key}) {
+      $changes .= "$comma$key => $diff{$key}";
+    } else {
+      $changes .= "$comma$key";
+    }
     $comma = ", ";
   }
 
