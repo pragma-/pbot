@@ -737,7 +737,11 @@ sub execute_code_factoid_using_safe {
 
   unless ($self->{factoids}->hash->{$chan}->{$keyword}->{interpolate} eq '0') {
     $action = $self->expand_factoid_vars($from, $nick, $root_keyword, $action);
-    $action = $self->expand_action_arguments($action, $arguments, $nick);
+    if ($self->{factoids}->hash->{$chan}->{$keyword}->{'allow_empty_args'}) {
+      $action = $self->expand_action_arguments($action, $arguments, '');
+    } else {
+      $action = $self->expand_action_arguments($action, $arguments, $nick);
+    }
   } else {
     $action = validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
   }
@@ -755,7 +759,11 @@ sub execute_code_factoid_using_vm {
       $stuff->{no_nickoverride} = 0;
     }
     $stuff->{code} = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $stuff->{code});
-    $stuff->{code} = $self->expand_action_arguments($stuff->{code}, $stuff->{arguments}, $stuff->{nick});
+    if ($self->{factoids}->hash->{$stuff->{channel}}->{$stuff->{keyword}}->{'allow_empty_args'}) {
+      $stuff->{code} = $self->expand_action_arguments($stuff->{code}, $stuff->{arguments}, '');
+    } else {
+      $stuff->{code} = $self->expand_action_arguments($stuff->{code}, $stuff->{arguments}, $stuff->{nick});
+    }
   } else {
     $stuff->{no_nickoverride} = 0;
   }
@@ -999,7 +1007,11 @@ sub handle_action {
     }
   } else {
     # no arguments supplied, replace $args with $nick/$tonick, etc
-    $action = $self->expand_action_arguments($action, undef, $stuff->{nick});
+    if ($self->{factoids}->hash->{$channel}->{$keyword}->{'allow_empty_args'}) {
+      $action = $self->expand_action_arguments($action, undef, '');
+    } else {
+      $action = $self->expand_action_arguments($action, undef, $stuff->{nick});
+    }
     $stuff->{no_nickoverride} = 0;
   }
 
@@ -1051,7 +1063,12 @@ sub handle_action {
     my $kw = length $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} ? $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} : $stuff->{root_keyword};
     $kw = $stuff->{keyword_override} if length $stuff->{keyword_override};
     $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $kw, $action);
-    $action = $self->expand_action_arguments($action, $stuff->{arguments}, $stuff->{nick});
+
+    if ($self->{factoids}->hash->{$channel}->{$keyword}->{'allow_empty_args'}) {
+      $action = $self->expand_action_arguments($action, $stuff->{arguments}, '');
+    } else {
+      $action = $self->expand_action_arguments($action, $stuff->{arguments}, $stuff->{nick});
+    }
   }
 
   return $action if $stuff->{special} eq 'code-factoid';
