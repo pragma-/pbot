@@ -141,11 +141,4 @@ sub interpreter {
   return undef;
 }
 
-sub parse_arguments {
-  my ($self, $arguments) = @_;
-  my $args = quotemeta $arguments;
-  $args =~ s/\\ / /g;
-  return shellwords($args);
-}
-
 1;
