@@ -989,7 +989,7 @@ sub factadd {
       my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
       if ($factoids->{$channel}->{$trigger}->{'locked'}) {
-        return "/say $trigger is locked; unlock before overwriting.";
+        return "/say $keyword_text is locked; unlock before overwriting.";
       }
 
       my ($owner) = $factoids->{$channel}->{$trigger}->{'owner'} =~ m/([^!]+)/;
@@ -997,7 +997,7 @@ sub factadd {
       if ((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host"))) {
         $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to overwrite $trigger [not owner]\n");
         my $chan = ($channel eq '.*' ? 'the global channel' : $channel);
-        return "You are not the owner of $trigger for $chan; cannot overwrite";
+        return "You are not the owner of $keyword_text for $chan; cannot overwrite";
       }
     }
   }

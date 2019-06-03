@@ -843,7 +843,9 @@ sub interpreter {
 
   if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments}) {
     $stuff->{alldone} = 1;
-    return $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
+    my $usage = $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
+    $usage =~ s/\$0/$keyword/g;
+    return $usage;
   }
 
   if (exists $stuff->{pipe_result}) {
@@ -867,7 +869,9 @@ sub interpreter {
 
     if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments}) {
       $stuff->{alldone} = 1;
-      return $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
+      my $usage = $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
+      $usage =~ s/\$0/$keyword/g;
+      return $usage;
     }
 
     $stuff->{lang} = $lang;
@@ -934,6 +938,7 @@ sub handle_action {
     # no arguments supplied, replace $args with $nick/$tonick, etc
     if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage}) {
       $action = "/say " . $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
+      $action =~ s/\$0/$keyword/g;
       $stuff->{alldone} = 1;
     } else {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{'allow_empty_args'}) {
