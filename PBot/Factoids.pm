@@ -841,7 +841,7 @@ sub interpreter {
 
   my $action;
 
-  if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments}) {
+  if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments} and $self->{factoids}->hash->{$channel}->{$keyword}->{requires_arguments}) {
     $stuff->{alldone} = 1;
     my $usage = $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
     $usage =~ s/\$0/$keyword/g;
