@@ -25,9 +25,7 @@ Math::Units
 Module::Refresh
 Net::Dict
 Parse::RecDescent
-PPI
 Proc::ProcessTable
-Safe
 SOAP::Lite
 String::LCSS
 Storable
