@@ -308,7 +308,6 @@ sub interpret {
   }
 
   $stuff->{keyword} = $keyword;
-  $stuff->{original_arguments} = $arguments;
 
   # unescape any escaped substituted commands
   $arguments =~ s/\\&\s*\{/&{/g if defined $arguments;
@@ -320,12 +319,21 @@ sub interpret {
 
   # set arguments as a plain string
   $stuff->{arguments} = $arguments;
+  $stuff->{original_arguments} = $arguments;
 
   # set arguments as an array
   $stuff->{arglist} = $self->make_args($arguments);
 
-  # handle this shit
-  return $self->SUPER::execute_all($stuff);
+  # execute all registered interpreters
+  my $result;
+  foreach my $func (@{$self->{handlers}}) {
+    $result = &{$func->{subref}}($stuff);
+    last if defined $result;
+
+    # reset any manipulated arguments
+    $stuff->{arguments} = $stuff->{original_arguments};
+  }
+  return $result;
 }
 
 # extracts a bracketed substring, gracefully handling unbalanced quotes
@@ -752,16 +760,18 @@ sub handle_result {
   if (exists $stuff->{subcmd}) {
     my $command = pop @{$stuff->{subcmd}};
 
-    if (@{$stuff->{subcmd}} == 0) {
+    if (@{$stuff->{subcmd}} == 0 or $stuff->{alldone}) {
       delete $stuff->{subcmd};
     }
 
     $command =~ s/&\{subcmd\}/$result/;
 
-    $stuff->{command} = $command;
-    $result = $self->interpret($stuff);
-    $stuff->{result}= $result;
-    $self->{pbot}->{logger}->log("subcmd result [$result]\n");
+    if (not $stuff->{alldone}) {
+      $stuff->{command} = $command;
+      $result = $self->interpret($stuff);
+      $stuff->{result}= $result;
+      $self->{pbot}->{logger}->log("subcmd result [$result]\n");
+    }
     $self->handle_result($stuff);
     return 0;
   }
@@ -769,9 +779,12 @@ sub handle_result {
   if ($stuff->{pipe} and not $stuff->{authorized}) {
     my ($pipe, $pipe_rest) = (delete $stuff->{pipe}, delete $stuff->{pipe_rest});
     $self->{pbot}->{logger}->log("Handling pipe [$result][$pipe][$pipe_rest]\n");
-    $stuff->{command} = "$pipe $result$pipe_rest";
-    $result = $self->interpret($stuff);
-    $stuff->{result} = $result;
+    $stuff->{pipe_result} = $result;
+    if (not $stuff->{alldone}) {
+      $stuff->{command} = "$pipe$pipe_rest";
+      $result = $self->interpret($stuff);
+      $stuff->{result} = $result;
+    }
     $self->handle_result($stuff, $result);
     return 0;
   }

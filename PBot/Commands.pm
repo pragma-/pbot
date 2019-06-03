@@ -108,6 +108,16 @@ sub interpreter {
     $level = $stuff->{'effective-level'};
   }
 
+  if (exists $stuff->{pipe_result}) {
+    my $pipe_result = $stuff->{pipe_result};
+    if (length $stuff->{arguments}) {
+      $stuff->{arguments} .= " $pipe_result";
+    } else {
+      $stuff->{arguments} = $pipe_result;
+    }
+    $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($stuff->{arguments});
+  }
+
   foreach my $ref (@{ $self->{handlers} }) {
     if ($ref->{name} eq $keyword) {
       if ($level >= $ref->{level}) {

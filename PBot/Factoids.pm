@@ -806,7 +806,6 @@ sub interpreter {
     $self->{pbot}->{logger}->log(Dumper $stuff);
   }
 
-  #$self->{pbot}->{logger}->log("enter factoid interpreter [$keyword][" . (defined $arguments ? $arguments : '') . "] referenced = $referenced\n");
   return undef if not length $stuff->{keyword} or $stuff->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
 
   $stuff->{from} = lc $stuff->{from};
@@ -937,6 +936,21 @@ sub interpreter {
 
   my $action;
 
+  if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments}) {
+    $stuff->{alldone} = 1;
+    return $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
+  }
+
+  if (exists $stuff->{pipe_result}) {
+    my $pipe_result = $stuff->{pipe_result};
+    if (length $stuff->{arguments}) {
+      $stuff->{arguments} .= " $pipe_result";
+    } else {
+      $stuff->{arguments} = $pipe_result;
+    }
+    $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($stuff->{arguments});
+  }
+
   if (length $stuff->{arguments} and exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args}) {
     $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args};
   } else {
@@ -947,6 +961,7 @@ sub interpreter {
     my ($lang, $code) = ($1, $2);
 
     if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments}) {
+      $stuff->{alldone} = 1;
       return $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
     }
 
@@ -1014,6 +1029,7 @@ sub handle_action {
     # no arguments supplied, replace $args with $nick/$tonick, etc
     if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage}) {
       $action = "/say " . $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
+      $stuff->{alldone} = 1;
     } else {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{'allow_empty_args'}) {
         $action = $self->expand_action_arguments($action, undef, '');
