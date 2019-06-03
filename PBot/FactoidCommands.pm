@@ -925,23 +925,44 @@ sub add_regex {
 sub factadd {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my ($from_chan, $keyword, $text);
+  my ($from_chan, $keyword, $text, $force);
 
   my @arglist = @{$stuff->{arglist}};
 
   if (@arglist) {
+    # check for -f since we allow it to be before optional channel argument
+    if ($arglist[0] eq '-f') {
+      $force = 1;
+      $self->{pbot}->{interpreter}->shift_arg(\@arglist);
+    }
+
+    # check if this is an optional channel argument
     if ($arglist[0] =~ m/(?:^#|^global$|^\.\*$)/i) {
-      splice @arglist, 2, 1 if lc $arglist[2] eq 'is';
-      ($from_chan, $keyword, $text) = $self->{pbot}->{interpreter}->split_args(\@arglist, 3);
+      $from_chan = $self->{pbot}->{interpreter}->shift_arg(\@arglist);
     } else {
       $from_chan = $from;
-      splice @arglist, 1, 1 if lc $arglist[1] eq 'is';
-      ($keyword, $text) = $self->{pbot}->{interpreter}->split_args(\@arglist, 2);
     }
+
+    # check for -f again since we also allow it to appear after the channel argument
+    if ($arglist[0] eq '-f') {
+      $force = 1;
+      $self->{pbot}->{interpreter}->shift_arg(\@arglist);
+    }
+
+    # now this is the keyword
+    $keyword = $self->{pbot}->{interpreter}->shift_arg(\@arglist);
+
+    # check for optional "is" and discard
+    if (lc $arglist[0] eq 'is') {
+      $self->{pbot}->{interpreter}->shift_arg(\@arglist);
+    }
+
+    # and the text is the remaining arguments with quotes preserved
+    ($text) = $self->{pbot}->{interpreter}->split_args(\@arglist, 1);
   }
 
   if (not defined $from_chan or not defined $text or not defined $keyword) {
-    return "Usage: factadd [channel] <keyword> <factoid>";
+    return "Usage: factadd [-f] [channel] <keyword> <factoid>; -f to force overwrite";
   }
 
   $from_chan = '.*' if $from_chan !~ /^#/;
@@ -959,10 +980,26 @@ sub factadd {
 
   my $keyword_text = $keyword =~ / / ? "\"$keyword\"" : $keyword;
 
-  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, undef, 1, 1);
+  my ($channel, $trigger)  = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, undef, 1, 1);
   if (defined $trigger) {
-    $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to overwrite $keyword\n");
-    return "/say $keyword_text already exists for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
+    if (not $force) {
+      $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to overwrite $keyword\n");
+      return "/say $keyword_text already exists for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
+    } else {
+      my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
+
+      if ($factoids->{$channel}->{$trigger}->{'locked'}) {
+        return "/say $trigger is locked; unlock before overwriting.";
+      }
+
+      my ($owner) = $factoids->{$channel}->{$trigger}->{'owner'} =~ m/([^!]+)/;
+
+      if ((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host"))) {
+        $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to overwrite $trigger [not owner]\n");
+        my $chan = ($channel eq '.*' ? 'the global channel' : $channel);
+        return "You are not the owner of $trigger for $chan; cannot overwrite";
+      }
+    }
   }
 
   ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid('.*', $keyword, undef, 1, 1);

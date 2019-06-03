@@ -647,10 +647,10 @@ sub make_args {
     push @arglist_quotes, $arg;
 
     # strip quotes from argument
-    if ($arg =~ m/^'(.*)'$/) {
+    if ($arg =~ m/^'.*'$/) {
       $arg =~ s/^'//;
       $arg =~ s/'$//;
-    } elsif ($arg =~ m/^"(.*)"$/) {
+    } elsif ($arg =~ m/^".*"$/) {
       $arg =~ s/^"//;
       $arg =~ s/"$//;
     }
@@ -686,10 +686,12 @@ sub split_args {
   my $max = $self->arglist_size($args);
 
   my $i = $offset // 0;
-  do {
-    my $arg = $args->[$i++];
-    push @result, $arg;
-  } while (--$count > 1 and $i < $max);
+  unless ($count == 1) {
+    do {
+      my $arg = $args->[$i++];
+      push @result, $arg;
+    } while (--$count > 1 and $i < $max);
+  }
 
   # get rest from 2nd half of arglist, which contains original quotes
   my $rest = join ' ', @$args[@$args / 2 + $i .. @$args - 1];
