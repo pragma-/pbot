@@ -23,9 +23,6 @@ use POSIX qw(strftime);
 use Text::ParseWords;
 use JSON;
 
-use PPI;
-use Safe;
-
 use PBot::VERSION qw/version/;
 use PBot::FactoidCommands;
 use PBot::FactoidModuleLauncher;
