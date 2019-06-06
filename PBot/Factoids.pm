@@ -424,11 +424,14 @@ sub expand_factoid_vars {
     $action =~ s/\$0/$root_keyword/g;
     my $const_action = $action;
 
-    while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$([a-zA-Z0-9_:#]+)/gi) {
+    $self->{pbot}->{logger}->log("action: $const_action\n") if $debug;
+
+    while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$(?:(\{[a-zA-Z0-9_:#]+\}|[a-zA-Z0-9_:#]+))/gi) {
       my ($a, $v) = ($1, $2);
       $a = '' if not defined $a;
+      next if not defined $v;
       $v =~ s/(.):$/$1/; # remove trailing : only if at least one character precedes it
-      next if $v =~ m/^[\W_]/; # special character prefix skipped for shell/code-factoids/etc
+      next if $v =~ m/^_/; # special character prefix skipped for shell/code-factoids/etc
       next if $v =~ m/^(?:nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])(?:\:json)*$/i; # don't override special variables
       next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
       last if ++$depth >= 1000;
@@ -449,6 +452,7 @@ sub expand_factoid_vars {
 
       my $recurse = 0;
       my $test_v = $v;
+      $test_v =~ s/\{(.+)\}/$1/;
       ALIAS:
       my @factoids = $self->find_factoid($from, $test_v, undef, 2, 2);
       next if not @factoids or not $factoids[0];
@@ -499,6 +503,12 @@ sub expand_factoid_vars {
           $mylist[$line] = "$fixed_a $mylist[$line]";
         }
 
+        if ($debug and $offset == 0) {
+          $self->{pbot}->{logger}->log(("-" x 40) . "\n");
+        }
+
+        $v = quotemeta $v;
+
         if (not length $mylist[$line]) {
           $self->{pbot}->{logger}->log("No length!\n") if $debug;
           if ($debug) {
@@ -511,7 +521,7 @@ sub expand_factoid_vars {
           $offset += $-[0];
 
           if ($debug) {
-            $self->{pbot}->{logger}->log("after: \$-[0]: $-[0], offset: $offset, r: EMPTY\n");
+            $self->{pbot}->{logger}->log("after: r: EMPTY \$-[0]: $-[0], offset: $offset\n");
             $self->{pbot}->{logger}->log("$action\n");
             $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
           }
@@ -526,7 +536,7 @@ sub expand_factoid_vars {
           $offset += $-[0] + length $mylist[$line];
 
           if ($debug) {
-            $self->{pbot}->{logger}->log("after: \$-[0]: $-[0], offset: $offset, r: $mylist[$line]\n");
+            $self->{pbot}->{logger}->log("after: r: $mylist[$line], \$-[0]: $-[0], offset: $offset\n");
             $self->{pbot}->{logger}->log("$action\n");
             $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
           }
