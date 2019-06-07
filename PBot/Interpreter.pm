@@ -546,7 +546,9 @@ sub extract_bracketed {
 # unbalanced quotes gracefully by treating them as part of the argument
 # they were found within.
 sub split_line {
-  my ($self, $line) = @_;
+  my ($self, $line, $strip_quotes) = @_;
+
+  $strip_quotes = 0 if not defined $strip_quotes;
 
   my @chars = split //, $line;
 
@@ -594,7 +596,7 @@ sub split_line {
     if (defined $quote) {
       if ($ch eq $quote) {
         # closing quote
-        $token .= $ch;
+        $token .= $ch unless $strip_quotes;
         push @args, $token;
         $quote = undef;
         $token = '';
@@ -614,7 +616,7 @@ sub split_line {
         # begin potential quoted argument
         $pos = $i - 1;
         $quote = $ch;
-        $token .= $ch;
+        $token .= $ch unless $strip_quotes;
       }
       next;
     }
