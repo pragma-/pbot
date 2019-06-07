@@ -430,18 +430,24 @@ sub expand_factoid_vars {
       my ($a, $v) = ($1, $2);
       $a = '' if not defined $a;
       next if not defined $v;
-      $v =~ s/(.):$/$1/; # remove trailing : only if at least one character precedes it
-      next if $v =~ m/^_/; # special character prefix skipped for shell/code-factoids/etc
-      next if $v =~ m/^(?:nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])(?:\:json)*$/i; # don't override special variables
-      next if @exclude && grep { $v =~ m/^\Q$_\E$/i } @exclude;
+
+      my $original_v = $v;
+      my $test_v = $v;
+
+      $test_v =~ s/(.):$/$1/; # remove trailing : only if at least one character precedes it
+      next if $test_v =~ m/^_/; # special character prefix skipped for shell/code-factoids/etc
+      next if $test_v =~ m/^(?:nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])(?:\:json)*$/i; # don't override special variables
+      next if @exclude && grep { $test_v =~ m/^\Q$_\E$/i } @exclude;
       last if ++$depth >= 1000;
 
-      $self->{pbot}->{logger}->log("v: [$v]\n") if $debug;
+      $self->{pbot}->{logger}->log("v: [$original_v], test v: [$test_v]\n") if $debug;
 
       $matches++;
 
+      $test_v =~ s/\{(.+)\}/$1/;
+
       my $modifier = '';
-      if ($v =~ s/(:.*)$//) {
+      if ($test_v =~ s/(:.*)$//) {
         $modifier = $1;
       }
 
@@ -451,8 +457,6 @@ sub expand_factoid_vars {
       }
 
       my $recurse = 0;
-      my $test_v = $v;
-      $test_v =~ s/\{(.+)\}/$1/;
       ALIAS:
       my @factoids = $self->find_factoid($from, $test_v, undef, 2, 2);
       next if not @factoids or not $factoids[0];
@@ -478,6 +482,22 @@ sub expand_factoid_vars {
         }
 
         foreach my $mod (split /:/, $modifier) {
+          next if not length $mod;
+
+          if ($mylist[$line] =~ /^\$\{\$([a-zA-Z0-9_:#]+)\}(.*)$/) {
+            $mylist[$line] = "\${\$$1:$mod}$2";
+            next;
+          } elsif ($mylist[$line] =~ /^\$\{([a-zA-Z0-9_:#]+)\}(.*)$/) {
+            $mylist[$line] = "\${$1:$mod}$2";
+            next;
+          } elsif ($mylist[$line] =~ /^\$\$([a-zA-Z0-9_:#]+)(.*)$/) {
+            $mylist[$line] = "\${\$$1:$mod}$2";
+            next;
+          } elsif ($mylist[$line] =~ /^\$([a-zA-Z0-9_:#]+)(.*)$/) {
+            $mylist[$line] = "\${$1:$mod}$2";
+            next;
+          }
+
           given ($mod) {
             when ('uc') {
               $mylist[$line] = uc $mylist[$line];
@@ -507,17 +527,18 @@ sub expand_factoid_vars {
           $self->{pbot}->{logger}->log(("-" x 40) . "\n");
         }
 
-        $v = quotemeta $v;
+        $original_v = quotemeta $original_v;
+        $original_v =~ s/\\:/:/g;
 
         if (not length $mylist[$line]) {
           $self->{pbot}->{logger}->log("No length!\n") if $debug;
           if ($debug) {
-            $self->{pbot}->{logger}->log("before: v: $v, offset: $offset\n");
+            $self->{pbot}->{logger}->log("before: v: $original_v, offset: $offset\n");
             $self->{pbot}->{logger}->log("$action\n");
             $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
           }
 
-          substr($action, $offset) =~ s/\s*$a\$$v$modifier//;
+          substr($action, $offset) =~ s/\s*$a\$$original_v//;
           $offset += $-[0];
 
           if ($debug) {
@@ -527,12 +548,12 @@ sub expand_factoid_vars {
           }
         } else {
           if ($debug) {
-            $self->{pbot}->{logger}->log("before: v: $v, offset: $offset\n");
+            $self->{pbot}->{logger}->log("before: v: $original_v, offset: $offset\n");
             $self->{pbot}->{logger}->log("$action\n");
             $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
           }
 
-          substr($action, $offset) =~ s/$a\$$v$modifier/$mylist[$line]/;
+          substr($action, $offset) =~ s/$a\$$original_v/$mylist[$line]/;
           $offset += $-[0] + length $mylist[$line];
 
           if ($debug) {
