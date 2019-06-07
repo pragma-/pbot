@@ -26,12 +26,24 @@ sub initialize {
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 }
 
+# expands stuff like "7d3h" to "7 days and 3 hours"
+sub unconcise {
+  my ($input) = @_;
+  my %word = (y => 'years', w => 'weeks', d => 'days', h => 'hours', m => 'minutes', s => 'seconds');
+  $input =~ s/(\d+)([ywdhms])/"$1 " . $word{lc $2} . ' and '/ige;
+  $input =~ s/ and $//;
+  return $input;
+}
+
 # parses English natural language date strings into seconds
 # does not accept times or dates in the past
 sub parsedate {
   my ($self, $input) = @_;
 
-  # make some aliases
+  # expand stuff like 7d3h
+  $input = unconcise($input);
+
+  # some aliases
   $input =~ s/\bsecs?\b/seconds/g;
   $input =~ s/\bmins?\b/minutes/g;
   $input =~ s/\bhrs?\b/hours/g;
@@ -39,7 +51,7 @@ sub parsedate {
   $input =~ s/\byrs?\b/years/g;
 
   # sanitizers
-  $input =~ s/\s+(am?|pm?)/$1/; # remove leading spaces from am/pm
+  $input =~ s/(\d+)\s+(am?|pm?)/$1$2/; # remove leading spaces from am/pm
 
   # split input on "and" or comma, then we'll add up the results
   # this allows us to parse things like "1 hour and 30 minutes"
