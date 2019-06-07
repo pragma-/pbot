@@ -51,7 +51,9 @@ sub parsedate {
   $input =~ s/\byrs?\b/years/g;
 
   # sanitizers
-  $input =~ s/(\d+)\s+(am?|pm?)/$1$2/; # remove leading spaces from am/pm
+  $input =~ s/\b(\d+)\s+(am?|pm?)\b/$1$2/;        # remove leading spaces from am/pm
+  $input =~ s/ (\d+)(am?|pm?)\b/ $1:00:00$2/;     # convert 3pm to 3:00:00pm
+  $input =~ s/ (\d+:\d+)(am?|pm?)\b/ $1:00:00$2/; # convert 3:00pm to 3:00:00pm
 
   # split input on "and" or comma, then we'll add up the results
   # this allows us to parse things like "1 hour and 30 minutes"
