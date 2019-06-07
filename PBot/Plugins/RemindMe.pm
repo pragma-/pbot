@@ -15,7 +15,6 @@ use DBI;
 use Time::Duration qw/concise duration/;
 use Time::HiRes qw/gettimeofday/;
 use Getopt::Long qw(GetOptionsFromString);
-use PBot::Utils::ParseDate;
 
 Getopt::Long::Configure ("bundling");
 
@@ -316,7 +315,7 @@ sub remindme {
 
   print "alarm: $alarm\n";
 
-  my ($length, $error) = parsedate($alarm);
+  my ($length, $error) = $self->{pbot}->{parsedate}->parsedate($alarm);
 
   print "length: $length, error: $error!\n";
   return $error if $error;

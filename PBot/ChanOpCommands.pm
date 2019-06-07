@@ -15,8 +15,6 @@ use strict;
 use Carp ();
 use Time::Duration;
 
-use PBot::Utils::ParseDate;
-
 sub new {
   if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to ChanOpCommands should be key/value pairs, not hash reference");
@@ -75,7 +73,7 @@ sub ban_user {
     $length = 60 * 60 * 24; # 24 hours
   } else {
     my $error;
-    ($length, $error) = parsedate($length);
+    ($length, $error) = $self->{pbot}->{parsedate}->parsedate($length);
     return $error if defined $error;
   }
 
@@ -183,7 +181,7 @@ sub mute_user {
     $length = 60 * 60 * 24; # 24 hours
   } else {
     my $error;
-    ($length, $error) = parsedate($length);
+    ($length, $error) = $self->{pbot}->{parsedate}->parsedate($length);
     return $error if defined $error;
   }
 

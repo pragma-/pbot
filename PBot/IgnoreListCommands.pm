@@ -16,8 +16,6 @@ use Time::HiRes qw(gettimeofday);
 use Time::Duration;
 use Carp ();
 
-use PBot::Utils::ParseDate;
-
 sub new {
   if (ref($_[1]) eq 'HASH') {
     Carp::croak("Options to IgnoreListCommands should be key/value pairs, not hash reference");
@@ -77,7 +75,7 @@ sub ignore_user {
     $length = -1; # permanently
   } else {
     my $error;
-    ($length, $error) = parsedate($length);
+    ($length, $error) = $self->{pbot}->{parsedate}->parsedate($length);
     return $error if defined $error;
   }
 

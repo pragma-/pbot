@@ -44,6 +44,7 @@ use PBot::Timer;
 use PBot::Refresher;
 use PBot::Plugins;
 use PBot::WebPaste;
+use PBot::Utils::ParseDate;
 
 sub new {
   if (ref($_[1]) eq 'HASH') {
@@ -120,6 +121,7 @@ sub initialize {
   $self->{chanops}            = PBot::ChanOps->new(pbot => $self, %conf);
   $self->{nicklist}           = PBot::NickList->new(pbot => $self, %conf);
   $self->{webpaste}           = PBot::WebPaste->new(pbot => $self, %conf);
+  $self->{parsedate}          = PBot::Utils::ParseDate->new(pbot => $self, %conf);
 
   $self->{interpreter}        = PBot::Interpreter->new(pbot => $self, %conf);
   $self->{interpreter}->register(sub { return $self->{commands}->interpreter(@_); });
