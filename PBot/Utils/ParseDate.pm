@@ -41,11 +41,12 @@ sub parsedate {
   # sanitizers
   $input =~ s/\s+(am?|pm?)/$1/; # remove leading spaces from am/pm
 
-  # split input on "and" or comma, then we'll add up the seconds
+  # split input on "and" or comma, then we'll add up the results
+  # this allows us to parse things like "1 hour and 30 minutes"
   my @inputs = split /(?:,?\s+and\s+|\s*,\s*)/, $input;
 
   # adjust timezone to user-override if user provides a timezone
-  # we don't know if a timezone was provided until it is parsed
+  # we won't know if a timezone was provided until it is parsed
   my $timezone;
   my $tz_override = 'UTC';
 
