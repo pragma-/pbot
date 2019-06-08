@@ -1468,18 +1468,17 @@ sub factchange {
   my $needs_disambig;
 
   if (defined $arguments) {
-    if ($arguments =~ /^([^\s]+) ([^\s]+)\s+s(.)/) {
-      $channel = $1;
-      $keyword = $2; 
-      $delim = $3;
-      $needs_disambig = 0;
-    } elsif ($arguments =~ /^([^\s]+)\s+s(.)/) {
+    if ($arguments =~ /^([^\s]+)\s+s(.)/) {
       $keyword = $1;
       $delim = $2;
       $channel = $from;
       $needs_disambig = 1;
+    } elsif ($arguments =~ /^([^\s]+) ([^\s]+)\s+s(.)/) {
+      $channel = $1;
+      $keyword = $2;
+      $delim = $3;
+      $needs_disambig = 0;
     }
-
     $delim = quotemeta $delim;
 
     if ($arguments =~ /\Q$keyword\E s$delim(.*?)$delim(.*)$delim(.*)$/) {
