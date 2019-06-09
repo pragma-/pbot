@@ -113,6 +113,7 @@ sub parsedate {
     # there was a timezone parsed, set the tz override and try again
     if ($to->time_zone_short_name ne 'floating' and $to->time_zone_short_name ne 'UTC' and $tz_override eq 'UTC') {
       $tz_override = $to->time_zone_long_name;
+      $to = undef;
       goto ADJUST_TIMEZONE;
     }
 
