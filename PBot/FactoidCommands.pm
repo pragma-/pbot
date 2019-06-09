@@ -1496,6 +1496,10 @@ sub factchange {
       $tochange = $1; 
       $changeto = $2;
       $modifier  = $3;
+    } elsif ($sub =~ /^s$delim(.*?)$delim(.*)$/) {
+      $tochange = $1;
+      $changeto = $2;
+      $modifier  = '';
     }
   }
 
