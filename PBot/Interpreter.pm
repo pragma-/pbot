@@ -815,7 +815,7 @@ sub handle_result {
     my $cmdlist = $self->make_args($stuff->{command});
     my ($cmd, $args) = $self->split_args($cmdlist, 2);
     if (not $self->{pbot}->{commands}->exists($cmd)) {
-      my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $cmd, $args, 1, 0, 1);
+      my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $cmd, arguments => $args, exact_channel => 1, exact_trigger => 0, find_alias => 1);
       if (defined $trigger) {
         if ($stuff->{preserve_whitespace} == 0) {
           $stuff->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};

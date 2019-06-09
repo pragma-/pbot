@@ -56,7 +56,7 @@ sub execute_module {
 
   $stuff->{arguments} = "" if not defined $stuff->{arguments};
 
-  my @factoids = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $stuff->{keyword}, undef, 2, 2);
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $stuff->{keyword}, exact_channel => 2, exact_trigger => 2);
 
   if (not @factoids or not $factoids[0]) {
     $stuff->{checkflood} = 1;

@@ -104,7 +104,7 @@ sub call_factoid {
     return "Usage: fact <channel> <keyword> [arguments]";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $keyword, $args, 1, 1);
+  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $keyword, arguments => $args, exact_channel => 1, exact_trigger => 1);
 
   if (not defined $trigger) {
     return "No such factoid '$keyword' exists for channel '$chan'";
@@ -168,14 +168,14 @@ sub log_factoid {
 }
 
 sub find_factoid_with_optional_channel {
-  my ($self, $from, $arguments, $command, $usage, $explicit, $exact_channel) = @_;
-
+  my ($self, $from, $arguments, $command, %opts) = @_;
+    
   my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
   my ($from_chan, $from_trigger, $remaining_args) = $self->{pbot}->{interpreter}->split_args($arglist, 3);
 
   if (not defined $from_chan or (not defined $from_chan and not defined $from_trigger)) {
-    return "Usage: $command [channel] <keyword>" if not $usage;
-    return $usage;
+    return "Usage: $command [channel] <keyword>" if not $opts{usage};
+    return $opts{usage};
   }
 
   my $needs_disambig;
@@ -202,15 +202,15 @@ sub find_factoid_with_optional_channel {
 
   my ($channel, $trigger);
 
-  if (defined $exact_channel and $exact_channel == 1) {
-    ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, undef, 1, 1);
+  if ($opts{exact_channel} == 1) {
+    ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, exact_channel => 1, exact_trigger => 1);
 
     if (not defined $channel) {
       $from_chan = 'the global channel' if $from_chan eq '.*';
       return "/say $from_trigger not found in $from_chan.";
     }
   } else {
-    my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, undef, 0, 1);
+    my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $from_trigger, exact_trigger => 1);
 
     if (not @factoids or not $factoids[0]) {
       if ($needs_disambig) {
@@ -223,7 +223,7 @@ sub find_factoid_with_optional_channel {
 
     if (@factoids > 1) {
       if ($needs_disambig or not grep { $_->[0] eq $from_chan } @factoids) {
-        unless ($explicit) {
+        unless ($opts{explicit}) {
           foreach my $factoid (@factoids) {
             if ($factoid->[0] eq '.*') {
               ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
@@ -249,7 +249,7 @@ sub find_factoid_with_optional_channel {
   $channel = '.*' if $channel eq 'global';
   $from_chan = '.*' if $channel eq 'global';
 
-  if ($explicit and $channel =~ /^#/ and $from_chan =~ /^#/ and $channel ne $from_chan) {
+  if ($opts{explicit} and $channel =~ /^#/ and $from_chan =~ /^#/ and $channel ne $from_chan) {
     return "/say $trigger belongs to $channel, not $from_chan. Please switch to or explicitly specify $channel.";
   }
 
@@ -359,7 +359,7 @@ sub factundo {
   $arguments = join ' ', @$args;
   my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo', undef, 1, 1);
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo', explicit => 1, exact_channel => 1);
   my $deleted;
 
   if (not defined $trigger) {
@@ -459,7 +459,7 @@ sub factredo {
 
   $arguments = join ' ', @$args;
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo', undef, 1, 1);
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo', explicit => 1, exact_channel => 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my $channel_path = $channel;
@@ -529,14 +529,14 @@ sub factset {
   my $self = shift;
   my ($from, $nick, $user, $host, $args) = @_;
 
-  my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factset', 'Usage: factset [channel] <factoid> [key [value]]', 1);
+  my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factset', usage => 'Usage: factset [channel] <factoid> [key [value]]', explicit => 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
   my ($key, $value) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
 
   $channel = '.*' if $channel !~ /^#/;
-  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1, 1);
+  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, exact_channel => 1, exact_trigger => 1);
 
   my $admininfo;
   if (defined $owner_channel) {
@@ -611,14 +611,14 @@ sub factunset {
 
   my $usage = 'Usage: factunset [channel] <factoid> <key>';
 
-  my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factunset', $usage, 1);
+  my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factunset', usage => $usage, explicit => 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   my ($key) = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
 
   return $usage if not length $key;
 
-  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, undef, 1, 1);
+  my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, exact_channel => 1, exact_trigger => 1);
 
   my $admininfo;
 
@@ -774,7 +774,7 @@ sub factmove {
     return "/say $nick: I don't think the channel name needs to be that long.";
   }
 
-  my ($found_src_channel, $found_source) = $self->{pbot}->{factoids}->find_factoid($src_channel, $source, undef, 1, 1);
+  my ($found_src_channel, $found_source) = $self->{pbot}->{factoids}->find_factoid($src_channel, $source, exact_channel => 1, exact_trigger => 1);
 
   if (not defined $found_src_channel) {
     return "Source factoid $source not found in channel $src_channel";
@@ -794,13 +794,13 @@ sub factmove {
     return "/say $found_source is locked; unlock before moving.";
   }
 
-  my ($found_target_channel, $found_target) = $self->{pbot}->{factoids}->find_factoid($target_channel, $target, undef, 1, 1);
+  my ($found_target_channel, $found_target) = $self->{pbot}->{factoids}->find_factoid($target_channel, $target, exact_channel => 1, exact_trigger => 1);
 
   if (defined $found_target_channel) {
     return "Target factoid $target already exists in channel $target_channel";
   }
 
-  my ($overchannel, $overtrigger) = $self->{pbot}->{factoids}->find_factoid('.*', $target, undef, 1, 1);
+  my ($overchannel, $overtrigger) = $self->{pbot}->{factoids}->find_factoid('.*', $target, exact_channel => 1, exact_trigger => 1);
   if (defined $overtrigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$overtrigger}->{'nooverride'}) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $target\n");
     return "/say $target already exists for the global channel and cannot be overridden for " . ($target_channel eq '.*' ? 'the global channel' : $target_channel) . ".";
@@ -863,14 +863,14 @@ sub factalias {
     return "/say $nick: I don't think the channel name needs to be that long.";
   }
 
-  my ($channel, $alias_trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $alias, undef, 1, 1);
+  my ($channel, $alias_trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $alias, exact_channel => 1, exact_trigger => 1);
   
   if (defined $alias_trigger) {
     $self->{pbot}->{logger}->log("attempt to overwrite existing command\n");
     return "'$alias_trigger' already exists for channel $channel";
   }
 
-  my ($overchannel, $overtrigger) = $self->{pbot}->{factoids}->find_factoid('.*', $alias, undef, 1, 1);
+  my ($overchannel, $overtrigger) = $self->{pbot}->{factoids}->find_factoid('.*', $alias, exact_channel => 1, exact_trigger => 1);
   if (defined $overtrigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$overtrigger}->{'nooverride'}) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $alias\n");
     return "/say $alias already exists for the global channel and cannot be overridden for " . ($chan eq '.*' ? 'the global channel' : $chan) . ".";
@@ -909,7 +909,7 @@ sub add_regex {
     return "Usage: regex <regex> <command>";
   }
 
-  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $keyword, undef, 1, 1);
+  my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $keyword, exact_channel => 1, exact_trigger => 1);
 
   if (defined $trigger) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to overwrite $trigger\n");
@@ -979,7 +979,7 @@ sub factadd {
 
   my $keyword_text = $keyword =~ / / ? "\"$keyword\"" : $keyword;
 
-  my ($channel, $trigger)  = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, undef, 1, 1);
+  my ($channel, $trigger)  = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, exact_channel => 1, exact_trigger => 1);
   if (defined $trigger) {
     if (not $force) {
       $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to overwrite $keyword\n");
@@ -1001,7 +1001,7 @@ sub factadd {
     }
   }
 
-  ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid('.*', $keyword, undef, 1, 1);
+  ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid('.*', $keyword, exact_channel => 1, exact_trigger => 1);
   if (defined $trigger and $self->{pbot}->{factoids}->{factoids}->hash->{'.*'}->{$trigger}->{'nooverride'}) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to override $keyword_text\n");
     return "/say $keyword_text already exists for the global channel and cannot be overridden for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
@@ -1029,7 +1029,7 @@ sub factrem {
     $from_chan = $from;
   }
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factrem', undef, 1);
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factrem', explicit => 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
   $channel = '.*' if $channel eq 'global';
@@ -1149,7 +1149,7 @@ sub factlog {
   return "Too many arguments -- $usage" if @$args > 2;
   return "Missing argument -- $usage" if not @$args;
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, "@$args", 'factlog', $usage, 0, 1);
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, "@$args", 'factlog', usage => $usage, exact_channel => 1);
 
   if (not defined $trigger) {
     # factoid not found or some error, try to continue and load factlog file if it exists
@@ -1508,7 +1508,7 @@ sub factchange {
   }
 
   my ($from_trigger, $from_chan) = ($keyword, $channel);
-  my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, undef, 0, 1);
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, exact_trigger => 1);
 
   if (not @factoids or not $factoids[0]) {
     $from_chan = 'global channel' if $from_chan eq '.*';

@@ -269,11 +269,17 @@ sub export_factoids {
 }
 
 sub find_factoid {
-  my ($self, $from, $keyword, $arguments, $exact_channel, $exact_trigger, $find_alias) = @_;
+  my ($self, $from, $keyword, %opts) = @_;
 
   my $debug = 0;
 
-  $self->{pbot}->{logger}->log("find_factoid: from: [$from], kw: [$keyword], args: [" . (defined $arguments ? $arguments : "undef") . "], " . (defined $exact_channel ? $exact_channel : "undef") . ", " . (defined $exact_trigger ? $exact_trigger : "undef") . "\n") if $debug;
+  if ($debug) {
+    use Data::Dumper;
+    my $dump = Dumper \%opts;
+    $self->{pbot}->{logger}->log("find_factiod: from: $from, kw: $keyword, opts: $dump\n");
+  }
+
+  my $arguments = exists $opts{arguments} ? $opts{arguments} : "";
 
   $from = '.*' if not defined $from or $from !~ /^#/;
   $from = lc $from;
@@ -283,13 +289,13 @@ sub find_factoid {
   my @result = eval {
     my @results;
     for (my $depth = 0; $depth < 5; $depth++) {
-      my $string = $keyword . (defined $arguments ? " $arguments" : "");
+      my $string = $keyword . (length $arguments ? " $arguments" : "");
       $self->{pbot}->{logger}->log("string: $string\n") if $debug;
       return undef if $self->{pbot}->{commands}->exists($keyword);
       # check factoids
       foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
-        if ($exact_channel) {
-          if (defined $exact_trigger && $exact_trigger == 1) {
+        if ($opts{exact_channel}) {
+          if ($opts{exact_trigger} == 1) {
             next unless $from eq lc $channel;
           } else {
             next unless $from eq lc $channel or $channel eq '.*';
@@ -300,7 +306,7 @@ sub find_factoid {
           if ($keyword =~ m/^\Q$trigger\E$/i) {
             $self->{pbot}->{logger}->log("return $channel: $trigger\n") if $debug;
 
-            if ($find_alias && $self->{factoids}->hash->{$channel}->{$trigger}->{action} =~ /^\/call\s+(.*)$/) {
+            if ($opts{find_alias} && $self->{factoids}->hash->{$channel}->{$trigger}->{action} =~ /^\/call\s+(.*)$/) {
               my $command;
               if (length $arguments) {
                 $command = "$1 $arguments";
@@ -312,7 +318,7 @@ sub find_factoid {
               goto NEXT_DEPTH;
             }
 
-            if (defined $exact_channel && $exact_channel == 1) {
+            if ($opts{exact_channel} == 1) {
               return ($channel, $trigger);
             } else {
               push @results, [$channel, $trigger];
@@ -322,9 +328,9 @@ sub find_factoid {
       }
 
       # then check regex factoids
-      if (not $exact_trigger) {
+      if (not $opts{exact_trigger}) {
         foreach my $channel (sort keys %{ $self->{factoids}->hash }) {
-          if ($exact_channel) {
+          if ($opts{exact_channel}) {
             next unless $from eq lc $channel or $channel eq '.*';
           }
 
@@ -334,7 +340,7 @@ sub find_factoid {
               if ($string =~ m/$trigger/i) {
                 $self->{pbot}->{logger}->log("return regex $channel: $trigger\n") if $debug;
 
-                if ($find_alias) {
+                if ($opts{find_alias}) {
                   my $command = $self->{factoids}->hash->{$channel}->{$trigger}->{action};
                   my $arglist = $self->{pbot}->{interpreter}->make_args($command);
                   ($keyword, $arguments) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
@@ -342,7 +348,7 @@ sub find_factoid {
                   goto NEXT_DEPTH;
                 }
 
-                if ($exact_channel == 1) {
+                if ($opts{exact_channel} == 1) {
                   return ($channel, $trigger);
                 } else {
                   push @results, [$channel, $trigger];
@@ -354,7 +360,7 @@ sub find_factoid {
       }
 
       NEXT_DEPTH:
-      last if not $find_alias;
+      last if not $opts{find_alias};
     }
 
     if ($debug) {
@@ -454,7 +460,7 @@ sub expand_factoid_vars {
 
       my $recurse = 0;
       ALIAS:
-      my @factoids = $self->find_factoid($from, $test_v, undef, 2, 2);
+      my @factoids = $self->find_factoid($from, $test_v, exact_channel => 2, exact_trigger => 2);
       next if not @factoids or not $factoids[0];
 
       my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
@@ -750,8 +756,7 @@ sub interpreter {
 
   # search for factoid against global channel and current channel (from unless ref_from is defined)
   my $original_keyword = $stuff->{keyword};
-  # $self->{pbot}->{logger}->log("calling find_factoid in Factoids.pm, interpreter()\n");
-  my ($channel, $keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{keyword}, $stuff->{arguments}, 1);
+  my ($channel, $keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{keyword}, arguments => $stuff->{arguments}, exact_channel => 1);
 
   if (not $stuff->{ref_from} or $stuff->{ref_from} eq '.*' or $stuff->{ref_from} eq $stuff->{from}) {
     $stuff->{ref_from} = "";
@@ -928,7 +933,7 @@ sub handle_action {
   my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
 
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
-    my ($root_channel, $root_keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{root_keyword}, $stuff->{arguments}, 1);
+    my ($root_channel, $root_keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{root_keyword}, arguments => $stuff->{arguments}, exact_channel => 1);
     if (not defined $root_channel or not defined $root_keyword) {
       $root_channel = $channel;
       $root_keyword = $keyword;
@@ -1017,7 +1022,7 @@ sub handle_action {
   }
 
   unless (exists $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
-    my ($root_channel, $root_keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{root_keyword}, $stuff->{arguments}, 1);
+    my ($root_channel, $root_keyword) = $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{root_keyword}, arguments => $stuff->{arguments}, exact_channel => 1);
     if (not defined $root_channel or not defined $root_keyword) {
       $root_channel = $channel;
       $root_keyword = $keyword;
