@@ -546,9 +546,7 @@ sub extract_bracketed {
 # unbalanced quotes gracefully by treating them as part of the argument
 # they were found within.
 sub split_line {
-  my ($self, $line, $strip_quotes) = @_;
-
-  $strip_quotes = 0 if not defined $strip_quotes;
+  my ($self, $line, %opts) = @_;
 
   my @chars = split //, $line;
 
@@ -561,6 +559,7 @@ sub split_line {
   my $i = 0;
   my $pos;
   my $ignore_quote = 0;
+  my $spaces = 0;
 
   while (1) {
     $last_ch = $ch;
@@ -582,6 +581,8 @@ sub split_line {
 
     $ch = $chars[$i++];
 
+    $spaces = 0 if $ch ne ' ';
+
     if ($escaped) {
       $token .= "\\$ch";
       $escaped = 0;
@@ -596,7 +597,7 @@ sub split_line {
     if (defined $quote) {
       if ($ch eq $quote) {
         # closing quote
-        $token .= $ch unless $strip_quotes;
+        $token .= $ch unless $opts{strip_quotes};
         push @args, $token;
         $quote = undef;
         $token = '';
@@ -616,15 +617,20 @@ sub split_line {
         # begin potential quoted argument
         $pos = $i - 1;
         $quote = $ch;
-        $token .= $ch unless $strip_quotes;
+        $token .= $ch unless $opts{strip_quotes};
       }
       next;
     }
 
     if ($ch eq ' ') {
-      push @args, $token if length $token;
-      $token = '';
-      next;
+      if (++$spaces > 1 and $opts{keep_spaces}) {
+        $token .= $ch;
+        next;
+      } else {
+        push @args, $token if length $token;
+        $token = '';
+        next;
+      }
     }
 
     $token .= $ch;
@@ -637,16 +643,16 @@ sub split_line {
 sub make_args {
   my ($self, $string) = @_;
 
-  my @args = $self->split_line($string);
+  my @args = $self->split_line($string, keep_spaces => 1);
 
   my @arglist;
-  my @arglist_quotes;
+  my @arglist_unstripped;
 
   while (@args) {
     my $arg = shift @args;
 
-    # add argument with quotes preserved
-    push @arglist_quotes, $arg;
+    # add argument with quotes and spaces preserved
+    push @arglist_unstripped, $arg;
 
     # strip quotes from argument
     if ($arg =~ m/^'.*'$/) {
@@ -657,12 +663,15 @@ sub make_args {
       $arg =~ s/"$//;
     }
 
-    # add unquoted argument
+    # strip leading spaces from argument
+    $arg =~ s/^\s+//;
+
+    # add stripped argument
     push @arglist, $arg;
   }
 
-  # copy quoted arguments to end of arglist
-  push @arglist, @arglist_quotes;
+  # copy unstripped arguments to end of arglist
+  push @arglist, @arglist_unstripped;
   return \@arglist;
 }
 
@@ -675,6 +684,7 @@ sub arglist_size {
 # shifts first argument off array of arguments
 sub shift_arg {
   my ($self, $args) = @_;
+  return undef if not @$args;
   splice @$args, @$args / 2, 1; # remove original quoted argument
   return shift @$args;
 }
@@ -695,7 +705,7 @@ sub split_args {
     } while (--$count > 1 and $i < $max);
   }
 
-  # get rest from 2nd half of arglist, which contains original quotes
+  # get rest from 2nd half of arglist, which contains original quotes and spaces
   my $rest = join ' ', @$args[@$args / 2 + $i .. @$args - 1];
   push @result, $rest if length $rest;
   return @result;
