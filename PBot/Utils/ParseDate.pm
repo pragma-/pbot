@@ -30,7 +30,7 @@ sub initialize {
 sub unconcise {
   my ($input) = @_;
   my %word = (y => 'years', w => 'weeks', d => 'days', h => 'hours', m => 'minutes', s => 'seconds');
-  $input =~ s/(\d+)([ywdhms])/"$1 " . $word{lc $2} . ' and '/ige;
+  $input =~ s/(\d+)([ywdhms])(?![a-z])/"$1 " . $word{lc $2} . ' and '/ige;
   $input =~ s/ and $//;
   return $input;
 }
@@ -39,6 +39,10 @@ sub unconcise {
 # does not accept times or dates in the past
 sub parsedate {
   my ($self, $input) = @_;
+
+  my $override ="";
+  TRY_AGAIN:
+  $input = "$override$input" if length $override;
 
   # expand stuff like 7d3h
   $input = unconcise($input);
@@ -54,10 +58,11 @@ sub parsedate {
   $input =~ s/\b(\d+)\s+(am?|pm?)\b/$1$2/;        # remove leading spaces from am/pm
   $input =~ s/ (\d+)(am?|pm?)\b/ $1:00:00$2/;     # convert 3pm to 3:00:00pm
   $input =~ s/ (\d+:\d+)(am?|pm?)\b/ $1:00$2/;    # convert 4:20pm to 4:20:00pm
+  $input =~ s/next (jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept(?:ember)?|oct(?:ober)?|nov(?:ember)|dec(?:ember)?) (\d+)(?:st|nd|rd|th)?(.*)/"next $1 and " . ($2 - 1) . " days" . (length $3 ? " and $3" : "")/ie;
 
   # split input on "and" or comma, then we'll add up the results
   # this allows us to parse things like "1 hour and 30 minutes"
-  my @inputs = split /(?:,?\s+and\s+|\s*,\s*)/, $input;
+  my @inputs = split /(?:,?\s+and\s+|\s*,\s*|\s+at\s+)/, $input;
 
   # adjust timezone to user-override if user provides a timezone
   # we won't know if a timezone was provided until it is parsed
@@ -69,7 +74,7 @@ sub parsedate {
   my $now = DateTime->now(time_zone => $timezone);
 
   my $seconds = 0;
-  my $from_now_added = 0;
+  my ($to, $base);
 
   foreach my $input (@inputs) {
     return -1 if $input =~ m/forever/i;
@@ -82,48 +87,48 @@ sub parsedate {
       next;
     }
 
+    # adjust base
+    if (defined $to) {
+      $base = $to->clone;
+      $base->set_time_zone($timezone);
+    } else {
+      $base = $now;
+    }
+
     # First, attempt to parse as-is...
-    my $to = eval { return DateTime::Format::Flexible->parse_datetime($input, lang => ['en'], base => $now); };
+    $to = eval { return DateTime::Format::Flexible->parse_datetime($input, lang => ['en'], base => $base); };
 
     # If there was an error, then append "from now" and attempt to parse as a relative time...
     if ($@) {
-      $from_now_added = 1;
       $input .= ' from now';
-      $to = eval { return DateTime::Format::Flexible->parse_datetime($input, lang => ['en'], base => $now); };
+      $to = eval { return DateTime::Format::Flexible->parse_datetime($input, lang => ['en'], base => $base); };
 
       # If there's still an error, it's bad input
       if ($@) {
-        $@ =~ s/ from now at PBot.*$//;
+        $@ =~ s/ ${override}from now at PBot.*$//;
         return (0, $@);
       }
     }
 
-    # there was a timezone parsed, set the override and try again
+    # there was a timezone parsed, set the tz override and try again
     if ($to->time_zone_short_name ne 'floating' and $to->time_zone_short_name ne 'UTC' and $tz_override eq 'UTC') {
       $tz_override = $to->time_zone_long_name;
       goto ADJUST_TIMEZONE;
     }
 
     $to->set_time_zone('UTC');
-    my $duration = $to->subtract_datetime_absolute($now);
+    $base->set_time_zone('UTC');
+    my $duration = $to->subtract_datetime_absolute($base);
 
-    # If the time is in the past, prepend "tomorrow" and reparse
+    # If the time is in the past, prepend "tomorrow" or "next" and reparse
     if ($duration->is_negative) {
-      $input = "tomorrow $input";
-      $to = eval { return DateTime::Format::Flexible->parse_datetime($input, lang => ['en'], base => $now); };
-
-      if ($@) {
-        $@ =~ s/format: tomorrow /format: /;
-        if ($from_now_added) {
-          $@ =~ s/ from now at PBot.*//;
-        } else {
-          $@ =~ s/ at PBot.*//;
-        }
-        return (0, $@);
+      if ($input =~ m/^\d/) {
+        $override = "tomorrow ";
+      } else {
+        $override = "next ";
       }
-
-      $to->set_time_zone('UTC');
-      $duration = $to->subtract_datetime_absolute($now);
+      $to = undef;
+      goto TRY_AGAIN;
     }
 
     # add the seconds from this input chunk
