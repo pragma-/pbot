@@ -280,12 +280,6 @@ sub find_factoid {
 
   $self->{pbot}->{logger}->log("from: $from\n") if $debug;
 
-  if ($keyword =~ /^([^ ]+) (.*)/) {
-    $self->{pbot}->{logger}->log("chopping keyword\n");
-    $keyword = $1;
-    $arguments = $2;
-  }
-
   my @result = eval {
     my @results;
     for (my $depth = 0; $depth < 5; $depth++) {
