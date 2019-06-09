@@ -313,7 +313,9 @@ sub find_factoid {
               } else {
                 $command = $1;
               }
-              ($keyword, $arguments) = split /\s+/, $command, 2;
+              my @args = $self->{pbot}->{interpreter}->split_line($command, 1);
+              $keyword = shift @args;
+              $arguments = join ' ', @args;
               goto NEXT_DEPTH;
             }
 
@@ -341,7 +343,9 @@ sub find_factoid {
 
                 if ($find_alias) {
                   my $command = $self->{factoids}->hash->{$channel}->{$trigger}->{action};
-                  ($keyword, $arguments) = split /\s+/, $command, 2;
+                  my @args = $self->{pbot}->{interpreter}->split_line($command, 1);
+                  $keyword = shift @args;
+                  $arguments = join ' ', @args;
                   $string = $keyword . (length $arguments ? " $arguments" : "");
                   goto NEXT_DEPTH;
                 }

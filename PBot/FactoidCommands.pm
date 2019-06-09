@@ -614,8 +614,7 @@ sub factunset {
   my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel($from, $args, 'factunset', $usage, 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
-  my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
-  my ($key) = $self->{pbot}->{interpreter}->split_args($arglist, 1);
+  my ($key) = $self->{pbot}->{interpreter}->split_line($arguments, 1);
 
   return $usage if not length $key;
 
