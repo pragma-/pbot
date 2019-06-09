@@ -1097,6 +1097,8 @@ sub factshow {
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
 
+  $stuff->{preserve_whitespace} = 1;
+
   my ($chan, $trig) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if (not defined $trig) {
@@ -1460,27 +1462,37 @@ sub factfind {
 
 sub factchange {
   my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
   my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier);
 
+  $stuff->{preserve_whitespace} = 1;
+
   my $needs_disambig;
 
-  if (defined $arguments) {
-    if ($arguments =~ /^([^\s]+)\s+s(.)/) {
-      $keyword = $1;
-      $delim = $2;
-      $channel = $from;
-      $needs_disambig = 1;
-    } elsif ($arguments =~ /^([^\s]+) ([^\s]+)\s+s(.)/) {
-      $channel = $1;
-      $keyword = $2;
-      $delim = $3;
+  if (length $arguments) {
+    my $args = $stuff->{arglist};
+    my $sub;
+
+    my $arg_count = $self->{pbot}->{interpreter}->arglist_size($args);
+
+    if ($arg_count >= 3 and ($args->[0] =~ m/^#/ or $args->[0] eq '.*' or lc $args->[0] eq 'global') and ($args->[2] =~ m/^s([[:punct:]])/)) {
+      $delim = $1;
+      $channel = $args->[0];
+      $keyword = $args->[1];
+      ($sub) = $self->{pbot}->{interpreter}->split_args($args, 1, 2);
       $needs_disambig = 0;
+    } elsif ($arg_count >= 2 and $args->[1] =~ m/^s([[:punct:]])/) {
+      $delim = $1;
+      $keyword = $args->[0];
+      $channel = $from;
+      ($sub) = $self->{pbot}->{interpreter}->split_args($args, 1, 1);
+      $needs_disambig = 1;
     }
+
     $delim = quotemeta $delim;
 
-    if ($arguments =~ /\Q$keyword\E s$delim(.*?)$delim(.*)$delim(.*)$/) {
+    if ($sub =~ /^s$delim(.*?)$delim(.*)$delim(.*)$/) {
       $tochange = $1; 
       $changeto = $2;
       $modifier  = $3;
