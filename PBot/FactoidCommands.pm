@@ -346,7 +346,6 @@ sub factundo {
     chomp $getopt_error;
   };
 
-  $arguments =~ s/(?<!\\)'/\\'/g;
   my ($list_undos, $goto_revision);
   my ($ret, $args) = GetOptionsFromString($arguments,
     'l:i'  => \$list_undos,
@@ -356,7 +355,7 @@ sub factundo {
   return $usage if @$args > 2;
   return $usage if not @$args;
 
-  $arguments = join ' ', @$args;
+  $arguments = join(' ', map { $_ = "'$_'" } @$args);
   my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
 
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo', explicit => 1, exact_channel => 1);
@@ -447,7 +446,6 @@ sub factredo {
     chomp $getopt_error;
   };
 
-  $arguments =~ s/(?<!\\)'/\\'/g;
   my ($list_undos, $goto_revision);
   my ($ret, $args) = GetOptionsFromString($arguments,
     'l:i'  => \$list_undos,
@@ -457,7 +455,7 @@ sub factredo {
   return $usage if @$args > 2;
   return $usage if not @$args;
 
-  $arguments = join ' ', @$args;
+  $arguments = join(' ', map { $_ = "'$_'" } @$args);
 
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo', explicit => 1, exact_channel => 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
@@ -1139,7 +1137,6 @@ sub factlog {
     chomp $getopt_error;
   };
 
-  $arguments =~ s/(?<!\\)'/\\'/g;
   my ($show_hostmask, $actual_timestamp);
   my ($ret, $args) = GetOptionsFromString($arguments,
     'h'  => \$show_hostmask,
@@ -1149,11 +1146,13 @@ sub factlog {
   return "Too many arguments -- $usage" if @$args > 2;
   return "Missing argument -- $usage" if not @$args;
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, "@$args", 'factlog', usage => $usage, exact_channel => 1);
+  $args = join(' ', map { $_ = "'$_'" } @$args);
+
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $args, 'factlog', usage => $usage, exact_channel => 1);
 
   if (not defined $trigger) {
     # factoid not found or some error, try to continue and load factlog file if it exists
-    my $arglist = $self->{pbot}->{interpreter}->make_args("@$args");
+    my $arglist = $self->{pbot}->{interpreter}->make_args($args);
     ($channel, $trigger) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
     if (not defined $trigger) {
       $trigger = $channel;
