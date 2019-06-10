@@ -170,6 +170,14 @@ sub log_factoid {
 sub find_factoid_with_optional_channel {
   my ($self, $from, $arguments, $command, %opts) = @_;
     
+  my %default_opts = (
+    usage => undef,
+    explicit => 0,
+    exact_channel => 0
+  );
+
+  %opts = (%default_opts, %opts);
+
   my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
   my ($from_chan, $from_trigger, $remaining_args) = $self->{pbot}->{interpreter}->split_args($arglist, 3);
 

@@ -271,6 +271,15 @@ sub export_factoids {
 sub find_factoid {
   my ($self, $from, $keyword, %opts) = @_;
 
+  my %default_opts = (
+    arguments => '',
+    exact_channel => 0,
+    exact_trigger => 0,
+    find_alias => 0
+  );
+
+  %opts = (%default_opts, %opts);
+
   my $debug = 0;
 
   if ($debug) {
@@ -279,12 +288,12 @@ sub find_factoid {
     $self->{pbot}->{logger}->log("find_factiod: from: $from, kw: $keyword, opts: $dump\n");
   }
 
-  my $arguments = exists $opts{arguments} ? $opts{arguments} : "";
-
   $from = '.*' if not defined $from or $from !~ /^#/;
   $from = lc $from;
 
   $self->{pbot}->{logger}->log("from: $from\n") if $debug;
+
+  my $arguments = $opts{arguments};
 
   my @result = eval {
     my @results;
