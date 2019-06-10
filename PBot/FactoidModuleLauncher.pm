@@ -12,7 +12,7 @@ package PBot::FactoidModuleLauncher;
 use warnings;
 use strict;
 
-use POSIX qw(WNOHANG); # for children process reaping
+use POSIX qw(WNOHANG);
 use Carp ();
 use Text::Balanced qw(extract_delimited);
 use JSON;
@@ -77,60 +77,7 @@ sub execute_module {
 
   $stuff->{arguments} = $self->{pbot}->{factoids}->expand_special_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $stuff->{arguments});
   $stuff->{arguments} = quotemeta $stuff->{arguments};
-
-  if ((exists $self->{special} and $stuff->{special} eq 'code-factoid') or exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{unquote_spaces}) {
-    $stuff->{arguments} =~ s/\\ / /g;
-  }
-
-  if (exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}) {
-    if ($self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{modulelauncher_subpattern} =~ m/s\/(.*?)\/(.*)\/(.*)/) {
-      my ($p1, $p2, $p3) = ($1, $2, $3);
-      my ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after);
-      if ($p3 eq 'g') {
-        $stuff->{arguments} =~ s/$p1/$p2/g;
-        ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
-      } else {
-        $stuff->{arguments} =~ s/$p1/$p2/;
-        ($a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $`, $');
-      }
-      $stuff->{arguments} =~ s/\$1/$a/g if defined $a;
-      $stuff->{arguments} =~ s/\$2/$b/g if defined $b;
-      $stuff->{arguments} =~ s/\$3/$c/g if defined $c;
-      $stuff->{arguments} =~ s/\$4/$d/g if defined $d;
-      $stuff->{arguments} =~ s/\$5/$e/g if defined $e;
-      $stuff->{arguments} =~ s/\$6/$f/g if defined $f;
-      $stuff->{arguments} =~ s/\$7/$g/g if defined $g;
-      $stuff->{arguments} =~ s/\$8/$h/g if defined $h;
-      $stuff->{arguments} =~ s/\$9/$i/g if defined $i;
-      $stuff->{arguments} =~ s/\$`/$before/g if defined $before;
-      $stuff->{arguments} =~ s/\$'/$after/g if defined $after;
-    } else {
-      $self->{pbot}->{logger}->log("Invalid module substitution pattern [" . $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{modulelauncher_subpattern}. "], ignoring.\n");
-    }
-  }
-
-  my $argsbuf = $self->{arguments};
-  $self->{arguments} = "";
-
-  my $lr;
-  while (1) {
-    my ($e, $r, $p) = extract_delimited($argsbuf, "'", "[^']+");
-
-    $lr = $r if not defined $lr;
-
-    if (defined $e) {
-      $e =~ s/\\([^\w])/$1/g;
-      $e =~ s/'/'\\''/g;
-      $e =~ s/^'\\''/'/;
-      $e =~ s/'\\''$/'/;
-      $stuff->{arguments} .= $p;
-      $stuff->{arguments} .= $e;
-      $lr = $r;
-    } else {
-      $stuff->{arguments} .= $lr;
-      last;
-    }
-  }
+  $stuff->{arguments} =~ s/\\ / /g;
 
   pipe(my $reader, my $writer);
   my $pid = fork;
