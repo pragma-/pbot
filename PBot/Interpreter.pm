@@ -548,6 +548,13 @@ sub extract_bracketed {
 sub split_line {
   my ($self, $line, %opts) = @_;
 
+  my %default_opts = (
+    strip_quotes => 0,
+    keep_spaces => 0
+  );
+
+  %opts = (%default_opts, %opts);
+
   my @chars = split //, $line;
 
   my @args;
