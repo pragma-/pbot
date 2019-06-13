@@ -19,8 +19,6 @@ eval {
   use lib 'languages';
   require "$language.pm";
 } or do {
-  $language =~ s/^cfact_//;
-
   my @modules = glob 'languages/*.pm';
   my $found = 0;
   my ($languages, $comma) = ('', '');
@@ -29,8 +27,10 @@ eval {
     $module = basename $module;
     $module =~ s/.pm$//;
     next if $module =~ m/^_/;
-    require "$module.pm";
+
+    require "$module.pm" or die $!;
     my $mod = $module->new;
+
 
     if (exists $mod->{name} and $mod->{name} eq $language) {
       $language = $module;
@@ -53,12 +53,12 @@ if (not length $h->{code}) {
   if (exists $h->{usage}) {
     print "$h->{usage}\n";
   } else {
-    print "Usage: cc [-paste] [-lang=<language>] [-info] [language options] <code> [-input=<stdin input>]\n";
+    print "Usage: cc [-lang=<language>] [-info] [-paste] [-args \"command-line arguments\"] [-stdin \"stdin input\"] [compiler/language options] <code>\n";
   }
   exit;
 }
 
-my $lang = $language->new(%$h);
+my $lang = $language->new(%{$h});
 
 $lang->{local} = $ENV{CC_LOCAL};
 

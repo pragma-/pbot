@@ -14,6 +14,8 @@ use LWP::UserAgent;
 use Time::HiRes qw/gettimeofday/;
 use Text::Balanced qw/extract_delimited/;
 use JSON;
+use Getopt::Long qw/GetOptionsFromArray :config pass_through/;
+
 
 my $EXECUTE_PORT = '3333';
 
@@ -40,11 +42,6 @@ sub new {
   $self->{lang}    =~ s/^\s+|\s+$//g if defined $self->{lang};
   $self->{code}    =~ s/^\s+|\s+$//g if defined $self->{code};
 
-  if (defined $self->{arguments}) {
-    $self->{arguments} = quotemeta $self->{arguments};
-    $self->{arguments} =~ s/\\ / /g;
-  }
-
   $self->initialize(%conf);
 
   return $self;
@@ -70,8 +67,12 @@ sub preprocess_code {
   unless($self->{got_run} and $self->{copy_code}) {
     open FILE, ">> log.txt";
     print FILE localtime() . "\n";
-    print FILE "$self->{nick} $self->{channel}: " . $self->{cmdline_options} . "$self->{code}\n";
+    print FILE "$self->{nick} $self->{channel}: [" . $self->{arguments} . "] " . $self->{cmdline_options} . "$self->{code}\n";
     close FILE;
+  }
+
+  if (exists $self->{prelude}) {
+    $self->{code} = "$self->{prelude}\n$self->{code}";
   }
 
   # replace \n outside of quotes with literal newline
@@ -334,6 +335,11 @@ sub execute {
     $input =~ s/\s+$//;
   }
 
+  $input =~ s/(?<!\\)\\n/\n/mg;
+  $input =~ s/(?<!\\)\\r/\r/mg;
+  $input =~ s/(?<!\\)\\t/\t/mg;
+  $input =~ s/(?<!\\)\\b/\b/mg;
+
   my $pretty_code = $self->pretty_format($self->{code});
 
   my $cmdline = $self->{cmdline};
@@ -371,8 +377,16 @@ sub execute {
   print FILE localtime() . "\n";
   print FILE "$cmdline\n$input\n$pretty_code\n";
 
-  my $compile_in = { lang => $self->{lang}, sourcefile => $self->{sourcefile}, execfile => $self->{execfile},
-    cmdline => $cmdline, input => $input, date => $date, arguments => $self->{arguments}, code => $pretty_code };
+  my $compile_in = {
+    lang => $self->{lang},
+    sourcefile => $self->{sourcefile},
+    execfile => $self->{execfile},
+    cmdline => $cmdline,
+    input => $input,
+    date => $date,
+    arguments => $self->{arguments},
+    code => $pretty_code
+  };
 
   $compile_in->{'factoid'} = $self->{'factoid'} if length $self->{'factoid'};
   $compile_in->{'persist-key'} = $self->{'persist-key'} if length $self->{'persist-key'};
@@ -384,7 +398,7 @@ sub execute {
   my $sent = 0;
   my $chunk_max = 4096;
   my $chunk_size = $length < $chunk_max ? $length : $chunk_max;
-  my $chunks_sent;
+  my $chunks_sent = 0;
 
   #print FILE "Sending $length bytes [$compile_json] to vm_server\n";
 
@@ -457,9 +471,30 @@ sub add_option {
 
 sub process_standard_options {
   my $self = shift;
-  my $code = $self->{code};
 
-  if ($code =~ s/(?:^|(?<=\s))-info\s*//i) {
+  my @opt_args = $self->split_line($self->{code});
+
+  use Data::Dumper;
+  print STDERR Dumper \@opt_args;
+
+  my $getopt_error;
+  local $SIG{__WARN__} = sub {
+    $getopt_error = shift;
+    chomp $getopt_error;
+  };
+
+  my ($info, $input, $arguments, $paste);
+  my ($ret, $rest) = GetOptionsFromArray(\@opt_args,
+    'info!' => \$info,
+    'stdin|input=s' => \$input,
+    'args|arguments=s' => \$arguments,
+    'paste!' => \$paste);
+
+  print STDERR "getopt: ret: [$ret]: rest: [$rest], info: $info, input: $input, args: $arguments, paste: $paste\n";
+
+  print STDERR Dumper @opt_args;
+
+  if ($info) {
     my $cmdline = $self->{cmdline};
     if (length $self->{default_options}) {
       $cmdline =~ s/\$options/$self->{default_options}/;
@@ -473,15 +508,25 @@ sub process_standard_options {
     exit;
   }
 
-  if ($code =~ s/-(?:input|stdin)=(.*)$//i) {
-    $self->add_option("-input", $1);
+  if (defined $input) {
+    if (not $input =~ s/^"(.*)"$/$1/) {
+      $input =~ s/^'(.*)'$/$1/;
+    }
+    $self->add_option("-input", $input);
   }
 
-  if ($code =~ s/(?:^|(?<=\s))-paste\s*//i) {
+  if (defined $arguments) {
+    if (not $arguments =~ s/^"(.*)"$/$1/) {
+      $arguments =~ s/^'(.*)'$/$1/;
+    }
+    $self->{arguments} = $arguments;
+  }
+
+  if ($paste) {
     $self->add_option("-paste");
   }
 
-  $self->{code} = $code;
+  $self->{code} = join ' ', @opt_args;
 }
 
 sub process_custom_options {
@@ -1000,6 +1045,110 @@ sub process_interactive_edit {
   }
 
   $self->{code} = $code;
+}
+
+# splits line into quoted arguments while preserving quotes. handles
+# unbalanced quotes gracefully by treating them as part of the argument
+# they were found within.
+sub split_line {
+  my ($self, $line, %opts) = @_;
+
+  my %default_opts = (
+    strip_quotes => 0,
+    keep_spaces => 0
+  );
+
+  %opts = (%default_opts, %opts);
+
+  my @chars = split //, $line;
+
+  my @args;
+  my $escaped = 0;
+  my $quote;
+  my $token = '';
+  my $ch = ' ';
+  my $last_ch;
+  my $i = 0;
+  my $pos;
+  my $ignore_quote = 0;
+  my $spaces = 0;
+
+  while (1) {
+    $last_ch = $ch;
+
+    if ($i >= @chars) {
+      if (defined $quote) {
+        # reached end, but unbalanced quote... reset to beginning of quote and ignore it
+        $i = $pos;
+        $ignore_quote = 1;
+        $quote = undef;
+        $last_ch = ' ';
+        $token = '';
+      } else {
+        # add final token and exit
+        push @args, $token if length $token;
+        last;
+      }
+    }
+
+    $ch = $chars[$i++];
+
+    $spaces = 0 if $ch ne ' ';
+
+    if ($escaped) {
+      $token .= "\\$ch";
+      $escaped = 0;
+      next;
+    }
+
+    if ($ch eq '\\') {
+      $escaped = 1;
+      next;
+    }
+
+    if (defined $quote) {
+      if ($ch eq $quote) {
+        # closing quote
+        $token .= $ch unless $opts{strip_quotes};
+        push @args, $token;
+        $quote = undef;
+        $token = '';
+      } else {
+        # still within quoted argument
+        $token .= $ch;
+      }
+      next;
+    }
+
+    if ($last_ch eq ' ' and not defined $quote and ($ch eq "'" or $ch eq '"')) {
+      if ($ignore_quote) {
+        # treat unbalanced quote as part of this argument
+        $token .= $ch;
+        $ignore_quote = 0;
+      } else {
+        # begin potential quoted argument
+        $pos = $i - 1;
+        $quote = $ch;
+        $token .= $ch unless $opts{strip_quotes};
+      }
+      next;
+    }
+
+    if ($ch eq ' ') {
+      if (++$spaces > 1 and $opts{keep_spaces}) {
+        $token .= $ch;
+        next;
+      } else {
+        push @args, $token if length $token;
+        $token = '';
+        next;
+      }
+    }
+
+    $token .= $ch;
+  }
+
+  return @args;
 }
 
 1;

@@ -211,28 +211,6 @@ sub preprocess_code {
     $prelude .= "\n#include <prelude.h>\n";
   }
 
-  if (defined $self->{arguments}) {
-    my $qargs = quotemeta $self->{arguments};
-    $qargs =~ s/\\ / /g;
-    my @args = shellwords($self->{arguments});
-    $prelude .= "\nint arglen = " . (scalar @args) . ";\n";
-
-    if (@args) {
-      $prelude .= "char *args[] = { ";
-
-      my $comma = "";
-      foreach my $arg (@args) {
-        $arg =~ s/"/\\"/g;
-        $prelude .= "$comma\"$arg\"";
-        $comma = ", ";
-      }
-
-      $prelude .= " };\n";
-    } else {
-      $prelude .= "char *args[] = {0};\n";
-    }
-  }
-
   print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $self->{debug};
 
   my $preprecode = $precode;

@@ -15,37 +15,6 @@ sub initialize {
   $self->{execfile}        = 'prog.pl';
   $self->{default_options} = '-w';
   $self->{cmdline}         = 'perl $options $sourcefile';
-
-  if (length $self->{arguments}) {
-    $self->{cmdline} .= " $self->{arguments}";
-  }
-}
-
-sub preprocess_code {
-  my $self = shift;
-  $self->SUPER::preprocess_code;
-
-  if (defined $self->{arguments}) {
-    my @args = shellwords($self->{arguments});
-    my $prelude .= "\nmy \$arglen = " . (scalar @args) . ";\n";
-
-    if (@args) {
-      $prelude .= "my \@args = (";
-
-      my $comma = "";
-      foreach my $arg (@args) {
-        $arg = quotemeta $arg;
-        $prelude .= "$comma\"$arg\"";
-        $comma = ", ";
-      }
-
-      $prelude .= ");\n";
-    } else {
-      $prelude .= "my \@args;\n";
-    }
-
-    $self->{code} = "$prelude\n$self->{code}";
-  }
 }
 
 sub postprocess_output {
