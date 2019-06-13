@@ -14,7 +14,6 @@ package _c_base;
 use parent '_default';
 
 use Text::Balanced qw/extract_bracketed/;
-use Text::ParseWords qw/shellwords/;
 
 sub initialize {
   my ($self, %conf) = @_;
