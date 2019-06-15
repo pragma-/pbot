@@ -27,6 +27,12 @@ my ($main_start, $main_end);
 sub flushall;
 sub gdb;
 
+my $cmdlineargs = '';
+foreach my $arg (@ARGV) {
+  $arg =~ s/'/'"'"'/g;
+  $cmdlineargs .= "'$arg' ";
+}
+
 my ($out, $in);
 
 sub getlocals {
@@ -79,7 +85,7 @@ sub execute {
     next if not length $line;
     <$out> and next if $line =~ m/^\(gdb\) No line \d+ in/;
     next if $line =~ m/^\(gdb\) No symbol table/;
-    next if $line =~ m/^\[Detaching from/;
+    next if $line =~ m/^\[Detaching after/;
     next if $line =~ m/^\[New Thread/;
     next if $line =~ m/^\(gdb\) Continuing/;
     next if $line =~ m/^\(gdb\) \$\d+ = "~Ok\.~"/;
@@ -138,7 +144,7 @@ sub execute {
       gdb $in, "set height 0\n";
 #      gdb $in, "set auto-solib-add off\n";
       gdb $in, "catch exec\n";
-      gdb $in, "run @ARGV < .input\n";
+      gdb $in, "run $cmdlineargs < .input\n";
       next;
     }
 
@@ -152,6 +158,7 @@ sub execute {
           my $sep = '';
           foreach my $var (keys %$locals_end) {
             print "checking local $var...\n" if $debug >= 4;
+            $locals_start->{$var} //= '';
             if ($locals_start->{$var} ne $locals_end->{$var}) {
               $local_vars .= "$sep$var = $locals_end->{$var}";
               $sep = '; ';

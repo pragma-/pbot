@@ -96,7 +96,13 @@ sub run_server {
 
       my $compile_in = decode_json($line);
 
+      $compile_in->{arguments} //= '';
+      $compile_in->{input} //= '';
+
       print "Attempting compile [$compile_in->{lang}] ...\n";
+
+      use Data::Dumper;
+      print Dumper $compile_in;
 
       my $pid = fork;
 
@@ -179,8 +185,6 @@ sub run_server {
 
 sub interpret {
   my %h = @_;
-
-  print "lang: [$h{lang}], sourcefile: [$h{sourcefile}], execfile [$h{execfile}], code: [$h{code}], cmdline: [$h{cmdline}], input: [$h{input}], date: [$h{date}]\n";
 
   $h{lang} = '_default' if not exists $languages{$h{lang}};
 
