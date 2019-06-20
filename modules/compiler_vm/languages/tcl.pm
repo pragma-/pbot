@@ -14,10 +14,6 @@ sub initialize {
   $self->{default_options} = '';
   $self->{cmdline}         = 'tclsh $options $sourcefile';
 
-  if (length $self->{arguments}) {
-    $self->{cmdline} .= " $self->{arguments}";
-  }
-
   $self->{cmdline_opening_comment} = "set CMDLINE {\n";
   $self->{cmdline_closing_comment} = "}\n";
 

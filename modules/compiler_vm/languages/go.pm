@@ -13,10 +13,6 @@ sub initialize {
   $self->{execfile}        = 'prog';
   $self->{default_options} = '';
   $self->{cmdline}         = 'go $options run $sourcefile';
-
-  if (length $self->{arguments}) {
-    $self->{cmdline} .= " $self->{arguments}";
-  }
 }
 
 1;

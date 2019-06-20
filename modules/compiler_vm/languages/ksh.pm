@@ -14,10 +14,6 @@ sub initialize {
   $self->{default_options} = '';
   $self->{cmdline}         = 'ksh $options $sourcefile';
 
-  if (length $self->{arguments}) {
-    $self->{cmdline} .= " $self->{arguments}";
-  }
-
   $self->{cmdline_opening_comment} = ": <<'____CMDLINE____'\n";
   $self->{cmdline_closing_comment} = "____CMDLINE____\n";
 

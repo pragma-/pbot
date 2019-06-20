@@ -14,10 +14,6 @@ sub initialize {
   $self->{default_options} = '';
   $self->{cmdline}         = 'd8 $options $sourcefile';
 
-  if (length $self->{arguments}) {
-    $self->{cmdline} .= " $self->{arguments}";
-  }
-
   $self->{cmdline_opening_comment} = "/************* CMDLINE *************\n";
   $self->{cmdline_closing_comment} = "************** CMDLINE *************/\n";
 

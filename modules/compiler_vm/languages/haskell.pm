@@ -14,10 +14,6 @@ sub initialize {
   $self->{default_options} = '';
   $self->{cmdline}         = 'ghc -v0 $options -o $execfile $sourcefile';
 
-  if (length $self->{arguments}) {
-    $self->{cmdline} .= " $self->{arguments}";
-  }
-
   $self->{cmdline_opening_comment} = "{-|\n=============== CMDLINE ===============\n";
   $self->{cmdline_closing_comment} = "=============== CMDLINE ===============\n-}\n";
 

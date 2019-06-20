@@ -3,16 +3,16 @@
 use warnings;
 use strict;
 
-package bash;
+package zsh;
 use parent '_default';
 
 sub initialize {
   my ($self, %conf) = @_;
 
-  $self->{sourcefile}      = 'prog.bash';
-  $self->{execfile}        = 'prog.bash';
+  $self->{sourcefile}      = 'prog.zsh';
+  $self->{execfile}        = 'prog.zsh';
   $self->{default_options} = '';
-  $self->{cmdline}         = 'bash $options $sourcefile';
+  $self->{cmdline}         = 'zsh $options $sourcefile';
 
   $self->{cmdline_opening_comment} = ": <<'____CMDLINE____'\n";
   $self->{cmdline_closing_comment} = "____CMDLINE____\n";
