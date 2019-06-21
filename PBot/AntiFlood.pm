@@ -737,7 +737,7 @@ sub unbanme {
     my $warning = '';
 
     if (length $channels_warning) {
-      $warning = " You may use `unbanme` one more time today for $channels_warning; please ensure that your client or connection issues are resolved before using your final `unbanme`.";
+      $warning = " You may use `unbanme` one more time today for $channels_warning; please ensure that your client or connection issues are resolved before using your final `unbanme` of the day.";
     }
 
     if (length $channels_disabled) {
@@ -750,7 +750,7 @@ sub unbanme {
       return "/msg $nick You were not unbanned at this time.$warning";
     }
   } else {
-    return "/msg $nick There is no temporary join-flooding ban set for you.";
+    return "/msg $nick There is no join-flooding ban set for you.";
   }
 }
 
