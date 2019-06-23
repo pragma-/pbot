@@ -363,7 +363,7 @@ sub factundo {
   return $usage if @$args > 2;
   return $usage if not @$args;
 
-  $arguments = join(' ', map { $_ = "'$_'" } @$args);
+  $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$args);
   my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
 
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo', explicit => 1, exact_channel => 1);
@@ -463,7 +463,7 @@ sub factredo {
   return $usage if @$args > 2;
   return $usage if not @$args;
 
-  $arguments = join(' ', map { $_ = "'$_'" } @$args);
+  $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$args);
 
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo', explicit => 1, exact_channel => 1);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
@@ -1154,7 +1154,7 @@ sub factlog {
   return "Too many arguments -- $usage" if @$args > 2;
   return "Missing argument -- $usage" if not @$args;
 
-  $args = join(' ', map { $_ = "'$_'" } @$args);
+  $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$args);
 
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $args, 'factlog', usage => $usage, exact_channel => 1);
 
