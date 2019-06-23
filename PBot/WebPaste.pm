@@ -35,7 +35,6 @@ sub initialize {
 
   $self->{paste_sites} = [
     sub { $self->paste_ixio(@_) },
-    sub { $self->paste_ptpb(@_) },
   ];
 
   $self->{current_site} = 0;
@@ -84,30 +83,6 @@ sub paste_ixio {
 
   my %post = ('f:1' => $text);
   my $response = $ua->post("http://ix.io", \%post);
-
-  if (not $response->is_success) {
-    return "error pasting: " . $response->status_line;
-  }
-
-  my $result = $response->content;
-  $result =~ s/^\s+//;
-  $result =~ s/\s+$//;
-  return $result;
-}
-
-sub paste_ptpb {
-  my $self = shift;
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
-
-  my $ua = LWP::UserAgent->new();
-  $ua->agent("Mozilla/5.0");
-  $ua->requests_redirectable([ ]);
-  $ua->timeout(10);
-
-  my %post = ( 'c' => $text, 'submit' => 'Submit' );
-  my $response = $ua->post("https://ptpb.pw/?u=1", \%post);
 
   if (not $response->is_success) {
     return "error pasting: " . $response->status_line;
