@@ -18,7 +18,6 @@ use strict;
 use base 'PBot::Registerable';
 
 use Carp ();
-use Text::ParseWords qw(shellwords);
 
 sub new {
   if (ref($_[1]) eq 'HASH') {
