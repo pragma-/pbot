@@ -86,7 +86,7 @@ sub pretty_format {
   print $fh $code;
   close $fh;
 
-  system("astyle", "-A3 -UHpnfq", $self->{sourcefile});
+  system("astyle", "-A3", "-UHpnfq", $self->{sourcefile});
 
   open $fh, "<$self->{sourcefile}" or die "Couldn't read $self->{sourcefile}: $!";
   $result = join '', <$fh>;
@@ -124,13 +124,13 @@ sub preprocess_code {
     } elsif($ch eq '#' and not $cpp and not $escaped and not $single_quote and not $double_quote) {
       $cpp = 1;
 
-      if($self->{code} =~ m/include\s*<([^>\n]*)>/msg) {
+      if($self->{code} =~ m/include\s*<([^>\n]*)>(?!\n)/msg) {
         my $match = $1;
         $pos = pos $self->{code};
         substr ($self->{code}, $pos, 0) = "\n";
         pos $self->{code} = $pos;
         $cpp = 0;
-      } elsif($self->{code} =~ m/include\s*"([^"\n]*)"/msg) {
+      } elsif($self->{code} =~ m/include\s*"([^"\n]*)"(?!\n)/msg) {
         my $match = $1;
         $pos = pos $self->{code};
         substr ($self->{code}, $pos, 0) = "\n";
