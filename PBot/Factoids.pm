@@ -619,10 +619,7 @@ sub expand_action_arguments {
     $action =~ s/\$args(?![[\w])/$input/g;
   }
 
-  my $qinput = quotemeta $input;
-  $qinput =~ s/\\ / /g;
-  my @args = shellwords($qinput);
-
+  my @args = $self->{pbot}->{interpreter}->split_line($input);
   $action =~ s/\$arglen\b/scalar @args/eg;
 
   my $depth = 0;
@@ -965,7 +962,6 @@ sub handle_action {
     } else {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
         my $target = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{arguments});
-
 
         if ($target and $action !~ /\$(?:nick|args)\b/) {
           $stuff->{nickoverride} = $target unless $stuff->{force_nickoverride};
