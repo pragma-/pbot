@@ -550,7 +550,8 @@ sub split_line {
 
   my %default_opts = (
     strip_quotes => 0,
-    keep_spaces => 0
+    keep_spaces => 0,
+    preserve_escapes => 1,
   );
 
   %opts = (%default_opts, %opts);
@@ -591,7 +592,11 @@ sub split_line {
     $spaces = 0 if $ch ne ' ';
 
     if ($escaped) {
-      $token .= "\\$ch";
+      if ($opts{preserve_escapes}) {
+        $token .= "\\$ch";
+      } else {
+        $token .= $ch;
+      }
       $escaped = 0;
       next;
     }
@@ -615,7 +620,7 @@ sub split_line {
       next;
     }
 
-    if ($last_ch eq ' ' and not defined $quote and ($ch eq "'" or $ch eq '"')) {
+    if (($last_ch eq ' ' or $last_ch eq ':' or $last_ch eq '(') and not defined $quote and ($ch eq "'" or $ch eq '"')) {
       if ($ignore_quote) {
         # treat unbalanced quote as part of this argument
         $token .= $ch;
