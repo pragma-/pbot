@@ -53,7 +53,7 @@ if (not length $h->{code}) {
   if (exists $h->{usage}) {
     print "$h->{usage}\n";
   } else {
-    print "Usage: cc [-lang=<language>] [-info] [-paste] [-args \"command-line arguments\"] [-stdin \"stdin input\"] [compiler/language options] <code>\n";
+    print "Usage: cc [-lang=<language>] [-info] [-paste] [-args \"command-line arguments\"] [compiler/language options] <code> [-stdin <stdin input>]\n";
   }
   exit;
 }

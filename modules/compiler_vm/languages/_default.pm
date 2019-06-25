@@ -14,8 +14,7 @@ use LWP::UserAgent;
 use Time::HiRes qw/gettimeofday/;
 use Text::Balanced qw/extract_delimited/;
 use JSON;
-use Getopt::Long qw/GetOptionsFromArray :config pass_through/;
-
+use Getopt::Long qw/GetOptionsFromArray :config pass_through no_ignore_case no_auto_abbrev/;
 
 my $EXECUTE_PORT = '3333';
 
@@ -179,7 +178,7 @@ sub show_output {
   }
 
   if (exists $self->{options}->{'-paste'} or (defined $self->{got_run} and $self->{got_run} eq 'paste')) {
-    my $cmdline = $self->{cmdline};
+    my $cmdline = "command: $self->{cmdline}\n";
 
     $cmdline =~ s/\$sourcefile/$self->{sourcefile}/g;
     $cmdline =~ s/\$execfile/$self->{execfile}/g;
@@ -202,6 +201,14 @@ sub show_output {
       $cmdline =~ s/\$options\s+//;
     }
 
+    if (length $self->{arguments}) {
+      $cmdline .= "arguments: $self->{arguments}\n";
+    }
+
+    if ($self->{options}->{'-stdin'}) {
+      $cmdline .= "stdin: $self->{options}->{'-stdin'}\n";
+    }
+
     my $pretty_code = $self->pretty_format($self->{code});
 
     my $cmdline_opening_comment = $self->{cmdline_opening_comment} // "/************* CMDLINE *************\n";
@@ -212,7 +219,7 @@ sub show_output {
 
     $pretty_code .= "\n\n";
     $pretty_code .= $cmdline_opening_comment;
-    $pretty_code .= "$cmdline\n";
+    $pretty_code .= "$cmdline";
     $pretty_code .= $cmdline_closing_comment;
 
     $output =~ s/\s+$//;
@@ -295,21 +302,23 @@ sub execute {
   }
 
   my $date = time;
-  my $input = $self->{options}->{'-input'};
+  my $stdin = $self->{options}->{'-stdin'};
 
-  if (not length $input) {
-    $input = `fortune -u -s`;
-    $input =~ s/[\n\r\t]/ /msg;
-    $input =~ s/:/ - /g;
-    $input =~ s/\s+/ /g;
-    $input =~ s/^\s+//;
-    $input =~ s/\s+$//;
+  if (not length $stdin) {
+    $stdin = `fortune -u -s`;
+    $stdin =~ s/[\n\r\t]/ /msg;
+    $stdin =~ s/:/ - /g;
+    $stdin =~ s/\s+/ /g;
+    $stdin =~ s/^\s+//;
+    $stdin =~ s/\s+$//;
   }
 
-  $input =~ s/(?<!\\)\\n/\n/mg;
-  $input =~ s/(?<!\\)\\r/\r/mg;
-  $input =~ s/(?<!\\)\\t/\t/mg;
-  $input =~ s/(?<!\\)\\b/\b/mg;
+  $stdin =~ s/(?<!\\)\\n/\n/mg;
+  $stdin =~ s/(?<!\\)\\r/\r/mg;
+  $stdin =~ s/(?<!\\)\\t/\t/mg;
+  $stdin =~ s/(?<!\\)\\b/\b/mg;
+  $stdin =~ s/(?<!\\)\\x([a-f0-9]+)/chr hex $1/ige;
+  $stdin =~ s/(?<!\\)\\([0-7]+)/chr oct $1/ge;
 
   my $pretty_code = $self->pretty_format($self->{code});
 
@@ -346,14 +355,14 @@ sub execute {
   open FILE, ">> log.txt";
   print FILE "------------------------------------------------------------------------\n";
   print FILE localtime() . "\n";
-  print FILE "$cmdline\n$input\n$pretty_code\n";
+  print FILE "$cmdline\n$stdin\n$pretty_code\n";
 
   my $compile_in = {
     lang => $self->{lang},
     sourcefile => $self->{sourcefile},
     execfile => $self->{execfile},
     cmdline => $cmdline,
-    input => $input,
+    input => $stdin,
     date => $date,
     arguments => $self->{arguments},
     code => $pretty_code
@@ -443,7 +452,7 @@ sub add_option {
 sub process_standard_options {
   my $self = shift;
 
-  my @opt_args = $self->split_line($self->{code}, preserve_escapes => 0);
+  my @opt_args = $self->split_line($self->{code}, preserve_escapes => 1);
 
   use Data::Dumper;
   print STDERR "opt_arg: ", Dumper \@opt_args;
@@ -454,16 +463,11 @@ sub process_standard_options {
     chomp $getopt_error;
   };
 
-  my ($info, $input, $arguments, $paste);
+  my ($info, $arguments, $paste);
   my ($ret, $rest) = GetOptionsFromArray(\@opt_args,
     'info!' => \$info,
-    'stdin|input=s' => \$input,
     'args|arguments=s' => \$arguments,
     'paste!' => \$paste);
-
-  print STDERR "getopt: ret: [$ret]: rest: [$rest], info: $info, input: $input, args: $arguments, paste: $paste\n";
-
-  #  print STDERR Dumper \@opt_args;
 
   if ($info) {
     my $cmdline = $self->{cmdline};
@@ -479,13 +483,6 @@ sub process_standard_options {
     exit;
   }
 
-  if (defined $input) {
-    if (not $input =~ s/^"(.*)"$/$1/) {
-      $input =~ s/^'(.*)'$/$1/;
-    }
-    $self->add_option("-input", $input);
-  }
-
   if (defined $arguments) {
     if (not $arguments =~ s/^"(.*)"$/$1/) {
       $arguments =~ s/^'(.*)'$/$1/;
@@ -498,6 +495,10 @@ sub process_standard_options {
   }
 
   $self->{code} = join ' ', @opt_args;
+
+  if ($self->{code} =~ s/-stdin[ =]?(.*)$//) {
+    $self->add_option("-stdin", $1);
+  }
 }
 
 sub process_custom_options {

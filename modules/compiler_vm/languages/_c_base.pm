@@ -231,7 +231,7 @@ sub preprocess_code {
 
   print "looking for functions, has main: $has_main\n" if $self->{debug} >= 2;
 
-  my $func_regex = qr/^([ *\w]+)\s+([ ()*\w:]+)\s*\(([^;{]*)\s*\)\s*({.*|<%.*|\?\?<.*)/ims;
+  my $func_regex = qr/^([ *\w]+)\s+([ ()*\w:\\]+)\s*\(([^;{]*)\s*\)\s*(\{.*|<%.*|\?\?<.*)/ims;
 
   # look for potential functions to extract
   while($preprecode =~ /$func_regex/ms) {
@@ -351,7 +351,7 @@ sub preprocess_code {
   $self->{code} =~ s/;\s*;\n/;\n/gs;
   $self->{code} =~ s/;(\s*\/\*.*?\*\/\s*);\n/;$1/gs;
   $self->{code} =~ s/;(\s*\/\/.*?\s*);\n/;$1/gs;
-  $self->{code} =~ s/({|})\n\s*;\n/$1\n/gs;
+  $self->{code} =~ s/(\{|})\n\s*;\n/$1\n/gs;
   $self->{code} =~ s/(?:\n\n)+/\n\n/g;
 
   print "final code: [$self->{code}]\n" if $self->{debug};
