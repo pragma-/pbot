@@ -19,7 +19,7 @@ sub preprocess {
 
   $self->execute(10, undef, 'date', '-s', "\@$self->{date}");
 
-  my @cmd = $self->split_line($self->{cmdline}, strip_quotes => 1);
+  my @cmd = $self->split_line($self->{cmdline}, strip_quotes => 1, preserve_escapes => 0);
 
   if ($self->{code} =~ m/print_last_statement\(.*\);$/m) {
     # remove print_last_statement wrapper in order to get warnings/errors from last statement line
@@ -75,7 +75,7 @@ sub postprocess {
   }
 
   print "Executing gdb\n";
-  my @args = $self->split_line($self->{arguments}, strip_quotes => 1);
+  my @args = $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 0);
   my ($exitval, $stdout, $stderr) = $self->execute(60, undef, 'compiler_watchdog.pl', @args);
 
   my $result = $stderr;

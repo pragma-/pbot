@@ -44,8 +44,8 @@ sub preprocess {
   $self->execute(10, undef, 'date', '-s', "\@$self->{date}");
 
   print "Executing [$self->{cmdline}] with args [$self->{arguments}]\n";
-  my @cmdline = $self->split_line($self->{cmdline}, strip_quotes => 1);
-  push @cmdline, $self->split_line($self->{arguments}, strip_quotes => 1);
+  my @cmdline = $self->split_line($self->{cmdline}, strip_quotes => 1, preserve_escapes => 0);
+  push @cmdline, $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 0);
 
   my ($retval, $stdout, $stderr) = $self->execute(60, $self->{input}, @cmdline);
   $self->{output} = $stderr;
@@ -89,7 +89,8 @@ sub split_line {
 
   my %default_opts = (
     strip_quotes => 0,
-    keep_spaces => 0
+    keep_spaces => 0,
+    preserve_escapes => 1,
   );
 
   %opts = (%default_opts, %opts);
@@ -130,7 +131,11 @@ sub split_line {
     $spaces = 0 if $ch ne ' ';
 
     if ($escaped) {
-      $token .= "\\$ch";
+      if ($opts{preserve_escapes}) {
+        $token .= "\\$ch";
+      } else {
+        $token .= $ch;
+      }
       $escaped = 0;
       next;
     }
@@ -154,7 +159,7 @@ sub split_line {
       next;
     }
 
-    if ($last_ch eq ' ' and not defined $quote and ($ch eq "'" or $ch eq '"')) {
+    if (($last_ch eq ' ' or $last_ch eq ':' or $last_ch eq '(') and not defined $quote and ($ch eq "'" or $ch eq '"')) {
       if ($ignore_quote) {
         # treat unbalanced quote as part of this argument
         $token .= $ch;

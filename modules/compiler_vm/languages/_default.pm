@@ -443,10 +443,10 @@ sub add_option {
 sub process_standard_options {
   my $self = shift;
 
-  my @opt_args = $self->split_line($self->{code});
+  my @opt_args = $self->split_line($self->{code}, preserve_escapes => 0);
 
   use Data::Dumper;
-  print STDERR Dumper \@opt_args;
+  print STDERR "opt_arg: ", Dumper \@opt_args;
 
   my $getopt_error;
   local $SIG{__WARN__} = sub {
@@ -463,7 +463,7 @@ sub process_standard_options {
 
   print STDERR "getopt: ret: [$ret]: rest: [$rest], info: $info, input: $input, args: $arguments, paste: $paste\n";
 
-  print STDERR Dumper @opt_args;
+  #  print STDERR Dumper \@opt_args;
 
   if ($info) {
     my $cmdline = $self->{cmdline};
@@ -1026,7 +1026,8 @@ sub split_line {
 
   my %default_opts = (
     strip_quotes => 0,
-    keep_spaces => 0
+    keep_spaces => 0,
+    preserve_escapes => 1,
   );
 
   %opts = (%default_opts, %opts);
@@ -1067,7 +1068,11 @@ sub split_line {
     $spaces = 0 if $ch ne ' ';
 
     if ($escaped) {
-      $token .= "\\$ch";
+      if ($opts{preserve_escapes}) {
+        $token .= "\\$ch";
+      } else {
+        $token .= $ch;
+      }
       $escaped = 0;
       next;
     }
@@ -1091,7 +1096,7 @@ sub split_line {
       next;
     }
 
-    if ($last_ch eq ' ' and not defined $quote and ($ch eq "'" or $ch eq '"')) {
+    if (($last_ch eq ' ' or $last_ch eq ':' or $last_ch eq '(') and not defined $quote and ($ch eq "'" or $ch eq '"')) {
       if ($ignore_quote) {
         # treat unbalanced quote as part of this argument
         $token .= $ch;
