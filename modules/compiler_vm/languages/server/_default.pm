@@ -81,9 +81,11 @@ sub execute {
   return ($exitval, $stdout, $stderr);
 }
 
-# splits line into quoted arguments while preserving quotes. handles
-# unbalanced quotes gracefully by treating them as part of the argument
-# they were found within.
+# splits line into quoted arguments while preserving quotes.
+# a string is considered quoted only if they are surrounded by
+# whitespace or json separators.
+# handles unbalanced quotes gracefully by treating them as
+# part of the argument they were found within.
 sub split_line {
   my ($self, $line, %opts) = @_;
 
@@ -103,6 +105,7 @@ sub split_line {
   my $token = '';
   my $ch = ' ';
   my $last_ch;
+  my $next_ch;
   my $i = 0;
   my $pos;
   my $ignore_quote = 0;
@@ -127,6 +130,7 @@ sub split_line {
     }
 
     $ch = $chars[$i++];
+    $next_ch = $chars[$i];
 
     $spaces = 0 if $ch ne ' ';
 
@@ -146,7 +150,7 @@ sub split_line {
     }
 
     if (defined $quote) {
-      if ($ch eq $quote) {
+      if ($ch eq $quote and (not defined $next_ch or $next_ch =~ /[\s,:;})\].+=]/)) {
         # closing quote
         $token .= $ch unless $opts{strip_quotes};
         push @args, $token;
@@ -159,7 +163,7 @@ sub split_line {
       next;
     }
 
-    if (($last_ch eq ' ' or $last_ch eq ':' or $last_ch eq '(') and not defined $quote and ($ch eq "'" or $ch eq '"')) {
+    if (($last_ch =~ /[\s:{(\[.+=]/) and not defined $quote and ($ch eq "'" or $ch eq '"')) {
       if ($ignore_quote) {
         # treat unbalanced quote as part of this argument
         $token .= $ch;
