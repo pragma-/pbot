@@ -9,6 +9,7 @@ HTML::FormatText
 HTML::Parse
 IPC::Shareable
 IPC::Open2
+IPC::Run
 JSON
 JSON::XS
 Lingua::EN::ABC
