@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-package _c_base; 
+package _c_base;
 use parent '_default';
 
 sub preprocess {

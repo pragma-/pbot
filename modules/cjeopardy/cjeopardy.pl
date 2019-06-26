@@ -43,7 +43,7 @@ if (defined $ret) {
   my $last_question = <$fh>;
   my $last_answer = <$fh>;
   my $last_timestamp = <$fh>;
-  
+
   if (scalar gettimeofday - $last_timestamp <= $TIMELIMIT) {
     my $duration = duration($TIMELIMIT - scalar gettimeofday - $last_timestamp);
     print "$color{magneta}The current question is$color{reset}: $last_question";

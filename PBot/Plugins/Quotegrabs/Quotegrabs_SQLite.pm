@@ -124,7 +124,7 @@ sub get_random_quotegrab {
       push @params, "$nick";
       $where = '';
       $and = 'AND ';
-    } 
+    }
 
     if (defined $channel) {
       $sql .= $where . $and . 'channel LIKE ? ';

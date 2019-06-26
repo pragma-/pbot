@@ -21,8 +21,8 @@ my $entry = $wiki->search($term);
 
 if ($entry) {
     my $text = $entry->text();
-    
-    if ($text) { 
+
+    if ($text) {
       $text =~ s/{{.*?}}//msg;
       $text =~ s/\[\[//g;
       $text =~ s/\]\]//g;
@@ -30,13 +30,13 @@ if ($entry) {
       $text =~ s/__[A-Z]+__//g;
       $text =~ s/\s+\(\)//msg;
       $text = HTML::FormatText->new->format(parse_html($text));
-      print $text; 
+      print $text;
     } else {
         print "Specific entry not found, see also: ";
         my $semi = "";
         foreach ($entry->related()) { print "$semi$_"; $semi = "; "; }
     }
-} else { 
-  print qq("$term" not found in Wikipedia\n) 
+} else {
+  print qq("$term" not found in Wikipedia\n)
 }
 

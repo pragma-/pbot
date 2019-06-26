@@ -169,7 +169,7 @@ $white_code =~ s/(?:\'((?:\\\'|(?!\').)*)\')/"'" . ('-' x length $1) . "'"/ge;
 
 my $precode;
 if ($white_code =~ m/#include/) {
-  $precode = $code; 
+  $precode = $code;
 } else {
   $precode = $prelude . $code;
 }

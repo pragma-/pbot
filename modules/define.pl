@@ -34,7 +34,7 @@ if ($text =~ m/no dictionary results/i)
 {
   print "No entry found for '$phrase'. ";
 
-  
+
   if ($text =~ m/Did you mean <a class.*?>(.*?)<\/a>/g)
   {
     print "Did you mean '$1'?  Alternate suggestions: ";
@@ -54,7 +54,7 @@ if ($text =~ m/no dictionary results/i)
 #    print "Suggestions: ";
 #
 #    $i = 30;
-#    while ($text =~ m/<a href=".*?\/search\?r=13&amp;q=.*?>(.*?)<\/a>/g 
+#    while ($text =~ m/<a href=".*?\/search\?r=13&amp;q=.*?>(.*?)<\/a>/g
 # && $i > 0)
 #    {
 #      print "$1, ";

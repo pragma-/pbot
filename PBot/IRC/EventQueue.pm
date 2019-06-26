@@ -6,7 +6,7 @@ use strict;
 
 sub new {
   my $class = shift;
-  
+
   my $self = {
     'queue' => {},
   };
@@ -56,7 +56,7 @@ sub head {
   my $self = shift;
 
   return undef if $self->is_empty;
- 
+
   no warnings; # because we want to numerically sort strings...
   my $headkey = (sort {$a <=> $b} (keys(%{$self->queue})))[0];
   use warnings;

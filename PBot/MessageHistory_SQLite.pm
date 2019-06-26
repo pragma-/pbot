@@ -64,7 +64,7 @@ sub sqlite_commit_interval_trigger {
 sub sqlite_debug_trigger {
   my ($self, $section, $item, $newvalue) = @_;
   $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$newvalue")) if defined $self->{dbh};
-  
+
 }
 
 sub begin {
@@ -72,7 +72,7 @@ sub begin {
 
   $self->{pbot}->{logger}->log("Opening message history SQLite database: $self->{filename}\n");
 
-  $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr; 
+  $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr;
 
   $self->{dbh}->sqlite_enable_load_extension(my $_enabled = 1);
   $self->{dbh}->prepare("SELECT load_extension('/usr/lib/sqlite3/pcre.so')");
@@ -106,7 +106,7 @@ SQL
 
     $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Nickserv (
-  id         INTEGER, 
+  id         INTEGER,
   nickserv   TEXT COLLATE NOCASE,
   timestamp  NUMERIC,
   UNIQUE (id, nickserv)
@@ -248,7 +248,7 @@ sub create_nickserv {
 
 sub update_nickserv_account {
   my ($self, $id, $nickserv, $timestamp) = @_;
-  
+
   #$self->{pbot}->{logger}->log("Updating nickserv account for id $id to $nickserv with timestamp [$timestamp]\n");
 
   $self->create_nickserv($id, $nickserv);
@@ -330,7 +330,7 @@ sub find_message_account_by_nick {
     my $row = $sth->fetchrow_hashref();
     return ($row->{id}, $row->{hostmask});
   };
-  
+
   $self->{pbot}->{logger}->log($@) if $@;
   return ($id, $hostmask);
 }
@@ -551,7 +551,7 @@ sub get_message_account {
         return ($rows, $self->{alias_type}->{STRONG});
       }
     }
- 
+
     # cloaked hostmask
     if ($host =~ m{/}) {
       $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE host = ? ORDER BY last_seen DESC');
@@ -647,7 +647,7 @@ sub get_message_account {
         }
 
         if ($match) {
-          $rows->[0] = { id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka }; 
+          $rows->[0] = { id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka };
           return ($rows, $self->{alias_type}->{STRONG});
         }
       }
@@ -703,7 +703,7 @@ sub get_message_account {
     my @nickserv_accounts = $self->get_nickserv_accounts($rows->[0]->{id});
     foreach my $nickserv_account (@nickserv_accounts) {
       $self->{pbot}->{logger}->log("$nick!$user\@$host [$rows->[0]->{id}] seen with nickserv account [$nickserv_account]\n");
-      $self->{pbot}->{antiflood}->check_nickserv_accounts($nick, $nickserv_account, "$nick!$user\@$host"); 
+      $self->{pbot}->{antiflood}->check_nickserv_accounts($nick, $nickserv_account, "$nick!$user\@$host");
     }
     return $rows->[0]->{id};
   }
@@ -786,7 +786,7 @@ sub get_hostmasks_for_channel {
     $sth->execute($channel);
     return $sth->fetchall_arrayref({});
   };
-  
+
   $self->{pbot}->{logger}->log($@) if $@;
   return $hostmasks;
 }
@@ -1055,7 +1055,7 @@ sub recall_message_by_count {
 
 sub recall_message_by_text {
   my ($self, $id, $channel, $text, $ignore_command) = @_;
-  
+
   my $regex = '(?i)';
   $regex .= ($text =~ m/^\w/) ? '\b' : '\B';
   $regex .= quotemeta $text;

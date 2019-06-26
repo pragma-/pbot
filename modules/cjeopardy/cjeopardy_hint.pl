@@ -102,7 +102,7 @@ while (@indices <= $hidden_character_count - $spaces - $dashes - $underscores - 
   next if $char eq '_';
   next if $char eq '"';
   next if grep { $index eq $_ } @indices;
-  push @indices, $index; 
+  push @indices, $index;
 }
 
 foreach my $index (@indices) {

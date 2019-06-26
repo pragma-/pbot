@@ -12,24 +12,21 @@
 use warnings;
 use strict;
 
-use IO::Socket::INET;
+use IO::Socket;
 use JSON;
 
 my $sock = IO::Socket::INET->new(
   PeerAddr => '127.0.0.1',
-  PeerPort => 9000, 
+  PeerPort => 9000,
   Proto => 'tcp');
 
-if (not defined $sock) {
+if(not defined $sock) {
   print "Fatal error compiling: $!; try again later\n";
   die $!;
 }
 
 my $json = join ' ', @ARGV;
-my $length = length $json;
-  
-print STDERR "got $length bytes of argv json: [$json]\n";
-
+print STDERR "join = $json?\n";
 my $h = decode_json $json;
 my $lang = $h->{lang} // "c11";
 
@@ -40,13 +37,9 @@ if ($h->{code} =~ s/-lang=([^ ]+)//) {
 $h->{lang} = $lang;
 $json = encode_json $h;
 
-$length = length $json;
+print $sock "$json\n";
 
-print STDERR "got $length bytes of json: [$json]\n";
-
-syswrite($sock, "$json\n");
-
-while (my $line = <$sock>) {
+while(my $line = <$sock>) {
   print "$line";
 }
 

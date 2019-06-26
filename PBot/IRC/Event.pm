@@ -40,7 +40,7 @@ sub new {
   my $to = shift;
   my $format = shift;
   my $args = \@_;
-  
+
   my $self = {
     'type'   =>  $type,
     'from'   =>  undef,
@@ -48,18 +48,18 @@ sub new {
     'format' =>  $format,
     'args'   =>  [],
   };
-  
+
   bless $self, $class;
-  
+
   if ($self->type !~ /\D/) {
     $self->type($self->trans($self->type));
   } else {
     $self->type(lc($self->type));
   }
-  
+
   $self->from($from);     # sets nick, user, and host
   $self->args($args);  # strips colons from args
-  
+
   return $self;
 }
 
@@ -69,7 +69,7 @@ sub args {
   my $self = shift;
   my $args = shift;
 
-  if ($args) {  
+  if ($args) {
     my (@q, $i, $ct) = @{$args};       # This line is solemnly dedicated to \mjd.
 
     $self->{'args'} = [ ];
@@ -123,7 +123,7 @@ sub from {
       { local $^W;
         @part = split /[\@!]/, $_[0], 3;
       }
-	
+
       $self->nick(defined $part[0] ? $part[0] : '');
       $self->user(defined $part[1] ? $part[1] : '');
       $self->host(defined $part[2] ? $part[2] : '');
@@ -132,7 +132,7 @@ sub from {
           $self->userhost($self->host);
       $self->{'from'} = $_[0];
     }
-      
+
     return $self->{'from'};
 }
 
@@ -158,7 +158,7 @@ sub nick {
 # Takes any number of args:  this event's list of recipients.
 sub to {
     my $self = shift;
-    
+
     $self->{'to'} = [ @_ ] if @_;
     return wantarray ? @{$self->{'to'}} : $self->{'to'};
 }
@@ -167,7 +167,7 @@ sub to {
 # Takes 1 optional arg:  the new value for this event's "type" field.
 sub type {
     my $self = shift;
-    
+
     $self->{'type'} = $_[0] if @_;
     return $self->{'type'};
 }
@@ -184,7 +184,7 @@ sub user {
 # Just $self->user plus '@' plus $self->host, for convenience.
 sub userhost {
     my $self = shift;
-    
+
     $self->{'userhost'} = $_[0] if @_;
     return $self->{'userhost'};
 }
@@ -194,7 +194,7 @@ sub userhost {
 sub trans {
     shift if (ref($_[0]) || $_[0]) =~ /^PBot::IRC/; # pragma_ 2011/21/01
     my $ev = shift;
-    
+
     return (exists $_names{$ev} ? $_names{$ev} : undef);
 }
 
@@ -207,10 +207,10 @@ sub trans {
      '004' => "myinfo",
      '005' => "map", 		# Undernet Extension, Kajetan@Hinner.com, 17/11/98
      '006' => "mapmore", 		# Undernet Extension, Kajetan@Hinner.com, 17/11/98
-     '007' => "mapend", 		# Undernet Extension, Kajetan@Hinner.com, 17/11/98	   	   
-     '008' => "snomask", 		# Undernet Extension, Kajetan@Hinner.com, 17/11/98	   
-     '009' => "statmemtot", 	# Undernet Extension, Kajetan@Hinner.com, 17/11/98	   
-     '010' => "statmem", 		# Undernet Extension, Kajetan@Hinner.com, 17/11/98	   
+     '007' => "mapend", 		# Undernet Extension, Kajetan@Hinner.com, 17/11/98
+     '008' => "snomask", 		# Undernet Extension, Kajetan@Hinner.com, 17/11/98
+     '009' => "statmemtot", 	# Undernet Extension, Kajetan@Hinner.com, 17/11/98
+     '010' => "statmem", 		# Undernet Extension, Kajetan@Hinner.com, 17/11/98
 
      200 => "tracelink",
      201 => "traceconnecting",

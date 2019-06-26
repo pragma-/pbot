@@ -12,7 +12,7 @@ use File::Basename;
 use JSON;
 
 my $USERNAME = 'compiler';
-my $USE_LOCAL = defined $ENV{'CC_LOCAL'}; 
+my $USE_LOCAL = defined $ENV{'CC_LOCAL'};
 
 use constant MOD_DIR => '/usr/local/share/compiler_vm/languages';
 

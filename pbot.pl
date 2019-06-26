@@ -1,4 +1,4 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 #
 # File: pbot.pl
 # Author: pragma_
@@ -29,11 +29,11 @@ use PBot::PBot;
 #
 # !! NOTICE !!
 
-# Be sure to set $bothome to the location PBot was extracted (default assumes ~/pbot).  
+# Be sure to set $bothome to the location PBot was extracted (default assumes ~/pbot).
 # This location must contain the PBot directory, among others configured below.
 my $bothome = "$ENV{HOME}/pbot";
 
-my %config = ( 
+my %config = (
   # -----------------------------------------------------
   # Be sure to set your IRC information to a registered NickServ account
   # if you want channel auto-join to work.

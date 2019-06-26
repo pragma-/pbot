@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# ugly and hacked together 
+# ugly and hacked together
 
 use warnings;
 use strict;
@@ -12,7 +12,7 @@ use strict;
 use HTML::Entities;
 use Data::Dumper;
 
-my $debug = 1000; 
+my $debug = 1000;
 
 sub gen_data;
 sub gen_txt;
@@ -58,7 +58,7 @@ sub gen_data {
     my $diff = $section_number - $last_section_number;
     print STDERR "Diff: $diff\n" if $debug >= 2;
 
-    if ($section_number > 0 and $diff < 0 or $diff > 1) { 
+    if ($section_number > 0 and $diff < 0 or $diff > 1) {
       print STDERR "Diff out of bounds: $diff\n";
       last;
     }
@@ -176,7 +176,7 @@ sub gen_data {
 sub bysection {
   my $inverse = 1;
   print STDERR "section cmp $a <=> $b\n" if $debug > 10;
-  
+
   my ($a1, $p1) = split /p/, $a;
   my ($b1, $p2) = split /p/, $b;
 

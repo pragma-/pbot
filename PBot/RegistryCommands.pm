@@ -30,7 +30,7 @@ sub initialize {
 
   my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to FactoidCommands");
   $self->{pbot} = $pbot;
-  
+
   $pbot->{commands}->register(sub { return $self->regadd(@_)         },       "regadd",     60);
   $pbot->{commands}->register(sub { return $self->regrem(@_)         },       "regrem",     60);
   $pbot->{commands}->register(sub { return $self->regshow(@_)        },       "regshow",     0);
@@ -220,12 +220,12 @@ sub regchange {
   if (defined $arguments) {
     if ($arguments =~ /^([^\s]+) ([^\s]+)\s+s(.)/) {
       $section = $1;
-      $item = $2; 
+      $item = $2;
       $delim = $3;
     }
-    
+
     if ($arguments =~ /$delim(.*?)$delim(.*)$delim(.*)?$/) {
-      $tochange = $1; 
+      $tochange = $1;
       $changeto = $2;
       $modifier  = $3;
     }

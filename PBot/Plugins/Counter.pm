@@ -44,7 +44,7 @@ sub initialize {
 
 sub unload {
   my $self = shift;
-  
+
   $self->{pbot}->{commands}->unregister('counteradd');
   $self->{pbot}->{commands}->unregister('counterdel');
   $self->{pbot}->{commands}->unregister('counterreset');
@@ -297,7 +297,7 @@ sub get_trigger {
 
 sub counteradd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  
+
   if (not $self->dbi_begin) {
     return "Internal error.";
   }

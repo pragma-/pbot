@@ -103,7 +103,7 @@ while ($html =~ m/<a href=".*?"\s*class="zeit_link">\s*(.*?)\s*<\/a>(.*?)<\/li>/
 #      }
 #      next if (ord($1) < 97 && ord($1) > 122 && ord($1) < 65 && ord($1) > 90
 #         && ord($1) < 48 && ord($1) > 57);
-    
+
 #      $result .= $1;
 #    }
   }

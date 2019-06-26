@@ -13,10 +13,10 @@ use LWP::Simple;
 
 my %news_sites = (
   "jbad"       => [ "http://jalalabad.us/backend/geeklog.rdf",
-                    "Jalalabad.us"    
+                    "Jalalabad.us"
                   ],
   "bbc"        => [ "http://news.bbc.co.uk/rss/newsonline_uk_edition/world/rss091.xml",
-		    "news.bbc.co.uk"  
+		    "news.bbc.co.uk"
                   ],
   "cnn"        => [ "http://www.cnn.com/cnn.rss",
                     "CNN News"
@@ -86,19 +86,19 @@ sub check_news {
       $rss->parse($content);
     };
     if (my $error = $@) {
-       $error =~ s/\n//g;   
+       $error =~ s/\n//g;
        print "Got error: $error\n";
        return 0;
-     }   
+     }
 
 
     foreach my $item (@{$rss->{'items'}}) {
       next unless defined($item->{'title'}) && defined($item->{'link'});
-  
+
       if ($links == 1)
       {
         $text = " $item->{'title'} : ( $item->{'link'} )";
-        $text =~ s/\n//g; 
+        $text =~ s/\n//g;
         $text =~ s/\t//g;
         $text =~ s/\r//g;
         print "$text\n";

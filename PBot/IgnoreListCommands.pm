@@ -70,7 +70,7 @@ sub ignore_user {
   if (not defined $channel) {
     $channel = ".*"; # all channels
   }
-  
+
   if (not defined $length) {
     $length = -1; # permanently
   } else {
@@ -103,12 +103,12 @@ sub unignore_user {
   if (not defined $channel) {
     $channel = ".*";
   }
-  
+
   if (exists $self->{pbot}->{ignorelist}->{ignore_list}->{$target} and not exists $self->{pbot}->{ignorelist}->{ignore_list}->{$target}->{$channel}) {
     $self->{pbot}->{logger}->log("$nick attempt to remove nonexistent [$target][$channel] from ignore list\n");
     return "/msg $nick [$target][$channel] not found in ignore list (use `ignore list` to list ignores)";
   }
-  
+
   $self->{pbot}->{ignorelist}->remove($target, $channel);
   $self->{pbot}->{logger}->log("$nick removed [$target][$channel] from ignore list\n");
   return "/msg $nick [$target][$channel] unignored";

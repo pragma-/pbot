@@ -31,7 +31,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
- 
+
   $self->{pbot} = delete $conf{pbot};
   Carp::croak("Missing pbot parameter to " . __FILE__) if not defined $self->{pbot};
 
@@ -115,7 +115,7 @@ sub on_motd {
 
 sub on_self_join {
   my ($self, $event_type, $event) = @_;
-  $self->send_who($event->{channel});
+  #$self->send_who($event->{channel});
   return 0;
 }
 
@@ -126,7 +126,7 @@ sub on_self_part {
 
 sub on_public {
   my ($self, $event_type, $event) = @_;
-  
+
   my $from = $event->{event}->{to}[0];
   my $nick = $event->{event}->nick;
   my $user = $event->{event}->user;
@@ -162,7 +162,7 @@ sub on_notice {
   $self->{pbot}->{logger}->log("Received NOTICE from $nick!$user\@$host to $event->{event}->{to}[0] '$text'\n");
 
   return 0 if not length $host;
- 
+
   if ($nick eq 'NickServ') {
     if ($text =~ m/This nickname is registered/) {
       $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
@@ -185,7 +185,7 @@ sub on_action {
   my ($self, $event_type, $event) = @_;
 
   $event->{event}->{args}[0] = "/me " . $event->{event}->{args}[0];
-  
+
   $self->on_public($event_type, $event);
   return 0;
 }
@@ -249,7 +249,7 @@ sub on_mode {
         $self->{pbot}->{chanops}->{is_opped}->{$channel}{timeout} = gettimeofday + $timeout;
         delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
         $self->{pbot}->{chanops}->perform_op_commands($channel);
-      } 
+      }
       elsif ($mode eq "-o") {
         $self->{pbot}->{logger}->log("$nick removed my ops in $channel\n");
         delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
@@ -257,8 +257,8 @@ sub on_mode {
       elsif ($mode eq "+b") {
         $self->{pbot}->{logger}->log("Got banned in $channel, attempting unban.");
         $event->{conn}->privmsg("chanserv", "unban $channel");
-      }    
-    } 
+      }
+    }
     else {  # bot not targeted
       if ($mode eq "+b") {
         if ($nick eq "ChanServ" or $target =~ m/##fix_your_connection$/i) {
@@ -281,7 +281,7 @@ sub on_mode {
             }
           }
         }
-      } 
+      }
       elsif ($mode eq "+q") {
         if ($nick ne $event->{conn}->nick) { # bot muted
           if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
@@ -325,8 +325,8 @@ sub on_join {
     $self->{pbot}->{antiflood}->check_bans($message_account, $event->{event}->from, $channel);
   }
 
-  $self->{pbot}->{antiflood}->check_flood($channel, $nick, $user, $host, $msg, 
-    $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_threshold'), 
+  $self->{pbot}->{antiflood}->check_flood($channel, $nick, $user, $host, $msg,
+    $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_threshold'),
     $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_time_threshold'),
     $self->{pbot}->{messagehistory}->{MSG_JOIN});
   return 0;
@@ -370,14 +370,14 @@ sub on_kick {
     my $text = "KICKED by $nick!$user\@$host ($reason)";
 
     $self->{pbot}->{messagehistory}->add_message($message_account, $hostmask, $channel, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
-    $self->{pbot}->{antiflood}->check_flood($channel, $target_nick, $target_user, $target_host, $text, 
+    $self->{pbot}->{antiflood}->check_flood($channel, $target_nick, $target_user, $target_host, $text,
       $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_threshold'),
       $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_time_threshold'),
       $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
   }
 
   $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account_id("$nick!$user\@$host");
-  
+
   if (defined $message_account) {
     my $text = "KICKED " . (defined $hostmask ? $hostmask : $target) . " from $channel ($reason)";
     $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_CHAT});
@@ -408,7 +408,7 @@ sub on_departure {
     $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
   }
 
-  $self->{pbot}->{antiflood}->check_flood($channel, $nick, $user, $host, $text, 
+  $self->{pbot}->{antiflood}->check_flood($channel, $nick, $user, $host, $text,
     $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_threshold'),
     $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_time_threshold'),
     $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});

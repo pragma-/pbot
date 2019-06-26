@@ -70,7 +70,7 @@ sub load {
 
   $self->{pbot}->{refresher}->{refresher}->refresh_module("PBot/Plugins/$plugin.pm");
 
-  my $ret = eval { 
+  my $ret = eval {
     eval "require $class";
 
     if ($@) {

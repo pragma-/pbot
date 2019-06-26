@@ -33,7 +33,7 @@ while (1) {
   } else {
     my $arguments = join('+', @ARGV);
     my $author = "";
-    
+
     $arguments =~ s/\$nick/me/gi;
     $arguments =~ s/\s/+/g;
 
@@ -74,7 +74,7 @@ while (1) {
     #print "Added '$t'\n";
     #print "$#quotes\n";
     last if ($#ARGV < 0);
-  } 
+  }
 
   if ($text =~ m/Page \d+ of (\d+)/) {
     $pages = $1;
@@ -84,7 +84,7 @@ while (1) {
   } else {
     last;
   }
-  
+
   if ($#quotes < 0) {
     print "No results found.\n";
     exit;

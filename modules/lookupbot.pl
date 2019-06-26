@@ -65,7 +65,7 @@ sub get_content {
     # Use the cache if requested
     my $timeout = time() - $cache;
     if (defined $cache &&
-        $cache > 0 && 
+        $cache > 0 &&
 	exists $url_cache{$url} &&
 	$url_cache{$url}->{'time'} > $timeout) {
 
@@ -195,7 +195,7 @@ sub uwotd_search {
 
     my ($word) = $content =~ /(<item .+?<\/item>)/s;
     my ($title, $description) = $word =~ /<(?:title|description)>(.+?)<\//gs;
-    
+
     $description = unescapeHTML($description);
     $description =~ s/<br\s*\/?>/\n/g;
 
@@ -225,7 +225,7 @@ sub wwotd_search {
             $blanks --;
         }
     }
-    
+
     return join "\n", @result;
 }
 
@@ -240,7 +240,7 @@ sub wotd_search {
     return if length @lines == 0;
     s/<.+?>//g foreach (@lines);
     @lines = grep { /^.+$/ } split (/\n/, @lines[0]);
-    
+
     return join ("\n", @lines);
 }
 =cut
@@ -528,7 +528,7 @@ sub tdm_search {
     if ($term =~ /^\d+$/ &&
         $term > 0 &&
         $term <= scalar(@lines)) {
-	
+
 	$id = $term - 1;
     }
 

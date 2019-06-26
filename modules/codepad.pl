@@ -68,13 +68,13 @@ $code = '';
 
 if ($lang eq "C" or $lang eq "C++") {
   my $has_main = 0;
-  
+
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
 
   while ($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
     my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
-    
+
     my @extract = extract_codeblock($potential_body, '{}');
     my $body;
     if (not defined $extract[0]) {

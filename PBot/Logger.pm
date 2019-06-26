@@ -40,7 +40,7 @@ sub log {
 
   if (defined $self->{log_file}) {
     print PLOG_FILE "$time :: $text";
-  } 
+  }
 
   print "$time :: $text";
 }

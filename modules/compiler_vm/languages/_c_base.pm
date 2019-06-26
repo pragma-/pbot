@@ -180,7 +180,7 @@ sub preprocess_code {
   my $precode;
 
   if($white_code =~ m/#include/) {
-    $precode = $self->{code}; 
+    $precode = $self->{code};
   } else {
     $precode = $default_prelude . $self->{code};
   }

@@ -96,7 +96,7 @@ sub remove {
   $section = lc $section;
 
   delete $self->{registry}->hash->{$section}->{$item};
-  
+
   if (not scalar keys %{ $self->{registry}->hash->{$section} }) {
     delete $self->{registry}->hash->{$section};
   }

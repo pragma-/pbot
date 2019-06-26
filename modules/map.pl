@@ -13,7 +13,7 @@ if ($#ARGV < 0)
   print "Try again. Please specify the location you would like to search for nearby cities around.\n";
   die;
 }
-  
+
 $location = join("+", @ARGV);
 
 $location =~ s/,/%2C/;
@@ -31,7 +31,7 @@ $location =~ s/%2C/,/g;
 
 if ($text =~ m/No match found/)
 {
-  print "$location is not a valid location for this service.\n"; 
+  print "$location is not a valid location for this service.\n";
   die;
 }
 
@@ -52,7 +52,7 @@ if ($text =~ m/location matches\:/g)
     $buffer =~ s/<\/b>//g;
     $buffer =~ s/^\s+//;
 
-    $buf = $buf . "$buffer - "; 
+    $buf = $buf . "$buffer - ";
 
     if ($location =~ m/$buffer/i)
     {

@@ -61,7 +61,7 @@ my %_udef = ();
 # Creates a new IRC object and assigns some default attributes.
 sub new {
   my $proto = shift;
-  
+
   my $self = {                # obvious defaults go here, rest are user-set
     _debug      => $_[0]->{_debug},
     _port       => 6667,
@@ -83,11 +83,11 @@ sub new {
     _ssl_ca_file => undef,
     _format     => { 'default' => "[%f:%t]  %m  <%d>", },
   };
-  
+
   bless $self, $proto;
   # do any necessary initialization here
   $self->connect(@_) if @_;
-  
+
   return $self;
 }
 
@@ -102,22 +102,22 @@ sub AUTOLOAD {
     #  <Teratogen> absolute power corrupts absolutely, but it's a helluva lot
     #              of fun.
     #  <Teratogen> =)
-    
+
     ($meth = $AUTOLOAD) =~ s/^.*:://;  ## strip fully qualified portion
 
     unless (exists $autoloaded{$meth}) {
 	croak "No method called \"$meth\" for $class object.";
     }
-    
+
     eval <<EOSub;
 sub $meth {
     my \$self = shift;
-	
+
     if (\@_) {
 	my \$old = \$self->{"_$meth"};
-	
+
 	\$self->{"_$meth"} = shift;
-	
+
 	return \$old;
     }
     else {
@@ -125,7 +125,7 @@ sub $meth {
     }
 }
 EOSub
-    
+
     # no reason to play this game every time
     goto &$meth;
 }
@@ -136,21 +136,21 @@ sub _add_generic_handler {
   my ($self, $event, $ref, $rp, $hash_ref, $real_name) = @_;
   my $ev;
   my %define = ( "replace" => 0, "before" => 1, "after" => 2 );
-  
+
   unless (@_ >= 3) {
     croak "Not enough arguments to $real_name()";
   }
   unless (ref($ref) eq 'CODE') {
     croak "Second argument of $real_name isn't a coderef";
   }
-  
+
   # Translate REPLACE, BEFORE and AFTER.
   if (not defined $rp) {
     $rp = 0;
   } elsif ($rp =~ /^\D/) {
     $rp = $define{lc $rp} || 0;
   }
-  
+
   foreach $ev (ref $event eq "ARRAY" ? @{$event} : $event) {
     # Translate numerics to names
     if ($ev =~ /^\d/) {
@@ -160,7 +160,7 @@ sub _add_generic_handler {
         return;
       }
     }
-    
+
     $hash_ref->{lc $ev} = [ $ref, $rp ];
   }
   return 1;
@@ -204,7 +204,7 @@ sub add_default_handler {
 sub admin {
   my $self = shift;        # Thank goodness for AutoLoader, huh?
                            # Perhaps we'll finally use it soon.
-  
+
   $self->sl("ADMIN" . ($_[0] ? " $_[0]" : ""));
 }
 
@@ -219,10 +219,10 @@ sub away {
 sub connect {
   my $self = shift;
   my ($password, $sock);
-  
+
   if (@_) {
     my (%arg) = @_;
-    
+
     $self->hostname($arg{'LocalAddr'}) if exists $arg{'LocalAddr'};
     $password = $arg{'Password'} if exists $arg{'Password'};
     $self->nick($arg{'Nick'}) if exists $arg{'Nick'};
@@ -235,7 +235,7 @@ sub connect {
     $self->ssl_ca_path($arg{'SSL_ca_path'}) if exists $arg{'SSL_ca_path'};
     $self->ssl_ca_file($arg{'SSL_ca_file'}) if exists $arg{'SSL_ca_file'};
   }
-  
+
   # Lots of error-checking claptrap first...
   unless ($self->server) {
     unless ($ENV{IRCSERVER}) {
@@ -258,12 +258,12 @@ sub connect {
     $self->username(eval { scalar getpwuid($>) } || $ENV{USER}
                     || $ENV{LOGNAME} || "japh");
   }
-  
+
   # Now for the socket stuff...
   if ($self->connected) {
     $self->quit("Changing servers");
   }
-  
+
   if ($self->ssl) {
     require IO::Socket::SSL;
 
@@ -292,27 +292,27 @@ sub connect {
     }
 
   } else {
-    
+
     $self->socket(IO::Socket::INET->new(PeerAddr  => $self->server,
                                         PeerPort  => $self->port,
                                         Proto     => "tcp",
                                         LocalAddr => $self->hostname,
                                         ));
   }
-  
+
   if (!$self->socket) {
     carp (sprintf "Can't connect to %s:%s!",
           $self->server, $self->port);
     $self->error(1);
     return;
   }
-  
+
   # Send a PASS command if they specified a password. According to
   # the RFC, we should do this as soon as we connect.
   if (defined $password) {
     $self->sl("PASS $password");
   }
-  
+
   # Now, log in to the server...
   unless ($self->sl('NICK ' . $self->nick()) and
           $self->sl(sprintf("USER %s %s %s :%s",
@@ -325,7 +325,7 @@ sub connect {
     $! = "Couldn't send NICK/USER introduction to " . $self->server;
     return;
   }
-  
+
   $self->{_connected} = 1;
   $self->parent->addconn($self);
 }
@@ -333,7 +333,7 @@ sub connect {
 # Returns a boolean value based on the state of the object's socket.
 sub connected {
   my $self = shift;
-  
+
   return ( $self->{_connected} and $self->socket() );
 }
 
@@ -344,11 +344,11 @@ sub connected {
 sub ctcp {
   my ($self, $type, $target) = splice @_, 0, 3;
   $type = uc $type;
-  
+
   unless ($target) {
     croak "Not enough arguments to ctcp()";
   }
-  
+
   if ($type eq "PING") {
     unless ($self->sl("PRIVMSG $target :\001PING " . int(time) . "\001")) {
       carp "Socket error sending $type request in ctcp()";
@@ -371,7 +371,7 @@ sub ctcp {
       return;
     }
   } else {
-    unless ($self->sl("PRIVMSG $target :\001$type " . 
+    unless ($self->sl("PRIVMSG $target :\001$type " .
                       CORE::join(" ",@_) . "\001")) {
       carp "Socket error sending $type request in ctcp()";
       return;
@@ -384,7 +384,7 @@ sub ctcp {
 #                the text of the reply
 sub ctcp_reply {
   my $self = shift;
-  
+
   $self->notice($_[0], "\001" . $_[1] . "\001");
 }
 
@@ -407,22 +407,22 @@ sub debug {
 sub dequote {
   my $line = shift;
   my ($order, @chunks) = (0, ());    # CHUNG! CHUNG! CHUNG!
-  
+
   # Filter misplaced \001s before processing... (Thanks, Tom!)
   substr($line, rindex($line, "\001"), 1) = '\\a'
       unless ($line =~ tr/\001//) % 2 == 0;
-  
+
   # Thanks to Abigail (abigail@fnx.com) for this clever bit.
   if (index($line, "\cP") >= 0) {    # dequote low-level \n, \r, ^P, and \0.
     my (%h) = (n => "\012", r => "\015", 0 => "\0", "\cP" => "\cP");
     $line =~ s/\cP([nr0\cP])/$h{$1}/g;
   }
   $line =~ s/\\([^\\a])/$1/g;  # dequote unnecessarily quoted characters.
-  
+
   # If true, it's in odd order... ctcp commands start with first chunk.
   $order = 1 if index($line, "\001") == 0;
   @chunks = map { s/\\\\/\\/g; $_ } (split /\cA/, $line);
-  
+
   return ($order, @chunks);
 }
 
@@ -439,7 +439,7 @@ sub DESTROY {
 # Takes at least 1 arg:  the format and args parameters to Event->new().
 sub disconnect {
   my $self = shift;
-  
+
   $self->{_connected} = 0;
   $self->parent->removeconn($self);
   $self->socket( undef );
@@ -455,7 +455,7 @@ sub disconnect {
 # Takes 1 optional arg:  the new value for $self->{'iserror'}
 sub error {
   my $self = shift;
-  
+
   $self->{'iserror'} = $_[0] if @_;
   return $self->{'iserror'};
 }
@@ -465,11 +465,11 @@ sub error {
 #           (optional)   the new format to use for this event
 sub format {
   my ($self, $ev) = splice @_, 0, 2;
-  
+
   unless ($ev) {
     croak "Not enough arguments to format()";
   }
-  
+
   if (@_) {
     $self->{'_format'}->{$ev} = $_[0];
   } else {
@@ -483,11 +483,11 @@ sub format {
 #                the arguments to the handler function
 sub handler {
   my ($self, $event) = splice @_, 0, 2;
-  
+
   unless (defined $event) {
     croak 'Too few arguments to Connection->handler()';
   }
-  
+
   # Get name of event.
   my $ev;
   if (ref $event) {
@@ -498,15 +498,15 @@ sub handler {
   } else {
     croak "Not enough arguments to handler()";
   }
-  
+
   print STDERR "Trying to handle event '$ev'.\n" if $self->{_debug};
 
-  
+
   if ($self->{_debug}) {
     use Data::Dumper;
     print STDERR "ev: ", Dumper($ev), "\nevent: ", Dumper($event), "\n";
   }
-  
+
   my $handler = undef;
   if (exists $self->{_handler}->{$ev}) {
     $handler = $self->{_handler}->{$ev};
@@ -515,9 +515,9 @@ sub handler {
   } else {
     return $self->_default($event, @_);
   }
-  
+
   my ($code, $rp) = @{$handler};
-  
+
   # If we have args left, try to call the handler.
   if ($rp == 0) {                      # REPLACE
     &$code($self, $event, @_);
@@ -530,9 +530,9 @@ sub handler {
   } else {
     confess "Bad parameter passed to handler(): rp=$rp";
   }
-  
+
   print STDERR "Handler for '$ev' called.\n" if $self->{_debug};
-  
+
   return 1;
 }
 
@@ -542,11 +542,11 @@ sub handler {
 #    (optional)  [mask(s) to be added to list of specified type]
 sub ignore {
   my $self = shift;
-  
+
   unless (@_) {
     croak "Not enough arguments to ignore()";
   }
-  
+
   if (@_ == 1) {
     if (exists $self->{_ignore}->{$_[0]}) {
       return @{ $self->{_ignore}->{$_[0]} };
@@ -555,16 +555,16 @@ sub ignore {
     }
   } elsif (@_ > 1) {     # code defensively, remember...
     my $type = shift;
-    
+
     # I moved this part further down as an Obsessive Efficiency
     # Initiative. It shouldn't be a problem if I do _parse right...
     # ... but those are famous last words, eh?
     unless (grep {$_ eq $type}
-            qw(public msg ctcp notice channel nick other all)) {	    
+            qw(public msg ctcp notice channel nick other all)) {
       carp "$type isn't a valid type to ignore()";
       return;
     }
-    
+
     if ( exists $self->{_ignore}->{$type} )  {
       push @{$self->{_ignore}->{$type}}, @_;
     } else  {
@@ -578,7 +578,7 @@ sub ignore {
 # Takes 1 optional arg: the name of the server to query.
 sub info {
   my $self = shift;
-  
+
   $self->sl("INFO" . ($_[0] ? " $_[0]" : ""));
 }
 
@@ -589,11 +589,11 @@ sub info {
 # I hate the syntax of this command... always seemed like a protocol flaw.
 sub invite {
   my $self = shift;
-  
+
   unless (@_ > 1) {
     croak "Not enough arguments to invite()";
   }
-  
+
   $self->sl("INVITE $_[0] $_[1]");
 }
 
@@ -601,11 +601,11 @@ sub invite {
 # Takes at least 1 arg:  nickname(s) to look up.
 sub ison {
   my $self = shift;
-  
+
   unless (@_) {
     croak 'Not enough args to ison().';
   }
-  
+
   $self->sl("ISON " . CORE::join(" ", @_));
 }
 
@@ -615,16 +615,16 @@ sub ison {
 #                optional channel password, for +k channels
 sub join {
   my $self = shift;
-  
+
   unless ( $self->connected ) {
     carp "Can't join() -- not connected to a server";
     return;
   }
-  
+
   unless (@_) {
     croak "Not enough arguments to join()";
   }
-  
+
   return $self->sl("JOIN $_[0]" . ($_[1] ? " $_[1]" : ""));
 
 }
@@ -634,7 +634,7 @@ sub join {
 #             (optional)  a parting comment to the departing bastard
 sub kick {
   my $self = shift;
-  
+
   unless (@_ > 1) {
     croak "Not enough arguments to kick()";
   }
@@ -646,7 +646,7 @@ sub kick {
 #                         now, so read the RFC.
 sub links {
   my ($self) = (shift, undef);
-  
+
   $self->sl("LINKS" . (scalar(@_) ? " " . CORE::join(" ", @_[0,1]) : ""));
 }
 
@@ -655,7 +655,7 @@ sub links {
 # channel (the server returns channel name, # of users, and topic for each).
 sub list {
   my $self = shift;
-  
+
   $self->sl("LIST " . CORE::join(",", @_));
 }
 
@@ -663,7 +663,7 @@ sub list {
 # Takes 1 optional arg: the name of a server to request the info from.
 sub lusers {
   my $self = shift;
-  
+
   $self->sl("LUSERS" . ($_[0] ? " $_[0]" : ""));
 }
 
@@ -672,11 +672,11 @@ sub lusers {
 # Takes 1 (optional) arg: the maximum line length (in bytes)
 sub maxlinelen {
   my $self = shift;
-  
+
   my $ret = $self->{_maxlinelen};
-  
+
   $self->{_maxlinelen} = shift if @_;
-  
+
   return $ret;
 }
 
@@ -686,7 +686,7 @@ sub maxlinelen {
 #                the action to send (e.g., "weed-whacks billn's hand off.")
 sub me {
   my $self = shift;
-  
+
   $self->ctcp("ACTION", $_[0], $_[1]);
 }
 
@@ -696,7 +696,7 @@ sub me {
 #             (optional)  operands of the mode string (nicks, hostmasks, etc.)
 sub mode {
   my $self = shift;
-  
+
   unless (@_ >= 1) {
     croak "Not enough arguments to mode()";
   }
@@ -707,7 +707,7 @@ sub mode {
 # Takes 1 optional arg:  the server to query (defaults to current server)
 sub motd {
   my $self = shift;
-  
+
   $self->sl("MOTD" . ($_[0] ? " $_[0]" : ""));
 }
 
@@ -716,9 +716,9 @@ sub motd {
 # Takes 1 or more optional args:  name(s) of channel(s) to list the users from.
 sub names {
   my $self = shift;
-  
+
   $self->sl("NAMES " . CORE::join(",", @_));
-  
+
 }   # Was this the easiest sub in the world, or what?
 
 # Creates and returns a DCC CHAT object, analogous to IRC.pm's newconn().
@@ -733,18 +733,18 @@ sub names {
 sub new_chat {
   my $self = shift;
   my ($init, $nick, $address, $port);
-  
+
   if (ref($_[0]) =~ /Event/) {
     # If it's from an Event object, we can't be initiating, right?
     ($init, undef, undef, undef, $address, $port) = (0, $_[0]->args);
     $nick = $_[0]->nick;
-    
+
   } elsif (ref($_[0]) eq "ARRAY") {
     ($init, $nick, $address, $port) = @{$_[0]};
   } else {
     ($init, $nick, $address, $port) = @_;
   }
-  
+
   PBot::IRC::DCC::CHAT->new($self, $init, $nick, $address, $port); # pragma_ 2011/21/01
 }
 
@@ -765,7 +765,7 @@ sub new_chat {
 sub new_get {
   my $self = shift;
   my ($nick, $name, $address, $port, $size,  $offset, $handle);
-  
+
   if (ref($_[0]) =~ /Event/) {
     (undef, undef, $name, $address, $port, $size) = $_[0]->args;
     $nick = $_[0]->nick;
@@ -776,7 +776,7 @@ sub new_get {
   } else {
     ($nick, $name, $address, $port, $size, $handle) = @_;
   }
-  
+
   unless (defined $handle and ref $handle and
           (ref $handle eq "GLOB" or $handle->can('print')))
   {
@@ -784,10 +784,10 @@ sub new_get {
           "a glob reference or object");
     return;                                # is this behavior OK?
   }
-  
+
   my $dcc = PBot::IRC::DCC::GET->new( $self, $nick, $address, $port, $size, # pragma_ 2011/21/01
                                      $name, $handle, $offset );
-  
+
   $self->parent->addconn($dcc) if $dcc;
   return $dcc;
 }
@@ -799,13 +799,13 @@ sub new_get {
 sub new_send {
   my $self = shift;
   my ($nick, $filename, $blocksize);
-  
+
   if (ref($_[0]) eq "ARRAY") {
     ($nick, $filename, $blocksize) = @{$_[0]};
   } else {
     ($nick, $filename, $blocksize) = @_;
   }
-  
+
   PBot::IRC::DCC::SEND->new($self, $nick, $filename, $blocksize); # pragma_ 2011/21/01
 }
 
@@ -816,7 +816,7 @@ sub new_send {
 # Takes 1 arg:  the nick. (I bet you could have figured that out...)
 sub nick {
   my $self = shift;
-  
+
   if (@_)  {
     $self->{'_nick'} = shift;
     if ($self->connected) {
@@ -830,18 +830,18 @@ sub nick {
 # Sends a notice to a channel or person.
 # Takes 2 args:  the target of the message (channel or nick)
 #                the text of the message to send
-# The message will be chunked if it is longer than the _maxlinelen 
+# The message will be chunked if it is longer than the _maxlinelen
 # attribute, but it doesn't try to protect against flooding.  If you
 # give it too much info, the IRC server will kick you off!
 sub notice {
   my ($self, $to) = splice @_, 0, 2;
-  
+
   unless (@_) {
     croak "Not enough arguments to notice()";
   }
-  
+
   my ($buf, $length, $line) = (CORE::join("", @_), $self->{_maxlinelen});
-  
+
   while (length($buf) > 0) {
     ($line, $buf) = unpack("a$length a*", $buf);
     $self->sl("NOTICE $to :$line");
@@ -853,11 +853,11 @@ sub notice {
 #                Operator's password
 sub oper {
   my $self = shift;
-  
+
   unless (@_ > 1) {
     croak "Not enough arguments to oper()";
   }
-  
+
   $self->sl("OPER $_[0] $_[1]");
 }
 
@@ -867,7 +867,7 @@ sub oper {
 sub parse {
   my ($self) = shift;
   my ($from, $type, $message, @stuff, $itype, $ev, @lines, $line);
-  
+
   if (defined ($self->ssl ?
                $self->socket->read($line, 10240) :
                $self->socket->recv($line, 10240, 0))
@@ -876,27 +876,27 @@ sub parse {
     # grab any remnant from the last go and split into lines
     my $chunk = $self->{_frag} . $line;
     @lines = split /\012/, $chunk;
-    
+
     # if the last line was incomplete, pop it off the chunk and
     # stick it back into the frag holder.
     $self->{_frag} = (substr($chunk, -1) ne "\012" ? pop @lines : '');
-    
-  } else {	
+
+  } else {
     # um, if we can read, i say we should read more than 0
     # besides, recv isn't returning undef on closed
     # sockets.  getting rid of this connection...
     $self->disconnect('error', 'Connection reset by peer');
     return;
   }
-  
+
  PARSELOOP: foreach $line (@lines) {
-   
+
    # Clean the lint filter every 2 weeks...
    $line =~ s/[\012\015]+$//;
    next unless $line;
-   
+
    print STDERR "<<< $line\n" if $self->{_debug};
-   
+
    # Like the RFC says: "respond as quickly as possible..."
    if ($line =~ /^PING/) {
      $ev = (PBot::IRC::Event->new( "ping", # pragma_ 2011/21/01
@@ -905,7 +905,7 @@ sub parse {
                                   "serverping",   # FIXME?
                                   substr($line, 5)
                                   ));
-     
+
      # Had to move this up front to avoid a particularly pernicious bug.
    } elsif ($line =~ /^NOTICE/) {
      $ev = PBot::IRC::Event->new( "snotice", # pragma_ 2011/21/01
@@ -913,8 +913,8 @@ sub parse {
                                  '',
                                  'server',
                                  (split /:/, $line, 2)[1] );
-     
-     
+
+
      # Spurious backslashes are for the benefit of cperl-mode.
      # Assumption:  all non-numeric message types begin with a letter
    } elsif ($line =~ /^:?
@@ -929,14 +929,14 @@ sub parse {
             /x)                      # That ought to do it for now...
    {
      $line = substr $line, 1 if $line =~ /^:/;
-     
+
      # Patch submitted for v.0.72
      # Fixes problems with IPv6 hostnames.
      # ($from, $line) = split ":", $line, 2;
      ($from, $line) = $line =~ /^(?:|)(\S+\s+[^:]+):?(.*)/;
 
      print STDERR "from: [$from], line: [$line]\n" if $self->{_debug};
-     
+
      ($from, $type, @stuff) = split /\s+/, $from;
      $type = lc $type;
 
@@ -968,38 +968,38 @@ sub parse {
      } else {
        $itype = "other";
      }
-     
+
      # This goes through the list of ignored addresses for this message
      # type and drops out of the sub if it's from an ignored hostmask.
-     
+
      study $from;
      foreach ( $self->ignore($itype), $self->ignore("all") ) {
        $_ = quotemeta; s/\\\*/.*/g;
        next PARSELOOP if $from =~ /$_/i;
      }
-     
+
      # It used to look a lot worse. Here was the original version...
      # the optimization above was proposed by Silmaril, for which I am
      # eternally grateful. (Mine still looks cooler, though. :)
-     
+
      # return if grep { $_ = join('.*', split(/\\\*/,
      #                  quotemeta($_)));  /$from/ }
      # ($self->ignore($type), $self->ignore("all"));
-     
+
      # Add $line to @stuff for the handlers
      push @stuff, $line if defined $line;
-     
+
      # Now ship it off to the appropriate handler and forget about it.
      if ( $itype eq "ctcp" ) {       # it's got CTCP in it!
        $self->parse_ctcp($type, $from, $stuff[0], $line);
        next;
-       
+
      }  elsif ($type eq "public" or $type eq "msg"   or
                $type eq "notice" or $type eq "mode"  or
                $type eq "join"   or $type eq "part"  or
                $type eq "topic"  or $type eq "invite" or
                $type eq "whoisaccount" or $type eq "cap") {
-       
+
        $ev = PBot::IRC::Event->new( $type, # pragma_ 2011/21/01
                                    $from,
                                    shift(@stuff),
@@ -1007,7 +1007,7 @@ sub parse {
                                    @stuff,
                                    );
      } elsif ($type eq "quit" or $type eq "nick" or $type eq "account") {
-       
+
        $ev = PBot::IRC::Event->new( $type, # pragma_ 2011/21/01
                                    $from,
                                    $from,
@@ -1015,14 +1015,14 @@ sub parse {
                                    @stuff,
                                    );
      } elsif ($type eq "kick") {
-       
+
        $ev = PBot::IRC::Event->new( $type, # pragma_ 2011/21/01
                                    $from,
                                    $stuff[1],
                                    $type,
                                    @stuff[0,2..$#stuff],
                                    );
-       
+
      } elsif ($type eq "kill") {
        $ev = PBot::IRC::Event->new($type, # pragma_ 2011/21/01
                                   $from,
@@ -1034,13 +1034,13 @@ sub parse {
                                   $from,
                                   '',
                                   $type,
-                                  $line);  
+                                  $line);
      } elsif ($type eq "pong") {
        $ev = PBot::IRC::Event->new($type, # pragma_ 2011/21/01
                                   $from,
                                   '',
                                   $type,
-                                  $line);  
+                                  $line);
      } else {
        carp "Unknown event type: $type";
      }
@@ -1052,14 +1052,14 @@ sub parse {
           \b/x                # Some other crap, whatever...
           ) {
      $ev = $self->parse_num($line);
-     
+
    } elsif ($line =~ /^:(\w+) MODE \1 /) {
      $ev = PBot::IRC::Event->new( 'umode', # pragma_ 2011/21/01
                                  $self->server,
                                  $self->nick,
                                  'server',
                                  substr($line, index($line, ':', 1) + 1));
-     
+
    } elsif ($line =~ /^:?       # Here's Ye Olde Server Notice handler!
             .+?                 # the servername (can't assume RFC hostname)
             \s+?                # Some spaces here...
@@ -1071,14 +1071,14 @@ sub parse {
                                  '',
                                  'server',
                                  (split /\s+/, $line, 3)[2] );
-     
-     
+
+
    } elsif ($line =~ /^ERROR/) {
      if ($line =~ /^ERROR :Closing [Ll]ink/) {   # is this compatible?
-       
+
        $ev = 'done';
        $self->disconnect( 'error', ($line =~ /(.*)/) );
-       
+
      } else {
        $ev = PBot::IRC::Event->new( "error", # pragma_ 2011/21/01
                                    $self->server,
@@ -1089,16 +1089,16 @@ sub parse {
    } elsif ($line =~ /^Closing [Ll]ink/) {
      $ev = 'done';
      $self->disconnect( 'error', ($line =~ /(.*)/) );
-     
+
    }
-   
+
    if ($ev) {
-     
+
      # We need to be able to fall through if the handler has
      # already been called (i.e., from within disconnect()).
-     
+
      $self->handler($ev) unless $ev eq 'done';
-     
+
    } else {
      # If it gets down to here, it's some exception I forgot about.
      carp "Funky parse case: $line\n";
@@ -1114,14 +1114,14 @@ sub parse {
 #                     the line from the server.
 sub parse_ctcp {
   my ($self, $type, $from, $stuff, $line) = @_;
-  
+
   my ($one, $two);
   my ($odd, @foo) = (&dequote($line));
-  
+
   while (($one, $two) = (splice @foo, 0, 2)) {
-    
+
     ($one, $two) = ($two, $one) if $odd;
-    
+
     my ($ctype) = $one =~ /^(\w+)\b/;
     my $prefix = undef;
     if ($type eq 'notice') {
@@ -1133,15 +1133,15 @@ sub parse_ctcp {
       carp "Unknown CTCP type: $type";
       return;
     }
-    
+
     if ($prefix) {
       my $handler = $prefix . lc $ctype;   # unit. value prob with $ctype
-      
+
       $one =~ s/^$ctype //i;  # strip the CTCP type off the args
       $self->handler(PBot::IRC::Event->new( $handler, $from, $stuff, # pragma_ 2011/21/01
                                            $handler, $one ));
     }
-    
+
     $self->handler(PBot::IRC::Event->new($type, $from, $stuff, $type, $two)) # pragma_ 2011/21/01
         if $two;
   }
@@ -1156,8 +1156,8 @@ sub parse_num {
 
   # Figlet protection?  This seems to be a bit closer to the RFC than
   # the original version, which doesn't seem to handle :trailers quite
-  # correctly. 
-  
+  # correctly.
+
   my ($from, $type, $stuff) = split(/\s+/, $line, 3);
   my ($blip, $space, $other, @stuff);
   while ($stuff) {
@@ -1172,9 +1172,9 @@ sub parse_num {
       $stuff = $other;
     }
   }
-  
+
   $from = substr $from, 1 if $from =~ /^:/;
-  
+
   return PBot::IRC::Event->new( $type, # pragma_ 2011/21/01
                                $from,
                                '',
@@ -1186,7 +1186,7 @@ sub parse_num {
 # Takes at least one arg:  name(s) of channel(s) to leave.
 sub part {
   my $self = shift;
-  
+
   unless (@_) {
     croak "No arguments provided to part()";
   }
@@ -1199,7 +1199,7 @@ sub part {
 # Takes no args.
 sub peer {
   my $self = shift;
-  
+
   return ($self->server(), "IRC connection");
 }
 
@@ -1221,25 +1221,25 @@ sub print {
 # Takes 2 args:  the target of the message (channel or nick)
 #                the text of the message to send
 # Don't use this for sending CTCPs... that's what the ctcp() function is for.
-# The message will be chunked if it is longer than the _maxlinelen 
+# The message will be chunked if it is longer than the _maxlinelen
 # attribute, but it doesn't try to protect against flooding.  If you
 # give it too much info, the IRC server will kick you off!
 sub privmsg {
   my ($self, $to) = splice @_, 0, 2;
-  
+
   unless (@_) {
     croak 'Not enough arguments to privmsg()';
   }
-  
+
   my $buf = CORE::join '', @_;
   my $length = $self->{_maxlinelen} - 11 - length($to);
   my $line;
-  
+
   if (ref($to) =~ /^(GLOB|IO::Socket)/) {
     while (length($buf) > 0) {
       ($line, $buf) = unpack("a$length a*", $buf);
       send($to, $line . "\012", 0);
-    } 
+    }
   } else {
     while (length($buf) > 0) {
       ($line, $buf) = unpack("a$length a*", $buf);
@@ -1257,23 +1257,23 @@ sub privmsg {
 # Takes 1 optional arg:  parting message, defaults to "Leaving" by custom.
 sub quit {
   my $self = shift;
-  
+
   # Do any user-defined stuff before leaving
   $self->handler("leaving");
-  
+
   unless ( $self->connected ) {  return (1)  }
-  
+
   # Why bother checking for sl() errors now, after all?  :)
   # We just send the QUIT command and leave. The server will respond with
   # a "Closing link" message, and parse() will catch it, close the
   # connection, and throw a "disconnect" event. Neat, huh? :-)
-  
+
   $self->sl("QUIT :" . (defined $_[0] ? $_[0] : "Leaving"));
-  
+
   # since the quit sends a line to the server, we need to flush the
   # output queue to make sure it gets there so the disconnect
   $self->parent->flush_output_queue();
-  
+
   return 1;
 }
 
@@ -1286,7 +1286,7 @@ sub rehash {
 }
 
 
-# As per the RFC, "force a server restart itself."  (Love that RFC.)  
+# As per the RFC, "force a server restart itself."  (Love that RFC.)
 # Takes no arguments.  If it succeeds, you will likely be disconnected,
 # but I assume you already knew that.  This sub is too simple...
 sub restart {
@@ -1339,7 +1339,7 @@ sub schedule_output_event {
 #                          servers to communicate with each other.
 sub sconnect {
   my $self = shift;
-  
+
   unless (@_) {
     croak "Not enough arguments to sconnect()";
   }
@@ -1351,7 +1351,7 @@ sub sconnect {
 #                                       ((syntaxen? syntaxi? syntaces?))
 sub server {
   my ($self) = shift;
-  
+
   if (@_)  {
     # cases like "irc.server.com:6668"
     if (index($_[0], ':') > 0) {
@@ -1362,17 +1362,17 @@ sub server {
       }
       $self->{_server} = $serv;
       $self->port($port);
-      
+
       # cases like ":6668"  (buried treasure!)
     } elsif (index($_[0], ':') == 0 and $_[0] =~ /^:(\d+)/) {
       $self->port($1);
-      
+
       # cases like "irc.server.com"
     } else {
       $self->{_server} = shift;
     }
     return (1);
-    
+
   } else {
     return $self->{_server};
   }
@@ -1383,11 +1383,11 @@ sub server {
 sub sl {
   my $self = shift;
   my $line = CORE::join '', @_;
-  
+
   unless (@_) {
     croak "Not enough arguments to sl()";
   }
-  
+
   if (! $self->pacing) {
     return $self->sl_real($line);
   }
@@ -1411,7 +1411,7 @@ sub sl {
   if ($seconds == 0) {
     $self->{_slcount} = 0;
   }
-  
+
   ### DEBUG DEBUG DEBUG
   if ($self->{_debug}) {
     print STDERR "S-> $seconds $line\n";
@@ -1427,18 +1427,18 @@ sub sl {
 sub sl_real {
   my $self = shift;
   my $line = shift;
-  
+
   unless ($line) {
     croak "Not enough arguments to sl_real()";
   }
-  
+
   ### DEBUG DEBUG DEBUG
   if ($self->{_debug}) {
     print STDERR ">>> $line\n";
   }
 
   return unless defined $self->socket;
-  
+
   # RFC compliance can be kinda nice...
   my $rv = $self->ssl ?
       $self->socket->print("$line\015\012") :
@@ -1455,11 +1455,11 @@ sub sl_real {
 #            (optional)  a comment about why it was disconnected
 sub squit {
   my $self = shift;
-  
+
   unless (@_) {
     croak "Not enough arguments to squit()";
   }
-  
+
   $self->sl("SQUIT $_[0]" . ($_[1] ? " :$_[1]" : ""));
 }
 
@@ -1468,24 +1468,24 @@ sub squit {
 #            (optional) the server to request from (default is current server)
 sub stats {
   my $self = shift;
-  
+
   unless (@_) {
     croak "Not enough arguments passed to stats()";
   }
-  
+
   $self->sl("STATS $_[0]" . ($_[1] ? " $_[1]" : ""));
 }
 
 # If anyone still has SUMMON enabled, this will implement it for you.
-# If not, well...heh.  Sorry.  First arg mandatory: user to summon.  
+# If not, well...heh.  Sorry.  First arg mandatory: user to summon.
 # Second arg optional: a server name.
 sub summon {
   my $self = shift;
-  
+
   unless (@_) {
     croak "Not enough arguments passed to summon()";
   }
-  
+
   $self->sl("SUMMON $_[0]" . ($_[1] ? " $_[1]" : ""));
 }
 
@@ -1494,7 +1494,7 @@ sub summon {
 # renamed to not collide with things... -- aburke
 sub timestamp {
   my ($self, $serv) = (shift, undef);
-  
+
   $self->sl("TIME" . ($_[0] ? " $_[0]" : ""));
 }
 
@@ -1503,11 +1503,11 @@ sub timestamp {
 #            (optional)  the new topic you want to impress everyone with
 sub topic {
   my $self = shift;
-  
+
   unless (@_) {
     croak "Not enough arguments to topic()";
   }
-  
+
   # Can you tell I've been reading the Nethack source too much? :)
   $self->sl("TOPIC $_[0]" . ($_[1] ? " :$_[1]" : ""));
 }
@@ -1516,16 +1516,16 @@ sub topic {
 # Take 1 optional arg:  the server or nickname to trace.
 sub trace {
   my $self = shift;
-  
+
   $self->sl("TRACE" . ($_[0] ? " $_[0]" : ""));
 }
 
 # This method submitted by Dave Schmitt <dschmi1@umbc.edu>. Thanks, Dave!
 sub unignore {
   my $self = shift;
-  
+
   croak "Not enough arguments to unignore()" unless @_;
-  
+
   if (@_ == 1) {
     if (exists $self->{_ignore}->{$_[0]}) {
       return @{ $self->{_ignore}->{$_[0]} };
@@ -1534,16 +1534,16 @@ sub unignore {
     }
   } elsif (@_ > 1) {     # code defensively, remember...
     my $type = shift;
-    
+
     # I moved this part further down as an Obsessive Efficiency
     # Initiative. It shouldn't be a problem if I do _parse right...
     # ... but those are famous last words, eh?
     unless (grep {$_ eq $type}
             qw(public msg ctcp notice channel nick other all)) {
       carp "$type isn't a valid type to unignore()";
-      return;                                                    
+      return;
        }
-    
+
     if ( exists $self->{_ignore}->{$type} )  {
       # removes all specifed entries ala _Perl_Cookbook_ recipe 4.7
       my @temp = @{$self->{_ignore}->{$type}};
@@ -1565,11 +1565,11 @@ sub unignore {
 # Takes at least 1 arg: nickname(s) to look up.
 sub userhost {
   my $self = shift;
-  
+
   unless (@_) {
     croak 'Not enough args to userhost().';
   }
-  
+
   $self->sl("USERHOST " . CORE::join (" ", @_));
 }
 
@@ -1577,7 +1577,7 @@ sub userhost {
 # Take 1 optional arg:  the server to query.
 sub users {
   my $self = shift;
-  
+
   $self->sl("USERS" . ($_[0] ? " $_[0]" : ""));
 }
 
@@ -1585,7 +1585,7 @@ sub users {
 # Takes 1 optional arg:  the server name/glob. (default is current server)
 sub version {
   my $self = shift;
-  
+
   $self->sl("VERSION" . ($_[0] ? " $_[0]" : ""));
 }
 
@@ -1593,11 +1593,11 @@ sub version {
 # Takes 1 arg:  the text to send.
 sub wallops {
   my $self = shift;
-  
+
   unless ($_[0]) {
     croak 'No arguments passed to wallops()';
   }
-  
+
   $self->sl("WALLOPS :" . CORE::join("", @_));
 }
 
@@ -1606,7 +1606,7 @@ sub wallops {
 #                         an "o" (nobody ever uses this...)
 sub who {
   my $self = shift;
-  
+
   # Obfuscation!
   $self->sl("WHO" . (@_ ? " @_" : ""));
 }
@@ -1615,7 +1615,7 @@ sub who {
 # Takes at least 1 arg:  nickmasks or channels to /whois
 sub whois {
   my $self = shift;
-  
+
   unless (@_) {
     croak "Not enough arguments to whois()";
   }
@@ -1628,7 +1628,7 @@ sub whois {
 #            (optional)  server or servermask to query
 sub whowas {
   my $self = shift;
-  
+
   unless (@_) {
     croak "Not enough arguments to whowas()";
   }
@@ -1642,24 +1642,24 @@ sub whowas {
 sub _default {
   my ($self, $event) = @_;
   my $verbose = $self->verbose;
-  
+
   # Users should only see this if the programmer (me) fucked up.
   unless ($event) {
     croak "You EEEEEDIOT!!! Not enough args to _default()!";
   }
-  
+
   # Reply to PING from server as quickly as possible.
   if ($event->type eq "ping") {
     $self->sl("PONG " . (CORE::join ' ', $event->args));
-    
+
   } elsif ($event->type eq "disconnect") {
-    
+
     # I violate OO tenets. (It's consensual, of course.)
     unless (keys %{$self->parent->{_connhash}} > 0) {
       die "No active connections left, exiting...\n";
     }
   }
-  
+
   return 1;
 }
 

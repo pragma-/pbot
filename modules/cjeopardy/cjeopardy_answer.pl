@@ -170,7 +170,7 @@ foreach my $answer (@valid_answers) {
   my $percentage = $distance / $length * 100;
 
   if ($percentage < $incorrect_percentage) {
-    $incorrect_percentage = $percentage; 
+    $incorrect_percentage = $percentage;
   }
 
   if ($percentage < 15) {
@@ -319,7 +319,7 @@ foreach my $answer (@valid_answers) {
 
     if ($channel eq '#cjeopardy') {
       my $question = `./cjeopardy.pl $channel`;
-      
+
       if ($hint_only_mode) {
         my $hint = `./cjeopardy_hint.pl candide $channel`;
         $hint =~ s/^Hint: //;

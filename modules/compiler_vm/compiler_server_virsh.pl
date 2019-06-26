@@ -18,7 +18,7 @@ my $COMPILE_TIMEOUT = 10;
 sub server_listen {
   my $port = shift @_;
 
-  my $server = IO::Socket::INET->new( 
+  my $server = IO::Socket::INET->new(
     Proto     => 'tcp',
     LocalPort => $port,
     Listen    => SOMAXCONN,
@@ -41,9 +41,9 @@ sub vm_start {
 
 sub vm_reset {
   return if $ENV{NORESET};
-  system("virsh detach-disk $DOMAIN_NAME vdb");
+  #system("virsh detach-disk $DOMAIN_NAME vdb");
   system("virsh snapshot-revert $DOMAIN_NAME 1");
-  system("virsh attach-disk $DOMAIN_NAME --source /var/lib/libvirt/images/factdata.qcow2 --target vdb");
+  #system("virsh attach-disk $DOMAIN_NAME --source /var/lib/libvirt/images/factdata.qcow2 --target vdb");
   print "Reset vm\n";
 }
 
@@ -85,7 +85,7 @@ sub execute {
 
       my $ret = $? >> 8;
       alarm 0;
-      
+
       print "[$ret, $result]\n";
       return ($ret, $result);
     };
@@ -174,7 +174,7 @@ sub compiler_server {
       if ($heartbeat == -1) {
         print "fucking dead, restarting\n";
         waitpid $heartbeat_pid, 0;
-        # vm_stop;
+        #vm_stop;
         next;
       }
 
@@ -259,10 +259,10 @@ sub compiler_server {
         next;
 
         print "stopping vm\n";
-        vm_stop;
+        #vm_stop;
         $running = 0;
         last;
-      } 
+      }
       print "Compiler server no longer running, restarting...\n";
     }
     print "waiting on heartbeat pid?\n";

@@ -30,13 +30,13 @@ $manpage =~ s/\+.*$//;
 my $get_text;
 do {
 #  $text = get("http://www.freebsd.org/cgi/man.cgi?query=$manpage&sektion=$section&apropos=0&manpath=FreeBSD+6.2-RELEASE&format=ascii");
-  
+
   $get_text = get("http://www.freebsd.org/cgi/man.cgi?query=$manpage&sektion=$section&apropos=0&manpath=SuSE+Linux%2Fi386+11.3&format=ascii");
 
 
   $text = substr($get_text, 0, 5000);
 #  print '['.length($text).']'."\n";
-  
+
   if ($text =~ m/Sorry, no data found/)
   {
     $section--;

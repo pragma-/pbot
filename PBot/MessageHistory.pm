@@ -2,7 +2,7 @@
 # Author: pragma_
 #
 # Purpose: Keeps track of who has said what and when, as well as their
-# nickserv accounts and alter-hostmasks.  
+# nickserv accounts and alter-hostmasks.
 #
 # Used in conjunction with AntiFlood and Quotegrabs for kick/ban on
 # flood/ban-evasion and grabbing quotes, respectively.
@@ -222,7 +222,7 @@ sub recall_message {
   my $usage = 'Usage: recall [nick [history [channel]]] [-c,channel <channel>] [-t,text,h,history <history>] [-b,before <context before>] [-a,after <context after>] [-x,context <nick>] [-n,count <count>] [+ ...]';
 
   if (not defined $arguments or not length $arguments) {
-    return $usage; 
+    return $usage;
   }
 
   $arguments = lc $arguments;

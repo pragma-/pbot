@@ -36,7 +36,7 @@ use PBot::AntiSpam;
 use PBot::Interpreter;
 use PBot::Commands;
 use PBot::ChanOps;
-use PBot::Factoids; 
+use PBot::Factoids;
 use PBot::BotAdmins;
 use PBot::IgnoreList;
 use PBot::BlackList;
@@ -96,14 +96,14 @@ sub initialize {
   $self->{registry}->add_default('text', 'irc',     'ircname',     $conf{ircname}     // "http://code.google.com/p/pbot2-pl/");
   $self->{registry}->add_default('text', 'irc',     'identify_password', $conf{identify_password} // 'none');
   $self->{registry}->add_default('text', 'irc',     'log_default_handler', 1);
-  
+
   $self->{registry}->set_default('irc', 'SSL_ca_file',       'private', 1);
   $self->{registry}->set_default('irc', 'SSL_ca_path',       'private', 1);
   $self->{registry}->set_default('irc', 'identify_password', 'private', 1);
 
   $self->{registry}->add_trigger('irc', 'botnick', sub { $self->change_botnick_trigger(@_) });
   $self->{registry}->add_trigger('irc', 'debug',   sub { $self->irc_debug_trigger(@_)      });
- 
+
   $self->{event_dispatcher}   = PBot::EventDispatcher->new(pbot => $self, %conf);
   $self->{irchandlers}        = PBot::IRCHandlers->new(pbot => $self, %conf);
   $self->{select_handler}     = PBot::SelectHandler->new(pbot => $self, %conf);
@@ -176,7 +176,7 @@ sub connect {
 
   $self->{logger}->log("Connecting to $server ...\n");
 
-  while (not $self->{conn} = $self->{irc}->newconn( 
+  while (not $self->{conn} = $self->{irc}->newconn(
       Nick         => random_nick,
       Username     => $self->{registry}->get_value('irc', 'username'),
       Ircname      => $self->{registry}->get_value('irc', 'ircname'),
@@ -197,8 +197,8 @@ sub connect {
   $self->{conn}->add_handler([ 251,252,253,254,255,302 ], sub { $self->{irchandlers}->on_init(@_) });
 
   # ignore these events
-  $self->{conn}->add_handler(['whoisserver', 
-                              'whoiscountry', 
+  $self->{conn}->add_handler(['whoisserver',
+                              'whoiscountry',
                               'whoischannels',
                               'whoisidle',
                               'motdstart',
@@ -216,9 +216,9 @@ sub do_one_loop {
 
 sub start {
   my $self = shift;
-  while (1) { 
+  while (1) {
     $self->connect() if not $self->{connected};
-    $self->do_one_loop() if $self->{connected}; 
+    $self->do_one_loop() if $self->{connected};
   }
 }
 

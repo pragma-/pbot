@@ -1,7 +1,7 @@
 # File: HashObject.pm
 # Author: pragma_
 #
-# Purpose: Provides a hash-table object with an abstracted API that includes 
+# Purpose: Provides a hash-table object with an abstracted API that includes
 # setting and deleting values, saving to and loading from files, etc.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
@@ -172,12 +172,12 @@ sub levenshtein_matches {
   my ($self, $keyword) = @_;
   my $comma = '';
   my $result = "";
-  
+
   foreach my $index (sort keys %{ $self->hash }) {
     my $distance = fastdistance($keyword, $index);
 
     # print "Distance $distance for $keyword (" , (length $keyword) , ") vs $index (" , length $index , ")\n";
-    
+
     my $length = (length($keyword) > length($index)) ? length $keyword : length $index;
 
     # print "Percentage: ", $distance / $length, "\n";

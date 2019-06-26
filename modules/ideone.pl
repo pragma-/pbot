@@ -91,7 +91,7 @@ my %languages = (
 # C99  34
 # C++  1
 
-my %preludes = ( 
+my %preludes = (
                  '34'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n",
                  '11'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n",
                  '1'   => "#include <iostream>\n#include <cstdio>\n",
@@ -133,7 +133,7 @@ if ($code =~ m/^\s*run\s*$/i) {
     print "$nick: No recent code to run.\n";
     exit 0;
   }
-} else { 
+} else {
   my $subcode = $code;
   my $got_undo = 0;
   my $got_sub = 0;
@@ -344,7 +344,7 @@ if ($code =~ m/^\s*run\s*$/i) {
           $before = $`;
           $after = $';
         } elsif ($suffix =~ /^i$/) {
-          $ret = $code =~ s|$regex|$to|i; 
+          $ret = $code =~ s|$regex|$to|i;
           $a = $1;
           $b = $2;
           $c = $3;
@@ -564,10 +564,10 @@ $code = '';
 
 if ($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$lang}{'id'} == 34) {
   my $has_main = 0;
-  
+
   my $prelude = '';
   $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
-  
+
   while ($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
     my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
 
@@ -600,7 +600,7 @@ if ($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{
 
 if ($languages{$lang}{'id'} == 1 or $languages{$lang}{'id'} == 11 or $languages{$lang}{'id'} == 35
      or $languages{$lang}{'id'} == 27 or $languages{$lang}{'id'} == 10 or $languages{$lang}{'id'} == 34) {
-  $code = pretty($code) 
+  $code = pretty($code)
 }
 
 $code =~ s/\\n/\n/g if $languages{$lang}{'id'} == 13 or $languages{$lang}{'id'} == 101 or $languages{$lang}{'id'} == 45;
@@ -735,7 +735,7 @@ if ($result->{result} == $INTERNAL_ERROR) {
 }
 
 $output .= "\n" . $result->{stderr};
-$output .= "\n" . $result->{output}; 
+$output .= "\n" . $result->{output};
 
 $output = decode_entities($output);
 

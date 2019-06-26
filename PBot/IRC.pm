@@ -16,7 +16,7 @@
 
 package PBot::IRC; # pragma_ 2011/01/21
 
-BEGIN { require 5.004; }    # needs IO::* and $coderef->(@args) syntax 
+BEGIN { require 5.004; }    # needs IO::* and $coderef->(@args) syntax
 
 use PBot::IRC::Connection; # pragma_ 2011/01/21
 use PBot::IRC::EventQueue; # pragma_ 2011/01/21
@@ -37,7 +37,7 @@ $VERSION = "0.79";
 
 sub new {
   my $proto = shift;
-  
+
   my $self = {
     '_conn'             => [],
     '_connhash'         => {},
@@ -49,9 +49,9 @@ sub new {
     '_timeout'          => 1,
     '_write'            => IO::Select->new(),
   };
-  
+
   bless $self, $proto;
-  
+
   return $self;
 }
 
@@ -70,7 +70,7 @@ sub schedulequeue {
 #           (optional)   a flag string to pass to addfh() (see below)
 sub addconn {
   my ($self, $conn) = @_;
-  
+
   $self->addfh( $conn->socket, $conn->can('parse'), ($_[2] || 'r'), $conn);
 }
 
@@ -84,9 +84,9 @@ sub addconn {
 sub addfh {
   my ($self, $fh, $code, $flag, $obj) = @_;
   my ($letter);
-  
+
   die "Not enough arguments to IRC->addfh()" unless defined $code;
-  
+
   if ($flag) {
     foreach $letter (split(//, lc $flag)) {
       if ($letter eq 'r') {
@@ -100,7 +100,7 @@ sub addfh {
   } else {
     $self->{_read}->add( $fh );
   }
-  
+
   $self->{_connhash}->{$fh} = [ $code, $obj ];
 }
 
@@ -108,7 +108,7 @@ sub addfh {
 # Takes 1 optional arg: a new boolean value for the flag.
 sub debug {
   my $self = shift;
-  
+
   if (@_) {
     $self->{_debug} = $_[0];
   }
@@ -156,7 +156,7 @@ sub do_one_loop {
 
   # Block until input arrives, then hand the filehandle over to the
   # user-supplied coderef. Look! It's a freezer full of government cheese!
-  
+
   if ($nexttimer) {
     $timeout = $nexttimer - $time < $self->{_timeout}
     ? $nexttimer - $time : $self->{_timeout};
@@ -170,11 +170,11 @@ sub do_one_loop {
     foreach $sock (@{$ev}) {
       my $conn = $self->{_connhash}->{$sock};
       $conn or next;
-    
+
       # $conn->[0] is a code reference to a handler sub.
       # $conn->[1] is optionally an object which the
       #    handler sub may be a method of.
-      
+
       $conn->[0]->($conn->[1] ? ($conn->[1], $sock) : $sock);
     }
   }
@@ -193,7 +193,7 @@ sub flush_output_queue {
 sub newconn {
   my $self = shift;
   my $conn = PBot::IRC::Connection->new($self, @_); # pragma_ 2011/01/21
-  
+
   return if $conn->error;
   return $conn;
 }
@@ -236,14 +236,14 @@ sub dequeue_output_event {
 # Takes 1 arg:  a Connection (or DCC or whatever) to remove.
 sub removeconn {
   my ($self, $conn) = @_;
-  
+
   $self->removefh( $conn->socket );
 }
 
 # Given a filehandle, removes it from all select lists. You get the picture.
 sub removefh {
   my ($self, $fh) = @_;
-  
+
   $self->{_read}->remove( $fh );
   $self->{_write}->remove( $fh );
   $self->{_error}->remove( $fh );
@@ -254,7 +254,7 @@ sub removefh {
 # first... (takes no args, of course)
 sub start {
   my $self = shift;
-  
+
   while (1) {
     $self->do_one_loop();
   }
@@ -265,7 +265,7 @@ sub start {
 # Fractional timeout values are just fine, as per the core select().
 sub timeout {
   my $self = shift;
-  
+
   if (@_) { $self->{_timeout} = $_[0] }
   return $self->{_timeout};
 }
@@ -476,7 +476,7 @@ SSL
 
 If you wish to connect to an irc server which is using SSL, set this to a
 true value.  Ie: "C<SSL => 1>".
-    
+
 =back
 
 =head2 Handlers
@@ -756,4 +756,4 @@ http://www.irchelp.org/, home of fine IRC resources.
 
 =cut
 
-    
+

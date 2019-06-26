@@ -90,13 +90,13 @@ sub _getline {
     if (defined $sock->recv($input, 10240)) {
 	$frag .= $input;
 	if (length($frag) > 0) {
-	    
+
             warn "Got ". length($frag) ." bytes from $sock\n"
                 if $self->{_debug};
-            
+
 	    if ($block) {          # Block mode (GET)
 		return $input;
-		
+
 	    } else {               # Line mode (CHAT)
 		# We're returning \n's 'cause DCC's need 'em
 		my @lines = split /\012/, $frag, -1;
@@ -109,10 +109,10 @@ sub _getline {
 	    # um, if we can read, i say we should read more than 0
 	    # besides, recv isn't returning undef on closed
 	    # sockets.  getting rid of this connection...
-	    
+
             warn "recv() received 0 bytes in _getline, closing connection.\n"
                 if $self->{_debug};
-            
+
 	    $self->{_parent}->handler(PBot::IRC::Event->new('dcc_close', # pragma_ 2011/21/01
 							   $self->{_nick},
 							   $self->{_socket},
@@ -124,10 +124,10 @@ sub _getline {
 	}
     } else {
 	# Error, lets scrap this connection
-	
+
         warn "recv() returned undef, socket error in _getline()\n"
             if $self->{_debug};
-	
+
         $self->{_parent}->handler(PBot::IRC::Event->new('dcc_close', # pragma_ 2011/21/01
 						       $self->{_nick},
 						       $self->{_socket},
@@ -141,10 +141,10 @@ sub _getline {
 
 sub DESTROY {
     my $self = shift;
-    
+
     # Only do the Disconnection Dance of Death if the socket is still
     # live. Duplicate dcc_close events would be a Bad Thing.
-    
+
     if ($self->{_socket}->opened) {
 	$self->{_parent}->handler(PBot::IRC::Event->new('dcc_close', # pragma_ 2011/21/01
 						       $self->{_nick},
@@ -154,7 +154,7 @@ sub DESTROY {
 	close $self->{_fh} if $self->{_fh};
 	$self->{_parent}->{_parent}->parent->removeconn($self);
     }
-    
+
 }
 
 sub peer {
@@ -200,7 +200,7 @@ sub new {
 
     binmode $fh;                     # I love this next line. :-)
     ref $fh eq 'GLOB' ? select((select($fh), $|++)[0]) : $fh->autoflush(1);
-    
+
     $sock = new IO::Socket::INET( Proto    => "tcp",
 				  PeerAddr => "$address:$port" );
 
@@ -210,13 +210,13 @@ sub new {
 						 $sock,
 						 'get',
 						 'get', $sock));
-	
+
     } else {
         carp "Can't connect to $address: $!";
         close $fh;
         return;
     }
-    
+
     $sock->autoflush(1);
 
     my $self = {
@@ -231,7 +231,7 @@ sub new {
         _parent     =>  $container,
         _size       =>  $size,  # Expected size of file
         _socket     =>  $sock,  # Socket we're reading from
-        _time       =>  time, 
+        _time       =>  time,
 	_type       =>  'GET',
         };
 
@@ -265,10 +265,10 @@ sub parse {
 	$self->{_socket}->close;
 	return;
     }
-    
+
     $self->{_bin} += length($line);
-    
-    
+
+
     # confirm the packet we've just recieved
     unless ( $self->{_socket}->send( pack("N", $self->{_bin}) ) ) {
 	carp "Error writing to DCC GET socket: $!";
@@ -281,7 +281,7 @@ sub parse {
 	$self->{_socket}->close;
 	return;
     }
-    
+
     $self->{_bout} += 4;
 
     # The file is done.
@@ -297,7 +297,7 @@ sub parse {
 	$self->{_socket}->close;
         return;
     }
-    
+
     $self->{_parent}->handler(PBot::IRC::Event->new('dcc_update', # pragma_ 2011/21/01
                                                    $self->{_nick},
                                                    $self,
@@ -374,9 +374,9 @@ sub new {
         carp "Couldn't open DCC SEND socket: $!";
         $fh->close;
         return;
-    }    
+    }
 
-    $container->ctcp('DCC SEND', $nick, $filename, 
+    $container->ctcp('DCC SEND', $nick, $filename,
                      unpack("N",inet_aton($container->hostname())),
 		     $sock->sockport(), $size);
 
@@ -384,7 +384,7 @@ sub new {
 
     my $self = {
         _bin        =>  0,         # Bytes we've recieved thus far
-        _blocksize  =>  $blocksize,       
+        _blocksize  =>  $blocksize,
         _bout       =>  0,         # Bytes we've sent
 	_debug      =>  $container->debug,
         _fh         =>  $fh,       # FileHandle we will be reading from.
@@ -394,12 +394,12 @@ sub new {
         _parent     =>  $container,
         _size       =>  $size,     # Size of file
         _socket     =>  $sock,     # Socket we're writing to
-        _time       =>  0,         # This gets set by Accept->parse() 
+        _time       =>  0,         # This gets set by Accept->parse()
 	_type       =>  'SEND',
     };
 
     bless $self, $class;
-    
+
     $sock = PBot::IRC::DCC::Accept->new($sock, $self); # pragma_ 2011/21/01
 
     unless (defined $sock) {
@@ -443,9 +443,9 @@ sub parse {
 	$self->{_socket}->close;
 	return;
     }
-    
+
     $size = unpack("N", $size);
-    
+
     if ($size >= $self->{_size}) {
 
 	if ($self->{_debug}) {
@@ -461,9 +461,9 @@ sub parse {
 						       $self->{_type}));
 	$self->{_socket}->close;
         return;
-    } 
+    }
 
-    # we're still waiting for acknowledgement, 
+    # we're still waiting for acknowledgement,
     # better not send any more
     return if $size < $self->{_bout};
 
@@ -504,7 +504,7 @@ sub parse {
 						   $self,
 						   $self->{_type},
 						   $self ));
-    
+
     return 1;
 }
 
@@ -536,7 +536,7 @@ sub new {
 
         $sock = new IO::Socket::INET( Proto     => "tcp",
                                       Listen    => 1);
-	
+
         unless (defined $sock) {
             carp "Couldn't open DCC CHAT socket: $!";
             return;
@@ -559,9 +559,9 @@ sub new {
 	    _time       =>  0,      # This gets set by Accept->parse()
 	    _type       =>  'CHAT',
 	};
-	
+
 	bless $self, $class;
-	
+
         $sock = PBot::IRC::DCC::Accept->new($sock, $self); # pragma_ 2011/21/01
 
 	unless (defined $sock) {
@@ -600,9 +600,9 @@ sub new {
 	    _time       =>  time,
 	    _type       =>  'CHAT',
 	};
-	
+
 	bless $self, $class;
-	
+
 	$self->{_parent}->parent->addfh($self->socket,
 					$self->can('parse'), 'r', $self);
     }
@@ -624,9 +624,9 @@ sub parse {
 
     foreach my $line ($self->_getline($sock)) {
 	return unless defined $line;
-    
+
 	$self->{_bin} += length($line);
-	
+
 	return undef if $line eq "\012";
 	$self->{_bout} += length($line);
 
@@ -635,7 +635,7 @@ sub parse {
 						       $self->{_socket},
 						       'chat',
 						       $line));
-	
+
 	$self->{_parent}->handler(PBot::IRC::Event->new('dcc_update', # pragma_ 2011/21/01
 						       $self->{_nick},
 						       $self,
@@ -653,7 +653,7 @@ sub privmsg {
     unless (@_) {
 	croak 'Not enough arguments to privmsg()';
     }
-    
+
     # Don't send a CR over DCC CHAT -- it's not wanted.
     $self->socket->send(join('', @_) . "\012");
 }
@@ -688,7 +688,7 @@ sub new {
 	      _parent   =>  $parent,
 	      _type     =>  'accept',
 	  };
-    
+
     bless $self, $class;
 
     # Tkil's gonna love this one. :-)   But what the hell... it's safe to
@@ -726,7 +726,7 @@ sub parse {
 	    return;
 	}
     }
-    
+
     $self->{_parent}->{_parent}->parent->addconn($self->{_parent});
     $self->{_parent}->{_parent}->parent->removeconn($self);
 

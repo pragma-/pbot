@@ -31,7 +31,7 @@ my @quotes;
 while (1) {
     my $arguments = "love you";
     my $author = "";
-    
+
     $arguments =~ s/\$nick/me/gi;
     $arguments =~ s/\s/+/g;
 
@@ -71,7 +71,7 @@ while (1) {
     push @quotes, $t;
     print "Added '$t'\n" if $debug;
     print "$#quotes\n" if $debug;
-  } 
+  }
 
   if ($text =~ m/Page \d+ of (\d+)/) {
     $pages = $1;
@@ -81,7 +81,7 @@ while (1) {
   } else {
     last;
   }
-  
+
   if ($#quotes < 0) {
     print "No results found.\n";
     die;

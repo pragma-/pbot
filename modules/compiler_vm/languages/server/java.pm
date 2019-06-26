@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-package java; 
+package java;
 use parent '_default';
 
 sub preprocess {
@@ -28,7 +28,7 @@ sub postprocess {
   print "Executing java\n";
   my $input_quoted = quotemeta $self->{input};
   $input_quoted =~ s/\\"/"'\\"'"/g;
-  my ($retval, $result) = $self->execute(60, "date -s \@$self->{date}; ulimit -t 5; echo $input_quoted | java prog $self->{arguments} > .output");
+  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 5; echo $input_quoted | java prog $self->{arguments} > .output\"");
 
   $result = "";
   open(FILE, '.output');

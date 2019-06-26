@@ -31,7 +31,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  
+
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   my $filename = delete $conf{spamkeywords_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spam_keywords';

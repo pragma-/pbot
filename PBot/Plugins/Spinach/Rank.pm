@@ -73,10 +73,10 @@ sub print_bad_lies {
 sub sort_mentions {
   my ($self) = @_;
   if ($self->{rank_direction} eq '+') {
-    return $b->{games_played} - $b->{times_first} - $b->{times_second} - $b->{times_third} <=> 
+    return $b->{games_played} - $b->{times_first} - $b->{times_second} - $b->{times_third} <=>
       $a->{games_played} - $a->{times_first} - $a->{times_second} - $a->{times_third};
   } else {
-    return $a->{games_played} - $a->{times_first} - $a->{times_second} - $a->{times_third} <=> 
+    return $a->{games_played} - $a->{times_first} - $a->{times_second} - $a->{times_third} <=>
       $b->{games_played} - $b->{times_first} - $b->{times_second} - $b->{times_third};
   }
 }
@@ -84,7 +84,7 @@ sub sort_mentions {
 sub print_mentions {
   my ($self, $player) = @_;
   return undef if $player->{games_played} == 0;
-  my $result = $player->{games_played} - $player->{times_first} - $player->{times_second} - $player->{times_third}; 
+  my $result = $player->{games_played} - $player->{times_first} - $player->{times_second} - $player->{times_third};
   return "$player->{nick}: $result";
 }
 
@@ -181,11 +181,11 @@ sub rank {
     lowscore      => { sort => sub { $self->sort_generic('low_score', @_) },         print => sub { $self->print_generic('low_score', @_) },        title => 'low score' },
     avgscore      => { sort => sub { $self->sort_generic('avg_score', @_) },         print => sub { $self->print_avg_score(@_) },                   title => 'average score' },
     goodlies      => { sort => sub { $self->sort_generic('good_lies', @_) },         print => sub { $self->print_generic('good_lies', @_) },        title => 'good lies' },
-    badlies       => { sort => sub { $self->sort_bad_lies(@_) },                     print => sub { $self->print_bad_lies(@_) },                    title => 'bad lies' }, 
+    badlies       => { sort => sub { $self->sort_bad_lies(@_) },                     print => sub { $self->print_bad_lies(@_) },                    title => 'bad lies' },
     first         => { sort => sub { $self->sort_generic('times_first', @_) },       print => sub { $self->print_generic('times_first', @_) },      title => 'first place' },
     second        => { sort => sub { $self->sort_generic('times_second', @_) },      print => sub { $self->print_generic('times_second', @_) },     title => 'second place' },
     third         => { sort => sub { $self->sort_generic('times_third', @_) },       print => sub { $self->print_generic('times_third', @_) },      title => 'third place' },
-    mentions      => { sort => sub { $self->sort_mentions(@_) },                     print => sub { $self->print_mentions(@_) },                    title => 'mentions' }, 
+    mentions      => { sort => sub { $self->sort_mentions(@_) },                     print => sub { $self->print_mentions(@_) },                    title => 'mentions' },
     games         => { sort => sub { $self->sort_generic('games_played', @_) },      print => sub { $self->print_generic('games_played', @_) },     title => 'games played' },
     questions     => { sort => sub { $self->sort_generic('questions_played', @_) },  print => sub { $self->print_generic('questions_played', @_) }, title => 'questions played' },
     goodguesses   => { sort => sub { $self->sort_generic('good_guesses', @_) },      print => sub { $self->print_generic('good_guesses', @_) },     title => 'good guesses' },

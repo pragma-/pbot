@@ -43,7 +43,7 @@ sub initialize {
 
 sub unload {
   my $self = shift;
-  
+
   $self->dbi_end;
 
   $self->{pbot}->{commands}->unregister('remindme');
@@ -191,7 +191,7 @@ sub delete_reminder {
 
 sub remindme {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  
+
   if (not $self->{dbh}) {
     return "Internal error.";
   }

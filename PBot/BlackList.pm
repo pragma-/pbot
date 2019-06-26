@@ -57,7 +57,7 @@ sub remove {
   $channel = lc $channel;
   $hostmask = lc $hostmask;
 
-  if (exists $self->{blacklist}->{$channel}) { 
+  if (exists $self->{blacklist}->{$channel}) {
     delete $self->{blacklist}->{$channel}->{$hostmask};
 
     if (keys %{ $self->{blacklist}->{$channel} } == 0) {
@@ -85,7 +85,7 @@ sub load_blacklist {
   }
 
   $self->{pbot}->{logger}->log("Loading blacklist from $filename ...\n");
-  
+
   open(FILE, "< $filename") or Carp::croak "Couldn't open $filename: $!\n";
   my @contents = <FILE>;
   close(FILE);
@@ -97,11 +97,11 @@ sub load_blacklist {
     $i++;
 
     my ($channel, $hostmask) = split(/\s+/, $line);
-    
+
     if (not defined $hostmask || not defined $channel) {
          Carp::croak "Syntax error around line $i of $filename\n";
     }
-    
+
     if (exists $self->{blacklist}->{$channel}->{$hostmask}) {
       Carp::croak "Duplicate blacklist entry [$hostmask][$channel] found in $filename around line $i\n";
     }

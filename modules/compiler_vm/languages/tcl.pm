@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-package tcl; 
+package tcl;
 use parent '_default';
 
 sub initialize {

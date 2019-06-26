@@ -11,7 +11,7 @@ use Math::Units qw(convert);
 my ($arguments, $response, $invalid, @conversion);
 
 my @valid_keywords = (
-  'sin', 'cos', 'tan', 'atan', 'exp', 'int', 'hex', 'oct', 'log', 'sqrt', 
+  'sin', 'cos', 'tan', 'atan', 'exp', 'int', 'hex', 'oct', 'log', 'sqrt',
   'floor', 'ceil', 'asin', 'acos', 'log10', 'sinh', 'cosh', 'tanh', 'abs',
   'pi', 'deg2rad', 'rad2deg', 'atan2', 'cbrt'
 );

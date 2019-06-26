@@ -15,7 +15,7 @@ sub validate_string {
   return $string if not defined $string or not length $string;
   $max_length = 1024 * 8 if not defined $max_length;
 
-  eval { 
+  eval {
     my $h = decode_json($string);
     foreach my $k (keys %$h) {
       $h->{$k} = substr $h->{$k}, 0, $max_length unless $max_length <= 0;

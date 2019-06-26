@@ -166,7 +166,7 @@ while ($text =~ m/^\s{4,6}(\d+\.[0-9\.]*)/msg) {
   }
 
   last if $found && $paragraph_specified == $USER_SPECIFIED;
-  
+
   if ($paragraph_specified == $USER_SPECIFIED) {
     print "No such paragraph '$paragraph' in section '$section' of n1256.\n";
     exit 0;

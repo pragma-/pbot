@@ -17,7 +17,7 @@ sub postprocess {
     $self->{output} = "[$self->{output}]\n";
   }
 
-  my ($retval, $result) = $self->execute(60, "date -s \@$self->{date}; ulimit -t 5; cat .input | /home/compiler/prog > .output");
+  my ($retval, $result) = $self->execute(60, "bash -c \"date -s \@$self->{date}; ulimit -t 5; cat .input | /home/compiler/prog > .output\"");
 
   $self->{error} = $retval;
 

@@ -87,7 +87,7 @@ sub load_ignores {
   }
 
   $self->{pbot}->{logger}->log("Loading ignorelist from $filename ...\n");
-  
+
   open(FILE, "< $filename") or Carp::croak "Couldn't open $filename: $!\n";
   my @contents = <FILE>;
   close(FILE);
@@ -99,11 +99,11 @@ sub load_ignores {
     $i++;
 
     my ($hostmask, $channel, $length) = split(/\s+/, $line);
-    
+
     if (not defined $hostmask || not defined $channel || not defined $length) {
          Carp::croak "Syntax error around line $i of $filename\n";
     }
-    
+
     if (exists ${ $self->{ignore_list} }{$hostmask}{$channel}) {
       Carp::croak "Duplicate ignore [$hostmask][$channel] found in $filename around line $i\n";
     }
@@ -144,7 +144,7 @@ sub check_ignore {
   my $pbot = $self->{pbot};
   $channel = lc $channel;
 
-  my $hostmask = "$nick!$user\@$host"; 
+  my $hostmask = "$nick!$user\@$host";
 
   my $now = gettimeofday;
 
@@ -168,9 +168,9 @@ sub check_ignore {
       $self->{ignore_flood_counter}->{$channel} = 0;
       if ($channel =~ /^#/) {
         $pbot->{conn}->me($channel, "has been overwhelmed.");
-        $pbot->{conn}->me($channel, "lies down and falls asleep."); 
+        $pbot->{conn}->me($channel, "lies down and falls asleep.");
         return 1;
-      } 
+      }
     }
 =cut
   }

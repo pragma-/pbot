@@ -51,11 +51,6 @@ if (@$args == 0) {
   close $fh;
 }
 
-if ($args =~ m/afroman/) {
-  print "Oh fuck off.\n";
-  exit;
-}
-
 my $ud = WebService::UrbanDictionary->new;
 my $results = $ud->request($args);
 

@@ -49,7 +49,7 @@ sub on_public {
     if ($self->{pbot}->{nicklist}->is_present_similar($channel, $n, 0.05)) {
       $self->{offenses}->{$channel}->{$nick}->{offenses}++;
       $self->{offenses}->{$channel}->{$nick}->{time} = gettimeofday;
-      
+
       $self->{pbot}->{logger}->log("$nick!$user\@$host is a twit. ($self->{offenses}->{$channel}->{$nick}->{offenses} offenses) $channel: $msg\n");
 
       given ($self->{offenses}->{$channel}->{$nick}->{offenses}) {

@@ -55,7 +55,7 @@ sub load_quotegrabs {
   return if not defined $filename;
 
   $self->{pbot}->{logger}->log("Loading quotegrabs from $filename ...\n");
-  
+
   open(FILE, "< $filename") or die "Couldn't open $filename: $!\n";
   my @contents = <FILE>;
   close(FILE);
@@ -143,7 +143,7 @@ sub get_random_quotegrab {
   $text = '.*' if not defined $text;
 
   my @quotes;
-  
+
   eval {
     for(my $i = 0; $i <= $#{ $self->{quotegrabs} }; $i++) {
       my $hash = $self->{quotegrabs}[$i];
@@ -158,7 +158,7 @@ sub get_random_quotegrab {
     $self->{pbot}->{logger}->log("Error in show_random_quotegrab parameters: $@\n");
     return undef;
   }
-  
+
   if ($#quotes < 0) {
     return undef;
   }

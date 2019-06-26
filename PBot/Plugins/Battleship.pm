@@ -366,7 +366,7 @@ sub battleship_cmd {
       if (not $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host")) {
         return "$nick: Sorry, only admins may see the full board.";
       }
- 
+
       if ($self->{current_state} eq 'nogame' or $self->{current_state} eq 'accept'
           or $self->{current_state} eq 'genboard' or $self->{current_state} eq 'gameover') {
         return "$nick: There is no board to show right now.";
@@ -383,7 +383,7 @@ sub battleship_cmd {
       }
       $self->show_battlefield(4, $nick);
     }
- 
+
     default {
       return $usage;
     }
@@ -675,7 +675,7 @@ sub generate_ship {
       }
 
       $self->{ship_length}->[$ship] = $l;
-      return 1; 
+      return 1;
     }
 
     if (++$fail >= 5000) {
@@ -899,7 +899,7 @@ sub show_battlefield {
   $self->{pbot}->{logger}->log("showing battlefield for player $player\n");
 
   $buf = "$color{cyan}  ";
-  
+
   for($x = 1; $x < $self->{N_X} + 1; $x++) {
     if ($x % 10 == 0) {
       $buf .= $color{yellow} if $self->{N_X} > 10;
@@ -952,7 +952,7 @@ sub show_battlefield {
           $buf .= "$self->{board}->[$y][$x] ";
         }
       } elsif ($player == 2) {
-        if ($self->{board}->[$y][$x] eq '|' || $self->{board}->[$y][$x] eq '―' 
+        if ($self->{board}->[$y][$x] eq '|' || $self->{board}->[$y][$x] eq '―'
           || $self->{board}->[$y][$x] eq 'I' || $self->{board}->[$y][$x] eq '=') {
           $buf .= "$color{blue}~ ";
           next;
@@ -989,7 +989,7 @@ sub show_battlefield {
 
   # bottom border
   $buf .= "$color{cyan}  ";
-  
+
   for($x = 1; $x < $self->{N_X} + 1; $x++) {
     if ($x % 10 == 0) {
       $buf .= $color{yellow} if $self->{N_X} > 10;

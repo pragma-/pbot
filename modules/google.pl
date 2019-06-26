@@ -70,7 +70,7 @@ if ($text =~ m/Showing web page information/g)
   $header = $1;
   $header =~ s/<.*?>//g;
   print "$header";
- 
+
   if ($text =~ m/Description:(.*?)<br>/)
   {
     $header = $1;

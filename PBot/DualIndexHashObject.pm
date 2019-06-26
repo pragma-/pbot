@@ -1,7 +1,7 @@
 # File: DualIndexHashObject.pm
 # Author: pragma_
 #
-# Purpose: Provides a hash-table object with an abstracted API that includes 
+# Purpose: Provides a hash-table object with an abstracted API that includes
 # setting and deleting values, saving to and loading from files, etc.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
@@ -182,7 +182,7 @@ sub levenshtein_matches {
   $distance = 0.60 if not defined $distance;
 
   $primary_index_key = '.*' if not defined $primary_index_key;
-  
+
   if (not $secondary_index_key) {
     foreach my $index (sort keys %{ $self->hash }) {
       my $distance_result = fastdistance($primary_index_key, $index);

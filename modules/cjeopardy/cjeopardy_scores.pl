@@ -315,7 +315,7 @@ if (lc $command eq 'score') {
   $score .= "highest correct streak: $player_data->{highest_correct_streak}" . ($player_data->{lifetime_highest_correct_streak} > $player_data->{highest_correct_streak} ? " [$player_data->{lifetime_highest_correct_streak}]" : "") . ", ";
   $score .= "quickest correct streak: ";
   $score .= ($player_data->{highest_quick_correct_streak} > 0 ? "$player_data->{highest_quick_correct_streak} in " . (concise duration $player_data->{quickest_correct_streak}) : "N/A") . ($player_data->{lifetime_highest_quick_correct_streak} > $player_data->{highest_quick_correct_streak} ? " [$player_data->{lifetime_highest_quick_correct_streak} in " . (concise duration $player_data->{lifetime_quickest_correct_streak}) . "]" : "") . ", ";
-  
+
   $score .= "quickest answer: ";
 
   if ($player_data->{quickest_correct} == 0) {

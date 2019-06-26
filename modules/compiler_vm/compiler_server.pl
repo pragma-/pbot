@@ -23,7 +23,7 @@ my $NOGRAPHIC       = 1;
 sub server_listen {
   my $port = shift @_;
 
-  my $server = IO::Socket::INET->new( 
+  my $server = IO::Socket::INET->new(
     Proto     => 'tcp',
     LocalPort => $port,
     Listen    => SOMAXCONN,
@@ -54,7 +54,7 @@ sub vm_start {
   if($pid == 0) {
     my $command = "qemu-system-x86_64 -M pc -net none -hda compiler-snap.qcow2 -m 512 -monitor tcp:127.0.0.1:$MONITOR_PORT,server,nowait -serial tcp:127.0.0.1:$SERIAL_PORT,server,nowait -serial tcp:127.0.0.1:$HEARTBEAT_PORT,server -boot c -enable-kvm -loadvm 1" . ($NOGRAPHIC ? " -nographic" : "");
     my @command_list = split / /, $command;
-    exec(@command_list); 
+    exec(@command_list);
   } else {
     return $pid;
   }
@@ -92,7 +92,7 @@ sub execute {
 
       local $SIG{ALRM} = sub { print "Time out\n"; kill 9, $pid; print "sent KILL to $pid\n"; die "Timed-out: $result\n"; };
       alarm($COMPILE_TIMEOUT);
-      
+
       while(my $line = <$fh>) {
         $result .= $line;
       }
@@ -294,7 +294,7 @@ sub compiler_server {
         vm_stop $vm_pid;
         $running = 0;
         last;
-      } 
+      }
       print "Compiler server no longer running, restarting...\n";
     }
     waitpid($heartbeat_pid, 0);

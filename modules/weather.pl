@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I /home/msmud/lib/lib/perl5/site_perl/5.10.0/ 
+#!/usr/bin/perl -I /home/msmud/lib/lib/perl5/site_perl/5.10.0/
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,7 @@ if ($#ARGV < 0)
   print "Try again. Please specify the location you would like weather for.\n";
   die;
 }
-  
+
 $location = join("+", @ARGV);
 
 $location =~ s/,/%2C/;
@@ -33,7 +33,7 @@ $location =~ s/%2C/,/g;
 
 if ($text =~ m/No match found/)
 {
-  print "$location is not a valid location for this service.\n"; 
+  print "$location is not a valid location for this service.\n";
   die;
 }
 
@@ -54,7 +54,7 @@ if ($text =~ m/location matches\:/g)
     $weather =~ s/<\/b>//g;
     $weather =~ s/^\s+//;
 
-    $buf = $buf . "$weather - "; 
+    $buf = $buf . "$weather - ";
 
     if ($location =~ m/$weather/i)
     {
@@ -70,8 +70,8 @@ if ($text =~ m/location matches\:/g)
   }
 }
 
-  my ($update, $temp, $high, $low, $tempc, $highc, $lowc, $cond, 
-      $today, $tonight, $country, $state, $city, $humid, $wind, 
+  my ($update, $temp, $high, $low, $tempc, $highc, $lowc, $cond,
+      $today, $tonight, $country, $state, $city, $humid, $wind,
       $sunup, $sundown, $feels, $feelsc);
 
   $text =~ m/<a href="\/">Weather<\/a>\s>/g;
@@ -84,7 +84,7 @@ if ($text =~ m/location matches\:/g)
     $country = $1;
   }
 
-  if ($country ne "Canada") 
+  if ($country ne "Canada")
   {
     $text =~ m/<a href=.*?>(.*?)<\/a>\s>/g;
     $state = $1;
@@ -97,7 +97,7 @@ if ($text =~ m/location matches\:/g)
     if $text =~ m/at:\s(.*?)<\/font><\/td>/gi;
 
 
-  while ($text =~ 
+  while ($text =~
 m/<td\swidth\=\".*?align\=center\scolspan\=.*?\sface\=.*?\s.*?<b>(.*?)<\/b>/g)
   {
     push(@days, $1);
@@ -110,7 +110,7 @@ m/<td\swidth\=\".*?align\=center\scolspan\=.*?\sface\=.*?\s.*?<b>(.*?)<\/b>/g)
       $date = $i;
       last;
     }
-    $i = $i + 1; 
+    $i = $i + 1;
   }
 
   if ($i > 4 && $date ne "")
@@ -149,14 +149,14 @@ m/<td\swidth\=\".*?align\=center\scolspan\=.*?\sface\=.*?\s.*?<b>(.*?)<\/b>/g)
 
   for($i = 0; $i <= $date; $i++)
   {
-    $text =~ 
+    $text =~
 m/<td\salign=right\scolspan=1.*?face=Arial>High\:.*?size=3\sface=Arial>\n\s\s(.*?)\&/sgi;
     $high = $1;
   }
 
   for($i = 0; $i <= $date; $i++)
   {
-    $text =~ 
+    $text =~
 m/<td\salign=right\scolspan=1.*?face=Arial>Low\:.*?size=3\sface=Arial>\n\s(.*?)\&/sgi;
     $low = $1;
   }

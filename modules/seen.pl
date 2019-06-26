@@ -37,7 +37,7 @@ while (seek(FILE, $pos--, 0))
 
     if ($line =~ m/^(\d\d:\d\d) -!- $nick (.*?)$/i)
     {
-      $result = "date at $1: $nick $2\n"; 
+      $result = "date at $1: $nick $2\n";
     }
     elsif ($line =~ m/^(\d\d:\d\d) <\s*$nick> (.*?)$/i)
     {

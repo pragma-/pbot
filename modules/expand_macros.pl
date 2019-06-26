@@ -15,7 +15,7 @@ use LWP::UserAgent;
 
 my $debug = 0;
 
-my $USE_LOCAL        = defined $ENV{'CC_LOCAL'}; 
+my $USE_LOCAL        = defined $ENV{'CC_LOCAL'};
 
 my $output = "";
 my $nooutput = 'No output.';

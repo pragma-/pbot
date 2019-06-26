@@ -383,7 +383,7 @@ sub execute {
   #print FILE "Sending $length bytes [$compile_json] to vm_server\n";
 
   $chunk_size -= 1; # account for newline in syswrite
-  
+
   while ($chunks_sent < $length) {
     my $chunk = substr $compile_json, $chunks_sent, $chunk_size;
     #print FILE "Sending chunk [$chunk]\n";
@@ -617,7 +617,7 @@ sub process_interactive_edit {
         print "No recent code to $self->{got_run}.\n";
         exit 0;
       }
-    } 
+    }
 
     if($subcode =~ m/^\s*(and)?\s*remove \s*([^']+)?\s*'/) {
       $last_keyword = 'remove';
@@ -824,7 +824,7 @@ sub process_interactive_edit {
           $before = $`;
           $after = $';
         } elsif($suffix =~ /^i$/) {
-          $ret = $code =~ s|$regex|$to|i; 
+          $ret = $code =~ s|$regex|$to|i;
           ($a, $b, $c, $d, $e, $f, $g, $h, $i) = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
           $before = $`;
           $after = $';

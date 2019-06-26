@@ -2,7 +2,7 @@
 # Author: pragma_
 #
 # Purpose: Maintains lists of nicks currently present in channels.
-# Used to retrieve list of channels a nick is present in or to 
+# Used to retrieve list of channels a nick is present in or to
 # determine if a nick is present in a channel.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
@@ -46,7 +46,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',      sub { $self->on_nickchange(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.public',    sub { $self->on_activity(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.caction',   sub { $self->on_activity(@_) });
-  
+
   # handlers for the bot itself joining/leaving channels
   $self->{pbot}->{event_dispatcher}->register_handler('pbot.join',    sub { $self->on_join_channel(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('pbot.part',    sub { $self->on_part_channel(@_) });
@@ -113,7 +113,7 @@ sub get_channels {
       push @channels, $channel;
     }
   }
-  
+
   return \@channels;
 }
 
@@ -236,7 +236,7 @@ sub random_nick {
   if (exists $self->{nicklist}->{$channel}) {
     my $now = gettimeofday;
     my @nicks = grep { $now - $self->{nicklist}->{$channel}->{$_}->{timestamp} < 3600 * 2 } keys %{ $self->{nicklist}->{$channel} };
-    
+
     my $nick = $nicks[rand @nicks];
     return $self->{nicklist}->{$channel}->{$nick}->{nick};
   } else {

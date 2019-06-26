@@ -29,7 +29,7 @@ $SIG{INT} = sub { vm_stop(); exit 1; };
 sub server_listen {
   my $port = shift @_;
 
-  my $server = IO::Socket::INET->new( 
+  my $server = IO::Socket::INET->new(
     Proto     => 'tcp',
     LocalPort => $port,
     Listen    => SOMAXCONN,
@@ -262,7 +262,7 @@ sub compiler_server {
         $ns->setvar('running', 0);
         vm_stop;
         last;
-      } 
+      }
       print "Compiler server no longer running, restarting...\n";
     }
     print "Waiting for heartbeat $heartbeat_pid to die\n";

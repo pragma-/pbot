@@ -88,14 +88,14 @@ sub execute_module {
     close $writer;
     $stuff->{checkflood} = 1;
     $self->{pbot}->{interpreter}->handle_result($stuff, "/me groans loudly.\n");
-    return; 
+    return;
   }
 
   # FIXME -- add check to ensure $module exists
 
   if ($pid == 0) { # start child block
     close $reader;
-    
+
     # don't quit the IRC client when the child dies
     no warnings;
     *PBot::IRC::Connection::DESTROY = sub { return; };
@@ -161,7 +161,7 @@ sub module_pipe_reader {
       $stuff->{no_nickoverride} = 0;
       $stuff->{force_nickoverride} = 1;
     } else {
-      # extract nick-like thing from module result 
+      # extract nick-like thing from module result
       if ($stuff->{result} =~ s/^(\S+): //) {
         my $nick = $1;
         if (lc $nick eq "usage") {

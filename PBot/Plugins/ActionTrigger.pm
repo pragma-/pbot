@@ -358,12 +358,12 @@ sub check_trigger {
         my $action = $trigger->{action};
         my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
         my $i;
-        map { ++$i; $action =~ s/\$$i/$_/g; } @stuff; 
-        
+        map { ++$i; $action =~ s/\$$i/$_/g; } @stuff;
+
         my $delay = 0;
 
         my ($n, $u, $h) = $trigger->{owner} =~ /^([^!]+)!([^@]+)\@(.*)$/;
-        my $command = { 
+        my $command = {
           nick => $n,
           user => $u,
           host => $h,

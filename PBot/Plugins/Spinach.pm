@@ -1930,7 +1930,7 @@ sub getlies {
     if ($needed <= 0) {
       $state->{reroll_question} = 1;
       $self->send_message($self->{channel}, "The answer was: " . uc ($state->{current_question}->{answer}) . $reveallies);
-      return 'reroll'; 
+      return 'reroll';
     }
   }
 
@@ -2326,7 +2326,7 @@ sub showfinalscore {
       }
 
       if ($i >= 4) {
-        $mentions = "$player->{name}: " . $self->commify($player->{score}) . "$comma$mentions"; 
+        $mentions = "$player->{name}: " . $self->commify($player->{score}) . "$comma$mentions";
         $comma = "; ";
         if ($i == 4) {
           $mentions = "Honorable mentions: $mentions";

@@ -45,8 +45,8 @@ sub initialize {
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   # flags for 'validated' field
-  $self->{NICKSERV_VALIDATED}       = (1<<0); 
-  $self->{NEEDS_CHECKBAN}           = (1<<1); 
+  $self->{NICKSERV_VALIDATED}       = (1<<0);
+  $self->{NEEDS_CHECKBAN}           = (1<<1);
 
   $self->{channels}      = {}; # per-channel statistics, e.g. for optimized tracking of last spoken nick for enter-abuse detection, etc
   $self->{nickflood}     = {}; # statistics to track nickchange flooding
@@ -270,7 +270,7 @@ sub update_join_watch {
     # check QUIT message for netsplits, and decrement joinwatch to allow a free rejoin
     if ($text =~ /^QUIT .*\.net .*\.split/) {
       if ($channel_data->{join_watch} > 0) {
-        $channel_data->{join_watch}--; 
+        $channel_data->{join_watch}--;
         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
       }
     }
@@ -513,9 +513,9 @@ sub check_flood {
                 $self->{pbot}->{logger}->log("[anti-flood] I am not an op for ${channel}-floodbans, disregarding join-flood.\n");
               }
             }
-            $channel_data->{join_watch} = $max_messages - 2; # give them a chance to rejoin 
+            $channel_data->{join_watch} = $max_messages - 2; # give them a chance to rejoin
             $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
-          } 
+          }
         } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
           if ($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
             # don't increment offenses again if already banned
@@ -915,7 +915,7 @@ sub check_bans {
           if ($self->whitelisted($baninfo->{channel}, $baninfo->{banmask}, 'ban') || $self->whitelisted($baninfo->{channel}, $mask, 'user')) {
             #$self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
             next;
-          } 
+          }
 
           # special case for twkm clone bans
           if ($baninfo->{banmask} =~ m/\?\*!\*@\*$/) {

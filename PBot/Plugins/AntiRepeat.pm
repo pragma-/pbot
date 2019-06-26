@@ -63,7 +63,7 @@ sub on_public {
 
   my $antirepeat = $self->{pbot}->{registry}->get_value($channel, 'antirepeat');
   return 0 if defined $antirepeat and not $antirepeat;
-  
+
   return 0 if $channel !~ m/^#/;
   return 0 if $event->{interpreted};
   return 0 if $self->{pbot}->{antiflood}->whitelisted($channel, "$nick!$user\@$host", 'antiflood');

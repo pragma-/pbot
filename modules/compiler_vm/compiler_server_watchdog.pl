@@ -39,7 +39,7 @@ while (1) {
 
   foreach $p (@{$t->table}) {
     $pids->{$p->pid} = { fname => $p->fname, ppid => $p->ppid };
-  } 
+  }
 
   foreach $p (keys %$pids) {
     if ($pids->{$p}->{fname} eq $QEMU) {

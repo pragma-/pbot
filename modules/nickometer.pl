@@ -65,24 +65,24 @@ sub nickometer ($) {
   if ($_ =~ m/^.$/) {
     &punish(1000, "single letter nick");
   }
-  
+
   while (m/[A-Z]([^A-Z]+)\b/g) {
     &punish(250, "length 1 between capitals") if length $1 == 1;
   }
 
   # Allow Perl referencing
   s/^\\([A-Za-z])/$1/;
-  
+
   # Keep me safe from Pudge ;-)
   s/\^(pudge)/$1/i;
 
   # C-- ain't so bad either
   s/^C--$/C/;
-  
+
   # Punish consecutive non-alphas
   s/([^A-Za-z0-9]{2,})
    /my $consecutive = length($1);
-    &punish(&slow_pow(10, $consecutive), 
+    &punish(&slow_pow(10, $consecutive),
 	    "$consecutive total consecutive non-alphas")
       if $consecutive;
     $1
@@ -91,12 +91,12 @@ sub nickometer ($) {
   # Remove balanced brackets and punish for unmatched
   while (s/^([^()]*)   (\() (.*) (\)) ([^()]*)   $/$1$3$5/x ||
 	 s/^([^{}]*)   (\{) (.*) (\}) ([^{}]*)   $/$1$3$5/x ||
-	 s/^([^\[\]]*) (\[) (.*) (\]) ([^\[\]]*) $/$1$3$5/x) 
+	 s/^([^\[\]]*) (\[) (.*) (\]) ([^\[\]]*) $/$1$3$5/x)
   {
     print "Removed $2$4 outside parentheses; nick now $_\n" if $verbose;
   }
   my $parentheses = tr/(){}[]/(){}[]/;
-  &punish(&slow_pow(10, $parentheses), 
+  &punish(&slow_pow(10, $parentheses),
 	  "$parentheses unmatched " .
 	    ($parentheses == 1 ? 'parenthesis' : 'parentheses'))
     if $parentheses;
@@ -116,11 +116,11 @@ sub nickometer ($) {
   # alpha is caps.
   my $orig_case = $_;
   s/^([^A-Za-z]*[A-Z].*[a-z].*?)[_-]?([A-Z])/$1\l$2/;
-  
+
   # A caps first alpha is sometimes not lame
   s/^([^A-Za-z]*)([A-Z])([a-z])/$1\l$2$3/;
-  
-  # Punish uppercase to lowercase shifts and vice-versa, modulo 
+
+  # Punish uppercase to lowercase shifts and vice-versa, modulo
   # exceptions above
   my $case_shifts = &case_shifts($orig_case);
   &punish(&slow_pow(5, $case_shifts),
@@ -133,7 +133,7 @@ sub nickometer ($) {
 
   # Punish letter to numeric shifts and vice-versa
   my $number_shifts = &number_shifts($_);
-  &punish(&slow_pow(9, $number_shifts), 
+  &punish(&slow_pow(9, $number_shifts),
 	  $number_shifts . ' letter/number ' .
 	    (($number_shifts == 1) ? 'shift' : 'shifts'))
     if $number_shifts > 1;
@@ -155,8 +155,8 @@ sub nickometer ($) {
   print "\nRaw lameness score is $score\n" if $verbose;
 
   # Use an appropriate function to map [0, +inf) to [0, 100)
-  my $percentage = 100 * 
-                     (1 + tanh(($score-400)/400)) * 
+  my $percentage = 100 *
+                     (1 + tanh(($score-400)/400)) *
                      (1 - 1/(1+$score/5)) / 2;
 
   my $digits = 2 * (2 - &round_up(log(100 - $percentage) / log(10)));

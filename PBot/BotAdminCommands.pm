@@ -38,7 +38,7 @@ sub initialize {
   }
 
   $self->{pbot} = $pbot;
-  
+
   $pbot->{commands}->register(sub { return $self->login(@_)        },       "login",         0);
   $pbot->{commands}->register(sub { return $self->logout(@_)       },       "logout",        0);
   $pbot->{commands}->register(sub { return $self->in_channel(@_)   },       "in",            0);
@@ -295,7 +295,7 @@ sub export {
   }
 
   if ($arguments =~ /^factoids$/i) {
-    return $self->{pbot}->{factoids}->export_factoids; 
+    return $self->{pbot}->{factoids}->export_factoids;
   }
 
   if ($arguments =~ /^admins$/i) {

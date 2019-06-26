@@ -205,8 +205,8 @@ my @rename_rules = (
   { old => qr/^BABY NAMES BEG/, new => "BABY NAMES" },
   { old => qr/^CURRENCY & FLAGS$/, new => "CURRENCIES & FLAGS" },
   { old => qr/^CURRENCIES$/, new => "CURRENCIES & FLAGS" },
-  { old => qr/^FUN$/, new => "FUN & GAMES" }, 
-  { old => qr/^GAMES$/, new => "FUN & GAMES" }, 
+  { old => qr/^FUN$/, new => "FUN & GAMES" },
+  { old => qr/^GAMES$/, new => "FUN & GAMES" },
   { old => qr/^HOBBIES & LEISURE$/, new => "FUN & GAMES" },
   { old => qr/^MISC GAMES$/, new => "FUN & GAMES" },
   { old => qr/^SIMPSONS$/, new => "THE SIMPSONS" },
@@ -235,8 +235,8 @@ my @rename_rules = (
   { old => qr/^EPL$/, new => "SOCCER" },
   { old => qr/^NZ$/, new => "NEW ZEALAND" },
   { old => qr/^NZ /, new => "NEW ZEALAND" },
-  { old => qr/[NB]URSERY RHYME/, new => "FAIRYTALES & NURSERY RHYMES" }, 
-  { old => qr/NURESRY RHYME/, new => "FAIRYTALES & NURSERY RHYMES" }, 
+  { old => qr/[NB]URSERY RHYME/, new => "FAIRYTALES & NURSERY RHYMES" },
+  { old => qr/NURESRY RHYME/, new => "FAIRYTALES & NURSERY RHYMES" },
   { old => qr/^GEOGRAPH/, new => "GEOGRAPHY" },
   { old => qr/TREKKIE/, new => "STAR TREK" },
   { old => qr/^STAR TREK/, new => "STAR TREK" },
@@ -313,8 +313,8 @@ my %refilter_rules = (
   ],
   "MUSIC" => [
     { regex => qr/theme song/i, category => "THEME SONGS" },
-    { regex => qr/80's tune performed by/i, category => "80'S TUNE PERFORMED BY" }, 
-    { regex => qr/90's tune performed by/i, category => "90'S TUNE PERFORMED BY" }, 
+    { regex => qr/80's tune performed by/i, category => "80'S TUNE PERFORMED BY" },
+    { regex => qr/90's tune performed by/i, category => "90'S TUNE PERFORMED BY" },
     { regex => qr/50's chart toppers/i, category => "1950'S CHART TOPPERS" },
     { regex => qr/60's chart toppers/i, category => "1960'S CHART TOPPERS" },
     { regex => qr/70's chart toppers/i, category => "1970'S CHART TOPPERS" },
@@ -694,7 +694,7 @@ for my $i (0 .. $#lines) {
 
   if (not $l[0] =~ m/ /) {
     print STDERR "Skipping doc $i (no spaces): $l[0] ($l[1])\n";
-    next; 
+    next;
   }
 
   # skip questions that we don't want
@@ -800,7 +800,7 @@ foreach my $cat (sort { @{$docs{$b}} <=> @{$docs{$a}} } keys %docs) {
   print STDERR "  $cat: ", scalar @{$docs{$cat}}, "\n";
 
   if (@{$docs{$cat}} < $minimum_category_size) {
-    $small++ 
+    $small++
   } else {
     $total += @{$docs{$cat}};
     $approved{$cat} = 1;
@@ -837,7 +837,7 @@ $total = @uncat;
 foreach my $doc (sort { $lines[$a] cmp $lines[$b] } @uncat) {
   if ($i % 1000 == 0) {
     print STDERR "-" x 80, "\n";
-    print STDERR "$i / $total\n"; 
+    print STDERR "$i / $total\n";
     print STDERR "-" x 80, "\n";
   }
   $i++;
@@ -899,7 +899,7 @@ foreach my $doc (@remaining_uncat) {
       push @{$docs{$cat}}, $doc;
       if (@{$docs{$cat}} == $minimum_category_size) {
        $approved{$cat} = 1;
-     } 
+     }
      print STDERR "Using uncat rules $cat for doc $i: $l[0] ($l[1])\n";
     } else {
       $new_uncat{$doc} = 1;

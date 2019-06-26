@@ -21,17 +21,17 @@ our $max_seconds = 1000000;
 our $seconds = 0;
 our @timer_funcs;
 
-$SIG{ALRM} = sub { 
-  $seconds += $min_timeout; 
-  alarm $min_timeout; 
+$SIG{ALRM} = sub {
+  $seconds += $min_timeout;
+  alarm $min_timeout;
 
-  # print "ALARM! $seconds $min_timeout\n"; 
-  
+  # print "ALARM! $seconds $min_timeout\n";
+
   # call timer func subroutines
   foreach my $func (@timer_funcs) { &$func; }
-  
+
   # prevent $seconds over-flow
-  $seconds -= $max_seconds if $seconds > $max_seconds; 
+  $seconds -= $max_seconds if $seconds > $max_seconds;
 };
 
 sub new {
