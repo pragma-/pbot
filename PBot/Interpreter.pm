@@ -217,6 +217,12 @@ sub interpret {
     return undef;
   }
 
+  # check for splitted commands
+  if ($stuff->{command} =~ m/^(.*?)\s*(?<!\\);;\s*(.*)/) {
+    $stuff->{command} = $1;
+    $stuff->{command_split} = $2;
+  }
+
   my $cmdlist = $self->make_args($stuff->{command});
   if ($self->arglist_size($cmdlist) >= 4 and lc $cmdlist->[0] eq 'tell' and (lc $cmdlist->[2] eq 'about' or lc $cmdlist->[2] eq 'the')) {
     # tell nick about cmd [args]
@@ -309,6 +315,9 @@ sub interpret {
 
   $stuff->{keyword} = $keyword;
 
+  # unescape any escaped command splits
+  $arguments =~ s/\\;;/;;/g if defined $arguments;
+
   # unescape any escaped substituted commands
   $arguments =~ s/\\&\s*\{/&{/g if defined $arguments;
 
@@ -329,7 +338,6 @@ sub interpret {
   foreach my $func (@{$self->{handlers}}) {
     $result = &{$func->{subref}}($stuff);
     last if defined $result;
-
     # reset any manipulated arguments
     $stuff->{arguments} = $stuff->{original_arguments};
   }
@@ -817,6 +825,30 @@ sub handle_result {
 
   if ($stuff->{prepend}) {
     $result = "$stuff->{prepend} $result";
+  }
+
+  if ($stuff->{command_split}) {
+    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    $stuff->{command} = delete $stuff->{command_split};
+    $self->{pbot}->{logger}->log("Handling split [$result][$stuff->{command}]\n");
+    $result =~ s#^/say #\n#i;
+    $result =~ s#^/me #\n* $botnick #i;
+    if (not length $stuff->{split_result}) {
+      $result =~ s/^\n//;
+      $stuff->{split_result} = $result;
+    } else {
+      $stuff->{split_result} .= $result;
+    }
+    $result = $self->interpret($stuff);
+    $self->handle_result($stuff, $result);
+    return 0;
+  }
+
+  if ($stuff->{split_result}) {
+    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    $result =~ s#^/say #\n#i;
+    $result =~ s#^/me #\n* $botnick #i;
+    $result = $stuff->{split_result} . $result;
   }
 
   my $original_result = $result;
