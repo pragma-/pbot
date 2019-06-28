@@ -102,22 +102,18 @@ sub load_admins {
     return;
   }
 
-  $self->{pbot}->{logger}->log("Loading admins from $filename ...\n");
-
   $self->{admins}->load;
 
   my $i = 0;
-
   foreach my $channel (keys %{ $self->{admins}->hash } ) {
     foreach my $hostmask (keys %{ $self->{admins}->hash->{$channel} }) {
       $i++;
-
       my $name = $self->{admins}->hash->{$channel}->{$hostmask}->{name};
       my $level = $self->{admins}->hash->{$channel}->{$hostmask}->{level};
       my $password = $self->{admins}->hash->{$channel}->{$hostmask}->{password};
 
       if (not defined $name or not defined $level or not defined $password) {
-        Carp::croak "Syntax error around line $i of $filename\n";
+        Carp::croak "Admin #$i of $filename is missing critical data\n";
       }
 
       $self->{pbot}->{logger}->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");

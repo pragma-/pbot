@@ -74,12 +74,9 @@ sub initialize {
 sub load_factoids {
   my $self = shift;
 
-  $self->{pbot}->{logger}->log("Loading factoids from " . $self->{factoids}->filename . " ...\n");
-
   $self->{factoids}->load;
 
   my ($text, $regex, $modules);
-
   foreach my $channel (keys %{ $self->{factoids}->hash }) {
     foreach my $trigger (keys %{ $self->{factoids}->hash->{$channel} }) {
       $self->{pbot}->{logger}->log("Missing type for $channel->$trigger\n") if not $self->{factoids}->hash->{$channel}->{$trigger}->{type};
@@ -88,7 +85,6 @@ sub load_factoids {
       $modules++ if $self->{factoids}->hash->{$channel}->{$trigger}->{type} eq 'module';
     }
   }
-
   $self->{pbot}->{logger}->log("  " . ($text + $regex + $modules) . " factoids loaded ($text text, $regex regexs, $modules modules).\n");
   $self->add_default_factoids();
 }

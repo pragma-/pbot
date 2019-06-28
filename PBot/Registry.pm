@@ -46,11 +46,7 @@ sub initialize {
 
 sub load {
   my $self = shift;
-
-  $self->{pbot}->{logger}->log("Loading registry from " . $self->{registry}->{filename} . " ...\n");
-
   $self->{registry}->load;
-
   foreach my $section (keys %{ $self->{registry}->hash }) {
     foreach my $item (keys %{ $self->{registry}->hash->{$section} }) {
       $self->process_trigger($section, $item, $self->{registry}->hash->{$section}->{$item}->{value});
