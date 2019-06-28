@@ -35,7 +35,7 @@ sub initialize {
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   my $filename = delete $conf{spamkeywords_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spam_keywords';
-  $self->{keywords} = PBot::DualIndexHashObject->new(name => 'SpamKeywords', filename => $filename);
+  $self->{keywords} = PBot::DualIndexHashObject->new(name => 'SpamKeywords', filename => $filename, pbot => $self->{pbot});
   $self->{keywords}->load;
 
   $self->{pbot}->{registry}->add_default('text', 'antispam', 'enforce',  $conf{enforce_antispam} // 1);

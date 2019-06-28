@@ -54,7 +54,7 @@ sub initialize {
   $self->{changinghost}  = {}; # tracks nicks changing hosts/identifying to strongly link them
 
   my $filename = delete $conf{whitelist_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/whitelist';
-  $self->{whitelist} = PBot::DualIndexHashObject->new(name => 'Whitelist', filename => $filename);
+  $self->{whitelist} = PBot::DualIndexHashObject->new(name => 'Whitelist', filename => $filename, pbot => $self->{pbot});
   $self->{whitelist}->load;
 
   $self->{pbot}->{timer}->register(sub { $self->adjust_offenses }, 60 * 60 * 1);
@@ -405,6 +405,7 @@ sub check_flood {
     }
 
     if ($self->whitelisted($channel, "$nick!$user\@$host", 'antiflood')) {
+      $self->{pbot}->{logger}->log("$nick!$user\@$host anti-flood whitelisted, disgregarding ban\n");
       next;
     }
 

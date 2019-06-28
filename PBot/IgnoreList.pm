@@ -112,7 +112,6 @@ sub load_ignores {
   }
 
   $self->{pbot}->{logger}->log("  $i entries in ignorelist\n");
-  $self->{pbot}->{logger}->log("Done.\n");
 }
 
 sub save_ignores {

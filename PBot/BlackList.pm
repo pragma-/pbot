@@ -110,7 +110,6 @@ sub load_blacklist {
   }
 
   $self->{pbot}->{logger}->log("  $i entries in blacklist\n");
-  $self->{pbot}->{logger}->log("Done.\n");
 }
 
 sub save_blacklist {

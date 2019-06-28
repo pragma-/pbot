@@ -50,9 +50,9 @@ sub initialize {
   my $export_path = delete $conf{export_path};
   my $export_site = delete $conf{export_site};
 
-  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to Factoids");
+  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
-  $self->{factoids}    = PBot::DualIndexHashObject->new(name => 'Factoids', filename => $filename);
+  $self->{factoids}    = PBot::DualIndexHashObject->new(name => 'Factoids', filename => $filename, pbot => $pbot);
   $self->{export_path} = $export_path;
   $self->{export_site} = $export_site;
 
@@ -90,8 +90,6 @@ sub load_factoids {
   }
 
   $self->{pbot}->{logger}->log("  " . ($text + $regex + $modules) . " factoids loaded ($text text, $regex regexs, $modules modules).\n");
-  $self->{pbot}->{logger}->log("Done.\n");
-
   $self->add_default_factoids();
 }
 

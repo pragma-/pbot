@@ -1,6 +1,10 @@
-[.*]
-<pbot3!stdin@localhost>
-level: 90
-name: pbot3
-password: admin
+{
+   ".*" : {
+      "pbot3!stdin@localhost" : {
+         "password" : "admin",
+         "level" : "90",
+         "name" : "pbot3"
+      }
+   }
+}
 

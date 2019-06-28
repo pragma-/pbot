@@ -36,7 +36,7 @@ sub initialize {
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   my $filename  = delete $conf{filename};
 
-  $self->{registry} = PBot::DualIndexHashObject->new(name => 'Registry', filename => $filename, ignore_duplicates => 1);
+  $self->{registry} = PBot::DualIndexHashObject->new(name => 'Registry', filename => $filename, pbot => $self->{pbot});
   $self->{triggers} = {};
 
   $self->{pbot}->{atexit}->register(sub { $self->save; return; });
@@ -56,8 +56,6 @@ sub load {
       $self->process_trigger($section, $item, $self->{registry}->hash->{$section}->{$item}->{value});
     }
   }
-
-  $self->{pbot}->{logger}->log("Done.\n");
 }
 
 sub save {

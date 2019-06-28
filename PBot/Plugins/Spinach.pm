@@ -122,6 +122,7 @@ sub load_questions {
     };
     local $/;
     <$fh>;
+    close $fh;
   };
 
   $self->{loaded_filename} = $filename;

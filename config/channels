@@ -1,4 +1,7 @@
-[#pbot2]
-chanop: 0
-enabled: 1
+{
+   "#pbot2" : {
+      "enabled" : "1",
+      "chanop" : "0"
+   }
+}
 

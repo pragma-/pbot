@@ -46,7 +46,7 @@ sub initialize {
   }
 
   $self->{pbot}           = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  $self->{admins}         = PBot::DualIndexHashObject->new(name => 'Admins', filename => $filename);
+  $self->{admins}         = PBot::DualIndexHashObject->new(name => 'Admins', filename => $filename, pbot => $self->{pbot});
   $self->{commands}       = PBot::BotAdminCommands->new(pbot => $self->{pbot});
   $self->{export_path}    = $export_path;
   $self->{export_site}    = $export_site;
@@ -125,7 +125,6 @@ sub load_admins {
   }
 
   $self->{pbot}->{logger}->log("  $i admins loaded.\n");
-  $self->{pbot}->{logger}->log("Done.\n");
 }
 
 sub save_admins {

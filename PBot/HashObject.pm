@@ -15,6 +15,7 @@ use strict;
 
 use Text::Levenshtein qw(fastdistance);
 use Carp ();
+use JSON;
 
 sub new {
   if (ref($_[1]) eq 'HASH') {
@@ -33,20 +34,16 @@ sub initialize {
 
   $self->{name} = delete $conf{name} // 'hash object';
   $self->{filename}  = delete $conf{filename} // Carp::carp("Missing filename to HashObject, will not be able to save to or load from file.");
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to HashObject");
+  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{hash} = {};
 }
 
-sub load_hash_add {
-  my ($self, $index_key, $hash, $i, $filename) = @_;
+sub hash_add {
+  my ($self, $index_key, $hash) = @_;
 
   if (defined $hash) {
     if (exists $self->hash->{$index_key}) {
-      if ($i) {
-        Carp::croak "Duplicate hash '$index_key' found in $filename around line $i\n";
-      } else {
-        return undef;
-      }
+      return undef;
     }
 
     foreach my $key (keys %$hash) {
@@ -68,54 +65,21 @@ sub load {
     return;
   }
 
-  $self->{pbot}->{logger}->log("Loading $self->{name} objects from $filename ...\n");
+  $self->{pbot}->{logger}->log("Loading $self->{name} from $filename ...\n");
 
   if (not open(FILE, "< $filename")) {
-    Carp::carp "Couldn't open $filename: $!\n";
-    Carp::carp "Skipping loading from file.\n";
+    Carp::carp "Skipping loading from file: Couldn't open $filename: $!\n";
     return;
   }
 
-  my ($hash, $index_key, $i);
-  $hash = {};
+	my $contents = do {
+		local $/;
+		<FILE>;
+	};
 
-  foreach my $line (<FILE>) {
-    $i++;
+  $self->{hash} = decode_json $contents;
 
-    $line =~ s/^\s+//;
-    $line =~ s/\s+$//;
-
-    if ($line =~ /^\[(.*)\]$/) {
-      $index_key = $1;
-      next;
-    }
-
-    if ($line eq '') {
-      # store the old hash
-      $self->load_hash_add($index_key, $hash, $i, $filename);
-
-      # start a new hash
-      $hash = {};
-      next;
-    }
-
-    my ($key, $value) = split /\:/, $line, 2;
-
-    if (not defined $key or not defined $value) {
-      Carp::croak "Error around line $i of $filename\n";
-    }
-
-    $key =~ s/^\s+//;
-    $key =~ s/\s+$//;
-    $value =~ s/^\s+//;
-    $value =~ s/\s+$//;
-
-    $hash->{$key} = $value;
-  }
-
-  close(FILE);
-
-  $self->{pbot}->{logger}->log("Done.\n");
+  close FILE;
 }
 
 sub save {
@@ -129,16 +93,14 @@ sub save {
     return;
   }
 
+  $self->{pbot}->{logger}->log("Saving $self->{name} to $filename\n");
+
+  my $json = JSON->new;
+  $json->space_before(0);
+  my $json_text = $json->pretty->encode($self->{hash});
+
   open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
-
-  foreach my $index (sort keys %{ $self->hash }) {
-    print FILE "[$index]\n";
-
-    foreach my $key (sort keys %{ ${ $self->hash }{$index} }) {
-      print FILE "$key: ${ $self->hash }{$index}{$key}\n";
-    }
-    print FILE "\n";
-  }
+  print FILE "$json_text\n";
   close(FILE);
 }
 
@@ -245,7 +207,7 @@ sub unset {
 sub add {
   my ($self, $index_key, $hash) = @_;
 
-  if ($self->load_hash_add($index_key, $hash, 0)) {
+  if ($self->hash_add($index_key, $hash)) {
     $self->save();
   } else {
     return "Error occurred adding new $self->{name} object.";

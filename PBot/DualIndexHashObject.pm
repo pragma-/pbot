@@ -14,6 +14,7 @@ use warnings;
 use strict;
 
 use Text::Levenshtein qw(fastdistance);
+use JSON;
 use Carp ();
 
 sub new {
@@ -33,21 +34,17 @@ sub initialize {
 
   $self->{name}     = delete $conf{name} // 'Dual Index hash object';
   $self->{filename} = delete $conf{filename} // Carp::carp("Missing filename to DualIndexHashObject, will not be able to save to or load from file.");
-  $self->{ignore_duplicates} = delete $conf{ignore_duplicates} // 0;
+  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{hash} = {};
 }
 
 
-sub load_hash_add {
-  my ($self, $primary_index_key, $secondary_index_key, $hash, $i, $filename) = @_;
+sub hash_add {
+  my ($self, $primary_index_key, $secondary_index_key, $hash) = @_;
 
   if (defined $hash) {
-    if (not $self->{ignore_duplicates} and exists $self->hash->{$primary_index_key}->{$secondary_index_key}) {
-      if ($i) {
-        Carp::croak "Duplicate secondary_index_key '$secondary_index_key' found in $filename around line $i\n";
-      } else {
-        return undef;
-      }
+    if (exists $self->hash->{$primary_index_key}->{$secondary_index_key}) {
+      return undef;
     }
 
     foreach my $key (keys %$hash) {
@@ -68,59 +65,20 @@ sub load {
     return;
   }
 
+  $self->{pbot}->{logger}->log("Loading $self->{name} from $filename ...\n");
+
   if (not open(FILE, "< $filename")) {
     Carp::carp "Skipping loading from file: Couldn't open $filename: $!\n";
     return;
   }
 
-  my ($primary_index_key, $secondary_index_key, $i, $hash);
-  $hash = {};
+  my $contents = do {
+    local $/;
+    <FILE>;
+  };
 
-  foreach my $line (<FILE>) {
-    $i++;
-
-    $line =~ s/^\s+//;
-    $line =~ s/\s+$//;
-
-    if ($line =~ /^\[(.*)\]$/) {
-      $primary_index_key = $1;
-      next;
-    }
-
-    if ($line =~ /^<(.*)>$/) {
-      $secondary_index_key = $1;
-
-      if (not $self->{ignore_duplicates} and exists $self->hash->{$primary_index_key}->{$secondary_index_key}) {
-        Carp::croak "Duplicate secondary_index_key '$secondary_index_key' at line $i of $filename\n";
-      }
-
-      next;
-    }
-
-    if ($line eq '') {
-      # store the old hash
-      $self->load_hash_add($primary_index_key, $secondary_index_key, $hash, $i, $filename);
-
-      # start a new hash
-      $hash = {};
-      next;
-    }
-
-    my ($key, $value) = split /:/, $line, 2;
-
-    $key =~ s/^\s+//;
-    $key =~ s/\s+$//;
-    $value =~ s/^\s+//;
-    $value =~ s/\s+$//;
-
-    if (not length $key or not length $value) {
-      Carp::croak "Missing key or value at line $i of $filename\n";
-    }
-
-    $hash->{$key} = $value;
-  }
-
-  close(FILE);
+  $self->{hash} = decode_json $contents;
+  close FILE;
 }
 
 sub save {
@@ -134,21 +92,14 @@ sub save {
     return;
   }
 
+  $self->{pbot}->{logger}->log("Saving $self->{name} to $filename\n");
+
+  my $json = JSON->new;
+  $json->space_before(0);
+  my $json_text = $json->pretty->encode($self->{hash});
+
   open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
-
-  foreach my $primary_index_key (sort keys %{ $self->hash }) {
-    print FILE "[$primary_index_key]\n";
-
-    foreach my $secondary_index_key (sort keys %{ $self->hash->{$primary_index_key} }) {
-      print FILE "<$secondary_index_key>\n";
-
-      foreach my $key (sort keys %{ $self->hash->{$primary_index_key}->{$secondary_index_key} }) {
-        print FILE "$key: " . $self->hash->{$primary_index_key}->{$secondary_index_key}{$key} . "\n";
-      }
-      print FILE "\n";
-    }
-  }
-
+  print FILE "$json_text\n";
   close FILE;
 }
 
@@ -314,7 +265,7 @@ sub unset {
 sub add {
   my ($self, $primary_index_key, $secondary_index_key, $hash) = @_;
 
-  if ($self->load_hash_add($primary_index_key, $secondary_index_key, $hash, 0)) {
+  if ($self->hash_add($primary_index_key, $secondary_index_key, $hash)) {
     $self->save();
   } else {
     return "Error occurred adding new $self->{name} object.";
