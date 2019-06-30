@@ -7,8 +7,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# $Id$
-
 package PBot::PBot;
 
 use strict;
@@ -182,6 +180,7 @@ sub connect {
       Ircname      => $self->{registry}->get_value('irc', 'ircname'),
       Server       => $server,
       Pacing       => 1,
+      UTF8         => 1,
       SSL          => $self->{registry}->get_value('irc', 'SSL'),
       SSL_ca_file  => $self->{registry}->get_value('irc', 'SSL_ca_file'),
       SSL_ca_path  => $self->{registry}->get_value('irc', 'SSL_ca_path'),

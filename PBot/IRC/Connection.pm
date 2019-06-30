@@ -21,6 +21,7 @@ use IO::Socket;
 use IO::Socket::INET;
 use Symbol;
 use Carp;
+use Encode;
 
 # all this junk below just to conditionally load a module
 # sometimes even perl is braindead...
@@ -41,18 +42,20 @@ use vars (
 
 
 # The names of the methods to be handled by &AUTOLOAD.
-my %autoloaded = ( 'ircname'  => undef,
-		   'port'     => undef,
-		   'username' => undef,
-		   'socket'   => undef,
-		   'verbose'  => undef,
-		   'parent'   => undef,
-                   'hostname' => undef,
-		   'pacing'   => undef,
-                   'ssl'      => undef,
-                   'ssl_ca_path' => undef,
-                   'ssl_ca_file' => undef,
-		 );
+my %autoloaded = (
+  'ircname'  => undef,
+  'port'     => undef,
+  'username' => undef,
+  'socket'   => undef,
+  'verbose'  => undef,
+  'parent'   => undef,
+  'hostname' => undef,
+  'pacing'   => undef,
+  'utf8'     => undef,
+  'ssl'      => undef,
+  'ssl_ca_path' => undef,
+  'ssl_ca_file' => undef,
+);
 
 # This hash will contain any global default handlers that the user specifies.
 
@@ -81,6 +84,7 @@ sub new {
     _ssl	=>  0,       # no ssl by default
     _ssl_ca_path => undef,
     _ssl_ca_file => undef,
+    _utf8       => 0,
     _format     => { 'default' => "[%f:%t]  %m  <%d>", },
   };
 
@@ -231,6 +235,7 @@ sub connect {
     $self->ircname($arg{'Ircname'}) if exists $arg{'Ircname'};
     $self->username($arg{'Username'}) if exists $arg{'Username'};
     $self->pacing($arg{'Pacing'}) if exists $arg{'Pacing'};
+    $self->utf8($arg{'UTF8'}) if exists $arg{'UTF8'};
     $self->ssl($arg{'SSL'}) if exists $arg{'SSL'};
     $self->ssl_ca_path($arg{'SSL_ca_path'}) if exists $arg{'SSL_ca_path'};
     $self->ssl_ca_file($arg{'SSL_ca_file'}) if exists $arg{'SSL_ca_file'};
@@ -890,6 +895,9 @@ sub parse {
   }
 
  PARSELOOP: foreach $line (@lines) {
+   if ($self->{_utf8}) {
+     utf8::decode($line);
+   }
 
    # Clean the lint filter every 2 weeks...
    $line =~ s/[\012\015]+$//;
@@ -1439,13 +1447,24 @@ sub sl_real {
 
   return unless defined $self->socket;
 
-  # RFC compliance can be kinda nice...
-  my $rv = $self->ssl ?
-      $self->socket->print("$line\015\012") :
-      $self->socket->send("$line\015\012", 0);
-  unless ($rv) {
-    $self->handler("sockerror");
-    return;
+  if ($self->{_utf8}) {
+    $line = encode('UTF-8', $line);
+  }
+
+  my $rv = eval {
+    # RFC compliance can be kinda nice...
+    my $rv = $self->ssl ?
+    $self->socket->print("$line\015\012") :
+    $self->socket->send("$line\015\012", 0);
+    unless ($rv) {
+      $self->handler("sockerror");
+      return;
+    }
+    return $rv;
+  };
+
+  if ($@) {
+    print "Attempt to send bad line: [$line]\n";
   }
   return $rv;
 }

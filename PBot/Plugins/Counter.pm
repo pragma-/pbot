@@ -57,7 +57,7 @@ sub create_database {
   my $self = shift;
 
   eval {
-    $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr;
+    $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1, sqlite_unicode => 1 }) or die $DBI::errstr;
 
     $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Counters (

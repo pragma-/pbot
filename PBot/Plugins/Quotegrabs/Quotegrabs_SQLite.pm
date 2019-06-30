@@ -39,7 +39,7 @@ sub begin {
 
   $self->{pbot}->{logger}->log("Opening quotegrabs SQLite database: $self->{filename}\n");
 
-  $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0 }) or die $DBI::errstr;
+  $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0, sqlite_unicode => 1 }) or die $DBI::errstr;
 
   eval {
     $self->{dbh}->do(<< 'SQL');

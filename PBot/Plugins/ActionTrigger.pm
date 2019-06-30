@@ -72,7 +72,7 @@ SQL
 sub dbi_begin {
   my ($self) = @_;
   eval {
-    $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1 }) or die $DBI::errstr;
+    $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", { RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1, sqlite_unicode => 1 }) or die $DBI::errstr;
   };
 
   if ($@) {

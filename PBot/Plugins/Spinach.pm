@@ -121,8 +121,9 @@ sub load_questions {
       return "Failed to load $filename";
     };
     local $/;
-    <$fh>;
+    my $text = <$fh>;
     close $fh;
+    $text;
   };
 
   $self->{loaded_filename} = $filename;

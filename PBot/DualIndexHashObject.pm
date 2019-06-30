@@ -96,7 +96,7 @@ sub save {
 
   my $json = JSON->new;
   $json->space_before(0);
-  my $json_text = $json->pretty->encode($self->{hash});
+  my $json_text = $json->pretty->utf8->encode($self->{hash});
 
   open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
   print FILE "$json_text\n";
