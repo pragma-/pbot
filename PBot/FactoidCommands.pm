@@ -18,6 +18,7 @@ use Time::HiRes qw(gettimeofday);
 use Getopt::Long qw(GetOptionsFromString);
 use POSIX qw(strftime);
 use Storable;
+use LWP::UserAgent ();
 
 use PBot::Utils::SafeFilename;
 
@@ -957,13 +958,35 @@ sub factadd {
     # now this is the keyword
     $keyword = $self->{pbot}->{interpreter}->shift_arg(\@arglist);
 
-    # check for optional "is" and discard
-    if (lc $arglist[0] eq 'is') {
+    # check for -url
+    if ($arglist[0] eq '-url') {
+      # discard it
       $self->{pbot}->{interpreter}->shift_arg(\@arglist);
-    }
 
-    # and the text is the remaining arguments with quotes preserved
-    ($text) = $self->{pbot}->{interpreter}->split_args(\@arglist, 1);
+      # the URL is the remaining arguments
+      ($url) = $self->{pbot}->{interpreter}->split_args(\@arglist, 1);
+
+      # create a UserAgent
+      my $ua = LWP::UserAgent->new(timeout => 10);
+
+      # get the factoid's text from the URL
+      my $response = $ua->get($url);
+
+      # process the response
+      if ($response->is_success) {
+        $text = $response->decoded_content;
+      } else {
+        return "Failed to get URL: " . $response->status_line;
+      }
+    } else {
+      # check for optional "is" and discard
+      if (lc $arglist[0] eq 'is') {
+        $self->{pbot}->{interpreter}->shift_arg(\@arglist);
+      }
+
+      # and the text is the remaining arguments with quotes preserved
+      ($text) = $self->{pbot}->{interpreter}->split_args(\@arglist, 1);
+    }
   }
 
   if (not defined $from_chan or not defined $text or not defined $keyword) {
