@@ -1160,13 +1160,19 @@ sub factshow {
   my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $args, 'factshow', usage => $usage);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
-  if ($paste) {
-    return $self->{pbot}->{webpaste}->paste($factoids->{$channel}->{$trigger}->{action});
-  }
-
   my $trigger_text = $trigger =~ / / ? "\"$trigger\"" : $trigger;
 
-  my $result = "$trigger_text: " . $factoids->{$channel}->{$trigger}->{action};
+  my $result = "$trigger_text: ";
+
+  if ($paste) {
+    $result .= $self->{pbot}->{webpaste}->paste($factoids->{$channel}->{$trigger}->{action});
+    $channel = 'global' if $channel eq '.*';
+    $chan = 'global' if $chan eq '.*';
+    $result = "[$channel] $result" if $channel ne $chan;
+    return $result;
+  }
+
+  $result .= $factoids->{$channel}->{$trigger}->{action};
 
   if ($factoids->{$channel}->{$trigger}->{type} eq 'module') {
     $result .= ' [module]';
@@ -1174,7 +1180,6 @@ sub factshow {
 
   $channel = 'global' if $channel eq '.*';
   $chan = 'global' if $chan eq '.*';
-
   $result = "[$channel] $result" if $channel ne $chan;
   return $result;
 }
