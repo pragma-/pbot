@@ -162,13 +162,14 @@ sub load_questions {
 
 sub save_questions {
   my $self = shift;
-  my $json = encode_json $self->{questions};
+  my $json = JSON->new;
+  my $json_text = $json->pretty->canonical->utf8->encode($self->{questions});
   my $filename = exists $self->{loaded_filename} ? $self->{loaded_filename} : $self->{questions_filename};
   open my $fh, '>', $filename or do {
     $self->{pbot}->{logger}->log("Failed to open Spinach file $filename: $!\n");
     return;
   };
-  print $fh "$json\n";
+  print $fh "$json_text\n";
   close $fh;
 }
 
@@ -394,18 +395,7 @@ sub spinach_cmd {
       }
 
       $question->{$key} = $value;
-
-      my $json = encode_json $self->{questions};
-      my $filename = exists $self->{loaded_filename} ? $self->{loaded_filename} : $self->{questions_filename};
-      open my $fh, '>', $filename or do {
-        $self->{pbot}->{logger}->log("Failed to open Spinach file $filename: $!\n");
-        return;
-      };
-      print $fh "$json\n";
-      close $fh;
-
-      $self->load_questions;
-
+      $self->save_questions;
       return "$nick: Question $id: $key set to $value";
     }
 

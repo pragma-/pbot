@@ -95,7 +95,7 @@ sub save {
   $self->{pbot}->{logger}->log("Saving $self->{name} to $filename\n");
 
   my $json = JSON->new;
-  my $json_text = $json->pretty->utf8->encode($self->{hash});
+  my $json_text = $json->pretty->canonical->utf8->encode($self->{hash});
 
   open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
   print FILE "$json_text\n";
