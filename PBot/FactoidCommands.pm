@@ -1132,15 +1132,37 @@ sub factshow {
 
   $stuff->{preserve_whitespace} = 1;
 
-  my ($chan, $trig) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+  my $usage = "Usage: factshow [-p] [channel] <keyword>; -p to paste";
+  return $usage if not $arguments;
+
+  my $getopt_error;
+  local $SIG{__WARN__} = sub {
+    $getopt_error = shift;
+    chomp $getopt_error;
+  };
+
+  my ($paste);
+  my ($ret, $args) = GetOptionsFromString($arguments,
+    'p'  => \$paste);
+
+  return "/say $getopt_error -- $usage" if defined $getopt_error;
+  return "Too many arguments -- $usage" if @$args > 2;
+  return "Missing argument -- $usage" if not @$args;
+
+  my ($chan, $trig) = @$args;
 
   if (not defined $trig) {
-    $trig = $chan;
     $chan = $from;
   }
 
-  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factshow');
+  $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$args);
+
+  my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $args, 'factshow', usage => $usage);
   return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
+
+  if ($paste) {
+    return $self->{pbot}->{webpaste}->paste($factoids->{$channel}->{$trigger}->{action});
+  }
 
   my $trigger_text = $trigger =~ / / ? "\"$trigger\"" : $trigger;
 
@@ -1154,7 +1176,6 @@ sub factshow {
   $chan = 'global' if $chan eq '.*';
 
   $result = "[$channel] $result" if $channel ne $chan;
-
   return $result;
 }
 
