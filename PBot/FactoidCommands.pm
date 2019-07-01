@@ -19,6 +19,7 @@ use Getopt::Long qw(GetOptionsFromString);
 use POSIX qw(strftime);
 use Storable;
 use LWP::UserAgent ();
+use JSON;
 
 use PBot::Utils::SafeFilename;
 
@@ -137,7 +138,9 @@ sub log_factoid {
   };
 
   my $now = gettimeofday;
-  print $fh "$now $hostmask $msg\n";
+  my $h = {ts => $now, hm => $hostmask, msg => $msg};
+  my $json = encode_json $h;
+  print $fh "$json\n";
   close $fh;
 
   return if $dont_save_undo;
@@ -1237,7 +1240,16 @@ sub factlog {
 
   my @entries;
   while (my $line = <$fh>) {
-    my ($timestamp, $hostmask, $msg) = split /\s+/, $line, 3;
+    my ($timestamp, $hostmask, $msg);
+
+    ($timestamp, $hostmask, $msg) = eval {
+      my $h = decode_json $line;
+      return ($h->{ts}, $h->{hm}, $h->{msg});
+    };
+
+    if ($@) {
+      ($timestamp, $hostmask, $msg) = split /\s+/, $line, 3;
+    }
 
     if (not $show_hostmask) {
       $hostmask =~ s/!.*$//;
@@ -1524,7 +1536,7 @@ sub factchange {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $factoids = $self->{pbot}->{factoids}->{factoids}->hash;
-  my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier);
+  my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier, $url);
 
   $stuff->{preserve_whitespace} = 1;
 
@@ -1536,7 +1548,17 @@ sub factchange {
 
     my $arg_count = $self->{pbot}->{interpreter}->arglist_size($args);
 
-    if ($arg_count >= 3 and ($args->[0] =~ m/^#/ or $args->[0] eq '.*' or lc $args->[0] eq 'global') and ($args->[2] =~ m/^s([[:punct:]])/)) {
+    if ($arg_count >= 4 and ($args->[0] =~ m/^#/ or $args->[0] eq '.*' or lc $args->[0] eq 'global') and ($args->[2] eq '-url')) {
+      $channel = $args->[0];
+      $keyword = $args->[1];
+      $url = $args->[3];
+      $needs_disambig = 0;
+    } elsif ($arg_count >= 3 and $args->[1] eq '-url') {
+      $keyword = $args->[0];
+      $url = $args->[2];
+      $channel = $from;
+      $needs_disambig = 1;
+    } elsif ($arg_count >= 3 and ($args->[0] =~ m/^#/ or $args->[0] eq '.*' or lc $args->[0] eq 'global') and ($args->[2] =~ m/^s([[:punct:]])/)) {
       $delim = $1;
       $channel = $args->[0];
       $keyword = $args->[1];
@@ -1550,21 +1572,23 @@ sub factchange {
       $needs_disambig = 1;
     }
 
-    $delim = quotemeta $delim;
+    if (defined $sub) {
+      $delim = quotemeta $delim;
 
-    if ($sub =~ /^s$delim(.*?)$delim(.*)$delim(.*)$/) {
-      $tochange = $1;
-      $changeto = $2;
-      $modifier  = $3;
-    } elsif ($sub =~ /^s$delim(.*?)$delim(.*)$/) {
-      $tochange = $1;
-      $changeto = $2;
-      $modifier  = '';
+      if ($sub =~ /^s$delim(.*?)$delim(.*)$delim(.*)$/) {
+        $tochange = $1;
+        $changeto = $2;
+        $modifier  = $3;
+      } elsif ($sub =~ /^s$delim(.*?)$delim(.*)$/) {
+        $tochange = $1;
+        $changeto = $2;
+        $modifier  = '';
+      }
     }
   }
 
-  if (not defined $channel or not defined $changeto) {
-    return "Usage: factchange [channel] <keyword> s/<pattern>/<replacement>/";
+  if (not defined $channel or (not defined $changeto and not defined $url)) {
+    return "Usage: factchange [channel] <keyword> (s/<pattern>/<replacement>/ | -url <paste site>)";
   }
 
   my ($from_trigger, $from_chan) = ($keyword, $channel);
@@ -1610,77 +1634,95 @@ sub factchange {
     }
   }
 
-  my $ret = eval {
-    use re::engine::RE2 -strict => 1;
-    my $action = $factoids->{$channel}->{$trigger}->{action};
-    my $changed;
+  my $action = $factoids->{$channel}->{$trigger}->{action};
 
-    if ($modifier eq 'gi' or $modifier eq 'ig' or $modifier eq 'g') {
-      my @chars = ("A".."Z", "a".."z", "0".."9");
-      my $magic = '';
-      $magic .= $chars[rand @chars] for 1..(10 * rand) + 10;
-      my $insensitive = index ($modifier, 'i') + 1;
-      my $count = 0;
-      my $max = 50;
+  if (defined $url) {
+    if ($url !~ m/^https?:\/\/(?:sprunge.us|ix.io)\/\w+$/) {
+      return "Invalid URL: acceptable URLs are: https://sprunge.us, https://ix.io";
+    }
 
-      while (1) {
-        if ($count == 0) {
-          if ($insensitive) {
-            $changed = $action =~ s|$tochange|$changeto$magic|i;
+    my $ua = LWP::UserAgent->new(timeout => 10);
+    my $response = $ua->get($url);
+
+    if ($response->is_success) {
+      $action = $response->decoded_content;
+    } else {
+      return "Failed to get URL: " . $response->status_line;
+    }
+  } else {
+    my $ret = eval {
+      use re::engine::RE2 -strict => 1;
+      my $changed;
+
+      if ($modifier eq 'gi' or $modifier eq 'ig' or $modifier eq 'g') {
+        my @chars = ("A".."Z", "a".."z", "0".."9");
+        my $magic = '';
+        $magic .= $chars[rand @chars] for 1..(10 * rand) + 10;
+        my $insensitive = index ($modifier, 'i') + 1;
+        my $count = 0;
+        my $max = 50;
+
+        while (1) {
+          if ($count == 0) {
+            if ($insensitive) {
+              $changed = $action =~ s|$tochange|$changeto$magic|i;
+            } else {
+              $changed = $action =~ s|$tochange|$changeto$magic|;
+            }
           } else {
-            $changed = $action =~ s|$tochange|$changeto$magic|;
+            if ($insensitive) {
+              $changed = $action =~ s|$tochange|$1$changeto$magic|i;
+            } else {
+              $changed = $action =~ s|$tochange|$1$changeto$magic|;
+            }
           }
-        } else {
-          if ($insensitive) {
-            $changed = $action =~ s|$tochange|$1$changeto$magic|i;
-          } else {
-            $changed = $action =~ s|$tochange|$1$changeto$magic|;
-          }
-        }
 
-        if ($changed) {
-          $count++;
-          if ($count == $max) {
-            $action =~ s/$magic//;
+          if ($changed) {
+            $count++;
+            if ($count == $max) {
+              $action =~ s/$magic//;
+              last;
+            }
+            $tochange = "$magic(.*?)$tochange" if $count == 1;
+          } else {
+            $changed = $count;
+            $action =~ s/$magic// if $changed;
             last;
           }
-          $tochange = "$magic(.*?)$tochange" if $count == 1;
-        } else {
-          $changed = $count;
-          $action =~ s/$magic// if $changed;
-          last;
         }
-      }
-    } elsif ($modifier eq 'i') {
-      $changed = $action =~ s|$tochange|$changeto|i;
-    } else {
-      $changed = $action =~ s|$tochange|$changeto|;
-    }
-
-    if (not $changed) {
-      $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change '$trigger' 's$delim$tochange$delim$changeto$delim\n");
-      return "Change $trigger failed.";
-    } else {
-      if (length $action > 8000 and not defined $admininfo) {
-        return "Change $trigger failed; result is too long.";
+      } elsif ($modifier eq 'i') {
+        $changed = $action =~ s|$tochange|$changeto|i;
+      } else {
+        $changed = $action =~ s|$tochange|$changeto|;
       }
 
-      if (not length $action) {
-        return "Change $trigger failed; factoids cannot be empty.";
+      if (not $changed) {
+        $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change '$trigger' 's$delim$tochange$delim$changeto$delim\n");
+        return "Change $trigger failed.";
       }
+      return "";
+    };
 
-      $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: changed '$trigger' 's/$tochange/$changeto/\n");
+    return "/msg $nick Change $trigger: $@" if $@;
+    return $ret if length $ret;
+  }
 
-      $factoids->{$channel}->{$trigger}->{action}    = $action;
-      $factoids->{$channel}->{$trigger}->{edited_by} = "$nick!$user\@$host";
-      $factoids->{$channel}->{$trigger}->{edited_on} = gettimeofday;
-      $self->{pbot}->{factoids}->save_factoids();
-      $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "changed to $factoids->{$channel}->{$trigger}->{action}");
-      return "Changed: $trigger is " . $factoids->{$channel}->{$trigger}->{action};
-    }
-  };
-  return "/msg $nick Change $trigger: $@" if $@;
-  return $ret;
+  if (length $action > 8000 and not defined $admininfo) {
+    return "Change $trigger failed; result is too long.";
+  }
+
+  if (not length $action) {
+    return "Change $trigger failed; factoids cannot be empty.";
+  }
+
+  $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: changed '$trigger' 's/$tochange/$changeto/\n");
+
+  $factoids->{$channel}->{$trigger}->{action}    = $action;
+  $factoids->{$channel}->{$trigger}->{edited_by} = "$nick!$user\@$host";
+  $factoids->{$channel}->{$trigger}->{edited_on} = gettimeofday;
+  $self->{pbot}->{factoids}->save_factoids();
+  $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "changed to $factoids->{$channel}->{$trigger}->{action}");
+  return "Changed: $trigger is " . $factoids->{$channel}->{$trigger}->{action};
 }
 
 sub load_module {
