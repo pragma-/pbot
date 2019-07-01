@@ -964,7 +964,11 @@ sub factadd {
       $self->{pbot}->{interpreter}->shift_arg(\@arglist);
 
       # the URL is the remaining arguments
-      ($url) = $self->{pbot}->{interpreter}->split_args(\@arglist, 1);
+      my ($url) = $self->{pbot}->{interpreter}->split_args(\@arglist, 1);
+
+      if ($url !~ m/^https?:\/\/(?:sprunge.us|ix.io)\/\w+$/) {
+        return "Invalid URL: acceptable URLs are: https://sprunge.us, https://ix.io";
+      }
 
       # create a UserAgent
       my $ua = LWP::UserAgent->new(timeout => 10);
@@ -990,7 +994,7 @@ sub factadd {
   }
 
   if (not defined $from_chan or not defined $text or not defined $keyword) {
-    return "Usage: factadd [-f] [channel] <keyword> <factoid>; -f to force overwrite";
+    return "Usage: factadd [-f] [channel] <keyword> (<factoid> | -url <paste site>); -f to force overwrite; -url to download from paste site";
   }
 
   $from_chan = '.*' if $from_chan !~ /^#/;
