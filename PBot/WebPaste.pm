@@ -16,6 +16,7 @@ use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use LWP::UserAgent;
 use Carp ();
+use Encode;
 
 sub new {
   if (ref($_[1]) eq 'HASH') {
@@ -55,9 +56,10 @@ sub get_paste_site {
 sub paste {
   my ($self, $text) = @_;
 
+  $text = encode('UTF-8', $text);
   $text =~ s/(.{120})\s/$1\n/g;
-  my $result;
 
+  my $result;
   for (my $tries = 5; $tries > 0; $tries--) {
     my $paste_site = $self->get_paste_site;
     $result = $paste_site->($text);
