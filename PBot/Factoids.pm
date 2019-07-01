@@ -882,7 +882,7 @@ sub interpreter {
     $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action};
   }
 
-  if ($action =~ m{^/code\s+([^\s]+)\s+(.+)$}i) {
+  if ($action =~ m{^/code\s+([^\s]+)\s+(.+)$}msi) {
     my ($lang, $code) = ($1, $2);
 
     if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments}) {
