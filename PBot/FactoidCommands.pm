@@ -970,7 +970,7 @@ sub factadd {
       my ($url) = $self->{pbot}->{interpreter}->split_args(\@arglist, 1);
 
       if ($url !~ m/^https?:\/\/(?:sprunge.us|ix.io)\/\w+$/) {
-        return "Invalid URL: acceptable URLs are: https://sprunge.us, https://ix.io";
+        return "Invalid URL: acceptable URLs are: http://sprunge.us, http://ix.io";
       }
 
       # create a UserAgent
@@ -1638,7 +1638,7 @@ sub factchange {
 
   if (defined $url) {
     if ($url !~ m/^https?:\/\/(?:sprunge.us|ix.io)\/\w+$/) {
-      return "Invalid URL: acceptable URLs are: https://sprunge.us, https://ix.io";
+      return "Invalid URL: acceptable URLs are: http://sprunge.us, http://ix.io";
     }
 
     my $ua = LWP::UserAgent->new(timeout => 10);
