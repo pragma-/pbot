@@ -687,7 +687,9 @@ sub execute_code_factoid_using_vm {
     } else {
       $stuff->{no_nickoverride} = 0;
     }
+
     $stuff->{code} = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $stuff->{code});
+
     if ($self->{factoids}->hash->{$stuff->{channel}}->{$stuff->{keyword}}->{'allow_empty_args'}) {
       $stuff->{code} = $self->expand_action_arguments($stuff->{code}, $stuff->{arguments}, '');
     } else {
