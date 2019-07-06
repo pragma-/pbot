@@ -111,8 +111,9 @@ sub execute_module {
 
     my ($exitval, $stdout, $stderr) = eval {
       my @cmdline = ("./$module", $self->{pbot}->{interpreter}->split_line($stuff->{arguments}));
+      my $timeout = $self->{pbot}->{registry}->get_value('general', 'module_timeout') // 30;
       my ($stdin, $stdout, $stderr);
-      run \@cmdline, \$stdin, \$stdout, \$stderr, timeout(10);
+      run \@cmdline, \$stdin, \$stdout, \$stderr, timeout($timeout);
       my $exitval = $? >> 8;
       return ($exitval, $stdout, $stderr);
     };
