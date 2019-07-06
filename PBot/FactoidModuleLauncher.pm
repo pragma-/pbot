@@ -119,7 +119,6 @@ sub execute_module {
 
     if ($@) {
       my $error = $@;
-      $self->{pbot}->{logger}->log("error: [$error]\n");
       if ($error =~ m/timeout on timer/) {
         ($exitval, $stdout, $stderr) = (-1, "$stuff->{trigger}: timed-out", '');
       } else {
