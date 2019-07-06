@@ -16,6 +16,7 @@ use POSIX qw(WNOHANG);
 use Carp ();
 use Text::Balanced qw(extract_delimited);
 use JSON;
+use IPC::Run qw/run timeout/;
 
 # automatically reap children processes in background
 $SIG{CHLD} = sub { while (waitpid(-1, WNOHANG) > 0) {} };
@@ -76,8 +77,6 @@ sub execute_module {
   $self->{pbot}->{logger}->log("(" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "): $stuff->{nick}!$stuff->{user}\@$stuff->{host}: Executing module [$stuff->{command}] $module $stuff->{arguments}\n");
 
   $stuff->{arguments} = $self->{pbot}->{factoids}->expand_special_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $stuff->{arguments});
-  $stuff->{arguments} = quotemeta $stuff->{arguments};
-  $stuff->{arguments} =~ s/\\ / /g;
 
   pipe(my $reader, my $writer);
   my $pid = fork;
@@ -110,7 +109,34 @@ sub execute_module {
       chdir $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{workdir};
     }
 
-    $stuff->{result} = `./$module $stuff->{arguments} 2>> $module-stderr`;
+    my ($exitval, $stdout, $stderr) = eval {
+      my @cmdline = ("./$module", $self->{pbot}->{interpreter}->split_line($stuff->{arguments}));
+      my ($stdin, $stdout, $stderr);
+      run \@cmdline, \$stdin, \$stdout, \$stderr, timeout(10);
+      my $exitval = $? >> 8;
+      return ($exitval, $stdout, $stderr);
+    };
+
+    if ($@) {
+      my $error = $@;
+      $self->{pbot}->{logger}->log("error: [$error]\n");
+      if ($error =~ m/timeout on timer/) {
+        ($exitval, $stdout, $stderr) = (-1, "$stuff->{trigger}: timed-out", '');
+      } else {
+        ($exitval, $stdout, $stderr) = (-1, '', $error);
+      }
+    }
+
+    if (length $stderr) {
+      if (open(my $fh, '>>', "$module-stderr")) {
+        print $fh $stderr;
+        close $fh;
+      } else {
+        $self->{pbot}->{logger}->log("Failed to open $module-stderr: $!\n");
+      }
+    }
+
+    $stuff->{result} = $stdout;
     chomp $stuff->{result};
 
     utf8::decode($stuff->{result});
