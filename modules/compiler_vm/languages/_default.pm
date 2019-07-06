@@ -39,7 +39,6 @@ sub new {
   $self->{nick}    =~ s/^\s+|\s+$//g if defined $self->{nick};
   $self->{channel} =~ s/^\s+|\s+$//g if defined $self->{channel};
   $self->{lang}    =~ s/^\s+|\s+$//g if defined $self->{lang};
-  $self->{code}    =~ s/^\s+|\s+$//g if defined $self->{code};
 
   $self->initialize(%conf);
 
@@ -452,7 +451,7 @@ sub add_option {
 sub process_standard_options {
   my $self = shift;
 
-  my @opt_args = $self->split_line($self->{code}, preserve_escapes => 1);
+  my @opt_args = $self->split_line($self->{code}, preserve_escapes => 1, keep_spaces => 1);
 
   use Data::Dumper;
   print STDERR "opt_arg: ", Dumper \@opt_args;
