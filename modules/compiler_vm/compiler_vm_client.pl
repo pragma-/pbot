@@ -10,6 +10,8 @@ use strict;
 use File::Basename;
 use JSON;
 
+use lib '.';
+
 my $json = join ' ', @ARGV;
 my $h = decode_json $json;
 
