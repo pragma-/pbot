@@ -26,7 +26,6 @@ if(not defined $sock) {
 }
 
 my $json = join ' ', @ARGV;
-print STDERR "join = $json?\n";
 my $h = decode_json $json;
 my $lang = $h->{lang} // "c11";
 
