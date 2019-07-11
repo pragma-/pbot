@@ -10,8 +10,8 @@ use strict;
 use WWW::Google::CustomSearch;
 use HTML::Entities;
 
-my $api_key = 'AIzaSyCps6lKe6-WGvPawx7BphCYb-xM0rdevKQ';
-my $cx      = '003394693865260357751:kmvdeoslok4';
+my $api_key = '';
+my $cx      = '';
 
 my ($nick, $arguments, $matches);
 
