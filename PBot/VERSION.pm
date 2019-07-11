@@ -14,6 +14,8 @@ package PBot::VERSION;
 use strict;
 use warnings;
 
+use feature 'unicode_strings';
+
 BEGIN {
   use Exporter;
   our @ISA = 'Exporter';

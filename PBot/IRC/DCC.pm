@@ -17,7 +17,7 @@ package PBot::IRC::DCC; # pragma_ 2011/21/01
 
 use strict;
 
-
+use feature 'unicode_strings';
 
 # --- #perl was here! ---
 #

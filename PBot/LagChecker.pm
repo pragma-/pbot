@@ -13,6 +13,8 @@ package PBot::LagChecker;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use feature 'switch';
 
 use Time::HiRes qw(gettimeofday tv_interval);

@@ -13,6 +13,8 @@ package PBot::SQLiteLogger;
 use strict;
 use warnings;
 
+use feature 'unicode_strings';
+
 use Carp;
 use Time::HiRes qw(gettimeofday);
 

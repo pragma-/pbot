@@ -10,6 +10,8 @@ use strict;
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
+use feature 'unicode_strings';
+
 use Carp ();
 use Time::Duration qw/concise duration/;
 use Data::Dumper;

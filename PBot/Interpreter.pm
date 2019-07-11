@@ -12,6 +12,8 @@ package PBot::Interpreter;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use base 'PBot::Registerable';
 
 use Time::HiRes qw/gettimeofday/;
@@ -329,6 +331,7 @@ sub interpret {
   # set arguments as a plain string
   $stuff->{arguments} = $arguments;
   $stuff->{original_arguments} = $arguments;
+  delete $stuff->{args_utf8};
 
   # set arguments as an array
   $stuff->{arglist} = $self->make_args($arguments);
@@ -340,6 +343,7 @@ sub interpret {
     last if defined $result;
     # reset any manipulated arguments
     $stuff->{arguments} = $stuff->{original_arguments};
+    delete $stuff->{args_utf8};
   }
   return $result;
 }

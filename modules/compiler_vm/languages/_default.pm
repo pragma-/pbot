@@ -3,6 +3,7 @@
 use warnings;
 use strict;
 use feature "switch";
+use feature 'unicode_strings';
 
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
@@ -15,6 +16,7 @@ use Time::HiRes qw/gettimeofday/;
 use Text::Balanced qw/extract_delimited/;
 use JSON;
 use Getopt::Long qw/GetOptionsFromArray :config pass_through no_ignore_case no_auto_abbrev/;
+use Encode;
 
 my $EXECUTE_PORT = '3333';
 
@@ -278,7 +280,7 @@ sub paste_ixio {
     return "error pasting: " . $response->status_line;
   }
 
-  my $result = $response->content;
+  my $result = $response->decoded_content;
   $result =~ s/^\s+//;
   $result =~ s/\s+$//;
   return $result;
@@ -371,7 +373,7 @@ sub execute {
   $compile_in->{'persist-key'} = $self->{'persist-key'} if length $self->{'persist-key'};
 
   my $compile_json = encode_json($compile_in);
-  $compile_json .= "\n:end:\n";
+  $compile_json .= encode('UTF-8', "\n:end:\n");
 
   my $length = length $compile_json;
   my $sent = 0;
@@ -388,7 +390,7 @@ sub execute {
     #print FILE "Sending chunk [$chunk]\n";
     $chunks_sent += length $chunk;
 
-    my $ret = syswrite($compiler, "$chunk\n");
+    my $ret = syswrite($compiler, $chunk);
 
     if (not defined $ret) {
       print FILE "Error sending: $!\n";
@@ -412,7 +414,8 @@ sub execute {
   my $got_result = 0;
 
   while(my $line = <$compiler_output>) {
-    print STDERR "Read [$line]\n";
+    utf8::decode($line);
+    print STDERR "Read from vm [$line]\n";
 
     $line =~ s/[\r\n]+$//;
     last if $line =~ /^result:end$/;

@@ -13,6 +13,8 @@ use lib "$FindBin::RealBin/../..";
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
+use feature 'unicode_strings';
+
 use Carp ();
 use JSON;
 
@@ -1532,7 +1534,7 @@ sub normalize_question {
 sub normalize_text {
   my ($self, $text) = @_;
 
-  $text = unidecode decode('utf8', $text);
+  $text = unidecode $text;
 
   $text =~ s/^\s+|\s+$//g;
   $text =~ s/\s+/ /g;

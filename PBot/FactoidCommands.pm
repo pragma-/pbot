@@ -12,6 +12,8 @@ package PBot::FactoidCommands;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);

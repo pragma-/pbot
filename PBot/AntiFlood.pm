@@ -16,6 +16,8 @@ package PBot::AntiFlood;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
@@ -405,7 +407,7 @@ sub check_flood {
     }
 
     if ($self->whitelisted($channel, "$nick!$user\@$host", 'antiflood')) {
-      $self->{pbot}->{logger}->log("$nick!$user\@$host anti-flood whitelisted, disgregarding ban\n");
+      $self->{pbot}->{logger}->log("$nick!$user\@$host anti-flood whitelisted, skipping anti-flood checking\n");
       next;
     }
 

@@ -3,6 +3,8 @@ package PBot::Utils::ValidateString;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 require Exporter;
 our @ISA = qw/Exporter/;
 our @EXPORT = qw/validate_string/;

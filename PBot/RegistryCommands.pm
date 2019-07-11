@@ -12,6 +12,8 @@ package PBot::RegistryCommands;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 
 sub new {

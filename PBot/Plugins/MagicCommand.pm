@@ -12,6 +12,8 @@ package PBot::Plugins::MagicCommand;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 
 sub new {

@@ -15,6 +15,8 @@
 
 package PBot::IRC::Connection; # pragma_ 2011/21/01
 
+use feature 'unicode_strings';
+
 use PBot::IRC::Event; # pragma_ 2011/21/01
 use PBot::IRC::DCC; # pragma_ 2011/21/01
 use IO::Socket;

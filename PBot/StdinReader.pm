@@ -7,6 +7,8 @@ package PBot::StdinReader;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use POSIX qw(tcgetpgrp getpgrp);  # to check whether process is in background or foreground
 use Carp ();
 

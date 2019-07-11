@@ -12,6 +12,8 @@ package PBot::Plugins;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use File::Basename;
 use Carp ();
 

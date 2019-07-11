@@ -12,11 +12,14 @@ package PBot::FactoidModuleLauncher;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use POSIX qw(WNOHANG);
 use Carp ();
 use Text::Balanced qw(extract_delimited);
 use JSON;
 use IPC::Run qw/run timeout/;
+use Encode;
 
 # automatically reap children processes in background
 $SIG{CHLD} = sub { while (waitpid(-1, WNOHANG) > 0) {} };
@@ -110,11 +113,17 @@ sub execute_module {
     }
 
     my ($exitval, $stdout, $stderr) = eval {
-      my @cmdline = ("./$module", $self->{pbot}->{interpreter}->split_line($stuff->{arguments}));
+      my $args = $stuff->{arguments};
+      if (not $stuff->{args_utf8}) {
+        $args = encode('UTF-8', $args);
+      }
+      my @cmdline = ("./$module", $self->{pbot}->{interpreter}->split_line($args));
       my $timeout = $self->{pbot}->{registry}->get_value('general', 'module_timeout') // 30;
       my ($stdin, $stdout, $stderr);
       run \@cmdline, \$stdin, \$stdout, \$stderr, timeout($timeout);
       my $exitval = $? >> 8;
+      utf8::decode($stdout);
+      utf8::decode($stderr);
       return ($exitval, $stdout, $stderr);
     };
 
@@ -138,8 +147,6 @@ sub execute_module {
 
     $stuff->{result} = $stdout;
     chomp $stuff->{result};
-
-    utf8::decode($stuff->{result});
 
     my $json = encode_json $stuff;
     print $writer "$json\n";

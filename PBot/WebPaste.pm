@@ -12,6 +12,8 @@ package PBot::WebPaste;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use LWP::UserAgent;

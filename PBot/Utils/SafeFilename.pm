@@ -1,5 +1,6 @@
 package PBot::Utils::SafeFilename;
 use 5.010; use warnings;
+use feature 'unicode_strings';
 
 require Exporter;
 our @ISA = qw/Exporter/;

@@ -12,6 +12,8 @@ package PBot::IgnoreList;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use PBot::IgnoreListCommands;
 use Time::HiRes qw(gettimeofday);
 

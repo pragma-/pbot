@@ -12,6 +12,8 @@ package PBot::Plugins::UrlTitles;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 
 sub new {

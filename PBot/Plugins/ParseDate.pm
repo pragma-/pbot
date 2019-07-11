@@ -9,6 +9,8 @@ package PBot::Plugins::ParseDate;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 
 use Time::Duration qw/duration/;

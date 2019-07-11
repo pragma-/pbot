@@ -12,6 +12,8 @@ package PBot::BotAdmins;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use PBot::DualIndexHashObject;
 use PBot::BotAdminCommands;
 

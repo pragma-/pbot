@@ -23,6 +23,7 @@ use PBot::IRC::EventQueue; # pragma_ 2011/01/21
 use IO::Select;
 use Carp;
 
+use feature 'unicode_strings';
 
 # grab the drop-in replacement for time() from Time::HiRes, if it's available
 BEGIN {

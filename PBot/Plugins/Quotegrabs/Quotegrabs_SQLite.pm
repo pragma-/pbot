@@ -12,6 +12,8 @@ package PBot::Plugins::Quotegrabs::Quotegrabs_SQLite;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use DBI;
 use Carp qw(shortmess);
 

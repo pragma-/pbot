@@ -12,6 +12,8 @@ package PBot::ChanOps;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use PBot::ChanOpCommands;
 use Time::HiRes qw(gettimeofday);
 

@@ -7,6 +7,8 @@ package PBot::SelectHandler;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use IO::Select;
 use Carp ();
 

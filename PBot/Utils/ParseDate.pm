@@ -7,6 +7,8 @@
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 package PBot::Utils::ParseDate;
 
 use DateTime;

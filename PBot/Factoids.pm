@@ -12,6 +12,8 @@ package PBot::Factoids;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
@@ -711,6 +713,7 @@ sub execute_code_factoid_using_vm {
   $stuff->{root_channel} = $stuff->{channel};
   $stuff->{keyword} = 'compiler';
   $stuff->{arguments} = $json;
+  $stuff->{args_utf8} = 1;
 
   $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($stuff);
   return "";

@@ -1,6 +1,8 @@
 package PBot::Utils::Indefinite;
 use 5.010; use warnings;
 
+use feature 'unicode_strings';
+
 require Exporter;
 our @ISA = qw/Exporter/;
 our @EXPORT = qw/prepend_indefinite_article select_indefinite_article/;

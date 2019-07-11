@@ -12,6 +12,8 @@ package PBot::Channels;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 use PBot::HashObject;
 

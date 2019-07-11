@@ -7,6 +7,8 @@ package PBot::Plugins::RemindMe;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 

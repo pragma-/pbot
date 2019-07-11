@@ -12,6 +12,8 @@ package PBot::ChanOpCommands;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 use Time::Duration;
 

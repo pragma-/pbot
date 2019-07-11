@@ -12,6 +12,8 @@ package PBot::Plugins::AutoRejoin;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;

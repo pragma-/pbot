@@ -12,6 +12,8 @@ package PBot::SQLiteLoggerLayer;
 use strict;
 use warnings;
 
+use feature 'unicode_strings';
+
 sub PUSHED
 {
   my ($class, $mode, $fh) = @_;

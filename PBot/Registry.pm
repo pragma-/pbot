@@ -13,6 +13,8 @@ package PBot::Registry;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Time::HiRes qw(gettimeofday);
 use Carp ();
 

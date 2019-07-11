@@ -15,6 +15,8 @@ package PBot::BanTracker;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use Data::Dumper;

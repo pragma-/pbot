@@ -12,6 +12,8 @@ package PBot::Plugins::Quotegrabs::Quotegrabs_Hashtable;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use HTML::Entities;
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);

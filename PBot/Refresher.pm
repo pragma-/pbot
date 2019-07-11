@@ -13,6 +13,8 @@ package PBot::Refresher;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Module::Refresh;
 use Carp ();
 

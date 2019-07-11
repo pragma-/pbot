@@ -9,6 +9,8 @@ package PBot::Plugins::Spinach::Rank;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use FindBin;
 use lib "$FindBin::RealBin/../../..";
 

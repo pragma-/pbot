@@ -14,6 +14,8 @@ package PBot::Timer;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 
 our $min_timeout = 1;

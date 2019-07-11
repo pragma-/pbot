@@ -12,6 +12,8 @@
 
 my $VERSION = "1.0.0";
 
+use feature 'unicode_strings';
+
 use strict;
 use warnings;
 

@@ -13,6 +13,8 @@ package PBot::HashObject;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Text::Levenshtein qw(fastdistance);
 use Carp ();
 use JSON;

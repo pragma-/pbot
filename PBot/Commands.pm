@@ -15,6 +15,8 @@ package PBot::Commands;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use base 'PBot::Registerable';
 
 use Carp ();

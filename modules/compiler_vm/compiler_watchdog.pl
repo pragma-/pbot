@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use warnings;
+no warnings;
 use strict;
 
 use IPC::Open2;
@@ -84,6 +84,7 @@ sub execute {
 
     next if not length $line;
     <$out> and next if $line =~ m/^\(gdb\) No line \d+ in/;
+    next if $line =~ m/No default breakpoint address/;
     next if $line =~ m/^\(gdb\) No symbol table/;
     next if $line =~ m/^\[Detaching after/;
     next if $line =~ m/^\[New Thread/;

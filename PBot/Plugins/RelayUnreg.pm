@@ -4,6 +4,8 @@ package PBot::Plugins::RelayUnreg;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 
 use Time::HiRes qw/gettimeofday/;

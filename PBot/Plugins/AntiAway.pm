@@ -12,6 +12,8 @@ package PBot::Plugins::AntiAway;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 
 sub new {

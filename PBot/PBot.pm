@@ -12,6 +12,8 @@ package PBot::PBot;
 use strict;
 use warnings;
 
+use feature 'unicode_strings';
+
 # unbuffer stdout
 STDOUT->autoflush(1);
 

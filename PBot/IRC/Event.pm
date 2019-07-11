@@ -24,6 +24,8 @@
 
 package PBot::IRC::Event; # pragma_ 2011/21/01
 
+use feature 'unicode_strings';
+
 use strict;
 our %_names;
 

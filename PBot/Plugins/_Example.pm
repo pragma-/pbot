@@ -7,6 +7,8 @@ package PBot::Plugins::_Example;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 
 sub new {

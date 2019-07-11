@@ -13,6 +13,8 @@ package PBot::Plugins::AntiTwitter;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp ();
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration qw/duration/;

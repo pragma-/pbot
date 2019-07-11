@@ -12,6 +12,8 @@ package PBot::IRCHandlers;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Carp();
 use Time::HiRes qw(gettimeofday);
 use Data::Dumper;

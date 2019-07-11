@@ -9,6 +9,8 @@ package PBot::Plugins::Spinach::Stats;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use DBI;
 use Carp qw(shortmess);
 

@@ -16,6 +16,8 @@ package PBot::MessageHistory;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use Getopt::Long qw(GetOptionsFromString);
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
