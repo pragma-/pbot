@@ -408,9 +408,9 @@ sub recall_message {
 
       if ($text =~ s/^(NICKCHANGE)\b/changed nick to/ or
           $text =~ s/^(KICKED|QUIT)\b/lc "$1"/e or
+          $text =~ s/^MODE ([^ ]+) (.*)/set mode $1 on $2/ or
           $text =~ s/^(JOIN|PART)\b/lc "$1ed"/e) {
-        # fix ugly "[nick] quit Quit: Leaving." messages
-        $text =~ s/^(quit) (.*)/$1 ($2)/;
+        $text =~ s/^(quit) (.*)/$1 ($2)/; # fix ugly "[nick] quit Quit: Leaving."
         $recall_text .= "[$ago] $msg->{nick} $text\n";
       } elsif ($text =~ s/^\/me\s+//) {
         $recall_text .= "[$ago] * $msg->{nick} $text\n";

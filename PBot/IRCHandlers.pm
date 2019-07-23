@@ -226,6 +226,9 @@ sub on_mode {
     }
 
     if (defined $target and length $target) {
+      my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
+      $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "MODE $mode $target", $self->{pbot}->{messagehistory}->{MSG_CHAT});
+
       if ($modifier eq '-') {
         $self->{pbot}->{nicklist}->delete_meta($channel, $target, "+$mode_char");
       } else {
