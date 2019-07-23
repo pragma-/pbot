@@ -67,6 +67,8 @@ sub initialize {
   $self->{version}  = PBot::VERSION->new(pbot => $self, %conf);
   $self->{logger}->log($self->{version}->version . "\n");
 
+  return if $conf{logger_only};
+
   $self->{atexit}   = PBot::Registerable->new(%conf);
   $self->{timer}    = PBot::Timer->new(timeout => 10, %conf);
   $self->{commands} = PBot::Commands->new(pbot => $self, %conf);
