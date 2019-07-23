@@ -16,6 +16,7 @@ use feature 'unicode_strings';
 
 use Carp ();
 use Time::Duration;
+use Time::HiRes qw/gettimeofday/;
 
 sub new {
   if (ref($_[1]) eq 'HASH') {
@@ -44,6 +45,72 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->mute_user(@_)     },       "mute",       10);
   $pbot->{commands}->register(sub { return $self->unmute_user(@_)   },       "unmute",     10);
   $pbot->{commands}->register(sub { return $self->kick_user(@_)     },       "kick",       10);
+  $pbot->{commands}->register(sub { return $self->checkban(@_)      },       "checkban",    0);
+  $pbot->{commands}->register(sub { return $self->checkmute(@_)     },       "checkmute",   0);
+}
+
+sub checkban {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+
+  if (not defined $target) {
+    return "Usage: checkban <mask> [channel]";
+  }
+
+  if (not defined $channel) {
+    $channel = $from;
+  }
+
+  if ($channel !~ /^#/) {
+    return "Please specify a channel.";
+  }
+
+  $channel = lc $channel;
+  $target = lc $target;
+
+  my $mask = $self->{pbot}->{chanops}->nick_to_banmask($target);
+
+  if (exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}
+    && exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}) {
+    my $timeout = $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}{timeout};
+    my $duration = duration($timeout - gettimeofday);
+
+    return "$mask has $duration remaining on their $channel ban";
+  } else {
+    return "$mask has no ban timeout";
+  }
+}
+
+sub checkmute {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+
+  if (not defined $target) {
+    return "Usage: checkmute <mask> [channel]";
+  }
+
+  if (not defined $channel) {
+    $channel = $from;
+  }
+
+  if ($channel !~ /^#/) {
+    return "Please specify a channel.";
+  }
+
+  $channel = lc $channel;
+  $target = lc $target;
+
+  my $mask = $self->{pbot}->{chanops}->nick_to_banmask($target);
+
+  if (exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}
+    && exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}) {
+    my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{timeout};
+    my $duration = duration($timeout - gettimeofday);
+
+    return "$mask has $duration remaining on their $channel mute";
+  } else {
+    return "$mask has no mute timeout";
+  }
 }
 
 sub ban_user {
@@ -71,13 +138,18 @@ sub ban_user {
     return "/msg $nick Usage: ban <mask> [channel [timeout (default: 24 hours)]]";
   }
 
+  my $no_length = 0;
   if (not defined $length) {
     $length = 60 * 60 * 24; # 24 hours
+    $no_length = 1;
   } else {
     my $error;
     ($length, $error) = $self->{pbot}->{parsedate}->parsedate($length);
     return $error if defined $error;
   }
+
+  $channel = lc $channel;
+  $target = lc $target;
 
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
@@ -86,23 +158,41 @@ sub ban_user {
     return "/msg $nick You are not an admin for $channel.";
   }
 
+  my $result = '';
+  my $sep = '';
   my @targets = split /,/, $target;
   my $immediately = @targets > 1 ? 0 : 1;
   foreach my $t (@targets) {
-    $self->{pbot}->{chanops}->ban_user_timed($t, $channel, $length, $immediately);
+    my $mask = $self->{pbot}->{chanops}->nick_to_banmask($t);
+
+    if ($no_length && exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}
+      && exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}) {
+      my $timeout = $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}{timeout};
+      my $duration = duration($timeout - gettimeofday);
+
+      $result .= "$sep$mask has $duration remaining on their $channel ban";
+      $sep = '; ';
+    } else {
+      $self->{pbot}->{chanops}->ban_user_timed($mask, $channel, $length, $immediately);
+
+      my $duration;
+      if ($length > 0) {
+        $duration = duration($length);
+      } else {
+        $duration = 'all eternity';
+      }
+
+      $result .= "$sep$mask banned in $channel for $duration";
+      $sep = '; ';
+    }
   }
 
   if (not $immediately) {
     $self->{pbot}->{chanops}->check_ban_queue;
   }
 
-  if ($length > 0) {
-    $length = duration($length);
-  } else {
-    $length = 'all eternity';
-  }
-
-  return "/msg $nick $target banned in $channel for $length";
+  $result = "/msg $nick $result" if $result !~ m/remaining on their/;
+  return $result;
 }
 
 sub unban_user {
@@ -179,13 +269,18 @@ sub mute_user {
     return "/msg $nick Usage: mute <mask> [channel [timeout (default: 24 hours)]]";
   }
 
+  my $no_length = 0;
   if (not defined $length) {
     $length = 60 * 60 * 24; # 24 hours
+    $no_length = 1;
   } else {
     my $error;
     ($length, $error) = $self->{pbot}->{parsedate}->parsedate($length);
     return $error if defined $error;
   }
+
+  $channel = lc $channel;
+  $target = lc $target;
 
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
@@ -194,23 +289,41 @@ sub mute_user {
     return "/msg $nick You are not an admin for $channel.";
   }
 
+  my $result = '';
+  my $sep = '';
   my @targets = split /,/, $target;
   my $immediately = @targets > 1 ? 0 : 1;
   foreach my $t (@targets) {
-    $self->{pbot}->{chanops}->mute_user_timed($t, $channel, $length, $immediately);
+    my $mask = $self->{pbot}->{chanops}->nick_to_banmask($t);
+
+    if ($no_length && exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}
+      && exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}) {
+      my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{timeout};
+      my $duration = duration($timeout - gettimeofday);
+
+      $result .= "$sep$mask has $duration remaining on their $channel mute";
+      $sep = '; ';
+    } else {
+      $self->{pbot}->{chanops}->mute_user_timed($t, $channel, $length, $immediately);
+
+      my $duration;
+      if ($length > 0) {
+        $duration = duration($length);
+      } else {
+        $duration = 'all eternity';
+      }
+
+      $result .= "$sep$mask muted in $channel for $duration";
+      $sep = '; ';
+    }
   }
 
   if (not $immediately) {
     $self->{pbot}->{chanops}->check_ban_queue;
   }
 
-  if ($length > 0) {
-    $length = duration($length);
-  } else {
-    $length = 'all eternity';
-  }
-
-  return "/msg $nick $target muted in $channel for $length";
+  $result = "/msg $nick $result" if $result !~ m/remaining on their/;
+  return $result;
 }
 
 sub unmute_user {

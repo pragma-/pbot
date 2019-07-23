@@ -190,20 +190,8 @@ sub unmode_user {
   $self->check_unban_queue if $immediately;
 }
 
-sub unban_user {
-  my ($self, $mask, $channel, $immediately) = @_;
-  $mask = lc $mask;
-  $channel = lc $channel;
-  $self->{pbot}->{logger}->log("Unbanning $channel $mask\n");
-  $self->unmode_user($mask, $channel, $immediately, 'b');
-}
-
-sub ban_user_timed {
-  my $self = shift;
-  my ($mask, $channel, $length, $immediately) = @_;
-
-  $channel = lc $channel;
-  $mask = lc $mask;
+sub nick_to_banmask {
+  my ($self, $mask) = @_;
 
   if ($mask !~ m/[!@\$]/) {
     my ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($mask);
@@ -219,7 +207,25 @@ sub ban_user_timed {
       $mask .= '!*@*';
     }
   }
+  return $mask;
+}
 
+sub unban_user {
+  my ($self, $mask, $channel, $immediately) = @_;
+  $mask = lc $mask;
+  $channel = lc $channel;
+  $self->{pbot}->{logger}->log("Unbanning $channel $mask\n");
+  $self->unmode_user($mask, $channel, $immediately, 'b');
+}
+
+sub ban_user_timed {
+  my $self = shift;
+  my ($mask, $channel, $length, $immediately) = @_;
+
+  $channel = lc $channel;
+  $mask = lc $mask;
+
+  $mask = $self->nick_to_banmask($mask);
   $self->ban_user($mask, $channel, $immediately);
 
   if ($length > 0) {
@@ -258,8 +264,9 @@ sub mute_user_timed {
   $channel = lc $channel;
   $mask = lc $mask;
 
-  $mask .= '!*@*' if $mask !~ m/[\$!@]/;
+  $mask = $self->nick_to_banmask($mask);
   $self->mute_user($mask, $channel, $immediately);
+
   if ($length > 0) {
     $self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
     $self->{unmute_timeout}->save;
