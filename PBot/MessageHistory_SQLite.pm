@@ -948,13 +948,13 @@ sub get_message_context {
     $messages_after = eval {
       my $sth;
       if (defined $context_id) {
-        $sth  = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND timestamp > ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
+        $sth  = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND timestamp > ? AND mode = 0 ORDER BY timestamp ASC LIMIT ?');
         $sth->bind_param(1, $context_id);
         $sth->bind_param(2, $message->{channel});
         $sth->bind_param(3, $message->{timestamp});
         $sth->bind_param(4, $after);
       } else {
-        $sth  = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND timestamp > ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
+        $sth  = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND timestamp > ? AND mode = 0 ORDER BY timestamp ASC LIMIT ?');
         $sth->bind_param(1, $message->{channel});
         $sth->bind_param(2, $message->{timestamp});
         $sth->bind_param(3, $after);
