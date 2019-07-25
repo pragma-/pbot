@@ -17,7 +17,7 @@ use feature 'unicode_strings';
 use HTML::Entities;
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
-use Getopt::Long qw(GetOptionsFromString);
+use Getopt::Long qw(GetOptionsFromArray);
 
 use PBot::Plugins::Quotegrabs::Quotegrabs_SQLite;      # use SQLite backend for quotegrabs database
 #use PBot::Plugins::Quotegrabs::Quotegrabs_Hashtable;  # use Perl hashtable backend for quotegrabs database
@@ -161,7 +161,7 @@ sub grab_quotegrab {
   }
 
   if (not defined $arguments or not length $arguments) {
-    return "Usage: grab <nick> [history [channel]] [+ <nick> [history [channel]] ...] -- where [history] is an optional argument that is a regex (without whitespace) of the text within the message; e.g., to grab a message containing 'pizza', use `grab nick pizza`; you can chain grabs with + to grab multiple messages";
+    return "Usage: grab <nick> [history [channel]] [+ <nick> [history [channel]] ...] -- where [history] is an optional regex argument; e.g., to grab a message containing 'pizza', use `grab nick pizza`; you can chain grabs with + to grab multiple messages";
   }
 
   $arguments = lc $arguments;
@@ -322,7 +322,7 @@ sub show_random_quotegrab {
     return "";
   }
 
-  my $usage = 'Usage: rq [nick [channel [text]]] [-c,--channel <channel>] [-t,--text <text>]';
+  my $usage = 'Usage: rq [nick [channel [text]]] [-c <channel>] [-t <text>]';
 
   if (defined $arguments) {
     my $getopt_error;
@@ -331,16 +331,16 @@ sub show_random_quotegrab {
       chomp $getopt_error;
     };
 
-    $arguments =~ s/(?<!\\)'/\\'/g;
-    my ($ret, $args) = GetOptionsFromString($arguments,
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, preserve_escapes => 1, strip_quotes => 1);
+    my ($ret, $rest) = GetOptionsFromArray(\@opt_args,
       'channel|c=s' => \$channel_search,
       'text|t=s'    => \$text_search);
 
     return "$getopt_error -- $usage" if defined $getopt_error;
 
-    $nick_search = shift @$args;
-    $channel_search = shift @$args if not defined $channel_search;
-    $text_search = shift @$args if not defined $text_search;
+    $nick_search = shift @opt_args;
+    $channel_search = shift @opt_args if not defined $channel_search;
+    $text_search = shift @opt_args if not defined $text_search;
 
     if ($nick_search =~ m/^#/) {
       my $tmp = $channel_search;
@@ -353,7 +353,15 @@ sub show_random_quotegrab {
     }
   }
 
-  $channel_search = undef if defined $channel_search and $channel_search !~ /^#/;
+  if (defined $channel_search and $channel_search !~ /^#/) {
+    if ($channel_search eq $nick) {
+      $channel_search = undef;
+    } elsif ($channel_search =~ m/^\./) {
+      # do nothing
+    } else {
+      return "$channel_search is not a valid channel.";
+    }
+  }
 
   my $quotegrab = $self->{database}->get_random_quotegrab($nick_search, $channel_search, $text_search);
 
