@@ -98,7 +98,7 @@ sub on_public {
   foreach my $string1 (@$messages) {
     next if $now - $string1->{timestamp} > 60 * 60 * 2;
     next if $allow_bot and $string1->{msg} =~ m/^(?:$bot_trigger|$botnick.?)/;
-    $string1->{msg} =~ s/^[^;,:]{1,20}//; # remove nick-like prefix if one exists
+    $string1->{msg} =~ s/^[^;,:]{1,20}[;,:]//; # remove nick-like prefix if one exists
     next if length $string1->{msg} <= 5;  # allow really short messages since "yep" "ok" etc are so common
 
     if (exists $self->{offenses}->{$account} and exists $self->{offenses}->{$account}->{$channel}) {
@@ -108,7 +108,7 @@ sub on_public {
     foreach my $string2 (@$messages) {
       next if $now - $string2->{timestamp} > 60 * 60 * 2;
       next if $allow_bot and $string2->{msg} =~ m/^(?:$bot_trigger|$botnick.?)/;
-      $string2->{msg} =~ s/^[^;,:]{1,20}//; # remove nick-like prefix if one exists
+      $string2->{msg} =~ s/^[^;,:]{1,20}[;,:]//; # remove nick-like prefix if one exists
       next if length $string2->{msg} <= 5;  # allow really short messages since "yep" "ok" etc are so common
 
       if (exists $self->{offenses}->{$account} and exists $self->{offenses}->{$account}->{$channel}) {
