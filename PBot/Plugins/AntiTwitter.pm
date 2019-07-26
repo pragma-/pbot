@@ -64,7 +64,7 @@ sub on_public {
         default {
           my $offenses = $self->{offenses}->{$channel}->{$nick}->{offenses} - 2;
           my $length = 60 * ($offenses * $offenses + 1);
-          $self->{pbot}->{chanops}->ban_user_timed("*!*\@$host", $channel, $length);
+          $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'using @nick too much', "*!*\@$host", $channel, $length);
           $self->{pbot}->{chanops}->gain_ops($channel);
           $length = duration $length;
           $event->{conn}->privmsg($nick, "$nick: Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly. You were warned. You will be allowed to speak again in $length.");

@@ -74,7 +74,7 @@ sub on_join {
       my $duration = duration($timeout);
       $duration =~ s/s$//; # hours -> hour, minutes -> minute
 
-      $self->{pbot}->{chanops}->ban_user_timed("*!$user\@$host", $channel, $timeout);
+      $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'autorejoining after kick', "*!$user\@$host", $channel, $timeout);
       $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick $duration ban for auto-rejoining after kick");
       $self->{pbot}->{chanops}->gain_ops($channel);
       $self->{kicks}->{$channel}->{$nick}->{rejoins}++;

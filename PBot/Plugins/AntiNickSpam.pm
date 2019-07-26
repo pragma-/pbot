@@ -80,7 +80,7 @@ sub check_flood {
 
   if (exists $self->{nicks}->{$channel} and @{$self->{nicks}->{$channel}} >= 10) {
     $self->{pbot}->{logger}->log("Nick spam flood detected in $channel\n");
-    $self->{pbot}->{chanops}->mute_user_timed('$~a', $channel, 60 * 15);
+    $self->{pbot}->{chanops}->mute_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'nick spam flooding', '$~a', $channel, 60 * 15);
   }
 }
 

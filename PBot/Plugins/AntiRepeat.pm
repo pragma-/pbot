@@ -146,13 +146,13 @@ sub on_public {
           $self->{pbot}->{chanops}->gain_ops($channel);
         }
         when (2) {
-          $self->{pbot}->{chanops}->ban_user_timed("*!*\@$host", $channel, 60);
+          $self->{pbot}->{chanops}->ban_user_timed($botnick, 'repeating messages', "*!*\@$host", $channel, 60);
         }
         when (3) {
-          $self->{pbot}->{chanops}->ban_user_timed("*!*\@$host", $channel, 60 * 15);
+          $self->{pbot}->{chanops}->ban_user_timed($botnick, 'repeating messages', "*!*\@$host", $channel, 60 * 15);
         }
         default {
-          $self->{pbot}->{chanops}->ban_user_timed("*!*\@$host", $channel, 60 * 60);
+          $self->{pbot}->{chanops}->ban_user_timed($botnick, 'repeating messages', "*!*\@$host", $channel, 60 * 60);
         }
       }
       return 0;
