@@ -220,7 +220,7 @@ sub unban_user {
 
 sub ban_user_timed {
   my $self = shift;
-  my ($mask, $channel, $length, $immediately) = @_;
+  my ($owner, $reason, $mask, $channel, $length, $immediately) = @_;
 
   $channel = lc $channel;
   $mask = lc $mask;
@@ -230,6 +230,8 @@ sub ban_user_timed {
 
   if ($length > 0) {
     $self->{unban_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
+    $self->{unban_timeout}->hash->{$channel}->{$mask}{owner} = $owner if defined $owner;
+    $self->{unban_timeout}->hash->{$channel}->{$mask}{reason} = $reason if defined $reason;
     $self->{unban_timeout}->save;
   } else {
     if ($self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, $mask)) {
@@ -259,7 +261,7 @@ sub unmute_user {
 
 sub mute_user_timed {
   my $self = shift;
-  my ($mask, $channel, $length, $immediately) = @_;
+  my ($owner, $reason, $mask, $channel, $length, $immediately) = @_;
 
   $channel = lc $channel;
   $mask = lc $mask;
@@ -269,6 +271,8 @@ sub mute_user_timed {
 
   if ($length > 0) {
     $self->{unmute_timeout}->hash->{$channel}->{$mask}{timeout} = gettimeofday + $length;
+    $self->{unmute_timeout}->hash->{$channel}->{$mask}{owner} = $owner if defined $owner;
+    $self->{unmute_timeout}->hash->{$channel}->{$mask}{reason} = $reason if defined $reason;
     $self->{unmute_timeout}->save;
   } else {
     if ($self->{pbot}->{chanops}->{unmute_timeout}->find_index($channel, $mask)) {

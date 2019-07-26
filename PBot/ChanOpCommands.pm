@@ -73,9 +73,15 @@ sub checkban {
   if (exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}
     && exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}) {
     my $timeout = $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}{timeout};
-    my $duration = duration($timeout - gettimeofday);
+    my $owner   = $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}{owner};
+    my $reason  = $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}{reason};
+    my $duration = concise duration($timeout - gettimeofday);
 
-    return "$mask has $duration remaining on their $channel ban";
+    my $result = "$mask banned in $channel ";
+    $result .= "by $owner " if defined $owner;
+    $result .= "for $reason " if defined $reason;
+    $result .= "($duration remaining)";
+    return $result;
   } else {
     return "$mask has no ban timeout";
   }
@@ -105,7 +111,15 @@ sub checkmute {
   if (exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}
     && exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}) {
     my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{timeout};
-    my $duration = duration($timeout - gettimeofday);
+    my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{timeout};
+    my $owner   = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{owner};
+    my $reason  = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{reason};
+    my $duration = concise duration($timeout - gettimeofday);
+
+    my $result = "$mask muted in $channel ";
+    $result .= "by $owner " if defined $owner;
+    $result .= "for $reason " if defined $reason;
+    $result .= "($duration remaining)";
 
     return "$mask has $duration remaining on their $channel mute";
   } else {
@@ -173,7 +187,7 @@ sub ban_user {
       $result .= "$sep$mask has $duration remaining on their $channel ban";
       $sep = '; ';
     } else {
-      $self->{pbot}->{chanops}->ban_user_timed($mask, $channel, $length, $immediately);
+      $self->{pbot}->{chanops}->ban_user_timed("$nick!$user\@$host", undef, $mask, $channel, $length, $immediately);
 
       my $duration;
       if ($length > 0) {
@@ -304,7 +318,7 @@ sub mute_user {
       $result .= "$sep$mask has $duration remaining on their $channel mute";
       $sep = '; ';
     } else {
-      $self->{pbot}->{chanops}->mute_user_timed($t, $channel, $length, $immediately);
+      $self->{pbot}->{chanops}->mute_user_timed("$nick!$user\@$host", undef, $t, $channel, $length, $immediately);
 
       my $duration;
       if ($length > 0) {
