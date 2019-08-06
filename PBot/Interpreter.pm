@@ -322,6 +322,8 @@ sub interpret {
 
   $stuff->{keyword} = $keyword;
 
+  $stuff->{original_arguments} = $arguments;
+
   # unescape any escaped command splits
   $arguments =~ s/\\;;/;;/g if defined $arguments;
 
@@ -335,7 +337,6 @@ sub interpret {
 
   # set arguments as a plain string
   $stuff->{arguments} = $arguments;
-  $stuff->{original_arguments} = $arguments;
   delete $stuff->{args_utf8};
 
   # set arguments as an array
