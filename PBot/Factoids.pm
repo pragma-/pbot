@@ -311,7 +311,7 @@ sub find_factoid {
           if ($keyword =~ m/^\Q$trigger\E$/i) {
             $self->{pbot}->{logger}->log("return $channel: $trigger\n") if $debug;
 
-            if ($opts{find_alias} && $self->{factoids}->hash->{$channel}->{$trigger}->{action} =~ /^\/call\s+(.*)$/) {
+            if ($opts{find_alias} && $self->{factoids}->hash->{$channel}->{$trigger}->{action} =~ /^\/call\s+(.*)$/ms) {
               my $command;
               if (length $arguments) {
                 $command = "$1 $arguments";
@@ -466,7 +466,7 @@ sub expand_factoid_vars {
 
       my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
 
-      if ($self->{factoids}->hash->{$var_chan}->{$var}->{action} =~ m{^/call (.*)}) {
+      if ($self->{factoids}->hash->{$var_chan}->{$var}->{action} =~ m{^/call (.*)}ms) {
         $test_v = $1;
         next if ++$recurse > 100;
         goto ALIAS;
@@ -973,8 +973,9 @@ sub handle_action {
   }
 
   # Check if it's an alias
-  if ($action =~ /^\/call\s+(.*)$/) {
+  if ($action =~ /^\/call\s+(.*)$/ms) {
     my $command = $1;
+    $command =~ s/\n$//;
     unless ($self->{factoids}->hash->{$channel}->{$keyword}->{'require_explicit_args'}) {
       my $args = $stuff->{arguments};
       $command .= " $args" if length $args and not $stuff->{special} eq 'code-factoid';

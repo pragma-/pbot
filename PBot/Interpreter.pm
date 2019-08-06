@@ -182,8 +182,12 @@ sub process_line {
 
     $stuff->{text} = $text;
     $stuff->{command} = $command;
-    $stuff->{nickoverride} = $nick_override if $nick_override;
-    $stuff->{force_nickoverride} = 1 if $nick_override;
+
+    if ($nick_override) {
+      $stuff->{nickoverride} = $nick_override;
+      $stuff->{force_nickoverride} = 1;
+    }
+
     $stuff->{referenced} = $embedded;
     $stuff->{interpret_depth} = 1;
     $stuff->{preserve_whitespace} = $preserve_whitespace;
@@ -220,12 +224,13 @@ sub interpret {
   }
 
   # check for splitted commands
-  if ($stuff->{command} =~ m/^(.*?)\s*(?<!\\);;\s*(.*)/) {
+  if ($stuff->{command} =~ m/^(.*?)\s*(?<!\\);;\s*(.*)/ms) {
     $stuff->{command} = $1;
     $stuff->{command_split} = $2;
   }
 
   my $cmdlist = $self->make_args($stuff->{command});
+
   if ($self->arglist_size($cmdlist) >= 4 and lc $cmdlist->[0] eq 'tell' and (lc $cmdlist->[2] eq 'about' or lc $cmdlist->[2] eq 'the')) {
     # tell nick about cmd [args]
     $stuff->{nickoverride} = $cmdlist->[1];
@@ -269,7 +274,7 @@ sub interpret {
   if (defined $arguments && $arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
     my ($pipe, $rest) = $self->extract_bracketed($arguments, '{', '}', '|', 1);
 
-    $arguments =~ s/\s*(?<!\\)\|\s*{(\Q$pipe\E)}.*$//;
+    $arguments =~ s/\s*(?<!\\)\|\s*{(\Q$pipe\E)}.*$//s;
     $pipe =~ s/^\s+|\s+$//g;
 
     if (exists $stuff->{pipe}) {
@@ -652,7 +657,7 @@ sub split_line {
       next;
     }
 
-    if ($ch eq ' ') {
+    if ($ch eq ' ' or $ch eq "\n" or $ch eq "\t") {
       if (++$spaces > 1 and $opts{keep_spaces}) {
         $token .= $ch;
         next;
