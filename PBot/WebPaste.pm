@@ -56,10 +56,16 @@ sub get_paste_site {
 }
 
 sub paste {
-  my ($self, $text) = @_;
+  my ($self, $text, %opts) = @_;
 
+  my %default_opts = (
+    no_split => 0,
+  );
+
+  %opts = (%default_opts, %opts);
+
+  $text =~ s/(.{120})\s/$1\n/g unless $opts{no_split};
   $text = encode('UTF-8', $text);
-  $text =~ s/(.{120})\s/$1\n/g;
 
   my $result;
   for (my $tries = 5; $tries > 0; $tries--) {
@@ -75,10 +81,7 @@ sub paste {
 }
 
 sub paste_ixio {
-  my $self = shift;
-  my $text = join(' ', @_);
-
-  $text =~ s/(.{120})\s/$1\n/g;
+  my ($self, $text) = @_;
 
   my $ua = LWP::UserAgent->new();
   $ua->agent("Mozilla/5.0");
