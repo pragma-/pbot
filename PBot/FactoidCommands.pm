@@ -1170,7 +1170,7 @@ sub factshow {
   my $result = "$trigger_text: ";
 
   if ($paste) {
-    $result .= $self->{pbot}->{webpaste}->paste($factoids->{$channel}->{$trigger}->{action});
+    $result .= $self->{pbot}->{webpaste}->paste($factoids->{$channel}->{$trigger}->{action}, no_split => 1);
     $channel = 'global' if $channel eq '.*';
     $chan = 'global' if $chan eq '.*';
     $result = "[$channel] $result" if $channel ne $chan;
