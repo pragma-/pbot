@@ -398,15 +398,15 @@ sub escape_json {
 sub expand_special_vars {
   my ($self, $from, $nick, $root_keyword, $action) = @_;
 
-  $action =~ s/\$nick:json/$self->escape_json($nick)/ge;
-  $action =~ s/\$channel:json/$self->escape_json($from)/ge;
-  $action =~ s/\$randomnick:json/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $self->escape_json($random) : $self->escape_json($nick)/ge;
-  $action =~ s/\$0:json/$self->escape_json($root_keyword)/ge;
+  $action =~ s/\$nick:json|\$\{nick:json\}/$self->escape_json($nick)/ge;
+  $action =~ s/\$channel:json|\$\{channel:json\}/$self->escape_json($from)/ge;
+  $action =~ s/\$randomnick:json|\$\{randomnick:json\}/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $self->escape_json($random) : $self->escape_json($nick)/ge;
+  $action =~ s/\$0:json|\$\{0:json\}/$self->escape_json($root_keyword)/ge;
 
-  $action =~ s/\$nick/$nick/g;
-  $action =~ s/\$channel/$from/g;
-  $action =~ s/\$randomnick/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
-  $action =~ s/\$0\b/$root_keyword/g;
+  $action =~ s/\$nick|\$\{nick\}/$nick/g;
+  $action =~ s/\$channel|\$\{channel\}/$from/g;
+  $action =~ s/\$randomnick|\$\{randomnick\}/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
+  $action =~ s/\$0\b|\$\{0\}\b/$root_keyword/g;
 
   return validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
@@ -416,7 +416,7 @@ sub expand_factoid_vars {
 
   $root_keyword = lc $root_keyword;
 
-  my $debug = 0;
+  my $debug = 10;
   my $depth = 0;
   while (1) {
     last if ++$depth >= 1000;
@@ -461,7 +461,7 @@ sub expand_factoid_vars {
 
       my $recurse = 0;
       ALIAS:
-      my @factoids = $self->find_factoid($from, $test_v, exact_channel => 2, exact_trigger => 2);
+      my @factoids = $self->find_factoid($from, $test_v, exact_channel => 0, exact_trigger => 2);
       next if not @factoids or not $factoids[0];
 
       my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
@@ -520,10 +520,12 @@ sub expand_factoid_vars {
           }
         }
 
+        my $replacement = $mylist[$line];
+
         if ($a) {
           my $fixed_a = select_indefinite_article $mylist[$line];
           $fixed_a = ucfirst $fixed_a if $a =~ m/^A/;
-          $mylist[$line] = "$fixed_a $mylist[$line]";
+          $replacement = "$fixed_a $mylist[$line]";
         }
 
         if ($debug and $offset == 0) {
@@ -541,8 +543,8 @@ sub expand_factoid_vars {
             $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
           }
 
-          substr($action, $offset) =~ s/\s*$a\$$original_v//;
-          $offset += $-[0];
+          substr($action, $offset) =~ s/$a\$$original_v ?/$replacement/;
+          $offset += $-[0] + length $replacement;
 
           if ($debug) {
             $self->{pbot}->{logger}->log("after: r: EMPTY \$-[0]: $-[0], offset: $offset\n");
@@ -556,11 +558,11 @@ sub expand_factoid_vars {
             $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
           }
 
-          substr($action, $offset) =~ s/$a\$$original_v/$mylist[$line]/;
-          $offset += $-[0] + length $mylist[$line];
+          substr($action, $offset) =~ s/$a\$$original_v/$replacement/;
+          $offset += $-[0] + length $replacement;
 
           if ($debug) {
-            $self->{pbot}->{logger}->log("after: r: $mylist[$line], \$-[0]: $-[0], offset: $offset\n");
+            $self->{pbot}->{logger}->log("after: r: $replacement, \$-[0]: $-[0], offset: $offset\n");
             $self->{pbot}->{logger}->log("$action\n");
             $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
           }
@@ -599,28 +601,28 @@ sub expand_action_arguments {
 
   if (not defined $input or $input eq '') {
     $input = "";
-    $action =~ s/\$args:json/$jsonargs/ge;
-    $action =~ s/\$args(?![[\w])/$nick/g;
+    $action =~ s/\$args:json|\$\{args:json\}/$jsonargs/ge;
+    $action =~ s/\$args(?![[\w])|\$\{args(?![[\w])\}/$nick/g;
   } else {
-    $action =~ s/\$args:json/$jsonargs/g;
-    $action =~ s/\$args(?![[\w])/$input/g;
+    $action =~ s/\$args:json|\$\{args:json\}/$jsonargs/g;
+    $action =~ s/\$args(?![[\w])|\$\{args(?![[\w])\}/$input/g;
   }
 
   my @args = $self->{pbot}->{interpreter}->split_line($input);
-  $action =~ s/\$arglen\b/scalar @args/eg;
+  $action =~ s/\$arglen\b|\$\{arglen\}/scalar @args/eg;
 
   my $depth = 0;
   my $const_action = $action;
-  while ($const_action =~ m/\$arg\[([^]]+)]/g) {
-    my $arg = $1;
+  while ($const_action =~ m/\$arg\[([^]]+)]|\$\{arg\[([^]]+)]\}/g) {
+    my $arg = defined $2 ? $2 : $1;
 
     last if ++$depth >= 100;
 
     if ($arg eq '*') {
       if (not defined $input or $input eq '') {
-        $action =~ s/\$arg\[\*\]/$nick/;
+        $action =~ s/\$arg\[\*\]|\$\{arg\[\*\]\}/$nick/;
       } else {
-        $action =~ s/\$arg\[\*\]/$input/;
+        $action =~ s/\$arg\[\*\]|\$\{arg\[\*\]\}/$input/;
       }
       next;
     }
@@ -647,9 +649,9 @@ sub expand_action_arguments {
         my $string = join(' ', @values);
 
         if ($string eq '') {
-          $action =~ s/\s*\$arg\[$arg1:$arg2\]//;
+          $action =~ s/\s*\$\{arg\[$arg1:$arg2\]\}// || $action =~ s/\s*\$arg\[$arg1:$arg2\]//;
         } else {
-          $action =~ s/\$arg\[$arg1:$arg2\]/$string/;
+          $action =~ s/\$\{arg\[$arg1:$arg2\]\}/$string/ || $action =~ s/\$arg\[$arg1:$arg2\]/$string/;
         }
       }
 
@@ -667,12 +669,12 @@ sub expand_action_arguments {
 
       if (not defined $value) {
         if ($arg == 0) {
-          $action =~ s/\$arg\[$arg\]/$nick/;
+          $action =~ s/\$\{arg\[$arg\]\}/$nick/ || $action =~ s/\$arg\[$arg\]/$nick/;
         } else {
-          $action =~ s/\s*\$arg\[$arg\]//;
+          $action =~ s/\s*\$\{arg\[$arg\]\}// || $action =~ s/\s*\$arg\[$arg\]//;
         }
       } else {
-        $action =~ s/\$arg\[$arg\]/$value/;
+        $action =~ s/\$arg\{\[$arg\]\}/$value/ || $action =~ s/\$arg\[$arg\]/$value/;
       }
     }
   }
@@ -684,7 +686,7 @@ sub execute_code_factoid_using_vm {
   my ($self, $stuff) = @_;
 
   unless (exists $self->{factoids}->hash->{$stuff->{channel}}->{$stuff->{keyword}}->{interpolate} and $self->{factoids}->hash->{$stuff->{channel}}->{$stuff->{keyword}}->{interpolate} eq '0') {
-    if ($stuff->{code} =~ m/(?:\$nick\b|\$args\b|\$arg\[)/ and length $stuff->{arguments}) {
+    if ($stuff->{code} =~ m/(?:\$\{?nick\b|\$\{?args\b|\$\{?arg\[)/ and length $stuff->{arguments}) {
       $stuff->{no_nickoverride} = 1;
     } else {
       $stuff->{no_nickoverride} = 0;
@@ -867,7 +869,7 @@ sub interpreter {
   if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments} and $self->{factoids}->hash->{$channel}->{$keyword}->{requires_arguments}) {
     $stuff->{alldone} = 1;
     my $usage = $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
-    $usage =~ s/\$0/$keyword/g;
+    $usage =~ s/\$0|\$\{0\}/$keyword/g;
     return $usage;
   }
 
@@ -893,7 +895,7 @@ sub interpreter {
     if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments}) {
       $stuff->{alldone} = 1;
       my $usage = $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
-      $usage =~ s/\$0/$keyword/g;
+      $usage =~ s/\$0|\$\{0\}/$keyword/g;
       return $usage;
     }
 
@@ -935,7 +937,7 @@ sub handle_action {
   }
 
   if (length $stuff->{arguments}) {
-    if ($action =~ m/\$args/ or $action =~ m/\$arg\[/) {
+    if ($action =~ m/\$\{?args/ or $action =~ m/\$\{?arg\[/) {
       unless (defined $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->hash->{$channel}->{$keyword}->{interpolate} eq '0') {
         $action = $self->expand_action_arguments($action, $stuff->{arguments}, $stuff->{nick});
         $stuff->{no_nickoverride} = 1;
@@ -948,7 +950,7 @@ sub handle_action {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{type} eq 'text') {
         my $target = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{arguments});
 
-        if ($target and $action !~ /\$(?:nick|args)\b/) {
+        if ($target and $action !~ /\$\{?(?:nick|args)\b/) {
           $stuff->{nickoverride} = $target unless $stuff->{force_nickoverride};
           $stuff->{no_nickoverride} = 0;
         } else {
@@ -960,7 +962,7 @@ sub handle_action {
     # no arguments supplied, replace $args with $nick/$tonick, etc
     if (exists $self->{factoids}->hash->{$channel}->{$keyword}->{usage}) {
       $action = "/say " . $self->{factoids}->hash->{$channel}->{$keyword}->{usage};
-      $action =~ s/\$0/$keyword/g;
+      $action =~ s/\$0|\$\{0\}/$keyword/g;
       $stuff->{alldone} = 1;
     } else {
       if ($self->{factoids}->hash->{$channel}->{$keyword}->{'allow_empty_args'}) {
