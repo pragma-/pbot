@@ -416,7 +416,7 @@ sub expand_factoid_vars {
 
   $root_keyword = lc $root_keyword;
 
-  my $debug = 10;
+  my $debug = 0;
   my $depth = 0;
   while (1) {
     last if ++$depth >= 1000;
