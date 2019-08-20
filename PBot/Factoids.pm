@@ -461,7 +461,7 @@ sub expand_factoid_vars {
 
       my $recurse = 0;
       ALIAS:
-      my @factoids = $self->find_factoid($from, $test_v, exact_channel => 0, exact_trigger => 2);
+      my @factoids = $self->find_factoid($from, $test_v, exact_channel => 2, exact_trigger => 2);
       next if not @factoids or not $factoids[0];
 
       my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
