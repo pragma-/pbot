@@ -601,9 +601,19 @@ sub factset {
   if (defined $owner_channel) {
     my $factoid = $self->{pbot}->{factoids}->{factoids}->hash->{$owner_channel}->{$owner_trigger};
 
-    my ($owner) = $factoid->{'owner'} =~ m/([^!]+)/;
+    my $owner;
+    my $mask;
+    if ($factoid->{'locked'}) {
+      # check owner against full hostmask for locked factoids
+      $owner = $factoid->{'owner'};
+      $mask = "$nick!$user\@$host";
+    } else {
+      # otherwise just the nick
+      ($owner) = $factoid->{'owner'} =~ m/([^!]+)/;
+      $mask = $nick;
+    }
 
-    if ((defined $value and $key ne 'action') and lc $nick ne lc $owner and $level == 0) {
+    if ((defined $value and $key ne 'action') and lc $mask ne lc $owner and $level == 0) {
       return "You are not the owner of $trigger.";
     }
   }
@@ -1073,7 +1083,7 @@ sub factrem {
   $channel = '.*' if $channel eq 'global';
   $from_chan = '.*' if $channel eq 'global';
 
-  my $trigger_text = $trigger =~ / / ? "\"$trigger\"" : $trigger;;
+  my $trigger_text = $trigger =~ / / ? "\"$trigger\"" : $trigger;
 
   if ($factoids->{$channel}->{$trigger}->{type} eq 'module') {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to remove $trigger_text [not factoid]\n");
