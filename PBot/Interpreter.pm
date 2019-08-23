@@ -224,7 +224,7 @@ sub interpret {
   }
 
   # check for splitted commands
-  if ($stuff->{command} =~ m/^(.*?)\s*(?<!\\);;\s*(.*)/ms) {
+  if ($stuff->{command} =~ m/^(.*?)\s*(?<!\\);;;\s*(.*)/ms) {
     $stuff->{command} = $1;
     $stuff->{command_split} = $2;
   }
@@ -325,7 +325,7 @@ sub interpret {
   $stuff->{original_arguments} = $arguments;
 
   # unescape any escaped command splits
-  $arguments =~ s/\\;;/;;/g if defined $arguments;
+  $arguments =~ s/\\;;;/;;;/g if defined $arguments;
 
   # unescape any escaped substituted commands
   $arguments =~ s/\\&\s*\{/&{/g if defined $arguments;
@@ -384,15 +384,12 @@ sub extract_bracketed {
   my $extracting = 0;
   my $extracted = 0;
   my $escaped = 0;
-  my $quote;
   my $token = '';
   my $ch = ' ';
   my $last_ch;
   my $i = 0;
-  my $quote_pos;
   my $bracket_pos;
   my $bracket_level = 0;
-  my $ignore_quote = 0;
   my $prefix_group_match = @prefix_group ? 0 : 1;
   my $prefix_match = @prefixes ? 0 : 1;
   my $match = 0;
@@ -405,14 +402,7 @@ sub extract_bracketed {
     $last_ch = $ch;
 
     if ($i >= @chars) {
-      if (defined $quote) {
-        # reached end, but unbalanced quote... reset to beginning of quote and ignore it
-        $i = $quote_pos;
-        $ignore_quote = 1;
-        $quote = undef;
-        $last_ch = ' ';
-        $token = '';
-      } elsif ($extracting) {
+      if ($extracting) {
         # reached end, but unbalanced brackets... reset to beginning and ignore them
         $i = $bracket_pos;
         $bracket_level = 0;
@@ -438,35 +428,6 @@ sub extract_bracketed {
 
     if ($ch eq '\\') {
       $escaped = 1;
-      next;
-    }
-
-    if (defined $quote) {
-      if ($ch eq $quote) {
-        # closing quote
-        $token .= $ch if $extracting or $extracted;
-        $result .= $token if $extracting;
-        $rest .= $token if $extracted;
-        $quote = undef;
-        $token = '';
-      } else {
-        # still within quoted argument
-        $token .= $ch if $extracting or $extracted;
-      }
-      next;
-    }
-
-    if ($last_ch eq ' ' and not defined $quote and ($ch eq "'" or $ch eq '"')) {
-      if ($ignore_quote) {
-        # treat unbalanced quote as part of this argument
-        $token .= $ch if $extracting or $extracted;
-        $ignore_quote = 0;
-      } else {
-        # begin potential quoted argument
-        $quote_pos = $i - 1;
-        $quote = $ch;
-        $token .= $ch if $extracting or $extracted;
-      }
       next;
     }
 
