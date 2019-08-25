@@ -327,65 +327,70 @@ sub reload {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  given ($arguments) {
-    when ("blacklist") {
+  my %reloadables = (
+    'blacklist' => sub {
       $self->{pbot}->{blacklist}->clear_blacklist;
       $self->{pbot}->{blacklist}->load_blacklist;
       return "Blacklist reloaded.";
-    }
+    },
 
-    when ("whitelist") {
+    'whitelist' => sub {
       $self->{pbot}->{antiflood}->{whitelist}->clear;
       $self->{pbot}->{antiflood}->{whitelist}->load;
       return "Whitelist reloaded.";
-    }
+    },
 
-    when ("ignores") {
+    'ignores' => sub {
       $self->{pbot}->{ignorelist}->clear_ignores;
       $self->{pbot}->{ignorelist}->load_ignores;
       return "Ignore list reloaded.";
-    }
+    },
 
-    when ("admins") {
+    'admins' => sub {
       $self->{pbot}->{admins}->{admins}->clear;
       $self->{pbot}->{admins}->load_admins;
       return "Admins reloaded.";
-    }
+    },
 
-    when ("channels") {
+    'channels' => sub {
       $self->{pbot}->{channels}->{channels}->clear;
       $self->{pbot}->{channels}->load_channels;
       return "Channels reloaded.";
-    }
+    },
 
-    when ("bantimeouts") {
+    'bantimeouts' => sub {
       $self->{pbot}->{chanops}->{unban_timeout}->clear;
       $self->{pbot}->{chanops}->{unban_timeout}->load;
       return "Ban timeouts reloaded.";
-    }
+    },
 
-    when ("mutetimeouts") {
+    'mutetimeouts' => sub {
       $self->{pbot}->{chanops}->{unmute_timeout}->clear;
       $self->{pbot}->{chanops}->{unmute_timeout}->load;
       return "Mute timeouts reloaded.";
-    }
+    },
 
-    when ("registry") {
+    'registry' => sub {
       $self->{pbot}->{registry}->{registry}->clear;
       $self->{pbot}->{registry}->load;
       return "Registry reloaded.";
-    }
+    },
 
-    when ("factoids") {
+    'factoids' => sub {
       $self->{pbot}->{factoids}->{factoids}->clear;
       $self->{pbot}->{factoids}->load_factoids;
       return "Factoids reloaded.";
     }
+  );
 
-    default {
-      return "Usage: reload <blacklist|whitelist|ignores|admins|channels|bantimeouts|mutetimeouts|registry|factoids>";
-    }
+  if (not length $arguments or not exists $reloadables{$arguments}) {
+    my $usage = 'Usage: refload <';
+    $usage .= join '|', sort keys %reloadables;
+    $usage .= '>';
+    return $usage;
   }
+
+  return $reloadables{$arguments}();
 }
 
 1;
