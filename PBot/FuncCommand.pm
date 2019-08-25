@@ -101,7 +101,7 @@ sub func_list {
     my $text = '';
 
     foreach my $func (sort keys %{$self->{funcs}}) {
-      if ($func =~ m/$regex/i) {
+      if ($func =~ m/$regex/i or $self->{funcs}->{$func}->{desc} =~ m/$regex/i) {
         $text .=  "$func: $self->{funcs}->{$func}->{desc}.\n";
       }
     }
