@@ -380,11 +380,16 @@ sub reload {
       $self->{pbot}->{factoids}->{factoids}->clear;
       $self->{pbot}->{factoids}->load_factoids;
       return "Factoids reloaded.";
+    },
+
+    'funcs' => sub {
+      $self->{pbot}->{func_cmd}->init_funcs;
+      return "Funcs reloaded.";
     }
   );
 
   if (not length $arguments or not exists $reloadables{$arguments}) {
-    my $usage = 'Usage: refload <';
+    my $usage = 'Usage: reload <';
     $usage .= join '|', sort keys %reloadables;
     $usage .= '>';
     return $usage;

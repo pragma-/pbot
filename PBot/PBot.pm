@@ -45,6 +45,7 @@ use PBot::Refresher;
 use PBot::Plugins;
 use PBot::WebPaste;
 use PBot::Utils::ParseDate;
+use PBot::FuncCommand;
 
 sub new {
   if (ref($_[1]) eq 'HASH') {
@@ -71,7 +72,9 @@ sub initialize {
 
   $self->{atexit}   = PBot::Registerable->new(%conf);
   $self->{timer}    = PBot::Timer->new(timeout => 10, %conf);
+
   $self->{commands} = PBot::Commands->new(pbot => $self, %conf);
+  $self->{func_cmd} = PBot::FuncCommand->new(pbot => $self, %conf);
 
   $self->{refresher} = PBot::Refresher->new(pbot => $self);
 
