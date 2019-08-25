@@ -5,13 +5,15 @@
 # Purpose: Special `func` command that executes built-in functions with
 # optional arguments. Usage: func <identifier> [arguments].
 #
-# Intended usage is with command-substitution (&{}). For example:
+# Intended usage is with command-substitution (&{}) or pipes (|{}).
 #
-# factadd img /call echo https://google.com/search?q=&{func urlencode $args}&tbm=isch
+# For example:
+#
+# factadd img /call echo https://google.com/search?q=&{func uri_encode $args}&tbm=isch
 #
 # The above would invoke the function 'urlencode' on $args and then replace
-# the command-substitution with the result, creating a simple Google Image
-# Search factoid command.
+# the command-substitution with the result, thus encoding $args to be safely
+# used in the URL of this simple Google Image Search factoid command.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,11 +41,8 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to FactoidCommands");
-
   $self->{pbot}->{commands}->register(sub { return $self->do_func(@_) }, 'func', 0);
-
   $self->init_funcs;
 }
 
