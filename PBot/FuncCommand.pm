@@ -9,10 +9,10 @@
 #
 # For example:
 #
-# factadd img /call echo https://google.com/search?q=&{func uri_encode $args}&tbm=isch
+# factadd img /call echo https://google.com/search?q=&{func uri_escape $args}&tbm=isch
 #
-# The above would invoke the function 'urlencode' on $args and then replace
-# the command-substitution with the result, thus encoding $args to be safely
+# The above would invoke the function 'uri_escape' on $args and then replace
+# the command-substitution with the result, thus escaping $args to be safely
 # used in the URL of this simple Google Image Search factoid command.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
