@@ -71,15 +71,12 @@ sub init_funcs {
       usage  => 'sed s/<regex>/<replacement>/[Pig]; P preserve case; i ignore case; g replace all',
       subref => sub { $self->func_sed(@_) }
     },
+    unquote => {
+      desc   => 'removes unescaped surrounding quotes and strips escapes from escaped quotes',
+      usage  => 'unquote <text>',
+      subref => sub { $self->func_unquote(@_) }
+    },
   };
-}
-
-use URI::Escape qw/uri_escape/;
-
-sub func_uri_escape {
-  my $self = shift;
-  my $text = "@_";
-  return uri_escape($text);
 }
 
 sub func_help {
@@ -124,6 +121,23 @@ sub func_list {
   }
 
   return $result;
+}
+
+sub func_unquote {
+  my $self = shift;
+  my $text = "@_";
+  $text =~ s/^"(.*?)(?<!\\)"$/$1/ || $text =~ s/^'(.*?)(?<!\\)'$/$1/;
+  $text =~ s/(?<!\\)\\'/'/g;
+  $text =~ s/(?<!\\)\\"/"/g;
+  return $text;
+}
+
+use URI::Escape qw/uri_escape/;
+
+sub func_uri_escape {
+  my $self = shift;
+  my $text = "@_";
+  return uri_escape($text);
 }
 
 # near-verbatim insertion of krok's `sed` factoid
@@ -176,7 +190,9 @@ sub do_func {
     push @params, $param;
   }
 
-  return $self->{funcs}->{$func}->{subref}->(@params);
+  my $result = $self->{funcs}->{$func}->{subref}->(@params);
+  $result =~ s/\x1/1/g;
+  return $result;
 }
 
 1;
