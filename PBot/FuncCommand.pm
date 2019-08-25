@@ -46,6 +46,8 @@ sub initialize {
   $self->init_funcs;
 }
 
+# this is a subroutine so PBot::BotAdminCommands::reload() can reload
+# the funcs without requiring a bot restart.
 sub init_funcs {
   my ($self) = @_;
 
@@ -76,6 +78,29 @@ sub init_funcs {
       subref => sub { $self->func_unquote(@_) }
     },
   };
+}
+
+sub do_func {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+
+  my $func = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+
+  if (not defined $func) {
+    return "Usage: func <keyword> [arguments]";
+  }
+
+  if (not exists $self->{funcs}->{$func}) {
+    return "[No such func '$func']";
+  }
+
+  my @params;
+  while (my $param = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist})) {
+    push @params, $param;
+  }
+
+  my $result = $self->{funcs}->{$func}->{subref}->(@params);
+  $result =~ s/\x1/1/g;
+  return $result;
 }
 
 sub func_help {
@@ -170,28 +195,5 @@ sub func_sed {
   }
 }
 use warnings;
-
-sub do_func {
-  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-
-  my $func = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
-
-  if (not defined $func) {
-    return "Usage: func <keyword> [arguments]";
-  }
-
-  if (not exists $self->{funcs}->{$func}) {
-    return "[No such func '$func']";
-  }
-
-  my @params;
-  while (my $param = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist})) {
-    push @params, $param;
-  }
-
-  my $result = $self->{funcs}->{$func}->{subref}->(@params);
-  $result =~ s/\x1/1/g;
-  return $result;
-}
 
 1;
