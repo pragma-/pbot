@@ -30,7 +30,7 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to FactoidCommands");
+  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot} = $pbot;
 
   $pbot->{commands}->register(sub { return $self->regadd(@_)         },       "regadd",     60);
