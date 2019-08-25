@@ -66,6 +66,11 @@ sub init_funcs {
       usage  => 'uri_escape <text>',
       subref => sub { $self->func_uri_escape(@_) }
     },
+    sed => {
+      desc   => 'a sed-like stream editor',
+      usage  => 'sed s/<regex>/<replacement>/[Pig]; P preserve case; i ignore case; g replace all',
+      subref => sub { $self->func_sed(@_) }
+    },
   };
 }
 
@@ -120,6 +125,38 @@ sub func_list {
 
   return $result;
 }
+
+# near-verbatim insertion of krok's `sed` factoid
+no warnings;
+sub func_sed {
+  my $self = shift;
+  my $text = "@_";
+
+	if ($text =~ /^s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)\1(\S*)\s+(.*)/p) {
+		my ($a, $r, $g, $m, $t) = ($5,"'\"$3\"'", index($4,"g") != -1, $4, $2);
+
+		if ($m=~/P/) {
+			$r =~ s/^'"(.*)"'$/$1/;
+			$m=~s/P//g;
+
+			if($g) {
+				$a =~ s|(?$m)($t)|$1=~/^[A-Z][^A-Z]/?ucfirst$r:($1=~/^[A-Z]+$/?uc$r:$r)|gie;
+			} else {
+				$a =~ s|(?$m)($t)|$1=~/^[A-Z][^A-Z]/?ucfirst$r:($1=~/^[A-Z]+$/?uc$r:$r)|ie;
+			}
+		} else {
+			if ($g) {
+				$a =~ s/(?$m)$t/$r/geee;
+			} else {
+				$a=~s/(?$m)$t/$r/eee;
+			}
+		}
+		return $a;
+	} else {
+		return "sed: syntax error";
+	}
+}
+use warnings;
 
 sub do_func {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
