@@ -24,6 +24,7 @@ $arguments =~ s/\W$//;
 
 exit if $arguments =~ m{https?://git}i;
 exit if $arguments =~ m{https://.*swissborg.com}i;
+exit if $arguments =~ m{https://streamable.com}i;
 exit if $arguments =~ m{https://matrix.org}i;
 exit if $arguments =~ m{https://freenode.net/news/spam-shake}i;
 exit if $arguments =~ m{https://twitter.com/ISCdotORG}i;
@@ -96,7 +97,7 @@ if (not $response->is_success)
   die "Couldn't get link: $arguments";
 }
 
-my $text = $response->content;
+my $text = $response->decoded_content;
 
 if ($text =~ m/<title>(.*?)<\/title>/msi)
 {
@@ -157,6 +158,7 @@ if ($distance / $length < 0.75) {
 
 exit if $t !~ m/\s/; # exit if title is only one word -- this isn't usually interesting
 exit if $t =~ m{christel}i;
+exit if $t =~ m{streamable}i;
 exit if $t =~ m{freenode}i;
 exit if $t =~ m{ico scam}i;
 exit if $t =~ m{Freenode head of infrastructure}i;
