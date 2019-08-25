@@ -156,12 +156,12 @@ sub func_unquote {
   return $text;
 }
 
-use URI::Escape qw/uri_escape/;
+use URI::Escape qw/uri_escape_utf8/;
 
 sub func_uri_escape {
   my $self = shift;
   my $text = "@_";
-  return uri_escape($text);
+  return uri_escape_utf8($text);
 }
 
 # near-verbatim insertion of krok's `sed` factoid
