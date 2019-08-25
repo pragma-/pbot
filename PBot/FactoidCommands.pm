@@ -844,6 +844,7 @@ sub factmove {
   $target_channel = 'global' if $target_channel eq '.*';
 
   if ($src_channel eq $target_channel) {
+    $self->log_factoid($found_src_channel, $found_source, "$nick!$user\@$host", "renamed from $found_source to $target");
     $self->log_factoid($target_channel, $target, "$nick!$user\@$host", "renamed from $found_source to $target");
     return "[$found_src_channel] $found_source renamed to $target";
   } else {
