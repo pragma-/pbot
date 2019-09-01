@@ -7,7 +7,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package PBot::Plugins::Quotegrabs;
+package Plugins::Quotegrabs;
 
 use warnings;
 use strict;
@@ -19,8 +19,8 @@ use Time::Duration;
 use Time::HiRes qw(gettimeofday);
 use Getopt::Long qw(GetOptionsFromArray);
 
-use PBot::Plugins::Quotegrabs::Quotegrabs_SQLite;      # use SQLite backend for quotegrabs database
-#use PBot::Plugins::Quotegrabs::Quotegrabs_Hashtable;  # use Perl hashtable backend for quotegrabs database
+use Plugins::Quotegrabs::Quotegrabs_SQLite;      # use SQLite backend for quotegrabs database
+#use Plugins::Quotegrabs::Quotegrabs_Hashtable;  # use Perl hashtable backend for quotegrabs database
 use PBot::Utils::ValidateString;
 
 use POSIX qw(strftime);
@@ -40,21 +40,29 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  $self->{pbot}        = delete $conf{pbot} // Carp::croak("Missing pbot reference in Quotegrabs");
-  $self->{filename}    = delete $conf{quotegrabs_file};
-  $self->{export_path} = delete $conf{export_quotegrabs_path};
-  $self->{export_site} = delete $conf{export_quotegrabs_site};
+  $self->{pbot}        = $conf{pbot} // Carp::croak("Missing pbot reference in Quotegrabs");
+  $self->{filename}    = $conf{quotegrabs_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quotegrabs.sqlite3';
+  $self->{export_path} = $conf{export_quotegrabs_path} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quotegrabs.html';
+  $self->{export_site} = $conf{export_quotegrabs_site} // 'http://www.iso-9899.info/candide/quotegrabs.html';
 
-  $self->{database} = PBot::Plugins::Quotegrabs::Quotegrabs_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
-  #$self->{database} = PBot::Plugins::Quotegrabs::Quotegrabs_Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
+  $self->{database} = Plugins::Quotegrabs::Quotegrabs_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
+  #$self->{database} = Plugins::Quotegrabs::Quotegrabs_Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
   $self->{database}->begin();
 
   $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
 
-  $self->{pbot}->{commands}->register(sub { $self->grab_quotegrab(@_)        },  "grab",  0);
-  $self->{pbot}->{commands}->register(sub { $self->show_quotegrab(@_)        },  "getq",  0);
-  $self->{pbot}->{commands}->register(sub { $self->delete_quotegrab(@_)      },  "delq",  0);
-  $self->{pbot}->{commands}->register(sub { $self->show_random_quotegrab(@_) },  "rq",    0);
+  $self->{pbot}->{commands}->register(sub { $self->grab_quotegrab(@_)        },  'grab',  0);
+  $self->{pbot}->{commands}->register(sub { $self->show_quotegrab(@_)        },  'getq',  0);
+  $self->{pbot}->{commands}->register(sub { $self->delete_quotegrab(@_)      },  'delq',  0);
+  $self->{pbot}->{commands}->register(sub { $self->show_random_quotegrab(@_) },  'rq',    0);
+}
+
+sub unload {
+  my ($self) = @_;
+  $self->{pbot}->{commands}->unregister('grab');
+  $self->{pbot}->{commands}->unregister('getq');
+  $self->{pbot}->{commands}->unregister('delq');
+  $self->{pbot}->{commands}->unregister('rq');
 }
 
 sub uniq { my %seen; grep !$seen{$_}++, @_ }
@@ -332,7 +340,7 @@ sub show_random_quotegrab {
     };
 
     my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, preserve_escapes => 1, strip_quotes => 1);
-    my ($ret, $rest) = GetOptionsFromArray(\@opt_args,
+    GetOptionsFromArray(\@opt_args,
       'channel|c=s' => \$channel_search,
       'text|t=s'    => \$text_search);
 

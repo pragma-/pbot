@@ -1,5 +1,5 @@
 
-package PBot::Plugins::RelayUnreg;
+package Plugins::RelayUnreg;
 
 use warnings;
 use strict;

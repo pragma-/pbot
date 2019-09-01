@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package PBot::Plugins::Spinach;
+package Plugins::Spinach;
 
 use warnings;
 use strict;
@@ -35,8 +35,8 @@ $Data::Dumper::Useqq = 1;
 
 use PBot::HashObject;
 
-use PBot::Plugins::Spinach::Stats;
-use PBot::Plugins::Spinach::Rank;
+use Plugins::Spinach::Stats;
+use Plugins::Spinach::Rank;
 
 sub new {
   Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
@@ -69,8 +69,8 @@ sub initialize {
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Spinach Metadata', filename => $self->{metadata_filename});
   $self->load_metadata;
 
-  $self->{stats}   = PBot::Plugins::Spinach::Stats->new(pbot => $self->{pbot}, filename => $self->{stats_filename});
-  $self->{rankcmd} = PBot::Plugins::Spinach::Rank->new(pbot => $self->{pbot}, channel => $self->{channel}, filename => $self->{stats_filename});
+  $self->{stats}   = Plugins::Spinach::Stats->new(pbot => $self->{pbot}, filename => $self->{stats_filename});
+  $self->{rankcmd} = Plugins::Spinach::Rank->new(pbot => $self->{pbot}, channel => $self->{channel}, filename => $self->{stats_filename});
 
   $self->create_states;
   $self->load_questions;

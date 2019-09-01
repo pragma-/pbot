@@ -45,10 +45,14 @@ sub initialize {
 sub autoload {
   my ($self, %conf) = @_;
 
+  return if $self->{pbot}->{registry}->get_value('plugins', 'noautoload');
+
+  my $path = $self->{pbot}->{registry}->get_value('plugins', 'path') // 'PBot/Plugins';
+
   $self->{pbot}->{logger}->log("Loading plugins ...\n");
   my $plugin_count = 0;
 
-  my @plugins = glob 'PBot/Plugins/*.pm';
+  my @plugins = glob "$path/*.pm";
 
   foreach my $plugin (sort @plugins) {
     $plugin = basename $plugin;
@@ -68,9 +72,18 @@ sub load {
 
   $self->unload($plugin);
 
-  my $class = "PBot::Plugins::$plugin";
+  return if $self->{pbot}->{registry}->get_value('plugins', 'disabled');
 
-  $self->{pbot}->{refresher}->{refresher}->refresh_module("PBot/Plugins/$plugin.pm");
+  my $path = $self->{pbot}->{registry}->get_value('plugins', 'path') // 'PBot/Plugins';
+
+  if (not grep { $_ eq $path } @INC) {
+    unshift @INC, $path;
+  }
+
+  my $class = $path . "/$plugin";
+  $class =~ s,[/\\],::,g;
+
+  $self->{pbot}->{refresher}->{refresher}->refresh_module("$path/$plugin.pm");
 
   my $ret = eval {
     eval "require $class";
@@ -84,7 +97,7 @@ sub load {
     $self->{pbot}->{logger}->log("Loading $plugin\n");
     my $mod = $class->new(pbot => $self->{pbot}, %conf);
     $self->{plugins}->{$plugin} = $mod;
-    $self->{pbot}->{refresher}->{refresher}->update_cache("PBot/Plugins/$plugin.pm");
+    $self->{pbot}->{refresher}->{refresher}->update_cache("$path/$plugin.pm");
     return 1;
   };
 
@@ -110,8 +123,12 @@ sub unload {
       $self->{pbot}->{logger}->log("Warning: got error unloading plugin $plugin: $@\n");
     }
 
-    $self->{pbot}->{refresher}->{refresher}->unload_module("PBot::Plugins::$plugin");
-    $self->{pbot}->{refresher}->{refresher}->unload_subs("PBot/Plugins/$plugin.pm");
+    my $path = $self->{pbot}->{registry}->get_value('plugins', 'path') // 'PBot/Plugins';
+    my $class = $path;
+    $class =~ s,[/\\],::,g;
+
+    $self->{pbot}->{refresher}->{refresher}->unload_module($class . '::' . $plugin);
+    $self->{pbot}->{refresher}->{refresher}->unload_subs("$path/$plugin.pm");
 
     $self->{pbot}->{logger}->log("Plugin $plugin unloaded.\n");
     return 1;

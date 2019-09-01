@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package PBot::Plugins::Spinach::Rank;
+package Plugins::Spinach::Rank;
 
 use warnings;
 use strict;
@@ -14,7 +14,7 @@ use feature 'unicode_strings';
 use FindBin;
 use lib "$FindBin::RealBin/../../..";
 
-use PBot::Plugins::Spinach::Stats;
+use Plugins::Spinach::Stats;
 use Math::Expression::Evaluator;
 
 sub new {
@@ -30,7 +30,7 @@ sub initialize {
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{channel} = $conf{channel} // Carp::croak("Missing channel reference to " . __FILE__);
   $self->{filename} = $conf{filename} // 'stats.sqlite';
-  $self->{stats} = PBot::Plugins::Spinach::Stats->new(pbot => $self->{pbot}, filename => $self->{filename});
+  $self->{stats} = Plugins::Spinach::Stats->new(pbot => $self->{pbot}, filename => $self->{filename});
 }
 
 sub sort_generic {
