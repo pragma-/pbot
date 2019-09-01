@@ -111,7 +111,6 @@ sub checkmute {
   if (exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}
     && exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}) {
     my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{timeout};
-    my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{timeout};
     my $owner   = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{owner};
     my $reason  = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{reason};
     my $duration = concise duration($timeout - gettimeofday);
