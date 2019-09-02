@@ -86,7 +86,7 @@ sub do_func {
   my $func = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
 
   if (not defined $func) {
-    return "Usage: func <keyword> [arguments]";
+    return "Usage: func <keyword> [arguments]; see also: func help";
   }
 
   if (not exists $self->{funcs}->{$func}) {
@@ -105,6 +105,10 @@ sub do_func {
 
 sub func_help {
   my ($self, $func) = @_;
+
+  if (not length $func) {
+    return "func: invoke built-in functions; usage: func <keyword> [arguments]; to list available functions: func list";
+  }
 
   if (not exists $self->{funcs}->{$func}) {
     return "No such func '$func'.";
