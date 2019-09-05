@@ -873,16 +873,6 @@ sub interpreter {
     return $usage;
   }
 
-  if (exists $stuff->{pipe_result}) {
-    my $pipe_result = $stuff->{pipe_result};
-    if (length $stuff->{arguments}) {
-      $stuff->{arguments} .= " $pipe_result";
-    } else {
-      $stuff->{arguments} = $pipe_result;
-    }
-    $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($stuff->{arguments});
-  }
-
   if (length $stuff->{arguments} and exists $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args}) {
     $action = $self->{factoids}->hash->{$channel}->{$keyword}->{action_with_args};
   } else {
@@ -997,7 +987,7 @@ sub handle_action {
 
     if (defined $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'}) {
         if ($self->{factoids}->hash->{$channel}->{$keyword}->{'locked'}) {
-          $self->{pbot}->{logger}->log("Effective-level set to $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'}\n");
+          $self->{pbot}->{logger}->log("Effective-level set to $self->{factoids}->{hash}->{$channel}->{$keyword}->{'effective-level'}\n");
           $stuff->{'effective-level'} = $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'};
         } else {
           $self->{pbot}->{logger}->log("Ignoring effective-level of $self->{factoids}->hash->{$channel}->{$keyword}->{'effective-level'} on unlocked factoid\n");

@@ -768,6 +768,17 @@ sub handle_result {
     $stuff->{prepend} = $1;
   }
 
+  if ($stuff->{pipe} and not $stuff->{authorized}) {
+    my ($pipe, $pipe_rest) = (delete $stuff->{pipe}, delete $stuff->{pipe_rest});
+    if (not $stuff->{alldone}) {
+      $stuff->{command} = "$pipe $result $pipe_rest";
+      $result = $self->interpret($stuff);
+      $stuff->{result} = $result;
+    }
+    $self->handle_result($stuff, $result);
+    return 0;
+  }
+
   if (exists $stuff->{subcmd}) {
     my $command = pop @{$stuff->{subcmd}};
 
@@ -781,22 +792,8 @@ sub handle_result {
       $stuff->{command} = $command;
       $result = $self->interpret($stuff);
       $stuff->{result}= $result;
-      $self->{pbot}->{logger}->log("subcmd result [$result]\n");
     }
     $self->handle_result($stuff);
-    return 0;
-  }
-
-  if ($stuff->{pipe} and not $stuff->{authorized}) {
-    my ($pipe, $pipe_rest) = (delete $stuff->{pipe}, delete $stuff->{pipe_rest});
-    $self->{pbot}->{logger}->log("Handling pipe [$result][$pipe][$pipe_rest]\n");
-    $stuff->{pipe_result} = $result;
-    if (not $stuff->{alldone}) {
-      $stuff->{command} = "$pipe$pipe_rest";
-      $result = $self->interpret($stuff);
-      $stuff->{result} = $result;
-    }
-    $self->handle_result($stuff, $result);
     return 0;
   }
 
@@ -807,7 +804,6 @@ sub handle_result {
   if ($stuff->{command_split}) {
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
     $stuff->{command} = delete $stuff->{command_split};
-    $self->{pbot}->{logger}->log("Handling split [$result][$stuff->{command}]\n");
     $result =~ s#^/say #\n#i;
     $result =~ s#^/me #\n* $botnick #i;
     if (not length $stuff->{split_result}) {
