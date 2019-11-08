@@ -47,7 +47,7 @@ sub autoload {
 
   return if $self->{pbot}->{registry}->get_value('plugins', 'noautoload');
 
-  my $path = $self->{pbot}->{registry}->get_value('plugins', 'path') // 'PBot/Plugins';
+  my $path = $self->{pbot}->{registry}->get_value('plugins', 'path') // 'Plugins';
 
   $self->{pbot}->{logger}->log("Loading plugins ...\n");
   my $plugin_count = 0;
