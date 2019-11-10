@@ -310,6 +310,7 @@ sub on_action {
   my ($nick, $user, $host, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
   my $channel = $event->{event}->{to}[0];
   return 0 if $event->{interpreted};
+  $msg =~ s/^\/me\s+//;
   $self->check_trigger($nick, $user, $host, $channel, "ACTION $msg");
   return 0;
 }
