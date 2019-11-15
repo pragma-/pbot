@@ -62,7 +62,9 @@ CREATE TABLE IF NOT EXISTS Triggers (
   trigger     TEXT,
   action      TEXT,
   owner       TEXT,
-  level       INTEGER
+  level       INTEGER,
+  repeatdelay INTEGER,
+  lastused    NUMERIC,
 )
 SQL
 
@@ -93,17 +95,18 @@ sub dbi_end {
 }
 
 sub add_trigger {
-  my ($self, $channel, $trigger, $action, $owner, $level) = @_;
+  my ($self, $channel, $trigger, $action, $owner, $level, $repeatdelay) = @_;
 
   return 0 if $self->get_trigger($channel, $trigger);
 
   eval {
-    my $sth = $self->{dbh}->prepare('INSERT INTO Triggers (channel, trigger, action, owner, level) VALUES (?, ?, ?, ?, ?)');
+    my $sth = $self->{dbh}->prepare('INSERT INTO Triggers (channel, trigger, action, owner, level, repeatdelay, lastused) VALUES (?, ?, ?, ?, ?, ?, 0)');
     $sth->bind_param(1, lc $channel);
     $sth->bind_param(2, $trigger);
     $sth->bind_param(3, $action);
     $sth->bind_param(4, $owner);
     $sth->bind_param(5, $level);
+    $sth->bind_param(6, $repeatdelay);
     $sth->execute();
   };
 
@@ -149,6 +152,35 @@ sub list_triggers {
   }
 
   return @$triggers;
+}
+
+sub update_trigger {
+  my ($self, $channel, $trigger, $data) = @_;
+
+  eval {
+    my $sql = 'UPDATE Triggers SET ';
+
+    my $comma = '';
+    foreach my $key (keys %$data) {
+      $sql .= "$comma$key = ?";
+      $comma = ", ";
+    }
+
+    $sql .= "WHERE trigger = ? AND channel = ?";
+
+    my $sth = $self->{dbh}->prepare($sql);
+
+    my $param = 1;
+    foreach my $key (keys %$data) {
+      $sth->bind_param($param++, $data->{$key});
+    }
+
+    $sth->bind_param($param++, $trigger);
+    $sth->bind_param($param, $channel);
+    $sth->execute();
+  };
+
+  $self->{pbot}->{logger}->log("Update trigger $channel/$trigger failed: $@\n") if $@;
 }
 
 sub get_trigger {
@@ -202,6 +234,7 @@ sub actiontrigger {
         foreach my $trigger (@triggers) {
           $result .= "$comma$trigger->{trigger} -> $trigger->{action}";
           $result .= " ($trigger->{level})" if $trigger->{level} != 0;
+          $result .= " [$trigger->{repeatdelay}]" if $trigger->{repeatdelay} != 0;
           $comma = ",\n";
         }
       }
@@ -213,17 +246,17 @@ sub actiontrigger {
       } else {
         ($channel, $arguments) = split / /, $arguments, 2;
         if ($channel !~ m/^#/ and $channel ne 'global') {
-          return "Usage from private message: actiontrigger add <channel> <level> <regex> <action>";
+          return "Usage from private message: actiontrigger add <channel> <level> <repeat delay> <regex> <action>";
         }
       }
 
-      my ($level, $trigger, $action) = split / /, $arguments, 3;
+      my ($level, $repeatdelay, $trigger, $action) = split / /, $arguments, 4;
 
       if (not defined $trigger or not defined $action) {
         if ($from !~ m/^#/) {
-          $result = "Usage from private message: actiontrigger add <channel> <level> <regex> <action>";
+          $result = "Usage from private message: actiontrigger add <channel> <level> <repeat delay> <regex> <action>";
         } else {
-          $result = "Usage: actiontrigger add <level> <regex> <action>";
+          $result = "Usage: actiontrigger add <level> <repeat delay> <regex> <action>";
         }
         return $result;
       }
@@ -238,6 +271,10 @@ sub actiontrigger {
         return "$nick: Missing level argument?\n";
       }
 
+      if ($repeatdelay !~ m/^\d+$/) {
+        return "$nick: Missing repeat delay argument?\n";
+      }
+
       if ($level > 0) {
         my $admin = $self->{pbot}->{admins}->find_admin($channel, "$nick!$user\@$host");
         if (not defined $admin or $level > $admin->{level}) {
@@ -245,7 +282,7 @@ sub actiontrigger {
         }
       }
 
-      if ($self->add_trigger($channel, $trigger, $action, "$nick!$user\@$host", $level)) {
+      if ($self->add_trigger($channel, $trigger, $action, "$nick!$user\@$host", $level, $repeatdelay)) {
         $result = "Trigger added.";
       } else {
         $result = "Failed to add trigger.";
@@ -285,9 +322,9 @@ sub actiontrigger {
 
     default {
       if ($from !~ m/^#/) {
-        $result = "Usage from private message: actiontrigger list [channel] | actiontrigger add <channel> <level> <regex> <trigger> | actiontrigger delete <channel> <regex>";
+        $result = "Usage from private message: actiontrigger list [channel] | actiontrigger add <channel> <level> <repeat delay> <regex> <trigger> | actiontrigger delete <channel> <regex>";
       } else {
-        $result = "Usage: actiontrigger list [channel] | actiontrigger add <level> <regex> <trigger> | actiontrigger delete <regex>";
+        $result = "Usage: actiontrigger list [channel] | actiontrigger add <level> <repeat delay> <regex> <trigger> | actiontrigger delete <regex>";
       }
     }
   }
@@ -347,7 +384,7 @@ sub check_trigger {
     return 0;
   }
 
-  my @triggers = $text =~ m/^QUIT/ ? $self->list_triggers('*') : $self->list_triggers($channel);
+  my @triggers = $self->list_triggers($channel);
   my @globals = $self->list_triggers('global');
 
   push @triggers, @globals;
@@ -355,9 +392,15 @@ sub check_trigger {
   $text = "$nick!$user\@$host $text";
   # $self->{pbot}->{logger}->log("Checking action trigger: [$text]\n");
 
+  my $now = gettimeofday;
+
   foreach my $trigger (@triggers) {
     eval {
-      if ($text  =~ m/$trigger->{trigger}/) {
+      if ($now - $trigger->{lastused} >= $trigger->{repeatdelay} and $text  =~ m/$trigger->{trigger}/) {
+        $trigger->{lastused} = $now;
+        my $data = { lastused => $now };
+        $self->update_trigger($trigger->{channel}, $trigger->{trigger}, $data);
+
         my $action = $trigger->{action};
         my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
         my $i;
