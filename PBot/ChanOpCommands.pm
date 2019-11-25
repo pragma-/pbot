@@ -127,8 +127,7 @@ sub checkmute {
 }
 
 sub ban_user {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   $channel = '' if not defined $channel;
@@ -153,7 +152,8 @@ sub ban_user {
 
   my $no_length = 0;
   if (not defined $length) {
-    $length = 60 * 60 * 24; # 24 hours
+    $length = $self->{pbot}->{registry}->get_value($channel, 'default_ban_timeout', 0, $stuff) //
+      $self->{pbot}->{registry}->get_value('general', 'default_ban_timeout', 0, $stuff) // 60 * 60 * 24; # 24 hours
     $no_length = 1;
   } else {
     my $error;
@@ -253,8 +253,7 @@ sub unban_user {
 }
 
 sub mute_user {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if (not defined $from) {
@@ -284,7 +283,8 @@ sub mute_user {
 
   my $no_length = 0;
   if (not defined $length) {
-    $length = 60 * 60 * 24; # 24 hours
+    $length = $self->{pbot}->{registry}->get_value($channel, 'default_mute_timeout', 0, $stuff) //
+      $self->{pbot}->{registry}->get_value('general', 'default_mute_timeout', 0, $stuff) // 60 * 60 * 24; # 24 hours
     $no_length = 1;
   } else {
     my $error;
