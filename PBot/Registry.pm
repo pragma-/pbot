@@ -145,27 +145,41 @@ sub unset {
 }
 
 sub get_value {
-  my ($self, $section, $item, $as_text) = @_;
+  my ($self, $section, $item, $as_text, $stuff) = @_;
+  my $key = $item;
 
-  if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$item}) {
-    if (not $as_text and $self->{registry}->hash->{$section}->{$item}->{type} eq 'array') {
-      return split /\s*,\s*/, $self->{registry}->hash->{$section}->{$item}->{value};
+  if (defined $stuff and exists $stuff->{nick}) {
+    if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{"$item.nick.$stuff->{nick}"}) {
+      $key = "$item.nick.$stuff->{nick}";
+    }
+  }
+
+  if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$key}) {
+    if (not $as_text and $self->{registry}->hash->{$section}->{$key}->{type} eq 'array') {
+      return split /\s*,\s*/, $self->{registry}->hash->{$section}->{$key}->{value};
     } else {
-      return $self->{registry}->hash->{$section}->{$item}->{value};
+      return $self->{registry}->hash->{$section}->{$key}->{value};
     }
   }
   return undef;
 }
 
 sub get_array_value {
-  my ($self, $section, $item, $index) = @_;
+  my ($self, $section, $item, $index, $stuff) = @_;
+  my $key = $item;
 
-  if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$item}) {
-    if ($self->{registry}->hash->{$section}->{$item}->{type} eq 'array') {
-      my @array = split /\s*,\s*/, $self->{registry}->hash->{$section}->{$item}->{value};
+  if (defined $stuff and exists $stuff->{nick}) {
+    if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{"$item.nick.$stuff->{nick}"}) {
+      $key = "$item.nick.$stuff->{nick}";
+    }
+  }
+
+  if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$key}) {
+    if ($self->{registry}->hash->{$section}->{$key}->{type} eq 'array') {
+      my @array = split /\s*,\s*/, $self->{registry}->hash->{$section}->{$key}->{value};
       return $array[$index >= $#array ? $#array : $index];
     } else {
-      return $self->{registry}->hash->{$section}->{$item}->{value};
+      return $self->{registry}->hash->{$section}->{$key}->{value};
     }
   }
   return undef;
