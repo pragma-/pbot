@@ -233,8 +233,8 @@ sub actiontrigger {
         my $comma = '';
         foreach my $trigger (@triggers) {
           $result .= "$comma$trigger->{trigger} -> $trigger->{action}";
-          $result .= " ($trigger->{level})" if $trigger->{level} != 0;
-          $result .= " [$trigger->{repeatdelay}]" if $trigger->{repeatdelay} != 0;
+          $result .= " (level=$trigger->{level})" if $trigger->{level} != 0;
+          $result .= " (repeatdelay=$trigger->{repeatdelay})" if $trigger->{repeatdelay} != 0;
           $comma = ",\n";
         }
       }
@@ -396,6 +396,8 @@ sub check_trigger {
 
   foreach my $trigger (@triggers) {
     eval {
+      $trigger->{lastused} = 0 if not defined $trigger->{lastused};
+      $trigger->{repeatdelay} = 0 if not defined $trigger->{repeatdelay};
       if ($now - $trigger->{lastused} >= $trigger->{repeatdelay} and $text  =~ m/$trigger->{trigger}/) {
         $trigger->{lastused} = $now;
         my $data = { lastused => $now };
