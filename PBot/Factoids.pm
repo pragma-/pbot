@@ -412,12 +412,26 @@ sub expand_special_vars {
 }
 
 sub expand_factoid_vars {
-  my ($self, $from, $nick, $root_keyword, $action, @exclude) = @_;
+  my ($self, $stuff, @exclude) = @_;
 
-  $root_keyword = lc $root_keyword;
+  my $from = length $stuff->{ref_from} ? $stuff->{ref_from} :  $stuff->{from};
+  my $nick = $stuff->{nick};
+  my $root_keyword = $stuff->{keyword_override} ? $stuff->{keyword_override} : $stuff->{root_keyword};
+  my $action = $stuff->{action};
 
   my $debug = 0;
   my $depth = 0;
+
+  if ($debug) {
+    $self->{pbot}->{logger}->log("enter expand_factoid_vars\n");
+    use Data::Dumper;
+    $self->{pbot}->{logger}->log(Dumper $stuff);
+  }
+
+  if ($action =~ m/^\/call --keyword-override=([^ ]+)/i) {
+    $root_keyword = $1;
+  }
+
   while (1) {
     last if ++$depth >= 1000;
 
@@ -513,6 +527,7 @@ sub expand_factoid_vars {
             }
             when ('title') {
               $mylist[$line] = ucfirst lc $mylist[$line];
+              $mylist[$line] =~ s/ (\w)/' ' . uc $1/ge;
             }
             when ('json') {
               $mylist[$line] = $self->escape_json($mylist[$line]);
@@ -692,7 +707,8 @@ sub execute_code_factoid_using_vm {
       $stuff->{no_nickoverride} = 0;
     }
 
-    $stuff->{code} = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $stuff->{code});
+    $stuff->{action} = $stuff->{code};
+    $stuff->{code} = $self->expand_factoid_vars($stuff);
 
     if ($self->{factoids}->hash->{$stuff->{channel}}->{$stuff->{keyword}}->{'allow_empty_args'}) {
       $stuff->{code} = $self->expand_action_arguments($stuff->{code}, $stuff->{arguments}, '');
@@ -921,9 +937,11 @@ sub handle_action {
       $root_channel = $channel;
       $root_keyword = $keyword;
     }
-    my $kw = length $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} ? $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} : $stuff->{root_keyword};
-    $kw = $stuff->{keyword_override} if length $stuff->{keyword_override};
-    $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $kw, $action);
+    if (not length $stuff->{keyword_override} and length $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override}) {
+      $stuff->{keyword_override} = $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override};
+    }
+    $stuff->{action} = $action;
+    $action = $self->expand_factoid_vars($stuff);
   }
 
   if (length $stuff->{arguments}) {
@@ -1010,9 +1028,11 @@ sub handle_action {
       $root_channel = $channel;
       $root_keyword = $keyword;
     }
-    my $kw = length $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} ? $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override} : $stuff->{root_keyword};
-    $kw = $stuff->{keyword_override} if length $stuff->{keyword_override};
-    $action = $self->expand_factoid_vars($stuff->{from}, $stuff->{nick}, $kw, $action);
+    if (not length $stuff->{keyword_override} and length $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override}) {
+      $stuff->{keyword_override} = $self->{factoids}->hash->{$root_channel}->{$root_keyword}->{keyword_override};
+    }
+    $stuff->{action} = $action;
+    $action = $self->expand_factoid_vars($stuff);
 
     if ($self->{factoids}->hash->{$channel}->{$keyword}->{'allow_empty_args'}) {
       $action = $self->expand_action_arguments($action, $stuff->{arguments}, '');
