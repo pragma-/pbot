@@ -10,8 +10,8 @@ use strict;
 use WWW::Google::CustomSearch;
 use HTML::Entities;
 
-my $api_key = '';
-my $cx      = '';
+my $api_key = '';  # https://developers.google.com/custom-search/v1/overview
+my $cx      = '';  # https://cse.google.com/all
 
 my ($nick, $arguments, $matches);
 
