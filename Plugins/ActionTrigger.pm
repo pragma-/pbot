@@ -151,6 +151,7 @@ sub list_triggers {
     $self->{pbot}->{logger}->log("List triggers failed: $@");
   }
 
+  $triggers = [] if not defined $triggers;
   return @$triggers;
 }
 
