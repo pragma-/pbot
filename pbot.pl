@@ -10,15 +10,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-my $VERSION = "1.0.0";
-
 use feature 'unicode_strings';
 
 use strict;
 use warnings;
 
-use lib ".";
-use PBot::PBot;
+my $bothome;
+BEGIN {
+  use File::Basename;
+  $bothome = -l __FILE__ ? dirname readlink __FILE__ : dirname __FILE__;
+  unshift @INC, $bothome;
+}
 
 # !! NOTICE !!
 #
@@ -30,10 +32,6 @@ use PBot::PBot;
 # the bot (regadd, regset, regchange, etc).
 #
 # !! NOTICE !!
-
-# Be sure to set $bothome to the location PBot was extracted (default assumes ~/pbot).
-# This location must contain the PBot directory, among others configured below.
-my $bothome = "$ENV{HOME}/pbot";
 
 my %config = (
   # -----------------------------------------------------
@@ -134,6 +132,7 @@ $config{quotegrabs_file} = "$config{data_dir}/quotegrabs.sqlite3";
 $config{message_history_file} = "$config{data_dir}/message_history.sqlite3";
 
 # Create and initialize bot object
+use PBot::PBot;
 my $pbot = PBot::PBot->new(%config);
 
 # Start the bot main loop; doesn't return
