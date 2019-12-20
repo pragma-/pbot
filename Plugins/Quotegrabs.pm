@@ -78,11 +78,12 @@ sub export_quotegrabs {
   my $had_table = 0;
   open FILE, "> $self->{export_path}" or return "Could not open export path.";
   my $time = localtime;
+  my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   print FILE "<html>\n<head><link href=\"css/blue.css\" rel=\"stylesheet\" type=\"text/css\">\n";
   print FILE '<script type="text/javascript" src="js/jquery-latest.js"></script>' . "\n";
   print FILE '<script type="text/javascript" src="js/jquery.tablesorter.js"></script>' . "\n";
   print FILE '<script type="text/javascript" src="js/picnet.table.filter.min.js"></script>' . "\n";
-  print FILE "</head>\n<body><i>Generated at $time</i><hr><h2>Candide's Quotegrabs</h2>\n";
+  print FILE "</head>\n<body><i>Generated at $time</i><hr><h2>$botnick\'s Quotegrabs</h2>\n";
   my $i = 0;
 
   my $last_channel = "";

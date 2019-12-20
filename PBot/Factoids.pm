@@ -153,13 +153,14 @@ sub export_factoids {
 
   open FILE, "> $filename" or return "Could not open export path.";
 
+  my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   my $time = localtime;
   print FILE "<html><head>\n<link href='css/blue.css' rel='stylesheet' type='text/css'>\n";
   print FILE '<script type="text/javascript" src="js/jquery-latest.js"></script>' . "\n";
   print FILE '<script type="text/javascript" src="js/jquery.tablesorter.js"></script>' . "\n";
   print FILE '<script type="text/javascript" src="js/picnet.table.filter.min.js"></script>' . "\n";
   print FILE "</head>\n<body><i>Last updated at $time</i>\n";
-  print FILE "<hr><h2>Candide's factoids</h2>\n";
+  print FILE "<hr><h2>$botnick\'s factoids</h2>\n";
 
   my $i = 0;
   my $table_id = 1;
