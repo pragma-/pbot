@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS Triggers (
   owner       TEXT,
   level       INTEGER,
   repeatdelay INTEGER,
-  lastused    NUMERIC,
+  lastused    NUMERIC
 )
 SQL
 
