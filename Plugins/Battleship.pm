@@ -39,6 +39,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
 
   $self->{channel} = '##battleship';
+  $self->{debug} = 0;
   $self->create_states;
 }
 
@@ -269,7 +270,9 @@ sub battleship_cmd {
     }
 
     when ('bomb') {
-      $self->{pbot}->{logger}->log("Battleship: bomb state: $self->{current_state}\n" . Dumper $self->{state_data});
+      if ($self->{debug}) {
+        $self->{pbot}->{logger}->log("Battleship: bomb state: $self->{current_state}\n" . Dumper $self->{state_data});
+      }
 
       if ($self->{current_state} ne 'playermove' and $self->{current_state} ne 'checkplayer') {
         return "$nick: It's not time to do that now.";
@@ -483,7 +486,7 @@ sub run_one_state {
   }
 
   # dump new state data for logging/debugging
-  if ($state_data->{newstate}) {
+  if ($self->{debug} and $state_data->{newstate}) {
     $self->{pbot}->{logger}->log("Battleship: New state: $self->{current_state}\n" . Dumper $state_data);
   }
 

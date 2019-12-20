@@ -39,6 +39,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',    sub { $self->on_departure(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
 
+  $self->{debug} = 0;
   $self->{channel} = '##connect4';
   $self->create_states;
 }
@@ -317,7 +318,9 @@ sub connect4_cmd {
     }
 
     when ('play') {
-      $self->{pbot}->{logger}->log("Connect4: play state: $self->{current_state}\n" . Dumper $self->{state_data});
+      if ($self->{debug}) {
+        $self->{pbot}->{logger}->log("Connect4: play state: $self->{current_state}\n" . Dumper $self->{state_data});
+      }
 
       if ($self->{current_state} ne 'playermove') {
         return "$nick: It's not time to do that now.";
@@ -478,7 +481,7 @@ sub run_one_state {
   }
 
   # dump new state data for logging/debugging
-  if ($state_data->{newstate}) {
+  if ($self->{debug} and $state_data->{newstate}) {
     $self->{pbot}->{logger}->log("Connect4: New state: $self->{current_state}\n" . Dumper $state_data);
   }
 
