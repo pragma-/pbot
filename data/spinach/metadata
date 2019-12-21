@@ -1,0 +1,17 @@
+{
+   "filter" : {
+      "category_include_filter" : ""
+   },
+   "settings" : {
+      "category_autopick" : "0",
+      "category_choices" : "7",
+      "debug_state" : "0",
+      "max_difficulty" : "25000",
+      "max_missed_inputs" : "3",
+      "min_difficulty" : "0",
+      "min_players" : "2",
+      "seen_expiry" : "1000000000",
+      "stats" : "1"
+   }
+}
+
