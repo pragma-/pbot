@@ -37,7 +37,7 @@ sub new {
 }
 
 sub version {
-  return BUILD_NAME . " revision " . BUILD_REVISION . " " . BUILD_DATE;
+  return BUILD_NAME . " version " . BUILD_REVISION . " " . BUILD_DATE;
 }
 
 1;
