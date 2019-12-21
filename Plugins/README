@@ -1,8 +1,6 @@
 Loadable plugins live here.
 
-All files not beginning with an underscore will be automatically loaded
-at bot start-up.
+All files listed in the `autoload` file will be loaded at bot start-up.
 
-Plugins (including those starting with an underscore) can be manually loaded
-or unloaded with the `plug` and `unplug` commands.  Use `pluglist` to list
-loaded plugins.
+Plugins can be manually loaded or unloaded with the `plug` and `unplug`
+commands.  Use `pluglist` to list loaded plugins.

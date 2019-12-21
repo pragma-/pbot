@@ -52,7 +52,14 @@ sub autoload {
   $self->{pbot}->{logger}->log("Loading plugins ...\n");
   my $plugin_count = 0;
 
-  my @plugins = glob "$path/*.pm";
+  my $fh;
+  if (not open $fh, "<$path/autoload") {
+    $self->{pbot}->{logger}->log("warning: file $path/autoload does not exist; skipping autoloading of Plugins\n");
+    return;
+  }
+
+  chomp(my @plugins = <$fh>);
+  close $fh;
 
   foreach my $plugin (sort @plugins) {
     $plugin = basename $plugin;

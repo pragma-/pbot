@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package Plugins::_Example;
+package Plugins::Example;
 
 use warnings;
 use strict;
@@ -44,7 +44,7 @@ sub on_public {
     return 0;
   }
 
-  $self->{pbot}->{logger}->log("_Example plugin: got message from $nick!$user\@$host: $msg\n");
+  $self->{pbot}->{logger}->log("Example plugin: got message from $nick!$user\@$host: $msg\n");
 
   return 0;
 }
