@@ -79,7 +79,7 @@ sub load {
     <FILE>;
   };
 
-  $self->{hash} = decode_json $contents;
+  $self->{hash} = decode_json $contents if length $contents;
   close FILE;
 }
 
