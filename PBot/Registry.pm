@@ -35,8 +35,8 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  my $filename  = delete $conf{filename};
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  my $filename  = $conf{filename} // Carp::croak("Missing filename reference in " . __FILE__);
 
   $self->{registry} = PBot::DualIndexHashObject->new(name => 'Registry', filename => $filename, pbot => $self->{pbot});
   $self->{triggers} = {};
@@ -106,7 +106,7 @@ sub set_default {
 }
 
 sub set {
-  my ($self, $section, $item, $key, $value, $is_default) = @_;
+  my ($self, $section, $item, $key, $value, $is_default, $dont_save) = @_;
 
   $section = lc $section;
   $item = lc $item;
@@ -127,7 +127,7 @@ sub set {
     $self->process_trigger($section, $item, $value);
   }
 
-  $self->save if $result =~ m/set to/ && not $is_default;
+  $self->save if !$dont_save && $result =~ m/set to/ && not $is_default;
 
   return $result;
 }
