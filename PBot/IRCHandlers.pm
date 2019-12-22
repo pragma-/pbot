@@ -91,8 +91,14 @@ sub on_connect {
   $self->{pbot}->{logger}->log("Requesting account-notify and extended-join . . .\n");
   $event->{conn}->sl("CAP REQ :account-notify extended-join");
 
-  $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
-  $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  if (length $self->{pbot}->{registry}->get_value('irc', 'identify_password')) {
+    $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
+    $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+  }
+
+  if (not $self->{pbot}->{registry}->get_value('general', 'autojoin_wait_for_nickserv')) {
+    $self->{pbot}->{channels}->autojoin;
+  }
 
   return 0;
 }
@@ -167,10 +173,16 @@ sub on_notice {
 
   if ($nick eq 'NickServ') {
     if ($text =~ m/This nickname is registered/) {
-      $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
-      $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+      if (length $self->{pbot}->{registry}->get_value('irc', 'identify_password')) {
+        $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
+        $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+      }
     } elsif ($text =~ m/You are now identified/) {
-      $event->{conn}->nick($self->{pbot}->{registry}->get_value('irc', 'botnick'));
+      if ($self->{pbot}->{registry}->get_value('irc', 'randomize_nick')) {
+        $event->{conn}->nick($self->{pbot}->{registry}->get_value('irc', 'botnick'));
+      } else {
+        $self->{pbot}->{channels}->autojoin;
+      }
     } elsif ($text =~ m/has been ghosted/) {
       $event->{conn}->nick($self->{pbot}->{registry}->get_value('irc', 'botnick'));
     }
@@ -467,15 +479,7 @@ sub on_nickchange {
   $self->{pbot}->{logger}->log("[NICKCHANGE] $nick!$user\@$host changed nick to $newnick\n");
 
   if ($newnick eq $self->{pbot}->{registry}->get_value('irc', 'botnick') and not $self->{pbot}->{joined_channels}) {
-    my $chans;
-    foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
-      if ($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
-        $chans .= "$chan,";
-      }
-    }
-    $self->{pbot}->{logger}->log("Joining channels: $chans\n");
-    $self->{pbot}->{chanops}->join_channel($chans);
-    $self->{pbot}->{joined_channels} = 1;
+    $self->{pbot}->{channels}->autojoin;
     return 0;
   }
 
