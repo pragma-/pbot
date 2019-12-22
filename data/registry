@@ -166,10 +166,6 @@
          "type" : "array",
          "value" : "none"
       },
-      "config_dir" : {
-         "type" : "text",
-         "value" : ""
-      },
       "data_dir" : {
          "type" : "text",
          "value" : ""
