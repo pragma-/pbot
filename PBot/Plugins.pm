@@ -47,7 +47,7 @@ sub autoload {
 
   return if $self->{pbot}->{registry}->get_value('plugins', 'noautoload');
 
-  my $path = $self->{pbot}->{registry}->get_value('plugins', 'path') // 'Plugins';
+  my $path = $self->{pbot}->{registry}->get_value('general', 'plugin_dir') // 'Plugins';
 
   $self->{pbot}->{logger}->log("Loading plugins ...\n");
   my $plugin_count = 0;
@@ -81,7 +81,7 @@ sub load {
 
   return if $self->{pbot}->{registry}->get_value('plugins', 'disabled');
 
-  my $path = $self->{pbot}->{registry}->get_value('plugins', 'path') // 'Plugins';
+  my $path = $self->{pbot}->{registry}->get_value('general', 'plugin_dir') // 'Plugins';
 
   if (not grep { $_ eq $path } @INC) {
     unshift @INC, $path;
@@ -130,7 +130,7 @@ sub unload {
       $self->{pbot}->{logger}->log("Warning: got error unloading plugin $plugin: $@\n");
     }
 
-    my $path = $self->{pbot}->{registry}->get_value('plugins', 'path') // 'Plugins';
+    my $path = $self->{pbot}->{registry}->get_value('general', 'plugin_dir') // 'Plugins';
     my $class = $path;
     $class =~ s,[/\\],::,g;
 
