@@ -152,7 +152,7 @@
    "general" : {
       "autojoin_wait_for_nickserv" : {
          "type" : "text",
-         "value" : "1"
+         "value" : "0"
       },
       "compile_blocks" : {
          "type" : "text",
@@ -262,7 +262,7 @@
       },
       "randomize_nick" : {
          "type" : "text",
-         "value" : "1"
+         "value" : "0"
       },
       "show_motd" : {
          "type" : "text",
