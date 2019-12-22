@@ -107,6 +107,20 @@ sub list {
   return $result;
 }
 
+sub autojoin {
+  my ($self) = @_;
+  return if $self->{pbot}->{joined_channels};
+  my $chans;
+  foreach my $chan (keys %{ $self->{pbot}->{channels}->{channels}->hash }) {
+    if ($self->{pbot}->{channels}->{channels}->hash->{$chan}{enabled}) {
+      $chans .= "$chan,";
+    }
+  }
+  $self->{pbot}->{logger}->log("Joining channels: $chans\n");
+  $self->{pbot}->{chanops}->join_channel($chans);
+  $self->{pbot}->{joined_channels} = 1;
+}
+
 sub is_active {
   my ($self, $channel) = @_;
   return exists $self->{channels}->hash->{$channel} && $self->{channels}->hash->{$channel}->{enabled};
