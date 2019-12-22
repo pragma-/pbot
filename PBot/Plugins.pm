@@ -87,13 +87,10 @@ sub load {
     unshift @INC, $path;
   }
 
-  my $class = $path . "/$plugin";
-  $class =~ s,[/\\],::,g;
-
   $self->{pbot}->{refresher}->{refresher}->refresh_module("$path/$plugin.pm");
 
   my $ret = eval {
-    eval "require $class";
+    require "$path/$plugin.pm";
 
     if ($@) {
       chomp $@;
@@ -102,6 +99,7 @@ sub load {
     }
 
     $self->{pbot}->{logger}->log("Loading $plugin\n");
+    my $class = "Plugins::$plugin";
     my $mod = $class->new(pbot => $self->{pbot}, %conf);
     $self->{plugins}->{$plugin} = $mod;
     $self->{pbot}->{refresher}->{refresher}->update_cache("$path/$plugin.pm");
