@@ -154,7 +154,7 @@
          "type" : "text",
          "value" : "1"
       },
-       "compile_blocks" : {
+      "compile_blocks" : {
          "type" : "text",
          "value" : "1"
       },
@@ -195,6 +195,10 @@
          "type" : "text",
          "value" : "30"
       },
+      "plugin_dir" : {
+         "type" : "text",
+         "value" : ""
+      },
       "show_url_titles" : {
          "type" : "text",
          "value" : "1"
@@ -225,7 +229,7 @@
    "irc" : {
       "botnick" : {
          "type" : "text",
-         "value" : "pbot3"
+         "value" : ""
       },
       "debug" : {
          "type" : "text",
@@ -255,6 +259,10 @@
       "port" : {
          "type" : "text",
          "value" : "6667"
+      },
+      "randomize_nick" : {
+         "type" : "text",
+         "value" : "1"
       },
       "show_motd" : {
          "type" : "text",
@@ -326,9 +334,13 @@
       }
    },
    "plugins" : {
-      "path" : {
+      "disabled" : {
          "type" : "text",
-         "value" : "Plugins"
+         "value" : "0"
+      },
+      "noautoload" : {
+         "type" : "text",
+         "value" : "0"
       }
    },
    "spinach" : {
