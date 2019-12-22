@@ -67,6 +67,7 @@ sub initialize {
 
   $self->{version}  = PBot::VERSION->new(pbot => $self, %conf);
   $self->{logger}->log($self->{version}->version . "\n");
+  $self->{logger}->log("Args: @ARGV\n") if @ARGV;
 
   return if $conf{logger_only};
 
@@ -78,14 +79,48 @@ sub initialize {
 
   $self->{refresher} = PBot::Refresher->new(pbot => $self);
 
-  my $config_dir = $conf{config_dir} // "$ENV{HOME}/pbot/config";
+  my $data_dir   = $conf{data_dir};
+  my $module_dir = $conf{module_dir};
+  my $plugin_dir = $conf{plugin_dir};
 
-  # registry created, but not yet loaded, to allow modules to create default values and triggers
-  $self->{registry} = PBot::Registry->new(pbot => $self, filename => $conf{registry_file} // "$config_dir/registry", %conf);
+  # check command-line arguments for directory overrides
+  foreach my $arg (@ARGV) {
+    if ($arg =~ m/^(?:general\.)?((?:data|module|plugin)_dir)=(.*)$/) {
+      my $override = $1;
+      my $value = $2;
+      $self->{logger}->log("Overriding $override to $value\n");
+      $data_dir = $value if $override eq 'data_dir';
+      $module_dir = $value if $override eq 'module_dir';
+      $plugin_dir = $value if $override eq 'plugin_dir';
+    }
+  }
 
-  $self->{registry}->add_default('text', 'general', 'config_dir',  $config_dir);
-  $self->{registry}->add_default('text', 'general', 'data_dir',    $conf{data_dir}    // "$ENV{HOME}/pbot/data");
-  $self->{registry}->add_default('text', 'general', 'module_dir',  $conf{module_dir}  // "$ENV{HOME}/pbot/modules");
+  # make sure the environment is sane
+  if (not -d $data_dir) {
+    $self->{logger}->log("Data directory ($data_dir) does not exist; aborting...\n");
+    exit;
+  }
+
+  if (not -d $module_dir) {
+    $self->{logger}->log("Modules directory ($module_dir) does not exist; aborting...\n");
+    exit;
+  }
+
+  if (not -d $plugin_dir) {
+    $self->{logger}->log("Plugins directory ($plugin_dir) does not exist; aborting...\n");
+    exit;
+  }
+
+  $self->{logger}->log("data_dir: $data_dir\n");
+  $self->{logger}->log("module_dir: $module_dir\n");
+  $self->{logger}->log("plugin_dir: $plugin_dir\n");
+
+  # create registry and set some defaults
+  $self->{registry} = PBot::Registry->new(pbot => $self, filename => "$data_dir/registry", %conf);
+
+  $self->{registry}->add_default('text', 'general', 'data_dir',    $data_dir);
+  $self->{registry}->add_default('text', 'general', 'module_dir',  $module_dir);
+  $self->{registry}->add_default('text', 'general', 'plugin_dir',  $plugin_dir);
   $self->{registry}->add_default('text', 'general', 'trigger',     $conf{trigger}     // '!');
 
   $self->{registry}->add_default('text', 'irc',     'debug',       $conf{irc_debug}   // 0);
@@ -96,33 +131,70 @@ sub initialize {
   $self->{registry}->add_default('text', 'irc',     'SSL',         $conf{SSL}         // 0);
   $self->{registry}->add_default('text', 'irc',     'SSL_ca_file', $conf{SSL_ca_file} // 'none');
   $self->{registry}->add_default('text', 'irc',     'SSL_ca_path', $conf{SSL_ca_path} // 'none');
-  $self->{registry}->add_default('text', 'irc',     'botnick',     $conf{botnick}     // "pbot3");
+  $self->{registry}->add_default('text', 'irc',     'botnick',     $conf{botnick}     // "");
   $self->{registry}->add_default('text', 'irc',     'username',    $conf{username}    // "pbot3");
-  $self->{registry}->add_default('text', 'irc',     'ircname',     $conf{ircname}     // "http://code.google.com/p/pbot2-pl/");
-  $self->{registry}->add_default('text', 'irc',     'identify_password', $conf{identify_password} // 'none');
+  $self->{registry}->add_default('text', 'irc',     'ircname',     $conf{ircname}     // "https://github.com/pragma-/pbot");
+  $self->{registry}->add_default('text', 'irc',     'identify_password', $conf{identify_password} // '');
   $self->{registry}->add_default('text', 'irc',     'log_default_handler', 1);
 
   $self->{registry}->set_default('irc', 'SSL_ca_file',       'private', 1);
   $self->{registry}->set_default('irc', 'SSL_ca_path',       'private', 1);
   $self->{registry}->set_default('irc', 'identify_password', 'private', 1);
 
+  # load existing registry entries from file (if exists) to overwrite defaults
+  if (-e $self->{registry}->{registry}->{filename}) {
+    $self->{registry}->load;
+  }
+
+  # update important paths
+  $self->{registry}->set('general', 'data_dir',   'value', $data_dir,   0, 1);
+  $self->{registry}->set('general', 'module_dir', 'value', $module_dir, 0, 1);
+  $self->{registry}->set('general', 'plugin_dir', 'value', $plugin_dir, 0, 1);
+
+  # override registry entries with command-line arguments, if any
+  foreach my $arg (@ARGV) {
+    next if $arg =~ m/^(?:general\.)?(?:config|data|module|plugin)_dir=.*$/; # already processed
+    my ($item, $value) = split /=/, $arg, 2;
+
+    if (not defined $item or not defined $value) {
+      $self->{logger}->log("Fatal error: unknown argument `$arg`; arguments must be in the form of `section.key=value` (e.g.: irc.botnick=newnick)\n");
+      exit;
+    }
+
+    my ($section, $key) = split /\./, $item, 2;
+
+    if (not defined $section or not defined $key) {
+      $self->{logger}->log("Fatal error: bad argument `$arg`; registry entries must be in the form of section.key (e.g.: irc.botnick)\n");
+    }
+
+    $self->{logger}->log("Overriding $section.$key to $value\n");
+    $self->{registry}->set($section, $key, 'value', $value, 0, 1);
+  }
+
+  # registry triggers fire when value changes
   $self->{registry}->add_trigger('irc', 'botnick', sub { $self->change_botnick_trigger(@_) });
   $self->{registry}->add_trigger('irc', 'debug',   sub { $self->irc_debug_trigger(@_)      });
+
+  # ensure user has attempted to configure the bot
+  if (not length $self->{registry}->get_value('irc', 'botnick')) {
+    $self->{logger}->log("Fatal error: IRC nickname not defined; please set registry key irc.botnick in $data_dir/registry to continue.\n");
+    exit;
+  }
 
   $self->{event_dispatcher}   = PBot::EventDispatcher->new(pbot => $self, %conf);
   $self->{irchandlers}        = PBot::IRCHandlers->new(pbot => $self, %conf);
   $self->{select_handler}     = PBot::SelectHandler->new(pbot => $self, %conf);
   $self->{stdin_reader}       = PBot::StdinReader->new(pbot => $self, %conf);
-  $self->{admins}             = PBot::BotAdmins->new(pbot => $self, filename => $conf{admins_file}, %conf);
+  $self->{admins}             = PBot::BotAdmins->new(pbot => $self, filename => "$data_dir/admins", %conf);
   $self->{bantracker}         = PBot::BanTracker->new(pbot => $self, %conf);
   $self->{lagchecker}         = PBot::LagChecker->new(pbot => $self, %conf);
-  $self->{messagehistory}     = PBot::MessageHistory->new(pbot => $self, filename => $conf{messagehistory_file}, %conf);
+  $self->{messagehistory}     = PBot::MessageHistory->new(pbot => $self, filename => "$data_dir/message_history.sqlite3", %conf);
   $self->{antiflood}          = PBot::AntiFlood->new(pbot => $self, %conf);
   $self->{antispam}           = PBot::AntiSpam->new(pbot => $self, %conf);
-  $self->{ignorelist}         = PBot::IgnoreList->new(pbot => $self, filename => $conf{ignorelist_file}, %conf);
-  $self->{blacklist}          = PBot::BlackList->new(pbot => $self, filename => $conf{blacklist_file}, %conf);
+  $self->{ignorelist}         = PBot::IgnoreList->new(pbot => $self, filename => "$data_dir/ignorelist", %conf);
+  $self->{blacklist}          = PBot::BlackList->new(pbot => $self, filename => "$data_dir/blacklist", %conf);
   $self->{irc}                = PBot::IRC->new();
-  $self->{channels}           = PBot::Channels->new(pbot => $self, filename => $conf{channels_file}, %conf);
+  $self->{channels}           = PBot::Channels->new(pbot => $self, filename => "$data_dir/channels", %conf);
   $self->{chanops}            = PBot::ChanOps->new(pbot => $self, %conf);
   $self->{nicklist}           = PBot::NickList->new(pbot => $self, %conf);
   $self->{webpaste}           = PBot::WebPaste->new(pbot => $self, %conf);
@@ -134,21 +206,13 @@ sub initialize {
 
   $self->{factoids} = PBot::Factoids->new(
     pbot        => $self,
-    filename    => $conf{factoids_file},
+    filename    => "$data_dir/factoids",
     export_path => $conf{export_factoids_path},
     export_site => $conf{export_factoids_site},
     %conf
   );
 
   $self->{plugins} = PBot::Plugins->new(pbot => $self, %conf);
-
-  if (not -e $self->{registry}->{registry}->{filename}) {
-    # save new defaults to file if file doesn't exist
-    $self->{registry}->save;
-  } else {
-    # load existing registry entries from file to overwrite defaults
-    $self->{registry}->load;
-  }
 
   # load available plugins
   $self->{plugins}->autoload(%conf);
@@ -182,7 +246,7 @@ sub connect {
   $self->{logger}->log("Connecting to $server ...\n");
 
   while (not $self->{conn} = $self->{irc}->newconn(
-      Nick         => random_nick,
+      Nick         => $self->{registry}->get_value('irc', 'randomize_nick') ? random_nick : $self->{registry}->get_value('irc', 'botnick'),
       Username     => $self->{registry}->get_value('irc', 'username'),
       Ircname      => $self->{registry}->get_value('irc', 'ircname'),
       Server       => $server,
