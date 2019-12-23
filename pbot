@@ -15,6 +15,7 @@ use feature 'unicode_strings';
 use strict;
 use warnings;
 
+# bothome is automatically set by this script, do not modify
 my $bothome;
 BEGIN {
   use File::Basename;
