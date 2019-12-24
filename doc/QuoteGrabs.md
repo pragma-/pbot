@@ -1,15 +1,15 @@
 Quotegrabs
 ----------
 
+PBot can grab user messages and store/recall them for posterity.
 
 <!-- md-toc-begin -->
-  * [Quotegrabs](#quotegrabs)
-    * [grab](#grab)
-    * [getq](#getq)
-    * [rq](#rq)
-    * [delq](#delq)
+* [Quotegrabs](#quotegrabs)
+  * [grab](#grab)
+  * [getq](#getq)
+  * [rq](#rq)
+  * [delq](#delq)
 <!-- md-toc-end -->
-
 
 ### grab
 Grabs a message someone says, and adds it to the quotegrabs database.  You may grab multiple nicks/messages in one quotegrab by separating the arguments with a plus sign (the nicks need not be different -- you can grab multiple messages by the same nick by specifying a different history for each grab).

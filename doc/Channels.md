@@ -1,17 +1,15 @@
 Channel Management
 ==================
 
-
 <!-- md-toc-begin -->
-    * [Channel Management](#channel-management)
-      * [chanadd](#chanadd)
-      * [chanrem](#chanrem)
-      * [chanset](#chanset)
-        * [Channel Metadata List](#channel-metadata-list)
-      * [chanunset](#chanunset)
-      * [chanlist](#chanlist)
+* [Channel Management](#channel-management)
+  * [chanadd](#chanadd)
+  * [chanrem](#chanrem)
+  * [chanset](#chanset)
+    * [Channel Metadata List](#channel-metadata-list)
+  * [chanunset](#chanunset)
+  * [chanlist](#chanlist)
 <!-- md-toc-end -->
-
 
 #### chanadd
 `chanadd` adds a channel to PBot's list of channels to auto-join and manage.

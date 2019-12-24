@@ -1,15 +1,13 @@
 ### code-factoids
 Code-factoids are a special type of factoid whose text is executed as Perl instructions. The return value from these instructions is the final text of the factoid. This final text is then parsed and treated like any other factoid text.
 
-
 <!-- md-toc-begin -->
-    * [code-factoids](#code-factoids)
-      * [Special variables](#special-variables)
-      * [testargs example](#testargs-example)
-      * [rtfm example](#rtfm-example)
-      * [poll example](#poll-example)
+* [code-factoids](#code-factoids)
+  * [Special variables](#special-variables)
+  * [testargs example](#testargs-example)
+  * [rtfm example](#rtfm-example)
+  * [poll example](#poll-example)
 <!-- md-toc-end -->
-
 
 By default, the variables created within code-factoids do not persist between factoid invocations. This behavior can be overridden by factsetting a persist-key with a unique value.
 

@@ -1,9 +1,10 @@
-Flood control
-=============
-PBot can monitor the channel for excessive rapid traffic originating from an individual and automatically ban the offender for a certain length of time.
+Anti-Abuse
+==========
 
+PBot can monitor channels for abusive behavior and take appropriate action.
 
 <!-- md-toc-begin -->
+* [Anti-Abuse](#anti-abuse)
 * [Flood control](#flood-control)
   * [Message flood](#message-flood)
   * [Join flood](#join-flood)
@@ -14,6 +15,9 @@ PBot can monitor the channel for excessive rapid traffic originating from an ind
 * [Opping/Deopping](#oppingdeopping)
 <!-- md-toc-end -->
 
+Flood control
+=============
+PBot can monitor the channel for excessive rapid traffic originating from an individual and automatically ban the offender for a certain length of time.
 
 Message flood
 -------------
