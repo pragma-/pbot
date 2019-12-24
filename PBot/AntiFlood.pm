@@ -55,7 +55,7 @@ sub initialize {
   $self->{whois_pending} = {}; # prevents multiple whois for nick joining multiple channels at once
   $self->{changinghost}  = {}; # tracks nicks changing hosts/identifying to strongly link them
 
-  my $filename = delete $conf{whitelist_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/whitelist';
+  my $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/whitelist';
   $self->{whitelist} = PBot::DualIndexHashObject->new(name => 'Whitelist', filename => $filename, pbot => $self->{pbot});
   $self->{whitelist}->load;
 
