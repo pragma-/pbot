@@ -47,6 +47,31 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->kick_user(@_)     },       "kick",       10);
   $pbot->{commands}->register(sub { return $self->checkban(@_)      },       "checkban",    0);
   $pbot->{commands}->register(sub { return $self->checkmute(@_)     },       "checkmute",   0);
+  $pbot->{commands}->register(sub { return $self->mode(@_)          },       "mode",       40);
+}
+
+sub mode {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+
+  if (not length $arguments) {
+    return "Usage: mode [channel] <arguments>";
+  }
+
+  # add current channel as default channel
+  if ($stuff->{arglist}[0] !~ m/^#/) {
+    if ($from =~ m/^#/) {
+      unshift @{$stuff->{arglist}}, $from;
+    } else {
+      return "Usage from private message: mode <channel> <arguments>";
+    }
+  }
+
+  my ($channel, $args) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+  $self->{pbot}->{conn}->mode($channel, $args);
+
+  if ($from !~ m/^#/) {
+    return "Done.";
+  }
 }
 
 sub checkban {
