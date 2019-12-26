@@ -58,7 +58,7 @@ sub initialize {
 
   $self->{commands} = PBot::ChanOpCommands->new(pbot => $self->{pbot});
 
-  $self->{pbot}->{registry}->add_default('text', 'general', 'deop_timeout', $conf{'deop_timeout'} // 300);
+  $self->{pbot}->{registry}->add_default('text', 'general', 'deop_timeout', 300);
 
   $self->{pbot}->{timer}->register(sub { $self->check_opped_timeouts  }, 10);
   $self->{pbot}->{timer}->register(sub { $self->check_unban_timeouts  }, 10);
@@ -82,8 +82,16 @@ sub gain_ops {
   return if exists $self->{op_requested}->{$channel};
   return if not $self->can_gain_ops($channel);
 
+  my $op_nick = $self->{pbot}->{registry}->get_value($channel, 'op_nick') //
+    $self->{pbot}->{registry}->get_value('general', 'op_nick') // 'chanserv';
+
+  my $op_command = $self->{pbot}->{registry}->get_value($channel, 'op_command') //
+    $self->{pbot}->{registry}->get_value('general', 'op_command') // "op $channel";
+
+  $op_command =~ s/\$channel\b/$channel/g;
+
   if (not exists $self->{is_opped}->{$channel}) {
-    $self->{pbot}->{conn}->privmsg("chanserv", "op $channel");
+    $self->{pbot}->{conn}->privmsg($op_nick, $op_command);
     $self->{op_requested}->{$channel} = scalar gettimeofday;
   } else {
     $self->perform_op_commands($channel);
@@ -94,7 +102,7 @@ sub lose_ops {
   my $self = shift;
   my $channel = shift;
   $channel = lc $channel;
-  $self->{pbot}->{conn}->privmsg("chanserv", "op $channel -" . $self->{pbot}->{registry}->get_value('irc', 'botnick'));
+  $self->{pbot}->{conn}->mode($channel, '-o ' . $self->{pbot}->{registry}->get_value('irc', 'botnick'));
 }
 
 sub add_op_command {
@@ -469,7 +477,7 @@ sub check_opped_timeouts {
           and exists $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}
           and $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}) {
         $self->lose_ops($channel);
-        delete $self->{is_opped}->{$channel}; # assume chanserv is alive and deop will succeed
+        delete $self->{is_opped}->{$channel}; # assume op_nick is alive and deop will succeed
       }
     } else {
       # my $timediff = $self->{is_opped}->{$channel}{timeout} - $now;
