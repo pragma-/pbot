@@ -187,6 +187,14 @@
          "type" : "text",
          "value" : "https://github.com/pragma-/pbot/blob/master/modules/"
       },
+      "op_nick" : {
+         "type" : "text",
+         "value" : "chanserv"
+      },
+      "op_command" : {
+         "type" : "text",
+         "value" : "op $channel"
+      },
       "module_timeout" : {
          "type" : "text",
          "value" : "30"
