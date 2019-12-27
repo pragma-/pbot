@@ -73,7 +73,7 @@ sub mode {
   my $arg = 0;
 
   my ($new_modes, $new_targets) = ("", "");
-  my $MAX_MODES = 4;
+  my $max_modes = $self->{pbot}->{ircd}->{MODES} // 1;
 
   while ($modes =~ m/(.)/g) {
     my $mode = $1;
@@ -102,7 +102,7 @@ sub mode {
           $new_targets .= "$self->{pbot}->{nicklist}->{nicklist}->{$channel}->{$n}->{nick} ";
           $i++;
 
-          if ($i == $MAX_MODES) {
+          if ($i == $max_modes) {
             $self->{pbot}->{chanops}->add_op_command($channel, "mode $channel $new_modes $new_targets");
             $new_modes = "";
             $new_targets = "";
@@ -115,7 +115,7 @@ sub mode {
       $new_targets .= "$target " if length $target;
       $i++;
 
-      if ($i == $MAX_MODES) {
+      if ($i == $max_modes) {
         $self->{pbot}->{chanops}->add_op_command($channel, "mode $channel $new_modes $new_targets");
         $new_modes = "";
         $new_targets = "";
