@@ -66,8 +66,69 @@ sub mode {
     }
   }
 
-  my ($channel, $args) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
-  $self->{pbot}->{conn}->mode($channel, $args);
+  my ($channel, $modes, $args) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+  my @targets = split /\s+/, $args;
+  my $modifier;
+  my $i = 0;
+  my $arg = 0;
+
+  my ($new_modes, $new_targets) = ("", "");
+  my $MAX_MODES = 4;
+
+  while ($modes =~ m/(.)/g) {
+    my $mode = $1;
+
+    if ($mode eq '-' or $mode eq '+') {
+      $modifier = $mode;
+      $new_modes .= $mode;
+      next;
+    }
+
+    my $target = $targets[$arg++] // "";
+
+    if (($mode eq 'v' or $mode eq 'o') and $target =~ m/\*/) {
+      my $q_target = lc quotemeta $target;
+      $q_target =~ s/\\\*/.*/g;
+      $channel = lc $channel;
+
+      if (not exists $self->{pbot}->{nicklist}->{nicklist}->{$channel}) {
+        return "I have no nick list for channel $channel; cannot use wildcard.";
+      }
+
+      foreach my $n (keys %{$self->{pbot}->{nicklist}->{nicklist}->{$channel}}) {
+        if ($n =~ m/^$q_target$/) {
+          $new_modes = $modifier if not length $new_modes;
+          $new_modes .= $mode;
+          $new_targets .= "$self->{pbot}->{nicklist}->{nicklist}->{$channel}->{$n}->{nick} ";
+          $i++;
+
+          if ($i == $MAX_MODES) {
+            $self->{pbot}->{chanops}->add_op_command($channel, "mode $channel $new_modes $new_targets");
+            $new_modes = "";
+            $new_targets = "";
+            $i = 0;
+          }
+        }
+      }
+    } else {
+      $new_modes .= $mode;
+      $new_targets .= "$target " if length $target;
+      $i++;
+
+      if ($i == $MAX_MODES) {
+        $self->{pbot}->{chanops}->add_op_command($channel, "mode $channel $new_modes $new_targets");
+        $new_modes = "";
+        $new_targets = "";
+        $i = 0;
+      }
+    }
+  }
+
+  if ($i) {
+    $self->{pbot}->{chanops}->add_op_command($channel, "mode $channel $new_modes $new_targets");
+  }
+
+  $self->{pbot}->{chanops}->gain_ops($channel);
 
   if ($from !~ m/^#/) {
     return "Done.";

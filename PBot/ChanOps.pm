@@ -477,7 +477,6 @@ sub check_opped_timeouts {
           and exists $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}
           and $self->{pbot}->{channels}->{channels}->hash->{$channel}{permop}) {
         $self->lose_ops($channel);
-        delete $self->{is_opped}->{$channel}; # assume op_nick is alive and deop will succeed
       }
     } else {
       # my $timediff = $self->{is_opped}->{$channel}{timeout} - $now;
