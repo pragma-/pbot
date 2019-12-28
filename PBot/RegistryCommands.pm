@@ -33,22 +33,22 @@ sub initialize {
   my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot} = $pbot;
 
-  $pbot->{commands}->register(sub { return $self->regadd(@_)         },       "regadd",     60);
-  $pbot->{commands}->register(sub { return $self->regrem(@_)         },       "regrem",     60);
-  $pbot->{commands}->register(sub { return $self->regshow(@_)        },       "regshow",     0);
-  $pbot->{commands}->register(sub { return $self->regset(@_)         },       "regset",     60);
-  $pbot->{commands}->register(sub { return $self->regunset(@_)       },       "regunset",   60);
-  $pbot->{commands}->register(sub { return $self->regchange(@_)      },       "regchange",  60);
-  $pbot->{commands}->register(sub { return $self->regfind(@_)        },       "regfind",     0);
+  $pbot->{commands}->register(sub { return $self->regset(@_)         }, "regset",       60);
+  $pbot->{commands}->register(sub { return $self->regunset(@_)       }, "regunset",     60);
+  $pbot->{commands}->register(sub { return $self->regshow(@_)        }, "regshow",       0);
+  $pbot->{commands}->register(sub { return $self->regsetmeta(@_)     }, "regsetmeta",   60);
+  $pbot->{commands}->register(sub { return $self->regunsetmeta(@_)   }, "regunsetmeta", 60);
+  $pbot->{commands}->register(sub { return $self->regchange(@_)      }, "regchange",    60);
+  $pbot->{commands}->register(sub { return $self->regfind(@_)        }, "regfind",       0);
 }
 
-sub regset {
+sub regsetmeta {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($section, $item, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4);
 
   if (not defined $section or not defined $item) {
-    return "Usage: regset <section> <item> [key [value]]";
+    return "Usage: regsetmeta <section> <item> [key [value]]";
   }
 
   $key = undef if not length $key;
@@ -57,40 +57,40 @@ sub regset {
   return $self->{pbot}->{registry}->set($section, $item, $key, $value);
 }
 
-sub regunset {
+sub regunsetmeta {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($section, $item, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if (not defined $section or not defined $item or not defined $key) {
-    return "Usage: regunset <section> <item> <key>"
+    return "Usage: regunsetmeta <section> <item> <key>"
   }
 
   return $self->{pbot}->{registry}->unset($section, $item, $key);
 }
 
-sub regadd {
+sub regset {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($section, $item, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if (not defined $section or not defined $item or not defined $value) {
-    return "Usage: regadd <section> <item> <value>";
+    return "Usage: regset <section> <item> <value>";
   }
 
   $self->{pbot}->{registry}->add('text', $section, $item, $value);
 
-  $self->{pbot}->{logger}->log("$nick!$user\@$host added registry entry [$section] $item => $value\n");
+  $self->{pbot}->{logger}->log("$nick!$user\@$host set registry entry [$section] $item => $value\n");
   return "[$section] $item set to $value";
 }
 
-sub regrem {
+sub regunset {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($section, $item) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if (not defined $section or not defined $item) {
-    return "Usage: regrem <section> <item>";
+    return "Usage: regunset <section> <item>";
   }
 
   if (not exists $self->{pbot}->{registry}->{registry}->hash->{$section}) {
@@ -103,7 +103,7 @@ sub regrem {
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host removed registry item [$section][$item]\n");
   $self->{pbot}->{registry}->remove($section, $item);
-  return "Registry item $item removed from section $section.";
+  return "Registry item $item unset from section $section.";
 }
 
 sub regshow {

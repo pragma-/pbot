@@ -79,7 +79,7 @@ sub add {
   }
 
   $self->{registry}->hash->{$section}->{$item}->{value} = $value;
-  $self->{registry}->hash->{$section}->{$item}->{type}  = $type;
+  $self->{registry}->hash->{$section}->{$item}->{type}  = $type unless exists $self->{registry}->hash->{$section}->{$item}->{type};
 
   $self->process_trigger($section, $item, $value) unless $is_default;
   $self->save unless $is_default;
