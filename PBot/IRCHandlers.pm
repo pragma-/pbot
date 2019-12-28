@@ -93,11 +93,26 @@ sub on_connect {
 
   if (length $self->{pbot}->{registry}->get_value('irc', 'identify_password')) {
     $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
-    $event->{conn}->privmsg("nickserv", "identify " . $self->{pbot}->{registry}->get_value('irc', 'botnick') . ' ' . $self->{pbot}->{registry}->get_value('irc', 'identify_password'));
+
+    my $nickserv = $self->{pbot}->{registry}->get_value('general', 'identify_nick')    // 'nickserv';
+    my $command  = $self->{pbot}->{registry}->get_value('general', 'identify_command') // 'identify $nick $password';
+
+    my $botnick  = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    my $password = $self->{pbot}->{registry}->get_value('irc', 'identify_password');
+
+    $command =~ s/\$nick\b/$botnick/g;
+    $command =~ s/\$password\b/$password/g;
+
+    $event->{conn}->privmsg($nickserv, $command);
+  } else {
+    $self->{pbot}->{logger}->log("No identify password; skipping identification to services.\n");
   }
 
   if (not $self->{pbot}->{registry}->get_value('general', 'autojoin_wait_for_nickserv')) {
+    $self->{pbot}->{logger}->log("Autojoining channels immediately; to wait for services set general.autojoin_wait_for_nickserv to 1.\n");
     $self->{pbot}->{channels}->autojoin;
+  } else {
+    $self->{pbot}->{logger}->log("Waiting for services identify response before autojoining channels.\n");
   }
 
   return 0;

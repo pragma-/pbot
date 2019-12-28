@@ -179,6 +179,14 @@
          "type" : "text",
          "value" : "300"
       },
+       "identify_nick" : {
+         "type" : "text",
+         "value" : "nickserv"
+      },
+      "identify_command" : {
+         "type" : "text",
+         "value" : "identify $nick $pasword"
+      },
       "module_dir" : {
          "type" : "text",
          "value" : ""
