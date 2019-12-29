@@ -66,9 +66,12 @@ sub on_public {
   my $antirepeat = $self->{pbot}->{registry}->get_value($channel, 'antirepeat');
   return 0 if defined $antirepeat and not $antirepeat;
 
+  return 0 if $self->{pbot}->{registry}->get_value($channel, 'dont_enforce_antiflood');
+
   return 0 if $channel !~ m/^#/;
   return 0 if $event->{interpreted};
   return 0 if $self->{pbot}->{antiflood}->whitelisted($channel, "$nick!$user\@$host", 'antiflood');
+  return 0 if $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
 
   my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
 
