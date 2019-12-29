@@ -1,0 +1,248 @@
+#!/usr/bin/env perl
+
+=head1 NAME
+
+git-md-toc - generate the table of content from the Markdown file(s)
+
+=head1 SYNOPSIS
+
+  git-md-toc [OPTIONS]
+
+=head1 DESCRIPTION
+
+Read and input and generate the table of content (TOC) based on the
+markup of the file which is assumed Markdown formatted. The outcome is
+also formatted as Markdown.
+
+If no file specified, the file C<README.md> is assumed.
+
+The following HTML comments are recognized in a special way and handled
+as the markers to insert new TOC or update existing one.
+
+=over 4
+
+=item C<< <!-- md-toc --> >>
+
+is used to point the place in the document where to put a new TOC.
+
+=item C<< <!-- md-toc-begin --> >>, C<< <!-- md-toc-end --> >>
+
+are used to point the beginning and end of the existing TOC.
+
+=back
+
+Be noticed that these markers themselves must be sticky to the left edge
+of the lines where they are situated. This rule doesn't spread on the
+content within.
+
+The updated TOC is always ended with double new line to separate from
+the further text below. On the same reason, if the TOC is preceded with
+some text above, the double new line is prepended the TOC.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-h>, B<--help>
+
+Print this help and exit.
+
+=item B<-t> I<TITLE>, B<--title>=I<TITLE>
+
+Set the title for the table of content. If not specified, the default
+value C<Table of Content> is assumed.
+
+=item B<-l> I<LEVEL>, B<--level>=I<LEVEL>
+
+Set the header level used for the TOC title. Available values are C<1>
+to C<6>. The default value is C<1>.
+
+=item B<-u>, B<--update>
+
+Update the file with the new table of content. It works even when reading
+from STDIN. In this case the outcome will be printed to STDOUT.
+
+=back
+
+=head1 SEE ALSO
+
+=head2 Syntax specification
+
+L<https://daringfireball.net/projects/markdown/>
+
+=head2 Perl implementations
+
+L<https://metacpan.org/pod/Text::Markdown>
+
+L<https://metacpan.org/pod/Text::MultiMarkdown>
+
+=head2 Some other implementations
+
+L<https://github.com/ekalinin/github-markdown-toc>
+
+L<https://github.com/ekalinin/github-markdown-toc.go>
+
+L<https://github.com/frnmst/md-toc>
+
+L<https://github.com/eGavr/toc-md>
+
+=head1 AUTHORS
+
+Ildar Shaimordanov E<lt>F<ildar.shaimordanov@gmail.com>E<gt>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2019 Ildar Shaimordanov. All rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
+
+use strict;
+use warnings;
+
+use Getopt::Long qw( :config no_ignore_case bundling );
+use Pod::Usage;
+
+my $toc_default_title = "Table of Content";
+my $toc_title;
+my $toc_level = 1;
+my $update;
+
+exit 1 unless GetOptions(
+	"h|help"	=> sub {
+		pod2usage({ -verbose => 2, -noperldoc => 1 });
+	},
+
+	"t|title:s"	=> sub {
+		$toc_title = $_[1] || $toc_default_title;
+	},
+	"l|level=i"	=> sub {
+		( $toc_level = $_[1] ) =~ /^[1-6]$/
+		or die "Integer expected in range [1..6]\n";
+	},
+	"u|update"	=> \$update,
+);
+
+# Hmm... No arguments. Let's take README.md or STDIN
+@ARGV or @ARGV = -t 0 ? "README.md" : "-";
+
+# =========================================================================
+
+my $md_toc		= "<!-- md-toc -->";
+my $md_toc_begin	= "<!-- md-toc-begin -->";
+my $md_toc_end		= "<!-- md-toc-end -->";
+
+foreach ( @ARGV ) {
+	my $orig_text;
+	{
+		local $/;
+		open F, $_ or die "Unable to open for reading: $_: $!\n";
+		$orig_text = <F>;
+		close F;
+	};
+
+	my $clean_text = $orig_text;
+
+	# skip code fencing
+	$clean_text =~ s{
+		(?:\A|\n) [ \t]* ``` .*? \n [ \t]* ```
+	}{}msgx;
+
+	# skip non-empty TOC blocks
+	$clean_text =~ s{
+		(?:\A|\n)
+		<!-- [ \t]+ md-toc-begin [ \t]+ --> [ \t\r]* \n
+		[\s\S]*? \n
+		<!-- [ \t]+ md-toc-end   [ \t]+ --> [ \t\r]*
+		(?=\n)
+	}{}msgx;
+
+	my %count = ();
+
+	my @toc = ();
+
+	push @toc, $md_toc_begin;
+	push @toc, "#" x $toc_level . " $toc_title" if $toc_title;
+
+	while ( $clean_text =~ m{
+		(?:\A|\n)
+		[ ]{0,3}
+		(?:
+			# atx-style headers H1-H6
+			( [#]{1,6} ) [ \t]+ ( .+? ) (?: [ \t]+ [#]* )?
+			|
+			# setext-style headers H1
+			( \S[^\r\n]*? ) [ \t\r]* \n [ \t]* ( [=] )+
+			|
+			# setext-style header H2
+			( (?![-]+)|[^\r\n]+? ) [ \t\r]* \n [ \t]* ( [-] )+
+		)
+		[ \t\r]*
+		(?=\n)
+	}mgx ) {
+		my $depth;
+		my $indent;
+		my $title;
+
+		if ( $1 && $2 ) {
+			$depth = length($1) - 1;
+			$title = $2;
+		} elsif ( $4 && $3 ) {
+			$depth = 0;
+			$indent = "";
+			$title = $3;
+		} elsif ( $6 && $5 ) {
+			$depth = 1;
+			$title = $5;
+		}
+
+		next unless $title;
+
+		$indent = "  " x $depth;
+
+		my $anchor = lc $title;
+		$anchor =~ s/\s/-/g;
+		$anchor =~ s/[^\w-]//g;
+
+		$count{$anchor}++;
+
+		$anchor .= ( 1 - $count{$anchor} or "" );
+
+		push @toc, "$indent* [$title](#$anchor)";
+	}
+
+	push @toc, $md_toc_end;
+
+	my $toc = join "\n", @toc;
+
+	unless ( $update ) {
+		print "$toc\n";
+		next;
+	}
+
+	$orig_text =~ s{
+		(?: (\A) | [\r\n]+ )
+		(?:
+			<!-- [ \t]+ md-toc [ \t]+ --> [ \t\r]*
+			|
+			<!-- [ \t]+ md-toc-begin [ \t]+ --> [ \t\r]* \n
+			(?: [\s\S]*? \n )*?
+			<!-- [ \t]+ md-toc-end   [ \t]+ --> [ \t\r]*
+		)
+		(?: (\Z) | [\r\n]+ )
+	}{
+		( $1 // "\n\n" ) . $toc . "\n\n";
+	}emgx;
+
+	warn "Updating $_\n";
+
+	open F, ">$_" or die "Unable to open for writing: $_: $!\n";
+	print F $orig_text;
+	close F;
+}
+
+# =========================================================================
+
+# EOF
