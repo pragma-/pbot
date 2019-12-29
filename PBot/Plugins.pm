@@ -48,13 +48,14 @@ sub autoload {
   return if $self->{pbot}->{registry}->get_value('plugins', 'noautoload');
 
   my $path = $self->{pbot}->{registry}->get_value('general', 'plugin_dir') // 'Plugins';
+  my $data_dir = $self->{pbot}->{registry}->get_value('general', 'data_dir');
 
   $self->{pbot}->{logger}->log("Loading plugins ...\n");
   my $plugin_count = 0;
 
   my $fh;
-  if (not open $fh, "<$path/autoload") {
-    $self->{pbot}->{logger}->log("warning: file $path/autoload does not exist; skipping autoloading of Plugins\n");
+  if (not open $fh, "<$data_dir/plugin_autoload") {
+    $self->{pbot}->{logger}->log("warning: file $data_dir/plugin_autoload does not exist; skipping autoloading of Plugins\n");
     return;
   }
 
