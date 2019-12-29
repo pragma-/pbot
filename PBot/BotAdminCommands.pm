@@ -61,6 +61,10 @@ sub sl {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
+  if (not length $arguments) {
+    return "Usage: sl <ircd command>";
+  }
+
   $self->{pbot}->{conn}->sl($arguments);
   return "";
 }
