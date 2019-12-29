@@ -48,6 +48,29 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->checkban(@_)      },       "checkban",    0);
   $pbot->{commands}->register(sub { return $self->checkmute(@_)     },       "checkmute",   0);
   $pbot->{commands}->register(sub { return $self->mode(@_)          },       "mode",       40);
+  $pbot->{commands}->register(sub { return $self->invite(@_)        },       "invite",     10);
+}
+
+sub invite {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+
+  if (not length $arguments) {
+    return "Usage: invite [channel] <nick>";
+  }
+
+  # add current channel as default channel
+  if ($stuff->{arglist}[0] !~ m/^#/) {
+    if ($from =~ m/^#/) {
+      unshift @{$stuff->{arglist}}, $from;
+    } else {
+      return "Usage from private message: invite <channel> <nick>";
+    }
+  }
+
+  my ($channel, $target) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+  $self->{pbot}->{chanops}->add_op_command($channel, "sl invite $target $channel");
+  $self->{pbot}->{chanops}->gain_ops($channel);
+  return "";
 }
 
 sub mode {

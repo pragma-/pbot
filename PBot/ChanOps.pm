@@ -126,6 +126,9 @@ sub perform_op_commands {
     } elsif ($command =~ /^kick (.*?) (.*?) (.*)/i) {
       $self->{pbot}->{conn}->kick($1, $2, $3) unless $1 =~ /\Q$botnick\E/i;
       $self->{pbot}->{logger}->log("  executing kick on $1 $2 $3\n");
+    } elsif ($command =~ /^sl (.*)/i) {
+      $self->{pbot}->{conn}->sl($1);
+      $self->{pbot}->{logger}->log("  executing sl $1\n");
     }
   }
   $self->{pbot}->{logger}->log("Done.\n");
