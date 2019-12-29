@@ -54,8 +54,9 @@ sub new {
 
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
-  $self->initialize(%conf);
+  $self->{atexit} = PBot::Registerable->new(%conf);
   $self->register_signal_handlers;
+  $self->initialize(%conf);
   return $self;
 }
 
@@ -80,7 +81,7 @@ sub initialize {
   }
 
   # logger created first to allow other modules to log things
-  $self->{logger}   = PBot::Logger->new(filename => "$data_dir/log/log", %conf);
+  $self->{logger}   = PBot::Logger->new(pbot => $self, filename => "$data_dir/log/log", %conf);
 
   $self->{version}  = PBot::VERSION->new(pbot => $self, %conf);
   $self->{logger}->log($self->{version}->version . "\n");
@@ -88,12 +89,9 @@ sub initialize {
 
   return if $conf{logger_only};
 
-  $self->{atexit}   = PBot::Registerable->new(%conf);
   $self->{timer}    = PBot::Timer->new(timeout => 10, %conf);
-
   $self->{commands} = PBot::Commands->new(pbot => $self, %conf);
   $self->{func_cmd} = PBot::FuncCommand->new(pbot => $self, %conf);
-
   $self->{refresher} = PBot::Refresher->new(pbot => $self);
 
   # make sure the environment is sane

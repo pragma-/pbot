@@ -19,24 +19,26 @@ sub new {
 
   my ($class, %conf) = @_;
 
-  my $logfile = delete $conf{filename};
+  my $pbot = $conf{pbot} // Carp::croak "Missing pbot reference to " . __FILE__;
+  my $logfile = $conf{filename} // Carp::croak "Missing logfile parameter in " . __FILE__;
 
-  if (defined $logfile) {
-    my $path = dirname $logfile;
-    if (not -d $path) {
-      print "Creating new logfile path: $path\n";
-      mkdir $path or Carp::croak "Couldn't create logfile path: $!\n";
-    }
-
-    open LOGFILE, ">>$logfile" or Carp::croak "Couldn't open logfile $logfile: $!\n";
-    LOGFILE->autoflush(1);
+  my $path = dirname $logfile;
+  if (not -d $path) {
+    print "Creating new logfile path: $path\n";
+    mkdir $path or Carp::croak "Couldn't create logfile path: $!\n";
   }
 
-  my $self = {
-    logfile => $logfile,
-  };
+  open LOGFILE, ">>$logfile" or Carp::croak "Couldn't open logfile $logfile: $!\n";
+  LOGFILE->autoflush(1);
 
-  bless $self, $class;
+  my $self = bless {
+    logfile => $logfile,
+    pbot => $pbot,
+    start => time,
+  }, $class;
+
+  $self->{pbot}->{atexit}->register(sub { $self->rotate_log; return; });
+
   return $self;
 }
 
@@ -51,6 +53,14 @@ sub log {
   }
 
   print "$time :: $text";
+}
+
+sub rotate_log {
+  my ($self) = @_;
+  my $time = localtime $self->{start};
+  $time =~ s/\s+/_/g;
+  close LOGFILE;
+  rename $self->{logfile}, $self->{logfile} . '-' . $time;
 }
 
 1;
