@@ -33,9 +33,6 @@ my %config = (
   # Path to directory containing loadable plugins
   plugin_dir => "$bothome/Plugins",
 
-  # Path to log file
-  log_file   => "$bothome/log/log",
-
   # -----------------------------------------------------
   # The bot can export the latest factoids and quotegrabs to an HTML
   # document.  If you run a webserver or something similiar, you may

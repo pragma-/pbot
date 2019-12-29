@@ -9,6 +9,7 @@ use strict;
 
 use feature 'unicode_strings';
 
+use File::Basename;
 use Carp ();
 
 sub new {
@@ -18,19 +19,24 @@ sub new {
 
   my ($class, %conf) = @_;
 
-  my $log_file = delete $conf{log_file};
+  my $logfile = delete $conf{filename};
 
-  if (defined $log_file) {
-    open PLOG_FILE, ">>$log_file" or Carp::croak "Couldn't open log file: $!\n" if defined $log_file;
-    PLOG_FILE->autoflush(1);
+  if (defined $logfile) {
+    my $path = dirname $logfile;
+    if (not -d $path) {
+      print "Creating new logfile path: $path\n";
+      mkdir $path or Carp::croak "Couldn't create logfile path: $!\n";
+    }
+
+    open LOGFILE, ">>$logfile" or Carp::croak "Couldn't open logfile $logfile: $!\n";
+    LOGFILE->autoflush(1);
   }
 
   my $self = {
-    log_file => $log_file,
+    logfile => $logfile,
   };
 
   bless $self, $class;
-
   return $self;
 }
 
@@ -40,8 +46,8 @@ sub log {
 
   $text =~ s/(\P{PosixGraph})/my $ch = $1; if ($ch =~ m{[\s]}) { $ch } else { sprintf "\\x%02X", ord $ch }/ge;
 
-  if (defined $self->{log_file}) {
-    print PLOG_FILE "$time :: $text";
+  if (defined $self->{logfile}) {
+    print LOGFILE "$time :: $text";
   }
 
   print "$time :: $text";

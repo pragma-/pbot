@@ -62,8 +62,25 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
+  $self->{startup_timestamp} = time;
+
+  my $data_dir   = $conf{data_dir};
+  my $module_dir = $conf{module_dir};
+  my $plugin_dir = $conf{plugin_dir};
+
+  # check command-line arguments for directory overrides
+  foreach my $arg (@ARGV) {
+    if ($arg =~ m/^(?:general\.)?((?:data|module|plugin)_dir)=(.*)$/) {
+      my $override = $1;
+      my $value = $2;
+      $data_dir = $value if $override eq 'data_dir';
+      $module_dir = $value if $override eq 'module_dir';
+      $plugin_dir = $value if $override eq 'plugin_dir';
+    }
+  }
+
   # logger created first to allow other modules to log things
-  $self->{logger}   = PBot::Logger->new(log_file => $conf{log_file}, %conf);
+  $self->{logger}   = PBot::Logger->new(filename => "$data_dir/log/log", %conf);
 
   $self->{version}  = PBot::VERSION->new(pbot => $self, %conf);
   $self->{logger}->log($self->{version}->version . "\n");
@@ -78,22 +95,6 @@ sub initialize {
   $self->{func_cmd} = PBot::FuncCommand->new(pbot => $self, %conf);
 
   $self->{refresher} = PBot::Refresher->new(pbot => $self);
-
-  my $data_dir   = $conf{data_dir};
-  my $module_dir = $conf{module_dir};
-  my $plugin_dir = $conf{plugin_dir};
-
-  # check command-line arguments for directory overrides
-  foreach my $arg (@ARGV) {
-    if ($arg =~ m/^(?:general\.)?((?:data|module|plugin)_dir)=(.*)$/) {
-      my $override = $1;
-      my $value = $2;
-      $self->{logger}->log("Overriding $override to $value\n");
-      $data_dir = $value if $override eq 'data_dir';
-      $module_dir = $value if $override eq 'module_dir';
-      $plugin_dir = $value if $override eq 'plugin_dir';
-    }
-  }
 
   # make sure the environment is sane
   if (not -d $data_dir) {
