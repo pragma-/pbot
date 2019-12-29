@@ -66,8 +66,8 @@ sub autoload {
     $plugin = basename $plugin;
     $plugin =~ s/.pm$//;
 
-    # do not load plugins that begin with an underscore
-    next if $plugin =~ m/^_/;
+    # do not load plugins that begin with a comment
+    next if $plugin =~ m/^\s*#/;
 
     $plugin_count++ if $self->load($plugin, %conf)
   }
