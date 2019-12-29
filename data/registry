@@ -232,6 +232,18 @@
          "value" : "[!]"
       }
    },
+   "googlesearch" : {
+     "api_key" : {
+       "private" : "1",
+       "type" : "text",
+       "value" : ""
+     },
+     "context" : {
+       "private" : "1",
+       "type" : "text",
+       "value" : ""
+     }
+   },
    "interpreter" : {
       "max_recursion" : {
          "type" : "text",
