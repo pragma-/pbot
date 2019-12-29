@@ -20,5 +20,5 @@ Features
 * Command piping and substitution
 * Much, much more
 
-See http://www.iso-9899.info/wiki/Candide for more information.
+See https://github.com/pragma-/pbot/tree/master/doc for more information.
 

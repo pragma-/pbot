@@ -266,7 +266,7 @@
       },
       "ircname" : {
          "type" : "text",
-         "value" : "http://www.iso-9899.info/wiki/Candide"
+         "value" : "https://github.com/pragma-/pbot"
       },
       "ircserver" : {
          "type" : "text",
