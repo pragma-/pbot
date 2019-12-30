@@ -56,10 +56,10 @@ sub on_public {
 
       given ($self->{offenses}->{$channel}->{$nick}->{offenses}) {
         when (1) {
-          $event->{conn}->privmsg($nick, "$nick: Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly.");
+          $event->{conn}->privmsg($nick, "Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly.");
         }
         when (2) {
-          $event->{conn}->privmsg($nick, "$nick: Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly. Doing this again will result in a temporary ban.");
+          $event->{conn}->privmsg($nick, "Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly. Doing this again will result in a temporary ban.");
         }
         default {
           my $offenses = $self->{offenses}->{$channel}->{$nick}->{offenses} - 2;
@@ -67,7 +67,7 @@ sub on_public {
           $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'using @nick too much', "*!*\@$host", $channel, $length);
           $self->{pbot}->{chanops}->gain_ops($channel);
           $length = duration $length;
-          $event->{conn}->privmsg($nick, "$nick: Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly. You were warned. You will be allowed to speak again in $length.");
+          $event->{conn}->privmsg($nick, "Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly. You were warned. You will be allowed to speak again in $length.");
         }
       }
       last;
