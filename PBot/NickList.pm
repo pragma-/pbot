@@ -38,7 +38,7 @@ sub initialize {
 
   $self->{pbot}->{registry}->add_default('text', 'nicklist', 'debug', '0');
 
-  $self->{pbot}->{commands}->register(sub { $self->dumpnicks(@_) }, "dumpnicks", 60);
+  $self->{pbot}->{commands}->register(sub { $self->show_nicklist(@_) }, "nicklist", 0);
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.namreply',  sub { $self->on_namreply(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.join',      sub { $self->on_join(@_) });
@@ -54,18 +54,31 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('pbot.part',    sub { $self->on_part_channel(@_) });
 }
 
-sub dumpnicks {
+sub show_nicklist {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   my $nicklist;
 
+  my $admin = $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host");
+
   if (not length $arguments) {
+    if (not $admin) {
+      return "Usage: nicklist <channel>";
+    }
     $nicklist = Dumper($self->{nicklist});
   } else {
     my @args = split / /, $arguments;
 
     if (@args == 1) {
+      if (not exists $self->{nicklist}->{$arguments}) {
+        return "No nicklist for $arguments.";
+      }
       $nicklist = Dumper($self->{nicklist}->{$arguments});
     } else {
+      if (not exists $self->{nicklist}->{$args[0]}) {
+        return "No nicklist for $args[0].";
+      } elsif (not exists $self->{nicklist}->{$args[0]}->{$args[1]}) {
+        return "No such nick $args[1] in channel $args[0].";
+      }
       $nicklist = Dumper($self->{nicklist}->{$args[0]}->{$args[1]});
     }
   }
@@ -94,8 +107,10 @@ sub remove_channel {
 
 sub add_nick {
   my ($self, $channel, $nick) = @_;
-  $self->{pbot}->{logger}->log("Adding nick '$nick' to channel '$channel'\n") if $self->{pbot}->{registry}->get_value('nicklist', 'debug');
-  $self->{nicklist}->{lc $channel}->{lc $nick} = { nick => $nick, timestamp => 0 };
+  if (not exists $self->{nicklist}->{lc $channel}->{lc $nick}) {
+    $self->{pbot}->{logger}->log("Adding nick '$nick' to channel '$channel'\n") if $self->{pbot}->{registry}->get_value('nicklist', 'debug');
+    $self->{nicklist}->{lc $channel}->{lc $nick} = { nick => $nick, timestamp => 0 };
+  }
 }
 
 sub remove_nick {
@@ -255,6 +270,12 @@ sub on_namreply {
     $stripped_nick =~ s/^[@+%]//g; # remove OP/Voice/etc indicator from nick
     $self->add_nick($channel, $stripped_nick);
 
+    my ($account_id, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($stripped_nick);
+    my ($user, $host) = $hostmask =~ m/[^!]+!([^@]+)@(.*)/;
+    $self->set_meta($channel, $stripped_nick, 'hostmask', $hostmask);
+    $self->set_meta($channel, $stripped_nick, 'user', $user);
+    $self->set_meta($channel, $stripped_nick, 'host', $host);
+
     if ($nick =~ m/\@/) {
       $self->set_meta($channel, $stripped_nick, '+o', 1);
     }
@@ -282,6 +303,9 @@ sub on_join {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
   $self->add_nick($channel, $nick);
+  $self->set_meta($channel, $nick, 'hostmask', "$nick!$user\@$host");
+  $self->set_meta($channel, $nick, 'user', $user);
+  $self->set_meta($channel, $nick, 'host', $host);
   return 0;
 }
 
