@@ -9,6 +9,7 @@ use strict;
 
 use feature 'unicode_strings';
 
+use Scalar::Util qw/openhandle/;
 use File::Basename;
 use Carp ();
 
@@ -48,7 +49,7 @@ sub log {
 
   $text =~ s/(\P{PosixGraph})/my $ch = $1; if ($ch =~ m{[\s]}) { $ch } else { sprintf "\\x%02X", ord $ch }/ge;
 
-  if (defined $self->{logfile}) {
+  if (openhandle *LOGFILE) {
     print LOGFILE "$time :: $text";
   }
 
@@ -59,8 +60,14 @@ sub rotate_log {
   my ($self) = @_;
   my $time = localtime $self->{start};
   $time =~ s/\s+/_/g;
+
+  # logfile has to be closed first for maximum compatibility with `rename`
   close LOGFILE;
   rename $self->{logfile}, $self->{logfile} . '-' . $time;
+
+  # reopen renamed logfile to resume any needed logging
+  open LOGFILE, ">>$self->{logfile}-$time" or Carp::carp "Couldn't re-open logfile $self->{logfile}-$time: $!\n";
+  LOGFILE->autoflush(1) if openhandle *LOGFILE;
 }
 
 1;
