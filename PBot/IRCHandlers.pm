@@ -138,7 +138,7 @@ sub on_motd {
 
 sub on_self_join {
   my ($self, $event_type, $event) = @_;
-  #$self->send_who($event->{channel});
+  $self->send_who($event->{channel});
   return 0;
 }
 
@@ -593,7 +593,14 @@ sub on_whospcrpl {
 
   return 0 if not defined $channel;
 
-  $self->{pbot}->{logger}->log("WHO id: $id, hostmask: $hostmask, $nickserv, $gecos.\n");
+  $self->{pbot}->{logger}->log("WHO id: $id [$channel], hostmask: $hostmask, $nickserv, $gecos.\n");
+
+  $self->{pbot}->{nicklist}->add_nick($channel, $nick);
+  $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'hostmask', $hostmask);
+  $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'user', $user);
+  $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'host', $host);
+  $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'nickserv', $nickserv) if $nickserv ne '0';
+  $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'gecos', $gecos);
 
   my $account_id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
   $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($hostmask, { last_seen => scalar gettimeofday });
