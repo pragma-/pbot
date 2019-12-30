@@ -46,7 +46,7 @@ sub on_public {
   $channel = lc $channel;
   return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 
-  while ($msg =~ m/\B[＠@]*([a-z0-9_^{}\-\\\[\]\|]+)/ig) {
+  while ($msg =~ m/\B[＠@]([a-z0-9_^{}\-\\\[\]\|]+)/ig) {
     my $n = $1;
     if ($self->{pbot}->{nicklist}->is_present_similar($channel, $n, 0.05)) {
       $self->{offenses}->{$channel}->{$nick}->{offenses}++;
