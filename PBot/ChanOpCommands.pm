@@ -110,16 +110,33 @@ sub mode {
     my $target = $targets[$arg++] // "";
 
     if (($mode eq 'v' or $mode eq 'o') and $target =~ m/\*/) {
+      # wildcard used; find all matching nicks; test against whitelist, etc
       my $q_target = lc quotemeta $target;
       $q_target =~ s/\\\*/.*/g;
       $channel = lc $channel;
 
       if (not exists $self->{pbot}->{nicklist}->{nicklist}->{$channel}) {
-        return "I have no nick list for channel $channel; cannot use wildcard.";
+        return "I have no nicklist for channel $channel; cannot use wildcard.";
       }
 
       foreach my $n (keys %{$self->{pbot}->{nicklist}->{nicklist}->{$channel}}) {
         if ($n =~ m/^$q_target$/) {
+          my $nick_data = $self->{pbot}->{nicklist}->{nicklist}->{$channel}->{$n};
+
+          if ($modifier eq '-') {
+            # removing mode -- check against whitelist, etc
+            next if $n eq $self->{pbot}->{registry}->get_value('irc', 'botnick');
+            next if $self->{pbot}->{antiflood}->whitelisted($channel, $nick_data->{hostmask});
+            next if $self->{pbot}->{admins}->loggedin($channel, $nick_data->{hostmask});
+          }
+
+          # skip nick if already has mode set/unset
+          if ($modifier eq '+') {
+            next if exists $nick_data->{"+$mode"};
+          } else {
+            next unless exists $nick_data->{"+$mode"};
+          }
+
           $new_modes = $modifier if not length $new_modes;
           $new_modes .= $mode;
           $new_targets .= "$self->{pbot}->{nicklist}->{nicklist}->{$channel}->{$n}->{nick} ";
@@ -134,6 +151,7 @@ sub mode {
         }
       }
     } else {
+      # no wildcard used; explicit mode requested - no whitelist checking
       $new_modes .= $mode;
       $new_targets .= "$target " if length $target;
       $i++;
