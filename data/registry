@@ -185,7 +185,7 @@
       },
       "identify_command" : {
          "type" : "text",
-         "value" : "identify $nick $pasword"
+         "value" : "identify $nick $password"
       },
       "module_dir" : {
          "type" : "text",
