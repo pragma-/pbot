@@ -38,14 +38,9 @@ The modules may be installed with a simple command:
 
     cpan -f -i $(cat MODULES)
 
-##### Caveats
-
 Some CPAN modules may fail to pass certain tests due to outdated variables.
 Despite these test failures, their core functionality should still work as
 expected.
-
-###### re::engine::RE2
-There have been reports that this module may not install. TODO: workaround.
 
 First-time Configuration
 ------------------------
@@ -66,12 +61,9 @@ Alternatively, you could name it after your bot's nickname:
 
     cp -r data coolbot
 
-You get the idea.
-
 ### Edit Registry
 
-Now you may edit the `registry` file in your data-directories to configure PBot
-settings.
+Now you may edit the `registry` file in your data-directory to configure PBot settings.
 
 #### Notable settings
 
@@ -120,7 +112,8 @@ to point at custom bots and commands to login/request OP.
 ##### Other networks
 
 Other networks are untested. They should be very similiar to either Freenode or IRCnet, and so one of those
-recommended settings should work. If you have any issues, please report them at https://github.com/pragma-/pbot/issues.
+recommended settings should work. If you have any issues, please report them at https://github.com/pragma-/pbot/issues
+or in the `#pbot2` channel on the Freenode network.
 
 ### Adding Channels
 
