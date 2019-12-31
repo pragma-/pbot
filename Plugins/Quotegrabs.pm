@@ -42,8 +42,6 @@ sub initialize {
 
   $self->{pbot}        = $conf{pbot} // Carp::croak("Missing pbot reference in Quotegrabs");
   $self->{filename}    = $conf{quotegrabs_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quotegrabs.sqlite3';
-  $self->{export_path} = $conf{export_quotegrabs_path} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quotegrabs.html';
-  $self->{export_site} = $conf{export_quotegrabs_site} // 'http://www.iso-9899.info/candide/quotegrabs.html';
 
   $self->{database} = Plugins::Quotegrabs::Quotegrabs_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
   #$self->{database} = Plugins::Quotegrabs::Quotegrabs_Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
@@ -69,7 +67,8 @@ sub uniq { my %seen; grep !$seen{$_}++, @_ }
 
 sub export_quotegrabs {
   my $self = shift;
-  return "Quotegrabs exporting not enabled." if not defined $self->{export_path};
+
+  $self->{export_path} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quotegrabs.html';
 
   my $quotegrabs = $self->{database}->get_all_quotegrabs();
 
@@ -158,7 +157,7 @@ sub export_quotegrabs {
   print FILE "</script>\n";
   print FILE "</body>\n</html>\n";
   close(FILE);
-  return "$i quotegrabs exported to " . $self->{export_site};
+  return "$i quotegrabs exported.";
 }
 
 sub grab_quotegrab {
