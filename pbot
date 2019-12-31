@@ -23,34 +23,14 @@ BEGIN {
   unshift @INC, $bothome;
 }
 
+# configuration is overridden via command-line arguments, do not modify
+# see doc/QuickStart.md
 my %config = (
-  # Path to data directory
   data_dir   => "$bothome/data",
-
-  # Path to directory containing command-line modules
   module_dir => "$bothome/modules",
-
-  # Path to directory containing loadable plugins
   plugin_dir => "$bothome/Plugins",
-
-  # -----------------------------------------------------
-  # The bot can export the latest factoids and quotegrabs to an HTML
-  # document.  If you run a webserver or something similiar, you may
-  # wish to set the following items ending with 'path' to point to
-  # a suitable location for the webserver, and to set the items
-  # ending with 'site' to the public-facing URL where the files
-  # may be viewed in a browser.
-  # -----------------------------------------------------
-  export_factoids_path    => "$bothome/factoids.html",   # change to a path in your webroot
-  export_factoids_site    => 'http://your.website.com/factoids.html',
-
-  export_quotegrabs_path  => "$bothome/quotegrabs.html", # change to a path in your webroot
-  export_quotegrabs_site  => 'http://your.website.com/quotegrabs.html',
 );
 
-# Create and initialize bot object
 use PBot::PBot;
 my $pbot = PBot::PBot->new(%config);
-
-# Start the bot main loop; doesn't return
 $pbot->start();
