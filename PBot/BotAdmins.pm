@@ -20,12 +20,8 @@ use PBot::BotAdminCommands;
 use Carp ();
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -33,43 +29,21 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
-  my $filename       = delete $conf{filename};
-  my $export_path    = delete $conf{export_path};
-  my $export_site    = delete $conf{export_site};
-  my $export_timeout = delete $conf{export_timeout};
-
-  if (not defined $export_timeout) {
-    if (defined $export_path) {
-      $export_timeout = 300; # every 5 minutes
-    } else {
-      $export_timeout = -1;
-    }
-  }
-
-  $self->{pbot}           = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  $self->{admins}         = PBot::DualIndexHashObject->new(name => 'Admins', filename => $filename, pbot => $self->{pbot});
-  $self->{commands}       = PBot::BotAdminCommands->new(pbot => $self->{pbot});
-  $self->{export_path}    = $export_path;
-  $self->{export_site}    = $export_site;
-  $self->{export_timeout} = $export_timeout;
-
+  $self->{pbot}     = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{admins}   = PBot::DualIndexHashObject->new(name => 'Admins', filename => $conf{filename}, pbot => $conf{pbot});
+  $self->{commands} = PBot::BotAdminCommands->new(pbot => $conf{pbot});
   $self->load_admins;
 }
 
 sub add_admin {
   my $self = shift;
   my ($name, $channel, $hostmask, $level, $password, $dont_save) = @_;
-
   $channel = lc $channel;
   $hostmask = lc $hostmask;
-
   $self->{admins}->hash->{$channel}->{$hostmask}->{name}     = $name;
   $self->{admins}->hash->{$channel}->{$hostmask}->{level}    = $level;
   $self->{admins}->hash->{$channel}->{$hostmask}->{password} = $password;
-
   $self->{pbot}->{logger}->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");
-
   $self->save_admins unless $dont_save;
 }
 
@@ -127,19 +101,7 @@ sub load_admins {
 
 sub save_admins {
   my $self = shift;
-
   $self->{admins}->save;
-  $self->export_admins;
-}
-
-sub export_admins {
-  my $self = shift;
-  my $filename;
-
-  if (@_) { $filename = shift; } else { $filename = $self->export_path; }
-
-  return if not defined $filename;
-  return;
 }
 
 sub find_admin {
@@ -169,7 +131,6 @@ sub find_admin {
 
 sub loggedin {
   my ($self, $channel, $hostmask) = @_;
-
   my $admin = $self->find_admin($channel, $hostmask);
 
   if (defined $admin && $admin->{loggedin}) {
@@ -181,7 +142,6 @@ sub loggedin {
 
 sub login {
   my ($self, $channel, $hostmask, $password) = @_;
-
   my $admin = $self->find_admin($channel, $hostmask);
 
   if (not defined $admin) {
@@ -195,50 +155,14 @@ sub login {
   }
 
   $admin->{loggedin} = 1;
-
   $self->{pbot}->{logger}->log("$hostmask logged into $channel\n");
-
   return "Logged into $channel.";
 }
 
 sub logout {
   my ($self, $channel, $hostmask) = @_;
-
   my $admin = $self->find_admin($channel, $hostmask);
-
   delete $admin->{loggedin} if defined $admin;
-}
-
-sub export_path {
-  my $self = shift;
-
-  if (@_) { $self->{export_path} = shift; }
-  return $self->{export_path};
-}
-
-sub export_timeout {
-  my $self = shift;
-
-  if (@_) { $self->{export_timeout} = shift; }
-  return $self->{export_timeout};
-}
-
-sub export_site {
-  my $self = shift;
-  if (@_) { $self->{export_site} = shift; }
-  return $self->{export_site};
-}
-
-sub admins {
-  my $self = shift;
-  return $self->{admins};
-}
-
-sub filename {
-  my $self = shift;
-
-  if (@_) { $self->{filename} = shift; }
-  return $self->{filename};
 }
 
 1;
