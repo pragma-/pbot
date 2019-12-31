@@ -62,7 +62,7 @@ sub show_nicklist {
 
   if (not length $arguments) {
     if (not $admin) {
-      return "Usage: nicklist <channel>";
+      return "Usage: nicklist <channel> [nick]";
     }
     $nicklist = Dumper($self->{nicklist});
   } else {
