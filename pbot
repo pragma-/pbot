@@ -32,5 +32,4 @@ my %config = (
 );
 
 use PBot::PBot;
-my $pbot = PBot::PBot->new(%config);
-$pbot->start();
+PBot::PBot->new(%config)->start();
