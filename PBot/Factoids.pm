@@ -48,15 +48,10 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $filename    = delete $conf{filename};
-  my $export_path = delete $conf{export_path};
-  my $export_site = delete $conf{export_site};
-
-  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  my $filename = $conf{filename};
+  my $pbot = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{factoids}    = PBot::DualIndexHashObject->new(name => 'Factoids', filename => $filename, pbot => $pbot);
-  $self->{export_path} = $export_path;
-  $self->{export_site} = $export_site;
 
   $self->{pbot}                  = $pbot;
   $self->{commands}              = PBot::FactoidCommands->new(pbot => $pbot);
@@ -148,7 +143,7 @@ sub export_factoids {
   my $self = shift;
   my $filename;
 
-  if (@_) { $filename = shift; } else { $filename = $self->export_path; }
+  if (@_) { $filename = shift; } else { $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factoids.html'; }
   return if not defined $filename;
 
   open FILE, "> $filename" or return "Could not open export path.";
@@ -261,8 +256,7 @@ sub export_factoids {
 
   close(FILE);
 
-  #$self->{pbot}->{logger}->log("$i factoids exported to path: " . $self->export_path . ", site: " . $self->export_site . "\n");
-  return "/say $i factoids exported to " . $self->export_site;
+  return "/say $i factoids exported.";
 }
 
 sub find_factoid {
@@ -1139,37 +1133,6 @@ sub handle_action {
     $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}): Unknown command type for '$keyword_text'\n");
     return "/me blinks." . " $ref_from";
   }
-}
-
-sub export_path {
-  my $self = shift;
-
-  if (@_) { $self->{export_path} = shift; }
-  return $self->{export_path};
-}
-
-sub logger {
-  my $self = shift;
-  if (@_) { $self->{logger} = shift; }
-  return $self->{logger};
-}
-
-sub export_site {
-  my $self = shift;
-  if (@_) { $self->{export_site} = shift; }
-  return $self->{export_site};
-}
-
-sub factoids {
-  my $self = shift;
-  return $self->{factoids};
-}
-
-sub filename {
-  my $self = shift;
-
-  if (@_) { $self->{filename} = shift; }
-  return $self->{filename};
 }
 
 1;

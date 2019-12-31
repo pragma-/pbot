@@ -203,13 +203,7 @@ sub initialize {
   $self->{interpreter}->register(sub { return $self->{commands}->interpreter(@_); });
   $self->{interpreter}->register(sub { return $self->{factoids}->interpreter(@_); });
 
-  $self->{factoids} = PBot::Factoids->new(
-    pbot        => $self,
-    filename    => "$data_dir/factoids",
-    export_path => $conf{export_factoids_path},
-    export_site => $conf{export_factoids_site},
-    %conf
-  );
+  $self->{factoids} = PBot::Factoids->new(pbot => $self, filename => "$data_dir/factoids", %conf);
 
   $self->{plugins} = PBot::Plugins->new(pbot => $self, %conf);
 
