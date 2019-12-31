@@ -271,10 +271,13 @@ sub on_namreply {
     $self->add_nick($channel, $stripped_nick);
 
     my ($account_id, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($stripped_nick);
-    my ($user, $host) = $hostmask =~ m/[^!]+!([^@]+)@(.*)/;
-    $self->set_meta($channel, $stripped_nick, 'hostmask', $hostmask);
-    $self->set_meta($channel, $stripped_nick, 'user', $user);
-    $self->set_meta($channel, $stripped_nick, 'host', $host);
+
+    if (defined $hostmask) {
+      my ($user, $host) = $hostmask =~ m/[^!]+!([^@]+)@(.*)/;
+      $self->set_meta($channel, $stripped_nick, 'hostmask', $hostmask);
+      $self->set_meta($channel, $stripped_nick, 'user', $user);
+      $self->set_meta($channel, $stripped_nick, 'host', $host);
+    }
 
     if ($nick =~ m/\@/) {
       $self->set_meta($channel, $stripped_nick, '+o', 1);
