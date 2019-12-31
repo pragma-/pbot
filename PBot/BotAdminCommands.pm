@@ -293,19 +293,11 @@ sub export {
   my ($from, $nick, $user, $host, $arguments) = @_;
 
   if (not defined $arguments) {
-    return "/msg $nick Usage: export <modules|factoids|admins>";
-  }
-
-  if ($arguments =~ /^modules$/i) {
-    return "/msg $nick Coming soon.";
+    return "/msg $nick Usage: export <factoids>";
   }
 
   if ($arguments =~ /^factoids$/i) {
     return $self->{pbot}->{factoids}->export_factoids;
-  }
-
-  if ($arguments =~ /^admins$/i) {
-    return "/msg $nick Coming soon.";
   }
 }
 
