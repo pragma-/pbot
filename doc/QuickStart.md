@@ -60,6 +60,9 @@ Alternatively, you could name it after your bot's nickname:
 
 ### Edit Registry
 
+PBot configuration is stored as key/value pairs grouped by sections. We call this the Registry.
+See https://github.com/pragma-/pbot/blob/master/doc/Registry.md for more details.
+
 Now you may edit the `registry` file in your data-directory to configure PBot settings.
 
 #### Notable settings
