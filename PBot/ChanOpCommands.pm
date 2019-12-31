@@ -125,7 +125,7 @@ sub mode {
 
           if ($modifier eq '-') {
             # removing mode -- check against whitelist, etc
-            next if $n eq $self->{pbot}->{registry}->get_value('irc', 'botnick');
+            next if $nick_data->{nick} eq $self->{pbot}->{registry}->get_value('irc', 'botnick');
             next if $self->{pbot}->{antiflood}->whitelisted($channel, $nick_data->{hostmask});
             next if $self->{pbot}->{admins}->loggedin($channel, $nick_data->{hostmask});
           }
@@ -563,18 +563,41 @@ sub kick_user {
   }
 
   my @nicks = split /,/, $victim;
-  my $i = 0;
   foreach my $n (@nicks) {
-    $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $n $reason");
+    if ($n =~ m/\*/) {
+      # wildcard used; find all matching nicks; test against whitelist, etc
+      my $q_target = lc quotemeta $n;
+      $q_target =~ s/\\\*/.*/g;
+      $channel = lc $channel;
+
+      if (not exists $self->{pbot}->{nicklist}->{nicklist}->{$channel}) {
+        return "I have no nicklist for channel $channel; cannot use wildcard.";
+      }
+
+      foreach my $nl (keys %{$self->{pbot}->{nicklist}->{nicklist}->{$channel}}) {
+        if ($nl =~ m/^$q_target$/) {
+          my $nick_data = $self->{pbot}->{nicklist}->{nicklist}->{$channel}->{$nl};
+
+          next if $nick_data->{nick} eq $self->{pbot}->{registry}->get_value('irc', 'botnick');
+          next if $self->{pbot}->{antiflood}->whitelisted($channel, $nick_data->{hostmask});
+          next if $self->{pbot}->{admins}->loggedin($channel, $nick_data->{hostmask});
+
+          $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nl $reason");
+        }
+      }
+    } else {
+      # no wildcard used, explicit kick
+      $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $n $reason");
+    }
+
+    # randomize next kick reason
     if (@insults) {
       $reason = $insults[rand @insults];
       $reason =~ s/\s+$//;
     }
-    last if ++$i >= 5;
   }
 
   $self->{pbot}->{chanops}->gain_ops($channel);
-
   return "";
 }
 
