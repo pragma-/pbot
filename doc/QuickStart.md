@@ -3,14 +3,11 @@ QuickStart
 PBot is an IRC bot written in Perl. This is a work-in-progress rough draft Quick Start guide.
 This notification will be removed when this guide is mature.
 
-
 <!-- md-toc-begin -->
 * [QuickStart](#quickstart)
   * [Installing](#installing)
     * [Prerequisites](#prerequisites)
       * [Installing CPAN modules](#installing-cpan-modules)
-        * [Caveats](#caveats)
-          * [re::engine::RE2](#reenginere2)
   * [First-time Configuration](#first-time-configuration)
     * [Clone data-directory](#clone-data-directory)
     * [Edit Registry](#edit-registry)
