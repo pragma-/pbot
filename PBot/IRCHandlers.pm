@@ -54,6 +54,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.invite',        sub { $self->on_invite(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.cap',           sub { $self->on_cap(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.map',           sub { $self->on_map(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.whoreply',      sub { $self->on_whoreply(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.whospcrpl',     sub { $self->on_whospcrpl(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.endofwho',      sub { $self->on_endofwho(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.channelmodeis', sub { $self->on_channelmodeis(@_) });
@@ -580,6 +581,49 @@ my %who_queue;
 my %who_cache;
 my $last_who_id;
 my $who_pending = 0;
+
+sub on_whoreply {
+  my ($self, $event_type, $event) = @_;
+
+  my ($ignored, $id, $user, $host, $server, $nick, $usermodes, $gecos) = @{$event->{event}->{args}};
+  ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
+  my $hostmask = "$nick!$user\@$host";
+  my $channel;
+
+  if ($id =~ m/^#/) {
+    foreach my $x (keys %who_cache) {
+      if ($who_cache{$x} eq $id) {
+        $id = $x;
+        last;
+      }
+    }
+  }
+
+  $last_who_id = $id;
+  $channel = $who_cache{$id};
+  delete $who_queue{$id};
+
+  return 0 if not defined $channel;
+
+  $self->{pbot}->{logger}->log("WHO id: $id [$channel], hostmask: $hostmask, $usermodes, $server, $gecos.\n");
+
+  $self->{pbot}->{nicklist}->add_nick($channel, $nick);
+  $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'hostmask', $hostmask);
+  $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'user', $user);
+  $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'host', $host);
+  $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'server', $server);
+  $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'gecos', $gecos);
+
+  my $account_id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+  $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($hostmask, { last_seen => scalar gettimeofday });
+
+  $self->{pbot}->{messagehistory}->{database}->link_aliases($account_id, $hostmask, undef);
+
+  $self->{pbot}->{messagehistory}->{database}->devalidate_channel($account_id, $channel);
+  $self->{pbot}->{antiflood}->check_bans($account_id, $hostmask, $channel);
+
+  return 0;
+}
 
 sub on_whospcrpl {
   my ($self, $event_type, $event) = @_;
