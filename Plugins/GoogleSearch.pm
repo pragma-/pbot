@@ -9,6 +9,8 @@ package Plugins::GoogleSearch;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+
 use WWW::Google::CustomSearch;
 use HTML::Entities;
 
@@ -80,7 +82,13 @@ sub googlesearch {
       return "$nick: No results for $b";
     }
 
-    return "$nick: $a: (", $result1->formattedTotalResults, ") ", decode_entities $result1->items->[0]->title, " <", $result1->items->[0]->link, "> VS $b: (", $result2->formattedTotalResults, ") ", decode_entities $result2->items->[0]->title, " <", $result2->items->[0]->link, ">";
+    my $title1 = $result1->items->[0]->title;
+    my $title2 = $result2->items->[0]->title;
+
+    utf8::decode $title1;
+    utf8::decode $title2;
+
+    return "$nick: $a: (" . $result1->formattedTotalResults . ") " . decode_entities($title1) . " <" . $result1->items->[0]->link . "> VS $b: (" . $result2->formattedTotalResults . ") " . decode_entities($title2) . " <" . $result2->items->[0]->link . ">";
   }
 
   my $result  = $engine->search($arguments);
@@ -93,7 +101,9 @@ sub googlesearch {
 
   my $comma = "";
   foreach my $item (@{$result->items}) {
-    $output .= $comma . decode_entities $item->title . ': <' . $item->link . ">";
+    my $title = $item->title;
+    utf8::decode $title;
+    $output .= $comma . decode_entities($title) . ': <' . $item->link . ">";
     $comma = " -- ";
     last if --$matches <= 0;
   }
