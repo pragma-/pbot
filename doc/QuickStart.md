@@ -1,7 +1,6 @@
 QuickStart
 ==========
-PBot is an IRC bot written in Perl. This is a work-in-progress rough draft Quick Start guide.
-This notification will be removed when this guide is mature.
+This is a work-in-progress rough draft Quick Start guide. This notification will be removed when this guide is mature.
 
 <!-- md-toc-begin -->
 * [QuickStart](#quickstart)
@@ -11,7 +10,6 @@ This notification will be removed when this guide is mature.
   * [First-time Configuration](#first-time-configuration)
     * [Clone data-directory](#clone-data-directory)
     * [Edit Registry](#edit-registry)
-      * [Notable settings](#notable-settings)
       * [Recommended settings for IRC Networks](#recommended-settings-for-irc-networks)
         * [Freenode](#freenode)
         * [IRCnet](#ircnet)
@@ -122,7 +120,6 @@ or in the `#pbot2` channel on the Freenode network.
 
 Starting PBot
 -------------
-Now you're ready to start PBot.
 
 ### Usage
 
