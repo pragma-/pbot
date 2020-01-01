@@ -98,7 +98,7 @@ Once you register your botnick with NickServ, it is recommended to set these add
 Registry key | Description | Recommended value
 --- | --- | ---:
 irc.identify_password | Password to use to identify to NickServ | `<password>`
-irc.identify_command | Command to send to NickServ to identify. `$nick` will be replaced with `irc.botnick`; `$password` will be replaced with `irc.identify_password`. If you wish to login to a NickServ account different than the `irc.botnick` you may replace the `$nick` text with a literal value. | identify $nick $password
+irc.identify_command | Command to send to NickServ to identify. `$nick` will be replaced with `irc.botnick`; `$password` will be replaced with `irc.identify_password`. If you wish to login to a NickServ account different than the `irc.botnick` you may replace the `$nick` text with a literal value. | `identify $nick $password`
 irc.randomize_nick | Randomize IRC nickname when connecting to server. PBot will change to irc.botnick when logged-in. This prevents users from monitoring the botnick to catch its IP address before it is identified. | 1
 general.autojoin_wait_for_nickserv | Wait for NickServ login before auto-joining channels. This prevents PBot from joining channels before it is identified and cloaked. | 1
 
@@ -112,9 +112,9 @@ These settings may be useful:
 Registry key | Description | Default value| Recommended value
 --- | --- | ---: | ---:
 general.identify_nick | Who to /msg for login/identify/authentication. Defaults to NickServ, can be overridden to a custom bot. | NickServ | `<service botnick>`
-general.identify_command | Command to send to `general.identify_nick` to login. | identify $nick $password | `<service bot command>`
+general.identify_command | Command to send to `general.identify_nick` to login. | `identify $nick $password` | `<service bot command>`
 general.op_nick | Who to /msg to request channel OP status. Defaults to ChanServ, can be overridden to a custom bot. | ChanServ | `<service botnick>`
-general.op_command | Command to send to `general.op_nick` to request channel OP status. | op $channel | `<service bot command>`
+general.op_command | Command to send to `general.op_nick` to request channel OP status. | `op $channel` | `<service bot command>`
 
 ##### Other networks
 
