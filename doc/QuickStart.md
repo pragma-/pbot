@@ -110,7 +110,7 @@ Instead, its nicknames and channels are protected by custom bots.
 These settings may be useful:
 
 Registry key | Description | Default value| Recommended value
---- | --- | ---:
+--- | --- | ---: | ---:
 general.identify_nick | Who to /msg for login/identify/authentication. Defaults to NickServ, can be overridden to a custom bot. | NickServ | `<service botnick>`
 general.identify_command | Command to send to `general.identify_nick` to login. | identify $nick $password | `<service bot command>`
 general.op_nick | Who to /msg to request channel OP status. Defaults to ChanServ, can be overridden to a custom bot. | ChanServ | `<service botnick>`
