@@ -71,8 +71,6 @@ See https://github.com/pragma-/pbot/blob/master/doc/Registry.md for more details
 Now you may edit the `registry` file in your data-directory to configure PBot settings. Alternatively,
 you may override the registry entries via the command-line.
 
-#### Notable settings
-
 Some settings you may be interested in configuring:
 
 Registry key | Description | Default value
