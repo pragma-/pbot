@@ -16,6 +16,11 @@ This notification will be removed when this guide is mature.
         * [Freenode](#freenode)
         * [IRCnet](#ircnet)
         * [Other networks](#other-networks)
+  * [Starting PBot](#starting-pbot)
+    * [Usage](#usage)
+      * [Overriding directories](#overriding-directories)
+      * [Overriding registry](#overriding-registry)
+  * [Additional Configuration](#additional-configuration)
     * [Adding Channels](#adding-channels)
     * [Adding Admins](#adding-admins)
     * [Loading Plugins](#loading-plugins)
@@ -60,10 +65,11 @@ Alternatively, you could name it after your bot's nickname:
 
 ### Edit Registry
 
-PBot configuration is stored as key/value pairs grouped by sections. We call this the Registry.
+PBot configuration is stored in a registry of key/value pairs grouped by sections.
 See https://github.com/pragma-/pbot/blob/master/doc/Registry.md for more details.
 
-Now you may edit the `registry` file in your data-directory to configure PBot settings.
+Now you may edit the `registry` file in your data-directory to configure PBot settings. Alternatively,
+you may override the registry entries via the command-line.
 
 #### Notable settings
 
@@ -71,49 +77,64 @@ Some settings you may be interested in configuring:
 
 Registry key | Description | Default value
 --- | --- | ---:
-irc.botnick | IRC nickname. This is the name people see when you talk. | _undefined_
+irc.botnick | IRC nickname. This is the name people see when you talk. _Required._ | _undefined_
 irc.username | IRC username. This is the `USER` field of your hostmask. | pbot3
 irc.ircname | IRC gecos/realname. This is the `general information` or `real-name` field, as seen in `WHOIS`. | https://github.com/pragma-/pbot
 irc.ircserver | IRC server to connect | irc.freenode.net
 irc.port | IRC server port | 6667
-irc.identify_password | Password to use to identify to NickServ/service bot. | _undefined_
-irc.randomize_nick | Randomize IRC nickname when connecting to server. PBot will change to irc.botnick when connected or logged-in. | 0
 general.trigger | Bot trigger | [!]
-general.autojoin_wait_for_nickserv | Wait for NickServ login before auto-joining channels. | 0
-general.identify_nick | Who to /msg for login/identify/authentication. Defaults to NickServ, can be overridden to a custom bot. | NickServ
-general.identify_command | Command to send to `general.identify_nick` to login. | identify $nick $password
-general.op_nick | Who to /msg to request channel OP status. Defaults to ChanServ, can be overridden to a custom bot. | ChanServ
-general.op_command | Command to send to `general.op_nick` to request channel OP status. | op $channel
-googlesearch.api_key | API key for Google Custom Search. | _undefined_
-googlesearch.context | Google Custom Search context key. | _undefined_
+
+For a more comprehensive list see https://github.com/pragma-/pbot/blob/master/doc/Registry.md#list-of-recognized-registry-items.
 
 #### Recommended settings for IRC Networks
 ##### Freenode
 
 The default settings are tailored for the Freenode IRC network. It is strongly recommended that
-you register an account with its NickServ service and to request a hostmask cloak. It is strongly
-recommended to register your channels with its ChanServ service. These services will protect your
-nick, IP address and channels.
+you register an account with NickServ and to request a hostmask cloak. Register your channels with
+ChanServ. These services will protect your nickname, IP address and channels.
 
-Once you register your botnick with NickServ, it is recommended to set `irc.randomize_nick` to `1`.
-This will cause PBot to connect to the network with a randomized nickname, which will prevent users
-from watching for your connection to attempt to capture your IP address.
+Once you register your botnick with NickServ, it is recommended to set these additional settings:
 
-Then set `irc.autojoin_wait_for_nickserv` to `1`. This will cause PBot to wait until logged into NickServ
-before attempting to auto-join your channels, to ensure your NickServ host cloak is applied beforehand.
+Registry key | Description | Recommended value
+--- | --- | ---:
+irc.identify_password | Password to use to identify to NickServ | `<password>`
+irc.identify_command | Command to send to NickServ to identify. `$nick` will be replaced with `irc.botnick`; `$password` will be replaced with `irc.identify_password`. If you wish to login to a NickServ account different than the `irc.botnick` you may replace the `$nick` text with a literal value. | identify $nick $password
+irc.randomize_nick | Randomize IRC nickname when connecting to server. PBot will change to irc.botnick when logged-in. This prevents users from monitoring the botnick to catch its IP address before it is identified. | 1
+general.autojoin_wait_for_nickserv | Wait for NickServ login before auto-joining channels. This prevents PBot from joining channels before it is identified and cloaked. | 1
 
 ##### IRCnet
 
 IRCnet is one of the oldest IRC networks still running. It has no Services like NickServ and ChanServ.
-Instead, its nicknames and channels are protected by custom bots. You may configure the
-`general.identify_nick`, `general.identify_command`, `general.op_nick` and `general.op_command` settings
-to point at custom bots and commands to login/request OP.
+Instead, its nicknames and channels are protected by custom bots.
+
+These settings may be useful:
+
+Registry key | Description | Default value| Recommended value
+--- | --- | ---:
+general.identify_nick | Who to /msg for login/identify/authentication. Defaults to NickServ, can be overridden to a custom bot. | NickServ | `<service botnick>`
+general.identify_command | Command to send to `general.identify_nick` to login. | identify $nick $password | `<service bot command>`
+general.op_nick | Who to /msg to request channel OP status. Defaults to ChanServ, can be overridden to a custom bot. | ChanServ | `<service botnick>`
+general.op_command | Command to send to `general.op_nick` to request channel OP status. | op $channel | `<service bot command>`
 
 ##### Other networks
 
-Other networks are untested. They should be very similiar to either Freenode or IRCnet, and so one of those
-recommended settings should work. If you have any issues, please report them at https://github.com/pragma-/pbot/issues
+Other networks are untested. They should be very similiar to either Freenode or IRCnet, and so one or both of those
+recommended settings should suffice. If you have any issues, please report them at https://github.com/pragma-/pbot/issues
 or in the `#pbot2` channel on the Freenode network.
+
+Starting PBot
+-------------
+Now you're ready to start PBot.
+
+### Usage
+
+    pbot [directory overrides...; e.g. data_dir=...] [registry overrides...; e.g. irc.botnick=...]
+
+#### Overriding directories
+#### Overriding registry
+
+Additional Configuration
+------------------------
 
 ### Adding Channels
 
