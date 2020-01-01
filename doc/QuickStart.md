@@ -67,7 +67,7 @@ PBot configuration is stored in a registry of key/value pairs grouped by section
 See https://github.com/pragma-/pbot/blob/master/doc/Registry.md for more details.
 
 Now you may edit the `registry` file in your data-directory to configure PBot settings. Alternatively,
-you may override the registry entries via the command-line.
+you may [override the registry entries via the command-line](#overriding-registry).
 
 Some settings you may be interested in configuring:
 
@@ -76,9 +76,9 @@ Registry key | Description | Default value
 irc.botnick | IRC nickname. This is the name people see when you talk. _Required._ | _undefined_
 irc.username | IRC username. This is the `USER` field of your hostmask. | pbot3
 irc.ircname | IRC gecos/realname. This is the `general information` or `real-name` field, as seen in `WHOIS`. | https://github.com/pragma-/pbot
-irc.ircserver | IRC server to connect | irc.freenode.net
-irc.port | IRC server port | 6667
-general.trigger | Bot trigger | [!]
+irc.ircserver | IRC server address to connect. | irc.freenode.net
+irc.port | IRC server port. | 6667
+general.trigger | Bot trigger. Can be a character class containing multiple trigger characters. Can be overridden per-channel. | [!]
 
 For a more comprehensive list see https://github.com/pragma-/pbot/blob/master/doc/Registry.md#list-of-recognized-registry-items.
 
@@ -94,9 +94,9 @@ Once you register your botnick with NickServ, it is recommended to set these add
 Registry key | Description | Recommended value
 --- | --- | ---:
 irc.identify_password | Password to use to identify to NickServ | `<password>`
-irc.identify_command | Command to send to NickServ to identify. `$nick` will be replaced with `irc.botnick`; `$password` will be replaced with `irc.identify_password`. If you wish to login to a NickServ account different than the `irc.botnick` you may replace the `$nick` text with a literal value. | `identify $nick $password`
-irc.randomize_nick | Randomize IRC nickname when connecting to server. PBot will change to irc.botnick when logged-in. This prevents users from monitoring the botnick to catch its IP address before it is identified. | 1
+irc.randomize_nick | Randomize IRC nickname when connecting to server. PBot will change to `irc.botnick` when logged-in. This prevents users from monitoring the botnick to catch its IP address before it is identified. | 1
 general.autojoin_wait_for_nickserv | Wait for NickServ login before auto-joining channels. This prevents PBot from joining channels before it is identified and cloaked. | 1
+general.identify_command | Command to send to NickServ to identify. `$nick` will be replaced with `irc.botnick`; `$password` will be replaced with `irc.identify_password`. If you wish to login to a NickServ account different than the `irc.botnick` you may replace the `$nick` text with a literal value. | `identify $nick $password`
 
 ##### IRCnet
 
