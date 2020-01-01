@@ -264,11 +264,7 @@
          "type" : "text",
          "value" : ""
       },
-      "ircname" : {
-         "type" : "text",
-         "value" : "https://github.com/pragma-/pbot"
-      },
-      "ircserver" : {
+      "server" : {
          "type" : "text",
          "value" : "irc.freenode.net"
       },
@@ -283,6 +279,10 @@
       "port" : {
          "type" : "text",
          "value" : "6667"
+      },
+      "realname" : {
+         "type" : "text",
+         "value" : "https://github.com/pragma-/pbot"
       },
       "randomize_nick" : {
          "type" : "text",

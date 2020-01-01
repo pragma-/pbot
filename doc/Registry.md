@@ -155,11 +155,11 @@ List of recognized registry items
 * irc.botnick
 * irc.debug
 * irc.identify_password
-* irc.ircname
-* irc.ircserver
+* irc.server
 * irc.log_default_handler
 * irc.max_msg_len
 * irc.port
+* irc.realname
 * irc.show_motd
 * irc.SSL_ca_file
 * irc.SSL_ca_path

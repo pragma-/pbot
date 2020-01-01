@@ -125,14 +125,14 @@ sub initialize {
   $self->{registry}->add_default('text', 'irc',     'debug',       $conf{irc_debug}   // 0);
   $self->{registry}->add_default('text', 'irc',     'show_motd',   $conf{show_motd}   // 1);
   $self->{registry}->add_default('text', 'irc',     'max_msg_len', $conf{max_msg_len} // 425);
-  $self->{registry}->add_default('text', 'irc',     'ircserver',   $conf{ircserver}   // "irc.freenode.net");
+  $self->{registry}->add_default('text', 'irc',     'server',      $conf{server}      // "irc.freenode.net");
   $self->{registry}->add_default('text', 'irc',     'port',        $conf{port}        // 6667);
   $self->{registry}->add_default('text', 'irc',     'SSL',         $conf{SSL}         // 0);
   $self->{registry}->add_default('text', 'irc',     'SSL_ca_file', $conf{SSL_ca_file} // 'none');
   $self->{registry}->add_default('text', 'irc',     'SSL_ca_path', $conf{SSL_ca_path} // 'none');
   $self->{registry}->add_default('text', 'irc',     'botnick',     $conf{botnick}     // "");
   $self->{registry}->add_default('text', 'irc',     'username',    $conf{username}    // "pbot3");
-  $self->{registry}->add_default('text', 'irc',     'ircname',     $conf{ircname}     // "https://github.com/pragma-/pbot");
+  $self->{registry}->add_default('text', 'irc',     'realname',    $conf{realname}    // "https://github.com/pragma-/pbot");
   $self->{registry}->add_default('text', 'irc',     'identify_password', $conf{identify_password} // '');
   $self->{registry}->add_default('text', 'irc',     'log_default_handler', 1);
 
@@ -234,14 +234,14 @@ sub connect {
     # TODO: disconnect, clean-up, etc
   }
 
-  $server = $self->{registry}->get_value('irc', 'ircserver') if not defined $server;
+  $server = $self->{registry}->get_value('irc', 'server') if not defined $server;
 
   $self->{logger}->log("Connecting to $server ...\n");
 
   while (not $self->{conn} = $self->{irc}->newconn(
       Nick         => $self->{registry}->get_value('irc', 'randomize_nick') ? random_nick : $self->{registry}->get_value('irc', 'botnick'),
       Username     => $self->{registry}->get_value('irc', 'username'),
-      Ircname      => $self->{registry}->get_value('irc', 'ircname'),
+      Ircname      => $self->{registry}->get_value('irc', 'realname'),
       Server       => $server,
       Pacing       => 1,
       UTF8         => 1,

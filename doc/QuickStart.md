@@ -75,8 +75,8 @@ Registry key | Description | Default value
 --- | --- | ---:
 irc.botnick | IRC nickname. This is the name people see when you talk. _Required._ | _undefined_
 irc.username | IRC username. This is the `USER` field of your hostmask. | pbot3
-irc.ircname | IRC gecos/realname. This is the `general information` or `real-name` field, as seen in `WHOIS`. | https://github.com/pragma-/pbot
-irc.ircserver | IRC server address to connect. | irc.freenode.net
+irc.realname | IRC gecos/realname. This is the `general information` or `real-name` field, as seen in `WHOIS`. | https://github.com/pragma-/pbot
+irc.server | IRC server address to connect. | irc.freenode.net
 irc.port | IRC server port. | 6667
 general.trigger | Bot trigger. Can be a character class containing multiple trigger characters. Can be overridden per-channel. | [!]
 
