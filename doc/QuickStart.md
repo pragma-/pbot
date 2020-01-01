@@ -1,3 +1,4 @@
+
 QuickStart
 ==========
 This is a work-in-progress rough draft Quick Start guide. This notification will be removed when this guide is mature.
@@ -6,9 +7,11 @@ This is a work-in-progress rough draft Quick Start guide. This notification will
 * [QuickStart](#quickstart)
   * [Installing](#installing)
     * [Prerequisites](#prerequisites)
+      * [Requirements](#requirements)
       * [Installing CPAN modules](#installing-cpan-modules)
+      * [Installing a crontab](#crontab)
   * [First-time Configuration](#first-time-configuration)
-    * [Clone data-directory](#clone-data-directory)
+    * [Clone PBot & data-directory](#clone-data-directory)
     * [Edit Registry](#edit-registry)
       * [Recommended settings for IRC Networks](#recommended-settings-for-irc-networks)
         * [Freenode](#freenode)
@@ -29,23 +32,48 @@ Installing
 
 ### Prerequisites
 
-#### Installing CPAN modules
+#### Requirements *(root)*
+
+	$ dnf -y install perl perl-CPAN git screen crontabs nano
+> or 		$ aptitude install perl perl-CPAN git screen crontabs nano
+> or 		$ apt-get install perl perl-CPAN git screen crontabs nano
+
+	$ adduser -m pbot
+	
+
+#### Installing CPAN modules *(root)*
 
 PBot has many features; some of these depend on Perl modules written by others.
-This list can be found in the `MODULES` file in the root directory of this source.
+This list can be found in the [`MODULES`](https://github.com/pragma-/pbot/blob/master/MODULES) file in the root directory of this source.
 
 The modules may be installed with a simple command:
 
-    cpan -f -i $(cat MODULES)
+    $ cpan
+	cpan[1]> force install <modules> 
+	cpan[49]> exit
 
 Some CPAN modules may fail to pass certain tests due to outdated variables.
 Despite these test failures, their core functionality should still work as
 expected.
 
+#### Installing a crontab *(pbot)*
+
+	$ su pbot
+	$ crontab -e
+
+0,5,10,15,20,25,30,35,40,45,50,55 * * * * screen -dmS pbot /home/pbot/pbot/pbot data_dir=/home/pbot/pbot/freenode >/dev/null 2>&1
+
+>  or
+>   0,15,30,45 * * * * screen -dmS pbot2 /home/pbot/pbot/pbot data_dir=/home/pbot/pbot/ircnet >/dev/null 2>&1
+>> or
+> 0,20,40 * * * * screen -dmS coolbot /home/pbot/pbot/pbot data_dir=/home/pbot/pbot/coolbot >/dev/null 2>&1
+
+	
+
 First-time Configuration
 ------------------------
 
-### Clone data-directory
+### Clone PBot & data-directory *(pbot)*
 
 PBot uses a data-directory to store all its configuration settings and data. It
 is **_strongly_** recommended to clone the default data-directory for each PBot
@@ -54,14 +82,24 @@ connection.
 Here we clone the data-directory for two PBot instances, naming them after the
 IRC network they will connect to:
 
-    cp -r data freenode
-    cp -r data ircnet
+    $ su pbot
+    $ cd /home/pbot
+    $ git clone https://github.com/pragma-/pbot.git
+    $ cd pbot
+    $ cp -r data freenode
+    $ cp -r data ircnet
 
 Alternatively, you could name it after your bot's nickname:
 
-    cp -r data coolbot
+    $ cp -r data coolbot
 
-### Edit Registry
+### Edit Registry *(pbot)*
+
+	$ cd data
+	$ nano registry
+> or $ cd freenode && vi registry
+> or $ cd coolbot
+> ...
 
 PBot configuration is stored in a registry of key/value pairs grouped by sections.
 See https://github.com/pragma-/pbot/blob/master/doc/Registry.md for more details.
@@ -75,8 +113,8 @@ Registry key | Description | Default value
 --- | --- | ---:
 irc.botnick | IRC nickname. This is the name people see when you talk. _Required._ | _undefined_
 irc.username | IRC username. This is the `USER` field of your hostmask. | pbot3
-irc.realname | IRC gecos/realname. This is the `general information` or `real-name` field, as seen in `WHOIS`. | https://github.com/pragma-/pbot
-irc.server | IRC server address to connect. | irc.freenode.net
+realname | IRC gecos/realname. This is the `general information` or `real-name` field, as seen in `WHOIS`. | https://github.com/pragma-/pbot
+server | IRC server address to connect. | irc.freenode.net
 irc.port | IRC server port. | 6667
 general.trigger | Bot trigger. Can be a character class containing multiple trigger characters. Can be overridden per-channel. | [!]
 
@@ -121,9 +159,16 @@ or in the `#pbot2` channel on the Freenode network.
 Starting PBot
 -------------
 
-### Usage
+### Usage *(pbot)*
 
-    pbot [directory overrides...; e.g. data_dir=...] [registry overrides...; e.g. irc.botnick=...]
+pbot [directory overrides...; e.g. data_dir=...] [registry overrides...; e.g. irc.botnick=...]
+
+    $ screen -dmS pbot /home/pbot/pbot/pbot data_dir=/home/pbot/pbot/freenode
+    $ screen -r pbot 	(for attaching to the screen named: pbot)
+    ctrl+a than ctrl+d 	(for detaching without closing the screen)
+
+> or $ screen -dmS coolbot /home/pbot/pbot/pbot data_dir=/home/pbot/pbot/coolbot
+> or $ ./pbot data_dir=/home/pbot/pbot/...
 
 #### Overriding directories
 #### Overriding registry
@@ -136,6 +181,3 @@ Additional Configuration
 ### Adding Admins
 
 ### Loading Plugins
-
-
-
