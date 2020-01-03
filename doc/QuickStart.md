@@ -2,7 +2,7 @@ QuickStart
 ==========
 
 <!-- md-toc-begin -->
-* [Installation](#installing)
+* [Installation](#installation)
   * [Installing Perl](#installing-perl)
   * [Installing CPAN modules](#installing-cpan-modules)
   * [Installing PBot](#installing-pbot)
@@ -10,6 +10,7 @@ QuickStart
     * [Download zip archive](#download-zip-archive)
 * [First-time Configuration](#first-time-configuration)
   * [Clone data-directory](#clone-data-directory)
+  * [Quick-start command](#quick-start-command)
   * [Edit Registry](#edit-registry)
     * [Recommended settings for IRC Networks](#recommended-settings-for-irc-networks)
       * [Freenode](#freenode)
@@ -84,7 +85,7 @@ Name | Description
 [`doc/`](https://github.com/pragma-/pbot/tree/master/doc) | Helpful documentation
 [`pbot`](https://github.com/pragma-/pbot/blob/master/pbot) | executable used to launch PBot
 
-You may create a symbolic-link to the `pbot` executable in `$HOME/bin/` or even
+You may create a symbolic link to the `pbot` executable in `$HOME/bin/` or even
 in `/usr/local/bin/`.
 
 ### Clone data-directory
@@ -102,6 +103,18 @@ IRC network they will connect to:
 Alternatively, you could name it after your bot's nickname:
 
     $ cp -r data coolbot
+
+### Quick-start command
+
+At this point, you may start PBot if you wish. The default settings will connect
+to the Freenode IRC network. Or you may read on to the next section for more
+advanced configuration.
+
+At minimum, the registry key `irc.botnick` must be set before PBot will connect
+to any IRC servers. Here we will use the cloned data-directory `coolbot` named
+after the botnick we'll use.
+
+    $ pbot data_dir=coolbot irc.botnick=coolbot
 
 ### Edit Registry
 
