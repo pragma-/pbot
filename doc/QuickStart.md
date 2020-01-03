@@ -222,10 +222,10 @@ You may set the follow admin properties:
 Name | Description
 --- | ---
 name | A unique name identifying this admin account.
-level | The privilege level of the admin. See [this table](https://github.com/pragma-/pbot/blob/master/doc/Admin.md#admin-levels) for more information.
+level | The privilege level of this admin. See [this table](https://github.com/pragma-/pbot/blob/master/doc/Admin.md#admin-levels) for more information.
 password | The password for this admin account.
 loggedin | If set to 1, the admin is logged in.
-stayloggedin | If set to 1, admins will not be logged out when they part/quit.
+stayloggedin | If set to 1, the admin will not be logged out when they part/quit.
 
 For more information, see the [Admin documentation](https://github.com/pragma-/pbot/blob/master/doc/Admin.md).
 
