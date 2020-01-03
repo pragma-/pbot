@@ -2,7 +2,7 @@ QuickStart
 ==========
 
 <!-- md-toc-begin -->
-* [Installing](#installing)
+* [Installation](#installing)
   * [Installing Perl](#installing-perl)
   * [Installing CPAN modules](#installing-cpan-modules)
   * [Installing PBot](#installing-pbot)
@@ -29,8 +29,8 @@ QuickStart
   * [Modules](#modules)
 <!-- md-toc-end -->
 
-Installing
-----------
+Installation
+------------
 
 ### Installing Perl
 
@@ -40,8 +40,9 @@ system's documentation to install it.
 
 ### Installing CPAN modules
 
-PBot has many features; some of these depend on Perl modules written by others.
-This list can be found in the `MODULES` file in the root directory of this source.
+Some of PBot's features depend on the availability of Perl modules written by
+third parties. To use such PBot features, the modules listed in the [`MODULES`](https://github.com/pragma-/pbot/blob/master/MODULES)
+file need to be installed.
 
 The modules may be installed with a simple command:
 
@@ -56,8 +57,9 @@ expected.
 #### git (recommended)
 
 The recommended way to install PBot is with `git`.  This will allow you easily update to
-the latest version of PBot via the `git pull` command. Also, if you become interested in
-contributing improvements to PBot, you will be able to submit them through `git`.
+the latest version of PBot via the git update process by issuing the `git pull` command.
+Also, if you become interested in contributing improvements to PBot, you will be able to
+submit them through `git`.
 
 The command to install with `git` is:
 
@@ -75,12 +77,12 @@ After git-cloning (or unpacking the ZIP archive) you should have a directory nam
 
 Name | Description
 --- | ---
-`PBot/` | PBot source tree
-`Plugins/` | Dynamically loadable internal plugins
-`modules/` | External command-line executables invokable by PBot commands
-`data/` | Default data-directory
-`doc/` | Helpful documentation
-`pbot` | executable used to launch PBot
+[`PBot/`](https://github.com/pragma-/pbot/tree/master/PBot) | PBot source tree
+[`Plugins/`](https://github.com/pragma-/pbot/tree/master/Plugins) | Dynamically loadable internal plugins
+[`modules/`](https://github.com/pragma-/pbot/tree/master/modules) | External command-line executables invokable by PBot commands
+[`data/`](https://github.com/pragma-/pbot/tree/master/data) | Default data-directory
+[`doc/`](https://github.com/pragma-/pbot/tree/master/doc) | Helpful documentation
+[`pbot`](https://github.com/pragma-/pbot/blob/master/pbot) | executable used to launch PBot
 
 You may create a symbolic-link to the `pbot` executable in `$HOME/bin/` or even
 in `/usr/local/bin/`.
