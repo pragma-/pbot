@@ -1,4 +1,4 @@
-PBot is a versatile IRC Bot written in Perl for the ##C channel on Freenode.net
+PBot is a versatile IRC Bot written in Perl
 
 Features
 --------
@@ -20,5 +20,7 @@ Features
 * Command piping and substitution
 * Much, much more
 
-See https://github.com/pragma-/pbot/tree/master/doc for more information.
+To get up-and-running quickly, check out the [Quick Start guide](https://github.com/pragma-/pbot/blob/master/doc/QuickStart.md).
+
+See the [PBot documentation](https://github.com/pragma-/pbot/tree/master/doc) for more information.
 
