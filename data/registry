@@ -172,8 +172,7 @@
       },
       "debugcontext" : {
          "type" : "text",
-         "value" : "0",
-         "vlaue" : "0"
+         "value" : "0"
       },
       "deop_timeout" : {
          "type" : "text",
