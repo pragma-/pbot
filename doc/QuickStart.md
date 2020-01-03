@@ -259,5 +259,51 @@ Further Reading
 That should get you started. For further information about PBot, check out these topics.
 
 ### Commands
+
+PBot has several core built-in commands. You've seen some of them in this document,
+for setting up channels and admins. Additional commands can be added to PBot though
+Plugins and Factoids.
+
 ### Factoids
+
+Factoids are a very special type of command. Anybody interacting with PBot
+can create, edit, delete and invoke factoids. Factoids can be locked by the
+creator of the factoid to prevent others from editing their factoids.
+
+At its most simple, factoids merely output the text the creator sets.
+
+    <pragma-> !factadd hello /say Hello, $nick!
+       <PBot> hello added to global channel.
+    <pragma-> PBot, hello
+       <PBot> Hello, pragma-!
+
+Significantly more complex factoids can be created with `$variables`, command-substitution,
+command-piping, `/code` invocation, and more!
+
 ### Modules
+
+Modules are external command-line executable programs and scripts that can be
+loaded via PBot Factoids.
+
+Suppose you have the [Qalculate!](https://qalculate.github.io/) command-line
+program and you want to provide a PBot command for it. You can create a _very_ simple
+shell script containing:
+
+    #!/bin/sh
+    qalc "$*"
+
+And let's call it `qalc.sh` and put it in PBot's `modules/` directory.
+
+Then you can add the `qalc` factoid:
+
+    !factadd global qalc qalc.sh
+
+And then set its `type` to `module`:
+
+    !factset global qalc type module
+
+Now you have a `qalc` calculator in PBot!
+
+    <pragma-> !qalc 2 * 2
+       <PBot> 2 * 2 = 4
+
