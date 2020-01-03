@@ -261,7 +261,7 @@ That should get you started. For further information about PBot, check out these
 ### Commands
 
 PBot has several core built-in commands. You've seen some of them in this document,
-for setting up channels and admins. Additional commands can be added to PBot though
+for setting up channels and admins. Additional commands can be added to PBot through
 Plugins and Factoids.
 
 ### Factoids
@@ -277,7 +277,7 @@ At its most simple, factoids merely output the text the creator sets.
     <pragma-> PBot, hello
        <PBot> Hello, pragma-!
 
-Significantly more complex factoids can be created with `$variables`, command-substitution,
+Significantly more complex factoids can be built by using `$variables`, command-substitution,
 command-piping, `/code` invocation, and more!
 
 ### Modules
