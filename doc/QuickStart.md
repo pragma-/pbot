@@ -159,23 +159,28 @@ Starting PBot
 
 ### Usage
 
-    pbot [directory overrides...; e.g. data_dir=...] [registry overrides...; e.g. irc.botnick=...]
+    $ pbot [directory overrides...; e.g. data_dir=...] [registry overrides...; e.g. irc.botnick=...]
 
 #### Overriding directories
 
 You may override PBot's default directory locations via the command-line.
 
-    pbot data_dir=/path/to/data plugin_dir=/path/to/Plugins modules_dir=/path/to/modules
+    $ pbot data_dir=/path/to/data plugin_dir=/path/to/Plugins modules_dir=/path/to/modules
 
 #### Overriding registry
 
 You may override any of your Registry values via the command-line. Any overrides made will be
 saved to the `registry` file. You do not need to use the override every time you launch PBot.
 
-    pbot irc.botnick=coolbot irc.server=irc.freenode.net irc.port=6667
+    $ pbot irc.botnick=coolbot irc.server=irc.freenode.net irc.port=6667
 
 Additional Configuration
 ------------------------
+
+Once you have launched PBot, you can type into the STDIN to execute commands within
+the bot. Alternatively you can launch your own IRC client and `/msg` PBot.
+
+Additional configuration can be done by sending the following commands to PBot.
 
 ### Adding Channels
 
@@ -196,9 +201,9 @@ You can `chanset` the following keys:
 
 Name | Description | Default value
 --- | --- | ---:
-enabled | If set to false, PBot will not autojoin or respond to this channel | 1
-chanop | If set to true, PBot will perform OP duties in this channel | 0
-permop | If set to true, PBot will not de-OP itself in this channel | 0
+enabled | If set to false, PBot will not autojoin or respond to this channel. | 1
+chanop | If set to true, PBot will perform OP duties in this channel. | 0
+permop | If set to true, PBot will not de-OP itself in this channel. | 0
 
 For more information, see the [Channels documentation](https://github.com/pragma-/pbot/blob/master/doc/Channels.md).
 
@@ -219,7 +224,7 @@ Name | Description
 name | A unique name identifying this admin account.
 level | The privilege level of the admin. See [this table](https://github.com/pragma-/pbot/blob/master/doc/Admin.md#admin-levels) for more information.
 password | The password for this admin account.
-loggedin | If set to 1, the admin is logged in..
+loggedin | If set to 1, the admin is logged in.
 stayloggedin | If set to 1, admins will not be logged out when they part/quit.
 
 For more information, see the [Admin documentation](https://github.com/pragma-/pbot/blob/master/doc/Admin.md).
