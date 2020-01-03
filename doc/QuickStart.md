@@ -1,6 +1,5 @@
 QuickStart
 ==========
-This is a work-in-progress rough draft Quick Start guide. This notification will be removed when this guide is mature.
 
 <!-- md-toc-begin -->
 * [Installing](#installing)
@@ -52,9 +51,9 @@ expected.
 
 #### git (recommended)
 
-The recommended way to install PBot is via `git`.  This will allow you easily update to
+The recommended way to install PBot is with `git`.  This will allow you easily update to
 the latest version of PBot via the `git pull` command. Also, if you become interested in
-contributing improvements to PBot, you will be able to submit them via `git`.
+contributing improvements to PBot, you will be able to submit them through `git`.
 
 The command to install with `git` is:
 
@@ -79,7 +78,7 @@ Name | Description
 `doc/` | Helpful documentation
 `pbot` | executable used to launch PBot
 
-You may create symbolic-links to the `pbot` executable in `$HOME/bin/` or even
+You may create a symbolic-link to the `pbot` executable in `$HOME/bin/` or even
 in `/usr/local/bin/`.
 
 ### Clone data-directory
@@ -101,7 +100,7 @@ Alternatively, you could name it after your bot's nickname:
 ### Edit Registry
 
 PBot configuration is stored in a registry of key/value pairs grouped by sections.
-See the [Registry documentation](https://github.com/pragma-/pbot/blob/master/doc/Registry.md) for more details.
+For more details, see the [Registry documentation](https://github.com/pragma-/pbot/blob/master/doc/Registry.md).
 
 Now you may edit the `registry` file in your data-directory to configure PBot settings. Alternatively,
 you may [override the registry entries via the command-line](#overriding-registry).
@@ -163,16 +162,85 @@ Starting PBot
     pbot [directory overrides...; e.g. data_dir=...] [registry overrides...; e.g. irc.botnick=...]
 
 #### Overriding directories
+
+You may override PBot's default directory locations via the command-line.
+
+    pbot data_dir=/path/to/data plugin_dir=/path/to/Plugins modules_dir=/path/to/modules
+
 #### Overriding registry
+
+You may override any of your Registry values via the command-line. Any overrides made will be
+saved to the `registry` file. You do not need to use the override every time you launch PBot.
+
+    pbot irc.botnick=coolbot irc.server=irc.freenode.net irc.port=6667
 
 Additional Configuration
 ------------------------
 
 ### Adding Channels
 
+To temporarily join channels, use the `join` command.
+
+    join <channel>
+
+To permanently add a channel to PBot, use the `chanadd` command. PBot will
+automatically join permanently added channels.
+
+    chanadd <channel>
+
+To configure a permanent channel's settings, use the `chanset` command:
+
+    chanset <channel> [key [value]]
+
+You can `chanset` the following keys:
+
+Name | Description | Default value
+--- | --- | ---:
+enabled | If set to false, PBot will not autojoin or respond to this channel | 1
+chanop | If set to true, PBot will perform OP duties in this channel | 0
+permop | If set to true, PBot will not de-OP itself in this channel | 0
+
+For more information, see the [Channels documentation](https://github.com/pragma-/pbot/blob/master/doc/Channels.md).
+
 ### Adding Admins
+
+To add admins to PBot, use the `adminadd` command.
+
+    adminadd <name> <channel> <hostmask> <level> <password>
+
+To change an admin's properties, use the `adminset` command.
+
+    adminset <channel> <name or hostmask> [key [value]]
+
+You may set the follow admin properties:
+
+Name | Description
+--- | ---
+name | A unique name identifying this admin account.
+level | The privilege level of the admin. See [this table](https://github.com/pragma-/pbot/blob/master/doc/Admin.md#admin-levels) for more information.
+password | The password for this admin account.
+loggedin | If set to 1, the admin is logged in..
+stayloggedin | If set to 1, admins will not be logged out when they part/quit.
+
+For more information, see the [Admin documentation](https://github.com/pragma-/pbot/blob/master/doc/Admin.md).
 
 ### Loading Plugins
 
+Plugins provide optional PBot features. The default plugins loaded by PBot is set by
+the `plugin_autoload` file in your data-directory.
 
+You may load plugins using the `plug` command.
+
+    plug <plugin>
+
+You may unload plugins using the `unplug` command.
+
+    unplug <plugin>
+
+Currently loaded plugins may be listed with the `pluglist` command.
+
+    <pragma-> !pluglist
+       <PBot> Loaded plugins: ActionTrigger, AntiAway, AntiKickAutoRejoin, AntiNickSpam, AntiRepeat, AntiTwitter, AutoRejoin, Counter, GoogleSearch, Quotegrabs, RemindMe, UrlTitles
+
+For more information, see the [Plugins documentation](https://github.com/pragma-/pbot/blob/master/doc/Plugins.md).
 
