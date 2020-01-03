@@ -268,7 +268,7 @@ Plugins and Factoids.
 
 Factoids are a very special type of command. Anybody interacting with PBot
 can create, edit, delete and invoke factoids. Factoids can be locked by the
-creator of the factoid to prevent others from editing their factoids.
+creator of the factoid to prevent them from being edited by others.
 
 At its most simple, factoids merely output the text the creator sets.
 
@@ -279,6 +279,8 @@ At its most simple, factoids merely output the text the creator sets.
 
 Significantly more complex factoids can be built by using `$variables`, command-substitution,
 command-piping, `/code` invocation, and more!
+
+For more information, see the [Factoids documentation](https://github.com/pragma-/pbot/blob/master/doc/Factoids.md).
 
 ### Modules
 
@@ -307,3 +309,4 @@ Now you have a `qalc` calculator in PBot!
     <pragma-> !qalc 2 * 2
        <PBot> 2 * 2 = 4
 
+For more information, see the [Modules documentation](https://github.com/pragma-/pbot/blob/master/doc/Modules.md).
