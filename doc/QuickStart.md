@@ -23,10 +23,10 @@ QuickStart
   * [Adding Channels](#adding-channels)
   * [Adding Admins](#adding-admins)
   * [Loading Plugins](#loading-plugins)
-  * [Further Reading](#further-reading)
-    * [Commands](#commands)
-    * [Factoids](#factoids)
-    * [Modules](#modules)
+* [Further Reading](#further-reading)
+  * [Commands](#commands)
+  * [Factoids](#factoids)
+  * [Modules](#modules)
 <!-- md-toc-end -->
 
 Installing
@@ -253,10 +253,11 @@ Currently loaded plugins may be listed with the `pluglist` command.
 
 For more information, see the [Plugins documentation](https://github.com/pragma-/pbot/blob/master/doc/Plugins.md).
 
-### Further Reading
+Further Reading
+---------------
 
 That should get you started. For further information about PBot, check out these topics.
 
-#### Commands
-#### Factoids
-#### Modules
+### Commands
+### Factoids
+### Modules
