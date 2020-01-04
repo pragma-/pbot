@@ -37,6 +37,7 @@ sub initialize {
 
 sub stdin_reader {
   my ($self, $input) = @_;
+  chomp $input;
 
   # make sure we're in the foreground first
   $self->{foreground} = (tcgetpgrp($self->{tty_fd}) == getpgrp()) ? 1 : 0;
