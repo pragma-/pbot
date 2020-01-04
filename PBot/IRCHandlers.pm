@@ -60,6 +60,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.channelmodeis', sub { $self->on_channelmodeis(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.topic',         sub { $self->on_topic(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.topicinfo',     sub { $self->on_topicinfo(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.channelcreate', sub { $self->on_channelcreate(@_) });
 
   $self->{pbot}->{event_dispatcher}->register_handler('pbot.join',         sub { $self->on_self_join(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('pbot.part',         sub { $self->on_self_part(@_) });
@@ -533,7 +534,16 @@ sub on_nicknameinuse {
 sub on_channelmodeis {
   my ($self, $event_type, $event) = @_;
   my (undef, $channel, $modes) = $event->{event}->args;
+  $self->{pbot}->{logger}->log("Channel $channel modes: $modes\n");
   $self->{pbot}->{channels}->{channels}->set($channel, 'MODE', $modes, 1);
+}
+
+sub on_channelcreate {
+  my ($self, $event_type, $event) = @_;
+  my ($owner, $channel, $timestamp) = $event->{event}->args;
+  $self->{pbot}->{logger}->log("Channel $channel created by $owner on " . localtime ($timestamp) . "\n");
+  $self->{pbot}->{channels}->{channels}->set($channel, 'CREATED_BY', $owner, 1);
+  $self->{pbot}->{channels}->{channels}->set($channel, 'CREATED_ON', $timestamp, 1);
 }
 
 sub on_topic {
@@ -560,7 +570,7 @@ sub on_topic {
 sub on_topicinfo {
   my ($self, $event_type, $event) = @_;
   my (undef, $channel, $by, $timestamp) = $event->{event}->args;
-  $self->{pbot}->{logger}->log("Topic for $channel set by $by on $timestamp\n");
+  $self->{pbot}->{logger}->log("Topic for $channel set by $by on " . localtime ($timestamp) . "\n");
   $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_BY', $by, 1);
   $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_ON', $timestamp, 1);
 }
