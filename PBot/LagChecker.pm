@@ -40,9 +40,9 @@ sub initialize {
   $self->{ping_send_time} = undef;     # when last ping was sent
 
   # maximum number of lag history entries to retain
-  $self->{pbot}->{registry}->add_default('text', 'lagchecker', 'lag_history_max',      $conf{lag_history_max}      //  3);
-  # lagging is true if lag_average reaches or exceeds this threshold, in seconds
-  $self->{pbot}->{registry}->add_default('text', 'lagchecker', 'lag_threshold',        $conf{lag_threadhold}       //  2);
+  $self->{pbot}->{registry}->add_default('text', 'lagchecker', 'lag_history_max',      $conf{lag_history_max}      // 3);
+  # lagging is true if lag_average reaches or exceeds this threshold, in milliseconds
+  $self->{pbot}->{registry}->add_default('text', 'lagchecker', 'lag_threshold',        $conf{lag_threshhold}       // 2000);
   # how often to send PING, in seconds
   $self->{pbot}->{registry}->add_default('text', 'lagchecker', 'lag_history_interval', $conf{lag_history_interval} // 10);
 

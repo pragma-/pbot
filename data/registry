@@ -321,7 +321,7 @@
       },
       "lag_threshold" : {
          "type" : "text",
-         "value" : "2"
+         "value" : "2000"
       }
    },
    "messagehistory" : {
