@@ -591,6 +591,7 @@ sub on_whoreply {
   my $channel;
 
   if ($id =~ m/^#/) {
+    $id = lc $id;
     foreach my $x (keys %who_cache) {
       if ($who_cache{$x} eq $id) {
         $id = $x;
@@ -673,6 +674,7 @@ sub on_endofwho {
 
 sub send_who {
   my ($self, $channel) = @_;
+  $channel = lc $channel;
   $self->{pbot}->{logger}->log("pending WHO to $channel\n");
 
   for (my $id = 1; $id < 99; $id++) {
