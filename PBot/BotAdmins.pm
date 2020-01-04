@@ -120,13 +120,11 @@ sub find_admin {
     foreach my $channel_regex (keys %{ $self->{admins}->hash }) {
       if ($from !~ m/^#/ or $from =~ m/^$channel_regex$/i) {
         foreach my $hostmask_regex (keys %{ $self->{admins}->hash->{$channel_regex} }) {
-          if ($hostmask_regex =~ m/\.\*/) {
-            # contains .* so it's considered a regex
-            return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/^$hostmask_regex$/i;
-          } elsif ($hostmask_regex =~ m/\*/) {
-            # contains * so it's converted to a regex
+          if ($hostmask_regex =~ m/[*?]/) {
+            # contains * or ? so it's converted to a regex
             my $hostmask_quoted = quotemeta $hostmask_regex;
-            $hostmask_quoted =~ s/\\\*/.*/g;
+            $hostmask_quoted =~ s/\\\*/.*?/g;
+            $hostmask_quoted =~ s/\\\?/./g;
             return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/^$hostmask_quoted$/i;
           } else {
             # direct comparison
