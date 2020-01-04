@@ -39,6 +39,7 @@ sub add_admin {
   my $self = shift;
   my ($name, $channel, $hostmask, $level, $password, $dont_save) = @_;
   $channel = lc $channel;
+  $channel = '.*' if $channel !~ m/^#/;
   $hostmask = lc $hostmask;
   $self->{admins}->hash->{$channel}->{$hostmask}->{name}     = $name;
   $self->{admins}->hash->{$channel}->{$hostmask}->{level}    = $level;
@@ -50,6 +51,10 @@ sub add_admin {
 sub remove_admin {
   my $self = shift;
   my ($channel, $hostmask) = @_;
+
+  $channel = lc $channel;
+  $hostmask = lc $hostmask;
+  $channel = '.*' if $channel !~ m/^#/;
 
   my $admin = delete $self->{admins}->hash->{$channel}->{$hostmask};
 
@@ -115,7 +120,18 @@ sub find_admin {
     foreach my $channel_regex (keys %{ $self->{admins}->hash }) {
       if ($from !~ m/^#/ or $from =~ m/^$channel_regex$/i) {
         foreach my $hostmask_regex (keys %{ $self->{admins}->hash->{$channel_regex} }) {
-          return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/^$hostmask_regex$/i or $hostmask eq lc $hostmask_regex;
+          if ($hostmask_regex =~ m/\.\*/) {
+            # contains .* so it's considered a regex
+            return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/^$hostmask_regex$/i;
+          } elsif ($hostmask_regex =~ m/\*/) {
+            # contains * so it's converted to a regex
+            my $hostmask_quoted = quotemeta $hostmask_regex;
+            $hostmask_quoted =~ s/\\\*/.*/g;
+            return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/^$hostmask_quoted$/i;
+          } else {
+            # direct comparison
+            return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask eq lc $hostmask_regex;
+          }
         }
       }
     }
