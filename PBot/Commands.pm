@@ -100,7 +100,9 @@ sub interpreter {
   }
 
   my $from = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $stuff->{from};
-  my $admin = $self->{pbot}->{admins}->loggedin($from, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+  my ($admin_channel) = $stuff->{arguments} =~ m/(#[^ ]+)/; # assume first channel-like argument
+  $admin_channel = $from if not defined $admin_channel;
+  my $admin = $self->{pbot}->{admins}->loggedin($admin_channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
   my $level = defined $admin ? $admin->{level} : 0;
   my $keyword = lc $stuff->{keyword};
 
