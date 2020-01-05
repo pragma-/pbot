@@ -712,13 +712,14 @@ sub list {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $text;
 
+  my $usage = "Usage: list <modules|commands|admins>";
+
   if (not defined $arguments) {
-    return "Usage: list <modules|factoids|commands|admins>";
+    return $usage;
   }
 
   if ($arguments =~ /^modules$/i) {
-    $from = '.*' if not defined $from or $from !~ /^#/;
-    $text = "Loaded modules for channel $from: ";
+    $text = "Loaded modules: ";
     foreach my $channel (sort keys %{ $self->{pbot}->{factoids}->{factoids}->hash }) {
       foreach my $command (sort keys %{ $self->{pbot}->{factoids}->{factoids}->hash->{$channel} }) {
         if ($self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$command}->{type} eq 'module') {
@@ -738,17 +739,14 @@ sub list {
     return $text;
   }
 
-  if ($arguments =~ /^factoids$/i) {
-    return "For a list of factoids see " . $self->{pbot}->{factoids}->export_site;
-  }
-
   if ($arguments =~ /^admins$/i) {
     $text = "Admins: ";
     my $last_channel = "";
     my $sep = "";
     foreach my $channel (sort keys %{ $self->{pbot}->{admins}->{admins}->hash }) {
+      next if $from =~ m/^#/ and $channel ne $from and $channel ne '.*';
       if ($last_channel ne $channel) {
-        $text .= $sep . "Channel " . ($channel eq ".*" ? "all" : $channel) . ": ";
+        $text .= $sep . ($channel eq ".*" ? "all" : $channel) . ": ";
         $last_channel = $channel;
         $sep = "";
       }
@@ -761,7 +759,7 @@ sub list {
     }
     return $text;
   }
-  return "Usage: list <modules|commands|factoids|admins>";
+  return $usage;
 }
 
 sub factmove {
