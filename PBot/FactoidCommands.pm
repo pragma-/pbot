@@ -746,11 +746,11 @@ sub list {
     foreach my $channel (sort keys %{ $self->{pbot}->{admins}->{admins}->hash }) {
       next if $from =~ m/^#/ and $channel ne $from and $channel ne '.*';
       if ($last_channel ne $channel) {
-        $text .= $sep . ($channel eq ".*" ? "all" : $channel) . ": ";
+        $text .= $sep . ($channel eq ".*" ? "global" : $channel) . ": ";
         $last_channel = $channel;
         $sep = "";
       }
-      foreach my $hostmask (sort keys %{ $self->{pbot}->{admins}->{admins}->hash->{$channel} }) {
+      foreach my $hostmask (sort { $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$a}->{name} cmp $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$b}->{name} } keys %{ $self->{pbot}->{admins}->{admins}->hash->{$channel} }) {
         $text .= $sep;
         $text .= "*" if $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}->{loggedin};
         $text .= $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}->{name} . " (" . $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}->{level} . ")";
