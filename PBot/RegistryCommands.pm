@@ -42,13 +42,82 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->regfind(@_)        }, "regfind",       0);
 }
 
+sub regset {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+
+  my $usage = "Usage: regset <section>.<item> <value>";
+
+  # support "<section>.<key>" syntax in addition to "<section> <key>"
+  my $section = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // return $usage;
+  my ($item, $value);
+  if ($section =~ m/^(.+?)\.(.+)$/) {
+    ($section, $item) = ($1, $2);
+    ($value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1);
+  } else {
+    ($item, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+  }
+
+  if (not defined $section or not defined $item or not defined $value) {
+    return $usage;
+  }
+
+  $self->{pbot}->{registry}->add('text', $section, $item, $value);
+
+  $self->{pbot}->{logger}->log("$nick!$user\@$host set registry entry [$section] $item => $value\n");
+  return "$section.$item set to $value";
+}
+
+sub regunset {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+
+  my $usage = "Usage: regunset <section>.<item>";
+
+  # support "<section>.<key>" syntax in addition to "<section> <key>"
+  my $section = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // return $usage;
+  my $item;
+  if ($section =~ m/^(.+?)\.(.+)$/) {
+    ($section, $item) = ($1, $2);
+  } else {
+    ($item) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1);
+  }
+
+  if (not defined $section or not defined $item) {
+    return $usage;
+  }
+
+  if (not exists $self->{pbot}->{registry}->{registry}->hash->{$section}) {
+    return "No such registry section $section.";
+  }
+
+  if (not exists $self->{pbot}->{registry}->{registry}->hash->{$section}->{$item}) {
+    return "No such item $item in section $section.";
+  }
+
+  $self->{pbot}->{logger}->log("$nick!$user\@$host removed registry entry $section.$item\n");
+  $self->{pbot}->{registry}->remove($section, $item);
+  return "$section.$item deleted from registry";
+}
+
 sub regsetmeta {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my ($section, $item, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4);
+
+  my $usage = "Usage: regsetmeta <section>.<item> [key [value]]";
+
+  # support "<section>.<key>" syntax in addition to "<section> <key>"
+  my $section = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // return $usage;
+  my ($item, $key, $value);
+  if ($section =~ m/^(.+?)\.(.+)$/) {
+    ($section, $item) = ($1, $2);
+    ($key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+  } else {
+    ($item, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+  }
 
   if (not defined $section or not defined $item) {
-    return "Usage: regsetmeta <section> <item> [key [value]]";
+    return $usage;
   }
 
   $key = undef if not length $key;
@@ -60,50 +129,24 @@ sub regsetmeta {
 sub regunsetmeta {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my ($section, $item, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+
+  my $usage = "Usage: regunsetmeta <section>.<item> <key>";
+
+  # support "<section>.<key>" syntax in addition to "<section> <key>"
+  my $section = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // return $usage;
+  my ($item, $key);
+  if ($section =~ m/^(.+?)\.(.+)$/) {
+    ($section, $item) = ($1, $2);
+    ($key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1);
+  } else {
+    ($item, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+  }
 
   if (not defined $section or not defined $item or not defined $key) {
-    return "Usage: regunsetmeta <section> <item> <key>"
+    return $usage;
   }
 
   return $self->{pbot}->{registry}->unset($section, $item, $key);
-}
-
-sub regset {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my ($section, $item, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
-
-  if (not defined $section or not defined $item or not defined $value) {
-    return "Usage: regset <section> <item> <value>";
-  }
-
-  $self->{pbot}->{registry}->add('text', $section, $item, $value);
-
-  $self->{pbot}->{logger}->log("$nick!$user\@$host set registry entry [$section] $item => $value\n");
-  return "[$section] $item set to $value";
-}
-
-sub regunset {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my ($section, $item) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
-
-  if (not defined $section or not defined $item) {
-    return "Usage: regunset <section> <item>";
-  }
-
-  if (not exists $self->{pbot}->{registry}->{registry}->hash->{$section}) {
-    return "No such registry section $section.";
-  }
-
-  if (not exists $self->{pbot}->{registry}->{registry}->hash->{$section}->{$item}) {
-    return "No such item $item in section $section.";
-  }
-
-  $self->{pbot}->{logger}->log("$nick!$user\@$host removed registry item [$section][$item]\n");
-  $self->{pbot}->{registry}->remove($section, $item);
-  return "Registry item $item unset from section $section.";
 }
 
 sub regshow {
@@ -111,10 +154,19 @@ sub regshow {
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $registry = $self->{pbot}->{registry}->{registry}->hash;
 
-  my ($section, $item) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+  my $usage = "Usage: regshow <section>.<item>";
+
+  # support "<section>.<key>" syntax in addition to "<section> <key>"
+  my $section = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // return $usage;
+  my $item;
+  if ($section =~ m/^(.+?)\.(.+)$/) {
+    ($section, $item) = ($1, $2);
+  } else {
+    ($item) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1);
+  }
 
   if (not defined $section or not defined $item) {
-    return "Usage: regshow <section> <item>";
+    return $usage;
   }
 
   if (not exists $registry->{$section}) {
@@ -126,10 +178,10 @@ sub regshow {
   }
 
   if ($registry->{$section}->{$item}->{private}) {
-    return "[$section] $item: <private>";
+    return "$section.$item: <private>";
   }
 
-  my $result = "[$section] $item: $registry->{$section}->{$item}->{value}";
+  my $result = "$section.$item: $registry->{$section}->{$item}->{value}";
 
   if ($registry->{$section}->{$item}->{type} eq 'array') {
     $result .= ' [array]';
@@ -220,7 +272,7 @@ sub regchange {
   my ($section, $item, $delim, $tochange, $changeto, $modifier);
 
   if (defined $arguments) {
-    if ($arguments =~ /^([^\s]+) ([^\s]+)\s+s(.)/) {
+    if ($arguments =~ /^(.+?)\.([^\s]+)\s+s(.)/ or $arguments =~ /^([^\s]+) ([^\s]+)\s+s(.)/) {
       $section = $1;
       $item = $2;
       $delim = $3;
@@ -234,7 +286,7 @@ sub regchange {
   }
 
   if (not defined $section or not defined $item or not defined $changeto) {
-    return "Usage: regchange <section> <item> s/<pattern>/<replacement>/";
+    return "Usage: regchange <section>.<item> s/<pattern>/<replacement>/";
   }
 
   my $registry = $self->{pbot}->{registry}->{registry}->hash;
@@ -250,16 +302,16 @@ sub regchange {
   my $ret = eval {
     use re::engine::RE2 -strict => 1;
     if (not $registry->{$section}->{$item}->{value} =~ s|$tochange|$changeto|) {
-      $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change [$section] $item 's$delim$tochange$delim$changeto$delim$modifier\n");
-      return "/msg $nick Change [$section] $item failed.";
+      $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change $section.$item 's$delim$tochange$delim$changeto$delim$modifier\n");
+      return "/msg $nick Change $section.$item failed.";
     } else {
-      $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: changed [$section] $item 's/$tochange/$changeto/\n");
+      $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: changed $section.$item 's/$tochange/$changeto/\n");
       $self->{pbot}->{registry}->process_trigger($section, $item, 'value', $registry->{$section}->{$item}->{value});
       $self->{pbot}->{registry}->save;
-      return "Changed: [$section] $item set to $registry->{$section}->{$item}->{value}";
+      return "$section.$item set to $registry->{$section}->{$item}->{value}";
     }
   };
-  return "/msg $nick Change [$section] $item: $@" if $@;
+  return "/msg $nick Failed to change $section.$item: $@" if $@;
   return $ret;
 }
 
