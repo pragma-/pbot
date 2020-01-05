@@ -220,7 +220,9 @@ sub adminset {
     return "You may not modify admins higher in level than you.";
   }
 
-  return $self->{pbot}->{admins}->{admins}->set($channel, $hostmask, $key, $value);
+  my $result = $self->{pbot}->{admins}->{admins}->set($channel, $hostmask, $key, $value);
+  $result =~ s/^password => .*;$/password => <private>;/m;
+  return $result;
 }
 
 sub adminunset {
