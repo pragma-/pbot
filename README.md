@@ -3,34 +3,30 @@ PBot
 PBot is a versatile IRC Bot written in Perl
 
 <!-- md-toc-begin -->
-* [Features](#features)
-  * [Advanced Interpreter](#advanced-interpreter)
-  * [Factoids](#factoids)
-  * [Code Factoids](#code-factoids)
-  * [Plugins](#plugins)
-  * [Modules](#modules)
-  * [Channel management](#channel-management)
-  * [Admin management](#admin-management)
-  * [Useful IRC command improvements](#useful-irc-command-improvements)
-  * [Easy configuration](#easy-configuration)
 * [Installation / Quick Start](#installation--quick-start)
 * [Documentation](#documentation)
+* [Features](#features)
+  * [Factoids](#factoids)
+  * [Code Factoids](#code-factoids)
+  * [Useful IRC command improvements](#useful-irc-command-improvements)
+  * [Channel management](#channel-management)
+  * [Plugins](#plugins)
+  * [Modules](#modules)
+  * [Admin management](#admin-management)
+  * [Easy configuration](#easy-configuration)
+  * [Advanced Interpreter](#advanced-interpreter)
 <!-- md-toc-end -->
+
+Installation / Quick Start
+--------------------------
+To get up-and-running quickly, check out the [Quick Start guide](https://github.com/pragma-/pbot/blob/master/doc/QuickStart.md).
+
+Documentation
+-------------
+See the [PBot documentation](https://github.com/pragma-/pbot/tree/master/doc) for more information.
 
 Features
 --------
-
-### Advanced Interpreter
-
-PBot has an advanced command interpreter with useful functionality.
-
-* piping
-* command substitution
-* command separation
-* inline commands
-* $variable interpolation
-* aliases
-* and more!
 
 ### Factoids
 
@@ -56,6 +52,28 @@ any language! This is one of PBot's most powerful features.
 
 How is this safe? Because the code is executed within a virtual machine that
 has been configured to fall-back to a previously saved state whenever it times out.
+
+### Useful IRC command improvements
+
+* `mode` command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
+* `unban <nick>` and `unmute <nick>` can remove all bans/mutes matching `<nick>`'s hostmask or account
+* `ban` and `mute` will intelligently set banmasks; also supports timeouts
+* `ban` and `mute` can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
+* `kick` can take a comma-separated list of nicks. also accept wildcards
+* and much, much, more
+
+### Channel management
+
+PBot can perform the expected channel management tasks.
+
+* opping/deopping, etc
+* channel-mode tracking
+* user hostmask/alias tracking
+* ban-evasion detection
+* flood detection
+* whitelisting, blacklisting, etc
+* spam/advertisement detection
+* and much, much more
 
 ### Plugins
 
@@ -102,20 +120,6 @@ Module | Description
 [Urban Dictionary](modules/urban) | Search Urban Dictionary for definitions.
 [Manpages](modules/man.pl) | Display a concise formatting of manual pages (designed for C functions)
 
-
-### Channel management
-
-PBot can perform the expected channel management tasks.
-
-* opping/deopping, etc
-* channel-mode tracking
-* user hostmask/alias tracking
-* ban-evasion detection
-* flood detection
-* whitelisting, blacklisting, etc
-* spam/advertisement detection
-* and much, much more
-
 ### Admin management
 
 PBot has easy admin management via simple built-in commands.
@@ -124,16 +128,6 @@ PBot has easy admin management via simple built-in commands.
 * admins can be required to login with a password
 * admins can be set to be permanently logged-in
 * admin abilities configured by admin-levels
-
-### Useful IRC command improvements
-
-* `mode` command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
-* `unban <nick>` and `unmute <nick>` can remove all bans/mutes matching `<nick>`'s hostmask or account
-* `ban` and `mute` will intelligently set banmasks; also supports timeouts
-* `ban` and `mute` can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
-* `kick` can take a comma-separated list of nicks
-* `kick` can also accept wildcards
-* and much, much, more
 
 ### Easy configuration
 
@@ -145,11 +139,16 @@ These settings can easily be configured via several methods:
 * simple built-in commands (`regset`, `regunset`, etc)
 * editing the [`$data_dir/registry`](data/registry) plain-text JSON file
 
-Installation / Quick Start
---------------------------
-To get up-and-running quickly, check out the [Quick Start guide](https://github.com/pragma-/pbot/blob/master/doc/QuickStart.md).
+### Advanced Interpreter
 
-Documentation
--------------
-See the [PBot documentation](https://github.com/pragma-/pbot/tree/master/doc) for more information.
+PBot has an advanced command interpreter with useful functionality.
+
+* piping
+* command substitution
+* command separation
+* inline commands
+* $variable interpolation
+* aliases
+* and more!
+
 
