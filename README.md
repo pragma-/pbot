@@ -65,17 +65,6 @@ Plugin | Description
 
 ### Factoids
 
-PBot supports factoids, with advanced features.
-
-* metadata (e.g. owner, times used, last used date, locked, etc)
-* advanced argument processing (indexing, splicing, etc)
-* special commands: `/say`, `/me`, `/msg`, `/code`, etc
-* advanced `$variable` interpolation (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)
-* factoid-based variable lists (e.g., add a factoid `$colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
-* changelog history
-* undo/redo history
-* and much, much more!
-
 Factoids are a very special type of command. Anybody interacting with PBot
 can create, edit, delete and invoke factoids. Factoids can be locked by the
 creator of the factoid to prevent them from being edited by others.
@@ -89,6 +78,17 @@ At its most simple, factoids merely output the text the creator sets.
 
 Significantly more complex factoids can be built by using `$variables`, command-substitution,
 command-piping, `/code` invocation, and more!
+
+PBot factoids include these advanced features:
+
+* metadata (e.g. owner, times used, last used date, locked, etc)
+* advanced argument processing (indexing, splicing, etc)
+* special commands: `/say`, `/me`, `/msg`, `/code`, etc
+* advanced `$variable` interpolation (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)
+* factoid-based variable lists (e.g., add a factoid `$colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
+* changelog history
+* undo/redo history
+* and much, much more!
 
 For more information, see the [Factoids documentation](https://github.com/pragma-/pbot/blob/master/doc/Factoids.md).
 
@@ -131,8 +131,6 @@ Now you have a `qalc` calculator in PBot!
     <pragma-> !qalc 2 * 2
        <PBot> 2 * 2 = 4
 
-For more information, see the [Modules documentation](https://github.com/pragma-/pbot/blob/master/doc/Modules.md).
-
 These are just some of the modules PBot comes with; there are several more:
 
 Module | Description
@@ -145,6 +143,8 @@ Module | Description
 [dict.org Dictionary](modules/dict.org.pl) | Interface to dict.org for definitions, translations, acronyms, etc.
 [Urban Dictionary](modules/urban) | Search Urban Dictionary for definitions.
 [Manpages](modules/man.pl) | Display a concise formatting of manual pages (designed for C functions)
+
+For more information, see the [Modules documentation](https://github.com/pragma-/pbot/blob/master/doc/Modules.md).
 
 ### Useful IRC command improvements
 
@@ -201,7 +201,7 @@ PBot has an advanced command interpreter with useful functionality.
 
 Support
 -------
-PBot has many features and can be daunting. For support, feel free to join the `#pbot2` channel on the [Freenode IRC network](https://freenode.net/kb/answer/chat).
+For questions and support, feel free to join the `#pbot2` channel on the [Freenode](https://freenode.net/kb/answer/chat) IRC network ([Web Chat](https://webchat.freenode.net/#pbot2)).
 
 License
 -------
