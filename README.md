@@ -61,7 +61,7 @@ has been configured to fall-back to a previously saved state whenever it times o
 * `unban <nick>` and `unmute <nick>` can remove all bans/mutes matching `<nick>`'s hostmask or account
 * `ban` and `mute` will intelligently set banmasks; supports timeouts
 * `ban` and `mute` can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
-* `kick` can take a comma-separated list of nicks; accept wildcards
+* `kick` can take a comma-separated list of nicks; accepts wildcards
 * and much, much, more
 
 ### Channel management
