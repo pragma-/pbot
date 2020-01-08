@@ -66,7 +66,7 @@ has been configured to fall-back to a previously saved state whenever it times o
 
 ### Channel management
 
-PBot can perform the expected channel management tasks.
+PBot can perform the typical channel management tasks.
 
 * opping/deopping, etc
 * channel-mode tracking
