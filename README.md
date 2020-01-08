@@ -2,10 +2,25 @@ PBot
 ----
 PBot is a versatile IRC Bot written in Perl
 
+<!-- md-toc-begin -->
+* [Features](#features)
+  * [Advanced Interpreter](#advanced-interpreter)
+  * [Factoids](#factoids)
+  * [Code Factoids](#code-factoids)
+  * [Plugins](#plugins)
+  * [Modules](#modules)
+  * [Channel management](#channel-management)
+  * [Admin management](#admin-management)
+  * [Useful IRC command improvements](#useful-irc-command-improvements)
+  * [Easy configuration](#easy-configuration)
+* [Installation / Quick Start](#installation--quick-start)
+* [Documentation](#documentation)
+<!-- md-toc-end -->
+
 Features
 --------
 
-## Advanced Interpreter
+### Advanced Interpreter
 
 PBot has an advanced command interpreter with useful functionality.
 
@@ -17,7 +32,7 @@ PBot has an advanced command interpreter with useful functionality.
 * aliases
 * and more!
 
-## Factoids
+### Factoids
 
 PBot has factoids with advanced features.
 
@@ -30,7 +45,7 @@ PBot has factoids with advanced features.
 * undo/redo history
 * and much, much more!
 
-## Code Factoids
+### Code Factoids
 
 Code factoids are a special type of factoid that begin with the `/code` command.
 
@@ -42,25 +57,7 @@ any language! This is one of PBot's most powerful features.
 How is this safe? Because the code is executed within a virtual machine that
 has been configured to fall-back to a previously saved state whenever it times out.
 
-## Modules
-
-PBot can execute any command-line program or script as an internal command. We call
-these modules.
-
-These are just some of the more notable modules; there are several more:
-
-Module | Description
---- | ---
-[C-to-English translator](modules/c2english) | Translates C code to natural English sentences.
-[C precedence analyzer](modules/paren) | Adds parentheses to C code to demonstrate precedence.
-[C Jeopardy! game](modules/cjeopardy) | C programming trivia game based on the Jeopardy! TV game show.
-[Virtual machine](modules/compiler_vm) | Executes arbitrary code and commands within a virtual machine.
-[C Standard citations](modules/c11std.pl) | Cite specified sections/paragraphs from the C standard.
-[dict.org Dictionary](modules/dict.org.pl) | Interface to dict.org for definitions, translations, acronyms, etc.
-[Urban Dictionary](modules/urban) | Search Urban Dictionary for definitions.
-[Manpages](modules/man.pl) | Display a concise formatting of manual pages (designed for C functions)
-
-## Plugins
+### Plugins
 
 PBot can dynamically load and unload Perl modules to alter its behavior.
 
@@ -87,7 +84,26 @@ Plugin | Description
 [Battleship](Plugins/Battleship.pm) | The classic Battleship board game, simplified for IRC
 [Connect4](Plugins/Connect4.pm) | The classic Connect-4 game.
 
-## Channel management
+### Modules
+
+PBot can execute any command-line program or script as an internal command. We call
+these modules.
+
+These are just some of the more notable modules; there are several more:
+
+Module | Description
+--- | ---
+[C-to-English translator](modules/c2english) | Translates C code to natural English sentences.
+[C precedence analyzer](modules/paren) | Adds parentheses to C code to demonstrate precedence.
+[C Jeopardy! game](modules/cjeopardy) | C programming trivia game based on the Jeopardy! TV game show.
+[Virtual machine](modules/compiler_vm) | Executes arbitrary code and commands within a virtual machine.
+[C Standard citations](modules/c11std.pl) | Cite specified sections/paragraphs from the C standard.
+[dict.org Dictionary](modules/dict.org.pl) | Interface to dict.org for definitions, translations, acronyms, etc.
+[Urban Dictionary](modules/urban) | Search Urban Dictionary for definitions.
+[Manpages](modules/man.pl) | Display a concise formatting of manual pages (designed for C functions)
+
+
+### Channel management
 
 PBot can perform the expected channel management tasks.
 
@@ -100,7 +116,7 @@ PBot can perform the expected channel management tasks.
 * spam/advertisement detection
 * and much, much more
 
-## Admin management
+### Admin management
 
 PBot has easy admin management via simple built-in commands.
 
@@ -109,7 +125,7 @@ PBot has easy admin management via simple built-in commands.
 * admins can be set to be permanently logged-in
 * admin abilities configured by admin-levels
 
-## Useful IRC command improvements
+### Useful IRC command improvements
 
 * `mode` command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
 * `unban <nick>` and `unmute <nick>` can remove all bans/mutes matching `<nick>`'s hostmask or account
@@ -119,7 +135,7 @@ PBot has easy admin management via simple built-in commands.
 * `kick` can also accept wildcards
 * and much, much, more
 
-## Easy configuration
+### Easy configuration
 
 PBot's settings are contained in a central registry of key/value pairs grouped by sections.
 
