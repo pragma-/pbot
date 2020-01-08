@@ -6,15 +6,16 @@ PBot is a versatile IRC Bot written in Perl
 * [Installation / Quick Start](#installation--quick-start)
 * [Documentation](#documentation)
 * [Features](#features)
+  * [Commands](#commands)
+  * [Plugins](#plugins)
   * [Factoids](#factoids)
   * [Code Factoids](#code-factoids)
+  * [Modules](#modules)
   * [Useful IRC command improvements](#useful-irc-command-improvements)
   * [Channel management](#channel-management)
-  * [Plugins](#plugins)
-  * [Modules](#modules)
   * [Admin management](#admin-management)
   * [Easy configuration](#easy-configuration)
-  * [Advanced Interpreter](#advanced-interpreter)
+  * [Advanced interpreter](#advanced-interpreter)
 * [Support](#support)
 * [License](#license)
 <!-- md-toc-end -->
@@ -30,52 +31,10 @@ See the [PBot documentation](https://github.com/pragma-/pbot/tree/master/doc) fo
 Features
 --------
 
-### Factoids
+### Commands
 
-PBot has factoids with advanced features.
-
-* metadata (e.g. owner, times used, last used date, locked, etc)
-* advanced argument processing (indexing, splicing, etc)
-* special commands: `/say`, `/me`, `/msg`, `/code`, etc
-* advanced `$variable` interpolation (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)
-* factoid-based variable lists (e.g., add a factoid `$colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
-* changelog history
-* undo/redo history
-* and much, much more!
-
-### Code Factoids
-
-Code factoids are a special type of factoid that begin with the `/code` command.
-
-    /code <language> <code>
-
-That's right! Anybody can create a factoid that can execute arbitrary code in
-any language! This is one of PBot's most powerful features.
-
-How is this safe? Because the code is executed within a virtual machine that
-has been configured to fall-back to a previously saved state whenever it times out.
-
-### Useful IRC command improvements
-
-* `mode` command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
-* `unban <nick>` and `unmute <nick>` can remove all bans/mutes matching `<nick>`'s hostmask or account
-* `ban` and `mute` will intelligently set banmasks; supports timeouts
-* `ban` and `mute` can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
-* `kick` can take a comma-separated list of nicks; accepts wildcards
-* and much, much, more
-
-### Channel management
-
-PBot can perform the typical channel management tasks.
-
-* opping/deopping, etc
-* channel-mode tracking
-* user hostmask/alias tracking
-* ban-evasion detection
-* flood detection
-* whitelisting, blacklisting, etc
-* spam/advertisement detection
-* and much, much more
+PBot has several useful core built-in commands. Additional commands can be added to PBot through
+Plugins and Factoids.
 
 ### Plugins
 
@@ -104,12 +63,77 @@ Plugin | Description
 [Battleship](Plugins/Battleship.pm) | The classic Battleship board game, simplified for IRC
 [Connect4](Plugins/Connect4.pm) | The classic Connect-4 game.
 
+### Factoids
+
+PBot supports factoids, with advanced features.
+
+* metadata (e.g. owner, times used, last used date, locked, etc)
+* advanced argument processing (indexing, splicing, etc)
+* special commands: `/say`, `/me`, `/msg`, `/code`, etc
+* advanced `$variable` interpolation (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)
+* factoid-based variable lists (e.g., add a factoid `$colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
+* changelog history
+* undo/redo history
+* and much, much more!
+
+Factoids are a very special type of command. Anybody interacting with PBot
+can create, edit, delete and invoke factoids. Factoids can be locked by the
+creator of the factoid to prevent them from being edited by others.
+
+At its most simple, factoids merely output the text the creator sets.
+
+    <pragma-> !factadd hello /say Hello, $nick!
+       <PBot> hello added to global channel.
+    <pragma-> PBot, hello
+       <PBot> Hello, pragma-!
+
+Significantly more complex factoids can be built by using `$variables`, command-substitution,
+command-piping, `/code` invocation, and more!
+
+For more information, see the [Factoids documentation](https://github.com/pragma-/pbot/blob/master/doc/Factoids.md).
+
+### Code Factoids
+
+Code factoids are a special type of factoid that begin with the `/code` command.
+
+    /code <language> <code>
+
+That's right! Anybody can create a factoid that can execute arbitrary code in
+any language! This is one of PBot's most powerful features.
+
+How is this safe? Because the code is executed within a virtual machine that
+has been configured to fall-back to a previously saved state whenever it times out.
+
 ### Modules
 
-PBot can execute any command-line program or script as an internal command. We call
-these modules.
+Modules are external command-line executable programs and scripts that can be
+loaded via PBot Factoids.
 
-These are just some of the more notable modules; there are several more:
+Suppose you have the [Qalculate!](https://qalculate.github.io/) command-line
+program and you want to provide a PBot command for it. You can create a _very_ simple
+shell script containing:
+
+    #!/bin/sh
+    qalc "$*"
+
+And let's call it `qalc.sh` and put it in PBot's `modules/` directory.
+
+Then you can add the `qalc` factoid:
+
+    !factadd global qalc qalc.sh
+
+And then set its `type` to `module`:
+
+    !factset global qalc type module
+
+Now you have a `qalc` calculator in PBot!
+
+    <pragma-> !qalc 2 * 2
+       <PBot> 2 * 2 = 4
+
+For more information, see the [Modules documentation](https://github.com/pragma-/pbot/blob/master/doc/Modules.md).
+
+These are just some of the modules PBot comes with; there are several more:
 
 Module | Description
 --- | ---
@@ -121,6 +145,28 @@ Module | Description
 [dict.org Dictionary](modules/dict.org.pl) | Interface to dict.org for definitions, translations, acronyms, etc.
 [Urban Dictionary](modules/urban) | Search Urban Dictionary for definitions.
 [Manpages](modules/man.pl) | Display a concise formatting of manual pages (designed for C functions)
+
+### Useful IRC command improvements
+
+* `mode` command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
+* `unban <nick>` and `unmute <nick>` can remove all bans/mutes matching `<nick>`'s hostmask or account
+* `ban` and `mute` will intelligently set banmasks; supports timeouts
+* `ban` and `mute` can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
+* `kick` can take a comma-separated list of nicks; accepts wildcards
+* and much, much, more
+
+### Channel management
+
+PBot can perform the typical channel management tasks.
+
+* opping/deopping, etc
+* channel-mode tracking
+* user hostmask/alias tracking
+* ban-evasion detection
+* flood detection
+* whitelisting, blacklisting, etc
+* spam/advertisement detection
+* and much, much more
 
 ### Admin management
 
@@ -141,7 +187,7 @@ These settings can easily be configured via several methods:
 * simple built-in commands (`regset`, `regunset`, etc)
 * editing the [`$data_dir/registry`](data/registry) plain-text JSON file
 
-### Advanced Interpreter
+### Advanced interpreter
 
 PBot has an advanced command interpreter with useful functionality.
 
