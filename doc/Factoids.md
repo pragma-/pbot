@@ -17,7 +17,7 @@ Factoids
     * [$channel](#channel)
     * [$randomnick](#randomnick)
     * [$0](#0)
-  * [adlib list variables](#adlib-list-variables)
+  * [List variables](#list-variables)
     * [modifiers](#modifiers)
   * [action_with_args](#action_with_args)
   * [add_nick](#add_nick)
@@ -75,21 +75,21 @@ If a factoid begins with `/say ` then PBot will not use the `<factoid> is <descr
 #### /me
 If a factoid begins with `/me ` then PBot will `CTCP ACTION` the factoid.
 
-    <pragma-> factadd global bounce /me bounces around.
-       <PBot> 'bounce' added to the global channel
-    <pragma-> bounce
+    <pragma-> !factadd global bounce /me bounces around.
+       <PBot> bounce added to the global channel
+    <pragma-> !bounce
             * PBot bounces around.
 
 #### /call
 If a factoid begins with `/call ` then PBot will call an existing command. This is what [`factalias`](#factalias) does internally.
 
-    <pragma-> factadd global boing /call bounce
-       <PBot> 'boing' added to the global channel
-    <pragma-> boing
+    <pragma-> !factadd global boing /call bounce
+       <PBot> boing added to the global channel
+    <pragma-> !boing
             * PBot bounces around.
 
 #### /msg
-If a factoid begins with `msg <nick> ` then PBot will `/MSG` the factoid text to `<nick>`. Only admins can use this command.
+If a factoid begins with `/msg <nick> ` then PBot will privately message the factoid text to `<nick>`. Only admins can use this command.
 
 ### Special variables
 You can use the following variables in a factoid or as an argument to one.
@@ -118,13 +118,21 @@ You can use the following variables in a factoid or as an argument to one.
 #### $0
 `$0` expands to the original keyword used to invoke a factoid. See also [Overriding $0](#Overriding_$0).
 
-### adlib list variables
-You may create a list of adlib words by using the normal factoid creation method. Multiple words can be surrounded with quotes to constitute one element.
+### List variables
+You may create a factoid containing a list of quoted values. When this factoid is used as a `$variable` by using the `$` character, a random value
+will be selected from the list.
+
+For example, first create a normal factoid.
 
     <pragma-> !factadd global colors is red green blue "bright yellow" pink "dark purple" orange
         <PBot> colors added to the global channel
 
-Then you can instruct PBot to pick a random word from this list to use in another factoid by inserting the list as a variable.
+Then use the factoid as a `$variable`.
+
+    <pragma-> !echo $colors
+       <PBot> red
+
+<!-- -->
 
     <pragma-> !factadd global sky is /say The sky is $colors.
        <PBot> sky added to the global channel
@@ -133,7 +141,7 @@ Then you can instruct PBot to pick a random word from this list to use in anothe
     <pragma-> !sky
        <PBot> The sky is green.
 
-A practical example, creating the RTFM trigger:
+Another example, creating the RTFM trigger:
 
     <pragma-> !factadd global sizes is big large tiny small huge gigantic teeny
        <PBot> sizes added to the global channel
@@ -145,7 +153,12 @@ A practical example, creating the RTFM trigger:
             * PBot thwacks mauke with a big red manual.
 
 #### modifiers
-Adlib list variables can accept trailing modifier keywords prefixed with a colon.  These can be chained together to combine their effects.
+Factoid `$variables` can accept trailing modifier keywords prefixed with a colon.  These can be chained together to combine their effects.
+
+    <pragma-> !echo $colors:uc
+       <PBot> RED
+    <pragma-> !echo $colors:ucfirst
+       <PBot> Blue
 
 Modifier | Description
 --- | ---
@@ -154,11 +167,6 @@ Modifier | Description
 `:ucfirst` | Uppercases the first letter in the expansion
 `:title` | Lowercases the expansion and then uppercases the initial letter of each word
 `:<channel>` | Looks for variable in `<channel>` first; use `global` to refer to the global channel
-
-    <pragma-> !echo $colors:uc
-       <PBot> RED
-    <pragma-> !echo $colors:ucfirst
-       <PBot> Blue
 
 ### action_with_args
 
@@ -212,9 +220,9 @@ Usage: `factrem [channel] <keyword>` `forget [channel] <keyword>`
 Aliasing a factoid
 ------------------
 ### factalias
-To create an factoid that acts as an alias for a command, use the `factalias` command or set the factoid's `action` to `/call <command>`.
+To create an factoid that acts as an alias for a command, use the `factalias` command or set the factoid's `action` meta-data to `/call <command>`.
 
-Usage: `factalias <channel> <new keyword> <command>`
+Usage: `factalias [channel] <keyword> <command>`
 
     <pragma-> !factadd ##c offtopic is /say In this channel, $args is off-topic.
     <pragma-> !offtopic C++
@@ -248,7 +256,7 @@ Changing a factoid
 ### factchange
 To change a factoid, use the `factchange` command:
 
-Usage:  `factchange <channel> <keyword> s/<pattern>/<change to>/[gi]`
+Usage:  `factchange [channel] <keyword> s/<pattern>/<change to>/[gi]`
 
     <pragma-> !c
        <PBot> C rocks!
@@ -354,7 +362,9 @@ To see a factoid's changelog history, use the `factlog` command.
 
 Usage: `factlog [-h] [-t] [channel] <factoid>`
 
-`-h` shows full hostmasks instead of just the nick. `-t` shows the actual timestamp instead of relative.
+`-h` shows full hostmasks instead of just the nick.
+
+`-t` shows the actual timestamp instead of relative.
 
     <pragma-> !factadd hi /say Hello there!
        <PBot> hi added to global channel.
@@ -376,8 +386,10 @@ Usage: `count <nick>`
 
     <pragma-> !count prec
        <PBot> prec has submitted 28 factoids out of 233 (12%)
+
     <pragma-> !count twkm
        <PBot> twkm has submitted 74 factoids out of 233 (31%)
+
     <pragma-> !count pragma
        <PBot> pragma has submitted 27 factoids out of 233 (11%)
 
@@ -388,19 +400,15 @@ To see a histogram of the top factoid submitters, use the `histogram` command.
        <PBot> 268 factoids, top 10 submitters: twkm: 74 (27%) Major-Willard: 64 (23%) pragma-: 40 (14%) prec: 39 (14%) defrost: 14 (5%) PoppaVic: 10 (3%) infobahn: 7 (2%) orbitz: 3 (1%) mauke: 3 (1%) Tom^: 2 (1%)
 
 ### top20
-To see the top 20 most popular factoids, use the `top20` command. It can also show you the 50 most recent factoids to be added to a channel.
+To see the top 20 most popular factoids, use the `top20` command. It can also show you the 50 most recent factoids that were added to a channel.
 
 Usage: `top20 <channel> [<nick> or 'recent']`
 
     <pragma-> !top20 ##c
        <PBot> Top 20 referenced factoids for ##c: explain (3459) c11 (2148) book (1070) books (1049) K&R (1000) dontcastmalloc (991) notC (696) standard (655) c99 (506) scanf (501) declare (453) std (434) cstd (344) tias (305) parens (291) int (287) c1x (272) UB (263) H&S (257) binky (236)
 
-<!-- -->
-
     <pragma-> !top20 ##c pragma-
        <PBot> 20 factoids last referenced by pragma- (pragma-!~chaos@unaffiliated/pragmatic-chaos): to [1d20h ago] realloc [3d15h ago] deport [4d16h ago] long [4d16h ago] decay [6d17h ago] x [6d16h ago] sizeof [13d18h ago] ENOQUESTION [13d19h ago] main [13d10h ago] cfaq [14d22h ago] heap [14d23h ago] malloc [15d15h ago] _ [16d20h ago] declareuse [17d15h ago] rot13 [17...
-
-<!-- -->
 
     <pragma-> !top20 ##c recent
        <PBot> 50 most recent ##c submissions: barometer [9h ago by kurahaupo] glib-pcre [21h ago by aozt] unspecified [1d13h ago by pragma-] rules [1d17h ago by oldlaptop] pjp [2d3h ago by d3738] gnu-errno-name-num [2d21h ago by aozt] cbreak [5d8h ago by jp] test case [5d9h ago by pragma-] googlearn [6d2h ago by glacial] threads [8d10h ago by glacial] cjeopard...
