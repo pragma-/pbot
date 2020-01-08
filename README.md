@@ -15,6 +15,8 @@ PBot is a versatile IRC Bot written in Perl
   * [Admin management](#admin-management)
   * [Easy configuration](#easy-configuration)
   * [Advanced Interpreter](#advanced-interpreter)
+* [Support](#support)
+* [License](#license)
 <!-- md-toc-end -->
 
 Installation / Quick Start
@@ -57,9 +59,9 @@ has been configured to fall-back to a previously saved state whenever it times o
 
 * `mode` command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
 * `unban <nick>` and `unmute <nick>` can remove all bans/mutes matching `<nick>`'s hostmask or account
-* `ban` and `mute` will intelligently set banmasks; also supports timeouts
+* `ban` and `mute` will intelligently set banmasks; supports timeouts
 * `ban` and `mute` can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
-* `kick` can take a comma-separated list of nicks. also accept wildcards
+* `kick` can take a comma-separated list of nicks; accept wildcards
 * and much, much, more
 
 ### Channel management
@@ -151,4 +153,10 @@ PBot has an advanced command interpreter with useful functionality.
 * aliases
 * and more!
 
+Support
+-------
+PBot has many features and can be daunting. For support, feel free to join the `#pbot2` channel on the [Freenode IRC network](https://freenode.net/kb/answer/chat).
 
+License
+-------
+PBot is licensed under the [Mozilla Public License, version 2](https://www.mozilla.org/en-US/MPL/2.0/).
