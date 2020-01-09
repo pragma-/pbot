@@ -300,7 +300,7 @@ You can use the following variables in a factoid or as an argument to one.
 `$0` expands to the original keyword used to invoke a factoid.
 
 ## List variables
-You may create a factoid containing a list of quoted values. When this factoid is used as a `$variable` by using the `$` character, a random value
+You may create a factoid containing a list of quoted values. When this factoid is used as a `$variable` a random value
 will be selected from the list.
 
 For example, first create a normal factoid.
