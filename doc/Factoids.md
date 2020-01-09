@@ -17,12 +17,12 @@
     * [Using command-piping](#using-command-piping)
     * [Improving SpongeBob Mock meme](#improving-spongebob-mock-meme)
 * [Special variables](#special-variables-1)
-  * [$nick](#nick)
   * [$args](#args)
   * [$arg[n]](#argn)
   * [$arg[n:m]](#argnm)
   * [$arglen](#arglen)
   * [$channel](#channel)
+  * [$nick](#nick)
   * [$randomnick](#randomnick)
   * [$0](#0)
 * [List variables](#list-variables)
@@ -174,7 +174,7 @@ the C programming language because why not?
 
 #### Setting a usage message
 
-Suppose you want command to display a usage message if there are no arguments provided. You can use
+Suppose you want the command to display a usage message if there are no arguments provided. You can use
 the [`factset`](#factset) command to set the `usage` [factoid meta-data](#factoid-metadata).
 
      <pragma-> !testargs
@@ -273,10 +273,7 @@ to strip the timestamp and the name, leaving only the message. `smr` stands for
        <PBot> gIrLs ArE dUmB!
 
 ## Special variables
-You can use the following variables in a factoid or as an argument to one.
-
-### $nick
-`$nick` expands to the nick of the caller.
+You can use the following variables in a factoid or, in some cases, as an argument to one.
 
 ### $args
 `$args` expands to any text following the keyword.  If there is no text then it expands to the nick of the caller.
@@ -292,6 +289,9 @@ You can use the following variables in a factoid or as an argument to one.
 
 ### $channel
 `$channel` expands to the name of the channel in which the factoid is used.
+
+### $nick
+`$nick` expands to the nick of the caller.
 
 ### $randomnick
 `$randomnick` expands to a random nick from the channel in which the factoid is used. Filtered to nicks who have spoken in channel in the last two hours.
