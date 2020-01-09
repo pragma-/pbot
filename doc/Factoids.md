@@ -143,7 +143,7 @@ Name | Description
 [java](../modules/compiler_vm/languages/java.pm) | Java programming language
 [javascript](../modules/compiler_vm/languages/javascript.pm) | JavaScript programming language
 [ksh](../modules/compiler_vm/languages/ksh.pm) | Korn shell scripting language
-[lua](../modules/compiler_vm/languages/lua.pm) | LUA scripting language
+[lua](../modules/compiler_vm/languages/lua.pm) | Lua programming language
 [perl](../modules/compiler_vm/languages/perl.pm) | Perl programming language
 [python3](../modules/compiler_vm/languages/python3.pm) | Python3 programming language
 [python](../modules/compiler_vm/languages/python.pm) | Python programming language
