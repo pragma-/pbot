@@ -91,6 +91,146 @@ If a factoid begins with `/call ` then PBot will call an existing command. This 
 #### /msg
 If a factoid begins with `/msg <nick> ` then PBot will privately message the factoid text to `<nick>`. Only admins can use this command.
 
+### /code
+Code Factoids are a special type of factoid whose text is treated as code and executed with a chosen programming language
+or interpreter. The output from code is then parsed and treated like any other factoid text. This allows anybody to add
+new and unique commands to PBot without the need for installing Plugins or modules.
+
+Code Factoids are executed within a virtual machine. See the [Virtual Machine](doc/VirtualMachine.md) documentation
+for more information.
+
+To create a Code Factoid, use the `/code` command. The syntax is:
+
+    factadd keyword /code <language> <code>
+
+The `<language>` parameter selects a programming/scripting language or interpreter to use.
+
+#### Supported languages
+
+As of this writing, these are the languages and interpreters that PBot supports. It is easy to add additional
+languages or interpreters. For example, [take a look at these language/interpreter files.](../modules/compiler_vm/languages)
+
+#### Special variables
+
+All the variables listed in [Special Variables](#special-variables) are expanded within Code Factoids before
+the code is executed or interpreted.
+
+[List variables](#list-variables) are also expanded beforehand as well. You can prevent this by using [`factset`](#factset)
+to set the `interpolate` [factoid meta-data](#factoid-metadata-list) to `0`. Alternatively, you can prevent `$variables` in
+the code from expanding by prefixing their name with an underscore, i.e. `$_variable`.
+
+#### testargs example
+
+Let's make a simple Code Factoid that demonstrates command-line arguments. Let's use
+the C programming language because why not?
+
+    <pragma-> !factadd testargs /code c11 printf("/say args: "); while (*++argv) printf("[%s] ", *argv);
+       <PBot> testargs added to the global channel.
+    <pragma-> testargs foo bar
+       <PBot> args: [foo] [bar]
+    <pragma-> testargs "abc 123" xyz
+       <PBot> args: [abc 123] [xyz]
+
+#### Setting a usage message
+
+Suppose you want command to display a usage message if there are no arguments provided. You can use
+the [`factset`](#factset) command to set the `usage` [factoid meta-data](#factoid-metadata-list).
+
+     <pragma-> !testargs
+        <PBot> args:
+
+     <pragma-> !factset testargs usage Usage: testargs <arguments>
+        <PBot> [global] testcargs 'usage' set to 'Usage: testargs <arguments>'
+
+     <pragma-> !testargs
+        <PBot> Usage: testargs <arguments>
+
+#### poll/vote example
+
+Here is a basic poll/vote example. Let's use Perl this time.
+
+First we add the factoids. Note that we use `$_variable` with underscore prefixing
+the name to prevent them from being expanded as [List Variables](#list-variables).
+
+    <pragma-> !factadd startvote /code perl use Storable; my $_question = "@ARGV";
+              print "Starting poll: $_question Use `vote <keyword>` to record your vote.";
+              my %_votes = (); my @data = ({%_votes}, $_question);
+              system 'rm -rf vote-data'; mkdir 'vote-data' or print "$!";
+              store \@data, 'vote-data/data';
+    <pragma-> !factset startvote usage Usage: startvote <question>
+
+    <pragma-> !factadd vote /code perl use Storable; my $_data = retrieve 'vote-data/data';
+              my %_votes = %{shift @$_data}; ($_votes{"$nick"}) = (lc "@ARGV");
+              unshift @$_data, {%_votes}; store $_data, 'vote-data/data';
+    <pragma-> !factset vote usage Usage: vote <keyword>
+
+    <pragma-> !factadd votes /code perl no warnings; use Storable; my $_data = retrieve 'vote-data/data';
+              my %_votes = %{shift @$_data}; my $_question = shift @$_data;
+              if (not keys %_votes) { print "No votes for \"$_question\" yet."; exit; }
+              my %_count; map { $_count{$_}++ } values %_votes;
+              my $_result = "Poll results for \"$_question\": "; my $_comma = "";
+              map { $_result .= "$_comma$_: $_count{$_}"; $_comma = ', '; }
+              sort { $_count{$b} <=> $_count{$a} } keys %_count; print "/say $_result";
+
+And action:
+
+    <pragma-> !startvote Isn't this cool?
+       <PBot> Starting poll: Isn't this cool? Use `vote <keyword>` to record your vote.
+    <pragma-> !vote yes
+    <luser69> !vote no
+    <someguy> !vote yes
+     <derpy3> !vote hamburger
+    <pragma-> !votes
+       <PBot> Poll results for "Isn't this cool?": yes: 2, no: 1, hamburger: 1
+
+#### SpongeBob Mock meme example
+
+Here is an example demonstrating how Code Factoids and command piping can work together.
+
+The SpongeBob Mock meme takes something ridiculous somebody said and repeats it with the
+letters in alternating lower and upper case.
+
+    <derpy3> Girls are dumb!
+     <SpBob> smh @ derpy3... gIrLs ArE dUmB!
+
+Let's make a command, using a Code Factoid, to do this! `sm` stands for "SpongeBob Mock".
+This time we'll use the Bash shell scripting language.
+
+    <pragma-> !factadd sm /code bash echo "${@,,}"|perl -pe 's/(?<!^)[[:alpha:]].*?([[:alpha:]]|$)/\L\u$&/g'
+    <pragma-> !factset sm usage Usage: sm <text>
+
+    <pragma-> !sm Testing one, two...
+       <PBot> tEsTiNg OnE, tWo...
+
+#### Using command-piping
+
+You can pipe the output of other commands to Code Factoids.
+
+    <pragma-> !echo Testing three, four... | {sm}
+       <PBot> tEsTiNg ThReE, fOuR...
+
+    <pragma-> !version | {sm}
+       <PBot> pBoT vErSiOn 2696 2020-01-04
+
+#### Improving SpongeBob Mock meme
+
+Let's improve the SpongeBob Mock meme by using the `recall` command to select
+the mock text for us.
+
+First of all, the `recall` command prints output like this:
+
+    <pragma-> !recall derpy3 girls
+       <PBot> [5m30s ago] <derpy3> Girls are dumb!
+
+So we're going to use the `func` command to invoke the built-in `sed` function
+to strip the timestamp and the name, leaving only the message. `smr` stands for
+"SpongeBob Mock Recall".
+
+    <pragma-> !factadd smr /call recall $args | {func sed s/^.*?\] (<.*?> )?(\S+:\s*)?//} | {sm}
+
+    <pragma-> !smr derpy3 girls
+       <PBot> gIrLs ArE dUmB!
+
 ### Special variables
 You can use the following variables in a factoid or as an argument to one.
 
@@ -353,7 +493,7 @@ Usage: `factshow [channel] <keyword>`
 ### factset
 To view [factoid meta-data](#factoid-metadata-list), such as owner, rate-limit, etc, use the `factset` command.
 
-Usage:  `factset <channel> <factoid> [<key> [value]]`
+Usage:  `factset [channel] <factoid> [<key> [value]]`
 
 Omit `<key>` and `<value>` to list all the keys and values for a factoid.  Specify `<key>`, but omit `<value>` to see the value for a specific key.
 
