@@ -22,11 +22,11 @@ PBot is a versatile IRC Bot written in Perl
 
 Installation / Quick Start
 --------------------------
-To get up-and-running quickly, check out the [Quick Start guide](https://github.com/pragma-/pbot/blob/master/doc/QuickStart.md).
+To get up-and-running quickly, check out the [Quick Start guide](doc/QuickStart.md).
 
 Documentation
 -------------
-See the [PBot documentation](https://github.com/pragma-/pbot/tree/master/doc) for more information.
+See the [PBot documentation](doc) for more information.
 
 Features
 --------
@@ -90,7 +90,7 @@ PBot factoids include these advanced features:
 * undo/redo history
 * and much, much more!
 
-For more information, see the [Factoids documentation](https://github.com/pragma-/pbot/blob/master/doc/Factoids.md).
+For more information, see the [Factoids documentation](doc/Factoids.md).
 
 ### Code Factoids
 
@@ -99,10 +99,12 @@ Code factoids are a special type of factoid that begin with the `/code` command.
     /code <language> <code>
 
 That's right! Anybody can create a factoid that can execute arbitrary code in
-any language! This is one of PBot's most powerful features.
+[any language](doc/Factoids.md#supported-languages)! This is one of PBot's most powerful features.
 
 How is this safe? Because the code is executed within a virtual machine that
 has been configured to fall-back to a previously saved state whenever it times out.
+
+For more information, see the [Code Factoid documentation](doc/Factoids.md#code).
 
 ### Modules
 
@@ -138,13 +140,13 @@ Module | Description
 [C-to-English translator](modules/c2english) | Translates C code to natural English sentences.
 [C precedence analyzer](modules/paren) | Adds parentheses to C code to demonstrate precedence.
 [C Jeopardy! game](modules/cjeopardy) | C programming trivia game based on the Jeopardy! TV game show.
-[Virtual machine](modules/compiler_vm) | Executes arbitrary code and commands within a virtual machine.
 [C Standard citations](modules/c11std.pl) | Cite specified sections/paragraphs from the C standard.
+[Virtual machine](modules/compiler_vm) | Executes arbitrary code and commands within a virtual machine.
 [dict.org Dictionary](modules/dict.org.pl) | Interface to dict.org for definitions, translations, acronyms, etc.
 [Urban Dictionary](modules/urban) | Search Urban Dictionary for definitions.
 [Manpages](modules/man.pl) | Display a concise formatting of manual pages (designed for C functions)
 
-For more information, see the [Modules documentation](https://github.com/pragma-/pbot/blob/master/doc/Modules.md).
+For more information, see the [Modules documentation](doc/Modules.md).
 
 ### Useful IRC command improvements
 
