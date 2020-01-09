@@ -2,57 +2,66 @@ Factoids
 ========
 
 <!-- md-toc-begin -->
-  * [Channel namespaces](#channel-namespaces)
-  * [Special commands](#special-commands)
-    * [/say](#say)
-    * [/me](#me)
-    * [/call](#call)
-    * [/msg](#msg)
-  * [Special variables](#special-variables)
-    * [$nick](#nick)
-    * [$args](#args)
-    * [$arg[n]](#argn)
-    * [$arg[n:m]](#argnm)
-    * [$arglen](#arglen)
-    * [$channel](#channel)
-    * [$randomnick](#randomnick)
-    * [$0](#0)
-  * [List variables](#list-variables)
-    * [modifiers](#modifiers)
-  * [action_with_args](#action_with_args)
-  * [add_nick](#add_nick)
+* [Channel namespaces](#channel-namespaces)
+* [Special commands](#special-commands)
+  * [/say](#say)
+  * [/me](#me)
+  * [/call](#call)
+  * [/msg](#msg)
+  * [/code](#code)
+    * [Supported languages](#supported-languages)
+    * [Special variables](#special-variables)
+    * [testargs example](#testargs-example)
+    * [Setting a usage message](#setting-a-usage-message)
+    * [poll/vote example](#pollvote-example)
+    * [SpongeBob Mock meme example](#spongebob-mock-meme-example)
+    * [Using command-piping](#using-command-piping)
+    * [Improving SpongeBob Mock meme](#improving-spongebob-mock-meme)
+* [Special variables](#special-variables-1)
+  * [$nick](#nick)
+  * [$args](#args)
+  * [$arg[n]](#argn)
+  * [$arg[n:m]](#argnm)
+  * [$arglen](#arglen)
+  * [$channel](#channel)
+  * [$randomnick](#randomnick)
+  * [$0](#0)
+* [List variables](#list-variables)
+  * [modifiers](#modifiers)
+* [action_with_args](#action_with_args)
+* [add_nick](#add_nick)
 * [Adding a factoid](#adding-a-factoid)
-  * [factadd](#factadd)
+* [factadd](#factadd)
 * [Viewing/triggering a factoid](#viewingtriggering-a-factoid)
 * [Viewing/triggering another channel's factoid](#viewingtriggering-another-channels-factoid)
-  * [fact](#fact)
+* [fact](#fact)
 * [Deleting a factoid](#deleting-a-factoid)
-  * [factrem](#factrem)
-  * [forget](#forget)
+* [factrem](#factrem)
+* [forget](#forget)
 * [Aliasing a factoid](#aliasing-a-factoid)
-  * [factalias](#factalias)
+* [factalias](#factalias)
 * [Moving/renaming a factoid](#movingrenaming-a-factoid)
-  * [factmove](#factmove)
+* [factmove](#factmove)
 * [Changing a factoid](#changing-a-factoid)
-  * [factchange](#factchange)
-  * [factundo](#factundo)
-  * [factredo](#factredo)
-  * [factset](#factset)
-  * [factunset](#factunset)
-    * [Factoid Metadata List](#factoid-metadata-list)
+* [factchange](#factchange)
+* [factundo](#factundo)
+* [factredo](#factredo)
+* [factset](#factset)
+* [factunset](#factunset)
+* [Factoid Metadata List](#factoid-metadata-list)
 * [Finding a factoid](#finding-a-factoid)
-  * [factfind](#factfind)
+* [factfind](#factfind)
 * [Information about a factoid](#information-about-a-factoid)
-  * [factinfo](#factinfo)
-  * [factshow](#factshow)
-  * [factset](#factset-1)
-  * [factlog](#factlog)
-  * [count](#count)
-  * [histogram](#histogram)
-  * [top20](#top20)
+* [factinfo](#factinfo)
+* [factshow](#factshow)
+* [factset](#factset-1)
+* [factlog](#factlog)
+* [count](#count)
+* [histogram](#histogram)
+* [top20](#top20)
 <!-- md-toc-end -->
 
-### Channel namespaces
+## Channel namespaces
 Factoids added in one channel may be called/triggered in another channel or in private message, providing that the other channel doesn't already have a factoid of the same name (in which case that channel's factoid will be triggered).
 
 Factoids may be added to a special channel named `global`. Factoids that are set in this channel will be accessible to any channels. Factoids that are set in a specific channel will override factoids of the same name that are set in the `global` channel or other channels.
@@ -63,33 +72,33 @@ Now imagine `##c++` also has a `malloc` factoid. If you invoke it in `##c++` the
 
 However, if there is no `malloc` factoid in the `global` channel but there is one in `##c` and `##c++`, and you attempt to invoke it in any other channel then PBot will display a disambiguation message listing which channels it belongs to and instructing you to use the [`fact`](#fact) command to call the desired factoid.
 
-### Special commands
-#### /say
-If a factoid begins with `/say ` then PBot will not use the `<factoid> is <description>` format when displaying the factoid. Instead, it will simply say only the `<description>`.
+## Special commands
+### /say
+If a factoid begins with `/say` then PBot will not use the `<factoid> is <description>` format when displaying the factoid. Instead, it will simply say only the `<description>`.
 
     <pragma-> !factadd global hi /say Well, hello there, $nick.
        <PBot> hi added to the global channel
        <prec> PBot, hi
        <PBot> Well, hello there, prec.
 
-#### /me
-If a factoid begins with `/me ` then PBot will `CTCP ACTION` the factoid.
+### /me
+If a factoid begins with `/me` then PBot will `CTCP ACTION` the factoid.
 
     <pragma-> !factadd global bounce /me bounces around.
        <PBot> bounce added to the global channel
     <pragma-> !bounce
             * PBot bounces around.
 
-#### /call
-If a factoid begins with `/call ` then PBot will call an existing command. This is what [`factalias`](#factalias) does internally.
+### /call
+If a factoid begins with `/call` then PBot will call an existing command. This is what [`factalias`](#factalias) does internally.
 
     <pragma-> !factadd global boing /call bounce
        <PBot> boing added to the global channel
     <pragma-> !boing
             * PBot bounces around.
 
-#### /msg
-If a factoid begins with `/msg <nick> ` then PBot will privately message the factoid text to `<nick>`. Only admins can use this command.
+### /msg
+If a factoid begins with `/msg <nick>` then PBot will privately message the factoid text to `<nick>`. Only admins can use this command.
 
 ### /code
 Code Factoids are a special type of factoid whose text is treated as code and executed with a chosen programming language
@@ -108,11 +117,43 @@ The `<language>` parameter selects a programming/scripting language or interpret
 #### Supported languages
 
 As of this writing, these are the languages and interpreters that PBot supports. It is easy to add additional
-languages or interpreters. For example, [take a look at these language/interpreter files.](../modules/compiler_vm/languages)
+languages or interpreters.
+
+Name | Description
+--- | ---
+[bash](../modules/compiler_vm/languages/bash.pm) | Bourne-again Shell scripting language
+[bc](../modules/compiler_vm/languages/bc.pm) | An arbitrary precision calculator language
+[bf](../modules/compiler_vm/languages/bf.pm) | BrainFuck esoteric language
+[c11](../modules/compiler_vm/languages/c11.pm) | C programming language using GCC -std=c11
+[c89](../modules/compiler_vm/languages/c89.pm) | C programming language using GCC -std=c89
+[c99](../modules/compiler_vm/languages/c99.pm) | C programming language using GCC -std=c99
+[clang11](../modules/compiler_vm/languages/clang11.pm) | C programming language using Clang -std=c11
+[clang89](../modules/compiler_vm/languages/clang89.pm) | C programming language using Clang -std=c89
+[clang99](../modules/compiler_vm/languages/clang99.pm) | C programming language using Clang -std=c99
+[clang](../modules/compiler_vm/languages/clang.pm) | Alias for `clang11`
+[clangpp](../modules/compiler_vm/languages/clangpp.pm) | C++ programming language using Clang
+[clisp](../modules/compiler_vm/languages/clisp.pm) | Common Lisp dialect of the Lisp programming language
+[cpp](../modules/compiler_vm/languages/cpp.pm) | C++ using GCC
+[freebasic](../modules/compiler_vm/languages/freebasic.pm) | FreeBasic BASIC compiler/interpreter
+[go](../modules/compiler_vm/languages/go.pm) | Golang programming language
+[haskell](../modules/compiler_vm/languages/haskell.pm) | Haskell programming language
+[java](../modules/compiler_vm/languages/java.pm) | Java programming language
+[javascript](../modules/compiler_vm/languages/javascript.pm) | JavaScript programming language
+[ksh](../modules/compiler_vm/languages/ksh.pm) | Korn shell scripting language
+[lua](../modules/compiler_vm/languages/lua.pm) | LUA scripting language
+[perl](../modules/compiler_vm/languages/perl.pm) | Perl programming language
+[python3](../modules/compiler_vm/languages/python3.pm) | Python3 programming language
+[python](../modules/compiler_vm/languages/python.pm) | Python programming language
+[qbasic](../modules/compiler_vm/languages/qbasic.pm) | QuickBasic option using FreeBasic
+[ruby](../modules/compiler_vm/languages/ruby.pm) | Ruby programming language
+[scheme](../modules/compiler_vm/languages/scheme.pm) | Scheme dialect of the Lisp programming language
+[sh](../modules/compiler_vm/languages/sh.pm) | Bourne Shell scripting language
+[tcl](../modules/compiler_vm/languages/tcl.pm) | TCL scripting language
+[zsh](../modules/compiler_vm/languages/zsh.pm) | Z Shell scripting language
 
 #### Special variables
 
-All the variables listed in [Special Variables](#special-variables) are expanded within Code Factoids before
+All the variables listed in [Special Variables](#special-variables-1) are expanded within Code Factoids before
 the code is executed or interpreted.
 
 [List variables](#list-variables) are also expanded beforehand as well. You can prevent this by using [`factset`](#factset)
@@ -231,34 +272,34 @@ to strip the timestamp and the name, leaving only the message. `smr` stands for
     <pragma-> !smr derpy3 girls
        <PBot> gIrLs ArE dUmB!
 
-### Special variables
+## Special variables
 You can use the following variables in a factoid or as an argument to one.
 
-#### $nick
+### $nick
 `$nick` expands to the nick of the caller.
 
-#### $args
+### $args
 `$args` expands to any text following the keyword.  If there is no text then it expands to the nick of the caller.
 
-#### $arg[n]
+### $arg[n]
 `$arg[n]` expands to the nth argument. Indexing begins from 0 (the first argument is `$arg[0]`).  You may use a negative number to count from the end; e.g., `$arg[-2]` means the 2nd argument from the end. Multiple words can be double-quoted to constitute one argument. If the argument does not exist, the variable and the leading space before it will be silently removed.
 
-#### $arg[n:m]
+### $arg[n:m]
 `$arg[n:m]` expands to a slice of arguments between `n` and `m`.  Indexing begins from 0 (the first argument is `$arg[0]`).  Not specifying the `m` value means the rest of the arguments; e.g., `$arg[2:]` means the remaining arguments after the first two.  Multiple words can be double-quoted to constitute one argument. If the argument does not exist, the variable and the leading space before it will be silently removed.
 
-#### $arglen
+### $arglen
 `$arglen` expands to the number of arguments provided to a factoid.
 
-#### $channel
+### $channel
 `$channel` expands to the name of the channel in which the factoid is used.
 
-#### $randomnick
+### $randomnick
 `$randomnick` expands to a random nick from the channel in which the factoid is used. Filtered to nicks who have spoken in channel in the last two hours.
 
-#### $0
-`$0` expands to the original keyword used to invoke a factoid. See also [Overriding $0](#Overriding_$0).
+### $0
+`$0` expands to the original keyword used to invoke a factoid.
 
-### List variables
+## List variables
 You may create a factoid containing a list of quoted values. When this factoid is used as a `$variable` by using the `$` character, a random value
 will be selected from the list.
 
@@ -292,7 +333,7 @@ Another example, creating the RTFM trigger:
     <pragma-> !rtfm mauke
             * PBot thwacks mauke with a big red manual.
 
-#### modifiers
+### modifiers
 Factoid `$variables` can accept trailing modifier keywords prefixed with a colon.  These can be chained together to combine their effects.
 
     <pragma-> !echo $colors:uc
@@ -308,7 +349,7 @@ Modifier | Description
 `:title` | Lowercases the expansion and then uppercases the initial letter of each word
 `:<channel>` | Looks for variable in `<channel>` first; use `global` to refer to the global channel
 
-### action_with_args
+## action_with_args
 
 You can use the [`factset`](#factset) command to set a special [factoid meta-data](#factoid-metadata-list) key named `action_with_args` to trigger an alternate message if an argument has been supplied.
 
@@ -321,13 +362,13 @@ You can use the [`factset`](#factset) command to set a special [factoid meta-dat
     <pragma-> !snack orbitz
             * PBot gives orbitz a cookie.
 
-### add_nick
+## add_nick
 
 You can use the [`factset`](#factset) command to set a special [factoid meta-data](#factoid-metadata-list) key named `add_nick` to prepend the nick of the caller to the output.  This is mostly useful for modules.
 
 Adding a factoid
 ----------------
-### factadd
+## factadd
 Usage: `factadd [channel] <keyword> <description>`
 
 To add a factoid to the global channel, use `global` as the channel.
@@ -343,15 +384,15 @@ To view or trigger a factoid, one merely issues its keyword as a command.
 
 Viewing/triggering another channel's factoid
 --------------------------------------------
-### fact
+## fact
 To view or trigger a factoid belonging to a specific channel, use the `fact` command.
 
 Usage: `fact <channel> <keyword> [arguments]`
 
 Deleting a factoid
 ------------------
-### factrem
-### forget
+## factrem
+## forget
 
 To remove a factoid, use the `factrem` or `forget` command.
 
@@ -359,7 +400,7 @@ Usage: `factrem [channel] <keyword>` `forget [channel] <keyword>`
 
 Aliasing a factoid
 ------------------
-### factalias
+## factalias
 To create an factoid that acts as an alias for a command, use the `factalias` command or set the factoid's `action` meta-data to `/call <command>`.
 
 Usage: `factalias [channel] <keyword> <command>`
@@ -384,7 +425,7 @@ Usage: `factalias [channel] <keyword> <command>`
 
 Moving/renaming a factoid
 -------------------------
-### factmove
+## factmove
 To rename a factoid or move a factoid to a different channel, use the `factmove` command:
 
 Usage:  `factmove <source channel> <source factoid> <target channel/factoid> [target factoid]`
@@ -393,7 +434,7 @@ If three arguments are given, the factoid is renamed in the source channel.  If 
 
 Changing a factoid
 ------------------
-### factchange
+## factchange
 To change a factoid, use the `factchange` command:
 
 Usage:  `factchange [channel] <keyword> s/<pattern>/<change to>/[gi]`
@@ -409,30 +450,30 @@ Note that the final argument is a Perl-style substitution regex.  See `man perlr
 
 For instance, it is possible to append to a factoid by using: `factchange channel factoid s/$/text to append/`. Likewise, you can prepend to a factoid by using: `factchange channel factoid s/^/text to prepend/`.
 
-### factundo
+## factundo
 To revert to an older revision, use the `factundo` command. You can repeatedly undo a factoid until there are no more undos remaining.
 
 Usage: `factundo [channel] <keyword>`
 
-### factredo
+## factredo
 To revert to a newer revision, use the `factredo` command. You can repeatedly redo a factoid until there are no more redos available.
 
 Usage: `factredo [channel] <keyword>`
 
-### factset
+## factset
 To view or set [factoid meta-data](#factoid-metadata-list), such as owner, rate-limit, etc, use the [`factset`](#factset) command.
 
 Usage:  `factset [channel] <factoid> [<key> [value]]`
 
 Omit `<key>` and `<value>` to list all the keys and values for a factoid.  Specify `<key>`, but omit `<value>` to see the value for a specific key.
 
-### factunset
+## factunset
 
 To unset [factoid meta-data](#factoid-metadata-list), use the `factunset` command.
 
 Usage: `factunset [channel] <factoid> <key>`
 
-#### Factoid Metadata List
+## Factoid Metadata List
 This is a list of recognized factoid meta-data fields. An admin level of `0` signifies that anybody can set the field.
 
 Name | Admin level | Description
@@ -460,7 +501,7 @@ Name | Admin level | Description
 
 Finding a factoid
 -----------------
-### factfind
+## factfind
 To search the database for a factoid, use the 'factfind` command.  You may optionally specify whether to narrow by channel and/or include factoid owner and/or last referenced by in the search.
 
 If there is only one match for the query, it will display that factoid and its text, otherwise it will list all matching keywords.
@@ -474,7 +515,7 @@ If you specify the `-regex` flag, the `text` argument will be treated as a regex
 
 Information about a factoid
 ---------------------------
-### factinfo
+## factinfo
 To get information about a factoid, such as who submitted it and when, use the `factinfo` command.
 
 Usage: `factinfo [channel] <keyword>`
@@ -482,7 +523,7 @@ Usage: `factinfo [channel] <keyword>`
     <pragma-> !factinfo ##c NULL
        <PBot> NULL: Factoid submitted by Major-Willard for all channels on Sat Jan 1 16:17:42 2005 [5 years and 178 days ago], referenced 39 times (last by pragma- on Sun Jun 27 04:40:32 2010 [5 seconds ago])
 
-### factshow
+## factshow
 To see the factoid `action` meta-data, use the `factshow` command.
 
 Usage: `factshow [channel] <keyword>`
@@ -490,14 +531,14 @@ Usage: `factshow [channel] <keyword>`
     <pragma-> !factshow hi
        <PBot> hi: /say $greetings, $nick.
 
-### factset
+## factset
 To view [factoid meta-data](#factoid-metadata-list), such as owner, rate-limit, etc, use the `factset` command.
 
 Usage:  `factset [channel] <factoid> [<key> [value]]`
 
 Omit `<key>` and `<value>` to list all the keys and values for a factoid.  Specify `<key>`, but omit `<value>` to see the value for a specific key.
 
-### factlog
+## factlog
 To see a factoid's changelog history, use the `factlog` command.
 
 Usage: `factlog [-h] [-t] [channel] <factoid>`
@@ -519,7 +560,7 @@ Usage: `factlog [-h] [-t] [channel] <factoid>`
     <pragma-> !factlog hi
        <PBot> [3m ago] pragma- created: /say Hi! [5m ago] pragma- deleted [8m ago] pragma- changed to /say Hello there, $nick! [10m ago] pragma- created: /say Hello there!
 
-### count
+## count
 To see how many factoids and what percentage of the database `<nick>` has submitted, use the `count` command.
 
 Usage: `count <nick>`
@@ -533,13 +574,13 @@ Usage: `count <nick>`
     <pragma-> !count pragma
        <PBot> pragma has submitted 27 factoids out of 233 (11%)
 
-### histogram
+## histogram
 To see a histogram of the top factoid submitters, use the `histogram` command.
 
     <pragma-> !histogram
        <PBot> 268 factoids, top 10 submitters: twkm: 74 (27%) Major-Willard: 64 (23%) pragma-: 40 (14%) prec: 39 (14%) defrost: 14 (5%) PoppaVic: 10 (3%) infobahn: 7 (2%) orbitz: 3 (1%) mauke: 3 (1%) Tom^: 2 (1%)
 
-### top20
+## top20
 To see the top 20 most popular factoids, use the `top20` command. It can also show you the 50 most recent factoids that were added to a channel.
 
 Usage: `top20 <channel> [<nick> or 'recent']`
