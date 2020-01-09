@@ -247,6 +247,7 @@ Let's make a command, using a Code Factoid, to do this! `sm` stands for "SpongeB
 This time we'll use the Bash shell scripting language.
 
     <pragma-> !factadd sm /code bash echo "${@,,}"|perl -pe 's/(?<!^)[[:alpha:]].*?([[:alpha:]]|$)/\L\u$&/g'
+
     <pragma-> !factset sm usage Usage: sm <text>
 
     <pragma-> !sm Testing one, two...
@@ -269,6 +270,7 @@ the mock text for us.
 
 First of all, the `recall` command prints output like this:
 
+     <derpy3> Girls are dumb!
     <pragma-> !recall derpy3 girls
        <PBot> [5m30s ago] <derpy3> Girls are dumb!
 
@@ -278,14 +280,17 @@ to strip the timestamp and the name, leaving only the message. `smr` stands for
 
     <pragma-> !factadd smr /call recall $args | {func sed s/^.*?\] (<.*?> )?(\S+:\s*)?//} | {sm}
 
+     <derpy3> Girls are dumb!
     <pragma-> !smr derpy3 girls
        <PBot> gIrLs ArE dUmB!
 
-We can make an alias with a more friendly name. By the way, if the `recall`ed
-message is the most recent, there is no need to use an argument (e.g., `girls`).
+We can make an alias with a more friendly name.
 
     <pragma-> !factalias mock smr
 
+If the recalled message is the most recent, there is no need to use an argument (e.g., `girls`).
+
+     <derpy3> Girls are dumb!
     <pragma-> !mock derpy3
        <PBot> gIrLs ArE dUmB!
 
