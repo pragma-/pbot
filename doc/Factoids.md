@@ -78,6 +78,7 @@ If a factoid begins with `/say` then PBot will not use the `<factoid> is <descri
 
     <pragma-> !factadd global hi /say Well, hello there, $nick.
        <PBot> hi added to the global channel
+
        <prec> PBot, hi
        <PBot> Well, hello there, prec.
 
@@ -86,6 +87,7 @@ If a factoid begins with `/me` then PBot will `CTCP ACTION` the factoid.
 
     <pragma-> !factadd global bounce /me bounces around.
        <PBot> bounce added to the global channel
+
     <pragma-> !bounce
             * PBot bounces around.
 
@@ -94,6 +96,7 @@ If a factoid begins with `/call` then PBot will call an existing command. This i
 
     <pragma-> !factadd global boing /call bounce
        <PBot> boing added to the global channel
+
     <pragma-> !boing
             * PBot bounces around.
 
@@ -167,8 +170,10 @@ the C programming language because why not?
 
     <pragma-> !factadd testargs /code c11 printf("/say args: "); while (*++argv) printf("[%s] ", *argv);
        <PBot> testargs added to the global channel.
+
     <pragma-> testargs foo bar
        <PBot> args: [foo] [bar]
+
     <pragma-> testargs "abc 123" xyz
        <PBot> args: [abc 123] [xyz]
 
@@ -198,11 +203,13 @@ the name to prevent them from being expanded as [List Variables](#list-variables
               my %_votes = (); my @data = ({%_votes}, $_question);
               system 'rm -rf vote-data'; mkdir 'vote-data' or print "$!";
               store \@data, 'vote-data/data';
+
     <pragma-> !factset startvote usage Usage: startvote <question>
 
     <pragma-> !factadd vote /code perl use Storable; my $_data = retrieve 'vote-data/data';
               my %_votes = %{shift @$_data}; ($_votes{"$nick"}) = (lc "@ARGV");
               unshift @$_data, {%_votes}; store $_data, 'vote-data/data';
+
     <pragma-> !factset vote usage Usage: vote <keyword>
 
     <pragma-> !factadd votes /code perl no warnings; use Storable; my $_data = retrieve 'vote-data/data';
@@ -217,10 +224,12 @@ And action:
 
     <pragma-> !startvote Isn't this cool?
        <PBot> Starting poll: Isn't this cool? Use `vote <keyword>` to record your vote.
+
     <pragma-> !vote yes
     <luser69> !vote no
     <someguy> !vote yes
      <derpy3> !vote hamburger
+
     <pragma-> !votes
        <PBot> Poll results for "Isn't this cool?": yes: 2, no: 1, hamburger: 1
 
@@ -272,6 +281,14 @@ to strip the timestamp and the name, leaving only the message. `smr` stands for
     <pragma-> !smr derpy3 girls
        <PBot> gIrLs ArE dUmB!
 
+We can make an alias with a more friendly name. By the way, if the `recall`ed
+message is the most recent, there is no need to use an argument (e.g., `girls`).
+
+    <pragma-> !factalias mock smr
+
+    <pragma-> !mock derpy3
+       <PBot> gIrLs ArE dUmB!
+
 ## Special variables
 You can use the following variables in a factoid or, in some cases, as an argument to one.
 
@@ -317,8 +334,10 @@ Then use the factoid as a `$variable`.
 
     <pragma-> !factadd global sky is /say The sky is $colors.
        <PBot> sky added to the global channel
+
     <pragma-> !sky
        <PBot> The sky is dark purple.
+
     <pragma-> !sky
        <PBot> The sky is green.
 
@@ -326,10 +345,13 @@ Another example, creating the RTFM trigger:
 
     <pragma-> !factadd global sizes is big large tiny small huge gigantic teeny
        <PBot> sizes added to the global channel
+
     <pragma-> !factadd global attacks is whaps thwacks bashes smacks punts whacks
        <PBot> attacks added to the global channel
+
     <pragma-> !factadd global rtfm is /me $attacks $args with a $sizes $colors manual.
        <PBot> rtfm added to the global channel
+
     <pragma-> !rtfm mauke
             * PBot thwacks mauke with a big red manual.
 
@@ -338,6 +360,7 @@ Factoid `$variables` can accept trailing modifier keywords prefixed with a colon
 
     <pragma-> !echo $colors:uc
        <PBot> RED
+
     <pragma-> !echo $colors:ucfirst
        <PBot> Blue
 
@@ -354,10 +377,13 @@ You can use the [`factset`](#factset) command to set a special [factoid meta-dat
 
     <pragma-> !factadd global snack is /me eats a cookie.
        <PBot> snack added to the global channel
+
     <pragma-> !factset global snack action_with_args /me gives $args a cookie.
        <PBot> [Factoids] (global) snack: 'action_with_args' set to '/me gives $args a cookie.'
+
     <pragma-> !snack
             * PBot eats a cookie.
+
     <pragma-> !snack orbitz
             * PBot gives orbitz a cookie.
 
@@ -399,9 +425,12 @@ To create an factoid that acts as an alias for a command, use the `factalias` co
 Usage: `factalias [channel] <keyword> <command>`
 
     <pragma-> !factadd ##c offtopic is /say In this channel, $args is off-topic.
+
     <pragma-> !offtopic C++
        <PBot> In this channel, C++ is off-topic.
+
     <pragma-> !factalias ##c C++ offtopic C++
+
     <pragma-> !C++
        <PBot> In this channel, C++ is off-topic.
 
@@ -409,10 +438,13 @@ Usage: `factalias [channel] <keyword> <command>`
 
     <pragma-> !factadd ##c book is /me points accusingly at $args, "Where is your book?!"
        <PBot> book added to ##c
+
     <pragma-> !book newbie
             * PBot points accusingly at newbie, "Where is your book?!"
+
     <pragma-> !factadd ##c rafb /call book
        <PBot> rafb added to ##c
+
     <pragma-> !rafb runtime
             * PBot points accusingly at runtime, "Where is your book?!"
 
@@ -432,8 +464,10 @@ Usage:  `factchange [channel] <keyword> s/<pattern>/<change to>/[gi]`
 
     <pragma-> !c
        <PBot> C rocks!
+
     <pragma-> !factchange ##c c s/rocks/rules/
        <PBot> c changed.
+
     <pragma-> !c
        <PBot> C rules!
 
@@ -539,10 +573,13 @@ Usage: `factlog [-h] [-t] [channel] <factoid>`
 
     <pragma-> !factadd hi /say Hello there!
        <PBot> hi added to global channel.
+
     <pragma-> !factchange hi s/!$/, $nick!/
        <PBot> Changed: hi is /say Hello there, $nick!
+
     <pragma-> !forget hi
        <PBot> hi removed from the global channel.
+
     <pragma-> !factadd hi /say Hi!
 
 <!-- -->
