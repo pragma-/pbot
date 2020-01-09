@@ -110,7 +110,7 @@ for more information.
 
 To create a Code Factoid, use the `/code` command. The syntax is:
 
-    factadd keyword /code <language> <code>
+    factadd <keyword> /code <language> <code>
 
 The `<language>` parameter selects a programming/scripting language or interpreter to use.
 
