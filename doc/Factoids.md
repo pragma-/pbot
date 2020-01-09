@@ -304,7 +304,7 @@ You can use the following variables in a factoid or, in some cases, as an argume
 `$arg[n]` expands to the nth argument. Indexing begins from 0 (the first argument is `$arg[0]`).  You may use a negative number to count from the end; e.g., `$arg[-2]` means the 2nd argument from the end. Multiple words can be double-quoted to constitute one argument. If the argument does not exist, the variable and the leading space before it will be silently removed.
 
 ### $arg[n:m]
-`$arg[n:m]` expands to a slice of arguments between `n` and `m`.  Indexing begins from 0 (the first argument is `$arg[0]`).  Not specifying the `m` value means the rest of the arguments; e.g., `$arg[2:]` means the remaining arguments after the first two.  Multiple words can be double-quoted to constitute one argument. If the argument does not exist, the variable and the leading space before it will be silently removed.
+`$arg[n:m]` expands to a slice of arguments between `n` and `m`.  Indexing begins from 0 (the first argument is `$arg[0]`).  Omitting the `m` value will use up the arguments after the `n`th value; e.g., `$arg[2:]` means the remaining arguments after the first two.  Multiple words can be double-quoted to constitute one argument. If the argument does not exist, the variable and the leading space before it will be silently removed.
 
 ### $arglen
 `$arglen` expands to the number of arguments provided to a factoid.
