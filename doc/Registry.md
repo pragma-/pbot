@@ -5,7 +5,7 @@ Registry
   * [About](#about)
     * [Types of values](#types-of-values)
     * [Creating array values](#creating-array-values)
-    * [Overriding registry values per-channel](#overriding-registry-values-per-channel)
+    * [Overriding Registry values per-channel](#overriding-registry-values-per-channel)
   * [Overriding Registry values via command-line](#overriding-registry-values-via-command-line)
   * [Registry commands](#registry-commands)
     * [regset](#regset)
@@ -17,7 +17,7 @@ Registry
     * [regunsetmeta](#regunsetmeta)
   * [Editing Registry file](#editing-registry-file)
   * [Metadata list](#metadata-list)
-  * [List of known registry items](#list-of-known-registry-items)
+  * [List of known Registry items](#list-of-known-registry-items)
     * [Channel-specific Registry items](#channel-specific-registry-items)
 <!-- md-toc-end -->
 
@@ -40,7 +40,7 @@ For example, we'll create a fictional Registry key `animals` in fictional sectio
     <pragma-> !regsetmeta foo.animals type array
        <PBot> foo.animals: 'type' set to 'array'
 
-### Overriding registry values per-channel
+### Overriding Registry values per-channel
 Some Registry items belonging to a specific section may be overridden on a per-channel basis by setting the item in a channel-specific section.
 
 For example, the bot's trigger is defined in `general.trigger`. You may set a `trigger` registry item in section `#channel` to override the value for that channel: `#channel.trigger`.
@@ -148,7 +148,7 @@ Name | Description
 `value` | The value of the registry item.
 `private` | Whether the value of the registry item is displayed in the `regset`, `regshow` or `regfind` commands. If set to a true value, the value of the registry key will be shown as `<private>`.
 
-## List of known registry items
+## List of known Registry items
 This is a list of recognized registry items at the time of this writing.
 
 Name | Description | Default value
