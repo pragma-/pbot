@@ -45,7 +45,7 @@ Retrieves and displays a specific grabbed quote from the quotegrabs database.
 Usage: `getq <quote-id>`
 
     <pragma-> !getq 1
-       <PBot> grabbed by pragma- in #channel on Wed Dec 31 16:00:00 1969 [50 years and 21 days ago]
+       <PBot> 1: grabbed by pragma- in #channel on Wed Dec 31 16:00:00 1969 [50 years and 21 days ago] <bob> Clowns are scary.
 
 ### rq
 Retrieves and displays a random grabbed quote from the quotegrabs database.  You may filter by nick, channel and/or quote text.
