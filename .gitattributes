@@ -1,0 +1,4 @@
+doc/* linguist-documentation
+build/* linguist-vendored
+data/* linguist-vendored
+misc/* linguist-vendored
