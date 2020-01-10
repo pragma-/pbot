@@ -72,7 +72,6 @@ PBot has several external command-line modules. Here is the documentation for mo
 * [insult](#insult)
 * [excuse](#excuse)
 * [horoscope](#horoscope)
-* [horrorscope](#horrorscope)
 * [quote](#quote)
 <!-- md-toc-end -->
 
@@ -730,11 +729,6 @@ Usage: `excuse [nick]`
 Displays a horoscope for a Zodiac sign (google this if you don't know your sign).
 
 Usage: `horoscope <sign>`
-
-### horrorscope
-Displays a horrorscope for a Zodiac sign.
-
-Usage: `horrorscope <sign>`
 
 ### quote
 Displays quotes from a popular quotation database.  If you use `quote` without arguments, it returns a random quote; if you use it
