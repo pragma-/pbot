@@ -92,7 +92,7 @@ PBot factoids include these advanced features:
 * advanced argument processing (indexing, splicing, etc)
 * special commands: `/say`, `/me`, `/msg`, `/code`, etc
 * advanced `$variable` interpolation (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)
-* factoid-based variable lists (e.g., add a factoid `$colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
+* factoid-based variable lists (e.g., add a factoid `colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
 * changelog history
 * undo/redo history
 * and much, much more!
