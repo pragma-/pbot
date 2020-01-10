@@ -42,7 +42,7 @@ system's documentation to install it.
 ### Installing CPAN modules
 
 Some of PBot's features depend on the availability of Perl modules written by
-third parties. To use such PBot features, the modules listed in the [`MODULES`](https://github.com/pragma-/pbot/blob/master/MODULES)
+third parties. To use such PBot features, the modules listed in the [`MODULES`](../MODULES)
 file need to be installed.
 
 The modules may be installed with a simple command:
@@ -119,7 +119,7 @@ after the botnick we'll use.
 ### Edit Registry
 
 PBot configuration is stored in a registry of key/value pairs grouped by sections.
-For more details, see the [Registry documentation](https://github.com/pragma-/pbot/blob/master/doc/Registry.md).
+For more details, see the [Registry documentation](Registry.md).
 
 Now you may edit the `registry` file in your data-directory to configure PBot settings. Alternatively,
 you may [override the registry entries via the command-line](#overriding-registry).
@@ -224,7 +224,7 @@ enabled | If set to false, PBot will not autojoin or respond to this channel. | 
 chanop | If set to true, PBot will perform OP duties in this channel. | 0
 permop | If set to true, PBot will not de-OP itself in this channel. | 0
 
-For more information, see the [Channels documentation](https://github.com/pragma-/pbot/blob/master/doc/Channels.md).
+For more information, see the [Channels documentation](Admin.md#channel-management-commands).
 
 ### Adding Admins
 
@@ -241,12 +241,12 @@ You may set the follow admin properties:
 Name | Description
 --- | ---
 name | A unique name identifying this admin account.
-level | The privilege level of this admin. See [this table](https://github.com/pragma-/pbot/blob/master/doc/Admin.md#admin-levels) for more information.
+level | The privilege level of this admin. See [this table](Admin.md#admin-levels) for more information.
 password | The password for this admin account.
 loggedin | If set to 1, the admin is logged in.
 stayloggedin | If set to 1, the admin will not be logged out when they part/quit.
 
-For more information, see the [Admin documentation](https://github.com/pragma-/pbot/blob/master/doc/Admin.md).
+For more information, see the [Admin documentation](Admin.md#admin-management-commands).
 
 ### Loading Plugins
 
@@ -266,7 +266,7 @@ Currently loaded plugins may be listed with the `pluglist` command.
     <pragma-> !pluglist
        <PBot> Loaded plugins: ActionTrigger, AntiAway, AntiKickAutoRejoin, AntiNickSpam, AntiRepeat, AntiTwitter, AutoRejoin, Counter, GoogleSearch, Quotegrabs, RemindMe, UrlTitles
 
-For more information, see the [Plugins documentation](https://github.com/pragma-/pbot/blob/master/doc/Plugins.md).
+For more information, see the [Plugins documentation](Plugins.md).
 
 Further Reading
 ---------------
@@ -295,7 +295,7 @@ At its most simple, factoids merely output the text the creator sets.
 Significantly more complex factoids can be built by using `$variables`, command-substitution,
 command-piping, `/code` invocation, and more!
 
-For more information, see the [Factoids documentation](https://github.com/pragma-/pbot/blob/master/doc/Factoids.md).
+For more information, see the [Factoids documentation](Factoids.md).
 
 ### Modules
 
@@ -324,4 +324,4 @@ Now you have a `qalc` calculator in PBot!
     <pragma-> !qalc 2 * 2
        <PBot> 2 * 2 = 4
 
-For more information, see the [Modules documentation](https://github.com/pragma-/pbot/blob/master/doc/Modules.md).
+For more information, see the [Modules documentation](Modules.md).
