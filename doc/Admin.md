@@ -189,17 +189,21 @@ PBot extends the IRC `MODE` command in useful ways. For instance, the `<targets>
 parameter can contain wildcards. To op everybody whose nick ends with `|dev`, for
 instance, you can do `!mode +o *|dev`.
 
-#### ban
-Bans a user. If the argument is a `nick` instead of a `hostmask`, it will determine an appropriate banmask for that nick.
+#### ban/mute
+Bans or mutes a user. If the argument is a `nick` instead of a `hostmask`, it will determine an appropriate banmask for that nick.
 
-Usage: `ban <nick or hostmask> [channel [timeout]]`
+Usages:
+- `ban <nick or hostmask> [channel [timeout]]`
+- `mute <nick or hostmask> [channel [timeout]]`
 
 If `timeout` is omitted, PBot will ban the user for 24 hours. Timeout can be specified as an relative time in English; for instance, `5 minutes`, `1 month and 2 weeks`, `next thursday`, `friday after next`, and so on.
 
-#### unban
-Unbans a user. If the argument is a `nick` instead of a `hostmask`, it will find all bans that match any of that nick's hostmasks or NickServ accounts and unban them.
+#### unban/unmute
+Unbans or unmutes a user. If the argument is a `nick` instead of a `hostmask`, it will find all bans that match any of that nick's hostmasks or NickServ accounts and unban them.
 
-Usage: `unban <nick or hostmask> [channel]`
+Usages:
+- `unban <nick or hostmask> [channel]`
+- `unmute <nick or hostmask> [channel]`
 
 #### kick
 Removes a user from the channel. `nick` can be a comma-separated list of multiple users, optionally containing wildcards. If `reason` is omitted, a random insult will be used.
