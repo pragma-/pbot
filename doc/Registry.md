@@ -45,8 +45,8 @@ Some Registry items belonging to a specific section may be overridden on a per-c
 For example, the bot's trigger is defined in `general.trigger`. You may set a `trigger` registry item in section `#channel` to override the value for that channel: `#channel.trigger`.
 
 ## Overriding Registry values via command-line
-You may override the Registry values via the PBot start-up command-line. Such
-overrides are permanent and will be saved.
+You may override the Registry values via the PBot start-up command-line. These
+overrides are not temporary; they will be saved.
 
     $ ./pbot data_dir=mybot irc.botnick=coolbot irc.server=freenode.net irc.port=6667
 
