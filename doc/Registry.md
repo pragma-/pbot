@@ -40,9 +40,9 @@ For example, we'll create a fictional Registry key `animals` in fictional sectio
        <PBot> foo.animals: 'type' set to 'array'
 
 ### Overriding registry values per-channel
-Some key/value pairs belonging to a specific section may be overridden on a per-channel basis by setting the key/value in a channel-specific section.
+Some Registry items belonging to a specific section may be overridden on a per-channel basis by setting the item in a channel-specific section.
 
-For example, the bot's trigger is defined in `general.trigger`. You may add a `trigger` registry item in `#channel` to override the value for that channel: `#channel.trigger`.
+For example, the bot's trigger is defined in `general.trigger`. You may set a `trigger` registry item in section `#channel` to override the value for that channel: `#channel.trigger`.
 
 ## Overriding Registry values via command-line
 You may override the Registry values via the PBot start-up command-line. Such
@@ -90,7 +90,9 @@ Usage: `regshow <section>.<item>`
 
 Usage: `regfind [-showvalues] [-section <section>] <regex>`
 
-To limit the search to a specific section, use `-section <section>`. To dump the entire registry, use `regfind -showvalues .*`.
+To limit the search to a specific section, use `-section <section>`.
+
+To dump the entire registry, use `regfind -showvalues .*`.
 
 ### regsetmeta
 `regsetmeta` sets the meta-data values for a specific registry key. See [registry meta-data list](#metadata-list).
