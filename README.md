@@ -171,7 +171,7 @@ For more information, see the [Modules documentation](doc/Modules.md).
 ### Virtual machine
 
 PBot can integrate with a virtual machine to safely execute arbitrary user-submitted
-commands or code.
+operating system commands or code.
 
 PBot supports [several shells and languages](doc/Factoids.md#supported-languages) out of the box!
 
