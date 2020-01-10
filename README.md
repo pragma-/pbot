@@ -181,7 +181,7 @@ PBot supports [several shells and languages](doc/Factoids.md#supported-languages
 PBot has extensive support for the C programming language. For instance, the C programming language
 plugin is integrated with the GNU Debugger. It will print useful debugging information.
 
-    <pragma-> !cc char *p = 0; *p++;
+    <pragma-> !cc char *p = 0; *p = 1;
        <PBot> runtime error: store to null pointer of type 'char'
               Program received signal SIGSEGV, Segmentation fault at
               statement: *p = 1; <local variables: p = 0x0>
