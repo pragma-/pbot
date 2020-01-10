@@ -303,7 +303,7 @@ You can use factoids as variables and interpolate them within commands.
 #### inline commands
 
 You can invoke up to three commands inlined within a message.  If the message
-is address to a nick, the output will also be addressed to them.
+is addressed to a nick, the output will also be addressed to them.
 
     <pragma-> newuser13: Check the !{version} and the !{help} documentation.
        <PBot> newuser13: PBot version 2696 2020-01-04
