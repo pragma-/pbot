@@ -152,30 +152,30 @@ This is a list of recognized registry items at the time of this writing.
 
 Name | Description | Default value
 --- | --- | ---
-antiaway.bad_actions | If a message matches against this regex, it is considered an Away action. |
-antiaway.bad_nicks | If someone changes their nick and the new nick matches this regex, it is considered an Away nick. |
-antiaway.kick_msg | The message to use when kicking Away offenders. |
-antiflood.chat_flood_punishment | The amount of time, in seconds, offenders will be muted/banned. |
-antiflood.chat_flood_threshold | The number of messages before this is considered a flood. |
-antiflood.chat_flood_time_threshold | `chat_flood_threshold` number of messages within this amount of time will be considered a flood. |
+antiaway.bad_actions | If a message matches against this regex, it is considered an Away action. | `^/me (is (away|gone)|.*auto.?away)`
+antiaway.bad_nicks | If someone changes their nick and the new nick matches this regex, it is considered an Away nick. | `(^z+[[:punct:]]|[[:punct:]](afk|brb|bbl|away|sleep|asleep|nap|z+|work|gone|study|out|home|busy|off)[[:punct:]]*$|afk$)`
+antiaway.kick_msg | The message to use when kicking Away offenders. | http://sackheads.org/~bnaylor/spew/away_msgs.html
+antiflood.chat_flood_punishment | The amount of time, in seconds, offenders will be muted/banned. | 60,300,3600,86400,604800,2419200
+antiflood.chat_flood_threshold | The number of messages before this is considered a flood. | 4
+antiflood.chat_flood_time_threshold | `chat_flood_threshold` number of messages within this amount of seconds will be considered a flood. | 5
 antiflood.debug_checkban | Print verbose debugging information about the `checkban` function. | 0
 antiflood.dont_enforce_admins | Do not enforce anti-flood detection against logged-in admins. | 1
-antiflood.enforce | If set to a true value, anti-flood will be enforced. |
-antiflood.enter_abuse_max_offenses ||
-antiflood.enter_abuse_punishment ||
-antiflood.enter_abuse_threshold ||
-antiflood.enter_abuse_time_threshold ||
-antiflood.join_flood_punishment ||
-antiflood.join_flood_threshold ||
-antiflood.join_flood_time_threshold ||
-antiflood.nick_flood_punishment ||
-antiflood.nick_flood_threshold ||
-antiflood.nick_flood_time_threshold ||
-antikickautorejoin.punishment ||
-antikickautorejoin.threshold ||
-bantracker.chanserv_ban_timeout ||
+antiflood.enforce | If set to a true value, anti-flood will be enforced. | 1
+antiflood.enter_abuse_max_offenses | | 3
+antiflood.enter_abuse_punishment || 60,300,3600,86400,604800,2419200
+antiflood.enter_abuse_threshold || 4
+antiflood.enter_abuse_time_threshold || 15
+antiflood.join_flood_punishment || 115200,3600,10800,604800
+antiflood.join_flood_threshold || 4
+antiflood.join_flood_time_threshold || 1800
+antiflood.nick_flood_punishment || 1800,3600,86400,604800
+antiflood.nick_flood_threshold || 3
+antiflood.nick_flood_time_threshold || 1800
+antikickautorejoin.punishment || 300,900,1800,3600,28800
+antikickautorejoin.threshold || 4
+bantracker.chanserv_ban_timeout || 604800
 bantracker.debug | Log verbose debugging information about the Ban Tracker. | 0
-bantracker.mute_timeout ||
+bantracker.mute_timeout || 604800
 factoids.default_rate_limit | The default rate-limit to set when creating new factoids. | 10
 general.data_dir | Path to PBot `data/` directory. |
 general.deop_timeout | Time-out, in seconds, before PBot deops itself after being opped. | 300
@@ -194,15 +194,15 @@ irc.server | The IRC server network address to connect to. | irc.freenode.net
 irc.log_default_handler | If set to a true value, any IRC events that are not explicitly handled by PBot will be dumped to the log. | 1
 irc.max_msg_len | The maximum length messages can be on this IRC server. | 425
 irc.port | The IRC server network port to connect to. | 6667
-irc.realname ||
+irc.realname || https://github.com/pragma-/pbot
 irc.show_motd | If set to a true value, the IRC server MOTD will be shown when connecting. | 1
 irc.SSL_ca_file | Path to a specific SSL certificate authority file. |
 irc.SSL_ca_path | Path to the SSL certificate authority directory containing certificate files. |
 irc.SSL | If set to a true value, SSL will be enabled when connecting to the IRC server. | 0
-irc.username ||
-lagchecker.lag_history_interval ||
-lagchecker.lag_history_max ||
-lagchecker.lag_threshold ||
+irc.username || PBot
+lagchecker.lag_history_interval | How often, in seconds, to send a `PING` to the IRC server. | 10
+lagchecker.lag_history_max | How many of the most recent `PING`s to average. | 3
+lagchecker.lag_threshold | Duration, in milliseconds, of average lag before PBot thinks it is lagging too much to sensibly enforce anti-flood, etc. | 2000
 messagehistory.debug_aka | Log verbose debugging information about the `aka` command. | 0
 messagehistory.debug_link | Log verbose debugging information about account linking. | 0
 messagehistory.sqlite_commit_interval | How often to commit SQLite transactions to the database. |
@@ -217,4 +217,4 @@ Name | Description
 [channel].max_newlines | The maximum number of lines to be sent before truncating to a paste site, if `preserve_newlines` is enabled.
 [channel].no_url_titles | Disables display of URL titles for this channel.
 [channel].preserve_newlines | If set to a true value, newlines will not be replaced with spaces in this channel. Each line of output will be sent as a distinct message.
-
+[channel].ratelimit_override | Duration, in seconds, of the rate-limit for factoids in this channel. To disable factoid rate-limiting for a channel, you can set this to `0`.
