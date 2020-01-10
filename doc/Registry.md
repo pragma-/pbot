@@ -23,14 +23,18 @@ Registry
 ## About
 PBot's behavior can be customized via a central registry of key/value pairs segregated by sections.
 
+These are represented as `<section>.<key>`. For example, `irc.port` is set to `6667` by default.
+
 ### Types of values
 There are two types of registry values: literals and arrays.  Literals can be strings, floats or integers.  Arrays are comma-separated lists of literals.
 
 ### Creating array values
 Use the [regsetmeta](#regsetmeta) command to change the `type` [meta-data key](#metadata-list) to `array`, and set the registry value to a comma-separated list of values.
 
-    <pragma-> !regset foo.animals aardvark, badger, cat, dingo
-       <PBot> foo.animals set to aardvark, badger, cat, dingo
+For example, we'll create a fictional Registry key `animals` in fictional section `foo` and then set its `type` to `array`.
+
+    <pragma-> !regset foo.animals aardvark,badger,cat,dingo
+       <PBot> foo.animals set to aardvark,badger,cat,dingo
 
     <pragma-> !regsetmeta foo.animals type array
        <PBot> foo.animals: 'type' set to 'array'
@@ -86,7 +90,7 @@ Usage: `regshow <section>.<item>`
 
 Usage: `regfind [-showvalues] [-section <section>] <regex>`
 
-To limit the search to a specific section, use `-section <section>`. To dump the entire registry, use `regfind -showvalues .*`
+To limit the search to a specific section, use `-section <section>`. To dump the entire registry, use `regfind -showvalues .*`.
 
 ### regsetmeta
 `regsetmeta` sets the meta-data values for a specific registry key. See [registry meta-data list](#metadata-list).
@@ -133,7 +137,7 @@ Name | Description
 --- | ---
 `type` | Sets the type of the registry item; values can be `text` (literal) or `array`.
 `value` | The value of the registry item.
-`private` | Whether the value of the registry item is displayed in the `regset`, `regshow` or `regfind` commands. If set to a true value, the value of the registry key will be shown as `**\<private\>**`.
+`private` | Whether the value of the registry item is displayed in the `regset`, `regshow` or `regfind` commands. If set to a true value, the value of the registry key will be shown as `<private>`.
 
 ## List of known registry items
 This is a list of recognized registry items at the time of this writing.
@@ -141,14 +145,14 @@ This is a list of recognized registry items at the time of this writing.
 Name | Description | Default value
 --- | --- | ---
 antiaway.bad_actions | If a message matches against this regex, it is considered an Away action. |
-antiaway.bad_nicks | If a user changes their nick and the new nick matches this regex, it is considered an Away nick. |
+antiaway.bad_nicks | If someone changes their nick and the new nick matches this regex, it is considered an Away nick. |
 antiaway.kick_msg | The message to use when kicking Away offenders. |
-antiflood.chat_flood_punishment ||
-antiflood.chat_flood_threshold ||
-antiflood.chat_flood_time_threshold ||
-antiflood.debug_checkban ||
-antiflood.dont_enforce_admins ||
-antiflood.enforce ||
+antiflood.chat_flood_punishment | The amount of time, in seconds, offenders will be muted/banned. |
+antiflood.chat_flood_threshold | The number of messages before this is considered a flood. |
+antiflood.chat_flood_time_threshold | `chat_flood_threshold` number of messages within this amount of time will be considered a flood. |
+antiflood.debug_checkban | Print verbose debugging information about the `checkban` function. | 0
+antiflood.dont_enforce_admins | Do not enforce anti-flood detection against logged-in admins. | 1
+antiflood.enforce | If set to a true value, anti-flood will be enforced. |
 antiflood.enter_abuse_max_offenses ||
 antiflood.enter_abuse_punishment ||
 antiflood.enter_abuse_threshold ||
@@ -162,53 +166,47 @@ antiflood.nick_flood_time_threshold ||
 antikickautorejoin.punishment ||
 antikickautorejoin.threshold ||
 bantracker.chanserv_ban_timeout ||
-bantracker.debug ||
+bantracker.debug | Log verbose debugging information about the Ban Tracker. | 0
 bantracker.mute_timeout ||
-factoids.default_rate_limit ||
-general.compile_blocks_channels ||
-general.compile_blocks ||
-general.compile_blocks_ignore_channels ||
-general.config_dir ||
-general.data_dir ||
-general.deop_timeout ||
-general.module_dir ||
-general.module_repo ||
-general.paste_ratelimit ||
-general.show_url_titles_channels ||
-general.show_url_titles ||
-general.show_url_titles_ignore_channels ||
-general.trigger ||
-interpreter.max_recursion ||
-irc.botnick ||
-irc.debug ||
-irc.identify_password ||
-irc.server ||
-irc.log_default_handler ||
-irc.max_msg_len ||
-irc.port ||
+factoids.default_rate_limit | The default rate-limit to set when creating new factoids. | 10
+general.data_dir | Path to PBot `data/` directory. |
+general.deop_timeout | Time-out, in seconds, before PBot deops itself after being opped. | 300
+general.module_dir | Path to PBot `modules/` directory. |
+general.module_repo | URL to source code of PBot modules; used in `factinfo` | https://github.com/pragma-/pbot/tree/master/modules
+general.paste_ratelimit | How often, in seconds, between pastes to web paste-sites. |
+general.show_url_titles_channels | A regular-expression or comma-separated list of channels that should display titles for URLs. | `.*`
+general.show_url_titles | If set to a true value, PBot will show titles for URLs. | 1
+general.show_url_titles_ignore_channels | A regular-expression or comma-separated list of channels that will not display titles for URLs. |
+general.trigger | The trigger character(s) or text that will invoke PBot commands. | [!]
+interpreter.max_recursion | The maximum number of recursions allowed before the command interpreter will abort. | 100
+irc.botnick | The IRC nickname of this PBot instance. |
+irc.debug | Log verbose debugging information about the IRC engine. | 0
+irc.identify_password | The password to identify to NickServ or other service bots. |
+irc.server | The IRC server network address to connect to. | irc.freenode.net
+irc.log_default_handler | If set to a true value, any IRC events that are not explicitly handled by PBot will be dumped to the log. | 1
+irc.max_msg_len | The maximum length messages can be on this IRC server. | 425
+irc.port | The IRC server network port to connect to. | 6667
 irc.realname ||
-irc.show_motd ||
-irc.SSL_ca_file ||
-irc.SSL_ca_path ||
-irc.SSL ||
+irc.show_motd | If set to a true value, the IRC server MOTD will be shown when connecting. | 1
+irc.SSL_ca_file | Path to a specific SSL certificate authority file. |
+irc.SSL_ca_path | Path to the SSL certificate authority directory containing certificate files. |
+irc.SSL | If set to a true value, SSL will be enabled when connecting to the IRC server. | 0
 irc.username ||
 lagchecker.lag_history_interval ||
 lagchecker.lag_history_max ||
 lagchecker.lag_threshold ||
-messagehistory.debug_aka ||
-messagehistory.debug_link ||
-messagehistory.max_messages ||
-messagehistory.sqlite_commit_interval ||
-messagehistory.sqlite_debug ||
-nicklist.debug ||
+messagehistory.debug_aka | Log verbose debugging information about the `aka` command. | 0
+messagehistory.debug_link | Log verbose debugging information about account linking. | 0
+messagehistory.sqlite_commit_interval | How often to commit SQLite transactions to the database. |
+messagehistory.sqlite_debug | Log verbose debugging information about SQLite statements. | 0
+nicklist.debug | Log verbose debugging information about the NickList. | 0
 
 Some items only exist as a channel-specific item.
 
-Name | Description | Default value
---- | --- | ---
-[channel].dont_enforce_antiflood ||
-[channel].max_newlines ||
-[channel].no_url_titles ||
-[channel].no_compile_blocks ||
-[channel].preserve_newlines ||
+Name | Description
+--- | ---
+[channel].dont_enforce_antiflood | Disables anti-flood enforcement for this channel.
+[channel].max_newlines | The maximum number of lines to be sent before truncating to a paste site, if `preserve_newlines` is enabled.
+[channel].no_url_titles | Disables display of URL titles for this channel.
+[channel].preserve_newlines | If set to a true value, newlines will not be replaced with spaces in this channel. Each line of output will be sent as a distinct message.
 
