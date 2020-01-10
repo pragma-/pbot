@@ -186,7 +186,7 @@ plugin is integrated with the GNU Debugger. It will print useful debugging infor
               Program received signal SIGSEGV, Segmentation fault at
               statement: *p = 1; <local variables: p = 0x0>
 
-It can display value of the most recent statement if there is no program output.
+It can display the value of the most recent statement if there is no program output.
 
     <pragma-> !cc sizeof (int)
        <PBot> no output: sizeof(int) = 4
@@ -217,6 +217,8 @@ PBot can perform the typical channel management tasks.
 * spam/advertisement detection
 * and much, much more
 
+For more information, see the [Channels documentation](doc/Channels.md) and the [AntiAbuse documentation](doc/AntiAbuse.md)
+
 ### Admin management
 
 PBot has easy admin management via simple built-in commands.
@@ -225,6 +227,8 @@ PBot has easy admin management via simple built-in commands.
 * admins can be required to login with a password
 * admins can be set to be permanently logged-in
 * admin abilities configured by admin-levels
+
+For more information, see the [Admin documentation.](doc/Admin.md)
 
 ### Easy configuration
 
@@ -235,6 +239,8 @@ These settings can easily be configured via several methods:
 * PBot's command-line arguments
 * simple built-in commands (`regset`, `regunset`, etc)
 * editing the [`$data_dir/registry`](data/registry) plain-text JSON file
+
+For more information, see the [Registry documentation.](doc/Registry.md)
 
 ### Advanced interpreter
 
