@@ -153,7 +153,7 @@ This is a list of recognized registry items at the time of this writing.
 Name | Description | Default value
 --- | --- | ---
 antiaway.bad_actions | If a message matches against this regex, it is considered an Away action. | `^/me (is (away\|gone)\|.*auto.?away)`
-antiaway.bad_nicks | If someone changes their nick and the new nick matches this regex, it is considered an Away nick. | `(^z+[[:punct:]]\|[[:punct:]](afk\|brb\|bbl\|away\|sleep\|asleep\|nap\|z+\|work\|gone\|study\|out\|home\|busy\|off)[[:punct:]]*$\|afk$)`
+antiaway.bad_nicks | If someone changes their nick and the new nick matches this regex, it is considered an Away nick. | `(^z+[[:punct:]]\|`<br/>`[[:punct:]](afk\|brb\|bbl\|away\|sleep\|`<br/>`asleep\|nap\|z+\|work\|gone\|study\|out\|home\|busy\|off)`<br/>`[[:punct:]]*$\|afk$)`
 antiaway.kick_msg | The message to use when kicking Away offenders. | http://sackheads.org/~bnaylor/spew/away_msgs.html
 antiflood.chat_flood_punishment | The amount of time, in seconds, offenders will be muted/banned. | 60,300,3600,86400,604800,2419200
 antiflood.chat_flood_threshold | The number of messages before this is considered a flood. | 4
