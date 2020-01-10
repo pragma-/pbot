@@ -232,7 +232,7 @@ PBot has easy admin management via simple built-in commands.
 * admins can be global admins or channel-specific admins
 * admins can be required to login with a password
 * admins can be set to be permanently logged-in
-* admin abilities configured by admin-levels
+* admin commands configured by [admin-levels](doc/Admin.md#admin-levels)
 
 For more information, see the [Admin documentation.](doc/Admin.md)
 
@@ -242,9 +242,9 @@ PBot's settings are contained in a central registry of key/value pairs grouped b
 
 These settings can easily be configured via several methods:
 
-* PBot's command-line arguments
-* simple built-in commands (`regset`, `regunset`, etc)
-* editing the [`$data_dir/registry`](data/registry) plain-text JSON file
+* [PBot's command-line arguments](doc/Registry.md#overriding-registry-values-via-command-line)
+* [simple built-in commands (`regset`, `regunset`, etc)](doc/Registry.md#registry-commands)
+* [editing](doc/Registry.md#editing-registry-file) the [`$data_dir/registry`](data/registry) plain-text JSON file
 
 For more information, see the [Registry documentation.](doc/Registry.md)
 
