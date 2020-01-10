@@ -4,7 +4,6 @@ PBot is a versatile IRC Bot written in Perl
 
 <!-- md-toc-begin -->
   * [Installation / Quick Start](#installation--quick-start)
-  * [Documentation](#documentation)
   * [Features](#features)
     * [Commands](#commands)
     * [Plugins](#plugins)
@@ -22,6 +21,7 @@ PBot is a versatile IRC Bot written in Perl
       * [command splitting](#command-splitting)
       * [$variable interpolation](#variable-interpolation)
       * [inline commands](#inline-commands)
+  * [Documentation](#documentation)
   * [Support](#support)
   * [License](#license)
 <!-- md-toc-end -->
@@ -29,10 +29,6 @@ PBot is a versatile IRC Bot written in Perl
 Installation / Quick Start
 --------------------------
 To get up-and-running quickly, check out the [Quick Start guide](doc/QuickStart.md).
-
-Documentation
--------------
-See the [PBot documentation](doc) for more information.
 
 Features
 --------
@@ -303,6 +299,9 @@ is address to a nick, the output will also be addressed to them.
        <PBot> newuser13: PBot version 2696 2020-01-04
        <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
 
+Documentation
+-------------
+See the [PBot documentation](doc) for more information.
 
 Support
 -------
