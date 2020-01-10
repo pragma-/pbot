@@ -209,7 +209,8 @@ messagehistory.sqlite_commit_interval | How often to commit SQLite transactions 
 messagehistory.sqlite_debug | Log verbose debugging information about SQLite statements. | 0
 nicklist.debug | Log verbose debugging information about the NickList. | 0
 
-Some items only exist as a channel-specific item.
+Some items only exist as a channel-specific item. You must [`regset`](#regset)
+these for your channels.
 
 Name | Description
 --- | ---
