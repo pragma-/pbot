@@ -56,7 +56,13 @@ overrides are permanent and will be saved.
 
 Usage: `regset <section>.<item> <value>`
 
-For example, to override the trigger for #mychannel to be any of `,`, `!` or `%`:
+To override the trigger for #mychannel to `$`:
+
+    <pragma-> !regset #mychannel.trigger $
+       <PBot> #mychannel.trigger set to $
+
+To override the trigger for #mychannel to be any of `,`, `!` or `%`, you can use
+a character class:
 
     <pragma> !regset #mychannel.trigger [,!%]
       <PBot> #mychannel.trigger set to [,!%]
