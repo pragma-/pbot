@@ -3,21 +3,27 @@ PBot
 PBot is a versatile IRC Bot written in Perl
 
 <!-- md-toc-begin -->
-* [Installation / Quick Start](#installation--quick-start)
-* [Documentation](#documentation)
-* [Features](#features)
-  * [Commands](#commands)
-  * [Plugins](#plugins)
-  * [Factoids](#factoids)
-  * [Code Factoids](#code-factoids)
-  * [Modules](#modules)
-  * [Useful IRC command improvements](#useful-irc-command-improvements)
-  * [Channel management](#channel-management)
-  * [Admin management](#admin-management)
-  * [Easy configuration](#easy-configuration)
-  * [Advanced interpreter](#advanced-interpreter)
-* [Support](#support)
-* [License](#license)
+  * [Installation / Quick Start](#installation--quick-start)
+  * [Documentation](#documentation)
+  * [Features](#features)
+    * [Commands](#commands)
+    * [Plugins](#plugins)
+    * [Factoids](#factoids)
+    * [Code Factoids](#code-factoids)
+    * [Modules](#modules)
+    * [Virtual machine](#virtual-machine)
+    * [Useful IRC command improvements](#useful-irc-command-improvements)
+    * [Channel management](#channel-management)
+    * [Admin management](#admin-management)
+    * [Easy configuration](#easy-configuration)
+    * [Advanced interpreter](#advanced-interpreter)
+      * [piping](#piping)
+      * [command substitution](#command-substitution)
+      * [command splitting](#command-splitting)
+      * [$variable interpolation](#variable-interpolation)
+      * [inline commands](#inline-commands)
+  * [Support](#support)
+  * [License](#license)
 <!-- md-toc-end -->
 
 Installation / Quick Start
@@ -73,6 +79,7 @@ At its most simple, factoids merely output the text the creator sets.
 
     <pragma-> !factadd hello /say Hello, $nick!
        <PBot> hello added to global channel.
+
     <pragma-> PBot, hello
        <PBot> Hello, pragma-!
 
@@ -94,7 +101,7 @@ For more information, see the [Factoids documentation](doc/Factoids.md).
 
 ### Code Factoids
 
-Code factoids are a special type of factoid that begin with the `/code` command.
+Code Factoids are a special type of factoid that begin with the `/code` command.
 
     /code <language> <code>
 
@@ -103,6 +110,19 @@ That's right! Anybody can create a factoid that can execute arbitrary code in
 
 How is this safe? Because the code is executed within a virtual machine that
 has been configured to fall-back to a previously saved state whenever it times out.
+
+For example, the venerable `rot13` function:
+
+    <pragma-> !factadd rot13 /code sh echo "$@" | tr a-zA-Z n-za-mN-ZA-M
+       <PBot> rot13 added to global channel.
+
+    <pragma-> !rot13 Pretty neat, huh?
+       <PBot> Cerggl arng, uhu?
+
+You can pipe output from other commands to Code Factoids.
+
+    <pragma-> !echo test | {rot13}
+       <PBot> grfg
 
 For more information, see the [Code Factoid documentation](doc/Factoids.md#code).
 
@@ -147,6 +167,33 @@ Module | Description
 [Manpages](modules/man.pl) | Display a concise formatting of manual pages (designed for C functions)
 
 For more information, see the [Modules documentation](doc/Modules.md).
+
+### Virtual machine
+
+PBot can integrate with a virtual machine to safely execute arbitrary user-submitted
+commands or code.
+
+PBot supports [several shells and languages](doc/Factoids.md#supported-languages) out of the box!
+
+    <pragma-> !sh echo Remember rot13? | tr a-zA-Z n-za-mN-ZA-M
+       <PBot> Erzrzore ebg13?
+
+PBot has extensive support for the C programming language. For instance, the C programming language
+plugin is integrated with the GNU Debugger. It will print useful debugging information.
+
+    <pragma-> !cc char *p = 0; *p++;
+       <PBot> runtime error: store to null pointer of type 'char'
+              Program received signal SIGSEGV, Segmentation fault at
+              statement: *p = 1; <local variables: p = 0x0>
+
+It can display value of the most recent statement if there is no program output.
+
+    <pragma-> !cc sizeof (int)
+       <PBot> no output: sizeof(int) = 4
+
+For more information about the C programming language plugin, see [the `cc` command in the Modules documentation.](doc/Modules.md#cc)
+
+For more information about the virtual machine, see the [Virtual Machine documentation.](doc/VirtualMachine.md)
 
 ### Useful IRC command improvements
 
@@ -193,13 +240,63 @@ These settings can easily be configured via several methods:
 
 PBot has an advanced command interpreter with useful functionality.
 
-* piping
-* command substitution
-* command separation
-* inline commands
-* $variable interpolation
-* aliases
-* and more!
+#### piping
+
+You can pipe output from one command as input into another command, indefinitely.
+
+    <pragma-> !echo hello world | {sed s/world/everybody/} | {uc}
+       <PBot> HELLO EVERYBODY
+
+#### command substitution
+
+You can insert the output from another command at any point within a command. This
+substitutes the command with its output at the point where the command was used.
+
+    <pragma-> !echo This is &{echo a demonstration} of command substitution
+       <PBot> This is a demonstration of command substitution
+
+For example, suppose you want to make a Google Image Search command. The naive
+way would be to simply do:
+
+    <pragma-> !factadd img /call echo https://google.com/search?tbm=isch&q=$args
+
+Unfortuately this would not support queries containing spaces or certain symbols. But
+never fear! We can use command substitution and the `uri_escape` function from the
+`func` command.
+
+Note that you must escape the command substitution to insert it literally into the
+factoid otherwise it will be expanded first.
+
+    <pragma-> !factadd img /call echo https://google.com/search?tbm=isch&q=\&{func uri_escape $args}
+
+    <pragma-> !img spaces & stuff
+       <PBot> https://google.com/search?tbm=isch&q=spaces%20%26%20stuff
+
+#### command splitting
+
+You can execute multiple commands sequentially as one command.
+
+    <pragma-> !echo Test! ;;; me smiles. ;;; version
+       <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
+
+#### $variable interpolation
+
+You can use factoids as variables and interpolate them within commands.
+
+    <pragma-> !factadd greeting "Hello, world"
+
+    <pragma-> !echo greeting is $greeting
+       <PBot> greeting is Hello, world
+
+#### inline commands
+
+You can invoke up to three commands in-lined within a message.  If the message
+is address to a nick, the output will also be addressed to them.
+
+    <pragma-> newuser13: Check the !{version} and the !{help} documentation.
+       <PBot> newuser13: PBot version 2696 2020-01-04
+       <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
+
 
 Support
 -------
