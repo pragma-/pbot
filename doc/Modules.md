@@ -4,7 +4,6 @@ Modules
 PBot has several external command-line modules. Here is the documentation for most of them.
 
 <!-- md-toc-begin -->
-* [Modules](#modules)
 * [cc](#cc)
   * [Usage](#usage)
   * [Supported Languages](#supported-languages)
