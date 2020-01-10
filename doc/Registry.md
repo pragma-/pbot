@@ -121,7 +121,7 @@ That example is equivalent to `regset irc.botnick candide`.
 Usage: `regunset <section>.<item> <key>`
 
 ## Editing Registry file
-You may edit the Registry file manually. It is located as `$data_dir/registry`. Its
+You may edit the Registry file manually. It is located as [`$data_dir/registry`](../data/registry). Its
 contents are plain-text JSON.
 
 This is a sample entry:
