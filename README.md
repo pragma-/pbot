@@ -174,6 +174,12 @@ PBot supports [several shells and languages](doc/Factoids.md#supported-languages
     <pragma-> !sh echo Remember rot13? | tr a-zA-Z n-za-mN-ZA-M
        <PBot> Erzrzore ebg13?
 
+        <nil> !go package main\nimport "fmt"\nfunc main() { fmt.Print("foo" == "foo"); }
+       <PBot> true
+
+    <pragma-> !python print('Hello there!')
+       <PBot> Hello there!
+
 PBot has extensive support for the C programming language. For instance, the C programming language
 plugin is integrated with the GNU Debugger. It will print useful debugging information.
 
