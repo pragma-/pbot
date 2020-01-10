@@ -1,104 +1,169 @@
 Administrative
 --------------
 
-
 <!-- md-toc-begin -->
-  * [Administrative](#administrative)
-    * [login](#login)
-    * [logout](#logout)
-    * [Admin Management](#admin-management)
-      * [adminadd](#adminadd)
-        * [Admin Levels](#admin-levels)
-      * [adminrem](#adminrem)
-      * [adminset](#adminset)
-        * [Admin Metadata List](#admin-metadata-list)
-      * [adminunset](#adminunset)
-    * [ignore](#ignore)
-    * [unignore](#unignore)
-    * [whitelist](#whitelist)
-    * [blacklist](#blacklist)
-    * [ban](#ban)
-    * [unban](#unban)
-    * [kick](#kick)
-    * [export](#export)
-    * [refresh](#refresh)
-    * [sl](#sl)
-    * [die](#die)
+* [Logging in and out](#logging-in-and-out)
+  * [login](#login)
+  * [logout](#logout)
+* [Admin management commands](#admin-management-commands)
+  * [adminadd](#adminadd)
+  * [adminrem](#adminrem)
+    * [Admin levels](#admin-levels)
+  * [adminset](#adminset)
+  * [adminunset](#adminunset)
+    * [Admin metadata list](#admin-metadata-list)
+* [Channel management commands](#channel-management-commands)
+  * [join](#join)
+  * [part](#part)
+  * [chanadd](#chanadd)
+  * [chanrem](#chanrem)
+  * [chanset](#chanset)
+  * [chanunset](#chanunset)
+  * [chanlist](#chanlist)
+    * [Channel metadata list](#channel-metadata-list)
+  * [ignore](#ignore)
+  * [unignore](#unignore)
+  * [whitelist](#whitelist)
+  * [blacklist](#blacklist)
+  * [mode](#mode)
+  * [ban](#ban)
+  * [unban](#unban)
+  * [kick](#kick)
+* [Miscellaneous commands](#miscellaneous-commands)
+  * [export](#export)
+  * [refresh](#refresh)
+  * [reload](#reload)
+  * [sl](#sl)
+  * [die](#die)
 <!-- md-toc-end -->
 
-
-### login
+### Logging in and out
 You cannot use any of the admin commands unless you login first. Note that login requires that your hostmask matches PBot's records.
 
-Usage:  `login <password>`
+However, if your admin account have the `loggedin` and `stayloggedin` metadata set to a true value then you will not need to login.
+#### login
+Logs into PBot.
 
-### logout
+Usage:  `login [channel] <password>`
+
+#### logout
 Logs out of PBot.
 
-### Admin Management
+Usage: `logout`
+
+### Admin management commands
 #### adminadd
-Adds a bot admin.
+Adds a new admin to PBot.
 
 Usage: `adminadd <name> <channel> <hostmask> <level> <password>`
 
-* `name`: a unique name to identify this account (usually the `nick` of the admin, but can be any identifier).
-
-* `channel`: which channel the admin can administrate; use `global` for all channels. This field cannot be changed without removing and re-adding the admin.
-
-* `hostmask`: a *regular expression* of what hostmask the admin is recognized/allowed to login from (e.g., `somenick!.*@.*.somedomain.com` or `.*@unaffiliated/someuser`). This field cannot be changed without removing and re-adding the admin.
-
-* `level`: an integer representing their level of privileges. See [admin-levels](#Admin_Levels).
-
-* `password`: the password the admin will use to login (from /msg!). A password is not required if the `stayloggedin` and `loggedin` meta-data are set for the admin; however, a dummy password still needs to be set.
-
-##### Admin Levels
-This is a list of admin commands allowed by each admin level. Higher level admins have access to all lower level admin commands.
-
-* `10`: whitelist, blacklist, chanlist, ban, unban, mute, unmute, kick, ignore, unignore
-* `40`: chanset, chanunset, chanadd, chanrem, join, part
-* `60`: adminadd, adminrem, adminset, adminunset, akalink, akaunlink, regadd, regrem, regset, regunset, regchange
-* `90`: sl, load, unload, export, rebuildaliases, refresh, die
+Parameter | Description
+--- | ---
+`<name>` | A unique name to identify this account (usually the `nick` of the admin, but can be any identifier).
+`<channel>` | Which channel the admin can administrate; use `global` for all channels. This field cannot be changed without removing and re-adding the admin.
+`<hostmask>` | What hostmask the admin is recognized/allowed to login from (e.g., `somenick!*@*somedomain.com` or `*@unaffiliated/someuser`). This field cannot be changed without removing and re-adding the admin.
+`<level>` | An integer representing their level of privileges. See [admin-levels](#admin-levels).
+`<password>` | the password the admin will use to login (from /msg!). A password is not required if the `stayloggedin` and `loggedin` metadata are set for the admin; however, a dummy password still needs to be set.
 
 #### adminrem
-Removes a bot admin. You can use the name field or the hostmask field that was set via adminadd.
+Removes an admin from PBot. You can use the name field or the hostmask field that was set via `adminadd`.
 
 Usage: `adminrem <channel> <name/hostmask>`
 
+##### Admin levels
+This is a list of admin commands allowed by each admin level. Higher level admins have access to all lower level admin commands.
+
+Level | Commands
+--- | ---
+10 | whitelist, blacklist, chanlist, ban, unban, mute, unmute, kick, ignore, unignore
+40 | chanset, chanunset, chanadd, chanrem, join, part
+60 | adminadd, adminrem, adminset, adminunset, akalink, akaunlink, regadd, regrem, regset, regunset, regchange
+90 | sl, load, unload, reload, export, rebuildaliases, refresh, die
+
 #### adminset
-Sets meta-data for an admin account. You can use the `name` field or the `hostmask` field that was set via `adminadd`. See also: [admin metadata list](#Admin_Metadata_List).
+Sets metadata for an admin account. You can use the `name` field or the `hostmask` field that was set via `adminadd`. See also: [admin metadata list](#admin-metadata-list).
 
 If `key` is omitted, it will list all the keys and values that are set.  If `value` is omitted, it will show the value for `key`.
 
 Usage: `adminset <channel> <name/hostmask> [<key> [value]]`
 
-##### Admin Metadata List
-This is a list of recognized meta-data keys for admin accounts.
-
-* `name`: A unique name identifying this admin account.
-* `level`: The privilege level of the admin. See [admin levels](#Admin_Levels).
-* `password`: The password for this admin account.
-* `loggedin`: Whether the admin is logged in or not.
-* `stayloggedin`: Do not log the admin out when they part/quit.
-
 #### adminunset
-Deletes a meta-data key from an admin account.  You can use the name `field` or the `hostmask` field that was set via adminadd.
+Deletes a metadata key from an admin account.  You can use the name `field` or the `hostmask` field that was set via adminadd.
 
 Usage: `adminunset <channel> <name/hostmask> <key>`
 
-### ignore
-Ignore a user.
+##### Admin metadata list
+This is a list of recognized metadata keys for admin accounts.
+
+Name | Description
+--- | ---
+`name` | A unique name identifying this admin account.
+`level` | The privilege level of the admin. See [admin levels](#admin-levels).
+`password` | The password for this admin account.
+`loggedin` | Whether the admin is logged in or not.
+`stayloggedin` | Do not log the admin out when they part/quit.
+
+### Channel management commands
+
+#### join
+To temporarily join a channel, use the `join` command. The channels may be a comma-
+separated list.
+
+Usage: `join <channel(s)>`
+
+#### part
+To temporarily leave a channel (that is, without removing it from PBot's list
+of channels), use the `part` command. The channels may be a comma-separated
+list.
+
+Usage `part <channel(s)>`
+
+#### chanadd
+`chanadd` permanently adds a channel to PBot's list of channels to auto-join and manage.
+
+Usage: `chanadd <channel>`
+
+#### chanrem
+`chanrem` removes a channel from PBot's list of channels to auto-join and manage.
+
+Usage: `chanrem <channel>`
+
+#### chanset
+`chanset` sets a channel's metadata. See [channel metadata list](#channel-metadata-list)
+
+Usage: `chanset <channel> [key [value]]`
+
+If both `key` and `value` are omitted, chanset will show all the keys and values for that channel. If only `value` is omitted, chanset will show the value for that key.
+
+#### chanunset
+`chanunset` deletes a channel's metadata key.
+
+Usage: `chanunset <channel> <key>`
+
+#### chanlist
+`chanlist` lists all added channels and their metadata keys and values.
+
+##### Channel metadata list
+Name | Description
+--- | ---
+`enabled` | When set to a true value, PBot will auto-join this channel after identifying to NickServ (unless `general.autojoin_wait_for_nickserv` is `0`, in which case auto-join happens immediately).
+`chanop` | When set to a true value, PBot will perform channel management (anti-flooding, ban-evasion, etc).
+`permop` | When set to a true value, PBot will automatically op itself when joining and remain opped instead of automatically opping and deopping as necessary.
+
+#### ignore
+Ignore a user. If you omit `[channel]` PBot will ignore the user in all channels, including private messages.
 
 Usage: `ignore <hostmask regex> [channel [timeout]]`
 
 Timeout can be specified as an relative time in English; for instance, `5 minutes`, `1 month and 2 weeks`, `next thursday`, `friday after next`, and so on.
 
-### unignore
-Unignores a user.
+#### unignore
+Unignores a user. If you omit `[channel]` PBot will unignore the user from all channels, including private messages.
 
 Usage:  `unignore <hostmask regex> [channel]`
 
-### whitelist
-Whitelists a hostmask to be exempt from ban evasions.
+#### whitelist
+Whitelists a hostmask regex to be exempt from ban evasions or anti-flood enforcement.
 
 Usages:
 
@@ -106,7 +171,7 @@ Usages:
 - `whitelist add <channel> <hostmask>`
 - `whitelist remove <channel> <hostmask>`
 
-### blacklist
+#### blacklist
 Blacklists a hostmask regex from joining a channel.
 
 Usages:
@@ -115,40 +180,63 @@ Usages:
 - `blacklist add <hostmask regex> [channel]`
 - `blacklist remove <hostmask regex> [channel]`
 
-### ban
+#### mode
+Sets or unsets channel or user modes.
+
+Usage: `mode <flags> <targets>`
+
+PBot extends the IRC `MODE` command in useful ways. For instance, the `<targets>`
+parameter can contain wildcards. To op everybody whose nick ends with `-dev`, for
+instance, you can do `!mode +o *-dev`.
+
+#### ban
 Bans a user. If the argument is a `nick` instead of a `hostmask`, it will determine an appropriate banmask for that nick.
 
 Usage: `ban <nick or hostmask> [channel [timeout]]`
 
 If `timeout` is omitted, PBot will ban the user for 24 hours. Timeout can be specified as an relative time in English; for instance, `5 minutes`, `1 month and 2 weeks`, `next thursday`, `friday after next`, and so on.
 
-### unban
+#### unban
 Unbans a user. If the argument is a `nick` instead of a `hostmask`, it will find all bans that match any of that nick's hostmasks or NickServ accounts and unban them.
 
 Usage: `unban <nick or hostmask> [channel]`
 
-### kick
-Removes a user from the channel. `nick` can be a comma-separated list of multiple users. If `reason` is omitted, a random insult will be used.
+#### kick
+Removes a user from the channel. `nick` can be a comma-separated list of multiple users, optionally containing wildcards. If `reason` is omitted, a random insult will be used.
 
 Usage from channel:   `kick <nick> [reason]`
 From private message: `kick <channel> <nick> [reason]`
 
-### export
-Exports specified list to website.
+### Miscellaneous commands
 
- Usage:  export `<commands|factoids|quotegrabs|admins|channels>`
+These are some of the miscellaneous admin commands that have not been covered
+above or in the rest of the PBot documentation.
 
-### refresh
+#### export
+Exports specified list to HTML file in `$data_dir`.
+
+Usage:  `export <factoids|quotegrabs>`
+
+#### refresh
 Refreshes/reloads PBot core modules and plugins (not the command-line modules since those are executed/loaded each time they are invoked).
 
-### sl
-Sends a raw IRC line to the server.
+#### reload
+Reloads a data or configuration file from `$data_dir`. This is useful if you
+manually edit a data or configuration file and you want PBot to know about the
+modifications.
 
-Usage: `sl <ird command>`
+Usage `reload <admins|bantimeouts|blacklist|channels|factoids|funcs|ignores|mutetimeouts|registry|whitelist>`
+
+#### sl
+Sends a raw IRC line to the server. This is useful if you want to execute any
+IRC command on the IRC server, in its raw pure form. Use the `sl` command when
+PBot does not have a built-in command to do what you need.
+
+Usage: `sl <irc command>`
 
     <pragma-> sl PRIVMSG #channel :Test message
        <PBot> Test message
 
-### die
-Kills PBot. :-(  Causes PBot to disconnect and exit.
+#### die
+Tells PBot to disconnect and exit.
 
