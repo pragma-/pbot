@@ -18,6 +18,7 @@ Registry
   * [Editing Registry file](#editing-registry-file)
   * [Metadata list](#metadata-list)
   * [List of known registry items](#list-of-known-registry-items)
+    * [Channel-specific Registry items](#channel-specific-registry-items)
 <!-- md-toc-end -->
 
 ## About
