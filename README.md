@@ -223,7 +223,7 @@ PBot can perform the typical channel management tasks.
 * spam/advertisement detection
 * and much, much more
 
-For more information, see the [Channels documentation](doc/Channels.md) and the [AntiAbuse documentation](doc/AntiAbuse.md)
+For more information, see the [Channels documentation](doc/Admin.md#channel-management-commands) and the [AntiAbuse documentation](doc/AntiAbuse.md)
 
 ### Admin management
 
@@ -234,7 +234,7 @@ PBot has easy admin management via simple built-in commands.
 * admins can be set to be permanently logged-in
 * admin commands configured by [admin-levels](doc/Admin.md#admin-levels)
 
-For more information, see the [Admin documentation.](doc/Admin.md)
+For more information, see the [Admin documentation.](doc/Admin.md#admin-management-commands)
 
 ### Easy configuration
 
