@@ -186,8 +186,8 @@ Sets or unsets channel or user modes.
 Usage: `mode <flags> <targets>`
 
 PBot extends the IRC `MODE` command in useful ways. For instance, the `<targets>`
-parameter can contain wildcards. To op everybody whose nick ends with `-dev`, for
-instance, you can do `!mode +o *-dev`.
+parameter can contain wildcards. To op everybody whose nick ends with `|dev`, for
+instance, you can do `!mode +o *|dev`.
 
 #### ban
 Bans a user. If the argument is a `nick` instead of a `hostmask`, it will determine an appropriate banmask for that nick.
