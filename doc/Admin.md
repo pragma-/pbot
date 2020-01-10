@@ -190,7 +190,8 @@ parameter can contain wildcards. To op everybody whose nick ends with `|dev`, fo
 instance, you can do `!mode +o *|dev`.
 
 #### ban/mute
-Bans or mutes a user. If the argument is a `nick` instead of a `hostmask`, it will determine an appropriate banmask for that nick.
+Bans or mutes a user. If the argument is a nick instead of a hostmask, it will determine an appropriate banmask for that nick.
+The argument can be a comma-separated list of multiple nicks or masks.
 
 Usages:
 - `ban <nick or hostmask> [channel [timeout]]`
@@ -199,14 +200,15 @@ Usages:
 If `timeout` is omitted, PBot will ban the user for 24 hours. Timeout can be specified as an relative time in English; for instance, `5 minutes`, `1 month and 2 weeks`, `next thursday`, `friday after next`, and so on.
 
 #### unban/unmute
-Unbans or unmutes a user. If the argument is a `nick` instead of a `hostmask`, it will find all bans that match any of that nick's hostmasks or NickServ accounts and unban them.
+Unbans or unmutes a user. If the argument is a nick instead of a hostmask, it will find all bans that match any of that nick's hostmasks or NickServ accounts and unban them.
+The argument can be a comma-separated list of multiple nicks or masks.
 
 Usages:
 - `unban <nick or hostmask> [channel]`
 - `unmute <nick or hostmask> [channel]`
 
 #### kick
-Removes a user from the channel. `nick` can be a comma-separated list of multiple users, optionally containing wildcards. If `reason` is omitted, a random insult will be used.
+Removes a user from the channel. `<nick>` can be a comma-separated list of multiple users, optionally containing wildcards. If `[reason]` is omitted, a random insult will be used.
 
 Usage from channel:   `kick <nick> [reason]`
 From private message: `kick <channel> <nick> [reason]`
