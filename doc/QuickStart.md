@@ -47,7 +47,7 @@ file need to be installed.
 
 The modules may be installed with a simple command:
 
-    cpan -f -i $(cat MODULES)
+    $ cpan -f -i $(cat MODULES)
 
 Some CPAN modules may fail to pass certain tests due to outdated variables.
 Despite these test failures, their core functionality should still work as
@@ -289,6 +289,7 @@ At its most simple, factoids merely output the text the creator sets.
 
     <pragma-> !factadd hello /say Hello, $nick!
        <PBot> hello added to global channel.
+
     <pragma-> PBot, hello
        <PBot> Hello, pragma-!
 
