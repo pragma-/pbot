@@ -1,6 +1,7 @@
 # Factoids
 
 <!-- md-toc-begin -->
+* [About](#about)
 * [Channel namespaces](#channel-namespaces)
 * [Special commands](#special-commands)
   * [/say](#say)
@@ -60,6 +61,19 @@
   * [histogram](#histogram)
   * [top20](#top20)
 <!-- md-toc-end -->
+
+## About
+Factoids are a very special type of command. Anybody interacting with PBot can create, edit, delete and invoke factoids. Factoids can be locked by the creator of the factoid to prevent them from being edited by others.
+
+At its most simple, factoids merely output the text the creator sets.
+
+<pragma-> !factadd hello /say Hello, $nick!
+   <PBot> hello added to global channel.
+
+<pragma-> PBot, hello
+   <PBot> Hello, pragma-!
+
+Significantly more complex factoids can be built by using $variables, command-substitution, command-piping, /code invocation, and more!
 
 ## Channel namespaces
 Factoids added in one channel may be called/triggered in another channel or in private message, providing that the other channel doesn't already have a factoid of the same name (in which case that channel's factoid will be triggered).
