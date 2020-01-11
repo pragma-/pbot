@@ -67,11 +67,11 @@ Factoids are a very special type of command. Anybody interacting with PBot can c
 
 At its most simple, factoids merely output the text the creator sets.
 
-<pragma-> !factadd hello /say Hello, $nick!
-   <PBot> hello added to global channel.
+    <pragma-> !factadd hello /say Hello, $nick!
+       <PBot> hello added to global channel.
 
-<pragma-> PBot, hello
-   <PBot> Hello, pragma-!
+    <pragma-> PBot, hello
+       <PBot> Hello, pragma-!
 
 Significantly more complex factoids can be built by using $variables, command-substitution, command-piping, /code invocation, and more!
 
@@ -122,8 +122,8 @@ Code Factoids are a special type of factoid whose text is treated as code and ex
 or interpreter. The output from code is then parsed and treated like any other factoid text. This allows anybody to add
 new and unique commands to PBot without the need for installing Plugins or modules.
 
-Code Factoids are executed within a virtual machine. See the [Virtual Machine](doc/VirtualMachine.md) documentation
-for more information.
+Code Factoids are executed within a virtual machine. You must install and set up a virtual machine with your operating system.
+See the [Virtual Machine](doc/VirtualMachine.md) documentation for more information.
 
 To create a Code Factoid, use the `/code` command. The syntax is:
 
