@@ -123,7 +123,7 @@ or interpreter. The output from code is then parsed and treated like any other f
 new and unique commands to PBot without the need for installing Plugins or modules.
 
 Code Factoids are executed within a virtual machine. You must install and set up a virtual machine with your operating system.
-See the [Virtual Machine](doc/VirtualMachine.md) documentation for more information.
+See the [Virtual Machine](VirtualMachine.md) documentation for more information.
 
 To create a Code Factoid, use the `/code` command. The syntax is:
 
