@@ -1,7 +1,7 @@
 # File: FactoidCommands.pm
 # Author: pragma_
 #
-# Purpose: Administrative command subroutines.
+# Purpose: Factoid command subroutines.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1374,7 +1374,7 @@ sub top20 {
           if ($user ne lc $factoids->{$chan}->{$command}{ref_user} && not $user =~ /$factoids->{$chan}->{$command}{ref_user}/i) {
             $user .= " ($factoids->{$chan}->{$command}{ref_user})";
           }
-          my $ago = $factoids->{$chan}->{$command}{last_referenced_on} ? ago(gettimeofday - $factoids->{$chan}->{$command}{last_referenced_on}) : "unknown";
+          my $ago = $factoids->{$chan}->{$command}{last_referenced_on} ? concise ago(gettimeofday - $factoids->{$chan}->{$command}{last_referenced_on}) : "unknown";
           $text .= "   $command [$ago]\n";
           $i++;
           last if $i >= 20;
