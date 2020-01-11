@@ -63,12 +63,12 @@ Parameter | Description
 `<channel>` | Which channel the admin can administrate; use `global` for all channels. This field cannot be changed without removing and re-adding the admin.
 `<hostmask>` | What hostmask the admin is recognized/allowed to login from (e.g., `somenick!*@*somedomain.com` or `*@unaffiliated/someuser`). This field cannot be changed without removing and re-adding the admin.
 `<level>` | An integer representing their level of privileges. See [admin-levels](#admin-levels).
-`<password>` | the password the admin will use to login (from /msg!). A password is not required if the `stayloggedin` and `loggedin` metadata are set for the admin; however, a dummy password still needs to be set.
+`<password>` | The password the admin will use to login (from /msg!). A password is not required if the `stayloggedin` and `loggedin` metadata are set for the admin; however, a dummy password still needs to be set.
 
 #### adminrem
 Removes an admin from PBot. You can use the name field or the hostmask field that was set via `adminadd`.
 
-Usage: `adminrem <channel> <name/hostmask>`
+Usage: `adminrem <channel> <name or hostmask>`
 
 ##### Admin levels
 This is a list of admin commands allowed by each admin level. Higher level admins have access to all lower level admin commands.
@@ -77,7 +77,7 @@ Level | Commands
 --- | ---
 10 | whitelist, blacklist, chanlist, ban, unban, mute, unmute, kick, ignore, unignore
 40 | chanset, chanunset, chanadd, chanrem, join, part
-60 | adminadd, adminrem, adminset, adminunset, akalink, akaunlink, regadd, regrem, regset, regunset, regchange
+60 | adminadd, adminrem, adminset, adminunset, akalink, akaunlink, regset, regunset, regsetmeta, regunsetmeta, regchange
 90 | sl, load, unload, reload, export, rebuildaliases, refresh, die
 
 #### adminset
@@ -85,12 +85,12 @@ Sets metadata for an admin account. You can use the `name` field or the `hostmas
 
 If `key` is omitted, it will list all the keys and values that are set.  If `value` is omitted, it will show the value for `key`.
 
-Usage: `adminset <channel> <name/hostmask> [<key> [value]]`
+Usage: `adminset <channel> <name or hostmask> [<key> [value]]`
 
 #### adminunset
 Deletes a metadata key from an admin account.  You can use the name `field` or the `hostmask` field that was set via adminadd.
 
-Usage: `adminunset <channel> <name/hostmask> <key>`
+Usage: `adminunset <channel> <name or hostmask> <key>`
 
 ##### Admin metadata list
 This is a list of recognized metadata keys for admin accounts.
