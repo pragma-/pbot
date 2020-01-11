@@ -38,7 +38,7 @@ Administrative
 <!-- md-toc-end -->
 
 ### Logging in and out
-You cannot use any of the admin commands unless you login first. Note that login requires that your hostmask matches PBot's records.
+You cannot use any of the admin commands unless you login. Note that login requires that your hostmask matches PBot's records.
 
 However, if your admin account have the `loggedin` and `stayloggedin` metadata set to a true value then you will not need to login.
 #### login
