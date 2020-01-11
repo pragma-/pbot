@@ -5,7 +5,7 @@
 PBot can interact with a virtual machine to safely execute arbitrary user-submitted
 system commands and code.
 
-This document will guide you through installing and configuration a virtual machine
+This document will guide you through installing and configuring a virtual machine
 by using the widely available [libvirt](https://libvirt.org) project tools, such as
 `virt-install`, `virsh`, `virt-manager`, `virt-viewer`, etc.
 
