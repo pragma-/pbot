@@ -135,7 +135,7 @@ irc.server | IRC server address to connect. | irc.freenode.net
 irc.port | IRC server port. | 6667
 general.trigger | Bot trigger. Can be a character class containing multiple trigger characters. Can be overridden per-channel. | [!]
 
-For a more comprehensive list see [this table](doc/Registry.md#list-of-known-registry-items).
+For a more comprehensive list see [this table](Registry.md#list-of-known-registry-items).
 
 #### Recommended settings for IRC Networks
 ##### Freenode
