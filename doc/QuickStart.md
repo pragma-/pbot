@@ -320,6 +320,10 @@ And then set its `type` to `module`:
 
     !factset global qalc type module
 
+Alternatively, you can simply use the [`load`](Admin.md#load) command:
+
+    !load qalc qalc.sh
+
 Now you have a `qalc` calculator in PBot!
 
     <pragma-> !qalc 2 * 2
