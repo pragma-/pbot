@@ -49,6 +49,8 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->checkmute(@_)     },       "checkmute",   0);
   $pbot->{commands}->register(sub { return $self->op_user(@_)       },       "op",         10);
   $pbot->{commands}->register(sub { return $self->deop_user(@_)     },       "deop",       10);
+  $pbot->{commands}->register(sub { return $self->voice_user(@_)    },       "voice",      10);
+  $pbot->{commands}->register(sub { return $self->devoice_user(@_)  },       "devoice",    10);
   $pbot->{commands}->register(sub { return $self->mode(@_)          },       "mode",       40);
   $pbot->{commands}->register(sub { return $self->invite(@_)        },       "invite",     10);
 }
@@ -75,19 +77,20 @@ sub invite {
   return "";
 }
 
-sub op_user {
-  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my $channel = $from;
+sub generic_mode_user {
+  my ($self, $mode_flag, $mode_name, $channel, $nick, $stuff) = @_;
   my $result = '';
+
+  my ($flag, $mode_char) = $mode_flag =~ m/(.)(.)/;
 
   if ($channel !~ m/^#/) {
     # from message
     $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
     $result = 'Done.';
     if (not defined $channel) {
-      return "Usage from message: op <channel> [nick]";
+      return "Usage from message: $mode_name <channel> [nick]";
     } elsif ($channel !~ m/^#/) {
-      return "$channel is not a channel. Usage from message: op <channel> [nick]";
+      return "$channel is not a channel. Usage from message: $mode_name <channel> [nick]";
     }
   }
 
@@ -102,21 +105,21 @@ sub op_user {
   }
 
   my $max_modes = $self->{pbot}->{ircd}->{MODES} // 1;
-  my $mode = '+';
+  my $mode = $flag;
   my $list = '';
   my $i = 0;
 
   foreach my $targets ($self->{pbot}->{interpreter}->unquoted_args($stuff->{arglist})) {
     foreach my $target (split /,/, $targets) {
-      $mode .= 'o';
+      $mode .= $mode_char;
       $list .= "$target ";
       $i++;
 
       if ($i >= $max_modes) {
         my $args = "$channel $mode $list";
         $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
-        $self->mode($from, $nick, $user, $host, $args, $stuff);
-        $mode = '+';
+        $self->mode($channel, $nick, $stuff->{user}, $stuff->{host}, $args, $stuff);
+        $mode = $flag;
         $list = '';
         $i = 0;
       }
@@ -126,67 +129,31 @@ sub op_user {
   if ($i) {
     my $args = "$channel $mode $list";
     $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
-    $self->mode($from, $nick, $user, $host, $args, $stuff);
+    $self->mode($channel, $nick, $stuff->{user}, $stuff->{host}, $args, $stuff);
   }
 
   return $result;
 }
 
+
+sub op_user {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  return $self->generic_mode_user('+o', 'op', $from, $nick, $stuff);
+}
+
 sub deop_user {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my $channel = $from;
-  my $result = '';
+  return $self->generic_mode_user('-o', 'deop', $from, $nick, $stuff);
+}
 
-  if ($channel !~ m/^#/) {
-    # from message
-    $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
-    $result = 'Done.';
-    if (not defined $channel) {
-      return "Usage from message: deop <channel> [nick]";
-    } elsif ($channel !~ m/^#/) {
-      return "$channel is not a channel. Usage from message: deop <channel> [nick]";
-    }
-  }
+sub voice_user {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  return $self->generic_mode_user('+v', 'voice', $from, $nick, $stuff);
+}
 
-  $channel = lc $channel;
-  if (not $self->{pbot}->{chanops}->can_gain_ops($channel)) {
-    return "I am not configured as an OP for $channel. See `chanset` command for more information.";
-  }
-
-  # add $nick to $args if no argument
-  if (not $self->{pbot}->{interpreter}->arglist_size($stuff->{arglist})) {
-    $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $nick);
-  }
-
-  my $max_modes = $self->{pbot}->{ircd}->{MODES} // 1;
-  my $mode = '-';
-  my $list = '';
-  my $i = 0;
-
-  foreach my $targets ($self->{pbot}->{interpreter}->unquoted_args($stuff->{arglist})) {
-    foreach my $target (split /,/, $targets) {
-      $mode .= 'o';
-      $list .= "$target ";
-      $i++;
-
-      if ($i >= $max_modes) {
-        my $args = "$channel $mode $list";
-        $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
-        $self->mode($from, $nick, $user, $host, $args, $stuff);
-        $mode = '-';
-        $list = '';
-        $i = 0;
-      }
-    }
-  }
-
-  if ($i) {
-    my $args = "$channel $mode $list";
-    $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
-    $self->mode($from, $nick, $user, $host, $args, $stuff);
-  }
-
-  return $result;
+sub devoice_user {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  return $self->generic_mode_user('-v', 'devoice', $from, $nick, $stuff);
 }
 
 sub mode {
