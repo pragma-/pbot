@@ -114,18 +114,18 @@ my $min_depth = 1;
 my $use_filename = 0;
 
 exit 1 unless GetOptions(
-	"h|help"	=> sub {
-		pod2usage({ -verbose => 2, -noperldoc => 1 });
-	},
+  "h|help"	=> sub {
+    pod2usage({ -verbose => 2, -noperldoc => 1 });
+  },
 
-	"t|title:s"	=> sub {
-		$toc_title = $_[1] || $toc_default_title;
-	},
-	"l|level=i"	=> sub {
-		( $toc_level = $_[1] ) =~ /^[1-6]$/
-		or die "Integer expected in range [1..6]\n";
-	},
-	"u|update"	=> \$update,
+  "t|title:s"	=> sub {
+    $toc_title = $_[1] || $toc_default_title;
+  },
+  "l|level=i"	=> sub {
+    ( $toc_level = $_[1] ) =~ /^[1-6]$/
+      or die "Integer expected in range [1..6]\n";
+  },
+  "u|update"	=> \$update,
   "x|maxdepth=i" => \$max_depth,
   "m|mindepth=i" => \$min_depth,
   "f|filename" => \$use_filename,
@@ -143,82 +143,86 @@ my $md_toc_end		= "<!-- md-toc-end -->";
 my $filename;
 
 foreach ( @ARGV ) {
-	my $orig_text;
-	{
-		local $/;
-		open F, $_ or die "Unable to open for reading: $_: $!\n";
-		$orig_text = <F>;
-		close F;
-	};
+  my $orig_text;
+  {
+    local $/;
+    open F, $_ or die "Unable to open for reading: $_: $!\n";
+    $orig_text = <F>;
+    close F;
+  };
 
   $filename = $_;
 
-	my $clean_text = $orig_text;
+  # skip README.md unless it is the only file explicitly specified
+  next if @ARGV > 1 and $filename eq 'README.md';
 
-	# skip code fencing
-	$clean_text =~ s{
-		(?:\A|\n) [ \t]* ``` .*? \n [ \t]* ```
-	}{}msgx;
+  my $clean_text = $orig_text;
 
-	# skip non-empty TOC blocks
-	$clean_text =~ s{
-		(?:\A|\n)
-		<!-- [ \t]+ md-toc-begin [ \t]+ --> [ \t\r]* \n
-		[\s\S]*? \n
-		<!-- [ \t]+ md-toc-end   [ \t]+ --> [ \t\r]*
-		(?=\n)
-	}{}msgx;
+  # skip code fencing
+  $clean_text =~ s{
+    (?:\A|\n) [ \t]* ``` .*? \n [ \t]* ```
+  }{}msgx;
 
-	my %count = ();
+  # skip non-empty TOC blocks
+  $clean_text =~ s{
+    (?:\A|\n)
+    <!-- [ \t]+ md-toc-begin [ \t]+ --> [ \t\r]* \n
+    [\s\S]*? \n
+    <!-- [ \t]+ md-toc-end   [ \t]+ --> [ \t\r]*
+    (?=\n)
+  }{}msgx;
 
-	my @toc = ();
+  my %count = ();
 
-	push @toc, $md_toc_begin;
-	push @toc, "#" x $toc_level . " $toc_title" if $toc_title;
+  my @toc = ();
 
-	while ( $clean_text =~ m{
-		(?:\A|\n)
-		[ ]{0,3}
-		(?:
-			# atx-style headers H1-H6
-			( [#]{1,6} ) [ \t]+ ( .+? ) (?: [ \t]+ [#]* )?
-			|
-			# setext-style headers H1
-			( \S[^\r\n]*? ) [ \t\r]* \n [ \t]* ( [=] )+
-			|
-			# setext-style header H2
-			( (?![-]+)|[^\r\n]+? ) [ \t\r]* \n [ \t]* ( [-] )+
-		)
-		[ \t\r]*
-		(?=\n)
-	}mgx ) {
-		my $depth;
-		my $indent;
-		my $title;
+  push @toc, $md_toc_begin;
+  push @toc, "#" x $toc_level . " $toc_title" if $toc_title;
 
-		if ( $1 && $2 ) {
-			$depth = length($1) - 1;
-			$title = $2;
-		} elsif ( $4 && $3 ) {
-			$depth = 0;
-			$indent = "";
-			$title = $3;
-		} elsif ( $6 && $5 ) {
-			$depth = 1;
-			$title = $5;
-		}
+  while ( $clean_text =~ m{
+      (?:\A|\n)
+      [ ]{0,3}
+      (?:
+      # atx-style headers H1-H6
+      ( [#]{1,6} ) [ \t]+ ( .+? ) (?: [ \t]+ [#]* )?
+      |
+      # setext-style headers H1
+      ( \S[^\r\n]*? ) [ \t\r]* \n [ \t]* ( [=] )+
+      |
+      # setext-style header H2
+      ( (?![-]+)|[^\r\n]+? ) [ \t\r]* \n [ \t]* ( [-] )+
+      )
+      [ \t\r]*
+      (?=\n)
+    }mgx ) {
 
-		next unless $title;
+    my $depth;
+    my $indent;
+    my $title;
 
-		$indent = "  " x $depth;
+    if ( $1 && $2 ) {
+      $depth = length($1) - 1;
+      $title = $2;
+    } elsif ( $4 && $3 ) {
+      $depth = 0;
+      $indent = "";
+      $title = $3;
+    } elsif ( $6 && $5 ) {
+      $depth = 1;
+      $title = $5;
+    }
 
-		my $anchor = lc $title;
-		$anchor =~ s/\s/-/g;
-		$anchor =~ s/[^\w-]//g;
+    next unless $title;
 
-		$count{$anchor}++;
+    $indent = "  " x $depth;
 
-		$anchor .= ( 1 - $count{$anchor} or "" );
+    my $anchor = lc $title;
+    $anchor =~ s/\s/-/g;
+    $anchor =~ s/[^\w-]//g;
+
+    $count{$anchor}++;
+
+    $anchor .= ( 1 - $count{$anchor} or "" );
 
     if ($depth >= $min_depth - 1 and $depth <= $max_depth - 1) {
       if ($use_filename) {
@@ -227,36 +231,36 @@ foreach ( @ARGV ) {
         push (@toc, "$indent* [$title](#$anchor)");
       }
     }
-	}
+  }
 
-	push @toc, $md_toc_end;
+  push @toc, $md_toc_end;
 
-	my $toc = join "\n", @toc;
+  my $toc = join "\n", @toc;
 
-	unless ( $update ) {
-		print "$toc\n";
-		next;
-	}
+  unless ( $update ) {
+    print "$toc\n";
+    next;
+  }
 
-	$orig_text =~ s{
-		(?: (\A) | [\r\n]+ )
-		(?:
-			<!-- [ \t]+ md-toc [ \t]+ --> [ \t\r]*
-			|
-			<!-- [ \t]+ md-toc-begin [ \t]+ --> [ \t\r]* \n
-			(?: [\s\S]*? \n )*?
-			<!-- [ \t]+ md-toc-end   [ \t]+ --> [ \t\r]*
-		)
-		(?: (\Z) | [\r\n]+ )
-	}{
-		( $1 // "\n\n" ) . $toc . "\n\n";
-	}emgx;
+  $orig_text =~ s{
+    (?: (\A) | [\r\n]+ )
+    (?:
+    <!-- [ \t]+ md-toc [ \t]+ --> [ \t\r]*
+    |
+    <!-- [ \t]+ md-toc-begin [ \t]+ --> [ \t\r]* \n
+    (?: [\s\S]*? \n )*?
+    <!-- [ \t]+ md-toc-end   [ \t]+ --> [ \t\r]*
+    )
+    (?: (\Z) | [\r\n]+ )
+  }{
+    ( $1 // "\n\n" ) . $toc . "\n\n";
+  }emgx;
 
-	warn "Updating $_\n";
+  warn "Updating $_\n";
 
-	open F, ">$_" or die "Unable to open for writing: $_: $!\n";
-	print F $orig_text;
-	close F;
+  open F, ">$_" or die "Unable to open for writing: $_: $!\n";
+  print F $orig_text;
+  close F;
 }
 
 # =========================================================================
