@@ -80,10 +80,11 @@ This is a list of admin commands allowed by each admin level. Higher level admin
 
 Level | Commands
 --- | ---
-10 | whitelist, blacklist, chanlist, ban, unban, mute, unmute, kick, ignore, unignore
-40 | chanset, chanunset, chanadd, chanrem, join, part
-60 | adminadd, adminrem, adminset, adminunset, akalink, akaunlink, regset, regunset, regsetmeta, regunsetmeta, regchange
-90 | sl, load, unload, reload, export, rebuildaliases, refresh, die
+10 | actiontrigger, antispam, whitelist, blacklist, chanlist, ban, unban, mute, unmute, op, deop, voice, devoice, invite, kick, ignore, unignore
+40 | chanset, chanunset, chanadd, chanrem, join, part, mode
+60 | adminadd, adminrem, adminset, adminunset, akalink, akaunlink, regset, regunset, regsetmeta, regunsetmeta, regchange, dumpbans
+90 | sl, plug, unplug, replug, load, unload, reload, export, rebuildaliases, refresh, die
+99 | eval
 
 #### adminset
 Sets metadata for an admin account. You can use the `name` field or the `hostmask` field that was set via `adminadd`. See also: [admin metadata list](#admin-metadata-list).
