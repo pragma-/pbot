@@ -7,10 +7,10 @@
   * [Admin management commands](#admin-management-commands)
     * [adminadd](#adminadd)
     * [adminrem](#adminrem)
-    * [Admin levels](#admin-levels)
+      * [Admin levels](#admin-levels)
     * [adminset](#adminset)
     * [adminunset](#adminunset)
-    * [Admin metadata list](#admin-metadata-list)
+      * [Admin metadata list](#admin-metadata-list)
     * [Listing admins](#listing-admins)
   * [Channel management commands](#channel-management-commands)
     * [join](#join)
@@ -20,7 +20,7 @@
     * [chanset](#chanset)
     * [chanunset](#chanunset)
     * [chanlist](#chanlist)
-    * [Channel metadata list](#channel-metadata-list)
+      * [Channel metadata list](#channel-metadata-list)
     * [ignore](#ignore)
     * [unignore](#unignore)
     * [whitelist](#whitelist)
@@ -83,7 +83,7 @@ Removes an admin from PBot. You can use the name field or the hostmask field tha
 
 Usage: `adminrem <channel> <name or hostmask>`
 
-### Admin levels
+#### Admin levels
 This is a list of admin commands allowed by each admin level. Higher level admins have access to all lower level admin commands.
 
 Level | Commands
@@ -106,7 +106,7 @@ Deletes a metadata key from an admin account.  You can use the name `field` or t
 
 Usage: `adminunset <channel> <name or hostmask> <key>`
 
-### Admin metadata list
+#### Admin metadata list
 This is a list of recognized metadata keys for admin accounts.
 
 Name | Description
@@ -167,7 +167,7 @@ Usage: `chanunset <channel> <key>`
 ### chanlist
 `chanlist` lists all added channels and their metadata keys and values.
 
-### Channel metadata list
+#### Channel metadata list
 Name | Description
 --- | ---
 `enabled` | When set to a true value, PBot will auto-join this channel after identifying to NickServ (unless `general.autojoin_wait_for_nickserv` is `0`, in which case auto-join happens immediately).
