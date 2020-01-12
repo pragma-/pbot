@@ -678,12 +678,27 @@ sub arglist_size {
   return @$args / 2;
 }
 
+# unshifts new argument to front
+sub unshift_arg {
+  my ($self, $args, $arg) = @_;
+  splice @$args, @$args / 2, 0, $arg; # add quoted argument
+  unshift @$args, $arg; # add first argument
+  return @$args;
+}
+
 # shifts first argument off array of arguments
 sub shift_arg {
   my ($self, $args) = @_;
   return undef if not @$args;
   splice @$args, @$args / 2, 1; # remove original quoted argument
   return shift @$args;
+}
+
+# returns list of unquoted arguments
+sub unquoted_args {
+  my ($self, $args) = @_;
+  return undef if not @$args;
+  return @$args[0 .. @$args / 2 - 1];
 }
 
 # splits array of arguments into array with overflow arguments filling up last position

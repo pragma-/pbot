@@ -47,6 +47,8 @@ sub initialize {
   $pbot->{commands}->register(sub { return $self->kick_user(@_)     },       "kick",       10);
   $pbot->{commands}->register(sub { return $self->checkban(@_)      },       "checkban",    0);
   $pbot->{commands}->register(sub { return $self->checkmute(@_)     },       "checkmute",   0);
+  $pbot->{commands}->register(sub { return $self->op_user(@_)       },       "op",         10);
+  $pbot->{commands}->register(sub { return $self->deop_user(@_)     },       "deop",       10);
   $pbot->{commands}->register(sub { return $self->mode(@_)          },       "mode",       40);
   $pbot->{commands}->register(sub { return $self->invite(@_)        },       "invite",     10);
 }
@@ -61,7 +63,7 @@ sub invite {
   # add current channel as default channel
   if ($stuff->{arglist}[0] !~ m/^#/) {
     if ($from =~ m/^#/) {
-      unshift @{$stuff->{arglist}}, $from;
+      $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from);
     } else {
       return "Usage from private message: invite <channel> <nick>";
     }
@@ -71,6 +73,120 @@ sub invite {
   $self->{pbot}->{chanops}->add_op_command($channel, "sl invite $target $channel");
   $self->{pbot}->{chanops}->gain_ops($channel);
   return "";
+}
+
+sub op_user {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my $channel = $from;
+  my $result = '';
+
+  if ($channel !~ m/^#/) {
+    # from message
+    $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+    $result = 'Done.';
+    if (not defined $channel) {
+      return "Usage from message: op <channel> [nick]";
+    } elsif ($channel !~ m/^#/) {
+      return "$channel is not a channel. Usage from message: op <channel> [nick]";
+    }
+  }
+
+  $channel = lc $channel;
+  if (not $self->{pbot}->{chanops}->can_gain_ops($channel)) {
+    return "I am not configured as an OP for $channel. See `chanset` command for more information.";
+  }
+
+  # add $nick to $args if no argument
+  if (not $self->{pbot}->{interpreter}->arglist_size($stuff->{arglist})) {
+    $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $nick);
+  }
+
+  my $max_modes = $self->{pbot}->{ircd}->{MODES} // 1;
+  my $mode = '+';
+  my $list = '';
+  my $i = 0;
+
+  foreach my $targets ($self->{pbot}->{interpreter}->unquoted_args($stuff->{arglist})) {
+    foreach my $target (split /,/, $targets) {
+      $mode .= 'o';
+      $list .= "$target ";
+      $i++;
+
+      if ($i >= $max_modes) {
+        my $args = "$channel $mode $list";
+        $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
+        $self->mode($from, $nick, $user, $host, $args, $stuff);
+        $mode = '+';
+        $list = '';
+        $i = 0;
+      }
+    }
+  }
+
+  if ($i) {
+    my $args = "$channel $mode $list";
+    $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
+    $self->mode($from, $nick, $user, $host, $args, $stuff);
+  }
+
+  return $result;
+}
+
+sub deop_user {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my $channel = $from;
+  my $result = '';
+
+  if ($channel !~ m/^#/) {
+    # from message
+    $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+    $result = 'Done.';
+    if (not defined $channel) {
+      return "Usage from message: deop <channel> [nick]";
+    } elsif ($channel !~ m/^#/) {
+      return "$channel is not a channel. Usage from message: deop <channel> [nick]";
+    }
+  }
+
+  $channel = lc $channel;
+  if (not $self->{pbot}->{chanops}->can_gain_ops($channel)) {
+    return "I am not configured as an OP for $channel. See `chanset` command for more information.";
+  }
+
+  # add $nick to $args if no argument
+  if (not $self->{pbot}->{interpreter}->arglist_size($stuff->{arglist})) {
+    $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $nick);
+  }
+
+  my $max_modes = $self->{pbot}->{ircd}->{MODES} // 1;
+  my $mode = '-';
+  my $list = '';
+  my $i = 0;
+
+  foreach my $targets ($self->{pbot}->{interpreter}->unquoted_args($stuff->{arglist})) {
+    foreach my $target (split /,/, $targets) {
+      $mode .= 'o';
+      $list .= "$target ";
+      $i++;
+
+      if ($i >= $max_modes) {
+        my $args = "$channel $mode $list";
+        $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
+        $self->mode($from, $nick, $user, $host, $args, $stuff);
+        $mode = '-';
+        $list = '';
+        $i = 0;
+      }
+    }
+  }
+
+  if ($i) {
+    my $args = "$channel $mode $list";
+    $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
+    $self->mode($from, $nick, $user, $host, $args, $stuff);
+  }
+
+  return $result;
 }
 
 sub mode {
@@ -83,7 +199,7 @@ sub mode {
   # add current channel as default channel
   if ($stuff->{arglist}[0] !~ m/^#/) {
     if ($from =~ m/^#/) {
-      unshift @{$stuff->{arglist}}, $from;
+      $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from);
     } else {
       return "Usage from private message: mode <channel> <arguments>";
     }
