@@ -27,7 +27,7 @@
   * [$randomnick](#randomnick)
   * [$0](#0)
 * [List variables](#list-variables)
-  * [modifiers](#modifiers)
+  * [Expansion modifiers](#expansion-modifiers)
 * [action_with_args](#action_with_args)
 * [add_nick](#add_nick)
 * [Adding a factoid](#adding-a-factoid)
@@ -374,8 +374,8 @@ Another example, creating the RTFM trigger:
     <pragma-> !rtfm mauke
             * PBot thwacks mauke with a big red manual.
 
-### modifiers
-Factoid `$variables` can accept trailing modifier keywords prefixed with a colon.  These can be chained together to combine their effects.
+### Expansion modifiers
+Factoid `$variables` can accept trailing expansion modifier keywords prefixed with a colon.  These can be chained together to combine their effects.
 
     <pragma-> !echo $colors:uc
        <PBot> RED
