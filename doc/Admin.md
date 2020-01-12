@@ -189,7 +189,7 @@ Usages:
 #### deop
 #### voice
 #### devoice
-The `op`, `deop`, `voice` and `devoice` all perform their respective named action.
+The `op`, `deop`, `voice` and `devoice` commands all perform their respective named action.
 
 The `targets` parameter can be a list of multiple nicks, optionally containing
 wildcards. If `targets` is omitted, the action will be performed on the caller.
