@@ -180,7 +180,7 @@ Ignore a user. If you omit `[channel]` PBot will ignore the user in all channels
 
 Usage: `ignore <hostmask regex> [channel [timeout]]`
 
-Timeout can be specified as an relative time in English; for instance, `5 minutes`, `1 month and 2 weeks`, `next thursday`, `friday after next`, and so on.
+Timeout can be specified as an relative time in English; for instance, `5 minutes`, `1 month and 2 weeks`, `next thursday`, `friday after next`, `forever` and such.
 
 #### unignore
 Unignores a user. If you omit `[channel]` PBot will unignore the user from all channels, including private messages.
@@ -247,7 +247,7 @@ Usages:
 - `ban <nick or hostmask> [channel [timeout]]`
 - `mute <nick or hostmask> [channel [timeout]]`
 
-If `timeout` is omitted, PBot will ban the user for 24 hours. Timeout can be specified as an relative time in English; for instance, `5 minutes`, `1 month and 2 weeks`, `next thursday`, `friday after next`, and so on.
+If `timeout` is omitted, PBot will ban the user for 24 hours. Timeout can be specified as an relative time in English; for instance, `5 minutes`, `1 month and 2 weeks`, `next thursday`, `friday after next`, `forever` and such.
 
 #### unban/unmute
 Unbans or unmutes a user. If the argument is a nick instead of a hostmask, it will find all bans that match any of that nick's hostmasks or NickServ accounts and unban them.
