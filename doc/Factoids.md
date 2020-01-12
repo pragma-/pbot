@@ -593,17 +593,17 @@ Usage: `factinfo [channel] <keyword>`
        <PBot> NULL: Factoid submitted by Major-Willard for all channels on Sat Jan 1 16:17:42 2005 [5 years and 178 days ago], referenced 39 times (last by pragma- on Sun Jun 27 04:40:32 2010 [5 seconds ago])
 
 ### factshow
-To see the factoid `action` meta-data, use the `factshow` command.
+To see the factoid description, use the `factshow` command.
 
 Usage: `factshow [-p] [channel] <keyword>`
 
     <pragma-> !factshow hi
        <PBot> hi: /say $greetings, $nick.
 
-You can use the `-p` option to have PBot paste the factoid contents to a Web-based
-text paste site. PBot will output a link to the paste instead of the contents. This
-is useful if the factoid was added with the `-url` option and contains formatting
-such as line-breaks and indentation.
+You can use the `-p` option to have PBot paste the factoid description to a Web-based
+text paste site. PBot will output a link to the paste instead. This is useful if the
+factoid was added with the `-url` option and contains formatting such as line-breaks
+and indentation.
 
 ### factset
 To view [factoid meta-data](#factoid-metadata-list), such as owner, rate-limit, etc, use the `factset` command.
