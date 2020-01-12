@@ -203,11 +203,11 @@ For more information about the virtual machine, see the [Virtual Machine documen
 
 ### Useful IRC command improvements
 
-* `mode` command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
+* [`mode`](doc/Admin.md#mode) command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
 * `unban <nick>` and `unmute <nick>` can remove all bans/mutes matching `<nick>`'s hostmask or account
-* `ban` and `mute` will intelligently set banmasks; supports timeouts
-* `ban` and `mute` can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
-* `kick` can take a comma-separated list of nicks; accepts wildcards
+* [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) will intelligently set banmasks; supports timeouts
+* [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
+* [`kick`](doc/Admin.md#kick) can take a comma-separated list of nicks; also accepts wildcards
 * and much, much, more
 
 ### Channel management
