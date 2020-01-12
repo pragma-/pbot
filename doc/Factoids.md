@@ -17,6 +17,7 @@
     * [SpongeBob Mock meme example](#spongebob-mock-meme-example)
     * [Using command-piping](#using-command-piping)
     * [Improving SpongeBob Mock meme](#improving-spongebob-mock-meme)
+    * [Formatting and editing lengthy Code Factoids](#formatting-and-editing-lengthy-code-factoids)
 * [Special variables](#special-variables-1)
   * [$args](#args)
   * [$arg[n]](#argn)
@@ -308,6 +309,17 @@ If the recalled message is the most recent, there is no need to use an argument 
     <pragma-> !mock derpy3
        <PBot> gIrLs ArE dUmB!
 
+#### Formatting and editing lengthy Code Factoids
+
+The poll Code Factoid examples got pretty long, didn't they? It can be quite
+difficult read them with the [`factshow`](#factshow) command.
+
+Fortunately, the [`factadd`](#factadd) command accepts a `-url` option that allows you
+to set PBot factoid contents from an external Web-based text paste site. This
+allows you to use your local text editor to craft Code Factoids that contain
+line-breaks and indentation. You may combine this with the `-f` option to
+force overwriting an existing Code Factoid with your latest modifications.
+
 ## Special variables
 You can use the following variables in a factoid or, in some cases, as an argument to one.
 
@@ -411,11 +423,20 @@ You can use the [`factset`](#factset) command to set a special [factoid meta-dat
 
 ## Adding a factoid
 ### factadd
-Usage: `factadd [channel] <keyword> <description>`
+Usage: `factadd [-f] [channel] <keyword> (<description> | -url <Web paste site>)`
 
-To add a factoid to the global channel, use `global` as the channel.
+To add a factoid to the global channel, use `global` as the channel parameter.
 
     <pragma-> !factadd ##c c /say C rocks!
+
+To force overwriting an existing factoid, use the `-f` option.
+
+To add a factoid's contents from an external Web-based text paste site, use the
+`-url <web paste URL>` option instead of a description. Factoids added this way
+will retain all formatting, including line-breaks and indentation.
+
+    <pragma-> !factadd newfactoid -url http://ix.io/XXXX
+       <PBot> newfactoid added to global channel.
 
 ## Viewing/triggering a factoid
 To view or trigger a factoid, one merely issues its keyword as a command.
