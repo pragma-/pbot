@@ -12,6 +12,7 @@ Administrative
   * [adminset](#adminset)
   * [adminunset](#adminunset)
     * [Admin metadata list](#admin-metadata-list)
+  * [Listing admins](#listing-admins)
 * [Channel management commands](#channel-management-commands)
   * [join](#join)
   * [part](#part)
@@ -34,6 +35,14 @@ Administrative
   * [unban/unmute](#unbanunmute)
   * [invite](#invite)
   * [kick](#kick)
+* [Module management commands](#module-management-commands)
+  * [load](#load)
+  * [unload](#unload)
+* [Plugin management commands](#plugin-management-commands)
+  * [plug](#plug)
+  * [unplug](#unplug)
+  * [replug](#replug)
+  * [pluglist](#pluglist)
 * [Miscellaneous commands](#miscellaneous-commands)
   * [export](#export)
   * [refresh](#refresh)
@@ -108,6 +117,16 @@ Name | Description
 `password` | The password for this admin account.
 `loggedin` | Whether the admin is logged in or not.
 `stayloggedin` | Do not log the admin out when they part/quit.
+
+#### Listing admins
+To list admins, use the `list admins` command. This is not an admin command, but
+it is included here for completeness.
+
+Usage: `list admins`
+
+When used in a channel, it will list only the admins for that channel, plus all
+global admins.  When used from private message, it will list all admins from
+all channels, including global admins.
 
 ### Channel management commands
 
@@ -248,6 +267,51 @@ Removes a user from the channel. `<nick>` can be a comma-separated list of multi
 
 Usage from channel:   `kick <nick> [reason]`
 From private message: `kick <channel> <nick> [reason]`
+
+### Module management commands
+
+Note that modules are "reloaded" each time they are executed. There is no need to `refresh` after editing a module.
+
+#### load
+This command loads a module in `$data_dir/modules/` as a PBot command. It is
+equivalent to `factadd`ing a new keyword and then setting its `type` to `module`.
+
+Usage: `load <keyword> <module>`
+
+For example, to load `$data_dir/modules/qalc.sh` as the `qalc` command:
+
+    <pragma-> !load qalc qalc.sh
+
+#### unload
+This command unloads a module. It is equivalent to deleting the factoid keyword
+the module was loaded as.
+
+Usage: `unload <keyword>`
+
+### Plugin management commands
+
+#### plug
+Loads a plugin into PBot.
+
+Usage: `plug <plugin>`
+
+#### unplug
+Unloads a plugin from PBot.
+
+Usage: `unplug <plugin>`
+
+#### replug
+Reloads a plugin into PBot. The plugin is first unloaded and then it is loaded again.
+
+Usage: `replug <plugin>`
+
+#### pluglist
+Lists all currently loaded plugins. This isn't an admin command, but it is included here for completeness.
+
+Usage: `pluglist`
+
+    <pragma-> !pluglist
+       <PBot> Loaded plugins: ActionTrigger, AntiAway, AntiKickAutoRejoin, AntiNickSpam, AntiRepeat, AntiTwitter, AutoRejoin, GoogleSearch, Quotegrabs, RemindMe, UrlTitles
 
 ### Miscellaneous commands
 
