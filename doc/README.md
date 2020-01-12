@@ -240,10 +240,6 @@
     * [delq](Quotegrabs.md#delq)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
-* [PBot Documentation](README.md#pbot-documentation)
-  * [Table of Contents](README.md#table-of-contents)
-<!-- md-toc-end -->
-<!-- md-toc-begin -->
 * [Registry](Registry.md#registry)
   * [About](Registry.md#about)
     * [Types of values](Registry.md#types-of-values)
