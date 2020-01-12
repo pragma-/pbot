@@ -180,14 +180,39 @@ Usages:
 - `blacklist add <hostmask regex> [channel]`
 - `blacklist remove <hostmask regex> [channel]`
 
+#### op
+#### deop
+#### voice
+#### devoice
+The `op`, `deop`, `voice` and `devoice` all perform their respective named action.
+
+The `targets` parameter can be a list of multiple nicks, optionally containing
+wildcards. If `targets` is omitted, the action will be performed on the caller.
+
+Usages:
+
+In channel:
+
+* `op [targets]`
+* `deop [targets]`
+* `voice [targets]`
+* `devoice [targets]`
+
+From private message:
+
+* `op <channel> [targets]`
+* `deop <channel> [targets]`
+* `voice <channel> [targets]`
+* `devoice <channel> [targets]`
+
 #### mode
 Sets or unsets channel or user modes.
 
-Usage: `mode <flags> <targets>`
+Usage: `mode [channel] <flags> [targets]`
 
-PBot extends the IRC `MODE` command in useful ways. For instance, the `<targets>`
-parameter can contain wildcards. To op everybody whose nick ends with `|dev`, for
-instance, you can do `!mode +o *|dev`.
+PBot extends the IRC `MODE` command in useful ways. For instance, the `targets`
+parameter may contain wildcards. To op everybody whose nick ends with `|dev` you
+can do `!mode +o *|dev` in a channel.
 
 #### ban/mute
 Bans or mutes a user. If the argument is a nick instead of a hostmask, it will determine an appropriate banmask for that nick.
@@ -206,6 +231,11 @@ The argument can be a comma-separated list of multiple nicks or masks.
 Usages:
 - `unban <nick or hostmask> [channel]`
 - `unmute <nick or hostmask> [channel]`
+
+#### invite
+Invites a user to a channel.
+
+Usage: `invite [channel] <nick>`
 
 #### kick
 Removes a user from the channel. `<nick>` can be a comma-separated list of multiple users, optionally containing wildcards. If `[reason]` is omitted, a random insult will be used.
