@@ -1,79 +1,113 @@
-Modules
--------
-
-PBot has several external command-line modules. Here is the documentation for most of them.
+# Modules
 
 <!-- md-toc-begin -->
-* [cc](#cc)
-  * [Usage](#usage)
-  * [Supported Languages](#supported-languages)
-  * [Default Language](#default-language)
-  * [Disallowed system calls](#disallowed-system-calls)
-  * [Program termination with no output](#program-termination-with-no-output)
-  * [Abnormal program termination](#abnormal-program-termination)
-  * [C and C++ Functionality](#c-and-c-functionality)
-  * [Using the preprocessor](#using-the-preprocessor)
-    * [Default #includes](#default-includes)
-    * [Using #include](#using-include)
-    * [Using #define](#using-define)
-  * [main() Function Unnecessary](#main-function-unnecessary)
-  * [Embedding Newlines](#embedding-newlines)
-  * [Printing in binary/base2](#printing-in-binarybase2)
-  * [Using the GDB debugger](#using-the-gdb-debugger)
-    * [print](#print)
-    * [ptype](#ptype)
-    * [watch](#watch)
-    * [trace](#trace)
-    * [gdb](#gdb)
-  * [Interactive Editing](#interactive-editing)
-    * [copy](#copy)
-    * [show](#show)
-    * [diff](#diff)
-    * [paste](#paste)
-    * [run](#run)
-    * [undo](#undo)
-    * [s//](#s)
-    * [replace](#replace)
-    * [prepend](#prepend)
-    * [append](#append)
-    * [remove](#remove)
-  * [Some Examples](#some-examples)
-* [english](#english)
-* [expand](#expand)
-* [prec](#prec)
-* [paren](#paren)
-* [faq](#faq)
-* [cfact](#cfact)
-* [cjeopardy](#cjeopardy)
-  * [hint](#hint)
-  * [what](#what)
-  * [w](#w)
-  * [filter](#filter)
-  * [score](#score)
-  * [rank](#rank)
-  * [reset](#reset)
-  * [qstats](#qstats)
-  * [qshow](#qshow)
-* [c99std](#c99std)
-* [c11std](#c11std)
-* [man](#man)
-* [google](#google)
-* [define](#define)
-* [dict](#dict)
-* [foldoc](#foldoc)
-* [vera](#vera)
-* [udict](#udict)
-* [wdict](#wdict)
-* [acronym](#acronym)
-* [math](#math)
-* [calc](#calc)
-* [qalc](#qalc)
-* [compliment](#compliment)
-* [insult](#insult)
-* [excuse](#excuse)
-* [horoscope](#horoscope)
-* [quote](#quote)
+  * [About](#about)
+  * [Creating modules](#creating-modules)
+  * [Documentation for built-in modules](#documentation-for-built-in-modules)
+    * [cc](#cc)
+      * [Usage](#usage)
+      * [Supported Languages](#supported-languages)
+      * [Default Language](#default-language)
+      * [Disallowed system calls](#disallowed-system-calls)
+      * [Program termination with no output](#program-termination-with-no-output)
+      * [Abnormal program termination](#abnormal-program-termination)
+      * [C and C++ Functionality](#c-and-c-functionality)
+      * [Using the preprocessor](#using-the-preprocessor)
+        * [Default #includes](#default-includes)
+        * [Using #include](#using-include)
+        * [Using #define](#using-define)
+      * [main() Function Unnecessary](#main-function-unnecessary)
+      * [Embedding Newlines](#embedding-newlines)
+      * [Printing in binary/base2](#printing-in-binarybase2)
+      * [Using the GDB debugger](#using-the-gdb-debugger)
+        * [print](#print)
+        * [ptype](#ptype)
+        * [watch](#watch)
+        * [trace](#trace)
+        * [gdb](#gdb)
+      * [Interactive Editing](#interactive-editing)
+        * [copy](#copy)
+        * [show](#show)
+        * [diff](#diff)
+        * [paste](#paste)
+        * [run](#run)
+        * [undo](#undo)
+        * [s//](#s)
+        * [replace](#replace)
+        * [prepend](#prepend)
+        * [append](#append)
+        * [remove](#remove)
+      * [Some Examples](#some-examples)
+    * [english](#english)
+    * [expand](#expand)
+    * [prec](#prec)
+    * [paren](#paren)
+    * [faq](#faq)
+    * [cfact](#cfact)
+    * [cjeopardy](#cjeopardy)
+      * [hint](#hint)
+      * [what](#what)
+      * [w](#w)
+      * [filter](#filter)
+      * [score](#score)
+      * [rank](#rank)
+      * [reset](#reset)
+      * [qstats](#qstats)
+      * [qshow](#qshow)
+    * [c99std](#c99std)
+    * [c11std](#c11std)
+    * [man](#man)
+    * [google](#google)
+    * [define](#define)
+    * [dict](#dict)
+    * [foldoc](#foldoc)
+    * [vera](#vera)
+    * [udict](#udict)
+    * [wdict](#wdict)
+    * [acronym](#acronym)
+    * [math](#math)
+    * [calc](#calc)
+    * [qalc](#qalc)
+    * [compliment](#compliment)
+    * [insult](#insult)
+    * [excuse](#excuse)
+    * [horoscope](#horoscope)
+    * [quote](#quote)
 <!-- md-toc-end -->
+
+## About
+Modules are external command-line executable programs and scripts that can be
+loaded via PBot Factoids.
+
+## Creating modules
+Suppose you have the [Qalculate!](https://qalculate.github.io/) command-line
+program and you want to provide a PBot command for it. You can create a _very_ simple
+shell script containing:
+
+    #!/bin/sh
+    qalc "$*"
+
+And let's call it `qalc.sh` and put it in PBot's `modules/` directory.
+
+Then you can add the `qalc` factoid:
+
+    !factadd global qalc qalc.sh
+
+And then set its `type` to `module`:
+
+    !factset global qalc type module
+
+Alternatively, you can simply use the [`load`](Admin.md#load) command:
+
+    !load qalc qalc.sh
+
+Now you have a `qalc` calculator in PBot!
+
+    <pragma-> !qalc 2 * 2
+       <PBot> 2 * 2 = 4
+
+## Documentation for built-in modules
+PBot comes several command-line modules included. Here is the documentation for most of them.
 
 ### cc
 Code compiler (and executor).  This command will compile and execute user-provided code in a number of languages, and then display the compiler and/or program output.

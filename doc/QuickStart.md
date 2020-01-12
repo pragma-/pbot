@@ -1,37 +1,35 @@
-QuickStart
-==========
+# QuickStart
 
 <!-- md-toc-begin -->
-* [Installation](#installation)
-  * [Installing Perl](#installing-perl)
-  * [Installing CPAN modules](#installing-cpan-modules)
-  * [Installing PBot](#installing-pbot)
-    * [git (recommended)](#git-recommended)
-    * [Download zip archive](#download-zip-archive)
-* [First-time Configuration](#first-time-configuration)
-  * [Clone data-directory](#clone-data-directory)
-  * [Quick-start command](#quick-start-command)
-  * [Edit Registry](#edit-registry)
-    * [Recommended settings for IRC Networks](#recommended-settings-for-irc-networks)
-      * [Freenode](#freenode)
-      * [IRCnet](#ircnet)
-      * [Other networks](#other-networks)
-* [Starting PBot](#starting-pbot)
-  * [Usage](#usage)
-    * [Overriding directories](#overriding-directories)
-    * [Overriding registry](#overriding-registry)
-* [Additional Configuration](#additional-configuration)
-  * [Adding Channels](#adding-channels)
-  * [Adding Admins](#adding-admins)
-  * [Loading Plugins](#loading-plugins)
-* [Further Reading](#further-reading)
-  * [Commands](#commands)
-  * [Factoids](#factoids)
-  * [Modules](#modules)
+  * [Installation](#installation)
+    * [Installing Perl](#installing-perl)
+    * [Installing CPAN modules](#installing-cpan-modules)
+    * [Installing PBot](#installing-pbot)
+      * [git (recommended)](#git-recommended)
+      * [Download zip archive](#download-zip-archive)
+  * [First-time Configuration](#first-time-configuration)
+    * [Clone data-directory](#clone-data-directory)
+    * [Quick-start command](#quick-start-command)
+    * [Edit Registry](#edit-registry)
+      * [Recommended settings for IRC Networks](#recommended-settings-for-irc-networks)
+        * [Freenode](#freenode)
+        * [IRCnet](#ircnet)
+        * [Other networks](#other-networks)
+  * [Starting PBot](#starting-pbot)
+    * [Usage](#usage)
+      * [Overriding directories](#overriding-directories)
+      * [Overriding registry](#overriding-registry)
+  * [Additional Configuration](#additional-configuration)
+    * [Adding Channels](#adding-channels)
+    * [Adding Admins](#adding-admins)
+    * [Loading Plugins](#loading-plugins)
+  * [Further Reading](#further-reading)
+    * [Commands](#commands)
+    * [Factoids](#factoids)
+    * [Modules](#modules)
 <!-- md-toc-end -->
 
-Installation
-------------
+## Installation
 
 ### Installing Perl
 
@@ -70,8 +68,7 @@ The command to install with `git` is:
 
 Alternatively, you may [download a ZIP archive](https://github.com/pragma-/pbot/archive/master.zip).
 
-First-time Configuration
-------------------------
+## First-time Configuration
 
 After git-cloning (or unpacking the ZIP archive) you should have a directory named
 `pbot/` (or `pbot-master/`). It should contain at least these directories and files:
@@ -173,8 +170,7 @@ Other networks are untested. They should be very similiar to either Freenode or 
 recommended settings should suffice. If you have any issues, please [report them here](https://github.com/pragma-/pbot/issues)
 or in the `#pbot2` channel on the Freenode network.
 
-Starting PBot
--------------
+## Starting PBot
 
 ### Usage
 
@@ -193,8 +189,7 @@ saved to the `registry` file. You do not need to use the override every time you
 
     $ pbot irc.botnick=coolbot irc.server=irc.freenode.net irc.port=6667
 
-Additional Configuration
-------------------------
+## Additional Configuration
 
 Once you have launched PBot, you can type into the STDIN to execute commands within
 the bot. Alternatively you can launch your own IRC client and `/msg` PBot.
@@ -268,8 +263,7 @@ Currently loaded plugins may be listed with the `pluglist` command.
 
 For more information, see the [Plugins documentation](Plugins.md).
 
-Further Reading
----------------
+## Further Reading
 
 That should get you started. For further information about PBot, check out these topics.
 

@@ -1,5 +1,4 @@
-Registry
-========
+# Registry
 
 <!-- md-toc-begin -->
   * [About](#about)
