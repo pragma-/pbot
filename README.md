@@ -3,27 +3,27 @@ PBot
 PBot is a versatile IRC Bot written in Perl
 
 <!-- md-toc-begin -->
-  * [Installation / Quick Start](#installation--quick-start)
-  * [Features](#features)
-    * [Commands](#commands)
-    * [Plugins](#plugins)
-    * [Factoids](#factoids)
-    * [Code Factoids](#code-factoids)
-    * [Modules](#modules)
-    * [Virtual machine](#virtual-machine)
-    * [Useful IRC command improvements](#useful-irc-command-improvements)
-    * [Channel management](#channel-management)
-    * [Admin management](#admin-management)
-    * [Easy configuration](#easy-configuration)
-    * [Advanced interpreter](#advanced-interpreter)
-      * [piping](#piping)
-      * [command substitution](#command-substitution)
-      * [command splitting](#command-splitting)
-      * [$variable interpolation](#variable-interpolation)
-      * [inline commands](#inline-commands)
-  * [Documentation](#documentation)
-  * [Support](#support)
-  * [License](#license)
+* [Installation / Quick Start](#installation--quick-start)
+* [Features](#features)
+  * [Commands](#commands)
+  * [Plugins](#plugins)
+  * [Factoids](#factoids)
+  * [Code Factoids](#code-factoids)
+  * [Modules](#modules)
+  * [Virtual machine](#virtual-machine)
+  * [Useful IRC command improvements](#useful-irc-command-improvements)
+  * [Channel management](#channel-management)
+  * [Admin management](#admin-management)
+  * [Easy configuration](#easy-configuration)
+  * [Advanced interpreter](#advanced-interpreter)
+    * [piping](#piping)
+    * [command substitution](#command-substitution)
+    * [command splitting](#command-splitting)
+    * [advanced $variable interpolation](#advanced-variable-interpolation)
+    * [inline commands](#inline-commands)
+* [Documentation](#documentation)
+* [Support](#support)
+* [License](#license)
 <!-- md-toc-end -->
 
 Installation / Quick Start
@@ -291,7 +291,7 @@ You can execute multiple commands sequentially as one command.
     <pragma-> !echo Test! ;;; me smiles. ;;; version
        <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
 
-#### $variable interpolation
+#### advanced $variable interpolation
 
 You can use factoids as variables and interpolate them within commands.
 
@@ -299,6 +299,12 @@ You can use factoids as variables and interpolate them within commands.
 
     <pragma-> !echo greeting is $greeting
        <PBot> greeting is Hello, world
+
+PBot `$variable` interpolation supports [expansion modifiers](doc/Factoids#expansion-modifiers), which can be chained to
+combine their effects.
+
+    <pragma-> !echo $greeting:uc
+       <PBot> HELLO, WORLD
 
 #### inline commands
 
