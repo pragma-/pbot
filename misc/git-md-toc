@@ -109,6 +109,9 @@ my $toc_default_title = "Table of Content";
 my $toc_title;
 my $toc_level = 1;
 my $update;
+my $max_depth = 6;
+my $min_depth = 1;
+my $use_filename = 0;
 
 exit 1 unless GetOptions(
 	"h|help"	=> sub {
@@ -123,6 +126,9 @@ exit 1 unless GetOptions(
 		or die "Integer expected in range [1..6]\n";
 	},
 	"u|update"	=> \$update,
+  "x|maxdepth=i" => \$max_depth,
+  "m|mindepth=i" => \$min_depth,
+  "f|filename" => \$use_filename,
 );
 
 # Hmm... No arguments. Let's take README.md or STDIN
@@ -134,6 +140,8 @@ my $md_toc		= "<!-- md-toc -->";
 my $md_toc_begin	= "<!-- md-toc-begin -->";
 my $md_toc_end		= "<!-- md-toc-end -->";
 
+my $filename;
+
 foreach ( @ARGV ) {
 	my $orig_text;
 	{
@@ -142,6 +150,8 @@ foreach ( @ARGV ) {
 		$orig_text = <F>;
 		close F;
 	};
+
+  $filename = $_;
 
 	my $clean_text = $orig_text;
 
@@ -210,7 +220,13 @@ foreach ( @ARGV ) {
 
 		$anchor .= ( 1 - $count{$anchor} or "" );
 
-		push @toc, "$indent* [$title](#$anchor)";
+    if ($depth >= $min_depth - 1 and $depth <= $max_depth - 1) {
+      if ($use_filename) {
+        push (@toc, "$indent* [$title]($filename#$anchor)");
+      } else {
+        push (@toc, "$indent* [$title](#$anchor)");
+      }
+    }
 	}
 
 	push @toc, $md_toc_end;
