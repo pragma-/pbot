@@ -320,6 +320,11 @@ allows you to use your local text editor to craft Code Factoids that contain
 line-breaks and indentation. You may combine this with the `-f` option to
 force overwriting an existing Code Factoid with your latest modifications.
 
+Likewise, the [`factshow`](#factshow) command accepts a `-p` option that will
+paste the contents of the factoid to a Web paste site. This allows you to read
+the factoid with its formatting preserved. You can also copy the paste to your
+local text editor.
+
 ## Special variables
 You can use the following variables in a factoid or, in some cases, as an argument to one.
 
@@ -590,10 +595,15 @@ Usage: `factinfo [channel] <keyword>`
 ### factshow
 To see the factoid `action` meta-data, use the `factshow` command.
 
-Usage: `factshow [channel] <keyword>`
+Usage: `factshow [-p] [channel] <keyword>`
 
     <pragma-> !factshow hi
        <PBot> hi: /say $greetings, $nick.
+
+You can use the `-p` option to have PBot paste the factoid contents to a Web-based
+text paste site. PBot will output a link to the paste instead of the contents. This
+is useful if the factoid was added with the `-url` option and contains formatting
+such as line-breaks and indentation.
 
 ### factset
 To view [factoid meta-data](#factoid-metadata-list), such as owner, rate-limit, etc, use the `factset` command.
