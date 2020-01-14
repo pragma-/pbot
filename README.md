@@ -3,27 +3,28 @@ PBot
 PBot is a versatile IRC Bot written in Perl
 
 <!-- md-toc-begin -->
-* [Installation / Quick Start](#installation--quick-start)
-* [Features](#features)
-  * [Commands](#commands)
-  * [Plugins](#plugins)
-  * [Factoids](#factoids)
-  * [Code Factoids](#code-factoids)
-  * [Modules](#modules)
-  * [Virtual machine](#virtual-machine)
-  * [Useful IRC command improvements](#useful-irc-command-improvements)
-  * [Channel management](#channel-management)
-  * [Admin management](#admin-management)
-  * [Easy configuration](#easy-configuration)
-  * [Advanced interpreter](#advanced-interpreter)
-    * [piping](#piping)
-    * [command substitution](#command-substitution)
-    * [command splitting](#command-splitting)
-    * [advanced $variable interpolation](#advanced-variable-interpolation)
-    * [inline commands](#inline-commands)
-* [Documentation](#documentation)
-* [Support](#support)
-* [License](#license)
+  * [PBot](#pbot)
+  * [Installation / Quick Start](#installation--quick-start)
+  * [Features](#features)
+    * [Commands](#commands)
+    * [Advanced interpreter](#advanced-interpreter)
+      * [piping](#piping)
+      * [command substitution](#command-substitution)
+      * [command splitting](#command-splitting)
+      * [advanced $variable interpolation](#advanced-variable-interpolation)
+      * [inline commands](#inline-commands)
+    * [Factoids](#factoids)
+    * [Code Factoids](#code-factoids)
+    * [Plugins](#plugins)
+    * [Modules](#modules)
+    * [Virtual machine](#virtual-machine)
+    * [Useful IRC command improvements](#useful-irc-command-improvements)
+    * [Channel management](#channel-management)
+    * [Admin management](#admin-management)
+    * [Easy configuration](#easy-configuration)
+  * [Documentation](#documentation)
+  * [Support](#support)
+  * [License](#license)
 <!-- md-toc-end -->
 
 Installation / Quick Start
@@ -36,34 +37,74 @@ Features
 ### Commands
 
 PBot has several useful core built-in commands. Additional commands can be added to PBot through
-Plugins and Factoids.
+Factoids and Plugins.
 
-### Plugins
+### Advanced interpreter
 
-PBot can dynamically load and unload Perl modules to alter its behavior.
+PBot has an advanced command interpreter with useful functionality.
 
-These are some of the plugins that PBot has, there are many more:
+#### piping
 
-Plugin | Description
---- | ---
-[GoogleSearch](Plugins/GoogleSearch.pm) | Performs Internet searches using the Google search engine.
-[UrlTitles](Plugins/UrlTitles.pm) | When a URL is seen in a channel, intelligently display its title. It will not display titles that are textually similiar to the URL, in order to maintain the channel signal-noise ratio.
-[Quotegrabs](Plugins/Quotegrabs.pm) | Grabs channel messages as quotes for posterity. Can grab messages from anywhere in the channel history. Can grab multiple messages at once!
-[RemindMe](Plugins/RemindMe.pm) | Lets people set up reminders. Lots of options.
-[ActionTrigger](Plugins/ActionTrigger.pm) | Lets admins set regular expression triggers to execute PBot commands or factoids.
-[AntiAway](Plugins/AntiAway.pm) | Detects when a person uses annoying in-channel away messages and warns them.
-[AutoRejoin](Plugins/AutoRejoin.pm) | Automatically rejoin channels if kicked or removed.
-[AntiNickSpam](Plugins/AntiNickSpam.pm) | Detects when a person is spamming an excessive number of nicks in the channel and removes them.
-[AntiRepeat](Plugins/AntiRepeat.pm) | Warn people about excessively repeating messages. Kicks if they fail to heed warnings.
-[AntiTwitter](Plugins/AntiTwitter.pm) | Warn people about addressing others with `@<nick>`. Kicks if they fail to heed warnings.
+You can pipe output from one command as input into another command, indefinitely.
 
-There are even a few games!
+    <pragma-> !echo hello world | {sed s/world/everybody/} | {uc}
+       <PBot> HELLO EVERYBODY
 
-Plugin | Description
---- | ---
-[Spinach](Plugins/Spinach.pm) | An advanced multiplayer Trivia game engine with a twist! A question is shown, everybody privately submits a false answer, all false answers and the true answer is shown, everybody tries to guess the true answer, points are gained when people pick your false answer!
-[Battleship](Plugins/Battleship.pm) | The classic Battleship board game, simplified for IRC
-[Connect4](Plugins/Connect4.pm) | The classic Connect-4 game.
+#### command substitution
+
+You can insert the output from another command at any point within a command. This
+substitutes the command with its output at the point where the command was used.
+
+    <pragma-> !echo This is &{echo a demonstration} of command substitution
+       <PBot> This is a demonstration of command substitution
+
+For example, suppose you want to make a Google Image Search command. The naive
+way would be to simply do:
+
+    <pragma-> !factadd img /call echo https://google.com/search?tbm=isch&q=$args
+
+Unfortuately this would not support queries containing spaces or certain symbols. But
+never fear! We can use command substitution and the `uri_escape` function from the
+`func` command.
+
+Note that you must escape the command substitution to insert it literally into the
+factoid otherwise it will be expanded first.
+
+    <pragma-> !factadd img /call echo https://google.com/search?tbm=isch&q=\&{func uri_escape $args}
+
+    <pragma-> !img spaces & stuff
+       <PBot> https://google.com/search?tbm=isch&q=spaces%20%26%20stuff
+
+#### command splitting
+
+You can execute multiple commands sequentially as one command.
+
+    <pragma-> !echo Test! ;;; me smiles. ;;; version
+       <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
+
+#### advanced $variable interpolation
+
+You can use factoids as variables and interpolate them within commands.
+
+    <pragma-> !factadd greeting "Hello, world"
+
+    <pragma-> !echo greeting is $greeting
+       <PBot> greeting is Hello, world
+
+PBot variable interpolation supports [expansion modifiers](doc/Factoids.md#expansion-modifiers), which can be chained to
+combine their effects.
+
+    <pragma-> !echo $greeting:uc
+       <PBot> HELLO, WORLD
+
+#### inline commands
+
+You can invoke up to three commands inlined within a message.  If the message
+is addressed to a nick, the output will also be addressed to them.
+
+    <pragma-> newuser13: Check the !{version} and the !{help} documentation.
+       <PBot> newuser13: PBot version 2696 2020-01-04
+       <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
 
 ### Factoids
 
@@ -121,6 +162,33 @@ You can pipe output from other commands to Code Factoids.
        <PBot> grfg
 
 For more information, see the [Code Factoid documentation](doc/Factoids.md#code).
+
+### Plugins
+
+PBot can dynamically load and unload Perl modules to alter its behavior.
+
+These are some of the plugins that PBot has, there are many more:
+
+Plugin | Description
+--- | ---
+[GoogleSearch](Plugins/GoogleSearch.pm) | Performs Internet searches using the Google search engine.
+[UrlTitles](Plugins/UrlTitles.pm) | When a URL is seen in a channel, intelligently display its title. It will not display titles that are textually similiar to the URL, in order to maintain the channel signal-noise ratio.
+[Quotegrabs](Plugins/Quotegrabs.pm) | Grabs channel messages as quotes for posterity. Can grab messages from anywhere in the channel history. Can grab multiple messages at once!
+[RemindMe](Plugins/RemindMe.pm) | Lets people set up reminders. Lots of options.
+[ActionTrigger](Plugins/ActionTrigger.pm) | Lets admins set regular expression triggers to execute PBot commands or factoids.
+[AntiAway](Plugins/AntiAway.pm) | Detects when a person uses annoying in-channel away messages and warns them.
+[AutoRejoin](Plugins/AutoRejoin.pm) | Automatically rejoin channels if kicked or removed.
+[AntiNickSpam](Plugins/AntiNickSpam.pm) | Detects when a person is spamming an excessive number of nicks in the channel and removes them.
+[AntiRepeat](Plugins/AntiRepeat.pm) | Warn people about excessively repeating messages. Kicks if they fail to heed warnings.
+[AntiTwitter](Plugins/AntiTwitter.pm) | Warn people about addressing others with `@<nick>`. Kicks if they fail to heed warnings.
+
+There are even a few games!
+
+Plugin | Description
+--- | ---
+[Spinach](Plugins/Spinach.pm) | An advanced multiplayer Trivia game engine with a twist! A question is shown, everybody privately submits a false answer, all false answers and the true answer is shown, everybody tries to guess the true answer, points are gained when people pick your false answer!
+[Battleship](Plugins/Battleship.pm) | The classic Battleship board game, simplified for IRC
+[Connect4](Plugins/Connect4.pm) | The classic Connect-4 game.
 
 ### Modules
 
@@ -247,73 +315,6 @@ These settings can easily be configured via several methods:
 * [editing](doc/Registry.md#editing-registry-file) the [`$data_dir/registry`](data/registry) plain-text JSON file
 
 For more information, see the [Registry documentation.](doc/Registry.md)
-
-### Advanced interpreter
-
-PBot has an advanced command interpreter with useful functionality.
-
-#### piping
-
-You can pipe output from one command as input into another command, indefinitely.
-
-    <pragma-> !echo hello world | {sed s/world/everybody/} | {uc}
-       <PBot> HELLO EVERYBODY
-
-#### command substitution
-
-You can insert the output from another command at any point within a command. This
-substitutes the command with its output at the point where the command was used.
-
-    <pragma-> !echo This is &{echo a demonstration} of command substitution
-       <PBot> This is a demonstration of command substitution
-
-For example, suppose you want to make a Google Image Search command. The naive
-way would be to simply do:
-
-    <pragma-> !factadd img /call echo https://google.com/search?tbm=isch&q=$args
-
-Unfortuately this would not support queries containing spaces or certain symbols. But
-never fear! We can use command substitution and the `uri_escape` function from the
-`func` command.
-
-Note that you must escape the command substitution to insert it literally into the
-factoid otherwise it will be expanded first.
-
-    <pragma-> !factadd img /call echo https://google.com/search?tbm=isch&q=\&{func uri_escape $args}
-
-    <pragma-> !img spaces & stuff
-       <PBot> https://google.com/search?tbm=isch&q=spaces%20%26%20stuff
-
-#### command splitting
-
-You can execute multiple commands sequentially as one command.
-
-    <pragma-> !echo Test! ;;; me smiles. ;;; version
-       <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
-
-#### advanced $variable interpolation
-
-You can use factoids as variables and interpolate them within commands.
-
-    <pragma-> !factadd greeting "Hello, world"
-
-    <pragma-> !echo greeting is $greeting
-       <PBot> greeting is Hello, world
-
-PBot variable interpolation supports [expansion modifiers](doc/Factoids.md#expansion-modifiers), which can be chained to
-combine their effects.
-
-    <pragma-> !echo $greeting:uc
-       <PBot> HELLO, WORLD
-
-#### inline commands
-
-You can invoke up to three commands inlined within a message.  If the message
-is addressed to a nick, the output will also be addressed to them.
-
-    <pragma-> newuser13: Check the !{version} and the !{help} documentation.
-       <PBot> newuser13: PBot version 2696 2020-01-04
-       <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
 
 Documentation
 -------------
