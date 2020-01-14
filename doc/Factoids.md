@@ -312,9 +312,12 @@ If the recalled message is the most recent, there is no need to use an argument 
 #### Formatting and editing lengthy Code Factoids
 
 The poll Code Factoid examples got pretty long, didn't they? It can be quite
-difficult read them with the [`factshow`](#factshow) command.
+difficult read them with the [`factshow`](#factshow) command. Editing them in
+your IRC client can be awkward, too. What if you could use your local system's
+text editor instead? And then upload the text to a Web-based paste site whose
+URL you can give to PBot to update the factoid? Guess what? You can!
 
-Fortunately, the [`factadd`](#factadd) command accepts a `-url` option that allows you
+The [`factadd`](#factadd) command accepts a `-url` option that allows you
 to set PBot factoid contents from an external Web-based text paste site. This
 allows you to use your local text editor to craft Code Factoids that contain
 line-breaks and indentation. You may combine this with the `-f` option to
