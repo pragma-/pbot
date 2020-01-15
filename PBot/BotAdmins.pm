@@ -38,45 +38,29 @@ sub initialize {
 sub add_admin {
   my $self = shift;
   my ($name, $channel, $hostmask, $level, $password, $dont_save) = @_;
-  $channel = lc $channel;
   $channel = '.*' if $channel !~ m/^#/;
-  $hostmask = lc $hostmask;
-  $self->{admins}->hash->{$channel}->{$hostmask}->{name}     = $name;
-  $self->{admins}->hash->{$channel}->{$hostmask}->{level}    = $level;
-  $self->{admins}->hash->{$channel}->{$hostmask}->{password} = $password;
+
+  my $data = {
+    name => $name,
+    level => $level,
+    password => $password
+  };
+
   $self->{pbot}->{logger}->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");
-  $self->save_admins unless $dont_save;
+  $self->{admins}->add($channel, $hostmask, $data, $dont_save);
 }
 
 sub remove_admin {
   my $self = shift;
   my ($channel, $hostmask) = @_;
-
-  $channel = lc $channel;
-  $hostmask = lc $hostmask;
-  $channel = '.*' if $channel !~ m/^#/;
-
-  my $admin = delete $self->{admins}->hash->{$channel}->{$hostmask};
-
-  if (not keys %{$self->{admins}->hash->{$channel}}) {
-    delete $self->{admins}->hash->{$channel};
-  }
-
-  if (defined $admin) {
-    $self->{pbot}->{logger}->log("Removed level $admin->{level} admin [$admin->{name}] [$hostmask] from channel [$channel]\n");
-    $self->save_admins;
-    return 1;
-  } else {
-    $self->{pbot}->{logger}->log("Attempt to remove non-existent admin [$hostmask] from channel [$channel]\n");
-    return 0;
-  }
+  return $self->{admins}->remove($channel, $hostmask);
 }
 
 sub load_admins {
   my $self = shift;
   my $filename;
 
-  if (@_) { $filename = shift; } else { $filename = $self->{admins}->filename; }
+  if (@_) { $filename = shift; } else { $filename = $self->{admins}->{filename}; }
 
   if (not defined $filename) {
     Carp::carp "No admins path specified -- skipping loading of admins";
@@ -86,18 +70,20 @@ sub load_admins {
   $self->{admins}->load;
 
   my $i = 0;
-  foreach my $channel (keys %{ $self->{admins}->hash } ) {
-    foreach my $hostmask (keys %{ $self->{admins}->hash->{$channel} }) {
+  foreach my $channel (sort keys %{ $self->{admins}->{hash} } ) {
+    foreach my $hostmask (sort keys %{ $self->{admins}->{hash}->{$channel} }) {
+      next if $hostmask eq '_name';
       $i++;
-      my $name = $self->{admins}->hash->{$channel}->{$hostmask}->{name};
-      my $level = $self->{admins}->hash->{$channel}->{$hostmask}->{level};
-      my $password = $self->{admins}->hash->{$channel}->{$hostmask}->{password};
+      my $name = $self->{admins}->{hash}->{$channel}->{$hostmask}->{name};
+      my $level = $self->{admins}->{hash}->{$channel}->{$hostmask}->{level};
+      my $password = $self->{admins}->{hash}->{$channel}->{$hostmask}->{password};
 
       if (not defined $name or not defined $level or not defined $password) {
-        Carp::croak "Admin #$i of $filename is missing critical data\n";
+        Carp::croak "An admin in $filename is missing critical data\n";
       }
 
-      $self->{pbot}->{logger}->log("Adding new level $level admin: [$name] [$hostmask] for channel [$channel]\n");
+      my $chan = $channel eq '.*' ? 'global' : $channel;
+      $self->{pbot}->{logger}->log("Adding new level $level $chan admin: $name $hostmask\n");
     }
   }
 
@@ -117,18 +103,19 @@ sub find_admin {
   $hostmask = lc $hostmask;
 
   my $result = eval {
-    foreach my $channel_regex (keys %{ $self->{admins}->hash }) {
+    foreach my $channel_regex (keys %{ $self->{admins}->{hash} }) {
       if ($from !~ m/^#/ or $from =~ m/^$channel_regex$/i) {
-        foreach my $hostmask_regex (keys %{ $self->{admins}->hash->{$channel_regex} }) {
+        foreach my $hostmask_regex (keys %{ $self->{admins}->{hash}->{$channel_regex} }) {
+          next if $hostmask_regex eq '_name';
           if ($hostmask_regex =~ m/[*?]/) {
             # contains * or ? so it's converted to a regex
             my $hostmask_quoted = quotemeta $hostmask_regex;
             $hostmask_quoted =~ s/\\\*/.*?/g;
             $hostmask_quoted =~ s/\\\?/./g;
-            return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/^$hostmask_quoted$/i;
+            return $self->{admins}->{hash}->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/^$hostmask_quoted$/i;
           } else {
             # direct comparison
-            return $self->{admins}->hash->{$channel_regex}->{$hostmask_regex} if $hostmask eq lc $hostmask_regex;
+            return $self->{admins}->{hash}->{$channel_regex}->{$hostmask_regex} if $hostmask eq lc $hostmask_regex;
           }
         }
       }

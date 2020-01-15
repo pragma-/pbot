@@ -74,7 +74,7 @@ sub execute_module {
   $stuff->{keyword} = $trigger;
   $stuff->{trigger} = $trigger;
 
-  my $module = $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{action};
+  my $module = $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{action};
   my $module_dir = $self->{pbot}->{registry}->get_value('general', 'module_dir');
 
   $self->{pbot}->{logger}->log("(" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "): $stuff->{nick}!$stuff->{user}\@$stuff->{host}: Executing module [$stuff->{command}] $module $stuff->{arguments}\n");
@@ -108,8 +108,8 @@ sub execute_module {
       Carp::croak("Could not chdir to '$module_dir': $!");
     }
 
-    if (exists $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{workdir}) {
-      chdir $self->{pbot}->{factoids}->{factoids}->hash->{$channel}->{$trigger}->{workdir};
+    if (exists $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{workdir}) {
+      chdir $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{workdir};
     }
 
     my ($exitval, $stdout, $stderr) = eval {
@@ -191,7 +191,7 @@ sub module_pipe_reader {
     $self->{pbot}->{interpreter}->handle_result($stuff, $stuff->{result});
   } else {
     # don't override nick if already set
-    if (exists $stuff->{special} and $stuff->{special} ne 'code-factoid' and exists $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} and $self->{pbot}->{factoids}->{factoids}->hash->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} != 0) {
+    if (exists $stuff->{special} and $stuff->{special} ne 'code-factoid' and exists $self->{pbot}->{factoids}->{factoids}->{hash}->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} and $self->{pbot}->{factoids}->{factoids}->{hash}->{$stuff->{channel}}->{$stuff->{trigger}}->{add_nick} != 0) {
       $stuff->{nickoverride} = $stuff->{nick};
       $stuff->{no_nickoverride} = 0;
       $stuff->{force_nickoverride} = 1;

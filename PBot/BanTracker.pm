@@ -92,11 +92,11 @@ sub on_banlist_entry {
     }
 
     if ($timeout && $self->{pbot}->{chanops}->can_gain_ops($channel)) {
-      if (not exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}) {
+      if (not exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$target}) {
         $self->{pbot}->{logger}->log("Temp ban for $target in $channel.\n");
-        $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $timeout;
-        $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{owner} = $source;
-        $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{reason} = 'Temp ban on *!*@... or *!...@gateway/web';
+        $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$target}->{timeout} = gettimeofday + $timeout;
+        $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$target}->{owner} = $source;
+        $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$target}->{reason} = 'Temp ban on *!*@... or *!...@gateway/web';
         $self->{pbot}->{chanops}->{unban_timeout}->save;
       }
     }
@@ -228,15 +228,15 @@ sub track_mode {
     delete $self->{banlist}->{$channel}->{$mode eq "-b" ? "+b" : "+q"}->{$target};
 
     if ($mode eq "-b") {
-      if ($self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, $target)) {
+      if ($self->{pbot}->{chanops}->{unban_timeout}->exists($channel, $target)) {
         $self->{pbot}->{chanops}->{unban_timeout}->remove($channel, $target);
-      } elsif ($self->{pbot}->{chanops}->{unban_timeout}->find_index($channel, "$target\$##stop_join_flood")) {
+      } elsif ($self->{pbot}->{chanops}->{unban_timeout}->exists($channel, "$target\$##stop_join_flood")) {
         # freenode strips channel forwards from unban result if no ban exists with a channel forward
         $self->{pbot}->{chanops}->{unban_timeout}->remove($channel, "$target\$##stop_join_flood");
       }
     }
     elsif ($mode eq "-q") {
-      if ($self->{pbot}->{chanops}->{unmute_timeout}->find_index($channel, $target)) {
+      if ($self->{pbot}->{chanops}->{unmute_timeout}->exists($channel, $target)) {
         $self->{pbot}->{chanops}->{unmute_timeout}->remove($channel, $target);
       }
     }

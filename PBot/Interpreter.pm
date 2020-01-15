@@ -850,11 +850,11 @@ sub handle_result {
       my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $cmd, arguments => $args, exact_channel => 1, exact_trigger => 0, find_alias => 1);
       if (defined $trigger) {
         if ($stuff->{preserve_whitespace} == 0) {
-          $stuff->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{preserve_whitespace};
+          $stuff->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->{hash}->{$chan}->{$trigger}->{preserve_whitespace};
           $stuff->{preserve_whitespace} = 0 if not defined $stuff->{preserve_whitespace};
         }
 
-        $use_output_queue = $self->{pbot}->{factoids}->{factoids}->hash->{$chan}->{$trigger}->{use_output_queue};
+        $use_output_queue = $self->{pbot}->{factoids}->{factoids}->{hash}->{$chan}->{$trigger}->{use_output_queue};
         $use_output_queue = 0 if not defined $use_output_queue;
       }
     }

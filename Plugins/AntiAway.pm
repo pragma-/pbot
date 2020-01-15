@@ -46,7 +46,7 @@ sub on_nickchange {
     my $kick_msg = $self->{pbot}->{registry}->get_value('antiaway', 'kick_msg');
     my $channels = $self->{pbot}->{nicklist}->get_channels($newnick);
     foreach my $chan (@$channels) {
-      next if not exists $self->{pbot}->{channels}->{channels}->hash->{$chan} or not $self->{pbot}->{channels}->{channels}->hash->{$chan}{chanop};
+      next if not exists $self->{pbot}->{channels}->{channels}->{hash}->{$chan} or not $self->{pbot}->{channels}->{channels}->{hash}->{$chan}->{chanop};
       $self->{pbot}->{logger}->log("$newnick matches bad away nick regex, kicking from $chan\n");
       $self->{pbot}->{chanops}->add_op_command($chan, "kick $chan $newnick $kick_msg");
       $self->{pbot}->{chanops}->gain_ops($chan);

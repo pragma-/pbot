@@ -61,7 +61,7 @@ sub on_kick {
   my ($nick, $user, $host, $target, $channel, $reason) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0], $event->{event}->{args}[1]);
 
   return 0 if not $self->{pbot}->{channels}->is_active($channel);
-  return 0 if $self->{pbot}->{channels}->{channels}->hash->{$channel}->{noautorejoin};
+  return 0 if $self->{pbot}->{channels}->{channels}->{hash}->{lc $channel}->{noautorejoin};
 
   if ($target eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
     $self->rejoin_channel($channel);
@@ -75,7 +75,7 @@ sub on_part {
   my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
 
   return 0 if not $self->{pbot}->{channels}->is_active($channel);
-  return 0 if $self->{pbot}->{channels}->{channels}->hash->{$channel}->{noautorejoin};
+  return 0 if $self->{pbot}->{channels}->{channels}->{hash}->{lc $channel}->{noautorejoin};
 
   if ($nick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
     $self->rejoin_channel($channel);

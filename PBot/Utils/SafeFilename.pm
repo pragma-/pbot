@@ -20,7 +20,7 @@ sub safe_filename {
     }
   }
 
-  return $safe;
+  return lc $safe;
 }
 
 1;

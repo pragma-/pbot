@@ -46,14 +46,16 @@ sub initialize {
 
 sub is_spam {
   my ($self, $namespace, $text, $all_namespaces) = @_;
+  my $lc_namespace = lc $namespace;
 
   return 0 if not $self->{pbot}->{registry}->get_value('antispam', 'enforce');
   return 0 if $self->{pbot}->{registry}->get_value($namespace, 'dont_enforce_antispam');
 
   my $ret = eval {
-    foreach my $space (keys %{ $self->{keywords}->hash }) {
-      if ($all_namespaces or $namespace =~ m/^$space$/i) {
-        foreach my $keyword (keys %{ $self->{keywords}->hash->{$space} }) {
+    foreach my $space (keys %{ $self->{keywords}->{hash} }) {
+      if ($all_namespaces or $lc_namespace eq $space) {
+        foreach my $keyword (keys %{ $self->{keywords}->{hash}->{$space} }) {
+          next if $keyword eq '_name';
           return 1 if $text =~ m/$keyword/i;
         }
       }
@@ -82,10 +84,11 @@ sub antispam_cmd {
     when ($_ eq "list" or $_ eq "show") {
       my $text = "Spam keywords:\n";
       my $entries = 0;
-      foreach my $namespace (keys %{ $self->{keywords}->hash }) {
-        $text .= "  $namespace:\n";
-        foreach my $keyword (keys %{ $self->{keywords}->hash->{$namespace} }) {
-          $text .= "    $keyword,\n";
+      foreach my $namespace (keys %{ $self->{keywords}->{hash} }) {
+        $text .= "  $self->{keywords}->{hash}->{$namespace}->{_name}:\n";
+        foreach my $keyword (keys %{ $self->{keywords}->{hash}->{$namespace} }) {
+          next if $keyword eq '_name';
+          $text .= "    $self->{keywords}->{hash}->{$namespace}->{$keyword}->{_name},\n";
           $entries++;
         }
       }
@@ -96,23 +99,23 @@ sub antispam_cmd {
       my ($namespace, $keyword, $flag, $value) = $self->{pbot}->{interpreter}->split_args($arglist, 4);
       return "Usage: antispam set <namespace> <regex> [flag] [value]" if not defined $namespace or not defined $keyword;
 
-      if (not exists $self->{keywords}->hash->{$namespace}) {
+      if (not exists $self->{keywords}->{hash}->{lc $namespace}) {
         return "There is no such namespace `$namespace`.";
       }
 
-      if (not exists $self->{keywords}->hash->{$namespace}->{$keyword}) {
-        return "There is no such regex `$keyword` for namespace `$namespace`.";
+      if (not exists $self->{keywords}->{hash}->{lc $namespace}->{lc $keyword}) {
+        return "There is no such regex `$keyword` for namespace `$self->{keywords}->{hash}->{$namespace}->{_name}`.";
       }
 
       if (not defined $flag) {
         my $text = "Flags:\n";
         my $comma = '';
-        foreach $flag (keys %{ $self->{keywords}->hash->{$namespace}->{$keyword} }) {
+        foreach $flag (keys %{ $self->{keywords}->{hash}->{lc $namespace}->{lc $keyword} }) {
           if ($flag eq 'created_on') {
-            my $timestamp = strftime "%a %b %e %H:%M:%S %Z %Y", localtime $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag};
+            my $timestamp = strftime "%a %b %e %H:%M:%S %Z %Y", localtime $self->{keywords}->{hash}->{lc $namespace}->{lc $keyword}->{$flag};
             $text .= $comma . "created_on: $timestamp";
           } else {
-            $value = $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag};
+            $value = $self->{keywords}->{hash}->{lc $namespace}->{lc $keyword}->{$flag};
             $text .= $comma .  "$flag: $value";
           }
           $comma = ",\n  ";
@@ -121,7 +124,7 @@ sub antispam_cmd {
       }
 
       if (not defined $value) {
-        $value = $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag};
+        $value = $self->{keywords}->{hash}->{lc $namespace}->{lc $keyword}->{$flag};
         if (not defined $value) {
           return "/say $flag is not set.";
         } else {
@@ -129,7 +132,7 @@ sub antispam_cmd {
         }
       }
 
-      $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag} = $value;
+      $self->{keywords}->{hash}->{lc $namespace}->{lc $keyword}->{$flag} = $value;
       $self->{keywords}->save;
       return "Flag set.";
     }
@@ -137,46 +140,36 @@ sub antispam_cmd {
       my ($namespace, $keyword, $flag) = $self->{pbot}->{interpreter}->split_args($arglist, 3);
       return "Usage: antispam unset <namespace> <regex> <flag>" if not defined $namespace or not defined $keyword or not defined $flag;
 
-      if (not exists $self->{keywords}->hash->{$namespace}) {
+      if (not exists $self->{keywords}->{hash}->{lc $namespace}) {
         return "There is no such namespace `$namespace`.";
       }
 
-      if (not exists $self->{keywords}->hash->{$namespace}->{$keyword}) {
+      if (not exists $self->{keywords}->{hash}->{lc $namespace}->{lc $keyword}) {
         return "There is no such keyword `$keyword` for namespace `$namespace`.";
       }
 
-      if (not exists $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag}) {
+      if (not exists $self->{keywords}->{hash}->{lc $namespace}->{lc $keyword}->{$flag}) {
         return "There is no such flag `$flag` for regex `$keyword` for namespace `$namespace`.";
       }
 
-      delete $self->{keywords}->hash->{$namespace}->{$keyword}->{$flag};
+      delete $self->{keywords}->{hash}->{lc $namespace}->{lc $keyword}->{$flag};
       $self->{keywords}->save;
       return "Flag unset.";
     }
     when ("add") {
       my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
       return "Usage: antispam add <namespace> <regex>" if not defined $namespace or not defined $keyword;
-      $self->{keywords}->hash->{$namespace}->{$keyword}->{owner} = "$nick!$user\@$host";
-      $self->{keywords}->hash->{$namespace}->{$keyword}->{created_on} = gettimeofday;
-      $self->{keywords}->save;
+      my $data = {
+        owner => "$nick!$user\@$host",
+        created_on => scalar gettimeofday
+      };
+      $self->{keywords}->add($namespace, $keyword, $data);
       return "/say Added `$keyword`.";
     }
     when ("remove") {
       my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
       return "Usage: antispam remove <namespace> <regex>" if not defined $namespace or not defined $keyword;
-
-      if (not defined $self->{keywords}->hash->{$namespace}) {
-        return "No entries for namespace $namespace";
-      }
-
-      if (not defined $self->{keywords}->hash->{$namespace}->{$keyword}) {
-        return "No such entry for namespace $namespace";
-      }
-
-      delete $self->{keywords}->hash->{$namespace}->{$keyword};
-      delete $self->{keywords}->hash->{$namespace} if keys %{ $self->{keywords}->hash->{$namespace} } == 0;
-      $self->{keywords}->save;
-      return "/say Removed `$keyword`.";
+      return $self->{keywords}->remove($namespace, $keyword);
     }
     default {
       return "Unknown command '$command'; commands are: list/show, add, remove";

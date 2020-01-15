@@ -278,13 +278,13 @@ sub checkban {
   $channel = lc $channel;
   $target = lc $target;
 
-  my $mask = $self->{pbot}->{chanops}->nick_to_banmask($target);
+  my $mask = lc $self->{pbot}->{chanops}->nick_to_banmask($target);
 
-  if (exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}
-    && exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}) {
-    my $timeout = $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}{timeout};
-    my $owner   = $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}{owner};
-    my $reason  = $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}{reason};
+  if (exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}
+    && exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}) {
+    my $timeout = $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}->{timeout};
+    my $owner   = $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}->{owner};
+    my $reason  = $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}->{reason};
     my $duration = concise duration($timeout - gettimeofday);
 
     my $result = "$mask banned in $channel ";
@@ -316,13 +316,13 @@ sub checkmute {
   $channel = lc $channel;
   $target = lc $target;
 
-  my $mask = $self->{pbot}->{chanops}->nick_to_banmask($target);
+  my $mask = lc $self->{pbot}->{chanops}->nick_to_banmask($target);
 
-  if (exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}
-    && exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}) {
-    my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{timeout};
-    my $owner   = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{owner};
-    my $reason  = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{reason};
+  if (exists $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}
+    && exists $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}) {
+    my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}->{timeout};
+    my $owner   = $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}->{owner};
+    my $reason  = $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}->{reason};
     my $duration = concise duration($timeout - gettimeofday);
 
     my $result = "$mask muted in $channel ";
@@ -386,11 +386,11 @@ sub ban_user {
   my @targets = split /,/, $target;
   my $immediately = @targets > 1 ? 0 : 1;
   foreach my $t (@targets) {
-    my $mask = $self->{pbot}->{chanops}->nick_to_banmask($t);
+    my $mask = lc $self->{pbot}->{chanops}->nick_to_banmask($t);
 
-    if ($no_length && exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}
-      && exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}) {
-      my $timeout = $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$mask}{timeout};
+    if ($no_length && exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}
+      && exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}) {
+      my $timeout = $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}->{timeout};
       my $duration = duration($timeout - gettimeofday);
 
       $result .= "$sep$mask has $duration remaining on their $channel ban";
@@ -517,11 +517,11 @@ sub mute_user {
   my @targets = split /,/, $target;
   my $immediately = @targets > 1 ? 0 : 1;
   foreach my $t (@targets) {
-    my $mask = $self->{pbot}->{chanops}->nick_to_banmask($t);
+    my $mask = lc $self->{pbot}->{chanops}->nick_to_banmask($t);
 
-    if ($no_length && exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}
-      && exists $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}) {
-      my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$mask}{timeout};
+    if ($no_length && exists $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}
+      && exists $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}) {
+      my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}->{timeout};
       my $duration = duration($timeout - gettimeofday);
 
       $result .= "$sep$mask has $duration remaining on their $channel mute";

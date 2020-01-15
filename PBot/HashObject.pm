@@ -2,7 +2,9 @@
 # Author: pragma_
 #
 # Purpose: Provides a hash-table object with an abstracted API that includes
-# setting and deleting values, saving to and loading from files, etc.
+# setting and deleting values, saving to and loading from files, etc.  Provides
+# case-insensitive access to the index key while preserving original case when
+# displaying index key.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,12 +22,8 @@ use Carp ();
 use JSON;
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to HashObject should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to HashObject should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -33,34 +31,17 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
-  $self->{name} = delete $conf{name} // 'hash object';
-  $self->{filename}  = delete $conf{filename} // Carp::carp("Missing filename to HashObject, will not be able to save to or load from file.");
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{name} = $conf{name} // 'hash object';
+  $self->{filename} = $conf{filename} // Carp::carp("Missing filename to HashObject, will not be able to save to or load from file.");
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{hash} = {};
-}
-
-sub hash_add {
-  my ($self, $index_key, $hash) = @_;
-
-  if (defined $hash) {
-    if (exists $self->hash->{$index_key}) {
-      return undef;
-    }
-
-    foreach my $key (keys %$hash) {
-      $self->hash->{$index_key}{$key} = $hash->{$key};
-    }
-    return 1;
-  }
-  return undef;
 }
 
 sub load {
   my $self = shift;
   my $filename;
 
-  if (@_) { $filename = shift; } else { $filename = $self->filename; }
+  if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
 
   if (not defined $filename) {
     Carp::carp "No $self->{name} filename specified -- skipping loading from file";
@@ -81,13 +62,31 @@ sub load {
 
   $self->{hash} = decode_json $contents;
   close FILE;
+
+  # update existing entries to use _name to preserve case
+  # and lowercase any non-lowercased entries
+  foreach my $index (keys %{ $self->{hash} }) {
+    if (not exists $self->{hash}->{$index}->{_name}) {
+      if (lc $index eq $index) {
+        $self->{hash}->{$index}->{_name} = $index;
+      } else {
+        if (exists $self->{hash}->{lc $index}) {
+          Carp::croak "Cannot update $self->{name} object $index; duplicate object found";
+        }
+
+        my $data = delete $self->{hash}->{$index};
+        $data->{_name} = $index;
+        $self->{hash}->{lc $index} = $data;
+      }
+    }
+  }
 }
 
 sub save {
   my $self = shift;
   my $filename;
 
-  if (@_) { $filename = shift; } else { $filename = $self->filename; }
+  if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
 
   if (not defined $filename) {
     Carp::carp "No $self->{name} filename specified -- skipping saving to file.\n";
@@ -109,40 +108,14 @@ sub clear {
   $self->{hash} = {};
 }
 
-sub find_hash {
-  my ($self, $keyword) = @_;
-
-  my $result = eval {
-    foreach my $index (keys %{ $self->hash }) {
-      if ($keyword =~ m/^\Q$index\E$/i) {
-        return $index;
-      }
-    }
-
-    return undef;
-  };
-
-  if ($@) {
-    $self->{pbot}->{logger}->log("find_hash: bad regex: $@\n");
-    return undef;
-  }
-
-  return $result;
-}
-
 sub levenshtein_matches {
   my ($self, $keyword) = @_;
   my $comma = '';
   my $result = "";
 
-  foreach my $index (sort keys %{ $self->hash }) {
+  foreach my $index (sort keys %{ $self->{hash} }) {
     my $distance = fastdistance($keyword, $index);
-
-    # print "Distance $distance for $keyword (" , (length $keyword) , ") vs $index (" , length $index , ")\n";
-
-    my $length = (length($keyword) > length($index)) ? length $keyword : length $index;
-
-    # print "Percentage: ", $distance / $length, "\n";
+    my $length = (length $keyword > length $index) ? length $keyword : length $index;
 
     if ($length != 0 && $distance / $length < 0.50) {
       $result .= $comma . $index;
@@ -157,20 +130,20 @@ sub levenshtein_matches {
 
 sub set {
   my ($self, $index, $key, $value, $dont_save) = @_;
+  my $lc_index = lc $index;
 
-  my $hash_index = $self->find_hash($index);
-
-  if (not $hash_index) {
-    my $result = "No such $self->{name} object '$index'; similiar matches: ";
+  if (not exists $self->{hash}->{$lc_index}) {
+    my $result = "$self->{name}: $index not found; similiar matches: ";
     $result .= $self->levenshtein_matches($index);
     return $result;
   }
 
   if (not defined $key) {
-    my $result = "[$self->{name}] $hash_index keys: ";
+    my $result = "[$self->{name}] $self->{hash}->{$lc_index}->{_name} keys: ";
     my $comma = '';
-    foreach my $k (sort keys %{ $self->hash->{$hash_index} }) {
-      $result .= $comma . "$k => " . $self->hash->{$hash_index}{$k};
+    foreach my $k (sort keys %{ $self->{hash}->{$lc_index} }) {
+      next if $k eq '_name';
+      $result .= $comma . "$k => " . $self->{hash}->{$lc_index}->{$k};
       $comma = "; ";
     }
     $result .= "none" if ($comma eq '');
@@ -178,73 +151,59 @@ sub set {
   }
 
   if (not defined $value) {
-    $value = $self->hash->{$hash_index}{$key};
+    $value = $self->{hash}->{$lc_index}->{$key};
   } else {
-    $self->hash->{$hash_index}{$key} = $value;
-    $self->save() unless $dont_save;
+    $self->{hash}->{$lc_index}->{$key} = $value;
+    $self->save unless $dont_save;
   }
 
-  return "[$self->{name}] $hash_index: '$key' " . (defined $value ? "set to '$value'" : "is not set.");
+  return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: '$key' " . (defined $value ? "set to '$value'" : "is not set.");
 }
 
 sub unset {
   my ($self, $index, $key) = @_;
+  my $lc_index = lc $index;
 
-  my $hash_index = $self->find_hash($index);
-
-  if (not $hash_index) {
-    my $result = "No such $self->{name} object '$index'; similiar matches: ";
+  if (not exists $self->{hash}->{$lc_index}) {
+    my $result = "$self->{name}: $index not found; similiar matches: ";
     $result .= $self->levenshtein_matches($index);
     return $result;
   }
 
-  delete $self->hash->{$hash_index}{$key};
-  $self->save();
+  delete $self->{hash}->{$lc_index}->{$key};
+  $self->save;
 
-  return "[$self->{name}] $hash_index: '$key' unset.";
+  return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: '$key' unset.";
 }
 
 sub add {
-  my ($self, $index_key, $hash) = @_;
+  my ($self, $index, $data) = @_;
+  my $lc_index = lc $index;
 
-  if ($self->hash_add($index_key, $hash)) {
-    $self->save();
-  } else {
-    return "Error occurred adding new $self->{name} object.";
+  if (exists $self->{hash}->{$lc_index}) {
+    return "Error: $self->{hash}->{$lc_index}->{_name} already exists in $self->{name}.";
   }
 
-  return "'$index_key' added to $self->{name}.";
+  $data->{_name} = $index; # preserve case of index
+  $self->{hash}->{$lc_index} = {%$data};
+  $self->save;
+  return "$index added to $self->{name}.";
 }
 
 sub remove {
   my ($self, $index) = @_;
+  my $lc_index = lc $index;
 
-  my $hash_index = $self->find_hash($index);
-
-  if (not $hash_index) {
-    my $result = "No such $self->{name} object '$index'; similiar matches: ";
-    $result .= $self->levenshtein_matches($index);
+  if (not exists $self->{hash}->{$lc_index}) {
+    my $result = "$self->{name}: $index not found; similiar matches: ";
+    $result .= $self->levenshtein_matches($lc_index);
     return $result;
   }
 
-  delete $self->hash->{$hash_index};
-  $self->save();
+  my $data = delete $self->{hash}->{$lc_index};
+  $self->save;
 
-  return "'$hash_index' removed from $self->{name}.";
-}
-
-# Getters and setters
-
-sub hash {
-  my $self = shift;
-  return $self->{hash};
-}
-
-sub filename {
-  my $self = shift;
-
-  if (@_) { $self->{filename} = shift; }
-  return $self->{filename};
+  return "$data->{_name} removed from $self->{name}.";
 }
 
 1;

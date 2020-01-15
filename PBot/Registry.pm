@@ -49,9 +49,10 @@ sub initialize {
 sub load {
   my $self = shift;
   $self->{registry}->load;
-  foreach my $section (keys %{ $self->{registry}->hash }) {
-    foreach my $item (keys %{ $self->{registry}->hash->{$section} }) {
-      $self->process_trigger($section, $item, $self->{registry}->hash->{$section}->{$item}->{value});
+  foreach my $section (keys %{ $self->{registry}->{hash} }) {
+    foreach my $item (keys %{ $self->{registry}->{hash}->{$section} }) {
+      next if $item eq '_name';
+      $self->process_trigger($section, $item, $self->{registry}->{hash}->{$section}->{$item}->{value});
     }
   }
 }
@@ -70,16 +71,25 @@ sub add {
   my $self = shift;
   my ($type, $section, $item, $value, $is_default) = @_;
 
+  my $lc_section = lc $section;
+  my $lc_item = lc $item;
+
   $type = lc $type;
-  $section = lc $section;
-  $item = lc $item;
 
   if ($is_default) {
-    return if exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$item};
+    return if exists $self->{registry}->{hash}->{$lc_section} and exists $self->{registry}->{hash}->{$lc_section}->{$lc_item};
   }
 
-  $self->{registry}->hash->{$section}->{$item}->{value} = $value;
-  $self->{registry}->hash->{$section}->{$item}->{type}  = $type unless exists $self->{registry}->hash->{$section}->{$item}->{type};
+  if (not exists $self->{registry}->{hash}->{$lc_section}) {
+    $self->{registry}->{hash}->{$lc_section}->{_name} = $section;
+  }
+
+  if (not exists $self->{registry}->{hash}->{$lc_section}->{$lc_item}) {
+    $self->{registry}->{hash}->{$lc_section}->{$lc_item}->{_name} = $item;
+  }
+
+  $self->{registry}->{hash}->{$lc_section}->{$lc_item}->{value} = $value;
+  $self->{registry}->{hash}->{$lc_section}->{$lc_item}->{type}  = $type unless exists $self->{registry}->{hash}->{$lc_section}->{$lc_item}->{type};
 
   $self->process_trigger($section, $item, $value) unless $is_default;
   $self->save unless $is_default;
@@ -90,11 +100,12 @@ sub remove {
   my ($section, $item) = @_;
 
   $section = lc $section;
+  $item = lc $item;
 
-  delete $self->{registry}->hash->{$section}->{$item};
+  delete $self->{registry}->{hash}->{$section}->{$item};
 
-  if (not scalar keys %{ $self->{registry}->hash->{$section} }) {
-    delete $self->{registry}->hash->{$section};
+  if (not scalar keys %{ $self->{registry}->{hash}->{$section} }) {
+    delete $self->{registry}->{hash}->{$section};
   }
 
   $self->save;
@@ -113,9 +124,9 @@ sub set {
   $key = lc $key if defined $key;
 
   if ($is_default) {
-    return if exists $self->{registry}->hash->{$section}
-      and exists $self->{registry}->hash->{$section}->{$item}
-      and exists $self->{registry}->hash->{$section}->{$item}->{$key};
+    return if exists $self->{registry}->{hash}->{$section}
+      and exists $self->{registry}->{hash}->{$section}->{$item}
+      and exists $self->{registry}->{hash}->{$section}->{$item}->{$key};
   }
 
   my $oldvalue = $self->get_value($section, $item, 1) if defined $value;
@@ -146,19 +157,22 @@ sub unset {
 
 sub get_value {
   my ($self, $section, $item, $as_text, $stuff) = @_;
+  $section = lc $section;
+  $item = lc $item;
   my $key = $item;
 
   if (defined $stuff and exists $stuff->{nick}) {
-    if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{"$item.nick.$stuff->{nick}"}) {
-      $key = "$item.nick.$stuff->{nick}";
+    my $stuff_nick = lc $stuff->{nick};
+    if (exists $self->{registry}->{hash}->{$section} and exists $self->{registry}->{hash}->{$section}->{"$item.nick.$stuff_nick"}) {
+      $key = "$item.nick.$stuff_nick";
     }
   }
 
-  if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$key}) {
-    if (not $as_text and $self->{registry}->hash->{$section}->{$key}->{type} eq 'array') {
-      return split /\s*,\s*/, $self->{registry}->hash->{$section}->{$key}->{value};
+  if (exists $self->{registry}->{hash}->{$section} and exists $self->{registry}->{hash}->{$section}->{$key}) {
+    if (not $as_text and $self->{registry}->{hash}->{$section}->{$key}->{type} eq 'array') {
+      return split /\s*,\s*/, $self->{registry}->{hash}->{$section}->{$key}->{value};
     } else {
-      return $self->{registry}->hash->{$section}->{$key}->{value};
+      return $self->{registry}->{hash}->{$section}->{$key}->{value};
     }
   }
   return undef;
@@ -166,20 +180,23 @@ sub get_value {
 
 sub get_array_value {
   my ($self, $section, $item, $index, $stuff) = @_;
+  $section = lc $section;
+  $item = lc $item;
   my $key = $item;
 
   if (defined $stuff and exists $stuff->{nick}) {
-    if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{"$item.nick.$stuff->{nick}"}) {
-      $key = "$item.nick.$stuff->{nick}";
+    my $stuff_nick = lc $stuff->{nick};
+    if (exists $self->{registry}->{hash}->{$section} and exists $self->{registry}->{hash}->{$section}->{"$item.nick.$stuff_nick"}) {
+      $key = "$item.nick.$stuff_nick";
     }
   }
 
-  if (exists $self->{registry}->hash->{$section} and exists $self->{registry}->hash->{$section}->{$key}) {
-    if ($self->{registry}->hash->{$section}->{$key}->{type} eq 'array') {
-      my @array = split /\s*,\s*/, $self->{registry}->hash->{$section}->{$key}->{value};
+  if (exists $self->{registry}->{hash}->{$section} and exists $self->{registry}->{hash}->{$section}->{$key}) {
+    if ($self->{registry}->{hash}->{$section}->{$key}->{type} eq 'array') {
+      my @array = split /\s*,\s*/, $self->{registry}->{hash}->{$section}->{$key}->{value};
       return $array[$index >= $#array ? $#array : $index];
     } else {
-      return $self->{registry}->hash->{$section}->{$key}->{value};
+      return $self->{registry}->{hash}->{$section}->{$key}->{value};
     }
   }
   return undef;
@@ -187,13 +204,14 @@ sub get_array_value {
 
 sub add_trigger {
   my ($self, $section, $item, $subref) = @_;
-
-  $self->{triggers}->{$section}->{$item} = $subref;
+  $self->{triggers}->{lc $section}->{lc $item} = $subref;
 }
 
 sub process_trigger {
   my $self = shift;
   my ($section, $item) = @_;
+  $section = lc $section;
+  $item = lc $item;
 
   if (exists $self->{triggers}->{$section} and exists $self->{triggers}->{$section}->{$item}) {
     return &{ $self->{triggers}->{$section}->{$item} }(@_);

@@ -206,12 +206,12 @@ sub load_metadata {
     debug_state => 0,
   };
 
-  if (not exists $self->{metadata}->hash->{settings}) {
-    $self->{metadata}->hash->{settings} = $defaults;
+  if (not exists $self->{metadata}->{hash}->{settings}) {
+    $self->{metadata}->{hash}->{settings} = $defaults;
   } else {
     foreach my $key (keys %$defaults) {
-      if (not exists $self->{metadata}->hash->{settings}->{$key}) {
-        $self->{metadata}->hash->{settings}->{$key} = $defaults->{$key};
+      if (not exists $self->{metadata}->{hash}->{settings}->{$key}) {
+        $self->{metadata}->{hash}->{settings}->{$key} = $defaults->{$key};
       }
     }
   }
@@ -748,10 +748,11 @@ sub spinach_cmd {
         my @truth_count = split /\s/, $self->{state_data}->{current_question}->{answer};
         my @lie_count = split /\s/, $arguments;
 
+=cut
         if (@truth_count > 1 and @lie_count == 1) {
           return "/msg $nick Your lie cannot be one word for this question. Please try again.";
         }
-
+=cut
         my $found_truth = 0;
 
         if (not $self->validate_lie($self->{state_data}->{current_question}->{answer}, $arguments)) {
@@ -887,33 +888,33 @@ sub spinach_cmd {
             return "Bad filter: No categories match. Try again.";
           }
 
-          $self->{metadata}->hash->{filter}->{"category_" . $_ . "_filter"} = $args;
+          $self->{metadata}->{hash}->{filter}->{"category_" . $_ . "_filter"} = $args;
           $self->save_metadata;
           return "Spinach $_ filter set.";
         }
 
         when ('clear') {
-          delete $self->{metadata}->hash->{filter};
+          delete $self->{metadata}->{hash}->{filter};
           $self->save_metadata;
           return "Spinach filter cleared.";
         }
 
         when ('show') {
-          if (not exists $self->{metadata}->hash->{filter}->{category_include_filter}
-              and not exists $self->{metadata}->hash->{filter}->{category_exclude_filter}) {
+          if (not exists $self->{metadata}->{hash}->{filter}->{category_include_filter}
+              and not exists $self->{metadata}->{hash}->{filter}->{category_exclude_filter}) {
             return "There is no Spinach filter set.";
           }
 
           my $text = "Spinach ";
           my $comma = "";
 
-          if (exists $self->{metadata}->hash->{filter}->{category_include_filter}) {
-            $text .= "include filter set to: " . $self->{metadata}->hash->{filter}->{category_include_filter};
+          if (exists $self->{metadata}->{hash}->{filter}->{category_include_filter}) {
+            $text .= "include filter set to: " . $self->{metadata}->{hash}->{filter}->{category_include_filter};
             $comma = "; ";
           }
 
-          if (exists $self->{metadata}->hash->{filter}->{category_exclude_filter}) {
-            $text .= $comma . "exclude filter set to: " . $self->{metadata}->hash->{filter}->{category_exclude_filter};
+          if (exists $self->{metadata}->{hash}->{filter}->{category_exclude_filter}) {
+            $text .= $comma . "exclude filter set to: " . $self->{metadata}->{hash}->{filter}->{category_exclude_filter};
           }
 
           return $text;
@@ -2427,7 +2428,7 @@ sub getplayers {
   if ($state->{first_tock}) {
     $tock = 15;
   } else {
-    $tock = 90;
+    $tock = 300;
   }
 
   if ($state->{ticks} % $tock == 0) {

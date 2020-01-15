@@ -297,7 +297,7 @@ sub on_mode {
       if ($mode eq "+b") {
         if ($nick eq "ChanServ" or $target =~ m/##fix_your_connection$/i) {
           if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
-            $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout');
+            $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{lc $channel}->{lc $target}->{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout');
             $self->{pbot}->{chanops}->{unban_timeout}->save;
           }
         } elsif ($target =~ m/^\*!\*@/ or $target =~ m/^\*!.*\@gateway\/web/i) {
@@ -308,9 +308,9 @@ sub on_mode {
           }
 
           if ($timeout && $self->{pbot}->{chanops}->can_gain_ops($channel)) {
-            if (not exists $self->{pbot}->{chanops}->{unban_timeout}->hash->{lc $channel}->{lc $target}) {
+            if (not exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{lc $channel}->{lc $target}) {
               $self->{pbot}->{logger}->log("Temp ban for $target in $channel.\n");
-              $self->{pbot}->{chanops}->{unban_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $timeout;
+              $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{lc $channel}->{lc $target}->{timeout} = gettimeofday + $timeout;
               $self->{pbot}->{chanops}->{unban_timeout}->save;
             }
           }
@@ -319,7 +319,7 @@ sub on_mode {
       elsif ($mode eq "+q") {
         if ($nick ne $event->{conn}->nick) { # bot muted
           if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
-            $self->{pbot}->{chanops}->{unmute_timeout}->hash->{$channel}->{$target}{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'mute_timeout');
+            $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{lc $channel}->{lc $target}->{timeout} = gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'mute_timeout');
             $self->{pbot}->{chanops}->{unmute_timeout}->save;
           }
         }

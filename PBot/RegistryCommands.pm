@@ -87,11 +87,14 @@ sub regunset {
     return $usage;
   }
 
-  if (not exists $self->{pbot}->{registry}->{registry}->hash->{$section}) {
+  $section = lc $section;
+  $item = lc $item;
+
+  if (not exists $self->{pbot}->{registry}->{registry}->{hash}->{$section}) {
     return "No such registry section $section.";
   }
 
-  if (not exists $self->{pbot}->{registry}->{registry}->hash->{$section}->{$item}) {
+  if (not exists $self->{pbot}->{registry}->{registry}->{hash}->{$section}->{$item}) {
     return "No such item $item in section $section.";
   }
 
@@ -152,7 +155,7 @@ sub regunsetmeta {
 sub regshow {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my $registry = $self->{pbot}->{registry}->{registry}->hash;
+  my $registry = $self->{pbot}->{registry}->{registry}->{hash};
 
   my $usage = "Usage: regshow <section>.<item>";
 
@@ -168,6 +171,9 @@ sub regshow {
   if (not defined $section or not defined $item) {
     return $usage;
   }
+
+  $section = lc $section;
+  $item = lc $item;
 
   if (not exists $registry->{$section}) {
     return "No such registry section $section.";
@@ -193,7 +199,7 @@ sub regshow {
 sub regfind {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $registry = $self->{pbot}->{registry}->{registry}->hash;
+  my $registry = $self->{pbot}->{registry}->{registry}->{hash};
 
   my $usage = "Usage: regfind [-showvalues] [-section section] <regex>";
 
@@ -214,14 +220,17 @@ sub regfind {
     return $usage;
   }
 
+  $section = lc $section;
+
   my ($text, $last_item, $last_section, $i);
   $last_section = "";
   $i = 0;
   eval {
     use re::engine::RE2 -strict => 1;
     foreach my $section_key (sort keys %{ $registry }) {
-      next if defined $section and $section_key !~ /^$section$/i;
+      next if defined $section and $section_key ne $section;
       foreach my $item_key (sort keys %{ $registry->{$section_key} }) {
+        next if $item_key eq '_name';
         if ($registry->{$section_key}->{$item_key}->{private}) {
           # do not match on value if private
           next if $item_key !~ /$arguments/i;
@@ -289,7 +298,10 @@ sub regchange {
     return "Usage: regchange <section>.<item> s/<pattern>/<replacement>/";
   }
 
-  my $registry = $self->{pbot}->{registry}->{registry}->hash;
+  $section = lc $section;
+  $item = lc $item;
+
+  my $registry = $self->{pbot}->{registry}->{registry}->{hash};
 
   if (not exists $registry->{$section}) {
     return "No such registry section $section.";

@@ -158,10 +158,11 @@ sub adminrem {
 
   $channel = '.*' if $channel eq 'global';
 
-  if (exists $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
-    if (not exists $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}) {
-      foreach my $mask (keys %{ $self->{pbot}->{admins}->{admins}->hash->{$channel} }) {
-        if ($self->{pbot}->{admins}->{admins}->hash->{$channel}->{$mask}->{name} eq $hostmask) {
+  if (exists $self->{pbot}->{admins}->{admins}->{hash}->{$channel}) {
+    if (not exists $self->{pbot}->{admins}->{admins}->{hash}->{$channel}->{$hostmask}) {
+      foreach my $mask (keys %{ $self->{pbot}->{admins}->{admins}->{hash}->{$channel} }) {
+        next if $mask eq '_name';
+        if ($self->{pbot}->{admins}->{admins}->{hash}->{$channel}->{$mask}->{name} eq $hostmask) {
           $hostmask = $mask;
           last;
         }
@@ -169,11 +170,7 @@ sub adminrem {
     }
   }
 
-  if ($self->{pbot}->{admins}->remove_admin($channel, $hostmask)) {
-    return "Admin removed.";
-  } else {
-    return "No such admin found.";
-  }
+  return $self->{pbot}->{admins}->remove_admin($channel, $hostmask);
 }
 
 sub adminset {
@@ -190,10 +187,11 @@ sub adminset {
 
   $channel = '.*' if $channel eq 'global';
 
-  if (exists $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
-    if (not exists $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}) {
-      foreach my $mask (keys %{ $self->{pbot}->{admins}->{admins}->hash->{$channel} }) {
-        if ($self->{pbot}->{admins}->{admins}->hash->{$channel}->{$mask}->{name} eq $hostmask) {
+  if (exists $self->{pbot}->{admins}->{admins}->{hash}->{$channel}) {
+    if (not exists $self->{pbot}->{admins}->{admins}->{hash}->{$channel}->{$hostmask}) {
+      foreach my $mask (keys %{ $self->{pbot}->{admins}->{admins}->{hash}->{$channel} }) {
+        next if $mask eq '_name';
+        if ($self->{pbot}->{admins}->{admins}->{hash}->{$channel}->{$mask}->{name} eq $hostmask) {
           $hostmask = $mask;
           last;
         }
@@ -239,10 +237,11 @@ sub adminunset {
 
   $channel = '.*' if $channel eq 'global';
 
-  if (exists $self->{pbot}->{admins}->{admins}->hash->{$channel}) {
-    if (not exists $self->{pbot}->{admins}->{admins}->hash->{$channel}->{$hostmask}) {
-      foreach my $mask (keys %{ $self->{pbot}->{admins}->{admins}->hash->{$channel} }) {
-        if ($self->{pbot}->{admins}->{admins}->hash->{$channel}->{$mask}->{name} eq $hostmask) {
+  if (exists $self->{pbot}->{admins}->{admins}->{hash}->{$channel}) {
+    if (not exists $self->{pbot}->{admins}->{admins}->{hash}->{$channel}->{$hostmask}) {
+      foreach my $mask (keys %{ $self->{pbot}->{admins}->{admins}->{hash}->{$channel} }) {
+        next if $mask eq '_name';
+        if ($self->{pbot}->{admins}->{admins}->{hash}->{$channel}->{$mask}->{name} eq $hostmask) {
           $hostmask = $mask;
           last;
         }

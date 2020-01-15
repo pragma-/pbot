@@ -96,7 +96,7 @@ sub update_timestamp {
     $self->{nicklist}->{$channel}->{$nick}->{timestamp} = gettimeofday;
   } else {
     $self->{pbot}->{logger}->log("Adding nick '$orig_nick' to channel '$channel'\n") if $self->{pbot}->{registry}->get_value('nicklist', 'debug');
-    $self->{nicklist}->{$channel}->{$nick} = { nick => $orig_nick, timestamp => gettimeofday };
+    $self->{nicklist}->{$channel}->{$nick} = { nick => $orig_nick, timestamp => scalar gettimeofday };
   }
 }
 
