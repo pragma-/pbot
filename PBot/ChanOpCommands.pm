@@ -19,12 +19,8 @@ use Time::Duration;
 use Time::HiRes qw/gettimeofday/;
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to ChanOpCommands should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -33,65 +29,93 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $pbot = delete $conf{pbot};
-  if (not defined $pbot) {
-    Carp::croak("Missing pbot reference to ChanOpCommands");
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+
+  $self->{pbot}->{commands}->register(sub { return $self->ban_user(@_)      },  "ban",        10);
+  $self->{pbot}->{commands}->register(sub { return $self->unban_user(@_)    },  "unban",      10);
+  $self->{pbot}->{commands}->register(sub { return $self->mute_user(@_)     },  "mute",       10);
+  $self->{pbot}->{commands}->register(sub { return $self->unmute_user(@_)   },  "unmute",     10);
+  $self->{pbot}->{commands}->register(sub { return $self->kick_user(@_)     },  "kick",       10);
+  $self->{pbot}->{commands}->register(sub { return $self->checkban(@_)      },  "checkban",    0);
+  $self->{pbot}->{commands}->register(sub { return $self->checkmute(@_)     },  "checkmute",   0);
+  $self->{pbot}->{commands}->register(sub { return $self->op_user(@_)       },  "op",         10);
+  $self->{pbot}->{commands}->register(sub { return $self->deop_user(@_)     },  "deop",       10);
+  $self->{pbot}->{commands}->register(sub { return $self->voice_user(@_)    },  "voice",      10);
+  $self->{pbot}->{commands}->register(sub { return $self->devoice_user(@_)  },  "devoice",    10);
+  $self->{pbot}->{commands}->register(sub { return $self->mode(@_)          },  "mode",       40);
+  $self->{pbot}->{commands}->register(sub { return $self->invite(@_)        },  "invite",     10);
+
+  $self->{invites} = {}; # track who invited who in order to direct invite responses to them
+
+  # handle invite responses
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.inviting', sub { return $self->on_inviting(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.useronchannel', sub { return $self->on_useronchannel(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.nosuchnick', sub { return $self->on_nosuchnick(@_) });
+}
+
+sub on_inviting {
+  my ($self, $event_type, $event) = @_;
+  my ($botnick, $target, $channel) = $event->{event}->args;
+  $self->{pbot}->{logger}->log("User $target invited to channel $channel.\n");
+  return 0 if not exists $self->{invites}->{lc $channel} and not exists $self->{invites}->{lc $channel}->{lc $target};
+  $event->{conn}->privmsg($self->{invites}->{lc $channel}->{lc $target}, "$target invited to $channel.");
+  delete $self->{invites}->{lc $channel}->{lc $target};
+  return 1;
+}
+
+sub on_useronchannel {
+  my ($self, $event_type, $event) = @_;
+  my ($botnick, $target, $channel) = $event->{event}->args;
+  $self->{pbot}->{logger}->log("User $target is already on channel $channel.\n");
+  return 0 if not exists $self->{invites}->{lc $channel} and not exists $self->{invites}->{lc $channel}->{lc $target};
+  $event->{conn}->privmsg($self->{invites}->{lc $channel}->{lc $target}, "$target is already on $channel.");
+  delete $self->{invites}->{lc $channel}->{lc $target};
+  return 1;
+}
+
+sub on_nosuchnick {
+  my ($self, $event_type, $event) = @_;
+  my ($botnick, $target, $msg) = $event->{event}->args;
+
+  $self->{pbot}->{logger}->log("$target: $msg\n");
+
+  my $nick;
+  foreach my $channel (keys %{$self->{invites}}) {
+    if (exists $self->{invites}->{$channel}->{lc $target}) {
+      $nick = $self->{invites}->{$channel}->{lc $target};
+      delete $self->{invites}->{$channel}->{lc $target};
+      last;
+    }
   }
 
-  $self->{pbot} = $pbot;
-
-  $pbot->{commands}->register(sub { return $self->ban_user(@_)      },       "ban",        10);
-  $pbot->{commands}->register(sub { return $self->unban_user(@_)    },       "unban",      10);
-  $pbot->{commands}->register(sub { return $self->mute_user(@_)     },       "mute",       10);
-  $pbot->{commands}->register(sub { return $self->unmute_user(@_)   },       "unmute",     10);
-  $pbot->{commands}->register(sub { return $self->kick_user(@_)     },       "kick",       10);
-  $pbot->{commands}->register(sub { return $self->checkban(@_)      },       "checkban",    0);
-  $pbot->{commands}->register(sub { return $self->checkmute(@_)     },       "checkmute",   0);
-  $pbot->{commands}->register(sub { return $self->op_user(@_)       },       "op",         10);
-  $pbot->{commands}->register(sub { return $self->deop_user(@_)     },       "deop",       10);
-  $pbot->{commands}->register(sub { return $self->voice_user(@_)    },       "voice",      10);
-  $pbot->{commands}->register(sub { return $self->devoice_user(@_)  },       "devoice",    10);
-  $pbot->{commands}->register(sub { return $self->mode(@_)          },       "mode",       40);
-  $pbot->{commands}->register(sub { return $self->invite(@_)        },       "invite",     10);
+  return 0 if not defined $nick;
+  $event->{conn}->privmsg($nick, "$target: $msg");
+  return 1;
 }
 
 sub invite {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-
   my ($channel, $target);
 
   if ($from !~ m/^#/) {
     # from /msg
-    if (not length $arguments) {
-      return "Usage from /msg: invite <channel> [nick]; if you omit [nick] then you will be invited";
-    }
-
+    my $usage = "Usage from /msg: invite <channel> [nick]; if you omit [nick] then you will be invited";
+    return $usage if not length $arguments;
     ($channel, $target) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
-
-    if ($channel !~ m/^#/) {
-      return "$channel is not a channel; usage from /msg: invite <channel> [nick]; if you omit [nick] then you will be invited";
-    }
-
-    if (not defined $target) {
-      $target = $nick;
-    }
+    return "$channel is not a channel; $usage" if $channel !~ m/^#/;
+    $target = $nick if not defined $target;
   } else {
     # in channel
-    if (not length $arguments) {
-      return "Usage: invite [channel] <nick>";
-    }
-
+    return "Usage: invite [channel] <nick>" if not length $arguments;
     # add current channel as default channel
-    if ($stuff->{arglist}[0] !~ m/^#/) {
-      $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from);
-    }
-
+    $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from) if $stuff->{arglist}[0] !~ m/^#/;
     ($channel, $target) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
   }
 
+  $self->{invites}->{lc $channel}->{lc $target} = $nick;
   $self->{pbot}->{chanops}->add_op_command($channel, "sl invite $target $channel");
   $self->{pbot}->{chanops}->gain_ops($channel);
-  return "";
+  return ""; # responses handled by events
 }
 
 sub generic_mode_user {
