@@ -58,20 +58,37 @@ sub initialize {
 sub invite {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  if (not length $arguments) {
-    return "Usage: invite [channel] <nick>";
-  }
+  my ($channel, $target);
 
-  # add current channel as default channel
-  if ($stuff->{arglist}[0] !~ m/^#/) {
-    if ($from =~ m/^#/) {
-      $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from);
-    } else {
-      return "Usage from private message: invite <channel> <nick>";
+  if ($from !~ m/^#/) {
+    # from /msg
+    if (not length $arguments) {
+      return "Usage from /msg: invite <channel> [nick]; if you omit [nick] then you will be invited";
     }
+
+    ($channel, $target) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+
+    if ($channel !~ m/^#/) {
+      return "$channel is not a channel; usage from /msg: invite <channel> [nick]; if you omit [nick] then you will be invited";
+    }
+
+    if (not defined $target) {
+      $target = $nick;
+    }
+  } else {
+    # in channel
+    if (not length $arguments) {
+      return "Usage: invite [channel] <nick>";
+    }
+
+    # add current channel as default channel
+    if ($stuff->{arglist}[0] !~ m/^#/) {
+      $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from);
+    }
+
+    ($channel, $target) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
   }
 
-  my ($channel, $target) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
   $self->{pbot}->{chanops}->add_op_command($channel, "sl invite $target $channel");
   $self->{pbot}->{chanops}->gain_ops($channel);
   return "";
