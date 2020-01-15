@@ -57,7 +57,7 @@ sub on_inviting {
   my ($self, $event_type, $event) = @_;
   my ($botnick, $target, $channel) = $event->{event}->args;
   $self->{pbot}->{logger}->log("User $target invited to channel $channel.\n");
-  return 0 if not exists $self->{invites}->{lc $channel} and not exists $self->{invites}->{lc $channel}->{lc $target};
+  return 0 if not exists $self->{invites}->{lc $channel} or not exists $self->{invites}->{lc $channel}->{lc $target};
   $event->{conn}->privmsg($self->{invites}->{lc $channel}->{lc $target}, "$target invited to $channel.");
   delete $self->{invites}->{lc $channel}->{lc $target};
   return 1;
@@ -67,7 +67,7 @@ sub on_useronchannel {
   my ($self, $event_type, $event) = @_;
   my ($botnick, $target, $channel) = $event->{event}->args;
   $self->{pbot}->{logger}->log("User $target is already on channel $channel.\n");
-  return 0 if not exists $self->{invites}->{lc $channel} and not exists $self->{invites}->{lc $channel}->{lc $target};
+  return 0 if not exists $self->{invites}->{lc $channel} or not exists $self->{invites}->{lc $channel}->{lc $target};
   $event->{conn}->privmsg($self->{invites}->{lc $channel}->{lc $target}, "$target is already on $channel.");
   delete $self->{invites}->{lc $channel}->{lc $target};
   return 1;
