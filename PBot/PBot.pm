@@ -166,6 +166,8 @@ sub initialize {
       $self->{logger}->log("Fatal error: bad argument `$arg`; registry entries must be in the form of section.key (e.g.: irc.botnick)\n");
     }
 
+    $section =~ s/^-//; # remove a leading - to allow arguments like -irc.botnick due to habitual use of -args
+
     $self->{logger}->log("Overriding $section.$key to $value\n");
     $self->{registry}->set($section, $key, 'value', $value, 0, 1);
   }
