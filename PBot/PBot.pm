@@ -71,7 +71,7 @@ sub initialize {
 
   # check command-line arguments for directory overrides
   foreach my $arg (@ARGV) {
-    if ($arg =~ m/^(?:general\.)?((?:data|module|plugin)_dir)=(.*)$/) {
+    if ($arg =~ m/^-?(?:general\.)?((?:data|module|plugin)_dir)=(.*)$/) {
       my $override = $1;
       my $value = $2;
       $data_dir = $value if $override eq 'data_dir';
@@ -152,7 +152,7 @@ sub initialize {
 
   # override registry entries with command-line arguments, if any
   foreach my $arg (@ARGV) {
-    next if $arg =~ m/^(?:general\.)?(?:config|data|module|plugin)_dir=.*$/; # already processed
+    next if $arg =~ m/^-?(?:general\.)?(?:config|data|module|plugin)_dir=.*$/; # already processed
     my ($item, $value) = split /=/, $arg, 2;
 
     if (not defined $item or not defined $value) {
