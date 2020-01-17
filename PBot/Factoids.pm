@@ -858,16 +858,23 @@ sub interpreter {
     }
   }
 
+  my $channel_name = $self->{factoids}->{hash}->{$channel}->{_name};
+  my $trigger_name = $self->{factoids}->{hash}->{$channel}->{$keyword}->{_name};
+  $channel_name = 'global' if $channel_name eq '.*';
+  $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
+
   $stuff->{keyword} = $keyword;
   $stuff->{trigger} = $keyword;
   $stuff->{channel} = $channel;
   $stuff->{original_keyword} = $original_keyword;
+  $stuff->{channel_name} = $channel_name;
+  $stuff->{trigger_name} = $trigger_name;
 
   return undef if $stuff->{referenced} and $self->{factoids}->{hash}->{$channel}->{$keyword}->{noembed};
 
   if (exists $self->{factoids}->{hash}->{$channel}->{$keyword}->{locked_to_channel}) {
     if ($stuff->{ref_from} ne "") { # called from another channel
-      return "$keyword may be invoked only in $stuff->{ref_from}.";
+      return "$trigger_name may be invoked only in $stuff->{ref_from}.";
     }
   }
 
@@ -878,7 +885,7 @@ sub interpreter {
         $ratelimit = $self->{factoids}->{hash}->{$channel}->{$keyword}->{rate_limit} if not defined $ratelimit;
         if (gettimeofday - $self->{factoids}->{hash}->{$channel}->{$keyword}->{last_referenced_on} < $ratelimit) {
           my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
-          return "/msg $stuff->{nick} $ref_from'$keyword' is rate-limited; try again in " . duration ($ratelimit - int(gettimeofday - $self->{factoids}->{hash}->{$channel}->{$keyword}->{last_referenced_on})) . "." unless $self->{pbot}->{admins}->loggedin($channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+          return "/msg $stuff->{nick} $ref_from'$trigger_name' is rate-limited; try again in " . duration ($ratelimit - int(gettimeofday - $self->{factoids}->{hash}->{$channel}->{$keyword}->{last_referenced_on})) . "." unless $self->{pbot}->{admins}->loggedin($channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
         }
       }
     }
@@ -894,7 +901,7 @@ sub interpreter {
   if (exists $self->{factoids}->{hash}->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments} and $self->{factoids}->{hash}->{$channel}->{$keyword}->{requires_arguments}) {
     $stuff->{alldone} = 1;
     my $usage = $self->{factoids}->{hash}->{$channel}->{$keyword}->{usage};
-    $usage =~ s/\$0|\$\{0\}/$keyword/g;
+    $usage =~ s/\$0|\$\{0\}/$trigger_name/g;
     return $usage;
   }
 
@@ -910,7 +917,7 @@ sub interpreter {
     if (exists $self->{factoids}->{hash}->{$channel}->{$keyword}->{usage} and not length $stuff->{arguments}) {
       $stuff->{alldone} = 1;
       my $usage = $self->{factoids}->{hash}->{$channel}->{$keyword}->{usage};
-      $usage =~ s/\$0|\$\{0\}/$keyword/g;
+      $usage =~ s/\$0|\$\{0\}/$trigger_name/g;
       return $usage;
     }
 
@@ -936,8 +943,7 @@ sub handle_action {
   return "" if not length $action;
 
   my ($channel, $keyword) = ($stuff->{channel}, $stuff->{trigger});
-  my $keyword_text = $keyword =~ / / ? "\"$keyword\"" : $keyword;
-
+  my ($channel_name, $trigger_name) = ($stuff->{channel_name}, $stuff->{trigger_name});
   my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
 
   unless (exists $self->{factoids}->{hash}->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->{hash}->{$channel}->{$keyword}->{interpolate} eq '0') {
@@ -979,7 +985,7 @@ sub handle_action {
     # no arguments supplied, replace $args with $nick/$tonick, etc
     if (exists $self->{factoids}->{hash}->{$channel}->{$keyword}->{usage}) {
       $action = "/say " . $self->{factoids}->{hash}->{$channel}->{$keyword}->{usage};
-      $action =~ s/\$0|\$\{0\}/$keyword/g;
+      $action =~ s/\$0|\$\{0\}/$trigger_name/g;
       $stuff->{alldone} = 1;
     } else {
       if ($self->{factoids}->{hash}->{$channel}->{$keyword}->{'allow_empty_args'}) {
@@ -992,7 +998,7 @@ sub handle_action {
   }
 
   # Check if it's an alias
-  if ($action =~ /^\/call\s+(.*)$/ms) {
+  if ($action =~ /^\/call\s+(.*)$/msi) {
     my $command = $1;
     $command =~ s/\n$//;
     unless ($self->{factoids}->{hash}->{$channel}->{$keyword}->{'require_explicit_args'}) {
@@ -1010,7 +1016,7 @@ sub handle_action {
     $stuff->{command} = $command;
     $stuff->{aliased} = 1;
 
-    $self->{pbot}->{logger}->log("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] ($stuff->{nick}!$stuff->{user}\@$stuff->{host}) [$keyword_text] aliased to: [$command]\n");
+    $self->{pbot}->{logger}->log("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] ($stuff->{nick}!$stuff->{user}\@$stuff->{host}) $trigger_name aliased to: $command\n");
 
     if (defined $self->{factoids}->{hash}->{$channel}->{$keyword}->{'effective-level'}) {
         if ($self->{factoids}->{hash}->{$channel}->{$keyword}->{'locked'}) {
@@ -1024,11 +1030,11 @@ sub handle_action {
     return $self->{pbot}->{interpreter}->interpret($stuff);
   }
 
-  $self->{pbot}->{logger}->log("(" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "): $stuff->{nick}!$stuff->{user}\@$stuff->{host}: $keyword_text: action: \"$action\"\n");
+  $self->{pbot}->{logger}->log("(" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "): $stuff->{nick}!$stuff->{user}\@$stuff->{host}: $trigger_name: action: \"$action\"\n");
 
   if ($self->{factoids}->{hash}->{$channel}->{$keyword}->{enabled} == 0) {
-    $self->{pbot}->{logger}->log("$keyword_text disabled.\n");
-    return "/msg $stuff->{nick} ${ref_from}$keyword_text is currently disabled.";
+    $self->{pbot}->{logger}->log("$trigger_name disabled.\n");
+    return "/msg $stuff->{nick} ${ref_from}$trigger_name is currently disabled.";
   }
 
   unless (exists $self->{factoids}->{hash}->{$channel}->{$keyword}->{interpolate} and $self->{factoids}->{hash}->{$channel}->{$keyword}->{interpolate} eq '0') {
@@ -1073,7 +1079,7 @@ sub handle_action {
       my $admin = $self->{pbot}->{admins}->loggedin($stuff->{from}, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
       if (not $admin or $admin->{level} < 60) {
         $self->{pbot}->{logger}->log("[ABUSE] Bad factoid (contains /msg): $action\n");
-        return "You are not powerful enough to do this.";
+        return "You are not powerful enough to use /msg in a factoid.";
       }
     }
 
@@ -1082,7 +1088,7 @@ sub handle_action {
         || $action =~ s/^\/msg\s+([^ ]+)/\/msg $1 $ref_from/i) {
         return $action;
       } else {
-        return $ref_from . "$keyword_text is $action";
+        return $ref_from . "$trigger_name is $action";
       }
     } else {
       if ($action =~ m/^\/(?:say|me|msg)/i) {
@@ -1090,7 +1096,7 @@ sub handle_action {
       } elsif ($action =~ s/^\/kick\s+//) {
         if (not exists $self->{factoids}->{hash}->{$channel}->{$keyword}->{'effective-level'}) {
           $stuff->{authorized} = 0;
-          return "/say $stuff->{nick}: $keyword_text doesn't have the effective-level to do that.";
+          return "/say $stuff->{nick}: $trigger_name doesn't have the effective-level to do that.";
         }
         my $level = 10;
         if ($self->{factoids}->{hash}->{$channel}->{$keyword}->{'effective-level'} >= $level) {
@@ -1101,7 +1107,7 @@ sub handle_action {
           return "/say $stuff->{nick}: My effective-level isn't high enough to do that.";
         }
       } else {
-        return "/say $keyword_text is $action";
+        return "/say $trigger_name is $action";
       }
     }
   } elsif ($self->{factoids}->{hash}->{$channel}->{$keyword}->{type} eq 'regex') {
@@ -1144,7 +1150,7 @@ sub handle_action {
       return "";
     }
   } else {
-    $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}): Unknown command type for '$keyword_text'\n");
+    $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}): Unknown command type for '$trigger_name'\n");
     return "/me blinks." . " $ref_from";
   }
 }
