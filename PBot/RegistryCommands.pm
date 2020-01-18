@@ -210,7 +210,7 @@ sub regfind {
   my ($section, $showvalues);
 
   $section = $1 if $arguments =~ s/-section\s+([^\b\s]+)//i;
-  $showvalues = 1 if $arguments =~ s/-showvalues//i;
+  $showvalues = 1 if $arguments =~ s/-showvalues?//i;
 
   $arguments =~ s/^\s+//;
   $arguments =~ s/\s+$//;
@@ -220,7 +220,7 @@ sub regfind {
     return $usage;
   }
 
-  $section = lc $section;
+  $section = lc $section if defined $section;;
 
   my ($text, $last_item, $last_section, $i);
   $last_section = "";
