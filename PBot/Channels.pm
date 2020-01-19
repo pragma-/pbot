@@ -123,9 +123,9 @@ sub is_active_op {
 
 sub get_meta {
   my ($self, $channel, $key) = @_;
-  my $lc_channel = lc $channel;
-  return undef if not exists $self->{channels}->{hash}->{$lc_channel};
-  return $self->{channels}->{hash}->{$lc_channel}->{$key};
+  $channel = lc $channel;
+  return undef if not exists $self->{channels}->{hash}->{$channel};
+  return $self->{channels}->{hash}->{$channel}->{$key};
 }
 
 sub load_channels {

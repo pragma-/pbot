@@ -17,10 +17,7 @@ use feature 'unicode_strings';
 use Carp ();
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to Registerable should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to Registerable should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
   $self->initialize(%conf);
@@ -59,32 +56,17 @@ sub execute {
 }
 
 sub register {
-  my $self = shift;
-  my $subref;
-
-  if (@_) {
-    $subref = shift;
-  } else {
-    Carp::croak("Must pass subroutine reference to register()");
-  }
-
+  my ($self, $subref) = @_;
+  Carp::croak("Must pass subroutine reference to register()") if not defined $subref;
   my $ref = { subref => $subref };
   push @{ $self->{handlers} }, $ref;
-
   return $ref;
 }
 
 sub unregister {
-  my $self = shift;
-  my $ref;
-
-  if (@_) {
-    $ref = shift;
-  } else {
-    Carp::croak("Must pass subroutine reference to unregister()");
-  }
-
-  @{ $self->{handlers} } = grep { $_ != $ref && $_->{subref} != $ref } @{ $self->{handlers} };
+  my ($self, $ref) = @_;
+  Carp::croak("Must pass reference to unregister()") if not defined $ref;
+  @{ $self->{handlers} } = grep { $_ != $ref } @{ $self->{handlers} };
 }
 
 1;

@@ -37,39 +37,29 @@ $SIG{ALRM} = sub {
 };
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to Timer should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to Timer should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
 
-  my $timeout = delete $conf{timeout};
-  $timeout = 10 unless defined $timeout;
-
-  my $name = delete $conf{name};
-  $name = "Unnamed $timeout Second Timer" unless defined $name;
+  my $timeout = $conf{timeout} // 10;
+  my $name = $conf{name} // "Unnamed $timeout Second Timer";
 
   my $self = {
     handlers => [],
-
     name => $name,
     timeout => $timeout,
     enabled => 0,
   };
 
   bless $self, $class;
-
   $min_timeout = $timeout if $timeout < $min_timeout;
 
   # alarm signal handler (poor-man's timer)
   $self->{timer_func} = sub { on_tick_handler($self) };
-
   return $self;
 }
 
 sub start {
   my $self = shift;
-  # print "Starting Timer $self->{name} $self->{timeout} $self->{enabled}\n";
   $self->{enabled} = 1;
   push @timer_funcs, $self->{timer_func};
   alarm $min_timeout;
@@ -77,7 +67,6 @@ sub start {
 
 sub stop {
   my $self = shift;
-  # print "Stopping timer $self->{name}\n";
   $self->{enabled} = 0;
   @timer_funcs = grep { $_ != $self->{timer_func} } @timer_funcs;
 }
@@ -85,9 +74,6 @@ sub stop {
 sub on_tick_handler {
   my $self = shift;
   my $elapsed = 0;
-
-  # print "-----\n";
-  # print "on tick handler for $self->{name}\n";
 
   if ($self->{enabled}) {
     if ($#{ $self->{handlers} } > -1) {
@@ -113,8 +99,6 @@ sub on_tick_handler {
     } else {
       # call default overridable handler if timeout has elapsed
       if (defined $self->{last}) {
-        # print "$self->{name} last = $self->{last}, seconds: $seconds, timeout: $self->{timeout} " . ($seconds - $self->{last}) . "\n";
-
         $self->{last} -= $max_seconds if $seconds < $self->{last}; # handle wrap-around
 
         if ($seconds - $self->{last} >= $self->{timeout}) {
@@ -122,7 +106,6 @@ sub on_tick_handler {
           $self->{last} = $seconds;
         }
       } else {
-        # print "New addition for $self->{name}\n";
         $elapsed = 1;
         $self->{last} = $seconds;
       }
@@ -133,13 +116,11 @@ sub on_tick_handler {
       }
     }
   }
-  # print "-----\n";
 }
 
 # overridable method, executed whenever timeout is triggered
 sub on_tick {
   my $self = shift;
-
   print "Tick! $self->{name} $self->{timeout} $self->{last} $seconds\n";
 }
 
@@ -150,14 +131,11 @@ sub register {
   Carp::croak("Must pass subroutine reference to register()") if not defined $ref;
 
   # TODO: Check if subref already exists in handlers?
-
   $timeout = 300 if not defined $timeout; # set default value of 5 minutes if not defined
   $id = 'timer' if not defined $id;
 
   my $h = { subref => $ref, timeout => $timeout, id => $id };
   push @{ $self->{handlers} }, $h;
-
-  # print "-- Registering timer $ref [$id] at $timeout seconds\n";
 
   if ($timeout < $min_timeout) {
     $min_timeout = $timeout;
@@ -169,15 +147,8 @@ sub register {
 }
 
 sub unregister {
-  my $self = shift;
-  my $id;
-
-  if (@_) {
-    $id = shift;
-  } else {
-    Carp::croak("Must pass timer id to unregister()");
-  }
-
+  my ($self, $id) = @_;
+  Carp::croak("Must pass timer id to unregister()") if not defined $id;
   @{ $self->{handlers} } = grep { $_->{id} ne $id } @{ $self->{handlers} };
 }
 

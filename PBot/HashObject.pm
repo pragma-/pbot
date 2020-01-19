@@ -176,8 +176,13 @@ sub unset {
   return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: '$key' unset.";
 }
 
+sub exists {
+  my ($self, $index) = @_;
+  return exists $self->{hash}->{lc $index};
+}
+
 sub add {
-  my ($self, $index, $data) = @_;
+  my ($self, $index, $data, $dont_save) = @_;
   my $lc_index = lc $index;
 
   if (exists $self->{hash}->{$lc_index}) {
@@ -186,7 +191,7 @@ sub add {
 
   $data->{_name} = $index; # preserve case of index
   $self->{hash}->{$lc_index} = {%$data};
-  $self->save;
+  $self->save unless $dont_save;
   return "$index added to $self->{name}.";
 }
 
