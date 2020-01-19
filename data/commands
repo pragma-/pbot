@@ -1,0 +1,503 @@
+{
+   "actiontrigger" : {
+      "_name" : "actiontrigger",
+      "help" : "",
+      "level" : 10
+   },
+   "adminadd" : {
+      "_name" : "adminadd",
+      "help" : "",
+      "level" : 60
+   },
+   "adminrem" : {
+      "_name" : "adminrem",
+      "help" : "",
+      "level" : 60
+   },
+   "adminset" : {
+      "_name" : "adminset",
+      "help" : "",
+      "level" : 60
+   },
+   "adminunset" : {
+      "_name" : "adminunset",
+      "help" : "",
+      "level" : 60
+   },
+   "aka" : {
+      "_name" : "aka",
+      "help" : "",
+      "level" : 0
+   },
+   "akalink" : {
+      "_name" : "akalink",
+      "help" : "",
+      "level" : 60
+   },
+   "akaunlink" : {
+      "_name" : "akaunlink",
+      "help" : "",
+      "level" : 60
+   },
+   "antispam" : {
+      "_name" : "antispam",
+      "help" : "",
+      "level" : 10
+   },
+   "ban" : {
+      "_name" : "ban",
+      "help" : "",
+      "level" : 10
+   },
+   "battleship" : {
+      "_name" : "battleship",
+      "help" : "",
+      "level" : 0
+   },
+   "blacklist" : {
+      "_name" : "blacklist",
+      "help" : "",
+      "level" : 10
+   },
+   "chanadd" : {
+      "_name" : "chanadd",
+      "help" : "",
+      "level" : 40
+   },
+   "chanlist" : {
+      "_name" : "chanlist",
+      "help" : "",
+      "level" : 10
+   },
+   "chanrem" : {
+      "_name" : "chanrem",
+      "help" : "",
+      "level" : 40
+   },
+   "chanset" : {
+      "_name" : "chanset",
+      "help" : "",
+      "level" : 40
+   },
+   "chanunset" : {
+      "_name" : "chanunset",
+      "help" : "",
+      "level" : 40
+   },
+   "checkban" : {
+      "_name" : "checkban",
+      "help" : "",
+      "level" : 0
+   },
+   "checkmute" : {
+      "_name" : "checkmute",
+      "help" : "",
+      "level" : 0
+   },
+   "cmdset" : {
+      "_name" : "cmdset",
+      "help" : "",
+      "level" : 90
+   },
+   "cmdunset" : {
+      "_name" : "cmdunset",
+      "help" : "",
+      "level" : 90
+   },
+   "connect4" : {
+      "_name" : "connect4",
+      "help" : "",
+      "level" : 0
+   },
+   "count" : {
+      "_name" : "count",
+      "help" : "",
+      "level" : 0
+   },
+   "counteradd" : {
+      "_name" : "counteradd",
+      "help" : "",
+      "level" : 0
+   },
+   "counterdel" : {
+      "_name" : "counterdel",
+      "help" : "",
+      "level" : 0
+   },
+   "counterlist" : {
+      "_name" : "counterlist",
+      "help" : "",
+      "level" : 0
+   },
+   "counterreset" : {
+      "_name" : "counterreset",
+      "help" : "",
+      "level" : 0
+   },
+   "countershow" : {
+      "_name" : "countershow",
+      "help" : "",
+      "level" : 0
+   },
+   "countertrigger" : {
+      "_name" : "countertrigger",
+      "help" : "",
+      "level" : 10
+   },
+   "delq" : {
+      "_name" : "delq",
+      "help" : "",
+      "level" : 0
+   },
+   "deop" : {
+      "_name" : "deop",
+      "help" : "",
+      "level" : 10
+   },
+   "devoice" : {
+      "_name" : "devoice",
+      "help" : "",
+      "level" : 10
+   },
+   "die" : {
+      "_name" : "die",
+      "help" : "",
+      "level" : 90
+   },
+   "dumpbans" : {
+      "_name" : "dumpbans",
+      "help" : "",
+      "level" : 60
+   },
+   "eval" : {
+      "_name" : "eval",
+      "help" : "",
+      "level" : 99
+   },
+   "export" : {
+      "_name" : "export",
+      "help" : "",
+      "level" : 90
+   },
+   "fact" : {
+      "_name" : "fact",
+      "help" : "",
+      "level" : 0
+   },
+   "factadd" : {
+      "_name" : "factadd",
+      "help" : "",
+      "level" : 0
+   },
+   "factalias" : {
+      "_name" : "factalias",
+      "help" : "",
+      "level" : 0
+   },
+   "factchange" : {
+      "_name" : "factchange",
+      "help" : "",
+      "level" : 0
+   },
+   "factfind" : {
+      "_name" : "factfind",
+      "help" : "",
+      "level" : 0
+   },
+   "factinfo" : {
+      "_name" : "factinfo",
+      "help" : "",
+      "level" : 0
+   },
+   "factlog" : {
+      "_name" : "factlog",
+      "help" : "",
+      "level" : 0
+   },
+   "factmove" : {
+      "_name" : "factmove",
+      "help" : "",
+      "level" : 0
+   },
+   "factredo" : {
+      "_name" : "factredo",
+      "help" : "",
+      "level" : 0
+   },
+   "factrem" : {
+      "_name" : "factrem",
+      "help" : "",
+      "level" : 0
+   },
+   "factset" : {
+      "_name" : "factset",
+      "help" : "",
+      "level" : 0
+   },
+   "factshow" : {
+      "_name" : "factshow",
+      "help" : "",
+      "level" : 0
+   },
+   "factundo" : {
+      "_name" : "factundo",
+      "help" : "",
+      "level" : 0
+   },
+   "factunset" : {
+      "_name" : "factunset",
+      "help" : "",
+      "level" : 0
+   },
+   "forget" : {
+      "_name" : "forget",
+      "help" : "",
+      "level" : 0
+   },
+   "func" : {
+      "_name" : "func",
+      "help" : "",
+      "level" : 0
+   },
+   "getq" : {
+      "_name" : "getq",
+      "help" : "",
+      "level" : 0
+   },
+   "google" : {
+      "_name" : "google",
+      "help" : "",
+      "level" : 0
+   },
+   "grab" : {
+      "_name" : "grab",
+      "help" : "",
+      "level" : 0
+   },
+   "histogram" : {
+      "_name" : "histogram",
+      "help" : "",
+      "level" : 0
+   },
+   "ignore" : {
+      "_name" : "ignore",
+      "help" : "",
+      "level" : 10
+   },
+   "in" : {
+      "_name" : "in",
+      "help" : "",
+      "level" : 0
+   },
+   "invite" : {
+      "_name" : "invite",
+      "help" : "",
+      "level" : 10
+   },
+   "join" : {
+      "_name" : "join",
+      "help" : "",
+      "level" : 40
+   },
+   "kick" : {
+      "_name" : "kick",
+      "help" : "",
+      "level" : 10
+   },
+   "lagcheck" : {
+      "_name" : "lagcheck",
+      "help" : "",
+      "level" : 0
+   },
+   "learn" : {
+      "_name" : "learn",
+      "help" : "",
+      "level" : 0
+   },
+   "list" : {
+      "_name" : "list",
+      "help" : "",
+      "level" : 0
+   },
+   "load" : {
+      "_name" : "load",
+      "help" : "",
+      "level" : 90
+   },
+   "login" : {
+      "_name" : "login",
+      "help" : "",
+      "level" : 0
+   },
+   "logout" : {
+      "_name" : "logout",
+      "help" : "",
+      "level" : 0
+   },
+   "mode" : {
+      "_name" : "mode",
+      "help" : "",
+      "level" : 40
+   },
+   "mute" : {
+      "_name" : "mute",
+      "help" : "",
+      "level" : 10
+   },
+   "nicklist" : {
+      "_name" : "nicklist",
+      "help" : "",
+      "level" : 0
+   },
+   "op" : {
+      "_name" : "op",
+      "help" : "",
+      "level" : 10
+   },
+   "part" : {
+      "_name" : "part",
+      "help" : "",
+      "level" : 40
+   },
+   "plug" : {
+      "_name" : "plug",
+      "help" : "",
+      "level" : 90
+   },
+   "pluglist" : {
+      "_name" : "pluglist",
+      "help" : "",
+      "level" : 0
+   },
+   "rebuildaliases" : {
+      "_name" : "rebuildaliases",
+      "help" : "",
+      "level" : 90
+   },
+   "recall" : {
+      "_name" : "recall",
+      "help" : "",
+      "level" : 0
+   },
+   "refresh" : {
+      "_name" : "refresh",
+      "help" : "",
+      "level" : 90
+   },
+   "regchange" : {
+      "_name" : "regchange",
+      "help" : "",
+      "level" : 60
+   },
+   "regex" : {
+      "_name" : "regex",
+      "help" : "",
+      "level" : 999
+   },
+   "regfind" : {
+      "_name" : "regfind",
+      "help" : "",
+      "level" : 0
+   },
+   "regset" : {
+      "_name" : "regset",
+      "help" : "",
+      "level" : 60
+   },
+   "regsetmeta" : {
+      "_name" : "regsetmeta",
+      "help" : "",
+      "level" : 60
+   },
+   "regshow" : {
+      "_name" : "regshow",
+      "help" : "",
+      "level" : 0
+   },
+   "regunset" : {
+      "_name" : "regunset",
+      "help" : "",
+      "level" : 60
+   },
+   "regunsetmeta" : {
+      "_name" : "regunsetmeta",
+      "help" : "",
+      "level" : 60
+   },
+   "reload" : {
+      "_name" : "reload",
+      "help" : "",
+      "level" : 90
+   },
+   "remindme" : {
+      "_name" : "remindme",
+      "help" : "",
+      "level" : 0
+   },
+   "replug" : {
+      "_name" : "replug",
+      "help" : "",
+      "level" : 90
+   },
+   "rq" : {
+      "_name" : "rq",
+      "help" : "",
+      "level" : 0
+   },
+   "sl" : {
+      "_name" : "sl",
+      "help" : "",
+      "level" : 90
+   },
+   "spinach" : {
+      "_name" : "spinach",
+      "help" : "",
+      "level" : 0
+   },
+   "top20" : {
+      "_name" : "top20",
+      "help" : "",
+      "level" : 0
+   },
+   "unban" : {
+      "_name" : "unban",
+      "help" : "",
+      "level" : 10
+   },
+   "unbanme" : {
+      "_name" : "unbanme",
+      "help" : "",
+      "level" : 0
+   },
+   "unignore" : {
+      "_name" : "unignore",
+      "help" : "",
+      "level" : 10
+   },
+   "unload" : {
+      "_name" : "unload",
+      "help" : "",
+      "level" : 90
+   },
+   "unmute" : {
+      "_name" : "unmute",
+      "help" : "",
+      "level" : 10
+   },
+   "unplug" : {
+      "_name" : "unplug",
+      "help" : "",
+      "level" : 90
+   },
+   "voice" : {
+      "_name" : "voice",
+      "help" : "",
+      "level" : 10
+   },
+   "whitelist" : {
+      "_name" : "whitelist",
+      "help" : "",
+      "level" : 10
+   }
+}
+
