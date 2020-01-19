@@ -418,7 +418,7 @@ sub ban_user {
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
 
-  if (not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
@@ -485,7 +485,7 @@ sub unban_user {
 
   return "/msg $nick Usage for /msg: unban <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
-  if (not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
@@ -549,7 +549,7 @@ sub mute_user {
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
 
-  if (not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
@@ -616,7 +616,7 @@ sub unmute_user {
 
   return "/msg $nick Usage for /msg: unmute <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
-  if (not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
@@ -670,7 +670,7 @@ sub kick_user {
     $channel = $1;
   }
 
-  if (not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
