@@ -89,11 +89,6 @@ sub initialize {
 
   return if $conf{logger_only};
 
-  $self->{timer}    = PBot::Timer->new(timeout => 10, %conf);
-  $self->{commands} = PBot::Commands->new(pbot => $self, %conf);
-  $self->{func_cmd} = PBot::FuncCommand->new(pbot => $self, %conf);
-  $self->{refresher} = PBot::Refresher->new(pbot => $self);
-
   # make sure the environment is sane
   if (not -d $data_dir) {
     $self->{logger}->log("Data directory ($data_dir) does not exist; aborting...\n");
@@ -113,6 +108,11 @@ sub initialize {
   $self->{logger}->log("data_dir: $data_dir\n");
   $self->{logger}->log("module_dir: $module_dir\n");
   $self->{logger}->log("plugin_dir: $plugin_dir\n");
+
+  $self->{timer}    = PBot::Timer->new(timeout => 10, %conf);
+  $self->{commands} = PBot::Commands->new(pbot => $self, filename => "$data_dir/commands", %conf);
+  $self->{func_cmd} = PBot::FuncCommand->new(pbot => $self, %conf);
+  $self->{refresher} = PBot::Refresher->new(pbot => $self);
 
   # create registry and set some defaults
   $self->{registry} = PBot::Registry->new(pbot => $self, filename => "$data_dir/registry", %conf);
