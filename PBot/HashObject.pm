@@ -157,7 +157,7 @@ sub set {
     $self->save unless $dont_save;
   }
 
-  return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: '$key' " . (defined $value ? "set to '$value'" : "is not set.");
+  return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: $key " . (defined $value ? "set to $value" : "is not set.");
 }
 
 sub unset {
@@ -173,7 +173,7 @@ sub unset {
   delete $self->{hash}->{$lc_index}->{$key};
   $self->save;
 
-  return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: '$key' unset.";
+  return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: $key unset.";
 }
 
 sub exists {

@@ -236,7 +236,7 @@ sub set {
     $self->save unless $dont_save;
   }
 
-  return "[$name1] $name2: '$key' " . (defined $value ? "set to '$value'" : "is not set.");
+  return "[$name1] $name2: $key " . (defined $value ? "set to $value" : "is not set.");
 }
 
 sub unset {
@@ -265,7 +265,7 @@ sub unset {
   my $name2 = $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{_name};
   $name2 = "\"$name2\"" if $name2 =~ / /;
 
-  return "$self->{name}: [$name1] $name2: '$key' unset.";
+  return "$self->{name}: [$name1] $name2: $key unset.";
 }
 
 sub add {
