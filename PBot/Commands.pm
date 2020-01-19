@@ -55,6 +55,10 @@ sub register {
 
   if (not $self->{metadata}->exists($name)) {
     $self->{metadata}->add($name, { level => $level, help => '' }, 1);
+  } else {
+    if (not defined $self->get_meta($name, 'level')) {
+      $self->{metadata}->set($name, 'level', $level, 1);
+    }
   }
 
   return $ref;
