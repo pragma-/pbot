@@ -78,6 +78,7 @@ sub initialize {
 
   $self->{choosecategory_max_count} = 4;
   $self->{picktruth_max_count} = 4;
+  $self->{tock_duration} = 30;
 }
 
 sub unload {
@@ -1732,7 +1733,7 @@ sub choosecategory {
   if ($state->{first_tock}) {
     $tock = 3;
   } else {
-    $tock = 15;
+    $tock = $self->{tock_duration};
   }
 
   if ($state->{ticks} % $tock == 0) {
@@ -1766,8 +1767,8 @@ sub choosecategory {
       $warning = '';
     }
 
-    my $remaining = 15 * $state->{max_count};
-    $remaining -= 15 * ($state->{counter} - 1);
+    my $remaining = $self->{tock_duration} * $state->{max_count};
+    $remaining -= $self->{tock_duration} * ($state->{counter} - 1);
     $remaining = "(" . (concise duration $remaining) . " remaining)";
 
     $self->send_message($self->{channel}, "$name: $warning$remaining Choose a category via `/msg me c <number>`:$color{reset}");
@@ -1882,7 +1883,7 @@ sub getlies {
   if ($state->{first_tock}) {
     $tock = 3;
   } else {
-    $tock = 15;
+    $tock = $self->{tock_duration};
   }
 
   my @nolies;
@@ -1969,8 +1970,8 @@ sub getlies {
       $warning = '';
     }
 
-    my $remaining = 15 * $state->{max_count};
-    $remaining -= 15 * ($state->{counter} - 1);
+    my $remaining = $self->{tock_duration} * $state->{max_count};
+    $remaining -= $self->{tock_duration} * ($state->{counter} - 1);
     $remaining = "(" . (concise duration $remaining) . " remaining)";
 
     $self->send_message($self->{channel}, "$players: $warning$remaining Submit your lie now via `/msg me lie <your lie>`!");
@@ -1986,7 +1987,7 @@ sub findtruth {
   if ($state->{first_tock}) {
     $tock = 3;
   } else {
-    $tock = 15;
+    $tock = $self->{tock_duration};
   }
 
   my @notruth;
@@ -2081,8 +2082,8 @@ sub findtruth {
       $warning = '';
     }
 
-    my $remaining = 15 * $state->{max_count};
-    $remaining -= 15 * ($state->{counter} - 1);
+    my $remaining = $self->{tock_duration} * $state->{max_count};
+    $remaining -= $self->{tock_duration} * ($state->{counter} - 1);
     $remaining = "(" . (concise duration $remaining) . " remaining)";
 
     $self->send_message($self->{channel}, "$players: $warning$remaining Find the truth now via `/msg me c <number>`!$color{reset}");
@@ -2426,7 +2427,7 @@ sub getplayers {
 
   my $tock;
   if ($state->{first_tock}) {
-    $tock = 15;
+    $tock = $self->{tock_duration};
   } else {
     $tock = 300;
   }
