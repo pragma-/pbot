@@ -35,7 +35,7 @@ sub initialize {
   $self->SUPER::initialize(%conf);
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
-  $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Commands metadata', filename => $conf{filename});
+  $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Commands', filename => $conf{filename});
   $self->load_metadata;
 
   $self->register(sub { $self->set(@_);   },  "cmdset",   90);
