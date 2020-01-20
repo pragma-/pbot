@@ -26,7 +26,7 @@ use LWP::UserAgent;
 # These are set automatically by the build/commit script
 use constant {
   BUILD_NAME     => "PBot",
-  BUILD_REVISION => 2838,
+  BUILD_REVISION => 2841,
   BUILD_DATE     => "2020-01-19",
 };
 
