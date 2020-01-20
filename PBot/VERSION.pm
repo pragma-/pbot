@@ -61,7 +61,7 @@ sub version_cmd {
         return "/say " . $self->version . "; you have the latest version.";
       }
     } else {
-      my $nick = $self->{pbot}->{nicklist}->is_present_similar($arguments);
+      my $nick = $self->{pbot}->{nicklist}->is_present_similar($from, $arguments);
       if ($nick) {
         return "/say $nick: " . $self->version;
       }

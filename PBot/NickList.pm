@@ -211,12 +211,6 @@ sub is_present_similar {
   $channel = lc $channel;
   $nick = lc $nick;
 
-=cut
-  use Devel::StackTrace;
-  my $trace = Devel::StackTrace->new(indent => 1, ignore_class => ['PBot::PBot', 'PBot::IRC']);
-  $self->{pbot}->{logger}->log("is_present_similar stacktrace: " . $trace->as_string() . "\n");
-=cut
-
   return 0 if not exists $self->{nicklist}->{$channel};
   return $self->{nicklist}->{$channel}->{$nick}->{nick} if $self->is_present($channel, $nick);
   return 0 if $nick =~ m/(?:^\$|\s)/;  # not nick-like
@@ -231,11 +225,6 @@ sub is_present_similar {
     return 0 if $now - $self->{nicklist}->{$channel}->{$person}->{timestamp} > 3600; # 1 hour
     my $distance = fastdistance($nick, $person);
     my $length = length $nick > length $person ? length $nick : length $person;
-
-=cut
-    my $p = $length != 0 ? $distance / $length : 0;
-    $self->{pbot}->{logger}->log("[$percentage] $nick <-> $person: $p %\n");
-=cut
 
     if ($length != 0 && $distance / $length <= $percentage) {
       return $self->{nicklist}->{$channel}->{$person}->{nick};

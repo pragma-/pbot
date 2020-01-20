@@ -38,8 +38,8 @@ sub initialize {
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Commands', filename => $conf{filename});
   $self->load_metadata;
 
-  $self->register(sub { $self->set(@_);   },  "cmdset",   90);
-  $self->register(sub { $self->unset(@_); },  "cmdunset", 90);
+  $self->register(sub { $self->set(@_)   },  "cmdset",   90);
+  $self->register(sub { $self->unset(@_) },  "cmdunset", 90);
 }
 
 sub register {

@@ -83,12 +83,6 @@ sub initialize {
   # logger created first to allow other modules to log things
   $self->{logger}   = PBot::Logger->new(pbot => $self, filename => "$data_dir/log/log", %conf);
 
-  $self->{version}  = PBot::VERSION->new(pbot => $self, %conf);
-  $self->{logger}->log($self->{version}->version . "\n");
-  $self->{logger}->log("Args: @ARGV\n") if @ARGV;
-
-  return if $conf{logger_only};
-
   # make sure the environment is sane
   if (not -d $data_dir) {
     $self->{logger}->log("Data directory ($data_dir) does not exist; aborting...\n");
@@ -105,12 +99,20 @@ sub initialize {
     exit;
   }
 
+  # then commands so the modules can register new commands
+  $self->{commands} = PBot::Commands->new(pbot => $self, filename => "$data_dir/commands", %conf);
+
+  # the version
+  $self->{version}  = PBot::VERSION->new(pbot => $self, %conf);
+  $self->{logger}->log($self->{version}->version . "\n");
+  $self->{logger}->log("Args: @ARGV\n") if @ARGV;
+
+  # log the configured paths
   $self->{logger}->log("data_dir: $data_dir\n");
   $self->{logger}->log("module_dir: $module_dir\n");
   $self->{logger}->log("plugin_dir: $plugin_dir\n");
 
   $self->{timer}    = PBot::Timer->new(timeout => 10, %conf);
-  $self->{commands} = PBot::Commands->new(pbot => $self, filename => "$data_dir/commands", %conf);
   $self->{func_cmd} = PBot::FuncCommand->new(pbot => $self, %conf);
   $self->{refresher} = PBot::Refresher->new(pbot => $self);
 

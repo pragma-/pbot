@@ -20,7 +20,7 @@ use Time::HiRes qw(gettimeofday);
 use Getopt::Long qw(GetOptionsFromString);
 use POSIX qw(strftime);
 use Storable;
-use LWP::UserAgent ();
+use LWP::UserAgent;
 use JSON;
 
 use PBot::Utils::SafeFilename;
