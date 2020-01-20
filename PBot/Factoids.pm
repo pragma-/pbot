@@ -302,7 +302,6 @@ sub find_factoid {
     for (my $depth = 0; $depth < 5; $depth++) {
       my $string = $keyword . (length $arguments ? " $arguments" : "");
       $self->{pbot}->{logger}->log("string: $string\n") if $debug;
-      return undef if $self->{pbot}->{commands}->exists($keyword);
       # check factoids
       foreach my $channel (sort keys %{ $self->{factoids}->{hash} }) {
         if ($opts{exact_channel}) {
