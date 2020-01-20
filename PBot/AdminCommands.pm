@@ -1,4 +1,4 @@
-# File: BotAdminCommands.pm
+# File: AdminCommands.pm
 # Author: pragma_
 #
 # Purpose: Administrative command subroutines.
@@ -7,7 +7,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package PBot::BotAdminCommands;
+package PBot::AdminCommands;
 
 use warnings;
 use strict;
@@ -20,12 +20,8 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 use Carp ();
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to BotAdminCommands should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -34,27 +30,22 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  my $pbot = delete $conf{pbot};
-  if (not defined $pbot) {
-    Carp::croak("Missing pbot reference to BotAdminCommands");
-  }
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
-  $self->{pbot} = $pbot;
-
-  $pbot->{commands}->register(sub { return $self->login(@_)        },       "login",         0);
-  $pbot->{commands}->register(sub { return $self->logout(@_)       },       "logout",        0);
-  $pbot->{commands}->register(sub { return $self->in_channel(@_)   },       "in",            0);
-  $pbot->{commands}->register(sub { return $self->join_channel(@_) },       "join",          40);
-  $pbot->{commands}->register(sub { return $self->part_channel(@_) },       "part",          40);
-  $pbot->{commands}->register(sub { return $self->ack_die(@_)      },       "die",           90);
-  $pbot->{commands}->register(sub { return $self->adminadd(@_)     },       "adminadd",      60);
-  $pbot->{commands}->register(sub { return $self->adminrem(@_)     },       "adminrem",      60);
-  $pbot->{commands}->register(sub { return $self->adminset(@_)     },       "adminset",      60);
-  $pbot->{commands}->register(sub { return $self->adminunset(@_)   },       "adminunset",    60);
-  $pbot->{commands}->register(sub { return $self->sl(@_)           },       "sl",            90);
-  $pbot->{commands}->register(sub { return $self->export(@_)       },       "export",        90);
-  $pbot->{commands}->register(sub { return $self->reload(@_)       },       "reload",        90);
-  $pbot->{commands}->register(sub { return $self->evalcmd(@_)      },       "eval",          99);
+  $self->{pbot}->{commands}->register(sub { return $self->login(@_)        },  "login",         0);
+  $self->{pbot}->{commands}->register(sub { return $self->logout(@_)       },  "logout",        0);
+  $self->{pbot}->{commands}->register(sub { return $self->in_channel(@_)   },  "in",            0);
+  $self->{pbot}->{commands}->register(sub { return $self->join_channel(@_) },  "join",          40);
+  $self->{pbot}->{commands}->register(sub { return $self->part_channel(@_) },  "part",          40);
+  $self->{pbot}->{commands}->register(sub { return $self->ack_die(@_)      },  "die",           90);
+  $self->{pbot}->{commands}->register(sub { return $self->adminadd(@_)     },  "adminadd",      60);
+  $self->{pbot}->{commands}->register(sub { return $self->adminrem(@_)     },  "adminrem",      60);
+  $self->{pbot}->{commands}->register(sub { return $self->adminset(@_)     },  "adminset",      60);
+  $self->{pbot}->{commands}->register(sub { return $self->adminunset(@_)   },  "adminunset",    60);
+  $self->{pbot}->{commands}->register(sub { return $self->sl(@_)           },  "sl",            90);
+  $self->{pbot}->{commands}->register(sub { return $self->export(@_)       },  "export",        90);
+  $self->{pbot}->{commands}->register(sub { return $self->reload(@_)       },  "reload",        90);
+  $self->{pbot}->{commands}->register(sub { return $self->evalcmd(@_)      },  "eval",          99);
 }
 
 sub sl {

@@ -46,7 +46,7 @@ sub initialize {
   $self->init_funcs;
 }
 
-# this is a subroutine so PBot::BotAdminCommands::reload() can reload
+# this is a subroutine so PBot::AdminCommands::reload() can reload
 # the funcs without requiring a bot restart.
 sub init_funcs {
   my ($self) = @_;

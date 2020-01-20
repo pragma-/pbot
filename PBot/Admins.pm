@@ -1,4 +1,4 @@
-# File: BotAdmins.pm
+# File: Admins.pm
 # Author: pragma_
 #
 # Purpose: Manages list of bot admins and whether they are logged in.
@@ -7,7 +7,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package PBot::BotAdmins;
+package PBot::Admins;
 
 use warnings;
 use strict;
@@ -15,7 +15,7 @@ use strict;
 use feature 'unicode_strings';
 
 use PBot::DualIndexHashObject;
-use PBot::BotAdminCommands;
+use PBot::AdminCommands;
 
 use Carp ();
 
@@ -31,7 +31,7 @@ sub initialize {
   my ($self, %conf) = @_;
   $self->{pbot}     = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{admins}   = PBot::DualIndexHashObject->new(name => 'Admins', filename => $conf{filename}, pbot => $conf{pbot});
-  $self->{commands} = PBot::BotAdminCommands->new(pbot => $conf{pbot});
+  $self->{commands} = PBot::AdminCommands->new(pbot => $conf{pbot});
   $self->load_admins;
 }
 

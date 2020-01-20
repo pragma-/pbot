@@ -37,7 +37,7 @@ use PBot::Interpreter;
 use PBot::Commands;
 use PBot::ChanOps;
 use PBot::Factoids;
-use PBot::BotAdmins;
+use PBot::Admins;
 use PBot::IgnoreList;
 use PBot::BlackList;
 use PBot::Timer;
@@ -188,7 +188,7 @@ sub initialize {
   $self->{irchandlers}        = PBot::IRCHandlers->new(pbot => $self, %conf);
   $self->{select_handler}     = PBot::SelectHandler->new(pbot => $self, %conf);
   $self->{stdin_reader}       = PBot::StdinReader->new(pbot => $self, %conf);
-  $self->{admins}             = PBot::BotAdmins->new(pbot => $self, filename => "$data_dir/admins", %conf);
+  $self->{admins}             = PBot::Admins->new(pbot => $self, filename => "$data_dir/admins", %conf);
   $self->{bantracker}         = PBot::BanTracker->new(pbot => $self, %conf);
   $self->{lagchecker}         = PBot::LagChecker->new(pbot => $self, %conf);
   $self->{messagehistory}     = PBot::MessageHistory->new(pbot => $self, filename => "$data_dir/message_history.sqlite3", %conf);
