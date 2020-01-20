@@ -23,7 +23,7 @@ BEGIN {
 
 use LWP::UserAgent;
 
-# These are set automatically by the build/commit script
+# These are set automatically by build/update_version.pl
 use constant {
   BUILD_NAME     => "PBot",
   BUILD_REVISION => 2841,
@@ -56,7 +56,7 @@ sub version_cmd {
     my $ua = LWP::UserAgent->new(timeout => 10);
     my $response = $ua->get($url);
 
-    return "Unable to get version information: " . $response->status_line if (not $response->is_success);
+    return "Unable to get version information: " . $response->status_line if not $response->is_success;
 
     my $text = $response->decoded_content;
     my ($version, $date) = $text =~ m/^\s+BUILD_REVISION => (\d+).*^\s+BUILD_DATE\s+=> "([^"]+)"/ms;
