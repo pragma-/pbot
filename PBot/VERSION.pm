@@ -55,7 +55,7 @@ sub version_cmd {
       my $text = $response->decoded_content;
       my ($version, $date) = $text =~ m/^\s+BUILD_REVISION => (\d+).*^\s+BUILD_DATE\s+=> "([^"]+)"/ms;
 
-      if ($version != BUILD_REVISION) {
+      if ($version > BUILD_REVISION) {
         return "/say " . $self->version . "; new version available: $version $date!";
       } else {
         return "/say " . $self->version . "; you have the latest version.";
