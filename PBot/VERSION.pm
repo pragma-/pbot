@@ -1,7 +1,8 @@
 # File: VERSION.pm
 # Author: pragma_
 #
-# Purpose: Keeps track of bot version.
+# Purpose: Keeps track of bot version. Can compare current version against
+# latest version on github or version.check_url site.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -32,10 +33,8 @@ use constant {
 sub new {
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
-  $self->{pbot}  = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
+  $self->{pbot}  = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { $self->version_cmd(@_) },  "version",  0);
-
   return $self;
 }
 
