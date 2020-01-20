@@ -26,7 +26,7 @@ use LWP::UserAgent;
 # These are set automatically by the build/commit script
 use constant {
   BUILD_NAME     => "PBot",
-  BUILD_REVISION => 2839,
+  BUILD_REVISION => 2838,
   BUILD_DATE     => "2020-01-19",
 };
 
@@ -35,6 +35,7 @@ sub new {
   my $self = bless {}, $class;
   $self->{pbot}  = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { $self->version_cmd(@_) },  "version",  0);
+  $self->{last_check} = { timestamp => 0, version => BUILD_REVISION, date => BUILD_DATE };
   return $self;
 }
 
@@ -45,28 +46,40 @@ sub version {
 sub version_cmd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  if (length $arguments) {
-    if ($arguments eq '-check') {
-      my $url = $self->{pbot}->{registry}->get_value('version', 'check_url') // 'https://raw.githubusercontent.com/pragma-/pbot/master/PBot/VERSION.pm';
-      my $ua = LWP::UserAgent->new(timeout => 10);
-      my $response = $ua->get($url);
-      return "Unable to get version information: " . $response->status_line if (not $response->is_success);
-      my $text = $response->decoded_content;
-      my ($version, $date) = $text =~ m/^\s+BUILD_REVISION => (\d+).*^\s+BUILD_DATE\s+=> "([^"]+)"/ms;
+  my $ratelimit = $self->{pbot}->{registry}->get_value('version', 'check_limit') // 300;
 
-      if ($version > BUILD_REVISION) {
-        return "/say " . $self->version . "; new version available: $version $date!";
-      } else {
-        return "/say " . $self->version . "; you have the latest version.";
-      }
-    } else {
-      my $nick = $self->{pbot}->{nicklist}->is_present_similar($from, $arguments);
-      if ($nick) {
-        return "/say $nick: " . $self->version;
-      }
+  if (time - $self->{last_check}->{timestamp} >= $ratelimit) {
+    $self->{last_check}->{timestamp} = time;
+
+    my $url = $self->{pbot}->{registry}->get_value('version', 'check_url') // 'https://raw.githubusercontent.com/pragma-/pbot/master/PBot/VERSION.pm';
+    $self->{pbot}->{logger}->log("Checking $url for new version...\n");
+    my $ua = LWP::UserAgent->new(timeout => 10);
+    my $response = $ua->get($url);
+
+    return "Unable to get version information: " . $response->status_line if (not $response->is_success);
+
+    my $text = $response->decoded_content;
+    my ($version, $date) = $text =~ m/^\s+BUILD_REVISION => (\d+).*^\s+BUILD_DATE\s+=> "([^"]+)"/ms;
+
+    if (not defined $version or not defined $date) {
+      return "Unable to get version information: data did not match expected format";
     }
+
+    $self->{last_check} = { timestamp => time, version => $version, date => $date };
   }
-  return "/say " . $self->version;
+
+  my $target_nick;
+  $target_nick = $self->{pbot}->{nicklist}->is_present_similar($from, $arguments) if length $arguments;
+
+  my $result = '/say ';
+  $result .= "$target_nick: " if $target_nick;
+  $result .= $self->version;
+
+  if ($self->{last_check}->{version} > BUILD_REVISION) {
+    $result .= "; new version available: $self->{last_check}->{version} $self->{last_check}->{date}!";
+  }
+
+  return $result;
 }
 
 1;
