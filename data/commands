@@ -1,503 +1,502 @@
 {
    "actiontrigger" : {
       "_name" : "actiontrigger",
-      "help" : "",
+      "help" : "Adds a new actiontrigger to PBot. See https://github.com/pragma-/pbot/blob/master/doc/ActionTrigger.md",
       "level" : 10
    },
    "adminadd" : {
       "_name" : "adminadd",
-      "help" : "",
+      "help" : "Adds a new admin to PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#adminadd",
       "level" : 60
    },
    "adminrem" : {
       "_name" : "adminrem",
-      "help" : "",
+      "help" : "Removes an admin from PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#adminrem",
       "level" : 60
    },
    "adminset" : {
       "_name" : "adminset",
-      "help" : "",
+      "help" : "Sets metadata for an admin account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#adminset",
       "level" : 60
    },
    "adminunset" : {
       "_name" : "adminunset",
-      "help" : "",
+      "help" : "Deletes a metadata key from an admin account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#adminunset",
       "level" : 60
    },
    "aka" : {
       "_name" : "aka",
-      "help" : "",
+      "help" : "Lists known aliases for a given nick. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#aka",
       "level" : 0
    },
    "akalink" : {
       "_name" : "akalink",
-      "help" : "",
+      "help" : "Manually link a known alias to a nick. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#akalink",
       "level" : 60
    },
    "akaunlink" : {
       "_name" : "akaunlink",
-      "help" : "",
+      "help" : "Manually unlink a known alias from a nick. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#akaunlink",
       "level" : 60
    },
    "antispam" : {
       "_name" : "antispam",
-      "help" : "",
+      "help" : "See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#antispam",
       "level" : 10
    },
    "ban" : {
       "_name" : "ban",
-      "help" : "",
+      "help" : "Bans a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#banmute",
       "level" : 10
    },
    "battleship" : {
       "_name" : "battleship",
-      "help" : "",
+      "help" : "The classic Battleship board game, modified for IRC. See https://github.com/pragma-/pbot/blob/master/doc/Battleship.md",
       "level" : 0
    },
    "blacklist" : {
       "_name" : "blacklist",
-      "help" : "",
+      "help" : "Blacklists a hostmask from joining a channel. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#blacklist",
       "level" : 10
    },
    "chanadd" : {
       "_name" : "chanadd",
-      "help" : "",
+      "help" : "Permanently adds a channel to PBot's list of channels to auto-join and manage. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#chanadd",
       "level" : 40
    },
    "chanlist" : {
       "_name" : "chanlist",
-      "help" : "",
+      "help" : "Lists all added channels and their metadata keys and values. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#chanlist",
       "level" : 10
    },
    "chanrem" : {
       "_name" : "chanrem",
-      "help" : "",
+      "help" : "Removes a channel from PBot's list of channels to auto-join and manage. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#chanrem",
       "level" : 40
    },
    "chanset" : {
       "_name" : "chanset",
-      "help" : "",
+      "help" : "Sets a channel's metadata. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#chanset and https://github.com/pragma-/pbot/blob/master/doc/Admin.md#channel-metadata-list",
       "level" : 40
    },
    "chanunset" : {
       "_name" : "chanunset",
-      "help" : "",
+      "help" : "Deletes a channel's metadata key. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#chanunset",
       "level" : 40
    },
    "checkban" : {
       "_name" : "checkban",
-      "help" : "",
+      "help" : "Shows the reason a mask was banned and how long the ban lasts. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#checkban",
       "level" : 0
    },
    "checkmute" : {
       "_name" : "checkmute",
-      "help" : "",
+      "help" : "Shows the reason a mask was muted and how long the mute lasts. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#checkmute",
       "level" : 0
    },
    "cmdset" : {
       "_name" : "cmdset",
-      "help" : "",
+      "help" : "Sets or shows command metadata. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#cmdset",
       "level" : 90
    },
    "cmdunset" : {
       "_name" : "cmdunset",
-      "help" : "",
+      "help" : "Deletes a channel metadata key. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#cmdunset",
       "level" : 90
    },
    "connect4" : {
       "_name" : "connect4",
-      "help" : "",
+      "help" : "The classic Connect-4 board game. See https://github.com/pragma-/pbot/blob/master/doc/Connect4.md",
       "level" : 0
    },
    "count" : {
       "_name" : "count",
-      "help" : "",
+      "help" : "Shows how many factoids and what percentage of the database <nick> has submitted. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#count",
       "level" : 0
    },
    "counteradd" : {
       "_name" : "counteradd",
-      "help" : "",
+      "help" : "Adds a new counter. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#add",
       "level" : 0
    },
    "counterdel" : {
       "_name" : "counterdel",
-      "help" : "",
+      "help" : "Deletes a counter. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#del",
       "level" : 0
    },
    "counterlist" : {
       "_name" : "counterlist",
-      "help" : "",
+      "help" : "Lists counters. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#list",
       "level" : 0
    },
    "counterreset" : {
       "_name" : "counterreset",
-      "help" : "",
+      "help" : "Resets a counter. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#reset",
       "level" : 0
    },
    "countershow" : {
       "_name" : "countershow",
-      "help" : "",
+      "help" : "Shows a counter's data. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#show",
       "level" : 0
    },
    "countertrigger" : {
       "_name" : "countertrigger",
-      "help" : "",
+      "help" : "Manages counter triggers. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#trigger",
       "level" : 10
    },
    "delq" : {
       "_name" : "delq",
-      "help" : "",
+      "help" : "Deletes a quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#delq",
       "level" : 0
    },
    "deop" : {
       "_name" : "deop",
-      "help" : "",
+      "help" : "Removes OP status from users. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#deop",
       "level" : 10
    },
    "devoice" : {
       "_name" : "devoice",
-      "help" : "",
+      "help" : "Removes VOICE status from users. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#devoice",
       "level" : 10
    },
    "die" : {
       "_name" : "die",
-      "help" : "",
+      "help" : "Tells PBot to disconnect and exit. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#die",
       "level" : 90
    },
    "dumpbans" : {
       "_name" : "dumpbans",
-      "help" : "",
+      "help" : "Displays PBot's internal banlist data structure. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#dumpbans",
       "level" : 60
    },
    "eval" : {
       "_name" : "eval",
-      "help" : "",
+      "help" : "Evaluates Perl code within PBot's context. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#eval",
       "level" : 99
    },
    "export" : {
       "_name" : "export",
-      "help" : "",
+      "help" : "Exports specified list to HTML file. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#export",
       "level" : 90
    },
    "fact" : {
       "_name" : "fact",
-      "help" : "",
+      "help" : "To view or trigger a factoid belonging to a specific channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#fact",
       "level" : 0
    },
    "factadd" : {
       "_name" : "factadd",
-      "help" : "",
+      "help" : "To add a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factadd",
       "level" : 0
    },
    "factalias" : {
       "_name" : "factalias",
-      "help" : "",
+      "help" : "To create an factoid that acts as an alias for a command. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factalias",
       "level" : 0
    },
    "factchange" : {
       "_name" : "factchange",
-      "help" : "",
+      "help" : "To change a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factchange",
       "level" : 0
    },
    "factfind" : {
       "_name" : "factfind",
-      "help" : "",
+      "help" : "To search the database for a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factfind",
       "level" : 0
    },
    "factinfo" : {
       "_name" : "factinfo",
-      "help" : "",
+      "help" : "To get information about a factoid, such as who submitted it and when. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factinfo",
       "level" : 0
    },
    "factlog" : {
       "_name" : "factlog",
-      "help" : "",
+      "help" : "To see a factoid's changelog history. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factlog",
       "level" : 0
    },
    "factmove" : {
       "_name" : "factmove",
-      "help" : "",
+      "help" : "To rename a factoid or move a factoid to a different channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factmove",
       "level" : 0
    },
    "factredo" : {
       "_name" : "factredo",
-      "help" : "",
+      "help" : "To revert to a newer revision. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factredo",
       "level" : 0
    },
    "factrem" : {
       "_name" : "factrem",
-      "help" : "",
+      "help" : "To remove a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factrem",
       "level" : 0
    },
    "factset" : {
       "_name" : "factset",
-      "help" : "",
+      "help" : "To view or set factoid metadata, such as owner, rate-limit, etc. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factset and https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factoid-metadata-list",
       "level" : 0
    },
    "factshow" : {
       "_name" : "factshow",
-      "help" : "",
+      "help" : "To see the factoid literal value without triggering it. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factshow",
       "level" : 0
    },
    "factundo" : {
       "_name" : "factundo",
-      "help" : "",
+      "help" : "To revert to an older revision. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factundo",
       "level" : 0
    },
    "factunset" : {
       "_name" : "factunset",
-      "help" : "",
+      "help" : "To unset factoid meta-data. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factunset and https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factoid-metadata-list",
       "level" : 0
    },
    "forget" : {
       "_name" : "forget",
-      "help" : "",
+      "help" : "To remove a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#forget",
       "level" : 0
    },
    "func" : {
       "_name" : "func",
-      "help" : "",
+      "help" : "To invoke built-in functions. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#func",
       "level" : 0
    },
    "getq" : {
       "_name" : "getq",
-      "help" : "",
+      "help" : "Retrieves and displays a specific quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#getq",
       "level" : 0
    },
    "google" : {
       "_name" : "google",
-      "help" : "",
+      "help" : "Displays Google search results for a query. See https://github.com/pragma-/pbot/blob/master/doc/Modules.md#google",
       "level" : 0
    },
    "grab" : {
       "_name" : "grab",
-      "help" : "",
+      "help" : "Grabs a message someone says, and adds it to the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#grab",
       "level" : 0
    },
    "histogram" : {
       "_name" : "histogram",
-      "help" : "",
+      "help" : "To see a histogram of the top factoid submitters. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#histogram",
       "level" : 0
    },
    "ignore" : {
       "_name" : "ignore",
-      "help" : "",
+      "help" : "Ignores a user. If you omit [channel] PBot will ignore the user in all channels, including private messages. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#ignore",
       "level" : 10
    },
    "in" : {
       "_name" : "in",
-      "help" : "",
+      "help" : "Performs a command in a specific channel. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#in",
       "level" : 0
    },
    "invite" : {
       "_name" : "invite",
-      "help" : "",
+      "help" : "Invites a user to a channel. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#invite",
       "level" : 10
    },
    "join" : {
       "_name" : "join",
-      "help" : "",
+      "help" : "To temporarily join a channel. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#join",
       "level" : 40
    },
    "kick" : {
       "_name" : "kick",
-      "help" : "",
+      "help" : "Removes a user from the channel. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#kick",
       "level" : 10
    },
    "lagcheck" : {
       "_name" : "lagcheck",
-      "help" : "",
+      "help" : "Displays history of PING times. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#lagcheck",
       "level" : 0
    },
    "learn" : {
       "_name" : "learn",
-      "help" : "",
+      "help" : "To add a factoid to the channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factadd",
       "level" : 0
    },
    "list" : {
       "_name" : "list",
-      "help" : "",
+      "help" : "Lists various collections, such as channels or admins. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#list",
       "level" : 0
    },
    "load" : {
       "_name" : "load",
-      "help" : "",
+      "help" : "This command loads a module as a PBot command. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#load",
       "level" : 90
    },
    "login" : {
       "_name" : "login",
-      "help" : "",
+      "help" : "Logs into a PBot admin account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#login",
       "level" : 0
    },
    "logout" : {
       "_name" : "logout",
-      "help" : "",
+      "help" : "Logs out of a PBot admin account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#logout",
       "level" : 0
    },
    "mode" : {
       "_name" : "mode",
-      "help" : "",
+      "help" : "Sets or unsets channel or user modes. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#mode",
       "level" : 40
    },
    "mute" : {
       "_name" : "mute",
-      "help" : "",
+      "help" : "Mutes a user. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#banmute",
       "level" : 10
    },
    "nicklist" : {
       "_name" : "nicklist",
-      "help" : "",
+      "help" : "Dumps the internal nicklist structure. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#nicklist",
       "level" : 0
    },
    "op" : {
       "_name" : "op",
-      "help" : "",
+      "help" : "Gives channel operator status to users. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#op",
       "level" : 10
    },
    "part" : {
       "_name" : "part",
-      "help" : "",
+      "help" : "To temporarily leave a channel, without removing it from PBot's list of channels. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#part",
       "level" : 40
    },
    "plug" : {
       "_name" : "plug",
-      "help" : "",
+      "help" : "Loads a plugin into PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#plug",
       "level" : 90
    },
    "pluglist" : {
       "_name" : "pluglist",
-      "help" : "",
+      "help" : "Lists all currently loaded plugins. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#pluglist",
       "level" : 0
    },
    "rebuildaliases" : {
       "_name" : "rebuildaliases",
-      "help" : "",
+      "help" : "Rebuilds the aka link table. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#rebuildaliases",
       "level" : 90
    },
    "recall" : {
       "_name" : "recall",
-      "help" : "",
+      "help" : "Recalls previous chat history for a channel. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#recall",
       "level" : 0
    },
    "refresh" : {
       "_name" : "refresh",
-      "help" : "",
+      "help" : "Refreshes and reloads PBot core modules and plugins. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#refresh",
       "level" : 90
    },
    "regchange" : {
       "_name" : "regchange",
-      "help" : "",
+      "help" : "To change the value of a registry item using a regular substitution expression. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regchange",
       "level" : 60
    },
    "regex" : {
       "_name" : "regex",
-      "help" : "",
+      "help" : "Manages regular expression commands. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#regex",
       "level" : 999
    },
    "regfind" : {
       "_name" : "regfind",
-      "help" : "",
+      "help" : "To search for registry items and optionally show the values of all matching items. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regfind",
       "level" : 0
    },
    "regset" : {
       "_name" : "regset",
-      "help" : "",
+      "help" : "To set a new registry item or update an existing item. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regset",
       "level" : 60
    },
    "regsetmeta" : {
       "_name" : "regsetmeta",
-      "help" : "",
+      "help" : "To set or view the metadata values for a specific registry key. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regsetmeta and https://github.com/pragma-/pbot/blob/master/doc/Registry.md#metadata-list",
       "level" : 60
    },
    "regshow" : {
       "_name" : "regshow",
-      "help" : "",
+      "help" : "To display the type and value of a registry item. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regshow",
       "level" : 0
    },
    "regunset" : {
       "_name" : "regunset",
-      "help" : "",
+      "help" : "To remove a registry item from a specific section/channel. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regunset",
       "level" : 60
    },
    "regunsetmeta" : {
       "_name" : "regunsetmeta",
-      "help" : "",
+      "help" : "To set the metadata values for a specific registry key. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regsetmeta and https://github.com/pragma-/pbot/blob/master/doc/Registry.md#metadata",
       "level" : 60
    },
    "reload" : {
       "_name" : "reload",
-      "help" : "",
+      "help" : "Reloads a data or configuration file. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#reload",
       "level" : 90
    },
    "remindme" : {
       "_name" : "remindme",
-      "help" : "",
+      "help" : "Manages user reminders. See https://github.com/pragma-/pbot/blob/master/doc/Remindme.md",
       "level" : 0
    },
    "replug" : {
       "_name" : "replug",
-      "help" : "",
+      "help" : "Reloads a plugin into PBot. The plugin is first unloaded and then it is loaded again. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#replug",
       "level" : 90
    },
    "rq" : {
       "_name" : "rq",
-      "help" : "",
+      "help" : "Retrieves and displays a random quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#rq",
       "level" : 0
    },
    "sl" : {
       "_name" : "sl",
-      "help" : "",
+      "help" : "Sends a raw IRC command to the server. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#sl",
       "level" : 90
    },
    "spinach" : {
       "_name" : "spinach",
-      "help" : "",
+      "help" : "Manages and interacts with the Spinach trivia game. See https://github.com/pragma-/pbot/blob/master/doc/Spinach.md",
       "level" : 0
    },
    "top20" : {
       "_name" : "top20",
-      "help" : "",
+      "help" : "To see the top 20 most popular factoids. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#top20",
       "level" : 0
    },
    "unban" : {
       "_name" : "unban",
-      "help" : "",
+      "help" : "Unbans a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unbanunmute",
       "level" : 10
    },
    "unbanme" : {
       "_name" : "unbanme",
-      "help" : "",
+      "help" : "Removes a join-flood ban. See https://github.com/pragma-/pbot/blob/master/doc/Abuse.md#unbanme",
       "level" : 0
    },
    "unignore" : {
       "_name" : "unignore",
-      "help" : "",
+      "help" : "Unignores a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unignore",
       "level" : 10
    },
    "unload" : {
       "_name" : "unload",
-      "help" : "",
+      "help" : "Unloads a module and removes its associated command. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unload",
       "level" : 90
    },
    "unmute" : {
       "_name" : "unmute",
-      "help" : "",
+      "help" : "Unmutes a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unbanunmute",
       "level" : 10
    },
    "unplug" : {
       "_name" : "unplug",
-      "help" : "",
+      "help" : "Unloads a plugin from PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unplug",
       "level" : 90
    },
    "voice" : {
       "_name" : "voice",
-      "help" : "",
+      "help" : "Sets mode +v on users. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#voice",
       "level" : 10
    },
    "whitelist" : {
       "_name" : "whitelist",
-      "help" : "",
+      "help" : "Whitelists a hostmask to be exempted from ban evasions or anti-flood enforcement. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#whitelist",
       "level" : 10
    }
 }
-
