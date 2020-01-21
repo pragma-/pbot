@@ -207,43 +207,43 @@ Here is the documentation for all of PBot's commands.
 
 #### Logging in and out of PBot
 
-##### login
-##### logout
+##### [login](Admin.md#login)
+##### [logout](Admin.md#logout)
 
 #### Admin management commands
 
-##### adminadd
-##### adminrem
-##### adminset
-##### adminunset
-##### list admins
+##### [adminadd](Admin.md#adminadd)
+##### [adminrem](Admin.md#adminrem)
+##### [adminset](Admin.md#adminset)
+##### [adminunset](Admin.md#adminunset)
+##### [list admins](Admin.md#listing-admins)
 
 #### Channel management commands
 
-##### join
-##### part
-##### chanadd
-##### chanrem
-##### chanset
-##### chanunset
-##### chanlist
+##### [join](Admin.md#join)
+##### [part](Admin.md#part)
+##### [chanadd](Admin.md#chanadd)
+##### [chanrem](Admin.md#chanrem)
+##### [chanset](Admin.md#chanset)
+##### [chanunset](Admin.md#chanunset)
+##### [chanlist](Admin.md#chanlist)
 
 #### Module management commands
 
-##### load
-##### unload
-##### list modules
+##### [load](Admin.md#load)
+##### [unload](Admin.md#unload)
+##### [list modules](Admin.md#listing-modules)
 
 #### Plugin management commands
 
-##### plug
-##### unplug
-##### pluglist
+##### [plug](Admin.md#plug)
+##### [unplug](Admin.md#unplug)
+##### [pluglist](Admin.md#pluglist)
 
 #### Command metadata commands
 
-##### cmdset
-##### cmdunset
+##### [cmdset](Admin.md#cmdset)
+##### [cmdunset](Admin.md#cmdunset)
 
 #### Registry commands
 
@@ -267,28 +267,28 @@ Here is the documentation for all of PBot's commands.
 
 #### Adding/remove factoids
 ##### [factadd](Factoids.md#factadd)
-##### factrem
-##### factalias
+##### [factrem](Factoids.md#factrem)
+##### [factalias](Admin.md#factalias)
 
 #### Displaying factoids
 ##### [fact](Factoids.md#fact)
 ##### [factshow](Factoids.md#factshow)
 
 #### Editing factoids
-##### factchange
-##### factmove
-##### factundo
-##### factredo
-##### factset
-##### factunset
+##### [factchange](Admin.md#factchange)
+##### [factmove](Admin.md#factmove)
+##### [factundo](Admin.md#factundo)
+##### [factredo](Admin.md#factredo)
+##### [factset](Admin.md#factset)
+##### [factunset](Admin.md#factunset)
 
 #### Information about factoids
-##### factlog
-##### factfind
-##### factinfo
-##### count
-##### histogram
-##### top20
+##### [factlog](Admin.md#factlog)
+##### [factfind](Admin.md#factfind)
+##### [factinfo](Admin.md#factinfo)
+##### [count](Admin.md#count)
+##### [histogram](Admin.md#histogram)
+##### [top20](Admin.md#top20)
 
 ### Miscellaneous commands
 
