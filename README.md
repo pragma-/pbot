@@ -1,43 +1,41 @@
-PBot
-----
+# PBot
 PBot is a versatile IRC Bot written in Perl
 
 <!-- md-toc-begin -->
-  * [PBot](#pbot)
-  * [Installation / Quick Start](#installation--quick-start)
-  * [Features](#features)
-    * [Commands](#commands)
-    * [Advanced interpreter](#advanced-interpreter)
-      * [piping](#piping)
-      * [command substitution](#command-substitution)
-      * [command splitting](#command-splitting)
-      * [advanced $variable interpolation](#advanced-variable-interpolation)
-      * [inline commands](#inline-commands)
-    * [Factoids](#factoids)
-    * [Code Factoids](#code-factoids)
-    * [Plugins](#plugins)
-    * [Modules](#modules)
-    * [Virtual machine](#virtual-machine)
-    * [Useful IRC command improvements](#useful-irc-command-improvements)
-    * [Channel management](#channel-management)
-    * [Admin management](#admin-management)
-    * [Easy configuration](#easy-configuration)
-  * [Documentation](#documentation)
-  * [Support](#support)
-  * [License](#license)
+* [Installation / Quick Start](#installation--quick-start)
+* [Features](#features)
+  * [Commands](#commands)
+  * [Advanced interpreter](#advanced-interpreter)
+    * [piping](#piping)
+    * [command substitution](#command-substitution)
+    * [command splitting](#command-splitting)
+    * [advanced $variable interpolation](#advanced-variable-interpolation)
+    * [inline commands](#inline-commands)
+  * [Factoids](#factoids)
+  * [Code Factoids](#code-factoids)
+  * [Plugins](#plugins)
+  * [Modules](#modules)
+  * [Virtual machine](#virtual-machine)
+  * [Useful IRC command improvements](#useful-irc-command-improvements)
+  * [Channel management](#channel-management)
+  * [Admin management](#admin-management)
+  * [Easy configuration](#easy-configuration)
+* [Documentation](#documentation)
+* [Support](#support)
+* [License](#license)
 <!-- md-toc-end -->
 
-Installation / Quick Start
---------------------------
+## Installation / Quick Start
 To get up-and-running quickly, check out the [Quick Start guide](doc/QuickStart.md).
 
-Features
---------
+## Features
 
 ### Commands
 
 PBot has several useful core built-in commands. Additional commands can be added to PBot through
-Factoids and Plugins.
+[Factoids](#factoids) and [Plugins](#plugins).
+
+For more information, see the [Commands documentation.](doc/Commands.md)
 
 ### Advanced interpreter
 
@@ -125,13 +123,13 @@ command-piping, `/code` invocation, and more!
 
 PBot factoids include these advanced features:
 
-* metadata (e.g. owner, times used, last used date, locked, etc)
-* advanced argument processing (indexing, splicing, etc)
-* special commands: `/say`, `/me`, `/msg`, `/code`, etc
-* advanced `$variable` interpolation (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)
-* factoid-based variable lists (e.g., add a factoid `colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
-* changelog history
-* undo/redo history
+* [undo/redo history](doc/Factoids.md#factundo)
+* [changelog history](doc/Factoids.md#factlog)
+* [advanced `$variable` interpolation (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)](doc/Factoids.md#expansion-modifiers)
+* [factoid-based variable lists (e.g., add a factoid `colors` containing "red green blue" and then `!echo $colors` will randomly pick one)](doc/Factoids.md#list-variables)
+* [advanced argument processing (indexing, splicing, etc)](doc/Factoids.md#special-variables-1)
+* [metadata (e.g. owner, times used, last used date, locked, etc)](doc/Factoids.md#factoid-metadata)
+* [special commands: `/say`, `/me`, `/msg`, `/code`, etc](doc/Factoids.md#special-commands)
 * and much, much more!
 
 For more information, see the [Factoids documentation](doc/Factoids.md).
@@ -211,6 +209,10 @@ Then you can add the `qalc` factoid:
 And then set its `type` to `module`:
 
     !factset global qalc type module
+
+Alternatively you can simply use the [`load`](doc/Admin.md#load) command.
+
+    !load qalc qalc.sh
 
 Now you have a `qalc` calculator in PBot!
 
@@ -316,14 +318,11 @@ These settings can easily be configured via several methods:
 
 For more information, see the [Registry documentation.](doc/Registry.md)
 
-Documentation
--------------
+## Documentation
 See the [PBot documentation](doc) for more information.
 
-Support
--------
+## Support
 For questions and support, feel free to join the `#pbot2` channel on the [Freenode](https://freenode.net/kb/answer/chat) IRC network ([Web Chat](https://webchat.freenode.net/#pbot2)).
 
-License
--------
+## License
 PBot is licensed under the [Mozilla Public License, version 2](https://www.mozilla.org/en-US/MPL/2.0/).
