@@ -268,27 +268,27 @@ Here is the documentation for all of PBot's commands.
 #### Adding/remove factoids
 ##### [factadd](Factoids.md#factadd)
 ##### [factrem](Factoids.md#factrem)
-##### [factalias](Admin.md#factalias)
+##### [factalias](Factoids.md#factalias)
 
 #### Displaying factoids
 ##### [fact](Factoids.md#fact)
 ##### [factshow](Factoids.md#factshow)
 
 #### Editing factoids
-##### [factchange](Admin.md#factchange)
-##### [factmove](Admin.md#factmove)
-##### [factundo](Admin.md#factundo)
-##### [factredo](Admin.md#factredo)
-##### [factset](Admin.md#factset)
-##### [factunset](Admin.md#factunset)
+##### [factchange](Factoids.md#factchange)
+##### [factmove](Factoids.md#factmove)
+##### [factundo](Factoids.md#factundo)
+##### [factredo](Factoids.md#factredo)
+##### [factset](Factoids.md#factset)
+##### [factunset](Factoids.md#factunset)
 
 #### Information about factoids
-##### [factlog](Admin.md#factlog)
-##### [factfind](Admin.md#factfind)
-##### [factinfo](Admin.md#factinfo)
-##### [count](Admin.md#count)
-##### [histogram](Admin.md#histogram)
-##### [top20](Admin.md#top20)
+##### [factlog](Factoids.md#factlog)
+##### [factfind](Factoids.md#factfind)
+##### [factinfo](Factoids.md#factinfo)
+##### [count](Factoids.md#count)
+##### [histogram](Factoids.md#histogram)
+##### [top20](Factoids.md#top20)
 
 ### Miscellaneous commands
 
