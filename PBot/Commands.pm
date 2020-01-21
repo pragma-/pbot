@@ -40,6 +40,7 @@ sub initialize {
 
   $self->register(sub { $self->set(@_)   },  "cmdset",   90);
   $self->register(sub { $self->unset(@_) },  "cmdunset", 90);
+  $self->register(sub { $self->help(@_)  },  "help",      0);
 }
 
 sub register {
@@ -127,20 +128,6 @@ sub interpreter {
   return undef;
 }
 
-sub set {
-  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my ($command, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
-  return "Usage: cmdset <command> [key [value]]" if not defined $command;
-  return $self->{metadata}->set($command, $key, $value);
-}
-
-sub unset {
-  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my ($command, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
-  return "Usage: cmdunset <command> <key>" if not defined $command or not defined $key;
-  return $self->{metadata}->unset($command, $key);
-}
-
 sub get_meta {
   my ($self, $command, $key) = @_;
   $command = lc $command;
@@ -156,6 +143,98 @@ sub load_metadata {
 sub save_metadata {
   my ($self) = @_;
   $self->{metadata}->save;
+}
+
+sub set {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($command, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+  return "Usage: cmdset <command> [key [value]]" if not defined $command;
+  return $self->{metadata}->set($command, $key, $value);
+}
+
+sub unset {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my ($command, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+  return "Usage: cmdunset <command> <key>" if not defined $command or not defined $key;
+  return $self->{metadata}->unset($command, $key);
+}
+
+sub help {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+
+  if (not length $arguments) {
+    return "For general help, see <https://github.com/pragma-/pbot/tree/master/doc>. For help about a specific command or factoid, use `help <keyword> [channel]`.";
+  }
+
+  my $keyword = lc $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+
+  # check built-in commands first
+  if ($self->exists($keyword)) {
+    if (exists $self->{metadata}->{hash}->{$keyword}) {
+      my $name = $self->{metadata}->{hash}->{$keyword}->{_name};
+      my $level = $self->{metadata}->{hash}->{$keyword}->{level};
+      my $help = $self->{metadata}->{hash}->{$keyword}->{help};
+      my $result = "/say $name: ";
+
+      if (defined $level and $level > 0) {
+        $result .= "[Level $level admin command] ";
+      }
+
+      if (not defined $help or not length $help) {
+        $result .= "I have no help for this command yet.";
+      } else {
+        $result .= $help;
+      }
+      return $result;
+    }
+    return "$keyword is a built-in command, but I have no help for it yet.";
+  }
+
+  # then factoids
+  my $channel_arg = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+  $channel_arg = $from if not defined $channel_arg or not length $channel_arg;
+  $channel_arg = '.*' if $channel_arg !~ m/^#/;
+
+  my @factoids = $self->{pbot}->{factoids}->find_factoid($channel_arg, $keyword, exact_trigger => 1);
+
+  if (not @factoids or not $factoids[0]) {
+    return "I don't know anything about $keyword.";
+  }
+
+  my ($channel, $trigger);
+
+  if (@factoids > 1) {
+    if (not grep { $_->[0] eq $channel_arg } @factoids) {
+      return "/say $keyword found in multiple channels: " . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids) . "; use `help $keyword <channel>` to disambiguate.";
+    } else {
+      foreach my $factoid (@factoids) {
+        if ($factoid->[0] eq $channel_arg) {
+          ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
+          last;
+        }
+      }
+    }
+  } else {
+    ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
+  }
+
+  my $channel_name = $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{_name};
+  my $trigger_name = $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{_name};
+  $channel_name = 'global channel' if $channel_name eq '.*';
+  $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
+
+  my $result = "/say ";
+  $result .= "[$channel_name] " if $channel ne $from and $channel ne '.*';
+  $result .= "$trigger_name: ";
+
+  my $help = $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{help};
+
+  if (not defined $help or not length $help) {
+    return "/say $trigger_name is a factoid for $channel_name, but I have no help for it yet.";
+  }
+
+  $result .= $help;
+  return $result;
 }
 
 1;
