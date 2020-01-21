@@ -172,6 +172,7 @@ or by acquiring and loading Plugins.
 
 Additional built-in commands can be created by loading PBot Plugins. Plugins are
 stand-alone self-contained units of code that can be loaded by the PBot owner.
+
 Plugins have access to PBot's internal APIs and data structures.
 
 ### Factoids
@@ -201,7 +202,8 @@ Modules do not have access to PBot's internal API or data structures.
 
 ## Command documentation
 
-Here is the documentation for all of PBot's commands.
+Here is the documentation for all of PBot's built-in commands and some of the
+more useful Factoids, Plugins and Modules.
 
 ### Administrative commands
 
@@ -291,5 +293,4 @@ Here is the documentation for all of PBot's commands.
 ##### [top20](Factoids.md#top20)
 
 ### Miscellaneous commands
-
 
