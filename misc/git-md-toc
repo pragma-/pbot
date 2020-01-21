@@ -216,19 +216,34 @@ foreach ( @ARGV ) {
 
     $indent = "  " x $depth;
 
-    my $anchor = lc $title;
-    $anchor =~ s/\s/-/g;
-    $anchor =~ s/[^\w-]//g;
+    my $anchor_url;
 
-    $count{$anchor}++;
+    # handle link titles
+    if ($title =~ m/\[([^]]+)\]\(([^)]+)\)/) {
+      $title = $1;
+      $anchor_url = $2;
+    }
 
-    $anchor .= ( 1 - $count{$anchor} or "" );
+    my $anchor;
+
+    if (defined $anchor_url) {
+      $anchor = $anchor_url;
+    } else {
+      $anchor =  lc $title;
+      $anchor =~ s/\s/-/g;
+      $anchor =~ s/[^\w-]//g;
+      $anchor = '#' . $anchor;
+
+      $count{$anchor}++;
+
+      $anchor .= ( 1 - $count{$anchor} or "" );
+    }
 
     if ($depth >= $min_depth - 1 and $depth <= $max_depth - 1) {
       if ($use_filename) {
-        push (@toc, "$indent* [$title]($filename#$anchor)");
+        push (@toc, "$indent* [$title]($filename$anchor)");
       } else {
-        push (@toc, "$indent* [$title](#$anchor)");
+        push (@toc, "$indent* [$title]($anchor)");
       }
     }
   }
