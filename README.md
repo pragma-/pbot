@@ -125,11 +125,11 @@ PBot factoids include these advanced features:
 
 * [undo/redo history](doc/Factoids.md#factundo)
 * [changelog history](doc/Factoids.md#factlog)
-* [advanced `$variable` interpolation (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)](doc/Factoids.md#expansion-modifiers)
-* [factoid-based variable lists (e.g., add a factoid `colors` containing "red green blue" and then `!echo $colors` will randomly pick one)](doc/Factoids.md#list-variables)
-* [advanced argument processing (indexing, splicing, etc)](doc/Factoids.md#special-variables-1)
-* [metadata (e.g. owner, times used, last used date, locked, etc)](doc/Factoids.md#factoid-metadata)
-* [special commands: `/say`, `/me`, `/msg`, `/code`, etc](doc/Factoids.md#special-commands)
+* [advanced `$variable` interpolation](doc/Factoids.md#expansion-modifiers) (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)
+* [factoid-based variable lists](doc/Factoids.md#list-variables) (e.g., add a factoid `colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
+* [advanced argument processing](doc/Factoids.md#special-variables-1) (indexing, splicing, etc)
+* [metadata](doc/Factoids.md#factoid-metadata) (e.g. owner, times used, last used date, locked, etc)
+* [special commands](doc/Factoids.md#special-commands) (`/say`, `/me`, `/msg`, `/code`, etc)
 * and much, much more!
 
 For more information, see the [Factoids documentation](doc/Factoids.md).
