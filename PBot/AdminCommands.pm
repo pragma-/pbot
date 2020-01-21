@@ -316,6 +316,11 @@ sub reload {
   my ($from, $nick, $user, $host, $arguments) = @_;
 
   my %reloadables = (
+    'commands' => sub {
+      $self->{pbot}->{commands}->load_metadata;
+      return "Commands metadata reloaded.";
+    },
+
     'blacklist' => sub {
       $self->{pbot}->{blacklist}->clear_blacklist;
       $self->{pbot}->{blacklist}->load_blacklist;
