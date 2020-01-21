@@ -181,82 +181,82 @@
    },
    "fact" : {
       "_name" : "fact",
-      "help" : "To view or trigger a factoid belonging to a specific channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#fact",
+      "help" : "Displays or invokes a factoid belonging to a specific channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#fact",
       "level" : 0
    },
    "factadd" : {
       "_name" : "factadd",
-      "help" : "To add a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factadd",
+      "help" : "Creates a new factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factadd",
       "level" : 0
    },
    "factalias" : {
       "_name" : "factalias",
-      "help" : "To create an factoid that acts as an alias for a command. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factalias",
+      "help" : "Creates a factoid that acts as an alias for a command. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factalias",
       "level" : 0
    },
    "factchange" : {
       "_name" : "factchange",
-      "help" : "To change a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factchange",
+      "help" : "Changes a factoid using a regular expression. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factchange",
       "level" : 0
    },
    "factfind" : {
       "_name" : "factfind",
-      "help" : "To search the database for a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factfind",
+      "help" : "Searches the database for a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factfind",
       "level" : 0
    },
    "factinfo" : {
       "_name" : "factinfo",
-      "help" : "To get information about a factoid, such as who submitted it and when. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factinfo",
+      "help" : "Displays information about a factoid, such as who submitted it and when. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factinfo",
       "level" : 0
    },
    "factlog" : {
       "_name" : "factlog",
-      "help" : "To see a factoid's changelog history. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factlog",
+      "help" : "Displays a factoid's changelog history. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factlog",
       "level" : 0
    },
    "factmove" : {
       "_name" : "factmove",
-      "help" : "To rename a factoid or move a factoid to a different channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factmove",
+      "help" : "Renames a factoid or moves a factoid to a different channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factmove",
       "level" : 0
    },
    "factredo" : {
       "_name" : "factredo",
-      "help" : "To revert to a newer revision. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factredo",
+      "help" : "Reverts a factoid to a newer revision. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factredo",
       "level" : 0
    },
    "factrem" : {
       "_name" : "factrem",
-      "help" : "To remove a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factrem",
+      "help" : "Deletes a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factrem",
       "level" : 0
    },
    "factset" : {
       "_name" : "factset",
-      "help" : "To view or set factoid metadata, such as owner, rate-limit, etc. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factset and https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factoid-metadata-list",
+      "help" : "Displays or sets factoid metadata, such as owner, rate-limit, etc. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factset and https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factoid-metadata-list",
       "level" : 0
    },
    "factshow" : {
       "_name" : "factshow",
-      "help" : "To see the factoid literal value without triggering it. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factshow",
+      "help" : "Displays a factoid's literal value without invoking the factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factshow",
       "level" : 0
    },
    "factundo" : {
       "_name" : "factundo",
-      "help" : "To revert to an older revision. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factundo",
+      "help" : "Reverts a factoid to an older revision. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factundo",
       "level" : 0
    },
    "factunset" : {
       "_name" : "factunset",
-      "help" : "To unset factoid meta-data. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factunset and https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factoid-metadata-list",
+      "help" : "Unsets a factoid metadata key. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factunset and https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factoid-metadata-list",
       "level" : 0
    },
    "forget" : {
       "_name" : "forget",
-      "help" : "To remove a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#forget",
+      "help" : "Deletes a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#forget",
       "level" : 0
    },
    "func" : {
       "_name" : "func",
-      "help" : "To invoke built-in functions. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#func",
+      "help" : "Invokes built-in functions. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#func",
       "level" : 0
    },
    "getq" : {
@@ -276,7 +276,7 @@
    },
    "histogram" : {
       "_name" : "histogram",
-      "help" : "To see a histogram of the top factoid submitters. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#histogram",
+      "help" : "Displays a histogram of the top factoid submitters. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#histogram",
       "level" : 0
    },
    "ignore" : {
@@ -296,7 +296,7 @@
    },
    "join" : {
       "_name" : "join",
-      "help" : "To temporarily join a channel. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#join",
+      "help" : "Temporarily joins a channel without adding it to PBot's list of channels to manage/auto-join. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#join",
       "level" : 40
    },
    "kick" : {
@@ -311,7 +311,7 @@
    },
    "learn" : {
       "_name" : "learn",
-      "help" : "To add a factoid to the channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factadd",
+      "help" : "Creates a new factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factadd",
       "level" : 0
    },
    "list" : {
@@ -356,7 +356,7 @@
    },
    "part" : {
       "_name" : "part",
-      "help" : "To temporarily leave a channel, without removing it from PBot's list of channels. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#part",
+      "help" : "Departs a channel, without removing it from PBot's list of channels to manage/auto-join. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#part",
       "level" : 40
    },
    "plug" : {
@@ -386,7 +386,7 @@
    },
    "regchange" : {
       "_name" : "regchange",
-      "help" : "To change the value of a registry item using a regular substitution expression. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regchange",
+      "help" : "Changes the value of a registry item using a regular expression. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regchange",
       "level" : 60
    },
    "regex" : {
@@ -396,32 +396,32 @@
    },
    "regfind" : {
       "_name" : "regfind",
-      "help" : "To search for registry items and optionally show the values of all matching items. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regfind",
+      "help" : "Searches the registry for keywords or values. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regfind",
       "level" : 0
    },
    "regset" : {
       "_name" : "regset",
-      "help" : "To set a new registry item or update an existing item. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regset",
+      "help" : "Creates a new registry item or updates an existing item. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regset",
       "level" : 60
    },
    "regsetmeta" : {
       "_name" : "regsetmeta",
-      "help" : "To set or view the metadata values for a specific registry key. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regsetmeta and https://github.com/pragma-/pbot/blob/master/doc/Registry.md#metadata-list",
+      "help" : "Sets or displays the metadata for a specific registry key. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regsetmeta and https://github.com/pragma-/pbot/blob/master/doc/Registry.md#metadata-list",
       "level" : 60
    },
    "regshow" : {
       "_name" : "regshow",
-      "help" : "To display the type and value of a registry item. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regshow",
+      "help" : "Displays the type and value of a registry item. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regshow",
       "level" : 0
    },
    "regunset" : {
       "_name" : "regunset",
-      "help" : "To remove a registry item from a specific section/channel. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regunset",
+      "help" : "Deletes a registry item from a specific section/channel. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regunset",
       "level" : 60
    },
    "regunsetmeta" : {
       "_name" : "regunsetmeta",
-      "help" : "To set the metadata values for a specific registry key. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regsetmeta and https://github.com/pragma-/pbot/blob/master/doc/Registry.md#metadata",
+      "help" : "Deletes a metadata key from a registry item. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regsetmeta and https://github.com/pragma-/pbot/blob/master/doc/Registry.md#metadata",
       "level" : 60
    },
    "reload" : {
@@ -456,7 +456,7 @@
    },
    "top20" : {
       "_name" : "top20",
-      "help" : "To see the top 20 most popular factoids. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#top20",
+      "help" : "Displays the top 20 most popular factoids. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#top20",
       "level" : 0
    },
    "unban" : {
