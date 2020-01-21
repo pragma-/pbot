@@ -18,20 +18,65 @@
   * [Command documentation](#command-documentation)
     * [Administrative commands](#administrative-commands)
       * [Logging in and out of PBot](#logging-in-and-out-of-pbot)
+        * [login](#login)
+        * [logout](#logout)
       * [Admin management commands](#admin-management-commands)
+        * [adminadd](#adminadd)
+        * [adminrem](#adminrem)
+        * [adminset](#adminset)
+        * [adminunset](#adminunset)
+        * [list admins](#list-admins)
       * [Channel management commands](#channel-management-commands)
+        * [join](#join)
+        * [part](#part)
+        * [chanadd](#chanadd)
+        * [chanrem](#chanrem)
+        * [chanset](#chanset)
+        * [chanunset](#chanunset)
+        * [chanlist](#chanlist)
       * [Module management commands](#module-management-commands)
+        * [load](#load)
+        * [unload](#unload)
+        * [list modules](#list-modules)
       * [Plugin management commands](#plugin-management-commands)
+        * [plug](#plug)
+        * [unplug](#unplug)
+        * [pluglist](#pluglist)
+      * [Command metadata commands](#command-metadata-commands)
+        * [cmdset](#cmdset)
+        * [cmdunset](#cmdunset)
       * [Registry commands](#registry-commands)
+        * [regset](#regset)
+        * [regunset](#regunset)
+        * [regchange](#regchange)
+        * [regshow](#regshow)
+        * [regfind](#regfind)
+        * [regsetmeta](#regsetmeta)
+        * [regunsetmeta](#regunsetmeta)
       * [Miscellaneous admin commands](#miscellaneous-admin-commands)
+        * [export](#export)
+        * [refresh](#refresh)
+        * [reload](#reload)
+        * [sl](#sl)
+        * [die](#die)
     * [Factoid commands](#factoid-commands)
-      * [Adding factoids](#adding-factoids)
-      * [Viewing factoids](#viewing-factoids)
-      * [Deleting factoids](#deleting-factoids)
-      * [Aliasing commands](#aliasing-commands)
-      * [Moving/renaming factoids](#movingrenaming-factoids)
-      * [Editing factoids](#editing-factoids)
-      * [Information about a factoid](#information-about-a-factoid)
+      * [[fact](Factoids.md#fact)](#factfactoidsmdfact)
+      * [factadd](#factadd)
+      * [factrem](#factrem)
+      * [factshow](#factshow)
+      * [factchange](#factchange)
+      * [factalias](#factalias)
+      * [factmove](#factmove)
+      * [factundo](#factundo)
+      * [factredo](#factredo)
+      * [factlog](#factlog)
+      * [factset](#factset)
+      * [factunset](#factunset)
+      * [factfind](#factfind)
+      * [factinfo](#factinfo)
+      * [count](#count)
+      * [histogram](#histogram)
+      * [top20](#top20)
     * [Miscellaneous commands](#miscellaneous-commands)
 <!-- md-toc-end -->
 
@@ -117,7 +162,7 @@ subroutine and data structures.
 Built-in commands are created via the `register()` function of the `Commands`
 module. Such commands are registered throughout PBot's source code. The owner
 of the PBot instance can locally add new commands by editing PBot's source code
-or by acquiring and loading new Plugins.
+or by acquiring and loading Plugins.
 
 #### Plugins
 
@@ -128,18 +173,17 @@ Plugins have access to PBot's internal APIs and data structures.
 ### Factoids
 
 Factoids are another type of command. Factoids are simple textual strings that
-anybody can create. At their most simple, they simply display their text when
-invoked. However, significantly more complex Factoids can be created by using
-the powerful interpreter and by using the even more powerful `/code` Factoid
-command.
+anybody can create. At their most simple, they display their text when invoked.
+However, significantly more complex Factoids can be created by using the powerful
+interpreter and by using the even more powerful `/code` Factoid command.
 
 Factoids do not have access to PBot's internal API or data structures.
 
 #### Code Factoids
 
-Code Factoids are simple Factoids that are created using the `/code` command.
-These Factoids will execute their textual string using the scripting or programming
-language invoked by the `/code` command.
+Code Factoids are Factoids whose text begins with the `/code` command.
+These Factoids will execute their text using the scripting or programming
+language specified by the `/code` command.
 
 Code Factoids do not have access to PBot's internal API or data structures.
 
@@ -159,33 +203,81 @@ Here is the documentation for all of PBot's commands.
 
 #### Logging in and out of PBot
 
+##### login
+##### logout
+
 #### Admin management commands
+
+##### adminadd
+##### adminrem
+##### adminset
+##### adminunset
+##### list admins
 
 #### Channel management commands
 
+##### join
+##### part
+##### chanadd
+##### chanrem
+##### chanset
+##### chanunset
+##### chanlist
+
 #### Module management commands
+
+##### load
+##### unload
+##### list modules
 
 #### Plugin management commands
 
+##### plug
+##### unplug
+##### pluglist
+
+#### Command metadata commands
+
+##### cmdset
+##### cmdunset
+
 #### Registry commands
+
+##### regset
+##### regunset
+##### regchange
+##### regshow
+##### regfind
+##### regsetmeta
+##### regunsetmeta
 
 #### Miscellaneous admin commands
 
+##### export
+##### refresh
+##### reload
+##### sl
+##### die
+
 ### Factoid commands
 
-#### Adding factoids
-
-#### Viewing factoids
-
-#### Deleting factoids
-
-#### Aliasing commands
-
-#### Moving/renaming factoids
-
-#### Editing factoids
-
-#### Information about a factoid
+#### [fact](Factoids.md#fact)
+#### factadd
+#### factrem
+#### factshow
+#### factchange
+#### factalias
+#### factmove
+#### factundo
+#### factredo
+#### factlog
+#### factset
+#### factunset
+#### factfind
+#### factinfo
+#### count
+#### histogram
+#### top20
 
 ### Miscellaneous commands
 
