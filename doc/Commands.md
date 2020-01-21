@@ -60,23 +60,27 @@
         * [sl](#sl)
         * [die](#die)
     * [Factoid commands](#factoid-commands)
-      * [[fact](Factoids.md#fact)](#factfactoidsmdfact)
-      * [factadd](#factadd)
-      * [factrem](#factrem)
-      * [factshow](#factshow)
-      * [factchange](#factchange)
-      * [factalias](#factalias)
-      * [factmove](#factmove)
-      * [factundo](#factundo)
-      * [factredo](#factredo)
-      * [factlog](#factlog)
-      * [factset](#factset)
-      * [factunset](#factunset)
-      * [factfind](#factfind)
-      * [factinfo](#factinfo)
-      * [count](#count)
-      * [histogram](#histogram)
-      * [top20](#top20)
+      * [Adding/remove factoids](#addingremove-factoids)
+        * [factadd](#factadd)
+        * [factrem](#factrem)
+        * [factalias](#factalias)
+      * [Displaying factoids](#displaying-factoids)
+        * [fact](#fact)
+        * [factshow](#factshow)
+      * [Editing factoids](#editing-factoids)
+        * [factchange](#factchange)
+        * [factmove](#factmove)
+        * [factundo](#factundo)
+        * [factredo](#factredo)
+        * [factset](#factset)
+        * [factunset](#factunset)
+      * [Information about factoids](#information-about-factoids)
+        * [factlog](#factlog)
+        * [factfind](#factfind)
+        * [factinfo](#factinfo)
+        * [count](#count)
+        * [histogram](#histogram)
+        * [top20](#top20)
     * [Miscellaneous commands](#miscellaneous-commands)
 <!-- md-toc-end -->
 
@@ -243,41 +247,48 @@ Here is the documentation for all of PBot's commands.
 
 #### Registry commands
 
-##### regset
-##### regunset
-##### regchange
-##### regshow
-##### regfind
-##### regsetmeta
-##### regunsetmeta
+##### [regset](Registry.md#regset)
+##### [regunset](Registry.md#regunset)
+##### [regchange](Registry.md#regchange)
+##### [regshow](Registry.md#regshow)
+##### [regfind](Registry.md#regfind)
+##### [regsetmeta](Registry.md#regsetmeta)
+##### [regunsetmeta](Registry.md#regunsetmeta)
 
 #### Miscellaneous admin commands
 
-##### export
-##### refresh
-##### reload
-##### sl
-##### die
+##### [export](Admin.md#export)
+##### [refresh](Admin.md#refresh])
+##### [reload](Admin.md#reload])
+##### [sl](Admin.md#sl)
+##### [die](Admin.md#die)
 
 ### Factoid commands
 
-#### [fact](Factoids.md#fact)
-#### factadd
-#### factrem
-#### factshow
-#### factchange
-#### factalias
-#### factmove
-#### factundo
-#### factredo
-#### factlog
-#### factset
-#### factunset
-#### factfind
-#### factinfo
-#### count
-#### histogram
-#### top20
+#### Adding/remove factoids
+##### [factadd](Factoids.md#factadd)
+##### factrem
+##### factalias
+
+#### Displaying factoids
+##### [fact](Factoids.md#fact)
+##### [factshow](Factoids.md#factshow)
+
+#### Editing factoids
+##### factchange
+##### factmove
+##### factundo
+##### factredo
+##### factset
+##### factunset
+
+#### Information about factoids
+##### factlog
+##### factfind
+##### factinfo
+##### count
+##### histogram
+##### top20
 
 ### Miscellaneous commands
 
