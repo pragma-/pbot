@@ -426,6 +426,10 @@ You can use the [`factset`](#factset) command to set a special [factoid metadata
 
 ## Adding/removing factoids
 ### factadd
+To create a factoid, use the `factadd` command. This command can alternatively
+accept a Web paste site via the `-url` option; this allows you to use your local
+editor to set factoid text that can include line-breaks and indentation.
+
 Usage: `factadd [-f] [channel] <keyword> (<description> | -url <Web paste site>)`
 
 To add a factoid to the global channel, use `global` as the channel parameter.
@@ -433,13 +437,6 @@ To add a factoid to the global channel, use `global` as the channel parameter.
     <pragma-> !factadd ##c c /say C rocks!
 
 To force overwriting an existing factoid, use the `-f` option.
-
-To add a factoid's contents from an external Web-based text paste site, use the
-`-url <web paste URL>` option instead of a description. Factoids added this way
-will retain all formatting, including line-breaks and indentation.
-
-    <pragma-> !factadd newfactoid -url http://ix.io/XXXX
-       <PBot> newfactoid added to global channel.
 
 ### factrem
 ### forget
