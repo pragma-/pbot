@@ -11,6 +11,7 @@ use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 use feature 'unicode_strings';
+use utf8;
 
 use Carp ();
 use Time::Duration qw/concise duration/;
@@ -45,8 +46,6 @@ sub initialize {
   $self->{player_one_horiz} = '—';
   $self->{player_two_vert}  = 'I';
   $self->{player_two_horiz} = '=';
-
-  utf8::decode $self->{player_one_horiz};
 
   $self->create_states;
 }
