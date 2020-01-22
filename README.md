@@ -5,12 +5,12 @@ PBot is a versatile IRC Bot written in Perl
 * [Installation / Quick Start](#installation--quick-start)
 * [Features](#features)
   * [Commands](#commands)
-  * [Advanced interpreter](#advanced-interpreter)
-    * [piping](#piping)
-    * [command substitution](#command-substitution)
-    * [command splitting](#command-splitting)
-    * [advanced $variable interpolation](#advanced-variable-interpolation)
-    * [inline commands](#inline-commands)
+  * [Powerful command interpreter](#powerful-command-interpreter)
+    * [Piping](#piping)
+    * [Substitution](#substitution)
+    * [Chaining](#chaining)
+    * [Variables](#variables)
+    * [Inline invocation](#inline-invocation)
   * [Factoids](#factoids)
   * [Code Factoids](#code-factoids)
   * [Plugins](#plugins)
@@ -32,23 +32,23 @@ To get up-and-running quickly, check out the [Quick Start guide](doc/QuickStart.
 
 ### Commands
 
-PBot has several useful core built-in commands. Additional commands can be added to PBot through
-[Factoids](#factoids) and [Plugins](#plugins).
+PBot has several useful built-in commands. Additional commands can be added to PBot through
+[Factoids](#factoids), [Plugins](#plugins) and [Modules](#modules).
 
 For more information, see the [Commands documentation.](doc/Commands.md)
 
-### Advanced interpreter
+### Powerful command interpreter
 
-PBot has an advanced command interpreter with useful functionality.
+PBot has an powerful command interpreter with useful functionality.
 
-#### piping
+#### Piping
 
 You can pipe output from one command as input into another command, indefinitely.
 
     <pragma-> !echo hello world | {sed s/world/everybody/} | {uc}
        <PBot> HELLO EVERYBODY
 
-#### command substitution
+#### Substitution
 
 You can insert the output from another command at any point within a command. This
 substitutes the command with its output at the point where the command was used.
@@ -73,14 +73,14 @@ factoid otherwise it will be expanded first.
     <pragma-> !img spaces & stuff
        <PBot> https://google.com/search?tbm=isch&q=spaces%20%26%20stuff
 
-#### command splitting
+#### Chaining
 
 You can execute multiple commands sequentially as one command.
 
     <pragma-> !echo Test! ;;; me smiles. ;;; version
        <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
 
-#### advanced $variable interpolation
+#### Variables
 
 You can use factoids as variables and interpolate them within commands.
 
@@ -95,7 +95,7 @@ combine their effects.
     <pragma-> !echo $greeting:uc
        <PBot> HELLO, WORLD
 
-#### inline commands
+#### Inline invocation
 
 You can invoke up to three commands inlined within a message.  If the message
 is addressed to a nick, the output will also be addressed to them.
