@@ -58,7 +58,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',    sub { $self->on_departure(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
 
-  $self->{channel} = '##spinach';
+  $self->{channel} = $self->{pbot}->{registry}->get_value('spinach', 'channel') // '##spinach';
 
   my $default_file = $self->{pbot}->{registry}->get_value('spinach', 'file') // 'trivia.json';
   $self->{questions_filename}   = $self->{pbot}->{registry}->get_value('general', 'data_dir') . "/spinach/$default_file";
@@ -257,7 +257,7 @@ sub spinach_cmd {
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
-  $command = lc $command;
+  $command = defined $command ? lc $command : '';
 
   my ($channel, $result);
 

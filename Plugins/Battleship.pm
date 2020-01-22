@@ -38,8 +38,8 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',    sub { $self->on_departure(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
 
-  $self->{channel} = '##battleship';
-  $self->{debug} = 0;
+  $self->{channel} = $self->{pbot}->{registry}->get_value('battleship', 'channel') // '##battleship';
+  $self->{debug} = $self->{pbot}->{registry}->get_value('battleship', 'debug') // 0;
   $self->create_states;
 }
 

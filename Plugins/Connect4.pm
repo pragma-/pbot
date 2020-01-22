@@ -39,8 +39,8 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',    sub { $self->on_departure(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
 
-  $self->{debug} = 0;
-  $self->{channel} = '##connect4';
+  $self->{channel} = $self->{pbot}->{registry}->get_value('connect4', 'channel') // '##connect4';
+  $self->{debug} = $self->{pbot}->{registry}->get_value('connect4', 'debug') // 0;
   $self->create_states;
 }
 
