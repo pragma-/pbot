@@ -556,6 +556,10 @@ This is a list of recognized factoid metadata fields. An admin level of `0` sign
 
 Name | Admin level | Description
 --- | --- | ---
+`action` | 0 | The action to perform or text to display when the factoid is invoked.
+`action_with_args` | 0 | Optional alternate action to perform if any arguments have been supplied when invoking the factoid.
+`usage` | 0 | Prints a usage message when no arguments are provided.
+`help` | 0 | The text to display when the [`help`](Commands.md#help) command is used on this factoid.
 `created_on` | 90 | The timestamp of when the factoid was created.
 `enabled` | 10 | Whether the factoid can be invoked or not. If it is disabled, the command will be silently ignored.
 `last_referenced_in` | 90 | The channel or private-message in which the factoid was last used.
@@ -573,9 +577,7 @@ Name | Admin level | Description
 `nooverride` | 10 | Prevents the creation of a factoid with an identical name in a different channel.
 `effective-level` | 20 | the effective admin level at which this factoid executes (i.e., for /kick, etc)
 `persist-key` | 20 | the storage key for allowing code-factoids to persist variables
-`action_with_args` | 0 | Alternate action to perform if an argument has been supplied when invoking the factoid.
 `interpolate` | 0 | When set to a false value, `$variables` will not be expanded.
-`usage` | 0 | Prints a usage message when no arguments are provided.
 `use_output_queue` | 0 | When set to a true value, the output will be delayed by a random number of seconds to simulate reading/typing.
 
 ## Information about factoids
