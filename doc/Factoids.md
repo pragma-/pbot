@@ -1,66 +1,61 @@
 # Factoids
 
 <!-- md-toc-begin -->
-  * [About](#about)
-  * [Channel namespaces](#channel-namespaces)
-  * [Special commands](#special-commands)
-    * [/say](#say)
-    * [/me](#me)
-    * [/call](#call)
-    * [/msg](#msg)
-    * [/code](#code)
-      * [Supported languages](#supported-languages)
-      * [Special variables](#special-variables)
-      * [testargs example](#testargs-example)
-      * [Setting a usage message](#setting-a-usage-message)
-      * [poll/vote example](#pollvote-example)
-      * [SpongeBob Mock meme example](#spongebob-mock-meme-example)
-      * [Using command-piping](#using-command-piping)
-      * [Improving SpongeBob Mock meme](#improving-spongebob-mock-meme)
-      * [Formatting and editing lengthy Code Factoids](#formatting-and-editing-lengthy-code-factoids)
-  * [Special variables](#special-variables-1)
-    * [$args](#args)
-    * [$arg[n]](#argn)
-    * [$arg[n:m]](#argnm)
-    * [$arglen](#arglen)
-    * [$channel](#channel)
-    * [$nick](#nick)
-    * [$randomnick](#randomnick)
-    * [$0](#0)
-  * [List variables](#list-variables)
-    * [Expansion modifiers](#expansion-modifiers)
-  * [action_with_args](#action_with_args)
-  * [add_nick](#add_nick)
-  * [Adding a factoid](#adding-a-factoid)
-    * [factadd](#factadd)
-  * [Viewing/triggering a factoid](#viewingtriggering-a-factoid)
-  * [Viewing/triggering another channel's factoid](#viewingtriggering-another-channels-factoid)
-    * [fact](#fact)
-  * [Deleting a factoid](#deleting-a-factoid)
-    * [factrem](#factrem)
-    * [forget](#forget)
-  * [Aliasing a factoid](#aliasing-a-factoid)
-    * [factalias](#factalias)
-  * [Moving/renaming a factoid](#movingrenaming-a-factoid)
-    * [factmove](#factmove)
-  * [Changing a factoid](#changing-a-factoid)
-    * [factchange](#factchange)
-    * [factundo](#factundo)
-    * [factredo](#factredo)
-  * [Factoid Metadata](#factoid-metadata)
-    * [factset](#factset)
-    * [factunset](#factunset)
-    * [Factoid Metadata List](#factoid-metadata-list)
-  * [Finding a factoid](#finding-a-factoid)
-    * [factfind](#factfind)
-  * [Information about a factoid](#information-about-a-factoid)
-    * [factinfo](#factinfo)
-    * [factshow](#factshow)
-    * [factset](#factset-1)
-    * [factlog](#factlog)
-    * [count](#count)
-    * [histogram](#histogram)
-    * [top20](#top20)
+* [About](#about)
+* [Channel namespaces](#channel-namespaces)
+* [Special commands](#special-commands)
+  * [/say](#say)
+  * [/me](#me)
+  * [/call](#call)
+  * [/msg](#msg)
+  * [/code](#code)
+    * [Supported languages](#supported-languages)
+    * [Special variables](#special-variables)
+    * [testargs example](#testargs-example)
+    * [Setting a usage message](#setting-a-usage-message)
+    * [poll/vote example](#pollvote-example)
+    * [SpongeBob Mock meme example](#spongebob-mock-meme-example)
+    * [Using command-piping](#using-command-piping)
+    * [Improving SpongeBob Mock meme](#improving-spongebob-mock-meme)
+    * [Formatting and editing lengthy Code Factoids](#formatting-and-editing-lengthy-code-factoids)
+* [Special variables](#special-variables-1)
+  * [$args](#args)
+  * [$arg[n]](#argn)
+  * [$arg[n:m]](#argnm)
+  * [$arglen](#arglen)
+  * [$channel](#channel)
+  * [$nick](#nick)
+  * [$randomnick](#randomnick)
+  * [$0](#0)
+* [List variables](#list-variables)
+  * [Expansion modifiers](#expansion-modifiers)
+* [action_with_args](#action_with_args)
+* [add_nick](#add_nick)
+* [Adding/removing factoids](#addingremoving-factoids)
+  * [factadd](#factadd)
+  * [factrem](#factrem)
+  * [forget](#forget)
+  * [factalias](#factalias)
+* [Displaying factoids](#displaying-factoids)
+  * [fact](#fact)
+  * [factshow](#factshow)
+* [Editing factoids](#editing-factoids)
+  * [factchange](#factchange)
+  * [factmove](#factmove)
+  * [factundo](#factundo)
+  * [factredo](#factredo)
+* [Factoid Metadata](#factoid-metadata)
+  * [factset](#factset)
+  * [factunset](#factunset)
+  * [Factoid Metadata List](#factoid-metadata-list)
+* [Information about factoids](#information-about-factoids)
+  * [factfind](#factfind)
+  * [factinfo](#factinfo)
+  * [factlog](#factlog)
+  * [factset](#factset-1)
+  * [count](#count)
+  * [histogram](#histogram)
+  * [top20](#top20)
 <!-- md-toc-end -->
 
 ## About
@@ -175,7 +170,7 @@ All the variables listed in [Special Variables](#special-variables-1) are expand
 the code is executed or interpreted.
 
 [List variables](#list-variables) are also expanded beforehand as well. You can prevent this by using [`factset`](#factset)
-to set the `interpolate` [factoid meta-data](#factoid-metadata) to `0`. Alternatively, you can prevent `$variables` in
+to set the `interpolate` [factoid metadata](#factoid-metadata) to `0`. Alternatively, you can prevent `$variables` in
 the code from expanding by prefixing their name with an underscore, i.e. `$_variable`.
 
 #### testargs example
@@ -195,7 +190,7 @@ the C programming language because why not?
 #### Setting a usage message
 
 Suppose you want the command to display a usage message if there are no arguments provided. You can use
-the [`factset`](#factset) command to set the `usage` [factoid meta-data](#factoid-metadata).
+the [`factset`](#factset) command to set the `usage` [factoid metadata](#factoid-metadata).
 
      <pragma-> !testargs
         <PBot> args:
@@ -412,7 +407,7 @@ Modifier | Description
 `:<channel>` | Looks for variable in `<channel>` first; use `global` to refer to the global channel
 
 ## action_with_args
-You can use the [`factset`](#factset) command to set a special [factoid meta-data](#factoid-metadata) key named `action_with_args` to trigger an alternate message if an argument has been supplied.
+You can use the [`factset`](#factset) command to set a special [factoid metadata](#factoid-metadata) key named `action_with_args` to trigger an alternate message if an argument has been supplied.
 
     <pragma-> !factadd global snack is /me eats a cookie.
        <PBot> snack added to the global channel
@@ -427,9 +422,9 @@ You can use the [`factset`](#factset) command to set a special [factoid meta-dat
             * PBot gives orbitz a cookie.
 
 ## add_nick
-You can use the [`factset`](#factset) command to set a special [factoid meta-data](#factoid-metadata) key named `add_nick` to prepend the nick of the caller to the output.  This is mostly useful for modules.
+You can use the [`factset`](#factset) command to set a special [factoid metadata](#factoid-metadata) key named `add_nick` to prepend the nick of the caller to the output.  This is mostly useful for modules.
 
-## Adding a factoid
+## Adding/removing factoids
 ### factadd
 Usage: `factadd [-f] [channel] <keyword> (<description> | -url <Web paste site>)`
 
@@ -446,19 +441,6 @@ will retain all formatting, including line-breaks and indentation.
     <pragma-> !factadd newfactoid -url http://ix.io/XXXX
        <PBot> newfactoid added to global channel.
 
-## Viewing/triggering a factoid
-To view or trigger a factoid, one merely issues its keyword as a command.
-
-    <pragma-> PBot, c?
-       <PBot> C rocks!
-
-## Viewing/triggering another channel's factoid
-### fact
-To view or trigger a factoid belonging to a specific channel, use the `fact` command.
-
-Usage: `fact <channel> <keyword> [arguments]`
-
-## Deleting a factoid
 ### factrem
 ### forget
 
@@ -466,45 +448,61 @@ To remove a factoid, use the `factrem` or `forget` command.
 
 Usage: `factrem [channel] <keyword>` `forget [channel] <keyword>`
 
-## Aliasing a factoid
 ### factalias
-To create an factoid that acts as an alias for a command, use the `factalias` command or set the factoid's `action` meta-data to `/call <command>`.
+To create an factoid that acts as an alias for a command, use the `factalias` command or set the factoid's `action` metadata to `/call <command>`.
 
 Usage: `factalias [channel] <keyword> <command>`
 
-    <pragma-> !factadd ##c offtopic is /say In this channel, $args is off-topic.
+    <pragma-> !factadd offtopic /say In this channel, $args is off-topic.
 
     <pragma-> !offtopic C++
        <PBot> In this channel, C++ is off-topic.
 
-    <pragma-> !factalias ##c C++ offtopic C++
+    <pragma-> !factadd C++ /call offtopic C++
 
     <pragma-> !C++
        <PBot> In this channel, C++ is off-topic.
 
 <!-- -->
 
-    <pragma-> !factadd ##c book is /me points accusingly at $args, "Where is your book?!"
-       <PBot> book added to ##c
+    <pragma-> !factadd book /me points accusingly at $args, "Where is your book?"
 
     <pragma-> !book newbie
-            * PBot points accusingly at newbie, "Where is your book?!"
+            * PBot points accusingly at newbie, "Where is your book?"
 
-    <pragma-> !factadd ##c rafb /call book
-       <PBot> rafb added to ##c
+    <pragma-> !factalias rafb book
 
     <pragma-> !rafb runtime
-            * PBot points accusingly at runtime, "Where is your book?!"
+            * PBot points accusingly at runtime, "Where is your book?"
 
-## Moving/renaming a factoid
-### factmove
-To rename a factoid or move a factoid to a different channel, use the `factmove` command:
+## Displaying factoids
+To view or trigger a factoid, one merely issues its keyword as a command.
 
-Usage:  `factmove <source channel> <source factoid> <target channel/factoid> [target factoid]`
+    <pragma-> PBot, c?
+       <PBot> C rocks!
 
-If three arguments are given, the factoid is renamed in the source channel.  If four arguments are given, the factoid is moved to the target channel with the target name.
+    <pragma-> !snack
+            * PBot eats a cookie.
 
-## Changing a factoid
+### fact
+To view or trigger a factoid belonging to a specific channel, use the `fact` command.
+
+Usage: `fact <channel> <keyword> [arguments]`
+
+### factshow
+To see a factoid's literal value without invoking the factoid, use the `factshow` command.
+
+Usage: `factshow [-p] [channel] <keyword>`
+
+    <pragma-> !factshow hi
+       <PBot> hi: /say $greetings, $nick.
+
+You can use the `-p` option to have PBot paste the factoid description to a Web-based
+text paste site. PBot will output a link to the paste instead. This is useful if the
+factoid was added with [`factadd`](#factadd)'s `-url` option and contains formatting
+such as line-breaks and indentation.
+
+## Editing factoids
 ### factchange
 To change a factoid, use the `factchange` command:
 
@@ -523,6 +521,13 @@ Note that the final argument is a Perl-style substitution regex.  See `man perlr
 
 For instance, it is possible to append to a factoid by using: `factchange channel factoid s/$/text to append/`. Likewise, you can prepend to a factoid by using: `factchange channel factoid s/^/text to prepend/`.
 
+### factmove
+To rename a factoid or move a factoid to a different channel, use the `factmove` command:
+
+Usage:  `factmove <source channel> <source factoid> <target channel/factoid> [target factoid]`
+
+If three arguments are given, the factoid is renamed in the source channel.  If four arguments are given, the factoid is moved to the target channel with the target name.
+
 ### factundo
 To revert to an older revision, use the `factundo` command. You can repeatedly undo a factoid until there are no more undos remaining.
 
@@ -535,19 +540,19 @@ Usage: `factredo [channel] <keyword>`
 
 ## Factoid Metadata
 ### factset
-To view or set [factoid meta-data](#factoid-metadata-list), such as owner, rate-limit, etc, use the [`factset`](#factset) command.
+To view or set [factoid metadata](#factoid-metadata-list), such as owner, rate-limit, etc, use the [`factset`](#factset) command.
 
 Usage:  `factset [channel] <factoid> [<key> [value]]`
 
 Omit `<key>` and `<value>` to list all the keys and values for a factoid.  Specify `<key>`, but omit `<value>` to see the value for a specific key.
 
 ### factunset
-To unset [factoid meta-data](#factoid-metadata-list), use the `factunset` command.
+To unset [factoid metadata](#factoid-metadata-list), use the `factunset` command.
 
 Usage: `factunset [channel] <factoid> <key>`
 
 ### Factoid Metadata List
-This is a list of recognized factoid meta-data fields. An admin level of `0` signifies that anybody can set the field.
+This is a list of recognized factoid metadata fields. An admin level of `0` signifies that anybody can set the field.
 
 Name | Admin level | Description
 --- | --- | ---
@@ -573,7 +578,7 @@ Name | Admin level | Description
 `usage` | 0 | Prints a usage message when no arguments are provided.
 `use_output_queue` | 0 | When set to a true value, the output will be delayed by a random number of seconds to simulate reading/typing.
 
-## Finding a factoid
+## Information about factoids
 ### factfind
 To search the database for a factoid, use the 'factfind` command.  You may optionally specify whether to narrow by channel and/or include factoid owner and/or last referenced by in the search.
 
@@ -586,7 +591,6 @@ If you specify the `-regex` flag, the `text` argument will be treated as a regex
     <pragma-> !factfind cast
        <PBot> 3 factoids match: [##c] NULL casting dontcastmalloc
 
-## Information about a factoid
 ### factinfo
 To get information about a factoid, such as who submitted it and when, use the `factinfo` command.
 
@@ -594,26 +598,6 @@ Usage: `factinfo [channel] <keyword>`
 
     <pragma-> !factinfo ##c NULL
        <PBot> NULL: Factoid submitted by Major-Willard for all channels on Sat Jan 1 16:17:42 2005 [5 years and 178 days ago], referenced 39 times (last by pragma- on Sun Jun 27 04:40:32 2010 [5 seconds ago])
-
-### factshow
-To see the factoid description, use the `factshow` command.
-
-Usage: `factshow [-p] [channel] <keyword>`
-
-    <pragma-> !factshow hi
-       <PBot> hi: /say $greetings, $nick.
-
-You can use the `-p` option to have PBot paste the factoid description to a Web-based
-text paste site. PBot will output a link to the paste instead. This is useful if the
-factoid was added with the `-url` option and contains formatting such as line-breaks
-and indentation.
-
-### factset
-To view [factoid meta-data](#factoid-metadata-list), such as owner, rate-limit, etc, use the `factset` command.
-
-Usage:  `factset [channel] <factoid> [<key> [value]]`
-
-Omit `<key>` and `<value>` to list all the keys and values for a factoid.  Specify `<key>`, but omit `<value>` to see the value for a specific key.
 
 ### factlog
 To see a factoid's changelog history, use the `factlog` command.
@@ -639,6 +623,13 @@ Usage: `factlog [-h] [-t] [channel] <factoid>`
 
     <pragma-> !factlog hi
        <PBot> [3m ago] pragma- created: /say Hi! [5m ago] pragma- deleted [8m ago] pragma- changed to /say Hello there, $nick! [10m ago] pragma- created: /say Hello there!
+
+### factset
+To view [factoid metadata](#factoid-metadata-list), such as owner, rate-limit, etc, use the `factset` command.
+
+Usage:  `factset [channel] <factoid> [<key> [value]]`
+
+Omit `<key>` and `<value>` to list all the keys and values for a factoid.  Specify `<key>`, but omit `<value>` to see the value for a specific key.
 
 ### count
 To see how many factoids and what percentage of the database `<nick>` has submitted, use the `count` command.

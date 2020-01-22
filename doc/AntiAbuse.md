@@ -3,14 +3,14 @@
 PBot can monitor channels for abusive behavior and take appropriate action.
 
 <!-- md-toc-begin -->
-  * [Flood control](#flood-control)
-    * [Message flood](#message-flood)
-    * [Join flood](#join-flood)
-    * [Enter key abuse](#enter-key-abuse)
-    * [Nick flood](#nick-flood)
-  * [Anti-away/Nick-control](#anti-awaynick-control)
-  * [Anti-auto-rejoin control](#anti-auto-rejoin-control)
-  * [Opping/Deopping](#oppingdeopping)
+* [Flood control](#flood-control)
+  * [Message flood](#message-flood)
+  * [Join flood](#join-flood)
+  * [Enter key abuse](#enter-key-abuse)
+  * [Nick flood](#nick-flood)
+* [Anti-away/Nick-control](#anti-awaynick-control)
+* [Anti-auto-rejoin control](#anti-auto-rejoin-control)
+* [Opping/Deopping](#oppingdeopping)
 <!-- md-toc-end -->
 
 ## Flood control

@@ -1,12 +1,12 @@
 # Quotegrabs
 
 <!-- md-toc-begin -->
-  * [About](#about)
-  * [Commands](#commands)
-    * [grab](#grab)
-    * [getq](#getq)
-    * [rq](#rq)
-    * [delq](#delq)
+* [About](#about)
+* [Commands](#commands)
+  * [grab](#grab)
+  * [getq](#getq)
+  * [rq](#rq)
+  * [delq](#delq)
 <!-- md-toc-end -->
 
 ## About

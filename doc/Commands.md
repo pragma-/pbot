@@ -58,7 +58,7 @@
       * [unplug](Admin.md#unplug)
       * [replug](Admin.md#replug)
       * [pluglist](Admin.md#pluglist)
-    * [Command metadata commands](#command-metadata-commands)
+    * [Command metadata](#command-metadata)
       * [cmdset](Admin.md#cmdset)
       * [cmdunset](Admin.md#cmdunset)
     * [Registry commands](#registry-commands)
@@ -76,7 +76,7 @@
       * [sl](Admin.md#sl)
       * [die](Admin.md#die)
   * [Factoid commands](#factoid-commands)
-    * [Adding/remove factoids](#addingremove-factoids)
+    * [Adding/removing factoids](#addingremoving-factoids)
       * [factadd](Factoids.md#factadd)
       * [factrem](Factoids.md#factrem)
       * [factalias](Factoids.md#factalias)
@@ -88,12 +88,13 @@
       * [factmove](Factoids.md#factmove)
       * [factundo](Factoids.md#factundo)
       * [factredo](Factoids.md#factredo)
+    * [Factoid metadata](#factoid-metadata)
       * [factset](Factoids.md#factset)
       * [factunset](Factoids.md#factunset)
     * [Information about factoids](#information-about-factoids)
-      * [factlog](Factoids.md#factlog)
       * [factfind](Factoids.md#factfind)
       * [factinfo](Factoids.md#factinfo)
+      * [factlog](Factoids.md#factlog)
       * [count](Factoids.md#count)
       * [histogram](Factoids.md#histogram)
       * [top20](Factoids.md#top20)
@@ -101,18 +102,15 @@
 <!-- md-toc-end -->
 
 ## Command interpreter
-
 PBot has a powerful command interpreter with useful functionality.
 
 ### Piping
-
 You can pipe output from one command as input into another command, indefinitely.
 
     <pragma-> !echo hello world | {sed s/world/everybody/} | {uc}
        <PBot> HELLO EVERYBODY
 
 ### Substitution
-
 You can insert the output from another command at any point within a command. This
 substitutes the command with its output at the point where the command was used.
 
@@ -137,14 +135,12 @@ factoid otherwise it will be expanded first.
        <PBot> https://google.com/search?tbm=isch&q=spaces%20%26%20stuff
 
 ### Chaining
-
 You can execute multiple commands sequentially as one command.
 
     <pragma-> !echo Test! ;;; me smiles. ;;; version
        <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
 
 ### Variables
-
 You can use factoids as variables and interpolate them within commands.
 
     <pragma-> !factadd greeting "Hello, world"
@@ -159,7 +155,6 @@ combine their effects.
        <PBot> HELLO, WORLD
 
 ### Inline invocation
-
 You can invoke up to three commands inlined within a message.  If the message
 is addressed to a nick, the output will also be addressed to them.
 
@@ -168,17 +163,14 @@ is addressed to a nick, the output will also be addressed to them.
        <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
 
 ## Types of commands
-
 There are several ways of adding new commands to PBot. We'll go over them here.
 
 ### Built-in commands
-
 Built-in commands are commands that are internal and native to PBot. They are
 executed within PBot's API and context. They have access to PBot internal
 subroutine and data structures.
 
 #### Creating new built-in commands
-
 Built-in commands are created via the `register()` function of the `Commands`
 module. Such commands are registered throughout PBot's source code. The owner
 of the PBot instance can locally add new commands by editing PBot's source code
@@ -188,7 +180,6 @@ or by acquiring and loading Plugins.
 * built-in commands have access to PBot internal API functions and data structures
 
 #### Plugins
-
 Additional built-in commands can be created by loading PBot Plugins. Plugins are
 stand-alone self-contained units of code that can be loaded by the PBot owner.
 
@@ -196,7 +187,6 @@ stand-alone self-contained units of code that can be loaded by the PBot owner.
 * PBot Plugins have access to PBot internal API functions and data structures
 
 ### Factoids
-
 Factoids are another type of command. Factoids are simple text commands which
 anybody can create. In their most basic form, they simply display their text
 when invoked. However, significantly more complex Factoids can be created by
@@ -209,7 +199,6 @@ using the [powerful interpreter features](#command-interpreter) and by using the
 For more information, see the [Factoids documentations.](Factoids.md)
 
 #### Code Factoids
-
 Code Factoids are Factoids whose text begins with the `/code` command.
 These Factoids will execute their text using the scripting or programming
 language specified by the argument following the `/code` command.
@@ -220,7 +209,6 @@ language specified by the argument following the `/code` command.
 For more information, see the [Code Factoid documentation.](Factoids.md#code)
 
 #### Modules
-
 Modules are simple stand-alone external command-line scripts and programs. Just
 about any application that can be run in your command-line shell can be loaded as
 a PBot module.
@@ -231,12 +219,10 @@ a PBot module.
 For more information, see the [Modules documentation.](Modules.md)
 
 ## List of commands
-
 Here is the list of all of PBot's built-in commands and some of the more useful
 Factoids, Plugins and Modules.
 
 ### version
-
 The `version` command displays the currently installed PBot revision and
 revision date. It will also check to see if there is a new version available.
 
@@ -244,20 +230,16 @@ revision date. It will also check to see if there is a new version available.
        <PBot> PBot version 2845 2020-01-19; new version available: 2850 2020-01-20!
 
 ### help
-
 The `help` command displays useful information about built-in commands and Factoids.
 
 Usage: `help [keyword] [channel]`
 
 ### Administrative commands
-
 #### Logging in and out of PBot
-
 ##### [login](Admin.md#login)
 ##### [logout](Admin.md#logout)
 
 #### Admin management commands
-
 ##### [adminadd](Admin.md#adminadd)
 ##### [adminrem](Admin.md#adminrem)
 ##### [adminset](Admin.md#adminset)
@@ -265,7 +247,6 @@ Usage: `help [keyword] [channel]`
 ##### [list admins](Admin.md#listing-admins)
 
 #### Channel management commands
-
 ##### [join](Admin.md#join)
 ##### [part](Admin.md#part)
 ##### [chanadd](Admin.md#chanadd)
@@ -300,8 +281,7 @@ Usage: `help [keyword] [channel]`
 ##### [replug](Admin.md#replug)
 ##### [pluglist](Admin.md#pluglist)
 
-#### Command metadata commands
-
+#### Command metadata
 ##### [cmdset](Admin.md#cmdset)
 ##### [cmdunset](Admin.md#cmdunset)
 
@@ -316,7 +296,6 @@ Usage: `help [keyword] [channel]`
 ##### [regunsetmeta](Registry.md#regunsetmeta)
 
 #### Miscellaneous admin commands
-
 ##### [export](Admin.md#export)
 ##### [refresh](Admin.md#refresh])
 ##### [reload](Admin.md#reload])
@@ -324,8 +303,7 @@ Usage: `help [keyword] [channel]`
 ##### [die](Admin.md#die)
 
 ### Factoid commands
-
-#### Adding/remove factoids
+#### Adding/removing factoids
 ##### [factadd](Factoids.md#factadd)
 ##### [factrem](Factoids.md#factrem)
 ##### [factalias](Factoids.md#factalias)
@@ -339,13 +317,15 @@ Usage: `help [keyword] [channel]`
 ##### [factmove](Factoids.md#factmove)
 ##### [factundo](Factoids.md#factundo)
 ##### [factredo](Factoids.md#factredo)
+
+#### Factoid metadata
 ##### [factset](Factoids.md#factset)
 ##### [factunset](Factoids.md#factunset)
 
 #### Information about factoids
-##### [factlog](Factoids.md#factlog)
 ##### [factfind](Factoids.md#factfind)
 ##### [factinfo](Factoids.md#factinfo)
+##### [factlog](Factoids.md#factlog)
 ##### [count](Factoids.md#count)
 ##### [histogram](Factoids.md#histogram)
 ##### [top20](Factoids.md#top20)
