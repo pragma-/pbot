@@ -40,6 +40,14 @@ sub initialize {
 
   $self->{channel} = $self->{pbot}->{registry}->get_value('battleship', 'channel') // '##battleship';
   $self->{debug} = $self->{pbot}->{registry}->get_value('battleship', 'debug') // 0;
+
+  $self->{player_one_vert}  = '|';
+  $self->{player_one_horiz} = '—';
+  $self->{player_two_vert}  = 'I';
+  $self->{player_two_horiz} = '=';
+
+  utf8::decode $self->{player_one_horiz};
+
   $self->create_states;
 }
 
@@ -583,11 +591,11 @@ sub count_ship_sections {
   for ($x = 0; $x < $self->{N_Y}; $x++) {
     for ($y = 0; $y < $self->{N_X}; $y++) {
       if ($player == 0) {
-        if ($self->{board}->[$x][$y] eq 'I' || $self->{board}->[$x][$y] eq '=') {
+        if ($self->{board}->[$x][$y] eq $self->{player_two_vert} || $self->{board}->[$x][$y] eq $self->{player_two_horiz}) {
           $sections++;
         }
       } else {
-        if ($self->{board}->[$x][$y] eq '|' || $self->{board}->[$x][$y] eq '―') {
+        if ($self->{board}->[$x][$y] eq $self->{player_one_vert} || $self->{board}->[$x][$y] eq $self->{player_one_horiz}) {
           $sections++;
         }
       }
@@ -676,7 +684,7 @@ sub generate_ship {
       }
 
       for (my $i = 0; $i < $l; $i++) {
-        $self->{board}->[$x += $o ? $xd : 0][$y += $o ? 0 : $yd] = $player ? ($o ? 'I' : '=') : ($o ? '|' : '―');
+        $self->{board}->[$x += $o ? $xd : 0][$y += $o ? 0 : $yd] = $player ? ($o ? $self->{player_two_vert} : $self->{player_two_horiz}) : ($o ? $self->{player_one_vert} : $self->{player_one_horiz});
       }
 
       $self->{ship_length}->[$ship] = $l;
@@ -717,9 +725,9 @@ sub check_sunk {
   $target = $self->{board}->[$x][$y];
 
   given ($target) {
-    when ($_ eq 'I' or $_ eq '|') {
+    when ($_ eq $self->{player_two_vert} or $_ eq $self->{player_one_vert}) {
       for ($i = $x + 1; $i < $self->{N_Y}; $i++) {
-        if (($self->{board}->[$i][$y] eq '|' && $player) || ($self->{board}->[$i][$y] eq 'I' && !$player)) {
+        if (($self->{board}->[$i][$y] eq $self->{player_one_vert} && $player) || ($self->{board}->[$i][$y] eq $self->{player_two_vert} && !$player)) {
           return 0;
         }
 
@@ -729,7 +737,7 @@ sub check_sunk {
       }
 
       for ($i = $x - 1; $i >= 0; $i--) {
-        if (($self->{board}->[$i][$y] eq '|' && $player) || ($self->{board}->[$i][$y] eq 'I' && !$player)) {
+        if (($self->{board}->[$i][$y] eq $self->{player_one_vert} && $player) || ($self->{board}->[$i][$y] eq $self->{player_two_vert} && !$player)) {
           return 0;
         }
 
@@ -741,9 +749,9 @@ sub check_sunk {
       return 1;
     }
 
-    when ($_ eq '―' or $_ eq '=') {
+    when ($_ eq $self->{player_one_horiz} or $_ eq $self->{player_two_horiz}) {
       for ($i = $y + 1; $i < $self->{N_X}; $i++) {
-        if (($self->{board}->[$x][$i] eq '―' && $player) || ($self->{board}->[$x][$i] eq '=' && !$player)) {
+        if (($self->{board}->[$x][$i] eq $self->{player_one_horiz} && $player) || ($self->{board}->[$x][$i] eq $self->{player_two_horiz} && !$player)) {
           return 0;
         }
 
@@ -753,7 +761,7 @@ sub check_sunk {
       }
 
       for ($i = $y - 1; $i >= 0; $i--) {
-        if (($self->{board}->[$x][$i] eq '―' && $player) || ($self->{board}->[$x][$i] eq '=' && !$player)) {
+        if (($self->{board}->[$x][$i] eq $self->{player_one_horiz} && $player) || ($self->{board}->[$x][$i] eq $self->{player_two_horiz} && !$player)) {
           return 0;
         }
 
@@ -788,11 +796,11 @@ sub bomb {
   $y--;
 
   if (!$player) {
-    if ($self->{board}->[$x][$y] eq 'I' || $self->{board}->[$x][$y] eq '=') {
+    if ($self->{board}->[$x][$y] eq $self->{player_two_vert} || $self->{board}->[$x][$y] eq $self->{player_two_horiz}) {
       $hit = 1;
     }
   } else {
-    if ($self->{board}->[$x][$y] eq '|' || $self->{board}->[$x][$y] eq '―') {
+    if ($self->{board}->[$x][$y] eq $self->{player_one_vert} || $self->{board}->[$x][$y] eq $self->{player_one_horiz}) {
       $hit = 1;
     }
   }
@@ -923,7 +931,7 @@ sub show_battlefield {
     $buf .= sprintf("$color{cyan}%c ", 97 + $y);
     for ($x = 0; $x < $self->{N_X}; $x++) {
       if ($player == 0) {
-        if ($self->{board}->[$y][$x] eq 'I' || $self->{board}->[$y][$x] eq '=') {
+        if ($self->{board}->[$y][$x] eq $self->{player_two_vert} || $self->{board}->[$y][$x] eq $self->{player_two_horiz}) {
           $buf .= "$color{blue}~ ";
           next;
         } else {
@@ -938,9 +946,10 @@ sub show_battlefield {
             $buf .= "$color{white}";
           }
           $buf .= "$self->{board}->[$y][$x] ";
+          $self->{pbot}->{logger}->log("$y, $x: $self->{board}->[$y][$x]\n");
         }
       } elsif ($player == 1) {
-        if ($self->{board}->[$y][$x] eq '|' || $self->{board}->[$y][$x] eq '―') {
+        if ($self->{board}->[$y][$x] eq $self->{player_one_vert} || $self->{board}->[$y][$x] eq $self->{player_one_horiz}) {
           $buf .= "$color{blue}~ ";
           next;
         } else {
@@ -957,8 +966,8 @@ sub show_battlefield {
           $buf .= "$self->{board}->[$y][$x] ";
         }
       } elsif ($player == 2) {
-        if ($self->{board}->[$y][$x] eq '|' || $self->{board}->[$y][$x] eq '―'
-          || $self->{board}->[$y][$x] eq 'I' || $self->{board}->[$y][$x] eq '=') {
+        if ($self->{board}->[$y][$x] eq $self->{player_one_vert} || $self->{board}->[$y][$x] eq $self->{player_one_horiz}
+          || $self->{board}->[$y][$x] eq $self->{player_two_vert} || $self->{board}->[$y][$x] eq $self->{player_two_horiz}) {
           $buf .= "$color{blue}~ ";
           next;
         } else {
