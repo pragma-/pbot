@@ -29,7 +29,7 @@ These are represented as `<section>.<key>`. For example, `irc.port` is set to `6
 There are two types of registry values: literals and arrays.  Literals can be strings, floats or integers.  Arrays are comma-separated lists of literals.
 
 ### Creating array values
-Use the [regsetmeta](#regsetmeta) command to change the `type` [meta-data key](#metadata-list) to `array`, and set the registry value to a comma-separated list of values.
+Use the [regsetmeta](#regsetmeta) command to change the `type` [metadata key](#metadata-list) to `array`, and set the registry value to a comma-separated list of values.
 
 For example, we'll create a fictional Registry key `animals` in fictional section `foo` and then set its `type` to `array`.
 
@@ -101,13 +101,13 @@ To limit the search to a specific section, use `-section <section>`.
 To dump the entire registry, use `regfind -showvalues .*`.
 
 ### regsetmeta
-`regsetmeta` sets the meta-data values for a specific registry key. See [registry meta-data list](#metadata-list).
+`regsetmeta` sets the metadata values for a specific registry key. See [registry metadata list](#metadata-list).
 
 If you omit the `<key>` argument, it will list all the defined keys and values for the registry item.  If you specify `<key>` but omit `<value>`, it will show the value for that specific key.
 
 Usage: `regsetmeta <section>.<item> [key [value]]`
 
-For example, this directly sets the `value` meta-data key of `irc.botnick`.
+For example, this directly sets the `value` metadata key of `irc.botnick`.
 
      <pragma-> !regsetmeta irc.botnick value candide
              * PBot changed nick to candide
@@ -116,7 +116,7 @@ For example, this directly sets the `value` meta-data key of `irc.botnick`.
 That example is equivalent to `regset irc.botnick candide`.
 
 ### regunsetmeta
-`regunset` deletes a meta-data key from a registry item.
+`regunset` deletes a metadata key from a registry item.
 
 Usage: `regunset <section>.<item> <key>`
 
@@ -139,7 +139,7 @@ After editing an entry in the Registry file, you may reload it with the `reload`
        <PBot> Registry reloaded.
 
 ## Metadata list
-This is a list of recognized registry meta-data keys.
+This is a list of recognized registry metadata keys.
 
 Name | Description
 --- | ---

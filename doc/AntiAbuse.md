@@ -51,5 +51,5 @@ PBot can detect if someone immediately auto-rejoins after having been kicked.
 When such a case is detected, PBot will kickban the offender (with a kick message of "$timeout ban for auto-rejoining after kick") for 5 minutes for the first offense. Each additional offense will result in the offender being banned for a much longer period. The offense counter is decremented once every 24 hours.
 
 ## Opping/Deopping
-ChanServ can op and deop PBot as necessary, unless the channel `permop` meta-data is set to a true value. PBot will wait until about 5 minutes have elapsed before requesting a deop from ChanServ. This timeout can be controlled via the `general.deop_timeout` registry value, which can be overriden on a per-channel basis.
+ChanServ can op and deop PBot as necessary, unless the channel `permop` metadata is set to a true value. PBot will wait until about 5 minutes have elapsed before requesting a deop from ChanServ. This timeout can be controlled via the `general.deop_timeout` registry value, which can be overriden on a per-channel basis.
 
