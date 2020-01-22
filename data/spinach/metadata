@@ -1,7 +1,4 @@
 {
-   "filter" : {
-      "category_include_filter" : ""
-   },
    "settings" : {
       "category_autopick" : "0",
       "category_choices" : "7",
