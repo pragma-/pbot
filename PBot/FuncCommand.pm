@@ -67,6 +67,26 @@ sub init_funcs {
       usage  => 'uri_escape <text>',
       subref => sub { $self->func_uri_escape(@_) }
     },
+    title => {
+      desc   => 'Title-cases text',
+      usage  => 'title <text>',
+      subref => sub { $self->func_title(@_) }
+    },
+     ucfirst => {
+      desc   => 'Uppercases first character',
+      usage  => 'ucfirst <text>',
+      subref => sub { $self->func_ucfirst(@_) }
+    },
+    uc => {
+      desc   => 'Uppercases all characters',
+      usage  => 'uc <text>',
+      subref => sub { $self->func_uc(@_) }
+    },
+    lc => {
+      desc   => 'Lowercases all characters',
+      usage  => 'lc <text>',
+      subref => sub { $self->func_lc(@_) }
+    },
     sed => {
       desc   => 'a sed-like stream editor',
       usage  => 'sed s/<regex>/<replacement>/[Pig]; P preserve case; i ignore case; g replace all',
@@ -107,7 +127,7 @@ sub func_help {
   my ($self, $func) = @_;
 
   if (not length $func) {
-    return "func: invoke built-in functions; usage: func <keyword> [arguments]; to list available functions: func list";
+    return "func: invoke built-in functions; usage: func <keyword> [arguments]; to list available functions: func list [regex]";
   }
 
   if (not exists $self->{funcs}->{$func}) {
@@ -127,9 +147,11 @@ sub func_list {
 
     foreach my $func (sort keys %{$self->{funcs}}) {
       if ($func =~ m/$regex/i or $self->{funcs}->{$func}->{desc} =~ m/$regex/i) {
-        $text .=  "$func: $self->{funcs}->{$func}->{desc}.\n";
+        $text .=  "$func, ";
       }
     }
+
+    $text =~ s/,\s+$//;
 
     if (not length $text) {
       if ($regex eq '.*') {
@@ -139,7 +161,7 @@ sub func_list {
       }
     }
 
-    return $text;
+    return "Available funcs: $text; see also: func help <keyword>";
   };
 
   if ($@) {
@@ -166,6 +188,32 @@ sub func_uri_escape {
   my $self = shift;
   my $text = "@_";
   return uri_escape_utf8($text);
+}
+
+sub func_title {
+  my $self = shift;
+  my $text = "@_";
+  $text = ucfirst lc $text;
+  $text =~ s/ (\w)/' ' . uc $1/ge;
+  return $text;
+}
+
+sub func_ucfirst {
+  my $self = shift;
+  my $text = "@_";
+  return ucfirst $text;
+}
+
+sub func_uc {
+  my $self = shift;
+  my $text = "@_";
+  return uc $text;
+}
+
+sub func_lc {
+  my $self = shift;
+  my $text = "@_";
+  return lc $text;
 }
 
 # near-verbatim insertion of krok's `sed` factoid
