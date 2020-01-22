@@ -2,87 +2,102 @@
 # Commands
 
 <!-- md-toc-begin -->
-  * [Command interpreter](#command-interpreter)
-    * [Piping](#piping)
-    * [Substitution](#substitution)
-    * [Chaining](#chaining)
-    * [Variables](#variables)
-    * [Inline invocation](#inline-invocation)
-  * [Types of commands](#types-of-commands)
-    * [Built-in commands](#built-in-commands)
-      * [Creating new built-in commands](#creating-new-built-in-commands)
-      * [Plugins](#plugins)
-    * [Factoids](#factoids)
-      * [Code Factoids](#code-factoids)
-      * [Modules](#modules)
-  * [List of commands](#list-of-commands)
-    * [Administrative commands](#administrative-commands)
-      * [Logging in and out of PBot](#logging-in-and-out-of-pbot)
-        * [login](Admin.md#login)
-        * [logout](Admin.md#logout)
-      * [Admin management commands](#admin-management-commands)
-        * [adminadd](Admin.md#adminadd)
-        * [adminrem](Admin.md#adminrem)
-        * [adminset](Admin.md#adminset)
-        * [adminunset](Admin.md#adminunset)
-        * [list admins](Admin.md#listing-admins)
-      * [Channel management commands](#channel-management-commands)
-        * [join](Admin.md#join)
-        * [part](Admin.md#part)
-        * [chanadd](Admin.md#chanadd)
-        * [chanrem](Admin.md#chanrem)
-        * [chanset](Admin.md#chanset)
-        * [chanunset](Admin.md#chanunset)
-        * [chanlist](Admin.md#chanlist)
-      * [Module management commands](#module-management-commands)
-        * [load](Admin.md#load)
-        * [unload](Admin.md#unload)
-        * [list modules](Admin.md#listing-modules)
-      * [Plugin management commands](#plugin-management-commands)
-        * [plug](Admin.md#plug)
-        * [unplug](Admin.md#unplug)
-        * [replug](Admin.md#replug)
-        * [pluglist](Admin.md#pluglist)
-      * [Command metadata commands](#command-metadata-commands)
-        * [cmdset](Admin.md#cmdset)
-        * [cmdunset](Admin.md#cmdunset)
-      * [Registry commands](#registry-commands)
-        * [regset](Registry.md#regset)
-        * [regunset](Registry.md#regunset)
-        * [regchange](Registry.md#regchange)
-        * [regshow](Registry.md#regshow)
-        * [regfind](Registry.md#regfind)
-        * [regsetmeta](Registry.md#regsetmeta)
-        * [regunsetmeta](Registry.md#regunsetmeta)
-      * [Miscellaneous admin commands](#miscellaneous-admin-commands)
-        * [export](Admin.md#export)
-        * [refresh](Admin.md#refresh])
-        * [reload](Admin.md#reload])
-        * [sl](Admin.md#sl)
-        * [die](Admin.md#die)
-    * [Factoid commands](#factoid-commands)
-      * [Adding/remove factoids](#addingremove-factoids)
-        * [factadd](Factoids.md#factadd)
-        * [factrem](Factoids.md#factrem)
-        * [factalias](Factoids.md#factalias)
-      * [Displaying factoids](#displaying-factoids)
-        * [fact](Factoids.md#fact)
-        * [factshow](Factoids.md#factshow)
-      * [Editing factoids](#editing-factoids)
-        * [factchange](Factoids.md#factchange)
-        * [factmove](Factoids.md#factmove)
-        * [factundo](Factoids.md#factundo)
-        * [factredo](Factoids.md#factredo)
-        * [factset](Factoids.md#factset)
-        * [factunset](Factoids.md#factunset)
-      * [Information about factoids](#information-about-factoids)
-        * [factlog](Factoids.md#factlog)
-        * [factfind](Factoids.md#factfind)
-        * [factinfo](Factoids.md#factinfo)
-        * [count](Factoids.md#count)
-        * [histogram](Factoids.md#histogram)
-        * [top20](Factoids.md#top20)
-    * [Miscellaneous commands](#miscellaneous-commands)
+* [Command interpreter](#command-interpreter)
+  * [Piping](#piping)
+  * [Substitution](#substitution)
+  * [Chaining](#chaining)
+  * [Variables](#variables)
+  * [Inline invocation](#inline-invocation)
+* [Types of commands](#types-of-commands)
+  * [Built-in commands](#built-in-commands)
+    * [Creating new built-in commands](#creating-new-built-in-commands)
+    * [Plugins](#plugins)
+  * [Factoids](#factoids)
+    * [Code Factoids](#code-factoids)
+    * [Modules](#modules)
+* [List of commands](#list-of-commands)
+  * [version](#version)
+  * [help](#help)
+  * [Administrative commands](#administrative-commands)
+    * [Logging in and out of PBot](#logging-in-and-out-of-pbot)
+      * [login](Admin.md#login)
+      * [logout](Admin.md#logout)
+    * [Admin management commands](#admin-management-commands)
+      * [adminadd](Admin.md#adminadd)
+      * [adminrem](Admin.md#adminrem)
+      * [adminset](Admin.md#adminset)
+      * [adminunset](Admin.md#adminunset)
+      * [list admins](Admin.md#listing-admins)
+    * [Channel management commands](#channel-management-commands)
+      * [join](Admin.md#join)
+      * [part](Admin.md#part)
+      * [chanadd](Admin.md#chanadd)
+      * [chanrem](Admin.md#chanrem)
+      * [chanset](Admin.md#chanset)
+      * [chanunset](Admin.md#chanunset)
+      * [chanlist](Admin.md#chanlist)
+      * [ignore](Admin.md#ignore)
+      * [unignore](Admin.md#unignore)
+      * [whitelist](Admin.md#whitelist)
+      * [blacklist](Admin.md#blacklist)
+      * [op](Admin.md#op)
+      * [deop](Admin.md#deop)
+      * [voice](Admin.md#voice)
+      * [devoice](Admin.md#devoice)
+      * [mode](Admin.md#mode)
+      * [ban/mute](Admin.md#banmute)
+      * [unban/unmute](Admin.md#unbanunmute)
+      * [invite](Admin.md#invite)
+      * [kick](Admin.md#kick)
+    * [Module management commands](#module-management-commands)
+      * [load](Admin.md#load)
+      * [unload](Admin.md#unload)
+      * [list modules](Admin.md#listing-modules)
+    * [Plugin management commands](#plugin-management-commands)
+      * [plug](Admin.md#plug)
+      * [unplug](Admin.md#unplug)
+      * [replug](Admin.md#replug)
+      * [pluglist](Admin.md#pluglist)
+    * [Command metadata commands](#command-metadata-commands)
+      * [cmdset](Admin.md#cmdset)
+      * [cmdunset](Admin.md#cmdunset)
+    * [Registry commands](#registry-commands)
+      * [regset](Registry.md#regset)
+      * [regunset](Registry.md#regunset)
+      * [regchange](Registry.md#regchange)
+      * [regshow](Registry.md#regshow)
+      * [regfind](Registry.md#regfind)
+      * [regsetmeta](Registry.md#regsetmeta)
+      * [regunsetmeta](Registry.md#regunsetmeta)
+    * [Miscellaneous admin commands](#miscellaneous-admin-commands)
+      * [export](Admin.md#export)
+      * [refresh](Admin.md#refresh])
+      * [reload](Admin.md#reload])
+      * [sl](Admin.md#sl)
+      * [die](Admin.md#die)
+  * [Factoid commands](#factoid-commands)
+    * [Adding/remove factoids](#addingremove-factoids)
+      * [factadd](Factoids.md#factadd)
+      * [factrem](Factoids.md#factrem)
+      * [factalias](Factoids.md#factalias)
+    * [Displaying factoids](#displaying-factoids)
+      * [fact](Factoids.md#fact)
+      * [factshow](Factoids.md#factshow)
+    * [Editing factoids](#editing-factoids)
+      * [factchange](Factoids.md#factchange)
+      * [factmove](Factoids.md#factmove)
+      * [factundo](Factoids.md#factundo)
+      * [factredo](Factoids.md#factredo)
+      * [factset](Factoids.md#factset)
+      * [factunset](Factoids.md#factunset)
+    * [Information about factoids](#information-about-factoids)
+      * [factlog](Factoids.md#factlog)
+      * [factfind](Factoids.md#factfind)
+      * [factinfo](Factoids.md#factinfo)
+      * [count](Factoids.md#count)
+      * [histogram](Factoids.md#histogram)
+      * [top20](Factoids.md#top20)
+  * [Miscellaneous commands](#miscellaneous-commands)
 <!-- md-toc-end -->
 
 ## Command interpreter
@@ -169,29 +184,40 @@ module. Such commands are registered throughout PBot's source code. The owner
 of the PBot instance can locally add new commands by editing PBot's source code
 or by acquiring and loading Plugins.
 
+* only bot owner can locally create new built-in commands
+* built-in commands have access to PBot internal API functions and data structures
+
 #### Plugins
 
 Additional built-in commands can be created by loading PBot Plugins. Plugins are
 stand-alone self-contained units of code that can be loaded by the PBot owner.
 
-Plugins have access to PBot's internal APIs and data structures.
+* only bot owner can install and load PBot Plugins
+* PBot Plugins have access to PBot internal API functions and data structures
 
 ### Factoids
 
-Factoids are another type of command. Factoids are simple textual strings that
-anybody can create. At their most simple, they display their text when invoked.
-However, significantly more complex Factoids can be created by using the powerful
-interpreter and by using the even more powerful `/code` Factoid command.
+Factoids are another type of command. Factoids are simple text commands which
+anybody can create. In their most basic form, they simply display their text
+when invoked. However, significantly more complex Factoids can be created by
+using the [powerful interpreter features](#command-interpreter) and by using the even more powerful
+[`/code` Factoid command](Factoids.md#code).
 
-Factoids do not have access to PBot's internal API or data structures.
+* anybody can create Factoids
+* Factoids do not have access to PBot internal API functions and data structures
+
+For more information, see the [Factoids documentations.](Factoids.md)
 
 #### Code Factoids
 
 Code Factoids are Factoids whose text begins with the `/code` command.
 These Factoids will execute their text using the scripting or programming
-language specified by the `/code` command.
+language specified by the argument following the `/code` command.
 
-Code Factoids do not have access to PBot's internal API or data structures.
+* anybody can create Code Factoids
+* Code Factoids do not have access to PBot internal API functions and data structures
+
+For more information, see the [Code Factoid documentation.](Factoids.md#code)
 
 #### Modules
 
@@ -199,12 +225,29 @@ Modules are simple stand-alone external command-line scripts and programs. Just
 about any application that can be run in your command-line shell can be loaded as
 a PBot module.
 
-Modules do not have access to PBot's internal API or data structures.
+* only bot owner can install new command-line modules
+* Modules do not have access to PBot internal API functions and data structures
+
+For more information, see the [Modules documentation.](Modules.md)
 
 ## List of commands
 
 Here is the list of all of PBot's built-in commands and some of the more useful
 Factoids, Plugins and Modules.
+
+### version
+
+The `version` command displays the currently installed PBot revision and
+revision date. It will also check to see if there is a new version available.
+
+    <pragma-> !version
+       <PBot> PBot version 2845 2020-01-19; new version available: 2850 2020-01-20!
+
+### help
+
+The `help` command displays useful information about built-in commands and Factoids.
+
+Usage: `help [keyword] [channel]`
 
 ### Administrative commands
 
@@ -230,6 +273,19 @@ Factoids, Plugins and Modules.
 ##### [chanset](Admin.md#chanset)
 ##### [chanunset](Admin.md#chanunset)
 ##### [chanlist](Admin.md#chanlist)
+##### [ignore](Admin.md#ignore)
+##### [unignore](Admin.md#unignore)
+##### [whitelist](Admin.md#whitelist)
+##### [blacklist](Admin.md#blacklist)
+##### [op](Admin.md#op)
+##### [deop](Admin.md#deop)
+##### [voice](Admin.md#voice)
+##### [devoice](Admin.md#devoice)
+##### [mode](Admin.md#mode)
+##### [ban/mute](Admin.md#banmute)
+##### [unban/unmute](Admin.md#unbanunmute)
+##### [invite](Admin.md#invite)
+##### [kick](Admin.md#kick)
 
 #### Module management commands
 
