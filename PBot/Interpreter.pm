@@ -935,7 +935,7 @@ sub output_result {
     if (defined $stuff->{nickoverride} and ($stuff->{no_nickoverride} == 0 or $stuff->{force_nickoverride} == 1)) {
       $line = "$stuff->{nickoverride}: $line";
     }
-    $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
+    $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} ne $botnick;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', $line, 0, 0, 0) if $stuff->{checkflood};
   } elsif ($line =~ s/^\/me\s+//i) {
 =cut
@@ -943,7 +943,7 @@ sub output_result {
       $line = "$line (for $stuff->{nickoverride})";
     }
 =cut
-    $pbot->{conn}->me($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
+    $pbot->{conn}->me($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} ne $botnick;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', '/me ' . $line, 0, 0, 0) if $stuff->{checkflood};
   } elsif ($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
     my $to = $1;
@@ -957,14 +957,14 @@ sub output_result {
         $line = "$line (for $stuff->{nickoverride})";
       }
 =cut
-      $pbot->{conn}->me($to, $line) if $to !~ /\Q$botnick\E/i;
+      $pbot->{conn}->me($to, $line) if $to ne $botnick;
       $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', '/me ' . $line, 0, 0, 0) if $stuff->{checkflood};
     } else {
       $line =~ s/^\/say\s+//i;
       if (defined $stuff->{nickoverride} and ($stuff->{no_nickoverride} == 0 or $stuff->{force_nickoverride} == 1)) {
         $line = "$stuff->{nickoverride}: $line";
       }
-      $pbot->{conn}->privmsg($to, $line) if $to !~ /\Q$botnick\E/i;
+      $pbot->{conn}->privmsg($to, $line) if $to ne $botnick;
       $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', $line, 0, 0, 0) if $stuff->{checkflood};
     }
   } elsif ($stuff->{authorized} && $line =~ s/^\/kick\s+//) {
@@ -986,13 +986,13 @@ sub output_result {
       $self->{pbot}->{chanops}->add_op_command($stuff->{from}, "kick $stuff->{from} $victim $reason");
       $self->{pbot}->{chanops}->gain_ops($stuff->{from});
     } else {
-      $pbot->{conn}->privmsg($stuff->{from}, "$victim: $reason") if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
+      $pbot->{conn}->privmsg($stuff->{from}, "$victim: $reason") if defined $stuff->{from} && $stuff->{from} ne $botnick;
     }
   } else {
     if (defined $stuff->{nickoverride} and ($stuff->{no_nickoverride} == 0 or $stuff->{force_nickoverride} == 1)) {
       $line = "$stuff->{nickoverride}: $line";
     }
-    $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} !~ /\Q$botnick\E/i;
+    $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} ne $botnick;
     $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', $line, 0, 0, 0) if $stuff->{checkflood};
   }
 }
