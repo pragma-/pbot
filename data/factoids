@@ -10543,7 +10543,7 @@
       },
       "lc" : {
          "_name" : "lc",
-         "action" : "/code bash echo ${*,,}",
+         "action" : "/call func lc",
          "created_on" : "1511922349.23886",
          "enabled" : "1",
          "last_referenced_in" : "##c-offtopic",
@@ -16891,7 +16891,7 @@
       },
       "sed" : {
          "_name" : "sed",
-         "action" : "/code perl\r\n\r\nno warnings;\r\n\r\nif (\"@ARGV\" =~ /^s(.)(.*?)(?<!\\\\)\\1(.*?)(?<!\\\\)\\1(\\S*)\\s+(.*)/p) {\r\n  ($_a, $_r, $_g, $_m, $_t) = ($5,\"'\\\"$3\\\"'\", index($4,\"g\") != -1, $4, $2);\r\n\r\n  if ($_m=~/P/) {\r\n    $_r =~ s/^'\"(.*)\"'$/$1/;\r\n    $_m=~s/P//g;\r\n\r\n    if($_g) {\r\n      $_a =~ s|(?$_m)($_t)|$1=~/^[A-Z][^A-Z]/?ucfirst$_r:($1=~/^[A-Z]+$/?uc$_r:$_r)|gie;\r\n    } else {\r\n      $_a =~ s|(?$_m)($_t)|$1=~/^[A-Z][^A-Z]/?ucfirst$_r:($1=~/^[A-Z]+$/?uc$_r:$_r)|ie;\r\n    }\r\n  } else {\r\n    if ($_g) {\r\n      $_a =~ s/(?$_m)$_t/$_r/geee;\r\n    } else {\r\n      $_a=~s/(?$_m)$_t/$_r/eee;\r\n    }\r\n  }\r\n  print $_a;\r\n} else {\r\n  print \"syntax error\";\r\n}\r\n\n",
+         "action" : "/call func sed",
          "created_on" : "1511483645.01936",
          "edited_by" : "k!~krok@unaffiliated/krok",
          "edited_on" : "1512587894.92103",
@@ -20500,7 +20500,7 @@
       },
       "uc" : {
          "_name" : "uc",
-         "action" : "/code bash echo ${*^^}",
+         "action" : "/call func uc",
          "created_on" : "1511922423.91118",
          "enabled" : "1",
          "last_referenced_in" : "pragma-",
@@ -20770,7 +20770,7 @@
       },
       "unquote" : {
          "_name" : "unquote",
-         "action" : "/code perl print \"@ARGV\"",
+         "action" : "/call func unquote",
          "created_on" : 1565882489.74915,
          "enabled" : 1,
          "last_referenced_in" : "##c-offtopic",
