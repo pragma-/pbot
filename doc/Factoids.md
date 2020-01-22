@@ -531,13 +531,21 @@ If three arguments are given, the factoid is renamed in the source channel.  If 
 
 ### factundo
 To revert to an older revision, use the `factundo` command. You can repeatedly undo a factoid until there are no more undos remaining.
+You can also list all revisions and then directly jump to a specific revision.
 
-Usage: `factundo [channel] <keyword>`
+Usage: `factundo [-l [N]] [-r <N>] [channel] <keyword>`
+
+* `-l [N]` list undo history, optionally starting from `N`
+* `-r <N>` jump to revision `N`
 
 ### factredo
 To revert to a newer revision, use the `factredo` command. You can repeatedly redo a factoid until there are no more redos available.
+You can also list all revisions and then directly jump to a specific revision.
 
-Usage: `factredo [channel] <keyword>`
+Usage: `factredo [-l [N]] [-r <N>] [channel] <keyword>`
+
+* `-l [N]` list undo history, optionally starting from `N`
+* `-r <N>` jump to revision `N`
 
 ## Factoid Metadata
 ### factset
@@ -606,7 +614,9 @@ To get information about a factoid, such as who submitted it and when, use the `
 Usage: `factinfo [channel] <keyword>`
 
     <pragma-> !factinfo ##c NULL
-       <PBot> NULL: Factoid submitted by Major-Willard for all channels on Sat Jan 1 16:17:42 2005 [5 years and 178 days ago], referenced 39 times (last by pragma- on Sun Jun 27 04:40:32 2010 [5 seconds ago])
+       <PBot> NULL: Factoid submitted by Major-Willard for all channels
+              on Sat Jan 1 16:17:42 2005 [5 years and 178 days ago],
+              referenced 39 times (last by pragma- on Sun Jun 27 04:40:32 2010 [5 seconds ago])
 
 ### factlog
 To see a factoid's changelog history, use the `factlog` command.
@@ -631,7 +641,10 @@ Usage: `factlog [-h] [-t] [channel] <factoid>`
 <!-- -->
 
     <pragma-> !factlog hi
-       <PBot> [3m ago] pragma- created: /say Hi! [5m ago] pragma- deleted [8m ago] pragma- changed to /say Hello there, $nick! [10m ago] pragma- created: /say Hello there!
+       <PBot> [3m ago] pragma- created: /say Hi!
+              [5m ago] pragma- deleted
+              [8m ago] pragma- changed to /say Hello there, $nick!
+              [10m ago] pragma- created: /say Hello there!
 
 ### factset
 To view [factoid metadata](#factoid-metadata-list), such as owner, rate-limit, etc, use the `factset` command.
