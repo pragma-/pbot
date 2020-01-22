@@ -125,6 +125,7 @@ PBot factoids include these advanced features:
 
 * [undo/redo history](doc/Factoids.md#factundo)
 * [changelog history](doc/Factoids.md#factlog)
+* [creating](doc/Factoids.md#factadd) and [modifying](doc/Factoids.md#factchange) contents using your local system editor
 * [advanced `$variable` interpolation](doc/Factoids.md#expansion-modifiers) (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)
 * [factoid-based variable lists](doc/Factoids.md#list-variables) (e.g., add a factoid `colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
 * [advanced argument processing](doc/Factoids.md#special-variables-1) (indexing, splicing, etc)
