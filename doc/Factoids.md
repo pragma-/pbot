@@ -576,10 +576,16 @@ Name | Admin level | Description
 `locked` | 10 | If enabled, prevents the factoid from being changed or removed.
 `add_nick` | 10 | Prepends the nick of the person invoking the factoid to the output of the factoid.
 `nooverride` | 10 | Prevents the creation of a factoid with an identical name in a different channel.
-`effective-level` | 20 | the effective admin level at which this factoid executes (i.e., for /kick, etc)
-`persist-key` | 20 | the storage key for allowing code-factoids to persist variables
+`effective-level` | 20 | The effective admin level at which this factoid executes (i.e., for /kick, etc)
+`persist-key` | 20 | The storage key for allowing code-factoids to persist variables
 `interpolate` | 0 | When set to a false value, `$variables` will not be expanded.
+`keyword_override` | 0 | Once invoked, make PBot think this factoid is a different one.
+`no_keyword_override` | 0 | Ignore the `--keyword-override=...` option.
 `use_output_queue` | 0 | When set to a true value, the output will be delayed by a random number of seconds to simulate reading/typing.
+`locked_to_channel` | 0 | This factoid can only be invoked in the channel in which it was created.
+`allow_empty_args` | 0 | Do not replace empty arguments with `$nick`.
+`require_explicit_args` | 0 | Aliases must have explicit `$args`.
+`preserve_whitespace` | 0 | Do not collapse ajdacent whitespace characters.
 
 ## Information about factoids
 ### factfind
