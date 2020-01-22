@@ -15,9 +15,11 @@
   * [Factoids](#factoids)
     * [Code Factoids](#code-factoids)
     * [Modules](#modules)
-* [List of commands](#list-of-commands)
+* [Commands documented here](#commands-documented-here)
   * [version](#version)
   * [help](#help)
+  * [uptime](#uptime)
+* [Commands documented elsewhere](#commands-documented-elsewhere)
   * [Administrative commands](#administrative-commands)
     * [Logging in and out of PBot](#logging-in-and-out-of-pbot)
       * [login](Admin.md#login)
@@ -98,7 +100,6 @@
       * [count](Factoids.md#count)
       * [histogram](Factoids.md#histogram)
       * [top20](Factoids.md#top20)
-  * [Miscellaneous commands](#miscellaneous-commands)
 <!-- md-toc-end -->
 
 ## Command interpreter
@@ -218,9 +219,12 @@ a PBot module.
 
 For more information, see the [Modules documentation.](Modules.md)
 
-## List of commands
-Here is the list of all of PBot's built-in commands and some of the more useful
-Factoids, Plugins and Modules.
+## Commands documented here
+These are the commands documented in this file. For commands documented in
+other files see the [PBot documentation](../doc).
+
+There is also a list of of commands and links to their documentation in the
+[Commands documented elsewhere](#commands-documented-elsewhere) section in this file.
 
 ### version
 The `version` command displays the currently installed PBot revision and
@@ -234,6 +238,14 @@ The `help` command displays useful information about built-in commands and Facto
 
 Usage: `help [keyword] [channel]`
 
+### uptime
+The `uptime` command displays the date and time your instance of PBot was started
+and how long it has been running.
+
+    <pragma-> !uptime
+       <PBot> Tue Jan 14 01:55:40 2020 [8 days and 13 hours]
+
+## Commands documented elsewhere
 ### Administrative commands
 #### Logging in and out of PBot
 ##### [login](Admin.md#login)
@@ -329,6 +341,3 @@ Usage: `help [keyword] [channel]`
 ##### [count](Factoids.md#count)
 ##### [histogram](Factoids.md#histogram)
 ##### [top20](Factoids.md#top20)
-
-### Miscellaneous commands
-
