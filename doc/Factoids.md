@@ -449,21 +449,10 @@ To remove a factoid, use the `factrem` or `forget` command.
 Usage: `factrem [channel] <keyword>` `forget [channel] <keyword>`
 
 ### factalias
-To create an factoid that acts as an alias for a command, use the `factalias` command or set the factoid's `action` metadata to `/call <command>`.
+To create an factoid that acts as an alias for a command, use the `factalias`
+command or create a factoid with its text set to `/call <command>`.
 
 Usage: `factalias [channel] <keyword> <command>`
-
-    <pragma-> !factadd offtopic /say In this channel, $args is off-topic.
-
-    <pragma-> !offtopic C++
-       <PBot> In this channel, C++ is off-topic.
-
-    <pragma-> !factadd C++ /call offtopic C++
-
-    <pragma-> !C++
-       <PBot> In this channel, C++ is off-topic.
-
-<!-- -->
 
     <pragma-> !factadd book /me points accusingly at $args, "Where is your book?"
 
@@ -474,6 +463,18 @@ Usage: `factalias [channel] <keyword> <command>`
 
     <pragma-> !rafb runtime
             * PBot points accusingly at runtime, "Where is your book?"
+
+<!-- -->
+
+    <pragma-> !factadd offtopic /say In this channel, $args is off-topic.
+
+    <pragma-> !offtopic C++
+       <PBot> In this channel, C++ is off-topic.
+
+    <pragma-> !factadd C++ /call offtopic C++
+
+    <pragma-> !C++
+       <PBot> In this channel, C++ is off-topic.
 
 ## Displaying factoids
 To view or trigger a factoid, one merely issues its keyword as a command.
