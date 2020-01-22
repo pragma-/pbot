@@ -505,9 +505,11 @@ such as line-breaks and indentation.
 
 ## Editing factoids
 ### factchange
-To change a factoid, use the `factchange` command:
+To change a factoid, use the `factchange` command. This command can alternatively
+accept a Web paste site via the `-url` option; this allows you to use your local
+editor to set factoid text that can include line-breaks and indentation.
 
-Usage:  `factchange [channel] <keyword> s/<pattern>/<change to>/[gi]`
+Usage:  `factchange [channel] <keyword> (s/<pattern>/<change to>/[gi] | -url <paste site>)`
 
     <pragma-> !c
        <PBot> C rocks!
