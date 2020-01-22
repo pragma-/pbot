@@ -173,10 +173,10 @@ subroutine and data structures.
 #### Creating new built-in commands
 Built-in commands are created via the `register()` function of the `Commands`
 module. Such commands are registered throughout PBot's source code. The owner
-of the PBot instance can locally add new commands by editing PBot's source code
+of the PBot instance can add new commands by editing PBot's source code
 or by acquiring and loading Plugins.
 
-* only bot owner can locally create new built-in commands
+* only bot owner can create new built-in commands
 * built-in commands have access to PBot internal API functions and data structures
 
 #### Plugins
