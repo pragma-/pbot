@@ -30,9 +30,51 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
   $self->{pbot}     = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+
   $self->{admins}   = PBot::DualIndexHashObject->new(name => 'Admins', filename => $conf{filename}, pbot => $conf{pbot});
-  $self->{commands} = PBot::AdminCommands->new(pbot => $conf{pbot});
   $self->load_admins;
+
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.join',  sub { $self->on_join(@_) });
+
+  $self->{commands} = PBot::AdminCommands->new(pbot => $conf{pbot});
+}
+
+sub on_join {
+  my ($self, $event_type, $event) = @_;
+  my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
+  ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
+
+  my $admin = $self->find_admin($channel, "$nick!$user\@$host");
+
+  if (defined $admin) {
+    if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
+      my $modes = '+';
+      my $targets = '';
+
+      if ($admin->{autoop}) {
+        $self->{pbot}->{logger}->log("[admin] $nick!$user\@$host autoop in $channel\n");
+        $modes .= 'o';
+        $targets .= "$nick ";
+      }
+
+      if ($admin->{autovoice}) {
+        $self->{pbot}->{logger}->log("[admin] $nick!$user\@$host autovoice in $channel\n");
+        $modes .= 'v';
+        $targets .= "$nick ";
+      }
+
+      if (length $modes > 1) {
+        $self->{pbot}->{chanops}->add_op_command($channel, "mode $channel $modes $targets");
+        $self->{pbot}->{chanops}->gain_ops($channel);
+      }
+    }
+
+    if ($admin->{autologin}) {
+      $self->{pbot}->{logger}->log("[admin] $nick!$user\@$host autologin to $admin->{name} ($admin->{level}) for $channel\n");
+      $admin->{loggedin} = 1;
+    }
+  }
+  return 0;
 }
 
 sub add_admin {
