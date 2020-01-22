@@ -1654,13 +1654,13 @@ sub choosecategory {
     my @choices;
     my @categories;
 
-    if (exists $self->{metadata}->{hash}->{filter}->{category_include_filter}) {
+    if (exists $self->{metadata}->{hash}->{filter}->{category_include_filter} and length $self->{metadata}->{hash}->{filter}->{category_include_filter}) {
       @categories = grep { /$self->{metadata}->{hash}->{filter}->{category_include_filter}/i } keys %{$self->{categories}};
     } else {
       @categories = keys %{$self->{categories}};
     }
 
-    if (exists $self->{metadata}->{hash}->{filter}->{category_exclude_filter}) {
+    if (exists $self->{metadata}->{hash}->{filter}->{category_exclude_filter} and length $self->{metadata}->{hash}->{filter}->{category_exclude_filter}) {
       @categories = grep { $_ !~ /$self->{metadata}->{hash}->{filter}->{category_exclude_filter}/i } @categories;
     }
 
