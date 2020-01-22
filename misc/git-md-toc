@@ -127,7 +127,7 @@ exit 1 unless GetOptions(
   },
   "u|update"	=> \$update,
   "x|maxdepth=i" => \$max_depth,
-  "m|mindepth=i" => \$min_depth,
+  "m|d|mindepth=i" => \$min_depth,
   "f|filename" => \$use_filename,
 );
 
@@ -214,7 +214,7 @@ foreach ( @ARGV ) {
 
     next unless $title;
 
-    $indent = "  " x $depth;
+    $indent = "  " x ($depth - ($min_depth - 1) < 0 ? 0 : $depth - ($min_depth - 1));
 
     my $anchor_url;
 
