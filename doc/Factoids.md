@@ -2,7 +2,6 @@
 
 <!-- md-toc-begin -->
 * [About](#about)
-* [Channel namespaces](#channel-namespaces)
 * [Special commands](#special-commands)
   * [/say](#say)
   * [/me](#me)
@@ -31,6 +30,7 @@
   * [Expansion modifiers](#expansion-modifiers)
 * [action_with_args](#action_with_args)
 * [add_nick](#add_nick)
+* [Channel namespaces](#channel-namespaces)
 * [Adding/removing factoids](#addingremoving-factoids)
   * [factadd](#factadd)
   * [factrem](#factrem)
@@ -70,17 +70,6 @@ At its most simple, a factoid merely output the text the creator sets.
        <PBot> Hello, pragma-!
 
 Significantly more complex factoids can be built by using $variables, command-substitution, command-piping, /code invocation, and more. Read on!
-
-## Channel namespaces
-Factoids added in one channel may be called/triggered in another channel or in private message, providing that the other channel doesn't already have a factoid of the same name (in which case that channel's factoid will be triggered).
-
-Factoids may be added to a special channel named `global`. Factoids that are set in this channel will be accessible to any channels. Factoids that are set in a specific channel will override factoids of the same name that are set in the `global` channel or other channels.
-
-For example, if there were factoid named `malloc` set in `##c` and in `global`, and you invoke it in `##c` then the `##c` version would be used. If the factoid were triggered in any other channel, then the `global` version would be invoked.
-
-Now imagine `##c++` also has a `malloc` factoid. If you invoke it in `##c++` then its version of the factoid would be used instead of `##c`'s or `global`'s versions. If you invoke it in a channel that is not `##c++` or `##c` then the `global` version would be used.
-
-However, if there is no `malloc` factoid in the `global` channel but there is one in `##c` and `##c++`, and you attempt to invoke it in any other channel then PBot will display a disambiguation message listing which channels it belongs to and instructing you to use the [`fact`](#fact) command to call the desired factoid.
 
 ## Special commands
 ### /say
@@ -423,6 +412,17 @@ You can use the [`factset`](#factset) command to set a special [factoid metadata
 
 ## add_nick
 You can use the [`factset`](#factset) command to set a special [factoid metadata](#factoid-metadata) key named `add_nick` to prepend the nick of the caller to the output.  This is mostly useful for modules.
+
+## Channel namespaces
+Factoids added in one channel may be called/triggered in another channel or in private message, providing that the other channel doesn't already have a factoid of the same name (in which case that channel's factoid will be triggered).
+
+Factoids may be added to a special channel named `global`. Factoids that are set in this channel will be accessible to any channels. Factoids that are set in a specific channel will override factoids of the same name that are set in the `global` channel or other channels.
+
+For example, if there were factoid named `malloc` set in `##c` and in `global`, and you invoke it in `##c` then the `##c` version would be used. If the factoid were triggered in any other channel, then the `global` version would be invoked.
+
+Now imagine `##c++` also has a `malloc` factoid. If you invoke it in `##c++` then its version of the factoid would be used instead of `##c`'s or `global`'s versions. If you invoke it in a channel that is not `##c++` or `##c` then the `global` version would be used.
+
+However, if there is no `malloc` factoid in the `global` channel but there is one in `##c` and `##c++`, and you attempt to invoke it in any other channel then PBot will display a disambiguation message listing which channels it belongs to and instructing you to use the [`fact`](#fact) command to call the desired factoid.
 
 ## Adding/removing factoids
 ### factadd
