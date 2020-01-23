@@ -143,7 +143,7 @@ sub set_meta {
   if (not exists $self->{nicklist}->{$channel} or not exists $self->{nicklist}->{$channel}->{$nick}) {
     if (exists $self->{nicklist}->{$channel} and $nick =~ m/[*?]/) {
       my $regex = quotemeta $nick;
-      $regex =~ s/\\\*/.*/g;
+      $regex =~ s/\\\*/.*?/g;
       $regex =~ s/\\\?/./g;
 
       my $found = 0;
