@@ -116,6 +116,9 @@ Name | Description
 `password` | The password for this admin account.
 `loggedin` | Whether the admin is logged in or not.
 `stayloggedin` | Do not log the admin out when they part/quit.
+`autologin` | Automatically log the admin in when they join the channel. Make sure the admin's hostmask wildcards are minimal.
+`autoop` | Automatically give the admin operator status when they join the channel. Make sure the admin's hostmask wildcards are minimal.
+`autovoice` | Automatically give the admin voiced status when they join the channel. Make sure the admin's hostmask wildcards are minimal.
 
 ### Listing admins
 To list admins, use the `list admins` command. This is not an admin command, but
