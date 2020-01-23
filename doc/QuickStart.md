@@ -279,7 +279,7 @@ Factoids are a very special type of command. Anybody interacting with PBot
 can create, edit, delete and invoke factoids. Factoids can be locked by the
 creator of the factoid to prevent them from being edited by others.
 
-At its most simple, factoids merely output the text the creator sets.
+At its most simple, a factoid merely displays the text the creator sets.
 
     <pragma-> !factadd hello /say Hello, $nick!
        <PBot> hello added to global channel.
