@@ -42,6 +42,10 @@
   * [unplug](#unplug)
   * [replug](#replug)
   * [pluglist](#pluglist)
+* [Command metadata commands](#command-metadata-commands)
+  * [cmdset](#cmdset)
+  * [cmdunset](#cmdunset)
+  * [Command metadata list](#command-metadata-list)
 * [Miscellaneous commands](#miscellaneous-commands)
   * [export](#export)
   * [refresh](#refresh)
@@ -75,7 +79,7 @@ Parameter | Description
 `<name>` | A unique name to identify this account (usually the `nick` of the admin, but can be any identifier).
 `<channel>` | Which channel the admin can administrate; use `global` for all channels. This field cannot be changed without removing and re-adding the admin.
 `<hostmask>` | What hostmask the admin is recognized/allowed to login from (e.g., `somenick!*@*somedomain.com` or `*@unaffiliated/someuser`). This field cannot be changed without removing and re-adding the admin.
-`<level>` | An integer representing their level of privileges. See [admin-levels](#admin-levels).
+`<level>` | An integer representing the admin's level of privileges. See [admin-levels](#admin-levels) and [`cmdset`](#cmdset).
 `<password>` | The password the admin will use to login (from /msg!). A password is not required if the `stayloggedin` and `loggedin` metadata are set for the admin; however, a dummy password still needs to be set.
 
 ### adminrem
@@ -85,6 +89,8 @@ Usage: `adminrem <channel> <name or hostmask>`
 
 #### Admin levels
 This is a list of admin commands allowed by each admin level. Higher level admins have access to all lower level admin commands.
+
+Note that you can use [`cmdset`](#cmdset) to adjust any command's admin level.
 
 Level | Commands
 --- | ---
@@ -314,6 +320,27 @@ Usage: `pluglist`
 
     <pragma-> !pluglist
        <PBot> Loaded plugins: ActionTrigger, AntiAway, AntiKickAutoRejoin, AntiNickSpam, AntiRepeat, AntiTwitter, AutoRejoin, GoogleSearch, Quotegrabs, RemindMe, UrlTitles
+
+## Command metadata commands
+
+### cmdset
+Use `cmdset` to set various [metadata](#command-metadata-list) for built-in commands.
+
+Usage: `cmdset <command> [key [value]]`
+
+Omit `<key>` and `<value>` to list all the keys and values for a factoid.  Specify `<key>`, but omit `<value>` to see the value for a specific key.
+
+### cmdunset
+Use `cmdset` to delete various [metadata](#command-metadata-list) from built-in commands.
+
+Usage: `cmdunset <command> <key>`
+
+### Command metadata list
+
+Name | Description
+--- | ---
+`help` | The text to display for the [`help`](Commands.md#help) command.
+`level` | The admin level of this command. See also [admin-levels](#admin-levels)
 
 ## Miscellaneous commands
 
