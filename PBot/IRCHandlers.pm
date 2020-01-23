@@ -140,7 +140,8 @@ sub on_motd {
 
 sub on_self_join {
   my ($self, $event_type, $event) = @_;
-  $self->send_who($event->{channel});
+  my $send_who = $self->{pbot}->{registry}->get_value('general', 'send_who_on_join') // 1;
+  $self->send_who($event->{channel}) if $send_who;
   return 0;
 }
 
