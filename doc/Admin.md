@@ -37,6 +37,7 @@
 * [Module management commands](#module-management-commands)
   * [load](#load)
   * [unload](#unload)
+  * [Listing modules](#listing-modules)
 * [Plugin management commands](#plugin-management-commands)
   * [plug](#plug)
   * [unplug](#unplug)
@@ -295,6 +296,12 @@ This command unloads a module. It is equivalent to deleting the factoid keyword
 the module was loaded as.
 
 Usage: `unload <keyword>`
+
+### Listing modules
+To list modules, use the `list modules` command. This is not an admin command, but
+it is included here for completeness.
+
+Usage: `list modules`
 
 ## Plugin management commands
 
