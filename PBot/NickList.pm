@@ -141,8 +141,23 @@ sub set_meta {
   $nick = lc $nick;
 
   if (not exists $self->{nicklist}->{$channel} or not exists $self->{nicklist}->{$channel}->{$nick}) {
-    $self->{pbot}->{logger}->log("Nicklist: Attempt to set invalid meta ($key => $value) for $nick in $channel.\n");
-    return 0;
+    if (exists $self->{nicklist}->{$channel} and $nick =~ m/[*?]/) {
+      my $regex = quotemeta $nick;
+      $regex =~ s/\\\*/.*/g;
+      $regex =~ s/\\\?/./g;
+
+      my $found = 0;
+      foreach my $n (keys %{$self->{nicklist}->{$channel}}) {
+        if ($self->{nicklist}->{$channel}->{$n}->{hostmask} =~ m/$regex/i) {
+          $self->{nicklist}->{$channel}->{$n}->{$key} = $value;
+          $found++;
+        }
+      }
+      return $found;
+    } else {
+      $self->{pbot}->{logger}->log("Nicklist: Attempt to set invalid meta ($key => $value) for $nick in $channel.\n");
+      return 0;
+    }
   }
 
   $self->{nicklist}->{$channel}->{$nick}->{$key} = $value;
