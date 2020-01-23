@@ -328,7 +328,7 @@ Use `cmdset` to set various [metadata](#command-metadata-list) for built-in comm
 
 Usage: `cmdset <command> [key [value]]`
 
-Omit `<key>` and `<value>` to list all the keys and values for a factoid.  Specify `<key>`, but omit `<value>` to see the value for a specific key.
+Omit `<key>` and `<value>` to list all the keys and values for a command.  Specify `<key>`, but omit `<value>` to see the value for a specific key.
 
 ### cmdunset
 Use `cmdset` to delete various [metadata](#command-metadata-list) from built-in commands.
