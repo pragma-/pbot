@@ -363,8 +363,7 @@ modifications.
 Usage `reload <admins|bantimeouts|blacklist|channels|factoids|funcs|ignores|mutetimeouts|registry|whitelist>`
 
 ### sl
-Sends a raw IRC line to the server. This is useful if you want to execute any
-IRC command on the IRC server, in its raw pure form. Use the `sl` command when
+Sends a raw IRC command to the server. Use the `sl` command when
 PBot does not have a built-in command to do what you need.
 
 Usage: `sl <irc command>`
