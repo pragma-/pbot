@@ -58,7 +58,7 @@
 ## Logging in and out
 You cannot use any of the admin commands unless you login. Note that login requires that your hostmask matches PBot's records.
 
-However, if your admin account have the `loggedin` and `stayloggedin` metadata set to a true value then you will not need to login.
+However, if your admin account has the `autologin` [metadata](#admin-metadata-list) set to a true value then you will not need to login.
 ### login
 Logs into PBot.
 
@@ -81,7 +81,7 @@ Parameter | Description
 `<channel>` | Which channel the admin can administrate; use `global` for all channels. This field cannot be changed without removing and re-adding the admin.
 `<hostmask>` | What hostmask the admin is recognized/allowed to login from (e.g., `somenick!*@*somedomain.com` or `*@unaffiliated/someuser`). This field cannot be changed without removing and re-adding the admin.
 `<level>` | An integer representing the admin's level of privileges. See [admin-levels](#admin-levels).
-`<password>` | The password the admin will use to login (from /msg!). A password is not required if the `stayloggedin` and `loggedin` metadata are set for the admin; however, a dummy password still needs to be set.
+`<password>` | The password the admin will use to login (from /msg!). A password is not required if the `autologin` [metadata](#admin-metadata-list) is set for the admin; however, a dummy password still needs to be set.
 
 ### adminrem
 Removes an admin from PBot. You can use the name field or the hostmask field that was set via `adminadd`.
