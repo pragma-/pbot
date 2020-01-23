@@ -298,7 +298,7 @@ the module was loaded as.
 Usage: `unload <keyword>`
 
 ### Listing modules
-To list modules, use the `list modules` command. This is not an admin command, but
+To list the loaded modules, use the `list modules` command. This is not an admin command, but
 it is included here for completeness.
 
 Usage: `list modules`
