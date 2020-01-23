@@ -16,7 +16,7 @@
    },
    "adminset" : {
       "_name" : "adminset",
-      "help" : "Sets metadata for an admin account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#adminset",
+      "help" : "Sets metadata for an admin account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#adminset and https://github.com/pragma-/pbot/blob/master/doc/Admin.md#admin-metadata-list",
       "level" : 60
    },
    "adminunset" : {
@@ -151,12 +151,12 @@
    },
    "deop" : {
       "_name" : "deop",
-      "help" : "Removes OP status from users. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#deop",
+      "help" : "Removes OP status from users. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#deop",
       "level" : 10
    },
    "devoice" : {
       "_name" : "devoice",
-      "help" : "Removes VOICE status from users. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#devoice",
+      "help" : "Removes VOICE status from users. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#devoice",
       "level" : 10
    },
    "die" : {
@@ -274,6 +274,11 @@
       "help" : "Grabs a message someone says, and adds it to the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#grab",
       "level" : 0
    },
+   "help" : {
+      "_name" : "help",
+      "help" : "",
+      "level" : 0
+   },
    "histogram" : {
       "_name" : "histogram",
       "help" : "Displays a histogram of the top factoid submitters. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#histogram",
@@ -301,8 +306,8 @@
    },
    "kick" : {
       "_name" : "kick",
-      "help" : "Removes a user from the channel. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#kick",
-      "level" : 10
+      "help" : "Removes a user from the channel. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#kick",
+      "level" : "10"
    },
    "lagcheck" : {
       "_name" : "lagcheck",
@@ -341,7 +346,7 @@
    },
    "mute" : {
       "_name" : "mute",
-      "help" : "Mutes a user. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#banmute",
+      "help" : "Mutes a user. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#banmute",
       "level" : 10
    },
    "nicklist" : {
@@ -351,7 +356,7 @@
    },
    "op" : {
       "_name" : "op",
-      "help" : "Gives channel operator status to users. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#op",
+      "help" : "Gives channel operator status to users. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#op",
       "level" : 10
    },
    "part" : {
@@ -489,9 +494,14 @@
       "help" : "Unloads a plugin from PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unplug",
       "level" : 90
    },
+   "version" : {
+      "_name" : "version",
+      "help" : "",
+      "level" : 0
+   },
    "voice" : {
       "_name" : "voice",
-      "help" : "Sets mode +v on users. Can accept wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#voice",
+      "help" : "Sets mode +v on users. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#voice",
       "level" : 10
    },
    "whitelist" : {
@@ -500,3 +510,4 @@
       "level" : 10
    }
 }
+
