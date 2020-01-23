@@ -90,6 +90,7 @@
   * [Module management commands](Admin.md#module-management-commands)
     * [load](Admin.md#load)
     * [unload](Admin.md#unload)
+    * [Listing modules](Admin.md#listing-modules)
   * [Plugin management commands](Admin.md#plugin-management-commands)
     * [plug](Admin.md#plug)
     * [unplug](Admin.md#unplug)
