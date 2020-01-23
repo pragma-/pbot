@@ -46,12 +46,11 @@
     * [Factoids](Commands.md#factoids)
       * [Code Factoids](Commands.md#code-factoids)
       * [Modules](Commands.md#modules)
-  * [List of commands](Commands.md#list-of-commands)
+  * [Commands documented here](Commands.md#commands-documented-here)
     * [version](Commands.md#version)
     * [help](Commands.md#help)
-    * [Administrative commands](Commands.md#administrative-commands)
-    * [Factoid commands](Commands.md#factoid-commands)
-    * [Miscellaneous commands](Commands.md#miscellaneous-commands)
+    * [uptime](Commands.md#uptime)
+  * [Commands documented elsewhere](Commands.md#commands-documented-elsewhere)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
 * [Administrative](Admin.md#administrative)
@@ -106,7 +105,6 @@
 <!-- md-toc-begin -->
 * [Factoids](Factoids.md#factoids)
   * [About](Factoids.md#about)
-  * [Channel namespaces](Factoids.md#channel-namespaces)
   * [Special commands](Factoids.md#special-commands)
     * [/say](Factoids.md#say)
     * [/me](Factoids.md#me)
@@ -135,6 +133,7 @@
     * [Expansion modifiers](Factoids.md#expansion-modifiers)
   * [action_with_args](Factoids.md#action_with_args)
   * [add_nick](Factoids.md#add_nick)
+  * [Channel namespaces](Factoids.md#channel-namespaces)
   * [Adding/removing factoids](Factoids.md#addingremoving-factoids)
     * [factadd](Factoids.md#factadd)
     * [factrem](Factoids.md#factrem)
