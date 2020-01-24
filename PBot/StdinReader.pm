@@ -13,10 +13,7 @@ use POSIX qw(tcgetpgrp getpgrp);  # to check whether process is in background or
 use Carp ();
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to StdinReader should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to StdinReader should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
   $self->initialize(%conf);
@@ -26,7 +23,16 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference in StdinReader");
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference in StdinReader");
+
+  # create implicit bot-admin account for bot
+  my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+  if (not $self->{pbot}->{admins}->find_admin('.*', '*!stdin@pbot')) {
+    $self->{pbot}->{logger}->log("Adding stdin admin *!stdin\@pbot...\n");
+    $self->{pbot}->{admins}->add_admin($botnick, '.*', '*!stdin@pbot', 100, 'notused', 1);
+    $self->{pbot}->{admins}->login($botnick, "$botnick!stdin\@pbot", 'notused');
+    $self->{pbot}->{admins}->save_admins;
+  }
 
   # used to check whether process is in background or foreground, for stdin reading
   open TTY, "</dev/tty" or die $!;
@@ -44,7 +50,7 @@ sub stdin_reader {
   return if not $self->{foreground};
 
   $self->{pbot}->{logger}->log("---------------------------------------------\n");
-  $self->{pbot}->{logger}->log("Read '$input' from STDIN\n");
+  $self->{pbot}->{logger}->log("Got STDIN: $input\n");
 
   my ($from, $text);
 

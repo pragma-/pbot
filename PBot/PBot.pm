@@ -187,8 +187,8 @@ sub initialize {
   $self->{event_dispatcher}   = PBot::EventDispatcher->new(pbot => $self, %conf);
   $self->{irchandlers}        = PBot::IRCHandlers->new(pbot => $self, %conf);
   $self->{select_handler}     = PBot::SelectHandler->new(pbot => $self, %conf);
-  $self->{stdin_reader}       = PBot::StdinReader->new(pbot => $self, %conf);
   $self->{admins}             = PBot::Admins->new(pbot => $self, filename => "$data_dir/admins", %conf);
+  $self->{stdin_reader}       = PBot::StdinReader->new(pbot => $self, %conf);
   $self->{bantracker}         = PBot::BanTracker->new(pbot => $self, %conf);
   $self->{lagchecker}         = PBot::LagChecker->new(pbot => $self, %conf);
   $self->{messagehistory}     = PBot::MessageHistory->new(pbot => $self, filename => "$data_dir/message_history.sqlite3", %conf);
@@ -213,11 +213,6 @@ sub initialize {
 
   # load available plugins
   $self->{plugins}->autoload(%conf);
-
-  # create implicit bot-admin account for bot
-  my $botnick = $self->{registry}->get_value('irc', 'botnick');
-  $self->{admins}->add_admin($botnick, '.*', "*!stdin\@pbot", 100, 'notused', 1);
-  $self->{admins}->login($botnick, "$botnick!stdin\@pbot", 'notused');
 
   # start timer
   $self->{timer}->start();
