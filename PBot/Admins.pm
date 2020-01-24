@@ -145,6 +145,7 @@ sub find_admin {
   $hostmask = lc $hostmask;
 
   my $result = eval {
+    my $admin;
     foreach my $channel_regex (keys %{ $self->{admins}->{hash} }) {
       if ($from !~ m/^#/ or $from =~ m/^$channel_regex$/i) {
         foreach my $hostmask_regex (keys %{ $self->{admins}->{hash}->{$channel_regex} }) {
@@ -154,15 +155,21 @@ sub find_admin {
             my $hostmask_quoted = quotemeta $hostmask_regex;
             $hostmask_quoted =~ s/\\\*/.*?/g;
             $hostmask_quoted =~ s/\\\?/./g;
-            return $self->{admins}->{hash}->{$channel_regex}->{$hostmask_regex} if $hostmask =~ m/^$hostmask_quoted$/i;
+            if ($hostmask =~ m/^$hostmask_quoted$/i) {
+              my $temp = $self->{admins}->{hash}->{$channel_regex}->{$hostmask_regex};
+              $admin = $temp if not defined $admin or $admin->{level} < $temp->{level};
+            }
           } else {
             # direct comparison
-            return $self->{admins}->{hash}->{$channel_regex}->{$hostmask_regex} if $hostmask eq lc $hostmask_regex;
+            if ($hostmask eq lc $hostmask_regex) {
+              my $temp = $self->{admins}->{hash}->{$channel_regex}->{$hostmask_regex};
+              $admin = $temp if not defined $admin or $admin->{level} < $temp->{level};
+            }
           }
         }
       }
     }
-    return undef;
+    return $admin;
   };
 
   if ($@) {
