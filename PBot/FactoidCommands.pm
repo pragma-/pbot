@@ -624,7 +624,7 @@ sub factset {
       $mask = $nick;
     }
 
-    if ((defined $value and $key ne 'action') and lc $mask ne lc $owner and $level == 0) {
+    if ((defined $value and $key ne 'action' and $key ne 'action_with_args') and lc $mask ne lc $owner and $level == 0) {
       return "You are not the owner of $trigger_name.";
     }
   }
@@ -706,7 +706,7 @@ sub factunset {
 
     my ($owner) = $factoid->{'owner'} =~ m/([^!]+)/;
 
-    if (lc $nick ne lc $owner and $level == 0) {
+    if ($key ne 'action_with_args' and lc $nick ne lc $owner and $level == 0) {
       return "You are not the owner of $trigger_name.";
     }
     $oldvalue = $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{$key};
