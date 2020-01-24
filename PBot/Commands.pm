@@ -19,8 +19,7 @@ use feature 'unicode_strings';
 
 use base 'PBot::Registerable';
 
-use Carp ();
-use PBot::HashObject;
+use Time::Duration qw/duration/;
 
 sub new {
   Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
@@ -38,9 +37,10 @@ sub initialize {
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Commands', filename => $conf{filename});
   $self->load_metadata;
 
-  $self->register(sub { $self->set(@_)   },  "cmdset",   90);
-  $self->register(sub { $self->unset(@_) },  "cmdunset", 90);
-  $self->register(sub { $self->help(@_)  },  "help",      0);
+  $self->register(sub { $self->cmdset(@_)   },  "cmdset",   90);
+  $self->register(sub { $self->cmdunset(@_) },  "cmdunset", 90);
+  $self->register(sub { $self->help(@_)     },  "help",      0);
+  $self->register(sub { $self->uptime(@_)   },  "uptime",    0);
 }
 
 sub register {
@@ -145,14 +145,14 @@ sub save_metadata {
   $self->{metadata}->save;
 }
 
-sub set {
+sub cmdset {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($command, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
   return "Usage: cmdset <command> [key [value]]" if not defined $command;
   return $self->{metadata}->set($command, $key, $value);
 }
 
-sub unset {
+sub cmdunset {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($command, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
   return "Usage: cmdunset <command> <key>" if not defined $command or not defined $key;
@@ -235,6 +235,11 @@ sub help {
 
   $result .= $help;
   return $result;
+}
+
+sub uptime {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  return localtime ($self->{pbot}->{startup_timestamp}) . " [" . duration (time - $self->{pbot}->{startup_timestamp}) . "]";
 }
 
 1;
