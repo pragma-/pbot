@@ -25,7 +25,6 @@ use POSIX qw(strftime);
 use Text::ParseWords;
 use JSON;
 
-use PBot::VERSION qw/version/;
 use PBot::FactoidCommands;
 use PBot::FactoidModuleLauncher;
 use PBot::DualIndexHashObject;
@@ -79,13 +78,6 @@ sub load_factoids {
     }
   }
   $self->{pbot}->{logger}->log("  " . ($text + $regex + $modules) . " factoids loaded ($text text, $regex regexs, $modules modules).\n");
-  $self->add_default_factoids();
-}
-
-sub add_default_factoids {
-  my $self = shift;
-  my $version = version();
-  $self->add_factoid('text', '.*', $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'version', "/say $version", 1);
 }
 
 sub save_factoids {
