@@ -77,6 +77,22 @@ sub remove {
     return "Usage: chanrem <channel>";
   }
 
+  $arguments = lc $arguments;
+
+  # clear unban timeouts
+  if (exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$arguments}) {
+    delete $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$arguments};
+    $self->{pbot}->{chanops}->{unban_timeout}->save;
+  }
+
+  # clear unmute timeouts
+  if (exists $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$arguments}) {
+    delete $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$arguments};
+    $self->{pbot}->{chanops}->{unmute_timeout}->save;
+  }
+
+  # TODO: ignores, etc?
+
   return $self->{channels}->remove($arguments);
 }
 
