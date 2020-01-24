@@ -67,14 +67,14 @@ sub initialize {
   $self->{stats_filename}       = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/stats.sqlite';
 
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Spinach Metadata', filename => $self->{metadata_filename});
-  $self->load_metadata;
+  $self->load_metadata();
 
   $self->{stats}   = Plugins::Spinach::Stats->new(pbot => $self->{pbot}, filename => $self->{stats_filename});
   $self->{rankcmd} = Plugins::Spinach::Rank->new(pbot => $self->{pbot}, channel => $self->{channel}, filename => $self->{stats_filename});
 
-  $self->create_states;
-  $self->load_questions;
-  $self->load_stopwords;
+  $self->create_states();
+  $self->load_questions();
+  $self->load_stopwords();
 
   $self->{choosecategory_max_count} = 4;
   $self->{picktruth_max_count} = 4;
@@ -1019,7 +1019,7 @@ sub spinach_cmd {
 
 sub spinach_timer {
   my $self = shift;
-  $self->run_one_state;
+  $self->run_one_state();
 }
 
 sub player_left {
