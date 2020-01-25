@@ -42,6 +42,7 @@ sub datecmd {
   my $timezone = $self->{pbot}->{registry}->get_value('date', 'default_timezone') // 'UTC';
   my $tz_override = $self->{pbot}->{users}->get_loggedin_user_metadata($from, "$nick!$user\@$host", 'timezone');
   $timezone = $tz_override if $tz_override;
+  $timezone = $arguments if length $arguments;
 
   my $newstuff = {
     from => $from, nick => $nick, user => $user, host => $host,
