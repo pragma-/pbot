@@ -388,7 +388,7 @@ sub userset {
 
   ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
   my $result = $self->{users}->set($channel, $hostmask, $key, $value);
-  $result =~ s/^password => .*;$/password => <private>;/m;
+  $result =~ s/^password => .*;?$/password => <private>;/m;
   return $result;
 }
 
@@ -438,9 +438,11 @@ sub mycmd {
   if (not $u) {
     $channel = '.*';
     $hostmask = "$nick!*\@*";
-    $u = $self->add_user("my_$nick", $channel, $hostmask);
-    $u->{autologin} = 1;
+    $u = $self->add_user("my_$nick", $channel, $hostmask, undef, undef, 1);
     $u->{loggedin} = 1;
+    $u->{stayloggedin} = 1;
+    $u->{autologin} = 1;
+    $self->save;
   }
 
   if (defined $value and $u->{level} == 0) {
@@ -450,10 +452,9 @@ sub mycmd {
     }
   }
 
-
   ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
   my $result = $self->{users}->set($channel, $hostmask, $key, $value);
-  $result =~ s/^password => .*;$/password => <private>;/m;
+  $result =~ s/^password => .*;?$/password => <private>;/m;
   return $result;
 }
 
