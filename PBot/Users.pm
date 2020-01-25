@@ -140,47 +140,54 @@ sub save {
   $self->{users}->save;
 }
 
-sub hostmask_or_account_name {
+sub find_user_account {
   my ($self, $channel, $hostmask) = @_;
 
   $channel = lc $channel;
   $hostmask = lc $hostmask;
   $channel = '.*' if $channel !~ /^#/;
+  my ($found_channel, $found_hostmask) = ($channel, $hostmask);
 
-  if (exists $self->{users}->{hash}->{$channel}) {
-    if (not exists $self->{users}->{hash}->{$channel}->{$hostmask}) {
-      my $last_level = 0;
-      # find hostmask by account name or wildcard
-      foreach my $mask (keys %{ $self->{users}->{hash}->{$channel} }) {
-        next if $mask eq '_name';
-        if (lc $self->{users}->{hash}->{$channel}->{$mask}->{name} eq $hostmask) {
-          if ($last_level < $self->{users}->{hash}->{$channel}->{$mask}->{level}) {
-            $hostmask = $mask;
-            $last_level = $self->{users}->{hash}->{$channel}->{$mask}->{level};
+  foreach my $chan (keys %{ $self->{users}->{hash} }) {
+    if ($channel !~ m/^#/ or $channel =~ m/^$chan$/i) {
+      if (not exists $self->{users}->{hash}->{$chan}->{$hostmask}) {
+        my $last_level = 0;
+        # find hostmask by account name or wildcard
+        foreach my $mask (keys %{ $self->{users}->{hash}->{$chan} }) {
+          next if $mask eq '_name';
+          if (lc $self->{users}->{hash}->{$chan}->{$mask}->{name} eq $hostmask) {
+            if ($last_level <= $self->{users}->{hash}->{$chan}->{$mask}->{level}) {
+              $found_hostmask = $mask;
+              $found_channel = $chan;
+              $last_level = $self->{users}->{hash}->{$chan}->{$mask}->{level};
+            }
           }
-        }
 
-        if ($mask =~ /[*?]/) {
-          # contains * or ? so it's converted to a regex
-          my $mask_quoted = quotemeta $mask;
-          $mask_quoted =~ s/\\\*/.*?/g;
-          $mask_quoted =~ s/\\\?/./g;
-          if ($hostmask =~ m/^$mask_quoted$/i) {
-            if ($last_level < $self->{users}->{hash}->{$channel}->{$mask}->{level}) {
-              $hostmask = $mask;
-              $last_level = $self->{users}->{hash}->{$channel}->{$mask}->{level};
+          if ($mask =~ /[*?]/) {
+            # contains * or ? so it's converted to a regex
+            my $mask_quoted = quotemeta $mask;
+            $mask_quoted =~ s/\\\*/.*?/g;
+            $mask_quoted =~ s/\\\?/./g;
+            if ($hostmask =~ m/^$mask_quoted$/i) {
+              if ($last_level <= $self->{users}->{hash}->{$chan}->{$mask}->{level}) {
+                $found_hostmask = $mask;
+                $found_channel = $chan;
+                $last_level = $self->{users}->{hash}->{$chan}->{$mask}->{level};
+              }
             }
           }
         }
       }
     }
   }
-  return $hostmask;
+  return ($found_channel, $found_hostmask);
 }
 
 sub find_admin {
   my ($self, $channel, $hostmask, $min_level) = @_;
   $min_level //= 1;
+
+  ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
 
   $channel = $self->{pbot}->{registry}->get_value('irc', 'botnick') if not defined $channel;
   $hostmask = '.*' if not defined $hostmask;
@@ -199,13 +206,13 @@ sub find_admin {
             $hostmask_quoted =~ s/\\\?/./g;
             if ($hostmask =~ m/^$hostmask_quoted$/i) {
               my $temp = $self->{users}->{hash}->{$channel_regex}->{$hostmask_regex};
-              $admin = $temp if $temp->{level} >= $min_level and (not defined $admin or $admin->{level} < $temp->{level});
+              $admin = $temp if $temp->{level} >= $min_level and (not defined $admin or $admin->{level} <= $temp->{level});
             }
           } else {
             # direct comparison
             if ($hostmask eq lc $hostmask_regex) {
               my $temp = $self->{users}->{hash}->{$channel_regex}->{$hostmask_regex};
-              $admin = $temp if $temp->{level} >= $min_level and (not defined $admin or $admin->{level} < $temp->{level});
+              $admin = $temp if $temp->{level} >= $min_level and (not defined $admin or $admin->{level} <= $temp->{level});
             }
           }
         }
@@ -271,6 +278,15 @@ sub logout {
   delete $user->{loggedin} if defined $user;
 }
 
+sub get_loggedin_user_metadata {
+  my ($self, $channel, $hostmask, $key) = @_;
+  my $user = $self->loggedin($channel, $hostmask);
+  if ($user) {
+    return $user->{lc $key};
+  }
+  return undef;
+}
+
 sub logincmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   my $channel = $from;
@@ -314,6 +330,7 @@ sub useradd {
   my $admin  = $self->{pbot}->{users}->find_admin($channel, "$nick!$user\@$host");
 
   if (not $admin) {
+    $channel = 'global' if $channel eq '.*';
     return "You are not an admin for $channel; cannot add users to that channel.\n";
   }
 
@@ -335,8 +352,7 @@ sub userdel {
     return "/msg $nick Usage: userdel <channel> <hostmask or account name>";
   }
 
-  $hostmask = $self->hostmask_or_account_name($channel, $hostmask);
-  $channel = '.*' if $channel !~ /^#/;
+  ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
   return $self->remove_user($channel, $hostmask);
 }
 
@@ -348,15 +364,16 @@ sub userset {
     return "Usage: userset <channel> <hostmask or account name> [key] [value]";
   }
 
-  $hostmask = $self->hostmask_or_account_name($channel, $hostmask);
   my $admin  = $self->find_admin($channel, "$nick!$user\@$host");
   my $target = $self->find_user($channel, $hostmask);
 
   if (not $admin) {
+    $channel = 'global' if $channel eq '.*';
     return "You are not an admin for $channel; cannot modify their users.";
   }
 
   if (not $target) {
+    $channel = 'global' if $channel eq '.*';
     return "There is no user $hostmask in channel $channel.";
   }
 
@@ -369,7 +386,7 @@ sub userset {
     return "You may not modify users higher in level than you.";
   }
 
-  $channel = '.*' if $channel !~ /^#/;
+  ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
   my $result = $self->{users}->set($channel, $hostmask, $key, $value);
   $result =~ s/^password => .*;$/password => <private>;/m;
   return $result;
@@ -384,22 +401,23 @@ sub userunset {
   }
 
   my $admin  = $self->find_admin($channel, "$nick!$user\@$host");
-  $hostmask = $self->hostmask_or_account_name($channel, $hostmask);
   my $target = $self->find_user($channel, $hostmask);
 
   if (not $admin) {
+    $channel = 'global' if $channel eq '.*';
     return "You are not an admin for $channel; cannot modify their users.";
   }
 
   if (not $target) {
+    $channel = 'global' if $channel eq '.*';
     return "There is no user $hostmask in channel $channel.";
   }
 
-  if ($target->{level} >= $user->{level}) {
-    return "You may not modify users equal or higher in level than you.";
+  if ($target->{level} > $admin->{level}) {
+    return "You may not modify users higher in level than you.";
   }
 
-  $channel = '.*' if $channel !~ /^#/;
+  ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
   return $self->{users}->unset($channel, $hostmask, $key);
 }
 
@@ -411,14 +429,11 @@ sub mycmd {
     return "Usage: my <key> [value]";
   }
 
+  $key = lc $key;
   my $channel = $from;
-  $channel = '.*' if $channel !~ /^#/;
-  my $hostmask = $self->hostmask_or_account_name($channel, "$nick!$user\@$host");
-  my $u = $self->find_user($channel, $hostmask);
+  my $hostmask = "$nick!$user\@$host";
 
-  print "hostmask: $hostmask\n";
-  use Data::Dumper;
-  print Dumper \$u;
+  my $u = $self->find_user($channel, $hostmask);
 
   if (not $u) {
     $channel = '.*';
@@ -428,13 +443,15 @@ sub mycmd {
     $u->{loggedin} = 1;
   }
 
-  if ($u->{level} == 0) {
+  if (defined $value and $u->{level} == 0) {
     my @disallowed = qw/level autoop autovoice/;
-    if (grep { lc $key } @disallowed) {
+    if (grep { $_ eq $key } @disallowed) {
       return "You must be an admin to set $key.";
     }
   }
 
+
+  ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
   my $result = $self->{users}->set($channel, $hostmask, $key, $value);
   $result =~ s/^password => .*;$/password => <private>;/m;
   return $result;

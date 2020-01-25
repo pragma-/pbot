@@ -5540,6 +5540,19 @@
          "ref_user" : "esselfe!~bsfc@unaffiliated/esselfe",
          "type" : "text"
       },
+      "date_module" : {
+         "_name" : "date_module",
+         "action" : "date.sh",
+         "add_nick" : 1,
+         "created_on" : 1579985843.56774,
+         "enabled" : 1,
+         "nooverride" : 1,
+         "owner" : "pragma-!~chaos@unaffiliated/pragmatic-chaos",
+         "rate_limit" : "15",
+         "ref_count" : 0,
+         "ref_user" : "nobody",
+         "type" : "module"
+      },
       "ddd" : {
          "_name" : "ddd",
          "action" : "a graphical front end to gdb and other debuggers (http://www.gnu.org/software/ddd/)",
