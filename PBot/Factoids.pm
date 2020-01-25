@@ -876,7 +876,7 @@ sub interpreter {
         $ratelimit = $self->{factoids}->{hash}->{$channel}->{$keyword}->{rate_limit} if not defined $ratelimit;
         if (gettimeofday - $self->{factoids}->{hash}->{$channel}->{$keyword}->{last_referenced_on} < $ratelimit) {
           my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
-          return "/msg $stuff->{nick} $ref_from'$trigger_name' is rate-limited; try again in " . duration ($ratelimit - int(gettimeofday - $self->{factoids}->{hash}->{$channel}->{$keyword}->{last_referenced_on})) . "." unless $self->{pbot}->{admins}->loggedin($channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+          return "/msg $stuff->{nick} $ref_from'$trigger_name' is rate-limited; try again in " . duration ($ratelimit - int(gettimeofday - $self->{factoids}->{hash}->{$channel}->{$keyword}->{last_referenced_on})) . "." unless $self->{pbot}->{users}->loggedin_admin($channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
         }
       }
     }
@@ -1067,7 +1067,7 @@ sub handle_action {
   elsif ($self->{factoids}->{hash}->{$channel}->{$keyword}->{type} eq 'text') {
     # Don't allow user-custom /msg factoids, unless factoid triggered by admin
     if ($action =~ m/^\/msg/i) {
-      my $admin = $self->{pbot}->{admins}->loggedin($stuff->{from}, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+      my $admin = $self->{pbot}->{users}->loggedin_admin($stuff->{from}, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
       if (not $admin or $admin->{level} < 60) {
         $self->{pbot}->{logger}->log("[ABUSE] Bad factoid (contains /msg): $action\n");
         return "You are not powerful enough to use /msg in a factoid.";

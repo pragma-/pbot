@@ -33,11 +33,37 @@ sub initialize {
   $self->{channels} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => $conf{filename});
   $self->load_channels;
 
+  $self->{pbot}->{commands}->register(sub { $self->join(@_)   },  "join",      40);
+  $self->{pbot}->{commands}->register(sub { $self->part(@_)   },  "part",      40);
   $self->{pbot}->{commands}->register(sub { $self->set(@_)    },  "chanset",   40);
   $self->{pbot}->{commands}->register(sub { $self->unset(@_)  },  "chanunset", 40);
   $self->{pbot}->{commands}->register(sub { $self->add(@_)    },  "chanadd",   40);
   $self->{pbot}->{commands}->register(sub { $self->remove(@_) },  "chanrem",   40);
   $self->{pbot}->{commands}->register(sub { $self->list(@_)   },  "chanlist",  10);
+}
+
+sub join {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  foreach my $channel (split /[\s+,]/, $arguments) {
+    $self->{pbot}->{logger}->log("$nick!$user\@$host made me join $channel\n");
+    $self->{pbot}->{chanops}->join_channel($channel);
+  }
+
+  return "/msg $nick Joining $arguments";
+}
+
+sub part {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  $arguments = $from if not $arguments;
+
+  foreach my $channel (split /[\s+,]/, $arguments) {
+    $self->{pbot}->{logger}->log("$nick!$user\@$host made me part $channel\n");
+    $self->{pbot}->{chanops}->part_channel($channel);
+  }
+
+  return "/msg $nick Parting $arguments";
 }
 
 sub set {

@@ -251,7 +251,7 @@ sub mode {
             # removing mode -- check against whitelist, etc
             next if $nick_data->{nick} eq $self->{pbot}->{registry}->get_value('irc', 'botnick');
             next if $self->{pbot}->{antiflood}->whitelisted($channel, $nick_data->{hostmask});
-            next if $self->{pbot}->{admins}->loggedin($channel, $nick_data->{hostmask});
+            next if $self->{pbot}->{users}->loggedin_admin($channel, $nick_data->{hostmask});
           }
 
           # skip nick if already has mode set/unset
@@ -418,7 +418,7 @@ sub ban_user {
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
 
-  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
@@ -485,7 +485,7 @@ sub unban_user {
 
   return "/msg $nick Usage for /msg: unban <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
-  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
@@ -549,7 +549,7 @@ sub mute_user {
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
 
-  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
@@ -616,7 +616,7 @@ sub unmute_user {
 
   return "/msg $nick Usage for /msg: unmute <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
-  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
@@ -670,7 +670,7 @@ sub kick_user {
     $channel = $1;
   }
 
-  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host")) {
+  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
     return "/msg $nick You are not an admin for $channel.";
   }
 
@@ -704,7 +704,7 @@ sub kick_user {
 
           next if $nick_data->{nick} eq $self->{pbot}->{registry}->get_value('irc', 'botnick');
           next if $self->{pbot}->{antiflood}->whitelisted($channel, $nick_data->{hostmask});
-          next if $self->{pbot}->{admins}->loggedin($channel, $nick_data->{hostmask});
+          next if $self->{pbot}->{users}->loggedin_admin($channel, $nick_data->{hostmask});
 
           $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nl $reason");
         }

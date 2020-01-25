@@ -37,7 +37,7 @@ use PBot::Interpreter;
 use PBot::Commands;
 use PBot::ChanOps;
 use PBot::Factoids;
-use PBot::Admins;
+use PBot::Users;
 use PBot::IgnoreList;
 use PBot::BlackList;
 use PBot::Timer;
@@ -102,7 +102,15 @@ sub initialize {
   # then commands so the modules can register new commands
   $self->{commands} = PBot::Commands->new(pbot => $self, filename => "$data_dir/commands", %conf);
 
-  # the version
+  # add some commands
+  $self->{commands}->register(sub { $self->listcmd(@_)  },  "list",     0);
+  $self->{commands}->register(sub { $self->ack_die(@_)  },  "die",     90);
+  $self->{commands}->register(sub { $self->export(@_)   },  "export",  90);
+  $self->{commands}->register(sub { $self->reload(@_)   },  "reload",  90);
+  $self->{commands}->register(sub { $self->evalcmd(@_)  },  "eval",    99);
+  $self->{commands}->register(sub { $self->sl(@_)       },  "sl",      90);
+
+  # prepare the version
   $self->{version}  = PBot::VERSION->new(pbot => $self, %conf);
   $self->{logger}->log($self->{version}->version . "\n");
   $self->{logger}->log("Args: @ARGV\n") if @ARGV;
@@ -187,7 +195,7 @@ sub initialize {
   $self->{event_dispatcher}   = PBot::EventDispatcher->new(pbot => $self, %conf);
   $self->{irchandlers}        = PBot::IRCHandlers->new(pbot => $self, %conf);
   $self->{select_handler}     = PBot::SelectHandler->new(pbot => $self, %conf);
-  $self->{admins}             = PBot::Admins->new(pbot => $self, filename => "$data_dir/admins", %conf);
+  $self->{users}              = PBot::Users->new(pbot => $self, filename => "$data_dir/users", %conf);
   $self->{stdin_reader}       = PBot::StdinReader->new(pbot => $self, %conf);
   $self->{bantracker}         = PBot::BanTracker->new(pbot => $self, %conf);
   $self->{lagchecker}         = PBot::LagChecker->new(pbot => $self, %conf);
@@ -219,9 +227,11 @@ sub initialize {
 }
 
 sub random_nick {
+  my ($self, $length) = @_;
+  $length //= 9;
   my @chars = ("A".."Z", "a".."z", "0".."9");
   my $nick = $chars[rand @chars - 10]; # nicks cannot start with a digit
-  $nick .= $chars[rand @chars] for 1..9;
+  $nick .= $chars[rand @chars] for 1..$length;
   return $nick;
 }
 
@@ -238,7 +248,7 @@ sub connect {
   $self->{logger}->log("Connecting to $server ...\n");
 
   while (not $self->{conn} = $self->{irc}->newconn(
-      Nick         => $self->{registry}->get_value('irc', 'randomize_nick') ? random_nick : $self->{registry}->get_value('irc', 'botnick'),
+      Nick         => $self->{registry}->get_value('irc', 'randomize_nick') ? $self->random_nick : $self->{registry}->get_value('irc', 'botnick'),
       Username     => $self->{registry}->get_value('irc', 'username'),
       Ircname      => $self->{registry}->get_value('irc', 'realname'),
       Server       => $server,
@@ -303,6 +313,213 @@ sub irc_debug_trigger {
 sub change_botnick_trigger {
   my ($self, $section, $item, $newvalue) = @_;
   $self->{conn}->nick($newvalue) if $self->{connected};
+}
+
+sub listcmd {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+  my $text;
+
+  my $usage = "Usage: list <modules|commands|admins|users>";
+
+  if (not defined $arguments) {
+    return $usage;
+  }
+
+  if ($arguments =~ /^modules$/i) {
+    $text = "Loaded modules: ";
+    foreach my $channel (sort keys %{ $self->{factoids}->{factoids}->{hash} }) {
+      foreach my $command (sort keys %{ $self->{factoids}->{factoids}->{hash}->{$channel} }) {
+        next if $command eq '_name';
+        if ($self->{factoids}->{factoids}->{hash}->{$channel}->{$command}->{type} eq 'module') {
+          $text .= "$self->{factoids}->{factoids}->{hash}->{$channel}->{$command}->{_name} ";
+        }
+      }
+    }
+    return $text;
+  }
+
+  if ($arguments =~ /^commands$/i) {
+    $text = "Registered commands: ";
+    foreach my $command (sort { $a->{name} cmp $b->{name} } @{ $self->{commands}->{handlers} }) {
+      $text .= "$command->{name} ";
+      $text .= "($command->{level}) " if $command->{level} > 0;
+    }
+    return $text;
+  }
+
+  if ($arguments =~ /^users$/i) {
+    $text = "Users: ";
+    my $last_channel = "";
+    my $sep = "";
+    foreach my $channel (sort keys %{ $self->{users}->{users}->{hash} }) {
+      next if $from =~ m/^#/ and $channel ne $from and $channel ne '.*';
+      if ($last_channel ne $channel) {
+        $text .= $sep . ($channel eq ".*" ? "global" : $channel) . ": ";
+        $last_channel = $channel;
+        $sep = "";
+      }
+      foreach my $hostmask (sort { return 0 if $a eq '_name' or $b eq '_name'; $self->{users}->{users}->{hash}->{$channel}->{$a}->{name} cmp $self->{users}->{users}->{hash}->{$channel}->{$b}->{name} } keys %{ $self->{users}->{users}->{hash}->{$channel} }) {
+        next if $hostmask eq '_name';
+        $text .= $sep;
+        $text .= "*" if $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{loggedin};
+        $text .= $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{name};
+        $text .= " (" . $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} . ")" if $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} > 0;
+        $sep = "; ";
+      }
+    }
+    return $text;
+  }
+
+  if ($arguments =~ /^admins$/i) {
+    $text = "Admins: ";
+    my $last_channel = "";
+    my $sep = "";
+    foreach my $channel (sort keys %{ $self->{users}->{users}->{hash} }) {
+      next if $from =~ m/^#/ and $channel ne $from and $channel ne '.*';
+      if ($last_channel ne $channel) {
+        $text .= $sep . ($channel eq ".*" ? "global" : $channel) . ": ";
+        $last_channel = $channel;
+        $sep = "";
+      }
+      foreach my $hostmask (sort { return 0 if $a eq '_name' or $b eq '_name'; $self->{users}->{users}->{hash}->{$channel}->{$a}->{name} cmp $self->{users}->{users}->{hash}->{$channel}->{$b}->{name} } keys %{ $self->{users}->{users}->{hash}->{$channel} }) {
+        next if $hostmask eq '_name';
+        next if $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} <= 0;
+        $text .= $sep;
+        $text .= "*" if $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{loggedin};
+        $text .= $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{name} . " (" . $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} . ")";
+        $sep = "; ";
+      }
+    }
+    return $text;
+  }
+  return $usage;
+}
+
+sub sl {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+  return "Usage: sl <ircd command>" if not length $arguments;
+  $self->{conn}->sl($arguments);
+  return "";
+}
+
+sub ack_die {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+  $self->{logger}->log("$nick!$user\@$host made me exit.\n");
+  $self->atexit();
+  $self->{conn}->privmsg($from, "Good-bye.") if defined $from;
+  $self->{conn}->quit("Departure requested.");
+  exit 0;
+}
+
+sub export {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+
+  return "/msg $nick Usage: export <factoids>" if not defined $arguments;
+
+  if ($arguments =~ /^factoids$/i) {
+    return $self->{factoids}->export_factoids;
+  }
+}
+
+sub evalcmd {
+  my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+  $self->{logger}->log("[$from] $nick!$user\@$host Evaluating [$arguments]\n");
+
+  my $ret;
+  my $result = eval $arguments;
+  if ($@) {
+    if (length $result) {
+      $ret .= "[Error: $@] ";
+    } else {
+      $ret .= "Error: $@";
+    }
+    $ret =~ s/ at \(eval \d+\) line 1.//;
+  }
+  return "/say $ret $result";
+}
+
+sub reload {
+  my $self = shift;
+  my ($from, $nick, $user, $host, $arguments) = @_;
+
+  my %reloadables = (
+    'commands' => sub {
+      $self->{commands}->load_metadata;
+      return "Commands metadata reloaded.";
+    },
+
+    'blacklist' => sub {
+      $self->{blacklist}->clear_blacklist;
+      $self->{blacklist}->load_blacklist;
+      return "Blacklist reloaded.";
+    },
+
+    'whitelist' => sub {
+      $self->{antiflood}->{whitelist}->clear;
+      $self->{antiflood}->{whitelist}->load;
+      return "Whitelist reloaded.";
+    },
+
+    'ignores' => sub {
+      $self->{ignorelist}->clear_ignores;
+      $self->{ignorelist}->load_ignores;
+      return "Ignore list reloaded.";
+    },
+
+    'users' => sub {
+      $self->{users}->load;
+      return "Users reloaded.";
+    },
+
+    'channels' => sub {
+      $self->{channels}->{channels}->clear;
+      $self->{channels}->load_channels;
+      return "Channels reloaded.";
+    },
+
+    'bantimeouts' => sub {
+      $self->{chanops}->{unban_timeout}->clear;
+      $self->{chanops}->{unban_timeout}->load;
+      return "Ban timeouts reloaded.";
+    },
+
+    'mutetimeouts' => sub {
+      $self->{chanops}->{unmute_timeout}->clear;
+      $self->{chanops}->{unmute_timeout}->load;
+      return "Mute timeouts reloaded.";
+    },
+
+    'registry' => sub {
+      $self->{registry}->{registry}->clear;
+      $self->{registry}->load;
+      return "Registry reloaded.";
+    },
+
+    'factoids' => sub {
+      $self->{factoids}->{factoids}->clear;
+      $self->{factoids}->load_factoids;
+      return "Factoids reloaded.";
+    },
+
+    'funcs' => sub {
+      $self->{func_cmd}->init_funcs;
+      return "Funcs reloaded.";
+    }
+  );
+
+  if (not length $arguments or not exists $reloadables{$arguments}) {
+    my $usage = 'Usage: reload <';
+    $usage .= join '|', sort keys %reloadables;
+    $usage .= '>';
+    return $usage;
+  }
+
+  return $reloadables{$arguments}();
 }
 
 1;

@@ -173,7 +173,7 @@ sub process_line {
   foreach $command (@commands) {
     # check if user is ignored (and command isn't `login`)
     if ($command !~ /^login / && defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
-      my $admin = $pbot->{admins}->loggedin($from, "$nick!$user\@$host");
+      my $admin = $pbot->{users}->loggedin_admin($from, "$nick!$user\@$host");
       if (!defined $admin || $admin->{level} < 10) {
         # hostmask ignored
         return 1;

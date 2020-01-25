@@ -18,12 +18,8 @@ use PBot::IgnoreListCommands;
 use Time::HiRes qw(gettimeofday);
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -32,8 +28,8 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  $self->{filename} = delete $conf{filename};
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{filename} = $conf{filename};
 
   $self->{ignore_list}          = {};
   $self->{ignore_flood_counter} = {};
@@ -41,7 +37,7 @@ sub initialize {
 
   $self->{commands} = PBot::IgnoreListCommands->new(pbot => $self->{pbot});
 
-  $self->load_ignores;
+  $self->load_ignores();
 
   $self->{pbot}->{timer}->register(sub { $self->check_ignore_timeouts }, 10);
 }

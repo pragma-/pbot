@@ -26,12 +26,12 @@ sub initialize {
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference in StdinReader");
 
   # create implicit bot-admin account for bot
-  my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-  if (not $self->{pbot}->{admins}->find_admin('.*', '*!stdin@pbot')) {
+  if (not $self->{pbot}->{users}->find_admin('.*', '*!stdin@pbot')) {
+    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
     $self->{pbot}->{logger}->log("Adding stdin admin *!stdin\@pbot...\n");
-    $self->{pbot}->{admins}->add_admin($botnick, '.*', '*!stdin@pbot', 100, 'notused', 1);
-    $self->{pbot}->{admins}->login($botnick, "$botnick!stdin\@pbot", 'notused');
-    $self->{pbot}->{admins}->save_admins;
+    $self->{pbot}->{users}->add_user($botnick, '.*', '*!stdin@pbot', 100, undef, 1);
+    $self->{pbot}->{users}->login($botnick, "$botnick!stdin\@pbot", undef);
+    $self->{pbot}->{users}->save;
   }
 
   # used to check whether process is in background or foreground, for stdin reading

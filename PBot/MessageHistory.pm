@@ -397,7 +397,7 @@ sub recall_message {
     foreach my $msg (@$messages) {
       $self->{pbot}->{logger}->log("$nick ($from) recalled <$msg->{nick}/$msg->{channel}> $msg->{msg}\n");
 
-      if ($max_recall_time && gettimeofday - $msg->{timestamp} > $max_recall_time && not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host")) {
+      if ($max_recall_time && gettimeofday - $msg->{timestamp} > $max_recall_time && not $self->{pbot}->{users}->loggedin_admin($from, "$nick!$user\@$host")) {
         $max_recall_time = duration($max_recall_time);
         $recall_text .= "Sorry, you can not recall messages older than $max_recall_time.";
         return $recall_text;

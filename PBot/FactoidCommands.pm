@@ -78,7 +78,6 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { return $self->factmove(@_)      },  "factmove",     0);
   $self->{pbot}->{commands}->register(sub { return $self->call_factoid(@_)  },  "fact",         0);
   $self->{pbot}->{commands}->register(sub { return $self->factfind(@_)      },  "factfind",     0);
-  $self->{pbot}->{commands}->register(sub { return $self->list(@_)          },  "list",         0);
   $self->{pbot}->{commands}->register(sub { return $self->top20(@_)         },  "top20",        0);
   $self->{pbot}->{commands}->register(sub { return $self->load_module(@_)   },  "load",        90);
   $self->{pbot}->{commands}->register(sub { return $self->unload_module(@_) },  "unload",      90);
@@ -408,7 +407,7 @@ sub factundo {
   }
 
   my $factoids = $self->{pbot}->{factoids}->{factoids}->{hash};
-  my $admininfo = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+  my $admininfo = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
   if ($factoids->{$channel}->{$trigger}->{'locked'}) {
     return "/say $trigger_name is locked and cannot be reverted." if not defined $admininfo;
 
@@ -501,7 +500,7 @@ sub factredo {
   }
 
   my $factoids = $self->{pbot}->{factoids}->{factoids}->{hash};
-  my $admininfo = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+  my $admininfo = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
   if ($factoids->{$channel}->{$trigger}->{'locked'}) {
     return "/say $trigger_name is locked and cannot be reverted." if not defined $admininfo;
 
@@ -563,9 +562,9 @@ sub factset {
 
   my $admininfo;
   if (defined $owner_channel) {
-    $admininfo  = $self->{pbot}->{admins}->loggedin($owner_channel, "$nick!$user\@$host");
+    $admininfo  = $self->{pbot}->{users}->loggedin_admin($owner_channel, "$nick!$user\@$host");
   } else {
-    $admininfo  = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+    $admininfo  = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
   }
 
   my $level = 0;
@@ -656,9 +655,9 @@ sub factunset {
   my $admininfo;
 
   if (defined $owner_channel) {
-    $admininfo = $self->{pbot}->{admins}->loggedin($owner_channel, "$nick!$user\@$host");
+    $admininfo = $self->{pbot}->{users}->loggedin_admin($owner_channel, "$nick!$user\@$host");
   } else {
-    $admininfo = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+    $admininfo = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
   }
 
   my $level = 0;
@@ -723,63 +722,6 @@ sub factunset {
   return $result;
 }
 
-sub list {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my $text;
-
-  my $usage = "Usage: list <modules|commands|admins>";
-
-  if (not defined $arguments) {
-    return $usage;
-  }
-
-  if ($arguments =~ /^modules$/i) {
-    $text = "Loaded modules: ";
-    foreach my $channel (sort keys %{ $self->{pbot}->{factoids}->{factoids}->{hash} }) {
-      foreach my $command (sort keys %{ $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel} }) {
-        next if $command eq '_name';
-        if ($self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$command}->{type} eq 'module') {
-          $text .= "$self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$command}->{_name} ";
-        }
-      }
-    }
-    return $text;
-  }
-
-  if ($arguments =~ /^commands$/i) {
-    $text = "Registered commands: ";
-    foreach my $command (sort { $a->{name} cmp $b->{name} } @{ $self->{pbot}->{commands}->{handlers} }) {
-      $text .= "$command->{name} ";
-      $text .= "($command->{level}) " if $command->{level} > 0;
-    }
-    return $text;
-  }
-
-  if ($arguments =~ /^admins$/i) {
-    $text = "Admins: ";
-    my $last_channel = "";
-    my $sep = "";
-    foreach my $channel (sort keys %{ $self->{pbot}->{admins}->{admins}->{hash} }) {
-      next if $from =~ m/^#/ and $channel ne $from and $channel ne '.*';
-      if ($last_channel ne $channel) {
-        $text .= $sep . ($channel eq ".*" ? "global" : $channel) . ": ";
-        $last_channel = $channel;
-        $sep = "";
-      }
-      foreach my $hostmask (sort { return 0 if $a eq '_name' or $b eq '_name'; $self->{pbot}->{admins}->{admins}->{hash}->{$channel}->{$a}->{name} cmp $self->{pbot}->{admins}->{admins}->{hash}->{$channel}->{$b}->{name} } keys %{ $self->{pbot}->{admins}->{admins}->{hash}->{$channel} }) {
-        next if $hostmask eq '_name';
-        $text .= $sep;
-        $text .= "*" if $self->{pbot}->{admins}->{admins}->{hash}->{$channel}->{$hostmask}->{loggedin};
-        $text .= $self->{pbot}->{admins}->{admins}->{hash}->{$channel}->{$hostmask}->{name} . " (" . $self->{pbot}->{admins}->{admins}->{hash}->{$channel}->{$hostmask}->{level} . ")";
-        $sep = "; ";
-      }
-    }
-    return $text;
-  }
-  return $usage;
-}
-
 sub factmove {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
@@ -827,7 +769,7 @@ sub factmove {
 
   my ($owner) = $factoids->{$found_src_channel}->{$found_source}->{'owner'} =~ m/([^!]+)/;
 
-  if ((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($found_src_channel, "$nick!$user\@$host"))) {
+  if ((lc $nick ne lc $owner) and (not $self->{pbot}->{users}->loggedin_admin($found_src_channel, "$nick!$user\@$host"))) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host attempted to move [$found_src_channel] $found_source (not owner)\n");
     my $chan = ($found_src_channel eq '.*' ? 'the global channel' : $found_src_channel);
     return "You are not the owner of $source_trigger_name for $source_channel_name.";
@@ -1080,7 +1022,7 @@ sub factadd {
 
       my ($owner) = $factoids->{$channel}->{$trigger}->{'owner'} =~ m/([^!]+)/;
 
-      if ((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host"))) {
+      if ((lc $nick ne lc $owner) and (not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host"))) {
         return "You are not the owner of $trigger_name for $channel_name; cannot force overwrite.";
       }
     }
@@ -1136,7 +1078,7 @@ sub factrem {
 
   my ($owner) = $factoids->{$channel}->{$trigger}->{'owner'} =~ m/([^!]+)/;
 
-  if ((lc $nick ne lc $owner) and (not $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host"))) {
+  if ((lc $nick ne lc $owner) and (not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host"))) {
     return "You are not the owner of $trigger_name for $channel_name.";
   }
 
@@ -1682,7 +1624,7 @@ sub factchange {
     return "/say $trigger_name belongs to $channel_name, but this is $from_chan. Please switch to $channel_name or use /msg to change this factoid.";
   }
 
-  my $admininfo = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+  my $admininfo = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
   if ($factoids_hash->{$channel}->{$trigger}->{'locked'}) {
     return "/say $trigger_name is locked and cannot be changed." if not defined $admininfo;
 

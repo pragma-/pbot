@@ -58,29 +58,24 @@ sub show_nicklist {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   my $nicklist;
 
-  my $admin = $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host");
-
   if (not length $arguments) {
-    if (not $admin) {
-      return "Usage: nicklist <channel> [nick]";
-    }
-    $nicklist = Dumper($self->{nicklist});
-  } else {
-    my @args = split / /, $arguments;
+    return "Usage: nicklist <channel> [nick]";
+  }
 
-    if (@args == 1) {
-      if (not exists $self->{nicklist}->{$arguments}) {
-        return "No nicklist for $arguments.";
-      }
-      $nicklist = Dumper($self->{nicklist}->{$arguments});
-    } else {
-      if (not exists $self->{nicklist}->{$args[0]}) {
-        return "No nicklist for $args[0].";
-      } elsif (not exists $self->{nicklist}->{$args[0]}->{$args[1]}) {
-        return "No such nick $args[1] in channel $args[0].";
-      }
-      $nicklist = Dumper($self->{nicklist}->{$args[0]}->{$args[1]});
+  my @args = split / /, $arguments;
+
+  if (@args == 1) {
+    if (not exists $self->{nicklist}->{lc $arguments}) {
+      return "No nicklist for $arguments.";
     }
+    $nicklist = Dumper($self->{nicklist}->{lc $arguments});
+  } else {
+    if (not exists $self->{nicklist}->{lc $args[0]}) {
+      return "No nicklist for $args[0].";
+    } elsif (not exists $self->{nicklist}->{lc $args[0]}->{lc $args[1]}) {
+      return "No such nick $args[1] in channel $args[0].";
+    }
+    $nicklist = Dumper($self->{nicklist}->{lc $args[0]}->{lc $args[1]});
   }
 
   return $nicklist;

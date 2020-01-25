@@ -39,10 +39,11 @@ sub initialize {
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Commands', filename => $conf{filename});
   $self->load_metadata;
 
-  $self->register(sub { $self->cmdset(@_)   },  "cmdset",   90);
-  $self->register(sub { $self->cmdunset(@_) },  "cmdunset", 90);
-  $self->register(sub { $self->help(@_)     },  "help",      0);
-  $self->register(sub { $self->uptime(@_)   },  "uptime",    0);
+  $self->register(sub { $self->cmdset(@_)     },  "cmdset",   90);
+  $self->register(sub { $self->cmdunset(@_)   },  "cmdunset", 90);
+  $self->register(sub { $self->help(@_)       },  "help",      0);
+  $self->register(sub { $self->uptime(@_)     },  "uptime",    0);
+  $self->register(sub { $self->in_channel(@_) },  "in",        0);
 }
 
 sub register {
@@ -97,7 +98,7 @@ sub interpreter {
   my $from = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $stuff->{from};
   my ($admin_channel) = $stuff->{arguments} =~ m/\B(#[^ ]+)/; # assume first channel-like argument
   $admin_channel = $from if not defined $admin_channel;
-  my $admin = $self->{pbot}->{admins}->loggedin($admin_channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+  my $admin = $self->{pbot}->{users}->loggedin_admin($admin_channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
   my $admin_level = defined $admin ? $admin->{level} : 0;
   my $keyword = lc $stuff->{keyword};
 
@@ -242,6 +243,20 @@ sub help {
 sub uptime {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   return localtime ($self->{pbot}->{startup_timestamp}) . " [" . duration (time - $self->{pbot}->{startup_timestamp}) . "]";
+}
+
+sub in_channel {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+
+  my $usage = "Usage: in <channel> <command>";
+  return $usage if not $arguments;
+
+  my ($channel, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+  return $usage if not defined $channel or not defined $command;
+
+  $stuff->{admin_channel_override} = $channel;
+  $stuff->{command} = $command;
+  return $self->{pbot}->{interpreter}->interpret($stuff);
 }
 
 1;
