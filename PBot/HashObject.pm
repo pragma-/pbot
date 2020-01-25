@@ -190,7 +190,7 @@ sub add {
   }
 
   $data->{_name} = $index; # preserve case of index
-  $self->{hash}->{$lc_index} = {%$data};
+  $self->{hash}->{$lc_index} = $data;
   $self->save unless $dont_save;
   return "$index added to $self->{name}.";
 }
