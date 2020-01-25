@@ -274,6 +274,7 @@ sub add {
   my $lc_secondary_index = lc $secondary_index;
 
   if (exists $self->{hash}->{$lc_primary_index} and exists $self->{$lc_primary_index}->{$lc_secondary_index}) {
+    $self->{pbot}->{logger}->log("Entry $lc_primary_index/$lc_secondary_index already exists.\n");
     return "Error: entry already exists";
   }
 
@@ -282,13 +283,14 @@ sub add {
   }
 
   $data->{_name} = $secondary_index; # preserve case
-  $self->{hash}->{$lc_primary_index}->{$lc_secondary_index} = {%$data};
+  $self->{hash}->{$lc_primary_index}->{$lc_secondary_index} = $data;
   $self->save() unless $dont_save;
 
   my $name1 = $self->{hash}->{$lc_primary_index}->{_name};
   my $name2 = $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{_name};
   $name1 = 'global' if $name1 eq '.*';
   $name2 = "\"$name2\"" if $name2 =~ / /;
+  $self->{pbot}->{logger}->log("$self->{name}: [$name1]: $name2 added.\n");
   return "$self->{name}: [$name1]: $name2 added.";
 }
 
