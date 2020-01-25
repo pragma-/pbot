@@ -215,10 +215,7 @@ Usages:
 - `blacklist remove <hostmask regex> [channel]`
 
 ### op
-### deop
-### voice
-### devoice
-The `op`, `deop`, `voice` and `devoice` commands all perform their respective named action.
+The `op` command perform the respective named action.
 
 The `targets` parameter can be a list of multiple nicks, optionally containing
 wildcards. If `targets` is omitted, the action will be performed on the caller.
@@ -228,15 +225,57 @@ Usages:
 In channel:
 
 * `op [targets]`
-* `deop [targets]`
-* `voice [targets]`
-* `devoice [targets]`
 
 From private message:
 
 * `op <channel> [targets]`
+
+### deop
+The `deop` command perform the respective named action.
+
+The `targets` parameter can be a list of multiple nicks, optionally containing
+wildcards. If `targets` is omitted, the action will be performed on the caller.
+
+Usages:
+
+In channel:
+
+* `deop [targets]`
+
+From private message:
+
 * `deop <channel> [targets]`
+
+### voice
+The `voice` command perform the respective named action.
+
+The `targets` parameter can be a list of multiple nicks, optionally containing
+wildcards. If `targets` is omitted, the action will be performed on the caller.
+
+Usages:
+
+In channel:
+
+* `voice [targets]`
+
+From private message:
+
 * `voice <channel> [targets]`
+
+### devoice
+The `devoice` command perform the respective named action.
+
+The `targets` parameter can be a list of multiple nicks, optionally containing
+wildcards. If `targets` is omitted, the action will be performed on the caller.
+
+Usages:
+
+In channel:
+
+* `devoice [targets]`
+
+From private message:
+
 * `devoice <channel> [targets]`
 
 ### mode
@@ -380,4 +419,3 @@ Usage: `sl <irc command>`
 
 ### die
 Tells PBot to disconnect and exit.
-
