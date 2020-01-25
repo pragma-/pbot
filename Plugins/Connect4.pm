@@ -271,7 +271,7 @@ sub connect4_cmd {
     }
 
     when ('abort') {
-      if (not $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host")) {
+      if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) {
         return "$nick: Sorry, only admins may abort the game.";
       }
 
@@ -290,7 +290,7 @@ sub connect4_cmd {
     }
 
     when ('kick') {
-      if (not $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host")) {
+      if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) {
         return "$nick: Sorry, only admins may kick people from the game.";
       }
 

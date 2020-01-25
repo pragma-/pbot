@@ -355,7 +355,7 @@ sub spinach_cmd {
     }
 
     when ('edit') {
-      my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
+      my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
 
       if (not $admin) {
         return "$nick: Sorry, only admins may edit questions.";
@@ -403,7 +403,7 @@ sub spinach_cmd {
     }
 
     when ('load') {
-      my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
+      my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
       if (not $admin or $admin->{level} < 90) {
         return "$nick: Sorry, only very powerful admins may reload the questions.";
       }
@@ -503,7 +503,7 @@ sub spinach_cmd {
     }
 
     when ('abort') {
-      if (not $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host")) {
+      if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) {
         return "$nick: Sorry, only admins may abort the game.";
       }
 
@@ -542,7 +542,7 @@ sub spinach_cmd {
     }
 
     when ('kick') {
-      if (not $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host")) {
+      if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) {
         return "$nick: Sorry, only admins may kick people from the game.";
       }
 
@@ -939,7 +939,7 @@ sub spinach_cmd {
           return "Usage: spinach state set <new state>";
         }
 
-        my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
+        my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
         if (not $admin or $admin->{level} < 90) {
           return "$nick: Sorry, only very powerful admins may set game state.";
         }
@@ -954,7 +954,7 @@ sub spinach_cmd {
           return "Usage: spinach state result <current state result>";
         }
 
-        my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
+        my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
         if (not $admin or $admin->{level} < 90) {
           return "$nick: Sorry, only very powerful admins may set game state.";
         }
@@ -978,7 +978,7 @@ sub spinach_cmd {
         return "Spinach stats setting cannot be modified while a game is in progress.";
       }
 
-      my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
+      my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
       if (defined $value and (not $admin or $admin->{level} <= 0)) {
         return "$nick: Sorry, only Spinach admins may set game settings.";
       }
@@ -997,7 +997,7 @@ sub spinach_cmd {
         return "Spinach stats setting cannot be modified while a game is in progress.";
       }
 
-      my $admin = $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host");
+      my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
       if (not $admin or $admin->{level} <= 0) {
         return "$nick: Sorry, only Spinach admins may set game settings.";
       }

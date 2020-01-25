@@ -264,7 +264,7 @@ sub remindme {
   }
 
   if ($delete_id) {
-    my $admininfo = $self->{pbot}->{admins}->loggedin($target ? $target : $from, "$nick!$user\@$host");
+    my $admininfo = $self->{pbot}->{users}->loggedin_admin($target ? $target : $from, "$nick!$user\@$host");
 
     # admins can delete any reminders (perhaps check admin levels against owner level?)
     if ($admininfo) {
@@ -303,7 +303,7 @@ sub remindme {
   return "Please specify a point in time for this reminder." if not $alarm;
   return "Please specify a reminder message." if not $text;
 
-  my $admininfo = $self->{pbot}->{admins}->loggedin($target ? $target : $from, "$nick!$user\@$host");
+  my $admininfo = $self->{pbot}->{users}->loggedin_admin($target ? $target : $from, "$nick!$user\@$host");
 
   if ($target) {
     if (not defined $admininfo) {

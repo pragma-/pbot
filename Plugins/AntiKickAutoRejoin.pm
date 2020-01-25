@@ -65,7 +65,7 @@ sub on_join {
   $channel = lc $channel;
   return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
   return 0 if $self->{pbot}->{antiflood}->whitelisted($channel, "$nick!$user\@$host");
-  return 0 if $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+  return 0 if $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
 
   if (exists $self->{kicks}->{$channel}
       and exists $self->{kicks}->{$channel}->{$nick}) {

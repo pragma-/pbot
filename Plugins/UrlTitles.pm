@@ -51,7 +51,7 @@ sub show_url_titles {
   return 0 if $event->{interpreted};
 
   if ($self->{pbot}->{ignorelist}->check_ignore($nick, $user, $host, $channel)) {
-    my $admin = $self->{pbot}->{admins}->loggedin($channel, "$nick!$user\@$host");
+    my $admin = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
     if (!defined $admin || $admin->{level} < 10) {
       return 0;
     }

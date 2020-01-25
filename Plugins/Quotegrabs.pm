@@ -281,7 +281,7 @@ sub delete_quotegrab {
     return "/msg $nick No quotegrab matching id $arguments found.";
   }
 
-  if (not $self->{pbot}->{admins}->loggedin($from, "$nick!$user\@$host") and $quotegrab->{grabbed_by} ne "$nick!$user\@$host") {
+  if (not $self->{pbot}->{users}->loggedin_admin($from, "$nick!$user\@$host") and $quotegrab->{grabbed_by} ne "$nick!$user\@$host") {
     return "You are not the grabber of this quote.";
   }
 

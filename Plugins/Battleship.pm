@@ -105,7 +105,7 @@ sub battleship_cmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   $arguments =~ s/^\s+|\s+$//g;
 
-  my $usage = "Usage: battleship challenge|accept|bomb|board|quit|players|kick|abort; for more information about a command: battleship help <command>";
+  my $usage = "Usage: battleship challenge|accept|bomb|board|score|quit|players|kick|abort; for more information about a command: battleship help <command>";
 
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
@@ -122,7 +122,7 @@ sub battleship_cmd {
 
         default {
           if (length $arguments) {
-            return "Battleship has no such command '$arguments'. I can't help you with that.";
+            return "Battleship help is coming soon.";
           } else {
             return "Usage: battleship help <command>";
           }
@@ -221,7 +221,7 @@ sub battleship_cmd {
     }
 
     when ('abort') {
-      if (not $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host")) {
+      if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) {
         return "$nick: Sorry, only admins may abort the game.";
       }
 
@@ -249,7 +249,7 @@ sub battleship_cmd {
     }
 
     when ('kick') {
-      if (not $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host")) {
+      if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) {
         return "$nick: Sorry, only admins may kick people from the game.";
       }
 
@@ -375,7 +375,7 @@ sub battleship_cmd {
     }
 
     when ('fullboard') {
-      if (not $self->{pbot}->{admins}->loggedin($self->{channel}, "$nick!$user\@$host")) {
+      if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) {
         return "$nick: Sorry, only admins may see the full board.";
       }
 
@@ -910,14 +910,14 @@ sub show_battlefield {
 
   $self->{pbot}->{logger}->log("showing battlefield for player $player\n");
 
-  $buf = "$color{cyan}  ";
+  $buf = "$color{cyan},01  ";
 
   for($x = 1; $x < $self->{N_X} + 1; $x++) {
     if ($x % 10 == 0) {
-      $buf .= $color{yellow} if $self->{N_X} > 10;
+      $buf .= "$color{yellow},01" if $self->{N_X} > 10;
       $buf .= $x % 10;
       $buf .= ' ';
-      $buf .= $color{cyan} if $self->{N_X} > 10;
+      $buf .= "$color{cyan},01" if $self->{N_X} > 10;
     } else {
       $buf .= $x % 10;
       $buf .= ' ';
@@ -927,88 +927,88 @@ sub show_battlefield {
   $buf .= "\n";
 
   for ($y = 0; $y < $self->{N_Y}; $y++) {
-    $buf .= sprintf("$color{cyan}%c ", 97 + $y);
+    $buf .= sprintf("$color{cyan},01%c ", 97 + $y);
     for ($x = 0; $x < $self->{N_X}; $x++) {
       if ($player == 0) {
         if ($self->{board}->[$y][$x] eq $self->{player_two_vert} || $self->{board}->[$y][$x] eq $self->{player_two_horiz}) {
-          $buf .= "$color{blue}~ ";
+          $buf .= "$color{blue},01~ ";
           next;
         } else {
           if ($self->{board}->[$y][$x] eq '1' || $self->{board}->[$y][$x] eq '2') {
-            $buf .= "$color{red}";
+            $buf .= "$color{red},01";
           } elsif ($self->{board}->[$y][$x] eq 'o' || $self->{board}->[$y][$x] eq '*') {
-            $buf .= "$color{cyan}";
+            $buf .= "$color{cyan},01";
           } elsif ($self->{board}->[$y][$x] eq '~') {
-            $buf .= "$color{blue}~ ";
+            $buf .= "$color{blue},01~ ";
             next;
           } else {
-            $buf .= "$color{white}";
+            $buf .= "$color{white},01";
           }
           $buf .= "$self->{board}->[$y][$x] ";
           $self->{pbot}->{logger}->log("$y, $x: $self->{board}->[$y][$x]\n");
         }
       } elsif ($player == 1) {
         if ($self->{board}->[$y][$x] eq $self->{player_one_vert} || $self->{board}->[$y][$x] eq $self->{player_one_horiz}) {
-          $buf .= "$color{blue}~ ";
+          $buf .= "$color{blue},01~ ";
           next;
         } else {
           if ($self->{board}->[$y][$x] eq '1' || $self->{board}->[$y][$x] eq '2') {
-            $buf .= "$color{red}";
+            $buf .= "$color{red},01";
           } elsif ($self->{board}->[$y][$x] eq 'o' || $self->{board}->[$y][$x] eq '*') {
-            $buf .= "$color{cyan}";
+            $buf .= "$color{cyan},01";
           } elsif ($self->{board}->[$y][$x] eq '~') {
-            $buf .= "$color{blue}~ ";
+            $buf .= "$color{blue},01~ ";
             next;
           } else {
-            $buf .= "$color{white}";
+            $buf .= "$color{white},01";
           }
           $buf .= "$self->{board}->[$y][$x] ";
         }
       } elsif ($player == 2) {
         if ($self->{board}->[$y][$x] eq $self->{player_one_vert} || $self->{board}->[$y][$x] eq $self->{player_one_horiz}
           || $self->{board}->[$y][$x] eq $self->{player_two_vert} || $self->{board}->[$y][$x] eq $self->{player_two_horiz}) {
-          $buf .= "$color{blue}~ ";
+          $buf .= "$color{blue},01~ ";
           next;
         } else {
           if ($self->{board}->[$y][$x] eq '1' || $self->{board}->[$y][$x] eq '2') {
-            $buf .= "$color{red}";
+            $buf .= "$color{red},01";
           } elsif ($self->{board}->[$y][$x] eq 'o' || $self->{board}->[$y][$x] eq '*') {
-            $buf .= "$color{cyan}";
+            $buf .= "$color{cyan},01";
           } elsif ($self->{board}->[$y][$x] eq '~') {
-            $buf .= "$color{blue}~ ";
+            $buf .= "$color{blue},01~ ";
             next;
           } else {
-            $buf .= "$color{white}";
+            $buf .= "$color{white},01";
           }
           $buf .= "$self->{board}->[$y][$x] ";
         }
       } else {
         if ($self->{board}->[$y][$x] eq '1' || $self->{board}->[$y][$x] eq '2') {
-          $buf .= "$color{red}";
+          $buf .= "$color{red},01";
         } elsif ($self->{board}->[$y][$x] eq 'o' || $self->{board}->[$y][$x] eq '*') {
-          $buf .= "$color{cyan}";
+          $buf .= "$color{cyan},01";
         } elsif ($self->{board}->[$y][$x] eq '~') {
-          $buf .= "$color{blue}~ ";
+          $buf .= "$color{blue},01~ ";
           next;
         } else {
-          $buf .= "$color{white}";
+          $buf .= "$color{white},01";
         }
         $buf .= "$self->{board}->[$y][$x] ";
       }
     }
-    $buf .= sprintf("$color{cyan}%c", 97 + $y);
+    $buf .= sprintf("$color{cyan},01%c", 97 + $y);
     $buf .= "$color{reset}\n";
   }
 
   # bottom border
-  $buf .= "$color{cyan}  ";
+  $buf .= "$color{cyan},01  ";
 
   for($x = 1; $x < $self->{N_X} + 1; $x++) {
     if ($x % 10 == 0) {
-      $buf .= $color{yellow} if $self->{N_X} > 10;
+      $buf .= $color{yellow},01 if $self->{N_X} > 10;
       $buf .= $x % 10;
       $buf .= ' ';
-      $buf .= $color{cyan} if $self->{N_X} > 10;
+      $buf .= $color{cyan},01 if $self->{N_X} > 10;
     } else {
       $buf .= $x % 10;
       $buf .= ' ';
@@ -1021,15 +1021,15 @@ sub show_battlefield {
   my $player2 = $self->{player}->[1]->{nick};
 
   if ($player == 0) {
-    $self->send_message($self->{player}->[$player]->{nick}, "Player One Legend: ships: [| -]  ocean: [$color{blue}~$color{reset}]  $player1 miss: [$color{cyan}*$color{reset}]  $player2 miss: [$color{cyan}o$color{reset}]  $player1 hit: [$color{red}"."1"."$color{reset}]  $player2 hit: [$color{red}2$color{reset}]");
+    $self->send_message($self->{player}->[$player]->{nick}, "Player One Legend: ships: [| -]  ocean: [$color{blue},01~$color{reset}]  $player1 miss: [$color{cyan},01*$color{reset}]  $player2 miss: [$color{cyan},01o$color{reset}]  $player1 hit: [$color{red},01"."1"."$color{reset}]  $player2 hit: [$color{red},012$color{reset}]");
   } elsif ($player == 1) {
-    $self->send_message($self->{player}->[$player]->{nick}, "Player Two Legend: ships: [I =]  ocean: [$color{blue}~$color{reset}]  $player1 miss: [$color{cyan}*$color{reset}]  $player2 miss: [$color{cyan}o$color{reset}]  $player1 hit: [$color{red}"."1"."$color{reset}]  $player2 hit: [$color{red}2$color{reset}]");
+    $self->send_message($self->{player}->[$player]->{nick}, "Player Two Legend: ships: [I =]  ocean: [$color{blue},01~$color{reset}]  $player1 miss: [$color{cyan},01*$color{reset}]  $player2 miss: [$color{cyan},01o$color{reset}]  $player1 hit: [$color{red},01"."1"."$color{reset}]  $player2 hit: [$color{red},012$color{reset}]");
   } elsif ($player == 2) {
-    $self->send_message($self->{channel}, "Spectator Legend: ocean: [$color{blue}~$color{reset}]  $player1 miss: [$color{cyan}*$color{reset}]  $player2 miss: [$color{cyan}o$color{reset}]  $player1 hit: [$color{red}"."1"."$color{reset}]  $player2 hit: [$color{red}2$color{reset}]");
+    $self->send_message($self->{channel}, "Spectator Legend: ocean: [$color{blue},01~$color{reset}]  $player1 miss: [$color{cyan},01*$color{reset}]  $player2 miss: [$color{cyan},01o$color{reset}]  $player1 hit: [$color{red},01"."1"."$color{reset}]  $player2 hit: [$color{red},012$color{reset}]");
   } elsif ($player == 3) {
-    $self->send_message($self->{channel}, "Final Board Legend: $player1 ships: [| -] $player2 ships: [I =]  ocean: [$color{blue}~$color{reset}]  $player1 miss: [$color{cyan}*$color{reset}]  $player2 miss: [$color{cyan}o$color{reset}]  $player1 hit: [$color{red}"."1"."$color{reset}]  $player2 hit: [$color{red}2$color{reset}]");
+    $self->send_message($self->{channel}, "Final Board Legend: $player1 ships: [| -] $player2 ships: [I =]  ocean: [$color{blue},01~$color{reset}]  $player1 miss: [$color{cyan},01*$color{reset}]  $player2 miss: [$color{cyan},01o$color{reset}]  $player1 hit: [$color{red},01"."1"."$color{reset}]  $player2 hit: [$color{red},012$color{reset}]");
   } else {
-    $self->send_message($nick, "Full Board Legend: $player1 ships: [| -] $player2 ships: [I =]  ocean: [$color{blue}~$color{reset}]  $player1 miss: [$color{cyan}*$color{reset}]  $player2 miss: [$color{cyan}o$color{reset}]  $player1 hit: [$color{red}"."1"."$color{reset}]  $player2 hit: [$color{red}2$color{reset}]");
+    $self->send_message($nick, "Full Board Legend: $player1 ships: [| -] $player2 ships: [I =]  ocean: [$color{blue},01~$color{reset}]  $player1 miss: [$color{cyan},01*$color{reset}]  $player2 miss: [$color{cyan},01o$color{reset}]  $player1 hit: [$color{red},01"."1"."$color{reset}]  $player2 hit: [$color{red},012$color{reset}]");
   }
 
   foreach my $line (split /\n/, $buf) {

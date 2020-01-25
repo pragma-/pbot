@@ -277,7 +277,7 @@ sub actiontrigger {
       }
 
       if ($level > 0) {
-        my $admin = $self->{pbot}->{admins}->find_admin($channel, "$nick!$user\@$host");
+        my $admin = $self->{pbot}->{users}->find_admin($channel, "$nick!$user\@$host");
         if (not defined $admin or $level > $admin->{level}) {
           return "You may not set a level higher than your own.";
         }
