@@ -429,6 +429,11 @@ sub mycmd {
     return "Usage: my <key> [value]";
   }
 
+  if (defined $value) {
+    $value =~ s/^is\s+//;
+    $value = undef if not length $value;
+  }
+
   $key = lc $key;
   my $channel = $from;
   my $hostmask = "$nick!$user\@$host";
