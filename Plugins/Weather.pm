@@ -77,8 +77,6 @@ sub get_weather {
     return "Failed to fetch weather date: " . $response->status_line;
   }
 
-  $self->{pbot}->{logger}->log("$xml\n");
-
   my $dom = XML::LibXML->load_xml(string => $xml);
 
   my $result = '';
@@ -86,7 +84,6 @@ sub get_weather {
   foreach my $channel ($dom->findnodes('//channel')) {
     my $title = $channel->findvalue('./title');
     my $description = $channel->findvalue('./description');
-    print "[$title][$description]\n";
 
     if ($description eq 'Invalid Location') {
       return "Location $location not found. Use \"<city>, <country abbrev>\" (e.g. \"paris, fr\") or a US Zip Code or \"<city>, <state abbrev>, US\" (e.g., \"austin, tx, us\").";
@@ -114,7 +111,6 @@ sub get_weather {
   }
 
   return $result;
-
 }
 
 sub fix_temps {
