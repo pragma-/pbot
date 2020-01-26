@@ -44,5 +44,6 @@ URI::Escape
 WebService::UrbanDictionary
 WWW::Google::CustomSearch
 WWW::Wikipedia
+XML::LibXML
 XML::Parser
 XML::RSS
