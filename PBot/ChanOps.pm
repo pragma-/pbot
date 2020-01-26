@@ -212,7 +212,7 @@ sub nick_to_banmask {
         $mask = '$a:' . $nickserv;
       } else {
         my ($nick, $user, $host) = $hostmask =~ m/([^!]+)!([^@]+)@(.*)/;
-        $mask = "*!$user\@" . PBot::AntiFlood::address_to_mask($host);
+        $mask = "*!$user\@" .$self->{pbot}->{antiflood}->address_to_mask($host);
       }
     } else {
       $mask .= '!*@*';

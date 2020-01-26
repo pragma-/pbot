@@ -498,7 +498,7 @@ sub check_flood {
             if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
               my $timeout = $self->{pbot}->{registry}->get_array_value('antiflood', 'join_flood_punishment', $channel_data->{offenses} - 1);
               my $duration = duration($timeout);
-              my $banmask = address_to_mask($host);
+              my $banmask = $self->address_to_mask($host);
 
               if ($self->{pbot}->{channels}->is_active_op("${channel}-floodbans")) {
                 $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'join flooding', "*!$user\@$banmask\$##stop_join_flood", $channel . '-floodbans', $timeout);
@@ -514,7 +514,7 @@ sub check_flood {
         } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
           if ($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
             # don't increment offenses again if already banned
-            if ($self->{pbot}->{chanops}->has_ban_timeout($channel, "*!$user\@" . address_to_mask($host))) {
+            if ($self->{pbot}->{chanops}->has_ban_timeout($channel, "*!$user\@" . $self->address_to_mask($host))) {
               $self->{pbot}->{logger}->log("$nick $channel flood offense disregarded due to existing ban\n");
               next;
             }
@@ -527,7 +527,7 @@ sub check_flood {
             if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
               my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $channel_data->{offenses} - 1);
 
-              $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'chat flooding', "*!$user\@" . address_to_mask($host), $channel, $length);
+              $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'chat flooding', "*!$user\@" . $self->address_to_mask($host), $channel, $length);
               $length = duration($length);
               $self->{pbot}->{logger}->log("$nick $channel flood offense " . $channel_data->{offenses} . " earned $length ban\n");
               $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in approximately $length.");
@@ -535,7 +535,7 @@ sub check_flood {
             $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
           }
           else { # private message flood
-            my $hostmask = address_to_mask($host);
+            my $hostmask = $self->address_to_mask($host);
             $hostmask =~ s/\*/.*/g;
             next if exists $self->{pbot}->{ignorelist}->{ignore_list}->{".*!$user\@$hostmask"}->{$channel};
 
@@ -562,7 +562,7 @@ sub check_flood {
 
           if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
             my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'nick_flood_punishment', $self->{nickflood}->{$ancestor}->{offenses} - 1);
-            $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'nick flooding', "*!$user\@" . address_to_mask($host), $channel, $length);
+            $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'nick flooding', "*!$user\@" . $self->address_to_mask($host), $channel, $length);
             $length = duration($length);
             $self->{pbot}->{logger}->log("$nick nickchange flood offense " . $self->{nickflood}->{$ancestor}->{offenses} . " earned $length ban\n");
             $self->{pbot}->{conn}->privmsg($nick, "You have been temporarily banned due to nick-change flooding.  You will be unbanned in $length.");
@@ -594,14 +594,14 @@ sub check_flood {
             $channel_data->{enter_abuses}++;
             if ($channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
               if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-                if ($self->{pbot}->{chanops}->has_ban_timeout($channel, "*!$user\@" . address_to_mask($host))) {
+                if ($self->{pbot}->{chanops}->has_ban_timeout($channel, "*!$user\@" . $self->address_to_mask($host))) {
                   $self->{pbot}->{logger}->log("$nick $channel enter abuse offense disregarded due to existing ban\n");
                   next;
                 }
 
                 my $offenses = $channel_data->{enter_abuses} - $enter_abuse_max_offenses + 1 + $other_offenses;
                 my $ban_length = $self->{pbot}->{registry}->get_array_value('antiflood', 'enter_abuse_punishment', $offenses - 1);
-                $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'enter abuse', "*!$user\@" . address_to_mask($host), $channel, $ban_length);
+                $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'enter abuse', "*!$user\@" . $self->address_to_mask($host), $channel, $ban_length);
                 $ban_length = duration($ban_length);
                 $self->{pbot}->{logger}->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
                 $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in approximately $ban_length.");
@@ -652,7 +652,7 @@ sub unbanme {
     next if $aliases{$alias}->{nickchange} == 1;
 
     my ($anick, $auser, $ahost) = $alias =~ m/([^!]+)!([^@]+)@(.*)/;
-    my $banmask = address_to_mask($ahost);
+    my $banmask = $self->address_to_mask($ahost);
     my $mask = "*!$auser\@$banmask\$##stop_join_flood";
 
     my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($aliases{$alias}->{id});
@@ -750,7 +750,7 @@ sub unbanme {
 }
 
 sub address_to_mask {
-  my $address = shift;
+  my ($self, $address) = @_;
   my $banmask;
 
   if ($address =~ m/^([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$/) {
@@ -961,7 +961,7 @@ sub check_bans {
           $banmask = "*!$user\@nat/$1/*";
         } else {
           $banmask = "*!*\@$host";
-          #$banmask = "*!$user@" . address_to_mask($host);
+          #$banmask = "*!$user@" . $self->address_to_mask($host);
         }
       }
 
