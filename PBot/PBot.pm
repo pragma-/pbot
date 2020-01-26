@@ -363,11 +363,11 @@ sub listcmd {
       foreach my $hostmask (sort { return 0 if $a eq '_name' or $b eq '_name'; $self->{users}->{users}->{hash}->{$channel}->{$a}->{name} cmp $self->{users}->{users}->{hash}->{$channel}->{$b}->{name} } keys %{ $self->{users}->{users}->{hash}->{$channel} }) {
         next if $hostmask eq '_name';
         $text .= $sep;
-        $text .= "*" if $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{loggedin};
         $text .= $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{name};
-        $text .= " (" . $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} . ")" if $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} > 0;
-        $sep = "; ";
+        $text .= "(" . $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} . ")" if $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} > 0;
+        $sep = " ";
       }
+      $sep = "; ";
     }
     return $text;
   }
@@ -387,10 +387,10 @@ sub listcmd {
         next if $hostmask eq '_name';
         next if $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} <= 0;
         $text .= $sep;
-        $text .= "*" if $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{loggedin};
         $text .= $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{name} . " (" . $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} . ")";
-        $sep = "; ";
+        $sep = " ";
       }
+      $sep = "; ";
     }
     return $text;
   }
