@@ -443,7 +443,15 @@ sub mycmd {
   if (not $u) {
     $channel = '.*';
     $hostmask = "$nick!*\@*";
-    $u = $self->add_user("my_$nick", $channel, $hostmask, undef, undef, 1);
+    my $name = $nick;
+
+    my ($existing_channel, $existing_hostmask) = $self->find_user_account($channel, $name);
+    if ($existing_hostmask ne $name) {
+      # user exists by name
+      return "There is already an user account named $name but it does not match your hostmask. Ask an admin for help.";
+    }
+
+    $u = $self->add_user($name, $channel, $hostmask, undef, undef, 1);
     $u->{loggedin} = 1;
     $u->{stayloggedin} = 1;
     $u->{autologin} = 1;
