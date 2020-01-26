@@ -452,6 +452,10 @@ sub mycmd {
     }
   }
 
+  if ($key eq 'level' and defined $value and $u->{level} < 90 and $value > $u->{level}) {
+    return "You may not increase your level!";
+  }
+
   ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
   my $result = $self->{users}->set($channel, $hostmask, $key, $value);
   $result =~ s/^password => .*;?$/password => <private>;/m;
