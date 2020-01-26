@@ -145,7 +145,6 @@ sub find_user_account {
 
   $channel = lc $channel;
   $hostmask = lc $hostmask;
-  $channel = '.*' if $channel !~ /^#/;
   my ($found_channel, $found_hostmask) = ($channel, $hostmask);
 
   foreach my $chan (keys %{ $self->{users}->{hash} }) {
@@ -177,6 +176,8 @@ sub find_user_account {
             }
           }
         }
+      } else {
+        $found_channel = $chan;
       }
     }
   }
@@ -446,7 +447,7 @@ sub mycmd {
     my $name = $nick;
 
     my ($existing_channel, $existing_hostmask) = $self->find_user_account($channel, $name);
-    if ($existing_hostmask ne $name) {
+    if ($existing_hostmask ne lc $name) {
       # user exists by name
       return "There is already an user account named $name but it does not match your hostmask. Ask an admin for help.";
     }
