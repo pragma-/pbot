@@ -442,7 +442,7 @@ sub mycmd {
 
   if (not $u) {
     $channel = '.*';
-    $hostmask = "$nick!*\@*";
+    $hostmask = "$nick!$user\@" . $self->{pbot}->{antiflood}->address_to_mask($host);
     my $name = $nick;
 
     my ($existing_channel, $existing_hostmask) = $self->find_user_account($channel, $name);
