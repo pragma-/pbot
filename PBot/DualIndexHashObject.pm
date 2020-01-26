@@ -222,6 +222,7 @@ sub set {
     my $result = "[$name1] $name2 keys:\n";
     my $comma = '';
     foreach my $key (sort keys %{ $self->{hash}->{$lc_primary_index}->{$lc_secondary_index} }) {
+      next if $key eq '_name';
       $result .= $comma . "$key => " . $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$key};
       $comma = ";\n";
     }
