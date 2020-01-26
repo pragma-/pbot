@@ -174,6 +174,7 @@ sub initialize {
 
     if (not defined $section or not defined $key) {
       $self->{logger}->log("Fatal error: bad argument `$arg`; registry entries must be in the form of section.key (e.g.: irc.botnick)\n");
+      exit;
     }
 
     $section =~ s/^-//; # remove a leading - to allow arguments like -irc.botnick due to habitual use of -args
