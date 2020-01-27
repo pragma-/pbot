@@ -19,17 +19,20 @@
   * [version](#version)
   * [help](#help)
   * [uptime](#uptime)
+  * [my](#my)
+  * [date](#date)
+  * [weather](#weather)
 * [Commands documented elsewhere](#commands-documented-elsewhere)
   * [Administrative commands](#administrative-commands)
     * [Logging in and out of PBot](#logging-in-and-out-of-pbot)
       * [login](Admin.md#login)
       * [logout](Admin.md#logout)
-    * [Admin management commands](#admin-management-commands)
-      * [adminadd](Admin.md#adminadd)
-      * [adminrem](Admin.md#adminrem)
-      * [adminset](Admin.md#adminset)
-      * [adminunset](Admin.md#adminunset)
-      * [list admins](Admin.md#listing-admins)
+    * [User management commands](#user-management-commands)
+      * [useradd](Admin.md#useradd)
+      * [userdel](Admin.md#userdel)
+      * [userset](Admin.md#userset)
+      * [userunset](Admin.md#userunset)
+      * [list users](Admin.md#listing-users)
     * [Channel management commands](#channel-management-commands)
       * [join](Admin.md#join)
       * [part](Admin.md#part)
@@ -245,18 +248,24 @@ and how long it has been running.
     <pragma-> !uptime
        <PBot> Tue Jan 14 01:55:40 2020 [8 days and 13 hours]
 
+### my
+
+### date
+
+### weather
+
 ## Commands documented elsewhere
 ### Administrative commands
 #### Logging in and out of PBot
 ##### [login](Admin.md#login)
 ##### [logout](Admin.md#logout)
 
-#### Admin management commands
-##### [adminadd](Admin.md#adminadd)
-##### [adminrem](Admin.md#adminrem)
-##### [adminset](Admin.md#adminset)
-##### [adminunset](Admin.md#adminunset)
-##### [list admins](Admin.md#listing-admins)
+#### User management commands
+##### [useradd](Admin.md#useradd)
+##### [userdel](Admin.md#userdel)
+##### [userset](Admin.md#userset)
+##### [userunset](Admin.md#userunset)
+##### [list users](Admin.md#listing-users)
 
 #### Channel management commands
 ##### [join](Admin.md#join)
