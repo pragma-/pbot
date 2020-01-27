@@ -4,26 +4,6 @@
       "help" : "Adds a new actiontrigger to PBot. See https://github.com/pragma-/pbot/blob/master/doc/ActionTrigger.md",
       "level" : 10
    },
-   "adminadd" : {
-      "_name" : "adminadd",
-      "help" : "Adds a new admin to PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#adminadd",
-      "level" : 60
-   },
-   "adminrem" : {
-      "_name" : "adminrem",
-      "help" : "Removes an admin from PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#adminrem",
-      "level" : 60
-   },
-   "adminset" : {
-      "_name" : "adminset",
-      "help" : "Sets metadata for an admin account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#adminset and https://github.com/pragma-/pbot/blob/master/doc/Admin.md#admin-metadata-list",
-      "level" : 60
-   },
-   "adminunset" : {
-      "_name" : "adminunset",
-      "help" : "Deletes a metadata key from an admin account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#adminunset",
-      "level" : 60
-   },
    "aka" : {
       "_name" : "aka",
       "help" : "Lists known aliases for a given nick. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#aka",
@@ -143,6 +123,11 @@
       "_name" : "countertrigger",
       "help" : "Manages counter triggers. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#trigger",
       "level" : 10
+   },
+   "date" : {
+      "_name" : "date",
+      "help" : "Shows date and time for a timezone. Accepts Linux timezone locations. You can set `!my timezone ...` to remember your timezone.",
+      "level" : 0
    },
    "delq" : {
       "_name" : "delq",
@@ -276,8 +261,8 @@
    },
    "help" : {
       "_name" : "help",
-      "help" : "",
-      "level" : 0
+      "help" : "Displays the `help` metadata for commands and factoids.",
+      "level" : "0"
    },
    "histogram" : {
       "_name" : "histogram",
@@ -348,6 +333,11 @@
       "_name" : "mute",
       "help" : "Mutes a user. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#banmute",
       "level" : 10
+   },
+   "my" : {
+      "_name" : "my",
+      "help" : "Lets users view and manipulate their own user metadata. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#my and https://github.com/pragma-/pbot/blob/master/doc/Admin.md#user-metadata-list",
+      "level" : 0
    },
    "nicklist" : {
       "_name" : "nicklist",
@@ -494,6 +484,31 @@
       "help" : "Unloads a plugin from PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unplug",
       "level" : 90
    },
+   "uptime" : {
+      "_name" : "uptime",
+      "help" : "",
+      "level" : 0
+   },
+   "useradd" : {
+      "_name" : "useradd",
+      "help" : "Adds a new user to PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#useradd",
+      "level" : 60
+   },
+   "userdel" : {
+      "_name" : "userdel",
+      "help" : "Removes an user from PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#userdel",
+      "level" : 60
+   },
+   "userset" : {
+      "_name" : "userset",
+      "help" : "Sets metadata for an user account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#userset and https://github.com/pragma-/pbot/blob/master/doc/Admin.md#user-metadata-list",
+      "level" : 60
+   },
+   "userunset" : {
+      "_name" : "userunset",
+      "help" : "Deletes a metadata key from an user account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#userunset",
+      "level" : 60
+   },
    "version" : {
       "_name" : "version",
       "help" : "",
@@ -503,6 +518,11 @@
       "_name" : "voice",
       "help" : "Sets mode +v on users. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#voice",
       "level" : 10
+   },
+   "weather" : {
+      "_name" : "weather",
+      "help" : "Fetches and displays weather data. You may set `!my location ...` to remember your location.",
+      "level" : 0
    },
    "whitelist" : {
       "_name" : "whitelist",
