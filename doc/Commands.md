@@ -257,6 +257,16 @@ Usage: `my [<key> [value]]`
 If `key` is omitted, the command will list all metadata keys and values for your
 user account.
 
+    <pragma-> my timezone los angeles
+       <PBot> [global] *!*@unaffiliated/pragmatic-chaos: timezone set to los angeles
+
+<!-- -->
+
+    <pragma-> my
+       <PBot> Usage: my [<key> [value]]; [global] *!*@unaffiliated/pragmatic-chaos keys:
+              autologin => 1; level => 100;  loggedin => 1; name => pragma;
+              password => <private>; timezone => los angeles
+
 See also [user metadata list](Admin.md#user-metadata-list).
 
 ### date
@@ -271,6 +281,10 @@ will use that timezone instead.
 
 You may use the [`my`](#my) command to set the user metadata `timezone`
 to have the command remember your timezone.
+
+    <pragma-> !date los angeles
+       <PBot> It's Mon 27 Jan 2020 02:08:19 PM PST in Los Angeles.
+
 ### weather
 The `weather` command displays the weather conditions and temperature for a location.
 
@@ -281,6 +295,10 @@ user account.
 
 You may use the [`my`](#my) command to set the user metadata `location`
 to have the command remember your location.
+
+    <pragma-> !weather los angeles
+       <PBot> Weather for Los Angeles, CA: Currently: Mostly Sunny: 71F/21C;
+              Forecast: High: 72F/22C Low: 53F/11C Warmer with sunshine
 
 ## Commands documented elsewhere
 ### Administrative commands
