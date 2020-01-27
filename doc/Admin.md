@@ -4,14 +4,14 @@
 * [Logging in and out](#logging-in-and-out)
   * [login](#login)
   * [logout](#logout)
-* [Admin management commands](#admin-management-commands)
-  * [adminadd](#adminadd)
-  * [adminrem](#adminrem)
+* [User management commands](#user-management-commands)
+  * [useradd](#useradd)
+  * [userdel](#userdel)
     * [Admin levels](#admin-levels)
-  * [adminset](#adminset)
-  * [adminunset](#adminunset)
-    * [Admin metadata list](#admin-metadata-list)
-  * [Listing admins](#listing-admins)
+  * [userset](#userset)
+  * [userunset](#userunset)
+    * [User metadata list](#user-metadata-list)
+  * [Listing users](#listing-users)
 * [Channel management commands](#channel-management-commands)
   * [join](#join)
   * [part](#part)
@@ -69,73 +69,82 @@ Logs out of PBot.
 
 Usage: `logout`
 
-## Admin management commands
-### adminadd
-Adds a new admin to PBot.
+## User management commands
+### useradd
+Adds a new user to PBot.
 
-Usage: `adminadd <name> <channel> <hostmask> <level> <password>`
+Usage: `useradd <account name> <channel> <hostmask> [level] [password]`
 
 Parameter | Description
 --- | ---
-`<name>` | A unique name to identify this account (usually the `nick` of the admin, but can be any identifier).
-`<channel>` | Which channel the admin can administrate; use `global` for all channels. This field cannot be changed without removing and re-adding the admin.
-`<hostmask>` | What hostmask the admin is recognized/allowed to login from (e.g., `somenick!*@*somedomain.com` or `*@unaffiliated/someuser`). This field cannot be changed without removing and re-adding the admin.
-`<level>` | An integer representing the admin's level of privileges. See [admin-levels](#admin-levels).
-`<password>` | The password the admin will use to login (from /msg!). A password is not required if the `autologin` [metadata](#admin-metadata-list) is set for the admin; however, a dummy password still needs to be set.
+`<account name>` | A unique name to identify this account (usually the `nick` of the user, but it can be any identifier).
+`<channel>` | The channel this user belongs to; use `global` for all channels. This field cannot be changed without removing and re-adding the user.
+`<hostmask>` | The hostmask from which this user is recognized/allowed to login from (e.g., `somenick!*@*.somedomain.com` or `*!*@unaffiliated/someuser`). This field cannot be changed without removing and re-adding the user.
+`[level]` | An integer representing the user's level of privileges. See [admin-levels](#admin-levels). Defaults to `0` if omitted (i.e., a normal unprivileged user).
+`[password]` | The password the user will use to login (from `/msg`, obviously). Generates a random password if omitted. Users may view and set their password by using the [`my`](Commands.md#my) command.
 
-### adminrem
-Removes an admin from PBot. You can use the name field or the hostmask field that was set via `adminadd`.
+### userdel
+Removes a user from PBot. You can use the `account name` field or the `hostmask` field that was set via the [`useradd`](#useradd) command.
 
-Usage: `adminrem <channel> <name or hostmask>`
+Usage: `userdel <channel> <account name or hostmask>`
 
 #### Admin levels
-This is a list of admin commands allowed by each admin level. Higher level admins have access to all lower level admin commands.
+This is a list of admin commands allowed by each admin level, by default. You
+can use [`cmdset`](#cmdset) to adjust any command's admin level.
 
-Note that you can use [`cmdset`](#cmdset) to adjust any command's admin level.
+Higher level admins have access to all lower level admin commands.
+
+Note that Plugins may also add new admin commands, so this list may be incomplete
+if you have third-party Plugins loaded.
 
 Level | Commands
 --- | ---
 10 | actiontrigger, antispam, whitelist, blacklist, chanlist, ban, unban, mute, unmute, op, deop, voice, devoice, invite, kick, ignore, unignore
 40 | chanset, chanunset, chanadd, chanrem, join, part, mode
-60 | adminadd, adminrem, adminset, adminunset, akalink, akaunlink, regset, regunset, regsetmeta, regunsetmeta, regchange, dumpbans
+60 | useradd, userdel, userset, userunset, akalink, akaunlink, regset, regunset, regsetmeta, regunsetmeta, regchange, dumpbans
 90 | sl, plug, unplug, replug, load, unload, reload, export, rebuildaliases, refresh, die
 99 | eval
 
-### adminset
-Sets metadata for an admin account. You can use the `name` field or the `hostmask` field that was set via `adminadd`. See also: [admin metadata list](#admin-metadata-list).
+### userset
+Sets metadata for a user account. You can use the `account name` field or the `hostmask` field that was set via the [`useradd`](#useradd) command. See also: [user metadata list](#user-metadata-list).
 
 If `key` is omitted, it will list all the keys and values that are set.  If `value` is omitted, it will show the value for `key`.
 
-Usage: `adminset <channel> <name or hostmask> [<key> [value]]`
+Usage: `userset <channel> <account name or hostmask> [<key> [value]]`
 
-### adminunset
-Deletes a metadata key from an admin account.  You can use the name `field` or the `hostmask` field that was set via adminadd.
+### userunset
+Deletes a metadata key from a user account.  You can use the `account name` field or the `hostmask` field that was set via the [`adminadd`](#adminadd) command.
 
-Usage: `adminunset <channel> <name or hostmask> <key>`
+Usage: `userunset <channel> <account name or hostmask> <key>`
 
-#### Admin metadata list
-This is a list of recognized metadata keys for admin accounts.
+#### User metadata list
+This is a list of recognized metadata keys for user accounts.
 
 Name | Description
 --- | ---
-`name` | A unique name identifying this admin account.
-`level` | The privilege level of the admin. See [admin levels](#admin-levels).
-`password` | The password for this admin account.
-`loggedin` | Whether the admin is logged in or not.
-`stayloggedin` | Do not log the admin out when they part/quit.
-`autologin` | Automatically log the admin in when they join the channel. Make sure the admin's hostmask wildcards are minimal.
-`autoop` | Automatically give the admin operator status when they join the channel. Make sure the admin's hostmask wildcards are minimal.
-`autovoice` | Automatically give the admin voiced status when they join the channel. Make sure the admin's hostmask wildcards are minimal.
+`name` | A unique name identifying the user account.
+`level` | The privilege level of the user. See [admin levels](#admin-levels).
+`password` | The password for the user account.
+`loggedin` | Whether the user is logged in or not.
+`stayloggedin` | Do not log the user out when they part/quit.
+`autologin` | Automatically log the user in when they join the channel. *Note: make sure the user's hostmask wildcards are as restrictive as possible.*
+`autoop` | Give the user `operator` status when they join the channel. *Note: make sure the admin's hostmask wildcards are as restrictive as possible.*
+`autovoice` | Give the user `voiced` status when they join the channel. *Note: make sure the admin's hostmask wildcards are as restrictive as possible.*
 
-### Listing admins
-To list admins, use the `list admins` command. This is not an admin command, but
+### Listing users
+To list user accounts, use the `list users` command. This is not an admin command, but
 it is included here for completeness.
 
-Usage: `list admins`
+Usage: `list users [channel]`
 
-When used in a channel, it will list only the admins for that channel, plus all
-global admins.  When used from private message, it will list all admins from
-all channels, including global admins.
+When the optional `[channel]` argument is provided, only users for that channel
+will be listed; no global users will be listed.
+
+When `[channel]` is omitted and the command is used in a channel, it will list
+the users for that channel, plus all global users.
+
+When `[channel]` is omitted and the command is used from private message, it will
+list all users from all channels, including global users.
 
 ## Channel management commands
 
