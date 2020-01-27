@@ -426,16 +426,11 @@ sub mycmd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
-  if (not defined $key) {
-    return "Usage: my <key> [value]";
-  }
-
   if (defined $value) {
     $value =~ s/^is\s+//;
     $value = undef if not length $value;
   }
 
-  $key = lc $key;
   my $channel = $from;
   my $hostmask = "$nick!$user\@$host";
 
@@ -459,19 +454,28 @@ sub mycmd {
     $self->save;
   }
 
-  if (defined $value and $u->{level} == 0) {
-    my @disallowed = qw/level autoop autovoice/;
-    if (grep { $_ eq $key } @disallowed) {
-      return "You must be an admin to set $key.";
+  my $result = '';
+
+  if (defined $key) {
+    $key = lc $key;
+
+    if (defined $value and $u->{level} == 0) {
+      my @disallowed = qw/level autoop autovoice/;
+      if (grep { $_ eq $key } @disallowed) {
+        return "You must be an admin to set $key.";
+      }
     }
+
+    if ($key eq 'level' and defined $value and $u->{level} < 90 and $value > $u->{level}) {
+      return "You may not increase your level!";
+    }
+  } else {
+    $result = "Usage: my <key> [value]; ";
   }
 
-  if ($key eq 'level' and defined $value and $u->{level} < 90 and $value > $u->{level}) {
-    return "You may not increase your level!";
-  }
 
   ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
-  my $result = $self->{users}->set($channel, $hostmask, $key, $value);
+  $result .= $self->{users}->set($channel, $hostmask, $key, $value);
   $result =~ s/^password => .*;?$/password => <private>;/m;
   return $result;
 }
