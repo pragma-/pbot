@@ -283,7 +283,7 @@ You may use the [`my`](#my) command to set the user metadata `timezone`
 to have the command remember your timezone.
 
     <pragma-> !date los angeles
-       <PBot> It's Mon 27 Jan 2020 02:08:19 PM PST in Los Angeles.
+       <PBot> It's Mon 27 Jan 2020 04:20:00 PM PST in Los Angeles.
 
 ### weather
 The `weather` command displays the weather conditions and temperature for a location.
