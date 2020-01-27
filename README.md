@@ -174,6 +174,7 @@ Plugin | Description
 [GoogleSearch](Plugins/GoogleSearch.pm) | Performs Internet searches using the Google search engine.
 [UrlTitles](Plugins/UrlTitles.pm) | When a URL is seen in a channel, intelligently display its title. It will not display titles that are textually similiar to the URL, in order to maintain the channel signal-noise ratio.
 [Quotegrabs](Plugins/Quotegrabs.pm) | Grabs channel messages as quotes for posterity. Can grab messages from anywhere in the channel history. Can grab multiple messages at once!
+[Weather](Plugins/Weather.pm) | Fetches and shows weather data for a location.
 [RemindMe](Plugins/RemindMe.pm) | Lets people set up reminders. Lots of options.
 [ActionTrigger](Plugins/ActionTrigger.pm) | Lets admins set regular expression triggers to execute PBot commands or factoids.
 [AntiAway](Plugins/AntiAway.pm) | Detects when a person uses annoying in-channel away messages and warns them.
@@ -181,6 +182,7 @@ Plugin | Description
 [AntiNickSpam](Plugins/AntiNickSpam.pm) | Detects when a person is spamming an excessive number of nicks in the channel and removes them.
 [AntiRepeat](Plugins/AntiRepeat.pm) | Warn people about excessively repeating messages. Kicks if they fail to heed warnings.
 [AntiTwitter](Plugins/AntiTwitter.pm) | Warn people about addressing others with `@<nick>`. Kicks if they fail to heed warnings.
+[Date](Plugins/Date.pm) | Displays date and time for a timezone.
 
 There are even a few games!
 
