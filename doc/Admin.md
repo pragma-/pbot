@@ -60,7 +60,7 @@ You cannot use any of the admin commands unless you login. Note that the [`login
 connected IRC hostmask matches the hostmask configured for the user account.
 
 You can keep your user account permanently logged in by setting a couple of [user metadata](#user-metadata-list) values. See
-the [user metadatalist](#user-metadata-list) for more information.
+the [user metadata list](#user-metadata-list) for more information.
 
 ### login
 Logs into PBot.
@@ -116,7 +116,7 @@ If `key` is omitted, it will list all the keys and values that are set.  If `val
 Usage: `userset <channel> <account name or hostmask> [<key> [value]]`
 
 ### userunset
-Deletes a metadata key from a user account.  You can use the `account name` field or the `hostmask` field that was set via the [`adminadd`](#adminadd) command.
+Deletes a metadata key from a user account.  You can use the `account name` field or the `hostmask` field that was set via the [`useradd`](#useradd) command.
 
 Usage: `userunset <channel> <account name or hostmask> <key>`
 
@@ -130,9 +130,9 @@ Name | Description
 `password` | The password for the user account.
 `loggedin` | Whether the user is logged in or not.
 `stayloggedin` | Do not log the user out when they part/quit.
-`autologin` | Automatically log the user in when they join the channel. *Note: make sure the user's hostmask wildcards are as restrictive as possible.*
-`autoop` | Give the user `operator` status when they join the channel. *Note: make sure the admin's hostmask wildcards are as restrictive as possible.*
-`autovoice` | Give the user `voiced` status when they join the channel. *Note: make sure the admin's hostmask wildcards are as restrictive as possible.*
+`autologin` | Automatically log the user in when they join the channel. *Note: make sure the user account's hostmask wildcards are as restrictive as possible.*
+`autoop` | Give the user `operator` status when they join the channel. *Note: make sure the user account's hostmask wildcards are as restrictive as possible.*
+`autovoice` | Give the user `voiced` status when they join the channel. *Note: make sure the user account's hostmask wildcards are as restrictive as possible.*
 
 ### Listing users
 To list user accounts, use the `list users` command. This is not an admin command, but
