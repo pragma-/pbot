@@ -198,7 +198,7 @@ using the [powerful interpreter features](#command-interpreter) and by using the
 [`/code` Factoid command](Factoids.md#code).
 
 * anybody can create Factoids
-* Factoids do not have access to PBot internal API functions and data structures
+* Factoids do not have access to PBot internal API functions and data structures (unless the [`eval`](Admin.md#eval) command is used)
 
 For more information, see the [Factoids documentations.](Factoids.md)
 
@@ -208,7 +208,7 @@ These Factoids will execute their text using the scripting or programming
 language specified by the argument following the `/code` command.
 
 * anybody can create Code Factoids
-* Code Factoids do not have access to PBot internal API functions and data structures
+* Code Factoids do not have access to PBot internal API functions and data structures (unless the [`eval`](Admin.md#eval) command is used)
 
 For more information, see the [Code Factoid documentation.](Factoids.md#code)
 
@@ -249,10 +249,38 @@ and how long it has been running.
        <PBot> Tue Jan 14 01:55:40 2020 [8 days and 13 hours]
 
 ### my
+The `my` command allows non-admin users to view and manipulate their user account
+metadata.
+
+Usage: `my [<key> [value]]`
+
+If `key` is omitted, the command will list all metadata keys and values for your
+user account.
+
+See also [user metadata list](Admin.md#user-metadata-list).
 
 ### date
+The `date` command displays the date and time. Note that it uses the Linux
+timezone files to find timezones.
 
+Usage: `date [timezone]`
+
+If `timezone` is omitted, the command will show the UTC date and time unless you
+have the `timezone` user metadata set on your user account in which case the command
+will use that timezone instead.
+
+You may use the [`my`](#my) command to set the user metadata `timezone`
+to have the command remember your timezone.
 ### weather
+The `weather` command displays the weather conditions and temperature for a location.
+
+Usage: `weather [location]`
+
+If `location` is omitted, the command will use the `location` user metadata set on your
+user account.
+
+You may use the [`my`](#my) command to set the user metadata `location`
+to have the command remember your location.
 
 ## Commands documented elsewhere
 ### Administrative commands
