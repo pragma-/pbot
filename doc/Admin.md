@@ -58,7 +58,7 @@
 ## Logging in and out
 You cannot use any of the admin commands unless you login. Note that login requires that your hostmask matches PBot's records.
 
-However, if your admin account has the `autologin` [metadata](#admin-metadata-list) set to a true value then you will not need to login.
+However, if your admin account has the `autologin` [metadata](#user-metadata-list) set to a true value then you will not need to login.
 ### login
 Logs into PBot.
 
