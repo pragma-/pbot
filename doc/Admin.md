@@ -56,9 +56,12 @@
 <!-- md-toc-end -->
 
 ## Logging in and out
-You cannot use any of the admin commands unless you login. Note that login requires that your hostmask matches PBot's records.
+You cannot use any of the admin commands unless you login. Note that the [`login`](#login) command requires that your currently
+connect IRC hostmask matches the hostmask configured for the user account.
 
-However, if your admin account has the `autologin` [metadata](#user-metadata-list) set to a true value then you will not need to login.
+You can keep your user account permanently logged in by setting a couple of [user metadata](#user-metadata-list) values. See
+the [user metadatalist](#user-metadata-list) for more information.
+
 ### login
 Logs into PBot.
 
