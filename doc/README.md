@@ -28,7 +28,7 @@
         * [Custom recommended IRCnet/other network settings](QuickStart.md#custom-recommended-ircnetother-network-settings)
     * [Regular start-up](QuickStart.md#regular-start-up)
   * [Additional configuration](QuickStart.md#additional-configuration)
-    * [Creating your bot owner user account](QuickStart.md#creating-your-bot-owner-user-account)
+    * [Creating your bot owner admin account](QuickStart.md#creating-your-bot-owner-admin-account)
     * [Adding channels](QuickStart.md#adding-channels)
     * [Adding other users and admins](QuickStart.md#adding-other-users-and-admins)
   * [Further Reading](QuickStart.md#further-reading)
