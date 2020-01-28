@@ -27,8 +27,6 @@ user account.
     my location <your location>
 
 ## How do I change the bot trigger?
-By default, PBot uses the `!` character as its trigger; as well as its `irc.botnick`.
-
 To change the default `!` trigger to a different character use the [`regset`](Registry.md#regset)
 command to change the `general.trigger` value.
 
