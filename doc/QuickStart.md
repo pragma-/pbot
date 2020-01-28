@@ -26,8 +26,8 @@
   * [Regular start-up](#regular-start-up)
 * [Additional configuration](#additional-configuration)
   * [Creating your bot owner admin account](#creating-your-bot-owner-admin-account)
-  * [Adding channels](#adding-channels)
   * [Adding other users and admins](#adding-other-users-and-admins)
+  * [Adding channels](#adding-channels)
 * [Further Reading](#further-reading)
   * [Commands](#commands)
   * [Factoids](#factoids)
@@ -264,6 +264,23 @@ Then you can login with:
 Now you can use `/msg` in your own IRC client to administrate PBot, instead of
 the terminal console.
 
+### Adding other users and admins
+To add users to PBot, use the [`useradd`](Admin.md#useradd) command.
+
+    useradd <account name> <channel> <hostmask> [[level] [password]]
+
+If you omit the `password` argument, a random password will be generated. The user
+can use the [`my`](Commands.md#my) command to view or change it.
+
+If you omit the `level` argument, the user will be a normal unprivileged user. See [admin levels](Admin.md#admin-levels)
+for more information about admin levels.
+
+Users may view and change their own metadata by using the [`my`](Commands.md#my) command.
+
+    my [<key> [value]]
+
+For more information, see the [Admin documentation](Admin.md).
+
 ### Adding channels
 To temporarily join channels, use the `join` command.
 
@@ -287,23 +304,6 @@ chanop | If set to true, PBot will perform OP duties in this channel. | 0
 permop | If set to true, PBot will not de-OP itself in this channel. | 0
 
 For more information, see the [Channels documentation](Admin.md#channel-management-commands).
-
-### Adding other users and admins
-To add users to PBot, use the `useradd` command.
-
-    useradd <account name> <channel> <hostmask> [[level] [password]]
-
-If you omit the `password` argument, a random password will be generated. The user
-can use the [`my`](Commands.md#my) command to view or change it.
-
-If you omit the `level` argument, the user will be a normal unprivileged user. See [admin levels](Admin.md#admin-levels)
-for more information about admin levels.
-
-Users may view and change their own metadata by using the [`my`](Commands.md#my) command.
-
-    my [<key> [value]]
-
-For more information, see the [Admin documentation](Admin.md).
 
 ## Further Reading
 That should get you started. For further information about PBot, check out these topics.
