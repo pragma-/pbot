@@ -226,7 +226,7 @@ Replace the placeholders, marked `X`, with values you want to use. Note that thi
 ### Regular start-up
 After your initial start-up  command, you only need to use the `data_dir`
 directory override when starting PBot. Any previously used registry overrides
-are saved to your data-directory's `registry` file.
+have been saved to your data-directory's `registry` file.
 
     $ pbot data_dir=X
 
