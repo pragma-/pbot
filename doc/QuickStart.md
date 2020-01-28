@@ -267,7 +267,7 @@ the terminal console.
 ### Adding other users and admins
 To add users to PBot, use the [`useradd`](Admin.md#useradd) command.
 
-    useradd <account name> <channel> <hostmask> [[level] [password]]
+    useradd <account name> <channel> <hostmask> [level [password]]
 
 If you omit the `password` argument, a random password will be generated. The user
 can use the [`my`](Commands.md#my) command to view or change it.
