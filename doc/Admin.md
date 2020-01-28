@@ -133,6 +133,8 @@ Name | Description
 `autologin` | Automatically log the user in when they join the channel. *Note: make sure the user account's hostmask wildcards are as restrictive as possible.*
 `autoop` | Give the user `operator` status when they join the channel. *Note: make sure the user account's hostmask wildcards are as restrictive as possible.*
 `autovoice` | Give the user `voiced` status when they join the channel. *Note: make sure the user account's hostmask wildcards are as restrictive as possible.*
+`location` | Sets your location for using the [`weather`](Commands.md#weather) command without any arguments.
+`timezone` | Sets your timezone for using the [`date`](Commands.md#date) command without any arguments.
 
 ### Listing users
 To list user accounts, use the `list users` command. This is not an admin command, but
