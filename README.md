@@ -21,6 +21,7 @@ PBot is a versatile IRC Bot written in Perl
   * [Admin management](#admin-management)
   * [Easy configuration](#easy-configuration)
 * [Documentation](#documentation)
+* [Frequently Asked Questions](#frequently-asked-questions)
 * [Support](#support)
 * [License](#license)
 <!-- md-toc-end -->
@@ -317,8 +318,11 @@ For more information, see the [Registry documentation.](doc/Registry.md)
 ## Documentation
 See the [PBot documentation](doc) for more information.
 
+## Frequently Asked Questions
+If you have a question, try the [PBot FAQ](doc/FAQ.md)!
+
 ## Support
-For questions and support, feel free to join the `#pbot2` channel on the [Freenode](https://freenode.net/kb/answer/chat) IRC network ([Web Chat](https://webchat.freenode.net/#pbot2)).
+For additional questions and support, feel free to join the `#pbot2` channel on the [Freenode](https://freenode.net/kb/answer/chat) IRC network ([Web Chat](https://webchat.freenode.net/#pbot2)).
 
 ## License
 PBot is licensed under the [Mozilla Public License, version 2](https://www.mozilla.org/en-US/MPL/2.0/).
