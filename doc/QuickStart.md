@@ -167,7 +167,7 @@ or in the `#pbot2` channel on the Freenode network.
 ## Starting PBot
 
 ### Usage
-    $ pbot [directory overrides...; e.g. data_dir=...] [registry overrides...; e.g. irc.botnick=...]
+    $ pbot [directory overrides...] [registry overrides...]
 
 #### Overriding directories
 You may override PBot's default directory locations via the command-line.
