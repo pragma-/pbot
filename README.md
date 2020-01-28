@@ -167,7 +167,7 @@ For more information, see the [Code Factoid documentation](doc/Factoids.md#code)
 
 PBot can dynamically load and unload Perl modules to alter its behavior.
 
-These are some of the plugins that PBot has, there are many more:
+These are some of the plugins that PBot has; there are many more:
 
 Plugin | Description
 --- | ---
@@ -195,7 +195,7 @@ Plugin | Description
 ### Modules
 
 Modules are external command-line executable programs and scripts that can be
-loaded via PBot Factoids.
+loaded as PBot commands.
 
 Suppose you have the [Qalculate!](https://qalculate.github.io/) command-line
 program and you want to provide a PBot command for it. You can create a _very_ simple
@@ -206,19 +206,11 @@ shell script containing:
 
 And let's call it `qalc.sh` and put it in PBot's `modules/` directory.
 
-Then you can add the `qalc` factoid:
-
-    !factadd global qalc qalc.sh
-
-And then set its `type` to `module`:
-
-    !factset global qalc type module
-
-Alternatively you can simply use the [`load`](doc/Admin.md#load) command.
+Then you can load it with the [`load`](doc/Admin.md#load) command.
 
     !load qalc qalc.sh
 
-Now you have a `qalc` calculator in PBot!
+Now you have a [Qalculate!](https://qalculate.github.io/) calculator in PBot!
 
     <pragma-> !qalc 2 * 2
        <PBot> 2 * 2 = 4
