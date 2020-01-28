@@ -277,7 +277,7 @@ for more information about admin levels.
 
 Users may view and change their own metadata by using the [`my`](Commands.md#my) command.
 
-    my [<key> [value]]
+    my [key [value]]
 
 For more information, see the [Admin documentation](Admin.md).
 
