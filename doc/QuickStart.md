@@ -25,7 +25,7 @@
       * [Custom recommended IRCnet/other network settings](#custom-recommended-ircnetother-network-settings)
   * [Regular start-up](#regular-start-up)
 * [Additional configuration](#additional-configuration)
-  * [Creating your bot owner user account](#creating-your-bot-owner-user-account)
+  * [Creating your bot owner admin account](#creating-your-bot-owner-admin-account)
   * [Adding channels](#adding-channels)
   * [Adding other users and admins](#adding-other-users-and-admins)
 * [Further Reading](#further-reading)
@@ -114,10 +114,10 @@ command-line options. We'll show you [how to do that](#starting-pbot) soon! Firs
 see what settings you should configure.
 
 Alternatively, you can edit the `registry` file in your cloned data-directory.
-See the [Editing registry file](Registry.md#editing-registry-file) for more
+See [editing registry file](Registry.md#editing-registry-file) for more
 information.
 
-Here is a table of some basic initial settings you should configure:
+Here is a table of basic initial settings you should configure:
 
 Registry key | Description | Default value
 --- | --- | ---:
@@ -202,11 +202,11 @@ The `irc.server` and `irc.port` settings are omitted because the default values 
 
 Replace the placeholders, marked `X`, with values you want to use. Note that this is just for the first-time start-up. Regular subsequent start-up needs only `data_dir` to be overridden.
 
-If you have registered your botnick with Freenode's NickServ service, use this command:
+* If you have registered your botnick with Freenode's NickServ service, use this command:
 
     pbot data_dir=X irc.botnick=X irc.identify_password=X irc.randomize_nick=1 general.autojoin_wait_for_nickserv=1
 
-Otherwise, use this one:
+* Otherwise, use this one:
 
     pbot data_dir=X irc.botnick=X
 
@@ -215,17 +215,18 @@ The following command is based on the [Recommended settings for IRC Networks](#r
 
 Replace the placeholders, marked `X`, with values you want to use. Note that this is just for the first-time start-up. Regular subsequent start-up needs only `data_dir` to be overridden.
 
-If you want PBot to identify with a custom bot or service on IRCnet/other networks, use this command:
+* If you want PBot to identify with a custom bot or service on IRCnet/other networks, use this command:
 
     pbot data_dir=X irc.botnick=X irc.server=X irc.port=X general.identify_nick=X general.op_nick=X
 
-Otherwise, use this one:
+* Otherwise, use this one:
 
     pbot data_dir=X irc.botnick=X irc.server=X irc.port=X
 
 ### Regular start-up
 After your initial start-up  command, you only need to use the `data_dir`
-directory override when starting PBot.
+directory override when starting PBot. Any previously used registry overrides
+are saved to your data-directory's `registry` file.
 
     $ pbot data_dir=X
 
@@ -234,7 +235,7 @@ Once you've launched PBot, you can type directly into its terminal to execute
 commands as the built-in PBot console admin user account. This will allow you
 to use admin commands to create new users or join channels.
 
-### Creating your bot owner user account
+### Creating your bot owner admin account
 To create your own fully privileged admin user account, use the following
 commands in the PBot terminal console.
 
@@ -242,9 +243,9 @@ Suppose your nick is `Bob` and your hostmask is `Bob!~user@some.domain.com`.
 
     useradd Bob global Bob!~user@*.domain.com 100
 
-This will create a level `100` admin user account named `Bob`. Note the wildcard
-replacing `some` in `some.domain.com`. Now as long as your connected hostmask
-matches your user account hostmask, you will be recognized.
+This will create a level `100` admin user account named `Bob` that can administrate
+all channels. Note the wildcard replacing `some` in `some.domain.com`. Now as long as
+your connected hostmask matches your user account hostmask, you will be recognized.
 
 In your own IRC client, connected using the hostmask we just added, type the
 following command:
