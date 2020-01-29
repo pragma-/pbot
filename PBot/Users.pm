@@ -145,7 +145,7 @@ sub find_user_account {
 
   $channel = lc $channel;
   $hostmask = lc $hostmask;
-  my ($found_channel, $found_hostmask) = ($channel, $hostmask);
+  my ($found_channel, $found_hostmask) = (undef, $hostmask);
 
   foreach my $chan (keys %{ $self->{users}->{hash} }) {
     if ($channel !~ m/^#/ or $channel =~ m/^$chan$/i) {
@@ -190,7 +190,7 @@ sub find_admin {
 
   ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
 
-  $channel = $self->{pbot}->{registry}->get_value('irc', 'botnick') if not defined $channel;
+  $channel = '.*' if not defined $channel;
   $hostmask = '.*' if not defined $hostmask;
   $hostmask = lc $hostmask;
 
@@ -353,8 +353,9 @@ sub userdel {
     return "/msg $nick Usage: userdel <channel> <hostmask or account name>";
   }
 
-  ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
-  return $self->remove_user($channel, $hostmask);
+  my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
+  $found_channel = $channel if not defined $found_channel; # let DualIndexHashObject disambiguate
+  return $self->remove_user($found_channel, $found_hostmask);
 }
 
 sub userset {
@@ -387,8 +388,9 @@ sub userset {
     return "You may not modify users higher in level than you.";
   }
 
-  ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
-  my $result = $self->{users}->set($channel, $hostmask, $key, $value);
+  my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
+  $found_channel = $channel if not defined $found_channel; # let DualIndexHashObject disambiguate
+  my $result = $self->{users}->set($found_channel, $found_hostmask, $key, $value);
   $result =~ s/^password => .*;?$/password => <private>;/m;
   return $result;
 }
@@ -418,8 +420,9 @@ sub userunset {
     return "You may not modify users higher in level than you.";
   }
 
-  ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
-  return $self->{users}->unset($channel, $hostmask, $key);
+  my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
+  $found_channel = $channel if not defined $found_channel; # let DualIndexHashObject disambiguate
+  return $self->{users}->unset($found_channel, $found_hostmask, $key);
 }
 
 sub mycmd {
@@ -444,7 +447,7 @@ sub mycmd {
     my ($existing_channel, $existing_hostmask) = $self->find_user_account($channel, $name);
     if ($existing_hostmask ne lc $name) {
       # user exists by name
-      return "There is already an user account named $name but it does not match your hostmask. Ask an admin for help.";
+      return "There is already an user account named $name but its hostmask ($existing_hostmask) does not match your hostmask ($hostmask). Ask an admin for help.";
     }
 
     $u = $self->add_user($name, $channel, $hostmask, undef, undef, 1);
@@ -474,8 +477,9 @@ sub mycmd {
   }
 
 
-  ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
-  $result .= $self->{users}->set($channel, $hostmask, $key, $value);
+  my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
+  $found_channel = $channel if not defined $found_channel; # let DualIndexHashObject disambiguate
+  $result .= $self->{users}->set($found_channel, $found_hostmask, $key, $value);
   $result =~ s/^password => .*;?$/password => <private>;/m;
   return $result;
 }
