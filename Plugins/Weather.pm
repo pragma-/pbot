@@ -65,7 +65,7 @@ sub weathercmd {
   $arguments = $location_override if not length $arguments;
 
   if (defined $user_override and not length $location_override) {
-    return "User account $user_override not found.";
+    return "No location set or user account does not exist.";
   }
 
   if (not length $arguments) {
