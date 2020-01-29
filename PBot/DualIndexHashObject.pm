@@ -327,8 +327,8 @@ sub remove {
   my $name2 = $data->{_name};
   $name2 = "\"$name2\"" if $name2 =~ / /;
 
-  # remove primary group if no more secondaries
-  if (keys %{ $self->{hash}->{$lc_primary_index} } == 0) {
+  # remove primary group if no more secondaries (only key left should be the _name key)
+  if (keys %{ $self->{hash}->{$lc_primary_index} } == 1) {
     delete $self->{hash}->{$lc_primary_index};
   }
 
