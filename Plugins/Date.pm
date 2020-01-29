@@ -14,6 +14,7 @@ use strict;
 
 use feature 'unicode_strings';
 
+use Getopt::Long qw(GetOptionsFromString);
 use Carp ();
 
 sub new {
@@ -39,10 +40,35 @@ sub unload {
 sub datecmd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
+  my $usage = "date [-u <user account>] [timezone]";
+  Getopt::Long::Configure("bundling");
+
+  my $getopt_error;
+  local $SIG{__WARN__} = sub {
+    $getopt_error = shift;
+    chomp $getopt_error;
+  };
+
+  my ($user_override, $show_usage);
+  my ($ret, $args) = GetOptionsFromString($arguments,
+    'u=s' => \$user_override,
+    'h' => \$show_usage
+  );
+
+  return $usage if $show_usage;
+  return "/say $getopt_error -- $usage" if defined $getopt_error;
+  $arguments = "@$args";
+
+  my $hostmask = defined $user_override ? $user_override : "$nick!$user\@$host";
+  my $tz_override = $self->{pbot}->{users}->get_loggedin_user_metadata($from, $hostmask, 'timezone') // '';
+
   my $timezone = $self->{pbot}->{registry}->get_value('date', 'default_timezone') // 'UTC';
-  my $tz_override = $self->{pbot}->{users}->get_loggedin_user_metadata($from, "$nick!$user\@$host", 'timezone');
   $timezone = $tz_override if $tz_override;
   $timezone = $arguments if length $arguments;
+
+  if (defined $user_override and not length $tz_override) {
+    return "No timezone set or user account does not exist.";
+  }
 
   my $newstuff = {
     from => $from, nick => $nick, user => $user, host => $host,
