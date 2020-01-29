@@ -41,7 +41,7 @@ sub unload {
 sub weathercmd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  my $usage = "Usage: weather [-u <user account>] <location>";
+  my $usage = "Usage: weather [-u <user account>] [location]";
   Getopt::Long::Configure("bundling");
 
   my $getopt_error;
