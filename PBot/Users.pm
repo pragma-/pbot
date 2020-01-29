@@ -365,7 +365,7 @@ sub useradd {
   }
 
   $self->{pbot}->{users}->add_user($name, $channel, $hostmask, $level, $password);
-  return not $level ? "User added." : "Admin added.";
+  return !$level ? "User added." : "Admin added.";
 }
 
 sub userdel {
