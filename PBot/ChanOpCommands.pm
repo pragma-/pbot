@@ -398,7 +398,7 @@ sub ban_user {
   $channel = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $from if not defined $channel or not length $channel;
 
   if (not defined $target) {
-    return "/msg $nick Usage: ban <mask> [channel [timeout (default: 24 hours)]]";
+    return "Usage: ban <mask> [channel [timeout (default: 24 hours)]]";
   }
 
   my $no_length = 0;
@@ -419,7 +419,7 @@ sub ban_user {
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
 
   if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
-    return "/msg $nick You are not an admin for $channel.";
+    return "You are not an admin for $channel.";
   }
 
   my $result = '';
@@ -477,16 +477,16 @@ sub unban_user {
   }
 
   if (not defined $target) {
-    return "/msg $nick Usage: unban <nick/mask> [channel [false value to use unban queue]]";
+    return "Usage: unban <nick/mask> [channel [false value to use unban queue]]";
   }
 
   $channel = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $from if not defined $channel;
   $immediately = 1 if not defined $immediately;
 
-  return "/msg $nick Usage for /msg: unban <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
+  return "Usage for /msg: unban <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
   if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
-    return "/msg $nick You are not an admin for $channel.";
+    return "You are not an admin for $channel.";
   }
 
   my @targets = split /,/, $target;
@@ -513,7 +513,7 @@ sub mute_user {
   }
 
   if (not defined $channel and $from !~ m/^#/) {
-    return "/msg $nick Usage from private message: mute <mask> <channel> [timeout (default: 24 hours)]";
+    return "Usage from private message: mute <mask> <channel> [timeout (default: 24 hours)]";
   }
 
   if ($channel !~ m/^#/) {
@@ -525,11 +525,11 @@ sub mute_user {
   $channel = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $from if not defined $channel;
 
   if ($channel !~ m/^#/) {
-    return "/msg $nick Please specify a channel.";
+    return "Please specify a channel.";
   }
 
   if (not defined $target) {
-    return "/msg $nick Usage: mute <mask> [channel [timeout (default: 24 hours)]]";
+    return "Usage: mute <mask> [channel [timeout (default: 24 hours)]]";
   }
 
   my $no_length = 0;
@@ -550,7 +550,7 @@ sub mute_user {
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
 
   if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
-    return "/msg $nick You are not an admin for $channel.";
+    return "You are not an admin for $channel.";
   }
 
   my $result = '';
@@ -608,16 +608,16 @@ sub unmute_user {
   }
 
   if (not defined $target) {
-    return "/msg $nick Usage: unmute <nick/mask> [channel [false value to use unban queue]]";
+    return "Usage: unmute <nick/mask> [channel [false value to use unban queue]]";
   }
 
   $channel = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $from if not defined $channel;
   $immediately = 1 if not defined $immediately;
 
-  return "/msg $nick Usage for /msg: unmute <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
+  return "Usage for /msg: unmute <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
   if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
-    return "/msg $nick You are not an admin for $channel.";
+    return "You are not an admin for $channel.";
   }
 
   my @targets = split /,/, $target;
@@ -648,7 +648,7 @@ sub kick_user {
   if (not $from =~ /^#/) {
     # used in private message
     if (not $arguments =~ s/^(^#\S+) (\S+)\s*//) {
-      return "/msg $nick Usage from private message: kick <channel> <nick> [reason]";
+      return "Usage from private message: kick <channel> <nick> [reason]";
     }
     ($channel, $victim) = ($1, $2);
   } else {
@@ -658,7 +658,7 @@ sub kick_user {
     } elsif ($arguments =~ s/^(\S+)\s*//) {
       ($victim, $channel) = ($1, exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $from);
     } else {
-      return "/msg $nick Usage: kick [channel] <nick> [reason]";
+      return "Usage: kick [channel] <nick> [reason]";
     }
   }
 
@@ -671,7 +671,7 @@ sub kick_user {
   }
 
   if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
-    return "/msg $nick You are not an admin for $channel.";
+    return "You are not an admin for $channel.";
   }
 
   my @insults;

@@ -419,7 +419,7 @@ sub export {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
 
-  return "/msg $nick Usage: export <factoids>" if not defined $arguments;
+  return "Usage: export <factoids>" if not defined $arguments;
 
   if ($arguments =~ /^factoids$/i) {
     return $self->{factoids}->export_factoids;
