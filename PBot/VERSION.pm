@@ -26,8 +26,8 @@ use LWP::UserAgent;
 # These are set automatically by build/update_version.pl
 use constant {
   BUILD_NAME     => "PBot",
-  BUILD_REVISION => 2957,
-  BUILD_DATE     => "2020-01-26",
+  BUILD_REVISION => 2996,
+  BUILD_DATE     => "2020-01-29",
 };
 
 sub new {
