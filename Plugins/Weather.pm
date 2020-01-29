@@ -16,6 +16,7 @@ use feature 'unicode_strings';
 
 use LWP::UserAgent::WithCache;
 use XML::LibXML;
+use Getopt::Long qw(GetOptionsFromString);
 use Carp ();
 
 sub new {
@@ -40,12 +41,35 @@ sub unload {
 sub weathercmd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  my $location_override = $self->{pbot}->{users}->get_loggedin_user_metadata($from, "$nick!$user\@$host", 'location') // '';
+  my $usage = "Usage: weather [-u <user account>] <location>";
+  Getopt::Long::Configure("bundling");
 
+  my $getopt_error;
+  local $SIG{__WARN__} = sub {
+    $getopt_error = shift;
+    chomp $getopt_error;
+  };
+
+  my ($user_override, $show_usage);
+  my ($ret, $args) = GetOptionsFromString($arguments,
+    'u=s' => \$user_override,
+    'h' => \$show_usage
+  );
+
+  return $usage if $show_usage;
+  return "/say $getopt_error -- $usage" if defined $getopt_error;
+  $arguments = "@$args";
+
+  my $hostmask = defined $user_override ? $user_override : "$nick!$user\@$host";
+  my $location_override = $self->{pbot}->{users}->get_loggedin_user_metadata($from, $hostmask, 'location') // '';
   $arguments = $location_override if not length $arguments;
 
+  if (defined $user_override and not length $location_override) {
+    return "User account $user_override not found.";
+  }
+
   if (not length $arguments) {
-    return "Usage: weather <location>";
+    return $usage;
   }
 
   return $self->get_weather($arguments);
