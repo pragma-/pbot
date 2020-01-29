@@ -273,11 +273,14 @@ See also [user metadata list](Admin.md#user-metadata-list).
 The `date` command displays the date and time. Note that it uses the Linux
 timezone files to find timezones.
 
-Usage: `date [timezone]`
+Usage: `date [-u <user account>] [timezone]`
 
 If `timezone` is omitted, the command will show the UTC date and time unless you
 have the `timezone` user metadata set on your user account in which case the command
 will use that timezone instead.
+
+If the `-u <user account>` option is specified, the command will use the `timezone`
+user metadata set for `<user account>`.
 
 You may use the [`my`](#my) command to set the user metadata `timezone`
 to have the command remember your timezone.
@@ -288,10 +291,13 @@ to have the command remember your timezone.
 ### weather
 The `weather` command displays the weather conditions and temperature for a location.
 
-Usage: `weather [location]`
+Usage: `weather [-u <user account>] [location]`
 
 If `location` is omitted, the command will use the `location` user metadata set on your
 user account.
+
+If the `-u <user account>` option is specified, the command will use the `location`
+user metadata set for `<user account>`.
 
 You may use the [`my`](#my) command to set the user metadata `location`
 to have the command remember your location.
