@@ -66,7 +66,7 @@ sub get_weather {
   if ($response->is_success) {
     $xml = $response->decoded_content;
   } else {
-    return "Failed to fetch weather date: " . $response->status_line;
+    return "Failed to fetch weather data: " . $response->status_line;
   }
 
   my $dom = XML::LibXML->load_xml(string => $xml);
