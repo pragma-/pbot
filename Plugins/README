@@ -1,6 +1,0 @@
-Loadable plugins live here.
-
-All files listed in the `autoload` file will be loaded at bot start-up.
-
-Plugins can be manually loaded or unloaded with the `plug` and `unplug`
-commands.  Use `pluglist` to list loaded plugins.
