@@ -160,7 +160,7 @@ sub whitelist {
     }
     when ("set") {
       my ($channel, $mask, $flag, $value) = $self->{pbot}->{interpreter}->split_args($arglist, 4);
-      return "Usage: whitelist set <channel> <mask> [flag] [value]" if not defined $channel or not defined $mask;
+      return "Usage: whitelist set <channel> <mask> [flag [value]]" if not defined $channel or not defined $mask;
 
       if (not exists $self->{whitelist}->{hash}->{lc $channel}) {
         return "There is no such channel `$channel` in the whitelist.";

@@ -347,7 +347,7 @@ sub useradd {
   $level //= 0;
 
   if (not defined $name or not defined $channel or not defined $hostmask) {
-    return "/msg $nick Usage: useradd <account name> <channel> <hostmask> [level] [password]";
+    return "/msg $nick Usage: useradd <account name> <channel> <hostmask> [level [password]]";
   }
 
   $channel = '.*' if $channel !~ /^#/;
@@ -392,7 +392,7 @@ sub userset {
   my ($channel, $hostmask, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4);
 
   if (not defined $hostmask) {
-    return "Usage: userset [channel] <hostmask or account name> [key] [value]";
+    return "Usage: userset [channel] <hostmask or account name> [key [value]]";
   }
 
   my $admin  = $self->find_admin($channel, "$nick!$user\@$host");

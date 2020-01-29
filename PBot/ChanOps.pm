@@ -122,7 +122,7 @@ sub perform_op_commands {
   while (my $command = shift @{ $self->{op_commands}->{$channel} }) {
     if ($command =~ /^mode (.*?) (.*)/i) {
       $self->{pbot}->{conn}->mode($1, $2);
-      $self->{pbot}->{logger}->log("  executing mode [$1] [$2]\n");
+      $self->{pbot}->{logger}->log("  executing mode $1 $2\n");
     } elsif ($command =~ /^kick (.*?) (.*?) (.*)/i) {
       $self->{pbot}->{conn}->kick($1, $2, $3) unless $1 =~ /^\Q$botnick\E$/i;
       $self->{pbot}->{logger}->log("  executing kick on $1 $2 $3\n");

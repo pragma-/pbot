@@ -477,7 +477,7 @@ sub unban_user {
   }
 
   if (not defined $target) {
-    return "/msg $nick Usage: unban <nick/mask> [[channel] [false value to use unban queue]]";
+    return "/msg $nick Usage: unban <nick/mask> [channel [false value to use unban queue]]";
   }
 
   $channel = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $from if not defined $channel;
@@ -608,7 +608,7 @@ sub unmute_user {
   }
 
   if (not defined $target) {
-    return "/msg $nick Usage: unmute <nick/mask> [[channel] [false value to use unban queue]]";
+    return "/msg $nick Usage: unmute <nick/mask> [channel [false value to use unban queue]]";
   }
 
   $channel = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $from if not defined $channel;

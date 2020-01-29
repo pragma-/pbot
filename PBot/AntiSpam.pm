@@ -97,7 +97,7 @@ sub antispam_cmd {
     }
     when ("set") {
       my ($namespace, $keyword, $flag, $value) = $self->{pbot}->{interpreter}->split_args($arglist, 4);
-      return "Usage: antispam set <namespace> <regex> [flag] [value]" if not defined $namespace or not defined $keyword;
+      return "Usage: antispam set <namespace> <regex> [flag [value]]" if not defined $namespace or not defined $keyword;
 
       if (not exists $self->{keywords}->{hash}->{lc $namespace}) {
         return "There is no such namespace `$namespace`.";

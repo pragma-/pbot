@@ -364,7 +364,7 @@ sub spinach_cmd {
       my ($id, $key, $value) = split /\s+/, $arguments, 3;
 
       if (not defined $id) {
-        return "Usage: spinach edit <question id> [key] [value]";
+        return "Usage: spinach edit <question id> [key [value]]";
       }
 
       $id =~ s/,//g;
