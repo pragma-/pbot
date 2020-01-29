@@ -384,7 +384,11 @@ sub userdel {
 
 sub userset {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-  $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from) if length $arguments and $stuff->{arglist}[0] !~ m/^#/;
+
+  if (length $arguments and $stuff->{arglist}[0] !~ m/^(#|\.\*$|global$)/) {
+    $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from)
+  }
+
   my ($channel, $hostmask, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4);
 
   if (not defined $hostmask) {
@@ -425,7 +429,11 @@ sub userset {
 
 sub userunset {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-  $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from) if length $arguments and $stuff->{arglist}[0] !~ m/^#/;
+
+  if (length $arguments and $stuff->{arglist}[0] !~ m/^(#|\.\*$|global$)/) {
+    $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from)
+  }
+
   my ($channel, $hostmask, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
   if (not defined $hostmask) {
