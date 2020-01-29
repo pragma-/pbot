@@ -312,7 +312,7 @@ sub logincmd {
   my $channel_text = $user_channel eq '.*' ? '' : " for $user_channel";
 
   if ($u->{loggedin}) {
-    return "/msg $nick You are already logged into $u->{name} ($user_hostmask}$channel_text.";
+    return "/msg $nick You are already logged into $u->{name} ($user_hostmask)$channel_text.";
   }
 
   my $result = $self->login($user_channel, $user_hostmask, $arguments);
@@ -384,10 +384,11 @@ sub userdel {
 
 sub userset {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from) if length $arguments and $stuff->{arglist}[0] !~ m/^#/;
   my ($channel, $hostmask, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4);
 
-  if (not defined $channel or not defined $hostmask) {
-    return "Usage: userset <channel> <hostmask or account name> [key] [value]";
+  if (not defined $hostmask) {
+    return "Usage: userset [channel] <hostmask or account name> [key] [value]";
   }
 
   my $admin  = $self->find_admin($channel, "$nick!$user\@$host");
@@ -399,8 +400,11 @@ sub userset {
   }
 
   if (not $target) {
-    $channel = 'global' if $channel eq '.*';
-    return "There is no user $hostmask in channel $channel.";
+    if ($channel !~ /^#/) {
+      return "There is no user account $hostmask.";
+    } else {
+      return "There is no user account $hostmask for $channel.";
+    }
   }
 
   # don't allow non-bot-owners to add admins that can also add admins
@@ -421,10 +425,11 @@ sub userset {
 
 sub userunset {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from) if length $arguments and $stuff->{arglist}[0] !~ m/^#/;
   my ($channel, $hostmask, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
-  if (not defined $channel or not defined $hostmask) {
-    return "Usage: userunset <channel> <hostmask or account name> <key>";
+  if (not defined $hostmask) {
+    return "Usage: userunset [channel] <hostmask or account name> <key>";
   }
 
   my $admin  = $self->find_admin($channel, "$nick!$user\@$host");
@@ -436,8 +441,11 @@ sub userunset {
   }
 
   if (not $target) {
-    $channel = 'global' if $channel eq '.*';
-    return "There is no user $hostmask in channel $channel.";
+    if ($channel !~ /^#/) {
+      return "There is no user account $hostmask.";
+    } else {
+      return "There is no user account $hostmask for $channel.";
+    }
   }
 
   if ($target->{level} > $admin->{level}) {
