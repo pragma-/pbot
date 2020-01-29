@@ -120,9 +120,9 @@ sub interpreter {
       } else {
         return undef if $stuff->{referenced};
         if ($admin_level == 0) {
-          return "/msg $stuff->{nick} You must login to use this command.";
+          return "/msg $stuff->{nick} You must be an admin to use this command.";
         } else {
-          return "/msg $stuff->{nick} You are not authorized to use this command.";
+          return "/msg $stuff->{nick} Your level is too low to use this command.";
         }
       }
     }

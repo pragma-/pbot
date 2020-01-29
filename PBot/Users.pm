@@ -257,10 +257,11 @@ sub loggedin_admin {
 sub login {
   my ($self, $channel, $hostmask, $password) = @_;
   my $user = $self->find_user($channel, $hostmask);
+  my $channel_text = $channel eq '.*' ? '' : " for $channel";
 
   if (not defined $user) {
     $self->{pbot}->{logger}->log("Attempt to login non-existent [$channel][$hostmask] failed\n");
-    return "You do not have an account in $channel.";
+    return "You do not have a user account$channel_text.";
   }
 
   if (defined $password and $user->{password} ne $password) {
@@ -269,8 +270,8 @@ sub login {
   }
 
   $user->{loggedin} = 1;
-  $self->{pbot}->{logger}->log("$hostmask logged into $channel\n");
-  return "Logged into $channel.";
+  $self->{pbot}->{logger}->log("$hostmask logged into $user->{name} ($hostmask)$channel_text.\n");
+  return "Logged into $user->{name} ($hostmask)$channel_text.";
 }
 
 sub logout {
@@ -301,19 +302,42 @@ sub logincmd {
     $arguments = $2;
   }
 
-  if ($self->loggedin($channel, "$nick!$user\@$host")) {
-    return "/msg $nick You are already logged into channel $channel.";
+  my ($user_channel, $user_hostmask) = $self->find_user_account($channel, "$nick!$user\@$host");
+
+  if (not defined $user_channel) {
+    return "/msg $nick You do not have a user account.";
   }
 
-  my $result = $self->login($channel, "$nick!$user\@$host", $arguments);
+  my $u = $self->{users}->{hash}->{$user_channel}->{$user_hostmask};
+  my $channel_text = $user_channel eq '.*' ? '' : " for $user_channel";
+
+  if ($u->{loggedin}) {
+    return "/msg $nick You are already logged into $u->{name} ($user_hostmask}$channel_text.";
+  }
+
+  my $result = $self->login($user_channel, $user_hostmask, $arguments);
   return "/msg $nick $result";
 }
 
 sub logoutcmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  return "/msg $nick Uh, you aren't logged into channel $from." if (not $self->loggedin($from, "$nick!$user\@$host"));
-  $self->logout($from, "$nick!$user\@$host");
-  return "/msg $nick Good-bye, $nick.";
+
+  $from = $arguments if length $arguments;
+  my ($user_channel, $user_hostmask) = $self->find_user_account($from, "$nick!$user\@$host");
+
+  if (not defined $user_channel) {
+    return "/msg $nick You do not have a user account.";
+  }
+
+  my $u = $self->{users}->{hash}->{$user_channel}->{$user_hostmask};
+  my $channel_text = $user_channel eq '.*' ? '' : " for $user_channel";
+
+  if (not $u->{loggedin}) {
+    return "/msg $nick You are not logged into $u->{name} ($user_hostmask)$channel_text.";
+  }
+
+  $self->logout($user_channel, $user_hostmask);
+  return "/msg $nick Logged out of $u->{name} ($user_hostmask)$channel_text.";
 }
 
 sub useradd {

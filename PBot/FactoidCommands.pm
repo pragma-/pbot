@@ -581,7 +581,7 @@ sub factset {
 
     if ($meta_level > 0) {
       if ($level == 0) {
-        return "You must login to set '$key'";
+        return "You be an admin to set '$key'";
       } elsif ($level < $meta_level) {
         return "You must be at least level $meta_level to set '$key'";
       }
@@ -673,7 +673,7 @@ sub factunset {
 
   if ($meta_level > 0) {
     if ($level == 0) {
-      return "You must login to unset '$key'";
+      return "You be an admin to unset '$key'";
     } elsif ($level < $meta_level) {
       return "You must be at least level $meta_level to unset '$key'";
     }
