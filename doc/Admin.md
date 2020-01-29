@@ -113,12 +113,12 @@ Sets metadata for a user account. You can use the `account name` field or the `h
 
 If `key` is omitted, it will list all the keys and values that are set.  If `value` is omitted, it will show the value for `key`.
 
-Usage: `userset <channel> <account name or hostmask> [<key> [value]]`
+Usage: `userset [channel] <account name or hostmask> [<key> [value]]`
 
 ### userunset
 Deletes a metadata key from a user account.  You can use the `account name` field or the `hostmask` field that was set via the [`useradd`](#useradd) command.
 
-Usage: `userunset <channel> <account name or hostmask> <key>`
+Usage: `userunset [channel] <account name or hostmask> <key>`
 
 #### User metadata list
 This is a list of recognized metadata keys for user accounts.
