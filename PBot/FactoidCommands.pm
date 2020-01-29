@@ -101,7 +101,7 @@ sub call_factoid {
   my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $keyword, arguments => $args, exact_channel => 1, exact_trigger => 1);
 
   if (not defined $trigger) {
-    return "No such factoid '$keyword' exists for channel '$chan'";
+    return "No such factoid $keyword exists for $chan";
   }
 
   $stuff->{keyword} = $trigger;
@@ -581,9 +581,9 @@ sub factset {
 
     if ($meta_level > 0) {
       if ($level == 0) {
-        return "You be an admin to set '$key'";
+        return "You must be an admin to set $key";
       } elsif ($level < $meta_level) {
-        return "You must be at least level $meta_level to set '$key'";
+        return "You must be at least level $meta_level to set $key";
       }
     }
 
@@ -673,9 +673,9 @@ sub factunset {
 
   if ($meta_level > 0) {
     if ($level == 0) {
-      return "You be an admin to unset '$key'";
+      return "You must be an admin to unset $key";
     } elsif ($level < $meta_level) {
-      return "You must be at least level $meta_level to unset '$key'";
+      return "You must be at least level $meta_level to unset $key";
     }
   }
 
