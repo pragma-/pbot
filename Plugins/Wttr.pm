@@ -121,7 +121,7 @@ sub get_weather {
   $location = lc $location;
 
   my $ua = LWP::UserAgent::WithCache->new(\%cache_opt, timeout => 10);
-  my $response = $ua->get("http://wttr.in/$location?format=j1");
+  my $response = $ua->get("http://wttr.in/$location?format=j1&m");
 
   my $json;
   if ($response->is_success) {
