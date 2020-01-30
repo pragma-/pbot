@@ -134,7 +134,7 @@ sub get_weather {
 
   # title-case location
   $location = ucfirst lc $location;
-  $location =~ s/(?: |\.)(\w)/' ' . uc $1/ge;
+  $location =~ s/( |\.)(\w)/$1 . uc $2/ge;
 
   my $result = "Weather for $location: ";
 
@@ -202,16 +202,16 @@ sub get_weather {
 
       when ('chances') {
         $result .= "Chances of: ";
-        $result .= "Fog: $h->{'chanceoffog'}, " if $h->{'chanceoffog'};
-        $result .= "Frost: $h->{'chanceoffrost'}, " if $h->{'chanceoffrost'};
-        $result .= "High temp: $h->{'chanceofhightemp'}, " if $h->{'chanceofhightemp'};
-        $result .= "Overcast: $h->{'chanceofovercast'}, " if $h->{'chanceofovercast'};
-        $result .= "Rain: $h->{'chanceofrain'}, " if $h->{'chanceofrain'};
-        $result .= "Remaining dry: $h->{'chanceofremdry'}, " if $h->{'chanceofremdry'};
-        $result .= "Snow: $h->{'chanceofsnow'}, " if $h->{'chanceofsnow'};
-        $result .= "Sunshine: $h->{'chanceofsunshine'}, " if $h->{'chanceofsunshine'};
-        $result .= "Thunder: $h->{'chanceofthunder'}, " if $h->{'chanceofthunder'};
-        $result .= "Windy: $h->{'chanceofwindy'}, " if $h->{'chanceofwindy'};
+        $result .= "Fog: $h->{'chanceoffog'}%, " if $h->{'chanceoffog'};
+        $result .= "Frost: $h->{'chanceoffrost'}%, " if $h->{'chanceoffrost'};
+        $result .= "High temp: $h->{'chanceofhightemp'}%, " if $h->{'chanceofhightemp'};
+        $result .= "Overcast: $h->{'chanceofovercast'}%, " if $h->{'chanceofovercast'};
+        $result .= "Rain: $h->{'chanceofrain'}%, " if $h->{'chanceofrain'};
+        $result .= "Remaining dry: $h->{'chanceofremdry'}%, " if $h->{'chanceofremdry'};
+        $result .= "Snow: $h->{'chanceofsnow'}%, " if $h->{'chanceofsnow'};
+        $result .= "Sunshine: $h->{'chanceofsunshine'}%, " if $h->{'chanceofsunshine'};
+        $result .= "Thunder: $h->{'chanceofthunder'}%, " if $h->{'chanceofthunder'};
+        $result .= "Windy: $h->{'chanceofwindy'}%, " if $h->{'chanceofwindy'};
         $result =~ s/,\s+$/; /;
       }
 
