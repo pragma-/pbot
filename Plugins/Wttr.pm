@@ -159,13 +159,11 @@ sub get_weather {
             $sep = ' -> ';
             $last_condition = $condition;
           }
-
         }
 
         if ($sep eq '') {
           $result .= $last_condition;
         }
-
         $result .= "; ";
       }
 
