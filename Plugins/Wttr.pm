@@ -102,7 +102,7 @@ sub wttrcmd {
 
   if (defined $options{all}) {
     %options = ();
-    map { $options{$_} = 1 } @wttr_options;
+    map { my $opt = $_; $opt =~ s/\|.*$//; $options{$opt} = 1 } @wttr_options;
     delete $options{all};
     delete $options{default};
   }
