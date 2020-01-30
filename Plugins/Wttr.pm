@@ -169,12 +169,13 @@ sub get_weather {
 
       when ('conditions') {
         $result .= "Currently: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_F'}F/$c->{'temp_C'}C (Feels like $c->{'FeelsLikeF'}F/$c->{'FeelsLikeC'}C); ";
-        $result .= "Cloud cover: $c->{'cloudcover'}; Visibility: $c->{'visibility'}; ";
+        $result .= "Cloud cover: $c->{'cloudcover'}%; Visibility: $c->{'visibility'}km; ";
         $result .= "Wind: $c->{'windspeedMiles'}M/$c->{'windspeedKmph'}K $c->{'winddirDegree'}°/$c->{'winddir16Point'}; ";
-        $result .= "Humidity: $c->{'humidity'}; Precip: $c->{'precipMM'}mm; Pressure: $c->{'pressure'}; UV Index: $c->{'uvIndex'}; ";
+        $result .= "Humidity: $c->{'humidity'}%; Precip: $c->{'precipMM'}mm; Pressure: $c->{'pressure'}hPa; UV Index: $c->{'uvIndex'}; ";
       }
 
       when ('forecast') {
+        $result .= "Hourly forecast: ";
         my ($last_temp, $last_condition, $sep) = ('', '', '');
         foreach my $hour (@{ $wttr->{'weather'}->[0]->{'hourly'} }) {
           my $temp = "$hour->{FeelsLikeF}F/$hour->{FeelsLikeC}C";
@@ -260,11 +261,11 @@ sub get_weather {
       }
 
       when ('visibility') {
-        $result .= "Visibility: $c->{'visibility'}; ";
+        $result .= "Visibility: $c->{'visibility'}km; ";
       }
 
       when ('cloudcover') {
-        $result .= "Cloud cover: $c->{'cloudcover'}; ";
+        $result .= "Cloud cover: $c->{'cloudcover'}%; ";
       }
 
       default {
