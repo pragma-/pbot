@@ -12217,6 +12217,17 @@
          "ref_user" : "VLetrmx!~VLetrmx@unaffiliated/vletrmx",
          "type" : "text"
       },
+         "netflix" : {
+         "_name" : "netflix",
+         "action" : "/call g site:netflix.com $args | {func sed s/\\(.*?\\) //} | {func sed s/\\|.*?: //}",
+         "created_on" : 1580416731.48863,
+         "enabled" : 1,
+         "owner" : "Benett!~Benett@xnetx.tk",
+         "rate_limit" : "15",
+         "ref_count" : "0",
+         "ref_user" : "nobody",
+         "type" : "text"
+      },
       "news" : {
          "_name" : "news",
          "action" : "/call echo $newsheaders a $news_idiot has been $news_seen $news_idiot_action $news_near $city. $news_quote $news_yapper, \"$news_comment\"",
@@ -18053,6 +18064,17 @@
          "ref_user" : "nobody",
          "type" : "text"
       },
+         "spotify" : {
+         "_name" : "spotify",
+         "action" : "/call g site:spotify.com $args | {func sed s/\\(.*?\\) //} | {func sed s/\\|.*?: //}",
+         "created_on" : 1580416712.02288,
+         "enabled" : 1,
+         "owner" : "Benett!~Benett@xnetx.tk",
+         "rate_limit" : "15",
+         "ref_count" : "0",
+         "ref_user" : "nobody",
+         "type" : "text"
+      },
       "spread_type" : {
          "_name" : "spread_type",
          "action" : "jelly jam preserves butter",
@@ -21968,6 +21990,19 @@
          "rate_limit" : "15",
          "ref_count" : "26",
          "ref_user" : "pragma-!~chaos@unaffiliated/pragmatic-chaos",
+         "type" : "text"
+      },
+      "wiki" : {
+         "_name" : "wiki",
+         "action" : "/me https://github.com/pragma-/pbot/wiki/Welcome-to-the-PBot-Wiki!",
+         "created_on" : 1580400359.80868,
+         "enabled" : 1,
+         "last_referenced_in" : "#xnetx",
+         "last_referenced_on" : 1580401637.6382,
+         "owner" : "Benett!~Benett@xnetx.tk",
+         "rate_limit" : "15",
+         "ref_count" : "1",
+         "ref_user" : "Benett!~Benett@xnetx.tk",
          "type" : "text"
       },
       "wikipedia" : {
