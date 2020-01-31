@@ -145,18 +145,22 @@ sub get_weather {
   foreach my $option (sort keys %options) {
     given ($option) {
       when ('default') {
-        $result .= "Currently: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_F'}F/$c->{'temp_C'}C; ";
-        $result .= "Forecast: High: $w->{maxtempF}F/$w->{maxtempC}C Low: $w->{mintempF}F/$w->{mintempC}C ";
+        $result .= "Currently: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F; ";
+        $result .= "Forecast: High: $w->{maxtempC}C/$w->{maxtempF}F, Low: $w->{mintempC}C/$w->{mintempF}F; ";
+        $result .= "Condition changes: ";
 
         my $last_condition = $c->{'weatherDesc'}->[0]->{'value'};
         my $sep = '';
 
         foreach my $hour (@{ $w->{'hourly'} }) {
           my $condition = $hour->{'weatherDesc'}->[0]->{'value'};
+          my $temp = "$hour->{FeelsLikeC}C/$hour->{FeelsLikeF}F";
+          my $time = sprintf "%04d", $hour->{'time'};
+          $time =~ s/(\d{2})$/:$1/;
 
           if ($condition ne $last_condition) {
-            $result .= "$sep$condition";
-            $sep = ' -> ';
+            $result .= "$sep$time: $condition ($temp)";
+            $sep = '-> ';
             $last_condition = $condition;
           }
         }
@@ -168,9 +172,9 @@ sub get_weather {
       }
 
       when ('conditions') {
-        $result .= "Currently: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_F'}F/$c->{'temp_C'}C (Feels like $c->{'FeelsLikeF'}F/$c->{'FeelsLikeC'}C); ";
+        $result .= "Current conditions: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F (Feels like $c->{'FeelsLikeC'}C/$c->{'FeelsLikeF'}F); ";
         $result .= "Cloud cover: $c->{'cloudcover'}%; Visibility: $c->{'visibility'}km; ";
-        $result .= "Wind: $c->{'windspeedMiles'}M/$c->{'windspeedKmph'}K $c->{'winddirDegree'}°/$c->{'winddir16Point'}; ";
+        $result .= "Wind: $c->{'windspeedKmph'}kph/$c->{'windspeedMiles'}mph $c->{'winddirDegree'}°/$c->{'winddir16Point'}; ";
         $result .= "Humidity: $c->{'humidity'}%; Precip: $c->{'precipMM'}mm; Pressure: $c->{'pressure'}hPa; UV Index: $c->{'uvIndex'}; ";
       }
 
@@ -178,7 +182,7 @@ sub get_weather {
         $result .= "Hourly forecast: ";
         my ($last_temp, $last_condition, $sep) = ('', '', '');
         foreach my $hour (@{ $wttr->{'weather'}->[0]->{'hourly'} }) {
-          my $temp = "$hour->{FeelsLikeF}F/$hour->{FeelsLikeC}C";
+          my $temp = "$hour->{FeelsLikeC}C/$hour->{FeelsLikeF}F";
           my $condition = $hour->{'weatherDesc'}->[0]->{'value'};
           my $text = '';
 
@@ -194,7 +198,9 @@ sub get_weather {
           }
 
           if (length $text) {
-            $result .= "$sep " . (sprintf "%04d", $hour->{'time'}) . ": $text";
+            my $time = sprintf "%04d", $hour->{'time'};
+            $time =~ s/(\d{2})$/:$1/;
+            $result .= "$sep $time: $text";
             $sep = ', ';
           }
         }
@@ -203,22 +209,22 @@ sub get_weather {
 
       when ('chances') {
         $result .= "Chances of: ";
-        $result .= "Fog: $h->{'chanceoffog'}%, " if $h->{'chanceoffog'};
-        $result .= "Frost: $h->{'chanceoffrost'}%, " if $h->{'chanceoffrost'};
-        $result .= "High temp: $h->{'chanceofhightemp'}%, " if $h->{'chanceofhightemp'};
-        $result .= "Overcast: $h->{'chanceofovercast'}%, " if $h->{'chanceofovercast'};
-        $result .= "Rain: $h->{'chanceofrain'}%, " if $h->{'chanceofrain'};
+        $result .= "Fog: $h->{'chanceoffog'}%, "              if $h->{'chanceoffog'};
+        $result .= "Frost: $h->{'chanceoffrost'}%, "          if $h->{'chanceoffrost'};
+        $result .= "High temp: $h->{'chanceofhightemp'}%, "   if $h->{'chanceofhightemp'};
+        $result .= "Overcast: $h->{'chanceofovercast'}%, "    if $h->{'chanceofovercast'};
+        $result .= "Rain: $h->{'chanceofrain'}%, "            if $h->{'chanceofrain'};
         $result .= "Remaining dry: $h->{'chanceofremdry'}%, " if $h->{'chanceofremdry'};
-        $result .= "Snow: $h->{'chanceofsnow'}%, " if $h->{'chanceofsnow'};
-        $result .= "Sunshine: $h->{'chanceofsunshine'}%, " if $h->{'chanceofsunshine'};
-        $result .= "Thunder: $h->{'chanceofthunder'}%, " if $h->{'chanceofthunder'};
-        $result .= "Windy: $h->{'chanceofwindy'}%, " if $h->{'chanceofwindy'};
+        $result .= "Snow: $h->{'chanceofsnow'}%, "            if $h->{'chanceofsnow'};
+        $result .= "Sunshine: $h->{'chanceofsunshine'}%, "    if $h->{'chanceofsunshine'};
+        $result .= "Thunder: $h->{'chanceofthunder'}%, "      if $h->{'chanceofthunder'};
+        $result .= "Windy: $h->{'chanceofwindy'}%, "          if $h->{'chanceofwindy'};
         $result =~ s/,\s+$/; /;
       }
 
       when ('wind') {
-        $result .= "Wind: $c->{'windspeedMiles'}M/$c->{'windspeedKmph'}K $c->{'winddirDegree'}°/$c->{'winddir16Point'}, ";
-        $result .= "gust: $h->{'WindGustMiles'}M/$h->{'WindGustKmph'}K, chill: $h->{'WindChillF'}F/$h->{'WindChillC'}C; ";
+        $result .= "Wind: $c->{'windspeedKmph'}kph/$c->{'windspeedMiles'}mph $c->{'winddirDegree'}°/$c->{'winddir16Point'}, ";
+        $result .= "gust: $h->{'WindGustKmph'}kph/$h->{'WindGustMiles'}mph, chill: $h->{'WindChillC'}C/$h->{'WindChillF'}F; ";
       }
 
       when ('location') {
@@ -227,15 +233,15 @@ sub get_weather {
       }
 
       when ('dewpoint') {
-        $result .= "Dew point: $h->{'DewPointF'}F/$h->{'DewPointC'}C; ";
+        $result .= "Dew point: $h->{'DewPointC'}C/$h->{'DewPointF'}F; ";
       }
 
       when ('feelslike') {
-        $result .= "Feels like: $h->{'FeelsLikeF'}F/$h->{'FeelsLikeC'}C; ";
+        $result .= "Feels like: $h->{'FeelsLikeC'}C/$h->{'FeelsLikeF'}F; ";
       }
 
       when ('heatindex') {
-        $result .= "Heat index: $h->{'HeatIndexF'}F/$h->{'HeatIndexC'}C; ";
+        $result .= "Heat index: $h->{'HeatIndexC'}C/$h->{'HeatIndexF'}F; ";
       }
 
       when ('moon') {
