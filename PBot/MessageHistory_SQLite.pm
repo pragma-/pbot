@@ -323,6 +323,20 @@ sub add_message_account {
   return $id;
 }
 
+sub find_message_account_by_id {
+  my ($self, $id) = @_;
+
+  my $hostmask = eval {
+    my $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE id = ? ORDER BY last_seen DESC LIMIT 1');
+    $sth->execute($id);
+    my $row = $sth->fetchrow_hashref();
+    return $row->{hostmask};
+  };
+
+  $self->{pbot}->{logger}->log($@) if $@;
+  return $hostmask;
+}
+
 sub find_message_account_by_nick {
   my ($self, $nick) = @_;
 
@@ -883,6 +897,26 @@ sub get_recent_messages {
     $sth->bind_param($param++, $channel);
     $sth->bind_param($param, $limit);
     $sth->execute();
+    return $sth->fetchall_arrayref({});
+  };
+  $self->{pbot}->{logger}->log($@) if $@;
+  return $messages;
+}
+
+sub get_recent_messages_from_channel {
+  my ($self, $channel, $limit, $mode, $direction) = @_;
+  $limit = 25 if not defined $limit;
+  $direction = 'ASC' if not defined $direction;
+
+  $channel = lc $channel;
+
+  my $mode_query = '';
+  $mode_query = "AND mode = $mode" if defined $mode;
+
+  my $messages = eval {
+    my $sql = "SELECT id, msg, mode, timestamp FROM Messages WHERE channel = ? $mode_query ORDER BY timestamp $direction LIMIT ?";
+    my $sth = $self->{dbh}->prepare($sql);
+    $sth->execute($channel, $limit);
     return $sth->fetchall_arrayref({});
   };
   $self->{pbot}->{logger}->log($@) if $@;
