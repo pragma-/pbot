@@ -503,7 +503,7 @@ sub mycmd {
     $key = lc $key;
 
     if (defined $value and $u->{level} == 0) {
-      my @disallowed = qw/level autoop autovoice/;
+      my @disallowed = qw/name level autoop autovoice/;
       if (grep { $_ eq $key } @disallowed) {
         return "You must be an admin to set $key.";
       }
