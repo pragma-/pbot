@@ -46,14 +46,12 @@ sub request {
   my $cached = $self->{cache}->get($uri);
 
   if (defined $cached) {
-    print "Using cached data for $uri\n";
     return HTTP::Response->parse($cached);
   }
 
   my $res = $self->SUPER::request(@args);
 
   if ($res->code eq HTTP::Status::RC_OK) {
-    print "caching new copy for $uri\n";
     $self->{cache}->set($uri, $res->as_string);
   }
 
