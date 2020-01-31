@@ -21,6 +21,7 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 use LWP::UserAgent::WithCache;
 use JSON;
 use Getopt::Long qw(GetOptionsFromString);
+use URI::Escape qw/uri_escape_utf8/;
 use Carp ();
 
 sub new {
@@ -107,10 +108,10 @@ sub wttrcmd {
     delete $options{default};
   }
 
-  return $self->get_weather($arguments, %options);
+  return $self->get_wttr($arguments, %options);
 }
 
-sub get_weather {
+sub get_wttr {
   my ($self, $location, %options) = @_;
 
   my %cache_opt = (
@@ -118,10 +119,10 @@ sub get_weather {
     'default_expires_in' => 3600
   );
 
-  $location = lc $location;
+  my $location_uri = uri_escape_utf8 $location;
 
   my $ua = LWP::UserAgent::WithCache->new(\%cache_opt, timeout => 10);
-  my $response = $ua->get("http://wttr.in/$location?format=j1&m");
+  my $response = $ua->get("http://wttr.in/$location_uri?format=j1&m");
 
   my $json;
   if ($response->is_success) {
@@ -246,7 +247,7 @@ sub get_weather {
 
       when ('moon') {
         my $a = $w->{'astronomy'}->[0];
-        $result .= "Moon: phase: $a->{'moon_phase'}, illumination: $a->{'moon_illumination'}, rise: $a->{'moonrise'}, set: $a->{'moonset'}; ";
+        $result .= "Moon: phase: $a->{'moon_phase'}, illumination: $a->{'moon_illumination'}%, rise: $a->{'moonrise'}, set: $a->{'moonset'}; ";
       }
 
       when ('sunrise') {
