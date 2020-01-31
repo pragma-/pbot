@@ -62,13 +62,6 @@ sub refresh {
     return $@;
   }
 
-  # update version factoid
-  my $version = $self->{pbot}->{version}->version();
-  if ($self->{pbot}->{factoids}->{factoids}->{hash}->{'.*'}->{'version'}->{'action'} ne "/say $version") {
-    $self->{pbot}->{factoids}->{factoids}->{hash}->{'.*'}->{'version'}->{'action'} = "/say $version";
-    $self->{pbot}->{logger}->log("New version: $version\n");
-  }
-
   return $result;
 }
 
