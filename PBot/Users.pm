@@ -75,7 +75,7 @@ sub on_join {
 
     if ($u->{autologin}) {
       $self->{pbot}->{logger}->log("$nick!$user\@$host autologin to $u->{name} ($u->{level}) for $channel\n");
-      $user->{loggedin} = 1;
+      $u->{loggedin} = 1;
     }
   }
   return 0;
