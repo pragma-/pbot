@@ -57,7 +57,7 @@ sub on_public {
   if ($msg =~ m/^\s*s([[:punct:]])/) {
     my $separator = $1;
     my $sep = quotemeta $separator;
-    if ($msg =~ m/^\s*s${sep}(.*?)(?<!\\)${sep}(.*?)(?<!\\)${sep}([g]*)\s*$/) {
+    if ($msg =~ m/^\s*s${sep}(.*?)(?<!\\)${sep}(.*?)(?<!\\)${sep}([g]*)\s*$/ or $msg =~ m/^\s*s${sep}(.*?)(?<!\\)${sep}(.*?)$/) {
       my ($regex, $replacement, $modifiers) = ($1, $2, $3);
       eval {
         my $rx = qr/$regex/;
@@ -74,7 +74,7 @@ sub on_public {
 
         foreach my $message (@$messages) {
           next if $ignore_commands and $message->{msg} =~ m/^(?:$bot_trigger|$botnick.?)/;
-          next if $message->{msg} =~ m/^\s*s[[:punct:]](.*?)[[:punct:]](.*?)[[:punct:]]g?\s*$/;
+          next if $message->{msg} =~ m/^\s*s[[:punct:]](.*?)[[:punct:]](.*?)[[:punct:]]?g?\s*$/;
 
           if ($message->{msg} =~ /$rx/) {
             my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_id($message->{id});
