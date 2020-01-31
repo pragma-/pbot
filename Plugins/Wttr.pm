@@ -18,7 +18,7 @@ use utf8;
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
-use LWP::UserAgent::WithCache;
+use PBot::Utils::LWPUserAgentCached;
 use JSON;
 use Getopt::Long qw(GetOptionsFromString);
 use URI::Escape qw/uri_escape_utf8/;
@@ -121,7 +121,7 @@ sub get_wttr {
 
   my $location_uri = uri_escape_utf8 $location;
 
-  my $ua = LWP::UserAgent::WithCache->new(\%cache_opt, timeout => 10);
+  my $ua = PBot::Utils::LWPUserAgentCached->new(\%cache_opt, timeout => 10);
   my $response = $ua->get("http://wttr.in/$location_uri?format=j1&m");
 
   my $json;

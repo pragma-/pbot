@@ -14,7 +14,7 @@ use strict;
 
 use feature 'unicode_strings';
 
-use LWP::UserAgent::WithCache;
+use PBot::Utils::LWPUserAgentCached;
 use XML::LibXML;
 use Getopt::Long qw(GetOptionsFromString);
 use Carp ();
@@ -83,7 +83,7 @@ sub get_weather {
     'default_expires_in' => 3600
   );
 
-  my $ua = LWP::UserAgent::WithCache->new(\%cache_opt, timeout => 10);
+  my $ua = PBot::Utils::LWPUserAgentCached->new(\%cache_opt, timeout => 10);
   my $response = $ua->get("http://rss.accuweather.com/rss/liveweather_rss.asp?metric=0&locCode=$location");
 
   my $xml;
