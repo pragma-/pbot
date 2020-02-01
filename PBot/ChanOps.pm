@@ -337,7 +337,7 @@ sub checkmute {
     $result .= "for $reason " if defined $reason;
     $result .= "($duration remaining)";
 
-    return "$mask has $duration remaining on their $channel mute";
+    return $result;
   } else {
     return "$mask has no mute timeout.";
   }
