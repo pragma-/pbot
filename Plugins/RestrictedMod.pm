@@ -97,7 +97,7 @@ sub generic_command {
 
   my $target_user = $self->{pbot}->{users}->find_user($channel, $target_nicklist->{hostmask});
 
-  if ((defined $target_user and $target_user->{level} > 0) or $target_user->{autoop} or $target_user->{autovoice}
+  if ((defined $target_user and $target_user->{level} > 0 or $target_user->{autoop} or $target_user->{autovoice})
       or $target_nicklist->{'+v'} or $target_nicklist->{'+o'}
       or $self->{pbot}->{antiflood}->whitelisted($channel, $target_nicklist->{hostmask})) {
     return "I don't think so."
