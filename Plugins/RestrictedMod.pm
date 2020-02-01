@@ -137,7 +137,7 @@ sub generic_command {
 
 sub kick {
   my ($self, $stuff) = @_;
-  return $self->generic_command($stuff, 'kick', 'kick $channel $target Good-bye!');
+  return $self->generic_command($stuff, 'kick');
 }
 
 sub ban {
