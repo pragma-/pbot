@@ -37,10 +37,10 @@ sub initialize {
     'list'   => { subref => sub { $self->list(@_)    }, help => "Lists available mod commands. Usage: mod list" },
     'kick'   => { subref => sub { $self->kick(@_)    }, help => "Kicks a nick from the channel. Usage: mod kick <nick>" },
     'ban'    => { subref => sub { $self->ban(@_)     }, help => "Bans a nick from the channel. Cannot be used to set a custom banmask. Usage: mod ban <nick>" },
-    'kb'     => { subref => sub { $self->kb(@_)      }, help => "Kickbans a nick from the channel. Cannot be used to set a custom banmask. Usage: mod kb <nick>" },
     'mute'   => { subref => sub { $self->mute(@_)    }, help => "Mutes a nick in the channel. Usage: mod mute <nick>" },
     'unban'  => { subref => sub { $self->unban(@_)   }, help => "Removes bans set by moderators. Cannot remove any other types of bans. Usage: mod unban <nick or mask>" },
     'unmute' => { subref => sub { $self->unmute(@_)  }, help => "Removes mutes set by moderators. Cannot remove any other types of mutes. Usage: mod unmute <nick or mask>" },
+    'kb'     => { subref => sub { $self->kb(@_)      }, help => "Kickbans a nick from the channel. Cannot be used to set a custom banmask. Usage: mod kb <nick>" },
   };
 }
 
@@ -138,11 +138,6 @@ sub generic_command {
 sub kick {
   my ($self, $stuff) = @_;
   return $self->generic_command($stuff, 'kick', 'kick $channel $target Good-bye!');
-}
-
-sub ban {
-  my ($self, $stuff) = @_;
-  return $self->generic_command($stuff, 'ban');
 }
 
 sub ban {
