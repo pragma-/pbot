@@ -95,6 +95,9 @@ sub wttrcmd {
     return "No location set or user account does not exist.";
   }
 
+  delete $options{u};
+  delete $options{h};
+
   if (not length $arguments) {
     return $usage;
   }
