@@ -162,7 +162,7 @@ sub unmute {
 
 sub kb {
   my ($self, $stuff) = @_;
-  my $result = $self->ban(dclone $stuff); # note: using copy of $stuff
+  my $result = $self->ban(dclone $stuff); # note: using copy of $stuff to preserve $stuff->{arglist} for $self->kick($stuff)
   return $result if length $result;
   return $self->kick($stuff);
 }
