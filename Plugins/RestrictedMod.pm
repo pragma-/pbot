@@ -16,6 +16,8 @@ use strict;
 use feature 'unicode_strings';
 use Carp ();
 
+use Storable qw/dclone/;
+
 sub new {
   Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
   my ($class, %conf) = @_;
@@ -95,7 +97,7 @@ sub generic_command {
 
   my $target_user = $self->{pbot}->{users}->find_user($channel, $target_nicklist->{hostmask});
 
-  if ($target_user->{level} > 0 or $target_user->{autoop} or $target_user->{autovoice}
+  if ((defined $target_user and $target_user->{level} > 0) or $target_user->{autoop} or $target_user->{autovoice}
       or $target_nicklist->{'+v'} or $target_nicklist->{'+o'}
       or $self->{pbot}->{antiflood}->whitelisted($channel, $target_nicklist->{hostmask})) {
     return "I don't think so."
@@ -126,9 +128,9 @@ sub ban {
 
 sub kb {
   my ($self, $stuff) = @_;
-  my $result = $self->kick({%$stuff}); # note: using copy of $stuff
+  my $result = $self->ban(dclone $stuff); # note: using copy of $stuff
   return $result if length $result;
-  return $self->ban($stuff);
+  return $self->kick($stuff);
 }
 
 sub mute {
