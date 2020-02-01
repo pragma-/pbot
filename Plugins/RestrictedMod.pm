@@ -149,9 +149,9 @@ sub modcmd {
   } else {
     my $commands = join ', ', sort keys %{$self->{commands}};
     if ($from !~ m/^#/) {
-      return "Usage: mod <channel> <command> <arguments>; commands are: $commands; see mod <help> <command> for more information";
+      return "Usage: mod <channel> <command> [arguments]; commands are: $commands; see `mod help <command>` for more information.";
     } else {
-      return "Usage: mod <command> <arguments>; commands are: $commands; see mod <help> <command> for more information";
+      return "Usage: mod <command> [arguments]; commands are: $commands; see `mod help <command>` for more information.";
     }
   }
 }
