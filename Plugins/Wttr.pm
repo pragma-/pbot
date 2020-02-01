@@ -96,7 +96,6 @@ sub wttrcmd {
   }
 
   delete $options{u};
-  delete $options{h};
 
   if (not length $arguments) {
     return $usage;
