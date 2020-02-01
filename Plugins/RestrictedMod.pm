@@ -33,12 +33,14 @@ sub initialize {
   $self->{pbot}->{commands}->set_meta('mod', 'help', 'Provides restricted moderation abilities to voiced users.');
 
   $self->{commands} = {
-    'help' => { subref => sub { $self->help(@_)  }, help => "Provides help about this command. Usage: mod help <mod command>; see also: mod help list" },
-    'list' => { subref => sub { $self->list(@_)  }, help => "Lists available mod commands. Usage: mod list" },
-    'kick' => { subref => sub { $self->kick(@_)  }, help => "Kicks a nick from the channel. Usage: mod kick <nick>" },
-    'ban'  => { subref => sub { $self->ban(@_)   }, help => "Bans a nick from the channel. Cannot be used to set a custom banmask. Usage: mod ban <nick>" },
-    'kb'   => { subref => sub { $self->kb(@_)    }, help => "Kickbans a nick from the channel. Cannot be used to set a custom banmask. Usage: mod kb <nick>" },
-    'mute' => { subref => sub { $self->mute(@_)  }, help => "Mutes a nick in the channel. Usage: mod mute <nick>" },
+    'help'   => { subref => sub { $self->help(@_)    }, help => "Provides help about this command. Usage: mod help <mod command>; see also: mod help list" },
+    'list'   => { subref => sub { $self->list(@_)    }, help => "Lists available mod commands. Usage: mod list" },
+    'kick'   => { subref => sub { $self->kick(@_)    }, help => "Kicks a nick from the channel. Usage: mod kick <nick>" },
+    'ban'    => { subref => sub { $self->ban(@_)     }, help => "Bans a nick from the channel. Cannot be used to set a custom banmask. Usage: mod ban <nick>" },
+    'kb'     => { subref => sub { $self->kb(@_)      }, help => "Kickbans a nick from the channel. Cannot be used to set a custom banmask. Usage: mod kb <nick>" },
+    'mute'   => { subref => sub { $self->mute(@_)    }, help => "Mutes a nick in the channel. Usage: mod mute <nick>" },
+    'unban'  => { subref => sub { $self->unban(@_)   }, help => "Removes bans set by moderators. Cannot remove any other types of bans. Usage: mod unban <nick or mask>" },
+    'unmute' => { subref => sub { $self->unmute(@_)  }, help => "Removes mutes set by moderators. Cannot remove any other types of mutes. Usage: mod unmute <nick or mask>" },
   };
 }
 
@@ -64,7 +66,7 @@ sub list {
 }
 
 sub generic_command {
-  my ($self, $stuff, $command, $op_command) = @_;
+  my ($self, $stuff, $command) = @_;
 
   my $channel = $stuff->{from};
   if ($channel !~ m/^#/) {
@@ -75,6 +77,7 @@ sub generic_command {
     }
   }
 
+  return "I do not have OPs for this channel. I cannot do any moderation here." if not $self->{pbot}->{chanops}->can_gain_ops($channel);
   my $hostmask = "$stuff->{nick}!$stuff->{user}\@$stuff->{host}";
   my $admin = $self->{pbot}->{users}->loggedin_admin($channel, $hostmask);
   my $voiced = $self->{pbot}->{nicklist}->get_meta($channel, $stuff->{nick}, '+v');
@@ -86,14 +89,30 @@ sub generic_command {
     return "Missing target. Usage: mod $command <nick>";
   }
 
+  if ($command eq 'unban') {
+    my $reason = $self->{pbot}->{chanops}->checkban($channel, $target);
+    if ($reason =~ m/moderator ban/) {
+      $self->{pbot}->{chanops}->unban_user($target, $channel, 1);
+      return "";
+    } else {
+      return "I don't think so. This command can unban only bans set by moderators.";
+    }
+  } elsif ($command eq 'unmute') {
+    my $reason = $self->{pbot}->{chanops}->checkmute($channel, $target);
+    if ($reason =~ m/moderator mute/) {
+      $self->{pbot}->{chanops}->unmute_user($target, $channel, 1);
+      return "";
+    } else {
+      return "I don't think so. This command can unmute only mutes set by moderators.";
+    }
+  }
+
   my $target_nicklist;
   if (not $self->{pbot}->{nicklist}->is_present($channel, $target)) {
     return "$stuff->{nick}: I do not see anybody named $target in this channel.";
   } else {
     $target_nicklist = $self->{pbot}->{nicklist}->{nicklist}->{lc $channel}->{lc $target};
   }
-
-  return "I do not have OPs for this channel. I cannot do any moderation here." if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 
   my $target_user = $self->{pbot}->{users}->find_user($channel, $target_nicklist->{hostmask});
 
@@ -103,16 +122,16 @@ sub generic_command {
     return "I don't think so."
   }
 
-  $op_command =~ s/\$channel\b/$channel/g;
-  $op_command =~ s/\$target\b/$target/g;
-
-  if ($op_command =~ /\$mask\b/) {
-    my $mask = "*!$target_nicklist->{user}\@" . $self->{pbot}->{antiflood}->address_to_mask($target_nicklist->{host});
-    $op_command =~ s/\$mask\b/$mask/g;
+  if ($command eq 'kick') {
+    $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $target Have a nice day!");
+    $self->{pbot}->{chanops}->gain_ops($channel);
+  } elsif ($command eq 'ban') {
+    $self->{pbot}->{chanops}->ban_user_timed("$stuff->{nick}!$stuff->{user}\@$stuff->{host}",
+      "doing something naughty (moderator ban)", $target, $channel, 3600 * 24, 1);
+  } elsif ($command eq 'mute') {
+    $self->{pbot}->{chanops}->mute_user_timed("$stuff->{nick}!$stuff->{user}\@$stuff->{host}",
+      "doing something naughty (moderator mute)", $target, $channel, 3600 * 24, 1);
   }
-
-  $self->{pbot}->{chanops}->add_op_command($channel, $op_command);
-  $self->{pbot}->{chanops}->gain_ops($channel);
   return "";
 }
 
@@ -123,7 +142,27 @@ sub kick {
 
 sub ban {
   my ($self, $stuff) = @_;
-  return $self->generic_command($stuff, 'ban', 'mode $channel +b $mask');
+  return $self->generic_command($stuff, 'ban');
+}
+
+sub ban {
+  my ($self, $stuff) = @_;
+  return $self->generic_command($stuff, 'ban');
+}
+
+sub mute {
+  my ($self, $stuff) = @_;
+  return $self->generic_command($stuff, 'mute');
+}
+
+sub unban {
+  my ($self, $stuff) = @_;
+  return $self->generic_command($stuff, 'unban');
+}
+
+sub unmute {
+  my ($self, $stuff) = @_;
+  return $self->generic_command($stuff, 'unmute');
 }
 
 sub kb {
@@ -131,11 +170,6 @@ sub kb {
   my $result = $self->ban(dclone $stuff); # note: using copy of $stuff
   return $result if length $result;
   return $self->kick($stuff);
-}
-
-sub mute {
-  my ($self, $stuff) = @_;
-  return $self->generic_command($stuff, 'mute', 'mode $channel +q $mask');
 }
 
 sub modcmd {
