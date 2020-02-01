@@ -223,7 +223,6 @@ if ($comma eq "") {
   print $found_section;
   print "p" . $found_paragraph if $paragraph_specified;
 =cut
-#  print "\nhttp://blackshell.com/~msmud/n1570.html\#$found_section";
   print "http://www.iso-9899.info/n1570.html\#$found_section";
   print "p" . $found_paragraph if $paragraph_specified;
   print "\n\n";
