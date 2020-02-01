@@ -95,7 +95,7 @@ sub generic_command {
       $self->{pbot}->{chanops}->unban_user($target, $channel, 1);
       return "";
     } else {
-      return "I don't think so. This command can unban only bans set by moderators.";
+      return "I don't think so. That ban was not set by a moderator.";
     }
   } elsif ($command eq 'unmute') {
     my $reason = $self->{pbot}->{chanops}->checkmute($channel, $target);
@@ -103,7 +103,7 @@ sub generic_command {
       $self->{pbot}->{chanops}->unmute_user($target, $channel, 1);
       return "";
     } else {
-      return "I don't think so. This command can unmute only mutes set by moderators.";
+      return "I don't think so. That mute was not set by a moderator.";
     }
   }
 
