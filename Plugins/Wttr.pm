@@ -276,7 +276,7 @@ sub get_wttr {
       }
 
       default {
-        $result .= "Option $_ coming soon; ";
+        $result .= "Option $_ coming soon; " unless lc $_ eq 'u';
       }
     }
   }
