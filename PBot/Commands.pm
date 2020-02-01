@@ -131,6 +131,15 @@ sub interpreter {
   return undef;
 }
 
+sub set_meta {
+  my ($self, $command, $key, $value, $save) = @_;
+  $command = lc $command;
+  return undef if not exists $self->{metadata}->{hash}->{$command};
+  $self->{metadata}->{hash}->{$command}->{$key} = $value;
+  $self->save_metadata if $save;
+  return 1;
+}
+
 sub get_meta {
   my ($self, $command, $key) = @_;
   $command = lc $command;
