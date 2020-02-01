@@ -30,7 +30,7 @@ sub initialize {
   my ($self, %conf) = @_;
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { $self->modcmd(@_) }, 'mod', 0);
-  $self->{pbot}->{commands}->set_meta('mod', 'help', 'Provides restricted moderation abilities to voiced users.');
+  $self->{pbot}->{commands}->set_meta('mod', 'help', 'Provides restricted moderation abilities to voiced users. They can kick/ban/etc only users that are not admins, whitelisted, voiced or opped.');
 
   $self->{commands} = {
     'help'   => { subref => sub { $self->help(@_)    }, help => "Provides help about this command. Usage: mod help <mod command>; see also: mod help list" },
