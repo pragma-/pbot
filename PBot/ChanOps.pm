@@ -16,6 +16,7 @@ use feature 'unicode_strings';
 
 use PBot::ChanOpCommands;
 use Time::HiRes qw(gettimeofday);
+use Time::Duration qw(concise duration);
 
 sub new {
   if (ref($_[1]) eq 'HASH') {
@@ -251,6 +252,30 @@ sub ban_user_timed {
   }
 }
 
+sub checkban {
+  my ($self, $channel, $target) = @_;
+  $channel = lc $channel;
+  $target = lc $target;
+
+  my $mask = lc $self->nick_to_banmask($target);
+
+  if (exists $self->{unban_timeout}->{hash}->{$channel}
+    && exists $self->{unban_timeout}->{hash}->{$channel}->{$mask}) {
+    my $timeout = $self->{unban_timeout}->{hash}->{$channel}->{$mask}->{timeout};
+    my $owner   = $self->{unban_timeout}->{hash}->{$channel}->{$mask}->{owner};
+    my $reason  = $self->{unban_timeout}->{hash}->{$channel}->{$mask}->{reason};
+    my $duration = concise duration($timeout - gettimeofday);
+
+    my $result = "$mask banned in $channel ";
+    $result .= "by $owner " if defined $owner;
+    $result .= "for $reason " if defined $reason;
+    $result .= "($duration remaining)";
+    return $result;
+  } else {
+    return "$mask has no ban timeout.";
+  }
+}
+
 sub mute_user {
   my $self = shift;
   my ($mask, $channel, $immediately) = @_;
@@ -289,6 +314,32 @@ sub mute_user_timed {
     $self->{unmute_timeout}->add($channel, $mask, $data);
   } else {
     $self->{unmute_timeout}->remove($channel, $mask);
+  }
+}
+
+sub checkmute {
+  my ($self, $channel, $target) = @_;
+
+  $channel = lc $channel;
+  $target = lc $target;
+
+  my $mask = lc $self->nick_to_banmask($target);
+
+  if (exists $self->{unmute_timeout}->{hash}->{$channel}
+    && exists $self->{unmute_timeout}->{hash}->{$channel}->{$mask}) {
+    my $timeout = $self->{unmute_timeout}->{hash}->{$channel}->{$mask}->{timeout};
+    my $owner   = $self->{unmute_timeout}->{hash}->{$channel}->{$mask}->{owner};
+    my $reason  = $self->{unmute_timeout}->{hash}->{$channel}->{$mask}->{reason};
+    my $duration = concise duration($timeout - gettimeofday);
+
+    my $result = "$mask muted in $channel ";
+    $result .= "by $owner " if defined $owner;
+    $result .= "for $reason " if defined $reason;
+    $result .= "($duration remaining)";
+
+    return "$mask has $duration remaining on their $channel mute";
+  } else {
+    return "$mask has no mute timeout.";
   }
 }
 

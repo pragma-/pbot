@@ -304,77 +304,22 @@ sub checkban {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
-  if (not defined $target) {
-    return "Usage: checkban <mask> [channel]";
-  }
+  return "Usage: checkban <mask> [channel]" if not defined $target;
+  $channel = $from if not defined $channel;
 
-  if (not defined $channel) {
-    $channel = $from;
-  }
-
-  if ($channel !~ /^#/) {
-    return "Please specify a channel.";
-  }
-
-  $channel = lc $channel;
-  $target = lc $target;
-
-  my $mask = lc $self->{pbot}->{chanops}->nick_to_banmask($target);
-
-  if (exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}
-    && exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}) {
-    my $timeout = $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}->{timeout};
-    my $owner   = $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}->{owner};
-    my $reason  = $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}->{reason};
-    my $duration = concise duration($timeout - gettimeofday);
-
-    my $result = "$mask banned in $channel ";
-    $result .= "by $owner " if defined $owner;
-    $result .= "for $reason " if defined $reason;
-    $result .= "($duration remaining)";
-    return $result;
-  } else {
-    return "$mask has no ban timeout";
-  }
+  return "Please specify a channel." if $channel !~ /^#/;
+  return $self->{pbot}->{chanops}->checkban($channel, $target);
 }
 
 sub checkmute {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
-  if (not defined $target) {
-    return "Usage: checkmute <mask> [channel]";
-  }
+  return "Usage: checkmute <mask> [channel]" if not defined $target;
+  $channel = $from if not defined $channel;
 
-  if (not defined $channel) {
-    $channel = $from;
-  }
-
-  if ($channel !~ /^#/) {
-    return "Please specify a channel.";
-  }
-
-  $channel = lc $channel;
-  $target = lc $target;
-
-  my $mask = lc $self->{pbot}->{chanops}->nick_to_banmask($target);
-
-  if (exists $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}
-    && exists $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}) {
-    my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}->{timeout};
-    my $owner   = $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}->{owner};
-    my $reason  = $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}->{reason};
-    my $duration = concise duration($timeout - gettimeofday);
-
-    my $result = "$mask muted in $channel ";
-    $result .= "by $owner " if defined $owner;
-    $result .= "for $reason " if defined $reason;
-    $result .= "($duration remaining)";
-
-    return "$mask has $duration remaining on their $channel mute";
-  } else {
-    return "$mask has no mute timeout";
-  }
+  return "Please specify a channel." if $channel !~ /^#/;
+  return $self->{pbot}->{chanops}->checkmute($channel, $target);
 }
 
 sub ban_user {
