@@ -52,8 +52,8 @@ sub dispatch_event {
       if ($@) {
         chomp $@;
         $self->{pbot}->{logger}->log("Error in event handler: $@\n");
-        $self->{pbot}->{logger}->log("Removing handler.\n");
-        splice @{$self->{handlers}->{$event_type}}, $i--, 1;
+        #$self->{pbot}->{logger}->log("Removing handler.\n");
+        #splice @{$self->{handlers}->{$event_type}}, $i--, 1;
       }
 
       return $ret if $ret;
@@ -72,8 +72,8 @@ sub dispatch_event {
     if ($@) {
       chomp $@;
       $self->{pbot}->{logger}->log("Error in event handler: $@\n");
-      $self->{pbot}->{logger}->log("Removing handler.\n");
-      splice @{$self->{handlers}->{any}}, $i--, 1;
+      #$self->{pbot}->{logger}->log("Removing handler.\n");
+      #splice @{$self->{handlers}->{any}}, $i--, 1;
     }
 
     return $ret if $ret;
