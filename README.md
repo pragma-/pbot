@@ -18,7 +18,7 @@ PBot is a versatile IRC Bot written in Perl
   * [Virtual machine](#virtual-machine)
   * [Useful IRC command improvements](#useful-irc-command-improvements)
   * [Channel management](#channel-management)
-  * [Admin management](#admin-management)
+  * [User management](#user-management)
   * [Easy configuration](#easy-configuration)
 * [Documentation](#documentation)
 * [Frequently Asked Questions](#frequently-asked-questions)
@@ -293,16 +293,17 @@ PBot can perform the typical channel management tasks.
 
 For more information, see the [Channels documentation](doc/Admin.md#channel-management-commands) and the [AntiAbuse documentation](doc/AntiAbuse.md)
 
-### Admin management
+### User management
 
-PBot has easy admin management via simple built-in commands.
+PBot has easy straightforward user management via simple built-in commands.
 
-* admins can be global admins or channel-specific admins
-* admins can be required to login with a password
-* admins can be set to be permanently logged-in
+* user accounts can be global or channel-specific
+* users can be recognized by hostmask or required to login with password
+* users can adjust their [user-metadata](doc/Admin.md#user-metadata-list) with the [`my`](doc/Commands.md#my) command
 * admin commands configured by [admin-levels](doc/Admin.md#admin-levels)
+* and more
 
-For more information, see the [Admin documentation.](doc/Admin.md#admin-management-commands)
+For more information, see the [Admin documentation.](doc/Admin.md#user-management-commands)
 
 ### Easy configuration
 
