@@ -4,6 +4,17 @@
 
 package Plugins::ActionTrigger;
 
+# purpose: provides interface to set/remove/modify regular expression triggers
+# to execute a command.
+#
+# Examples:
+#
+# actiontrigger add #channel 0 0 ^(?i)([^!]+)![^\s]+.JOIN echo Hi $1, welcome to $channel!
+# actiontrigger add global 0 0 ^(?i)([^!]+)![^\s]+.PRIVMSG.*bad_word kick $1 That's a naughty word!
+# etc
+#
+# These are basic examples; more complex examples can be crafted.
+
 use warnings;
 use strict;
 
@@ -52,7 +63,6 @@ sub unload {
 
 sub create_database {
   my $self = shift;
-
   return if not $self->{dbh};
 
   eval {
@@ -67,7 +77,6 @@ CREATE TABLE IF NOT EXISTS Triggers (
   lastused    NUMERIC
 )
 SQL
-
   };
 
   $self->{pbot}->{logger}->log("ActionTrigger create database failed: $@") if $@;
@@ -101,13 +110,7 @@ sub add_trigger {
 
   eval {
     my $sth = $self->{dbh}->prepare('INSERT INTO Triggers (channel, trigger, action, owner, level, repeatdelay, lastused) VALUES (?, ?, ?, ?, ?, ?, 0)');
-    $sth->bind_param(1, lc $channel);
-    $sth->bind_param(2, $trigger);
-    $sth->bind_param(3, $action);
-    $sth->bind_param(4, $owner);
-    $sth->bind_param(5, $level);
-    $sth->bind_param(6, $repeatdelay);
-    $sth->execute();
+    $sth->execute(lc $channel, $trigger, $action, $owner, $level, $repeatdelay);
   };
 
   if ($@) {
@@ -119,14 +122,11 @@ sub add_trigger {
 
 sub delete_trigger {
   my ($self, $channel, $trigger) = @_;
-
   return 0 if not $self->get_trigger($channel, $trigger);
-
   my $sth = $self->{dbh}->prepare('DELETE FROM Triggers WHERE channel = ? AND trigger = ?');
   $sth->bind_param(1, lc $channel);
   $sth->bind_param(2, $trigger);
   $sth->execute();
-
   return 1;
 }
 
@@ -168,9 +168,7 @@ sub update_trigger {
     }
 
     $sql .= "WHERE trigger = ? AND channel = ?";
-
     my $sth = $self->{dbh}->prepare($sql);
-
     my $param = 1;
     foreach my $key (keys %$data) {
       $sth->bind_param($param++, $data->{$key});
@@ -202,135 +200,6 @@ sub get_trigger {
   }
 
   return $row;
-}
-
-sub actiontrigger {
-  my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-  if (not $self->{dbh}) {
-    return "Internal error.";
-  }
-
-  my $command;
-  ($command, $arguments) = split / /, $arguments, 2;
-
-  my ($channel, $result);
-
-  given ($command) {
-    when ('list') {
-      ($channel) = split / /, $arguments, 1;
-      if (not defined $channel) {
-        $channel = $from;
-      } elsif ($channel !~ m/^#/ and $channel ne 'global') {
-        return "Usage: actiontrigger list [channel]";
-      }
-
-      my @triggers = $self->list_triggers($channel);
-
-      if (not @triggers) {
-        $result = "No action triggers set for $channel.";
-      } else {
-        $result = "Triggers for $channel:\n";
-        my $comma = '';
-        foreach my $trigger (@triggers) {
-          $result .= "$comma$trigger->{trigger} -> $trigger->{action}";
-          $result .= " (level=$trigger->{level})" if $trigger->{level} != 0;
-          $result .= " (repeatdelay=$trigger->{repeatdelay})" if $trigger->{repeatdelay} != 0;
-          $comma = ",\n";
-        }
-      }
-    }
-
-    when ('add') {
-      if ($from =~ m/^#/) {
-        $channel = $from;
-      } else {
-        ($channel, $arguments) = split / /, $arguments, 2;
-        if ($channel !~ m/^#/ and $channel ne 'global') {
-          return "Usage from private message: actiontrigger add <channel> <level> <repeat delay> <regex> <action>";
-        }
-      }
-
-      my ($level, $repeatdelay, $trigger, $action) = split / /, $arguments, 4;
-
-      if (not defined $trigger or not defined $action) {
-        if ($from !~ m/^#/) {
-          $result = "Usage from private message: actiontrigger add <channel> <level> <repeat delay> <regex> <action>";
-        } else {
-          $result = "Usage: actiontrigger add <level> <repeat delay> <regex> <action>";
-        }
-        return $result;
-      }
-
-      my $exists = $self->get_trigger($channel, $trigger);
-
-      if (defined $exists) {
-        return "Trigger already exists.";
-      }
-
-      if ($level !~ m/^\d+$/) {
-        return "$nick: Missing level argument?\n";
-      }
-
-      if ($repeatdelay !~ m/^\d+$/) {
-        return "$nick: Missing repeat delay argument?\n";
-      }
-
-      if ($level > 0) {
-        my $admin = $self->{pbot}->{users}->find_admin($channel, "$nick!$user\@$host");
-        if (not defined $admin or $level > $admin->{level}) {
-          return "You may not set a level higher than your own.";
-        }
-      }
-
-      if ($self->add_trigger($channel, $trigger, $action, "$nick!$user\@$host", $level, $repeatdelay)) {
-        $result = "Trigger added.";
-      } else {
-        $result = "Failed to add trigger.";
-      }
-    }
-
-    when ('delete') {
-      if ($from =~ m/^#/) {
-        $channel = $from;
-      } else {
-        ($channel, $arguments) = split / /, $arguments, 2;
-        if ($channel !~ m/^#/ and $channel ne 'global') {
-          return "Usage from private message: actiontrigger delete <channel> <regex>";
-        }
-      }
-
-      my ($trigger) = split / /, $arguments, 1;
-
-      if (not defined $trigger) {
-        if ($from !~ m/^#/) {
-          $result = "Usage from private message: actiontrigger delete <channel> <regex>";
-        } else {
-          $result = "Usage: actiontrigger delete <regex>";
-        }
-        return $result;
-      }
-
-      my $exists = $self->get_trigger($channel, $trigger);
-
-      if (not defined $exists) {
-        $result = "No such trigger.";
-      } else {
-        $self->delete_trigger($channel, $trigger);
-        $result = "Trigger deleted.";
-      }
-    }
-
-    default {
-      if ($from !~ m/^#/) {
-        $result = "Usage from private message: actiontrigger list [channel] | actiontrigger add <channel> <level> <repeat delay> <regex> <trigger> | actiontrigger delete <channel> <regex>";
-      } else {
-        $result = "Usage: actiontrigger list [channel] | actiontrigger add <level> <repeat delay> <regex> <trigger> | actiontrigger delete <regex>";
-      }
-    }
-  }
-
-  return $result;
 }
 
 sub on_kick {
@@ -380,19 +249,13 @@ sub on_departure {
 
 sub check_trigger {
   my ($self, $nick, $user, $host, $channel, $text) = @_;
-
-  if (not $self->{dbh}) {
-    return 0;
-  }
+  return 0 if not $self->{dbh};
 
   my @triggers = $self->list_triggers($channel);
   my @globals = $self->list_triggers('global');
-
   push @triggers, @globals;
 
   $text = "$nick!$user\@$host $text";
-  # $self->{pbot}->{logger}->log("Checking action trigger: [$text]\n");
-
   my $now = gettimeofday;
 
   foreach my $trigger (@triggers) {
@@ -428,8 +291,141 @@ sub check_trigger {
       $self->{pbot}->{logger}->log("Skipping bad trigger $trigger->{trigger}: $@");
     }
   }
-
   return 0;
+}
+
+sub actiontrigger {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  return "Internal error." if not $self->{dbh};
+
+  my $command = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+  my $result;
+  given ($command) {
+    when ('list') {
+      my $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+      if (not defined $channel) {
+        if ($from !~ /^#/) {
+          $channel = 'global';
+        } else {
+          $channel = $from;
+        }
+      } elsif ($channel !~ m/^#/ and $channel ne 'global') {
+        return "Invalid channel $channel. Usage: actiontrigger list [#channel or global]";
+      }
+
+      my @triggers = $self->list_triggers($channel);
+
+      if (not @triggers) {
+        $result = "No action triggers set for $channel.";
+      } else {
+        $result = "Triggers for $channel:\n";
+        my $comma = '';
+        foreach my $trigger (@triggers) {
+          $trigger->{level} //= 0;
+          $trigger->{repeatdelay} //= 0;
+          $result .= "$comma$trigger->{trigger} -> $trigger->{action}";
+          $result .= " (level=$trigger->{level})" if $trigger->{level} != 0;
+          $result .= " (repeatdelay=$trigger->{repeatdelay})" if $trigger->{repeatdelay} != 0;
+          $comma = ",\n";
+        }
+      }
+    }
+
+# TODO: use GetOpt flags instead of positional arguments
+    when ('add') {
+      my $channel;
+      if ($from =~ m/^#/) {
+        $channel = $from;
+      } else {
+        $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+
+        if (not defined $channel) {
+          return "To use this command from private message the <channel> argument is required. Usage: actiontrigger add <#channel or global> <level> <repeat delay (in seconds)> <regex trigger> <command>";
+        } elsif ($channel !~ m/^#/ and $channel ne 'global') {
+          return "Invalid channel $channel. Usage: actiontrigger add <#channel or global> <level> <repeat delay (in seconds)> <regex trigger> <command>";
+        }
+      }
+
+      my ($level, $repeatdelay, $trigger, $action) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4, 0, 1);
+
+      if (not defined $trigger or not defined $action) {
+        if ($from !~ m/^#/) {
+          $result = "To use this command from private message the <channel> argument is required. Usage: actiontrigger add <#channel or global> <level> <repeat delay (in seconds)> <regex trigger> <command>";
+        } else {
+          $result = "Usage: actiontrigger add <level> <repeat delay (in seconds)> <regex trigger> <command>";
+        }
+        return $result;
+      }
+
+      my $exists = $self->get_trigger($channel, $trigger);
+
+      if (defined $exists) {
+        return "Trigger already exists.";
+      }
+
+      if ($level !~ m/^\d+$/) {
+        return "$nick: Missing level argument?\n";
+      }
+
+      if ($repeatdelay !~ m/^\d+$/) {
+        return "$nick: Missing repeat delay argument?\n";
+      }
+
+      if ($level > 0) {
+        my $admin = $self->{pbot}->{users}->find_admin($channel, "$nick!$user\@$host");
+        if (not defined $admin or $level > $admin->{level}) {
+          return "You may not set a level higher than your own.";
+        }
+      }
+
+      if ($self->add_trigger($channel, $trigger, $action, "$nick!$user\@$host", $level, $repeatdelay)) {
+        $result = "Trigger added.";
+      } else {
+        $result = "Failed to add trigger.";
+      }
+    }
+
+    when ('delete') {
+      my $channel;
+      if ($from =~ m/^#/) {
+        $channel = $from;
+      } else {
+        $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+        if ($channel !~ m/^#/ and $channel ne 'global') {
+          return "To use this command from private message the <channel> argument is required. Usage: actiontrigger delete <#channel or global> <regex trigger>";
+        }
+      }
+
+      my ($trigger) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1);
+
+      if (not defined $trigger) {
+        if ($from !~ m/^#/) {
+          $result = "To use this command from private message the <channel> argument is required. Usage: from private message: actiontrigger delete <channel> <regex trigger>";
+        } else {
+          $result = "Usage: actiontrigger delete <regex trigger>";
+        }
+        return $result;
+      }
+
+      my $exists = $self->get_trigger($channel, $trigger);
+
+      if (not defined $exists) {
+        $result = "No such trigger.";
+      } else {
+        $self->delete_trigger($channel, $trigger);
+        $result = "Trigger deleted.";
+      }
+    }
+
+    default {
+      if ($from !~ m/^#/) {
+        $result = "Usage from private message: actiontrigger list [#channel or global] | actiontrigger add <channel> <level> <repeat delay (in seconds)> <regex trigger> <command> | actiontrigger delete <channel> <regex trigger>";
+      } else {
+        $result = "Usage: actiontrigger list [#channel or global] | actiontrigger add <level> <repeat delay (in seconds)> <regex trigger> <command> | actiontrigger delete <regex>";
+      }
+    }
+  }
+  return $result;
 }
 
 1;
