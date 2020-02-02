@@ -22,7 +22,7 @@ package Plugins::ActionTrigger;
 # actiontrigger add global 0 300 "some phrase" echo Something!
 #
 # Capture a part of somebody's message.
-# actiontrigger add #channel 0 0 "(?i)how is the weather in (.*) today" weather $1
+# actiontrigger add #channel 0 0 "(?i)how is the weather (?:in|for) (.*) today" weather $1
 #
 # These are basic examples; more complex examples can be crafted.
 
