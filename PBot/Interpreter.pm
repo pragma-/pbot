@@ -232,9 +232,9 @@ sub interpret {
   my $cmdlist = $self->make_args($stuff->{command});
 
   if ($self->arglist_size($cmdlist) >= 4 and lc $cmdlist->[0] eq 'tell' and (lc $cmdlist->[2] eq 'about' or lc $cmdlist->[2] eq 'the')) {
-    # tell nick about cmd [args]
+    # tell nick about/the cmd [args]
     $stuff->{nickoverride} = $cmdlist->[1];
-    ($keyword, $arguments) = $self->split_args($cmdlist, 2, 3);
+    ($keyword, $arguments) = $self->split_args($cmdlist, 2, 3, 1);
     $arguments = '' if not defined $arguments;
     my $similar = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{nickoverride});
     if ($similar) {
@@ -246,7 +246,7 @@ sub interpret {
     }
   } else {
     # normal command
-    ($keyword, $arguments) = $self->split_args($cmdlist, 2);
+    ($keyword, $arguments) = $self->split_args($cmdlist, 2, 0, 1);
     $arguments = "" if not defined $arguments;
   }
 
@@ -705,10 +705,11 @@ sub unquoted_args {
 # splits array of arguments into array with overflow arguments filling up last position
 # split_args(qw/dog cat bird hamster/, 3) => ("dog", "cat", "bird hamster")
 sub split_args {
-  my ($self, $args, $count, $offset) = @_;
+  my ($self, $args, $count, $offset, $preserve_quotes) = @_;
   my @result;
-
   my $max = $self->arglist_size($args);
+
+  $preserve_quotes //= 0;
 
   my $i = $offset // 0;
   unless ($count == 1) {
@@ -718,8 +719,14 @@ sub split_args {
     } while (--$count > 1 and $i < $max);
   }
 
-  # get rest from 2nd half of arglist, which contains original quotes and spaces
-  my $rest = join ' ', @$args[@$args / 2 + $i .. @$args - 1];
+  # join the get rest as a string
+  my $rest;
+  if ($preserve_quotes) {
+    # get from second half of args, which contains quotes
+    $rest = join ' ', @$args[@$args / 2 + $i .. @$args - 1];
+  } else {
+    $rest = join ' ', @$args[$i .. $max - 1];
+  }
   push @result, $rest if length $rest;
   return @result;
 }
@@ -846,7 +853,7 @@ sub handle_result {
 
   if (defined $stuff->{command}) {
     my $cmdlist = $self->make_args($stuff->{command});
-    my ($cmd, $args) = $self->split_args($cmdlist, 2);
+    my ($cmd, $args) = $self->split_args($cmdlist, 2, 0, 1);
     if (not $self->{pbot}->{commands}->exists($cmd)) {
       my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $cmd, arguments => $args, exact_channel => 1, exact_trigger => 0, find_alias => 1);
       if (defined $trigger) {
