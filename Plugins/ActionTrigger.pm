@@ -419,7 +419,7 @@ sub actiontrigger {
 
     default {
       if ($from !~ m/^#/) {
-        $result = "Usage from private message: actiontrigger list [#channel or global] | actiontrigger add <channel> <level> <repeat delay (in seconds)> <regex trigger> <command> | actiontrigger delete <channel> <regex trigger>";
+        $result = "Usage from private message: actiontrigger list [#channel or global] | actiontrigger add <#channel or global> <level> <repeat delay (in seconds)> <regex trigger> <command> | actiontrigger delete <#channel or global> <regex trigger>";
       } else {
         $result = "Usage: actiontrigger list [#channel or global] | actiontrigger add <level> <repeat delay (in seconds)> <regex trigger> <command> | actiontrigger delete <regex>";
       }
