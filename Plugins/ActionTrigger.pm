@@ -13,7 +13,7 @@ package Plugins::ActionTrigger;
 # actiontrigger add #channel 0 0 ^(?i)([^!]+)![^\s]+.JOIN echo Hi $1, welcome to $channel!
 #
 # Kick a nick if they say a naughty thing.
-# actiontrigger add global 10 0 "^(?i)([^!]+)![^\s]+.PRIVMSG.*bad phrase" kick $1 That's a naughty word!
+# actiontrigger add global 10 0 "^(?i)([^!]+)![^\s]+.PRIVMSG.*bad phrase" kick $1 Do you talk to your mother with that mouth?
 #
 # Say something when a keyword is seen, but only once every 5 minutes:
 # actiontrigger add global 0 300 "some phrase" echo Something!
