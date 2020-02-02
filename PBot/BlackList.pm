@@ -21,12 +21,8 @@ use Carp ();
 use Time::HiRes qw(gettimeofday);
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -34,20 +30,15 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  $self->{filename} = delete $conf{filename};
-
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{filename} = $conf{filename};
   $self->{blacklist} = {};
-
-  $self->{pbot}->{commands}->register(sub { return $self->blacklist(@_)    }, "blacklist", 10);
-
+  $self->{pbot}->{commands}->register(sub { $self->blacklist(@_) }, "blacklist", 10);
   $self->load_blacklist;
 }
 
 sub add {
   my ($self, $channel, $hostmask) = @_;
-
   $self->{blacklist}->{lc $channel}->{lc $hostmask} = 1;
   $self->save_blacklist();
 }
@@ -66,7 +57,6 @@ sub remove {
       delete $self->{blacklist}->{$channel};
     }
   }
-
   $self->save_blacklist();
 }
 
@@ -78,11 +68,10 @@ sub clear_blacklist {
 sub load_blacklist {
   my $self = shift;
   my $filename;
-
   if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
 
   if (not defined $filename) {
-    Carp::carp "No blacklist path specified -- skipping loading of blacklist";
+    $self->{pbot}->{logger}->log("No blacklist path specified -- skipping loading of blacklist");
     return;
   }
 
@@ -121,7 +110,7 @@ sub save_blacklist {
   if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
 
   if (not defined $filename) {
-    Carp::carp "No blacklist path specified -- skipping saving of blacklist\n";
+    $self->{pbot}->{logger}->log("No blacklist path specified -- skipping saving of blacklist\n");
     return;
   }
 
