@@ -57,7 +57,6 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to FactoidCommands");
 
   $self->{pbot}->{registry}->add_default('text', 'general', 'module_repo', $conf{module_repo} // 'https://github.com/pragma-/pbot/blob/master/modules/');
@@ -92,7 +91,7 @@ sub initialize {
 sub call_factoid {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my ($chan, $keyword, $args) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+  my ($chan, $keyword, $args) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3, 0, 1);
 
   if (not defined $chan or not defined $keyword) {
     return "Usage: fact <channel> <keyword> [arguments]";
@@ -178,7 +177,7 @@ sub find_factoid_with_optional_channel {
   %opts = (%default_opts, %opts);
 
   my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
-  my ($from_chan, $from_trigger, $remaining_args) = $self->{pbot}->{interpreter}->split_args($arglist, 3);
+  my ($from_chan, $from_trigger, $remaining_args) = $self->{pbot}->{interpreter}->split_args($arglist, 3, 0, 1);
 
   if (not defined $from_chan or (not defined $from_chan and not defined $from_trigger)) {
     return "Usage: $command [channel] <keyword>" if not $opts{usage};
@@ -200,7 +199,7 @@ sub find_factoid_with_optional_channel {
       my $keyword = $from_chan;
       $from_chan = $from;
       $from_trigger = $keyword;
-      (undef, $remaining_args) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
+      (undef, $remaining_args) = $self->{pbot}->{interpreter}->split_args($arglist, 2, 0, 1);
     }
   }
 
@@ -828,7 +827,7 @@ sub factalias {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-  my ($chan, $alias, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+  my ($chan, $alias, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3, 0, 1);
 
   if (defined $chan and not ($chan eq '.*' or $chan =~ m/^#/)) {
     # $chan doesn't look like a channel, so shift everything to the right
@@ -981,7 +980,7 @@ sub factadd {
       }
 
       # and the text is the remaining arguments with quotes preserved
-      ($text) = $self->{pbot}->{interpreter}->split_args(\@arglist, 1);
+      ($text) = $self->{pbot}->{interpreter}->split_args(\@arglist, 1, 0, 1);
     }
   }
 
@@ -1557,13 +1556,13 @@ sub factchange {
       $delim = $1;
       $channel = $args->[0];
       $keyword = $args->[1];
-      ($sub) = $self->{pbot}->{interpreter}->split_args($args, 1, 2);
+      ($sub) = $self->{pbot}->{interpreter}->split_args($args, 1, 2, 1);
       $needs_disambig = 0;
     } elsif ($arg_count >= 2 and $args->[1] =~ m/^s([[:punct:]])/) {
       $delim = $1;
       $keyword = $args->[0];
       $channel = $from;
-      ($sub) = $self->{pbot}->{interpreter}->split_args($args, 1, 1);
+      ($sub) = $self->{pbot}->{interpreter}->split_args($args, 1, 1, 1);
       $needs_disambig = 1;
     }
 

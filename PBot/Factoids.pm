@@ -317,7 +317,7 @@ sub find_factoid {
                 $command = $1;
               }
               my $arglist = $self->{pbot}->{interpreter}->make_args($command);
-              ($keyword, $arguments) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
+              ($keyword, $arguments) = $self->{pbot}->{interpreter}->split_args($arglist, 2, 0, 1);
               goto NEXT_DEPTH;
             }
 
@@ -347,7 +347,7 @@ sub find_factoid {
                 if ($opts{find_alias}) {
                   my $command = $self->{factoids}->{hash}->{$channel}->{$trigger}->{action};
                   my $arglist = $self->{pbot}->{interpreter}->make_args($command);
-                  ($keyword, $arguments) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
+                  ($keyword, $arguments) = $self->{pbot}->{interpreter}->split_args($arglist, 2, 0, 1);
                   $string = $keyword . (length $arguments ? " $arguments" : "");
                   goto NEXT_DEPTH;
                 }
