@@ -79,7 +79,7 @@ sub generic_command {
 
   return "I do not have OPs for this channel. I cannot do any moderation here."
     if not $self->{pbot}->{chanops}->can_gain_ops($channel);
-  return "Voiced channel moderation is not enabled for this channel. Use `regset $channel.restrictedmod 1` to enable."
+  return "Voiced moderation is not enabled for this channel. Use `regset $channel.restrictedmod 1` to enable."
     if not $self->{pbot}->{registry}->get_value($channel, 'restrictedmod');
   my $hostmask = "$stuff->{nick}!$stuff->{user}\@$stuff->{host}";
   my $admin = $self->{pbot}->{users}->loggedin_admin($channel, $hostmask);
