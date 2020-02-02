@@ -9,9 +9,14 @@ package Plugins::ActionTrigger;
 #
 # Examples:
 #
+# Greet a nick when they join the channel:
 # actiontrigger add #channel 0 0 ^(?i)([^!]+)![^\s]+.JOIN echo Hi $1, welcome to $channel!
-# actiontrigger add global 0 0 ^(?i)([^!]+)![^\s]+.PRIVMSG.*bad_word kick $1 That's a naughty word!
-# etc
+#
+# Kick a nick if they say a naughty thing.
+# actiontrigger add global 10 0 "^(?i)([^!]+)![^\s]+.PRIVMSG.*bad phrase" kick $1 That's a naughty word!
+#
+# Say something when a keyword is seen, but only once every 5 minutes:
+# actiontrigger add global 0 300 "some phrase" echo Something!
 #
 # These are basic examples; more complex examples can be crafted.
 
@@ -124,9 +129,7 @@ sub delete_trigger {
   my ($self, $channel, $trigger) = @_;
   return 0 if not $self->get_trigger($channel, $trigger);
   my $sth = $self->{dbh}->prepare('DELETE FROM Triggers WHERE channel = ? AND trigger = ?');
-  $sth->bind_param(1, lc $channel);
-  $sth->bind_param(2, $trigger);
-  $sth->execute();
+  $sth->execute(lc $channel, $trigger);
   return 1;
 }
 
@@ -142,8 +145,7 @@ sub list_triggers {
     } else {
       $sth = $self->{dbh}->prepare('SELECT * FROM Triggers WHERE channel = ?');
     }
-    $sth->bind_param(1, lc $channel);
-    $sth->execute();
+    $sth->execute(lc $channel);
     return $sth->fetchall_arrayref({});
   };
 
@@ -187,9 +189,7 @@ sub get_trigger {
 
   my $row = eval {
     my $sth = $self->{dbh}->prepare('SELECT * FROM Triggers WHERE channel = ? AND trigger = ?');
-    $sth->bind_param(1, lc $channel);
-    $sth->bind_param(2, $trigger);
-    $sth->execute();
+    $sth->execute(lc $channel, $trigger);
     my $row = $sth->fetchrow_hashref();
     return $row;
   };
