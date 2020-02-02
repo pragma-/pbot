@@ -12,11 +12,17 @@ package Plugins::ActionTrigger;
 # Greet a nick when they join the channel:
 # actiontrigger add #channel 0 0 ^(?i)([^!]+)![^\s]+.JOIN echo Hi $1, welcome to $channel!
 #
-# Kick a nick if they say a naughty thing.
+# Same, but via private message (set level to 10 to use `msg` admin command):
+# actiontrigger add #channel 10 0 ^(?i)([^!]+)![^\s]+.JOIN msg Hi $1, welcome to $channel!
+#
+# Kick a nick if they say a naughty thing. Set level to 10 to use `kick` admin command.
 # actiontrigger add global 10 0 "^(?i)([^!]+)![^\s]+.PRIVMSG.*bad phrase" kick $1 Do you talk to your mother with that mouth?
 #
 # Say something when a keyword is seen, but only once every 5 minutes:
 # actiontrigger add global 0 300 "some phrase" echo Something!
+#
+# Capture a part of somebody's message.
+# actiontrigger add #channel 0 0 "(?i)how is the weather in (.*) today" weather $1
 #
 # These are basic examples; more complex examples can be crafted.
 
