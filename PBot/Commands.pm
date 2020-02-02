@@ -1,4 +1,5 @@
 # File: Commands.pm
+#
 # Author: pragma_
 #
 # Purpose: Derives from Registerable class to provide functionality to
@@ -43,7 +44,7 @@ sub initialize {
   $self->register(sub { $self->cmdunset(@_)   },  "cmdunset", 90);
   $self->register(sub { $self->help(@_)       },  "help",      0);
   $self->register(sub { $self->uptime(@_)     },  "uptime",    0);
-  $self->register(sub { $self->in_channel(@_) },  "in",        0);
+  $self->register(sub { $self->in_channel(@_) },  "in",       10);
 }
 
 sub register {
@@ -260,10 +261,14 @@ sub in_channel {
   my $usage = "Usage: in <channel> <command>";
   return $usage if not $arguments;
 
-  my ($channel, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+  my ($channel, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2, 0, 1);
   return $usage if not defined $channel or not defined $command;
 
-  $stuff->{admin_channel_override} = $channel;
+  if (not $self->{pbot}->{nicklist}->is_present($channel, $nick)) {
+    return "You must be present in $channel to do this.";
+  }
+
+  $stuff->{from} = $channel;
   $stuff->{command} = $command;
   return $self->{pbot}->{interpreter}->interpret($stuff);
 }
