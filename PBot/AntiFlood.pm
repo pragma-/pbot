@@ -30,12 +30,8 @@ use Text::CSV;
 use Carp ();
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -43,7 +39,6 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   # flags for 'validated' field
