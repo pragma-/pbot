@@ -95,7 +95,7 @@ sub add_factoid {
 
   my $data;
 
-  if (exists $self->{factoids}->{hash}->{lc $channel}->{lc $trigger}) {
+  if (exists $self->{factoids}->{hash}->{lc $channel} and exists $self->{factoids}->{hash}->{lc $channel}->{lc $trigger}) {
     # only update action field if force-adding it through factadd -f
     $data = $self->{factoids}->{hash}->{lc $channel}->{lc $trigger};
     $data->{action} = $action;
