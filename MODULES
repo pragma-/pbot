@@ -20,6 +20,7 @@ Lingua::Stem
 LWP::Protocol::https
 LWP::Simple
 LWP::UserAgent
+LWP::UserAgent::Paranoid
 LWP::UserAgent::WithCache
 Math::Expression::Evaluator
 Math::Units

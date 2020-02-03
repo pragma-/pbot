@@ -16,7 +16,7 @@ use feature 'unicode_strings';
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
-use LWP::UserAgent;
+use LWP::UserAgent::Paranoid;
 use Carp ();
 use Encode;
 
@@ -68,7 +68,7 @@ sub paste {
   $text = encode('UTF-8', $text);
 
   my $result;
-  for (my $tries = 5; $tries > 0; $tries--) {
+  for (my $tries = 3; $tries > 0; $tries--) {
     my $paste_site = $self->get_paste_site;
     $result = $paste_site->($text);
 
@@ -83,10 +83,9 @@ sub paste {
 sub paste_ixio {
   my ($self, $text) = @_;
 
-  my $ua = LWP::UserAgent->new();
+  my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 3);
   $ua->agent("Mozilla/5.0");
   push @{ $ua->requests_redirectable }, 'POST';
-  $ua->timeout(10);
 
   my %post = ('f:1' => $text);
   my $response = $ua->post("http://ix.io", \%post);
