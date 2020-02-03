@@ -21,7 +21,7 @@ use Carp ();
 use Encode;
 
 sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference" if ref($_[1]) eq 'HASH';
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
   $self->initialize(%conf);
