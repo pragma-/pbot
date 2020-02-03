@@ -181,6 +181,11 @@ sub exists {
   return exists $self->{hash}->{lc $index};
 }
 
+sub get_data {
+  my ($self, $index) = @_;
+  return $self->{hash}->{lc $index};
+}
+
 sub add {
   my ($self, $index, $data, $dont_save) = @_;
   my $lc_index = lc $index;
