@@ -2,7 +2,8 @@
 # Author: pragma_
 #
 # Purpose: Refreshes/reloads module subroutines. Does not refresh/reload
-# module member data, only subroutines.
+# module member data, only subroutines. TODO: reinitialize modules in order
+# to refresh member data too.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,12 +20,8 @@ use Module::Refresh;
 use Carp ();
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -32,13 +29,9 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
-  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  $self->{pbot} = $pbot;
-
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{refresher} = Module::Refresh->new;
-
-  $pbot->{commands}->register(sub { return $self->refresh(@_) }, "refresh", 90);
+  $self->{pbot}->{commands}->register(sub { return $self->refresh(@_) }, "refresh", 1);
 }
 
 sub refresh {
@@ -61,7 +54,6 @@ sub refresh {
     $self->{pbot}->{logger}->log("Error refreshing: $@\n");
     return $@;
   }
-
   return $result;
 }
 
