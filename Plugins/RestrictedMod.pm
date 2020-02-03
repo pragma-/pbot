@@ -32,6 +32,10 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { $self->modcmd(@_) }, 'mod', 0);
   $self->{pbot}->{commands}->set_meta('mod', 'help', 'Provides restricted moderation abilities to voiced users. They can kick/ban/etc only users that are not admins, whitelisted, voiced or opped.');
 
+  $self->{pbot}->{capabilities}->add('chanmod', 'can-mod', 1);
+  $self->{pbot}->{capabilities}->add('chanmod', 'can-voice', 1);
+  $self->{pbot}->{capabilities}->add('chanmod', 'can-devoice', 1);
+
   $self->{commands} = {
     'help'   => { subref => sub { $self->help(@_)    }, help => "Provides help about this command. Usage: mod help <mod command>; see also: mod help list" },
     'list'   => { subref => sub { $self->list(@_)    }, help => "Lists available mod commands. Usage: mod list" },
@@ -47,6 +51,7 @@ sub initialize {
 sub unload {
   my ($self) = @_;
   $self->{pbot}->{commands}->unregister('mod');
+  $self->{pbot}->{capabilities}->remove('chanmod');
 }
 
 sub help {

@@ -32,13 +32,13 @@ sub initialize {
   $self->{users}   = PBot::DualIndexHashObject->new(name => 'Users', filename => $conf{filename}, pbot => $conf{pbot});
   $self->load;
 
-  $self->{pbot}->{commands}->register(sub { return $self->logincmd(@_)   },  "login",       0);
-  $self->{pbot}->{commands}->register(sub { return $self->logoutcmd(@_)  },  "logout",      0);
-  $self->{pbot}->{commands}->register(sub { return $self->useradd(@_)    },  "useradd",    60);
-  $self->{pbot}->{commands}->register(sub { return $self->userdel(@_)    },  "userdel",    60);
-  $self->{pbot}->{commands}->register(sub { return $self->userset(@_)    },  "userset",    60);
-  $self->{pbot}->{commands}->register(sub { return $self->userunset(@_)  },  "userunset",  60);
-  $self->{pbot}->{commands}->register(sub { return $self->mycmd(@_)      },  "my",          0);
+  $self->{pbot}->{commands}->register(sub { return $self->logincmd(@_)   },  "login",      0);
+  $self->{pbot}->{commands}->register(sub { return $self->logoutcmd(@_)  },  "logout",     0);
+  $self->{pbot}->{commands}->register(sub { return $self->useradd(@_)    },  "useradd",    1);
+  $self->{pbot}->{commands}->register(sub { return $self->userdel(@_)    },  "userdel",    1);
+  $self->{pbot}->{commands}->register(sub { return $self->userset(@_)    },  "userset",    1);
+  $self->{pbot}->{commands}->register(sub { return $self->userunset(@_)  },  "userunset",  1);
+  $self->{pbot}->{commands}->register(sub { return $self->mycmd(@_)      },  "my",         0);
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.join',  sub { $self->on_join(@_) });
 }
@@ -502,20 +502,21 @@ sub mycmd {
   if (defined $key) {
     $key = lc $key;
 
-    if (defined $value and $u->{level} == 0) {
-      my @disallowed = qw/name level autoop autovoice/;
+    if (defined $value and not $self->{pbot}->{capabilities}->userhas($u, 'admin')) {
+      my @disallowed = qw/name autoop autovoice/;
       if (grep { $_ eq $key } @disallowed) {
-        return "You must be an admin to set $key.";
+        return "The $key metadata requires the admin capability to set, which your user account does not have.";
       }
     }
 
-    if ($key eq 'level' and defined $value and $u->{level} < 90 and $value > $u->{level}) {
-      return "You may not increase your level!";
+    if (defined $value and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-capabilities')) {
+      if ($key =~ m/^can-/ or $self->{pbot}->{capabilities}->exists($key)) {
+        return "The $key metadata requires the can-modify-capabilities capability, which your user account does not have.";
+      }
     }
   } else {
     $result = "Usage: my <key> [value]; ";
   }
-
 
   my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
   $found_channel = $channel if not defined $found_channel; # let DualIndexHashObject disambiguate

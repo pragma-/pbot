@@ -417,9 +417,9 @@ sub check_flood {
             $self->{whois_pending}->{$nick} = gettimeofday;
           }
         } else {
-          if ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN} && exists $self->{pbot}->{capabilities}->{'extended-join'}) {
+          if ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN} && exists $self->{pbot}->{irc_capabilities}->{'extended-join'}) {
             # don't WHOIS joins if extended-join capability is active
-          } elsif (not exists $self->{pbot}->{capabilities}->{'account-notify'}) {
+          } elsif (not exists $self->{pbot}->{irc_capabilities}->{'account-notify'}) {
             if (not exists $self->{whois_pending}->{$nick}) {
               $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($account, '');
               $self->{pbot}->{conn}->whois($nick);
@@ -820,7 +820,7 @@ sub check_bans {
       $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
     }
   } else {
-    if (not exists $self->{pbot}->{capabilities}->{'account-notify'}) {
+    if (not exists $self->{pbot}->{irc_capabilities}->{'account-notify'}) {
       # mark this account as needing check-bans when nickserv account is identified
       my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
       if (not $channel_data->{validated} & $self->{NEEDS_CHECKBAN}) {

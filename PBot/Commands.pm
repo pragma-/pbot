@@ -2,10 +2,8 @@
 #
 # Author: pragma_
 #
-# Purpose: Derives from Registerable class to provide functionality to
-#          register subroutines, along with a command name and admin level.
-#          Registered items will then be executed if their command name matches
-#          a name provided via input.
+# Purpose: Registers commands. Invokes commands with user capability
+# validation.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -40,31 +38,34 @@ sub initialize {
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Commands', filename => $conf{filename});
   $self->load_metadata;
 
-  $self->register(sub { $self->cmdset(@_)     },  "cmdset",   90);
-  $self->register(sub { $self->cmdunset(@_)   },  "cmdunset", 90);
+  $self->register(sub { $self->cmdset(@_)     },  "cmdset",    1);
+  $self->register(sub { $self->cmdunset(@_)   },  "cmdunset",  1);
   $self->register(sub { $self->help(@_)       },  "help",      0);
   $self->register(sub { $self->uptime(@_)     },  "uptime",    0);
-  $self->register(sub { $self->in_channel(@_) },  "in",       10);
+  $self->register(sub { $self->in_channel(@_) },  "in",        1);
 }
 
 sub register {
-  my ($self, $subref, $name, $level) = @_;
+  my ($self, $subref, $name, $requires_cap) = @_;
 
-  if (not defined $subref or not defined $name or not defined $level) {
+  if (not defined $subref or not defined $name) {
     Carp::croak("Missing parameters to Commands::register");
   }
 
   my $ref = $self->SUPER::register($subref);
   $ref->{name} = lc $name;
-  $ref->{level} = $level;
+  $ref->{requires_cap} = $requires_cap // 0;
 
   if (not $self->{metadata}->exists($name)) {
-    $self->{metadata}->add($name, { level => $level, help => '' }, 1);
+    $self->{metadata}->add($name, { requires_cap => $requires_cap, help => '' }, 1);
   } else {
-    if (not defined $self->get_meta($name, 'level')) {
-      $self->{metadata}->set($name, 'level', $level, 1);
+    if (not defined $self->get_meta($name, 'requires_cap')) {
+      $self->{metadata}->set($name, 'requires_cap', $requires_cap, 1);
     }
   }
+
+  # add can-cmd capability
+  $self->{pbot}->{capabilities}->add("can-$name", undef, 1);
 
   return $ref;
 }
@@ -96,39 +97,44 @@ sub interpreter {
     $self->{pbot}->{logger}->log(Dumper $stuff);
   }
 
-  my $from = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $stuff->{from};
-  my ($admin_channel) = $stuff->{arguments} =~ m/\B(#[^ ]+)/; # assume first channel-like argument
-  $admin_channel = $from if not defined $admin_channel;
-  my $admin = $self->{pbot}->{users}->loggedin_admin($admin_channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
-  my $admin_level = defined $admin ? $admin->{level} : 0;
   my $keyword = lc $stuff->{keyword};
+  my $from = $stuff->{from};
 
-  if (exists $stuff->{'effective-level'}) {
-    $self->{pbot}->{logger}->log("override level to $stuff->{'effective-level'}\n");
-    $admin_level = $stuff->{'effective-level'};
+  my ($cmd_channel) = $stuff->{arguments} =~ m/\B(#[^ ]+)/; # assume command is invoked in regards to first channel-like argument
+  $cmd_channel = $from if not defined $cmd_channel;         # otherwise command is invoked in regards to the channel the user is in
+  my $user = $self->{pbot}->{users}->loggedin($cmd_channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+
+  my $cap_override;
+  if (exists $stuff->{'cap-override'}) {
+    $self->{pbot}->{logger}->log("Override cap to $stuff->{'cap-override'}\n");
+    $cap_override = $stuff->{'cap-override'};
   }
 
   foreach my $ref (@{ $self->{handlers} }) {
     if ($ref->{name} eq $keyword) {
-      my $cmd_level = $self->get_meta($keyword, 'level') // $ref->{level};
-      if ($admin_level >= $cmd_level) {
-        $stuff->{no_nickoverride} = 1;
-        my $result = &{ $ref->{subref} }($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{arguments}, $stuff);
-        if ($stuff->{referenced}) {
-          return undef if $result =~ m/(?:usage:|no results)/i;
-        }
-        return $result;
-      } else {
-        return undef if $stuff->{referenced};
-        if ($admin_level == 0) {
-          return "/msg $stuff->{nick} You must be an admin to use this command.";
+      my $requires_cap = $self->get_meta($keyword, 'requires_cap') // $ref->{requires_cap};
+      if ($requires_cap) {
+        if (defined $cap_override) {
+          if (not $self->{pbot}->{capabilities}->has($cap_override, "can-$keyword")) {
+            return "/msg $stuff->{nick} The $keyword command requires the can-$keyword capability, which cap-override $cap_override does not have.";
+          }
         } else {
-          return "/msg $stuff->{nick} Your level is too low to use this command.";
+          if (not defined $user) {
+            return "/msg $stuff->{nick} You must be logged into your user account to use $keyword.";
+          }
+
+          if (not $self->{pbot}->{capabilities}->userhas($user, "can-$keyword")) {
+            return "/msg $stuff->{nick} The $keyword command requires the can-$keyword capability, which your user account does not have.";
+          }
         }
       }
+
+      $stuff->{no_nickoverride} = 1;
+      my $result = &{ $ref->{subref} }($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{arguments}, $stuff);
+      return undef if $stuff->{referenced} and $result =~ m/(?:usage:|no results)/i;
+      return $result;
     }
   }
-
   return undef;
 }
 
@@ -185,12 +191,12 @@ sub help {
   if ($self->exists($keyword)) {
     if (exists $self->{metadata}->{hash}->{$keyword}) {
       my $name = $self->{metadata}->{hash}->{$keyword}->{_name};
-      my $level = $self->{metadata}->{hash}->{$keyword}->{level};
+      my $requires_cap = $self->{metadata}->{hash}->{$keyword}->{requires_cap};
       my $help = $self->{metadata}->{hash}->{$keyword}->{help};
       my $result = "/say $name: ";
 
-      if (defined $level and $level > 0) {
-        $result .= "[Level $level admin command] ";
+      if ($requires_cap) {
+        $result .= "[Requires can-$keyword] ";
       }
 
       if (not defined $help or not length $help) {

@@ -28,22 +28,50 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
-  $self->{pbot}->{commands}->register(sub { return $self->ban_user(@_)      },  "ban",        10);
-  $self->{pbot}->{commands}->register(sub { return $self->unban_user(@_)    },  "unban",      10);
-  $self->{pbot}->{commands}->register(sub { return $self->mute_user(@_)     },  "mute",       10);
-  $self->{pbot}->{commands}->register(sub { return $self->unmute_user(@_)   },  "unmute",     10);
-  $self->{pbot}->{commands}->register(sub { return $self->kick_user(@_)     },  "kick",       10);
-  $self->{pbot}->{commands}->register(sub { return $self->checkban(@_)      },  "checkban",    0);
-  $self->{pbot}->{commands}->register(sub { return $self->checkmute(@_)     },  "checkmute",   0);
-  $self->{pbot}->{commands}->register(sub { return $self->op_user(@_)       },  "op",         10);
-  $self->{pbot}->{commands}->register(sub { return $self->deop_user(@_)     },  "deop",       10);
-  $self->{pbot}->{commands}->register(sub { return $self->voice_user(@_)    },  "voice",      10);
-  $self->{pbot}->{commands}->register(sub { return $self->devoice_user(@_)  },  "devoice",    10);
-  $self->{pbot}->{commands}->register(sub { return $self->mode(@_)          },  "mode",       40);
-  $self->{pbot}->{commands}->register(sub { return $self->invite(@_)        },  "invite",     10);
+  # register commands
+  $self->{pbot}->{commands}->register(sub { return $self->ban_user(@_)      },  "ban",        1);
+  $self->{pbot}->{commands}->register(sub { return $self->unban_user(@_)    },  "unban",      1);
+  $self->{pbot}->{commands}->register(sub { return $self->mute_user(@_)     },  "mute",       1);
+  $self->{pbot}->{commands}->register(sub { return $self->unmute_user(@_)   },  "unmute",     1);
+  $self->{pbot}->{commands}->register(sub { return $self->kick_user(@_)     },  "kick",       1);
+  $self->{pbot}->{commands}->register(sub { return $self->checkban(@_)      },  "checkban",   0);
+  $self->{pbot}->{commands}->register(sub { return $self->checkmute(@_)     },  "checkmute",  0);
+  $self->{pbot}->{commands}->register(sub { return $self->op_user(@_)       },  "op",         1);
+  $self->{pbot}->{commands}->register(sub { return $self->deop_user(@_)     },  "deop",       1);
+  $self->{pbot}->{commands}->register(sub { return $self->voice_user(@_)    },  "voice",      1);
+  $self->{pbot}->{commands}->register(sub { return $self->devoice_user(@_)  },  "devoice",    1);
+  $self->{pbot}->{commands}->register(sub { return $self->mode(@_)          },  "mode",       1);
+  $self->{pbot}->{commands}->register(sub { return $self->invite(@_)        },  "invite",     1);
+
+  # allow commands to set modes
+  $self->{pbot}->{capabilities}->add('can-ban',     'can-mode-b', 1);
+  $self->{pbot}->{capabilities}->add('can-unban',   'can-mode-b', 1);
+  $self->{pbot}->{capabilities}->add('can-mute',    'can-mode-q', 1);
+  $self->{pbot}->{capabilities}->add('can-unmute',  'can-mode-q', 1);
+  $self->{pbot}->{capabilities}->add('can-op',      'can-mode-o', 1);
+  $self->{pbot}->{capabilities}->add('can-deop',    'can-mode-o', 1);
+  $self->{pbot}->{capabilities}->add('can-voice',   'can-mode-v', 1);
+  $self->{pbot}->{capabilities}->add('can-devoice', 'can-mode-v', 1);
+
+  # create can-mode-any capabilities group
+  foreach my $mode ("a" .. "z", "A" .. "Z") {
+    $self->{pbot}->{capabilities}->add('can-mode-any', "can-mode-$mode", 1);
+  }
+  $self->{pbot}->{capabilities}->add('can-mode-any', 'can-mode', 1);
+
+  # create chanop capabilities group
+  $self->{pbot}->{capabilities}->add('chanop', 'can-ban',     1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-unban',   1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-mute',    1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-unmute',  1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-kick',    1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-op',      1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-deop',    1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-voice',   1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-devoice', 1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-invite',  1);
 
   $self->{invites} = {}; # track who invited who in order to direct invite responses to them
 
@@ -127,7 +155,6 @@ sub generic_mode_user {
   if ($channel !~ m/^#/) {
     # from message
     $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
-    $result = 'Done.';
     if (not defined $channel) {
       return "Usage from message: $mode_name <channel> [nick]";
     } elsif ($channel !~ m/^#/) {
@@ -159,10 +186,11 @@ sub generic_mode_user {
       if ($i >= $max_modes) {
         my $args = "$channel $mode $list";
         $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
-        $self->mode($channel, $nick, $stuff->{user}, $stuff->{host}, $args, $stuff);
+        $result = $self->mode($channel, $nick, $stuff->{user}, $stuff->{host}, $args, $stuff);
         $mode = $flag;
         $list = '';
         $i = 0;
+        last if $result ne '' and $result ne 'Done.';
       }
     }
   }
@@ -170,12 +198,11 @@ sub generic_mode_user {
   if ($i) {
     my $args = "$channel $mode $list";
     $stuff->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
-    $self->mode($channel, $nick, $stuff->{user}, $stuff->{host}, $args, $stuff);
+    $result = $self->mode($channel, $nick, $stuff->{user}, $stuff->{host}, $args, $stuff);
   }
 
   return $result;
 }
-
 
 sub op_user {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
@@ -222,6 +249,8 @@ sub mode {
   my ($new_modes, $new_targets) = ("", "");
   my $max_modes = $self->{pbot}->{ircd}->{MODES} // 1;
 
+  my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+
   while ($modes =~ m/(.)/g) {
     my $mode = $1;
 
@@ -229,6 +258,10 @@ sub mode {
       $modifier = $mode;
       $new_modes .= $mode;
       next;
+    }
+
+    if (not $self->{pbot}->{capabilities}->userhas($u, "can-mode-$mode")) {
+      return "/msg $nick Your user account does not have the can-mode-$mode capability required to set this mode.";
     }
 
     my $target = $targets[$arg++] // "";
@@ -297,6 +330,8 @@ sub mode {
 
   if ($from !~ m/^#/) {
     return "Done.";
+  } else {
+    return "";
   }
 }
 
@@ -363,10 +398,6 @@ sub ban_user {
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
 
-  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
-    return "You are not an admin for $channel.";
-  }
-
   my $result = '';
   my $sep = '';
   my @targets = split /,/, $target;
@@ -430,10 +461,6 @@ sub unban_user {
 
   return "Usage for /msg: unban <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
-  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
-    return "You are not an admin for $channel.";
-  }
-
   my @targets = split /,/, $target;
   $immediately = 0 if @targets > 1;
 
@@ -493,10 +520,6 @@ sub mute_user {
 
   my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
   return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
-
-  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
-    return "You are not an admin for $channel.";
-  }
 
   my $result = '';
   my $sep = '';
@@ -561,10 +584,6 @@ sub unmute_user {
 
   return "Usage for /msg: unmute <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
-  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
-    return "You are not an admin for $channel.";
-  }
-
   my @targets = split /,/, $target;
   $immediately = 0 if @targets > 1;
 
@@ -613,10 +632,6 @@ sub kick_user {
   # we can help them out by seeing if they put the channel in the reason.
   if ($reason =~ s/^(#\S+)\s*//) {
     $channel = $1;
-  }
-
-  if ($self->{pbot}->{commands}->get_meta($stuff->{keyword}, 'level') and not $stuff->{'effective-level'} and not $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
-    return "You are not an admin for $channel.";
   }
 
   my @insults;

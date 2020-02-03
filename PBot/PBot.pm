@@ -21,6 +21,7 @@ use Carp ();
 use PBot::Logger;
 use PBot::VERSION;
 use PBot::Registry;
+use PBot::Capabilities;
 use PBot::SelectHandler;
 use PBot::StdinReader;
 use PBot::IRC;
@@ -99,16 +100,22 @@ sub initialize {
     exit;
   }
 
+  # then capabilities so commands can add new capabilities
+  $self->{capabilities} = PBot::Capabilities->new(pbot => $self, filename => "$data_dir/capabilities", %conf);
+
   # then commands so the modules can register new commands
   $self->{commands} = PBot::Commands->new(pbot => $self, filename => "$data_dir/commands", %conf);
 
   # add some commands
-  $self->{commands}->register(sub { $self->listcmd(@_)  },  "list",     0);
-  $self->{commands}->register(sub { $self->ack_die(@_)  },  "die",     90);
-  $self->{commands}->register(sub { $self->export(@_)   },  "export",  90);
-  $self->{commands}->register(sub { $self->reload(@_)   },  "reload",  90);
-  $self->{commands}->register(sub { $self->evalcmd(@_)  },  "eval",    99);
-  $self->{commands}->register(sub { $self->sl(@_)       },  "sl",      90);
+  $self->{commands}->register(sub { $self->listcmd(@_)  },  "list");
+  $self->{commands}->register(sub { $self->ack_die(@_)  },  "die",     1);
+  $self->{commands}->register(sub { $self->export(@_)   },  "export",  1);
+  $self->{commands}->register(sub { $self->reload(@_)   },  "reload",  1);
+  $self->{commands}->register(sub { $self->evalcmd(@_)  },  "eval",    1);
+  $self->{commands}->register(sub { $self->sl(@_)       },  "sl",      1);
+
+  # add 'cap' capability command
+  $self->{commands}->register(sub { $self->{capabilities}->capcmd(@_) }, "cap");
 
   # prepare the version
   $self->{version}  = PBot::VERSION->new(pbot => $self, %conf);
@@ -225,6 +232,9 @@ sub initialize {
 
   # start timer
   $self->{timer}->start();
+
+  # give botowner all capabilities
+  $self->{capabilities}->rebuild_botowner_capabilities();
 }
 
 sub random_nick {

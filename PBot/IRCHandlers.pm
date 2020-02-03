@@ -345,7 +345,7 @@ sub on_join {
 
   my $msg = 'JOIN';
 
-  if (exists $self->{pbot}->{capabilities}->{'extended-join'}) {
+  if (exists $self->{pbot}->{irc_capabilities}->{'extended-join'}) {
     $msg .= " $event->{event}->{args}[0] :$event->{event}->{args}[1]";
 
     $self->{pbot}->{messagehistory}->{database}->update_gecos($message_account, $event->{event}->{args}[1], scalar gettimeofday);
@@ -480,7 +480,7 @@ sub on_cap {
 
     my @caps = split /\s+/, $event->{event}->{args}->[1];
     foreach my $cap (@caps) {
-      $self->{pbot}->{capabilities}->{$cap} = 1;
+      $self->{pbot}->{irc_capabilities}->{$cap} = 1;
     }
   } else {
     $self->{pbot}->{logger}->log(Dumper $event->{event});
