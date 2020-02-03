@@ -35,6 +35,18 @@ sub initialize {
   $self->{caps} = PBot::HashObject->new(name => 'Capabilities', filename => $filename, pbot => $self->{pbot});
   $self->{caps}->load;
   # 'cap' command registered in PBot.pm because $self->{pbot}->{commands} is not yet loaded.
+
+  # add some basic capabilities
+  $self->add('can-modify-capabilities', undef, 1);
+
+  # add admin capabilities group
+  $self->add('admin', 'chanop',        1); # add chanop capabilities group -- see ChanOpCommands.md
+  $self->add('admin', 'can-useradd',   1);
+  $self->add('admin', 'can-userdel',   1);
+  $self->add('admin', 'can-userset',   1);
+  $self->add('admin', 'can-userunset', 1);
+  $self->add('admin', 'can-join',      1);
+  $self->add('admin', 'can-part',      1);
 }
 
 sub has {
@@ -108,6 +120,40 @@ sub rebuild_botowner_capabilities {
   }
 }
 
+sub list {
+  my ($self, $capability) = @_;
+  $capability = lc $capability;
+  return "No such capability $capability." if defined $capability and not exists $self->{caps}->{hash}->{$capability};
+
+  my @caps;
+  my @cap_group;
+  my @cap_standalone;
+  my $result;
+
+  if (not defined $capability) {
+    @caps = sort keys %{$self->{caps}->{hash}};
+    $result = 'Capabilities: ';
+  } else {
+    @caps = sort keys %{$self->{caps}->{hash}->{$capability}};
+    return "Capability $capability has no sub-capabilities." if @caps == 1;
+    $result = "Sub-capabilities for $capability: ";
+  }
+
+  # first list all capabilities that have sub-capabilities (i.e. grouped capabilities)
+  # then list stand-alone capabilities
+  foreach my $cap (@caps) {
+    next if $cap eq '_name';
+    my $count = keys(%{$self->{caps}->{hash}->{$cap}}) - 1;
+    if ($count) {
+      push @cap_group, "$cap [$count]" if $count;
+    } else {
+      push @cap_standalone, $cap;
+    }
+  }
+  $result .= join ', ', @cap_group, @cap_standalone;
+  return $result;
+}
+
 sub capcmd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
@@ -116,32 +162,7 @@ sub capcmd {
   given ($command) {
     when ('list') {
       my $cap = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
-      if (defined $cap) {
-        $cap = lc $cap;
-        return "No such capability $cap." if not exists $self->{caps}->{hash}->{$cap};
-        return "Capability $cap has no sub-capabilities." if keys %{$self->{caps}->{hash}->{$cap}} == 1;
-
-        $result = "Sub-capabilities for $cap: ";
-        $result .= join(', ', grep { $_ ne '_name' } sort keys %{$self->{caps}->{hash}->{$cap}});
-      } else {
-        return "No capabilities defined." if keys(%{$self->{caps}->{hash}}) == 0;
-        $result = "Capabilities: ";
-        my @caps;
-
-        # first list all capabilities that have sub-capabilities (i.e. grouped capabilities)
-        foreach my $cap (sort keys %{$self->{caps}->{hash}}) {
-          my $count = keys(%{$self->{caps}->{hash}->{$cap}}) - 1;
-          push @caps, "$cap [$count]" if $count;
-        }
-
-        # then list stand-alone capabilities
-        foreach my $cap (sort keys %{$self->{caps}->{hash}}) {
-          next if keys(%{$self->{caps}->{hash}->{$cap}}) > 1;
-          push @caps, $cap;
-        }
-
-        $result .= join ', ', @caps;
-      }
+      return $self->list($cap);
     }
 
     when ('userhas') {
