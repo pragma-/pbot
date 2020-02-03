@@ -21,10 +21,7 @@ use Carp ();
 use Encode;
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference" if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
   $self->initialize(%conf);
@@ -33,8 +30,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{paste_sites} = [
     sub { $self->paste_ixio(@_) },
@@ -51,7 +47,6 @@ sub get_paste_site {
   if (++$self->{current_site} >= @{$self->{paste_sites}}) {
     $self->{current_site} = 0;
   }
-
   return $subref;
 }
 
@@ -76,24 +71,17 @@ sub paste {
       last;
     }
   }
-
   return $result;
 }
 
 sub paste_ixio {
   my ($self, $text) = @_;
-
-  my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 3);
+  my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 10);
   $ua->agent("Mozilla/5.0");
   push @{ $ua->requests_redirectable }, 'POST';
-
   my %post = ('f:1' => $text);
   my $response = $ua->post("http://ix.io", \%post);
-
-  if (not $response->is_success) {
-    return "error pasting: " . $response->status_line;
-  }
-
+  return "error pasting: " . $response->status_line if not $response->is_success;
   my $result = $response->content;
   $result =~ s/^\s+//;
   $result =~ s/\s+$//;
