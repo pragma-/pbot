@@ -276,7 +276,7 @@ For more information about the virtual machine, see the [Virtual Machine documen
 * [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) will intelligently set banmasks; supports timeouts
 * [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
 * [`kick`](doc/Admin.md#kick) can take a comma-separated list of nicks; also accepts wildcards
-* and much, much, more
+* and much, much more!
 
 ### Channel management
 
@@ -289,7 +289,7 @@ PBot can perform the typical channel management tasks.
 * flood detection
 * whitelisting, blacklisting, etc
 * spam/advertisement detection
-* and much, much more
+* and much, much more!
 
 For more information, see the [Channels documentation](doc/Admin.md#channel-management-commands) and the [AntiAbuse documentation](doc/AntiAbuse.md)
 
@@ -297,11 +297,11 @@ For more information, see the [Channels documentation](doc/Admin.md#channel-mana
 
 PBot has easy straightforward user management via simple built-in commands.
 
+* [user capabilities](doc/Admin.md#user-capabilities) dictate what users can and cannot do
 * user accounts can be global or channel-specific
 * users can be recognized by hostmask or required to login with password
 * users can adjust their [user-metadata](doc/Admin.md#user-metadata-list) with the [`my`](doc/Commands.md#my) command
-* admin commands configured by [admin-levels](doc/Admin.md#admin-levels)
-* and more
+* and much, much more!
 
 For more information, see the [Admin documentation.](doc/Admin.md#user-management-commands)
 
