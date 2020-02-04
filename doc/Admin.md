@@ -259,7 +259,8 @@ Name | Description
 `chanop` | Channel operator capability group. Contains the basic channel management capabilities.
 `chanmod` | Channel moderator capability group. Grants `can-voice`, `can-devoice` and the use of the `mod` command without being voiced.
 `can-<command name>` | If a command `<command name>` has the `cap-required` [command metadata](#command-metadata-list) then the user's account must have the `can-<command name>` capability to invoke it. For example, the `op` command requires users to have the `can-op` capability.
-`can-mode-<letter>` | Allows the `mode` command to set mode `<letter>`. For example, to allow a user to set `mode +m` give them the `can-mode` and `can-mode-m` capabilities.
+`can-mode-<flag>` | Allows the `mode` command to set mode `<flag>`. For example, to allow a user to set `mode +m` give them the `can-mode` and `can-mode-m` capabilities. `<flag>` is one mode character.
+`can-mode-any` | Allows the `mode` command to set any mode flag.
 `can-modify-capabilities` | Allows the user to use the [`useradd`](#useradd) or [`userset`](#userset) commands to add or remove capabilities from users.
 `can-group-capabilities` | Allows the user to use the `cap group` command to modify capability groups.
 `can-ungroup-capabilities` | Allows the user to use the `cap ungroup` command to modify capability groups.
