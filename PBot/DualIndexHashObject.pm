@@ -40,7 +40,6 @@ sub initialize {
 
 sub load {
   my ($self, $filename) = @_;
-
   $filename = $self->{filename} if not defined $filename;
 
   if (not defined $filename) {
@@ -104,7 +103,6 @@ sub load {
 sub save {
   my $self = shift;
   my $filename;
-
   if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
 
   if (not defined $filename) {

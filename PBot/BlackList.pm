@@ -33,7 +33,7 @@ sub initialize {
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{filename} = $conf{filename};
   $self->{blacklist} = {};
-  $self->{pbot}->{commands}->register(sub { $self->blacklist(@_) }, "blacklist", 10);
+  $self->{pbot}->{commands}->register(sub { $self->blacklist(@_) }, "blacklist", 1);
   $self->load_blacklist;
 }
 

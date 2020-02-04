@@ -25,14 +25,10 @@ use warnings;
 use strict;
 
 use feature 'unicode_strings';
-
 use Carp ();
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
   $self->initialize(%conf);
@@ -41,7 +37,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to FactoidCommands");
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { return $self->do_func(@_) }, 'func', 0);
   $self->init_funcs;
 }

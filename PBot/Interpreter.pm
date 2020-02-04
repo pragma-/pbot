@@ -23,10 +23,7 @@ use Carp ();
 use PBot::Utils::ValidateString;
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
   $self->initialize(%conf);
@@ -35,10 +32,8 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->SUPER::initialize(%conf);
-
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{pbot}->{registry}->add_default('text',  'general', 'compile_blocks',                  $conf{compile_blocks}                  // 1);
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',         $conf{compile_blocks_channels}         // '.*');
@@ -174,8 +169,8 @@ sub process_line {
     # check if user is ignored (and command isn't `login`)
     if ($command !~ /^login / && defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
       my $admin = $pbot->{users}->loggedin_admin($from, "$nick!$user\@$host");
-      if (!defined $admin || $admin->{level} < 10) {
-        # hostmask ignored
+      if (!defined $admin) {
+        # user is ignored
         return 1;
       }
     }
@@ -791,7 +786,7 @@ sub handle_result {
     $stuff->{prepend} = $1;
   }
 
-  if ($stuff->{pipe} and not $stuff->{authorized}) {
+  if ($stuff->{pipe}) {
     my ($pipe, $pipe_rest) = (delete $stuff->{pipe}, delete $stuff->{pipe_rest});
     if (not $stuff->{alldone}) {
       $stuff->{command} = "$pipe $result $pipe_rest";
@@ -975,27 +970,6 @@ sub output_result {
       $pbot->{conn}->privmsg($to, $line) if $to ne $botnick;
       $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', $line, 0, 0, 0) if $stuff->{checkflood};
     }
-  } elsif ($stuff->{authorized} && $line =~ s/^\/kick\s+//) {
-    $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', '/kick ' . $line, 0, 0, 0) if $stuff->{checkflood};
-    my ($victim, $reason) = split /\s+/, $line, 2;
-
-    if (not defined $reason) {
-      if (open my $fh, '<',  $self->{pbot}->{registry}->get_value('general', 'module_dir') . '/insults.txt') {
-        my @insults = <$fh>;
-        close $fh;
-        $reason = $insults[rand @insults];
-        chomp $reason;
-      } else {
-        $reason = 'Bye!';
-      }
-    }
-
-    if ($self->{pbot}->{chanops}->can_gain_ops($stuff->{from})) {
-      $self->{pbot}->{chanops}->add_op_command($stuff->{from}, "kick $stuff->{from} $victim $reason");
-      $self->{pbot}->{chanops}->gain_ops($stuff->{from});
-    } else {
-      $pbot->{conn}->privmsg($stuff->{from}, "$victim: $reason") if defined $stuff->{from} && $stuff->{from} ne $botnick;
-    }
   } else {
     if (defined $stuff->{nickoverride} and ($stuff->{no_nickoverride} == 0 or $stuff->{force_nickoverride} == 1)) {
       $line = "$stuff->{nickoverride}: $line";
@@ -1087,9 +1061,9 @@ sub process_command_queue {
           preserve_whitespace => 0
         };
 
-        if (exists $command->{level}) {
-          $self->{pbot}->{logger}->log("Override command effective-level to $command->{level}\n");
-          $stuff->{'effective-level'} = $command->{level};
+        if (exists $command->{'cap-override'}) {
+          $self->{pbot}->{logger}->log("[command queue] Override command capability with $command->{'cap-override'}\n");
+          $stuff->{'cap-override'} = $command->{'cap-override'};
         }
 
         my $result = $self->interpret($stuff);

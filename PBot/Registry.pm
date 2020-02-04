@@ -22,10 +22,7 @@ use PBot::DualIndexHashObject;
 use PBot::RegistryCommands;
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be item/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be item/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
   $self->initialize(%conf);
@@ -34,15 +31,11 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   my $filename  = $conf{filename} // Carp::croak("Missing filename reference in " . __FILE__);
-
   $self->{registry} = PBot::DualIndexHashObject->new(name => 'Registry', filename => $filename, pbot => $self->{pbot});
   $self->{triggers} = {};
-
   $self->{pbot}->{atexit}->register(sub { $self->save; return; });
-
   PBot::RegistryCommands->new(pbot => $self->{pbot});
 }
 
@@ -107,7 +100,6 @@ sub remove {
   if (not scalar keys %{ $self->{registry}->{hash}->{$section} }) {
     delete $self->{registry}->{hash}->{$section};
   }
-
   $self->save;
 }
 
@@ -139,7 +131,6 @@ sub set {
   }
 
   $self->save if !$dont_save && $result =~ m/set to/ && not $is_default;
-
   return $result;
 }
 

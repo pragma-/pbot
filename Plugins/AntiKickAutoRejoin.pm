@@ -28,7 +28,6 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot}    = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{pbot}->{registry}->add_default('array', 'antikickautorejoin', 'punishment', '300,900,1800,3600,28800');
@@ -36,7 +35,6 @@ sub initialize {
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick', sub { $self->on_kick(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.join', sub { $self->on_join(@_) });
-
   $self->{kicks} = {};
 }
 
@@ -54,7 +52,6 @@ sub on_kick {
   }
 
   $self->{kicks}->{$channel}->{$target}->{last_kick} = gettimeofday;
-
   return 0;
 }
 
@@ -82,7 +79,6 @@ sub on_join {
       $self->{kicks}->{$channel}->{$nick}->{rejoins}++;
     }
   }
-
   return 0;
 }
 

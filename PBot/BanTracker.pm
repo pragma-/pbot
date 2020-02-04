@@ -24,12 +24,8 @@ $Data::Dumper::Sortkeys = 1;
 use Carp ();
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to BanTracker should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to BanTracker should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -38,14 +34,14 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
 
-  $self->{pbot}    = delete $conf{pbot} // Carp::croak("Missing pbot reference to BanTracker");
+  $self->{pbot}    = $conf{pbot} // Carp::croak("Missing pbot reference to BanTracker");
   $self->{banlist} = {};
 
   $self->{pbot}->{registry}->add_default('text', 'bantracker', 'chanserv_ban_timeout', '604800');
   $self->{pbot}->{registry}->add_default('text', 'bantracker', 'mute_timeout',         '604800');
   $self->{pbot}->{registry}->add_default('text', 'bantracker', 'debug',                '0');
 
-  $self->{pbot}->{commands}->register(sub { $self->dumpbans(@_) }, "dumpbans", 60);
+  $self->{pbot}->{commands}->register(sub { $self->dumpbans(@_) }, "dumpbans", 1);
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.endofnames', sub { $self->get_banlist(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.banlist',    sub { $self->on_banlist_entry(@_) });
@@ -54,7 +50,6 @@ sub initialize {
 
 sub dumpbans {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
   my $bans = Dumper($self->{banlist});
   return $bans;
 }

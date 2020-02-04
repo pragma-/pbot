@@ -13,7 +13,6 @@ use warnings;
 use strict;
 
 use feature 'unicode_strings';
-
 use Carp ();
 
 sub new {
@@ -26,7 +25,6 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { return $self->magic(@_)}, "mc", 90);
 }
@@ -39,7 +37,6 @@ sub unload {
 sub magic {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-
   # do something magical!
   return "Did something magical.";
 }

@@ -27,7 +27,6 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{pbot}->{commands}->register(sub { $self->counteradd(@_)      }, 'counteradd',      0);
@@ -40,7 +39,6 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->on_public(@_) });
 
   $self->{filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/counters.sqlite3';
-
   $self->create_database;
 }
 
@@ -130,7 +128,6 @@ sub add_counter {
     $self->{pbot}->{logger}->log("Add counter failed: $@");
     return 0;
   }
-
   return 1;
 }
 
@@ -155,7 +152,6 @@ sub reset_counter {
     $self->{pbot}->{logger}->log("Reset counter failed: $@");
     return (undef, undef);
   }
-
   return ($description, $timestamp);
 }
 
@@ -179,7 +175,6 @@ sub delete_counter {
     $self->{pbot}->{logger}->log("Delete counter failed: $@");
     return 0;
   }
-
   return 1;
 }
 
@@ -196,7 +191,6 @@ sub list_counters {
   if ($@) {
     $self->{pbot}->{logger}->log("List counters failed: $@");
   }
-
   return map { $_->[0] } @$counters;
 }
 
@@ -216,7 +210,6 @@ sub get_counter {
     $self->{pbot}->{logger}->log("Get counter failed: $@");
     return undef;
   }
-
   return ($description, $time, $counter, $created_on, $created_by);
 }
 
@@ -240,7 +233,6 @@ sub add_trigger {
     $self->{pbot}->{logger}->log("Add trigger failed: $@");
     return 0;
   }
-
   return 1;
 }
 
@@ -256,7 +248,6 @@ sub delete_trigger {
   $sth->bind_param(1, lc $channel);
   $sth->bind_param(2, lc $trigger);
   $sth->execute();
-
   return 1;
 }
 
@@ -273,7 +264,6 @@ sub list_triggers {
   if ($@) {
     $self->{pbot}->{logger}->log("List triggers failed: $@");
   }
-
   return @$triggers;
 }
 
@@ -293,17 +283,12 @@ sub get_trigger {
     $self->{pbot}->{logger}->log("Get trigger failed: $@");
     return undef;
   }
-
   return $target;
 }
 
 sub counteradd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-  if (not $self->dbi_begin) {
-    return "Internal error.";
-  }
-
+  return "Internal error." if not $self->dbi_begin;
   my ($channel, $name, $description);
 
   if ($from !~ m/^#/) {
@@ -325,18 +310,13 @@ sub counteradd {
   } else {
     $result = "Counter '$name' already exists.";
   }
-
   $self->dbi_end;
   return $result;
 }
 
 sub counterdel {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-  if (not $self->dbi_begin) {
-    return "Internal error.";
-  }
-
+  return "Internal error." if not $self->dbi_begin;
   my ($channel, $name);
 
   if ($from !~ m/^#/) {
@@ -358,18 +338,13 @@ sub counterdel {
   } else {
     $result = "No such counter.";
   }
-
   $self->dbi_end;
   return $result;
 }
 
 sub counterreset {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-  if (not $self->dbi_begin) {
-    return "Internal error.";
-  }
-
+  return "Internal error." if not $self->dbi_begin;
   my ($channel, $name);
 
   if ($from !~ m/^#/) {
@@ -400,11 +375,7 @@ sub counterreset {
 
 sub countershow {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-  if (not $self->dbi_begin) {
-    return "Internal error.";
-  }
-
+  return "Internal error." if not $self->dbi_begin;
   my ($channel, $name);
 
   if ($from !~ m/^#/) {
@@ -436,11 +407,7 @@ sub countershow {
 
 sub counterlist {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-  if (not $self->dbi_begin) {
-    return "Internal error.";
-  }
-
+  return "Internal error." if not $self->dbi_begin;
   my $channel;
 
   if ($from !~ m/^#/) {
@@ -472,11 +439,7 @@ sub counterlist {
 
 sub countertrigger {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-  if (not $self->dbi_begin) {
-    return "Internal error.";
-  }
-
+  return "Internal error." if not $self->dbi_begin;
   my $command;
   ($command, $arguments) = split / /, $arguments, 2;
 
@@ -642,9 +605,7 @@ sub on_public {
       $self->{pbot}->{logger}->log("Skipping bad trigger $trigger->{trigger}: $@");
     }
   }
-
   $self->dbi_end;
-
   return 0;
 }
 

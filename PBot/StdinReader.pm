@@ -22,7 +22,6 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference in StdinReader");
 
   # create implicit bot-admin account for bot
@@ -61,7 +60,6 @@ sub stdin_reader {
     $from = $self->{pbot}->{registry}->get_value('irc', 'botnick') . "!stdin\@pbot";
     $text = $self->{pbot}->{registry}->get_value('irc', 'botnick') . " $input";
   }
-
   return $self->{pbot}->{interpreter}->process_line($from, $self->{pbot}->{registry}->get_value('irc', 'botnick'), "stdin", "pbot", $text);
 }
 

@@ -21,10 +21,8 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.public',    sub { $self->on_public(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->on_public(@_) });
 }
 
 sub unload {
@@ -45,7 +43,6 @@ sub on_public {
   }
 
   $self->{pbot}->{logger}->log("Example plugin: got message from $nick!$user\@$host: $msg\n");
-
   return 0;
 }
 

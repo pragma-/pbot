@@ -25,12 +25,8 @@ use Encode;
 $SIG{CHLD} = sub { while (waitpid(-1, WNOHANG) > 0) {} };
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to Commands should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -38,13 +34,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
-  my $pbot = delete $conf{pbot};
-  if (not defined $pbot) {
-    Carp::croak("Missing pbot reference to PBot::FactoidModuleLauncher");
-  }
-
-  $self->{pbot} = $pbot;
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 }
 
 sub execute_module {

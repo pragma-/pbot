@@ -49,10 +49,7 @@ use PBot::Utils::ParseDate;
 use PBot::FuncCommand;
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to PBot should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to PBot should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
   $self->{atexit} = PBot::Registerable->new(%conf);
@@ -63,7 +60,6 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{startup_timestamp} = time;
 
   my $data_dir   = $conf{data_dir};
@@ -331,7 +327,7 @@ sub listcmd {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $text;
 
-  my $usage = "Usage: list <modules|commands|admins|users>";
+  my $usage = "Usage: list <modules|commands|users>";
 
   if (not defined $arguments) {
     return $usage;
@@ -353,8 +349,11 @@ sub listcmd {
   if ($arguments =~ /^commands$/i) {
     $text = "Registered commands: ";
     foreach my $command (sort { $a->{name} cmp $b->{name} } @{ $self->{commands}->{handlers} }) {
-      $text .= "$command->{name} ";
-      $text .= "($command->{level}) " if $command->{level} > 0;
+      if ($command->{requires_cap}) {
+        $text .= "+$command->{name} ";
+      } else {
+        $text .= "$command->{name} ";
+      }
     }
     return $text;
   }
@@ -373,31 +372,17 @@ sub listcmd {
       foreach my $hostmask (sort { return 0 if $a eq '_name' or $b eq '_name'; $self->{users}->{users}->{hash}->{$channel}->{$a}->{name} cmp $self->{users}->{users}->{hash}->{$channel}->{$b}->{name} } keys %{ $self->{users}->{users}->{hash}->{$channel} }) {
         next if $hostmask eq '_name';
         $text .= $sep;
+        my $has_cap = 0;
+        foreach my $key (keys %{$self->{users}->{users}->{hash}->{$channel}->{$hostmask}}) {
+          next if $key eq '_name';
+          if ($self->{capabilities}->exists($key)) {
+            print "has $key?\n";
+            $has_cap = 1;
+            last;
+          }
+        }
+        $text .= '+' if $has_cap;
         $text .= $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{name};
-        $text .= "(" . $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} . ")" if $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} > 0;
-        $sep = " ";
-      }
-      $sep = "; ";
-    }
-    return $text;
-  }
-
-  if ($arguments =~ /^admins$/i) {
-    $text = "Admins: ";
-    my $last_channel = "";
-    my $sep = "";
-    foreach my $channel (sort keys %{ $self->{users}->{users}->{hash} }) {
-      next if $from =~ m/^#/ and $channel ne $from and $channel ne '.*';
-      if ($last_channel ne $channel) {
-        $text .= $sep . ($channel eq ".*" ? "global" : $channel) . ": ";
-        $last_channel = $channel;
-        $sep = "";
-      }
-      foreach my $hostmask (sort { return 0 if $a eq '_name' or $b eq '_name'; $self->{users}->{users}->{hash}->{$channel}->{$a}->{name} cmp $self->{users}->{users}->{hash}->{$channel}->{$b}->{name} } keys %{ $self->{users}->{users}->{hash}->{$channel} }) {
-        next if $hostmask eq '_name';
-        next if $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} <= 0;
-        $text .= $sep;
-        $text .= $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{name} . " (" . $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{level} . ")";
         $sep = " ";
       }
       $sep = "; ";

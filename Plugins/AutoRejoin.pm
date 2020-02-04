@@ -28,20 +28,17 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot}    = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{pbot}->{registry}->add_default('array', 'autorejoin', 'rejoin_delay', '900,1800,3600');
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',   sub { $self->on_kick(@_)   });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.part',   sub { $self->on_part(@_)   });
-
   $self->{rejoins} = {};
 }
 
 sub rejoin_channel {
   my ($self, $channel) = @_;
-
   $self->{rejoins}->{$channel}->{rejoins} = 0 if not exists $self->{rejoins}->{$channel};
 
   my $delay = $self->{pbot}->{registry}->get_array_value($channel, 'rejoin_delay', $self->{rejoins}->{$channel}->{rejoins});
@@ -51,8 +48,6 @@ sub rejoin_channel {
 
   $delay = duration $delay;
   $self->{pbot}->{logger}->log("Rejoining $channel in $delay.\n");
-
-  #$self->{rejoins}->{$channel}->{rejoins}++;
   $self->{rejoins}->{$channel}->{last_rejoin} = gettimeofday;
 }
 
@@ -66,7 +61,6 @@ sub on_kick {
   if ($target eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
     $self->rejoin_channel($channel);
   }
-
   return 0;
 }
 
@@ -80,7 +74,6 @@ sub on_part {
   if ($nick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
     $self->rejoin_channel($channel);
   }
-
   return 0;
 }
 

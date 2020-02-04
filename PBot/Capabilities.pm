@@ -53,8 +53,9 @@ sub has {
   my ($self, $cap, $subcap, $depth) = @_;
   my $cap_data = $self->{caps}->get_data($cap);
   return 0 if not defined $cap_data;
+  return 1 if $cap eq $subcap;
 
-  $depth //= 2;
+  $depth //= 10;
   if (--$depth <= 0) {
     $self->{pbot}->{logger}->log("Max recursion reached for PBot::Capabilities->has()\n");
     return 0;
@@ -74,7 +75,7 @@ sub userhas {
   return 1 if $user->{$cap};
   foreach my $key (keys %{$user}) {
     next if $key eq '_name';
-    return 1 if $self->has($key, $cap, 10);
+    return 1 if $self->has($key, $cap);
   }
   return 0;
 }
@@ -109,6 +110,15 @@ sub add {
 }
 
 sub remove {
+  my ($self, $cap) = @_;
+  $cap = lc $cap;
+  foreach my $c (keys %{$self->{caps}->{hash}}) {
+    next if $c eq '_name';
+    foreach my $sub_cap (keys %{$self->{caps}->{hash}->{$c}}) {
+      delete $self->{caps}->{hash}->{$c}->{$sub_cap} if $sub_cap eq $cap;
+    }
+    delete $self->{caps}->{hash}->{$c} if $c eq $cap;
+  }
 }
 
 sub rebuild_botowner_capabilities {
@@ -122,7 +132,7 @@ sub rebuild_botowner_capabilities {
 
 sub list {
   my ($self, $capability) = @_;
-  $capability = lc $capability;
+  $capability = lc $capability if defined $capability;
   return "No such capability $capability." if defined $capability and not exists $self->{caps}->{hash}->{$capability};
 
   my @caps;
@@ -135,7 +145,7 @@ sub list {
     $result = 'Capabilities: ';
   } else {
     @caps = sort keys %{$self->{caps}->{hash}->{$capability}};
-    return "Capability $capability has no sub-capabilities." if @caps == 1;
+    return "Capability $capability has no sub-capabilities." if not @caps or @caps == 1;
     $result = "Sub-capabilities for $capability: ";
   }
 
@@ -144,7 +154,7 @@ sub list {
   foreach my $cap (@caps) {
     next if $cap eq '_name';
     my $count = keys(%{$self->{caps}->{hash}->{$cap}}) - 1;
-    if ($count) {
+    if ($count > 0) {
       push @cap_group, "$cap [$count]" if $count;
     } else {
       push @cap_standalone, $cap;
@@ -166,6 +176,41 @@ sub capcmd {
     }
 
     when ('userhas') {
+      my ($hostmask, $cap) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+      return "Usage: cap userhas <user> [capability]" if not defined $hostmask;
+      $cap = lc $cap if defined $cap;
+
+      my $u = $self->{pbot}->{users}->find_user('.*', $hostmask);
+      return "No such user $hostmask." if not defined $u;
+
+      if (defined $cap) {
+        return "Try again. No such capability $cap." if not $self->exists($cap);
+        if ($self->userhas($u, $cap)) {
+          return "Yes. User $u->{name} has capability $cap.";
+        } else {
+          return "No. User $u->{name} does not have capability $cap.";
+        }
+      } else {
+        my $result = "User $u->{name} has capabilities: ";
+        my @groups;
+        my @single;
+        foreach my $key (sort keys %{$u}) {
+          next if $key eq '_name';
+          next if not $self->exists($key);
+          my $count = keys (%{$self->{caps}->{hash}->{$key}}) - 1;
+          if ($count > 0) {
+            push @groups, "$key [$count]";
+          } else {
+            push @single, $key;
+          }
+        }
+        if (@groups or @single) {
+          $result .= join ', ', @groups, @single;
+        } else {
+          $result = "User $u->{name} has no capabilities.";
+        }
+        return $result;
+      }
     }
 
     when ('add') {
@@ -175,7 +220,7 @@ sub capcmd {
     }
 
     default {
-      $result = "Usage: cap list [capability] | cap add <capability> [sub-capability] | cap remove <capability> [sub-capability] | cap userhas <user> <capability>";
+      $result = "Usage: cap list [capability] | cap add <capability> [sub-capability] | cap remove <capability> [sub-capability] | cap userhas <user> [capability]";
     }
   }
   return $result;

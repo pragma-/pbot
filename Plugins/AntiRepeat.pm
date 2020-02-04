@@ -28,7 +28,6 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat',           $conf{antirepeat}           // 1);
@@ -40,17 +39,11 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->on_public(@_) });
 
   $self->{pbot}->{timer}->register(sub { $self->adjust_offenses }, 60 * 60 * 1, 'antirepeat');
-
   $self->{offenses} = {};
 }
 
 sub unload {
   my $self = shift;
-  # perform plugin clean-up here
-  # normally we'd unregister the 'irc.public' event handler; however, the
-  # event dispatcher will do this automatically for us when it sees there
-  # is no longer an existing sub.
-
   $self->{pbot}->{timer}->unregister('antirepeat');
 }
 
@@ -161,7 +154,6 @@ sub on_public {
       return 0;
     }
   }
-
   return 0;
 }
 

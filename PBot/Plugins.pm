@@ -18,12 +18,8 @@ use File::Basename;
 use Carp ();
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
-
   my $self = bless {}, $class;
   $self->initialize(%conf);
   return $self;
@@ -31,20 +27,16 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{plugins} = {};
-
-  $self->{pbot}->{commands}->register(sub { $self->load_cmd(@_)   },  "plug",     90);
-  $self->{pbot}->{commands}->register(sub { $self->unload_cmd(@_) },  "unplug",   90);
-  $self->{pbot}->{commands}->register(sub { $self->reload_cmd(@_) },  "replug",   90);
-  $self->{pbot}->{commands}->register(sub { $self->list_cmd(@_)   },  "pluglist",  0);
+  $self->{pbot}->{commands}->register(sub { $self->load_cmd(@_)   },  "plug",     1);
+  $self->{pbot}->{commands}->register(sub { $self->unload_cmd(@_) },  "unplug",   1);
+  $self->{pbot}->{commands}->register(sub { $self->reload_cmd(@_) },  "replug",   1);
+  $self->{pbot}->{commands}->register(sub { $self->list_cmd(@_)   },  "pluglist", 0);
 }
 
 sub autoload {
   my ($self, %conf) = @_;
-
   return if $self->{pbot}->{registry}->get_value('plugins', 'noautoload');
 
   my $path = $self->{pbot}->{registry}->get_value('general', 'plugin_dir') // 'Plugins';
@@ -71,7 +63,6 @@ sub autoload {
 
     $plugin_count++ if $self->load($plugin, %conf)
   }
-
   $self->{pbot}->{logger}->log("$plugin_count plugin" . ($plugin_count == 1 ? '' : 's') . " loaded.\n");
 }
 
@@ -112,7 +103,6 @@ sub load {
     $self->{pbot}->{logger}->log("Error loading $plugin: $@\n");
     return 0;
   }
-
   return $ret;
 }
 
@@ -189,7 +179,6 @@ sub unload_cmd {
 
 sub list_cmd {
    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
    my $result = "Loaded plugins: ";
    my $count = 0;
    my $comma = '';
@@ -201,7 +190,6 @@ sub list_cmd {
    }
 
    $result .= 'none' if $count == 0;
-
    return $result;
 }
 

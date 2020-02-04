@@ -78,7 +78,6 @@ sub version_cmd {
   if ($self->{last_check}->{version} > BUILD_REVISION) {
     $result .= "; new version available: $self->{last_check}->{version} $self->{last_check}->{date}!";
   }
-
   return $result;
 }
 

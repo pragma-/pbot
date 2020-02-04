@@ -25,26 +25,26 @@ use JSON;
 
 use PBot::Utils::SafeFilename;
 
-our %factoid_metadata_levels = (
-  created_on                  => 90,
-  enabled                     => 10,
-  last_referenced_in          => 90,
-  last_referenced_on          => 90,
-  modulelauncher_subpattern   => 90,
-  owner                       => 90,
-  rate_limit                  => 10,
-  ref_count                   => 90,
-  ref_user                    => 90,
-  type                        => 90,
-  edited_by                   => 90,
-  edited_on                   => 90,
-  locked                      => 10,
-  add_nick                    => 10,
-  nooverride                  => 10,
-  'effective-level'           => 40,
-  'persist-key'               => 20,
-  'interpolate'               => 10,
-  # all others are allowed to be factset by anybody/default to level 0
+our %factoid_metadata_capabilities = (
+  created_on                  => 'botowner',
+  enabled                     => 'chanop',
+  last_referenced_in          => 'botowner',
+  last_referenced_on          => 'botowner',
+  modulelauncher_subpattern   => 'botowner',
+  owner                       => 'botowner',
+  rate_limit                  => 'chanop',
+  ref_count                   => 'botowner',
+  ref_user                    => 'botowner',
+  type                        => 'botowner',
+  edited_by                   => 'botowner',
+  edited_on                   => 'botowner',
+  locked                      => 'chanop',
+  add_nick                    => 'chanop',
+  nooverride                  => 'chanop',
+  'cap-override'              => 'botowner',
+  'persist-key'               => 'admin',
+  'interpolate'               => 'chanop',
+  # all others are allowed to be factset by anybody
 );
 
 sub new {
@@ -78,14 +78,14 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { return $self->call_factoid(@_)  },  "fact",         0);
   $self->{pbot}->{commands}->register(sub { return $self->factfind(@_)      },  "factfind",     0);
   $self->{pbot}->{commands}->register(sub { return $self->top20(@_)         },  "top20",        0);
-  $self->{pbot}->{commands}->register(sub { return $self->load_module(@_)   },  "load",        90);
-  $self->{pbot}->{commands}->register(sub { return $self->unload_module(@_) },  "unload",      90);
+  $self->{pbot}->{commands}->register(sub { return $self->load_module(@_)   },  "load",         1);
+  $self->{pbot}->{commands}->register(sub { return $self->unload_module(@_) },  "unload",       1);
   $self->{pbot}->{commands}->register(sub { return $self->histogram(@_)     },  "histogram",    0);
   $self->{pbot}->{commands}->register(sub { return $self->count(@_)         },  "count",        0);
 
   # the following commands have not yet been updated to use the new factoid structure
   # DO NOT USE!!  Factoid corruption may occur.
-  $self->{pbot}->{commands}->register(sub { return $self->add_regex(@_)     },  "regex",        999);
+  $self->{pbot}->{commands}->register(sub { return $self->add_regex(@_)     },  "regex",        1);
 }
 
 sub call_factoid {
@@ -406,13 +406,12 @@ sub factundo {
   }
 
   my $factoids = $self->{pbot}->{factoids}->{factoids}->{hash};
-  my $admininfo = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
+  my $userinfo = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
   if ($factoids->{$channel}->{$trigger}->{'locked'}) {
-    return "/say $trigger_name is locked and cannot be reverted." if not defined $admininfo;
+    return "/say $trigger_name is locked and cannot be reverted." if not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin');
 
-    if (exists $factoids->{$channel}->{$trigger}->{'effective-level'}
-        and $admininfo->{level} < $factoids->{$channel}->{$trigger}->{'effective-level'}) {
-      return "/say $trigger_name is locked with an effective-level higher than your level and cannot be reverted.";
+    if (exists $factoids->{$channel}->{$trigger}->{'cap-override'} and not $self->{pbot}->{capabilities}->userhas($userinfo, 'botowner')) {
+      return "/say $trigger_name is locked with a cap-override and cannot be reverted. Unlock the factoid first.";
     }
   }
 
@@ -499,13 +498,12 @@ sub factredo {
   }
 
   my $factoids = $self->{pbot}->{factoids}->{factoids}->{hash};
-  my $admininfo = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
+  my $userinfo = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
   if ($factoids->{$channel}->{$trigger}->{'locked'}) {
-    return "/say $trigger_name is locked and cannot be reverted." if not defined $admininfo;
+    return "/say $trigger_name is locked and cannot be reverted." if not defined $self->{pbot}->{capabilities}->userhas($userinfo, 'admin');
 
-    if (exists $factoids->{$channel}->{$trigger}->{'effective-level'}
-        and $admininfo->{level} < $factoids->{$channel}->{$trigger}->{'effective-level'}) {
-      return "/say $trigger_name is locked with an effective-level higher than your level and cannot be reverted.";
+    if (exists $factoids->{$channel}->{$trigger}->{'cap-override'} and not $self->{pbot}->{capabilities}->userhas($userinfo, 'botowner')) {
+      return "/say $trigger_name is locked with a cap-override and cannot be reverted. Unlock the factoid first.";
     }
   }
 
@@ -559,50 +557,39 @@ sub factset {
   $channel = '.*' if $channel !~ /^#/;
   my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, exact_channel => 1, exact_trigger => 1);
 
-  my $admininfo;
+  my $userinfo;
   if (defined $owner_channel) {
-    $admininfo  = $self->{pbot}->{users}->loggedin_admin($owner_channel, "$nick!$user\@$host");
+    $userinfo  = $self->{pbot}->{users}->loggedin($owner_channel, "$nick!$user\@$host");
   } else {
-    $admininfo  = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
+    $userinfo  = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
   }
 
-  my $level = 0;
-  my $meta_level = 0;
-
-  if (defined $admininfo) {
-    $level = $admininfo->{level};
-  }
-
+  my $meta_cap;
   if (defined $key) {
-    if (defined $factoid_metadata_levels{$key}) {
-      $meta_level = $factoid_metadata_levels{$key};
+    if (defined $factoid_metadata_capabilities{$key}) {
+      $meta_cap = $factoid_metadata_capabilities{$key};
     }
 
-    if ($meta_level > 0) {
-      if ($level == 0) {
-        return "You must be an admin to set $key";
-      } elsif ($level < $meta_level) {
-        return "You must be at least level $meta_level to set $key";
+    if (defined $meta_cap) {
+      if (not $self->{pbot}->{capabilities}->userhas($userinfo, $meta_cap)) {
+        return "Your user account must have the $meta_cap capability to set $key.";
       }
     }
 
-    if (defined $value and !$level and $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{'locked'}) {
+    if (defined $value and !$self->{pbot}->{capabilities}->userhas($userinfo, 'admin') and $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{'locked'}) {
       return "/say $trigger_name is locked; unlock before setting.";
     }
 
-    if (lc $key eq 'effective-level' and defined $value and $level > 0) {
-      if ($value > $level) {
-        return "You cannot set `effective-level` greater than your level, which is $level.";
-      } elsif ($value < 0) {
-        return "You cannot set a negative effective-level.";
+    if (lc $key eq 'cap-override' and defined $value) {
+      if (not $self->{pbot}->{capabilities}->exists($value)) {
+        return "No such capability $value.";
       }
-
       $self->{pbot}->{factoids}->{factoids}->set($channel, $trigger, 'locked', '1');
     }
 
-    if (lc $key eq 'locked' and exists $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{'effective-level'}) {
-      if ($level < $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{'effective-level'}) {
-        return "You cannot unlock this factoid because its effective-level is greater than your level.";
+    if (lc $key eq 'locked' and exists $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{'cap-override'}) {
+      if (not $self->{pbot}->{capabilities}->userhas($userinfo, 'botowner')) {
+        return "/say $trigger_name has a cap-override and cannot be unlocked until the override is removed.";
       }
     }
   }
@@ -622,7 +609,7 @@ sub factset {
       $mask = $nick;
     }
 
-    if ((defined $value and $key ne 'action' and $key ne 'action_with_args') and lc $mask ne lc $owner and $level == 0) {
+    if ((defined $value and $key ne 'action' and $key ne 'action_with_args') and lc $mask ne lc $owner and not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin')) {
       return "You are not the owner of $trigger_name.";
     }
   }
@@ -651,43 +638,30 @@ sub factunset {
 
   my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, exact_channel => 1, exact_trigger => 1);
 
-  my $admininfo;
-
+  my $userinfo;
   if (defined $owner_channel) {
-    $admininfo = $self->{pbot}->{users}->loggedin_admin($owner_channel, "$nick!$user\@$host");
+    $userinfo = $self->{pbot}->{users}->loggedin($owner_channel, "$nick!$user\@$host");
   } else {
-    $admininfo = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
+    $userinfo = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
   }
 
-  my $level = 0;
-  my $meta_level = 0;
-
-  if (defined $admininfo) {
-    $level = $admininfo->{level};
+  my $meta_cap;
+  if (exists $factoid_metadata_capabilities{$key}) {
+    $meta_cap = $factoid_metadata_capabilities{$key};
   }
 
-  if (defined $factoid_metadata_levels{$key}) {
-    $meta_level = $factoid_metadata_levels{$key};
-  }
-
-  if ($meta_level > 0) {
-    if ($level == 0) {
-      return "You must be an admin to unset $key";
-    } elsif ($level < $meta_level) {
-      return "You must be at least level $meta_level to unset $key";
+  if (defined $meta_cap) {
+    if (not $self->{pbot}->{capabilities}->userhas($userinfo, $meta_cap)) {
+      return "Your user account must have the $meta_cap capability to unset $key.";
     }
   }
 
-  if (exists $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{'effective-level'}) {
+  if (exists $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{'cap-override'}) {
     if (lc $key eq 'locked') {
-      if ($level >= $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{'effective-level'}) {
-        $self->{pbot}->{factoids}->{factoids}->unset($channel, $trigger, 'effective-level');
+      if ($self->{pbot}->{capabilities}->userhas($userinfo, 'botowner')) {
+        $self->{pbot}->{factoids}->{factoids}->unset($channel, $trigger, 'cap-override');
       } else {
-        return "You cannot unlock this factoid because its effective-level is higher than your level.";
-      }
-    } elsif (lc $key eq 'effective-level') {
-      if ($level < $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{'effective-level'}) {
-        return "You cannot unset the effective-level because it is higher than your level.";
+        return "You cannot unlock this factoid because it has a cap-override. Remove the override first.";
       }
     }
   }
@@ -704,7 +678,7 @@ sub factunset {
 
     my ($owner) = $factoid->{'owner'} =~ m/([^!]+)/;
 
-    if ($key ne 'action_with_args' and lc $nick ne lc $owner and $level == 0) {
+    if ($key ne 'action_with_args' and lc $nick ne lc $owner and not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin')) {
       return "You are not the owner of $trigger_name.";
     }
     $oldvalue = $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{$key};
@@ -717,7 +691,6 @@ sub factunset {
   if ($result =~ m/unset/) {
     $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "unset $key (value: $oldvalue)");
   }
-
   return $result;
 }
 
@@ -1623,13 +1596,12 @@ sub factchange {
     return "/say $trigger_name belongs to $channel_name, but this is $from_chan. Please switch to $channel_name or use /msg to change this factoid.";
   }
 
-  my $admininfo = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
+  my $userinfo = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
   if ($factoids_hash->{$channel}->{$trigger}->{'locked'}) {
-    return "/say $trigger_name is locked and cannot be changed." if not defined $admininfo;
+    return "/say $trigger_name is locked and cannot be changed." if not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin');
 
-    if (exists $factoids_hash->{$channel}->{$trigger}->{'effective-level'}
-        and $admininfo->{level} < $factoids_hash->{$channel}->{$trigger}->{'effective-level'}) {
-      return "/say $trigger_name is locked with an effective-level higher than your level and cannot be changed.";
+    if (exists $factoids_hash->{$channel}->{$trigger}->{'cap-override'} and not $self->{pbot}->{capabilities}->userhas($userinfo, 'botowner')) {
+      return "/say $trigger_name is locked with a cap-override set and cannot be changed until the override is removed.";
     }
   }
 
@@ -1711,7 +1683,7 @@ sub factchange {
     return $ret if length $ret;
   }
 
-  if (length $action > 8000 and not defined $admininfo) {
+  if (length $action > 8000 and not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin')) {
     return "Change $trigger_name failed; result is too long.";
   }
 

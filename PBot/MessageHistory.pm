@@ -26,10 +26,7 @@ use Carp ();
 use PBot::MessageHistory_SQLite;
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
   $self->initialize(%conf);
@@ -38,8 +35,8 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  $self->{filename} = delete $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/message_history.sqlite3';
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{filename} = $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/message_history.sqlite3';
 
   $self->{database} = PBot::MessageHistory_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
   $self->{database}->begin();
@@ -55,9 +52,9 @@ sub initialize {
 
   $self->{pbot}->{commands}->register(sub { $self->recall_message(@_)     },  "recall",          0);
   $self->{pbot}->{commands}->register(sub { $self->list_also_known_as(@_) },  "aka",             0);
-  $self->{pbot}->{commands}->register(sub { $self->rebuild_aliases(@_)    },  "rebuildaliases", 90);
-  $self->{pbot}->{commands}->register(sub { $self->aka_link(@_)           },  "akalink",        60);
-  $self->{pbot}->{commands}->register(sub { $self->aka_unlink(@_)         },  "akaunlink",      60);
+  $self->{pbot}->{commands}->register(sub { $self->rebuild_aliases(@_)    },  "rebuildaliases",  1);
+  $self->{pbot}->{commands}->register(sub { $self->aka_link(@_)           },  "akalink",         1);
+  $self->{pbot}->{commands}->register(sub { $self->aka_unlink(@_)         },  "akaunlink",       1);
 
   $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
 }

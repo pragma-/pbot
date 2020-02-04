@@ -1009,12 +1009,12 @@ sub handle_action {
 
     $self->{pbot}->{logger}->log("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] ($stuff->{nick}!$stuff->{user}\@$stuff->{host}) $trigger_name aliased to: $command\n");
 
-    if (defined $self->{factoids}->{hash}->{$channel}->{$keyword}->{'effective-level'}) {
+    if (defined $self->{factoids}->{hash}->{$channel}->{$keyword}->{'cap-override'}) {
         if ($self->{factoids}->{hash}->{$channel}->{$keyword}->{'locked'}) {
-          $self->{pbot}->{logger}->log("Effective-level set to $self->{factoids}->{hash}->{$channel}->{$keyword}->{'effective-level'}\n");
-          $stuff->{'effective-level'} = $self->{factoids}->{hash}->{$channel}->{$keyword}->{'effective-level'};
+          $self->{pbot}->{logger}->log("Capability override set to $self->{factoids}->{hash}->{$channel}->{$keyword}->{'cap-override'}\n");
+          $stuff->{'cap-override'} = $self->{factoids}->{hash}->{$channel}->{$keyword}->{'cap-override'};
         } else {
-          $self->{pbot}->{logger}->log("Ignoring effective-level of $self->{factoids}->{hash}->{$channel}->{$keyword}->{'effective-level'} on unlocked factoid\n");
+          $self->{pbot}->{logger}->log("Ignoring cap-override of $self->{factoids}->{hash}->{$channel}->{$keyword}->{'cap-override'} on unlocked factoid\n");
         }
     }
 
@@ -1068,9 +1068,9 @@ sub handle_action {
     # Don't allow user-custom /msg factoids, unless factoid triggered by admin
     if ($action =~ m/^\/msg/i) {
       my $admin = $self->{pbot}->{users}->loggedin_admin($stuff->{from}, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
-      if (not $admin or $admin->{level} < 60) {
+      if (not $admin) {
         $self->{pbot}->{logger}->log("[ABUSE] Bad factoid (contains /msg): $action\n");
-        return "You are not powerful enough to use /msg in a factoid.";
+        return "You must be an admin to use /msg in a factoid.";
       }
     }
 
@@ -1084,19 +1084,6 @@ sub handle_action {
     } else {
       if ($action =~ m/^\/(?:say|me|msg)/i) {
         return $action;
-      } elsif ($action =~ s/^\/kick\s+//) {
-        if (not exists $self->{factoids}->{hash}->{$channel}->{$keyword}->{'effective-level'}) {
-          $stuff->{authorized} = 0;
-          return "/say $stuff->{nick}: $trigger_name doesn't have the effective-level to do that.";
-        }
-        my $level = 10;
-        if ($self->{factoids}->{hash}->{$channel}->{$keyword}->{'effective-level'} >= $level) {
-          $stuff->{authorized} = 1;
-          return "/kick " . $action;
-        } else {
-          $stuff->{authorized} = 0;
-          return "/say $stuff->{nick}: My effective-level isn't high enough to do that.";
-        }
       } else {
         return "/say $trigger_name is $action";
       }

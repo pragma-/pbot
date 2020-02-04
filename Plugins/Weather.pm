@@ -71,7 +71,6 @@ sub weathercmd {
   if (not length $arguments) {
     return $usage;
   }
-
   return $self->get_weather($arguments);
 }
 
@@ -125,7 +124,6 @@ sub get_weather {
       last;
     }
   }
-
   return $result;
 }
 

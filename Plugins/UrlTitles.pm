@@ -26,8 +26,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{pbot}->{registry}->add_default('text',  'general', 'show_url_titles',                 $conf{show_url_titles}                 // 1);
   $self->{pbot}->{registry}->add_default('array', 'general', 'show_url_titles_channels',        $conf{show_url_titles_channels}        // '.*');
@@ -37,9 +36,7 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->show_url_titles(@_) });
 }
 
-sub unload {
-  my $self = shift;
-}
+sub unload {}
 
 sub show_url_titles {
   my ($self, $event_type, $event) = @_;
@@ -88,7 +85,6 @@ sub show_url_titles {
       $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($stuff);
     }
   }
-
   return 0;
 }
 

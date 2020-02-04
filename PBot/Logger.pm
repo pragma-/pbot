@@ -14,45 +14,32 @@ use File::Basename;
 use Carp ();
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to Logger should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to Logger should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
+  my $self = bless {}, $class;
 
-  my $pbot = $conf{pbot} // Carp::croak "Missing pbot reference to " . __FILE__;
-  my $logfile = $conf{filename} // Carp::croak "Missing logfile parameter in " . __FILE__;
+  $self->{pbot} = $conf{pbot} // Carp::croak "Missing pbot reference to " . __FILE__;
+  $self->{logfile} = $conf{filename} // Carp::croak "Missing logfile parameter in " . __FILE__;
+  $self->{start} = time;
 
-  my $path = dirname $logfile;
+  my $path = dirname $self->{logfile};
   if (not -d $path) {
     print "Creating new logfile path: $path\n";
     mkdir $path or Carp::croak "Couldn't create logfile path: $!\n";
   }
 
-  open LOGFILE, ">>$logfile" or Carp::croak "Couldn't open logfile $logfile: $!\n";
+  open LOGFILE, ">>$self->{logfile}" or Carp::croak "Couldn't open logfile $self->{logfile}: $!\n";
   LOGFILE->autoflush(1);
 
-  my $self = bless {
-    logfile => $logfile,
-    pbot => $pbot,
-    start => time,
-  }, $class;
-
   $self->{pbot}->{atexit}->register(sub { $self->rotate_log; return; });
-
   return $self;
 }
 
 sub log {
   my ($self, $text) = @_;
   my $time = localtime;
-
   $text =~ s/(\P{PosixGraph})/my $ch = $1; if ($ch =~ m{[\s]}) { $ch } else { sprintf "\\x%02X", ord $ch }/ge;
-
-  if (openhandle *LOGFILE) {
-    print LOGFILE "$time :: $text";
-  }
-
+  print LOGFILE "$time :: $text" if openhandle *LOGFILE;
   print "$time :: $text";
 }
 

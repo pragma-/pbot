@@ -27,8 +27,6 @@ $SIG{ALRM} = sub {
   $seconds += $min_timeout;
   alarm $min_timeout;
 
-  # print "ALARM! $seconds $min_timeout\n";
-
   # call timer func subroutines
   foreach my $func (@timer_funcs) { &$func; }
 

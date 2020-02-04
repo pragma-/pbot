@@ -32,10 +32,9 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot}    = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  $self->{nicklist} = {};
 
+  $self->{nicklist} = {};
   $self->{pbot}->{registry}->add_default('text', 'nicklist', 'debug', '0');
 
   $self->{pbot}->{commands}->register(sub { $self->show_nicklist(@_) }, "nicklist", 0);
@@ -57,10 +56,7 @@ sub initialize {
 sub show_nicklist {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   my $nicklist;
-
-  if (not length $arguments) {
-    return "Usage: nicklist <channel> [nick]";
-  }
+  return "Usage: nicklist <channel> [nick]" if not length $arguments;
 
   my @args = split / /, $arguments;
 
@@ -77,7 +73,6 @@ sub show_nicklist {
     }
     $nicklist = Dumper($self->{nicklist}->{lc $args[0]}->{lc $args[1]});
   }
-
   return $nicklist;
 }
 
@@ -170,7 +165,6 @@ sub delete_meta {
       or not exists $self->{nicklist}->{$channel}->{$nick}->{$key}) {
     return undef;
   }
-
   return delete $self->{nicklist}->{$channel}->{$nick}->{$key};
 }
 
@@ -240,7 +234,6 @@ sub is_present_similar {
       return $self->{nicklist}->{$channel}->{$person}->{nick};
     }
   }
-
   return 0;
 }
 
@@ -290,7 +283,6 @@ sub on_namreply {
       $self->set_meta($channel, $stripped_nick, '+h', 1);
     }
   }
-
   return 0;
 }
 
@@ -327,7 +319,6 @@ sub on_quit {
       $self->remove_nick($channel, $nick);
     }
   }
-
   return 0;
 }
 
@@ -350,7 +341,6 @@ sub on_nickchange {
       $self->{nicklist}->{$channel}->{lc $newnick} = $meta;
     }
   }
-
   return 0;
 }
 

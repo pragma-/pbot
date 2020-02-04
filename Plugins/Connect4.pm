@@ -29,7 +29,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = delete $conf{pbot};
+  $self->{pbot} = $conf{pbot};
 
   $self->{pbot}->{commands}->register(sub { $self->connect4_cmd(@_) }, 'connect4', 0);
 

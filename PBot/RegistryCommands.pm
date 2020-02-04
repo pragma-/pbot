@@ -17,10 +17,7 @@ use feature 'unicode_strings';
 use Carp ();
 
 sub new {
-  if (ref($_[1]) eq 'HASH') {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference");
-  }
-
+  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
   $self->initialize(%conf);
@@ -29,23 +26,19 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
-  my $pbot = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  $self->{pbot} = $pbot;
-
-  $pbot->{commands}->register(sub { return $self->regset(@_)         }, "regset",       60);
-  $pbot->{commands}->register(sub { return $self->regunset(@_)       }, "regunset",     60);
-  $pbot->{commands}->register(sub { return $self->regshow(@_)        }, "regshow",       0);
-  $pbot->{commands}->register(sub { return $self->regsetmeta(@_)     }, "regsetmeta",   60);
-  $pbot->{commands}->register(sub { return $self->regunsetmeta(@_)   }, "regunsetmeta", 60);
-  $pbot->{commands}->register(sub { return $self->regchange(@_)      }, "regchange",    60);
-  $pbot->{commands}->register(sub { return $self->regfind(@_)        }, "regfind",       0);
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{pbot}->{commands}->register(sub { $self->regset(@_)         }, "regset",        1);
+  $self->{pbot}->{commands}->register(sub { $self->regunset(@_)       }, "regunset",      1);
+  $self->{pbot}->{commands}->register(sub { $self->regshow(@_)        }, "regshow",       0);
+  $self->{pbot}->{commands}->register(sub { $self->regsetmeta(@_)     }, "regsetmeta",    1);
+  $self->{pbot}->{commands}->register(sub { $self->regunsetmeta(@_)   }, "regunsetmeta",  1);
+  $self->{pbot}->{commands}->register(sub { $self->regchange(@_)      }, "regchange",     1);
+  $self->{pbot}->{commands}->register(sub { $self->regfind(@_)        }, "regfind",       0);
 }
 
 sub regset {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-
   my $usage = "Usage: regset <section>.<item> <value>";
 
   # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -71,7 +64,6 @@ sub regset {
 sub regunset {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-
   my $usage = "Usage: regunset <section>.<item>";
 
   # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -106,7 +98,6 @@ sub regunset {
 sub regsetmeta {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-
   my $usage = "Usage: regsetmeta <section>.<item> [key [value]]";
 
   # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -125,14 +116,12 @@ sub regsetmeta {
 
   $key = undef if not length $key;
   $value = undef if not length $value;
-
   return $self->{pbot}->{registry}->set($section, $item, $key, $value);
 }
 
 sub regunsetmeta {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-
   my $usage = "Usage: regunsetmeta <section>.<item> <key>";
 
   # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -148,7 +137,6 @@ sub regunsetmeta {
   if (not defined $section or not defined $item or not defined $key) {
     return $usage;
   }
-
   return $self->{pbot}->{registry}->unset($section, $item, $key);
 }
 
@@ -156,7 +144,6 @@ sub regshow {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $registry = $self->{pbot}->{registry}->{registry}->{hash};
-
   my $usage = "Usage: regshow <section>.<item>";
 
   # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -192,7 +179,6 @@ sub regshow {
   if ($registry->{$section}->{$item}->{type} eq 'array') {
     $result .= ' [array]';
   }
-
   return $result;
 }
 
@@ -200,15 +186,11 @@ sub regfind {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $registry = $self->{pbot}->{registry}->{registry}->{hash};
-
   my $usage = "Usage: regfind [-showvalues] [-section section] <regex>";
 
-  if (not defined $arguments) {
-    return $usage;
-  }
+  return $usage if not defined $arguments;
 
   my ($section, $showvalues);
-
   $section = $1 if $arguments =~ s/-section\s+([^\b\s]+)//i;
   $showvalues = 1 if $arguments =~ s/-showvalues?//i;
 
@@ -216,9 +198,7 @@ sub regfind {
   $arguments =~ s/\s+$//;
   $arguments =~ s/\s+/ /g;
 
-  if ($arguments eq "") {
-    return $usage;
-  }
+  return $usage if $arguments eq "";
 
   $section = lc $section if defined $section;;
 

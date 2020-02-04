@@ -78,7 +78,7 @@ sub initialize {
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'debug_checkban',             $conf{debug_checkban}             //  0);
 
   $self->{pbot}->{commands}->register(sub { return $self->unbanme(@_)   },  "unbanme",   0);
-  $self->{pbot}->{commands}->register(sub { return $self->whitelist(@_) },  "whitelist", 10);
+  $self->{pbot}->{commands}->register(sub { return $self->whitelist(@_) },  "whitelist", 1);
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisaccount', sub { $self->on_whoisaccount(@_)  });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisuser',    sub { $self->on_whoisuser(@_)     });

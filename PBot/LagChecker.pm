@@ -30,7 +30,6 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot}  = $conf{pbot} // Carp::croak("Missing pbot reference to LagChecker");
 
   $self->{lag_average}    = undef;     # average of entries in lag history, in seconds

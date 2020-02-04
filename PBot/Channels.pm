@@ -27,19 +27,18 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{channels} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => $conf{filename});
   $self->load_channels;
 
-  $self->{pbot}->{commands}->register(sub { $self->join(@_)   },  "join",      40);
-  $self->{pbot}->{commands}->register(sub { $self->part(@_)   },  "part",      40);
-  $self->{pbot}->{commands}->register(sub { $self->set(@_)    },  "chanset",   40);
-  $self->{pbot}->{commands}->register(sub { $self->unset(@_)  },  "chanunset", 40);
-  $self->{pbot}->{commands}->register(sub { $self->add(@_)    },  "chanadd",   40);
-  $self->{pbot}->{commands}->register(sub { $self->remove(@_) },  "chanrem",   40);
-  $self->{pbot}->{commands}->register(sub { $self->list(@_)   },  "chanlist",  10);
+  $self->{pbot}->{commands}->register(sub { $self->join(@_)   },  "join",      1);
+  $self->{pbot}->{commands}->register(sub { $self->part(@_)   },  "part",      1);
+  $self->{pbot}->{commands}->register(sub { $self->set(@_)    },  "chanset",   1);
+  $self->{pbot}->{commands}->register(sub { $self->unset(@_)  },  "chanunset", 1);
+  $self->{pbot}->{commands}->register(sub { $self->add(@_)    },  "chanadd",   1);
+  $self->{pbot}->{commands}->register(sub { $self->remove(@_) },  "chanrem",   1);
+  $self->{pbot}->{commands}->register(sub { $self->list(@_)   },  "chanlist",  1);
 }
 
 sub join {

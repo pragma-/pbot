@@ -30,31 +30,23 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
   $self->{pbot}->{commands}->register(sub { $self->remindme(@_) }, 'remindme', 0);
-
   $self->{filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/reminders.sqlite3';
-
   $self->{pbot}->{timer}->register(sub { $self->check_reminders(@_) }, 1, 'RemindMe');
-
   $self->dbi_begin;
   $self->create_database;
 }
 
 sub unload {
   my $self = shift;
-
   $self->dbi_end;
-
   $self->{pbot}->{commands}->unregister('remindme');
   $self->{pbot}->{timer}->unregister('RemindMe');
 }
 
 sub create_database {
   my $self = shift;
-
   return if not $self->{dbh};
 
   eval {
@@ -154,7 +146,6 @@ sub get_reminder {
     $self->{pbot}->{logger}->log("List reminders failed: $@");
     return undef;
   }
-
   return $reminder;
 }
 
