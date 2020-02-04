@@ -241,9 +241,9 @@ commands in the PBot terminal console.
 
 Suppose your nick is `Bob` and your hostmask is `Bob!~user@some.domain.com`.
 
-    useradd Bob global Bob!~user@*.domain.com 100
+    useradd Bob global Bob!~user@*.domain.com botowner
 
-This will create a level `100` admin user account named `Bob` that can administrate
+This will create a user account named `Bob` with the `botowner` [user-capability](Admin.md#user-capabilities) that can administrate
 all channels. Note the wildcard replacing `some` in `some.domain.com`. Now as long as
 your connected hostmask matches your user account hostmask, you will be recognized.
 
@@ -267,13 +267,13 @@ the terminal console.
 ### Adding other users and admins
 To add users to PBot, use the [`useradd`](Admin.md#useradd) command.
 
-    useradd <account name> <channel> <hostmask> [level [password]]
+    useradd <account name> <channel> <hostmask> [capabilities [password]]
+
+If you omit the `capabilities` argument, the user will be a normal unprivileged user. See [user-capabilities](Admin.md#user-capabilities)
+for more information about user-capabilities.
 
 If you omit the `password` argument, a random password will be generated. The user
 can use the [`my`](Commands.md#my) command to view or change it.
-
-If you omit the `level` argument, the user will be a normal unprivileged user. See [admin levels](Admin.md#admin-levels)
-for more information about admin levels.
 
 Users may view and change their own metadata by using the [`my`](Commands.md#my) command.
 
