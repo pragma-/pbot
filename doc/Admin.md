@@ -252,15 +252,15 @@ current list of capabilities, use the [`cap list`](#listing-capabilities) comman
 
 Name | Description
 --- | ---
-botowner | The most powerful capability group. Contains all capabilities.
-admin | The admin capability group. Contains the basic administrative capabilities.
-chanop | Channel operator capability group. Contains the basic channel management capabilities.
-chanmod | Channel moderator capability group. Grants `can-voice`, `can-devoice` and the use of the `mod` command without being voiced.
-can-<cmd> | If a command `<cmd>` has the `cap-required` [command metadata](#command-metadata-list) then the `can-<cmd>` capability is required to invoke it. For example, the `op` command requires the `can-op` capability.
-can-mode-<letter> | Allows the `mode` command to set mode `<letter>`. For example, to allow a user to set `mode +m` give them the `can-mode` and `can-mode-m` capabilities.
-can-modify-capabilities | Allows the user to use the [`useradd`](#useradd) or [`userset`](#userset) commands to add or remove capabilities from users.
-can-group-capabilities | Allows the user to use the `cap group` command to modify capability groups.
-can-ungroup-capabilities | Allows the user to use the `cap ungroup` command to modify capability groups.
+`botowner` | The most powerful capability group. Contains all capabilities.
+`admin` | The admin capability group. Contains the basic administrative capabilities.
+`chanop` | Channel operator capability group. Contains the basic channel management capabilities.
+`chanmod` | Channel moderator capability group. Grants `can-voice`, `can-devoice` and the use of the `mod` command without being voiced.
+`can-<cmd>` | If a command `<cmd>` has the `cap-required` [command metadata](#command-metadata-list) then the `can-<cmd>` capability is required to invoke it. For example, the `op` command requires the `can-op` capability.
+`can-mode-<letter>` | Allows the `mode` command to set mode `<letter>`. For example, to allow a user to set `mode +m` give them the `can-mode` and `can-mode-m` capabilities.
+`can-modify-capabilities` | Allows the user to use the [`useradd`](#useradd) or [`userset`](#userset) commands to add or remove capabilities from users.
+`can-group-capabilities` | Allows the user to use the `cap group` command to modify capability groups.
+`can-ungroup-capabilities` | Allows the user to use the `cap ungroup` command to modify capability groups.
 
 ## Channel management commands
 
