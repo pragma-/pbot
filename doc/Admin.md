@@ -7,11 +7,19 @@
 * [User management commands](#user-management-commands)
   * [useradd](#useradd)
   * [userdel](#userdel)
-    * [Admin levels](#admin-levels)
   * [userset](#userset)
   * [userunset](#userunset)
     * [User metadata list](#user-metadata-list)
   * [Listing users](#listing-users)
+* [User capabilities](#user-capabilities)
+  * [cap](#cap)
+    * [Listing capabilities](#listing-capabilities)
+    * [Grouping capabilities](#grouping-capabilities)
+      * [Creating a new group or adding to an existing group](#creating-a-new-group-or-adding-to-an-existing-group)
+      * [Removing capabilites from a group or deleting a group](#removing-capabilites-from-a-group-or-deleting-a-group)
+    * [Giving capabilities to users](#giving-capabilities-to-users)
+    * [Checking user capabilities](#checking-user-capabilities)
+    * [User capabilities list](#user-capabilities-list)
 * [Channel management commands](#channel-management-commands)
   * [join](#join)
   * [part](#part)
@@ -76,14 +84,14 @@ Usage: `logout`
 ### useradd
 Adds a new user to PBot.
 
-Usage: `useradd <account name> <channel> <hostmask> [level] [password]`
+Usage: `useradd <account name> <channel> <hostmask> [capabilities [password]]`
 
 Parameter | Description
 --- | ---
 `<account name>` | A unique name to identify this account (usually the `nick` of the user, but it can be any identifier).
 `<channel>` | The channel this user belongs to; use `global` for all channels. This field cannot be changed without removing and re-adding the user.
 `<hostmask>` | The hostmask from which this user is recognized/allowed to login from (e.g., `somenick!*@*.somedomain.com` or `*!*@unaffiliated/someuser`). This field cannot be changed without removing and re-adding the user.
-`[level]` | An integer representing the user's level of privileges. See [admin-levels](#admin-levels). Defaults to `0` if omitted (i.e., a normal unprivileged user).
+`[capabilities]` | A comma-separated list of [user-capabilities](#user-capabilities-list) for this user.
 `[password]` | The password the user will use to login (from `/msg`, obviously). Generates a random password if omitted. Users may view and set their password by using the [`my`](Commands.md#my) command.
 
 ### userdel
@@ -91,32 +99,15 @@ Removes a user from PBot. You can use the `account name` field or the `hostmask`
 
 Usage: `userdel <channel> <account name or hostmask>`
 
-#### Admin levels
-This is a list of admin commands allowed by each admin level, by default. You
-can use [`cmdset`](#cmdset) to adjust any command's admin level.
-
-Higher level admins have access to all lower level admin commands.
-
-Note that Plugins may also add new admin commands, so this list may be incomplete
-if you have third-party Plugins loaded.
-
-Level | Commands
---- | ---
-10 | actiontrigger, antispam, whitelist, blacklist, chanlist, ban, unban, mute, unmute, op, deop, voice, devoice, invite, kick, ignore, unignore
-40 | chanset, chanunset, chanadd, chanrem, join, part, mode
-60 | useradd, userdel, userset, userunset, akalink, akaunlink, regset, regunset, regsetmeta, regunsetmeta, regchange, dumpbans
-90 | sl, plug, unplug, replug, load, unload, reload, export, rebuildaliases, refresh, die
-99 | eval
-
 ### userset
-Sets metadata for a user account. You can use the `account name` field or the `hostmask` field that was set via the [`useradd`](#useradd) command. See also: [user metadata list](#user-metadata-list).
+Sets [metadata](#user-metadata-list) or [user-capabilities](#user-capabilities-list) for a user account. You can use the `account name` field or the `hostmask` field that was set via the [`useradd`](#useradd) command. See also: [user metadata list](#user-metadata-list).
 
 If `key` is omitted, it will list all the keys and values that are set.  If `value` is omitted, it will show the value for `key`.
 
 Usage: `userset [channel] <account name or hostmask> [<key> [value]]`
 
 ### userunset
-Deletes a metadata key from a user account.  You can use the `account name` field or the `hostmask` field that was set via the [`useradd`](#useradd) command.
+Deletes a [metadata](#user-metadata-list) or [user-capability](#user-capabilities-list) from a user account.  You can use the `account name` field or the `hostmask` field that was set via the [`useradd`](#useradd) command.
 
 Usage: `userunset [channel] <account name or hostmask> <key>`
 
@@ -126,7 +117,6 @@ This is a list of recognized metadata keys for user accounts.
 Name | Description
 --- | ---
 `name` | A unique name identifying the user account.
-`level` | The privilege level of the user. See [admin levels](#admin-levels).
 `password` | The password for the user account.
 `loggedin` | Whether the user is logged in or not.
 `stayloggedin` | Do not log the user out when they part/quit.
@@ -135,10 +125,12 @@ Name | Description
 `autovoice` | Give the user `voiced` status when they join the channel. *Note: make sure the user account's hostmask wildcards are as restrictive as possible.*
 `location` | Sets your location for using the [`weather`](Commands.md#weather) command without any arguments.
 `timezone` | Sets your timezone for using the [`date`](Commands.md#date) command without any arguments.
+[capabilities](#user-capabilities-list) | User capabilities are managed as user metadata.
 
 ### Listing users
 To list user accounts, use the `list users` command. This is not an admin command, but
-it is included here for completeness.
+it is included here for completeness. Users with a plus (+) sign next their name have
+[user-capabilities](#user-capabilities) set on their account.
 
 Usage: `list users [channel]`
 
@@ -150,6 +142,125 @@ the users for that channel, plus all global users.
 
 When `[channel]` is omitted and the command is used from private message, it will
 list all users from all channels, including global users.
+
+## User capabilities
+PBot uses a user-capability system to control what users can and cannot do.
+
+### cap
+Use the `cap` command to list capabilities, to manage capability groups and to
+see what capabilities a user has.
+
+Usage:
+
+    cap list [capability] |
+    cap group <existing or new capability group> <existing capability> |
+    cap ungroup <existing capability group> <grouped capability> |
+    cap userhas <user> [capability]
+
+#### Listing capabilities
+Use `cap list [capability]` to list user-capabilities.
+
+If `[capability]` is omitted, the command will list all available capabilities.
+
+    <pragma-> cap list
+       <PBot> Capabilities: admin (7 caps), botowner (60 caps), can-ban (1 cap), can-deop (1 cap),
+              can-devoice (1 cap), can-mode-any (53 caps), can-op (1 cap), can-unban (1 cap),
+              chanop (10 caps), can-akalink, can-akaunlink, can-antispam, can-blacklist, ...
+<!-- -->
+    <pragma-> cap list chanop
+       <PBot> Grouped capabilities for chanop: can-ban (1 cap), can-deop (1 cap), can-devoice (1 cap),
+              can-mute (1 cap), can-op (1 cap), can-unban (1 cap), can-unmute (1 cap), can-voice (1 cap),
+              can-invite, can-kick
+<!-- -->
+    <pragma-> cap list can-ban
+       <PBot> Grouped capabilities for can-ban: can-mode-b
+
+#### Grouping capabilities
+Capabilities can be grouped together into a collection, which can then be applied to a user.
+Capability groups can containing nested groups.
+
+In the [listing capabilities](#listing-capabilities) example, the `admin` capability is
+a group containing seven capabilities, including the `chanop` capability group which
+itself contains 10 capabilities.
+
+    <pragma-> cap list admin
+       <PBot> chanop (10 caps), can-join, can-part, can-useradd, can-userdel,
+              can-userset, can-userunset
+
+##### Creating a new group or adding to an existing group
+To create a new capability group or to add capabilities to an existing group,
+use the `cap group` command.
+
+Usage: `cap group <existing or new capability group> <existing capability>`
+
+For example, to create a new capability group called `moderator` who can strictly
+only set `mode +m` or `mode -m` and use the `voice` and `devoice` commands:
+
+    <pragma-> cap group moderator can-voice
+    <pragma-> cap group moderator can-devoice
+    <pragma-> cap group moderator can-mode
+    <pragma-> cap group moderator can-mode-m
+<!-- -->
+    <pragma-> cap list moderator
+       <PBot> Grouped capabilities for moderator: can-devoice (1 cap), can-voice (1 cap),
+              can-mode, can-mode-m
+
+Then you can set this capability group on users with the [`userset`](#userset) command.
+
+##### Removing capabilites from a group or deleting a group
+To remove capabilities from a group or to delete a group, use the `cap ungroup`
+command.
+
+Usage: `cap ungroup <existing capability group> <grouped capability>`
+
+When the last capability is removed from a group, the group itself will be deleted.
+
+#### Giving capabilities to users
+To give capabilities to a user, use the [`useradd`](#useradd) or the [`userset`](#userset) commands.
+
+    <pragma-> useradd alice global alice!*@* moderator
+or
+    <pragma-> userset alice moderator 1
+
+#### Checking user capabilities
+To see what capabilities a user account has, use the `cap userhas` command.
+
+Usage: `cap userhas <user> [capability]`
+
+If the `[capability]` argument is omitted, the command will list all capability
+groups and capabilities the user account has.
+
+If the `[capability]` argument is provided, the command will determine if the
+capability is granted to the user account.
+
+    <pragma-> cap userhas alice
+       <PBot> User aliace has capabilities: moderator (4 caps)
+<!-- -->
+    <pragma-> cap userhas alice can-voice
+       <PBot> Yes. User alice has capability can-voice.
+<!-- -->
+    <pragma-> cap userhas alice can-op
+       <PBot> No. User alice does not have capability can-op.
+
+
+#### User capabilities list
+This is a list of built-in capability groups and capabilities. You can create
+new custom capability groups with the [`cap group`](#creating-a-new-group-or-adding-to-an-existing-group) command.
+
+Please note that PBot is sometimes updated more frequently than this list is updated. To see the most
+current list of capabilities, use the [`cap list`](#listing-capabilities) command.
+
+Name | Description
+--- | ---
+botowner | The most powerful capability group. Contains all capabilities.
+admin | The admin capability group. Contains the basic administrative capabilities.
+chanop | Channel operator capability group. Contains the basic channel management capabilities.
+chanmod | Channel moderator capability group. Grants `can-voice`, `can-devoice` and the use of the `mod` command without being voiced.
+can-<cmd> | If a command `<cmd>` has the `cap-required` [command metadata](#command-metadata-list) then the `can-<cmd>` capability is required to invoke it. For example, the `op` command requires the `can-op` capability.
+can-mode-<letter> | Allows the `mode` command to set mode `<letter>`. For example, to allow a user to set `mode +m` give them the `can-mode` and `can-mode-m` capabilities.
+can-modify-capabilities | Allows the user to use the [`useradd`](#useradd) or [`userset`](#userset) commands to add or remove capabilities from users.
+can-group-capabilities | Allows the user to use the `cap group` command to modify capability groups.
+can-ungroup-capabilities | Allows the user to use the `cap ungroup` command to modify capability groups.
 
 ## Channel management commands
 
@@ -361,7 +472,7 @@ Usage: `cmdunset <command> <key>`
 Name | Description
 --- | ---
 `help` | The text to display for the [`help`](Commands.md#help) command.
-`level` | The admin level of this command. See also [admin-levels](#admin-levels)
+`cap-required` | If this is set to a true value then the command requires that users have the `can-<command name>` capability before they can invoke it.
 
 ## Miscellaneous commands
 
