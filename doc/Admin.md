@@ -177,7 +177,7 @@ If `[capability]` is omitted, the command will list all available capabilities.
 
 #### Grouping capabilities
 Capabilities can be grouped together into a collection, which can then be applied to a user.
-Capability groups can containing nested groups.
+Capability groups can contain nested groups.
 
 In the [listing capabilities](#listing-capabilities) example, the `admin` capability is
 a group containing seven capabilities, including the `chanop` capability group which
