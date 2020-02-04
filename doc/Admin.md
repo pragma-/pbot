@@ -91,7 +91,7 @@ Parameter | Description
 `<account name>` | A unique name to identify this account (usually the `nick` of the user, but it can be any identifier).
 `<channel>` | The channel this user belongs to; use `global` for all channels. This field cannot be changed without removing and re-adding the user.
 `<hostmask>` | The hostmask from which this user is recognized/allowed to login from (e.g., `somenick!*@*.somedomain.com` or `*!*@unaffiliated/someuser`). This field cannot be changed without removing and re-adding the user.
-`[capabilities]` | A comma-separated list of [user-capabilities](#user-capabilities-list) for this user.
+`[capabilities]` | A comma-separated list of [user-capabilities](#user-capabilities) for this user.
 `[password]` | The password the user will use to login (from `/msg`, obviously). Generates a random password if omitted. Users may view and set their password by using the [`my`](Commands.md#my) command.
 
 ### userdel
@@ -125,7 +125,7 @@ Name | Description
 `autovoice` | Give the user `voiced` status when they join the channel. *Note: make sure the user account's hostmask wildcards are as restrictive as possible.*
 `location` | Sets your location for using the [`weather`](Commands.md#weather) command without any arguments.
 `timezone` | Sets your timezone for using the [`date`](Commands.md#date) command without any arguments.
-[capabilities](#user-capabilities-list) | User capabilities are managed as user metadata.
+[capabilities](#user-capabilities-list) | [User-capabilities](#user-capabilities) are managed as user metadata.
 
 ### Listing users
 To list user accounts, use the `list users` command. This is not an admin command, but
@@ -472,7 +472,7 @@ Usage: `cmdunset <command> <key>`
 Name | Description
 --- | ---
 `help` | The text to display for the [`help`](Commands.md#help) command.
-`cap-required` | If this is set to a true value then the command requires that users have the `can-<command name>` capability before they can invoke it.
+`cap-required` | If this is set to a true value then the command requires that users have the `can-<command name>` [capability](#user-capabilities) before they can invoke it.
 
 ## Miscellaneous commands
 
