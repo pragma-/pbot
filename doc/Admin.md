@@ -12,6 +12,7 @@
     * [User metadata list](#user-metadata-list)
   * [Listing users](#listing-users)
 * [User capabilities](#user-capabilities)
+  * [Introduction](#introduction)
   * [cap](#cap)
     * [Listing capabilities](#listing-capabilities)
     * [Grouping capabilities](#grouping-capabilities)
@@ -145,6 +146,54 @@ list all users from all channels, including global users.
 
 ## User capabilities
 PBot uses a user-capability system to control what users can and cannot do.
+
+### Introduction
+
+For example, imagine a user named alice. alice has no capabilities granted yet.
+She tries to use the [`ban`](#banmute) command:
+
+    <alice> !ban somebody
+     <PBot> The ban command requires the can-ban capability, which your user account does not have.
+
+Suppose alice tries to grant herself the can-ban capability:
+
+    <alice> !my can-ban 1
+     <PBot> The can-ban metadata requires the can-modify-capabilities capability, which your user account does not have.
+
+To grant her the `can-ban` capability, a user with the `can-userset` and `can-modifiy-capabilities` capabilities
+can use the [`userset`](#userset) command:
+
+    <bob> !userset alice can-ban 1
+
+Now alice can use the `ban` command.
+
+User-capabilities can provide fine-grained permissions over various PBot functionality. For example,
+consider the [`mode`](#mode) command. Channel operators can use their IRC client's `/mode` command to
+set any channel modes, including any undesirable modes (such as +k). Suppose you'd prefer to limit
+their modes to just a specific subset of all modes. You can do this with user-cabilities. To do so,
+instead of making them channel operators you can make them PBot users and grant them specific PBot
+user-capabilities.
+
+First grant the user the `can-mode` capability so they can use the PBot [`mode`](#mode) command. Then grant them the specific
+`can-mode-<flag>` capabilities. To allow them to set any modes without restriction, grant them the `can-mode-any`
+capability.
+
+See this demonstration:
+
+    <alice> !mode +b test
+     <PBot> The mode command requires the can-mode capability, which your user account does not have.
+      <bob> !userset alice can-mode 1
+    <alice> !mode +b test
+     <PBot> Your user account does not have the can-mode-b capability required to set this mode.
+      <bob> !userset alice can-mode-b 1
+    <alice> !mode +b test
+          * PBot sets mode +b test!*@*
+    <alice> !mode +k lol
+     <PBot> Your user account does not have the can-mode-k capability required to set this mode.
+
+As you can see, user-capabilities can be very flexible and very powerful in configuring your
+channel users. Check out [grouping capabilities](#grouping-capabilities) in the upcoming section
+of this document, as well. Read on!
 
 ### cap
 Use the `cap` command to list capabilities, to manage capability groups and to
