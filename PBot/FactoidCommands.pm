@@ -43,7 +43,6 @@ our %factoid_metadata_capabilities = (
   nooverride                  => 'chanop',
   'cap-override'              => 'botowner',
   'persist-key'               => 'admin',
-  'interpolate'               => 'chanop',
   # all others are allowed to be factset by anybody
 );
 
