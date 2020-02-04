@@ -38,6 +38,8 @@ sub initialize {
 
   # add some basic capabilities
   $self->add('can-modify-capabilities', undef, 1);
+  $self->add('can-add-capabilities',    undef, 1);
+  $self->add('can-remove-capabilities', undef, 1);
 
   # add admin capabilities group
   $self->add('admin', 'chanop',        1); # add chanop capabilities group -- see ChanOpCommands.md
@@ -96,7 +98,6 @@ sub exists {
 
 sub add {
   my ($self, $cap, $subcap, $dontsave) = @_;
-
   if (not defined $subcap) {
     if (not $self->{caps}->exists($cap)) {
       $self->{caps}->add($cap, {}, $dontsave);
@@ -230,6 +231,10 @@ sub capcmd {
       my $subcap = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
       return "Usage: cap add <capability> [sub-capability]" if not defined $cap;
 
+      my $u = $self->{pbot}->{users}->loggedin($from, "$nick!$user\@$host");
+      return "You must be logged into your user account to add capabilities." if not defined $u;
+      return "You must have the can-add-capabilities capability to add capabilities." if not $self->userhas($u, 'can-add-capabilities');
+
       if (not defined $subcap) {
         return "Capability $cap already exists. Did you mean to add a sub-capability to it? Usage: cap add <capability> [sub-capability]" if $self->exists($cap);
         $self->add($cap);
@@ -247,6 +252,10 @@ sub capcmd {
       my $subcap = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
       return "Usage: cap remove <capability> [sub-capability]" if not defined $cap;
       return "No such capability $cap." if not $self->exists($cap);
+
+      my $u = $self->{pbot}->{users}->loggedin($from, "$nick!$user\@$host");
+      return "You must be logged into your user account to remove capabilities." if not defined $u;
+      return "You must have the can-remove-capabilities capability to remove capabilities." if not $self->userhas($u, 'can-remove-capabilities');
 
       if (not defined $subcap) {
         $self->remove($cap);
