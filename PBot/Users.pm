@@ -410,7 +410,7 @@ sub userset {
   }
 
   if ($self->{pbot}->{capabilities}->exists($key) and not $self->{pbot}->{capabilities}->userhas($u, $key)) {
-    return "To set the $key capability your user account must also have it.";
+    return "To set the $key capability your user account must also have it." unless $self->{pbot}->{capabilities}->userhas($u, 'botowner');
   }
 
   my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
@@ -456,7 +456,7 @@ sub userunset {
   }
 
   if (defined $key and $self->{pbot}->{capabilities}->exists($key) and not $self->{pbot}->{capabilities}->userhas($u, $key)) {
-    return "To unset the $key capability your user account must also have it.";
+    return "To unset the $key capability your user account must also have it." unless $self->{pbot}->{capabilities}->userhas($u, 'botowner');
   }
 
   my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
