@@ -219,7 +219,9 @@ When the last capability is removed from a group, the group itself will be delet
 To give capabilities to a user, use the [`useradd`](#useradd) or the [`userset`](#userset) commands.
 
     <pragma-> useradd alice global alice!*@* moderator
+
 or
+
     <pragma-> userset alice moderator 1
 
 #### Checking user capabilities
