@@ -65,8 +65,7 @@ sub register {
   }
 
   # add can-cmd capability
-  $self->{pbot}->{capabilities}->add("can-$name", undef, 1);
-
+  $self->{pbot}->{capabilities}->add("can-$name", undef, 1) if $requires_cap;
   return $ref;
 }
 
