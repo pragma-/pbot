@@ -264,7 +264,7 @@ user account.
 
     <pragma-> my
        <PBot> Usage: my [<key> [value]]; [global] *!*@unaffiliated/pragmatic-chaos keys:
-              autologin => 1; level => 100;  loggedin => 1; name => pragma;
+              autologin => 1; botowner => 1; location => PST, loggedin => 1; name => pragma;
               password => <private>; timezone => los angeles
 
 See also [user metadata list](Admin.md#user-metadata-list).
