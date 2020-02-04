@@ -81,6 +81,7 @@ sub paste_ixio {
   push @{ $ua->requests_redirectable }, 'POST';
   my %post = ('f:1' => $text);
   my $response = $ua->post("http://ix.io", \%post);
+  alarm 1; # LWP::UserAgent::Paranoid kills alarm
   return "error pasting: " . $response->status_line if not $response->is_success;
   my $result = $response->content;
   $result =~ s/^\s+//;
