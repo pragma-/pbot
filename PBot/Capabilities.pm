@@ -162,8 +162,8 @@ sub list {
     $result = 'Capabilities: ';
   } else {
     @caps = sort keys %{$self->{caps}->{hash}->{$capability}};
-    return "Capability $capability has no sub-capabilities." if not @caps or @caps == 1;
-    $result = "Sub-capabilities for $capability: ";
+    return "Capability $capability has no grouped capabilities." if not @caps or @caps == 1;
+    $result = "Grouped capabilities for $capability: ";
   }
 
   # first list all capabilities that have sub-capabilities (i.e. grouped capabilities)
