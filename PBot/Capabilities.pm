@@ -53,17 +53,17 @@ sub has {
   my ($self, $cap, $subcap, $depth) = @_;
   my $cap_data = $self->{caps}->get_data($cap);
   return 0 if not defined $cap_data;
-  return 1 if $cap eq $subcap;
+  return 1 if $cap eq $subcap and $cap_data->{$subcap};
 
   $depth //= 10;
   if (--$depth <= 0) {
-    $self->{pbot}->{logger}->log("Max recursion reached for PBot::Capabilities->has()\n");
+    $self->{pbot}->{logger}->log("Max recursion reached for PBot::Capabilities->has($cap, $subcap)\n");
     return 0;
   }
 
   foreach my $c (keys %{$cap_data}) {
     next if $c eq '_name';
-    return 1 if $c eq $subcap;
+    return 1 if $c eq $subcap and $cap_data->{$c};
     return 1 if $self->has($c, $subcap, $depth);
   }
   return 0;
@@ -75,6 +75,7 @@ sub userhas {
   return 1 if $user->{$cap};
   foreach my $key (keys %{$user}) {
     next if $key eq '_name';
+    next if not $user->{$key};
     return 1 if $self->has($key, $cap);
   }
   return 0;
@@ -110,15 +111,26 @@ sub add {
 }
 
 sub remove {
-  my ($self, $cap) = @_;
+  my ($self, $cap, $subcap) = @_;
   $cap = lc $cap;
-  foreach my $c (keys %{$self->{caps}->{hash}}) {
-    next if $c eq '_name';
-    foreach my $sub_cap (keys %{$self->{caps}->{hash}->{$c}}) {
-      delete $self->{caps}->{hash}->{$c}->{$sub_cap} if $sub_cap eq $cap;
+
+  if (not defined $subcap) {
+    foreach my $c (keys %{$self->{caps}->{hash}}) {
+      next if $c eq '_name';
+      foreach my $sub_cap (keys %{$self->{caps}->{hash}->{$c}}) {
+        delete $self->{caps}->{hash}->{$c}->{$sub_cap} if $sub_cap eq $cap;
+      }
+      if ($c eq $cap) {
+        delete $self->{caps}->{hash}->{$c};
+      }
     }
-    delete $self->{caps}->{hash}->{$c} if $c eq $cap;
+  } else {
+    $subcap = lc $subcap;
+    if (exists $self->{caps}->{hash}->{$cap}) {
+      delete $self->{caps}->{hash}->{$cap}->{$subcap};
+    }
   }
+  $self->{caps}->save;
 }
 
 sub rebuild_botowner_capabilities {
@@ -214,9 +226,36 @@ sub capcmd {
     }
 
     when ('add') {
+      my $cap    = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+      my $subcap = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+      return "Usage: cap add <capability> [sub-capability]" if not defined $cap;
+
+      if (not defined $subcap) {
+        return "Capability $cap already exists. Did you mean to add a sub-capability to it? Usage: cap add <capability> [sub-capability]" if $self->exists($cap);
+        $self->add($cap);
+        return "Capability $cap added.";
+      } else {
+        return "You cannot add a capability to itself." if lc $cap eq lc $subcap;
+        return "No such capability $subcap." if not $self->exists($subcap);
+        $self->add($cap, $subcap);
+        return "Capability $subcap added to $cap.";
+      }
     }
 
     when ('remove') {
+      my $cap    = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+      my $subcap = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+      return "Usage: cap remove <capability> [sub-capability]" if not defined $cap;
+      return "No such capability $cap." if not $self->exists($cap);
+
+      if (not defined $subcap) {
+        $self->remove($cap);
+        return "Capability $cap removed.";
+      } else {
+        return "Capability $cap does not have a $subcap sub-capability." if not $self->has($cap, $subcap);
+        $self->remove($cap, $subcap);
+        return "Capability $subcap removed from $cap.";
+      }
     }
 
     default {
