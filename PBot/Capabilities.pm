@@ -37,8 +37,8 @@ sub initialize {
   # 'cap' command registered in PBot.pm because $self->{pbot}->{commands} is not yet loaded.
 
   # add some basic capabilities
-  $self->add('can-modify-capabilities', undef, 1);
-  $self->add('can-group-capabilities',    undef, 1);
+  $self->add('can-modify-capabilities',  undef, 1);
+  $self->add('can-group-capabilities',   undef, 1);
   $self->add('can-ungroup-capabilities', undef, 1);
 
   # add admin capabilities group
@@ -153,8 +153,8 @@ sub list {
   return "No such capability $capability." if defined $capability and not exists $self->{caps}->{hash}->{$capability};
 
   my @caps;
-  my @cap_group;
-  my @cap_standalone;
+  my @groups;
+  my @standalones;
   my $result;
 
   if (not defined $capability) {
@@ -172,12 +172,12 @@ sub list {
     next if $cap eq '_name';
     my $count = keys(%{$self->{caps}->{hash}->{$cap}}) - 1;
     if ($count > 0) {
-      push @cap_group, "$cap [$count]" if $count;
+      push @groups, "$cap ($count cap" . ($count == 1 ? '' : 's') . ")" if $count;
     } else {
-      push @cap_standalone, $cap;
+      push @standalones, $cap;
     }
   }
-  $result .= join ', ', @cap_group, @cap_standalone;
+  $result .= join ', ', @groups, @standalones;
   return $result;
 }
 
@@ -216,7 +216,7 @@ sub capcmd {
           next if not $self->exists($key);
           my $count = keys (%{$self->{caps}->{hash}->{$key}}) - 1;
           if ($count > 0) {
-            push @groups, "$key [$count]";
+            push @groups, "$key ($count cap" . ($count == 1 ? '' : 's') . ")";
           } else {
             push @single, $key;
           }
