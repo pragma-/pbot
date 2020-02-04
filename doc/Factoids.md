@@ -44,10 +44,10 @@
   * [factmove](#factmove)
   * [factundo](#factundo)
   * [factredo](#factredo)
-* [Factoid Metadata](#factoid-metadata)
+* [Factoid metadata](#factoid-metadata)
   * [factset](#factset)
   * [factunset](#factunset)
-  * [Factoid Metadata List](#factoid-metadata-list)
+  * [Factoid metadata List](#factoid-metadata-list)
 * [Information about factoids](#information-about-factoids)
   * [factfind](#factfind)
   * [factinfo](#factinfo)
@@ -546,7 +546,7 @@ Usage: `factredo [-l [N]] [-r <N>] [channel] <keyword>`
 * `-l [N]` list undo history, optionally starting from `N`
 * `-r <N>` jump to revision `N`
 
-## Factoid Metadata
+## Factoid metadata
 ### factset
 To view or set [factoid metadata](#factoid-metadata-list), such as owner, rate-limit, etc, use the [`factset`](#factset) command.
 
@@ -559,7 +559,7 @@ To unset [factoid metadata](#factoid-metadata-list), use the `factunset` command
 
 Usage: `factunset [channel] <factoid> <key>`
 
-### Factoid Metadata List
+### Factoid metadata List
 This is a list of recognized factoid metadata fields. A [user-capability](Admin.md#user-capabilities) of `none` signifies that anybody can set the field.
 
 Name | Capability | Description
