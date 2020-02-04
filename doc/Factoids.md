@@ -560,39 +560,39 @@ To unset [factoid metadata](#factoid-metadata-list), use the `factunset` command
 Usage: `factunset [channel] <factoid> <key>`
 
 ### Factoid Metadata List
-This is a list of recognized factoid metadata fields. An admin level of `0` signifies that anybody can set the field.
+This is a list of recognized factoid metadata fields. A [user-capability](Admin.md#user-capabilities) of `none` signifies that anybody can set the field.
 
-Name | Admin level | Description
+Name | Capability | Description
 --- | --- | ---
-`action` | 0 | The action to perform or text to display when the factoid is invoked.
-`action_with_args` | 0 | Optional alternate action to perform if any arguments have been supplied when invoking the factoid.
-`usage` | 0 | Prints a usage message when no arguments are provided.
-`help` | 0 | The text to display when the [`help`](Commands.md#help) command is used on this factoid.
-`created_on` | 90 | The timestamp of when the factoid was created.
-`enabled` | 10 | Whether the factoid can be invoked or not. If it is disabled, the command will be silently ignored.
-`last_referenced_in` | 90 | The channel or private-message in which the factoid was last used.
-`last_referenced_on` | 90 | The timestamp of when the factoid was last used.
-`modulelauncher_subpattern` | 90 | A substitution expression used to modify the arguments into a command-line for a module factoid.
-`owner` | 90 | The creator of the factoid. The creator has the ability to lock the factoid, etc.
-`rate_limit` | 10 | The factoid may be invoked only once per this many seconds. `0` for no limit.
-`ref_count` | 90 | How many times the factoid has been invoked in its life-time.
-`ref_user` | 90 | The hostmask of the last person to invoke the factoid.
-`type` | 90 | The type of the factoid. "text" for regular factoid; "module" for module.
-`edited_by` | 90 | The hostmask of the person to last edit the factoid.
-`edited_on` | 90 | The timestamp of when the factoid was last edited.
-`locked` | 10 | If enabled, prevents the factoid from being changed or removed.
-`add_nick` | 10 | Prepends the nick of the person invoking the factoid to the output of the factoid.
-`nooverride` | 10 | Prevents the creation of a factoid with an identical name in a different channel.
-`effective-level` | 20 | The effective admin level at which this factoid executes (i.e., for /kick, etc)
-`persist-key` | 20 | The storage key for allowing code-factoids to persist variables
-`interpolate` | 0 | When set to a false value, `$variables` will not be expanded.
-`keyword_override` | 0 | Once invoked, make PBot think this factoid is a different one.
-`no_keyword_override` | 0 | Ignore the `--keyword-override=...` option.
-`use_output_queue` | 0 | When set to a true value, the output will be delayed by a random number of seconds to simulate reading/typing.
-`locked_to_channel` | 0 | This factoid can only be invoked in the channel in which it was created.
-`allow_empty_args` | 0 | Do not replace empty arguments with `$nick`.
-`require_explicit_args` | 0 | Aliases must have explicit `$args`.
-`preserve_whitespace` | 0 | Do not collapse ajdacent whitespace characters.
+`action` | none | The action to perform or text to display when the factoid is invoked.
+`action_with_args` | none | Optional alternate action to perform if any arguments have been supplied when invoking the factoid.
+`usage` | none | Prints a usage message when no arguments are provided.
+`help` | none | The text to display when the [`help`](Commands.md#help) command is used on this factoid.
+`created_on` | botowner | The timestamp of when the factoid was created.
+`enabled` | chanop | Whether the factoid can be invoked or not. If it is disabled, the command will be silently ignored.
+`last_referenced_in` | botowner | The channel or private-message in which the factoid was last used.
+`last_referenced_on` | botowner | The timestamp of when the factoid was last used.
+`modulelauncher_subpattern` | botowner | A substitution expression used to modify the arguments into a command-line for a module factoid.
+`owner` | botowner | The creator of the factoid. The creator has the ability to lock the factoid, etc.
+`rate_limit` | chanop | The factoid may be invoked only once per this many seconds. `0` for no limit.
+`ref_count` | botowner | How many times the factoid has been invoked in its life-time.
+`ref_user` | botowner | The hostmask of the last person to invoke the factoid.
+`type` | botowner | The type of the factoid. "text" for regular factoid; "module" for module.
+`edited_by` | botowner | The hostmask of the person to last edit the factoid.
+`edited_on` | botowner | The timestamp of when the factoid was last edited.
+`locked` | chanop | If enabled, prevents the factoid from being changed or removed.
+`add_nick` | chanop | Prepends the nick of the person invoking the factoid to the output of the factoid.
+`nooverride` | chanop | Prevents the creation of a factoid with an identical name in a different channel.
+`cap-override` | botowner | Provides a user with the capability specified, just for this factoid invocation.
+`persist-key` | admin | The storage key for allowing code-factoids to persist variables
+`interpolate` | none | When set to a false value, `$variables` will not be expanded.
+`keyword_override` | none | Once invoked, make PBot think this factoid is a different one.
+`no_keyword_override` | none | Ignore the `--keyword-override=...` option.
+`use_output_queue` | none | When set to a true value, the output will be delayed by a random number of seconds to simulate reading/typing.
+`locked_to_channel` | none | This factoid can only be invoked in the channel in which it was created.
+`allow_empty_args` | none | Do not replace empty arguments with `$nick`.
+`require_explicit_args` | none | Aliases must have explicit `$args`.
+`preserve_whitespace` | none | Do not collapse ajdacent whitespace characters.
 
 ## Information about factoids
 ### factfind
