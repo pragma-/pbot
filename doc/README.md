@@ -44,8 +44,6 @@
     * [date](Commands.md#date)
     * [weather](Commands.md#weather)
   * [Commands documented elsewhere](Commands.md#commands-documented-elsewhere)
-    * [Administrative commands](Commands.md#administrative-commands)
-    * [Factoid commands](Commands.md#factoid-commands)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
 * [Administrative](Admin.md#administrative)
@@ -58,6 +56,8 @@
     * [userset](Admin.md#userset)
     * [userunset](Admin.md#userunset)
     * [Listing users](Admin.md#listing-users)
+  * [User capabilities](Admin.md#user-capabilities)
+    * [cap](Admin.md#cap)
   * [Channel management commands](Admin.md#channel-management-commands)
     * [join](Admin.md#join)
     * [part](Admin.md#part)
@@ -232,8 +232,8 @@
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
 * [Frequently Asked Questions](FAQ.md#frequently-asked-questions)
-  * [How do I change my password?](FAQ.md#how-do-i-change-my-password)
-  * [How do I make PBot remember my `date` timezone?](FAQ.md#how-do-i-make-pbot-remember-my-date-timezone)
-  * [How do I make PBot remember my `weather` location?](FAQ.md#how-do-i-make-pbot-remember-my-weather-location)
-  * [How do I change the bot trigger?](FAQ.md#how-do-i-change-the-bot-trigger)
+    * [How do I change my password?](FAQ.md#how-do-i-change-my-password)
+    * [How do I make PBot remember my `date` timezone?](FAQ.md#how-do-i-make-pbot-remember-my-date-timezone)
+    * [How do I make PBot remember my `weather` location?](FAQ.md#how-do-i-make-pbot-remember-my-weather-location)
+    * [How do I change the bot trigger?](FAQ.md#how-do-i-change-the-bot-trigger)
 <!-- md-toc-end -->
