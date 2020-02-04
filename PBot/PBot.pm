@@ -376,7 +376,6 @@ sub listcmd {
         foreach my $key (keys %{$self->{users}->{users}->{hash}->{$channel}->{$hostmask}}) {
           next if $key eq '_name';
           if ($self->{capabilities}->exists($key)) {
-            print "has $key?\n";
             $has_cap = 1;
             last;
           }
