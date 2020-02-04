@@ -21131,6 +21131,19 @@
          "ref_user" : "nobody",
          "type" : "text"
       },
+      "users" : {
+         "_name" : "users",
+         "action" : "/call list users",
+         "created_on" : 1580466619.68236,
+         "enabled" : 1,
+         "last_referenced_in" : "##pragma-",
+         "last_referenced_on" : 1580705420.8709,
+         "owner" : "pragma-!~chaos@unaffiliated/pragmatic-chaos",
+         "rate_limit" : "15",
+         "ref_count" : "9",
+         "ref_user" : "pragma-!~chaos@unaffiliated/pragmatic-chaos",
+         "type" : "text"
+      },
       "uses" : {
          "_name" : "uses",
          "action" : "/call 8ball",
