@@ -236,7 +236,7 @@ If the `[capability]` argument is provided, the command will determine if the
 capability is granted to the user account.
 
     <pragma-> cap userhas alice
-       <PBot> User aliace has capabilities: moderator (4 caps)
+       <PBot> User alice has capabilities: moderator (4 caps)
 <!-- -->
     <pragma-> cap userhas alice can-voice
        <PBot> Yes. User alice has capability can-voice.
