@@ -167,7 +167,7 @@ can use the [`userset`](#userset) command:
 
 Now alice can use the `ban` command.
 
-User-capabilities can provide fine-grained permissions over various PBot functionality. For example,
+User-capabilities provides fine-grained permissions over various PBot functionality. For example,
 consider the [`mode`](#mode) command. Channel operators can use their IRC client's `/mode` command to
 set any channel modes, including any undesirable modes (such as +k). Suppose you'd prefer to limit
 their modes to just a specific subset of all modes. You can do this with user-cabilities. To do so,
@@ -307,12 +307,12 @@ Name | Description
 `admin` | The admin capability group. Contains the basic administrative capabilities.
 `chanop` | Channel operator capability group. Contains the basic channel management capabilities.
 `chanmod` | Channel moderator capability group. Grants `can-voice`, `can-devoice` and the use of the `mod` command without being voiced.
-`can-<command name>` | If a command `<command name>` has the `cap-required` [command metadata](#command-metadata-list) then the user's account must have the `can-<command name>` capability to invoke it. For example, the `op` command requires users to have the `can-op` capability.
-`can-mode-<flag>` | Allows the `mode` command to set mode `<flag>`. For example, to allow a user to set `mode +m` give them the `can-mode` and `can-mode-m` capabilities. `<flag>` is one mode character.
-`can-mode-any` | Allows the `mode` command to set any mode flag.
+`can-<command name>` | If a command `<command name>` has the `cap-required` [command metadata](#command-metadata-list) then the user's account must have the `can-<command name>` capability to invoke it. For example, the [`op`](#op) command requires users to have the `can-op` capability.
+`can-mode-<flag>` | Allows the [`mode`](#mode) command to set mode `<flag>`. For example, to allow a user to set `mode +m` give them the `can-mode` and `can-mode-m` capabilities. `<flag>` is one mode character.
+`can-mode-any` | Allows the [`mode`](#mode) command to set any mode flag.
 `can-modify-capabilities` | Allows the user to use the [`useradd`](#useradd) or [`userset`](#userset) commands to add or remove capabilities from users.
-`can-group-capabilities` | Allows the user to use the `cap group` command to modify capability groups.
-`can-ungroup-capabilities` | Allows the user to use the `cap ungroup` command to modify capability groups.
+`can-group-capabilities` | Allows the user to use the [`cap group`](#cap) command to modify capability groups.
+`can-ungroup-capabilities` | Allows the user to use the [`cap ungroup`](#cap) command to modify capability groups.
 
 ## Channel management commands
 

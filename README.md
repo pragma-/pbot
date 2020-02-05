@@ -190,7 +190,7 @@ There are even a few games!
 
 Plugin | Description
 --- | ---
-[Spinach](Plugins/Spinach.pm) | An advanced multiplayer Trivia game engine with a twist! A question is shown, everybody privately submits a false answer, all false answers and the true answer is shown, everybody tries to guess the true answer, points are gained when people pick your false answer!
+[Spinach](Plugins/Spinach.pm) | An advanced multiplayer Trivia game engine with a twist! A question is shown. Everybody privately submits a false answer. All false answers and the true answer is shown. Everybody tries to guess the true answer. Points are gained when people pick your false answer!
 [Battleship](Plugins/Battleship.pm) | The classic Battleship board game, simplified for IRC
 [Connect4](Plugins/Connect4.pm) | The classic Connect-4 game.
 
@@ -291,7 +291,7 @@ PBot can perform the typical channel management tasks.
 * spam/advertisement detection
 * and much, much more!
 
-For more information, see the [Channels documentation](doc/Admin.md#channel-management-commands) and the [AntiAbuse documentation](doc/AntiAbuse.md)
+For more information, see the [Channels documentation](doc/Admin.md#channel-management-commands) and the [Anti-abuse documentation](doc/AntiAbuse.md)
 
 ### User management
 
