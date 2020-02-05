@@ -39,7 +39,7 @@ sub initialize {
 sub regset {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my $usage = "Usage: regset <section>.<item> <value>";
+  my $usage = "Usage: regset <section>.<item> [value]";
 
   # support "<section>.<key>" syntax in addition to "<section> <key>"
   my $section = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // return $usage;
@@ -51,11 +51,15 @@ sub regset {
     ($item, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
   }
 
-  if (not defined $section or not defined $item or not defined $value) {
+  if (not defined $section or not defined $item) {
     return $usage;
   }
 
-  $self->{pbot}->{registry}->add('text', $section, $item, $value);
+  if (defined $value) {
+    $self->{pbot}->{registry}->add('text', $section, $item, $value);
+  } else {
+    return $self->{pbot}->{registry}->set($section, $item, 'value');
+  }
 
   $self->{pbot}->{logger}->log("$nick!$user\@$host set registry entry [$section] $item => $value\n");
   return "$section.$item set to $value";
