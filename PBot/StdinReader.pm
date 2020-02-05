@@ -61,7 +61,7 @@ sub stdin_reader {
     $from = $1;
     $text = $self->{pbot}->{registry}->get_value('irc', 'botnick') . " $2";
   } else {
-    $from = $self->{pbot}->{registry}->get_value('irc', 'botnick') . "!stdin\@pbot";
+    $from = 'stdin@pbot';
     $text = $self->{pbot}->{registry}->get_value('irc', 'botnick') . " $input";
   }
   return $self->{pbot}->{interpreter}->process_line($from, $self->{pbot}->{registry}->get_value('irc', 'botnick'), "stdin", "pbot", $text);

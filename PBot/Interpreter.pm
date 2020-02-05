@@ -200,7 +200,7 @@ sub interpret {
   my $text;
   my $pbot = $self->{pbot};
 
-  $pbot->{logger}->log("=== Enter interpret_command: [" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "][$stuff->{nick}!$stuff->{user}\@$stuff->{host}][$stuff->{interpret_depth}][$stuff->{command}]\n");
+  $pbot->{logger}->log("=== [$stuff->{interpret_depth}] Got command: (" . (defined $stuff->{from} ? $stuff->{from} : "undef") . ") $stuff->{nick}!$stuff->{user}\@$stuff->{host}: $stuff->{command}\n");
 
   $stuff->{special} = "" unless exists $self->{special};
 
@@ -302,7 +302,7 @@ sub interpret {
       };
       $self->add_message_to_output_queue($stuff->{from}, $message, $delay);
       $delay = duration($delay);
-      $self->{pbot}->{logger}->log("Final result ($delay delay) [$message->{message}]\n");
+      $self->{pbot}->{logger}->log("($delay delay) [$message->{message}]\n");
       return undef;
     }
   }
@@ -776,9 +776,7 @@ sub handle_result {
     $self->{pbot}->{logger}->log(Dumper $stuff);
   }
 
-  if (not defined $result or length $result == 0) {
-    return 0;
-  }
+  return 0 if not defined $result or length $result == 0;
 
   if ($result =~ s#^(/say|/me) ##) {
     $stuff->{prepend} = $1;
@@ -889,7 +887,7 @@ sub handle_result {
         };
         $self->add_message_to_output_queue($stuff->{from}, $message, 0);
       } else {
-        $self->{pbot}->{conn}->privmsg($stuff->{from}, "And that's all I have to say about that. See $link for full text.");
+        $self->{pbot}->{conn}->privmsg($stuff->{from}, "And that's all I have to say about that. See $link for full text.") unless $stuff->{from} =~ /stdin\@pbot$/;
       }
       last;
     }
@@ -908,11 +906,11 @@ sub handle_result {
       };
       $self->add_message_to_output_queue($stuff->{from}, $message, $delay);
       $delay = duration($delay);
-      $self->{pbot}->{logger}->log("Final result ($delay delay) [$line]\n");
+      $self->{pbot}->{logger}->log("($delay delay) $line\n");
     } else {
       $stuff->{line} = $line;
       $self->output_result($stuff);
-      $self->{pbot}->{logger}->log("Final result: [$line]\n");
+      $self->{pbot}->{logger}->log("$line\n");
     }
   }
   $self->{pbot}->{logger}->log("---------------------------------------------\n");
@@ -933,6 +931,7 @@ sub output_result {
   my $line = $stuff->{line};
 
   return if not defined $line or not length $line;
+  return 0 if $stuff->{from} =~ /stdin\@pbot$/;
 
   if ($line =~ s/^\/say\s+//i) {
     if (defined $stuff->{nickoverride} and ($stuff->{no_nickoverride} == 0 or $stuff->{force_nickoverride} == 1)) {
