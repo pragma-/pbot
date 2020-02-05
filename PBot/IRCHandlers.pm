@@ -243,7 +243,7 @@ sub on_mode {
     $mode_char = $char;
     $target = $event->{event}->{args}[++$i];
 
-    $self->{pbot}->{logger}->log("Mode $channel [$mode $target] by $nick!$user\@$host\n");
+    $self->{pbot}->{logger}->log("Mode $channel [$mode" . (length $target ? " $target" : '') . "] by $nick!$user\@$host\n");
 
     if ($mode eq "-b" or $mode eq "+b" or $mode eq "-q" or $mode eq "+q") {
       $self->{pbot}->{bantracker}->track_mode("$nick!$user\@$host", $mode, $target, $channel);
