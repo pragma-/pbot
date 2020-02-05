@@ -796,8 +796,10 @@ sub devalidate_accounts {
 
 sub check_bans {
   my ($self, $message_account, $mask, $channel, $dry_run) = @_;
-
   $channel = lc $channel;
+
+  my $user = $self->{pbot}->{users}->loggedin($channel, $mask);
+  return 0 if $self->{pbot}->{capabilities}->userhas($user, 'botowner');
 
   if (not $self->{pbot}->{chanops}->can_gain_ops($channel)) {
     $self->{pbot}->{logger}->log("anti-flood: [check-ban] I do not have ops for $channel, ignoring possible ban evasions.\n");
