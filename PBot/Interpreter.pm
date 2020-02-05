@@ -302,7 +302,7 @@ sub interpret {
       };
       $self->add_message_to_output_queue($stuff->{from}, $message, $delay);
       $delay = duration($delay);
-      $self->{pbot}->{logger}->log("($delay delay) [$message->{message}]\n");
+      $self->{pbot}->{logger}->log("($delay delay) $message->{message}\n");
       return undef;
     }
   }
@@ -887,7 +887,7 @@ sub handle_result {
         };
         $self->add_message_to_output_queue($stuff->{from}, $message, 0);
       } else {
-        $self->{pbot}->{conn}->privmsg($stuff->{from}, "And that's all I have to say about that. See $link for full text.") unless $stuff->{from} =~ /stdin\@pbot$/;
+        $self->{pbot}->{conn}->privmsg($stuff->{from}, "And that's all I have to say about that. See $link for full text.") unless $stuff->{from} eq 'stdin@pbot';
       }
       last;
     }
@@ -931,7 +931,7 @@ sub output_result {
   my $line = $stuff->{line};
 
   return if not defined $line or not length $line;
-  return 0 if $stuff->{from} =~ /stdin\@pbot$/;
+  return 0 if $stuff->{from} eq 'stdin\@pbot';
 
   if ($line =~ s/^\/say\s+//i) {
     if (defined $stuff->{nickoverride} and ($stuff->{no_nickoverride} == 0 or $stuff->{force_nickoverride} == 1)) {
