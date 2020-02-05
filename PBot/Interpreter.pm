@@ -931,7 +931,7 @@ sub output_result {
   my $line = $stuff->{line};
 
   return if not defined $line or not length $line;
-  return 0 if $stuff->{from} eq 'stdin\@pbot';
+  return 0 if $stuff->{from} eq 'stdin@pbot';
 
   if ($line =~ s/^\/say\s+//i) {
     if (defined $stuff->{nickoverride} and ($stuff->{no_nickoverride} == 0 or $stuff->{force_nickoverride} == 1)) {
