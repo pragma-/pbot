@@ -86,16 +86,18 @@ sub generic_command {
     if not $self->{pbot}->{chanops}->can_gain_ops($channel);
   return "Voiced moderation is not enabled for this channel. Use `regset $channel.restrictedmod 1` to enable."
     if not $self->{pbot}->{registry}->get_value($channel, 'restrictedmod');
+
   my $hostmask = "$stuff->{nick}!$stuff->{user}\@$stuff->{host}";
-  my $admin = $self->{pbot}->{users}->loggedin_admin($channel, $hostmask);
+  my $user = $self->{pbot}->{users}->loggedin($channel, $hostmask) // { admin => 0, chanmod => 0};
   my $voiced = $self->{pbot}->{nicklist}->get_meta($channel, $stuff->{nick}, '+v');
-  return "You must be voiced (usermode +v) or an admin to use this command." if not $voiced and not $admin;
+
+  if (not $voiced and not $self->{pbot}->{capabilities}->userhas($user, 'admin')
+      and not $self->{pbot}->{capabilities}->userhas($user, 'chanmod')) {
+    return "You must be voiced (usermode +v) or have the admin or chanmod capability to use this command.";
+  }
 
   my $target = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
-
-  if (not defined $target) {
-    return "Missing target. Usage: mod $command <nick>";
-  }
+  return "Missing target. Usage: mod $command <nick>" if not defined $target;
 
   if ($command eq 'unban') {
     my $reason = $self->{pbot}->{chanops}->checkban($channel, $target);
