@@ -183,9 +183,35 @@ sub capcmd {
       return $self->list($cap);
     }
 
+    when ('whohas') {
+      my $cap = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+      return "Usage: cap whohas <capability>; Lists all users who have <capability>" if not defined $cap;
+      return "No such capability $cap." if not $self->exists($cap);
+      my $result = "Users with capability $cap: ";
+      my $matched = 0;
+      my $users = $self->{pbot}->{users}->{users}->{hash};
+      foreach my $channel (sort keys %$users) {
+        my @matches;
+        next if $channel eq '_name';
+        foreach my $hostmask (sort keys %{$users->{$channel}}) {
+          next if $hostmask eq '_name';
+          my $u = $users->{$channel}->{$hostmask};
+          push @matches, $u->{name} if $self->userhas($u, $cap);
+        }
+        if (@matches) {
+          $result .= '; ' if $matched;
+          $result .= $users->{$channel}->{_name} eq '.*' ? '' : "$channel: ";
+          $result .= join ', ', @matches;
+          $matched = 1;
+        }
+      }
+      $result .= 'nobody' if not $matched;
+      return $result;
+    }
+
     when ('userhas') {
       my ($hostmask, $cap) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
-      return "Usage: cap userhas <user> [capability]" if not defined $hostmask;
+      return "Usage: cap userhas <user> [capability]; Lists capabilities belonging to <user>" if not defined $hostmask;
       $cap = lc $cap if defined $cap;
 
       my $u = $self->{pbot}->{users}->find_user('.*', $hostmask);
@@ -253,7 +279,7 @@ sub capcmd {
     }
 
     default {
-      $result = "Usage: cap list [capability] | cap group <existing or new capability group> <existing capability> | cap ungroup <existing capability group> <grouped capability> | cap userhas <user> [capability]";
+      $result = "Usage: cap list [capability] | cap group <existing or new capability group> <existing capability> | cap ungroup <existing capability group> <grouped capability> | cap userhas <user> [capability] | cap whohas <capability>";
     }
   }
   return $result;
