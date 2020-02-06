@@ -315,8 +315,11 @@ Name | Description | Belongs to group
 `can-ungroup-capabilities` | Allows the user to use the [`cap ungroup`](#cap) command to modify capability groups. | botowner
 `can-clear-bans` | Allows the user to use [`unban *`](#unbanunmute) to clear a channel's bans. | botowner, admin
 `can-clear-mutes` | Allows the user to use [`unmute *`](#unbanunmute) to clear a channel's mutes. | botowner, admin
-## Channel management commands
+`can-kick-wildcard` | Allows the user to use wildcards with the [`kick`](#kick) command. | botowner, admin
+`can-op-wildcard` | Allows the user to use wildcards with the [`op`](#op) command. | botowner, admin
+`can-voice-wildcard` | Allows the user to use wildcards with the [`voice`](#voice) command. | botowner, chanop, chanmod
 
+## Channel management commands
 ### join
 To temporarily join a channel, use the `join` command. The channels may be a comma-
 separated list.
