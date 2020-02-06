@@ -81,6 +81,16 @@ sub initialize {
   $self->{pbot}->{capabilities}->add('admin', 'can-clear-bans',  1);
   $self->{pbot}->{capabilities}->add('admin', 'can-clear-mutes', 1);
 
+  # allows users to use wildcards in command
+  $self->{pbot}->{capabilities}->add('can-op-wildcard',    undef, 1);
+  $self->{pbot}->{capabilities}->add('can-voice-wildcard', undef, 1);
+  $self->{pbot}->{capabilities}->add('can-kick-wildcard',  undef, 1);
+
+  $self->{pbot}->{capabilities}->add('admin',   'can-kick-wildcard',  1);
+  $self->{pbot}->{capabilities}->add('admin',   'can-op-wildcard',    1);
+  $self->{pbot}->{capabilities}->add('admin',   'can-voice-wildcard', 1);
+  $self->{pbot}->{capabilities}->add('chanmod', 'can-voice-wildcard', 1);
+
   $self->{invites} = {}; # track who invited who in order to direct invite responses to them
 
   # handle invite responses
@@ -284,6 +294,17 @@ sub mode {
         return "I have no nicklist for channel $channel; cannot use wildcard.";
       }
 
+      my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+      if ($mode eq 'v') {
+        if (not $self->{pbot}->{capabilities}->userhas($u, 'can-voice-wildcard')) {
+          return "/msg $nick Using wildcards with `mode +v` requires the can-voice-wildcard capability, which your user account does not have.";
+        }
+      } else {
+        if (not $self->{pbot}->{capabilities}->userhas($u, 'can-op-wildcard')) {
+          return "/msg $nick Using wildcards with `mode +o` requires the can-op-wildcard capability, which your user account does not have.";
+        }
+      }
+
       foreach my $n (keys %{$self->{pbot}->{nicklist}->{nicklist}->{$channel}}) {
         if ($n =~ m/^$q_target$/) {
           my $nick_data = $self->{pbot}->{nicklist}->{nicklist}->{$channel}->{$n};
@@ -475,7 +496,7 @@ sub unban_user {
     if ($t eq '*') {
       my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
       if (not $self->{pbot}->{capabilities}->userhas($u, 'can-clear-bans')) {
-        return "Clearing the channel bans requires the can-clear-bans capability, which your user account does not have.";
+        return "/msg $nick Clearing the channel bans requires the can-clear-bans capability, which your user account does not have.";
       }
       $channel = lc $channel;
       if (exists $self->{pbot}->{bantracker}->{banlist}->{$channel} && exists $self->{pbot}->{bantracker}->{banlist}->{$channel}->{'+b'}) {
@@ -609,7 +630,7 @@ sub unmute_user {
     if ($t eq '*') {
       my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
       if (not $self->{pbot}->{capabilities}->userhas($u, 'can-clear-mutes')) {
-        return "Clearing the channel mutes requires the can-clear-mutes capability, which your user account does not have.";
+        return "/msg $nick Clearing the channel mutes requires the can-clear-mutes capability, which your user account does not have.";
       }
       $channel = lc $channel;
       if (exists $self->{pbot}->{bantracker}->{banlist}->{$channel} && exists $self->{pbot}->{bantracker}->{banlist}->{$channel}->{'+q'}) {
@@ -686,6 +707,11 @@ sub kick_user {
 
       if (not exists $self->{pbot}->{nicklist}->{nicklist}->{$channel}) {
         return "I have no nicklist for channel $channel; cannot use wildcard.";
+      }
+
+      my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+      if (not $self->{pbot}->{capabilities}->userhas($u, 'can-kick-wildcard')) {
+        return "/msg $nick Using wildcards with `kick` requires the can-kick-wildcard capability, which your user account does not have.";
       }
 
       foreach my $nl (keys %{$self->{pbot}->{nicklist}->{nicklist}->{$channel}}) {
