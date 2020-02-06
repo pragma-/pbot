@@ -40,7 +40,11 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { return $self->userunset(@_)  },  "userunset",  1);
   $self->{pbot}->{commands}->register(sub { return $self->mycmd(@_)      },  "my",         0);
 
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.join',  sub { $self->on_join(@_) });
+  $self->{pbot}->{capabilities}->add('admin', 'can-useradd',   1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-userdel',   1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-userset',   1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-userunset', 1);
+  $self->{pbot}->{capabilities}->add('can-modify-admins', undef, 1);
 }
 
 sub on_join {
@@ -93,7 +97,7 @@ sub add_user {
     password => $password
   };
 
-  foreach my $cap (split /\s*,\s*/, $capabilities) {
+  foreach my $cap (split /\s*,\s*/, lc $capabilities) {
     next if $cap eq 'none';
     $data->{$cap} = 1;
   }
@@ -349,11 +353,14 @@ sub useradd {
     return "Your user account does not have the can-modify-capabilities capability. You cannot create user accounts with capabilities.";
   }
 
-  foreach my $cap (split /\s*,\s*/, $capabilities) {
+  foreach my $cap (split /\s*,\s*/, lc $capabilities) {
     next if $cap eq 'none';
     return "There is no such capability $cap." if not $self->{pbot}->{capabilities}->exists($cap);
     if (not $self->{pbot}->{capabilities}->userhas($u, $cap)) {
       return "To set the $cap capability your user account must also have it.";
+    }
+    if ($self->{pbot}->{capabilities}->has($cap, 'admin') and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-admins')) {
+      return "To set the $cap capability your user account must have the can-modify-admins capability.";
     }
   }
   $self->{pbot}->{users}->add_user($name, $channel, $hostmask, $capabilities, $password);
@@ -367,6 +374,17 @@ sub userdel {
 
   if (not defined $channel or not defined $hostmask) {
     return "Usage: userdel <channel> <hostmask or account name>";
+  }
+
+  my $u = $self->find_user($channel, "$nick!$user\@$host");
+  my $t = $self->find_user($channel, $hostmask);
+
+  if ($self->{pbot}->{capabilities}->userhas($t, 'botowner') and not $self->{pbot}->{capabilities}->userhas($u, 'botowner')) {
+    return "Only botowners may delete botowner user accounts.";
+  }
+
+  if ($self->{pbot}->{capabilities}->userhas($t, 'admin') and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-admins')) {
+    return "To delete admin user accounts your user account must have the can-modify-admins capability.";
   }
 
   my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
@@ -409,6 +427,10 @@ sub userset {
     }
   }
 
+  if (defined $value and $self->{pbot}->{capabilities}->userhas($target, 'admin') and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-admins')) {
+    return "To modify admin user accounts your user account must have the can-modify-admins capability.";
+  }
+
   if ($self->{pbot}->{capabilities}->exists($key) and not $self->{pbot}->{capabilities}->userhas($u, $key)) {
     return "To set the $key capability your user account must also have it." unless $self->{pbot}->{capabilities}->userhas($u, 'botowner');
   }
@@ -433,7 +455,7 @@ sub userunset {
     return "Usage: userunset [channel] <hostmask or account name> <key>";
   }
 
-  my $u = $self->find_admin($channel, "$nick!$user\@$host");
+  my $u = $self->find_user($channel, "$nick!$user\@$host");
   my $target = $self->find_user($channel, $hostmask);
 
   if (not $u) {
@@ -453,6 +475,10 @@ sub userunset {
     if ($key =~ m/^can-/i or $self->{pbot}->{capabilities}->exists($key)) {
       return "The $key metadata requires the can-modify-capabilities capability, which your user account does not have.";
     }
+  }
+
+  if (defined $key and $self->{pbot}->{capabilities}->userhas($target, 'admin') and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-admins')) {
+    return "To modify admin user accounts your user account must have the can-modify-admins capability.";
   }
 
   if (defined $key and $self->{pbot}->{capabilities}->exists($key) and not $self->{pbot}->{capabilities}->userhas($u, $key)) {
@@ -500,17 +526,25 @@ sub mycmd {
 
   if (defined $key) {
     $key = lc $key;
-
-    if (defined $value and not $self->{pbot}->{capabilities}->userhas($u, 'admin')) {
-      my @disallowed = qw/name autoop autovoice/;
-      if (grep { $_ eq $key } @disallowed) {
-        return "The $key metadata requires the admin capability to set, which your user account does not have.";
+    if (defined $value) {
+      if (not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-capabilities')) {
+        if ($key =~ m/^can-/ or $self->{pbot}->{capabilities}->exists($key)) {
+          return "The $key metadata requires the can-modify-capabilities capability, which your user account does not have.";
+        }
       }
-    }
 
-    if (defined $value and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-capabilities')) {
-      if ($key =~ m/^can-/ or $self->{pbot}->{capabilities}->exists($key)) {
-        return "The $key metadata requires the can-modify-capabilities capability, which your user account does not have.";
+      if (not $self->{pbot}->{capabilities}->userhas($u, 'botowner')) {
+        my @disallowed = qw/can-modify-admins botowner can-modify-capabilities/;
+        if (grep { $_ eq $key } @disallowed) {
+          return "The $key metadata requires the botowner capability to set, which your user account does not have.";
+        }
+      }
+
+      if (not $self->{pbot}->{capabilities}->userhas($u, 'admin')) {
+        my @disallowed = qw/name autoop autovoice/;
+        if (grep { $_ eq $key } @disallowed) {
+          return "The $key metadata requires the admin capability to set, which your user account does not have.";
+        }
       }
     }
   } else {

@@ -36,19 +36,10 @@ sub initialize {
   $self->{caps}->load;
   # 'cap' command registered in PBot.pm because $self->{pbot}->{commands} is not yet loaded.
 
-  # add some basic capabilities
+  # add some capabilities used in this file
   $self->add('can-modify-capabilities',  undef, 1);
   $self->add('can-group-capabilities',   undef, 1);
   $self->add('can-ungroup-capabilities', undef, 1);
-
-  # add capabilites to admin capabilities group
-  $self->add('admin', 'chanop',        1); # add chanop capabilities group to admin group -- see ChanOpCommands.md
-  $self->add('admin', 'can-useradd',   1);
-  $self->add('admin', 'can-userdel',   1);
-  $self->add('admin', 'can-userset',   1);
-  $self->add('admin', 'can-userunset', 1);
-  $self->add('admin', 'can-mode',      1);
-  $self->add('admin', 'can-mode-any',  1);
 }
 
 sub has {

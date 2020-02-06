@@ -61,7 +61,7 @@ sub initialize {
   }
   $self->{pbot}->{capabilities}->add('can-mode-any', 'can-mode', 1);
 
-  # create chanop capabilities group
+  # add to chanop capabilities group
   $self->{pbot}->{capabilities}->add('chanop', 'can-ban',     1);
   $self->{pbot}->{capabilities}->add('chanop', 'can-unban',   1);
   $self->{pbot}->{capabilities}->add('chanop', 'can-mute',    1);
@@ -72,6 +72,11 @@ sub initialize {
   $self->{pbot}->{capabilities}->add('chanop', 'can-voice',   1);
   $self->{pbot}->{capabilities}->add('chanop', 'can-devoice', 1);
   $self->{pbot}->{capabilities}->add('chanop', 'can-invite',  1);
+
+  # add to admin capability group
+  $self->{pbot}->{capabilities}->add('admin', 'chanop',       1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-mode',     1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-mode-any', 1);
 
   # allow users to use !unban * or !unmute *
   $self->{pbot}->{capabilities}->add('can-clear-bans',  undef, 1);
@@ -297,11 +302,11 @@ sub mode {
       my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
       if ($mode eq 'v') {
         if (not $self->{pbot}->{capabilities}->userhas($u, 'can-voice-wildcard')) {
-          return "/msg $nick Using wildcards with `mode +v` requires the can-voice-wildcard capability, which your user account does not have.";
+          return "/msg $nick Using wildcards with `mode v` requires the can-voice-wildcard capability, which your user account does not have.";
         }
       } else {
         if (not $self->{pbot}->{capabilities}->userhas($u, 'can-op-wildcard')) {
-          return "/msg $nick Using wildcards with `mode +o` requires the can-op-wildcard capability, which your user account does not have.";
+          return "/msg $nick Using wildcards with `mode o` requires the can-op-wildcard capability, which your user account does not have.";
         }
       }
 
