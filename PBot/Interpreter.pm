@@ -919,17 +919,16 @@ sub handle_result {
 
 sub dehighlight_nicks {
   my ($self, $line, $channel) = @_;
-  $channel = lc $channel;
-  my $nicklist = $self->{pbot}->{nicklist}->{nicklist};
-  return $line if not exists $nicklist->{$channel};
-  my $zwsp = "\x{200b}";
-  foreach my $nick (keys %{$nicklist->{$channel}}) {
-    my $n = quotemeta $nicklist->{$channel}->{$nick}->{nick};
+  return $line if $self->{pbot}->{registry}->get_value('general', 'no_dehighlight_nicks');
+  my @nicks = $self->{pbot}->{nicklist}->get_nicks($channel);
+  return $line if not @nicks;
+  foreach my $nick (@nicks) {
+    $nick = quotemeta $nick;
     my $const_line = $line;
-    while ($const_line =~ m/($n)/gi) {
+    while ($const_line =~ m/(?<![^\W_])($nick)(?![^\W_])/gi) {
       my $match = $1;
-      $match =~ s/^(.)/$1$zwsp/;
-      $line =~ s/$n/$match/i;
+      $match =~ s/^(.)/$1\x{200b}/;
+      $line =~ s/$nick/$match/i;
     }
   }
   return $line;
