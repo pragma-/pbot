@@ -45,6 +45,8 @@ sub initialize {
   $self->{pbot}->{capabilities}->add('admin', 'can-userset',   1);
   $self->{pbot}->{capabilities}->add('admin', 'can-userunset', 1);
   $self->{pbot}->{capabilities}->add('can-modify-admins', undef, 1);
+
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.join',  sub { $self->on_join(@_) });
 }
 
 sub on_join {
