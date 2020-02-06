@@ -25,7 +25,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 }
 
 # expands stuff like "7d3h" to "7 days and 3 hours"

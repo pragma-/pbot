@@ -28,7 +28,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat',           $conf{antirepeat}           // 1);
   $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat_threshold', $conf{antirepeat_threshold} // 2.5);

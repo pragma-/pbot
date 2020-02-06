@@ -27,7 +27,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{pbot}->{commands}->register(sub { $self->counteradd(@_)      }, 'counteradd',      0);
   $self->{pbot}->{commands}->register(sub { $self->counterdel(@_)      }, 'counterdel',      0);

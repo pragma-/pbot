@@ -32,7 +32,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot}    = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{nicklist} = {};
   $self->{pbot}->{registry}->add_default('text', 'nicklist', 'debug', '0');

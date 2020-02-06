@@ -28,7 +28,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot}    = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{pbot}->{registry}->add_default('array', 'antikickautorejoin', 'punishment', '300,900,1800,3600,28800');
   $self->{pbot}->{registry}->add_default('text',  'antikickautorejoin', 'threshold',  '4');

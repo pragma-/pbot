@@ -32,10 +32,10 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{name}     = delete $conf{name} // 'Dual Index hash object';
-  $self->{filename} = delete $conf{filename} // Carp::carp("Missing filename to DualIndexHashObject, will not be able to save to or load from file.");
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  $self->{hash} = {};
+  $self->{name}     = $conf{name} // 'Dual Index hash object';
+  $self->{filename} = $conf{filename} // Carp::carp("Missing filename to DualIndexHashObject, will not be able to save to or load from file.");
+  $self->{pbot}     = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{hash}     = {};
 }
 
 sub load {

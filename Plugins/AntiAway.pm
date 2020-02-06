@@ -26,7 +26,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{pbot}->{registry}->add_default('text', 'antiaway', 'bad_nicks',   $conf{bad_nicks}   // '([[:punct:]](afk|brb|bbl|away|sleep|z+|work|gone|study|out|home|busy|off)[[:punct:]]*$|.+\[.*\]$)');
   $self->{pbot}->{registry}->add_default('text', 'antiaway', 'bad_actions', $conf{bad_actions} // '^/me (is (away|gone)|.*auto.?away)');

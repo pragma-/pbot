@@ -22,7 +22,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference in " . __FILE__);
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference in " . __FILE__);
   $self->{handlers} = { any => [] };
 }
 

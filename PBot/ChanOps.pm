@@ -28,7 +28,7 @@ sub new {
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to ChanOps");
+  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to ChanOps");
 
   $self->{unban_timeout} = PBot::DualIndexHashObject->new(
     pbot => $self->{pbot},
