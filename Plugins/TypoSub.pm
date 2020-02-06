@@ -100,7 +100,7 @@ sub on_public {
       if ($@) {
         my $error = "Error in `s${separator}${regex}${separator}${replacement}${separator}${modifiers}`: $@";
         $error =~ s/ at .*$//;
-        $event->{conn}->privmsg($channel, $error);
+        $event->{conn}->privmsg($nick, $error);
         return 0;
       }
     }
