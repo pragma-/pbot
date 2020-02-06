@@ -438,7 +438,7 @@ If `timeout` is omitted, PBot will ban the user for 24 hours. Timeout can be spe
 
 ### unban/unmute
 Unbans or unmutes a user. If the argument is a nick instead of a hostmask, it will find all bans that match any of that nick's hostmasks or NickServ accounts and unban them.
-The argument can be a comma-separated list of multiple nicks or masks.
+The argument can be a comma-separated list of multiple nicks or masks. If the argument is `*` then all bans/mutes for the channel will be removed.
 
 Usages:
 - `unban <nick or hostmask> [channel]`
