@@ -302,6 +302,7 @@ Usage: `cap whohas <capability>`
 
     <pragma-> cap whohas moderator
        <PBot> Users with capability moderator: alice
+<!-- -->
     <pragma-> cap whohas can-voice
        <PBot> Users with capability can-voice: alice
 
