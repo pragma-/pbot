@@ -917,6 +917,22 @@ sub handle_result {
   return 1;
 }
 
+sub dehighlight_nicks {
+  my ($self, $line, $channel) = @_;
+  $channel = lc $channel;
+  return if not exists $self->{pbot}->{nicklist}->{nicklist}->{$channel};
+  my $nicklist = $self->{pbot}->{nicklist}->{nicklist};
+
+  my $zwsp = "\x{200b}";
+  foreach my $nick (keys %{$nicklist->{$channel}}) {
+    my $n = quotemeta $nicklist->{$channel}->{$nick}->{nick};
+    my $n_nh = $nicklist->{$channel}->{$nick}->{nick};
+    $n_nh =~ s/^(.)/$1$zwsp/;
+    $line =~ s/$n/$n_nh/g;
+  }
+  return $line;
+}
+
 sub output_result {
   my ($self, $stuff) = @_;
   my ($pbot, $botnick) = ($self->{pbot}, $self->{pbot}->{registry}->get_value('irc', 'botnick'));
@@ -932,6 +948,8 @@ sub output_result {
 
   return if not defined $line or not length $line;
   return 0 if $stuff->{from} eq 'stdin@pbot';
+
+  $line = $self->dehighlight_nicks($line, $stuff->{from}) if $stuff->{from} =~ /^#/ and $line !~ /^\/msg\s+/i;
 
   if ($line =~ s/^\/say\s+//i) {
     if (defined $stuff->{nickoverride} and ($stuff->{no_nickoverride} == 0 or $stuff->{force_nickoverride} == 1)) {
