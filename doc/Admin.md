@@ -301,19 +301,20 @@ new custom capability groups with the [`cap group`](#creating-a-new-group-or-add
 Please note that PBot is sometimes updated more frequently than this list is updated. To see the most
 current list of capabilities, use the [`cap list`](#listing-capabilities) command.
 
-Name | Description
---- | ---
-`botowner` | The most powerful capability group. Contains all capabilities.
-`admin` | The admin capability group. Contains the basic administrative capabilities.
-`chanop` | Channel operator capability group. Contains the basic channel management capabilities.
-`chanmod` | Channel moderator capability group. Grants `can-voice`, `can-devoice` and the use of the `mod` command without being voiced.
-`can-<command name>` | If a command `<command name>` has the `cap-required` [command metadata](#command-metadata-list) then the user's account must have the `can-<command name>` capability to invoke it. For example, the [`op`](#op) command requires users to have the `can-op` capability.
-`can-mode-<flag>` | Allows the [`mode`](#mode) command to set mode `<flag>`. For example, to allow a user to set `mode +m` give them the `can-mode` and `can-mode-m` capabilities. `<flag>` is one mode character.
-`can-mode-any` | Allows the [`mode`](#mode) command to set any mode flag.
-`can-modify-capabilities` | Allows the user to use the [`useradd`](#useradd) or [`userset`](#userset) commands to add or remove capabilities from users.
-`can-group-capabilities` | Allows the user to use the [`cap group`](#cap) command to modify capability groups.
-`can-ungroup-capabilities` | Allows the user to use the [`cap ungroup`](#cap) command to modify capability groups.
-
+Name | Description | Belongs to group
+--- | --- | ---
+`botowner` | The most powerful capability group. Contains all capabilities.| none
+`admin` | The admin capability group. Contains the basic administrative capabilities. | botowner
+`chanop` | Channel operator capability group. Contains the basic channel management capabilities. | botowner, admin
+`chanmod` | Channel moderator capability group. Grants `can-voice`, `can-devoice` and the use of the `mod` command without being voiced. | botowner
+`can-<command name>` | If a command `<command name>` has the `cap-required` [command metadata](#command-metadata-list) then the user's account must have the `can-<command name>` capability to invoke it. For example, the [`op`](#op) command requires users to have the `can-op` capability. | botowner
+`can-mode-<flag>` | Allows the [`mode`](#mode) command to set mode `<flag>`. For example, to allow a user to set `mode +m` give them the `can-mode` and `can-mode-m` capabilities. `<flag>` is one mode character. | botowner, can-mode-any
+`can-mode-any` | Allows the [`mode`](#mode) command to set any mode flag. | botowner
+`can-modify-capabilities` | Allows the user to use the [`useradd`](#useradd) or [`userset`](#userset) commands to add or remove capabilities from users. | botowner
+`can-group-capabilities` | Allows the user to use the [`cap group`](#cap) command to modify capability groups. | botowner
+`can-ungroup-capabilities` | Allows the user to use the [`cap ungroup`](#cap) command to modify capability groups. | botowner
+`can-clear-bans` | Allows the user to use [`unban *`](#unbanunmute) to clear a channel's bans. | botowner, admin
+`can-clear-mutes` | Allows the user to use [`unmute *`](#unbanunmute) to clear a channel's mutes. | botowner, admin
 ## Channel management commands
 
 ### join
