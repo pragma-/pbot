@@ -51,7 +51,8 @@ sub initialize {
   my ($self, %conf) = @_;
   $self->{pbot} = delete $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
-  $self->{pbot}->{commands}->register(sub { $self->actiontrigger(@_) }, 'actiontrigger', 10);
+  $self->{pbot}->{commands}->register(sub { $self->actiontrigger(@_) }, 'actiontrigger', 1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-actiontrigger', 1);
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.public',  sub { $self->on_public(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->on_action(@_) });
@@ -70,6 +71,7 @@ sub unload {
   my $self = shift;
   $self->dbi_end;
   $self->{pbot}->{commands}->unregister('actiontrigger');
+  $self->{pbot}->{capabilities}->remove('can-actiontrigger');
 }
 
 sub create_database {

@@ -34,7 +34,8 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { $self->counterreset(@_)    }, 'counterreset',    0);
   $self->{pbot}->{commands}->register(sub { $self->countershow(@_)     }, 'countershow',     0);
   $self->{pbot}->{commands}->register(sub { $self->counterlist(@_)     }, 'counterlist',     0);
-  $self->{pbot}->{commands}->register(sub { $self->countertrigger(@_)  }, 'countertrigger', 10);
+  $self->{pbot}->{commands}->register(sub { $self->countertrigger(@_)  }, 'countertrigger',  1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-countertrigger', 1);
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->on_public(@_) });
 
@@ -44,13 +45,13 @@ sub initialize {
 
 sub unload {
   my $self = shift;
-
   $self->{pbot}->{commands}->unregister('counteradd');
   $self->{pbot}->{commands}->unregister('counterdel');
   $self->{pbot}->{commands}->unregister('counterreset');
   $self->{pbot}->{commands}->unregister('countershow');
   $self->{pbot}->{commands}->unregister('counterlist');
   $self->{pbot}->{commands}->unregister('countertrigger');
+  $self->{pbot}->{capabilities}->remove('can-countertrigger');
 }
 
 sub create_database {
