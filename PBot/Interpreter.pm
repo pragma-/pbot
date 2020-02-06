@@ -925,9 +925,11 @@ sub dehighlight_nicks {
   my $zwsp = "\x{200b}";
   foreach my $nick (keys %{$nicklist->{$channel}}) {
     my $n = quotemeta $nicklist->{$channel}->{$nick}->{nick};
-    my $n_nh = $nicklist->{$channel}->{$nick}->{nick};
-    $n_nh =~ s/^(.)/$1$zwsp/;
-    $line =~ s/$n/$n_nh/gi;
+    while ($line =~ m/($n)/gi) {
+      my $match = $1;
+      $match =~ s/^(.)/$1$zwsp/;
+      $line =~ s/$n/$match/i;
+    }
   }
   return $line;
 }
