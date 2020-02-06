@@ -920,8 +920,8 @@ sub handle_result {
 sub dehighlight_nicks {
   my ($self, $line, $channel) = @_;
   $channel = lc $channel;
-  return $line if not exists $self->{pbot}->{nicklist}->{nicklist}->{$channel};
   my $nicklist = $self->{pbot}->{nicklist}->{nicklist};
+  return $line if not exists $nicklist->{$channel};
   my $zwsp = "\x{200b}";
   foreach my $nick (keys %{$nicklist->{$channel}}) {
     my $n = quotemeta $nicklist->{$channel}->{$nick}->{nick};
