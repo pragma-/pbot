@@ -39,6 +39,10 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { $self->add(@_)    },  "chanadd",   1);
   $self->{pbot}->{commands}->register(sub { $self->remove(@_) },  "chanrem",   1);
   $self->{pbot}->{commands}->register(sub { $self->list(@_)   },  "chanlist",  1);
+
+  $self->{pbot}->{capabilities}->add('admin', 'can-join',     1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-part',     1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-chanlist', 1);
 }
 
 sub join {

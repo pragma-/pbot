@@ -43,6 +43,8 @@ sub initialize {
   $self->register(sub { $self->help(@_)       },  "help",      0);
   $self->register(sub { $self->uptime(@_)     },  "uptime",    0);
   $self->register(sub { $self->in_channel(@_) },  "in",        1);
+
+  $self->{pbot}->{capabilities}->add('admin', 'in', 1);
 }
 
 sub register {

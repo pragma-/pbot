@@ -41,14 +41,14 @@ sub initialize {
   $self->add('can-group-capabilities',   undef, 1);
   $self->add('can-ungroup-capabilities', undef, 1);
 
-  # add admin capabilities group
-  $self->add('admin', 'chanop',        1); # add chanop capabilities group -- see ChanOpCommands.md
+  # add capabilites to admin capabilities group
+  $self->add('admin', 'chanop',        1); # add chanop capabilities group to admin group -- see ChanOpCommands.md
   $self->add('admin', 'can-useradd',   1);
   $self->add('admin', 'can-userdel',   1);
   $self->add('admin', 'can-userset',   1);
   $self->add('admin', 'can-userunset', 1);
-  $self->add('admin', 'can-join',      1);
-  $self->add('admin', 'can-part',      1);
+  $self->add('admin', 'can-mode',      1);
+  $self->add('admin', 'can-mode-any',  1);
 }
 
 sub has {
@@ -254,7 +254,7 @@ sub capcmd {
 
       my $u = $self->{pbot}->{users}->loggedin($from, "$nick!$user\@$host");
       return "You must be logged into your user account to remove capabilities from groups." if not defined $u;
-      return "You must have the can-remove-capabilities capability to remove capabilities from groups." if not $self->userhas($u, 'can-ungroup-capabilities');
+      return "You must have the can-ungroup-capabilities capability to remove capabilities from groups." if not $self->userhas($u, 'can-ungroup-capabilities');
 
       return "Capability $subcap does not belong to the $cap capability group." if not $self->has($cap, $subcap);
       $self->remove($cap, $subcap);

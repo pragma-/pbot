@@ -56,6 +56,9 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { $self->aka_link(@_)           },  "akalink",         1);
   $self->{pbot}->{commands}->register(sub { $self->aka_unlink(@_)         },  "akaunlink",       1);
 
+  $self->{pbot}->{capabilities}->add('admin', 'can-akalink',   1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-akaunlink', 1);
+
   $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
 }
 

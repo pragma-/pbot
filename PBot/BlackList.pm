@@ -34,6 +34,7 @@ sub initialize {
   $self->{filename} = $conf{filename};
   $self->{blacklist} = {};
   $self->{pbot}->{commands}->register(sub { $self->blacklist(@_) }, "blacklist", 1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-blacklist', 1);
   $self->load_blacklist;
 }
 

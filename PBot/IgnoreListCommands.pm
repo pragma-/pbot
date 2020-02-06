@@ -31,6 +31,8 @@ sub initialize {
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { $self->ignore_user(@_)    }, "ignore",   1);
   $self->{pbot}->{commands}->register(sub { $self->unignore_user(@_)  }, "unignore", 1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-ignore',   1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-unignore', 1);
 }
 
 sub ignore_user {
