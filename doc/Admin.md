@@ -319,7 +319,7 @@ Name | Description | Belongs to group
 `admin` | The admin capability group. Contains the basic administrative capabilities. | botowner
 `chanop` | Channel operator capability group. Contains the basic channel management capabilities. | botowner, admin
 `chanmod` | Channel moderator capability group. Grants `can-voice`, `can-devoice` and the use of the `mod` command without being voiced. | botowner
-`can-<command name>` | If a command `<command name>` has the `cap-required` [command metadata](#command-metadata-list) then the user's account must have the `can-<command name>` capability to invoke it. For example, the [`op`](#op) command requires users to have the `can-op` capability. | botowner
+`can-<command name>` | If a command `<command name>` has the `cap-required` [command metadata](#command-metadata-list) then the user's account must have the `can-<command name>` capability to invoke it. For example, the [`op`](#op) command requires users to have the `can-op` capability. | botowner, various groups
 `can-mode-<flag>` | Allows the [`mode`](#mode) command to set mode `<flag>`. For example, to allow a user to set `mode +m` give them the `can-mode` and `can-mode-m` capabilities. `<flag>` is one mode character. | botowner, can-mode-any
 `can-mode-any` | Allows the [`mode`](#mode) command to set any mode flag. | botowner
 `can-modify-capabilities` | Allows the user to use the [`useradd`](#useradd) or [`userset`](#userset) commands to add or remove capabilities from users. | botowner
