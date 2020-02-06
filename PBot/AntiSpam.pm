@@ -41,7 +41,7 @@ sub initialize {
   $self->{keywords}->load;
 
   $self->{pbot}->{registry}->add_default('text', 'antispam', 'enforce',  $conf{enforce_antispam} // 1);
-  $self->{pbot}->{commands}->register(sub { return $self->antispam_cmd(@_) }, "antispam", 1);
+  $self->{pbot}->{commands}->register(sub { $self->antispam_cmd(@_) }, "antispam", 1);
   $self->{pbot}->{capabilities}->add('admin', 'can-antispam', 1);
 }
 

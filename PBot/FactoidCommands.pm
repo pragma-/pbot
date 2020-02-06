@@ -60,31 +60,31 @@ sub initialize {
 
   $self->{pbot}->{registry}->add_default('text', 'general', 'module_repo', $conf{module_repo} // 'https://github.com/pragma-/pbot/blob/master/modules/');
 
-  $self->{pbot}->{commands}->register(sub { return $self->factadd(@_)       },  "learn",        0);
-  $self->{pbot}->{commands}->register(sub { return $self->factadd(@_)       },  "factadd",      0);
-  $self->{pbot}->{commands}->register(sub { return $self->factrem(@_)       },  "forget",       0);
-  $self->{pbot}->{commands}->register(sub { return $self->factrem(@_)       },  "factrem",      0);
-  $self->{pbot}->{commands}->register(sub { return $self->factshow(@_)      },  "factshow",     0);
-  $self->{pbot}->{commands}->register(sub { return $self->factinfo(@_)      },  "factinfo",     0);
-  $self->{pbot}->{commands}->register(sub { return $self->factlog(@_)       },  "factlog",      0);
-  $self->{pbot}->{commands}->register(sub { return $self->factundo(@_)      },  "factundo",     0);
-  $self->{pbot}->{commands}->register(sub { return $self->factredo(@_)      },  "factredo",     0);
-  $self->{pbot}->{commands}->register(sub { return $self->factset(@_)       },  "factset",      0);
-  $self->{pbot}->{commands}->register(sub { return $self->factunset(@_)     },  "factunset",    0);
-  $self->{pbot}->{commands}->register(sub { return $self->factchange(@_)    },  "factchange",   0);
-  $self->{pbot}->{commands}->register(sub { return $self->factalias(@_)     },  "factalias",    0);
-  $self->{pbot}->{commands}->register(sub { return $self->factmove(@_)      },  "factmove",     0);
-  $self->{pbot}->{commands}->register(sub { return $self->call_factoid(@_)  },  "fact",         0);
-  $self->{pbot}->{commands}->register(sub { return $self->factfind(@_)      },  "factfind",     0);
-  $self->{pbot}->{commands}->register(sub { return $self->top20(@_)         },  "top20",        0);
-  $self->{pbot}->{commands}->register(sub { return $self->load_module(@_)   },  "load",         1);
-  $self->{pbot}->{commands}->register(sub { return $self->unload_module(@_) },  "unload",       1);
-  $self->{pbot}->{commands}->register(sub { return $self->histogram(@_)     },  "histogram",    0);
-  $self->{pbot}->{commands}->register(sub { return $self->count(@_)         },  "count",        0);
+  $self->{pbot}->{commands}->register(sub { $self->factadd(@_)       },  "learn",        0);
+  $self->{pbot}->{commands}->register(sub { $self->factadd(@_)       },  "factadd",      0);
+  $self->{pbot}->{commands}->register(sub { $self->factrem(@_)       },  "forget",       0);
+  $self->{pbot}->{commands}->register(sub { $self->factrem(@_)       },  "factrem",      0);
+  $self->{pbot}->{commands}->register(sub { $self->factshow(@_)      },  "factshow",     0);
+  $self->{pbot}->{commands}->register(sub { $self->factinfo(@_)      },  "factinfo",     0);
+  $self->{pbot}->{commands}->register(sub { $self->factlog(@_)       },  "factlog",      0);
+  $self->{pbot}->{commands}->register(sub { $self->factundo(@_)      },  "factundo",     0);
+  $self->{pbot}->{commands}->register(sub { $self->factredo(@_)      },  "factredo",     0);
+  $self->{pbot}->{commands}->register(sub { $self->factset(@_)       },  "factset",      0);
+  $self->{pbot}->{commands}->register(sub { $self->factunset(@_)     },  "factunset",    0);
+  $self->{pbot}->{commands}->register(sub { $self->factchange(@_)    },  "factchange",   0);
+  $self->{pbot}->{commands}->register(sub { $self->factalias(@_)     },  "factalias",    0);
+  $self->{pbot}->{commands}->register(sub { $self->factmove(@_)      },  "factmove",     0);
+  $self->{pbot}->{commands}->register(sub { $self->call_factoid(@_)  },  "fact",         0);
+  $self->{pbot}->{commands}->register(sub { $self->factfind(@_)      },  "factfind",     0);
+  $self->{pbot}->{commands}->register(sub { $self->top20(@_)         },  "top20",        0);
+  $self->{pbot}->{commands}->register(sub { $self->load_module(@_)   },  "load",         1);
+  $self->{pbot}->{commands}->register(sub { $self->unload_module(@_) },  "unload",       1);
+  $self->{pbot}->{commands}->register(sub { $self->histogram(@_)     },  "histogram",    0);
+  $self->{pbot}->{commands}->register(sub { $self->count(@_)         },  "count",        0);
 
   # the following commands have not yet been updated to use the new factoid structure
   # DO NOT USE!!  Factoid corruption may occur.
-  $self->{pbot}->{commands}->register(sub { return $self->add_regex(@_)     },  "regex",        1);
+  $self->{pbot}->{commands}->register(sub { $self->add_regex(@_)     },  "regex",        1);
 }
 
 sub call_factoid {

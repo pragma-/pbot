@@ -53,7 +53,7 @@ sub initialize {
     'lag_history_interval'
   );
 
-  $self->{pbot}->{commands}->register(sub { return $self->lagcheck(@_) }, "lagcheck", 0);
+  $self->{pbot}->{commands}->register(sub { $self->lagcheck(@_) }, "lagcheck", 0);
   $self->{pbot}->{event_dispatcher}->register_handler('irc.pong', sub { $self->on_pong(@_) });
 }
 

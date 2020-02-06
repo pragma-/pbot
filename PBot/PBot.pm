@@ -216,8 +216,8 @@ sub initialize {
   $self->{parsedate}          = PBot::Utils::ParseDate->new(pbot => $self, %conf);
 
   $self->{interpreter}        = PBot::Interpreter->new(pbot => $self, %conf);
-  $self->{interpreter}->register(sub { return $self->{commands}->interpreter(@_); });
-  $self->{interpreter}->register(sub { return $self->{factoids}->interpreter(@_); });
+  $self->{interpreter}->register(sub { $self->{commands}->interpreter(@_) });
+  $self->{interpreter}->register(sub { $self->{factoids}->interpreter(@_) });
 
   $self->{factoids} = PBot::Factoids->new(pbot => $self, filename => "$data_dir/factoids", %conf);
 

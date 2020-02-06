@@ -31,7 +31,7 @@ sub initialize {
   my ($self, %conf) = @_;
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{refresher} = Module::Refresh->new;
-  $self->{pbot}->{commands}->register(sub { return $self->refresh(@_) }, "refresh", 1);
+  $self->{pbot}->{commands}->register(sub { $self->refresh(@_) }, "refresh", 1);
 }
 
 sub refresh {

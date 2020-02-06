@@ -32,13 +32,13 @@ sub initialize {
   $self->{users} = PBot::DualIndexHashObject->new(name => 'Users', filename => $conf{filename}, pbot => $conf{pbot});
   $self->load;
 
-  $self->{pbot}->{commands}->register(sub { return $self->logincmd(@_)   },  "login",      0);
-  $self->{pbot}->{commands}->register(sub { return $self->logoutcmd(@_)  },  "logout",     0);
-  $self->{pbot}->{commands}->register(sub { return $self->useradd(@_)    },  "useradd",    1);
-  $self->{pbot}->{commands}->register(sub { return $self->userdel(@_)    },  "userdel",    1);
-  $self->{pbot}->{commands}->register(sub { return $self->userset(@_)    },  "userset",    1);
-  $self->{pbot}->{commands}->register(sub { return $self->userunset(@_)  },  "userunset",  1);
-  $self->{pbot}->{commands}->register(sub { return $self->mycmd(@_)      },  "my",         0);
+  $self->{pbot}->{commands}->register(sub { $self->logincmd(@_)   },  "login",      0);
+  $self->{pbot}->{commands}->register(sub { $self->logoutcmd(@_)  },  "logout",     0);
+  $self->{pbot}->{commands}->register(sub { $self->useradd(@_)    },  "useradd",    1);
+  $self->{pbot}->{commands}->register(sub { $self->userdel(@_)    },  "userdel",    1);
+  $self->{pbot}->{commands}->register(sub { $self->userset(@_)    },  "userset",    1);
+  $self->{pbot}->{commands}->register(sub { $self->userunset(@_)  },  "userunset",  1);
+  $self->{pbot}->{commands}->register(sub { $self->mycmd(@_)      },  "my",         0);
 
   $self->{pbot}->{capabilities}->add('admin', 'can-useradd',   1);
   $self->{pbot}->{capabilities}->add('admin', 'can-userdel',   1);

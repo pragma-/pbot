@@ -31,19 +31,19 @@ sub initialize {
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   # register commands
-  $self->{pbot}->{commands}->register(sub { return $self->ban_user(@_)      },  "ban",        1);
-  $self->{pbot}->{commands}->register(sub { return $self->unban_user(@_)    },  "unban",      1);
-  $self->{pbot}->{commands}->register(sub { return $self->mute_user(@_)     },  "mute",       1);
-  $self->{pbot}->{commands}->register(sub { return $self->unmute_user(@_)   },  "unmute",     1);
-  $self->{pbot}->{commands}->register(sub { return $self->kick_user(@_)     },  "kick",       1);
-  $self->{pbot}->{commands}->register(sub { return $self->checkban(@_)      },  "checkban",   0);
-  $self->{pbot}->{commands}->register(sub { return $self->checkmute(@_)     },  "checkmute",  0);
-  $self->{pbot}->{commands}->register(sub { return $self->op_user(@_)       },  "op",         1);
-  $self->{pbot}->{commands}->register(sub { return $self->deop_user(@_)     },  "deop",       1);
-  $self->{pbot}->{commands}->register(sub { return $self->voice_user(@_)    },  "voice",      1);
-  $self->{pbot}->{commands}->register(sub { return $self->devoice_user(@_)  },  "devoice",    1);
-  $self->{pbot}->{commands}->register(sub { return $self->mode(@_)          },  "mode",       1);
-  $self->{pbot}->{commands}->register(sub { return $self->invite(@_)        },  "invite",     1);
+  $self->{pbot}->{commands}->register(sub { $self->ban_user(@_)      },  "ban",        1);
+  $self->{pbot}->{commands}->register(sub { $self->unban_user(@_)    },  "unban",      1);
+  $self->{pbot}->{commands}->register(sub { $self->mute_user(@_)     },  "mute",       1);
+  $self->{pbot}->{commands}->register(sub { $self->unmute_user(@_)   },  "unmute",     1);
+  $self->{pbot}->{commands}->register(sub { $self->kick_user(@_)     },  "kick",       1);
+  $self->{pbot}->{commands}->register(sub { $self->checkban(@_)      },  "checkban",   0);
+  $self->{pbot}->{commands}->register(sub { $self->checkmute(@_)     },  "checkmute",  0);
+  $self->{pbot}->{commands}->register(sub { $self->op_user(@_)       },  "op",         1);
+  $self->{pbot}->{commands}->register(sub { $self->deop_user(@_)     },  "deop",       1);
+  $self->{pbot}->{commands}->register(sub { $self->voice_user(@_)    },  "voice",      1);
+  $self->{pbot}->{commands}->register(sub { $self->devoice_user(@_)  },  "devoice",    1);
+  $self->{pbot}->{commands}->register(sub { $self->mode(@_)          },  "mode",       1);
+  $self->{pbot}->{commands}->register(sub { $self->invite(@_)        },  "invite",     1);
 
   # allow commands to set modes
   $self->{pbot}->{capabilities}->add('can-ban',     'can-mode-b', 1);
@@ -99,9 +99,9 @@ sub initialize {
   $self->{invites} = {}; # track who invited who in order to direct invite responses to them
 
   # handle invite responses
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.inviting', sub { return $self->on_inviting(@_) });
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.useronchannel', sub { return $self->on_useronchannel(@_) });
-  $self->{pbot}->{event_dispatcher}->register_handler('irc.nosuchnick', sub { return $self->on_nosuchnick(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.inviting',      sub { $self->on_inviting(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.useronchannel', sub { $self->on_useronchannel(@_) });
+  $self->{pbot}->{event_dispatcher}->register_handler('irc.nosuchnick',    sub { $self->on_nosuchnick(@_) });
 }
 
 sub on_inviting {

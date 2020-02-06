@@ -38,7 +38,7 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
   $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-  $self->{pbot}->{commands}->register(sub { return $self->do_func(@_) }, 'func', 0);
+  $self->{pbot}->{commands}->register(sub { $self->do_func(@_) }, 'func', 0);
   $self->init_funcs;
 }
 
