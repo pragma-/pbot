@@ -73,6 +73,14 @@ sub initialize {
   $self->{pbot}->{capabilities}->add('chanop', 'can-devoice', 1);
   $self->{pbot}->{capabilities}->add('chanop', 'can-invite',  1);
 
+  # allow users to use !unban * or !unmute *
+  $self->{pbot}->{capabilities}->add('can-clear-bans',  undef, 1);
+  $self->{pbot}->{capabilities}->add('can-clear-mutes', undef, 1);
+
+  # allow admins to use !unban * or !unmute *
+  $self->{pbot}->{capabilities}->add('admin', 'can-clear-bans',  1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-clear-mutes', 1);
+
   $self->{invites} = {}; # track who invited who in order to direct invite responses to them
 
   # handle invite responses
@@ -465,6 +473,10 @@ sub unban_user {
 
   foreach my $t (@targets) {
     if ($t eq '*') {
+      my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+      if (not $self->{pbot}->{capabilities}->userhas($u, 'can-clear-bans')) {
+        return "Clearing the channel bans requires the can-clear-bans capability, which your user account does not have.";
+      }
       $channel = lc $channel;
       if (exists $self->{pbot}->{bantracker}->{banlist}->{$channel} && exists $self->{pbot}->{bantracker}->{banlist}->{$channel}->{'+b'}) {
         $immediately = 0;
@@ -595,6 +607,10 @@ sub unmute_user {
 
   foreach my $t (@targets) {
     if ($t eq '*') {
+      my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+      if (not $self->{pbot}->{capabilities}->userhas($u, 'can-clear-mutes')) {
+        return "Clearing the channel mutes requires the can-clear-mutes capability, which your user account does not have.";
+      }
       $channel = lc $channel;
       if (exists $self->{pbot}->{bantracker}->{banlist}->{$channel} && exists $self->{pbot}->{bantracker}->{banlist}->{$channel}->{'+q'}) {
         $immediately = 0;
