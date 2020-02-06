@@ -302,6 +302,8 @@ Usage: `cap whohas <capability>`
 
     <pragma-> cap whohas moderator
        <PBot> Users with capability moderator: alice
+    <pragma-> cap whohas can-voice
+       <PBot> Users with capability can-voice: alice
 
 #### User capabilities list
 This is a list of built-in capability groups and capabilities. You can create
