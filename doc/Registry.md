@@ -181,7 +181,7 @@ general.data_dir | Path to PBot `data/` directory. |
 general.deop_timeout | Time-out, in seconds, before PBot deops itself after being opped. | 300
 general.module_dir | Path to PBot `modules/` directory. |
 general.module_repo | URL to source code of PBot modules; used in `factinfo` | https://github.com/pragma-/pbot/tree/master/modules
-general.no_dehighlight_nicks | If set to at true value then  when outputting text PBot will not convert nicks to text that avoid triggering IRC client highlighting | not defined
+general.no_dehighlight_nicks | If set to at true value then  when outputting text PBot will not convert nicks to text that avoids triggering IRC client nick-highlighting | not defined
 general.paste_ratelimit | How often, in seconds, between pastes to web paste-sites. |
 general.show_url_titles_channels | A regular-expression or comma-separated list of channels that should display titles for URLs. | `.*`
 general.show_url_titles | If set to a true value, PBot will show titles for URLs. | 1
