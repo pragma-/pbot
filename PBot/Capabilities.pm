@@ -200,7 +200,7 @@ sub capcmd {
         }
         if (@matches) {
           $result .= '; ' if $matched;
-          $result .= $users->{$channel}->{_name} eq '.*' ? '' : "$channel: ";
+          $result .= $users->{$channel}->{_name} eq '.*' ? '' : "$users->{$channel}->{_name}: ";
           $result .= join ', ', @matches;
           $matched = 1;
         }
