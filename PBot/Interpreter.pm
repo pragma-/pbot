@@ -927,7 +927,7 @@ sub dehighlight_nicks {
     my $n = quotemeta $nicklist->{$channel}->{$nick}->{nick};
     my $n_nh = $nicklist->{$channel}->{$nick}->{nick};
     $n_nh =~ s/^(.)/$1$zwsp/;
-    $line =~ s/$n/$n_nh/g;
+    $line =~ s/$n/$n_nh/gi;
   }
   return $line;
 }
