@@ -124,6 +124,17 @@ sub get_channels {
   return \@channels;
 }
 
+sub get_nicks {
+  my ($self, $channel) = @_;
+  $channel = lc $channel;
+  my @nicks;
+  return @nicks if not exists $self->{nicklist}->{$channel};
+  foreach my $nick (keys %{ $self->{nicklist}->{$channel} }) {
+    push @nicks, $self->{nicklist}->{$channel}->{$nick}->{nick};
+  }
+  return @nicks;
+}
+
 sub set_meta {
   my ($self, $channel, $nick, $key, $value) = @_;
 
