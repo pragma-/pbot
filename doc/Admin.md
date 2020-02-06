@@ -20,6 +20,7 @@
       * [Removing capabilites from a group or deleting a group](#removing-capabilites-from-a-group-or-deleting-a-group)
     * [Giving capabilities to users](#giving-capabilities-to-users)
     * [Checking user capabilities](#checking-user-capabilities)
+    * [Listing users who have a capability](#listing-users-who-have-a-capability)
     * [User capabilities list](#user-capabilities-list)
 * [Channel management commands](#channel-management-commands)
   * [join](#join)
@@ -204,7 +205,8 @@ Usage:
     cap list [capability] |
     cap group <existing or new capability group> <existing capability> |
     cap ungroup <existing capability group> <grouped capability> |
-    cap userhas <user> [capability]
+    cap userhas <user> [capability] |
+    cap whohas <capability>
 
 #### Listing capabilities
 Use `cap list [capability]` to list user-capabilities.
@@ -293,6 +295,13 @@ capability is granted to the user account.
     <pragma-> cap userhas alice can-op
        <PBot> No. User alice does not have capability can-op.
 
+#### Listing users who have a capability
+To list all the users that have a capability, use the `cap whohas` command.
+
+Usage: `cap whohas <capability>`
+
+    <pragma-> cap whohas moderator
+       <PBot> Users with capability moderator: alice
 
 #### User capabilities list
 This is a list of built-in capability groups and capabilities. You can create
