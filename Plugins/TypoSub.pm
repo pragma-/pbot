@@ -57,7 +57,7 @@ sub on_public {
   if ($msg =~ m/^\s*s([[:punct:]])/) {
     my $separator = $1;
     my $sep = quotemeta $separator;
-    if ($msg =~ m/^\s*s${sep}(.*?)(?<!\\)${sep}(.*?)(?<!\\)${sep}([g]*)\s*$/ or $msg =~ m/^\s*s${sep}(.*?)(?<!\\)${sep}(.*?)$/) {
+    if ($msg =~ m/^\s*s${sep}(.*?)(?<!\\)${sep}(.*?)(?<!\\)${sep}([g]*).*$/ or $msg =~ m/^\s*s${sep}(.*?)(?<!\\)${sep}(.*)$/) {
       my ($regex, $replacement, $modifiers) = ($1, $2, $3);
       eval {
         my $rx = qr/$regex/;
