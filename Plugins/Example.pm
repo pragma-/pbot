@@ -8,7 +8,6 @@ use warnings;
 use strict;
 
 use feature 'unicode_strings';
-
 use Carp ();
 
 sub new {
@@ -28,9 +27,7 @@ sub initialize {
 sub unload {
   my $self = shift;
   # perform plugin clean-up here
-  # normally we'd unregister the 'irc.public' event handler; however, the
-  # event dispatcher will do this automatically for us when it sees there
-  # is no longer an existing sub.
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public', __PACKAGE__);
 }
 
 sub on_public {

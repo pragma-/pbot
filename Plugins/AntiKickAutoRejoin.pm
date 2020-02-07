@@ -38,6 +38,12 @@ sub initialize {
   $self->{kicks} = {};
 }
 
+sub unload {
+  my ($self) = @_;
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick', __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.join', __PACKAGE__);
+}
+
 sub on_kick {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $target, $channel, $reason) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0], $event->{event}->{args}[1]);

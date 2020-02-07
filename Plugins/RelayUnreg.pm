@@ -30,6 +30,7 @@ sub initialize {
 sub unload {
   my $self = shift;
   $self->{pbot}->{timer}->unregister('RelayUnreg');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public', __PACKAGE__);
 }
 
 sub on_public {

@@ -36,6 +36,12 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->on_action(@_) });
 }
 
+sub unload {
+  my ($self) = @_;
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.nick',    __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction', __PACKAGE__);
+}
+
 sub on_nickchange {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $newnick) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);

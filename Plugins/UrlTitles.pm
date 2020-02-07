@@ -36,7 +36,11 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->show_url_titles(@_) });
 }
 
-sub unload {}
+sub unload {
+  my ($self) = @_;
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public',  __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction', __PACKAGE__);
+}
 
 sub show_url_titles {
   my ($self, $event_type, $event) = @_;

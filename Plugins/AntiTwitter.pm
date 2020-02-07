@@ -38,6 +38,11 @@ sub initialize {
   $self->{offenses} = {};
 }
 
+sub unload {
+  my ($self) = @_;
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public', __PACKAGE__);
+}
+
 sub on_public {
   my ($self, $event_type, $event) = @_;
   my ($nick, $user, $host, $channel, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->{to}[0], $event->{event}->args);

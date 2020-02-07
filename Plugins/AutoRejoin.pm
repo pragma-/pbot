@@ -37,6 +37,12 @@ sub initialize {
   $self->{rejoins} = {};
 }
 
+sub unload {
+  my ($self) = @_;
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick', __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.part', __PACKAGE__);
+}
+
 sub rejoin_channel {
   my ($self, $channel) = @_;
   $self->{rejoins}->{$channel}->{rejoins} = 0 if not exists $self->{rejoins}->{$channel};
