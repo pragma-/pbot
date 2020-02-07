@@ -27,12 +27,29 @@ sub initialize {
 }
 
 sub register_handler {
-  my ($self, $event_type, $sub) = @_;
-
-  my ($package, $filename, $line, $subroutine) = caller(1);
-  my $info = "$filename:$line; $subroutine";
-  $self->{pbot}->{logger}->log("Adding handler for $event_type: $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug');
+  my ($self, $event_type, $sub, $package_override) = @_;
+  my ($package) = caller(1);
+  $package = $package_override if defined $package_override;
+  my $info = "$package\-\>$event_type";
+  $self->{pbot}->{logger}->log("Adding handler: $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug');
   push @{$self->{handlers}->{$event_type}}, [$sub, $info];
+}
+
+sub remove_handler {
+  my ($self, $event_type, $package_override) = @_;
+  my ($package) = caller(1);
+  $package = $package_override if defined $package_override;
+  my $info = "$package\-\>$event_type";
+
+  if (exists $self->{handlers}->{$event_type}) {
+    for (my $i = 0; $i < @{$self->{handlers}->{$event_type}}; $i++) {
+      my $ref = @{$self->{handlers}->{$event_type}}[$i];
+      if ($info eq $ref->[1]) {
+        $self->{pbot}->{logger}->log("Removing handler: $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug');
+        splice @{$self->{handlers}->{$event_type}}, $i--, 1;
+      }
+    }
+  }
 }
 
 sub dispatch_event {
@@ -55,7 +72,6 @@ sub dispatch_event {
         #$self->{pbot}->{logger}->log("Removing handler.\n");
         #splice @{$self->{handlers}->{$event_type}}, $i--, 1;
       }
-
       return $ret if $ret;
     }
   }
@@ -75,10 +91,8 @@ sub dispatch_event {
       #$self->{pbot}->{logger}->log("Removing handler.\n");
       #splice @{$self->{handlers}->{any}}, $i--, 1;
     }
-
     return $ret if $ret;
   }
-
   return $ret;
 }
 
