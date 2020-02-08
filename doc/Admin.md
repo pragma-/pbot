@@ -214,9 +214,29 @@ Use `cap list [capability]` to list user-capabilities.
 If `[capability]` is omitted, the command will list all available capabilities.
 
     <pragma-> cap list
-       <PBot> Capabilities: admin (7 caps), botowner (60 caps), can-ban (1 cap), can-deop (1 cap),
-              can-devoice (1 cap), can-mode-any (53 caps), can-op (1 cap), can-unban (1 cap),
-              chanop (10 caps), can-akalink, can-akaunlink, can-antispam, can-blacklist, ...
+       <PBot> Capabilities: admin (25 caps), botowner (71 caps), can-ban (1 cap), can-deop (1 cap),
+              can-devoice (1 cap), can-mode-any (53 caps), can-mute (1 cap), can-op (1 cap), can-unban (1 cap),
+              can-unmute (1 cap), can-voice (1 cap), chanmod (4 caps), chanop (10 caps), moderator (4 caps),
+              can-actiontrigger, can-akalink, can-akaunlink, can-antispam, can-blacklist, ...
+
+
+#### Grouping capabilities
+Capabilities can be grouped together into a collection, which can then be applied to a user.
+Capability groups can contain nested groups.
+
+In the [listing capabilities](#listing-capabilities) example, the `admin` capability is
+a group containing several capabilities, including other grouped capabilites such as the `chanop` capability
+group which itself can contain more groups and capabilities.
+
+Observe.
+
+    <pragma-> cap list admin
+       <PBot> Grouped capabilities for admin: can-mode-any (53 caps), chanop (10 caps),
+              can-actiontrigger, can-akalink, can-akaunlink, can-antispam, can-blacklist,
+              can-chanlist, can-clear-bans, can-clear-mutes, can-countertrigger, can-ignore,
+              can-in, can-join, can-kick-wildcard, can-mode, can-op-wildcard, can-part,
+              can-unignore, can-useradd, can-userdel, can-userset, can-userunset, can-voice-wildcard,
+              can-whitelist
 <!-- -->
     <pragma-> cap list chanop
        <PBot> Grouped capabilities for chanop: can-ban (1 cap), can-deop (1 cap), can-devoice (1 cap),
@@ -225,20 +245,6 @@ If `[capability]` is omitted, the command will list all available capabilities.
 <!-- -->
     <pragma-> cap list can-ban
        <PBot> Grouped capabilities for can-ban: can-mode-b
-
-#### Grouping capabilities
-Capabilities can be grouped together into a collection, which can then be applied to a user.
-Capability groups can contain nested groups.
-
-In the [listing capabilities](#listing-capabilities) example, the `admin` capability is
-a group containing seven capabilities, including the `chanop` capability group which
-itself contains 10 capabilities.
-
-    <pragma-> cap list admin
-       <PBot> Grouped capabilities for admin: can-mode-any (53 caps), chanop (10 caps), can-actiontrigger,
-              can-akalink, can-akaunlink, can-antispam, can-blacklist, can-chanlist, can-clear-bans, can-clear-mutes,
-              can-countertrigger, can-ignore, can-in, can-join, can-kick-wildcard, can-mode, can-op-wildcard, can-part,
-              can-unignore, can-useradd, can-userdel, can-userset, can-userunset, can-voice-wildcard, can-whitelist
 
 ##### Creating a new group or adding to an existing group
 To create a new capability group or to add capabilities to an existing group,
