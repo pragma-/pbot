@@ -235,8 +235,10 @@ a group containing seven capabilities, including the `chanop` capability group w
 itself contains 10 capabilities.
 
     <pragma-> cap list admin
-       <PBot> chanop (10 caps), can-join, can-part, can-useradd, can-userdel,
-              can-userset, can-userunset
+       <PBot> Grouped capabilities for admin: can-mode-any (53 caps), chanop (10 caps), can-actiontrigger,
+              can-akalink, can-akaunlink, can-antispam, can-blacklist, can-chanlist, can-clear-bans, can-clear-mutes,
+              can-countertrigger, can-ignore, can-in, can-join, can-kick-wildcard, can-mode, can-op-wildcard, can-part,
+              can-unignore, can-useradd, can-userdel, can-userset, can-userunset, can-voice-wildcard, can-whitelist
 
 ##### Creating a new group or adding to an existing group
 To create a new capability group or to add capabilities to an existing group,
