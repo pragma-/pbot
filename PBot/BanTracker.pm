@@ -11,32 +11,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::BanTracker;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
-use Carp ();
-
-sub new {
-  Carp::croak("Options to BanTracker should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my ($self, %conf) = @_;
-
-  $self->{pbot}    = $conf{pbot} // Carp::croak("Missing pbot reference to BanTracker");
-  $self->{banlist} = {};
-
   $self->{pbot}->{registry}->add_default('text', 'bantracker', 'chanserv_ban_timeout', '604800');
   $self->{pbot}->{registry}->add_default('text', 'bantracker', 'mute_timeout',         '604800');
   $self->{pbot}->{registry}->add_default('text', 'bantracker', 'debug',                '0');
@@ -46,6 +32,8 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.endofnames', sub { $self->get_banlist(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.banlist',    sub { $self->on_banlist_entry(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.quietlist',  sub { $self->on_quietlist_entry(@_) });
+
+  $self->{banlist} = {};
 }
 
 sub dumpbans {

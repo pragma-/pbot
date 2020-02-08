@@ -8,13 +8,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::FactoidCommands;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
-use Carp ();
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
 use Getopt::Long qw(GetOptionsFromString);
@@ -46,18 +44,8 @@ our %factoid_metadata_capabilities = (
   # all others are allowed to be factset by anybody
 );
 
-sub new {
-  Carp::croak("Options to FactoidCommands should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to FactoidCommands");
-
   $self->{pbot}->{registry}->add_default('text', 'general', 'module_repo', $conf{module_repo} // 'https://github.com/pragma-/pbot/blob/master/modules/');
 
   $self->{pbot}->{commands}->register(sub { $self->factadd(@_)       },  "learn",        0);

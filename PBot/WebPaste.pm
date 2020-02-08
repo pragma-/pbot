@@ -8,29 +8,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::WebPaste;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use LWP::UserAgent::Paranoid;
-use Carp ();
 use Encode;
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   $self->{paste_sites} = [
     sub { $self->paste_ixio(@_) },
@@ -41,9 +30,7 @@ sub initialize {
 
 sub get_paste_site {
   my ($self) = @_;
-
   my $subref = $self->{paste_sites}->[$self->{current_site}];
-
   if (++$self->{current_site} >= @{$self->{paste_sites}}) {
     $self->{current_site} = 0;
   }
@@ -52,11 +39,9 @@ sub get_paste_site {
 
 sub paste {
   my ($self, $text, %opts) = @_;
-
   my %default_opts = (
     no_split => 0,
   );
-
   %opts = (%default_opts, %opts);
 
   $text =~ s/(.{120})\s/$1\n/g unless $opts{no_split};
@@ -66,10 +51,7 @@ sub paste {
   for (my $tries = 3; $tries > 0; $tries--) {
     my $paste_site = $self->get_paste_site;
     $result = $paste_site->($text);
-
-    if ($result !~ m/error pasting/) {
-      last;
-    }
+    last if $result !~ m/error pasting/;
   }
   return $result;
 }

@@ -12,29 +12,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::DualIndexHashObject;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use Text::Levenshtein qw(fastdistance);
 use JSON;
-use Carp ();
-
-sub new {
-  Carp::croak("Options to DualIndexHashObject should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my ($self, %conf) = @_;
   $self->{name}     = $conf{name} // 'Dual Index hash object';
   $self->{filename} = $conf{filename} // Carp::carp("Missing filename to DualIndexHashObject, will not be able to save to or load from file.");
-  $self->{pbot}     = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{hash}     = {};
 }
 

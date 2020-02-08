@@ -3,27 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::StdinReader;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use POSIX qw(tcgetpgrp getpgrp);  # to check whether process is in background or foreground
-use Carp ();
-
-sub new {
-  Carp::croak("Options to StdinReader should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference in StdinReader");
-
   # create implicit bot-admin account for bot
   my $user = $self->{pbot}->{users}->find_user('.*', '*!stdin@pbot');
   if (not defined $user or not $self->{pbot}->{capabilities}->userhas($user, 'botowner')) {

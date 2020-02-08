@@ -14,8 +14,7 @@ use warnings;
 
 use feature 'unicode_strings';
 
-sub PUSHED
-{
+sub PUSHED {
   my ($class, $mode, $fh) = @_;
   my $logger;
   return bless \$logger, $class;
@@ -23,13 +22,12 @@ sub PUSHED
 
 sub OPEN {
   my ($self, $path, $mode, $fh) = @_;
-  # $path is actually our logger object
+  # $path is our logger object
   $$self = $path;
   return 1;
 }
 
-sub WRITE
-{
+sub WRITE {
   my ($self, $buf, $fh) = @_;
   $$self->log($buf);
   return length($buf);

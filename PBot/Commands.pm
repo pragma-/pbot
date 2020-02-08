@@ -10,30 +10,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Commands;
+use parent 'PBot::Class', 'PBot::Registerable';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
-use base 'PBot::Registerable';
-
-use Carp ();
-use PBot::HashObject;
 use Time::Duration qw/duration/;
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->SUPER::initialize(%conf);
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->PBot::Registerable::initialize(%conf);
 
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Commands', filename => $conf{filename});
   $self->load_metadata;
@@ -49,12 +35,9 @@ sub initialize {
 
 sub register {
   my ($self, $subref, $name, $requires_cap) = @_;
+  Carp::croak("Missing parameters to Commands::register") if not defined $subref or not defined $name;
 
-  if (not defined $subref or not defined $name) {
-    Carp::croak("Missing parameters to Commands::register");
-  }
-
-  my $ref = $self->SUPER::register($subref);
+  my $ref = $self->PBot::Registerable::register($subref);
   $ref->{name} = lc $name;
   $ref->{requires_cap} = $requires_cap // 0;
 

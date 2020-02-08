@@ -9,34 +9,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::VERSION;
+use parent 'PBot::Class';
 
-use strict;
-use warnings;
-
+use strict; use warnings;
 use feature 'unicode_strings';
-
-BEGIN {
-  use Exporter;
-  our @ISA = 'Exporter';
-  our @EXPORT_OK = qw(version);
-}
 
 use LWP::UserAgent;
 
-# These are set automatically by build/update_version.pl
+# These are set automatically by the misc/update_version script
 use constant {
   BUILD_NAME     => "PBot",
   BUILD_REVISION => 3194,
   BUILD_DATE     => "2020-02-07",
 };
 
-sub new {
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->{pbot}  = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+sub initialize {
+  my ($self, %conf) = @_;
   $self->{pbot}->{commands}->register(sub { $self->version_cmd(@_) },  "version",  0);
   $self->{last_check} = { timestamp => 0, version => BUILD_REVISION, date => BUILD_DATE };
-  return $self;
 }
 
 sub version {

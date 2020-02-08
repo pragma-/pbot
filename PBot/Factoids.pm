@@ -8,10 +8,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Factoids;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use feature 'switch';
@@ -20,7 +19,6 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 use HTML::Entities;
 use Time::HiRes qw(gettimeofday);
 use Time::Duration qw(duration);
-use Carp ();
 use POSIX qw(strftime);
 use Text::ParseWords;
 use JSON;
@@ -32,20 +30,9 @@ use PBot::DualIndexHashObject;
 use PBot::Utils::Indefinite;
 use PBot::Utils::ValidateString;
 
-sub new {
-  Carp::croak("Options to Factoids should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-
   my $filename = $conf{filename};
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
   $self->{factoids} = PBot::DualIndexHashObject->new(name => 'Factoids', filename => $filename, pbot => $self->{pbot});
 
   $self->{pbot}                  = $self->{pbot};
@@ -58,13 +45,11 @@ sub initialize {
   $self->{pbot}->{registry}->add_default('text', 'factoids', 'max_channel_length',  20);
 
   $self->{pbot}->{atexit}->register(sub { $self->save_factoids; return; });
-
   $self->load_factoids;
 }
 
 sub load_factoids {
   my $self = shift;
-
   $self->{factoids}->load;
 
   my ($text, $regex, $modules);

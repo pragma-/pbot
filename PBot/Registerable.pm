@@ -8,21 +8,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Registerable;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
-
-use Carp ();
-
-sub new {
-  Carp::croak("Options to Registerable should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my $self = shift;
@@ -31,7 +20,6 @@ sub initialize {
 
 sub execute_all {
   my $self = shift;
-
   foreach my $func (@{ $self->{handlers} }) {
     my $result = &{ $func->{subref} }(@_);
     return $result if defined $result;
@@ -42,11 +30,7 @@ sub execute_all {
 sub execute {
   my $self = shift;
   my $ref = shift;
-
-  if (not defined $ref) {
-    Carp::croak("Missing reference parameter to Registerable::execute");
-  }
-
+  Carp::croak("Missing reference parameter to Registerable::execute") if not defined $ref;
   foreach my $func (@{ $self->{handlers} }) {
     if ($ref == $func || $ref == $func->{subref}) {
       return &{ $func->{subref} }(@_);

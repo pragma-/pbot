@@ -8,29 +8,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::IRCHandlers;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
-use Carp();
 use Time::HiRes qw(gettimeofday);
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
 
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot parameter to " . __FILE__);
-
   $self->{pbot}->{event_dispatcher}->register_handler('irc.welcome',       sub { $self->on_connect(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.disconnect',    sub { $self->on_disconnect(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.motd',          sub { $self->on_motd(@_) });

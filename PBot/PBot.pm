@@ -9,9 +9,7 @@
 
 package PBot::PBot;
 
-use strict;
-use warnings;
-
+use strict; use warnings;
 use feature 'unicode_strings';
 
 # unbuffer stdout
@@ -20,6 +18,8 @@ STDOUT->autoflush(1);
 use Carp ();
 use PBot::Logger;
 use PBot::VERSION;
+use PBot::HashObject;
+use PBot::DualIndexHashObject;
 use PBot::Registry;
 use PBot::Capabilities;
 use PBot::SelectHandler;
@@ -49,11 +49,9 @@ use PBot::Utils::ParseDate;
 use PBot::FuncCommand;
 
 sub new {
-  Carp::croak("Options to PBot should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
+  my ($proto, %conf) = @_;
+  my $class = ref($proto) || $proto;
   my $self = bless {}, $class;
-  $self->{atexit} = PBot::Registerable->new(%conf);
-  $self->register_signal_handlers;
   $self->initialize(%conf);
   return $self;
 }
@@ -61,6 +59,9 @@ sub new {
 sub initialize {
   my ($self, %conf) = @_;
   $self->{startup_timestamp} = time;
+
+  $self->{atexit} = PBot::Registerable->new(%conf, pbot => $self);
+  $self->register_signal_handlers;
 
   my $data_dir   = $conf{data_dir};
   my $module_dir = $conf{module_dir};
@@ -114,7 +115,7 @@ sub initialize {
   $self->{commands}->register(sub { $self->{capabilities}->capcmd(@_) }, "cap");
 
   # prepare the version
-  $self->{version}  = PBot::VERSION->new(pbot => $self, %conf);
+  $self->{version} = PBot::VERSION->new(pbot => $self, %conf);
   $self->{logger}->log($self->{version}->version . "\n");
   $self->{logger}->log("Args: @ARGV\n") if @ARGV;
 
@@ -123,8 +124,8 @@ sub initialize {
   $self->{logger}->log("module_dir: $module_dir\n");
   $self->{logger}->log("plugin_dir: $plugin_dir\n");
 
-  $self->{timer}    = PBot::Timer->new(timeout => 10, %conf);
-  $self->{func_cmd} = PBot::FuncCommand->new(pbot => $self, %conf);
+  $self->{timer}     = PBot::Timer->new(pbot => $self, timeout => 10, %conf);
+  $self->{func_cmd}  = PBot::FuncCommand->new(pbot => $self, %conf);
   $self->{refresher} = PBot::Refresher->new(pbot => $self);
 
   # create registry and set some defaults

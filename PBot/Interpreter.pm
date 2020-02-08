@@ -8,32 +8,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Interpreter;
+use parent 'PBot::Class', 'PBot::Registerable';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
-
-use base 'PBot::Registerable';
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
-use Carp ();
 
 use PBot::Utils::ValidateString;
 
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->SUPER::initialize(%conf);
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
+  $self->PBot::Registerable::initialize(%conf);
 
   $self->{pbot}->{registry}->add_default('text',  'general', 'compile_blocks',                  $conf{compile_blocks}                  // 1);
   $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',         $conf{compile_blocks_channels}         // '.*');

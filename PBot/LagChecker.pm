@@ -9,29 +9,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::LagChecker;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
-use feature 'switch';
 
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
-use Carp ();
-
-sub new {
-  Carp::croak("Options to LagChecker should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot}  = $conf{pbot} // Carp::croak("Missing pbot reference to LagChecker");
-
   $self->{lag_average}    = undef;     # average of entries in lag history, in seconds
   $self->{lag_string}     = undef;     # string representation of lag history and lag average
   $self->{lag_history}    = [];        # history of previous PING/PONG timings

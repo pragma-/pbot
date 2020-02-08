@@ -3,34 +3,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Capabilities;
+use parent 'PBot::Class';
 
 # purpose: provides interface to set/remove/modify/query user capabilities.
 #
 # Examples:
 #
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
-use PBot::HashObject;
-use Carp ();
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   my $filename = $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/capabilities';
   $self->{caps} = PBot::HashObject->new(name => 'Capabilities', filename => $filename, pbot => $self->{pbot});
   $self->{caps}->load;

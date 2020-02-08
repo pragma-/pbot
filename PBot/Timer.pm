@@ -10,13 +10,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Timer;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
-
-use Carp ();
 
 our $min_timeout = 1;
 our $max_seconds = 1000000;
@@ -34,23 +31,13 @@ $SIG{ALRM} = sub {
   $seconds -= $max_seconds if $seconds > $max_seconds;
 };
 
-sub new {
-  Carp::croak("Options to Timer should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-
+sub initialize {
+  my ($self, %conf) = @_;
   my $timeout = $conf{timeout} // 10;
-  my $name = $conf{name} // "Unnamed $timeout Second Timer";
-
-  my $self = {
-    handlers => [],
-    name => $name,
-    timeout => $timeout,
-    enabled => 0,
-  };
-
-  bless $self, $class;
   $min_timeout = $timeout if $timeout < $min_timeout;
-
+  $self->{name} = $conf{name} // "Unnamed $timeout Second Timer";
+  $self->{handlers} = [];
+  $self->{enabled} = 0;
   # alarm signal handler (poor-man's timer)
   $self->{timer_func} = sub { on_tick_handler($self) };
   return $self;

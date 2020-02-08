@@ -3,26 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::EventDispatcher;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use IO::Select;
-use Carp ();
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference in " . __FILE__);
   $self->{handlers} = { any => [] };
 }
 
@@ -60,7 +49,8 @@ sub dispatch_event {
     for (my $i = 0; $i < @{$self->{handlers}->{$event_type}}; $i++) {
       my $ref = @{$self->{handlers}->{$event_type}}[$i];
       my ($handler, $info) = ($ref->[0], $ref->[1]);
-      $self->{pbot}->{logger}->log("Dispatching $event_type to handler $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug') > 1;
+      my $debug = $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug') // 0;
+      $self->{pbot}->{logger}->log("Dispatching $event_type to handler $info\n") if $debug > 1;
 
       eval {
         $ret = $handler->($event_type, $event_data);

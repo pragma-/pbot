@@ -10,29 +10,22 @@
 
 package PBot::SQLiteLogger;
 
-use strict;
-use warnings;
-
+use strict; use warnings;
 use feature 'unicode_strings';
 
-use Carp;
 use Time::HiRes qw(gettimeofday);
 
-sub new
-{
+sub new {
   my ($class, %conf) = @_;
   my $self = {};
   $self->{buf} = '';
   $self->{timestamp} = gettimeofday;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference in " . __FILE__);
   return bless $self, $class;
 }
 
-sub log
-{
+sub log {
   my $self = shift;
   $self->{buf} .= shift;
-
   # DBI feeds us pieces at a time, so accumulate a complete line
   # before outputing
   if ($self->{buf} =~ tr/\n//) {

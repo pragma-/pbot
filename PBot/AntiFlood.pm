@@ -12,34 +12,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::AntiFlood;
+use parent 'PBot::Class';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
-use PBot::DualIndexHashObject;
-
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
 use POSIX qw/strftime/;
 use Text::CSV;
-use Carp ();
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 
   # flags for 'validated' field
   $self->{NICKSERV_VALIDATED}       = (1<<0);
