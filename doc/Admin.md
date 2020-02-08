@@ -524,7 +524,10 @@ Lists all currently loaded plugins. This isn't an admin command, but it is inclu
 Usage: `pluglist`
 
     <pragma-> !pluglist
-       <PBot> Loaded plugins: ActionTrigger, AntiAway, AntiKickAutoRejoin, AntiNickSpam, AntiRepeat, AntiTwitter, AutoRejoin, GoogleSearch, Quotegrabs, RemindMe, UrlTitles
+       <PBot> Loaded plugins: ActionTrigger, AntiAway, AntiKickAutoRejoin, AntiNickSpam,
+              AntiRepeat, AntiTwitter, AutoRejoin, Battleship, Connect4, Counter, Date,
+              GoogleSearch, Quotegrabs, RemindMe, RestrictedMod, Spinach, TypoSub, UrlTitles,
+              Weather, Wttr
 
 ## Command metadata commands
 
