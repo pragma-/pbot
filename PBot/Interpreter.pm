@@ -912,10 +912,10 @@ sub dehighlight_nicks {
   foreach my $nick (@nicks) {
     $nick = quotemeta $nick;
     my $const_line = $line;
-    while ($const_line =~ m/(?<![^\W_])($nick)(?![^\W_])/gi) {
+    while ($const_line =~ m/(?<![^\W_])($nick)(?![^\W_:])/gi) {
       my $match = $1;
       $match =~ s/^(.)/$1\x{200b}/;
-      $line =~ s/$nick/$match/i;
+      $line =~ s/$nick(?!:)/$match/i;
     }
   }
   return $line;
