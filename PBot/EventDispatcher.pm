@@ -28,7 +28,7 @@ sub initialize {
 
 sub register_handler {
   my ($self, $event_type, $sub, $package_override) = @_;
-  my ($package) = caller(1);
+  my ($package) = caller(0);
   $package = $package_override if defined $package_override;
   my $info = "$package\-\>$event_type";
   $self->{pbot}->{logger}->log("Adding handler: $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug');
@@ -37,7 +37,7 @@ sub register_handler {
 
 sub remove_handler {
   my ($self, $event_type, $package_override) = @_;
-  my ($package) = caller(1);
+  my ($package) = caller(0);
   $package = $package_override if defined $package_override;
   my $info = "$package\-\>$event_type";
 
@@ -60,7 +60,7 @@ sub dispatch_event {
     for (my $i = 0; $i < @{$self->{handlers}->{$event_type}}; $i++) {
       my $ref = @{$self->{handlers}->{$event_type}}[$i];
       my ($handler, $info) = ($ref->[0], $ref->[1]);
-      $self->{pbot}->{logger}->log("Dispatching $event_type to handler $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug');
+      $self->{pbot}->{logger}->log("Dispatching $event_type to handler $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug') > 1;
 
       eval {
         $ret = $handler->($event_type, $event_data);
