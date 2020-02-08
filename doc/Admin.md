@@ -203,7 +203,7 @@ see what capabilities a user has.
 Usage:
 
     cap list [capability] |
-    cap group <existing or new capability group> <existing capability> |
+    cap group <existing or new capability group> <existing capabilities...> |
     cap ungroup <existing capability group> <grouped capability> |
     cap userhas <user> [capability] |
     cap whohas <capability>
@@ -250,15 +250,12 @@ Observe.
 To create a new capability group or to add capabilities to an existing group,
 use the `cap group` command.
 
-Usage: `cap group <existing or new capability group> <existing capability>`
+Usage: `cap group <existing or new capability group> <existing capabilities...>`
 
 For example, to create a new capability group called `moderator` who can strictly
 only set `mode +m` or `mode -m` and use the `voice` and `devoice` commands:
 
-    <pragma-> cap group moderator can-voice
-    <pragma-> cap group moderator can-devoice
-    <pragma-> cap group moderator can-mode
-    <pragma-> cap group moderator can-mode-m
+    <pragma-> cap group moderator can-voice can-devoice can-mode can-mode-m
 <!-- -->
     <pragma-> cap list moderator
        <PBot> Grouped capabilities for moderator: can-devoice (1 cap), can-voice (1 cap),
