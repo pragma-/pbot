@@ -137,7 +137,7 @@ sub set_meta {
 
       my $found = 0;
       foreach my $n (keys %{$self->{nicklist}->{$channel}}) {
-        if ($self->{nicklist}->{$channel}->{$n}->{hostmask} =~ m/$regex/i) {
+        if (exists $self->{nicklist}->{$channel}->{$n}->{hostmask} and $self->{nicklist}->{$channel}->{$n}->{hostmask} =~ m/$regex/i) {
           $self->{nicklist}->{$channel}->{$n}->{$key} = $value;
           $found++;
         }
