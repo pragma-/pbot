@@ -329,7 +329,7 @@ Name | Description | Belongs to group
 `can-clear-mutes` | Allows the user to use [`unmute *`](#unbanunmute) to clear a channel's mutes. | botowner, admin
 `can-kick-wildcard` | Allows the user to use wildcards with the [`kick`](#kick) command. | botowner, admin
 `can-op-wildcard` | Allows the user to use wildcards with the [`op`](#op) command. | botowner, admin
-`can-voice-wildcard` | Allows the user to use wildcards with the [`voice`](#voice) command. | botowner, chanop, chanmod
+`can-voice-wildcard` | Allows the user to use wildcards with the [`voice`](#voice) command. | botowner, admin, chanop, chanmod
 
 ## Channel management commands
 ### join
