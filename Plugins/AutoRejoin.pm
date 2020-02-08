@@ -39,8 +39,8 @@ sub initialize {
 
 sub unload {
   my ($self) = @_;
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick', __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.part', __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
 }
 
 sub rejoin_channel {

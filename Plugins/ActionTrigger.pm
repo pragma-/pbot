@@ -72,12 +72,12 @@ sub unload {
   $self->dbi_end;
   $self->{pbot}->{commands}->unregister('actiontrigger');
   $self->{pbot}->{capabilities}->remove('can-actiontrigger');
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public',  __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction', __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.join',    __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.part',    __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit',    __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick',    __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.join');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
 }
 
 sub create_database {

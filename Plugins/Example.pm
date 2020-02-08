@@ -27,7 +27,7 @@ sub initialize {
 sub unload {
   my $self = shift;
   # perform plugin clean-up here
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public', __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
 }
 
 sub on_public {

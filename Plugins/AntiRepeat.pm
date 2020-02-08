@@ -45,8 +45,8 @@ sub initialize {
 sub unload {
   my $self = shift;
   $self->{pbot}->{timer}->unregister('antirepeat');
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public',  __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction', __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
 }
 
 sub on_public {

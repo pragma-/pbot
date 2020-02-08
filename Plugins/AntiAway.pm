@@ -38,8 +38,8 @@ sub initialize {
 
 sub unload {
   my ($self) = @_;
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.nick',    __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction', __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.nick');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
 }
 
 sub on_nickchange {

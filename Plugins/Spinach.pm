@@ -86,9 +86,9 @@ sub unload {
   $self->{pbot}->{commands}->unregister('spinach');
   $self->{pbot}->{timer}->unregister('spinach timer');
   $self->{stats}->end if $self->{stats_running};
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.part', __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit', __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick', __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
 }
 
 sub on_kick {

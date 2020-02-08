@@ -54,9 +54,9 @@ sub unload {
   my $self = shift;
   $self->{pbot}->{commands}->unregister('battleship');
   $self->{pbot}->{timer}->unregister('battleship timer');
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.part', __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit', __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick', __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
 }
 
 sub on_kick {

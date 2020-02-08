@@ -39,8 +39,8 @@ sub initialize {
 
 sub unload {
   my ($self) = @_;
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public',  __PACKAGE__);
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction', __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
 }
 
 sub on_public {

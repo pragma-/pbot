@@ -52,7 +52,7 @@ sub unload {
   $self->{pbot}->{commands}->unregister('counterlist');
   $self->{pbot}->{commands}->unregister('countertrigger');
   $self->{pbot}->{capabilities}->remove('can-countertrigger');
-  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public', __PACKAGE__);
+  $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
 }
 
 sub create_database {
