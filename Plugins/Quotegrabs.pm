@@ -8,10 +8,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::Quotegrabs;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use HTML::Entities;
@@ -25,17 +24,8 @@ use PBot::Utils::ValidateString;
 
 use POSIX qw(strftime);
 
-sub new {
-  Carp::croak("Options to Quotegrabs should be key/value pairs, not hash reference") if ref($_[1]) eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot}        = $conf{pbot} // Carp::croak("Missing pbot reference in Quotegrabs");
   $self->{filename}    = $conf{quotegrabs_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quotegrabs.sqlite3';
 
   $self->{database} = Plugins::Quotegrabs::Quotegrabs_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});

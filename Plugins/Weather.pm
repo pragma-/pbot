@@ -8,28 +8,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::Weather;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use PBot::Utils::LWPUserAgentCached;
 use XML::LibXML;
 use Getopt::Long qw(GetOptionsFromString);
-use Carp ();
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
+Getopt::Long::Configure("bundling");
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { $self->weathercmd(@_) },  "weather", 0);
 }
 
@@ -40,10 +30,7 @@ sub unload {
 
 sub weathercmd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-
   my $usage = "Usage: weather [-u <user account>] [location]";
-  Getopt::Long::Configure("bundling");
-
   my $getopt_error;
   local $SIG{__WARN__} = sub {
     $getopt_error = shift;

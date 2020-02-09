@@ -3,33 +3,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::AntiRepeat;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
+use warnings; use strict;
+use feature 'unicode_strings';
 
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
-
-use feature 'unicode_strings';
-
-use Carp ();
 
 use String::LCSS qw/lcss/;
 use Time::HiRes qw/gettimeofday/;
 use POSIX qw/strftime/;
 
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
   $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat',           $conf{antirepeat}           // 1);
   $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat_threshold', $conf{antirepeat_threshold} // 2.5);
   $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat_match',     $conf{antirepeat_match}     // 0.5);

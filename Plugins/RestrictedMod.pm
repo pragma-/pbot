@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::RestrictedMod;
+use parent 'Plugins::Plugin';
 
 # purpose: provides restricted moderation abilities to voiced users.
 # They are allowed to ban/mute/kick only users that are not admins,
@@ -10,25 +11,13 @@ package Plugins::RestrictedMod;
 # configurations where +v users are recognized as "semi-trusted" in
 # order to provide assistance in combating heavy spam and drone traffic.
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
-use Carp ();
 
 use Storable qw/dclone/;
 
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { $self->modcmd(@_) }, 'mod', 0);
   $self->{pbot}->{commands}->set_meta('mod', 'help', 'Provides restricted moderation abilities to voiced users. They can kick/ban/etc only users that are not admins, whitelisted, voiced or opped.');
 

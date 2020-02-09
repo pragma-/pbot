@@ -8,26 +8,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::UrlTitles;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
-use Carp ();
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
   $self->{pbot}->{registry}->add_default('text',  'general', 'show_url_titles',                 $conf{show_url_titles}                 // 1);
   $self->{pbot}->{registry}->add_default('array', 'general', 'show_url_titles_channels',        $conf{show_url_titles_channels}        // '.*');
   $self->{pbot}->{registry}->add_default('array', 'general', 'show_url_titles_ignore_channels', $conf{show_url_titles_ignore_channels} // 'none');

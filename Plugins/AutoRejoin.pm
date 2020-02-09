@@ -8,30 +8,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::AutoRejoin;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
-use Carp ();
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
   $self->{pbot}->{registry}->add_default('array', 'autorejoin', 'rejoin_delay', '900,1800,3600');
-
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',   sub { $self->on_kick(@_)   });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.part',   sub { $self->on_part(@_)   });
   $self->{rejoins} = {};

@@ -8,10 +8,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::Wttr;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 use utf8;
 
@@ -20,21 +19,12 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 use PBot::Utils::LWPUserAgentCached;
 use JSON;
-use Getopt::Long qw(GetOptionsFromString);
 use URI::Escape qw/uri_escape_utf8/;
-use Carp ();
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
+use Getopt::Long qw(GetOptionsFromString);
+Getopt::Long::Configure("bundling_override", "ignorecase_always");
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { $self->wttrcmd(@_) },  "wttr", 0);
 }
 
@@ -67,8 +57,6 @@ sub wttrcmd {
   );
 
   my $usage = "Usage: wttr [-u <user account>] [location] [" . join(' ', map { "-$_" } @wttr_options) . "]";
-  Getopt::Long::Configure("bundling_override", "ignorecase_always");
-
   my $getopt_error;
   local $SIG{__WARN__} = sub {
     $getopt_error = shift;

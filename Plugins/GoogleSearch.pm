@@ -5,29 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::GoogleSearch;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use WWW::Google::CustomSearch;
 use HTML::Entities;
 
-use Carp ();
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
   $self->{pbot}->{registry}->add_default('text', 'googlesearch', 'api_key', '');
   $self->{pbot}->{registry}->add_default('text', 'googlesearch', 'context', '');
 
@@ -44,16 +31,10 @@ sub unload {
 
 sub googlesearch {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-
-  if (not length $arguments) {
-    return "Usage: google [number of results] query\n";
-  }
+  return "Usage: google [number of results] query\n" if not length $arguments;
 
   my $matches = 1;
-
-  if ($arguments =~ s/^([0-9]+)//) {
-    $matches = $1;
-  }
+  $matches = $1 if $arguments =~ s/^-n\s+([0-9]+)\s*//;
 
   my $api_key = $self->{pbot}->{registry}->get_value('googlesearch', 'api_key');  # https://developers.google.com/custom-search/v1/overview
   my $cx      = $self->{pbot}->{registry}->get_value('googlesearch', 'context');  # https://cse.google.com/all

@@ -8,26 +8,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::AntiAway;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
-
-use Carp ();
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
   $self->{pbot}->{registry}->add_default('text', 'antiaway', 'bad_nicks',   $conf{bad_nicks}   // '([[:punct:]](afk|brb|bbl|away|sleep|z+|work|gone|study|out|home|busy|off)[[:punct:]]*$|.+\[.*\]$)');
   $self->{pbot}->{registry}->add_default('text', 'antiaway', 'bad_actions', $conf{bad_actions} // '^/me (is (away|gone)|.*auto.?away)');
   $self->{pbot}->{registry}->add_default('text', 'antiaway', 'kick_msg',    'http://sackheads.org/~bnaylor/spew/away_msgs.html');

@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::ActionTrigger;
+use parent 'Plugins::Plugin';
 
 # purpose: provides interface to set/remove/modify regular expression triggers
 # to execute a command.
@@ -26,31 +27,18 @@ package Plugins::ActionTrigger;
 #
 # These are basic examples; more complex examples can be crafted.
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
-use Carp ();
 use DBI;
 use Time::Duration qw/duration/;
 use Time::HiRes qw/gettimeofday/;
 
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
   $self->{pbot}->{commands}->register(sub { $self->actiontrigger(@_) }, 'actiontrigger', 1);
   $self->{pbot}->{capabilities}->add('admin', 'can-actiontrigger', 1);
 

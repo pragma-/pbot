@@ -3,34 +3,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::RemindMe;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
-use Carp ();
 use DBI;
 use Time::Duration qw/concise duration/;
 use Time::HiRes qw/gettimeofday/;
 use Getopt::Long qw(GetOptionsFromString);
-
 Getopt::Long::Configure ("bundling");
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{commands}->register(sub { $self->remindme(@_) }, 'remindme', 0);
   $self->{filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/reminders.sqlite3';
   $self->{pbot}->{timer}->register(sub { $self->check_reminders(@_) }, 1, 'RemindMe');

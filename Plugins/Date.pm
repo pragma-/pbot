@@ -8,26 +8,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::Date;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
-
+use warnings; use strict;
 use feature 'unicode_strings';
 
 use Getopt::Long qw(GetOptionsFromString);
-use Carp ();
-
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
+Getopt::Long::Configure("bundling");
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
   $self->{pbot}->{registry}->add_default('text', 'date', 'default_timezone', 'UTC');
   $self->{pbot}->{commands}->register(sub { $self->datecmd(@_) },  "date", 0);
 }
@@ -39,10 +29,7 @@ sub unload {
 
 sub datecmd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-
   my $usage = "date [-u <user account>] [timezone]";
-  Getopt::Long::Configure("bundling");
-
   my $getopt_error;
   local $SIG{__WARN__} = sub {
     $getopt_error = shift;

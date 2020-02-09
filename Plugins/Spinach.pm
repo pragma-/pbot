@@ -3,19 +3,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::Spinach;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
+use warnings; use strict;
 
 use FindBin;
 use lib "$FindBin::RealBin/../..";
-
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 use feature 'unicode_strings';
 
-use Carp ();
 use JSON;
 
 use Lingua::EN::Fractions qw/fraction2words/;
@@ -38,18 +36,8 @@ use PBot::HashObject;
 use Plugins::Spinach::Stats;
 use Plugins::Spinach::Rank;
 
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
-
   $self->{pbot}->{commands}->register(sub { $self->spinach_cmd(@_) }, 'spinach', 0);
 
   $self->{pbot}->{timer}->register(sub { $self->spinach_timer }, 1, 'spinach timer');

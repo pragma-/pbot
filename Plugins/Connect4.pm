@@ -3,34 +3,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::Connect4;
+use parent 'Plugins::Plugin';
 
-use warnings;
-use strict;
+use warnings; use strict;
+use feature 'unicode_strings';
 
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
-use feature 'unicode_strings';
-
-use Carp ();
 use Time::Duration qw/concise duration/;
 use Data::Dumper;
 use List::Util qw[min max];
 $Data::Dumper::Useqq = 1;
 $Data::Dumper::Sortkeys = 1;
 
-sub new {
-  Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
-  $self->initialize(%conf);
-  return $self;
-}
-
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot} = $conf{pbot};
-
   $self->{pbot}->{commands}->register(sub { $self->connect4_cmd(@_) }, 'connect4', 0);
 
   $self->{pbot}->{timer}->register(sub { $self->connect4_timer }, 1, 'connect4 timer');
