@@ -18,8 +18,8 @@ use Time::Duration;
 
 sub initialize {
   my ($self, %conf) = @_;
-  $self->{pbot}->{registry}->add_default('array', 'antikickautorejoin', 'punishment', '300,900,1800,3600,28800');
-  $self->{pbot}->{registry}->add_default('text',  'antikickautorejoin', 'threshold',  '4');
+  $self->{pbot}->{registry}->add_default('array', 'antikickautorejoin', 'punishment', '30,90,180,300,28800');
+  $self->{pbot}->{registry}->add_default('text',  'antikickautorejoin', 'threshold',  '2');
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.kick', sub { $self->on_kick(@_) });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.join', sub { $self->on_join(@_) });
@@ -68,7 +68,7 @@ sub on_join {
       $duration =~ s/s$//; # hours -> hour, minutes -> minute
 
       $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'autorejoining after kick', "*!$user\@$host", $channel, $timeout);
-      $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick $duration ban for auto-rejoining after kick");
+      $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick $duration ban for auto-rejoining after kick; use this time to think about why you were kicked");
       $self->{pbot}->{chanops}->gain_ops($channel);
       $self->{kicks}->{$channel}->{$nick}->{rejoins}++;
     }
