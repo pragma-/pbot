@@ -81,8 +81,7 @@ sub load {
 
     $self->{pbot}->{logger}->log("Loading $plugin\n");
     my $class = "Plugins::$plugin";
-    my $mod = $class->new(pbot => $self->{pbot}, %conf);
-    $self->{plugins}->{$plugin} = $mod;
+    $self->{plugins}->{$plugin} = $class->new(pbot => $self->{pbot}, %conf);
     $self->{pbot}->{refresher}->{refresher}->update_cache("$path/$plugin.pm");
     return 1;
   };
