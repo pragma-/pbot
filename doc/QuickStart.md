@@ -78,7 +78,7 @@ Name | Description
 --- | ---
 [`PBot/`](https://github.com/pragma-/pbot/tree/master/PBot) | PBot source tree
 [`Plugins/`](https://github.com/pragma-/pbot/tree/master/Plugins) | Dynamically loadable internal plugins
-[`modules/`](https://github.com/pragma-/pbot/tree/master/modules) | External command-line executables invokable by PBot commands
+[`modules/`](https://github.com/pragma-/pbot/tree/master/modules) | External command-line executables invokable as PBot commands
 [`data/`](https://github.com/pragma-/pbot/tree/master/data) | Default data-directory
 [`doc/`](https://github.com/pragma-/pbot/tree/master/doc) | Helpful documentation
 [`pbot`](https://github.com/pragma-/pbot/blob/master/pbot) | executable used to launch PBot
