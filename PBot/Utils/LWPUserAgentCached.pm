@@ -40,9 +40,11 @@ sub request {
   my ($self, @args) = @_;
   my $request = $args[0];
   return $self->SUPER::request(@args) if $request->method ne 'GET';
+
   my $uri = $request->uri->as_string;
   my $cached = $self->{cache}->get($uri);
   return HTTP::Response->parse($cached) if defined $cached;
+
   my $res = $self->SUPER::request(@args);
   $self->{cache}->set($uri, $res->as_string) if $res->code eq HTTP::Status::RC_OK;
   return $res;
