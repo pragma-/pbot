@@ -31,7 +31,7 @@ sub new {
 sub initialize {
   my ($package, $filename, $line) = caller(0);
   my (undef, undef, undef, $subroutine) = caller(1);
-  Carp::croak("Missing initialize subroutine, created by $subroutine at $filename:$line");
+  Carp::croak("Missing initialize subroutine in $subroutine at $filename:$line");
 }
 
 1;
