@@ -318,13 +318,20 @@ sub logoutcmd {
 sub users {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
-  $channel = $from if not defined $channel;
+
+  my $include_global = '';
+  if (not defined $channel) {
+    $channel = $from;
+    $include_global = '.*';
+  } else {
+    $channel = '.*' if $channel !~ /^#/;
+  }
 
   my $text = "Users: ";
   my $last_channel = "";
   my $sep = "";
   foreach my $chan (sort keys %{ $self->{users}->{hash} }) {
-    next if $from =~ m/^#/ and $chan ne $channel and $chan ne '.*';
+    next if $from =~ m/^#/ and $chan ne $channel and $chan ne $include_global;
     next if $from !~ m/^#/ and $channel =~ m/^#/ and $chan ne $channel;
 
     if ($last_channel ne $chan) {
