@@ -63,4 +63,4 @@ Usage: `useradd <user account name> <channel> <hostmask> is-whitelisted`
 If the user already exists, use the [`userset`](Admin.md#userset) command to
 grant them the `is-whitelisted` capability.
 
-Usage: `userset <user account name> is-whitelisted 1`
+Usage: `userset [channel] <user account name> is-whitelisted 1`
