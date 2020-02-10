@@ -150,7 +150,7 @@ sub find_user_account {
   }
 
   foreach my $chan (sort $sort keys %{ $self->{users}->{hash} }) {
-    if (($channel !~ m/^#/ and $any_channel) or $any_channel or $channel =~ m/^$chan$/i) {
+    if (($channel !~ m/^#/ and $any_channel) or $channel =~ m/^$chan$/i) {
       if (not exists $self->{users}->{hash}->{$chan}->{$hostmask}) {
         # find hostmask by account name or wildcard
         foreach my $mask (keys %{ $self->{users}->{hash}->{$chan} }) {
@@ -196,7 +196,7 @@ sub find_user {
 
   my $user = eval {
     foreach my $channel_regex (sort $sort keys %{ $self->{users}->{hash} }) {
-      if (($channel !~ m/^#/ and $any_channel) or $any_channel or $channel =~ m/^$channel_regex$/i) {
+      if (($channel !~ m/^#/ and $any_channel) or $channel =~ m/^$channel_regex$/i) {
         foreach my $hostmask_regex (keys %{ $self->{users}->{hash}->{$channel_regex} }) {
           next if $hostmask_regex eq '_name';
           if ($hostmask_regex =~ m/[*?]/) {
