@@ -58,5 +58,9 @@ To whitelist a user, use the [`useradd`](Admin.md#useradd) command with the
 `is-whitelisted` capability argument.  To whitelist them in all channels, add
 the user to the global channel.
 
+Usage: `useradd <user account name> <channel> <hostmask> is-whitelisted`
+
 If the user already exists, use the [`userset`](Admin.md#userset) command to
 grant them the `is-whitelisted` capability.
+
+Usage: `userset <user account name> is-whitelisted 1`
