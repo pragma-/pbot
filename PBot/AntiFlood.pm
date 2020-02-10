@@ -278,7 +278,6 @@ sub check_flood {
     }
 
     if ($self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted')) {
-      $self->{pbot}->{logger}->log("$nick!$user\@$host whitelisted, skipping anti-flood checking\n");
       next;
     }
 
