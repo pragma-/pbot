@@ -303,4 +303,5 @@
     * [How do I make PBot remember my `date` timezone?](FAQ.md#how-do-i-make-pbot-remember-my-date-timezone)
     * [How do I make PBot remember my `weather` location?](FAQ.md#how-do-i-make-pbot-remember-my-weather-location)
     * [How do I change the bot trigger?](FAQ.md#how-do-i-change-the-bot-trigger)
+    * [How do I whitelist a user?](FAQ.md#how-do-i-whitelist-a-user)
 <!-- md-toc-end -->
