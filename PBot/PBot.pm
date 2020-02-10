@@ -328,7 +328,7 @@ sub listcmd {
   my ($from, $nick, $user, $host, $arguments) = @_;
   my $text;
 
-  my $usage = "Usage: list <modules|commands|users>";
+  my $usage = "Usage: list <modules|commands>";
 
   if (not defined $arguments) {
     return $usage;
@@ -355,37 +355,6 @@ sub listcmd {
       } else {
         $text .= "$command->{name} ";
       }
-    }
-    return $text;
-  }
-
-  if ($arguments =~ /^users$/i) {
-    $text = "Users: ";
-    my $last_channel = "";
-    my $sep = "";
-    foreach my $channel (sort keys %{ $self->{users}->{users}->{hash} }) {
-      next if $from =~ m/^#/ and $channel ne $from and $channel ne '.*';
-      if ($last_channel ne $channel) {
-        $text .= $sep . ($channel eq ".*" ? "global" : $channel) . ": ";
-        $last_channel = $channel;
-        $sep = "";
-      }
-      foreach my $hostmask (sort { return 0 if $a eq '_name' or $b eq '_name'; $self->{users}->{users}->{hash}->{$channel}->{$a}->{name} cmp $self->{users}->{users}->{hash}->{$channel}->{$b}->{name} } keys %{ $self->{users}->{users}->{hash}->{$channel} }) {
-        next if $hostmask eq '_name';
-        $text .= $sep;
-        my $has_cap = 0;
-        foreach my $key (keys %{$self->{users}->{users}->{hash}->{$channel}->{$hostmask}}) {
-          next if $key eq '_name';
-          if ($self->{capabilities}->exists($key)) {
-            $has_cap = 1;
-            last;
-          }
-        }
-        $text .= '+' if $has_cap;
-        $text .= $self->{users}->{users}->{hash}->{$channel}->{$hostmask}->{name};
-        $sep = " ";
-      }
-      $sep = "; ";
     }
     return $text;
   }
@@ -426,7 +395,7 @@ sub evalcmd {
 
   $self->{logger}->log("[$from] $nick!$user\@$host Evaluating [$arguments]\n");
 
-  my $ret;
+  my $ret = '';
   my $result = eval $arguments;
   if ($@) {
     if (length $result) {
@@ -436,6 +405,8 @@ sub evalcmd {
     }
     $ret =~ s/ at \(eval \d+\) line 1.//;
   }
+  $result = 'Undefined.' if not defined $result;
+  $result = 'No output.' if not length $result;
   return "/say $ret $result";
 }
 

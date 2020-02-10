@@ -24,6 +24,7 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { $self->userdel(@_)    },  "userdel",    1);
   $self->{pbot}->{commands}->register(sub { $self->userset(@_)    },  "userset",    1);
   $self->{pbot}->{commands}->register(sub { $self->userunset(@_)  },  "userunset",  1);
+  $self->{pbot}->{commands}->register(sub { $self->users(@_)  },      "users",      0);
   $self->{pbot}->{commands}->register(sub { $self->mycmd(@_)      },  "my",         0);
 
   $self->{pbot}->{capabilities}->add('admin', 'can-useradd',   1);
@@ -266,16 +267,13 @@ sub logout {
 sub get_loggedin_user_metadata {
   my ($self, $channel, $hostmask, $key) = @_;
   my $user = $self->loggedin($channel, $hostmask);
-  if ($user) {
-    return $user->{lc $key};
-  }
+  return $user->{lc $key} if $user;
   return undef;
 }
 
 sub logincmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   my $channel = $from;
-
   return "Usage: login [channel] password" if not $arguments;
 
   if ($arguments =~ m/^([^ ]+)\s+(.+)/) {
@@ -299,28 +297,58 @@ sub logincmd {
 
 sub logoutcmd {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
   $from = $arguments if length $arguments;
   my ($user_channel, $user_hostmask) = $self->find_user_account($from, "$nick!$user\@$host");
-
-  if (not defined $user_channel) {
-    return "/msg $nick You do not have a user account.";
-  }
+  return "/msg $nick You do not have a user account." if not defined $user_channel;
 
   my $u = $self->{users}->{hash}->{$user_channel}->{$user_hostmask};
   my $channel_text = $user_channel eq '.*' ? '' : " for $user_channel";
-
-  if (not $u->{loggedin}) {
-    return "/msg $nick You are not logged into $u->{name} ($user_hostmask)$channel_text.";
-  }
+  return "/msg $nick You are not logged into $u->{name} ($user_hostmask)$channel_text." if not $u->{loggedin};
 
   $self->logout($user_channel, $user_hostmask);
   return "/msg $nick Logged out of $u->{name} ($user_hostmask)$channel_text.";
 }
 
+sub users {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+  $channel = $from if not defined $channel;
+
+  my $text = "Users: ";
+  my $last_channel = "";
+  my $sep = "";
+  foreach my $chan (sort keys %{ $self->{users}->{hash} }) {
+    next if $from =~ m/^#/ and $chan ne $channel and $chan ne '.*';
+    next if $from !~ m/^#/ and $channel =~ m/^#/ and $chan ne $channel;
+
+    if ($last_channel ne $chan) {
+      $text .= $sep . ($chan eq ".*" ? "global" : $chan) . ": ";
+      $last_channel = $chan;
+      $sep = "";
+    }
+
+    foreach my $hostmask (sort { return 0 if $a eq '_name' or $b eq '_name'; $self->{users}->{hash}->{$chan}->{$a}->{name} cmp $self->{users}->{hash}->{$chan}->{$b}->{name} } keys %{ $self->{users}->{hash}->{$chan} }) {
+      next if $hostmask eq '_name';
+      $text .= $sep;
+      my $has_cap = 0;
+      foreach my $key (keys %{$self->{users}->{hash}->{$chan}->{$hostmask}}) {
+        next if $key eq '_name';
+        if ($self->{pbot}->{capabilities}->exists($key)) {
+          $has_cap = 1;
+          last;
+        }
+      }
+      $text .= '+' if $has_cap;
+      $text .= $self->{users}->{hash}->{$chan}->{$hostmask}->{name};
+      $sep = " ";
+    }
+    $sep = "; ";
+  }
+  return $text;
+}
+
 sub useradd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-
   my ($name, $channel, $hostmask, $capabilities, $password) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 5);
   $capabilities //= 'none';
 
@@ -357,7 +385,6 @@ sub useradd {
 
 sub userdel {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-
   my ($channel, $hostmask) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
   if (not defined $channel or not defined $hostmask) {
