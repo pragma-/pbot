@@ -566,7 +566,8 @@ sub mycmd {
   }
 
   my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
-  $found_channel = $channel if not defined $found_channel; # let DualIndexHashObject disambiguate
+  ($found_channel, $found_hostmask) = $self->find_user_account('.*', $hostmask) if not defined $found_channel;
+  return "No user account found in $channel." if not defined $found_channel;
   $result .= $self->{users}->set($found_channel, $found_hostmask, $key, $value);
   $result =~ s/^password => .*;?$/password => <private>;/m;
   return $result;
