@@ -86,7 +86,7 @@ sub interpreter {
 
   my ($cmd_channel) = $stuff->{arguments} =~ m/\B(#[^ ]+)/; # assume command is invoked in regards to first channel-like argument
   $cmd_channel = $from if not defined $cmd_channel;         # otherwise command is invoked in regards to the channel the user is in
-  my $user = $self->{pbot}->{users}->loggedin($cmd_channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+  my $user = $self->{pbot}->{users}->find_user($cmd_channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
 
   my $cap_override;
   if (exists $stuff->{'cap-override'}) {
@@ -104,6 +104,13 @@ sub interpreter {
           }
         } else {
           if (not defined $user) {
+            my ($found_chan, $found_mask) = $self->{pbot}->{users}->find_user_account($cmd_channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}", 1);
+            if (not defined $found_chan) {
+              return "/msg $stuff->{nick} You must have a user account to use $keyword.";
+            } else {
+              return "/msg $stuff->{nick} You must have a user account in $cmd_channel to use $keyword. (You have an account in $found_chan.)";
+            }
+          } elsif (not $user->{loggedin}) {
             return "/msg $stuff->{nick} You must be logged into your user account to use $keyword.";
           }
 
