@@ -555,7 +555,7 @@ sub mycmd {
       }
 
       if (not $self->{pbot}->{capabilities}->userhas($u, 'admin')) {
-        my @disallowed = qw/name autoop autovoice/;
+        my @disallowed = qw/name autoop autovoice chanop admin/;
         if (grep { $_ eq $key } @disallowed) {
           return "The $key metadata requires the admin capability to set, which your user account does not have.";
         }
