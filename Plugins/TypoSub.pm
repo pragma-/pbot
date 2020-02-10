@@ -79,8 +79,14 @@ sub on_public {
             my $text = $message->{msg};
             if ($modifiers =~ m/g/) {
               $text =~ s/$rx/$replacement/g;
+              my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+              my $i;
+              map { ++$i; $text =~ s/[\$\\]$i/$_/g; } @stuff;
             } else {
               $text =~ s/$rx/$replacement/;
+              my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+              my $i;
+              map { ++$i; $text =~ s/[\$\\]$i/$_/g; } @stuff;
             }
             $event->{conn}->privmsg($channel, "$result$text");
             return 0;
