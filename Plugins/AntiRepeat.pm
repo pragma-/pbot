@@ -52,8 +52,9 @@ sub on_public {
 
   return 0 if $channel !~ m/^#/;
   return 0 if $event->{interpreted};
-  return 0 if $self->{pbot}->{antiflood}->whitelisted($channel, "$nick!$user\@$host", 'antiflood');
-  return 0 if $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
+
+  my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+  return 0 if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
 
   my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
 

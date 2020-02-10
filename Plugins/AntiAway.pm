@@ -38,7 +38,11 @@ sub on_nickchange {
     my $kick_msg = $self->{pbot}->{registry}->get_value('antiaway', 'kick_msg');
     my $channels = $self->{pbot}->{nicklist}->get_channels($newnick);
     foreach my $chan (@$channels) {
-      next if not exists $self->{pbot}->{channels}->{channels}->{hash}->{$chan} or not $self->{pbot}->{channels}->{channels}->{hash}->{$chan}->{chanop};
+      next if not $self->{pbot}->{chanops}->can_gain_ops($chan);
+
+      my $u = $self->{pbot}->{users}->loggedin($chan, "$nick!$user\@$host");
+      next if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
+
       $self->{pbot}->{logger}->log("$newnick matches bad away nick regex, kicking from $chan\n");
       $self->{pbot}->{chanops}->add_op_command($chan, "kick $chan $newnick $kick_msg");
       $self->{pbot}->{chanops}->gain_ops($chan);
@@ -53,6 +57,9 @@ sub on_action {
 
   return 0 if $channel !~ /^#/;
   return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
+
+  my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+  return 0 if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
 
   my $bad_actions = $self->{pbot}->{registry}->get_value('antiaway', 'bad_actions');
   if ($msg =~ m/$bad_actions/i) {

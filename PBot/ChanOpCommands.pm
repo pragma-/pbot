@@ -50,16 +50,17 @@ sub initialize {
   $self->{pbot}->{capabilities}->add('can-mode-any', 'can-mode', 1);
 
   # add to chanop capabilities group
-  $self->{pbot}->{capabilities}->add('chanop', 'can-ban',     1);
-  $self->{pbot}->{capabilities}->add('chanop', 'can-unban',   1);
-  $self->{pbot}->{capabilities}->add('chanop', 'can-mute',    1);
-  $self->{pbot}->{capabilities}->add('chanop', 'can-unmute',  1);
-  $self->{pbot}->{capabilities}->add('chanop', 'can-kick',    1);
-  $self->{pbot}->{capabilities}->add('chanop', 'can-op',      1);
-  $self->{pbot}->{capabilities}->add('chanop', 'can-deop',    1);
-  $self->{pbot}->{capabilities}->add('chanop', 'can-voice',   1);
-  $self->{pbot}->{capabilities}->add('chanop', 'can-devoice', 1);
-  $self->{pbot}->{capabilities}->add('chanop', 'can-invite',  1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-ban',        1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-unban',      1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-mute',       1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-unmute',     1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-kick',       1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-op',         1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-deop',       1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-voice',      1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-devoice',    1);
+  $self->{pbot}->{capabilities}->add('chanop', 'can-invite',     1);
+  $self->{pbot}->{capabilities}->add('chanop', 'is-whitelisted', 1);
 
   # add to admin capability group
   $self->{pbot}->{capabilities}->add('admin', 'chanop',       1);
@@ -305,8 +306,8 @@ sub mode {
           if ($modifier eq '-') {
             # removing mode -- check against whitelist, etc
             next if $nick_data->{nick} eq $self->{pbot}->{registry}->get_value('irc', 'botnick');
-            next if $self->{pbot}->{antiflood}->whitelisted($channel, $nick_data->{hostmask});
-            next if $self->{pbot}->{users}->loggedin_admin($channel, $nick_data->{hostmask});
+            my $u = $self->{pbot}->{users}->loggedin($channel, $nick_data->{hostmask});
+            next if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
           }
 
           # skip nick if already has mode set/unset
@@ -712,8 +713,8 @@ sub kick_user {
           my $nick_data = $self->{pbot}->{nicklist}->{nicklist}->{$channel}->{$nl};
 
           next if $nick_data->{nick} eq $self->{pbot}->{registry}->get_value('irc', 'botnick');
-          next if $self->{pbot}->{antiflood}->whitelisted($channel, $nick_data->{hostmask});
-          next if $self->{pbot}->{users}->loggedin_admin($channel, $nick_data->{hostmask});
+          my $u = $self->{pbot}->{users}->loggedin($channel, $nick_data->{hostmask});
+          next if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
 
           $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nl $reason");
         }

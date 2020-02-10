@@ -27,6 +27,9 @@ sub initialize {
   $self->add('can-modify-capabilities',  undef, 1);
   $self->add('can-group-capabilities',   undef, 1);
   $self->add('can-ungroup-capabilities', undef, 1);
+
+  # add some useful capabilities
+  $self->add('is-whitelisted', undef, 1);
 }
 
 sub has {

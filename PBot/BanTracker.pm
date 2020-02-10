@@ -174,7 +174,9 @@ sub is_banned {
 
     if (defined $baninfos) {
       foreach my $baninfo (@$baninfos) {
-        if ($self->{pbot}->{antiflood}->whitelisted($baninfo->{channel}, $baninfo->{banmask}, 'ban') || $self->{pbot}->{antiflood}->whitelisted($baninfo->{channel}, "$nick!$user\@$host", 'user')) {
+        my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+        my $whitelisted = $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
+        if ($self->{pbot}->{antiflood}->ban_exempted($baninfo->{channel}, $baninfo->{banmask}) || $whitelisted) {
           $self->{pbot}->{logger}->log("[BanTracker] is_banned: $nick!$user\@$host banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
         } else {
           if ($channel eq lc $baninfo->{channel}) {

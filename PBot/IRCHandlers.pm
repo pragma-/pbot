@@ -430,11 +430,11 @@ sub on_departure {
     $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_time_threshold'),
     $self->{pbot}->{messagehistory}->{MSG_DEPARTURE});
 
-  # auto-logout admins but not users
-  my $admin = $self->{pbot}->{users}->find_admin($channel, "$nick!$user\@$host");
-  if (defined $admin and $admin->{loggedin} and not $admin->{stayloggedin}) {
+  my $u = $self->{pbot}->{users}->find_user($channel, "$nick!$user\@$host");
+  if (defined $u and $u->{loggedin} and not $u->{stayloggedin}) {
     $self->{pbot}->{logger}->log("Logged out $nick.\n");
-    delete $admin->{loggedin};
+    delete $u->{loggedin};
+    $self->{pbot}->{users}->save;
   }
   return 0;
 }

@@ -37,9 +37,9 @@ sub initialize {
   $self->{whois_pending} = {}; # prevents multiple whois for nick joining multiple channels at once
   $self->{changinghost}  = {}; # tracks nicks changing hosts/identifying to strongly link them
 
-  my $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/whitelist';
-  $self->{whitelist} = PBot::DualIndexHashObject->new(name => 'Whitelist', filename => $filename, pbot => $self->{pbot});
-  $self->{whitelist}->load;
+  my $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/ban-exemptions';
+  $self->{'ban-exemptions'} = PBot::DualIndexHashObject->new(name => 'Ban exemptions', filename => $filename, pbot => $self->{pbot});
+  $self->{'ban-exemptions'}->load;
 
   $self->{pbot}->{timer}->register(sub { $self->adjust_offenses }, 60 * 60 * 1);
 
@@ -64,9 +64,9 @@ sub initialize {
 
   $self->{pbot}->{registry}->add_default('text',  'antiflood', 'debug_checkban',             $conf{debug_checkban}             //  0);
 
-  $self->{pbot}->{commands}->register(sub { $self->unbanme(@_)   },  "unbanme",   0);
-  $self->{pbot}->{commands}->register(sub { $self->whitelist(@_) },  "whitelist", 1);
-  $self->{pbot}->{capabilities}->add('admin', 'can-whitelist', 1);
+  $self->{pbot}->{commands}->register(sub { $self->unbanme(@_)    },  "unbanme",   0);
+  $self->{pbot}->{commands}->register(sub { $self->ban_exempt(@_) },  "ban-exempt", 1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-ban-exempt', 1);
 
   $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisaccount', sub { $self->on_whoisaccount(@_)  });
   $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisuser',    sub { $self->on_whoisuser(@_)     });
@@ -74,160 +74,56 @@ sub initialize {
   $self->{pbot}->{event_dispatcher}->register_handler('irc.account',      sub { $self->on_accountnotify(@_) });
 }
 
-sub whitelisted {
-  my ($self, $channel, $hostmask, $mode) = @_;
+sub ban_exempted {
+  my ($self, $channel, $hostmask) = @_;
   $channel = lc $channel;
   $hostmask = lc $hostmask;
-  $mode = 'user' if not defined $mode;
-
-  given ($mode) {
-    when ('ban') {
-      return 1 if exists $self->{whitelist}->{hash}->{$channel}
-        and exists $self->{whitelist}->{hash}->{$channel}->{$hostmask}
-        and $self->{whitelist}->{hash}->{$channel}->{$hostmask}->{ban};
-      return 0;
-    }
-
-    default {
-      my $ret = eval {
-        foreach my $chan (keys %{ $self->{whitelist}->{hash} }) {
-          next unless $channel eq $chan;
-          foreach my $mask (keys %{ $self->{whitelist}->{hash}->{$chan} }) {
-            next if $mask eq '_name';
-            next if $self->{whitelist}->{hash}->{$chan}->{$mask}->{ban};
-            return 1 if $hostmask eq $mask and $self->{whitelist}->{hash}->{$chan}->{$mask}->{$mode};
-          }
-        }
-        return 0;
-      };
-
-      if ($@) {
-        $self->{pbot}->{logger}->log("Error in whitelist: $@");
-        return 0;
-      }
-
-      return $ret;
-    }
-  }
+  return 1 if $self->{'ban-exemptions'}->exists($channel, $hostmask);
+  return 0;
 }
 
-sub whitelist {
+sub ban_exempt {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-
   my $arglist = $stuff->{arglist};
   $self->{pbot}->{interpreter}->lc_args($arglist);
 
   my $command = $self->{pbot}->{interpreter}->shift_arg($arglist);
-
-  return "Usage: whitelist <command>, where commands are: list/show, add, remove, set, unset" if not defined $command;
+  return "Usage: ban-exempt <command>, where commands are: list, add, remove" if not defined $command;
 
   given ($command) {
-    when ($_ eq "list" or $_ eq "show") {
-      my $text = "Whitelist:\n";
+    when ($_ eq 'list') {
+      my $text = 'Ban-evasion exemptions:\n';
       my $entries = 0;
-      foreach my $channel (keys %{ $self->{whitelist}->{hash} }) {
-        $text .= "  $self->{whitelist}->{hash}->{$channel}->{_name}:\n";
-        foreach my $mask (keys %{ $self->{whitelist}->{hash}->{$channel} }) {
+      foreach my $channel (keys %{ $self->{'ban-exemptions'}->{hash} }) {
+        $text .= "  $self->{'ban-exemptions'}->{hash}->{$channel}->{_name}:\n";
+        foreach my $mask (keys %{ $self->{'ban-exemptions'}->{hash}->{$channel} }) {
           next if $mask eq '_name';
-          my $mode = '';
-          $mode .= 'u' if $self->{whitelist}->{hash}->{$channel}->{$mask}->{user};
-          $mode .= 'b' if $self->{whitelist}->{hash}->{$channel}->{$mask}->{ban};
-          $mode .= 'a' if $self->{whitelist}->{hash}->{$channel}->{$mask}->{antiflood};
-          $mode = '?' if not length $mode;
-          $text .= "    $mask [$mode],\n";
+          $text .= "    $mask,\n";
           $entries++;
         }
       }
       $text .= "none" if $entries == 0;
       return $text;
     }
-    when ("set") {
-      my ($channel, $mask, $flag, $value) = $self->{pbot}->{interpreter}->split_args($arglist, 4);
-      return "Usage: whitelist set <channel> <mask> [flag [value]]" if not defined $channel or not defined $mask;
-
-      if (not exists $self->{whitelist}->{hash}->{lc $channel}) {
-        return "There is no such channel `$channel` in the whitelist.";
-      }
-
-      if (not exists $self->{whitelist}->{hash}->{lc $channel}->{lc $mask}) {
-        return "There is no such mask `$mask` for channel `$channel` in the whitelist.";
-      }
-
-      if (not defined $flag) {
-        my $text = "Flags:\n";
-        my $comma = '';
-        foreach $flag (keys %{ $self->{whitelist}->{hash}->{lc $channel}->{lc $mask} }) {
-          if ($flag eq 'created_on') {
-            my $timestamp = strftime "%a %b %e %H:%M:%S %Z %Y", localtime $self->{whitelist}->{hash}->{lc $channel}->{lc $mask}->{$flag};
-            $text .= $comma . "created_on: $timestamp";
-          } else {
-            $value = $self->{whitelist}->{hash}->{lc $channel}->{lc $mask}->{$flag};
-            $text .= $comma .  "$flag: $value";
-          }
-          $comma = ",\n  ";
-        }
-        return $text;
-      }
-
-      if (not defined $value) {
-        $value = $self->{whitelist}->{hash}->{lc $channel}->{lc $mask}->{$flag};
-        if (not defined $value) {
-          return "/say $flag is not set.";
-        } else {
-          return "/say $flag is set to $value";
-        }
-      }
-
-      $self->{whitelist}->{hash}->{lc $channel}->{lc $mask}->{$flag} = $value;
-      $self->{whitelist}->save;
-      return "Flag set.";
-    }
-    when ("unset") {
-      my ($channel, $mask, $flag) = $self->{pbot}->{interpreter}->split_args($arglist, 3);
-      return "Usage: whitelist unset <channel> <mask> <flag>" if not defined $channel or not defined $mask or not defined $flag;
-
-      if (not exists $self->{whitelist}->{hash}->{lc $channel}) {
-        return "There is no such channel `$channel` in the whitelist.";
-      }
-
-      if (not exists $self->{whitelist}->{hash}->{lc $channel}->{lc $mask}) {
-        return "There is no such mask `$mask` for channel `$channel` in the whitelist.";
-      }
-
-      if (not exists $self->{whitelist}->{hash}->{lc $channel}->{lc $mask}->{$flag}) {
-        return "There is no such flag `$flag` for mask `$mask` for channel `$channel` in the whitelist.";
-      }
-
-      delete $self->{whitelist}->{hash}->{lc $channel}->{lc $mask}->{$flag};
-      $self->{whitelist}->save;
-      return "Flag unset.";
-    }
     when ("add") {
-      my ($channel, $mask, $mode) = $self->{pbot}->{interpreter}->split_args($arglist, 3);
-      return "Usage: whitelist add <channel> <mask> [mode (user or ban, default: user)]" if not defined $channel or not defined $mask;
-      $mode = 'user' if not defined $mode;
+      my ($channel, $mask) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
+      return "Usage: ban-exempt add <channel> <mask>" if not defined $channel or not defined $mask;
 
       my $data = {
         owner => "$nick!$user\@$host",
         created_on => scalar gettimeofday
       };
 
-      if ($mode eq 'user') {
-        $data->{user} = 1;
-      } else {
-        $data->{ban} = 1;
-      }
-
-      $self->{whitelist}->add($channel, $mask, $data);
-      return "/say $mask whitelisted in channel $channel";
+      $self->{'ban-exemptions'}->add($channel, $mask, $data);
+      return "/say $mask exempted from ban-evasions in channel $channel";
     }
     when ("remove") {
       my ($channel, $mask) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
-      return "Usage: whitelist remove <channel> <mask>" if not defined $channel or not defined $mask;
-      return $self->{whitelist}->remove($channel, $mask);
+      return "Usage: ban-exempt remove <channel> <mask>" if not defined $channel or not defined $mask;
+      return $self->{'ban-exemptions'}->remove($channel, $mask);
     }
     default {
-      return "Unknown command '$command'; commands are: list/show, add, remove";
+      return "Unknown command '$command'; commands are: list, add, remove";
     }
   }
 }
@@ -358,7 +254,6 @@ sub check_flood {
   }
 
   my $channels;
-
   if ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
     $channels = $self->{pbot}->{nicklist}->get_channels($oldnick);
   } else {
@@ -366,23 +261,24 @@ sub check_flood {
     push @$channels, $channel;
   }
 
-  foreach my $channel (@$channels) {
-    $channel = lc $channel;
+  foreach my $chan (@$channels) {
+    $chan = lc $chan;
     # do not do flood processing if channel is not in bot's channel list or bot is not set as chanop for the channel
-    next if $channel =~ /^#/ and not $self->{pbot}->{chanops}->can_gain_ops($channel);
+    next if $chan =~ /^#/ and not $self->{pbot}->{chanops}->can_gain_ops($chan);
+    my $u = $self->{pbot}->{users}->loggedin($chan, "$nick!$user\@$host");
 
-    if ($channel =~ /^#/ and $mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
+    if ($chan =~ /^#/ and $mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
       # remove validation on PART or KICK so we check for ban-evasion when user returns at a later time
-      my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'validated');
-      if ($channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
-        $channel_data->{validated} &= ~$self->{NICKSERV_VALIDATED};
-        $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+      my $chan_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'validated');
+      if ($chan_data->{validated} & $self->{NICKSERV_VALIDATED}) {
+        $chan_data->{validated} &= ~$self->{NICKSERV_VALIDATED};
+        $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
       }
       next;
     }
 
-    if ($self->whitelisted($channel, "$nick!$user\@$host", 'antiflood')) {
-      $self->{pbot}->{logger}->log("$nick!$user\@$host anti-flood whitelisted, skipping anti-flood checking\n");
+    if ($self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted')) {
+      $self->{pbot}->{logger}->log("$nick!$user\@$host whitelisted, skipping anti-flood checking\n");
       next;
     }
 
@@ -392,8 +288,8 @@ sub check_flood {
     }
 
     # check for ban evasion if channel begins with # (not private message) and hasn't yet been validated against ban evasion
-    if ($channel =~ m/^#/) {
-      my $validated = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'validated')->{'validated'};
+    if ($chan =~ m/^#/) {
+      my $validated = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'validated')->{'validated'};
 
       if ($validated & $self->{NEEDS_CHECKBAN} or not $validated & $self->{NICKSERV_VALIDATED}) {
         if ($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
@@ -414,7 +310,7 @@ sub check_flood {
               $self->{whois_pending}->{$nick} = gettimeofday;
             }
           } else {
-            $self->check_bans($account, "$nick!$user\@$host", $channel);
+            $self->check_bans($account, "$nick!$user\@$host", $chan);
           }
         }
       }
@@ -423,34 +319,34 @@ sub check_flood {
     # do not do flood enforcement for this event if bot is lagging
     if ($self->{pbot}->{lagchecker}->lagging) {
       $self->{pbot}->{logger}->log("Disregarding enforcement of anti-flood due to lag: " . $self->{pbot}->{lagchecker}->lagstring . "\n");
-      $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+      $self->{channels}->{$chan}->{last_spoken_nick} = $nick;
       return;
     }
 
-    # do not do flood enforcement for logged in bot admins
-    if ($self->{pbot}->{registry}->get_value('antiflood', 'dont_enforce_admins') and $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host")) {
-      $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+    # do not do flood enforcement for whitelisted users
+    if ($self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted')) {
+      $self->{channels}->{$chan}->{last_spoken_nick} = $nick;
       next;
     }
 
     # do not do flood enforcement for channels that do not want it
-    if ($self->{pbot}->{registry}->get_value($channel, 'dont_enforce_antiflood')) {
-      $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+    if ($self->{pbot}->{registry}->get_value($chan, 'dont_enforce_antiflood')) {
+      $self->{channels}->{$chan}->{last_spoken_nick} = $nick;
       next;
     }
 
     # check for chat/join/private message flooding
-    if ($max_messages > 0 and $self->{pbot}->{messagehistory}->{database}->get_max_messages($account, $channel, $mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} ? $nick : undef) >= $max_messages) {
+    if ($max_messages > 0 and $self->{pbot}->{messagehistory}->{database}->get_max_messages($account, $chan, $mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} ? $nick : undef) >= $max_messages) {
       my $msg;
       if ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
-        $msg = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $channel, $max_messages - 1)
+        $msg = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $chan, $max_messages - 1)
       }
       elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN}) {
-        my $joins = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, $max_messages, $self->{pbot}->{messagehistory}->{MSG_JOIN});
+        my $joins = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $chan, $max_messages, $self->{pbot}->{messagehistory}->{MSG_JOIN});
         $msg = $joins->[0];
       }
       elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
-        my $nickchanges = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($ancestor, $channel, $max_messages, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}, $nick);
+        my $nickchanges = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($ancestor, $chan, $max_messages, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}, $nick);
         $msg = $nickchanges->[0];
       }
       elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
@@ -464,78 +360,78 @@ sub check_flood {
 
       my $last;
       if ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
-        $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($ancestor, $channel, 0, undef, $nick);
+        $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($ancestor, $chan, 0, undef, $nick);
       } else {
-        $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $channel, 0);
+        $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $chan, 0);
       }
 
       if ($last->{timestamp} - $msg->{timestamp} <= $max_time) {
         if ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN}) {
-          my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'offenses', 'last_offense', 'join_watch');
-          #$self->{pbot}->{logger}->log("$account offenses $channel_data->{offenses}, join watch $channel_data->{join_watch}, max messages $max_messages\n");
-          if ($channel_data->{join_watch} >= $max_messages) {
-            $channel_data->{offenses}++;
-            $channel_data->{last_offense} = gettimeofday;
+          my $chan_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'offenses', 'last_offense', 'join_watch');
+          #$self->{pbot}->{logger}->log("$account offenses $chan_data->{offenses}, join watch $chan_data->{join_watch}, max messages $max_messages\n");
+          if ($chan_data->{join_watch} >= $max_messages) {
+            $chan_data->{offenses}++;
+            $chan_data->{last_offense} = gettimeofday;
 
             if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-              my $timeout = $self->{pbot}->{registry}->get_array_value('antiflood', 'join_flood_punishment', $channel_data->{offenses} - 1);
+              my $timeout = $self->{pbot}->{registry}->get_array_value('antiflood', 'join_flood_punishment', $chan_data->{offenses} - 1);
               my $duration = duration($timeout);
               my $banmask = $self->address_to_mask($host);
 
               if ($self->{pbot}->{channels}->is_active_op("${channel}-floodbans")) {
-                $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'join flooding', "*!$user\@$banmask\$##stop_join_flood", $channel . '-floodbans', $timeout);
-                $self->{pbot}->{logger}->log("$nick!$user\@$banmask banned for $duration due to join flooding (offense #" . $channel_data->{offenses} . ").\n");
-                $self->{pbot}->{conn}->privmsg($nick, "You have been banned from $channel due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with `unbanme`, otherwise you will be automatically unbanned in $duration.");
+                $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'join flooding', "*!$user\@$banmask\$##stop_join_flood", $chan . '-floodbans', $timeout);
+                $self->{pbot}->{logger}->log("$nick!$user\@$banmask banned for $duration due to join flooding (offense #" . $chan_data->{offenses} . ").\n");
+                $self->{pbot}->{conn}->privmsg($nick, "You have been banned from $chan due to join flooding.  If your connection issues have been fixed, or this was an accident, you may request an unban at any time by responding to this message with `unbanme`, otherwise you will be automatically unbanned in $duration.");
               } else {
                 $self->{pbot}->{logger}->log("[anti-flood] I am not an op for ${channel}-floodbans, disregarding join-flood.\n");
               }
             }
-            $channel_data->{join_watch} = $max_messages - 2; # give them a chance to rejoin
-            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+            $chan_data->{join_watch} = $max_messages - 2; # give them a chance to rejoin
+            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
           }
         } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
-          if ($channel =~ /^#/) { #channel flood (opposed to private message or otherwise)
+          if ($chan =~ /^#/) { #channel flood (opposed to private message or otherwise)
             # don't increment offenses again if already banned
-            if ($self->{pbot}->{chanops}->has_ban_timeout($channel, "*!$user\@" . $self->address_to_mask($host))) {
-              $self->{pbot}->{logger}->log("$nick $channel flood offense disregarded due to existing ban\n");
+            if ($self->{pbot}->{chanops}->has_ban_timeout($chan, "*!$user\@" . $self->address_to_mask($host))) {
+              $self->{pbot}->{logger}->log("$nick $chan flood offense disregarded due to existing ban\n");
               next;
             }
 
-            my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'offenses', 'last_offense');
-            $channel_data->{offenses}++;
-            $channel_data->{last_offense} = gettimeofday;
-            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+            my $chan_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'offenses', 'last_offense');
+            $chan_data->{offenses}++;
+            $chan_data->{last_offense} = gettimeofday;
+            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
 
             if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-              my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $channel_data->{offenses} - 1);
+              my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $chan_data->{offenses} - 1);
 
-              $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'chat flooding', "*!$user\@" . $self->address_to_mask($host), $channel, $length);
+              $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'chat flooding', "*!$user\@" . $self->address_to_mask($host), $chan, $length);
               $length = duration($length);
-              $self->{pbot}->{logger}->log("$nick $channel flood offense " . $channel_data->{offenses} . " earned $length ban\n");
+              $self->{pbot}->{logger}->log("$nick $chan flood offense " . $chan_data->{offenses} . " earned $length ban\n");
               $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to flooding.  Please use a web paste service such as http://codepad.org for lengthy pastes.  You will be allowed to speak again in approximately $length.");
             }
-            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
           }
           else { # private message flood
             my $hostmask = $self->address_to_mask($host);
             $hostmask =~ s/\*/.*/g;
-            next if exists $self->{pbot}->{ignorelist}->{ignore_list}->{".*!$user\@$hostmask"}->{$channel};
+            next if exists $self->{pbot}->{ignorelist}->{ignore_list}->{".*!$user\@$hostmask"}->{$chan};
 
-            my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'offenses', 'last_offense');
-            $channel_data->{offenses}++;
-            $channel_data->{last_offense} = gettimeofday;
-            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+            my $chan_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'offenses', 'last_offense');
+            $chan_data->{offenses}++;
+            $chan_data->{last_offense} = gettimeofday;
+            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
 
-            my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $channel_data->{offenses} - 1);
+            my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $chan_data->{offenses} - 1);
 
-            $self->{pbot}->{ignorelist}->add(".*!$user\@$hostmask", $channel, $length);
+            $self->{pbot}->{ignorelist}->add(".*!$user\@$hostmask", $chan, $length);
             $length = duration($length);
-            $self->{pbot}->{logger}->log("$nick msg flood offense " . $channel_data->{offenses} . " earned $length ignore\n");
+            $self->{pbot}->{logger}->log("$nick msg flood offense " . $chan_data->{offenses} . " earned $length ignore\n");
             $self->{pbot}->{conn}->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");
           }
           next;
         } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} and $self->{nickflood}->{$ancestor}->{changes} >= $max_messages) {
-          next if $channel !~ /^#/;
+          next if $chan !~ /^#/;
           ($nick) = $text =~ m/NICKCHANGE (.*)/;
 
           $self->{nickflood}->{$ancestor}->{offenses}++;
@@ -544,7 +440,7 @@ sub check_flood {
 
           if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
             my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'nick_flood_punishment', $self->{nickflood}->{$ancestor}->{offenses} - 1);
-            $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'nick flooding', "*!$user\@" . $self->address_to_mask($host), $channel, $length);
+            $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'nick flooding', "*!$user\@" . $self->address_to_mask($host), $chan, $length);
             $length = duration($length);
             $self->{pbot}->{logger}->log("$nick nickchange flood offense " . $self->{nickflood}->{$ancestor}->{offenses} . " earned $length ban\n");
             $self->{pbot}->{conn}->privmsg($nick, "You have been temporarily banned due to nick-change flooding.  You will be unbanned in $length.");
@@ -554,69 +450,69 @@ sub check_flood {
     }
 
     # check for enter abuse
-    if ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT} and $channel =~ m/^#/) {
-      my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'enter_abuse', 'enter_abuses', 'offenses');
-      my $other_offenses = delete $channel_data->{offenses};
+    if ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT} and $chan =~ m/^#/) {
+      my $chan_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'enter_abuse', 'enter_abuses', 'offenses');
+      my $other_offenses = delete $chan_data->{offenses};
       my $debug_enter_abuse = $self->{pbot}->{registry}->get_value('antiflood', 'debug_enter_abuse');
 
-      if (defined $self->{channels}->{$channel}->{last_spoken_nick} and $nick eq $self->{channels}->{$channel}->{last_spoken_nick}) {
-        my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, 2, $self->{pbot}->{messagehistory}->{MSG_CHAT});
+      if (defined $self->{channels}->{$chan}->{last_spoken_nick} and $nick eq $self->{channels}->{$chan}->{last_spoken_nick}) {
+        my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $chan, 2, $self->{pbot}->{messagehistory}->{MSG_CHAT});
 
-        my $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_threshold');
-        my $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_time_threshold');
-        my $enter_abuse_max_offenses   = $self->{pbot}->{registry}->get_value($channel, 'enter_abuse_max_offenses');
+        my $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value($chan, 'enter_abuse_threshold');
+        my $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value($chan, 'enter_abuse_time_threshold');
+        my $enter_abuse_max_offenses   = $self->{pbot}->{registry}->get_value($chan, 'enter_abuse_max_offenses');
 
         $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_threshold') if not defined $enter_abuse_threshold;
         $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_time_threshold') if not defined $enter_abuse_time_threshold;
         $enter_abuse_max_offenses   = $self->{pbot}->{registry}->get_value('antiflood', 'enter_abuse_max_offenses') if not defined $enter_abuse_max_offenses;
 
         if ($messages->[1]->{timestamp} - $messages->[0]->{timestamp} <= $enter_abuse_time_threshold) {
-          if (++$channel_data->{enter_abuse} >= $enter_abuse_threshold - 1) {
-            $channel_data->{enter_abuse} = $enter_abuse_threshold / 2 - 1;
-            $channel_data->{enter_abuses}++;
-            if ($channel_data->{enter_abuses} >= $enter_abuse_max_offenses) {
+          if (++$chan_data->{enter_abuse} >= $enter_abuse_threshold - 1) {
+            $chan_data->{enter_abuse} = $enter_abuse_threshold / 2 - 1;
+            $chan_data->{enter_abuses}++;
+            if ($chan_data->{enter_abuses} >= $enter_abuse_max_offenses) {
               if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-                if ($self->{pbot}->{chanops}->has_ban_timeout($channel, "*!$user\@" . $self->address_to_mask($host))) {
-                  $self->{pbot}->{logger}->log("$nick $channel enter abuse offense disregarded due to existing ban\n");
+                if ($self->{pbot}->{chanops}->has_ban_timeout($chan, "*!$user\@" . $self->address_to_mask($host))) {
+                  $self->{pbot}->{logger}->log("$nick $chan enter abuse offense disregarded due to existing ban\n");
                   next;
                 }
 
-                my $offenses = $channel_data->{enter_abuses} - $enter_abuse_max_offenses + 1 + $other_offenses;
+                my $offenses = $chan_data->{enter_abuses} - $enter_abuse_max_offenses + 1 + $other_offenses;
                 my $ban_length = $self->{pbot}->{registry}->get_array_value('antiflood', 'enter_abuse_punishment', $offenses - 1);
-                $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'enter abuse', "*!$user\@" . $self->address_to_mask($host), $channel, $ban_length);
+                $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'enter abuse', "*!$user\@" . $self->address_to_mask($host), $chan, $ban_length);
                 $ban_length = duration($ban_length);
-                $self->{pbot}->{logger}->log("$nick $channel enter abuse offense " . $channel_data->{enter_abuses} . " earned $ban_length ban\n");
+                $self->{pbot}->{logger}->log("$nick $chan enter abuse offense " . $chan_data->{enter_abuses} . " earned $ban_length ban\n");
                 $self->{pbot}->{conn}->privmsg($nick, "You have been muted due to abusing the enter key.  Please do not split your sentences over multiple messages.  You will be allowed to speak again in approximately $ban_length.");
-                $channel_data->{last_offense} = gettimeofday;
-                $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+                $chan_data->{last_offense} = gettimeofday;
+                $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
                 next;
               }
             } else {
-              $self->{pbot}->{logger}->log("$nick $channel enter abuses counter incremented to " . $channel_data->{enter_abuses} . "\n") if $debug_enter_abuse;
-              if ($channel_data->{enter_abuses} == $enter_abuse_max_offenses - 1 && $channel_data->{enter_abuse} == $enter_abuse_threshold / 2 - 1) {
+              $self->{pbot}->{logger}->log("$nick $chan enter abuses counter incremented to " . $chan_data->{enter_abuses} . "\n") if $debug_enter_abuse;
+              if ($chan_data->{enter_abuses} == $enter_abuse_max_offenses - 1 && $chan_data->{enter_abuse} == $enter_abuse_threshold / 2 - 1) {
                 if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-                  $self->{pbot}->{conn}->privmsg($channel, "$nick: Please stop abusing the enter key. Feel free to type longer messages and to take a moment to think of anything else to say before you hit that enter key.");
+                  $self->{pbot}->{conn}->privmsg($chan, "$nick: Please stop abusing the enter key. Feel free to type longer messages and to take a moment to think of anything else to say before you hit that enter key.");
                 }
               }
             }
           } else {
-            $self->{pbot}->{logger}->log("$nick $channel enter abuse counter incremented to " . $channel_data->{enter_abuse} . "\n") if $debug_enter_abuse;
+            $self->{pbot}->{logger}->log("$nick $chan enter abuse counter incremented to " . $chan_data->{enter_abuse} . "\n") if $debug_enter_abuse;
           }
-          $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+          $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
         } else {
-          if ($channel_data->{enter_abuse} > 0) {
-            $self->{pbot}->{logger}->log("$nick $channel more than $enter_abuse_time_threshold seconds since last message, enter abuse counter reset\n") if $debug_enter_abuse;
-            $channel_data->{enter_abuse} = 0;
-            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+          if ($chan_data->{enter_abuse} > 0) {
+            $self->{pbot}->{logger}->log("$nick $chan more than $enter_abuse_time_threshold seconds since last message, enter abuse counter reset\n") if $debug_enter_abuse;
+            $chan_data->{enter_abuse} = 0;
+            $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
           }
         }
       } else {
-        $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
+        $self->{channels}->{$chan}->{last_spoken_nick} = $nick;
         $self->{pbot}->{logger}->log("last spoken nick set to $nick\n") if $debug_enter_abuse;
-        if ($channel_data->{enter_abuse} > 0) {
-          $self->{pbot}->{logger}->log("$nick $channel enter abuse counter reset\n") if $debug_enter_abuse;
-          $channel_data->{enter_abuse} = 0;
-          $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
+        if ($chan_data->{enter_abuse} > 0) {
+          $self->{pbot}->{logger}->log("$nick $chan enter abuse counter reset\n") if $debug_enter_abuse;
+          $chan_data->{enter_abuse} = 0;
+          $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
         }
       }
     }
@@ -653,7 +549,9 @@ sub unbanme {
 
         if (defined $baninfos) {
           foreach my $baninfo (@$baninfos) {
-            if ($self->whitelisted($baninfo->{channel}, $baninfo->{banmask}, 'ban') || $self->whitelisted($baninfo->{channel}, "$nick!$user\@$host", 'user')) {
+            my $u = $self->{pbot}->{users}->loggedin($baninfo->{channel}, "$nick!$user\@$host");
+            my $whitelisted = $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
+            if ($self->ban_exempted($baninfo->{channel}, $baninfo->{banmask}) || $whitelisted) {
               $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
             } else {
               if ($channel eq lc $baninfo->{channel}) {
@@ -855,7 +753,8 @@ sub check_bans {
         my $tnickserv = defined $nickserv ? $nickserv : "[undefined]";
         $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking blacklist for $alias in channel $channel using gecos '$tgecos' and nickserv '$tnickserv'\n") if $debug_checkban >= 5;
         if ($self->{pbot}->{blacklist}->check_blacklist($alias, $channel, $nickserv, $gecos)) {
-          if ($self->whitelisted($channel, $mask, 'user')) {
+          my $u = $self->{pbot}->{users}->loggedin($channel, $mask);
+          if ($self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted')) {
             $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] blacklisted in $channel, but allowed through whitelist\n");
             next;
           }
@@ -887,7 +786,9 @@ sub check_bans {
             next;
           }
 
-          if ($self->whitelisted($baninfo->{channel}, $baninfo->{banmask}, 'ban') || $self->whitelisted($baninfo->{channel}, $mask, 'user')) {
+          my $u = $self->{pbot}->{users}->loggedin($baninfo->{channel}, $mask);
+          my $whitelisted = $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
+          if ($self->ban_exempted($baninfo->{channel}, $baninfo->{banmask}) || $whitelisted) {
             #$self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
             next;
           }
