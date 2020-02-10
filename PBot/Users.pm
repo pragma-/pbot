@@ -138,21 +138,24 @@ sub save {
 
 sub find_user_account {
   my ($self, $channel, $hostmask) = @_;
-
   $channel = lc $channel;
   $hostmask = lc $hostmask;
-  my ($found_channel, $found_hostmask) = (undef, $hostmask);
 
-  foreach my $chan (keys %{ $self->{users}->{hash} }) {
+  my $sort;
+  if ($channel =~ m/^#/) {
+    $sort = sub { $a cmp $b };
+  } else {
+    $sort = sub { $b cmp $a };
+  }
+
+  foreach my $chan (sort $sort keys %{ $self->{users}->{hash} }) {
     if ($channel !~ m/^#/ or $channel =~ m/^$chan$/i) {
       if (not exists $self->{users}->{hash}->{$chan}->{$hostmask}) {
         # find hostmask by account name or wildcard
         foreach my $mask (keys %{ $self->{users}->{hash}->{$chan} }) {
           next if $mask eq '_name';
           if (lc $self->{users}->{hash}->{$chan}->{$mask}->{name} eq $hostmask) {
-            $found_hostmask = $mask;
-            $found_channel = $chan;
-            last;
+            return ($chan, $mask);
           }
 
           if ($mask =~ /[*?]/) {
@@ -161,19 +164,16 @@ sub find_user_account {
             $mask_quoted =~ s/\\\*/.*?/g;
             $mask_quoted =~ s/\\\?/./g;
             if ($hostmask =~ m/^$mask_quoted$/i) {
-              $found_hostmask = $mask;
-              $found_channel = $chan;
-              last;
+              return ($chan, $mask);
             }
           }
         }
       } else {
-        $found_channel = $chan;
-        last;
+        return ($chan, $hostmask);
       }
     }
   }
-  return ($found_channel, $found_hostmask);
+  return (undef, $hostmask);
 }
 
 sub find_user {
@@ -184,8 +184,7 @@ sub find_user {
   $hostmask = '.*' if not defined $hostmask;
   $hostmask = lc $hostmask;
 
-  my $result = eval {
-    my $user;
+  my $user = eval {
     foreach my $channel_regex (keys %{ $self->{users}->{hash} }) {
       if ($channel !~ m/^#/ or $channel =~ m/^$channel_regex$/i) {
         foreach my $hostmask_regex (keys %{ $self->{users}->{hash}->{$channel_regex} }) {
@@ -213,7 +212,7 @@ sub find_user {
   if ($@) {
     $self->{pbot}->{logger}->log("Error in find_user parameters: $@\n");
   }
-  return $result;
+  return $user;
 }
 
 sub find_admin {
