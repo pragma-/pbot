@@ -71,6 +71,15 @@ sub save_factoids {
   $self->export_factoids;
 }
 
+sub get_meta {
+  my ($self, $channel, $trigger, $key) = @_;
+  $channel = lc $channel;
+  $trigger = lc $trigger;
+  my ($chan, $trig) = $self->find_factoid($channel, $trigger, exact_channel => 1);
+  return undef if not defined $chan;
+  return $self->{factoids}->{hash}->{$chan}->{$trig}->{$key};
+}
+
 sub add_factoid {
   my $self = shift;
   my ($type, $channel, $owner, $trigger, $action, $dont_save) = @_;
