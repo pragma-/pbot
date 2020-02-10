@@ -184,8 +184,15 @@ sub find_user {
   $hostmask = '.*' if not defined $hostmask;
   $hostmask = lc $hostmask;
 
+  my $sort;
+  if ($channel =~ m/^#/) {
+    $sort = sub { $a cmp $b };
+  } else {
+    $sort = sub { $b cmp $a };
+  }
+
   my $user = eval {
-    foreach my $channel_regex (keys %{ $self->{users}->{hash} }) {
+    foreach my $channel_regex (sort $sort keys %{ $self->{users}->{hash} }) {
       if ($channel !~ m/^#/ or $channel =~ m/^$channel_regex$/i) {
         foreach my $hostmask_regex (keys %{ $self->{users}->{hash}->{$channel_regex} }) {
           next if $hostmask_regex eq '_name';
