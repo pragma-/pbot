@@ -205,8 +205,11 @@ sub capcmd {
       return "Usage: cap userhas <user> [capability]; Lists capabilities belonging to <user>" if not defined $hostmask;
       $cap = lc $cap if defined $cap;
 
-      my $u = $self->{pbot}->{users}->find_user($from, $hostmask);
-      return "No such user $hostmask in $from." if not defined $u;
+      my $u = $self->{pbot}->{users}->find_user($from, $hostmask, 1);
+      if (not defined $u) {
+        $from = 'global' if $from !~ /^#/;
+        return "No such user $hostmask in $from."
+      }
 
       if (defined $cap) {
         return "Try again. No such capability $cap." if not $self->exists($cap);
