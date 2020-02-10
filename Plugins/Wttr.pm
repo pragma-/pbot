@@ -21,7 +21,6 @@ use PBot::Utils::LWPUserAgentCached;
 use JSON;
 use URI::Escape qw/uri_escape_utf8/;
 use Getopt::Long qw(GetOptionsFromString);
-Getopt::Long::Configure("bundling_override", "ignorecase_always");
 
 sub initialize {
   my ($self, %conf) = @_;
@@ -62,6 +61,8 @@ sub wttrcmd {
     $getopt_error = shift;
     chomp $getopt_error;
   };
+
+  Getopt::Long::Configure("bundling_override", "ignorecase_always");
 
   my %options;
   my ($ret, $args) = GetOptionsFromString($arguments,

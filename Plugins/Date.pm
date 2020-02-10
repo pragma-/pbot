@@ -14,7 +14,6 @@ use warnings; use strict;
 use feature 'unicode_strings';
 
 use Getopt::Long qw(GetOptionsFromString);
-Getopt::Long::Configure("bundling");
 
 sub initialize {
   my ($self, %conf) = @_;
@@ -35,6 +34,8 @@ sub datecmd {
     $getopt_error = shift;
     chomp $getopt_error;
   };
+
+  Getopt::Long::Configure("bundling");
 
   my ($user_override, $show_usage);
   my ($ret, $args) = GetOptionsFromString($arguments,

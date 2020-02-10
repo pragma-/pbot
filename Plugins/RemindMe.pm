@@ -15,7 +15,6 @@ use DBI;
 use Time::Duration qw/concise duration/;
 use Time::HiRes qw/gettimeofday/;
 use Getopt::Long qw(GetOptionsFromString);
-Getopt::Long::Configure ("bundling");
 
 sub initialize {
   my ($self, %conf) = @_;
@@ -188,6 +187,8 @@ sub remindme {
     $getopt_error = shift;
     chomp $getopt_error;
   };
+
+  Getopt::Long::Configure ("bundling");
 
   $arguments =~ s/(?<!\\)'/\\'/g;
   my ($ret, $args) = GetOptionsFromString($arguments,
