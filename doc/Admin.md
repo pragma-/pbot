@@ -130,11 +130,11 @@ Name | Description
 [capabilities](#user-capabilities-list) | [User-capabilities](#user-capabilities) are managed as user metadata.
 
 ### Listing users
-To list user accounts, use the `list users` command. This is not an admin command, but
+To list user accounts, use the `users` command. This is not an admin command, but
 it is included here for completeness. Users with a plus (+) sign next their name have
 [user-capabilities](#user-capabilities) set on their account.
 
-Usage: `list users [channel]`
+Usage: `users [channel]`
 
 When the optional `[channel]` argument is provided, only users for that channel
 will be listed; no global users will be listed.

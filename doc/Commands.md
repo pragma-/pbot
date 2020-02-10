@@ -32,7 +32,7 @@
       * [userdel](Admin.md#userdel)
       * [userset](Admin.md#userset)
       * [userunset](Admin.md#userunset)
-      * [list users](Admin.md#listing-users)
+      * [users](Admin.md#listing-users)
     * [Channel management commands](#channel-management-commands)
       * [join](Admin.md#join)
       * [part](Admin.md#part)
@@ -317,7 +317,7 @@ to have the command remember your location.
 ##### [userdel](Admin.md#userdel)
 ##### [userset](Admin.md#userset)
 ##### [userunset](Admin.md#userunset)
-##### [list users](Admin.md#listing-users)
+##### [users](Admin.md#listing-users)
 
 #### Channel management commands
 ##### [join](Admin.md#join)
