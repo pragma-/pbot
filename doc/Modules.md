@@ -89,17 +89,14 @@ shell script containing:
 
 And let's call it `qalc.sh` and put it in PBot's `modules/` directory.
 
-Then you can add the `qalc` factoid:
-
-    !factadd global qalc qalc.sh
-
-And then set its `type` to `module`:
-
-    !factset global qalc type module
-
-Alternatively, you can simply use the [`load`](Admin.md#load) command:
+Then you can use the [`load`](Admin.md#load) command:
 
     !load qalc qalc.sh
+
+Note: this is equivalent to creating a factoid and setting its `type` to `module`:
+
+    !factadd global qalc qalc.sh
+    !factset global qalc type module
 
 Now you have a `qalc` calculator in PBot!
 
