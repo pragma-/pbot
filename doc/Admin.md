@@ -149,7 +149,6 @@ list all users from all channels, including global users.
 PBot uses a user-capability system to control what users can and cannot do.
 
 ### Introduction
-
 For example, imagine a user named alice. alice has no capabilities granted yet.
 She tries to use the [`ban`](#banmute) command:
 
@@ -327,6 +326,7 @@ Name | Description | Belongs to group
 `can-<command name>` | If a command `<command name>` has the `cap-required` [command metadata](#command-metadata-list) then the user's account must have the `can-<command name>` capability to invoke it. For example, the [`op`](#op) command requires users to have the `can-op` capability. | botowner, various groups
 `can-mode-<flag>` | Allows the [`mode`](#mode) command to set mode `<flag>`. For example, to allow a user to set `mode +m` give them the `can-mode` and `can-mode-m` capabilities. `<flag>` is one mode character. | botowner, can-mode-any
 `can-mode-any` | Allows the [`mode`](#mode) command to set any mode flag. | botowner
+`can-modify-admins` | Allows the user to modify user accounts that have the `admin` capability | botowner
 `can-modify-capabilities` | Allows the user to use the [`useradd`](#useradd) or [`userset`](#userset) commands to add or remove capabilities from users. | botowner
 `can-group-capabilities` | Allows the user to use the [`cap group`](#cap) command to modify capability groups. | botowner
 `can-ungroup-capabilities` | Allows the user to use the [`cap ungroup`](#cap) command to modify capability groups. | botowner
@@ -335,6 +335,7 @@ Name | Description | Belongs to group
 `can-kick-wildcard` | Allows the user to use wildcards with the [`kick`](#kick) command. | botowner, admin
 `can-op-wildcard` | Allows the user to use wildcards with the [`op`](#op) command. | botowner, admin
 `can-voice-wildcard` | Allows the user to use wildcards with the [`voice`](#voice) command. | botowner, admin, chanop, chanmod
+`is-whitelisted` | The user is exempt from anti-flood, ban-evasion checks, wild-card kicking, etc. | botowner, admin, chanop
 
 ## Channel management commands
 ### join
