@@ -6,6 +6,7 @@ This is a work in progress. More questions coming soon!
   * [How do I make PBot remember my `date` timezone?](#how-do-i-make-pbot-remember-my-date-timezone)
   * [How do I make PBot remember my `weather` location?](#how-do-i-make-pbot-remember-my-weather-location)
   * [How do I change the bot trigger?](#how-do-i-change-the-bot-trigger)
+  * [How do I whitelist a user?](#how-do-i-whitelist-a-user)
 <!-- md-toc-end -->
 
 ### How do I change my password?
@@ -49,4 +50,13 @@ For example, to override the trigger specifically for `#channel`:
 
     regset #channel.trigger ~
 
+### How do I whitelist a user?
+Whitelisting a user exempts them from anti-flood enforcement, ban-evasion checking,
+being automatically muted or kicked for various offenses, and more.
 
+To whitelist a user, use the [`useradd`](Admin.md#useradd) command with the
+`is-whitelisted` capability argument.  To whitelist them in all channels, add
+the user to the global channel.
+
+If the user already exists, use the [`userset`](Admin.md#userset) command to
+grant them the `is-whitelisted` capability.
