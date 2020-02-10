@@ -1,6 +1,7 @@
 {
    "actiontrigger" : {
       "_name" : "actiontrigger",
+      "dont-replace-pronouns" : "1",
       "help" : "Adds a new actiontrigger to PBot. See https://github.com/pragma-/pbot/blob/master/doc/ActionTrigger.md",
       "requires_cap" : 1
    },
@@ -26,7 +27,13 @@
    },
    "ban" : {
       "_name" : "ban",
+      "dont-replace-pronouns" : "1",
       "help" : "Bans a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#banmute",
+      "requires_cap" : 1
+   },
+   "ban-exempt" : {
+      "_name" : "ban-exempt",
+      "help" : "Manages list of ban-masks that are exempted from ban-evasion detection.",
       "requires_cap" : 1
    },
    "battleship" : {
@@ -81,7 +88,9 @@
    },
    "cmdset" : {
       "_name" : "cmdset",
+      "dont-replace-pronouns" : "1",
       "help" : "Sets or shows command metadata. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#cmdset",
+      "ignore-my" : "1",
       "requires_cap" : 1
    },
    "cmdunset" : {
@@ -161,6 +170,7 @@
    },
    "eval" : {
       "_name" : "eval",
+      "dont-replace-pronouns" : "1",
       "help" : "Evaluates Perl code within PBot's context. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#eval",
       "requires_cap" : 1
    },
@@ -176,6 +186,7 @@
    },
    "factadd" : {
       "_name" : "factadd",
+      "dont-replace-pronouns" : "1",
       "help" : "Creates a new factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factadd",
       "requires_cap" : 0
    },
@@ -186,11 +197,13 @@
    },
    "factchange" : {
       "_name" : "factchange",
+      "dont-replace-pronouns" : "1",
       "help" : "Changes a factoid using a regular expression. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factchange",
       "requires_cap" : 0
    },
    "factfind" : {
       "_name" : "factfind",
+      "dont-replace-pronouns" : "1",
       "help" : "Searches the database for a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factfind",
       "requires_cap" : 0
    },
@@ -216,16 +229,19 @@
    },
    "factrem" : {
       "_name" : "factrem",
+      "dont-replace-pronouns" : "1",
       "help" : "Deletes a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factrem",
       "requires_cap" : 0
    },
    "factset" : {
       "_name" : "factset",
+      "dont-replace-pronouns" : "1",
       "help" : "Displays or sets factoid metadata, such as owner, rate-limit, etc. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factset and https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factoid-metadata-list",
       "requires_cap" : 0
    },
    "factshow" : {
       "_name" : "factshow",
+      "dont-replace-pronouns" : "1",
       "help" : "Displays a factoid's literal value without invoking the factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factshow",
       "requires_cap" : 0
    },
@@ -241,6 +257,7 @@
    },
    "forget" : {
       "_name" : "forget",
+      "dont-replace-pronouns" : "1",
       "help" : "Deletes a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#forget",
       "requires_cap" : 0
    },
@@ -256,6 +273,7 @@
    },
    "google" : {
       "_name" : "google",
+      "dont-replace-pronouns" : "1",
       "help" : "Displays Google search results for a query. See https://github.com/pragma-/pbot/blob/master/doc/Modules.md#google",
       "requires_cap" : 0
    },
@@ -340,13 +358,15 @@
    },
    "mute" : {
       "_name" : "mute",
+      "dont-replace-pronouns" : "1",
       "help" : "Mutes a user. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#banmute",
       "requires_cap" : 1
    },
    "my" : {
       "_name" : "my",
+      "dont-replace-pronouns" : "1",
       "help" : "Lets users view and manipulate their own user metadata. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#my and https://github.com/pragma-/pbot/blob/master/doc/Admin.md#user-metadata-list",
-      "requires_cap" : 0
+      "requires_cap" : "0"
    },
    "nicklist" : {
       "_name" : "nicklist",
@@ -455,6 +475,7 @@
    },
    "spinach" : {
       "_name" : "spinach",
+      "dont-replace-pronouns" : "1",
       "help" : "Manages and interacts with the Spinach trivia game. See https://github.com/pragma-/pbot/blob/master/doc/Spinach.md",
       "requires_cap" : 0
    },
@@ -465,6 +486,7 @@
    },
    "unban" : {
       "_name" : "unban",
+      "dont-replace-pronouns" : "1",
       "help" : "Unbans a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unbanunmute",
       "requires_cap" : 1
    },
@@ -485,6 +507,7 @@
    },
    "unmute" : {
       "_name" : "unmute",
+      "dont-replace-pronouns" : "1",
       "help" : "Unmutes a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unbanunmute",
       "requires_cap" : 1
    },
@@ -500,21 +523,30 @@
    },
    "useradd" : {
       "_name" : "useradd",
+      "dont-replace-pronouns" : "1",
       "help" : "Adds a new user to PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#useradd",
       "requires_cap" : 1
    },
    "userdel" : {
       "_name" : "userdel",
+      "dont-replace-pronouns" : "1",
       "help" : "Removes an user from PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#userdel",
       "requires_cap" : 1
    },
+   "users" : {
+      "_name" : "users",
+      "help" : "",
+      "requires_cap" : 0
+   },
    "userset" : {
       "_name" : "userset",
+      "dont-replace-pronouns" : "1",
       "help" : "Sets metadata for an user account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#userset and https://github.com/pragma-/pbot/blob/master/doc/Admin.md#user-metadata-list",
       "requires_cap" : 1
    },
    "userunset" : {
       "_name" : "userunset",
+      "dont-replace-pronouns" : "1",
       "help" : "Deletes a metadata key from an user account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#userunset",
       "requires_cap" : 1
    },
@@ -532,11 +564,6 @@
       "_name" : "weather",
       "help" : "Fetches and displays weather data. You may set `!my location ...` to remember your location.",
       "requires_cap" : 0
-   },
-   "whitelist" : {
-      "_name" : "whitelist",
-      "help" : "Whitelists a hostmask to be exempted from ban evasions or anti-flood enforcement. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#whitelist",
-      "requires_cap" : 1
    },
    "wttr" : {
       "_name" : "wttr",
