@@ -543,7 +543,7 @@ sub mycmd {
     $key = lc $key;
     if (defined $value) {
       if (not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-capabilities')) {
-        if ($key =~ m/^can-/ or $self->{pbot}->{capabilities}->exists($key)) {
+        if ($key =~ m/^is-/ or $key =~ m/^can-/ or $self->{pbot}->{capabilities}->exists($key)) {
           return "The $key metadata requires the can-modify-capabilities capability, which your user account does not have.";
         }
       }
