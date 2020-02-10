@@ -265,10 +265,8 @@ sub interpret {
     $stuff->{pipe} = $pipe;
   }
 
-  $stuff->{nickoverride} = $stuff->{nick} if defined $stuff->{nickoverride} and lc $stuff->{nickoverride} eq 'me';
-
-  # TODO: use cmd/factoid metadata instead of ... this thing...
-  if ($keyword !~ /^(?:help|my|g|google|img|bingimg|factrem|forget|set|factdel|factadd|add|factfind|find|factshow|show|forget|factdel|factset|factchange|change|msg|cc|eval|u|udict|ud|actiontrigger|urban|perl|ban|mute|spinach|choose|c|lie|l|adminadd|unmute|unban)$/i) {
+  if (not $self->{pbot}->{commands}->get_meta($keyword, 'dont-replace-pronouns') and not $self->{pbot}->{factoids}->get_meta($stuff->{from}, $keyword, 'dont-replace-pronouns')) {
+    $stuff->{nickoverride} = $stuff->{nick} if defined $stuff->{nickoverride} and lc $stuff->{nickoverride} eq 'me';
     $keyword =~ s/(\w+)([?!.]+)$/$1/;
     $arguments =~ s/(?<![\w\/\-\\])i am\b/$stuff->{nick} is/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
     $arguments =~ s/(?<![\w\/\-\\])me\b/$stuff->{nick}/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
@@ -276,9 +274,10 @@ sub interpret {
     $arguments =~ s/\\my\b/my/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
     $arguments =~ s/\\me\b/me/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
     $arguments =~ s/\\i am\b/i am/gi if defined $arguments && $stuff->{interpret_depth} <= 2;
+  }
 
+  if (not $self->{pbot}->{commands}->get_meta($keyword, 'dont-protect-self') and not $self->{pbot}->{factoids}->get_meta($stuff->{from}, $keyword, 'dont-protect-self')) {
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-
     if (defined $arguments && ($arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i || $arguments =~ m/^$botnick$/i)) {
       my $delay = rand (10) + 5;
       my $message = {
@@ -302,7 +301,6 @@ sub interpret {
   }
 
   $stuff->{keyword} = $keyword;
-
   $stuff->{original_arguments} = $arguments;
 
   # unescape any escaped command splits
