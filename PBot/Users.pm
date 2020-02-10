@@ -137,9 +137,10 @@ sub save {
 }
 
 sub find_user_account {
-  my ($self, $channel, $hostmask) = @_;
+  my ($self, $channel, $hostmask, $any_channel) = @_;
   $channel = lc $channel;
   $hostmask = lc $hostmask;
+  $any_channel //= 0;
 
   my $sort;
   if ($channel =~ m/^#/) {
@@ -149,7 +150,7 @@ sub find_user_account {
   }
 
   foreach my $chan (sort $sort keys %{ $self->{users}->{hash} }) {
-    if ($channel !~ m/^#/ or $channel =~ m/^$chan$/i) {
+    if (($channel !~ m/^#/ and $any_channel) or $channel =~ m/^$chan$/i) {
       if (not exists $self->{users}->{hash}->{$chan}->{$hostmask}) {
         # find hostmask by account name or wildcard
         foreach my $mask (keys %{ $self->{users}->{hash}->{$chan} }) {
@@ -177,8 +178,10 @@ sub find_user_account {
 }
 
 sub find_user {
-  my ($self, $channel, $hostmask) = @_;
-  ($channel, $hostmask) = $self->find_user_account($channel, $hostmask);
+  my ($self, $channel, $hostmask, $any_channel) = @_;
+  $any_channel //= 0;
+  ($channel, $hostmask) = $self->find_user_account($channel, $hostmask, $any_channel);
+  return undef if not $any_channel and not defined $channel;
 
   $channel = '.*' if not defined $channel;
   $hostmask = '.*' if not defined $hostmask;
@@ -193,7 +196,7 @@ sub find_user {
 
   my $user = eval {
     foreach my $channel_regex (sort $sort keys %{ $self->{users}->{hash} }) {
-      if ($channel !~ m/^#/ or $channel =~ m/^$channel_regex$/i) {
+      if (($channel !~ m/^#/ and $any_channel) or $channel =~ m/^$channel_regex$/i) {
         foreach my $hostmask_regex (keys %{ $self->{users}->{hash}->{$channel_regex} }) {
           next if $hostmask_regex eq '_name';
           if ($hostmask_regex =~ m/[*?]/) {
@@ -268,6 +271,13 @@ sub logout {
   my ($self, $channel, $hostmask) = @_;
   my $user = $self->find_user($channel, $hostmask);
   delete $user->{loggedin} if defined $user;
+}
+
+sub get_user_metadata {
+  my ($self, $channel, $hostmask, $key) = @_;
+  my $user = $self->find_user($channel, $hostmask, 1);
+  return $user->{lc $key} if $user;
+  return undef;
 }
 
 sub get_loggedin_user_metadata {
@@ -530,7 +540,7 @@ sub mycmd {
   my $channel = $from;
   my $hostmask = "$nick!$user\@$host";
 
-  my $u = $self->find_user($channel, $hostmask);
+  my $u = $self->find_user($channel, $hostmask, 1);
 
   if (not $u) {
     $channel = '.*';
@@ -579,8 +589,8 @@ sub mycmd {
     $result = "Usage: my <key> [value]; ";
   }
 
-  my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
-  ($found_channel, $found_hostmask) = $self->find_user_account('.*', $hostmask) if not defined $found_channel;
+  my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask, 1);
+  ($found_channel, $found_hostmask) = $self->find_user_account('.*', $hostmask, 1) if not defined $found_channel;
   return "No user account found in $channel." if not defined $found_channel;
   $result .= $self->{users}->set($found_channel, $found_hostmask, $key, $value);
   $result =~ s/^password => .*;?$/password => <private>;/m;

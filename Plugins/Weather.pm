@@ -49,7 +49,7 @@ sub weathercmd {
   $arguments = "@$args";
 
   my $hostmask = defined $user_override ? $user_override : "$nick!$user\@$host";
-  my $location_override = $self->{pbot}->{users}->get_loggedin_user_metadata($from, $hostmask, 'location') // '';
+  my $location_override = $self->{pbot}->{users}->get_user_metadata($from, $hostmask, 'location') // '';
   $arguments = $location_override if not length $arguments;
 
   if (defined $user_override and not length $location_override) {

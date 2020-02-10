@@ -48,7 +48,7 @@ sub datecmd {
   $arguments = "@$args";
 
   my $hostmask = defined $user_override ? $user_override : "$nick!$user\@$host";
-  my $tz_override = $self->{pbot}->{users}->get_loggedin_user_metadata($from, $hostmask, 'timezone') // '';
+  my $tz_override = $self->{pbot}->{users}->get_user_metadata($from, $hostmask, 'timezone') // '';
 
   my $timezone = $self->{pbot}->{registry}->get_value('date', 'default_timezone') // 'UTC';
   $timezone = $tz_override if $tz_override;

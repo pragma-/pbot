@@ -77,7 +77,7 @@ sub wttrcmd {
   $arguments = "@$args";
 
   my $hostmask = defined $options{u} ? $options{u} : "$nick!$user\@$host";
-  my $location_override = $self->{pbot}->{users}->get_loggedin_user_metadata($from, $hostmask, 'location') // '';
+  my $location_override = $self->{pbot}->{users}->get_user_metadata($from, $hostmask, 'location') // '';
   $arguments = $location_override if not length $arguments;
 
   if (defined $options{u} and not length $location_override) {
