@@ -388,9 +388,9 @@ sub spinach_cmd {
     }
 
     when ('load') {
-      my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
-      if (not $admin or $admin->{level} < 90) {
-        return "$nick: Sorry, only very powerful admins may reload the questions.";
+      my $u = $self->{pbot}->{users}->loggedin($self->{channel}, "$nick!$user\@$host");
+      if (not $u or not $self->{pbot}->{capabilities}->userhas($u, 'botowner')) {
+        return "$nick: Sorry, only botowners may reload the questions.";
       }
 
       $arguments = undef if not length $arguments;
@@ -922,9 +922,9 @@ sub spinach_cmd {
           return "Usage: spinach state set <new state>";
         }
 
-        my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
-        if (not $admin or $admin->{level} < 90) {
-          return "$nick: Sorry, only very powerful admins may set game state.";
+        my $u = $self->{pbot}->{users}->loggedin($self->{channel}, "$nick!$user\@$host");
+        if (not $self->{pbot}->{capabilities}->userhas($u, 'admin')) {
+          return "$nick: Sorry, only admins may set game state.";
         }
 
         $self->{previous_state} = $self->{current_state};
@@ -938,8 +938,8 @@ sub spinach_cmd {
         }
 
         my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
-        if (not $admin or $admin->{level} < 90) {
-          return "$nick: Sorry, only very powerful admins may set game state.";
+        if (not $admin) {
+          return "$nick: Sorry, only admins may set game state.";
         }
 
         $self->{state_data}->{previous_result} = $self->{state_data}->{result};
@@ -962,7 +962,7 @@ sub spinach_cmd {
       }
 
       my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
-      if (defined $value and (not $admin or $admin->{level} <= 0)) {
+      if (defined $value and not $admin) {
         return "$nick: Sorry, only Spinach admins may set game settings.";
       }
 
@@ -981,7 +981,7 @@ sub spinach_cmd {
       }
 
       my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
-      if (not $admin or $admin->{level} <= 0) {
+      if (not $admin) {
         return "$nick: Sorry, only Spinach admins may set game settings.";
       }
 
