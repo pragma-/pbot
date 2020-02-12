@@ -90,7 +90,6 @@
       "_name" : "cmdset",
       "dont-replace-pronouns" : "1",
       "help" : "Sets or shows command metadata. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#cmdset",
-      "ignore-my" : "1",
       "requires_cap" : 1
    },
    "cmdunset" : {
@@ -284,6 +283,7 @@
    },
    "help" : {
       "_name" : "help",
+      "dont-replace-pronouns" : "1",
       "help" : "Displays the `help` metadata for commands and factoids.",
       "requires_cap" : 0
    },
