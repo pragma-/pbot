@@ -158,9 +158,12 @@ sub unset {
     return $result;
   }
 
-  delete $self->{hash}->{$lc_index}->{$key};
-  $self->save;
-  return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: $key unset.";
+  if (defined delete $self->{hash}->{$lc_index}->{$key}) {
+    $self->save;
+    return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: $key unset.";
+  } else {
+    return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: $key does not exist.";
+  }
 }
 
 sub exists {
@@ -208,15 +211,22 @@ sub remove {
   }
 
   if (defined $data_index) {
-    delete $self->{hash}->{$lc_index}->{$data_index};
-    delete $self->{hash}->{$lc_index} if keys(%{$self->{hash}->{$lc_index}}) == 1;
-    $self->save unless $dont_save;
-    return "$self->{hash}->{$lc_index}->{_name}.$data_index removed from $self->{name}";
+    if (defined delete $self->{hash}->{$lc_index}->{$data_index}) {
+      delete $self->{hash}->{$lc_index} if keys(%{$self->{hash}->{$lc_index}}) == 1;
+      $self->save unless $dont_save;
+      return "$self->{hash}->{$lc_index}->{_name}.$data_index removed from $self->{name}";
+    } else {
+      return "$self->{name}: $self->{hash}->{$lc_index}->{_name}.$data_index does not exist.";
+    }
   }
 
   my $data = delete $self->{hash}->{$lc_index};
-  $self->save unless $dont_save;
-  return "$data->{_name} removed from $self->{name}.";
+  if (defined $data) {
+    $self->save unless $dont_save;
+    return "$data->{_name} removed from $self->{name}.";
+  } else {
+    return "$self->{name}: $data_index does not exist.";
+  }
 }
 
 1;
