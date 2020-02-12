@@ -431,10 +431,10 @@ sub reload {
       return "Blacklist reloaded.";
     },
 
-    'whitelist' => sub {
-      $self->{antiflood}->{whitelist}->clear;
-      $self->{antiflood}->{whitelist}->load;
-      return "Whitelist reloaded.";
+    'ban-exemptions' => sub {
+      $self->{antiflood}->{'ban-exemptions'}->clear;
+      $self->{antiflood}->{'ban-exemptions'}->load;
+      return "Ban exemptions reloaded.";
     },
 
     'ignores' => sub {
