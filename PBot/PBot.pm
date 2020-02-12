@@ -415,6 +415,11 @@ sub reload {
   my ($from, $nick, $user, $host, $arguments) = @_;
 
   my %reloadables = (
+    'capabilities' => sub {
+      $self->{capabilities}->load;
+      return "Capabilities reloaded.";
+    },
+
     'commands' => sub {
       $self->{commands}->load_metadata;
       return "Commands metadata reloaded.";
