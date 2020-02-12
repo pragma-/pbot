@@ -55,14 +55,15 @@ sub initialize {
   $self->{stats_filename}       = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/stats.sqlite';
 
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Spinach Metadata', filename => $self->{metadata_filename});
-  $self->load_metadata();
+  $self->{metadata}->load;
+  $self->set_metadata_defaults;
 
   $self->{stats}   = Plugins::Spinach::Stats->new(pbot => $self->{pbot}, filename => $self->{stats_filename});
   $self->{rankcmd} = Plugins::Spinach::Rank->new(pbot => $self->{pbot}, channel => $self->{channel}, filename => $self->{stats_filename});
 
-  $self->create_states();
-  $self->load_questions();
-  $self->load_stopwords();
+  $self->create_states;
+  $self->load_questions;
+  $self->load_stopwords;
 
   $self->{choosecategory_max_count} = 4;
   $self->{picktruth_max_count} = 4;
@@ -182,10 +183,8 @@ sub load_stopwords {
   close $fh;
 }
 
-sub load_metadata {
-  my $self = shift;
-  $self->{metadata}->load;
-
+sub set_metadata_defaults {
+  my ($self) = @_;
   my $defaults = {
     category_choices => 7,
     category_autopick => 0,
@@ -198,20 +197,15 @@ sub load_metadata {
     debug_state => 0,
   };
 
-  if (not exists $self->{metadata}->{hash}->{settings}) {
-    $self->{metadata}->{hash}->{settings} = $defaults;
+  if ($self->{metadata}->exists('settings')) {
+    $self->{metadata}->add('settings', $defaults, 1);
   } else {
     foreach my $key (keys %$defaults) {
-      if (not exists $self->{metadata}->{hash}->{settings}->{$key}) {
-        $self->{metadata}->{hash}->{settings}->{$key} = $defaults->{$key};
+      if (not $self->{metadata}->exists('settings', $key)) {
+        $self->{metadata}->set('settings', $key, $defaults->{$key}, 1);
       }
     }
   }
-}
-
-sub save_metadata {
-  my $self = shift;
-  $self->{metadata}->save;
 }
 
 my %color = (
@@ -880,33 +874,31 @@ sub spinach_cmd {
             return "Bad filter: No categories match. Try again.";
           }
 
-          $self->{metadata}->{hash}->{filter}->{"category_" . $_ . "_filter"} = $args;
-          $self->save_metadata;
+          $self->{metadata}->set('filter', "category_" . $_ . "_filter", $args);
           return "Spinach $_ filter set.";
         }
 
         when ('clear') {
-          delete $self->{metadata}->{hash}->{filter};
-          $self->save_metadata;
+          $self->{metadata}->remove('filter');
           return "Spinach filter cleared.";
         }
 
         when ('show') {
-          if (not exists $self->{metadata}->{hash}->{filter}->{category_include_filter}
-              and not exists $self->{metadata}->{hash}->{filter}->{category_exclude_filter}) {
+          if (not $self->{metadata}->exists('filter', 'category_include_filter')
+              and not $self->{metadata}->exists('filter', 'category_exclude_filter')) {
             return "There is no Spinach filter set.";
           }
 
           my $text = "Spinach ";
           my $comma = "";
 
-          if (exists $self->{metadata}->{hash}->{filter}->{category_include_filter}) {
-            $text .= "include filter set to: " . $self->{metadata}->{hash}->{filter}->{category_include_filter};
+          if ($self->{metadata}->exists('filter', 'category_include_filter')) {
+            $text .= "include filter set to: " . $self->{metadata}->get_data('filter', 'category_include_filter');
             $comma = "; ";
           }
 
-          if (exists $self->{metadata}->{hash}->{filter}->{category_exclude_filter}) {
-            $text .= $comma . "exclude filter set to: " . $self->{metadata}->{hash}->{filter}->{category_exclude_filter};
+          if ($self->{metadata}->exists('filter', 'category_exclude_filter')) {
+            $text .= $comma . "exclude filter set to: " . $self->{metadata}->get_data('filter', 'category_exclude_filter');
           }
 
           return $text;
@@ -1083,7 +1075,7 @@ sub run_one_state {
   if ($self->{current_state} =~ /r\dq\d/) {
     my $removed = 0;
     for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
-      if ($self->{state_data}->{players}->[$i]->{missedinputs} >= $self->{metadata}->{hash}->{settings}->{max_missed_inputs}) {
+      if ($self->{state_data}->{players}->[$i]->{missedinputs} >= $self->{metadata}->get_data('settings', 'max_missed_inputs')) {
         $self->send_message($self->{channel}, "$color{red}$self->{state_data}->{players}->[$i]->{name} has missed too many prompts and has been ejected from the game!$color{reset}");
         splice @{$self->{state_data}->{players}}, $i--, 1;
         $removed = 1;
@@ -1127,7 +1119,7 @@ sub run_one_state {
   }
 
   # dump new state data for logging/debugging
-  if ($state_data->{newstate} and $self->{metadata}->{hash}->{settings}->{debug_state}) {
+  if ($state_data->{newstate} and $self->{metadata}->get_data('settings', 'debug_state')) {
     $self->{pbot}->{logger}->log("Spinach: New state: $self->{previous_state} ($state_data->{previous_result}) --> $self->{current_state}\n" . Dumper $state_data);
   }
 
@@ -1645,14 +1637,16 @@ sub choosecategory {
     my @choices;
     my @categories;
 
-    if (exists $self->{metadata}->{hash}->{filter}->{category_include_filter} and length $self->{metadata}->{hash}->{filter}->{category_include_filter}) {
-      @categories = grep { /$self->{metadata}->{hash}->{filter}->{category_include_filter}/i } keys %{$self->{categories}};
+    if ($self->{metadata}->exists('filter', 'category_include_filter') and length $self->{metadata}->get_data('filter', 'category_include_filter')) {
+      my $filter = $self->{metadata}->get_data('filter', 'category_include_filter');
+      @categories = grep { /$filter/i } keys %{$self->{categories}};
     } else {
       @categories = keys %{$self->{categories}};
     }
 
-    if (exists $self->{metadata}->{hash}->{filter}->{category_exclude_filter} and length $self->{metadata}->{hash}->{filter}->{category_exclude_filter}) {
-      @categories = grep { $_ !~ /$self->{metadata}->{hash}->{filter}->{category_exclude_filter}/i } @categories;
+    if ($self->{metadata}->exists('filter', 'category_exclude_filter') and length $self->{metadata}->get_data('filter', 'category_exclude_filter')) {
+      my $filter = $self->{metadata}->get_data('filter', 'category_exclude_filter');
+      @categories = grep { $_ !~ /$filter/i } @categories;
     }
 
     my $no_infinite_loops = 0;
@@ -1667,17 +1661,17 @@ sub choosecategory {
         next;
       }
 
-      if (exists $self->{metadata}->{hash}->{settings}->{min_difficulty}) {
-        @questions = grep { $self->{categories}{$cat}{$_}->{value} >= $self->{metadata}->{hash}->{settings}->{min_difficulty} } @questions;
+      if ($self->{metadata}->exists('settings', 'min_difficulty')) {
+        @questions = grep { $self->{categories}{$cat}{$_}->{value} >= $self->{metadata}->get_data('settings', 'min_difficulty') } @questions;
       }
 
-      if (exists $self->{metadata}->{hash}->{settings}->{max_difficulty}) {
-        @questions = grep { $self->{categories}{$cat}{$_}->{value} <= $self->{metadata}->{hash}->{settings}->{max_difficulty} } @questions;
+      if ($self->{metadata}->exists('settings', 'max_difficulty')) {
+        @questions = grep { $self->{categories}{$cat}{$_}->{value} <= $self->{metadata}->get_data('settings', 'max_difficulty') } @questions;
       }
 
-      if (exists $self->{metadata}->{hash}->{settings}->{seen_expiry}) {
+      if ($self->{metadata}->exists('settings', 'seen_expiry')) {
         my $now = time;
-        @questions = grep { $now - $self->{categories}{$cat}{$_}->{seen_timestamp} >= $self->{metadata}->{hash}->{settings}->{seen_expiry} } @questions;
+        @questions = grep { $now - $self->{categories}{$cat}{$_}->{seen_timestamp} >= $self->{metadata}->get_data('settings', 'seen_expiry') } @questions;
       }
 
       next if not @questions;
@@ -1686,7 +1680,7 @@ sub choosecategory {
         push @choices, $cat;
       }
 
-      last if @choices == $self->{metadata}->{hash}->{settings}->{category_choices} or @categories < $self->{metadata}->{hash}->{settings}->{category_choices};;
+      last if @choices == $self->{metadata}->get_data('settings', 'category_choices') or @categories < $self->{metadata}->get_data('settings', 'category_choices');
     }
 
     if (not @choices) {
@@ -1706,7 +1700,7 @@ sub choosecategory {
       $comma = "; ";
     }
 
-    if ($state->{reroll_category} and not $self->{metadata}->{hash}->{settings}->{category_autopick}) {
+    if ($state->{reroll_category} and not $self->{metadata}->get_data('settings', 'category_autopick')) {
       $self->send_message($self->{channel}, "$state->{categories_text}");
     }
 
@@ -1730,7 +1724,7 @@ sub choosecategory {
   if ($state->{ticks} % $tock == 0) {
     $state->{tocked} = 1;
 
-    if (exists $state->{random_category} or $self->{metadata}->{hash}->{settings}->{category_autopick}) {
+    if (exists $state->{random_category} or $self->{metadata}->get_data('settings', 'category_autopick')) {
       delete $state->{random_category};
       my $category = $state->{category_options}->[rand (@{$state->{category_options}} - 2)];
       my $questions = scalar keys %{ $self->{categories}{$category} };
@@ -1788,14 +1782,14 @@ sub getnewquestion {
 
     @questions = sort { $self->{categories}{$state->{current_category}}{$a}->{seen_timestamp} <=> $self->{categories}{$state->{current_category}}{$b}->{seen_timestamp} } @questions;
     my $now = time;
-    @questions = grep { $now - $self->{categories}{$state->{current_category}}{$_}->{seen_timestamp} >= $self->{metadata}->{hash}->{settings}->{seen_expiry} } @questions;
+    @questions = grep { $now - $self->{categories}{$state->{current_category}}{$_}->{seen_timestamp} >= $self->{metadata}->get_data('settings', 'seen_expiry') } @questions;
 
-    if (exists $self->{metadata}->{hash}->{settings}->{min_difficulty}) {
-      @questions = grep { $self->{categories}{$state->{current_category}}{$_}->{value} >= $self->{metadata}->{hash}->{settings}->{min_difficulty} } @questions;
+    if ($self->{metadata}->exists('settings', 'min_difficulty')) {
+      @questions = grep { $self->{categories}{$state->{current_category}}{$_}->{value} >= $self->{metadata}->get_data('settings', 'min_difficulty') } @questions;
     }
 
-    if (exists $self->{metadata}->{hash}->{settings}->{max_difficulty}) {
-      @questions = grep { $self->{categories}{$state->{current_category}}{$_}->{value} <= $self->{metadata}->{hash}->{settings}->{max_difficulty} } @questions;
+    if ($self->{metadata}->exists('settings', 'max_difficulty')) {
+      @questions = grep { $self->{categories}{$state->{current_category}}{$_}->{value} <= $self->{metadata}->get_data('settings', 'max_difficulty') } @questions;
     }
 
     if (not @questions) {
@@ -2116,7 +2110,7 @@ sub showlies {
       last if @liars;
 
       if ($player->{truth} ne $state->{correct_answer}) {
-        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+        if ($self->{metadata}->get_data('settings', 'stats')) {
           my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
           my $player_data = $self->{stats}->get_player_data($player_id);
           $player_data->{bad_guesses}++;
@@ -2143,7 +2137,7 @@ sub showlies {
       my $comma = '';
 
       foreach my $liar (@liars) {
-        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+        if ($self->{metadata}->get_data('settings', 'stats')) {
           my $player_id = $self->{stats}->get_player_id($liar->{name}, $self->{channel});
           my $player_data = $self->{stats}->get_player_data($player_id);
           $player_data->{players_deceived}++;
@@ -2157,7 +2151,7 @@ sub showlies {
         $liar->{good_lie} = 1;
       }
 
-      if ($self->{metadata}->{hash}->{settings}->{stats}) {
+      if ($self->{metadata}->get_data('settings', 'stats')) {
         my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
         my $player_data = $self->{stats}->get_player_data($player_id);
         $player_data->{bad_guesses}++;
@@ -2193,7 +2187,7 @@ sub showtruth {
     my $comma = '';
     my $count = 0;
     foreach my $player (@{$state->{players}}) {
-      if ($self->{metadata}->{hash}->{settings}->{stats}) {
+      if ($self->{metadata}->get_data('settings', 'stats')) {
         $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
         $player_data = $self->{stats}->get_player_data($player_id);
 
@@ -2202,14 +2196,14 @@ sub showtruth {
       }
 
       if (exists $player->{deceived}) {
-        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+        if ($self->{metadata}->get_data('settings', 'stats')) {
           $self->{stats}->update_player_data($player_id, $player_data);
         }
         next;
       }
 
       if (exists $player->{truth} and $player->{truth} eq $state->{correct_answer}) {
-        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+        if ($self->{metadata}->get_data('settings', 'stats')) {
           $player_data->{good_guesses}++;
           $self->{stats}->update_player_data($player_id, $player_data);
         }
@@ -2246,7 +2240,7 @@ sub reveallies {
       $comma = '; ';
 
       if ($player->{good_lie}) {
-        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+        if ($self->{metadata}->get_data('settings', 'stats')) {
           my $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
           my $player_data = $self->{stats}->get_player_data($player_id);
           $player_data->{good_lies}++;
@@ -2295,7 +2289,7 @@ sub showfinalscore {
     my $i = @{$state->{players}};
     $state->{finalscores} = [];
     foreach my $player (sort { $a->{score} <=> $b->{score} } @{$state->{players}}) {
-      if ($self->{metadata}->{hash}->{settings}->{stats}) {
+      if ($self->{metadata}->get_data('settings', 'stats')) {
         $player_id = $self->{stats}->get_player_id($player->{name}, $self->{channel});
         $player_data = $self->{stats}->get_player_data($player_id);
 
@@ -2319,7 +2313,7 @@ sub showfinalscore {
           $mentions = "Honorable mentions: $mentions";
         }
 
-        if ($self->{metadata}->{hash}->{settings}->{stats}) {
+        if ($self->{metadata}->get_data('settings', 'stats')) {
           $self->{stats}->update_player_data($player_id, $player_data);
         }
 
@@ -2336,7 +2330,7 @@ sub showfinalscore {
         $text = sprintf("%15s%-13s%7s", "WINNER: ", $player->{name}, $self->commify($player->{score}));
       }
 
-      if ($self->{metadata}->{hash}->{settings}->{stats}) {
+      if ($self->{metadata}->get_data('settings', 'stats')) {
         $self->{stats}->update_player_data($player_id, $player_data);
       }
 
@@ -2408,7 +2402,7 @@ sub getplayers {
     }
   }
 
-  my $min_players = $self->{metadata}->{hash}->{settings}->{min_players} // 2;
+  my $min_players = $self->{metadata}->get_data('settings', 'min_players') // 2;
 
   if (@$players >= $min_players and not $unready) {
     $self->send_message($self->{channel}, "All players ready!");
@@ -2460,7 +2454,7 @@ sub getplayers {
 
 sub round1 {
   my ($self, $state) = @_;
-  if ($self->{metadata}->{hash}->{settings}->{stats}) {
+  if ($self->{metadata}->get_data('settings', 'stats')) {
     $self->{stats}->begin;
     $self->{stats_running} = 1;
   }

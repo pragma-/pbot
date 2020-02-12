@@ -22,7 +22,7 @@ sub initialize {
   $self->PBot::Registerable::initialize(%conf);
 
   $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Commands', filename => $conf{filename});
-  $self->load_metadata;
+  $self->{metadata}->load;
 
   $self->register(sub { $self->cmdset(@_)     },  "cmdset",    1);
   $self->register(sub { $self->cmdunset(@_)   },  "cmdunset",  1);
@@ -131,28 +131,14 @@ sub interpreter {
 
 sub set_meta {
   my ($self, $command, $key, $value, $save) = @_;
-  $command = lc $command;
-  return undef if not exists $self->{metadata}->{hash}->{$command};
-  $self->{metadata}->{hash}->{$command}->{$key} = $value;
-  $self->save_metadata if $save;
+  return undef if not $self->{metadata}->exists($command);
+  $self->{metadata}->set($command, $key, $value, !$save);
   return 1;
 }
 
 sub get_meta {
   my ($self, $command, $key) = @_;
-  $command = lc $command;
-  return undef if not exists $self->{metadata}->{hash}->{$command};
-  return $self->{metadata}->{hash}->{$command}->{$key};
-}
-
-sub load_metadata {
-  my ($self) = @_;
-  $self->{metadata}->load;
-}
-
-sub save_metadata {
-  my ($self) = @_;
-  $self->{metadata}->save;
+  return $self->{metadata}->get_data($command, $key);
 }
 
 sub cmdset {
@@ -180,15 +166,12 @@ sub help {
 
   # check built-in commands first
   if ($self->exists($keyword)) {
-    if (exists $self->{metadata}->{hash}->{$keyword}) {
-      my $name = $self->{metadata}->{hash}->{$keyword}->{_name};
-      my $requires_cap = $self->{metadata}->{hash}->{$keyword}->{requires_cap};
-      my $help = $self->{metadata}->{hash}->{$keyword}->{help};
+    if ($self->{metadata}->exists($keyword)) {
+      my $name = $self->{metadata}->get_data($keyword, '_name');
+      my $requires_cap = $self->{metadata}->get_data($keyword, 'requires_cap');
+      my $help = $self->{metadata}->get_data($keyword, 'help');
       my $result = "/say $name: ";
-
-      if ($requires_cap) {
-        $result .= "[Requires can-$keyword] ";
-      }
+      $result .= "[Requires can-$keyword] " if $requires_cap;
 
       if (not defined $help or not length $help) {
         $result .= "I have no help for this command yet.";

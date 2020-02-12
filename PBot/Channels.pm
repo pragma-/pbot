@@ -16,7 +16,7 @@ use feature 'unicode_strings';
 sub initialize {
   my ($self, %conf) = @_;
   $self->{channels} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => $conf{filename});
-  $self->load_channels;
+  $self->{channels}->load;
 
   $self->{pbot}->{commands}->register(sub { $self->join(@_)   },  "join",      1);
   $self->{pbot}->{commands}->register(sub { $self->part(@_)   },  "part",      1);
@@ -33,25 +33,20 @@ sub initialize {
 
 sub join {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
   foreach my $channel (split /[\s+,]/, $arguments) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host made me join $channel\n");
     $self->{pbot}->{chanops}->join_channel($channel);
   }
-
   return "/msg $nick Joining $arguments";
 }
 
 sub part {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
   $arguments = $from if not $arguments;
-
   foreach my $channel (split /[\s+,]/, $arguments) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host made me part $channel\n");
     $self->{pbot}->{chanops}->part_channel($channel);
   }
-
   return "/msg $nick Parting $arguments";
 }
 
@@ -71,10 +66,7 @@ sub unset {
 
 sub add {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-  if (not defined $arguments or not length $arguments) {
-    return "Usage: chanadd <channel>";
-  }
+  return "Usage: chanadd <channel>" if not defined $arguments or not length $arguments;
 
   my $data = {
     enabled => 1,
@@ -87,39 +79,30 @@ sub add {
 
 sub remove {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-  if (not defined $arguments or not length $arguments) {
-    return "Usage: chanrem <channel>";
-  }
-
-  $arguments = lc $arguments;
+  return "Usage: chanrem <channel>" if not defined $arguments or not length $arguments;
 
   # clear unban timeouts
-  if (exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$arguments}) {
-    delete $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$arguments};
-    $self->{pbot}->{chanops}->{unban_timeout}->save;
+  if ($self->{pbot}->{chanops}->{unban_timeout}->exists($arguments)) {
+    $self->{pbot}->{chanops}->{unban_timeout}->remove($arguments);
   }
 
   # clear unmute timeouts
-  if (exists $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$arguments}) {
-    delete $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$arguments};
-    $self->{pbot}->{chanops}->{unmute_timeout}->save;
+  if ($self->{pbot}->{chanops}->{unmute_timeout}->exists($arguments)) {
+    $self->{pbot}->{chanops}->{unmute_timeout}->remove($arguments);
   }
 
   # TODO: ignores, etc?
-
   return $self->{channels}->remove($arguments);
 }
 
 sub list {
   my ($self, $from, $nick, $user, $host, $arguments) = @_;
   my $result;
-
-  foreach my $index (sort keys %{ $self->{channels}->{hash} }) {
-    $result .= "$self->{channels}->{hash}->{$index}->{_name}: {";
+  foreach my $channel (sort $self->{channels}->get_keys) {
+    $result .= $self->{channels}->get_data($channel, '_name') . ': {';
     my $comma = ' ';
-    foreach my $key (sort keys %{ $self->{channels}->{hash}->{$index} }) {
-      $result .= "$comma$key => $self->{channels}->{hash}->{$index}->{$key}";
+    foreach my $key (sort $self->{channels}->get_keys($channel)) {
+      $result .= "$comma$key => " . $self->{channels}->get_data($channel, $key);
       $comma = ', ';
     }
     $result .= " }\n";
@@ -130,43 +113,31 @@ sub list {
 sub autojoin {
   my ($self) = @_;
   return if $self->{pbot}->{joined_channels};
-  my $chans;
-  foreach my $chan (keys %{ $self->{channels}->{hash} }) {
-    if ($self->{channels}->{hash}->{$chan}->{enabled}) {
-      $chans .= "$self->{channels}->{hash}->{$chan}->{_name},";
+  my $channels;
+  foreach my $channel ($self->{channels}->get_keys) {
+    if ($self->{channels}->get_data($channel, 'enabled')) {
+      $channels .= $self->{channels}->get_data($channel, '_name') . ',';
     }
   }
-  $self->{pbot}->{logger}->log("Joining channels: $chans\n");
-  $self->{pbot}->{chanops}->join_channel($chans);
+  $self->{pbot}->{logger}->log("Joining channels: $channels\n");
+  $self->{pbot}->{chanops}->join_channel($channels);
   $self->{pbot}->{joined_channels} = 1;
 }
 
 sub is_active {
   my ($self, $channel) = @_;
-  my $lc_channel = lc $channel;
-  return exists $self->{channels}->{hash}->{$lc_channel} && $self->{channels}->{hash}->{$lc_channel}->{enabled};
+  # returns undef if channel doesn't exist; otherwise, the value of 'enabled'
+  return $self->{channels}->get_data($channel, 'enabled');
 }
 
 sub is_active_op {
   my ($self, $channel) = @_;
-  return $self->is_active($channel) && $self->{channels}->{hash}->{lc $channel}->{chanop};
+  return $self->is_active($channel) && $self->{channels}->get_data($channel, 'chanop');
 }
 
 sub get_meta {
   my ($self, $channel, $key) = @_;
-  $channel = lc $channel;
-  return undef if not exists $self->{channels}->{hash}->{$channel};
-  return $self->{channels}->{hash}->{$channel}->{$key};
-}
-
-sub load_channels {
-  my ($self) = @_;
-  $self->{channels}->load;
-}
-
-sub save_channels {
-  my ($self) = @_;
-  $self->{channels}->save;
+  return $self->{channels}->get_data($channel, $key);
 }
 
 1;

@@ -31,6 +31,8 @@ sub load {
   my $filename;
   if (@_) { $filename = shift; } else { $filename = $self->{filename}; }
 
+  $self->clear;
+
   if (not defined $filename) {
     Carp::carp "No $self->{name} filename specified -- skipping loading from file";
     return;
@@ -53,7 +55,7 @@ sub load {
 
   # update existing entries to use _name to preserve case
   # and lowercase any non-lowercased entries
-  foreach my $index (keys %{ $self->{hash} }) {
+  foreach my $index (keys %{$self->{hash}}) {
     if (not exists $self->{hash}->{$index}->{_name}) {
       if (lc $index eq $index) {
         $self->{hash}->{$index}->{_name} = $index;
@@ -100,7 +102,7 @@ sub levenshtein_matches {
   my $comma = '';
   my $result = "";
 
-  foreach my $index (sort keys %{ $self->{hash} }) {
+  foreach my $index (sort keys %{$self->{hash}}) {
     my $distance = fastdistance($keyword, $index);
     my $length = (length $keyword > length $index) ? length $keyword : length $index;
 
@@ -128,7 +130,7 @@ sub set {
   if (not defined $key) {
     my $result = "[$self->{name}] $self->{hash}->{$lc_index}->{_name} keys: ";
     my $comma = '';
-    foreach my $k (sort keys %{ $self->{hash}->{$lc_index} }) {
+    foreach my $k (sort keys %{$self->{hash}->{$lc_index}}) {
       next if $k eq '_name';
       $result .= $comma . "$k => " . $self->{hash}->{$lc_index}->{$k};
       $comma = "; ";
@@ -143,7 +145,6 @@ sub set {
     $self->{hash}->{$lc_index}->{$key} = $value;
     $self->save unless $dont_save;
   }
-
   return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: $key " . (defined $value ? "set to $value" : "is not set.");
 }
 
@@ -159,18 +160,27 @@ sub unset {
 
   delete $self->{hash}->{$lc_index}->{$key};
   $self->save;
-
   return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: $key unset.";
 }
 
 sub exists {
+  my ($self, $index, $data_index) = @_;
+  return exists $self->{hash}->{lc $index} if not defined $data_index;
+  return exists $self->{hash}->{lc $index}->{$data_index};
+}
+
+sub get_keys {
   my ($self, $index) = @_;
-  return exists $self->{hash}->{lc $index};
+  return keys %{$self->{hash}} if not defined $index;
+  return grep { $_ ne '_name' } keys %{$self->{hash}->{lc $index}};
 }
 
 sub get_data {
-  my ($self, $index) = @_;
-  return $self->{hash}->{lc $index};
+  my ($self, $index, $data_index) = @_;
+  my $lc_index = lc $index;
+  return undef if not exists $self->{hash}->{$lc_index};
+  return $self->{hash}->{$lc_index} if not defined $data_index;
+  return $self->{hash}->{$lc_index}->{$data_index};
 }
 
 sub add {
@@ -188,7 +198,7 @@ sub add {
 }
 
 sub remove {
-  my ($self, $index) = @_;
+  my ($self, $index, $data_index, $dont_save) = @_;
   my $lc_index = lc $index;
 
   if (not exists $self->{hash}->{$lc_index}) {
@@ -197,9 +207,15 @@ sub remove {
     return $result;
   }
 
-  my $data = delete $self->{hash}->{$lc_index};
-  $self->save;
+  if (defined $data_index) {
+    delete $self->{hash}->{$lc_index}->{$data_index};
+    delete $self->{hash}->{$lc_index} if keys(%{$self->{hash}->{$lc_index}}) == 1;
+    $self->save unless $dont_save;
+    return "$self->{hash}->{$lc_index}->{_name}.$data_index removed from $self->{name}";
+  }
 
+  my $data = delete $self->{hash}->{$lc_index};
+  $self->save unless $dont_save;
   return "$data->{_name} removed from $self->{name}.";
 }
 

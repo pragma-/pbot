@@ -416,12 +416,12 @@ sub reload {
 
   my %reloadables = (
     'capabilities' => sub {
-      $self->{capabilities}->load;
+      $self->{capabilities}->{caps}->load;
       return "Capabilities reloaded.";
     },
 
     'commands' => sub {
-      $self->{commands}->load_metadata;
+      $self->{commands}->{metadata}->load;
       return "Commands metadata reloaded.";
     },
 
@@ -449,8 +449,7 @@ sub reload {
     },
 
     'channels' => sub {
-      $self->{channels}->{channels}->clear;
-      $self->{channels}->load_channels;
+      $self->{channels}->{channels}->load;
       return "Channels reloaded.";
     },
 

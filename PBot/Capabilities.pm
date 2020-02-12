@@ -44,8 +44,7 @@ sub has {
     return 0;
   }
 
-  foreach my $c (keys %{$cap_data}) {
-    next if $c eq '_name';
+  foreach my $c ($self->{caps}->get_keys($cap)) {
     return 1 if $c eq $subcap and $cap_data->{$c};
     return 1 if $self->has($c, $subcap, $depth);
   }
@@ -56,7 +55,7 @@ sub userhas {
   my ($self, $user, $cap) = @_;
   return 0 if not defined $user;
   return 1 if $user->{$cap};
-  foreach my $key (keys %{$user}) {
+  foreach my $key (keys %$user) {
     next if $key eq '_name';
     next if not $user->{$key};
     return 1 if $self->has($key, $cap);
@@ -67,10 +66,9 @@ sub userhas {
 sub exists {
   my ($self, $cap) = @_;
   $cap = lc $cap;
-  foreach my $c (keys %{$self->{caps}->{hash}}) {
-    next if $c eq '_name';
+  foreach my $c ($self->{caps}->get_keys) {
     return 1 if $c eq $cap;
-    foreach my $sub_cap (keys %{$self->{caps}->{hash}->{$c}}) {
+    foreach my $sub_cap ($self->{caps}->get_keys($c)) {
       return 1 if $sub_cap eq $cap;
     }
   }
@@ -95,43 +93,30 @@ sub add {
 sub remove {
   my ($self, $cap, $subcap) = @_;
   $cap = lc $cap;
-
   if (not defined $subcap) {
-    foreach my $c (keys %{$self->{caps}->{hash}}) {
-      next if $c eq '_name';
-      foreach my $sub_cap (keys %{$self->{caps}->{hash}->{$c}}) {
-        delete $self->{caps}->{hash}->{$c}->{$sub_cap} if $sub_cap eq $cap;
+    foreach my $c ($self->{caps}->get_keys) {
+      foreach my $sub_cap ($self->{caps}->get_keys($c)) {
+        $self->{caps}->remove($c, $sub_cap, 1) if $sub_cap eq $cap;
       }
-      if ($c eq $cap) {
-        delete $self->{caps}->{hash}->{$c};
-      }
+      $self->{caps}->remove($c, undef, 1) if $c eq $cap;
     }
   } else {
-    $subcap = lc $subcap;
-    if (exists $self->{caps}->{hash}->{$cap}) {
-      delete $self->{caps}->{hash}->{$cap}->{$subcap};
-    }
-
-    if (keys %{$self->{caps}->{hash}->{$cap}} == 1) {
-      delete $self->{caps}->{hash}->{$cap};
-    }
+    $self->{caps}->remove($cap, $subcap, 1) if $self->{caps}->exists($cap);
   }
   $self->{caps}->save;
 }
 
 sub rebuild_botowner_capabilities {
   my ($self) = @_;
-  $self->{caps}->remove('botowner');
-  foreach my $cap (keys %{$self->{caps}->{hash}}) {
-    next if $cap eq '_name';
+  $self->{caps}->remove('botowner', undef, 1);
+  foreach my $cap ($self->{caps}->get_keys) {
     $self->add('botowner', $cap, 1);
   }
 }
 
 sub list {
   my ($self, $capability) = @_;
-  $capability = lc $capability if defined $capability;
-  return "No such capability $capability." if defined $capability and not exists $self->{caps}->{hash}->{$capability};
+  return "No such capability $capability." if defined $capability and not $self->{caps}->exists($capability);
 
   my @caps;
   my @groups;
@@ -139,19 +124,18 @@ sub list {
   my $result;
 
   if (not defined $capability) {
-    @caps = sort keys %{$self->{caps}->{hash}};
+    @caps = sort $self->{caps}->get_keys;
     $result = 'Capabilities: ';
   } else {
-    @caps = sort keys %{$self->{caps}->{hash}->{$capability}};
-    return "Capability $capability has no grouped capabilities." if not @caps or @caps == 1;
+    @caps = sort $self->{caps}->get_keys($capability);
+    return "Capability $capability has no grouped capabilities." if not @caps;
     $result = "Grouped capabilities for $capability: ";
   }
 
   # first list all capabilities that have sub-capabilities (i.e. grouped capabilities)
   # then list stand-alone capabilities
   foreach my $cap (@caps) {
-    next if $cap eq '_name';
-    my $count = keys(%{$self->{caps}->{hash}->{$cap}}) - 1;
+    my $count = $self->{caps}->get_keys($cap);
     if ($count > 0) {
       push @groups, "$cap ($count cap" . ($count == 1 ? '' : 's') . ")" if $count;
     } else {
@@ -225,7 +209,7 @@ sub capcmd {
         foreach my $key (sort keys %{$u}) {
           next if $key eq '_name';
           next if not $self->exists($key);
-          my $count = keys (%{$self->{caps}->{hash}->{$key}}) - 1;
+          my $count = $self->{caps}->get_keys;
           if ($count > 0) {
             push @groups, "$key ($count cap" . ($count == 1 ? '' : 's') . ")";
           } else {
