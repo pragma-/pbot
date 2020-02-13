@@ -163,19 +163,17 @@ sub capcmd {
       return "No such capability $cap." if not $self->exists($cap);
       my $result = "Users with capability $cap: ";
       my $matched = 0;
-      my $users = $self->{pbot}->{users}->{users}->{hash};
-      foreach my $channel (sort keys %$users) {
+      my $users = $self->{pbot}->{users}->{users};
+      foreach my $channel (sort $users->get_keys) {
         my @matches;
-        next if $channel eq '_name';
-        foreach my $hostmask (sort keys %{$users->{$channel}}) {
-          next if $hostmask eq '_name';
-          my $u = $users->{$channel}->{$hostmask};
+        foreach my $hostmask (sort $users->get_keys($channel)) {
+          my $u = $users->get_data($channel, $hostmask);
           push @matches, $u->{name} if $self->userhas($u, $cap);
         }
         if (@matches) {
           $result .= '; ' if $matched;
           my $global = $matched ? 'global: ' : '';
-          $result .= $users->{$channel}->{_name} eq '.*' ? $global : "$users->{$channel}->{_name}: ";
+          $result .= $users->get_data($channel, '_name') eq '.*' ? $global : $users->get_data($channel, '_name') . ': ';
           $result .= join ', ', @matches;
           $matched = 1;
         }

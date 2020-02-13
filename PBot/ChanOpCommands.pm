@@ -429,9 +429,8 @@ sub ban_user {
   foreach my $t (@targets) {
     my $mask = lc $self->{pbot}->{chanops}->nick_to_banmask($t);
 
-    if ($no_length && exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}
-      && exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}) {
-      my $timeout = $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$mask}->{timeout};
+    if ($no_length && $self->{pbot}->{chanops}->{unban_timeout}->exists($channel, $mask)) {
+      my $timeout = $self->{pbot}->{chanops}->{unban_timeout}->get_data($channel, $mask, 'timeout');
       my $d = duration($timeout - gettimeofday);
       $result .= "$sep$mask has $d remaining on their $channel ban";
       $sep = '; ';
@@ -563,9 +562,8 @@ sub mute_user {
   foreach my $t (@targets) {
     my $mask = lc $self->{pbot}->{chanops}->nick_to_banmask($t);
 
-    if ($no_length && exists $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}
-      && exists $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}) {
-      my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->{hash}->{$channel}->{$mask}->{timeout};
+    if ($no_length && $self->{pbot}->{chanops}->{unmute_timeout}->exists($channel, $mask)) {
+      my $timeout = $self->{pbot}->{chanops}->{unmute_timeout}->get_data($channel, $mask, 'timeout');
       my $d = duration($timeout - gettimeofday);
       $result .= "$sep$mask has $d remaining on their $channel mute";
       $sep = '; ';

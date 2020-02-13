@@ -71,14 +71,11 @@ sub regunset {
     return $usage;
   }
 
-  $section = lc $section;
-  $item = lc $item;
-
-  if (not exists $self->{pbot}->{registry}->{registry}->{hash}->{$section}) {
+  if (not $self->{pbot}->{registry}->{registry}->exits($section)) {
     return "No such registry section $section.";
   }
 
-  if (not exists $self->{pbot}->{registry}->{registry}->{hash}->{$section}->{$item}) {
+  if (not $self->{pbot}->{registry}->{registry}->exists($section, $item)) {
     return "No such item $item in section $section.";
   }
 
@@ -135,7 +132,7 @@ sub regunsetmeta {
 sub regshow {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my $registry = $self->{pbot}->{registry}->{registry}->{hash};
+  my $registry = $self->{pbot}->{registry}->{registry};
   my $usage = "Usage: regshow <section>.<item>";
 
   # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -151,24 +148,21 @@ sub regshow {
     return $usage;
   }
 
-  $section = lc $section;
-  $item = lc $item;
-
-  if (not exists $registry->{$section}) {
+  if (not $registry->exists($section)) {
     return "No such registry section $section.";
   }
 
-  if (not exists $registry->{$section}->{$item}) {
+  if (not $registry->exists($section, $item)) {
     return "No such registry item $item in section $section.";
   }
 
-  if ($registry->{$section}->{$item}->{private}) {
+  if ($registry->get_data($section, $item, 'private')) {
     return "$section.$item: <private>";
   }
 
-  my $result = "$section.$item: $registry->{$section}->{$item}->{value}";
+  my $result = "$section.$item: " . $registry->get_data($section, $item, 'value');
 
-  if ($registry->{$section}->{$item}->{type} eq 'array') {
+  if ($registry->get_data($section, $item, 'type') eq 'array') {
     $result .= ' [array]';
   }
   return $result;
@@ -177,7 +171,7 @@ sub regshow {
 sub regfind {
   my $self = shift;
   my ($from, $nick, $user, $host, $arguments) = @_;
-  my $registry = $self->{pbot}->{registry}->{registry}->{hash};
+  my $registry = $self->{pbot}->{registry}->{registry};
   my $usage = "Usage: regfind [-showvalues] [-section section] <regex>";
 
   return $usage if not defined $arguments;
@@ -199,15 +193,15 @@ sub regfind {
   $i = 0;
   eval {
     use re::engine::RE2 -strict => 1;
-    foreach my $section_key (sort keys %{ $registry }) {
+    foreach my $section_key (sort $registry->get_keys) {
       next if defined $section and $section_key ne $section;
-      foreach my $item_key (sort keys %{ $registry->{$section_key} }) {
+      foreach my $item_key (sort $registry->get_keys($section_key)) {
         next if $item_key eq '_name';
-        if ($registry->{$section_key}->{$item_key}->{private}) {
+        if ($registry->get_data($section_key, $item_key, 'private')) {
           # do not match on value if private
           next if $item_key !~ /$arguments/i;
         } else {
-          next if $registry->{$section_key}->{$item_key}->{value} !~ /$arguments/i and $item_key !~ /$arguments/i;
+          next if $registry->get_data($section_key, $item_key, 'value') !~ /$arguments/i and $item_key !~ /$arguments/i;
         }
 
         $i++;
@@ -217,10 +211,10 @@ sub regfind {
           $last_section = $section_key;
         }
         if ($showvalues) {
-          if ($registry->{$section_key}->{$item_key}->{private}) {
+          if ($registry->get_data($section_key, $item_key, 'private')) {
             $text .= "  $item_key = <private>\n";
           } else {
-            $text .= "  $item_key = $registry->{$section_key}->{$item_key}->{value}" . ($registry->{$section_key}->{$item_key}->{type} eq 'array' ? " [array]\n" : "\n");
+            $text .= "  $item_key = " . $registry->get_data($section_key, $item_key, 'value') . ($registry->get_data($section_key, $item_key, 'type') eq 'array' ? " [array]\n" : "\n");
           }
         } else {
           $text .= "  $item_key\n";
@@ -234,10 +228,10 @@ sub regfind {
 
   if ($i == 1) {
     chop $text;
-    if ($registry->{$last_section}->{$last_item}->{private}) {
+    if ($registry->get_data($last_section, $last_item, 'private')) {
       return "Found one registry entry: [$last_section] $last_item: <private>";
     } else {
-      return "Found one registry entry: [$last_section] $last_item: $registry->{$last_section}->{$last_item}->{value}" . ($registry->{$last_section}->{$last_item}->{type} eq 'array' ? ' [array]' : '');
+      return "Found one registry entry: [$last_section] $last_item: " . $registry->get_data($last_section, $last_item, 'value') . ($registry->get_data($last_section, $last_item, 'type') eq 'array' ? ' [array]' : '');
     }
   } else {
     return "Found $i registry entries:\n$text" unless $i == 0;
@@ -273,26 +267,26 @@ sub regchange {
   $section = lc $section;
   $item = lc $item;
 
-  my $registry = $self->{pbot}->{registry}->{registry}->{hash};
+  my $registry = $self->{pbot}->{registry}->{registry};
 
-  if (not exists $registry->{$section}) {
+  if (not $registry->exists($section)) {
     return "No such registry section $section.";
   }
 
-  if (not exists $registry->{$section}->{$item}) {
+  if (not $registry->exists($section, $item)) {
     return "No such registry item $item in section $section.";
   }
 
   my $ret = eval {
     use re::engine::RE2 -strict => 1;
-    if (not $registry->{$section}->{$item}->{value} =~ s|$tochange|$changeto|) {
+    if (not $registry->get_data($section, $item, 'value') =~ s|$tochange|$changeto|) {
       $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change $section.$item 's$delim$tochange$delim$changeto$delim$modifier\n");
       return "/msg $nick Change $section.$item failed.";
     } else {
       $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: changed $section.$item 's/$tochange/$changeto/\n");
-      $self->{pbot}->{registry}->process_trigger($section, $item, 'value', $registry->{$section}->{$item}->{value});
+      $self->{pbot}->{registry}->process_trigger($section, $item, 'value', $registry->get_data($section, $item, 'value'));
       $self->{pbot}->{registry}->save;
-      return "$section.$item set to $registry->{$section}->{$item}->{value}";
+      return "$section.$item set to " . $registry->get_data($section, $item, 'value');
     }
   };
   return "/msg $nick Failed to change $section.$item: $@" if $@;

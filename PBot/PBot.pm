@@ -336,11 +336,11 @@ sub listcmd {
 
   if ($arguments =~ /^modules$/i) {
     $text = "Loaded modules: ";
-    foreach my $channel (sort keys %{ $self->{factoids}->{factoids}->{hash} }) {
-      foreach my $command (sort keys %{ $self->{factoids}->{factoids}->{hash}->{$channel} }) {
+    foreach my $channel (sort $self->{factoids}->{factoids}->get_keys) {
+      foreach my $command (sort $self->{factoids}->{factoids}->get_keys($channel)) {
         next if $command eq '_name';
-        if ($self->{factoids}->{factoids}->{hash}->{$channel}->{$command}->{type} eq 'module') {
-          $text .= "$self->{factoids}->{factoids}->{hash}->{$channel}->{$command}->{_name} ";
+        if ($self->{factoids}->{factoids}->get_data($channel, $command, 'type') eq 'module') {
+          $text .= $self->{factoids}->{factoids}->get_data($channel, $command, '_name') . ' ';
         }
       }
     }

@@ -189,11 +189,6 @@ sub get_data {
 sub add {
   my ($self, $index, $data, $dont_save) = @_;
   my $lc_index = lc $index;
-
-  if (exists $self->{hash}->{$lc_index}) {
-    return "Error: $self->{hash}->{$lc_index}->{_name} already exists in $self->{name}.";
-  }
-
   $data->{_name} = $index; # preserve case of index
   $self->{hash}->{$lc_index} = $data;
   $self->save unless $dont_save;

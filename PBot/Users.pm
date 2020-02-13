@@ -104,7 +104,6 @@ sub remove_user {
 sub load {
   my $self = shift;
   my $filename;
-
   if (@_) { $filename = shift; } else { $filename = $self->{users}->{filename}; }
 
   if (not defined $filename) {
@@ -115,19 +114,16 @@ sub load {
   $self->{users}->load;
 
   my $i = 0;
-  foreach my $channel (sort keys %{ $self->{users}->{hash} } ) {
-    foreach my $hostmask (sort keys %{ $self->{users}->{hash}->{$channel} }) {
-      next if $hostmask eq '_name';
+  foreach my $channel (sort $self->{users}->get_keys) {
+    foreach my $hostmask (sort $self->{users}->get_keys($channel)) {
       $i++;
-      my $name = $self->{users}->{hash}->{$channel}->{$hostmask}->{name};
-      my $password = $self->{users}->{hash}->{$channel}->{$hostmask}->{password};
-
+      my $name = $self->{users}->get_data($channel, $hostmask, 'name');
+      my $password = $self->{users}->get_data($channel, $hostmask, 'password');
       if (not defined $name or not defined $password) {
         Carp::croak "A user in $filename is missing critical data\n";
       }
     }
   }
-
   $self->{pbot}->{logger}->log("  $i users loaded.\n");
 }
 
@@ -149,13 +145,12 @@ sub find_user_account {
     $sort = sub { $b cmp $a };
   }
 
-  foreach my $chan (sort $sort keys %{ $self->{users}->{hash} }) {
+  foreach my $chan (sort $sort $self->{users}->get_keys) {
     if (($channel !~ m/^#/ and $any_channel) or $channel =~ m/^$chan$/i) {
-      if (not exists $self->{users}->{hash}->{$chan}->{$hostmask}) {
+      if (not $self->{users}->exists($chan, $hostmask)) {
         # find hostmask by account name or wildcard
-        foreach my $mask (keys %{ $self->{users}->{hash}->{$chan} }) {
-          next if $mask eq '_name';
-          if (lc $self->{users}->{hash}->{$chan}->{$mask}->{name} eq $hostmask) {
+        foreach my $mask ($self->{users}->get_keys($chan)) {
+          if (lc $self->{users}->get_data($chan, $mask, 'name') eq $hostmask) {
             return ($chan, $mask);
           }
 
@@ -195,22 +190,21 @@ sub find_user {
   }
 
   my $user = eval {
-    foreach my $channel_regex (sort $sort keys %{ $self->{users}->{hash} }) {
+    foreach my $channel_regex (sort $sort $self->{users}->get_keys) {
       if (($channel !~ m/^#/ and $any_channel) or $channel =~ m/^$channel_regex$/i) {
-        foreach my $hostmask_regex (keys %{ $self->{users}->{hash}->{$channel_regex} }) {
-          next if $hostmask_regex eq '_name';
+        foreach my $hostmask_regex ($self->{users}->get_keys($channel_regex)) {
           if ($hostmask_regex =~ m/[*?]/) {
             # contains * or ? so it's converted to a regex
             my $hostmask_quoted = quotemeta $hostmask_regex;
             $hostmask_quoted =~ s/\\\*/.*?/g;
             $hostmask_quoted =~ s/\\\?/./g;
             if ($hostmask =~ m/^$hostmask_quoted$/i) {
-              return $self->{users}->{hash}->{$channel_regex}->{$hostmask_regex};
+              return $self->{users}->get_data($channel_regex, $hostmask_regex);
             }
           } else {
             # direct comparison
             if ($hostmask eq lc $hostmask_regex) {
-              return $self->{users}->{hash}->{$channel_regex}->{$hostmask_regex};
+              return $self->{users}->get_data($channel_regex, $hostmask_regex);
             }
           }
         }
@@ -300,7 +294,7 @@ sub logincmd {
   my ($user_channel, $user_hostmask) = $self->find_user_account($channel, "$nick!$user\@$host");
   return "/msg $nick You do not have a user account." if not defined $user_channel;
 
-  my $u = $self->{users}->{hash}->{$user_channel}->{$user_hostmask};
+  my $u = $self->{users}->get_data($user_channel, $user_hostmask);
   my $channel_text = $user_channel eq '.*' ? '' : " for $user_channel";
 
   if ($u->{loggedin}) {
@@ -317,7 +311,7 @@ sub logoutcmd {
   my ($user_channel, $user_hostmask) = $self->find_user_account($from, "$nick!$user\@$host");
   return "/msg $nick You do not have a user account." if not defined $user_channel;
 
-  my $u = $self->{users}->{hash}->{$user_channel}->{$user_hostmask};
+  my $u = $self->{users}->get_data($user_channel, $user_hostmask);
   my $channel_text = $user_channel eq '.*' ? '' : " for $user_channel";
   return "/msg $nick You are not logged into $u->{name} ($user_hostmask)$channel_text." if not $u->{loggedin};
 
@@ -340,7 +334,7 @@ sub users {
   my $text = "Users: ";
   my $last_channel = "";
   my $sep = "";
-  foreach my $chan (sort keys %{ $self->{users}->{hash} }) {
+  foreach my $chan (sort $self->{users}->get_keys) {
     next if $from =~ m/^#/ and $chan ne $channel and $chan ne $include_global;
     next if $from !~ m/^#/ and $channel =~ m/^#/ and $chan ne $channel;
 
@@ -350,19 +344,17 @@ sub users {
       $sep = "";
     }
 
-    foreach my $hostmask (sort { return 0 if $a eq '_name' or $b eq '_name'; $self->{users}->{hash}->{$chan}->{$a}->{name} cmp $self->{users}->{hash}->{$chan}->{$b}->{name} } keys %{ $self->{users}->{hash}->{$chan} }) {
-      next if $hostmask eq '_name';
+    foreach my $hostmask (sort { return 0 if $a eq '_name' or $b eq '_name'; $self->{users}->get_data($chan, $a, 'name') cmp $self->{users}->get_data($chan, $b, 'name') } $self->{users}->get_keys($chan)) {
       $text .= $sep;
       my $has_cap = 0;
-      foreach my $key (keys %{$self->{users}->{hash}->{$chan}->{$hostmask}}) {
-        next if $key eq '_name';
+      foreach my $key ($self->{users}->get_keys($chan, $hostmask)) {
         if ($self->{pbot}->{capabilities}->exists($key)) {
           $has_cap = 1;
           last;
         }
       }
       $text .= '+' if $has_cap;
-      $text .= $self->{users}->{hash}->{$chan}->{$hostmask}->{name};
+      $text .= $self->{users}->get_data($chan, $hostmask, 'name');
       $sep = " ";
     }
     $sep = "; ";

@@ -211,8 +211,8 @@ sub help {
     ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
   }
 
-  my $channel_name = $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{_name};
-  my $trigger_name = $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{_name};
+  my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
+  my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
   $channel_name = 'global channel' if $channel_name eq '.*';
   $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
@@ -220,7 +220,7 @@ sub help {
   $result .= "[$channel_name] " if $channel ne $from and $channel ne '.*';
   $result .= "$trigger_name: ";
 
-  my $help = $self->{pbot}->{factoids}->{factoids}->{hash}->{$channel}->{$trigger}->{help};
+  my $help = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, 'help');
 
   if (not defined $help or not length $help) {
     return "/say $trigger_name is a factoid for $channel_name, but I have no help for it yet.";

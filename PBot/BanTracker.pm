@@ -72,16 +72,17 @@ sub on_banlist_entry {
     }
 
     if ($timeout && $self->{pbot}->{chanops}->can_gain_ops($channel)) {
-      if (not exists $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$target}) {
+      if (not $self->{pbot}->{chanops}->{unban_timeout}->exists($channel, $target)) {
         $self->{pbot}->{logger}->log("Temp ban for $target in $channel.\n");
-        $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$target}->{timeout} = gettimeofday + $timeout;
-        $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$target}->{owner} = $source;
-        $self->{pbot}->{chanops}->{unban_timeout}->{hash}->{$channel}->{$target}->{reason} = 'Temp ban on *!*@... or *!...@gateway/web';
-        $self->{pbot}->{chanops}->{unban_timeout}->save;
+        my $data = {
+          timeout => gettimeofday + $timeout,
+          owner => $source,
+          reason => 'Temp ban on *!*@... or *!...@gateway/web'
+        };
+        $self->{pbot}->{chanops}->{unban_timeout}->add($channel, $target, $data);
       }
     }
   }
-
   return 0;
 }
 

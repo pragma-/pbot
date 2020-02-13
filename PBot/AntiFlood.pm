@@ -92,12 +92,11 @@ sub ban_exempt {
 
   given ($command) {
     when ($_ eq 'list') {
-      my $text = 'Ban-evasion exemptions:\n';
+      my $text = "Ban-evasion exemptions:\n";
       my $entries = 0;
-      foreach my $channel (keys %{ $self->{'ban-exemptions'}->{hash} }) {
-        $text .= "  $self->{'ban-exemptions'}->{hash}->{$channel}->{_name}:\n";
-        foreach my $mask (keys %{ $self->{'ban-exemptions'}->{hash}->{$channel} }) {
-          next if $mask eq '_name';
+      foreach my $channel ($self->{'ban-exemptions'}->get_keys) {
+        $text .= ' ' . $self->{'ban-exemptions'}->get_data($channel, '_name') . ":\n";
+        foreach my $mask ($self->{'ban-exemptions'}->get_keys($channel)) {
           $text .= "    $mask,\n";
           $entries++;
         }

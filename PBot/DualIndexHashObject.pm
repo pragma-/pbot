@@ -247,24 +247,54 @@ sub unset {
     return $result;
   }
 
-  delete $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$key};
-  $self->save();
-
   my $name2 = $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{_name};
   $name2 = "\"$name2\"" if $name2 =~ / /;
 
-  return "$self->{name}: [$name1] $name2: $key unset.";
+  if (defined delete $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$key}) {
+    $self->save;
+    return "$self->{name}: [$name1] $name2: $key unset.";
+  } else {
+    return "$self->{name}: [$name1] $name2: $key does not exist.";
+  }
+  $self->save;
+}
+
+sub exists {
+  my ($self, $primary_index, $secondary_index, $data_index) = @_;
+  $primary_index = lc $primary_index;
+  return 0 if not exists $self->{hash}->{$primary_index};
+  return 1 if not defined $secondary_index;
+  $secondary_index = lc $secondary_index;
+  return 0 if not exists $self->{hash}->{$primary_index}->{$secondary_index};
+  return 1 if not defined $data_index;
+  return exists $self->{hash}->{$primary_index}->{$secondary_index}->{$data_index};
+}
+
+sub get_keys {
+  my ($self, $primary_index, $secondary_index) = @_;
+  return keys %{$self->{hash}} if not defined $primary_index;
+
+  if (not defined $secondary_index) {
+    return grep { $_ ne '_name' } keys %{$self->{hash}->{lc $primary_index}};
+  }
+
+  return grep { $_ ne '_name' } keys %{$self->{hash}->{lc $primary_index}->{lc $secondary_index}};
+}
+
+sub get_data {
+  my ($self, $primary_index, $secondary_index, $data_index) = @_;
+  $primary_index = lc $primary_index if defined $primary_index;
+  $secondary_index = lc $secondary_index if defined $secondary_index;
+  return undef if not exists $self->{hash}->{$primary_index};
+  return $self->{hash}->{$primary_index} if not defined $secondary_index;
+  return $self->{hash}->{$primary_index}->{$secondary_index} if not defined $data_index;
+  return $self->{hash}->{$primary_index}->{$secondary_index}->{$data_index};
 }
 
 sub add {
-  my ($self, $primary_index, $secondary_index, $data, $dont_save) = @_;
+  my ($self, $primary_index, $secondary_index, $data, $dont_save, $quiet) = @_;
   my $lc_primary_index = lc $primary_index;
   my $lc_secondary_index = lc $secondary_index;
-
-  if (exists $self->{hash}->{$lc_primary_index} and exists $self->{$lc_primary_index}->{$lc_secondary_index}) {
-    $self->{pbot}->{logger}->log("Entry $lc_primary_index/$lc_secondary_index already exists.\n");
-    return "Error: entry already exists";
-  }
 
   if (not exists $self->{hash}->{$lc_primary_index}) {
     $self->{hash}->{$lc_primary_index}->{_name} = $primary_index; # preserve case
@@ -278,12 +308,12 @@ sub add {
   my $name2 = $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{_name};
   $name1 = 'global' if $name1 eq '.*';
   $name2 = "\"$name2\"" if $name2 =~ / /;
-  $self->{pbot}->{logger}->log("$self->{name}: [$name1]: $name2 added.\n");
+  $self->{pbot}->{logger}->log("$self->{name}: [$name1]: $name2 added.\n") unless $dont_save or $quiet;
   return "$self->{name}: [$name1]: $name2 added.";
 }
 
 sub remove {
-  my ($self, $primary_index, $secondary_index) = @_;
+  my ($self, $primary_index, $secondary_index, $data_index, $dont_save) = @_;
   my $lc_primary_index = lc $primary_index;
   my $lc_secondary_index = lc $secondary_index;
 
@@ -293,12 +323,16 @@ sub remove {
     return $result;
   }
 
-  if (not $secondary_index) {
+  if (not defined $secondary_index) {
     my $data = delete $self->{hash}->{$lc_primary_index};
-    my $name = $data->{_name};
-    $name = 'global' if $name eq '.*';
-    $self->save;
-    return "$self->{name}: $name removed.";
+    if (defined $data) {
+      my $name = $data->{_name};
+      $name = 'global' if $name eq '.*';
+      $self->save unless $dont_save;
+      return "$self->{name}: $name removed.";
+    } else {
+      return "$self->{name}: $primary_index does not exist.";
+    }
   }
 
   my $name1 = $self->{hash}->{$lc_primary_index}->{_name};
@@ -310,24 +344,30 @@ sub remove {
     return $result;
   }
 
-  my $data = delete $self->{hash}->{$lc_primary_index}->{$lc_secondary_index};
-  my $name2 = $data->{_name};
-  $name2 = "\"$name2\"" if $name2 =~ / /;
+  if (not defined $data_index) {
+    my $data = delete $self->{hash}->{$lc_primary_index}->{$lc_secondary_index};
+    if (defined $data) {
+      my $name2 = $data->{_name};
+      $name2 = "\"$name2\"" if $name2 =~ / /;
 
-  # remove primary group if no more secondaries (only key left should be the _name key)
-  if (keys %{ $self->{hash}->{$lc_primary_index} } == 1) {
-    delete $self->{hash}->{$lc_primary_index};
+      # remove primary group if no more secondaries (only key left should be the _name key)
+      if (keys %{ $self->{hash}->{$lc_primary_index} } == 1) {
+        delete $self->{hash}->{$lc_primary_index};
+      }
+
+      $self->save unless $dont_save;
+      return "$self->{name}: [$name1] $name2 removed.";
+    } else {
+      return "$self->{name}: [$name1] $secondary_index does not exist.";
+    }
   }
 
-  $self->save();
-  return "$self->{name}: [$name1] $name2 removed.";
-}
-
-sub exists {
-  my ($self, $primary_index, $secondary_index) = @_;
-  $primary_index = lc $primary_index;
-  $secondary_index = lc $secondary_index;
-  return (exists $self->{hash}->{$primary_index} and exists $self->{hash}->{$primary_index}->{$secondary_index});
+  my $name2 = $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{_name};
+  if (defined delete $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$data_index}) {
+    return "$self->{name}: [$name1] $name2.$data_index removed.";
+  } else {
+    return "$self->{name}: [$name1] $name2.$data_index does not exist.";
+  }
 }
 
 1;

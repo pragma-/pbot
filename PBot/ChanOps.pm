@@ -56,9 +56,9 @@ sub initialize {
 sub can_gain_ops {
   my ($self, $channel) = @_;
   $channel = lc $channel;
-  return exists $self->{pbot}->{channels}->{channels}->{hash}->{$channel}
-  && $self->{pbot}->{channels}->{channels}->{hash}->{$channel}->{chanop}
-  && $self->{pbot}->{channels}->{channels}->{hash}->{$channel}->{enabled};
+  return $self->{pbot}->{channels}->{channels}->exists($channel)
+  && $self->{pbot}->{channels}->{channels}->get_data($channel, 'chanop')
+  && $self->{pbot}->{channels}->{channels}->get_data($channel, 'enabled');
 }
 
 sub gain_ops {
@@ -124,9 +124,7 @@ sub perform_op_commands {
 sub ban_user {
   my $self = shift;
   my ($mask, $channel, $immediately) = @_;
-
   $self->add_to_ban_queue($channel, 'b', $mask);
-
   if (not defined $immediately or $immediately != 0) {
     $self->check_ban_queue;
   }
@@ -157,7 +155,6 @@ sub get_bans {
       }
     }
   }
-
   return $masks
 }
 
@@ -184,7 +181,6 @@ sub unmode_user {
     $unbanned{$baninfo->{banmask}} = 1;
     $self->add_to_unban_queue($channel, $mode, $baninfo->{banmask});
   }
-
   $self->check_unban_queue if $immediately;
 }
 
@@ -234,22 +230,20 @@ sub ban_user_timed {
     $data->{reason} = $reason if defined $reason;
     $self->{unban_timeout}->add($channel, $mask, $data);
   } else {
-    $self->{unban_timeout}->remove($channel, $mask);
+    if ($self->{unban_timeout}->exists($channel, $mask)) {
+      $self->{unban_timeout}->remove($channel, $mask);
+    }
   }
 }
 
 sub checkban {
   my ($self, $channel, $target) = @_;
-  $channel = lc $channel;
-  $target = lc $target;
+  my $mask = $self->nick_to_banmask($target);
 
-  my $mask = lc $self->nick_to_banmask($target);
-
-  if (exists $self->{unban_timeout}->{hash}->{$channel}
-    && exists $self->{unban_timeout}->{hash}->{$channel}->{$mask}) {
-    my $timeout = $self->{unban_timeout}->{hash}->{$channel}->{$mask}->{timeout};
-    my $owner   = $self->{unban_timeout}->{hash}->{$channel}->{$mask}->{owner};
-    my $reason  = $self->{unban_timeout}->{hash}->{$channel}->{$mask}->{reason};
+  if ($self->{unban_timeout}->exists($channel, $mask)) {
+    my $timeout = $self->{unban_timeout}->get_data($channel, $mask, 'timeout');
+    my $owner   = $self->{unban_timeout}->get_data($channel, $mask, 'owner');
+    my $reason  = $self->{unban_timeout}->get_data($channel, $mask, 'reason');
     my $duration = concise duration($timeout - gettimeofday);
 
     my $result = "$mask banned in $channel ";
@@ -265,9 +259,7 @@ sub checkban {
 sub mute_user {
   my $self = shift;
   my ($mask, $channel, $immediately) = @_;
-
   $self->add_to_ban_queue($channel, 'q', $mask);
-
   if (not defined $immediately or $immediately != 0) {
     $self->check_ban_queue;
   }
@@ -285,9 +277,6 @@ sub mute_user_timed {
   my $self = shift;
   my ($owner, $reason, $mask, $channel, $length, $immediately) = @_;
 
-  $channel = lc $channel;
-  $mask = lc $mask;
-
   $mask = $self->nick_to_banmask($mask);
   $self->mute_user($mask, $channel, $immediately);
 
@@ -299,23 +288,20 @@ sub mute_user_timed {
     $data->{reason} = $reason if defined $reason;
     $self->{unmute_timeout}->add($channel, $mask, $data);
   } else {
-    $self->{unmute_timeout}->remove($channel, $mask);
+    if ($self->{unmute_timeout}->exists($channel, $mask)) {
+      $self->{unmute_timeout}->remove($channel, $mask);
+    }
   }
 }
 
 sub checkmute {
   my ($self, $channel, $target) = @_;
+  my $mask = $self->nick_to_banmask($target);
 
-  $channel = lc $channel;
-  $target = lc $target;
-
-  my $mask = lc $self->nick_to_banmask($target);
-
-  if (exists $self->{unmute_timeout}->{hash}->{$channel}
-    && exists $self->{unmute_timeout}->{hash}->{$channel}->{$mask}) {
-    my $timeout = $self->{unmute_timeout}->{hash}->{$channel}->{$mask}->{timeout};
-    my $owner   = $self->{unmute_timeout}->{hash}->{$channel}->{$mask}->{owner};
-    my $reason  = $self->{unmute_timeout}->{hash}->{$channel}->{$mask}->{reason};
+  if ($self->{unmute_timeout}->exists($channel, $mask)) {
+    my $timeout = $self->{unmute_timeout}->get_data($channel, $mask, 'timeout');
+    my $owner   = $self->{unmute_timeout}->get_data($channel, $mask, 'owner');
+    my $reason  = $self->{unmute_timeout}->get_data($channel, $mask, 'reason');
     my $duration = concise duration($timeout - gettimeofday);
 
     my $result = "$mask muted in $channel ";
@@ -341,8 +327,8 @@ sub join_channel {
     delete $self->{is_opped}->{$channel};
     delete $self->{op_requested}->{$channel};
 
-    if (exists $self->{pbot}->{channels}->{channels}->{hash}->{lc $channel}
-        and $self->{pbot}->{channels}->{channels}->{hash}->{lc $channel}->{permop}) {
+    if ($self->{pbot}->{channels}->{channels}->exists($channel)
+        and $self->{pbot}->{channels}->{channels}->get_data($channel, 'permop')) {
       $self->gain_ops($channel);
     }
 
@@ -352,24 +338,21 @@ sub join_channel {
 
 sub part_channel {
   my ($self, $channel) = @_;
-
   $channel = lc $channel;
-
   $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.part', { channel => $channel });
   $self->{pbot}->{conn}->part($channel);
-
   delete $self->{is_opped}->{$channel};
   delete $self->{op_requested}->{$channel};
 }
 
 sub has_ban_timeout {
   my ($self, $channel, $mask) = @_;
-  return exists $self->{unban_timeout}->{hash}->{lc $channel}->{lc $mask};
+  return $self->{unban_timeout}->exists($channel, $mask);
 }
 
 sub has_mute_timeout {
   my ($self, $channel, $mask) = @_;
-  return exists $self->{unmute_timeout}->{hash}->{lc $channel}->{lc $mask};
+  return $self->{unmute_timeout}->exists($channel, $mask);
 }
 
 sub add_to_ban_queue {
@@ -474,16 +457,12 @@ sub check_unban_queue {
 
 sub check_unban_timeouts {
   my $self = shift;
-
   return if not $self->{pbot}->{joined_channels};
-
   my $now = gettimeofday();
-
-  foreach my $channel (keys %{ $self->{unban_timeout}->{hash} }) {
-    foreach my $mask (keys %{ $self->{unban_timeout}->{hash}->{$channel} }) {
-      next if $mask eq '_name';
-      if ($self->{unban_timeout}->{hash}->{$channel}->{$mask}->{timeout} < $now) {
-        $self->{unban_timeout}->{hash}->{$channel}->{$mask}->{timeout} = $now + 7200;
+  foreach my $channel ($self->{unban_timeout}->get_keys) {
+    foreach my $mask ($self->{unban_timeout}->get_keys($channel)) {
+      if ($self->{unban_timeout}->get_data($channel, $mask, 'timeout') < $now) {
+        $self->{unban_timeout}->set($channel, $mask, 'timeout', $now + 7200);
         $self->unban_user($mask, $channel);
       }
     }
@@ -492,16 +471,12 @@ sub check_unban_timeouts {
 
 sub check_unmute_timeouts {
   my $self = shift;
-
   return if not $self->{pbot}->{joined_channels};
-
   my $now = gettimeofday();
-
-  foreach my $channel (keys %{ $self->{unmute_timeout}->{hash} }) {
-    foreach my $mask (keys %{ $self->{unmute_timeout}->{hash}->{$channel} }) {
-      next if $mask eq '_name';
-      if ($self->{unmute_timeout}->{hash}->{$channel}->{$mask}->{timeout} < $now) {
-        $self->{unmute_timeout}->{hash}->{$channel}->{$mask}->{timeout} = $now + 7200;
+  foreach my $channel ($self->{unmute_timeout}->get_keys) {
+    foreach my $mask ($self->{unmute_timeout}->get_keys($channel)) {
+      if ($self->{unmute_timeout}->get_data($channel, $mask, 'timeout') < $now) {
+        $self->{unmute_timeout}->set($channel, $mask, 'timeout', $now + 7200);
         $self->unmute_user($mask, $channel);
       }
     }
@@ -511,11 +486,10 @@ sub check_unmute_timeouts {
 sub check_opped_timeouts {
   my $self = shift;
   my $now = gettimeofday();
-
   foreach my $channel (keys %{ $self->{is_opped} }) {
     if ($self->{is_opped}->{$channel}{timeout} < $now) {
-      unless (exists $self->{pbot}->{channels}->{channels}->{hash}->{lc $channel}
-          and $self->{pbot}->{channels}->{channels}->{hash}->{lc $channel}->{permop}) {
+      unless ($self->{pbot}->{channels}->{channels}->exists($channel)
+          and $self->{pbot}->{channels}->{channels}->get_data($channel, 'permop')) {
         $self->lose_ops($channel);
       }
     }
@@ -523,8 +497,8 @@ sub check_opped_timeouts {
 
   foreach my $channel (keys %{ $self->{op_requested} }) {
     if ($now - $self->{op_requested}->{$channel} > 60 * 5) {
-      if (exists $self->{pbot}->{channels}->{channels}->{hash}->{lc $channel}
-          and $self->{pbot}->{channels}->{channels}->{hash}->{lc $channel}->{enabled}) {
+      if ($self->{pbot}->{channels}->{channels}->exists($channel)
+          and $self->{pbot}->{channels}->{channels}->get_data($channel, 'enabled')) {
         $self->{pbot}->{logger}->log("5 minutes since OP request for $channel and no OP yet; trying again ...\n");
         delete $self->{op_requested}->{$channel};
         $self->gain_ops($channel);
