@@ -4,7 +4,11 @@ PBot is a versatile IRC Bot written in Perl
 <!-- md-toc-begin -->
 * [Installation / Quick Start](#installation--quick-start)
 * [Features](#features)
-  * [Commands](#commands)
+  * [Useful IRC command improvements](#useful-irc-command-improvements)
+  * [Channel management](#channel-management)
+  * [User management](#user-management)
+  * [Easy configuration](#easy-configuration)
+  * [Extensible](#extensible)
   * [Powerful command interpreter](#powerful-command-interpreter)
     * [Piping](#piping)
     * [Substitution](#substitution)
@@ -15,11 +19,8 @@ PBot is a versatile IRC Bot written in Perl
   * [Code Factoids](#code-factoids)
   * [Plugins](#plugins)
   * [Modules](#modules)
+  * [Functions](#functions)
   * [Virtual machine](#virtual-machine)
-  * [Useful IRC command improvements](#useful-irc-command-improvements)
-  * [Channel management](#channel-management)
-  * [User management](#user-management)
-  * [Easy configuration](#easy-configuration)
 * [Documentation](#documentation)
 * [Frequently Asked Questions](#frequently-asked-questions)
 * [Support](#support)
@@ -31,26 +32,67 @@ To get up-and-running quickly, check out the [Quick Start guide](doc/QuickStart.
 
 ## Features
 
-### Commands
+### Useful IRC command improvements
+* [`mode`](doc/Admin.md#mode) command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
+* `unban <nick>` and `unmute <nick>` can remove all bans/mutes matching `<nick>`'s hostmask or account
+* [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) will intelligently set banmasks; supports timeouts
+* [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
+* [`kick`](doc/Admin.md#kick) can take a comma-separated list of nicks; also accepts wildcards
+* and much, much more!
 
-PBot has several useful built-in commands. Additional commands can be added to PBot through
-[Factoids](#factoids), [Plugins](#plugins) and [Modules](#modules).
+### Channel management
+PBot can perform the typical channel management tasks.
+
+* opping/deopping, etc
+* channel-mode tracking
+* user hostmask/alias tracking
+* ban-evasion detection
+* flood detection
+* whitelisting, blacklisting, etc
+* spam/advertisement detection
+* and much, much more!
+
+For more information, see the [Channels documentation](doc/Admin.md#channel-management-commands) and the [Anti-abuse documentation](doc/AntiAbuse.md)
+
+### User management
+PBot has easy straightforward user management via simple built-in commands.
+
+* [user capabilities](doc/Admin.md#user-capabilities) dictate what users can and cannot do
+* user accounts can be global or channel-specific
+* users can be recognized by hostmask or required to login with password
+* users can adjust their [user-metadata](doc/Admin.md#user-metadata-list) with the [`my`](doc/Commands.md#my) command
+* and much, much more!
+
+For more information, see the [Admin documentation.](doc/Admin.md#user-management-commands)
+
+### Easy configuration
+PBot's settings are contained in a central registry of key/value pairs grouped by sections.
+
+These settings can easily be configured via several methods:
+
+* [PBot's command-line arguments](doc/Registry.md#overriding-registry-values-via-command-line)
+* [simple built-in commands (`regset`, `regunset`, etc)](doc/Registry.md#registry-commands)
+* [editing](doc/Registry.md#editing-registry-file) the [`$data_dir/registry`](data/registry) plain-text JSON file
+
+For more information, see the [Registry documentation.](doc/Registry.md)
+
+### Extensible
+PBot is extensible in multiple ways. Additional commands and functionality can  be added to PBot through
+[Factoids](#factoids), [Plugins](#plugins), [Modules](#modules) and [Functions](#functions).
+
+### Powerful command interpreter
+PBot has an powerful command interpreter with useful functionality, and tons of
+built-in commands.
 
 For more information, see the [Commands documentation.](doc/Commands.md)
 
-### Powerful command interpreter
-
-PBot has an powerful command interpreter with useful functionality.
-
 #### Piping
-
 You can pipe output from one command as input into another command, indefinitely.
 
     <pragma-> !echo hello world | {sed s/world/everybody/} | {uc}
        <PBot> HELLO EVERYBODY
 
 #### Substitution
-
 You can insert the output from another command at any point within a command. This
 substitutes the command with its output at the point where the command was used.
 
@@ -75,14 +117,12 @@ factoid otherwise it will be expanded first.
        <PBot> https://google.com/search?tbm=isch&q=spaces%20%26%20stuff
 
 #### Chaining
-
 You can execute multiple commands sequentially as one command.
 
     <pragma-> !echo Test! ;;; me smiles. ;;; version
        <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
 
 #### Variables
-
 You can use factoids as variables and interpolate them within commands.
 
     <pragma-> !factadd greeting "Hello, world"
@@ -97,7 +137,6 @@ combine their effects.
        <PBot> HELLO, WORLD
 
 #### Inline invocation
-
 You can invoke up to three commands inlined within a message.  If the message
 is addressed to a nick, the output will also be addressed to them.
 
@@ -106,7 +145,6 @@ is addressed to a nick, the output will also be addressed to them.
        <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
 
 ### Factoids
-
 Factoids are a very special type of command. Anybody interacting with PBot
 can create, edit, delete and invoke factoids. Factoids can be locked by the
 creator of the factoid to prevent them from being edited by others.
@@ -138,7 +176,6 @@ PBot factoids include these advanced features:
 For more information, see the [Factoids documentation](doc/Factoids.md).
 
 ### Code Factoids
-
 Code Factoids are a special type of factoid that begin with the `/code` command.
 
     /code <language> <code>
@@ -165,7 +202,6 @@ You can pipe output from other commands to Code Factoids.
 For more information, see the [Code Factoid documentation](doc/Factoids.md#code).
 
 ### Plugins
-
 PBot can dynamically load and unload Perl modules to alter its behavior.
 
 These are some of the plugins that PBot has; there are many more:
@@ -195,7 +231,6 @@ Plugin | Description
 [Connect4](Plugins/Connect4.pm) | The classic Connect-4 game.
 
 ### Modules
-
 Modules are external command-line executable programs and scripts that can be
 loaded as PBot commands.
 
@@ -232,8 +267,12 @@ Module | Description
 
 For more information, see the [Modules documentation](doc/Modules.md).
 
-### Virtual machine
+### Functions
+Functions are "commands" that accept input, manipulates it and then outputs the result.
 
+For more information, see the [Functions documentation](doc/Functions.md).
+
+### Virtual machine
 PBot can integrate with a virtual machine to safely execute arbitrary user-submitted
 operating system commands or code.
 
@@ -268,54 +307,6 @@ It can display the value of the most recent statement if there is no program out
 For more information about the C programming language plugin, see [the `cc` command in the Modules documentation.](doc/Modules.md#cc)
 
 For more information about the virtual machine, see the [Virtual Machine documentation.](doc/VirtualMachine.md)
-
-### Useful IRC command improvements
-
-* [`mode`](doc/Admin.md#mode) command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
-* `unban <nick>` and `unmute <nick>` can remove all bans/mutes matching `<nick>`'s hostmask or account
-* [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) will intelligently set banmasks; supports timeouts
-* [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
-* [`kick`](doc/Admin.md#kick) can take a comma-separated list of nicks; also accepts wildcards
-* and much, much more!
-
-### Channel management
-
-PBot can perform the typical channel management tasks.
-
-* opping/deopping, etc
-* channel-mode tracking
-* user hostmask/alias tracking
-* ban-evasion detection
-* flood detection
-* whitelisting, blacklisting, etc
-* spam/advertisement detection
-* and much, much more!
-
-For more information, see the [Channels documentation](doc/Admin.md#channel-management-commands) and the [Anti-abuse documentation](doc/AntiAbuse.md)
-
-### User management
-
-PBot has easy straightforward user management via simple built-in commands.
-
-* [user capabilities](doc/Admin.md#user-capabilities) dictate what users can and cannot do
-* user accounts can be global or channel-specific
-* users can be recognized by hostmask or required to login with password
-* users can adjust their [user-metadata](doc/Admin.md#user-metadata-list) with the [`my`](doc/Commands.md#my) command
-* and much, much more!
-
-For more information, see the [Admin documentation.](doc/Admin.md#user-management-commands)
-
-### Easy configuration
-
-PBot's settings are contained in a central registry of key/value pairs grouped by sections.
-
-These settings can easily be configured via several methods:
-
-* [PBot's command-line arguments](doc/Registry.md#overriding-registry-values-via-command-line)
-* [simple built-in commands (`regset`, `regunset`, etc)](doc/Registry.md#registry-commands)
-* [editing](doc/Registry.md#editing-registry-file) the [`$data_dir/registry`](data/registry) plain-text JSON file
-
-For more information, see the [Registry documentation.](doc/Registry.md)
 
 ## Documentation
 See the [PBot documentation](doc) for more information.
