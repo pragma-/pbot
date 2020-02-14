@@ -8,10 +8,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Registerable;
-use parent 'PBot::Class';
 
 use warnings; use strict;
 use feature 'unicode_strings';
+
+sub new {
+  my ($proto, %conf) = @_;
+  my $class = ref($proto) || $proto;
+  my $self = bless {}, $class;
+  Carp::croak("Missing pbot reference to " . __FILE__) unless exists $conf{pbot};
+  $self->{pbot} = $conf{pbot};
+  $self->initialize(%conf);
+  return $self;
+}
 
 sub initialize {
   my $self = shift;

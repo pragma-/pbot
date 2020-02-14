@@ -24,6 +24,7 @@ sub new {
   }
 
   $self->{pbot} = $conf{pbot};
+  $self->{pbot}->{logger}->log("Initializing $class\n");
   $self->initialize(%conf);
   return $self;
 }

@@ -60,9 +60,6 @@ sub initialize {
   my ($self, %conf) = @_;
   $self->{startup_timestamp} = time;
 
-  $self->{atexit} = PBot::Registerable->new(%conf, pbot => $self);
-  $self->register_signal_handlers;
-
   my $data_dir   = $conf{data_dir};
   my $module_dir = $conf{module_dir};
   my $plugin_dir = $conf{plugin_dir};
@@ -78,8 +75,32 @@ sub initialize {
     }
   }
 
-  # logger created first to allow other modules to log things
-  $self->{logger}   = PBot::Logger->new(pbot => $self, filename => "$data_dir/log/log", %conf);
+  # check command-line arguments for registry overrides
+  foreach my $arg (@ARGV) {
+    next if $arg =~ m/^-?(?:general\.)?(?:config|data|module|plugin)_dir=.*$/; # already processed
+    my ($item, $value) = split /=/, $arg, 2;
+
+    if (not defined $item or not defined $value) {
+      print STDERR "Fatal error: unknown argument `$arg`; arguments must be in the form of `section.key=value` (e.g.: irc.botnick=newnick)\n";
+      exit;
+    }
+
+    my ($section, $key) = split /\./, $item, 2;
+    if (not defined $section or not defined $key) {
+      print STDERR "Fatal error: bad argument `$arg`; registry entries must be in the form of section.key (e.g.: irc.botnick)\n";
+      exit;
+    }
+
+    $section =~ s/^-//; # remove a leading - to allow arguments like -irc.botnick due to habitual use of -args
+    $self->{overrides}->{"$section.$key"} = $value;
+  }
+
+  # let modules register signal handlers
+  $self->{atexit} = PBot::Registerable->new(%conf, pbot => $self);
+  $self->register_signal_handlers;
+
+  # create logger
+  $self->{logger} = PBot::Logger->new(pbot => $self, filename => "$data_dir/log/log", %conf);
 
   # make sure the environment is sane
   if (not -d $data_dir) {
@@ -165,24 +186,9 @@ sub initialize {
   $self->{registry}->set('general', 'plugin_dir', 'value', $plugin_dir, 0, 1);
 
   # override registry entries with command-line arguments, if any
-  foreach my $arg (@ARGV) {
-    next if $arg =~ m/^-?(?:general\.)?(?:config|data|module|plugin)_dir=.*$/; # already processed
-    my ($item, $value) = split /=/, $arg, 2;
-
-    if (not defined $item or not defined $value) {
-      $self->{logger}->log("Fatal error: unknown argument `$arg`; arguments must be in the form of `section.key=value` (e.g.: irc.botnick=newnick)\n");
-      exit;
-    }
-
-    my ($section, $key) = split /\./, $item, 2;
-
-    if (not defined $section or not defined $key) {
-      $self->{logger}->log("Fatal error: bad argument `$arg`; registry entries must be in the form of section.key (e.g.: irc.botnick)\n");
-      exit;
-    }
-
-    $section =~ s/^-//; # remove a leading - to allow arguments like -irc.botnick due to habitual use of -args
-
+  foreach my $override (keys %{$self->{overrides}}) {
+    my ($section, $key) = split /\./, $override;
+    my $value = $self->{overrides}->{$override};
     $self->{logger}->log("Overriding $section.$key to $value\n");
     $self->{registry}->set($section, $key, 'value', $value, 0, 1);
   }
