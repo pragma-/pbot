@@ -283,7 +283,8 @@ uppercases the text.
     <pragma-> echo Hello world! | {sed s/world/universe/} | {uc}
        <PBot> HELLO UNIVERSE!
 
-Here's a short list of the Functions that come with PBot.
+Here's a short list of the Functions that come with PBot. Additional Functions can easily be added
+by making a very simple PBot Plugin.
 
 Name | Description
 --- | ---
