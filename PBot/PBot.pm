@@ -46,7 +46,7 @@ use PBot::Refresher;
 use PBot::Plugins;
 use PBot::WebPaste;
 use PBot::Utils::ParseDate;
-use PBot::FuncCommand;
+use PBot::Functions;
 
 sub new {
   my ($proto, %conf) = @_;
@@ -125,7 +125,7 @@ sub initialize {
   $self->{logger}->log("plugin_dir: $plugin_dir\n");
 
   $self->{timer}     = PBot::Timer->new(pbot => $self, timeout => 10, %conf);
-  $self->{func_cmd}  = PBot::FuncCommand->new(pbot => $self, %conf);
+  $self->{functions} = PBot::Functions->new(pbot => $self, %conf);
   $self->{refresher} = PBot::Refresher->new(pbot => $self);
 
   # create registry and set some defaults
@@ -475,11 +475,6 @@ sub reload {
       $self->{factoids}->{factoids}->clear;
       $self->{factoids}->load_factoids;
       return "Factoids reloaded.";
-    },
-
-    'funcs' => sub {
-      $self->{func_cmd}->init_funcs;
-      return "Funcs reloaded.";
     }
   );
 
