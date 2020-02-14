@@ -55,6 +55,13 @@ sub initialize {
       subref => sub { $self->func_unquote(@_) }
     }
   );
+  $self->{pbot}->{functions}->register('uri_escape',
+    {
+      desc   => 'percent-encode unsafe URI characters',
+      usage  => 'uri_escape <text>',
+      subref => sub { $self->func_uri_escape(@_) }
+    }
+  );
 }
 
 sub unload {
@@ -64,6 +71,7 @@ sub unload {
   $self->{pbot}->{functions}->unregister('uc');
   $self->{pbot}->{functions}->unregister('lc');
   $self->{pbot}->{functions}->unregister('unquote');
+  $self->{pbot}->{functions}->unregister('uri_escape');
 }
 
 sub func_unquote {
@@ -99,6 +107,13 @@ sub func_lc {
   my $self = shift;
   my $text = "@_";
   return lc $text;
+}
+
+use URI::Escape qw/uri_escape_utf8/;
+sub func_uri_escape {
+  my $self = shift;
+  my $text = "@_";
+  return uri_escape_utf8($text);
 }
 
 1;
