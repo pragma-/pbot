@@ -271,7 +271,7 @@ For more information, see the [Modules documentation](doc/Modules.md).
 Functions are commands that accept input, manipulate it and then output the result. They are extremely
 useful with [piping](#piping) or [command substituting](#substitution).
 
-For example, the `uri_escape` function demonstrated in the [Substitutions](#substitutions) section earlier
+For example, the `uri_escape` function demonstrated in the [Substitution](#substitution) section earlier
 makes text safe for use in a URL.
 
     <pragma-> uri_escape thing's & words
