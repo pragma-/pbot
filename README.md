@@ -272,19 +272,18 @@ Functions are commands that accept input, manipulate it and then output the resu
 useful with [piping](#piping) or [command substituting](#substitution).
 
 For example, the `uri_escape` function demonstrated in the [Substitutions](#substitutions) section earlier
-makes text safe for use in a URL. We also saw the `sed` and `uc` functions demonstrated in [Piping](#piping).
+makes text safe for use in a URL.
 
     <pragma-> uri_escape thing's & words
        <PBot> thing%27s%20%26%20words
 
-As demonstrated previously, the `sed` function replaces text using a substitution regex. The `uc` function
-uppercases the text.
+We also saw the `sed` and `uc` functions demonstrated in [Piping](#piping). The `sed` function
+replaces text using a substitution regex. The `uc` function uppercases the text.
 
     <pragma-> echo Hello world! | {sed s/world/universe/} | {uc}
        <PBot> HELLO UNIVERSE!
 
-Here's a short list of the Functions that come with PBot. Additional Functions can easily be added
-by making a very simple PBot Plugin.
+Here's a short list of the Functions that come with PBot.
 
 Name | Description
 --- | ---
@@ -296,6 +295,8 @@ Name | Description
 `ucfirst` | Uppercases the first character of the text.
 `uc` | Uppercases all characters.
 `lc` | Lowercases all characters.
+
+Additional Functions can easily be added by making a very simple PBot Plugin.
 
 For more information, see the [Functions documentation](doc/Functions.md).
 
