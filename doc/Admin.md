@@ -550,7 +550,7 @@ Name | Description
 `help` | The text to display for the [`help`](Commands.md#help) command.
 `cap-required` | When set to a true value then the command requires that users have the `can-<command name>` [capability](#user-capabilities) before they can invoke it.
 `dont-replace-pronouns` | When set to a true value then pronouns such as "my", "me", "your", etc, will not be intuitively replaced with nicks and such.
-`execute-process` | When set to a true value then this command will be executed as a background process. Use this for commands that can potentially take a long time to complete.
+`background-process` | When set to a true value then this command will be executed as a background process. Use this for commands that can potentially take a long time to complete.
 
 ## Process management commands
 ### ps

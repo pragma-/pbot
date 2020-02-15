@@ -150,7 +150,7 @@ Any command can be flagged to be executed as a background process. For example, 
 make a Plugin that has a command that may potentially take a long time to complete, which could
 cause PBot to be non-responsive...
 
-Not a problem! You can use the [`cmdset`](doc/Admin.md#cmdset) command to set the `execute-process` [command metadata](doc/Admin.md#command-metadata-list)
+Not a problem! You can use the [`cmdset`](doc/Admin.md#cmdset) command to set the `background-process` [command metadata](doc/Admin.md#command-metadata-list)
 and the command will now run as a background process, allowing PBot to carry on with its duties.
 
 The familiar [`ps`](doc/Admin.md#ps) and [`kill`](doc/Admin.md#kill) commands can be used to list and kill the background processes.
