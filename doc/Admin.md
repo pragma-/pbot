@@ -554,7 +554,7 @@ Name | Description
 
 ## Process management commands
 ### ps
-Lists all currently running background process.
+Lists all currently running background processes.
 
 Usage: `ps`
 
