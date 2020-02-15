@@ -35,7 +35,7 @@ sub ps_cmd {
     push @processes, "$pid: $self->{processes}->{$pid}->{commands}->[0]";
   }
   if (@processes) {
-    return "Running processes: ", join '; ', @processes;
+    return "Running processes: "  . join '; ', @processes;
   } else {
     return "No running processes.";
   }
@@ -43,7 +43,21 @@ sub ps_cmd {
 
 sub kill_cmd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-  return "Coming soon.";
+  my $usage = "Usage: kill <pids...>";
+
+  my @pids;
+  while (1) {
+    my $pid = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // last;
+    push @pids, $pid;
+  }
+  return $usage if not @pids;
+
+  foreach my $pid (@pids) {
+    return "No such pid $pid." if not exists $self->{processes}->{$pid};
+  }
+
+  kill 'INT', @pids;
+  return "Killed.";
 }
 
 sub add_process {
@@ -61,6 +75,10 @@ sub execute_subroutine {
 
 sub execute_process {
   my ($self, $stuff, $subref) = @_;
+
+  if (not exists $stuff->{commands}) {
+    $stuff->{commands} = [ $stuff->{command} ];
+  }
 
   pipe(my $reader, my $writer);
   my $pid = fork;
