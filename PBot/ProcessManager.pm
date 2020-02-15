@@ -75,9 +75,9 @@ sub execute_process {
   }
 
   pipe(my $reader, my $writer);
-  my $pid = fork;
+  $stuff->{pid} = fork;
 
-  if (not defined $pid) {
+  if (not defined $stuff->{pid}) {
     $self->{pbot}->{logger}->log("Could not fork process: $!\n");
     close $reader;
     close $writer;
@@ -86,7 +86,7 @@ sub execute_process {
     return;
   }
 
-  if ($pid == 0) {
+  if ($stuff->{pid} == 0) {
     # child
     close $reader;
 
@@ -97,7 +97,7 @@ sub execute_process {
 
     # execute the provided subroutine, results are stored in $stuff
     eval {
-      local $SIG{ALRM} = sub { die "PBot::Process timed-out" };
+      local $SIG{ALRM} = sub { die "PBot::Process `$stuff->{commands}->[0]` timed-out" };
       alarm $timeout;
       $subref->($stuff);
       die if $@;
@@ -120,8 +120,8 @@ sub execute_process {
  } else {
    # parent
    close $writer;
-   $self->add_process($pid, $stuff);
-   $self->{pbot}->{select_handler}->add_reader($reader, sub { $self->process_pipe_reader($pid, @_) });
+   $self->add_process($stuff->{pid}, $stuff);
+   $self->{pbot}->{select_handler}->add_reader($reader, sub { $self->process_pipe_reader($stuff->{pid}, @_) });
    # return empty string since reader will handle the output when child is finished
    return "";
  }
