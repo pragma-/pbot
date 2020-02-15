@@ -105,7 +105,6 @@
       * [Channel metadata list](Admin.md#channel-metadata-list)
     * [ignore](Admin.md#ignore)
     * [unignore](Admin.md#unignore)
-    * [whitelist](Admin.md#whitelist)
     * [blacklist](Admin.md#blacklist)
     * [op](Admin.md#op)
     * [deop](Admin.md#deop)

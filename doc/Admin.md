@@ -33,7 +33,6 @@
     * [Channel metadata list](#channel-metadata-list)
   * [ignore](#ignore)
   * [unignore](#unignore)
-  * [whitelist](#whitelist)
   * [blacklist](#blacklist)
   * [op](#op)
   * [deop](#deop)
@@ -237,8 +236,7 @@ Observe.
               can-actiontrigger, can-akalink, can-akaunlink, can-antispam, can-blacklist,
               can-chanlist, can-clear-bans, can-clear-mutes, can-countertrigger, can-ignore,
               can-in, can-join, can-kick-wildcard, can-mode, can-op-wildcard, can-part,
-              can-unignore, can-useradd, can-userdel, can-userset, can-userunset, can-voice-wildcard,
-              can-whitelist
+              can-unignore, can-useradd, can-userdel, can-userset, can-userunset, can-voice-wildcard
 <!-- -->
     <pragma-> cap list chanop
        <PBot> Grouped capabilities for chanop: can-ban (1 cap), can-deop (1 cap), can-devoice (1 cap),
@@ -397,15 +395,6 @@ Timeout can be specified as an relative time in English; for instance, `5 minute
 Unignores a user. If you omit `[channel]` PBot will unignore the user from all channels, including private messages.
 
 Usage:  `unignore <hostmask regex> [channel]`
-
-### whitelist
-Whitelists a hostmask regex to be exempt from ban evasions or anti-flood enforcement.
-
-Usages:
-
-- `whitelist <show/list>`
-- `whitelist add <channel> <hostmask>`
-- `whitelist remove <channel> <hostmask>`
 
 ### blacklist
 Blacklists a hostmask regex from joining a channel.
@@ -581,7 +570,7 @@ Reloads a data or configuration file from `$data_dir`. This is useful if you
 manually edit a data or configuration file and you want PBot to know about the
 modifications.
 
-Usage `reload <admins|bantimeouts|blacklist|channels|factoids|funcs|ignores|mutetimeouts|registry|whitelist>`
+Usage `reload <admins|bantimeouts|blacklist|channels|factoids|funcs|ignores|mutetimeouts|registry>`
 
 ### sl
 Sends a raw IRC command to the server. Use the `sl` command when
