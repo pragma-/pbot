@@ -146,7 +146,7 @@ is addressed to a nick, the output will also be addressed to them.
        <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
 
 #### Background processing
-Any command can be flagged to execute as a background process. For example, suppose you
+Any command can be flagged to be executed as a background process. For example, suppose you
 make a Plugin that has a command that may potentially take a long time to complete, which could
 cause PBot to be non-responsive until the command completes...
 
