@@ -118,7 +118,6 @@ sub from {
     my @part;
 
     if (@_) {
-
         # avoid certain irritating and spurious warnings from this line...
         {
             local $^W;

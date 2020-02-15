@@ -81,7 +81,6 @@ sub execute_process {
     }
 
     if ($stuff->{pid} == 0) {
-
         # child
         close $reader;
 
@@ -116,12 +115,10 @@ sub execute_process {
         # end child
         exit 0;
     } else {
-
         # parent
         close $writer;
         $self->add_process($stuff->{pid}, $stuff);
         $self->{pbot}->{select_handler}->add_reader($reader, sub { $self->process_pipe_reader($stuff->{pid}, @_) });
-
         # return empty string since reader will handle the output when child is finished
         return "";
     }
@@ -152,7 +149,6 @@ sub process_pipe_reader {
 
     if (defined $stuff->{nickoverride}) { $self->{pbot}->{interpreter}->handle_result($stuff, $stuff->{result}); }
     else {
-
         # don't override nick if already set
         if (    exists $stuff->{special}
             and $stuff->{special} ne 'code-factoid'
@@ -163,22 +159,18 @@ sub process_pipe_reader {
             $stuff->{no_nickoverride}    = 0;
             $stuff->{force_nickoverride} = 1;
         } else {
-
             # extract nick-like thing from module result
             if ($stuff->{result} =~ s/^(\S+): //) {
                 my $nick = $1;
                 if (lc $nick eq "usage") {
-
                     # put it back on result if it's a usage message
                     $stuff->{result} = "$nick: $stuff->{result}";
                 } else {
                     my $present = $self->{pbot}->{nicklist}->is_present($stuff->{channel}, $nick);
                     if ($present) {
-
                         # nick is present in channel
                         $stuff->{nickoverride} = $present;
                     } else {
-
                         # nick not present, put it back on result
                         $stuff->{result} = "$nick: $stuff->{result}";
                     }

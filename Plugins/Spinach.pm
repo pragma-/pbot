@@ -1561,7 +1561,6 @@ sub choosecategory {
         }
 
         if (++$state->{counter} > $state->{max_count}) {
-
             # $state->{players}->[$state->{current_player}]->{missedinputs}++;
             my $name     = $state->{players}->[$state->{current_player}]->{name};
             my $category = $state->{category_options}->[rand(@{$state->{category_options}} - 2)];

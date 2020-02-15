@@ -495,7 +495,6 @@ sub get_message_account {
                         $self->{pbot}->{logger}->log("2: distance match: $host vs $thost == " . ($distance / $length) . "\n");
                         $match = 1;
                     } else {
-
                         # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
                         if (defined $hostip) {
                             if ($hostip eq $thost) {
@@ -632,7 +631,6 @@ sub get_message_account {
                     $self->{pbot}->{logger}->log("7: distance match: $host vs $thost == " . ($distance / $length) . "\n");
                     $match = 1;
                 } else {
-
                     # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
                     if (defined $hostip) {
                         if ($hostip eq $thost) {
@@ -1374,7 +1372,6 @@ sub link_aliases {
                         $ids{$row->{id}} = {id => $row->{id}, type => $self->{alias_type}->{STRONG}};    # don't force linking
                         $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} ($row->{hostmask}) for nick [$nick]\n") if $debug_link >= 2;
                     } else {
-
                         # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
                         if (defined $hostip) {
                             if ($hostip eq $thost) {
@@ -1567,8 +1564,7 @@ sub get_also_known_as {
             my $rows = $sth->fetchall_arrayref({});
 
             foreach my $row (@$rows) {
-
-                #        next if $row->{type} == $self->{alias_type}->{WEAK};
+                # next if $row->{type} == $self->{alias_type}->{WEAK};
                 $ids{$row->{alias}} = {id => $id, type => $row->{type}};
                 $self->{pbot}->{logger}->log("[$id] 1) Adding $row->{alias} -> $id [type $row->{type}]\n") if $debug;
             }
@@ -1788,7 +1784,6 @@ sub get_message_account_id {
     };
 
     $self->{pbot}->{logger}->log($@) if $@;
-
     #$self->{pbot}->{logger}->log("get_message_account_id: returning id [". (defined $id ? $id: 'undef') . "] for mask [$mask]\n");
     return $id;
 }
@@ -1799,7 +1794,6 @@ sub commit_message_history {
     return if not $self->{dbh};
 
     if ($self->{new_entries} > 0) {
-
         # $self->{pbot}->{logger}->log("Commiting $self->{new_entries} messages to SQLite\n");
         eval { $self->{dbh}->commit(); };
 

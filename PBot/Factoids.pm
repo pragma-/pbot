@@ -86,7 +86,6 @@ sub add_factoid {
 
     my $data;
     if ($self->{factoids}->exists($channel, $trigger)) {
-
         # only update action field if force-adding it through factadd -f
         $data           = $self->{factoids}->get_data($channel, $trigger);
         $data->{action} = $action;
@@ -905,7 +904,6 @@ sub handle_action {
             }
         }
     } else {
-
         # no arguments supplied, replace $args with $nick/$tonick, etc
         if ($self->{factoids}->exists($channel, $keyword, 'usage')) {
             $action = "/say " . $self->{factoids}->get_data($channel, $keyword, 'usage');
@@ -989,7 +987,6 @@ sub handle_action {
         if   (length $result) { return $ref_from . $result; }
         else                  { return ""; }
     } elsif ($self->{factoids}->get_data($channel, $keyword, 'type') eq 'text') {
-
         # Don't allow user-custom /msg factoids, unless factoid triggered by admin
         if ($action =~ m/^\/msg/i) {
             my $admin = $self->{pbot}->{users}->loggedin_admin($stuff->{from}, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");

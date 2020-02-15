@@ -166,7 +166,6 @@ sub find_factoid_with_optional_channel {
 
     my $needs_disambig;
     if (not defined $from_trigger) {
-
         # cmd arg1, so insert $from as channel
         $from_trigger   = $from_chan;
         $from_chan      = $from;
@@ -174,10 +173,8 @@ sub find_factoid_with_optional_channel {
 
         #$needs_disambig = 1;
     } else {
-
         # cmd arg1 arg2 [...?]
         if ($from_chan !~ /^#/ and lc $from_chan ne 'global' and $from_chan ne '.*') {
-
             # not a channel or global, so must be a keyword
             my $keyword = $from_chan;
             $from_chan    = $from;
@@ -332,7 +329,6 @@ sub factundo {
     my $deleted;
 
     if (not defined $trigger) {
-
         # factoid not found or some error, try to continue and load undo file if it exists
         $deleted = 1;
         ($channel, $trigger) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
@@ -541,12 +537,10 @@ sub factset {
         my $owner;
         my $mask;
         if ($factoid->{'locked'}) {
-
             # check owner against full hostmask for locked factoids
             $owner = $factoid->{'owner'};
             $mask  = "$nick!$user\@$host";
         } else {
-
             # otherwise just the nick
             ($owner) = $factoid->{'owner'} =~ m/([^!]+)/;
             $mask = $nick;
@@ -704,7 +698,6 @@ sub factalias {
     my ($chan, $alias, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3, 0, 1);
 
     if (defined $chan and not($chan eq '.*' or $chan =~ m/^#/)) {
-
         # $chan doesn't look like a channel, so shift everything to the right
         # and replace $chan with $from
         if   (defined $command and length $command) { $command = "$alias $command"; }
@@ -782,7 +775,6 @@ sub factadd {
     my @arglist = @{$stuff->{arglist}};
 
     if (@arglist) {
-
         # check for -f since we allow it to be before optional channel argument
         if ($arglist[0] eq '-f') {
             $force = 1;
@@ -804,7 +796,6 @@ sub factadd {
 
         # check for -url
         if ($arglist[0] eq '-url') {
-
             # discard it
             $self->{pbot}->{interpreter}->shift_arg(\@arglist);
 
@@ -824,7 +815,6 @@ sub factadd {
             if ($response->is_success) { $text = $response->decoded_content; }
             else                       { return "Failed to get URL: " . $response->status_line; }
         } else {
-
             # check for optional "is" and discard
             if (lc $arglist[0] eq 'is') { $self->{pbot}->{interpreter}->shift_arg(\@arglist); }
 
@@ -1033,7 +1023,6 @@ sub factlog {
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $args, 'factlog', usage => $usage, exact_channel => 1);
 
     if (not defined $trigger) {
-
         # factoid not found or some error, try to continue and load factlog file if it exists
         my $arglist = $self->{pbot}->{interpreter}->make_args($args);
         ($channel, $trigger) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
@@ -1486,7 +1475,6 @@ sub factchange {
     my $action = $factoids_data->get_data($channel, $trigger, 'action');
 
     if (defined $url) {
-
         # FIXME: move this to registry
         if ($url !~ m/^https?:\/\/(?:sprunge.us|ix.io)\/\w+$/) { return "Invalid URL: acceptable URLs are: http://sprunge.us, http://ix.io"; }
 

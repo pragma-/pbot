@@ -147,13 +147,11 @@ sub find_user_account {
     foreach my $chan (sort $sort $self->{users}->get_keys) {
         if (($channel !~ m/^#/ and $any_channel) or $channel =~ m/^$chan$/i) {
             if (not $self->{users}->exists($chan, $hostmask)) {
-
                 # find hostmask by account name or wildcard
                 foreach my $mask ($self->{users}->get_keys($chan)) {
                     if (lc $self->{users}->get_data($chan, $mask, 'name') eq $hostmask) { return ($chan, $mask); }
 
                     if ($mask =~ /[*?]/) {
-
                         # contains * or ? so it's converted to a regex
                         my $mask_quoted = quotemeta $mask;
                         $mask_quoted =~ s/\\\*/.*?/g;
@@ -191,14 +189,12 @@ sub find_user {
             if (($channel !~ m/^#/ and $any_channel) or $channel =~ m/^$channel_regex$/i) {
                 foreach my $hostmask_regex ($self->{users}->get_keys($channel_regex)) {
                     if ($hostmask_regex =~ m/[*?]/) {
-
                         # contains * or ? so it's converted to a regex
                         my $hostmask_quoted = quotemeta $hostmask_regex;
                         $hostmask_quoted =~ s/\\\*/.*?/g;
                         $hostmask_quoted =~ s/\\\?/./g;
                         if ($hostmask =~ m/^$hostmask_quoted$/i) { return $self->{users}->get_data($channel_regex, $hostmask_regex); }
                     } else {
-
                         # direct comparison
                         if ($hostmask eq lc $hostmask_regex) { return $self->{users}->get_data($channel_regex, $hostmask_regex); }
                     }
@@ -514,7 +510,6 @@ sub mycmd {
 
         my ($existing_channel, $existing_hostmask) = $self->find_user_account($channel, $name);
         if ($existing_hostmask ne lc $name) {
-
             # user exists by name
             return "There is already an user account named $name but its hostmask ($existing_hostmask) does not match your hostmask ($hostmask). Ask an admin for help.";
         }

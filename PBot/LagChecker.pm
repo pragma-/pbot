@@ -99,7 +99,6 @@ sub lagging {
     my $self = shift;
 
     if (defined $self->{pong_received} and $self->{pong_received} == 0) {
-
         # a ping has been sent (pong_received is not undef) and no pong has been received yet
         my $elapsed = tv_interval($self->{ping_send_time});
         return $elapsed >= $self->{pbot}->{registry}->get_value('lagchecker', 'lag_threshold');
@@ -119,7 +118,6 @@ sub lagcheck {
     my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
     if (defined $self->{pong_received} and $self->{pong_received} == 0) {
-
         # a ping has been sent (pong_received is not undef) and no pong has been received yet
         my $elapsed   = tv_interval($self->{ping_send_time});
         my $lag_total = $elapsed;

@@ -167,7 +167,6 @@ sub regfind {
             foreach my $item_key (sort $registry->get_keys($section_key)) {
                 next if $item_key eq '_name';
                 if ($registry->get_data($section_key, $item_key, 'private')) {
-
                     # do not match on value if private
                     next if $item_key !~ /$arguments/i;
                 } else {

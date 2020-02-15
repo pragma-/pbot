@@ -181,7 +181,6 @@ sub grab_quotegrab {
         my $message;
 
         if ($grab_history =~ /^\d+$/) {
-
             # integral history
             my $max_messages = $self->{pbot}->{messagehistory}->{database}->get_max_messages($account, $channel);
             if ($grab_history < 1 || $grab_history > $max_messages) { return "Please choose a history between 1 and $max_messages"; }
@@ -190,7 +189,6 @@ sub grab_quotegrab {
 
             $message = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $channel, $grab_history, 'grab');
         } else {
-
             # regex history
             $message = $self->{pbot}->{messagehistory}->{database}->recall_message_by_text($account, $channel, $grab_history, 'grab');
 
@@ -229,7 +227,6 @@ sub grab_quotegrab {
     ($grab_nick) = split /\+/, $grab_nicks, 2;
 
     if ($text =~ s/^(NICKCHANGE)\b/changed nick to/ or $text =~ s/^(KICKED|QUIT)\b/lc "$1"/e or $text =~ s/^(JOIN|PART)\b/lc "$1ed"/e) {
-
         # fix ugly "[nick] quit Quit: Leaving." messages
         $text =~ s/^(quit) (.*)/$1 ($2)/;
         return "Quote grabbed: $quotegrab->{id}: $grab_nick $text";
@@ -325,7 +322,6 @@ sub show_random_quotegrab {
     if (defined $channel_search and $channel_search !~ /^#/) {
         if ($channel_search eq $nick) { $channel_search = undef; }
         elsif ($channel_search =~ m/^\./) {
-
             # do nothing
         } else {
             return "$channel_search is not a valid channel.";

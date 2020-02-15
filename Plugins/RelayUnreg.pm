@@ -98,10 +98,8 @@ sub check_queue {
         my ($time, $channel, $nick, $user, $host, $msg) = @{$self->{queue}->[0]};
 
         if ($now >= $time) {
-
             # if nick is still present in channel, send the message
             if ($self->{pbot}->{nicklist}->is_present($channel, $nick)) {
-
                 # ensure they're not banned (+z allows us to see +q/+b messages as normal ones)
                 my $banned = $self->{pbot}->{bantracker}->is_banned($nick, $user, $host, $channel);
                 $self->{pbot}->{logger}

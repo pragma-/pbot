@@ -64,7 +64,6 @@ sub on_tick_handler {
 
     if ($self->{enabled}) {
         if ($#{$self->{handlers}} > -1) {
-
             # call handlers supplied via register() if timeout for each has elapsed
             foreach my $func (@{$self->{handlers}}) {
                 if (defined $func->{last}) {
@@ -85,7 +84,6 @@ sub on_tick_handler {
                 }
             }
         } else {
-
             # call default overridable handler if timeout has elapsed
             if (defined $self->{last}) {
                 $self->{last} -= $max_seconds if $seconds < $self->{last};    # handle wrap-around

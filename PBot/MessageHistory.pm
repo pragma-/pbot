@@ -295,7 +295,6 @@ sub recall_message {
         my $message;
 
         if ($recall_history =~ /^\d+$/) {
-
             # integral history
             if (defined $account) {
                 my $max_messages = $self->{database}->get_max_messages($account, $recall_channel);
@@ -324,7 +323,6 @@ sub recall_message {
 
             if (not defined $message) { return "No message found at index $recall_history in channel $recall_channel."; }
         } else {
-
             # regex history
             $message = $self->{database}->recall_message_by_text($account, $recall_channel, $recall_history, '(?:recall|mock|ftfy|fix)');
 

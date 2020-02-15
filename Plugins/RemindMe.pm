@@ -319,7 +319,6 @@ sub check_reminders {
     }
 
     foreach my $reminder (@$reminders) {
-
         # ensures we get the current nick of the person
         my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($reminder->{account});
         my ($nick) = $hostmask =~ /^([^!]+)!/;

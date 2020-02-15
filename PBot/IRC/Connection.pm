@@ -150,7 +150,6 @@ sub _add_generic_handler {
     elsif ($rp =~ /^\D/)    { $rp = $define{lc $rp} || 0; }
 
     foreach $ev (ref $event eq "ARRAY" ? @{$event} : $event) {
-
         # Translate numerics to names
         if ($ev =~ /^\d/) {
             $ev = PBot::IRC::Event->trans($ev);    # pragma_ 2011/21/01
@@ -701,7 +700,6 @@ sub new_chat {
     my ($init, $nick, $address, $port);
 
     if (ref($_[0]) =~ /Event/) {
-
         # If it's from an Event object, we can't be initiating, right?
         ($init, undef, undef, undef, $address, $port) = (0, $_[0]->args);
         $nick = $_[0]->nick;
@@ -826,7 +824,6 @@ sub parse {
     my ($from, $type, $message, @stuff, $itype, $ev, @lines, $line);
 
     if (defined($self->ssl ? $self->socket->read($line, 10240) : $self->socket->recv($line, 10240, 0)) and (length($self->{_frag}) + length($line)) > 0) {
-
         # grab any remnant from the last go and split into lines
         my $chunk = $self->{_frag} . $line;
         @lines = split /\012/, $chunk;
@@ -836,7 +833,6 @@ sub parse {
         $self->{_frag} = (substr($chunk, -1) ne "\012" ? pop @lines : '');
 
     } else {
-
         # um, if we can read, i say we should read more than 0
         # besides, recv isn't returning undef on closed
         # sockets.  getting rid of this connection...
@@ -1054,7 +1050,6 @@ sub parse {
 
         } elsif ($line =~ /^ERROR/) {
             if ($line =~ /^ERROR :Closing [Ll]ink/) {    # is this compatible?
-
                 $ev = 'done';
                 $self->disconnect('error', ($line =~ /(.*)/));
 
@@ -1074,14 +1069,12 @@ sub parse {
         }
 
         if ($ev) {
-
             # We need to be able to fall through if the handler has
             # already been called (i.e., from within disconnect()).
 
             $self->handler($ev) unless $ev eq 'done';
 
         } else {
-
             # If it gets down to here, it's some exception I forgot about.
             carp "Funky parse case: $line\n";
         }
@@ -1317,7 +1310,6 @@ sub server {
     my ($self) = shift;
 
     if (@_) {
-
         # cases like "irc.server.com:6668"
         if (index($_[0], ':') > 0) {
             my ($serv, $port) = split /:/, $_[0];
@@ -1390,7 +1382,6 @@ sub sl_real {
     if ($self->{_utf8}) { $line = encode('UTF-8', $line); }
 
     my $rv = eval {
-
         # RFC compliance can be kinda nice...
         my $rv = $self->ssl ? $self->socket->print("$line\015\012") : $self->socket->send("$line\015\012", 0);
         unless ($rv) {
@@ -1487,7 +1478,6 @@ sub unignore {
         }
 
         if (exists $self->{_ignore}->{$type}) {
-
             # removes all specifed entries ala _Perl_Cookbook_ recipe 4.7
             my @temp = @{$self->{_ignore}->{$type}};
             @{$self->{_ignore}->{$type}} = ();
@@ -1581,7 +1571,6 @@ sub _default {
         $self->sl("PONG " . (CORE::join ' ', $event->args));
 
     } elsif ($event->type eq "disconnect") {
-
         # I violate OO tenets. (It's consensual, of course.)
         unless (keys %{$self->parent->{_connhash}} > 0) { die "No active connections left, exiting...\n"; }
     }

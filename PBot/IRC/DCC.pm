@@ -80,7 +80,6 @@ sub _getline {
 
             if ($block) {    # Block mode (GET)
                 return $input;
-
             } else {         # Line mode (CHAT)
                              # We're returning \n's 'cause DCC's need 'em
                 my @lines = split /\012/, $frag, -1;
@@ -89,7 +88,6 @@ sub _getline {
                 return (@lines);
             }
         } else {
-
             # um, if we can read, i say we should read more than 0
             # besides, recv isn't returning undef on closed
             # sockets.  getting rid of this connection...
@@ -110,7 +108,6 @@ sub _getline {
             return;
         }
     } else {
-
         # Error, lets scrap this connection
 
         warn "recv() returned undef, socket error in _getline()\n" if $self->{_debug};
@@ -450,7 +447,6 @@ sub parse {
     $self->{_bin} += 4;
 
     unless (defined $size) {
-
         # Dang! The other end unexpectedly canceled.
         carp(($self->peer)[1] . " connection to " . ($self->peer)[0] . " lost");
         $self->{_fh}->close;
@@ -567,7 +563,6 @@ sub new {
     my ($sock, $self);
 
     if ($type) {
-
         # we're initiating
 
         $sock = new IO::Socket::INET(
@@ -610,7 +605,6 @@ sub new {
         }
 
     } else {                                                  # we're connecting
-
         $address = &PBot::IRC::DCC::Connection::fixaddr($address);    # pragma_ 2011/21/01
         return if $port < 1024 or not defined $address;
 
@@ -760,7 +754,6 @@ sub parse {
     $self->{_parent}->{_time}   = time;
 
     if ($self->{_parent}->{_type} eq 'SEND') {
-
         # ok, to get the ball rolling, we send them the first packet.
         my $buf;
         unless (defined $self->{_parent}->{_fh}->read($buf, $self->{_parent}->{_blocksize})) { return; }

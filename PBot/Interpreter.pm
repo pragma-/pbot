@@ -145,7 +145,6 @@ sub process_line {
     }
 
     foreach $command (@commands) {
-
         # check if user is ignored (and command isn't `login`)
         if ($command !~ /^login / && defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
             if (not $pbot->{users}->loggedin_admin($from, "$nick!$user\@$host")) {
@@ -209,7 +208,6 @@ sub interpret {
     push @{$stuff->{commands}}, $stuff->{command};
 
     if ($self->arglist_size($cmdlist) >= 4 and lc $cmdlist->[0] eq 'tell' and (lc $cmdlist->[2] eq 'about' or lc $cmdlist->[2] eq 'the')) {
-
         # tell nick about/the cmd [args]
         $stuff->{nickoverride} = $cmdlist->[1];
         ($keyword, $arguments) = $self->split_args($cmdlist, 2, 3, 1);
@@ -223,7 +221,6 @@ sub interpret {
             delete $stuff->{force_nickoverride};
         }
     } else {
-
         # normal command
         ($keyword, $arguments) = $self->split_args($cmdlist, 2, 0, 1);
         $arguments = "" if not defined $arguments;
@@ -379,7 +376,6 @@ sub extract_bracketed {
 
         if ($i >= @chars) {
             if ($extracting) {
-
                 # reached end, but unbalanced brackets... reset to beginning and ignore them
                 $i             = $bracket_pos;
                 $bracket_level = 0;
@@ -389,7 +385,6 @@ sub extract_bracketed {
                 $token         = '';
                 $result        = '';
             } else {
-
                 # add final token and exit
                 $rest .= $token if $extracted;
                 last;
@@ -532,7 +527,6 @@ sub split_line {
 
         if ($i >= @chars) {
             if (defined $quote) {
-
                 # reached end, but unbalanced quote... reset to beginning of quote and ignore it
                 $i            = $pos;
                 $ignore_quote = 1;
@@ -540,7 +534,6 @@ sub split_line {
                 $last_ch      = ' ';
                 $token        = $last_token;
             } else {
-
                 # add final token and exit
                 push @args, $token if length $token;
                 last;
@@ -566,14 +559,12 @@ sub split_line {
 
         if (defined $quote) {
             if ($ch eq $quote and (not defined $next_ch or $next_ch =~ /[\s,:;})\].+=]/)) {
-
                 # closing quote
                 $token .= $ch unless $opts{strip_quotes};
                 push @args, $token;
                 $quote = undef;
                 $token = '';
             } else {
-
                 # still within quoted argument
                 $token .= $ch;
             }
@@ -582,12 +573,10 @@ sub split_line {
 
         if (($last_ch =~ /[\s:{(\[.+=]/) and not defined $quote and ($ch eq "'" or $ch eq '"')) {
             if ($ignore_quote) {
-
                 # treat unbalanced quote as part of this argument
                 $token .= $ch;
                 $ignore_quote = 0;
             } else {
-
                 # begin potential quoted argument
                 $pos        = $i - 1;
                 $quote      = $ch;
@@ -699,7 +688,6 @@ sub split_args {
     # join the get rest as a string
     my $rest;
     if ($preserve_quotes) {
-
         # get from second half of args, which contains quotes
         $rest = join ' ', @$args[@$args / 2 + $i .. @$args - 1];
     } else {

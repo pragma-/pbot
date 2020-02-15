@@ -138,7 +138,6 @@ sub invite {
     my ($channel, $target);
 
     if ($from !~ m/^#/) {
-
         # from /msg
         my $usage = "Usage from /msg: invite <channel> [nick]; if you omit [nick] then you will be invited";
         return $usage if not length $arguments;
@@ -146,7 +145,6 @@ sub invite {
         return "$channel is not a channel; $usage" if $channel !~ m/^#/;
         $target = $nick if not defined $target;
     } else {
-
         # in channel
         return "Usage: invite [channel] <nick>" if not length $arguments;
 
@@ -168,7 +166,6 @@ sub generic_mode_user {
     my ($flag, $mode_char) = $mode_flag =~ m/(.)(.)/;
 
     if ($channel !~ m/^#/) {
-
         # from message
         $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
         if    (not defined $channel) { return "Usage from message: $mode_name <channel> [nick]"; }
@@ -271,7 +268,6 @@ sub mode {
         my $target = $targets[$arg++] // "";
 
         if (($mode eq 'v' or $mode eq 'o') and $target =~ m/\*/) {
-
             # wildcard used; find all matching nicks; test against whitelist, etc
             my $q_target = lc quotemeta $target;
             $q_target =~ s/\\\*/.*/g;
@@ -295,7 +291,6 @@ sub mode {
                     my $nick_data = $self->{pbot}->{nicklist}->{nicklist}->{$channel}->{$n};
 
                     if ($modifier eq '-') {
-
                         # removing mode -- check against whitelist, etc
                         next if $nick_data->{nick} eq $self->{pbot}->{registry}->get_value('irc', 'botnick');
                         my $u = $self->{pbot}->{users}->loggedin($channel, $nick_data->{hostmask});
@@ -320,7 +315,6 @@ sub mode {
                 }
             }
         } else {
-
             # no wildcard used; explicit mode requested - no whitelist checking
             $new_modes   .= $mode;
             $new_targets .= "$target " if length $target;
@@ -624,12 +618,10 @@ sub kick_user {
     my ($channel, $victim, $reason);
 
     if (not $from =~ /^#/) {
-
         # used in private message
         if (not $arguments =~ s/^(^#\S+) (\S+)\s*//) { return "Usage from private message: kick <channel> <nick> [reason]"; }
         ($channel, $victim) = ($1, $2);
     } else {
-
         # used in channel
         if    ($arguments =~ s/^(#\S+)\s+(\S+)\s*//) { ($channel, $victim) = ($1, $2); }
         elsif ($arguments =~ s/^(\S+)\s*//)          { ($victim, $channel) = ($1, exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $from); }
@@ -657,7 +649,6 @@ sub kick_user {
     my @nicks = split /,/, $victim;
     foreach my $n (@nicks) {
         if ($n =~ m/\*/) {
-
             # wildcard used; find all matching nicks; test against whitelist, etc
             my $q_target = lc quotemeta $n;
             $q_target =~ s/\\\*/.*/g;
@@ -682,7 +673,6 @@ sub kick_user {
                 }
             }
         } else {
-
             # no wildcard used, explicit kick
             $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $n $reason");
         }

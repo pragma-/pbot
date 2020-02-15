@@ -136,7 +136,6 @@ sub update_join_watch {
         $channel_data->{join_watch}++;
         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
     } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
-
         # PART or QUIT
         # check QUIT message for netsplits, and decrement joinwatch to allow a free rejoin
         if ($text =~ /^QUIT .*\.net .*\.split/) {
@@ -148,16 +147,13 @@ sub update_join_watch {
 
         # check QUIT message for Ping timeout or Excess Flood
         elsif ($text =~ /^QUIT Excess Flood/ or $text =~ /^QUIT Max SendQ exceeded/ or $text =~ /^QUIT Ping timeout/) {
-
             # treat these as an extra join so they're snagged more quickly since these usually will keep flooding
             $channel_data->{join_watch}++;
             $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
         } else {
-
             # some other type of QUIT or PART
         }
     } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
-
         # reset joinwatch if they send a message
         if ($channel_data->{join_watch} > 0) {
             $channel_data->{join_watch} = 0;
@@ -263,13 +259,11 @@ sub check_flood {
 
     foreach my $chan (@$channels) {
         $chan = lc $chan;
-
         # do not do flood processing if channel is not in bot's channel list or bot is not set as chanop for the channel
         next if $chan =~ /^#/ and not $self->{pbot}->{chanops}->can_gain_ops($chan);
         my $u = $self->{pbot}->{users}->loggedin($chan, "$nick!$user\@$host");
 
         if ($chan =~ /^#/ and $mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
-
             # remove validation on PART or KICK so we check for ban-evasion when user returns at a later time
             my $chan_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'validated');
             if ($chan_data->{validated} & $self->{NICKSERV_VALIDATED}) {
@@ -292,7 +286,6 @@ sub check_flood {
 
             if ($validated & $self->{NEEDS_CHECKBAN} or not $validated & $self->{NICKSERV_VALIDATED}) {
                 if ($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
-
                     # don't check for evasion on PART/KICK
                 } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
                     if (not exists $self->{whois_pending}->{$nick}) {
@@ -302,7 +295,6 @@ sub check_flood {
                     }
                 } else {
                     if ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN} && exists $self->{pbot}->{irc_capabilities}->{'extended-join'}) {
-
                         # don't WHOIS joins if extended-join capability is active
                     } elsif (not exists $self->{pbot}->{irc_capabilities}->{'account-notify'}) {
                         if (not exists $self->{whois_pending}->{$nick}) {
@@ -352,7 +344,6 @@ sub check_flood {
                   $self->{pbot}->{messagehistory}->{database}->get_recent_messages($ancestor, $chan, $max_messages, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}, $nick);
                 $msg = $nickchanges->[0];
             } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
-
                 # no flood checks to be done for departure events
                 next;
             } else {
@@ -397,8 +388,8 @@ sub check_flood {
                         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
                     }
                 } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
-                    if ($chan =~ /^#/) {                                 #channel flood (opposed to private message or otherwise)
-                                                                         # don't increment offenses again if already banned
+                    if ($chan =~ /^#/) {                                #channel flood (opposed to private message or otherwise)
+                        # don't increment offenses again if already banned
                         if ($self->{pbot}->{chanops}->has_ban_timeout($chan, "*!$user\@" . $self->address_to_mask($host))) {
                             $self->{pbot}->{logger}->log("$nick $chan flood offense disregarded due to existing ban\n");
                             next;
@@ -675,7 +666,6 @@ sub address_to_mask {
 }
 
 sub devalidate_accounts {
-
     # remove validation on accounts in $channel that match a ban/quiet $mask
     my ($self, $mask, $channel) = @_;
     my @message_accounts;
@@ -727,7 +717,6 @@ sub check_bans {
         }
     } else {
         if (not exists $self->{pbot}->{irc_capabilities}->{'account-notify'}) {
-
             # mark this account as needing check-bans when nickserv account is identified
             my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
             if (not $channel_data->{validated} & $self->{NEEDS_CHECKBAN}) {
@@ -813,7 +802,6 @@ sub check_bans {
                     my $u           = $self->{pbot}->{users}->loggedin($baninfo->{channel}, $mask);
                     my $whitelisted = $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
                     if ($self->ban_exempted($baninfo->{channel}, $baninfo->{banmask}) || $whitelisted) {
-
                         #$self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
                         next;
                     }

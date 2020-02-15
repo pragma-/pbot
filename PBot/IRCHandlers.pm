@@ -426,7 +426,6 @@ sub on_departure {
     my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
 
     if ($text =~ m/^QUIT/) {
-
         # QUIT messages must be dispatched to each channel the user is on
         my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
         foreach my $chan (@$channels) {
@@ -547,13 +546,11 @@ sub on_topic {
     my ($self, $event_type, $event) = @_;
 
     if (not length $event->{event}->{to}->[0]) {
-
         # on join
         my (undef, $channel, $topic) = $event->{event}->args;
         $self->{pbot}->{logger}->log("Topic for $channel: $topic\n");
         $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC', $topic, 1);
     } else {
-
         # user changing topic
         my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
         my $channel = $event->{event}->{to}->[0];

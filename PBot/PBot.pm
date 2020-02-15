@@ -253,7 +253,6 @@ sub connect {
     my ($self, $server) = @_;
 
     if ($self->{connected}) {
-
         # TODO: disconnect, clean-up, etc
     }
 

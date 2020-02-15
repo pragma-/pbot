@@ -24,7 +24,6 @@ sub validate_string {
     };
 
     if ($@) {
-
         # not a json string
         $string = substr $string, 0, $max_length unless $max_length <= 0;
     }
