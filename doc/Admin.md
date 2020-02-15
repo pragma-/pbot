@@ -551,6 +551,7 @@ Name | Description
 `cap-required` | When set to a true value then the command requires that users have the `can-<command name>` [capability](#user-capabilities) before they can invoke it.
 `dont-replace-pronouns` | When set to a true value then pronouns such as "my", "me", "your", etc, will not be intuitively replaced with nicks and such.
 `background-process` | When set to a true value then this command will be executed as a background process. Use this for commands that can potentially take a long time to complete.
+`process-timeout` | The timeout, in seconds, before the process is automatically killed. If not set then the `processmanager.default_timeout` [Registry](Registry.md) value will be used.
 
 ## Process management commands
 ### ps
