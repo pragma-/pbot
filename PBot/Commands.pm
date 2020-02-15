@@ -121,7 +121,7 @@ sub interpreter {
       }
 
       $stuff->{no_nickoverride} = 1;
-      if ($self->get_meta($keyword, 'execute-process')) {
+      if ($self->get_meta($keyword, 'background-process')) {
         my $timeout = $self->{pbot}->{registry}->get_value('processmanager', 'default_timeout');
         $self->{pbot}->{process_manager}->execute_process(
           $stuff,
