@@ -24,7 +24,6 @@ use Text::ParseWords;
 use JSON;
 
 use PBot::FactoidCommands;
-use PBot::FactoidModuleLauncher;
 use PBot::DualIndexHashObject;
 
 use PBot::Utils::Indefinite;
@@ -37,7 +36,6 @@ sub initialize {
 
   $self->{pbot}                  = $self->{pbot};
   $self->{commands}              = PBot::FactoidCommands->new(pbot => $self->{pbot});
-  $self->{factoidmodulelauncher} = PBot::FactoidModuleLauncher->new(pbot => $self->{pbot});
 
   $self->{pbot}->{registry}->add_default('text', 'factoids', 'default_rate_limit',  15);
   $self->{pbot}->{registry}->add_default('text', 'factoids', 'max_name_length',     100);
@@ -709,7 +707,7 @@ sub execute_code_factoid_using_vm {
   $stuff->{arguments} = $json;
   $stuff->{args_utf8} = 1;
 
-  $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($stuff);
+  $self->{pbot}->{process_manager}->execute_module($stuff);
   return "";
 }
 
@@ -1035,7 +1033,7 @@ sub handle_action {
     $stuff->{root_keyword} = $keyword unless defined $stuff->{root_keyword};
     $stuff->{root_channel} = $channel;
 
-    my $result = $self->{factoidmodulelauncher}->execute_module($stuff);
+    my $result = $self->{pbot}->{process_manager}->execute_module($stuff);
     if (length $result) {
       return $ref_from . $result;
     } else {

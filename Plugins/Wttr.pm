@@ -112,7 +112,7 @@ sub get_wttr {
 
   my $location_uri = uri_escape_utf8 $location;
 
-  my $ua = PBot::Utils::LWPUserAgentCached->new(\%cache_opt, timeout => 10);
+  my $ua = PBot::Utils::LWPUserAgentCached->new(\%cache_opt, timeout => 30);
   my $response = $ua->get("http://wttr.in/$location_uri?format=j1&m");
 
   my $json;

@@ -47,6 +47,7 @@ use PBot::Plugins;
 use PBot::WebPaste;
 use PBot::Utils::ParseDate;
 use PBot::Functions;
+use PBot::ProcessManager;
 
 sub new {
   my ($proto, %conf) = @_;
@@ -204,6 +205,7 @@ sub initialize {
   }
 
   $self->{event_dispatcher}   = PBot::EventDispatcher->new(pbot => $self, %conf);
+  $self->{process_manager}    = PBot::ProcessManager->new(pbot => $self, %conf);
   $self->{irchandlers}        = PBot::IRCHandlers->new(pbot => $self, %conf);
   $self->{select_handler}     = PBot::SelectHandler->new(pbot => $self, %conf);
   $self->{users}              = PBot::Users->new(pbot => $self, filename => "$data_dir/users", %conf);
