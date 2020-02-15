@@ -25,6 +25,7 @@ sub initialize {
   my ($self, %conf) = @_;
   $self->{pbot}->{commands}->register(sub { $self->ps_cmd(@_)   }, 'ps',   0);
   $self->{pbot}->{commands}->register(sub { $self->kill_cmd(@_) }, 'kill', 1);
+  $self->{pbot}->{capabilities}->add('admin', 'can-kill');
   $self->{processes} = {};
 }
 
@@ -44,18 +45,13 @@ sub ps_cmd {
 sub kill_cmd {
   my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
   my $usage = "Usage: kill <pids...>";
-
   my @pids;
   while (1) {
     my $pid = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // last;
+    return "No such pid $pid." if not exists $self->{processes}->{$pid};
     push @pids, $pid;
   }
   return $usage if not @pids;
-
-  foreach my $pid (@pids) {
-    return "No such pid $pid." if not exists $self->{processes}->{$pid};
-  }
-
   kill 'INT', @pids;
   return "Killed.";
 }
