@@ -57,6 +57,9 @@
   * [cmdset](#cmdset)
   * [cmdunset](#cmdunset)
   * [Command metadata list](#command-metadata-list)
+* [Process management commands](#process-management-commands)
+  * [ps](#ps)
+  * [kill](#kill)
 * [Miscellaneous commands](#miscellaneous-commands)
   * [export](#export)
   * [refresh](#refresh)
@@ -477,7 +480,6 @@ Usage from channel:   `kick <nick> [reason]`
 From private message: `kick <channel> <nick> [reason]`
 
 ## Module management commands
-
 Note that modules are "reloaded" each time they are executed. There is no need to `refresh` after editing a module.
 
 ### load
@@ -503,7 +505,6 @@ it is included here for completeness.
 Usage: `list modules`
 
 ## Plugin management commands
-
 ### plug
 Loads a plugin into PBot.
 
@@ -531,7 +532,6 @@ Usage: `pluglist`
               Weather, Wttr
 
 ## Command metadata commands
-
 ### cmdset
 Use `cmdset` to set various [metadata](#command-metadata-list) for built-in commands.
 
@@ -545,14 +545,25 @@ Use `cmdset` to delete various [metadata](#command-metadata-list) from built-in 
 Usage: `cmdunset <command> <key>`
 
 ### Command metadata list
-
 Name | Description
 --- | ---
 `help` | The text to display for the [`help`](Commands.md#help) command.
-`cap-required` | If this is set to a true value then the command requires that users have the `can-<command name>` [capability](#user-capabilities) before they can invoke it.
+`cap-required` | When set to a true value then the command requires that users have the `can-<command name>` [capability](#user-capabilities) before they can invoke it.
+`dont-replace-pronouns` | When set to a true value then pronouns such as "my", "me", "your", etc, will not be intuitively replaced with nicks and such.
+`execute-process` | When set to a true value then this command will be executed as a background process. Use this for commands that can potentially take a long time to complete.
+
+## Process management commands
+### ps
+Lists all currently running background process.
+
+Usage: `ps`
+
+### kill
+Sends the interrupt signal to selected running background processes.
+
+Usage: `kill <pids...>`
 
 ## Miscellaneous commands
-
 These are some of the miscellaneous admin commands that have not been covered
 above or in the rest of the PBot documentation.
 
