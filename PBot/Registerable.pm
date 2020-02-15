@@ -62,4 +62,9 @@ sub unregister {
   @{ $self->{handlers} } = grep { $_ != $ref } @{ $self->{handlers} };
 }
 
+sub unregister_all {
+  my ($self) = @_;
+  $self->{handlers} = [];
+}
+
 1;
