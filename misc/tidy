@@ -1,2 +1,2 @@
 #!/bin/bash
-perltidy -utf8 -nanl -boc $* -b -bext=/ && perltidy -conv -boc -utf8 -kis -l=170 -vmll -pt=2 -sbt=2 -bt=2 -nsfs -ce -b -bext=/ -nolq -nolc -iscl -nbbc -kgb $*
+perltidy -utf8 -nanl -nbbc -boc $* -b -bext=/ && perltidy -conv -boc -utf8 -kis -l=170 -vmll -pt=2 -sbt=2 -bt=2 -nsfs -ce -b -bext=/ -nolq -nolc -iscl -nbbc -kgb $*
