@@ -15,6 +15,7 @@ PBot is a versatile IRC Bot written in Perl
     * [Chaining](#chaining)
     * [Variables](#variables)
     * [Inline invocation](#inline-invocation)
+    * [Background processing](#background-processing)
   * [Factoids](#factoids)
   * [Code Factoids](#code-factoids)
   * [Plugins](#plugins)
@@ -143,6 +144,16 @@ is addressed to a nick, the output will also be addressed to them.
     <pragma-> newuser13: Check the !{version} and the !{help} documentation.
        <PBot> newuser13: PBot version 2696 2020-01-04
        <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
+
+#### Background processing
+Any command can be flagged to execute as a background process. For example, suppose you
+make a Plugin that has a command that may potentially take a long time to complete, which could
+cause PBot to be non-responsive until the command completes...
+
+Not a problem! You can use the [`cmdset`](doc/Commands.md#cmdset) command to set the `execute-process` [command metadata](doc/Admin.md#command-metadata-list)
+and the command will now run as a background process, allowing PBot to carry on with its duties while the command runs.
+
+The familiar [`ps`](doc/Admin.md#ps) and [`kill`](doc/Admin.md#kill) commands can be used to list and kill the background processes.
 
 ### Factoids
 Factoids are a very special type of command. Anybody interacting with PBot
