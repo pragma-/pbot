@@ -237,9 +237,6 @@ sub initialize {
   # load available plugins
   $self->{plugins}->autoload(%conf);
 
-  # start timer
-  $self->{timer}->start();
-
   # give botowner all capabilities
   $self->{capabilities}->rebuild_botowner_capabilities();
 }
@@ -282,7 +279,10 @@ sub connect {
 
   $self->{connected} = 1;
 
-  #set up handlers for the IRC engine
+  # start timer once connected
+  $self->{timer}->start;
+
+  # set up handlers for the IRC engine
   $self->{conn}->add_default_handler(sub { $self->{irchandlers}->default_handler(@_) }, 1);
   $self->{conn}->add_handler([ 251,252,253,254,255,302 ], sub { $self->{irchandlers}->on_init(@_) });
 
