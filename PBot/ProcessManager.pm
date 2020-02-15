@@ -15,8 +15,6 @@ use feature 'unicode_strings';
 
 use POSIX qw(WNOHANG);
 use JSON;
-use IPC::Run qw/run timeout/;
-use Encode;
 
 # automatically reap children processes in background
 $SIG{CHLD} = sub { while (waitpid(-1, WNOHANG) > 0) {} };
