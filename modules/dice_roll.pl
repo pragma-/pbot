@@ -10,36 +10,31 @@ use Games::Dice qw/roll roll_array/;
 
 my ($result, $rolls, $show);
 
-if ($#ARGV <0)
-{
-  print "Usage: roll [-show] <dice roll>; e.g.: roll 3d6+1. To see all individual dice rolls, add -show.\n";
-  die;
+if ($#ARGV < 0) {
+    print "Usage: roll [-show] <dice roll>; e.g.: roll 3d6+1. To see all individual dice rolls, add -show.\n";
+    die;
 }
 
 $rolls = join("", @ARGV);
 
-if ($rolls =~ s/\s*-show\s*//) {
-  $show = 1;
-}
+if ($rolls =~ s/\s*-show\s*//) { $show = 1; }
 
 if ($rolls =~ m/^\s*(\d+)d\d+(?:\+?-?\d+)?\s*$/) {
-  if ($1 > 100) {
-    print "Sorry, maximum of 100 rolls.\n";
-    die;
-  }
+    if ($1 > 100) {
+        print "Sorry, maximum of 100 rolls.\n";
+        die;
+    }
 } else {
-  print "Usage: roll [-show] <dice roll>; e.g.: roll 3d6+1. To see all individual dice rolls, add -show.\n";
-  die;
+    print "Usage: roll [-show] <dice roll>; e.g.: roll 3d6+1. To see all individual dice rolls, add -show.\n";
+    die;
 }
 
 if ($show) {
-  my @results = roll_array $rolls;
-  $result = 0;
-  foreach my $n (@results) {
-    $result += $n;
-  }
-  print "/me rolled $rolls for @results totaling $result.\n";
+    my @results = roll_array $rolls;
+    $result = 0;
+    foreach my $n (@results) { $result += $n; }
+    print "/me rolled $rolls for @results totaling $result.\n";
 } else {
-  $result = roll $rolls;
-  print "/me rolled $rolls for $result.\n";
+    $result = roll $rolls;
+    print "/me rolled $rolls for $result.\n";
 }

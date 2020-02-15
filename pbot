@@ -7,17 +7,17 @@
 # bothome is automatically set by this script, do not modify
 my $bothome;
 BEGIN {
-  use File::Basename;
-  $bothome = -l __FILE__ ? dirname readlink __FILE__ : dirname __FILE__;
-  unshift @INC, $bothome;
+    use File::Basename;
+    $bothome = -l __FILE__ ? dirname readlink __FILE__ : dirname __FILE__;
+    unshift @INC, $bothome;
 }
 
 # configuration is overridden via command-line arguments, do not modify
 # see doc/QuickStart.md
 my %config = (
-  data_dir   => "$bothome/data",
-  module_dir => "$bothome/modules",
-  plugin_dir => "$bothome/Plugins",
+    data_dir   => "$bothome/data",
+    module_dir => "$bothome/modules",
+    plugin_dir => "$bothome/Plugins",
 );
 
 use PBot::PBot;

@@ -14,21 +14,21 @@ use warnings; use strict;
 use feature 'unicode_strings';
 
 sub initialize {
-  my ($self, %conf) = @_;
-  $self->{pbot}->{commands}->register(sub { return $self->magic(@_)}, "mc", 90);
+    my ($self, %conf) = @_;
+    $self->{pbot}->{commands}->register(sub { return $self->magic(@_) }, "mc", 90);
 }
 
 sub unload {
-  my $self = shift;
-  $self->{pbot}->{commands}->unregister("mc");
+    my $self = shift;
+    $self->{pbot}->{commands}->unregister("mc");
 }
 
 sub magic {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  # do something magical!
-  return "Did something magical.";
-}
+    my $self = shift;
+    my ($from, $nick, $user, $host, $arguments) = @_;
 
+    # do something magical!
+    return "Did something magical.";
+}
 
 1;

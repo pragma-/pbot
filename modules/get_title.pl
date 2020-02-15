@@ -11,13 +11,12 @@ use HTML::Entities;
 use Text::Levenshtein qw(fastdistance);
 use Time::HiRes qw(gettimeofday);
 
-if ($#ARGV <= 0)
-{
-  print "Usage: title nick URL\n";
-  exit;
+if ($#ARGV <= 0) {
+    print "Usage: title nick URL\n";
+    exit;
 }
 
-my $nick = shift(@ARGV);
+my $nick      = shift(@ARGV);
 my $arguments = join("%20", @ARGV);
 
 $arguments =~ s/\W$//;
@@ -89,27 +88,26 @@ $ua->max_size(200 * 1024);
 
 my $response = $ua->get("$arguments");
 
-if (not $response->is_success)
-{
-  #print "Couldn't get link.\n";
-  use Data::Dumper;
-  print STDERR Dumper $response;
-  die "Couldn't get link: $arguments";
+if (not $response->is_success) {
+
+    #print "Couldn't get link.\n";
+    use Data::Dumper;
+    print STDERR Dumper $response;
+    die "Couldn't get link: $arguments";
 }
 
 my $text = $response->decoded_content;
 
-if ($text =~ m/<title>(.*?)<\/title>/msi)
-{
-  $t = $1;
-} else {
-  #print "No title for link.\n";
-  exit;
+if ($text =~ m/<title>(.*?)<\/title>/msi) { $t = $1; }
+else {
+
+    #print "No title for link.\n";
+    exit;
 }
 
-my $quote = chr(226) . chr(128) . chr(156);
+my $quote  = chr(226) . chr(128) . chr(156);
 my $quote2 = chr(226) . chr(128) . chr(157);
-my $dash = chr(226) . chr(128) . chr(147);
+my $dash   = chr(226) . chr(128) . chr(147);
 
 $t =~ s/\s+/ /g;
 $t =~ s/^\s+//g;
@@ -135,8 +133,8 @@ $t =~ s/<em>//g;
 $t =~ s/<\/em>//g;
 
 if (length $t > 150) {
-  $t = substr($t, 0, 150);
-  $t = "$t [...]";
+    $t = substr($t, 0, 150);
+    $t = "$t [...]";
 }
 
 # $nick =~ s/^(.)(.*)/$1|$2/;
@@ -150,13 +148,11 @@ my ($file) = $arguments =~ m/.*\/(.*)$/;
 $file =~ s/[_-]/ /g;
 
 my $distance = fastdistance(lc $file, lc $t);
-my $length = (length $file > length $t) ? length $file : length $t;
+my $length   = (length $file > length $t) ? length $file : length $t;
 
-if ($distance / $length < 0.75) {
-    exit;
-}
+if ($distance / $length < 0.75) { exit; }
 
-exit if $t !~ m/\s/; # exit if title is only one word -- this isn't usually interesting
+exit if $t !~ m/\s/;                                 # exit if title is only one word -- this isn't usually interesting
 exit if $t =~ m{christel}i;
 exit if $t =~ m{streamable}i;
 exit if $t =~ m{freenode}i;
@@ -182,11 +178,11 @@ exit if $t =~ m/(?:sign up|login)/i;
 
 my @data;
 if (open my $fh, "<", "last-title-$nick.dat") {
-  @data = <$fh>;
-  close $fh;
+    @data = <$fh>;
+    close $fh;
 
-  chomp $data[0];
-  exit if $t eq $data[0] and scalar gettimeofday - $data[1] < 1800;
+    chomp $data[0];
+    exit if $t eq $data[0] and scalar gettimeofday - $data[1] < 1800;
 }
 
 open my $fh, ">", "last-title-$nick.dat";

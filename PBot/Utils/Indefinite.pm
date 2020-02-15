@@ -1,10 +1,11 @@
 package PBot::Utils::Indefinite;
+
 use 5.010; use warnings;
 
 use feature 'unicode_strings';
 
 require Exporter;
-our @ISA = qw/Exporter/;
+our @ISA    = qw/Exporter/;
 our @EXPORT = qw/prepend_indefinite_article select_indefinite_article/;
 
 # This module implements A/AN inflexion for nouns...
@@ -44,48 +45,47 @@ sub select_indefinite_article {
     my ($word) = @_;
 
     # Handle ordinal forms...
-    return "a"   if $word =~ $ORDINAL_A;
-    return "an"  if $word =~ $ORDINAL_AN;
+    return "a"  if $word =~ $ORDINAL_A;
+    return "an" if $word =~ $ORDINAL_AN;
 
     # Handle special cases...
-    return "an"  if $word =~ $EXPLICIT_AN;
-    return "an"  if $word =~ $SINGLE_AN;
-    return "a"   if $word =~ $SINGLE_A;
+    return "an" if $word =~ $EXPLICIT_AN;
+    return "an" if $word =~ $SINGLE_AN;
+    return "a"  if $word =~ $SINGLE_A;
 
     # Handle abbreviations...
-    return "an"  if $word =~ $ABBREV_AN;
-    return "an"  if $word =~ /\A [aefhilmnorsx][.-]/xi;
-    return "a"   if $word =~ /\A [a-z][.-]/xi;
+    return "an" if $word =~ $ABBREV_AN;
+    return "an" if $word =~ /\A [aefhilmnorsx][.-]/xi;
+    return "a"  if $word =~ /\A [a-z][.-]/xi;
 
     # Handle consonants
 
-    return "a"   if $word =~ /\A [^aeiouy] /xi;
+    return "a" if $word =~ /\A [^aeiouy] /xi;
 
     # Handle special vowel-forms
 
-    return "a"   if $word =~ /\A e [uw] /xi;
-    return "a"   if $word =~ /\A onc?e \b /xi;
-    return "a"   if $word =~ /\A uni (?: [^nmd] | mo) /xi;
-    return "an"  if $word =~ /\A ut[th] /xi;
-    return "a"   if $word =~ /\A u [bcfhjkqrst] [aeiou] /xi;
+    return "a"  if $word =~ /\A e [uw] /xi;
+    return "a"  if $word =~ /\A onc?e \b /xi;
+    return "a"  if $word =~ /\A uni (?: [^nmd] | mo) /xi;
+    return "an" if $word =~ /\A ut[th] /xi;
+    return "a"  if $word =~ /\A u [bcfhjkqrst] [aeiou] /xi;
 
     # Handle special capitals
 
-    return "a"   if $word =~ /\A U [NK] [AIEO]? /x;
+    return "a" if $word =~ /\A U [NK] [AIEO]? /x;
 
     # Handle vowels
 
-    return "an"  if $word =~ /\A [aeiou]/xi;
+    return "an" if $word =~ /\A [aeiou]/xi;
 
     # Handle Y... (before certain consonants implies (unnaturalized) "I.." sound)
-    return "an"  if $word =~ $INITIAL_Y_AN;
+    return "an" if $word =~ $INITIAL_Y_AN;
 
     # Otherwise, guess "A"
     return "a";
 }
 
-
-1; # Magic true value required at end of module
+1;    # Magic true value required at end of module
 __END__
 
 =head1 NAME

@@ -16,55 +16,54 @@ use feature 'unicode_strings';
 use Getopt::Long qw(GetOptionsFromString);
 
 sub initialize {
-  my ($self, %conf) = @_;
-  $self->{pbot}->{registry}->add_default('text', 'date', 'default_timezone', 'UTC');
-  $self->{pbot}->{commands}->register(sub { $self->datecmd(@_) },  "date", 0);
+    my ($self, %conf) = @_;
+    $self->{pbot}->{registry}->add_default('text', 'date', 'default_timezone', 'UTC');
+    $self->{pbot}->{commands}->register(sub { $self->datecmd(@_) }, "date", 0);
 }
 
 sub unload {
-  my $self = shift;
-  $self->{pbot}->{commands}->unregister("date");
+    my $self = shift;
+    $self->{pbot}->{commands}->unregister("date");
 }
 
 sub datecmd {
-  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-  my $usage = "date [-u <user account>] [timezone]";
-  my $getopt_error;
-  local $SIG{__WARN__} = sub {
-    $getopt_error = shift;
-    chomp $getopt_error;
-  };
+    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my $usage = "date [-u <user account>] [timezone]";
+    my $getopt_error;
+    local $SIG{__WARN__} = sub {
+        $getopt_error = shift;
+        chomp $getopt_error;
+    };
 
-  Getopt::Long::Configure("bundling");
+    Getopt::Long::Configure("bundling");
 
-  my ($user_override, $show_usage);
-  my ($ret, $args) = GetOptionsFromString($arguments,
-    'u=s' => \$user_override,
-    'h' => \$show_usage
-  );
+    my ($user_override, $show_usage);
+    my ($ret, $args) = GetOptionsFromString(
+        $arguments,
+        'u=s' => \$user_override,
+        'h'   => \$show_usage
+    );
 
-  return $usage if $show_usage;
-  return "/say $getopt_error -- $usage" if defined $getopt_error;
-  $arguments = "@$args";
+    return $usage                         if $show_usage;
+    return "/say $getopt_error -- $usage" if defined $getopt_error;
+    $arguments = "@$args";
 
-  my $hostmask = defined $user_override ? $user_override : "$nick!$user\@$host";
-  my $tz_override = $self->{pbot}->{users}->get_user_metadata($from, $hostmask, 'timezone') // '';
+    my $hostmask    = defined $user_override ? $user_override : "$nick!$user\@$host";
+    my $tz_override = $self->{pbot}->{users}->get_user_metadata($from, $hostmask, 'timezone') // '';
 
-  my $timezone = $self->{pbot}->{registry}->get_value('date', 'default_timezone') // 'UTC';
-  $timezone = $tz_override if $tz_override;
-  $timezone = $arguments if length $arguments;
+    my $timezone = $self->{pbot}->{registry}->get_value('date', 'default_timezone') // 'UTC';
+    $timezone = $tz_override if $tz_override;
+    $timezone = $arguments   if length $arguments;
 
-  if (defined $user_override and not length $tz_override) {
-    return "No timezone set or user account does not exist.";
-  }
+    if (defined $user_override and not length $tz_override) { return "No timezone set or user account does not exist."; }
 
-  my $newstuff = {
-    from => $from, nick => $nick, user => $user, host => $host,
-    command => "date_module $timezone", root_channel => $from, root_keyword => "date_module",
-    keyword => "date_module", arguments => "$timezone"
-  };
+    my $newstuff = {
+        from    => $from,                   nick         => $nick, user         => $user, host => $host,
+        command => "date_module $timezone", root_channel => $from, root_keyword => "date_module",
+        keyword => "date_module", arguments => "$timezone"
+    };
 
-  $self->{pbot}->{modules}->execute_module($newstuff);
+    $self->{pbot}->{modules}->execute_module($newstuff);
 }
 
 1;

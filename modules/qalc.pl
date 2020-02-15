@@ -10,8 +10,8 @@ use strict;
 my $args = join ' ', @ARGV;
 
 if (not length $args) {
-  print "Usage: qalc <expression>\n";
-  exit;
+    print "Usage: qalc <expression>\n";
+    exit;
 }
 
 my $result = `ulimit -t 2; qalc '$args'`;
@@ -20,4 +20,5 @@ $result =~ s/^.*approx.\s+//;
 $result =~ s/^.*=\s+//;
 
 print "$args = $result\n";
+
 # print "$result\n";

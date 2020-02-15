@@ -16,42 +16,41 @@ use feature 'unicode_strings';
 use Time::HiRes qw(gettimeofday);
 
 sub new {
-  my ($class, %conf) = @_;
-  my $self = {};
-  $self->{buf} = '';
-  $self->{timestamp} = gettimeofday;
-  return bless $self, $class;
+    my ($class, %conf) = @_;
+    my $self = {};
+    $self->{buf}       = '';
+    $self->{timestamp} = gettimeofday;
+    return bless $self, $class;
 }
 
 sub log {
-  my $self = shift;
-  $self->{buf} .= shift;
-  # DBI feeds us pieces at a time, so accumulate a complete line
-  # before outputing
-  if ($self->{buf} =~ tr/\n//) {
-    $self->log_message;
-    $self->{buf} = '';
-  }
+    my $self = shift;
+    $self->{buf} .= shift;
+
+    # DBI feeds us pieces at a time, so accumulate a complete line
+    # before outputing
+    if ($self->{buf} =~ tr/\n//) {
+        $self->log_message;
+        $self->{buf} = '';
+    }
 }
 
 sub log_message {
-  my $self = shift;
-  my $now = gettimeofday;
-  my $elapsed = $now - $self->{timestamp};
-  if ($elapsed >= 0.100) {
-    $self->{pbot}->{logger}->log("^^^ SLOW SQL ^^^\n");
-  }
-  $elapsed = sprintf '%10.3f', $elapsed;
-  $self->{pbot}->{logger}->log("$elapsed : $self->{buf}");
-  $self->{timestamp} = $now;
+    my $self    = shift;
+    my $now     = gettimeofday;
+    my $elapsed = $now - $self->{timestamp};
+    if ($elapsed >= 0.100) { $self->{pbot}->{logger}->log("^^^ SLOW SQL ^^^\n"); }
+    $elapsed = sprintf '%10.3f', $elapsed;
+    $self->{pbot}->{logger}->log("$elapsed : $self->{buf}");
+    $self->{timestamp} = $now;
 }
 
 sub close {
-  my $self = shift;
-  if ($self->{buf}) {
-    $self->log_message;
-    $self->{buf} = '';
-  }
+    my $self = shift;
+    if ($self->{buf}) {
+        $self->log_message;
+        $self->{buf} = '';
+    }
 }
 
 1;

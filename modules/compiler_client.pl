@@ -16,30 +16,27 @@ use IO::Socket;
 use JSON;
 
 my $sock = IO::Socket::INET->new(
-  PeerAddr => '127.0.0.1',
-  PeerPort => 9000,
-  Proto => 'tcp');
+    PeerAddr => '127.0.0.1',
+    PeerPort => 9000,
+    Proto    => 'tcp'
+);
 
-if(not defined $sock) {
-  print "Fatal error compiling: $!; try again later\n";
-  die $!;
+if (not defined $sock) {
+    print "Fatal error compiling: $!; try again later\n";
+    die $!;
 }
 
 my $json = join ' ', @ARGV;
-my $h = decode_json $json;
+my $h    = decode_json $json;
 my $lang = $h->{lang} // "c11";
 
-if ($h->{code} =~ s/-lang=([^ ]+)//) {
-  $lang = lc $1;
-}
+if ($h->{code} =~ s/-lang=([^ ]+)//) { $lang = lc $1; }
 
 $h->{lang} = $lang;
 $json = encode_json $h;
 
 print $sock "$json\n";
 
-while(my $line = <$sock>) {
-  print "$line";
-}
+while (my $line = <$sock>) { print "$line"; }
 
 close $sock;

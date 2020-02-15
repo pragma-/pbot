@@ -18,31 +18,31 @@ use feature 'unicode_strings';
 use Module::Refresh;
 
 sub initialize {
-  my ($self, %conf) = @_;
-  $self->{refresher} = Module::Refresh->new;
-  $self->{pbot}->{commands}->register(sub { $self->refresh(@_) }, "refresh", 1);
+    my ($self, %conf) = @_;
+    $self->{refresher} = Module::Refresh->new;
+    $self->{pbot}->{commands}->register(sub { $self->refresh(@_) }, "refresh", 1);
 }
 
 sub refresh {
-  my ($self, $from, $nick, $user, $host, $arguments) = @_;
-  my $result = eval {
-    if (not $arguments) {
-      $self->{pbot}->{logger}->log("Refreshing all modified modules\n");
-      $self->{refresher}->refresh;
-      return "Refreshed all modified modules.\n";
-    } else {
-      $self->{pbot}->{logger}->log("Refreshing module $arguments\n");
-      $self->{refresher}->refresh_module($arguments);
-      $self->{pbot}->{logger}->log("Refreshed module.\n");
-      return "Refreshed module.\n";
-    }
-  };
+    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+    my $result = eval {
+        if (not $arguments) {
+            $self->{pbot}->{logger}->log("Refreshing all modified modules\n");
+            $self->{refresher}->refresh;
+            return "Refreshed all modified modules.\n";
+        } else {
+            $self->{pbot}->{logger}->log("Refreshing module $arguments\n");
+            $self->{refresher}->refresh_module($arguments);
+            $self->{pbot}->{logger}->log("Refreshed module.\n");
+            return "Refreshed module.\n";
+        }
+    };
 
-  if ($@) {
-    $self->{pbot}->{logger}->log("Error refreshing: $@\n");
-    return $@;
-  }
-  return $result;
+    if ($@) {
+        $self->{pbot}->{logger}->log("Error refreshing: $@\n");
+        return $@;
+    }
+    return $result;
 }
 
 1;

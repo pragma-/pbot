@@ -4,6 +4,7 @@
 eval 'exec /usr/bin/perl -w -S $0 ${1+"$@"}'
     if 0; # not running under some shell
 =cut
+
 #
 # dict - perl DICT client (for accessing network dictionary servers)
 #
@@ -26,9 +27,9 @@ $VERSION = sprintf("%d.%d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
 #-----------------------------------------------------------------------
 # Global variables
 #-----------------------------------------------------------------------
-my $PROGRAM;                     # The name we're running as, minus path
-my $config;                      # Config object (AppConfig::Std)
-my $dict;                        # Dictionary object (Net::Dict)
+my $PROGRAM;    # The name we're running as, minus path
+my $config;     # Config object (AppConfig::Std)
+my $dict;       # Dictionary object (Net::Dict)
 
 initialise();
 
@@ -43,17 +44,14 @@ list_databases() if $config->dbs;
 list_strategies() if $config->strats;
 =cut
 
-if ($config->database) {
-  $dict->setDicts($config->database);
-} else {
-  $dict->setDicts('wn');
-}
+if   ($config->database) { $dict->setDicts($config->database); }
+else                     { $dict->setDicts('wn'); }
 
 #-----------------------------------------------------------------------
 # Perform define or match, if a word or pattern was given
 #-----------------------------------------------------------------------
-if (@ARGV > 0)
-{
+if (@ARGV > 0) {
+
 =cut
     if ($config->match)
     {
@@ -62,13 +60,17 @@ if (@ARGV > 0)
     else
     {
 =cut
-	define_word(join ' ', @ARGV);
+
+    define_word(join ' ', @ARGV);
+
 =cut
     }
 =cut
+
 } else {
-      print "Usage: dict [-d database] [-n start from definition number] [-t abbreviation of word class type (n]oun, v]erb, adv]erb, adj]ective, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
-  exit 0;
+    print
+      "Usage: dict [-d database] [-n start from definition number] [-t abbreviation of word class type (n]oun, v]erb, adv]erb, adj]ective, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
+    exit 0;
 }
 
 exit 0;
@@ -80,116 +82,100 @@ exit 0;
 # Look up definition(s) for the specified word.
 #
 #=======================================================================
-sub define_word
-{
-  my $word = shift;
-  my $eref;
-  my $entry;
-  my ($db, $def);
+sub define_word {
+    my $word = shift;
+    my $eref;
+    my $entry;
+    my ($db, $def);
 
+    $eref = $dict->define($word);
 
-  $eref = $dict->define($word);
+    if (@$eref == 0) { _no_definitions($word); }
+    else {
+        foreach $entry (@$eref) {
+            ($db, $def) = @$entry;
 
-  if (@$eref == 0)
-  {
-    _no_definitions($word);
-  }
-  else
-  {
-    foreach $entry (@$eref)
-    {
-      ($db, $def) = @$entry;
+            my $defs = dict_hash($def);
+            print "$defs->{word}: ";
 
-      my $defs = dict_hash($def);
-      print "$defs->{word}: ";
+            my $comma        = '';
+            my $def_type     = $config->def_type;
+            my $def_contains = $config->def_contains;
 
-      my $comma = '';
-      my $def_type = $config->def_type;
-      my $def_contains = $config->def_contains;
+            # normalize '*' to '.*'
+            $def_type =~ s/\.\*/*/g;
+            $def_type =~ s/\*/.*/g;
 
-      # normalize '*' to '.*'
-      $def_type =~ s/\.\*/*/g;
-      $def_type =~ s/\*/.*/g;
+            # normalize '*' to '.*'
+            $def_contains =~ s/\.\*/*/g;
+            $def_contains =~ s/\*/.*/g;
 
-      # normalize '*' to '.*'
-      $def_contains =~ s/\.\*/*/g;
-      $def_contains =~ s/\*/.*/g;
+            my $defined = 0;
 
-      my $defined = 0;
+            eval {
+                foreach my $type (keys %$defs) {
+                    next if $type eq 'word';
+                    next unless $type =~ m/$def_type/i;
+                    print "$comma$type: " if length $type;
+                    foreach my $number (sort { $a <=> $b } keys %{$defs->{$type}}) {
+                        next           unless $number >= $config->def_number;
+                        next           unless $defs->{$type}{$number} =~ m/$def_contains/i;
+                        print "$comma" unless $number == 1;
+                        print "$number) $defs->{$type}{$number}";
+                        $comma   = ",\n\n";
+                        $defined = 1;
+                    }
+                }
+            };
 
-      eval {
-        foreach my $type (keys %$defs) {
-          next if $type eq 'word';
-          next unless $type =~ m/$def_type/i;
-          print "$comma$type: " if length $type;
-          foreach my $number (sort { $a <=> $b } keys %{ $defs->{$type} }) {
-            next unless $number >= $config->def_number;
-            next unless $defs->{$type}{$number} =~ m/$def_contains/i;
-            print "$comma" unless $number == 1;
-            print "$number) $defs->{$type}{$number}";
-            $comma = ",\n\n";
-            $defined = 1;
-          }
+            if ($@) {
+                print "Error in -t parameter.  Use v, n, *, etc.\n";
+                exit 0;
+            }
+
+            if (not $defined && $def_type ne '*') {
+                my $types = '';
+                $comma = '';
+                foreach my $type (sort keys %$defs) {
+                    next if $type eq 'word';
+                    $types .= "$comma$type";
+                    $comma = ', ';
+                }
+                if   (length $types) { print "no `$def_type` definition found; available definitions: $types.\n"; }
+                else                 { print "no definition found.\n"; }
+            } elsif (not $defined) {
+                print "no definition found.\n";
+            }
         }
-      };
-
-      if ($@) {
-        print "Error in -t parameter.  Use v, n, *, etc.\n";
-        exit 0;
-      }
-
-      if (not $defined && $def_type ne '*') {
-        my $types = '';
-        $comma = '';
-        foreach my $type (sort keys %$defs) {
-          next if $type eq 'word';
-          $types .= "$comma$type";
-          $comma = ', ';
-        }
-        if (length $types) {
-          print "no `$def_type` definition found; available definitions: $types.\n";
-        } else {
-          print "no definition found.\n";
-        }
-      } elsif (not $defined) {
-        print "no definition found.\n";
-      }
     }
-  }
 }
 
 sub dict_hash {
-  my $def = shift;
-  my $defs = {};
+    my $def  = shift;
+    my $defs = {};
 
-  $def =~ s/{([^}]+)}/$1/g;
+    $def =~ s/{([^}]+)}/$1/g;
 
-  my @lines = split /[\n\r]/, $def;
+    my @lines = split /[\n\r]/, $def;
 
-  $defs->{word} = shift @lines;
+    $defs->{word} = shift @lines;
 
-  my ($type, $number, $text) = ('', 1, '');
+    my ($type, $number, $text) = ('', 1, '');
 
-  foreach my $line (@lines) {
-    $line =~ s/^\s+//;
-    $line =~ s/\s+$//;
-    $line =~ s/\s+/ /g;
+    foreach my $line (@lines) {
+        $line =~ s/^\s+//;
+        $line =~ s/\s+$//;
+        $line =~ s/\s+/ /g;
 
-    if ($line =~ m/^([a-z]+) (\d+): (.*)/i) {
-      ($type, $number, $text) = ($1, $2, $3);
-    }
-    elsif ($line =~ m/^(\d+): (.*)/i) {
-      ($number, $text) = ($1, $2);
-    }
-    else {
-      $text = $line;
+        if    ($line =~ m/^([a-z]+) (\d+): (.*)/i) { ($type, $number, $text) = ($1, $2, $3); }
+        elsif ($line =~ m/^(\d+): (.*)/i)          { ($number, $text)        = ($1, $2); }
+        else                                       { $text                   = $line; }
+
+        $text = " $text" if exists $defs->{$type}{$number};
+        $defs->{$type}{$number} .= $text;
     }
 
-    $text = " $text"  if exists $defs->{$type}{$number};
-    $defs->{$type}{$number} .= $text;
-  }
-
-  return $defs;
+    return $defs;
 }
 
 #=======================================================================
@@ -202,34 +188,25 @@ sub dict_hash {
 # it, etc.
 #
 #=======================================================================
-sub _no_definitions
-{
+sub _no_definitions {
     my $word = shift;
 
     my %strategies;
     my %words;
     my $strategy;
 
-
     %strategies = $dict->strategies;
-    if (!exists($strategies{'lev'}) && !exists($strategies{'soundex'}))
-    {
+    if (!exists($strategies{'lev'}) && !exists($strategies{'soundex'})) {
         print "no definition found for \"$word\"\n";
         return;
     }
 
     $strategy = exists $strategies{'lev'} ? 'lev' : 'soundex';
-    foreach my $entry (@{ $dict->match($word, $strategy) })
-    {
-        $words{$entry->[1]}++;
-    }
-    if (keys %words == 0)
-    {
+    foreach my $entry (@{$dict->match($word, $strategy)}) { $words{$entry->[1]}++; }
+    if (keys %words == 0) {
         print "no definition found for \"$word\", ",
-            "and no similar words found\n";
-    }
-    else
-    {
+          "and no similar words found\n";
+    } else {
         print "no definition found for \"$word\" - perhaps you meant: ", join(', ', keys %words), "\n";
     }
 }
@@ -242,28 +219,18 @@ sub _no_definitions
 # with the -strategy switch.
 #
 #=======================================================================
-sub match_word
-{
+sub match_word {
     my $word = shift;
     my $eref;
     my $entry;
     my ($db, $match);
 
-
-    unless ($config->strategy)
-    {
-	die "you must specify -strategy when using -match\n";
-    }
+    unless ($config->strategy) { die "you must specify -strategy when using -match\n"; }
     $eref = $dict->match($word, $config->strategy);
 
-    if (@$eref == 0)
-    {
-        print "no matches for \"$word\"\n";
-    }
-    else
-    {
-        foreach $entry (@$eref)
-        {
+    if (@$eref == 0) { print "no matches for \"$word\"\n"; }
+    else {
+        foreach $entry (@$eref) {
             ($db, $match) = @$entry;
             print "$db : $match\n";
         }
@@ -278,10 +245,8 @@ sub match_word
 # DICT server.
 #
 #=======================================================================
-sub list_databases
-{
+sub list_databases {
     my %dbs = $dict->dbs();
-
 
     tabulate_hash(\%dbs, 'Database', 'Description');
 }
@@ -294,10 +259,8 @@ sub list_databases
 # by the DICT server.
 #
 #=======================================================================
-sub list_strategies
-{
+sub list_strategies {
     my %strats = $dict->strategies();
-
 
     tabulate_hash(\%strats, 'Strategy', 'Description');
 }
@@ -314,14 +277,11 @@ sub list_strategies
 # credits, etc.
 #
 #=======================================================================
-sub show_db_info
-{
+sub show_db_info {
     my $db  = shift;
     my %dbs = $dict->dbs();
 
-
-    if (not exists $dbs{$config->info})
-    {
+    if (not exists $dbs{$config->info}) {
         print "  dictionary \"$db\" not known\n";
         return;
     }
@@ -336,8 +296,8 @@ sub show_db_info
 # check config file and command-line
 #
 #=======================================================================
-sub initialise
-{
+sub initialise {
+
     #-------------------------------------------------------------------
     # Initialise misc global variables
     #-------------------------------------------------------------------
@@ -346,16 +306,20 @@ sub initialise
     #-------------------------------------------------------------------
     # Create AppConfig::Std, define parameters, and parse command-line
     #-------------------------------------------------------------------
-    $config = AppConfig::Std->new({ CASE => 1 })
-        || die "failed to create AppConfig::Std: $!\n";
+    $config = AppConfig::Std->new({CASE => 1}) || die "failed to create AppConfig::Std: $!\n";
 
-    $config->define('host',       { ARGCOUNT => 1, ALIAS => 'h' });
-    $config->define('port',       { ARGCOUNT => 1, ALIAS => 'p',
-                                    DEFAULT => 2628 });
-    $config->define('database',   { ARGCOUNT => 1, ALIAS => 'd' });
-    $config->define('def_number',   { ARGCOUNT => 1, ALIAS => 'n', DEFAULT => 1 });
-    $config->define('def_type',   { ARGCOUNT => 1, ALIAS => 't', DEFAULT => '*'});
-    $config->define('def_contains',   { ARGCOUNT => 1, ALIAS => 'search', DEFAULT => '*'});
+    $config->define('host', {ARGCOUNT => 1, ALIAS => 'h'});
+    $config->define(
+        'port',
+        {
+            ARGCOUNT => 1, ALIAS => 'p',
+            DEFAULT  => 2628
+        }
+    );
+    $config->define('database',     {ARGCOUNT => 1, ALIAS => 'd'});
+    $config->define('def_number',   {ARGCOUNT => 1, ALIAS => 'n', DEFAULT => 1});
+    $config->define('def_type',     {ARGCOUNT => 1, ALIAS => 't', DEFAULT => '*'});
+    $config->define('def_contains', {ARGCOUNT => 1, ALIAS => 'search', DEFAULT => '*'});
 
 =cut
     $config->define('match',      { ARGCOUNT => 0, ALIAS => 'm' });
@@ -363,10 +327,15 @@ sub initialise
     $config->define('strategy',   { ARGCOUNT => 1, ALIAS => 's' });
     $config->define('strats',     { ARGCOUNT => 0, ALIAS => 'S' });
 =cut
-    $config->define('client',     { ARGCOUNT => 1, ALIAS => 'c',
-				    DEFAULT => "$PROGRAM $VERSION ".
-				"[using Net::Dict $Net::Dict::VERSION]",
-				  });
+
+    $config->define(
+        'client',
+        {
+            ARGCOUNT => 1, ALIAS => 'c',
+            DEFAULT  => "$PROGRAM $VERSION " . "[using Net::Dict $Net::Dict::VERSION]",
+        }
+    );
+
 =cut
     $config->define('info',       { ARGCOUNT => 1, ALIAS => 'i' });
     $config->define('serverinfo', { ARGCOUNT => 0, ALIAS => 'I' });
@@ -374,8 +343,9 @@ sub initialise
 =cut
 
     if (not $config->args(\@ARGV)) {
-      print "Usage: dict [-d database] [-n start from definition number] [-t abbreviation of word class type (n]oun, v]erb, adv]erb, adj]ective, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
-      exit;
+        print
+          "Usage: dict [-d database] [-n start from definition number] [-t abbreviation of word class type (n]oun, v]erb, adv]erb, adj]ective, etc)] [-search <regex> for definitions matching <regex>] <word>\n";
+        exit;
     }
 
     #-------------------------------------------------------------------
@@ -388,12 +358,12 @@ sub initialise
     #-------------------------------------------------------------------
     # Create connection to DICT server
     #-------------------------------------------------------------------
-    $dict = Net::Dict->new($config->host,
-                           Port   => $config->port,
-                           Client => $config->client,
-			   Debug  => $config->debug,
-                          )
-        || die "failed to create Net::Dict: $!\n";
+    $dict = Net::Dict->new(
+        $config->host,
+        Port   => $config->port,
+        Client => $config->client,
+        Debug  => $config->debug,
+    ) || die "failed to create Net::Dict: $!\n";
 }
 
 #=======================================================================
@@ -404,8 +374,8 @@ sub initialise
 # of databases and strategies.
 #
 #=======================================================================
-sub tabulate_hash
-{
+sub tabulate_hash {
+
     my $hashref     = shift;
     my $keytitle    = shift;
     my $value_title = shift;
@@ -413,28 +383,20 @@ sub tabulate_hash
     my $width = length $keytitle;
     my ($key, $value);
 
-
     #-------------------------------------------------------------------
     # Find the length of the longest key, so we can right align
     # the column of keys
     #-------------------------------------------------------------------
-    foreach $key (keys %$hashref)
-    {
-        $width = length($key) if length($key) > $width;
-    }
+    foreach $key (keys %$hashref) { $width = length($key) if length($key) > $width; }
 
     #-------------------------------------------------------------------
     # print out keys and values in a basic ascii formatted table view
     #-------------------------------------------------------------------
     printf("  %${width}s   $value_title\n", $keytitle);
     print '  ', '-' x $width, '   ', '-' x (length $value_title), "\n";
-    while (($key, $value) = each %$hashref)
-    {
-	printf("  %${width}s : $value\n", $key);
-    }
+    while (($key, $value) = each %$hashref) { printf("  %${width}s : $value\n", $key); }
     print "\n";
 }
-
 
 __END__
 

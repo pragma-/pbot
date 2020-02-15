@@ -13,21 +13,21 @@ use feature 'unicode_strings';
 use Time::Duration qw/duration/;
 
 sub initialize {
-  my ($self, %conf) = @_;
-  $self->{pbot}->{commands}->register(sub { return $self->pd(@_)}, "pd", 0);
+    my ($self, %conf) = @_;
+    $self->{pbot}->{commands}->register(sub { return $self->pd(@_) }, "pd", 0);
 }
 
 sub unload {
-  my $self = shift;
-  $self->{pbot}->{commands}->unregister("pd");
+    my $self = shift;
+    $self->{pbot}->{commands}->unregister("pd");
 }
 
 sub pd {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my ($seconds, $error) = $self->{pbot}->{parsedate}->parsedate($arguments);
-  return $error if defined $error;
-  return duration $seconds;
+    my $self = shift;
+    my ($from, $nick, $user, $host, $arguments) = @_;
+    my ($seconds, $error) = $self->{pbot}->{parsedate}->parsedate($arguments);
+    return $error if defined $error;
+    return duration $seconds;
 }
 
 1;

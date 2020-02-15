@@ -17,13 +17,14 @@ use Text::Balanced qw(extract_codeblock);
 
 my @languages = qw/C C++ D Haskell Lua OCaml PHP Perl Python Ruby Scheme Tcl/;
 
-my %preludes = ( 'C' => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n",
-                 'C++' => "#include <iostream>\n#include <cstdio>\n",
-               );
+my %preludes = (
+    'C'   => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n",
+    'C++' => "#include <iostream>\n#include <cstdio>\n",
+);
 
 if ($#ARGV <= 0) {
-  print "Usage: cc [-lang=<language>] <code>\n";
-  exit 0;
+    print "Usage: cc [-lang=<language>] <code>\n";
+    exit 0;
 }
 
 my $nick = shift @ARGV;
@@ -42,22 +43,22 @@ $show_url = 1 if $code =~ s/-showurl//i;
 
 my $found = 0;
 foreach my $l (@languages) {
-  if (uc $lang eq uc $l) {
-    $lang = $l;
-    $found = 1;
-    last;
-  }
+    if (uc $lang eq uc $l) {
+        $lang  = $l;
+        $found = 1;
+        last;
+    }
 }
 
 if (not $found) {
-  print "$nick: Invalid language '$lang'.  Supported languages are: @languages\n";
-  exit 0;
+    print "$nick: Invalid language '$lang'.  Supported languages are: @languages\n";
+    exit 0;
 }
 
 my $ua = LWP::UserAgent->new();
 
 $ua->agent("Mozilla/5.0");
-push @{ $ua->requests_redirectable }, 'POST';
+push @{$ua->requests_redirectable}, 'POST';
 
 $code =~ s/#include <([^>]+)>/\n#include <$1>\n/g;
 $code =~ s/#([^ ]+) (.*?)\\n/\n#$1 $2\n/g;
@@ -67,65 +68,60 @@ my $precode = $preludes{$lang} . $code;
 $code = '';
 
 if ($lang eq "C" or $lang eq "C++") {
-  my $has_main = 0;
+    my $has_main = 0;
 
-  my $prelude = '';
-  $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
+    my $prelude = '';
+    $prelude = "$1$2" if $precode =~ s/^\s*(#.*)(#.*?[>\n])//s;
 
-  while ($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
-    my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
+    while ($precode =~ s/([ a-zA-Z0-9_*\[\]]+)\s+([a-zA-Z0-9_*]+)\s*\((.*?)\)\s*({.*)//) {
+        my ($ret, $ident, $params, $potential_body) = ($1, $2, $3, $4);
 
-    my @extract = extract_codeblock($potential_body, '{}');
-    my $body;
-    if (not defined $extract[0]) {
-      $output .= "<pre>error: unmatched brackets for function '$ident'; </pre>";
-      $body = $extract[1];
-    } else {
-      $body = $extract[0];
-      $precode .= $extract[1];
+        my @extract = extract_codeblock($potential_body, '{}');
+        my $body;
+        if (not defined $extract[0]) {
+            $output .= "<pre>error: unmatched brackets for function '$ident'; </pre>";
+            $body = $extract[1];
+        } else {
+            $body = $extract[0];
+            $precode .= $extract[1];
+        }
+        $code .= "$ret $ident($params) $body\n\n";
+        $has_main = 1 if $ident eq 'main';
     }
-    $code .= "$ret $ident($params) $body\n\n";
-    $has_main = 1 if $ident eq 'main';
-  }
 
-  $precode =~ s/^\s+//;
-  $precode =~ s/\s+$//;
+    $precode =~ s/^\s+//;
+    $precode =~ s/\s+$//;
 
-  if (not $has_main) {
-    $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) { $precode\n;\n  return 0;}\n";
-  } else {
-    $code = "$prelude\n\n$precode\n\n$code\n";
-  }
+    if   (not $has_main) { $code = "$prelude\n\n$code\n\nint main(int argc, char **argv) { $precode\n;\n  return 0;}\n"; }
+    else                 { $code = "$prelude\n\n$precode\n\n$code\n"; }
 } else {
-  $code = $precode;
+    $code = $precode;
 }
 
 if ($lang eq "C" or $lang eq "C++") {
-#  $code = pretty($code);
+
+    #  $code = pretty($code);
 }
 
 $code =~ s/^\s+//;
 $code =~ s/\s+$//;
 
-my %post = ( 'lang' => $lang, 'code' => $code, 'private' => 'True', 'run' => 'True', 'submit' => 'Submit' );
+my %post     = ('lang' => $lang, 'code' => $code, 'private' => 'True', 'run' => 'True', 'submit' => 'Submit');
 my $response = $ua->post("http://codepad.org", \%post);
 
 if (not $response->is_success) {
-  print "There was an error compiling the code.\n";
-  die $response->status_line;
+    print "There was an error compiling the code.\n";
+    die $response->status_line;
 }
 
 my $text = $response->decoded_content;
-my $url = $response->request->uri;
+my $url  = $response->request->uri;
 
 # remove line numbers
 $text =~ s/<a style="" name="output-line-\d+">\d+<\/a>//g;
 
-if ($text =~ /<span class="heading">Output:<\/span>.+?<div class="code">(.*)<\/div>.+?<\/table>/si) {
-  $output .= "$1";
-} else {
-  $output .= "<pre>No output.</pre>";
-}
+if   ($text =~ /<span class="heading">Output:<\/span>.+?<div class="code">(.*)<\/div>.+?<\/table>/si) { $output .= "$1"; }
+else                                                                                                  { $output .= "<pre>No output.</pre>"; }
 
 $output = decode_entities($output);
 $output = HTML::FormatText->new->format(parse_html($output));
@@ -141,24 +137,19 @@ print FILE localtime() . "\n";
 print FILE "$nick: [ $url ] $output\n\n";
 close FILE;
 
-if ($show_url) {
-  print "$nick: [ $url ] $output\n";
-} else {
-  print "$nick: $output\n";
-}
+if   ($show_url) { print "$nick: [ $url ] $output\n"; }
+else             { print "$nick: $output\n"; }
 
 sub pretty {
-  my $code = join '', @_;
-  my $result;
+    my $code = join '', @_;
+    my $result;
 
-  my $pid = open2(\*IN, \*OUT, 'astyle -Upf');
-  print OUT "$code\n";
-  close OUT;
-  while (my $line = <IN>) {
-    $result .= $line;
-  }
-  close IN;
-  waitpid($pid, 0);
-  return $result;
+    my $pid = open2(\*IN, \*OUT, 'astyle -Upf');
+    print OUT "$code\n";
+    close OUT;
+    while (my $line = <IN>) { $result .= $line; }
+    close IN;
+    waitpid($pid, 0);
+    return $result;
 }
 
