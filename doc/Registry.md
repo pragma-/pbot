@@ -209,6 +209,7 @@ messagehistory.debug_link | Log verbose debugging information about account link
 messagehistory.sqlite_commit_interval | How often to commit SQLite transactions to the database. |
 messagehistory.sqlite_debug | Log verbose debugging information about SQLite statements. | 0
 nicklist.debug | Log verbose debugging information about the NickList. | 0
+processmanager.default_timeout | The default timeout for background processes, in seconds. | 30
 
 ### Channel-specific Registry items
 
