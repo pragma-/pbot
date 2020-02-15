@@ -8,6 +8,7 @@
   * [Chaining](#chaining)
   * [Variables](#variables)
   * [Inline invocation](#inline-invocation)
+  * [Background processing](#background-processing)
 * [Types of commands](#types-of-commands)
   * [Built-in commands](#built-in-commands)
     * [Creating new built-in commands](#creating-new-built-in-commands)
@@ -43,7 +44,6 @@
       * [chanlist](Admin.md#chanlist)
       * [ignore](Admin.md#ignore)
       * [unignore](Admin.md#unignore)
-      * [whitelist](Admin.md#whitelist)
       * [blacklist](Admin.md#blacklist)
       * [op](Admin.md#op)
       * [deop](Admin.md#deop)
@@ -66,6 +66,9 @@
     * [Command metadata](#command-metadata)
       * [cmdset](Admin.md#cmdset)
       * [cmdunset](Admin.md#cmdunset)
+    * [Process management](#process-management)
+      * [ps](Admin.md#ps)
+      * [kill](Admin.md#kill)
     * [Registry commands](#registry-commands)
       * [regset](Registry.md#regset)
       * [regunset](Registry.md#regunset)
@@ -165,6 +168,18 @@ is addressed to a nick, the output will also be addressed to them.
     <pragma-> newuser13: Check the !{version} and the !{help} documentation.
        <PBot> newuser13: PBot version 2696 2020-01-04
        <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
+
+### Background processing
+Any command can be flagged to be executed as a background process. For example, suppose you
+make a Plugin that has a command that may potentially take a long time to complete, which could
+cause PBot to be non-responsive...
+
+Not a problem! You can use the [`cmdset`](doc/Admin.md#cmdset) command to set the `background-process` [command metadata](doc/Admin.md#command-metadata-list)
+and the command will now run as a background process, allowing PBot to carry on with its duties.
+
+The familiar [`ps`](doc/Admin.md#ps) and [`kill`](doc/Admin.md#kill) commands can be used to list and kill the background processes.
+
+You can also [`cmdset`](doc/Admin.md#cmdset) the `process-timeout` [command metadata](doc/Admin.md#command-metadata-list) to set the timeout, in seconds, before the command is automatically killed. Otherwise the `processmanager.default_timeout` [registry value](doc/Registry.md) will be used.
 
 ## Types of commands
 There are several ways of adding new commands to PBot. We'll go over them here.
@@ -329,7 +344,6 @@ to have the command remember your location.
 ##### [chanlist](Admin.md#chanlist)
 ##### [ignore](Admin.md#ignore)
 ##### [unignore](Admin.md#unignore)
-##### [whitelist](Admin.md#whitelist)
 ##### [blacklist](Admin.md#blacklist)
 ##### [op](Admin.md#op)
 ##### [deop](Admin.md#deop)
@@ -358,8 +372,11 @@ to have the command remember your location.
 ##### [cmdset](Admin.md#cmdset)
 ##### [cmdunset](Admin.md#cmdunset)
 
-#### Registry commands
+#### Process management
+##### [ps](Admin.md#ps)
+##### [kill](Admin.md#kill)
 
+#### Registry commands
 ##### [regset](Registry.md#regset)
 ##### [regunset](Registry.md#regunset)
 ##### [regchange](Registry.md#regchange)
