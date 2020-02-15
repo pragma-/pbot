@@ -270,6 +270,7 @@ sub unset {
 
 sub exists {
   my ($self, $primary_index, $secondary_index, $data_index) = @_;
+  return 0 if not defined $primary_index;
   $primary_index = lc $primary_index;
   return 0 if not exists $self->{hash}->{$primary_index};
   return 1 if not defined $secondary_index;
