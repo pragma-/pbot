@@ -66,11 +66,9 @@ sub remove_process {
   delete $self->{processes}->{$pid};
 }
 
-sub execute_subroutine {
-}
-
 sub execute_process {
-  my ($self, $stuff, $subref) = @_;
+  my ($self, $stuff, $subref, $timeout) = @_;
+  $timeout //= 30;
 
   if (not exists $stuff->{commands}) {
     $stuff->{commands} = [ $stuff->{command} ];
@@ -88,7 +86,8 @@ sub execute_process {
     return;
   }
 
-  if ($pid == 0) { # start child block
+  if ($pid == 0) {
+    # child
     close $reader;
 
     # don't quit the IRC client when the child dies
@@ -97,11 +96,19 @@ sub execute_process {
     use warnings;
 
     # execute the provided subroutine, results are stored in $stuff
-    eval { $subref->($stuff) };
+    eval {
+      local $SIG{ALRM} = sub { die "PBot::Process timed-out" };
+      alarm $timeout;
+      $subref->($stuff);
+      die if $@;
+    };
+    alarm 0;
 
     # check for errors
     if ($@) {
-      $self->{pbot}->{logger}->log("Error executing process: $@\n");
+      $stuff->{result} = $@;
+      $stuff->{result} =~ s/ at PBot.*$//ms;
+      $self->{pbot}->{logger}->log("Error executing process: $stuff->{result}\n");
     }
 
     # print $stuff to pipe
