@@ -99,8 +99,7 @@ sub wttrcmd {
     delete $options{default};
   }
 
-  $self->{pbot}->{process_manager}->execute_process($stuff, sub { $stuff->{result} = $self->get_wttr($arguments, %options) });
-  return "";
+  return $self->get_wttr($arguments, %options);
 }
 
 sub get_wttr {

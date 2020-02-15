@@ -175,6 +175,7 @@
    },
    "export" : {
       "_name" : "export",
+      "execute-process" : "1",
       "help" : "Exports specified list to HTML file. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#export",
       "requires_cap" : 1
    },
@@ -400,6 +401,7 @@
    },
    "recall" : {
       "_name" : "recall",
+      "execute-process" : "1",
       "help" : "Recalls previous chat history for a channel. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#recall",
       "requires_cap" : 0
    },
@@ -562,11 +564,13 @@
    },
    "weather" : {
       "_name" : "weather",
+      "execute-process" : "1",
       "help" : "Fetches and displays weather data. You may set `!my location ...` to remember your location.",
       "requires_cap" : 0
    },
    "wttr" : {
       "_name" : "wttr",
+      "execute-process" : "1",
       "help" : "",
       "requires_cap" : "0"
    }

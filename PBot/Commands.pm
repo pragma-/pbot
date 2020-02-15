@@ -121,9 +121,19 @@ sub interpreter {
       }
 
       $stuff->{no_nickoverride} = 1;
-      my $result = &{ $ref->{subref} }($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{arguments}, $stuff);
-      return undef if $stuff->{referenced} and $result =~ m/(?:usage:|no results)/i;
-      return $result;
+      if ($self->get_meta($keyword, 'execute-process')) {
+        my $timeout = $self->{pbot}->{registry}->get_value('processmanager', 'default_timeout');
+        $self->{pbot}->{process_manager}->execute_process(
+          $stuff,
+          sub { $stuff->{result} = $ref->{subref}->($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{arguments}, $stuff) },
+          $timeout
+        );
+        return "";
+      } else {
+        my $result = $ref->{subref}->($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{arguments}, $stuff);
+        return undef if $stuff->{referenced} and $result =~ m/(?:usage:|no results)/i;
+        return $result;
+      }
     }
   }
   return undef;
