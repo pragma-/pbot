@@ -16,15 +16,15 @@ use feature 'unicode_strings';
 use POSIX qw(WNOHANG);
 use JSON;
 
-# automatically reap children processes in background
-$SIG{CHLD} = sub { while (waitpid(-1, WNOHANG) > 0) {} };
-
 sub initialize {
   my ($self, %conf) = @_;
   $self->{pbot}->{commands}->register(sub { $self->ps_cmd(@_)   }, 'ps',   0);
   $self->{pbot}->{commands}->register(sub { $self->kill_cmd(@_) }, 'kill', 1);
   $self->{pbot}->{capabilities}->add('admin', 'can-kill');
   $self->{processes} = {};
+
+  # automatically reap children processes in background
+  $SIG{CHLD} = sub { my $pid; do { $pid = waitpid(-1, WNOHANG); $self->remove_process($pid) if $pid > 0; } while $pid > 0; };
 }
 
 sub ps_cmd {
@@ -93,6 +93,9 @@ sub execute_process {
     *PBot::IRC::Connection::DESTROY = sub { return; };
     use warnings;
 
+    # remove atexit handlers
+    $self->{pbot}->{atexit}->unregister_all;
+
     # execute the provided subroutine, results are stored in $stuff
     eval {
       local $SIG{ALRM} = sub { die "PBot::Process `$stuff->{commands}->[0]` timed-out" };
@@ -105,8 +108,8 @@ sub execute_process {
     # check for errors
     if ($@) {
       $stuff->{result} = $@;
-      $stuff->{result} =~ s/ at PBot.*$//ms;
       $self->{pbot}->{logger}->log("Error executing process: $stuff->{result}\n");
+      $stuff->{result} =~ s/ at PBot.*$//ms;
     }
 
     # print $stuff to pipe
@@ -127,7 +130,6 @@ sub execute_process {
 
 sub process_pipe_reader {
   my ($self, $pid, $buf) = @_;
-  $self->remove_process($pid);
   my $stuff = decode_json $buf or do {
     $self->{pbot}->{logger}->log("Failed to decode bad json: [$buf]\n");
     return;
