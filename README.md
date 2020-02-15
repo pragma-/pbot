@@ -155,6 +155,8 @@ and the command will now run as a background process, allowing PBot to carry on 
 
 The familiar [`ps`](doc/Admin.md#ps) and [`kill`](doc/Admin.md#kill) commands can be used to list and kill the background processes.
 
+You can also [`cmdset`](doc/Admin.md#cmdset) the `process-timeout` [command metadata](doc/Admin.md#command-metadata-list) to set the timeout, in seconds, before the command is automatically killed. Otherwise the `processmanager.default_timeout` [registry value](doc/Registry.md) will be used.
+
 ### Factoids
 Factoids are a very special type of command. Anybody interacting with PBot
 can create, edit, delete and invoke factoids. Factoids can be locked by the
