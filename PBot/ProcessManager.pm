@@ -1,20 +1,19 @@
-# File: FactoidModuleLauncher.pm
+# File: ProcessManager.pm
 # Author: pragma_
 #
-# Purpose: Handles forking and execution of module processes
+# Purpose: Handles forking and execution of module/subroutine processes
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package PBot::FactoidModuleLauncher;
+package PBot::ProcessManager;
 use parent 'PBot::Class';
 
 use warnings; use strict;
 use feature 'unicode_strings';
 
 use POSIX qw(WNOHANG);
-use Text::Balanced qw(extract_delimited);
 use JSON;
 use IPC::Run qw/run timeout/;
 use Encode;
@@ -24,55 +23,56 @@ $SIG{CHLD} = sub { while (waitpid(-1, WNOHANG) > 0) {} };
 
 sub initialize {
   my ($self, %conf) = @_;
+  $self->{pbot}->{commands}->register(sub { $self->ps_cmd(@_)   }, 'ps',   0);
+  $self->{pbot}->{commands}->register(sub { $self->kill_cmd(@_) }, 'kill', 1);
+  $self->{processes} = {};
 }
 
-sub execute_module {
-  my ($self, $stuff) = @_;
-  my $text;
-
-  if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
-    use Data::Dumper;
-    $Data::Dumper::Sortkeys  = 1;
-    $self->{pbot}->{logger}->log("FML::execute_module\n");
-    $self->{pbot}->{logger}->log(Dumper $stuff);
+sub ps_cmd {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  my @processes;
+  foreach my $pid (sort keys %{$self->{processes}}) {
+    push @processes, "$pid: $self->{processes}->{$pid}->{commands}->[0]";
   }
-
-  $stuff->{arguments} = "" if not defined $stuff->{arguments};
-
-  my @factoids = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $stuff->{keyword}, exact_channel => 2, exact_trigger => 2);
-
-  if (not @factoids or not $factoids[0]) {
-    $stuff->{checkflood} = 1;
-    $self->{pbot}->{interpreter}->handle_result($stuff, "/msg $stuff->{nick} Failed to find module for '$stuff->{keyword}' in channel $stuff->{from}\n");
-    return;
+  if (@processes) {
+    return "Running processes: ", join '; ', @processes;
+  } else {
+    return "No running processes.";
   }
+}
 
-  my ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
+sub kill_cmd {
+  my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+  return "Coming soon.";
+}
 
-  $stuff->{channel} = $channel;
-  $stuff->{keyword} = $trigger;
-  $stuff->{trigger} = $trigger;
+sub add_process {
+  my ($self, $pid, $stuff) = @_;
+  $self->{processes}->{$pid} = $stuff;
+}
 
-  my $module = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, 'action');
-  my $module_dir = $self->{pbot}->{registry}->get_value('general', 'module_dir');
+sub remove_process {
+  my ($self, $pid) = @_;
+  delete $self->{processes}->{$pid};
+}
 
-  $self->{pbot}->{logger}->log("(" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "): $stuff->{nick}!$stuff->{user}\@$stuff->{host}: Executing module [$stuff->{command}] $module $stuff->{arguments}\n");
+sub execute_subroutine {
+}
 
-  $stuff->{arguments} = $self->{pbot}->{factoids}->expand_special_vars($stuff->{from}, $stuff->{nick}, $stuff->{root_keyword}, $stuff->{arguments});
+sub execute_process {
+  my ($self, $stuff, $subref) = @_;
 
   pipe(my $reader, my $writer);
   my $pid = fork;
 
   if (not defined $pid) {
-    $self->{pbot}->{logger}->log("Could not fork module: $!\n");
+    $self->{pbot}->{logger}->log("Could not fork process: $!\n");
     close $reader;
     close $writer;
     $stuff->{checkflood} = 1;
     $self->{pbot}->{interpreter}->handle_result($stuff, "/me groans loudly.\n");
     return;
   }
-
-  # FIXME -- add check to ensure $module exists
 
   if ($pid == 0) { # start child block
     close $reader;
@@ -82,72 +82,40 @@ sub execute_module {
     *PBot::IRC::Connection::DESTROY = sub { return; };
     use warnings;
 
-    if (not chdir $module_dir) {
-      $self->{pbot}->{logger}->log("Could not chdir to '$module_dir': $!\n");
-      Carp::croak("Could not chdir to '$module_dir': $!");
-    }
+    # execute the provided subroutine, results are stored in $stuff
+    eval { $subref->($stuff) };
 
-    if ($self->{pbot}->{factoids}->{factoids}->exists($channel, $trigger, 'workdir')) {
-      chdir $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, 'workdir');
-    }
-
-    my ($exitval, $stdout, $stderr) = eval {
-      my $args = $stuff->{arguments};
-      if (not $stuff->{args_utf8}) {
-        $args = encode('UTF-8', $args);
-      }
-      my @cmdline = ("./$module", $self->{pbot}->{interpreter}->split_line($args));
-      my $timeout = $self->{pbot}->{registry}->get_value('general', 'module_timeout') // 30;
-      my ($stdin, $stdout, $stderr);
-      run \@cmdline, \$stdin, \$stdout, \$stderr, timeout($timeout);
-      my $exitval = $? >> 8;
-      utf8::decode($stdout);
-      utf8::decode($stderr);
-      return ($exitval, $stdout, $stderr);
-    };
-
+    # check for errors
     if ($@) {
-      my $error = $@;
-      if ($error =~ m/timeout on timer/) {
-        ($exitval, $stdout, $stderr) = (-1, "$stuff->{trigger}: timed-out", '');
-      } else {
-        ($exitval, $stdout, $stderr) = (-1, '', $error);
-      }
+      $self->{pbot}->{logger}->log("Error executing process: $@\n");
     }
 
-    if (length $stderr) {
-      if (open(my $fh, '>>', "$module-stderr")) {
-        print $fh $stderr;
-        close $fh;
-      } else {
-        $self->{pbot}->{logger}->log("Failed to open $module-stderr: $!\n");
-      }
-    }
-
-    $stuff->{result} = $stdout;
-    chomp $stuff->{result};
-
+    # print $stuff to pipe
     my $json = encode_json $stuff;
     print $writer "$json\n";
+
+   # end child
     exit 0;
-  } # end child block
-  else {
-    close $writer;
-    $self->{pbot}->{select_handler}->add_reader($reader, sub { $self->module_pipe_reader(@_) });
-    return "";
-  }
+ } else {
+   # parent
+   close $writer;
+   $self->add_process($pid, $stuff);
+   $self->{pbot}->{select_handler}->add_reader($reader, sub { $self->process_pipe_reader($pid, @_) });
+   # return empty string since reader will handle the output when child is finished
+   return "";
+ }
 }
 
-sub module_pipe_reader {
-  my ($self, $buf) = @_;
-
+sub process_pipe_reader {
+  my ($self, $pid, $buf) = @_;
+  $self->remove_process($pid);
   my $stuff = decode_json $buf or do {
     $self->{pbot}->{logger}->log("Failed to decode bad json: [$buf]\n");
     return;
   };
 
   if (not defined $stuff->{result} or not length $stuff->{result}) {
-    $self->{pbot}->{logger}->log("No result from module.\n");
+    $self->{pbot}->{logger}->log("No result from process.\n");
     return;
   }
 
@@ -158,9 +126,7 @@ sub module_pipe_reader {
   if (exists $stuff->{special} and $stuff->{special} eq 'code-factoid') {
     $stuff->{result} =~ s/\s+$//g;
     $self->{pbot}->{logger}->log("No text result from code-factoid.\n") and return if not length $stuff->{result};
-
     $stuff->{original_keyword} = $stuff->{root_keyword};
-
     $stuff->{result} = $self->{pbot}->{factoids}->handle_action($stuff, $stuff->{result});
   }
 

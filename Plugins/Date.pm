@@ -64,7 +64,7 @@ sub datecmd {
     keyword => "date_module", arguments => "$timezone"
   };
 
-  $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($newstuff);
+  $self->{pbot}->{modules}->execute_module($newstuff);
 }
 
 1;

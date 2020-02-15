@@ -74,7 +74,7 @@ sub show_url_titles {
         keyword => "title", arguments => "$nick $url"
       };
 
-      $self->{pbot}->{factoids}->{factoidmodulelauncher}->execute_module($stuff);
+      $self->{pbot}->{modules}->execute_module($stuff);
     }
   }
   return 0;

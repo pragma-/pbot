@@ -707,7 +707,7 @@ sub execute_code_factoid_using_vm {
   $stuff->{arguments} = $json;
   $stuff->{args_utf8} = 1;
 
-  $self->{pbot}->{process_manager}->execute_module($stuff);
+  $self->{pbot}->{modules}->execute_module($stuff);
   return "";
 }
 
@@ -1033,7 +1033,7 @@ sub handle_action {
     $stuff->{root_keyword} = $keyword unless defined $stuff->{root_keyword};
     $stuff->{root_channel} = $channel;
 
-    my $result = $self->{pbot}->{process_manager}->execute_module($stuff);
+    my $result = $self->{pbot}->{modules}->execute_module($stuff);
     if (length $result) {
       return $ref_from . $result;
     } else {

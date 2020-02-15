@@ -210,6 +210,8 @@ sub interpret {
   }
 
   my $cmdlist = $self->make_args($stuff->{command});
+  $stuff->{commands} = [] unless exists $stuff->{commands};
+  push @{$stuff->{commands}}, $stuff->{command};
 
   if ($self->arglist_size($cmdlist) >= 4 and lc $cmdlist->[0] eq 'tell' and (lc $cmdlist->[2] eq 'about' or lc $cmdlist->[2] eq 'the')) {
     # tell nick about/the cmd [args]
@@ -245,6 +247,8 @@ sub interpret {
       push @{$stuff->{subcmd}}, "$keyword $arguments";
       $command =~ s/^\s+|\s+$//g;
       $stuff->{command} = $command;
+      $stuff->{commands} = [];
+      push @{$stuff->{commands}}, $command;
       $stuff->{result} = $self->interpret($stuff);
       return $stuff->{result};
     }

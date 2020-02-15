@@ -43,10 +43,11 @@ use PBot::IgnoreList;
 use PBot::BlackList;
 use PBot::Timer;
 use PBot::Refresher;
-use PBot::Plugins;
 use PBot::WebPaste;
 use PBot::Utils::ParseDate;
+use PBot::Plugins;
 use PBot::Functions;
+use PBot::Modules;
 use PBot::ProcessManager;
 
 sub new {
@@ -147,6 +148,7 @@ sub initialize {
   $self->{logger}->log("plugin_dir: $plugin_dir\n");
 
   $self->{timer}     = PBot::Timer->new(pbot => $self, timeout => 10, %conf);
+  $self->{modules}   = PBot::Modules->new(pbot => $self, %conf);
   $self->{functions} = PBot::Functions->new(pbot => $self, %conf);
   $self->{refresher} = PBot::Refresher->new(pbot => $self);
 

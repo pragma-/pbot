@@ -65,8 +65,6 @@ sub initialize {
   $self->{pbot}->{commands}->register(sub { $self->call_factoid(@_)  },  "fact",         0);
   $self->{pbot}->{commands}->register(sub { $self->factfind(@_)      },  "factfind",     0);
   $self->{pbot}->{commands}->register(sub { $self->top20(@_)         },  "top20",        0);
-  $self->{pbot}->{commands}->register(sub { $self->load_module(@_)   },  "load",         1);
-  $self->{pbot}->{commands}->register(sub { $self->unload_module(@_) },  "unload",       1);
   $self->{pbot}->{commands}->register(sub { $self->histogram(@_)     },  "histogram",    0);
   $self->{pbot}->{commands}->register(sub { $self->count(@_)         },  "count",        0);
 
@@ -1619,47 +1617,6 @@ sub factchange {
   $factoids_data->set($channel, $trigger, 'edited_on', gettimeofday);
   $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "changed to $action");
   return "Changed: $trigger_name is $action";
-}
-
-# FIXME: these two functions need to use $stuff->{arglist}
-sub load_module {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->{factoids}->{factoids};
-  my ($keyword, $module) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
-
-  if (not defined $module) {
-    return "Usage: load <keyword> <module>";
-  }
-
-  if (not $factoids->exists('.*', $keyword)) {
-    $self->{pbot}->{factoids}->add_factoid('module', '.*', "$nick!$user\@$host", $keyword, $module, 1);
-    $factoids->set('.*', $keyword, 'add_nick', 1, 1);
-    $factoids->set('.*', $keyword, 'nooverride', 1);
-    $self->{pbot}->{logger}->log("$nick!$user\@$host loaded module $keyword => $module\n");
-    return "Loaded module $keyword => $module";
-  } else {
-    return 'There is already a keyword named ' . $factoids->get_data('.*', $keyword, '_name') . '.';
-  }
-}
-
-sub unload_module {
-  my $self = shift;
-  my ($from, $nick, $user, $host, $arguments) = @_;
-  my $factoids = $self->{pbot}->{factoids}->{factoids};
-
-  if (not defined $arguments) {
-    return "Usage: unload <keyword>";
-  } elsif (not $factoids->exists('.*', $arguments)) {
-    return "/say $arguments not found.";
-  } elsif ($factoids->get_data('.*', $arguments, 'type') ne 'module') {
-    return "/say " . $factoids->get_data('.*', $arguments, '_name') . ' is not a module.';
-  } else {
-    my $name = $factoids->get_data('.*', $arguments, '_name');
-    $factoids->remove('.*', $arguments);
-    $self->{pbot}->{logger}->log("$nick!$user\@$host unloaded module $arguments\n");
-    return "/say $name unloaded.";
-  }
 }
 
 1;
