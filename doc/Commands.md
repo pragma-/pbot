@@ -13,6 +13,7 @@
   * [Built-in commands](#built-in-commands)
     * [Creating new built-in commands](#creating-new-built-in-commands)
     * [Plugins](#plugins)
+    * [Functions](#functions)
   * [Factoids](#factoids)
     * [Code Factoids](#code-factoids)
     * [Modules](#modules)
@@ -204,6 +205,18 @@ stand-alone self-contained units of code that can be loaded by the PBot owner.
 
 * only bot owner can install and load PBot Plugins
 * PBot Plugins have access to PBot internal API functions and data structures
+
+#### Functions
+Functions are commands that accept input, manipulate it and then output the result. They are extremely
+useful with [piping](#piping) or [command substituting](#substitution).
+
+For example, the `uri_escape` function demonstrated in the [Substitutions](#substitutions) section earlier
+makes text safe for use in a URL. We also saw the `sed` and `uc` functions demonstrated in [Piping](#piping).
+
+Functions can be loaded via PBot Plugins.
+
+* only bot owner can load new Functions
+* Functions have access to PBot internal API functions and data structures
 
 ### Factoids
 Factoids are another type of command. Factoids are simple text commands which
