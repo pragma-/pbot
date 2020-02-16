@@ -45,7 +45,7 @@ sub ps_cmd {
     Getopt::Long::Configure("bundling");
 
     my ($show_all, $show_user, $show_running_time);
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, preserve_escapes => 1, strip_quotes => 1);
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
     GetOptionsFromArray(
         \@opt_args,
         'all|a' => \$show_all,

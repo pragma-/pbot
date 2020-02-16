@@ -13,7 +13,7 @@ use parent 'Plugins::Plugin';
 use warnings; use strict;
 use feature 'unicode_strings';
 
-use Getopt::Long qw(GetOptionsFromString);
+use Getopt::Long qw(GetOptionsFromArray);
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -38,15 +38,16 @@ sub datecmd {
     Getopt::Long::Configure("bundling");
 
     my ($user_override, $show_usage);
-    my ($ret, $args) = GetOptionsFromString(
-        $arguments,
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+    GetOptionsFromArray(
+        \@opt_args,
         'u=s' => \$user_override,
         'h'   => \$show_usage
     );
 
     return $usage                         if $show_usage;
     return "/say $getopt_error -- $usage" if defined $getopt_error;
-    $arguments = "@$args";
+    $arguments = "@opt_args";
 
     my $hostmask    = defined $user_override ? $user_override : "$nick!$user\@$host";
     my $tz_override = $self->{pbot}->{users}->get_user_metadata($from, $hostmask, 'timezone') // '';

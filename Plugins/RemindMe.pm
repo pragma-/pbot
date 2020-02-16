@@ -14,7 +14,7 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 use DBI;
 use Time::Duration qw/concise duration/;
 use Time::HiRes qw/gettimeofday/;
-use Getopt::Long qw(GetOptionsFromString);
+use Getopt::Long qw(GetOptionsFromArray);
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -186,9 +186,9 @@ sub remindme {
 
     Getopt::Long::Configure("bundling");
 
-    $arguments =~ s/(?<!\\)'/\\'/g;
-    my ($ret, $args) = GetOptionsFromString(
-        $arguments,
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+    GetOptionsFromArray(
+        \@opt_args,
         'r:i' => \$repeat,
         't:s' => \$alarm,
         'c:s' => \$target,
@@ -259,7 +259,7 @@ sub remindme {
         else                                      { return "Could not delete reminder $delete_id."; }
     }
 
-    $text = join ' ', @$args if not defined $text;
+    $text = join ' ', @opt_args if not defined $text;
 
     return "Please specify a point in time for this reminder." if not $alarm;
     return "Please specify a reminder message."                if not $text;

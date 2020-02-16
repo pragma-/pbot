@@ -18,7 +18,7 @@ use parent 'PBot::Class';
 use warnings; use strict;
 use feature 'unicode_strings';
 
-use Getopt::Long qw(GetOptionsFromString);
+use Getopt::Long qw(GetOptionsFromArray);
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
 
@@ -125,8 +125,9 @@ sub list_also_known_as {
     Getopt::Long::Configure("bundling");
 
     my ($show_hostmasks, $show_gecos, $show_nickserv, $show_id, $show_relationship, $show_weak, $dont_use_aliases_table);
-    my ($ret, $args) = GetOptionsFromString(
-        $arguments,
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+    GetOptionsFromArray(
+        \@opt_args,
         'h'  => \$show_hostmasks,
         'n'  => \$show_nickserv,
         'r'  => \$show_relationship,
@@ -137,13 +138,13 @@ sub list_also_known_as {
     );
 
     return "/say $getopt_error -- $usage" if defined $getopt_error;
-    return "Too many arguments -- $usage" if @$args > 1;
-    return "Missing argument -- $usage"   if @$args != 1;
+    return "Too many arguments -- $usage" if @opt_args > 1;
+    return "Missing argument -- $usage"   if @opt_args != 1;
 
-    my %akas = $self->{database}->get_also_known_as(@$args[0], $dont_use_aliases_table);
+    my %akas = $self->{database}->get_also_known_as($opt_args[0], $dont_use_aliases_table);
 
     if (%akas) {
-        my $result = "@$args[0] also known as:\n";
+        my $result = "$opt_args[0] also known as:\n";
 
         my %nicks;
         my $sep = "";
@@ -178,7 +179,7 @@ sub list_also_known_as {
         }
         return $result;
     } else {
-        return "I don't know anybody named @$args[0].";
+        return "I don't know anybody named $opt_args[0].";
     }
 }
 
@@ -211,8 +212,9 @@ sub recall_message {
     foreach my $recall (@recalls) {
         my ($recall_nick, $recall_history, $recall_channel, $recall_before, $recall_after, $recall_context, $recall_count);
 
-        my ($ret, $args) = GetOptionsFromString(
-            $recall,
+        my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+        GetOptionsFromArray(
+            \@opt_args,
             'channel|c:s'        => \$recall_channel,
             'text|t|history|h:s' => \$recall_history,
             'before|b:i'         => \$recall_before,
@@ -226,9 +228,9 @@ sub recall_message {
         my $channel_arg = 1 if defined $recall_channel;
         my $history_arg = 1 if defined $recall_history;
 
-        $recall_nick    = shift @$args if @$args;
-        $recall_history = shift @$args if @$args and not defined $recall_history;
-        $recall_channel = "@$args" if @$args and not defined $recall_channel;
+        $recall_nick    = shift @opt_args if @opt_args;
+        $recall_history = shift @opt_args if @opt_args and not defined $recall_history;
+        $recall_channel = "@opt_args" if @opt_args and not defined $recall_channel;
 
         $recall_count = 1 if (not defined $recall_count) || ($recall_count <= 0);
         return "You may only select a count of up to 50 messages." if $recall_count > 50;

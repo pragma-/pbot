@@ -22,7 +22,7 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 use PBot::Utils::LWPUserAgentCached;
 use JSON;
 use URI::Escape qw/uri_escape_utf8/;
-use Getopt::Long qw(GetOptionsFromString);
+use Getopt::Long qw(GetOptionsFromArray);
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -67,8 +67,9 @@ sub wttrcmd {
     Getopt::Long::Configure("bundling_override", "ignorecase_always");
 
     my %options;
-    my ($ret, $args) = GetOptionsFromString(
-        $arguments,
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+    GetOptionsFromArray(
+        \@opt_args,
         \%options,
         'u=s',
         'h',
@@ -77,7 +78,7 @@ sub wttrcmd {
 
     return "/say $getopt_error -- $usage" if defined $getopt_error;
     return $usage                         if exists $options{h};
-    $arguments = "@$args";
+    $arguments = "@opt_args";
 
     my $hostmask          = defined $options{u} ? $options{u} : "$nick!$user\@$host";
     my $location_override = $self->{pbot}->{users}->get_user_metadata($from, $hostmask, 'location') // '';

@@ -16,7 +16,7 @@ use feature 'unicode_strings';
 
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
-use Getopt::Long qw(GetOptionsFromString);
+use Getopt::Long qw(GetOptionsFromArray);
 use POSIX qw(strftime);
 use Storable;
 use LWP::UserAgent;
@@ -311,17 +311,18 @@ sub factundo {
     };
 
     my ($list_undos, $goto_revision);
-    my ($ret, $args) = GetOptionsFromString(
-        $arguments,
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+    GetOptionsFromArray(
+        \@opt_args,
         'l:i' => \$list_undos,
         'r=i' => \$goto_revision
     );
 
     return "/say $getopt_error -- $usage" if defined $getopt_error;
-    return $usage                         if @$args > 2;
-    return $usage                         if not @$args;
+    return $usage                         if @opt_args > 2;
+    return $usage                         if not @opt_args;
 
-    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$args);
+    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @opt_args);
     my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factundo', explicit => 1, exact_channel => 1);
@@ -411,17 +412,18 @@ sub factredo {
     };
 
     my ($list_undos, $goto_revision);
-    my ($ret, $args) = GetOptionsFromString(
-        $arguments,
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+    GetOptionsFromArray(
+        \@opt_args,
         'l:i' => \$list_undos,
         'r=i' => \$goto_revision
     );
 
     return "/say $getopt_error -- $usage" if defined $getopt_error;
-    return $usage                         if @$args > 2;
-    return $usage                         if not @$args;
+    return $usage                         if @opt_args > 2;
+    return $usage                         if not @opt_args;
 
-    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$args);
+    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @opt_args);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $arguments, 'factredo', explicit => 1, exact_channel => 1);
     return $channel if not defined $trigger;    # if $trigger is not defined, $channel is an error message
@@ -955,18 +957,19 @@ sub factshow {
     };
 
     my ($paste);
-    my ($ret, $args) = GetOptionsFromString(
-        $arguments,
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+    GetOptionsFromArray(
+        \@opt_args,
         'p' => \$paste
     );
 
     return "/say $getopt_error -- $usage" if defined $getopt_error;
-    return "Too many arguments -- $usage" if @$args > 2;
-    return "Missing argument -- $usage"   if not @$args;
+    return "Too many arguments -- $usage" if @opt_args > 2;
+    return "Missing argument -- $usage"   if not @opt_args;
 
-    my ($chan, $trig) = @$args;
+    my ($chan, $trig) = @opt_args;
     $chan = $from if not defined $trig;
-    $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$args);
+    my $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @opt_args);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $args, 'factshow', usage => $usage);
     return $channel if not defined $trigger;    # if $trigger is not defined, $channel is an error message
@@ -1005,17 +1008,18 @@ sub factlog {
     };
 
     my ($show_hostmask, $actual_timestamp);
-    my ($ret, $args) = GetOptionsFromString(
-        $arguments,
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+    GetOptionsFromArray(
+        \@opt_args,
         'h' => \$show_hostmask,
         't' => \$actual_timestamp
     );
 
     return "/say $getopt_error -- $usage" if defined $getopt_error;
-    return "Too many arguments -- $usage" if @$args > 2;
-    return "Missing argument -- $usage"   if not @$args;
+    return "Too many arguments -- $usage" if @opt_args > 2;
+    return "Missing argument -- $usage"   if not @opt_args;
 
-    $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$args);
+    my $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @opt_args);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel($from, $args, 'factlog', usage => $usage, exact_channel => 1);
 
