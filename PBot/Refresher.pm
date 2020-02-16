@@ -25,14 +25,25 @@ sub initialize {
 
 sub refresh {
     my ($self, $from, $nick, $user, $host, $arguments) = @_;
+    my $refresh_error;
+    local $SIG{__WARN__} = sub {
+        $refresh_error  = shift;
+        return if $refresh_error =~ /Can't undef active/;
+        return if $refresh_error =~ /Subroutine \w+ redefined/;
+        $refresh_error =~ s/\s+Compilation failed in require at \/usr.*//;
+        $self->{pbot}->{logger}->log("Error refreshing: $refresh_error\n");
+    };
+
     my $result = eval {
         if (not $arguments) {
             $self->{pbot}->{logger}->log("Refreshing all modified modules\n");
             $self->{refresher}->refresh;
+            return "Error refreshing: $refresh_error" if defined $refresh_error;
             return "Refreshed all modified modules.\n";
         } else {
             $self->{pbot}->{logger}->log("Refreshing module $arguments\n");
             $self->{refresher}->refresh_module($arguments);
+            return "Error refreshing: $refresh_error" if defined $refresh_error;
             $self->{pbot}->{logger}->log("Refreshed module.\n");
             return "Refreshed module.\n";
         }
