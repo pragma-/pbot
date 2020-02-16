@@ -3,7 +3,7 @@ CGI
 Data::Dumper
 DBD::SQLite
 Games::Dice
-Getopt::Std
+Getopt::Long
 HTML::Entities
 HTML::FormatText
 HTML::Parse
