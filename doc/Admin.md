@@ -551,7 +551,14 @@ Usage: `Usage: ps [-atu]; -a show all information; -t show running time; -u show
 ### kill
 Sends the interrupt signal to selected running background processes.
 
-Usage: `Usage: kill [-a] [-t <seconds>] [-s <signal>] [pids...]; -a kill all processes; -t <seconds> kill processes running longer than <seconds>; -s send <signal> to processes`
+Usage: `Usage: kill [-a] [-t <seconds>] [-s <signal>] [pids...]`
+
+Option | Description
+--- | ---
+`-a` | kill all processes
+`-t <seconds>` | kill processes running longer than `<seconds>`
+`-s` | send `<signal>` to processes instead of interrupt signal
+`pids...` | list of PIDs to kill
 
 If neither options `-a` or `-t` are provided then the `pids...` option is required.
 
