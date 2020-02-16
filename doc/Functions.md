@@ -1,12 +1,9 @@
 # Functions
 
-This is a place-holder from the main [README](../README.md#functions) until I have time to flesh this out more.
-If you've already read that section, there is nothing new here.
-
 Functions are commands that accept input, manipulate it and then output the result. They are extremely
 useful with [piping](../README.md#piping) or [command substituting](../README.md#substitution).
 
-For example, the `uri_escape` function demonstrated in the [Substitutions](../README.md#substitutions) section earlier
+For example, the `uri_escape` function demonstrated in the [Substitution](../README.md#substitution) section earlier
 makes text safe for use in a URL. We also saw the `sed` and `uc` functions demonstrated in [Piping](../README.md#piping).
 
     <pragma-> uri_escape thing's & words
@@ -30,3 +27,5 @@ Name | Description
 `ucfirst` | Uppercases the first character of the text.
 `uc` | Uppercases all characters.
 `lc` | Lowercases all characters.
+
+Additional Functions can be loaded via PBot Plugins.

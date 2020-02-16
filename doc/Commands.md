@@ -210,7 +210,7 @@ stand-alone self-contained units of code that can be loaded by the PBot owner.
 Functions are commands that accept input, manipulate it and then output the result. They are extremely
 useful with [piping](#piping) or [command substituting](#substitution).
 
-For example, the `uri_escape` function demonstrated in the [Substitutions](#substitutions) section earlier
+For example, the `uri_escape` function demonstrated in the [Substitution](#substitution) section earlier
 makes text safe for use in a URL. We also saw the `sed` and `uc` functions demonstrated in [Piping](#piping).
 
 Functions can be loaded via PBot Plugins.
