@@ -61,7 +61,7 @@ sub regunset {
 
     if (not defined $section or not defined $item) { return $usage; }
 
-    if (not $self->{pbot}->{registry}->{registry}->exits($section)) { return "No such registry section $section."; }
+    if (not $self->{pbot}->{registry}->{registry}->exists($section)) { return "No such registry section $section."; }
 
     if (not $self->{pbot}->{registry}->{registry}->exists($section, $item)) { return "No such item $item in section $section."; }
 
