@@ -14,7 +14,9 @@ use parent 'PBot::Class';
 use warnings; use strict;
 use feature 'unicode_strings';
 
-use POSIX qw(WNOHANG);
+use Time::Duration qw/concise duration/;
+use Getopt::Long qw/GetOptionsFromArray/;
+use POSIX qw/WNOHANG/;
 use JSON;
 
 sub initialize {
@@ -32,28 +34,107 @@ sub initialize {
 
 sub ps_cmd {
     my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my $usage = 'Usage: ps [-atu]; -a show all information; -t show running time; -u show user/channel';
+
+    my $getopt_error;
+    local $SIG{__WARN__} = sub {
+        $getopt_error = shift;
+        chomp $getopt_error;
+    };
+
+    Getopt::Long::Configure("bundling");
+
+    my ($show_all, $show_user, $show_running_time);
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, preserve_escapes => 1, strip_quotes => 1);
+    GetOptionsFromArray(
+        \@opt_args,
+        'all|a' => \$show_all,
+        'user|u' => \$show_user,
+        'time|t' => \$show_running_time
+    );
+    return "$getopt_error; $usage" if defined $getopt_error;
+
     my @processes;
-    foreach my $pid (sort keys %{$self->{processes}}) { push @processes, "$pid: $self->{processes}->{$pid}->{commands}->[0]"; }
-    if (@processes) { return "Running processes: " . join '; ', @processes; }
-    else            { return "No running processes."; }
+    foreach my $pid (sort keys %{$self->{processes}}) { push @processes, $self->{processes}->{$pid}; }
+    if (not @processes) { return "No running processes."; }
+
+    my $result;
+    if (@processes == 1) { $result = 'One process: '; } else { $result = @processes . ' processes: '; }
+
+    my $sep = '';
+    foreach my $process (@processes) {
+        $result .= $sep;
+        $result .= "$process->{pid}: $process->{commands}->[0]";
+
+        if ($show_running_time or $show_all) {
+            my $duration = concise duration (time - $process->{process_start});
+            $result .= " [$duration]";
+        }
+
+        if ($show_user or $show_all) {
+            $result .= " ($process->{nick} in $process->{from})";
+        }
+
+        $sep = '; ';
+    }
+
+    return $result;
 }
 
 sub kill_cmd {
     my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my $usage = "Usage: kill <pids...>";
-    my @pids;
-    while (1) {
-        my $pid = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // last;
-        return "No such pid $pid." if not exists $self->{processes}->{$pid};
-        push @pids, $pid;
+    my $usage = 'Usage: kill [-a] [-t <seconds>] [-s <signal>]  [pids...]; -a kill all processes; -t <seconds> kill processes running longer than <seconds>; -s send <signal> to processes';
+
+    my $getopt_error;
+    local $SIG{__WARN__} = sub {
+        $getopt_error = shift;
+        chomp $getopt_error;
+    };
+
+    Getopt::Long::Configure("bundling");
+
+    my ($kill_all, $kill_time, $signal);
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, preserve_escapes => 1, strip_quotes => 1);
+    GetOptionsFromArray(
+        \@opt_args,
+        'all|a' => \$kill_all,
+        'time|t=i' => \$kill_time,
+        'signal|s=s' => \$signal,
+    );
+    return "$getopt_error; $usage" if defined $getopt_error;
+    return "Must specify PIDs to kill unless options -a or -t are provided." if not $kill_all and not $kill_time and not @opt_args;
+
+    if (defined $signal) {
+        $signal = uc $signal;
+    } else {
+        $signal = 'INT';
     }
-    return $usage if not @pids;
-    kill 'INT', @pids;
-    return "Killed.";
+
+    my @pids;
+    if (defined $kill_all or defined $kill_time) {
+        my $now = time;
+        foreach my $pid (sort keys %{$self->{processes}}) {
+            my $process = $self->{processes}->{$pid};
+            print "$pid: running time " . $now - $process->{process_start} . " and kill time: $kill_time\n";
+            next if defined $kill_time and $now - $process->{process_start} < $kill_time;
+            push @pids, $pid;
+        }
+    } else {
+        foreach my $pid (@opt_args) {
+            return "No such pid $pid." if not exists $self->{processes}->{$pid};
+            push @pids, $pid;
+        }
+    }
+    return "No matching process." if not @pids;
+
+    my $ret = eval { kill $signal, @pids };
+    if ($@) { my $error = $@; $error =~ s/ at PBot.*//; return $error; }
+    return "[$ret] Sent signal " . $signal . ' to ' . join ', ', @pids;
 }
 
 sub add_process {
     my ($self, $pid, $stuff) = @_;
+    $stuff->{process_start} = time;
     $self->{processes}->{$pid} = $stuff;
 }
 
