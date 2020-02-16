@@ -173,7 +173,7 @@ sub process_line {
 
 sub interpret {
     my ($self,    $stuff)     = @_;
-    my ($keyword, $arguments) = ("", "");
+    my ($keyword, $arguments) = ('', '');
     my $text;
     my $pbot = $self->{pbot};
 
@@ -223,7 +223,7 @@ sub interpret {
     } else {
         # normal command
         ($keyword, $arguments) = $self->split_args($cmdlist, 2, 0, 1);
-        $arguments = "" if not defined $arguments;
+        $arguments = '' if not defined $arguments;
     }
 
     # FIXME: make this a registry item
