@@ -45,6 +45,7 @@
     * [Built-in commands](Commands.md#built-in-commands)
       * [Creating new built-in commands](Commands.md#creating-new-built-in-commands)
       * [Plugins](Commands.md#plugins)
+      * [Functions](Commands.md#functions)
     * [Factoids](Commands.md#factoids)
       * [Code Factoids](Commands.md#code-factoids)
       * [Modules](Commands.md#modules)
