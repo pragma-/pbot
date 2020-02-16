@@ -564,7 +564,7 @@ Option | Description
 `-a` | kill all processes
 `-t <seconds>` | kill processes running longer than `<seconds>`
 `-s <signal>` | send `<signal>` to processes instead of interrupt signal
-`pids...` | space-separated list of PIDs to kill
+`pids...` | space-delimited list of PIDs to kill
 
 If neither options `-a` or `-t` are provided then the `pids...` option is required.
 
