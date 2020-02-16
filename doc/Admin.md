@@ -546,7 +546,13 @@ Name | Description
 ### ps
 Lists all currently running background processes.
 
-Usage: `Usage: ps [-atu]; -a show all information; -t show running time; -u show user/channel`
+Usage: `Usage: ps [-atu]`
+
+Option | Description
+--- | ---
+`-a` | show all information
+`-t` | show running time
+`-u` | show user and channel
 
 ### kill
 Sends the interrupt signal to selected running background processes.
@@ -557,8 +563,8 @@ Option | Description
 --- | ---
 `-a` | kill all processes
 `-t <seconds>` | kill processes running longer than `<seconds>`
-`-s` | send `<signal>` to processes instead of interrupt signal
-`pids...` | list of PIDs to kill
+`-s <signal>` | send `<signal>` to processes instead of interrupt signal
+`pids...` | space-separated list of PIDs to kill
 
 If neither options `-a` or `-t` are provided then the `pids...` option is required.
 
