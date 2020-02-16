@@ -546,12 +546,14 @@ Name | Description
 ### ps
 Lists all currently running background processes.
 
-Usage: `ps`
+Usage: `Usage: ps [-atu]; -a show all information; -t show running time; -u show user/channel`
 
 ### kill
 Sends the interrupt signal to selected running background processes.
 
-Usage: `kill <pids...>`
+Usage: `Usage: kill [-a] [-t <seconds>] [-s <signal>] [pids...]; -a kill all processes; -t <seconds> kill processes running longer than <seconds>; -s send <signal> to processes`
+
+If neither options `-a` or `-t` are provided then the `pids...` option is required.
 
 ## Miscellaneous commands
 These are some of the miscellaneous admin commands that have not been covered
