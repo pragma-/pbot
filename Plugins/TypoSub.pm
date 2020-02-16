@@ -51,7 +51,6 @@ sub on_public {
         if ($msg =~ m/^\s*s${sep}(.*?)(?<!\\)${sep}(.*?)(?<!\\)${sep}([g]*).*$/ or $msg =~ m/^\s*s${sep}(.*?)(?<!\\)${sep}(.*)$/) {
             my ($regex, $replacement, $modifiers) = ($1, $2, $3);
             eval {
-
                 my $rx = qr/$regex/;
 
                 my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages_from_channel($channel, 50, $self->{pbot}->{messagehistory}->{MSG_CHAT}, 'DESC');

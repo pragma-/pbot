@@ -234,7 +234,6 @@ sub checkban {
     my $mask = $self->nick_to_banmask($target);
 
     if ($self->{unban_timeout}->exists($channel, $mask)) {
-
         my $timeout = $self->{unban_timeout}->get_data($channel, $mask, 'timeout');
         my $owner   = $self->{unban_timeout}->get_data($channel, $mask, 'owner');
         my $reason  = $self->{unban_timeout}->get_data($channel, $mask, 'reason');
@@ -288,7 +287,6 @@ sub checkmute {
     my $mask = $self->nick_to_banmask($target);
 
     if ($self->{unmute_timeout}->exists($channel, $mask)) {
-
         my $timeout = $self->{unmute_timeout}->get_data($channel, $mask, 'timeout');
         my $owner   = $self->{unmute_timeout}->get_data($channel, $mask, 'owner');
         my $reason  = $self->{unmute_timeout}->get_data($channel, $mask, 'reason');

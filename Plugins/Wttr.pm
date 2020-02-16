@@ -35,7 +35,6 @@ sub unload {
 }
 
 sub wttrcmd {
-
     my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
     my @wttr_options = (
@@ -103,7 +102,6 @@ sub wttrcmd {
 }
 
 sub get_wttr {
-
     my ($self, $location, %options) = @_;
 
     my %cache_opt = (

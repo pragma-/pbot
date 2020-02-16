@@ -743,7 +743,6 @@ sub bomb {
 }
 
 sub show_scoreboard {
-
     my ($self) = @_;
 
     my $buf;

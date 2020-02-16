@@ -61,7 +61,6 @@ sub weathercmd {
 }
 
 sub get_weather {
-
     my ($self, $location) = @_;
 
     my %cache_opt = (

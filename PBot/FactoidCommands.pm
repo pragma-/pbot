@@ -301,7 +301,6 @@ sub list_undo_history {
 }
 
 sub factundo {
-
     my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
     my $usage = "Usage: factundo [-l [N]] [-r N] [channel] <keyword> (-l list undo history, optionally starting from N; -r jump to revision N)";
 
@@ -400,7 +399,6 @@ sub factundo {
 }
 
 sub factredo {
-
     my $self = shift;
     my ($from, $nick, $user, $host, $arguments) = @_;
 
@@ -916,7 +914,6 @@ sub factrem {
 }
 
 sub histogram {
-
     my $self = shift;
     my ($from, $nick, $user, $host, $arguments) = @_;
     my $factoids = $self->{pbot}->{factoids}->{factoids};
@@ -1160,7 +1157,6 @@ sub factinfo {
 }
 
 sub top20 {
-
     my $self = shift;
 
     my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
@@ -1228,7 +1224,6 @@ sub top20 {
 }
 
 sub count {
-
     my $self = shift;
     my ($from, $nick, $user, $host, $arguments) = @_;
     my $factoids = $self->{pbot}->{factoids}->{factoids};

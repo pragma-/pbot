@@ -1427,7 +1427,6 @@ sub normalize_text {
 }
 
 sub validate_lie {
-
     my ($self, $truth, $lie) = @_;
 
     my %truth_words      = @{stem map { $_ => 1 } grep { /^\w+$/ and not exists $self->{stopwords}{lc $_} } split /\b/, $truth};
@@ -1923,7 +1922,6 @@ sub showlies {
         }
 
         if (@liars) {
-
             my $liars_text          = '';
             my $liars_no_apostrophe = '';
             my $lie                 = $player->{truth};
@@ -1972,7 +1970,6 @@ sub showtruth {
     my ($self, $state) = @_;
 
     if ($state->{ticks} % 3 == 0) {
-
         my $player_id;
         my $player_data;
         my $players;
@@ -2069,7 +2066,6 @@ sub showfinalscore {
     my ($self, $state) = @_;
 
     if ($state->{newstate}) {
-
         my $player_id;
 
         my $player_data;

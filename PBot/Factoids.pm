@@ -371,7 +371,6 @@ sub expand_special_vars {
 }
 
 sub expand_factoid_vars {
-
     my ($self, $stuff, @exclude) = @_;
 
     my $from         = length $stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from};
@@ -610,7 +609,6 @@ sub expand_action_arguments {
 
         if ($@) { next; }
         else {
-
             if (not defined $value) {
                 if   ($arg == 0) { $action =~ s/\$\{arg\[$arg\]\}/$nick/ || $action =~ s/\$arg\[$arg\]/$nick/; }
                 else             { $action =~ s/\s*\$\{arg\[$arg\]\}//   || $action =~ s/\s*\$arg\[$arg\]//; }
@@ -702,7 +700,6 @@ sub interpreter {
 
     # if no match found, attempt to call factoid from another channel if it exists there
     if (not defined $keyword) {
-
         my $string = "$original_keyword $stuff->{arguments}";
 
         my $lc_keyword = lc $original_keyword;

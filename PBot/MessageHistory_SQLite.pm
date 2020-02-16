@@ -684,9 +684,7 @@ sub get_message_account {
 
     if (defined $rows->[0] and not defined $orig_nick) {
         if ($link_type == $self->{alias_type}->{STRONG}) {
-
             my $host1 = lc "$nick!$user\@$host";
-
             my $host2 = lc $rows->[0]->{hostmask};
             my ($nick1) = $host1 =~ m/^([^!]+)!/;
             my ($nick2) = $host2 =~ m/^([^!]+)!/;

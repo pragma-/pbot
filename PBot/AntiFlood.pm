@@ -584,7 +584,6 @@ sub unbanme {
     }
 
     if (keys %$unbanned) {
-
         my $channels = '';
 
         my $sep               = '';
@@ -596,7 +595,6 @@ sub unbanme {
         foreach my $channel (keys %$unbanned) {
             foreach my $mask (keys %{$unbanned->{$channel}}) {
                 if ($self->{pbot}->{channels}->is_active_op("${channel}-floodbans")) {
-
                     if ($unbanned->{$channel}->{$mask} <= 2) {
                         $self->{pbot}->{chanops}->unban_user($mask, $channel . '-floodbans');
                         $channels .= "$sep$channel";

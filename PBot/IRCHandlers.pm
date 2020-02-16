@@ -133,7 +133,6 @@ sub on_self_part {
 }
 
 sub on_public {
-
     my ($self, $event_type, $event) = @_;
 
     my $from = $event->{event}->{to}[0];
@@ -149,7 +148,6 @@ sub on_public {
 }
 
 sub on_msg {
-
     my ($self, $event_type, $event) = @_;
     my ($nick, $host) = ($event->{event}->nick, $event->{event}->host);
     my $text = $event->{event}->{args}[0];

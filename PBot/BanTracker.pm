@@ -55,7 +55,6 @@ sub get_banlist {
 }
 
 sub on_banlist_entry {
-
     my ($self, $event_type, $event) = @_;
 
     my $channel   = lc $event->{event}->{args}[1];
@@ -91,7 +90,6 @@ sub on_banlist_entry {
 }
 
 sub on_quietlist_entry {
-
     my ($self, $event_type, $event) = @_;
 
     my $channel   = lc $event->{event}->{args}[1];

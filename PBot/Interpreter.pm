@@ -913,13 +913,6 @@ sub output_result {
         $pbot->{conn}->privmsg($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} ne $botnick;
         $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', $line, 0, 0, 0) if $stuff->{checkflood};
     } elsif ($line =~ s/^\/me\s+//i) {
-
-=cut
-    if (defined $stuff->{nickoverride}) {
-      $line = "$line (for $stuff->{nickoverride})";
-    }
-=cut
-
         $pbot->{conn}->me($stuff->{from}, $line) if defined $stuff->{from} && $stuff->{from} ne $botnick;
         $pbot->{antiflood}->check_flood($stuff->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', '/me ' . $line, 0, 0, 0) if $stuff->{checkflood};
     } elsif ($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
@@ -929,13 +922,6 @@ sub output_result {
         } elsif ($to =~ /.*serv(?:@.*)?$/i) {
             $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$stuff->{nick}!$stuff->{user}\@$stuff->{host}] [$stuff->{command}] [$line]\n");
         } elsif ($line =~ s/^\/me\s+//i) {
-
-=cut
-      if (defined $stuff->{nickoverride}) {
-        $line = "$line (for $stuff->{nickoverride})";
-      }
-=cut
-
             $pbot->{conn}->me($to, $line)                                                                                                    if $to ne $botnick;
             $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', '/me ' . $line, 0, 0, 0) if $stuff->{checkflood};
         } else {
