@@ -27,10 +27,12 @@ sub refresh {
     my ($self, $from, $nick, $user, $host, $arguments) = @_;
     my $refresh_error;
     local $SIG{__WARN__} = sub {
-        $refresh_error  = shift;
-        return if $refresh_error =~ /Can't undef active/;
-        return if $refresh_error =~ /Subroutine \w+ redefined/;
+        my $warning = shift;
+        warn $warning and return if $warning =~ /Can't undef active/;
+        warn $warning and return if $warning =~ /Subroutine \w+ redefined/;
+        $refresh_error = $warning;
         $refresh_error =~ s/\s+Compilation failed in require at \/usr.*//;
+        $refresh_error =~ s/in \@INC.*/in \@INC/;
         $self->{pbot}->{logger}->log("Error refreshing: $refresh_error\n");
     };
 
