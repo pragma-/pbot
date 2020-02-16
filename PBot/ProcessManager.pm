@@ -115,7 +115,6 @@ sub kill_cmd {
         my $now = time;
         foreach my $pid (sort keys %{$self->{processes}}) {
             my $process = $self->{processes}->{$pid};
-            print "$pid: running time " . $now - $process->{process_start} . " and kill time: $kill_time\n";
             next if defined $kill_time and $now - $process->{process_start} < $kill_time;
             push @pids, $pid;
         }
