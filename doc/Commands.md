@@ -218,6 +218,8 @@ Functions can be loaded via PBot Plugins.
 * only bot owner can load new Functions
 * Functions have access to PBot internal API functions and data structures
 
+For more information, see the [Functions documentation.](Functions.md)
+
 ### Factoids
 Factoids are another type of command. Factoids are simple text commands which
 anybody can create. In their most basic form, they simply display their text
