@@ -345,7 +345,7 @@ sub factundo {
     my $channel_path_safe = safe_filename $channel_path;
     my $trigger_safe      = safe_filename $trigger;
 
-    my $path  = $self->{pbot}->{registry}->get_data('general', 'data_dir') . '/factlog';
+    my $path  = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
     my $undos = eval { retrieve("$path/$trigger_safe.$channel_path_safe.undo"); };
 
     my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
