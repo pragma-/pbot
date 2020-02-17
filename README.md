@@ -80,12 +80,11 @@ For more information, see the [Registry documentation.](doc/Registry.md)
 
 ### Reload core modules without disconnecting
 Suppose you edit some PBot source file, be it a core file such as PBot/Factoids.pm or
-a Plugin such as Plugins/Wttr.pm. Or suppose there's a PBot update available.
+a Plugin such as Plugins/Wttr.pm. Or suppose there's a PBot update available. Most simple
+bots would require you to shut down the bot and restart it in order to see the modifications.
 
-Most simple bots would require you to shut down the bot and restart it in order
-to see the modifications. Not PBot! Rather than shut PBot down and restart it, you
-can simply use the [`refresh`](doc/Admin.md#refresh) command to reload all modified PBot
-core files and Plugins.
+Not PBot! Rather than shut PBot down and restart it, you can simply use the [`refresh`](doc/Admin.md#refresh)
+command to reload all modified PBot core files and Plugins.
 
 You can also use the [`reload`](doc/Admin.md#reload) command to reload any modified
 configuration or data files in your configured data-directory.
