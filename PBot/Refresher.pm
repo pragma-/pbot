@@ -29,7 +29,7 @@ sub refresh {
     local $SIG{__WARN__} = sub {
         my $warning = shift;
         warn $warning and return if $warning =~ /Can't undef active/;
-        warn $warning and return if $warning =~ /Subroutine \w+ redefined/;
+        warn $warning and return if $warning =~ /subroutine .* redefined/i;
         $refresh_error = $warning;
         $refresh_error =~ s/\s+Compilation failed in require at \/usr.*//;
         $refresh_error =~ s/in \@INC.*/in \@INC/;
