@@ -580,6 +580,10 @@ Usage:  `export <factoids|quotegrabs>`
 ### refresh
 Refreshes/reloads PBot core modules and plugins (not the command-line modules since those are executed/loaded each time they are invoked).
 
+For example, suppose you edit some PBot source file, be it a core file such as PBot/Factoids.pm or
+a Plugin such as Plugins/Wttr.pm. Rather than shut the bot down and restart it, you can simply use
+the `refresh` command to reload all modified PBot core files and Plugins.
+
 ### reload
 Reloads a data or configuration file from `$data_dir`. This is useful if you
 manually edit a data or configuration file and you want PBot to know about the
