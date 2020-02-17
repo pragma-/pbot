@@ -180,7 +180,7 @@ sub execute_process {
 
         # execute the provided subroutine, results are stored in $stuff
         eval {
-            local $SIG{ALRM} = sub { die "PBot::Process `$stuff->{commands}->[0]` timed-out" };
+            local $SIG{ALRM} = sub { die "Process `$stuff->{commands}->[0]` timed-out" };
             alarm $timeout;
             $subref->($stuff);
             die if $@;
