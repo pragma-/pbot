@@ -845,7 +845,17 @@ sub interpreter {
         return "";
     }
 
-    return $self->handle_action($stuff, $action);
+    if ($self->{factoids}->get_data($channel, $keyword, 'background-process')) {
+        my $timeout = $self->{factoids}->get_data($channel, $keyword, 'process-timeout') // $self->{pbot}->{registry}->get_value('processmanager', 'default_timeout');
+        $self->{pbot}->{process_manager}->execute_process(
+            $stuff,
+            sub { $stuff->{result} = $self->handle_action($stuff, $action); },
+            $timeout
+        );
+        return "";
+    } else {
+        return $self->handle_action($stuff, $action);
+    }
 }
 
 sub handle_action {

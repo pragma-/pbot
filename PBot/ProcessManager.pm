@@ -148,6 +148,12 @@ sub execute_process {
 
     if (not exists $stuff->{commands}) { $stuff->{commands} = [$stuff->{command}]; }
 
+    # don't fork again if we're already a forked process
+    if (exists $stuff->{pid}) {
+        $subref->($stuff);
+        return $stuff->{result};
+    }
+
     pipe(my $reader, my $writer);
     $stuff->{pid} = fork;
 
