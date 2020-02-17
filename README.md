@@ -8,7 +8,7 @@ PBot is a versatile IRC Bot written in Perl
   * [Channel management](#channel-management)
   * [User management](#user-management)
   * [Easy configuration](#easy-configuration)
-  * [Extensible](#extensible)
+  * [Reload core modules without disconnecting](#reload-core-modules-without-disconnecting)
   * [Powerful command interpreter](#powerful-command-interpreter)
     * [Piping](#piping)
     * [Substitution](#substitution)
@@ -16,6 +16,7 @@ PBot is a versatile IRC Bot written in Perl
     * [Variables](#variables)
     * [Inline invocation](#inline-invocation)
     * [Background processing](#background-processing)
+  * [Extensible](#extensible)
   * [Factoids](#factoids)
   * [Code Factoids](#code-factoids)
   * [Plugins](#plugins)
@@ -77,9 +78,14 @@ These settings can easily be configured via several methods:
 
 For more information, see the [Registry documentation.](doc/Registry.md)
 
-### Extensible
-PBot is extensible in multiple ways. Additional commands and functionality can  be added to PBot through
-[Factoids](#factoids), [Plugins](#plugins), [Modules](#modules) and [Functions](#functions).
+### Reload core modules without disconnecting
+Suppose you edit some PBot source file, be it a core file such as PBot/Factoids.pm or
+a Plugin such as Plugins/Wttr.pm. Or suppose there's a PBot update available.
+
+Most simple bots would require you to shut down the bot and restart it in order
+to see the modifications. Not PBot! Rather than shut PBot down and restart it, you
+can simply use the [`refresh`](doc/Admin.md#refresh) command to reload all modified PBot
+core files and Plugins.
 
 ### Powerful command interpreter
 PBot has an powerful command interpreter with useful functionality, and tons of
@@ -156,6 +162,10 @@ and the command will now run as a background process, allowing PBot to carry on 
 The familiar [`ps`](doc/Admin.md#ps) and [`kill`](doc/Admin.md#kill) commands can be used to list and kill the background processes.
 
 You can also [`cmdset`](doc/Admin.md#cmdset) the `process-timeout` [command metadata](doc/Admin.md#command-metadata-list) to set the timeout, in seconds, before the command is automatically killed. Otherwise the `processmanager.default_timeout` [registry value](doc/Registry.md) will be used.
+
+### Extensible
+PBot is extensible in multiple ways. Additional commands and functionality can  be added to PBot through
+[Factoids](#factoids), [Plugins](#plugins), [Modules](#modules) and [Functions](#functions).
 
 ### Factoids
 Factoids are a very special type of command. Anybody interacting with PBot
