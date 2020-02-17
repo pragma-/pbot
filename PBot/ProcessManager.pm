@@ -15,6 +15,7 @@ use warnings; use strict;
 use feature 'unicode_strings';
 
 use Time::Duration qw/concise duration/;
+use Time::HiRes qw/gettimeofday/;
 use Getopt::Long qw/GetOptionsFromArray/;
 use POSIX qw/WNOHANG/;
 use JSON;
@@ -67,7 +68,7 @@ sub ps_cmd {
         $result .= "$process->{pid}: $process->{commands}->[0]";
 
         if ($show_running_time or $show_all) {
-            my $duration = concise duration (time - $process->{process_start});
+            my $duration = concise duration (gettimeofday - $process->{process_start});
             $result .= " [$duration]";
         }
 
@@ -133,13 +134,22 @@ sub kill_cmd {
 
 sub add_process {
     my ($self, $pid, $stuff) = @_;
-    $stuff->{process_start} = time;
+    $stuff->{process_start} = gettimeofday;
     $self->{processes}->{$pid} = $stuff;
+    $self->{pbot}->{logger}->log("Starting process $pid: $stuff->{commands}->[0]\n");
 }
 
 sub remove_process {
     my ($self, $pid) = @_;
-    delete $self->{processes}->{$pid};
+    if (exists $self->{processes}->{$pid}) {
+        my $command = $self->{processes}->{$pid}->{commands}->[0];
+        my $duration = gettimeofday - $self->{processes}->{$pid}->{process_start};
+        $duration = sprintf "%0.3f", $duration;
+        $self->{pbot}->{logger}->log("Finished process $pid ($command): duration $duration seconds\n");
+        delete $self->{processes}->{$pid};
+    } else {
+        $self->{pbot}->{logger}->log("Finished unknown process $pid\n");
+    }
 }
 
 sub execute_process {
@@ -190,6 +200,7 @@ sub execute_process {
         # check for errors
         if ($@) {
             $stuff->{result} = $@;
+            $stuff->{'timed-out'} = 1 if $stuff->{result} =~ /^Process .* timed-out at PBot\/ProcessManager/;
             $self->{pbot}->{logger}->log("Error executing process: $stuff->{result}\n");
             $stuff->{result} =~ s/ at PBot.*$//ms;
         }
