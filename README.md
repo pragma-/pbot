@@ -87,7 +87,7 @@ Not PBot! Rather than shut PBot down and restart it, you can simply use the [`re
 command to reload all modified PBot core files and Plugins.
 
 You can also use the [`reload`](doc/Admin.md#reload) command to reload any modified
-configuration or data files in your configured data-directory.
+configuration or data files.
 
 ### Powerful command interpreter
 PBot has an powerful command interpreter with useful functionality, and tons of
