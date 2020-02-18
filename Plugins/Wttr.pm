@@ -53,6 +53,7 @@ sub wttrcmd {
         "sunhours",
         "snowfall",
         "location",
+        "time",
         "default",
         "all",
     );
@@ -132,6 +133,14 @@ sub get_wttr {
     my $w = $wttr->{'weather'}->[0];
     my $h = $w->{'hourly'}->[0];
 
+    my ($obsdate, $obstime) = split / /, $c->{'localObsDateTime'}, 2;
+    my ($obshour, $obsminute) = split /:/, $obstime;
+    if ($obsminute =~ s/ PM$//) {
+        $obshour += 12;
+    } else {
+        $obsminute =~ s/ AM$//;
+    }
+
     foreach my $option (sort keys %options) {
         given ($option) {
             when ('default') {
@@ -149,13 +158,16 @@ sub get_wttr {
                     $time =~ s/(\d{2})$/:$1/;
 
                     if ($condition ne $last_condition) {
-                        $result .= "$sep$time: $condition ($temp)";
-                        $sep            = '-> ';
-                        $last_condition = $condition;
+                        my ($hour, $minute) = split /:/, $time;
+                        if (($hour > $obshour) or ($hour == $obshour and $minute >= $obsminute)) {
+                            $result .= "$sep$time: $condition ($temp)";
+                            $sep            = '-> ';
+                            $last_condition = $condition;
+                        }
                     }
                 }
 
-                if ($sep eq '') { $result .= $last_condition; }
+                if ($sep eq '') { $result .= "none"; }
                 $result .= "; ";
             }
 
@@ -181,15 +193,18 @@ sub get_wttr {
 
                     if ($condition ne $last_condition) {
                         $text .= ' ' if length $text;
-                        $text .= $condition;
+                        $text .= "($condition)";
                         $last_condition = $condition;
                     }
 
                     if (length $text) {
                         my $time = sprintf "%04d", $hour->{'time'};
                         $time =~ s/(\d{2})$/:$1/;
-                        $result .= "$sep $time: $text";
-                        $sep = ', ';
+                        my ($hour, $minute) = split /:/, $time;
+                        if (($hour > $obshour) or ($hour == $obshour and $minute >= $obsminute)) {
+                            $result .= "$sep $time: $text";
+                            $sep = ', ';
+                        }
                     }
                 }
                 $result .= "; ";
@@ -245,6 +260,8 @@ sub get_wttr {
             when ('visibility') { $result .= "Visibility: $c->{'visibility'}km; "; }
 
             when ('cloudcover') { $result .= "Cloud cover: $c->{'cloudcover'}%; "; }
+
+            when ('time') { $result .= "Observation Time: $c->{'localObsDateTime'}; "; }
 
             default { $result .= "Option $_ coming soon; " unless lc $_ eq 'u'; }
         }
