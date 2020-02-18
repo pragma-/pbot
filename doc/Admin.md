@@ -529,7 +529,7 @@ Usage: `cmdset <command> [key [value]]`
 Omit `<key>` and `<value>` to list all the keys and values for a command.  Specify `<key>`, but omit `<value>` to see the value for a specific key.
 
 ### cmdunset
-Use `cmdset` to delete various [metadata](#command-metadata-list) from built-in commands.
+Use `cmdunset` to delete various [metadata](#command-metadata-list) from built-in commands.
 
 Usage: `cmdunset <command> <key>`
 
