@@ -36,8 +36,13 @@ sub initialize {
 sub has {
     my ($self, $cap, $subcap, $depth) = @_;
     my $cap_data = $self->{caps}->get_data($cap);
+
     return 0 if not defined $cap_data;
-    return 1 if $cap eq $subcap and $cap_data->{$subcap};
+
+    if ($cap eq $subcap) {
+        return 0 if exists $cap_data->{$subcap} and not $cap_data->{$subcap};
+        return 1;
+    }
 
     $depth //= 10;
     if (--$depth <= 0) {
