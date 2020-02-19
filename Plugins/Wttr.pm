@@ -53,7 +53,9 @@ sub wttrcmd {
         "sunhours",
         "snowfall",
         "location",
+        "qlocation",
         "time",
+        "population",
         "default",
         "all",
     );
@@ -123,9 +125,23 @@ sub get_wttr {
 
     my $wttr = decode_json $json;
 
-    # title-case location
-    $location = ucfirst lc $location;
-    $location =~ s/( |\.)(\w)/$1 . uc $2/ge;
+    if (exists $wttr->{nearest_area}) {
+        my $areaName = $wttr->{nearest_area}->[0]->{areaName}->[0]->{value};
+        my $region   = $wttr->{nearest_area}->[0]->{region}->[0]->{value};
+        my $country  = $wttr->{nearest_area}->[0]->{country}->[0]->{value};
+
+        $location = '';
+        $location .= "$areaName, " if length $areaName;
+        $location .= "$region, "   if length $region and $region ne $areaName;
+        $location .= "$country, "  if length $country;
+        $location =~ s/, $//;
+    } else {
+        # title-case location
+        $location = ucfirst lc $location;
+        $location =~ s/( |\.)(\w)/$1 . uc $2/ge;
+    }
+
+    $location =~ s/United States of America/USA/;
 
     my $result = "Weather for $location: ";
 
@@ -167,8 +183,8 @@ sub get_wttr {
                     }
                 }
 
-                if ($sep eq '') { $result .= "none"; }
-                $result .= "; ";
+                if ($sep eq '') { $result .= 'none'; }
+                $result .= '; ';
             }
 
             when ('conditions') {
@@ -198,7 +214,7 @@ sub get_wttr {
                     }
 
                     if (length $text) {
-                        my $time = sprintf "%04d", $hour->{'time'};
+                        my $time = sprintf '%04d', $hour->{'time'};
                         $time =~ s/(\d{2})$/:$1/;
                         my ($hour, $minute) = split /:/, $time;
                         if (($hour > $obshour) or ($hour == $obshour and $minute >= $obsminute)) {
@@ -211,17 +227,17 @@ sub get_wttr {
             }
 
             when ('chances') {
-                $result .= "Chances of: ";
-                $result .= "Fog: "           . $h->{'chanceoffog'}      . "%, "  if $h->{'chanceoffog'};
-                $result .= "Frost: "         . $h->{'chanceoffrost'}    . "%, "  if $h->{'chanceoffrost'};
-                $result .= "High temp: "     . $h->{'chanceofhightemp'} . "%, "  if $h->{'chanceofhightemp'};
-                $result .= "Overcast: "      . $h->{'chanceofovercast'} . "%, "  if $h->{'chanceofovercast'};
-                $result .= "Rain: "          . $h->{'chanceofrain'}     . "%, "  if $h->{'chanceofrain'};
-                $result .= "Remaining dry: " . $h->{'chanceofremdry'}   . "%, "  if $h->{'chanceofremdry'};
-                $result .= "Snow: "          . $h->{'chanceofsnow'}     . "%, "  if $h->{'chanceofsnow'};
-                $result .= "Sunshine: "      . $h->{'chanceofsunshine'} . "%, "  if $h->{'chanceofsunshine'};
-                $result .= "Thunder: "       . $h->{'chanceofthunder'}  . "%, "  if $h->{'chanceofthunder'};
-                $result .= "Windy: "         . $h->{'chanceofwindy'}    . "%, "  if $h->{'chanceofwindy'};
+                $result .= 'Chances of: ';
+                $result .= 'Fog: '           . $h->{'chanceoffog'}      . '%, '  if $h->{'chanceoffog'};
+                $result .= 'Frost: '         . $h->{'chanceoffrost'}    . '%, '  if $h->{'chanceoffrost'};
+                $result .= 'High temp: '     . $h->{'chanceofhightemp'} . '%, '  if $h->{'chanceofhightemp'};
+                $result .= 'Overcast: '      . $h->{'chanceofovercast'} . '%, '  if $h->{'chanceofovercast'};
+                $result .= 'Rain: '          . $h->{'chanceofrain'}     . '%, '  if $h->{'chanceofrain'};
+                $result .= 'Remaining dry: ' . $h->{'chanceofremdry'}   . '%, '  if $h->{'chanceofremdry'};
+                $result .= 'Snow: '          . $h->{'chanceofsnow'}     . '%, '  if $h->{'chanceofsnow'};
+                $result .= 'Sunshine: '      . $h->{'chanceofsunshine'} . '%, '  if $h->{'chanceofsunshine'};
+                $result .= 'Thunder: '       . $h->{'chanceofthunder'}  . '%, '  if $h->{'chanceofthunder'};
+                $result .= 'Windy: '         . $h->{'chanceofwindy'}    . '%, '  if $h->{'chanceofwindy'};
                 $result =~ s/,\s+$/; /;
             }
 
@@ -230,9 +246,9 @@ sub get_wttr {
                 $result .= "gust: $h->{'WindGustKmph'}kph/$h->{'WindGustMiles'}mph, chill: $h->{'WindChillC'}C/$h->{'WindChillF'}F; ";
             }
 
-            when ('location') {
+            when ('qlocation') {
                 my $l = $wttr->{'request'}->[0];
-                $result .= "Location: $l->{'query'} ($l->{'type'}); ";
+                $result .= "Query location: $l->{'query'} ($l->{'type'}); ";
             }
 
             when ('dewpoint') { $result .= "Dew point: $h->{'DewPointC'}C/$h->{'DewPointF'}F; "; }
@@ -261,7 +277,17 @@ sub get_wttr {
 
             when ('cloudcover') { $result .= "Cloud cover: $c->{'cloudcover'}%; "; }
 
-            when ('time') { $result .= "Observation Time: $c->{'localObsDateTime'}; "; }
+            when ('time') { $result .= "Observation time: $c->{'localObsDateTime'}; "; }
+
+            when ('location') {
+                $result .= "Observation location: $location";
+            }
+
+            when ('population') {
+                my $population = $wttr->{nearest_area}->[0]->{population};
+                $population =~ s/(\d)(?=(\d{3})+(\D|$))/$1\,/g;
+                $result .= "Population: $population; ";
+            }
 
             default { $result .= "Option $_ coming soon; " unless lc $_ eq 'u'; }
         }
