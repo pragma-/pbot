@@ -706,6 +706,7 @@ sub lc_args {
 sub truncate_result {
     my ($self, $from, $nick, $text, $original_result, $result, $paste) = @_;
     my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
+    $max_msg_len -= length "PRIVMSG $from :";
 
     utf8::encode $result;
     utf8::encode $original_result;
