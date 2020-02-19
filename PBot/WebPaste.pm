@@ -44,7 +44,6 @@ sub paste {
     %opts = (%default_opts, %opts);
 
     $text =~ s/(.{120})\s/$1\n/g unless $opts{no_split};
-    $text = encode('UTF-8', $text);
 
     my $result;
     for (my $tries = 3; $tries > 0; $tries--) {

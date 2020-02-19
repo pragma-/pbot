@@ -707,10 +707,16 @@ sub truncate_result {
     my ($self, $from, $nick, $text, $original_result, $result, $paste) = @_;
     my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
 
+    utf8::encode $result;
+    utf8::encode $original_result;
+
+    use bytes;
+
     if (length $result > $max_msg_len) {
         my $link;
         if ($paste) {
-            $original_result = substr $original_result, 0, 8000;
+            my $max_paste_len = $self->{pbot}->{registry}->get_value('paste', 'max_length') // 1024 * 32;
+            $original_result = substr $original_result, 0, $max_paste_len;
             $link            = $self->{pbot}->{webpaste}->paste("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
         } else {
             $link = 'undef';
@@ -721,12 +727,12 @@ sub truncate_result {
         else                     { $trunc .= "$link]"; }
 
         $self->{pbot}->{logger}->log("Message truncated -- pasted to $link\n") if $paste;
-
         my $trunc_len = length $result < $max_msg_len ? length $result : $max_msg_len;
         $result = substr($result, 0, $trunc_len);
         substr($result, $trunc_len - length $trunc) = $trunc;
     }
 
+    utf8::decode $result;
     return $result;
 }
 
