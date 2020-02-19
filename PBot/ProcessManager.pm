@@ -228,6 +228,8 @@ sub process_pipe_reader {
         return;
     };
 
+    delete $stuff->{pid};
+
     if (not defined $stuff->{result} or not length $stuff->{result}) {
         $self->{pbot}->{logger}->log("No result from process.\n");
         return;
