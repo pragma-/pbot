@@ -20,6 +20,7 @@ sub new {
     my $self = {};
     $self->{buf}       = '';
     $self->{timestamp} = gettimeofday;
+    $self->{pbot}      = $conf{pbot};
     return bless $self, $class;
 }
 
