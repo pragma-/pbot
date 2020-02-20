@@ -11,19 +11,19 @@ use parent 'Plugins::Plugin';
 # Examples:
 #
 # Greet a nick when they join the channel:
-# actiontrigger add #channel 0 0 ^(?i)([^!]+)![^\s]+.JOIN echo Hi $1, welcome to $channel!
+# actiontrigger add #channel none 0 ^(?i)([^!]+)![^\s]+.JOIN echo Hi $1, welcome to $channel!
 #
-# Same, but via private message (set level to 10 to use `msg` admin command):
-# actiontrigger add #channel 10 0 ^(?i)([^!]+)![^\s]+.JOIN msg Hi $1, welcome to $channel!
+# Same, but via private message (set capability to "admin" to use `msg` admin command):
+# actiontrigger add #channel admin 0 ^(?i)([^!]+)![^\s]+.JOIN msg Hi $1, welcome to $channel!
 #
-# Kick a nick if they say a naughty thing. Set level to 10 to use `kick` admin command.
-# actiontrigger add global 10 0 "^(?i)([^!]+)![^\s]+.PRIVMSG.*bad phrase" kick $1 Do you talk to your mother with that mouth?
+# Kick a nick if they say a naughty thing. Set capability to "can-kick" to use `kick` admin command.
+# actiontrigger add global can-kick 0 "^(?i)([^!]+)![^\s]+.PRIVMSG.*bad phrase" kick $1 Do you talk to your mother with that mouth?
 #
 # Say something when a keyword is seen, but only once every 5 minutes:
-# actiontrigger add global 0 300 "some phrase" echo Something!
+# actiontrigger add global none 300 "some phrase" echo Something!
 #
 # Capture a part of somebody's message.
-# actiontrigger add #channel 0 0 "(?i)how is the weather (?:in|for) (.*) today" weather $1
+# actiontrigger add #channel none 0 "(?i)how is the weather (?:in|for) (.*) today" weather $1
 #
 # These are basic examples; more complex examples can be crafted.
 
@@ -53,6 +53,7 @@ sub initialize {
 
     $self->dbi_begin;
     $self->create_database;
+    $self->update_database;
 }
 
 sub unload {
@@ -75,18 +76,40 @@ sub create_database {
     eval {
         $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Triggers (
-  channel     TEXT,
-  trigger     TEXT,
-  action      TEXT,
-  owner       TEXT,
-  level       INTEGER,
-  repeatdelay INTEGER,
-  lastused    NUMERIC
+  channel       TEXT,
+  trigger       TEXT,
+  action        TEXT,
+  owner         TEXT,
+  cap_override  TEXT,
+  repeatdelay   INTEGER,
+  lastused      NUMERIC
 )
 SQL
     };
 
     $self->{pbot}->{logger}->log("ActionTrigger create database failed: $@") if $@;
+}
+
+sub update_database {
+    my $self = shift;
+    return if not $self->{dbh};
+
+    my %columns = ();
+
+    eval {
+        foreach my $col (@{$self->{dbh}->selectall_arrayref("PRAGMA TABLE_INFO(Triggers)")}) {
+            $columns{$col->[1]} = 1;
+        }
+
+        if (not exists $columns{cap_override}) {
+            $self->{dbh}->do("ALTER TABLE Triggers ADD COLUMN cap_override TEXT");
+            $self->{dbh}->do("UPDATE Triggers SET cap_override='botowner', level=0 WHERE level >= 90");
+            $self->{dbh}->do("UPDATE Triggers SET cap_override='admin', level=0 WHERE level >= 60");
+            $self->{dbh}->do("UPDATE Triggers SET cap_override='chanop', level=0 WHERE level >= 10");
+        }
+    };
+
+    $self->{pbot}->{logger}->log("ActionTrigger update database failed: $@") if $@;
 }
 
 sub dbi_begin {
@@ -112,13 +135,13 @@ sub dbi_end {
 }
 
 sub add_trigger {
-    my ($self, $channel, $trigger, $action, $owner, $level, $repeatdelay) = @_;
+    my ($self, $channel, $trigger, $action, $owner, $cap_override, $repeatdelay) = @_;
 
     return 0 if $self->get_trigger($channel, $trigger);
 
     eval {
-        my $sth = $self->{dbh}->prepare('INSERT INTO Triggers (channel, trigger, action, owner, level, repeatdelay, lastused) VALUES (?, ?, ?, ?, ?, ?, 0)');
-        $sth->execute(lc $channel, $trigger, $action, $owner, $level, $repeatdelay);
+        my $sth = $self->{dbh}->prepare('INSERT INTO Triggers (channel, trigger, action, owner, cap_override, repeatdelay, lastused) VALUES (?, ?, ?, ?, ?, ?, 0)');
+        $sth->execute(lc $channel, $trigger, $action, $owner, $cap_override, $repeatdelay);
     };
 
     if ($@) {
@@ -279,9 +302,14 @@ sub check_trigger {
                     user    => $u,
                     host    => $h,
                     command => $action,
-                    level   => $trigger->{level} // 0
                 };
-                $self->{pbot}->{logger}->log("ActionTrigger: ($channel) $trigger->{trigger} -> $action [$command->{level}]\n");
+
+                if (length $trigger->{cap_override} and $trigger->{cap_override} ne 'none') {
+                    $command->{'cap-override'} = $trigger->{cap_override};
+                }
+                my $cap = '';
+                $cap = " (capability=$command->{'cap-override'})" if exists $command->{'cap-override'};
+                $self->{pbot}->{logger}->log("ActionTrigger: ($channel) $trigger->{trigger} -> $action$cap\n");
                 $self->{pbot}->{interpreter}->add_to_command_queue($channel, $command, $delay);
             }
         };
@@ -314,10 +342,10 @@ sub actiontrigger {
                 $result = "Triggers for $channel:\n";
                 my $comma = '';
                 foreach my $trigger (@triggers) {
-                    $trigger->{level}       //= 0;
-                    $trigger->{repeatdelay} //= 0;
+                    $trigger->{cap_override} //= 'none';
+                    $trigger->{repeatdelay}  //= 0;
                     $result .= "$comma$trigger->{trigger} -> $trigger->{action}";
-                    $result .= " (level=$trigger->{level})" if $trigger->{level} != 0;
+                    $result .= " (capability=$trigger->{cap_override})" if length $trigger->{cap_override} and $trigger->{cap_override} ne 'none';
                     $result .= " (repeatdelay=$trigger->{repeatdelay})" if $trigger->{repeatdelay} != 0;
                     $comma = ",\n";
                 }
@@ -333,20 +361,20 @@ sub actiontrigger {
 
                 if (not defined $channel) {
                     return
-                      "To use this command from private message the <channel> argument is required. Usage: actiontrigger add <#channel or global> <level> <repeat delay (in seconds)> <regex trigger> <command>";
+                      "To use this command from private message the <channel> argument is required. Usage: actiontrigger add <#channel or global> <capability> <repeat delay (in seconds)> <regex trigger> <command>";
                 } elsif ($channel !~ m/^#/ and $channel ne 'global') {
-                    return "Invalid channel $channel. Usage: actiontrigger add <#channel or global> <level> <repeat delay (in seconds)> <regex trigger> <command>";
+                    return "Invalid channel $channel. Usage: actiontrigger add <#channel or global> <capability> <repeat delay (in seconds)> <regex trigger> <command>";
                 }
             }
 
-            my ($level, $repeatdelay, $trigger, $action) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4, 0, 1);
+            my ($cap_override, $repeatdelay, $trigger, $action) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4, 0, 1);
 
             if (not defined $trigger or not defined $action) {
                 if ($from !~ m/^#/) {
                     $result =
-                      "To use this command from private message the <channel> argument is required. Usage: actiontrigger add <#channel or global> <level> <repeat delay (in seconds)> <regex trigger> <command>";
+                      "To use this command from private message the <channel> argument is required. Usage: actiontrigger add <#channel or global> <capability> <repeat delay (in seconds)> <regex trigger> <command>";
                 } else {
-                    $result = "Usage: actiontrigger add <level> <repeat delay (in seconds)> <regex trigger> <command>";
+                    $result = "Usage: actiontrigger add <capability> <repeat delay (in seconds)> <regex trigger> <command>";
                 }
                 return $result;
             }
@@ -355,17 +383,17 @@ sub actiontrigger {
 
             if (defined $exists) { return "Trigger already exists."; }
 
-            if ($level !~ m/^\d+$/) { return "$nick: Missing level argument?\n"; }
+            if (not $self->{pbot}->{capabilities}->exists($cap_override)) { return "$nick: Capability '$cap_override' does not exist.\n"; }
 
             if ($repeatdelay !~ m/^\d+$/) { return "$nick: Missing repeat delay argument?\n"; }
 
-            if ($level > 0) {
-                my $admin = $self->{pbot}->{users}->find_admin($channel, "$nick!$user\@$host");
-                if (not defined $admin or $level > $admin->{level}) { return "You may not set a level higher than your own."; }
+            if ($cap_override ne 'none') {
+                my $u = $self->{pbot}->{users}->find_user($channel, "$nick!$user\@$host");
+                if (not $self->{pbot}->{capabilities}->userhas($u, $cap_override)) { return "You may not set a capability that you do not have."; }
             }
 
-            if   ($self->add_trigger($channel, $trigger, $action, "$nick!$user\@$host", $level, $repeatdelay)) { $result = "Trigger added."; }
-            else                                                                                               { $result = "Failed to add trigger."; }
+            if   ($self->add_trigger($channel, $trigger, $action, "$nick!$user\@$host", $cap_override, $repeatdelay)) { $result = "Trigger added."; }
+            else                                                                                                      { $result = "Failed to add trigger."; }
         }
 
         when ('delete') {
@@ -401,10 +429,10 @@ sub actiontrigger {
         default {
             if ($from !~ m/^#/) {
                 $result =
-                  "Usage from private message: actiontrigger list [#channel or global] | actiontrigger add <#channel or global> <level> <repeat delay (in seconds)> <regex trigger> <command> | actiontrigger delete <#channel or global> <regex trigger>";
+                  "Usage from private message: actiontrigger list [#channel or global] | actiontrigger add <#channel or global> <capability> <repeat delay (in seconds)> <regex trigger> <command> | actiontrigger delete <#channel or global> <regex trigger>";
             } else {
                 $result =
-                  "Usage: actiontrigger list [#channel or global] | actiontrigger add <level> <repeat delay (in seconds)> <regex trigger> <command> | actiontrigger delete <regex>";
+                  "Usage: actiontrigger list [#channel or global] | actiontrigger add <capability> <repeat delay (in seconds)> <regex trigger> <command> | actiontrigger delete <regex>";
             }
         }
     }
