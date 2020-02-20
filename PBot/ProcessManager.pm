@@ -148,7 +148,7 @@ sub remove_process {
         $self->{pbot}->{logger}->log("Finished process $pid ($command): duration $duration seconds\n");
         delete $self->{processes}->{$pid};
     } else {
-        $self->{pbot}->{logger}->log("Finished unknown process $pid\n");
+        $self->{pbot}->{logger}->log("Finished process $pid\n");
     }
 }
 
