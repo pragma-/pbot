@@ -143,7 +143,7 @@ sub get_wttr {
 
     $location =~ s/United States of America/USA/;
 
-    my $result = "Weather for $location: ";
+    my $result = "$location: ";
 
     my $c = $wttr->{'current_condition'}->[0];
     my $w = $wttr->{'weather'}->[0];
