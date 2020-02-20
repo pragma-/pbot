@@ -8,6 +8,8 @@ use parent 'Plugins::Plugin';
 # purpose: provides interface to set/remove/modify regular expression triggers
 # to execute a command.
 #
+# Usage: actiontrigger add <#channel or global> <capability> <repeat delay (in seconds)> <regex trigger> <command>
+#
 # Examples:
 #
 # Greet a nick when they join the channel:
