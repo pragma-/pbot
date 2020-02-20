@@ -383,11 +383,10 @@ sub actiontrigger {
 
             if (defined $exists) { return "Trigger already exists."; }
 
-            if (not $self->{pbot}->{capabilities}->exists($cap_override)) { return "$nick: Capability '$cap_override' does not exist.\n"; }
-
             if ($repeatdelay !~ m/^\d+$/) { return "$nick: Missing repeat delay argument?\n"; }
 
             if ($cap_override ne 'none') {
+                if (not $self->{pbot}->{capabilities}->exists($cap_override)) { return "$nick: Capability '$cap_override' does not exist. Use 'none' to omit.\n"; }
                 my $u = $self->{pbot}->{users}->find_user($channel, "$nick!$user\@$host");
                 if (not $self->{pbot}->{capabilities}->userhas($u, $cap_override)) { return "You may not set a capability that you do not have."; }
             }
