@@ -734,7 +734,7 @@ sub factalias {
     $self->{pbot}->{factoids}->add_factoid('text', $chan, "$nick!$user\@$host", $alias, "/call $command");
     $self->{pbot}->{logger}->log("$nick!$user\@$host [$chan] aliased $alias => $command\n");
     $self->{pbot}->{factoids}->save_factoids();
-    return "$alias aliases `$command` for " . ($chan eq '.*' ? 'the global channel' : $chan);
+    return "/say $alias aliases `$command` for " . ($chan eq '.*' ? 'the global channel' : $chan);
 }
 
 sub add_regex {
