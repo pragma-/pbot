@@ -74,15 +74,23 @@ sub on_public {
                         else                    { $result = "$nick thinks $target meant to say: "; }
                         my $text = $message->{msg};
                         if ($modifiers =~ m/g/) {
-                            $text =~ s/$rx/$replacement/g;
-                            my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
-                            my $i;
-                            map { ++$i; $text =~ s/[\$\\]$i/$_/g; } @stuff;
+                            $text =~ s{$rx}
+                            {
+                                my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+                                my $t = $replacement;
+                                my $i = 0;
+                                defined $_ // last, ++$i, $t =~ s|[\$\\]$i|$_|g for @stuff;
+                                $t
+                            }gxe;
                         } else {
-                            $text =~ s/$rx/$replacement/;
-                            my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
-                            my $i;
-                            map { ++$i; $text =~ s/[\$\\]$i/$_/g; } @stuff;
+                            $text =~ s{$rx}
+                            {
+                                my $i = 0;
+                                my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+                                my $t = $replacement;
+                                defined $_ // last, ++$i, $t =~ s|[\$\\]$i|$_|g for @stuff;
+                                $t
+                            }xe;
                         }
                         $event->{conn}->privmsg($channel, "$result$text");
                         return 0;
