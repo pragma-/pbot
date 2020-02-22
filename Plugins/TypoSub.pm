@@ -79,7 +79,7 @@ sub on_public {
                                 my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
                                 my $t = $replacement;
                                 my $i = 0;
-                                defined $_ // last, ++$i, $t =~ s|[\$\\]$i|$_|g for @stuff;
+                                defined $_ || last, ++$i, $t =~ s|[\$\\]$i|$_|g for @stuff;
                                 $t
                             }gxe;
                         } else {
@@ -88,7 +88,7 @@ sub on_public {
                                 my $i = 0;
                                 my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
                                 my $t = $replacement;
-                                defined $_ // last, ++$i, $t =~ s|[\$\\]$i|$_|g for @stuff;
+                                defined $_ || last, ++$i, $t =~ s|[\$\\]$i|$_|g for @stuff;
                                 $t
                             }xe;
                         }
