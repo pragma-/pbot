@@ -29,7 +29,6 @@ our %factoid_metadata_capabilities = (
     enabled                   => 'chanop',
     last_referenced_in        => 'botowner',
     last_referenced_on        => 'botowner',
-    modulelauncher_subpattern => 'botowner',
     owner                     => 'botowner',
     rate_limit                => 'chanop',
     ref_count                 => 'botowner',
@@ -910,9 +909,8 @@ sub factrem {
     if ($factoids->get_data($channel, $trigger, 'locked')) { return "/say $trigger_name is locked; unlock before deleting."; }
 
     $self->{pbot}->{logger}->log("$nick!$user\@$host removed [$channel][$trigger][" . $factoids->get_data($channel, $trigger, 'action') . "]\n");
-    $self->{pbot}->{factoids}->remove_factoid($channel, $trigger);
     $self->log_factoid($channel, $trigger, "$nick!$user\@$host", "deleted", 1);
-    return "/say $trigger_name removed from $channel_name.";
+    return $self->{pbot}->{factoids}->remove_factoid($channel, $trigger);
 }
 
 sub histogram {
@@ -1324,24 +1322,38 @@ sub factfind {
 
         foreach my $chan (sort $factoids->get_keys) {
             next if defined $channel and $chan !~ /^$channel$/i;
-            foreach my $trigger (sort $factoids->get_keys($chan)) {
-                next if $trigger eq '_name';
-                if ($factoids->get_data($chan, $trigger, 'type') eq 'text' or $factoids->get_data($chan, $trigger, 'type') eq 'regex') {
-                    if (   $factoids->get_data($chan, $trigger, 'owner') =~ /^$owner$/i
-                        && $factoids->get_data($chan, $trigger, 'ref_user') =~ /^$refby$/i
-                        && ($factoids->exists($chan, $trigger, 'edited_by') ? $factoids->get_data($chan, $trigger, 'edited_by') =~ /^$editby$/i : 1))
-                    {
-                        next if ($arguments ne "" && $factoids->get_data($chan, $trigger, 'action') !~ /$regex/i && $trigger !~ /$regex/i);
-                        $i++;
-                        if ($chan ne $last_chan) {
-                            $text .= $chan eq '.*' ? '[global channel] ' : '[' . $factoids->get_data($chan, '_name') . '] ';
-                            $last_chan = $chan;
-                        }
-                        my $trigger_name = $factoids->get_data($chan, $trigger, '_name');
-                        $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
-                        $text .= "$trigger_name ";
-                        $last_trigger = $trigger_name;
+            foreach my $factoid ($factoids->get(index1 => $chan, index2 => undef, owner => undef, ref_user => undef, edited_by => undef, action => undef)) {
+                my $match = 0;
+
+                if ($owner eq '.*') {
+                    $match = 1;
+                } else {
+                    $match = 1 if $factoid->{owner} =~ /^$owner/i;
+                }
+
+                if ($refby eq '.*') {
+                    $match = 1;
+                } else {
+                    $match = 1 if $factoid->{ref_user} =~ /^$refby/i;
+                }
+
+                if ($editby eq '.*') {
+                    $match = 1;
+                } else {
+                    $match = 1 if $factoid->{edited_by} =~ /^$editby/i;
+                }
+
+                if ($match) {
+                    next if ($arguments ne "" && $factoid->{action} !~ /$regex/i && $factoid->{index2} !~ /$regex/i);
+                    $i++;
+                    if ($chan ne $last_chan) {
+                        $text .= $chan eq '.*' ? '[global channel] ' : '[' . $factoids->get_data($chan, '_name') . '] ';
+                        $last_chan = $chan;
                     }
+                    my $trigger_name = $factoids->get_data($chan, $factoid->{index2}, '_name');
+                    $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
+                    $text .= "$trigger_name ";
+                    $last_trigger = $trigger_name;
                 }
             }
         }
