@@ -63,10 +63,10 @@ sub begin {
     $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", {RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1, sqlite_unicode => 1})
       or die $DBI::errstr;
 
-    $self->{dbh}->sqlite_enable_load_extension(my $_enabled = 1);
-    $self->{dbh}->prepare("SELECT load_extension('/usr/lib/sqlite3/pcre.so')");
-
     eval {
+        $self->{dbh}->sqlite_enable_load_extension(my $_enabled = 1);
+        $self->{dbh}->prepare("SELECT load_extension('/usr/lib/sqlite3/pcre.so')");
+
         my $sqlite_debug = $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_debug');
         use PBot::SQLiteLoggerLayer;
         use PBot::SQLiteLogger;
