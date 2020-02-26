@@ -282,6 +282,11 @@ sub find_factoid {
     if ($debug) {
         use Data::Dumper;
         my $dump = Dumper \%opts;
+        $self->{pbot}->{logger}->log("+" x 32 . "\n");
+        use Devel::StackTrace;
+        my $trace = Devel::StackTrace->new(indent => 1, ignore_class => ['PBot::PBot', 'PBot::IRC']);
+        $self->{pbot}->{logger}->log("find_factoid stacktrace: " . $trace->as_string() . "\n");
+
         $self->{pbot}->{logger}->log("find_factiod: from: $from, kw: $keyword, opts: $dump\n");
     }
 
@@ -289,31 +294,100 @@ sub find_factoid {
     $from    = lc $from;
     $keyword = lc $keyword;
 
-    $self->{pbot}->{logger}->log("from: $from\n") if $debug;
-
     my $arguments = $opts{arguments};
 
     my @result = eval {
         my @results;
-        for (my $depth = 0; $depth < 5; $depth++) {
+        my ($channel, $trigger);
+        for (my $depth = 0; $depth < 15; $depth++) {
+            my $action;
             my $string = $keyword . (length $arguments ? " $arguments" : "");
             $self->{pbot}->{logger}->log("string: $string\n") if $debug;
 
-            # check factoids
-            foreach my $channel (sort $self->{factoids}->get_keys) {
-                if ($opts{exact_channel}) {
-                    if   ($opts{exact_trigger} == 1) { next unless $from eq lc $channel; }
-                    else                             { next unless $from eq lc $channel or $channel eq '.*'; }
+            if ($opts{exact_channel} and $opts{exact_trigger}) {
+                if ($self->{factoids}->exists($from, $keyword)) {
+                    ($channel, $trigger) = ($from, $keyword);
+                    goto CHECK_ALIAS;
                 }
 
-                foreach my $trigger ($self->{factoids}->get_keys($channel)) {
-                    if ($keyword eq $trigger) {
-                        $self->{pbot}->{logger}->log("return $channel: $trigger\n") if $debug;
+                if ($opts{exact_trigger} > 1 and $self->{factoids}->exists('.*', $keyword)) {
+                    ($channel, $trigger) = ('.*', $keyword);
+                    goto CHECK_ALIAS;
+                }
 
-                        if ($opts{find_alias} && $self->{factoids}->get_data($channel, $trigger, 'action') =~ /^\/call\s+(.*)$/ms) {
-                            my $command;
-                            if   (length $arguments) { $command = "$1 $arguments"; }
-                            else                     { $command = $1; }
+                goto CHECK_REGEX;
+            }
+
+            if ($opts{exact_channel} and not $opts{exact_trigger}) {
+                if (not $self->{factoids}->exists($from, $keyword)) {
+                    goto CHECK_REGEX if $from eq '.*';
+                    goto CHECK_REGEX if not $self->{factoids}->exists('.*', $keyword);
+                    ($channel, $trigger) = ('.*', $keyword);
+                    goto CHECK_ALIAS;
+                }
+                ($channel, $trigger) = ($from, $keyword);
+                goto CHECK_ALIAS;
+            }
+
+            if (not $opts{exact_channel}) {
+                my $factoids = $self->{factoids}->get_all_by_trigger($keyword);
+
+                foreach my $factoid (@$factoids) {
+                    $channel = $factoid->{index1};
+                    $trigger = $factoid->{index2};
+                    $action  = $factoid->{action};
+
+                    if ($opts{find_alias} && $action =~ m{^/call\s+(.*)$}ms) {
+                        goto CHECK_ALIAS;
+                    }
+
+                    push @results, [$channel, $trigger];
+                }
+
+                goto CHECK_REGEX;
+            }
+
+            CHECK_ALIAS:
+            if ($opts{find_alias}) {
+                $action = $self->{factoids}->get_data($channel, $trigger, 'action') if not defined $action;
+                if ($action =~ m{^/call\s+(.*)$}ms) {
+                    my $command;
+                    if (length $arguments) {
+                        $command = "$1 $arguments";
+                    } else {
+                        $command = $1;
+                    }
+                    my $arglist = $self->{pbot}->{interpreter}->make_args($command);
+                    ($keyword, $arguments) = $self->{pbot}->{interpreter}->split_args($arglist, 2, 0, 1);
+                    goto NEXT_DEPTH;
+                }
+            }
+
+            if ($opts{exact_channel} == 1) {
+                return ($channel, $trigger);
+            } else {
+                push @results, [$channel, $trigger];
+            }
+
+            CHECK_REGEX:
+            if (not $opts{exact_trigger} and defined $trigger) {
+                my $factoids;
+
+                if ($opts{exact_channel}) {
+                    $factoids = $self->{factoids}->get_regex_by_channel($channel);
+                } else {
+                    $factoids = $self->{factoids}->get_regex_by_channel(undef);
+                }
+
+                my $regex = qr/$trigger/i;
+                foreach my $factoid (@$factoids) {
+                    if ($string =~ /$regex/) {
+                        $channel = $factoid->{index1};
+                        $trigger = $factoid->{index2};
+                        $action  = $factoid->{action};
+
+                        if ($opts{find_alias}) {
+                            my $command = $action;
                             my $arglist = $self->{pbot}->{interpreter}->make_args($command);
                             ($keyword, $arguments) = $self->{pbot}->{interpreter}->split_args($arglist, 2, 0, 1);
                             goto NEXT_DEPTH;
@@ -325,33 +399,8 @@ sub find_factoid {
                 }
             }
 
-            # then check regex factoids
-            if (not $opts{exact_trigger}) {
-                foreach my $channel ($self->{factoids}->get_keys) {
-                    if ($opts{exact_channel}) { next unless $from eq lc $channel or $channel eq '.*'; }
-
-                    foreach my $trigger (sort $self->{factoids}->get_keys($channel)) {
-                        next if $trigger eq '_name';
-                        if ($self->{factoids}->get_data($channel, $trigger, 'type') eq 'regex') {
-                            $self->{pbot}->{logger}->log("checking regex $string =~ m/$trigger/i\n") if $debug >= 2;
-                            if ($string =~ m/$trigger/i) {
-                                $self->{pbot}->{logger}->log("return regex $channel: $trigger\n") if $debug;
-
-                                if ($opts{find_alias}) {
-                                    my $command = $self->{factoids}->get_data($channel, $trigger, 'action');
-                                    my $arglist = $self->{pbot}->{interpreter}->make_args($command);
-                                    ($keyword, $arguments) = $self->{pbot}->{interpreter}->split_args($arglist, 2, 0, 1);
-                                    $string = $keyword . (length $arguments ? " $arguments" : "");
-                                    goto NEXT_DEPTH;
-                                }
-
-                                if ($opts{exact_channel} == 1) { return ($channel, $trigger); }
-                                else                           { push @results, [$channel, $trigger]; }
-                            }
-                        }
-                    }
-                }
-            }
+            # match not found
+            last;
 
           NEXT_DEPTH:
             last if not $opts{find_alias};
@@ -367,7 +416,7 @@ sub find_factoid {
     };
 
     if ($@) {
-        $self->{pbot}->{logger}->log("find_factoid: bad regex: $@\n");
+        $self->{pbot}->{logger}->log("Error in find_factoid: $@\n");
         return undef;
     }
 
@@ -732,37 +781,27 @@ sub interpreter {
     if (not defined $keyword) {
         my $string = "$original_keyword $stuff->{arguments}";
 
-        my $lc_keyword = lc $original_keyword;
-        my $comma      = "";
-        my $found      = 0;
-        my $chans      = "";
+        my @chanlist   = ();
         my ($fwd_chan, $fwd_trig);
 
-        # build string of which channels contain the keyword, keeping track of the last one and count
-        foreach my $chan ($self->{factoids}->get_keys) {
-            foreach my $trig ($self->{factoids}->get_keys($chan)) {
-                my $type = $self->{factoids}->get_data($chan, $trig, 'type');
-                if (($type eq 'text' or $type eq 'module') and $trig eq $lc_keyword) {
-                    $chans .= $comma . $self->{factoids}->get_data($chan, '_name');
-                    $comma = ", ";
-                    $found++;
-                    $fwd_chan = $chan;
-                    $fwd_trig = $trig;
-                    last;
-                }
-            }
+        # build list of which channels contain the keyword, keeping track of the last one and count
+        foreach my $factoid ($self->{factoids}->get(index2 => $original_keyword, index1 => undef, type => undef)) {
+            next if $factoid->{type} ne 'text' and $factoid->{type} ne 'module';
+            push @chanlist, $self->{factoids}->get_data($factoid->{index1}, '_name');
+            $fwd_chan = $factoid->{index1};
+            $fwd_trig = $original_keyword;
         }
 
         my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
 
         # if multiple channels have this keyword, then ask user to disambiguate
-        if ($found > 1) {
+        if (@chanlist> 1) {
             return undef if $stuff->{referenced};
-            return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple channels (use 'fact <channel> $original_keyword' to choose one): $chans";
+            return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple channels (use 'fact <channel> $original_keyword' to choose one): " . join(' ,', @chanlist);
         }
 
         # if there's just one other channel that has this keyword, trigger that instance
-        elsif ($found == 1) {
+        elsif (@chanlist == 1) {
             $pbot->{logger}->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
             $stuff->{keyword} = $fwd_trig;
             $stuff->{interpret_depth}++;
@@ -837,12 +876,14 @@ sub interpreter {
         }
     }
 
-    my $data = $self->{factoids}->get_data($channel, $keyword);
-    $data->{ref_count}++;
-    $data->{ref_user}           = "$stuff->{nick}!$stuff->{user}\@$stuff->{host}";
-    $data->{last_referenced_on} = gettimeofday;
-    $data->{last_referenced_in} = $stuff->{from} || "stdin";
-    $self->{factoids}->add($channel, $keyword, $data, 1, 1);
+    my $ref_count = $self->{factoids}->get_data($channel, $keyword, 'ref_count');
+    my $update_data = {
+        ref_count          => ++$ref_count,
+        ref_user           => "$stuff->{nick}!$stuff->{user}\@$stuff->{host}",
+        last_referenced_on => scalar gettimeofday,
+        last_referenced_in => $stuff->{from} || 'stdin',
+    };
+    $self->{factoids}->add($channel, $keyword, $update_data, 1, 1);
 
     my $action;
 
