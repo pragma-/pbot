@@ -23,16 +23,55 @@ use POSIX qw(strftime);
 use Text::ParseWords;
 use JSON;
 
+use PBot::FactoidsSQLite;
 use PBot::FactoidCommands;
-use PBot::DualIndexHashObject;
 
 use PBot::Utils::Indefinite;
 use PBot::Utils::ValidateString;
 
+our %factoid_metadata = (
+    'action'                => 'TEXT',
+    'action_with_args'      => 'TEXT',
+    'add_nick'              => 'INTEGER',
+    'allow_empty_args'      => 'INTEGER',
+    'background-process'    => 'INTEGER',
+    'cap-override'          => 'TEXT',
+    'created_on'            => 'NUMERIC',
+    'dont-protect-self'     => 'INTEGER',
+    'dont-replace-pronouns' => 'INTEGER',
+    'edited_by'             => 'TEXT',
+    'edited_on'             => 'NUMERIC',
+    'enabled'               => 'INTEGER',
+    'help'                  => 'TEXT',
+    'interpolate'           => 'INTEGER',
+    'keyword_override'      => 'TEXT',
+    'last_referenced_in'    => 'TEXT',
+    'last_referenced_on'    => 'NUMERIC',
+    'locked'                => 'INTEGER',
+    'locked_to_channel'     => 'INTEGER',
+    'no_keyword_override'   => 'INTEGER',
+    'noembed'               => 'INTEGER',
+    'nooverride'            => 'INTEGER',
+    'owner'                 => 'TEXT',
+    'persist-key'           => 'INTEGER',
+    'preserve_whitespace'   => 'INTEGER',
+    'process-timeout'       => 'INTEGER',
+    'rate_limit'            => 'INTEGER',
+    'ref_count'             => 'INTEGER',
+    'ref_user'              => 'TEXT',
+    'require_explicit_args' => 'INTEGER',
+    'requires_arguments'    => 'INTEGER',
+    'type'                  => 'TEXT',
+    'unquote_spaces'        => 'INTEGER',
+    'usage'                 => 'TEXT',
+    'use_output_queue'      => 'INTEGER',
+    'workdir'               => 'TEXT',
+);
+
 sub initialize {
     my ($self, %conf) = @_;
     my $filename = $conf{filename};
-    $self->{factoids} = PBot::DualIndexHashObject->new(name => 'Factoids', filename => $filename, pbot => $self->{pbot});
+    $self->{factoids} = PBot::FactoidsSQLite->new(name => 'Factoids', filename => $filename, pbot => $self->{pbot});
 
     $self->{pbot}     = $self->{pbot};
     $self->{commands} = PBot::FactoidCommands->new(pbot => $self->{pbot});
@@ -49,18 +88,7 @@ sub initialize {
 sub load_factoids {
     my $self = shift;
     $self->{factoids}->load;
-
-    my ($text, $regex, $modules);
-    foreach my $channel ($self->{factoids}->get_keys) {
-        foreach my $trigger ($self->{factoids}->get_keys($channel)) {
-            next                                                                  if $trigger eq '_name';
-            $self->{pbot}->{logger}->log("Missing type for $channel->$trigger\n") if not $self->{factoids}->get_data($channel, $trigger, 'type');
-            $text++    if $self->{factoids}->get_data($channel, $trigger, 'type') eq 'text';
-            $regex++   if $self->{factoids}->get_data($channel, $trigger, 'type') eq 'regex';
-            $modules++ if $self->{factoids}->get_data($channel, $trigger, 'type') eq 'module';
-        }
-    }
-    $self->{pbot}->{logger}->log("  " . ($text + $regex + $modules) . " factoids loaded ($text text, $regex regexs, $modules modules).\n");
+    $self->{factoids}->create_metadata(\%factoid_metadata);
 }
 
 sub save_factoids {
@@ -111,7 +139,7 @@ sub remove_factoid {
     my $self = shift;
     my ($channel, $trigger) = @_;
     $channel = '.*' if $channel !~ /^#/;
-    $self->{factoids}->remove($channel, $trigger);
+    return $self->{factoids}->remove($channel, $trigger);
 }
 
 sub export_factoids {
@@ -121,6 +149,8 @@ sub export_factoids {
     if   (@_) { $filename = shift; }
     else      { $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factoids.html'; }
     return if not defined $filename;
+
+    $self->{pbot}->{logger}->log("Exporting factoids to $filename\n");
 
     open FILE, "> $filename" or return "Could not open export path.";
 

@@ -20,6 +20,7 @@ use PBot::Logger;
 use PBot::VERSION;
 use PBot::HashObject;
 use PBot::DualIndexHashObject;
+use PBot::DualIndexSQLiteObject;
 use PBot::Registry;
 use PBot::Capabilities;
 use PBot::SelectHandler;
@@ -228,7 +229,7 @@ sub initialize {
     $self->{interpreter}->register(sub { $self->{commands}->interpreter(@_) });
     $self->{interpreter}->register(sub { $self->{factoids}->interpreter(@_) });
 
-    $self->{factoids} = PBot::Factoids->new(pbot => $self, filename => "$data_dir/factoids", %conf);
+    $self->{factoids} = PBot::Factoids->new(pbot => $self, filename => "$data_dir/factoids.sqlite3", %conf);
 
     $self->{plugins} = PBot::Plugins->new(pbot => $self, %conf);
 
