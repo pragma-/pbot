@@ -280,7 +280,8 @@ and how long it has been running.
 
 ### my
 The `my` command allows non-admin users to view and manipulate their user account
-metadata.
+metadata. If there is no user account, one will be created with an appropriate
+hostmask.
 
 Usage: `my [<key> [value]]`
 
