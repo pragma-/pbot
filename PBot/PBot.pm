@@ -327,6 +327,7 @@ sub register_signal_handlers {
 sub atexit {
     my $self = shift;
     $self->{atexit}->execute_all;
+    alarm 0;
 }
 
 sub irc_debug_trigger {
