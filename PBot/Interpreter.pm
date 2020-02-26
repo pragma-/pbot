@@ -706,7 +706,7 @@ sub lc_args {
 sub truncate_result {
     my ($self, $from, $nick, $text, $original_result, $result, $paste) = @_;
     my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
-    $max_msg_len -= length "PRIVMSG $from :";
+    $max_msg_len -= length "PRIVMSG $from :" if defined $from;
 
     utf8::encode $result;
     utf8::encode $original_result;
@@ -817,8 +817,7 @@ sub handle_result {
             my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($stuff->{from}, $cmd, arguments => $args, exact_channel => 1, exact_trigger => 0, find_alias => 1);
             if (defined $trigger) {
                 if ($stuff->{preserve_whitespace} == 0) {
-                    $stuff->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'preserve_whitespace');
-                    $stuff->{preserve_whitespace} = 0 if not defined $stuff->{preserve_whitespace};
+                    $stuff->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'preserve_whitespace') // 0;
                 }
 
                 $use_output_queue = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'use_output_queue');
