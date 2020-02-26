@@ -363,4 +363,7 @@ sub remove {
     else                                                                                           { return "$self->{name}: [$name1] $name2.$data_index does not exist."; }
 }
 
+# for compatibility with SQLite object
+sub create_metadata { }
+
 1;
