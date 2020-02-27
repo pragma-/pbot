@@ -73,9 +73,6 @@ sub begin {
     };
 
     if ($@) { $self->{pbot}->{logger}->log("Error initializing $self->{name} database: $@\n"); }
-
-    $self->create_database;
-    $self->create_cache;
 }
 
 sub end {
@@ -149,7 +146,6 @@ sub trim_cache {
     foreach my $index1 (keys %{$self->{cache_timeouts}}) {
         foreach my $index2 (keys %{$self->{cache_timeouts}->{$index1}}) {
             if ($now >= $self->{cache_timeouts}->{$index1}->{$index2}) {
-                $self->{pbot}->{logger}->log("Trimming $self->{name} [$index1] $index2 cache\n");
                 my $name = $self->{cache}->{$index1}->{$index2}->{_name};
                 $self->{cache}->{$index1}->{$index2} = {};
                 $self->{cache}->{$index1}->{$index2}->{_name} = $name if defined $name;
@@ -338,23 +334,6 @@ sub get_keys {
     return @keys;
 }
 
-sub get_all_index2 {
-    my ($self, $index2) = @_;
-
-    my $data = eval {
-        my $sth = $self->{dbh}->prepare('SELECT index1, index2, action FROM Stuff WHERE index2 = ?');
-        $sth->execute($index2);
-        return $sth->fetchall_arrayref({});
-    };
-
-    if ($@) {
-        $self->{pbot}->{logger}->log("Error in get_all_index2: $@\n");
-        return [];
-    }
-
-    return $data;
-}
-
 sub get {
     my ($self, %opts) = @_;
 
@@ -411,7 +390,7 @@ sub get_data {
     return undef if not exists $self->{cache}->{$lc_index1}->{$lc_index2} and $lc_index2 ne '_name';
 
     if (not defined $data_index) {
-        # special case for compatability with DualIndexHashObject
+        # special case for compatibility with DualIndexHashObject
         if ($lc_index2 eq '_name') {
             if (exists $self->{cache}->{$lc_index1}->{_name}) {
                 return $self->{cache}->{$lc_index1}->{_name};
@@ -456,7 +435,7 @@ sub get_data {
         return $data;
     }
 
-    # special case for compatability with DualIndexHashObject
+    # special case for compatibility with DualIndexHashObject
     if ($data_index eq '_name') {
         if (exists $self->{cache}->{$lc_index1}->{$lc_index2}->{_name}) {
             return $self->{cache}->{$lc_index1}->{$lc_index2}->{_name};
@@ -654,7 +633,7 @@ sub set {
         return $result;
     }
 
-    my $name1 = $self->get_data($index1, $index2, '_name');
+    my $name1 = $self->get_data($index1, '_name');
     my $name2 = $self->get_data($index1, $index2, '_name');
 
     $name1 = 'global'     if $name1 eq '.*';
@@ -744,9 +723,14 @@ sub unset {
     return "[$name1] $name2.$key unset.";
 }
 
+sub load  {
+    my ($self) = @_;
+    $self->create_database;
+    $self->create_cache;
+}
+
 # nothing to do here for SQLite
-# kept for compatability with DualIndexHashObject
-sub load  { }
+# kept for compatibility with DualIndexHashObject
 sub save  { }
 sub clear { }
 
