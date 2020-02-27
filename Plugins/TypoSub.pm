@@ -51,6 +51,7 @@ sub on_public {
         if ($msg =~ m/^\s*s${sep}(.*?)(?<!\\)${sep}(.*?)(?<!\\)${sep}([g]*).*$/ or $msg =~ m/^\s*s${sep}(.*?)(?<!\\)${sep}(.*)$/) {
             my ($regex, $replacement, $modifiers) = ($1, $2, $3);
             eval {
+                use re::engine::RE2 -strict => 1;
                 my $rx = qr/$regex/;
 
                 my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages_from_channel($channel, 50, $self->{pbot}->{messagehistory}->{MSG_CHAT}, 'DESC');
@@ -82,6 +83,7 @@ sub on_public {
                                 defined $_ || last, ++$i, $t =~ s|[\$\\]$i|$_|g for @stuff;
                                 $t
                             }gxe;
+                            $text = substr($text, 0, 350);
                         } else {
                             $text =~ s{$rx}
                             {
