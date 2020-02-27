@@ -23,7 +23,6 @@ use POSIX qw(strftime);
 use Text::ParseWords;
 use JSON;
 
-use PBot::FactoidsSQLite;
 use PBot::FactoidCommands;
 
 use PBot::Utils::Indefinite;
@@ -71,7 +70,7 @@ our %factoid_metadata = (
 sub initialize {
     my ($self, %conf) = @_;
     my $filename = $conf{filename};
-    $self->{factoids} = PBot::FactoidsSQLite->new(name => 'Factoids', filename => $filename, pbot => $self->{pbot});
+    $self->{factoids} = PBot::DualIndexSQLiteObject->new(name => 'Factoids', filename => $filename, pbot => $self->{pbot});
 
     $self->{pbot}     = $self->{pbot};
     $self->{commands} = PBot::FactoidCommands->new(pbot => $self->{pbot});
@@ -367,21 +366,22 @@ sub find_factoid {
             }
 
             CHECK_REGEX:
-            if (not $opts{exact_trigger} and defined $trigger) {
-                my $factoids;
+            if (not $opts{exact_trigger}) {
+                my @factoids;
 
                 if ($opts{exact_channel}) {
-                    $factoids = $self->{factoids}->get_regex_by_channel($channel);
+                    @factoids = $self->{factoids}->get(type => 'regex', index1 => $channel, index2 => undef, action => undef);
+                    push @factoids, $self->{factoids}->get(type => 'regex', index1 => '.*', index2 => undef, action => undef);
                 } else {
-                    $factoids = $self->{factoids}->get_regex_by_channel(undef);
+                    @factoids = $self->{factoids}->get(type => 'regex', index1 => undef, index2 => undef, action => undef);
                 }
 
-                my $regex = qr/$trigger/i;
-                foreach my $factoid (@$factoids) {
-                    if ($string =~ /$regex/) {
-                        $channel = $factoid->{index1};
-                        $trigger = $factoid->{index2};
-                        $action  = $factoid->{action};
+                foreach my $factoid (@factoids) {
+                    $channel = $factoid->{index1};
+                    $trigger = $factoid->{index2};
+                    $action  = $factoid->{action};
+
+                    if ($string =~ /$trigger/) {
 
                         if ($opts{find_alias}) {
                             my $command = $action;

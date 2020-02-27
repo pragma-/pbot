@@ -343,29 +343,25 @@ sub get {
         my @where = ();
 
         foreach my $key (keys %opts) {
-            if (not defined $opts{$key}) {
-                push @keys, $key;
-            } else {
-                push @where, $key;
+            if (defined $opts{$key}) {
+                if ($key =~ s/^!//) {
+                    push @where, "\"$key\" != ?";
+                } else {
+                    push @where, "\"$key\" = ?";
+                }
             }
+            push @keys, $key;
         }
 
         $sql .= join ', ', @keys;
         $sql .= ' FROM Stuff WHERE ';
-
-        foreach my $w (@where) {
-            if ($w =~ s/^!//) {
-                $sql .= "\"$w\" != ?";
-            } else {
-                $sql .= "\"$w\" = ?";
-            }
-        }
+        $sql .= join ' AND ', @where;
 
         my $sth = $self->{dbh}->prepare($sql);
 
         my $param = 0;
-        foreach my $w (@where) {
-            $sth->bind_param(++$param, $opts{$w});
+        foreach my $key (keys %opts) {
+            $sth->bind_param(++$param, $opts{$key}) if defined $opts{$key};
         }
 
         $sth->execute;
