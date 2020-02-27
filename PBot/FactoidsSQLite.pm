@@ -25,23 +25,6 @@ sub new {
     return $self;
 }
 
-sub get_all_by_trigger {
-    my ($self, $index2) = @_;
-
-    my $data = eval {
-        my $sth = $self->{dbh}->prepare('SELECT index1, index2, action FROM Stuff WHERE index2 = ?');
-        $sth->execute($index2);
-        return $sth->fetchall_arrayref({});
-    };
-
-    if ($@) {
-        $self->{pbot}->{logger}->log("Error in get_all_by_trigger: $@\n");
-        return undef;
-    }
-
-    return $data;
-}
-
 sub get_regex_by_channel {
     my ($self, $channel) = @_;
 

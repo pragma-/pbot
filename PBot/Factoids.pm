@@ -330,14 +330,11 @@ sub find_factoid {
             }
 
             if (not $opts{exact_channel}) {
-                my $factoids = $self->{factoids}->get_all_by_trigger($keyword);
-
-                foreach my $factoid (@$factoids) {
+                foreach my $factoid ($self->{factoids}->get(index2 => $keyword, index1 => undef, action => undef)) {
                     $channel = $factoid->{index1};
-                    $trigger = $factoid->{index2};
-                    $action  = $factoid->{action};
+                    $trigger = $keyword;
 
-                    if ($opts{find_alias} && $action =~ m{^/call\s+(.*)$}ms) {
+                    if ($opts{find_alias} && $factoid->{action} =~ m{^/call\s+(.*)$}ms) {
                         goto CHECK_ALIAS;
                     }
 
@@ -797,7 +794,7 @@ sub interpreter {
         # if multiple channels have this keyword, then ask user to disambiguate
         if (@chanlist> 1) {
             return undef if $stuff->{referenced};
-            return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple channels (use 'fact <channel> $original_keyword' to choose one): " . join(' ,', @chanlist);
+            return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple channels (use 'fact <channel> $original_keyword' to choose one): " . join(', ', @chanlist);
         }
 
         # if there's just one other channel that has this keyword, trigger that instance
