@@ -212,7 +212,7 @@ sub recall_message {
     foreach my $recall (@recalls) {
         my ($recall_nick, $recall_history, $recall_channel, $recall_before, $recall_after, $recall_context, $recall_count);
 
-        my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+        my @opt_args = $self->{pbot}->{interpreter}->split_line($recall, strip_quotes => 1);
         GetOptionsFromArray(
             \@opt_args,
             'channel|c:s'        => \$recall_channel,
@@ -229,8 +229,8 @@ sub recall_message {
         my $history_arg = 1 if defined $recall_history;
 
         $recall_nick    = shift @opt_args if @opt_args;
-        $recall_history = shift @opt_args if @opt_args and not defined $recall_history;
-        $recall_channel = "@opt_args" if @opt_args and not defined $recall_channel;
+        $recall_history = shift @opt_args if @opt_args and not $history_arg;
+        $recall_channel = "@opt_args" if @opt_args and not $channel_arg;
 
         $recall_count = 1 if (not defined $recall_count) || ($recall_count <= 0);
         return "You may only select a count of up to 50 messages." if $recall_count > 50;
@@ -238,8 +238,8 @@ sub recall_message {
         $recall_before = 0 if not defined $recall_before;
         $recall_after  = 0 if not defined $recall_after;
 
-        # imply -x if -n > 1 and no history
-        if ($recall_count > 1 and not defined $recall_history) { $recall_context = $recall_nick; }
+        # imply -x if -n > 1 and no history and -x isn't already set to somebody
+        if ($recall_count > 1 and not defined $recall_history and not defined $recall_context) { $recall_context = $recall_nick; }
 
         # make -n behave like -b if -n > 1 and nick is context
         if ((defined $recall_context or not defined $recall_history) and $recall_count > 1) {
@@ -247,9 +247,9 @@ sub recall_message {
             $recall_count  = 0;
         }
 
-        if ($recall_before + $recall_after > 200) { return "You may only select up to 200 lines of surrounding context."; }
+        if ($recall_before + $recall_after > 20) { return "You may only select up to 20 lines of surrounding context."; }
 
-        if ($recall_count > 1 and ($recall_before > 0 or $recall_after > 0)) { return "The `count` and `context before/after` options cannot be used together."; }
+        if ($recall_count > 1 and ($recall_before > 0 or $recall_after > 0)) { return "The `count` and `before/after` options cannot be used together."; }
 
         # swap nick and channel if recall nick looks like channel and channel wasn't specified
         if (not $channel_arg and $recall_nick =~ m/^#/) {
@@ -276,7 +276,7 @@ sub recall_message {
         # set channel to current channel if not specified
         $recall_channel = $from if not defined $recall_channel;
 
-        # another sanity check for people using it wrong
+        # yet another sanity check for people using it wrong
         if ($recall_channel !~ m/^#/) {
             $recall_history = "$recall_history $recall_channel";
             $recall_channel = $from;
@@ -347,8 +347,6 @@ sub recall_message {
         my $max_recall_time = $self->{pbot}->{registry}->get_value('messagehistory', 'max_recall_time');
 
         foreach my $msg (@$messages) {
-            $self->{pbot}->{logger}->log("$nick ($from) recalled <$msg->{nick}/$msg->{channel}> $msg->{msg}\n");
-
             if ($max_recall_time && gettimeofday - $msg->{timestamp} > $max_recall_time && not $self->{pbot}->{users}->loggedin_admin($from, "$nick!$user\@$host")) {
                 $max_recall_time = duration($max_recall_time);
                 $recall_text .= "Sorry, you can not recall messages older than $max_recall_time.";
