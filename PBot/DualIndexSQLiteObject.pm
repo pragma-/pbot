@@ -88,6 +88,12 @@ sub end {
     $self->{pbot}->{timer}->unregister("DualIndexSQLiteObject $self->{name} Timer");
 }
 
+sub load  {
+    my ($self) = @_;
+    $self->create_database;
+    $self->create_cache;
+}
+
 sub create_database {
     my ($self) = @_;
 
@@ -334,37 +340,79 @@ sub get_keys {
     return @keys;
 }
 
-sub get {
+sub get_each {
     my ($self, %opts) = @_;
 
-    my $data = eval {
+    my $sth = eval {
         my $sql = 'SELECT ';
         my @keys = ();
         my @where = ();
 
         foreach my $key (keys %opts) {
+            next if $key eq '_sort';
+
+            if ($key eq '_everything') {
+                push @keys, '*';
+                next;
+            }
+
             if (defined $opts{$key}) {
                 if ($key =~ s/^!//) {
-                    push @where, "\"$key\" != ?";
+                    push @where, qq{"$key" != ?};
                 } else {
-                    push @where, "\"$key\" = ?";
+                    push @where, qq{"$key" = ?};
                 }
             }
-            push @keys, $key;
+
+            push @keys, $key unless $opts{_everything};
         }
 
         $sql .= join ', ', @keys;
         $sql .= ' FROM Stuff WHERE ';
         $sql .= join ' AND ', @where;
+        $sql .= qq{ORDER BY "$opts{_sort}"} if defined $opts{_sort};
 
         my $sth = $self->{dbh}->prepare($sql);
 
         my $param = 0;
         foreach my $key (keys %opts) {
+            next if $key eq '_everything' or $key eq '_sort';
             $sth->bind_param(++$param, $opts{$key}) if defined $opts{$key};
         }
 
         $sth->execute;
+        return $sth;
+    };
+
+    if ($@) {
+        $self->{pbot}->{logger}->log("Error getting data: $@\n");
+        return undef;
+    }
+
+    return $sth;
+}
+
+sub get_next {
+    my ($self, $sth) = @_;
+
+    my $data = eval {
+        return $sth->fetchrow_hashref;
+    };
+
+    if ($@) {
+        $self->{pbot}->{logger}->log("Error getting next: $@\n");
+        return undef;
+    }
+
+    return $data;
+}
+
+sub get_all {
+    my ($self, %opts) = @_;
+
+    my $sth = $self->get_each(%opts);
+
+    my $data = eval {
         return $sth->fetchall_arrayref({});
     };
 
@@ -717,12 +765,6 @@ sub unset {
     }
 
     return "[$name1] $name2.$key unset.";
-}
-
-sub load  {
-    my ($self) = @_;
-    $self->create_database;
-    $self->create_cache;
 }
 
 # nothing to do here for SQLite

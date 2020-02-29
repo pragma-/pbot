@@ -732,7 +732,6 @@ sub factalias {
 
     $self->{pbot}->{factoids}->add_factoid('text', $chan, "$nick!$user\@$host", $alias, "/call $command");
     $self->{pbot}->{logger}->log("$nick!$user\@$host [$chan] aliased $alias => $command\n");
-    $self->{pbot}->{factoids}->save_factoids();
     return "/say $alias aliases `$command` for " . ($chan eq '.*' ? 'the global channel' : $chan);
 }
 
@@ -1322,7 +1321,7 @@ sub factfind {
 
         foreach my $chan (sort $factoids->get_keys) {
             next if defined $channel and $chan !~ /^$channel$/i;
-            foreach my $factoid ($factoids->get(index1 => $chan, index2 => undef, owner => undef, ref_user => undef, edited_by => undef, action => undef)) {
+            foreach my $factoid ($factoids->get_all(index1 => $chan, index2 => undef, owner => undef, ref_user => undef, edited_by => undef, action => undef)) {
                 my $match = 0;
 
                 if ($owner eq '.*') {
