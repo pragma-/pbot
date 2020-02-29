@@ -192,19 +192,20 @@ sub export_factoids {
         print FILE "</tr>\n</thead>\n<tbody>\n";
         $table_id++;
 
-        foreach my $trigger (sort $self->{factoids}->get_keys($channel)) {
-            my $trigger_name = $self->{factoids}->get_data($channel, $trigger, '_name');
-            if ($self->{factoids}->get_data($channel, $trigger, 'type') eq 'text') {
+        my $iter = $self->{factoids}->get_each(index1 => $channel, _everything => 1, _sort => 'index1');
+        while ((my $factoid = $self->{factoids}->get_next($iter)) != undef) {
+            my $trigger_name = $self->{factoids}->get_data($factoid->{index1}, $factoid->{index2}, '_name');
+            if ($factoid->{type} eq 'text') {
                 $i++;
                 if   ($i % 2) { print FILE "<tr bgcolor=\"#dddddd\">\n"; }
                 else          { print FILE "<tr>\n"; }
 
-                print FILE "<td>" . encode_entities($self->{factoids}->get_data($channel, $trigger, 'owner')) . "</td>\n";
-                print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $self->{factoids}->get_data($channel, $trigger, 'created_on')) . "</td>\n";
+                print FILE "<td>" . encode_entities($factoid->{'owner'}) . "</td>\n";
+                print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $factoid->{'created_on'}) . "</td>\n";
 
-                print FILE "<td>" . $self->{factoids}->get_data($channel, $trigger, 'ref_count') . "</td>\n";
+                print FILE "<td>" . $factoid->{'ref_count'} . "</td>\n";
 
-                my $action = $self->{factoids}->get_data($channel, $trigger, 'action');
+                my $action = $factoid->{'action'};
 
                 if ($action =~ m/https?:\/\/[^ ]+/) {
                     $action =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http" . encode_entities($2) . "'>http" . encode_entities($2) . "<\/a>"/ge;
@@ -213,8 +214,8 @@ sub export_factoids {
                     $action = encode_entities($action);
                 }
 
-                if ($self->{factoids}->exists($channel, $trigger, 'action_with_args')) {
-                    my $with_args = $self->{factoids}->get_data($channel, $trigger, 'action_with_args');
+                if (defined $factoid->{'action_with_args'}) {
+                    my $with_args = $factoid->{'action_with_args'};
                     $with_args =~ s/(.*?)http(s?:\/\/[^ ]+)/encode_entities($1) . "<a href='http" . encode_entities($2) . "'>http" . encode_entities($2) . "<\/a>"/ge;
                     $with_args =~ s/(.*)<\/a>(.*$)/"$1<\/a>" . encode_entities($2)/e;
                     print FILE "<td width=100%><b>" . encode_entities($trigger_name) . "</b> is $action<br><br><b>with_args:</b> " . encode_entities($with_args) . "</td>\n";
@@ -222,18 +223,18 @@ sub export_factoids {
                     print FILE "<td width=100%><b>" . encode_entities($trigger_name) . "</b> is $action</td>\n";
                 }
 
-                if ($self->{factoids}->exists($channel, $trigger, 'edited_by')) {
-                    print FILE "<td>" . $self->{factoids}->get_data($channel, $trigger, 'edited_by') . "</td>\n";
-                    print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $self->{factoids}->get_data($channel, $trigger, 'edited_on')) . "</td>\n";
+                if (defined $factoid->{'edited_by'}) {
+                    print FILE "<td>" . $factoid->{'edited_by'} . "</td>\n";
+                    print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $factoid->{'edited_on'}) . "</td>\n";
                 } else {
                     print FILE "<td></td>\n";
                     print FILE "<td></td>\n";
                 }
 
-                print FILE "<td>" . encode_entities($self->{factoids}->get_data($channel, $trigger, 'ref_user')) . "</td>\n";
+                print FILE "<td>" . encode_entities($factoid->{'ref_user'}) . "</td>\n";
 
-                if ($self->{factoids}->exists($channel, $trigger, 'last_referenced_on')) {
-                    print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $self->{factoids}->get_data($channel, $trigger, 'last_referenced_on')) . "</td>\n";
+                if (defined $factoid->{'last_referenced_on'}) {
+                    print FILE "<td>" . encode_entities(strftime "%Y/%m/%d %H:%M:%S", localtime $factoid->{'last_referenced_on'}) . "</td>\n";
                 } else {
                     print FILE "<td></td>\n";
                 }
@@ -329,7 +330,7 @@ sub find_factoid {
             }
 
             if (not $opts{exact_channel}) {
-                foreach my $factoid ($self->{factoids}->get(index2 => $keyword, index1 => undef, action => undef)) {
+                foreach my $factoid ($self->{factoids}->get_all(index2 => $keyword, index1 => undef, action => undef)) {
                     $channel = $factoid->{index1};
                     $trigger = $keyword;
 
@@ -370,10 +371,10 @@ sub find_factoid {
                 my @factoids;
 
                 if ($opts{exact_channel}) {
-                    @factoids = $self->{factoids}->get(type => 'regex', index1 => $channel, index2 => undef, action => undef);
-                    push @factoids, $self->{factoids}->get(type => 'regex', index1 => '.*', index2 => undef, action => undef);
+                    @factoids = $self->{factoids}->get_all(type => 'regex', index1 => $channel, index2 => undef, action => undef);
+                    push @factoids, $self->{factoids}->get_all(type => 'regex', index1 => '.*', index2 => undef, action => undef);
                 } else {
-                    @factoids = $self->{factoids}->get(type => 'regex', index1 => undef, index2 => undef, action => undef);
+                    @factoids = $self->{factoids}->get_all(type => 'regex', index1 => undef, index2 => undef, action => undef);
                 }
 
                 foreach my $factoid (@factoids) {
@@ -782,7 +783,7 @@ sub interpreter {
         my ($fwd_chan, $fwd_trig);
 
         # build list of which channels contain the keyword, keeping track of the last one and count
-        foreach my $factoid ($self->{factoids}->get(index2 => $original_keyword, index1 => undef, type => undef)) {
+        foreach my $factoid ($self->{factoids}->get_all(index2 => $original_keyword, index1 => undef, type => undef)) {
             next if $factoid->{type} ne 'text' and $factoid->{type} ne 'module';
             push @chanlist, $self->{factoids}->get_data($factoid->{index1}, '_name');
             $fwd_chan = $factoid->{index1};
