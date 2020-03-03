@@ -361,9 +361,10 @@ sub get_each {
             }
 
             if ($key eq '_sort') {
-                if ($value =~ /^\-/) {
+                if ($value =~ s/^\-//) {
                     push @sort, "$value DESC";
                 } else {
+                    $value =~ s/^\+//; # optional
                     push @sort, "$value ASC";
                 }
                 next;
