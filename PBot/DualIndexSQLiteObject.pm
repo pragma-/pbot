@@ -341,43 +341,65 @@ sub get_keys {
 }
 
 sub get_each {
-    my ($self, %opts) = @_;
+    my ($self, @opts) = @_;
 
     my $sth = eval {
         my $sql = 'SELECT ';
         my @keys = ();
+        my @values = ();
         my @where = ();
+        my @sort = ();
+        my $everything = 0;
 
-        foreach my $key (keys %opts) {
-            next if $key eq '_sort';
+        foreach my $expr (@opts) {
+            my ($key, $op, $value) = split /\s*([!=<>]+)\s*/, $expr, 3;
 
             if ($key eq '_everything') {
+                $everything = 1;
                 push @keys, '*';
                 next;
             }
 
-            if (defined $opts{$key}) {
-                if ($key =~ s/^!//) {
-                    push @where, qq{"$key" != ?};
+            if ($key eq '_sort') {
+                if ($value =~ /^\-/) {
+                    push @sort, "$value DESC";
                 } else {
-                    push @where, qq{"$key" = ?};
+                    push @sort, "$value ASC";
                 }
+                next;
             }
 
-            push @keys, $key unless $opts{_everything};
+            if (defined $op) {
+                my $prefix = 'AND ';
+
+                if ($op eq '=' or $op eq '==') {
+                    $op = '=';
+                } elsif ($op eq '!=' or $op eq '<>') {
+                    $op = '!=';
+                }
+
+                if ($key =~ s/^(OR\s+|AND\s+)//) {
+                    $prefix = $1;
+                }
+
+                $prefix = '' if not @where;
+                push @where, qq{$prefix"$key" $op ?};
+                push @values, $value;
+            }
+
+            push @keys, $key unless $everything or grep { $_ eq $key } @keys;
         }
 
         $sql .= join ', ', @keys;
         $sql .= ' FROM Stuff WHERE ';
-        $sql .= join ' AND ', @where;
-        $sql .= qq{ORDER BY "$opts{_sort}"} if defined $opts{_sort};
+        $sql .= join ' ', @where;
+        $sql .= ' ORDER BY ' . join(', ', @sort) if @sort;
 
         my $sth = $self->{dbh}->prepare($sql);
 
         my $param = 0;
-        foreach my $key (keys %opts) {
-            next if $key eq '_everything' or $key eq '_sort';
-            $sth->bind_param(++$param, $opts{$key}) if defined $opts{$key};
+        foreach my $value (@values) {
+            $sth->bind_param(++$param, $value);
         }
 
         $sth->execute;
@@ -408,9 +430,9 @@ sub get_next {
 }
 
 sub get_all {
-    my ($self, %opts) = @_;
+    my ($self, @opts) = @_;
 
-    my $sth = $self->get_each(%opts);
+    my $sth = $self->get_each(@opts);
 
     my $data = eval {
         return $sth->fetchall_arrayref({});

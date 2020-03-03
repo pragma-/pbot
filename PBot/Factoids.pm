@@ -192,8 +192,8 @@ sub export_factoids {
         print FILE "</tr>\n</thead>\n<tbody>\n";
         $table_id++;
 
-        my $iter = $self->{factoids}->get_each(index1 => $channel, _everything => 1, _sort => 'index1');
-        while ((my $factoid = $self->{factoids}->get_next($iter)) != undef) {
+        my $iter = $self->{factoids}->get_each("index1 = $channel", '_everything', '_sort = index1');
+        while (defined (my $factoid = $self->{factoids}->get_next($iter))) {
             my $trigger_name = $self->{factoids}->get_data($factoid->{index1}, $factoid->{index2}, '_name');
             if ($factoid->{type} eq 'text') {
                 $i++;
@@ -320,6 +320,7 @@ sub find_factoid {
 
             if ($opts{exact_channel} and not $opts{exact_trigger}) {
                 if (not $self->{factoids}->exists($from, $keyword)) {
+                    ($channel, $trigger) = ($from, $keyword);
                     goto CHECK_REGEX if $from eq '.*';
                     goto CHECK_REGEX if not $self->{factoids}->exists('.*', $keyword);
                     ($channel, $trigger) = ('.*', $keyword);
@@ -330,7 +331,7 @@ sub find_factoid {
             }
 
             if (not $opts{exact_channel}) {
-                foreach my $factoid ($self->{factoids}->get_all(index2 => $keyword, index1 => undef, action => undef)) {
+                foreach my $factoid ($self->{factoids}->get_all("index2 = $keyword", 'index1', 'action')) {
                     $channel = $factoid->{index1};
                     $trigger = $keyword;
 
@@ -371,10 +372,13 @@ sub find_factoid {
                 my @factoids;
 
                 if ($opts{exact_channel}) {
-                    @factoids = $self->{factoids}->get_all(type => 'regex', index1 => $channel, index2 => undef, action => undef);
-                    push @factoids, $self->{factoids}->get_all(type => 'regex', index1 => '.*', index2 => undef, action => undef);
+                    if ($channel ne '.*') {
+                        @factoids = $self->{factoids}->get_all('type = regex', "index1 = $channel", 'OR index1 = .*', 'index2', 'action');
+                    } else {
+                        @factoids = $self->{factoids}->get_all('type = regex', "index1 = $channel", 'index2', 'action');
+                    }
                 } else {
-                    @factoids = $self->{factoids}->get_all(type => 'regex', index1 => undef, index2 => undef, action => undef);
+                    @factoids = $self->{factoids}->get_all('type = regex', 'index1', 'index2', 'action');
                 }
 
                 foreach my $factoid (@factoids) {
@@ -383,7 +387,6 @@ sub find_factoid {
                     $action  = $factoid->{action};
 
                     if ($string =~ /$trigger/) {
-
                         if ($opts{find_alias}) {
                             my $command = $action;
                             my $arglist = $self->{pbot}->{interpreter}->make_args($command);
@@ -783,7 +786,7 @@ sub interpreter {
         my ($fwd_chan, $fwd_trig);
 
         # build list of which channels contain the keyword, keeping track of the last one and count
-        foreach my $factoid ($self->{factoids}->get_all(index2 => $original_keyword, index1 => undef, type => undef)) {
+        foreach my $factoid ($self->{factoids}->get_all("index2 = $original_keyword", 'index1', 'type')) {
             next if $factoid->{type} ne 'text' and $factoid->{type} ne 'module';
             push @chanlist, $self->{factoids}->get_data($factoid->{index1}, '_name');
             $fwd_chan = $factoid->{index1};

@@ -1321,7 +1321,7 @@ sub factfind {
 
         foreach my $chan (sort $factoids->get_keys) {
             next if defined $channel and $chan !~ /^$channel$/i;
-            foreach my $factoid ($factoids->get_all(index1 => $chan, index2 => undef, owner => undef, ref_user => undef, edited_by => undef, action => undef)) {
+            foreach my $factoid ($factoids->get_all("index1 = $chan", 'index2', 'owner', 'ref_user', 'edited_by', 'action')) {
                 my $match = 0;
 
                 if ($owner eq '.*') {
