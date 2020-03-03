@@ -371,7 +371,7 @@ sub get_each {
             }
 
             if (defined $op) {
-                my $prefix = 'AND ';
+                my $prefix = 'AND';
 
                 if ($op eq '=' or $op eq '==') {
                     $op = '=';
@@ -379,12 +379,12 @@ sub get_each {
                     $op = '!=';
                 }
 
-                if ($key =~ s/^(OR\s+|AND\s+)//) {
+                if ($key =~ s/^(OR|AND)\s+//) {
                     $prefix = $1;
                 }
 
                 $prefix = '' if not @where;
-                push @where, qq{$prefix"$key" $op ?};
+                push @where, [ $prefix, $key, $op ];
                 push @values, $value;
             }
 
@@ -392,8 +392,34 @@ sub get_each {
         }
 
         $sql .= join ', ', @keys;
-        $sql .= ' FROM Stuff WHERE ';
-        $sql .= join ' ', @where;
+        $sql .= ' FROM Stuff WHERE';
+
+        my $in_or = 0;
+        for (my $i = 0; $i < @where; $i++) {
+            my ($prefix, $key, $op) = @{$where[$i]};
+            my ($next_prefix, $next_key) = ('', '');
+
+            if ($i < @where - 1) {
+                ($next_prefix, $next_key) = @{$where[$i + 1]};
+            }
+
+            if ($next_prefix eq 'OR' and $next_key eq $key) {
+                $sql .= "$prefix ";
+                $sql .= '(' if not $in_or;
+                $sql .= "\"$key\" $op ? ";
+                $in_or = 1;
+            } else {
+                $sql .= "$prefix \"$key\" $op ? ";
+
+                if ($in_or) {
+                    $sql .= ') ';
+                    $in_or = 0;
+                }
+            }
+        }
+
+        $sql .= ')' if $in_or;
+
         $sql .= ' ORDER BY ' . join(', ', @sort) if @sort;
 
         my $sth = $self->{dbh}->prepare($sql);
