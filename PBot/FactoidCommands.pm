@@ -68,10 +68,7 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->top20(@_) },        "top20",      0);
     $self->{pbot}->{commands}->register(sub { $self->histogram(@_) },    "histogram",  0);
     $self->{pbot}->{commands}->register(sub { $self->count(@_) },        "count",      0);
-
-    # the following commands have not yet been updated to use the new factoid structure
-    # DO NOT USE!!  Factoid corruption may occur.
-    $self->{pbot}->{commands}->register(sub { $self->add_regex(@_) }, "regex", 1);
+    $self->{pbot}->{commands}->register(sub { $self->add_regex(@_) },    "regex",      1);
 }
 
 sub call_factoid {
@@ -736,32 +733,32 @@ sub factalias {
 }
 
 sub add_regex {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments) = @_;
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
-    my ($keyword, $text) = $arguments =~ /^(.*?)\s+(.*)$/ if defined $arguments;
+    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($keyword, $text) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
     $from = '.*' if not defined $from or $from !~ /^#/;
 
-    if (not defined $keyword) {
-        $text = "";
-        foreach my $trigger (sort $factoids->get_keys($from)) {
-            if ($factoids->get_data($from, $trigger, 'type') eq 'regex') { $text .= $trigger . " "; }
-        }
-        return "Stored regexs for channel $from: $text";
-    }
+    if (not defined $keyword) { return "Usage: regex <regex> <command> | regex <channel>"; }
 
-    if (not defined $text) { return "Usage: regex <regex> <command>"; }
+    if (not defined $text) {
+        my @regexes;
+        my $iter = $self->{pbot}->{factoids}->{factoids}->get_each('type = regex', "index1 = $keyword", 'index2', '_sort = index2');
+        while (defined (my $factoid = $self->{pbot}->{factoids}->{factoids}->get_next($iter))) {
+            push @regexes, $factoid->{index2};
+        }
+        $text = join '; ', @regexes;
+        $text = 'none' if not length $text;
+        return "Regex factoids for channel $keyword: $text";
+    }
 
     my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from, $keyword, exact_channel => 1, exact_trigger => 1);
 
     if (defined $trigger) {
-        $self->{pbot}->{logger}->log("$nick!$user\@$host attempt to overwrite $trigger\n");
         return "/say $trigger already exists for channel $channel.";
     }
 
     $self->{pbot}->{factoids}->add_factoid('regex', $from, "$nick!$user\@$host", $keyword, $text);
-    $self->{pbot}->{logger}->log("$nick!$user\@$host added [$keyword] => [$text]\n");
+    $self->{pbot}->{logger}->log("$nick!$user\@$host added regex [$keyword] => [$text]\n");
     return "/say $keyword added.";
 }
 
