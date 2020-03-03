@@ -913,27 +913,26 @@ sub histogram {
     my $self = shift;
     my ($from, $nick, $user, $host, $arguments) = @_;
     my $factoids = $self->{pbot}->{factoids}->{factoids};
-    my %hash;
+    my %owners;
     my $factoid_count = 0;
 
-    foreach my $channel ($factoids->get_keys) {
-        foreach my $command ($factoids->get_keys($channel)) {
-            if ($factoids->get_data($channel, $command, 'type') eq 'text') {
-                $hash{$factoids->{$channel}->{$command}->{owner}}++;
-                $factoid_count++;
-            }
-        }
+    my $iter = $factoids->get_each('type = text', 'owner');
+    while (defined (my $factoid = $factoids->get_next($iter))) {
+        my ($owner) = $factoid->{owner} =~ m/^([^!]+)/;
+        $owners{$owner}++;
+        $factoid_count++;
     }
 
+    my $top = 15;
     my $text;
     my $i = 0;
-    foreach my $owner (sort { $hash{$b} <=> $hash{$a} } keys %hash) {
-        my $percent = int($hash{$owner} / $factoid_count * 100);
-        $text .= "$owner: $hash{$owner} ($percent" . "%)\n";
+    foreach my $owner (sort { $owners{$b} <=> $owners{$a} } keys %owners) {
+        my $percent = int($owners{$owner} / $factoid_count * 100);
+        $text .= "$owner: $owners{$owner} ($percent" . "%)\n";
         $i++;
-        last if $i >= 10;
+        last if $i >= $top;
     }
-    return "/say $factoid_count factoids, top 10 submitters:\n$text";
+    return "/say $factoid_count factoids, top $top submitters:\n$text";
 }
 
 sub factshow {
@@ -1155,9 +1154,7 @@ sub factinfo {
 }
 
 sub top20 {
-    my $self = shift;
-
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
     my $factoids = $self->{pbot}->{factoids}->{factoids};
     my %hash     = ();
     my $text     = "";
@@ -1168,56 +1165,51 @@ sub top20 {
     if (not defined $channel) { return "Usage: top20 <channel> [nick or 'recent']"; }
 
     if (not defined $args) {
-        foreach my $chan (sort $factoids->get_keys) {
-            next if lc $chan ne lc $channel;
-            foreach my $command (sort { $factoids->get_data($chan, $b, 'ref_count') <=> $factoids->get_data($chan, $a, 'ref_count') } $factoids->get_keys($chan)) {
-                if ($factoids->get_data($chan, $command, 'ref_count') > 0 and $factoids->get_data($chan, $command, 'type') eq 'text') {
-                    $text .= $factoids->get_data($chan, $command, '_name') . ' (' . $factoids->get_data($chan, $command, 'ref_count') . ') ';
-                    $i++;
-                    last if $i >= 20;
-                }
-            }
-            $channel = "the global channel"                             if $channel eq '.*';
-            $text    = "Top $i referenced factoids for $channel: $text" if $i > 0;
-            return $text;
-        }
-    } else {
-        if (lc $args eq "recent") {
-            foreach my $chan (sort $factoids->get_keys) {
-                next if lc $chan ne lc $channel;
-                foreach my $command (sort { $factoids->get_data($chan, $b, 'created_on') <=> $factoids->get_data($chan, $a, 'created_on') } $factoids->get_keys($chan)) {
-                    my $ago   = concise ago gettimeofday - $factoids->get_data($chan, $command, 'created_on');
-                    my $owner = $factoids->get_data($chan, $command, 'owner');
-                    $owner =~ s/!.*$//;
-                    $text .= '   ' . $factoids->get_data($chan, $command, '_name') . " [$ago by $owner]\n";
-                    $i++;
-                    last if $i >= 50;
-                }
-                $channel = "global channel"                                if $channel eq '.*';
-                $text    = "$i most recent $channel submissions:\n\n$text" if $i > 0;
-                return $text;
-            }
+        my $iter = $factoids->get_each('type = text', "index1 = $channel", 'index2', 'ref_count > 0', '_sort = -ref_count');
+        while (defined (my $factoid = $factoids->get_next($iter))) {
+            $text .= $factoids->get_data($factoid->{index1}, $factoid->{index2}, '_name') . " ($factoid->{ref_count}) ";
+            $i++;
+            last if $i >= 20;
         }
 
-        my $user = lc $args;
-        foreach my $chan (sort $factoids->get_keys) {
-            next if lc $chan ne lc $channel;
-            foreach my $command (sort { ($factoids->get_data($chan, $b, 'last_referenced_on') || 0) <=> ($factoids->get_data($chan, $a, 'last_referenced_on') || 0) }
-                $factoids->get_keys($chan))
-            {
-                next if $command eq '_name';
-                my $ref_user = lc $factoids->get_data($chan, $command, 'ref_user');
-                if ($ref_user =~ /\Q$args\E/i) {
-                    if ($user ne $ref_user && not $user =~ /$ref_user/i) { $user .= " ($ref_user)"; }
-                    my $ago = $factoids->get_data($chan, $command, 'last_referenced_on') ? concise ago(gettimeofday - $factoids->get_data($chan, $command, 'last_referenced_on')) : "unknown";
-                    $text .= '   ' . $factoids->get_data($chan, $command, '_name') . " [$ago]\n";
-                    $i++;
-                    last if $i >= 20;
-                }
-            }
-            $text = "$i factoids last referenced by $user:\n\n$text" if $i > 0;
-            return $text;
+        $channel = "the global channel"                             if $channel eq '.*';
+        if ($i > 0) {
+            return "Top $i referenced factoids for $channel: $text";
+        } else {
+            return "No factoids referenced in $channel.";
         }
+    }
+
+    if (lc $args eq "recent") {
+        my $iter = $factoids->get_each('type = text', "index1 = $channel", 'index2', 'created_on', 'owner', '_sort = -created_on');
+        while (defined (my $factoid = $factoids->get_next($iter))) {
+            my $ago   = concise ago gettimeofday - $factoid->{'created_on'};
+            my ($owner) = $factoid->{'owner'} =~ /^([^!]+)/;
+            $text .= '   ' . $factoids->get_data($factoid->{index1}, $factoid->{index2}, '_name') . " [$ago by $owner]\n";
+            $i++;
+            last if $i >= 50;
+        }
+
+        $channel = "global channel"                                if $channel eq '.*';
+        $text    = "$i most recent $channel submissions:\n\n$text" if $i > 0;
+        return $text;
+    }
+
+    my $iter = $factoids->get_each('type = text', "index1 = $channel", 'index2', 'ref_user', 'last_referenced_on', '_sort = -last_referenced_on');
+    while (defined (my $factoid = $factoids->get_next($iter))) {
+        my ($ref_user) = $factoid->{ref_user} =~ /^([^!]+)/;
+        if ($ref_user =~ /^\Q$args\E/i) {
+            my $ago = $factoid->{'last_referenced_on'} ? concise ago(gettimeofday - $factoid->{'last_referenced_on'}) : "unknown";
+            $text .= '   ' . $factoids->get_data($factoid->{index1}, $factoid->{index2}, '_name') . " [$ago]\n";
+            $i++;
+            last if $i >= 20;
+        }
+    }
+
+    if ($i > 0) {
+        return "$i $channel factoids last referenced by $args:\n\n$text";
+    } else {
+        return "No factoids last referenced by $args in $channel.";
     }
 }
 
@@ -1233,18 +1225,16 @@ sub count {
     $arguments = ".*" if ($arguments =~ /^factoids$/);
 
     eval {
-        foreach my $channel ($factoids->get_keys) {
-            foreach my $command ($factoids->get_keys($channel)) {
-                next if $command eq '_name';
-                next if $factoids->get_data($channel, $command, 'type') ne 'text';
-                $total++;
-                if ($factoids->get_data($channel, $command, 'owner') =~ /^\Q$arguments\E$/i) { $i++; }
-            }
+        my $iter = $factoids->get_each('type = text', 'owner');
+        while (defined (my $factoid = $factoids->get_next($iter))) {
+            $total++;
+            my ($owner) = $factoid->{owner} =~ /^([^!]+)/;
+            if ($owner =~ /^$arguments$/i) { $i++; }
         }
     };
-    return "/msg $nick $arguments: $@" if $@;
+    return "/msg $nick Error counting $arguments: $@" if $@;
 
-    return "I have $i factoids." if $arguments eq ".*";
+    return "I have $i text factoids." if $arguments eq ".*";
 
     if ($i > 0) {
         my $percent = int($i / $total * 100);
