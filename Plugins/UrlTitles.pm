@@ -38,7 +38,7 @@ sub show_url_titles {
     return 0 if not $msg =~ m/https?:\/\/[^\s]/;
     return 0 if $event->{interpreted};
 
-    if ($self->{pbot}->{ignorelist}->is_ignore($channel, "$nick!$user\@$host")) {
+    if ($self->{pbot}->{ignorelist}->is_ignored($channel, "$nick!$user\@$host")) {
         return 0;
     }
 
