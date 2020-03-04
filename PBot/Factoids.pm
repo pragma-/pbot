@@ -812,9 +812,6 @@ sub interpreter {
 
         # otherwise keyword hasn't been found, display similiar matches for all channels
         else {
-            # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, don't say anything
-            return undef if length $stuff->{arguments} and not $self->{pbot}->{nicklist}->is_present($stuff->{from}, $stuff->{arguments});
-
             my $namespace = $strictnamespace ? $stuff->{from} : '.*';
             $namespace = '.*' if $namespace !~ /^#/;
 
@@ -832,12 +829,20 @@ sub interpreter {
             # otherwise find levenshtein closest matches
             $matches = $self->{factoids}->levenshtein_matches($namespace, lc $original_keyword, 0.50, $strictnamespace);
 
-            # don't say anything if nothing similiar was found
-            return undef if $matches eq 'none';
-            return undef if $stuff->{referenced};
+            # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, /msg the error to the caller
+            if (length $stuff->{arguments} and not $self->{pbot}->{nicklist}->is_present($stuff->{from}, $stuff->{arguments})) {
+                $stuff->{send_msg_to_caller} = 1;
+            }
+
+            # /msg the caller if nothing similiar was found
+            $stuff->{send_msg_to_caller} = 1 if $matches eq 'none';
+            $stuff->{send_msg_to_caller} = 1 if $stuff->{referenced};
+
+            my $msg_caller = '';
+            $msg_caller = "/msg $stuff->{nick} " if $stuff->{send_msg_to_caller};
 
             my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
-            return $ref_from . "No such factoid '$original_keyword'; did you mean $matches?";
+            return $msg_caller . $ref_from . "No such factoid '$original_keyword'; did you mean $matches?";
         }
     }
 
