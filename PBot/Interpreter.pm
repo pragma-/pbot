@@ -146,10 +146,9 @@ sub process_line {
 
     foreach $command (@commands) {
         # check if user is ignored (and command isn't `login`)
-        if ($command !~ /^login / && defined $from && $pbot->{ignorelist}->check_ignore($nick, $user, $host, $from)) {
-            if (not $pbot->{users}->loggedin_admin($from, "$nick!$user\@$host")) {
-                return 1;    # user is ignored
-            }
+        if ($command !~ /^login / && defined $from && $pbot->{ignorelist}->is_ignored($from, "$nick!$user\@$host")) {
+            $self->{pbot}->{logger}->log("Disregarding command from ignored user $nick!$user\@$host in $from.\n");
+            return 1;
         }
 
         $stuff->{text}    = $text;

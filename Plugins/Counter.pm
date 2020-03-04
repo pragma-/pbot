@@ -492,9 +492,8 @@ sub on_public {
 
     return 0 if $event->{interpreted};
 
-    if ($self->{pbot}->{ignorelist}->check_ignore($nick, $user, $host, $channel, 1)) {
-        my $admin = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
-        if (!defined $admin || $admin->{level} < 10) { return 0; }
+    if ($self->{pbot}->{ignorelist}->is_ignored($channel, "$nick!$user\@$host")) {
+        return 0;
     }
 
     if (not $self->dbi_begin) { return 0; }

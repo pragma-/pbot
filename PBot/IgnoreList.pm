@@ -8,180 +8,155 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::IgnoreList;
-
 use parent 'PBot::Class';
 
 use warnings; use strict;
 use feature 'unicode_strings';
 
-use PBot::IgnoreListCommands;
-use Time::HiRes qw(gettimeofday);
+use Time::Duration qw/concise duration/;
 
 sub initialize {
     my ($self, %conf) = @_;
+
     $self->{filename} = $conf{filename};
 
-    $self->{ignore_list}          = {};
-    $self->{ignore_flood_counter} = {};
-    $self->{last_timestamp}       = {};
+    $self->{ignorelist} = PBot::DualIndexHashObject->new(pbot => $self->{pbot}, name => 'IgnoreList', filename => $self->{filename});
+    $self->{ignorelist}->load;
 
-    $self->{commands} = PBot::IgnoreListCommands->new(pbot => $self->{pbot});
-    $self->load_ignores();
+    $self->{pbot}->{commands}->register(sub { $self->ignore_cmd(@_) },   "ignore",   1);
+    $self->{pbot}->{commands}->register(sub { $self->unignore_cmd(@_) }, "unignore", 1);
+
+    $self->{pbot}->{capabilities}->add('admin', 'can-ignore',   1);
+    $self->{pbot}->{capabilities}->add('admin', 'can-unignore', 1);
+
+    $self->{pbot}->{capabilities}->add('chanop', 'can-ignore',   1);
+    $self->{pbot}->{capabilities}->add('chanop', 'can-unignore', 1);
 
     $self->{pbot}->{timer}->register(sub { $self->check_ignore_timeouts }, 10);
 }
 
 sub add {
-    my $self = shift;
-    my ($hostmask, $channel, $length) = @_;
+    my ($self, $channel, $hostmask, $length, $owner) = @_;
 
-    if   ($length < 0) { $self->{ignore_list}->{$hostmask}->{$channel} = -1; }
-    else               { $self->{ignore_list}->{$hostmask}->{$channel} = gettimeofday + $length; }
+    if ($hostmask !~ /!/) {
+        $hostmask .= '!*@*';
+    } elsif ($hostmask !~ /@/) {
+        $hostmask .= '@*';
+    }
 
-    $self->save_ignores();
+    my $regex = quotemeta $hostmask;
+    $regex =~ s/\\\*/.*/g;
+    $regex =~ s/\\\?/./g;
+
+    my $data = {
+        owner => $owner,
+        created_on => time,
+        regex => $regex,
+    };
+
+    if ($length < 0) {
+        $data->{timeout} = -1;
+    } else {
+        $data->{timeout} = time + $length;
+    }
+
+    $self->{ignorelist}->add($channel, $hostmask, $data);
+
+    my $duration = $data->{timeout} == -1 ? 'all eternity' : duration $length;
+    return "$hostmask ignored for $duration";
 }
 
 sub remove {
-    my $self = shift;
-    my ($hostmask, $channel) = @_;
-
-    delete $self->{ignore_list}->{$hostmask}->{$channel};
-
-    if (not keys %{$self->{ignore_list}->{$hostmask}}) { delete $self->{ignore_list}->{$hostmask}; }
-
-    $self->save_ignores();
+    my ($self, $channel, $hostmask) = @_;
+    return $self->{ignorelist}->remove($channel, $hostmask);
 }
 
-sub clear_ignores {
-    my $self = shift;
-    $self->{ignore_list} = {};
-}
+sub is_ignored {
+    my ($self, $channel, $hostmask) = @_;
 
-sub load_ignores {
-    my $self = shift;
-    my $filename;
+    return 0 if $self->{pbot}->{users}->loggedin_admin($channel, $hostmask);
 
-    if   (@_) { $filename = shift; }
-    else      { $filename = $self->{filename}; }
-
-    if (not defined $filename) {
-        Carp::carp "No ignorelist path specified -- skipping loading of ignorelist";
-        return;
-    }
-
-    $self->{pbot}->{logger}->log("Loading ignorelist from $filename ...\n");
-
-    open(FILE, "< $filename") or Carp::croak "Couldn't open $filename: $!\n";
-    my @contents = <FILE>;
-    close(FILE);
-
-    my $i = 0;
-
-    foreach my $line (@contents) {
-        chomp $line;
-        $i++;
-
-        my ($hostmask, $channel, $length) = split(/\s+/, $line);
-
-        if (not defined $hostmask || not defined $channel || not defined $length) { Carp::croak "Syntax error around line $i of $filename\n"; }
-
-        if (exists ${$self->{ignore_list}}{$hostmask}{$channel}) { Carp::croak "Duplicate ignore [$hostmask][$channel] found in $filename around line $i\n"; }
-
-        $self->{ignore_list}->{$hostmask}->{$channel} = $length;
-    }
-
-    $self->{pbot}->{logger}->log("  $i entries in ignorelist\n");
-}
-
-sub save_ignores {
-    my $self = shift;
-    my $filename;
-
-    if   (@_) { $filename = shift; }
-    else      { $filename = $self->{filename}; }
-
-    if (not defined $filename) {
-        Carp::carp "No ignorelist path specified -- skipping saving of ignorelist\n";
-        return;
-    }
-
-    open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
-
-    foreach my $hostmask (keys %{$self->{ignore_list}}) {
-        foreach my $channel (keys %{$self->{ignore_list}->{$hostmask}}) {
-            my $length = $self->{ignore_list}->{$hostmask}->{$channel};
-            print FILE "$hostmask $channel $length\n";
+    foreach my $chan ('.*', $channel) {
+        foreach my $ignored ($self->{ignorelist}->get_keys($chan)) {
+            my $regex = $self->{ignorelist}->get_data($chan, $ignored, 'regex');
+            return 1 if $hostmask =~ /^$regex$/i;
         }
     }
 
-    close(FILE);
-}
-
-sub check_ignore {
-    my $self = shift;
-    my ($nick, $user, $host, $channel, $silent) = @_;
-    my $pbot = $self->{pbot};
-    $channel = lc $channel;
-
-    my $hostmask = "$nick!$user\@$host";
-
-    my $now = gettimeofday;
-
-    if (defined $channel) {    # do not execute following if text is coming from STDIN ($channel undef)
-        if ($channel =~ /^#/) { $self->{ignore_flood_counter}->{$channel}++; }
-
-        if (not exists $self->{last_timestamp}->{$channel}) { $self->{last_timestamp}->{$channel} = $now; }
-        elsif ($now - $self->{last_timestamp}->{$channel} >= 30) {
-            $self->{last_timestamp}->{$channel} = $now;
-            if (exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 0) { $self->{ignore_flood_counter}->{$channel} = 0; }
-        }
-
-=cut
-    if (exists $self->{ignore_flood_counter}->{$channel} and $self->{ignore_flood_counter}->{$channel} > 5) {
-      $self->{commands}->ignore_user("", "floodcontrol", "", "", ".* $channel 300");
-      $self->{ignore_flood_counter}->{$channel} = 0;
-      if ($channel =~ /^#/) {
-        $pbot->{conn}->me($channel, "has been overwhelmed.");
-        $pbot->{conn}->me($channel, "lies down and falls asleep.");
-        return 1;
-      }
-    }
-=cut
-
-    }
-
-    foreach my $ignored (keys %{$self->{ignore_list}}) {
-        foreach my $ignored_channel (keys %{$self->{ignore_list}->{$ignored}}) {
-            my $ignored_channel_escaped = quotemeta $ignored_channel;
-            my $ignored_escaped         = quotemeta $ignored;
-
-            $ignored_channel_escaped =~ s/\\(\.|\*)/$1/g;
-            $ignored_escaped         =~ s/\\(\.|\*)/$1/g;
-
-            if (($channel =~ /$ignored_channel_escaped/i) && ($hostmask =~ /$ignored_escaped/i)) {
-                $self->{pbot}->{logger}->log("$nick!$user\@$host message ignored in channel $channel (matches [$ignored] host and [$ignored_channel] channel)\n") unless $silent;
-                return 1;
-            }
-        }
-    }
     return 0;
 }
 
 sub check_ignore_timeouts {
-    my $self = shift;
-    my $now  = gettimeofday();
+    my ($self) = @_;
+    my $now    = time;
 
-    foreach my $hostmask (keys %{$self->{ignore_list}}) {
-        foreach my $channel (keys %{$self->{ignore_list}->{$hostmask}}) {
-            next if ($self->{ignore_list}->{$hostmask}->{$channel} == -1);    #permanent ignore
+    foreach my $channel ($self->{ignorelist}->get_keys) {
+        foreach my $hostmask ($self->{ignorelist}->get_keys($channel)) {
+            my $timeout = $self->{ignorelist}->get_data($channel, $hostmask, 'timeout');
+            next if $timeout == -1; # permanent ignore
 
-            if ($self->{ignore_list}->{$hostmask}->{$channel} < $now) {
+            if ($now >= $timeout) {
                 $self->{pbot}->{logger}->log("Unignoring $hostmask in channel $channel.\n");
-                $self->remove($hostmask, $channel);
-                if ($hostmask eq ".*") { $self->{pbot}->{conn}->me($channel, "awakens."); }
+                $self->remove($channel, $hostmask);
             }
         }
     }
+}
+
+sub ignore_cmd {
+    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+
+    my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+
+    return "Usage: ignore <hostmask> [channel [timeout]] | ignore list" if not defined $target;
+
+    if ($target =~ /^list$/i) {
+        my $text = "Ignored: ";
+        my $now  = time;
+        my $ignored = 0;
+
+        foreach my $channel (sort $self->{ignorelist}->get_keys) {
+            $text .= $channel eq '.*' ? "global:\n" : "$channel:\n";
+            my @list = ();
+            foreach my $hostmask (sort $self->{ignorelist}->get_keys($channel)) {
+                my $timeout = $self->{ignorelist}->get_data($channel, $hostmask, 'timeout');
+                if ($timeout == -1) {
+                    push @list, "  $hostmask";
+                } else {
+                    push @list, "  $hostmask (" . (concise duration $timeout - $now) . ')';
+                }
+                $ignored++;
+            }
+            $text .= join ";\n", @list;
+        }
+        return "Ignore list is empty." if not $ignored;
+        return "/msg $nick $text";
+    }
+
+    if (not defined $channel) {
+        $channel = ".*";    # all channels
+    }
+
+    if (not defined $length) {
+        $length = -1;       # permanently
+    } else {
+        my $error;
+        ($length, $error) = $self->{pbot}->{parsedate}->parsedate($length);
+        return $error if defined $error;
+    }
+
+    return $self->add($channel, $target, $length, "$nick!$user\@$host");
+}
+
+sub unignore_cmd {
+    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+
+    if (not defined $target) { return "Usage: unignore <hostmask> [channel]"; }
+
+    if (not defined $channel) { $channel = '.*'; }
+
+    return $self->remove($channel, $target);
 }
 
 1;

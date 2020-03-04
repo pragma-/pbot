@@ -38,9 +38,8 @@ sub show_url_titles {
     return 0 if not $msg =~ m/https?:\/\/[^\s]/;
     return 0 if $event->{interpreted};
 
-    if ($self->{pbot}->{ignorelist}->check_ignore($nick, $user, $host, $channel)) {
-        my $admin = $self->{pbot}->{users}->loggedin_admin($channel, "$nick!$user\@$host");
-        if (!defined $admin || $admin->{level} < 10) { return 0; }
+    if ($self->{pbot}->{ignorelist}->is_ignore($channel, "$nick!$user\@$host")) {
+        return 0;
     }
 
     # no titles for unidentified users in +z channels

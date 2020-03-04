@@ -447,8 +447,7 @@ sub reload {
         },
 
         'ignores' => sub {
-            $self->{ignorelist}->clear_ignores;
-            $self->{ignorelist}->load_ignores;
+            $self->{ignorelist}->{ignorelist}->load;
             return "Ignore list reloaded.";
         },
 
