@@ -6,6 +6,9 @@
 # extends the HashObject with an additional index key. Provides case-insensitive
 # access to both index keys, while preserving original case when displaying the
 # keys.
+#
+# Data is stored in working memory for lightning fast performance. If you have
+# a huge amount of data, consider DualIndexSQLiteObject instead.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -272,9 +275,17 @@ sub get_keys {
     my ($self, $primary_index, $secondary_index) = @_;
     return keys %{$self->{hash}} if not defined $primary_index;
 
+    my $lc_primary_index = lc $primary_index;
+
     if (not defined $secondary_index) {
-        return grep { $_ ne '_name' } keys %{$self->{hash}->{lc $primary_index}};
+        return () if not exists $self->{hash}->{$lc_primary_index};
+        return grep { $_ ne '_name' } keys %{$self->{hash}->{$lc_primary_index}};
     }
+
+    my $lc_secondary_index = lc $secondary_index;
+
+    return () if not exists $self->{hash}->{$lc_primary_index}
+        or not exists $self->{hash}->{$lc_primary_index}->{$lc_secondary_index};
 
     return grep { $_ ne '_name' } keys %{$self->{hash}->{lc $primary_index}->{lc $secondary_index}};
 }
@@ -363,7 +374,12 @@ sub remove {
     else                                                                                           { return "$self->{name}: [$name1] $name2.$data_index does not exist."; }
 }
 
-# for compatibility with SQLite object
+# for compatibility with DualIndexSQLiteObject
 sub create_metadata { }
+
+# todo:
+sub get_each { }
+sub get_next { }
+sub get_all  { }
 
 1;
