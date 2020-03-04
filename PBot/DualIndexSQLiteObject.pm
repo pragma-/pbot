@@ -2,7 +2,8 @@
 # Author: pragma_
 #
 # Purpose: Provides a dual-indexed SQLite object with an abstracted API that includes
-# setting and deleting values, caching, displaying nearest matches, etc.
+# setting and deleting values, caching, displaying nearest matches, etc. Designed to
+# be as compatible as possible with DualIndexHashObject; e.g. get_keys, get_data, etc.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
