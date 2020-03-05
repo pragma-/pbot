@@ -415,8 +415,7 @@ sub check_flood {
                         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
                     } else {    # private message flood
                         my $hostmask = $self->address_to_mask($host);
-                        $hostmask =~ s/\*/.*/g;
-                        next if exists $self->{pbot}->{ignorelist}->{ignore_list}->{".*!$user\@$hostmask"}->{$chan};
+                        next if $self->{pbot}->{ignorelist}->{ignorelist}->exists($chan, "*!$user\@$hostmask");
 
                         my $chan_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'offenses', 'last_offense');
                         $chan_data->{offenses}++;
@@ -425,7 +424,8 @@ sub check_flood {
 
                         my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $chan_data->{offenses} - 1);
 
-                        $self->{pbot}->{ignorelist}->add(".*!$user\@$hostmask", $chan, $length);
+                        my $owner = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+                        $self->{pbot}->{ignorelist}->add($chan, "*!$user\@$hostmask", $length, $owner);
                         $length = duration($length);
                         $self->{pbot}->{logger}->log("$nick msg flood offense " . $chan_data->{offenses} . " earned $length ignore\n");
                         $self->{pbot}->{conn}->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");
