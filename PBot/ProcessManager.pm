@@ -24,7 +24,7 @@ sub initialize {
     my ($self, %conf) = @_;
     $self->{pbot}->{commands}->register(sub { $self->ps_cmd(@_) },   'ps',   0);
     $self->{pbot}->{commands}->register(sub { $self->kill_cmd(@_) }, 'kill', 1);
-    $self->{pbot}->{capabilities}->add('admin', 'can-kill');
+    $self->{pbot}->{capabilities}->add('admin', 'can-kill', 1);
     $self->{processes} = {};
 
     # automatically reap children processes in background
