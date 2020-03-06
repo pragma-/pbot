@@ -22,6 +22,7 @@ sub initialize {
 
     $self->{ignorelist} = PBot::DualIndexHashObject->new(pbot => $self->{pbot}, name => 'IgnoreList', filename => $self->{filename});
     $self->{ignorelist}->load;
+    $self->enqueue_ignores;
 
     $self->{pbot}->{commands}->register(sub { $self->ignore_cmd(@_) },   "ignore",   1);
     $self->{pbot}->{commands}->register(sub { $self->unignore_cmd(@_) }, "unignore", 1);
@@ -31,8 +32,26 @@ sub initialize {
 
     $self->{pbot}->{capabilities}->add('chanop', 'can-ignore',   1);
     $self->{pbot}->{capabilities}->add('chanop', 'can-unignore', 1);
+}
 
-    $self->{pbot}->{timer}->register(sub { $self->check_ignore_timeouts }, 10);
+sub enqueue_ignores {
+    my ($self) = @_;
+    my $now    = time;
+
+    foreach my $channel ($self->{ignorelist}->get_keys) {
+        foreach my $hostmask ($self->{ignorelist}->get_keys($channel)) {
+            my $timeout = $self->{ignorelist}->get_data($channel, $hostmask, 'timeout');
+            next if $timeout == -1; # permanent ignore
+
+            my $interval = $timeout - $now;
+            $interval = 0 if $interval < 0;
+
+            $self->{pbot}->{timer}->enqueue_event(sub {
+                    $self->remove($channel, $hostmask);
+                }, $interval, "ignore_timeout $channel $hostmask"
+            );
+        }
+    }
 }
 
 sub add {
@@ -45,7 +64,7 @@ sub add {
     }
 
     my $regex = quotemeta $hostmask;
-    $regex =~ s/\\\*/.*/g;
+    $regex =~ s/\\\*/.*?/g;
     $regex =~ s/\\\?/./g;
 
     my $data = {
@@ -62,12 +81,29 @@ sub add {
 
     $self->{ignorelist}->add($channel, $hostmask, $data);
 
+    if ($length > 0) {
+        $self->{pbot}->{timer}->dequeue_event("ignore_timeout $channel $hostmask");
+
+        $self->{pbot}->{timer}->enqueue_event(sub {
+                $self->remove($channel, $hostmask);
+            }, $length, "ignore_timeout $channel $hostmask"
+        );
+    }
+
     my $duration = $data->{timeout} == -1 ? 'all eternity' : duration $length;
     return "$hostmask ignored for $duration";
 }
 
 sub remove {
     my ($self, $channel, $hostmask) = @_;
+
+    if ($hostmask !~ /!/) {
+        $hostmask .= '!*@*';
+    } elsif ($hostmask !~ /@/) {
+        $hostmask .= '@*';
+    }
+
+    $self->{pbot}->{timer}->dequeue_event("ignore_timeout $channel $hostmask");
     return $self->{ignorelist}->remove($channel, $hostmask);
 }
 
@@ -84,23 +120,6 @@ sub is_ignored {
     }
 
     return 0;
-}
-
-sub check_ignore_timeouts {
-    my ($self) = @_;
-    my $now    = time;
-
-    foreach my $channel ($self->{ignorelist}->get_keys) {
-        foreach my $hostmask ($self->{ignorelist}->get_keys($channel)) {
-            my $timeout = $self->{ignorelist}->get_data($channel, $hostmask, 'timeout');
-            next if $timeout == -1; # permanent ignore
-
-            if ($now >= $timeout) {
-                $self->{pbot}->{logger}->log("Unignoring $hostmask in channel $channel.\n");
-                $self->remove($channel, $hostmask);
-            }
-        }
-    }
 }
 
 sub ignore_cmd {
