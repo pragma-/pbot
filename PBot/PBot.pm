@@ -148,7 +148,7 @@ sub initialize {
     $self->{logger}->log("module_dir: $module_dir\n");
     $self->{logger}->log("plugin_dir: $plugin_dir\n");
 
-    $self->{timer}     = PBot::Timer->new(pbot => $self, timeout => 10, %conf);
+    $self->{timer}     = PBot::Timer->new(pbot => $self, timeout => 10, name => 'PBot Timer', %conf);
     $self->{modules}   = PBot::Modules->new(pbot => $self, %conf);
     $self->{functions} = PBot::Functions->new(pbot => $self, %conf);
     $self->{refresher} = PBot::Refresher->new(pbot => $self);

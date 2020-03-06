@@ -40,7 +40,7 @@ sub initialize {
     $self->{pbot}->{timer}->register(
         sub { $self->send_ping },
         $self->{pbot}->{registry}->get_value('lagchecker', 'lag_history_interval'),
-        'lag_history_interval'
+        'lag check'
     );
 
     $self->{pbot}->{commands}->register(sub { $self->lagcheck(@_) }, "lagcheck", 0);
@@ -49,7 +49,7 @@ sub initialize {
 
 sub lag_history_interval_trigger {
     my ($self, $section, $item, $newvalue) = @_;
-    $self->{pbot}->{timer}->update_interval('lag_history_interval', $newvalue);
+    $self->{pbot}->{timer}->update_interval('lag check', $newvalue);
 }
 
 sub send_ping {

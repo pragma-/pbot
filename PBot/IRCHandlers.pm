@@ -49,7 +49,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.join', sub { $self->on_self_join(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.part', sub { $self->on_self_part(@_) });
 
-    $self->{pbot}->{timer}->register(sub { $self->check_pending_whos }, 10);
+    $self->{pbot}->{timer}->register(sub { $self->check_pending_whos }, 10, 'Check Pending Whos');
 }
 
 sub default_handler {

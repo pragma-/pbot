@@ -48,10 +48,10 @@ sub initialize {
 
     $self->{pbot}->{registry}->add_default('text', 'general', 'deop_timeout', 300);
 
-    $self->{pbot}->{timer}->register(sub { $self->check_opped_timeouts },  10);
     $self->{pbot}->{timer}->register(sub { $self->check_unban_timeouts },  10);
     $self->{pbot}->{timer}->register(sub { $self->check_unmute_timeouts }, 10);
-    $self->{pbot}->{timer}->register(sub { $self->check_unban_queue },     30);
+    $self->{pbot}->{timer}->register(sub { $self->check_opped_timeouts },  10, 'Check Opped Timeouts');
+    $self->{pbot}->{timer}->register(sub { $self->check_unban_queue },     30, 'Check Unban Queue');
 }
 
 sub can_gain_ops {
