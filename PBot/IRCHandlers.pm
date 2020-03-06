@@ -269,6 +269,7 @@ sub on_mode {
                     if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
                         if ($self->{pbot}->{chanops}->{unban_timeout}->exists($channel, $target)) {
                             $self->{pbot}->{chanops}->{unban_timeout}->set($channel, $target, 'timeout', gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'));
+                            $self->{pbot}->{timer}->update_interval("unban_timeout $channel $target", $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'));
                         } else {
                             my $data = {
                                 reason  => 'Temp ban for banned-by-ChanServ or mask is *!*@*##fix_your_connection',
@@ -276,6 +277,7 @@ sub on_mode {
                                 timeout => gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'),
                             };
                             $self->{pbot}->{chanops}->{unban_timeout}->add($channel, $target, $data);
+                            $self->{pbot}->{chanops}->enqueue_unban_timeout($channel, $target, $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'));
                         }
                     }
                 } elsif ($target =~ m/^\*!\*@/ or $target =~ m/^\*!.*\@gateway\/web/i) {
@@ -294,6 +296,7 @@ sub on_mode {
                                 owner   => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
                             };
                             $self->{pbot}->{chanops}->{unban_timeout}->add($channel, $target, $data);
+                            $self->{pbot}->{chanops}->enqueue_unban_timeout($channel, $target, $timeout);
                         }
                     }
                 }
@@ -302,6 +305,7 @@ sub on_mode {
                     if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
                         if ($self->{pbot}->{chanops}->{unmute_timeout}->exists($channel, $target)) {
                             $self->{pbot}->{chanops}->{unmute_timeout}->set($channel, $target, 'timeout', gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'));
+                            $self->{pbot}->{timer}->update_interval("unmute_timeout $channel $target", $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'));
                         } else {
                             my $data = {
                                 reason  => 'Temp mute',
@@ -309,6 +313,7 @@ sub on_mode {
                                 timeout => gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'mute_timeout'),
                             };
                             $self->{pbot}->{chanops}->{unmute_timeout}->add($channel, $target, $data);
+                            $self->{pbot}->{chanops}->enqueue_unmute_timeout($channel, $target, $self->{pbot}->{registry}->get_value('bantracker', 'mute_timeout'));
                         }
                     }
                 }
@@ -587,7 +592,7 @@ my $who_pending = 0;
 sub on_whoreply {
     my ($self, $event_type, $event) = @_;
 
-    my ($ignored, $id, $user, $host, $server, $nick, $usermodes, $gecos) = @{$event->{event}->{args}};
+    my (undef, $id, $user, $host, $server, $nick, $usermodes, $gecos) = @{$event->{event}->{args}};
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
     my $hostmask = "$nick!$user\@$host";
     my $channel;
@@ -631,7 +636,7 @@ sub on_whoreply {
 sub on_whospcrpl {
     my ($self, $event_type, $event) = @_;
 
-    my ($ignored, $id, $user, $host, $nick, $nickserv, $gecos) = @{$event->{event}->{args}};
+    my (undef, $id, $user, $host, $nick, $nickserv, $gecos) = @{$event->{event}->{args}};
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
     $last_who_id = $id;
     my $hostmask = "$nick!$user\@$host";

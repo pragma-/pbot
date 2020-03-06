@@ -82,10 +82,16 @@ sub remove {
     return "Usage: chanrem <channel>" if not defined $arguments or not length $arguments;
 
     # clear unban timeouts
-    if ($self->{pbot}->{chanops}->{unban_timeout}->exists($arguments)) { $self->{pbot}->{chanops}->{unban_timeout}->remove($arguments); }
+    if ($self->{pbot}->{chanops}->{unban_timeout}->exists($arguments)) {
+        $self->{pbot}->{chanops}->{unban_timeout}->remove($arguments);
+        $self->{pbot}->{timer}->dequeue_event("unban_timeout $arguments .*");
+    }
 
     # clear unmute timeouts
-    if ($self->{pbot}->{chanops}->{unmute_timeout}->exists($arguments)) { $self->{pbot}->{chanops}->{unmute_timeout}->remove($arguments); }
+    if ($self->{pbot}->{chanops}->{unmute_timeout}->exists($arguments)) {
+        $self->{pbot}->{chanops}->{unmute_timeout}->remove($arguments);
+        $self->{pbot}->{timer}->dequeue_event("unmute_timeout $arguments .*");
+    }
 
     # TODO: ignores, etc?
     return $self->{channels}->remove($arguments);

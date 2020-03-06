@@ -83,6 +83,7 @@ sub on_banlist_entry {
                     reason  => 'Temp ban on *!*@... or *!...@gateway/web'
                 };
                 $self->{pbot}->{chanops}->{unban_timeout}->add($channel, $target, $data);
+                $self->{pbot}->{chanops}->enqueue_unban_timeout($channel, $target, $timeout);
             }
         }
     }
@@ -204,13 +205,22 @@ sub track_mode {
         delete $self->{banlist}->{$channel}->{$mode eq "-b" ? "+b" : "+q"}->{$target};
 
         if ($mode eq "-b") {
-            if ($self->{pbot}->{chanops}->{unban_timeout}->exists($channel, $target)) { $self->{pbot}->{chanops}->{unban_timeout}->remove($channel, $target); }
+            if ($self->{pbot}->{chanops}->{unban_timeout}->exists($channel, $target)) {
+                $self->{pbot}->{chanops}->{unban_timeout}->remove($channel, $target);
+                $self->{pbot}->{timer}->dequeue_event("unban_timeout $channel $target");
+            }
             elsif ($self->{pbot}->{chanops}->{unban_timeout}->exists($channel, "$target\$##stop_join_flood")) {
                 # freenode strips channel forwards from unban result if no ban exists with a channel forward
                 $self->{pbot}->{chanops}->{unban_timeout}->remove($channel, "$target\$##stop_join_flood");
+                $self->{pbot}->{timer}->dequeue_event(lc "unban_timeout $channel $target\$##stop_join_flood");
             }
         } elsif ($mode eq "-q") {
-            if ($self->{pbot}->{chanops}->{unmute_timeout}->exists($channel, $target)) { $self->{pbot}->{chanops}->{unmute_timeout}->remove($channel, $target); }
+            if ($self->{pbot}->{chanops}->{unmute_timeout}->exists($channel, $target)) {
+                $self->{pbot}->{chanops}->{unmute_timeout}->remove($channel, $target);
+                $self->{pbot}->{timer}->dequeue_event("unmute_timeout $channel $target");
+            } else {
+                $self->{pbot}->{logger}->log("No unmute timeout for $channel $target\n");
+            }
         }
     } else {
         $self->{pbot}->{logger}->log("BanTracker: Unknown mode '$mode'\n");

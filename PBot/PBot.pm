@@ -435,13 +435,11 @@ sub reload {
         },
 
         'blacklist' => sub {
-            $self->{blacklist}->clear_blacklist;
             $self->{blacklist}->load_blacklist;
             return "Blacklist reloaded.";
         },
 
         'ban-exemptions' => sub {
-            $self->{antiflood}->{'ban-exemptions'}->clear;
             $self->{antiflood}->{'ban-exemptions'}->load;
             return "Ban exemptions reloaded.";
         },
@@ -462,25 +460,25 @@ sub reload {
         },
 
         'bantimeouts' => sub {
-            $self->{chanops}->{unban_timeout}->clear;
+            $self->{timer}->dequeue_event('unban_timeout .*');
             $self->{chanops}->{unban_timeout}->load;
+            $self->{chanops}->enqueue_unban_timeouts;
             return "Ban timeouts reloaded.";
         },
 
         'mutetimeouts' => sub {
-            $self->{chanops}->{unmute_timeout}->clear;
+            $self->{timer}->dequeue_event('unmute_timeout .*');
             $self->{chanops}->{unmute_timeout}->load;
+            $self->{chanops}->enqueue_unmute_timeouts;
             return "Mute timeouts reloaded.";
         },
 
         'registry' => sub {
-            $self->{registry}->{registry}->clear;
             $self->{registry}->load;
             return "Registry reloaded.";
         },
 
         'factoids' => sub {
-            $self->{factoids}->{factoids}->clear;
             $self->{factoids}->load_factoids;
             return "Factoids reloaded.";
         }
