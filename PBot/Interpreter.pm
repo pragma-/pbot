@@ -27,12 +27,6 @@ sub initialize {
     $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',        $conf{compile_blocks_channels}        // '.*');
     $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_ignore_channels', $conf{compile_blocks_ignore_channels} // 'none');
     $self->{pbot}->{registry}->add_default('text', 'interpreter', 'max_recursion', 10);
-
-    $self->{output_queue}  = {};
-    $self->{command_queue} = {};
-
-    $self->{pbot}->{timer}->register(sub { $self->process_output_queue },  1);
-    $self->{pbot}->{timer}->register(sub { $self->process_command_queue }, 1);
 }
 
 sub process_line {
@@ -945,50 +939,54 @@ sub output_result {
 sub add_message_to_output_queue {
     my ($self, $channel, $message, $delay) = @_;
 
-    if ($delay > 0 and exists $self->{output_queue}->{$channel}) {
-        my $last_when = $self->{output_queue}->{$channel}->[-1]->{when};
-        $message->{when} = $last_when + $delay;
-    } else {
-        $message->{when} = gettimeofday + $delay;
-    }
+    $self->{pbot}->{timer}->enqueue_event(
+        sub {
+            my ($self) = @_;
 
-    push @{$self->{output_queue}->{$channel}}, $message;
+            my $stuff = {
+                from       => $channel,
+                nick       => $message->{nick},
+                user       => $message->{user},
+                host       => $message->{host},
+                line       => $message->{message},
+                command    => $message->{command},
+                checkflood => $message->{checkflood}
+            };
 
-    $self->process_output_queue if $delay <= 0;
-}
-
-sub process_output_queue {
-    my $self = shift;
-
-    foreach my $channel (keys %{$self->{output_queue}}) {
-        for (my $i = 0; $i < @{$self->{output_queue}->{$channel}}; $i++) {
-            my $message = $self->{output_queue}->{$channel}->[$i];
-            if (gettimeofday >= $message->{when}) {
-                my $stuff = {
-                    from       => $channel,
-                    nick       => $message->{nick},
-                    user       => $message->{user},
-                    host       => $message->{host},
-                    line       => $message->{message},
-                    command    => $message->{command},
-                    checkflood => $message->{checkflood}
-                };
-
-                $self->output_result($stuff);
-                splice @{$self->{output_queue}->{$channel}}, $i--, 1;
-            }
-        }
-
-        if (not @{$self->{output_queue}->{$channel}}) { delete $self->{output_queue}->{$channel}; }
-    }
+            $self->{pbot}->{interpreter}->output_result($stuff);
+        },
+        $delay, "output $channel $message->{message}"
+    );
 }
 
 sub add_to_command_queue {
     my ($self, $channel, $command, $delay) = @_;
 
-    $command->{when} = gettimeofday + $delay;
+    $self->{pbot}->{timer}->enqueue_event(
+        sub {
+            my ($self) = @_;
+            my $stuff = {
+                from                => $channel,
+                nick                => $command->{nick},
+                user                => $command->{user},
+                host                => $command->{host},
+                command             => $command->{command},
+                interpret_depth     => 0,
+                checkflood          => 0,
+                preserve_whitespace => 0
+            };
 
-    push @{$self->{command_queue}->{$channel}}, $command;
+            if (exists $command->{'cap-override'}) {
+                $self->{pbot}->{logger}->log("[command queue] Override command capability with $command->{'cap-override'}\n");
+                $stuff->{'cap-override'} = $command->{'cap-override'};
+            }
+
+            my $result = $self->{pbot}->{interpreter}->interpret($stuff);
+            $stuff->{result} = $result;
+            $self->{pbot}->{interpreter}->handle_result($stuff, $result);
+        },
+        $delay, "command $channel $command->{command}"
+    );
 }
 
 sub add_botcmd_to_command_queue {
@@ -1002,40 +1000,6 @@ sub add_botcmd_to_command_queue {
     };
 
     $self->add_to_command_queue($channel, $botcmd, $delay);
-}
-
-sub process_command_queue {
-    my $self = shift;
-
-    foreach my $channel (keys %{$self->{command_queue}}) {
-        for (my $i = 0; $i < @{$self->{command_queue}->{$channel}}; $i++) {
-            my $command = $self->{command_queue}->{$channel}->[$i];
-            if (gettimeofday >= $command->{when}) {
-                my $stuff = {
-                    from                => $channel,
-                    nick                => $command->{nick},
-                    user                => $command->{user},
-                    host                => $command->{host},
-                    command             => $command->{command},
-                    interpret_depth     => 0,
-                    checkflood          => 0,
-                    preserve_whitespace => 0
-                };
-
-                if (exists $command->{'cap-override'}) {
-                    $self->{pbot}->{logger}->log("[command queue] Override command capability with $command->{'cap-override'}\n");
-                    $stuff->{'cap-override'} = $command->{'cap-override'};
-                }
-
-                my $result = $self->interpret($stuff);
-                $stuff->{result} = $result;
-                $self->handle_result($stuff, $result);
-                splice @{$self->{command_queue}->{$channel}}, $i--, 1;
-            }
-        }
-
-        if (not @{$self->{command_queue}->{$channel}}) { delete $self->{command_queue}->{$channel}; }
-    }
 }
 
 1;
