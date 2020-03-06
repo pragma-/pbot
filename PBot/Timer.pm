@@ -1,55 +1,77 @@
 # File: Timer.pm
 # Author: pragma_
 #
-# Purpose: Provides functionality to register and execute one or more subroutines every X seconds.
+# Purpose: Provides functionality to register subroutines/events to be invoked
+# at a future time, optionally recurring.
 #
-# Caveats: Uses ALARM signal and all its issues.
+# If no subroutines/events are registered/enqueued, the default on_tick()
+# method, which can be overridden, is invoked.
+#
+# Uses own internal seconds counter and relative-intervals to avoid
+# timeout desyncs due to system clock changes.
+#
+# Note: Uses ALARM signal.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Timer;
-
 use parent 'PBot::Class';
 
 use warnings; use strict;
 use feature 'unicode_strings';
 
-our $min_timeout = 1;
-our $max_seconds = 1000000;
-our $seconds     = 0;
+use Time::Duration qw/concise duration/;
+
+our $seconds ||= 0;
 our @timer_funcs;
 
+# alarm signal handler (poor-man's timer)
 $SIG{ALRM} = sub {
-    $seconds += $min_timeout;
-    alarm $min_timeout;
-
-    # call timer func subroutines
+    $seconds += 1;
+    alarm 1;
     foreach my $func (@timer_funcs) { &$func; }
-
-    # prevent $seconds over-flow
-    $seconds -= $max_seconds if $seconds > $max_seconds;
 };
 
 sub initialize {
     my ($self, %conf) = @_;
-    my $timeout = $conf{timeout} // 10;
-    $min_timeout      = $timeout if $timeout < $min_timeout;
-    $self->{name}     = $conf{name} // "Unnamed $timeout Second Timer";
-    $self->{handlers} = [];
-    $self->{enabled}  = 0;
+    my $timeout          = $conf{timeout} // 10;
+    $self->{name}        = $conf{name} // "Unnamed ${timeout}s Timer";
+    $self->{enabled}     = 0;
+    $self->{event_queue} = [];
+    $self->{last}        = $seconds;
+    $self->{timeout}     = $timeout;
 
-    # alarm signal handler (poor-man's timer)
-    $self->{timer_func} = sub { on_tick_handler($self) };
-    return $self;
+    $self->{pbot}->{commands}->register(sub { $self->event_queue_cmd(@_) },  'eventqueue', 0);
+
+    $self->{timer_func} = sub { $self->on_tick_handler(@_) };
+}
+
+sub event_queue_cmd {
+    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+
+    return "No events queued." if not @{$self->{event_queue}};
+
+    my $text = "Queued events:\n";
+
+    my $i = 0;
+    foreach my $event (@{$self->{event_queue}}) {
+        my $duration = concise duration $event->{timeout} - $seconds;
+        $text .= "  $i) in $duration: $event->{id}";
+        $text .= ' [R]' if $event->{repeating};
+        $text .= ";\n";
+        $i++;
+    }
+
+    return $text;
 }
 
 sub start {
     my $self = shift;
     $self->{enabled} = 1;
     push @timer_funcs, $self->{timer_func};
-    alarm $min_timeout;
+    alarm 1;
 }
 
 sub stop {
@@ -58,92 +80,142 @@ sub stop {
     @timer_funcs = grep { $_ != $self->{timer_func} } @timer_funcs;
 }
 
-sub on_tick_handler {
-    my $self    = shift;
-    my $elapsed = 0;
+sub find_enqueue_position {
+    my ($self, $value) = @_;
 
-    if ($self->{enabled}) {
-        if ($#{$self->{handlers}} > -1) {
-            # call handlers supplied via register() if timeout for each has elapsed
-            foreach my $func (@{$self->{handlers}}) {
-                if (defined $func->{last}) {
-                    $func->{last} -= $max_seconds if $seconds < $func->{last};    # handle wrap-around of $seconds
+    return 0 if not @{$self->{event_queue}};
 
-                    if ($seconds - $func->{last} >= $func->{timeout}) {
-                        $func->{last} = $seconds;
-                        $elapsed = 1;
-                    }
-                } else {
-                    $func->{last} = $seconds;
-                    $elapsed = 1;
-                }
+    if ($value < $self->{event_queue}->[0]->{timeout}) {
+        return 0;
+    }
 
-                if ($elapsed) {
-                    &{$func->{subref}}($self);
-                    $elapsed = 0;
-                }
-            }
+    if ($value > $self->{event_queue}->[@{$self->{event_queue}} - 1]->{timeout}) {
+        return scalar @{$self->{event_queue}};
+    }
+
+    my $lo = 0;
+    my $hi = scalar @{$self->{event_queue}} - 1;
+
+    while ($lo <= $hi) {
+        my $mid = int (($hi + $lo) / 2);
+
+        if ($value < $self->{event_queue}->[$mid]->{timeout}) {
+            $hi = $mid - 1;
+        } elsif ($value > $self->{event_queue}->[$mid]->{timeout}) {
+            $lo = $mid + 1;
         } else {
-            # call default overridable handler if timeout has elapsed
-            if (defined $self->{last}) {
-                $self->{last} -= $max_seconds if $seconds < $self->{last};    # handle wrap-around
-
-                if ($seconds - $self->{last} >= $self->{timeout}) {
-                    $elapsed = 1;
-                    $self->{last} = $seconds;
-                }
-            } else {
-                $elapsed = 1;
-                $self->{last} = $seconds;
-            }
-
-            if ($elapsed) {
-                $self->on_tick();
-                $elapsed = 0;
-            }
+            return $mid;
         }
+    }
+
+    return $lo;
+}
+
+sub enqueue_event {
+    my ($self, $ref, $interval, $id, $repeating) = @_;
+
+    $id        ||= 'anonymous event';
+    $repeating ||= 0;
+
+    my $event = {
+        id        => $id,
+        subref    => $ref,
+        interval  => $interval,
+        timeout   => $seconds + $interval,
+        repeating => $repeating,
+    };
+
+    my $i = $self->find_enqueue_position($event->{timeout});
+    splice @{$self->{event_queue}}, $i, 0, $event;
+
+    my $debug = $self->{pbot}->{registry}->get_value('timer', 'debug') // 0;
+    if ($debug > 1) {
+        $self->{pbot}->{logger}->log("Enqueued new timer event $id at position $i: timeout=$event->{timeout} interval=$interval repeating=$repeating\n");
     }
 }
 
-# overridable method, executed whenever timeout is triggered
-sub on_tick {
-    my $self = shift;
-    print "Tick! $self->{name} $self->{timeout} $self->{last} $seconds\n";
+sub dequeue_event {
+    my ($self, $id) = @_;
+
+    eval {
+        $id = quotemeta $id;
+        $id =~ s/\\\.\\\*\\\?/.*?/g;
+        $id =~ s/\\\.\\\*/.*/g;
+        my $regex = qr/^$id$/;
+        @{$self->{event_queue}} = grep { $_->{id} !~ /$regex/i; } @{$self->{event_queue}};
+    };
+
+    if ($@) {
+        $self->{pbot}->{logger}->log("Error in dequeue_event: $@\n");
+    }
 }
 
 sub register {
-    my $self = shift;
-    my ($ref, $timeout, $id) = @_;
-
-    Carp::croak("Must pass subroutine reference to register()") if not defined $ref;
-
-    # TODO: Check if subref already exists in handlers?
-    $timeout = 300     if not defined $timeout;    # set default value of 5 minutes if not defined
-    $id      = 'timer' if not defined $id;
-
-    my $h = {subref => $ref, timeout => $timeout, id => $id};
-    push @{$self->{handlers}}, $h;
-
-    if ($timeout < $min_timeout) { $min_timeout = $timeout; }
-
-    if ($self->{enabled}) { alarm $min_timeout; }
+    my ($self, $ref, $interval, $id) = @_;
+    $self->enqueue_event($ref, $interval, $id, 1);
 }
 
 sub unregister {
     my ($self, $id) = @_;
-    Carp::croak("Must pass timer id to unregister()") if not defined $id;
-    @{$self->{handlers}} = grep { $_->{id} ne $id } @{$self->{handlers}};
+    $self->dequeue_event($id);
 }
 
 sub update_interval {
-    my ($self, $id, $interval) = @_;
+    my ($self, $id, $interval, $dont_enqueue) = @_;
 
-    foreach my $h (@{$self->{handlers}}) {
-        if ($h->{id} eq $id) {
-            $h->{timeout} = $interval;
+    for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
+        if ($self->{event_queue}->[$i]->{id} eq $id) {
+            if ($dont_enqueue) {
+                $self->{event_queue}->[$i]->{interval} = $interval;
+            } else {
+                my $event = splice(@{$self->{event_queue}}, $i, 1);
+                $self->enqueue_event($event->{subref}, $interval, $id, $event->{repeating});
+            }
             last;
         }
     }
+}
+
+sub on_tick_handler {
+    my ($self) = @_;
+    return if not $self->{enabled};
+
+    my $debug = $self->{pbot}->{registry}->get_value('timer', 'debug') // 0;
+    $self->{pbot}->{logger}->log("$self->{name} tick $seconds\n") if $debug;
+
+    if (@{$self->{event_queue}}) {
+        my @enqueue = ();
+        for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
+            if ($seconds >= $self->{event_queue}->[$i]->{timeout}) {
+                my $event = $self->{event_queue}->[$i];
+                $self->{pbot}->{logger}->log("Processing timer event $i: $event->{id}\n") if $debug > 1;
+                $event->{subref}->($self);
+                splice @{$self->{event_queue}}, $i--, 1;
+                push @enqueue, $event if $event->{repeating};
+            } else {
+                if ($debug > 2) {
+                    $self->{pbot}->{logger}->log("Event not ready yet: $self->{event_queue}->[$i]->{id} (timeout=$self->{event_queue}->[$i]->{timeout})\n");
+                }
+                last;
+            }
+        }
+
+        foreach my $event (@enqueue) {
+            $self->enqueue_event($event->{subref}, $event->{interval}, $event->{id}, 1);
+        }
+    } else {
+        # no queued events, call default overridable on_tick() method if timeout has elapsed
+        if ($seconds - $self->{last} >= $self->{timeout}) {
+            $self->{last} = $seconds;
+            $self->on_tick;
+        }
+    }
+}
+
+# default overridable handler, executed whenever timeout is triggered
+sub on_tick {
+    my ($self) = @_;
+    $self->{pbot}->{logger}->log("Tick! $self->{name} $self->{timeout} $self->{last} $seconds\n");
 }
 
 1;
