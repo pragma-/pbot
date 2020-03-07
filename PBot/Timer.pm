@@ -25,12 +25,12 @@ use feature 'unicode_strings';
 use Time::Duration qw/concise duration/;
 
 our $seconds ||= 0;
+our $waitfor ||= 1;
 our @timer_funcs;
 
 # alarm signal handler (poor-man's timer)
 $SIG{ALRM} = sub {
-    $seconds += 1;
-    alarm 1;
+    $seconds += $waitfor;
     foreach my $func (@timer_funcs) { &$func; }
 };
 
@@ -53,18 +53,33 @@ sub event_queue_cmd {
 
     return "No events queued." if not @{$self->{event_queue}};
 
-    my $text = "Queued events:\n";
+    my $result = eval {
+        my $text = "Queued events:\n";
 
-    my $i = 0;
-    foreach my $event (@{$self->{event_queue}}) {
-        my $duration = concise duration $event->{timeout} - $seconds;
-        $text .= "  $i) in $duration: $event->{id}";
-        $text .= ' [R]' if $event->{repeating};
-        $text .= ";\n";
-        $i++;
+        my $i = 0;
+        foreach my $event (@{$self->{event_queue}}) {
+            $i++;
+
+            if ($arguments) {
+                next unless $event->{id} =~ /$arguments/;
+            }
+
+            my $duration = concise duration $event->{timeout} - $seconds;
+            $text .= "  $i) in $duration: $event->{id}";
+            $text .= ' [R]' if $event->{repeating};
+            $text .= ";\n";
+        }
+
+        return $text;
+    };
+
+    if ($@) {
+        my $error = $@;
+        $error =~ s/ at PBot.*//;
+        return "Bad regex: $error";
     }
 
-    return $text;
+    return $result;
 }
 
 sub start {
@@ -104,6 +119,9 @@ sub find_enqueue_position {
         } elsif ($value > $self->{event_queue}->[$mid]->{timeout}) {
             $lo = $mid + 1;
         } else {
+            while ($mid < @{$self->{event_queue}} and $self->{event_queue}->[$mid]->{timeout} == $value) {
+                $mid++;
+            }
             return $mid;
         }
     }
@@ -127,6 +145,10 @@ sub enqueue_event {
 
     my $i = $self->find_enqueue_position($event->{timeout});
     splice @{$self->{event_queue}}, $i, 0, $event;
+
+    if ($interval < $waitfor) {
+        $self->waitfor($interval);
+    }
 
     my $debug = $self->{pbot}->{registry}->get_value('timer', 'debug') // 0;
     if ($debug > 1) {
@@ -160,6 +182,17 @@ sub unregister {
     $self->dequeue_event($id);
 }
 
+sub update_repeating {
+    my ($self, $id, $repeating) = @_;
+
+    for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
+        if ($self->{event_queue}->[$i]->{id} eq $id) {
+            $self->{event_queue}->[$i]->{repeating} = $repeating;
+            last;
+        }
+    }
+}
+
 sub update_interval {
     my ($self, $id, $interval, $dont_enqueue) = @_;
 
@@ -176,6 +209,13 @@ sub update_interval {
     }
 }
 
+sub waitfor {
+    my ($self, $duration) = @_;
+    $duration = 1 if $duration < 1;
+    alarm $duration;
+    $waitfor = $duration;
+}
+
 sub on_tick_handler {
     my ($self) = @_;
     return if not $self->{enabled};
@@ -183,22 +223,27 @@ sub on_tick_handler {
     my $debug = $self->{pbot}->{registry}->get_value('timer', 'debug') // 0;
     $self->{pbot}->{logger}->log("$self->{name} tick $seconds\n") if $debug;
 
+    my $next_tick = 1;
     if (@{$self->{event_queue}}) {
         my @enqueue = ();
         for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
             if ($seconds >= $self->{event_queue}->[$i]->{timeout}) {
                 my $event = $self->{event_queue}->[$i];
                 $self->{pbot}->{logger}->log("Processing timer event $i: $event->{id}\n") if $debug > 1;
-                $event->{subref}->($self);
+                $event->{subref}->($event);
                 splice @{$self->{event_queue}}, $i--, 1;
                 push @enqueue, $event if $event->{repeating};
             } else {
                 if ($debug > 2) {
                     $self->{pbot}->{logger}->log("Event not ready yet: $self->{event_queue}->[$i]->{id} (timeout=$self->{event_queue}->[$i]->{timeout})\n");
                 }
+
+                $next_tick = $self->{event_queue}->[$i]->{timeout} - $seconds;
                 last;
             }
         }
+
+        $self->waitfor($next_tick);
 
         foreach my $event (@enqueue) {
             $self->enqueue_event($event->{subref}, $event->{interval}, $event->{id}, 1);
@@ -209,6 +254,8 @@ sub on_tick_handler {
             $self->{last} = $seconds;
             $self->on_tick;
         }
+
+        $self->waitfor($self->{timeout} - $seconds - $self->{last});
     }
 }
 
