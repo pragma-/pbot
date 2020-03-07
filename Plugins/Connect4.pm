@@ -21,8 +21,6 @@ sub initialize {
     my ($self, %conf) = @_;
     $self->{pbot}->{commands}->register(sub { $self->connect4_cmd(@_) }, 'connect4', 0);
 
-    $self->{pbot}->{timer}->register(sub { $self->connect4_timer }, 1, 'connect4 timer');
-
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quit', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.kick', sub { $self->on_kick(@_) });
@@ -35,10 +33,10 @@ sub initialize {
 sub unload {
     my $self = shift;
     $self->{pbot}->{commands}->unregister('connect4');
-    $self->{pbot}->{timer}->unregister('connect4 timer');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
+    $self->{pbot}->{timer}->dequeue_event('connect4 loop');
 }
 
 sub on_kick {
@@ -164,6 +162,12 @@ sub connect4_cmd {
                 $self->{current_state} = 'accept';
                 $self->{state_data}    = {players => [], counter => 0};
 
+                $self->{pbot}->{timer}->enqueue_event(
+                    sub {
+                        $self->run_one_state;
+                    }, 1, 'connect4 loop', 1
+                );
+
                 my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
                 my $player = {id => $id, name => $nick, missedinputs => 0};
                 push @{$self->{state_data}->{players}}, $player;
@@ -180,12 +184,18 @@ sub connect4_cmd {
 
             if (not $challengee) { return "That nick is not present in this channel. Invite them to $self->{channel} and try again!"; }
 
-            $self->{current_state} = 'accept';
-            $self->{state_data}    = {players => [], counter => 0};
-
             if (length $options) {
                 if ($err = $self->parse_challenge($options)) { return $err; }
             }
+
+            $self->{current_state} = 'accept';
+            $self->{state_data}    = {players => [], counter => 0};
+
+            $self->{pbot}->{timer}->enqueue_event(
+                sub {
+                    $self->run_one_state;
+                }, 1, 'connect4 loop', 1
+            );
 
             my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
             my $player = {id => $id, name => $nick, missedinputs => 0};
@@ -328,11 +338,6 @@ sub connect4_cmd {
     }
 
     return $result;
-}
-
-sub connect4_timer {
-    my $self = shift;
-    $self->run_one_state;
 }
 
 sub player_left {
@@ -684,6 +689,7 @@ sub show_board {
 sub nogame {
     my ($self, $state) = @_;
     $state->{result} = 'nogame';
+    $self->{pbot}->{timer}->update_repeating('connect4 loop', 0);
     return $state;
 }
 
