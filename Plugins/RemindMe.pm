@@ -20,16 +20,54 @@ sub initialize {
     my ($self, %conf) = @_;
     $self->{pbot}->{commands}->register(sub { $self->remindme(@_) }, 'remindme', 0);
     $self->{filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/reminders.sqlite3';
-    $self->{pbot}->{timer}->register(sub { $self->check_reminders(@_) }, 1, 'RemindMe');
     $self->dbi_begin;
     $self->create_database;
+    $self->enqueue_reminders;
 }
 
 sub unload {
     my $self = shift;
     $self->dbi_end;
     $self->{pbot}->{commands}->unregister('remindme');
-    $self->{pbot}->{timer}->unregister('RemindMe');
+    $self->{pbot}->{timer}->dequeue_event('reminder .*');
+}
+
+sub enqueue_reminders {
+    my ($self) = @_;
+
+    return if not $self->{dbh};
+
+    my $reminders = eval {
+        my $sth = $self->{dbh}->prepare('SELECT * FROM Reminders');
+        $sth->execute;
+        return $sth->fetchall_arrayref({});
+    };
+
+    if ($@) {
+        $self->{pbot}->{logger}->log("Enqueue reminders failed: $@");
+        return;
+    }
+
+    foreach my $reminder (@$reminders) {
+        # delete this reminder if it's expired by 31 days
+        if (gettimeofday - $reminder->{alarm} >= 86400 * 31) {
+            $self->{pbot}->{logger}->log("Deleting expired reminder: $reminder->{id}) $reminder->{text} set by $reminder->{created_by}\n");
+            $self->delete_reminder($reminder->{id});
+            next;
+        }
+
+        my $timeout = $reminder->{alarm} - gettimeofday;
+        $timeout = 10 if $timeout < 10;
+        my $repeating = $reminder->{repeat};
+
+        $self->{pbot}->{timer}->enqueue_event(
+            sub {
+                my ($event) = @_;
+                $self->do_reminder($reminder->{id}, $event);
+            },
+            $timeout, "reminder $reminder->{id}", $repeating
+        );
+    }
 }
 
 sub create_database {
@@ -81,15 +119,43 @@ sub dbi_end {
 sub add_reminder {
     my ($self, $account, $target, $text, $alarm, $duration, $repeat, $owner) = @_;
 
-    eval {
+    my $id = eval {
         my $sth = $self->{dbh}->prepare('INSERT INTO Reminders (account, target, text, alarm, duration, repeat, created_on, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
         $sth->execute($account, $target, $text, $alarm, $duration, $repeat, scalar gettimeofday, $owner);
+        return $self->{dbh}->sqlite_last_insert_rowid;
     };
 
     if ($@) {
         $self->{pbot}->{logger}->log("Add reminder failed: $@");
         return 0;
     }
+
+    $self->{pbot}->{timer}->enqueue_event(
+        sub {
+            my ($event) = @_;
+            $self->do_reminder($id, $event);
+        },
+        $duration, "reminder $id", $repeat
+    );
+
+    return $id;
+}
+
+sub delete_reminder {
+    my ($self, $id) = @_;
+    return if not $self->{dbh};
+
+    eval {
+        my $sth = $self->{dbh}->prepare('DELETE FROM Reminders WHERE id = ?');
+        $sth->execute($id);
+    };
+
+    if ($@) {
+        $self->{pbot}->{logger}->log("Delete reminder $id failed: $@");
+        return 0;
+    }
+
+    $self->{pbot}->{timer}->dequeue_event("reminder $id");
     return 1;
 }
 
@@ -128,7 +194,7 @@ sub get_reminder {
     };
 
     if ($@) {
-        $self->{pbot}->{logger}->log("List reminders failed: $@");
+        $self->{pbot}->{logger}->log("Get reminder failed: $@");
         return undef;
     }
     return $reminder;
@@ -144,27 +210,55 @@ sub get_reminders {
     };
 
     if ($@) {
-        $self->{pbot}->{logger}->log("List reminders failed: $@");
+        $self->{pbot}->{logger}->log("Get reminders failed: $@");
         return [];
     }
 
     return $reminders;
 }
 
-sub delete_reminder {
-    my ($self, $id) = @_;
-    return if not $self->{dbh};
+sub do_reminder {
+    my ($self, $id, $event) = @_;
 
-    eval {
-        my $sth = $self->{dbh}->prepare('DELETE FROM Reminders WHERE id = ?');
-        $sth->execute($id);
-    };
+    my $reminder = $self->get_reminder($id);
 
-    if ($@) {
-        $self->{pbot}->{logger}->log("Delete reminder $id failed: $@");
-        return 0;
+    if (not defined $reminder) {
+        $self->{pbot}->{logger}->log("Queued reminder $id no longer exists.\n");
+        $event->{repeating} = 0;
+        return;
     }
-    return 1;
+
+    my $nick;
+    if (not defined $reminder->{target}) {
+        # ensures we get the current nick of the person
+        my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($reminder->{account});
+        ($nick) = $hostmask =~ /^([^!]+)!/;
+
+        # try again if the person isn't around yet
+        if (not $self->{pbot}->{nicklist}->is_present_any_channel($nick)) {
+            $event->{interval} = 300;
+            $event->{repeating} = 1;
+            return;
+        }
+    }
+
+    my $text = "Reminder: $reminder->{text}";
+    my $target = $reminder->{target} // $nick;
+    $self->{pbot}->{conn}->privmsg($target, $text);
+
+    $self->{pbot}->{logger}->log("Reminded $target about \"$text\"\n");
+
+    if ($reminder->{repeat} > 0) {
+        $reminder->{repeat}--;
+        $reminder->{alarm} = gettimeofday + $reminder->{duration};
+        my $data = { repeat => $reminder->{repeat}, alarm => $reminder->{alarm} };
+        $self->update_reminder($reminder->{id}, $data);
+        $event->{interval} = $reminder->{duration};
+        $event->{repeating} = 1;
+    } else {
+        $self->delete_reminder($reminder->{id});
+        $event->{repeating} = 0;
+    }
 }
 
 sub remindme {
@@ -272,14 +366,9 @@ sub remindme {
         if (not $self->{pbot}->{channels}->is_active($target)) { return "I'm not active in channel $target."; }
     }
 
-    print "alarm: $alarm\n";
-
     my ($length, $error) = $self->{pbot}->{parsedate}->parsedate($alarm);
-
-    print "length: $length, error: $error!\n";
     return $error if $error;
 
-    # I don't know how I feel about enforcing arbitrary time restrictions
     if ($length > 31536000 * 10) { return "Come on now, I'll be dead by then."; }
 
     if (not defined $admininfo and $length < 60) { return "Time must be a minimum of 60 seconds."; }
@@ -298,56 +387,8 @@ sub remindme {
         if (@$reminders >= 3) { return "You may only set 3 reminders at a time. Use `remindme -d id` to remove a reminder."; }
     }
 
-    if   ($self->add_reminder($account, $target, $text, $alarm, $length, $repeat, "$nick!$user\@$host")) { return "Reminder added."; }
-    else                                                                                                 { return "Failed to add reminder."; }
-}
-
-sub check_reminders {
-    my $self = shift;
-
-    return if not $self->{dbh};
-
-    my $reminders = eval {
-        my $sth = $self->{dbh}->prepare('SELECT * FROM Reminders WHERE alarm <= ?');
-        $sth->execute(scalar gettimeofday);
-        return $sth->fetchall_arrayref({});
-    };
-
-    if ($@) {
-        $self->{pbot}->{logger}->log("Check reminders failed: $@");
-        return;
-    }
-
-    foreach my $reminder (@$reminders) {
-        # ensures we get the current nick of the person
-        my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($reminder->{account});
-        my ($nick) = $hostmask =~ /^([^!]+)!/;
-
-        # delete this reminder if it's expired by 31 days
-        if (gettimeofday - $reminder->{alarm} >= 86400 * 31) {
-            $self->{pbot}->{logger}->log("Deleting expired reminder: $reminder->{id}) $reminder->{text} set by $reminder->{created_by}\n");
-            $self->delete_reminder($reminder->{id});
-            next;
-        }
-
-        # don't execute this reminder if the person isn't around yet
-        next if not $self->{pbot}->{nicklist}->is_present_any_channel($nick);
-
-        my $text   = "Reminder: $reminder->{text}";
-        my $target = $reminder->{target} // $nick;
-        $self->{pbot}->{conn}->privmsg($target, $text);
-
-        $self->{pbot}->{logger}->log("Reminded $target about \"$text\"\n");
-
-        if ($reminder->{repeat} > 0) {
-            $reminder->{repeat}--;
-            $reminder->{alarm} = gettimeofday + $reminder->{duration};
-            my $data = {repeat => $reminder->{repeat}, alarm => $reminder->{alarm}};
-            $self->update_reminder($reminder->{id}, $data);
-        } else {
-            $self->delete_reminder($reminder->{id});
-        }
-    }
+    if   (my $id = $self->add_reminder($account, $target, $text, $alarm, $length, $repeat, "$nick!$user\@$host")) { return "Reminder $id added."; }
+    else                                                                                                          { return "Failed to add reminder."; }
 }
 
 1;
