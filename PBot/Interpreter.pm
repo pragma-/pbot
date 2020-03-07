@@ -941,8 +941,6 @@ sub add_message_to_output_queue {
 
     $self->{pbot}->{timer}->enqueue_event(
         sub {
-            my ($self) = @_;
-
             my $stuff = {
                 from       => $channel,
                 nick       => $message->{nick},
@@ -953,7 +951,7 @@ sub add_message_to_output_queue {
                 checkflood => $message->{checkflood}
             };
 
-            $self->{pbot}->{interpreter}->output_result($stuff);
+            $self->output_result($stuff);
         },
         $delay, "output $channel $message->{message}"
     );
@@ -964,7 +962,6 @@ sub add_to_command_queue {
 
     $self->{pbot}->{timer}->enqueue_event(
         sub {
-            my ($self) = @_;
             my $stuff = {
                 from                => $channel,
                 nick                => $command->{nick},
@@ -981,9 +978,9 @@ sub add_to_command_queue {
                 $stuff->{'cap-override'} = $command->{'cap-override'};
             }
 
-            my $result = $self->{pbot}->{interpreter}->interpret($stuff);
+            my $result = $self->interpret($stuff);
             $stuff->{result} = $result;
-            $self->{pbot}->{interpreter}->handle_result($stuff, $result);
+            $self->handle_result($stuff, $result);
         },
         $delay, "command $channel $command->{command}"
     );
