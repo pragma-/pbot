@@ -129,6 +129,8 @@
     * [cmdset](Admin.md#cmdset)
     * [cmdunset](Admin.md#cmdunset)
     * [Command metadata list](Admin.md#command-metadata-list)
+  * [Event queue commands](Admin.md#event-queue-commands)
+    * [eventqueue](Admin.md#eventqueue)
   * [Process management commands](Admin.md#process-management-commands)
     * [ps](Admin.md#ps)
     * [kill](Admin.md#kill)
