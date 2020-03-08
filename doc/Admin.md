@@ -548,16 +548,16 @@ Name | Description
 ### eventqueue
 Manages the PBot event queue. Can be used to add commands that run at a future time.
 
-Usage: `eventqueue list [filter regex] | add <relative time> <command> | delete <regex>
+Usage: `eventqueue list [filter regex] | add <relative time> <command> | delete <regex>`
 
 For example, to schedule a command to run 10 seconds from now:
 
-   <pragma-> eventqueue add "10 seconds" echo Ta-da!
-      <PBot> Command added to event queue.
+    <pragma-> eventqueue add "10 seconds" echo Ta-da!
+       <PBot> Command added to event queue.
 
-   10 seconds later ...
+    10 seconds later ...
 
-      <PBot> Ta-da!
+       <PBot> Ta-da!
 
 ## Process management commands
 ### ps
