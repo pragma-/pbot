@@ -45,8 +45,6 @@ sub initialize {
     my ($self, %conf) = @_;
     $self->{pbot}->{commands}->register(sub { $self->spinach_cmd(@_) }, 'spinach', 0);
 
-    $self->{pbot}->{timer}->register(sub { $self->spinach_timer }, 1, 'spinach timer');
-
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quit', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.kick', sub { $self->on_kick(@_) });
@@ -78,7 +76,7 @@ sub initialize {
 sub unload {
     my $self = shift;
     $self->{pbot}->{commands}->unregister('spinach');
-    $self->{pbot}->{timer}->unregister('spinach timer');
+    $self->{pbot}->{timer}->dequeue_event('spinach loop');
     $self->{stats}->end if $self->{stats_running};
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit');
@@ -343,8 +341,13 @@ sub spinach_cmd {
 
         when ('join') {
             if ($self->{current_state} eq 'nogame') {
-                $self->{state_data}    = {players => [], counter => 0};
+                $self->{state_data}    = { players => [], counter => 0 };
                 $self->{current_state} = 'getplayers';
+
+                $self->{pbot}->{timer}->enqueue_event(sub {
+                        $self->run_one_state;
+                    }, 1, 'spinach loop', 1
+                );
             }
 
             my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
@@ -414,6 +417,7 @@ sub spinach_cmd {
 
                 if (not @{$self->{state_data}->{players}}) {
                     $self->{current_state} = 'nogame';
+                    $self->{pbot}->{timer}->update_repeating('spinach loop', 0);
                     return "/msg $self->{channel} $nick has left the game! All players have left. The game has been stopped.";
                 } else {
                     return "/msg $self->{channel} $nick has left the game!";
@@ -851,11 +855,6 @@ sub spinach_cmd {
     return $result;
 }
 
-sub spinach_timer {
-    my $self = shift;
-    $self->run_one_state();
-}
-
 sub player_left {
     my ($self, $nick, $user, $host) = @_;
 
@@ -939,6 +938,7 @@ sub run_one_state {
         if (not @{$self->{state_data}->{players}}) {
             $self->send_message($self->{channel}, "All players have left the game!");
             $self->{current_state} = 'nogame';
+            $self->{pbot}->{timer}->update_repeating('spinach loop', 0);
         }
     }
 
@@ -948,6 +948,7 @@ sub run_one_state {
     if (not defined $self->{current_state}) {
         $self->{pbot}->{logger}->log("Spinach state broke.\n");
         $self->{current_state} = 'nogame';
+        $self->{pbot}->{timer}->update_repeating('spinach loop', 0);
         return;
     }
 
@@ -2154,6 +2155,7 @@ sub nogame {
         delete $self->{stats_running};
     }
     $state->{result} = 'nogame';
+    $self->{pbot}->{timer}->update_repeating('spinach loop', 0);
     return $state;
 }
 
@@ -2206,6 +2208,7 @@ sub getplayers {
                 $self->send_message($self->{channel}, "All players have left the queue. The game has been stopped.");
                 $self->{current_state} = 'nogame';
                 $self->{result}        = 'nogame';
+                $self->{pbot}->{timer}->update_repeating('spinach loop', 0);
                 return $state;
             }
         }
