@@ -30,7 +30,7 @@ sub initialize {
 
 sub unload {
     my $self = shift;
-    $self->{pbot}->{timer}->unregister('antirepeat');
+    $self->{pbot}->{timer}->dequeue_event('antirepeat .*');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
 }
