@@ -550,12 +550,12 @@ Manages the PBot event queue. Can be used to add commands that run at a future t
 
 Usage: `eventqueue list [filter regex] | add <relative time> <command> | delete <regex>`
 
-For example, to schedule a command to run 10 seconds from now:
+For example, to schedule a command to run 1 hour from now:
 
-    <pragma-> eventqueue add "10 seconds" echo Ta-da!
+    <pragma-> eventqueue add "1 hour" echo Ta-da!
        <PBot> Command added to event queue.
 
-    10 seconds later ...
+    1 hour later ...
 
        <PBot> Ta-da!
 
