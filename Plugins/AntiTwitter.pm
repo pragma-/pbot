@@ -25,13 +25,13 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 sub initialize {
     my ($self, %conf) = @_;
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->on_public(@_) });
-    $self->{pbot}->{timer}->register(sub { $self->adjust_offenses }, 60 * 60 * 1, 'antitwitter');
     $self->{offenses} = {};
 }
 
 sub unload {
     my ($self) = @_;
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
+    $self->{pbot}->{timer}->dequeue_event('antitwitter .*');
 }
 
 sub on_public {
@@ -61,6 +61,17 @@ sub on_public {
                     my $length   = 60 * ($offenses * $offenses + 1);
                     $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'using @nick too much', "*!*\@$host", $channel, $length);
                     $self->{pbot}->{chanops}->gain_ops($channel);
+
+                    $self->{pbot}->{timer}->enqueue_event(sub {
+                            my ($event) = @_;
+                            if (--$self->{offenses}->{$channel}->{$nick}->{offenses} <= 0) {
+                                delete $self->{offenses}->{$channel}->{$nick};
+                                delete $self->{offenses}->{$channel} if not keys %{$self->{offenses}->{$channel}};
+                                $event->{repeating} = 0;
+                            }
+                        }, 60 * 60 * 24 * 2, "antitwitter offenses-- $channel $nick", 1
+                    );
+
                     $length = duration $length;
                     $event->{conn}->privmsg(
                         $nick,
@@ -72,22 +83,6 @@ sub on_public {
         }
     }
     return 0;
-}
-
-sub adjust_offenses {
-    my $self = shift;
-    my $now  = gettimeofday;
-
-    foreach my $channel (keys %{$self->{offenses}}) {
-        foreach my $nick (keys %{$self->{offenses}->{$channel}}) {
-            if ($now - $self->{offenses}->{$channel}->{$nick}->{time} >= 60 * 60 * 24 * 7) {
-                if (--$self->{offenses}->{$channel}->{$nick}->{offenses} <= 0) {
-                    delete $self->{offenses}->{$channel}->{$nick};
-                    delete $self->{offenses}->{$channel} if not keys %{$self->{offenses}->{$channel}};
-                }
-            }
-        }
-    }
 }
 
 1;
