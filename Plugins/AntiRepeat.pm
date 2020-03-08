@@ -25,7 +25,6 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',  sub { $self->on_public(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->on_public(@_) });
 
-    $self->{pbot}->{timer}->register(sub { $self->adjust_offenses }, 60 * 60 * 1, 'antirepeat');
     $self->{offenses} = {};
 }
 
@@ -114,9 +113,21 @@ sub on_public {
 
     foreach my $match (keys %matches) {
         if (sqrt $matches{$match} > $threshold) {
-            $self->{offenses}->{$account}->{$channel}->{last_offense}    = gettimeofday;
-            $self->{offenses}->{$account}->{$channel}->{last_adjustment} = gettimeofday;
+            $self->{offenses}->{$account}->{$channel}->{last_offense} = gettimeofday;
             $self->{offenses}->{$account}->{$channel}->{offenses}++;
+
+            $self->{pbot}->{timer}->enqueue_event(sub {
+                    my ($event) = @_;
+                    $self->{offenses}->{$account}->{$channel}->{offenses}--;
+
+                    if ($self->{offenses}->{$account}->{$channel}->{offenses} <= 0) {
+                        $event->{repeating} = 0;
+                        delete $self->{offenses}->{$account}->{$channel};
+                        if (keys %{$self->{offenses}->{$account}} == 0) { delete $self->{offenses}->{$account}; }
+                    }
+
+                }, 10, "antirepeat offense-- $account $channel", 1
+            );
 
             $self->{pbot}->{logger}->log("$nick!$user\@$host triggered anti-repeat; offense $self->{offenses}->{$account}->{$channel}->{offenses}\n");
 
@@ -125,34 +136,14 @@ sub on_public {
                     $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick Stop repeating yourself");
                     $self->{pbot}->{chanops}->gain_ops($channel);
                 }
-                when (2) { $self->{pbot}->{chanops}->ban_user_timed($botnick, 'repeating messages', "*!*\@$host", $channel, 60); }
-                when (3) { $self->{pbot}->{chanops}->ban_user_timed($botnick, 'repeating messages', "*!*\@$host", $channel, 60 * 15); }
+                when (2) { $self->{pbot}->{chanops}->ban_user_timed($botnick, 'repeating messages', "*!*\@$host", $channel, 30); }
+                when (3) { $self->{pbot}->{chanops}->ban_user_timed($botnick, 'repeating messages', "*!*\@$host", $channel, 60 * 5); }
                 default  { $self->{pbot}->{chanops}->ban_user_timed($botnick, 'repeating messages', "*!*\@$host", $channel, 60 * 60); }
             }
             return 0;
         }
     }
     return 0;
-}
-
-sub adjust_offenses {
-    my $self = shift;
-    my $now  = gettimeofday;
-
-    foreach my $account (keys %{$self->{offenses}}) {
-        foreach my $channel (keys %{$self->{offenses}->{$account}}) {
-            if ($self->{offenses}->{$account}->{$channel}->{offenses} > 0 and $now - $self->{offenses}->{$account}->{$channel}->{last_adjustment} > 60 * 60 * 3) {
-                $self->{offenses}->{$account}->{$channel}->{offenses}--;
-
-                if ($self->{offenses}->{$account}->{$channel}->{offenses} <= 0) {
-                    delete $self->{offenses}->{$account}->{$channel};
-                    if (keys %{$self->{offenses}->{$account}} == 0) { delete $self->{offenses}->{$account}; }
-                } else {
-                    $self->{offenses}->{$account}->{$channel}->{last_adjustment} = $now;
-                }
-            }
-        }
-    }
 }
 
 1;
