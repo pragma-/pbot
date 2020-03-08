@@ -218,17 +218,14 @@ sub ban_user_timed {
     $mask = $self->nick_to_banmask($mask);
     $self->ban_user($mask, $channel, $immediately);
 
+    my $data = {};
+    $data->{timeout} = $length > 0 ? gettimeofday + $length : -1;
+    $data->{owner}   = $owner  if defined $owner;
+    $data->{reason}  = $reason if defined $reason;
+    $self->{unban_timeout}->add($channel, $mask, $data);
+
     if ($length > 0) {
-        my $data = {timeout => gettimeofday + $length};
-        $data->{owner}  = $owner  if defined $owner;
-        $data->{reason} = $reason if defined $reason;
-        $self->{unban_timeout}->add($channel, $mask, $data);
         $self->enqueue_unban_timeout($channel, $mask, $length);
-    } else {
-        if ($self->{unban_timeout}->exists($channel, $mask)) {
-            $self->{unban_timeout}->remove($channel, $mask);
-            $self->{pbot}->{timer}->dequeue_event("unban_timeout $channel $mask");
-        }
     }
 }
 
@@ -246,7 +243,7 @@ sub checkban {
 
         $result .= "by $owner "   if defined $owner;
         $result .= "for $reason " if defined $reason;
-        $result .= "($duration remaining)";
+        $result .= $timeout > 0 ? "($duration remaining)" : "(permanent)";
         return $result;
     } else {
         return "$mask has no ban timeout.";
@@ -275,17 +272,14 @@ sub mute_user_timed {
     $mask = $self->nick_to_banmask($mask);
     $self->mute_user($mask, $channel, $immediately);
 
+    my $data = {};
+    $data->{timeout} = $length > 0 ? gettimeofday + $length : -1;
+    $data->{owner}   = $owner  if defined $owner;
+    $data->{reason}  = $reason if defined $reason;
+    $self->{unmute_timeout}->add($channel, $mask, $data);
+
     if ($length > 0) {
-        my $data = { timeout => gettimeofday + $length };
-        $data->{owner}  = $owner  if defined $owner;
-        $data->{reason} = $reason if defined $reason;
-        $self->{unmute_timeout}->add($channel, $mask, $data);
         $self->enqueue_unmute_timeout($channel, $mask, $length);
-    } else {
-        if ($self->{unmute_timeout}->exists($channel, $mask)) {
-            $self->{unmute_timeout}->remove($channel, $mask);
-            $self->{pbot}->{timer}->dequeue_event("unmute_timeout $channel $mask");
-        }
     }
 }
 
@@ -303,7 +297,7 @@ sub checkmute {
 
         $result .= "by $owner "   if defined $owner;
         $result .= "for $reason " if defined $reason;
-        $result .= "($duration remaining)";
+        $result .= $timeout > 0 ? "($duration remaining)" : "(permanent)";
 
         return $result;
     } else {
@@ -476,7 +470,9 @@ sub enqueue_unmute_timeouts {
 
     foreach my $channel ($self->{unmute_timeout}->get_keys) {
         foreach my $mask ($self->{unmute_timeout}->get_keys($channel)) {
-            my $interval = $self->{unmute_timeout}->get_data($channel, $mask, 'timeout') - $now;
+            my $timeout = $self->{unmute_timeout}->get_data($channel, $mask, 'timeout');
+            next if $timeout <= 0;
+            my $interval = $timeout - $now;
             $interval = 10 if $interval < 10;
             $self->enqueue_unmute_timeout($channel, $mask, $interval);
         }
@@ -489,7 +485,9 @@ sub enqueue_unban_timeouts {
 
     foreach my $channel ($self->{unban_timeout}->get_keys) {
         foreach my $mask ($self->{unban_timeout}->get_keys($channel)) {
-            my $interval = $self->{unban_timeout}->get_data($channel, $mask, 'timeout') - $now;
+            my $timeout = $self->{unban_timeout}->get_data($channel, $mask, 'timeout');
+            next if $timeout <= 0;
+            my $interval = $timeout - $now;
             $interval = 10 if $interval < 10;
             $self->enqueue_unban_timeout($channel, $mask, $interval);
         }
