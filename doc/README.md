@@ -64,6 +64,7 @@
       * [Module management commands](Commands.md#module-management-commands)
       * [Plugin management commands](Commands.md#plugin-management-commands)
       * [Command metadata](Commands.md#command-metadata)
+      * [Event queue](Commands.md#event-queue)
       * [Process management](Commands.md#process-management)
       * [Registry commands](Commands.md#registry-commands)
       * [Miscellaneous admin commands](Commands.md#miscellaneous-admin-commands)

@@ -67,6 +67,8 @@
     * [Command metadata](#command-metadata)
       * [cmdset](Admin.md#cmdset)
       * [cmdunset](Admin.md#cmdunset)
+    * [Event queue](#event-queue)
+      * [eventqueue](Admin.md#eventqueue)
     * [Process management](#process-management)
       * [ps](Admin.md#ps)
       * [kill](Admin.md#kill)
@@ -387,6 +389,9 @@ to have the command remember your location.
 #### Command metadata
 ##### [cmdset](Admin.md#cmdset)
 ##### [cmdunset](Admin.md#cmdunset)
+
+#### Event queue
+##### [eventqueue](Admin.md#eventqueue)
 
 #### Process management
 ##### [ps](Admin.md#ps)
