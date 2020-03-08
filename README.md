@@ -36,7 +36,7 @@ To get up-and-running quickly, check out the [Quick Start guide](doc/QuickStart.
 
 ### Useful IRC command improvements
 * [`mode`](doc/Admin.md#mode) command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
-* `unban <nick>` and `unmute <nick>` can remove all bans/mutes matching `<nick>`'s hostmask or account
+* `unban <nick>` and `unmute <nick>` will remove all bans/mutes matching their current or previously seen hostmasks or accounts
 * [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) will intelligently set banmasks; supports timeouts
 * [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
 * [`kick`](doc/Admin.md#kick) can take a comma-separated list of nicks; also accepts wildcards
