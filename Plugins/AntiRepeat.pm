@@ -126,7 +126,7 @@ sub on_public {
                         if (keys %{$self->{offenses}->{$account}} == 0) { delete $self->{offenses}->{$account}; }
                     }
 
-                }, 10, "antirepeat offense-- $account $channel", 1
+                }, 60 * 60 * 2, "antirepeat offense-- $account $channel", 1
             );
 
             $self->{pbot}->{logger}->log("$nick!$user\@$host triggered anti-repeat; offense $self->{offenses}->{$account}->{$channel}->{offenses}\n");
