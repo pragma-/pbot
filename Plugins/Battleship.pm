@@ -23,8 +23,6 @@ sub initialize {
     my ($self, %conf) = @_;
     $self->{pbot}->{commands}->register(sub { $self->battleship_cmd(@_) }, 'battleship', 0);
 
-    $self->{pbot}->{timer}->register(sub { $self->battleship_timer }, 1, 'battleship timer');
-
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quit', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.kick', sub { $self->on_kick(@_) });
@@ -43,7 +41,7 @@ sub initialize {
 sub unload {
     my $self = shift;
     $self->{pbot}->{commands}->unregister('battleship');
-    $self->{pbot}->{timer}->unregister('battleship timer');
+    $self->{pbot}->{timer}->dequeue_event('battleship loop');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
@@ -133,6 +131,12 @@ sub battleship_cmd {
 
                 $player = {id => -1, name => undef, missedinputs => 0};
                 push @{$self->{state_data}->{players}}, $player;
+
+                $self->{pbot}->{timer}->enqueue_event(sub {
+                        $self->run_one_state;
+                    }, 1, 'battleship loop', 1
+                );
+
                 return "/msg $self->{channel} $nick has made an open challenge!  Use `accept` to accept their challenge.";
             }
 
@@ -150,6 +154,11 @@ sub battleship_cmd {
             ($id) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($challengee);
             $player = {id => $id, name => $challengee, missedinputs => 0};
             push @{$self->{state_data}->{players}}, $player;
+
+            $self->{pbot}->{timer}->enqueue_event(sub {
+                    $self->battleship_loop;
+                }, 1, 'battleship loop', 1
+            );
 
             return "/msg $self->{channel} $nick has challenged $challengee to Battleship! Use `accept` to accept their challenge.";
         }
@@ -341,11 +350,6 @@ sub battleship_cmd {
     }
 
     return $result;
-}
-
-sub battleship_timer {
-    my $self = shift;
-    $self->run_one_state;
 }
 
 sub player_left {
@@ -958,6 +962,7 @@ sub show_battlefield {
 sub nogame {
     my ($self, $state) = @_;
     $state->{result} = 'nogame';
+    $self->{pbot}->{timer}->update_repeating('battleship loop', 0);
     return $state;
 }
 
