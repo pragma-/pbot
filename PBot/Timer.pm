@@ -43,7 +43,8 @@ sub initialize {
     $self->{last}        = $seconds;
     $self->{timeout}     = $timeout;
 
-    $self->{pbot}->{commands}->register(sub { $self->event_queue_cmd(@_) },  'eventqueue', 0);
+    $self->{pbot}->{commands}->register(sub { $self->event_queue_cmd(@_) },  'eventqueue', 1);
+    $self->{pbot}->{capabilities}->add('admin', 'can-eventqueue', 1);
 
     $self->{timer_func} = sub { $self->on_tick_handler(@_) };
 }
@@ -51,35 +52,72 @@ sub initialize {
 sub event_queue_cmd {
     my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-    return "No events queued." if not @{$self->{event_queue}};
+    my $usage = "Usage: eventqueue list [filter regex] | add <relative time> <command> | remove <regex>";
 
-    my $result = eval {
-        my $text = "Queued events:\n";
+    my $command = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
 
-        my $i = 0;
-        foreach my $event (@{$self->{event_queue}}) {
-            $i++;
-
-            if ($arguments) {
-                next unless $event->{id} =~ /$arguments/;
-            }
-
-            my $duration = concise duration $event->{timeout} - $seconds;
-            $text .= "  $i) in $duration: $event->{id}";
-            $text .= ' [R]' if $event->{repeating};
-            $text .= ";\n";
-        }
-
-        return $text;
-    };
-
-    if ($@) {
-        my $error = $@;
-        $error =~ s/ at PBot.*//;
-        return "Bad regex: $error";
+    if (not defined $command) {
+        return $usage;
     }
 
-    return $result;
+    if ($command eq 'list') {
+        return "No events queued." if not @{$self->{event_queue}};
+
+        my $result = eval {
+            my $text = "Queued events:\n";
+            my ($regex) = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+
+            my $i = 0;
+            foreach my $event (@{$self->{event_queue}}) {
+                $i++;
+
+                if ($regex) {
+                    next unless $event->{id} =~ /$regex/;
+                }
+
+                my $duration = concise duration $event->{timeout} - $seconds;
+                $text .= "  $i) in $duration: $event->{id}";
+                $text .= ' [R]' if $event->{repeating};
+                $text .= ";\n";
+            }
+
+            return $text;
+        };
+
+        if ($@) {
+            my $error = $@;
+            $error =~ s/ at PBot.*//;
+            return "Bad regex: $error";
+        }
+
+        return $result;
+    }
+
+    if ($command eq 'add') {
+        my ($duration, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+        return "Usage: eventqueue add <relative time> <command>" if not defined $duration or not defined $command;
+
+        my ($delay, $error) = $self->{pbot}->{parsedate}->parsedate($duration);
+        return $error if defined $error;
+
+        my $cmd = {
+            nick => $nick,
+            user => $user,
+            host => $host,
+            command => $command,
+        };
+
+        $self->{pbot}->{interpreter}->add_to_command_queue($from, $cmd, $delay);
+        return "Command added to event queue.";
+    }
+
+    if ($command eq 'remove') {
+        my $regex = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+        return "Usage: eventqueue add <regex>" if not defined $regex;
+        return $self->dequeue_event($regex);
+    }
+
+    return "Unknown command '$command'. $usage";
 }
 
 sub start {
@@ -159,17 +197,26 @@ sub enqueue_event {
 sub dequeue_event {
     my ($self, $id) = @_;
 
-    eval {
+    my $result = eval {
         $id = quotemeta $id;
         $id =~ s/\\\.\\\*\\\?/.*?/g;
         $id =~ s/\\\.\\\*/.*/g;
         my $regex = qr/^$id$/;
+        my $count = @{$self->{event_queue}};
         @{$self->{event_queue}} = grep { $_->{id} !~ /$regex/i; } @{$self->{event_queue}};
+        my $removed = $count - @{$self->{event_queue}};
+        return "No matching events." if not $removed;
+        return "Removed $removed event" . ($removed == 1 ? '' : 's') . '.';
     };
 
     if ($@) {
-        $self->{pbot}->{logger}->log("Error in dequeue_event: $@\n");
+        my $error = $@;
+        $self->{pbot}->{logger}->log("Error in dequeue_event: $error\n");
+        $error =~ s/ at PBot.*//;
+        return "$error";
     }
+
+    return $result;
 }
 
 sub register {
@@ -223,8 +270,8 @@ sub on_tick_handler {
     my $debug = $self->{pbot}->{registry}->get_value('timer', 'debug') // 0;
     $self->{pbot}->{logger}->log("$self->{name} tick $seconds\n") if $debug;
 
-    my $next_tick = 1;
     if (@{$self->{event_queue}}) {
+        my $next_tick = 1;
         my @enqueue = ();
         for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
             if ($seconds >= $self->{event_queue}->[$i]->{timeout}) {
