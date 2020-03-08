@@ -56,6 +56,8 @@
   * [cmdset](#cmdset)
   * [cmdunset](#cmdunset)
   * [Command metadata list](#command-metadata-list)
+* [Event queue commands](#event-queue-commands)
+  * [eventqueue](#eventqueue)
 * [Process management commands](#process-management-commands)
   * [ps](#ps)
   * [kill](#kill)
@@ -541,6 +543,21 @@ Name | Description
 `dont-replace-pronouns` | When set to a true value then pronouns such as "my", "me", "your", etc, will not be intuitively replaced with nicks and such.
 `background-process` | When set to a true value then this command will be executed as a background process. Use this for commands that can potentially take a long time to complete.
 `process-timeout` | The timeout, in seconds, before the process is automatically killed. If not set then the `processmanager.default_timeout` [registry](Registry.md) value will be used.
+
+## Event queue commands
+### eventqueue
+Manages the PBot event queue. Can be used to add commands that run at a future time.
+
+Usage: `eventqueue list [filter regex] | add <relative time> <command> | delete <regex>
+
+For example, to schedule a command to run 10 seconds from now:
+
+   <pragma-> eventqueue add "10 seconds" echo Ta-da!
+      <PBot> Command added to event queue.
+
+   10 seconds later ...
+
+      <PBot> Ta-da!
 
 ## Process management commands
 ### ps
