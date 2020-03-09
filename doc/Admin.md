@@ -562,11 +562,19 @@ For example, to schedule a command to run 1 hour from now:
 
        <PBot> Ta-da!
 
-The `remove` command's `<event>` argument can include wildcards of the form `.*` or `.*?`. For example,
-to remove all `command` events, you can simply do:
+The `remove` command's `<event>` argument can include wildcards of the form `.*`. For example,
+to remove all `command` events:
 
     <pragma-> eventqueue remove command .*
        <PBot> Removed 1 event.
+
+Or to remove all `command` events in `#channel`:
+
+    <pragma-> eventqueue remove command #channel .*
+
+Or to remove all events in `#channel`:
+
+    <pragma-> eventqueue remove .* #channel .*
 
 ## Process management commands
 ### ps
