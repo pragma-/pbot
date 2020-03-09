@@ -958,7 +958,7 @@ sub add_message_to_output_queue {
 }
 
 sub add_to_command_queue {
-    my ($self, $channel, $command, $delay) = @_;
+    my ($self, $channel, $command, $delay, $repeating) = @_;
 
     $self->{pbot}->{timer}->enqueue_event(
         sub {
@@ -982,7 +982,7 @@ sub add_to_command_queue {
             $stuff->{result} = $result;
             $self->handle_result($stuff, $result);
         },
-        $delay, "command $channel $command->{command}"
+        $delay, "command $channel $command->{command}", $repeating
     );
 }
 

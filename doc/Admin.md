@@ -549,7 +549,7 @@ Name | Description
 PBot uses an event queue to schedule future tasks or commands. The `eventqueue` command can
 be used to list or remove upcoming events. It can also be used to schedule a command.
 
-Usage: `eventqueue list [filter regex] | add <relative time> <command> | remove <event>`
+Usage: `eventqueue list [filter regex] | add <relative time> <command> [-repeat] | remove <event>`
 
 For example, to schedule a command to run 1 hour from now:
 

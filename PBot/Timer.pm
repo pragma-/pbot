@@ -100,6 +100,9 @@ sub event_queue_cmd {
         my ($delay, $error) = $self->{pbot}->{parsedate}->parsedate($duration);
         return $error if defined $error;
 
+        my $repeating = 0;
+        $repeating = 1 if $command =~ s/^-repeat\s+|\s+-repeat$//g;
+
         my $cmd = {
             nick => $nick,
             user => $user,
@@ -107,7 +110,7 @@ sub event_queue_cmd {
             command => $command,
         };
 
-        $self->{pbot}->{interpreter}->add_to_command_queue($from, $cmd, $delay);
+        $self->{pbot}->{interpreter}->add_to_command_queue($from, $cmd, $delay, $repeating);
         return "Command added to event queue.";
     }
 
