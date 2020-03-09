@@ -112,8 +112,10 @@ sub event_queue_cmd {
     }
 
     if ($command eq 'remove') {
-        my $regex = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+        my ($regex) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1);
         return "Usage: eventqueue add <regex>" if not defined $regex;
+        $regex =~ s/\*/.*?/g;
+        print "regex: [$regex]\n";
         return $self->dequeue_event($regex);
     }
 
