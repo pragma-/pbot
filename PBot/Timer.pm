@@ -184,13 +184,13 @@ sub enqueue_event {
     my $i = $self->find_enqueue_position($event->{timeout});
     splice @{$self->{event_queue}}, $i, 0, $event;
 
-    if ($interval < $waitfor) {
-        $self->waitfor($interval);
-    }
-
     my $debug = $self->{pbot}->{registry}->get_value('timer', 'debug') // 0;
     if ($debug > 1) {
         $self->{pbot}->{logger}->log("Enqueued new timer event $id at position $i: timeout=$event->{timeout} interval=$interval repeating=$repeating\n");
+    }
+
+    if ($interval < $waitfor) {
+        $self->waitfor($interval);
     }
 }
 
@@ -290,11 +290,11 @@ sub on_tick_handler {
             }
         }
 
-        $self->waitfor($next_tick);
-
         foreach my $event (@enqueue) {
             $self->enqueue_event($event->{subref}, $event->{interval}, $event->{id}, 1);
         }
+
+        $self->waitfor($next_tick);
     } else {
         # no queued events, call default overridable on_tick() method if timeout has elapsed
         if ($seconds - $self->{last} >= $self->{timeout}) {
