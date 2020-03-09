@@ -130,7 +130,7 @@
     * [cmdset](Admin.md#cmdset)
     * [cmdunset](Admin.md#cmdunset)
     * [Command metadata list](Admin.md#command-metadata-list)
-  * [Event queue commands](Admin.md#event-queue-commands)
+  * [Event queue management](Admin.md#event-queue-management)
     * [eventqueue](Admin.md#eventqueue)
   * [Process management commands](Admin.md#process-management-commands)
     * [ps](Admin.md#ps)

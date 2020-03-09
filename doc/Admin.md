@@ -56,7 +56,7 @@
   * [cmdset](#cmdset)
   * [cmdunset](#cmdunset)
   * [Command metadata list](#command-metadata-list)
-* [Event queue commands](#event-queue-commands)
+* [Event queue management](#event-queue-management)
   * [eventqueue](#eventqueue)
 * [Process management commands](#process-management-commands)
   * [ps](#ps)
@@ -544,18 +544,18 @@ Name | Description
 `background-process` | When set to a true value then this command will be executed as a background process. Use this for commands that can potentially take a long time to complete.
 `process-timeout` | The timeout, in seconds, before the process is automatically killed. If not set then the `processmanager.default_timeout` [registry](Registry.md) value will be used.
 
-## Event queue commands
+## Event queue management
 ### eventqueue
 Manages the PBot event queue. Can be used to add commands that run at a future time.
 
-Usage: `eventqueue list [filter regex] | add <relative time> <command> | delete <regex>`
+Usage: `eventqueue list [filter regex] | add <relative time> <command> | remove <regex>`
 
 For example, to schedule a command to run 1 hour from now:
 
     <pragma-> eventqueue add "1 hour" echo Ta-da!
        <PBot> Command added to event queue.
 
-    <pragma-> eventqueue list echo
+    <pragma-> eventqueue list
        <PBot> Queued events: 1) in 1h: output #channel /say Ta-da!
 
     ... 1 hour later ...
