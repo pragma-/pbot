@@ -548,7 +548,7 @@ Name | Description
 ### eventqueue
 Manages the PBot event queue. Can be used to add commands that run at a future time.
 
-Usage: `eventqueue list [filter regex] | add <relative time> <command> | remove <regex>`
+Usage: `eventqueue list [filter regex] | add <relative time> <command> | remove <event>`
 
 For example, to schedule a command to run 1 hour from now:
 
@@ -556,15 +556,16 @@ For example, to schedule a command to run 1 hour from now:
        <PBot> Command added to event queue.
 
     <pragma-> eventqueue list
-       <PBot> Queued events: 1) in 1h: output #channel /say Ta-da!
+       <PBot> Queued events: 1) in 1h: command #channel echo Ta-da!
 
     ... 1 hour later ...
 
        <PBot> Ta-da!
 
-To remove all "output" events:
+The `remove` command's `<event>` argument can include wildcards of the form `.*` or `.*?`. For example,
+to remove all `command` events, you can simply do:
 
-    <pragma-> eventqueue remove output.*
+    <pragma-> eventqueue remove command .*
        <PBot> Removed 1 event.
 
 ## Process management commands
