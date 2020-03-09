@@ -555,9 +555,17 @@ For example, to schedule a command to run 1 hour from now:
     <pragma-> eventqueue add "1 hour" echo Ta-da!
        <PBot> Command added to event queue.
 
-    1 hour later ...
+    <pragma-> eventqueue list echo
+       <PBot> Queued events: 1) in 1h: output #channel /say Ta-da!
+
+    ... 1 hour later ...
 
        <PBot> Ta-da!
+
+To remove all "output" events:
+
+    <pragma-> eventqueue remove output.*
+       <PBot> Removed 1 event.
 
 ## Process management commands
 ### ps
