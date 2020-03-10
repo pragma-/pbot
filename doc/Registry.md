@@ -240,7 +240,7 @@ Name | Description
 [channel].dont_enforce_antiflood | Disables anti-flood enforcement for this channel.
 [channel].max_newlines | The maximum number of lines to be sent before truncating to a paste site, if `preserve_newlines` is enabled.
 [channel].no_url_titles | Disables display of URL titles for this channel.
-[channel].notyposubs | Diables use of `s//` substitution to edit messages.
+[channel].notyposubs | Disables use of `s//` substitution to edit messages.
 [channel].preserve_newlines | If set to a true value, newlines will not be replaced with spaces in this channel. Each line of output will be sent as a distinct message.
 [channel].ratelimit_override | Duration, in seconds, of the rate-limit for factoids in this channel. To disable factoid rate-limiting for a channel, you can set this to `0`.
 [channel].rejoin_delay | Overrides autorejoin.rejoin_delay for this channel.
