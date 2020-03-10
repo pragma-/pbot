@@ -173,16 +173,27 @@ antiflood.nick_flood_threshold || 3
 antiflood.nick_flood_time_threshold || 1800
 antikickautorejoin.punishment || 300,900,1800,3600,28800
 antikickautorejoin.threshold || 4
+autorejoin.rejoin_delay | Delay before rejoining a channel after being kicked or requested to leave. | 900,1800,3600
 bantracker.chanserv_ban_timeout || 604800
 bantracker.debug | Log verbose debugging information about the Ban Tracker. | 0
 bantracker.mute_timeout || 604800
+battleship.channel | Sets the channel for the Battleship game plugin. | ##battleship
+connect4.channel | Sets the channel for the Connect4 game plugin. | ##connect4
 factoids.default_rate_limit | The default rate-limit to set when creating new factoids. | 10
+factoids.max_channel_length | The maximum length the channel field can be. | 20
+factoids.max_content_length | The maximum length the content field can be. | 8192
+factoids.max_name_length | The maximum length the name field can be. | 100
+factoids.max_undos | Maximum undo history entries. | 20
 general.data_dir | Path to PBot `data/` directory. |
+general.daemon | Run PBot in daemon mode. Closes stdin and stdout, writes only to logfile. | 0
 general.deop_timeout | Time-out, in seconds, before PBot deops itself after being opped. | 300
+general.default_ban_timeout | Default timeout for bans. | 24 hours
+general.default_mute_timeout | Default timeout for mutes. | 24 hours
 general.module_dir | Path to PBot `modules/` directory. |
 general.module_repo | URL to source code of PBot modules; used in `factinfo` | https://github.com/pragma-/pbot/tree/master/modules
 general.no_dehighlight_nicks | If set to at true value then  when outputting text PBot will not convert nicks to text that avoids triggering IRC client nick-highlighting | not defined
 general.paste_ratelimit | How often, in seconds, between pastes to web paste-sites. |
+general.send_who_on_join | When joining a channel, send the `WHO` command to get detailed information about who is present, and to check for ban-evasions. | 1
 general.show_url_titles_channels | A regular-expression or comma-separated list of channels that should display titles for URLs. | `.*`
 general.show_url_titles | If set to a true value, PBot will show titles for URLs. | 1
 general.show_url_titles_ignore_channels | A regular-expression or comma-separated list of channels that will not display titles for URLs. |
@@ -201,6 +212,7 @@ irc.SSL_ca_file | Path to a specific SSL certificate authority file. |
 irc.SSL_ca_path | Path to the SSL certificate authority directory containing certificate files. |
 irc.SSL | If set to a true value, SSL will be enabled when connecting to the IRC server. | 0
 irc.username || PBot
+interpreter.max_recursion | Maximum recursion depth for bot command aliasing. | 10
 lagchecker.lag_history_interval | How often, in seconds, to send a `PING` to the IRC server. | 10
 lagchecker.lag_history_max | How many of the most recent `PING`s to average. | 3
 lagchecker.lag_threshold | Duration, in milliseconds, of average lag before PBot thinks it is lagging too much to sensibly enforce anti-flood, etc. | 2000
@@ -210,6 +222,8 @@ messagehistory.sqlite_commit_interval | How often to commit SQLite transactions 
 messagehistory.sqlite_debug | Log verbose debugging information about SQLite statements. | 0
 nicklist.debug | Log verbose debugging information about the NickList. | 0
 processmanager.default_timeout | The default timeout for background processes, in seconds. | 30
+spinach.channel | Sets the channel for the Spinach game plugin. | ##spinach
+typosub.ignore_commands | Do not apply `s//` substitution to bot commands.
 
 ### Channel-specific Registry items
 
@@ -221,8 +235,15 @@ these for your channels. They are listed here.
 
 Name | Description
 --- | ---
+[channel].default_ban_timeout | Overrides general.default_ban_timeout for this channel.
+[channel].default_mute_timeout | Overrides general.default_mute_timeout for this channel.
 [channel].dont_enforce_antiflood | Disables anti-flood enforcement for this channel.
 [channel].max_newlines | The maximum number of lines to be sent before truncating to a paste site, if `preserve_newlines` is enabled.
 [channel].no_url_titles | Disables display of URL titles for this channel.
+[channel].notyposubs | Diables use of `s//` substitution to edit messages.
 [channel].preserve_newlines | If set to a true value, newlines will not be replaced with spaces in this channel. Each line of output will be sent as a distinct message.
 [channel].ratelimit_override | Duration, in seconds, of the rate-limit for factoids in this channel. To disable factoid rate-limiting for a channel, you can set this to `0`.
+[channel].rejoin_delay | Overrides autorejoin.rejoin_delay for this channel.
+[channel].strictnamespace | When enabled, factoids belonging to other channels will not show up in this channel unless specifically invoked.
+[channel].trigger | Overrides the bot trigger for this channel.
+[channel].typosub_ignore_commands | Do not apply `s//` substitution to bot commands.
