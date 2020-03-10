@@ -197,6 +197,7 @@ general.send_who_on_join | When joining a channel, send the `WHO` command to get
 general.show_url_titles_channels | A regular-expression or comma-separated list of channels that should display titles for URLs. | `.*`
 general.show_url_titles | If set to a true value, PBot will show titles for URLs. | 1
 general.show_url_titles_ignore_channels | A regular-expression or comma-separated list of channels that will not display titles for URLs. |
+general.strictnamespace | When enabled, factoids belonging to other channels will not show up in current channels unless specifically invoked.
 general.trigger | The trigger character(s) or text that will invoke PBot commands. | [!]
 interpreter.max_recursion | The maximum number of recursions allowed before the command interpreter will abort. | 100
 irc.botnick | The IRC nickname of this PBot instance. |
