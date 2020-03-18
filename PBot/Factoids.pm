@@ -842,7 +842,11 @@ sub interpreter {
             $msg_caller = "/msg $stuff->{nick} " if $stuff->{send_msg_to_caller};
 
             my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
-            return $msg_caller . $ref_from . "No such factoid '$original_keyword'; did you mean $matches?";
+            if ($matches eq 'none') {
+                return $msg_caller . $ref_from . "No such factoid '$original_keyword'; no similar matches.";
+            } else {
+                return $msg_caller . $ref_from . "No such factoid '$original_keyword'; did you mean $matches?";
+            }
         }
     }
 
