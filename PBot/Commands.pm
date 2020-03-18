@@ -112,6 +112,11 @@ sub interpreter {
                 }
             }
 
+            $stuff->{action} = $stuff->{arguments};
+            $stuff->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($stuff);
+            $stuff->{arguments} = $self->{pbot}->{factoids}->expand_special_vars($stuff->{from}, $stuff->{nick}, $stuff->{keyword}, $stuff->{arguments});
+            delete $stuff->{action};
+
             $stuff->{no_nickoverride} = 1;
             if ($self->get_meta($keyword, 'background-process')) {
                 my $timeout = $self->get_meta($keyword, 'process-timeout') // $self->{pbot}->{registry}->get_value('processmanager', 'default_timeout');
