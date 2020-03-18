@@ -135,8 +135,6 @@ sub connect4_cmd {
     ($command, $arguments, $options) = split / /, $arguments, 3;
     $command = lc $command;
 
-    my ($channel, $result);
-
     given ($command) {
         when ('help') {
             given ($arguments) {
@@ -315,6 +313,7 @@ sub connect4_cmd {
                     $self->{state_data}->{counter}        = 0;
                 }
             }
+            return "";
         }
 
         when ('board') {
@@ -327,7 +326,7 @@ sub connect4_cmd {
                 if ($self->{state_data}->{players}->[$i]->{id} == $id) {
                     $self->send_message($self->{channel}, "$nick surveys the board!");
                     $self->show_board;
-                    return;
+                    return "";
                 }
             }
 
@@ -337,7 +336,7 @@ sub connect4_cmd {
         default { return $usage; }
     }
 
-    return $result;
+    return "";
 }
 
 sub player_left {
