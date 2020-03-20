@@ -493,16 +493,6 @@ sub get_data {
             }
         }
 
-        if (grep { $_ ne '_name' } keys %{$self->{cache}->{$lc_index1}->{$lc_index2}}) {
-            my $d = {};
-            foreach my $key (keys %{$self->{cache}->{$lc_index1}->{$lc_index2}}) {
-                if (defined $self->{cache}->{$lc_index1}->{$lc_index2}->{$key}) {
-                    $d->{$key} = $self->{cache}->{$lc_index1}->{$lc_index2}->{$key};
-                }
-            }
-            return $d;
-        }
-
         my $data = eval {
             my $sth = $self->{dbh}->prepare('SELECT * FROM Stuff WHERE index1 = ? AND index2 = ?');
             $sth->execute($index1, $index2);
