@@ -123,7 +123,8 @@ sub get_wttr {
     if ($response->is_success) { $json = $response->decoded_content; }
     else                       { return "Failed to fetch weather data: " . $response->status_line; }
 
-    my $wttr = decode_json $json;
+    my $wttr = eval { decode_json $json };
+    return $json if $@; # error decoding json so it must not be json -- return as-is
 
     if (exists $wttr->{nearest_area}) {
         my $areaName = $wttr->{nearest_area}->[0]->{areaName}->[0]->{value};
