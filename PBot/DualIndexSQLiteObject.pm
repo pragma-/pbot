@@ -501,8 +501,10 @@ sub get_data {
             my $d = {};
             foreach my $key (keys %{$stuff->[0]}) {
                 next if $key eq 'index1' or $key eq 'index2';
-                $self->{cache}->{$lc_index1}->{$lc_index2}->{$key} = $stuff->[0]->{$key};
-                $d->{$key} = $stuff->[0]->{key} if defined $stuff->[0]->{key};
+                if (defined $stuff->[0]->{$key}) {
+                    $self->{cache}->{$lc_index1}->{$lc_index2}->{$key} = $stuff->[0]->{$key};
+                    $d->{$key} = $stuff->[0]->{$key};
+                }
             }
 
             my $timeout = $self->{pbot}->{registry}->get_value('dualindexsqliteobject', 'cache_timeout') // 60 * 30;

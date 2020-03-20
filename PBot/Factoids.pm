@@ -130,8 +130,8 @@ sub add_factoid {
         };
     }
 
-    $self->{commands}->log_factoid($channel, $trigger, $owner, "created: $action") unless $dont_save;
     $self->{factoids}->add($channel, $trigger, $data, $dont_save);
+    $self->{commands}->log_factoid($channel, $trigger, $owner, "created: $action") unless $dont_save;
 }
 
 sub remove_factoid {
