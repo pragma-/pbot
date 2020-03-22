@@ -878,9 +878,10 @@ sub dehighlight_nicks {
     my @nicks = $self->{pbot}->{nicklist}->get_nicks($channel);
     return $line if not @nicks;
     foreach my $nick (@nicks) {
+        next if length $nick == 1;
         $nick = quotemeta $nick;
         my $const_line = $line;
-        while ($const_line =~ m/(?<![^\W_])($nick)(?![^\W_:])/gi) {
+        while ($const_line =~ m/(?<![^\W_\.\\])($nick)(?![^\W_:])/gi) {
             my $match = $1;
             $match =~ s/^(.)/$1\x{200b}/;
             $line  =~ s/$nick(?!:)/$match/i;
