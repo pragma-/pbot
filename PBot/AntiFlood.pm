@@ -208,7 +208,7 @@ sub check_flood {
         $account = $self->{pbot}->{messagehistory}->get_message_account($newnick, $user, $host);
         $nick    = $newnick;
     } else {
-        $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", lc $channel eq lc $mask ? "QUIT" : $channel, $mask, $text));
+        $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", $channel eq lc $mask ? "QUIT" : $channel, $mask, $text));
     }
 
     # do not do flood processing for bot messages
@@ -242,7 +242,6 @@ sub check_flood {
         $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($account);
 
         if ($text eq 'QUIT Changing host') {
-            $self->{pbot}->{logger}->log("$mask [$account] changing host!\n");
             $self->{changinghost}->{$nick} = $account;
         }
 
@@ -251,8 +250,9 @@ sub check_flood {
     }
 
     my $channels;
-    if ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) { $channels = $self->{pbot}->{nicklist}->get_channels($oldnick); }
-    else {
+    if ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+        $channels = $self->{pbot}->{nicklist}->get_channels($oldnick);
+    } else {
         $self->update_join_watch($account, $channel, $text, $mode);
         push @$channels, $channel;
     }
@@ -526,6 +526,8 @@ sub check_flood {
             }
         }
     }
+
+    $self->{channels}->{$channel}->{last_spoken_nick} = $nick if $mode == $self->{pbot}->{messagehistory}->{MSG_CHAT};
 }
 
 sub unbanme {
