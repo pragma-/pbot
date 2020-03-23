@@ -1260,10 +1260,6 @@ sub factfind {
     $editby    = $1 if $arguments =~ s/\s*-editby\s+([^\b\s]+)//i;
     $use_regex = 1  if $arguments =~ s/\s*-regex\b//i;
 
-    $owner  = '.*' if not defined $owner;
-    $refby  = '.*' if not defined $refby;
-    $editby = '.*' if not defined $editby;
-
     $arguments =~ s/^\s+//;
     $arguments =~ s/\s+$//;
     $arguments =~ s/\s+/ /g;
@@ -1273,12 +1269,12 @@ sub factfind {
 
     $argtype = "owned by $owner" if $owner ne '.*';
 
-    if ($refby ne '.*') {
+    if (defined $refby) {
         if (not defined $argtype) { $argtype = "last referenced by $refby"; }
         else                      { $argtype .= " and last referenced by $refby"; }
     }
 
-    if ($editby ne '.*') {
+    if (defined $editby) {
         if (not defined $argtype) { $argtype = "last edited by $editby"; }
         else                      { $argtype .= " and last edited by $editby"; }
     }
@@ -1311,26 +1307,23 @@ sub factfind {
             foreach my $factoid ($factoids->get_all("index1 = $chan", 'index2', 'owner', 'ref_user', 'edited_by', 'action')) {
                 my $match = 0;
 
-                if ($owner eq '.*') {
-                    $match = 1;
-                } else {
+                if (defined $owner) {
                     $match = 1 if $factoid->{owner} =~ /^$owner/i;
                 }
 
-                if ($refby eq '.*') {
-                    $match = 1;
-                } else {
+                if (defined $refby) {
                     $match = 1 if $factoid->{ref_user} =~ /^$refby/i;
                 }
 
-                if ($editby eq '.*') {
-                    $match = 1;
-                } else {
+                if (defined $editby) {
                     $match = 1 if $factoid->{edited_by} =~ /^$editby/i;
                 }
 
+                if ($arguments ne "" && ($factoid->{action} =~ /$regex/i || $factoid->{index2} =~ /$regex/i)) {
+                    $match = 1;
+                }
+
                 if ($match) {
-                    next if ($arguments ne "" && $factoid->{action} !~ /$regex/i && $factoid->{index2} !~ /$regex/i);
                     $i++;
                     if ($chan ne $last_chan) {
                         $text .= $chan eq '.*' ? '[global channel] ' : '[' . $factoids->get_data($chan, '_name') . '] ';
