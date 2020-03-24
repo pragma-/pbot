@@ -877,17 +877,26 @@ sub dehighlight_nicks {
     return $line if $self->{pbot}->{registry}->get_value('general', 'no_dehighlight_nicks');
     my @nicks = $self->{pbot}->{nicklist}->get_nicks($channel);
     return $line if not @nicks;
-    foreach my $nick (@nicks) {
-        next if length $nick == 1;
-        $nick = quotemeta $nick;
-        my $const_line = $line;
-        while ($const_line =~ m/(?<![^\W_\.\\])($nick)(?![^\W_:])/gi) {
-            my $match = $1;
-            $match =~ s/^(.)/$1\x{200b}/;
-            $line  =~ s/$nick(?!:)/$match/i;
-        }
+
+    my %nick_table = map { $_ => 1 } @nicks;
+
+    my @tokens = split / /, $line;
+
+    foreach my $token (@tokens) {
+        my $potential_nick = $token;
+        $potential_nick =~ s/^[^\w\[\]\<\>\-\\\^\{\}]+//;
+        $potential_nick =~ s/[^\w\[\]\<\>\-\\\^\{\}]+$//;
+
+        next if length $potential_nick == 1;
+        next if not $nick_table{$potential_nick};
+
+        my $dehighlighted_nick = $potential_nick;
+        $dehighlighted_nick =~ s/(.)/$1\x{200b}/;
+
+        $token =~ s/\Q$potential_nick\E(?!:)/$dehighlighted_nick/;
     }
-    return $line;
+
+    return join ' ', @tokens;
 }
 
 sub output_result {
