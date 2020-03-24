@@ -1250,7 +1250,7 @@ sub factfind {
     my ($from, $nick, $user, $host, $arguments) = @_;
 
     my $usage = "Usage: factfind [-channel channel] [-owner regex] [-editby regex] [-refby regex] [-regex] [text]";
-    return $usage if not defined $arguments;
+    return $usage if not length $arguments;
 
     my $factoids = $self->{pbot}->{factoids}->{factoids};
     my ($channel, $owner, $refby, $editby, $use_regex);
