@@ -875,20 +875,15 @@ sub handle_result {
 sub dehighlight_nicks {
     my ($self, $line, $channel) = @_;
     return $line if $self->{pbot}->{registry}->get_value('general', 'no_dehighlight_nicks');
-    my @nicks = $self->{pbot}->{nicklist}->get_nicks($channel);
-    return $line if not @nicks;
-
-    my %nick_table = map { $_ => 1 } @nicks;
 
     my @tokens = split / /, $line;
-
     foreach my $token (@tokens) {
         my $potential_nick = $token;
         $potential_nick =~ s/^[^\w\[\]\<\>\-\\\^\{\}]+//;
         $potential_nick =~ s/[^\w\[\]\<\>\-\\\^\{\}]+$//;
 
         next if length $potential_nick == 1;
-        next if not $nick_table{$potential_nick};
+        next if not $self->{pbot}->{nicklist}->is_present($channel, $potential_nick);
 
         my $dehighlighted_nick = $potential_nick;
         $dehighlighted_nick =~ s/(.)/$1\x{200b}/;
