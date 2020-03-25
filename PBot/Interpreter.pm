@@ -879,8 +879,8 @@ sub dehighlight_nicks {
     my @tokens = split / /, $line;
     foreach my $token (@tokens) {
         my $potential_nick = $token;
-        $potential_nick =~ s/^[^\w\[\]\<\>\-\\\^\{\}]+//;
-        $potential_nick =~ s/[^\w\[\]\<\>\-\\\^\{\}]+$//;
+        $potential_nick =~ s/^[^\w\[\]\-\\\^\{\}]+//;
+        $potential_nick =~ s/[^\w\[\]\-\\\^\{\}]+$//;
 
         next if length $potential_nick == 1;
         next if not $self->{pbot}->{nicklist}->is_present($channel, $potential_nick);
