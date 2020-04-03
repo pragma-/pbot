@@ -342,6 +342,10 @@ sub recall_message {
             if (not defined $context_account) { return "I don't know anybody named $recall_context."; }
         }
 
+        if ($from =~ /^#/ and ($recall_count > 2 or $recall_after > 2 or $recall_before > 2)) {
+            return "Please use `recall` from private message when recalling multiple messages. Just add \"-c $from\" to the command and /msg it to me.";
+        }
+
         my $messages = $self->{database}->get_message_context($message, $recall_before, $recall_after, $recall_count, $recall_history, $context_account);
 
         my $max_recall_time = $self->{pbot}->{registry}->get_value('messagehistory', 'max_recall_time');
