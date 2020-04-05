@@ -224,6 +224,8 @@ sub ban_user_timed {
     $data->{reason}  = $reason if defined $reason;
     $self->{unban_timeout}->add($channel, $mask, $data);
 
+    $self->{pbot}->{timer}->dequeue_event("unban_timeout $channel $mask");
+
     if ($length > 0) {
         $self->enqueue_unban_timeout($channel, $mask, $length);
     }
@@ -277,6 +279,8 @@ sub mute_user_timed {
     $data->{owner}   = $owner  if defined $owner;
     $data->{reason}  = $reason if defined $reason;
     $self->{unmute_timeout}->add($channel, $mask, $data);
+
+    $self->{pbot}->{timer}->dequeue_event("unmute_timeout $channel $mask");
 
     if ($length > 0) {
         $self->enqueue_unmute_timeout($channel, $mask, $length);

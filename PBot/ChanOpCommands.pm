@@ -486,15 +486,17 @@ sub mute_user {
     my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
     my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
+    $channel = '' if not defined $channel;
+
     if (not defined $from) {
         $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
         return "";
     }
 
-    if (not defined $channel and $from !~ m/^#/) { return "Usage from private message: mute <mask> <channel> [timeout (default: 24 hours)]"; }
+    if (not length $channel and $from !~ m/^#/) { return "Usage from private message: mute <mask> <channel> [timeout (default: 24 hours)]"; }
 
     if ($channel !~ m/^#/) {
-        $length  = "$channel $length";
+        $length  = $channel . ' ' . (defined $length ? $length : '');
         $length  = undef if $length eq ' ';
         $channel = exists $stuff->{admin_channel_override} ? $stuff->{admin_channel_override} : $from;
     }
