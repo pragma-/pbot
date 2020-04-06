@@ -68,18 +68,23 @@ sub event_queue_cmd {
             my ($regex) = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
 
             my $i = 0;
+            my $events = 0;
             foreach my $event (@{$self->{event_queue}}) {
                 $i++;
 
                 if ($regex) {
-                    next unless $event->{id} =~ /$regex/;
+                    next unless $event->{id} =~ /$regex/i;
                 }
+
+                $events++;
 
                 my $duration = concise duration $event->{timeout} - $seconds;
                 $text .= "  $i) in $duration: $event->{id}";
                 $text .= ' [R]' if $event->{repeating};
                 $text .= ";\n";
             }
+
+            return "No events found." if $events == 0;
 
             return $text;
         };
@@ -118,7 +123,6 @@ sub event_queue_cmd {
         my ($regex) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1);
         return "Usage: eventqueue remove <event>" if not defined $regex;
         $regex =~ s/\*/.*?/g;
-        print "regex: [$regex]\n";
         return $self->dequeue_event($regex);
     }
 
@@ -206,7 +210,7 @@ sub dequeue_event {
         $id = quotemeta $id;
         $id =~ s/\\\.\\\*\\\?/.*?/g;
         $id =~ s/\\\.\\\*/.*/g;
-        my $regex = qr/^$id$/;
+        my $regex = qr/^$id$/i;
         my $count = @{$self->{event_queue}};
         @{$self->{event_queue}} = grep { $_->{id} !~ /$regex/i; } @{$self->{event_queue}};
         my $removed = $count - @{$self->{event_queue}};
