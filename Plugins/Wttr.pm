@@ -189,7 +189,14 @@ sub get_wttr {
                 }
 
                 if ($sep eq '') {
-                    $result .= "Current conditions: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F (Feels like $c->{'FeelsLikeC'}C/$c->{'FeelsLikeF'}F); ";
+                    $result = '';
+                    $result .= "Current conditions: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F";
+                    if ($c->{'FeelsLikeC'} != $c->{'temp_C'}) {
+                        $result .= " (Feels like $c->{'FeelsLikeC'}C/$c->{'FeelsLikeF'}F); ";
+                    } else {
+                        $result .= '; ';
+                    }
+                    $result .= "Forecast: High: $w->{maxtempC}C/$w->{maxtempF}F, Low: $w->{mintempC}C/$w->{mintempF}F; ";
                     $result .= "Cloud cover: $c->{'cloudcover'}%; Visibility: $c->{'visibility'}km; ";
                     $result .= "Wind: $c->{'windspeedKmph'}kph/$c->{'windspeedMiles'}mph $c->{'winddirDegree'}°/$c->{'winddir16Point'}; ";
                     $result .= "Humidity: $c->{'humidity'}%; Precip: $c->{'precipMM'}mm; Pressure: $c->{'pressure'}hPa; UV Index: $c->{'uvIndex'}";
@@ -199,7 +206,12 @@ sub get_wttr {
             }
 
             when ('conditions') {
-                $result .= "Current conditions: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F (Feels like $c->{'FeelsLikeC'}C/$c->{'FeelsLikeF'}F); ";
+                $result .= "Current conditions: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F";
+                if ($c->{'FeelsLikeC'} != $c->{'temp_C'}) {
+                    $result .= " (Feels like $c->{'FeelsLikeC'}C/$c->{'FeelsLikeF'}F); ";
+                } else {
+                    $result .= '; ';
+                }
                 $result .= "Cloud cover: $c->{'cloudcover'}%; Visibility: $c->{'visibility'}km; ";
                 $result .= "Wind: $c->{'windspeedKmph'}kph/$c->{'windspeedMiles'}mph $c->{'winddirDegree'}°/$c->{'winddir16Point'}; ";
                 $result .= "Humidity: $c->{'humidity'}%; Precip: $c->{'precipMM'}mm; Pressure: $c->{'pressure'}hPa; UV Index: $c->{'uvIndex'}; ";
