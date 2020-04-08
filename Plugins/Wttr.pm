@@ -102,11 +102,11 @@ sub wttrcmd {
         delete $options{default};
     }
 
-    return $self->get_wttr($arguments, %options);
+    return $self->get_wttr($arguments, sort keys %options);
 }
 
 sub get_wttr {
-    my ($self, $location, %options) = @_;
+    my ($self, $location, @options) = @_;
 
     my %cache_opt = (
         'namespace'          => 'wttr',
@@ -158,7 +158,11 @@ sub get_wttr {
         $obsminute =~ s/ AM$//;
     }
 
-    foreach my $option (sort keys %options) {
+    if (@options == 1 and $options[0] eq 'default') {
+        push @options, 'chances';
+    }
+
+    foreach my $option (@options) {
         given ($option) {
             when ('default') {
                 $result .= "Currently: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F; ";
@@ -184,7 +188,13 @@ sub get_wttr {
                     }
                 }
 
-                if ($sep eq '') { $result .= 'none'; }
+                if ($sep eq '') {
+                    $result .= "Current conditions: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F (Feels like $c->{'FeelsLikeC'}C/$c->{'FeelsLikeF'}F); ";
+                    $result .= "Cloud cover: $c->{'cloudcover'}%; Visibility: $c->{'visibility'}km; ";
+                    $result .= "Wind: $c->{'windspeedKmph'}kph/$c->{'windspeedMiles'}mph $c->{'winddirDegree'}°/$c->{'winddir16Point'}; ";
+                    $result .= "Humidity: $c->{'humidity'}%; Precip: $c->{'precipMM'}mm; Pressure: $c->{'pressure'}hPa; UV Index: $c->{'uvIndex'}";
+                }
+
                 $result .= '; ';
             }
 
