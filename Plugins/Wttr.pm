@@ -165,9 +165,17 @@ sub get_wttr {
     foreach my $option (@options) {
         given ($option) {
             when ('default') {
-                $result .= "Currently: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F; ";
+                $result .= "Currently: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F";
+
+                if ($c->{'FeelsLikeC'} != $c->{'temp_C'}) {
+                    $result .= " (Feels like $c->{'FeelsLikeC'}C/$c->{'FeelsLikeF'}F); ";
+                } else {
+                    $result .= '; ';
+                }
+
                 $result .= "Forecast: High: $w->{maxtempC}C/$w->{maxtempF}F, Low: $w->{mintempC}C/$w->{mintempF}F; ";
-                $result .= "Condition changes: ";
+
+                my $conditions = "Condition changes: ";
 
                 my $last_condition = $c->{'weatherDesc'}->[0]->{'value'};
                 my $sep            = '';
@@ -181,7 +189,7 @@ sub get_wttr {
                     if ($condition ne $last_condition) {
                         my ($hour, $minute) = split /:/, $time;
                         if (($hour > $obshour) or ($hour == $obshour and $minute >= $obsminute)) {
-                            $result .= "$sep$time: $condition ($temp)";
+                            $conditions .= "$sep$time: $condition ($temp)";
                             $sep            = '-> ';
                             $last_condition = $condition;
                         }
@@ -189,17 +197,11 @@ sub get_wttr {
                 }
 
                 if ($sep eq '') {
-                    $result = '';
-                    $result .= "Current conditions: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F";
-                    if ($c->{'FeelsLikeC'} != $c->{'temp_C'}) {
-                        $result .= " (Feels like $c->{'FeelsLikeC'}C/$c->{'FeelsLikeF'}F); ";
-                    } else {
-                        $result .= '; ';
-                    }
-                    $result .= "Forecast: High: $w->{maxtempC}C/$w->{maxtempF}F, Low: $w->{mintempC}C/$w->{mintempF}F; ";
                     $result .= "Cloud cover: $c->{'cloudcover'}%; Visibility: $c->{'visibility'}km; ";
                     $result .= "Wind: $c->{'windspeedKmph'}kph/$c->{'windspeedMiles'}mph $c->{'winddirDegree'}°/$c->{'winddir16Point'}; ";
                     $result .= "Humidity: $c->{'humidity'}%; Precip: $c->{'precipMM'}mm; Pressure: $c->{'pressure'}hPa; UV Index: $c->{'uvIndex'}";
+                } else {
+                    $result .= $conditions;
                 }
 
                 $result .= '; ';
