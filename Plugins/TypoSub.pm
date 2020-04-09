@@ -39,6 +39,7 @@ sub on_public {
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
+    return 0 if $self->{pbot}->{ignorelist}->is_ignored($channel, "$nick!$user\@$host");
     my $nosubs = $self->{pbot}->{registry}->get_value($channel, 'notyposub');
     return 0 if defined $nosubs and $nosubs;
 
