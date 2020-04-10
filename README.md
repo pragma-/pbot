@@ -90,7 +90,7 @@ You can also use the [`reload`](doc/Admin.md#reload) command to reload any modif
 configuration or data files.
 
 ### Powerful command interpreter
-PBot has an powerful command interpreter with useful functionality, and tons of
+PBot has a powerful command interpreter with useful functionality, and tons of
 built-in commands.
 
 For more information, see the [Commands documentation.](doc/Commands.md)
