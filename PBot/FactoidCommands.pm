@@ -1267,7 +1267,7 @@ sub factfind {
     $arguments = substr($arguments, 0, 30);
     my $argtype = undef;
 
-    $argtype = "owned by $owner" if $owner ne '.*';
+    $argtype = "owned by $owner" if defined $owner and $owner ne '.*';
 
     if (defined $refby) {
         if (not defined $argtype) { $argtype = "last referenced by $refby"; }
