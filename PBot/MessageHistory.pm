@@ -342,7 +342,7 @@ sub recall_message {
             if (not defined $context_account) { return "I don't know anybody named $recall_context."; }
         }
 
-        if ($from =~ /^#/ and ($recall_count > 2 or $recall_after > 2 or $recall_before > 2)) {
+        if ($from =~ /^#/ and ($recall_count > 5 or $recall_after > 5 or $recall_before > 5)) {
             return "Please use `recall` from private message when recalling multiple messages. Just add \"-c $from\" to the command and /msg it to me.";
         }
 
