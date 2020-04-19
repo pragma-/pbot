@@ -128,7 +128,7 @@ SQL
 CREATE TABLE IF NOT EXISTS Messages (
   id         INTEGER,
   channel    TEXT COLLATE NOCASE,
-  msg        TEXT,
+  msg        TEXT COLLATE NOCASE,
   timestamp  NUMERIC,
   mode       INTEGER
 )
@@ -909,27 +909,25 @@ sub get_message_context {
     my ($messages_before, $messages_after, $messages_count);
 
     if (defined $count and $count > 1) {
-        my $regex = '(?i)';
-        $regex .= ($text =~ m/^\w/) ? '\b' : '\B';
-        $regex .= quotemeta $text;
-        $regex .= ($text =~ m/\w$/) ? '\b' : '\B';
-        $regex =~ s/\\\*/.*?/g;
+        my $search = "%$text%";
+        $search =~ s/\*/%/g;
+        $search =~ s/\?/_/g;
 
         $messages_count = eval {
             my $sth;
             if (defined $context_id) {
                 $sth = $self->{dbh}->prepare(
-                    'SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg REGEXP ? AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
+                    'SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg LIKE ? ESCAPE "\" AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
                 $sth->bind_param(1, $context_id);
                 $sth->bind_param(2, $message->{channel});
-                $sth->bind_param(3, $regex);
+                $sth->bind_param(3, $search);
                 $sth->bind_param(4, $message->{timestamp});
                 $sth->bind_param(5, $count - 1);
             } else {
                 $sth = $self->{dbh}
-                  ->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg REGEXP ? AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
+                  ->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg LIKE ? ESCAPE "\" AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
                 $sth->bind_param(1, $message->{channel});
-                $sth->bind_param(2, $regex);
+                $sth->bind_param(2, $search);
                 $sth->bind_param(3, $message->{timestamp});
                 $sth->bind_param(4, $count - 1);
             }
@@ -1076,24 +1074,22 @@ sub recall_message_by_count {
 sub recall_message_by_text {
     my ($self, $id, $channel, $text, $ignore_command) = @_;
 
-    my $regex = '(?i)';
-    $regex .= ($text =~ m/^\w/) ? '\b' : '\B';
-    $regex .= quotemeta $text;
-    $regex .= ($text =~ m/\w$/) ? '\b' : '\B';
-    $regex =~ s/\\\*/.*?/g;
+    my $search = "%$text%";
+    $search =~ s/\*/%/g;
+    $search =~ s/\?/_/g;
 
     my $messages;
 
     if (defined $id) {
         $messages = eval {
-            my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg REGEXP ? ORDER BY timestamp DESC LIMIT 10');
-            $sth->execute($id, $channel, $regex);
+            my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg LIKE ? ESCAPE "\" ORDER BY timestamp DESC LIMIT 10');
+            $sth->execute($id, $channel, $search);
             return $sth->fetchall_arrayref({});
         };
     } else {
         $messages = eval {
-            my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg REGEXP ? ORDER BY timestamp DESC LIMIT 10');
-            $sth->execute($channel, $regex);
+            my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg LIKE ? ESCAPE "\" ORDER BY timestamp DESC LIMIT 10');
+            $sth->execute($channel, $search);
             return $sth->fetchall_arrayref({});
         };
     }
