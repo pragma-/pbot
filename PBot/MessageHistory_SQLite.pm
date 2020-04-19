@@ -64,9 +64,6 @@ sub begin {
       or die $DBI::errstr;
 
     eval {
-        $self->{dbh}->sqlite_enable_load_extension(my $_enabled = 1);
-        $self->{dbh}->prepare("SELECT load_extension('/usr/lib/sqlite3/pcre.so')");
-
         my $sqlite_debug = $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_debug');
         use PBot::SQLiteLoggerLayer;
         use PBot::SQLiteLogger;
