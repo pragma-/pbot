@@ -50,6 +50,7 @@ use PBot::Plugins;
 use PBot::Functions;
 use PBot::Modules;
 use PBot::ProcessManager;
+use PBot::Migration;
 
 sub new {
     my ($proto, %conf) = @_;
@@ -63,24 +64,26 @@ sub initialize {
     my ($self, %conf) = @_;
     $self->{startup_timestamp} = time;
 
-    my $data_dir   = $conf{data_dir};
-    my $module_dir = $conf{module_dir};
-    my $plugin_dir = $conf{plugin_dir};
+    my $data_dir      = $conf{data_dir};
+    my $module_dir    = $conf{module_dir};
+    my $plugin_dir    = $conf{plugin_dir};
+    my $migration_dir = $conf{migration_dir};
 
     # check command-line arguments for directory overrides
     foreach my $arg (@ARGV) {
-        if ($arg =~ m/^-?(?:general\.)?((?:data|module|plugin)_dir)=(.*)$/) {
-            my $override = $1;
-            my $value    = $2;
-            $data_dir   = $value if $override eq 'data_dir';
-            $module_dir = $value if $override eq 'module_dir';
-            $plugin_dir = $value if $override eq 'plugin_dir';
+        if ($arg =~ m/^-?(?:general\.)?((?:data|module|plugin|migration)_dir)=(.*)$/) {
+            my $override   = $1;
+            my $value      = $2;
+            $data_dir      = $value if $override eq 'data_dir';
+            $module_dir    = $value if $override eq 'module_dir';
+            $plugin_dir    = $value if $override eq 'plugin_dir';
+            $migration_dir = $value if $override eq 'migration_dir';
         }
     }
 
     # check command-line arguments for registry overrides
     foreach my $arg (@ARGV) {
-        next if $arg =~ m/^-?(?:general\.)?(?:config|data|module|plugin)_dir=.*$/;    # already processed
+        next if $arg =~ m/^-?(?:general\.)?(?:config|data|module|plugin|migration)_dir=.*$/;    # already processed
         my ($item, $value) = split /=/, $arg, 2;
 
         if (not defined $item or not defined $value) {
@@ -102,15 +105,16 @@ sub initialize {
     $self->{atexit} = PBot::Registerable->new(%conf, pbot => $self);
     $self->register_signal_handlers;
 
-    # create logger
-    $self->{logger} = PBot::Logger->new(pbot => $self, filename => "$data_dir/log/log", %conf);
-
-    # make sure the environment is sane
+    # make sure the data directory exists
     if (not -d $data_dir) {
-        $self->{logger}->log("Data directory ($data_dir) does not exist; aborting...\n");
+        print STDERR "Data directory ($data_dir) does not exist; aborting...\n";
         exit;
     }
 
+    # create logger
+    $self->{logger} = PBot::Logger->new(pbot => $self, filename => "$data_dir/log/log", %conf);
+
+    # make sure the rest of the environment is sane
     if (not -d $module_dir) {
         $self->{logger}->log("Modules directory ($module_dir) does not exist; aborting...\n");
         exit;
@@ -121,10 +125,23 @@ sub initialize {
         exit;
     }
 
-    # then capabilities so commands can add new capabilities
+    if (not -d $migration_dir) {
+        $self->{logger}->log("Migration directory ($migration_dir) does not exist; aborting...\n");
+        exit;
+    }
+
+    # migrate/update any data files to new locations/formats
+    $self->{migrator} = PBot::Migration->new(pbot => $self, data_dir => $data_dir, migration_dir => $migration_dir);
+
+    if ($self->{migrator}->migrate) {
+        $self->{logger}->log("Migration failed.\n");
+        exit 0;
+    }
+
+    # create capabilities so commands can add new capabilities
     $self->{capabilities} = PBot::Capabilities->new(pbot => $self, filename => "$data_dir/capabilities", %conf);
 
-    # then commands so the modules can register new commands
+    # create commands so the modules can register new commands
     $self->{commands} = PBot::Commands->new(pbot => $self, filename => "$data_dir/commands", %conf);
 
     # add some commands
@@ -143,10 +160,11 @@ sub initialize {
     $self->{logger}->log($self->{version}->version . "\n");
     $self->{logger}->log("Args: @ARGV\n") if @ARGV;
 
-    # log the configured paths
-    $self->{logger}->log("data_dir: $data_dir\n");
     $self->{logger}->log("module_dir: $module_dir\n");
     $self->{logger}->log("plugin_dir: $plugin_dir\n");
+    $self->{logger}->log("data_dir: $data_dir\n");
+    $self->{logger}->log("migration_dir: $migration_dir\n");
+
 
     $self->{timer}     = PBot::Timer->new(pbot => $self, timeout => 10, name => 'PBot Timer', %conf);
     $self->{modules}   = PBot::Modules->new(pbot => $self, %conf);
@@ -156,10 +174,11 @@ sub initialize {
     # create registry and set some defaults
     $self->{registry} = PBot::Registry->new(pbot => $self, filename => "$data_dir/registry", %conf);
 
-    $self->{registry}->add_default('text', 'general', 'data_dir',   $data_dir);
-    $self->{registry}->add_default('text', 'general', 'module_dir', $module_dir);
-    $self->{registry}->add_default('text', 'general', 'plugin_dir', $plugin_dir);
-    $self->{registry}->add_default('text', 'general', 'trigger',    $conf{trigger} // '!');
+    $self->{registry}->add_default('text', 'general', 'data_dir',      $data_dir);
+    $self->{registry}->add_default('text', 'general', 'module_dir',    $module_dir);
+    $self->{registry}->add_default('text', 'general', 'plugin_dir',    $plugin_dir);
+    $self->{registry}->add_default('text', 'general', 'migration_dir', $migration_dir);
+    $self->{registry}->add_default('text', 'general', 'trigger',       $conf{trigger} // '!');
 
     $self->{registry}->add_default('text', 'irc', 'debug',             $conf{irc_debug}         // 0);
     $self->{registry}->add_default('text', 'irc', 'show_motd',         $conf{show_motd}         // 1);
@@ -183,9 +202,10 @@ sub initialize {
     if (-e $self->{registry}->{registry}->{filename}) { $self->{registry}->load; }
 
     # update important paths
-    $self->{registry}->set('general', 'data_dir',   'value', $data_dir,   0, 1);
-    $self->{registry}->set('general', 'module_dir', 'value', $module_dir, 0, 1);
-    $self->{registry}->set('general', 'plugin_dir', 'value', $plugin_dir, 0, 1);
+    $self->{registry}->set('general', 'data_dir',      'value', $data_dir,      0, 1);
+    $self->{registry}->set('general', 'module_dir',    'value', $module_dir,    0, 1);
+    $self->{registry}->set('general', 'plugin_dir',    'value', $plugin_dir,    0, 1);
+    $self->{registry}->set('general', 'migration_dir', 'value', $migration_dir, 0, 1);
 
     # override registry entries with command-line arguments, if any
     foreach my $override (keys %{$self->{overrides}}) {

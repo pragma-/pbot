@@ -16,6 +16,7 @@ use warnings; use strict;
 use feature 'unicode_strings';
 
 use Module::Refresh;
+use File::Basename;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -25,6 +26,14 @@ sub initialize {
 
 sub refresh {
     my ($self, $from, $nick, $user, $host, $arguments) = @_;
+
+    my $last_migration = $self->{pbot}->{migrator}->get_last_migration_version;
+    my @migrations     = $self->{pbot}->{migrator}->get_available_migrations($last_migration);
+
+    if (@migrations) {
+        return "Migration available; cannot refresh. Please restart PBot to begin migration of " . join(', ', map { basename $_ } @migrations);
+    }
+
     my $refresh_error;
     local $SIG{__WARN__} = sub {
         my $warning = shift;
@@ -55,6 +64,7 @@ sub refresh {
         $self->{pbot}->{logger}->log("Error refreshing: $@\n");
         return $@;
     }
+
     return $result;
 }
 
