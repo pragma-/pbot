@@ -15,10 +15,10 @@ BEGIN {
 # configuration is overridden via command-line arguments, do not modify
 # see doc/QuickStart.md
 my %config = (
-    data_dir      => "$bothome/data",
-    module_dir    => "$bothome/modules",
-    plugin_dir    => "$bothome/Plugins",
-    migration_dir => "$bothome/migration",
+    data_dir   => "$bothome/data",
+    module_dir => "$bothome/modules",
+    plugin_dir => "$bothome/Plugins",
+    update_dir => "$bothome/updates",
 );
 
 use PBot::PBot;

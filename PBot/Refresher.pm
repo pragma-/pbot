@@ -27,11 +27,11 @@ sub initialize {
 sub refresh {
     my ($self, $from, $nick, $user, $host, $arguments) = @_;
 
-    my $last_migration = $self->{pbot}->{migrator}->get_last_migration_version;
-    my @migrations     = $self->{pbot}->{migrator}->get_available_migrations($last_migration);
+    my $last_update = $self->{pbot}->{updater}->get_last_update_version;
+    my @updates     = $self->{pbot}->{updater}->get_available_updates($last_update);
 
-    if (@migrations) {
-        return "Migration available; cannot refresh. Please restart PBot to begin migration of " . join(', ', map { basename $_ } @migrations);
+    if (@updates) {
+        return "Update available; cannot refresh. Please restart PBot to begin update of " . join(', ', map { basename $_ } @updates);
     }
 
     my $refresh_error;
