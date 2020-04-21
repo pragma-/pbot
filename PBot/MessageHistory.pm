@@ -233,7 +233,7 @@ sub recall_message {
         $recall_channel = "@opt_args" if @opt_args and not $channel_arg;
 
         $recall_count = 1 if (not defined $recall_count) || ($recall_count <= 0);
-        return "You may only select a count of up to 50 messages." if $recall_count > 50;
+        return "You may only select a count of up to 100 messages." if $recall_count > 100;
 
         $recall_before = 0 if not defined $recall_before;
         $recall_after  = 0 if not defined $recall_after;
@@ -247,7 +247,7 @@ sub recall_message {
             $recall_count  = 0;
         }
 
-        if ($recall_before + $recall_after > 20) { return "You may only select up to 20 lines of surrounding context."; }
+        if ($recall_before + $recall_after > 100) { return "You may only select up to 100 lines of surrounding context."; }
 
         if ($recall_count > 1 and ($recall_before > 0 or $recall_after > 0)) { return "The `count` and `before/after` options cannot be used together."; }
 
@@ -302,18 +302,7 @@ sub recall_message {
                 my $max_messages = $self->{database}->get_max_messages($account, $recall_channel);
                 if ($recall_history < 1 || $recall_history > $max_messages) {
                     if ($max_messages == 0) {
-                        my @channels = $self->{database}->get_channels($account);
-                        my $result   = "No messages for $recall_nick in $recall_channel; I have messages for them in ";
-                        my $comma    = '';
-                        my $count    = 0;
-                        foreach my $channel (sort @channels) {
-                            next if $channel !~ /^#/;
-                            $result .= "$comma$channel";
-                            $comma = ', ';
-                            $count++;
-                        }
-                        if   ($count == 0) { return "I have no messages for $recall_nick."; }
-                        else               { return "/say $result."; }
+                        return "No messages for $recall_nick in $recall_channel yet.";
                     } else {
                         return "Please choose a history between 1 and $max_messages";
                     }
