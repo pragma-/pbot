@@ -270,7 +270,7 @@
    "irc" : {
       "botnick" : {
          "type" : "text",
-         "value" : "wtfsadfff"
+         "value" : ""
       },
       "debug" : {
          "type" : "text",
