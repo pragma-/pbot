@@ -28,7 +28,7 @@ sub update {
 
     $self->{pbot}->{logger}->log("Checking if update needed...\n");
 
-    my $current_version        = $self->get_current_version;
+    my $current_version     = $self->get_current_version;
     my $last_update_version = $self->get_last_update_version;
 
     $self->{pbot}->{logger}->log("Current version: $current_version; last update version: $last_update_version\n");
@@ -47,9 +47,12 @@ sub update {
 
     foreach my $update (@updates) {
         $self->{pbot}->{logger}->log("Executing update script: $update\n");
-        my $output = `$update $self->{data_dir}`;
+        my $output = `$update "$self->{data_dir}" $current_version $last_update_version`;
         my $exit = $? >> 8;
-        $self->{pbot}->{logger}->log("Script completed. Exit $exit. Output: $output");
+        foreach my $line (split /\n/, $output) {
+            $self->{pbot}->{logger}->log("  $line\n");
+        }
+        $self->{pbot}->{logger}->log("Update script completed " . ($exit ? "unsuccessfully (exit $exit)" : 'successfully') . "\n");
         return $exit if $exit != 0;
     }
 

@@ -14,7 +14,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package PBot::DualIndexHashObject;
+package lib3503::DualIndexHashObject;
 
 use warnings; use strict;
 use feature 'unicode_strings';
@@ -109,10 +109,6 @@ sub save {
     }
 
     $self->{pbot}->{logger}->log("Saving $self->{name} to $filename\n");
-
-    if (not $self->get_data('$metadata$', '$metadata$', 'update_version')) {
-        $self->add('$metadata$', '$metadata$', { update_version => PBot::VERSION::BUILD_REVISION });
-    }
 
     my $json      = JSON->new;
     my $json_text = $json->pretty->canonical->utf8->encode($self->{hash});
@@ -277,13 +273,13 @@ sub exists {
 
 sub get_keys {
     my ($self, $primary_index, $secondary_index) = @_;
-    return grep { $_ ne '$metadata$' } keys %{$self->{hash}} if not defined $primary_index;
+    return keys %{$self->{hash}} if not defined $primary_index;
 
     my $lc_primary_index = lc $primary_index;
 
     if (not defined $secondary_index) {
         return () if not exists $self->{hash}->{$lc_primary_index};
-        return grep { $_ ne '_name' and $_ ne '$metadata$' } keys %{$self->{hash}->{$lc_primary_index}};
+        return grep { $_ ne '_name' } keys %{$self->{hash}->{$lc_primary_index}};
     }
 
     my $lc_secondary_index = lc $secondary_index;
