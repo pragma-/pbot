@@ -1,189 +1,148 @@
 {
    "$metadata$" : {
       "$metadata$" : {
-         "_name" : "$metadata$",
          "update_version" : 3503
-      },
-      "_name" : "$metadata$"
+      }
    },
    "antiaway" : {
-      "_name" : "antiaway",
       "bad_actions" : {
-         "_name" : "bad_actions",
          "type" : "text",
          "value" : "^/me (is (away|gone)|.*auto.?away)"
       },
       "bad_nicks" : {
-         "_name" : "bad_nicks",
          "type" : "text",
          "value" : "(^z+[[:punct:]]|[[:punct:]](afk|brb|bbl|away|sleep|asleep|nap|z+|work|gone|study|out|home|busy|off)[[:punct:]]*$|afk$)"
       },
       "kick_msg" : {
-         "_name" : "kick_msg",
          "type" : "text",
          "value" : "http://sackheads.org/~bnaylor/spew/away_msgs.html"
       }
    },
    "antiflood" : {
-      "_name" : "antiflood",
       "antirepeat" : {
-         "_name" : "antirepeat",
          "type" : "text",
          "value" : "1"
       },
       "antirepeat_allow_bot" : {
-         "_name" : "antirepeat_allow_bot",
          "type" : "text",
          "value" : "1"
       },
       "antirepeat_match" : {
-         "_name" : "antirepeat_match",
          "type" : "text",
          "value" : "0.5"
       },
       "antirepeat_threshold" : {
-         "_name" : "antirepeat_threshold",
          "type" : "text",
          "value" : "2.5"
       },
       "chat_flood_punishment" : {
-         "_name" : "chat_flood_punishment",
          "type" : "array",
          "value" : "60,300,3600,86400,604800,2419200"
       },
       "chat_flood_threshold" : {
-         "_name" : "chat_flood_threshold",
          "type" : "text",
          "value" : "4"
       },
       "chat_flood_time_threshold" : {
-         "_name" : "chat_flood_time_threshold",
          "type" : "text",
          "value" : "5"
       },
       "debug_checkban" : {
-         "_name" : "debug_checkban",
          "type" : "text",
          "value" : "0"
       },
       "dont_enforce_admins" : {
-         "_name" : "dont_enforce_admins",
          "type" : "text",
          "value" : "1"
       },
       "enforce" : {
-         "_name" : "enforce",
          "type" : "text",
          "value" : "1"
       },
       "enter_abuse_max_offenses" : {
-         "_name" : "enter_abuse_max_offenses",
          "type" : "text",
          "value" : "3"
       },
       "enter_abuse_punishment" : {
-         "_name" : "enter_abuse_punishment",
          "type" : "array",
          "value" : "60,300,3600,86400,604800,2419200"
       },
       "enter_abuse_threshold" : {
-         "_name" : "enter_abuse_threshold",
          "type" : "text",
          "value" : "4"
       },
       "enter_abuse_time_threshold" : {
-         "_name" : "enter_abuse_time_threshold",
          "type" : "text",
          "value" : "15"
       },
       "join_flood_punishment" : {
-         "_name" : "join_flood_punishment",
          "type" : "array",
          "value" : "115200,3600,10800,604800"
       },
       "join_flood_threshold" : {
-         "_name" : "join_flood_threshold",
          "type" : "text",
          "value" : "4"
       },
       "join_flood_time_threshold" : {
-         "_name" : "join_flood_time_threshold",
          "type" : "text",
          "value" : "1800"
       },
       "nick_flood_punishment" : {
-         "_name" : "nick_flood_punishment",
          "type" : "array",
          "value" : "1800,3600,86400,604800"
       },
       "nick_flood_threshold" : {
-         "_name" : "nick_flood_threshold",
          "type" : "text",
          "value" : "3"
       },
       "nick_flood_time_threshold" : {
-         "_name" : "nick_flood_time_threshold",
          "type" : "text",
          "value" : "1800"
       }
    },
    "antikickautorejoin" : {
-      "_name" : "antikickautorejoin",
       "punishment" : {
-         "_name" : "punishment",
          "type" : "array",
          "value" : "300,900,1800,3600,28800"
       },
       "threshold" : {
-         "_name" : "threshold",
          "type" : "text",
          "value" : "4"
       }
    },
    "antispam" : {
-      "_name" : "antispam",
       "enforce" : {
-         "_name" : "enforce",
          "type" : "text",
          "value" : "1"
       }
    },
    "autorejoin" : {
-      "_name" : "autorejoin",
       "rejoin_delay" : {
-         "_name" : "rejoin_delay",
          "type" : "array",
          "value" : "900,1800,3600"
       }
    },
    "bantracker" : {
-      "_name" : "bantracker",
       "chanserv_ban_timeout" : {
-         "_name" : "chanserv_ban_timeout",
          "type" : "text",
          "value" : "604800"
       },
       "debug" : {
-         "_name" : "debug",
          "type" : "text",
          "value" : "0"
       },
       "mute_timeout" : {
-         "_name" : "mute_timeout",
          "type" : "text",
          "value" : "604800"
       }
    },
    "date" : {
-      "_name" : "date",
       "default_timezone" : {
-         "_name" : "default_timezone",
          "type" : "text",
          "value" : "UTC"
       }
    },
    "dualindexsqliteobject" : {
-      "_name" : "dualindexsqliteobject",
       "debug_factoids" : {
          "_name" : "debug_Factoids",
          "type" : "text",
@@ -191,306 +150,242 @@
       }
    },
    "factoids" : {
-      "_name" : "factoids",
       "default_rate_limit" : {
-         "_name" : "default_rate_limit",
          "type" : "text",
          "value" : "15"
       },
       "max_channel_length" : {
-         "_name" : "max_channel_length",
          "type" : "text",
          "value" : "20"
       },
       "max_content_length" : {
-         "_name" : "max_content_length",
          "type" : "text",
          "value" : "8192"
       },
       "max_name_length" : {
-         "_name" : "max_name_length",
          "type" : "text",
          "value" : "100"
       }
    },
    "general" : {
-      "_name" : "general",
       "autojoin_wait_for_nickserv" : {
-         "_name" : "autojoin_wait_for_nickserv",
          "type" : "text",
          "value" : "0"
       },
       "compile_blocks" : {
-         "_name" : "compile_blocks",
          "type" : "text",
          "value" : "1"
       },
       "compile_blocks_channels" : {
-         "_name" : "compile_blocks_channels",
          "type" : "array",
          "value" : ".*"
       },
       "compile_blocks_ignore_channels" : {
-         "_name" : "compile_blocks_ignore_channels",
          "type" : "array",
          "value" : "none"
       },
       "data_dir" : {
-         "_name" : "data_dir",
          "type" : "text",
          "value" : "data"
       },
       "debugcontext" : {
-         "_name" : "debugcontext",
          "type" : "text",
          "value" : "0"
       },
       "deop_timeout" : {
-         "_name" : "deop_timeout",
          "type" : "text",
          "value" : "300"
       },
       "identify_command" : {
-         "_name" : "identify_command",
          "type" : "text",
          "value" : "identify $nick $password"
       },
       "identify_nick" : {
-         "_name" : "identify_nick",
          "type" : "text",
          "value" : "nickserv"
       },
       "module_dir" : {
-         "_name" : "module_dir",
          "type" : "text",
          "value" : "./modules"
       },
       "module_repo" : {
-         "_name" : "module_repo",
          "type" : "text",
          "value" : "https://github.com/pragma-/pbot/blob/master/modules/"
       },
       "module_timeout" : {
-         "_name" : "module_timeout",
          "type" : "text",
          "value" : "30"
       },
       "op_command" : {
-         "_name" : "op_command",
          "type" : "text",
          "value" : "op $channel"
       },
       "op_nick" : {
-         "_name" : "op_nick",
          "type" : "text",
          "value" : "chanserv"
       },
       "plugin_dir" : {
-         "_name" : "plugin_dir",
          "type" : "text",
          "value" : "./Plugins"
       },
       "show_url_titles" : {
-         "_name" : "show_url_titles",
          "type" : "text",
          "value" : "1"
       },
       "show_url_titles_channels" : {
-         "_name" : "show_url_titles_channels",
          "type" : "array",
          "value" : ".*"
       },
       "show_url_titles_ignore_channels" : {
-         "_name" : "show_url_titles_ignore_channels",
          "type" : "array",
          "value" : "none"
       },
       "strictnamespace" : {
-         "_name" : "strictnamespace",
          "type" : "text",
          "value" : "1"
       },
       "trigger" : {
-         "_name" : "trigger",
          "type" : "text",
          "value" : "[!]"
       }
    },
    "googlesearch" : {
-      "_name" : "googlesearch",
       "api_key" : {
-         "_name" : "api_key",
          "private" : "1",
          "type" : "text",
          "value" : ""
       },
       "context" : {
-         "_name" : "context",
          "private" : "1",
          "type" : "text",
          "value" : ""
       }
    },
    "interpreter" : {
-      "_name" : "interpreter",
       "max_recursion" : {
-         "_name" : "max_recursion",
          "type" : "text",
          "value" : "100"
       }
    },
    "irc" : {
-      "_name" : "irc",
       "botnick" : {
-         "_name" : "botnick",
          "type" : "text",
-         "value" : ""
+         "value" : "wtfsadfff"
       },
       "debug" : {
-         "_name" : "debug",
          "type" : "text",
          "value" : "0"
       },
       "identify_password" : {
-         "_name" : "identify_password",
          "private" : "1",
          "type" : "text",
          "value" : ""
       },
       "log_default_handler" : {
-         "_name" : "log_default_handler",
          "type" : "text",
          "value" : "1"
       },
       "max_msg_len" : {
-         "_name" : "max_msg_len",
          "type" : "text",
          "value" : "425"
       },
       "port" : {
-         "_name" : "port",
          "type" : "text",
          "value" : "6667"
       },
       "randomize_nick" : {
-         "_name" : "randomize_nick",
          "type" : "text",
          "value" : "0"
       },
       "realname" : {
-         "_name" : "realname",
          "type" : "text",
          "value" : "https://github.com/pragma-/pbot"
       },
       "server" : {
-         "_name" : "server",
          "type" : "text",
          "value" : "irc.freenode.net"
       },
       "show_motd" : {
-         "_name" : "show_motd",
          "type" : "text",
          "value" : "1"
       },
       "ssl" : {
-         "_name" : "ssl",
          "type" : "text",
          "value" : "0"
       },
       "ssl_ca_file" : {
-         "_name" : "ssl_ca_file",
          "private" : "1",
          "type" : "text",
          "value" : "none"
       },
       "ssl_ca_path" : {
-         "_name" : "ssl_ca_path",
          "private" : "1",
          "type" : "text",
          "value" : "none"
       },
       "username" : {
-         "_name" : "username",
          "type" : "text",
          "value" : "pbot3"
       }
    },
    "lagchecker" : {
-      "_name" : "lagchecker",
       "lag_history_interval" : {
-         "_name" : "lag_history_interval",
          "type" : "text",
          "value" : "10"
       },
       "lag_history_max" : {
-         "_name" : "lag_history_max",
          "type" : "text",
          "value" : "3"
       },
       "lag_threshold" : {
-         "_name" : "lag_threshold",
          "type" : "text",
          "value" : "2000"
       }
    },
    "messagehistory" : {
-      "_name" : "messagehistory",
       "debug_aka" : {
-         "_name" : "debug_aka",
          "type" : "text",
          "value" : "0"
       },
       "debug_link" : {
-         "_name" : "debug_link",
          "type" : "text",
          "value" : "0"
       },
       "max_messages" : {
-         "_name" : "max_messages",
          "type" : "text",
          "value" : "32"
       },
       "max_recall_time" : {
-         "_name" : "max_recall_time",
          "type" : "text",
          "value" : "0"
       },
       "sqlite_commit_interval" : {
-         "_name" : "sqlite_commit_interval",
          "type" : "text",
          "value" : "5"
       },
       "sqlite_debug" : {
-         "_name" : "sqlite_debug",
          "type" : "text",
          "value" : "0"
       }
    },
    "nicklist" : {
-      "_name" : "nicklist",
       "debug" : {
-         "_name" : "debug",
          "type" : "text",
          "value" : "0"
       }
    },
    "plugins" : {
-      "_name" : "plugins",
       "disabled" : {
-         "_name" : "disabled",
          "type" : "text",
          "value" : "0"
       },
       "noautoload" : {
-         "_name" : "noautoload",
          "type" : "text",
          "value" : "0"
       }
    },
    "spinach" : {
-      "_name" : "spinach",
       "file" : {
-         "_name" : "file",
          "type" : "text",
          "value" : "jeopardy_complete.json"
       }

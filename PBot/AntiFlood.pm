@@ -95,7 +95,7 @@ sub ban_exempt {
             my $text    = "Ban-evasion exemptions:\n";
             my $entries = 0;
             foreach my $channel ($self->{'ban-exemptions'}->get_keys) {
-                $text .= ' ' . $self->{'ban-exemptions'}->get_data($channel, '_name') . ":\n";
+                $text .= ' ' . $self->{'ban-exemptions'}->get_key_name($channel) . ":\n";
                 foreach my $mask ($self->{'ban-exemptions'}->get_keys($channel)) {
                     $text .= "    $mask,\n";
                     $entries++;

@@ -101,7 +101,7 @@ sub list {
     my ($self, $from, $nick, $user, $host, $arguments) = @_;
     my $result;
     foreach my $channel (sort $self->{channels}->get_keys) {
-        $result .= $self->{channels}->get_data($channel, '_name') . ': {';
+        $result .= $self->{channels}->get_key_name($channel) . ': {';
         my $comma = ' ';
         foreach my $key (sort $self->{channels}->get_keys($channel)) {
             $result .= "$comma$key => " . $self->{channels}->get_data($channel, $key);
@@ -117,7 +117,7 @@ sub autojoin {
     return if $self->{pbot}->{joined_channels};
     my $channels;
     foreach my $channel ($self->{channels}->get_keys) {
-        if ($self->{channels}->get_data($channel, 'enabled')) { $channels .= $self->{channels}->get_data($channel, '_name') . ','; }
+        if ($self->{channels}->get_data($channel, 'enabled')) { $channels .= $self->{channels}->get_key_name($channel) . ','; }
     }
     $self->{pbot}->{logger}->log("Joining channels: $channels\n");
     $self->{pbot}->{chanops}->join_channel($channels);

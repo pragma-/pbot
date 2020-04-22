@@ -1,10 +1,8 @@
 {
    "$metadata$" : {
-      "_name" : "$metadata$",
       "update_version" : 3503
    },
    "admin" : {
-      "_name" : "admin",
       "can-actiontrigger" : 1,
       "can-akalink" : 1,
       "can-akaunlink" : 1,
@@ -34,7 +32,6 @@
       "chanop" : 1
    },
    "botowner" : {
-      "_name" : "botowner",
       "admin" : 1,
       "can-actiontrigger" : 1,
       "can-akalink" : 1,
@@ -105,113 +102,47 @@
       "chanop" : 1,
       "is-whitelisted" : 1
    },
-   "can-actiontrigger" : {
-      "_name" : "can-actiontrigger"
-   },
-   "can-akalink" : {
-      "_name" : "can-akalink"
-   },
-   "can-akaunlink" : {
-      "_name" : "can-akaunlink"
-   },
-   "can-antispam" : {
-      "_name" : "can-antispam"
-   },
+   "can-actiontrigger" : {},
+   "can-akalink" : {},
+   "can-akaunlink" : {},
+   "can-antispam" : {},
    "can-ban" : {
-      "_name" : "can-ban",
       "can-mode-b" : 1
    },
-   "can-ban-exempt" : {
-      "_name" : "can-ban-exempt"
-   },
-   "can-blacklist" : {
-      "_name" : "can-blacklist"
-   },
-   "can-chanadd" : {
-      "_name" : "can-chanadd"
-   },
-   "can-chanlist" : {
-      "_name" : "can-chanlist"
-   },
-   "can-chanrem" : {
-      "_name" : "can-chanrem"
-   },
-   "can-chanset" : {
-      "_name" : "can-chanset"
-   },
-   "can-chanunset" : {
-      "_name" : "can-chanunset"
-   },
-   "can-clear-bans" : {
-      "_name" : "can-clear-bans"
-   },
-   "can-clear-mutes" : {
-      "_name" : "can-clear-mutes"
-   },
-   "can-cmdset" : {
-      "_name" : "can-cmdset"
-   },
-   "can-cmdunset" : {
-      "_name" : "can-cmdunset"
-   },
-   "can-countertrigger" : {
-      "_name" : "can-countertrigger"
-   },
+   "can-ban-exempt" : {},
+   "can-blacklist" : {},
+   "can-chanadd" : {},
+   "can-chanlist" : {},
+   "can-chanrem" : {},
+   "can-chanset" : {},
+   "can-chanunset" : {},
+   "can-clear-bans" : {},
+   "can-clear-mutes" : {},
+   "can-cmdset" : {},
+   "can-cmdunset" : {},
+   "can-countertrigger" : {},
    "can-deop" : {
-      "_name" : "can-deop",
       "can-mode-o" : 1
    },
    "can-devoice" : {
-      "_name" : "can-devoice",
       "can-mode-v" : 1
    },
-   "can-die" : {
-      "_name" : "can-die"
-   },
-   "can-dumpbans" : {
-      "_name" : "can-dumpbans"
-   },
-   "can-eval" : {
-      "_name" : "can-eval"
-   },
-   "can-eventqueue" : {
-      "_name" : "can-eventqueue"
-   },
-   "can-export" : {
-      "_name" : "can-export"
-   },
-   "can-group-capabilities" : {
-      "_name" : "can-group-capabilities"
-   },
-   "can-ignore" : {
-      "_name" : "can-ignore"
-   },
-   "can-in" : {
-      "_name" : "can-in"
-   },
-   "can-invite" : {
-      "_name" : "can-invite"
-   },
-   "can-join" : {
-      "_name" : "can-join"
-   },
-   "can-kick" : {
-      "_name" : "can-kick"
-   },
-   "can-kick-wildcard" : {
-      "_name" : "can-kick-wildcard"
-   },
-   "can-kill" : {
-      "_name" : "can-kill"
-   },
-   "can-load" : {
-      "_name" : "can-load"
-   },
-   "can-mode" : {
-      "_name" : "can-mode"
-   },
+   "can-die" : {},
+   "can-dumpbans" : {},
+   "can-eval" : {},
+   "can-eventqueue" : {},
+   "can-export" : {},
+   "can-group-capabilities" : {},
+   "can-ignore" : {},
+   "can-in" : {},
+   "can-invite" : {},
+   "can-join" : {},
+   "can-kick" : {},
+   "can-kick-wildcard" : {},
+   "can-kill" : {},
+   "can-load" : {},
+   "can-mode" : {},
    "can-mode-any" : {
-      "_name" : "can-mode-any",
       "can-mode" : 1,
       "can-mode-A" : 1,
       "can-mode-B" : 1,
@@ -266,110 +197,53 @@
       "can-mode-y" : 1,
       "can-mode-z" : 1
    },
-   "can-modify-admins" : {
-      "_name" : "can-modify-admins"
-   },
-   "can-modify-capabilities" : {
-      "_name" : "can-modify-capabilities"
-   },
+   "can-modify-admins" : {},
+   "can-modify-capabilities" : {},
    "can-mute" : {
-      "_name" : "can-mute",
       "can-mode-q" : 1
    },
    "can-op" : {
-      "_name" : "can-op",
       "can-mode-o" : 1
    },
-   "can-op-wildcard" : {
-      "_name" : "can-op-wildcard"
-   },
-   "can-part" : {
-      "_name" : "can-part"
-   },
-   "can-plug" : {
-      "_name" : "can-plug"
-   },
-   "can-rebuildaliases" : {
-      "_name" : "can-rebuildaliases"
-   },
-   "can-refresh" : {
-      "_name" : "can-refresh"
-   },
-   "can-regchange" : {
-      "_name" : "can-regchange"
-   },
-   "can-regex" : {
-      "_name" : "can-regex"
-   },
-   "can-regset" : {
-      "_name" : "can-regset"
-   },
-   "can-regsetmeta" : {
-      "_name" : "can-regsetmeta"
-   },
-   "can-regunset" : {
-      "_name" : "can-regunset"
-   },
-   "can-regunsetmeta" : {
-      "_name" : "can-regunsetmeta"
-   },
-   "can-reload" : {
-      "_name" : "can-reload"
-   },
-   "can-replug" : {
-      "_name" : "can-replug"
-   },
-   "can-sl" : {
-      "_name" : "can-sl"
-   },
+   "can-op-wildcard" : {},
+   "can-part" : {},
+   "can-plug" : {},
+   "can-rebuildaliases" : {},
+   "can-refresh" : {},
+   "can-regchange" : {},
+   "can-regex" : {},
+   "can-regset" : {},
+   "can-regsetmeta" : {},
+   "can-regunset" : {},
+   "can-regunsetmeta" : {},
+   "can-reload" : {},
+   "can-replug" : {},
+   "can-sl" : {},
    "can-unban" : {
-      "_name" : "can-unban",
       "can-mode-b" : 1
    },
-   "can-ungroup-capabilities" : {
-      "_name" : "can-ungroup-capabilities"
-   },
-   "can-unignore" : {
-      "_name" : "can-unignore"
-   },
-   "can-unload" : {
-      "_name" : "can-unload"
-   },
+   "can-ungroup-capabilities" : {},
+   "can-unignore" : {},
+   "can-unload" : {},
    "can-unmute" : {
-      "_name" : "can-unmute",
       "can-mode-q" : 1
    },
-   "can-unplug" : {
-      "_name" : "can-unplug"
-   },
-   "can-useradd" : {
-      "_name" : "can-useradd"
-   },
-   "can-userdel" : {
-      "_name" : "can-userdel"
-   },
-   "can-userset" : {
-      "_name" : "can-userset"
-   },
-   "can-userunset" : {
-      "_name" : "can-userunset"
-   },
+   "can-unplug" : {},
+   "can-useradd" : {},
+   "can-userdel" : {},
+   "can-userset" : {},
+   "can-userunset" : {},
    "can-voice" : {
-      "_name" : "can-voice",
       "can-mode-v" : 1
    },
-   "can-voice-wildcard" : {
-      "_name" : "can-voice-wildcard"
-   },
+   "can-voice-wildcard" : {},
    "chanmod" : {
-      "_name" : "chanmod",
       "can-devoice" : 1,
       "can-mod" : 1,
       "can-voice" : 1,
       "can-voice-wildcard" : 1
    },
    "chanop" : {
-      "_name" : "chanop",
       "can-ban" : 1,
       "can-deop" : 1,
       "can-devoice" : 1,
@@ -384,8 +258,6 @@
       "can-voice" : 1,
       "is-whitelisted" : 1
    },
-   "is-whitelisted" : {
-      "_name" : "is-whitelisted"
-   }
+   "is-whitelisted" : {}
 }
 

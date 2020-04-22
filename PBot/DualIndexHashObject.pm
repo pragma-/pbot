@@ -67,9 +67,10 @@ sub load {
     # and lowercase any non-lowercased entries
     foreach my $primary_index (keys %{$self->{hash}}) {
         if (not exists $self->{hash}->{$primary_index}->{_name}) {
-            if (lc $primary_index eq $primary_index) { $self->{hash}->{$primary_index}->{_name} = $primary_index; }
-            else {
-                if (exists $self->{hash}->{lc $primary_index}) { Carp::croak "Cannot update $self->{name} primary index $primary_index; duplicate object found"; }
+            if ($primary_index ne lc $primary_index) {
+                if (exists $self->{hash}->{lc $primary_index}) {
+                    Carp::croak "Cannot update $self->{name} primary index $primary_index; duplicate object found";
+                }
 
                 my $data = delete $self->{hash}->{$primary_index};
                 $data->{_name}                  = $primary_index;
@@ -78,11 +79,9 @@ sub load {
             }
         }
 
-        foreach my $secondary_index (keys %{$self->{hash}->{$primary_index}}) {
-            next if $secondary_index eq '_name';
+        foreach my $secondary_index (grep { $_ ne '_name' } keys %{$self->{hash}->{$primary_index}}) {
             if (not exists $self->{hash}->{$primary_index}->{$secondary_index}->{_name}) {
-                if (lc $secondary_index eq $secondary_index) { $self->{hash}->{$primary_index}->{$secondary_index}->{_name} = $secondary_index; }
-                else {
+                if ($secondary_index ne lc $secondary_index) {
                     if (exists $self->{hash}->{$primary_index}->{lc $secondary_index}) {
                         Carp::croak "Cannot update $self->{name} $primary_index sub-object $secondary_index; duplicate object found";
                     }
@@ -142,7 +141,7 @@ sub levenshtein_matches {
             my $length          = (length $primary_index > length $index) ? length $primary_index : length $index;
 
             if ($distance_result / $length < $distance) {
-                my $name = $self->{hash}->{$index}->{_name};
+                my $name = $self->get_key_name($index);
                 if   ($name =~ / /) { $result .= $comma . "\"$name\""; }
                 else                { $result .= $comma . $name; }
                 $comma = ", ";
@@ -156,7 +155,7 @@ sub levenshtein_matches {
         my $header      = "";
 
         foreach my $index1 (sort keys %{$self->{hash}}) {
-            $header = "[$self->{hash}->{$index1}->{_name}] ";
+            $header = "[" . $self->get_key_name($index1) . "] ";
             $header = '[global] ' if $header eq '[.*] ';
 
             if ($strictnamespace) {
@@ -169,7 +168,7 @@ sub levenshtein_matches {
                 my $length          = (length $secondary_index > length $index2) ? length $secondary_index : length $index2;
 
                 if ($distance_result / $length < $distance) {
-                    my $name = $self->{hash}->{$index1}->{$index2}->{_name};
+                    my $name = $self->get_key_name($index1, $index2);
                     $header      = "" if $last_header eq $header;
                     $last_header = $header;
                     $comma       = '; ' if $comma ne '' and $header ne '';
@@ -199,13 +198,13 @@ sub set {
 
     if (not exists $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}) {
         my $secondary_text = $secondary_index =~ / / ? "\"$secondary_index\"" : $secondary_index;
-        my $result         = "$self->{name}: [$self->{hash}->{$lc_primary_index}->{_name}] $secondary_text not found; similiar matches: ";
+        my $result         = "$self->{name}: [" . $self->get_key_name($lc_primary_index) . "] $secondary_text not found; similiar matches: ";
         $result .= $self->levenshtein_matches($primary_index, $secondary_index);
         return $result;
     }
 
-    my $name1 = $self->{hash}->{$lc_primary_index}->{_name};
-    my $name2 = $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{_name};
+    my $name1 = $self->get_key_name($lc_primary_index);
+    my $name2 = $self->get_key_name($lc_primary_index, $lc_secondary_index);
 
     $name1 = 'global'     if $name1 eq '.*';
     $name2 = "\"$name2\"" if $name2 =~ / /;
@@ -242,7 +241,7 @@ sub unset {
         return $result;
     }
 
-    my $name1 = $self->{hash}->{$lc_primary_index}->{_name};
+    my $name1 = $self->get_key_name($lc_primary_index);
     $name1 = 'global' if $name1 eq '.*';
 
     if (not exists $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}) {
@@ -251,7 +250,7 @@ sub unset {
         return $result;
     }
 
-    my $name2 = $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{_name};
+    my $name2 = $self->get_key_name($lc_primary_index, $lc_secondary_index);
     $name2 = "\"$name2\"" if $name2 =~ / /;
 
     if (defined delete $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$key}) {
@@ -273,6 +272,32 @@ sub exists {
     return 0 if not exists $self->{hash}->{$primary_index}->{$secondary_index};
     return 1 if not defined $data_index;
     return exists $self->{hash}->{$primary_index}->{$secondary_index}->{$data_index};
+}
+
+sub get_key_name {
+    my ($self, $primary_index, $secondary_index) = @_;
+
+    my $lc_primary_index = lc $primary_index;
+
+    return $lc_primary_index if not exists $self->{hash}->{$lc_primary_index};
+
+    if (not defined $secondary_index) {
+        if (exists $self->{hash}->{$lc_primary_index}->{_name}) {
+            return $self->{hash}->{$lc_primary_index}->{_name};
+        } else {
+            return $lc_primary_index;
+        }
+    }
+
+    my $lc_secondary_index = lc $secondary_index;
+
+    return $lc_secondary_index if not exists $self->{hash}->{$lc_primary_index}->{$lc_secondary_index};
+
+    if (exists $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{_name}) {
+        return $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{_name};
+    } else {
+        return $lc_secondary_index;
+    }
 }
 
 sub get_keys {
@@ -310,15 +335,22 @@ sub add {
     my $lc_secondary_index = lc $secondary_index;
 
     if (not exists $self->{hash}->{$lc_primary_index}) {
-        $self->{hash}->{$lc_primary_index}->{_name} = $primary_index;    # preserve case
+        # preserve case
+        if ($primary_index ne $lc_primary_index) {
+            $self->{hash}->{$lc_primary_index}->{_name} = $primary_index;
+        }
     }
 
-    $data->{_name} = $secondary_index;                                   # preserve case
+    if ($secondary_index ne $lc_secondary_index) {
+        # preserve case
+        $data->{_name} = $secondary_index;
+    }
+
     $self->{hash}->{$lc_primary_index}->{$lc_secondary_index} = $data;
     $self->save() unless $dont_save;
 
-    my $name1 = $self->{hash}->{$lc_primary_index}->{_name};
-    my $name2 = $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{_name};
+    my $name1 = $self->get_key_name($lc_primary_index);
+    my $name2 = $self->get_key_name($lc_primary_index, $lc_secondary_index);
     $name1 = 'global'     if $name1 eq '.*';
     $name2 = "\"$name2\"" if $name2 =~ / /;
     $self->{pbot}->{logger}->log("$self->{name}: [$name1]: $name2 added.\n") unless $dont_save or $quiet;
@@ -339,7 +371,7 @@ sub remove {
     if (not defined $secondary_index) {
         my $data = delete $self->{hash}->{$lc_primary_index};
         if (defined $data) {
-            my $name = $data->{_name};
+            my $name = exists $data->{_name} ? $data->{_name} : $lc_primary_index;
             $name = 'global' if $name eq '.*';
             $self->save unless $dont_save;
             return "$self->{name}: $name removed.";
@@ -348,7 +380,7 @@ sub remove {
         }
     }
 
-    my $name1 = $self->{hash}->{$lc_primary_index}->{_name};
+    my $name1 = $self->get_key_name($lc_primary_index);
     $name1 = 'global' if $name1 eq '.*';
 
     if (not exists $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}) {
@@ -360,11 +392,13 @@ sub remove {
     if (not defined $data_index) {
         my $data = delete $self->{hash}->{$lc_primary_index}->{$lc_secondary_index};
         if (defined $data) {
-            my $name2 = $data->{_name};
+            my $name2 = exists $data->{_name} ? $data->{_name} : $lc_secondary_index;
             $name2 = "\"$name2\"" if $name2 =~ / /;
 
-            # remove primary group if no more secondaries (only key left should be the _name key)
-            if (keys %{$self->{hash}->{$lc_primary_index}} == 1) { delete $self->{hash}->{$lc_primary_index}; }
+            # remove primary group if no more secondaries
+            if (grep { $_ ne '_name' } keys %{$self->{hash}->{$lc_primary_index}} == 0) {
+                delete $self->{hash}->{$lc_primary_index};
+            }
 
             $self->save unless $dont_save;
             return "$self->{name}: [$name1] $name2 removed.";
@@ -373,9 +407,12 @@ sub remove {
         }
     }
 
-    my $name2 = $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{_name};
-    if   (defined delete $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$data_index}) { return "$self->{name}: [$name1] $name2.$data_index removed."; }
-    else                                                                                           { return "$self->{name}: [$name1] $name2.$data_index does not exist."; }
+    my $name2 = $self->get_key_name($lc_primary_index, $lc_secondary_index);
+    if (defined delete $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$data_index}) {
+        return "$self->{name}: [$name1] $name2.$data_index removed.";
+    } else {
+        return "$self->{name}: [$name1] $name2.$data_index does not exist.";
+    }
 }
 
 # for compatibility with DualIndexSQLiteObject

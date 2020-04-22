@@ -67,9 +67,10 @@ sub load {
     # and lowercase any non-lowercased entries
     foreach my $index (keys %{$self->{hash}}) {
         if (not exists $self->{hash}->{$index}->{_name}) {
-            if (lc $index eq $index) { $self->{hash}->{$index}->{_name} = $index; }
-            else {
-                if (exists $self->{hash}->{lc $index}) { Carp::croak "Cannot update $self->{name} object $index; duplicate object found"; }
+            if ($index ne lc $index) {
+                if (exists $self->{hash}->{lc $index}) {
+                    Carp::croak "Cannot update $self->{name} object $index; duplicate object found";
+                }
 
                 my $data = delete $self->{hash}->{$index};
                 $data->{_name} = $index;
@@ -140,10 +141,9 @@ sub set {
     }
 
     if (not defined $key) {
-        my $result = "[$self->{name}] $self->{hash}->{$lc_index}->{_name} keys: ";
+        my $result = "[$self->{name}] " . $self->get_key_name($lc_index) .  " keys: ";
         my $comma  = '';
-        foreach my $k (sort keys %{$self->{hash}->{$lc_index}}) {
-            next if $k eq '_name';
+        foreach my $k (sort grep { $_ ne '_name' } keys %{$self->{hash}->{$lc_index}}) {
             $result .= $comma . "$k => " . $self->{hash}->{$lc_index}->{$k};
             $comma = "; ";
         }
@@ -156,7 +156,7 @@ sub set {
         $self->{hash}->{$lc_index}->{$key} = $value;
         $self->save unless $dont_save;
     }
-    return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: $key " . (defined $value ? "set to $value" : "is not set.");
+    return "[$self->{name}] " . $self->get_key_name($lc_index) . ": $key " . (defined $value ? "set to $value" : "is not set.");
 }
 
 sub unset {
@@ -171,9 +171,9 @@ sub unset {
 
     if (defined delete $self->{hash}->{$lc_index}->{$key}) {
         $self->save;
-        return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: $key unset.";
+        return "[$self->{name}] " . $self->get_key_name($lc_index) . ": $key unset.";
     } else {
-        return "[$self->{name}] $self->{hash}->{$lc_index}->{_name}: $key does not exist.";
+        return "[$self->{name}] " . $self->get_key_name($lc_index) . ": $key does not exist.";
     }
 }
 
@@ -181,6 +181,13 @@ sub exists {
     my ($self, $index, $data_index) = @_;
     return exists $self->{hash}->{lc $index} if not defined $data_index;
     return exists $self->{hash}->{lc $index}->{$data_index};
+}
+
+sub get_key_name {
+    my ($self, $index) = @_;
+    my $lc_index = lc $index;
+    return $lc_index if not exists $self->{hash}->{$lc_index};
+    return exists $self->{hash}->{$lc_index}->{_name} ? $self->{hash}->{$lc_index}->{_name} : $lc_index;
 }
 
 sub get_keys {
@@ -200,7 +207,12 @@ sub get_data {
 sub add {
     my ($self, $index, $data, $dont_save) = @_;
     my $lc_index = lc $index;
-    $data->{_name} = $index;              # preserve case of index
+
+    # preserve case of index
+    if ($index ne $lc_index) {
+        $data->{_name} = $index;
+    }
+
     $self->{hash}->{$lc_index} = $data;
     $self->save unless $dont_save;
     return "$index added to $self->{name}.";
@@ -220,16 +232,17 @@ sub remove {
         if (defined delete $self->{hash}->{$lc_index}->{$data_index}) {
             delete $self->{hash}->{$lc_index} if keys(%{$self->{hash}->{$lc_index}}) == 1;
             $self->save unless $dont_save;
-            return "$self->{hash}->{$lc_index}->{_name}.$data_index removed from $self->{name}";
+            return $self->get_key_name($lc_index) . ".$data_index removed from $self->{name}";
         } else {
-            return "$self->{name}: $self->{hash}->{$lc_index}->{_name}.$data_index does not exist.";
+            return "$self->{name}: " . $self->get_key_name($lc_index) . ".$data_index does not exist.";
         }
     }
 
     my $data = delete $self->{hash}->{$lc_index};
     if (defined $data) {
         $self->save unless $dont_save;
-        return "$data->{_name} removed from $self->{name}.";
+        my $name = exists $data->{_name} ? $data->{_name} : $lc_index;
+        return "$name removed from $self->{name}.";
     } else {
         return "$self->{name}: $data_index does not exist.";
     }

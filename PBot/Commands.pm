@@ -174,7 +174,7 @@ sub help {
     # check built-in commands first
     if ($self->exists($keyword)) {
         if ($self->{metadata}->exists($keyword)) {
-            my $name         = $self->{metadata}->get_data($keyword, '_name');
+            my $name         = $self->{metadata}->get_key_name($keyword);
             my $requires_cap = $self->{metadata}->get_data($keyword, 'requires_cap');
             my $help         = $self->{metadata}->get_data($keyword, 'help');
             my $result       = "/say $name: ";
@@ -216,8 +216,8 @@ sub help {
         ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
     }
 
-    my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
-    my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
+    my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_key_name($channel);
+    my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_key_name($channel, $trigger);
     $channel_name = 'global channel'    if $channel_name eq '.*';
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 

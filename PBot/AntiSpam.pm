@@ -68,9 +68,9 @@ sub antispam_cmd {
             my $text    = "Spam keywords:\n";
             my $entries = 0;
             foreach my $namespace ($self->{keywords}->get_keys) {
-                $text .= ' ' . $self->{keywords}->get_data($namespace, '_name') . ":\n";
+                $text .= ' ' . $self->{keywords}->get_key_name($namespace) . ":\n";
                 foreach my $keyword ($self->{keywords}->get_keys($namespace)) {
-                    $text .= '    ' . $self->{keywords}->get_data($namespace, $keyword, '_name') . ",\n";
+                    $text .= '    ' . $self->{keywords}->get_key_name($namespace, $keyword) . ",\n";
                     $entries++;
                 }
             }
@@ -84,7 +84,7 @@ sub antispam_cmd {
             if (not $self->{keywords}->exists($namespace)) { return "There is no such namespace `$namespace`."; }
 
             if (not $self->{keywords}->exists($namespace, $keyword)) {
-                return "There is no such regex `$keyword` for namespace `" . $self->{keywords}->get_data($namespace, '_name') . '`.';
+                return "There is no such regex `$keyword` for namespace `" . $self->{keywords}->get_key_name($namespace) . '`.';
             }
 
             if (not defined $flag) {

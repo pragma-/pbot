@@ -1,579 +1,468 @@
 {
    "$metadata$" : {
-      "_name" : "$metadata$",
       "update_version" : 3503
    },
    "actiontrigger" : {
-      "_name" : "actiontrigger",
       "dont-replace-pronouns" : "1",
       "help" : "Adds a new actiontrigger to PBot. See https://github.com/pragma-/pbot/blob/master/doc/ActionTrigger.md",
       "requires_cap" : 1
    },
    "aka" : {
-      "_name" : "aka",
       "help" : "Lists known aliases for a given nick. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#aka",
       "requires_cap" : 0
    },
    "akalink" : {
-      "_name" : "akalink",
       "help" : "Manually link a known alias to a nick. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#akalink",
       "requires_cap" : 1
    },
    "akaunlink" : {
-      "_name" : "akaunlink",
       "help" : "Manually unlink a known alias from a nick. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#akaunlink",
       "requires_cap" : 1
    },
    "antispam" : {
-      "_name" : "antispam",
       "help" : "See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#antispam",
       "requires_cap" : 1
    },
    "ban" : {
-      "_name" : "ban",
       "dont-replace-pronouns" : "1",
       "help" : "Bans a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#banmute",
       "requires_cap" : 1
    },
    "ban-exempt" : {
-      "_name" : "ban-exempt",
       "help" : "Manages list of ban-masks that are exempted from ban-evasion detection.",
       "requires_cap" : 1
    },
    "battleship" : {
-      "_name" : "battleship",
       "help" : "The classic Battleship board game, modified for IRC. See https://github.com/pragma-/pbot/blob/master/doc/Battleship.md",
       "requires_cap" : 0
    },
    "blacklist" : {
-      "_name" : "blacklist",
       "help" : "Blacklists a hostmask from joining a channel. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#blacklist",
       "requires_cap" : 1
    },
    "cap" : {
-      "_name" : "cap",
       "help" : "",
       "requires_cap" : 0
    },
    "chanadd" : {
-      "_name" : "chanadd",
       "help" : "Permanently adds a channel to PBot's list of channels to auto-join and manage. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#chanadd",
       "requires_cap" : 1
    },
    "chanlist" : {
-      "_name" : "chanlist",
       "help" : "Lists all added channels and their metadata keys and values. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#chanlist",
       "requires_cap" : 1
    },
    "chanrem" : {
-      "_name" : "chanrem",
       "help" : "Removes a channel from PBot's list of channels to auto-join and manage. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#chanrem",
       "requires_cap" : 1
    },
    "chanset" : {
-      "_name" : "chanset",
       "help" : "Sets a channel's metadata. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#chanset and https://github.com/pragma-/pbot/blob/master/doc/Admin.md#channel-metadata-list",
       "requires_cap" : 1
    },
    "chanunset" : {
-      "_name" : "chanunset",
       "help" : "Deletes a channel's metadata key. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#chanunset",
       "requires_cap" : 1
    },
    "checkban" : {
-      "_name" : "checkban",
       "help" : "Shows the reason a mask was banned and how long the ban lasts. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#checkban",
       "requires_cap" : 0
    },
    "checkmute" : {
-      "_name" : "checkmute",
       "help" : "Shows the reason a mask was muted and how long the mute lasts. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#checkmute",
       "requires_cap" : 0
    },
    "cmdset" : {
-      "_name" : "cmdset",
       "dont-replace-pronouns" : "1",
       "help" : "Sets or shows command metadata. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#cmdset",
       "requires_cap" : 1
    },
    "cmdunset" : {
-      "_name" : "cmdunset",
       "help" : "Deletes a channel metadata key. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#cmdunset",
       "requires_cap" : 1
    },
    "connect4" : {
-      "_name" : "connect4",
       "help" : "The classic Connect-4 board game. See https://github.com/pragma-/pbot/blob/master/doc/Connect4.md",
       "requires_cap" : 0
    },
    "count" : {
-      "_name" : "count",
       "help" : "Shows how many factoids and what percentage of the database <nick> has submitted. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#count",
       "requires_cap" : 0
    },
    "counteradd" : {
-      "_name" : "counteradd",
       "help" : "Adds a new counter. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#add",
       "requires_cap" : 0
    },
    "counterdel" : {
-      "_name" : "counterdel",
       "help" : "Deletes a counter. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#del",
       "requires_cap" : 0
    },
    "counterlist" : {
-      "_name" : "counterlist",
       "help" : "Lists counters. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#list",
       "requires_cap" : 0
    },
    "counterreset" : {
-      "_name" : "counterreset",
       "help" : "Resets a counter. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#reset",
       "requires_cap" : 0
    },
    "countershow" : {
-      "_name" : "countershow",
       "help" : "Shows a counter's data. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#show",
       "requires_cap" : 0
    },
    "countertrigger" : {
-      "_name" : "countertrigger",
       "help" : "Manages counter triggers. See https://github.com/pragma-/pbot/blob/master/doc/Counter.md#trigger",
       "requires_cap" : 1
    },
    "date" : {
-      "_name" : "date",
       "help" : "Shows date and time for a timezone. Accepts Linux timezone locations. You can set `!my timezone ...` to remember your timezone.",
       "requires_cap" : 0
    },
    "delq" : {
-      "_name" : "delq",
       "help" : "Deletes a quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#delq",
       "requires_cap" : 0
    },
    "deop" : {
-      "_name" : "deop",
       "help" : "Removes OP status from users. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#deop",
       "requires_cap" : 1
    },
    "devoice" : {
-      "_name" : "devoice",
       "help" : "Removes VOICE status from users. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#devoice",
       "requires_cap" : 1
    },
    "die" : {
-      "_name" : "die",
       "help" : "Tells PBot to disconnect and exit. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#die",
       "requires_cap" : 1
    },
    "dumpbans" : {
-      "_name" : "dumpbans",
       "help" : "Displays PBot's internal banlist data structure. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#dumpbans",
       "requires_cap" : 1
    },
    "eval" : {
-      "_name" : "eval",
       "dont-replace-pronouns" : "1",
       "help" : "Evaluates Perl code within PBot's context. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#eval",
       "requires_cap" : 1
    },
    "export" : {
-      "_name" : "export",
       "background-process" : "1",
       "help" : "Exports specified list to HTML file. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#export",
       "requires_cap" : 1
    },
    "fact" : {
-      "_name" : "fact",
       "help" : "Displays or invokes a factoid belonging to a specific channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#fact",
       "requires_cap" : 0
    },
    "factadd" : {
-      "_name" : "factadd",
       "dont-replace-pronouns" : "1",
       "help" : "Creates a new factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factadd",
       "requires_cap" : 0
    },
    "factalias" : {
-      "_name" : "factalias",
       "help" : "Creates a factoid that acts as an alias for a command. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factalias",
       "requires_cap" : 0
    },
    "factchange" : {
-      "_name" : "factchange",
       "dont-replace-pronouns" : "1",
       "help" : "Changes a factoid using a regular expression. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factchange",
       "requires_cap" : 0
    },
    "factfind" : {
-      "_name" : "factfind",
       "dont-replace-pronouns" : "1",
       "help" : "Searches the database for a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factfind",
       "requires_cap" : 0
    },
    "factinfo" : {
-      "_name" : "factinfo",
       "help" : "Displays information about a factoid, such as who submitted it and when. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factinfo",
       "requires_cap" : 0
    },
    "factlog" : {
-      "_name" : "factlog",
       "help" : "Displays a factoid's changelog history. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factlog",
       "requires_cap" : 0
    },
    "factmove" : {
-      "_name" : "factmove",
       "help" : "Renames a factoid or moves a factoid to a different channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factmove",
       "requires_cap" : 0
    },
    "factredo" : {
-      "_name" : "factredo",
       "help" : "Reverts a factoid to a newer revision. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factredo",
       "requires_cap" : 0
    },
    "factrem" : {
-      "_name" : "factrem",
       "dont-replace-pronouns" : "1",
       "help" : "Deletes a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factrem",
       "requires_cap" : 0
    },
    "factset" : {
-      "_name" : "factset",
       "dont-replace-pronouns" : "1",
       "help" : "Displays or sets factoid metadata, such as owner, rate-limit, etc. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factset and https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factoid-metadata-list",
       "requires_cap" : 0
    },
    "factshow" : {
-      "_name" : "factshow",
       "dont-replace-pronouns" : "1",
       "help" : "Displays a factoid's literal value without invoking the factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factshow",
       "requires_cap" : 0
    },
    "factundo" : {
-      "_name" : "factundo",
       "help" : "Reverts a factoid to an older revision. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factundo",
       "requires_cap" : 0
    },
    "factunset" : {
-      "_name" : "factunset",
       "help" : "Unsets a factoid metadata key. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factunset and https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factoid-metadata-list",
       "requires_cap" : 0
    },
    "forget" : {
-      "_name" : "forget",
       "dont-replace-pronouns" : "1",
       "help" : "Deletes a factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#forget",
       "requires_cap" : 0
    },
    "func" : {
-      "_name" : "func",
       "help" : "Invokes built-in functions. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#func",
       "requires_cap" : 0
    },
    "getq" : {
-      "_name" : "getq",
       "help" : "Retrieves and displays a specific quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#getq",
       "requires_cap" : 0
    },
    "google" : {
-      "_name" : "google",
       "dont-replace-pronouns" : "1",
       "help" : "Displays Google search results for a query. See https://github.com/pragma-/pbot/blob/master/doc/Modules.md#google",
       "requires_cap" : 0
    },
    "grab" : {
-      "_name" : "grab",
       "help" : "Grabs a message someone says, and adds it to the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#grab",
       "requires_cap" : 0
    },
    "help" : {
-      "_name" : "help",
       "dont-replace-pronouns" : "1",
       "help" : "Displays the `help` metadata for commands and factoids.",
       "requires_cap" : 0
    },
    "histogram" : {
-      "_name" : "histogram",
       "help" : "Displays a histogram of the top factoid submitters. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#histogram",
       "requires_cap" : 0
    },
    "ignore" : {
-      "_name" : "ignore",
       "help" : "Ignores a user. If you omit [channel] PBot will ignore the user in all channels, including private messages. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#ignore",
       "requires_cap" : 1
    },
    "in" : {
-      "_name" : "in",
       "help" : "Performs a command in a specific channel. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#in",
       "requires_cap" : 1
    },
    "invite" : {
-      "_name" : "invite",
       "help" : "Invites a user to a channel. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#invite",
       "requires_cap" : 1
    },
    "join" : {
-      "_name" : "join",
       "help" : "Temporarily joins a channel without adding it to PBot's list of channels to manage/auto-join. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#join",
       "requires_cap" : 1
    },
    "kick" : {
-      "_name" : "kick",
       "help" : "Removes a user from the channel. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#kick",
       "requires_cap" : 1
    },
    "lagcheck" : {
-      "_name" : "lagcheck",
       "help" : "Displays history of PING times. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#lagcheck",
       "requires_cap" : 0
    },
    "learn" : {
-      "_name" : "learn",
       "help" : "Creates a new factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factadd",
       "requires_cap" : 0
    },
    "list" : {
-      "_name" : "list",
       "help" : "Lists various collections, such as channels or admins. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#list"
    },
    "load" : {
-      "_name" : "load",
       "help" : "This command loads a module as a PBot command. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#load",
       "requires_cap" : 1
    },
    "login" : {
-      "_name" : "login",
       "help" : "Logs into a PBot admin account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#login",
       "requires_cap" : 0
    },
    "logout" : {
-      "_name" : "logout",
       "help" : "Logs out of a PBot admin account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#logout",
       "requires_cap" : 0
    },
    "mod" : {
-      "_name" : "mod",
       "help" : "Provides restricted moderation abilities to voiced users. They can kick/ban/etc only users that are not admins, whitelisted, voiced or opped.",
       "requires_cap" : 0
    },
    "mode" : {
-      "_name" : "mode",
       "help" : "Sets or unsets channel or user modes. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#mode",
       "requires_cap" : 1
    },
    "mute" : {
-      "_name" : "mute",
       "dont-replace-pronouns" : "1",
       "help" : "Mutes a user. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#banmute",
       "requires_cap" : 1
    },
    "my" : {
-      "_name" : "my",
       "dont-replace-pronouns" : "1",
       "help" : "Lets users view and manipulate their own user metadata. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#my and https://github.com/pragma-/pbot/blob/master/doc/Admin.md#user-metadata-list",
       "requires_cap" : "0"
    },
    "nicklist" : {
-      "_name" : "nicklist",
       "help" : "Dumps the internal nicklist structure. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#nicklist",
       "requires_cap" : 0
    },
    "op" : {
-      "_name" : "op",
       "help" : "Gives channel operator status to users. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#op",
       "requires_cap" : "1"
    },
    "part" : {
-      "_name" : "part",
       "help" : "Departs a channel, without removing it from PBot's list of channels to manage/auto-join. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#part",
       "requires_cap" : 1
    },
    "plug" : {
-      "_name" : "plug",
       "help" : "Loads a plugin into PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#plug",
       "requires_cap" : 1
    },
    "pluglist" : {
-      "_name" : "pluglist",
       "help" : "Lists all currently loaded plugins. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#pluglist",
       "requires_cap" : 0
    },
    "rebuildaliases" : {
-      "_name" : "rebuildaliases",
       "help" : "Rebuilds the aka link table. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#rebuildaliases",
       "requires_cap" : 1
    },
    "recall" : {
-      "_name" : "recall",
       "background-process" : "1",
       "help" : "Recalls previous chat history for a channel. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#recall",
       "requires_cap" : 0
    },
    "refresh" : {
-      "_name" : "refresh",
       "help" : "Refreshes and reloads PBot core modules and plugins. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#refresh",
       "requires_cap" : 0
    },
    "regchange" : {
-      "_name" : "regchange",
       "help" : "Changes the value of a registry item using a regular expression. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regchange",
       "requires_cap" : 1
    },
    "regex" : {
-      "_name" : "regex",
       "help" : "Manages regular expression commands. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#regex",
       "requires_cap" : 1
    },
    "regfind" : {
-      "_name" : "regfind",
       "help" : "Searches the registry for keywords or values. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regfind",
       "requires_cap" : 0
    },
    "regset" : {
-      "_name" : "regset",
       "help" : "Creates a new registry item or updates an existing item. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regset",
       "requires_cap" : 1
    },
    "regsetmeta" : {
-      "_name" : "regsetmeta",
       "help" : "Sets or displays the metadata for a specific registry key. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regsetmeta and https://github.com/pragma-/pbot/blob/master/doc/Registry.md#metadata-list",
       "requires_cap" : 1
    },
    "regshow" : {
-      "_name" : "regshow",
       "help" : "Displays the type and value of a registry item. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regshow",
       "requires_cap" : 0
    },
    "regunset" : {
-      "_name" : "regunset",
       "help" : "Deletes a registry item from a specific section/channel. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regunset",
       "requires_cap" : 1
    },
    "regunsetmeta" : {
-      "_name" : "regunsetmeta",
       "help" : "Deletes a metadata key from a registry item. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regsetmeta and https://github.com/pragma-/pbot/blob/master/doc/Registry.md#metadata",
       "requires_cap" : 1
    },
    "reload" : {
-      "_name" : "reload",
       "help" : "Reloads a data or configuration file. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#reload",
       "requires_cap" : 1
    },
    "remindme" : {
-      "_name" : "remindme",
       "help" : "Manages user reminders. See https://github.com/pragma-/pbot/blob/master/doc/Remindme.md",
       "requires_cap" : 0
    },
    "replug" : {
-      "_name" : "replug",
       "help" : "Reloads a plugin into PBot. The plugin is first unloaded and then it is loaded again. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#replug",
       "requires_cap" : 1
    },
    "rq" : {
-      "_name" : "rq",
       "help" : "Retrieves and displays a random quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#rq",
       "requires_cap" : 0
    },
    "sl" : {
-      "_name" : "sl",
       "help" : "Sends a raw IRC command to the server. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#sl",
       "requires_cap" : 1
    },
    "spinach" : {
-      "_name" : "spinach",
       "dont-replace-pronouns" : "1",
       "help" : "Manages and interacts with the Spinach trivia game. See https://github.com/pragma-/pbot/blob/master/doc/Spinach.md",
       "requires_cap" : 0
    },
    "top20" : {
-      "_name" : "top20",
       "help" : "Displays the top 20 most popular factoids. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#top20",
       "requires_cap" : 0
    },
    "unban" : {
-      "_name" : "unban",
       "dont-replace-pronouns" : "1",
       "help" : "Unbans a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unbanunmute",
       "requires_cap" : 1
    },
    "unbanme" : {
-      "_name" : "unbanme",
       "help" : "Removes a join-flood ban. See https://github.com/pragma-/pbot/blob/master/doc/Abuse.md#unbanme",
       "requires_cap" : 0
    },
    "unignore" : {
-      "_name" : "unignore",
       "help" : "Unignores a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unignore",
       "requires_cap" : 1
    },
    "unload" : {
-      "_name" : "unload",
       "help" : "Unloads a module and removes its associated command. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unload",
       "requires_cap" : 1
    },
    "unmute" : {
-      "_name" : "unmute",
       "dont-replace-pronouns" : "1",
       "help" : "Unmutes a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unbanunmute",
       "requires_cap" : 1
    },
    "unplug" : {
-      "_name" : "unplug",
       "help" : "Unloads a plugin from PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unplug",
       "requires_cap" : 1
    },
    "uptime" : {
-      "_name" : "uptime",
       "help" : "Displays the date and time this instance of PBot was started and how long it has been running.",
       "requires_cap" : 0
    },
    "useradd" : {
-      "_name" : "useradd",
       "dont-replace-pronouns" : "1",
       "help" : "Adds a new user to PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#useradd",
       "requires_cap" : 1
    },
    "userdel" : {
-      "_name" : "userdel",
       "dont-replace-pronouns" : "1",
       "help" : "Removes an user from PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#userdel",
       "requires_cap" : 1
    },
    "users" : {
-      "_name" : "users",
       "help" : "",
       "requires_cap" : 0
    },
    "userset" : {
-      "_name" : "userset",
       "dont-replace-pronouns" : "1",
       "help" : "Sets metadata for an user account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#userset and https://github.com/pragma-/pbot/blob/master/doc/Admin.md#user-metadata-list",
       "requires_cap" : 1
    },
    "userunset" : {
-      "_name" : "userunset",
       "dont-replace-pronouns" : "1",
       "help" : "Deletes a metadata key from an user account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#userunset",
       "requires_cap" : 1
    },
    "version" : {
-      "_name" : "version",
       "help" : "",
       "requires_cap" : 0
    },
    "voice" : {
-      "_name" : "voice",
       "help" : "Sets mode +v on users. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#voice",
       "requires_cap" : 1
    },
    "weather" : {
-      "_name" : "weather",
       "background-process" : "1",
       "help" : "Fetches and displays weather data. You may set `!my location ...` to remember your location.",
       "requires_cap" : 0
    },
    "wttr" : {
-      "_name" : "wttr",
       "background-process" : "1",
       "help" : "",
       "requires_cap" : "0"

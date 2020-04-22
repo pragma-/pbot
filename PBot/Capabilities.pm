@@ -165,7 +165,7 @@ sub capcmd {
                 if (@matches) {
                     $result .= '; ' if $matched;
                     my $global = $matched ? 'global: ' : '';
-                    $result .= $users->get_data($channel, '_name') eq '.*' ? $global : $users->get_data($channel, '_name') . ': ';
+                    $result .= $users->get_key_name($channel) eq '.*' ? $global : $users->get_key_name($channel) . ': ';
                     $result .= join ', ', @matches;
                     $matched = 1;
                 }
