@@ -1,4 +1,8 @@
 {
+   "$metadata$" : {
+      "_name" : "$metadata$",
+      "update_version" : 3503
+   },
    "actiontrigger" : {
       "_name" : "actiontrigger",
       "dont-replace-pronouns" : "1",

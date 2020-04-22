@@ -1,7 +1,12 @@
 {
    "#pbot2" : {
-      "enabled" : "1",
-      "chanop" : "0"
+      "_name" : "#pbot2",
+      "chanop" : "0",
+      "enabled" : "1"
+   },
+   "$metadata$" : {
+      "_name" : "$metadata$",
+      "update_version" : 3503
    }
 }
 
