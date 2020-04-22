@@ -19,7 +19,7 @@ my ($data_dir, $version, $last_update) = @ARGV;
 print "Adding version info... version: $version, last_update: $last_update, data_dir: $data_dir\n";
 
 my @hashobjects = qw/channels commands capabilities/;
-my @dualindex = qw/unban_timeout unmute_timeout ban-exemptions ignorelist registry spam_keywords users/;
+my @dualindex = qw/unban_timeouts unmute_timeouts ban-exemptions ignorelist registry spam_keywords users/;
 
 my $pbot = lib3503::PBot->new();
 
