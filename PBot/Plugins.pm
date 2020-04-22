@@ -155,18 +155,12 @@ sub unload_cmd {
 
 sub list_cmd {
     my ($self, $from, $nick, $user, $host, $arguments) = @_;
-    my $result = "Loaded plugins: ";
-    my $count  = 0;
-    my $comma  = '';
 
-    foreach my $plugin (sort keys %{$self->{plugins}}) {
-        $result .= $comma . $plugin;
-        $count++;
-        $comma = ', ';
-    }
+    my @plugins = sort keys %{$self->{plugins}};
 
-    $result .= 'none' if $count == 0;
-    return $result;
+    return "No plugins loaded." if not @plugins;
+
+    return scalar @plugins . ' plugin' . (@plugins == 1 ? '' : 's') . ' loaded: ' . join (', ', @plugins);
 }
 
 1;
