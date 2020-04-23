@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# Adds version metadata to HashObject and DualIndexHashObject JSON files
+# Adds version metadata to HashObject and DualIndexHashObject JSON files.
 
 use warnings; use strict;
 
