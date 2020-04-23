@@ -74,7 +74,9 @@ sub exists {
     $cap = lc $cap;
     foreach my $c ($self->{caps}->get_keys) {
         return 1 if $c eq $cap;
-        foreach my $sub_cap ($self->{caps}->get_keys($c)) { return 1 if $sub_cap eq $cap; }
+        foreach my $sub_cap ($self->{caps}->get_keys($c)) {
+            return 1 if $sub_cap eq $cap;
+        }
     }
     return 0;
 }
@@ -82,10 +84,15 @@ sub exists {
 sub add {
     my ($self, $cap, $subcap, $dontsave) = @_;
     if (not defined $subcap) {
-        if (not $self->{caps}->exists($cap)) { $self->{caps}->add($cap, {}, $dontsave); }
+        if (not $self->{caps}->exists($cap)) {
+            $self->{caps}->add($cap, {}, $dontsave);
+        }
     } else {
-        if ($self->{caps}->exists($cap)) { $self->{caps}->set($cap, $subcap, 1, $dontsave); }
-        else                             { $self->{caps}->add($cap, {$subcap => 1}, $dontsave); }
+        if ($self->{caps}->exists($cap)) {
+            $self->{caps}->set($cap, $subcap, 1, $dontsave);
+        } else {
+            $self->{caps}->add($cap, { $subcap => 1 }, $dontsave);
+        }
     }
 }
 
@@ -94,7 +101,9 @@ sub remove {
     $cap = lc $cap;
     if (not defined $subcap) {
         foreach my $c ($self->{caps}->get_keys) {
-            foreach my $sub_cap ($self->{caps}->get_keys($c)) { $self->{caps}->remove($c, $sub_cap, 1) if $sub_cap eq $cap; }
+            foreach my $sub_cap ($self->{caps}->get_keys($c)) {
+                $self->{caps}->remove($c, $sub_cap, 1) if $sub_cap eq $cap;
+            }
             $self->{caps}->remove($c, undef, 1) if $c eq $cap;
         }
     } else {
@@ -154,43 +163,40 @@ sub capcmd {
             return "Usage: cap whohas <capability>; Lists all users who have <capability>" if not defined $cap;
             return "No such capability $cap."                                              if not $self->exists($cap);
             my $result  = "Users with capability $cap: ";
-            my $matched = 0;
             my $users   = $self->{pbot}->{users}->{users};
-            foreach my $channel (sort $users->get_keys) {
-                my @matches;
-                foreach my $hostmask (sort $users->get_keys($channel)) {
-                    my $u = $users->get_data($channel, $hostmask);
-                    push @matches, $u->{name} if $self->userhas($u, $cap);
-                }
-                if (@matches) {
-                    $result .= '; ' if $matched;
-                    my $global = $matched ? 'global: ' : '';
-                    $result .= $users->get_key_name($channel) eq '.*' ? $global : $users->get_key_name($channel) . ': ';
-                    $result .= join ', ', @matches;
-                    $matched = 1;
-                }
+            my @matches;
+            foreach my $name (sort $users->get_keys) {
+                my $u = $users->get_data($name);
+                push @matches, $users->get_key_name($name) if $self->userhas($u, $cap);
             }
-            $result .= 'nobody' if not $matched;
+
+            if (@matches) {
+                $result .= join(', ', @matches);
+            } else {
+                $result .= 'nobody';
+            }
+
             return $result;
         }
 
         when ('userhas') {
-            my ($hostmask, $cap) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
-            return "Usage: cap userhas <user> [capability]; Lists capabilities belonging to <user>" if not defined $hostmask;
+            my ($name, $cap) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+            return "Usage: cap userhas <username> [capability]; Lists capabilities belonging to <user>" if not defined $name;
             $cap = lc $cap if defined $cap;
 
-            my $u = $self->{pbot}->{users}->find_user($from, $hostmask, 1);
+            my $u = $self->{pbot}->{users}->{users}->get_data($name);
             if (not defined $u) {
-                $from = 'global' if $from !~ /^#/;
-                return "No such user $hostmask in $from.";
+                return "No such user $name.";
             }
+
+            $name = $self->{pbot}->{users}->{users}->get_key_name($name);
 
             if (defined $cap) {
                 return "Try again. No such capability $cap." if not $self->exists($cap);
-                if   ($self->userhas($u, $cap)) { return "Yes. User $u->{name} has capability $cap."; }
-                else                            { return "No. User $u->{name} does not have capability $cap."; }
+                if   ($self->userhas($u, $cap)) { return "Yes. User $name has capability $cap."; }
+                else                            { return "No. User $name  does not have capability $cap."; }
             } else {
-                my $result = "User $u->{name} has capabilities: ";
+                my $result = "User $name has capabilities: ";
                 my @groups;
                 my @single;
                 foreach my $key (sort keys %{$u}) {
@@ -201,7 +207,7 @@ sub capcmd {
                     else              { push @single, $key; }
                 }
                 if (@groups or @single) { $result .= join ', ', @groups, @single; }
-                else                    { $result = "User $u->{name} has no capabilities."; }
+                else                    { $result = "User $name has no capabilities."; }
                 return $result;
             }
         }

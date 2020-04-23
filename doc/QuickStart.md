@@ -241,7 +241,7 @@ commands in the PBot terminal console.
 
 Suppose your nick is `Bob` and your hostmask is `Bob!~user@some.domain.com`.
 
-    useradd Bob global Bob!~user@*.domain.com botowner
+    useradd Bob Bob!~user@*.domain.com global botowner
 
 This will create a user account named `Bob` with the `botowner` [user-capability](Admin.md#user-capabilities) that can administrate
 all channels. Note the wildcard replacing `some` in `some.domain.com`. Now as long as
@@ -267,7 +267,9 @@ the terminal console.
 ### Adding other users and admins
 To add users to PBot, use the [`useradd`](Admin.md#useradd) command.
 
-    useradd <account name> <channel> <hostmask> [capabilities [password]]
+    useradd <username> <hostmasks> [channels [capabilities [password]]]
+
+The `hostmasks` and `channels` arguments can be a comma-separated list of values.
 
 If you omit the `capabilities` argument, the user will be a normal unprivileged user. See [user-capabilities](Admin.md#user-capabilities)
 for more information about user-capabilities.

@@ -90,39 +90,40 @@ Usage: `logout`
 ### useradd
 Adds a new user to PBot.
 
-Usage: `useradd <account name> <channel> <hostmask> [capabilities [password]]`
+Usage: `useradd <username> <hostmasks> [channels [capabilities [password]]]`
 
 Parameter | Description
 --- | ---
-`<account name>` | A unique name to identify this account (usually the `nick` of the user, but it can be any identifier).
-`<channel>` | The channel this user belongs to; use `global` for all channels. This field cannot be changed without removing and re-adding the user.
-`<hostmask>` | The hostmask from which this user is recognized/allowed to login from (e.g., `somenick!*@*.somedomain.com` or `*!*@unaffiliated/someuser`). This field cannot be changed without removing and re-adding the user.
-`[capabilities]` | A comma-separated list of [user-capabilities](#user-capabilities) for this user.
-`[password]` | The password the user will use to login (from `/msg`, obviously). Generates a random password if omitted. Users may view and set their password by using the [`my`](Commands.md#my) command.
+`username` | A unique name to identify this account (usually the `nick` of the user, but it can be any identifier).
+`hostmasks` | The hostmasks from which this user is recognized/allowed to login from (e.g., `somenick!*@*.somedomain.com` or `*!*@unaffiliated/someuser`). Can be a comma-separated list of values.
+`channels` | The channels this user belongs to; use `global` for all channels. Can be a comma-separated list of values.
+`capabilities` | A comma-separated list of [user-capabilities](#user-capabilities) for this user.
+`password` | The password the user will use to login (from `/msg`, obviously). Generates a random password if omitted. Users may view and set their password by using the [`my`](Commands.md#my) command.
 
 ### userdel
-Removes a user from PBot. You can use the `account name` field or the `hostmask` field that was set via the [`useradd`](#useradd) command.
+Removes a user from PBot.
 
-Usage: `userdel <channel> <account name or hostmask>`
+Usage: `userdel <username>`
 
 ### userset
-Sets [metadata](#user-metadata-list) or [user-capabilities](#user-capabilities-list) for a user account. You can use the `account name` field or the `hostmask` field that was set via the [`useradd`](#useradd) command. See also: [user metadata list](#user-metadata-list).
+Sets [metadata](#user-metadata-list) or [user-capabilities](#user-capabilities-list) for a user account. See also: [user metadata list](#user-metadata-list).
 
 If `key` is omitted, it will list all the keys and values that are set.  If `value` is omitted, it will show the value for `key`.
 
-Usage: `userset [channel] <account name or hostmask> [<key> [value]]`
+Usage: `userset <username> [<key> [value]]`
 
 ### userunset
-Deletes a [metadata](#user-metadata-list) or [user-capability](#user-capabilities-list) from a user account.  You can use the `account name` field or the `hostmask` field that was set via the [`useradd`](#useradd) command.
+Deletes a [metadata](#user-metadata-list) or [user-capability](#user-capabilities-list) from a user account.
 
-Usage: `userunset [channel] <account name or hostmask> <key>`
+Usage: `userunset <username> <key>`
 
 #### User metadata list
 This is a list of recognized metadata keys for user accounts.
 
 Name | Description
 --- | ---
-`name` | A unique name identifying the user account.
+`hostmasks` | A comma-separated list of hostmasks this user is recognized by.
+`channels` | A comma-separated list of channels this user belongs to.
 `password` | The password for the user account.
 `loggedin` | Whether the user is logged in or not.
 `stayloggedin` | Do not log the user out when they part/quit.

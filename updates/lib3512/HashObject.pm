@@ -10,7 +10,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package PBot::HashObject;
+package lib3512::HashObject;
 
 use warnings; use strict;
 use feature 'unicode_strings';
@@ -94,7 +94,7 @@ sub save {
     $self->{pbot}->{logger}->log("Saving $self->{name} to $filename\n");
 
     if (not $self->get_data('$metadata$', 'update_version')) {
-        $self->add('$metadata$', { update_version => PBot::VERSION::BUILD_REVISION });
+        $self->add('$metadata$', { update_version => 3512 });
     }
 
     my $json      = JSON->new;
@@ -145,7 +145,7 @@ sub set {
         my $comma  = '';
         foreach my $k (sort grep { $_ ne '_name' } keys %{$self->{hash}->{$lc_index}}) {
             $result .= $comma . "$k => " . $self->{hash}->{$lc_index}->{$k};
-            $comma = ";\n";
+            $comma = "; ";
         }
         $result .= "none" if ($comma eq '');
         return $result;

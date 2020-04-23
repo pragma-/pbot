@@ -15,7 +15,7 @@ use feature 'unicode_strings';
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{users} = PBot::DualIndexHashObject->new(name => 'Users', filename => $conf{filename}, pbot => $conf{pbot});
+    $self->{users} = PBot::HashObject->new(name => 'Users', filename => $conf{filename}, pbot => $conf{pbot});
     $self->load;
 
     $self->{pbot}->{commands}->register(sub { $self->logincmd(@_) },  "login",     0);
@@ -34,6 +34,16 @@ sub initialize {
     $self->{pbot}->{capabilities}->add('can-modify-admins', undef,           1);
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.join', sub { $self->on_join(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.part', sub { $self->on_departure(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.quit', sub { $self->on_departure(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.kick', sub { $self->on_kick(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('pbot.part', sub { $self->on_self_part(@_) });
+
+
+    $self->{user_index} = {};
+    $self->{user_cache} = {};
+
+    $self->rebuild_user_index;
 }
 
 sub on_join {
@@ -74,16 +84,36 @@ sub on_join {
     return 0;
 }
 
+sub on_departure {
+    my ($self, $event_type, $event) = @_;
+    my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
+    ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
+    $self->decache_user($channel, "$nick!$user\@$host");
+}
+
+sub on_kick {
+    my ($self, $event_type, $event) = @_;
+    my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->{args}[0]);
+    ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
+    $self->decache_user($channel, "$nick!$user\@$host");
+}
+
+sub on_self_part {
+    my ($self, $event_type, $event) = @_;
+    delete $self->{user_cache}->{lc $event->{channel}};
+}
+
 sub add_user {
-    my ($self, $name, $channel, $hostmask, $capabilities, $password, $dont_save) = @_;
-    $channel = '.*' if $channel !~ m/^#/;
+    my ($self, $name, $channels, $hostmasks, $capabilities, $password, $dont_save) = @_;
+    $channels = 'global' if $channels !~ m/^#/;
 
     $capabilities //= 'none';
     $password     //= $self->{pbot}->random_nick(16);
 
     my $data = {
-        name     => $name,
-        password => $password
+        channels  => $channels,
+        hostmasks => $hostmasks,
+        password  => $password
     };
 
     foreach my $cap (split /\s*,\s*/, lc $capabilities) {
@@ -91,36 +121,32 @@ sub add_user {
         $data->{$cap} = 1;
     }
 
-    $self->{pbot}->{logger}->log("Adding new user (caps: $capabilities): name: $name hostmask: $hostmask channel: $channel\n");
-    $self->{users}->add($channel, $hostmask, $data, $dont_save);
+    $self->{pbot}->{logger}->log("Adding new user (caps: $capabilities): name: $name hostmasks: $hostmasks channels: $channels\n");
+    $self->{users}->add($name, $data, $dont_save);
+    $self->rebuild_user_index;
     return $data;
 }
 
 sub remove_user {
-    my ($self, $channel, $hostmask) = @_;
-    return $self->{users}->remove($channel, $hostmask);
+    my ($self, $name) = @_;
+    my $result = $self->{users}->remove($name);
+    $self->rebuild_user_index;
+    return $result;
 }
 
 sub load {
     my $self = shift;
-    my $filename;
-    if   (@_) { $filename = shift; }
-    else      { $filename = $self->{users}->{filename}; }
-
-    if (not defined $filename) {
-        Carp::carp "No users path specified -- skipping loading of users";
-        return;
-    }
 
     $self->{users}->load;
 
     my $i = 0;
-    foreach my $channel (sort $self->{users}->get_keys) {
-        foreach my $hostmask (sort $self->{users}->get_keys($channel)) {
-            $i++;
-            my $name     = $self->{users}->get_data($channel, $hostmask, 'name');
-            my $password = $self->{users}->get_data($channel, $hostmask, 'password');
-            if (not defined $name or not defined $password) { Carp::croak "A user in $filename is missing critical data\n"; }
+    foreach my $name (sort $self->{users}->get_keys) {
+        $i++;
+        my $password  = $self->{users}->get_data($name, 'password');
+        my $channels  = $self->{users}->get_data($name, 'channels');
+        my $hostmasks = $self->{users}->get_data($name, 'hostmasks');
+        if (not defined $channels or not defined $hostmasks or not defined $password) {
+            Carp::croak "User $name is missing critical data\n";
         }
     }
     $self->{pbot}->{logger}->log("  $i users loaded.\n");
@@ -131,81 +157,101 @@ sub save {
     $self->{users}->save;
 }
 
+sub rebuild_user_index {
+    my ($self) = @_;
+
+    $self->{user_index} = {};
+
+    foreach my $name ($self->{users}->get_keys) {
+        my $channels  = $self->{users}->get_data($name, 'channels');
+        my $hostmasks = $self->{users}->get_data($name, 'hostmasks');
+
+        my @c = split /\s*,\s*/, $channels;
+        my @h = split /\s*,\s*/, $hostmasks;
+
+        foreach my $channel (@c) {
+            foreach my $hostmask (@h) {
+                $self->{user_index}->{lc $channel}->{lc $hostmask} = $name;
+            }
+        }
+    }
+}
+
+sub cache_user {
+    my ($self, $channel, $hostmask, $username, $account_mask) = @_;
+    $self->{user_cache}->{lc $channel}->{lc $hostmask} = [ $username, $account_mask ];
+}
+
+sub decache_user {
+    my ($self, $channel, $hostmask) = @_;
+    my $lc_hostmask = lc $hostmask;
+    delete $self->{user_cache}->{lc $channel}->{$lc_hostmask};
+    delete $self->{user_cache}->{global}->{$lc_hostmask};
+}
+
 sub find_user_account {
     my ($self, $channel, $hostmask, $any_channel) = @_;
     $channel  = lc $channel;
     $hostmask = lc $hostmask;
     $any_channel //= 0;
 
-    my $sort;
-    if ($channel =~ m/^#/) {
-        $sort = sub { $a cmp $b };
-    } else {
-        $sort = sub { $b cmp $a };
+    # first try to find an exact match
+
+    if (exists $self->{user_cache}->{$channel} and exists $self->{user_cache}->{$channel}->{$hostmask}) {
+        my ($username, $account_mask) = @{$self->{user_cache}->{$channel}->{$hostmask}};
+        return ($channel, $account_mask);
     }
 
-    foreach my $chan (sort $sort $self->{users}->get_keys) {
-        if (($channel !~ m/^#/ and $any_channel) or $channel =~ m/^$chan$/i) {
-            if (not $self->{users}->exists($chan, $hostmask)) {
-                # find hostmask by account name or wildcard
-                foreach my $mask ($self->{users}->get_keys($chan)) {
-                    if (lc $self->{users}->get_data($chan, $mask, 'name') eq $hostmask) { return ($chan, $mask); }
+    if (exists $self->{user_cache}->{global} and exists $self->{user_cache}->{global}->{$hostmask}) {
+        my ($username, $account_mask) = @{$self->{user_cache}->{global}->{$hostmask}};
+        return ('global', $account_mask);
+    }
 
-                    if ($mask =~ /[*?]/) {
-                        # contains * or ? so it's converted to a regex
-                        my $mask_quoted = quotemeta $mask;
-                        $mask_quoted =~ s/\\\*/.*?/g;
-                        $mask_quoted =~ s/\\\?/./g;
-                        if ($hostmask =~ m/^$mask_quoted$/i) { return ($chan, $mask); }
+    if (exists $self->{user_index}->{$channel} and exists $self->{user_index}->{$channel}->{$hostmask}) {
+        return ($channel, $hostmask);
+    }
+
+    if (exists $self->{user_index}->{global} and exists $self->{user_index}->{global}->{$hostmask}) {
+        return ('global', $hostmask);
+    }
+
+    # no exact matches found -- check for wildcard matches
+
+    my @search_channels;
+
+    if ($any_channel) {
+        @search_channels = keys %{$self->{user_index}};
+    } else {
+        @search_channels = ($channel, 'global');
+    }
+
+    foreach my $search_channel (@search_channels) {
+        if (exists $self->{user_index}->{$search_channel}) {
+            foreach my $mask (keys %{$self->{user_index}->{$search_channel}}) {
+                if ($mask =~ m/[*?]/) {
+                    # contains * or ? so it's converted to a regex
+                    my $mask_quoted = quotemeta $mask;
+                    $mask_quoted =~ s/\\\*/.*?/g;
+                    $mask_quoted =~ s/\\\?/./g;
+                    if ($hostmask =~ m/^$mask_quoted$/i) {
+                        return ($search_channel, $mask);
                     }
                 }
-            } else {
-                return ($chan, $hostmask);
             }
         }
     }
+
     return (undef, $hostmask);
 }
 
 sub find_user {
     my ($self, $channel, $hostmask, $any_channel) = @_;
     $any_channel //= 0;
-    ($channel, $hostmask) = $self->find_user_account($channel, $hostmask, $any_channel);
-    return undef if not $any_channel and not defined $channel;
-
-    $channel  = '.*' if not defined $channel;
-    $hostmask = '.*' if not defined $hostmask;
-    $hostmask = lc $hostmask;
-
-    my $sort;
-    if ($channel =~ m/^#/) {
-        $sort = sub { $a cmp $b };
-    } else {
-        $sort = sub { $b cmp $a };
-    }
-
-    my $user = eval {
-        foreach my $channel_regex (sort $sort $self->{users}->get_keys) {
-            if (($channel !~ m/^#/ and $any_channel) or $channel =~ m/^$channel_regex$/i) {
-                foreach my $hostmask_regex ($self->{users}->get_keys($channel_regex)) {
-                    if ($hostmask_regex =~ m/[*?]/) {
-                        # contains * or ? so it's converted to a regex
-                        my $hostmask_quoted = quotemeta $hostmask_regex;
-                        $hostmask_quoted =~ s/\\\*/.*?/g;
-                        $hostmask_quoted =~ s/\\\?/./g;
-                        if ($hostmask =~ m/^$hostmask_quoted$/i) { return $self->{users}->get_data($channel_regex, $hostmask_regex); }
-                    } else {
-                        # direct comparison
-                        if ($hostmask eq lc $hostmask_regex) { return $self->{users}->get_data($channel_regex, $hostmask_regex); }
-                    }
-                }
-            }
-        }
-        return undef;
-    };
-
-    if ($@) { $self->{pbot}->{logger}->log("Error in find_user parameters: $@\n"); }
-    return $user;
+    my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask, $any_channel);
+    return undef if not defined $found_channel;
+    my $name = $self->{user_index}->{$found_channel}->{$found_hostmask};
+    $self->cache_user($found_channel, $hostmask, $name, $found_hostmask);
+    return wantarray ? ($self->{users}->get_data($name), $name) : $self->{users}->get_data($name);
 }
 
 sub find_admin {
@@ -233,7 +279,7 @@ sub loggedin_admin {
 sub login {
     my ($self, $channel, $hostmask, $password) = @_;
     my $user         = $self->find_user($channel, $hostmask);
-    my $channel_text = $channel eq '.*' ? '' : " for $channel";
+    my $channel_text = $channel eq 'global' ? '' : " for $channel";
 
     if (not defined $user) {
         $self->{pbot}->{logger}->log("Attempt to login non-existent [$channel][$hostmask] failed\n");
@@ -246,8 +292,10 @@ sub login {
     }
 
     $user->{loggedin} = 1;
-    $self->{pbot}->{logger}->log("$hostmask logged into $user->{name} ($hostmask)$channel_text.\n");
-    return "Logged into $user->{name} ($hostmask)$channel_text.";
+    my ($user_chan, $user_hostmask) = $self->find_user_account($channel, $hostmask);
+    my $name = $self->{user_index}->{$user_chan}->{$user_hostmask};
+    $self->{pbot}->{logger}->log("$hostmask logged into " . $self->{users}->get_key_name($name) . " ($hostmask)$channel_text.\n");
+    return "Logged into " . $self->{users}->get_key_name($name) . " ($hostmask)$channel_text.";
 }
 
 sub logout {
@@ -283,10 +331,14 @@ sub logincmd {
     my ($user_channel, $user_hostmask) = $self->find_user_account($channel, "$nick!$user\@$host");
     return "/msg $nick You do not have a user account." if not defined $user_channel;
 
-    my $u            = $self->{users}->get_data($user_channel, $user_hostmask);
-    my $channel_text = $user_channel eq '.*' ? '' : " for $user_channel";
+    my $name = $self->{user_index}->{$user_channel}->{$user_hostmask};
 
-    if ($u->{loggedin}) { return "/msg $nick You are already logged into $u->{name} ($user_hostmask)$channel_text."; }
+    my $u            = $self->{users}->get_data($name);
+    my $channel_text = $user_channel eq 'global' ? '' : " for $user_channel";
+
+    if ($u->{loggedin}) {
+        return "/msg $nick You are already logged into " . $self->{users}->get_key_name($name) . " ($user_hostmask)$channel_text.";
+    }
 
     my $result = $self->login($user_channel, $user_hostmask, $arguments);
     return "/msg $nick $result";
@@ -298,12 +350,14 @@ sub logoutcmd {
     my ($user_channel, $user_hostmask) = $self->find_user_account($from, "$nick!$user\@$host");
     return "/msg $nick You do not have a user account." if not defined $user_channel;
 
-    my $u            = $self->{users}->get_data($user_channel, $user_hostmask);
-    my $channel_text = $user_channel eq '.*' ? '' : " for $user_channel";
-    return "/msg $nick You are not logged into $u->{name} ($user_hostmask)$channel_text." if not $u->{loggedin};
+    my $name = $self->{user_index}->{$user_channel}->{$user_hostmask};
+
+    my $u            = $self->{users}->get_data($name);
+    my $channel_text = $user_channel eq 'global' ? '' : " for $user_channel";
+    return "/msg $nick You are not logged into " . $self->{users}->get_key_name($name) . " ($user_hostmask)$channel_text." if not $u->{loggedin};
 
     $self->logout($user_channel, $user_hostmask);
-    return "/msg $nick Logged out of $u->{name} ($user_hostmask)$channel_text.";
+    return "/msg $nick Logged out of " . $self->{users}->get_key_name($name) . " ($user_hostmask)$channel_text.";
 }
 
 sub users {
@@ -313,37 +367,38 @@ sub users {
     my $include_global = '';
     if (not defined $channel) {
         $channel        = $from;
-        $include_global = '.*';
+        $include_global = 'global';
     } else {
-        $channel = '.*' if $channel !~ /^#/;
+        $channel = 'global' if $channel !~ /^#/;
     }
 
     my $text         = "Users: ";
     my $last_channel = "";
     my $sep          = "";
-    foreach my $chan (sort $self->{users}->get_keys) {
+    foreach my $chan (sort keys %{$self->{user_index}}) {
         next if $from =~ m/^#/ and $chan ne $channel and $chan ne $include_global;
         next if $from !~ m/^#/ and $channel =~ m/^#/ and $chan ne $channel;
 
         if ($last_channel ne $chan) {
-            $text .= $sep . ($chan eq ".*" ? "global" : $chan) . ": ";
+            $text .= "$sep$chan: ";
             $last_channel = $chan;
             $sep          = "";
         }
 
-        foreach my $hostmask (sort { return 0 if $a eq '_name' or $b eq '_name'; $self->{users}->get_data($chan, $a, 'name') cmp $self->{users}->get_data($chan, $b, 'name') }
-            $self->{users}->get_keys($chan))
+        foreach my $hostmask (sort { $self->{user_index}->{$chan}->{$a} cmp $self->{user_index}->{$chan}->{$b} }
+            keys %{$self->{user_index}->{$chan}})
         {
+            my $name = $self->{user_index}->{$chan}->{$hostmask};
             $text .= $sep;
             my $has_cap = 0;
-            foreach my $key ($self->{users}->get_keys($chan, $hostmask)) {
+            foreach my $key ($self->{users}->get_keys($name)) {
                 if ($self->{pbot}->{capabilities}->exists($key)) {
                     $has_cap = 1;
                     last;
                 }
             }
             $text .= '+' if $has_cap;
-            $text .= $self->{users}->get_data($chan, $hostmask, 'name');
+            $text .= $self->{users}->get_key_name($name);
             $sep = " ";
         }
         $sep = "; ";
@@ -353,18 +408,20 @@ sub users {
 
 sub useradd {
     my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($name, $channel, $hostmask, $capabilities, $password) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 5);
+    my ($name, $hostmasks, $channels, $capabilities, $password) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 5);
     $capabilities //= 'none';
 
-    if (not defined $name or not defined $channel or not defined $hostmask) { return "Usage: useradd <account name> <channel> <hostmask> [capabilities [password]]"; }
+    if (not defined $name or not defined $hostmasks) { return "Usage: useradd <username> <hostmasks> [channels [capabilities [password]]]"; }
 
-    $channel = '.*' if $channel !~ /^#/;
+    $channels = 'global' if $channels !~ /^#/;
 
-    my $u = $self->{pbot}->{users}->find_user($channel, "$nick!$user\@$host");
+    my $u;
+    foreach my $channel (sort split /\s*,\s*/, lc $channels) {
+        $u = $self->{pbot}->{users}->find_user($channel, "$nick!$user\@$host");
 
-    if (not defined $u) {
-        $channel = 'global' if $channel eq '.*';
-        return "You do not have a user account for $channel; cannot add users to that channel.\n";
+        if (not defined $u) {
+            return "You do not have a user account for $channel; cannot add users to that channel.\n";
+        }
     }
 
     if ($capabilities ne 'none' and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-capabilities')) {
@@ -372,25 +429,28 @@ sub useradd {
     }
 
     foreach my $cap (split /\s*,\s*/, lc $capabilities) {
-        next                                       if $cap eq 'none';
+        next if $cap eq 'none';
+
         return "There is no such capability $cap." if not $self->{pbot}->{capabilities}->exists($cap);
+
         if (not $self->{pbot}->{capabilities}->userhas($u, $cap)) { return "To set the $cap capability your user account must also have it."; }
+
         if ($self->{pbot}->{capabilities}->has($cap, 'admin') and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-admins')) {
             return "To set the $cap capability your user account must have the can-modify-admins capability.";
         }
     }
-    $self->{pbot}->{users}->add_user($name, $channel, $hostmask, $capabilities, $password);
+
+    $self->{pbot}->{users}->add_user($name, $channels, $hostmasks, $capabilities, $password);
     return "User added.";
 }
 
 sub userdel {
     my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($channel, $hostmask) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
-    if (not defined $channel or not defined $hostmask) { return "Usage: userdel <channel> <hostmask or account name>"; }
+    if (not length $arguments) { return "Usage: userdel <username>"; }
 
-    my $u = $self->find_user($channel, "$nick!$user\@$host");
-    my $t = $self->find_user($channel, $hostmask);
+    my $u = $self->find_user($from, "$nick!$user\@$host");
+    my $t = $self->{users}->get_data($arguments);
 
     if ($self->{pbot}->{capabilities}->userhas($t, 'botowner') and not $self->{pbot}->{capabilities}->userhas($u, 'botowner')) {
         return "Only botowners may delete botowner user accounts.";
@@ -400,31 +460,26 @@ sub userdel {
         return "To delete admin user accounts your user account must have the can-modify-admins capability.";
     }
 
-    my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
-    $found_channel = $channel if not defined $found_channel;    # let DualIndexHashObject disambiguate
-    return $self->remove_user($found_channel, $found_hostmask);
+    return $self->remove_user($arguments);
 }
 
 sub userset {
     my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-    if (length $arguments and $stuff->{arglist}[0] !~ m/^(#|\.\*$|global$)/) { $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from) }
+    my ($name, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
 
-    my ($channel, $hostmask, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4);
+    if (not defined $name) { return "Usage: userset <username> [key [value]]"; }
 
-    if (not defined $hostmask) { return "Usage: userset [channel] <hostmask or account name> [key [value]]"; }
-
-    my $u      = $self->find_user($channel, "$nick!$user\@$host");
-    my $target = $self->find_user($channel, $hostmask);
+    my $u      = $self->find_user($from, "$nick!$user\@$host", 1);
+    my $target = $self->{users}->get_data($name);
 
     if (not $u) {
-        $channel = 'global' if $channel eq '.*';
-        return "You do not have a user account for $channel; cannot modify their users.";
+        $from = 'global' if $from !~ /^#/;
+        return "You do not have a user account for $from; cannot modify their users.";
     }
 
     if (not $target) {
-        if   ($channel !~ /^#/) { return "There is no user account $hostmask."; }
-        else                    { return "There is no user account $hostmask for $channel."; }
+        return "There is no user account $name.";
     }
 
     if (defined $value and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-capabilities')) {
@@ -441,52 +496,58 @@ sub userset {
         return "To set the $key capability your user account must also have it." unless $self->{pbot}->{capabilities}->userhas($u, 'botowner');
     }
 
-    my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
-    $found_channel = $channel if not defined $found_channel;    # let DualIndexHashObject disambiguate
-    my $result = $self->{users}->set($found_channel, $found_hostmask, $key, $value);
+    my $result = $self->{users}->set($name, $key, $value);
+    print "result [$result]\n";
     $result =~ s/^password => .*;?$/password => <private>;/m;
+
+    if (defined $key and ($key eq 'channels' or $key eq 'hostmasks') and defined $value) {
+        $self->rebuild_user_index;
+    }
+
     return $result;
 }
 
 sub userunset {
     my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
 
-    if (length $arguments and $stuff->{arglist}[0] !~ m/^(#|\.\*$|global$)/) { $self->{pbot}->{interpreter}->unshift_arg($stuff->{arglist}, $from) }
+    my ($name, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
 
-    my ($channel, $hostmask, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+    if (not defined $name or not defined $key) { return "Usage: userunset <username> <key>"; }
 
-    if (not defined $hostmask) { return "Usage: userunset [channel] <hostmask or account name> <key>"; }
+    $key = lc $key;
 
-    my $u      = $self->find_user($channel, "$nick!$user\@$host");
-    my $target = $self->find_user($channel, $hostmask);
+    my @disallowed = qw/channels hostmasks password/;
+    if (grep { $_ eq $key } @disallowed) {
+        return "The $key metadata cannot be unset. Use the `userset` command to modify it.";
+    }
+
+    my $u      = $self->find_user($from, "$nick!$user\@$host", 1);
+    my $target = $self->{users}->get_data($name);
 
     if (not $u) {
-        $channel = 'global' if $channel eq '.*';
-        return "You do not have a user account for $channel; cannot modify their users.";
+        $from = 'global' if $from !~ /^#/;
+        return "You do not have a user account for $from; cannot modify their users.";
     }
 
     if (not $target) {
-        if   ($channel !~ /^#/) { return "There is no user account $hostmask."; }
-        else                    { return "There is no user account $hostmask for $channel."; }
+        return "There is no user account $name.";
     }
 
-    if (defined $key and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-capabilities')) {
+    if (not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-capabilities')) {
         if ($key =~ m/^can-/i or $self->{pbot}->{capabilities}->exists($key)) {
             return "The $key metadata requires the can-modify-capabilities capability, which your user account does not have.";
         }
     }
 
-    if (defined $key and $self->{pbot}->{capabilities}->userhas($target, 'admin') and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-admins')) {
+    if ($self->{pbot}->{capabilities}->userhas($target, 'admin') and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-admins')) {
         return "To modify admin user accounts your user account must have the can-modify-admins capability.";
     }
 
-    if (defined $key and $self->{pbot}->{capabilities}->exists($key) and not $self->{pbot}->{capabilities}->userhas($u, $key)) {
+    if ($self->{pbot}->{capabilities}->exists($key) and not $self->{pbot}->{capabilities}->userhas($u, $key)) {
         return "To unset the $key capability your user account must also have it." unless $self->{pbot}->{capabilities}->userhas($u, 'botowner');
     }
 
-    my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask);
-    $found_channel = $channel if not defined $found_channel;    # let DualIndexHashObject disambiguate
-    return $self->{users}->unset($found_channel, $found_hostmask, $key);
+    return $self->{users}->unset($name, $key);
 }
 
 sub mycmd {
@@ -501,24 +562,25 @@ sub mycmd {
     my $channel  = $from;
     my $hostmask = "$nick!$user\@$host";
 
-    my $u = $self->find_user($channel, $hostmask, 1);
+    my ($u, $name) = $self->find_user($channel, $hostmask, 1);
 
     if (not $u) {
-        $channel  = '.*';
+        $channel  = 'global';
         $hostmask = "$nick!$user\@" . $self->{pbot}->{antiflood}->address_to_mask($host);
-        my $name = $nick;
+        $name = $nick;
 
-        my ($existing_channel, $existing_hostmask) = $self->find_user_account($channel, $name);
-        if ($existing_hostmask ne lc $name) {
-            # user exists by name
-            return "There is already an user account named $name but its hostmask ($existing_hostmask) does not match your hostmask ($hostmask). Ask an admin for help.";
+        $u = $self->{users}->get_data($name);
+        if ($u) {
+            $self->{pbot}->{logger}->log("Adding additional hostmask $hostmask to user account $name\n");
+            $u->{hostmasks} .= ",$hostmask";
+            $self->rebuild_user_index;
+        } else {
+            $u                 = $self->add_user($name, $channel, $hostmask, undef, undef, 1);
+            $u->{loggedin}     = 1;
+            $u->{stayloggedin} = 1;
+            $u->{autologin}    = 1;
+            $self->save;
         }
-
-        $u                 = $self->add_user($name, $channel, $hostmask, undef, undef, 1);
-        $u->{loggedin}     = 1;
-        $u->{stayloggedin} = 1;
-        $u->{autologin}    = 1;
-        $self->save;
     }
 
     my $result = '';
@@ -550,10 +612,7 @@ sub mycmd {
         $result = "Usage: my <key> [value]; ";
     }
 
-    my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask, 1);
-    ($found_channel, $found_hostmask) = $self->find_user_account('.*', $hostmask, 1) if not defined $found_channel;
-    return "No user account found in $channel." if not defined $found_channel;
-    $result .= $self->{users}->set($found_channel, $found_hostmask, $key, $value);
+    $result .= $self->{users}->set($name, $key, $value);
     $result =~ s/^password => .*;?$/password => <private>;/m;
     return $result;
 }
