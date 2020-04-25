@@ -97,6 +97,8 @@ sub save {
         $self->add('$metadata$', { update_version => PBot::VERSION::BUILD_REVISION });
     }
 
+    $self->set('$metadata$', 'name', $self->{name}, 1);
+
     my $json      = JSON->new;
     my $json_text = $json->pretty->canonical->utf8->encode($self->{hash});
 
@@ -151,8 +153,9 @@ sub set {
         return $result;
     }
 
-    if (not defined $value) { $value = $self->{hash}->{$lc_index}->{$key}; }
-    else {
+    if (not defined $value) {
+        $value = $self->{hash}->{$lc_index}->{$key};
+    } else {
         $self->{hash}->{$lc_index}->{$key} = $value;
         $self->save unless $dont_save;
     }
