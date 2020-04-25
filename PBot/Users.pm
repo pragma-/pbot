@@ -26,6 +26,7 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->userunset(@_) }, "userunset", 1);
     $self->{pbot}->{commands}->register(sub { $self->users(@_) },     "users",     0);
     $self->{pbot}->{commands}->register(sub { $self->mycmd(@_) },     "my",        0);
+    $self->{pbot}->{commands}->register(sub { $self->idcmd(@_) },     "id",        0);
 
     $self->{pbot}->{capabilities}->add('admin',             'can-useradd',   1);
     $self->{pbot}->{capabilities}->add('admin',             'can-userdel',   1);
@@ -38,7 +39,6 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quit', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.kick', sub { $self->on_kick(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.part', sub { $self->on_self_part(@_) });
-
 
     $self->{user_index} = {};
     $self->{user_cache} = {};
@@ -614,6 +614,35 @@ sub mycmd {
 
     $result .= $self->{users}->set($name, $key, $value);
     $result =~ s/^password => .*;?$/password => <private>;/m;
+    return $result;
+}
+
+sub idcmd {
+    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+
+    my $target = length $arguments ? $arguments : $nick;
+
+    my ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($target);
+    my $ancestor_id = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($message_account);
+    my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
+
+    my ($u, $name) = $self->find_user($from, $hostmask, 1);
+
+    my $result = "$nick ($hostmask): user id: $message_account; ";
+
+    if ($message_account != $ancestor_id) {
+        $result .= "parent user id: $ancestor_id; ";
+    }
+
+    if (defined $u) {
+        $result .= "user account: $name (";
+        $result .= ($u->{loggedin} ? "logged in" : "not logged in") . '); ';
+    }
+
+    if (defined $nickserv and length $nickserv) {
+        $result .= "NickServ: $nickserv";
+    }
+
     return $result;
 }
 
