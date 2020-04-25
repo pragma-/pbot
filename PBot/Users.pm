@@ -16,7 +16,6 @@ use feature 'unicode_strings';
 sub initialize {
     my ($self, %conf) = @_;
     $self->{users} = PBot::HashObject->new(name => 'Users', filename => $conf{filename}, pbot => $conf{pbot});
-    $self->load;
 
     $self->{pbot}->{commands}->register(sub { $self->logincmd(@_) },  "login",     0);
     $self->{pbot}->{commands}->register(sub { $self->logoutcmd(@_) }, "logout",    0);
@@ -43,7 +42,7 @@ sub initialize {
     $self->{user_index} = {};
     $self->{user_cache} = {};
 
-    $self->rebuild_user_index;
+    $self->load;
 }
 
 sub on_join {
@@ -138,6 +137,7 @@ sub load {
     my $self = shift;
 
     $self->{users}->load;
+    $self->rebuild_user_index;
 
     my $i = 0;
     foreach my $name (sort $self->{users}->get_keys) {
@@ -228,14 +228,11 @@ sub find_user_account {
     foreach my $search_channel (@search_channels) {
         if (exists $self->{user_index}->{$search_channel}) {
             foreach my $mask (keys %{$self->{user_index}->{$search_channel}}) {
-                if ($mask =~ m/[*?]/) {
-                    # contains * or ? so it's converted to a regex
-                    my $mask_quoted = quotemeta $mask;
-                    $mask_quoted =~ s/\\\*/.*?/g;
-                    $mask_quoted =~ s/\\\?/./g;
-                    if ($hostmask =~ m/^$mask_quoted$/i) {
-                        return ($search_channel, $mask);
-                    }
+                my $mask_quoted = quotemeta $mask;
+                $mask_quoted =~ s/\\\*/.*?/g;
+                $mask_quoted =~ s/\\\?/./g;
+                if ($hostmask =~ m/^$mask_quoted$/i) {
+                    return ($search_channel, $mask);
                 }
             }
         }
@@ -628,7 +625,7 @@ sub idcmd {
 
     my ($u, $name) = $self->find_user($from, $hostmask, 1);
 
-    my $result = "$nick ($hostmask): user id: $message_account; ";
+    my $result = "$target ($hostmask): user id: $message_account; ";
 
     if ($message_account != $ancestor_id) {
         $result .= "parent user id: $ancestor_id; ";
