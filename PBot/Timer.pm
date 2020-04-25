@@ -212,10 +212,11 @@ sub dequeue_event {
         $id =~ s/\\\.\\\*/.*/g;
         my $regex = qr/^$id$/i;
         my $count = @{$self->{event_queue}};
+        my @removed = grep { $_->{id} =~ /$regex/i; } @{$self->{event_queue}};
         @{$self->{event_queue}} = grep { $_->{id} !~ /$regex/i; } @{$self->{event_queue}};
-        my $removed = $count - @{$self->{event_queue}};
-        return "No matching events." if not $removed;
-        return "Removed $removed event" . ($removed == 1 ? '' : 's') . '.';
+        $count -= @{$self->{event_queue}};
+        return "No matching events." if not $count;
+        return "Removed $count event" . ($count == 1 ? '' : 's') . ': ' . join(', ', map { $_->{id} } @removed);
     };
 
     if ($@) {
