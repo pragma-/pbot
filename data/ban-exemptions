@@ -1,7 +1,8 @@
 {
    "$metadata$" : {
       "$metadata$" : {
-         "update_version" : 3503
+         "update_version" : 3503,
+         "name" : "Ban exemptions"
       }
    }
 }

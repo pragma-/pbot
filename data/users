@@ -1,6 +1,7 @@
 {
    "$metadata$" : {
-      "update_version" : 3512
+      "update_version" : 3512,
+      "name" : "Users"
    }
 }
 

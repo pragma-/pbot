@@ -1,6 +1,7 @@
 {
    "$metadata$" : {
-      "update_version" : 3503
+      "update_version" : 3503,
+      "name" : "Commands"
    },
    "actiontrigger" : {
       "dont-replace-pronouns" : "1",
@@ -332,7 +333,7 @@
    },
    "refresh" : {
       "help" : "Refreshes and reloads PBot core modules and plugins. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#refresh",
-      "requires_cap" : 0
+      "requires_cap" : 1
    },
    "regchange" : {
       "help" : "Changes the value of a registry item using a regular expression. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regchange",

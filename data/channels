@@ -4,7 +4,8 @@
       "enabled" : "1"
    },
    "$metadata$" : {
-      "update_version" : 3503
+      "update_version" : 3503,
+      "name" : "Channels"
    }
 }
 
