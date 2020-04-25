@@ -396,7 +396,7 @@ sub remove {
             $name2 = "\"$name2\"" if $name2 =~ / /;
 
             # remove primary group if no more secondaries
-            if (grep { $_ ne '_name' } keys %{$self->{hash}->{$lc_primary_index}} == 0) {
+            if ((grep { $_ ne '_name' } keys %{$self->{hash}->{$lc_primary_index}}) == 0) {
                 delete $self->{hash}->{$lc_primary_index};
             }
 
