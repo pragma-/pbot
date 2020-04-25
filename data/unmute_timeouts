@@ -2,7 +2,7 @@
    "$metadata$" : {
       "$metadata$" : {
          "update_version" : 3503,
-         name : "Unmute Timeouts"
+         "name" : "Unmute Timeouts"
       }
    }
 }
