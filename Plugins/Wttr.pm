@@ -83,13 +83,18 @@ sub wttrcmd {
     return $usage                         if exists $options{h};
     $arguments = "@opt_args";
 
-    my $hostmask          = defined $options{u} ? $options{u} : "$nick!$user\@$host";
-    my $location_override = $self->{pbot}->{users}->get_user_metadata($from, $hostmask, 'location') // '';
-    $arguments = $location_override if not length $arguments;
+    if (defined $options{u}) {
+        my $username = delete $options{u};
 
-    if (defined $options{u} and not length $location_override) { return "No location set or user account does not exist."; }
-
-    delete $options{u};
+        my $userdata = $self->{pbot}->{users}->{users}->get_data($username);
+        return "No such user account $username." if not defined $userdata;
+        return "User account does not have `location` set." if not exists $userdata->{location};
+        $arguments = $userdata->{location};
+    } else {
+        if (not length $arguments) {
+            $arguments = $self->{pbot}->{users}->get_user_metadata($from, "$nick!$user\@$host", 'location') // '';
+        }
+    }
 
     if (not length $arguments) { return $usage; }
 
@@ -124,7 +129,16 @@ sub get_wttr {
     else                       { return "Failed to fetch weather data: " . $response->status_line; }
 
     my $wttr = eval { decode_json $json };
-    return $json if $@; # error decoding json so it must not be json -- return as-is
+
+    if ($@) {
+        # error decoding json so it must not be json -- return as-is
+        $@ = undef;
+        my $error = $json;
+        if ($error =~ /^Unknown location/) {
+            $error = "Unknown location: $location";
+        }
+        return $error;
+    }
 
     if (exists $wttr->{nearest_area}) {
         my $areaName = $wttr->{nearest_area}->[0]->{areaName}->[0]->{value};
