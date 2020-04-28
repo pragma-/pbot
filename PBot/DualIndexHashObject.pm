@@ -348,7 +348,16 @@ sub add {
         $data->{_name} = $secondary_index;
     }
 
-    $self->{hash}->{$lc_primary_index}->{$lc_secondary_index} = $data;
+    if (exists $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}) {
+        foreach my $key (keys %{$data}) {
+            if (not exists $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$key}) {
+                $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$key} = $data->{$key};
+            }
+        }
+    } else {
+        $self->{hash}->{$lc_primary_index}->{$lc_secondary_index} = $data;
+    }
+
     $self->save() unless $dont_save;
 
     my $name1 = $self->get_key_name($lc_primary_index);
