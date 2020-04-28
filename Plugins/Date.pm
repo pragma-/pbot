@@ -49,8 +49,16 @@ sub datecmd {
     return "/say $getopt_error -- $usage" if defined $getopt_error;
     $arguments = "@opt_args";
 
-    my $hostmask    = defined $user_override ? $user_override : "$nick!$user\@$host";
-    my $tz_override = $self->{pbot}->{users}->get_user_metadata($from, $hostmask, 'timezone') // '';
+    my $tz_override;
+
+    if (defined $user_override) {
+        my $userdata = $self->{pbot}->{users}->{users}->get_data($user_override);
+        return "No such user account $user_override." if not defined $userdata;
+        return "User account does not have `timezone` set." if not exists $userdata->{timezone};
+        $tz_override = $userdata->{timezone};
+    } else {
+        $tz_override = $self->{pbot}->{users}->get_user_metadata($from, "$nick!$user\@$host", 'timezone') // '';
+    }
 
     my $timezone = $self->{pbot}->{registry}->get_value('date', 'default_timezone') // 'UTC';
     $timezone = $tz_override if $tz_override;
