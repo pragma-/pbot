@@ -161,6 +161,7 @@ sub rebuild_user_index {
     my ($self) = @_;
 
     $self->{user_index} = {};
+    $self->{user_cache} = {};
 
     foreach my $name ($self->{users}->get_keys) {
         my $channels  = $self->{users}->get_data($name, 'channels');
