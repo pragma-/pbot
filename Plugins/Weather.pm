@@ -115,7 +115,7 @@ sub get_weather {
 
 sub fix_temps {
     my ($self, $text) = @_;
-    $text =~ s|(-?\d+)\s*F|my $f = $1; my $c = ($f - 32 ) * 5 / 9; $c = sprintf("%.1d", $c); "${f}F/${c}C"|eg;
+    $text =~ s|(-?\d+)\s*F|my $f = $1; my $c = ($f - 32 ) * 5 / 9; $c = sprintf("%.1d", $c); "${c}C/${f}F"|eg;
     return $text;
 }
 
