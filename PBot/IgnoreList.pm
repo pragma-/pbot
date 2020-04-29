@@ -63,6 +63,8 @@ sub add {
         $hostmask .= '@*';
     }
 
+    $channel = '.*' if $channel !~ /^#/;
+
     my $regex = quotemeta $hostmask;
     $regex =~ s/\\\*/.*?/g;
     $regex =~ s/\\\?/./g;
@@ -103,6 +105,8 @@ sub remove {
         $hostmask .= '@*';
     }
 
+    $channel = '.*' if $channel !~ /^#/;
+
     $self->{pbot}->{timer}->dequeue_event("ignore_timeout $channel $hostmask");
     return $self->{ignorelist}->remove($channel, $hostmask);
 }
@@ -130,12 +134,12 @@ sub ignore_cmd {
     return "Usage: ignore <hostmask> [channel [timeout]] | ignore list" if not defined $target;
 
     if ($target =~ /^list$/i) {
-        my $text = "Ignored: ";
+        my $text = "Ignored:";
         my $now  = time;
         my $ignored = 0;
 
         foreach my $channel (sort $self->{ignorelist}->get_keys) {
-            $text .= $channel eq '.*' ? "global:\n" : "$channel:\n";
+            $text .= $channel eq '.*' ? " global:\n" : " $channel:\n";
             my @list = ();
             foreach my $hostmask (sort $self->{ignorelist}->get_keys($channel)) {
                 my $timeout = $self->{ignorelist}->get_data($channel, $hostmask, 'timeout');
