@@ -2,7 +2,7 @@
    "$metadata$" : {
       "$metadata$" : {
          "update_version" : 3503,
-         "name" : "Unban Timeouts"
+         "name" : "Ban List"
       }
    }
 }
