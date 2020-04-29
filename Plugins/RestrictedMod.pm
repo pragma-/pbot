@@ -90,7 +90,7 @@ sub generic_command {
     if ($command eq 'unban') {
         my $reason = $self->{pbot}->{banlist}->checkban($channel, 'b', $target);
         if ($reason =~ m/moderator ban/) {
-            $self->{pbot}->{chanops}->unban_user($channel, 'b', $target, 1);
+            $self->{pbot}->{banlist}->unban_user($channel, 'b', $target, 1);
             return "";
         } else {
             return "I don't think so. That ban was not set by a moderator.";

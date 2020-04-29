@@ -75,7 +75,7 @@ sub banlist_cmd {
 
     if ($self->{banlist}->exists($arguments)) {
         my $count = $self->{banlist}->get_keys($arguments);
-        $result .= "$count bans:\n";
+        $result .= "$count ban" . ($count == 1 ? '' : 's') . ":\n";
         foreach my $mask ($self->{banlist}->get_keys($arguments)) {
             my $data = $self->{banlist}->get_data($arguments, $mask);
             $result .= "  $mask banned ";
@@ -100,7 +100,7 @@ sub banlist_cmd {
 
     if ($self->{quietlist}->exists($arguments)) {
         my $count = $self->{quietlist}->get_keys($arguments);
-        $result .= "$count mutes:\n";
+        $result .= "$count mute" . ($count == 1 ? '' : 's') . ":\n";
         foreach my $mask ($self->{quietlist}->get_keys($arguments)) {
             my $data = $self->{quietlist}->get_data($arguments, $mask);
             $result .= "  $mask muted ";
@@ -120,9 +120,10 @@ sub banlist_cmd {
             $result .= ";\n";
         }
     } else {
-        $result .= "quiets: none;\n";
+        $result .= "quiets: none\n";
     }
 
+    $result =~ s/ ;/;/g;
     return $result;
 }
 
@@ -166,7 +167,7 @@ sub on_banlist_entry {
     my $timestamp =    $event->{event}->{args}[4];
 
     my $ago = concise ago(gettimeofday - $timestamp);
-    $self->{pbot}->{logger}->log("banlist: [banlist entry] $channel: $target banned by $source $ago.\n");
+    $self->{pbot}->{logger}->log("Ban List: [banlist entry] $channel: $target banned by $source $ago.\n");
     $self->{temp_banlist}->{$channel}->{'+b'}->{$target} = [$source, $timestamp];
     return 0;
 }
@@ -180,7 +181,7 @@ sub on_quietlist_entry {
     my $timestamp =    $event->{event}->{args}[5];
 
     my $ago = concise ago(gettimeofday - $timestamp);
-    $self->{pbot}->{logger}->log("banlist: [quietlist entry] $channel: $target quieted by $source $ago.\n");
+    $self->{pbot}->{logger}->log("Ban List: [quietlist entry] $channel: $target quieted by $source $ago.\n");
     $self->{temp_banlist}->{$channel}->{'+q'}->{$target} = [$source, $timestamp];
     return 0;
 }
@@ -189,7 +190,7 @@ sub compare_banlist {
     my ($self, $event_type, $event) = @_;
     my $channel = lc $event->{event}->{args}[1];
 
-    $self->{pbot}->{logger}->log("Finalizing ban list for $channel\n");
+    $self->{pbot}->{logger}->log("Finalizing Ban List for $channel\n");
 
     # first check for saved bans no longer in channel
     foreach my $mask ($self->{banlist}->get_keys($channel)) {
@@ -226,7 +227,8 @@ sub compare_banlist {
         $self->{banlist}->add($channel, $mask, $data, 1);
     }
 
-    $self->{banlist}->save;
+    $self->{banlist}->save if keys %{$self->{temp_banlist}->{$channel}->{'+b'}};
+    delete $self->{temp_banlist}->{$channel}->{'+b'};
 }
 
 sub compare_quietlist {
@@ -253,7 +255,8 @@ sub compare_quietlist {
         $self->{quietlist}->add($channel, $mask, $data, 1);
     }
 
-    $self->{quietlist}->save;
+    $self->{quietlist}->save if keys %{$self->{temp_banlist}->{$channel}->{'+q'}};
+    delete $self->{temp_banlist}->{$channel}->{'+q'};
 }
 
 sub track_mode {
@@ -265,7 +268,7 @@ sub track_mode {
     $mask    = lc $mask;
 
     if ($mode eq "+b" or $mode eq "+q") {
-        $self->{pbot}->{logger}->log("banlist: $mask " . ($mode eq '+b' ? 'banned' : 'quieted') . " by $source in $channel.\n");
+        $self->{pbot}->{logger}->log("Ban List: $mask " . ($mode eq '+b' ? 'banned' : 'quieted') . " by $source in $channel.\n");
 
         my $data = {
             owner => $source,
@@ -280,7 +283,7 @@ sub track_mode {
 
         $self->{pbot}->{antiflood}->devalidate_accounts($mask, $channel);
     } elsif ($mode eq "-b" or $mode eq "-q") {
-        $self->{pbot}->{logger}->log("banlist: $mask " . ($mode eq '-b' ? 'unbanned' : 'unquieted') . " by $source in $channel.\n");
+        $self->{pbot}->{logger}->log("Ban List: $mask " . ($mode eq '-b' ? 'unbanned' : 'unquieted') . " by $source in $channel.\n");
 
         if ($mode eq "-b") {
             $self->{banlist}->remove($channel, $mask);
@@ -323,7 +326,7 @@ sub track_mode {
                 if (not $self->{banlist}->exists($channel, $mask)) {
                     $self->{pbot}->{logger}->log("Temp ban for $mask in $channel.\n");
                     my $data = {
-                        reason    => 'Temp ban for *!*@... banmask',
+                        reason    => 'Temp ban for *!*@host',
                         timeout   => gettimeofday + $timeout,
                         owner     => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
                         timestamp => gettimeofday,
@@ -383,14 +386,14 @@ sub unmode_user {
     my %unbanned;
 
     if (not defined $bans) {
-        push @$bans, { banmask => $mask, type => "+$mode" };
+        push @$bans, { mask => $mask, type => "+$mode" };
     }
 
     foreach my $ban (@$bans) {
         next if $ban->{type} ne "+$mode";
-        next if exists $unbanned{$ban->{banmask}};
-        $unbanned{$ban->{banmask}} = 1;
-        $self->add_to_unban_queue($channel, $mode, $ban->{banmask});
+        next if exists $unbanned{$ban->{mask}};
+        $unbanned{$ban->{mask}} = 1;
+        $self->add_to_unban_queue($channel, $mode, $ban->{mask});
     }
 
     $self->flush_unban_queue if $immediately;
@@ -695,7 +698,8 @@ sub enqueue_timeouts {
     foreach my $channel ($list->get_keys) {
         foreach my $mask ($list->get_keys($channel)) {
             my $timeout = $list->get_data($channel, $mask, 'timeout');
-            next if $timeout <= 0;
+            next if defined $timeout and $timeout <= 0;
+            next if not defined $timeout;
             my $interval = $timeout - $now;
             $interval = 10 if $interval < 10;
             $self->enqueue_unban($channel, $mode, $mask, $interval);

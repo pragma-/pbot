@@ -1,8 +1,8 @@
 {
    "$metadata$" : {
       "$metadata$" : {
-         "update_version" : 3503,
-         "name" : "Ban List"
+         "name" : "Ban List",
+         "update_version" : "3536"
       }
    }
 }

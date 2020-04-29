@@ -103,7 +103,7 @@ sub check_queue {
                 # ensure they're not banned (+z allows us to see +q/+b messages as normal ones)
                 my $banned = $self->{pbot}->{banlist}->is_banned($nick, $user, $host, $channel);
                 $self->{pbot}->{logger}
-                  ->log("[RelayUnreg] $nick!$user\@$host $banned->{mode} as $banned->{banmask} in $banned->{channel} by $banned->{owner}, not relaying unregistered message\n")
+                  ->log("[RelayUnreg] $nick!$user\@$host $banned->{mode} as $banned->{mask} in $banned->{channel} by $banned->{owner}, not relaying unregistered message\n")
                   if $banned;
                 $self->{pbot}->{conn}->privmsg($channel, "(unreg) <$nick> $msg") unless $banned;
             }

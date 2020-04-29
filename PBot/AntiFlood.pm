@@ -397,7 +397,7 @@ sub check_flood {
                 } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
                     if ($chan =~ /^#/) {                                #channel flood (opposed to private message or otherwise)
                         # don't increment offenses again if already banned
-                        if ($self->{pbot}->{chanops}->has_ban_timeout($chan, "*!$user\@" . $self->address_to_mask($host))) {
+                        if ($self->{pbot}->{banlist}->has_ban_timeout($chan, "*!$user\@" . $self->address_to_mask($host))) {
                             $self->{pbot}->{logger}->log("$nick $chan flood offense disregarded due to existing ban\n");
                             next;
                         }
@@ -496,7 +496,7 @@ sub check_flood {
                         $chan_data->{enter_abuses}++;
                         if ($chan_data->{enter_abuses} >= $enter_abuse_max_offenses) {
                             if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-                                if ($self->{pbot}->{chanops}->has_ban_timeout($chan, "*!$user\@" . $self->address_to_mask($host))) {
+                                if ($self->{pbot}->{banlist}->has_ban_timeout($chan, "*!$user\@" . $self->address_to_mask($host))) {
                                     $self->{pbot}->{logger}->log("$nick $chan enter abuse offense disregarded due to existing ban\n");
                                     next;
                                 }
@@ -594,13 +594,13 @@ sub unbanme {
                     foreach my $baninfo (@$baninfos) {
                         my $u           = $self->{pbot}->{users}->loggedin($baninfo->{channel}, "$nick!$user\@$host");
                         my $whitelisted = $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
-                        if ($self->ban_exempted($baninfo->{channel}, $baninfo->{banmask}) || $whitelisted) {
-                            $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost banned as $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+                        if ($self->ban_exempted($baninfo->{channel}, $baninfo->{mask}) || $whitelisted) {
+                            $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost banned as $baninfo->{mask} in $baninfo->{channel}, but allowed through whitelist\n");
                         } else {
                             if ($channel eq lc $baninfo->{channel}) {
                                 my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
-                                $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost $mode as $baninfo->{banmask} in $baninfo->{channel} by $baninfo->{owner}, unbanme rejected\n");
-                                return "/msg $nick You have been $mode as $baninfo->{banmask} by $baninfo->{owner}, unbanme will not work until it is removed.";
+                                $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost $mode as $baninfo->{mask} in $baninfo->{channel} by $baninfo->{owner}, unbanme rejected\n");
+                                return "/msg $nick You have been $mode as $baninfo->{mask} by $baninfo->{owner}, unbanme will not work until it is removed.";
                             }
                         }
                     }
@@ -803,7 +803,7 @@ sub check_bans {
                     }
 
                     my $baninfo = {};
-                    $baninfo->{banmask} = $alias;
+                    $baninfo->{mask} = $alias;
                     $baninfo->{channel} = $channel;
                     $baninfo->{owner}   = 'blacklist';
                     $baninfo->{when}    = 0;
@@ -821,7 +821,7 @@ sub check_bans {
                 foreach my $baninfo (@$baninfos) {
                     if (time - $baninfo->{when} < 5) {
                         $self->{pbot}->{logger}
-                          ->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{banmask} in $baninfo->{channel}, but within 5 seconds of establishing ban; giving another chance\n");
+                          ->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{mask} in $baninfo->{channel}, but within 5 seconds of establishing ban; giving another chance\n");
                         my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
                         if ($channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
                             $channel_data->{validated} &= ~$self->{NICKSERV_VALIDATED};
@@ -833,18 +833,18 @@ sub check_bans {
 
                     my $u           = $self->{pbot}->{users}->loggedin($baninfo->{channel}, $mask);
                     my $whitelisted = $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
-                    if ($self->ban_exempted($baninfo->{channel}, $baninfo->{banmask}) || $whitelisted) {
-                        #$self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{banmask} in $baninfo->{channel}, but allowed through whitelist\n");
+                    if ($self->ban_exempted($baninfo->{channel}, $baninfo->{mask}) || $whitelisted) {
+                        #$self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{mask} in $baninfo->{channel}, but allowed through whitelist\n");
                         next;
                     }
 
                     # special case for twkm clone bans
-                    if ($baninfo->{banmask} =~ m/\?\*!\*@\*$/) {
-                        $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{banmask} in $baninfo->{channel}, but disregarded due to clone ban\n");
+                    if ($baninfo->{mask} =~ m/\?\*!\*@\*$/) {
+                        $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{mask} in $baninfo->{channel}, but disregarded due to clone ban\n");
                         next;
                     }
 
-                    my $banmask_regex = quotemeta $baninfo->{banmask};
+                    my $banmask_regex = quotemeta $baninfo->{mask};
                     $banmask_regex =~ s/\\\*/.*/g;
                     $banmask_regex =~ s/\\\?/./g;
 
@@ -853,7 +853,7 @@ sub check_bans {
                         next;
                     }
 
-                    if (defined $nickserv and $baninfo->{type} eq '+q' and $baninfo->{banmask} =~ /^\$a:(.*)/ and lc $1 eq $nickserv and $nickserv eq $current_nickserv_account) {
+                    if (defined $nickserv and $baninfo->{type} eq '+q' and $baninfo->{mask} =~ /^\$a:(.*)/ and lc $1 eq $nickserv and $nickserv eq $current_nickserv_account) {
                         $self->{pbot}->{logger}->log("anti-flood: [check-bans] Hostmask ($mask) matches quiet on account ($nickserv), disregarding\n");
                         next;
                     }
@@ -861,7 +861,7 @@ sub check_bans {
                     if (not defined $bans) { $bans = []; }
 
                     $self->{pbot}->{logger}
-                      ->log("anti-flood: [check-bans] Hostmask ($mask [$alias" . (defined $nickserv ? "/$nickserv" : "") . "]) matches $baninfo->{type} $baninfo->{banmask}, adding ban\n");
+                      ->log("anti-flood: [check-bans] Hostmask ($mask [$alias" . (defined $nickserv ? "/$nickserv" : "") . "]) matches $baninfo->{type} $baninfo->{mask}, adding ban\n");
                     push @$bans, $baninfo;
                     goto GOT_BAN;
                 }
@@ -877,7 +877,7 @@ sub check_bans {
             my ($user, $host) = $mask =~ m/[^!]+!([^@]+)@(.*)/;
             if ($host =~ m{^([^/]+)/.+} and $1 ne 'gateway' and $1 ne 'nat') { $banmask = "*!*\@$host"; }
             elsif ( $current_nickserv_account
-                and $baninfo->{banmask} !~ m/^\$a:/i
+                and $baninfo->{mask} !~ m/^\$a:/i
                 and not $self->{pbot}->{banlist}->{banlist}->exists($baninfo->{channel}, "\$a:$current_nickserv_account"))
             {
                 $banmask = "\$a:$current_nickserv_account";
@@ -890,10 +890,10 @@ sub check_bans {
                 }
             }
 
-            $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evaded $baninfo->{banmask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
+            $self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask evaded $baninfo->{mask} banned in $baninfo->{channel} by $baninfo->{owner}, banning $banmask\n");
             my ($bannick) = $mask =~ m/^([^!]+)/;
             if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
-                if ($self->{pbot}->{chanops}->has_ban_timeout($baninfo->{channel}, $banmask)) {
+                if ($self->{pbot}->{banlist}->has_ban_timeout($baninfo->{channel}, $banmask)) {
                     $self->{pbot}->{logger}->log("anti-flood: [check-bans] $banmask already banned in $channel, disregarding\n");
                     return;
                 }
@@ -915,7 +915,7 @@ sub check_bans {
                 else {
                     my $owner = $baninfo->{owner};
                     $owner =~ s/!.*$//;
-                    $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Evaded $baninfo->{banmask} set by $owner");
+                    $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Evaded $baninfo->{mask} set by $owner");
                 }
                 $self->{pbot}->{banlist}->ban_user_timed(
                     $banmask, $baninfo->{channel},

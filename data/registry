@@ -1,8 +1,8 @@
 {
    "$metadata$" : {
       "$metadata$" : {
-         "update_version" : 3503,
-         "name" : "Registry"
+         "name" : "Registry",
+         "update_version" : "3536"
       }
    },
    "antiaway" : {
@@ -123,7 +123,7 @@
          "value" : "900,1800,3600"
       }
    },
-   "bantracker" : {
+   "banlist" : {
       "chanserv_ban_timeout" : {
          "type" : "text",
          "value" : "604800"
