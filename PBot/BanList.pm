@@ -108,7 +108,7 @@ sub banlist_cmd {
             if (defined $data->{timestamp}) {
                 my $date = strftime "%a %b %e %H:%M:%S %Y %Z", localtime $data->{timestamp};
                 my $ago = concise ago (time - $data->{timestamp});
-                $result .= "on $date ($ago ago) ";
+                $result .= "on $date ($ago) ";
             }
 
             $result .= "by $data->{owner} "   if defined $data->{owner};
@@ -563,7 +563,7 @@ sub checkban {
     if (defined $data->{timestamp}) {
         my $date = strftime "%a %b %e %H:%M:%S %Y %Z", localtime $data->{timestamp};
         my $ago = concise ago (time - $data->{timestamp});
-        $result .= "on $date ($ago ago) ";
+        $result .= "on $date ($ago) ";
     }
 
     $result .= "by $data->{owner} "   if defined $data->{owner};
