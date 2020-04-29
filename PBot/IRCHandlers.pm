@@ -203,7 +203,7 @@ sub on_action {
 
 sub on_mode {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user,       $host)  = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
+    my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
     my $mode_string = $event->{event}->{args}[0];
     my $channel     = $event->{event}->{to}[0];
     $channel = lc $channel;
@@ -228,15 +228,18 @@ sub on_mode {
 
         $self->{pbot}->{logger}->log("Mode $channel [$mode" . (length $target ? " $target" : '') . "] by $nick!$user\@$host\n");
 
-        if ($mode eq "-b" or $mode eq "+b" or $mode eq "-q" or $mode eq "+q") { $self->{pbot}->{bantracker}->track_mode("$nick!$user\@$host", $mode, $target, $channel); }
+        $self->{pbot}->{banlist}->track_mode("$nick!$user\@$host", $channel, $mode, $target);
+        $self->{pbot}->{chanops}->track_mode("$nick!$user\@$host", $channel, $mode, $target);
 
         if (defined $target and length $target) {
+            # mode set on user
             my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
             $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "MODE $mode $target", $self->{pbot}->{messagehistory}->{MSG_CHAT});
 
             if ($modifier eq '-') { $self->{pbot}->{nicklist}->delete_meta($channel, $target, "+$mode_char"); }
             else                  { $self->{pbot}->{nicklist}->set_meta($channel, $target, $mode, 1); }
         } else {
+            # mode set on channel
             my $modes = $self->{pbot}->{channels}->get_meta($channel, 'MODE');
             if (defined $modes) {
                 if ($modifier eq '+') {
@@ -248,78 +251,8 @@ sub on_mode {
                 $self->{pbot}->{channels}->{channels}->set($channel, 'MODE', $modes, 1);
             }
         }
-
-        if (defined $target && $target eq $event->{conn}->nick) {    # bot targeted
-            if ($mode eq "+o") {
-                $self->{pbot}->{logger}->log("$nick opped me in $channel\n");
-                my $timeout = $self->{pbot}->{registry}->get_value($channel, 'deop_timeout') // $self->{pbot}->{registry}->get_value('general', 'deop_timeout');
-                $self->{pbot}->{chanops}->{is_opped}->{$channel}{timeout} = gettimeofday + $timeout;
-                delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
-                $self->{pbot}->{chanops}->perform_op_commands($channel);
-            } elsif ($mode eq "-o") {
-                $self->{pbot}->{logger}->log("$nick removed my ops in $channel\n");
-                delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
-            } elsif ($mode eq "+b") {
-                $self->{pbot}->{logger}->log("Got banned in $channel, attempting unban.");
-                $event->{conn}->privmsg("chanserv", "unban $channel");
-            }
-        } else {    # bot not targeted
-            if ($mode eq "+b") {
-                if ($nick eq "ChanServ" or $target =~ m/##fix_your_connection$/i) {
-                    if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
-                        if ($self->{pbot}->{chanops}->{unban_timeout}->exists($channel, $target)) {
-                            $self->{pbot}->{chanops}->{unban_timeout}->set($channel, $target, 'timeout', gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'));
-                            $self->{pbot}->{timer}->update_interval("unban_timeout $channel $target", $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'));
-                        } else {
-                            my $data = {
-                                reason  => 'Temp ban for banned-by-ChanServ or mask is *!*@*##fix_your_connection',
-                                owner   => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
-                                timeout => gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'),
-                            };
-                            $self->{pbot}->{chanops}->{unban_timeout}->add($channel, $target, $data);
-                            $self->{pbot}->{chanops}->enqueue_unban_timeout($channel, $target, $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'));
-                        }
-                    }
-                } elsif ($target =~ m/^\*!\*@/ or $target =~ m/^\*!.*\@gateway\/web/i) {
-                    my $timeout = 60 * 60 * 24 * 7;
-
-                    if ($target =~ m/\// and $target !~ m/\@gateway/) {
-                        $timeout = 0;    # permanent bans for cloaks that aren't gateway
-                    }
-
-                    if ($timeout && $self->{pbot}->{chanops}->can_gain_ops($channel)) {
-                        if (not $self->{pbot}->{chanops}->{unban_timeout}->exists($channel, $target)) {
-                            $self->{pbot}->{logger}->log("Temp ban for $target in $channel.\n");
-                            my $data = {
-                                reason  => 'Temp ban for *!*@... banmask',
-                                timeout => gettimeofday + $timeout,
-                                owner   => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
-                            };
-                            $self->{pbot}->{chanops}->{unban_timeout}->add($channel, $target, $data);
-                            $self->{pbot}->{chanops}->enqueue_unban_timeout($channel, $target, $timeout);
-                        }
-                    }
-                }
-            } elsif ($mode eq "+q") {
-                if ($nick ne $event->{conn}->nick) {    # bot muted
-                    if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
-                        if ($self->{pbot}->{chanops}->{unmute_timeout}->exists($channel, $target)) {
-                            $self->{pbot}->{chanops}->{unmute_timeout}->set($channel, $target, 'timeout', gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'));
-                            $self->{pbot}->{timer}->update_interval("unmute_timeout $channel $target", $self->{pbot}->{registry}->get_value('bantracker', 'chanserv_ban_timeout'));
-                        } else {
-                            my $data = {
-                                reason  => 'Temp mute',
-                                owner   => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
-                                timeout => gettimeofday + $self->{pbot}->{registry}->get_value('bantracker', 'mute_timeout'),
-                            };
-                            $self->{pbot}->{chanops}->{unmute_timeout}->add($channel, $target, $data);
-                            $self->{pbot}->{chanops}->enqueue_unmute_timeout($channel, $target, $self->{pbot}->{registry}->get_value('bantracker', 'mute_timeout'));
-                        }
-                    }
-                }
-            }
-        }
     }
+
     return 0;
 }
 

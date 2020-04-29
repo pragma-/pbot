@@ -29,7 +29,7 @@ use PBot::IRC;
 use PBot::EventDispatcher;
 use PBot::IRCHandlers;
 use PBot::Channels;
-use PBot::BanTracker;
+use PBot::BanList;
 use PBot::NickList;
 use PBot::LagChecker;
 use PBot::MessageHistory;
@@ -231,7 +231,6 @@ sub initialize {
     $self->{select_handler}   = PBot::SelectHandler->new(pbot => $self, %conf);
     $self->{users}            = PBot::Users->new(pbot => $self, filename => "$data_dir/users", %conf);
     $self->{stdin_reader}     = PBot::StdinReader->new(pbot => $self, %conf);
-    $self->{bantracker}       = PBot::BanTracker->new(pbot => $self, %conf);
     $self->{lagchecker}       = PBot::LagChecker->new(pbot => $self, %conf);
     $self->{messagehistory}   = PBot::MessageHistory->new(pbot => $self, filename => "$data_dir/message_history.sqlite3", %conf);
     $self->{antiflood}        = PBot::AntiFlood->new(pbot => $self, %conf);
@@ -241,6 +240,7 @@ sub initialize {
     $self->{irc}              = PBot::IRC->new();
     $self->{channels}         = PBot::Channels->new(pbot => $self, filename => "$data_dir/channels", %conf);
     $self->{chanops}          = PBot::ChanOps->new(pbot => $self, %conf);
+    $self->{banlist}          = PBot::BanList->new(pbot => $self, %conf);
     $self->{nicklist}         = PBot::NickList->new(pbot => $self, %conf);
     $self->{webpaste}         = PBot::WebPaste->new(pbot => $self, %conf);
     $self->{parsedate}        = PBot::Utils::ParseDate->new(pbot => $self, %conf);
@@ -319,7 +319,6 @@ sub connect {
             'motdstart',
             'endofmotd',
             'away',
-            'endofbanlist'
         ],
         sub { }
     );
@@ -479,18 +478,14 @@ sub reload {
             return "Channels reloaded.";
         },
 
-        'bantimeouts' => sub {
-            $self->{timer}->dequeue_event('unban_timeout .*');
-            $self->{chanops}->{unban_timeout}->load;
-            $self->{chanops}->enqueue_unban_timeouts;
-            return "Ban timeouts reloaded.";
-        },
-
-        'mutetimeouts' => sub {
-            $self->{timer}->dequeue_event('unmute_timeout .*');
-            $self->{chanops}->{unmute_timeout}->load;
-            $self->{chanops}->enqueue_unmute_timeouts;
-            return "Mute timeouts reloaded.";
+        'banlist' => sub {
+            $self->{timer}->dequeue_event('unban #.*');
+            $self->{timer}->dequeue_event('unmute #.*');
+            $self->{banlist}->{banlist}->load;
+            $self->{banlist}->{quietlist}->load;
+            $self->{chanops}->enqueue_timeouts($self->{banlist}->{banlist},   'b');
+            $self->{chanops}->enqueue_timeouts($self->{banlist}->{quietlist}, 'q');
+            return "Ban list reloaded.";
         },
 
         'registry' => sub {

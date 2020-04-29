@@ -35,14 +35,16 @@ sub unload {
 
 sub on_kick {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $target, $channel, $reason) =
-      ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0], $event->{event}->{args}[1]);
+    my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
+    my ($target, $channel, $reason) = ($event->{event}->to, $event->{event}->{args}[0], $event->{event}->{args}[1]);
 
     $channel = lc $channel;
     return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
     return 0 if $reason eq '*BANG!*';                                   # roulette
 
-    if (not exists $self->{kicks}->{$channel} or not exists $self->{kicks}->{$channel}->{$target}) { $self->{kicks}->{$channel}->{$target}->{rejoins} = 0; }
+    if (not exists $self->{kicks}->{$channel} or not exists $self->{kicks}->{$channel}->{$target}) {
+        $self->{kicks}->{$channel}->{$target}->{rejoins} = 0;
+    }
 
     $self->{kicks}->{$channel}->{$target}->{last_kick} = gettimeofday;
     return 0;
@@ -65,12 +67,20 @@ sub on_join {
             my $duration = duration($timeout);
             $duration =~ s/s$//;    # hours -> hour, minutes -> minute
 
-            $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'autorejoining after kick', "*!$user\@$host", $channel, $timeout);
+            $self->{pbot}->{banlist}->ban_user_timed(
+                $channel,
+                'b',
+                "*!$user\@$host",
+                $timeout,
+                $self->{pbot}->{registry}->get_value('irc', 'botnick'),
+                'autorejoining after kick',
+            );
             $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick $duration ban for auto-rejoining after kick; use this time to think about why you were kicked");
             $self->{pbot}->{chanops}->gain_ops($channel);
             $self->{kicks}->{$channel}->{$nick}->{rejoins}++;
         }
     }
+
     return 0;
 }
 

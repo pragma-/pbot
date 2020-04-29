@@ -69,7 +69,14 @@ sub check_flood {
 
     if (exists $self->{nicks}->{$channel} and @{$self->{nicks}->{$channel}} >= 10) {
         $self->{pbot}->{logger}->log("Nick spam flood detected in $channel\n");
-        $self->{pbot}->{chanops}->mute_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'nick spam flooding', '$~a', $channel, 60 * 15);
+        $self->{pbot}->{banlist}->ban_user_timed(
+            $channel,
+            'q',
+            '$~a',
+            60 * 15,
+            $self->{pbot}->{registry}->get_value('irc', 'botnick'),
+            'nick spam flooding',
+        );
     }
 }
 
@@ -79,9 +86,13 @@ sub clear_old_nicks {
     return if not exists $self->{nicks}->{$channel};
 
     while (1) {
-        if   (@{$self->{nicks}->{$channel}} and $self->{nicks}->{$channel}->[0]->[0] <= $now - 15) { shift @{$self->{nicks}->{$channel}}; }
-        else                                                                                       { last; }
+        if   (@{$self->{nicks}->{$channel}} and $self->{nicks}->{$channel}->[0]->[0] <= $now - 15) {
+            shift @{$self->{nicks}->{$channel}};
+        } else {
+            last;
+        }
     }
+
     delete $self->{nicks}->{$channel} if not @{$self->{nicks}->{$channel}};
 }
 

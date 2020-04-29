@@ -18,34 +18,34 @@ sub initialize {
     $self->{channels} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => $conf{filename});
     $self->{channels}->load;
 
-    $self->{pbot}->{commands}->register(sub { $self->join(@_) },   "join",      1);
-    $self->{pbot}->{commands}->register(sub { $self->part(@_) },   "part",      1);
-    $self->{pbot}->{commands}->register(sub { $self->set(@_) },    "chanset",   1);
-    $self->{pbot}->{commands}->register(sub { $self->unset(@_) },  "chanunset", 1);
-    $self->{pbot}->{commands}->register(sub { $self->add(@_) },    "chanadd",   1);
-    $self->{pbot}->{commands}->register(sub { $self->remove(@_) }, "chanrem",   1);
-    $self->{pbot}->{commands}->register(sub { $self->list(@_) },   "chanlist",  1);
+    $self->{pbot}->{commands}->register(sub { $self->join_cmd(@_) }, "join",      1);
+    $self->{pbot}->{commands}->register(sub { $self->part_cmd(@_) }, "part",      1);
+    $self->{pbot}->{commands}->register(sub { $self->set(@_) },      "chanset",   1);
+    $self->{pbot}->{commands}->register(sub { $self->unset(@_) },    "chanunset", 1);
+    $self->{pbot}->{commands}->register(sub { $self->add(@_) },      "chanadd",   1);
+    $self->{pbot}->{commands}->register(sub { $self->remove(@_) },   "chanrem",   1);
+    $self->{pbot}->{commands}->register(sub { $self->list(@_) },     "chanlist",  1);
 
     $self->{pbot}->{capabilities}->add('admin', 'can-join',     1);
     $self->{pbot}->{capabilities}->add('admin', 'can-part',     1);
     $self->{pbot}->{capabilities}->add('admin', 'can-chanlist', 1);
 }
 
-sub join {
+sub join_cmd {
     my ($self, $from, $nick, $user, $host, $arguments) = @_;
     foreach my $channel (split /[\s+,]/, $arguments) {
         $self->{pbot}->{logger}->log("$nick!$user\@$host made me join $channel\n");
-        $self->{pbot}->{chanops}->join_channel($channel);
+        $self->join($channel);
     }
     return "/msg $nick Joining $arguments";
 }
 
-sub part {
+sub part_cmd {
     my ($self, $from, $nick, $user, $host, $arguments) = @_;
     $arguments = $from if not $arguments;
     foreach my $channel (split /[\s+,]/, $arguments) {
         $self->{pbot}->{logger}->log("$nick!$user\@$host made me part $channel\n");
-        $self->{pbot}->{chanops}->part_channel($channel);
+        $self->part($channel);
     }
     return "/msg $nick Parting $arguments";
 }
@@ -81,17 +81,11 @@ sub remove {
     my ($self, $from, $nick, $user, $host, $arguments) = @_;
     return "Usage: chanrem <channel>" if not defined $arguments or not length $arguments;
 
-    # clear unban timeouts
-    if ($self->{pbot}->{chanops}->{unban_timeout}->exists($arguments)) {
-        $self->{pbot}->{chanops}->{unban_timeout}->remove($arguments);
-        $self->{pbot}->{timer}->dequeue_event("unban_timeout $arguments .*");
-    }
-
-    # clear unmute timeouts
-    if ($self->{pbot}->{chanops}->{unmute_timeout}->exists($arguments)) {
-        $self->{pbot}->{chanops}->{unmute_timeout}->remove($arguments);
-        $self->{pbot}->{timer}->dequeue_event("unmute_timeout $arguments .*");
-    }
+    # clear banlists
+    $self->{pbot}->{banlist}->remove($arguments);
+    $self->{pbot}->{quietlist}->remove($arguments);
+    $self->{pbot}->{timer}->dequeue_event("unban $arguments .*");
+    $self->{pbot}->{timer}->dequeue_event("unmute $arguments .*");
 
     # TODO: ignores, etc?
     return $self->{channels}->remove($arguments);
@@ -112,21 +106,51 @@ sub list {
     return $result;
 }
 
+sub join {
+    my ($self, $channels) = @_;
+
+    $self->{pbot}->{conn}->join($channels);
+
+    foreach my $channel (split /,/, $channels) {
+        $channel = lc $channel;
+        $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.join', {channel => $channel});
+
+        delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
+        delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
+
+        if ($self->{channels}->exists($channel) and $self->{channels}->get_data($channel, 'permop')) {
+            $self->gain_ops($channel);
+        }
+
+        $self->{pbot}->{conn}->mode($channel);
+    }
+}
+
+sub part {
+    my ($self, $channel) = @_;
+    $channel = lc $channel;
+    $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.part', {channel => $channel});
+    $self->{pbot}->{conn}->part($channel);
+    delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
+    delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
+}
+
 sub autojoin {
     my ($self) = @_;
     return if $self->{pbot}->{joined_channels};
     my $channels;
     foreach my $channel ($self->{channels}->get_keys) {
-        if ($self->{channels}->get_data($channel, 'enabled')) { $channels .= $self->{channels}->get_key_name($channel) . ','; }
+        if ($self->{channels}->get_data($channel, 'enabled')) {
+            $channels .= $self->{channels}->get_key_name($channel) . ',';
+        }
     }
     $self->{pbot}->{logger}->log("Joining channels: $channels\n");
-    $self->{pbot}->{chanops}->join_channel($channels);
+    $self->join($channels);
     $self->{pbot}->{joined_channels} = 1;
 }
 
 sub is_active {
     my ($self, $channel) = @_;
-
     # returns undef if channel doesn't exist; otherwise, the value of 'enabled'
     return $self->{channels}->get_data($channel, 'enabled');
 }

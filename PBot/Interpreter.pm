@@ -51,12 +51,12 @@ sub process_line {
         my $chanmodes = $self->{pbot}->{channels}->get_meta($from, 'MODE');
         if (defined $chanmodes and $chanmodes =~ m/z/) {
             $stuff->{'chan-z'} = 1;
-            if (exists $self->{pbot}->{bantracker}->{banlist}->{$from}->{'+q'}->{'$~a'}) {
+            if ($self->{pbot}->{banlist}->{quietlist}->exists($from, '$~a')) {
                 my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
                 if (not defined $nickserv or not length $nickserv) { $stuff->{unidentified} = 1; }
             }
 
-            if ($self->{pbot}->{bantracker}->is_banned($nick, $user, $host, $from)) { $stuff->{banned} = 1; }
+            $stuff->{banned} = 1 if $self->{pbot}->{banlist}->is_banned($nick, $user, $host, $from);
         }
     }
 

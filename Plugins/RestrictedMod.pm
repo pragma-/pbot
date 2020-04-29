@@ -50,8 +50,11 @@ sub help {
     my ($self, $stuff) = @_;
     my $command = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // 'help';
 
-    if   (exists $self->{commands}->{$command}) { return $self->{commands}->{$command}->{help}; }
-    else                                        { return "No such mod command '$command'. I can't help you with that."; }
+    if (exists $self->{commands}->{$command}) {
+        return $self->{commands}->{$command}->{help};
+    } else {
+        return "No such mod command '$command'. I can't help you with that.";
+    }
 }
 
 sub list {
@@ -85,17 +88,17 @@ sub generic_command {
     return "Missing target. Usage: mod $command <nick>" if not defined $target;
 
     if ($command eq 'unban') {
-        my $reason = $self->{pbot}->{chanops}->checkban($channel, $target);
+        my $reason = $self->{pbot}->{banlist}->checkban($channel, 'b', $target);
         if ($reason =~ m/moderator ban/) {
-            $self->{pbot}->{chanops}->unban_user($target, $channel, 1);
+            $self->{pbot}->{chanops}->unban_user($channel, 'b', $target, 1);
             return "";
         } else {
             return "I don't think so. That ban was not set by a moderator.";
         }
     } elsif ($command eq 'unmute') {
-        my $reason = $self->{pbot}->{chanops}->checkmute($channel, $target);
+        my $reason = $self->{pbot}->{banlist}->checkban($channel, 'q', $target);
         if ($reason =~ m/moderator mute/) {
-            $self->{pbot}->{chanops}->unmute_user($target, $channel, 1);
+            $self->{pbot}->{banlist}->unban_user($channel, 'q', $target, 1);
             return "";
         } else {
             return "I don't think so. That mute was not set by a moderator.";
@@ -120,14 +123,24 @@ sub generic_command {
         $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $target Have a nice day!");
         $self->{pbot}->{chanops}->gain_ops($channel);
     } elsif ($command eq 'ban') {
-        $self->{pbot}->{chanops}->ban_user_timed(
+        $self->{pbot}->{banlist}->ban_user_timed(
+            $channel,
+            'b',
+            $target,
+            3600 * 24,
             "$stuff->{nick}!$stuff->{user}\@$stuff->{host}",
-            "doing something naughty (moderator ban)", $target, $channel, 3600 * 24, 1
+            "doing something naughty (moderator ban)",
+            1
         );
     } elsif ($command eq 'mute') {
-        $self->{pbot}->{chanops}->mute_user_timed(
+        $self->{pbot}->{banlist}->ban_user_timed(
+            $channel,
+            'q',
+            $target,
+            3600 * 24,
             "$stuff->{nick}!$stuff->{user}\@$stuff->{host}",
-            "doing something naughty (moderator mute)", $target, $channel, 3600 * 24, 1
+            "doing something naughty (moderator mute)",
+            1
         );
     }
     return "";

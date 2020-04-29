@@ -59,7 +59,7 @@ sub on_public {
 
     # don't enforce anti-repeat for unreg spam
     my $chanmodes = $self->{pbot}->{channels}->get_meta($channel, 'MODE');
-    if (defined $chanmodes and $chanmodes =~ m/z/ and exists $self->{pbot}->{bantracker}->{banlist}->{$channel}->{'+q'}->{'$~a'}) {
+    if (defined $chanmodes and $chanmodes =~ m/z/ and $self->{pbot}->{banlist}->{quietlist}->exists($channel, '$~a')) {
         my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($account);
         return 0 if not defined $nickserv or not length $nickserv;
     }
@@ -136,9 +136,9 @@ sub on_public {
                     $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick Stop repeating yourself");
                     $self->{pbot}->{chanops}->gain_ops($channel);
                 }
-                when (2) { $self->{pbot}->{chanops}->ban_user_timed($botnick, 'repeating messages', "*!*\@$host", $channel, 30); }
-                when (3) { $self->{pbot}->{chanops}->ban_user_timed($botnick, 'repeating messages', "*!*\@$host", $channel, 60 * 5); }
-                default  { $self->{pbot}->{chanops}->ban_user_timed($botnick, 'repeating messages', "*!*\@$host", $channel, 60 * 60); }
+                when (2) { $self->{pbot}->{banlist}->ban_user_timed($channel, 'b', "*!*\@$host", 30,      $botnick, 'repeating messages'); }
+                when (3) { $self->{pbot}->{banlist}->ban_user_timed($channel, 'b', "*!*\@$host", 60 * 5,  $botnick, 'repeating messages'); }
+                default  { $self->{pbot}->{banlist}->ban_user_timed($channel, 'b', "*!*\@$host", 60 * 60, $botnick, 'repeating messages'); }
             }
             return 0;
         }

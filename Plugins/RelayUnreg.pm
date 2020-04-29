@@ -30,7 +30,7 @@ sub on_public {
     return 0 if not length $msg;
 
     # exit if channel hasn't muted $~a
-    return 0 if not exists $self->{pbot}->{bantracker}->{banlist}->{$channel}->{'+q'}->{'$~a'};
+    return 0 if not $self->{pbot}->{banlist}->{quietlist}->exists($channel, '$~a');
 
     # exit if channel isn't +z
     my $chanmodes = $self->{pbot}->{channels}->get_meta($channel, 'MODE');
@@ -101,7 +101,7 @@ sub check_queue {
             # if nick is still present in channel, send the message
             if ($self->{pbot}->{nicklist}->is_present($channel, $nick)) {
                 # ensure they're not banned (+z allows us to see +q/+b messages as normal ones)
-                my $banned = $self->{pbot}->{bantracker}->is_banned($nick, $user, $host, $channel);
+                my $banned = $self->{pbot}->{banlist}->is_banned($nick, $user, $host, $channel);
                 $self->{pbot}->{logger}
                   ->log("[RelayUnreg] $nick!$user\@$host $banned->{mode} as $banned->{banmask} in $banned->{channel} by $banned->{owner}, not relaying unregistered message\n")
                   if $banned;

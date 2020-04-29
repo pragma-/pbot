@@ -15,8 +15,9 @@ use feature 'unicode_strings';
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{registry}
-      ->add_default('text', 'antiaway', 'bad_nicks', $conf{bad_nicks} // '([[:punct:]](afk|brb|bbl|away|sleep|z+|work|gone|study|out|home|busy|off)[[:punct:]]*$|.+\[.*\]$)');
+    $self->{pbot}->{registry}->add_default('text', 'antiaway', 'bad_nicks',
+        $conf{bad_nicks} // '([[:punct:]](afk|brb|bbl|away|sleep|z+|work|gone|study|out|home|busy|off)[[:punct:]]*$|.+\[.*\]$)'
+    );
     $self->{pbot}->{registry}->add_default('text', 'antiaway', 'bad_actions', $conf{bad_actions} // '^/me (is (away|gone)|.*auto.?away)');
     $self->{pbot}->{registry}->add_default('text', 'antiaway', 'kick_msg',    'http://sackheads.org/~bnaylor/spew/away_msgs.html');
 

@@ -51,15 +51,25 @@ sub on_public {
             $self->{pbot}->{logger}->log("$nick!$user\@$host is a twit. ($self->{offenses}->{$channel}->{$nick}->{offenses} offenses) $channel: $msg\n");
 
             given ($self->{offenses}->{$channel}->{$nick}->{offenses}) {
-                when (1) { $event->{conn}->privmsg($nick, "Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly."); }
-                when (2) {
-                    $event->{conn}
-                      ->privmsg($nick, "Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly. Doing this again will result in a temporary ban.");
+                when (1) {
+                    $event->{conn}->privmsg($nick, "Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly.");
                 }
+
+                when (2) {
+                    $event->{conn}->privmsg($nick, "Please do not use \@nick to address people. Drop the @ symbol; it's not necessary and it's ugly. Doing this again will result in a temporary ban.");
+                }
+
                 default {
                     my $offenses = $self->{offenses}->{$channel}->{$nick}->{offenses} - 2;
                     my $length   = 60 * ($offenses * $offenses + 1);
-                    $self->{pbot}->{chanops}->ban_user_timed($self->{pbot}->{registry}->get_value('irc', 'botnick'), 'using @nick too much', "*!*\@$host", $channel, $length);
+                    $self->{pbot}->{banlist}->ban_user_timed(
+                        $channel,
+                        'b',
+                        "*!*\@$host",
+                        $length,
+                        $self->{pbot}->{registry}->get_value('irc', 'botnick'),
+                        'using @nick too much',
+                    );
                     $self->{pbot}->{chanops}->gain_ops($channel);
 
                     $self->{pbot}->{timer}->enqueue_event(sub {
@@ -69,7 +79,7 @@ sub on_public {
                                 delete $self->{offenses}->{$channel} if not keys %{$self->{offenses}->{$channel}};
                                 $event->{repeating} = 0;
                             }
-                        }, 60 * 60 * 24 * 2, "antitwitter offenses-- $channel $nick", 1
+                        }, 60 * 60 * 24 * 2, "antitwitter $channel $nick", 1
                     );
 
                     $length = duration $length;
