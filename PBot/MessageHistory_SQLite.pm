@@ -384,7 +384,6 @@ sub get_message_account {
     return $id if defined $id;
 
     $self->{pbot}->{logger}->log("Getting new message account for $nick!$user\@$host...\n");
-    $self->{pbot}->{logger}->log("It's a nick-change!\n") if defined $orig_nick;
 
     my $do_nothing = 0;
     my $sth;
