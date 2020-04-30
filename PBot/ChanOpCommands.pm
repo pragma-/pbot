@@ -454,7 +454,7 @@ sub unban_user {
                 last;
             }
         } else {
-            $self->{pbot}->{banlist}->unban_user($t, 'b', $channel, $immediately);
+            $self->{pbot}->{banlist}->unban_user($channel, 'b', $t, $immediately);
         }
     }
 

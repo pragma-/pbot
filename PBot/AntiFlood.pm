@@ -598,7 +598,7 @@ sub unbanme {
                             $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost banned as $baninfo->{mask} in $baninfo->{channel}, but allowed through whitelist\n");
                         } else {
                             if ($channel eq lc $baninfo->{channel}) {
-                                my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
+                                my $mode = $baninfo->{type} eq 'b' ? "banned" : "quieted";
                                 $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost $mode as $baninfo->{mask} in $baninfo->{channel} by $baninfo->{owner}, unbanme rejected\n");
                                 return "/msg $nick You have been $mode as $baninfo->{mask} by $baninfo->{owner}, unbanme will not work until it is removed.";
                             }
@@ -853,7 +853,7 @@ sub check_bans {
                         next;
                     }
 
-                    if (defined $nickserv and $baninfo->{type} eq '+q' and $baninfo->{mask} =~ /^\$a:(.*)/ and lc $1 eq $nickserv and $nickserv eq $current_nickserv_account) {
+                    if (defined $nickserv and $baninfo->{type} eq 'q' and $baninfo->{mask} =~ /^\$a:(.*)/ and lc $1 eq $nickserv and $nickserv eq $current_nickserv_account) {
                         $self->{pbot}->{logger}->log("anti-flood: [check-bans] Hostmask ($mask) matches quiet on account ($nickserv), disregarding\n");
                         next;
                     }

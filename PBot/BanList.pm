@@ -386,11 +386,11 @@ sub unmode_user {
     my %unbanned;
 
     if (not defined $bans) {
-        push @$bans, { mask => $mask, type => "+$mode" };
+        push @$bans, { mask => $mask, type => $mode };
     }
 
     foreach my $ban (@$bans) {
-        next if $ban->{type} ne "+$mode";
+        next if $ban->{type} ne $mode;
         next if exists $unbanned{$ban->{mask}};
         $unbanned{$ban->{mask}} = 1;
         $self->add_to_unban_queue($channel, $mode, $ban->{mask});
@@ -742,7 +742,7 @@ sub is_banned {
                     $self->{pbot}->{logger}->log("[BanList] is_banned: $nick!$user\@$host banned as $baninfo->{mask} in $baninfo->{channel}, but allowed through whitelist\n");
                 } else {
                     if ($channel eq lc $baninfo->{channel}) {
-                        my $mode = $baninfo->{type} eq "+b" ? "banned" : "quieted";
+                        my $mode = $baninfo->{type} eq 'b' ? "banned" : "quieted";
                         $self->{pbot}->{logger}->log("[BanList] is_banned: $nick!$user\@$host $mode as $baninfo->{mask} in $baninfo->{channel} by $baninfo->{owner}\n");
                         $banned = $baninfo;
                         last;
