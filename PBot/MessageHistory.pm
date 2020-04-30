@@ -246,8 +246,8 @@ sub recall_message {
         # imply -x if -n > 1 and no history and -x isn't already set to somebody
         if ($recall_count > 1 and not defined $recall_history and not defined $recall_context) { $recall_context = $recall_nick; }
 
-        # make -n behave like -b if -n > 1 and nick is context
-        if ((defined $recall_context and not defined $recall_history) and $recall_count > 1) {
+        # make -n behave like -b if -n > 1 and no history is specified
+        if (not defined $recall_history and $recall_count > 1) {
             $recall_before = $recall_count - 1;
             $recall_count  = 0;
         }
