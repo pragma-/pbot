@@ -1111,6 +1111,30 @@ sub recall_message_by_text {
     return $messages->[0];
 }
 
+sub get_random_message {
+    my ($self, $id, $channel) = @_;
+
+    my $message;
+
+    if (defined $id) {
+        $message = eval {
+            my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND mode = ? ORDER BY RANDOM() LIMIT 1');
+            $sth->execute($id, $channel, $self->{pbot}->{messagehistory}->{MSG_CHAT});
+            return $sth->fetchrow_hashref;
+        };
+    } else {
+        $message = eval {
+            my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND mode = ? ORDER BY RANDOM() LIMIT 1');
+            $sth->execute($channel, $self->{pbot}->{messagehistory}->{MSG_CHAT});
+            return $sth->fetchrow_hashref;
+        };
+    }
+
+    $self->{pbot}->{logger}->log($@) if $@;
+
+    return $message;
+}
+
 sub get_max_messages {
     my ($self, $id, $channel, $use_aliases) = @_;
 

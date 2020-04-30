@@ -192,7 +192,7 @@ sub recall_message {
     }
 
     my $usage =
-      'Usage: recall [nick [history [channel]]] [-c,channel <channel>] [-t,text,h,history <history>] [-b,before <context before>] [-a,after <context after>] [-x,context <nick>] [-n,count <count>] [+ ...]';
+      'Usage: recall [nick [history [channel]]] [-c <channel>] [-t <text>] [-b <context before>] [-a <context after>] [-x <filter to nick>] [-n <count>] [-r raw mode] [+ ...]';
 
     if (not defined $arguments or not length $arguments) { return $usage; }
 
@@ -207,10 +207,13 @@ sub recall_message {
     };
 
     my $recall_text = '';
-    Getopt::Long::Configure("bundling");
+    Getopt::Long::Configure("bundling_override");
+
+    # global state
+    my ($recall_channel, $raw, $random);
 
     foreach my $recall (@recalls) {
-        my ($recall_nick, $recall_history, $recall_channel, $recall_before, $recall_after, $recall_context, $recall_count);
+        my ($recall_nick, $recall_history, $recall_before, $recall_after, $recall_context, $recall_count);
 
         my @opt_args = $self->{pbot}->{interpreter}->split_line($recall, strip_quotes => 1);
         GetOptionsFromArray(
@@ -220,7 +223,9 @@ sub recall_message {
             'before|b:i'         => \$recall_before,
             'after|a:i'          => \$recall_after,
             'count|n:i'          => \$recall_count,
-            'context|x:s'        => \$recall_context
+            'context|x:s'        => \$recall_context,
+            'raw|r'              => \$raw,
+            'random'             => \$random,
         );
 
         return "/say $getopt_error -- $usage" if defined $getopt_error;
@@ -242,7 +247,7 @@ sub recall_message {
         if ($recall_count > 1 and not defined $recall_history and not defined $recall_context) { $recall_context = $recall_nick; }
 
         # make -n behave like -b if -n > 1 and nick is context
-        if ((defined $recall_context or not defined $recall_history) and $recall_count > 1) {
+        if ((defined $recall_context and not defined $recall_history) and $recall_count > 1) {
             $recall_before = $recall_count - 1;
             $recall_count  = 0;
         }
@@ -296,7 +301,9 @@ sub recall_message {
 
         my $message;
 
-        if ($recall_history =~ /^\d+$/) {
+        if ($random) {
+            $message = $self->{database}->get_random_message($account, $recall_channel);
+        } elsif ($recall_history =~ /^\d+$/) {
             # integral history
             if (defined $account) {
                 my $max_messages = $self->{database}->get_max_messages($account, $recall_channel);
@@ -310,12 +317,12 @@ sub recall_message {
             }
 
             $recall_history--;
-            $message = $self->{database}->recall_message_by_count($account, $recall_channel, $recall_history, '(?:recall|mock|ftfy|fix)');
+            $message = $self->{database}->recall_message_by_count($account, $recall_channel, $recall_history, '(?:recall|mock|ftfy|fix|clapper)');
 
             if (not defined $message) { return "No message found at index $recall_history in channel $recall_channel."; }
         } else {
             # regex history
-            $message = $self->{database}->recall_message_by_text($account, $recall_channel, $recall_history, '(?:recall|mock|ftfy|fix)');
+            $message = $self->{database}->recall_message_by_text($account, $recall_channel, $recall_history, '(?:recall|mock|ftfy|fix|clapper)');
 
             if (not defined $message) {
                 if   (defined $account) { return "No message for nick $found_nick in channel $recall_channel containing \"$recall_history\""; }
@@ -355,11 +362,11 @@ sub recall_message {
                 or $text =~ s/^(JOIN|PART)\b/lc "$1ed"/e)
             {
                 $text =~ s/^(quit) (.*)/$1 ($2)/;    # fix ugly "[nick] quit Quit: Leaving."
-                $recall_text .= "[$ago] $msg->{nick} $text\n";
+                $recall_text .= $raw ? "$text\n" : "[$ago] $msg->{nick} $text\n";
             } elsif ($text =~ s/^\/me\s+//) {
-                $recall_text .= "[$ago] * $msg->{nick} $text\n";
+                $recall_text .= $raw ? "$text\n" : "[$ago] * $msg->{nick} $text\n";
             } else {
-                $recall_text .= "[$ago] <$msg->{nick}> $text\n";
+                $recall_text .= $raw ? "$text\n" : "[$ago] <$msg->{nick}> $text\n";
             }
         }
     }
