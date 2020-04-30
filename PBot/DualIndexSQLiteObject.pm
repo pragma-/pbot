@@ -683,7 +683,7 @@ sub remove {
 
     if (defined $self->get_data($lc_index1, $lc_index2, $data_index)) {
         eval {
-            my $sth = $self->{dbh}->prepare("UPDATE Stuff SET $data_index = ? WHERE index1 = ? AND index2 = ?");
+            my $sth = $self->{dbh}->prepare("UPDATE Stuff SET '$data_index' = ? WHERE index1 = ? AND index2 = ?");
             $sth->execute(undef, $index1, $index2);
 
             $self->{cache}->{$index1}->{$index2}->{$data_index} = undef;
@@ -741,7 +741,7 @@ sub set {
     if (not defined $value) { $value = $self->get_data($index1, $index2, $key); }
     else {
         eval {
-            my $sth = $self->{dbh}->prepare("UPDATE Stuff SET $key = ? WHERE index1 = ? AND index2 = ?");
+            my $sth = $self->{dbh}->prepare("UPDATE Stuff SET '$key' = ? WHERE index1 = ? AND index2 = ?");
             $sth->execute($value, $index1, $index2);
 
             my ($lc_index1, $lc_index2) = (lc $index1, lc $index2);
@@ -787,7 +787,7 @@ sub unset {
     }
 
     eval {
-        my $sth = $self->{dbh}->prepare("UPDATE Stuff SET $key = ? WHERE index1 = ? AND index2 = ?");
+        my $sth = $self->{dbh}->prepare("UPDATE Stuff SET '$key' = ? WHERE index1 = ? AND index2 = ?");
         $sth->execute(undef, $index1, $index2);
 
         my ($lc_index1, $lc_index2) = (lc $index1, lc $index2);
