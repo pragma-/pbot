@@ -180,7 +180,7 @@ sub help {
             my $result       = "/say $name: ";
             $result .= "[Requires can-$keyword] " if $requires_cap;
 
-            if   (not defined $help or not length $help) { $result .= "I have no help for this command yet."; }
+            if   (not defined $help or not length $help) { $result .= "I have no help text for this command yet. To add help text, use the command `cmdset $keyword help <text>`."; }
             else                                         { $result .= $help; }
             return $result;
         }
@@ -227,7 +227,7 @@ sub help {
 
     my $help = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, 'help');
 
-    if (not defined $help or not length $help) { return "/say $trigger_name is a factoid for $channel_name, but I have no help for it yet."; }
+    if (not defined $help or not length $help) { return "/say $trigger_name is a factoid for $channel_name, but I have no help text for it yet. To add help text, use the command `factset $trigger_name help <text>`."; }
 
     $result .= $help;
     return $result;
