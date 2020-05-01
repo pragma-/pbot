@@ -65,7 +65,7 @@ sub do_func {
     return "[No such func '$func']"                                 if not exists $self->{funcs}->{$func};
 
     my @params;
-    while (my $param = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist})) { push @params, $param; }
+    while (defined(my $param = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}))) { push @params, $param; }
 
     my $result = $self->{funcs}->{$func}->{subref}->(@params);
     $result =~ s/\x1/1/g;
