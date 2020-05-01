@@ -471,6 +471,32 @@ sub get_all {
     return @$data;
 }
 
+sub get_key_name {
+    my ($self, $index1, $index2) = @_;
+
+    my $lc_index1 = lc $index1;
+
+    return $lc_index1 if not exists $self->{cache}->{$lc_index1};
+
+    if (not defined $index2) {
+        if (exists $self->{cache}->{$lc_index1}->{_name}) {
+            return $self->{cache}->{$lc_index1}->{_name};
+        } else {
+            return $lc_index1;
+        }
+    }
+
+    my $lc_index2 = lc $index2;
+
+    return $lc_index2 if not exists $self->{cache}->{$lc_index1}->{$lc_index2};
+
+    if (exists $self->{cache}->{$lc_index1}->{$lc_index2}->{_name}) {
+        return $self->{cache}->{$lc_index1}->{$lc_index2}->{_name};
+    } else {
+        return $lc_index2;
+    }
+}
+
 sub get_data {
     my ($self, $index1, $index2, $data_index) = @_;
 
