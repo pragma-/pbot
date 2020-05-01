@@ -134,13 +134,13 @@ sub ignore_cmd {
     return "Usage: ignore <hostmask> [channel [timeout]] | ignore list" if not defined $target;
 
     if ($target =~ /^list$/i) {
-        my $text = "Ignored:";
+        my $text = "Ignored:\n\n";
         my $now  = time;
         my $ignored = 0;
 
         foreach my $channel (sort $self->{ignorelist}->get_keys) {
-            $text .= $channel eq '.*' ? " global:\n" : " $channel:\n";
-            my @list = ();
+            $text .= $channel eq '.*' ? "global:\n" : "$channel:\n";
+            my @list;
             foreach my $hostmask (sort $self->{ignorelist}->get_keys($channel)) {
                 my $timeout = $self->{ignorelist}->get_data($channel, $hostmask, 'timeout');
                 if ($timeout == -1) {
@@ -151,6 +151,7 @@ sub ignore_cmd {
                 $ignored++;
             }
             $text .= join ";\n", @list;
+            $text .= "\n";
         }
         return "Ignore list is empty." if not $ignored;
         return "/msg $nick $text";
