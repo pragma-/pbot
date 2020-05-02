@@ -101,15 +101,15 @@ sub unset {
 }
 
 sub get_value {
-    my ($self, $section, $item, $as_text, $stuff) = @_;
+    my ($self, $section, $item, $as_text, $context) = @_;
     $section = lc $section;
     $item    = lc $item;
     my $key = $item;
 
     # TODO: use user-metadata for this
-    if (defined $stuff and exists $stuff->{nick}) {
-        my $stuff_nick = lc $stuff->{nick};
-        if ($self->{registry}->exists($section, "$item.nick.$stuff_nick")) { $key = "$item.nick.$stuff_nick"; }
+    if (defined $context and exists $context->{nick}) {
+        my $context_nick = lc $context->{nick};
+        if ($self->{registry}->exists($section, "$item.nick.$context_nick")) { $key = "$item.nick.$context_nick"; }
     }
 
     if ($self->{registry}->exists($section, $key)) {
@@ -120,15 +120,15 @@ sub get_value {
 }
 
 sub get_array_value {
-    my ($self, $section, $item, $index, $stuff) = @_;
+    my ($self, $section, $item, $index, $context) = @_;
     $section = lc $section;
     $item    = lc $item;
     my $key = $item;
 
     # TODO: use user-metadata for this
-    if (defined $stuff and exists $stuff->{nick}) {
-        my $stuff_nick = lc $stuff->{nick};
-        if ($self->{registry}->exists($section, "$item.nick.$stuff_nick")) { $key = "$item.nick.$stuff_nick"; }
+    if (defined $context and exists $context->{nick}) {
+        my $context_nick = lc $context->{nick};
+        if ($self->{registry}->exists($section, "$item.nick.$context_nick")) { $key = "$item.nick.$context_nick"; }
     }
 
     if ($self->{registry}->exists($section, $key)) {

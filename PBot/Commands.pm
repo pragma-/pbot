@@ -66,27 +66,27 @@ sub exists {
 }
 
 sub interpreter {
-    my ($self, $stuff) = @_;
+    my ($self, $context) = @_;
     my $result;
 
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
         $Data::Dumper::Sortkeys = 1;
         $self->{pbot}->{logger}->log("Commands::interpreter\n");
-        $self->{pbot}->{logger}->log(Dumper $stuff);
+        $self->{pbot}->{logger}->log(Dumper $context);
     }
 
-    my $keyword = lc $stuff->{keyword};
-    my $from    = $stuff->{from};
+    my $keyword = lc $context->{keyword};
+    my $from    = $context->{from};
 
-    my ($cmd_channel) = $stuff->{arguments} =~ m/\B(#[^ ]+)/;    # assume command is invoked in regards to first channel-like argument
+    my ($cmd_channel) = $context->{arguments} =~ m/\B(#[^ ]+)/;    # assume command is invoked in regards to first channel-like argument
     $cmd_channel = $from if not defined $cmd_channel;            # otherwise command is invoked in regards to the channel the user is in
-    my $user = $self->{pbot}->{users}->find_user($cmd_channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+    my $user = $self->{pbot}->{users}->find_user($cmd_channel, "$context->{nick}!$context->{user}\@$context->{host}");
 
     my $cap_override;
-    if (exists $stuff->{'cap-override'}) {
-        $self->{pbot}->{logger}->log("Override cap to $stuff->{'cap-override'}\n");
-        $cap_override = $stuff->{'cap-override'};
+    if (exists $context->{'cap-override'}) {
+        $self->{pbot}->{logger}->log("Override cap to $context->{'cap-override'}\n");
+        $cap_override = $context->{'cap-override'};
     }
 
     foreach my $ref (@{$self->{handlers}}) {
@@ -95,40 +95,40 @@ sub interpreter {
             if ($requires_cap) {
                 if (defined $cap_override) {
                     if (not $self->{pbot}->{capabilities}->has($cap_override, "can-$keyword")) {
-                        return "/msg $stuff->{nick} The $keyword command requires the can-$keyword capability, which cap-override $cap_override does not have.";
+                        return "/msg $context->{nick} The $keyword command requires the can-$keyword capability, which cap-override $cap_override does not have.";
                     }
                 } else {
                     if (not defined $user) {
-                        my ($found_chan, $found_mask) = $self->{pbot}->{users}->find_user_account($cmd_channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}", 1);
-                        if   (not defined $found_chan) { return "/msg $stuff->{nick} You must have a user account to use $keyword."; }
-                        else                           { return "/msg $stuff->{nick} You must have a user account in $cmd_channel to use $keyword. (You have an account in $found_chan.)"; }
+                        my ($found_chan, $found_mask) = $self->{pbot}->{users}->find_user_account($cmd_channel, "$context->{nick}!$context->{user}\@$context->{host}", 1);
+                        if   (not defined $found_chan) { return "/msg $context->{nick} You must have a user account to use $keyword."; }
+                        else                           { return "/msg $context->{nick} You must have a user account in $cmd_channel to use $keyword. (You have an account in $found_chan.)"; }
                     } elsif (not $user->{loggedin}) {
-                        return "/msg $stuff->{nick} You must be logged into your user account to use $keyword.";
+                        return "/msg $context->{nick} You must be logged into your user account to use $keyword.";
                     }
 
                     if (not $self->{pbot}->{capabilities}->userhas($user, "can-$keyword")) {
-                        return "/msg $stuff->{nick} The $keyword command requires the can-$keyword capability, which your user account does not have.";
+                        return "/msg $context->{nick} The $keyword command requires the can-$keyword capability, which your user account does not have.";
                     }
                 }
             }
 
-            $stuff->{action} = $stuff->{arguments};
-            $stuff->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($stuff);
-            $stuff->{arguments} = $self->{pbot}->{factoids}->expand_special_vars($stuff->{from}, $stuff->{nick}, $stuff->{keyword}, $stuff->{arguments});
-            delete $stuff->{action};
+            $context->{action} = $context->{arguments};
+            $context->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($context);
+            $context->{arguments} = $self->{pbot}->{factoids}->expand_special_vars($context->{from}, $context->{nick}, $context->{keyword}, $context->{arguments});
+            delete $context->{action};
 
-            $stuff->{no_nickoverride} = 1;
+            $context->{no_nickoverride} = 1;
             if ($self->get_meta($keyword, 'background-process')) {
                 my $timeout = $self->get_meta($keyword, 'process-timeout') // $self->{pbot}->{registry}->get_value('processmanager', 'default_timeout');
                 $self->{pbot}->{process_manager}->execute_process(
-                    $stuff,
-                    sub { $stuff->{result} = $ref->{subref}->($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{arguments}, $stuff) },
+                    $context,
+                    sub { $context->{result} = $ref->{subref}->($context->{from}, $context->{nick}, $context->{user}, $context->{host}, $context->{arguments}, $context) },
                     $timeout
                 );
                 return "";
             } else {
-                my $result = $ref->{subref}->($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, $stuff->{arguments}, $stuff);
-                return undef if $stuff->{referenced} and $result =~ m/(?:usage:|no results)/i;
+                my $result = $ref->{subref}->($context->{from}, $context->{nick}, $context->{user}, $context->{host}, $context->{arguments}, $context);
+                return undef if $context->{referenced} and $result =~ m/(?:usage:|no results)/i;
                 return $result;
             }
         }
@@ -149,27 +149,27 @@ sub get_meta {
 }
 
 sub cmdset {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($command, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($command, $key, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
     return "Usage: cmdset <command> [key [value]]" if not defined $command;
     return $self->{metadata}->set($command, $key, $value);
 }
 
 sub cmdunset {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($command, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($command, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
     return "Usage: cmdunset <command> <key>" if not defined $command or not defined $key;
     return $self->{metadata}->unset($command, $key);
 }
 
 sub help {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
     if (not length $arguments) {
         return "For general help, see <https://github.com/pragma-/pbot/tree/master/doc>. For help about a specific command or factoid, use `help <keyword> [channel]`.";
     }
 
-    my $keyword = lc $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+    my $keyword = lc $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
     # check built-in commands first
     if ($self->exists($keyword)) {
@@ -188,7 +188,7 @@ sub help {
     }
 
     # then factoids
-    my $channel_arg = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+    my $channel_arg = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
     $channel_arg = $from if not defined $channel_arg or not length $channel_arg;
     $channel_arg = '.*'  if $channel_arg !~ m/^#/;
 
@@ -234,24 +234,24 @@ sub help {
 }
 
 sub uptime {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
     return localtime($self->{pbot}->{startup_timestamp}) . " [" . duration(time - $self->{pbot}->{startup_timestamp}) . "]";
 }
 
 sub in_channel {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
     my $usage = "Usage: in <channel> <command>";
     return $usage if not $arguments;
 
-    my ($channel, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2, 0, 1);
+    my ($channel, $command) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2, 0, 1);
     return $usage if not defined $channel or not defined $command;
 
     if (not $self->{pbot}->{nicklist}->is_present($channel, $nick)) { return "You must be present in $channel to do this."; }
 
-    $stuff->{from}    = $channel;
-    $stuff->{command} = $command;
-    return $self->{pbot}->{interpreter}->interpret($stuff);
+    $context->{from}    = $channel;
+    $context->{command} = $command;
+    return $self->{pbot}->{interpreter}->interpret($context);
 }
 
 1;

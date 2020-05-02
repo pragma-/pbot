@@ -83,8 +83,8 @@ sub ban_exempted {
 }
 
 sub ban_exempt {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my $arglist = $stuff->{arglist};
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my $arglist = $context->{arglist};
     $self->{pbot}->{interpreter}->lc_args($arglist);
 
     my $command = $self->{pbot}->{interpreter}->shift_arg($arglist);
@@ -163,7 +163,7 @@ sub update_join_watch {
 }
 
 sub check_flood {
-    my ($self, $channel, $nick, $user, $host, $text, $max_messages, $max_time, $mode, $stuff) = @_;
+    my ($self, $channel, $nick, $user, $host, $text, $max_messages, $max_time, $mode, $context) = @_;
     $channel = lc $channel;
 
     my $mask    = "$nick!$user\@$host";
@@ -218,7 +218,7 @@ sub check_flood {
     }
 
     # don't do flood processing for unidentified or banned users in +z channels
-    if (defined $stuff and $stuff->{'chan-z'} and ($stuff->{'unidentified'} or $stuff->{'banned'})) { return; }
+    if (defined $context and $context->{'chan-z'} and ($context->{'unidentified'} or $context->{'banned'})) { return; }
 
     my $ancestor = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
     $self->{pbot}->{logger}->log("Processing anti-flood account $account " . ($ancestor != $account ? "[ancestor $ancestor] " : '') . "for mask $mask\n")

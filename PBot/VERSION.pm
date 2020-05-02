@@ -32,7 +32,7 @@ sub initialize {
 sub version { return BUILD_NAME . " version " . BUILD_REVISION . " " . BUILD_DATE; }
 
 sub version_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
     my $ratelimit = $self->{pbot}->{registry}->get_value('version', 'check_limit') // 300;
 

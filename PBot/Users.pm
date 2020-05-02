@@ -359,8 +359,8 @@ sub logoutcmd {
 }
 
 sub users {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my $channel = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
     my $include_global = '';
     if (not defined $channel) {
@@ -405,8 +405,8 @@ sub users {
 }
 
 sub useradd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($name, $hostmasks, $channels, $capabilities, $password) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 5);
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($name, $hostmasks, $channels, $capabilities, $password) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 5);
     $capabilities //= 'none';
 
     if (not defined $name or not defined $hostmasks) { return "Usage: useradd <username> <hostmasks> [channels [capabilities [password]]]"; }
@@ -443,7 +443,7 @@ sub useradd {
 }
 
 sub userdel {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
     if (not length $arguments) { return "Usage: userdel <username>"; }
 
@@ -462,9 +462,9 @@ sub userdel {
 }
 
 sub userset {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
-    my ($name, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+    my ($name, $key, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
 
     if (not defined $name) { return "Usage: userset <username> [key [value]]"; }
 
@@ -506,9 +506,9 @@ sub userset {
 }
 
 sub userunset {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
-    my ($name, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+    my ($name, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (not defined $name or not defined $key) { return "Usage: userunset <username> <key>"; }
 
@@ -549,8 +549,8 @@ sub userunset {
 }
 
 sub mycmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($key, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (defined $value) {
         $value =~ s/^is\s+//;
@@ -616,7 +616,7 @@ sub mycmd {
 }
 
 sub idcmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
     my $target = length $arguments ? $arguments : $nick;
 

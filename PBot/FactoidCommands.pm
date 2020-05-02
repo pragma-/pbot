@@ -73,8 +73,8 @@ sub initialize {
 
 sub call_factoid {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($chan, $keyword, $args) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3, 0, 1);
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($chan, $keyword, $args) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3, 0, 1);
 
     if (not defined $chan or not defined $keyword) { return "Usage: fact <channel> <keyword> [arguments]"; }
 
@@ -82,13 +82,13 @@ sub call_factoid {
 
     if (not defined $trigger) { return "No such factoid $keyword exists for $chan"; }
 
-    $stuff->{keyword}      = $trigger;
-    $stuff->{trigger}      = $trigger;
-    $stuff->{ref_from}     = $channel;
-    $stuff->{arguments}    = $args;
-    $stuff->{root_keyword} = $trigger;
+    $context->{keyword}      = $trigger;
+    $context->{trigger}      = $trigger;
+    $context->{ref_from}     = $channel;
+    $context->{arguments}    = $args;
+    $context->{root_keyword} = $trigger;
 
-    return $self->{pbot}->{factoids}->interpreter($stuff);
+    return $self->{pbot}->{factoids}->interpreter($context);
 }
 
 sub log_factoid {
@@ -297,7 +297,7 @@ sub list_undo_history {
 }
 
 sub factundo {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
     my $usage = "Usage: factundo [-l [N]] [-r N] [channel] <keyword> (-l list undo history, optionally starting from N; -r jump to revision N)";
 
     my $getopt_error;
@@ -605,8 +605,8 @@ sub factunset {
 
 sub factmove {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($src_channel, $source, $target_channel, $target) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 5);
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($src_channel, $source, $target_channel, $target) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 5);
     my $usage = "Usage: factmove <source channel> <source factoid> <target channel/factoid> [target factoid]";
     return $usage if not defined $target_channel;
 
@@ -690,8 +690,8 @@ sub factmove {
 
 sub factalias {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($chan, $alias, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3, 0, 1);
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($chan, $alias, $command) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3, 0, 1);
 
     if (defined $chan and not($chan eq '.*' or $chan =~ m/^#/)) {
         # $chan doesn't look like a channel, so shift everything to the right
@@ -733,8 +733,8 @@ sub factalias {
 }
 
 sub add_regex {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($keyword, $text) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($keyword, $text) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     $from = '.*' if not defined $from or $from !~ /^#/;
 
@@ -764,10 +764,10 @@ sub add_regex {
 
 sub factadd {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
     my ($from_chan, $keyword, $text, $force);
 
-    my @arglist = @{$stuff->{arglist}};
+    my @arglist = @{$context->{arglist}};
 
     if (@arglist) {
         # check for -f since we allow it to be before optional channel argument
@@ -869,10 +869,10 @@ sub factadd {
 
 sub factrem {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
     my $factoids = $self->{pbot}->{factoids}->{factoids};
 
-    my ($from_chan, $from_trig) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+    my ($from_chan, $from_trig) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (not defined $from_trig) {
         $from_trig = $from_chan;
@@ -937,9 +937,9 @@ sub histogram {
 
 sub factshow {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
     my $factoids = $self->{pbot}->{factoids}->{factoids};
-    $stuff->{preserve_whitespace} = 1;
+    $context->{preserve_whitespace} = 1;
     my $usage = "Usage: factshow [-p] [channel] <keyword>; -p to paste";
     return $usage if not $arguments;
 
@@ -1063,9 +1063,9 @@ sub factlog {
 
 sub factinfo {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
     my $factoids = $self->{pbot}->{factoids}->{factoids};
-    my ($chan, $trig) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+    my ($chan, $trig) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (not defined $trig) {
         $trig = $chan;
@@ -1154,13 +1154,13 @@ sub factinfo {
 }
 
 sub top20 {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
     my $factoids = $self->{pbot}->{factoids}->{factoids};
     my %hash     = ();
     my $text     = "";
     my $i        = 0;
 
-    my ($channel, $args) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+    my ($channel, $args) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (not defined $channel) { return "Usage: top20 <channel> [nick or 'recent']"; }
 
@@ -1357,16 +1357,16 @@ sub factfind {
 
 sub factchange {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
     my $factoids_data = $self->{pbot}->{factoids}->{factoids};
     my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier, $url);
 
-    $stuff->{preserve_whitespace} = 1;
+    $context->{preserve_whitespace} = 1;
 
     my $needs_disambig;
 
     if (length $arguments) {
-        my $args = $stuff->{arglist};
+        my $args = $context->{arglist};
         my $sub;
 
         my $arg_count = $self->{pbot}->{interpreter}->arglist_size($args);

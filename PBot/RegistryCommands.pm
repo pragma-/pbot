@@ -26,17 +26,17 @@ sub initialize {
 
 sub regset {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
     my $usage = "Usage: regset <section>.<item> [value]";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
-    my $section = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // return $usage;
+    my $section = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}) // return $usage;
     my ($item, $value);
     if ($section =~ m/^(.+?)\.(.+)$/) {
         ($section, $item) = ($1, $2);
-        ($value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1);
+        ($value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 1);
     } else {
-        ($item, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+        ($item, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
     }
 
     if (not defined $section or not defined $item) { return $usage; }
@@ -50,14 +50,14 @@ sub regset {
 
 sub regunset {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
     my $usage = "Usage: regunset <section>.<item>";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
-    my $section = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // return $usage;
+    my $section = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}) // return $usage;
     my $item;
     if ($section =~ m/^(.+?)\.(.+)$/) { ($section, $item) = ($1, $2); }
-    else                              { ($item) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1); }
+    else                              { ($item) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 1); }
 
     if (not defined $section or not defined $item) { return $usage; }
 
@@ -72,17 +72,17 @@ sub regunset {
 
 sub regsetmeta {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
     my $usage = "Usage: regsetmeta <section>.<item> [key [value]]";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
-    my $section = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // return $usage;
+    my $section = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}) // return $usage;
     my ($item, $key, $value);
     if ($section =~ m/^(.+?)\.(.+)$/) {
         ($section, $item)  = ($1, $2);
-        ($key,     $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+        ($key,     $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
     } else {
-        ($item, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+        ($item, $key, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
     }
 
     if (not defined $section or not defined $item) { return $usage; }
@@ -94,17 +94,17 @@ sub regsetmeta {
 
 sub regunsetmeta {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
     my $usage = "Usage: regunsetmeta <section>.<item> <key>";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
-    my $section = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // return $usage;
+    my $section = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}) // return $usage;
     my ($item, $key);
     if ($section =~ m/^(.+?)\.(.+)$/) {
         ($section, $item) = ($1, $2);
-        ($key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1);
+        ($key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 1);
     } else {
-        ($item, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+        ($item, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
     }
 
     if (not defined $section or not defined $item or not defined $key) { return $usage; }
@@ -113,15 +113,15 @@ sub regunsetmeta {
 
 sub regshow {
     my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($from, $nick, $user, $host, $arguments, $context) = @_;
     my $registry = $self->{pbot}->{registry}->{registry};
     my $usage    = "Usage: regshow <section>.<item>";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
-    my $section = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // return $usage;
+    my $section = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}) // return $usage;
     my $item;
     if ($section =~ m/^(.+?)\.(.+)$/) { ($section, $item) = ($1, $2); }
-    else                              { ($item) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1); }
+    else                              { ($item) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 1); }
 
     if (not defined $section or not defined $item) { return $usage; }
 

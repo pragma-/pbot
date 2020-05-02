@@ -127,9 +127,9 @@ sub is_ignored {
 }
 
 sub ignore_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
-    my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+    my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
 
     return "Usage: ignore <hostmask> [channel [timeout]] | ignore list" if not defined $target;
 
@@ -173,8 +173,8 @@ sub ignore_cmd {
 }
 
 sub unignore_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (not defined $target) { return "Usage: unignore <hostmask> [channel]"; }
 

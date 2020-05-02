@@ -148,18 +148,18 @@ sub list {
 }
 
 sub capcmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
-    my $command = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+    my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
     my $result;
     given ($command) {
         when ('list') {
-            my $cap = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+            my $cap = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
             return $self->list($cap);
         }
 
         when ('whohas') {
-            my $cap = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+            my $cap = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
             return "Usage: cap whohas <capability>; Lists all users who have <capability>" if not defined $cap;
             return "No such capability $cap."                                              if not $self->exists($cap);
             my $result  = "Users with capability $cap: ";
@@ -180,7 +180,7 @@ sub capcmd {
         }
 
         when ('userhas') {
-            my ($name, $cap) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+            my ($name, $cap) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
             return "Usage: cap userhas <username> [capability]; Lists capabilities belonging to <user>" if not defined $name;
             $cap = lc $cap if defined $cap;
 
@@ -213,7 +213,7 @@ sub capcmd {
         }
 
         when ('group') {
-            my ($cap, $subcaps) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+            my ($cap, $subcaps) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
             return "Usage: cap group <existing or new capability> <existing capabilities...>" if not defined $cap or not defined $subcaps;
 
             my $u = $self->{pbot}->{users}->loggedin($from, "$nick!$user\@$host");
@@ -231,7 +231,7 @@ sub capcmd {
         }
 
         when ('ungroup') {
-            my ($cap, $subcaps) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+            my ($cap, $subcaps) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
             return "Usage: cap ungroup <existing capability group> <grouped capabilities...>" if not defined $cap or not defined $subcaps;
             return "No such capability $cap."                                                 if not $self->exists($cap);
 

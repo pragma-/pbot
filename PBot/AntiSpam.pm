@@ -55,9 +55,9 @@ sub is_spam {
 }
 
 sub antispam_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
-    my $arglist = $stuff->{arglist};
+    my $arglist = $context->{arglist};
 
     my $command = $self->{pbot}->{interpreter}->shift_arg($arglist);
 

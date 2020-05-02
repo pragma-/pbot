@@ -34,7 +34,7 @@ sub initialize {
 }
 
 sub ps_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
     my $usage = 'Usage: ps [-atu]; -a show all information; -t show running time; -u show user/channel';
 
     my $getopt_error;
@@ -83,7 +83,7 @@ sub ps_cmd {
 }
 
 sub kill_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
     my $usage = 'Usage: kill [-a] [-t <seconds>] [-s <signal>]  [pids...]; -a kill all processes; -t <seconds> kill processes running longer than <seconds>; -s send <signal> to processes';
 
     my $getopt_error;
@@ -133,10 +133,10 @@ sub kill_cmd {
 }
 
 sub add_process {
-    my ($self, $pid, $stuff) = @_;
-    $stuff->{process_start} = gettimeofday;
-    $self->{processes}->{$pid} = $stuff;
-    $self->{pbot}->{logger}->log("Starting process $pid: $stuff->{commands}->[0]\n");
+    my ($self, $pid, $context) = @_;
+    $context->{process_start} = gettimeofday;
+    $self->{processes}->{$pid} = $context;
+    $self->{pbot}->{logger}->log("Starting process $pid: $context->{commands}->[0]\n");
 }
 
 sub remove_process {
@@ -153,30 +153,30 @@ sub remove_process {
 }
 
 sub execute_process {
-    my ($self, $stuff, $subref, $timeout) = @_;
+    my ($self, $context, $subref, $timeout) = @_;
     $timeout //= 30;
 
-    if (not exists $stuff->{commands}) { $stuff->{commands} = [$stuff->{command}]; }
+    if (not exists $context->{commands}) { $context->{commands} = [$context->{command}]; }
 
     # don't fork again if we're already a forked process
-    if (exists $stuff->{pid}) {
-        $subref->($stuff);
-        return $stuff->{result};
+    if (exists $context->{pid}) {
+        $subref->($context);
+        return $context->{result};
     }
 
     pipe(my $reader, my $writer);
-    $stuff->{pid} = fork;
+    $context->{pid} = fork;
 
-    if (not defined $stuff->{pid}) {
+    if (not defined $context->{pid}) {
         $self->{pbot}->{logger}->log("Could not fork process: $!\n");
         close $reader;
         close $writer;
-        $stuff->{checkflood} = 1;
-        $self->{pbot}->{interpreter}->handle_result($stuff, "/me groans loudly.\n");
+        $context->{checkflood} = 1;
+        $self->{pbot}->{interpreter}->handle_result($context, "/me groans loudly.\n");
         return;
     }
 
-    if ($stuff->{pid} == 0) {
+    if ($context->{pid} == 0) {
         # child
         close $reader;
 
@@ -188,25 +188,25 @@ sub execute_process {
         # remove atexit handlers
         $self->{pbot}->{atexit}->unregister_all;
 
-        # execute the provided subroutine, results are stored in $stuff
+        # execute the provided subroutine, results are stored in $context
         eval {
-            local $SIG{ALRM} = sub { die "Process `$stuff->{commands}->[0]` timed-out" };
+            local $SIG{ALRM} = sub { die "Process `$context->{commands}->[0]` timed-out" };
             alarm $timeout;
-            $subref->($stuff);
+            $subref->($context);
             die if $@;
         };
         alarm 0;
 
         # check for errors
         if ($@) {
-            $stuff->{result} = $@;
-            $stuff->{'timed-out'} = 1 if $stuff->{result} =~ /^Process .* timed-out at PBot\/ProcessManager/;
-            $self->{pbot}->{logger}->log("Error executing process: $stuff->{result}\n");
-            $stuff->{result} =~ s/ at PBot.*$//ms;
+            $context->{result} = $@;
+            $context->{'timed-out'} = 1 if $context->{result} =~ /^Process .* timed-out at PBot\/ProcessManager/;
+            $self->{pbot}->{logger}->log("Error executing process: $context->{result}\n");
+            $context->{result} =~ s/ at PBot.*$//ms;
         }
 
-        # print $stuff to pipe
-        my $json = encode_json $stuff;
+        # print $context to pipe
+        my $json = encode_json $context;
         print $writer "$json\n";
 
         # end child
@@ -214,8 +214,8 @@ sub execute_process {
     } else {
         # parent
         close $writer;
-        $self->add_process($stuff->{pid}, $stuff);
-        $self->{pbot}->{select_handler}->add_reader($reader, sub { $self->process_pipe_reader($stuff->{pid}, @_) });
+        $self->add_process($context->{pid}, $context);
+        $self->{pbot}->{select_handler}->add_reader($reader, sub { $self->process_pipe_reader($context->{pid}, @_) });
         # return empty string since reader will handle the output when child is finished
         return "";
     }
@@ -223,66 +223,66 @@ sub execute_process {
 
 sub process_pipe_reader {
     my ($self, $pid, $buf) = @_;
-    my $stuff = decode_json $buf or do {
+    my $context = decode_json $buf or do {
         $self->{pbot}->{logger}->log("Failed to decode bad json: [$buf]\n");
         return;
     };
 
-    delete $stuff->{pid};
+    delete $context->{pid};
 
-    if (not defined $stuff->{result} or not length $stuff->{result}) {
+    if (not defined $context->{result} or not length $context->{result}) {
         $self->{pbot}->{logger}->log("No result from process.\n");
         return;
     }
 
-    if ($stuff->{referenced}) { return if $stuff->{result} =~ m/(?:no results)/i; }
+    if ($context->{referenced}) { return if $context->{result} =~ m/(?:no results)/i; }
 
-    if (exists $stuff->{special} and $stuff->{special} eq 'code-factoid') {
-        $stuff->{result} =~ s/\s+$//g;
-        $self->{pbot}->{logger}->log("No text result from code-factoid.\n") and return if not length $stuff->{result};
-        $stuff->{original_keyword} = $stuff->{root_keyword};
-        $stuff->{result}           = $self->{pbot}->{factoids}->handle_action($stuff, $stuff->{result});
+    if (exists $context->{special} and $context->{special} eq 'code-factoid') {
+        $context->{result} =~ s/\s+$//g;
+        $self->{pbot}->{logger}->log("No text result from code-factoid.\n") and return if not length $context->{result};
+        $context->{original_keyword} = $context->{root_keyword};
+        $context->{result}           = $self->{pbot}->{factoids}->handle_action($context, $context->{result});
     }
 
-    $stuff->{checkflood} = 0;
+    $context->{checkflood} = 0;
 
-    if (defined $stuff->{nickoverride}) { $self->{pbot}->{interpreter}->handle_result($stuff, $stuff->{result}); }
+    if (defined $context->{nickoverride}) { $self->{pbot}->{interpreter}->handle_result($context, $context->{result}); }
     else {
         # don't override nick if already set
-        if (    exists $stuff->{special}
-            and $stuff->{special} ne 'code-factoid'
-            and $self->{pbot}->{factoids}->{factoids}->exists($stuff->{channel}, $stuff->{trigger}, 'add_nick')
-            and $self->{pbot}->{factoids}->{factoids}->get_data($stuff->{channel}, $stuff->{trigger}, 'add_nick') != 0)
+        if (    exists $context->{special}
+            and $context->{special} ne 'code-factoid'
+            and $self->{pbot}->{factoids}->{factoids}->exists($context->{channel}, $context->{trigger}, 'add_nick')
+            and $self->{pbot}->{factoids}->{factoids}->get_data($context->{channel}, $context->{trigger}, 'add_nick') != 0)
         {
-            $stuff->{nickoverride}       = $stuff->{nick};
-            $stuff->{no_nickoverride}    = 0;
-            $stuff->{force_nickoverride} = 1;
+            $context->{nickoverride}       = $context->{nick};
+            $context->{no_nickoverride}    = 0;
+            $context->{force_nickoverride} = 1;
         } else {
             # extract nick-like thing from module result
-            if ($stuff->{result} =~ s/^(\S+): //) {
+            if ($context->{result} =~ s/^(\S+): //) {
                 my $nick = $1;
                 if (lc $nick eq "usage") {
                     # put it back on result if it's a usage message
-                    $stuff->{result} = "$nick: $stuff->{result}";
+                    $context->{result} = "$nick: $context->{result}";
                 } else {
-                    my $present = $self->{pbot}->{nicklist}->is_present($stuff->{channel}, $nick);
+                    my $present = $self->{pbot}->{nicklist}->is_present($context->{channel}, $nick);
                     if ($present) {
                         # nick is present in channel
-                        $stuff->{nickoverride} = $present;
+                        $context->{nickoverride} = $present;
                     } else {
                         # nick not present, put it back on result
-                        $stuff->{result} = "$nick: $stuff->{result}";
+                        $context->{result} = "$nick: $context->{result}";
                     }
                 }
             }
         }
-        $self->{pbot}->{interpreter}->handle_result($stuff, $stuff->{result});
+        $self->{pbot}->{interpreter}->handle_result($context, $context->{result});
     }
 
     my $text = $self->{pbot}->{interpreter}
-      ->truncate_result($stuff->{channel}, $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'undef', $stuff->{result}, $stuff->{result}, 0);
+      ->truncate_result($context->{channel}, $self->{pbot}->{registry}->get_value('irc', 'botnick'), 'undef', $context->{result}, $context->{result}, 0);
     $self->{pbot}->{antiflood}
-      ->check_flood($stuff->{from}, $self->{pbot}->{registry}->get_value('irc', 'botnick'), $self->{pbot}->{registry}->get_value('irc', 'username'), 'pbot', $text, 0, 0, 0);
+      ->check_flood($context->{from}, $self->{pbot}->{registry}->get_value('irc', 'botnick'), $self->{pbot}->{registry}->get_value('irc', 'username'), 'pbot', $text, 0, 0, 0);
 }
 
 1;

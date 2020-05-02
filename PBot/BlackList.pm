@@ -144,9 +144,9 @@ sub check_blacklist {
 }
 
 sub blacklist {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
-    my $arglist = $stuff->{arglist};
+    my $arglist = $context->{arglist};
     $self->{pbot}->{interpreter}->lc_args($arglist);
 
     my $command = $self->{pbot}->{interpreter}->shift_arg($arglist);

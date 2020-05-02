@@ -322,14 +322,14 @@ sub check_trigger {
 }
 
 sub actiontrigger {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
     return "Internal error." if not $self->{dbh};
 
-    my $command = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+    my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
     my $result;
     given ($command) {
         when ('list') {
-            my $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+            my $channel = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
             if (not defined $channel) {
                 if   ($from !~ /^#/) { $channel = 'global'; }
                 else                 { $channel = $from; }
@@ -359,7 +359,7 @@ sub actiontrigger {
             my $channel;
             if ($from =~ m/^#/) { $channel = $from; }
             else {
-                $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+                $channel = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
                 if (not defined $channel) {
                     return
@@ -369,7 +369,7 @@ sub actiontrigger {
                 }
             }
 
-            my ($cap_override, $repeatdelay, $trigger, $action) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 4, 0, 1);
+            my ($cap_override, $repeatdelay, $trigger, $action) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 4, 0, 1);
 
             if (not defined $trigger or not defined $action) {
                 if ($from !~ m/^#/) {
@@ -401,13 +401,13 @@ sub actiontrigger {
             my $channel;
             if ($from =~ m/^#/) { $channel = $from; }
             else {
-                $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+                $channel = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
                 if ($channel !~ m/^#/ and $channel ne 'global') {
                     return "To use this command from private message the <channel> argument is required. Usage: actiontrigger delete <#channel or global> <regex trigger>";
                 }
             }
 
-            my ($trigger) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1);
+            my ($trigger) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 1);
 
             if (not defined $trigger) {
                 if ($from !~ m/^#/) {

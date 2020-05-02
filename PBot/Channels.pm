@@ -51,15 +51,15 @@ sub part_cmd {
 }
 
 sub set {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($channel, $key, $value) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 3);
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($channel, $key, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
     return "Usage: chanset <channel> [key [value]]" if not defined $channel;
     return $self->{channels}->set($channel, $key, $value);
 }
 
 sub unset {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($channel, $key) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($channel, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
     return "Usage: chanunset <channel> <key>" if not defined $channel or not defined $key;
     return $self->{channels}->unset($channel, $key);
 }

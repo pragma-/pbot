@@ -47,8 +47,8 @@ sub unload {
 }
 
 sub help {
-    my ($self, $stuff) = @_;
-    my $command = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // 'help';
+    my ($self, $context) = @_;
+    my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}) // 'help';
 
     if (exists $self->{commands}->{$command}) {
         return $self->{commands}->{$command}->{help};
@@ -58,16 +58,16 @@ sub help {
 }
 
 sub list {
-    my ($self, $stuff) = @_;
+    my ($self, $context) = @_;
     return "Available mod commands: " . join ', ', sort keys %{$self->{commands}};
 }
 
 sub generic_command {
-    my ($self, $stuff, $command) = @_;
+    my ($self, $context, $command) = @_;
 
-    my $channel = $stuff->{from};
+    my $channel = $context->{from};
     if ($channel !~ m/^#/) {
-        $channel = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+        $channel = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
         if (not defined $channel or $channel !~ /^#/) { return "Must specify channel from private message. Usage: mod $command <channel> <nick>"; }
     }
@@ -76,15 +76,15 @@ sub generic_command {
     return "Voiced moderation is not enabled for this channel. Use `regset $channel.restrictedmod 1` to enable."
       if not $self->{pbot}->{registry}->get_value($channel, 'restrictedmod');
 
-    my $hostmask = "$stuff->{nick}!$stuff->{user}\@$stuff->{host}";
+    my $hostmask = "$context->{nick}!$context->{user}\@$context->{host}";
     my $user     = $self->{pbot}->{users}->loggedin($channel, $hostmask) // {admin => 0, chanmod => 0};
-    my $voiced   = $self->{pbot}->{nicklist}->get_meta($channel, $stuff->{nick}, '+v');
+    my $voiced   = $self->{pbot}->{nicklist}->get_meta($channel, $context->{nick}, '+v');
 
     if (not $voiced and not $self->{pbot}->{capabilities}->userhas($user, 'admin') and not $self->{pbot}->{capabilities}->userhas($user, 'chanmod')) {
         return "You must be voiced (usermode +v) or have the admin or chanmod capability to use this command.";
     }
 
-    my $target = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+    my $target = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
     return "Missing target. Usage: mod $command <nick>" if not defined $target;
 
     if ($command eq 'unban') {
@@ -106,7 +106,7 @@ sub generic_command {
     }
 
     my $target_nicklist;
-    if   (not $self->{pbot}->{nicklist}->is_present($channel, $target)) { return "$stuff->{nick}: I do not see anybody named $target in this channel."; }
+    if   (not $self->{pbot}->{nicklist}->is_present($channel, $target)) { return "$context->{nick}: I do not see anybody named $target in this channel."; }
     else                                                                { $target_nicklist = $self->{pbot}->{nicklist}->{nicklist}->{lc $channel}->{lc $target}; }
 
     my $target_user = $self->{pbot}->{users}->loggedin($channel, $target_nicklist->{hostmask});
@@ -128,7 +128,7 @@ sub generic_command {
             'b',
             $target,
             3600 * 24,
-            "$stuff->{nick}!$stuff->{user}\@$stuff->{host}",
+            "$context->{nick}!$context->{user}\@$context->{host}",
             "doing something naughty (moderator ban)",
             1
         );
@@ -138,7 +138,7 @@ sub generic_command {
             'q',
             $target,
             3600 * 24,
-            "$stuff->{nick}!$stuff->{user}\@$stuff->{host}",
+            "$context->{nick}!$context->{user}\@$context->{host}",
             "doing something naughty (moderator mute)",
             1
         );
@@ -147,45 +147,45 @@ sub generic_command {
 }
 
 sub kick {
-    my ($self, $stuff) = @_;
-    return $self->generic_command($stuff, 'kick');
+    my ($self, $context) = @_;
+    return $self->generic_command($context, 'kick');
 }
 
 sub ban {
-    my ($self, $stuff) = @_;
-    return $self->generic_command($stuff, 'ban');
+    my ($self, $context) = @_;
+    return $self->generic_command($context, 'ban');
 }
 
 sub mute {
-    my ($self, $stuff) = @_;
-    return $self->generic_command($stuff, 'mute');
+    my ($self, $context) = @_;
+    return $self->generic_command($context, 'mute');
 }
 
 sub unban {
-    my ($self, $stuff) = @_;
-    return $self->generic_command($stuff, 'unban');
+    my ($self, $context) = @_;
+    return $self->generic_command($context, 'unban');
 }
 
 sub unmute {
-    my ($self, $stuff) = @_;
-    return $self->generic_command($stuff, 'unmute');
+    my ($self, $context) = @_;
+    return $self->generic_command($context, 'unmute');
 }
 
 sub kb {
-    my ($self, $stuff) = @_;
-    my $result = $self->ban(dclone $stuff);    # note: using copy of $stuff to preserve $stuff->{arglist} for $self->kick($stuff)
+    my ($self, $context) = @_;
+    my $result = $self->ban(dclone $context);    # note: using copy of $context to preserve $context->{arglist} for $self->kick($context)
     return $result if length $result;
-    return $self->kick($stuff);
+    return $self->kick($context);
 }
 
 sub modcmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
-    my $command = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}) // '';
+    my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}) // '';
     $command = lc $command;
 
     if (grep { $_ eq $command } keys %{$self->{commands}}) {
-        return $self->{commands}->{$command}->{subref}->($stuff);
+        return $self->{commands}->{$command}->{subref}->($context);
     } else {
         my $commands = join ', ', sort keys %{$self->{commands}};
         if   ($from !~ m/^#/) { return "Usage: mod <channel> <command> [arguments]; commands are: $commands; see `mod help <command>` for more information."; }

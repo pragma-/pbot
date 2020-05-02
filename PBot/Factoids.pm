@@ -451,12 +451,12 @@ sub expand_special_vars {
 }
 
 sub expand_factoid_vars {
-    my ($self, $stuff, @exclude) = @_;
+    my ($self, $context, @exclude) = @_;
 
-    my $from         = length $stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from};
-    my $nick         = $stuff->{nick};
-    my $root_keyword = $stuff->{keyword_override} ? $stuff->{keyword_override} : $stuff->{root_keyword};
-    my $action       = $stuff->{action};
+    my $from         = length $context->{ref_from} ? $context->{ref_from} : $context->{from};
+    my $nick         = $context->{nick};
+    my $root_keyword = $context->{keyword_override} ? $context->{keyword_override} : $context->{root_keyword};
+    my $action       = $context->{action};
 
     my $debug = 0;
     my $depth = 0;
@@ -464,7 +464,7 @@ sub expand_factoid_vars {
     if ($debug) {
         $self->{pbot}->{logger}->log("enter expand_factoid_vars\n");
         use Data::Dumper;
-        $self->{pbot}->{logger}->log(Dumper $stuff);
+        $self->{pbot}->{logger}->log(Dumper $context);
     }
 
     if ($action =~ m/^\/call --keyword-override=([^ ]+)/i) { $root_keyword = $1; }
@@ -702,44 +702,44 @@ sub expand_action_arguments {
 }
 
 sub execute_code_factoid_using_vm {
-    my ($self, $stuff) = @_;
+    my ($self, $context) = @_;
 
-    unless ($self->{factoids}->exists($stuff->{channel}, $stuff->{keyword}, 'interpolate')
-        and $self->{factoids}->get_data($stuff->{channel}, $stuff->{keyword}, 'interpolate') eq '0')
+    unless ($self->{factoids}->exists($context->{channel}, $context->{keyword}, 'interpolate')
+        and $self->{factoids}->get_data($context->{channel}, $context->{keyword}, 'interpolate') eq '0')
     {
-        if   ($stuff->{code} =~ m/(?:\$\{?nick\b|\$\{?args\b|\$\{?arg\[)/ and length $stuff->{arguments}) { $stuff->{no_nickoverride} = 1; }
-        else                                                                                              { $stuff->{no_nickoverride} = 0; }
+        if   ($context->{code} =~ m/(?:\$\{?nick\b|\$\{?args\b|\$\{?arg\[)/ and length $context->{arguments}) { $context->{no_nickoverride} = 1; }
+        else                                                                                              { $context->{no_nickoverride} = 0; }
 
-        $stuff->{action} = $stuff->{code};
-        $stuff->{code}   = $self->expand_factoid_vars($stuff);
+        $context->{action} = $context->{code};
+        $context->{code}   = $self->expand_factoid_vars($context);
 
-        if ($self->{factoids}->get_data($stuff->{channel}, $stuff->{keyword}, 'allow_empty_args')) {
-            $stuff->{code} = $self->expand_action_arguments($stuff->{code}, $stuff->{arguments}, '');
+        if ($self->{factoids}->get_data($context->{channel}, $context->{keyword}, 'allow_empty_args')) {
+            $context->{code} = $self->expand_action_arguments($context->{code}, $context->{arguments}, '');
         } else {
-            $stuff->{code} = $self->expand_action_arguments($stuff->{code}, $stuff->{arguments}, $stuff->{nick});
+            $context->{code} = $self->expand_action_arguments($context->{code}, $context->{arguments}, $context->{nick});
         }
     } else {
-        $stuff->{no_nickoverride} = 0;
+        $context->{no_nickoverride} = 0;
     }
 
     my %h = (
-        nick    => $stuff->{nick}, channel => $stuff->{from}, lang => $stuff->{lang}, code => $stuff->{code}, arguments => $stuff->{arguments},
-        factoid => "$stuff->{channel}:$stuff->{keyword}"
+        nick    => $context->{nick}, channel => $context->{from}, lang => $context->{lang}, code => $context->{code}, arguments => $context->{arguments},
+        factoid => "$context->{channel}:$context->{keyword}"
     );
 
-    if ($self->{factoids}->exists($stuff->{channel}, $stuff->{keyword}, 'persist-key')) {
-        $h{'persist-key'} = $self->{factoids}->get_data($stuff->{channel}, $stuff->{keyword}, 'persist-key');
+    if ($self->{factoids}->exists($context->{channel}, $context->{keyword}, 'persist-key')) {
+        $h{'persist-key'} = $self->{factoids}->get_data($context->{channel}, $context->{keyword}, 'persist-key');
     }
 
     my $json = encode_json \%h;
 
-    $stuff->{special}      = 'code-factoid';
-    $stuff->{root_channel} = $stuff->{channel};
-    $stuff->{keyword}      = 'compiler';
-    $stuff->{arguments}    = $json;
-    $stuff->{args_utf8}    = 1;
+    $context->{special}      = 'code-factoid';
+    $context->{root_channel} = $context->{channel};
+    $context->{keyword}      = 'compiler';
+    $context->{arguments}    = $json;
+    $context->{args_utf8}    = 1;
 
-    $self->{pbot}->{modules}->execute_module($stuff);
+    $self->{pbot}->{modules}->execute_module($context);
     return "";
 }
 
@@ -749,38 +749,38 @@ sub execute_code_factoid {
 }
 
 sub interpreter {
-    my ($self, $stuff) = @_;
+    my ($self, $context) = @_;
     my $pbot = $self->{pbot};
 
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
         $Data::Dumper::Sortkeys = 1;
         $self->{pbot}->{logger}->log("Factoids::interpreter\n");
-        $self->{pbot}->{logger}->log(Dumper $stuff);
+        $self->{pbot}->{logger}->log(Dumper $context);
     }
 
-    return undef if not length $stuff->{keyword} or $stuff->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
+    return undef if not length $context->{keyword} or $context->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion');
 
-    $stuff->{from} = lc $stuff->{from};
+    $context->{from} = lc $context->{from};
 
-    my $strictnamespace = $self->{pbot}->{registry}->get_value($stuff->{from}, 'strictnamespace');
+    my $strictnamespace = $self->{pbot}->{registry}->get_value($context->{from}, 'strictnamespace');
 
     if (not defined $strictnamespace) { $strictnamespace = $self->{pbot}->{registry}->get_value('general', 'strictnamespace'); }
 
     # search for factoid against global channel and current channel (from unless ref_from is defined)
-    my $original_keyword = $stuff->{keyword};
+    my $original_keyword = $context->{keyword};
     my ($channel, $keyword) =
-      $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{keyword}, arguments => $stuff->{arguments}, exact_channel => 1);
+      $self->find_factoid($context->{ref_from} ? $context->{ref_from} : $context->{from}, $context->{keyword}, arguments => $context->{arguments}, exact_channel => 1);
 
-    if (not $stuff->{ref_from} or $stuff->{ref_from} eq '.*' or $stuff->{ref_from} eq $stuff->{from}) { $stuff->{ref_from} = ""; }
+    if (not $context->{ref_from} or $context->{ref_from} eq '.*' or $context->{ref_from} eq $context->{from}) { $context->{ref_from} = ""; }
 
-    if (defined $channel and not $channel eq '.*' and not $channel eq lc $stuff->{from}) { $stuff->{ref_from} = $channel; }
+    if (defined $channel and not $channel eq '.*' and not $channel eq lc $context->{from}) { $context->{ref_from} = $channel; }
 
-    $stuff->{arguments} = "" if not defined $stuff->{arguments};
+    $context->{arguments} = "" if not defined $context->{arguments};
 
     # if no match found, attempt to call factoid from another channel if it exists there
     if (not defined $keyword) {
-        my $string = "$original_keyword $stuff->{arguments}";
+        my $string = "$original_keyword $context->{arguments}";
 
         my @chanlist   = ();
         my ($fwd_chan, $fwd_trig);
@@ -793,36 +793,36 @@ sub interpreter {
             $fwd_trig = $original_keyword;
         }
 
-        my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
+        my $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : "";
 
         # if multiple channels have this keyword, then ask user to disambiguate
         if (@chanlist> 1) {
-            return undef if $stuff->{referenced};
+            return undef if $context->{referenced};
             return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple channels (use 'fact <channel> $original_keyword' to choose one): " . join(', ', @chanlist);
         }
 
         # if there's just one other channel that has this keyword, trigger that instance
         elsif (@chanlist == 1) {
             $pbot->{logger}->log("Found '$original_keyword' as '$fwd_trig' in [$fwd_chan]\n");
-            $stuff->{keyword} = $fwd_trig;
-            $stuff->{interpret_depth}++;
-            $stuff->{ref_from} = $fwd_chan;
-            return $pbot->{factoids}->interpreter($stuff);
+            $context->{keyword} = $fwd_trig;
+            $context->{interpret_depth}++;
+            $context->{ref_from} = $fwd_chan;
+            return $pbot->{factoids}->interpreter($context);
         }
 
         # otherwise keyword hasn't been found, display similiar matches for all channels
         else {
-            my $namespace = $strictnamespace ? $stuff->{from} : '.*';
+            my $namespace = $strictnamespace ? $context->{from} : '.*';
             $namespace = '.*' if $namespace !~ /^#/;
 
             my $namespace_regex = $namespace;
             if ($strictnamespace) { $namespace_regex = "(?:" . (quotemeta $namespace) . '|\\.\\*)'; }
 
-            my $matches = $self->{commands}->factfind($stuff->{from}, $stuff->{nick}, $stuff->{user}, $stuff->{host}, quotemeta($original_keyword) . " -channel $namespace_regex");
+            my $matches = $self->{commands}->factfind($context->{from}, $context->{nick}, $context->{user}, $context->{host}, quotemeta($original_keyword) . " -channel $namespace_regex");
 
             # found factfind matches
             if ($matches !~ m/^No factoids/) {
-                return undef if $stuff->{referenced};
+                return undef if $context->{referenced};
                 return "No such factoid '$original_keyword'; $matches";
             }
 
@@ -830,18 +830,18 @@ sub interpreter {
             $matches = $self->{factoids}->levenshtein_matches($namespace, lc $original_keyword, 0.50, $strictnamespace);
 
             # if a non-nick argument was supplied, e.g., a sentence using the bot's nick, /msg the error to the caller
-            if (length $stuff->{arguments} and not $self->{pbot}->{nicklist}->is_present($stuff->{from}, $stuff->{arguments})) {
-                $stuff->{send_msg_to_caller} = 1;
+            if (length $context->{arguments} and not $self->{pbot}->{nicklist}->is_present($context->{from}, $context->{arguments})) {
+                $context->{send_msg_to_caller} = 1;
             }
 
             # /msg the caller if nothing similiar was found
-            $stuff->{send_msg_to_caller} = 1 if $matches eq 'none';
-            $stuff->{send_msg_to_caller} = 1 if $stuff->{referenced};
+            $context->{send_msg_to_caller} = 1 if $matches eq 'none';
+            $context->{send_msg_to_caller} = 1 if $context->{referenced};
 
             my $msg_caller = '';
-            $msg_caller = "/msg $stuff->{nick} " if $stuff->{send_msg_to_caller};
+            $msg_caller = "/msg $context->{nick} " if $context->{send_msg_to_caller};
 
-            my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
+            my $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : "";
             if ($matches eq 'none') {
                 return $msg_caller . $ref_from . "No such factoid '$original_keyword'; no similar matches.";
             } else {
@@ -855,32 +855,32 @@ sub interpreter {
     $channel_name = 'global'            if $channel_name eq '.*';
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
-    $stuff->{keyword}          = $keyword;
-    $stuff->{trigger}          = $keyword;
-    $stuff->{channel}          = $channel;
-    $stuff->{original_keyword} = $original_keyword;
-    $stuff->{channel_name}     = $channel_name;
-    $stuff->{trigger_name}     = $trigger_name;
+    $context->{keyword}          = $keyword;
+    $context->{trigger}          = $keyword;
+    $context->{channel}          = $channel;
+    $context->{original_keyword} = $original_keyword;
+    $context->{channel_name}     = $channel_name;
+    $context->{trigger_name}     = $trigger_name;
 
-    return undef if $stuff->{referenced} and $self->{factoids}->get_data($channel, $keyword, 'noembed');
+    return undef if $context->{referenced} and $self->{factoids}->get_data($channel, $keyword, 'noembed');
 
     if ($self->{factoids}->get_data($channel, $keyword, 'locked_to_channel')) {
-        if ($stuff->{ref_from} ne "") {    # called from another channel
-            return "$trigger_name may be invoked only in $stuff->{ref_from}.";
+        if ($context->{ref_from} ne "") {    # called from another channel
+            return "$trigger_name may be invoked only in $context->{ref_from}.";
         }
     }
 
     if ($self->{factoids}->exists($channel, $keyword, 'last_referenced_on')) {
         if ($self->{factoids}->exists($channel, $keyword, 'last_referenced_in')) {
-            if ($self->{factoids}->get_data($channel, $keyword, 'last_referenced_in') eq $stuff->{from}) {
-                my $ratelimit = $self->{pbot}->{registry}->get_value($stuff->{from}, 'ratelimit_override');
+            if ($self->{factoids}->get_data($channel, $keyword, 'last_referenced_in') eq $context->{from}) {
+                my $ratelimit = $self->{pbot}->{registry}->get_value($context->{from}, 'ratelimit_override');
                 $ratelimit = $self->{factoids}->get_data($channel, $keyword, 'rate_limit') if not defined $ratelimit;
                 if (gettimeofday - $self->{factoids}->get_data($channel, $keyword, 'last_referenced_on') < $ratelimit) {
-                    my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
+                    my $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : "";
                     return
-                      "/msg $stuff->{nick} $ref_from'$trigger_name' is rate-limited; try again in "
+                      "/msg $context->{nick} $ref_from'$trigger_name' is rate-limited; try again in "
                       . duration($ratelimit - int(gettimeofday - $self->{factoids}->get_data($channel, $keyword, 'last_referenced_on'))) . "."
-                      unless $self->{pbot}->{users}->loggedin_admin($channel, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+                      unless $self->{pbot}->{users}->loggedin_admin($channel, "$context->{nick}!$context->{user}\@$context->{host}");
                 }
             }
         }
@@ -889,22 +889,22 @@ sub interpreter {
     my $ref_count = $self->{factoids}->get_data($channel, $keyword, 'ref_count');
     my $update_data = {
         ref_count          => ++$ref_count,
-        ref_user           => "$stuff->{nick}!$stuff->{user}\@$stuff->{host}",
+        ref_user           => "$context->{nick}!$context->{user}\@$context->{host}",
         last_referenced_on => scalar gettimeofday,
-        last_referenced_in => $stuff->{from} || 'stdin',
+        last_referenced_in => $context->{from} || 'stdin',
     };
     $self->{factoids}->add($channel, $keyword, $update_data, 1, 1);
 
     my $action;
 
-    if ($self->{factoids}->exists($channel, $keyword, 'usage') and not length $stuff->{arguments} and $self->{factoids}->get_data($channel, $keyword, 'requires_arguments')) {
-        $stuff->{alldone} = 1;
+    if ($self->{factoids}->exists($channel, $keyword, 'usage') and not length $context->{arguments} and $self->{factoids}->get_data($channel, $keyword, 'requires_arguments')) {
+        $context->{alldone} = 1;
         my $usage = $self->{factoids}->get_data($channel, $keyword, 'usage');
         $usage =~ s/\$0|\$\{0\}/$trigger_name/g;
         return $usage;
     }
 
-    if (length $stuff->{arguments} and $self->{factoids}->exists($channel, $keyword, 'action_with_args')) {
+    if (length $context->{arguments} and $self->{factoids}->exists($channel, $keyword, 'action_with_args')) {
         $action = $self->{factoids}->get_data($channel, $keyword, 'action_with_args');
     } else {
         $action = $self->{factoids}->get_data($channel, $keyword, 'action');
@@ -913,81 +913,81 @@ sub interpreter {
     if ($action =~ m{^/code\s+([^\s]+)\s+(.+)$}msi) {
         my ($lang, $code) = ($1, $2);
 
-        if ($self->{factoids}->exists($channel, $keyword, 'usage') and not length $stuff->{arguments}) {
-            $stuff->{alldone} = 1;
+        if ($self->{factoids}->exists($channel, $keyword, 'usage') and not length $context->{arguments}) {
+            $context->{alldone} = 1;
             my $usage = $self->{factoids}->get_data($channel, $keyword, 'usage');
             $usage =~ s/\$0|\$\{0\}/$trigger_name/g;
             return $usage;
         }
 
-        $stuff->{lang} = $lang;
-        $stuff->{code} = $code;
-        $self->execute_code_factoid($stuff);
+        $context->{lang} = $lang;
+        $context->{code} = $code;
+        $self->execute_code_factoid($context);
         return "";
     }
 
     if ($self->{factoids}->get_data($channel, $keyword, 'background-process')) {
         my $timeout = $self->{factoids}->get_data($channel, $keyword, 'process-timeout') // $self->{pbot}->{registry}->get_value('processmanager', 'default_timeout');
         $self->{pbot}->{process_manager}->execute_process(
-            $stuff,
-            sub { $stuff->{result} = $self->handle_action($stuff, $action); },
+            $context,
+            sub { $context->{result} = $self->handle_action($context, $action); },
             $timeout
         );
         return "";
     } else {
-        return $self->handle_action($stuff, $action);
+        return $self->handle_action($context, $action);
     }
 }
 
 sub handle_action {
-    my ($self, $stuff, $action) = @_;
+    my ($self, $context, $action) = @_;
 
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
         $Data::Dumper::Sortkeys = 1;
         $self->{pbot}->{logger}->log("Factoids::handle_action [$action]\n");
-        $self->{pbot}->{logger}->log(Dumper $stuff);
+        $self->{pbot}->{logger}->log(Dumper $context);
     }
 
     return "" if not length $action;
 
-    my ($channel,      $keyword)      = ($stuff->{channel},      $stuff->{trigger});
-    my ($channel_name, $trigger_name) = ($stuff->{channel_name}, $stuff->{trigger_name});
-    my $ref_from = $stuff->{ref_from} ? "[$stuff->{ref_from}] " : "";
+    my ($channel,      $keyword)      = ($context->{channel},      $context->{trigger});
+    my ($channel_name, $trigger_name) = ($context->{channel_name}, $context->{trigger_name});
+    my $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : "";
 
     unless ($self->{factoids}->exists($channel, $keyword, 'interpolate') and $self->{factoids}->get_data($channel, $keyword, 'interpolate') eq '0') {
         my ($root_channel, $root_keyword) =
-          $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{root_keyword}, arguments => $stuff->{arguments}, exact_channel => 1);
+          $self->find_factoid($context->{ref_from} ? $context->{ref_from} : $context->{from}, $context->{root_keyword}, arguments => $context->{arguments}, exact_channel => 1);
         if (not defined $root_channel or not defined $root_keyword) {
             $root_channel = $channel;
             $root_keyword = $keyword;
         }
-        if (not length $stuff->{keyword_override} and length $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override')) {
-            $stuff->{keyword_override} = $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override');
+        if (not length $context->{keyword_override} and length $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override')) {
+            $context->{keyword_override} = $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override');
         }
-        $stuff->{action} = $action;
-        $action = $self->expand_factoid_vars($stuff);
+        $context->{action} = $action;
+        $action = $self->expand_factoid_vars($context);
     }
 
-    if (length $stuff->{arguments}) {
+    if (length $context->{arguments}) {
         if ($action =~ m/\$\{?args/ or $action =~ m/\$\{?arg\[/) {
             unless (defined $self->{factoids}->get_data($channel, $keyword, 'interpolate') and $self->{factoids}->get_data($channel, $keyword, 'interpolate') eq '0') {
-                $action = $self->expand_action_arguments($action, $stuff->{arguments}, $stuff->{nick});
-                $stuff->{no_nickoverride} = 1;
+                $action = $self->expand_action_arguments($action, $context->{arguments}, $context->{nick});
+                $context->{no_nickoverride} = 1;
             } else {
-                $stuff->{no_nickoverride} = 0;
+                $context->{no_nickoverride} = 0;
             }
-            $stuff->{arguments}          = "";
-            $stuff->{original_arguments} = "";
+            $context->{arguments}          = "";
+            $context->{original_arguments} = "";
         } else {
             if ($self->{factoids}->get_data($channel, $keyword, 'type') eq 'text') {
-                my $target = $self->{pbot}->{nicklist}->is_present_similar($stuff->{from}, $stuff->{arguments});
+                my $target = $self->{pbot}->{nicklist}->is_present_similar($context->{from}, $context->{arguments});
 
                 if ($target and $action !~ /\$\{?(?:nick|args)\b/) {
-                    $stuff->{nickoverride}    = $target unless $stuff->{force_nickoverride};
-                    $stuff->{no_nickoverride} = 0;
+                    $context->{nickoverride}    = $target unless $context->{force_nickoverride};
+                    $context->{no_nickoverride} = 0;
                 } else {
-                    $stuff->{no_nickoverride} = 1;
+                    $context->{no_nickoverride} = 1;
                 }
             }
         }
@@ -996,12 +996,12 @@ sub handle_action {
         if ($self->{factoids}->exists($channel, $keyword, 'usage')) {
             $action = "/say " . $self->{factoids}->get_data($channel, $keyword, 'usage');
             $action =~ s/\$0|\$\{0\}/$trigger_name/g;
-            $stuff->{alldone} = 1;
+            $context->{alldone} = 1;
         } else {
             if   ($self->{factoids}->get_data($channel, $keyword, 'allow_empty_args')) { $action = $self->expand_action_arguments($action, undef, ''); }
-            else                                                                       { $action = $self->expand_action_arguments($action, undef, $stuff->{nick}); }
+            else                                                                       { $action = $self->expand_action_arguments($action, undef, $context->{nick}); }
         }
-        $stuff->{no_nickoverride} = 0;
+        $context->{no_nickoverride} = 0;
     }
 
     # Check if it's an alias
@@ -1009,75 +1009,75 @@ sub handle_action {
         my $command = $1;
         $command =~ s/\n$//;
         unless ($self->{factoids}->get_data($channel, $keyword, 'require_explicit_args')) {
-            my $args = $stuff->{arguments};
-            $command .= " $args" if length $args and not $stuff->{special} eq 'code-factoid';
-            $stuff->{arguments} = '';
+            my $args = $context->{arguments};
+            $command .= " $args" if length $args and not $context->{special} eq 'code-factoid';
+            $context->{arguments} = '';
         }
 
         unless ($self->{factoids}->get_data($channel, $keyword, 'no_keyword_override')) {
-            if ($command =~ s/\s*--keyword-override=([^ ]+)\s*//) { $stuff->{keyword_override} = $1; }
+            if ($command =~ s/\s*--keyword-override=([^ ]+)\s*//) { $context->{keyword_override} = $1; }
         }
 
-        $stuff->{command} = $command;
-        $stuff->{aliased} = 1;
+        $context->{command} = $command;
+        $context->{aliased} = 1;
 
         $self->{pbot}->{logger}
-          ->log("[" . (defined $stuff->{from} ? $stuff->{from} : "stdin") . "] ($stuff->{nick}!$stuff->{user}\@$stuff->{host}) $trigger_name aliased to: $command\n");
+          ->log("[" . (defined $context->{from} ? $context->{from} : "stdin") . "] ($context->{nick}!$context->{user}\@$context->{host}) $trigger_name aliased to: $command\n");
 
         if (defined $self->{factoids}->get_data($channel, $keyword, 'cap-override')) {
             if ($self->{factoids}->get_data($channel, $keyword, 'locked')) {
                 $self->{pbot}->{logger}->log("Capability override set to " . $self->{factoids}->get_data($channel, $keyword, 'cap-override') . "\n");
-                $stuff->{'cap-override'} = $self->{factoids}->get_data($channel, $keyword, 'cap-override');
+                $context->{'cap-override'} = $self->{factoids}->get_data($channel, $keyword, 'cap-override');
             } else {
                 $self->{pbot}->{logger}->log("Ignoring cap-override of " . $self->{factoids}->get_data($channel, $keyword, 'cap-override') . " on unlocked factoid\n");
             }
         }
 
-        return $self->{pbot}->{interpreter}->interpret($stuff);
+        return $self->{pbot}->{interpreter}->interpret($context);
     }
 
     $self->{pbot}->{logger}
-      ->log("(" . (defined $stuff->{from} ? $stuff->{from} : "(undef)") . "): $stuff->{nick}!$stuff->{user}\@$stuff->{host}: $trigger_name: action: \"$action\"\n");
+      ->log("(" . (defined $context->{from} ? $context->{from} : "(undef)") . "): $context->{nick}!$context->{user}\@$context->{host}: $trigger_name: action: \"$action\"\n");
 
     if ($self->{factoids}->get_data($channel, $keyword, 'enabled') == 0) {
         $self->{pbot}->{logger}->log("$trigger_name disabled.\n");
-        return "/msg $stuff->{nick} ${ref_from}$trigger_name is currently disabled.";
+        return "/msg $context->{nick} ${ref_from}$trigger_name is currently disabled.";
     }
 
     unless ($self->{factoids}->exists($channel, $keyword, 'interpolate') and $self->{factoids}->get_data($channel, $keyword, 'interpolate') eq '0') {
         my ($root_channel, $root_keyword) =
-          $self->find_factoid($stuff->{ref_from} ? $stuff->{ref_from} : $stuff->{from}, $stuff->{root_keyword}, arguments => $stuff->{arguments}, exact_channel => 1);
+          $self->find_factoid($context->{ref_from} ? $context->{ref_from} : $context->{from}, $context->{root_keyword}, arguments => $context->{arguments}, exact_channel => 1);
         if (not defined $root_channel or not defined $root_keyword) {
             $root_channel = $channel;
             $root_keyword = $keyword;
         }
-        if (not length $stuff->{keyword_override} and length $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override')) {
-            $stuff->{keyword_override} = $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override');
+        if (not length $context->{keyword_override} and length $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override')) {
+            $context->{keyword_override} = $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override');
         }
-        $stuff->{action} = $action;
-        $action = $self->expand_factoid_vars($stuff);
+        $context->{action} = $action;
+        $action = $self->expand_factoid_vars($context);
 
-        if   ($self->{factoids}->get_data($channel, $keyword, 'allow_empty_args')) { $action = $self->expand_action_arguments($action, $stuff->{arguments}, ''); }
-        else                                                                       { $action = $self->expand_action_arguments($action, $stuff->{arguments}, $stuff->{nick}); }
+        if   ($self->{factoids}->get_data($channel, $keyword, 'allow_empty_args')) { $action = $self->expand_action_arguments($action, $context->{arguments}, ''); }
+        else                                                                       { $action = $self->expand_action_arguments($action, $context->{arguments}, $context->{nick}); }
     }
 
-    return $action if $stuff->{special} eq 'code-factoid';
+    return $action if $context->{special} eq 'code-factoid';
 
     if ($self->{factoids}->get_data($channel, $keyword, 'type') eq 'module') {
         my $preserve_whitespace = $self->{factoids}->get_data($channel, $keyword, 'preserve_whitespace');
         $preserve_whitespace = 0 if not defined $preserve_whitespace;
 
-        $stuff->{preserve_whitespace} = $preserve_whitespace;
-        $stuff->{root_keyword}        = $keyword unless defined $stuff->{root_keyword};
-        $stuff->{root_channel}        = $channel;
+        $context->{preserve_whitespace} = $preserve_whitespace;
+        $context->{root_keyword}        = $keyword unless defined $context->{root_keyword};
+        $context->{root_channel}        = $channel;
 
-        my $result = $self->{pbot}->{modules}->execute_module($stuff);
+        my $result = $self->{pbot}->{modules}->execute_module($context);
         if   (length $result) { return $ref_from . $result; }
         else                  { return ""; }
     } elsif ($self->{factoids}->get_data($channel, $keyword, 'type') eq 'text') {
         # Don't allow user-custom /msg factoids, unless factoid triggered by admin
         if ($action =~ m/^\/msg/i) {
-            my $admin = $self->{pbot}->{users}->loggedin_admin($stuff->{from}, "$stuff->{nick}!$stuff->{user}\@$stuff->{host}");
+            my $admin = $self->{pbot}->{users}->loggedin_admin($context->{from}, "$context->{nick}!$context->{user}\@$context->{host}");
             if (not $admin) {
                 $self->{pbot}->{logger}->log("[ABUSE] Bad factoid (contains /msg): $action\n");
                 return "You must be an admin to use /msg in a factoid.";
@@ -1093,7 +1093,7 @@ sub handle_action {
         }
     } elsif ($self->{factoids}->get_data($channel, $keyword, 'type') eq 'regex') {
         my $result = eval {
-            my $string = "$stuff->{original_keyword}" . (defined $stuff->{arguments} ? " $stuff->{arguments}" : "");
+            my $string = "$context->{original_keyword}" . (defined $context->{arguments} ? " $context->{arguments}" : "");
             my $cmd;
             if ($string =~ m/$keyword/i) {
                 $self->{pbot}->{logger}->log("[$string] matches [$keyword] - calling [" . $action . "$']\n");
@@ -1116,8 +1116,8 @@ sub handle_action {
                 $cmd = $action;
             }
 
-            $stuff->{command} = $cmd;
-            return $self->{pbot}->{interpreter}->interpret($stuff);
+            $context->{command} = $cmd;
+            return $self->{pbot}->{interpreter}->interpret($context);
         };
 
         if ($@) {
@@ -1128,7 +1128,7 @@ sub handle_action {
         if   (length $result) { return $ref_from . $result; }
         else                  { return ""; }
     } else {
-        $self->{pbot}->{logger}->log("($stuff->{from}): $stuff->{nick}!$stuff->{user}\@$stuff->{host}): Unknown command type for '$trigger_name'\n");
+        $self->{pbot}->{logger}->log("($context->{from}): $context->{nick}!$context->{user}\@$context->{host}): Unknown command type for '$trigger_name'\n");
         return "/me blinks." . " $ref_from";
     }
 }

@@ -59,13 +59,13 @@ sub unregister {
 }
 
 sub do_func {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my $func = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my $func = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
     return "Usage: func <keyword> [arguments]; see also: func help" if not defined $func;
     return "[No such func '$func']"                                 if not exists $self->{funcs}->{$func};
 
     my @params;
-    while (defined(my $param = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist}))) { push @params, $param; }
+    while (defined(my $param = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}))) { push @params, $param; }
 
     my $result = $self->{funcs}->{$func}->{subref}->(@params);
     $result =~ s/\x1/1/g;

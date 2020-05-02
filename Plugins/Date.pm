@@ -27,7 +27,7 @@ sub unload {
 }
 
 sub datecmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
     my $usage = "date [-u <user account>] [timezone]";
     my $getopt_error;
     local $SIG{__WARN__} = sub {
@@ -66,13 +66,13 @@ sub datecmd {
 
     if (defined $user_override and not length $tz_override) { return "No timezone set or user account does not exist."; }
 
-    my $newstuff = {
+    my $newcontext = {
         from    => $from,                   nick         => $nick, user         => $user, host => $host,
         command => "date_module $timezone", root_channel => $from, root_keyword => "date_module",
         keyword => "date_module", arguments => "$timezone"
     };
 
-    $self->{pbot}->{modules}->execute_module($newstuff);
+    $self->{pbot}->{modules}->execute_module($newcontext);
 }
 
 1;

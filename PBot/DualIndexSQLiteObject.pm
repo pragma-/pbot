@@ -263,9 +263,9 @@ sub get_keys {
         if (not $nocache) { return keys %{$self->{cache}}; }
 
         @keys = eval {
-            my $stuff = $self->{dbh}->selectall_arrayref('SELECT DISTINCT index1 FROM Stuff');
-            if (@$stuff) {
-                return map { $_->[0] } @$stuff;
+            my $context = $self->{dbh}->selectall_arrayref('SELECT DISTINCT index1 FROM Stuff');
+            if (@$context) {
+                return map { $_->[0] } @$context;
             } else {
                 return ();
             }
@@ -287,9 +287,9 @@ sub get_keys {
         @keys = eval {
             my $sth = $self->{dbh}->prepare('SELECT index2 FROM Stuff WHERE index1 = ?');
             $sth->execute($index1);
-            my $stuff = $sth->fetchall_arrayref;
-            if (@$stuff) {
-                return map { $_->[0] } @$stuff;
+            my $context = $sth->fetchall_arrayref;
+            if (@$context) {
+                return map { $_->[0] } @$context;
             } else {
                 return ();
             }
@@ -313,15 +313,15 @@ sub get_keys {
     @keys = eval {
         my $sth = $self->{dbh}->prepare('SELECT * FROM Stuff WHERE index1 = ? AND index2 = ?');
         $sth->execute($index1, $index2);
-        my $stuff = $sth->fetchall_arrayref({});
+        my $context = $sth->fetchall_arrayref({});
         my @k     = ();
-        return @k if not @{$stuff};
+        return @k if not @{$context};
 
         my ($lc_index1, $lc_index2) = (lc $index1, lc $index2);
-        foreach my $key (keys %{$stuff->[0]}) {
+        foreach my $key (keys %{$context->[0]}) {
             next if $key eq 'index1' or $key eq 'index2';
-            push @k, $key if defined $stuff->[0]->{$key};
-            $self->{cache}->{$lc_index1}->{$lc_index2}->{$key} = $stuff->[0]->{$key};
+            push @k, $key if defined $context->[0]->{$key};
+            $self->{cache}->{$lc_index1}->{$lc_index2}->{$key} = $context->[0]->{$key};
         }
 
         my $timeout = $self->{pbot}->{registry}->get_value('dualindexsqliteobject', 'cache_timeout') // 60 * 30;
@@ -519,14 +519,14 @@ sub get_data {
         my $data = eval {
             my $sth = $self->{dbh}->prepare('SELECT * FROM Stuff WHERE index1 = ? AND index2 = ?');
             $sth->execute($index1, $index2);
-            my $stuff = $sth->fetchall_arrayref({});
+            my $context = $sth->fetchall_arrayref({});
 
             my $d = {};
-            foreach my $key (keys %{$stuff->[0]}) {
+            foreach my $key (keys %{$context->[0]}) {
                 next if $key eq 'index1' or $key eq 'index2';
-                if (defined $stuff->[0]->{$key}) {
-                    $self->{cache}->{$lc_index1}->{$lc_index2}->{$key} = $stuff->[0]->{$key};
-                    $d->{$key} = $stuff->[0]->{$key};
+                if (defined $context->[0]->{$key}) {
+                    $self->{cache}->{$lc_index1}->{$lc_index2}->{$key} = $context->[0]->{$key};
+                    $d->{$key} = $context->[0]->{$key};
                 }
             }
 
@@ -560,17 +560,17 @@ sub get_data {
     my $value = eval {
         my $sth = $self->{dbh}->prepare('SELECT * FROM Stuff WHERE index1 = ? AND index2 = ?');
         $sth->execute($index1, $index2);
-        my $stuff = $sth->fetchall_arrayref({});
+        my $context = $sth->fetchall_arrayref({});
 
-        foreach my $key (keys %{$stuff->[0]}) {
+        foreach my $key (keys %{$context->[0]}) {
             next if $key eq 'index1' or $key eq 'index2';
-            $self->{cache}->{$lc_index1}->{$lc_index2}->{$key} = $stuff->[0]->{$key};
+            $self->{cache}->{$lc_index1}->{$lc_index2}->{$key} = $context->[0]->{$key};
         }
 
         my $timeout = $self->{pbot}->{registry}->get_value('dualindexsqliteobject', 'cache_timeout') // 60 * 30;
         $self->{cache_timeouts}->{$lc_index1}->{$lc_index2} = time + $timeout;
 
-        return $stuff->[0]->{$data_index};
+        return $context->[0]->{$data_index};
     };
 
     if ($@) {

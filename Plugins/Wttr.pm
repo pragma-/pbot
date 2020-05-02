@@ -35,7 +35,7 @@ sub unload {
 }
 
 sub wttrcmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
     my @wttr_options = (
         "conditions",

@@ -128,8 +128,8 @@ sub banlist_cmd {
 }
 
 sub checkban_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     return "Usage: checkban <mask> [channel]" if not defined $target;
     $channel = $from if not defined $channel;
@@ -139,8 +139,8 @@ sub checkban_cmd {
 }
 
 sub checkmute_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
-    my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+    my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     return "Usage: checkmute <mask> [channel]" if not defined $target;
     $channel = $from if not defined $channel;

@@ -50,11 +50,11 @@ sub initialize {
 }
 
 sub event_queue_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
 
     my $usage = "Usage: eventqueue list [filter regex] | add <relative time> <command> [-repeat] | remove <event>";
 
-    my $command = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+    my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
     if (not defined $command) {
         return $usage;
@@ -65,7 +65,7 @@ sub event_queue_cmd {
 
         my $result = eval {
             my $text = "Queued events:\n";
-            my ($regex) = $self->{pbot}->{interpreter}->shift_arg($stuff->{arglist});
+            my ($regex) = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
             my $i = 0;
             my $events = 0;
@@ -99,7 +99,7 @@ sub event_queue_cmd {
     }
 
     if ($command eq 'add') {
-        my ($duration, $command) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 2);
+        my ($duration, $command) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
         return "Usage: eventqueue add <relative time> <command> [-repeat]" if not defined $duration or not defined $command;
 
         my ($delay, $error) = $self->{pbot}->{parsedate}->parsedate($duration);
@@ -120,7 +120,7 @@ sub event_queue_cmd {
     }
 
     if ($command eq 'remove') {
-        my ($regex) = $self->{pbot}->{interpreter}->split_args($stuff->{arglist}, 1);
+        my ($regex) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 1);
         return "Usage: eventqueue remove <event>" if not defined $regex;
         $regex =~ s/\*/.*?/g;
         return $self->dequeue_event($regex);

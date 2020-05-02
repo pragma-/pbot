@@ -31,7 +31,7 @@ sub unload {
 }
 
 sub googlesearch {
-    my ($self, $from, $nick, $user, $host, $arguments, $stuff) = @_;
+    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
     return "Usage: google [number of results] query\n" if not length $arguments;
 
     my $matches = 1;
