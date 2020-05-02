@@ -756,7 +756,7 @@ sub set {
             push @metadata, "$key => $value" if defined $value;
         }
         if   (not @metadata) { $result .= "none"; }
-        else                 { $result .= join '; ', @metadata; }
+        else                 { $result .= join ";\n", @metadata; }
         return $result;
     }
 
