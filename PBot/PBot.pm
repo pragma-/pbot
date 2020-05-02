@@ -483,8 +483,8 @@ sub reload {
             $self->{timer}->dequeue_event('unmute #.*');
             $self->{banlist}->{banlist}->load;
             $self->{banlist}->{quietlist}->load;
-            $self->{chanops}->enqueue_timeouts($self->{banlist}->{banlist},   'b');
-            $self->{chanops}->enqueue_timeouts($self->{banlist}->{quietlist}, 'q');
+            $self->{banlist}->enqueue_timeouts($self->{banlist}->{banlist},   'b');
+            $self->{banlist}->enqueue_timeouts($self->{banlist}->{quietlist}, 'q');
             return "Ban list reloaded.";
         },
 
