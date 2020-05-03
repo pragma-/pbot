@@ -260,12 +260,12 @@ sub interpret {
     {
         $context->{nickoverride} = $context->{nick} if defined $context->{nickoverride} and lc $context->{nickoverride} eq 'me';
         $keyword   =~ s/(\w+)([?!.]+)$/$1/;
-        $arguments =~ s/(?<![\w\/\-\\])i am\b/$context->{nick} is/gi if defined $arguments && $context->{interpret_depth} <= 2;
-        $arguments =~ s/(?<![\w\/\-\\])me\b/$context->{nick}/gi if defined $arguments && $context->{interpret_depth} <= 2;
-        $arguments =~ s/(?<![\w\/\-\\])my\b/$context->{nick}'s/gi if defined $arguments && $context->{interpret_depth} <= 2;
-        $arguments =~ s/\\my\b/my/gi if defined $arguments && $context->{interpret_depth} <= 2;
-        $arguments =~ s/\\me\b/me/gi if defined $arguments && $context->{interpret_depth} <= 2;
-        $arguments =~ s/\\i am\b/i am/gi if defined $arguments && $context->{interpret_depth} <= 2;
+        $arguments =~ s/(?<![\w\/\-\\])i am\b/$context->{nick} is/gi if defined $arguments && $context->{interpret_depth} <= 1;
+        $arguments =~ s/(?<![\w\/\-\\])me\b/$context->{nick}/gi if defined $arguments && $context->{interpret_depth} <= 1;
+        $arguments =~ s/(?<![\w\/\-\\])my\b/$context->{nick}'s/gi if defined $arguments && $context->{interpret_depth} <= 1;
+        $arguments =~ s/\\my\b/my/gi if defined $arguments && $context->{interpret_depth} <= 1;
+        $arguments =~ s/\\me\b/me/gi if defined $arguments && $context->{interpret_depth} <= 1;
+        $arguments =~ s/\\i am\b/i am/gi if defined $arguments && $context->{interpret_depth} <= 1;
     }
 
     if (not $self->{pbot}->{commands}->get_meta($keyword, 'dont-protect-self') and not $self->{pbot}->{factoids}->get_meta($context->{from}, $keyword, 'dont-protect-self')) {
