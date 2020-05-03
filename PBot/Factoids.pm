@@ -870,7 +870,6 @@ sub interpreter {
         }
     }
 
-    $self->{pbot}->{logger}->log("$keyword $context->{interpret_depth}\n");
     if ($context->{interpret_depth} <= 1 and $self->{factoids}->get_data($channel, $keyword, 'last_referenced_in') eq $context->{from}) {
         my $ratelimit = $self->{pbot}->{registry}->get_value($context->{from}, 'ratelimit_override');
         $ratelimit = $self->{factoids}->get_data($channel, $keyword, 'rate_limit') if not defined $ratelimit;
