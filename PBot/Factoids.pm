@@ -870,19 +870,16 @@ sub interpreter {
         }
     }
 
-    if ($self->{factoids}->exists($channel, $keyword, 'last_referenced_on')) {
-        if ($self->{factoids}->exists($channel, $keyword, 'last_referenced_in')) {
-            if ($self->{factoids}->get_data($channel, $keyword, 'last_referenced_in') eq $context->{from}) {
-                my $ratelimit = $self->{pbot}->{registry}->get_value($context->{from}, 'ratelimit_override');
-                $ratelimit = $self->{factoids}->get_data($channel, $keyword, 'rate_limit') if not defined $ratelimit;
-                if (gettimeofday - $self->{factoids}->get_data($channel, $keyword, 'last_referenced_on') < $ratelimit) {
-                    my $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : "";
-                    return
-                      "/msg $context->{nick} $ref_from'$trigger_name' is rate-limited; try again in "
-                      . duration($ratelimit - int(gettimeofday - $self->{factoids}->get_data($channel, $keyword, 'last_referenced_on'))) . "."
-                      unless $self->{pbot}->{users}->loggedin_admin($channel, "$context->{nick}!$context->{user}\@$context->{host}");
-                }
-            }
+    $self->{pbot}->{logger}->log("$keyword $context->{interpret_depth}\n");
+    if ($context->{interpret_depth} <= 1 and $self->{factoids}->get_data($channel, $keyword, 'last_referenced_in') eq $context->{from}) {
+        my $ratelimit = $self->{pbot}->{registry}->get_value($context->{from}, 'ratelimit_override');
+        $ratelimit = $self->{factoids}->get_data($channel, $keyword, 'rate_limit') if not defined $ratelimit;
+        if (gettimeofday - $self->{factoids}->get_data($channel, $keyword, 'last_referenced_on') < $ratelimit) {
+            my $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : "";
+            return
+            "/msg $context->{nick} $ref_from'$trigger_name' is rate-limited; try again in "
+            . duration($ratelimit - int(gettimeofday - $self->{factoids}->get_data($channel, $keyword, 'last_referenced_on'))) . "."
+            unless $self->{pbot}->{users}->loggedin_admin($channel, "$context->{nick}!$context->{user}\@$context->{host}");
         }
     }
 

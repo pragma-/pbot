@@ -154,7 +154,7 @@ sub process_line {
         }
 
         $context->{referenced}          = $embedded;
-        $context->{interpret_depth}     = 1;
+        $context->{interpret_depth}     = 0;
         $context->{preserve_whitespace} = $preserve_whitespace;
 
         $context->{result} = $self->interpret($context);
@@ -170,6 +170,8 @@ sub interpret {
     my $text;
     my $pbot = $self->{pbot};
 
+    $context->{interpret_depth}++;
+
     $pbot->{logger}->log("=== [$context->{interpret_depth}] Got command: ("
           . (defined $context->{from} ? $context->{from} : "undef")
           . ") $context->{nick}!$context->{user}\@$context->{host}: $context->{command}\n");
@@ -183,7 +185,7 @@ sub interpret {
         $self->{pbot}->{logger}->log(Dumper $context);
     }
 
-    return "Too many levels of recursion, aborted." if (++$context->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
+    return "Too many levels of recursion, aborted." if ($context->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
 
     if (not defined $context->{nick} || not defined $context->{user} || not defined $context->{host} || not defined $context->{command}) {
         $pbot->{logger}->log("Error 1, bad parameters to interpret_command\n");
