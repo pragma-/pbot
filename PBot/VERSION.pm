@@ -25,14 +25,12 @@ use constant {
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->version_cmd(@_) }, "version", 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_version(@_) }, "version", 0);
     $self->{last_check} = {timestamp => 0, version => BUILD_REVISION, date => BUILD_DATE};
 }
 
-sub version { return BUILD_NAME . " version " . BUILD_REVISION . " " . BUILD_DATE; }
-
-sub version_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_version {
+    my ($self, $context) = @_;
 
     my $ratelimit = $self->{pbot}->{registry}->get_value('version', 'check_limit') // 300;
 
@@ -55,7 +53,7 @@ sub version_cmd {
     }
 
     my $target_nick;
-    $target_nick = $self->{pbot}->{nicklist}->is_present_similar($from, $arguments) if length $arguments;
+    $target_nick = $self->{pbot}->{nicklist}->is_present_similar($context->{from}, $context->{arguments}) if length $context->{arguments};
 
     my $result = '/say ';
     $result .= "$target_nick: " if $target_nick;
@@ -64,5 +62,7 @@ sub version_cmd {
     if ($self->{last_check}->{version} > BUILD_REVISION) { $result .= "; new version available: $self->{last_check}->{version} $self->{last_check}->{date}!"; }
     return $result;
 }
+
+sub version { return BUILD_NAME . " version " . BUILD_REVISION . " " . BUILD_DATE; }
 
 1;

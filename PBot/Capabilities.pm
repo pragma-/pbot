@@ -33,6 +33,117 @@ sub initialize {
     $self->add('is-whitelisted', undef, 1);
 }
 
+sub cmd_cap {
+    my ($self, $context) = @_;
+
+    my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
+    my $result;
+    given ($command) {
+        when ('list') {
+            my $cap = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
+            return $self->list($cap);
+        }
+
+        when ('whohas') {
+            my $cap = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
+            return "Usage: cap whohas <capability>; Lists all users who have <capability>" if not defined $cap;
+            return "No such capability $cap."                                              if not $self->exists($cap);
+            my $result  = "Users with capability $cap: ";
+            my $users   = $self->{pbot}->{users}->{users};
+            my @matches;
+            foreach my $name (sort $users->get_keys) {
+                my $u = $users->get_data($name);
+                push @matches, $users->get_key_name($name) if $self->userhas($u, $cap);
+            }
+
+            if (@matches) {
+                $result .= join(', ', @matches);
+            } else {
+                $result .= 'nobody';
+            }
+
+            return $result;
+        }
+
+        when ('userhas') {
+            my ($name, $cap) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
+            return "Usage: cap userhas <username> [capability]; Lists capabilities belonging to <user>" if not defined $name;
+            $cap = lc $cap if defined $cap;
+
+            my $u = $self->{pbot}->{users}->{users}->get_data($name);
+            if (not defined $u) {
+                return "No such user $name.";
+            }
+
+            $name = $self->{pbot}->{users}->{users}->get_key_name($name);
+
+            if (defined $cap) {
+                return "Try again. No such capability $cap." if not $self->exists($cap);
+                if   ($self->userhas($u, $cap)) { return "Yes. User $name has capability $cap."; }
+                else                            { return "No. User $name  does not have capability $cap."; }
+            } else {
+                my $result = "User $name has capabilities: ";
+                my @groups;
+                my @single;
+                foreach my $key (sort keys %{$u}) {
+                    next if $key eq '_name';
+                    next if not $self->exists($key);
+                    my $count = $self->{caps}->get_keys;
+                    if   ($count > 0) { push @groups, "$key ($count cap" . ($count == 1 ? '' : 's') . ")"; }
+                    else              { push @single, $key; }
+                }
+                if (@groups or @single) { $result .= join ', ', @groups, @single; }
+                else                    { $result = "User $name has no capabilities."; }
+                return $result;
+            }
+        }
+
+        when ('group') {
+            my ($cap, $subcaps) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
+            return "Usage: cap group <existing or new capability> <existing capabilities...>" if not defined $cap or not defined $subcaps;
+
+            my $u = $self->{pbot}->{users}->loggedin($context->{from}, $context->{hostmask});
+            return "You must be logged into your user account to group capabilities together."           if not defined $u;
+            return "You must have the can-group-capabilities capability to group capabilities together." if not $self->userhas($u, 'can-group-capabilities');
+
+            my @caps = split /\s+|,/, $subcaps;
+            foreach my $c (@caps) {
+                return "No such capability $c."                     if not $self->exists($c);
+                return "You cannot group a capability with itself." if lc $cap eq lc $c;
+                $self->add($cap, $c);
+            }
+            if (@caps > 1) { return "Capabilities " . join(', ', @caps) . " added to the $cap capability group."; }
+            else           { return "Capability $subcaps added to the $cap capability group."; }
+        }
+
+        when ('ungroup') {
+            my ($cap, $subcaps) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
+            return "Usage: cap ungroup <existing capability group> <grouped capabilities...>" if not defined $cap or not defined $subcaps;
+            return "No such capability $cap."                                                 if not $self->exists($cap);
+
+            my $u = $self->{pbot}->{users}->loggedin($context->{from}, $context->{hostmask});
+            return "You must be logged into your user account to remove capabilities from groups."             if not defined $u;
+            return "You must have the can-ungroup-capabilities capability to remove capabilities from groups." if not $self->userhas($u, 'can-ungroup-capabilities');
+
+            my @caps = split /\s+|,/, $subcaps;
+            foreach my $c (@caps) {
+                return "No such capability $c."                                      if not $self->exists($c);
+                return "Capability $c does not belong to the $cap capability group." if not $self->has($cap, $c);
+                $self->remove($cap, $c);
+            }
+
+            if (@caps > 1) { return "Capabilities " . join(', ', @caps) . " removed from the $cap capability group."; }
+            else           { return "Capability $subcaps removed from the $cap capability group."; }
+        }
+
+        default {
+            $result =
+              "Usage: cap list [capability] | cap group <existing or new capability group> <existing capabilities...> | cap ungroup <existing capability group> <grouped capabilities...> | cap userhas <user> [capability] | cap whohas <capability>";
+        }
+    }
+    return $result;
+}
+
 sub has {
     my ($self, $cap, $subcap, $depth) = @_;
     my $cap_data = $self->{caps}->get_data($cap);
@@ -144,117 +255,6 @@ sub list {
         else              { push @standalones, $cap; }
     }
     $result .= join ', ', @groups, @standalones;
-    return $result;
-}
-
-sub capcmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
-
-    my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
-    my $result;
-    given ($command) {
-        when ('list') {
-            my $cap = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
-            return $self->list($cap);
-        }
-
-        when ('whohas') {
-            my $cap = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
-            return "Usage: cap whohas <capability>; Lists all users who have <capability>" if not defined $cap;
-            return "No such capability $cap."                                              if not $self->exists($cap);
-            my $result  = "Users with capability $cap: ";
-            my $users   = $self->{pbot}->{users}->{users};
-            my @matches;
-            foreach my $name (sort $users->get_keys) {
-                my $u = $users->get_data($name);
-                push @matches, $users->get_key_name($name) if $self->userhas($u, $cap);
-            }
-
-            if (@matches) {
-                $result .= join(', ', @matches);
-            } else {
-                $result .= 'nobody';
-            }
-
-            return $result;
-        }
-
-        when ('userhas') {
-            my ($name, $cap) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
-            return "Usage: cap userhas <username> [capability]; Lists capabilities belonging to <user>" if not defined $name;
-            $cap = lc $cap if defined $cap;
-
-            my $u = $self->{pbot}->{users}->{users}->get_data($name);
-            if (not defined $u) {
-                return "No such user $name.";
-            }
-
-            $name = $self->{pbot}->{users}->{users}->get_key_name($name);
-
-            if (defined $cap) {
-                return "Try again. No such capability $cap." if not $self->exists($cap);
-                if   ($self->userhas($u, $cap)) { return "Yes. User $name has capability $cap."; }
-                else                            { return "No. User $name  does not have capability $cap."; }
-            } else {
-                my $result = "User $name has capabilities: ";
-                my @groups;
-                my @single;
-                foreach my $key (sort keys %{$u}) {
-                    next if $key eq '_name';
-                    next if not $self->exists($key);
-                    my $count = $self->{caps}->get_keys;
-                    if   ($count > 0) { push @groups, "$key ($count cap" . ($count == 1 ? '' : 's') . ")"; }
-                    else              { push @single, $key; }
-                }
-                if (@groups or @single) { $result .= join ', ', @groups, @single; }
-                else                    { $result = "User $name has no capabilities."; }
-                return $result;
-            }
-        }
-
-        when ('group') {
-            my ($cap, $subcaps) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
-            return "Usage: cap group <existing or new capability> <existing capabilities...>" if not defined $cap or not defined $subcaps;
-
-            my $u = $self->{pbot}->{users}->loggedin($from, "$nick!$user\@$host");
-            return "You must be logged into your user account to group capabilities together."           if not defined $u;
-            return "You must have the can-group-capabilities capability to group capabilities together." if not $self->userhas($u, 'can-group-capabilities');
-
-            my @caps = split /\s+|,/, $subcaps;
-            foreach my $c (@caps) {
-                return "No such capability $c."                     if not $self->exists($c);
-                return "You cannot group a capability with itself." if lc $cap eq lc $c;
-                $self->add($cap, $c);
-            }
-            if (@caps > 1) { return "Capabilities " . join(', ', @caps) . " added to the $cap capability group."; }
-            else           { return "Capability $subcaps added to the $cap capability group."; }
-        }
-
-        when ('ungroup') {
-            my ($cap, $subcaps) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
-            return "Usage: cap ungroup <existing capability group> <grouped capabilities...>" if not defined $cap or not defined $subcaps;
-            return "No such capability $cap."                                                 if not $self->exists($cap);
-
-            my $u = $self->{pbot}->{users}->loggedin($from, "$nick!$user\@$host");
-            return "You must be logged into your user account to remove capabilities from groups."             if not defined $u;
-            return "You must have the can-ungroup-capabilities capability to remove capabilities from groups." if not $self->userhas($u, 'can-ungroup-capabilities');
-
-            my @caps = split /\s+|,/, $subcaps;
-            foreach my $c (@caps) {
-                return "No such capability $c."                                      if not $self->exists($c);
-                return "Capability $c does not belong to the $cap capability group." if not $self->has($cap, $c);
-                $self->remove($cap, $c);
-            }
-
-            if (@caps > 1) { return "Capabilities " . join(', ', @caps) . " removed from the $cap capability group."; }
-            else           { return "Capability $subcaps removed from the $cap capability group."; }
-        }
-
-        default {
-            $result =
-              "Usage: cap list [capability] | cap group <existing or new capability group> <existing capabilities...> | cap ungroup <existing capability group> <grouped capabilities...> | cap userhas <user> [capability] | cap whohas <capability>";
-        }
-    }
     return $result;
 }
 

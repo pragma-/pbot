@@ -15,7 +15,7 @@ use feature 'unicode_strings';
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { return $self->magic(@_) }, "mc", 90);
+    $self->{pbot}->{commands}->register(sub { return $self->cmd_magic(@_) }, "mc", 90);
 }
 
 sub unload {
@@ -23,9 +23,8 @@ sub unload {
     $self->{pbot}->{commands}->unregister("mc");
 }
 
-sub magic {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments) = @_;
+sub cmd_magic {
+    my ($self, $context) = @_;
 
     # do something magical!
     return "Did something magical.";

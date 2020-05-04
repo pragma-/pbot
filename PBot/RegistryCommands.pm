@@ -15,18 +15,17 @@ use feature 'unicode_strings';
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->regset(@_) },       "regset",       1);
-    $self->{pbot}->{commands}->register(sub { $self->regunset(@_) },     "regunset",     1);
-    $self->{pbot}->{commands}->register(sub { $self->regshow(@_) },      "regshow",      0);
-    $self->{pbot}->{commands}->register(sub { $self->regsetmeta(@_) },   "regsetmeta",   1);
-    $self->{pbot}->{commands}->register(sub { $self->regunsetmeta(@_) }, "regunsetmeta", 1);
-    $self->{pbot}->{commands}->register(sub { $self->regchange(@_) },    "regchange",    1);
-    $self->{pbot}->{commands}->register(sub { $self->regfind(@_) },      "regfind",      0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_regset(@_) },       "regset",       1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_regunset(@_) },     "regunset",     1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_regshow(@_) },      "regshow",      0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_regsetmeta(@_) },   "regsetmeta",   1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_regunsetmeta(@_) }, "regunsetmeta", 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_regchange(@_) },    "regchange",    1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_regfind(@_) },      "regfind",      0);
 }
 
-sub regset {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_regset {
+    my ($self, $context) = @_;
     my $usage = "Usage: regset <section>.<item> [value]";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -44,13 +43,12 @@ sub regset {
     if (defined $value) { $self->{pbot}->{registry}->add('text', $section, $item, $value); }
     else                { return $self->{pbot}->{registry}->set($section, $item, 'value'); }
 
-    $self->{pbot}->{logger}->log("$nick!$user\@$host set registry entry [$section] $item => $value\n");
+    $self->{pbot}->{logger}->log("$context->{hostmask} set registry entry [$section] $item => $value\n");
     return "$section.$item set to $value";
 }
 
-sub regunset {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_regunset {
+    my ($self, $context) = @_;
     my $usage = "Usage: regunset <section>.<item>";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -65,14 +63,13 @@ sub regunset {
 
     if (not $self->{pbot}->{registry}->{registry}->exists($section, $item)) { return "No such item $item in section $section."; }
 
-    $self->{pbot}->{logger}->log("$nick!$user\@$host removed registry entry $section.$item\n");
+    $self->{pbot}->{logger}->log("$context->{hostmask} removed registry entry $section.$item\n");
     $self->{pbot}->{registry}->remove($section, $item);
     return "$section.$item deleted from registry";
 }
 
-sub regsetmeta {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_regsetmeta {
+    my ($self, $context) = @_;
     my $usage = "Usage: regsetmeta <section>.<item> [key [value]]";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -92,9 +89,8 @@ sub regsetmeta {
     return $self->{pbot}->{registry}->set($section, $item, $key, $value);
 }
 
-sub regunsetmeta {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_regunsetmeta {
+    my ($self, $context) = @_;
     my $usage = "Usage: regunsetmeta <section>.<item> <key>";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -111,9 +107,8 @@ sub regunsetmeta {
     return $self->{pbot}->{registry}->unset($section, $item, $key);
 }
 
-sub regshow {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_regshow {
+    my ($self, $context) = @_;
     my $registry = $self->{pbot}->{registry}->{registry};
     my $usage    = "Usage: regshow <section>.<item>";
 
@@ -137,11 +132,11 @@ sub regshow {
     return $result;
 }
 
-sub regfind {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments) = @_;
+sub cmd_regfind {
+    my ($self, $context) = @_;
     my $registry = $self->{pbot}->{registry}->{registry};
     my $usage    = "Usage: regfind [-showvalues] [-section section] <regex>";
+    my $arguments = $context->{arguments};
 
     return $usage if not defined $arguments;
 
@@ -193,7 +188,7 @@ sub regfind {
         }
     };
 
-    return "/msg $nick $arguments: $@" if $@;
+    return "/msg $context->{nick} $context->{arguments}: $@" if $@;
 
     if ($i == 1) {
         chop $text;
@@ -212,12 +207,12 @@ sub regfind {
     }
 }
 
-sub regchange {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments) = @_;
+sub cmd_regchange {
+    my ($self, $context) = @_;
     my ($section, $item, $delim, $tochange, $changeto, $modifier);
+    my $arguments = $context->{arguments};
 
-    if (defined $arguments) {
+    if (length $arguments) {
         if ($arguments =~ /^(.+?)\.([^\s]+)\s+s(.)/ or $arguments =~ /^([^\s]+) ([^\s]+)\s+s(.)/) {
             $section = $1;
             $item    = $2;
@@ -245,16 +240,16 @@ sub regchange {
     my $ret = eval {
         use re::engine::RE2 -strict => 1;
         if (not $registry->get_data($section, $item, 'value') =~ s|$tochange|$changeto|) {
-            $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: failed to change $section.$item 's$delim$tochange$delim$changeto$delim$modifier\n");
-            return "/msg $nick Change $section.$item failed.";
+            $self->{pbot}->{logger}->log("($context->{from}) $context->{hostmask}: failed to change $section.$item 's$delim$tochange$delim$changeto$delim$modifier\n");
+            return "/msg $context->{nick} Change $section.$item failed.";
         } else {
-            $self->{pbot}->{logger}->log("($from) $nick!$user\@$host: changed $section.$item 's/$tochange/$changeto/\n");
+            $self->{pbot}->{logger}->log("($context->{from}) $context->{hostmask}: changed $section.$item 's/$tochange/$changeto/\n");
             $self->{pbot}->{registry}->process_trigger($section, $item, 'value', $registry->get_data($section, $item, 'value'));
             $self->{pbot}->{registry}->save;
             return "$section.$item set to " . $registry->get_data($section, $item, 'value');
         }
     };
-    return "/msg $nick Failed to change $section.$item: $@" if $@;
+    return "/msg $context->{nick} Failed to change $section.$item: $@" if $@;
     return $ret;
 }
 

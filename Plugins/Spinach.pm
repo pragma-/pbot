@@ -43,7 +43,7 @@ use Plugins::Spinach::Rank;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->spinach_cmd(@_) }, 'spinach', 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_spinach(@_) }, 'spinach', 0);
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quit', sub { $self->on_departure(@_) });
@@ -85,7 +85,7 @@ sub unload {
 
 sub on_kick {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user,       $host)  = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
+    my ($nick, $user, $host)  = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
     my ($victim, $reason) = ($event->{event}->to, $event->{event}->{args}[1]);
     my $channel = $event->{event}->{args}[0];
     return 0 if lc $channel ne $self->{channel};
@@ -228,8 +228,9 @@ my %color = (
     reset => "\x0F",
 );
 
-sub spinach_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_spinach {
+    my ($self, $context) = @_;
+    my $arguments = $context->{arguments};
     $arguments =~ s/^\s+|\s+$//g;
 
     my $usage =
@@ -292,9 +293,9 @@ sub spinach_cmd {
         }
 
         when ('edit') {
-            my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
+            my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask});
 
-            if (not $admin) { return "$nick: Sorry, only admins may edit questions."; }
+            if (not $admin) { return "$context->{nick}: Sorry, only admins may edit questions."; }
 
             my ($id, $key, $value) = split /\s+/, $arguments, 3;
 
@@ -310,30 +311,30 @@ sub spinach_cmd {
                 }
             }
 
-            if (not defined $question) { return "$nick: No such question."; }
+            if (not defined $question) { return "$context->{nick}: No such question."; }
 
             if (not defined $key) {
                 my $dump = Dumper $question;
                 $dump =~ s/\$VAR\d+ = \{\s*//;
                 $dump =~ s/ \};\s*$//;
-                return "$nick: Question $id: $dump";
+                return "$context->{nick}: Question $id: $dump";
             }
 
             if (not defined $value) {
                 my $v = $question->{$key} // 'unset';
-                return "$nick: Question $id: $key => $v";
+                return "$context->{nick}: Question $id: $key => $v";
             }
 
-            if ($key !~ m/^(?:question|answer|category)$/i) { return "$nick: You may not edit that key."; }
+            if ($key !~ m/^(?:question|answer|category)$/i) { return "$context->{nick}: You may not edit that key."; }
 
             $question->{$key} = $value;
             $self->save_questions;
-            return "$nick: Question $id: $key set to $value";
+            return "$context->{nick}: Question $id: $key set to $value";
         }
 
         when ('load') {
-            my $u = $self->{pbot}->{users}->loggedin($self->{channel}, "$nick!$user\@$host");
-            if (not $u or not $self->{pbot}->{capabilities}->userhas($u, 'botowner')) { return "$nick: Sorry, only botowners may reload the questions."; }
+            my $u = $self->{pbot}->{users}->loggedin($self->{channel}, $context->{hostmask});
+            if (not $u or not $self->{pbot}->{capabilities}->userhas($u, 'botowner')) { return "$context->{nick}: Sorry, only botowners may reload the questions."; }
 
             $arguments = undef if not length $arguments;
             return $self->load_questions($arguments);
@@ -350,59 +351,59 @@ sub spinach_cmd {
                 );
             }
 
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
+            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($context->{nick}, $context->{user}, $context->{host});
 
             foreach my $player (@{$self->{state_data}->{players}}) {
-                if ($player->{id} == $id) { return "$nick: You have already joined this game."; }
+                if ($player->{id} == $id) { return "$context->{nick}: You have already joined this game."; }
             }
 
-            my $player = {id => $id, name => $nick, score => 0, ready => $self->{current_state} eq 'getplayers' ? 0 : 1, missedinputs => 0};
+            my $player = {id => $id, name => $context->{nick}, score => 0, ready => $self->{current_state} eq 'getplayers' ? 0 : 1, missedinputs => 0};
             push @{$self->{state_data}->{players}}, $player;
             $self->{state_data}->{counter} = 0;
-            return "/msg $self->{channel} $nick has joined the game!";
+            return "/msg $self->{channel} $context->{nick} has joined the game!";
         }
 
         when ('ready') {
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
+            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($context->{nick}, $context->{user}, $context->{host});
 
             foreach my $player (@{$self->{state_data}->{players}}) {
                 if ($player->{id} == $id) {
-                    if ($self->{current_state} ne 'getplayers') { return "/msg $nick This is not the time to use `ready`."; }
+                    if ($self->{current_state} ne 'getplayers') { return "/msg $context->{nick} This is not the time to use `ready`."; }
 
                     if ($player->{ready} == 0) {
                         $player->{ready} = 1;
                         $player->{score} = 0;
-                        return "/msg $self->{channel} $nick is ready!";
+                        return "/msg $self->{channel} $context->{nick} is ready!";
                     } else {
-                        return "/msg $nick You are already ready.";
+                        return "/msg $context->{nick} You are already ready.";
                     }
                 }
             }
 
-            return "$nick: You haven't joined this game yet. Use `j` to play now!";
+            return "$context->{nick}: You haven't joined this game yet. Use `j` to play now!";
         }
 
         when ('unready') {
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
+            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($context->{nick}, $context->{user}, $context->{host});
 
             foreach my $player (@{$self->{state_data}->{players}}) {
                 if ($player->{id} == $id) {
-                    if ($self->{current_state} ne 'getplayers') { return "/msg $nick This is not the time to use `unready`."; }
+                    if ($self->{current_state} ne 'getplayers') { return "/msg $context->{nick} This is not the time to use `unready`."; }
 
                     if ($player->{ready} != 0) {
                         $player->{ready} = 0;
-                        return "/msg $self->{channel} $nick is no longer ready!";
+                        return "/msg $self->{channel} $context->{nick} is no longer ready!";
                     } else {
-                        return "/msg $nick You are already not ready.";
+                        return "/msg $context->{nick} You are already not ready.";
                     }
                 }
             }
 
-            return "$nick: You haven't joined this game yet. Use `j` to play now!";
+            return "$context->{nick}: You haven't joined this game yet. Use `j` to play now!";
         }
 
         when ('exit') {
-            my $id      = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
+            my $id      = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($context->{nick}, $context->{user}, $context->{host});
             my $removed = 0;
 
             for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
@@ -418,20 +419,20 @@ sub spinach_cmd {
                 if (not @{$self->{state_data}->{players}}) {
                     $self->{current_state} = 'nogame';
                     $self->{pbot}->{timer}->update_repeating('spinach loop', 0);
-                    return "/msg $self->{channel} $nick has left the game! All players have left. The game has been stopped.";
+                    return "/msg $self->{channel} $context->{nick} has left the game! All players have left. The game has been stopped.";
                 } else {
-                    return "/msg $self->{channel} $nick has left the game!";
+                    return "/msg $self->{channel} $context->{nick} has left the game!";
                 }
             } else {
-                return "$nick: But you are not even playing the game.";
+                return "$context->{nick}: But you are not even playing the game.";
             }
         }
 
         when ('abort') {
-            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) { return "$nick: Sorry, only admins may abort the game."; }
+            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask})) { return "$context->{nick}: Sorry, only admins may abort the game."; }
 
             $self->{current_state} = 'gameover';
-            return "/msg $self->{channel} $nick: The game has been aborted.";
+            return "/msg $self->{channel} $context->{nick}: The game has been aborted.";
         }
 
         when ($_ eq 'score' or $_ eq 'players') {
@@ -460,7 +461,7 @@ sub spinach_cmd {
         }
 
         when ('kick') {
-            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) { return "$nick: Sorry, only admins may kick people from the game."; }
+            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask})) { return "$context->{nick}: Sorry, only admins may kick people from the game."; }
 
             if (not length $arguments) { return "Usage: spinach kick <nick>"; }
 
@@ -475,9 +476,9 @@ sub spinach_cmd {
 
             if ($removed) {
                 if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) { $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1 }
-                return "/msg $self->{channel} $nick: $arguments has been kicked from the game.";
+                return "/msg $self->{channel} $context->{nick}: $arguments has been kicked from the game.";
             } else {
-                return "$nick: $arguments isn't even in the game.";
+                return "$context->{nick}: $arguments isn't even in the game.";
             }
         }
 
@@ -490,7 +491,7 @@ sub spinach_cmd {
 
         when ('reroll') {
             if ($self->{current_state} =~ /getlies$/) {
-                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
+                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($context->{nick}, $context->{user}, $context->{host});
 
                 my $player;
                 my $rerolled = 0;
@@ -508,7 +509,7 @@ sub spinach_cmd {
                     }
                 }
 
-                if (not $player) { return "$nick: You are not playing in this game. Use `j` to start playing now!"; }
+                if (not $player) { return "$context->{nick}: You are not playing in this game. Use `j` to start playing now!"; }
 
                 my $needed = int(@{$self->{state_data}->{players}} / 2) + 1;
                 $needed -= $rerolled;
@@ -519,15 +520,15 @@ sub spinach_cmd {
                 elsif ($needed > 1)  { $votes_needed = "$needed more votes to reroll!"; }
                 else                 { $votes_needed = "Rerolling..."; }
 
-                return "/msg $self->{channel} $color{red}$nick has voted to reroll for another question from the same category! $color{reset}$votes_needed";
+                return "/msg $self->{channel} $color{red}$context->{nick} has voted to reroll for another question from the same category! $color{reset}$votes_needed";
             } else {
-                return "$nick: This command can be used only during the \"submit lies\" stage.";
+                return "$context->{nick}: This command can be used only during the \"submit lies\" stage.";
             }
         }
 
         when ('skip') {
             if ($self->{current_state} =~ /getlies$/) {
-                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
+                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($context->{nick}, $context->{user}, $context->{host});
 
                 my $player;
                 my $skipped = 0;
@@ -545,7 +546,7 @@ sub spinach_cmd {
                     }
                 }
 
-                if (not $player) { return "$nick: You are not playing in this game. Use `j` to start playing now!"; }
+                if (not $player) { return "$context->{nick}: You are not playing in this game. Use `j` to start playing now!"; }
 
                 my $needed = int(@{$self->{state_data}->{players}} / 2) + 1;
                 $needed -= $skipped;
@@ -556,15 +557,15 @@ sub spinach_cmd {
                 elsif ($needed > 1)  { $votes_needed = "$needed more votes to skip!"; }
                 else                 { $votes_needed = "Skipping..."; }
 
-                return "/msg $self->{channel} $color{red}$nick has voted to skip this category! $color{reset}$votes_needed";
+                return "/msg $self->{channel} $color{red}$context->{nick} has voted to skip this category! $color{reset}$votes_needed";
             } else {
-                return "$nick: This command can be used only during the \"submit lies\" stage.";
+                return "$context->{nick}: This command can be used only during the \"submit lies\" stage.";
             }
         }
 
         when ('keep') {
             if ($self->{current_state} =~ /getlies$/) {
-                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
+                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($context->{nick}, $context->{user}, $context->{host});
 
                 my $player;
                 foreach my $i (@{$self->{state_data}->{players}}) {
@@ -577,11 +578,11 @@ sub spinach_cmd {
                     }
                 }
 
-                if (not $player) { return "$nick: You are not playing in this game. Use `j` to start playing now!"; }
+                if (not $player) { return "$context->{nick}: You are not playing in this game. Use `j` to start playing now!"; }
 
-                return "/msg $self->{channel} $color{green}$nick has voted to keep playing the current question!";
+                return "/msg $self->{channel} $color{green}$context->{nick} has voted to keep playing the current question!";
             } else {
-                return "$nick: This command can be used only during the \"submit lies\" stage.";
+                return "$context->{nick}: This command can be used only during the \"submit lies\" stage.";
             }
         }
 
@@ -590,37 +591,37 @@ sub spinach_cmd {
             if ($self->{current_state} =~ /choosecategory$/) {
                 if (not length $arguments) { return "Usage: spinach choose <integer>"; }
 
-                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
+                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($context->{nick}, $context->{user}, $context->{host});
 
                 if (not @{$self->{state_data}->{players}} or $id != $self->{state_data}->{players}->[$self->{state_data}->{current_player}]->{id}) {
-                    return "$nick: It is not your turn to choose a category.";
+                    return "$context->{nick}: It is not your turn to choose a category.";
                 }
 
-                if ($arguments !~ /^[0-9]+$/) { return "$nick: Please choose a category number. $self->{state_data}->{categories_text}"; }
+                if ($arguments !~ /^[0-9]+$/) { return "$context->{nick}: Please choose a category number. $self->{state_data}->{categories_text}"; }
 
                 $arguments--;
 
                 if ($arguments < 0 or $arguments >= @{$self->{state_data}->{category_options}}) {
-                    return "$nick: Choice out of range. Please choose a valid category. $self->{state_data}->{categories_text}";
+                    return "$context->{nick}: Choice out of range. Please choose a valid category. $self->{state_data}->{categories_text}";
                 }
 
                 if ($arguments == @{$self->{state_data}->{category_options}} - 2) {
                     $arguments = (@{$self->{state_data}->{category_options}} - 2) * rand;
                     $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
-                    return "/msg $self->{channel} $nick has chosen RANDOM CATEGORY! Randomly choosing category: $self->{state_data}->{current_category}!";
+                    return "/msg $self->{channel} $context->{nick} has chosen RANDOM CATEGORY! Randomly choosing category: $self->{state_data}->{current_category}!";
                 } elsif ($arguments == @{$self->{state_data}->{category_options}} - 1) {
                     $self->{state_data}->{reroll_category} = 1;
-                    return "/msg $self->{channel} $nick has chosen REROLL CATEGORIES! Rerolling categories...";
+                    return "/msg $self->{channel} $context->{nick} has chosen REROLL CATEGORIES! Rerolling categories...";
                 } else {
                     $self->{state_data}->{current_category} = $self->{state_data}->{category_options}->[$arguments];
-                    return "/msg $self->{channel} $nick has chosen $self->{state_data}->{current_category}!";
+                    return "/msg $self->{channel} $context->{nick} has chosen $self->{state_data}->{current_category}!";
                 }
             }
 
             if ($self->{current_state} =~ /getlies$/) {
                 if (not length $arguments) { return "Usage: spinach lie <text>"; }
 
-                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
+                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($context->{nick}, $context->{user}, $context->{host});
 
                 my $player;
                 foreach my $i (@{$self->{state_data}->{players}}) {
@@ -630,7 +631,7 @@ sub spinach_cmd {
                     }
                 }
 
-                if (not $player) { return "$nick: You are not playing in this game. Use `j` to start playing now!"; }
+                if (not $player) { return "$context->{nick}: You are not playing in this game. Use `j` to start playing now!"; }
 
                 $arguments = $self->normalize_text($arguments);
 
@@ -639,7 +640,7 @@ sub spinach_cmd {
 
 =cut
         if (@truth_count > 1 and @lie_count == 1) {
-          return "/msg $nick Your lie cannot be one word for this question. Please try again.";
+          return "/msg $context->{nick} Your lie cannot be one word for this question. Please try again.";
         }
 =cut
 
@@ -654,24 +655,24 @@ sub spinach_cmd {
                     }
                 }
 
-                if (not $found_truth and ++$player->{lie_count} > 2) { return "/msg $nick You cannot change your lie again this round."; }
+                if (not $found_truth and ++$player->{lie_count} > 2) { return "/msg $context->{nick} You cannot change your lie again this round."; }
 
                 if ($found_truth) {
-                    $self->send_message($self->{channel}, "$color{yellow}$nick has found the truth!$color{reset}");
-                    return "$nick: Your lie is too similar to the truth! Please submit a different lie.";
+                    $self->send_message($self->{channel}, "$color{yellow}$context->{nick} has found the truth!$color{reset}");
+                    return "$context->{nick}: Your lie is too similar to the truth! Please submit a different lie.";
                 }
 
                 my $changed = exists $player->{lie};
                 $player->{lie} = $arguments;
 
-                if   ($changed) { return "/msg $self->{channel} $nick has changed their lie!"; }
-                else            { return "/msg $self->{channel} $nick has submitted a lie!"; }
+                if   ($changed) { return "/msg $self->{channel} $context->{nick} has changed their lie!"; }
+                else            { return "/msg $self->{channel} $context->{nick} has submitted a lie!"; }
             }
 
             if ($self->{current_state} =~ /findtruth$/) {
                 if (not length $arguments) { return "Usage: spinach truth <integer>"; }
 
-                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
+                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($context->{nick}, $context->{user}, $context->{host});
 
                 my $player;
                 foreach my $i (@{$self->{state_data}->{players}}) {
@@ -681,14 +682,14 @@ sub spinach_cmd {
                     }
                 }
 
-                if (not $player) { return "$nick: You are not playing in this game. Use `j` to start playing now!"; }
+                if (not $player) { return "$context->{nick}: You are not playing in this game. Use `j` to start playing now!"; }
 
-                if ($arguments !~ /^[0-9]+$/) { return "$nick: Please select a truth number. $self->{state_data}->{current_choices_text}"; }
+                if ($arguments !~ /^[0-9]+$/) { return "$context->{nick}: Please select a truth number. $self->{state_data}->{current_choices_text}"; }
 
                 $arguments--;
 
                 if ($arguments < 0 or $arguments >= @{$self->{state_data}->{current_choices}}) {
-                    return "$nick: Selection out of range. Please select a valid truth. $self->{state_data}->{current_choices_text}";
+                    return "$context->{nick}: Selection out of range. Please select a valid truth. $self->{state_data}->{current_choices_text}";
                 }
 
                 my $changed = exists $player->{truth};
@@ -696,14 +697,14 @@ sub spinach_cmd {
 
                 if ($player->{truth} eq $player->{lie}) {
                     delete $player->{truth};
-                    return "$nick: You cannot select your own lie!";
+                    return "$context->{nick}: You cannot select your own lie!";
                 }
 
-                if   ($changed) { return "/msg $self->{channel} $nick has selected a different truth!"; }
-                else            { return "/msg $self->{channel} $nick has selected a truth!"; }
+                if   ($changed) { return "/msg $self->{channel} $context->{nick} has selected a different truth!"; }
+                else            { return "/msg $self->{channel} $context->{nick} has selected a truth!"; }
             }
 
-            return "$nick: It is not time to use this command.";
+            return "$context->{nick}: It is not time to use this command.";
         }
 
         when ('show') {
@@ -712,7 +713,7 @@ sub spinach_cmd {
                 return;
             }
 
-            return "$nick: There is nothing to show right now.";
+            return "$context->{nick}: There is nothing to show right now.";
         }
 
         when ('categories') {
@@ -795,8 +796,8 @@ sub spinach_cmd {
             if ($command eq 'set') {
                 if (not length $args) { return "Usage: spinach state set <new state>"; }
 
-                my $u = $self->{pbot}->{users}->loggedin($self->{channel}, "$nick!$user\@$host");
-                if (not $self->{pbot}->{capabilities}->userhas($u, 'admin')) { return "$nick: Sorry, only admins may set game state."; }
+                my $u = $self->{pbot}->{users}->loggedin($self->{channel}, $context->{hostmask});
+                if (not $self->{pbot}->{capabilities}->userhas($u, 'admin')) { return "$context->{nick}: Sorry, only admins may set game state."; }
 
                 $self->{previous_state} = $self->{current_state};
                 $self->{current_state}  = $args;
@@ -806,8 +807,8 @@ sub spinach_cmd {
             if ($command eq 'result') {
                 if (not length $args) { return "Usage: spinach state result <current state result>"; }
 
-                my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
-                if (not $admin) { return "$nick: Sorry, only admins may set game state."; }
+                my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask});
+                if (not $admin) { return "$context->{nick}: Sorry, only admins may set game state."; }
 
                 $self->{state_data}->{previous_result} = $self->{state_data}->{result};
                 $self->{state_data}->{result}          = $args;
@@ -826,8 +827,8 @@ sub spinach_cmd {
                 return "Spinach stats setting cannot be modified while a game is in progress.";
             }
 
-            my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
-            if (defined $value and not $admin) { return "$nick: Sorry, only Spinach admins may set game settings."; }
+            my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask});
+            if (defined $value and not $admin) { return "$context->{nick}: Sorry, only Spinach admins may set game settings."; }
 
             return $self->{metadata}->set($index, $key, $value);
         }
@@ -841,8 +842,8 @@ sub spinach_cmd {
                 return "Spinach stats setting cannot be modified while a game is in progress.";
             }
 
-            my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host");
-            if (not $admin) { return "$nick: Sorry, only Spinach admins may set game settings."; }
+            my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask});
+            if (not $admin) { return "$context->{nick}: Sorry, only Spinach admins may set game settings."; }
 
             return $self->{metadata}->unset($index, $key);
         }

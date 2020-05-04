@@ -21,17 +21,17 @@ sub initialize {
     my ($self, %conf) = @_;
 
     # register commands
-    $self->{pbot}->{commands}->register(sub { $self->ban_user(@_) },     "ban",       1);
-    $self->{pbot}->{commands}->register(sub { $self->unban_user(@_) },   "unban",     1);
-    $self->{pbot}->{commands}->register(sub { $self->mute_user(@_) },    "mute",      1);
-    $self->{pbot}->{commands}->register(sub { $self->unmute_user(@_) },  "unmute",    1);
-    $self->{pbot}->{commands}->register(sub { $self->kick_user(@_) },    "kick",      1);
-    $self->{pbot}->{commands}->register(sub { $self->op_user(@_) },      "op",        1);
-    $self->{pbot}->{commands}->register(sub { $self->deop_user(@_) },    "deop",      1);
-    $self->{pbot}->{commands}->register(sub { $self->voice_user(@_) },   "voice",     1);
-    $self->{pbot}->{commands}->register(sub { $self->devoice_user(@_) }, "devoice",   1);
-    $self->{pbot}->{commands}->register(sub { $self->mode(@_) },         "mode",      1);
-    $self->{pbot}->{commands}->register(sub { $self->invite(@_) },       "invite",    1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_op(@_) },      "op",      1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_deop(@_) },    "deop",    1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_voice(@_) },   "voice",   1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_devoice(@_) }, "devoice", 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_ban(@_) },     "ban",     1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_unban(@_) },   "unban",   1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_mute(@_) },    "mute",    1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_unmute(@_) },  "unmute",  1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_kick(@_) },    "kick",    1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_mode(@_) },    "mode",    1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_invite(@_) },  "invite",  1);
 
     # allow commands to set modes
     $self->{pbot}->{capabilities}->add('can-ban',     'can-mode-b', 1);
@@ -131,35 +131,36 @@ sub on_nosuchnick {
     return 1;
 }
 
-sub invite {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_invite {
+    my ($self, $context) = @_;
     my ($channel, $target);
 
-    if ($from !~ m/^#/) {
+    if ($context->{from} !~ m/^#/) {
         # from /msg
         my $usage = "Usage from /msg: invite <channel> [nick]; if you omit [nick] then you will be invited";
-        return $usage if not length $arguments;
+        return $usage if not length $context->{arguments};
         ($channel, $target) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
         return "$channel is not a channel; $usage" if $channel !~ m/^#/;
-        $target = $nick if not defined $target;
+        $target = $context->{nick} if not defined $target;
     } else {
         # in channel
-        return "Usage: invite [channel] <nick>" if not length $arguments;
+        return "Usage: invite [channel] <nick>" if not length $context->{arguments};
 
         # add current channel as default channel
-        $self->{pbot}->{interpreter}->unshift_arg($context->{arglist}, $from) if $context->{arglist}[0] !~ m/^#/;
+        $self->{pbot}->{interpreter}->unshift_arg($context->{arglist}, $context->{from}) if $context->{arglist}[0] !~ m/^#/;
         ($channel, $target) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
     }
 
-    $self->{invites}->{lc $channel}->{lc $target} = $nick;
+    $self->{invites}->{lc $channel}->{lc $target} = $context->{nick};
     $self->{pbot}->{chanops}->add_op_command($channel, "sl invite $target $channel");
     $self->{pbot}->{chanops}->gain_ops($channel);
     return "";    # responses handled by events
 }
 
-sub generic_mode_user {
-    my ($self, $mode_flag, $mode_name, $channel, $nick, $context) = @_;
+sub generic_mode {
+    my ($self, $mode_flag, $mode_name, $context) = @_;
     my $result = '';
+    my $channel = $context->{from};
 
     my ($flag, $mode_char) = $mode_flag =~ m/(.)(.)/;
 
@@ -174,7 +175,7 @@ sub generic_mode_user {
     if (not $self->{pbot}->{chanops}->can_gain_ops($channel)) { return "I am not configured as an OP for $channel. See `chanset` command for more information."; }
 
     # add $nick to $args if no argument
-    if (not $self->{pbot}->{interpreter}->arglist_size($context->{arglist})) { $self->{pbot}->{interpreter}->unshift_arg($context->{arglist}, $nick); }
+    if (not $self->{pbot}->{interpreter}->arglist_size($context->{arglist})) { $self->{pbot}->{interpreter}->unshift_arg($context->{arglist}, $context->{nick}); }
 
     my $max_modes = $self->{pbot}->{ircd}->{MODES} // 1;
     my $mode      = $flag;
@@ -190,7 +191,7 @@ sub generic_mode_user {
             if ($i >= $max_modes) {
                 my $args = "$channel $mode $list";
                 $context->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
-                $result           = $self->mode($channel, $nick, $context->{user}, $context->{host}, $args, $context);
+                $result           = $self->mode($channel, $context->{nick}, $context->{user}, $context->{host}, $args, $context);
                 $mode             = $flag;
                 $list             = '';
                 $i                = 0;
@@ -201,42 +202,46 @@ sub generic_mode_user {
 
     if ($i) {
         my $args = "$channel $mode $list";
+        $context->{arguments} = $args;
         $context->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
-        $result = $self->mode($channel, $nick, $context->{user}, $context->{host}, $args, $context);
+        $result = $self->cmd_mode($context);
     }
 
     return $result;
 }
 
-sub op_user {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
-    return $self->generic_mode_user('+o', 'op', $from, $nick, $context);
+sub cmd_op {
+    my ($self, $context) = @_;
+    return $self->generic_mode('+o', 'op', $context);
 }
 
-sub deop_user {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
-    return $self->generic_mode_user('-o', 'deop', $from, $nick, $context);
+sub cmd_deop {
+    my ($self, $context) = @_;
+    return $self->generic_mode('-o', 'deop', $context);
 }
 
-sub voice_user {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
-    return $self->generic_mode_user('+v', 'voice', $from, $nick, $context);
+sub cmd_voice {
+    my ($self, $context) = @_;
+    return $self->generic_mode('+v', 'voice', $context);
 }
 
-sub devoice_user {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
-    return $self->generic_mode_user('-v', 'devoice', $from, $nick, $context);
+sub cmd_devoice {
+    my ($self, $context) = @_;
+    return $self->generic_mode('-v', 'devoice', $context);
 }
 
-sub mode {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_mode {
+    my ($self, $context) = @_;
 
-    if (not length $arguments) { return "Usage: mode [channel] <arguments>"; }
+    if (not length $context->{arguments}) { return "Usage: mode [channel] <arguments>"; }
 
     # add current channel as default channel
     if ($context->{arglist}[0] !~ m/^#/) {
-        if ($from =~ m/^#/) { $self->{pbot}->{interpreter}->unshift_arg($context->{arglist}, $from); }
-        else                { return "Usage from private message: mode <channel> <arguments>"; }
+        if ($context->{from} =~ m/^#/) {
+            $self->{pbot}->{interpreter}->unshift_arg($context->{arglist}, $context->{from});
+        } else {
+            return "Usage from private message: mode <channel> <arguments>";
+        }
     }
 
     my ($channel, $modes, $args) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
@@ -248,7 +253,7 @@ sub mode {
     my ($new_modes, $new_targets) = ("", "");
     my $max_modes = $self->{pbot}->{ircd}->{MODES} // 1;
 
-    my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+    my $u = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
 
     while ($modes =~ m/(.)/g) {
         my $mode = $1;
@@ -260,7 +265,7 @@ sub mode {
         }
 
         if (not $self->{pbot}->{capabilities}->userhas($u, "can-mode-$mode")) {
-            return "/msg $nick Your user account does not have the can-mode-$mode capability required to set this mode.";
+            return "/msg $context->{nick} Your user account does not have the can-mode-$mode capability required to set this mode.";
         }
 
         my $target = $targets[$arg++] // "";
@@ -271,16 +276,18 @@ sub mode {
             $q_target =~ s/\\\*/.*/g;
             $channel = lc $channel;
 
-            if (not exists $self->{pbot}->{nicklist}->{nicklist}->{$channel}) { return "I have no nicklist for channel $channel; cannot use wildcard."; }
+            if (not exists $self->{pbot}->{nicklist}->{nicklist}->{$channel}) {
+                return "I have no nicklist for channel $channel; cannot use wildcard.";
+            }
 
-            my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+            my $u = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
             if ($mode eq 'v') {
                 if (not $self->{pbot}->{capabilities}->userhas($u, 'can-voice-wildcard')) {
-                    return "/msg $nick Using wildcards with `mode v` requires the can-voice-wildcard capability, which your user account does not have.";
+                    return "/msg $context->{nick} Using wildcards with `mode v` requires the can-voice-wildcard capability, which your user account does not have.";
                 }
             } else {
                 if (not $self->{pbot}->{capabilities}->userhas($u, 'can-op-wildcard')) {
-                    return "/msg $nick Using wildcards with `mode o` requires the can-op-wildcard capability, which your user account does not have.";
+                    return "/msg $context->{nick} Using wildcards with `mode o` requires the can-op-wildcard capability, which your user account does not have.";
                 }
             }
 
@@ -331,18 +338,18 @@ sub mode {
 
     $self->{pbot}->{chanops}->gain_ops($channel);
 
-    if   ($from !~ m/^#/) { return "Done."; }
-    else                  { return ""; }
+    if   ($context->{from} !~ m/^#/) { return "Done."; }
+    else                             { return "";      }
 }
 
-sub ban_user {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_ban {
+    my ($self, $context) = @_;
     my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
 
     $channel = '' if not defined $channel;
     $length  = '' if not defined $length;
 
-    if (not defined $from) {
+    if (not defined $context->{from}) {
         $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
         return "";
     }
@@ -350,10 +357,12 @@ sub ban_user {
     if ($channel !~ m/^#/) {
         $length  = "$channel $length";
         $length  = undef if $length eq ' ';
-        $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $from;
+        $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from};
     }
 
-    $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $from if not defined $channel or not length $channel;
+    if (not defined $channel or not length $channel) {
+        $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from};
+    }
 
     if (not defined $target) { return "Usage: ban <mask> [channel [timeout (default: 24 hours)]]"; }
 
@@ -391,7 +400,7 @@ sub ban_user {
             $result .= "$sep$mask has $d remaining on their $channel ban";
             $sep = '; ';
         } else {
-            $self->{pbot}->{banlist}->ban_user_timed($channel, 'b', $mask, $length, "$nick!$user\@$host", undef, $immediately);
+            $self->{pbot}->{banlist}->ban_user_timed($channel, 'b', $mask, $length, $context->{hostmask}, undef, $immediately);
             $duration = $length > 0 ? duration $length : 'all eternity';
             if ($immediately) {
                 $result .= "$sep$mask banned in $channel for $duration";
@@ -408,15 +417,14 @@ sub ban_user {
         $self->{pbot}->{banlist}->flush_ban_queue;
     }
 
-    $result = "/msg $nick $result" if $result !~ m/remaining on their/;
+    $result = "/msg $context->{nick} $result" if $result !~ m/remaining on their/;
     return $result;
 }
 
-sub unban_user {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_unban {
+    my ($self, $context) = @_;
 
-    if (not defined $from) {
+    if (not defined $context->{from}) {
         $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
         return "";
     }
@@ -431,8 +439,11 @@ sub unban_user {
 
     if (not defined $target) { return "Usage: unban <nick/mask> [channel [false value to use unban queue]]"; }
 
-    $channel     = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $from if not defined $channel;
-    $immediately = 1                                                                                  if not defined $immediately;
+    if (not defined $channel) {
+        $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from};
+    }
+
+    $immediately = 1 if not defined $immediately;
 
     return "Usage for /msg: unban <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
@@ -441,9 +452,9 @@ sub unban_user {
 
     foreach my $t (@targets) {
         if ($t eq '*') {
-            my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+            my $u = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
             if (not $self->{pbot}->{capabilities}->userhas($u, 'can-clear-bans')) {
-                return "/msg $nick Clearing the channel bans requires the can-clear-bans capability, which your user account does not have.";
+                return "/msg $context->{nick} Clearing the channel bans requires the can-clear-bans capability, which your user account does not have.";
             }
             $channel = lc $channel;
             if ($self->{pbot}->{banlist}->{banlist}->exists($channel)) {
@@ -459,29 +470,31 @@ sub unban_user {
     }
 
     $self->{pbot}->{banlist}->flush_unban_queue if not $immediately;
-    return "/msg $nick $target has been unbanned from $channel.";
+    return "/msg $context->{nick} $target has been unbanned from $channel.";
 }
 
-sub mute_user {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_mute {
+    my ($self, $context) = @_;
     my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
 
     $channel = '' if not defined $channel;
 
-    if (not defined $from) {
+    if (not defined $context->{from}) {
         $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
         return "";
     }
 
-    if (not length $channel and $from !~ m/^#/) { return "Usage from private message: mute <mask> <channel> [timeout (default: 24 hours)]"; }
+    if (not length $channel and $context->{from} !~ m/^#/) {
+        return "Usage from private message: mute <mask> <channel> [timeout (default: 24 hours)]";
+    }
 
     if ($channel !~ m/^#/) {
         $length  = $channel . ' ' . (defined $length ? $length : '');
         $length  = undef if $length eq ' ';
-        $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $from;
+        $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from};
     }
 
-    $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $from if not defined $channel;
+    $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from} if not defined $channel;
 
     if ($channel !~ m/^#/) { return "Please specify a channel."; }
 
@@ -520,7 +533,7 @@ sub mute_user {
             $result .= "$sep$mask has $d remaining on their $channel mute";
             $sep = '; ';
         } else {
-            $self->{pbot}->{banlist}->ban_user_timed($channel, 'q', $t, $length, "$nick!$user\@$host", undef, $immediately);
+            $self->{pbot}->{banlist}->ban_user_timed($channel, 'q', $t, $length, $context->{hostmask}, undef, $immediately);
             $duration = $length > 0 ? duration $length : 'all eternity';
             if ($immediately) {
                 $result .= "$sep$mask muted in $channel for $duration";
@@ -537,15 +550,14 @@ sub mute_user {
         $self->{pbot}->{banlist}->flush_ban_queue;
     }
 
-    $result = "/msg $nick $result" if $result !~ m/remaining on their/;
+    $result = "/msg $context->{nick} $result" if $result !~ m/remaining on their/;
     return $result;
 }
 
-sub unmute_user {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_unmute {
+    my ($self, $context) = @_;
 
-    if (not defined $from) {
+    if (not defined $context->{from}) {
         $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
         return "";
     }
@@ -560,8 +572,8 @@ sub unmute_user {
 
     if (not defined $target) { return "Usage: unmute <nick/mask> [channel [false value to use unban queue]]"; }
 
-    $channel     = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $from if not defined $channel;
-    $immediately = 1                                                                                  if not defined $immediately;
+    $channel     = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from} if not defined $channel;
+    $immediately = 1 if not defined $immediately;
 
     return "Usage for /msg: unmute <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
@@ -570,9 +582,9 @@ sub unmute_user {
 
     foreach my $t (@targets) {
         if ($t eq '*') {
-            my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+            my $u = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
             if (not $self->{pbot}->{capabilities}->userhas($u, 'can-clear-mutes')) {
-                return "/msg $nick Clearing the channel mutes requires the can-clear-mutes capability, which your user account does not have.";
+                return "/msg $context->{nick} Clearing the channel mutes requires the can-clear-mutes capability, which your user account does not have.";
             }
             $channel = lc $channel;
             if ($self->{pbot}->{banlist}->{quietlist}->exists($channel)) {
@@ -588,28 +600,28 @@ sub unmute_user {
     }
 
     $self->{pbot}->{banlist}->flush_unban_queue if not $immediately;
-    return "/msg $nick $target has been unmuted in $channel.";
+    return "/msg $context->{nick} $target has been unmuted in $channel.";
 }
 
-sub kick_user {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_kick {
+    my ($self, $context) = @_;
 
-    if (not defined $from) {
+    if (not defined $context->{from}) {
         $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
         return "";
     }
 
     my ($channel, $victim, $reason);
+    my $arguments = $context->{arguments};
 
-    if (not $from =~ /^#/) {
+    if (not $context->{from} =~ /^#/) {
         # used in private message
         if (not $arguments =~ s/^(^#\S+) (\S+)\s*//) { return "Usage from private message: kick <channel> <nick> [reason]"; }
         ($channel, $victim) = ($1, $2);
     } else {
         # used in channel
         if    ($arguments =~ s/^(#\S+)\s+(\S+)\s*//) { ($channel, $victim) = ($1, $2); }
-        elsif ($arguments =~ s/^(\S+)\s*//)          { ($victim, $channel) = ($1, exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $from); }
+        elsif ($arguments =~ s/^(\S+)\s*//)          { ($victim, $channel) = ($1, exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from}); }
         else                                         { return "Usage: kick [channel] <nick> [reason]"; }
     }
 
@@ -641,9 +653,9 @@ sub kick_user {
 
             if (not exists $self->{pbot}->{nicklist}->{nicklist}->{$channel}) { return "I have no nicklist for channel $channel; cannot use wildcard."; }
 
-            my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+            my $u = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
             if (not $self->{pbot}->{capabilities}->userhas($u, 'can-kick-wildcard')) {
-                return "/msg $nick Using wildcards with `kick` requires the can-kick-wildcard capability, which your user account does not have.";
+                return "/msg $context->{nick} Using wildcards with `kick` requires the can-kick-wildcard capability, which your user account does not have.";
             }
 
             foreach my $nl (keys %{$self->{pbot}->{nicklist}->{nicklist}->{$channel}}) {

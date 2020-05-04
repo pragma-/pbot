@@ -41,7 +41,7 @@ use Time::HiRes qw/gettimeofday/;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->actiontrigger(@_) }, 'actiontrigger', 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_actiontrigger(@_) }, 'actiontrigger', 1);
     $self->{pbot}->{capabilities}->add('admin', 'can-actiontrigger', 1);
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',  sub { $self->on_public(@_) });
@@ -228,7 +228,7 @@ sub get_trigger {
 
 sub on_kick {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user,       $host)  = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
+    my ($nick, $user, $host)  = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
     my ($victim, $reason) = ($event->{event}->to, $event->{event}->{args}[1]);
     my $channel = $event->{event}->{args}[0];
     return 0 if $event->{interpreted};
@@ -321,8 +321,8 @@ sub check_trigger {
     return 0;
 }
 
-sub actiontrigger {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_actiontrigger {
+    my ($self, $context) = @_;
     return "Internal error." if not $self->{dbh};
 
     my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
@@ -331,8 +331,8 @@ sub actiontrigger {
         when ('list') {
             my $channel = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
             if (not defined $channel) {
-                if   ($from !~ /^#/) { $channel = 'global'; }
-                else                 { $channel = $from; }
+                if   ($context->{from} !~ /^#/) { $channel = 'global'; }
+                else                            { $channel = $context->{from}; }
             } elsif ($channel !~ m/^#/ and $channel ne 'global') {
                 return "Invalid channel $channel. Usage: actiontrigger list [#channel or global]";
             }
@@ -357,7 +357,7 @@ sub actiontrigger {
         # TODO: use GetOpt flags instead of positional arguments
         when ('add') {
             my $channel;
-            if ($from =~ m/^#/) { $channel = $from; }
+            if ($context->{from} =~ m/^#/) { $channel = $context->{from}; }
             else {
                 $channel = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
@@ -372,7 +372,7 @@ sub actiontrigger {
             my ($cap_override, $repeatdelay, $trigger, $action) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 4, 0, 1);
 
             if (not defined $trigger or not defined $action) {
-                if ($from !~ m/^#/) {
+                if ($context->{from} !~ m/^#/) {
                     $result =
                       "To use this command from private message the <channel> argument is required. Usage: actiontrigger add <#channel or global> <capability> <repeat delay (in seconds)> <regex trigger> <command>";
                 } else {
@@ -385,21 +385,21 @@ sub actiontrigger {
 
             if (defined $exists) { return "Trigger already exists."; }
 
-            if ($repeatdelay !~ m/^\d+$/) { return "$nick: Missing repeat delay argument?\n"; }
+            if ($repeatdelay !~ m/^\d+$/) { return "$context->{nick}: Missing repeat delay argument?\n"; }
 
             if ($cap_override ne 'none') {
-                if (not $self->{pbot}->{capabilities}->exists($cap_override)) { return "$nick: Capability '$cap_override' does not exist. Use 'none' to omit.\n"; }
-                my $u = $self->{pbot}->{users}->find_user($channel, "$nick!$user\@$host");
+                if (not $self->{pbot}->{capabilities}->exists($cap_override)) { return "$context->{nick}: Capability '$cap_override' does not exist. Use 'none' to omit.\n"; }
+                my $u = $self->{pbot}->{users}->find_user($channel, $context->{hostmask});
                 if (not $self->{pbot}->{capabilities}->userhas($u, $cap_override)) { return "You may not set a capability that you do not have."; }
             }
 
-            if   ($self->add_trigger($channel, $trigger, $action, "$nick!$user\@$host", $cap_override, $repeatdelay)) { $result = "Trigger added."; }
+            if   ($self->add_trigger($channel, $trigger, $action, $context->{hostmask}, $cap_override, $repeatdelay)) { $result = "Trigger added."; }
             else                                                                                                      { $result = "Failed to add trigger."; }
         }
 
         when ('delete') {
             my $channel;
-            if ($from =~ m/^#/) { $channel = $from; }
+            if ($context->{from} =~ m/^#/) { $channel = $context->{from}; }
             else {
                 $channel = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
                 if ($channel !~ m/^#/ and $channel ne 'global') {
@@ -410,7 +410,7 @@ sub actiontrigger {
             my ($trigger) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 1);
 
             if (not defined $trigger) {
-                if ($from !~ m/^#/) {
+                if ($context->{from} !~ m/^#/) {
                     $result = "To use this command from private message the <channel> argument is required. Usage: from private message: actiontrigger delete <channel> <regex trigger>";
                 } else {
                     $result = "Usage: actiontrigger delete <regex trigger>";
@@ -428,7 +428,7 @@ sub actiontrigger {
         }
 
         default {
-            if ($from !~ m/^#/) {
+            if ($context->{from} !~ m/^#/) {
                 $result =
                   "Usage from private message: actiontrigger list [#channel or global] | actiontrigger add <#channel or global> <capability> <repeat delay (in seconds)> <regex trigger> <command> | actiontrigger delete <#channel or global> <regex trigger>";
             } else {

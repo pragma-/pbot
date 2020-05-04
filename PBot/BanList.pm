@@ -30,9 +30,9 @@ sub initialize {
     $self->{pbot}->{registry}->add_default('text', 'banlist', 'mute_timeout',         '604800');
     $self->{pbot}->{registry}->add_default('text', 'banlist', 'debug',                '0');
 
-    $self->{pbot}->{commands}->register(sub { $self->banlist_cmd(@_) },   "banlist",   0);
-    $self->{pbot}->{commands}->register(sub { $self->checkban_cmd(@_) },  "checkban",  0);
-    $self->{pbot}->{commands}->register(sub { $self->checkmute_cmd(@_) }, "checkmute", 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_banlist(@_) },   "banlist",   0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_checkban(@_) },  "checkban",  0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_checkmute(@_) }, "checkmute", 0);
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.endofnames',     sub { $self->get_banlist(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.banlist',        sub { $self->on_banlist_entry(@_) });
@@ -64,20 +64,20 @@ sub initialize {
     $self->{pbot}->{timer}->register(sub { $self->flush_unban_queue }, 30, 'Unban Queue');
 }
 
-sub banlist_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_banlist {
+    my ($self, $context) = @_;
 
-    if (not length $arguments) {
+    if (not length $context->{arguments}) {
         return "Usage: banlist <channel>";
     }
 
-    my $result = "Ban list for $arguments:\n";
+    my $result = "Ban list for $context->{arguments}:\n";
 
-    if ($self->{banlist}->exists($arguments)) {
-        my $count = $self->{banlist}->get_keys($arguments);
+    if ($self->{banlist}->exists($context->{arguments})) {
+        my $count = $self->{banlist}->get_keys($context->{arguments});
         $result .= "$count ban" . ($count == 1 ? '' : 's') . ":\n";
-        foreach my $mask ($self->{banlist}->get_keys($arguments)) {
-            my $data = $self->{banlist}->get_data($arguments, $mask);
+        foreach my $mask ($self->{banlist}->get_keys($context->{arguments})) {
+            my $data = $self->{banlist}->get_data($context->{arguments}, $mask);
             $result .= "  $mask banned ";
 
             if (defined $data->{timestamp}) {
@@ -98,11 +98,11 @@ sub banlist_cmd {
         $result .= "bans: none;\n";
     }
 
-    if ($self->{quietlist}->exists($arguments)) {
-        my $count = $self->{quietlist}->get_keys($arguments);
+    if ($self->{quietlist}->exists($context->{arguments})) {
+        my $count = $self->{quietlist}->get_keys($context->{arguments});
         $result .= "$count mute" . ($count == 1 ? '' : 's') . ":\n";
-        foreach my $mask ($self->{quietlist}->get_keys($arguments)) {
-            my $data = $self->{quietlist}->get_data($arguments, $mask);
+        foreach my $mask ($self->{quietlist}->get_keys($context->{arguments})) {
+            my $data = $self->{quietlist}->get_data($context->{arguments}, $mask);
             $result .= "  $mask muted ";
 
             if (defined $data->{timestamp}) {
@@ -127,23 +127,23 @@ sub banlist_cmd {
     return $result;
 }
 
-sub checkban_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_checkban {
+    my ($self, $context) = @_;
     my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     return "Usage: checkban <mask> [channel]" if not defined $target;
-    $channel = $from if not defined $channel;
+    $channel = $context->{from} if not defined $channel;
 
     return "Please specify a channel." if $channel !~ /^#/;
     return $self->checkban($channel, 'b', $target);
 }
 
-sub checkmute_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_checkmute {
+    my ($self, $context) = @_;
     my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     return "Usage: checkmute <mask> [channel]" if not defined $target;
-    $channel = $from if not defined $channel;
+    $channel = $context->{from} if not defined $channel;
 
     return "Please specify a channel." if $channel !~ /^#/;
     return $self->checkban($channel, 'q', $target);

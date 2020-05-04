@@ -22,8 +22,8 @@ use JSON;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->ps_cmd(@_) },   'ps',   0);
-    $self->{pbot}->{commands}->register(sub { $self->kill_cmd(@_) }, 'kill', 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_ps(@_) },   'ps',   0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_kill(@_) }, 'kill', 1);
     $self->{pbot}->{capabilities}->add('admin', 'can-kill', 1);
     $self->{processes} = {};
 
@@ -33,8 +33,8 @@ sub initialize {
     };
 }
 
-sub ps_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_ps {
+    my ($self, $context) = @_;
     my $usage = 'Usage: ps [-atu]; -a show all information; -t show running time; -u show user/channel';
 
     my $getopt_error;
@@ -46,7 +46,7 @@ sub ps_cmd {
     Getopt::Long::Configure("bundling");
 
     my ($show_all, $show_user, $show_running_time);
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
     GetOptionsFromArray(
         \@opt_args,
         'all|a' => \$show_all,
@@ -82,8 +82,8 @@ sub ps_cmd {
     return $result;
 }
 
-sub kill_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_kill {
+    my ($self, $context) = @_;
     my $usage = 'Usage: kill [-a] [-t <seconds>] [-s <signal>]  [pids...]; -a kill all processes; -t <seconds> kill processes running longer than <seconds>; -s send <signal> to processes';
 
     my $getopt_error;
@@ -95,7 +95,7 @@ sub kill_cmd {
     Getopt::Long::Configure("bundling");
 
     my ($kill_all, $kill_time, $signal);
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, preserve_escapes => 1, strip_quotes => 1);
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, preserve_escapes => 1, strip_quotes => 1);
     GetOptionsFromArray(
         \@opt_args,
         'all|a' => \$kill_all,

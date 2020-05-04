@@ -145,15 +145,15 @@ sub initialize {
     $self->{commands} = PBot::Commands->new(pbot => $self, filename => "$data_dir/commands", %conf);
 
     # add some commands
-    $self->{commands}->register(sub { $self->listcmd(@_) }, "list");
-    $self->{commands}->register(sub { $self->ack_die(@_) }, "die", 1);
-    $self->{commands}->register(sub { $self->export(@_) },  "export", 1);
-    $self->{commands}->register(sub { $self->reload(@_) },  "reload", 1);
-    $self->{commands}->register(sub { $self->evalcmd(@_) }, "eval", 1);
-    $self->{commands}->register(sub { $self->sl(@_) },      "sl", 1);
+    $self->{commands}->register(sub { $self->cmd_list(@_) },   "list");
+    $self->{commands}->register(sub { $self->cmd_die(@_) },    "die", 1);
+    $self->{commands}->register(sub { $self->cmd_export(@_) }, "export", 1);
+    $self->{commands}->register(sub { $self->cmd_reload(@_) }, "reload", 1);
+    $self->{commands}->register(sub { $self->cmd_eval(@_) },   "eval", 1);
+    $self->{commands}->register(sub { $self->cmd_sl(@_) },     "sl", 1);
 
     # add 'cap' capability command
-    $self->{commands}->register(sub { $self->{capabilities}->capcmd(@_) }, "cap");
+    $self->{commands}->register(sub { $self->{capabilities}->cmd_cap(@_) }, "cap");
 
     # prepare the version
     $self->{version} = PBot::VERSION->new(pbot => $self, %conf);
@@ -361,16 +361,15 @@ sub change_botnick_trigger {
     $self->{conn}->nick($newvalue) if $self->{connected};
 }
 
-sub listcmd {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments) = @_;
+sub cmd_list {
+    my ($self, $context) = @_;
     my $text;
 
     my $usage = "Usage: list <modules|commands>";
 
-    if (not defined $arguments) { return $usage; }
+    return $usage if not length $context->{arguments};
 
-    if ($arguments =~ /^modules$/i) {
+    if ($context->{arguments} =~ /^modules$/i) {
         $text = "Loaded modules: ";
         foreach my $channel (sort $self->{factoids}->{factoids}->get_keys) {
             foreach my $command (sort $self->{factoids}->{factoids}->get_keys($channel)) {
@@ -380,10 +379,11 @@ sub listcmd {
                 }
             }
         }
+
         return $text;
     }
 
-    if ($arguments =~ /^commands$/i) {
+    if ($context->{arguments} =~ /^commands$/i) {
         $text = "Registered commands: ";
         foreach my $command (sort { $a->{name} cmp $b->{name} } @{$self->{commands}->{handlers}}) {
             if   ($command->{requires_cap}) { $text .= "+$command->{name} "; }
@@ -394,40 +394,35 @@ sub listcmd {
     return $usage;
 }
 
-sub sl {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments) = @_;
-    return "Usage: sl <ircd command>" if not length $arguments;
-    $self->{conn}->sl($arguments);
-    return "";
+sub cmd_sl {
+    my ($self, $context) = @_;
+    return "Usage: sl <ircd command>" if not length $context->{arguments};
+    $self->{conn}->sl($context->{arguments});
+    return "/msg $context->{nick} sl: command sent. See log for result.";
 }
 
-sub ack_die {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments) = @_;
-    $self->{logger}->log("$nick!$user\@$host made me exit.\n");
+sub cmd_die {
+    my ($self, $context) = @_;
+    $self->{logger}->log("$context->{hostmask} made me exit.\n");
     $self->atexit();
-    $self->{conn}->privmsg($from, "Good-bye.") if defined $from;
-    $self->{conn}->quit("Departure requested.");
+    $self->{conn}->privmsg($context->{from}, "Good-bye.") if defined $context->{from};
+    $self->{conn}->quit("Departure requested.") if defined $self->{conn};
     exit 0;
 }
 
-sub export {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments) = @_;
-
-    return "Usage: export <factoids>" if not defined $arguments;
-
-    if ($arguments =~ /^factoids$/i) { return $self->{factoids}->export_factoids; }
+sub cmd_export {
+    my ($self, $context) = @_;
+    return "Usage: export <factoids>" if not length $context->{arguments};
+    if ($context->{arguments} =~ /^factoids$/i) { return $self->{factoids}->export_factoids; }
 }
 
-sub evalcmd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_eval {
+    my ($self, $context) = @_;
 
-    $self->{logger}->log("[$from] $nick!$user\@$host Evaluating [$arguments]\n");
+    $self->{logger}->log("eval: $context->{from} $context->{hostmask} evaluating `$context->{arguments}`\n");
 
     my $ret    = '';
-    my $result = eval $arguments;
+    my $result = eval $context->{arguments};
     if ($@) {
         if   (length $result) { $ret .= "[Error: $@] "; }
         else                  { $ret .= "Error: $@"; }
@@ -438,9 +433,8 @@ sub evalcmd {
     return "/say $ret $result";
 }
 
-sub reload {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments) = @_;
+sub cmd_reload {
+    my ($self, $context) = @_;
 
     my %reloadables = (
         'capabilities' => sub {
@@ -499,14 +493,14 @@ sub reload {
         }
     );
 
-    if (not length $arguments or not exists $reloadables{$arguments}) {
+    if (not length $context->{arguments} or not exists $reloadables{$context->{arguments}}) {
         my $usage = 'Usage: reload <';
         $usage .= join '|', sort keys %reloadables;
         $usage .= '>';
         return $usage;
     }
 
-    return $reloadables{$arguments}();
+    return $reloadables{$context->{arguments}}();
 }
 
 1;

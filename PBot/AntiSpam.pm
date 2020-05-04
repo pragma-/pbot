@@ -26,36 +26,12 @@ sub initialize {
     $self->{keywords}->load;
 
     $self->{pbot}->{registry}->add_default('text', 'antispam', 'enforce', $conf{enforce_antispam} // 1);
-    $self->{pbot}->{commands}->register(sub { $self->antispam_cmd(@_) }, "antispam", 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_antispam(@_) }, "antispam", 1);
     $self->{pbot}->{capabilities}->add('admin', 'can-antispam', 1);
 }
 
-sub is_spam {
-    my ($self, $namespace, $text, $all_namespaces) = @_;
-    my $lc_namespace = lc $namespace;
-
-    return 0 if not $self->{pbot}->{registry}->get_value('antispam', 'enforce');
-    return 0 if $self->{pbot}->{registry}->get_value($namespace, 'dont_enforce_antispam');
-
-    my $ret = eval {
-        foreach my $space ($self->{keywords}->get_keys) {
-            if ($all_namespaces or $lc_namespace eq $space) {
-                foreach my $keyword ($self->{keywords}->get_keys($space)) { return 1 if $text =~ m/$keyword/i; }
-            }
-        }
-        return 0;
-    };
-
-    if ($@) {
-        $self->{pbot}->{logger}->log("Error in is_spam: $@");
-        return 0;
-    }
-    $self->{pbot}->{logger}->log("AntiSpam: spam detected!\n") if $ret;
-    return $ret;
-}
-
-sub antispam_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_antispam {
+    my ($self, $context) = @_;
 
     my $arglist = $context->{arglist};
 
@@ -126,7 +102,7 @@ sub antispam_cmd {
             my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
             return "Usage: antispam add <namespace> <regex>" if not defined $namespace or not defined $keyword;
             my $data = {
-                owner      => "$nick!$user\@$host",
+                owner      => $context->{hostmask},
                 created_on => scalar gettimeofday
             };
             $self->{keywords}->add($namespace, $keyword, $data);
@@ -139,6 +115,30 @@ sub antispam_cmd {
         }
         default { return "Unknown command '$command'; commands are: list/show, add, remove"; }
     }
+}
+
+sub is_spam {
+    my ($self, $namespace, $text, $all_namespaces) = @_;
+    my $lc_namespace = lc $namespace;
+
+    return 0 if not $self->{pbot}->{registry}->get_value('antispam', 'enforce');
+    return 0 if $self->{pbot}->{registry}->get_value($namespace, 'dont_enforce_antispam');
+
+    my $ret = eval {
+        foreach my $space ($self->{keywords}->get_keys) {
+            if ($all_namespaces or $lc_namespace eq $space) {
+                foreach my $keyword ($self->{keywords}->get_keys($space)) { return 1 if $text =~ m/$keyword/i; }
+            }
+        }
+        return 0;
+    };
+
+    if ($@) {
+        $self->{pbot}->{logger}->log("Error in is_spam: $@");
+        return 0;
+    }
+    $self->{pbot}->{logger}->log("AntiSpam: spam detected!\n") if $ret;
+    return $ret;
 }
 
 1;

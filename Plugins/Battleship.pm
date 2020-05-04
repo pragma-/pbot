@@ -21,7 +21,7 @@ $Data::Dumper::Sortkeys = 1;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->battleship_cmd(@_) }, 'battleship', 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_battleship(@_) }, 'battleship', 0);
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quit', sub { $self->on_departure(@_) });
@@ -49,7 +49,7 @@ sub unload {
 
 sub on_kick {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user,       $host)  = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
+    my ($nick, $user, $host)  = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
     my ($victim, $reason) = ($event->{event}->to, $event->{event}->{args}[1]);
     my $channel = $event->{event}->{args}[0];
     return 0 if lc $channel ne $self->{channel};
@@ -92,14 +92,13 @@ my %color = (
     reset => "\x0F",
 );
 
-sub battleship_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-    $arguments =~ s/^\s+|\s+$//g;
+sub cmd_battleship {
+    my ($self, $context) = @_;
+    $context->{arguments} =~ s/^\s+|\s+$//g;
 
     my $usage = "Usage: battleship challenge|accept|bomb|board|score|quit|players|kick|abort; for more information about a command: battleship help <command>";
 
-    my $command;
-    ($command, $arguments) = split / /, $arguments, 2;
+    my ($command, $arguments) = split / /, $context->{arguments}, 2;
     $command = lc $command;
 
     my ($channel, $result);
@@ -125,8 +124,8 @@ sub battleship_cmd {
                 $self->{current_state} = 'accept';
                 $self->{state_data}    = {players => [], counter => 0};
 
-                my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-                my $player = {id => $id, name => $nick, missedinputs => 0};
+                my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
+                my $player = {id => $id, name => $context->{nick}, missedinputs => 0};
                 push @{$self->{state_data}->{players}}, $player;
 
                 $player = {id => -1, name => undef, missedinputs => 0};
@@ -137,7 +136,7 @@ sub battleship_cmd {
                     }, 1, 'battleship loop', 1
                 );
 
-                return "/msg $self->{channel} $nick has made an open challenge!  Use `accept` to accept their challenge.";
+                return "/msg $self->{channel} $context->{nick} has made an open challenge!  Use `accept` to accept their challenge.";
             }
 
             my $challengee = $self->{pbot}->{nicklist}->is_present($self->{channel}, $arguments);
@@ -147,8 +146,8 @@ sub battleship_cmd {
             $self->{current_state} = 'accept';
             $self->{state_data}    = {players => [], counter => 0};
 
-            my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-            my $player = {id => $id, name => $nick, missedinputs => 0};
+            my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
+            my $player = {id => $id, name => $context->{nick}, missedinputs => 0};
             push @{$self->{state_data}->{players}}, $player;
 
             ($id) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($challengee);
@@ -160,31 +159,31 @@ sub battleship_cmd {
                 }, 1, 'battleship loop', 1
             );
 
-            return "/msg $self->{channel} $nick has challenged $challengee to Battleship! Use `accept` to accept their challenge.";
+            return "/msg $self->{channel} $context->{nick} has challenged $challengee to Battleship! Use `accept` to accept their challenge.";
         }
 
         when ('accept') {
-            if ($self->{current_state} ne 'accept') { return "/msg $nick This is not the time to use `accept`."; }
+            if ($self->{current_state} ne 'accept') { return "/msg $context->{nick} This is not the time to use `accept`."; }
 
-            my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
             my $player = $self->{state_data}->{players}->[1];
 
             # open challenge
             if ($player->{id} == -1) {
                 $player->{id}   = $id;
-                $player->{name} = $nick;
+                $player->{name} = $context->{nick};
             }
 
             if ($player->{id} == $id) {
                 $player->{accepted} = 1;
-                return "/msg $self->{channel} $nick has accepted $self->{state_data}->{players}->[0]->{name}'s challenge!";
+                return "/msg $self->{channel} $context->{nick} has accepted $self->{state_data}->{players}->[0]->{name}'s challenge!";
             } else {
-                return "/msg $nick You have not been challenged to a game of Battleship yet.";
+                return "/msg $context->{nick} You have not been challenged to a game of Battleship yet.";
             }
         }
 
         when ($_ eq 'decline' or $_ eq 'quit' or $_ eq 'forfeit' or $_ eq 'concede') {
-            my $id      = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            my $id      = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
             my $removed = 0;
 
             for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
@@ -198,20 +197,22 @@ sub battleship_cmd {
                 if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) { $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1 }
 
                 if (@{$self->{state_data}->{players}} == 2 and ($self->{state_data}->{players}->[1]->{id} == -1 || not $self->{state_data}->{players}->[1]->{accepted})) {
-                    return "/msg $self->{channel} $nick declined the challenge.";
+                    return "/msg $self->{channel} $context->{nick} declined the challenge.";
                 } else {
-                    return "/msg $self->{channel} $nick has left the game!";
+                    return "/msg $self->{channel} $context->{nick} has left the game!";
                 }
             } else {
-                return "$nick: But you are not even playing the game.";
+                return "$context->{nick}: But you are not even playing the game.";
             }
         }
 
         when ('abort') {
-            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) { return "$nick: Sorry, only admins may abort the game."; }
+            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask})) {
+                return "$context->{nick}: Only admins may abort the game.";
+            }
 
             $self->{current_state} = 'gameover';
-            return "/msg $self->{channel} $nick: The game has been aborted.";
+            return "/msg $self->{channel} $context->{nick}: The game has been aborted.";
         }
 
         when ('score') {
@@ -230,7 +231,9 @@ sub battleship_cmd {
         }
 
         when ('kick') {
-            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) { return "$nick: Sorry, only admins may kick people from the game."; }
+            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask})) {
+                return "$context->{nick}: Only admins may kick people from the game.";
+            }
 
             if (not length $arguments) { return "Usage: battleship kick <nick>"; }
 
@@ -245,18 +248,18 @@ sub battleship_cmd {
 
             if ($removed) {
                 if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) { $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1 }
-                return "/msg $self->{channel} $nick: $arguments has been kicked from the game.";
+                return "/msg $self->{channel} $context->{nick}: $arguments has been kicked from the game.";
             } else {
-                return "$nick: $arguments isn't even in the game.";
+                return "$context->{nick}: $arguments isn't even in the game.";
             }
         }
 
         when ('bomb') {
             if ($self->{debug}) { $self->{pbot}->{logger}->log("Battleship: bomb state: $self->{current_state}\n" . Dumper $self->{state_data}); }
 
-            if ($self->{current_state} ne 'playermove' and $self->{current_state} ne 'checkplayer') { return "$nick: It's not time to do that now."; }
+            if ($self->{current_state} ne 'playermove' and $self->{current_state} ne 'checkplayer') { return "$context->{nick}: It's not time to do that now."; }
 
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
             my $player;
 
             if    ($self->{state_data}->{players}->[0]->{id} == $id) { $player = 0; }
@@ -264,11 +267,11 @@ sub battleship_cmd {
             else                                                     { return "You are not playing in this game."; }
 
             if (not length $arguments) {
-                if   (delete $self->{state_data}->{players}->[$player]->{location}) { return "$nick: Attack location cleared."; }
-                else                                                                { return "$nick: Usage: bomb <location>"; }
+                if   (delete $self->{state_data}->{players}->[$player]->{location}) { return "$context->{nick}: Attack location cleared."; }
+                else                                                                { return "$context->{nick}: Usage: bomb <location>"; }
             }
 
-            if ($arguments !~ m/^[a-zA-Z][0-9]+$/) { return "$nick: Usage: battleship bomb <location>; <location> must be in the form of A15, B3, C9, etc."; }
+            if ($arguments !~ m/^[a-zA-Z][0-9]+$/) { return "$context->{nick}: Usage: battleship bomb <location>; <location> must be in the form of A15, B3, C9, etc."; }
 
             $arguments = uc $arguments;
 
@@ -278,17 +281,17 @@ sub battleship_cmd {
 
             $x = ord($x) - 65;
 
-            if ($x < 0 || $x > $self->{N_Y} || $y < 0 || $y > $self->{N_X}) { return "$nick: Target out of range, try again."; }
+            if ($x < 0 || $x > $self->{N_Y} || $y < 0 || $y > $self->{N_X}) { return "$context->{nick}: Target out of range, try again."; }
 
             if ($self->{state_data}->{current_player} != $player) {
                 my $msg;
-                if (not exists $self->{state_data}->{players}->[$player]->{location}) { $msg = "$nick: You will attack $arguments when it is your turn."; }
-                else { $msg = "$nick: You will now attack $arguments instead of $self->{state_data}->{players}->[$player]->{location} when it is your turn."; }
+                if (not exists $self->{state_data}->{players}->[$player]->{location}) { $msg = "$context->{nick}: You will attack $arguments when it is your turn."; }
+                else { $msg = "$context->{nick}: You will now attack $arguments instead of $self->{state_data}->{players}->[$player]->{location} when it is your turn."; }
                 $self->{state_data}->{players}->[$player]->{location} = $arguments;
                 return $msg;
             }
 
-            if ($self->{player}->[$player]->{done}) { return "$nick: You have already attacked this turn."; }
+            if ($self->{player}->[$player]->{done}) { return "$context->{nick}: You have already attacked this turn."; }
 
             if ($self->bomb($player, uc $arguments)) {
                 if ($self->{player}->[$player]->{won}) {
@@ -308,7 +311,7 @@ sub battleship_cmd {
 
         when ($_ eq 'specboard' or $_ eq 'board') {
             if ($self->{current_state} eq 'nogame' or $self->{current_state} eq 'accept' or $self->{current_state} eq 'genboard' or $self->{current_state} eq 'gameover') {
-                return "$nick: There is no board to show right now.";
+                return "$context->{nick}: There is no board to show right now.";
             }
 
             if ($_ eq 'specboard') {
@@ -316,10 +319,10 @@ sub battleship_cmd {
                 return;
             }
 
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
             for (my $i = 0; $i < 2; $i++) {
                 if ($self->{state_data}->{players}->[$i]->{id} == $id) {
-                    $self->send_message($self->{channel}, "$nick surveys the battlefield!");
+                    $self->send_message($self->{channel}, "$context->{nick} surveys the battlefield!");
                     $self->show_battlefield($i);
                     return;
                 }
@@ -328,22 +331,24 @@ sub battleship_cmd {
         }
 
         when ('fullboard') {
-            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) { return "$nick: Sorry, only admins may see the full board."; }
+            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask})) {
+                return "$context->{nick}: Only admins may see the full board.";
+            }
 
             if ($self->{current_state} eq 'nogame' or $self->{current_state} eq 'accept' or $self->{current_state} eq 'genboard' or $self->{current_state} eq 'gameover') {
-                return "$nick: There is no board to show right now.";
+                return "$context->{nick}: There is no board to show right now.";
             }
 
             # show real board if admin is actually in the game ... no cheating!
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
             for (my $i = 0; $i < 2; $i++) {
                 if ($self->{state_data}->{players}->[$i]->{id} == $id) {
-                    $self->send_message($self->{channel}, "$nick surveys the battlefield!");
+                    $self->send_message($self->{channel}, "$context->{nick} surveys the battlefield!");
                     $self->show_battlefield($i);
                     return;
                 }
             }
-            $self->show_battlefield(4, $nick);
+            $self->show_battlefield(4, $context->{nick});
         }
 
         default { return $usage; }

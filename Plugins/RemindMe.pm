@@ -18,7 +18,7 @@ use Getopt::Long qw(GetOptionsFromArray);
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->remindme(@_) }, 'remindme', 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_remindme(@_) }, 'remindme', 0);
     $self->{filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/reminders.sqlite3';
     $self->dbi_begin;
     $self->create_database;
@@ -261,14 +261,14 @@ sub do_reminder {
     }
 }
 
-sub remindme {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_remindme {
+    my ($self, $context) = @_;
 
     if (not $self->{dbh}) { return "Internal error."; }
 
     my $usage = "Usage: remindme [-c channel] [-r count]  message -t time | remindme -l [nick] | remindme -d id";
 
-    return $usage if not length $arguments;
+    return $usage if not length $context->{arguments};
 
     my ($target, $repeat, $text, $alarm, $list_reminders, $delete_id);
 
@@ -280,7 +280,7 @@ sub remindme {
 
     Getopt::Long::Configure("bundling");
 
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
     GetOptionsFromArray(
         \@opt_args,
         'r:i' => \$repeat,
@@ -304,7 +304,7 @@ sub remindme {
 
             ($nick_override) = $hostmask =~ m/^([^!]+)!/;
         } else {
-            $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
         }
         $account = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
 
@@ -331,7 +331,7 @@ sub remindme {
     }
 
     if ($delete_id) {
-        my $admininfo = $self->{pbot}->{users}->loggedin_admin($target ? $target : $from, "$nick!$user\@$host");
+        my $admininfo = $self->{pbot}->{users}->loggedin_admin($target ? $target : $context->{from}, $context->{hostmask});
 
         # admins can delete any reminders (perhaps check admin levels against owner level?)
         if ($admininfo) {
@@ -341,7 +341,7 @@ sub remindme {
             else                                      { return "Could not delete reminder $delete_id."; }
         }
 
-        my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+        my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
         $account = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
         my $reminder = $self->get_reminder($delete_id);
 
@@ -358,7 +358,7 @@ sub remindme {
     return "Please specify a point in time for this reminder." if not $alarm;
     return "Please specify a reminder message."                if not $text;
 
-    my $admininfo = $self->{pbot}->{users}->loggedin_admin($target ? $target : $from, "$nick!$user\@$host");
+    my $admininfo = $self->{pbot}->{users}->loggedin_admin($target ? $target : $context->{from}, $context->{hostmask});
 
     if ($target) {
         if (not defined $admininfo) { return "Only admins can create channel reminders."; }
@@ -379,7 +379,7 @@ sub remindme {
 
     $alarm = gettimeofday + $length;
 
-    my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+    my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
     $account = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
 
     if (not defined $admininfo) {
@@ -387,7 +387,7 @@ sub remindme {
         if (@$reminders >= 3) { return "You may only set 3 reminders at a time. Use `remindme -d id` to remove a reminder."; }
     }
 
-    if   (my $id = $self->add_reminder($account, $target, $text, $alarm, $length, $repeat, "$nick!$user\@$host")) { return "Reminder $id added."; }
+    if   (my $id = $self->add_reminder($account, $target, $text, $alarm, $length, $repeat, $context->{hostmask})) { return "Reminder $id added."; }
     else                                                                                                          { return "Failed to add reminder."; }
 }
 

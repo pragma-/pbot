@@ -64,8 +64,8 @@ sub initialize {
 
     $self->{pbot}->{registry}->add_default('text', 'antiflood', 'debug_checkban', $conf{debug_checkban} // 0);
 
-    $self->{pbot}->{commands}->register(sub { $self->unbanme(@_) },    "unbanme",    0);
-    $self->{pbot}->{commands}->register(sub { $self->ban_exempt(@_) }, "ban-exempt", 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_unbanme(@_) },    "unbanme",    0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_ban_exempt(@_) }, "ban-exempt", 1);
     $self->{pbot}->{capabilities}->add('admin', 'can-ban-exempt', 1);
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisaccount', sub { $self->on_whoisaccount(@_) });
@@ -74,16 +74,8 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.account',      sub { $self->on_accountnotify(@_) });
 }
 
-sub ban_exempted {
-    my ($self, $channel, $hostmask) = @_;
-    $channel  = lc $channel;
-    $hostmask = lc $hostmask;
-    return 1 if $self->{'ban-exemptions'}->exists($channel, $hostmask);
-    return 0;
-}
-
-sub ban_exempt {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_ban_exempt {
+    my ($self, $context) = @_;
     my $arglist = $context->{arglist};
     $self->{pbot}->{interpreter}->lc_args($arglist);
 
@@ -109,7 +101,7 @@ sub ban_exempt {
             return "Usage: ban-exempt add <channel> <mask>" if not defined $channel or not defined $mask;
 
             my $data = {
-                owner      => "$nick!$user\@$host",
+                owner      => $context->{hostmask},
                 created_on => scalar gettimeofday
             };
 
@@ -123,6 +115,123 @@ sub ban_exempt {
         }
         default { return "Unknown command '$command'; commands are: list, add, remove"; }
     }
+}
+
+sub cmd_unbanme {
+    my ($self, $context) = @_;
+    my $unbanned;
+
+    my %aliases = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($context->{nick});
+
+    foreach my $alias (keys %aliases) {
+        next if $aliases{$alias}->{type} == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK};
+        next if $aliases{$alias}->{nickchange} == 1;
+
+        my ($anick, $auser, $ahost) = $alias =~ m/([^!]+)!([^@]+)@(.*)/;
+        my $banmask = $self->address_to_mask($ahost);
+        my $mask    = "*!$auser\@$banmask\$##stop_join_flood";
+
+        my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($aliases{$alias}->{id});
+
+        foreach my $channel (@channels) {
+            next if exists $unbanned->{$channel} and exists $unbanned->{$channel}->{$mask};
+            next if not $self->{pbot}->{banlist}->{banlist}->exists($channel . '-floodbans', $mask);
+
+            my $message_account   = $self->{pbot}->{messagehistory}->{database}->get_message_account($anick, $auser, $ahost);
+            my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
+
+            push @nickserv_accounts, undef;
+
+            foreach my $nickserv_account (@nickserv_accounts) {
+                my $baninfos = $self->{pbot}->{banlist}->get_baninfo($channel, "$anick!$auser\@$ahost", $nickserv_account);
+
+                if (defined $baninfos) {
+                    foreach my $baninfo (@$baninfos) {
+                        my $u           = $self->{pbot}->{users}->loggedin($baninfo->{channel}, $context->{hostmask});
+                        my $whitelisted = $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
+                        if ($self->ban_exempted($baninfo->{channel}, $baninfo->{mask}) || $whitelisted) {
+                            $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost banned as $baninfo->{mask} in $baninfo->{channel}, but allowed through whitelist\n");
+                        } else {
+                            if ($channel eq lc $baninfo->{channel}) {
+                                my $mode = $baninfo->{type} eq 'b' ? "banned" : "quieted";
+                                $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost $mode as $baninfo->{mask} in $baninfo->{channel} by $baninfo->{owner}, unbanme rejected\n");
+                                return "/msg $context->{nick} You have been $mode as $baninfo->{mask} by $baninfo->{owner}, unbanme will not work until it is removed.";
+                            }
+                        }
+                    }
+                }
+            }
+
+            my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'unbanmes');
+            if ($channel_data->{unbanmes} <= 2) {
+                $channel_data->{unbanmes}++;
+                $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
+            }
+
+            $unbanned->{$channel}->{$mask} = $channel_data->{unbanmes};
+        }
+    }
+
+    if (keys %$unbanned) {
+        my $channels = '';
+
+        my $sep               = '';
+        my $channels_warning  = '';
+        my $sep_warning       = '';
+        my $channels_disabled = '';
+        my $sep_disabled      = '';
+
+        foreach my $channel (keys %$unbanned) {
+            foreach my $mask (keys %{$unbanned->{$channel}}) {
+                if ($self->{pbot}->{channels}->is_active_op("${channel}-floodbans")) {
+                    if ($unbanned->{$channel}->{$mask} <= 2) {
+                        $self->{pbot}->{banlist}->unban_user($channel . '-floodbans', 'b', $mask);
+                        $channels .= "$sep$channel";
+                        $sep = ", ";
+                    }
+
+                    if ($unbanned->{$channel}->{$mask} == 1) {
+                        $channels_warning .= "$sep_warning$channel";
+                        $sep_warning = ", ";
+                    } else {
+                        $channels_disabled .= "$sep_disabled$channel";
+                        $sep_disabled = ", ";
+                    }
+                }
+            }
+        }
+
+        $self->{pbot}->{banlist}->flush_unban_queue();
+
+        $channels          =~ s/(.*), /$1 and /;
+        $channels_warning  =~ s/(.*), /$1 and /;
+        $channels_disabled =~ s/(.*), /$1 and /;
+
+        my $warning = '';
+
+        if (length $channels_warning) {
+            $warning =
+              " You may use `unbanme` one more time today for $channels_warning; please ensure that your client or connection issues are resolved.";
+        }
+
+        if (length $channels_disabled) {
+            $warning .=
+              " You may not use `unbanme` again for several hours for $channels_disabled.";
+        }
+
+        if   (length $channels) { return "/msg $context->{nick} You have been unbanned from $channels.$warning"; }
+        else                    { return "/msg $context->{nick} $warning"; }
+    } else {
+        return "/msg $context->{nick} There is no join-flooding ban set for you.";
+    }
+}
+
+sub ban_exempted {
+    my ($self, $channel, $hostmask) = @_;
+    $channel  = lc $channel;
+    $hostmask = lc $hostmask;
+    return 1 if $self->{'ban-exemptions'}->exists($channel, $hostmask);
+    return 0;
 }
 
 sub update_join_watch {
@@ -560,115 +669,6 @@ sub check_flood {
     }
 
     $self->{channels}->{$channel}->{last_spoken_nick} = $nick if $mode == $self->{pbot}->{messagehistory}->{MSG_CHAT};
-}
-
-sub unbanme {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-    my $unbanned;
-
-    my %aliases = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($nick);
-
-    foreach my $alias (keys %aliases) {
-        next if $aliases{$alias}->{type} == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK};
-        next if $aliases{$alias}->{nickchange} == 1;
-
-        my ($anick, $auser, $ahost) = $alias =~ m/([^!]+)!([^@]+)@(.*)/;
-        my $banmask = $self->address_to_mask($ahost);
-        my $mask    = "*!$auser\@$banmask\$##stop_join_flood";
-
-        my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($aliases{$alias}->{id});
-
-        foreach my $channel (@channels) {
-            next if exists $unbanned->{$channel} and exists $unbanned->{$channel}->{$mask};
-            next if not $self->{pbot}->{banlist}->{banlist}->exists($channel . '-floodbans', $mask);
-
-            my $message_account   = $self->{pbot}->{messagehistory}->{database}->get_message_account($anick, $auser, $ahost);
-            my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
-
-            push @nickserv_accounts, undef;
-
-            foreach my $nickserv_account (@nickserv_accounts) {
-                my $baninfos = $self->{pbot}->{banlist}->get_baninfo($channel, "$anick!$auser\@$ahost", $nickserv_account);
-
-                if (defined $baninfos) {
-                    foreach my $baninfo (@$baninfos) {
-                        my $u           = $self->{pbot}->{users}->loggedin($baninfo->{channel}, "$nick!$user\@$host");
-                        my $whitelisted = $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
-                        if ($self->ban_exempted($baninfo->{channel}, $baninfo->{mask}) || $whitelisted) {
-                            $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost banned as $baninfo->{mask} in $baninfo->{channel}, but allowed through whitelist\n");
-                        } else {
-                            if ($channel eq lc $baninfo->{channel}) {
-                                my $mode = $baninfo->{type} eq 'b' ? "banned" : "quieted";
-                                $self->{pbot}->{logger}->log("anti-flood: [unbanme] $anick!$auser\@$ahost $mode as $baninfo->{mask} in $baninfo->{channel} by $baninfo->{owner}, unbanme rejected\n");
-                                return "/msg $nick You have been $mode as $baninfo->{mask} by $baninfo->{owner}, unbanme will not work until it is removed.";
-                            }
-                        }
-                    }
-                }
-            }
-
-            my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'unbanmes');
-            if ($channel_data->{unbanmes} <= 2) {
-                $channel_data->{unbanmes}++;
-                $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
-            }
-
-            $unbanned->{$channel}->{$mask} = $channel_data->{unbanmes};
-        }
-    }
-
-    if (keys %$unbanned) {
-        my $channels = '';
-
-        my $sep               = '';
-        my $channels_warning  = '';
-        my $sep_warning       = '';
-        my $channels_disabled = '';
-        my $sep_disabled      = '';
-
-        foreach my $channel (keys %$unbanned) {
-            foreach my $mask (keys %{$unbanned->{$channel}}) {
-                if ($self->{pbot}->{channels}->is_active_op("${channel}-floodbans")) {
-                    if ($unbanned->{$channel}->{$mask} <= 2) {
-                        $self->{pbot}->{banlist}->unban_user($channel . '-floodbans', 'b', $mask);
-                        $channels .= "$sep$channel";
-                        $sep = ", ";
-                    }
-
-                    if ($unbanned->{$channel}->{$mask} == 1) {
-                        $channels_warning .= "$sep_warning$channel";
-                        $sep_warning = ", ";
-                    } else {
-                        $channels_disabled .= "$sep_disabled$channel";
-                        $sep_disabled = ", ";
-                    }
-                }
-            }
-        }
-
-        $self->{pbot}->{banlist}->flush_unban_queue();
-
-        $channels          =~ s/(.*), /$1 and /;
-        $channels_warning  =~ s/(.*), /$1 and /;
-        $channels_disabled =~ s/(.*), /$1 and /;
-
-        my $warning = '';
-
-        if (length $channels_warning) {
-            $warning =
-              " You may use `unbanme` one more time today for $channels_warning; please ensure that your client or connection issues are resolved.";
-        }
-
-        if (length $channels_disabled) {
-            $warning .=
-              " You may not use `unbanme` again for several hours for $channels_disabled.";
-        }
-
-        if   (length $channels) { return "/msg $nick You have been unbanned from $channels.$warning"; }
-        else                    { return "/msg $nick $warning"; }
-    } else {
-        return "/msg $nick There is no join-flooding ban set for you.";
-    }
 }
 
 sub address_to_mask {

@@ -18,7 +18,7 @@ use Storable qw/dclone/;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->modcmd(@_) }, 'mod', 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_mod(@_) }, 'mod', 0);
     $self->{pbot}->{commands}->set_meta(
         'mod', 'help',
         'Provides restricted moderation abilities to voiced users. They can kick/ban/etc only users that are not admins, whitelisted, voiced or opped.'
@@ -76,7 +76,7 @@ sub generic_command {
     return "Voiced moderation is not enabled for this channel. Use `regset $channel.restrictedmod 1` to enable."
       if not $self->{pbot}->{registry}->get_value($channel, 'restrictedmod');
 
-    my $hostmask = "$context->{nick}!$context->{user}\@$context->{host}";
+    my $hostmask = $context->{hostmask};
     my $user     = $self->{pbot}->{users}->loggedin($channel, $hostmask) // {admin => 0, chanmod => 0};
     my $voiced   = $self->{pbot}->{nicklist}->get_meta($channel, $context->{nick}, '+v');
 
@@ -178,8 +178,8 @@ sub kb {
     return $self->kick($context);
 }
 
-sub modcmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_mod {
+    my ($self, $context) = @_;
 
     my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}) // '';
     $command = lc $command;
@@ -188,8 +188,11 @@ sub modcmd {
         return $self->{commands}->{$command}->{subref}->($context);
     } else {
         my $commands = join ', ', sort keys %{$self->{commands}};
-        if   ($from !~ m/^#/) { return "Usage: mod <channel> <command> [arguments]; commands are: $commands; see `mod help <command>` for more information."; }
-        else                  { return "Usage: mod <command> [arguments]; commands are: $commands; see `mod help <command>` for more information."; }
+        if   ($context->{from} !~ m/^#/) {
+            return "Usage: mod <channel> <command> [arguments]; commands are: $commands; see `mod help <command>` for more information.";
+        } else {
+            return "Usage: mod <command> [arguments]; commands are: $commands; see `mod help <command>` for more information.";
+        }
     }
 }
 

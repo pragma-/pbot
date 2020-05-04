@@ -19,7 +19,7 @@ $Data::Dumper::Sortkeys = 1;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->connect4_cmd(@_) }, 'connect4', 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_connect4(@_) }, 'connect4', 0);
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quit', sub { $self->on_departure(@_) });
@@ -41,7 +41,7 @@ sub unload {
 
 sub on_kick {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user,       $host)  = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
+    my ($nick, $user, $host)  = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
     my ($victim, $reason) = ($event->{event}->to, $event->{event}->{args}[1]);
     my $channel = $event->{event}->{args}[0];
     return 0 if lc $channel ne $self->{channel};
@@ -124,15 +124,15 @@ sub parse_challenge {
     return 0;
 }
 
-sub connect4_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-    my ($options, $command, $err);
+sub cmd_connect4 {
+    my ($self, $context) = @_;
+    my $err;
 
-    $arguments =~ s/^\s+|\s+$//g;
+    $context->{arguments} =~ s/^\s+|\s+$//g;
 
     my $usage = "Usage: connect4 challenge|accept|play|board|quit|players|kick|abort; for more information about a command: connect4 help <command>";
 
-    ($command, $arguments, $options) = split / /, $arguments, 3;
+    my ($command, $arguments, $options) = split / /, $context->{arguments}, 3;
     $command = lc $command;
 
     given ($command) {
@@ -166,13 +166,13 @@ sub connect4_cmd {
                     }, 1, 'connect4 loop', 1
                 );
 
-                my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-                my $player = {id => $id, name => $nick, missedinputs => 0};
+                my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
+                my $player = {id => $id, name => $context->{nick}, missedinputs => 0};
                 push @{$self->{state_data}->{players}}, $player;
 
                 $player = {id => -1, name => undef, missedinputs => 0};
                 push @{$self->{state_data}->{players}}, $player;
-                return "/msg $self->{channel} $nick has made an open challenge (Connect-$self->{CONNECTIONS} @ "
+                return "/msg $self->{channel} $context->{nick} has made an open challenge (Connect-$self->{CONNECTIONS} @ "
                   . "$self->{N_Y}x$self->{N_X} board)! Use `accept` to accept their challenge.";
             }
 
@@ -195,40 +195,40 @@ sub connect4_cmd {
                 }, 1, 'connect4 loop', 1
             );
 
-            my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-            my $player = {id => $id, name => $nick, missedinputs => 0};
+            my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
+            my $player = {id => $id, name => $context->{nick}, missedinputs => 0};
             push @{$self->{state_data}->{players}}, $player;
 
             ($id) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($challengee);
             $player = {id => $id, name => $challengee, missedinputs => 0};
             push @{$self->{state_data}->{players}}, $player;
 
-            return "/msg $self->{channel} $nick has challenged $challengee to "
+            return "/msg $self->{channel} $context->{nick} has challenged $challengee to "
               . "Connect-$self->{CONNECTIONS} @ $self->{N_Y}x$self->{N_X} board! Use `accept` to accept their challenge.";
         }
 
         when ('accept') {
-            if ($self->{current_state} ne 'accept') { return "/msg $nick This is not the time to use `accept`."; }
+            if ($self->{current_state} ne 'accept') { return "/msg $context->{nick} This is not the time to use `accept`."; }
 
-            my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
             my $player = $self->{state_data}->{players}->[1];
 
             # open challenge
             if ($player->{id} == -1) {
                 $player->{id}   = $id;
-                $player->{name} = $nick;
+                $player->{name} = $context->{nick};
             }
 
             if ($player->{id} == $id) {
                 $player->{accepted} = 1;
-                return "/msg $self->{channel} $nick has accepted $self->{state_data}->{players}->[0]->{name}'s challenge!";
+                return "/msg $self->{channel} $context->{nick} has accepted $self->{state_data}->{players}->[0]->{name}'s challenge!";
             } else {
-                return "/msg $nick You have not been challenged to a game of Connect4 yet.";
+                return "/msg $context->{nick} You have not been challenged to a game of Connect4 yet.";
             }
         }
 
         when ($_ eq 'decline' or $_ eq 'quit' or $_ eq 'forfeit' or $_ eq 'concede') {
-            my $id      = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            my $id      = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
             my $removed = 0;
 
             for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
@@ -240,17 +240,19 @@ sub connect4_cmd {
 
             if ($removed) {
                 if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) { $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1 }
-                return "/msg $self->{channel} $nick has left the game!";
+                return "/msg $self->{channel} $context->{nick} has left the game!";
             } else {
-                return "$nick: But you are not even playing the game.";
+                return "$context->{nick}: But you are not even playing the game.";
             }
         }
 
         when ('abort') {
-            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) { return "$nick: Sorry, only admins may abort the game."; }
+            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask})) {
+                return "$context->{nick}: Only admins may abort the game.";
+            }
 
             $self->{current_state} = 'gameover';
-            return "/msg $self->{channel} $nick: The game has been aborted.";
+            return "/msg $self->{channel} $context->{nick}: The game has been aborted.";
         }
 
         when ('players') {
@@ -260,7 +262,9 @@ sub connect4_cmd {
         }
 
         when ('kick') {
-            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, "$nick!$user\@$host")) { return "$nick: Sorry, only admins may kick people from the game."; }
+            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask})) {
+                return "$context->{nick}: Only admins may kick people from the game.";
+            }
 
             if (not length $arguments) { return "Usage: connect4 kick <nick>"; }
 
@@ -275,29 +279,29 @@ sub connect4_cmd {
 
             if ($removed) {
                 if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) { $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1 }
-                return "/msg $self->{channel} $nick: $arguments has been kicked from the game.";
+                return "/msg $self->{channel} $context->{nick}: $arguments has been kicked from the game.";
             } else {
-                return "$nick: $arguments isn't even in the game.";
+                return "$context->{nick}: $arguments isn't even in the game.";
             }
         }
 
         when ('play') {
             if ($self->{debug}) { $self->{pbot}->{logger}->log("Connect4: play state: $self->{current_state}\n" . Dumper $self->{state_data}); }
 
-            if ($self->{current_state} ne 'playermove') { return "$nick: It's not time to do that now."; }
+            if ($self->{current_state} ne 'playermove') { return "$context->{nick}: It's not time to do that now."; }
 
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
             my $player;
 
             if    ($self->{state_data}->{players}->[0]->{id} == $id) { $player = 0; }
             elsif ($self->{state_data}->{players}->[1]->{id} == $id) { $player = 1; }
             else                                                     { return "You are not playing in this game."; }
 
-            if ($self->{state_data}->{current_player} != $player) { return "$nick: It is not your turn to attack!"; }
+            if ($self->{state_data}->{current_player} != $player) { return "$context->{nick}: It is not your turn to attack!"; }
 
-            if ($self->{player}->[$player]->{done}) { return "$nick: You have already played this turn."; }
+            if ($self->{player}->[$player]->{done}) { return "$context->{nick}: You have already played this turn."; }
 
-            if ($arguments !~ m/^\d+$/) { return "$nick: Usage: connect4 play <location>; <location> must be in the [1, $self->{N_X}] range."; }
+            if ($arguments !~ m/^\d+$/) { return "$context->{nick}: Usage: connect4 play <location>; <location> must be in the [1, $self->{N_X}] range."; }
 
             if ($self->play($player, uc $arguments)) {
                 if ($self->{player}->[$player]->{won}) {
@@ -318,13 +322,13 @@ sub connect4_cmd {
 
         when ('board') {
             if ($self->{current_state} eq 'nogame' or $self->{current_state} eq 'accept' or $self->{current_state} eq 'genboard' or $self->{current_state} eq 'gameover') {
-                return "$nick: There is no board to show right now.";
+                return "$context->{nick}: There is no board to show right now.";
             }
 
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
             for (my $i = 0; $i < 2; $i++) {
                 if ($self->{state_data}->{players}->[$i]->{id} == $id) {
-                    $self->send_message($self->{channel}, "$nick surveys the board!");
+                    $self->send_message($self->{channel}, "$context->{nick} surveys the board!");
                     $self->show_board;
                     return "";
                 }

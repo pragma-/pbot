@@ -27,7 +27,7 @@ use feature 'unicode_strings';
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->do_func(@_) }, 'func', 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_func(@_) }, 'func', 0);
 
     $self->register(
         'help',
@@ -48,18 +48,8 @@ sub initialize {
     );
 }
 
-sub register {
-    my ($self, $func, $data) = @_;
-    $self->{funcs}->{$func} = $data;
-}
-
-sub unregister {
-    my ($self, $func) = @_;
-    delete $self->{funcs}->{$func};
-}
-
-sub do_func {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_func {
+    my ($self, $context) = @_;
     my $func = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
     return "Usage: func <keyword> [arguments]; see also: func help" if not defined $func;
     return "[No such func '$func']"                                 if not exists $self->{funcs}->{$func};
@@ -70,6 +60,16 @@ sub do_func {
     my $result = $self->{funcs}->{$func}->{subref}->(@params);
     $result =~ s/\x1/1/g;
     return $result;
+}
+
+sub register {
+    my ($self, $func, $data) = @_;
+    $self->{funcs}->{$func} = $data;
+}
+
+sub unregister {
+    my ($self, $func) = @_;
+    delete $self->{funcs}->{$func};
 }
 
 sub func_help {

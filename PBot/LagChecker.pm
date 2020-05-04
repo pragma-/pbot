@@ -43,7 +43,7 @@ sub initialize {
         'lag check'
     );
 
-    $self->{pbot}->{commands}->register(sub { $self->lagcheck(@_) }, "lagcheck", 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_lagcheck(@_) }, "lagcheck", 0);
     $self->{pbot}->{event_dispatcher}->register_handler('irc.pong', sub { $self->on_pong(@_) });
 }
 
@@ -114,8 +114,8 @@ sub lagstring {
     return $lag;
 }
 
-sub lagcheck {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_lagcheck {
+    my ($self, $context) = @_;
 
     if (defined $self->{pong_received} and $self->{pong_received} == 0) {
         # a ping has been sent (pong_received is not undef) and no pong has been received yet

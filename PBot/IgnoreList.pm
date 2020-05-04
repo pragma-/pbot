@@ -24,14 +24,68 @@ sub initialize {
     $self->{ignorelist}->load;
     $self->enqueue_ignores;
 
-    $self->{pbot}->{commands}->register(sub { $self->ignore_cmd(@_) },   "ignore",   1);
-    $self->{pbot}->{commands}->register(sub { $self->unignore_cmd(@_) }, "unignore", 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_ignore(@_) },   "ignore",   1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_unignore(@_) }, "unignore", 1);
 
     $self->{pbot}->{capabilities}->add('admin', 'can-ignore',   1);
     $self->{pbot}->{capabilities}->add('admin', 'can-unignore', 1);
 
     $self->{pbot}->{capabilities}->add('chanop', 'can-ignore',   1);
     $self->{pbot}->{capabilities}->add('chanop', 'can-unignore', 1);
+}
+
+sub cmd_ignore {
+    my ($self, $context) = @_;
+
+    my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
+
+    return "Usage: ignore <hostmask> [channel [timeout]] | ignore list" if not defined $target;
+
+    if ($target =~ /^list$/i) {
+        my $text = "Ignored:\n\n";
+        my $now  = time;
+        my $ignored = 0;
+
+        foreach my $channel (sort $self->{ignorelist}->get_keys) {
+            $text .= $channel eq '.*' ? "global:\n" : "$channel:\n";
+            my @list;
+            foreach my $hostmask (sort $self->{ignorelist}->get_keys($channel)) {
+                my $timeout = $self->{ignorelist}->get_data($channel, $hostmask, 'timeout');
+                if ($timeout == -1) {
+                    push @list, "  $hostmask";
+                } else {
+                    push @list, "  $hostmask (" . (concise duration $timeout - $now) . ')';
+                }
+                $ignored++;
+            }
+            $text .= join ";\n", @list;
+            $text .= "\n";
+        }
+        return "Ignore list is empty." if not $ignored;
+        return "/msg $context->{nick} $text";
+    }
+
+    if (not defined $channel) {
+        $channel = ".*";    # all channels
+    }
+
+    if (not defined $length) {
+        $length = -1;       # permanently
+    } else {
+        my $error;
+        ($length, $error) = $self->{pbot}->{parsedate}->parsedate($length);
+        return $error if defined $error;
+    }
+
+    return $self->add($channel, $target, $length, $context->{hostmask});
+}
+
+sub cmd_unignore {
+    my ($self, $context) = @_;
+    my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
+    if (not defined $target) { return "Usage: unignore <hostmask> [channel]"; }
+    if (not defined $channel) { $channel = '.*'; }
+    return $self->remove($channel, $target);
 }
 
 sub enqueue_ignores {
@@ -124,63 +178,6 @@ sub is_ignored {
     }
 
     return 0;
-}
-
-sub ignore_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
-
-    my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
-
-    return "Usage: ignore <hostmask> [channel [timeout]] | ignore list" if not defined $target;
-
-    if ($target =~ /^list$/i) {
-        my $text = "Ignored:\n\n";
-        my $now  = time;
-        my $ignored = 0;
-
-        foreach my $channel (sort $self->{ignorelist}->get_keys) {
-            $text .= $channel eq '.*' ? "global:\n" : "$channel:\n";
-            my @list;
-            foreach my $hostmask (sort $self->{ignorelist}->get_keys($channel)) {
-                my $timeout = $self->{ignorelist}->get_data($channel, $hostmask, 'timeout');
-                if ($timeout == -1) {
-                    push @list, "  $hostmask";
-                } else {
-                    push @list, "  $hostmask (" . (concise duration $timeout - $now) . ')';
-                }
-                $ignored++;
-            }
-            $text .= join ";\n", @list;
-            $text .= "\n";
-        }
-        return "Ignore list is empty." if not $ignored;
-        return "/msg $nick $text";
-    }
-
-    if (not defined $channel) {
-        $channel = ".*";    # all channels
-    }
-
-    if (not defined $length) {
-        $length = -1;       # permanently
-    } else {
-        my $error;
-        ($length, $error) = $self->{pbot}->{parsedate}->parsedate($length);
-        return $error if defined $error;
-    }
-
-    return $self->add($channel, $target, $length, "$nick!$user\@$host");
-}
-
-sub unignore_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
-    my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
-
-    if (not defined $target) { return "Usage: unignore <hostmask> [channel]"; }
-
-    if (not defined $channel) { $channel = '.*'; }
-
-    return $self->remove($channel, $target);
 }
 
 1;

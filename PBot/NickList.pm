@@ -27,7 +27,7 @@ sub initialize {
     $self->{nicklist} = {};
     $self->{pbot}->{registry}->add_default('text', 'nicklist', 'debug', '0');
 
-    $self->{pbot}->{commands}->register(sub { $self->show_nicklist(@_) }, "nicklist", 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_nicklist(@_) }, "nicklist", 1);
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.namreply', sub { $self->on_namreply(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.join',     sub { $self->on_join(@_) });
@@ -43,16 +43,18 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.part', sub { $self->on_part_channel(@_) });
 }
 
-sub show_nicklist {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_nicklist {
+    my ($self, $context) = @_;
     my $nicklist;
-    return "Usage: nicklist <channel> [nick]" if not length $arguments;
+    return "Usage: nicklist <channel> [nick]" if not length $context->{arguments};
 
-    my @args = split / /, $arguments;
+    my @args = split / /, $context->{arguments};
 
     if (@args == 1) {
-        if (not exists $self->{nicklist}->{lc $arguments}) { return "No nicklist for $arguments."; }
-        $nicklist = Dumper($self->{nicklist}->{lc $arguments});
+        if (not exists $self->{nicklist}->{lc $context->{arguments}}) {
+            return "No nicklist for $context->{arguments}.";
+        }
+        $nicklist = Dumper($self->{nicklist}->{lc $context->{arguments}});
     } else {
         if    (not exists $self->{nicklist}->{lc $args[0]})                { return "No nicklist for $args[0]."; }
         elsif (not exists $self->{nicklist}->{lc $args[0]}->{lc $args[1]}) { return "No such nick $args[1] in channel $args[0]."; }

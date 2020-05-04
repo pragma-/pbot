@@ -18,7 +18,7 @@ use Getopt::Long qw(GetOptionsFromArray);
 sub initialize {
     my ($self, %conf) = @_;
     $self->{pbot}->{registry}->add_default('text', 'date', 'default_timezone', 'UTC');
-    $self->{pbot}->{commands}->register(sub { $self->datecmd(@_) }, "date", 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_date(@_) }, "date", 0);
 }
 
 sub unload {
@@ -26,8 +26,8 @@ sub unload {
     $self->{pbot}->{commands}->unregister("date");
 }
 
-sub datecmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_date {
+    my ($self, $context) = @_;
     my $usage = "date [-u <user account>] [timezone]";
     my $getopt_error;
     local $SIG{__WARN__} = sub {
@@ -38,7 +38,7 @@ sub datecmd {
     Getopt::Long::Configure("bundling");
 
     my ($user_override, $show_usage);
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+    my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
     GetOptionsFromArray(
         \@opt_args,
         'u=s' => \$user_override,
@@ -47,7 +47,7 @@ sub datecmd {
 
     return $usage                         if $show_usage;
     return "/say $getopt_error -- $usage" if defined $getopt_error;
-    $arguments = "@opt_args";
+    $context->{arguments} = "@opt_args";
 
     my $tz_override;
 
@@ -57,19 +57,25 @@ sub datecmd {
         return "User account does not have `timezone` set." if not exists $userdata->{timezone};
         $tz_override = $userdata->{timezone};
     } else {
-        $tz_override = $self->{pbot}->{users}->get_user_metadata($from, "$nick!$user\@$host", 'timezone') // '';
+        $tz_override = $self->{pbot}->{users}->get_user_metadata($context->{from}, $context->{hostmask}, 'timezone') // '';
     }
 
     my $timezone = $self->{pbot}->{registry}->get_value('date', 'default_timezone') // 'UTC';
     $timezone = $tz_override if $tz_override;
-    $timezone = $arguments   if length $arguments;
+    $timezone = $context->{arguments}   if length $context->{arguments};
 
     if (defined $user_override and not length $tz_override) { return "No timezone set or user account does not exist."; }
 
     my $newcontext = {
-        from    => $from,                   nick         => $nick, user         => $user, host => $host,
-        command => "date_module $timezone", root_channel => $from, root_keyword => "date_module",
-        keyword => "date_module", arguments => "$timezone"
+        from         => $context->{from},
+        nick         => $context->{nick},
+        user         => $context->{user},
+        host         => $context->{host},
+        command      => "date_module $timezone",
+        root_channel => $context->{from},
+        root_keyword => "date_module",
+        keyword      => "date_module",
+        arguments    => "$timezone"
     };
 
     $self->{pbot}->{modules}->execute_module($newcontext);

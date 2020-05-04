@@ -18,55 +18,55 @@ sub initialize {
     $self->{channels} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => $conf{filename});
     $self->{channels}->load;
 
-    $self->{pbot}->{commands}->register(sub { $self->join_cmd(@_) }, "join",      1);
-    $self->{pbot}->{commands}->register(sub { $self->part_cmd(@_) }, "part",      1);
-    $self->{pbot}->{commands}->register(sub { $self->set(@_) },      "chanset",   1);
-    $self->{pbot}->{commands}->register(sub { $self->unset(@_) },    "chanunset", 1);
-    $self->{pbot}->{commands}->register(sub { $self->add(@_) },      "chanadd",   1);
-    $self->{pbot}->{commands}->register(sub { $self->remove(@_) },   "chanrem",   1);
-    $self->{pbot}->{commands}->register(sub { $self->list(@_) },     "chanlist",  1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_join(@_) },   "join",      1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_part(@_) },   "part",      1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_set(@_) },    "chanset",   1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_unset(@_) },  "chanunset", 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_add(@_) },    "chanadd",   1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_remove(@_) }, "chanrem",   1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_list(@_) },   "chanlist",  1);
 
     $self->{pbot}->{capabilities}->add('admin', 'can-join',     1);
     $self->{pbot}->{capabilities}->add('admin', 'can-part',     1);
     $self->{pbot}->{capabilities}->add('admin', 'can-chanlist', 1);
 }
 
-sub join_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-    foreach my $channel (split /[\s+,]/, $arguments) {
-        $self->{pbot}->{logger}->log("$nick!$user\@$host made me join $channel\n");
+sub cmd_join {
+    my ($self, $context) = @_;
+    foreach my $channel (split /[\s+,]/, $context->{arguments}) {
+        $self->{pbot}->{logger}->log("$context->{hostmask} made me join $channel\n");
         $self->join($channel);
     }
-    return "/msg $nick Joining $arguments";
+    return "/msg $context->{nick} Joining $context->{arguments}";
 }
 
-sub part_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-    $arguments = $from if not $arguments;
-    foreach my $channel (split /[\s+,]/, $arguments) {
-        $self->{pbot}->{logger}->log("$nick!$user\@$host made me part $channel\n");
+sub cmd_part {
+    my ($self, $context) = @_;
+    $context->{arguments} = $context->{from} if not $context->{arguments};
+    foreach my $channel (split /[\s+,]/, $context->{arguments}) {
+        $self->{pbot}->{logger}->log("$context->{hostmask} made me part $channel\n");
         $self->part($channel);
     }
-    return "/msg $nick Parting $arguments";
+    return "/msg $context->{nick} Parting $context->{arguments}";
 }
 
-sub set {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_set {
+    my ($self, $context) = @_;
     my ($channel, $key, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
     return "Usage: chanset <channel> [key [value]]" if not defined $channel;
     return $self->{channels}->set($channel, $key, $value);
 }
 
-sub unset {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_unset {
+    my ($self, $context) = @_;
     my ($channel, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
     return "Usage: chanunset <channel> <key>" if not defined $channel or not defined $key;
     return $self->{channels}->unset($channel, $key);
 }
 
-sub add {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-    return "Usage: chanadd <channel>" if not defined $arguments or not length $arguments;
+sub cmd_add {
+    my ($self, $context) = @_;
+    return "Usage: chanadd <channel>" if not length $context->{arguments};
 
     my $data = {
         enabled => 1,
@@ -74,25 +74,25 @@ sub add {
         permop  => 0
     };
 
-    return $self->{channels}->add($arguments, $data);
+    return $self->{channels}->add($context->{arguments}, $data);
 }
 
-sub remove {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-    return "Usage: chanrem <channel>" if not defined $arguments or not length $arguments;
+sub cmd_remove {
+    my ($self, $context) = @_;
+    return "Usage: chanrem <channel>" if not length $context->{arguments};
 
     # clear banlists
-    $self->{pbot}->{banlist}->remove($arguments);
-    $self->{pbot}->{quietlist}->remove($arguments);
-    $self->{pbot}->{timer}->dequeue_event("unban $arguments .*");
-    $self->{pbot}->{timer}->dequeue_event("unmute $arguments .*");
+    $self->{pbot}->{banlist}->remove($context->{arguments});
+    $self->{pbot}->{quietlist}->remove($context->{arguments});
+    $self->{pbot}->{timer}->dequeue_event("unban $context->{arguments} .*");
+    $self->{pbot}->{timer}->dequeue_event("unmute $context->{arguments} .*");
 
     # TODO: ignores, etc?
-    return $self->{channels}->remove($arguments);
+    return $self->{channels}->remove($context->{arguments});
 }
 
-sub list {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_list {
+    my ($self, $context) = @_;
     my $result;
     foreach my $channel (sort $self->{channels}->get_keys) {
         $result .= $self->{channels}->get_key_name($channel) . ': {';

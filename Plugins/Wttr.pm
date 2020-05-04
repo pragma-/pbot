@@ -26,7 +26,7 @@ use Getopt::Long qw(GetOptionsFromArray);
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->wttrcmd(@_) }, "wttr", 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_wttr(@_) }, "wttr", 0);
 }
 
 sub unload {
@@ -34,8 +34,10 @@ sub unload {
     $self->{pbot}->{commands}->unregister("wttr");
 }
 
-sub wttrcmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_wttr {
+    my ($self, $context) = @_;
+
+    my $arguments = $context->{arguments};
 
     my @wttr_options = (
         "conditions",
@@ -92,7 +94,7 @@ sub wttrcmd {
         $arguments = $userdata->{location};
     } else {
         if (not length $arguments) {
-            $arguments = $self->{pbot}->{users}->get_user_metadata($from, "$nick!$user\@$host", 'location') // '';
+            $arguments = $self->{pbot}->{users}->get_user_metadata($context->{from}, $context->{hostmask}, 'location') // '';
         }
     }
 

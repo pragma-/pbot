@@ -18,10 +18,55 @@ use File::Basename;
 sub initialize {
     my ($self, %conf) = @_;
     $self->{plugins} = {};
-    $self->{pbot}->{commands}->register(sub { $self->load_cmd(@_) },   "plug",     1);
-    $self->{pbot}->{commands}->register(sub { $self->unload_cmd(@_) }, "unplug",   1);
-    $self->{pbot}->{commands}->register(sub { $self->reload_cmd(@_) }, "replug",   1);
-    $self->{pbot}->{commands}->register(sub { $self->list_cmd(@_) },   "pluglist", 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_plug(@_) },     "plug",     1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_unplug(@_) },   "unplug",   1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_replug(@_) },   "replug",   1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_pluglist(@_) }, "pluglist", 0);
+}
+
+sub cmd_plug {
+    my ($self, $context) = @_;
+    my $plugin = $context->{arguments};
+
+    if (not length $plugin) { return "Usage: plug <plugin>"; }
+
+    if   ($self->load($plugin)) { return "Loaded $plugin plugin."; }
+    else                        { return "Plugin $plugin failed to load."; }
+}
+
+sub cmd_unplug {
+    my ($self, $context) = @_;
+    my $plugin = $context->{arguments};
+
+    if (not length $plugin) { return "Usage: unplug <plugin>"; }
+
+    if   ($self->unload($plugin)) { return "Unloaded $plugin plugin."; }
+    else                          { return "Plugin $plugin is not loaded."; }
+}
+
+sub cmd_replug {
+    my ($self, $context) = @_;
+    my $plugin = $context->{arguments};
+
+    if (not length $plugin) { return "Usage: replug <plugin>"; }
+
+    my $unload_result = $self->cmd_unplug($context);
+    my $load_result   = $self->cmd_plug($context);
+
+    my $result = "";
+    $result .= "$unload_result " if $unload_result =~ m/^Unloaded/;
+    $result .= $load_result;
+    return $result;
+}
+
+sub cmd_pluglist {
+    my ($self, $context) = @_;
+
+    my @plugins = sort keys %{$self->{plugins}};
+
+    return "No plugins loaded." if not @plugins;
+
+    return scalar @plugins . ' plugin' . (@plugins == 1 ? '' : 's') . ' loaded: ' . join (', ', @plugins);
 }
 
 sub autoload {
@@ -119,48 +164,6 @@ sub unload {
     } else {
         return 0;
     }
-}
-
-sub reload_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-    if (not length $arguments) { return "Usage: replug <plugin>"; }
-
-    my $unload_result = $self->unload_cmd($from, $nick, $user, $host, $arguments);
-    my $load_result   = $self->load_cmd($from, $nick, $user, $host, $arguments);
-
-    my $result = "";
-    $result .= "$unload_result " if $unload_result =~ m/^Unloaded/;
-    $result .= $load_result;
-    return $result;
-}
-
-sub load_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-    if (not length $arguments) { return "Usage: plug <plugin>"; }
-
-    if   ($self->load($arguments)) { return "Loaded $arguments plugin."; }
-    else                           { return "Plugin $arguments failed to load."; }
-}
-
-sub unload_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-    if (not length $arguments) { return "Usage: unplug <plugin>"; }
-
-    if   ($self->unload($arguments)) { return "Unloaded $arguments plugin."; }
-    else                             { return "Plugin $arguments is not loaded."; }
-}
-
-sub list_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
-
-    my @plugins = sort keys %{$self->{plugins}};
-
-    return "No plugins loaded." if not @plugins;
-
-    return scalar @plugins . ' plugin' . (@plugins == 1 ? '' : 's') . ' loaded: ' . join (', ', @plugins);
 }
 
 1;

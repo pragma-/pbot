@@ -43,14 +43,14 @@ sub initialize {
     $self->{last}        = $seconds;
     $self->{timeout}     = $timeout;
 
-    $self->{pbot}->{commands}->register(sub { $self->event_queue_cmd(@_) },  'eventqueue', 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_eventqueue(@_) },  'eventqueue', 1);
     $self->{pbot}->{capabilities}->add('admin', 'can-eventqueue', 1);
 
     $self->{timer_func} = sub { $self->on_tick_handler(@_) };
 }
 
-sub event_queue_cmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_eventqueue {
+    my ($self, $context) = @_;
 
     my $usage = "Usage: eventqueue list [filter regex] | add <relative time> <command> [-repeat] | remove <event>";
 
@@ -109,13 +109,13 @@ sub event_queue_cmd {
         $repeating = 1 if $command =~ s/^-repeat\s+|\s+-repeat$//g;
 
         my $cmd = {
-            nick => $nick,
-            user => $user,
-            host => $host,
+            nick => $context->{nick},
+            user => $context->{user},
+            host => $context->{host},
             command => $command,
         };
 
-        $self->{pbot}->{interpreter}->add_to_command_queue($from, $cmd, $delay, $repeating);
+        $self->{pbot}->{interpreter}->add_to_command_queue($context->{from}, $cmd, $delay, $repeating);
         return "Command added to event queue.";
     }
 

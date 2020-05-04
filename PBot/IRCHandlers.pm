@@ -122,7 +122,18 @@ sub on_motd {
 
 sub on_self_join {
     my ($self, $event_type, $event) = @_;
-    my $send_who = $self->{pbot}->{registry}->get_value('general', 'send_who_on_join') // 1;
+
+    return 0 if not $self->{pbot}->{registry}->get_value('general', 'send_who_on_join') // 1;
+
+    my $send_who = 0;
+    if ($self->{pbot}->{registry}->get_value('general', 'send_who_chanop_only') // 1) {
+        if ($self->{pbot}->{channels}->get_meta($event->{channel}, 'chanop')) {
+            $send_who = 1;
+        }
+    } else {
+        $send_who = 1;
+    }
+
     $self->send_who($event->{channel}) if $send_who;
     return 0;
 }

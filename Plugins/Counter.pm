@@ -17,12 +17,12 @@ use Time::HiRes qw/gettimeofday/;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->counteradd(@_) },     'counteradd',     0);
-    $self->{pbot}->{commands}->register(sub { $self->counterdel(@_) },     'counterdel',     0);
-    $self->{pbot}->{commands}->register(sub { $self->counterreset(@_) },   'counterreset',   0);
-    $self->{pbot}->{commands}->register(sub { $self->countershow(@_) },    'countershow',    0);
-    $self->{pbot}->{commands}->register(sub { $self->counterlist(@_) },    'counterlist',    0);
-    $self->{pbot}->{commands}->register(sub { $self->countertrigger(@_) }, 'countertrigger', 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_counteradd(@_) },     'counteradd',     0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_counterdel(@_) },     'counterdel',     0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_counterreset(@_) },   'counterreset',   0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_countershow(@_) },    'countershow',    0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_counterlist(@_) },    'counterlist',    0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_countertrigger(@_) }, 'countertrigger', 1);
     $self->{pbot}->{capabilities}->add('admin', 'can-countertrigger', 1);
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->on_public(@_) });
@@ -260,40 +260,40 @@ sub get_trigger {
     return $target;
 }
 
-sub counteradd {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_counteradd {
+    my ($self, $context) = @_;
     return "Internal error." if not $self->dbi_begin;
     my ($channel, $name, $description);
 
-    if ($from !~ m/^#/) {
-        ($channel, $name, $description) = split /\s+/, $arguments, 3;
+    if ($context->{from} !~ m/^#/) {
+        ($channel, $name, $description) = split /\s+/, $context->{arguments}, 3;
         if (not defined $channel or not defined $name or not defined $description or $channel !~ m/^#/) {
             return "Usage from private message: counteradd <channel> <name> <description>";
         }
     } else {
-        $channel = $from;
-        ($name, $description) = split /\s+/, $arguments, 2;
+        $channel = $context->{from};
+        ($name, $description) = split /\s+/, $context->{arguments}, 2;
         if (not defined $name or not defined $description) { return "Usage: counteradd <name> <description>"; }
     }
 
     my $result;
-    if   ($self->add_counter("$nick!$user\@$host", $channel, $name, $description)) { $result = "Counter added."; }
-    else                                                                           { $result = "Counter '$name' already exists."; }
+    if   ($self->add_counter($context->{hostmask}, $channel, $name, $description)) { $result = "Counter added."; }
+    else                                                                             { $result = "Counter '$name' already exists."; }
     $self->dbi_end;
     return $result;
 }
 
-sub counterdel {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_counterdel {
+    my ($self, $context) = @_;
     return "Internal error." if not $self->dbi_begin;
     my ($channel, $name);
 
-    if ($from !~ m/^#/) {
-        ($channel, $name) = split /\s+/, $arguments, 2;
+    if ($context->{from} !~ m/^#/) {
+        ($channel, $name) = split /\s+/, $context->{arguments}, 2;
         if (not defined $channel or not defined $name or $channel !~ m/^#/) { return "Usage from private message: counterdel <channel> <name>"; }
     } else {
-        $channel = $from;
-        ($name) = split /\s+/, $arguments, 1;
+        $channel = $context->{from};
+        ($name) = split /\s+/, $context->{arguments}, 1;
         if (not defined $name) { return "Usage: counterdel <name>"; }
     }
 
@@ -304,17 +304,17 @@ sub counterdel {
     return $result;
 }
 
-sub counterreset {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_counterreset {
+    my ($self, $context) = @_;
     return "Internal error." if not $self->dbi_begin;
     my ($channel, $name);
 
-    if ($from !~ m/^#/) {
-        ($channel, $name) = split /\s+/, $arguments, 2;
+    if ($context->{from} !~ m/^#/) {
+        ($channel, $name) = split /\s+/, $context->{arguments}, 2;
         if (not defined $channel or not defined $name or $channel !~ m/^#/) { return "Usage from private message: counterreset <channel> <name>"; }
     } else {
-        $channel = $from;
-        ($name) = split /\s+/, $arguments, 1;
+        $channel = $context->{from};
+        ($name) = split /\s+/, $context->{arguments}, 1;
         if (not defined $name) { return "Usage: counterreset <name>"; }
     }
 
@@ -331,17 +331,17 @@ sub counterreset {
     return $result;
 }
 
-sub countershow {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_countershow {
+    my ($self, $context) = @_;
     return "Internal error." if not $self->dbi_begin;
     my ($channel, $name);
 
-    if ($from !~ m/^#/) {
-        ($channel, $name) = split /\s+/, $arguments, 2;
+    if ($context->{from} !~ m/^#/) {
+        ($channel, $name) = split /\s+/, $context->{arguments}, 2;
         if (not defined $channel or not defined $name or $channel !~ m/^#/) { return "Usage from private message: countershow <channel> <name>"; }
     } else {
-        $channel = $from;
-        ($name) = split /\s+/, $arguments, 1;
+        $channel = $context->{from};
+        ($name) = split /\s+/, $context->{arguments}, 1;
         if (not defined $name) { return "Usage: countershow <name>"; }
     }
 
@@ -359,16 +359,16 @@ sub countershow {
     return $result;
 }
 
-sub counterlist {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_counterlist {
+    my ($self, $context) = @_;
     return "Internal error." if not $self->dbi_begin;
     my $channel;
 
-    if ($from !~ m/^#/) {
-        if (not length $arguments or $arguments !~ m/^#/) { return "Usage from private message: counterlist <channel>"; }
-        $channel = $arguments;
+    if ($context->{from} !~ m/^#/) {
+        if (not length $context->{arguments} or $context->{arguments} !~ m/^#/) { return "Usage from private message: counterlist <channel>"; }
+        $channel = $context->{arguments};
     } else {
-        $channel = $from;
+        $channel = $context->{from};
     }
 
     my @counters = $self->list_counters($channel);
@@ -388,19 +388,19 @@ sub counterlist {
     return $result;
 }
 
-sub countertrigger {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_countertrigger {
+    my ($self, $context) = @_;
     return "Internal error." if not $self->dbi_begin;
     my $command;
-    ($command, $arguments) = split / /, $arguments, 2;
+    ($command, $context->{arguments}) = split / /, $context->{arguments}, 2;
 
     my ($channel, $result);
 
     given ($command) {
         when ('list') {
-            if ($from =~ m/^#/) { $channel = $from; }
+            if ($context->{from} =~ m/^#/) { $channel = $context->{from}; }
             else {
-                ($channel) = split / /, $arguments, 1;
+                ($channel) = split / /, $context->{arguments}, 1;
                 if ($channel !~ m/^#/) {
                     $self->dbi_end;
                     return "Usage from private message: countertrigger list <channel>";
@@ -421,19 +421,19 @@ sub countertrigger {
         }
 
         when ('add') {
-            if ($from =~ m/^#/) { $channel = $from; }
+            if ($context->{from} =~ m/^#/) { $channel = $context->{from}; }
             else {
-                ($channel, $arguments) = split / /, $arguments, 2;
+                ($channel, $context->{arguments}) = split / /, $context->{arguments}, 2;
                 if ($channel !~ m/^#/) {
                     $self->dbi_end;
                     return "Usage from private message: countertrigger add <channel> <regex> <target>";
                 }
             }
 
-            my ($trigger, $target) = split / /, $arguments, 2;
+            my ($trigger, $target) = split / /, $context->{arguments}, 2;
 
             if (not defined $trigger or not defined $target) {
-                if   ($from !~ m/^#/) { $result = "Usage from private message: countertrigger add <channel> <regex> <target>"; }
+                if   ($context->{from} !~ m/^#/) { $result = "Usage from private message: countertrigger add <channel> <regex> <target>"; }
                 else                  { $result = "Usage: countertrigger add <regex> <target>"; }
                 $self->dbi_end;
                 return $result;
@@ -451,19 +451,19 @@ sub countertrigger {
         }
 
         when ('delete') {
-            if ($from =~ m/^#/) { $channel = $from; }
+            if ($context->{from} =~ m/^#/) { $channel = $context->{from}; }
             else {
-                ($channel, $arguments) = split / /, $arguments, 2;
+                ($channel, $context->{arguments}) = split / /, $context->{arguments}, 2;
                 if ($channel !~ m/^#/) {
                     $self->dbi_end;
                     return "Usage from private message: countertrigger delete <channel> <regex>";
                 }
             }
 
-            my ($trigger) = split / /, $arguments, 1;
+            my ($trigger) = split / /, $context->{arguments}, 1;
 
             if (not defined $trigger) {
-                if   ($from !~ m/^#/) { $result = "Usage from private message: countertrigger delete <channel> <regex>"; }
+                if   ($context->{from} !~ m/^#/) { $result = "Usage from private message: countertrigger delete <channel> <regex>"; }
                 else                  { $result = "Usage: countertrigger delete <regex>"; }
                 $self->dbi_end;
                 return $result;

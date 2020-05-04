@@ -22,9 +22,63 @@ sub initialize {
     my ($self, %conf) = @_;
     $self->{filename}  = $conf{filename};
     $self->{blacklist} = {};
-    $self->{pbot}->{commands}->register(sub { $self->blacklist(@_) }, "blacklist", 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_blacklist(@_) }, "blacklist", 1);
     $self->{pbot}->{capabilities}->add('admin', 'can-blacklist', 1);
     $self->load_blacklist;
+}
+
+sub cmd_blacklist {
+    my ($self, $context) = @_;
+
+    my $arglist = $context->{arglist};
+    $self->{pbot}->{interpreter}->lc_args($arglist);
+
+    my $command = $self->{pbot}->{interpreter}->shift_arg($arglist);
+
+    return "Usage: blacklist <command>, where commands are: list/show, add, remove" if not defined $command;
+
+    given ($command) {
+        when ($_ eq "list" or $_ eq "show") {
+            my $text    = "Blacklist:\n";
+            my $entries = 0;
+            foreach my $channel (sort keys %{$self->{blacklist}}) {
+                if   ($channel eq '.*') { $text .= "  all channels:\n"; }
+                else                    { $text .= "  $channel:\n"; }
+                foreach my $mask (sort keys %{$self->{blacklist}->{$channel}}) {
+                    $text .= "    $mask,\n";
+                    $entries++;
+                }
+            }
+            $text .= "none" if $entries == 0;
+            return "/msg $context->{nick} $text";
+        }
+        when ("add") {
+            my ($mask, $channel) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
+            return "Usage: blacklist add <hostmask regex> [channel]" if not defined $mask;
+
+            $channel = '.*' if not defined $channel;
+
+            $self->{pbot}->{logger}->log("$context->{hostmask} added [$mask] to blacklist for channel [$channel]\n");
+            $self->add($channel, $mask);
+            return "/say $mask blacklisted in channel $channel";
+        }
+        when ("remove") {
+            my ($mask, $channel) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
+            return "Usage: blacklist remove <hostmask regex> [channel]" if not defined $mask;
+
+            $channel = '.*' if not defined $channel;
+
+            if (exists $self->{blacklist}->{$channel} and not exists $self->{blacklist}->{$channel}->{$mask}) {
+                $self->{pbot}->{logger}->log("$context->{hostmask} attempt to remove nonexistent [$mask][$channel] from blacklist\n");
+                return "/say $mask not found in blacklist for channel $channel (use `blacklist list` to display blacklist)";
+            }
+
+            $self->remove($channel, $mask);
+            $self->{pbot}->{logger}->log("$context->{hostmask} removed [$mask] from blacklist for channel [$channel]\n");
+            return "/say $mask removed from blacklist for channel $channel";
+        }
+        default { return "Unknown command '$command'; commands are: list/show, add, remove"; }
+    }
 }
 
 sub add {
@@ -141,60 +195,6 @@ sub check_blacklist {
         }
     }
     return 0;
-}
-
-sub blacklist {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
-
-    my $arglist = $context->{arglist};
-    $self->{pbot}->{interpreter}->lc_args($arglist);
-
-    my $command = $self->{pbot}->{interpreter}->shift_arg($arglist);
-
-    return "Usage: blacklist <command>, where commands are: list/show, add, remove" if not defined $command;
-
-    given ($command) {
-        when ($_ eq "list" or $_ eq "show") {
-            my $text    = "Blacklist:\n";
-            my $entries = 0;
-            foreach my $channel (sort keys %{$self->{blacklist}}) {
-                if   ($channel eq '.*') { $text .= "  all channels:\n"; }
-                else                    { $text .= "  $channel:\n"; }
-                foreach my $mask (sort keys %{$self->{blacklist}->{$channel}}) {
-                    $text .= "    $mask,\n";
-                    $entries++;
-                }
-            }
-            $text .= "none" if $entries == 0;
-            return "/msg $nick $text";
-        }
-        when ("add") {
-            my ($mask, $channel) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
-            return "Usage: blacklist add <hostmask regex> [channel]" if not defined $mask;
-
-            $channel = '.*' if not defined $channel;
-
-            $self->{pbot}->{logger}->log("$nick!$user\@$host added [$mask] to blacklist for channel [$channel]\n");
-            $self->add($channel, $mask);
-            return "/say $mask blacklisted in channel $channel";
-        }
-        when ("remove") {
-            my ($mask, $channel) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
-            return "Usage: blacklist remove <hostmask regex> [channel]" if not defined $mask;
-
-            $channel = '.*' if not defined $channel;
-
-            if (exists $self->{blacklist}->{$channel} and not exists $self->{blacklist}->{$channel}->{$mask}) {
-                $self->{pbot}->{logger}->log("$nick attempt to remove nonexistent [$mask][$channel] from blacklist\n");
-                return "/say $mask not found in blacklist for channel $channel (use `blacklist list` to display blacklist)";
-            }
-
-            $self->remove($channel, $mask);
-            $self->{pbot}->{logger}->log("$nick!$user\@$host removed [$mask] from blacklist for channel [$channel]\n");
-            return "/say $mask removed from blacklist for channel $channel";
-        }
-        default { return "Unknown command '$command'; commands are: list/show, add, remove"; }
-    }
 }
 
 1;

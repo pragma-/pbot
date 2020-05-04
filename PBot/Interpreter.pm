@@ -34,11 +34,11 @@ sub process_line {
     my ($from, $nick, $user, $host, $text) = @_;
     $from = lc $from if defined $from;
 
-    my $context = {from => $from, nick => $nick, user => $user, host => $host, text => $text};
+    my $context = {from => $from, nick => $nick, user => $user, host => $host, hostmask => "$nick!$user\@$host", text => $text};
     my $pbot  = $self->{pbot};
 
     my $message_account = $pbot->{messagehistory}->get_message_account($nick, $user, $host);
-    $pbot->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $from, $text, $pbot->{messagehistory}->{MSG_CHAT});
+    $pbot->{messagehistory}->add_message($message_account, $context->{hostmask}, $from, $text, $pbot->{messagehistory}->{MSG_CHAT});
     $context->{message_account} = $message_account;
 
     my $flood_threshold      = $pbot->{registry}->get_value($from, 'chat_flood_threshold');
@@ -165,7 +165,7 @@ sub process_line {
 }
 
 sub interpret {
-    my ($self,    $context)     = @_;
+    my ($self, $context) = @_;
     my ($keyword, $arguments) = ('', '');
     my $text;
     my $pbot = $self->{pbot};
@@ -174,7 +174,7 @@ sub interpret {
 
     $pbot->{logger}->log("=== [$context->{interpret_depth}] Got command: ("
           . (defined $context->{from} ? $context->{from} : "undef")
-          . ") $context->{nick}!$context->{user}\@$context->{host}: $context->{command}\n");
+          . ") $context->{hostmask}: $context->{command}\n");
 
     $context->{special} = "" unless exists $self->{special};
 
@@ -321,6 +321,7 @@ sub interpret {
         $context->{arguments} = $context->{original_arguments};
         delete $context->{args_utf8};
     }
+
     return $result;
 }
 

@@ -21,11 +21,11 @@ use File::Basename;
 sub initialize {
     my ($self, %conf) = @_;
     $self->{refresher} = Module::Refresh->new;
-    $self->{pbot}->{commands}->register(sub { $self->refresh(@_) }, "refresh", 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_refresh(@_) }, "refresh", 1);
 }
 
-sub refresh {
-    my ($self, $from, $nick, $user, $host, $arguments) = @_;
+sub cmd_refresh {
+    my ($self, $context) = @_;
 
     my $last_update = $self->{pbot}->{updater}->get_last_update_version;
     my @updates     = $self->{pbot}->{updater}->get_available_updates($last_update);
@@ -46,14 +46,14 @@ sub refresh {
     };
 
     my $result = eval {
-        if (not $arguments) {
+        if (not $context->{arguments}) {
             $self->{pbot}->{logger}->log("Refreshing all modified modules\n");
             $self->{refresher}->refresh;
             return "Error refreshing: $refresh_error" if defined $refresh_error;
             return "Refreshed all modified modules.\n";
         } else {
-            $self->{pbot}->{logger}->log("Refreshing module $arguments\n");
-            $self->{refresher}->refresh_module($arguments);
+            $self->{pbot}->{logger}->log("Refreshing module $context->{arguments}\n");
+            $self->{refresher}->refresh_module($context->{arguments});
             return "Error refreshing: $refresh_error" if defined $refresh_error;
             $self->{pbot}->{logger}->log("Refreshed module.\n");
             return "Refreshed module.\n";

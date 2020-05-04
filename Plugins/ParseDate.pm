@@ -14,7 +14,7 @@ use Time::Duration qw/duration/;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { return $self->pd(@_) }, "pd", 0);
+    $self->{pbot}->{commands}->register(sub { return $self->cmd_parsedate(@_) }, "pd", 0);
 }
 
 sub unload {
@@ -22,10 +22,9 @@ sub unload {
     $self->{pbot}->{commands}->unregister("pd");
 }
 
-sub pd {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $arguments) = @_;
-    my ($seconds, $error) = $self->{pbot}->{parsedate}->parsedate($arguments);
+sub cmd_parsedate {
+    my ($self, $context) = @_;
+    my ($seconds, $error) = $self->{pbot}->{parsedate}->parsedate($context->{arguments});
     return $error if defined $error;
     return duration $seconds;
 }

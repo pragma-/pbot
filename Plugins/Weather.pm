@@ -20,7 +20,7 @@ use Getopt::Long qw(GetOptionsFromArray);
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->weathercmd(@_) }, "weather", 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_weather(@_) }, "weather", 0);
 }
 
 sub unload {
@@ -28,14 +28,16 @@ sub unload {
     $self->{pbot}->{commands}->unregister("weather");
 }
 
-sub weathercmd {
-    my ($self, $from, $nick, $user, $host, $arguments, $context) = @_;
+sub cmd_weather {
+    my ($self, $context) = @_;
     my $usage = "Usage: weather [-u <user account>] [location]";
     my $getopt_error;
     local $SIG{__WARN__} = sub {
         $getopt_error = shift;
         chomp $getopt_error;
     };
+
+    my $arguments = $context->{arguments};
 
     Getopt::Long::Configure("bundling");
 
@@ -51,8 +53,8 @@ sub weathercmd {
     return "/say $getopt_error -- $usage" if defined $getopt_error;
     $arguments = "@opt_args";
 
-    my $hostmask          = defined $user_override ? $user_override : "$nick!$user\@$host";
-    my $location_override = $self->{pbot}->{users}->get_user_metadata($from, $hostmask, 'location') // '';
+    my $hostmask          = defined $user_override ? $user_override : $context->{hostmask};
+    my $location_override = $self->{pbot}->{users}->get_user_metadata($context->{from}, $hostmask, 'location') // '';
     $arguments = $location_override if not length $arguments;
 
     if (defined $user_override and not length $location_override) { return "No location set or user account does not exist."; }
