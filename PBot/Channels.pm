@@ -119,7 +119,7 @@ sub join {
         delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
 
         if ($self->{channels}->exists($channel) and $self->{channels}->get_data($channel, 'permop')) {
-            $self->gain_ops($channel);
+            $self->{pbot}->{chanops}->gain_ops($channel);
         }
 
         $self->{pbot}->{conn}->mode($channel);
