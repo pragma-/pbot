@@ -232,7 +232,8 @@ sub process_pipe_reader {
 
     if (not defined $context->{result} or not length $context->{result}) {
         $self->{pbot}->{logger}->log("No result from process.\n");
-        return;
+        return if $context->{suppress_no_output};
+        $context->{result} = "No output.";
     }
 
     if ($context->{referenced}) { return if $context->{result} =~ m/(?:no results)/i; }

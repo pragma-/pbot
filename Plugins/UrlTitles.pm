@@ -65,9 +65,16 @@ sub show_url_titles {
             }
 
             my $context = {
-                from    => $channel,           nick         => $nick,    user         => $user, host => $host,
-                command => "title $nick $url", root_channel => $channel, root_keyword => "title",
-                keyword => "title", arguments => "$nick $url"
+                from               => $channel,
+                nick               => $nick,
+                user               => $user,
+                host               => $host,
+                command            => "title $nick $url",
+                root_channel       => $channel,
+                root_keyword       => "title",
+                keyword            => "title",
+                arguments          => "$nick $url",
+                suppress_no_output => 1,
             };
 
             $self->{pbot}->{modules}->execute_module($context);
