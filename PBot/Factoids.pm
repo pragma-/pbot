@@ -818,7 +818,8 @@ sub interpreter {
             my $namespace_regex = $namespace;
             if ($strictnamespace) { $namespace_regex = "(?:" . (quotemeta $namespace) . '|\\.\\*)'; }
 
-            my $matches = $self->{commands}->factfind($context->{from}, $context->{nick}, $context->{user}, $context->{host}, quotemeta($original_keyword) . " -channel $namespace_regex");
+            $context->{arguments} = quotemeta($original_keyword) . " -channel $namespace_regex";
+            my $matches = $self->{commands}->cmd_factfind($context);
 
             # found factfind matches
             if ($matches !~ m/^No factoids/) {
