@@ -74,7 +74,14 @@ sub cmd_googlesearch {
           . $result2->items->[0]->link . ">";
     }
 
-    my $result = $engine->search($context->{arguments});
+    my $result = eval { $engine->search($context->{arguments}) };
+
+    if ($@) {
+        my $error = $@;
+        $error =~ s/^WWW::Google::CustomSearch::search\(\): /google: /;
+        $error =~ s/file .*$//;
+        return $error;
+    }
 
     if (not defined $result or not defined $result->items or not @{$result->items}) { return "$context->{nick}: No results found"; }
 
