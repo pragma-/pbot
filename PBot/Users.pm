@@ -532,8 +532,9 @@ sub cache_user {
 
 sub decache_user {
     my ($self, $channel, $hostmask) = @_;
+    my $lc_channel = lc $channel;
     my $lc_hostmask = lc $hostmask;
-    delete $self->{user_cache}->{lc $channel}->{$lc_hostmask};
+    delete $self->{user_cache}->{$lc_channel}->{$lc_hostmask} if exists $self->{user_cache}->{$lc_channel};
     delete $self->{user_cache}->{global}->{$lc_hostmask};
 }
 
