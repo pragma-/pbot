@@ -79,7 +79,8 @@ sub cmd_googlesearch {
     if ($@) {
         my $error = $@;
         $error =~ s/^WWW::Google::CustomSearch::search\(\): /google: /;
-        $error =~ s/file .*$//;
+        $error =~ s/file .*?$//;
+        $error =~ s/Missing required arguments: totalResults.*/No results./;
         return $error;
     }
 
