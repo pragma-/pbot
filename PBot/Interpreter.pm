@@ -170,6 +170,10 @@ sub interpret {
     my $text;
     my $pbot = $self->{pbot};
 
+    if (not exists $context->{hostmask}) {
+        $context->{hostmask} = "$context->{nick}!$context->{user}\@$context->{host}";
+    }
+
     $context->{interpret_depth}++;
 
     $pbot->{logger}->log("=== [$context->{interpret_depth}] Got command: ("
