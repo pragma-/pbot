@@ -69,6 +69,7 @@ sub show_url_titles {
                 nick               => $nick,
                 user               => $user,
                 host               => $host,
+                hostmask           => "$nick!$user\@$host",
                 command            => "title $nick $url",
                 root_channel       => $channel,
                 root_keyword       => "title",
