@@ -50,7 +50,7 @@ sub on_join {
     my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
-    my $u = $self->find_user($channel, "$nick!$user\@$host");
+    my ($u, $name) = $self->find_user($channel, "$nick!$user\@$host");
 
     if (defined $u) {
         if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
@@ -76,7 +76,7 @@ sub on_join {
         }
 
         if ($u->{autologin}) {
-            $self->{pbot}->{logger}->log("$nick!$user\@$host autologin to $u->{name} for $channel\n");
+            $self->{pbot}->{logger}->log("$nick!$user\@$host autologin to $name for $channel\n");
             $u->{loggedin} = 1;
         }
     }
