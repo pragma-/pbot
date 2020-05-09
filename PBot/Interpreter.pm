@@ -386,6 +386,7 @@ sub extract_bracketed {
                 $result        = '';
             } else {
                 # add final token and exit
+                $token .= '\\' if $escaped;
                 $rest .= $token if $extracted;
                 last;
             }
@@ -535,6 +536,7 @@ sub split_line {
                 $token        = $last_token;
             } else {
                 # add final token and exit
+                $token .= '\\' if $escaped;
                 push @args, $token if length $token;
                 last;
             }
