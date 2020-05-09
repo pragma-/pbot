@@ -180,7 +180,7 @@ sub check_blacklist {
             $black_channel_escaped  =~ s/\\(\.|\*)/$1/g;
             $black_hostmask_escaped =~ s/\\(\.|\*)/$1/g;
 
-            next if $channel !~ /^$black_channel_escaped$/;
+            next if $channel !~ /^$black_channel_escaped$/i;
 
             if ($flag eq 'a' && defined $nickserv && $nickserv =~ /^$black_hostmask_escaped$/i) {
                 $self->{pbot}->{logger}->log("$hostmask nickserv $nickserv blacklisted in channel $channel (matches [\$a:$black_hostmask] host and [$black_channel] channel)\n");
