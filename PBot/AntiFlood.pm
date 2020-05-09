@@ -918,11 +918,12 @@ sub check_bans {
                     $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Evaded $baninfo->{mask} set by $owner");
                 }
                 $self->{pbot}->{banlist}->ban_user_timed(
-                    $banmask, $baninfo->{channel},
+                    $baninfo->{channel},
                     'b',
+                    $banmask,
                     60 * 60 * 24 * 14,
                     $self->{pbot}->{registry}->get_value('irc', 'botnick'),
-                    'ban evasion',
+                    $baninfo->{type} eq 'blacklist' ? 'blacklisted' : 'ban evasion',
                 );
             }
             my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
