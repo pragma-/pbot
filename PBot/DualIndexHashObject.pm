@@ -36,6 +36,7 @@ sub initialize {
     my ($self, %conf) = @_;
     $self->{name}     = $conf{name}     // 'Dual Index hash object';
     $self->{filename} = $conf{filename} // Carp::carp("Missing filename to DualIndexHashObject, will not be able to save to or load from file.");
+    $self->{save_queue_timeout} = $conf{save_queue_timeout} // 0;
     $self->{hash}     = {};
 }
 
@@ -107,20 +108,34 @@ sub save {
         return;
     }
 
-    $self->{pbot}->{logger}->log("Saving $self->{name} to $filename\n");
+    my $subref = sub {
+        $self->{pbot}->{logger}->log("Saving $self->{name} to $filename\n");
 
-    if (not $self->get_data('$metadata$', '$metadata$', 'update_version')) {
-        $self->add('$metadata$', '$metadata$', { update_version => PBot::VERSION::BUILD_REVISION });
+        if (not $self->get_data('$metadata$', '$metadata$', 'update_version')) {
+            $self->add('$metadata$', '$metadata$', { update_version => PBot::VERSION::BUILD_REVISION });
+        }
+
+        $self->set('$metadata$', '$metadata$', 'name', $self->{name}, 1);
+
+        my $json      = JSON->new;
+        my $json_text = $json->pretty->canonical->utf8->encode($self->{hash});
+
+        open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
+        print FILE "$json_text\n";
+        close FILE;
+    };
+
+    if ($self->{save_queue_timeout}) {
+        # enqueue the save to prevent save-thrashing
+        $self->{pbot}->{timer}->replace_subref_or_enqueue_event(
+            $subref,
+            $self->{save_queue_timeout},
+            "save $self->{name}",
+        );
+    } else {
+        # execute it right now
+        $subref->();
     }
-
-    $self->set('$metadata$', '$metadata$', 'name', $self->{name}, 1);
-
-    my $json      = JSON->new;
-    my $json_text = $json->pretty->canonical->utf8->encode($self->{hash});
-
-    open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
-    print FILE "$json_text\n";
-    close FILE;
 }
 
 sub clear {

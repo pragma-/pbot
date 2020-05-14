@@ -258,6 +258,13 @@ sub initialize {
 
     # give botowner all capabilities
     $self->{capabilities}->rebuild_botowner_capabilities();
+
+    # flush all pending save events to disk at exit
+    $self->{atexit}->register(sub {
+            $self->{pbot}->{timer}->execute_and_dequeue_event('save *');
+            return;
+        }
+    );
 }
 
 sub random_nick {
