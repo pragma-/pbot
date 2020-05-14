@@ -176,6 +176,33 @@ sub find_enqueue_position {
     return $lo;
 }
 
+sub replace_subref_or_enqueue_event {
+    my ($self, $ref, $interval, $id, $repeating) = @_;
+
+    my @events = grep { $_->{id} eq $id } @{$self->{event_queue}};
+
+    if (not @events) {
+        $self->enqueue_event($ref, $interval, $id, $repeating);
+        return;
+    }
+
+    foreach my $event (@events) {
+        $event->{subref} = $ref;
+    }
+}
+
+sub replace_or_enqueue_event {
+    my ($self, $ref, $interval, $id, $repeating) = @_;
+    $self->dequeue_event($id) if $self->exists($id);
+    $self->enqueue_event($ref, $interval, $id, $repeating);
+}
+
+sub enqueue_event_unless_exists {
+    my ($self, $ref, $interval, $id, $repeating) = @_;
+    return if $self->exists($id);
+    $self->enqueue_event($ref, $interval, $id, $repeating);
+}
+
 sub enqueue_event {
     my ($self, $ref, $interval, $id, $repeating) = @_;
 
@@ -204,7 +231,7 @@ sub enqueue_event {
 }
 
 sub dequeue_event {
-    my ($self, $id) = @_;
+    my ($self, $id, $execute) = @_;
 
     my $result = eval {
         $id = quotemeta $id;
@@ -215,6 +242,13 @@ sub dequeue_event {
         my @removed = grep { $_->{id} =~ /$regex/i; } @{$self->{event_queue}};
         @{$self->{event_queue}} = grep { $_->{id} !~ /$regex/i; } @{$self->{event_queue}};
         $count -= @{$self->{event_queue}};
+
+        if ($execute) {
+            foreach my $event (@removed) {
+                $event->{subref}->($event);
+            }
+        }
+
         return "No matching events." if not $count;
         return "Removed $count event" . ($count == 1 ? '' : 's') . ': ' . join(', ', map { $_->{id} } @removed);
     };
@@ -229,6 +263,11 @@ sub dequeue_event {
     return $result;
 }
 
+sub execute_and_dequeue_event {
+    my ($self, $id) = @_;
+    return $self->dequeue_event($id, 1);
+}
+
 sub register {
     my ($self, $ref, $interval, $id) = @_;
     $self->enqueue_event($ref, $interval, $id, 1);
@@ -237,6 +276,11 @@ sub register {
 sub unregister {
     my ($self, $id) = @_;
     $self->dequeue_event($id);
+}
+
+sub exists {
+    my ($self, $id) = @_;
+    return scalar grep { $_->{id} eq $id } @{$self->{event_queue}};
 }
 
 sub update_repeating {
