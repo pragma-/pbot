@@ -460,7 +460,7 @@ sub cmd_unban {
             if ($self->{pbot}->{banlist}->{banlist}->exists($channel)) {
                 $immediately = 0;
                 foreach my $banmask ($self->{pbot}->{banlist}->{banlist}->get_keys($channel)) {
-                    $self->{pbot}->{banlist}->unban_user($banmask, 'b', $channel, $immediately);
+                    $self->{pbot}->{banlist}->unban_user($channel, 'b', $banmask, $immediately);
                 }
                 last;
             }
