@@ -43,13 +43,15 @@ sub initialize {
     $self->{banlist} = PBot::DualIndexHashObject->new(
         pbot     => $self->{pbot},
         name     => 'Ban List',
-        filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/banlist'
+        filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/banlist',
+        save_queue_timeout => 5,
     );
 
     $self->{quietlist} = PBot::DualIndexHashObject->new(
         pbot     => $self->{pbot},
         name     => 'Quiet List',
-        filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quietlist'
+        filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quietlist',
+        save_queue_timeout => 5,
     );
 
     $self->{banlist}->load;
