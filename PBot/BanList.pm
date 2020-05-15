@@ -44,14 +44,14 @@ sub initialize {
         pbot     => $self->{pbot},
         name     => 'Ban List',
         filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/banlist',
-        save_queue_timeout => 5,
+        save_queue_timeout => 15,
     );
 
     $self->{quietlist} = PBot::DualIndexHashObject->new(
         pbot     => $self->{pbot},
         name     => 'Quiet List',
         filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quietlist',
-        save_queue_timeout => 5,
+        save_queue_timeout => 15,
     );
 
     $self->{banlist}->load;
