@@ -55,7 +55,7 @@ sub initialize {
 sub cmd_list_also_known_as {
     my ($self, $context) = @_;
 
-    my $usage = "Usage: aka [-hingr] <nick>; -h show hostmasks; -i show ids; -n show nickserv accounts; -g show gecos, -r show relationships";
+    my $usage = "Usage: aka [-hingr] <nick | hostmask>; -h show hostmasks; -i show ids; -n show nickserv accounts; -g show gecos, -r show relationships";
 
     if (not length $context->{arguments}) { return $usage; }
 
@@ -76,7 +76,7 @@ sub cmd_list_also_known_as {
         'r'  => \$show_relationship,
         'g'  => \$show_gecos,
         'w'  => \$show_weak,
-        'nt' => \$dont_use_aliases_table,
+        'z' => \$dont_use_aliases_table,
         'i'  => \$show_id
     );
 
@@ -93,7 +93,7 @@ sub cmd_list_also_known_as {
         my $sep = "";
         foreach my $aka (sort keys %akas) {
             next if $aka =~ /^Guest\d+(?:!.*)?$/;
-            next if $akas{$aka}->{type} == $self->{database}->{alias_type}->{WEAK} && not $show_weak;
+            next if exists $akas{$aka}->{type} and $akas{$aka}->{type} == $self->{database}->{alias_type}->{WEAK} && not $show_weak;
 
             if (not $show_hostmasks) {
                 my ($nick) = $aka =~ m/([^!]+)/;
@@ -115,7 +115,7 @@ sub cmd_list_also_known_as {
                 $result .= " [$akas{$aka}->{id}]";
             }
 
-            $result .= " [WEAK]" if $akas{$aka}->{type} == $self->{database}->{alias_type}->{WEAK};
+            $result .= " [WEAK]" if exists $akas{$aka}->{type} and $akas{$aka}->{type} == $self->{database}->{alias_type}->{WEAK};
 
             if   ($show_hostmasks or $show_nickserv or $show_gecos or $show_id or $show_relationship) { $sep = ",\n"; }
             else                                                                                      { $sep = ", "; }
