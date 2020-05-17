@@ -23,6 +23,8 @@ $Data::Dumper::Sortkeys = 1;
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration qw/concise ago/;
 
+use Getopt::Long qw/GetOptionsFromArray/;
+
 sub initialize {
     my ($self, %conf) = @_;
     $self->{nicklist} = {};
@@ -46,39 +48,123 @@ sub initialize {
 
 sub cmd_nicklist {
     my ($self, $context) = @_;
-    return "Usage: nicklist <channel> [nick]" if not length $context->{arguments};
 
     my $nicklist;
-    my @args = split / /, $context->{arguments};
+    my $usage = "Usage: nicklist (<channel [nick]> | <nick>) [-sort=nick|host|spoken|join] [-hostmask] [-join]";
+
+    my $getopt_error;
+    local $SIG{__WARN__} = sub {
+        $getopt_error = shift;
+        chomp $getopt_error;
+    };
+
+    Getopt::Long::Configure("bundling_override");
+
+    my $sort_method = 'nick';
+    my $full_hostmask = 0;
+    my $include_join = 0;
+
+    my @args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
+    GetOptionsFromArray(
+        \@args,
+        'sort|s=s'     => \$sort_method,
+        'hostmask|hm'  => \$full_hostmask,
+        'join|j'       => \$include_join,
+    );
+    return "$getopt_error; $usage" if defined $getopt_error;
+
+    return $usage if not length $args[0];
+
+    my %sort = (
+        'spoken' => sub {
+            if ($_[1] eq '+') {
+                return $_[0]->{$b}->{timestamp} <=> $_[0]->{$a}->{timestamp};
+            } else {
+                return $_[0]->{$a}->{timestamp} <=> $_[0]->{$b}->{timestamp};
+            }
+        },
+
+        'join' => sub {
+            if ($_[1] eq '+') {
+                return $_[0]->{$b}->{join} <=> $_[0]->{$a}->{join};
+            } else {
+                return $_[0]->{$a}->{join} <=> $_[0]->{$b}->{join};
+            }
+        },
+
+        'host' => sub {
+            if ($_[1] eq '+') {
+                return lc $_[0]->{$a}->{host} cmp lc $_[0]->{$b}->{host};
+            } else {
+                return lc $_[0]->{$b}->{host} cmp lc $_[0]->{$a}->{host};
+            }
+        },
+
+        'nick' => sub {
+            if ($_[1] eq '+') {
+                return lc $_[0]->{$a}->{nick} cmp lc $_[0]->{$b}->{nick};
+            } else {
+                return lc $_[0]->{$b}->{nick} cmp lc $_[0]->{$a}->{nick};
+            }
+        },
+    );
+
+    my $sort_direction = '+';
+    if ($sort_method =~ s/^(\+|\-)//) {
+        $sort_direction = $1;
+    }
+
+    if (not exists $sort{$sort_method}) {
+        return "Invalid sort method '$sort_method'; valid methods are: " . join(', ', sort keys %sort);
+    }
+
+    if ($args[0] !~ /^#/) {
+        unshift @args, $context->{from};
+    }
 
     if (@args == 1) {
-        if (not exists $self->{nicklist}->{lc $context->{arguments}}) {
-            return "No nicklist for $context->{arguments}.";
+        if (not exists $self->{nicklist}->{lc $args[0]}) {
+            return "No nicklist for channel $args[0].";
         }
 
-        my $count = keys %{$self->{nicklist}->{lc $context->{arguments}}};
-        $nicklist = "$count nick" . ($count == 1 ? '' : 's') . " in $context->{arguments}:\n";
+        my $count = keys %{$self->{nicklist}->{lc $args[0]}};
+        $nicklist = "$count nick" . ($count == 1 ? '' : 's') . " in $args[0]:\n";
 
-        foreach my $entry (sort keys %{$self->{nicklist}->{lc $context->{arguments}}}) {
-            $nicklist .= "  $self->{nicklist}->{lc $context->{arguments}}->{$entry}->{hostmask}";
+        foreach my $entry (sort { $sort{$sort_method}->($self->{nicklist}->{lc $args[0]}, $sort_direction) } keys %{$self->{nicklist}->{lc $args[0]}}) {
+            if ($full_hostmask) {
+                $nicklist .= "  $self->{nicklist}->{lc $args[0]}->{$entry}->{hostmask}";
+            } else {
+                $nicklist .= "  $self->{nicklist}->{lc $args[0]}->{$entry}->{nick}";
+            }
+
             my $sep = ': ';
 
-            if ($self->{nicklist}->{lc $context->{arguments}}->{$entry}->{timestamp} > 0) {
-                my $duration = concise ago (gettimeofday - $self->{nicklist}->{lc $context->{arguments}}->{$entry}->{timestamp});
+            if ($self->{nicklist}->{lc $args[0]}->{$entry}->{timestamp} > 0) {
+                my $duration = concise ago (gettimeofday - $self->{nicklist}->{lc $args[0]}->{$entry}->{timestamp});
                 $nicklist .= "${sep}last spoken $duration";
                 $sep = ', ';
             }
 
-            foreach my $key (sort keys %{$self->{nicklist}->{lc $context->{arguments}}->{$entry}}) {
-                next if grep { $key eq $_ } qw/nick user host timestamp hostmask/;
-                $nicklist .= "$sep$key => $self->{nicklist}->{lc $context->{arguments}}->{$entry}->{$key}";
+            if ($include_join and $self->{nicklist}->{lc $args[0]}->{$entry}->{join} > 0) {
+                my $duration = concise ago (gettimeofday - $self->{nicklist}->{lc $args[0]}->{$entry}->{join});
+                $nicklist .= "${sep}joined $duration";
+                $sep = ', ';
+            }
+
+            foreach my $key (sort keys %{$self->{nicklist}->{lc $args[0]}->{$entry}}) {
+                next if grep { $key eq $_ } qw/nick user host join timestamp hostmask/;
+                if ($self->{nicklist}->{lc $args[0]}->{$entry}->{$key} == 1) {
+                    $nicklist .= "$sep$key";
+                } else {
+                    $nicklist .= "$sep$key => $self->{nicklist}->{lc $args[0]}->{$entry}->{$key}";
+                }
                 $sep = ', ';
             }
             $nicklist .= "\n";
         }
     } else {
         if (not exists $self->{nicklist}->{lc $args[0]}) {
-            return "No nicklist for $args[0].";
+            return "No nicklist for channel $args[0].";
         } elsif (not exists $self->{nicklist}->{lc $args[0]}->{lc $args[1]}) {
             return "No such nick $args[1] in channel $args[0].";
         }
@@ -92,8 +178,14 @@ sub cmd_nicklist {
             $sep = ', ';
         }
 
+        if ($self->{nicklist}->{lc $args[0]}->{lc $args[1]}->{join} > 0) {
+            my $duration = concise ago (gettimeofday - $self->{nicklist}->{lc $args[0]}->{lc $args[1]}->{join});
+            $nicklist .= "${sep}joined $duration";
+            $sep = ', ';
+        }
+
         foreach my $key (sort keys %{$self->{nicklist}->{lc $args[0]}->{lc $args[1]}}) {
-            next if grep { $key eq $_ } qw/nick user host timestamp hostmask/;
+            next if grep { $key eq $_ } qw/nick user host join timestamp hostmask/;
             $nicklist .= "$sep$key => $self->{nicklist}->{lc $args[0]}->{lc $args[1]}->{$key}";
             $sep = ', ';
         }
@@ -318,6 +410,7 @@ sub on_join {
     $self->set_meta($channel, $nick, 'hostmask', "$nick!$user\@$host");
     $self->set_meta($channel, $nick, 'user',     $user);
     $self->set_meta($channel, $nick, 'host',     $host);
+    $self->set_meta($channel, $nick, 'join',     gettimeofday);
     return 0;
 }
 
