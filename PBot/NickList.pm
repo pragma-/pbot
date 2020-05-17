@@ -21,6 +21,7 @@ use Data::Dumper;
 
 $Data::Dumper::Sortkeys = 1;
 use Time::HiRes qw/gettimeofday/;
+use Time::Duration qw/concise ago/;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -45,21 +46,61 @@ sub initialize {
 
 sub cmd_nicklist {
     my ($self, $context) = @_;
-    my $nicklist;
     return "Usage: nicklist <channel> [nick]" if not length $context->{arguments};
 
+    my $nicklist;
     my @args = split / /, $context->{arguments};
 
     if (@args == 1) {
         if (not exists $self->{nicklist}->{lc $context->{arguments}}) {
             return "No nicklist for $context->{arguments}.";
         }
-        $nicklist = Dumper($self->{nicklist}->{lc $context->{arguments}});
+
+        my $count = keys %{$self->{nicklist}->{lc $context->{arguments}}};
+        $nicklist = "$count nick" . ($count == 1 ? '' : 's') . " in $context->{arguments}:\n";
+
+        foreach my $entry (sort keys %{$self->{nicklist}->{lc $context->{arguments}}}) {
+            $nicklist .= "  $self->{nicklist}->{lc $context->{arguments}}->{$entry}->{hostmask}";
+            my $sep = ': ';
+
+            if ($self->{nicklist}->{lc $context->{arguments}}->{$entry}->{timestamp} > 0) {
+                my $duration = concise ago (gettimeofday - $self->{nicklist}->{lc $context->{arguments}}->{$entry}->{timestamp});
+                $nicklist .= "${sep}last spoken $duration";
+                $sep = ', ';
+            }
+
+            foreach my $key (sort keys %{$self->{nicklist}->{lc $context->{arguments}}->{$entry}}) {
+                next if grep { $key eq $_ } qw/nick user host timestamp hostmask/;
+                $nicklist .= "$sep$key => $self->{nicklist}->{lc $context->{arguments}}->{$entry}->{$key}";
+                $sep = ', ';
+            }
+            $nicklist .= "\n";
+        }
     } else {
-        if    (not exists $self->{nicklist}->{lc $args[0]})                { return "No nicklist for $args[0]."; }
-        elsif (not exists $self->{nicklist}->{lc $args[0]}->{lc $args[1]}) { return "No such nick $args[1] in channel $args[0]."; }
-        $nicklist = Dumper($self->{nicklist}->{lc $args[0]}->{lc $args[1]});
+        if (not exists $self->{nicklist}->{lc $args[0]}) {
+            return "No nicklist for $args[0].";
+        } elsif (not exists $self->{nicklist}->{lc $args[0]}->{lc $args[1]}) {
+            return "No such nick $args[1] in channel $args[0].";
+        }
+
+        $nicklist = "Nicklist information for $self->{nicklist}->{lc $args[0]}->{lc $args[1]}->{hostmask} in $args[0]: ";
+        my $sep = '';
+
+        if ($self->{nicklist}->{lc $args[0]}->{lc $args[1]}->{timestamp} > 0) {
+            my $duration = concise ago (gettimeofday - $self->{nicklist}->{lc $args[0]}->{lc $args[1]}->{timestamp});
+            $nicklist .= "last spoken $duration";
+            $sep = ', ';
+        }
+
+        foreach my $key (sort keys %{$self->{nicklist}->{lc $args[0]}->{lc $args[1]}}) {
+            next if grep { $key eq $_ } qw/nick user host timestamp hostmask/;
+            $nicklist .= "$sep$key => $self->{nicklist}->{lc $args[0]}->{lc $args[1]}->{$key}";
+            $sep = ', ';
+        }
+
+        $nicklist .= 'no details' if $sep eq '';
     }
+
     return $nicklist;
 }
 
