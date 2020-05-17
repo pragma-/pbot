@@ -171,10 +171,16 @@ sub cmd_users {
             $sep          = "";
         }
 
-        foreach my $hostmask (sort { $self->{user_index}->{$chan}->{$a} cmp $self->{user_index}->{$chan}->{$b} }
-            keys %{$self->{user_index}->{$chan}})
+        my %seen_names;
+
+        foreach my $hostmask (
+            sort { $self->{user_index}->{$chan}->{$a} cmp $self->{user_index}->{$chan}->{$b} }
+            keys %{$self->{user_index}->{$chan}}
+        )
         {
             my $name = $self->{user_index}->{$chan}->{$hostmask};
+            next if $seen_names{$name};
+            $seen_names{$name} = 1;
             $text .= $sep;
             my $has_cap = 0;
             foreach my $key ($self->{users}->get_keys($name)) {
