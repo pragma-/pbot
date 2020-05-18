@@ -67,7 +67,7 @@ sub cmd_list_also_known_as {
 
     Getopt::Long::Configure("bundling_override");
 
-    my $sort_method = 'nick';
+    my $sort_method = undef;
     my ($show_hostmasks, $show_gecos, $show_nickserv, $show_id, $show_relationship, $show_weak, $show_last_seen, $dont_use_aliases_table);
     my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
     GetOptionsFromArray(
@@ -86,6 +86,9 @@ sub cmd_list_also_known_as {
     return "/say $getopt_error -- $usage" if defined $getopt_error;
     return "Too many arguments -- $usage" if @opt_args > 1;
     return "Missing argument -- $usage"   if @opt_args != 1;
+
+    $sort_method = 'seen' if $show_last_seen and not defined $sort_method;
+    $sort_method = 'nick' if not defined $sort_method;
 
     my %sort = (
         'id' => sub {
