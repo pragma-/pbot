@@ -50,7 +50,7 @@ sub cmd_nicklist {
     my ($self, $context) = @_;
 
     my $nicklist;
-    my $usage = "Usage: nicklist (<channel [nick]> | <nick>) [-sort=nick|host|spoken|join] [-hostmask] [-join]";
+    my $usage = "Usage: nicklist (<channel [nick]> | <nick>) [-sort=nick|host|spoken|join] [-hostmask] [-join]; -hostmask to show hostmasks instead of nicks; -join to include join time";
 
     my $getopt_error;
     local $SIG{__WARN__} = sub {
