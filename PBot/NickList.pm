@@ -115,7 +115,7 @@ sub cmd_nicklist {
     }
 
     if (not exists $sort{$sort_method}) {
-        return "Invalid sort method '$sort_method'; valid methods are: " . join(', ', sort keys %sort);
+        return "Invalid sort method '$sort_method'; valid methods are (you may prefix with a - to invert the sort direction): " . join(', ', sort keys %sort);
     }
 
     if ($args[0] !~ /^#/) {
