@@ -89,12 +89,12 @@ sub autoload {
     close $fh;
 
     foreach my $plugin (sort @plugins) {
-        $plugin = basename $plugin;
-        $plugin =~ s/.pm$//;
-
         # do not load plugins that begin with a comment
         next if $plugin =~ m/^\s*#/;
+        next if not length $plugin;
 
+        $plugin = basename $plugin;
+        $plugin =~ s/.pm$//;
         $plugin_count++ if $self->load($plugin, %conf);
     }
     $self->{pbot}->{logger}->log("$plugin_count plugin" . ($plugin_count == 1 ? '' : 's') . " loaded.\n");
