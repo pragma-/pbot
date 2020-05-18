@@ -143,6 +143,14 @@ sub cmd_list_also_known_as {
                 return lc $_[0]->{$b}->{hostmask} cmp lc $_[0]->{$a}->{hostmask};
             }
         },
+
+         'gecos' => sub {
+            if ($_[1] eq '+') {
+                return lc $_[0]->{$a}->{gecos} cmp lc $_[0]->{$b}->{gecos};
+            } else {
+                return lc $_[0]->{$b}->{gecos} cmp lc $_[0]->{$a}->{gecos};
+            }
+        },
     );
 
     my $sort_direction = '+';
