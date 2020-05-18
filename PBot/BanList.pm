@@ -274,7 +274,7 @@ sub track_mode {
 
         my $data = {
             owner => $source,
-            timestamp => gettimeofday,
+            timestamp => scalar gettimeofday,
         };
 
         if ($mode eq "+b") {
