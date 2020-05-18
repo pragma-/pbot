@@ -72,8 +72,8 @@ sub cmd_nicklist {
         'join|j'       => \$include_join,
     );
     return "$getopt_error; $usage" if defined $getopt_error;
-
-    return $usage if not length $args[0];
+    return "Too many arguments -- $usage" if @args > 2;
+    return $usage if @args == 0 or not length $args[0];
 
     my %sort = (
         'spoken' => sub {
