@@ -50,7 +50,7 @@ sub cmd_nicklist {
     my ($self, $context) = @_;
 
     my $nicklist;
-    my $usage = "Usage: nicklist (<channel [nick]> | <nick>) [-sort=nick|host|spoken|join] [-hostmask] [-join]; -hostmask to show hostmasks instead of nicks; -join to include join time";
+    my $usage = "Usage: nicklist (<channel [nick]> | <nick>) [-sort <by>] [-hostmask] [-join]; -hostmask to show hostmasks instead of nicks; -join to include join time";
 
     my $getopt_error;
     local $SIG{__WARN__} = sub {
@@ -115,7 +115,7 @@ sub cmd_nicklist {
     }
 
     if (not exists $sort{$sort_method}) {
-        return "Invalid sort method '$sort_method'; valid methods are (you may prefix with a - to invert the sort direction): " . join(', ', sort keys %sort);
+        return "Invalid sort method '$sort_method'; valid methods are: " . join(', ', sort keys %sort) . "; prefix with - to invert sort direction.";
     }
 
     if ($args[0] !~ /^#/) {
