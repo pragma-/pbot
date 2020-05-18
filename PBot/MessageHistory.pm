@@ -55,7 +55,7 @@ sub initialize {
 sub cmd_list_also_known_as {
     my ($self, $context) = @_;
 
-    my $usage = "Usage: aka [-hingr] <nick | hostmask>; -h show hostmasks; -i show ids; -n show nickserv accounts; -g show gecos, -r show relationships";
+    my $usage = "Usage: aka [-hilngr] <nick> [-sort <by>]; -h show hostmasks; -i show ids; -l show last seen, -n show nickserv accounts; -g show gecos, -r show relationships";
 
     if (not length $context->{arguments}) { return $usage; }
 
@@ -65,24 +65,94 @@ sub cmd_list_also_known_as {
         chomp $getopt_error;
     };
 
-    Getopt::Long::Configure("bundling");
+    Getopt::Long::Configure("bundling_override");
 
-    my ($show_hostmasks, $show_gecos, $show_nickserv, $show_id, $show_relationship, $show_weak, $dont_use_aliases_table);
+    my $sort_method = 'nick';
+    my ($show_hostmasks, $show_gecos, $show_nickserv, $show_id, $show_relationship, $show_weak, $show_last_seen, $dont_use_aliases_table);
     my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
     GetOptionsFromArray(
         \@opt_args,
         'h'  => \$show_hostmasks,
+        'l'  => \$show_last_seen,
         'n'  => \$show_nickserv,
         'r'  => \$show_relationship,
         'g'  => \$show_gecos,
         'w'  => \$show_weak,
         'z' => \$dont_use_aliases_table,
-        'i'  => \$show_id
+        'i'  => \$show_id,
+        'sort|s=s' => \$sort_method,
     );
 
     return "/say $getopt_error -- $usage" if defined $getopt_error;
     return "Too many arguments -- $usage" if @opt_args > 1;
     return "Missing argument -- $usage"   if @opt_args != 1;
+
+    my %sort = (
+        'id' => sub {
+            if ($_[1] eq '+') {
+                return $_[0]->{$a}->{id} <=> $_[0]->{$b}->{id};
+            } else {
+                return $_[0]->{$b}->{id} <=> $_[0]->{$a}->{id};
+            }
+        },
+
+        'seen' => sub {
+            if ($_[1] eq '+') {
+                return $_[0]->{$b}->{last_seen} <=> $_[0]->{$a}->{last_seen};
+            } else {
+                return $_[0]->{$a}->{last_seen} <=> $_[0]->{$b}->{last_seen};
+            }
+        },
+
+        'nickserv' => sub {
+            if ($_[1] eq '+') {
+                return lc $_[0]->{$a}->{nickserv} cmp lc $_[0]->{$b}->{nickserv};
+            } else {
+                return lc $_[0]->{$b}->{nickserv} cmp lc $_[0]->{$a}->{nickserv};
+            }
+        },
+
+        'nick' => sub {
+            if ($_[1] eq '+') {
+                return lc $_[0]->{$a}->{nick} cmp lc $_[0]->{$b}->{nick};
+            } else {
+                return lc $_[0]->{$b}->{nick} cmp lc $_[0]->{$a}->{nick};
+            }
+        },
+
+        'user' => sub {
+            if ($_[1] eq '+') {
+                return lc $_[0]->{$a}->{user} cmp lc $_[0]->{$b}->{user};
+            } else {
+                return lc $_[0]->{$b}->{user} cmp lc $_[0]->{$a}->{user};
+            }
+        },
+
+        'host' => sub {
+            if ($_[1] eq '+') {
+                return lc $_[0]->{$a}->{host} cmp lc $_[0]->{$b}->{host};
+            } else {
+                return lc $_[0]->{$b}->{host} cmp lc $_[0]->{$a}->{host};
+            }
+        },
+
+         'hostmask' => sub {
+            if ($_[1] eq '+') {
+                return lc $_[0]->{$a}->{hostmask} cmp lc $_[0]->{$b}->{hostmask};
+            } else {
+                return lc $_[0]->{$b}->{hostmask} cmp lc $_[0]->{$a}->{hostmask};
+            }
+        },
+    );
+
+    my $sort_direction = '+';
+    if ($sort_method =~ s/^(\+|\-)//) {
+        $sort_direction = $1;
+    }
+
+    if (not exists $sort{$sort_method}) {
+        return "Invalid sort method '$sort_method'; valid methods are: " . join(', ', sort keys %sort) . "; prefix with - to invert sort direction.";
+    }
 
     my %akas = $self->{database}->get_also_known_as($opt_args[0], $dont_use_aliases_table);
 
@@ -91,7 +161,7 @@ sub cmd_list_also_known_as {
 
         my %nicks;
         my $sep = "";
-        foreach my $aka (sort keys %akas) {
+        foreach my $aka (sort { $sort{$sort_method}->(\%akas, $sort_direction) } keys %akas) {
             next if $aka =~ /^Guest\d+(?:!.*)?$/;
             next if exists $akas{$aka}->{type} and $akas{$aka}->{type} == $self->{database}->{alias_type}->{WEAK} && not $show_weak;
 
@@ -116,6 +186,11 @@ sub cmd_list_also_known_as {
             }
 
             $result .= " [WEAK]" if exists $akas{$aka}->{type} and $akas{$aka}->{type} == $self->{database}->{alias_type}->{WEAK};
+
+            if ($show_last_seen) {
+                my $seen = concise ago (gettimeofday - $akas{$aka}->{last_seen});
+                $result .= " last seen: $seen";
+            }
 
             if   ($show_hostmasks or $show_nickserv or $show_gecos or $show_id or $show_relationship) { $sep = ",\n"; }
             else                                                                                      { $sep = ", "; }

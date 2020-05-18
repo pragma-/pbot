@@ -1608,7 +1608,7 @@ sub get_also_known_as {
                 last if not $new_aliases;
             }
 
-            my $hostmask_sth = $self->{dbh}->prepare('SELECT hostmask, nickchange FROM Hostmasks WHERE id = ?');
+            my $hostmask_sth = $self->{dbh}->prepare('SELECT hostmask, nickchange, last_seen FROM Hostmasks WHERE id = ?');
             my $nickserv_sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE id = ?');
             my $gecos_sth    = $self->{dbh}->prepare('SELECT gecos FROM Gecos WHERE id = ?');
 
@@ -1619,7 +1619,19 @@ sub get_also_known_as {
                 $rows = $hostmask_sth->fetchall_arrayref({});
 
                 foreach my $row (@$rows) {
-                    $akas{$row->{hostmask}} = {hostmask => $row->{hostmask}, id => $id, alias => $ids{$id}->{id}, type => $ids{$id}->{type}, nickchange => $row->{nickchange}};
+                    my ($nick, $user, $host) = $row->{hostmask} =~ m/^([^!]+)!([^@]+)@(.*)/;
+                    $akas{$row->{hostmask}} = {
+                        id => $id,
+                        alias => $ids{$id}->{id},
+                        nick => $nick,
+                        user => $user,
+                        host => $host,
+                        hostmask => $row->{hostmask},
+                        type => $ids{$id}->{type},
+                        nickchange => $row->{nickchange},
+                        last_seen => $row->{last_seen},
+                    };
+
                     $self->{pbot}->{logger}->log("[$id] Adding hostmask $row->{hostmask} -> $ids{$id}->{id} [type $ids{$id}->{type}]\n") if $debug;
                 }
 
