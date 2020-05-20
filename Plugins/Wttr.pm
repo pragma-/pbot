@@ -49,7 +49,7 @@ sub cmd_wttr {
         "heatindex",
         "cloudcover",
         "wind",
-        "sunrise|sunset",
+        "sun",
         "moon",
         "chances",
         "sunhours",
@@ -62,7 +62,7 @@ sub cmd_wttr {
         "all",
     );
 
-    my $usage = "Usage: wttr [-u <user account>] [location] [" . join(' ', map { "-$_" } @wttr_options) . "]";
+    my $usage = "Usage: wttr (<location> | -u <user account>) [" . join(' ', map { "-$_" } @wttr_options) . "]; to have me remember your location, use `my location <location>`.";
     my $getopt_error;
     local $SIG{__WARN__} = sub {
         $getopt_error = shift;
@@ -303,7 +303,7 @@ sub get_wttr {
                 $result .= "Moon: phase: $a->{'moon_phase'}, illumination: $a->{'moon_illumination'}%, rise: $a->{'moonrise'}, set: $a->{'moonset'}; ";
             }
 
-            when ('sunrise') {
+            when ('sun') {
                 my $a = $w->{'astronomy'}->[0];
                 $result .= "Sun: rise: $a->{'sunrise'}, set: $a->{'sunset'}; ";
             }
