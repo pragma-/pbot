@@ -30,7 +30,7 @@ sub unload {
 
 sub cmd_weather {
     my ($self, $context) = @_;
-    my $usage = "Usage: weather [-u <user account>] [location]";
+    my $usage = "Usage: weather (<location> | -u <user account>)";
     my $getopt_error;
     local $SIG{__WARN__} = sub {
         $getopt_error = shift;
