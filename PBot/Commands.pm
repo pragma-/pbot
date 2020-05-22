@@ -232,10 +232,12 @@ sub interpreter {
                 }
             }
 
-            $context->{action} = $context->{arguments};
-            $context->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($context);
-            $context->{arglist} = $self->{pbot}->{interpreter}->make_args($context->{arguments});
-            delete $context->{action};
+            unless ($self->get_meta($keyword, 'dont-replace-pronouns')) {
+                $context->{action} = $context->{arguments};
+                $context->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($context);
+                $context->{arglist} = $self->{pbot}->{interpreter}->make_args($context->{arguments});
+                delete $context->{action};
+            }
 
             $context->{no_nickoverride} = 1;
             if ($self->get_meta($keyword, 'background-process')) {
