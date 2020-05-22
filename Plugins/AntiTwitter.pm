@@ -42,6 +42,9 @@ sub on_public {
     $channel = lc $channel;
     return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 
+    my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+    return 0 if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
+
     while ($msg =~ m/\B[＠@]([a-z0-9_^{}\-\\\[\]\|]+)/ig) {
         my $n = $1;
         if ($self->{pbot}->{nicklist}->is_present_similar($channel, $n, 0.05)) {
