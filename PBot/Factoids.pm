@@ -436,16 +436,16 @@ sub escape_json {
 sub expand_special_vars {
     my ($self, $from, $nick, $root_keyword, $action) = @_;
 
-    $action =~ s/\$nick:json|\$\{nick:json\}/$self->escape_json($nick)/ge;
-    $action =~ s/\$channel:json|\$\{channel:json\}/$self->escape_json($from)/ge;
+    $action =~ s/(?<!\\)\$nick:json|(?<!\\)\$\{nick:json\}/$self->escape_json($nick)/ge;
+    $action =~ s/(?<!\\)\$channel:json|(?<!\\)\$\{channel:json\}/$self->escape_json($from)/ge;
     $action =~
-      s/\$randomnick:json|\$\{randomnick:json\}/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $self->escape_json($random) : $self->escape_json($nick)/ge;
-    $action =~ s/\$0:json|\$\{0:json\}/$self->escape_json($root_keyword)/ge;
+      s/(?<!\\)\$randomnick:json|(?<!\\)\$\{randomnick:json\}/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $self->escape_json($random) : $self->escape_json($nick)/ge;
+    $action =~ s/(?<!\\)\$0:json|(?<!\\)\$\{0:json\}/$self->escape_json($root_keyword)/ge;
 
-    $action =~ s/\$nick|\$\{nick\}/$nick/g;
-    $action =~ s/\$channel|\$\{channel\}/$from/g;
-    $action =~ s/\$randomnick|\$\{randomnick\}/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
-    $action =~ s/\$0\b|\$\{0\}\b/$root_keyword/g;
+    $action =~ s/(?<!\\)\$nick|(?<!\\)\$\{nick\}/$nick/g;
+    $action =~ s/(?<!\\)\$channel|(?<!\\)\$\{channel\}/$from/g;
+    $action =~ s/(?<!\\)\$randomnick|(?<!\\)\$\{randomnick\}/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
+    $action =~ s/(?<!\\)\$0\b|(?<!\\)\$\{0\}\b/$root_keyword/g;
 
     return validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
@@ -475,7 +475,7 @@ sub expand_factoid_vars {
         my $offset     = 0;
         my $matches    = 0;
         my $expansions = 0;
-        $action =~ s/\$0/$root_keyword/g;
+        $action =~ s/(?<!\\)\$0/$root_keyword/g;
         my $const_action = $action;
 
         $self->{pbot}->{logger}->log("action: $const_action\n") if $debug;
@@ -609,9 +609,9 @@ sub expand_factoid_vars {
         last if $matches == 0 or $expansions == 0;
     }
 
-    $action =~ s/\\\$/\$/g;
-
     unless (@exclude) { $action = $self->expand_special_vars($from, $nick, $root_keyword, $action); }
+
+    $action =~ s/\\\$/\$/g;
 
     return validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
@@ -897,7 +897,7 @@ sub interpreter {
     if ($self->{factoids}->exists($channel, $keyword, 'usage') and not length $context->{arguments} and $self->{factoids}->get_data($channel, $keyword, 'requires_arguments')) {
         $context->{alldone} = 1;
         my $usage = $self->{factoids}->get_data($channel, $keyword, 'usage');
-        $usage =~ s/\$0|\$\{0\}/$trigger_name/g;
+        $usage =~ s/(?<!\\)\$0|(?<!\\)\$\{0\}/$trigger_name/g;
         return $usage;
     }
 
@@ -913,7 +913,7 @@ sub interpreter {
         if ($self->{factoids}->exists($channel, $keyword, 'usage') and not length $context->{arguments}) {
             $context->{alldone} = 1;
             my $usage = $self->{factoids}->get_data($channel, $keyword, 'usage');
-            $usage =~ s/\$0|\$\{0\}/$trigger_name/g;
+            $usage =~ s/(?<!\\)\$0|(?<!\\)\$\{0\}/$trigger_name/g;
             return $usage;
         }
 
@@ -992,7 +992,7 @@ sub handle_action {
         # no arguments supplied, replace $args with $nick/$tonick, etc
         if ($self->{factoids}->exists($channel, $keyword, 'usage')) {
             $action = "/say " . $self->{factoids}->get_data($channel, $keyword, 'usage');
-            $action =~ s/\$0|\$\{0\}/$trigger_name/g;
+            $action =~ s/(?<!\\)\$0|(?<!\\)\$\{0\}/$trigger_name/g;
             $context->{alldone} = 1;
         } else {
             if   ($self->{factoids}->get_data($channel, $keyword, 'allow_empty_args')) { $action = $self->expand_action_arguments($action, undef, ''); }

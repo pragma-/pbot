@@ -234,7 +234,6 @@ sub interpreter {
 
             $context->{action} = $context->{arguments};
             $context->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($context);
-            $context->{arguments} = $self->{pbot}->{factoids}->expand_special_vars($context->{from}, $context->{nick}, $context->{keyword}, $context->{arguments});
             delete $context->{action};
 
             $context->{no_nickoverride} = 1;

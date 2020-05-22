@@ -81,10 +81,14 @@ sub launch_module {
     $context->{trigger} = $trigger;
 
     my $module = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, 'action');
-    $self->{pbot}->{logger}->log("("
-          . (defined $context->{from} ? $context->{from} : "(undef)")
-          . "): $context->{nick}!$context->{user}\@$context->{host}: Executing module [$context->{command}] $module $context->{arguments}\n");
-    $context->{arguments} = $self->{pbot}->{factoids}->expand_special_vars($context->{from}, $context->{nick}, $context->{root_keyword}, $context->{arguments});
+    $self->{pbot}->{logger}->log(
+        "(" . (defined $context->{from} ? $context->{from} : "(undef)")
+        . "): $context->{nick}!$context->{user}\@$context->{host}: Executing module [$context->{command}] $module $context->{arguments}\n"
+    );
+
+    $context->{action} = $context->{arguments};
+    $context->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($context);
+    delete $context->{action};
 
     my $module_dir = $self->{pbot}->{registry}->get_value('general', 'module_dir');
     if (not chdir $module_dir) {
