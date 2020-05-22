@@ -19,8 +19,8 @@ use LWP::UserAgent;
 # These are set automatically by the misc/update_version script
 use constant {
     BUILD_NAME     => "PBot",
-    BUILD_REVISION => 3610,
-    BUILD_DATE     => "2020-05-18",
+    BUILD_REVISION => 3616,
+    BUILD_DATE     => "2020-05-21",
 };
 
 sub initialize {
