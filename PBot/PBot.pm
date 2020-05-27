@@ -69,36 +69,34 @@ sub initialize {
     my $plugin_dir = $conf{plugin_dir};
     my $update_dir = $conf{update_dir};
 
-    # check command-line arguments for directory overrides
+    # process command-line arguments
     foreach my $arg (@ARGV) {
         if ($arg =~ m/^-?(?:general\.)?((?:data|module|plugin|update)_dir)=(.*)$/) {
+            # check command-line arguments for directory overrides
             my $override = $1;
             my $value    = $2;
             $data_dir    = $value if $override eq 'data_dir';
             $module_dir  = $value if $override eq 'module_dir';
             $plugin_dir  = $value if $override eq 'plugin_dir';
             $update_dir  = $value if $override eq 'update_dir';
+        } else {
+            # check command-line arguments for registry overrides
+            my ($item, $value) = split /=/, $arg, 2;
+
+            if (not defined $item or not defined $value) {
+                print STDERR "Fatal error: unknown argument `$arg`; arguments must be in the form of `section.key=value` (e.g.: irc.botnick=newnick)\n";
+                exit;
+            }
+
+            my ($section, $key) = split /\./, $item, 2;
+            if (not defined $section or not defined $key) {
+                print STDERR "Fatal error: bad argument `$arg`; registry entries must be in the form of section.key (e.g.: irc.botnick)\n";
+                exit;
+            }
+
+            $section =~ s/^-//;    # remove a leading - to allow arguments like -irc.botnick due to habitual use of -args
+            $self->{overrides}->{"$section.$key"} = $value;
         }
-    }
-
-    # check command-line arguments for registry overrides
-    foreach my $arg (@ARGV) {
-        next if $arg =~ m/^-?(?:general\.)?(?:config|data|module|plugin|update)_dir=.*$/;    # already processed
-        my ($item, $value) = split /=/, $arg, 2;
-
-        if (not defined $item or not defined $value) {
-            print STDERR "Fatal error: unknown argument `$arg`; arguments must be in the form of `section.key=value` (e.g.: irc.botnick=newnick)\n";
-            exit;
-        }
-
-        my ($section, $key) = split /\./, $item, 2;
-        if (not defined $section or not defined $key) {
-            print STDERR "Fatal error: bad argument `$arg`; registry entries must be in the form of section.key (e.g.: irc.botnick)\n";
-            exit;
-        }
-
-        $section =~ s/^-//;    # remove a leading - to allow arguments like -irc.botnick due to habitual use of -args
-        $self->{overrides}->{"$section.$key"} = $value;
     }
 
     # let modules register signal handlers
