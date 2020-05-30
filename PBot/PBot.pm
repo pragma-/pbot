@@ -75,6 +75,7 @@ sub initialize {
             # check command-line arguments for directory overrides
             my $override = $1;
             my $value    = $2;
+            $value =~ s/[\\\/]$//; # strip trailing directory separator
             $data_dir    = $value if $override eq 'data_dir';
             $module_dir  = $value if $override eq 'module_dir';
             $plugin_dir  = $value if $override eq 'plugin_dir';
