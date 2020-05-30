@@ -519,6 +519,15 @@ sub check_flood {
                         if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
                             my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'chat_flood_punishment', $chan_data->{offenses} - 1);
 
+                            if ($self->{pbot}->{nicklist}->get_meta($chan, $nick, '+o')) {
+                                $self->{pbot}->{logger}->log("Disregarding flood enforcement for opped user $nick in $chan.\n");
+                                next;
+                            }
+
+                            if ($self->{pbot}->{nicklist}->get_meta($chan, $nick, '+v')) {
+                                $self->{pbot}->{chanops}->add_op_command($chan, 'mode -v $nick');
+                            }
+
                             $self->{pbot}->{banlist}->ban_user_timed(
                                 $chan,
                                 'b',
@@ -565,6 +574,15 @@ sub check_flood {
                     if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
                         my $length = $self->{pbot}->{registry}->get_array_value('antiflood', 'nick_flood_punishment', $self->{nickflood}->{$ancestor}->{offenses} - 1);
 
+                        if ($self->{pbot}->{nicklist}->get_meta($chan, $nick, '+o')) {
+                            $self->{pbot}->{logger}->log("Disregarding flood enforcement for opped user $nick in $chan.\n");
+                            next;
+                        }
+
+                        if ($self->{pbot}->{nicklist}->get_meta($chan, $nick, '+v')) {
+                            $self->{pbot}->{chanops}->add_op_command($chan, 'mode -v $nick');
+                        }
+
                         $self->{pbot}->{banlist}->ban_user_timed(
                             $chan,
                             'b',
@@ -605,6 +623,15 @@ sub check_flood {
                         $chan_data->{enter_abuses}++;
                         if ($chan_data->{enter_abuses} >= $enter_abuse_max_offenses) {
                             if ($self->{pbot}->{registry}->get_value('antiflood', 'enforce')) {
+                                if ($self->{pbot}->{nicklist}->get_meta($chan, $nick, '+o')) {
+                                    $self->{pbot}->{logger}->log("Disregarding flood enforcement for opped user $nick in $chan.\n");
+                                    next;
+                                }
+
+                                if ($self->{pbot}->{nicklist}->get_meta($chan, $nick, '+v')) {
+                                    $self->{pbot}->{chanops}->add_op_command($chan, 'mode -v $nick');
+                                }
+
                                 if ($self->{pbot}->{banlist}->has_ban_timeout($chan, "*!$user\@" . $self->address_to_mask($host))) {
                                     $self->{pbot}->{logger}->log("$nick $chan enter abuse offense disregarded due to existing ban\n");
                                     next;
@@ -911,12 +938,14 @@ sub check_bans {
                     return;
                 }
 
-                if ($baninfo->{type} eq 'blacklist') { $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick I don't think so"); }
-                else {
+                if ($baninfo->{type} eq 'blacklist') {
+                    $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick I don't think so");
+                } else {
                     my $owner = $baninfo->{owner};
                     $owner =~ s/!.*$//;
                     $self->{pbot}->{chanops}->add_op_command($baninfo->{channel}, "kick $baninfo->{channel} $bannick Evaded $baninfo->{mask} set by $owner");
                 }
+
                 $self->{pbot}->{banlist}->ban_user_timed(
                     $baninfo->{channel},
                     'b',
