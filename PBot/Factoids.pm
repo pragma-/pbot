@@ -526,14 +526,18 @@ sub expand_factoid_vars {
                 my $change = $self->{factoids}->get_data($var_chan, $var, 'action');
                 my @list   = $self->{pbot}->{interpreter}->split_line($change);
 
-                my @mylist;
-                for (my $i = 0; $i <= $#list; $i++) {
-                    push @mylist, $list[$i] if defined $list[$i] and length $list[$i];
-                }
-
                 my %settings;
+
                 foreach my $mod (split /:/, $modifier) {
                     next if not length $mod;
+                    if ($mod =~ s/,$//) {
+                        $settings{'trailing-comma'} = 1;
+                    }
+
+                    if ($mod eq 'comma') {
+                        $settings{'comma'} = 1;
+                        next;
+                    }
 
                     if ($mod eq 'enumerate') {
                         $settings{'enumerate'} = 1;
@@ -593,49 +597,53 @@ sub expand_factoid_vars {
                 if (exists $settings{'index'}) {
                     my $index = $settings{'index'};
                     $index = 0 if $index < 0;
-                    $index = $#mylist if $index > $#mylist;
-                    $replacement = $mylist[$index];
+                    $index = $#list if $index > $#list;
+                    $replacement = $list[$index];
                 } elsif ($settings{'pick'}) {
                     my $min = $settings{'pick_min'};
                     my $max = $settings{'pick_max'};
-                    $max = $#mylist if $max > $#mylist;
+                    $max = $#list if $max > $#list;
 
                     my $count = $max;
                     if ($settings{'random'}) {
                         $count = int rand ($max + 1 - $min) + $min;
                     }
 
-                    @list = ();
+                    my @choices;
                     while ($count-- > 0) {
-                        my $index = int rand @mylist;
+                        my $index = int rand @list;
 
-                        my $choice = $mylist[$index];
+                        my $choice = $list[$index];
 
                         if ($settings{'unique'}) {
-                            splice @mylist, $index, 1;
+                            splice @list, $index, 1;
                         }
 
                         # strip outer quotes
                         if (not $choice =~ s/^"(.*)"$/$1/) { $choice =~ s/^'(.*)'$/$1/; }
-                        push @list, $choice;
+                        push @choices, $choice;
                     }
 
                     if ($settings{'sort+'}) {
-                        @list = sort { $a cmp $b } @list;
+                        @choices = sort { $a cmp $b } @choices;
                     }
 
                     if ($settings{'sort-'}) {
-                        @list = sort { $b cmp $a } @list;
+                        @choices = sort { $b cmp $a } @choices;
                     }
 
-                    if ($settings{'enumerate'}) {
-                        $replacement = join ', ', @list;
-                        $replacement =~ s/(.*), /$1 and /;
+                    if ($settings{'enumerate'} or $settings{'comma'}) {
+                        $replacement = join ', ', @choices;
+                        $replacement =~ s/(.*), /$1 and / if $settings{'enumerate'};
                     } else {
-                        $replacement = "@list";
+                        $replacement = "@choices";
                     }
                 } else {
-                    $replacement = $mylist[rand @mylist];
+                    $replacement = $list[rand @list];
+                }
+
+                if ($settings{'trailing-comma'}) {
+                    $replacement .= ',';
                 }
 
                 # strip outer quotes
@@ -643,6 +651,7 @@ sub expand_factoid_vars {
 
                 foreach my $mod (split /:/, $modifier) {
                     next if not length $mod;
+                    $mod =~ s/,$//;
 
                     if ($replacement =~ /^\$\{\$([a-zA-Z0-9_:#]+)\}(.*)$/) {
                         $replacement = "\${\$$1:$mod}$2";
