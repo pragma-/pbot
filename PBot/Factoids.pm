@@ -590,7 +590,7 @@ sub expand_factoid_vars {
 
                 my $replacement;
 
-                if ($settings{'index'}) {
+                if (exists $settings{'index'}) {
                     my $index = $settings{'index'};
                     $index = 0 if $index < 0;
                     $index = $#mylist if $index > $#mylist;
