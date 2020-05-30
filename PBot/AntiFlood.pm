@@ -525,7 +525,8 @@ sub check_flood {
                             }
 
                             if ($self->{pbot}->{nicklist}->get_meta($chan, $nick, '+v')) {
-                                $self->{pbot}->{chanops}->add_op_command($chan, 'mode -v $nick');
+                                $self->{pbot}->{chanops}->add_op_command($chan, "mode $chan -v $nick");
+                                $self->{pbot}->{chanops}->gain_ops($chan);
                             }
 
                             $self->{pbot}->{banlist}->ban_user_timed(
@@ -580,7 +581,8 @@ sub check_flood {
                         }
 
                         if ($self->{pbot}->{nicklist}->get_meta($chan, $nick, '+v')) {
-                            $self->{pbot}->{chanops}->add_op_command($chan, 'mode -v $nick');
+                            $self->{pbot}->{chanops}->add_op_command($chan, "mode $chan -v $nick");
+                            $self->{pbot}->{chanops}->gain_ops($chan);
                         }
 
                         $self->{pbot}->{banlist}->ban_user_timed(
@@ -629,7 +631,8 @@ sub check_flood {
                                 }
 
                                 if ($self->{pbot}->{nicklist}->get_meta($chan, $nick, '+v')) {
-                                    $self->{pbot}->{chanops}->add_op_command($chan, 'mode -v $nick');
+                                    $self->{pbot}->{chanops}->add_op_command($chan, "mode $chan -v $nick");
+                                    $self->{pbot}->{chanops}->gain_ops($chan);
                                 }
 
                                 if ($self->{pbot}->{banlist}->has_ban_timeout($chan, "*!$user\@" . $self->address_to_mask($host))) {
