@@ -54,6 +54,14 @@ sub register {
     return $ref;
 }
 
+sub register_front {
+    my ($self, $subref) = @_;
+    Carp::croak("Must pass subroutine reference to register_front()") if not defined $subref;
+    my $ref = {subref => $subref};
+    unshift @{$self->{handlers}}, $ref;
+    return $ref;
+}
+
 sub unregister {
     my ($self, $ref) = @_;
     Carp::croak("Must pass reference to unregister()") if not defined $ref;
