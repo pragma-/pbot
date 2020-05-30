@@ -82,8 +82,8 @@ sub cmd_remove {
     return "Usage: chanrem <channel>" if not length $context->{arguments};
 
     # clear banlists
-    $self->{pbot}->{banlist}->remove($context->{arguments});
-    $self->{pbot}->{quietlist}->remove($context->{arguments});
+    $self->{pbot}->{banlist}->{banlist}->remove($context->{arguments});
+    $self->{pbot}->{banlist}->{quietlist}->remove($context->{arguments});
     $self->{pbot}->{timer}->dequeue_event("unban $context->{arguments} .*");
     $self->{pbot}->{timer}->dequeue_event("unmute $context->{arguments} .*");
 
