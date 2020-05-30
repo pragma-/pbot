@@ -70,9 +70,11 @@ our %factoid_metadata = (
 sub initialize {
     my ($self, %conf) = @_;
     my $filename = $conf{filename};
-    $self->{factoids} = PBot::DualIndexSQLiteObject->new(name => 'Factoids', filename => $filename, pbot => $self->{pbot});
 
-    $self->{pbot}     = $self->{pbot};
+    $self->{pbot} = $self->{pbot};
+    $self->{pbot}->{atexit}->register(sub { $self->save_factoids; return; });
+
+    $self->{factoids} = PBot::DualIndexSQLiteObject->new(name => 'Factoids', filename => $filename, pbot => $self->{pbot});
     $self->{commands} = PBot::FactoidCommands->new(pbot => $self->{pbot});
 
     $self->{pbot}->{registry}->add_default('text', 'factoids', 'default_rate_limit', 15);
@@ -80,7 +82,6 @@ sub initialize {
     $self->{pbot}->{registry}->add_default('text', 'factoids', 'max_content_length', 1024 * 8);
     $self->{pbot}->{registry}->add_default('text', 'factoids', 'max_channel_length', 20);
 
-    $self->{pbot}->{atexit}->register(sub { $self->save_factoids; return; });
     $self->load_factoids;
 }
 
