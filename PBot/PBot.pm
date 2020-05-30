@@ -260,7 +260,7 @@ sub initialize {
 
     # flush all pending save events to disk at exit
     $self->{atexit}->register(sub {
-            $self->{pbot}->{timer}->execute_and_dequeue_event('save *');
+            $self->{timer}->execute_and_dequeue_event('save *');
             return;
         }
     );
