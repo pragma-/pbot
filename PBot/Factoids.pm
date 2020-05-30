@@ -472,7 +472,7 @@ sub expand_factoid_vars {
         $action =~ s/(?<!\\)\$0/$root_keyword/g;
         my $const_action = $action;
 
-        while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$(?:(\{[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:-]+)?\}|[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:-]+)?))/gi) {
+        while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$(?:(\{[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:+-]+)?\}|[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:+-]+)?))/gi) {
             my ($indefinite_article, $v) = ($1, $2);
             $indefinite_article = '' if not defined $indefinite_article;
             next if not defined $v;
@@ -594,7 +594,8 @@ sub expand_factoid_vars {
                 } elsif ($settings{'pick'}) {
                     my $min = $settings{'pick_min'};
                     my $max = $settings{'pick_max'};
-                    $max = $#list if $max > $#list;
+                    $max = @list if $max > @list;
+                    $min = $max if $min > $max;
 
                     my $count = $max;
                     if ($settings{'random'}) {
@@ -603,8 +604,7 @@ sub expand_factoid_vars {
 
                     my @choices;
                     while ($count-- > 0) {
-                        my $index = int rand @list;
-
+                        my $index  = int rand @list;
                         my $choice = $list[$index];
 
                         if ($settings{'unique'}) {
