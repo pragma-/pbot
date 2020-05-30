@@ -615,6 +615,8 @@ sub expand_factoid_vars {
                             splice @mylist, $index, 1;
                         }
 
+                        # strip outer quotes
+                        if (not $choice =~ s/^"(.*)"$/$1/) { $choice =~ s/^'(.*)'$/$1/; }
                         push @list, $choice;
                     }
 
