@@ -459,14 +459,7 @@ sub expand_factoid_vars {
     my $root_keyword = $context->{keyword_override} ? $context->{keyword_override} : $context->{root_keyword};
     my $action       = $context->{action};
 
-    my $debug = 0;
     my $depth = 0;
-
-    if ($debug) {
-        $self->{pbot}->{logger}->log("enter expand_factoid_vars\n");
-        use Data::Dumper;
-        $self->{pbot}->{logger}->log(Dumper $context);
-    }
 
     if ($action =~ m/^\/call --keyword-override=([^ ]+)/i) { $root_keyword = $1; }
 
@@ -478,8 +471,6 @@ sub expand_factoid_vars {
         my $expansions = 0;
         $action =~ s/(?<!\\)\$0/$root_keyword/g;
         my $const_action = $action;
-
-        $self->{pbot}->{logger}->log("action: $const_action\n") if $debug;
 
         while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$(?:(\{[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:-]+)?\}|[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:-]+)?))/gi) {
             my ($indefinite_article, $v) = ($1, $2);
@@ -494,8 +485,6 @@ sub expand_factoid_vars {
             next if $test_v =~ m/^(?:nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])(?:\:json)*$/i;    # don't override special variables
             next if @exclude && grep { $test_v =~ m/^\Q$_\E$/i } @exclude;
             last if ++$depth >= 1000;
-
-            $self->{pbot}->{logger}->log("v: [$original_v], test v: [$test_v]\n") if $debug;
 
             $matches++;
 
@@ -530,8 +519,8 @@ sub expand_factoid_vars {
 
                 foreach my $mod (split /:/, $modifier) {
                     next if not length $mod;
-                    if ($mod =~ s/,$//) {
-                        $settings{'trailing-comma'} = 1;
+                    if ($mod =~ s/([,.#:-]+)$//) {
+                        $settings{'trailing-punct'} = $1;
                     }
 
                     if ($mod eq 'comma') {
@@ -554,7 +543,7 @@ sub expand_factoid_vars {
                         next;
                     }
 
-                    if ($mod =~ /^pick\((\d+),(\d+)\)$/) {
+                    if ($mod =~ /^pick\((\-?\d+),(\-?\d+)\)$/) {
                         $settings{'pick'} = 1;
                         $settings{'random'} = 1;
                         $settings{'pick_min'} = $1;
@@ -562,14 +551,14 @@ sub expand_factoid_vars {
                         next;
                     }
 
-                    if ($mod =~ /^pick\((\d+)\)$/) {
+                    if ($mod =~ /^pick\((\-?\d+)\)$/) {
                         $settings{'pick'} = 1;
                         $settings{'pick_min'} = 1;
                         $settings{'pick_max'} = $1;
                         next;
                     }
 
-                    if ($mod =~ /^pick_unique\((\d+),(\d+)\)$/) {
+                    if ($mod =~ /^pick_unique\((\-?\d+),(\-?\d+)\)$/) {
                         $settings{'pick'} = 1;
                         $settings{'random'} = 1;
                         $settings{'unique'} = 1;
@@ -578,7 +567,7 @@ sub expand_factoid_vars {
                         next;
                     }
 
-                    if ($mod =~ /^pick_unique\((\d+)\)$/) {
+                    if ($mod =~ /^pick_unique\((\-?\d+)\)$/) {
                         $settings{'pick'} = 1;
                         $settings{'unique'} = 1;
                         $settings{'pick_min'} = 1;
@@ -586,7 +575,7 @@ sub expand_factoid_vars {
                         next;
                     }
 
-                    if ($mod =~ /^index\((\d+)\)$/) {
+                    if ($mod =~ /^index\((\-?\d+)\)$/) {
                         $settings{'index'} = $1;
                         next;
                     }
@@ -596,9 +585,12 @@ sub expand_factoid_vars {
 
                 if (exists $settings{'index'}) {
                     my $index = $settings{'index'};
+                    $index = $#list - -$index if $index < 0;
                     $index = 0 if $index < 0;
                     $index = $#list if $index > $#list;
                     $replacement = $list[$index];
+                    # strip outer quotes
+                    if (not $replacement =~ s/^"(.*)"$/$1/) { $replacement =~ s/^'(.*)'$/$1/; }
                 } elsif ($settings{'pick'}) {
                     my $min = $settings{'pick_min'};
                     my $max = $settings{'pick_max'};
@@ -640,14 +632,13 @@ sub expand_factoid_vars {
                     }
                 } else {
                     $replacement = $list[rand @list];
+                    # strip outer quotes
+                    if (not $replacement =~ s/^"(.*)"$/$1/) { $replacement =~ s/^'(.*)'$/$1/; }
                 }
 
-                if ($settings{'trailing-comma'}) {
-                    $replacement .= ',';
+                if ($settings{'trailing-punct'}) {
+                    $replacement .= $settings{'trailing-punct'};
                 }
-
-                # strip outer quotes
-                if (not $replacement =~ s/^"(.*)"$/$1/) { $replacement =~ s/^'(.*)'$/$1/; }
 
                 foreach my $mod (split /:/, $modifier) {
                     next if not length $mod;
@@ -685,46 +676,21 @@ sub expand_factoid_vars {
                     $replacement      = "$fixed_article $replacement";
                 }
 
-                if ($debug and $offset == 0) { $self->{pbot}->{logger}->log(("-" x 40) . "\n"); }
-
                 $original_v = quotemeta $original_v;
                 $original_v =~ s/\\:/:/g;
 
                 if (not length $replacement) {
-                    $self->{pbot}->{logger}->log("No length!\n") if $debug;
-                    if ($debug) {
-                        $self->{pbot}->{logger}->log("before: v: $original_v, offset: $offset\n");
-                        $self->{pbot}->{logger}->log("$action\n");
-                        $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
-                    }
-
                     substr($action, $offset) =~ s/$indefinite_article\$$original_v ?/$replacement/;
                     $offset += $-[0] + length $replacement;
-
-                    if ($debug) {
-                        $self->{pbot}->{logger}->log("after: r: EMPTY \$-[0]: $-[0], offset: $offset\n");
-                        $self->{pbot}->{logger}->log("$action\n");
-                        $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
-                    }
                 } else {
-                    if ($debug) {
-                        $self->{pbot}->{logger}->log("before: v: $original_v, offset: $offset\n");
-                        $self->{pbot}->{logger}->log("$action\n");
-                        $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
-                    }
-
                     substr($action, $offset) =~ s/$indefinite_article\$$original_v/$replacement/;
                     $offset += $-[0] + length $replacement;
-
-                    if ($debug) {
-                        $self->{pbot}->{logger}->log("after: r: $replacement, \$-[0]: $-[0], offset: $offset\n");
-                        $self->{pbot}->{logger}->log("$action\n");
-                        $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
-                    }
                 }
+
                 $expansions++;
             }
         }
+
         last if $matches == 0 or $expansions == 0;
     }
 
