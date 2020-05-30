@@ -533,12 +533,12 @@ sub expand_factoid_vars {
                         next;
                     }
 
-                    if ($mod =~ /^sort\+?$/) {
+                    if ($mod =~ /^\+?sort$/) {
                         $settings{'sort+'} = 1;
                         next;
                     }
 
-                    if ($mod =~ /^sort\-$/) {
+                    if ($mod =~ /^\-sort$/) {
                         $settings{'sort-'} = 1;
                         next;
                     }
