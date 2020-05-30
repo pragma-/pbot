@@ -481,9 +481,9 @@ sub expand_factoid_vars {
 
         $self->{pbot}->{logger}->log("action: $const_action\n") if $debug;
 
-        while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$(?:(\{[a-zA-Z0-9_:#]+\}|[a-zA-Z0-9_:#]+))/gi) {
-            my ($a, $v) = ($1, $2);
-            $a = '' if not defined $a;
+        while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$(?:(\{[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:-]+)?\}|[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:-]+)?))/gi) {
+            my ($indefinite_article, $v) = ($1, $2);
+            $indefinite_article = '' if not defined $indefinite_article;
             next if not defined $v;
 
             my $original_v = $v;
@@ -525,46 +525,153 @@ sub expand_factoid_vars {
             if ($self->{factoids}->get_data($var_chan, $var, 'type') eq 'text') {
                 my $change = $self->{factoids}->get_data($var_chan, $var, 'action');
                 my @list   = $self->{pbot}->{interpreter}->split_line($change);
+
                 my @mylist;
-                for (my $i = 0; $i <= $#list; $i++) { push @mylist, $list[$i] if defined $list[$i] and length $list[$i]; }
-                my $line = int(rand($#mylist + 1));
-                if (not $mylist[$line] =~ s/^"(.*)"$/$1/) { $mylist[$line] =~ s/^'(.*)'$/$1/; }
+                for (my $i = 0; $i <= $#list; $i++) {
+                    push @mylist, $list[$i] if defined $list[$i] and length $list[$i];
+                }
+
+                my %settings;
+                foreach my $mod (split /:/, $modifier) {
+                    next if not length $mod;
+
+                    if ($mod eq 'enumerate') {
+                        $settings{'enumerate'} = 1;
+                        next;
+                    }
+
+                    if ($mod =~ /^sort\+?$/) {
+                        $settings{'sort+'} = 1;
+                        next;
+                    }
+
+                    if ($mod =~ /^sort\-$/) {
+                        $settings{'sort-'} = 1;
+                        next;
+                    }
+
+                    if ($mod =~ /^pick\((\d+),(\d+)\)$/) {
+                        $settings{'pick'} = 1;
+                        $settings{'random'} = 1;
+                        $settings{'pick_min'} = $1;
+                        $settings{'pick_max'} = $2;
+                        next;
+                    }
+
+                    if ($mod =~ /^pick\((\d+)\)$/) {
+                        $settings{'pick'} = 1;
+                        $settings{'pick_min'} = 1;
+                        $settings{'pick_max'} = $1;
+                        next;
+                    }
+
+                    if ($mod =~ /^pick_unique\((\d+),(\d+)\)$/) {
+                        $settings{'pick'} = 1;
+                        $settings{'random'} = 1;
+                        $settings{'unique'} = 1;
+                        $settings{'pick_min'} = $1;
+                        $settings{'pick_max'} = $2;
+                        next;
+                    }
+
+                    if ($mod =~ /^pick_unique\((\d+)\)$/) {
+                        $settings{'pick'} = 1;
+                        $settings{'unique'} = 1;
+                        $settings{'pick_min'} = 1;
+                        $settings{'pick_max'} = $1;
+                        next;
+                    }
+
+                    if ($mod =~ /^index\((\d+)\)$/) {
+                        $settings{'index'} = $1;
+                        next;
+                    }
+                }
+
+                my $replacement;
+
+                if ($settings{'index'}) {
+                    my $index = $settings{'index'};
+                    $index = 0 if $index < 0;
+                    $index = $#mylist if $index > $#mylist;
+                    $replacement = $mylist[$index];
+                } elsif ($settings{'pick'}) {
+                    my $min = $settings{'pick_min'};
+                    my $max = $settings{'pick_max'};
+                    $max = $#mylist if $max > $#mylist;
+
+                    my $count = $max;
+                    if ($settings{'random'}) {
+                        $count = int rand ($max + 1 - $min) + $min;
+                    }
+
+                    @list = ();
+                    while ($count-- > 0) {
+                        my $index = int rand @mylist;
+
+                        my $choice = $mylist[$index];
+
+                        if ($settings{'unique'}) {
+                            splice @mylist, $index, 1;
+                        }
+
+                        push @list, $choice;
+                    }
+
+                    if ($settings{'sort+'}) {
+                        @list = sort { $a cmp $b } @list;
+                    }
+
+                    if ($settings{'sort-'}) {
+                        @list = sort { $b cmp $a } @list;
+                    }
+
+                    if ($settings{'enumerate'}) {
+                        $replacement = join ', ', @list;
+                        $replacement =~ s/(.*), /$1 and /;
+                    } else {
+                        $replacement = "@list";
+                    }
+                } else {
+                    $replacement = $mylist[rand @mylist];
+                }
+
+                # strip outer quotes
+                if (not $replacement =~ s/^"(.*)"$/$1/) { $replacement =~ s/^'(.*)'$/$1/; }
 
                 foreach my $mod (split /:/, $modifier) {
                     next if not length $mod;
 
-                    if ($mylist[$line] =~ /^\$\{\$([a-zA-Z0-9_:#]+)\}(.*)$/) {
-                        $mylist[$line] = "\${\$$1:$mod}$2";
+                    if ($replacement =~ /^\$\{\$([a-zA-Z0-9_:#]+)\}(.*)$/) {
+                        $replacement = "\${\$$1:$mod}$2";
                         next;
-                    } elsif ($mylist[$line] =~ /^\$\{([a-zA-Z0-9_:#]+)\}(.*)$/) {
-                        $mylist[$line] = "\${$1:$mod}$2";
+                    } elsif ($replacement =~ /^\$\{([a-zA-Z0-9_:#]+)\}(.*)$/) {
+                        $replacement = "\${$1:$mod}$2";
                         next;
-                    } elsif ($mylist[$line] =~ /^\$\$([a-zA-Z0-9_:#]+)(.*)$/) {
-                        $mylist[$line] = "\${\$$1:$mod}$2";
+                    } elsif ($replacement =~ /^\$\$([a-zA-Z0-9_:#]+)(.*)$/) {
+                        $replacement = "\${\$$1:$mod}$2";
                         next;
-                    } elsif ($mylist[$line] =~ /^\$([a-zA-Z0-9_:#]+)(.*)$/) {
-                        $mylist[$line] = "\${$1:$mod}$2";
+                    } elsif ($replacement =~ /^\$([a-zA-Z0-9_:#]+)(.*)$/) {
+                        $replacement = "\${$1:$mod}$2";
                         next;
                     }
 
                     given ($mod) {
-                        when ('uc')      { $mylist[$line] = uc $mylist[$line]; }
-                        when ('lc')      { $mylist[$line] = lc $mylist[$line]; }
-                        when ('ucfirst') { $mylist[$line] = ucfirst $mylist[$line]; }
+                        when ('uc')      { $replacement = uc $replacement; }
+                        when ('lc')      { $replacement = lc $replacement; }
+                        when ('ucfirst') { $replacement = ucfirst $replacement; }
                         when ('title') {
-                            $mylist[$line] = ucfirst lc $mylist[$line];
-                            $mylist[$line] =~ s/ (\w)/' ' . uc $1/ge;
+                            $replacement = ucfirst lc $replacement;
+                            $replacement =~ s/ (\w)/' ' . uc $1/ge;
                         }
-                        when ('json') { $mylist[$line] = $self->escape_json($mylist[$line]); }
+                        when ('json') { $replacement = $self->escape_json($replacement); }
                     }
                 }
 
-                my $replacement = $mylist[$line];
-
-                if ($a) {
-                    my $fixed_a = select_indefinite_article $mylist[$line];
-                    $fixed_a     = ucfirst $fixed_a if $a =~ m/^A/;
-                    $replacement = "$fixed_a $mylist[$line]";
+                if ($indefinite_article) {
+                    my $fixed_article = select_indefinite_article $replacement;
+                    $fixed_article    = ucfirst $fixed_article if $indefinite_article =~ m/^A/;
+                    $replacement      = "$fixed_article $replacement";
                 }
 
                 if ($debug and $offset == 0) { $self->{pbot}->{logger}->log(("-" x 40) . "\n"); }
@@ -572,7 +679,7 @@ sub expand_factoid_vars {
                 $original_v = quotemeta $original_v;
                 $original_v =~ s/\\:/:/g;
 
-                if (not length $mylist[$line]) {
+                if (not length $replacement) {
                     $self->{pbot}->{logger}->log("No length!\n") if $debug;
                     if ($debug) {
                         $self->{pbot}->{logger}->log("before: v: $original_v, offset: $offset\n");
@@ -580,7 +687,7 @@ sub expand_factoid_vars {
                         $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
                     }
 
-                    substr($action, $offset) =~ s/$a\$$original_v ?/$replacement/;
+                    substr($action, $offset) =~ s/$indefinite_article\$$original_v ?/$replacement/;
                     $offset += $-[0] + length $replacement;
 
                     if ($debug) {
@@ -595,7 +702,7 @@ sub expand_factoid_vars {
                         $self->{pbot}->{logger}->log((" " x $offset) . "^\n");
                     }
 
-                    substr($action, $offset) =~ s/$a\$$original_v/$replacement/;
+                    substr($action, $offset) =~ s/$indefinite_article\$$original_v/$replacement/;
                     $offset += $-[0] + length $replacement;
 
                     if ($debug) {
