@@ -792,8 +792,11 @@ sub execute_code_factoid_using_vm {
     unless ($self->{factoids}->exists($context->{channel}, $context->{keyword}, 'interpolate')
         and $self->{factoids}->get_data($context->{channel}, $context->{keyword}, 'interpolate') eq '0')
     {
-        if   ($context->{code} =~ m/(?:\$\{?nick\b|\$\{?args\b|\$\{?arg\[)/ and length $context->{arguments}) { $context->{no_nickoverride} = 1; }
-        else                                                                                              { $context->{no_nickoverride} = 0; }
+        if ($context->{code} =~ m/(?:\$\{?nick\b|\$\{?args\b|\$\{?arg\[)/ and length $context->{arguments}) {
+            $context->{no_nickoverride} = 1;
+        } else {
+            $context->{no_nickoverride} = 0;
+        }
 
         $context->{action} = $context->{code};
         $context->{code}   = $self->expand_factoid_vars($context);
@@ -1080,8 +1083,11 @@ sub handle_action {
             $action =~ s/(?<!\\)\$0|(?<!\\)\$\{0\}/$trigger_name/g;
             $context->{alldone} = 1;
         } else {
-            if   ($self->{factoids}->get_data($channel, $keyword, 'allow_empty_args')) { $action = $self->expand_action_arguments($action, undef, ''); }
-            else                                                                       { $action = $self->expand_action_arguments($action, undef, $context->{nick}); }
+            if ($self->{factoids}->get_data($channel, $keyword, 'allow_empty_args')) {
+                $action = $self->expand_action_arguments($action, undef, '');
+            } else {
+                $action = $self->expand_action_arguments($action, undef, $context->{nick});
+            }
         }
         $context->{no_nickoverride} = 0;
     }
