@@ -189,21 +189,20 @@ sub generic_mode {
             $i++;
 
             if ($i >= $max_modes) {
-                my $args = "$channel $mode $list";
-                $context->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
-                $result           = $self->mode($channel, $context->{nick}, $context->{user}, $context->{host}, $args, $context);
-                $mode             = $flag;
-                $list             = '';
-                $i                = 0;
+                $context->{arguments} = "$channel $mode $list";
+                $context->{arglist}   = $self->{pbot}->{interpreter}->make_args($context->{arguments});
+                $result               = $self->cmd_mode($context);
+                $mode                 = $flag;
+                $list                 = '';
+                $i                    = 0;
                 last if $result ne '' and $result ne 'Done.';
             }
         }
     }
 
     if ($i) {
-        my $args = "$channel $mode $list";
-        $context->{arguments} = $args;
-        $context->{arglist} = $self->{pbot}->{interpreter}->make_args($args);
+        $context->{arguments} = "$channel $mode $list";
+        $context->{arglist}   = $self->{pbot}->{interpreter}->make_args($context->{arguments});
         $result = $self->cmd_mode($context);
     }
 
