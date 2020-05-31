@@ -219,6 +219,19 @@ sub interpret {
             delete $context->{nickoverride};
             delete $context->{force_nickoverride};
         }
+    } elsif ($self->arglist_size($cmdlist) >= 3 and lc $cmdlist->[0] eq 'give') {
+        # give nick cmd [args]
+        $context->{nickoverride} = $cmdlist->[1];
+        ($keyword, $arguments) = $self->split_args($cmdlist, 2, 2, 1);
+        $arguments = '' if not defined $arguments;
+        my $similar = $self->{pbot}->{nicklist}->is_present_similar($context->{from}, $context->{nickoverride});
+        if ($similar) {
+            $context->{nickoverride}       = $similar;
+            $context->{force_nickoverride} = 1;
+        } else {
+            delete $context->{nickoverride};
+            delete $context->{force_nickoverride};
+        }
     } else {
         # normal command
         ($keyword, $arguments) = $self->split_args($cmdlist, 2, 0, 1);
@@ -507,6 +520,8 @@ sub split_line {
     );
 
     %opts = (%default_opts, %opts);
+
+    return () if not length $line;
 
     my @chars = split //, $line;
 
@@ -816,8 +831,9 @@ sub handle_result {
         my $cmdlist = $self->make_args($context->{command});
         my ($cmd, $args) = $self->split_args($cmdlist, 2, 0, 1);
         if (not $self->{pbot}->{commands}->exists($cmd)) {
-            my ($chan, $trigger) = $self->{pbot}->{factoids}->find_factoid($context->{from}, $cmd, arguments => $args, exact_channel => 1, exact_trigger => 0, find_alias => 1);
-            if (defined $trigger) {
+            my @factoids = $self->{pbot}->{factoids}->find_factoid($context->{from}, $cmd, arguments => $args, exact_channel => 0, exact_trigger => 0, find_alias => 1);
+            if (@factoids == 1) {
+                my ($chan, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
                 if ($context->{preserve_whitespace} == 0) {
                     $context->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'preserve_whitespace') // 0;
                 }
@@ -865,8 +881,12 @@ sub handle_result {
         if ($use_output_queue) {
             my $delay   = rand(10) + 5;
             my $message = {
-                nick    => $context->{nick}, user       => $context->{user}, host => $context->{host}, command => $context->{command},
-                message => $line,          checkflood => 1
+                nick => $context->{nick},
+                user => $context->{user},
+                host => $context->{host},
+                command => $context->{command},
+                message => $line,
+                checkflood => 1,
             };
             $self->add_message_to_output_queue($context->{from}, $message, $delay);
             $delay = duration($delay);
