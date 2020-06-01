@@ -159,6 +159,18 @@ Examples:
 ### Addressing output to users
 There are a number of ways to address command output to users.
 
+You can prefix the `<bot trigger>`-based invocation with the user's nickname:
+
+    <nickname> <bot trigger> <command>
+
+Examples:
+
+    <pragma-> dave: !echo Testing
+       <PBot> dave: Testing
+
+    <pragma-> mike: !time
+       <PBot> mike: It's Sun 31 May 2020 06:03:08 PM PDT in Los Angeles.
+
 You can use the `tell` keyword:
 
     tell <nickname> (about|the) <command>
