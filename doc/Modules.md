@@ -79,6 +79,11 @@
 Modules are external command-line executable programs and scripts that can be
 loaded via PBot Factoids.
 
+Command arguments are passed to Module scripts/programs as command-line arguments. The
+standard output from the Module script/program is returned as the command result. The
+standard error output is stored in a file named `<module>-stderr` in the `modules`
+directory.
+
 ## Creating modules
 Suppose you have the [Qalculate!](https://qalculate.github.io/) command-line
 program and you want to provide a PBot command for it. You can create a _very_ simple
