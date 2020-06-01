@@ -81,7 +81,7 @@ loaded via PBot Factoids.
 
 Command arguments are passed to Module scripts/programs as command-line arguments. The
 standard output from the Module script/program is returned as the command result. The
-standard error output is stored in a file named `<module>-stderr` in the `modules`
+standard error output is stored in a file named `<module>-stderr` in the `modules/`
 directory.
 
 ## Creating modules
@@ -109,7 +109,7 @@ Now you have a `qalc` calculator in PBot!
        <PBot> 2 * 2 = 4
 
 ## Documentation for built-in modules
-PBot comes several command-line modules included. Here is the documentation for most of them.
+PBot comes with several Modules included. Here is the documentation for most of them.
 
 ### cc
 Code compiler (and executor).  This command will compile and execute user-provided code in a number of languages, and then display the compiler and/or program output.
