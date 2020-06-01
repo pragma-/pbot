@@ -3,11 +3,13 @@
 
 <!-- md-toc-begin -->
 * [Command interpreter](#command-interpreter)
+  * [Command invocation](#command-invocation)
+  * [Addressing output to users](#addressing-output-to-users)
+  * [Inline invocation](#inline-invocation)
+  * [Chaining](#chaining)
   * [Piping](#piping)
   * [Substitution](#substitution)
-  * [Chaining](#chaining)
   * [Variables](#variables)
-  * [Inline invocation](#inline-invocation)
   * [Background processing](#background-processing)
 * [Types of commands](#types-of-commands)
   * [Built-in commands](#built-in-commands)
@@ -114,8 +116,117 @@
 ## Command interpreter
 PBot has a powerful command interpreter with useful functionality.
 
+### Command invocation
+There are a number of ways to invoke commands with PBot.
+
+The syntax of PBot's commands largely follow Unix/POSIX conventions.
+
+A single command's syntax is:
+
+    <keyword> [arguments]
+
+`<keyword>` is one token containing no whitespace, and is required as denoted by the angle brackets.
+
+`[arguments]` is a list of tokens which can be quoted to contain whitespace, and is optional as denoted by the square brackets.
+
+We will refer to this as `<command>` throughout this documentation.
+
+The most straight-forward way to invoke a command is:
+
+    <bot trigger> <command>
+
+`<bot trigger>` is the bot's trigger sequence, defined in the `general.trigger` registry setting
+(defined to be the exclamation mark by default).
+
+Example:
+
+    <pragma-> !echo hi
+       <PBot> hi
+
+You can also prefix or postfix address PBot by its nickname:
+
+    <bot nick> <command>
+    <command> <bot nick>
+
+Examples:
+
+    <pragma-> PBot: hello
+       <PBot> Hi there, pragma-
+
+    <pragma-> bye, PBot
+       <PBot> Good-bye, pragma-
+
+### Addressing output to users
+There are a number of ways to address command output to users.
+
+You can use the `tell` keyword:
+
+    tell <nickname> (about|the) <command>
+
+Examples:
+
+    <pragma-> !tell dave about echo Testing
+       <PBot> dave: Testing
+
+    <pragma-> !tell mike the time
+       <PBot> It's Sun 31 May 2020 06:03:08 PM PDT in Los Angeles.
+
+You can use the `give` keyword:
+
+    give <nickname> <command>
+
+Examples:
+
+    <pragma-> !give dave echo Testing
+       <PBot> dave: Testing
+
+    <pragma-> !give mike time
+       <PBot> It's Sun 31 May 2020 06:03:08 PM PDT in Los Angeles.
+
+You can use [#inline-invocation](inline invocation), as well -- see the next section.
+
+### Inline invocation
+You can invoke up to three commands inlined within a message.  If the message
+is addressed to a nick, the output will also be addressed to them.
+
+The syntax for inline invocation is:
+
+    [nickname:] [text] <bot trigger>{ <command> } [text]
+
+`[nickname:]` may optionally be prefixed to the message to address the command output to them.
+
+`[text]` is optional message text that is ignored.
+
+`<bot trigger>` is the bot's command trigger; which defaults to the exclamation mark (!).
+
+`<command>` is the command to invoke.
+
+Example:
+
+    <pragma-> newuser13: Check the !{version} and the !{help} documentation.
+       <PBot> newuser13: PBot version 2696 2020-01-04
+       <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
+
+### Chaining
+You can execute multiple commands sequentially as one command.
+
+The syntax for chaining is:
+
+    <command> ;;; <command> [...]
+
+Example:
+
+    <pragma-> !echo Test! ;;; me smiles. ;;; version
+       <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
+
 ### Piping
 You can pipe output from one command as input into another command, indefinitely.
+
+The syntax for piping is:
+
+    <command> | { <command> } [...]
+
+Example:
 
     <pragma-> !echo hello world | {sed s/world/everybody/} | {uc}
        <PBot> HELLO EVERYBODY
@@ -124,17 +235,21 @@ You can pipe output from one command as input into another command, indefinitely
 You can insert the output from another command at any point within a command. This
 substitutes the command with its output at the point where the command was used.
 
+The syntax for substitution is:
+
+    <command &{ <command> } >
+
+Example:
+
     <pragma-> !echo This is &{echo a demonstration} of command substitution
        <PBot> This is a demonstration of command substitution
 
-For example, suppose you want to make a Google Image Search command. The naive
-way would be to simply do:
+Suppose you want to make a Google Image Search command. The naive way would be to simply do:
 
     <pragma-> !factadd img /call echo https://google.com/search?tbm=isch&q=$args
 
-Unfortuately this would not support queries containing spaces or certain symbols. But
-never fear! We can use command substitution and the `uri_escape` function from the
-`func` command.
+Unfortuately this would not support queries containing spaces or certain symbols. To fix this,
+We can use command substitution and the `uri_escape` function from the `func` command.
 
 Note that you must escape the command substitution to insert it literally into the
 factoid otherwise it will be expanded first.
@@ -143,12 +258,6 @@ factoid otherwise it will be expanded first.
 
     <pragma-> !img spaces & stuff
        <PBot> https://google.com/search?tbm=isch&q=spaces%20%26%20stuff
-
-### Chaining
-You can execute multiple commands sequentially as one command.
-
-    <pragma-> !echo Test! ;;; me smiles. ;;; version
-       <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
 
 ### Variables
 You can use factoids as variables and interpolate them within commands.
@@ -163,14 +272,6 @@ combine their effects.
 
     <pragma-> !echo $greeting:uc
        <PBot> HELLO, WORLD
-
-### Inline invocation
-You can invoke up to three commands inlined within a message.  If the message
-is addressed to a nick, the output will also be addressed to them.
-
-    <pragma-> newuser13: Check the !{version} and the !{help} documentation.
-       <PBot> newuser13: PBot version 2696 2020-01-04
-       <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
 
 ### Background processing
 Any command can be flagged to be executed as a background process. For example, suppose you
