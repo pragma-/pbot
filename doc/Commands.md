@@ -119,7 +119,17 @@ PBot has a powerful command interpreter with useful functionality.
 ### Command invocation
 There are a number of ways to invoke commands with PBot.
 
-The syntax of PBot's commands largely follow Unix/POSIX conventions.
+The documentation and syntax of PBot's commands largely follow Unix/POSIX conventions:
+
+Square brackets `[optional]` indicate that the enclosed element (parameter, value, or information) is optional.
+You can choose one or more items or no items. Do not type the square brackets themselves in the command line.
+
+Angle brackets `<required>` indicate that the enclosed element (parameter, value, or information) is mandatory.
+You are required to replace the text within the angle brackets with the appropriate information.
+Do not type the angle brackets themselves in the command line.
+
+A parenthesized set of elements delimited by a vertical bar `(x|y|z)` indicates mutually exclusive choices. You
+must pick one and only one. Do not type the parentheses in the command line.
 
 A single command's syntax is:
 
