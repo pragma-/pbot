@@ -169,7 +169,7 @@ Examples:
        <PBot> dave: Testing
 
     <pragma-> !tell mike the time
-       <PBot> It's Sun 31 May 2020 06:03:08 PM PDT in Los Angeles.
+       <PBot> mike: It's Sun 31 May 2020 06:03:08 PM PDT in Los Angeles.
 
 You can use the `give` keyword:
 
@@ -181,9 +181,9 @@ Examples:
        <PBot> dave: Testing
 
     <pragma-> !give mike time
-       <PBot> It's Sun 31 May 2020 06:03:08 PM PDT in Los Angeles.
+       <PBot> mike: It's Sun 31 May 2020 06:03:08 PM PDT in Los Angeles.
 
-You can use [#inline-invocation](inline invocation), as well -- see the next section.
+You can use [inline invocation](#inline-invocation), as well -- see the next section.
 
 ### Inline invocation
 You can invoke up to three commands inlined within a message.  If the message
