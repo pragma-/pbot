@@ -454,6 +454,7 @@ sub cmd_reload {
         },
 
         'blacklist' => sub {
+            $self->{blacklist}->clear_blacklist;
             $self->{blacklist}->load_blacklist;
             return "Blacklist reloaded.";
         },
