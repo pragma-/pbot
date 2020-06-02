@@ -289,7 +289,7 @@ You can use factoids as variables and interpolate them within commands.
     <pragma-> !echo greeting is $greeting
        <PBot> greeting is Hello, world
 
-PBot variable interpolation supports [expansion modifiers](doc/Factoids.md#expansion-modifiers), which can be chained to
+PBot variable interpolation supports [expansion modifiers](Factoids.md#expansion-modifiers), which can be chained to
 combine their effects.
 
     <pragma-> !echo $greeting:uc
