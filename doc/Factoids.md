@@ -397,8 +397,8 @@ Modifier | Description
 `:<channel>` | Looks for variable in `<channel>` first; use `global` to refer to the global channel. This modifier must be the first modifier when chained with other modifiers.
 `:index(n)` | Selects the `n`th element from the `$variable` list.
 `:pick(x)` | Selects `x` count of random elements.
-`:pick(x,y)` | Selects between `x` and `y`, inclusive, count of random elements.
-`:pick_unique(x,y)` | Selects between `x` and `y`, inclusive, count of random elements without any repeated selections.
+`:pick(x,y)` | Selects between `x` and `y`, inclusive, count of random elements. `x` may be `0` to occasionally pick no value. In this case the `$variable` and any leading whitespace will be stripped.
+`:pick_unique(x,y)` | Selects between `x` and `y`, inclusive, count of random elements without any repeated selections. `x` may be `0` to occasionally pick no value. In this case the `$variable` and any leading whitespace will be stripped.
 
 Text modifiers alter the selected values.
 
@@ -425,10 +425,10 @@ Modifier | Description
 `:enumerate` | Converts a selected list to a comma-separated list with `and` replacing the final comma.
 
     <pragma-> !echo $colors:pick(5):comma
-       <PBot> red, yellow, blue, dark purple, orange
+       <PBot> red, bright yellow, blue, dark purple, orange
 
     <pragma-> !echo $colors:pick(5):enumerate
-       <PBot> blue, green, pink, orange and yellow
+       <PBot> blue, green, dark purple, orange and bright yellow
 
 ## action_with_args
 You can use the [`factset`](#factset) command to set a special [factoid metadata](#factoid-metadata) key named `action_with_args` to trigger an alternate message if an argument has been supplied.
