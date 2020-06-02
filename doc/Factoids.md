@@ -340,8 +340,10 @@ You can use the following variables in a factoid or, in some cases, as an argume
 `$0` expands to the original keyword used to invoke a factoid.
 
 ## List variables
-You may create a factoid containing a list of quoted values. When this factoid is used as a `$variable` a random value
-will be selected from the list.
+You may create a factoid containing a list of values. Each value can optionally be quoted to preserve spaces within.
+
+When this factoid is used as a `$variable` a random value will be selected from the list. You can further control
+which or how many values are chosen via [expansion modifiers](#expansion-modifiers).
 
 For example, first create a normal factoid.
 
@@ -379,7 +381,26 @@ Another example, creating the RTFM trigger:
             * PBot thwacks mauke with a big red manual.
 
 ### Expansion modifiers
-Factoid `$variables` can accept trailing expansion modifier keywords prefixed with a colon.  These can be chained together to combine their effects.
+List `$variables` can accept trailing expansion modifier keywords prefixed with a colon. These can be chained together to combine their effects.
+
+There are two categories of expansion modifiers. Selection modifiers and text modifiers.
+
+Selection modifiers control how values are chosen from the `$variable`'s list.
+
+    <pragma-> !echo $colors:pick(3)
+       <PBot> red pink green
+
+Note that modifiers may not contain spaces. `:pick(2, 3)` is invalid and must be written as `:pick(2,3)`.
+
+Modifier | Description
+--- | ---
+`:<channel>` | Looks for variable in `<channel>` first; use `global` to refer to the global channel. This modifier must be the first modifier when chained with other modifiers.
+`:index(n)` | Selects the `n`th element from the `$variable` list.
+`:pick(x)` | Selects `x` count of random elements.
+`:pick(x,y)` | Selects between `x` and `y`, inclusive, count of random elements.
+`:pick_unique(x,y)` | Selects between `x` and `y`, inclusive, count of random elements without any repeated selections.
+
+Text modifiers alter the selected values.
 
     <pragma-> !echo $colors:uc
        <PBot> RED
@@ -389,11 +410,25 @@ Factoid `$variables` can accept trailing expansion modifier keywords prefixed wi
 
 Modifier | Description
 --- | ---
-`:uc` | Uppercases the expansion
-`:lc` | Lowercases the expansion
-`:ucfirst` | Uppercases the first letter in the expansion
-`:title` | Lowercases the expansion and then uppercases the initial letter of each word
-`:<channel>` | Looks for variable in `<channel>` first; use `global` to refer to the global channel
+`:uc` | Uppercases the expansion.
+`:lc` | Lowercases the expansion.
+`:ucfirst` | Uppercases the first letter in the expansion.
+`:title` | Lowercases the expansion and then uppercases the initial letter of each word.
+
+The following text modifiers apply only to selection modifiers that return more than one selection. Using them otherwise has no effect.
+
+Modifier | Description
+--- | ---
+`:sort` | Sorts the selected list in ascending order.
+`:-sort` | Sorts the selected list in descending order.
+`:comma` | Converts a selected list to a comma-separated list.
+`:enumerate` | Converts a selected list to a comma-separated list with `and` replacing the final comma.
+
+    <pragma-> !echo $colors:pick(5):comma
+       <PBot> red, yellow, blue, dark purple, orange
+
+    <pragma-> !echo $colors:pick(5):enumerate
+       <PBot> blue, green, pink, orange and yellow
 
 ## action_with_args
 You can use the [`factset`](#factset) command to set a special [factoid metadata](#factoid-metadata) key named `action_with_args` to trigger an alternate message if an argument has been supplied.
