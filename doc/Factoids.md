@@ -398,6 +398,7 @@ Modifier | Description
 `:index(n)` | Selects the `n`th element from the `$variable` list.
 `:pick(x)` | Selects `x` count of random elements.
 `:pick(x,y)` | Selects between `x` and `y`, inclusive, count of random elements. `x` may be `0` to occasionally pick no value. In this case the `$variable` and any leading whitespace will be stripped.
+`:pick_unique(x)` | Selects `x` count of random elements without any repeated selections.
 `:pick_unique(x,y)` | Selects between `x` and `y`, inclusive, count of random elements without any repeated selections. `x` may be `0` to occasionally pick no value. In this case the `$variable` and any leading whitespace will be stripped.
 
 Text modifiers alter the selected values.
