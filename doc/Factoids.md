@@ -385,7 +385,7 @@ List `$variables` and [Selectors](Commands.md#selectors) can accept trailing exp
 
 There are two categories of expansion modifiers. Selection modifiers and text modifiers.
 
-Selection modifiers control how values are chosen from the `$variable`'s list.
+Selection modifiers control how values are chosen from the `$variable` or Selector list.
 
     <pragma-> !echo $colors:pick(3)
        <PBot> red pink green
