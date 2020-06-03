@@ -303,7 +303,7 @@ The syntax for Selectors is:
 
     %(<list of selections>)[:modifiers]
 
-`<list of selections>` is a list of items separated by a vertical bar.
+`<list of selections>` is a list of items or [`$variables`](Factoids.md#list-variables) separated by a vertical bar.
 
 `[:modifiers]` is an optional list of modifiers, each prefixed with a colon. See [expansion-modifiers](Factoids.md#expansion-modifiers).
 
