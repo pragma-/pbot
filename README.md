@@ -14,6 +14,7 @@ PBot is a versatile IRC Bot written in Perl
     * [Substitution](#substitution)
     * [Chaining](#chaining)
     * [Variables](#variables)
+    * [Selectors](#selectors)
     * [Inline invocation](#inline-invocation)
     * [Background processing](#background-processing)
   * [Extensible](#extensible)
@@ -144,6 +145,12 @@ combine their effects.
 
     <pragma-> !echo $greeting:uc
        <PBot> HELLO, WORLD
+
+#### Selectors
+You can select a random item from a selection list and interpolate the value within commands.
+
+    <pragma-> !echo This is a %(neat|cool|awesome) bot.
+       <PBot> This is a cool bot.
 
 #### Inline invocation
 You can invoke up to three commands inlined within a message.  If the message

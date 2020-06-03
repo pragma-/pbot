@@ -42,6 +42,7 @@
     * [Piping](Commands.md#piping)
     * [Substitution](Commands.md#substitution)
     * [Variables](Commands.md#variables)
+    * [Selectors](Commands.md#selectors)
     * [Background processing](Commands.md#background-processing)
   * [Types of commands](Commands.md#types-of-commands)
     * [Built-in commands](Commands.md#built-in-commands)

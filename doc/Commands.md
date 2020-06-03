@@ -10,6 +10,7 @@
   * [Piping](#piping)
   * [Substitution](#substitution)
   * [Variables](#variables)
+  * [Selectors](#selectors)
   * [Background processing](#background-processing)
 * [Types of commands](#types-of-commands)
   * [Built-in commands](#built-in-commands)
@@ -294,6 +295,25 @@ combine their effects.
 
     <pragma-> !echo $greeting:uc
        <PBot> HELLO, WORLD
+
+### Selectors
+You can select a random item from a selection list and interpolate the value within commands.
+
+The syntax for selectors is:
+
+    %(<list of selections>)[:modifiers]
+
+`<list of selections>` is a list of items separated by a vertical bar.
+
+`[:modifiers]` is an optional list of modifiers, each prefixed with a colon. See [expansion-modifiers](Factoids.md#expansion-modifiers).
+
+Examples:
+
+    <pragma-> !echo This is a %(neat|cool|awesome) bot.
+       <PBot> This is a cool bot.
+
+    <pragma-> !echo IRC is %(fun|weird|confusing|amazing):pick_unique(2):enumerate
+       <PBot> IRC is weird and fun
 
 ### Background processing
 Any command can be flagged to be executed as a background process. For example, suppose you
