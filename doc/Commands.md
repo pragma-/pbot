@@ -299,7 +299,7 @@ combine their effects.
 ### Selectors
 You can select a random item from a selection list and interpolate the value within commands.
 
-The syntax for selectors is:
+The syntax for Selectors is:
 
     %(<list of selections>)[:modifiers]
 
