@@ -455,8 +455,6 @@ sub select_item {
     my ($self, $list, $modifier) = @_;
     my %settings;
 
-    $self->{pbot}->{logger}->log("Picking from list (" . (join ', ', @$list) . ") with modifier [$modifier]\n");
-
     foreach my $mod (split /:/, $modifier) {
         next if not length $mod;
         if ($mod =~ s/([,.#:-]+)$//) {
@@ -598,12 +596,7 @@ sub select_item {
         }
     }
 
-    if (wantarray) {
-        my @items = ($item);
-        return @items;
-    }
-
-    return $item;
+    return wantarray ? ($item) : $item;
 }
 
 sub expand_factoid_selectors {
