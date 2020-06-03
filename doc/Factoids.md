@@ -383,16 +383,16 @@ Another example, creating the RTFM trigger:
 ### Expansion modifiers
 List `$variables` and [Selectors](Commands.md#selectors) can accept trailing expansion modifier keywords prefixed with a colon. These can be chained together to combine their effects.
 
-There are two categories of expansion modifiers. Selection modifiers and text modifiers.
+There are three categories of expansion modifiers. Selector, Selection and text modifiers.
 
-Selection modifiers control how values are chosen from the `$variable` or Selector list.
+Selector modifiers control how values are chosen from the `$variable` or Selector list.
 
     <pragma-> !echo $colors:pick(3)
        <PBot> red pink green
 
 Note that modifiers may not contain spaces. `:pick(2, 3)` is invalid and must be written as `:pick(2,3)`.
 
-Modifier | Description
+Selector Modifier | Description
 --- | ---
 `:<channel>` | Looks for variable in `<channel>` first; use `global` to refer to the global channel. This modifier must be the first modifier when chained with other modifiers.
 `:index(n)` | Selects the `n`th element from the `$variable` list.
@@ -401,24 +401,9 @@ Modifier | Description
 `:pick_unique(x)` | Selects `x` count of random elements without any repeated selections.
 `:pick_unique(x,y)` | Selects between `x` and `y`, inclusive, count of random elements without any repeated selections. `x` may be `0` to occasionally pick no value. In this case the `$variable` and any leading whitespace will be stripped.
 
-Text modifiers alter the selected values.
+Selection modifiers apply only to selector modifiers that return more than one selection. Using them otherwise has no effect.
 
-    <pragma-> !echo $colors:uc
-       <PBot> RED
-
-    <pragma-> !echo $colors:ucfirst
-       <PBot> Blue
-
-Modifier | Description
---- | ---
-`:uc` | Uppercases the expansion.
-`:lc` | Lowercases the expansion.
-`:ucfirst` | Uppercases the first letter in the expansion.
-`:title` | Lowercases the expansion and then uppercases the initial letter of each word.
-
-The following text modifiers apply only to selection modifiers that return more than one selection. Using them otherwise has no effect.
-
-Modifier | Description
+Selection Modifier | Description
 --- | ---
 `:sort` | Sorts the selected list in ascending order.
 `:-sort` | Sorts the selected list in descending order.
@@ -430,6 +415,21 @@ Modifier | Description
 
     <pragma-> !echo $colors:pick(5):enumerate
        <PBot> blue, green, dark purple, orange and bright yellow
+
+And finally, text modifiers alter the selected values.
+
+    <pragma-> !echo $colors:uc
+       <PBot> RED
+
+    <pragma-> !echo $colors:ucfirst
+       <PBot> Blue
+
+Text Modifier | Description
+--- | ---
+`:uc` | Uppercases the expansion.
+`:lc` | Lowercases the expansion.
+`:ucfirst` | Uppercases the first letter in the expansion.
+`:title` | Lowercases the expansion and then uppercases the initial letter of each word.
 
 ## action_with_args
 You can use the [`factset`](#factset) command to set a special [factoid metadata](#factoid-metadata) key named `action_with_args` to trigger an alternate message if an argument has been supplied.
