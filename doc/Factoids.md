@@ -381,7 +381,7 @@ Another example, creating the RTFM trigger:
             * PBot thwacks mauke with a big red manual.
 
 ### Expansion modifiers
-List `$variables` and Selectors can accept trailing expansion modifier keywords prefixed with a colon. These can be chained together to combine their effects.
+List `$variables` and [Selectors](Commands.md#selectors) can accept trailing expansion modifier keywords prefixed with a colon. These can be chained together to combine their effects.
 
 There are two categories of expansion modifiers. Selection modifiers and text modifiers.
 
