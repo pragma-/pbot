@@ -467,6 +467,10 @@ sub select_item {
             $settings{'trailing-punct'} = $1;
         }
 
+        if ($mod =~ /^join\((.?)\)$/) {
+            $settings{'join'} = $1;
+        }
+
         if ($mod eq 'comma') {
             $settings{'comma'} = 1;
             next;
@@ -570,7 +574,10 @@ sub select_item {
 
         return @choices if wantarray;
 
-        if ($settings{'enumerate'} or $settings{'comma'}) {
+        if (exists $settings{'join'}) {
+            my $sep = $settings{'join'};
+            $item = join $sep, @choices;
+        } elsif ($settings{'enumerate'} or $settings{'comma'}) {
             $item = join ', ', @choices;
             $item =~ s/(.*), /$1 and / if $settings{'enumerate'};
         } else {
