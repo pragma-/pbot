@@ -315,6 +315,19 @@ Examples:
     <pragma-> !echo IRC is %(fun|weird|confusing|amazing):pick_unique(2):enumerate
        <PBot> IRC is weird and fun
 
+You can use Selectors to create a command that picks randomly from a list of commands!
+
+Example:
+
+    <pragma-> !factadd lart /call %(kick|slap|insult) $args
+       <PBot> lart added
+
+    <pragma-> !lart someuser
+       <PBot> someuser: If I ever need a brain transplant, I'd choose yours because I'd want a brain that had never been used.
+
+    <pragma-> !lart someuser
+            * PBot slaps someuser with a large rabid turkey.
+
 ### Background processing
 Any command can be flagged to be executed as a background process. For example, suppose you
 make a Plugin that has a command that may potentially take a long time to complete, which could
