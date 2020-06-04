@@ -451,6 +451,91 @@ sub expand_special_vars {
     return validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
 
+sub parse_expansion_modifiers {
+    my ($self, $modifier) = @_;
+
+    my %settings;
+
+    while ($$modifier =~ s/^\s*:\s*//) {
+        if ($$modifier =~ s/^join\s*//) {
+            my ($params, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($$modifier, '(', ')', '', 1);
+            $$modifier = $rest;
+            my @args = $self->{pbot}->{interpreter}->split_line($params, strip_quotes => 1, strip_commas => 1);
+            $settings{'join'} = $args[0];
+            next;
+        }
+
+        if ($$modifier=~ s/^comma//) {
+            $settings{'comma'} = 1;
+            next;
+        }
+
+        if ($$modifier=~ s/^enumerate//) {
+            $settings{'enumerate'} = 1;
+            next;
+        }
+
+        if ($$modifier=~ s/^\+?sort//) {
+            $settings{'sort+'} = 1;
+            next;
+        }
+
+        if ($$modifier=~ s/^\-sort//) {
+            $settings{'sort-'} = 1;
+            next;
+        }
+
+        if ($$modifier=~ s/^pick_unique\s*//) {
+            my ($params, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($$modifier, '(', ')', '', 1);
+            $$modifier = $rest;
+            my @args = $self->{pbot}->{interpreter}->split_line($params, strip_quotes => 1, strip_commas => 1);
+
+            $settings{'pick'} = 1;
+            $settings{'unique'} = 1;
+
+            if (@args == 2) {
+                $settings{'random'} = 1;
+                $settings{'pick_min'} = $args[0];
+                $settings{'pick_max'} = $args[1];
+            } else {
+                $settings{'pick_min'} = 1;
+                $settings{'pick_max'} = $args[0];
+            }
+
+            next;
+        }
+
+        if ($$modifier=~ s/^pick\s*//) {
+            my ($params, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($$modifier, '(', ')', '', 1);
+            $$modifier = $rest;
+            my @args = $self->{pbot}->{interpreter}->split_line($params, strip_quotes => 1, strip_commas => 1);
+
+            $settings{'pick'} = 1;
+
+            if (@args == 2) {
+                $settings{'random'} = 1;
+                $settings{'pick_min'} = $args[0];
+                $settings{'pick_max'} = $args[1];
+            } else {
+                $settings{'pick_min'} = 1;
+                $settings{'pick_max'} = $args[0];
+            }
+
+            next;
+        }
+
+        if ($$modifier=~ s/^index\s*//) {
+            my ($params, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($$modifier, '(', ')', '', 1);
+            $$modifier = $rest;
+            my @args = $self->{pbot}->{interpreter}->split_line($params, strip_quotes => 1, strip_commas => 1);
+            $settings{'index'} = $args[0];
+            next;
+        }
+    }
+
+    return %settings;
+}
+
 sub select_item {
     my ($self, $list, $modifier, %opts) = @_;
 
@@ -460,74 +545,7 @@ sub select_item {
 
     %opts = (%default_opts, %opts);
 
-    my %settings;
-    foreach my $mod (split /:/, $modifier) {
-        next if not length $mod;
-        if ($mod =~ s/([,.#:-]+)$//) {
-            $settings{'trailing-punct'} = $1;
-        }
-
-        if ($mod =~ /^join\((.?)\)$/) {
-            $settings{'join'} = $1;
-        }
-
-        if ($mod eq 'comma') {
-            $settings{'comma'} = 1;
-            next;
-        }
-
-        if ($mod eq 'enumerate') {
-            $settings{'enumerate'} = 1;
-            next;
-        }
-
-        if ($mod =~ /^\+?sort$/) {
-            $settings{'sort+'} = 1;
-            next;
-        }
-
-        if ($mod =~ /^\-sort$/) {
-            $settings{'sort-'} = 1;
-            next;
-        }
-
-        if ($mod =~ /^pick\((\-?\d+),(\-?\d+)\)$/) {
-            $settings{'pick'} = 1;
-            $settings{'random'} = 1;
-            $settings{'pick_min'} = $1;
-            $settings{'pick_max'} = $2;
-            next;
-        }
-
-        if ($mod =~ /^pick\((\-?\d+)\)$/) {
-            $settings{'pick'} = 1;
-            $settings{'pick_min'} = 1;
-            $settings{'pick_max'} = $1;
-            next;
-        }
-
-        if ($mod =~ /^pick_unique\((\-?\d+),(\-?\d+)\)$/) {
-            $settings{'pick'} = 1;
-            $settings{'random'} = 1;
-            $settings{'unique'} = 1;
-            $settings{'pick_min'} = $1;
-            $settings{'pick_max'} = $2;
-            next;
-        }
-
-        if ($mod =~ /^pick_unique\((\-?\d+)\)$/) {
-            $settings{'pick'} = 1;
-            $settings{'unique'} = 1;
-            $settings{'pick_min'} = 1;
-            $settings{'pick_max'} = $1;
-            next;
-        }
-
-        if ($mod =~ /^index\((\-?\d+)\)$/) {
-            $settings{'index'} = $1;
-            next;
-        }
-    }
+    my %settings = $self->parse_expansion_modifiers($modifier);
 
     my $item;
 
@@ -576,6 +594,7 @@ sub select_item {
 
         if (exists $settings{'join'}) {
             my $sep = $settings{'join'};
+            $sep = '' if not defined $sep;
             $item = join $sep, @choices;
         } elsif ($settings{'enumerate'} or $settings{'comma'}) {
             $item = join ', ', @choices;
@@ -589,27 +608,20 @@ sub select_item {
         if (not $item =~ s/^"(.*)"$/$1/) { $item =~ s/^'(.*)'$/$1/; }
     }
 
-    if ($settings{'trailing-punct'}) {
-        $item .= $settings{'trailing-punct'};
+    if ($settings{'uc'}) { $item = uc $item; }
+
+    if ($settings{'lc'}) { $item = lc $item; }
+
+    if ($settings{'ucfirst'}) { $item = ucfirst $item; }
+
+    if ($settings{'title'}) {
+        $item = ucfirst lc $item;
+        $item =~ s/ (\w)/' ' . uc $1/ge;
     }
 
-    foreach my $mod (split /:/, $modifier) {
-        next if not length $mod;
-        $mod =~ s/,$//;
+    if ($settings{'json'}) { $item = $self->escape_json($item); }
 
-        given ($mod) {
-            when ('uc')      { $item = uc $item; }
-            when ('lc')      { $item = lc $item; }
-            when ('ucfirst') { $item = ucfirst $item; }
-            when ('title') {
-                $item = ucfirst lc $item;
-                $item =~ s/ (\w)/' ' . uc $1/ge;
-            }
-            when ('json') { $item = $self->escape_json($item); }
-        }
-    }
-
-    return wantarray ? ($item) : $item;
+    return $item;
 }
 
 sub expand_factoid_selectors {
@@ -634,12 +646,6 @@ sub expand_factoid_selectors {
 
         last if not length $extracted;
 
-        my $modifier = '';
-
-        if ($rest =~ s/^(:[^ |]+)//) {
-            $modifier = $1;
-        }
-
         if ($extracted =~ /(.*?)(?<!\\)%\s*\(.*\)/) {
             $extracted = $self->expand_factoid_selectors($context, $extracted, nested => 1);
         }
@@ -652,14 +658,13 @@ sub expand_factoid_selectors {
             push @list, @items;
         }
 
-        my $item = $self->select_item(\@list, $modifier, %opts);
+        my $item = $self->select_item(\@list, \$rest, %opts);
 
         $result .= $item;
         $action = $rest;
     }
 
     $result .= $action;
-
     return $result;
 }
 
@@ -693,7 +698,7 @@ sub expand_factoid_vars {
         $action =~ s/(?<!\\)\$0/$root_keyword/g;
         my $const_action = $action;
 
-        while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$(?:(\{[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:+-]+)?\}|[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:+-]+)?))/gi) {
+        while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$(?:(\{[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:'"+-]+)?\}|[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:'"+-]+)?))/gi) {
             my ($indefinite_article, $v) = ($1, $2);
             $indefinite_article = '' if not defined $indefinite_article;
             next if not defined $v;
@@ -738,15 +743,15 @@ sub expand_factoid_vars {
                 my @replacements;
 
                 if (wantarray) {
-                    @replacements = $self->select_item(\@list, $modifier, %opts);
+                    @replacements = $self->select_item(\@list, \$modifier, %opts);
                 } else {
-                    push @replacements, scalar $self->select_item(\@list, $modifier, %opts);
+                    push @replacements, scalar $self->select_item(\@list, \$modifier, %opts);
                 }
 
                 foreach my $replacement (@replacements) {
                     foreach my $mod (split /:/, $modifier) {
-                        next if not length $mod;
                         $mod =~ s/,$//;
+                        next if not length $mod;
 
                         if ($replacement =~ /^\$\{\$([a-zA-Z0-9_:#]+)\}(.*)$/) {
                             $replacement = "\${\$$1:$mod}$2";
