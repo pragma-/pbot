@@ -517,6 +517,7 @@ sub split_line {
         strip_quotes     => 0,
         keep_spaces      => 0,
         preserve_escapes => 1,
+        strip_commas     => 0,
     );
 
     %opts = (%default_opts, %opts);
@@ -588,7 +589,7 @@ sub split_line {
             next;
         }
 
-        if (($last_ch =~ /[\s:{(\[.+=]/) and not defined $quote and ($ch eq "'" or $ch eq '"')) {
+        if (($last_ch =~ /[\s:{(\[.+=,]/) and not defined $quote and ($ch eq "'" or $ch eq '"')) {
             if ($ignore_quote) {
                 # treat unbalanced quote as part of this argument
                 $token .= $ch;
@@ -603,12 +604,14 @@ sub split_line {
             next;
         }
 
-        if ($ch eq ' ' or $ch eq "\n" or $ch eq "\t") {
+        if ($ch eq ' ' or $ch eq "\n" or $ch eq "\t" or ($opts{strip_commas} and $ch eq ',')) {
             if (++$spaces > 1 and $opts{keep_spaces}) {
                 $token .= $ch;
                 next;
             } else {
-                push @args, $token if length $token;
+                unless ($opts{strip_commas} and $token eq ',') {
+                    push @args, $token if length $token;
+                }
                 $token = '';
                 next;
             }
@@ -703,13 +706,32 @@ sub split_args {
     }
 
     # join the get rest as a string
-    my $rest;
+    my $rest = '';
     if ($preserve_quotes) {
         # get from second half of args, which contains quotes
-        $rest = join ' ', @$args[@$args / 2 + $i .. @$args - 1];
+        # and don't insert space before separators
+        my $sep = '';
+        my $last_quoted = 0;
+        foreach my $arg (@$args[@$args / 2 + $i .. @$args - 1]) {
+            if ($arg =~ m/^[,;)+!.?-]/ and $last_quoted) {
+                $sep = '';
+            } else {
+                $sep = ' ';
+            }
+
+            $rest .= $sep unless not length $rest;
+            $rest .= $arg;
+
+            if ($arg =~ /["']$/) {
+                $last_quoted = 1;
+            } else {
+                $last_quoted = 0;
+            }
+        }
     } else {
         $rest = join ' ', @$args[$i .. $max - 1];
     }
+
     push @result, $rest if length $rest;
     return @result;
 }
