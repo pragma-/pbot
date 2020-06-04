@@ -328,7 +328,7 @@ Example:
     <pragma-> !lart someuser
             * PBot slaps someuser with a large rabid turkey.
 
-To allow an unpriviliged (not botowner, admin or chanop, etc) to use the `kick` command within the `lart` command, you must
+To allow an unprivileged (not bot owner, admin, etc) user to use the `kick` command within the `lart` command, you must
 set the `cap-override` [Factoid metadata](Factoids.md#factoid-metadata):
 
     <pragma-> !factset lart cap-override can-kick 1
