@@ -328,6 +328,11 @@ Example:
     <pragma-> !lart someuser
             * PBot slaps someuser with a large rabid turkey.
 
+To allow an unpriviliged (not botowner, admin or chanop, etc) to use the `kick` command within the `lart` command, you must
+set the `cap-override` [Factoid metadata](Factoids.md#factoid-metadata):
+
+    <pragma-> !factset lart cap-override can-kick 1
+
 ### Background processing
 Any command can be flagged to be executed as a background process. For example, suppose you
 make a Plugin that has a command that may potentially take a long time to complete, which could
