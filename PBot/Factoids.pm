@@ -452,9 +452,15 @@ sub expand_special_vars {
 }
 
 sub select_item {
-    my ($self, $list, $modifier) = @_;
-    my %settings;
+    my ($self, $list, $modifier, %opts) = @_;
 
+    my %default_opts = (
+        nested => 0,
+    );
+
+    %opts = (%default_opts, %opts);
+
+    my %settings;
     foreach my $mod (split /:/, $modifier) {
         next if not length $mod;
         if ($mod =~ s/([,.#:-]+)$//) {
@@ -532,7 +538,7 @@ sub select_item {
     } elsif ($settings{'pick'}) {
         my $min = $settings{'pick_min'};
         my $max = $settings{'pick_max'};
-        $max = @$list if $max > @$list;
+        $max = @$list if $settings{'unique'} and $max > @$list;
         $min = $max if $min > $max;
 
         my $count = $max;
@@ -568,7 +574,7 @@ sub select_item {
             $item = join ', ', @choices;
             $item =~ s/(.*), /$1 and / if $settings{'enumerate'};
         } else {
-            $item = "@choices";
+            $item = $opts{nested} ? join('|', @choices) : "@choices";
         }
     } else {
         $item = $list->[rand @$list];
@@ -600,7 +606,13 @@ sub select_item {
 }
 
 sub expand_factoid_selectors {
-    my ($self, $context, $action) = @_;
+    my ($self, $context, $action, %opts) = @_;
+
+    my %default_opts = (
+        nested => 0,
+    );
+
+    %opts = (%default_opts, %opts);
 
     my $result = '';
 
@@ -617,18 +629,23 @@ sub expand_factoid_selectors {
 
         my $modifier = '';
 
-        if ($rest =~ s/^(:[^ ]+)//) {
+        if ($rest =~ s/^(:[^ |]+)//) {
             $modifier = $1;
         }
 
+        if ($extracted =~ /(.*?)(?<!\\)%\s*\(.*\)/) {
+            $extracted = $self->expand_factoid_selectors($context, $extracted, nested => 1);
+        }
+
         my @list;
-        foreach my $item (split /\s*\|\s*/, $extracted) {
+        foreach my $item (split /\s*(?<!\\)\|\s*/, $extracted) {
             $item =~ s/^\s+|\s+$//g;
-            my @items = $self->expand_factoid_vars($context, $item);
+            $item =~ s/\\\|/|/g;
+            my @items = $self->expand_factoid_vars($context, $item, %opts);
             push @list, @items;
         }
 
-        my $item = $self->select_item(\@list, $modifier);
+        my $item = $self->select_item(\@list, $modifier, %opts);
 
         $result .= $item;
         $action = $rest;
@@ -640,7 +657,13 @@ sub expand_factoid_selectors {
 }
 
 sub expand_factoid_vars {
-    my ($self, $context, $action, @exclude) = @_;
+    my ($self, $context, $action, %opts) = @_;
+
+    my %default_opts = (
+        nested => 0,
+    );
+
+    %opts = (%default_opts, %opts);
 
     my $from         = length $context->{ref_from} ? $context->{ref_from} : $context->{from};
     my $nick         = $context->{nick};
@@ -674,7 +697,6 @@ sub expand_factoid_vars {
             $test_v =~ s/(.):$/$1/;    # remove trailing : only if at least one character precedes it
             next if $test_v =~ m/^_/;                                                                      # special character prefix skipped for shell/code-factoids/etc
             next if $test_v =~ m/^(?:nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])(?:\:json)*$/i;    # don't override special variables
-            next if @exclude && grep { $test_v =~ m/^\Q$_\E$/i } @exclude;
             last if ++$depth >= 1000;
 
             $matches++;
@@ -709,9 +731,9 @@ sub expand_factoid_vars {
                 my @replacements;
 
                 if (wantarray) {
-                    @replacements = $self->select_item(\@list, $modifier);
+                    @replacements = $self->select_item(\@list, $modifier, %opts);
                 } else {
-                    push @replacements, scalar $self->select_item(\@list, $modifier);
+                    push @replacements, scalar $self->select_item(\@list, $modifier, %opts);
                 }
 
                 foreach my $replacement (@replacements) {
@@ -756,7 +778,7 @@ sub expand_factoid_vars {
                     return @replacements;
                 }
 
-                my $replacement = "@replacements";
+                my $replacement = $opts{nested} ? join('|', @replacements) : "@replacements";
 
                 $original_v = quotemeta $original_v;
                 $original_v =~ s/\\:/:/g;
@@ -776,7 +798,7 @@ sub expand_factoid_vars {
         last if $matches == 0 or $expansions == 0;
     }
 
-    unless (@exclude) { $action = $self->expand_special_vars($from, $nick, $root_keyword, $action); }
+    $action = $self->expand_special_vars($from, $nick, $root_keyword, $action);
 
     $action =~ s/\\\$/\$/g;
 
