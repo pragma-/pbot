@@ -698,7 +698,7 @@ sub cmd_factrem {
 
     if ($factoids->get_data($channel, $trigger, 'type') eq 'module') { return "/say $trigger_name is not a factoid."; }
 
-    if ($channel =~ /^#/ and $from_chan =~ /^#/ and $channel ne $from_chan) {
+    if ($channel =~ /^#/ and $from_chan =~ /^#/ and lc $channel ne lc $from_chan) {
         return "/say $trigger_name belongs to $channel_name, but this is $from_chan. Please switch to $channel_name or use /msg to remove this factoid.";
     }
 
@@ -1134,7 +1134,7 @@ sub cmd_factchange {
 
     $from_chan = '.*' if $from_chan eq 'global';
 
-    if ($channel =~ /^#/ and $from_chan =~ /^#/ and $channel ne $from_chan) {
+    if ($channel =~ /^#/ and $from_chan =~ /^#/ and lc $channel ne lc $from_chan) {
         return "/say $trigger_name belongs to $channel_name, but this is $from_chan. Please switch to $channel_name or use /msg to change this factoid.";
     }
 
@@ -1484,7 +1484,7 @@ sub find_factoid_with_optional_channel {
     $channel   = '.*' if $channel eq 'global';
     $from_chan = '.*' if $channel eq 'global';
 
-    if ($opts{explicit} and $channel =~ /^#/ and $from_chan =~ /^#/ and $channel ne $from_chan) {
+    if ($opts{explicit} and $channel =~ /^#/ and $from_chan =~ /^#/ and lc $channel ne lc $from_chan) {
         my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
         my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
         $channel_name = 'global'            if $channel_name eq '.*';
