@@ -712,7 +712,7 @@ sub cmd_factrem {
 
     $self->{pbot}->{logger}->log("$context->{hostmask} removed [$channel][$trigger][" . $factoids->get_data($channel, $trigger, 'action') . "]\n");
     $self->log_factoid($channel, $trigger, $context->{hostmask}, "deleted", 1);
-    return $self->{pbot}->{factoids}->remove_factoid($channel, $trigger);
+    return '/say '. $self->{pbot}->{factoids}->remove_factoid($channel, $trigger);
 }
 
 sub cmd_factshow {
@@ -1456,7 +1456,7 @@ sub find_factoid_with_optional_channel {
         }
 
         if (@factoids > 1) {
-            if ($needs_disambig or not grep { $_->[0] eq $from_chan } @factoids) {
+            if ($needs_disambig or not grep { lc $_->[0] eq $from_chan } @factoids) {
                 unless ($opts{explicit}) {
                     foreach my $factoid (@factoids) {
                         if ($factoid->[0] eq '.*') { ($channel, $trigger) = ($factoid->[0], $factoid->[1]); }
@@ -1484,7 +1484,7 @@ sub find_factoid_with_optional_channel {
     $channel   = '.*' if $channel eq 'global';
     $from_chan = '.*' if $channel eq 'global';
 
-    if ($opts{explicit} and $channel =~ /^#/ and $from_chan =~ /^#/ and lc $channel ne lc $from_chan) {
+    if ($opts{explicit} and $channel =~ /^#/ and $from_chan =~ /^#/ and lc $channel ne $from_chan) {
         my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
         my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
         $channel_name = 'global'            if $channel_name eq '.*';
