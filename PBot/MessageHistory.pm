@@ -236,20 +236,21 @@ sub cmd_recall_message {
         chomp $getopt_error;
     };
 
-    my $recall_text = '';
+    my $result = '';
     Getopt::Long::Configure("bundling_override");
 
     # global state
     my ($recall_channel, $raw, $random);
 
     foreach my $recall (@recalls) {
-        my ($recall_nick, $recall_history, $recall_before, $recall_after, $recall_context, $recall_count);
+        my ($recall_nick, $recall_text, $recall_history, $recall_before, $recall_after, $recall_context, $recall_count);
 
         my @opt_args = $self->{pbot}->{interpreter}->split_line($recall, strip_quotes => 1);
         GetOptionsFromArray(
             \@opt_args,
             'channel|c:s'        => \$recall_channel,
-            'text|t|history|h:s' => \$recall_history,
+            'history|h:s'        => \$recall_history,
+            'text|t:s'           => \$recall_text,
             'before|b:i'         => \$recall_before,
             'after|a:i'          => \$recall_after,
             'count|n:i'          => \$recall_count,
@@ -260,12 +261,30 @@ sub cmd_recall_message {
 
         return "/say $getopt_error -- $usage" if defined $getopt_error;
 
+        if (defined $recall_history and defined $recall_history) {
+            return "/say $context->{nick}: The -h and -t options cannot be used together.";
+        }
+
+        # we swap these $recall variables around so much later on that we
+        # need to remember which flags were explicitly set...
         my $channel_arg = 1 if defined $recall_channel;
         my $history_arg = 1 if defined $recall_history;
 
         $recall_nick    = shift @opt_args if @opt_args;
-        $recall_history = shift @opt_args if @opt_args and not $history_arg;
-        $recall_channel = "@opt_args" if @opt_args and not $channel_arg;
+        $recall_history = shift @opt_args if @opt_args and not $history_arg and not defined $recall_text;
+
+        if (not $channel_arg) {
+            $recall_channel = "@opt_args" if @opt_args;
+        } else {
+            if (defined $recall_history) {
+                $recall_history .= ' ';
+            }
+            $recall_history .= "@opt_args" if @opt_args;
+        }
+
+        if (defined $recall_text and not defined $recall_history) {
+            $recall_history = $recall_text;
+        }
 
         $recall_count = 1 if (not defined $recall_count) || ($recall_count <= 0);
         return "You may only select a count of up to 100 messages." if $recall_count > 100;
@@ -333,7 +352,7 @@ sub cmd_recall_message {
 
         if ($random) {
             $message = $self->{database}->get_random_message($account, $recall_channel);
-        } elsif ($recall_history =~ /^\d+$/) {
+        } elsif ($recall_history =~ /^\d+$/ and not defined $recall_text) {
             # integral history
             if (defined $account) {
                 my $max_messages = $self->{database}->get_max_messages($account, $recall_channel);
@@ -375,8 +394,8 @@ sub cmd_recall_message {
         foreach my $msg (@$messages) {
             if ($max_recall_time && gettimeofday - $msg->{timestamp} > $max_recall_time && not $self->{pbot}->{users}->loggedin_admin($context->{from}, $context->{hostmask})) {
                 $max_recall_time = duration($max_recall_time);
-                $recall_text .= "Sorry, you can not recall messages older than $max_recall_time.";
-                return $recall_text;
+                $result .= "Sorry, you can not recall messages older than $max_recall_time.";
+                return $result;
             }
 
             my $text = $msg->{msg};
@@ -388,16 +407,16 @@ sub cmd_recall_message {
                 or $text =~ s/^(JOIN|PART)\b/lc "$1ed"/e)
             {
                 $text =~ s/^(quit) (.*)/$1 ($2)/;    # fix ugly "[nick] quit Quit: Leaving."
-                $recall_text .= $raw ? "$text\n" : "[$ago] $msg->{nick} $text\n";
+                $result .= $raw ? "$text\n" : "[$ago] $msg->{nick} $text\n";
             } elsif ($text =~ s/^\/me\s+//) {
-                $recall_text .= $raw ? "$text\n" : "[$ago] * $msg->{nick} $text\n";
+                $result .= $raw ? "$text\n" : "[$ago] * $msg->{nick} $text\n";
             } else {
-                $recall_text .= $raw ? "$text\n" : "[$ago] <$msg->{nick}> $text\n";
+                $result .= $raw ? "$text\n" : "[$ago] <$msg->{nick}> $text\n";
             }
         }
     }
 
-    return $recall_text;
+    return $result;
 }
 
 sub cmd_rebuild_aliases {
