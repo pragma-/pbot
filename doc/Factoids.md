@@ -409,12 +409,19 @@ Selection Modifier | Description
 `:-sort` | Sorts the selected list in descending order.
 `:comma` | Converts a selected list to a comma-separated list.
 `:enumerate` | Converts a selected list to a comma-separated list with `and` replacing the final comma.
+`:join([s])` | Converts a selected list to an `s`-separated list. `s` is a string optionally enclosed in quotes.
 
     <pragma-> !echo $colors:pick(5):comma
        <PBot> red, bright yellow, blue, dark purple, orange
 
     <pragma-> !echo $colors:pick(5):enumerate
        <PBot> blue, green, dark purple, orange and bright yellow
+
+    <pragma-> !echo $colors:pick(5):join('::')
+       <PBot> red::orange::bright yellow::green
+
+    <pragma-> !echo $colors:pick(3):join()
+       <PBot> greenorangeblue
 
 And finally, text modifiers alter the selected values.
 
