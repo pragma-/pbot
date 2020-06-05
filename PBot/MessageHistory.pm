@@ -261,7 +261,7 @@ sub cmd_recall_message {
 
         return "/say $getopt_error -- $usage" if defined $getopt_error;
 
-        if (defined $recall_history and defined $recall_history) {
+        if (defined $recall_history and defined $recall_text) {
             return "/say $context->{nick}: The -h and -t options cannot be used together.";
         }
 
