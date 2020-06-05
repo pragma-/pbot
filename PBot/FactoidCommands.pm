@@ -1108,7 +1108,7 @@ sub cmd_factchange {
     }
 
     if (@factoids > 1) {
-        if (not grep { $_->[0] eq $from_chan } @factoids) {
+        if (not grep { lc $_->[0] eq $from_chan } @factoids) {
             return
                 "/say $from_trigger found in multiple channels: "
               . (join ', ', sort map { $_->[0] eq '.*' ? 'global' : $_->[0] } @factoids)
@@ -1470,7 +1470,7 @@ sub find_factoid_with_optional_channel {
                 }
             } else {
                 foreach my $factoid (@factoids) {
-                    if ($factoid->[0] eq $from_chan) {
+                    if (lc $factoid->[0] eq $from_chan) {
                         ($channel, $trigger) = ($factoid->[0], $factoid->[1]);
                         last;
                     }
