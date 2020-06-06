@@ -390,8 +390,6 @@ Selector modifiers control how values are chosen from the `$variable` or Selecto
     <pragma-> !echo $colors:pick(3)
        <PBot> red pink green
 
-Note that modifiers may not contain spaces. `:pick(2, 3)` is invalid and must be written as `:pick(2,3)`.
-
 Selector Modifier | Description
 --- | ---
 `:<channel>` | Looks for variable in `<channel>` first; use `global` to refer to the global channel. This modifier must be the first modifier when chained with other modifiers.
