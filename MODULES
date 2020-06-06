@@ -28,7 +28,6 @@ Module::Refresh
 Net::Dict
 Parse::RecDescent
 Proc::ProcessTable
-SOAP::Lite
 String::LCSS
 Storable
 Text::Autoformat
