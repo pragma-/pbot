@@ -535,8 +535,9 @@ sub make_list {
     my ($self, $context, $extracted, $settings, %opts) = @_;
 
     if ($extracted =~ /(.*?)(?<!\\)%\s*\(.*\)/) {
-        $opts{nested} = 1;
+        $opts{nested}++;
         $extracted = $self->expand_factoid_selectors($context, $extracted, %opts);
+        $opts{nested}--;
     }
 
     my @list;
@@ -544,24 +545,21 @@ sub make_list {
         $item =~ s/^\s+|\s+$//g;
         $item =~ s/\\\|/|/g;
 
-        my @items = $self->expand_factoid_vars($context, $item, %opts);
 
-        foreach $item (@items) {
-            if ($settings->{'uc'}) { $item = uc $item; }
+        if ($settings->{'uc'}) { $item = uc $item; }
 
-            if ($settings->{'lc'}) { $item = lc $item; }
+        if ($settings->{'lc'}) { $item = lc $item; }
 
-            if ($settings->{'ucfirst'}) { $item = ucfirst $item; }
+        if ($settings->{'ucfirst'}) { $item = ucfirst $item; }
 
-            if ($settings->{'title'}) {
-                $item = ucfirst lc $item;
-                $item =~ s/ (\w)/' ' . uc $1/ge;
-            }
-
-            if ($settings->{'json'}) { $item = $self->escape_json($item); }
+        if ($settings->{'title'}) {
+            $item = ucfirst lc $item;
+            $item =~ s/ (\w)/' ' . uc $1/ge;
         }
 
-        push @list, @items;
+        if ($settings->{'json'}) { $item = $self->escape_json($item); }
+
+        push @list, $item;
     }
 
     if ($settings->{'unique'}) {
@@ -584,20 +582,8 @@ sub make_list {
 sub select_item {
     my ($self, $context, $extracted, $modifier, %opts) = @_;
 
-    my %default_opts = (
-        nested => 0,
-    );
-
-    %opts = (%default_opts, %opts);
 
     my %settings = $self->parse_expansion_modifiers($modifier);
-
-    if ($opts{nested}) {
-        my $list = $self->make_list($context, $extracted, \%settings, %opts);
-        @$list = map { $_ .= $$modifier } @$list;
-        $$modifier = '';
-        return join ('|', @$list);
-    }
 
     my $item;
 
