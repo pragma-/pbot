@@ -1284,7 +1284,9 @@ sub handle_action {
     $self->{pbot}->{logger}
       ->log("(" . (defined $context->{from} ? $context->{from} : "(undef)") . "): $context->{nick}!$context->{user}\@$context->{host}: $trigger_name: action: \"$action\"\n");
 
-    if ($self->{factoids}->get_data($channel, $keyword, 'enabled') == 0) {
+    my $enabled = $self->{factoids}->get_data($channel, $keyword, 'enabled');
+
+    if (defined $enabled and $enabled == 0) {
         $self->{pbot}->{logger}->log("$trigger_name disabled.\n");
         return "/msg $context->{nick} ${ref_from}$trigger_name is currently disabled.";
     }
