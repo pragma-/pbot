@@ -465,16 +465,6 @@ sub parse_expansion_modifiers {
             next;
         }
 
-        if ($$modifier=~ s/^comma//) {
-            $settings{'comma'} = 1;
-            next;
-        }
-
-        if ($$modifier=~ s/^enumerate//) {
-            $settings{'enumerate'} = 1;
-            next;
-        }
-
         if ($$modifier=~ s/^\+?sort//) {
             $settings{'sort+'} = 1;
             next;
@@ -531,13 +521,68 @@ sub parse_expansion_modifiers {
             $settings{'index'} = $args[0];
             next;
         }
+
+        # catch-all for any word modifier
+        if ($$modifier =~ s/^(\w+)//) {
+            $settings{$1} = 1;
+        }
     }
 
     return %settings;
 }
 
+sub make_list {
+    my ($self, $context, $extracted, $settings, %opts) = @_;
+
+    if ($extracted =~ /(.*?)(?<!\\)%\s*\(.*\)/) {
+        $opts{nested} = 1;
+        $extracted = $self->expand_factoid_selectors($context, $extracted, %opts);
+    }
+
+    my @list;
+    foreach my $item (split /\s*(?<!\\)\|\s*/, $extracted) {
+        $item =~ s/^\s+|\s+$//g;
+        $item =~ s/\\\|/|/g;
+
+        my @items = $self->expand_factoid_vars($context, $item, %opts);
+
+        foreach $item (@items) {
+            if ($settings->{'uc'}) { $item = uc $item; }
+
+            if ($settings->{'lc'}) { $item = lc $item; }
+
+            if ($settings->{'ucfirst'}) { $item = ucfirst $item; }
+
+            if ($settings->{'title'}) {
+                $item = ucfirst lc $item;
+                $item =~ s/ (\w)/' ' . uc $1/ge;
+            }
+
+            if ($settings->{'json'}) { $item = $self->escape_json($item); }
+        }
+
+        push @list, @items;
+    }
+
+    if ($settings->{'unique'}) {
+        foreach my $choice (@{$settings->{'choices'}}) {
+            @list = grep { $_ ne $choice } @list;
+        }
+    }
+
+    if ($settings->{'sort+'}) {
+        @list = sort { $a cmp $b } @list;
+    }
+
+    if ($settings->{'sort-'}) {
+        @list = sort { $b cmp $a } @list;
+    }
+
+    return \@list;
+}
+
 sub select_item {
-    my ($self, $list, $modifier, %opts) = @_;
+    my ($self, $context, $extracted, $modifier, %opts) = @_;
 
     my %default_opts = (
         nested => 0,
@@ -547,21 +592,32 @@ sub select_item {
 
     my %settings = $self->parse_expansion_modifiers($modifier);
 
+    if ($opts{nested}) {
+        my $list = $self->make_list($context, $extracted, \%settings, %opts);
+        @$list = map { $_ .= $$modifier } @$list;
+        $$modifier = '';
+        return join ('|', @$list);
+    }
+
     my $item;
 
     if (exists $settings{'index'}) {
+        my $list = $self->make_list($context, $extracted, \%settings, %opts);
         my $index = $settings{'index'};
+
         $index = $#$list - -$index if $index < 0;
         $index = 0 if $index < 0;
         $index = $#$list if $index > $#$list;
+
         $item = $list->[$index];
+
         # strip outer quotes
         if (not $item =~ s/^"(.*)"$/$1/) { $item =~ s/^'(.*)'$/$1/; }
     } elsif ($settings{'pick'}) {
         my $min = $settings{'pick_min'};
         my $max = $settings{'pick_max'};
-        $max = @$list if $settings{'unique'} and $max > @$list;
-        $min = $max if $min > $max;
+
+        $max = 100 if $max > 100;
 
         my $count = $max;
         if ($settings{'random'}) {
@@ -569,16 +625,22 @@ sub select_item {
         }
 
         my @choices;
+        $settings{'choices'} = \@choices;
+
         while ($count-- > 0) {
+            my $list = $self->make_list($context, $extracted, \%settings, %opts);
+
+            last if not @$list;
+
+            $max = @$list if $settings{'unique'} and $max > @$list;
+            $min = $max if $min > $max;
+
             my $index  = int rand @$list;
             my $choice = $list->[$index];
 
-            if ($settings{'unique'}) {
-                splice @$list, $index, 1;
-            }
-
             # strip outer quotes
             if (not $choice =~ s/^"(.*)"$/$1/) { $choice =~ s/^'(.*)'$/$1/; }
+
             push @choices, $choice;
         }
 
@@ -603,23 +665,13 @@ sub select_item {
             $item = $opts{nested} ? join('|', @choices) : "@choices";
         }
     } else {
+        my $list = $self->make_list($context, $extracted, \%settings, %opts);
+
         $item = $list->[rand @$list];
+
         # strip outer quotes
         if (not $item =~ s/^"(.*)"$/$1/) { $item =~ s/^'(.*)'$/$1/; }
     }
-
-    if ($settings{'uc'}) { $item = uc $item; }
-
-    if ($settings{'lc'}) { $item = lc $item; }
-
-    if ($settings{'ucfirst'}) { $item = ucfirst $item; }
-
-    if ($settings{'title'}) {
-        $item = ucfirst lc $item;
-        $item =~ s/ (\w)/' ' . uc $1/ge;
-    }
-
-    if ($settings{'json'}) { $item = $self->escape_json($item); }
 
     return $item;
 }
@@ -629,9 +681,12 @@ sub expand_factoid_selectors {
 
     my %default_opts = (
         nested => 0,
+        recurse => 0,
     );
 
     %opts = (%default_opts, %opts);
+
+    return '!recursion limit!' if ++$opts{recurse} > 100;
 
     my $result = '';
 
@@ -646,21 +701,7 @@ sub expand_factoid_selectors {
 
         last if not length $extracted;
 
-        if ($extracted =~ /(.*?)(?<!\\)%\s*\(.*\)/) {
-            $extracted = $self->expand_factoid_selectors($context, $extracted, nested => 1);
-        }
-
-        my @list;
-        foreach my $item (split /\s*(?<!\\)\|\s*/, $extracted) {
-            $item =~ s/^\s+|\s+$//g;
-            $item =~ s/\\\|/|/g;
-            my @items = $self->expand_factoid_vars($context, $item, %opts);
-            push @list, @items;
-        }
-
-        my $item = $self->select_item(\@list, \$rest, %opts);
-
-        $result .= $item;
+        $result .= $self->select_item($context, $extracted, \$rest, %opts);
         $action = $rest;
     }
 
@@ -683,7 +724,7 @@ sub expand_factoid_vars {
 
     $action = defined $action ? $action : $context->{action};
 
-    $action = $self->expand_factoid_selectors($context, $action);
+    $action = $self->expand_factoid_selectors($context, $action, %opts);
 
     my $depth = 0;
 
@@ -743,9 +784,9 @@ sub expand_factoid_vars {
                 my @replacements;
 
                 if (wantarray) {
-                    @replacements = $self->select_item(\@list, \$modifier, %opts);
+                    @replacements = $self->select_item($context, join ('|', @list),  \$modifier, %opts);
                 } else {
-                    push @replacements, scalar $self->select_item(\@list, \$modifier, %opts);
+                    push @replacements, scalar $self->select_item($context, join ('|', @list), \$modifier, %opts);
                 }
 
                 foreach my $replacement (@replacements) {
