@@ -1,6 +1,8 @@
 AppConfig::Std
 CGI
 Data::Dumper
+DateTime::Format::Flexible
+DateTime::Format::Duration
 DBD::SQLite
 Games::Dice
 Getopt::Long
