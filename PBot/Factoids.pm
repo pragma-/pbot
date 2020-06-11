@@ -687,7 +687,16 @@ sub expand_factoid_selectors {
 
         last if not length $extracted;
 
-        $result .= $self->select_item($context, $extracted, \$rest, %opts);
+        my $item = $self->select_item($context, $extracted, \$rest, %opts);
+
+        if ($result =~ s/\b(a|an)(\s+)$//i) {
+            my ($article, $trailing) = ($1, $2);
+            my $fixed_article = select_indefinite_article $item;
+            $fixed_article = ucfirst $fixed_article if $article =~ m/^A/;
+            $item = $fixed_article . $trailing . $item;
+        }
+
+        $result .= $item;
         $action = $rest;
     }
 
