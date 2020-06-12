@@ -743,7 +743,7 @@ sub expand_factoid_vars {
         my $expansions = 0;
 
 
-        while ($rest =~ s/(.*?)(?<!\\)\$([\w|{])/$2/) {
+        while ($rest =~ s/(.*?)(?<!\\)\$([\w|{])/$2/ms) {
             $result .= $1;
 
 
