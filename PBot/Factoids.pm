@@ -750,7 +750,7 @@ sub expand_factoid_vars {
             my $var;
             my $extract_method;
 
-            if ($action =~ /^\{.*?\}/) {
+            if ($rest =~ /^\{.*?\}/) {
                 ($var, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($rest, '{', '}');
 
                 if ($var =~ /:/) {
@@ -847,7 +847,15 @@ sub expand_factoid_vars {
             }
         }
 
-        last if $matches == 0 or $expansions == 0;
+        if ($matches == 0 or $expansions == 0) {
+            if (length $rest) {
+                $rest = $result . $rest;
+                $result = '';
+                next;
+            } else {
+                last;
+            }
+        }
 
         if (not length $rest) {
             $rest = $result;
