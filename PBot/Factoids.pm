@@ -665,12 +665,12 @@ sub expand_factoid_selectors {
 
     my %default_opts = (
         nested => 0,
-        recurse => 0,
+        recursions => 0,
     );
 
     %opts = (%default_opts, %opts);
 
-    return '!recursion limit!' if ++$opts{recurse} > 100;
+    return '!recursion limit!' if ++$opts{recursions} > 100;
 
     my $result = '';
 
@@ -713,9 +713,12 @@ sub expand_factoid_vars {
 
     my %default_opts = (
         nested => 0,
+        recursions => 0,
     );
 
     %opts = (%default_opts, %opts);
+
+    return '!recursion limit reached!' if ++$opts{recursions} > 100;
 
     my $from         = length $context->{ref_from} ? $context->{ref_from} : $context->{from};
     my $nick         = $context->{nick};
