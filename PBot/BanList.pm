@@ -277,8 +277,8 @@ sub track_mode {
     my ($source, $channel, $mode, $mask) = @_;
 
     my ($nick) = $source =~ /(^[^!]+)/;
-    $channel = lc $channel;
-    $mask    = lc $mask;
+    $channel = defined $channel ? lc $channel : '';
+    $mask    = defined $mask ? lc $mask : '';
 
     my $mute_char = $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char');
 

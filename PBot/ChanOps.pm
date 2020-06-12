@@ -35,8 +35,8 @@ sub initialize {
 sub track_mode {
     my ($self, $source, $channel, $mode, $target) = @_;
 
-    $channel = lc $channel;
-    $target  = lc $target;
+    $channel = defined $channel ? lc $channel : '';
+    $target  = defined $target ? lc $target : '';
 
     if ($target eq lc $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
         if ($mode eq '+o') {
