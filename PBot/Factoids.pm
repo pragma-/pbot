@@ -692,7 +692,13 @@ sub expand_factoid_selectors {
         if ($result =~ s/\b(a|an)(\s+)$//i) {
             my ($article, $trailing) = ($1, $2);
             my $fixed_article = select_indefinite_article $item;
-            $fixed_article = ucfirst $fixed_article if $article =~ m/^A/;
+
+            if ($article eq 'A' or $article eq 'AN') {
+                $fixed_article = uc $fixed_article;
+            } elsif ($article eq 'An') {
+                $fixed_article = ucfirst $fixed_article;
+            }
+
             $item = $fixed_article . $trailing . $item;
         }
 
@@ -810,9 +816,6 @@ sub expand_factoid_vars {
                     push @replacements, scalar $self->select_item($context, join ('|', @list), \$rest, %opts);
                 }
 
-                foreach my $replacement (@replacements) {
-                }
-
                 if (wantarray) {
                     return @replacements;
                 }
@@ -823,7 +826,21 @@ sub expand_factoid_vars {
                     $result =~ s/\s+$//;
                 }
 
+                if ($result =~ s/\b(a|an)(\s+)$//i) {
+                    my ($article, $trailing) = ($1, $2);
+                    my $fixed_article = select_indefinite_article $replacement;
+
+                    if ($article eq 'A' or $article eq 'AN') {
+                        $fixed_article = uc $fixed_article;
+                    } elsif ($article eq 'An') {
+                        $fixed_article = ucfirst $fixed_article;
+                    }
+
+                    $replacement = $fixed_article . $trailing . $replacement;
+                }
+
                 $result .= $replacement;
+
                 $expansions++;
             } else {
                 $result .= $extract_method eq 'bracket' ? '${' . $var . '}' : '$' . $var;
