@@ -545,7 +545,6 @@ sub make_list {
         $item =~ s/^\s+|\s+$//g;
         $item =~ s/\\\|/|/g;
 
-
         if ($settings->{'uc'}) { $item = uc $item; }
 
         if ($settings->{'lc'}) { $item = lc $item; }
@@ -581,7 +580,6 @@ sub make_list {
 
 sub select_item {
     my ($self, $context, $extracted, $modifier, %opts) = @_;
-
 
     my %settings = $self->parse_expansion_modifiers($modifier);
 
@@ -742,10 +740,8 @@ sub expand_factoid_vars {
         my $matches    = 0;
         my $expansions = 0;
 
-
         while ($rest =~ s/(.*?)(?<!\\)\$([\w|{])/$2/ms) {
             $result .= $1;
-
 
             my $var;
             my $extract_method;
@@ -812,12 +808,9 @@ sub expand_factoid_vars {
 
                 if (wantarray) {
                     @replacements = $self->select_item($context, join ('|', @list),  \$rest, %opts);
+                    return @replacements;
                 } else {
                     push @replacements, scalar $self->select_item($context, join ('|', @list), \$rest, %opts);
-                }
-
-                if (wantarray) {
-                    return @replacements;
                 }
 
                 my $replacement = $opts{nested} ? join('|', @replacements) : "@replacements";
@@ -849,9 +842,7 @@ sub expand_factoid_vars {
             }
         }
 
-        if ($matches == 0 or $expansions == 0) {
-            last;
-        }
+        last if $matches == 0 or $expansions == 0;
 
         if (not length $rest) {
             $rest = $result;
