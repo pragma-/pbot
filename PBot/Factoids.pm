@@ -725,50 +725,76 @@ sub expand_factoid_vars {
 
     if ($action =~ m/^\/call --keyword-override=([^ ]+)/i) { $root_keyword = $1; }
 
-    while (1) {
-        last if ++$depth >= 1000;
+    my $result = '';
+    my $rest   = $action;
 
-        my $offset     = 0;
+    while (1) {
+        last if ++$depth >= 100;
+
+        $rest =~ s/(?<!\\)\$0/$root_keyword/g;
+
         my $matches    = 0;
         my $expansions = 0;
-        $action =~ s/(?<!\\)\$0/$root_keyword/g;
-        my $const_action = $action;
 
-        while ($const_action =~ /(\ba\s*|\ban\s*)?(?<!\\)\$(?:(\{[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:'"+-]+)?\}|[a-zA-Z0-9_#]+(?::[a-zA-Z0-9_(),.#:'"+-]+)?))/gi) {
-            my ($indefinite_article, $v) = ($1, $2);
-            $indefinite_article = '' if not defined $indefinite_article;
-            next if not defined $v;
 
-            my $original_v = $v;
-            my $test_v     = $v;
+        while ($rest =~ s/(.*?)(?<!\\)\$([\w|{])/$2/) {
+            $result .= $1;
 
-            $test_v =~ s/(.):$/$1/;    # remove trailing : only if at least one character precedes it
-            next if $test_v =~ m/^_/;                                                                      # special character prefix skipped for shell/code-factoids/etc
-            next if $test_v =~ m/^(?:nick|channel|randomnick|arglen|args|arg\[.+\]|[_0])(?:\:json)*$/i;    # don't override special variables
-            last if ++$depth >= 1000;
+
+            my $var;
+            my $extract_method;
+
+            if ($action =~ /^\{.*?\}/) {
+                ($var, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($rest, '{', '}');
+
+                if ($var =~ /:/) {
+                    my @stuff = split /:/, $var, 2;
+                    $var = $stuff[0];
+                    $rest = ':' . $stuff[1] . $rest;
+                }
+
+                $extract_method = 'bracket';
+            } else {
+                $rest =~ s/^(\w+)//;
+                $var = $1;
+                $extract_method = 'regex';
+            }
+
+            if ($var =~ /^(?:_.*|nick|channel|randomnick|arglen|args|arg\[.+\])$/i) {
+                # skip identifiers with leading underscore and special variables
+                $result .= $extract_method eq 'bracket' ? '${' . $var . '}' : '$' . $var;
+                next;
+            }
 
             $matches++;
 
-            $test_v =~ s/\{(.+)\}/$1/;
-
-            my $modifier = '';
-            if ($test_v =~ s/(:.*)$//) { $modifier = $1; }
-
-            if ($modifier =~ m/^:(#[^:]+|global)/i) {
+            # extract channel expansion modifier
+            if ($rest =~ s/^\s*:\s*(#[^:]+|global)//i) {
                 $from = $1;
                 $from = '.*' if lc $from eq 'global';
             }
 
             my $recurse = 0;
           ALIAS:
-            my @factoids = $self->find_factoid($from, $test_v, exact_channel => 2, exact_trigger => 2);
-            next if not @factoids or not $factoids[0];
+            my @factoids = $self->find_factoid($from, $var, exact_channel => 2, exact_trigger => 2);
 
-            my ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
+            if (not @factoids or not $factoids[0]) {
+                $result .= $extract_method eq 'bracket' ? '${' . $var . '}' : '$' . $var;
+                next;
+            }
+
+            my $var_chan;
+            ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
 
             if ($self->{factoids}->get_data($var_chan, $var, 'action') =~ m{^/call (.*)}ms) {
-                $test_v = $1;
-                next if ++$recurse > 100;
+                $var = $1;
+
+                if (++$recurse > 100) {
+                    $self->{pbot}->{logger}->log("Factoids: variable expansion recursion limit reached\n");
+                    $result .= $extract_method eq 'bracket' ? '${' . $var . '}' : '$' . $var;
+                    next;
+                }
+
                 goto ALIAS;
             }
 
@@ -779,47 +805,12 @@ sub expand_factoid_vars {
                 my @replacements;
 
                 if (wantarray) {
-                    @replacements = $self->select_item($context, join ('|', @list),  \$modifier, %opts);
+                    @replacements = $self->select_item($context, join ('|', @list),  \$rest, %opts);
                 } else {
-                    push @replacements, scalar $self->select_item($context, join ('|', @list), \$modifier, %opts);
+                    push @replacements, scalar $self->select_item($context, join ('|', @list), \$rest, %opts);
                 }
 
                 foreach my $replacement (@replacements) {
-                    foreach my $mod (split /:/, $modifier) {
-                        $mod =~ s/,$//;
-                        next if not length $mod;
-
-                        if ($replacement =~ /^\$\{\$([a-zA-Z0-9_:#]+)\}(.*)$/) {
-                            $replacement = "\${\$$1:$mod}$2";
-                            next;
-                        } elsif ($replacement =~ /^\$\{([a-zA-Z0-9_:#]+)\}(.*)$/) {
-                            $replacement = "\${$1:$mod}$2";
-                            next;
-                        } elsif ($replacement =~ /^\$\$([a-zA-Z0-9_:#]+)(.*)$/) {
-                            $replacement = "\${\$$1:$mod}$2";
-                            next;
-                        } elsif ($replacement =~ /^\$([a-zA-Z0-9_:#]+)(.*)$/) {
-                            $replacement = "\${$1:$mod}$2";
-                            next;
-                        }
-
-                        given ($mod) {
-                            when ('uc')      { $replacement = uc $replacement; }
-                            when ('lc')      { $replacement = lc $replacement; }
-                            when ('ucfirst') { $replacement = ucfirst $replacement; }
-                            when ('title') {
-                                $replacement = ucfirst lc $replacement;
-                                $replacement =~ s/ (\w)/' ' . uc $1/ge;
-                            }
-                            when ('json') { $replacement = $self->escape_json($replacement); }
-                        }
-                    }
-
-                    if ($indefinite_article) {
-                        my $fixed_article = select_indefinite_article $replacement;
-                        $fixed_article    = ucfirst $fixed_article if $indefinite_article =~ m/^A/;
-                        $replacement      = "$fixed_article $replacement";
-                    }
                 }
 
                 if (wantarray) {
@@ -828,29 +819,32 @@ sub expand_factoid_vars {
 
                 my $replacement = $opts{nested} ? join('|', @replacements) : "@replacements";
 
-                $original_v = quotemeta $original_v;
-                $original_v =~ s/\\:/:/g;
-
                 if (not length $replacement) {
-                    substr($action, $offset) =~ s/$indefinite_article\$$original_v ?/$replacement/;
-                    $offset += $-[0] + length $replacement;
-                } else {
-                    substr($action, $offset) =~ s/$indefinite_article\$$original_v/$replacement/;
-                    $offset += $-[0] + length $replacement;
+                    $result =~ s/\s+$//;
                 }
 
+                $result .= $replacement;
                 $expansions++;
+            } else {
+                $result .= $extract_method eq 'bracket' ? '${' . $var . '}' : '$' . $var;
             }
         }
 
         last if $matches == 0 or $expansions == 0;
+
+        if (not length $rest) {
+            $rest = $result;
+            $result = '';
+        }
     }
 
-    $action = $self->expand_special_vars($from, $nick, $root_keyword, $action);
+    $result .= $rest;
 
-    $action =~ s/\\\$/\$/g;
+    $result = $self->expand_special_vars($from, $nick, $root_keyword, $result);
 
-    return validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
+    $result =~ s/\\\$/\$/g;
+
+    return validate_string($result, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
 
 sub expand_action_arguments {
