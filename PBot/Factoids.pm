@@ -693,9 +693,9 @@ sub expand_factoid_selectors {
             my ($article, $trailing) = ($1, $2);
             my $fixed_article = select_indefinite_article $item;
 
-            if ($article eq 'A' or $article eq 'AN') {
+            if ($article eq 'AN') {
                 $fixed_article = uc $fixed_article;
-            } elsif ($article eq 'An') {
+            } elsif ($article eq 'An' or $article eq 'A') {
                 $fixed_article = ucfirst $fixed_article;
             }
 
@@ -824,15 +824,17 @@ sub expand_factoid_vars {
 
                 if (not length $replacement) {
                     $result =~ s/\s+$//;
+                } else {
+                    $replacement = $self->expand_factoid_vars($context, $replacement, %opts);
                 }
 
                 if ($result =~ s/\b(a|an)(\s+)$//i) {
                     my ($article, $trailing) = ($1, $2);
                     my $fixed_article = select_indefinite_article $replacement;
 
-                    if ($article eq 'A' or $article eq 'AN') {
+                    if ($article eq 'AN') {
                         $fixed_article = uc $fixed_article;
-                    } elsif ($article eq 'An') {
+                    } elsif ($article eq 'An' or $article eq 'A') {
                         $fixed_article = ucfirst $fixed_article;
                     }
 
@@ -848,13 +850,7 @@ sub expand_factoid_vars {
         }
 
         if ($matches == 0 or $expansions == 0) {
-            if (length $rest) {
-                $rest = $result . $rest;
-                $result = '';
-                next;
-            } else {
-                last;
-            }
+            last;
         }
 
         if (not length $rest) {
