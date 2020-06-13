@@ -524,6 +524,14 @@ sub nick_to_banmask {
         }
     }
 
+    if ($mask !~ /!/) {
+        $mask .= '!*@*';
+    } elsif ($mask !~ /@/) {
+        $mask =~ s/\*?$/*@*/;
+    } else {
+        $mask =~ s/\@$/@*/;
+    }
+
     return $mask;
 }
 
@@ -544,8 +552,10 @@ sub ban_user_timed {
     };
 
     if ($mode eq 'b') {
+        $self->{banlist}->remove($channel, $mask, 'timeout');
         $self->{banlist}->add($channel, $mask, $data);
     } elsif ($mode eq $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char')) {
+        $self->{quietlist}->remove($channel, $mask, 'timeout');
         $self->{quietlist}->add($channel, $mask, $data);
     }
 
@@ -583,7 +593,7 @@ sub checkban {
 
     $result .= "by $data->{owner} "   if defined $data->{owner};
     $result .= "for $data->{reason} " if defined $data->{reason};
-    if ($data->{timeout} > 0) {
+    if (exists $data->{timeout} and $data->{timeout} > 0) {
         my $duration = concise duration($data->{timeout} - gettimeofday);
         $result .= "($duration remaining)";
     }
