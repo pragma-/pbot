@@ -765,8 +765,8 @@ sub expand_factoid_vars {
                 $extract_method = 'regex';
             }
 
-            if ($var =~ /^(?:_.*|nick|channel|randomnick|arglen|args|arg\[.+\])$/i) {
-                # skip identifiers with leading underscore and special variables
+            if ($var =~ /^(?:_.*|\d+|a|b|nick|channel|randomnick|arglen|args|arg\[.+\])$/i) {
+                # skip identifiers with leading underscores, etc
                 $result .= $extract_method eq 'bracket' ? '${' . $var . '}' : '$' . $var;
                 next;
             }
