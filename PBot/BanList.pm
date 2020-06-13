@@ -524,12 +524,16 @@ sub nick_to_banmask {
         }
     }
 
-    if ($mask !~ /!/) {
-        $mask .= '!*@*';
-    } elsif ($mask !~ /@/) {
-        $mask =~ s/\*?$/*@*/;
-    } else {
-        $mask =~ s/\@$/@*/;
+    # make sure $mask always has full wildcards
+    # there's probably a better way to do this...
+    if ($mask !~ /^\$/) {
+        if ($mask !~ /!/) {
+            $mask .= '!*@*';
+        } elsif ($mask !~ /@/) {
+            $mask =~ s/\*?$/*@*/;
+        } else {
+            $mask =~ s/\@$/@*/;
+        }
     }
 
     return $mask;
