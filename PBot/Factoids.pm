@@ -622,10 +622,13 @@ sub select_item {
             my $index  = int rand @$list;
             my $choice = $list->[$index];
 
-            # strip outer quotes
-            if (not $choice =~ s/^"(.*)"$/$1/) { $choice =~ s/^'(.*)'$/$1/; }
 
             push @choices, $choice;
+        }
+
+        # strip outer quotes
+        foreach my $choice (@choices) {
+            if (not $choice =~ s/^"(.*)"$/$1/) { $choice =~ s/^'(.*)'$/$1/; }
         }
 
         if ($settings{'sort+'}) {
