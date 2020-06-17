@@ -888,8 +888,8 @@ sub expand_factoid_vars {
 
     $result = $self->expand_special_vars($from, $nick, $root_keyword, $result);
 
-    $result =~ s/\\\$/\$/g;
-    $result =~ s/(?<!\\)\\(.)/$1/g;
+    # unescape certain symbols
+    $result =~ s/(?<!\\)\\([\$\:\|])/$1/g;
 
     return validate_string($result, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
