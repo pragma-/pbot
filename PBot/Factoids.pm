@@ -600,7 +600,7 @@ sub select_weighted_item_from_list {
     my $n = int rand $weight_sum;
 
     for my $weight (@weights) {
-        if ($n <= $weight->[0]) {
+        if ($n < $weight->[0]) {
             return $list->[$weight->[1]];
         }
         $n -= $weight->[0];
