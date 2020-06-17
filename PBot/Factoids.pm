@@ -598,7 +598,6 @@ sub select_weighted_item_from_list {
     }
 
     my $n = int rand $weight_sum;
-    $index = 0;
 
     for my $weight (sort { $a->[0] <=> $b->[0] } @weights) {
         if ($n < $weight->[0]) {
