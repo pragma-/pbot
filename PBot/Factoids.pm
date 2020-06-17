@@ -578,6 +578,36 @@ sub make_list {
     return \@list;
 }
 
+sub select_weighted_item_from_list {
+    my ($self, $list, $index) = @_;
+
+    my @weights;
+    my $weight_sum = 0;
+
+    for (my $i = 0; $i <= $#$list; $i++) {
+        my $weight = 1;
+        if ($list->[$i] =~ s/:weight\((\d+)\)//) {
+            $weight = $1;
+        }
+        $weights[$i] = [ $weight, $i ];
+        $weight_sum += $weight;
+    }
+
+    if (defined $index) {
+        return $list->[$index];
+    }
+
+    my $n = int rand $weight_sum;
+    $index = 0;
+
+    for my $weight (sort { $a->[0] <=> $b->[0] } @weights) {
+        if ($n < $weight->[0]) {
+            return $list->[$weight->[1]];
+        }
+        $n -= $weight->[0];
+    }
+}
+
 sub select_item {
     my ($self, $context, $extracted, $modifier, %opts) = @_;
 
@@ -593,7 +623,7 @@ sub select_item {
         $index = 0 if $index < 0;
         $index = $#$list if $index > $#$list;
 
-        $item = $list->[$index];
+        $item = $self->select_weighted_item_from_list($list, $index);
 
         # strip outer quotes
         if (not $item =~ s/^"(.*)"$/$1/) { $item =~ s/^'(.*)'$/$1/; }
@@ -619,8 +649,7 @@ sub select_item {
             $max = @$list if $settings{'unique'} and $max > @$list;
             $min = $max if $min > $max;
 
-            my $index  = int rand @$list;
-            my $choice = $list->[$index];
+            my $choice = $self->select_weighted_item_from_list($list);
 
 
             push @choices, $choice;
@@ -654,7 +683,7 @@ sub select_item {
     } else {
         my $list = $self->make_list($context, $extracted, \%settings, %opts);
 
-        $item = $list->[rand @$list];
+        $item = $self->select_weighted_item_from_list($list);
 
         # strip outer quotes
         if (not $item =~ s/^"(.*)"$/$1/) { $item =~ s/^'(.*)'$/$1/; }
@@ -861,6 +890,7 @@ sub expand_factoid_vars {
     $result = $self->expand_special_vars($from, $nick, $root_keyword, $result);
 
     $result =~ s/\\\$/\$/g;
+    $result =~ s/(?<!\\)\\(.)/$1/g;
 
     return validate_string($result, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
