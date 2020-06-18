@@ -30,6 +30,7 @@
       "can-userset" : 1,
       "can-userunset" : 1,
       "can-voice-wildcard" : 1,
+      "can-whitelist" : 1,
       "chanop" : 1
    },
    "botowner" : {
@@ -67,8 +68,11 @@
       "can-kick-wildcard" : 1,
       "can-kill" : 1,
       "can-load" : 1,
+      "can-mod" : 1,
       "can-mode" : 1,
       "can-mode-any" : 1,
+      "can-mode-b" : 1,
+      "can-mode-o" : 1,
       "can-modify-admins" : 1,
       "can-modify-capabilities" : 1,
       "can-mute" : 1,
@@ -99,6 +103,7 @@
       "can-userunset" : 1,
       "can-voice" : 1,
       "can-voice-wildcard" : 1,
+      "can-whitelist" : 1,
       "chanmod" : 1,
       "chanop" : 1,
       "is-whitelisted" : 1
@@ -142,6 +147,7 @@
    "can-kick-wildcard" : {},
    "can-kill" : {},
    "can-load" : {},
+   "can-mod" : {},
    "can-mode" : {},
    "can-mode-any" : {
       "can-mode" : 1,
@@ -238,6 +244,7 @@
       "can-mode-v" : 1
    },
    "can-voice-wildcard" : {},
+   "can-whitelist" : {},
    "chanmod" : {
       "can-devoice" : 1,
       "can-mod" : 1,
