@@ -1,7 +1,7 @@
 {
    "$metadata$" : {
-      "update_version" : 3503,
-      "name" : "Commands"
+      "name" : "Commands",
+      "update_version" : 3503
    },
    "actiontrigger" : {
       "dont-replace-pronouns" : "1",
@@ -27,19 +27,24 @@
    "ban" : {
       "dont-replace-pronouns" : "1",
       "help" : "Bans a user. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#banmute",
-      "requires_cap" : 1
+      "requires_cap" : "1"
    },
    "ban-exempt" : {
       "help" : "Manages list of ban-masks that are exempted from ban-evasion detection.",
       "requires_cap" : 1
+   },
+   "banlist" : {
+      "help" : "",
+      "requires_cap" : 0
    },
    "battleship" : {
       "help" : "The classic Battleship board game, modified for IRC. See https://github.com/pragma-/pbot/blob/master/doc/Battleship.md",
       "requires_cap" : 0
    },
    "blacklist" : {
+      "dont-replace-pronouns" : "1",
       "help" : "Blacklists a hostmask from joining a channel. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#blacklist",
-      "requires_cap" : 1
+      "requires_cap" : "1"
    },
    "cap" : {
       "help" : "",
@@ -143,6 +148,10 @@
       "help" : "Evaluates Perl code within PBot's context. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#eval",
       "requires_cap" : 1
    },
+   "eventqueue" : {
+      "help" : "",
+      "requires_cap" : "1"
+   },
    "export" : {
       "background-process" : "1",
       "help" : "Exports specified list to HTML file. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#export",
@@ -155,11 +164,12 @@
    "factadd" : {
       "dont-replace-pronouns" : "1",
       "help" : "Creates a new factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factadd",
-      "requires_cap" : 0
+      "requires_cap" : "0"
    },
    "factalias" : {
+      "dont-replace-pronouns" : "1",
       "help" : "Creates a factoid that acts as an alias for a command. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factalias",
-      "requires_cap" : 0
+      "requires_cap" : "0"
    },
    "factchange" : {
       "dont-replace-pronouns" : "1",
@@ -241,6 +251,10 @@
       "help" : "Displays a histogram of the top factoid submitters. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#histogram",
       "requires_cap" : 0
    },
+   "id" : {
+      "help" : "",
+      "requires_cap" : 0
+   },
    "ignore" : {
       "help" : "Ignores a user. If you omit [channel] PBot will ignore the user in all channels, including private messages. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#ignore",
       "requires_cap" : 1
@@ -259,6 +273,10 @@
    },
    "kick" : {
       "help" : "Removes a user from the channel. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#kick",
+      "requires_cap" : 1
+   },
+   "kill" : {
+      "help" : "",
       "requires_cap" : 1
    },
    "lagcheck" : {
@@ -322,18 +340,23 @@
       "help" : "Lists all currently loaded plugins. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#pluglist",
       "requires_cap" : 0
    },
+   "ps" : {
+      "help" : "",
+      "requires_cap" : 0
+   },
    "rebuildaliases" : {
       "help" : "Rebuilds the aka link table. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#rebuildaliases",
       "requires_cap" : 1
    },
    "recall" : {
       "background-process" : "1",
+      "dont-replace-pronouns" : "1",
       "help" : "Recalls previous chat history for a channel. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#recall",
-      "requires_cap" : 0
+      "requires_cap" : "0"
    },
    "refresh" : {
       "help" : "Refreshes and reloads PBot core modules and plugins. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#refresh",
-      "requires_cap" : 1
+      "requires_cap" : "1"
    },
    "regchange" : {
       "help" : "Changes the value of a registry item using a regular expression. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regchange",
@@ -380,6 +403,7 @@
       "requires_cap" : 1
    },
    "rq" : {
+      "dont-replace-pronouns" : "1",
       "help" : "Retrieves and displays a random quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#rq",
       "requires_cap" : 0
    },
