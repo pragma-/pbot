@@ -586,7 +586,7 @@ sub select_weighted_item_from_list {
 
     for (my $i = 0; $i <= $#$list; $i++) {
         my $weight = 1;
-        if ($list->[$i] =~ s/:weight\((\d+)\)//) {
+        if ($list->[$i] =~ s/:weight\(([0-9.-]+)\)//) {
             $weight = $1;
         }
         $weights[$i] = [ $weight, $i ];
@@ -597,7 +597,7 @@ sub select_weighted_item_from_list {
         return $list->[$index];
     }
 
-    my $n = int rand $weight_sum;
+    my $n = rand $weight_sum;
 
     for my $weight (@weights) {
         if ($n < $weight->[0]) {
