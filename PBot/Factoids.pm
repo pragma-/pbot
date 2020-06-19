@@ -456,8 +456,8 @@ sub parse_expansion_modifiers {
 
     my %settings;
 
-    while ($$modifier =~ s/^://) {
-        if ($$modifier =~ s/^join\s*//) {
+    while ($$modifier =~ s/^:(?=\w)//) {
+        if ($$modifier =~ s/^join\s*(?=\(.*?(?=\)))//) {
             my ($params, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($$modifier, '(', ')', '', 1);
             $$modifier = $rest;
             my @args = $self->{pbot}->{interpreter}->split_line($params, strip_quotes => 1, strip_commas => 1);
@@ -475,7 +475,7 @@ sub parse_expansion_modifiers {
             next;
         }
 
-        if ($$modifier=~ s/^pick_unique\s*//) {
+        if ($$modifier=~ s/^pick_unique\s*(?=\(.*?(?=\)))//) {
             my ($params, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($$modifier, '(', ')', '', 1);
             $$modifier = $rest;
             my @args = $self->{pbot}->{interpreter}->split_line($params, strip_quotes => 1, strip_commas => 1);
@@ -487,15 +487,17 @@ sub parse_expansion_modifiers {
                 $settings{'random'} = 1;
                 $settings{'pick_min'} = $args[0];
                 $settings{'pick_max'} = $args[1];
-            } else {
+            } elsif (@args == 1) {
                 $settings{'pick_min'} = 1;
                 $settings{'pick_max'} = $args[0];
+            } else {
+                push @{$settings{errors}}, "pick_unique(): missing argument(s)";
             }
 
             next;
         }
 
-        if ($$modifier=~ s/^pick\s*//) {
+        if ($$modifier=~ s/^pick\s*(?=\(.*?(?=\)))//) {
             my ($params, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($$modifier, '(', ')', '', 1);
             $$modifier = $rest;
             my @args = $self->{pbot}->{interpreter}->split_line($params, strip_quotes => 1, strip_commas => 1);
@@ -506,25 +508,35 @@ sub parse_expansion_modifiers {
                 $settings{'random'} = 1;
                 $settings{'pick_min'} = $args[0];
                 $settings{'pick_max'} = $args[1];
-            } else {
+            } elsif (@args == 1) {
                 $settings{'pick_min'} = 1;
                 $settings{'pick_max'} = $args[0];
+            } else {
+                push @{$settings{errors}}, "pick(): missing argument(s)";
             }
 
             next;
         }
 
-        if ($$modifier=~ s/^index\s*//) {
+        if ($$modifier=~ s/^index\s*(?=\(.*?(?=\)))//) {
             my ($params, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($$modifier, '(', ')', '', 1);
             $$modifier = $rest;
             my @args = $self->{pbot}->{interpreter}->split_line($params, strip_quotes => 1, strip_commas => 1);
-            $settings{'index'} = $args[0];
+            if (@args == 1) {
+                $settings{'index'} = $args[0];
+            } else {
+                push @{$settings{errors}}, "index(): missing argument";
+            }
             next;
         }
 
-        # catch-all for any word modifier
-        if ($$modifier =~ s/^(\w+)//) {
+        if ($$modifier =~ s/^(enumerate|comma|uc|lc|ucfirst|title)//) {
             $settings{$1} = 1;
+            next;
+        }
+
+        if ($$modifier =~ s/^(\w+)//) {
+            push @{$settings{errors}}, "Unknown modifier `$1`";
         }
     }
 
@@ -612,6 +624,10 @@ sub select_item {
 
     my %settings = $self->parse_expansion_modifiers($modifier);
 
+    if (exists $settings{errors}) {
+        return "[Error: " . join ('; ', @{$settings{errors}}) . ']';
+    }
+
     my $item;
 
     if (exists $settings{'index'}) {
@@ -649,7 +665,6 @@ sub select_item {
             $min = $max if $min > $max;
 
             my $choice = $self->select_weighted_item_from_list($list);
-
 
             push @choices, $choice;
         }
