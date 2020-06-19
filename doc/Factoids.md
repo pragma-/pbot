@@ -398,6 +398,7 @@ Selector Modifier | Description
 `:pick(x,y)` | Selects between `x` and `y`, inclusive, count of random elements. `x` may be `0` to occasionally pick no value. In this case the `$variable` and any leading whitespace will be stripped.
 `:pick_unique(x)` | Selects `x` count of random elements without any repeated selections.
 `:pick_unique(x,y)` | Selects between `x` and `y`, inclusive, count of random elements without any repeated selections. `x` may be `0` to occasionally pick no value. In this case the `$variable` and any leading whitespace will be stripped.
+`:weight(n)` | Sets the weight of this item to `n`. Items default to weight 1 if `:weight` is omitted. A higher weight makes an item more likely to be selected. A weight of `0` means the item will never be selected.
 
 Selection modifiers apply only to selector modifiers that return more than one selection. Using them otherwise has no effect.
 
