@@ -456,7 +456,7 @@ sub parse_expansion_modifiers {
 
     my %settings;
 
-    while ($$modifier =~ s/^\s*:\s*//) {
+    while ($$modifier =~ s/^://) {
         if ($$modifier =~ s/^join\s*//) {
             my ($params, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($$modifier, '(', ')', '', 1);
             $$modifier = $rest;
