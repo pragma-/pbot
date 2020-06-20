@@ -553,7 +553,7 @@ sub make_list {
     }
 
     my @list;
-    foreach my $item (split /\s*(?<!\\)\|\s*/, $extracted) {
+    foreach my $item (split /\s*(?<!\\)\|\s*/, $extracted, -1) {
         $item =~ s/^\s+|\s+$//g;
         $item =~ s/\\\|/|/g;
 
