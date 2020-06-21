@@ -86,9 +86,7 @@ sub launch_module {
         . "): $context->{nick}!$context->{user}\@$context->{host}: Executing module [$context->{command}] $module $context->{arguments}\n"
     );
 
-    $context->{action} = $context->{arguments};
-    $context->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($context);
-    delete $context->{action};
+    $context->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($context, $context->{arguments});
 
     my $module_dir = $self->{pbot}->{registry}->get_value('general', 'module_dir');
     if (not chdir $module_dir) {

@@ -425,32 +425,6 @@ sub find_factoid {
     return @result;
 }
 
-sub escape_json {
-    my ($self, $text) = @_;
-    my $thing = {thing => $text};
-    my $json  = encode_json $thing;
-    $json =~ s/^{".*":"//;
-    $json =~ s/"}$//;
-    return $json;
-}
-
-sub expand_special_vars {
-    my ($self, $from, $nick, $root_keyword, $action) = @_;
-
-    $action =~ s/(?<!\\)\$nick:json|(?<!\\)\$\{nick:json\}/$self->escape_json($nick)/ge;
-    $action =~ s/(?<!\\)\$channel:json|(?<!\\)\$\{channel:json\}/$self->escape_json($from)/ge;
-    $action =~
-      s/(?<!\\)\$randomnick:json|(?<!\\)\$\{randomnick:json\}/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $self->escape_json($random) : $self->escape_json($nick)/ge;
-    $action =~ s/(?<!\\)\$0:json|(?<!\\)\$\{0:json\}/$self->escape_json($root_keyword)/ge;
-
-    $action =~ s/(?<!\\)\$nick|(?<!\\)\$\{nick\}/$nick/g;
-    $action =~ s/(?<!\\)\$channel|(?<!\\)\$\{channel\}/$from/g;
-    $action =~ s/(?<!\\)\$randomnick|(?<!\\)\$\{randomnick\}/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
-    $action =~ s/(?<!\\)\$0\b|(?<!\\)\$\{0\}\b/$root_keyword/g;
-
-    return validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
-}
-
 sub parse_expansion_modifiers {
     my ($self, $modifier) = @_;
 
@@ -994,6 +968,32 @@ sub expand_action_arguments {
     return $action;
 }
 
+sub escape_json {
+    my ($self, $text) = @_;
+    my $thing = {thing => $text};
+    my $json  = encode_json $thing;
+    $json =~ s/^{".*":"//;
+    $json =~ s/"}$//;
+    return $json;
+}
+
+sub expand_special_vars {
+    my ($self, $from, $nick, $root_keyword, $action) = @_;
+
+    $action =~ s/(?<!\\)\$nick:json|(?<!\\)\$\{nick:json\}/$self->escape_json($nick)/ge;
+    $action =~ s/(?<!\\)\$channel:json|(?<!\\)\$\{channel:json\}/$self->escape_json($from)/ge;
+    $action =~
+      s/(?<!\\)\$randomnick:json|(?<!\\)\$\{randomnick:json\}/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $self->escape_json($random) : $self->escape_json($nick)/ge;
+    $action =~ s/(?<!\\)\$0:json|(?<!\\)\$\{0:json\}/$self->escape_json($root_keyword)/ge;
+
+    $action =~ s/(?<!\\)\$nick|(?<!\\)\$\{nick\}/$nick/g;
+    $action =~ s/(?<!\\)\$channel|(?<!\\)\$\{channel\}/$from/g;
+    $action =~ s/(?<!\\)\$randomnick|(?<!\\)\$\{randomnick\}/my $random = $self->{pbot}->{nicklist}->random_nick($from); $random ? $random : $nick/ge;
+    $action =~ s/(?<!\\)\$0\b|(?<!\\)\$\{0\}\b/$root_keyword/g;
+
+    return validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
+}
+
 sub execute_code_factoid_using_vm {
     my ($self, $context) = @_;
 
@@ -1006,8 +1006,7 @@ sub execute_code_factoid_using_vm {
             $context->{no_nickoverride} = 0;
         }
 
-        $context->{action} = $context->{code};
-        $context->{code}   = $self->expand_factoid_vars($context);
+        $context->{code} = $self->expand_factoid_vars($context, $context->{code});
 
         if ($self->{factoids}->get_data($context->{channel}, $context->{keyword}, 'allow_empty_args')) {
             $context->{code} = $self->expand_action_arguments($context->{code}, $context->{arguments}, '');
@@ -1246,7 +1245,12 @@ sub handle_action {
 
     my ($channel,      $keyword)      = ($context->{channel},      $context->{trigger});
     my ($channel_name, $trigger_name) = ($context->{channel_name}, $context->{trigger_name});
-    my $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : "";
+
+    my $ref_from = '';
+
+    unless ($context->{pipe} or $context->{subcmd}) {
+        $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : '';
+    }
 
     unless ($self->{factoids}->exists($channel, $keyword, 'interpolate') and $self->{factoids}->get_data($channel, $keyword, 'interpolate') eq '0') {
         my ($root_channel, $root_keyword) =
@@ -1258,8 +1262,7 @@ sub handle_action {
         if (not length $context->{keyword_override} and length $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override')) {
             $context->{keyword_override} = $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override');
         }
-        $context->{action} = $action;
-        $action = $self->expand_factoid_vars($context);
+        $action = $self->expand_factoid_vars($context, $action);
     }
 
     if (length $context->{arguments}) {
@@ -1345,18 +1348,23 @@ sub handle_action {
     unless ($self->{factoids}->exists($channel, $keyword, 'interpolate') and $self->{factoids}->get_data($channel, $keyword, 'interpolate') eq '0') {
         my ($root_channel, $root_keyword) =
           $self->find_factoid($context->{ref_from} ? $context->{ref_from} : $context->{from}, $context->{root_keyword}, arguments => $context->{arguments}, exact_channel => 1);
+
         if (not defined $root_channel or not defined $root_keyword) {
             $root_channel = $channel;
             $root_keyword = $keyword;
         }
+
         if (not length $context->{keyword_override} and length $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override')) {
             $context->{keyword_override} = $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override');
         }
-        $context->{action} = $action;
-        $action = $self->expand_factoid_vars($context);
 
-        if   ($self->{factoids}->get_data($channel, $keyword, 'allow_empty_args')) { $action = $self->expand_action_arguments($action, $context->{arguments}, ''); }
-        else                                                                       { $action = $self->expand_action_arguments($action, $context->{arguments}, $context->{nick}); }
+        $action = $self->expand_factoid_vars($context, $action);
+
+        if ($self->{factoids}->get_data($channel, $keyword, 'allow_empty_args')) {
+            $action = $self->expand_action_arguments($action, $context->{arguments}, '');
+        } else {
+            $action = $self->expand_action_arguments($action, $context->{arguments}, $context->{nick});
+        }
     }
 
     return $action if $context->{special} eq 'code-factoid';
@@ -1370,8 +1378,12 @@ sub handle_action {
         $context->{root_channel}        = $channel;
 
         my $result = $self->{pbot}->{modules}->execute_module($context);
-        if   (length $result) { return $ref_from . $result; }
-        else                  { return ""; }
+
+        if (length $result) {
+            return $ref_from . $result;
+        } else {
+            return "";
+        }
     } elsif ($self->{factoids}->get_data($channel, $keyword, 'type') eq 'text') {
         # Don't allow user-custom /msg factoids, unless factoid triggered by admin
         if ($action =~ m/^\/msg/i) {
