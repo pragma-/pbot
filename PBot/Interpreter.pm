@@ -267,8 +267,12 @@ sub interpret {
         $arguments =~ s/\s*(?<!\\)\|\s*{(\Q$pipe\E)}.*$//s;
         $pipe      =~ s/^\s+|\s+$//g;
 
-        if   (exists $context->{pipe}) { $context->{pipe_rest} = "$rest | { $context->{pipe} }$context->{pipe_rest}"; }
-        else                         { $context->{pipe_rest} = $rest; }
+        if (exists $context->{pipe}) {
+            $context->{pipe_rest} = "$rest | { $context->{pipe} }$context->{pipe_rest}";
+        } else {
+            $context->{pipe_rest} = $rest;
+        }
+
         $context->{pipe} = $pipe;
     }
 
@@ -793,11 +797,11 @@ sub handle_result {
     if    ($result =~ s#^(/say|/me) ##) { $context->{prepend} = $1; }
     elsif ($result =~ s#^(/msg \S+) ##) { $context->{prepend} = $1; }
 
-    if ($context->{pipe}) {
+    if (exists $context->{pipe}) {
         my ($pipe, $pipe_rest) = (delete $context->{pipe}, delete $context->{pipe_rest});
         if (not $context->{alldone}) {
             $context->{command} = "$pipe $result $pipe_rest";
-            $result           = $self->interpret($context);
+            $result             = $self->interpret($context);
             $context->{result}  = $result;
         }
         $self->handle_result($context, $result);
@@ -813,7 +817,7 @@ sub handle_result {
 
         if (not $context->{alldone}) {
             $context->{command} = $command;
-            $result           = $self->interpret($context);
+            $result             = $self->interpret($context);
             $context->{result}  = $result;
         }
         $self->handle_result($context);
