@@ -967,7 +967,8 @@ sub output_result {
 
     $line = $self->dehighlight_nicks($line, $context->{from}) if $context->{from} =~ /^#/ and $line !~ /^\/msg\s+/i;
 
-    if ($line =~ s/^\/say\s+//i) {
+    if ($line =~ s/^\/say(?:\s+|$)//i) {
+        $line = ' ' if not length $line;
         if (defined $context->{nickoverride} and ($context->{no_nickoverride} == 0 or $context->{force_nickoverride} == 1)) { $line = "$context->{nickoverride}: $line"; }
         $pbot->{conn}->privmsg($context->{from}, $line) if defined $context->{from} && $context->{from} ne $botnick;
         $pbot->{antiflood}->check_flood($context->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', $line, 0, 0, 0) if $context->{checkflood};
