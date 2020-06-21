@@ -1387,16 +1387,21 @@ sub handle_action {
     } elsif ($self->{factoids}->get_data($channel, $keyword, 'type') eq 'text') {
         # Don't allow user-custom /msg factoids, unless factoid triggered by admin
         if ($action =~ m/^\/msg/i) {
-            my $admin = $self->{pbot}->{users}->loggedin_admin($context->{from}, "$context->{nick}!$context->{user}\@$context->{host}");
-            if (not $admin) {
-                $self->{pbot}->{logger}->log("[ABUSE] Bad factoid (contains /msg): $action\n");
-                return "You must be an admin to use /msg in a factoid.";
+            if (not $self->{pbot}->{users}->loggedin_admin($context->{from}, $context->{hostmask})) {
+                $self->{pbot}->{logger}->log("[ABUSE] Bad factoid (starts with /msg): $action\n");
+                return "You must be an admin to use /msg.";
             }
         }
 
         if ($ref_from) {
-            if ($action =~ s/^\/say\s+/$ref_from/i || $action =~ s/^\/me\s+(.*)/\/me $1 $ref_from/i || $action =~ s/^\/msg\s+([^ ]+)/\/msg $1 $ref_from/i) { return $action; }
-            else { return $ref_from . "$trigger_name is $action"; }
+            if (   $action =~ s/^\/say\s+/$ref_from/i
+                || $action =~ s/^\/me\s+(.*)/\/me $1 $ref_from/i
+                || $action =~ s/^\/msg\s+([^ ]+)/\/msg $1 $ref_from/i
+            ) {
+                return $action;
+            } else {
+                return $ref_from . "$trigger_name is $action";
+            }
         } else {
             if   ($action =~ m/^\/(?:say|me|msg)/i) { return $action; }
             else                                    { return "/say $trigger_name is $action"; }
