@@ -642,6 +642,10 @@ sub cmd_kick {
         }
     }
 
+    if ($context->{keyword} =~ /^[A-Z]+$/) {
+        $reason = uc $reason;
+    }
+
     my @nicks = split /,/, $victim;
     foreach my $n (@nicks) {
         if ($n =~ m/\*/) {
