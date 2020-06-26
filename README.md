@@ -43,7 +43,7 @@ To get up-and-running quickly, check out the [Quick Start guide](doc/QuickStart.
 * [`kick`](doc/Admin.md#kick) can take a comma-separated list of nicks; also accepts wildcards
 * and much, much more!
 
-For more information, see the [Admin documentation.](doc/Admin.md#user-management-commands)
+For more information, see the [Admin documentation.](doc/Admin.md)
 
 ### Channel management
 PBot can perform the typical channel management tasks.
