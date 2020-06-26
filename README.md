@@ -43,6 +43,8 @@ To get up-and-running quickly, check out the [Quick Start guide](doc/QuickStart.
 * [`kick`](doc/Admin.md#kick) can take a comma-separated list of nicks; also accepts wildcards
 * and much, much more!
 
+For more information, see the [Admin documentation.](doc/Admin.md#user-management-commands)
+
 ### Channel management
 PBot can perform the typical channel management tasks.
 
@@ -102,6 +104,8 @@ You can pipe output from one command as input into another command, indefinitely
     <pragma-> !echo hello world | {sed s/world/everybody/} | {uc}
        <PBot> HELLO EVERYBODY
 
+[Learn more.](doc/Commands.md#piping)
+
 #### Substitution
 You can insert the output from another command at any point within a command. This
 substitutes the command with its output at the point where the command was used.
@@ -126,11 +130,15 @@ factoid otherwise it will be expanded first.
     <pragma-> !img spaces & stuff
        <PBot> https://google.com/search?tbm=isch&q=spaces%20%26%20stuff
 
+[Learn more.](doc/Commands.md#substitution)
+
 #### Chaining
 You can execute multiple commands sequentially as one command.
 
     <pragma-> !echo Test! ;;; me smiles. ;;; version
        <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
+
+[Learn more.](doc/Commands.md#chaining)
 
 #### Variables
 You can use factoids as variables and interpolate them within commands.
@@ -146,11 +154,15 @@ combine their effects.
     <pragma-> !echo $greeting:uc
        <PBot> HELLO, WORLD
 
+[Learn more.](doc/Factoids.md#list-variables)
+
 #### Selectors
 You can select a random item from a selection list and interpolate the value within commands.
 
     <pragma-> !echo This is a %(neat|cool|awesome) bot.
        <PBot> This is a cool bot.
+
+[Learn more.](doc/Commands.md#selectors)
 
 #### Inline invocation
 You can invoke up to three commands inlined within a message.  If the message
@@ -159,6 +171,8 @@ is addressed to a nick, the output will also be addressed to them.
     <pragma-> newuser13: Check the !{version} and the !{help} documentation.
        <PBot> newuser13: PBot version 2696 2020-01-04
        <PBot> newuser13: To learn all about me, see https://github.com/pragma-/pbot/tree/master/doc
+
+[Learn more.](doc/Commands.md#command-invocation)
 
 #### Background processing
 Any command can be flagged to be executed as a background process. For example, suppose you
