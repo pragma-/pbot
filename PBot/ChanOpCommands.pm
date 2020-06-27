@@ -644,6 +644,8 @@ sub cmd_kick {
 
     if ($context->{keyword} =~ /^[A-Z]+$/) {
         $reason = uc $reason;
+    } elsif ($context->{keyword} eq 'KiCk' or $context->{keyword} eq 'kIcK') {
+        $reason =~ s/(.)(.)/lc($1) . uc($2)/ge;
     }
 
     my @nicks = split /,/, $victim;
