@@ -785,7 +785,7 @@ sub expand_factoid_vars {
                 $extract_method = 'regex';
             }
 
-            if ($var =~ /^(?:_.*|\d+|a|b|nick|channel|randomnick|arglen|args|arg\[.+\])$/i) {
+            if ($var =~ /^(?:_.*|[[:punct:]0-9]+|a|b|nick|channel|randomnick|arglen|args|arg\[.+\])$/i) {
                 # skip identifiers with leading underscores, etc
                 $result .= $extract_method eq 'bracket' ? '${' . $var . '}' : '$' . $var;
                 next;
@@ -1252,19 +1252,6 @@ sub handle_action {
         $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : '';
     }
 
-    unless ($self->{factoids}->exists($channel, $keyword, 'interpolate') and $self->{factoids}->get_data($channel, $keyword, 'interpolate') eq '0') {
-        my ($root_channel, $root_keyword) =
-          $self->find_factoid($context->{ref_from} ? $context->{ref_from} : $context->{from}, $context->{root_keyword}, arguments => $context->{arguments}, exact_channel => 1);
-        if (not defined $root_channel or not defined $root_keyword) {
-            $root_channel = $channel;
-            $root_keyword = $keyword;
-        }
-        if (not length $context->{keyword_override} and length $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override')) {
-            $context->{keyword_override} = $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override');
-        }
-        $action = $self->expand_factoid_vars($context, $action);
-    }
-
     if (length $context->{arguments}) {
         if ($action =~ m/\$\{?args/ or $action =~ m/\$\{?arg\[/) {
             unless (defined $self->{factoids}->get_data($channel, $keyword, 'interpolate') and $self->{factoids}->get_data($channel, $keyword, 'interpolate') eq '0') {
@@ -1333,6 +1320,20 @@ sub handle_action {
         }
 
         return $self->{pbot}->{interpreter}->interpret($context);
+    }
+
+    unless ($self->{factoids}->exists($channel, $keyword, 'interpolate') and $self->{factoids}->get_data($channel, $keyword, 'interpolate') eq '0') {
+        my ($root_channel, $root_keyword) =
+          $self->find_factoid($context->{ref_from} ? $context->{ref_from} : $context->{from}, $context->{root_keyword}, arguments => $context->{arguments}, exact_channel => 1);
+        if (not defined $root_channel or not defined $root_keyword) {
+            $root_channel = $channel;
+            $root_keyword = $keyword;
+        }
+        if (not length $context->{keyword_override} and length $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override')) {
+            $context->{keyword_override} = $self->{factoids}->get_data($root_channel, $root_keyword, 'keyword_override');
+        }
+
+        $action = $self->expand_factoid_vars($context, $action);
     }
 
     $self->{pbot}->{logger}
