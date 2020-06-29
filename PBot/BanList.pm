@@ -202,8 +202,6 @@ sub compare_banlist {
     my ($self, $event_type, $event) = @_;
     my $channel = lc $event->{event}->{args}[1];
 
-    $self->{pbot}->{logger}->log("Finalizing Ban List for $channel\n");
-
     # first check for saved bans no longer in channel
     foreach my $mask ($self->{banlist}->get_keys($channel)) {
         if (not exists $self->{temp_banlist}->{$channel}->{'+b'}->{$mask}) {
@@ -247,7 +245,6 @@ sub compare_quietlist {
     my ($self, $event_type, $event) = @_;
     my $channel = lc $event->{event}->{args}[1];
 
-    $self->{pbot}->{logger}->log("Finalizing quiet list for $channel\n");
     my $mute_char = $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char');
 
     # first check for saved quiets no longer in channel
