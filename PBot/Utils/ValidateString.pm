@@ -20,8 +20,13 @@ sub validate_string {
     local $@;
     eval {
         my $h = decode_json($string);
-        foreach my $k (keys %$h) { $h->{$k} = substr $h->{$k}, 0, $max_length unless $max_length <= 0; }
-        $string = encode_json($h);
+
+        if (not defined $h) {
+            $string = 'null';
+        } else {
+            foreach my $k (keys %$h) { $h->{$k} = substr $h->{$k}, 0, $max_length unless $max_length <= 0; }
+            $string = encode_json($h);
+        }
     };
 
     if ($@) {
