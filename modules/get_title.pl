@@ -19,8 +19,12 @@ if ($#ARGV <= 0) {
 my $nick      = shift(@ARGV);
 my $arguments = join("%20", @ARGV);
 
+print STDERR "nick: [$nick], args: [$arguments]\n";
+
 $arguments =~ s/\W$//;
 
+exit if $arguments =~ m{https?://ibb.co/}i;
+exit if $arguments =~ m{googlesource.com/}i;
 exit if $arguments =~ m{https?://git}i;
 exit if $arguments =~ m{https://.*swissborg.com}i;
 exit if $arguments =~ m{https://streamable.com}i;
@@ -83,7 +87,11 @@ exit if $arguments =~ m/paste.*\.(?:com|org|net|ch|ca|de|uk|info)/i;
 exit if $arguments =~ m/pasting.*\.(?:com|org|net|ca|de|uk|info|ch)/i;
 
 my $ua = LWP::UserAgent->new;
-$ua->agent("Mozilla/5.0");
+if ($arguments =~ /youtube|youtu.be|googlevideo/) {
+    $ua->agent("Googlebot");
+} else {
+    $ua->agent("Mozilla/5.0");
+}
 $ua->max_size(200 * 1024);
 
 my $response = $ua->get("$arguments");
@@ -100,7 +108,8 @@ my $text = $response->decoded_content;
 
 if ($text =~ m/<title>(.*?)<\/title>/msi) { $t = $1; }
 else {
-
+    use Data::Dumper;
+    print STDERR Dumper $response;
     #print "No title for link.\n";
     exit;
 }
@@ -154,6 +163,7 @@ if ($distance / $length < 0.75) { exit; }
 
 exit if $t !~ m/\s/;                                 # exit if title is only one word -- this isn't usually interesting
 exit if $t =~ m{christel}i;
+exit if $t =~ m{^Loading}i;
 exit if $t =~ m{streamable}i;
 exit if $t =~ m{freenode}i;
 exit if $t =~ m{ico scam}i;
