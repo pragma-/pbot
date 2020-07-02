@@ -647,16 +647,11 @@ sub cmd_factadd {
         $channel_name = 'global'            if $channel_name eq '.*';
         $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
-        if (not $force) { return "/say $trigger_name already exists for $channel_name."; }
-        else {
+        if (not $force) {
+            return "/say $trigger_name already exists for $channel_name.";
+        } else {
             my $factoids = $self->{pbot}->{factoids}->{factoids};
-
             if ($factoids->get_data($channel, $trigger, 'locked')) { return "/say $trigger_name is locked; unlock before overwriting."; }
-
-            my ($owner) = $factoids->get_data($channel, $trigger, 'owner') =~ m/([^!]+)/;
-            if ((lc $context->{nick} ne lc $owner) and (not $self->{pbot}->{users}->loggedin_admin($channel, $context->{hostmask}))) {
-                return "You are not the owner of $trigger_name for $channel_name; cannot force overwrite.";
-            }
         }
     }
 
