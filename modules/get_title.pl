@@ -6,6 +6,8 @@
 
 # Quick and dirty by :pragma
 
+# Update: Did I say quick and dirty? I meant lazy and filthy. I should rewrite this completely.
+
 use LWP::UserAgent;
 use HTML::Entities;
 use Text::Levenshtein qw(fastdistance);
@@ -167,6 +169,7 @@ exit if $t =~ m{^Loading}i;
 exit if $t =~ m{streamable}i;
 exit if $t =~ m{freenode}i;
 exit if $t =~ m{ico scam}i;
+exit if $t =~ m{^IBM Knowledge Center$}i;
 exit if $t =~ m{Freenode head of infrastructure}i;
 exit if $t =~ m{ISC on Twitter}i;
 exit if $t =~ m{spambot.*freenode}i;
