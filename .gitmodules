@@ -1,0 +1,3 @@
+[submodule "Plang"]
+	path = Plang
+	url = https://github.com/pragma-/Plang
