@@ -278,6 +278,7 @@ sub random_nick {
 # TODO: add disconnect subroutine
 sub connect {
     my ($self, $server) = @_;
+    return if $ENV{PBOT_LOCAL};
 
     if ($self->{connected}) {
         # TODO: disconnect, clean-up, etc
@@ -333,15 +334,15 @@ sub connect {
 #main loop
 sub do_one_loop {
     my $self = shift;
-    $self->{irc}->do_one_loop();
-    $self->{select_handler}->do_select();
+    $self->{irc}->do_one_loop() if $self->{connected};
+    $self->{select_handler}->do_select;
 }
 
 sub start {
     my $self = shift;
     while (1) {
-        $self->connect()     if not $self->{connected};
-        $self->do_one_loop() if $self->{connected};
+        $self->connect if not $self->{connected};
+        $self->do_one_loop;
     }
 }
 
