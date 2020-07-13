@@ -70,11 +70,21 @@ sub cmd_plang {
 }
 
 # run an embedded plang program
+# TODO this is just a proof-of-concept at this stage; 90% of this stuff will be moved into Plang::Interpreter
 sub run {
     my ($self, $code) = @_;
 
+    # reset output buffer
+    $self->{output} = "";  # collect output of the embedded Plang program
+
     # parse the code into an ast
     my $ast = $self->{plang}->parse_string($code);
+
+    # check for parse errors
+    my $errors = $self->{plang}->handle_parse_errors;
+    return ['ERROR', $errors] if defined $errors;
+
+    # return if no program
     return if not defined $ast;
 
     # create a new environment for a Plang program
@@ -84,7 +94,6 @@ sub run {
     my $program    = $ast->[0];
     my $statements = $program->[1];
 
-    $self->{output} = "";  # collect output of the embedded Plang program
     my $result;            # result of the final statement
 
     eval {
