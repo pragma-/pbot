@@ -33,15 +33,15 @@ sub initialize {
     $self->{plang}->{interpreter}->add_function_builtin('factset',
         # parameters are [['param1 name', default arg], ['param2 name', default arg], ...]
         [['channel', undef], ['keyword', undef], ['text', undef]],
-        \&set_factoid);
+        sub { $self->set_factoid(@_) });
 
     $self->{plang}->{interpreter}->add_function_builtin('factget',
-        [['channel', undef], ['keyword', undef]],
-        \&get_factoid);
+        [['channel', undef], ['keyword', undef], ['meta', ['STRING', 'action']]],
+        sub { $self->get_factoid(@_) });
 
     $self->{plang}->{interpreter}->add_function_builtin('factappend',
         [['channel', undef], ['keyword', undef], ['text', undef]],
-        \&append_factoid);
+        sub { $self->append_factoid(@_) });
 
     # register the `plang` command
     $self->{pbot}->{commands}->register(sub { $self->cmd_plang(@_) }, "plang", 0);
@@ -103,6 +103,14 @@ sub run {
 
             if ($ins eq 'STMT') {
                 $result = $self->{plang}->{interpreter}->statement($context, $node->[1]);
+
+                $self->{output} .= $result->[1] if $result->[0] eq 'STDOUT';
+
+                if ($result->[0] eq 'ERROR') {
+                    $self->{output} .= "Error: $result->[1]";
+                    $result = undef;
+                    last;
+                }
             }
         }
     };
@@ -117,22 +125,35 @@ sub run {
 
 # our custom PBot built-in functions for Plang
 
+sub is_locked {
+    my ($self, $channel, $keyword) = @_;
+    return $self->{pbot}->{factoids}->get_meta($channel, $keyword, 'locked');
+}
+
 sub get_factoid {
-    my ($plang, $name, $arguments) = @_;
-    my ($channel, $keyword) = ($arguments->[0]->[1], $arguments->[1]->[1]);
-    return ['STRING', "get_factoid: channel: [$channel], keyword: [$keyword]"];
+    my ($self, $plang, $name, $arguments) = @_;
+    my ($channel, $keyword, $meta) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
+    my $result = $self->{pbot}->{factoids}->get_meta($channel, $keyword, $meta);
+    return ['STRING', $result];
 }
 
 sub set_factoid {
-    my ($plang, $name, $arguments) = @_;
+    my ($self, $plang, $name, $arguments) = @_;
     my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
-    return ['STRING', "set_factoid: channel: [$channel], keyword: [$keyword], text: [$text]"];
+    return ['ERROR', "Factoid $channel.$keyword is locked. Cannot set."] if $self->is_locked($channel, $keyword);
+    $self->{pbot}->{factoids}->add_factoid('text', $channel, 'Plang', $keyword, $text);
+    return ['STRING', $text];
 }
 
 sub append_factoid {
-    my ($plang, $name, $arguments) = @_;
+    my ($self, $plang, $name, $arguments) = @_;
     my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
-    return ['STRING', "append_factoid: channel: [$channel], keyword: [$keyword], text: [$text]"];
+    return ['ERROR', "Factoid $channel.$keyword is locked. Cannot append."] if $self->is_locked($channel, $keyword);
+    my $action = $self->{pbot}->{factoids}->get_meta($channel, $keyword, 'action');
+    $action = "" if not defined $action;
+    $action .= $text;
+    $self->{pbot}->{factoids}->add_factoid('text', $channel, 'Plang', $keyword, $action);
+    return ['STRING', $action];
 }
 
 1;
