@@ -30,9 +30,18 @@ sub initialize {
     $self->{plang} = Plang::Interpreter->new(embedded => 1, debug => $debug);
 
     # register some built-in functions
-    $self->{plang}->{interpreter}->add_function_builtin('set',    [qw/channel keyword text/], \&set_factoid);
-    $self->{plang}->{interpreter}->add_function_builtin('get',    [qw/channel keyword/],      \&get_factoid);
-    $self->{plang}->{interpreter}->add_function_builtin('append', [qw/channel keyword text/], \&append_factoid);
+    $self->{plang}->{interpreter}->add_function_builtin('factset',
+        # parameters are [['param1 name', default arg], ['param2 name', default arg], ...]
+        [['channel', undef], ['keyword', undef], ['text', undef]],
+        \&set_factoid);
+
+    $self->{plang}->{interpreter}->add_function_builtin('factget',
+        [['channel', undef], ['keyword', undef]],
+        \&get_factoid);
+
+    $self->{plang}->{interpreter}->add_function_builtin('factappend',
+        [['channel', undef], ['keyword', undef], ['text', undef]],
+        \&append_factoid);
 
     # register the `plang` command
     $self->{pbot}->{commands}->register(sub { $self->cmd_plang(@_) }, "plang", 0);
@@ -54,16 +63,9 @@ sub cmd_plang {
     my $result = $self->run($context->{arguments});
 
     # check to see if we need to append final result to output
-    if (defined $result) {
-        if (ref $result->[0] eq 'ARRAY') {
-            foreach my $r (@$result) {
-                $self->{output} .= $r->[1] if defined $r->[1];
-            }
-        } else {
-            $self->{output} .= $result->[1] if defined $result->[1];
-        }
-    }
+    $self->{output} .= $result->[1] if defined $result->[1];
 
+    # return the output
     return length $self->{output} ? $self->{output} : "No output.";
 }
 
@@ -85,57 +87,23 @@ sub run {
     $self->{output} = "";  # collect output of the embedded Plang program
     my $result;            # result of the final statement
 
-    # interpret the statements
-    foreach my $node (@$statements) {
-        my $ins = $node->[0];
+    eval {
+        # interpret the statements
+        foreach my $node (@$statements) {
+            my $ins = $node->[0];
 
-        if ($ins eq 'STMT') {
-            $result = $self->{plang}->{interpreter}->statement($context, $node->[1]);
-            $result = $self->handle_statement_results($result);
+            if ($ins eq 'STMT') {
+                $result = $self->{plang}->{interpreter}->statement($context, $node->[1]);
+            }
         }
+    };
 
-        last if $self->{error};
+    if ($@) {
+        $self->{output} .= $@;
+        return;
     }
 
     return $result; # return result of the final statement
-}
-use Data::Dumper;
-
-# handle a Plang statement result
-sub handle_statement_results {
-    my ($self, $results) = @_;
-
-    if (ref $results->[0] eq 'ARRAY') {
-        my $ret;
-        foreach my $result (@$results) {
-            $ret = $self->handle_statement_result($result);
-        }
-        return $ret;
-    } else {
-        return $self->handle_statement_result($results);
-    }
-}
-
-sub handle_statement_result {
-    my ($self, $result) = @_;
-
-    if ($result->[0] eq 'ERROR') {
-        $self->{output} .= $result->[1];
-        $self->{error} = 1;
-        return;
-    }
-
-    if ($result->[0] eq 'WARNING') {
-        $self->{output} .= $result->[1];
-        return;
-    }
-
-    if ($result->[0] eq 'STDOUT') {
-        $self->{output} .= $result->[1];
-        return;
-    }
-
-    return $result;
 }
 
 # our custom PBot built-in functions for Plang
