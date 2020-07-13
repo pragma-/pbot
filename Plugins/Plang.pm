@@ -55,7 +55,7 @@ sub unload {
 sub cmd_plang {
     my ($self, $context) = @_;
 
-    my $usage = "plang <Plang code>; see https://github.com/pragma-/Plang";
+    my $usage = "Usage: plang <code>; see https://github.com/pragma-/Plang";
 
     return $usage if not length $context->{arguments};
 
