@@ -104,7 +104,11 @@ sub run {
             if ($ins eq 'STMT') {
                 $result = $self->{plang}->{interpreter}->statement($context, $node->[1]);
 
-                $self->{output} .= $result->[1] if $result->[0] eq 'STDOUT';
+               if ($result->[0] eq 'STDOUT') {
+                   $self->{output} .= $result->[1];
+                   $result = undef;
+                   next;
+               }
 
                 if ($result->[0] eq 'ERROR') {
                     $self->{output} .= "Error: $result->[1]";
