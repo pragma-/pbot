@@ -43,7 +43,7 @@ sub new {
         '_schedulequeue' => new PBot::IRC::EventQueue(),    # pragma_ 2011/01/21
         '_outputqueue'   => new PBot::IRC::EventQueue(),    # pragma_ 2011/01/21
         '_read'          => IO::Select->new(),
-        '_timeout'       => 1,
+        '_timeout'       => 0,
         '_write'         => IO::Select->new(),
     };
 

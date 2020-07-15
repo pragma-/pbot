@@ -34,7 +34,8 @@ sub remove_reader {
 sub do_select {
     my ($self) = @_;
     my $length = 8192;
-    my @ready  = $self->{select}->can_read(0);
+    my @ready  = $self->{select}->can_read(.1);
+
     foreach my $fh (@ready) {
         my $ret = sysread($fh, my $buf, $length);
 
