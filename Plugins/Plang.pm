@@ -63,7 +63,7 @@ sub cmd_plang {
     my $result = $self->run($context->{arguments});
 
     # check to see if we need to append final result to output
-    $self->{output} .= $result->[1] if defined $result->[1];
+    $self->{output} .= $self->{plang}->{interpreter}->output_value($result) if defined $result->[1];
 
     # return the output
     return length $self->{output} ? $self->{output} : "No output.";
@@ -94,7 +94,7 @@ sub run {
     my $program    = $ast->[0];
     my $statements = $program->[1];
 
-    my $result;            # result of the final statement
+    my $result; # result of the final statement
 
     eval {
         # interpret the statements
