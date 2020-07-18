@@ -793,7 +793,7 @@ sub expand_factoid_vars {
             $matches++;
 
             # extract channel expansion modifier
-            if ($rest =~ s/^:*(#[^:]+|global)//i) {
+            if ($rest =~ s/^:(#[^:]+|global)//i) {
                 $from = $1;
                 $from = '.*' if lc $from eq 'global';
             }
