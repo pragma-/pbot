@@ -107,8 +107,7 @@ sub get_meta {
 }
 
 sub add_factoid {
-    my $self = shift;
-    my ($type, $channel, $owner, $trigger, $action, $dont_save) = @_;
+    my ($self, $type, $channel, $owner, $trigger, $action, $dont_save) = @_;
     $type    = lc $type;
     $channel = '.*' if $channel !~ /^#/;
 
@@ -504,7 +503,7 @@ sub parse_expansion_modifiers {
             next;
         }
 
-        if ($$modifier =~ s/^(enumerate|comma|uc|lc|ucfirst|title)//) {
+        if ($$modifier =~ s/^(enumerate|comma|ucfirst|lcfirst|title|uc|lc)//) {
             $settings{$1} = 1;
             next;
         }
@@ -794,7 +793,7 @@ sub expand_factoid_vars {
             $matches++;
 
             # extract channel expansion modifier
-            if ($rest =~ s/^\s*:\s*(#[^:]+|global)//i) {
+            if ($rest =~ s/^:*(#[^:]+|global)//i) {
                 $from = $1;
                 $from = '.*' if lc $from eq 'global';
             }
@@ -823,6 +822,8 @@ sub expand_factoid_vars {
                 goto ALIAS;
             }
 
+            my %settings = $self->parse_expansion_modifiers(\$rest);
+
             if ($self->{factoids}->get_data($var_chan, $var, 'type') eq 'text') {
                 my $change = $self->{factoids}->get_data($var_chan, $var, 'action');
                 my @list   = $self->{pbot}->{interpreter}->split_line($change);
@@ -843,6 +844,19 @@ sub expand_factoid_vars {
                 } else {
                     $replacement = $self->expand_factoid_vars($context, $replacement, %opts);
                 }
+
+                if ($settings{'uc'}) { $replacement = uc $replacement; }
+
+                if ($settings{'lc'}) { $replacement = lc $replacement; }
+
+                if ($settings{'ucfirst'}) { $replacement = ucfirst $replacement; }
+
+                if ($settings{'title'}) {
+                    $replacement = ucfirst lc $replacement;
+                    $replacement =~ s/ (\w)/' ' . uc $1/ge;
+                }
+
+                if ($settings{'json'}) { $replacement = $self->escape_json($replacement); }
 
                 if ($result =~ s/\b(a|an)(\s+)$//i) {
                     my ($article, $trailing) = ($1, $2);
