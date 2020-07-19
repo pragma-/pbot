@@ -822,7 +822,8 @@ sub expand_factoid_vars {
                 goto ALIAS;
             }
 
-            my %settings = $self->parse_expansion_modifiers(\$rest);
+            my $copy = $rest;
+            my %settings = $self->parse_expansion_modifiers(\$copy);
 
             if ($self->{factoids}->get_data($var_chan, $var, 'type') eq 'text') {
                 my $change = $self->{factoids}->get_data($var_chan, $var, 'action');
