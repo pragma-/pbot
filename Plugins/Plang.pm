@@ -19,9 +19,17 @@ use Getopt::Long qw(GetOptionsFromArray);
 sub initialize {
     my ($self, %conf) = @_;
 
+    # load Plang module
     my $path = $self->{pbot}->{registry}->get_value('general', 'plang_dir') // 'Plang';
     unshift @INC, $path if not grep { $_ eq $path } @INC;
     require "$path/Interpreter.pm";
+
+    # allow !refresh to reload these modules
+    $self->{pbot}->{refresher}->{refresher}->update_cache("$path/Interpreter.pm");
+    $self->{pbot}->{refresher}->{refresher}->update_cache("$path/AstInterpreter.pm");
+    $self->{pbot}->{refresher}->{refresher}->update_cache("$path/Grammar.pm");
+    $self->{pbot}->{refresher}->{refresher}->update_cache("$path/Lexer.pm");
+    $self->{pbot}->{refresher}->{refresher}->update_cache("$path/Parser.pm");
 
     # regset plang.debug 0-10 -- Plugin must be reloaded for this value to take effect.
     my $debug = $self->{pbot}->{registry}->get_value('plang', 'debug') // 0;
@@ -29,7 +37,7 @@ sub initialize {
     # create our Plang interpreter object
     $self->{plang} = Plang::Interpreter->new(embedded => 1, debug => $debug);
 
-    # register some built-in functions
+    # register some PBot-specific built-in functions
     $self->{plang}->{interpreter}->add_function_builtin('factset',
         # parameters are [['param1 name', default arg], ['param2 name', default arg], ...]
         [['namespace', undef], ['keyword', undef], ['text', undef]],
@@ -42,6 +50,11 @@ sub initialize {
     $self->{plang}->{interpreter}->add_function_builtin('factappend',
         [['namespace', undef], ['keyword', undef], ['text', undef]],
         sub { $self->append_factoid(@_) });
+
+    # override the built-in `print` function to send to our output buffer instead
+    $self->{plang}->{interpreter}->add_function_builtin('print',
+        [['stmt', undef], ['end', ['STRING', "\n"]]],
+        sub { $self->print_override(@_) });
 
     # register the `plang` command
     $self->{pbot}->{commands}->register(sub { $self->cmd_plang(@_) }, "plang", 0);
@@ -88,7 +101,7 @@ sub run {
     return if not defined $ast;
 
     # create a new environment for a Plang program
-    my $context = $self->{plang}->{interpreter}->init_program;
+    my $context = $self->{plang}->{interpreter}->new_context;
 
     # grab our program's statements
     my $program    = $ast->[0];
@@ -125,6 +138,14 @@ sub run {
     }
 
     return $result; # return result of the final statement
+}
+
+# overridden `print` built-in
+sub print_override {
+    my ($self, $plang, $name, $arguments) = @_;
+    my ($stmt, $end) = ($plang->output_value($arguments->[0]), $arguments->[1]->[1]);
+    $self->{output} .= "$stmt$end";
+    return ['NIL', undef];
 }
 
 # our custom PBot built-in functions for Plang
