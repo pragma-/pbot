@@ -145,7 +145,7 @@ sub print_override {
     my ($self, $plang, $name, $arguments) = @_;
     my ($stmt, $end) = ($plang->output_value($arguments->[0]), $arguments->[1]->[1]);
     $self->{output} .= "$stmt$end";
-    return ['NIL', undef];
+    return ['STRING', "$stmt$end"];
 }
 
 # our custom PBot built-in functions for Plang
