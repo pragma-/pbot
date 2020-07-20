@@ -69,11 +69,10 @@ sub cmd_plang {
     my ($self, $context) = @_;
 
     my $usage = "Usage: plang <code>; see https://github.com/pragma-/Plang";
-
     return $usage if not length $context->{arguments};
 
-    # run() returns result of the final statement
-    my $result = $self->run($context->{arguments});
+    $self->{output} = "";  # collect output of the embedded Plang program
+    my $result = $self->{plang}->interpret_string($context->{arguments});
 
     # check to see if we need to append final result to output
     $self->{output} .= $self->{plang}->{interpreter}->output_value($result) if defined $result->[1];
@@ -82,65 +81,8 @@ sub cmd_plang {
     return length $self->{output} ? $self->{output} : "No output.";
 }
 
-# run an embedded plang program
-# TODO this is just a proof-of-concept at this stage; 90% of this stuff will be moved into Plang::Interpreter
-sub run {
-    my ($self, $code) = @_;
-
-    # reset output buffer
-    $self->{output} = "";  # collect output of the embedded Plang program
-
-    # parse the code into an ast
-    my $ast = $self->{plang}->parse_string($code);
-
-    # check for parse errors
-    my $errors = $self->{plang}->handle_parse_errors;
-    return ['ERROR', $errors] if defined $errors;
-
-    # return if no program
-    return if not defined $ast;
-
-    # create a new environment for a Plang program
-    my $context = $self->{plang}->{interpreter}->new_context;
-
-    # grab our program's statements
-    my $program    = $ast->[0];
-    my $statements = $program->[1];
-
-    my $result; # result of the final statement
-
-    eval {
-        # interpret the statements
-        foreach my $node (@$statements) {
-            my $ins = $node->[0];
-
-            if ($ins eq 'STMT') {
-                $result = $self->{plang}->{interpreter}->statement($context, $node->[1]);
-
-               if ($result->[0] eq 'STDOUT') {
-                   $self->{output} .= $result->[1];
-                   $result = undef;
-                   next;
-               }
-
-                if ($result->[0] eq 'ERROR') {
-                    $self->{output} .= "Error: $result->[1]";
-                    $result = undef;
-                    last;
-                }
-            }
-        }
-    };
-
-    if ($@) {
-        $self->{output} .= $@;
-        return;
-    }
-
-    return $result; # return result of the final statement
-}
-
 # overridden `print` built-in
+
 sub print_override {
     my ($self, $plang, $name, $arguments) = @_;
     my ($stmt, $end) = ($plang->output_value($arguments->[0]), $arguments->[1]->[1]);
