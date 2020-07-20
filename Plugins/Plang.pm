@@ -58,6 +58,9 @@ sub initialize {
 
     # register the `plang` command
     $self->{pbot}->{commands}->register(sub { $self->cmd_plang(@_) }, "plang", 0);
+
+    # register the `plangrepl` command (does not reset environment)
+    $self->{pbot}->{commands}->register(sub { $self->cmd_plangrepl(@_) }, "plangrepl", 0);
 }
 
 sub unload {
@@ -76,6 +79,22 @@ sub cmd_plang {
 
     # check to see if we need to append final result to output
     $self->{output} .= $self->{plang}->{interpreter}->output_value($result) if defined $result->[1];
+
+    # return the output
+    return length $self->{output} ? $self->{output} : "No output.";
+}
+
+sub cmd_plangrepl {
+    my ($self, $context) = @_;
+
+    my $usage = "Usage: plangrepl <code>; see https://github.com/pragma-/Plang";
+    return $usage if not length $context->{arguments};
+
+    $self->{output} = "";  # collect output of the embedded Plang program
+    my $result = $self->{plang}->interpret_string($context->{arguments}, repl => 1);
+
+    # check to see if we need to append final result to output
+    $self->{output} .= $self->{plang}->{interpreter}->output_value($result, repl => 1) if defined $result->[1];
 
     # return the output
     return length $self->{output} ? $self->{output} : "No output.";
