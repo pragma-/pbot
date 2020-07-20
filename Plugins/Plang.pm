@@ -38,21 +38,21 @@ sub initialize {
     $self->{plang} = Plang::Interpreter->new(embedded => 1, debug => $debug);
 
     # register some PBot-specific built-in functions
-    $self->{plang}->{interpreter}->add_function_builtin('factset',
+    $self->{plang}->{interpreter}->add_builtin_function('factset',
         # parameters are [['param1 name', default arg], ['param2 name', default arg], ...]
         [['namespace', undef], ['keyword', undef], ['text', undef]],
         sub { $self->set_factoid(@_) });
 
-    $self->{plang}->{interpreter}->add_function_builtin('factget',
+    $self->{plang}->{interpreter}->add_builtin_function('factget',
         [['namespace', undef], ['keyword', undef], ['meta', ['STRING', 'action']]],
         sub { $self->get_factoid(@_) });
 
-    $self->{plang}->{interpreter}->add_function_builtin('factappend',
+    $self->{plang}->{interpreter}->add_builtin_function('factappend',
         [['namespace', undef], ['keyword', undef], ['text', undef]],
         sub { $self->append_factoid(@_) });
 
     # override the built-in `print` function to send to our output buffer instead
-    $self->{plang}->{interpreter}->add_function_builtin('print',
+    $self->{plang}->{interpreter}->add_builtin_function('print',
         [['stmt', undef], ['end', ['STRING', "\n"]]],
         sub { $self->print_override(@_) });
 
