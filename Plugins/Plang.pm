@@ -19,17 +19,17 @@ use Getopt::Long qw(GetOptionsFromArray);
 sub initialize {
     my ($self, %conf) = @_;
 
-    # load Plang module
+    # load Plang modules
     my $path = $self->{pbot}->{registry}->get_value('general', 'plang_dir') // 'Plang';
     unshift @INC, $path if not grep { $_ eq $path } @INC;
-    require "$path/Interpreter.pm";
 
-    # allow !refresh to reload these modules
-    $self->{pbot}->{refresher}->{refresher}->update_cache("$path/Interpreter.pm");
-    $self->{pbot}->{refresher}->{refresher}->update_cache("$path/AstInterpreter.pm");
-    $self->{pbot}->{refresher}->{refresher}->update_cache("$path/Grammar.pm");
-    $self->{pbot}->{refresher}->{refresher}->update_cache("$path/Lexer.pm");
-    $self->{pbot}->{refresher}->{refresher}->update_cache("$path/Parser.pm");
+    # require all the Plang .pm modules so Module::Refresh can reload them without
+    # needing to restart PBot
+    require "$path/Interpreter.pm";
+    require "$path/AstInterpreter.pm";
+    require "$path/Grammar.pm";
+    require "$path/Parser.pm";
+    require "$path/Lexer.pm";
 
     # regset plang.debug 0-10 -- Plugin must be reloaded for this value to take effect.
     my $debug = $self->{pbot}->{registry}->get_value('plang', 'debug') // 0;
