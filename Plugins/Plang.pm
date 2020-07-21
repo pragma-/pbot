@@ -53,7 +53,7 @@ sub initialize {
 
     # override the built-in `print` function to send to our output buffer instead
     $self->{plang}->{interpreter}->add_builtin_function('print',
-        [['stmt', undef], ['end', ['STRING', "\n"]]],
+        [['expr', undef], ['end', ['STRING', "\n"]]],
         sub { $self->print_override(@_) });
 
     # register the `plang` command
@@ -104,8 +104,8 @@ sub cmd_plangrepl {
 
 sub print_override {
     my ($self, $plang, $context, $name, $arguments) = @_;
-    my ($stmt, $end) = ($plang->output_value($arguments->[0]), $arguments->[1]->[1]);
-    $self->{output} .= "$stmt$end";
+    my ($expr, $end) = ($plang->output_value($arguments->[0]), $arguments->[1]->[1]);
+    $self->{output} .= "$expr$end";
     return ['NIL', undef];
 }
 
