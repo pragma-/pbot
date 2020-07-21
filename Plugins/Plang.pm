@@ -103,7 +103,7 @@ sub cmd_plangrepl {
 # overridden `print` built-in
 
 sub print_override {
-    my ($self, $plang, $name, $arguments) = @_;
+    my ($self, $plang, $context, $name, $arguments) = @_;
     my ($stmt, $end) = ($plang->output_value($arguments->[0]), $arguments->[1]->[1]);
     $self->{output} .= "$stmt$end";
     return ['NIL', undef];
@@ -117,14 +117,14 @@ sub is_locked {
 }
 
 sub get_factoid {
-    my ($self, $plang, $name, $arguments) = @_;
+    my ($self, $plang, $context, $name, $arguments) = @_;
     my ($namespace, $keyword, $meta) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     my $result = $self->{pbot}->{factoids}->get_meta($namespace, $keyword, $meta);
     return ['STRING', $result];
 }
 
 sub set_factoid {
-    my ($self, $plang, $name, $arguments) = @_;
+    my ($self, $plang, $context, $name, $arguments) = @_;
     my ($namespace, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     return ['ERROR', "Factoid $namespace.$keyword is locked. Cannot set."] if $self->is_locked($namespace, $keyword);
     $self->{pbot}->{factoids}->add_factoid('text', $namespace, 'Plang', $keyword, $text);
@@ -132,7 +132,7 @@ sub set_factoid {
 }
 
 sub append_factoid {
-    my ($self, $plang, $name, $arguments) = @_;
+    my ($self, $plang, $context, $name, $arguments) = @_;
     my ($namespace, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     return ['ERROR', "Factoid $namespace.$keyword is locked. Cannot append."] if $self->is_locked($namespace, $keyword);
     my $action = $self->{pbot}->{factoids}->get_meta($namespace, $keyword, 'action');
