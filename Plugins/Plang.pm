@@ -40,21 +40,25 @@ sub initialize {
     # register some PBot-specific built-in functions
     $self->{plang}->{interpreter}->add_builtin_function('factset',
         # parameters are [['param1 name', default arg], ['param2 name', default arg], ...]
-        [['namespace', undef], ['keyword', undef], ['text', undef]],
-        sub { $self->set_factoid(@_) });
+        [['channel', undef], ['keyword', undef], ['text', undef]],
+        sub { $self->plang_builtin_factset(@_) });
 
     $self->{plang}->{interpreter}->add_builtin_function('factget',
-        [['namespace', undef], ['keyword', undef], ['meta', ['STRING', 'action']]],
-        sub { $self->get_factoid(@_) });
+        [['channel', undef], ['keyword', undef], ['meta', ['STRING', 'action']]],
+        sub { $self->plang_builtin_factget(@_) });
 
     $self->{plang}->{interpreter}->add_builtin_function('factappend',
-        [['namespace', undef], ['keyword', undef], ['text', undef]],
-        sub { $self->append_factoid(@_) });
+        [['channel', undef], ['keyword', undef], ['text', undef]],
+        sub { $self->plang_builtin_factappend(@_) });
+
+    $self->{plang}->{interpreter}->add_builtin_function('userget',
+        [['name', undef]],
+        sub { $self->plang_builtin_userget(@_) });
 
     # override the built-in `print` function to send to our output buffer instead
     $self->{plang}->{interpreter}->add_builtin_function('print',
         [['expr', undef], ['end', ['STRING', "\n"]]],
-        sub { $self->print_override(@_) });
+        sub { $self->plang_builtin_print(@_) });
 
     # register the `plang` command
     $self->{pbot}->{commands}->register(sub { $self->cmd_plang(@_) }, "plang", 0);
@@ -101,8 +105,7 @@ sub cmd_plangrepl {
 }
 
 # overridden `print` built-in
-
-sub print_override {
+sub plang_builtin_print {
     my ($self, $plang, $context, $name, $arguments) = @_;
     my ($expr, $end) = ($plang->output_value($arguments->[0]), $arguments->[1]->[1]);
     $self->{output} .= "$expr$end";
@@ -116,30 +119,54 @@ sub is_locked {
     return $self->{pbot}->{factoids}->get_meta($channel, $keyword, 'locked');
 }
 
-sub get_factoid {
+sub plang_builtin_factget {
     my ($self, $plang, $context, $name, $arguments) = @_;
-    my ($namespace, $keyword, $meta) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
-    my $result = $self->{pbot}->{factoids}->get_meta($namespace, $keyword, $meta);
+    my ($channel, $keyword, $meta) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
+    my $result = $self->{pbot}->{factoids}->get_meta($channel, $keyword, $meta);
     return ['STRING', $result];
 }
 
-sub set_factoid {
+sub plang_builtin_factset {
     my ($self, $plang, $context, $name, $arguments) = @_;
-    my ($namespace, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
-    return ['ERROR', "Factoid $namespace.$keyword is locked. Cannot set."] if $self->is_locked($namespace, $keyword);
-    $self->{pbot}->{factoids}->add_factoid('text', $namespace, 'Plang', $keyword, $text);
+    my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
+    return ['ERROR', "Factoid $channel.$keyword is locked. Cannot set."] if $self->is_locked($channel, $keyword);
+    $self->{pbot}->{factoids}->add_factoid('text', $channel, 'Plang', $keyword, $text);
     return ['STRING', $text];
 }
 
-sub append_factoid {
+sub plang_builtin_factappend {
     my ($self, $plang, $context, $name, $arguments) = @_;
-    my ($namespace, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
-    return ['ERROR', "Factoid $namespace.$keyword is locked. Cannot append."] if $self->is_locked($namespace, $keyword);
-    my $action = $self->{pbot}->{factoids}->get_meta($namespace, $keyword, 'action');
+    my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
+    return ['ERROR', "Factoid $channel.$keyword is locked. Cannot append."] if $self->is_locked($channel, $keyword);
+    my $action = $self->{pbot}->{factoids}->get_meta($channel, $keyword, 'action');
     $action = "" if not defined $action;
     $action .= $text;
-    $self->{pbot}->{factoids}->add_factoid('text', $namespace, 'Plang', $keyword, $action);
+    $self->{pbot}->{factoids}->add_factoid('text', $channel, 'Plang', $keyword, $action);
     return ['STRING', $action];
+}
+
+sub plang_builtin_userget {
+    my ($self, $plang, $context, $name, $arguments) = @_;
+    my ($username) = ($arguments->[0], $arguments->[1]);
+
+    if ($username->[0] ne 'STRING') {
+        $plang->error($context, "`name` argument must be a String (got " . $plang->pretty_type($username) . ")");
+    }
+
+    my $user = $self->{pbot}->{users}->{users}->get_data($username->[1]);
+
+    if (not defined $user) {
+        return ['NIL', undef];
+    }
+
+    my $hash = { %$user };
+    $hash->{password} = '<private>';
+
+    while (my ($key, $value) = each %$hash) {
+        $hash->{$key} = ['STRING', $value];
+    }
+
+    return ['MAP', $hash];
 }
 
 1;
