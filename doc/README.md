@@ -283,8 +283,8 @@
 * [Plugins](Plugins.md#plugins)
   * [About](Plugins.md#about)
     * [PBot Plugins](Plugins.md#pbot-plugins)
-      * [Plang](Plugins.mdPlugins/Plang.md)
-      * [Quotegrabs](Plugins.mdPlugins/Quotegrabs.md)
+      * [Plang](Plugins/Plang.md)
+      * [Quotegrabs](Plugins/Quotegrabs.md)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
 * [Anti-Abuse](AntiAbuse.md#anti-abuse)
