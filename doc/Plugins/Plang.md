@@ -23,7 +23,7 @@ written specifically for PBot, but is powerful enough to be used as a general-pu
 scripting language embedded into any Perl application.
 
 This document describes PBot's Plang plugin. To learn how to use the Plang scripting
-language, see the [Plang documentation](https://github.com/pragma-/Plang/README.md).
+language, see the [Plang documentation](https://github.com/pragma-/Plang/blob/master/README.md).
 
 ### PBot `plang` and `plangrepl` commands
 #### `plang`

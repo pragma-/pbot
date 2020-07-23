@@ -280,13 +280,11 @@
     * [quote](Modules.md#quote)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
-* [Quotegrabs](Quotegrabs.md#quotegrabs)
-  * [About](Quotegrabs.md#about)
-  * [Commands](Quotegrabs.md#commands)
-    * [grab](Quotegrabs.md#grab)
-    * [getq](Quotegrabs.md#getq)
-    * [rq](Quotegrabs.md#rq)
-    * [delq](Quotegrabs.md#delq)
+* [Plugins](Plugins.md#plugins)
+  * [About](Plugins.md#about)
+    * [PBot Plugins](Plugins.md#pbot-plugins)
+      * [Plang](Plugins.mdPlugins/Plang.md)
+      * [Quotegrabs](Plugins.mdPlugins/Quotegrabs.md)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
 * [Anti-Abuse](AntiAbuse.md#anti-abuse)
