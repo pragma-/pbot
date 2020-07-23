@@ -75,7 +75,7 @@ sub unload {
 sub cmd_plang {
     my ($self, $context) = @_;
 
-    my $usage = "Usage: plang <code>; see https://github.com/pragma-/Plang";
+    my $usage = "Usage: plang <code>; see https://github.com/pragma-/Plang and https://github.com/pragma-/pbot/blob/master/doc/Plugins/Plang.md";
     return $usage if not length $context->{arguments};
 
     $self->{output} = "";  # collect output of the embedded Plang program
@@ -91,7 +91,7 @@ sub cmd_plang {
 sub cmd_plangrepl {
     my ($self, $context) = @_;
 
-    my $usage = "Usage: plangrepl <code>; see https://github.com/pragma-/Plang";
+    my $usage = "Usage: plangrepl <code>; see https://github.com/pragma-/Plang and https://github.com/pragma-/pbot/blob/master/doc/Plugins/Plang.md";
     return $usage if not length $context->{arguments};
 
     $self->{output} = "";  # collect output of the embedded Plang program
