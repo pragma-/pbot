@@ -17,6 +17,7 @@ PBot is a versatile IRC Bot written in Perl
     * [Selectors](#selectors)
     * [Inline invocation](#inline-invocation)
     * [Background processing](#background-processing)
+  * [Scripting interface](#scripting-interface)
   * [Extensible](#extensible)
   * [Factoids](#factoids)
   * [Code Factoids](#code-factoids)
@@ -185,6 +186,13 @@ and the command will now run as a background process, allowing PBot to carry on 
 The familiar [`ps`](doc/Admin.md#ps) and [`kill`](doc/Admin.md#kill) commands can be used to list and kill the background processes.
 
 You can also [`cmdset`](doc/Admin.md#cmdset) the `process-timeout` [command metadata](doc/Admin.md#command-metadata-list) to set the timeout, in seconds, before the command is automatically killed. Otherwise the `processmanager.default_timeout` [registry value](doc/Registry.md) will be used.
+
+### Scripting interface
+PBot uses [Plang](https://github.com/pragma-/Plang) as a scripting language. You can use the
+scripting language to construct advanced commands that are capable of interacting with PBot
+internal API functions.
+
+[Learn more.](doc/Plugins/Plang.md)
 
 ### Extensible
 PBot is extensible in multiple ways. Additional commands and functionality can  be added to PBot through
