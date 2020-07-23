@@ -33,6 +33,12 @@
     * [Modules](QuickStart.md#modules)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
+* [Plugins](Plugins.md#plugins)
+  * [About](Plugins.md#about)
+  * [Plang](Plugins/Plang.md)
+  * [Quotegrabs](Plugins/Quotegrabs.md)
+<!-- md-toc-end -->
+<!-- md-toc-begin -->
 * [Commands](Commands.md#commands)
   * [Command interpreter](Commands.md#command-interpreter)
     * [Command invocation](Commands.md#command-invocation)
@@ -278,13 +284,6 @@
     * [excuse](Modules.md#excuse)
     * [horoscope](Modules.md#horoscope)
     * [quote](Modules.md#quote)
-<!-- md-toc-end -->
-<!-- md-toc-begin -->
-* [Plugins](Plugins.md#plugins)
-  * [About](Plugins.md#about)
-    * [PBot Plugins](Plugins.md#pbot-plugins)
-      * [Plang](Plugins/Plang.md)
-      * [Quotegrabs](Plugins/Quotegrabs.md)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
 * [Anti-Abuse](AntiAbuse.md#anti-abuse)
