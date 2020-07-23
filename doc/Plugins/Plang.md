@@ -13,7 +13,7 @@
 <!-- md-toc-end -->
 
 ## About
-This Plang plugin provides a scripting interface to PBot. It has access to PBot
+The Plang plugin provides a scripting interface to PBot. It has access to PBot
 internal APIs and state.
 
 ## The Plang Language
