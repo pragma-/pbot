@@ -232,6 +232,10 @@ sub interpreter {
                 }
             }
 
+            if ($self->get_meta($keyword, 'preserve_whitespace')) {
+                $context->{preserve_whitespace} = 1;
+            }
+
             unless ($self->get_meta($keyword, 'dont-replace-pronouns')) {
                 $context->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($context, $context->{arguments});
                 $context->{arglist} = $self->{pbot}->{interpreter}->make_args($context->{arguments});
