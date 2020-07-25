@@ -82,7 +82,13 @@ sub cmd_plang {
     my $result = $self->{plang}->interpret_string($context->{arguments});
 
     # check to see if we need to append final result to output
-    $self->{output} .= $self->{plang}->{interpreter}->output_value($result) if defined $result->[1];
+    if (defined $result->[1]) {
+        if ($result->[0] eq 'STRING') {
+            $self->{output} .= $self->{plang}->{interpreter}->output_string_literal($result->[1]);
+        } else {
+            $self->{output} .= $self->{plang}->{interpreter}->output_value($result);
+        }
+    }
 
     # return the output
     return length $self->{output} ? $self->{output} : "No output.";
