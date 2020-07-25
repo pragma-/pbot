@@ -81,7 +81,7 @@ See the [Plang Map documentation](https://github.com/pragma-/Plang#map) for a re
 Examples:
 
     <pragma-> !plang userget('pragma-')
-       <PBot> { channels: "global", hostmasks: "*!*\@unaffiliated/pragmatic-chaos", botowner: 1 }
+       <PBot> { channels: "global", hostmasks: "*!*@unaffiliated/pragmatic-chaos", botowner: 1 }
 
     <pragma-> !plang userget('pragma-')['botowner']
        <PBot> 1
