@@ -84,15 +84,18 @@ sub cmd_plang {
     return $usage if not length $context->{arguments};
 
     $self->{output} = "";  # collect output of the embedded Plang program
-    my $result = $self->{plang}->interpret_string($context->{arguments});
 
-    # check to see if we need to append final result to output
-    if (defined $result->[1]) {
-        if ($result->[0] eq 'STRING') {
-            $self->{output} .= $self->{plang}->{interpreter}->output_string_literal($result->[1]);
-        } else {
-            $self->{output} .= $self->{plang}->{interpreter}->output_value($result);
+    eval {
+        my $result =  $self->{plang}->interpret_string($context->{arguments});
+
+        # check to see if we need to append final result to output
+        if (defined $result->[1]) {
+            $self->{output} .= $self->{plang}->{interpreter}->output_value($result, literal => 1);
         }
+    };
+
+    if ($@) {
+        $self->{output} .= $@;
     }
 
     # return the output
@@ -106,10 +109,17 @@ sub cmd_plangrepl {
     return $usage if not length $context->{arguments};
 
     $self->{output} = "";  # collect output of the embedded Plang program
-    my $result = $self->{plang}->interpret_string($context->{arguments}, repl => 1);
 
-    # check to see if we need to append final result to output
-    $self->{output} .= $self->{plang}->{interpreter}->output_value($result, repl => 1) if defined $result->[1];
+    eval {
+        my $result = $self->{plang}->interpret_string($context->{arguments}, repl => 1);
+
+        # check to see if we need to append final result to output
+        $self->{output} .= $self->{plang}->{interpreter}->output_value($result, repl => 1) if defined $result->[1];
+    };
+
+    if ($@) {
+        $self->{output} .= $@;
+    }
 
     # return the output
     return length $self->{output} ? $self->{output} : "No output.";
