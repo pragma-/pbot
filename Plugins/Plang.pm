@@ -40,24 +40,29 @@ sub initialize {
     # register some PBot-specific built-in functions
     $self->{plang}->{interpreter}->add_builtin_function('factset',
         # parameters are [['param1 name', default arg], ['param2 name', default arg], ...]
-        [['channel', undef], ['keyword', undef], ['text', undef]],
+        [['String', 'channel', undef], ['String', 'keyword', undef], ['String', 'text', undef]],
+        'String',  # return type
         sub { $self->plang_builtin_factset(@_) });
 
     $self->{plang}->{interpreter}->add_builtin_function('factget',
-        [['channel', undef], ['keyword', undef], ['meta', ['STRING', 'action']]],
+        [['String', 'channel', undef], ['String', 'keyword', undef], ['String', 'meta', ['STRING', 'action']]],
+        'String',
         sub { $self->plang_builtin_factget(@_) });
 
     $self->{plang}->{interpreter}->add_builtin_function('factappend',
-        [['channel', undef], ['keyword', undef], ['text', undef]],
+        [['String', 'channel', undef], ['String', 'keyword', undef], ['String', 'text', undef]],
+        'String',
         sub { $self->plang_builtin_factappend(@_) });
 
     $self->{plang}->{interpreter}->add_builtin_function('userget',
-        [['name', undef]],
+        [['String', 'name', undef]],
+        'Map',
         sub { $self->plang_builtin_userget(@_) });
 
     # override the built-in `print` function to send to our output buffer instead
     $self->{plang}->{interpreter}->add_builtin_function('print',
-        [['expr', undef], ['end', ['STRING', "\n"]]],
+        [['Any', 'expr', undef], ['String', 'end', ['STRING', "\n"]]],
+        'Null',
         sub { $self->plang_builtin_print(@_) });
 
     # register the `plang` command
