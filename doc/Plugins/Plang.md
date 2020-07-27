@@ -85,3 +85,6 @@ Examples:
 
     <pragma-> !plang userget('pragma-')['botowner']
        <PBot> 1
+
+    <pragma-> !plang if userget('pragma-')['botowner'] then print('Greetings master!') else print('Hello mortal.')
+       <PBot> Greetings master!
