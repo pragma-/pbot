@@ -124,7 +124,7 @@
       "requires_cap" : 0
    },
    "delq" : {
-      "help" : "Deletes a quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#delq",
+      "help" : "Deletes a quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Plugins/Quotegrabs.md#delq",
       "requires_cap" : 0
    },
    "deop" : {
@@ -230,17 +230,17 @@
       "requires_cap" : 0
    },
    "getq" : {
-      "help" : "Retrieves and displays a specific quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#getq",
+      "help" : "Retrieves and displays a specific quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Plugins/Quotegrabs.md#getq",
       "requires_cap" : 0
    },
    "google" : {
       "dont-replace-pronouns" : "1",
       "help" : "Displays Google search results for a query. See https://github.com/pragma-/pbot/blob/master/doc/Modules.md#google",
-      "requires_cap" : 0
+      "requires_cap" : "0"
    },
    "grab" : {
-      "help" : "Grabs a message someone says, and adds it to the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#grab",
-      "requires_cap" : 0
+      "help" : "Grabs a message someone says, and adds it to the quotegrabs database. https://github.com/pragma-/pbot/blob/master/doc/Plugins/Quotegrabs.md#grab",
+      "requires_cap" : "0"
    },
    "help" : {
       "dont-replace-pronouns" : "1",
@@ -284,8 +284,9 @@
       "requires_cap" : 0
    },
    "learn" : {
+      "dont-replace-pronouns" : "1",
       "help" : "Creates a new factoid. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factadd",
-      "requires_cap" : 0
+      "requires_cap" : "0"
    },
    "list" : {
       "help" : "Lists various collections, such as channels or admins. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#list"
@@ -332,6 +333,19 @@
       "help" : "Departs a channel, without removing it from PBot's list of channels to manage/auto-join. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#part",
       "requires_cap" : 1
    },
+   "plang" : {
+      "background-process" : "1",
+      "dont-replace-pronouns" : "1",
+      "help" : "",
+      "preserve-whitespace" : "1",
+      "preserve_whitespace" : "1",
+      "requires_cap" : "0"
+   },
+   "plangrepl" : {
+      "background-process" : "1",
+      "help" : "",
+      "requires_cap" : 0
+   },
    "plug" : {
       "help" : "Loads a plugin into PBot. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#plug",
       "requires_cap" : 1
@@ -350,7 +364,7 @@
    },
    "recall" : {
       "background-process" : "1",
-      "dont-replace-pronouns" : "1",
+      "dont-replace-pronouns" : "0",
       "help" : "Recalls previous chat history for a channel. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#recall",
       "requires_cap" : "0"
    },
@@ -404,7 +418,7 @@
    },
    "rq" : {
       "dont-replace-pronouns" : "1",
-      "help" : "Retrieves and displays a random quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Quotegrabs.md#rq",
+      "help" : "Retrieves and displays a random quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Plugins/Quotegrabs.md#rq",
       "requires_cap" : 0
    },
    "sl" : {
