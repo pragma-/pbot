@@ -57,7 +57,7 @@ sub cmd_weather {
     my $location_override = $self->{pbot}->{users}->get_user_metadata($context->{from}, $hostmask, 'location') // '';
     $arguments = $location_override if not length $arguments;
 
-    if (defined $user_override and not length $location_override) { return "No location set or user account does not exist."; }
+    if (defined $user_override and not length $location_override) { return "No location set or user account does not exist. They may use the `my` command to set the `location` user metadata their user account."; }
 
     if (not length $arguments) { return $usage; }
     return $self->get_weather($arguments);

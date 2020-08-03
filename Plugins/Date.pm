@@ -53,8 +53,8 @@ sub cmd_date {
 
     if (defined $user_override) {
         my $userdata = $self->{pbot}->{users}->{users}->get_data($user_override);
-        return "No such user account $user_override." if not defined $userdata;
-        return "User account does not have `timezone` set." if not exists $userdata->{timezone};
+        return "No such user account $user_override. They may use the `my` command to create a user account and set their `timezone` user metadata." if not defined $userdata;
+        return "User account does not have `timezone` set. They may use the `my` command to set their `timezone` user metadata." if not exists $userdata->{timezone};
         $tz_override = $userdata->{timezone};
     } else {
         $tz_override = $self->{pbot}->{users}->get_user_metadata($context->{from}, $context->{hostmask}, 'timezone') // '';
