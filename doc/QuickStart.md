@@ -4,6 +4,7 @@
 * [Installation](#installation)
   * [Installing Perl](#installing-perl)
   * [Installing CPAN modules](#installing-cpan-modules)
+    * [re::engine::RE2](#reenginere2)
   * [Installing PBot](#installing-pbot)
     * [git (recommended)](#git-recommended)
     * [Download zip archive](#download-zip-archive)
@@ -54,6 +55,15 @@ The modules may be installed with a simple command:
 Some CPAN modules may fail to pass certain tests due to outdated variables.
 Despite these test failures, their core functionality should still work as
 expected.
+
+#### re::engine::RE2
+PBot uses the `re::engine::RE2` module for its regular expressions. This engine is safer
+for user-submitted regular expressions.
+
+If you could not install it through CPAN, you must install it manually.
+
+* https://github.com/google/re2
+* https://github.com/dgl/re-engine-RE2/
 
 ### Installing PBot
 
