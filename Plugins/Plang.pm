@@ -130,7 +130,7 @@ sub plang_builtin_print {
     my ($self, $plang, $context, $name, $arguments) = @_;
     my ($expr, $end) = ($plang->output_value($arguments->[0]), $arguments->[1]->[1]);
     $self->{output} .= "$expr$end";
-    return ['NIL', undef];
+    return ['NULL', undef];
 }
 
 # our custom PBot built-in functions for Plang
@@ -177,7 +177,7 @@ sub plang_builtin_userget {
     my $user = $self->{pbot}->{users}->{users}->get_data($username->[1]);
 
     if (not defined $user) {
-        return ['NIL', undef];
+        return ['NULL', undef];
     }
 
     my $hash = { %$user };
