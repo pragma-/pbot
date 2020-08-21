@@ -111,7 +111,7 @@ sub process_line {
         }
     } elsif ($cmd_text =~ m/^$bot_trigger\s*(.+)$/) {
         $command = $1;
-    } elsif ($cmd_text =~ m/^.?$botnick.?\s*(.+)$/i) {
+    } elsif ($cmd_text =~ m/^.?\s*$botnick\s*[[:punct:]]?\s+(.+)$/i) {
         $command = $1;
     } elsif ($cmd_text =~ m/^(.+?),?\s*$botnick[?!.]*$/i) {
         $command = $1;
