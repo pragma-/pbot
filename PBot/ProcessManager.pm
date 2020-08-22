@@ -203,6 +203,7 @@ sub execute_process {
             $context->{'timed-out'} = 1 if $context->{result} =~ /^Process .* timed-out at PBot\/ProcessManager/;
             $self->{pbot}->{logger}->log("Error executing process: $context->{result}\n");
             $context->{result} =~ s/ at PBot.*$//ms;
+            $context->{result} =~ s/\s+...propagated$//ms;
         }
 
         # print $context to pipe
