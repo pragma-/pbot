@@ -168,7 +168,7 @@ sub plang_builtin_factget {
 sub plang_builtin_factset {
     my ($self, $plang, $context, $name, $arguments) = @_;
     my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
-    die "Factoid $channel.$keyword is locked. Cannot set." if $self->is_locked($channel, $keyword);
+    die "Factoid $channel.$keyword is locked. Cannot set.\n" if $self->is_locked($channel, $keyword);
     $self->{pbot}->{factoids}->add_factoid('text', $channel, 'Plang', $keyword, $text);
     return [['TYPE', 'String'], $text];
 }
@@ -176,7 +176,7 @@ sub plang_builtin_factset {
 sub plang_builtin_factappend {
     my ($self, $plang, $context, $name, $arguments) = @_;
     my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
-    die "Factoid $channel.$keyword is locked. Cannot append." if $self->is_locked($channel, $keyword);
+    die "Factoid $channel.$keyword is locked. Cannot append.\n" if $self->is_locked($channel, $keyword);
     my $action = $self->{pbot}->{factoids}->get_meta($channel, $keyword, 'action');
     $action = "" if not defined $action;
     $action .= $text;
