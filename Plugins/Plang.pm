@@ -47,7 +47,9 @@ sub initialize {
             [['TYPE', 'String'], 'text', undef]
         ],
         ['TYPE', 'String'],  # return type
-        sub { $self->plang_builtin_factset(@_) });
+        sub { $self->plang_builtin_factset(@_) },
+        sub { $self->plang_validate_builtin_factset(@_) }
+    );
 
     $self->{plang}->add_builtin_function('factget',
         [
@@ -56,7 +58,9 @@ sub initialize {
             [['TYPE', 'String'], 'meta', [['TYPE', 'String'], 'action']]
         ],
         ['TYPE', 'String'],
-        sub { $self->plang_builtin_factget(@_) });
+        sub { $self->plang_builtin_factget(@_) },
+        sub { $self->plang_validate_builtin_factget(@_) },
+    );
 
     $self->{plang}->add_builtin_function('factappend',
         [
@@ -65,14 +69,18 @@ sub initialize {
             [['TYPE', 'String'], 'text', undef]
         ],
         ['TYPE', 'String'],
-        sub { $self->plang_builtin_factappend(@_) });
+        sub { $self->plang_builtin_factappend(@_) },
+        sub { $self->plang_validate_builtin_factappend(@_) },
+    );
 
     $self->{plang}->add_builtin_function('userget',
         [
             [['TYPE', 'String'], 'name', undef]
         ],
         ['TYPELIST', [['TYPE', 'Map'], ['TYPE', 'Null']]],
-        sub { $self->plang_builtin_userget(@_) });
+        sub { $self->plang_builtin_userget(@_) },
+        sub { $self->plang_validate_builtin_userget(@_) },
+    );
 
     # override the built-in `print` function to send to our output buffer instead
     $self->{plang}->add_builtin_function('print',
@@ -81,7 +89,9 @@ sub initialize {
             [['TYPE', 'String'], 'end', [['TYPE', 'String'], "\n"]]
         ],
         ['TYPE', 'Null'],
-        sub { $self->plang_builtin_print(@_) });
+        sub { $self->plang_builtin_print(@_) },
+        sub { $self->plang_validate_builtin_print(@_) },
+    );
 
     # register the `plang` command
     $self->{pbot}->{commands}->register(sub { $self->cmd_plang(@_) }, "plang", 0);
@@ -151,6 +161,10 @@ sub plang_builtin_print {
     return [['TYPE', 'Null'], undef];
 }
 
+sub plang_validate_builtin_print {
+    return [['TYPE', 'Null'], undef];
+}
+
 # our custom PBot built-in functions for Plang
 
 sub is_locked {
@@ -165,12 +179,20 @@ sub plang_builtin_factget {
     return [['TYPE', 'String'], $result];
 }
 
+sub plang_validate_builtin_factget {
+    return [['TYPE', 'String'], ""];
+}
+
 sub plang_builtin_factset {
     my ($self, $plang, $context, $name, $arguments) = @_;
     my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     die "Factoid $channel.$keyword is locked. Cannot set.\n" if $self->is_locked($channel, $keyword);
     $self->{pbot}->{factoids}->add_factoid('text', $channel, 'Plang', $keyword, $text);
     return [['TYPE', 'String'], $text];
+}
+
+sub plang_validate_builtin_factset {
+    return [['TYPE', 'String'], ""];
 }
 
 sub plang_builtin_factappend {
@@ -182,6 +204,10 @@ sub plang_builtin_factappend {
     $action .= $text;
     $self->{pbot}->{factoids}->add_factoid('text', $channel, 'Plang', $keyword, $action);
     return [['TYPE', 'String'], $action];
+}
+
+sub plang_validate_builtin_factappend {
+    return [['TYPE', 'String'], ""];
 }
 
 sub plang_builtin_userget {
@@ -202,6 +228,10 @@ sub plang_builtin_userget {
     }
 
     return [['TYPE', 'Map'], $hash];
+}
+
+sub plang_validate_builtin_userget {
+    return [['TYPE', 'Map'], {}];
 }
 
 1;
