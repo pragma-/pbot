@@ -53,11 +53,16 @@ sub cmd_weather {
     return "/say $getopt_error -- $usage" if defined $getopt_error;
     $arguments = "@opt_args";
 
-    my $hostmask          = defined $user_override ? $user_override : $context->{hostmask};
-    my $location_override = $self->{pbot}->{users}->get_user_metadata($context->{from}, $hostmask, 'location') // '';
-    $arguments = $location_override if not length $arguments;
-
-    if (defined $user_override and not length $location_override) { return "No location set or user account does not exist. They may use the `my` command to set the `location` user metadata their user account."; }
+    if (defined $user_override) {
+        my $userdata = $self->{pbot}->{users}->{users}->get_data($user_override);
+        return "No such user account $user_override." if not defined $userdata;
+        return "User account does not have `location` set." if not exists $userdata->{location};
+        $arguments = $userdata->{location};
+    } else {
+        if (not length $arguments) {
+            $arguments = $self->{pbot}->{users}->get_user_metadata($context->{from}, $context->{hostmask}, 'location') // '';
+        }
+    }
 
     if (not length $arguments) { return $usage; }
     return $self->get_weather($arguments);
