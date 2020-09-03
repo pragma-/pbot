@@ -38,7 +38,7 @@ is preserved in-between commands and the types of values is output along with th
 Several have been added for PBot; they are described here.
 
 ### factget
-    factget(channel, keyword, meta = "action")
+    factget(channel: String, keyword: String, meta: String = "action") -> String
 
 Use the `factget` function to retrieve metadata from factoids.
 
@@ -48,7 +48,7 @@ parameter can be omitted and will default to `"action"`.
 The `factget` function returns a `String` containing the value of the factoid metadata key.
 
 ### factset
-    factset(channel, keyword, text)
+    factset(channel: String, keyword: String, text: String) -> String
 
 Use the `factset` function to set the `action` metadata value for factoids.
 
@@ -57,7 +57,7 @@ The `factset` function takes three parameters: `channel`, `keyword` and `text`.
 The `factset` function returns a `String` containing the value of `text`.
 
 ### factappend
-    factappend(channel, keyword, text)
+    factappend(channel: String, keyword: String, text: String) -> String
 
 Use the `factappend` function to append text to the `action` metadata for factoids.
 
@@ -67,7 +67,7 @@ The `factappend` function returns a `String` containing the value of factoid's `
 metadata with `text` appended.
 
 ### userget
-    userget(name)
+    userget(name: String) -> Map
 
 Use the `userget` function to retrieve user metadata.
 
