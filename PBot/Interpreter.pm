@@ -713,24 +713,9 @@ sub split_args {
     my $rest = '';
     if ($preserve_quotes) {
         # get from second half of args, which contains quotes
-        # and don't insert space before separators
-        my $sep = '';
-        my $last_quoted = 0;
         foreach my $arg (@$args[@$args / 2 + $i .. @$args - 1]) {
-            if ($arg =~ m/^[,;)+!.?-]/ and $last_quoted) {
-                $sep = '';
-            } else {
-                $sep = ' ';
-            }
-
-            $rest .= $sep unless not length $rest;
+            $rest .= ' ' unless not length $rest;
             $rest .= $arg;
-
-            if ($arg =~ /["']$/) {
-                $last_quoted = 1;
-            } else {
-                $last_quoted = 0;
-            }
         }
     } else {
         $rest = join ' ', @$args[$i .. $max - 1];

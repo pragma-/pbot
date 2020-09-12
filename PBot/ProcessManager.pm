@@ -180,6 +180,8 @@ sub execute_process {
         # child
         close $reader;
 
+        $self->{pbot}->{child} = 1;
+
         # don't quit the IRC client when the child dies
         no warnings;
         *PBot::IRC::Connection::DESTROY = sub { return; };

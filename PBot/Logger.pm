@@ -9,6 +9,7 @@ use feature 'unicode_strings';
 
 use Scalar::Util qw/openhandle/;
 use File::Basename;
+use File::Copy;
 
 sub new {
     my ($proto, %conf) = @_;
@@ -51,16 +52,8 @@ sub rotate_log {
     my ($self) = @_;
     my $time = localtime $self->{start};
     $time =~ s/\s+/_/g;
-
     $self->log("Rotating log to $self->{logfile}-$time\n");
-
-    # logfile has to be closed first for maximum compatibility with `rename`
-    close LOGFILE;
-    rename $self->{logfile}, $self->{logfile} . '-' . $time;
-
-    # reopen renamed logfile to resume any needed logging
-    open LOGFILE, ">>$self->{logfile}-$time" or Carp::carp "Couldn't re-open logfile $self->{logfile}-$time: $!\n";
-    LOGFILE->autoflush(1) if openhandle * LOGFILE;
+    move($self->{logfile}, $self->{logfile} . '-' . $time);
 }
 
 1;
