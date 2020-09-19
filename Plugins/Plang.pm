@@ -77,7 +77,7 @@ sub initialize {
         [
             [['TYPE', 'String'], 'name', undef]
         ],
-        ['TYPELIST', [['TYPE', 'Map'], ['TYPE', 'Null']]],
+        ['TYPEUNION', [['TYPE', 'Map'], ['TYPE', 'Null']]],
         sub { $self->plang_builtin_userget(@_) },
         sub { $self->plang_validate_builtin_userget(@_) },
     );
