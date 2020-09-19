@@ -276,6 +276,8 @@ sub cmd_userset {
         return "There is no user account $name.";
     }
 
+    $key = lc $key;
+
     if (defined $value and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-capabilities')) {
         if ($key =~ m/^can-/i or $self->{pbot}->{capabilities}->exists($key)) {
             return "The $key metadata requires the can-modify-capabilities capability, which your user account does not have.";
