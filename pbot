@@ -4,21 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# bothome is automatically set by this script, do not modify
-my $bothome;
-BEGIN {
-    use File::Basename;
-    $bothome = -l __FILE__ ? dirname readlink __FILE__ : dirname __FILE__;
-    unshift @INC, $bothome;
-}
+use FindBin qw($RealBin);
+use lib "$RealBin/.";
 
 # configuration is overridden via command-line arguments, do not modify
 # see doc/QuickStart.md
 my %config = (
-    data_dir   => "$bothome/data",
-    module_dir => "$bothome/modules",
-    plugin_dir => "$bothome/Plugins",
-    update_dir => "$bothome/updates",
+    data_dir   => "$RealBin/data",
+    module_dir => "$RealBin/modules",
+    plugin_dir => "$RealBin/Plugins",
+    update_dir => "$RealBin/updates",
 );
 
 use PBot::PBot;
