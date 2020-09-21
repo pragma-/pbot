@@ -18,7 +18,7 @@ internal APIs and state.
 
 ## The Plang Language
 The scripting language is [Plang](https://github.com/pragma-/Plang). It was
-written specifically for PBot, but is powerful enough to be used as a general-purpose
+written specifically for PBot, but aims to be powerful enough to be used as a general-purpose
 scripting language embedded into any Perl application.
 
 This document describes PBot's Plang plugin. To learn how to use the Plang scripting
@@ -74,7 +74,7 @@ Use the `userget` function to retrieve user metadata.
 The `userget` function takes one parameter: `name`.
 
 The `userget` function returns a `Map` containing all the metadata of the user, or
-`nil` if there is no user matching `name`.
+`null` if there is no user matching `name`.
 
 See the [Plang Map documentation](https://github.com/pragma-/Plang#map) for a refresher on using Plang maps.
 
