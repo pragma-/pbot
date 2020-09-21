@@ -1,7 +1,7 @@
 # File: Plang.pm
 # Author: pragma-
 #
-# Purpose: Simplified scripting language for creating advanced PBot factoids
+# Purpose: Scripting language for creating advanced PBot factoids
 # and interacting with various internal PBot APIs.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
@@ -27,28 +27,30 @@ sub initialize {
     # needing to restart PBot
     require "$path/Interpreter.pm";
     require "$path/AstInterpreter.pm";
-    require "$path/Grammar.pm";
+    require "$path/Grammar.pm"; # FIXME: this module cannot be reloaded
     require "$path/Parser.pm";
     require "$path/Lexer.pm";
     require "$path/Types.pm";
+    require "$path/Validator.pm";
 
-    # regset plang.debug 0-10 -- Plugin must be reloaded for this value to take effect.
-    my $debug = $self->{pbot}->{registry}->get_value('plang', 'debug') // 0;
+    # regset plang.debug <AST,VARS,FUNCS,etc>
+    # Plugin must be reloaded for this value to take effect.
+    my $debug = $self->{pbot}->{registry}->get_value('plang', 'debug') // '';
 
     # create our Plang interpreter object
     $self->{plang} = Plang::Interpreter->new(embedded => 1, debug => $debug);
 
     # register some PBot-specific built-in functions
-    $self->{plang}->add_builtin_function('factset',
-        # parameters are [['param1 name', default arg], ['param2 name', default arg], ...]
+    $self->{plang}->add_builtin_function('factset', # function name
+        # parameters are [[type, param1 name, default arg], [type, param2 name, default arg], ...]
         [
-            [['TYPE', 'String'], 'channel', undef],
-            [['TYPE', 'String'], 'keyword', undef],
-            [['TYPE', 'String'], 'text', undef]
+            [['TYPE', 'String'], 'channel', undef], # param 1
+            [['TYPE', 'String'], 'keyword', undef], # param 2
+            [['TYPE', 'String'], 'text',    undef], # param 3
         ],
-        ['TYPE', 'String'],  # return type
-        sub { $self->plang_builtin_factset(@_) },
-        sub { $self->plang_validate_builtin_factset(@_) }
+        ['TYPE', 'String'],                         # return type
+        sub { $self->plang_builtin_factset(@_) },   # builtin subref
+        sub { $self->plang_validate_builtin_factset(@_) } # type-checker subref
     );
 
     $self->{plang}->add_builtin_function('factget',
@@ -100,6 +102,7 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->cmd_plangrepl(@_) }, "plangrepl", 0);
 }
 
+# runs when plugin is unloaded
 sub unload {
     my $self = shift;
     $self->{pbot}->{commands}->unregister("plang");
