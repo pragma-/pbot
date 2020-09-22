@@ -17,6 +17,7 @@
       * [Other networks](#other-networks)
 * [Starting PBot](#starting-pbot)
   * [Usage](#usage)
+    * [rlwrap](#rlwrap)
     * [Overriding directories](#overriding-directories)
     * [Overriding registry](#overriding-registry)
   * [First-time start-up](#first-time-start-up)
@@ -178,6 +179,12 @@ or in the `#pbot2` channel on the Freenode network.
 
 ### Usage
     $ pbot [directory overrides...] [registry overrides...]
+
+#### rlwrap
+It is recommended to use the `rlwrap` program for command-line history if you use
+the PBot STDIN interface.
+
+    $ rlwrap pbot [...]
 
 #### Overriding directories
 You may override PBot's default directory locations via the command-line.

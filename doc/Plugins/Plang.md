@@ -3,8 +3,9 @@
 <!-- md-toc-begin -->
 * [About](#about)
 * [The Plang Language](#the-plang-language)
-* [`plang` command](#plang-command)
-* [`plangrepl` command](#plangrepl-command)
+* [PBot commands](#pbot-commands)
+  * [plang](#plang-1)
+  * [plangrepl](#plangrepl)
 * [PBot built-in Plang functions](#pbot-built-in-plang-functions)
   * [factget](#factget)
   * [factset](#factset)
@@ -24,12 +25,13 @@ scripting language embedded into any Perl application.
 This document describes PBot's Plang plugin. To learn how to use the Plang scripting
 language, see the [Plang documentation](https://github.com/pragma-/Plang/blob/master/README.md).
 
-## `plang` command
+## PBot commands
+### plang
 Use the `plang` command to run a Plang script.
 
 Usage: `plang <code>`
 
-## `plangrepl` command
+### plangrepl
 The `plangrepl` command is identical to the `plang` command, except the environment
 is preserved in-between commands and the types of values is output along with the value.
 
@@ -38,28 +40,32 @@ is preserved in-between commands and the types of values is output along with th
 Several have been added for PBot; they are described here.
 
 ### factget
-    factget(channel: String, keyword: String, meta: String = "action") -> String
-
 Use the `factget` function to retrieve metadata from factoids.
+
+Signature: `factget(channel: String, keyword: String, meta: String = "action") -> String | Null`
 
 The `factget` function takes three paramaters: `channel`, `keyword` and `meta`. The `meta`
 parameter can be omitted and will default to `"action"`.
 
-The `factget` function returns a `String` containing the value of the factoid metadata key.
+The `factget` function returns a `String` containing the value of the factoid metadata or
+`null` if the factoid does not exist.
 
 ### factset
-    factset(channel: String, keyword: String, text: String) -> String
+Use the `factset` function to set metadata values for factoids. The factoid
+will be created if it does not exist.
 
-Use the `factset` function to set the `action` metadata value for factoids.
+Signature: `factset(channel: String, keyword: String, text: String, meta: String = "action") -> String`
 
-The `factset` function takes three parameters: `channel`, `keyword` and `text`.
+The `factset` function takes four parameters: `channel`, `keyword`, `text`,
+and optionally `meta`. If the `meta` parameter is omitted it will default to
+`"action"`.
 
 The `factset` function returns a `String` containing the value of `text`.
 
 ### factappend
-    factappend(channel: String, keyword: String, text: String) -> String
-
 Use the `factappend` function to append text to the `action` metadata for factoids.
+
+Signature: `factappend(channel: String, keyword: String, text: String) -> String`
 
 The `factappend` function takes three parameters: `channel`, `keyword` and `text`.
 
@@ -67,9 +73,9 @@ The `factappend` function returns a `String` containing the value of factoid's `
 metadata with `text` appended.
 
 ### userget
-    userget(name: String) -> Map
-
 Use the `userget` function to retrieve user metadata.
+
+Signature: userget(name: String) -> Map | Null
 
 The `userget` function takes one parameter: `name`.
 
@@ -78,13 +84,22 @@ The `userget` function returns a `Map` containing all the metadata of the user, 
 
 See the [Plang Map documentation](https://github.com/pragma-/Plang#map) for a refresher on using Plang maps.
 
-Examples:
+## Examples
+### Basic examples
 
     <pragma-> !plang userget('pragma-')
        <PBot> { channels: "global", hostmasks: "*!*@unaffiliated/pragmatic-chaos", botowner: 1 }
 
-    <pragma-> !plang userget('pragma-')['botowner']
+    <pragma-> !plang userget('pragma-').botowner
        <PBot> 1
 
-    <pragma-> !plang if userget('pragma-')['botowner'] then print('Greetings master!') else print('Hello mortal.')
+    <pragma-> !plang if userget('pragma-').botowner then print('Greetings master!') else print('Hello mortal.')
        <PBot> Greetings master!
+
+### Karma example
+
+This is just a quick-and-dirty placeholder snippet for now. This section will be updated with a proper
+and elaborate demonstration of creating proper `karma` commands and triggers.
+
+    <pragma-> !plang var karma = Integer(factget('#karma-data', 'pragma-')); karma += 1; factset('#karma-data', 'pragma-', String(karma));
+       <PBot> 1
