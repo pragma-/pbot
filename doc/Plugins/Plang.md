@@ -75,7 +75,7 @@ metadata with `text` appended.
 ### userget
 Use the `userget` function to retrieve user metadata.
 
-Signature: userget(name: String) -> Map | Null
+Signature: `userget(name: String) -> Map | Null`
 
 The `userget` function takes one parameter: `name`.
 
