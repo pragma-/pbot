@@ -82,7 +82,7 @@ The `userget` function takes one parameter: `name`.
 The `userget` function returns a `Map` containing all the metadata of the user, or
 `null` if there is no user matching `name`.
 
-See the [Plang Map documentation](https://github.com/pragma-/Plang#map) for a refresher on using Plang maps.
+See the [Plang Map documentation](https://github.com/pragma-/Plang#maps) for a refresher on using Plang maps.
 
 ## Examples
 ### Basic examples
