@@ -21,13 +21,12 @@ sub initialize {
 
     # load Plang modules
     my $path = $self->{pbot}->{registry}->get_value('general', 'plang_dir') // 'Plang';
-    unshift @INC, $path if not grep { $_ eq $path } @INC;
+    unshift @INC, "$path/lib" if not grep { $_ eq "$path/lib" } @INC;
 
-    # require all the Plang .pm modules so Module::Refresh can reload them without
-    # needing to restart PBot
+    # require all the Plang .pm modules for Module::Refresh
     require "$path/Interpreter.pm";
     require "$path/AstInterpreter.pm";
-    require "$path/Grammar.pm"; # FIXME: this module cannot be reloaded
+    require "$path/Grammar.pm"; # FIXME: Module::Refresh doesn't like this one
     require "$path/Parser.pm";
     require "$path/Lexer.pm";
     require "$path/Types.pm";
