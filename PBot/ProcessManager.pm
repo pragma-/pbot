@@ -195,7 +195,6 @@ sub execute_process {
             local $SIG{ALRM} = sub { die "Process `$context->{commands}->[0]` timed-out" };
             alarm $timeout;
             $subref->($context);
-            die if $@;
         };
         alarm 0;
 
