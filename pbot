@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use FindBin qw($RealBin);
-use lib "$RealBin/.";
+use lib "$RealBin/";
 
 # configuration is overridden via command-line arguments, do not modify
 # see doc/QuickStart.md
