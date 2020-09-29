@@ -210,6 +210,7 @@ sub execute_process {
         # print $context to pipe
         my $json = encode_json $context;
         print $writer "$json\n";
+        close $writer;
 
         # end child
         exit 0;
@@ -225,6 +226,7 @@ sub execute_process {
 
 sub process_pipe_reader {
     my ($self, $pid, $buf) = @_;
+
     my $context = decode_json $buf or do {
         $self->{pbot}->{logger}->log("Failed to decode bad json: [$buf]\n");
         return;

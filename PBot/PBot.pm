@@ -100,15 +100,15 @@ sub initialize {
         }
     }
 
-    # let modules register signal handlers
-    $self->{atexit} = PBot::Registerable->new(%conf, pbot => $self);
-    $self->register_signal_handlers;
-
     # make sure the data directory exists
     if (not -d $data_dir) {
         print STDERR "Data directory ($data_dir) does not exist; aborting...\n";
         exit;
     }
+
+    # let modules register signal handlers
+    $self->{atexit} = PBot::Registerable->new(%conf, pbot => $self);
+    $self->register_signal_handlers;
 
     # create logger
     $self->{logger} = PBot::Logger->new(pbot => $self, filename => "$data_dir/log/log", %conf);
@@ -411,9 +411,9 @@ sub cmd_sl {
 sub cmd_die {
     my ($self, $context) = @_;
     $self->{logger}->log("$context->{hostmask} made me exit.\n");
-    $self->atexit();
-    $self->{conn}->privmsg($context->{from}, "Good-bye.") if defined $context->{from};
+    $self->{conn}->privmsg($context->{from}, "Good-bye.") if $context->{from} ne 'stdin@pbot';
     $self->{conn}->quit("Departure requested.") if defined $self->{conn};
+    $self->atexit();
     exit 0;
 }
 

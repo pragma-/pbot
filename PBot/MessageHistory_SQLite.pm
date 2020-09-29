@@ -51,8 +51,15 @@ sub sqlite_commit_interval_trigger {
 
 sub sqlite_debug_trigger {
     my ($self, $section, $item, $newvalue) = @_;
-    $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$newvalue")) if defined $self->{dbh};
 
+    if ($newvalue) {
+        open $self->{trace_layer}, '>:via(PBot::SQLiteLoggerLayer)', PBot::SQLiteLogger->new(pbot => $self->{pbot});
+    } else {
+        close $self->{trace_layer} if $self->{trace_layer};
+        delete $self->{trace_layer};
+    }
+
+    $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$newvalue")) if defined $self->{dbh};
 }
 
 sub begin {
@@ -67,8 +74,10 @@ sub begin {
         my $sqlite_debug = $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_debug');
         use PBot::SQLiteLoggerLayer;
         use PBot::SQLiteLogger;
-        open $self->{trace_layer}, '>:via(PBot::SQLiteLoggerLayer)', PBot::SQLiteLogger->new(pbot => $self->{pbot});
-        $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$sqlite_debug"), $self->{trace_layer});
+        if ($sqlite_debug) {
+            open $self->{trace_layer}, '>:via(PBot::SQLiteLoggerLayer)', PBot::SQLiteLogger->new(pbot => $self->{pbot});
+            $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$sqlite_debug"), $self->{trace_layer});
+        }
 
         $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Hostmasks (
@@ -165,6 +174,7 @@ sub end {
     if (exists $self->{dbh} and defined $self->{dbh}) {
         $self->{dbh}->commit() if $self->{new_entries};
         $self->{dbh}->disconnect();
+        close $self->{trace_layer} if $self->{trace_layer};
         delete $self->{dbh};
     }
 }
