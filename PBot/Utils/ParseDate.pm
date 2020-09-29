@@ -108,7 +108,7 @@ sub parsedate {
 
             # If there's still an error, it's bad input
             if ($@) {
-                $@ =~ s/ ${override}from now at PBot.*$//;
+                $@ =~ s/ ${override}from now at .*$//;
                 return (0, $@);
             }
         }
