@@ -334,16 +334,15 @@
       "requires_cap" : 1
    },
    "plang" : {
-      "background-process" : "1",
       "dont-replace-pronouns" : "1",
       "help" : "",
-      "preserve-whitespace" : "1",
       "preserve_whitespace" : "1",
       "requires_cap" : "0"
    },
    "plangrepl" : {
-      "background-process" : "1",
+      "dont-replace-pronouns" : "1",
       "help" : "",
+      "preserve_whitespace" : "1",
       "requires_cap" : 0
    },
    "plug" : {
