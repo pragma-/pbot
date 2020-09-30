@@ -101,7 +101,9 @@ See the [Plang Map documentation](https://github.com/pragma-/Plang#maps) for a r
 
 ### Karma example
 
-Here is a quick-and-dirty way to make a simple Karma system.
+Here is a quick-and-dirty way to make a simple Karma system. This is a demonstration of what is
+currently possible with Plang. This will not be its final form. Support for classes will be added
+soon.
 
 We'll use the `factget()` and `factset()` functions to get and store Karma values to an
 unique unused channnel; let's call it `#karma-data`. To get the first command argument,
