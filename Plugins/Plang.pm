@@ -58,7 +58,7 @@ sub initialize {
             [['TYPE', 'String'], 'keyword', undef],
             [['TYPE', 'String'], 'meta', [['TYPE', 'String'], 'action']]
         ],
-        ['TYPE', 'String'],
+        ['TYPEUNION', [['TYPE', 'String'], ['TYPE', 'Null']]],
         sub { $self->plang_builtin_factget(@_) },
         sub { $self->plang_validate_builtin_factget(@_) },
     );
@@ -178,7 +178,11 @@ sub plang_builtin_factget {
     my ($self, $plang, $context, $name, $arguments) = @_;
     my ($channel, $keyword, $meta) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     my $result = $self->{pbot}->{factoids}->get_meta($channel, $keyword, $meta);
-    return [['TYPE', 'String'], $result];
+    if (defined $result) {
+        return [['TYPE', 'String'], $result];
+    } else {
+        return [['TYPE', 'Null'], undef];
+    }
 }
 
 sub plang_validate_builtin_factget {
