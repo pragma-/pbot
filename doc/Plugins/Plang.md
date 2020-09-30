@@ -103,8 +103,11 @@ See the [Plang Map documentation](https://github.com/pragma-/Plang#maps) for a r
 
 Here is a quick-and-dirty way to make a simple Karma system.
 
-First we `factadd` the `++` command. Note that `$arg[0]` is PBot's special
-argument variable representing the first command argument.
+We'll use the `factget()` and `factset()` functions to get and store Karma values to an
+unique unused channnel; let's call it `#karma-data`. To get the first command argument,
+we'll use PBot's special factoid variable `$arg[0]`.
+
+First we add the `++` command.
 
     <pragma-> !factadd ++ /call plang var karma = Integer(factget('#karma-data', '$arg[0]')); karma += 1; factset('#karma-data', '$arg[0]', String(karma));
        <PBot> ++ added to global channel.
@@ -114,7 +117,7 @@ Similarly, we add the `--` command.
     <pragma-> !factadd -- /call plang var karma = Integer(factget('#karma-data', '$arg[0]')); karma -= 1; factset('#karma-data', '$arg[0]', String(karma));
        <PBot> -- added to global channel.
 
-Finally, we add the `karma` command. This command simply displays the Karma value.
+Finally, we add the `karma` command.
 
     <pragma-> !factadd karma /call plang var k = factget('#karma-data' , '$arg[0]'); if k == null then print('No karma for $arg[0] yet.') else print($'Karma for $arg[0]: {k}')
        <PBot> karma added to global channel.
