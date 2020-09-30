@@ -11,6 +11,9 @@
   * [factset](#factset)
   * [factappend](#factappend)
   * [userget](#userget)
+* [Examples](#examples)
+  * [Basic examples](#basic-examples)
+  * [Karma example](#karma-example)
 <!-- md-toc-end -->
 
 ## About
@@ -98,8 +101,46 @@ See the [Plang Map documentation](https://github.com/pragma-/Plang#maps) for a r
 
 ### Karma example
 
-This is just a quick-and-dirty placeholder snippet for now. This section will be updated with a proper
-and elaborate demonstration of creating proper `karma` commands and triggers.
+Here is a quick-and-dirty way to make a simple Karma system.
 
-    <pragma-> !plang var karma = Integer(factget('#karma-data', 'pragma-')); karma += 1; factset('#karma-data', 'pragma-', String(karma));
+First we `factadd` the `++` command. Note that `$arg[0]` is PBot's special
+argument variable representing the first command argument.
+
+    <pragma-> !factadd ++ /call plang var karma = Integer(factget('#karma-data', '$arg[0]')); karma += 1; factset('#karma-data', '$arg[0]', String(karma));
+       <PBot> ++ added to global channel.
+
+Similarly, we add the `--` command.
+
+    <pragma-> !factadd -- /call plang var karma = Integer(factget('#karma-data', '$arg[0]')); karma -= 1; factset('#karma-data', '$arg[0]', String(karma));
+       <PBot> -- added to global channel.
+
+Finally, we add the `karma` command. This command simply displays the Karma value.
+
+    <pragma-> !factadd karma /call plang var k = factget('#karma-data' , '$arg[0]'); if k == null then print('No karma for $arg[0] yet.') else print($'Karma for $arg[0]: {k}')
+       <PBot> karma added to global channel.
+
+A short demonstration:
+
+    <pragma-> !karma nf
+       <PBot> No karma for nf yet.
+
+    <pragma-> !-- nf
+       <PBot> -1
+
+    <pragma-> !-- nf
+       <PBot> -2
+
+    <pragma-> !++ nf
+       <PBot> -1
+
+    <pragma-> !karma nf
+       <PBot> Karma for nf: -1
+
+You can use double quotes to group multiple words as one argument (but not single quotes due to how `$arg[0]` is inserted
+into single-quoted strings in the Plang snippets).
+
+    <pragma-> !++ "this and that"
        <PBot> 1
+
+    <pragma-> !karma "this and that"
+       <PBot> Karma for "this and that": 1
