@@ -106,7 +106,7 @@ currently possible with Plang. This will not be its final form. Support for clas
 soon.
 
 We'll use the `factget()` and `factset()` functions to get and store Karma values to an
-unique unused channnel; let's call it `#karma-data`. To get the first command argument,
+unique unused channnel. Let's call it `#karma-data`. To get the first command argument,
 we'll use PBot's special factoid variable `$arg[0]`.
 
 First we add the `++` command.
