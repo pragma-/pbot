@@ -106,7 +106,7 @@ currently possible with Plang. This will not be its final form. Support for clas
 soon.
 
 We'll use the `factget()` and `factset()` functions to get and store Karma values to an
-unique unused channnel. Let's call it `#karma-data`. To get the first command argument,
+unique unused channel. Let's call it `#karma-data`. To get the first command argument,
 we'll use PBot's special factoid variable `$arg[0]`.
 
 First we add the `++` command.
@@ -121,7 +121,7 @@ Similarly, we add the `--` command.
 
 Finally, we add the `karma` command.
 
-    <pragma-> !factadd karma /call plang var k = factget('#karma-data' , '$arg[0]'); if k == null then print('No karma for $arg[0] yet.') else print($'Karma for $arg[0]: {k}')
+    <pragma-> !factadd karma /call plang var k = factget('#karma-data', '$arg[0]'); if k == null then print('No karma for $arg[0] yet.') else print($'Karma for $arg[0]: {k}')
        <PBot> karma added to global channel.
 
 A short demonstration:
