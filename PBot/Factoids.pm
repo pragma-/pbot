@@ -101,7 +101,7 @@ sub get_meta {
     my ($self, $channel, $trigger, $key) = @_;
     $channel = lc $channel;
     $trigger = lc $trigger;
-    my ($chan, $trig) = $self->find_factoid($channel, $trigger, exact_channel => 1);
+    my ($chan, $trig) = $self->find_factoid($channel, $trigger, exact_channel => 1, exact_trigger => 1);
     return undef if not defined $chan;
     return $self->{factoids}->get_data($chan, $trig, $key);
 }
