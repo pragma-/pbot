@@ -42,6 +42,13 @@ is preserved in-between commands and the types of values is output along with th
 [Plang](https://github.com/pragma-/Plang) lets you add custom built-in functions.
 Several have been added for PBot; they are described here.
 
+Function | Description
+--- | ---
+[factget](#factget) | Retrieve metadata from factoids
+[factset](#factset) | Sets metadata on factoids
+[factappend](#factappend) | Appends to the `action` metadata on factoids
+[userget](#userget) | Retrieve metadata from users
+
 ### factget
 Use the `factget` function to retrieve metadata from factoids.
 
