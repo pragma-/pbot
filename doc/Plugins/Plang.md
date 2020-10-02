@@ -118,12 +118,12 @@ we'll use PBot's special factoid variable `$arg[0]`.
 
 First we add the `++` command.
 
-    <pragma-> !factadd ++ /call plang var karma = Integer(factget('#karma-data', '$arg[0]')); karma += 1; factset('#karma-data', '$arg[0]', String(karma));
+    <pragma-> !factadd ++ /call plang var karma = Integer(factget('#karma-data', '$arg[0]')); factset('#karma-data', '$arg[0]', String(karma + 1));
        <PBot> ++ added to global channel.
 
 Similarly, we add the `--` command.
 
-    <pragma-> !factadd -- /call plang var karma = Integer(factget('#karma-data', '$arg[0]')); karma -= 1; factset('#karma-data', '$arg[0]', String(karma));
+    <pragma-> !factadd -- /call plang var karma = Integer(factget('#karma-data', '$arg[0]')); factset('#karma-data', '$arg[0]', String(karma - 1));
        <PBot> -- added to global channel.
 
 Finally, we add the `karma` command.
