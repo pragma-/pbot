@@ -42,7 +42,7 @@ is preserved in-between commands and the types of values is output along with th
 [Plang](https://github.com/pragma-/Plang) lets you add custom built-in functions.
 Several have been added for PBot; they are described here.
 
-Function | Signature<br>Description
+Function | Signature / Description
 --- | ---
 [factget](#factget) | `factget(channel: String, keyword: String, meta: String = "action") -> String \| Null`<br>Retrieve metadata from factoids
 [factset](#factset) | `factset(channel: String, keyword: String, text: String, meta: String = "action") -> String`<br>Sets metadata on factoids
