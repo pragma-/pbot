@@ -42,12 +42,12 @@ is preserved in-between commands and the types of values is output along with th
 [Plang](https://github.com/pragma-/Plang) lets you add custom built-in functions.
 Several have been added for PBot; they are described here.
 
-Function | Signature<hr>Description
+Function | Signature<br>Description
 --- | ---
-[factget](#factget) | `factget(channel: String, keyword: String, meta: String = "action") -> String | Null`<hr>Retrieve metadata from factoids
-[factset](#factset) | `factset(channel: String, keyword: String, text: String, meta: String = "action") -> String`<hr>Sets metadata on factoids
-[factappend](#factappend) | `factappend(channel: String, keyword: String, text: String) -> String`<hr>Appends to the `action` metadata on factoids
-[userget](#userget) | `userget(name: String) -> Map | Null`<hr>Retrieve metadata from users
+[factget](#factget) | `factget(channel: String, keyword: String, meta: String = "action") -> String \| Null`<br>Retrieve metadata from factoids
+[factset](#factset) | `factset(channel: String, keyword: String, text: String, meta: String = "action") -> String`<br>Sets metadata on factoids
+[factappend](#factappend) | `factappend(channel: String, keyword: String, text: String) -> String`<br>Appends to the `action` metadata on factoids
+[userget](#userget) | `userget(name: String) -> Map \| Null`<br>Retrieve metadata from users
 
 ### factget
 Use the `factget` function to retrieve metadata from factoids.
