@@ -276,7 +276,7 @@ sub cmd_userset {
         return "There is no user account $name.";
     }
 
-    $key = lc $key;
+    $key = lc $key if defined $key;
 
     if (defined $value and not $self->{pbot}->{capabilities}->userhas($u, 'can-modify-capabilities')) {
         if ($key =~ m/^can-/i or $self->{pbot}->{capabilities}->exists($key)) {
