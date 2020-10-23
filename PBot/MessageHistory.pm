@@ -139,7 +139,7 @@ sub cmd_list_also_known_as {
             }
         },
 
-         'hostmask' => sub {
+        'hostmask' => sub {
             if ($_[1] eq '+') {
                 return lc $_[0]->{$a}->{hostmask} cmp lc $_[0]->{$b}->{hostmask};
             } else {
@@ -147,7 +147,7 @@ sub cmd_list_also_known_as {
             }
         },
 
-         'gecos' => sub {
+        'gecos' => sub {
             if ($_[1] eq '+') {
                 return lc $_[0]->{$a}->{gecos} cmp lc $_[0]->{$b}->{gecos};
             } else {
