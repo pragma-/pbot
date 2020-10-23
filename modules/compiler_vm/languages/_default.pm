@@ -466,7 +466,7 @@ sub process_standard_options {
   };
 
   my ($info, $arguments, $paste);
-  my ($ret, $rest) = GetOptionsFromArray(\@opt_args,
+  GetOptionsFromArray(\@opt_args,
     'info!' => \$info,
     'args|arguments=s' => \$arguments,
     'paste!' => \$paste);
@@ -1048,7 +1048,7 @@ sub split_line {
   my $last_ch;
   my $next_ch;
   my $i = 0;
-  my $pos;
+  my $pos = 0;
   my $ignore_quote = 0;
   my $spaces = 0;
 
