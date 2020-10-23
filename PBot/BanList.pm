@@ -229,7 +229,7 @@ sub compare_banlist {
                 if ($timeout) {
                     $self->{pbot}->{logger}->log("Temp ban for $mask in $channel.\n");
                     $data->{timeout} = gettimeofday + $timeout;
-                    $self->{pbot}->{chanops}->enqueue_unban($channel, 'b', $mask, $timeout);
+                    $self->enqueue_unban($channel, 'b', $mask, $timeout);
                 }
             }
         }
