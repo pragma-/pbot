@@ -14,11 +14,8 @@ my $args = quotemeta "@ARGV";
 $args =~ s/\\([ :-])/$1/g;
 $args =~ s/^\s+|\s+$//g;
 
-my $opts = '-j';
+my $opts = '-j -no-ansi -no-autocorrect';
 $opts .= ' -b' unless $args =~ /^-/;
 
 my $result = `trans $opts $args`;
-
-$result =~ s/\e\[\d+m//g;
-
 print "$result\n";
