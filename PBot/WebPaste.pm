@@ -23,7 +23,7 @@ sub initialize {
     my ($self, %conf) = @_;
 
     $self->{paste_sites} = [
-        sub { $self->paste_ixio(@_) },
+        sub { $self->paste_0x0st(@_) },
     ];
 
     $self->{current_site} = 0;
@@ -54,13 +54,13 @@ sub paste {
     return $result;
 }
 
-sub paste_ixio {
+sub paste_0x0st {
     my ($self, $text) = @_;
     my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 10);
     $ua->agent("Mozilla/5.0");
     push @{$ua->requests_redirectable}, 'POST';
-    my %post     = ('f:1' => $text);
-    my $response = $ua->post("http://ix.io", \%post);
+    my %post     = ('file' => $text);
+    my $response = $ua->post("http://0x0.st", \%post);
     alarm 1;    # LWP::UserAgent::Paranoid kills alarm
     return "error pasting: " . $response->status_line if not $response->is_success;
     my $result = $response->content;
