@@ -1,7 +1,9 @@
 #!/bin/bash
 
+export LC_TIME=C
 export TZ=UTC
-if (( $# )) && ! read -r TZ < <(IFS=_; find -L /usr/share/zoneinfo/posix -type f -not -iname 'West' -iname "*$**" -printf '%P\n' -quit); then
+TZDIR=${TZDIR:-/usr/share/zoneinfo/posix}
+if (( $# )) && ! read -r TZ < <(IFS=_; find -L "$TZDIR" -type f -not -iname 'West' -iname "*$**" -printf '%P\n' -quit); then
   echo "No match for '$*'."
   exit 1
 fi
