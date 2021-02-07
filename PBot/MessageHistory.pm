@@ -286,8 +286,9 @@ sub cmd_recall_message {
             $recall_history = $recall_text;
         }
 
+        my $max_count = $self->{pbot}->{registry}->get_value('messagehistory', 'max_recall_count') // 50;
         $recall_count = 1 if (not defined $recall_count) || ($recall_count <= 0);
-        return "You may only select a count of up to 100 messages." if $recall_count > 100;
+        return "You may only select a count of up to $max_count messages." if $recall_count > $max_count;
 
         $recall_before = 0 if not defined $recall_before;
         $recall_after  = 0 if not defined $recall_after;
