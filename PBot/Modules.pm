@@ -114,8 +114,11 @@ sub launch_module {
 
     if ($@) {
         my $error = $@;
-        if   ($error =~ m/timeout on timer/) { ($exitval, $stdout, $stderr) = (-1, "$context->{trigger}: timed-out", ''); }
-        else                                 { ($exitval, $stdout, $stderr) = (-1, '',                             $error); }
+        if ($error =~ m/timeout on timer/) {
+            ($exitval, $stdout, $stderr) = (-1, "$context->{trigger}: timed-out", '');
+        } else {
+            ($exitval, $stdout, $stderr) = (-1, '', $error);
+        }
     }
 
     if (length $stderr) {
