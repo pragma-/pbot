@@ -8,6 +8,9 @@ use warnings;
 use strict;
 use feature "switch";
 
+use utf8;
+use feature 'unicode_strings';
+
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 package _c_base;
@@ -392,6 +395,7 @@ sub postprocess_output {
   my $right_quote = chr(226) . chr(128) . chr(153);
   $output =~ s/$left_quote/'/msg;
   $output =~ s/$right_quote/'/msg;
+  $output =~ s/[‘’]/'/g;
   $output =~ s/`/'/msg;
   $output =~ s/\t/   /g;
   if($output =~ /In function '([^']+)':/) {
@@ -446,8 +450,8 @@ sub postprocess_output {
   $output =~ s/\s0x[a-z0-9]+: note: pointer points here\s+<memory cannot be printed>//gms;
   $output =~ s/store to address 0x[a-z0-9]+ with insufficient space/store to address with insufficient space/gms;
   $output =~ s/load of misaligned address 0x[a-z0-9]+ for type/load of misaligned address for type/gms;
-  $output =~ s/=+\s+==\d+==ERROR: (.*?) on address.*==\d+==ABORTING\s*/$1\n/gms;
-  $output =~ s/Copyright \(C\) 2015 Free Software Foundation.*//ms;
+  #  $output =~ s/=+\s+==\d+==ERROR: (.*?) on address.*==\d+==ABORTING\s*/$1\n/gms;
+  $output =~ s/Copyright \(C\) \d+ Free Software Foundation.*//ms;
   $output =~ s/==\d+==WARNING: unexpected format specifier in printf interceptor: %[^\s]+\s*//gms;
   $output =~ s/(Defined at .*?)\s+included at/$1/msg;
   $output =~ s/^\nno output/no output/ms;

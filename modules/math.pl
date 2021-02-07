@@ -22,10 +22,17 @@ if ($#ARGV < 0) {
 }
 
 $arguments = join(' ', @ARGV);
+
+my $raw = 0;
+if ($arguments =~ s/^-raw\s+//) {
+    $raw = 1;
+}
+
 my $orig_arguments = $arguments;
 
 $arguments =~ s/(the )*(ultimate )*answer.*question of life(,? the universe,? and everything)?\s?/42/gi;
 $arguments =~ s/(the )*(ultimate )*meaning of (life|existence|everything)?/42/gi;
+$arguments =~ s/baker'?s dozen/13/g;
 
 if ($arguments =~ s/(\d+\s?)([^ ]+)\s+to\s+([^ ]+)\s*$/$1/) { @conversion = ($2, $3); }
 
@@ -64,4 +71,8 @@ if (@conversion) {
     $response = "$result $conversion[1]";
 }
 
-print "$orig_arguments = $response\n";
+if ($raw) {
+    print "$response\n";
+} else {
+    print "$orig_arguments = $response\n";
+}

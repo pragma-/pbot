@@ -25,7 +25,10 @@ print STDERR "nick: [$nick], args: [$arguments]\n";
 
 $arguments =~ s/\W$//;
 
+exit if $arguments =~ m{https?://.*\.c$}i;
+exit if $arguments =~ m{https?://.*\.h$}i;
 exit if $arguments =~ m{https?://ibb.co/}i;
+exit if $arguments =~ m{https?://.*onlinegdb.com}i;
 exit if $arguments =~ m{googlesource.com/}i;
 exit if $arguments =~ m{https?://git}i;
 exit if $arguments =~ m{https://.*swissborg.com}i;
@@ -91,10 +94,11 @@ exit if $arguments =~ m/pasting.*\.(?:com|org|net|ca|de|uk|info|ch)/i;
 my $ua = LWP::UserAgent->new;
 if ($arguments =~ /youtube|youtu.be|googlevideo/) {
     $ua->agent("Googlebot");
+    $ua->max_size(1200 * 1024);
 } else {
     $ua->agent("Mozilla/5.0");
+    $ua->max_size(200 * 1024);
 }
-$ua->max_size(200 * 1024);
 
 my $response = $ua->get("$arguments");
 

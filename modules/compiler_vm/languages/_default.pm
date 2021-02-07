@@ -138,7 +138,7 @@ sub postprocess_output {
 
   unless($self->{got_run} and $self->{copy_code}) {
     open FILE, ">> log.txt";
-    print FILE "------------------------------------------------------------------------\n";
+    print FILE "--------------------------post processing----------------------------------------------\n";
     print FILE localtime() . "\n";
     print FILE "$self->{output}\n";
     close FILE;
@@ -171,7 +171,7 @@ sub show_output {
 
   unless ($self->{got_run} and $self->{copy_code}) {
     open FILE, ">> log.txt";
-    print FILE "------------------------------------------------------------------------\n";
+    print FILE "------------------------show output------------------------------------------------\n";
     print FILE localtime() . "\n";
     print FILE "$output\n";
     print FILE "========================================================================\n";
@@ -330,50 +330,52 @@ sub execute {
 
   my $options;
   if (length $self->{cmdline_options}) {
-    $options = $self->{cmdline_options};
+      $options = $self->{cmdline_options};
   } else {
-    $options = $self->{default_options};
+      $options = $self->{default_options};
   }
 
   if ((not exists $self->{options}->{'-paste'}) and (not defined $self->{got_run} or $self->{got_run} ne 'paste')) {
-    if (exists $self->{options_nopaste}) {
-      $options .= ' ' if length $options;
-      $options .= $self->{options_nopaste};
-    }
+      if (exists $self->{options_nopaste}) {
+          $options .= ' ' if length $options;
+          $options .= $self->{options_nopaste};
+      }
   } else {
-    if (exists $self->{options_paste}) {
-      $options .= ' ' if length $options;
-      $options .= $self->{options_paste};
-    }
+      if (exists $self->{options_paste}) {
+          $options .= ' ' if length $options;
+          $options .= $self->{options_paste};
+      }
   }
 
   if (length $options) {
-    $cmdline =~ s/\$options/$options/;
+      $cmdline =~ s/\$options/$options/;
   } else {
-    $cmdline =~ s/\$options\s+//;
+      $cmdline =~ s/\$options\s+//;
   }
 
   open FILE, ">> log.txt";
-  print FILE "------------------------------------------------------------------------\n";
+  print FILE "---------------------executing---------------------------------------------------\n";
   print FILE localtime() . "\n";
   print FILE "$cmdline\n$stdin\n$pretty_code\n";
 
   my $compile_in = {
-    lang => $self->{lang},
-    sourcefile => $self->{sourcefile},
-    execfile => $self->{execfile},
-    cmdline => $cmdline,
-    input => $stdin,
-    date => $date,
-    arguments => $self->{arguments},
-    code => $pretty_code
+      lang => $self->{lang},
+      sourcefile => $self->{sourcefile},
+      execfile => $self->{execfile},
+      cmdline => $cmdline,
+      input => $stdin,
+      date => $date,
+      arguments => $self->{arguments},
+      code => $pretty_code
   };
 
   $compile_in->{'factoid'} = $self->{'factoid'} if length $self->{'factoid'};
   $compile_in->{'persist-key'} = $self->{'persist-key'} if length $self->{'persist-key'};
 
   my $compile_json = encode_json($compile_in);
+  print STDERR "outgoing json: $compile_json\n";
   $compile_json .= encode('UTF-8', "\n:end:\n");
+  print STDERR "outgoing json after concat: $compile_json\n";
 
   my $length = length $compile_json;
   my $sent = 0;
@@ -386,25 +388,25 @@ sub execute {
   $chunk_size -= 1; # account for newline in syswrite
 
   while ($chunks_sent < $length) {
-    my $chunk = substr $compile_json, $chunks_sent, $chunk_size;
-    #print FILE "Sending chunk [$chunk]\n";
-    $chunks_sent += length $chunk;
+      my $chunk = substr $compile_json, $chunks_sent, $chunk_size;
+      #print FILE "Sending chunk [$chunk]\n";
+      $chunks_sent += length $chunk;
 
-    my $ret = syswrite($compiler, $chunk);
+      my $ret = syswrite($compiler, $chunk);
 
-    if (not defined $ret) {
-      print FILE "Error sending: $!\n";
-      last;
-    }
+      if (not defined $ret) {
+          print FILE "Error sending: $!\n";
+          last;
+      }
 
-    if ($ret == 0) {
-      print FILE "Sent 0 bytes. Sleep 1 sec and try again\n";
-      sleep 1;
-      next;
-    }
+      if ($ret == 0) {
+          print FILE "Sent 0 bytes. Sleep 1 sec and try again\n";
+          sleep 1;
+          next;
+      }
 
-    $sent += $ret;
-    print FILE "Sent $ret bytes, so far $sent ...\n";
+      $sent += $ret;
+      print FILE "Sent $ret bytes, so far $sent ...\n";
   }
 
   #print FILE "Done sending!\n";
@@ -414,23 +416,23 @@ sub execute {
   my $got_result = 0;
 
   while(my $line = <$compiler_output>) {
-    utf8::decode($line);
-    print STDERR "Read from vm [$line]\n";
+      utf8::decode($line);
+      print STDERR "Read from vm [$line]\n";
 
-    $line =~ s/[\r\n]+$//;
-    last if $line =~ /^result:end$/;
+      $line =~ s/[\r\n]+$//;
+      last if $line =~ /^result:end$/;
 
-    if($line =~ /^result:/) {
-      $line =~ s/^result://;
-      my $compile_out = decode_json($line);
-      $result .= "$compile_out->{result}\n";
-      $got_result = 1;
-      next;
-    }
+      if($line =~ /^result:/) {
+          $line =~ s/^result://;
+          my $compile_out = decode_json($line);
+          $result .= "$compile_out->{result}\n";
+          $got_result = 1;
+          next;
+      }
 
-    if($got_result) {
-      $result .= "$line\n";
-    }
+      if($got_result) {
+          $result .= "$line\n";
+      }
   }
 
   close $compiler;
@@ -457,6 +459,7 @@ sub process_standard_options {
   my @opt_args = $self->split_line($self->{code}, preserve_escapes => 1, keep_spaces => 1);
 
   use Data::Dumper;
+  print STDERR "code:\n$self->{code}\n";
   print STDERR "opt_arg: ", Dumper \@opt_args;
 
   my $getopt_error;
@@ -1073,6 +1076,7 @@ sub split_line {
     $ch = $chars[$i++];
     $next_ch = $chars[$i];
 
+    my $dquote = $quote // 'undef';
     $spaces = 0 if $ch ne ' ';
 
     if ($escaped) {

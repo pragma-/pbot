@@ -28,6 +28,7 @@ if (not defined $sock) {
 
 my $json = join ' ', @ARGV;
 my $h    = decode_json $json;
+
 my $lang = $h->{lang} // "c11";
 
 if ($h->{code} =~ s/-lang=([^ ]+)//) { $lang = lc $1; }

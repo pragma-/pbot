@@ -38,6 +38,7 @@ sub preprocess {
   my $self = shift;
 
   open(my $fh, '>', $self->{sourcefile}) or die $!;
+  binmode($fh, ':utf8');
   print $fh $self->{code} . "\n";
   close $fh;
 
@@ -103,7 +104,6 @@ sub split_line {
   my $escaped = 0;
   my $quote;
   my $token = '';
-  my $last_token = '';
   my $ch = ' ';
   my $last_ch;
   my $next_ch;
@@ -122,7 +122,7 @@ sub split_line {
         $ignore_quote = 1;
         $quote = undef;
         $last_ch = ' ';
-        $token = $last_token;
+        $token = '';
       } else {
         # add final token and exit
         push @args, $token if length $token;
@@ -173,7 +173,6 @@ sub split_line {
         # begin potential quoted argument
         $pos = $i - 1;
         $quote = $ch;
-        $last_token = $token;
         $token .= $ch unless $opts{strip_quotes};
       }
       next;

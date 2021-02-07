@@ -12,7 +12,7 @@ sub initialize {
   $self->{sourcefile}      = 'prog.js';
   $self->{execfile}        = 'prog.js';
   $self->{default_options} = '';
-  $self->{cmdline}         = 'd8 $options $sourcefile';
+  $self->{cmdline}         = 'sh -c \'NODE_DISABLE_COLORS=1 node -p $options < $sourcefile\'';
 
   $self->{cmdline_opening_comment} = "/************* CMDLINE *************\n";
   $self->{cmdline_closing_comment} = "************** CMDLINE *************/\n";

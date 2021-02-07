@@ -12,7 +12,7 @@ sub initialize {
   $self->{sourcefile}      = 'prog.bc';
   $self->{execfile}        = 'prog.bc';
   $self->{default_options} = '-l';
-  $self->{cmdline}         = 'BC_LINE_LENGTH=2000000000 bc -q $options $sourcefile';
+  $self->{cmdline}         = 'sh -c \'BC_LINE_LENGTH=2000000000 bc -q $options $sourcefile\'';
 }
 
 sub preprocess_code {

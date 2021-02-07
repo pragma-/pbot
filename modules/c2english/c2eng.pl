@@ -109,9 +109,7 @@ sub precompile_grammar {
   Parse::RecDescent->Precompile($grammar, "PCGrammar") or die "Could not precompile: $!";
 }
 
-sub flatten {
-  map { ref eq 'ARRAY' ? flatten(@$_) : $_ } @_
-}
+sub flatten { map { ref eq 'ARRAY' ? flatten(@$_) : $_ } @_ }
 
 sub isfalse {
   return istrue($_[0], 'zero');
