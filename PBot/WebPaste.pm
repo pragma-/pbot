@@ -67,8 +67,7 @@ sub paste_0x0st {
     );
     alarm 1;    # LWP::UserAgent::Paranoid kills alarm
     return "error pasting: " . $response->status_line if not $response->is_success;
-    my $result = $response->content;
-    return $result;
+    return $response->content;
 }
 
 sub paste_ixio {
@@ -79,8 +78,7 @@ sub paste_ixio {
     my $response = $ua->post("http://ix.io", \%post);
     alarm 1;    # LWP::UserAgent::Paranoid kills alarm
     return "error pasting: " . $response->status_line if not $response->is_success;
-    my $result = $response->content;
-    return $result;
+    return $response->content;
 }
 
 1;
