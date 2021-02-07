@@ -231,7 +231,7 @@ sub set {
         my $comma  = '';
         foreach my $key (sort keys %{$self->{hash}->{$lc_primary_index}->{$lc_secondary_index}}) {
             next if $key eq '_name';
-            $result .= $comma . "$key => " . $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$key};
+            $result .= $comma . "$key: " . $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$key};
             $comma = ";\n";
         }
         $result .= "none" if ($comma eq '');

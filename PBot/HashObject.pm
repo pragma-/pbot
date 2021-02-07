@@ -146,7 +146,7 @@ sub set {
         my $result = "[$self->{name}] " . $self->get_key_name($lc_index) .  " keys: ";
         my $comma  = '';
         foreach my $k (sort grep { $_ ne '_name' } keys %{$self->{hash}->{$lc_index}}) {
-            $result .= $comma . "$k => " . $self->{hash}->{$lc_index}->{$k};
+            $result .= $comma . "$k: " . $self->{hash}->{$lc_index}->{$k};
             $comma = ";\n";
         }
         $result .= "none" if ($comma eq '');

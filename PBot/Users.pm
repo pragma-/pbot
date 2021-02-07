@@ -294,7 +294,7 @@ sub cmd_userset {
 
     my $result = $self->{users}->set($name, $key, $value);
     print "result [$result]\n";
-    $result =~ s/^password => .*;?$/password => <private>;/m;
+    $result =~ s/^password: .*;?$/password: <private>;/m;
 
     if (defined $key and ($key eq 'channels' or $key eq 'hostmasks') and defined $value) {
         $self->rebuild_user_index;
@@ -411,7 +411,7 @@ sub cmd_my {
     }
 
     $result .= $self->{users}->set($name, $key, $value);
-    $result =~ s/^password => .*;?$/password => <private>;/m;
+    $result =~ s/^password: .*;?$/password: <private>;/m;
     return $result;
 }
 
