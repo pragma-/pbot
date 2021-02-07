@@ -57,10 +57,12 @@ sub paste {
 sub paste_0x0st {
     my ($self, $text) = @_;
     my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 10);
-    $ua->agent("Mozilla/5.0");
     push @{$ua->requests_redirectable}, 'POST';
-    my %post     = ('file' => $text);
-    my $response = $ua->post("http://0x0.st", \%post);
+    my $response = $ua->post(
+        "https://0x0.st",
+        [ file => [ undef, "file", Content => $text ] ],
+        Content_Type => 'form-data'
+    );
     alarm 1;    # LWP::UserAgent::Paranoid kills alarm
     return "error pasting: " . $response->status_line if not $response->is_success;
     my $result = $response->content;
