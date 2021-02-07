@@ -1,6 +1,7 @@
 {
    "$metadata$" : {
-      "update_version" : 3503
+      "update_version" : 3503,
+      "name" : "Capabilities"
    },
    "admin" : {
       "can-actiontrigger" : 1,
