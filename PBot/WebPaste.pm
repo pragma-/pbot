@@ -24,6 +24,7 @@ sub initialize {
 
     $self->{paste_sites} = [
         sub { $self->paste_0x0st(@_) },
+        # sub { $self->paste_ixio(@_) }, # removed due to being too slow (temporarily hopefully)
     ];
 
     $self->{current_site} = 0;
@@ -51,6 +52,7 @@ sub paste {
         $result = $paste_site->($text);
         last if $result !~ m/error pasting/;
     }
+    $result =~ s/^\s+|\s+$//g;
     return $result;
 }
 
@@ -66,8 +68,18 @@ sub paste_0x0st {
     alarm 1;    # LWP::UserAgent::Paranoid kills alarm
     return "error pasting: " . $response->status_line if not $response->is_success;
     my $result = $response->content;
-    $result =~ s/^\s+//;
-    $result =~ s/\s+$//;
+    return $result;
+}
+
+sub paste_ixio {
+    my ($self, $text) = @_;
+    my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 10);
+    push @{$ua->requests_redirectable}, 'POST';
+    my %post     = ('f:1' => $text);
+    my $response = $ua->post("http://ix.io", \%post);
+    alarm 1;    # LWP::UserAgent::Paranoid kills alarm
+    return "error pasting: " . $response->status_line if not $response->is_success;
+    my $result = $response->content;
     return $result;
 }
 
