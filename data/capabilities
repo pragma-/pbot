@@ -1,7 +1,6 @@
 {
    "$metadata$" : {
-      "update_version" : 3503,
-      "name" : "Capabilities"
+      "update_version" : 3503
    },
    "admin" : {
       "can-actiontrigger" : 1,
@@ -14,7 +13,6 @@
       "can-clear-bans" : 1,
       "can-clear-mutes" : 1,
       "can-countertrigger" : 1,
-      "can-eventqueue" : 1,
       "can-ignore" : 1,
       "can-in" : 1,
       "can-join" : 1,
@@ -106,7 +104,9 @@
       "can-whitelist" : 1,
       "chanmod" : 1,
       "chanop" : 1,
-      "is-whitelisted" : 1
+      "in" : 1,
+      "is-whitelisted" : 1,
+      "moderator" : 1
    },
    "can-actiontrigger" : {},
    "can-akalink" : {},
@@ -136,7 +136,8 @@
    "can-die" : {},
    "can-dumpbans" : {},
    "can-eval" : {},
-   "can-eventqueue" : {},
+   "can-eventqueue" : {
+   },
    "can-export" : {},
    "can-group-capabilities" : {},
    "can-ignore" : {},
@@ -204,6 +205,8 @@
       "can-mode-y" : 1,
       "can-mode-z" : 1
    },
+   "can-mode-b" : {},
+   "can-mode-o" : {},
    "can-modify-admins" : {},
    "can-modify-capabilities" : {},
    "can-mute" : {
@@ -266,6 +269,13 @@
       "can-voice" : 1,
       "is-whitelisted" : 1
    },
-   "is-whitelisted" : {}
+   "in" : {},
+   "is-whitelisted" : {},
+   "moderator" : {
+      "can-devoice" : 1,
+      "can-mode" : 1,
+      "can-mode-m" : 1,
+      "can-voice" : 1
+   }
 }
 

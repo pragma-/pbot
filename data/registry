@@ -356,6 +356,10 @@
          "type" : "text",
          "value" : "32"
       },
+      "max_recall_count" : {
+         "type" : "text",
+         "value" : "100"
+      },
       "max_recall_time" : {
          "type" : "text",
          "value" : "0"
