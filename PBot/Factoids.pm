@@ -908,7 +908,7 @@ sub expand_action_arguments {
     if   (not defined $input or $input eq '') { %h = (args => $nick); }
     else                                      { %h = (args => $input); }
 
-    my $jsonargs = encode_json \%h;
+    my $jsonargs = to_json \%h;
     $jsonargs =~ s/^{".*":"//;
     $jsonargs =~ s/"}$//;
 
@@ -986,7 +986,7 @@ sub expand_action_arguments {
 sub escape_json {
     my ($self, $text) = @_;
     my $thing = {thing => $text};
-    my $json  = encode_json $thing;
+    my $json  = to_json $thing;
     $json =~ s/^{".*":"//;
     $json =~ s/"}$//;
     return $json;
