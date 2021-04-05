@@ -142,21 +142,9 @@ sub get_wttr {
         return $error;
     }
 
-    if (exists $wttr->{nearest_area}) {
-        my $areaName = $wttr->{nearest_area}->[0]->{areaName}->[0]->{value};
-        my $region   = $wttr->{nearest_area}->[0]->{region}->[0]->{value};
-        my $country  = $wttr->{nearest_area}->[0]->{country}->[0]->{value};
-
-        $location = '';
-        $location .= "$areaName, " if length $areaName;
-        $location .= "$region, "   if length $region and $region ne $areaName;
-        $location .= "$country, "  if length $country;
-        $location =~ s/, $//;
-    } else {
-        # title-case location
-        $location = ucfirst lc $location;
-        $location =~ s/( |\.)(\w)/$1 . uc $2/ge;
-    }
+    # title-case location
+    $location = ucfirst lc $location;
+    $location =~ s/( |\.)(\w)/$1 . uc $2/ge;
 
     $location =~ s/United States of America/USA/;
 
@@ -321,7 +309,21 @@ sub get_wttr {
             when ('time') { $result .= "Observation time: $c->{'localObsDateTime'}; "; }
 
             when ('location') {
-                $result .= "Observation location: $location";
+                if (exists $wttr->{nearest_area}) {
+                    my $areaName = $wttr->{nearest_area}->[0]->{areaName}->[0]->{value};
+                    my $region   = $wttr->{nearest_area}->[0]->{region}->[0]->{value};
+                    my $country  = $wttr->{nearest_area}->[0]->{country}->[0]->{value};
+
+                    my $location = '';
+                    $location .= "$areaName, " if length $areaName;
+                    $location .= "$region, "   if length $region and $region ne $areaName;
+                    $location .= "$country, "  if length $country;
+                    $location =~ s/, $//;
+
+                    $result .= "Observation location: $location";
+                } else {
+                    $result .= "Query location: $location";
+                }
             }
 
             when ('population') {
