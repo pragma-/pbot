@@ -20,6 +20,8 @@ use Time::Duration qw/duration/;
 
 use feature 'switch';
 
+use utf8;
+
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 sub initialize {
