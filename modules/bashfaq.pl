@@ -7,7 +7,7 @@
 my $query = "@ARGV";
 print "Usage: faq <id or search text>\n" and exit 0 if not length $query;
 
-my (%faq, $id, $rcpt, $output);
+my (%faq, $match);
 
 open(FILE, "< bashfaq.txt") or print "Can't open Bash FAQ: $!" and exit 1;
 
@@ -26,23 +26,21 @@ if ($query =~ / >/) {
 }
 
 if (exists $faq{$query}) {
-    $id = $query;
-    $output = $faq{$id};
+    $match = $query;
 } else {
     foreach my $key (keys %faq) {
         if ($faq{$key} =~ /$query/i) {
-            $id = $key;
-            $output = $faq{$key};
+            $match = $key;
             last;
         }
     }
 }
 
-if (defined $output) {
-    $id = sprintf "%03d", $id;
-    $output = "https://mywiki.wooledge.org/BashFAQ/$id -- $output\n";
-    $output = "$rcpt: $output" if length $rcpt;
-    print $output;
+if ($match) {
+    my $id = sprintf "%03d", $match;
+    my $output = "https://mywiki.wooledge.org/BashFAQ/$id -- $faq{$match}";
+    print "$rcpt: " if $rcpt;
+    print "$output\n";
 } else {
     print "No matches found at https://mywiki.wooledge.org/BashFAQ\n";
 }
