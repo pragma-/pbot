@@ -1,0 +1,122 @@
+1. How can I read a file (data stream, variable) line-by-line (and/or field-by-field)?
+2. How can I store the return value and/or output of a command in a variable?
+3. How can I sort or compare files based on some metadata attribute (newest / oldest modification time, size, etc)?
+4. How can I check whether a directory is empty or not? How do I check for any *.mpg files, or count how many there are?
+5. How can I use array variables?
+6. How can I use variable variables (indirect variables, pointers, references) or associative arrays?
+7. Is there a function to return the length of a string?
+8. How can I recursively search all files for a string?
+9. What is buffering? Or, why does my command line produce no output: tail -f logfile | grep 'foo bar' | awk ...
+10. How can I recreate a directory hierarchy structure, without the files?
+11. How can I print the n'th line of a file?
+12. How do I invoke a shell command from a non-shell application?
+13. How can I concatenate two variables? How do I append a string to a variable?
+14. How can I redirect the output of multiple commands at once?
+15. How can I run a command on all files with the extension .gz?
+16. How can I use a logical AND/OR/NOT in a shell pattern (glob)?
+17. How can I group expressions in an if statement, e.g. if (A AND B) OR C?
+18. How can I use numbers with leading zeros in a loop, e.g. 01, 02?
+19. How can I split a file into line ranges, e.g. lines 1-10, 11-20, 21-30?
+20. How can I find and safely handle file names containing newlines, spaces or both?
+21. How can I replace a string with another string in a variable, a stream, a file, or in all the files in a directory?
+22. How can I calculate with floating point numbers instead of just integers?
+23. I want to launch an interactive shell that has special aliases and functions, not the ones in the user's ~/.bashrc.
+24. I set variables in a loop that's in a pipeline. Why do they disappear after the loop terminates? Or, why can't I pipe data to read?
+25. How can I access positional parameters after $9?
+26. How can I randomize (shuffle) the order of lines in a file? Or select a random line from a file, or select a random file from a directory?
+27. How can two unrelated processes communicate?
+28. How do I determine the location of my script? I want to read some config files from the same place.
+29. How can I display the target of a symbolic link?
+30. How can I rename all my *.foo files to *.bar, or convert spaces to underscores, or convert upper-case file names to lower case?
+31. What is the difference between test, [ and [[ ?
+32. How can I redirect the output of 'time' to a variable or file?
+33. How can I find a process ID for a process given its name?
+34. Can I do a spinner in Bash?
+35. How can I handle command-line options and arguments in my script easily?
+36. How can I get all lines that are: in both of two files (set intersection) or in only one of two files (set subtraction).
+37. How can I print text in various colors?
+38. How do Unix file permissions work?
+39. What are all the dot-files that bash reads?
+40. How do I use dialog to get input from the user?
+41. How do I determine whether a variable contains a substring?
+42. How can I find out if a process is still running?
+43. Why does my crontab job fail? 0 0 * * * some command > /var/log/mylog.`date +%Y%m%d`
+44. How do I create a progress bar? How do I see a progress indicator when copying/moving files?
+45. How can I ensure that only one instance of a script is running at a time (mutual exclusion, locking)?
+46. I want to check to see whether a word is in a list (or an element is a member of a set).
+47. How can I redirect stderr to a pipe?
+48. Eval command and security issues
+49. How can I view periodic updates/appends to a file? (ex: growing log file)
+50. I'm trying to put a command in a variable, but the complex cases always fail!
+51. I want history-search just like in tcsh. How can I bind it to the up and down keys?
+52. How do I convert a file from DOS format to UNIX format (remove CRs from CR-LF line terminators)?
+53. I have a fancy prompt with colors, and now bash doesn't seem to know how wide my terminal is. Lines wrap around incorrectly.
+53.1. Escape the colors with \[ \]
+54. How can I tell whether a variable contains a valid number?
+55. Tell me all about 2>&1 -- what's the difference between 2>&1 >foo and >foo 2>&1, and when do I use which?
+56. How can I untar (or unzip) multiple tarballs at once?
+57. How can I group entries (in a file by common prefixes)?
+58. Can bash handle binary data?
+59. I saw this command somewhere: :(){ :|:& } (fork bomb). How does it work?
+60. I'm trying to write a script that will change directory (or set a variable), but after the script finishes, I'm back where I started (or my variable isn't set)!
+61. Is there a list of which features were added to specific releases (versions) of Bash?
+62. How do I create a temporary file in a secure manner?
+63. My ssh client hangs when I try to logout after running a remote background job!
+64. Why is it so hard to get an answer to the question that I asked in #bash?
+65. Is there a "PAUSE" command in bash like there is in MSDOS batch scripts? To prompt the user to press any key to continue?
+66. I want to check if [[ $var == foo || $var == bar || $var == more ]] without repeating $var n times.
+67. How can I trim leading/trailing white space from one of my variables?
+68. How do I run a command, and have it abort (timeout) after N seconds?
+69. I want to automate an ssh (or scp, or sftp) connection, but I don't know how to send the password....
+70. How do I convert Unix (epoch) times to human-readable values?
+71. How do I convert an ASCII character to its decimal (or hexadecimal) value and back? How do I do URL encoding or URL decoding?
+72. How can I ensure my environment is configured for cron, batch, and at jobs?
+73. How can I use parameter expansion? How can I get substrings? How can I get a file without its extension, or get just a file's extension? What are some good ways to do basename and dirname?
+74. How do I get the effects of those nifty Bash Parameter Expansions in older shells?
+75. How do I use 'find'? I can't understand the man page at all!
+76. How do I get the sum of all the numbers in a column?
+77. How do I log history or "secure" bash against history removal?
+78. I want to set a user's password using the Unix passwd command, but how do I script that? It doesn't read standard input!
+79. How can I grep for lines containing foo AND bar, foo OR bar? Or for files containing foo AND bar, possibly on separate lines? Or files containing foo but NOT bar?
+80. How can I make an alias that takes an argument?
+81. How can I determine whether a command exists anywhere in my PATH?
+82. Why is $(...) preferred over `...` (backticks)?
+83. How do I determine whether a variable is already defined? Or a function?
+84. How do I return a string (or large number, or negative number) from a function? "return" only lets me give a number from 0 to 255.
+85. How to write several times to a fifo without having to reopen it?
+86. How to ignore aliases or functions when running a command?
+87. How can I get a file's permissions (or other metadata) without parsing ls -l output?
+88. How can I avoid losing any history lines?
+89. I'm reading a file line by line and running ssh or ffmpeg, only the first line gets processed!
+90. How do I prepend a text to a file (the opposite of >>)?
+91. I'm trying to get the number of columns or lines of my terminal but the variables COLUMNS / LINES are always empty.
+92. How do I write a CGI script that accepts parameters?
+93. How can I set the contents of my terminal's title bar?
+94. I want to get an alert when my disk is full (parsing df output).
+95. I'm getting "Argument list too long". How can I process a large list in chunks?
+96. ssh eats my word boundaries! I can't do ssh remotehost make CFLAGS="-g -O"!
+97. How do I determine whether a symlink is dangling (broken)?
+98. How to add localization support to your bash scripts
+99. How can I get the newest (or oldest) file from a directory?
+100. How do I do string manipulations in bash?
+101. Common utility functions (warn, die)
+102. How to get the difference between two dates
+103. How do I check whether my file was modified in a certain month or date range?
+104. Why doesn't foo=bar echo "$foo" print bar?
+105. Why doesn't set -e (or set -o errexit, or trap ERR) do what I expected?
+106. Logging! I want to send all of my script's output to a log file. But I want to do it from inside the script. And I want to see it on the terminal too!
+107. How do I add a timestamp to every line of a stream?
+108. How do I wait for several spawned processes?
+109. How can I tell whether my script was sourced (dotted in) or executed?
+110. How do I copy a file to a remote system, and specify a remote name which may contain spaces?
+111. What is the Shellshock vulnerability in Bash?
+112. What are the advantages and disadvantages of using set -u (or set -o nounset)?
+113. How do I extract data from an HTML or XML file?
+114. How do I operate on IP addresses and netmasks?
+115. How do I make a menu?
+116. I have two files. The first one contains bad IP addresses (plus other fields). I want to remove all of these bad addresses from a second file.
+117. I have a pipeline where a long-running command feeds into a filter. If the filter finds "foo", I want the long-running command to die.
+118. How do I print the contents of an array in reverse order, or reverse an array?
+119. What's the difference between "cmd < file" and "cat file | cmd"? What is a UUOC?
+120. How can I find out where this strange variable in my interactive shell came from?
+121. What does value too great for base mean? (Octal values in arithmetic.)
