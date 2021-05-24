@@ -29,7 +29,7 @@ if (exists $faq{$query}) {
     $match = $query;
 } else {
     foreach my $key (keys %faq) {
-        if ($faq{$key} =~ /$query/i) {
+        if ($faq{$key} =~ /\Q$query\E/i) {
             $match = $key;
             last;
         }
