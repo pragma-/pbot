@@ -38,9 +38,8 @@ if (exists $faq{$query}) {
 
 if ($match) {
     my $id = sprintf "%03d", $match;
-    my $output = "https://mywiki.wooledge.org/BashFAQ/$id -- $faq{$match}";
     print "$rcpt: " if $rcpt;
-    print "$output\n";
+    print "https://mywiki.wooledge.org/BashFAQ/$id -- $faq{$match}\n";
 } else {
     print "No matches found at https://mywiki.wooledge.org/BashFAQ\n";
 }
