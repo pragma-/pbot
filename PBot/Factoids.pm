@@ -745,6 +745,8 @@ sub expand_factoid_vars {
 
     $action = defined $action ? $action : $context->{action};
 
+    return $action if $self->{factoids}->get_data($context->{channel}, $context->{keyword}, 'interpolate') eq '0';
+
     $action = $self->expand_factoid_selectors($context, $action, %opts);
 
     my $depth = 0;
