@@ -1097,12 +1097,14 @@ sub interpreter {
         my @chanlist   = ();
         my ($fwd_chan, $fwd_trig);
 
-        # build list of which channels contain the keyword, keeping track of the last one and count
-        foreach my $factoid ($self->{factoids}->get_all("index2 = $original_keyword", 'index1', 'type')) {
-            next if $factoid->{type} ne 'text' and $factoid->{type} ne 'module';
-            push @chanlist, $self->{factoids}->get_data($factoid->{index1}, '_name');
-            $fwd_chan = $factoid->{index1};
-            $fwd_trig = $original_keyword;
+        unless ($strictnamespace) {
+            # build list of which channels contain the keyword, keeping track of the last one and count
+            foreach my $factoid ($self->{factoids}->get_all("index2 = $original_keyword", 'index1', 'type')) {
+                next if $factoid->{type} ne 'text' and $factoid->{type} ne 'module';
+                push @chanlist, $self->{factoids}->get_data($factoid->{index1}, '_name');
+                $fwd_chan = $factoid->{index1};
+                $fwd_trig = $original_keyword;
+            }
         }
 
         my $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : "";
