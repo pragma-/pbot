@@ -748,6 +748,9 @@ sub expand_factoid_vars {
     my $interpolate = $self->{factoids}->get_data($context->{channel}, $context->{keyword}, 'interpolate');
     return $action if defined $interpolate and $interpolate == 0;
 
+    $interpolate = $self->{pbot}->{registry}->get_value($context->{channel}, 'interpolate_factoids');
+    return $action if defined $interpolate and $interpolate == 0;
+
     $action = $self->expand_factoid_selectors($context, $action, %opts);
 
     my $depth = 0;

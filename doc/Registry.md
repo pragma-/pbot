@@ -248,3 +248,4 @@ Name | Description
 [channel].strictnamespace | When enabled, factoids belonging to other channels will not show up in this channel unless specifically invoked.
 [channel].trigger | Overrides the bot trigger for this channel.
 [channel].typosub_ignore_commands | Do not apply `s//` substitution to bot commands.
+[channel].interpolate_factoids | If this key exists and is set to `0` then factoids containing `$variables` will not have the variables expanded and interpolated.
