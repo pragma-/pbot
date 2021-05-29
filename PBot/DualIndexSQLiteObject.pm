@@ -350,7 +350,7 @@ sub get_each {
         my $everything = 0;
 
         foreach my $expr (@opts) {
-            my ($key, $op, $value) = split /\s*([!=<>]+)\s*/, $expr, 3;
+            my ($key, $op, $value) = split /\s+/, $expr, 3;
 
             if ($key eq '_everything') {
                 $everything = 1;
