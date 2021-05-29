@@ -29,8 +29,15 @@ sub initialize {
     $self->register(sub { $self->cmd_help(@_) },       "help",     0);
     $self->register(sub { $self->cmd_uptime(@_) },     "uptime",   0);
     $self->register(sub { $self->cmd_in_channel(@_) }, "in",       0);
+    $self->register(sub { $self->cmd_nop(@_) },        "nop",      0);
 
     $self->{pbot}->{capabilities}->add('admin', 'can-in', 1);
+}
+
+sub cmd_nop {
+    my ($self, $context) = @_;
+    $self->{pbot}->{logger}->log("Disregarding NOP command.\n");
+    return "";
 }
 
 sub cmd_set {
