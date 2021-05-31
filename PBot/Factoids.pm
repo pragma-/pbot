@@ -1094,6 +1094,17 @@ sub interpreter {
 
     $context->{arguments} = "" if not defined $context->{arguments};
 
+    # factoid > nick redirection
+    if ($context->{arguments} =~ s/> ([_a-zA-Z0-9\[\]{}`\\-]+)$//) {
+        my $rcpt = $1;
+        if ($self->{pbot}->{nicklist}->is_present($context->{from}, $rcpt)) {
+            $context->{nickoverride} = $rcpt;
+            $context->{force_nickoverride} = 1;
+        } else {
+            $context->{arguments} .= "> $rcpt";
+        }
+    }
+
     # if no match found, attempt to call factoid from another channel if it exists there
     if (not defined $keyword) {
         my $string = "$original_keyword $context->{arguments}";
