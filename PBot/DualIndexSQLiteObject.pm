@@ -350,7 +350,11 @@ sub get_each {
         my $everything = 0;
 
         foreach my $expr (@opts) {
-            my ($key, $op, $value) = split /\s+/, $expr, 3;
+            my ($key, $op, $value) = $expr =~ /(.*?)\s+([!=<>]+)\s+(.*)/;
+
+            if (not defined $key) {
+                $key = $expr;
+            }
 
             if ($key eq '_everything') {
                 $everything = 1;
