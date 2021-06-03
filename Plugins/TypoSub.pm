@@ -43,7 +43,7 @@ sub on_public {
     my $nosubs = $self->{pbot}->{registry}->get_value($channel, 'notyposub');
     return 0 if defined $nosubs and $nosubs;
 
-    return 0 if $self->{pbot}->{users}->get_loggedin_user_metadata($channel, "$nick!$user\@$host", 'no-typosub');
+    return 0 if $self->{pbot}->{users}->get_loggedin_user_metadata($channel, "$nick!$user\@$host", 'notyposub');
 
     return 0 if $channel !~ m/^#/;
     return 0 if $event->{interpreted};
