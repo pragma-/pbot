@@ -547,17 +547,37 @@ Displays a random C fact.  You may specify a search text to limit the random set
 ### cjeopardy
 C Jeopardy is loosely based on the Jeopardy! game show. The questions are phrased in the form of an answer and are answered in the form of a question.
 
-The `cjeopardy` command isplays a random C Jeopardy question.  You can specify a search text to limit the random set to those containing that text.  Answer the questions with `what is ...?`
-Can be used to skip the current question.
+There are approximately 1,330 questions. All of the questions are sentences extracted from the C11 draft standard PDF, with certain nouns or phrases replaced with `this`. The goal of the game
+is to answer the correct noun or phrase.
+
+The `cjeopardy` command displays a random C Jeopardy question.  You can specify a search text to limit the random set to those containing that text.
+Can be used to skip the current question after 5 minutes have elapsed.
 
 Usage: `cjeopardy [search text]`
 
+Example game:
+
+    <pragma-> !cjeopardy
        <PBot> 1009) This macro expands to a integer constant expressions that can be used as the argument to the exit function to return successful termination status to the host environment.
-    <pragma-> what is EXIT_SUCCESS?
+    <pragma-> !what is EXIT_SUCCESS?
        <PBot> pragma-: 'EXIT_SUCCESS' is correct! (1m15s)
+       <PBot> pragma-: Next question: 288) Of an integer type, this is the number of bits it uses to represent values, including any sign and padding bits.
+    <pragma-> !w width
+       <PBot> pragma-: 'width' is correct! (25s)
+       <PBot> pragma-: Next question: 83) A byte with all bits set to 0 is called this.
+       <jdoe> !hint
+       <PBot> Hint: n... ...r....r
+       <jdoe> !w null integer
+       <PBot> jdoe: Sorry, 'null integer' is only 50.0% correct.
+       <jdoe> !w null character
+    <pragma-> !w null character
+       <PBot> jdoe: 'null character' is correct! (2m15s)
+       <PBot> pragma-: Too slow by 2s, jdoe got the correct answer!
 
 #### hint
 Displays a hint for the current C Jeopardy question. Each subsequent hint request reveals more of the answer.
+
+When an answer can have multiple forms, the hint always chooses the longest one.
 
 #### what
 #### w
@@ -570,7 +590,7 @@ Usage: `w <answer>`
 #### filter
 `filter` can skip questions containing undesirable words such as wide-character or floating-point.
 
-Usage: `filter <comma or space separated list of words>` or `filter clear` to clear the filter
+Usage: `filter <comma separated list of words>` or `filter clear` to clear the filter.
 
 #### score
 Shows the personal C Jeopardy statistics for a player. If used without any arguments, it shows your own statistics.
