@@ -276,13 +276,13 @@ sub add_trigger {
 
 sub process_trigger {
     my $self = shift;           # shift $self off of the top of @_
-    my ($section, $item) = @_;  # but leave $section and $item in @_
+    my ($section, $item) = @_;  # but leave $section, $item and anything else (i.e. $value) in @_
 
     $section = lc $section;
     $item    = lc $item;
 
     if (exists $self->{triggers}->{$section} and exists $self->{triggers}->{$section}->{$item}) {
-        return &{$self->{triggers}->{$section}->{$item}}(@_);  # $section and $item still in @_
+        return &{$self->{triggers}->{$section}->{$item}}(@_); # $section, $item, $value, etc in @_
     }
 
     return undef;
