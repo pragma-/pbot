@@ -47,6 +47,8 @@ sub process_line {
     $flood_threshold      = $pbot->{registry}->get_value('antiflood', 'chat_flood_threshold')      if not defined $flood_threshold;
     $flood_time_threshold = $pbot->{registry}->get_value('antiflood', 'chat_flood_time_threshold') if not defined $flood_time_threshold;
 
+
+=cut
     if (defined $from and $from =~ m/^#/) {
         my $chanmodes = $self->{pbot}->{channels}->get_meta($from, 'MODE');
         if (defined $chanmodes and $chanmodes =~ m/z/) {
@@ -59,6 +61,7 @@ sub process_line {
             $context->{banned} = 1 if $self->{pbot}->{banlist}->is_banned($nick, $user, $host, $from);
         }
     }
+=cut
 
     $pbot->{antiflood}->check_flood(
         $from,                               $nick, $user, $host, $text,
@@ -66,10 +69,12 @@ sub process_line {
         $pbot->{messagehistory}->{MSG_CHAT}, $context
     ) if defined $from;
 
+=cut
     if ($context->{banned} or $context->{unidentified}) {
         $self->{pbot}->{logger}->log("Disregarding banned/unidentified user message (channel $from is +z).\n");
         return 1;
     }
+=cut
 
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 

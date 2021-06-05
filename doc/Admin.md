@@ -333,8 +333,7 @@ Name | Description | Belongs to group
 `can-mode-any` | Allows the [`mode`](#mode) command to set any mode flag. | botowner
 `can-modify-admins` | Allows the user to modify user accounts that have the `admin` capability | botowner
 `can-modify-capabilities` | Allows the user to use the [`useradd`](#useradd) or [`userset`](#userset) commands to add or remove capabilities from users. | botowner
-`can-group-capabilities` | Allows the user to use the [`cap group`](#cap) command to modify capability groups. | botowner
-`can-ungroup-capabilities` | Allows the user to use the [`cap ungroup`](#cap) command to modify capability groups. | botowner
+`can-group-capabilities` | Allows the user to use the [`cap group`](#cap) and [`cap ungroup`](#cap) commands to modify capability groups. | botowner
 `can-clear-bans` | Allows the user to use [`unban *`](#unbanunmute) to clear a channel's bans. | botowner, admin
 `can-clear-mutes` | Allows the user to use [`unmute *`](#unbanunmute) to clear a channel's mutes. | botowner, admin
 `can-kick-wildcard` | Allows the user to use wildcards with the [`kick`](#kick) command. | botowner, admin

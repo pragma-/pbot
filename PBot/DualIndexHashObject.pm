@@ -49,7 +49,7 @@ sub load {
         return;
     }
 
-    $self->{pbot}->{logger}->log("Loading $self->{name} from $filename ...\n");
+    $self->{pbot}->{logger}->log("Loading $self->{name} from $filename\n");
 
     if (not open(FILE, "< $filename")) {
         $self->{pbot}->{logger}->log("Skipping loading from file: Couldn't open $filename: $!\n");

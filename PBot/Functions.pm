@@ -27,6 +27,7 @@ use feature 'unicode_strings';
 
 sub initialize {
     my ($self, %conf) = @_;
+
     $self->{pbot}->{commands}->register(sub { $self->cmd_func(@_) }, 'func', 0);
 
     $self->register(
@@ -50,15 +51,27 @@ sub initialize {
 
 sub cmd_func {
     my ($self, $context) = @_;
+
     my $func = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
-    return "Usage: func <keyword> [arguments]; see also: func help" if not defined $func;
-    return "[No such func '$func']"                                 if not exists $self->{funcs}->{$func};
+
+    if (not defined $func) {
+        return "Usage: func <keyword> [arguments]; see also: func help";
+    }
+
+    if (not exists $self->{funcs}->{$func}) {
+        return "[No such func '$func']"
+    }
 
     my @params;
-    while (defined(my $param = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}))) { push @params, $param; }
+
+    while (defined(my $param = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}))) {
+        push @params, $param;
+    }
 
     my $result = $self->{funcs}->{$func}->{subref}->(@params);
-    $result =~ s/\x1/1/g;
+
+    $result =~ s/\x1/1/g; # strip CTCP code
+
     return $result;
 }
 
@@ -74,26 +87,43 @@ sub unregister {
 
 sub func_help {
     my ($self, $func) = @_;
-    return "func: invoke built-in functions; usage: func <keyword> [arguments]; to list available functions: func list [regex]" if not length $func;
-    return "No such func '$func'."                                                                                              if not exists $self->{funcs}->{$func};
+
+    if (not length $func) {
+        return "func: invoke built-in functions; usage: func <keyword> [arguments]; to list available functions: func list [regex]";
+    }
+
+    if (not exists $self->{funcs}->{$func}) {
+        return "No such func '$func'.";
+    }
+
     return "$func: $self->{funcs}->{$func}->{desc}; usage: $self->{funcs}->{$func}->{usage}";
 }
 
 sub func_list {
     my ($self, $regex) = @_;
-    $regex = '.*' if not defined $regex;
+
+    $regex //= '.*';
+
     my $result = eval {
-        my $text = '';
+        my @funcs;
+
         foreach my $func (sort keys %{$self->{funcs}}) {
-            if ($func =~ m/$regex/i or $self->{funcs}->{$func}->{desc} =~ m/$regex/i) { $text .= "$func, "; }
+            if ($func =~ m/$regex/i or $self->{funcs}->{$func}->{desc} =~ m/$regex/i) {
+                push @funcs, $func;
+            }
         }
 
-        $text =~ s/,\s+$//;
-        if (not length $text) {
-            if   ($regex eq '.*') { $text = "No funcs yet."; }
-            else                  { $text = "No matching func."; }
+        my $result = join ', ', @funcs;
+
+        if (not length $result) {
+            if ($regex eq '.*') {
+                $result = "No funcs yet.";
+            } else {
+                $result = "No matching func.";
+            }
         }
-        return "Available funcs: $text; see also: func help <keyword>";
+
+        return "Available funcs: $result; see also: func help <keyword>";
     };
 
     if ($@) {
@@ -101,6 +131,7 @@ sub func_list {
         $error =~ s/at PBot.Functions.*$//;
         return "Error: $error\n";
     }
+
     return $result;
 }
 

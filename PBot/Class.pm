@@ -12,6 +12,9 @@ package PBot::Class;
 use warnings;
 use strict;
 
+use feature 'unicode_strings';
+use utf8;
+
 sub new {
     my ($proto, %conf) = @_;
     my $class = ref($proto) || $proto;

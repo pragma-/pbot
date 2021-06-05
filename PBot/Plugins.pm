@@ -22,6 +22,9 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->cmd_unplug(@_) },   "unplug",   1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_replug(@_) },   "replug",   1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_pluglist(@_) }, "pluglist", 0);
+
+    # load configured plugins
+    $self->autoload(%conf);
 }
 
 sub cmd_plug {

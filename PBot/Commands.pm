@@ -21,23 +21,14 @@ sub initialize {
     my ($self, %conf) = @_;
     $self->PBot::Registerable::initialize(%conf);
 
-    $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Commands', filename => $conf{filename});
+    # command metadata
+    $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Command metadata', filename => $conf{filename});
     $self->{metadata}->load;
 
-    $self->register(sub { $self->cmd_set(@_) },        "cmdset",   1);
-    $self->register(sub { $self->cmd_unset(@_) },      "cmdunset", 1);
-    $self->register(sub { $self->cmd_help(@_) },       "help",     0);
-    $self->register(sub { $self->cmd_uptime(@_) },     "uptime",   0);
-    $self->register(sub { $self->cmd_in_channel(@_) }, "in",       0);
-    $self->register(sub { $self->cmd_nop(@_) },        "nop",      0);
-
-    $self->{pbot}->{capabilities}->add('admin', 'can-in', 1);
-}
-
-sub cmd_nop {
-    my ($self, $context) = @_;
-    $self->{pbot}->{logger}->log("Disregarding NOP command.\n");
-    return "";
+    # register commands to manipulate command metadata and obtain help
+    $self->register(sub { $self->cmd_set(@_) },   "cmdset",   1);
+    $self->register(sub { $self->cmd_unset(@_) }, "cmdunset", 1);
+    $self->register(sub { $self->cmd_help(@_) },  "help",     0);
 }
 
 sub cmd_set {
@@ -69,13 +60,19 @@ sub cmd_help {
             my $name         = $self->{metadata}->get_key_name($keyword);
             my $requires_cap = $self->{metadata}->get_data($keyword, 'requires_cap');
             my $help         = $self->{metadata}->get_data($keyword, 'help');
-            my $result       = "/say $name: ";
+
+            my $result = "/say $name: ";
             $result .= "[Requires can-$keyword] " if $requires_cap;
 
-            if   (not defined $help or not length $help) { $result .= "I have no help text for this command yet. To add help text, use the command `cmdset $keyword help <text>`."; }
-            else                                         { $result .= $help; }
+            if (not defined $help or not length $help) {
+                $result .= "I have no help text for this command yet. To add help text, use the command `cmdset $keyword help <text>`.";
+            } else {
+                $result .= $help;
+            }
+
             return $result;
         }
+
         return "$keyword is a built-in command, but I have no help for it yet.";
     }
 
@@ -119,33 +116,13 @@ sub cmd_help {
 
     my $help = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, 'help');
 
-    if (not defined $help or not length $help) { return "/say $trigger_name is a factoid for $channel_name, but I have no help text for it yet. To add help text, use the command `factset $trigger_name help <text>`."; }
+    if (not defined $help or not length $help) {
+        return "/say $trigger_name is a factoid for $channel_name, but I have no help text for it yet."
+           . " To add help text, use the command `factset $trigger_name help <text>`.";
+    }
 
     $result .= $help;
     return $result;
-}
-
-sub cmd_uptime {
-    my ($self, $context) = @_;
-    return localtime($self->{pbot}->{startup_timestamp}) . " [" . duration(time - $self->{pbot}->{startup_timestamp}) . "]";
-}
-
-sub cmd_in_channel {
-    my ($self, $context) = @_;
-
-    my $usage = "Usage: in <channel> <command>";
-    return $usage if not length $context->{arguments};
-
-    my ($channel, $command) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2, 0, 1);
-    return $usage if not defined $channel or not defined $command;
-
-    if (not $self->{pbot}->{nicklist}->is_present($channel, $context->{nick})) {
-        return "You must be present in $channel to do this.";
-    }
-
-    $context->{from}    = $channel;
-    $context->{command} = $command;
-    return $self->{pbot}->{interpreter}->interpret($context);
 }
 
 sub register {
@@ -156,12 +133,15 @@ sub register {
     $ref->{name}         = lc $name;
     $ref->{requires_cap} = $requires_cap // 0;
 
-    if (not $self->{metadata}->exists($name)) { $self->{metadata}->add($name, {requires_cap => $requires_cap, help => ''}, 1); }
-    else {
-        if (not defined $self->get_meta($name, 'requires_cap')) { $self->{metadata}->set($name, 'requires_cap', $requires_cap, 1); }
+    if (not $self->{metadata}->exists($name)) {
+        $self->{metadata}->add($name, {requires_cap => $requires_cap, help => ''}, 1);
+    } else {
+        if (not defined $self->get_meta($name, 'requires_cap')) {
+            $self->{metadata}->set($name, 'requires_cap', $requires_cap, 1);
+        }
     }
 
-    # add can-cmd capability
+    # add can-cmd capability if command requires such
     $self->{pbot}->{capabilities}->add("can-$name", undef, 1) if $requires_cap;
     return $ref;
 }
@@ -207,7 +187,10 @@ sub interpreter {
     my $from    = $context->{from};
 
     my ($cmd_channel) = $context->{arguments} =~ m/\B(#[^ ]+)/;    # assume command is invoked in regards to first channel-like argument
-    $cmd_channel = $from if not defined $cmd_channel;            # otherwise command is invoked in regards to the channel the user is in
+    $cmd_channel = $from if not defined $cmd_channel;              # otherwise command is invoked in regards to the channel the user is in
+
+    $context->{channel} = $cmd_channel;
+
     my $user = $self->{pbot}->{users}->find_user($cmd_channel, "$context->{nick}!$context->{user}\@$context->{host}");
 
     my $cap_override;

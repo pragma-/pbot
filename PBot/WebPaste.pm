@@ -1,7 +1,7 @@
 # File: WebPaste.pm
 # Author: pragma_
 #
-# Purpose: Pastes text to web paste sites.
+# Purpose: Pastes text to a cycling list of web paste sites.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,6 +22,9 @@ use Encode;
 sub initialize {
     my ($self, %conf) = @_;
 
+    # There used to be many more paste sites in this list but one by one
+    # many have died off. :-(
+
     $self->{paste_sites} = [
         sub { $self->paste_0x0st(@_) },
         # sub { $self->paste_ixio(@_) }, # removed due to being too slow (temporarily hopefully)
@@ -32,53 +35,74 @@ sub initialize {
 
 sub get_paste_site {
     my ($self) = @_;
+
     my $subref = $self->{paste_sites}->[$self->{current_site}];
-    if (++$self->{current_site} >= @{$self->{paste_sites}}) { $self->{current_site} = 0; }
+
+    if (++$self->{current_site} >= @{$self->{paste_sites}}) {
+        $self->{current_site} = 0;
+    }
+
     return $subref;
 }
 
 sub paste {
     my ($self, $text, %opts) = @_;
+
     my %default_opts = (
         no_split => 0,
     );
+
     %opts = (%default_opts, %opts);
 
     $text =~ s/(.{120})\s/$1\n/g unless $opts{no_split};
 
-    my $result;
+    my $response;
+
     for (my $tries = 3; $tries > 0; $tries--) {
         my $paste_site = $self->get_paste_site;
-        $result = $paste_site->($text);
-        last if $result !~ m/error pasting/;
+
+        $response = $paste_site->($text);
+
+        last if $response->is_success;
     }
+
+    if (not $response->is_success) {
+        return "error pasting: " . $response->status_line;
+    }
+
+    my $result = $response->decoded_content;
+
     $result =~ s/^\s+|\s+$//g;
+
+    alarm 1; # LWP::UserAgent::Paranoid kills alarm
+
     return $result;
 }
 
 sub paste_0x0st {
     my ($self, $text) = @_;
+
     my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 10);
+
     push @{$ua->requests_redirectable}, 'POST';
-    my $response = $ua->post(
+
+    return $ua->post(
         "https://0x0.st",
         [ file => [ undef, "file", Content => $text ] ],
         Content_Type => 'form-data'
     );
-    alarm 1;    # LWP::UserAgent::Paranoid kills alarm
-    return "error pasting: " . $response->status_line if not $response->is_success;
-    return $response->content;
 }
 
 sub paste_ixio {
     my ($self, $text) = @_;
+
     my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 10);
+
     push @{$ua->requests_redirectable}, 'POST';
-    my %post     = ('f:1' => $text);
-    my $response = $ua->post("http://ix.io", \%post);
-    alarm 1;    # LWP::UserAgent::Paranoid kills alarm
-    return "error pasting: " . $response->status_line if not $response->is_success;
-    return $response->content;
+
+    my %post = ('f:1' => $text);
+
+    return $ua->post("http://ix.io", \%post);
 }
 
 1;
