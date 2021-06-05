@@ -78,21 +78,26 @@ sub cmd_lagcheck {
         my $lag_total = $elapsed;
         my $len       = @{$self->{lag_history}};
 
-        my $lagstring = "";
-        my $comma     = "";
+        my @entries;
 
         foreach my $entry (@{$self->{lag_history}}) {
             my ($send_time, $lag_result) = @$entry;
+
             $lag_total += $lag_result;
+
             my $ago = concise ago(gettimeofday - $send_time);
-            $lagstring .= $comma . "[$ago] " . sprintf "%.1f ms", $lag_result;
-            $comma = "; ";
+
+            push @entries, "[$ago] " . sprintf "%.1f ms", $lag_result;
         }
 
-        $lagstring .= $comma . "[waiting for pong] $elapsed";
+        push @entries, "[waiting for pong] $elapsed";
+
+        my $lagstring = join '; ', @entries;
 
         my $average = $lag_total / ($len + 1);
+
         $lagstring .= "; average: " . sprintf "%.1f ms", $average;
+
         return $lagstring;
     }
 
