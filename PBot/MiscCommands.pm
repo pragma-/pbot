@@ -1,4 +1,4 @@
-# File: Commands.pm
+# File: MiscCommands.pm
 #
 # Author: pragma_
 #
