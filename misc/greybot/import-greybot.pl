@@ -1,18 +1,36 @@
 #!/usr/bin/env perl
 
-# quick-and-dirty script to import greybot factoids
+# quick-and-dirty script to import greybot factoids.
+#
+# http://wooledge.org/~greybot/
+#
+# Disclaimer: this import script really IS quick-and-dirty. some bits
+# of code are copied out of the PBot tree. ideally, we would instead update
+# the code in the PBot tree to be more library-like.
+#
+# but that's a task for another day. right now i just want to get these
+# greybot factoids imported As-Soon-As-Possible. isn't technical debt fun?
+#
+# if this script is used again in the future, ensure the PBot snippets
+# that were copied over are not out-dated. time-permitting, implement
+# all the TODOs in this script.
 
 use warnings;
 use strict;
 
-use lib '.';
-
 use File::Basename;
+
+# TODO: DualIndexSQLiteObject is the current factoids database API. It expects
+# a PBot instance. We have "temporarily" copied it out of the PBot source tree
+# and modified it for this import script. Ideally we should instead modify the
+# file in the PBot tree.
+use lib '.';
 use PBot::DualIndexSQLiteObject;
 
 my @skip = qw/bash ksh check/;
 
-# PBot/Factoids.pm
+# dirtily copied from PBot/Factoids.pm for now.
+# TODO: we should use PBot::Factoids instead.
 my %factoid_metadata = (
     'action'                => 'TEXT',
     'action_with_args'      => 'TEXT',
@@ -52,40 +70,47 @@ my %factoid_metadata = (
     'workdir'               => 'TEXT',
 );
 
-my $f = PBot::DualIndexSQLiteObject->new(name => 'Factoids', filename => './greybot.sqlite3');
-$f->load;
-$f->create_metadata(\%factoid_metadata);
+my $factoids = PBot::DualIndexSQLiteObject->new(name => 'Factoids', filename => './greybot.sqlite3');
 
-$f->begin_work;
+$factoids->load;
+$factoids->create_metadata(\%factoid_metadata);
+
+$factoids->begin_work;
 
 my @files = glob 'meta/*';
 
 foreach my $file (sort @files) {
   my $factoid = basename $file;
-  print "Reading $factoid ($file)\n";
 
   if (grep { $_ eq $factoid } @skip) {
-      print "SKIPPING $file!\n";
+      print "$factoid: skipping factoid.\n";
       next;
   }
 
-  open my $fh, '<', $file or die "Couldn't open $file: $!\n";
+  open my $fh, '< :encoding(UTF-8)', $file or die "Couldn't open $file: $!\n";
 
   my @lines = <$fh>;
-  my $fact = $lines[$#lines];
-  chomp $fact;
-  print "  === Got factoid [$fact]\n";
+  my $data = $lines[$#lines];
+  chomp $data;
 
-  my ($nick, $timestamp, $command, $text) = split /\s/, $fact, 4;
+  my ($nick, $timestamp, $command, $text) = split /\s/, $data, 4;
 
-  $text = '' if not defined $text;
-
-  print "  nick: [$nick], timestamp: [$timestamp], cmd: [$command], text: [$text]\n";
+  if (not defined $nick or not defined $timestamp or not defined $command) {
+      print "$factoid: could not parse: $data\n";
+      die;
+  }
 
   if (lc $command eq 'forget') {
-    print "  --- skipping factoid (deleted)\n";
+    print "$factoid: skipping deleted factoid\n";
     next;
   }
+
+  if (not defined $text) {
+      print "$factoid: missing text\n";
+      die;
+  }
+
+  print "nick: $nick, timestamp: $timestamp, cmd: $command, text: [$text]\n" if $ENV{DEBUG};
 
   if ($text =~ m/^#redirect (.*)/i) {
     $text = "/call $1";
@@ -93,9 +118,9 @@ foreach my $file (sort @files) {
     $text = "/say $text";
   }
 
-  print "  +++ Adding factoid: $factoid is $text\n";
+  print "adding factoid: $factoid is \"$text\"\n" if $ENV{DEBUG};
 
-  my $data = {
+  $data = {
       enabled => 1,
       type       => 'text',
       action     => $text,
@@ -105,7 +130,7 @@ foreach my $file (sort @files) {
       ref_user   => "nobody",
   };
 
-  $f->add('#bash', $factoid, $data);
+  $factoids->add('#bash', $factoid, $data);
 }
 
-$f->end;
+$factoids->end;
