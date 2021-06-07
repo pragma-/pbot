@@ -13,6 +13,7 @@ use parent 'PBot::Class', 'PBot::Registerable';
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
@@ -30,8 +31,8 @@ sub initialize {
 }
 
 sub process_line {
-    my $self = shift;
-    my ($from, $nick, $user, $host, $text) = @_;
+    my ($self, $from, $nick, $user, $host, $text) = @_;
+
     $from = lc $from if defined $from;
 
     my $context = {from => $from, nick => $nick, user => $user, host => $host, hostmask => "$nick!$user\@$host", text => $text};
@@ -737,37 +738,58 @@ sub lc_args {
 }
 
 sub truncate_result {
-    my ($self, $from, $nick, $text, $original_result, $result, $paste) = @_;
+    my ($self, $from, $nick, $command, $paste_text, $text, $paste) = @_;
+
     my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
+
     $max_msg_len -= length "PRIVMSG $from :" if defined $from;
 
-    utf8::encode $result;
-    utf8::encode $original_result;
+    utf8::encode $paste_text;
+    utf8::encode $text;
 
-    use bytes;
+    if (length $text > $max_msg_len) {
+        my $paste_result;
 
-    if (length $result > $max_msg_len) {
-        my $link;
         if ($paste) {
+            # limit pastes to 32k by default, overridable via paste.max_length
             my $max_paste_len = $self->{pbot}->{registry}->get_value('paste', 'max_length') // 1024 * 32;
-            $original_result = substr $original_result, 0, $max_paste_len;
-            $link            = $self->{pbot}->{webpaste}->paste("[" . (defined $from ? $from : "stdin") . "] <$nick> $text\n\n$original_result");
-        } else {
-            $link = 'undef';
+
+            # truncate paste to max paste length
+            # FIXME: this potentially chops unicode characters in wrong places
+            $paste_text = substr $paste_text, 0, $max_paste_len;
+
+            utf8::decode $paste_text;
+
+            # send text to paste site
+            $paste_result = $self->{pbot}->{webpaste}->paste("($from) $nick: $command\n\n$paste_text");
         }
 
-        my $trunc = "... [truncated; ";
-        if   ($link =~ m/^http/) { $trunc .= "see $link for full text.]"; }
-        else                     { $trunc .= "$link]"; }
+        my $trunc = "... [truncated";
 
-        $self->{pbot}->{logger}->log("Message truncated -- pasted to $link\n") if $paste;
-        my $trunc_len = length $result < $max_msg_len ? length $result : $max_msg_len;
-        $result = substr($result, 0, $trunc_len);
-        substr($result, $trunc_len - length $trunc) = $trunc;
+        if (not defined $paste_result) {
+            # no paste
+            $trunc .= "]";
+        } elsif ($paste_result =~ m/^http/) {
+            # a link
+            $trunc .= "; see $paste_result for full text.]";
+        } else {
+            # an error or something else
+            $trunc .= "$paste_result]";
+        }
+
+        if ($paste) {
+            $paste_result //= 'not pasted';
+            $self->{pbot}->{logger}->log("Message truncated -- $paste_result\n");
+        }
+
+        my $trunc_len = length $text < $max_msg_len ? length $text : $max_msg_len;
+        # FIXME: this potentially chops unicode characters in wrong places
+        $text = substr($text, 0, $trunc_len);
+        substr($text, $trunc_len - length $trunc) = $trunc;
     }
 
-    utf8::decode $result;
-    return $result;
+    utf8::decode $text;
+    return $text;
 }
 
 sub handle_result {
@@ -839,8 +861,6 @@ sub handle_result {
         $result = $context->{split_result} . $result;
     }
 
-    my $original_result = $result;
-
     my $use_output_queue = 0;
 
     if (defined $context->{command}) {
@@ -854,26 +874,25 @@ sub handle_result {
                     $context->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'preserve_whitespace') // 0;
                 }
 
-                $use_output_queue = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'use_output_queue');
-                $use_output_queue = 0 if not defined $use_output_queue;
+                $use_output_queue = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'use_output_queue') // 0;
             }
         }
     }
 
     my $preserve_newlines = $self->{pbot}->{registry}->get_value($context->{from}, 'preserve_newlines');
 
+    my $original_result = $result;
+
     $result =~ s/[\n\r]/ /g unless $preserve_newlines;
     $result =~ s/[ \t]+/ /g unless $context->{preserve_whitespace};
 
-    my $max_lines = $self->{pbot}->{registry}->get_value($context->{from}, 'max_newlines');
-    $max_lines = 4 if not defined $max_lines;
+    my $max_lines = $self->{pbot}->{registry}->get_value($context->{from}, 'max_newlines') // 4;
     my $lines = 0;
 
     my $stripped_line;
     foreach my $line (split /[\n\r]+/, $result) {
         $stripped_line = $line;
-        $stripped_line =~ s/^\s+//;
-        $stripped_line =~ s/\s+$//;
+        $stripped_line =~ s/^\s+|\s+$//g;
         next if not length $stripped_line;
 
         if (++$lines >= $max_lines) {
@@ -891,8 +910,11 @@ sub handle_result {
             last;
         }
 
-        if   ($preserve_newlines) { $line = $self->truncate_result($context->{from}, $context->{nick}, $context->{text}, $line,            $line, 1); }
-        else                      { $line = $self->truncate_result($context->{from}, $context->{nick}, $context->{text}, $original_result, $line, 1); }
+        if ($preserve_newlines) {
+            $line = $self->truncate_result($context->{from}, $context->{nick}, $context->{text}, $line, $line, 1);
+        } else {
+            $line = $self->truncate_result($context->{from}, $context->{nick}, $context->{text}, $original_result, $line, 1);
+        }
 
         if ($use_output_queue) {
             my $delay   = rand(10) + 5;

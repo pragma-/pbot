@@ -18,6 +18,7 @@ package PBot::DualIndexHashObject;
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
 use Text::Levenshtein qw(fastdistance);
 use JSON;

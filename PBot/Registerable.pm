@@ -11,6 +11,7 @@ package PBot::Registerable;
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
 sub new {
     my ($proto, %conf) = @_;

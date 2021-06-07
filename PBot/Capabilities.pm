@@ -11,6 +11,7 @@ use parent 'PBot::Class';
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
 use feature 'switch';
 no if $] >= 5.018, warnings => "experimental::smartmatch";

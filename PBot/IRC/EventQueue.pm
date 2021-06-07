@@ -1,6 +1,7 @@
 package PBot::IRC::EventQueue;    # pragma_ 2011/21/01
 
 use feature 'unicode_strings';
+use utf8;
 
 use PBot::IRC::EventQueue::Entry;    # pragma_ 2011/21/01
 

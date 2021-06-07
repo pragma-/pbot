@@ -16,6 +16,7 @@
 package PBot::IRC::Connection;    # pragma_ 2011/21/01
 
 use feature 'unicode_strings';
+use utf8;
 
 use PBot::IRC::Event;             # pragma_ 2011/21/01
 use PBot::IRC::DCC;               # pragma_ 2011/21/01
@@ -221,8 +222,8 @@ sub connect {
     if (@_) {
         my (%arg) = @_;
 
-        $self->hostname($arg{'LocalAddr'}) if exists $arg{'LocalAddr'};
-        $password = $arg{'Password'} if exists $arg{'Password'};
+        $self->hostname($arg{'LocalAddr'})      if exists $arg{'LocalAddr'};
+        $password = $arg{'Password'}            if exists $arg{'Password'};
         $self->nick($arg{'Nick'})               if exists $arg{'Nick'};
         $self->port($arg{'Port'})               if exists $arg{'Port'};
         $self->server($arg{'Server'})           if exists $arg{'Server'};

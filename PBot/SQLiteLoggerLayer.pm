@@ -13,6 +13,7 @@ use strict;
 use warnings;
 
 use feature 'unicode_strings';
+use utf8;
 
 sub PUSHED {
     my ($class, $mode, $fh) = @_;

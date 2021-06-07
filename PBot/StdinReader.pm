@@ -7,14 +7,18 @@ use parent 'PBot::Class';
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
-use POSIX qw(tcgetpgrp getpgrp);    # to check whether process is in background or foreground
+use POSIX qw(tcgetpgrp getpgrp);  # to check whether process is in background or foreground
+
+use Encode;
 
 sub initialize {
     my ($self, %conf) = @_;
 
-    # create implicit bot-admin account for bot
+    # create stdin bot-admin account for bot
     my $user = $self->{pbot}->{users}->find_user('.*', '*!stdin@pbot');
+
     if (not defined $user or not $self->{pbot}->{capabilities}->userhas($user, 'botowner')) {
         my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
         $self->{pbot}->{logger}->log("Adding stdin botowner *!stdin\@pbot...\n");
@@ -23,18 +27,25 @@ sub initialize {
         $self->{pbot}->{users}->save;
     }
 
-    # used to check whether process is in background or foreground, for stdin reading
     if (not $self->{pbot}->{registry}->get_value('general', 'daemon')) {
+        # TTY is used to check whether process is in background or foreground
         open TTY, "</dev/tty" or die $!;
         $self->{tty_fd} = fileno(TTY);
+
+        # add STDIN to select handler
         $self->{pbot}->{select_handler}->add_reader(\*STDIN, sub { $self->stdin_reader(@_) });
     } else {
         $self->{pbot}->{logger}->log("Starting in daemon mode.\n");
+        # TODO: close STDIN, etc?
     }
 }
 
 sub stdin_reader {
     my ($self, $input) = @_;
+
+    # decode STDIN input from utf8
+    $input = decode('UTF-8', $input);
+
     chomp $input;
 
     # make sure we're in the foreground first
@@ -46,14 +57,17 @@ sub stdin_reader {
 
     my ($from, $text);
 
+    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+
     if ($input =~ m/^~([^ ]+)\s+(.*)/) {
         $from = $1;
-        $text = $self->{pbot}->{registry}->get_value('irc', 'botnick') . " $2";
+        $text = "$botnick $2";
     } else {
         $from = 'stdin@pbot';
-        $text = $self->{pbot}->{registry}->get_value('irc', 'botnick') . " $input";
+        $text = "$botnick $input";
     }
-    return $self->{pbot}->{interpreter}->process_line($from, $self->{pbot}->{registry}->get_value('irc', 'botnick'), "stdin", "pbot", $text);
+
+    return $self->{pbot}->{interpreter}->process_line($from, $botnick, "stdin", "pbot", $text);
 }
 
 1;

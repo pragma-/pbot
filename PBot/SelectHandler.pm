@@ -7,6 +7,7 @@ use parent 'PBot::Class';
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
 use IO::Select;
 
@@ -18,10 +19,10 @@ sub initialize {
 }
 
 sub add_reader {
-    my ($self, $handle, $sub) = @_;
+    my ($self, $handle, $subref) = @_;
     $self->{select}->add($handle);
-    $self->{readers}->{$handle} = $sub;
-    $self->{buffers}->{$handle} = "";
+    $self->{readers}->{$handle} = $subref;
+    $self->{buffers}->{$handle} = '';
 }
 
 sub remove_reader {
@@ -33,32 +34,61 @@ sub remove_reader {
 
 sub do_select {
     my ($self) = @_;
+
+    # maximum read length
     my $length = 8192;
+
+    # check if any readers can read
     my @ready  = $self->{select}->can_read(.1);
 
     foreach my $fh (@ready) {
+        # read from handle
         my $ret = sysread($fh, my $buf, $length);
 
+        # error reading
         if (not defined $ret) {
-            $self->{pbot}->{logger}->log("Error with $fh: $!\n");
+            $self->{pbot}->{logger}->log("SelectHandler: Error reading $fh: $!\n");
             $self->remove_reader($fh);
             next;
         }
 
+        # reader closed
         if ($ret == 0) {
-            if (length $self->{buffers}->{$fh}) { $self->{readers}->{$fh}->($self->{buffers}->{$fh}); }
+            # is there anything in reader's buffer?
+            if (length $self->{buffers}->{$fh}) {
+                # send buffer to reader subref
+                $self->{readers}->{$fh}->($self->{buffers}->{$fh});
+            }
+
+            # remove reader
             $self->remove_reader($fh);
+
+            # skip to next reader
             next;
         }
 
+        # sanity check for missing reader
+        if (not exists $self->{readers}->{$fh}) {
+            $self->{pbot}->{logger}->log("Error: no reader for $fh\n");
+
+            # skip to next reader
+            next;
+        }
+
+        # accumulate input into reader's buffer
         $self->{buffers}->{$fh} .= $buf;
 
-        if (not exists $self->{readers}->{$fh}) { $self->{pbot}->{logger}->log("Error: no reader for $fh\n"); }
-        else {
-            if ($ret < $length) {
-                $self->{readers}->{$fh}->($self->{buffers}->{$fh});
-                $self->{buffers}->{$fh} = "";
-            }
+        # if we read less than max length bytes then this is probably
+        # a complete message so send it to reader now, otherwise we'll
+        # continue to accumulate input into reader's buffer and then send
+        # the buffer when reader closes.
+
+        if ($ret < $length) {
+            # send reader's buffer to reader subref
+            $self->{readers}->{$fh}->($self->{buffers}->{$fh});
+
+            # clear out reader's buffer
+            $self->{buffers}->{$fh} = '';
         }
     }
 }

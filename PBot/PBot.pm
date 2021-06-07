@@ -13,9 +13,6 @@ use strict; use warnings;
 use feature 'unicode_strings';
 use utf8;
 
-# unbuffer stdout
-STDOUT->autoflush(1);
-
 use Carp ();
 use PBot::Logger;
 use PBot::VERSION;
@@ -53,6 +50,17 @@ use PBot::Updater;
 use PBot::Users;
 use PBot::Utils::ParseDate;
 use PBot::WebPaste;
+
+# unbuffer stdout stream
+STDOUT->autoflush(1);
+
+# set standard output streams to encode as utf8
+binmode(STDOUT, ":utf8");
+binmode(STDERR, ":utf8");
+
+# decode command-line arguments from utf8
+use Encode;
+@ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
 
 sub new {
     my ($proto, %conf) = @_;

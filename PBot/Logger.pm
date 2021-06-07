@@ -6,6 +6,7 @@ package PBot::Logger;
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
 use Scalar::Util qw/openhandle/;
 use File::Basename;
@@ -24,36 +25,61 @@ sub new {
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{logfile} = $conf{filename} // Carp::croak "Missing logfile parameter in " . __FILE__;
-    $self->{start}   = time;
 
+    # ensure logfile path was provided
+    $self->{logfile} = $conf{filename} // Carp::croak "Missing logfile parameter in " . __FILE__;
+
+
+    # record start time for later logfile rename in rotation
+    $self->{start} = time;
+
+    # get directories leading to logfile
     my $path = dirname $self->{logfile};
+
+    # create log file path
     if (not -d $path) {
         print "Creating new logfile path: $path\n" unless $self->{pbot}->{overrides}->{'general.daemon'};
         mkdir $path or Carp::croak "Couldn't create logfile path: $!\n";
     }
 
-    open LOGFILE, ">>$self->{logfile}" or Carp::croak "Couldn't open logfile $self->{logfile}: $!\n";
+    # open log file with utf8 encoding
+    open LOGFILE, ">> :encoding(UTF-8)", $self->{logfile} or Carp::croak "Couldn't open logfile $self->{logfile}: $!\n";
     LOGFILE->autoflush(1);
 
+    # rename logfile to start-time at exit
     $self->{pbot}->{atexit}->register(sub { $self->rotate_log; return; });
-    return $self;
 }
 
 sub log {
     my ($self, $text) = @_;
+
+    # get current time
     my $time = localtime;
+
+    # replace potentially log-corrupting characters (colors, gibberish, etc)
     $text =~ s/(\P{PosixGraph})/my $ch = $1; if ($ch =~ m{[\s]}) { $ch } else { sprintf "\\x%02X", ord $ch }/ge;
+
+    # log to file
     print LOGFILE "$time :: $text" if openhandle * LOGFILE;
-    print "$time :: $text" unless $self->{pbot}->{overrides}->{'general.daemon'};
+
+    # and print to stdout unless daemonized
+    print STDOUT "$time :: $text" unless $self->{pbot}->{overrides}->{'general.daemon'};
 }
 
 sub rotate_log {
     my ($self) = @_;
+
+    # get start time
     my $time = localtime $self->{start};
-    $time =~ s/\s+/_/g;
+    $time =~ s/\s+/_/g; # replace spaces with underscores
+
     $self->log("Rotating log to $self->{logfile}-$time\n");
+
+    # rename log to start time
     move($self->{logfile}, $self->{logfile} . '-' . $time);
+
+    # set new start time for next rotation
+    $self->{start} = time;
 }
 
 1;

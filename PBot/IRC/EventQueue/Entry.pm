@@ -3,6 +3,7 @@ package PBot::IRC::EventQueue::Entry;    # pragma_ 2011/21/01
 use strict;
 
 use feature 'unicode_strings';
+use utf8;
 
 my $id = 0;
 

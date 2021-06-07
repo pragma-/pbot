@@ -14,6 +14,7 @@ use parent 'PBot::Class', 'PBot::Registerable';
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
 use Time::Duration qw/duration/;
 

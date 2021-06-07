@@ -23,6 +23,7 @@ use IO::Select;
 use Carp;
 
 use feature 'unicode_strings';
+use utf8;
 
 # grab the drop-in replacement for time() from Time::HiRes, if it's available
 BEGIN { Time::HiRes->import('time') if eval "require Time::HiRes"; }

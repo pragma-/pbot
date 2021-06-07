@@ -12,6 +12,7 @@ use parent 'PBot::Class';
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
 sub initialize {
     my ($self, %conf) = @_;

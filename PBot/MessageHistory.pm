@@ -17,6 +17,7 @@ use parent 'PBot::Class';
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
 use Getopt::Long qw(GetOptionsFromArray);
 use Time::HiRes qw(gettimeofday tv_interval);

@@ -7,6 +7,7 @@ use parent 'PBot::Class';
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
 use IO::Select;
 

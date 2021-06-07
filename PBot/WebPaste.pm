@@ -13,6 +13,7 @@ use parent 'PBot::Class';
 
 use warnings; use strict;
 use feature 'unicode_strings';
+use utf8;
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
@@ -36,8 +37,10 @@ sub initialize {
 sub get_paste_site {
     my ($self) = @_;
 
+    # get the next paste site's subroutine reference
     my $subref = $self->{paste_sites}->[$self->{current_site}];
 
+    # rotate current_site
     if (++$self->{current_site} >= @{$self->{paste_sites}}) {
         $self->{current_site} = 0;
     }
@@ -54,22 +57,31 @@ sub paste {
 
     %opts = (%default_opts, %opts);
 
+    # word-wrap text unless no_split is set
     $text =~ s/(.{120})\s/$1\n/g unless $opts{no_split};
+
+    # encode paste to utf8
+    $text = encode('UTF-8', $text);
 
     my $response;
 
     for (my $tries = 3; $tries > 0; $tries--) {
+        # get the next paste site
         my $paste_site = $self->get_paste_site;
 
+        # attempt to paste text
         $response = $paste_site->($text);
 
+        # exit loop if paste succeeded
         last if $response->is_success;
     }
 
+    # all tries failed
     if (not $response->is_success) {
         return "error pasting: " . $response->status_line;
     }
 
+    # success, return URL
     my $result = $response->decoded_content;
 
     $result =~ s/^\s+|\s+$//g;
