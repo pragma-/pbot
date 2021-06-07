@@ -282,7 +282,8 @@ sub register_signal_handlers {
 
     $SIG{INT} = sub {
         $self->{logger}->log("SIGINT received, exiting immediately.\n");
-        $self->atexit; exit 0;
+        $self->atexit;
+        exit 0;
     };
 }
 
@@ -291,6 +292,7 @@ sub atexit {
     my $self = shift;
     $self->{atexit}->execute_all;
     alarm 0;
+    $self->{logger}->log("Good-bye.\n");
 }
 
 # main loop
