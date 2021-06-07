@@ -151,8 +151,6 @@ sub launch_module {
 
         my $exitval = $? >> 8;
 
-        $self->{pbot}->{logger}->log("stdout before: $stdout\n");
-
         utf8::decode $stdout;
         utf8::decode $stderr;
 
