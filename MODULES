@@ -42,6 +42,7 @@ Text::Unidecode
 Time::Duration
 Time::ParseDate
 re::engine::RE2
+Unicode::Truncate
 URI::Escape
 WebService::UrbanDictionary
 WWW::Google::CustomSearch

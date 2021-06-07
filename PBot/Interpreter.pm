@@ -17,6 +17,7 @@ use utf8;
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
+use Unicode::Truncate;
 
 use PBot::Utils::ValidateString;
 
@@ -244,7 +245,7 @@ sub interpret {
         $arguments = '' if not defined $arguments;
     }
 
-    # FIXME: make this a registry item
+    # TODO: make this a registry item
     if (length $keyword > 128) {
         $keyword = substr($keyword, 0, 128);
         $self->{pbot}->{logger}->log("Truncating keyword to 128 chars: $keyword\n");
@@ -742,8 +743,9 @@ sub truncate_result {
 
     my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
 
-    $max_msg_len -= length "PRIVMSG $from :" if defined $from;
+    $max_msg_len -= length "PRIVMSG $from :";
 
+    # encode texts to utf8
     utf8::encode $paste_text;
     utf8::encode $text;
 
@@ -755,9 +757,11 @@ sub truncate_result {
             my $max_paste_len = $self->{pbot}->{registry}->get_value('paste', 'max_length') // 1024 * 32;
 
             # truncate paste to max paste length
-            # FIXME: this potentially chops unicode characters in wrong places
-            $paste_text = substr $paste_text, 0, $max_paste_len;
+            $paste_text = truncate_egc $paste_text, $max_paste_len;
 
+            $self->{pbot}->{logger}->log("Truncated paste to $max_paste_len bytes\n");
+
+            # decode paste text from utf8 because webpaste encodes to utf8
             utf8::decode $paste_text;
 
             # send text to paste site
@@ -782,13 +786,18 @@ sub truncate_result {
             $self->{pbot}->{logger}->log("Message truncated -- $paste_result\n");
         }
 
+        # make room to append the truncation text to the message text
+        # (third argument to truncate_egc is '' to prevent appending its own ellipsis)
         my $trunc_len = length $text < $max_msg_len ? length $text : $max_msg_len;
-        # FIXME: this potentially chops unicode characters in wrong places
-        $text = substr($text, 0, $trunc_len);
-        substr($text, $trunc_len - length $trunc) = $trunc;
+        $text = truncate_egc $text, $trunc_len - length $trunc, '';
+
+        # append the truncation text
+        $text .= $trunc;
     }
 
+    # decode text from utf8
     utf8::decode $text;
+
     return $text;
 }
 
