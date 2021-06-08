@@ -27,7 +27,9 @@ use File::Basename;
 use lib '.';
 use PBot::DualIndexSQLiteObject;
 
-my @skip = qw/bash ksh check/;
+# skip these factoids since they are used by
+# candide for other purposes.
+my @skip = qw/bash ksh check bashfaq bashpf faq pf/;
 
 # dirtily copied from PBot/Factoids.pm for now.
 # TODO: we should use PBot::Factoids instead.
