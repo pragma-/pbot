@@ -51,7 +51,7 @@ sub cmd_unset {
 
     my ($command, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
-    if (not defined $command or not defined $key ) {
+    if (not defined $command or not defined $key) {
         return "Usage: cmdunset <command> <key>";
     }
 

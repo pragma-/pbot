@@ -138,12 +138,7 @@ sub launch_module {
         my $args = $context->{arguments};
 
         if (not $context->{args_utf8}) {
-            $self->{pbot}->{logger}->log("encoding args ($args)\n");
             $args = encode('UTF-8', $args);
-            $self->{pbot}->{logger}->log("encoded args ($args)\n");
-
-            my $test = decode('UTF-8', $args);
-            $self->{pbot}->{logger}->log("decoded test ($test)\n");
         }
 
         my @cmdline = ("./$module", $self->{pbot}->{interpreter}->split_line($args));
@@ -156,16 +151,8 @@ sub launch_module {
 
         my $exitval = $? >> 8;
 
-        $self->{pbot}->{logger}->log("stdout before: $stdout\n");
-
         utf8::decode $stdout;
         utf8::decode $stderr;
-        # decode('UTF-8', $stdout);
-        # decode('UTF-8', $stderr);
-        # decode('utf8', $stdout);
-        # decode('utf8', $stderr);
-
-        $self->{pbot}->{logger}->log("stdout after: $stdout\n");
 
         return ($exitval, $stdout, $stderr);
     };
