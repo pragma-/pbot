@@ -37,14 +37,23 @@ sub initialize {
     # prepare registry-specific bot commands
     PBot::RegistryCommands->new(pbot => $self->{pbot});
 
+    # load existing registry entries from file (if exists)
+    if (-e $filename) {
+        $self->load;
+    } else {
+        $self->{pbot}->{logger}->log("No registry found at $filename, using defaults.\n");
+    }
+
     # add default registry items
     $self->add_default('text', 'general', 'data_dir',      $conf{data_dir});
     $self->add_default('text', 'general', 'module_dir',    $conf{module_dir});
     $self->add_default('text', 'general', 'plugin_dir',    $conf{plugin_dir});
     $self->add_default('text', 'general', 'update_dir',    $conf{update_dir});
 
+    # bot trigger
     $self->add_default('text', 'general', 'trigger',       $conf{trigger}           // '!');
 
+    # irc
     $self->add_default('text', 'irc', 'debug',             $conf{irc_debug}         // 0);
     $self->add_default('text', 'irc', 'show_motd',         $conf{show_motd}         // 1);
     $self->add_default('text', 'irc', 'max_msg_len',       $conf{max_msg_len}       // 425);
@@ -59,16 +68,13 @@ sub initialize {
     $self->add_default('text', 'irc', 'identify_password', $conf{identify_password} // '');
     $self->add_default('text', 'irc', 'log_default_handler', 1);
 
+    # make sensitive entries private
     $self->set_default('irc', 'SSL_ca_file',       'private', 1);
     $self->set_default('irc', 'SSL_ca_path',       'private', 1);
     $self->set_default('irc', 'identify_password', 'private', 1);
 
-    # load existing registry entries from file (if exists) to overwrite defaults
-    if (-e $filename) {
-        $self->load;
-    } else {
-        $self->{pbot}->{logger}->log("No registry found at $filename, using defaults.\n");
-    }
+    # customizable regular expressions
+    $self->add_default('text', 'regex', 'nickname', '[_a-zA-Z0-9\[\]{}`\\-]+');
 
     # update important paths
     $self->set('general', 'data_dir',   'value', $conf{data_dir},   0, 1);
@@ -140,24 +146,34 @@ sub add_default {
 }
 
 sub add {
-    my $self = shift;
-    my ($type, $section, $item, $value, $is_default) = @_;
+    my ($self, $type, $section, $item, $value, $is_default) = @_;
+
     $type = lc $type;
 
-    if ($is_default) {
-        # don't replace existing registry values if we're just adding a default value
-        return if $self->{registry}->exists($section, $item);
-    }
-
     if (not $self->{registry}->exists($section, $item)) {
+        # registry entry does not exist
+
         my $data = {
             value => $value,
             type  => $type,
         };
+
         $self->{registry}->add($section, $item, $data, 1);
     } else {
+        # registry entry already exists
+
+        if ($is_default) {
+            # don't replace existing registry values if we're just adding a default value
+            return;
+        }
+
+        # update value
         $self->{registry}->set($section, $item, 'value', $value, 1);
-        $self->{registry}->set($section, $item, 'type',  $type,  1) unless $self->{registry}->exists($section, $item, 'type');
+
+        # update type only if it doesn't exist
+        unless ($self->{registry}->exists($section, $item, 'type')) {
+            $self->{registry}->set($section, $item, 'type', $type, 1);
+        }
     }
 
     unless ($is_default) {

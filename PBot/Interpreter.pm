@@ -17,83 +17,84 @@ use utf8;
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
+
+use Encode;
 use Unicode::Truncate;
 
 use PBot::Utils::ValidateString;
 
 sub initialize {
     my ($self, %conf) = @_;
+
+    # PBot::Interpreter can register multiple interpreter subrefs.
+    # See also: Commands::interpreter() and Factoids::interpreter()
     $self->PBot::Registerable::initialize(%conf);
 
-    $self->{pbot}->{registry}->add_default('text',  'general', 'compile_blocks',                 $conf{compile_blocks}                 // 1);
-    $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_channels',        $conf{compile_blocks_channels}        // '.*');
-    $self->{pbot}->{registry}->add_default('array', 'general', 'compile_blocks_ignore_channels', $conf{compile_blocks_ignore_channels} // 'none');
-    $self->{pbot}->{registry}->add_default('text', 'interpreter', 'max_recursion', 10);
+    # registry entry for maximum recursion depth
+    $self->{pbot}->{registry}->add_default('text',  'interpreter', 'max_recursion', 10);
 }
 
+# this is the main entry point for a message to be parsed and interpreted
 sub process_line {
     my ($self, $from, $nick, $user, $host, $text) = @_;
 
-    $from = lc $from if defined $from;
+    # lowercase `from` field for case-insensitivity
+    $from = lc $from;
 
-    my $context = {from => $from, nick => $nick, user => $user, host => $host, hostmask => "$nick!$user\@$host", text => $text};
-    my $pbot  = $self->{pbot};
+    # context object maintains contextual information about the state and
+    # processing of this message. this object is passed between various bot
+    # functions and interfaces, which may themselves add more fields.
+    my $context = {
+        from     => $from,                 # source (channel, sender hostmask, "pbot@stdin", etc)
+        nick     => $nick,                 # nickname
+        user     => $user,                 # username
+        host     => $host,                 # hostname/ip address
+        hostmask => "$nick!$user\@$host",  # full hostmask
+        text     => $text,                 # message contents
+    };
 
-    my $message_account = $pbot->{messagehistory}->get_message_account($nick, $user, $host);
-    $pbot->{messagehistory}->add_message($message_account, $context->{hostmask}, $from, $text, $pbot->{messagehistory}->{MSG_CHAT});
+    # add hostmask to user/message tracking database and get their account id
+    my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
+
+    # add account id to context object
     $context->{message_account} = $message_account;
 
-    my $flood_threshold      = $pbot->{registry}->get_value($from, 'chat_flood_threshold');
-    my $flood_time_threshold = $pbot->{registry}->get_value($from, 'chat_flood_time_threshold');
+    # add message to message history as a chat message
+    $self->{pbot}->{messagehistory}->add_message($message_account, $context->{hostmask}, $from, $text, $self->{pbot}->{messagehistory}->{MSG_CHAT});
 
-    $flood_threshold      = $pbot->{registry}->get_value('antiflood', 'chat_flood_threshold')      if not defined $flood_threshold;
-    $flood_time_threshold = $pbot->{registry}->get_value('antiflood', 'chat_flood_time_threshold') if not defined $flood_time_threshold;
+    # look up channel-specific flood threshold settings from registry
+    my $flood_threshold      = $self->{pbot}->{registry}->get_value($from, 'chat_flood_threshold');
+    my $flood_time_threshold = $self->{pbot}->{registry}->get_value($from, 'chat_flood_time_threshold');
 
+    # get general flood threshold settings if there are no channel-specific settings
+    $flood_threshold       //= $self->{pbot}->{registry}->get_value('antiflood', 'chat_flood_threshold');
+    $flood_time_threshold  //= $self->{pbot}->{registry}->get_value('antiflood', 'chat_flood_time_threshold');
 
-=cut
-    if (defined $from and $from =~ m/^#/) {
-        my $chanmodes = $self->{pbot}->{channels}->get_meta($from, 'MODE');
-        if (defined $chanmodes and $chanmodes =~ m/z/) {
-            $context->{'chan-z'} = 1;
-            if ($self->{pbot}->{banlist}->{quietlist}->exists($from, '$~a')) {
-                my $nickserv = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
-                if (not defined $nickserv or not length $nickserv) { $context->{unidentified} = 1; }
-            }
+    # perform anti-flood processing on this message
+    $self->{pbot}->{antiflood}->check_flood(
+        $from, $nick, $user, $host, $text,
+        $flood_threshold, $flood_time_threshold,
+        $self->{pbot}->{messagehistory}->{MSG_CHAT},
+        $context
+    );
 
-            $context->{banned} = 1 if $self->{pbot}->{banlist}->is_banned($nick, $user, $host, $from);
-        }
-    }
-=cut
-
-    $pbot->{antiflood}->check_flood(
-        $from,                               $nick, $user, $host, $text,
-        $flood_threshold,                    $flood_time_threshold,
-        $pbot->{messagehistory}->{MSG_CHAT}, $context
-    ) if defined $from;
-
-=cut
-    if ($context->{banned} or $context->{unidentified}) {
-        $self->{pbot}->{logger}->log("Disregarding banned/unidentified user message (channel $from is +z).\n");
-        return 1;
-    }
-=cut
-
+    # get bot nickname
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
-    # get channel-specific trigger if available
-    my $bot_trigger = $pbot->{registry}->get_value($from, 'trigger');
+    # get channel-specific bot trigger if available
+    my $bot_trigger = $self->{pbot}->{registry}->get_value($from, 'trigger');
 
-    # otherwise get general trigger
-    if (not defined $bot_trigger) { $bot_trigger = $pbot->{registry}->get_value('general', 'trigger'); }
+    # otherwise get general bot trigger
+    $bot_trigger //= $self->{pbot}->{registry}->get_value('general', 'trigger');
 
-    my $nick_regex = qr/[^%!,:\(\)\+\*\/ ]+/;
+    # get nick regex from registry entry
+    my $nick_regex = $self->{pbot}->{registry}->get_value('regex', 'nickname');
 
-    my $nick_override;
+    my $nick_override       = undef;
     my $processed           = 0;
     my $preserve_whitespace = 0;
 
-    $text =~ s/^\s+//;
-    $text =~ s/\s+$//;
+    $text =~ s/^\s+|\s+$//g;
     $text = validate_string($text, 0);
 
     my $cmd_text = $text;
@@ -147,7 +148,7 @@ sub process_line {
 
     foreach $command (@commands) {
         # check if user is ignored (and command isn't `login`)
-        if ($command !~ /^login / && defined $from && $pbot->{ignorelist}->is_ignored($from, "$nick!$user\@$host")) {
+        if ($command !~ /^login / && defined $from && $self->{pbot}->{ignorelist}->is_ignored($from, "$nick!$user\@$host")) {
             $self->{pbot}->{logger}->log("Disregarding command from ignored user $nick!$user\@$host in $from.\n");
             return 1;
         }
@@ -330,8 +331,6 @@ sub interpret {
     # unescape any escaped pipes
     $arguments =~ s/\\\|\s*\{/| {/g if defined $arguments;
 
-    $arguments = validate_string($arguments);
-
     # set arguments as a plain string
     $context->{arguments} = $arguments;
     delete $context->{args_utf8};
@@ -359,10 +358,11 @@ sub interpret {
 sub extract_bracketed {
     my ($self, $string, $open_bracket, $close_bracket, $optional_prefix, $allow_whitespace) = @_;
 
-    $open_bracket     = '{' if not defined $open_bracket;
-    $close_bracket    = '}' if not defined $close_bracket;
-    $optional_prefix  = ''  if not defined $optional_prefix;
-    $allow_whitespace = 0   if not defined $allow_whitespace;
+    # set default values when none provided
+    $open_bracket     //= '{';
+    $close_bracket    //= '}';
+    $optional_prefix  //= '';
+    $allow_whitespace //= 0;
 
     my @prefix_group;
 
@@ -745,9 +745,9 @@ sub truncate_result {
 
     $max_msg_len -= length "PRIVMSG $from :";
 
-    # encode texts to utf8
-    utf8::encode $paste_text;
-    utf8::encode $text;
+    # encode text to utf8 for byte length truncation
+    $text       = encode('UTF-8', $text);
+    $paste_text = encode('UTF-8', $paste_text);
 
     if (length $text > $max_msg_len) {
         my $paste_result;
@@ -758,11 +758,6 @@ sub truncate_result {
 
             # truncate paste to max paste length
             $paste_text = truncate_egc $paste_text, $max_paste_len;
-
-            $self->{pbot}->{logger}->log("Truncated paste to $max_paste_len bytes\n");
-
-            # decode paste text from utf8 because webpaste encodes to utf8
-            utf8::decode $paste_text;
 
             # send text to paste site
             $paste_result = $self->{pbot}->{webpaste}->paste("($from) $nick: $command\n\n$paste_text");
@@ -793,10 +788,10 @@ sub truncate_result {
 
         # append the truncation text
         $text .= $trunc;
+    } else {
+        # decode text from utf8
+        $text = decode('UTF-8', $text);
     }
-
-    # decode text from utf8
-    utf8::decode $text;
 
     return $text;
 }

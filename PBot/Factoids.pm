@@ -1036,35 +1036,55 @@ sub execute_code_factoid_using_vm {
             $context->{code} = $self->expand_action_arguments($context->{code}, $context->{arguments}, $context->{nick});
         }
     } else {
+        # otherwise allow nick overriding
         $context->{no_nickoverride} = 0;
     }
 
-    my %h = (
-        nick    => $context->{nick}, channel => $context->{from}, lang => $context->{lang}, code => $context->{code}, arguments => $context->{arguments},
-        factoid => "$context->{channel}:$context->{keyword}"
+    # set up `compiler` module arguments
+    my %args = (
+        nick      => $context->{nick},
+        channel   => $context->{from},
+        lang      => $context->{lang},
+        code      => $context->{code},
+        arguments => $context->{arguments},
+        factoid   => "$context->{channel}:$context->{keyword}",
     );
 
-    if ($self->{factoids}->exists($context->{channel}, $context->{keyword}, 'persist-key')) {
-        $h{'persist-key'} = $self->{factoids}->get_data($context->{channel}, $context->{keyword}, 'persist-key');
+    # the vm can persist filesystem data to external storage identified by a key.
+    # if the `persist-key` factoid metadata is set, then use this key.
+    my $persist_key = $self->{factoids}->get_data($context->{channel}, $context->{keyword}, 'persist-key');
+
+    if (defined $persist_key) {
+        $args{'persist-key'} = $persist_key;
     }
 
-    my $json = encode_json \%h;
+    # encode args to utf8 json string
+    my $json = encode_json \%args;
 
-    $context->{special}      = 'code-factoid';
-    $context->{root_channel} = $context->{channel};
-    $context->{keyword}      = 'compiler';
-    $context->{arguments}    = $json;
-    $context->{args_utf8}    = 1;
+    # update context details
+    $context->{special}      = 'code-factoid';      # ensure handle_result(), etc, process this as a code-factoid
+    $context->{root_channel} = $context->{channel}; # override root channel to current channel
+    $context->{keyword}      = 'compiler';          # code-factoid uses `compiler` command to invoke vm
+    $context->{arguments}    = $json;               # set arguments to json string as `compiler` wants
+    $context->{args_utf8}    = 1;                   # arguments are utf8 encoded by encode_json
 
+    # launch the `compiler` module
     $self->{pbot}->{modules}->execute_module($context);
-    return "";
+
+    # return empty string since the module process reader will
+    # pass the output along to the result handler
+    return '';
 }
 
 sub execute_code_factoid {
     my ($self, @args) = @_;
+    # this sub used to contain an if-clause that selected
+    # an alternative method of executing code factoids.
+    # now it only uses the vm. maybe one day...
     return $self->execute_code_factoid_using_vm(@args);
 }
 
+# main entry point for PBot::Interpreter to interpret a factoid command
 sub interpreter {
     my ($self, $context) = @_;
     my $pbot = $self->{pbot};
@@ -1096,7 +1116,9 @@ sub interpreter {
     $context->{arguments} = "" if not defined $context->{arguments};
 
     # factoid > nick redirection
-    if ($context->{arguments} =~ s/> ([_a-zA-Z0-9\[\]{}`\\-]+)$//) {
+    my $nick_regex = $self->{pbot}->{registry}->get_value('regex', 'nickname');
+
+    if ($context->{arguments} =~ s/> ($nick_regex)$//) {
         my $rcpt = $1;
         if ($self->{pbot}->{nicklist}->is_present($context->{from}, $rcpt)) {
             $context->{nickoverride} = $rcpt;

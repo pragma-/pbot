@@ -20,9 +20,11 @@ use Time::Duration qw/duration/;
 
 sub initialize {
     my ($self, %conf) = @_;
+
+    # PBot::Commands can register subrefs
     $self->PBot::Registerable::initialize(%conf);
 
-    # command metadata
+    # command metadata stored as a HashObject
     $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Command metadata', filename => $conf{filename});
     $self->{metadata}->load;
 
@@ -34,15 +36,25 @@ sub initialize {
 
 sub cmd_set {
     my ($self, $context) = @_;
+
     my ($command, $key, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
-    return "Usage: cmdset <command> [key [value]]" if not defined $command;
+
+    if (not defined $command) {
+        return "Usage: cmdset <command> [key [value]]";
+    }
+
     return $self->{metadata}->set($command, $key, $value);
 }
 
 sub cmd_unset {
     my ($self, $context) = @_;
+
     my ($command, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
-    return "Usage: cmdunset <command> <key>" if not defined $command or not defined $key;
+
+    if (not defined $command or not defined $key ) {
+        return "Usage: cmdunset <command> <key>";
+    }
+
     return $self->{metadata}->unset($command, $key);
 }
 
@@ -57,13 +69,19 @@ sub cmd_help {
 
     # check built-in commands first
     if ($self->exists($keyword)) {
+
+        # check for command metadata
         if ($self->{metadata}->exists($keyword)) {
             my $name         = $self->{metadata}->get_key_name($keyword);
             my $requires_cap = $self->{metadata}->get_data($keyword, 'requires_cap');
             my $help         = $self->{metadata}->get_data($keyword, 'help');
 
             my $result = "/say $name: ";
-            $result .= "[Requires can-$keyword] " if $requires_cap;
+
+            # prefix help text with required capability
+            if ($requires_cap) {
+                $result .= "[Requires can-$keyword] ";
+            }
 
             if (not defined $help or not length $help) {
                 $result .= "I have no help text for this command yet. To add help text, use the command `cmdset $keyword help <text>`.";
@@ -74,21 +92,35 @@ sub cmd_help {
             return $result;
         }
 
+        # no command metadata available
         return "$keyword is a built-in command, but I have no help for it yet.";
     }
 
     # then factoids
     my $channel_arg = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
-    $channel_arg = $context->{from} if not defined $channel_arg or not length $channel_arg;
-    $channel_arg = '.*'  if $channel_arg !~ m/^#/;
 
+    if (not defined $channel_arg or not length $channel_arg) {
+        # set channel argument to from if no argument was passed
+        $channel_arg = $context->{from};
+    }
+
+    if ($channel_arg !~ /^#/) {
+        # set channel argument to global if it's not channel-like
+        $channel_arg = '.*';
+    }
+
+    # find factoids
     my @factoids = $self->{pbot}->{factoids}->find_factoid($channel_arg, $keyword, exact_trigger => 1);
 
-    if (not @factoids or not $factoids[0]) { return "I don't know anything about $keyword."; }
+    if (not @factoids or not $factoids[0]) {
+        # nothing found
+        return "I don't know anything about $keyword.";
+    }
 
     my ($channel, $trigger);
 
     if (@factoids > 1) {
+        # ask to disambiguate factoids if found in multiple channels
         if (not grep { $_->[0] eq $channel_arg } @factoids) {
             return
                 "/say $keyword found in multiple channels: "
@@ -106,44 +138,71 @@ sub cmd_help {
         ($channel, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
     }
 
+    # get canonical channel and trigger names with original typographical casing
     my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_key_name($channel);
     my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_key_name($channel, $trigger);
-    $channel_name = 'global channel'    if $channel_name eq '.*';
-    $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
-    my $result = "/say ";
-    $result .= "[$channel_name] " if $channel ne $context->{from} and $channel ne '.*';
-    $result .= "$trigger_name: ";
+    # prettify channel name if it's ".*"
+    if ($channel_name eq '.*') {
+        $channel_name = 'global channel';
+    }
 
+    # prettify trigger name with double-quotes if it contains spaces
+    if ($trigger_name =~ / /) {
+        $trigger_name = "\"$trigger_name\"";
+    }
+
+    # get factoid's `help` metadata
     my $help = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, 'help');
 
+    # return immediately if no help text
     if (not defined $help or not length $help) {
         return "/say $trigger_name is a factoid for $channel_name, but I have no help text for it yet."
            . " To add help text, use the command `factset $trigger_name help <text>`.";
     }
 
-    $result .= $help;
+    my $result = "/say ";
+
+    # if factoid doesn't belong to invoked or global channel,
+    # then prefix with the factoid's channel name.
+    if ($channel ne $context->{from} and $channel ne '.*') {
+        $result .= "[$channel_name] ";
+    }
+
+    $result .= "$trigger_name: $help";
+
     return $result;
 }
 
 sub register {
     my ($self, $subref, $name, $requires_cap) = @_;
-    Carp::croak("Missing parameters to Commands::register") if not defined $subref or not defined $name;
 
+    if (not defined $subref or not defined $name) {
+        Carp::croak("Missing parameters to Commands::register");
+    }
+
+    # register subref
     my $ref = $self->PBot::Registerable::register($subref);
+
+    # update internal metadata
     $ref->{name}         = lc $name;
     $ref->{requires_cap} = $requires_cap // 0;
 
+    # update command metadata
     if (not $self->{metadata}->exists($name)) {
-        $self->{metadata}->add($name, {requires_cap => $requires_cap, help => ''}, 1);
+        $self->{metadata}->add($name, { requires_cap => $requires_cap, help => '' }, 1);
     } else {
+        # metadata already exists, just update requires_cap unless it's already set.
         if (not defined $self->get_meta($name, 'requires_cap')) {
             $self->{metadata}->set($name, 'requires_cap', $requires_cap, 1);
         }
     }
 
-    # add can-cmd capability if command requires such
-    $self->{pbot}->{capabilities}->add("can-$name", undef, 1) if $requires_cap;
+    # add can-<command> capability to PBot capabilities if required
+    if ($requires_cap) {
+        $self->{pbot}->{capabilities}->add("can-$name", undef, 1);
+    }
+
     return $ref;
 }
 
@@ -173,10 +232,13 @@ sub get_meta {
     return $self->{metadata}->get_data($command, $key);
 }
 
+# main entry point for PBot::Interpreter to interpret a registered bot command
+# see also PBot::Factoids::interpreter() for factoid commands
 sub interpreter {
     my ($self, $context) = @_;
     my $result;
 
+    # debug flag to trace $context location and contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
         $Data::Dumper::Sortkeys = 1;
