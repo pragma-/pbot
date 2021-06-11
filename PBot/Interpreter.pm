@@ -123,10 +123,10 @@ sub process_line {
         $command = $2;
 
         # does somenick or similar exist in channel?
-        my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $possible_nick_prefix);
+        my $recipient = $self->{pbot}->{nicklist}->is_present_similar($from, $possible_nick_prefix);
 
-        if ($similar) {
-            $nick_prefix = $similar;
+        if ($recipient) {
+            $nick_prefix = $recipient;
         } else {
             # disregard command if no such nick is present.
             $self->{pbot}->{logger}->log("No similar nick for $possible_nick_prefix; disregarding command.\n");
@@ -155,10 +155,10 @@ sub process_line {
             my $possible_nick_prefix = $1;
 
             # does somenick or similar exist in channel?
-            my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $possible_nick_prefix);
+            my $recipient = $self->{pbot}->{nicklist}->is_present_similar($from, $possible_nick_prefix);
 
-            if ($similar) {
-                $nick_prefix = $similar;
+            if ($recipient) {
+                $nick_prefix = $recipient;
             }
         }
 
@@ -612,7 +612,6 @@ sub handle_result {
         $result = $context->{split_result} . $result;
     }
 
-
     # set preserve_whitespace and use_output_queue
     # TODO: this should be in Factoids.pm and update $context's flags
 
@@ -654,22 +653,25 @@ sub handle_result {
 
         # paste everything if we've output the maximum lines
         if (++$lines >= $max_lines) {
+
             my $link = $self->{pbot}->{webpaste}->paste("$context->{from} <$context->{nick}> $context->{text}\n\n$original_result");
+
+            my $message = "And that's all I have to say about that. See $link for full text.";
 
             if ($use_output_queue) {
                 my $message = {
                     nick       => $context->{nick},
-                    user => $context->{user},
-                    host => $context->{host},
-                    command => $context->{command},
-                    message    => "And that's all I have to say about that. See $link for full text.",
+                    user       => $context->{user},
+                    host       => $context->{host},
+                    command    => $context->{command},
+                    message    => $message,
                     checkflood => 1
                 };
 
                 $self->add_message_to_output_queue($context->{from}, $message, 0);
             } else {
                 unless ($context->{from} eq 'stdin@pbot') {
-                    $self->{pbot}->{conn}->privmsg($context->{from}, "And that's all I have to say about that. See $link for full text.");
+                    $self->{pbot}->{conn}->privmsg($context->{from}, $message);
                 }
             }
 
@@ -681,11 +683,11 @@ sub handle_result {
         if ($use_output_queue) {
             my $delay   = rand(10) + 5;
             my $message = {
-                nick => $context->{nick},
-                user => $context->{user},
-                host => $context->{host},
-                command => $context->{command},
-                message => $line,
+                nick       => $context->{nick},
+                user       => $context->{user},
+                host       => $context->{host},
+                command    => $context->{command},
+                message    => $line,
                 checkflood => 1,
             };
             $self->add_message_to_output_queue($context->{from}, $message, $delay);
