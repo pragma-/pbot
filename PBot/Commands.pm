@@ -182,11 +182,11 @@ sub register {
     }
 
     # register subref
-    my $ref = $self->PBot::Registerable::register($subref);
+    my $command = $self->PBot::Registerable::register($subref);
 
     # update internal metadata
-    $ref->{name}         = lc $name;
-    $ref->{requires_cap} = $requires_cap // 0;
+    $command->{name}         = lc $name;
+    $command->{requires_cap} = $requires_cap // 0;
 
     # update command metadata
     if (not $self->{metadata}->exists($name)) {
@@ -203,7 +203,7 @@ sub register {
         $self->{pbot}->{capabilities}->add("can-$name", undef, 1);
     }
 
-    return $ref;
+    return $command;
 }
 
 sub unregister {
@@ -216,7 +216,7 @@ sub unregister {
 sub exists {
     my ($self, $keyword) = @_;
     $keyword = lc $keyword;
-    foreach my $ref (@{$self->{handlers}}) { return 1 if $ref->{name} eq $keyword; }
+    foreach my $command (@{$self->{handlers}}) { return 1 if $command->{name} eq $keyword; }
     return 0;
 }
 
@@ -236,7 +236,6 @@ sub get_meta {
 # see also PBot::Factoids::interpreter() for factoid commands
 sub interpreter {
     my ($self, $context) = @_;
-    my $result;
 
     # debug flag to trace $context location and contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
@@ -246,25 +245,37 @@ sub interpreter {
         $self->{pbot}->{logger}->log(Dumper $context);
     }
 
+    # some convenient aliases
     my $keyword = lc $context->{keyword};
     my $from    = $context->{from};
 
+    # set the channel the command is in reference to
     my ($cmd_channel) = $context->{arguments} =~ m/\B(#[^ ]+)/;    # assume command is invoked in regards to first channel-like argument
     $cmd_channel = $from if not defined $cmd_channel;              # otherwise command is invoked in regards to the channel the user is in
 
     $context->{channel} = $cmd_channel;
 
-    my $user = $self->{pbot}->{users}->find_user($cmd_channel, "$context->{nick}!$context->{user}\@$context->{host}");
+    # get the user's bot account
+    my $user = $self->{pbot}->{users}->find_user($cmd_channel, $context->{hostmask});
 
+    # check for a capability override
     my $cap_override;
+
     if (exists $context->{'cap-override'}) {
         $self->{pbot}->{logger}->log("Override cap to $context->{'cap-override'}\n");
         $cap_override = $context->{'cap-override'};
     }
 
-    foreach my $ref (@{$self->{handlers}}) {
-        if ($ref->{name} eq $keyword) {
-            my $requires_cap = $self->get_meta($keyword, 'requires_cap') // $ref->{requires_cap};
+    # go through all commands
+    # TODO: maybe use a hash lookup
+    foreach my $command (@{$self->{handlers}}) {
+
+        # is this the command
+        if ($command->{name} eq $keyword) {
+
+            # does this command require capabilities
+            my $requires_cap = $self->get_meta($keyword, 'requires_cap') // $command->{requires_cap};
+
             if ($requires_cap) {
                 if (defined $cap_override) {
                     if (not $self->{pbot}->{capabilities}->has($cap_override, "can-$keyword")) {
@@ -272,9 +283,13 @@ sub interpreter {
                     }
                 } else {
                     if (not defined $user) {
-                        my ($found_chan, $found_mask) = $self->{pbot}->{users}->find_user_account($cmd_channel, "$context->{nick}!$context->{user}\@$context->{host}", 1);
-                        if   (not defined $found_chan) { return "/msg $context->{nick} You must have a user account to use $keyword. You may use the `my` command to create a personal user account. See `help my`."; }
-                        else                           { return "/msg $context->{nick} You must have a user account in $cmd_channel to use $keyword. (You have an account in $found_chan.)"; }
+                        my ($found_chan, $found_mask) = $self->{pbot}->{users}->find_user_account($cmd_channel, $context->{hostmask}, 1);
+
+                        if (not defined $found_chan) {
+                            return "/msg $context->{nick} You must have a user account to use $keyword. You may use the `my` command to create a personal user account. See `help my`.";
+                        } else {
+                            return "/msg $context->{nick} You must have a user account in $cmd_channel to use $keyword. (You have an account in $found_chan.)";
+                        }
                     } elsif (not $user->{loggedin}) {
                         return "/msg $context->{nick} You must be logged into your user account to use $keyword.";
                     }
@@ -291,25 +306,43 @@ sub interpreter {
 
             unless ($self->get_meta($keyword, 'dont-replace-pronouns')) {
                 $context->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($context, $context->{arguments});
-                $context->{arglist} = $self->{pbot}->{interpreter}->make_args($context->{arguments});
+                $context->{arglist}   = $self->{pbot}->{interpreter}->make_args($context->{arguments});
             }
 
-            $context->{no_nickoverride} = 1;
+            $self->{pbot}->{logger}->log("Disabling nickprefix\n");
+            $context->{nickprefix_disabled} = 1;
+
             if ($self->get_meta($keyword, 'background-process')) {
-                my $timeout = $self->get_meta($keyword, 'process-timeout') // $self->{pbot}->{registry}->get_value('processmanager', 'default_timeout');
+                # execute this command as a backgrounded process
+
+                # set timeout to command metadata value
+                my $timeout = $self->get_meta($keyword, 'process-timeout');
+
+                # otherwise set timeout to default value
+                $timeout //= $self->{pbot}->{registry}->get_value('processmanager', 'default_timeout');
+
+                # execute command in background
                 $self->{pbot}->{process_manager}->execute_process(
                     $context,
-                    sub { $context->{result} = $ref->{subref}->($context) },
-                    $timeout
+                    sub { $context->{result} = $command->{subref}->($context) },
+                    $timeout,
                 );
-                return "";
+
+                # return no output since it will be handled by process manager
+                return '';
             } else {
-                my $result = $ref->{subref}->($context);
+                # execute this command normally
+                my $result = $command->{subref}->($context);
+
+                # disregard undesired command output if command is embedded
                 return undef if $context->{referenced} and $result =~ m/(?:usage:|no results)/i;
+
+                # return command output
                 return $result;
             }
         }
     }
+
     return undef;
 }
 

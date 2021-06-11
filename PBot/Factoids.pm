@@ -1023,9 +1023,9 @@ sub execute_code_factoid_using_vm {
         and $self->{factoids}->get_data($context->{channel}, $context->{keyword}, 'interpolate') eq '0')
     {
         if ($context->{code} =~ m/(?:\$\{?nick\b|\$\{?args\b|\$\{?arg\[)/ and length $context->{arguments}) {
-            $context->{no_nickoverride} = 1;
+            $context->{nickprefix_disabled} = 1;
         } else {
-            $context->{no_nickoverride} = 0;
+            $context->{nickprefix_disabled} = 0;
         }
 
         $context->{code} = $self->expand_factoid_vars($context, $context->{code});
@@ -1037,7 +1037,7 @@ sub execute_code_factoid_using_vm {
         }
     } else {
         # otherwise allow nick overriding
-        $context->{no_nickoverride} = 0;
+        $context->{nickprefix_disabled} = 0;
     }
 
     # set up `compiler` module arguments
@@ -1121,8 +1121,8 @@ sub interpreter {
     if ($context->{arguments} =~ s/> ($nick_regex)$//) {
         my $rcpt = $1;
         if ($self->{pbot}->{nicklist}->is_present($context->{from}, $rcpt)) {
-            $context->{nickoverride} = $rcpt;
-            $context->{force_nickoverride} = 1;
+            $context->{nickprefix} = $rcpt;
+            $context->{nickprefix_forced} = 1;
         } else {
             $context->{arguments} .= "> $rcpt";
         }
@@ -1327,10 +1327,8 @@ sub handle_action {
         if ($action =~ m/\$\{?args/ or $action =~ m/\$\{?arg\[/) {
             unless (defined $self->{factoids}->get_data($channel, $keyword, 'interpolate') and $self->{factoids}->get_data($channel, $keyword, 'interpolate') eq '0') {
                 $action = $self->expand_action_arguments($action, $context->{arguments}, $context->{nick});
-                $context->{no_nickoverride} = 1;
-            } else {
-                $context->{no_nickoverride} = 0;
             }
+
             $context->{arguments}          = "";
             $context->{original_arguments} = "";
         } else {
@@ -1338,10 +1336,8 @@ sub handle_action {
                 my $target = $self->{pbot}->{nicklist}->is_present_similar($context->{from}, $context->{arguments});
 
                 if ($target and $action !~ /\$\{?(?:nick|args)\b/) {
-                    $context->{nickoverride}    = $target unless $context->{force_nickoverride};
-                    $context->{no_nickoverride} = 0;
-                } else {
-                    $context->{no_nickoverride} = 1;
+                    $context->{nickprefix}          = $target unless $context->{nickprefix_forced};
+                    $context->{nickprefix_disabled} = 0;
                 }
             }
         }
@@ -1358,7 +1354,7 @@ sub handle_action {
                 $action = $self->expand_action_arguments($action, undef, $context->{nick});
             }
         }
-        $context->{no_nickoverride} = 0;
+        $context->{nickprefix_disabled} = 0;
     }
 
     # Check if it's an alias

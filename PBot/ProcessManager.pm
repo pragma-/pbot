@@ -198,6 +198,7 @@ sub execute_process {
 
     $timeout //= 30; # default timeout 30 seconds
 
+    # ensure contextual command history list is available for add_process()
     if (not exists $context->{commands}) {
         $context->{commands} = [$context->{command}];
     }
@@ -332,15 +333,16 @@ sub process_pipe_reader {
     }
 
     # if nick isn't overridden yet, check for a potential nick prefix
-    if (not defined $context->{nickoverride}) {
+    # TODO: this stuff should be moved to Interpreter::output_result
+    if (not $context->{nickprefix}) {
         # if add_nick is set on the factoid, set the nick override to the caller's nick
         if (exists $context->{special} and $context->{special} ne 'code-factoid'
             and $self->{pbot}->{factoids}->{factoids}->exists($context->{channel}, $context->{trigger}, 'add_nick')
             and $self->{pbot}->{factoids}->{factoids}->get_data($context->{channel}, $context->{trigger}, 'add_nick') != 0)
         {
-            $context->{nickoverride}       = $context->{nick};
-            $context->{no_nickoverride}    = 0;
-            $context->{force_nickoverride} = 1;
+            $context->{nickprefix}          = $context->{nick};
+            $context->{nickprefix_disabled} = 0;
+            $context->{nickprefix_forced}   = 1;
         } else {
             # extract nick-like thing from process result
             if ($context->{result} =~ s/^(\S+): //) {
@@ -354,7 +356,7 @@ sub process_pipe_reader {
 
                     if ($present) {
                         # nick is present in channel
-                        $context->{nickoverride} = $present;
+                        $context->{nickprefix} = $present;
                     } else {
                         # nick not present, put it back on result
                         $context->{result} = "$nick: $context->{result}";
@@ -366,7 +368,7 @@ sub process_pipe_reader {
 
     # send the result off to the bot to be handled
     $context->{checkflood} = 1;
-    $self->{pbot}->{interpreter}->handle_result($context, $context->{result});
+    $self->{pbot}->{interpreter}->handle_result($context);
 }
 
 1;

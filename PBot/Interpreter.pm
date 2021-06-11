@@ -1,7 +1,11 @@
 # File: Interpreter.pm
 # Author: pragma_
 #
-# Purpose:
+# Purpose: Main entry point to parse and interpret a string into bot
+# commands and dispatch the commands to registered interpreters.
+# Handles argument processing, command piping, command substitution,
+# command splitting, command output processing such as truncating long
+# text to web paste sites, etc.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -31,15 +35,20 @@ sub initialize {
     $self->PBot::Registerable::initialize(%conf);
 
     # registry entry for maximum recursion depth
-    $self->{pbot}->{registry}->add_default('text',  'interpreter', 'max_recursion', 10);
+    $self->{pbot}->{registry}->add_default('text', 'interpreter', 'max_recursion', 10);
 }
 
-# this is the main entry point for a message to be parsed and interpreted
+# this is the main entry point for a message to be parsed into commands
+# and to execute those commands and process their output
 sub process_line {
     my ($self, $from, $nick, $user, $host, $text) = @_;
 
     # lowercase `from` field for case-insensitivity
     $from = lc $from;
+
+    # sanitize text a bit
+    $text =~ s/^\s+|\s+$//g;
+    $text = validate_string($text, 0);
 
     # context object maintains contextual information about the state and
     # processing of this message. this object is passed between various bot
@@ -90,106 +99,147 @@ sub process_line {
     # get nick regex from registry entry
     my $nick_regex = $self->{pbot}->{registry}->get_value('regex', 'nickname');
 
-    my $nick_override       = undef;
-    my $processed           = 0;
-    my $preserve_whitespace = 0;
-
-    $text =~ s/^\s+|\s+$//g;
-    $text = validate_string($text, 0);
-
+    # preserve original text and parse $cmd_text for bot commands
     my $cmd_text = $text;
-    $cmd_text =~ s/^\/me\s+//;
+    $cmd_text =~ s/^\/me\s+//;  # remove leading /me
 
-    # check for bot command invocation
-    my @commands;
-    my $command;
-    my $embedded = 0;
+    # parse for bot command invocation
+    my @commands;       # all commands parsed out of this text so far
+    my $command;        # current command being parsed
+    my $embedded = 0;   # was command embedded within a message, e.g.: "see the !{help xyz} about that"
 
-    if    ($cmd_text =~ m/^\s*($nick_regex)[,:]?\s+$bot_trigger\{\s*(.+?)\s*\}\s*$/) { goto CHECK_EMBEDDED_CMD; }
-    elsif ($cmd_text =~ m/^\s*$bot_trigger\{\s*(.+?)\s*\}\s*$/)                      { goto CHECK_EMBEDDED_CMD; }
-    elsif ($cmd_text =~ m/^\s*($nick_regex)[,:]\s+$bot_trigger\s*(.+)$/) {
-        my $possible_nick_override = $1;
+    my $nick_prefix         = undef;  # addressed nickname for prefixing output
+    my $processed           = 0;      # counts how many commands were successfully processed
+
+    if ($cmd_text =~ m/^\s*($nick_regex)[,:]?\s+$bot_trigger\{\s*(.+?)\s*\}\s*$/) {
+        # "somenick: !{command}"
+        goto CHECK_EMBEDDED_CMD;
+    } elsif ($cmd_text =~ m/^\s*$bot_trigger\{\s*(.+?)\s*\}\s*$/) {
+        # "!{command}"
+        goto CHECK_EMBEDDED_CMD;
+    } elsif ($cmd_text =~ m/^\s*($nick_regex)[,:]\s+$bot_trigger\s*(.+)$/) {
+        # "somenick: !command"
+        my $possible_nick_prefix = $1;
         $command = $2;
 
-        my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $possible_nick_override);
-        if ($similar) { $nick_override = $similar; }
-        else {
-            $self->{pbot}->{logger}->log("No similar nick for $possible_nick_override\n");
+        # does somenick or similar exist in channel?
+        my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $possible_nick_prefix);
+
+        if ($similar) {
+            $nick_prefix = $similar;
+        } else {
+            # disregard command if no such nick is present.
+            $self->{pbot}->{logger}->log("No similar nick for $possible_nick_prefix; disregarding command.\n");
             return 0;
         }
     } elsif ($cmd_text =~ m/^$bot_trigger\s*(.+)$/) {
+        # "!command"
         $command = $1;
     } elsif ($cmd_text =~ m/^.?\s*$botnick\s*[[:punct:]]?\s+(.+)$/i) {
+        # "botnick: command"
         $command = $1;
     } elsif ($cmd_text =~ m/^(.+?),?\s*$botnick[?!.]*$/i) {
+        # "command, botnick?"
         $command = $1;
     }
 
     # check for embedded commands
   CHECK_EMBEDDED_CMD:
+
+    # if no command was parsed yet (or if we reached this point by one of the gotos above)
+    # then look for embedded commands, e.g.: "today is !{date} and the weather is !{weather}"
     if (not defined $command or $command =~ m/^\{.*\}/) {
+
+        # check for an addressed nickname
         if ($cmd_text =~ s/^\s*($nick_regex)[,:]\s+//) {
-            my $possible_nick_override = $1;
-            my $similar                = $self->{pbot}->{nicklist}->is_present_similar($from, $possible_nick_override);
-            if ($similar) { $nick_override = $similar; }
+            my $possible_nick_prefix = $1;
+
+            # does somenick or similar exist in channel?
+            my $similar = $self->{pbot}->{nicklist}->is_present_similar($from, $possible_nick_prefix);
+
+            if ($similar) {
+                $nick_prefix = $similar;
+            }
         }
 
-        for (my $count = 0; $count < 3; $count++) {
+        # get max embed registry value
+        my $max_embed = $self->{pbot}->{registry}->get_value('interpreter', 'max_embed') // 3;
+
+        # extract embedded commands
+        for (my $count = 0; $count < $max_embed; $count++) {
             my ($extracted, $rest) = $self->extract_bracketed($cmd_text, '{', '}', $bot_trigger);
+
+            # nothing to extract found, all done.
             last if not length $extracted;
+
+            # move command text buffer forwards past extracted text
             $cmd_text = $rest;
+
+            # trim surrounding whitespace
             $extracted =~ s/^\s+|\s+$//g;
+
+            # add command to parsed commands.
             push @commands, $extracted;
+
+            # set embedded flag
             $embedded = 1;
         }
     } else {
+        # otherwise a single command has already been parsed.
+        # so, add the command to parsed commands.
         push @commands, $command;
     }
 
+    # set $context's command output recipient field
+    if ($nick_prefix) {
+        $context->{nickprefix}         = $nick_prefix;
+        $context->{nickprefix_forced} = 1;
+    }
+
+    # set $context object's embedded flag
+    $context->{referenced} = $embedded;
+
+    # interpret all parsed commands
     foreach $command (@commands) {
-        # check if user is ignored (and command isn't `login`)
-        if ($command !~ /^login / && defined $from && $self->{pbot}->{ignorelist}->is_ignored($from, "$nick!$user\@$host")) {
+
+        # check if user is ignored
+        # the `login` command gets a pass on the ignore filter
+        if ($command !~ /^login / and $self->{pbot}->{ignorelist}->is_ignored($from, "$nick!$user\@$host")) {
             $self->{pbot}->{logger}->log("Disregarding command from ignored user $nick!$user\@$host in $from.\n");
             return 1;
         }
 
-        $context->{text}    = $text;
+        # update $context command field
         $context->{command} = $command;
 
-        if ($nick_override) {
-            $context->{nickoverride}       = $nick_override;
-            $context->{force_nickoverride} = 1;
-        }
+        # reset $context's interpreter recursion depth counter
+        $context->{interpret_depth} = 0;
 
-        $context->{referenced}          = $embedded;
-        $context->{interpret_depth}     = 0;
-        $context->{preserve_whitespace} = $preserve_whitespace;
-
+        # interpet this command
         $context->{result} = $self->interpret($context);
+
+        # handle command output
         $self->handle_result($context);
+
+        # increment processed counter
         $processed++;
     }
+
+    # return number of commands processed
     return $processed;
 }
 
+# main entry point to interpret/execute a bot command.
+# takes a $context object containing contextual information about the
+# command such as the channel, nick, user, host, command, etc.
 sub interpret {
     my ($self, $context) = @_;
-    my ($keyword, $arguments) = ('', '');
-    my $text;
-    my $pbot = $self->{pbot};
 
-    if (not exists $context->{hostmask}) {
-        $context->{hostmask} = "$context->{nick}!$context->{user}\@$context->{host}";
-    }
+    # log command invocation
+    $self->{pbot}->{logger}->log("=== [$context->{interpret_depth}] Got command: "
+        . "($context->{from}) $context->{hostmask}: $context->{command}\n");
 
-    $context->{interpret_depth}++;
-
-    $pbot->{logger}->log("=== [$context->{interpret_depth}] Got command: ("
-          . (defined $context->{from} ? $context->{from} : "undef")
-          . ") $context->{hostmask}: $context->{command}\n");
-
-    $context->{special} = "" unless exists $self->{special};
-
+    # debug flag to trace $context location and contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
         $Data::Dumper::Sortkeys = 1;
@@ -197,84 +247,140 @@ sub interpret {
         $self->{pbot}->{logger}->log(Dumper $context);
     }
 
-    return "Too many levels of recursion, aborted." if ($context->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion'));
+    # enforce recursion limit
+    if (++$context->{interpret_depth} > $self->{pbot}->{registry}->get_value('interpreter', 'max_recursion')) {
+        return "Too many levels of recursion, aborted.";
+    }
 
+    # sanity check the context fields, none of these should be missing
     if (not defined $context->{nick} || not defined $context->{user} || not defined $context->{host} || not defined $context->{command}) {
-        $pbot->{logger}->log("Error 1, bad parameters to interpret_command\n");
+        $self->{pbot}->{logger}->log("Error: Interpreter::interpret: missing field(s)\n");
+        return '/me coughs weakly.'; # indicate that something went wrong
+    }
+
+    # check for a split command, e.g. "echo Hello ;;; echo world."
+    if ($context->{command} =~ m/^(.*?)\s*(?<!\\);;;\s*(.*)/ms) {
+        $context->{command}       = $1; # command is the first half of the split
+        $context->{command_split} = $2; # store the rest of the split, potentially containing more splits
+    }
+
+    # convert command string to list of arguments
+    my $cmdlist = $self->make_args($context->{command});
+
+    $context->{cmdlist} = $cmdlist;
+
+    # create context command history if non-existent
+    if (not exists $context->{commands}) {
+        $context->{commands} = [];
+    }
+
+    # add command to context command history
+    push @{$context->{commands}}, $context->{command};
+
+    # parse the command into keyword, arguments and recipient
+    my ($keyword, $arguments, $recipient) = ('', '', undef);
+
+    if ($self->arglist_size($cmdlist) >= 4 and lc $cmdlist->[0] eq 'tell' and (lc $cmdlist->[2] eq 'about' or lc $cmdlist->[2] eq 'the')) {
+        # tell nick about/the cmd [args]; e.g. "tell somenick about malloc" or "tell somenick the date"
+
+        # split the list into two fields (keyword and remaining arguments)
+        # starting at the 4th element and preserving quotes
+        ($keyword, $arguments) = $self->split_args($cmdlist, 2, 3, 1);
+
+        # 2nd element is the recipient
+        $recipient = $cmdlist->[1];
+    } elsif ($self->arglist_size($cmdlist) >= 3 and lc $cmdlist->[0] eq 'give') {
+        # give nick cmd [args]; e.g. "give somenick date"
+
+        # split the list into two fields (keyword and remaining arguments)
+        # starting at the 3rd element and preserving quotes
+        ($keyword, $arguments) = $self->split_args($cmdlist, 2, 2, 1);
+
+        # 2nd element is the recipient
+        $recipient = $cmdlist->[1];
+    } else {
+        # normal command, split into keywords and arguments while preserving quotes
+        ($keyword, $arguments) = $self->split_args($cmdlist, 2, 0, 1);
+    }
+
+    # limit keyword length (in bytes)
+    # TODO: make this a registry item
+    {
+        # lexical scope for use bytes
+        use bytes;
+        if (length $keyword > 128) {
+            $keyword = truncate_egc $keyword, 128; # safely truncate unicode strings
+            $self->{pbot}->{logger}->log("Truncating keyword to <= 128 bytes: $keyword\n");
+        }
+    }
+
+    # ensure we have a $keyword
+    if (not defined $keyword or not length $keyword) {
+        $self->{pbot}->{logger}->log("Error: Missing keyword; disregarding command\n");
         return undef;
     }
 
-    # check for splitted commands
-    if ($context->{command} =~ m/^(.*?)\s*(?<!\\);;;\s*(.*)/ms) {
-        $context->{command}       = $1;
-        $context->{command_split} = $2;
-    }
+    # ensure $arguments is a string if none were given
+    $arguments //= '';
 
-    my $cmdlist = $self->make_args($context->{command});
-    $context->{commands} = [] unless exists $context->{commands};
-    push @{$context->{commands}}, $context->{command};
+    if (defined $recipient) {
+        # ensure that the recipient is present in the channel
+        $recipient = $self->{pbot}->{nicklist}->is_present_similar($context->{from}, $recipient);
 
-    if ($self->arglist_size($cmdlist) >= 4 and lc $cmdlist->[0] eq 'tell' and (lc $cmdlist->[2] eq 'about' or lc $cmdlist->[2] eq 'the')) {
-        # tell nick about/the cmd [args]
-        $context->{nickoverride} = $cmdlist->[1];
-        ($keyword, $arguments) = $self->split_args($cmdlist, 2, 3, 1);
-        $arguments = '' if not defined $arguments;
-        my $similar = $self->{pbot}->{nicklist}->is_present_similar($context->{from}, $context->{nickoverride});
-        if ($similar) {
-            $context->{nickoverride}       = $similar;
-            $context->{force_nickoverride} = 1;
+        if ($recipient) {
+            # if present then set and force the nickprefix
+            $context->{nickprefix}        = $recipient;
+            $context->{nickprefix_forced} = 1;
         } else {
-            delete $context->{nickoverride};
-            delete $context->{force_nickoverride};
+            # otherwise discard nickprefix
+            delete $context->{nickprefix};
+            delete $context->{nickprefix_forced};
         }
-    } elsif ($self->arglist_size($cmdlist) >= 3 and lc $cmdlist->[0] eq 'give') {
-        # give nick cmd [args]
-        $context->{nickoverride} = $cmdlist->[1];
-        ($keyword, $arguments) = $self->split_args($cmdlist, 2, 2, 1);
-        $arguments = '' if not defined $arguments;
-        my $similar = $self->{pbot}->{nicklist}->is_present_similar($context->{from}, $context->{nickoverride});
-        if ($similar) {
-            $context->{nickoverride}       = $similar;
-            $context->{force_nickoverride} = 1;
-        } else {
-            delete $context->{nickoverride};
-            delete $context->{force_nickoverride};
-        }
-    } else {
-        # normal command
-        ($keyword, $arguments) = $self->split_args($cmdlist, 2, 0, 1);
-        $arguments = '' if not defined $arguments;
-    }
-
-    # TODO: make this a registry item
-    if (length $keyword > 128) {
-        $keyword = substr($keyword, 0, 128);
-        $self->{pbot}->{logger}->log("Truncating keyword to 128 chars: $keyword\n");
     }
 
     # parse out a substituted command
-    if (defined $arguments && $arguments =~ m/(?<!\\)&\s*\{/) {
+    if ($arguments =~ m/(?<!\\)&\s*\{/) {
         my ($command) = $self->extract_bracketed($arguments, '{', '}', '&', 1);
 
+        # did we find a substituted command?
         if (length $command) {
+            # replace it with a placeholder
             $arguments =~ s/&\s*\{\Q$command\E\}/&{subcmd}/;
+
+            # add it to the list of substituted commands
             push @{$context->{subcmd}}, "$keyword $arguments";
+
+            # trim surrounding whitespace
             $command =~ s/^\s+|\s+$//g;
+
+            # replace contextual command
             $context->{command}  = $command;
+
+            # reset contextual command history
             $context->{commands} = [];
+
+            # add command to contextual command history
             push @{$context->{commands}}, $command;
+
+            # interpret the substituted command
             $context->{result} = $self->interpret($context);
+
+            # return the output
             return $context->{result};
         }
     }
 
     # parse out a pipe
-    if (defined $arguments && $arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
+    if ($arguments =~ m/(?<!\\)\|\s*\{\s*[^}]+\}\s*$/) {
         my ($pipe, $rest) = $self->extract_bracketed($arguments, '{', '}', '|', 1);
 
+        # strip pipe and everything after it from arguments
         $arguments =~ s/\s*(?<!\\)\|\s*{(\Q$pipe\E)}.*$//s;
-        $pipe      =~ s/^\s+|\s+$//g;
 
+        # trim surrounding whitespace
+        $pipe =~ s/^\s+|\s+$//g;
+
+        # update contextual pipe data
         if (exists $context->{pipe}) {
             $context->{pipe_rest} = "$rest | { $context->{pipe} }$context->{pipe_rest}";
         } else {
@@ -284,72 +390,560 @@ sub interpret {
         $context->{pipe} = $pipe;
     }
 
-    if (    not $self->{pbot}->{commands}->get_meta($keyword, 'dont-replace-pronouns')
+    # unescape any escaped command splits
+    $arguments =~ s/\\;;;/;;;/g;
+
+    # unescape any escaped substituted commands
+    $arguments =~ s/\\&\s*\{/&{/g;
+
+    # unescape any escaped pipes
+    $arguments =~ s/\\\|\s*\{/| {/g;
+
+    # replace pronouns like "i", "my", etc, with "nick", "nick's", etc
+    if (not $self->{pbot}->{commands}->get_meta($keyword, 'dont-replace-pronouns')
         and not $self->{pbot}->{factoids}->get_meta($context->{from}, $keyword, 'dont-replace-pronouns'))
     {
-        $context->{nickoverride} = $context->{nick} if defined $context->{nickoverride} and lc $context->{nickoverride} eq 'me';
-        $keyword   =~ s/(\w+)([?!.]+)$/$1/;
-        $arguments =~ s/(?<![\w\/\-\\])i am\b/$context->{nick} is/gi if defined $arguments && $context->{interpret_depth} <= 1;
-        $arguments =~ s/(?<![\w\/\-\\])me\b/$context->{nick}/gi if defined $arguments && $context->{interpret_depth} <= 1;
-        $arguments =~ s/(?<![\w\/\-\\])my\b/$context->{nick}'s/gi if defined $arguments && $context->{interpret_depth} <= 1;
-        $arguments =~ s/\\my\b/my/gi if defined $arguments && $context->{interpret_depth} <= 1;
-        $arguments =~ s/\\me\b/me/gi if defined $arguments && $context->{interpret_depth} <= 1;
-        $arguments =~ s/\\i am\b/i am/gi if defined $arguments && $context->{interpret_depth} <= 1;
+
+        # if command recipient is "me" then replace it with invoker's nick
+        # e.g., "!tell me about date" or "!give me date", etc
+        if (defined $context->{nickprefix} and lc $context->{nickprefix} eq 'me') {
+            $context->{nickprefix} = $context->{nick};
+        }
+
+        # strip trailing sentence-ending punctuators from $keyword
+        # TODO: why are we doing this? why here? why at all?
+        $keyword =~ s/(\w+)[?!.]+$/$1/;
+
+        # replace pronouns in $arguments.
+        # but only on the top-level command (not on subsequent recursions).
+        # all pronouns can be escaped to prevent replacement, e.g. "!give \me date"
+        if (length $arguments and $context->{interpret_depth} <= 1) {
+            $arguments =~ s/(?<![\w\/\-\\])i am\b/$context->{nick} is/gi;
+            $arguments =~ s/(?<![\w\/\-\\])me\b/$context->{nick}/gi;
+            $arguments =~ s/(?<![\w\/\-\\])my\b/$context->{nick}'s/gi;
+
+            # unescape any escaped pronouns
+            $arguments =~ s/\\i am\b/i am/gi;
+            $arguments =~ s/\\my\b/my/gi;
+            $arguments =~ s/\\me\b/me/gi;
+        }
     }
 
-    if (not $self->{pbot}->{commands}->get_meta($keyword, 'dont-protect-self') and not $self->{pbot}->{factoids}->get_meta($context->{from}, $keyword, 'dont-protect-self')) {
+    # the bot doesn't like performing bot commands on itself
+    # unless dont-protect-self is true
+    if (not $self->{pbot}->{commands}->get_meta($keyword, 'dont-protect-self')
+            and not $self->{pbot}->{factoids}->get_meta($context->{from}, $keyword, 'dont-protect-self'))
+    {
         my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-        if (defined $arguments && ($arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i || $arguments =~ m/^$botnick$/i)) {
-            my $delay   = rand(10) + 5;
+
+        if ($arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i || $arguments =~ m/^$botnick$/i) {
+            # build message structure
             my $message = {
-                nick    => $context->{nick}, user => $context->{user}, host => $context->{host}, command => $context->{command}, checkflood => 1,
-                message => "$context->{nick}: Why would I want to do that to myself?"
+                nick       => $context->{nick},
+                user       => $context->{user},
+                host       => $context->{host},
+                command    => $context->{command},
+                checkflood => 1,
+                message    => "$context->{nick}: Why would I want to do that to myself?",
             };
+
+            # get a random delay
+            my $delay = rand(10) + 5;
+
+            # add message to output queue
             $self->add_message_to_output_queue($context->{from}, $message, $delay);
+
+            # log upcoming message + delay
             $delay = duration($delay);
             $self->{pbot}->{logger}->log("($delay delay) $message->{message}\n");
+
+            # no output to return
             return undef;
         }
     }
 
-    if (not defined $keyword) {
-        $pbot->{logger}->log("Error 2, no keyword\n");
-        return undef;
+    # set the contextual root root keyword.
+    # this is the keyword first used to invoke this command. it is not updated
+    # on subsequent command interpreter recursions.
+    if (not exists $context->{root_keyword}) {
+        $context->{root_keyword} = $keyword;
     }
 
-    if (not exists $context->{root_keyword}) { $context->{root_keyword} = $keyword; }
+    # update the contextual keyword field
+    $context->{keyword} = $keyword;
 
-    $context->{keyword}            = $keyword;
+    # update the contextual arguments field
+    $context->{arguments} = $arguments;
+
+    # update the original arguments field.
+    # the actual arguments field may be manipulated/overridden by
+    # the interpreters. the arguments field is reset with this
+    # field after each interpreter finishes.
     $context->{original_arguments} = $arguments;
 
-    # unescape any escaped command splits
-    $arguments =~ s/\\;;;/;;;/g if defined $arguments;
+    # make the argument list
+    $context->{arglist} = $self->make_args($arguments);
 
-    # unescape any escaped substituted commands
-    $arguments =~ s/\\&\s*\{/&{/g if defined $arguments;
-
-    # unescape any escaped pipes
-    $arguments =~ s/\\\|\s*\{/| {/g if defined $arguments;
-
-    # set arguments as a plain string
-    $context->{arguments} = $arguments;
+    # reset utf8 flag for arguments
+    # arguments aren't a utf8 encoded string at this point
     delete $context->{args_utf8};
 
-    # set arguments as an array
-    $context->{arglist} = $self->make_args($arguments);
+    # reset the special behavior
+    $context->{special} = '';
 
     # execute all registered interpreters
     my $result;
+
     foreach my $func (@{$self->{handlers}}) {
-        $result = &{$func->{subref}}($context);
+        # call the interpreter
+        $result = $func->{subref}->($context);
+
+        # exit loop if interpreter returned output
         last if defined $result;
 
-        # reset any manipulated arguments
+        # reset any manipulated/overridden arguments
         $context->{arguments} = $context->{original_arguments};
         delete $context->{args_utf8};
     }
 
+    # return command output
     return $result;
+}
+
+# finalizes processing on a command.
+# updates pipes, substitutions, splits. truncates to paste site.
+# sends final command output to appropriate queues.
+sub handle_result {
+    my ($self, $context, $result) = @_;
+
+    # if passed, allow $result parameter to override contextual result
+    $result //= $context->{result};
+
+    # preservation of consecutive whitespace is disabled by default
+    $context->{preserve_whitespace} //= 0;
+
+    # debug flag to trace $context location and contents
+    if ($self->{pbot}->{registry}->get_value('general', 'debugcontext') and length $context->{result}) {
+        use Data::Dumper;
+        $Data::Dumper::Sortkeys = 1;
+        $self->{pbot}->{logger}->log("Interpreter::handle_result [$result]\n");
+        $self->{pbot}->{logger}->log(Dumper $context);
+    }
+
+    # ensure we have a command result to work with
+    if (not defined $result or length $result == 0) {
+        return 0;
+    }
+
+    # strip and store /command prefixes
+    # to be re-added after result processing
+    if ($result =~ s!^(/say|/me|/msg \S+) !!) {
+        $context->{result_prefix} = $1;
+    } else {
+        delete $context->{result_prefix};
+    }
+
+    # finish piping
+    if (exists $context->{pipe}) {
+        my ($pipe, $pipe_rest) = (delete $context->{pipe}, delete $context->{pipe_rest});
+
+        if (not $context->{alldone}) {
+            $context->{command} = "$pipe $result $pipe_rest";
+            $context->{result}  = $self->interpret($context);
+        }
+
+        $self->handle_result($context);
+        return 0;
+    }
+
+    # finish command substitution
+    if (exists $context->{subcmd}) {
+        my $command = pop @{$context->{subcmd}};
+
+        if (@{$context->{subcmd}} == 0 or $context->{alldone}) { delete $context->{subcmd}; }
+
+        $command =~ s/&\{subcmd\}/$result/;
+
+        if (not $context->{alldone}) {
+            $context->{command} = $command;
+            $context->{result}  = $self->interpret($context);
+        }
+
+        $self->handle_result($context);
+        return 0;
+    }
+
+    # restore /command prefix
+    if ($context->{result_prefix}) {
+        $result = "$context->{result_prefix} $result";
+    }
+
+    # finish command split
+    if ($context->{command_split}) {
+        my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+
+        # update contextual command with next command in split
+        $context->{command} = delete $context->{command_split};
+
+        # reformat result to be more suitable for joining together
+        $result =~ s!^/say !\n!i;
+        $result =~ s!^/me !\n* $botnick !i;
+
+        if (not length $context->{split_result}) {
+            $result =~ s/^\n//;
+            $context->{split_result} = $result;
+        } else {
+            $context->{split_result} .= $result;
+        }
+
+        $context->{result} = $self->interpret($context);
+        $self->handle_result($context);
+        return 0;
+    }
+
+    # join command split
+    if ($context->{split_result}) {
+        my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+
+        # reformat result to be more suitable for joining together
+        $result =~ s!^/say !\n!i;
+        $result =~ s!^/me !\n* $botnick !i;
+
+        $result = $context->{split_result} . $result;
+    }
+
+
+    # set preserve_whitespace and use_output_queue
+    # TODO: this should be in Factoids.pm and update $context's flags
+
+    my $use_output_queue = 0;
+
+    if (not $self->{pbot}->{commands}->exists($context->{keyword})) {
+        my @factoids = $self->{pbot}->{factoids}->find_factoid($context->{from}, $context->{keyword},
+            arguments     => $context->{arguments},
+            exact_channel => 0,
+            exact_trigger => 0,
+            find_alias    => 1
+        );
+
+        if (@factoids == 1) {
+            my ($chan, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
+
+            if ($context->{preserve_whitespace} == 0) {
+                $context->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'preserve_whitespace') // 0;
+            }
+
+            $use_output_queue = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'use_output_queue') // 0;
+        }
+    }
+
+    my $preserve_newlines = $self->{pbot}->{registry}->get_value($context->{from}, 'preserve_newlines');
+
+    my $original_result = $result;
+
+    $result =~ s/[\n\r]/ /g unless $preserve_newlines;
+    $result =~ s/[ \t]+/ /g unless $context->{preserve_whitespace};
+
+    my $max_lines = $self->{pbot}->{registry}->get_value($context->{from}, 'max_newlines') // 4;
+    my $lines = 0;
+
+    # split result into lines and go over each line
+    foreach my $line (split /[\n\r]+/, $result) {
+        # skip blank lines
+        next if $line !~ /\S/;
+
+        # paste everything if we've output the maximum lines
+        if (++$lines >= $max_lines) {
+            my $link = $self->{pbot}->{webpaste}->paste("$context->{from} <$context->{nick}> $context->{text}\n\n$original_result");
+
+            if ($use_output_queue) {
+                my $message = {
+                    nick       => $context->{nick},
+                    user => $context->{user},
+                    host => $context->{host},
+                    command => $context->{command},
+                    message    => "And that's all I have to say about that. See $link for full text.",
+                    checkflood => 1
+                };
+
+                $self->add_message_to_output_queue($context->{from}, $message, 0);
+            } else {
+                unless ($context->{from} eq 'stdin@pbot') {
+                    $self->{pbot}->{conn}->privmsg($context->{from}, "And that's all I have to say about that. See $link for full text.");
+                }
+            }
+
+            last;
+        }
+
+        $line = $self->truncate_result($context, $line, $original_result);
+
+        if ($use_output_queue) {
+            my $delay   = rand(10) + 5;
+            my $message = {
+                nick => $context->{nick},
+                user => $context->{user},
+                host => $context->{host},
+                command => $context->{command},
+                message => $line,
+                checkflood => 1,
+            };
+            $self->add_message_to_output_queue($context->{from}, $message, $delay);
+            $delay = duration($delay);
+            $self->{pbot}->{logger}->log("($delay delay) $line\n");
+        } else {
+            $context->{output} = $line;
+            $self->output_result($context);
+            $self->{pbot}->{logger}->log("$line\n");
+        }
+    }
+
+    # log a separator bar after command finishes
+    $self->{pbot}->{logger}->log("---------------------------------------------\n");
+
+    # successful command completion
+    return 1;
+}
+
+# truncates a message, optionally pasting to a web paste site.
+# $paste_text is the version of text (e.g. with whitespace formatting preserved, etc)
+# to send to the paste site.
+sub truncate_result {
+    my ($self, $context, $text, $paste_text) = @_;
+
+    my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
+
+    $max_msg_len -= length "PRIVMSG $context->{from} :";
+
+    # encode text to utf8 for byte length truncation
+    $text       = encode('UTF-8', $text);
+    $paste_text = encode('UTF-8', $paste_text);
+
+    if (length $text > $max_msg_len) {
+        my $paste_result;
+
+        if (defined $paste_text) {
+            # limit pastes to 32k by default, overridable via paste.max_length
+            my $max_paste_len = $self->{pbot}->{registry}->get_value('paste', 'max_length') // 1024 * 32;
+
+            # truncate paste to max paste length
+            $paste_text = truncate_egc $paste_text, $max_paste_len;
+
+            # send text to paste site
+            $paste_result = $self->{pbot}->{webpaste}->paste("$context->{from} <$context->{nick}> $context->{text}\n\n$paste_text");
+        }
+
+        my $trunc = '... [truncated';
+
+        if (not defined $paste_result) {
+            # no paste
+            $trunc .= "]";
+        } elsif ($paste_result =~ m/^http/) {
+            # a link
+            $trunc .= "; see $paste_result for full text.]";
+        } else {
+            # an error or something else
+            $trunc .= "$paste_result]";
+        }
+
+        $paste_result //= 'not pasted';
+        $self->{pbot}->{logger}->log("Message truncated -- $paste_result\n");
+
+        # make room to append the truncation text to the message text
+        # (third argument to truncate_egc is '' to prevent appending its own ellipsis)
+        my $trunc_len = length $text < $max_msg_len ? length $text : $max_msg_len;
+        $text = truncate_egc $text, $trunc_len - length $trunc, '';
+
+        # append the truncation text
+        $text .= $trunc;
+    } else {
+        # decode text from utf8
+        $text = decode('UTF-8', $text);
+    }
+
+    return $text;
+}
+
+sub dehighlight_nicks {
+    my ($self, $line, $channel) = @_;
+
+    return $line if $self->{pbot}->{registry}->get_value('general', 'no_dehighlight_nicks');
+
+    my @tokens = split / /, $line;
+
+    foreach my $token (@tokens) {
+        my $potential_nick = $token;
+        $potential_nick =~ s/^[^\w\[\]\-\\\^\{\}]+//;
+        $potential_nick =~ s/[^\w\[\]\-\\\^\{\}]+$//;
+
+        next if length $potential_nick == 1;
+        next if not $self->{pbot}->{nicklist}->is_present($channel, $potential_nick);
+
+        my $dehighlighted_nick = $potential_nick;
+        $dehighlighted_nick =~ s/(.)/$1\x{200b}/;
+
+        $token =~ s/\Q$potential_nick\E(?!:)/$dehighlighted_nick/;
+    }
+
+    return join ' ', @tokens;
+}
+
+sub output_result {
+    my ($self, $context)   = @_;
+
+    # debug flag to trace $context location and contents
+    if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
+        use Data::Dumper;
+        $Data::Dumper::Sortkeys = 1;
+        $self->{pbot}->{logger}->log("Interpreter::output_result\n");
+        $self->{pbot}->{logger}->log(Dumper $context);
+    }
+
+    my $output = $context->{output};
+
+    # nothing to do if we have nothing to do innit
+    return if not defined $output or not length $output;
+
+    # nothing more to do here if the command came from STDIN
+    return if $context->{from} eq 'stdin@pbot';
+
+    # insert null-width spaces into nicknames to prevent IRC clients
+    # from unncessarily highlighting people
+    if ($context->{from} =~ /^#/ and $output !~ /^\/msg\s+/i) {
+        $output = $self->dehighlight_nicks($output, $context->{from});
+    }
+
+    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    my $to      = $context->{from};
+
+    # log the message if requested
+    if ($context->{checkflood}) {
+        $self->{pbot}->{antiflood}->check_flood($to, $botnick, $self->{pbot}->{registry}->get_value('irc', 'username'), 'pbot', $output, 0, 0, 0);
+    }
+
+    # nothing more to do here if the output is going to the bot
+    return if $to eq $botnick;
+
+    # handle various /command prefixes
+
+    my $type = 'echo'; # will be set to 'echo' or 'action' depending on /command prefix
+
+    if ($output =~ s/^\/say //i) {
+        # /say stripped off
+        $output = ' ' if not length $output;  # ensure we output something
+    }
+    elsif ($output =~ s/^\/me //i) {
+        # /me stripped off
+        $type = 'action';
+    }
+    elsif ($output =~ s/^\/msg\s+([^\s]+) //i) {
+        # /msg somenick stripped off
+
+        $to = $1;  # reset $to to output to somenick
+
+        # don't allow /msg nick1,nick2,etc
+        if ($to =~ /,/) {
+            $self->{pbot}->{logger}->log("[HACK] Disregarding attempt to /msg multiple users. $context->{hostmask} [$context->{command}] $output\n");
+            return;
+        }
+
+        # don't allow /msging any nicks that end with "serv" (e.g. ircd services; NickServ, ChanServ, etc)
+        if ($to =~ /.*serv(?:@.*)?$/i) {
+            $self->{pbot}->{logger}->log("[HACK] Disregarding attempt to /msg *serv. $context->{hostmask} [$context->{command}] $output]\n");
+            return;
+        }
+
+        if ($output =~ s/^\/me //i) {
+            # /me stripped off
+            $type = 'action';
+        }
+        else {
+            # strip off /say if present
+            $output =~ s/^\/say //i;
+        }
+    }
+
+    if ($type eq 'echo') {
+        # prepend nickprefix to output
+        if ($context->{nickprefix} && (! $context->{nickprefix_disabled} || $context->{nickprefix_forced})) {
+            $output = "$context->{nickprefix}: $output";
+        }
+
+        # send the message to the channel/user
+        $self->{pbot}->{conn}->privmsg($to, $output);
+    }
+    elsif ($type eq 'action') {
+        # append nickprefix to output
+        if ($context->{nickprefix} && (! $context->{nickprefix_disabled} || $context->{nickprefix_forced})) {
+            $output = "$output (for $context->{nickprefix})";
+        }
+
+        # CTCP ACTION the message to the channel/user
+        $self->{pbot}->{conn}->me($to, $output);
+    }
+}
+
+sub add_message_to_output_queue {
+    my ($self, $channel, $message, $delay) = @_;
+
+    $self->{pbot}->{timer}->enqueue_event(
+        sub {
+            my $context = {
+                from       => $channel,
+                nick       => $message->{nick},
+                user       => $message->{user},
+                host       => $message->{host},
+                output     => $message->{message},
+                command    => $message->{command},
+                checkflood => $message->{checkflood}
+            };
+
+            $self->output_result($context);
+        },
+        $delay, "output $channel $message->{message}"
+    );
+}
+
+sub add_to_command_queue {
+    my ($self, $channel, $command, $delay, $repeating) = @_;
+
+    $self->{pbot}->{timer}->enqueue_event(
+        sub {
+            my $context = {
+                from                => $channel,
+                nick                => $command->{nick},
+                user                => $command->{user},
+                host                => $command->{host},
+                command             => $command->{command},
+                interpret_depth     => 0,
+                checkflood          => 0,
+                preserve_whitespace => 0
+            };
+
+            if (exists $command->{'cap-override'}) {
+                $self->{pbot}->{logger}->log("[command queue] Override command capability with $command->{'cap-override'}\n");
+                $context->{'cap-override'} = $command->{'cap-override'};
+            }
+
+            my $result = $self->interpret($context);
+            $context->{result} = $result;
+            $self->handle_result($context, $result);
+        },
+        $delay, "command $channel $command->{command}", $repeating
+    );
+}
+
+sub add_botcmd_to_command_queue {
+    my ($self, $channel, $command, $delay) = @_;
+
+    my $botcmd = {
+        nick    => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
+        user    => 'stdin',
+        host    => 'pbot',
+        command => $command
+    };
+
+    $self->add_to_command_queue($channel, $botcmd, $delay);
 }
 
 # extracts a bracketed substring, gracefully handling unbalanced quotes
@@ -736,344 +1330,6 @@ sub split_args {
 sub lc_args {
     my ($self, $args) = @_;
     for (my $i = 0; $i < @$args; $i++) { $args->[$i] = lc $args->[$i]; }
-}
-
-sub truncate_result {
-    my ($self, $from, $nick, $command, $paste_text, $text, $paste) = @_;
-
-    my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
-
-    $max_msg_len -= length "PRIVMSG $from :";
-
-    # encode text to utf8 for byte length truncation
-    $text       = encode('UTF-8', $text);
-    $paste_text = encode('UTF-8', $paste_text);
-
-    if (length $text > $max_msg_len) {
-        my $paste_result;
-
-        if ($paste) {
-            # limit pastes to 32k by default, overridable via paste.max_length
-            my $max_paste_len = $self->{pbot}->{registry}->get_value('paste', 'max_length') // 1024 * 32;
-
-            # truncate paste to max paste length
-            $paste_text = truncate_egc $paste_text, $max_paste_len;
-
-            # send text to paste site
-            $paste_result = $self->{pbot}->{webpaste}->paste("($from) $nick: $command\n\n$paste_text");
-        }
-
-        my $trunc = "... [truncated";
-
-        if (not defined $paste_result) {
-            # no paste
-            $trunc .= "]";
-        } elsif ($paste_result =~ m/^http/) {
-            # a link
-            $trunc .= "; see $paste_result for full text.]";
-        } else {
-            # an error or something else
-            $trunc .= "$paste_result]";
-        }
-
-        if ($paste) {
-            $paste_result //= 'not pasted';
-            $self->{pbot}->{logger}->log("Message truncated -- $paste_result\n");
-        }
-
-        # make room to append the truncation text to the message text
-        # (third argument to truncate_egc is '' to prevent appending its own ellipsis)
-        my $trunc_len = length $text < $max_msg_len ? length $text : $max_msg_len;
-        $text = truncate_egc $text, $trunc_len - length $trunc, '';
-
-        # append the truncation text
-        $text .= $trunc;
-    } else {
-        # decode text from utf8
-        $text = decode('UTF-8', $text);
-    }
-
-    return $text;
-}
-
-sub handle_result {
-    my ($self, $context, $result) = @_;
-    $result                       = $context->{result} if not defined $result;
-    $context->{preserve_whitespace} = 0                if not defined $context->{preserve_whitespace};
-
-    if ($self->{pbot}->{registry}->get_value('general', 'debugcontext') and length $context->{result}) {
-        use Data::Dumper;
-        $Data::Dumper::Sortkeys = 1;
-        $self->{pbot}->{logger}->log("Interpreter::handle_result [$result]\n");
-        $self->{pbot}->{logger}->log(Dumper $context);
-    }
-
-    return 0 if not defined $result or length $result == 0;
-
-    if    ($result =~ s#^(/say|/me) ##) { $context->{prepend} = $1; }
-    elsif ($result =~ s#^(/msg \S+) ##) { $context->{prepend} = $1; }
-
-    if (exists $context->{pipe}) {
-        my ($pipe, $pipe_rest) = (delete $context->{pipe}, delete $context->{pipe_rest});
-        if (not $context->{alldone}) {
-            $context->{command} = "$pipe $result $pipe_rest";
-            $result             = $self->interpret($context);
-            $context->{result}  = $result;
-        }
-        $self->handle_result($context, $result);
-        return 0;
-    }
-
-    if (exists $context->{subcmd}) {
-        my $command = pop @{$context->{subcmd}};
-
-        if (@{$context->{subcmd}} == 0 or $context->{alldone}) { delete $context->{subcmd}; }
-
-        $command =~ s/&\{subcmd\}/$result/;
-
-        if (not $context->{alldone}) {
-            $context->{command} = $command;
-            $result             = $self->interpret($context);
-            $context->{result}  = $result;
-        }
-        $self->handle_result($context);
-        return 0;
-    }
-
-    if ($context->{prepend}) { $result = "$context->{prepend} $result"; }
-
-    if ($context->{command_split}) {
-        my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-        $context->{command} = delete $context->{command_split};
-        $result =~ s#^/say #\n#i;
-        $result =~ s#^/me #\n* $botnick #i;
-        if (not length $context->{split_result}) {
-            $result =~ s/^\n//;
-            $context->{split_result} = $result;
-        } else {
-            $context->{split_result} .= $result;
-        }
-        $result = $self->interpret($context);
-        $self->handle_result($context, $result);
-        return 0;
-    }
-
-    if ($context->{split_result}) {
-        my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-        $result =~ s#^/say #\n#i;
-        $result =~ s#^/me #\n* $botnick #i;
-        $result = $context->{split_result} . $result;
-    }
-
-    my $use_output_queue = 0;
-
-    if (defined $context->{command}) {
-        my $cmdlist = $self->make_args($context->{command});
-        my ($cmd, $args) = $self->split_args($cmdlist, 2, 0, 1);
-        if (not $self->{pbot}->{commands}->exists($cmd)) {
-            my @factoids = $self->{pbot}->{factoids}->find_factoid($context->{from}, $cmd, arguments => $args, exact_channel => 0, exact_trigger => 0, find_alias => 1);
-            if (@factoids == 1) {
-                my ($chan, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
-                if ($context->{preserve_whitespace} == 0) {
-                    $context->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'preserve_whitespace') // 0;
-                }
-
-                $use_output_queue = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'use_output_queue') // 0;
-            }
-        }
-    }
-
-    my $preserve_newlines = $self->{pbot}->{registry}->get_value($context->{from}, 'preserve_newlines');
-
-    my $original_result = $result;
-
-    $result =~ s/[\n\r]/ /g unless $preserve_newlines;
-    $result =~ s/[ \t]+/ /g unless $context->{preserve_whitespace};
-
-    my $max_lines = $self->{pbot}->{registry}->get_value($context->{from}, 'max_newlines') // 4;
-    my $lines = 0;
-
-    my $stripped_line;
-    foreach my $line (split /[\n\r]+/, $result) {
-        $stripped_line = $line;
-        $stripped_line =~ s/^\s+|\s+$//g;
-        next if not length $stripped_line;
-
-        if (++$lines >= $max_lines) {
-            my $link = $self->{pbot}->{webpaste}->paste("[" . (defined $context->{from} ? $context->{from} : "stdin") . "] <$context->{nick}> $context->{text}\n\n$original_result");
-            if ($use_output_queue) {
-                my $message = {
-                    nick       => $context->{nick}, user => $context->{user}, host => $context->{host}, command => $context->{command},
-                    message    => "And that's all I have to say about that. See $link for full text.",
-                    checkflood => 1
-                };
-                $self->add_message_to_output_queue($context->{from}, $message, 0);
-            } else {
-                $self->{pbot}->{conn}->privmsg($context->{from}, "And that's all I have to say about that. See $link for full text.") unless $context->{from} eq 'stdin@pbot';
-            }
-            last;
-        }
-
-        if ($preserve_newlines) {
-            $line = $self->truncate_result($context->{from}, $context->{nick}, $context->{text}, $line, $line, 1);
-        } else {
-            $line = $self->truncate_result($context->{from}, $context->{nick}, $context->{text}, $original_result, $line, 1);
-        }
-
-        if ($use_output_queue) {
-            my $delay   = rand(10) + 5;
-            my $message = {
-                nick => $context->{nick},
-                user => $context->{user},
-                host => $context->{host},
-                command => $context->{command},
-                message => $line,
-                checkflood => 1,
-            };
-            $self->add_message_to_output_queue($context->{from}, $message, $delay);
-            $delay = duration($delay);
-            $self->{pbot}->{logger}->log("($delay delay) $line\n");
-        } else {
-            $context->{line} = $line;
-            $self->output_result($context);
-            $self->{pbot}->{logger}->log("$line\n");
-        }
-    }
-    $self->{pbot}->{logger}->log("---------------------------------------------\n");
-    return 1;
-}
-
-sub dehighlight_nicks {
-    my ($self, $line, $channel) = @_;
-    return $line if $self->{pbot}->{registry}->get_value('general', 'no_dehighlight_nicks');
-
-    my @tokens = split / /, $line;
-    foreach my $token (@tokens) {
-        my $potential_nick = $token;
-        $potential_nick =~ s/^[^\w\[\]\-\\\^\{\}]+//;
-        $potential_nick =~ s/[^\w\[\]\-\\\^\{\}]+$//;
-
-        next if length $potential_nick == 1;
-        next if not $self->{pbot}->{nicklist}->is_present($channel, $potential_nick);
-
-        my $dehighlighted_nick = $potential_nick;
-        $dehighlighted_nick =~ s/(.)/$1\x{200b}/;
-
-        $token =~ s/\Q$potential_nick\E(?!:)/$dehighlighted_nick/;
-    }
-
-    return join ' ', @tokens;
-}
-
-sub output_result {
-    my ($self, $context)   = @_;
-    my ($pbot, $botnick) = ($self->{pbot}, $self->{pbot}->{registry}->get_value('irc', 'botnick'));
-
-    if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
-        use Data::Dumper;
-        $Data::Dumper::Sortkeys = 1;
-        $self->{pbot}->{logger}->log("Interpreter::output_result\n");
-        $self->{pbot}->{logger}->log(Dumper $context);
-    }
-
-    my $line = $context->{line};
-
-    return   if not defined $line or not length $line;
-    return 0 if $context->{from} eq 'stdin@pbot';
-
-    $line = $self->dehighlight_nicks($line, $context->{from}) if $context->{from} =~ /^#/ and $line !~ /^\/msg\s+/i;
-
-    if ($line =~ s/^\/say(?:\s+|$)//i) {
-        $line = ' ' if not length $line;
-        if (defined $context->{nickoverride} and ($context->{no_nickoverride} == 0 or $context->{force_nickoverride} == 1)) { $line = "$context->{nickoverride}: $line"; }
-        $pbot->{conn}->privmsg($context->{from}, $line) if defined $context->{from} && $context->{from} ne $botnick;
-        $pbot->{antiflood}->check_flood($context->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', $line, 0, 0, 0) if $context->{checkflood};
-    } elsif ($line =~ s/^\/me\s+//i) {
-        $pbot->{conn}->me($context->{from}, $line) if defined $context->{from} && $context->{from} ne $botnick;
-        $pbot->{antiflood}->check_flood($context->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', '/me ' . $line, 0, 0, 0) if $context->{checkflood};
-    } elsif ($line =~ s/^\/msg\s+([^\s]+)\s+//i) {
-        my $to = $1;
-        if ($to =~ /,/) {
-            $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg multiple users: [$context->{nick}!$context->{user}\@$context->{host}] [$context->{command}] [$line]\n");
-        } elsif ($to =~ /.*serv(?:@.*)?$/i) {
-            $pbot->{logger}->log("[HACK] Possible HACK ATTEMPT /msg *serv: [$context->{nick}!$context->{user}\@$context->{host}] [$context->{command}] [$line]\n");
-        } elsif ($line =~ s/^\/me\s+//i) {
-            $pbot->{conn}->me($to, $line)                                                                                                    if $to ne $botnick;
-            $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', '/me ' . $line, 0, 0, 0) if $context->{checkflood};
-        } else {
-            $line =~ s/^\/say\s+//i;
-            if (defined $context->{nickoverride} and ($context->{no_nickoverride} == 0 or $context->{force_nickoverride} == 1)) { $line = "$context->{nickoverride}: $line"; }
-            $pbot->{conn}->privmsg($to, $line)                                                                                      if $to ne $botnick;
-            $pbot->{antiflood}->check_flood($to, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', $line, 0, 0, 0) if $context->{checkflood};
-        }
-    } else {
-        if (defined $context->{nickoverride} and ($context->{no_nickoverride} == 0 or $context->{force_nickoverride} == 1)) { $line = "$context->{nickoverride}: $line"; }
-        $pbot->{conn}->privmsg($context->{from}, $line) if defined $context->{from} && $context->{from} ne $botnick;
-        $pbot->{antiflood}->check_flood($context->{from}, $botnick, $pbot->{registry}->get_value('irc', 'username'), 'pbot', $line, 0, 0, 0) if $context->{checkflood};
-    }
-}
-
-sub add_message_to_output_queue {
-    my ($self, $channel, $message, $delay) = @_;
-
-    $self->{pbot}->{timer}->enqueue_event(
-        sub {
-            my $context = {
-                from       => $channel,
-                nick       => $message->{nick},
-                user       => $message->{user},
-                host       => $message->{host},
-                line       => $message->{message},
-                command    => $message->{command},
-                checkflood => $message->{checkflood}
-            };
-
-            $self->output_result($context);
-        },
-        $delay, "output $channel $message->{message}"
-    );
-}
-
-sub add_to_command_queue {
-    my ($self, $channel, $command, $delay, $repeating) = @_;
-
-    $self->{pbot}->{timer}->enqueue_event(
-        sub {
-            my $context = {
-                from                => $channel,
-                nick                => $command->{nick},
-                user                => $command->{user},
-                host                => $command->{host},
-                command             => $command->{command},
-                interpret_depth     => 0,
-                checkflood          => 0,
-                preserve_whitespace => 0
-            };
-
-            if (exists $command->{'cap-override'}) {
-                $self->{pbot}->{logger}->log("[command queue] Override command capability with $command->{'cap-override'}\n");
-                $context->{'cap-override'} = $command->{'cap-override'};
-            }
-
-            my $result = $self->interpret($context);
-            $context->{result} = $result;
-            $self->handle_result($context, $result);
-        },
-        $delay, "command $channel $command->{command}", $repeating
-    );
-}
-
-sub add_botcmd_to_command_queue {
-    my ($self, $channel, $command, $delay) = @_;
-
-    my $botcmd = {
-        nick    => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
-        user    => 'stdin',
-        host    => 'pbot',
-        command => $command
-    };
-
-    $self->add_to_command_queue($channel, $botcmd, $delay);
 }
 
 1;

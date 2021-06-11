@@ -68,6 +68,9 @@ sub initialize {
     $self->add_default('text', 'irc', 'identify_password', $conf{identify_password} // '');
     $self->add_default('text', 'irc', 'log_default_handler', 1);
 
+    # interpreter
+    $self->add_default('text', 'interpreter', 'max_embed', 3);
+
     # make sensitive entries private
     $self->set_default('irc', 'SSL_ca_file',       'private', 1);
     $self->set_default('irc', 'SSL_ca_path',       'private', 1);

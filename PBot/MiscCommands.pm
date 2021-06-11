@@ -52,17 +52,27 @@ sub cmd_in_channel {
     my ($self, $context) = @_;
 
     my $usage = 'Usage: in <channel> <command>';
-    return $usage if not length $context->{arguments};
+
+    if (not length $context->{arguments}) {
+        return $usage;
+    }
 
     my ($channel, $command) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2, 0, 1);
-    return $usage if not defined $channel or not defined $command;
 
+    if (not defined $channel or not defined $command) {
+        return $usage;
+    }
+
+    # invoker must be present in that channel
     if (not $self->{pbot}->{nicklist}->is_present($channel, $context->{nick})) {
         return "You must be present in $channel to do this.";
     }
 
+    # update context with new channel and command
     $context->{from}    = $channel;
     $context->{command} = $command;
+
+    # perform the command and return the result
     return $self->{pbot}->{interpreter}->interpret($context);
 }
 

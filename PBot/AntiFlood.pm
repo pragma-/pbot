@@ -285,6 +285,7 @@ sub check_flood {
         $account = delete $self->{changinghost}->{$nick};
 
         my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_id($mask);
+
         if (defined $id) {
             if ($id != $account) {
                 $self->{pbot}->{logger}->log("Linking $mask [$id] to account $account\n");

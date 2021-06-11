@@ -367,7 +367,7 @@ sub is_present {
 }
 
 sub is_present_similar {
-    my ($self, $channel, $nick, $similar) = @_;
+    my ($self, $channel, $nick, $similarity) = @_;
 
     $channel = lc $channel;
     $nick    = lc $nick;
@@ -385,8 +385,8 @@ sub is_present_similar {
 
     my $percentage;
 
-    if (defined $similar) {
-        $percentage = $similar;
+    if (defined $similarity) {
+        $percentage = $similarity;
     } else {
         $percentage = $self->{pbot}->{registry}->get_value('interpreter', 'nick_similarity') // 0.20;
     }
