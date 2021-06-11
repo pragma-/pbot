@@ -126,7 +126,7 @@ sub cmd_die {
     $self->{pbot}->{logger}->log("$context->{hostmask} made me exit.\n");
     $self->{pbot}->{conn}->privmsg($context->{from}, "Good-bye.") if $context->{from} ne 'stdin@pbot';
     $self->{pbot}->{conn}->quit("Departure requested.") if defined $self->{pbot}->{conn};
-    $self->pbot->atexit();
+    $self->{pbot}->atexit();
     exit 0;
 }
 
