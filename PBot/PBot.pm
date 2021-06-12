@@ -13,8 +13,8 @@
 #
 # But don't fear. PBot's forked Net::IRC package has also been maintained
 # and updated along with PBot. It contains numerous bugfixes and supports
-# various new features such as IRCv3 user capability negotiation and SASL
-# authentication.
+# various new features such as IRCv3 client capability negotiation and SASL
+# user authentication.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
