@@ -454,6 +454,17 @@ sub trans {
     728 => "quietlist",            # freenode +q, pragma_ 12/12/2011
     729 => "endofquietlist",       # freenode +q, pragma_ 27/4/2020
 
+    # IRCv3 SASL   pragma- June 11, 2021
+    900 => "repl_loggedin",
+    901 => "repl_loggedout",
+    902 => "err_nicklocked",
+    903 => "rpl_saslsuccess",
+    904 => "err_saslfail",
+    905 => "err_sasltoolong",
+    906 => "err_saslaborted",
+    907 => "err_saslalready",
+    908 => "rpl_saslmechs",
+
     999 => "numericerror",         # Bahamut IRCD
 
     # add these events so that default handlers will kick in and handle them
@@ -471,8 +482,11 @@ sub trans {
     'nick'       => 'nick',
     'pong'       => 'pong',
     'invite'     => 'invite',
-    'cap'        => 'cap',
-    'account'    => 'account',
+
+    # IRCv3
+    'cap'          => 'cap',
+    'account'      => 'account',
+    'authenticate' => 'authenticate',
 );
 
 1;

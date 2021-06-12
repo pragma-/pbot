@@ -59,9 +59,10 @@ sub initialize {
     $self->add_default('text', 'irc', 'max_msg_len',       $conf{max_msg_len}       // 425);
     $self->add_default('text', 'irc', 'server',            $conf{server}            // "irc.libera.chat");
     $self->add_default('text', 'irc', 'port',              $conf{port}              // 6667);
-    $self->add_default('text', 'irc', 'SSL',               $conf{SSL}               // 0);
-    $self->add_default('text', 'irc', 'SSL_ca_file',       $conf{SSL_ca_file}       // 'none');
-    $self->add_default('text', 'irc', 'SSL_ca_path',       $conf{SSL_ca_path}       // 'none');
+    $self->add_default('text', 'irc', 'sasl',              $conf{SASL}              // 0);
+    $self->add_default('text', 'irc', 'ssl',               $conf{SSL}               // 0);
+    $self->add_default('text', 'irc', 'ssl_ca_file',       $conf{SSL_ca_file}       // 'none');
+    $self->add_default('text', 'irc', 'ssl_ca_path',       $conf{SSL_ca_path}       // 'none');
     $self->add_default('text', 'irc', 'botnick',           $conf{botnick}           // "");
     $self->add_default('text', 'irc', 'username',          $conf{username}          // "pbot3");
     $self->add_default('text', 'irc', 'realname',          $conf{realname}          // "https://github.com/pragma-/pbot");

@@ -246,6 +246,7 @@ sub connect {
             SSL         => $self->{registry}->get_value('irc', 'SSL'),
             SSL_ca_file => $self->{registry}->get_value('irc', 'SSL_ca_file'),
             SSL_ca_path => $self->{registry}->get_value('irc', 'SSL_ca_path'),
+            Debug       => $self->{registry}->get_value('irc', 'debug'),
         )
       )
     {
@@ -281,7 +282,12 @@ sub register_signal_handlers {
     my $self = shift;
 
     $SIG{INT} = sub {
-        $self->{logger}->log("SIGINT received, exiting immediately.\n");
+        my $msg = "SIGINT received, exiting immediately.\n";
+        if (exists $self->{pbot}->{logger}) {
+            $self->{logger}->log($msg);
+        } else {
+            print $msg;
+        }
         $self->atexit;
         exit 0;
     };
@@ -292,7 +298,27 @@ sub atexit {
     my $self = shift;
     $self->{atexit}->execute_all;
     alarm 0;
-    $self->{logger}->log("Good-bye.\n");
+    if (exists $self->{logger}) {
+        $self->{logger}->log("Good-bye.\n");
+    } else {
+        print "Good-bye.\n";
+    }
+}
+
+# convenient function to exit PBot
+sub exit {
+    my ($self, $exitval) = @_;
+    $exitval //= 0;
+
+    my $msg = "Exiting immediately.\n";
+
+    if (exists $self->{logger}) {
+        $self->{logger}->log($msg);
+    } else {
+        print $msg;
+    }
+    $self->atexit;
+    exit $exitval;
 }
 
 # main loop

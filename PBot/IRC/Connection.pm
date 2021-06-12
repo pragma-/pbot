@@ -230,6 +230,7 @@ sub connect {
         $self->ircname($arg{'Ircname'})         if exists $arg{'Ircname'};
         $self->username($arg{'Username'})       if exists $arg{'Username'};
         $self->pacing($arg{'Pacing'})           if exists $arg{'Pacing'};
+        $self->debug($arg{'Debug'})             if exists $arg{'Debug'};
         $self->utf8($arg{'UTF8'})               if exists $arg{'UTF8'};
         $self->ssl($arg{'SSL'})                 if exists $arg{'SSL'};
         $self->ssl_ca_path($arg{'SSL_ca_path'}) if exists $arg{'SSL_ca_path'};
@@ -311,6 +312,9 @@ sub connect {
         $self->error(1);
         return;
     }
+
+    # send CAP LS first
+    $self->sl("CAP LS 302");
 
     # Send a PASS command if they specified a password. According to
     # the RFC, we should do this as soon as we connect.
@@ -872,6 +876,16 @@ sub parse {
                 (split /:/, $line, 2)[1]
             );
 
+        } elsif ($line =~ /^AUTHENTICATE \+$/) { # IRCv3 SASL pragma- June 11, 2021
+            $ev = PBot::IRC::Event->new(
+                'authenticate',
+                $self->server,
+                $self->nick,
+                'server',
+                '+'
+            );
+
+
             # Spurious backslashes are for the benefit of cperl-mode.
             # Assumption:  all non-numeric message types begin with a letter
         } elsif (
@@ -958,7 +972,7 @@ sub parse {
                 or $type eq "topic"
                 or $type eq "invite"
                 or $type eq "whoisaccount"
-                or $type eq "cap")
+                or $type eq "cap")  # IRCv3 client capabilities  pragma-
             {
 
                 $ev = PBot::IRC::Event->new(
@@ -1015,11 +1029,11 @@ sub parse {
                 carp "Unknown event type: $type";
             }
         } elsif (
-            $line =~ /^:?       # Here's Ye Olde Numeric Handler!
-          \S+?                 # the servername (can't assume RFC hostname)
-          \s+?                # Some spaces here...
-          \d+?                # The actual number
-          \b/x    # Some other crap, whatever...
+            $line =~ /^:?        # Here's Ye Olde Numeric Handler!
+             \S+?                # the servername (can't assume RFC hostname)
+             \s+?                # Some spaces here...
+             \d+?                # The actual number
+             \b/x                # Some other crap, whatever...
           )
         {
             $ev = $self->parse_num($line);
@@ -1038,7 +1052,7 @@ sub parse {
             .+?                 # the servername (can't assume RFC hostname)
             \s+?                # Some spaces here...
             NOTICE              # The server notice
-            \b/x            # Some other crap, whatever...
+            \b/x                # Some other crap, whatever...
           )
         {
             $ev = PBot::IRC::Event->new(

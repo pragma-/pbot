@@ -18,6 +18,9 @@ use utf8;
 use Time::HiRes qw(gettimeofday);
 use Data::Dumper;
 
+use MIME::Base64;
+use Encode;
+
 $Data::Dumper::Sortkeys = 1;
 
 sub initialize {
@@ -37,7 +40,6 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',          sub { $self->on_nickchange(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.nicknameinuse', sub { $self->on_nicknameinuse(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.invite',        sub { $self->on_invite(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.cap',           sub { $self->on_cap(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.map',           sub { $self->on_map(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.whoreply',      sub { $self->on_whoreply(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.whospcrpl',     sub { $self->on_whospcrpl(@_) });
@@ -47,6 +49,22 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.topicinfo',     sub { $self->on_topicinfo(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.channelcreate', sub { $self->on_channelcreate(@_) });
 
+    # IRCv3 client capabilities
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.cap', sub { $self->on_cap(@_) });
+
+    # IRCv3 SASL
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.authenticate',    sub { $self->on_sasl_authenticate(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.rpl_loggedin',    sub { $self->on_rpl_loggedin(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.rpl_loggedout',   sub { $self->on_rpl_loggedout(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.err_nicklocked',  sub { $self->on_err_nicklocked(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.rpl_saslsuccess', sub { $self->on_rpl_saslsuccess(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.err_saslfail',    sub { $self->on_err_saslfail(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.err_sasltoolong', sub { $self->on_err_sasltoolong(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.err_saslaborted', sub { $self->on_err_saslaborted(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.err_saslalready', sub { $self->on_err_saslalready(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.rpl_saslmechs',   sub { $self->on_rpl_saslmechs(@_) });
+
+    # bot itself joining and parting channels
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.join', sub { $self->on_self_join(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.part', sub { $self->on_self_part(@_) });
 
@@ -73,31 +91,35 @@ sub on_connect {
     $self->{pbot}->{logger}->log("Connected!\n");
     $event->{conn}->{connected} = 1;
 
-    $self->{pbot}->{logger}->log("Requesting account-notify and extended-join . . .\n");
-    $event->{conn}->sl("CAP REQ :account-notify extended-join");
+    if (not $self->{pbot}->{irc_capabilities}->{sasl}) {
+        # not using SASL, so identify the old way by /msg NickServ or some bot
+        if (length $self->{pbot}->{registry}->get_value('irc', 'identify_password')) {
+            $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
 
-    if (length $self->{pbot}->{registry}->get_value('irc', 'identify_password')) {
-        $self->{pbot}->{logger}->log("Identifying with NickServ . . .\n");
+            my $nickserv = $self->{pbot}->{registry}->get_value('general', 'identify_nick')    // 'nickserv';
+            my $command  = $self->{pbot}->{registry}->get_value('general', 'identify_command') // 'identify $nick $password';
 
-        my $nickserv = $self->{pbot}->{registry}->get_value('general', 'identify_nick')    // 'nickserv';
-        my $command  = $self->{pbot}->{registry}->get_value('general', 'identify_command') // 'identify $nick $password';
+            my $botnick  = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+            my $password = $self->{pbot}->{registry}->get_value('irc', 'identify_password');
 
-        my $botnick  = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-        my $password = $self->{pbot}->{registry}->get_value('irc', 'identify_password');
+            $command =~ s/\$nick\b/$botnick/g;
+            $command =~ s/\$password\b/$password/g;
 
-        $command =~ s/\$nick\b/$botnick/g;
-        $command =~ s/\$password\b/$password/g;
+            $event->{conn}->privmsg($nickserv, $command);
+        } else {
+            $self->{pbot}->{logger}->log("No identify password; skipping identification to services.\n");
+        }
 
-        $event->{conn}->privmsg($nickserv, $command);
+        if (not $self->{pbot}->{registry}->get_value('general', 'autojoin_wait_for_nickserv')) {
+            $self->{pbot}->{logger}->log("Autojoining channels immediately; to wait for services set general.autojoin_wait_for_nickserv to 1.\n");
+            $self->{pbot}->{channels}->autojoin;
+        } else {
+            $self->{pbot}->{logger}->log("Waiting for services identify response before autojoining channels.\n");
+        }
     } else {
-        $self->{pbot}->{logger}->log("No identify password; skipping identification to services.\n");
-    }
-
-    if (not $self->{pbot}->{registry}->get_value('general', 'autojoin_wait_for_nickserv')) {
-        $self->{pbot}->{logger}->log("Autojoining channels immediately; to wait for services set general.autojoin_wait_for_nickserv to 1.\n");
+        # using SASL; go ahead and auto-join channels
+        $self->{pbot}->{logger}->log("Autojoining channels.\n");
         $self->{pbot}->{channels}->autojoin;
-    } else {
-        $self->{pbot}->{logger}->log("Waiting for services identify response before autojoining channels.\n");
     }
 
     return 0;
@@ -409,24 +431,203 @@ sub on_map {
 
     foreach my $arg (@{$event->{event}->{args}}) {
         my ($key, $value) = split /=/, $arg;
+
         $self->{pbot}->{ircd}->{$key} = $value;
-        $self->{pbot}->{logger}->log("  $key\n")        if not defined $value;
-        $self->{pbot}->{logger}->log("  $key=$value\n") if defined $value;
+
+        if (not defined $value) {
+            $self->{pbot}->{logger}->log("  $key\n");
+        } else {
+            $self->{pbot}->{logger}->log("  $key=$value\n");
+        }
     }
 }
+
+# IRCv3 client capability negotiation
+# TODO: most, if not all, of this should probably be in PBot::IRC::Connection
+# but at the moment I don't want to change Net::IRC more then the absolute
+# minimum necessary.
+#
+# TODO: CAP NEW and CAP DEL
 
 sub on_cap {
     my ($self, $event_type, $event) = @_;
 
-    if ($event->{event}->{args}->[0] eq 'ACK') {
-        $self->{pbot}->{logger}->log("Client capabilities granted: " . $event->{event}->{args}->[1] . "\n");
+    # configure client capabilities that PBot currently supports
+    my %desired_caps = (
+        'account-notify' => 1,
+        'extended-join'  => 1,
+
+        # TODO: unsupported capabilities worth looking into
+        'away-notify'    => 0,
+        'chghost'        => 0,
+        'identify-msg'   => 0,
+        'multi-prefix'   => 0,
+    );
+
+    if ($event->{event}->{args}->[0] eq 'LS') {
+        my $capabilities;
+        my $caps_done = 0;
+
+        if ($event->{event}->{args}->[1] eq '*') {
+            # more CAP LS messages coming
+            $capabilities = $event->{event}->{args}->[2];
+        } else {
+            # final CAP LS message
+            $caps_done    = 1;
+            $capabilities = $event->{event}->{args}->[1];
+        }
+
+        $self->{pbot}->{logger}->log("Client capabilities available: $capabilities\n");
+
+        my @caps = split /\s+/, $capabilities;
+
+        foreach my $cap (@caps) {
+            my $value;
+
+            if ($cap =~ /=/) {
+                ($cap, $value) = split /=/, $cap;
+            } else {
+                $value = 1;
+            }
+
+            # store available capability
+            $self->{pbot}->{irc_capabilities_available}->{$cap} = $value;
+
+            # request desired capabilities
+            if ($desired_caps{$cap}) {
+                $self->{pbot}->{logger}->log("Requesting client capability $cap\n");
+                $event->{conn}->sl("CAP REQ :$cap");
+            }
+        }
+
+        # capability negotiation done
+        # now we either start SASL authentication or we send CAP END
+        if ($caps_done) {
+            # start SASL authentication if enabled
+            if ($self->{pbot}->{registry}->get_value('irc', 'sasl')) {
+                $self->{pbot}->{logger}->log("Requesting client capability sasl\n");
+                $event->{conn}->sl("CAP REQ :sasl");
+            } else {
+                $self->{pbot}->{logger}->log("Completed client capability negotiation\n");
+                $event->{conn}->sl("CAP END");
+            }
+        }
+    }
+    elsif ($event->{event}->{args}->[0] eq 'ACK') {
+        $self->{pbot}->{logger}->log("Client capabilities granted: $event->{event}->{args}->[1]\n");
 
         my @caps = split /\s+/, $event->{event}->{args}->[1];
-        foreach my $cap (@caps) { $self->{pbot}->{irc_capabilities}->{$cap} = 1; }
-    } else {
+
+        foreach my $cap (@caps) {
+            $self->{pbot}->{irc_capabilities}->{$cap} = 1;
+
+            if ($cap eq 'sasl') {
+                # begin SASL authentication
+                # TODO: for now we support only PLAIN
+                $self->{pbot}->{logger}->log("Performing SASL authentication [PLAIN]\n");
+                $event->{conn}->sl("AUTHENTICATE PLAIN");
+            }
+        }
+    }
+    elsif ($event->{event}->{args}->[0] eq 'NAK') {
+        $self->{pbot}->{logger}->log("Client capabilities rejected: $event->{event}->{args}->[1]\n");
+    }
+    else {
+        $self->{pbot}->{logger}->log("Unknown CAP event:\n");
         $self->{pbot}->{logger}->log(Dumper $event->{event});
     }
+
     return 0;
+}
+
+# IRCv3 SASL authentication
+# TODO: this should probably be in PBot::IRC::Connection as well...
+# but at the moment I don't want to change Net::IRC more then the absolute
+# minimum necessary.
+
+sub on_sasl_authenticate {
+    my ($self, $event_type, $event) = @_;
+
+    my $nick     = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    my $password = $self->{pbot}->{registry}->get_value('irc', 'identify_password');
+
+    if (not defined $password or not length $password) {
+        $self->{pbot}->{logger}->log("Error: Registry entry irc.password is not set.\n");
+        $self->{pbot}->exit;
+    }
+
+    $password = encode('UTF-8', "$nick\0$nick\0$password");
+
+    $password = encode_base64($password, '');
+
+    my @chunks = unpack('(A400)*', $password);
+
+    foreach my $chunk (@chunks) {
+        $event->{conn}->sl("AUTHENTICATE $chunk");
+    }
+
+    # must send final AUTHENTICATE + if last chunk was exactly 400 bytes
+    if (length $chunks[$#chunks] == 400) {
+        $event->{conn}->sl("AUTHENTICATE +");
+    }
+
+    return 0;
+}
+
+sub on_rpl_loggedin {
+    my ($self, $event_type, $event) = @_;
+    $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
+    return 0;
+}
+
+sub on_rpl_loggedout {
+    my ($self, $event_type, $event) = @_;
+    $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
+    return 0;
+}
+
+sub on_err_nicklocked {
+    my ($self, $event_type, $event) = @_;
+    $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
+    $self->{pbot}->exit;
+}
+
+sub on_rpl_saslsuccess {
+    my ($self, $event_type, $event) = @_;
+    $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
+    $event->{conn}->sl("CAP END");
+    return 0;
+}
+
+sub on_err_saslfail {
+    my ($self, $event_type, $event) = @_;
+    $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
+    $self->{pbot}->exit;
+}
+
+sub on_err_sasltoolong {
+    my ($self, $event_type, $event) = @_;
+    $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
+    $self->{pbot}->exit;
+}
+
+sub on_err_saslaborted {
+    my ($self, $event_type, $event) = @_;
+    $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
+    $self->{pbot}->exit;
+}
+
+sub on_err_saslalready {
+    my ($self, $event_type, $event) = @_;
+    $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
+    return 0;
+}
+
+sub on_rpl_saslmechs {
+    my ($self, $event_type, $event) = @_;
+    $self->{pbot}->{logger}->log("SASL mechanism not available.\n");
+    $self->{pbot}->{logger}->log("Available mechanisms are: $event->{event}->{args}->[1]\n");
+    $self->{pbot}->exit;
 }
 
 sub on_nickchange {
