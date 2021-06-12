@@ -2,6 +2,19 @@
 # Author: pragma_
 #
 # Purpose: IRC Bot
+#
+# PBot was started around 2001, 2002. It has been lovingly maintained;
+# however, it does use the ancient Net::IRC package and some outdated
+# Perl5 practices.
+#
+# It would be nice to use modern packages like Moo
+# and Mojo::IRC, but PBot is a labor of 20+ years of love and contains
+# many significant features that depend on how Net::IRC and Perl5 behaves.
+#
+# But don't fear. PBot's forked Net::IRC package has also been maintained
+# and updated along with PBot. It contains numerous bugfixes and supports
+# various new features such as IRCv3 user capability negotiation and SASL
+# authentication.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
