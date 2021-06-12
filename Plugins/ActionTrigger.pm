@@ -16,7 +16,7 @@ use parent 'Plugins::Plugin';
 # actiontrigger add #channel none 0 ^(?i)([^!]+)![^\s]+.JOIN echo Hi $1, welcome to $channel!
 #
 # Same, but via private message (set capability to "admin" to use `msg` admin command):
-# actiontrigger add #channel admin 0 ^(?i)([^!]+)![^\s]+.JOIN msg Hi $1, welcome to $channel!
+# actiontrigger add #channel admin 0 ^(?i)([^!]+)![^\s]+.JOIN msg $1 Hi $1, welcome to $channel!
 #
 # Kick a nick if they say a naughty thing. Set capability to "can-kick" to use `kick` admin command.
 # actiontrigger add global can-kick 0 "^(?i)([^!]+)![^\s]+.PRIVMSG.*bad phrase" kick $1 Do you talk to your mother with that mouth?
@@ -28,6 +28,8 @@ use parent 'Plugins::Plugin';
 # actiontrigger add #channel none 0 "(?i)how is the weather (?:in|for) (.*) today" weather $1
 #
 # These are basic examples; more complex examples can be crafted.
+#
+# TODO: share actually useful examples from personal bot
 
 use warnings; use strict;
 use feature 'unicode_strings';
