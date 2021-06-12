@@ -552,7 +552,7 @@ sub on_sasl_authenticate {
     my $password = $self->{pbot}->{registry}->get_value('irc', 'identify_password');
 
     if (not defined $password or not length $password) {
-        $self->{pbot}->{logger}->log("Error: Registry entry irc.password is not set.\n");
+        $self->{pbot}->{logger}->log("Error: Registry entry irc.identify_password is not set.\n");
         $self->{pbot}->exit;
     }
 
