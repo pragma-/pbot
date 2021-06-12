@@ -455,8 +455,8 @@ sub trans {
     729 => "endofquietlist",       # freenode +q, pragma_ 27/4/2020
 
     # IRCv3 SASL   pragma- June 11, 2021
-    900 => "repl_loggedin",
-    901 => "repl_loggedout",
+    900 => "rpl_loggedin",
+    901 => "rpl_loggedout",
     902 => "err_nicklocked",
     903 => "rpl_saslsuccess",
     904 => "err_saslfail",
