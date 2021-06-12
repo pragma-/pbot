@@ -283,7 +283,7 @@ sub register_signal_handlers {
 
     $SIG{INT} = sub {
         my $msg = "SIGINT received, exiting immediately.\n";
-        if (exists $self->{pbot}->{logger}) {
+        if (exists $self->{logger}) {
             $self->{logger}->log($msg);
         } else {
             print $msg;
