@@ -21,9 +21,9 @@
     * [Overriding directories](#overriding-directories)
     * [Overriding registry](#overriding-registry)
   * [First-time start-up](#first-time-start-up)
-    * [Using default Freenode settings](#using-default-freenode-settings)
+    * [Using default settings](#using-default-settings)
     * [Using custom settings](#using-custom-settings)
-      * [Custom recommended Freenode settings](#custom-recommended-freenode-settings)
+      * [Custom recommended settings](#custom-recommended-settings)
       * [Custom recommended IRCnet/other network settings](#custom-recommended-ircnetother-network-settings)
   * [Regular start-up](#regular-start-up)
 * [Additional configuration](#additional-configuration)
@@ -147,20 +147,22 @@ For a list of other available settings see [this table](Registry.md#list-of-know
 
 ##### Libera.Chat
 The default settings are tailored for the Libera.Chat IRC network. It is strongly recommended that
-you register an account with NickServ and to request a hostmask cloak. Register your channels with
-ChanServ. These services will protect your nickname, IP address and channels. You may enable SASL
-authentication.
+you register an account with NickServ and to enable SASL authentication. Register your channels with
+ChanServ. These services will protect your nickname, IP address and channels. You may request a host
+cloak from Libera staff.
 
 Once you register your botnick with NickServ, it is recommended to enable `irc.sasl`. If you
 choose not to use IRCv3 SASL authentication, then it is recommended to set the following:
 
 <details><summary>Click to show recommended Libera.Chat settings with SASL disabled</summary>
+
 Registry key | Description | Recommended value
 --- | --- | ---:
 irc.identify_password | Password to use to identify to NickServ | `<password>`
 irc.randomize_nick | Randomize IRC nickname when connecting to server. PBot will change to `irc.botnick` when logged-in. This prevents users from monitoring the botnick to catch its IP address before it is identified. | 1
 general.autojoin_wait_for_nickserv | Wait for NickServ login before auto-joining channels. This prevents PBot from joining channels before it is identified and cloaked. | 1
 general.identify_command | Command to send to NickServ to identify. `$nick` will be replaced with `irc.botnick`; `$password` will be replaced with `irc.identify_password`. If you wish to login to a NickServ account different than the `irc.botnick` you may replace the `$nick` text with a literal value. | `identify $nick $password`
+
 </details>
 
 ##### IRCnet
@@ -170,18 +172,20 @@ Instead, its nicknames and channels are protected by custom bots.
 These settings may be useful:
 
 <details><summary>Click to show recommended IRCnet settings</summary>
+
 Registry key | Description | Default value| Recommended value
 --- | --- | ---: | ---:
 general.identify_nick | Who to /msg for login/identify/authentication. Defaults to NickServ, can be overridden to a custom bot. | NickServ | `<service botnick>`
 general.identify_command | Command to send to `general.identify_nick` to login. | `identify $nick $password` | `<service bot command>`
 general.op_nick | Who to /msg to request channel OP status. Defaults to ChanServ, can be overridden to a custom bot. | ChanServ | `<service botnick>`
 general.op_command | Command to send to `general.op_nick` to request channel OP status. | `op $channel` | `<service bot command>`
+
 </details>
 
 ##### Other networks
-Other networks are untested. They should be very similiar to either Freenode or IRCnet, and so one or both of those
+Other networks are untested. They should be very similiar to either Libera.Chat or IRCnet, and so one or both of the
 recommended settings should suffice. If you have any issues, please [report them here](https://github.com/pragma-/pbot/issues)
-or in the `#pbot2` channel on the Freenode network.
+or by sending `pragma-` a message on the Libera.Chat network.
 
 ## Starting PBot
 
@@ -207,13 +211,13 @@ saved to the `registry` file. You do not need to use the override every time you
 
 ### First-time start-up
 
-#### Using default Freenode settings
-The default settings will connect to the Freenode IRC network.
+#### Using default settings
+The default settings will connect to the Libera.Chat IRC network.
 
 At minimum, the registry key `irc.botnick` must be set before PBot will connect to any IRC servers.
 
 The following command will use the `coolbot` data-directory that we cloned in the [initial setup](#initial-setup),
-and set the `irc.botnick` registry key to the same name. It will automatically connect to the Freenode IRC network.
+and set the `irc.botnick` registry key to the same name. It will automatically connect to the Libera.Chat IRC network.
 
     $ pbot data_dir=coolbot irc.botnick=coolbot
 
@@ -221,15 +225,15 @@ and set the `irc.botnick` registry key to the same name. It will automatically c
 To connect to a specific IRC server or to configure additional settings, you may
 [override the directory paths](#overriding-directories) and [override the registry values](#overriding-registry). Read on to the next section for examples.
 
-##### Custom recommended Freenode settings
+##### Custom recommended settings
 The following command is based on the [Recommended settings for IRC Networks](#recommended-settings-for-irc-networks) section earlier in this document.
-The `irc.server` and `irc.port` settings are omitted because the default values will connect to the Freenode IRC network.
+The `irc.server` and `irc.port` settings are omitted because the default values will connect to the Libera.Chat IRC network.
 
 Replace the placeholders, marked `X`, with values you want to use. Note that this is just for the first-time start-up. Regular subsequent start-up needs only `data_dir` to be overridden.
 
-* If you have registered your botnick with Freenode's NickServ service, use this command:
+* If you have registered your botnick with the NickServ service, use this command:
 
-    `pbot data_dir=X irc.botnick=X irc.identify_password=X irc.randomize_nick=1 general.autojoin_wait_for_nickserv=1`
+    `pbot data_dir=X irc.botnick=X irc.identify_password=X irc.sasl=1`
 
 * Otherwise, use this one:
 
