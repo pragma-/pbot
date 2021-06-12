@@ -231,7 +231,7 @@ The `irc.server` and `irc.port` settings are omitted because the default values 
 
 Replace the placeholders, marked `X`, with values you want to use. Note that this is just for the first-time start-up. Regular subsequent start-up needs only `data_dir` to be overridden.
 
-* If you have registered your botnick with the NickServ service, update the `irc.password` entry in the `data/registry` file and then use this command:
+* If you have registered your botnick with the NickServ service, update the `irc.identify_password` entry in the `registry` file in your bot's data directory and then use this command:
 
     `pbot data_dir=X irc.botnick=X irc.sasl=1`
 
