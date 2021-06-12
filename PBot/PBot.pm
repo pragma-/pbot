@@ -7,7 +7,7 @@
 # however, it does use the ancient Net::IRC package and some outdated
 # Perl5 practices.
 #
-# It would be nice to use modern packages like Moo
+# It would be nice to use modern packages like Moo (or even Dios!)
 # and Mojo::IRC, but PBot is a labor of 20+ years of love and contains
 # many significant features that depend on how Net::IRC and Perl5 behaves.
 #
