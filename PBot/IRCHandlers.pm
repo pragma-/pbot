@@ -444,7 +444,7 @@ sub on_map {
 
 # IRCv3 client capability negotiation
 # TODO: most, if not all, of this should probably be in PBot::IRC::Connection
-# but at the moment I don't want to change Net::IRC more then the absolute
+# but at the moment I don't want to change Net::IRC more than the absolute
 # minimum necessary.
 #
 # TODO: CAP NEW and CAP DEL
@@ -542,7 +542,7 @@ sub on_cap {
 
 # IRCv3 SASL authentication
 # TODO: this should probably be in PBot::IRC::Connection as well...
-# but at the moment I don't want to change Net::IRC more then the absolute
+# but at the moment I don't want to change Net::IRC more than the absolute
 # minimum necessary.
 
 sub on_sasl_authenticate {
