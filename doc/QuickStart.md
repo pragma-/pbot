@@ -233,11 +233,11 @@ Replace the placeholders, marked `X`, with values you want to use. Note that thi
 
 * If you have registered your botnick with the NickServ service, use this command:
 
-    `pbot data_dir=X irc.botnick=X irc.identify_password=X irc.sasl=1`
+    $ pbot data_dir=X irc.botnick=X irc.identify_password=X irc.sasl=1
 
 * Otherwise, use this one:
 
-    `pbot data_dir=X irc.botnick=X`
+    $ pbot data_dir=X irc.botnick=X
 
 ##### Custom recommended IRCnet/other network settings
 The following command is based on the [Recommended settings for IRC Networks](#recommended-settings-for-irc-networks) section earlier in this document.
@@ -246,11 +246,11 @@ Replace the placeholders, marked `X`, with values you want to use. Note that thi
 
 * If you want PBot to identify with a custom bot or service on IRCnet/other networks, use this command:
 
-    `pbot data_dir=X irc.botnick=X irc.server=X irc.port=X general.identify_nick=X general.op_nick=X`
+    $ pbot data_dir=X irc.botnick=X irc.server=X irc.port=X general.identify_nick=X general.op_nick=X
 
 * Otherwise, use this one:
 
-    `pbot data_dir=X irc.botnick=X irc.server=X irc.port=X`
+    $ pbot data_dir=X irc.botnick=X irc.server=X irc.port=X
 
 ### Regular start-up
 After your initial start-up  command, you only need to use the `data_dir`
