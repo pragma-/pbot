@@ -21,7 +21,7 @@
       * [Overriding directories](QuickStart.md#overriding-directories)
       * [Overriding registry](QuickStart.md#overriding-registry)
     * [First-time start-up](QuickStart.md#first-time-start-up)
-      * [Using default Freenode settings](QuickStart.md#using-default-freenode-settings)
+      * [Using default settings](QuickStart.md#using-default-settings)
       * [Using custom settings](QuickStart.md#using-custom-settings)
     * [Regular start-up](QuickStart.md#regular-start-up)
   * [Additional configuration](QuickStart.md#additional-configuration)
