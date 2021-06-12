@@ -148,11 +148,11 @@ For a list of other available settings see [this table](Registry.md#list-of-know
 ##### Libera.Chat
 The default settings are tailored for the Libera.Chat IRC network. It is strongly recommended that
 you register an account with NickServ and to enable SASL authentication. Register your channels with
-ChanServ. These services will protect your nickname, IP address and channels. You may request a host
-cloak from Libera staff.
+ChanServ. You may request a host cloak from Libera staff. This  will protect your nickname, IP address
+and channels.
 
-Once you register your botnick with NickServ, it is recommended to enable `irc.sasl`. If you
-choose not to use IRCv3 SASL authentication, then it is recommended to set the following:
+Once you register with NickServ, it is strongly recommended to enable `irc.sasl`. If you
+choose not to use IRCv3 SASL authentication, then it is recommended to set these options:
 
 <details><summary>Click to show recommended Libera.Chat settings with SASL disabled</summary>
 
