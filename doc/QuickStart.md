@@ -12,7 +12,7 @@
   * [Clone data-directory](#clone-data-directory)
   * [Configuration](#configuration)
     * [Recommended settings for IRC Networks](#recommended-settings-for-irc-networks)
-      * [Freenode](#freenode)
+      * [Libera.Chat](#liberachat)
       * [IRCnet](#ircnet)
       * [Other networks](#other-networks)
 * [Starting PBot](#starting-pbot)
@@ -109,7 +109,7 @@ Here we clone the data-directory for two PBot instances, naming them after the
 IRC network they will connect to:
 
     $ cd pbot (or pbot-master)
-    $ cp -r data freenode
+    $ cp -r data libera
     $ cp -r data ircnet
 
 Alternatively, you could name your new data directory after your bot's nickname:
@@ -135,27 +135,33 @@ Registry key | Description | Default value
 irc.botnick | IRC nickname. This is the name people see when you talk. _Required._ | _undefined_
 irc.username | IRC username. This is the `USER` field of your hostmask. | pbot3
 irc.realname | IRC gecos/realname. This is the `general information` or `real-name` field, as seen in `WHOIS`. | https://github.com/pragma-/pbot
-irc.server | IRC server address to connect. | irc.freenode.net
+irc.server | IRC server address to connect. | irc.libera.chat
 irc.port | IRC server port. | 6667
+irc.identify_password | Password to authenticate with services or bots. | _undefined_
+irc.sasl | Whether to use the IRCv3 SASL authentication mechanism. | 0
 general.trigger | Bot trigger. Can be a character class containing multiple trigger characters. Can be overridden per-channel. | [!]
 
 For a list of other available settings see [this table](Registry.md#list-of-known-registry-items) in the [Registry documentation](Registry.md).
 
 #### Recommended settings for IRC Networks
 
-##### Freenode
-The default settings are tailored for the Freenode IRC network. It is strongly recommended that
+##### Libera.Chat
+The default settings are tailored for the Libera.Chat IRC network. It is strongly recommended that
 you register an account with NickServ and to request a hostmask cloak. Register your channels with
-ChanServ. These services will protect your nickname, IP address and channels.
+ChanServ. These services will protect your nickname, IP address and channels. You may enable SASL
+authentication.
 
-Once you register your botnick with NickServ, it is recommended to set these additional settings:
+Once you register your botnick with NickServ, it is recommended to enable `irc.sasl`. If you
+choose not to use IRCv3 SASL authentication, then it is recommended to set the following:
 
+<details><summary>Click to show recommended Libera.Chat settings with SASL disabled</summary>
 Registry key | Description | Recommended value
 --- | --- | ---:
 irc.identify_password | Password to use to identify to NickServ | `<password>`
 irc.randomize_nick | Randomize IRC nickname when connecting to server. PBot will change to `irc.botnick` when logged-in. This prevents users from monitoring the botnick to catch its IP address before it is identified. | 1
 general.autojoin_wait_for_nickserv | Wait for NickServ login before auto-joining channels. This prevents PBot from joining channels before it is identified and cloaked. | 1
 general.identify_command | Command to send to NickServ to identify. `$nick` will be replaced with `irc.botnick`; `$password` will be replaced with `irc.identify_password`. If you wish to login to a NickServ account different than the `irc.botnick` you may replace the `$nick` text with a literal value. | `identify $nick $password`
+</details>
 
 ##### IRCnet
 IRCnet is one of the oldest IRC networks still running. It has no Services like NickServ and ChanServ.
@@ -163,12 +169,14 @@ Instead, its nicknames and channels are protected by custom bots.
 
 These settings may be useful:
 
+<details><summary>Click to show recommended IRCnet settings</summary>
 Registry key | Description | Default value| Recommended value
 --- | --- | ---: | ---:
 general.identify_nick | Who to /msg for login/identify/authentication. Defaults to NickServ, can be overridden to a custom bot. | NickServ | `<service botnick>`
 general.identify_command | Command to send to `general.identify_nick` to login. | `identify $nick $password` | `<service bot command>`
 general.op_nick | Who to /msg to request channel OP status. Defaults to ChanServ, can be overridden to a custom bot. | ChanServ | `<service botnick>`
 general.op_command | Command to send to `general.op_nick` to request channel OP status. | `op $channel` | `<service bot command>`
+</details>
 
 ##### Other networks
 Other networks are untested. They should be very similiar to either Freenode or IRCnet, and so one or both of those
