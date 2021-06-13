@@ -1,3 +1,4 @@
+AppConfig::Std
 CGI
 DateTime::Format::Flexible
 DateTime::Format::Duration
