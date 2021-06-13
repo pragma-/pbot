@@ -73,8 +73,8 @@ sub initialize {
     $self->add_default('text', 'interpreter', 'max_embed', 3);
 
     # make sensitive entries private
-    $self->set_default('irc', 'SSL_ca_file',       'private', 1);
-    $self->set_default('irc', 'SSL_ca_path',       'private', 1);
+    $self->set_default('irc', 'ssl_ca_file',       'private', 1);
+    $self->set_default('irc', 'ssl_ca_path',       'private', 1);
     $self->set_default('irc', 'identify_password', 'private', 1);
 
     # customizable regular expressions

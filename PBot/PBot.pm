@@ -256,9 +256,9 @@ sub connect {
             Port        => $port,
             Pacing      => 1,
             UTF8        => 1,
-            SSL         => $self->{registry}->get_value('irc', 'SSL'),
-            SSL_ca_file => $self->{registry}->get_value('irc', 'SSL_ca_file'),
-            SSL_ca_path => $self->{registry}->get_value('irc', 'SSL_ca_path'),
+            SSL         => $self->{registry}->get_value('irc', 'ssl'),
+            SSL_ca_file => $self->{registry}->get_value('irc', 'ssl_ca_file'),
+            SSL_ca_path => $self->{registry}->get_value('irc', 'ssl_ca_path'),
             Debug       => $self->{registry}->get_value('irc', 'debug'),
         )
       )
