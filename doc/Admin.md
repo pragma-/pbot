@@ -152,7 +152,8 @@ When `[channel]` is omitted and the command is used from private message, it wil
 list all users from all channels, including global users.
 
 ## User capabilities
-PBot uses a user-capability system to control what users can and cannot do.
+PBot uses a user-capability system to control what users can and cannot do. User-capabilities
+provides fine-grained permissions over various PBot functionality.
 
 ### Introduction
 For example, imagine a user named alice. alice has no capabilities granted yet.
@@ -173,8 +174,7 @@ can use the [`userset`](#userset) command:
 
 Now alice can use the `ban` command.
 
-User-capabilities provides fine-grained permissions over various PBot functionality. For example,
-consider the [`mode`](#mode) command. Channel operators can use their IRC client's `/mode` command to
+Let's consider the [`mode`](#mode) command. Channel operators can use their IRC client's `/mode` command to
 set any channel modes, including any undesirable modes (such as +k). Suppose you'd prefer to limit
 their modes to just a specific subset of all modes. You can do this with user-cabilities. To do so,
 instead of making them channel operators you can make them PBot users and grant them specific PBot
@@ -320,7 +320,8 @@ This is a list of built-in capability groups and capabilities. You can create
 new custom capability groups with the [`cap group`](#creating-a-new-group-or-adding-to-an-existing-group) command.
 
 Please note that PBot is sometimes updated more frequently than this list is updated. To see the most
-current list of capabilities, use the [`cap list`](#listing-capabilities) command.
+current list of capabilities, use the [`cap list`](#listing-capabilities) command or see the
+[`data/capabilities`](../data/capabilities) file.
 
 Name | Description | Belongs to group
 --- | --- | ---
