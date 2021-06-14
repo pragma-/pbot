@@ -5,6 +5,7 @@ Table of Contents
 ------------------------
 
 0.  Deprecation notice
+0.1. Forked by pragma- for PBot
 1.  Introduction
 2.  Availability
 3.  Prerequisites
@@ -18,13 +19,20 @@ Table of Contents
 
 
 
-0. Deprecation notic
+0. Deprecation notice
 ------------------------
 
     This module is officially DEPRECATED. It has been abandoned in favor of more
 modern approaches, including Bot::BasicBot and POE::Component::IRC. This release
 only serves to warn current and new users about the status of this distribution.
 
+0.1. Forked by pragma- for PBot
+------------------------
+    This module has been forked as part of PBot. It has been added privately to
+PBot's repository because I do not have CPAN access, nor am I sure if CPAN would
+appreciate my contributions. As such, this version of Net::IRC is now PBot::IRC
+and it has been continually updated and improved with bugfixes and improvements,
+including support for the IRCv3 specification.
 
 1. Introduction
 ------------------------
