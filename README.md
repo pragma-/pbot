@@ -165,7 +165,7 @@ PBot factoids include these advanced features:
 * [undo/redo history](doc/Factoids.md#factundo)
 * [changelog history](doc/Factoids.md#factlog)
 * [channel namespaces](doc/Factoids.md#channel-namespaces)
-* You can use the [`factadd`](doc/Factoids.md#factadd) and [`factchange``](doc/Factoids.md#factchange) commands accept a `-url` option that sets the factoid contents from a paste website. In other words, you can edit a factoid's contents using your local editor, optionally including line-breaks and indentation.
+* [`factadd`](doc/Factoids.md#factadd) and [`factchange`](doc/Factoids.md#factchange) commands accept a `-url` option that sets the factoid contents from a paste website. In other words, you can edit a factoid's contents using your local editor, preserving line-breaks and indentation.
 * [advanced `$variable` interpolation](doc/Factoids.md#expansion-modifiers) (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)
 * [factoid-based variable lists](doc/Factoids.md#list-variables) (e.g., add a factoid `colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
 * [advanced argument processing](doc/Factoids.md#special-variables-1) (indexing, splicing, etc)
