@@ -195,7 +195,7 @@ Making a `choose` command:
     <pragma-> !factadd choose /code zsh _arr=($args); print $_arr[$((RANDOM % $#_arr + 1))]
        <PBot> choose added to global channel.
 
-Using the `choose` command via an [embedded command](doc/Commands.md#inline-invocation):
+Using the `choose` command via an [inlined command](doc/Commands.md#inline-invocation):
 
     <pragma-> hmm, what should I have for dinner? !{choose chicken "roast beef" pizza meatloaf}
        <PBot> pizza
