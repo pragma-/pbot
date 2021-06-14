@@ -2,33 +2,35 @@
 PBot is a versatile IRCv3 Bot written in Perl
 
 <!-- md-toc-begin -->
-* [Installation / Quick Start](#installation--quick-start)
-* [Features](#features)
-  * [Useful IRC command improvements](#useful-irc-command-improvements)
-  * [Channel management](#channel-management)
-  * [User management](#user-management)
-  * [Easy configuration](#easy-configuration)
-  * [Reload core modules without disconnecting](#reload-core-modules-without-disconnecting)
-  * [Powerful command interpreter](#powerful-command-interpreter)
-    * [Piping](#piping)
-    * [Substitution](#substitution)
-    * [Chaining](#chaining)
-    * [Variables](#variables)
-    * [Selectors](#selectors)
-    * [Inline invocation](#inline-invocation)
-    * [Background processing](#background-processing)
-  * [Scripting interface](#scripting-interface)
-  * [Extensible](#extensible)
-  * [Factoids](#factoids)
-  * [Code Factoids](#code-factoids)
-  * [Plugins](#plugins)
-  * [Modules](#modules)
-  * [Functions](#functions)
-  * [Virtual machine](#virtual-machine)
-* [Documentation](#documentation)
-* [Frequently Asked Questions](#frequently-asked-questions)
-* [Support](#support)
-* [License](#license)
+* [PBot](#pbot)
+  * [Installation / Quick Start](#installation--quick-start)
+  * [Features](#features)
+    * [IRCv3](#ircv3)
+    * [Powerful command interpreter](#powerful-command-interpreter)
+      * [Piping](#piping)
+      * [Substitution](#substitution)
+      * [Chaining](#chaining)
+      * [Variables](#variables)
+      * [Selectors](#selectors)
+      * [Inline invocation](#inline-invocation)
+      * [Background processing](#background-processing)
+    * [Reload core modules without disconnecting](#reload-core-modules-without-disconnecting)
+    * [Scripting interface](#scripting-interface)
+    * [Extensible](#extensible)
+      * [Factoids](#factoids)
+      * [Code Factoids](#code-factoids)
+      * [Plugins](#plugins)
+      * [Modules](#modules)
+      * [Functions](#functions)
+    * [Virtual machine](#virtual-machine)
+    * [Powerful user management](#powerful-user-management)
+    * [Useful IRC improvements](#useful-irc-improvements)
+    * [Channel management and protection](#channel-management-and-protection)
+    * [Easy configuration](#easy-configuration)
+  * [Documentation](#documentation)
+  * [Frequently Asked Questions](#frequently-asked-questions)
+  * [Support](#support)
+  * [License](#license)
 <!-- md-toc-end -->
 
 ## Installation / Quick Start
@@ -36,62 +38,12 @@ To get up-and-running quickly, check out the [Quick Start guide](doc/QuickStart.
 
 ## Features
 
-### Useful IRC command improvements
-* [`mode`](doc/Admin.md#mode) command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
-* `unban <nick>` and `unmute <nick>` will remove all bans/mutes matching their current or previously seen hostmasks or accounts
-* [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) will intelligently set banmasks; supports timeouts
-* [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
-* [`kick`](doc/Admin.md#kick) can take a comma-separated list of nicks; also accepts wildcards
-* and much, much more!
+### IRCv3
+PBot supports several features of the IRCv3 specification.
 
-For more information, see the [Admin documentation.](doc/Admin.md)
-
-### Channel management
-PBot can perform the typical channel management tasks.
-
-* opping/deopping, etc
-* channel-mode tracking
-* user hostmask/alias tracking
-* ban-evasion detection
-* flood detection
-* whitelisting, blacklisting, etc
-* spam/advertisement detection
-* and much, much more!
-
-For more information, see the [Channels documentation](doc/Admin.md#channel-management-commands) and the [Anti-abuse documentation](doc/AntiAbuse.md)
-
-### User management
-PBot has easy straightforward user management via simple built-in commands.
-
-* [user capabilities](doc/Admin.md#user-capabilities) dictate what users can and cannot do
-* user accounts can be global or channel-specific
-* users can be recognized by hostmask or required to login with password
-* users can adjust their [user-metadata](doc/Admin.md#user-metadata-list) with the [`my`](doc/Commands.md#my) command
-* and much, much more!
-
-For more information, see the [Admin documentation.](doc/Admin.md#user-management-commands)
-
-### Easy configuration
-PBot's settings are contained in a central registry of key/value pairs grouped by sections.
-
-These settings can easily be configured via several methods:
-
-* [PBot's command-line arguments](doc/Registry.md#overriding-registry-values-via-command-line)
-* [simple built-in commands (`regset`, `regunset`, etc)](doc/Registry.md#registry-commands)
-* [editing](doc/Registry.md#editing-registry-file) the [`$data_dir/registry`](data/registry) plain-text JSON file
-
-For more information, see the [Registry documentation.](doc/Registry.md)
-
-### Reload core modules without disconnecting
-Suppose you edit some PBot source file, be it a core file such as PBot/Factoids.pm or
-a Plugin such as Plugins/Wttr.pm. Or suppose there's a PBot update available. Most simple
-bots would require you to shut down the bot and restart it in order to see the modifications.
-
-Not PBot! Rather than shut PBot down and restart it, you can simply use the [`refresh`](doc/Admin.md#refresh)
-command to reload all modified PBot core files and Plugins.
-
-You can also use the [`reload`](doc/Admin.md#reload) command to reload any modified
-configuration or data files.
+* client capability negotiation
+* SASL authentication
+* account-notify, extended-join, and more.
 
 ### Powerful command interpreter
 PBot has a powerful command interpreter with useful functionality, and tons of
@@ -187,6 +139,17 @@ The familiar [`ps`](doc/Admin.md#ps) and [`kill`](doc/Admin.md#kill) commands ca
 
 You can also [`cmdset`](doc/Admin.md#cmdset) the `process-timeout` [command metadata](doc/Admin.md#command-metadata-list) to set the timeout, in seconds, before the command is automatically killed. Otherwise the `processmanager.default_timeout` [registry value](doc/Registry.md) will be used.
 
+### Reload core modules without disconnecting
+Suppose you edit some PBot source file, be it a core file such as [PBot/Interpreter.pm](PBot/Interpreter.pm) or
+a Plugin such as [Plugins/Wttr.pm](Plugins/Wttr.pm). Or suppose there's a PBot update available. Most simple
+bots would require you to shut down the bot and restart it in order to see the modifications.
+
+Not PBot! you can simply use the [`refresh`](doc/Admin.md#refresh) command to reload all modified
+PBot core files and Plugins without bot restart.
+
+You can also use the [`reload`](doc/Admin.md#reload) command to reload any modified
+configuration or data files.
+
 ### Scripting interface
 PBot uses [Plang](https://github.com/pragma-/Plang) as a scripting language. You can use the
 scripting language to construct advanced commands that are capable of interacting with PBot
@@ -195,10 +158,10 @@ internal API functions.
 [Learn more.](doc/Plugins/Plang.md)
 
 ### Extensible
-PBot is extensible in multiple ways. Additional commands and functionality can  be added to PBot through
-[Factoids](#factoids), [Plugins](#plugins), [Modules](#modules) and [Functions](#functions).
+PBot is extensible in multiple ways. Additional commands and functionality can  be added to PBot in
+the following ways.
 
-### Factoids
+#### Factoids
 Factoids are a very special type of command. Anybody interacting with PBot
 can create, edit, delete and invoke factoids. Factoids can be locked by the
 creator of the factoid to prevent them from being edited by others.
@@ -229,7 +192,7 @@ PBot factoids include these advanced features:
 
 For more information, see the [Factoids documentation](doc/Factoids.md).
 
-### Code Factoids
+#### Code Factoids
 Code Factoids are a special type of factoid that begin with the `/code` command.
 
     /code <language> <code>
@@ -237,8 +200,7 @@ Code Factoids are a special type of factoid that begin with the `/code` command.
 That's right! Anybody can create a factoid that can execute arbitrary code in
 [any language](doc/Factoids.md#supported-languages)! This is one of PBot's most powerful features.
 
-How is this safe? Because the code is executed within a virtual machine that
-has been configured to fall-back to a previously saved state whenever it times out.
+How is this safe? Because the code is executed safely within a virtual machine sandbox.
 
 For example, the venerable `rot13` function:
 
@@ -248,14 +210,24 @@ For example, the venerable `rot13` function:
     <pragma-> !rot13 Pretty neat, huh?
        <PBot> Cerggl arng, uhu?
 
-You can pipe output from other commands to Code Factoids.
+Making a `choose` command:
+
+    <pragma-> !factadd choose /code zsh zsh _arr=($args); print $_arr[$((RANDOM % $#_arr + 1))]
+       <PBot> choose added to global channel.
+
+Using the `choose` command via an [embedded command](doc/Commands.md#inline-invocation):
+
+    <pragma-> hmm, what should I have for dinner? !{choose chicken "roast beef" pizza meatloaf}
+       <PBot> pizza
+
+You can even pipe output from other commands to Code Factoids.
 
     <pragma-> !echo test | {rot13}
        <PBot> grfg
 
 For more information, see the [Code Factoid documentation](doc/Factoids.md#code).
 
-### Plugins
+#### Plugins
 PBot can dynamically load and unload Perl modules to alter its behavior.
 
 These are some of the plugins that PBot has; there are many more:
@@ -284,7 +256,7 @@ Plugin | Description
 [Battleship](Plugins/Battleship.pm) | The classic Battleship board game, simplified for IRC
 [Connect4](Plugins/Connect4.pm) | The classic Connect-4 game.
 
-### Modules
+#### Modules
 Modules are external command-line executable programs and scripts that can be
 loaded as PBot commands.
 
@@ -321,7 +293,7 @@ Module | Description
 
 For more information, see the [Modules documentation](doc/Modules.md).
 
-### Functions
+#### Functions
 Functions are commands that accept input, manipulate it and then output the result. They are extremely
 useful with [piping](#piping) or [command substituting](#substitution).
 
@@ -343,6 +315,7 @@ Name | Description
 --- | ---
 `uri_escape` | Percent-encodes unsafe URI characters.
 `sed` | Performs sed-like regex substitution.
+`grep` | Searches a string for a regex and prints the matching whole-word (e.g. `echo pizza hamburger hotdog | {grep burger}` outputs `hamburger`).
 `pluralize` | Intelligently makes a word or phrase plural.
 `unquote` | Removes surrounding quotation marks.
 `title` | Title-cases text. That is, lowercases the text then uppercases the first letter of each word.
@@ -390,6 +363,52 @@ For more information about the C programming language plugin, see [the `cc` comm
 
 For more information about the virtual machine, see the [Virtual Machine documentation.](doc/VirtualMachine.md)
 
+### Powerful user management
+PBot has powerful yet simple user management functionality and commands.
+
+* instead of generic access-levels, [fine-grained user capabilities](doc/Admin.md#user-capabilities) limit what users may do
+* user accounts can be global or channel-specific
+* users can be recognized by hostmask or required to login with password
+* users can adjust their [user-metadata](doc/Admin.md#user-metadata-list) with the [`my`](doc/Commands.md#my) command
+* and much, much more!
+
+For more information, see the [Admin documentation.](doc/Admin.md#user-management-commands)
+
+### Useful IRC improvements
+* [`mode`](doc/Admin.md#mode) command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
+* `unban <nick>` and `unmute <nick>` will remove all bans/mutes matching their current or previously seen hostmasks or accounts
+* [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) will intelligently set banmasks; supports timeouts
+* [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) can take a comma-separate list of nicks. Will intelligently group them into multiple `MODE +bbbb` commands
+* [`kick`](doc/Admin.md#kick) can take a comma-separated list of nicks; also accepts wildcards
+* and much, much more!
+
+For more information, see the [Admin documentation.](doc/Admin.md)
+
+### Channel management and protection
+PBot can perform the typical channel management tasks.
+
+* opping/deopping, etc
+* channel-mode tracking
+* user hostmask/alias tracking
+* ban-evasion detection
+* flood detection
+* whitelisting, blacklisting, etc
+* spam/advertisement detection
+* and much, much more!
+
+For more information, see the [Channels documentation](doc/Admin.md#channel-management-commands) and the [Anti-abuse documentation](doc/AntiAbuse.md)
+
+### Easy configuration
+PBot's settings are contained in a central registry of key/value pairs grouped by sections.
+
+These settings can easily be configured via several methods:
+
+* [PBot's command-line arguments](doc/Registry.md#overriding-registry-values-via-command-line)
+* [simple built-in commands (`regset`, `regunset`, etc)](doc/Registry.md#registry-commands)
+* [editing](doc/Registry.md#editing-registry-file) the [`$data_dir/registry`](data/registry) plain-text JSON file
+
+For more information, see the [Registry documentation.](doc/Registry.md)
+
 ## Documentation
 See the [PBot documentation](doc) for more information.
 
@@ -397,7 +416,7 @@ See the [PBot documentation](doc) for more information.
 If you have a question, try the [PBot FAQ](doc/FAQ.md)!
 
 ## Support
-For additional questions and support, feel free to join the `#pbot2` channel on the [Freenode](https://freenode.net/kb/answer/chat) IRC network ([Web Chat](https://webchat.freenode.net/#pbot2)).
+For additional questions and support, feel free to join the `#pbot` channel on the [Libera.Chat](https://libera.chat/guides) IRC network ([Web Chat](https://web.libera.chat/#pbot)).
 
 ## License
 PBot is licensed under the [Mozilla Public License, version 2](https://www.mozilla.org/en-US/MPL/2.0/).
