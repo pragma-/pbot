@@ -8,15 +8,15 @@ PBot is a versatile IRCv3 Bot written in Perl
     * [Powerful command interpreter](#powerful-command-interpreter)
       * [Piping](#piping)
       * [Substitution](#substitution)
-      * [Chaining](#chaining)
       * [Variables](#variables)
       * [Selectors](#selectors)
       * [Inline invocation](#inline-invocation)
+      * [Chaining](#chaining)
       * [Background processing](#background-processing)
     * [Scripting interface](#scripting-interface)
     * [Extensible](#extensible)
       * [Factoids](#factoids)
-      * [Code Factoids](#code-factoids)
+      * [Code factoids](#code-factoids)
       * [Plugins](#plugins)
       * [Modules](#modules)
       * [Functions](#functions)
@@ -84,14 +84,6 @@ factoid otherwise it will be expanded first.
 
 [Learn more.](doc/Commands.md#substitution)
 
-#### Chaining
-You can execute multiple commands sequentially as one command.
-
-    <pragma-> !echo Test! ;;; me smiles. ;;; version
-       <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
-
-[Learn more.](doc/Commands.md#chaining)
-
 #### Variables
 You can use factoids as variables and interpolate them within commands.
 
@@ -126,11 +118,16 @@ is addressed to a nick, the output will also be addressed to them.
 
 [Learn more.](doc/Commands.md#command-invocation)
 
-#### Background processing
-Any command can be flagged to be executed as a background process. For example, suppose you
-make a Plugin that has a command that may potentially take a long time to complete, which could
-cause PBot to be non-responsive...
+#### Chaining
+You can execute multiple commands sequentially as one command.
 
+    <pragma-> !echo Test! ;;; me smiles. ;;; version
+       <PBot> Test! * PBot smiles. PBot version 2696 2020-01-04
+
+[Learn more.](doc/Commands.md#chaining)
+
+#### Background processing
+All of PBot's internal commands complete instantly, but suppose you make a Plugin that provides a command that may potentially take a long time to complete?
 Not a problem! You can use the [`cmdset`](doc/Admin.md#cmdset) command to set the `background-process` [command metadata](doc/Admin.md#command-metadata-list)
 and the command will now run as a background process, allowing PBot to carry on with its duties.
 
@@ -168,7 +165,7 @@ PBot factoids include these advanced features:
 * [undo/redo history](doc/Factoids.md#factundo)
 * [changelog history](doc/Factoids.md#factlog)
 * [channel namespaces](doc/Factoids.md#channel-namespaces)
-* [creating](doc/Factoids.md#factadd) and [modifying](doc/Factoids.md#factchange) contents using your local system editor. Yes, you can edit the contents, optionally including line-breaks and indentation; then paste to a paste site; and finally use `factadd -url` or `factchange -url` comamnds.
+* You can use the [`factadd`](doc/Factoids.md#factadd) and [`factchange``](doc/Factoids.md#factchange) commands accept a `-url` option that sets the factoid contents from a paste website. In other words, you can edit a factoid's contents using your local editor, optionally including line-breaks and indentation.
 * [advanced `$variable` interpolation](doc/Factoids.md#expansion-modifiers) (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)
 * [factoid-based variable lists](doc/Factoids.md#list-variables) (e.g., add a factoid `colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
 * [advanced argument processing](doc/Factoids.md#special-variables-1) (indexing, splicing, etc)
@@ -178,8 +175,10 @@ PBot factoids include these advanced features:
 
 For more information, see the [Factoids documentation](doc/Factoids.md).
 
-#### Code Factoids
-Code Factoids are a special type of factoid that executes its contents within a sandboxed virtual machine.
+#### Code factoids
+Code factoids are a special type of factoid that executes its contents within a sandboxed virtual machine.
+
+The contents of code factoids must begin with the `/code` command:
 
     /code <language> <code>
 
@@ -193,7 +192,7 @@ For example, the venerable `rot13` function:
 
 Making a `choose` command:
 
-    <pragma-> !factadd choose /code zsh zsh _arr=($args); print $_arr[$((RANDOM % $#_arr + 1))]
+    <pragma-> !factadd choose /code zsh _arr=($args); print $_arr[$((RANDOM % $#_arr + 1))]
        <PBot> choose added to global channel.
 
 Using the `choose` command via an [embedded command](doc/Commands.md#inline-invocation):
@@ -314,7 +313,7 @@ operating system commands or code.
 
 PBot supports [several shells and languages](doc/Factoids.md#supported-languages) out of the box!
 
-One of PBot's most powerful features, [Code Factoids](#code-factoids) would not be possible without this.
+One of PBot's most powerful features, [Code Factoids](#code-factoids), would not be possible without this.
 
     <pragma-> !sh echo Remember rot13? | tr a-zA-Z n-za-mN-ZA-M
        <PBot> Erzrzore ebg13?
