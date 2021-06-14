@@ -2,10 +2,9 @@
 PBot is a versatile IRCv3 Bot written in Perl
 
 <!-- md-toc-begin -->
-* [PBot](#pbot)
   * [Installation / Quick Start](#installation--quick-start)
   * [Features](#features)
-    * [IRCv3](#ircv3)
+    * [IRCv3 capable](#ircv3-capable)
     * [Powerful command interpreter](#powerful-command-interpreter)
       * [Piping](#piping)
       * [Substitution](#substitution)
@@ -14,7 +13,6 @@ PBot is a versatile IRCv3 Bot written in Perl
       * [Selectors](#selectors)
       * [Inline invocation](#inline-invocation)
       * [Background processing](#background-processing)
-    * [Reload core modules without disconnecting](#reload-core-modules-without-disconnecting)
     * [Scripting interface](#scripting-interface)
     * [Extensible](#extensible)
       * [Factoids](#factoids)
@@ -22,11 +20,12 @@ PBot is a versatile IRCv3 Bot written in Perl
       * [Plugins](#plugins)
       * [Modules](#modules)
       * [Functions](#functions)
-    * [Virtual machine](#virtual-machine)
+    * [Virtual machine to safely execute user-submitted code](#virtual-machine-to-safely-execute-user-submitted-code)
     * [Powerful user management](#powerful-user-management)
-    * [Useful IRC improvements](#useful-irc-improvements)
+    * [Useful IRC quality-of-life improvements](#useful-irc-quality-of-life-improvements)
     * [Channel management and protection](#channel-management-and-protection)
     * [Easy configuration](#easy-configuration)
+    * [Live reloading of core modules or data files](#live-reloading-of-core-modules-or-data-files)
   * [Documentation](#documentation)
   * [Frequently Asked Questions](#frequently-asked-questions)
   * [Support](#support)
@@ -38,7 +37,7 @@ To get up-and-running quickly, check out the [Quick Start guide](doc/QuickStart.
 
 ## Features
 
-### IRCv3
+### IRCv3 capable
 PBot supports several features of the IRCv3 specification.
 
 * client capability negotiation
@@ -138,17 +137,6 @@ and the command will now run as a background process, allowing PBot to carry on 
 The familiar [`ps`](doc/Admin.md#ps) and [`kill`](doc/Admin.md#kill) commands can be used to list and kill the background processes.
 
 You can also [`cmdset`](doc/Admin.md#cmdset) the `process-timeout` [command metadata](doc/Admin.md#command-metadata-list) to set the timeout, in seconds, before the command is automatically killed. Otherwise the `processmanager.default_timeout` [registry value](doc/Registry.md) will be used.
-
-### Reload core modules without disconnecting
-Suppose you edit some PBot source file, be it a core file such as [PBot/Interpreter.pm](PBot/Interpreter.pm) or
-a Plugin such as [Plugins/Wttr.pm](Plugins/Wttr.pm). Or suppose there's a PBot update available. Most simple
-bots would require you to shut down the bot and restart it in order to see the modifications.
-
-Not PBot! you can simply use the [`refresh`](doc/Admin.md#refresh) command to reload all modified
-PBot core files and Plugins without bot restart.
-
-You can also use the [`reload`](doc/Admin.md#reload) command to reload any modified
-configuration or data files.
 
 ### Scripting interface
 PBot uses [Plang](https://github.com/pragma-/Plang) as a scripting language. You can use the
@@ -327,11 +315,13 @@ Additional Functions can easily be added by making a very simple PBot Plugin.
 
 For more information, see the [Functions documentation](doc/Functions.md).
 
-### Virtual machine
+### Virtual machine to safely execute user-submitted code
 PBot can integrate with a virtual machine to safely execute arbitrary user-submitted
 operating system commands or code.
 
 PBot supports [several shells and languages](doc/Factoids.md#supported-languages) out of the box!
+
+One of PBot's most powerful features, [Code Factoids](#code-factoids) would not be possible without this.
 
     <pragma-> !sh echo Remember rot13? | tr a-zA-Z n-za-mN-ZA-M
        <PBot> Erzrzore ebg13?
@@ -374,7 +364,7 @@ PBot has powerful yet simple user management functionality and commands.
 
 For more information, see the [Admin documentation.](doc/Admin.md#user-management-commands)
 
-### Useful IRC improvements
+### Useful IRC quality-of-life improvements
 * [`mode`](doc/Admin.md#mode) command can take wildcards, e.g. `mode +ov foo* bar*` to op nicks beginning with `foo` and voice nicks beginning with `bar`
 * `unban <nick>` and `unmute <nick>` will remove all bans/mutes matching their current or previously seen hostmasks or accounts
 * [`ban`](doc/Admin.md#banmute) and [`mute`](doc/Admin.md#banmute) will intelligently set banmasks; supports timeouts
@@ -408,6 +398,17 @@ These settings can easily be configured via several methods:
 * [editing](doc/Registry.md#editing-registry-file) the [`$data_dir/registry`](data/registry) plain-text JSON file
 
 For more information, see the [Registry documentation.](doc/Registry.md)
+
+### Live reloading of core modules or data files
+Suppose you edit some PBot source file, be it a core file such as [PBot/Interpreter.pm](PBot/Interpreter.pm) or
+a Plugin such as [Plugins/Wttr.pm](Plugins/Wttr.pm). Or suppose there's a PBot update available. Most simple
+bots would require you to shut down the bot and restart it in order to see the modifications.
+
+Not PBot! you can simply use the [`refresh`](doc/Admin.md#refresh) command to reload all modified
+PBot core files and Plugins without bot restart.
+
+You can also use the [`reload`](doc/Admin.md#reload) command to reload any modified
+configuration or data files.
 
 ## Documentation
 See the [PBot documentation](doc) for more information.
