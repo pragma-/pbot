@@ -146,15 +146,13 @@ internal API functions.
 [Learn more.](doc/Plugins/Plang.md)
 
 ### Extensible
-PBot is extensible in multiple ways. Additional commands and functionality can  be added to PBot in
-the following ways.
+Additional commands and functionality can  be added to PBot in the following ways.
 
 #### Factoids
 Factoids are a very special type of command. Anybody interacting with PBot
-can create, edit, delete and invoke factoids. Factoids can be locked by the
-creator of the factoid to prevent them from being edited by others.
+can create, edit, delete and invoke factoids.
 
-At its most simple, a factoid merely displays the text the creator sets.
+A simple factoid merely displays the text the creator sets.
 
     <pragma-> !factadd hello /say Hello, $nick!
        <PBot> hello added to global channel.
@@ -163,14 +161,14 @@ At its most simple, a factoid merely displays the text the creator sets.
        <PBot> Hello, pragma-!
 
 Significantly more complex factoids can be built by using `$variables`, command-substitution,
-command-piping, `/code` invocation, and more!
+command-piping, `/code` invocation, command prefixes such as `/say`, `/me`, `/msg`, and more!
 
 PBot factoids include these advanced features:
 
 * [undo/redo history](doc/Factoids.md#factundo)
 * [changelog history](doc/Factoids.md#factlog)
 * [channel namespaces](doc/Factoids.md#channel-namespaces)
-* [creating](doc/Factoids.md#factadd) and [modifying](doc/Factoids.md#factchange) contents using your local system editor to edit the contents, optionally including line-breaks and indentation; then pasting the contents to a Web paste site; and finally using the `-url` option to add/edit the factiod.
+* [creating](doc/Factoids.md#factadd) and [modifying](doc/Factoids.md#factchange) contents using your local system editor. Yes, you can edit the contents, optionally including line-breaks and indentation; then paste to a paste site; and finally use `factadd -url` or `factchange -url` comamnds.
 * [advanced `$variable` interpolation](doc/Factoids.md#expansion-modifiers) (`$var:lc` to lowercase contents, `$var:ucfirst` to uppercase first letter, etc)
 * [factoid-based variable lists](doc/Factoids.md#list-variables) (e.g., add a factoid `colors` containing "red green blue" and then `!echo $colors` will randomly pick one)
 * [advanced argument processing](doc/Factoids.md#special-variables-1) (indexing, splicing, etc)
@@ -181,14 +179,9 @@ PBot factoids include these advanced features:
 For more information, see the [Factoids documentation](doc/Factoids.md).
 
 #### Code Factoids
-Code Factoids are a special type of factoid that begin with the `/code` command.
+Code Factoids are a special type of factoid that executes its contents within a sandboxed virtual machine.
 
     /code <language> <code>
-
-That's right! Anybody can create a factoid that can execute arbitrary code in
-[any language](doc/Factoids.md#supported-languages)! This is one of PBot's most powerful features.
-
-How is this safe? Because the code is executed safely within a virtual machine sandbox.
 
 For example, the venerable `rot13` function:
 
