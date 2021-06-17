@@ -303,8 +303,9 @@ sub track_mode {
             $self->{pbot}->{timer}->dequeue_event("unban $channel $mask");
 
             # freenode strips channel forwards from unban result if no ban exists with a channel forward
-            $self->{banlist}->remove($channel, "$mask\$##stop_join_flood");
-            $self->{pbot}->{timer}->dequeue_event(lc "unban $channel $mask\$##stop_join_flood");
+            my $join_flood_channel = $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_channel') // '#stop-join-flood';
+            $self->{banlist}->remove($channel, "$mask\$$join_flood_channel");
+            $self->{pbot}->{timer}->dequeue_event(lc "unban $channel $mask\$$join_flood_channel");
         } elsif ($mode eq "-$mute_char") {
             $self->{quietlist}->remove($channel, $mask);
             $self->{pbot}->{timer}->dequeue_event("unmute $channel $mask");

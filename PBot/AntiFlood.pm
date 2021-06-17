@@ -128,9 +128,11 @@ sub cmd_unbanme {
         next if $aliases{$alias}->{type} == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK};
         next if $aliases{$alias}->{nickchange} == 1;
 
+        my $join_flood_channel = $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_channel') // '#stop-join-flood';
+
         my ($anick, $auser, $ahost) = $alias =~ m/([^!]+)!([^@]+)@(.*)/;
         my $banmask = $self->address_to_mask($ahost);
-        my $mask    = "*!$auser\@$banmask\$##stop_join_flood";
+        my $mask    = "*!$auser\@$banmask\$$join_flood_channel";
 
         my @channels = $self->{pbot}->{messagehistory}->{database}->get_channels($aliases{$alias}->{id});
 
@@ -483,11 +485,13 @@ sub check_flood {
                             my $duration = duration($timeout);
                             my $banmask  = $self->address_to_mask($host);
 
+                            my $join_flood_channel = $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_channel') // '#stop-join-flood';
+
                             if ($self->{pbot}->{channels}->is_active_op("${channel}-floodbans")) {
                                 $self->{pbot}->{banlist}->ban_user_timed(
                                     $chan . '-floodbans',
                                     'b',
-                                    "*!$user\@$banmask\$##stop_join_flood",
+                                    "*!$user\@$banmask\$$join_flood_channel",
                                     $timeout,
                                     $self->{pbot}->{registry}->get_value('irc', 'botnick'),
                                     'join flooding',
