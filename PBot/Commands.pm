@@ -1,7 +1,5 @@
 # File: Commands.pm
 #
-# Author: pragma_
-#
 # Purpose: Registers commands. Invokes commands with user capability
 # validation.
 
@@ -12,9 +10,7 @@
 package PBot::Commands;
 use parent 'PBot::Class', 'PBot::Registerable';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Time::Duration qw/duration/;
 

@@ -1,5 +1,4 @@
 # File: RegistryCommands.pm
-# Author: pragma_
 #
 # Purpose: Bot commands to manipulate Registry entries.
 
@@ -10,9 +9,7 @@
 package PBot::RegistryCommands;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;

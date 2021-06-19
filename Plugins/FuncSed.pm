@@ -1,5 +1,4 @@
 # File: FuncSed.pm
-# Author: pragma-
 #
 # Purpose: Registers the sed Function
 
@@ -10,8 +9,7 @@
 package Plugins::FuncSed;
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -32,7 +30,6 @@ sub unload {
 
 # near-verbatim insertion of krok's `sed` factoid
 no warnings;
-
 sub func_sed {
     my $self = shift;
     my $text = "@_";

@@ -1,25 +1,26 @@
+# File: Logger.pm
+#
+# Purpose: Logs text to file and STDOUT.
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Logger;
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Scalar::Util qw/openhandle/;
 use File::Basename;
 use File::Copy;
 
 sub new {
-    my ($proto, %conf) = @_;
-    my $class = ref($proto) || $proto;
-    my $self  = bless {}, $class;
-    Carp::croak("Missing pbot reference to " . __FILE__) unless exists $conf{pbot};
-    $self->{pbot} = $conf{pbot};
+    my ($class, %args) = @_;
+    my $self = bless {}, $class;
+    Carp::croak("Missing pbot reference to " . __FILE__) unless exists $args{pbot};
+    $self->{pbot} = delete $args{pbot};
     print "Initializing " . __PACKAGE__ . "\n" unless $self->{pbot}->{overrides}->{'general.daemon'};
-    $self->initialize(%conf);
+    $self->initialize(%args);
     return $self;
 }
 

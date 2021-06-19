@@ -1,5 +1,4 @@
 # File: Plang.pm
-# Author: pragma-
 #
 # Purpose: Scripting language for creating advanced PBot factoids
 # and interacting with various internal PBot APIs.
@@ -11,8 +10,7 @@
 package Plugins::Plang;
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 use Getopt::Long qw(GetOptionsFromArray);
 

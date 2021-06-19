@@ -7,8 +7,7 @@
 package Plugins::ParseDate;
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use  PBot::Imports;
 
 use Time::Duration qw/duration/;
 

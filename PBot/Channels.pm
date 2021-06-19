@@ -1,5 +1,4 @@
 # File: Channels.pm
-# Author: pragma_
 #
 # Purpose: Manages list of channels and auto-joins.
 
@@ -10,9 +9,7 @@
 package PBot::Channels;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;

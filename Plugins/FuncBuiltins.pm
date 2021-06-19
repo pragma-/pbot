@@ -1,5 +1,4 @@
 # File: FuncBuiltins.pm
-# Author: pragma-
 #
 # Purpose: Registers the basic built-in Functions
 
@@ -10,8 +9,7 @@
 package Plugins::FuncBuiltins;
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;

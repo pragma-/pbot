@@ -1,5 +1,4 @@
 # File: IRCHandlers.pm
-# Author: pragma_
 #
 # Purpose: Subroutines to handle IRC events
 
@@ -8,12 +7,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::IRCHandlers;
-
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Time::HiRes qw(gettimeofday);
 use Data::Dumper;

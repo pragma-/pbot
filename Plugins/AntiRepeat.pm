@@ -5,11 +5,7 @@
 package Plugins::AntiRepeat;
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-
-use feature 'switch';
-no if $] >= 5.018, warnings => "experimental::smartmatch";
+use PBot::Imports;
 
 use String::LCSS qw/lcss/;
 use Time::HiRes qw/gettimeofday/;

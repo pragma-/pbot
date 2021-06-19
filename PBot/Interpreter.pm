@@ -1,5 +1,4 @@
 # File: Interpreter.pm
-# Author: pragma_
 #
 # Purpose: Main entry point to parse and interpret a string into bot
 # commands and dispatch the commands to registered interpreters.
@@ -12,12 +11,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Interpreter;
-
 use parent 'PBot::Class', 'PBot::Registerable';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;

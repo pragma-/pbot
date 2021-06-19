@@ -1,8 +1,7 @@
 # File: VERSION.pm
-# Author: pragma_
 #
 # Purpose: Keeps track of bot version. Can compare current version against
-# latest version on github or version.check_url site.
+# latest version on github or URL in `version.check_url` registry entry.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,9 +10,7 @@
 package PBot::VERSION;
 use parent 'PBot::Class';
 
-use strict; use warnings;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use LWP::UserAgent;
 

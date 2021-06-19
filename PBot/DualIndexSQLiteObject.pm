@@ -1,5 +1,4 @@
 # File: DualIndexSQLiteObject.pm
-# Author: pragma_
 #
 # Purpose: Provides a dual-indexed SQLite object with an abstracted API that includes
 # setting and deleting values, caching, displaying nearest matches, etc. Designed to
@@ -11,20 +10,17 @@
 
 package PBot::DualIndexSQLiteObject;
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use DBI;
 use Text::Levenshtein qw(fastdistance);
 
 sub new {
-    my ($proto, %conf) = @_;
-    my $class = ref($proto) || $proto;
-    my $self  = bless {}, $class;
-    Carp::croak("Missing pbot reference to " . __FILE__) unless exists $conf{pbot};
-    $self->{pbot} = $conf{pbot};
-    $self->initialize(%conf);
+    my ($class, %args) = @_;
+    my $self = bless {}, $class;
+    Carp::croak("Missing pbot reference to " . __FILE__) unless exists $args{pbot};
+    $self->{pbot} = delete $args{pbot};
+    $self->initialize(%args);
     return $self;
 }
 

@@ -22,8 +22,7 @@ use PBot::IRC::EventQueue;  # pragma_ 2011/01/21
 use IO::Select;
 use Carp;
 
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 # grab the drop-in replacement for time() from Time::HiRes, if it's available
 BEGIN { Time::HiRes->import('time') if eval "require Time::HiRes"; }

@@ -1,3 +1,11 @@
+# File: RestrictedMod.pm
+#
+# Purpose: Provides restricted moderation abilities to voiced users.
+# They are allowed to ban/mute/kick only users that are not admins,
+# whitelisted, or autoop/autovoice. This is useful for, e.g., IRCnet
+# configurations where +v users are recognized as "semi-trusted" in
+# order to provide assistance in combating heavy spam and drone traffic.
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -5,14 +13,7 @@
 package Plugins::RestrictedMod;
 use parent 'Plugins::Plugin';
 
-# purpose: provides restricted moderation abilities to voiced users.
-# They are allowed to ban/mute/kick only users that are not admins,
-# whitelisted, or autoop/autovoice. This is useful for, e.g., IRCnet
-# configurations where +v users are recognized as "semi-trusted" in
-# order to provide assistance in combating heavy spam and drone traffic.
-
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 use Storable qw/dclone/;
 

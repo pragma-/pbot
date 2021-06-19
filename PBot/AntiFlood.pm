@@ -1,5 +1,4 @@
 # File: AntiFlood.pm
-# Author: pragma_
 #
 # Purpose: Tracks message and nickserv statistics to enforce anti-flooding and
 # ban-evasion detection.
@@ -14,12 +13,7 @@
 package PBot::AntiFlood;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
-
-use feature 'switch';
-no if $] >= 5.018, warnings => "experimental::smartmatch";
+use PBot::Imports;
 
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;

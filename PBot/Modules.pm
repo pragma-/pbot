@@ -1,6 +1,5 @@
 # File: Modules.pm
-# Author: pragma_
-
+#
 # Purpose: Modules are command-line programs and scripts that can be loaded
 # via PBot factoids. Command arguments are passed as command-line arguments.
 # The standard output from the script is returned as the bot command result.
@@ -12,12 +11,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Modules;
-
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use IPC::Run qw/run timeout/;
 use Encode;

@@ -1,11 +1,11 @@
 # File: DualIndexHashObject.pm
-# Author: pragma_
 #
 # Purpose: Provides a hash-table object with an abstracted API that includes
-# setting and deleting values, saving to and loading from files, etc. This
-# extends the HashObject with an additional index key. Provides case-insensitive
-# access to both index keys, while preserving original case when displaying the
-# keys.
+# setting and deleting values, saving to and loading from files, etc.
+#
+# DualIndexHashObject extends the HashObject with an additional index key.
+# Provides case-insensitive access to both index keys, while preserving
+# original case when displaying the keys.
 #
 # Data is stored in working memory for lightning fast performance. If you have
 # a huge amount of data, consider DualIndexSQLiteObject instead.
@@ -16,29 +16,26 @@
 
 package PBot::DualIndexHashObject;
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Text::Levenshtein qw(fastdistance);
 use JSON;
 
 sub new {
-    my ($proto, %conf) = @_;
-    my $class = ref($proto) || $proto;
-    my $self  = bless {}, $class;
-    Carp::croak("Missing pbot reference to " . __FILE__) unless exists $conf{pbot};
-    $self->{pbot} = $conf{pbot};
-    $self->initialize(%conf);
+    my ($class, %args) = @_;
+    my $self = bless {}, $class;
+    Carp::croak("Missing pbot reference to " . __FILE__) unless exists $args{pbot};
+    $self->{pbot} = delete $args{pbot};
+    $self->initialize(%args);
     return $self;
 }
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{name}     = $conf{name}     // 'Dual Index hash object';
+    $self->{name}     = $conf{name}     // 'unnamed';
     $self->{filename} = $conf{filename} // Carp::carp("Missing filename to DualIndexHashObject, will not be able to save to or load from file.");
     $self->{save_queue_timeout} = $conf{save_queue_timeout} // 0;
-    $self->{hash}     = {};
+    $self->{hash} = {};
 }
 
 sub load {

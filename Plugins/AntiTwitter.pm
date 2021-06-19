@@ -1,28 +1,19 @@
 # File: AntiTwitter.pm
-# Author: pragma_
 #
-# Purpose: Warns people off from using @nick style addressing. Temp-bans if they
-#          persist.
+# Purpose: Warns people off from using @nick style addressing. Temp-bans
+# if they persist.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::AntiTwitter;
-
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration qw/duration/;
-
-use feature 'switch';
-
-use utf8;
-
-no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 sub initialize {
     my ($self, %conf) = @_;

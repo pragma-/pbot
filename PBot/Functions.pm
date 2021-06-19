@@ -1,6 +1,4 @@
-
 # File: Functions.pm
-# Author: pragma_
 #
 # Purpose: Special `func` command that executes built-in functions with
 # optional arguments. Usage: func <identifier> [arguments].
@@ -22,9 +20,7 @@
 package PBot::Functions;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;

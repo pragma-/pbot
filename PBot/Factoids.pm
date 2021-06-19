@@ -1,7 +1,6 @@
 # File: Factoids.pm
-# Author: pragma_
 #
-# Purpose: Provides functionality for factoids and a type of external module execution.
+# Purpose: Provides functionality for factoids.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,12 +9,7 @@
 package PBot::Factoids;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
-
-use feature 'switch';
-no if $] >= 5.018, warnings => "experimental::smartmatch";
+use PBot::Imports;
 
 use HTML::Entities;
 use Time::HiRes qw(gettimeofday);

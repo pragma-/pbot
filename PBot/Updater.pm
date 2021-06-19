@@ -1,7 +1,8 @@
 # File: Updater.pm
-# Author: pragma_
 #
-# Purpose: Updates data/configration files to new locations/formats based
+# Purpose: Migrates data files from older versions to newer versions.
+#
+# Updates data/configration files to new locations/formats based
 # on versioning information. Ensures data/configuration files are in the
 # proper location and using the latest data structure.
 
@@ -12,9 +13,7 @@
 package PBot::Updater;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use File::Basename;
 

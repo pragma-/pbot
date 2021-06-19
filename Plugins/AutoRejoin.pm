@@ -1,5 +1,4 @@
 # File: AutoRejoin.pm
-# Author: pragma_
 #
 # Purpose: Auto-rejoin channels after kick or whatever.
 
@@ -8,11 +7,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::AutoRejoin;
-
 use parent 'Plugins::Plugin';
-
-use warnings; use strict;
-use feature 'unicode_strings';
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;

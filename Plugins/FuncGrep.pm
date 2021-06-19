@@ -1,5 +1,4 @@
 # File: FuncGrep.pm
-# Author: pragma-
 #
 # Purpose: Registers the grep Function
 
@@ -10,8 +9,7 @@
 package Plugins::FuncGrep;
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;

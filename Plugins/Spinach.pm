@@ -3,18 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::Spinach;
-
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
+use PBot::Imports;
+use PBot::HashObject;
 
-use FindBin;
-use lib "$FindBin::RealBin/../..";
-use feature 'switch';
-
-no if $] >= 5.018, warnings => "experimental::smartmatch";
-
-use feature 'unicode_strings';
+use Plugins::Spinach::Stats;
+use Plugins::Spinach::Rank;
 
 use JSON;
 
@@ -34,12 +29,8 @@ use Data::Dumper;
 $Data::Dumper::Sortkeys = sub {
     my ($h) = @_; my @a = sort grep { not /^(?:seen_questions|alternativeSpellings)$/ } keys %$h; \@a;
 };
+
 $Data::Dumper::Useqq = 1;
-
-use PBot::HashObject;
-
-use Plugins::Spinach::Stats;
-use Plugins::Spinach::Rank;
 
 sub initialize {
     my ($self, %conf) = @_;

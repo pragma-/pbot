@@ -1,5 +1,4 @@
 # File: IgnoreList.pm
-# Author: pragma_
 #
 # Purpose: Manages ignore list.
 
@@ -10,9 +9,7 @@
 package PBot::IgnoreList;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Time::Duration qw/concise duration/;
 

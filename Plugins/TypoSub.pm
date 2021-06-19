@@ -1,11 +1,6 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-package Plugins::TypoSub;
-use parent 'Plugins::Plugin';
-
-# purpose: Replaces "typos" with "corrections".
+# File: TypoSub.pm
+#
+# Purpose: Replaces "typos" with "corrections".
 #
 # Examples:
 #
@@ -17,8 +12,15 @@ use parent 'Plugins::Plugin';
 # <alice> s/like/love/
 # <PBot> alice meant to say: i love candy
 
-use warnings; use strict;
-use feature 'unicode_strings';
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+package Plugins::TypoSub;
+use parent 'Plugins::Plugin';
+
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;

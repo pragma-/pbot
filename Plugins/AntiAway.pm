@@ -1,5 +1,4 @@
 # File: AntiAway.pm
-# Author: pragma_
 #
 # Purpose: Kicks people that visibly auto-away with ACTIONs or nick-changes
 
@@ -10,8 +9,7 @@
 package Plugins::AntiAway;
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;

@@ -1,5 +1,4 @@
 # File: Timer.pm
-# Author: pragma_
 #
 # Purpose: Provides functionality to register subroutines/events to be invoked
 # at a future time, optionally recurring.
@@ -19,9 +18,7 @@
 package PBot::Timer;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Time::Duration qw/concise duration/;
 

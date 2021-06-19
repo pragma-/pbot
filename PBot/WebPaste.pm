@@ -1,5 +1,4 @@
 # File: WebPaste.pm
-# Author: pragma_
 #
 # Purpose: Pastes text to a cycling list of web paste sites.
 
@@ -8,12 +7,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::WebPaste;
-
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;

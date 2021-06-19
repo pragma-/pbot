@@ -1,5 +1,4 @@
 # File: BanList.pm
-# Author: pragma_
 #
 # Purpose: Populates and maintains channel banlists by checking mode +b/+q on
 # joining channels and by tracking modes +b/+q and -b/-q in channels. Keeps
@@ -13,16 +12,11 @@ package PBot::BanList;
 
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
-use Data::Dumper;
 use POSIX qw/strftime/;
-
-$Data::Dumper::Sortkeys = 1;
 
 sub initialize {
     my ($self, %conf) = @_;

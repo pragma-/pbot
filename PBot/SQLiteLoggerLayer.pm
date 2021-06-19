@@ -1,7 +1,6 @@
 # File: SQLiteLoggerLayer
-# Author: pragma_
 #
-# Purpose: PerlIO::via layer to log DBI trace messages
+# Purpose: PerlIO::via layer to log DBI trace messages.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,11 +8,7 @@
 
 package PBot::SQLiteLoggerLayer;
 
-use strict;
-use warnings;
-
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 sub PUSHED {
     my ($class, $mode, $fh) = @_;
@@ -23,20 +18,18 @@ sub PUSHED {
 
 sub OPEN {
     my ($self, $path, $mode, $fh) = @_;
-
-    # $path is our logger object
-    $$self = $path;
+    $$self = $path; # path is our PBot::Logger object
     return 1;
 }
 
 sub WRITE {
     my ($self, $buf, $fh) = @_;
-    $$self->log($buf);
+    $$self->log($buf); # log message
     return length($buf);
 }
 
 sub CLOSE {
-    my $self = shift;
+    my ($self) = @_;
     $$self->close();
     return 0;
 }

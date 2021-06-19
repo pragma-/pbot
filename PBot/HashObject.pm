@@ -1,5 +1,4 @@
 # File: HashObject.pm
-# Author: pragma_
 #
 # Purpose: Provides a hash-table object with an abstracted API that includes
 # setting and deleting values, saving to and loading from files, etc.  Provides
@@ -12,38 +11,39 @@
 
 package PBot::HashObject;
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Text::Levenshtein qw(fastdistance);
 use JSON;
 
 sub new {
-    my ($proto, %conf) = @_;
-    my $class = ref($proto) || $proto;
+    my ($class, %args) = @_;
     my $self  = bless {}, $class;
-    Carp::croak("Missing pbot reference to " . __FILE__) unless exists $conf{pbot};
-    $self->{pbot} = $conf{pbot};
-    $self->initialize(%conf);
+    Carp::croak("Missing pbot reference to " . __FILE__) unless exists $args{pbot};
+    $self->{pbot} = delete $args{pbot};
+    $self->initialize(%args);
     return $self;
 }
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{name}     = $conf{name}     // 'hash object';
-    $self->{filename} = $conf{filename} // Carp::carp("Missing filename to HashObject, will not be able to save to or load from file.");
+
+    $self->{name}     = $conf{name} // 'unnammed';
     $self->{hash}     = {};
+    $self->{filename} = $conf{filename};
+
+    if (not defined $self->{filename}) {
+        Carp::carp("Missing filename for $self->{name} HashObject, will not be able to save to or load from file.");
+    }
 }
 
 sub load {
-    my $self = shift;
-    my $filename;
-    if   (@_) { $filename = shift; }
-    else      { $filename = $self->{filename}; }
+    my ($self, $filename) = @_;
 
-    $self->clear;
+    # allow overriding $self->{filename} with $filename parameter
+    $filename //= $self->{filename};
 
+    # no filename? nothing to load
     if (not defined $filename) {
         Carp::carp "No $self->{name} filename specified -- skipping loading from file";
         return;
@@ -56,37 +56,55 @@ sub load {
         return;
     }
 
+    # slurp file into $contents
     my $contents = do {
         local $/;
         <FILE>;
     };
 
-    $self->{hash} = decode_json $contents;
     close FILE;
 
-    # update existing entries to use _name to preserve case
-    # and lowercase any non-lowercased entries
-    foreach my $index (keys %{$self->{hash}}) {
-        if (not exists $self->{hash}->{$index}->{_name}) {
-            if ($index ne lc $index) {
-                if (exists $self->{hash}->{lc $index}) {
-                    Carp::croak "Cannot update $self->{name} object $index; duplicate object found";
-                }
+    eval {
+        # first try to deocde json, throws exception on misparse/errors
+        my $newhash = decode_json $contents;
 
-                my $data = delete $self->{hash}->{$index};
-                $data->{_name} = $index;
-                $self->{hash}->{lc $index} = $data;
+        # clear current hash only if decode succeeded
+        $self->clear;
+
+        # update internal hash
+        $self->{hash} = $newhash;
+
+        # update existing entries to use _name to preserve typographical casing
+        # e.g., when someone edits a config file by hand, they might add an
+        # entry with uppercase characters in its name.
+        foreach my $index (keys %{$self->{hash}}) {
+            if (not exists $self->{hash}->{$index}->{_name}) {
+                if ($index ne lc $index) {
+                    if (exists $self->{hash}->{lc $index}) {
+                        Carp::croak "Cannot update $self->{name} object $index; duplicate object found";
+                    }
+
+                    my $data = delete $self->{hash}->{$index};
+                    $data->{_name} = $index;             # _name is original typographical case
+                    $self->{hash}->{lc $index} = $data;  # index key is lowercased
+                }
             }
         }
+    };
+
+    if ($@) {
+        # json parse error or such
+        $self->{pbot}->{logger}->log("Warning: failed to load $filename: $@\n");
     }
 }
 
 sub save {
-    my $self = shift;
-    my $filename;
-    if   (@_) { $filename = shift; }
-    else      { $filename = $self->{filename}; }
+    my ($self, $filename) = @_;
 
+    # allow parameter overriding internal field
+    $filename //= $self->{filename};
+
+    # no filename? nothing to save
     if (not defined $filename) {
         Carp::carp "No $self->{name} filename specified -- skipping saving to file.\n";
         return;
@@ -94,42 +112,53 @@ sub save {
 
     $self->{pbot}->{logger}->log("Saving $self->{name} to $filename\n");
 
+    # add update_version to metadata
     if (not $self->get_data('$metadata$', 'update_version')) {
         $self->add('$metadata$', { update_version => PBot::VERSION::BUILD_REVISION });
     }
 
+    # ensure `name` metadata is current
     $self->set('$metadata$', 'name', $self->{name}, 1);
 
+    # encode hash as JSON
     my $json      = JSON->new;
     my $json_text = $json->pretty->canonical->utf8->encode($self->{hash});
 
+    # print JSON to file
     open(FILE, "> $filename") or die "Couldn't open $filename: $!\n";
     print FILE "$json_text\n";
     close(FILE);
 }
 
 sub clear {
-    my $self = shift;
+    my ($self) = @_;
     $self->{hash} = {};
 }
 
 sub levenshtein_matches {
     my ($self, $keyword) = @_;
-    my $comma  = '';
-    my $result = "";
+
+    my @matches;
 
     foreach my $index (sort keys %{$self->{hash}}) {
         my $distance = fastdistance($keyword, $index);
-        my $length   = (length $keyword > length $index) ? length $keyword : length $index;
+
+        my $length_a = length $keyword;
+        my $length_b = length $index;
+        my $length   = $length_a > $length_b ? $length_a : $length_b;
 
         if ($length != 0 && $distance / $length < 0.50) {
-            $result .= $comma . $index;
-            $comma = ", ";
+            push @matches, $index;
         }
     }
 
+    return 'none' if not @matches;
+
+    my $result = join ', ', @matches;
+
+    # "a, b, c, d" -> "a, b, c or d"
     $result =~ s/(.*), /$1 or /;
-    $result = "none" if $comma eq '';
+
     return $result;
 }
 
@@ -137,29 +166,41 @@ sub set {
     my ($self, $index, $key, $value, $dont_save) = @_;
     my $lc_index = lc $index;
 
+    # find similarly named keys
     if (not exists $self->{hash}->{$lc_index}) {
-        my $result = "$self->{name}: $index not found; similiar matches: ";
+        my $result = "$self->{name}: $index not found; similar matches: ";
         $result .= $self->levenshtein_matches($index);
         return $result;
     }
 
     if (not defined $key) {
+        # if no key provided, then list all keys and values
         my $result = "[$self->{name}] " . $self->get_key_name($lc_index) .  " keys: ";
-        my $comma  = '';
-        foreach my $k (sort grep { $_ ne '_name' } keys %{$self->{hash}->{$lc_index}}) {
-            $result .= $comma . "$k: " . $self->{hash}->{$lc_index}->{$k};
-            $comma = ";\n";
+
+        my @entries;
+
+        foreach my $key (sort grep { $_ ne '_name' } keys %{$self->{hash}->{$lc_index}}) {
+            push @entries, "$key: $self->{hash}->{$lc_index}->{$key}";
         }
-        $result .= "none" if ($comma eq '');
+
+        if (@entries) {
+            $result .= join ";\n", @entries;
+        } else {
+            $result .= 'none';
+        }
+
         return $result;
     }
 
     if (not defined $value) {
+        # if no value provided, then show this key's value
         $value = $self->{hash}->{$lc_index}->{$key};
     } else {
+        # otherwise update the value belonging to key
         $self->{hash}->{$lc_index}->{$key} = $value;
         $self->save unless $dont_save;
     }
+
     return "[$self->{name}] " . $self->get_key_name($lc_index) . ": $key " . (defined $value ? "set to $value" : "is not set.");
 }
 
@@ -168,7 +209,7 @@ sub unset {
     my $lc_index = lc $index;
 
     if (not exists $self->{hash}->{$lc_index}) {
-        my $result = "$self->{name}: $index not found; similiar matches: ";
+        my $result = "$self->{name}: $index not found; similar matches: ";
         $result .= $self->levenshtein_matches($index);
         return $result;
     }
@@ -227,7 +268,7 @@ sub remove {
     my $lc_index = lc $index;
 
     if (not exists $self->{hash}->{$lc_index}) {
-        my $result = "$self->{name}: $index not found; similiar matches: ";
+        my $result = "$self->{name}: $index not found; similar matches: ";
         $result .= $self->levenshtein_matches($lc_index);
         return $result;
     }

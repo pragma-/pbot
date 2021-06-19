@@ -1,5 +1,4 @@
 # File: Registerable.pm
-# Author: pragma_
 #
 # Purpose: Provides functionality to register and execute one or more subroutines.
 
@@ -9,17 +8,14 @@
 
 package PBot::Registerable;
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 sub new {
-    my ($proto, %conf) = @_;
-    my $class = ref($proto) || $proto;
+    my ($class, %args) = @_;
     my $self  = bless {}, $class;
-    Carp::croak("Missing pbot reference to " . __FILE__) unless exists $conf{pbot};
-    $self->{pbot} = $conf{pbot};
-    $self->initialize(%conf);
+    Carp::croak("Missing pbot reference to " . __FILE__) unless exists $args{pbot};
+    $self->{pbot} = delete $args{pbot};
+    $self->initialize(%args);
     return $self;
 }
 

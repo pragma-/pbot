@@ -5,11 +5,7 @@
 package Plugins::Connect4;
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-
-use feature 'switch';
-no if $] >= 5.018, warnings => "experimental::smartmatch";
+use PBot::Imports;
 
 use Time::Duration qw/concise duration/;
 use Data::Dumper;

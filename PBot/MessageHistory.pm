@@ -1,5 +1,4 @@
 # File: MessageHistory.pm
-# Author: pragma_
 #
 # Purpose: Keeps track of who has said what and when, as well as their
 # nickserv accounts and alter-hostmasks.
@@ -12,12 +11,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::MessageHistory;
-
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Getopt::Long qw(GetOptionsFromArray);
 use Time::HiRes qw(gettimeofday tv_interval);

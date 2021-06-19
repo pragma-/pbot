@@ -1,5 +1,4 @@
 # File: PBot.pm
-# Author: pragma_
 #
 # Purpose: IRC Bot
 #
@@ -22,9 +21,7 @@
 
 package PBot::PBot;
 
-use strict; use warnings;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Carp ();
 use PBot::Logger;
@@ -76,10 +73,9 @@ use Encode;
 @ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
 
 sub new {
-    my ($proto, %conf) = @_;
-    my $class = ref($proto) || $proto;
-    my $self  = bless {}, $class;
-    $self->initialize(%conf);
+    my ($class, %args) = @_;
+    my $self = bless {}, $class;
+    $self->initialize(%args);
     return $self;
 }
 

@@ -3,16 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::Battleship;
-
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
-
-use feature 'switch';
-
-no if $] >= 5.018, warnings => "experimental::smartmatch";
+use PBot::Imports;
 
 use Time::Duration qw/concise duration/;
 use Data::Dumper;

@@ -1,19 +1,19 @@
 # File: MessageHistory_SQLite.pm
-# Author: pragma_
 #
-# Purpose: SQLite backend for storing/retreiving a user's message history
+# Purpose: SQLite backend for storing/retreiving a user's message history.
+# Peforms intelligent hostmask and nickserv heuristics to link nicknames
+# in order to ensure message history is stored in the right user account
+# ids. This is also extremely useful for detecting ban-evasions and listing
+# also-known-as data for a nickname (see the !aka bot command).
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::MessageHistory_SQLite;
-
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use DBI;
 use Carp qw(shortmess);

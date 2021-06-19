@@ -1,5 +1,4 @@
 # File: ChanOps.pm
-# Author: pragma_
 #
 # Purpose: Provides channel operator status tracking and commands.
 
@@ -8,14 +7,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::ChanOps;
-
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use PBot::ChanOpCommands;
+
 use Time::HiRes qw(gettimeofday);
 use Time::Duration qw(concise duration);
 

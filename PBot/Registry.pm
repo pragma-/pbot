@@ -1,5 +1,4 @@
 # File: Registry.pm
-# Author: pragma_
 #
 # Purpose: Provides a centralized registry of configuration settings that can
 # easily be examined and updated via getters and setters.
@@ -9,12 +8,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::Registry;
-
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Time::HiRes qw(gettimeofday);
 use PBot::RegistryCommands;

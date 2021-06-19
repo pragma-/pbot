@@ -1,3 +1,7 @@
+# File: StdinReader.pm
+#
+# Purpose: Reads input from STDIN.
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -5,9 +9,7 @@
 package PBot::StdinReader;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use POSIX qw(tcgetpgrp getpgrp);  # to check whether process is in background or foreground
 

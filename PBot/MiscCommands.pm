@@ -1,8 +1,7 @@
 # File: MiscCommands.pm
 #
-# Author: pragma_
-#
-# Purpose: Registers misc PBot commands.
+# Purpose: Registers misc PBot commands that don't really belong in any
+# other file.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,9 +10,7 @@
 package PBot::MiscCommands;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Time::Duration qw/duration/;
 

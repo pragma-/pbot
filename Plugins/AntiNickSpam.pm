@@ -1,5 +1,4 @@
 # File: AntiNickSpam.pm
-# Author: pragma_
 #
 # Purpose: Temporarily mutes $~a in channel if too many nicks were
 #          mentioned within a time period; used to combat botnet spam
@@ -9,11 +8,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::AntiNickSpam;
-
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 use Time::Duration qw/duration/;
 use Time::HiRes qw/gettimeofday/;

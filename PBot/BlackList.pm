@@ -1,5 +1,4 @@
 # File: BlackList.pm
-# Author: pragma_
 #
 # Purpose: Manages list of hostmasks that are not allowed to join a channel.
 
@@ -10,12 +9,7 @@
 package PBot::BlackList;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
-
-use feature 'switch';
-no if $] >= 5.018, warnings => "experimental::smartmatch";
+use PBot::Imports;
 
 use Time::HiRes qw(gettimeofday);
 

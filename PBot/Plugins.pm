@@ -1,7 +1,6 @@
 # File: Plugins.pm
-# Author: pragma-
 #
-# Purpose: Loads and manages plugins.
+# Purpose: Loads and manages external plugins.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,9 +9,7 @@
 package PBot::Plugins;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use File::Basename;
 

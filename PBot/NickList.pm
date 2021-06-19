@@ -1,5 +1,4 @@
 # File: NickList.pm
-# Author: pragma_
 #
 # Purpose: Maintains lists of nicks currently present in channels.
 # Used to retrieve list of channels a nick is present in or to
@@ -10,12 +9,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::NickList;
-
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Text::Levenshtein qw/fastdistance/;
 use Data::Dumper;

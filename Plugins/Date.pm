@@ -1,5 +1,4 @@
 # File: Date.pm
-# Author: pragma-
 #
 # Purpose: Adds command to display time and date for timezones.
 
@@ -10,8 +9,7 @@
 package Plugins::Date;
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 use Getopt::Long qw(GetOptionsFromArray);
 

@@ -1,26 +1,28 @@
+# File: Plugin.pm
+#
+# Purpose: Base class for PBot plugins.
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::Plugin;
 
-# purpose: base class for PBot plugins
-
-use warnings; use strict;
+use PBot::Imports;
 
 sub new {
-    my ($proto, %conf) = @_;
-    my $class = ref($proto) || $proto;
+    my ($class, %args) = @_;
+
     my $self  = bless {}, $class;
 
-    if (not exists $conf{pbot}) {
+    if (not exists $args{pbot}) {
         my ($package, $filename, $line) = caller(0);
         my (undef, undef, undef, $subroutine) = caller(1);
         Carp::croak("Missing pbot reference to " . $class . ", created by $subroutine at $filename:$line");
     }
 
-    $self->{pbot} = $conf{pbot};
-    $self->initialize(%conf);
+    $self->{pbot} = $args{pbot};
+    $self->initialize(%args);
     return $self;
 }
 

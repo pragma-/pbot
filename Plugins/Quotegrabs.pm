@@ -1,18 +1,18 @@
 # File: Quotegrabs.pm
-# Author: pragma_
 #
-# Purpose: Allows users to "grab" quotes from message history and store them for later retrieval.
+# Purpose: Allows users to "grab" quotes from message history and store them
+# for later retrieval. Can grab a quote from any point in the message history,
+# not just the most recent message. Can grab multiple distinct messages with
+# one `grab` command.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::Quotegrabs;
-
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 use HTML::Entities;
 use Time::Duration;

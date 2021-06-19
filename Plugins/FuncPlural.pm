@@ -1,7 +1,6 @@
 # File: FuncPlural.pm
-# Author: pragma-
 #
-# Purpose: Registers the plural Function
+# Purpose: Registers the plural Function.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,8 +9,7 @@
 package Plugins::FuncPlural;
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -51,8 +49,13 @@ sub pluralize_word {
     'us' => 'uses',
     'x' => 'xes',
     'ium' => 'ia',
-    'um' => 'a', 'stomach' => 'stomachs' , 'cactus' => 'cacti' , 'cactus' => 'cacti' , 'knoif' => 'knoives' , 'sheaf' =>
-'sheaves' , 'dwarf' => 'dwarves' ,
+    'um' => 'a',
+    'stomach' => 'stomachs',
+    'cactus' => 'cacti',
+    'cactus' => 'cacti',
+    'knoif' => 'knoives',
+    'sheaf' => 'sheaves',
+    'dwarf' => 'dwarves',
     'loaf' => 'loaves',
     'louse' => 'lice',
     'die' => 'dice',

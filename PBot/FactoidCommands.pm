@@ -1,5 +1,4 @@
 # File: FactoidCommands.pm
-# Author: pragma_
 #
 # Purpose: Factoid command subroutines.
 
@@ -8,12 +7,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package PBot::FactoidCommands;
-
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);

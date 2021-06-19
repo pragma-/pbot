@@ -1,5 +1,4 @@
 # File: Refresher.pm
-# Author: pragma_
 #
 # Purpose: Refreshes/reloads module subroutines. Does not refresh/reload
 # module member data, only subroutines. TODO: reinitialize modules in order
@@ -12,17 +11,17 @@
 package PBot::Refresher;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 use Module::Refresh;
 use File::Basename;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{refresher} = Module::Refresh->new;
+
     $self->{pbot}->{commands}->register(sub { $self->cmd_refresh(@_) }, "refresh", 1);
+
+    $self->{refresher} = Module::Refresh->new;
 }
 
 sub cmd_refresh {

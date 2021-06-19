@@ -1,5 +1,4 @@
 # File: Weather.pm
-# Author: pragma-
 #
 # Purpose: Weather command.
 
@@ -8,11 +7,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 package Plugins::Weather;
-
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 use PBot::Utils::LWPUserAgentCached;
 use XML::LibXML;

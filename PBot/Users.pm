@@ -1,5 +1,4 @@
 # File: Users.pm
-# Author: pragma_
 #
 # Purpose: Manages list of bot users/admins and their metadata.
 
@@ -10,9 +9,7 @@
 package PBot::Users;
 use parent 'PBot::Class';
 
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -28,11 +25,12 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->cmd_my(@_) },        "my",        0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_id(@_) },        "id",        0);
 
-    $self->{pbot}->{capabilities}->add('admin',             'can-useradd',   1);
-    $self->{pbot}->{capabilities}->add('admin',             'can-userdel',   1);
-    $self->{pbot}->{capabilities}->add('admin',             'can-userset',   1);
-    $self->{pbot}->{capabilities}->add('admin',             'can-userunset', 1);
-    $self->{pbot}->{capabilities}->add('can-modify-admins', undef,           1);
+    $self->{pbot}->{capabilities}->add('admin', 'can-useradd',   1);
+    $self->{pbot}->{capabilities}->add('admin', 'can-userdel',   1);
+    $self->{pbot}->{capabilities}->add('admin', 'can-userset',   1);
+    $self->{pbot}->{capabilities}->add('admin', 'can-userunset', 1);
+
+    $self->{pbot}->{capabilities}->add('can-modify-admins', undef, 1);
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.join',  sub { $self->on_join(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part',  sub { $self->on_departure(@_) });

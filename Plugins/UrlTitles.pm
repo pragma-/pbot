@@ -1,5 +1,4 @@
 # File: UrlTitles.pm
-# Author: pragma-
 #
 # Purpose: Display titles of URLs in channel messages.
 
@@ -10,8 +9,7 @@
 package Plugins::UrlTitles;
 use parent 'Plugins::Plugin';
 
-use warnings; use strict;
-use feature 'unicode_strings';
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;

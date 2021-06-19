@@ -1,3 +1,7 @@
+# File: Capabilites.pm
+#
+# Purpose: Fine-grained user permissions.
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -5,16 +9,7 @@
 package PBot::Capabilities;
 use parent 'PBot::Class';
 
-# purpose: provides interface to set/remove/modify/query user capabilities.
-#
-# Examples: See doc/Admin.md for examples.
-
-use warnings; use strict;
-use feature 'unicode_strings';
-use utf8;
-
-use feature 'switch';
-no if $] >= 5.018, warnings => "experimental::smartmatch";
+use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;
