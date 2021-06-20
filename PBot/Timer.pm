@@ -22,8 +22,8 @@ use PBot::Imports;
 
 use Time::Duration qw/concise duration/;
 
-our $seconds ||= 0;
-our $waitfor ||= 1;
+our $seconds //= 0;
+our $waitfor //= 1;
 our @timer_funcs;
 
 # alarm signal handler (poor-man's timer)
@@ -204,8 +204,9 @@ sub enqueue_event_unless_exists {
 sub enqueue_event {
     my ($self, $ref, $interval, $id, $repeating) = @_;
 
-    $id        ||= 'anonymous event';
-    $repeating ||= 0;
+    $id        //= 'anonymous event';
+    $repeating //= 0;
+    $interval  //= 0;
 
     my $event = {
         id        => $id,

@@ -375,8 +375,13 @@ sub send_message {
     $delay = 0 if not defined $delay;
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
     my $message = {
-        nick    => $botnick, user => 'battleship', host => 'localhost', command => 'battleship text', checkflood => 1,
-        message => $text
+        nick       => $botnick,
+        user       => 'battleship',
+        host       => 'localhost',
+        hostmask   => "$botnick!battleship\@localhost",
+        command    => 'battleship',
+        checkflood => 1,
+        message    => $text
     };
     $self->{pbot}->{interpreter}->add_message_to_output_queue($to, $message, $delay);
 }

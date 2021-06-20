@@ -438,6 +438,7 @@ sub interpret {
                 nick       => $context->{nick},
                 user       => $context->{user},
                 host       => $context->{host},
+                hostmask   => $context->{hostmask},
                 command    => $context->{command},
                 checkflood => 1,
                 message    => "$context->{nick}: Why would I want to do that to myself?",
@@ -659,6 +660,7 @@ sub handle_result {
                     nick       => $context->{nick},
                     user       => $context->{user},
                     host       => $context->{host},
+                    hostmask   => $context->{hostmask},
                     command    => $context->{command},
                     message    => $message,
                     checkflood => 1
@@ -682,6 +684,7 @@ sub handle_result {
                 nick       => $context->{nick},
                 user       => $context->{user},
                 host       => $context->{host},
+                hostmask   => $context->{hostmask},
                 command    => $context->{command},
                 message    => $line,
                 checkflood => 1,
@@ -891,6 +894,7 @@ sub add_message_to_output_queue {
                 nick       => $message->{nick},
                 user       => $message->{user},
                 host       => $message->{host},
+                hostmask   => $message->{hostmask},
                 output     => $message->{message},
                 command    => $message->{command},
                 checkflood => $message->{checkflood}
@@ -912,6 +916,7 @@ sub add_to_command_queue {
                 nick                => $command->{nick},
                 user                => $command->{user},
                 host                => $command->{host},
+                hostmask            => $command->{hostmask},
                 command             => $command->{command},
                 interpret_depth     => 0,
                 checkflood          => 0,
@@ -935,11 +940,13 @@ sub add_botcmd_to_command_queue {
     my ($self, $channel, $command, $delay) = @_;
 
     my $botcmd = {
-        nick    => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
-        user    => 'stdin',
-        host    => 'pbot',
-        command => $command
+        nick     => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
+        user     => 'stdin',
+        host     => 'pbot',
+        command  => $command
     };
+
+    $botcmd->{hostmask} = "$botcmd->{nick}!stdin\@pbot";
 
     $self->add_to_command_queue($channel, $botcmd, $delay);
 }
