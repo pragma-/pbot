@@ -100,7 +100,7 @@ sub initialize {
             my ($item, $value) = split /=/, $arg, 2;
 
             if (not defined $item or not defined $value) {
-                print STDERR "Fatal error: unknown argument `$arg`; arguments must be in the form of `section.key=value` (e.g.: irc.botnick=newnick)\n";
+                print STDERR "Fatal error: unknown argument `$arg`; arguments must be in the form of `section.key=value` or `path_dir=value` (e.g.: irc.botnick=newnick or data_dir=path)\n";
                 exit;
             }
 
@@ -174,8 +174,11 @@ sub initialize {
         exit;
     }
 
+    # prepare the IRC engine
+    $self->{irc} = PBot::IRC->new;
+
     # prepare remaining core PBot modules -- do not change this order
-    $self->{timer} = PBot::Timer->new(pbot => $self, timeout => 10, name => 'PBot Timer', %conf);
+    $self->{timer}            = PBot::Timer->new(pbot => $self, timeout => 10, name => 'PBot Timer', %conf);
     $self->{event_dispatcher} = PBot::EventDispatcher->new(pbot => $self, %conf);
     $self->{users}            = PBot::Users->new(pbot => $self, filename => "$conf{data_dir}/users", %conf);
     $self->{antiflood}        = PBot::AntiFlood->new(pbot => $self, %conf);
@@ -188,7 +191,6 @@ sub initialize {
     $self->{functions}        = PBot::Functions->new(pbot => $self, %conf);
     $self->{refresher}        = PBot::Refresher->new(pbot => $self);
     $self->{ignorelist}       = PBot::IgnoreList->new(pbot => $self, filename => "$conf{data_dir}/ignorelist", %conf);
-    $self->{irc}              = PBot::IRC->new();
     $self->{irchandlers}      = PBot::IRCHandlers->new(pbot => $self, %conf);
     $self->{interpreter}      = PBot::Interpreter->new(pbot => $self, %conf);
     $self->{lagchecker}       = PBot::LagChecker->new(pbot => $self, %conf);
@@ -332,16 +334,17 @@ sub exit {
 
 # main loop
 sub do_one_loop {
-    my $self = shift;
-    $self->{irc}->do_one_loop() if $self->{connected};
-    $self->{select_handler}->do_select;
+    my ($self) = @_;
+    $self->{irc}->do_one_loop();
 }
 
 # main entry point
 sub start {
     my $self = shift;
+
+    $self->connect;
+
     while (1) {
-        $self->connect if not $self->{connected};
         $self->do_one_loop;
     }
 }
