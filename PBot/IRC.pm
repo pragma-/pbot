@@ -137,23 +137,22 @@ sub do_one_loop {
             $scheduledevent = $self->schedulequeue->dequeue();
             $scheduledevent->content->{coderef}->(@{$scheduledevent->content->{args}});
         }
-        if (!$self->schedulequeue->is_empty() && $nexttimer && $self->schedulequeue->head->time < $nexttimer) { $nexttimer = $self->schedulequeue->head->time; }
+
+        if (!$self->schedulequeue->is_empty() && $nexttimer && $self->schedulequeue->head->time < $nexttimer) {
+            $nexttimer = $self->schedulequeue->head->time;
+        }
     }
 
     # Block until input arrives, then hand the filehandle over to the
     # user-supplied coderef. Look! It's a freezer full of government cheese!
 
-    if ($nexttimer) { $timeout = $nexttimer - $time < $self->{_timeout} ? $nexttimer - $time : $self->{_timeout}; }
-    else            { $timeout = $self->{_timeout}; }
-    foreach $ev (
-        IO::Select->select(
-            $self->{_read},
-            $self->{_write},
-            $self->{_error},
-            $timeout
-        )
-      )
-    {
+    if ($nexttimer) {
+        $timeout = $nexttimer - $time < $self->{_timeout} ? $nexttimer - $time : $self->{_timeout};
+    } else {
+        $timeout = $self->{_timeout};
+    }
+
+    foreach $ev (IO::Select->select($self->{_read}, $self->{_write}, $self->{_error}, $timeout)) {
         foreach $sock (@{$ev}) {
             my $conn = $self->{_connhash}->{$sock};
             $conn or next;
