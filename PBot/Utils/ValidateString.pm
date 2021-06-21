@@ -12,6 +12,7 @@ our @ISA    = qw/Exporter/;
 our @EXPORT = qw/validate_string/;
 
 use JSON;
+use Encode;
 use Unicode::Truncate;
 
 # validate_string converts a given string to one that conforms to
@@ -85,6 +86,7 @@ sub validate_this_string {
 
     # truncate safely
     if ($max_length > 0) {
+        $string = encode('UTF-8', $string);
         $string = truncate_egc $string, $max_length;
     }
 
