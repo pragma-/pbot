@@ -56,8 +56,8 @@ sub on_select_read {
     if ($ret == 0) {
         # is there anything in reader's buffer?
         if (length $self->{buffers}->{$handle}) {
-            # send buffer to reader subref
-            $self->{readers}->{$handle}->($self->{buffers}->{$handle});
+            # send buffer to reader's consumer subref
+            $subref->($self->{buffers}->{$handle});
         }
 
         # remove reader
