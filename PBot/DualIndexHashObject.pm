@@ -125,7 +125,7 @@ sub save {
 
     if ($self->{save_queue_timeout}) {
         # enqueue the save to prevent save-thrashing
-        $self->{pbot}->{enqueue_event}->replace_subref_or_enqueue_event(
+        $self->{pbot}->{event_queue}->replace_subref_or_enqueue_event(
             $subref,
             $self->{save_queue_timeout},
             "save $self->{name}",
