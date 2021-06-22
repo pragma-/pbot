@@ -45,14 +45,14 @@ sub initialize {
 sub stdin_reader {
     my ($self, $input) = @_;
 
+    # make sure we're in the foreground first
+    $self->{foreground} = (tcgetpgrp($self->{tty_fd}) == getpgrp()) ? 1 : 0;
+    return if not $self->{foreground};
+
     # decode STDIN input from utf8
     $input = decode('UTF-8', $input);
 
     chomp $input;
-
-    # make sure we're in the foreground first
-    $self->{foreground} = (tcgetpgrp($self->{tty_fd}) == getpgrp()) ? 1 : 0;
-    return if not $self->{foreground};
 
     $self->{pbot}->{logger}->log("---------------------------------------------\n");
     $self->{pbot}->{logger}->log("Got STDIN: $input\n");

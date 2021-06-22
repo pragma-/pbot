@@ -1,12 +1,18 @@
+# File: ValidateString.pm
+#
+# Purpose: ensures that a given string conforms to PBot's limitations
+# for internal strings. This means ensuring the string is not too long,
+# does not have undesired characters, etc.
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 package PBot::Utils::ValidateString;
 
-use warnings;
-use strict;
+use PBot::Imports;
 
-use feature 'unicode_strings';
-use utf8;
-
-# export validate_string() subroutine
+# export validate_string subroutine
 require Exporter;
 our @ISA    = qw/Exporter/;
 our @EXPORT = qw/validate_string/;

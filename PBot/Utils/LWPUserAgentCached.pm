@@ -1,9 +1,16 @@
-package PBot::Utils::LWPUserAgentCached;
-use strict;
-
+# File: LWPUserAgentCached.pm
+#
 # Purpose: variant of LWP::UserAgent::WithCache. Instead of depending on
 # the 'expires' or 'Last-Modified' attributes, we always cache for the
 # specified duration.
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+package PBot::Utils::LWPUserAgentCached;
+
+use PBot::Imports;
 
 use base qw/LWP::UserAgent/;
 use Cache::FileCache;

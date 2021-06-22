@@ -1,8 +1,10 @@
+# File: Indefinite.pm
+#
+# Purpose: Implements a/an inflexion for nouns.
+
 package PBot::Utils::Indefinite;
 
-use 5.010; use warnings;
-
-use feature 'unicode_strings';
+use PBot::Imports;
 
 require Exporter;
 our @ISA    = qw/Exporter/;
