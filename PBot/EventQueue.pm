@@ -33,7 +33,7 @@ sub initialize {
 sub cmd_eventqueue {
     my ($self, $context) = @_;
 
-    my $usage = "Usage: eventqueue list [filter regex] | add <relative time> <command> [-repeat] | remove <event>";
+    my $usage = "Usage: eventqueue list [filter regex] | add <relative time> <command> [-repeat] | remove <regex>";
 
     my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
@@ -119,8 +119,8 @@ sub cmd_eventqueue {
 
     if ($command eq 'remove') {
         my ($regex) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 1);
-        return "Usage: eventqueue remove <event>" if not defined $regex;
-        $regex =~ s/\*/.*?/g;
+        return "Usage: eventqueue remove <regex>" if not defined $regex;
+        $regex =~ s/(?<!\.)\*/.*?/g;
         return $self->dequeue_event($regex);
     }
 
@@ -264,6 +264,7 @@ sub dequeue_event {
     return $result;
 }
 
+# invoke and remove all events matching regex
 sub execute_and_dequeue_event {
     my ($self, $id) = @_;
     return $self->dequeue_event($id, 1);
