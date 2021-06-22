@@ -128,208 +128,14 @@ sub cmd_eventqueue {
     return "Unknown command '$command'. $usage";
 }
 
-sub find_enqueue_position {
-    my ($self, $time) = @_;
-
-    # no events in queue yet, early-return first position
-    return 0 if not @{$self->{event_queue}};
-
-    # early-return first position if event's time is less
-    # than first position's
-    if ($time < $self->{event_queue}->[0]->{timeout}) {
-        return 0;
-    }
-
-    # early-return last position if event's time is greater
-    if ($time > $self->{event_queue}->[@{$self->{event_queue}} - 1]->{timeout}) {
-        return scalar @{$self->{event_queue}};
-    }
-
-    # binary search to find enqueue position
-
-    my $lo = 0;
-    my $hi = scalar @{$self->{event_queue}} - 1;
-
-    while ($lo <= $hi) {
-        my $mid = int (($hi + $lo) / 2);
-
-        if ($time < $self->{event_queue}->[$mid]->{timeout}) {
-            $hi = $mid - 1;
-        } elsif ($time > $self->{event_queue}->[$mid]->{timeout}) {
-            $lo = $mid + 1;
-        } else {
-            while ($mid < @{$self->{event_queue}} and $self->{event_queue}->[$mid]->{timeout} == $time) {
-                # found a slot with the same time. we "slide" down the array
-                # to append this event to the end of this region of same-times.
-                $mid++;
-            }
-            return $mid;
-        }
-    }
-
-    return $lo;
-}
-
-sub replace_subref_or_enqueue_event {
-    my ($self, $subref, $interval, $id, $repeating) = @_;
-
-    # find events matching id
-    my @events = grep { $_->{id} eq $id } @{$self->{event_queue}};
-
-    # no events found, enqueue new event
-    if (not @events) {
-        $self->enqueue_event($subref, $interval, $id, $repeating);
-        return;
-    }
-
-    # otherwise update existing events
-    foreach my $event (@events) {
-        $event->{subref} = $subref;
-    }
-}
-
-sub replace_or_enqueue_event {
-    my ($self, $subref, $interval, $id, $repeating) = @_;
-
-    # remove event if it exists
-    $self->dequeue_event($id) if $self->exists($id);
-
-    # enqueue new event
-    $self->enqueue_event($subref, $interval, $id, $repeating);
-}
-
-sub enqueue_event_unless_exists {
-    my ($self, $subref, $interval, $id, $repeating) = @_;
-
-    # event already exists, bail out
-    return if $self->exists($id);
-
-    # enqueue new event
-    $self->enqueue_event($subref, $interval, $id, $repeating);
-}
-
-# adds an event to the event queue
-sub enqueue_event {
-    my ($self, $subref, $interval, $id, $repeating) = @_;
-
-    $id        //= 'an event';
-    $repeating //= 0;
-    $interval  //= 0;
-
-    my $event = {
-        id        => $id,
-        subref    => $subref,
-        interval  => $interval,
-        timeout   => time + $interval,
-        repeating => $repeating,
-    };
-
-    my $i = $self->find_enqueue_position($event->{timeout});
-    splice @{$self->{event_queue}}, $i, 0, $event;
-
-    my $debug = $self->{pbot}->{registry}->get_value('eventqueue', 'debug') // 0;
-    if ($debug > 1) {
-        $self->{pbot}->{logger}->log("Enqueued new event $id at position $i: timeout=$event->{timeout} interval=$interval repeating=$repeating\n");
-    }
-}
-
-# removes an event from the event queue, optionally invoking it.
-# `id` can contain `.*` and `.*?` for wildcard-matching/globbing.
-sub dequeue_event {
-    my ($self, $id, $execute) = @_;
-
-    my $result = eval {
-        $id = quotemeta $id;
-        $id =~ s/\\\.\\\*\\\?/.*?/g;
-        $id =~ s/\\\.\\\*/.*/g;
-        my $regex = qr/^$id$/i;
-        my $count = @{$self->{event_queue}};
-        my @removed = grep { $_->{id} =~ /$regex/i; } @{$self->{event_queue}};
-        @{$self->{event_queue}} = grep { $_->{id} !~ /$regex/i; } @{$self->{event_queue}};
-        $count -= @{$self->{event_queue}};
-
-        if ($execute) {
-            foreach my $event (@removed) {
-                $event->{subref}->($event);
-            }
-        }
-
-        return "No matching events." if not $count;
-        return "Removed $count event" . ($count == 1 ? '' : 's') . ': ' . join(', ', map { $_->{id} } @removed);
-    };
-
-    if ($@) {
-        my $error = $@;
-        $self->{pbot}->{logger}->log("Error in dequeue_event: $error\n");
-        $error =~ s/ at PBot.*//;
-        return "$error";
-    }
-
-    return $result;
-}
-
-# invoke and remove all events matching `id`, which can
-# contain `.*` and `.*?` for wildcard-matching/globbing
-sub execute_and_dequeue_event {
-    my ($self, $id) = @_;
-    return $self->dequeue_event($id, 1);
-}
-
-# adds an event, with repeating defaulted to enabled
-sub enqueue {
-    my ($self, $subref, $interval, $id, $repeating) = @_;
-    $repeating //= 1;
-    $self->enqueue_event($subref, $interval, $id, $repeating);
-}
-
-# alias to dequeue_event, for consistency
-sub dequeue {
-    my ($self, $id) = @_;
-    $self->dequeue_event($id);
-}
-
-sub exists {
-    my ($self, $id) = @_;
-    return scalar grep { $_->{id} eq $id } @{$self->{event_queue}};
-}
-
-sub update_repeating {
-    my ($self, $id, $repeating) = @_;
-
-    for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
-        if ($self->{event_queue}->[$i]->{id} eq $id) {
-            $self->{event_queue}->[$i]->{repeating} = $repeating;
-            last;
-        }
-    }
-}
-
-sub update_interval {
-    my ($self, $id, $interval, $dont_enqueue) = @_;
-
-    for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
-        if ($self->{event_queue}->[$i]->{id} eq $id) {
-            if ($dont_enqueue) {
-                # update interval in-place without moving event to new place in queue
-                # (allows event to fire at expected time, then updates to new timeout afterwards)
-                $self->{event_queue}->[$i]->{interval} = $interval;
-            } else {
-                # remove and add event in new position in queue
-                my $event = splice(@{$self->{event_queue}}, $i, 1);
-                $self->enqueue_event($event->{subref}, $interval, $id, $event->{repeating});
-            }
-            last;
-        }
-    }
-}
-
+# returns seconds until upcoming event.
 sub duration_until_next_event {
     my ($self) = @_;
     return 0 if not @{$self->{event_queue}};
     return $self->{event_queue}->[0]->{timeout} - time;
 }
 
-# invokes the current events and then returns seconds until next upcoming event
+# invokes any current events and then returns seconds until upcoming event.
 sub do_events {
     my ($self) = @_;
 
@@ -373,6 +179,230 @@ sub do_events {
     }
 
     return $self->duration_until_next_event;
+}
+
+# check if an event is in the event queue.
+sub exists {
+    my ($self, $id) = @_;
+    return scalar grep { $_->{id} eq $id } @{$self->{event_queue}};
+}
+
+# quickly and efficiently find the best position in the event
+# queue array for a given time value
+sub find_enqueue_position {
+    my ($self, $time) = @_;
+
+    # no events in queue yet, early-return first position
+    return 0 if not @{$self->{event_queue}};
+
+    # early-return first position if event's time is less
+    # than first position's
+    if ($time < $self->{event_queue}->[0]->{timeout}) {
+        return 0;
+    }
+
+    # early-return last position if event's time is greater
+    if ($time > $self->{event_queue}->[@{$self->{event_queue}} - 1]->{timeout}) {
+        return scalar @{$self->{event_queue}};
+    }
+
+    # binary search to find enqueue position
+
+    my $lo = 0;
+    my $hi = scalar @{$self->{event_queue}} - 1;
+
+    while ($lo <= $hi) {
+        my $mid = int (($hi + $lo) / 2);
+
+        if ($time < $self->{event_queue}->[$mid]->{timeout}) {
+            $hi = $mid - 1;
+        } elsif ($time > $self->{event_queue}->[$mid]->{timeout}) {
+            $lo = $mid + 1;
+        } else {
+            while ($mid < @{$self->{event_queue}} and $self->{event_queue}->[$mid]->{timeout} == $time) {
+                # found a slot with the same time. we "slide" down the array
+                # to append this event to the end of this region of same-times.
+                $mid++;
+            }
+            return $mid;
+        }
+    }
+
+    return $lo;
+}
+
+# adds an event to the event queue, optionally repeating
+sub enqueue_event {
+    my ($self, $subref, $interval, $id, $repeating) = @_;
+
+    # default values
+    $id        //= "unnamed (${interval}s $subref)";
+    $repeating //= 0;
+    $interval  //= 0;
+
+    # create event structure
+    my $event = {
+        id        => $id,
+        subref    => $subref,
+        interval  => $interval,
+        timeout   => time + $interval,
+        repeating => $repeating,
+    };
+
+    # find position to add event
+    my $i = $self->find_enqueue_position($event->{timeout});
+
+    # add the event to the event queue array
+    splice @{$self->{event_queue}}, $i, 0, $event;
+
+    # debugging noise
+    my $debug = $self->{pbot}->{registry}->get_value('eventqueue', 'debug') // 0;
+    if ($debug > 1) {
+        $self->{pbot}->{logger}->log("Enqueued new event $id at position $i: timeout=$event->{timeout} interval=$interval repeating=$repeating\n");
+    }
+}
+
+# convenient alias to add an event with repeating defaulted to enabled.
+sub enqueue {
+    my ($self, $subref, $interval, $id, $repeating) = @_;
+    $self->enqueue_event($subref, $interval, $id, $repeating // 1);
+}
+
+# removes an event from the event queue, optionally invoking it.
+# `id` can contain `.*` and `.*?` for wildcard-matching/globbing.
+sub dequeue_event {
+    my ($self, $id, $execute) = @_;
+
+    my $result = eval {
+        # escape special characters
+        $id = quotemeta $id;
+
+        # unescape .* and .*?
+        $id =~ s/\\\.\\\*\\\?/.*?/g;
+        $id =~ s/\\\.\\\*/.*/g;
+
+        # compile regex
+        my $regex = qr/^$id$/i;
+
+        # count total events before removal
+        my $count = @{$self->{event_queue}};
+
+        # collect events to be removed
+        my @removed = grep { $_->{id} =~ /$regex/i; } @{$self->{event_queue}};
+
+        # remove events from event queue
+        @{$self->{event_queue}} = grep { $_->{id} !~ /$regex/i; } @{$self->{event_queue}};
+
+        # set count to total events removed
+        $count -= @{$self->{event_queue}};
+
+        # invoke removed events, if requested
+        if ($execute) {
+            foreach my $event (@removed) {
+                $event->{subref}->($event);
+            }
+        }
+
+        # nothing removed
+        return "No matching events." if not $count;
+
+        # list all removed events
+        return "Removed $count event" . ($count == 1 ? '' : 's') . ': ' . join(', ', map { $_->{id} } @removed);
+    };
+
+    if ($@) {
+        my $error = $@;
+        $self->{pbot}->{logger}->log("Error in dequeue_event: $error\n");
+        $error =~ s/ at PBot.*//;
+        return "$error";
+    }
+
+    return $result;
+}
+
+# alias to dequeue_event, for consistency.
+sub dequeue {
+    my ($self, $id) = @_;
+    $self->dequeue_event($id);
+}
+
+# invoke and remove all events matching `id`, which can
+# contain `.*` and `.*?` for wildcard-matching/globbing.
+sub execute_and_dequeue_event {
+    my ($self, $id) = @_;
+    return $self->dequeue_event($id, 1);
+}
+
+# replace code subrefs for matching events. if no events
+# were found, then add the event to the event queue.
+sub replace_subref_or_enqueue_event {
+    my ($self, $subref, $interval, $id, $repeating) = @_;
+
+    # find events matching id
+    my @events = grep { $_->{id} eq $id } @{$self->{event_queue}};
+
+    # no events found, enqueue new event
+    if (not @events) {
+        $self->enqueue_event($subref, $interval, $id, $repeating);
+        return;
+    }
+
+    # otherwise update existing events
+    foreach my $event (@events) {
+        $event->{subref} = $subref;
+    }
+}
+
+# remove existing events of this id then enqueue new event.
+sub replace_or_enqueue_event {
+    my ($self, $subref, $interval, $id, $repeating) = @_;
+
+    # remove event if it exists
+    $self->dequeue_event($id) if $self->exists($id);
+
+    # enqueue new event
+    $self->enqueue_event($subref, $interval, $id, $repeating);
+}
+
+# add event unless it already had been added.
+sub enqueue_event_unless_exists {
+    my ($self, $subref, $interval, $id, $repeating) = @_;
+
+    # event already exists, bail out
+    return if $self->exists($id);
+
+    # enqueue new event
+    $self->enqueue_event($subref, $interval, $id, $repeating);
+}
+
+# update the `repeating` flag for all events matching `id`.
+sub update_repeating {
+    my ($self, $id, $repeating) = @_;
+
+    for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
+        if ($self->{event_queue}->[$i]->{id} eq $id) {
+            $self->{event_queue}->[$i]->{repeating} = $repeating;
+        }
+    }
+}
+
+# update the `interval` value for all events matching `id`.
+sub update_interval {
+    my ($self, $id, $interval, $dont_enqueue) = @_;
+
+    for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
+        if ($self->{event_queue}->[$i]->{id} eq $id) {
+            if ($dont_enqueue) {
+                # update interval in-place without moving event to new place in queue
+                # (allows event to fire at expected time, then updates to new timeout afterwards)
+                $self->{event_queue}->[$i]->{interval} = $interval;
+            } else {
+                # remove and add event in new position in queue
+                my $event = splice(@{$self->{event_queue}}, $i, 1);
+                $self->enqueue_event($event->{subref}, $interval, $id, $event->{repeating});
+            }
+        }
+    }
 }
 
 1;
