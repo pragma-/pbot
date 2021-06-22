@@ -30,6 +30,7 @@ sub initialize {
     $self->{pbot}->{capabilities}->add('admin', 'can-eventqueue', 1);
 }
 
+# eventqueue bot command
 sub cmd_eventqueue {
     my ($self, $context) = @_;
 
@@ -207,6 +208,7 @@ sub enqueue_event_unless_exists {
     $self->enqueue_event($subref, $interval, $id, $repeating);
 }
 
+# adds an event to the event queue
 sub enqueue_event {
     my ($self, $subref, $interval, $id, $repeating) = @_;
 
@@ -231,6 +233,8 @@ sub enqueue_event {
     }
 }
 
+# removes an event from the event queue, optionally invoking it.
+# `id` can contain `.*` and `.*?` for wildcard-matching/globbing.
 sub dequeue_event {
     my ($self, $id, $execute) = @_;
 
@@ -264,19 +268,21 @@ sub dequeue_event {
     return $result;
 }
 
-# invoke and remove all events matching regex
+# invoke and remove all events matching `id`, which can
+# contain `.*` and `.*?` for wildcard-matching/globbing
 sub execute_and_dequeue_event {
     my ($self, $id) = @_;
     return $self->dequeue_event($id, 1);
 }
 
-# adds event with repeating defaulting to enabled
+# adds an event, with repeating defaulted to enabled
 sub enqueue {
     my ($self, $subref, $interval, $id, $repeating) = @_;
     $repeating //= 1;
     $self->enqueue_event($subref, $interval, $id, $repeating);
 }
 
+# alias to dequeue_event, for consistency
 sub dequeue {
     my ($self, $id) = @_;
     $self->dequeue_event($id);
@@ -324,7 +330,6 @@ sub duration_until_next_event {
 }
 
 # invokes the current events and then returns seconds until next upcoming event
-
 sub do_events {
     my ($self) = @_;
 
