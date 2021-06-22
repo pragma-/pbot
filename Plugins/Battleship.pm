@@ -34,7 +34,7 @@ sub initialize {
 sub unload {
     my $self = shift;
     $self->{pbot}->{commands}->unregister('battleship');
-    $self->{pbot}->{timer}->dequeue_event('battleship loop');
+    $self->{pbot}->{event_queue}->dequeue_event('battleship loop');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
@@ -124,7 +124,7 @@ sub cmd_battleship {
                 $player = {id => -1, name => undef, missedinputs => 0};
                 push @{$self->{state_data}->{players}}, $player;
 
-                $self->{pbot}->{timer}->enqueue_event(sub {
+                $self->{pbot}->{event_queue}->enqueue_event(sub {
                         $self->run_one_state;
                     }, 1, 'battleship loop', 1
                 );
@@ -147,7 +147,7 @@ sub cmd_battleship {
             $player = {id => $id, name => $challengee, missedinputs => 0};
             push @{$self->{state_data}->{players}}, $player;
 
-            $self->{pbot}->{timer}->enqueue_event(sub {
+            $self->{pbot}->{event_queue}->enqueue_event(sub {
                     $self->battleship_loop;
                 }, 1, 'battleship loop', 1
             );
@@ -965,7 +965,7 @@ sub show_battlefield {
 sub nogame {
     my ($self, $state) = @_;
     $state->{result} = 'nogame';
-    $self->{pbot}->{timer}->update_repeating('battleship loop', 0);
+    $self->{pbot}->{event_queue}->update_repeating('battleship loop', 0);
     return $state;
 }
 

@@ -35,7 +35,7 @@ sub initialize {
     $self->{pbot}->{registry}->add_trigger('messagehistory', 'sqlite_commit_interval', sub { $self->sqlite_commit_interval_trigger(@_) });
     $self->{pbot}->{registry}->add_trigger('messagehistory', 'sqlite_debug',           sub { $self->sqlite_debug_trigger(@_) });
 
-    $self->{pbot}->{timer}->register(
+    $self->{pbot}->{event_queue}->enqueue(
         sub { $self->commit_message_history },
         $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_commit_interval'),
         'messagehistory commit'
@@ -47,7 +47,7 @@ sub initialize {
 
 sub sqlite_commit_interval_trigger {
     my ($self, $section, $item, $newvalue) = @_;
-    $self->{pbot}->{timer}->update_interval('messagehistory commit', $newvalue);
+    $self->{pbot}->{event_queue}->update_interval('messagehistory commit', $newvalue);
 }
 
 sub sqlite_debug_trigger {

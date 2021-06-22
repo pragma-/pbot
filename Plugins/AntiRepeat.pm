@@ -26,7 +26,7 @@ sub initialize {
 
 sub unload {
     my $self = shift;
-    $self->{pbot}->{timer}->dequeue_event('antirepeat .*');
+    $self->{pbot}->{event_queue}->dequeue_event('antirepeat .*');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
 }
@@ -112,7 +112,7 @@ sub on_public {
             $self->{offenses}->{$account}->{$channel}->{last_offense} = gettimeofday;
             $self->{offenses}->{$account}->{$channel}->{offenses}++;
 
-            $self->{pbot}->{timer}->enqueue_event(sub {
+            $self->{pbot}->{event_queue}->enqueue_event(sub {
                     my ($event) = @_;
                     $self->{offenses}->{$account}->{$channel}->{offenses}--;
 

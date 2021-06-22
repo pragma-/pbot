@@ -82,8 +82,8 @@ sub cmd_remove {
     # clear banlists
     $self->{pbot}->{banlist}->{banlist}->remove($context->{arguments});
     $self->{pbot}->{banlist}->{quietlist}->remove($context->{arguments});
-    $self->{pbot}->{timer}->dequeue_event("unban $context->{arguments} .*");
-    $self->{pbot}->{timer}->dequeue_event("unmute $context->{arguments} .*");
+    $self->{pbot}->{event_queue}->dequeue_event("unban $context->{arguments} .*");
+    $self->{pbot}->{event_queue}->dequeue_event("unmute $context->{arguments} .*");
 
     # TODO: ignores, etc?
     return $self->{channels}->remove($context->{arguments});

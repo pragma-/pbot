@@ -39,7 +39,7 @@ sub initialize {
     $self->{pbot}->{registry}->add_trigger('dualindexsqliteobject', "debug_$self->{name}", sub { $self->sqlite_debug_trigger(@_) });
 
     $self->{pbot}->{atexit}->register(sub { $self->end; return; });
-    $self->{pbot}->{timer}->register(sub {$self->trim_cache }, 60, "DualIndexSQLiteObject $self->{name} Timer");
+    $self->{pbot}->{event_queue}->enqueue(sub {$self->trim_cache }, 60, "Trim $self->{name} cache");
 
     $self->begin;
 }
@@ -80,7 +80,7 @@ sub end {
         $self->{dbh} = undef;
     }
 
-    $self->{pbot}->{timer}->unregister("DualIndexSQLiteObject $self->{name} Timer");
+    $self->{pbot}->{event_queue}->dequeue("Trim $self->{name} cache");
 }
 
 sub load  {

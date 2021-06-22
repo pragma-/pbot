@@ -32,7 +32,7 @@ sub unload {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
-    $self->{pbot}->{timer}->dequeue_event('connect4 loop');
+    $self->{pbot}->{event_queue}->dequeue_event('connect4 loop');
 }
 
 sub on_kick {
@@ -156,7 +156,7 @@ sub cmd_connect4 {
                 $self->{current_state} = 'accept';
                 $self->{state_data}    = {players => [], counter => 0};
 
-                $self->{pbot}->{timer}->enqueue_event(
+                $self->{pbot}->{event_queue}->enqueue_event(
                     sub {
                         $self->run_one_state;
                     }, 1, 'connect4 loop', 1
@@ -185,7 +185,7 @@ sub cmd_connect4 {
             $self->{current_state} = 'accept';
             $self->{state_data}    = {players => [], counter => 0};
 
-            $self->{pbot}->{timer}->enqueue_event(
+            $self->{pbot}->{event_queue}->enqueue_event(
                 sub {
                     $self->run_one_state;
                 }, 1, 'connect4 loop', 1
@@ -693,7 +693,7 @@ sub show_board {
 sub nogame {
     my ($self, $state) = @_;
     $state->{result} = 'nogame';
-    $self->{pbot}->{timer}->update_repeating('connect4 loop', 0);
+    $self->{pbot}->{event_queue}->update_repeating('connect4 loop', 0);
     return $state;
 }
 

@@ -27,7 +27,8 @@ sub initialize {
 
     $self->{pbot}->{registry}->add_default('text', 'general', 'deop_timeout', 300);
 
-    $self->{pbot}->{timer}->register(sub { $self->check_opped_timeouts },  10, 'Check Opped Timeouts');
+    # TODO: enqueue OP events as needed instead of naively checking every 10 seconds
+    $self->{pbot}->{event_queue}->enqueue(sub { $self->check_opped_timeouts },  10, 'Check opped timeouts');
 }
 
 sub track_mode {

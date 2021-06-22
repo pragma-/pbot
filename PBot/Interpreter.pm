@@ -887,7 +887,7 @@ sub output_result {
 sub add_message_to_output_queue {
     my ($self, $channel, $message, $delay) = @_;
 
-    $self->{pbot}->{timer}->enqueue_event(
+    $self->{pbot}->{event_queue}->enqueue_event(
         sub {
             my $context = {
                 from       => $channel,
@@ -909,7 +909,7 @@ sub add_message_to_output_queue {
 sub add_to_command_queue {
     my ($self, $channel, $command, $delay, $repeating) = @_;
 
-    $self->{pbot}->{timer}->enqueue_event(
+    $self->{pbot}->{event_queue}->enqueue_event(
         sub {
             my $context = {
                 from                => $channel,

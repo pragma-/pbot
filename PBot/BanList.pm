@@ -59,7 +59,7 @@ sub initialize {
     $self->{ban_queue}   = {};
     $self->{unban_queue} = {};
 
-    $self->{pbot}->{timer}->register(sub { $self->flush_unban_queue }, 30, 'Unban Queue');
+    $self->{pbot}->{event_queue}->enqueue(sub { $self->flush_unban_queue }, 30, 'Flush unban queue');
 }
 
 sub cmd_banlist {
@@ -203,7 +203,7 @@ sub compare_banlist {
             $self->{pbot}->{logger}->log("BanList: Saved ban +b $mask no longer exists in $channel.\n");
             # TODO option to restore ban
             $self->{banlist}->remove($channel, $mask, undef, 1);
-            $self->{pbot}->{timer}->dequeue_event("unban $channel $mask");
+            $self->{pbot}->{event_queue}->dequeue_event("unban $channel $mask");
         }
     }
 
@@ -248,7 +248,7 @@ sub compare_quietlist {
             $self->{pbot}->{logger}->log("BanList: Saved quiet +q $mask no longer exists in $channel.\n");
             # TODO option to restore quiet
             $self->{quietlist}->remove($channel, $mask, undef, 1);
-            $self->{pbot}->{timer}->dequeue_event("unmute $channel $mask");
+            $self->{pbot}->{event_queue}->dequeue_event("unmute $channel $mask");
         }
     }
 
@@ -294,15 +294,15 @@ sub track_mode {
 
         if ($mode eq "-b") {
             $self->{banlist}->remove($channel, $mask);
-            $self->{pbot}->{timer}->dequeue_event("unban $channel $mask");
+            $self->{pbot}->{event_queue}->dequeue_event("unban $channel $mask");
 
             # freenode strips channel forwards from unban result if no ban exists with a channel forward
             my $join_flood_channel = $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_channel') // '#stop-join-flood';
             $self->{banlist}->remove($channel, "$mask\$$join_flood_channel");
-            $self->{pbot}->{timer}->dequeue_event(lc "unban $channel $mask\$$join_flood_channel");
+            $self->{pbot}->{event_queue}->dequeue_event(lc "unban $channel $mask\$$join_flood_channel");
         } elsif ($mode eq "-$mute_char") {
             $self->{quietlist}->remove($channel, $mask);
-            $self->{pbot}->{timer}->dequeue_event("unmute $channel $mask");
+            $self->{pbot}->{event_queue}->dequeue_event("unmute $channel $mask");
         }
     }
 
@@ -312,7 +312,7 @@ sub track_mode {
         if ($nick eq "ChanServ" or $mask =~ m/##fix_your_connection$/i) {
             if ($self->{banlist}->exists($channel, $mask)) {
                 $self->{banlist}->set($channel, $mask, 'timeout', gettimeofday + $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'));
-                $self->{pbot}->{timer}->update_interval("unban $channel $mask", $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'));
+                $self->{pbot}->{event_queue}->update_interval("unban $channel $mask", $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'));
             } else {
                 my $data = {
                     reason    => 'Temp ban for banned-by-ChanServ or mask is *!*@*##fix_your_connection',
@@ -349,7 +349,7 @@ sub track_mode {
             $self->{pbot}->{logger}->log("WEIRD MUTE THING $nick...\n");
             if ($self->{quietlist}->exists($channel, $mask)) {
                 $self->{quietlist}->set($channel, $mask, 'timeout', gettimeofday + $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'));
-                $self->{pbot}->{timer}->update_interval("unmute $channel $mask", $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'));
+                $self->{pbot}->{event_queue}->update_interval("unmute $channel $mask", $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'));
             } else {
                 my $data = {
                     reason    => 'Temp mute',
@@ -557,7 +557,7 @@ sub ban_user_timed {
     }
 
     my $method = $mode eq 'b' ? 'unban' : 'unmute';
-    $self->{pbot}->{timer}->dequeue_event("$method $channel $mask");
+    $self->{pbot}->{event_queue}->dequeue_event("$method $channel $mask");
 
     if ($length > 0) {
         $self->enqueue_unban($channel, $mode, $mask, $length);
@@ -704,9 +704,9 @@ sub enqueue_unban {
 
     my $method = $mode eq 'b' ? 'unban' : 'unmute';
 
-    $self->{pbot}->{timer}->enqueue_event(
+    $self->{pbot}->{event_queue}->enqueue_event(
         sub {
-            $self->{pbot}->{timer}->update_interval("$method $channel $hostmask", 60 * 15, 1); # try again in 15 minutes
+            $self->{pbot}->{event_queue}->update_interval("$method $channel $hostmask", 60 * 15, 1); # try again in 15 minutes
             return if not $self->{pbot}->{joined_channels};
             $self->unban_user($channel, $mode, $hostmask);
         }, $interval, "$method $channel $hostmask", 1

@@ -25,7 +25,7 @@ sub unload {
     my $self = shift;
     $self->dbi_end;
     $self->{pbot}->{commands}->unregister('remindme');
-    $self->{pbot}->{timer}->dequeue_event('reminder .*');
+    $self->{pbot}->{event_queue}->dequeue_event('reminder .*');
 }
 
 sub enqueue_reminders {
@@ -56,7 +56,7 @@ sub enqueue_reminders {
         $timeout = 10 if $timeout < 10;
         my $repeating = $reminder->{repeat};
 
-        $self->{pbot}->{timer}->enqueue_event(
+        $self->{pbot}->{event_queue}->enqueue_event(
             sub {
                 my ($event) = @_;
                 $self->do_reminder($reminder->{id}, $event);
@@ -126,7 +126,7 @@ sub add_reminder {
         return 0;
     }
 
-    $self->{pbot}->{timer}->enqueue_event(
+    $self->{pbot}->{event_queue}->enqueue_event(
         sub {
             my ($event) = @_;
             $self->do_reminder($id, $event);
@@ -151,7 +151,7 @@ sub delete_reminder {
         return 0;
     }
 
-    $self->{pbot}->{timer}->dequeue_event("reminder $id");
+    $self->{pbot}->{event_queue}->dequeue_event("reminder $id");
     return 1;
 }
 

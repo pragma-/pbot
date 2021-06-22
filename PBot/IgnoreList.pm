@@ -98,7 +98,7 @@ sub enqueue_ignores {
             my $interval = $timeout - $now;
             $interval = 0 if $interval < 0;
 
-            $self->{pbot}->{timer}->enqueue_event(sub {
+            $self->{pbot}->{event_queue}->enqueue_event(sub {
                     $self->remove($channel, $hostmask);
                 }, $interval, "ignore_timeout $channel $hostmask"
             );
@@ -136,9 +136,9 @@ sub add {
     $self->{ignorelist}->add($channel, $hostmask, $data);
 
     if ($length > 0) {
-        $self->{pbot}->{timer}->dequeue_event("ignore_timeout $channel $hostmask");
+        $self->{pbot}->{event_queue}->dequeue_event("ignore_timeout $channel $hostmask");
 
-        $self->{pbot}->{timer}->enqueue_event(sub {
+        $self->{pbot}->{event_queue}->enqueue_event(sub {
                 $self->remove($channel, $hostmask);
             }, $length, "ignore_timeout $channel $hostmask"
         );
@@ -159,7 +159,7 @@ sub remove {
 
     $channel = '.*' if $channel !~ /^#/;
 
-    $self->{pbot}->{timer}->dequeue_event("ignore_timeout $channel $hostmask");
+    $self->{pbot}->{event_queue}->dequeue_event("ignore_timeout $channel $hostmask");
     return $self->{ignorelist}->remove($channel, $hostmask);
 }
 

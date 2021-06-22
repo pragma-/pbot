@@ -24,7 +24,7 @@ sub initialize {
 sub unload {
     my ($self) = @_;
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
-    $self->{pbot}->{timer}->dequeue_event('antitwitter .*');
+    $self->{pbot}->{event_queue}->dequeue_event('antitwitter .*');
 }
 
 sub on_public {
@@ -68,7 +68,7 @@ sub on_public {
                     );
                     $self->{pbot}->{chanops}->gain_ops($channel);
 
-                    $self->{pbot}->{timer}->enqueue_event(sub {
+                    $self->{pbot}->{event_queue}->enqueue_event(sub {
                             my ($event) = @_;
                             if (--$self->{offenses}->{$channel}->{$nick}->{offenses} <= 0) {
                                 delete $self->{offenses}->{$channel}->{$nick};

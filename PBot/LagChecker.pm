@@ -45,8 +45,8 @@ sub initialize {
     # registry trigger for lag_history_interval changes
     $self->{pbot}->{registry}->add_trigger('lagchecker', 'lag_history_interval', sub { $self->trigger_lag_history_interval(@_) });
 
-    # timer to send PINGs
-    $self->{pbot}->{timer}->register(
+    # enqueue repeating event  to send PINGs
+    $self->{pbot}->{event_queue}->enqueue(
         sub { $self->send_ping },
         $self->{pbot}->{registry}->get_value('lagchecker', 'lag_history_interval'),
         'lag check'
@@ -62,7 +62,7 @@ sub initialize {
 # registry trigger fires when value changes
 sub trigger_lag_history_interval {
     my ($self, $section, $item, $newvalue) = @_;
-    $self->{pbot}->{timer}->update_interval('lag check', $newvalue);
+    $self->{pbot}->{event_queue}->update_interval('lag check', $newvalue);
 }
 
 # lagcheck bot command

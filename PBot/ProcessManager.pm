@@ -243,13 +243,12 @@ sub execute_process {
         # remove atexit handlers
         $self->{pbot}->{atexit}->unregister_all;
 
-        # FIXME: close databases and files too? Or just set everything to check for $self->{pbot}->{child} == 1 or $context->{pid} == 0?
-
         # execute the provided subroutine, results are stored in $context
         eval {
             local $SIG{ALRM} = sub { die "Process `$context->{commands}->[0]` timed-out" };
             alarm $timeout;
             $subref->($context);
+            alarm 0;
         };
 
         # check for errors
@@ -264,9 +263,6 @@ sub execute_process {
             $context->{result} =~ s/ at PBot.*$//ms;
             $context->{result} =~ s/\s+...propagated at .*$//ms;
         }
-
-        # turn alarm back on for PBot::Timer
-        alarm 1;
 
         # print $context to pipe
         my $json = encode_json $context;

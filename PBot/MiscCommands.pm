@@ -191,8 +191,8 @@ sub cmd_reload {
         },
 
         'banlist' => sub {
-            $self->{pbot}->{timer}->dequeue_event('unban #.*');
-            $self->{pbot}->{timer}->dequeue_event('unmute #.*');
+            $self->{pbot}->{event_queue}->dequeue_event('unban #.*');
+            $self->{pbot}->{event_queue}->dequeue_event('unmute #.*');
             $self->{pbot}->{banlist}->{banlist}->load;
             $self->{pbot}->{banlist}->{quietlist}->load;
             $self->{pbot}->{banlist}->enqueue_timeouts($self->{pbot}->{banlist}->{banlist},   'b');

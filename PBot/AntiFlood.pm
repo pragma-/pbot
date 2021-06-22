@@ -36,7 +36,7 @@ sub initialize {
     $self->{'ban-exemptions'} = PBot::DualIndexHashObject->new(name => 'Ban exemptions', filename => $filename, pbot => $self->{pbot});
     $self->{'ban-exemptions'}->load;
 
-    $self->{pbot}->{timer}->register(sub { $self->adjust_offenses }, 60 * 60 * 1, 'AntiFlood Adjust Offenses');
+    $self->{pbot}->{event_queue}->enqueue(sub { $self->adjust_offenses }, 60 * 60 * 1, 'Adjust anti-flood offenses');
 
     $self->{pbot}->{registry}->add_default('text', 'antiflood', 'enforce', $conf{enforce_antiflood} // 1);
 

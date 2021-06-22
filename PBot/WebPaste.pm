@@ -82,8 +82,6 @@ sub paste {
 
     $result =~ s/^\s+|\s+$//g;
 
-    alarm 1; # LWP::UserAgent::Paranoid kills alarm
-
     return $result;
 }
 

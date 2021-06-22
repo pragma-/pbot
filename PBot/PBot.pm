@@ -37,6 +37,7 @@ use PBot::ChanOps;
 use PBot::DualIndexHashObject;
 use PBot::DualIndexSQLiteObject;
 use PBot::EventDispatcher;
+use PBot::EventQueue;
 use PBot::Factoids;
 use PBot::Functions;
 use PBot::HashObject;
@@ -55,7 +56,6 @@ use PBot::Registry;
 use PBot::Refresher;
 use PBot::SelectHandler;
 use PBot::StdinReader;
-use PBot::Timer;
 use PBot::Updater;
 use PBot::Users;
 use PBot::Utils::ParseDate;
@@ -178,7 +178,7 @@ sub initialize {
     $self->{irc} = PBot::IRC->new;
 
     # prepare remaining core PBot modules -- do not change this order
-    $self->{timer}            = PBot::Timer->new(pbot => $self, timeout => 10, name => 'PBot Timer', %conf);
+    $self->{event_queue}      = PBot::EventQueue->new(pbot => $self, name => 'PBot event queue', %conf);
     $self->{event_dispatcher} = PBot::EventDispatcher->new(pbot => $self, %conf);
     $self->{users}            = PBot::Users->new(pbot => $self, filename => "$conf{data_dir}/users", %conf);
     $self->{antiflood}        = PBot::AntiFlood->new(pbot => $self, %conf);
@@ -213,9 +213,9 @@ sub initialize {
     # -- this must happen last after all modules have registered their capabilities --
     $self->{capabilities}->rebuild_botowner_capabilities;
 
-    # flush all pending save events to disk at exit
+    # fire all pending save events at exit
     $self->{atexit}->register(sub {
-            $self->{timer}->execute_and_dequeue_event('save *');
+            $self->{event_queue}->execute_and_dequeue_event('save .*');
             return;
         }
     );
@@ -267,9 +267,6 @@ sub connect {
 
     $self->{connected} = 1;
 
-    # start timer once connected
-    $self->{timer}->start;
-
     # set up handlers for the IRC engine
     $self->{conn}->add_default_handler(sub { $self->{irchandlers}->default_handler(@_) }, 1);
     $self->{conn}->add_handler([251, 252, 253, 254, 255, 302], sub { $self->{irchandlers}->on_init(@_) });
@@ -308,7 +305,6 @@ sub register_signal_handlers {
 sub atexit {
     my $self = shift;
     $self->{atexit}->execute_all;
-    alarm 0;
     if (exists $self->{logger}) {
         $self->{logger}->log("Good-bye.\n");
     } else {
@@ -335,7 +331,16 @@ sub exit {
 # main loop
 sub do_one_loop {
     my ($self) = @_;
-    $self->{irc}->do_one_loop();
+
+    # do an irc engine loop (select, eventqueues, etc)
+    $self->{irc}->do_one_loop;
+
+    # check for an available PBot event (returns seconds until next event)
+    my $waitfor = $self->{event_queue}->do_next_event;
+
+    # tell irc select loop to sleep for this many seconds
+    # (or until its own internal eventqueue has an event)
+    $self->{irc}->timeout($waitfor);
 }
 
 # main entry point

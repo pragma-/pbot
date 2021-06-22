@@ -1,6 +1,8 @@
 # File: EventDispatcher.pm
 #
 # Purpose: Registers event handlers and dispatches events to them.
+#
+# Note: PBot::EventDispatcher has no relation to PBot::EventQueue.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this

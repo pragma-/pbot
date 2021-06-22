@@ -64,7 +64,8 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.join', sub { $self->on_self_join(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.part', sub { $self->on_self_part(@_) });
 
-    $self->{pbot}->{timer}->register(sub { $self->check_pending_whos }, 10, 'Check Pending Whos');
+    # TODO: enqueue these events as needed instead of naively checking every 10 seconds
+    $self->{pbot}->{event_queue}->enqueue(sub { $self->check_pending_whos }, 10, 'Check pending WHOs');
 }
 
 sub default_handler {

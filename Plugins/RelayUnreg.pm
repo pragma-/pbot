@@ -14,12 +14,12 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->on_public(@_) });
     $self->{queue}    = [];
     $self->{notified} = {};
-    $self->{pbot}->{timer}->register(sub { $self->check_queue }, 1, 'RelayUnreg');
+    $self->{pbot}->{event_queue}->enqueue(sub { $self->check_queue }, 1, 'RelayUnreg');
 }
 
 sub unload {
     my $self = shift;
-    $self->{pbot}->{timer}->unregister('RelayUnreg');
+    $self->{pbot}->{event_queue}->dequeue('RelayUnreg');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
 }
 
