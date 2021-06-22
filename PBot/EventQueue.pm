@@ -322,9 +322,9 @@ sub duration_until_next_event {
     return $self->{event_queue}->[0]->{timeout} - time;
 }
 
-# invokes the next event, if ready, and then returns seconds until next event
+# invokes the current events and then returns seconds until next upcoming event
 
-sub do_next_event {
+sub do_events {
     my ($self) = @_;
 
     # early-return if no events available

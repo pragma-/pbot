@@ -335,8 +335,8 @@ sub do_one_loop {
     # do an irc engine loop (select, eventqueues, etc)
     $self->{irc}->do_one_loop;
 
-    # check for an available PBot event (returns seconds until next event)
-    my $waitfor = $self->{event_queue}->do_next_event;
+    # invoke PBot events (returns seconds until next event)
+    my $waitfor = $self->{event_queue}->do_events;
 
     # tell irc select loop to sleep for this many seconds
     # (or until its own internal eventqueue has an event)
