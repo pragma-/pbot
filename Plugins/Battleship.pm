@@ -373,11 +373,10 @@ sub player_left {
 sub send_message {
     my ($self, $to, $text, $delay) = @_;
 
-    $self->{pbot}->{conn}->notice($to, $text);
+    $delay = 0 if not defined $delay;
 
-=cut
-    $delay //= 0 if not defined $delay;
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+
     my $message = {
         nick       => $botnick,
         user       => 'battleship',
@@ -387,8 +386,8 @@ sub send_message {
         checkflood => 1,
         message    => $text
     };
+
     $self->{pbot}->{interpreter}->add_message_to_output_queue($to, $message, $delay);
-=cut
 }
 
 sub run_one_state {
@@ -921,8 +920,6 @@ sub show_battlefield {
     my $player1 = $self->{player}->[0]->{nick};
     my $player2 = $self->{player}->[1]->{nick};
 
-    $self->{pbot}->{conn}->pacing(0);
-
     if ($player == 0) {
         $self->send_message(
             $self->{player}->[$player]->{nick},
@@ -965,9 +962,6 @@ sub show_battlefield {
         elsif ($player == 2 || $player == 3) { $self->send_message($self->{channel},                   $line); }
         else                                 { $self->send_message($nick,                              $line); }
     }
-
-    $self->{pbot}->{conn}->pacing(1);
-
 }
 
 # state subroutines
