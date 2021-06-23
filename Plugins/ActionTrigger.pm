@@ -1,9 +1,16 @@
 # File: ActionTrigger.pm
 #
 # Purpose: provides interface to set/remove/modify regular expression triggers
-# to execute a command.
+# which invoke bot commands when matched against IRC messages.
 #
 # Usage: actiontrigger add <#channel or global> <capability> <rate-limit (in seconds)> <regex trigger> <command>
+#
+# Note that ActionTrigger does not match on raw IRC lines. It matches on a
+# simplified message format:
+#
+#    "<hostmask> <action> <arguments>"
+#
+# where <action> can be PRIVMSG, ACTION, KICK, JOIN, PART or QUIT.
 #
 # Examples:
 #
