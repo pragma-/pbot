@@ -287,7 +287,7 @@ sub connect {
 }
 
 sub register_signal_handlers {
-    my $self = shift;
+    my ($self) = @_;
 
     $SIG{INT} = sub {
         my $msg = "SIGINT received, exiting immediately.\n";
@@ -303,7 +303,7 @@ sub register_signal_handlers {
 
 # called when PBot terminates
 sub atexit {
-    my $self = shift;
+    my ($self) = @_;
     $self->{atexit}->execute_all;
     if (exists $self->{logger}) {
         $self->{logger}->log("Good-bye.\n");
@@ -345,7 +345,7 @@ sub do_one_loop {
 
 # main entry point
 sub start {
-    my $self = shift;
+    my ($self) = @_;
 
     $self->connect;
 

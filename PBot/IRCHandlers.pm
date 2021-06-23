@@ -126,6 +126,7 @@ sub on_disconnect {
     my ($self, $event_type, $event) = @_;
     $self->{pbot}->{logger}->log("Disconnected...\n");
     $self->{pbot}->{connected} = 0;
+    $self->{pbot}->connect;
     return 0;
 }
 
