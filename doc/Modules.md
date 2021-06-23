@@ -114,7 +114,7 @@ PBot comes with several Modules included. Here is the documentation for most of 
 ### cc
 Code compiler (and executor).  This command will compile and execute user-provided code in a number of languages, and then display the compiler and/or program output.
 
-The program is executed within a gdb debugger instance, which may be interacted with via the [gdb macros described below](#Using_the_GDB_debugger) or with the `gdb("command")` function.
+The program is executed within a gdb debugger instance, which may be interacted with via the [gdb macros described below](#using-the-gdb-debugger) or with the `gdb("command")` function.
 
 The compiler and program are executed inside a virtual machine.  After each run, the virtual machine is restored to a previous state.  No system calls have been disallowed.  You can write to and read from the filesystem, provided you do it in the same program.  The network cable has been unplugged.  You are free to write and test any code you like.  Have fun.
 
@@ -137,7 +137,7 @@ The `-stdin <stdin input>` option provides STDIN input (i.e., `scanf()`, `getc(s
 
 The `-args <command-line arguments>` option provides command-line arguments (i.e., `argv`).
 
-The `run`, `undo`, `show`, `replace`, etc commands are part of [interactive-editing](#Interactive_Editing).
+The `run`, `undo`, `show`, `replace`, etc commands are part of [interactive-editing](#interactive-editing).
 
 The `diff` command can be used to display the differences between the two most recent snippets.
 
@@ -375,7 +375,7 @@ The [cc](#cc) command supports interactive-editing.  The general syntax is:  `cc
 
 Each cc snippet is saved in a buffer which is named after the channel or nick it was used in.  You can use [show](#show) or [diff](#diff) with a buffer argument to view that buffer; otherwise you can use the [copy](#copy) command to copy the most recent snippet of another buffer into the current buffer and optionally chain it with another command -- for example, to copy the `##c` buffer (e.g., from a private message or a different channel) and paste it: `cc copy ##c and paste`.
 
-The commands are:  [copy](#copy), [show](#show), [diff](#diff), [paste](#paste), [run](#run), [undo](#undo), [s//](#s.2F.2F), [replace](#replace), [prepend](#prepend), [append](#append), and [remove](#remove).  Most of the commands may be chained together by separating them with whitespace or "and".
+The commands are:  [copy](#copy), [show](#show), [diff](#diff), [paste](#paste), [run](#run), [undo](#undo), [s//](#s), [replace](#replace), [prepend](#prepend), [append](#append), and [remove](#remove).  Most of the commands may be chained together by separating them with whitespace or "and".
 
 The commands are described in more detail below:
 
