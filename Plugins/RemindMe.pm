@@ -14,8 +14,8 @@ use PBot::Imports;
 
 use DBI;
 use Time::Duration qw/concise duration/;
-use Time::HiRes qw/time/;
-use Getopt::Long qw(GetOptionsFromArray);
+use Time::HiRes    qw/time/;
+use Getopt::Long   qw/GetOptionsFromArray/;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -194,7 +194,7 @@ sub cmd_remindme {
 
     my $admininfo = $self->{pbot}->{users}->loggedin_admin($channel ? $channel : $context->{from}, $context->{hostmask});
 
-    # option -c was provided; ensure user is an admin and bot is in targeted channel
+    # option -c was provided; ensure user is an admin and bot is in channel
     if ($channel) {
         if (not defined $admininfo) {
             return "Only admins can create channel reminders.";
@@ -272,25 +272,19 @@ sub do_reminder {
         return;
     }
 
-    # nick of person being reminded
-    my $nick;
+    # ensures we get the current nick of the person being reminded
+    my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($reminder->{account});
+    my ($nick) = $hostmask =~ /^([^!]+)!/;
 
-    # ensure person is available to receive reminder
-    if (not defined $reminder->{target}) {
-        # ensures we get the current nick of the person
-        my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($reminder->{account});
-        ($nick) = $hostmask =~ /^([^!]+)!/;
-
-        # try again in 30 seconds if the person isn't around yet
-        if (not $self->{pbot}->{nicklist}->is_present_any_channel($nick)) {
-            $event->{interval}  = 30;
-            $event->{repeating} = 1;
-            return;
-        }
+    # try again in 30 seconds if the person isn't around yet
+    if (not $self->{pbot}->{nicklist}->is_present_any_channel($nick)) {
+        $event->{interval}  = 30;
+        $event->{repeating} = 1;
+        return;
     }
 
     # send reminder text to person
-    my $target = $reminder->{target} // $nick;
+    my $target = $reminder->{channel} // $nick;
     my $text = $reminder->{text};
 
     # if sending reminder to channel, highlight person being reminded
@@ -298,10 +292,10 @@ sub do_reminder {
         $text = "$nick: $text";
     }
 
-    $self->{pbot}->{conn}->privmsg($target, $reminder->{text});
+    $self->{pbot}->{conn}->privmsg($target, $text);
 
     # log event
-    $self->{pbot}->{logger}->log("Reminded $target about \"$reminder->{text}\"\n");
+    $self->{pbot}->{logger}->log("Reminded $target about \"$text\"\n");
 
     # update repeats or delete reminder
     if ($reminder->{repeats} > 0) {
@@ -371,7 +365,7 @@ sub create_database {
 CREATE TABLE IF NOT EXISTS Reminders (
   id          INTEGER PRIMARY KEY,
   account     TEXT,
-  target      TEXT,
+  channel     TEXT,
   text        TEXT,
   alarm       NUMERIC,
   repeats     INTEGER,
@@ -413,11 +407,11 @@ sub add_reminder {
     my ($self, %args) = @_;
 
     my $id = eval {
-        my $sth = $self->{dbh}->prepare('INSERT INTO Reminders (account, target, text, alarm, interval, repeats, created_on, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        my $sth = $self->{dbh}->prepare('INSERT INTO Reminders (account, channel, text, alarm, interval, repeats, created_on, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
 
         $sth->execute(
             $args{account},
-            $args{target},
+            $args{channel},
             $args{text},
             $args{alarm},
             $args{interval},
