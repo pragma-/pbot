@@ -67,7 +67,7 @@ sub stdin_reader {
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
     # process input as a bot command
-    return $self->{pbot}->{interpreter}->process_line($botnick, $botnick, "stdin", "pbot", $input, 1);
+    return $self->{pbot}->{interpreter}->process_line('stdin@pbot', $botnick, "stdin", "pbot", $input, 1);
 }
 
 1;
