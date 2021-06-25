@@ -37,7 +37,7 @@ sub initialize {
 # this is the main entry point for a message to be parsed into commands
 # and to execute those commands and process their output
 sub process_line {
-    my ($self, $from, $nick, $user, $host, $text) = @_;
+    my ($self, $from, $nick, $user, $host, $text, $is_command) = @_;
 
     # lowercase `from` field for case-insensitivity
     $from = lc $from;
@@ -104,9 +104,17 @@ sub process_line {
     my $command;        # current command being parsed
     my $embedded = 0;   # was command embedded within a message, e.g.: "see the !{help xyz} about that"
 
-    my $nick_prefix         = undef;  # addressed nickname for prefixing output
-    my $processed           = 0;      # counts how many commands were successfully processed
+    my $nick_prefix = undef;  # addressed nickname for prefixing output
+    my $processed   = 0;      # counts how many commands were successfully processed
 
+    # check if we should treat this entire text as a command
+    # (i.e., it came from /msg or was otherwise flagged as a command)
+    if ($is_command) {
+        $command = $cmd_text;
+        goto CHECK_EMBEDDED_CMD;
+    }
+
+    # otherwise try to parse any potential commands
     if ($cmd_text =~ m/^\s*($nick_regex)[,:]?\s+$bot_trigger\{\s*(.+?)\s*\}\s*$/) {
         # "somenick: !{command}"
         goto CHECK_EMBEDDED_CMD;

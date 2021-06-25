@@ -274,6 +274,7 @@ sub connect {
     # ignore these events
     $self->{conn}->add_handler(
         [
+            'myinfo',
             'whoisserver',
             'whoiscountry',
             'whoischannels',

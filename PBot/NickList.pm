@@ -36,6 +36,8 @@ sub initialize {
 
     # handlers for various IRC events
     # TODO: track mode changes to update user flags
+    # Update: turns out that IRCHandler's on_mode() is doing this already -- we need to make that
+    # emit a mode-change event or some such and register a handler for it here.
     $self->{pbot}->{event_dispatcher}->register_handler('irc.namreply', sub { $self->on_namreply(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.join',     sub { $self->on_join(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part',     sub { $self->on_part(@_) });

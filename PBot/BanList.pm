@@ -624,14 +624,14 @@ sub flush_ban_queue {
                     my $target = pop @{$self->{ban_queue}->{$channel}->{$mode}};
                     $list  .= " $target";
                     $modes .= $mode;
-                    last if ++$count >= $self->{pbot}->{ircd}->{MODES};
+                    last if ++$count >= $self->{pbot}->{isupport}->{MODES} // 1;
                 }
 
                 if (not @{$self->{ban_queue}->{$channel}->{$mode}}) {
                     delete $self->{ban_queue}->{$channel}->{$mode};
                 }
 
-                last if $count >= $self->{pbot}->{ircd}->{MODES};
+                last if $count >= $self->{pbot}->{isupport}->{MODES} // 1;
             }
 
             if (not keys %{$self->{ban_queue}->{$channel}}) {
@@ -675,14 +675,14 @@ sub flush_unban_queue {
                     my $target = pop @{$self->{unban_queue}->{$channel}->{$mode}};
                     $list  .= " $target";
                     $modes .= $mode;
-                    last if ++$count >= $self->{pbot}->{ircd}->{MODES};
+                    last if ++$count >= $self->{pbot}->{isupport}->{MODES} // 1;
                 }
 
                 if (not @{$self->{unban_queue}->{$channel}->{$mode}}) {
                     delete $self->{unban_queue}->{$channel}->{$mode};
                 }
 
-                last if $count >= $self->{pbot}->{ircd}->{MODES};
+                last if $count >= $self->{pbot}->{isupport}->{MODES} // 1;
             }
 
             if (not keys %{$self->{unban_queue}->{$channel}}) {

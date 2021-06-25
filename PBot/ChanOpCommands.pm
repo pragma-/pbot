@@ -174,7 +174,7 @@ sub generic_mode {
     # add $nick to $args if no argument
     if (not $self->{pbot}->{interpreter}->arglist_size($context->{arglist})) { $self->{pbot}->{interpreter}->unshift_arg($context->{arglist}, $context->{nick}); }
 
-    my $max_modes = $self->{pbot}->{ircd}->{MODES} // 1;
+    my $max_modes = $self->{pbot}->{isupport}->{MODES} // 1;
     my $mode      = $flag;
     my $list      = '';
     my $i         = 0;
@@ -247,7 +247,7 @@ sub cmd_mode {
     my $arg = 0;
 
     my ($new_modes, $new_targets) = ("", "");
-    my $max_modes = $self->{pbot}->{ircd}->{MODES} // 1;
+    my $max_modes = $self->{pbot}->{isupport}->{MODES} // 1;
 
     my $u = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
 

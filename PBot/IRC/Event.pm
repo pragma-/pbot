@@ -205,7 +205,7 @@ sub trans {
     '002' => "yourhost",
     '003' => "created",
     '004' => "myinfo",
-    '005' => "map",           # Undernet Extension, Kajetan@Hinner.com, 17/11/98
+    '005' => "isupport",      # Undernet Extension, Kajetan@Hinner.com, 17/11/98  # renamed to `isupport` - pragma June 24, 2021
     '006' => "mapmore",       # Undernet Extension, Kajetan@Hinner.com, 17/11/98
     '007' => "mapend",        # Undernet Extension, Kajetan@Hinner.com, 17/11/98
     '008' => "snomask",       # Undernet Extension, Kajetan@Hinner.com, 17/11/98
