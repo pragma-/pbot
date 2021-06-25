@@ -1,6 +1,12 @@
 # File: StdinReader.pm
 #
 # Purpose: Reads input from STDIN.
+#
+# Note: To execute a command in a channel, use the `in` command:
+#
+#    in #foo echo hi
+#
+# The above will output "hi" in channel #foo.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -52,24 +58,16 @@ sub stdin_reader {
     # decode STDIN input from utf8
     $input = decode('UTF-8', $input);
 
+    # remove newline
     chomp $input;
 
     $self->{pbot}->{logger}->log("---------------------------------------------\n");
     $self->{pbot}->{logger}->log("Got STDIN: $input\n");
 
-    my ($from, $text);
-
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
-    if ($input =~ m/^~([^ ]+)\s+(.*)/) {
-        $from = $1;
-        $text = "$botnick $2";
-    } else {
-        $from = 'stdin@pbot';
-        $text = "$botnick $input";
-    }
-
-    return $self->{pbot}->{interpreter}->process_line($from, $botnick, "stdin", "pbot", $text);
+    # process input as a bot command
+    return $self->{pbot}->{interpreter}->process_line($botnick, $botnick, "stdin", "pbot", $input, 1);
 }
 
 1;
