@@ -576,7 +576,7 @@ sub on_isupport {
     foreach my $arg (@{$event->{event}->{args}}) {
         my ($key, $value) = split /=/, $arg;
 
-        if ($key =~ /^-/) {
+        if ($key =~ s/^-//) {
             # server removed suppport for this key
             delete $self->{pbot}->{isupport}->{$key};
         } else {
