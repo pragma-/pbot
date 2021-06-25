@@ -422,7 +422,7 @@ sub trans {
     483 => "cantkillserver",
     484 => "ischanservice",        # Undernet Extension, Kajetan@Hinner.com, 17/10/98
     485 => "killdeny",             # UnrealIrcd, Hendrik Frenzel
-    486 => "htmdisabled",          # UnrealIrcd, Hendrik Frenzel
+    486 => "nononreg",             # UnrealIrcd, Hendrik Frenzel   # renamed to nononreg - pragma June 24, 2021
     489 => "secureonlychan",       # UnrealIrcd, Hendrik Frenzel
     491 => "nooperhost",
     492 => "noservicehost",

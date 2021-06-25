@@ -58,6 +58,7 @@ sub initialize {
     $ed->register_handler('irc.notregistered', sub { $self->log_first_arg    (@_) });
     $ed->register_handler('irc.n_local',       sub { $self->log_third_arg    (@_) });
     $ed->register_handler('irc.n_global',      sub { $self->log_third_arg    (@_) });
+    $ed->register_handler('irc.nononreg',      sub { $self->on_nononreg      (@_) });
 
     # IRCv3 client capabilities
     $ed->register_handler('irc.cap', sub { $self->on_cap(@_) });
@@ -879,6 +880,16 @@ sub on_topicinfo {
     $self->{pbot}->{logger}->log("Topic for $channel set by $by on " . localtime($timestamp) . "\n");
     $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_BY', $by,        1);
     $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_ON', $timestamp, 1);
+    return 0;
+}
+
+sub on_nononreg {
+    my ($self, $event_type, $event) = @_;
+
+    my $target = $event->{event}->{args}->[1];
+
+    $self->{pbot}->{logger}->log("Cannot send private /msg to $target; they are blocking unidentified /msgs.\n");
+
     return 0;
 }
 
