@@ -23,7 +23,7 @@ use Encode;
 sub initialize {
     my ($self, %conf) = @_;
 
-    # convenient alias so the following lings aren't so long
+    # convenient alias so the following lines aren't so long
     my $ed = $self->{pbot}->{event_dispatcher};
 
     # various IRC events (note that other PBot packages and plugins can
@@ -45,9 +45,6 @@ sub initialize {
     $ed->register_handler('irc.nicknameinuse', sub { $self->on_nicknameinuse (@_) });
     $ed->register_handler('irc.invite',        sub { $self->on_invite        (@_) });
     $ed->register_handler('irc.isupport',      sub { $self->on_isupport      (@_) });
-    $ed->register_handler('irc.whoreply',      sub { $self->on_whoreply      (@_) });
-    $ed->register_handler('irc.whospcrpl',     sub { $self->on_whospcrpl     (@_) });
-    $ed->register_handler('irc.endofwho',      sub { $self->on_endofwho      (@_) });
     $ed->register_handler('irc.channelmodeis', sub { $self->on_channelmodeis (@_) });
     $ed->register_handler('irc.topic',         sub { $self->on_topic         (@_) });
     $ed->register_handler('irc.topicinfo',     sub { $self->on_topicinfo     (@_) });
@@ -59,6 +56,9 @@ sub initialize {
     $ed->register_handler('irc.n_local',       sub { $self->log_third_arg    (@_) });
     $ed->register_handler('irc.n_global',      sub { $self->log_third_arg    (@_) });
     $ed->register_handler('irc.nononreg',      sub { $self->on_nononreg      (@_) });
+    $ed->register_handler('irc.whoreply',      sub { $self->on_whoreply      (@_) });
+    $ed->register_handler('irc.whospcrpl',     sub { $self->on_whospcrpl     (@_) });
+    $ed->register_handler('irc.endofwho',      sub { $self->on_endofwho      (@_) });
 
     # IRCv3 client capabilities
     $ed->register_handler('irc.cap', sub { $self->on_cap(@_) });
