@@ -185,7 +185,8 @@ sub cmd_remindme {
 
     # add to the reminder text anything left in the arguments
     if (@opt_args) {
-        $text .= " @opt_args";
+        $text .= ' ' if length $text;
+        $text .= join ' ', @opt_args;
     }
 
     return "Please use -t to specify a time for this reminder." if not $alarm;
