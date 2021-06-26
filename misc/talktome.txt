@@ -1,0 +1,156 @@
+Some of us in #c-offtopic have too much time on our hands. We created a lot of factoids to simulate
+speaking in various languages. These factoids use factoid-variable interpolation to do a kind of
+"Mad Libs"-style adlibbing: https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#list-variables
+
+These are the four main entry points:
+
+<pragma->   !german
+<candide>   Noch, doch alles nich nauentliurch oder eine ein zur klappendeurch anzvescwieschaft du...
+
+<pragma->   !french
+<candide>   Indregris as pour tordasse; a c'est la êtredeau outors; mon antirdi eautindre ellepoul, va frêtourdi je ourmiblé?
+
+<pragma->   !jap
+<candide>   Dogabo kimochi dogi ga mipa zuriropedzu gesu ano, sede, toa, sono: mupigo peku ha.
+
+<pragma->   !talkto
+<candide>   Eat ceeroo eur steoback ihect: e freango preherd: drierd!
+
+And these are the factoids that make it work:
+
+--- FRAMEWORK ---
+
+<pragma->	,factshow talktome
+<candide>	[global] talktome: /call echo $sentence:ucfirst
+
+<pragma->	,factshow sentence
+<candide>	sentence: $sentence_more $sentence_more $sentence_more $sentence_more $sentence_more $sentence_more $sentence_punct $sentence_punct $sentence_end
+
+<pragma->	,factshow sentence_more
+<candide>	[global] sentence_more: "$$0_random_word $sentence"
+
+<pragma->   ,factshow sentence_punct
+<candide>   [global] sentence_punct: "$$0_random_word$punctuation_middle $sentence"
+
+<pragma->   ,factshow sentence_end
+<candide>   [global] sentence_end: $$0_random_word$punctuation_end
+
+<pragma->   ,show punctuation_middle
+candide>    [global] punctuation_middle: , , , : ;
+
+<pragma->   ,show punctuation_end
+<candide>   [global] punctuation_end: . . . ... ! ?
+
+--- GERMAN ---
+
+<pragma->   ,factshow german
+<candide>   [global] german: /call --keyword-override=talkgermanto talkgermanto
+
+<pragma->	,factshow talkgermanto_random_word
+<candide>	[global] talkgermanto_random_word: /call random_word_bigger_chunks
+
+<pragma->	,show random_word_bigger_chunks
+<candide>	[global] random_word_bigger_chunks: $$0_small_word $$0_small_word $$0_small_word ${random_chunk:ucfirst}${random_chunk_end} ${random_chunk:ucfirst}${random_chunk} ${random_chunk}${random_chunk} ${random_chunks:ucfirst}${random_chunk_end} ${random_chunks}${random_chunk_end} ${random_chunks}${random_chunk_end} ${random_chunks}${random_chunk_end}... [truncated; see https://0x0.st/-9r-.txt for full text.]
+
+<pragma->	,show talkgermanto_small_word
+<candide>	[global] talkgermanto_small_word: ich bin du bist zu für in im das die der alles dich über oder und hast mich zur noch doch unter was war ja nein warum kein keine Herr Juden Jude dem nich ein eine wie jawohl tut heil wo wer wie wenn gonkst
+
+<pragma->	,show random_chunk
+<candide>	[global] random_chunk: ${$0_chunk_cc} ${$0_chunk_cv} ${$0_chunk_vc} ${$0_chunk_vv}
+
+<pragma->	,show random_chunks
+<candide>	[global] random_chunks: ${random_chunk}${random_chunk} ${random_chunk} ${random_chunk}${random_chunks} ${random_chunk}${random_chunks}
+
+<pragma->	,show random_chunk_end
+<candide>	[global] random_chunk_end: ${$0_chunk_v_end} ${$0_chunk_c_end}
+
+<pragma->	,show talkgermanto_chunk_cc
+<candide>	[global] talkgermanto_chunk_cc: krieg blitz funf schm schz tsch tschz schw grim diehl hahl führ wort gent chuld weis  juden herr dampf schiff fahrts triebs werk haupt sel ten chung zeit rind fleisch ket tier rind setz rungs chungs auf ben bauern leid schwein schlecht herbst laub tritt ver gen kennt niss zier gang mahl neid dorn hös chen schl... [truncated; see https://0x0.st/-9rH.txt for full text.]
+
+<pragma->	,show talkgermanto_chunk_cv
+<candide>	[global] talkgermanto_chunk_cv: stä faule plötzli leibe jude bau tri nau tä tra ge sche ti tie schleppe chauvi ge scwie turbo gnü
+
+<pragma->	,show talkgermanto_chunk_vv
+<candide>	[global] talkgermanto_chunk_vv: ölke iese unde ause ende eite uldi entli iche öre anzve eti ü extra
+
+<pragma->	,show talkgermanto_chunk_vc
+<candide>	[global] talkgermanto_chunk_vc: ortung erden ird ersch indet änner erant über unter eiheit ungs un am
+
+<pragma->   ,show talkgermanto_chunk_v_end
+<candide>   [global] talkgermanto_chunk_v_end: en ien aß ere ern er uch urch örer
+
+<pragma->   ,show talkgermanto_chunk_c_end
+<candide>   [global] talkgermanto_chunk_c_end: krieg ten der chen ker gern weise fern len ber ner nen macht wulst drückten ßig keit schaft stens
+
+
+--- FRENCH ---
+
+<pragma->   ,factshow french
+<candide>   [global] french: /call --keyword-override=talkfrenchto talkfrenchto
+
+<pragma->	,factshow talkfrenchto_random_word
+<candide>	[global] talkfrenchto_random_word: /call random_word_chunks
+
+<pragma->	,show random_word_chunks
+<candide>	[global] random_word_chunks: $$0_small_word $$0_small_word $$0_small_word $$0_small_word $$0_small_word $$0_small_word $$0_small_word $$0_small_word $$0_small_word $$0_small_word $$0_small_word $$0_chunk_vv$$0_chunk_cv $$0_chunk_vv$$0_chunk_cc $$0_chunk_vc$$0_chunk_vv $$0_chunk_vc$$0_chunk_vc $$0_chunk_cv$$0_chunk_cv $$0_chunk_cv$$0_chunk_cc $... [truncated; see https://0x0.st/-pSt.txt for full text.]
+
+<pragma->	,show talkfrenchto_small_word
+<candide>	[global] talkfrenchto_small_word: je ou en et y tu il va si à ma ta ton sa t'y j'y ai as de te cul c'est du mon pour vers n'en t'en m'en t'a m'a l'a le la a
+
+<pragma->	,show talkfrenchto_chunk_vc
+<candide>	[global] talkfrenchto_chunk_vc: eindr angr engr ond emb out oût eaut ors eurt
+
+<pragma->	,show talkfrenchto_chunk_cv
+<candide>	[global] talkfrenchto_chunk_cv: rdi ppre dre ndre ndra gre prou pren gro fron grin fran fron brâ trou pène
+
+<pragma->	,show talkfrenchto_chunk_vv
+<candide>	[global] talkfrenchto_chunk_vv: eau arti ordi ourdi anti enne elle être ânil once anse indre urpe ourde ourmi asse osse
+
+<pragma->	,show talkfrenchto_chunk_cc
+<candide>	[global] talkfrenchto_chunk_cc: rtir roud frêt soir jour gord mord tord dort poul cul
+
+--- JAPANESE ---
+
+<pragma->   ,show jap
+<candide>   [global] jap: /call --keyword-override=talkjapaneseto talkjapaneseto
+
+<pragma->	,factshow talkjapaneseto_random_word
+<candide>	[global] talkjapaneseto_random_word: $$0_small_word $random_japanese_word $random_japanese_word
+
+<pragma->	,factshow talkjapaneseto_small_word
+<candide>	[global] talkjapaneseto_small_word: no no no no no no no wo ha ga ga ga ga ga ga de ni da ka yo ne zo desu kara made boku kimi watashi ore kore sore are kono sono ano eto ichi ni san ya hai iie kimochi yamete sensei kawaii
+
+<pragma->	,show random_japanese_word
+<candide>	[global] random_japanese_word: $japanese_syllable$random_japanese_word $japanese_syllable$japanese_syllable
+
+<pragma->	,show japanese_syllable
+<candide>	[global] japanese_syllable: a i u e o ei ou ka ki ku ke ko ga gi gu ge go sa shi su se so za ji zu ze zo ta chi tsu te to da dzi dzu de do na ni nu ne no ha hi fu he ho ba bi bu be bo pa pi pu pe po ma mi mu me mo ya yu yo ra ri ru re ro wa wo n saki kuso baka
+
+--- ENGLISH (seems more Dutch but whatever) ---
+
+<pragma->   show talkto
+<candide>   [global] talkto: /call talktome
+
+<pragma->   ,show talkto_random_word
+<candide>   [global] talkto_random_word: /call random_word_vowels_consonants
+
+<pragma->   ,show random_word_vowels_consonants
+<candide>   [global] random_word_vowels_consonants: $$0_consonants_start$$0_vowels_end $$0_consonants_start$$0_vowels_middle$$0_consonants_end $$0_consonants_start$$0_vowels_middle$$0_consonants_middle$$0_vowels_end $$0_consonants_start$$0_vowels_middle$$0_consonants_middle$$0_vowels_middle$$0_consonants_end $$0_vowels_start $$0_vowels_start$$0_consonants... [truncated; see https://0x0.st/-pSI.txt for full text.]
+
+<pragma->   ,show talkto_consonants_start
+<candide>   [global] talkto_consonants_start: r t tr p pr pl m n b c ch sh f fr s st d dr th l y z
+
+<pragma->   ,show talkto_consonants_end
+<candide>   [global] talkto_consonants_end: sh ck pt rd rk ng ct p t r d n st
+
+<pragma->   ,show talkto_consonants_middle
+<candide>   [global] talkto_consonants_middle: xc x lp ng h b bb c cc r r rr s ss p p pp l l ll t tt m m mm n n nn rk br st
+
+<pragma->   ,show talkto_vowels_start
+<candide>   [global] talkto_vowels_start: a a a e e e e e i i o o u u ee oo eu ue ei ie eo ea ea
+
+<pragma->   ,show talkto_vowels_middle
+<candide>   [global] talkto_vowels_middle: a a a e e e e e i i o o u u ee oo eu ue ei ie eo ea ea
+
+<pragma->   ,show talkto_vowels_end
+<candide>   [global] talkto_vowels_end: a a a e e e e e i i o o u u ee oo eu ue ei ie eo ea ea
