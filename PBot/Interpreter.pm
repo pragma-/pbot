@@ -112,6 +112,17 @@ sub process_line {
     if ($is_command) {
         $command = $cmd_text;
         $command =~ s/^$bot_trigger//; # strip leading bot trigger, if any
+
+        # restore command if stripping bot trigger makes command empty
+        # (they wanted to invoke a command named after the trigger itself)
+        # TODO: this could potentially be confusing when trying to invoke
+        # commands that are sequential instances of the bot trigger, e.g.
+        # attempting to invoke a factoid named `...` while the bot trigger
+        # is `.` could now prove confusing via /msg or stdin. Might need
+        # to rethink this and just require bot trigger all the time ...
+        # but for now let's see how this goes and if people can figure it
+        # out with minimal confusion.
+        $command = $cmd_text if not length $command;
         goto CHECK_EMBEDDED_CMD;
     }
 
