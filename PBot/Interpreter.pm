@@ -50,7 +50,7 @@ sub process_line {
     # processing of this message. this object is passed between various bot
     # functions and interfaces, which may themselves add more fields.
     my $context = {
-        from     => $from,                 # source (channel, sender hostmask, "pbot@stdin", etc)
+        from     => $from,                 # source (channel, sender hostmask, 'stdin@pbot', etc)
         nick     => $nick,                 # nickname
         user     => $user,                 # username
         host     => $host,                 # hostname/ip address
@@ -111,6 +111,7 @@ sub process_line {
     # (i.e., it came from /msg or was otherwise flagged as a command)
     if ($is_command) {
         $command = $cmd_text;
+        $command =~ s/^$bot_trigger//; # strip leading bot trigger, if any
         goto CHECK_EMBEDDED_CMD;
     }
 
