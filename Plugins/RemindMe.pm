@@ -194,11 +194,9 @@ sub cmd_remindme {
 
     my $admininfo = $self->{pbot}->{users}->loggedin_admin($channel ? $channel : $context->{from}, $context->{hostmask});
 
-    # option -c was provided; ensure user is an admin and bot is in channel
-    if ($channel) {
-        if (not $self->{pbot}->{channels}->is_active($channel)) {
-            return "I'm not active in channel $channel.";
-        }
+    # option -c was provided; ensure bot is in channel
+    if ($channel and not $self->{pbot}->{channels}->is_active($channel)) {
+        return "I'm not active in channel $channel.";
     }
 
     # parse "5 minutes", "next week", "3pm", etc into seconds
