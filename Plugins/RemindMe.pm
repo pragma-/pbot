@@ -196,10 +196,6 @@ sub cmd_remindme {
 
     # option -c was provided; ensure user is an admin and bot is in channel
     if ($channel) {
-        if (not defined $admininfo) {
-            return "Only admins can create channel reminders.";
-        }
-
         if (not $self->{pbot}->{channels}->is_active($channel)) {
             return "I'm not active in channel $channel.";
         }
