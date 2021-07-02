@@ -528,7 +528,7 @@ sub on_departure {
 
     ($nick, $user, $host) = $self->normalize_hostmask($nick, $user, $host);
 
-    my $text = uc ($event->{event}->type) . $args;
+    my $text = uc ($event->{event}->type) . ' ' . $args;
 
     my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
 
