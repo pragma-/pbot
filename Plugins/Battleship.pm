@@ -1,7 +1,7 @@
 # File: Battleship.pm
 #
 # Purpose: Simplified version of the Battleship board game. In this variant,
-# there is only one game grid/board and every player's ships are share it.
+# there is only one game grid/board and every player's ships share it.
 # This adds an element of strategy: everybody knows where their own ships
 # are located and they know that ships cannot overlap, ergo they know where
 # NOT to aim. This helps to speed games up by removing some randomness.
@@ -69,7 +69,7 @@ sub initialize {
     $self->{channel} = $self->{pbot}->{registry}->get_value('battleship', 'channel') // '##battleship';
 
     # debugging flag
-    $self->{debug}   = $self->{pbot}->{registry}->get_value('battleship', 'debug')   // 1;
+    $self->{debug}   = $self->{pbot}->{registry}->get_value('battleship', 'debug')   // 0;
 
     # player limit per game
     $self->{MAX_PLAYERS} = 5;
