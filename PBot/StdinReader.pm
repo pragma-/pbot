@@ -61,6 +61,8 @@ sub stdin_reader {
     # remove newline
     chomp $input;
 
+    return if not length $input;
+
     $self->{pbot}->{logger}->log("---------------------------------------------\n");
     $self->{pbot}->{logger}->log("Got STDIN: $input\n");
 
