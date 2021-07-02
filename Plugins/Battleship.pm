@@ -1,6 +1,10 @@
 # File: Battleship.pm
 #
-# Purpose: Simplified version of the Battleship board game.
+# Purpose: Simplified version of the Battleship board game. In this variant,
+# there is only one game grid/board and every player's ships are share it.
+# This adds an element of strategy: everybody knows where their own ships
+# are located and they know that ships cannot overlap, ergo they know where
+# NOT to aim. This helps to speed games up by removing some randomness.
 #
 # Note: This code was written circa 1993 for a DikuMUD fork. It was originally
 # written in C, as I was teaching the language to myself in my early teens. Two
@@ -9,6 +13,12 @@
 # historical reasons -- I was inspired by the IOCCC and I attempted to be clever
 # with nested conditional operators and other silliness. Please be gentle if you
 # read this code. :)
+#
+# Update: Much of this code has now been refactored to support more than two
+# players on a single board. The board grows in size for each additional player,
+# to accomodate their ships. Whirlpools have also been added. They are initially
+# hidden by the ocean. When shot, they reveal themselves on the map and deflect
+# the shot to a random tile.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,6 +32,33 @@ use PBot::Imports;
 use Time::Duration;
 use Data::Dumper;
 
+# some colors for IRC messages
+my %color = (
+    white      => "\x0300",
+    black      => "\x0301",
+    blue       => "\x0302",
+    green      => "\x0303",
+    red        => "\x0304",
+    maroon     => "\x0305",
+    purple     => "\x0306",
+    orange     => "\x0307",
+    yellow     => "\x0308",
+    lightgreen => "\x0309",
+    teal       => "\x0310",
+    cyan       => "\x0311",
+    lightblue  => "\x0312",
+    magneta    => "\x0313",
+    gray       => "\x0314",
+    lightgray  => "\x0315",
+
+    bold       => "\x02",
+    italics    => "\x1D",
+    underline  => "\x1F",
+    reverse    => "\x16",
+
+    reset      => "\x0F",
+);
+
 sub initialize {
     my ($self, %conf) = @_;
 
@@ -31,19 +68,50 @@ sub initialize {
     # set the channel where to send game messages
     $self->{channel} = $self->{pbot}->{registry}->get_value('battleship', 'channel') // '##battleship';
 
-    # set debugging flag
-    $self->{debug}   = $self->{pbot}->{registry}->get_value('battleship', 'debug')   // 0;
+    # debugging flag
+    $self->{debug}   = $self->{pbot}->{registry}->get_value('battleship', 'debug')   // 1;
 
-    # set board tile symbols/characters
-    $self->{player_one_vert}  = '|';
-    $self->{player_one_horiz} = '—';
-    $self->{player_two_vert}  = 'I';
-    $self->{player_two_horiz} = '=';
-    $self->{ocean}            = '~';
-    $self->{player_one_miss}  = '*';
-    $self->{player_one_hit}   = '1';
-    $self->{player_two_miss}  = 'o';
-    $self->{player_two_hit}   = '2';
+    # player limit per game
+    $self->{MAX_PLAYERS} = 5;
+
+    # battleship tile symbols
+    $self->{TILE_HIT}   = ['1' .. $self->{MAX_PLAYERS}];
+    $self->{TILE_OCEAN} = "$color{blue}~";
+    $self->{TILE_MISS}  = "$color{cyan}o";
+
+    # personal ship tiles shown on player board
+    $self->{TILE_SHIP_VERT}  = "$color{white}|";
+    $self->{TILE_SHIP_HORIZ} = "$color{white}—";
+
+    # all player ship tiles shown on final/full board
+    $self->{TILE_SHIP}  = ['A' .. chr ord('A') + $self->{MAX_PLAYERS} - 1];
+
+    # initially hidden by ocean, revealed when shot.
+    # when shot, sends particle to random coordinate
+    # and damages any ship there, including player's
+    $self->{TILE_WHIRLPOOL} = "$color{cyan}@";
+
+    # default board dimensions
+    $self->{BOARD_X}         = 14;
+    $self->{BOARD_Y}         = 8;
+
+    # number of ships per player
+    $self->{SHIP_COUNT}      = 8;
+
+    # modifiers for show_battlefield()
+    $self->{BOARD_SPECTATOR} = -1;
+    $self->{BOARD_FINAL}     = -2;
+    $self->{BOARD_FULL}      = -3;
+
+    # types of board tiles
+    $self->{TYPE_OCEAN}      = 0;
+    $self->{TYPE_SHIP}       = 1;
+    $self->{TYPE_MISS}       = 2;
+    $self->{TYPE_WHIRLPOOL}  = 3;
+
+    # ship orientation
+    $self->{ORIENT_VERT}     = 0;
+    $self->{ORIENT_HORIZ}    = 1;
 
     # create game state machine
     $self->create_states;
@@ -56,14 +124,14 @@ sub unload {
     $self->{pbot}->{commands}->unregister('battleship');
 
     # remove battleship loop event from event queue
-    $self->{pbot}->{event_queue}->dequeue_event('battleship loop');
+    $self->end_game_loop;
 }
 
 # `battleship` bot command
 sub cmd_battleship {
     my ($self, $context) = @_;
 
-    my $usage = "Usage: battleship challenge|accept|decline|bomb|board|score|forfeit|quit|players|kick|abort; for more information about a command: battleship help <command>";
+    my $usage = "Usage: battleship challenge|accept|decline|ready|unready|bomb|board|score|players|join|quit|kick|abort; see also: battleship help <command>";
 
     # strip leading and trailing whitespace
     $context->{arguments} =~ s/^\s+|\s+$//g;
@@ -72,6 +140,9 @@ sub cmd_battleship {
 
     $command //= '';
     $command = lc $command;
+
+    $arguments //= '';
+    $arguments = lc $arguments;
 
     # shorter aliases
     my ($nick, $user, $host, $hostmask, $channel) = (
@@ -106,134 +177,96 @@ sub cmd_battleship {
                 return "There is already a game of Battleship underway.";
             }
 
-            # `challenge` without arguments issues an open challenge
-            if (not length $arguments) {
-                $self->set_state('accept');
+            # set game to the `accept` state to begin accepting challenges
+            $self->set_state('challenge');
 
-                # add player 1, the challenger, to the game
-                my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            # add player 0, the challenger, to the game
+            my $id = $self->get_player_id($nick, $user, $host);
 
-                my $player = {
-                    id   => $id,
-                    name => $nick,
-                    missedinputs => 0
-                };
+            my $player = $self->new_player($id, $nick);
 
-                push @{$self->{state_data}->{players}}, $player;
+            # clear out player data
+            $self->{state_data}->{players} = [];
 
-                # add player 2, a placeholder for the challengee
-                $player = {
-                    id   => -1,
-                    name => 'anybody',
-                    missedinputs => 0
-                };
-
-                push @{$self->{state_data}->{players}}, $player;
-
-                # start the battleship game loop
-                $self->{pbot}->{event_queue}->enqueue_event(sub {
-                        $self->run_one_state;
-                    }, 1, 'battleship loop', 1
-                );
-
-                return "/msg $channel $nick has made an open challenge! Use `accept` to accept their challenge.";
-            }
-
-            # otherwise we're challenging a specific person
-
-            # are they in the channel?
-            my $challengee = $self->{pbot}->{nicklist}->is_present($channel, $arguments);
-
-            if (not $challengee) {
-                return "$arguments is not present in $channel. Invite them to the channel and try again!";
-            }
-
-            # set up next state of game
-            $self->set_state('accept');
-
-            # add player 1, the challenger, to the game
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-
-            my $player = {
-                id   => $id,
-                name => $nick,
-                missedinputs => 0,
-            };
-
-            push @{$self->{state_data}->{players}}, $player;
-
-            # add player 2, the challengee, to the game
-            ($id) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($challengee);
-
-            $player = {
-                id   => $id,
-                name => $challengee,
-                missedinputs => 0,
-            };
-
+            # add player 0
             push @{$self->{state_data}->{players}}, $player;
 
             # start the battleship game loop
-            $self->{pbot}->{event_queue}->enqueue_event(sub {
-                    $self->run_one_state;
-                }, 1, 'battleship loop', 1
-            );
+            $self->begin_game_loop;
 
-            return "/msg $channel $nick has challenged $challengee to Battleship! Use `accept` to accept their challenge.";
+            return "/msg $channel $nick has issued a Battleship challenge! Use `accept` to accept their challenge.";
         }
 
-        # accept challenges
-        when ('accept') {
-            if ($self->{current_state} ne 'accept') {
-                return "/msg $nick This is not the time to use `accept`.";
+        # accept a challenge
+        when (['accept', 'join']) {
+            if ($self->{current_state} ne 'challenge') {
+                return "This is not the time to use `$command`.";
             }
 
-            my $id     = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-            my $player = $self->{state_data}->{players}->[1];
-
-            # accept an open challenge
-            if ($player->{id} == -1) {
-                $player->{id}   = $id;
-                $player->{name} = $nick;
+            if (@{$self->{state_data}->{players}} >= $self->{MAX_PLAYERS}) {
+                return "/msg $channel $nick: The player limit has been reached. Try again next game.";
             }
 
-            # confirm right user is accepting challenge
-            if ($player->{id} == $id) {
-                # accept the challenge
-                $player->{accepted} = 1;
-                return "/msg $channel $nick has accepted $self->{state_data}->{players}->[0]->{name}'s challenge!";
+            my $id = $self->get_player_id($nick, $user, $host);
+
+            # check that player hasn't already accepted/joined
+            if (grep { $_->{id} == $id } @{$self->{state_data}->{players}}) {
+                return "$nick: You have already joined this Battleship game.";
+            }
+
+            # add another player
+            my $player = $self->new_player($id, $nick);
+
+            $player->{index} = @{$self->{state_data}->{players}};
+
+            push @{$self->{state_data}->{players}}, $player;
+
+            return "/msg $channel $nick has joined the game. Use `ready` to ready-up.";
+        }
+
+        # ready/unready
+        when (['ready', 'unready']) {
+            if ($self->{current_state} ne 'challenge') {
+                return "This is not the time to use `$command`.";
+            }
+
+            my $id = $self->get_player_id($nick, $user, $host);
+
+            my ($player) = grep { $_->{id} == $id } @{$self->{state_data}->{players}};
+
+            if (not defined $player) {
+                return "$nick: You have not joined this game of Battleship. Use `accept` to join the game.";
+            }
+
+            if ($command eq 'ready') {
+                $player->{ready} = 1;
+                return "/msg $channel $nick is ready!";
             } else {
-                # wrong user tried to accept
-                return "/msg $nick You have not been challenged to a game of Battleship.";
+                $player->{ready} = 0;
+                return "/msg $channel $nick is no longer ready.";
             }
         }
 
         # decline a challenge or forfeit/concede a game
         when (['decline', 'quit', 'forfeit', 'concede']) {
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-
-            my $removed = 0;
+            my $id = $self->get_player_id($nick, $user, $host);
 
             for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
                 if ($self->{state_data}->{players}->[$i]->{id} == $id) {
-                    $self->{state_data}->{players}->[$i]->{removed} = 1;
-                    $removed = 1;
-                }
-            }
+                    if ($self->{current_state} eq 'challenge') {
+                        # remove from player list now since this is only the accept
+                        # stage and a game hasn't yet begun
+                        splice @{$self->{state_data}->{players}}, $i, 1;
+                    } else {
+                        # there is an on-going game, just mark them as removed
+                        $self->{state_data}->{players}->[$i]->{removed} = 1;
+                    }
 
-            if ($removed) {
-                if ($self->{current_state} eq 'accept') {
-                    $self->set_state('nogame');
-                    $self->{state_data}->{players} = [];
-                    return "/msg $channel $nick declined the challenge.";
-                }
-                else {
                     return "/msg $channel $nick has left the game!";
                 }
             }
-            else {
-                return "$nick: But you are not even playing the game.";
-            }
+
+            return "There is nothing to $command.";
         }
 
         when ('abort') {
@@ -241,79 +274,79 @@ sub cmd_battleship {
                 return "$nick: Only admins may abort the game.";
             }
 
+            if ($self->{current_state} eq 'nogame') {
+                return "/msg $channel $nick: There is no ongoing game to abort.";
+            }
+
+            # jump directly to the `gameover` state to
+            # show the final board and reset the game
             $self->set_state('gameover');
 
             return "/msg $channel $nick: The game has been aborted.";
         }
 
         when ('score') {
-            if (@{$self->{state_data}->{players}} == 2) {
-                $self->show_scoreboard;
-                return '';
-            } else {
-                return "There is no game going on right now.";
+            if ($self->{current_state} ne 'move' and $self->{current_state} ne 'attack') {
+                return "There is no Battleship score to show right now.";
             }
+
+            $self->show_scoreboard;
+            return '';
         }
 
         when ('players') {
-            if ($self->{current_state} eq 'accept') {
-                return "$self->{state_data}->{players}->[0]->{name} has challenged $self->{state_data}->{players}->[1]->{name}!";
+            if (not @{$self->{state_data}->{players}}) {
+                return "There are no players playing Battleship right now. Start a game with the `challenge` command!";
             }
-            elsif (@{$self->{state_data}->{players}} == 2) {
-                return "$self->{state_data}->{players}->[0]->{name} is in battle with $self->{state_data}->{players}->[1]->{name}!";
-            }
-            else {
-                return "There are no players playing right now. Start a game with `challenge <nick>`!";
-            }
+
+            $self->list_players;
+            return '';
         }
 
         when ('kick') {
             if (not $self->{pbot}->{users}->loggedin_admin($channel, $hostmask)) {
-                return "$nick: Only admins may kick people from the game.";
+                return "$nick: Only admins may kick players from the game.";
             }
 
             if (not length $arguments) {
                 return "Usage: battleship kick <nick>";
             }
 
-            my $removed = 0;
+            # get the id associated with this nick, in case the current player has changed nick while playing
+            my ($id) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($arguments);
+
+            if (not defined $id) {
+                return "I don't know anybody named $arguments.";
+            }
+
+            $id = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($id);
 
             for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
-                if (lc $self->{state_data}->{players}->[$i]->{name} eq $arguments) {
+                if (lc $self->{state_data}->{players}->[$i]->{id} == $id) {
                     $self->{state_data}->{players}->[$i]->{removed} = 1;
-                    $removed = 1;
+                    return "/msg $channel $nick: $arguments has been kicked from the game.";
                 }
             }
 
-            if ($removed) {
-                return "/msg $channel $nick: $arguments has been kicked from the game.";
-            } else {
-                return "$nick: $arguments isn't even in the game.";
-            }
+            return "$nick: $arguments isn't even in the game.";
         }
 
         when ('bomb') {
-            if ($self->{current_state} ne 'playermove' and $self->{current_state} ne 'checkplayer') {
+            if ($self->{current_state} ne 'move' and $self->{current_state} ne 'attack') {
                 return "$nick: It's not time to do that now.";
             }
 
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            my $id = $self->get_player_id($nick, $user, $host);
 
-            my $player;
+            my ($player) = grep { $_->{id} == $id } @{$self->{state_data}->{players}};
 
-            if ($self->{state_data}->{players}->[0]->{id} == $id) {
-                $player = 0;
-            }
-            elsif ($self->{state_data}->{players}->[1]->{id} == $id) {
-                $player = 1;
-            }
-            else {
+            if (not defined $player) {
                 return "You are not playing in this game.";
             }
 
             # no arguments provided
             if (not length $arguments) {
-                if (delete $self->{state_data}->{players}->[$player]->{location}) {
+                if (delete $player->{location}) {
                     return "$nick: Attack location cleared.";
                 } else {
                     return "$nick: Usage: bomb <location>";
@@ -336,61 +369,35 @@ sub cmd_battleship {
                 return "$nick: Target out of range, try again.";
             }
 
-            # it's not this player's turn, go ahead and store their move
-            # for when it is their turn
-            if ($self->{state_data}->{current_player} != $player) {
-                my $msg;
-                if (not exists $self->{state_data}->{players}->[$player]->{location}) {
-                    $msg = "$nick: You will attack $arguments when it is your turn.";
-                }
-                else {
-                    $msg = "$nick: You will now attack $arguments instead of $self->{state_data}->{players}->[$player]->{location} when it is your turn.";
-                }
-                $self->{state_data}->{players}->[$player]->{location} = $arguments;
-                return $msg;
+            my $msg;
+            if (not exists $player->{location}) {
+                $msg = "/msg $channel $nick aims at $arguments.";
             }
-
-            # prevent player from attacking multiple times in one turn
-            if ($self->{player}->[$player]->{done}) {
-                return "$nick: You have already attacked this turn.";
+            elsif (lc $player->{location} eq lc $arguments) {
+                return '';
             }
-
-            # commence attack!
-            if ($self->bomb($player, $arguments)) {
-                if ($self->{player}->[$player]->{won}) {
-                    $self->set_state('checkplayer');
-                    $self->run_one_state;
-                } else {
-                    $self->{player}->[ $player]->{done} = 1;
-                    $self->{player}->[!$player]->{done} = 0;
-
-                    $self->{state_data}->{current_player} = !$player;
-
-                    $self->{state_data}->{ticks}      = 1;
-                    $self->{state_data}->{first_tock} = 1;
-                    $self->{state_data}->{tocks}      = 0;
-                }
+            else {
+                $msg = "/msg $channel $nick aims at $arguments instead of $player->{location}.";
             }
-
-            # bomb() sent bombing output to channel
-            return '';
+            $player->{location} = $arguments;
+            return $msg;
         }
 
         when (['specboard', 'board']) {
-            if (grep { $_ eq $self->{current_state} } qw/nogame accept genboard gameover/) {
+            if (grep { $_ eq $self->{current_state} } qw/nogame challenge genboard gameover/) {
                 return "$nick: There is no board to show right now.";
             }
 
             # specifically show spectator board, even if invoked by a player
             if ($_ eq 'specboard') {
-                $self->show_battlefield(2);
+                $self->show_battlefield($self->{BOARD_SPECTATOR});
                 return '';
             }
 
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+            my $id = $self->get_player_id($nick, $user, $host);
 
-            # show player's personal board if `id` is playing
-            for (my $i = 0; $i < 2; $i++) {
+            # show player's personal board if playing
+            for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
                 if ($self->{state_data}->{players}->[$i]->{id} == $id) {
                     $self->send_message($channel, "$nick surveys the battlefield!");
                     $self->show_battlefield($i);
@@ -399,22 +406,23 @@ sub cmd_battleship {
             }
 
             # otherwise show spectator board
-            $self->show_battlefield(2);
+            $self->show_battlefield($self->{BOARD_SPECTATOR});
+            return '';
         }
 
-        # this command shows both player's ships and all information
+        # this command shows the entire battlefield
         when ('fullboard') {
             if (not $self->{pbot}->{users}->loggedin_admin($channel, $hostmask)) {
                 return "$nick: Only admins may see the full board.";
             }
 
-            if (grep { $_ eq $self->{current_state} } qw/nogame accept genboard gameover/) {
+            if (grep { $_ eq $self->{current_state} } qw/nogame challenge genboard gameover/) {
                 return "$nick: There is no board to show right now.";
             }
 
-            # show real board if admin is actually in the game ... no cheating!
-            my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-            for (my $i = 0; $i < 2; $i++) {
+            # show real board if admin is in the game ... no cheating!
+            my $id = $self->get_player_id($nick, $user, $host);
+            for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
                 if ($self->{state_data}->{players}->[$i]->{id} == $id) {
                     $self->send_message($channel, "$nick surveys the battlefield!");
                     $self->show_battlefield($i);
@@ -423,7 +431,7 @@ sub cmd_battleship {
             }
 
             # show full board
-            $self->show_battlefield(4, $nick);
+            $self->show_battlefield($self->{BOARD_FULL}, $nick);
         }
 
         default { return $usage; }
@@ -451,119 +459,114 @@ sub send_message {
     $self->{pbot}->{interpreter}->add_message_to_output_queue($to, $message, $delay);
 }
 
-# some colors for IRC messages
-my %color = (
-    white      => "\x0300",
-    black      => "\x0301",
-    blue       => "\x0302",
-    green      => "\x0303",
-    red        => "\x0304",
-    maroon     => "\x0305",
-    purple     => "\x0306",
-    orange     => "\x0307",
-    yellow     => "\x0308",
-    lightgreen => "\x0309",
-    teal       => "\x0310",
-    cyan       => "\x0311",
-    lightblue  => "\x0312",
-    magneta    => "\x0313",
-    gray       => "\x0314",
-    lightgray  => "\x0315",
+# get unambiguous internal id for player hostmask
+sub get_player_id {
+    my ($self, $nick, $user, $host) = @_;
+    my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+    return   $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($id);
+}
 
-    bold      => "\x02",
-    italics   => "\x1D",
-    underline => "\x1F",
-    reverse   => "\x16",
+# create a new player hash
+sub new_player {
+    my ($self, $id, $nick) = @_;
 
-    reset     => "\x0F",
-);
+    return {
+        id           => $id,
+        name         => $nick,
+        ready        => 0,
+        health       => 0,
+        shots        => 0,
+        hit          => 0,
+        miss         => 0,
+        sunk         => 0,
+        index        => 0,
+        missedinputs => 0,
+    };
+}
+
+# get a random number interval [lower, upper)
+sub number {
+    my ($self, $lower, $upper) = @_;
+    return int rand($upper - $lower) + $lower;
+}
 
 # battleship stuff
 
+sub begin_game_loop {
+    my ($self) = @_;
+    # add `battleship loop` event repeating at 1s interval
+    $self->{pbot}->{event_queue}->enqueue_event(
+        sub {
+            $self->run_one_state;
+        },
+        1, 'battleship loop', 1
+    );
+}
+
+sub end_game_loop {
+    my ($self) = @_;
+    # remove `battleship loop` event
+
+    # repeating events get re-added to queue after event completes, so we
+    # must set repeating to 0 to ensure the event gets removed
+    $self->{pbot}->{event_queue}->update_repeating('battleship loop', 0);
+
+    # dequeue_event cannot remove repeating events if dequeue_event is called
+    # from within a repeating event since the event infrastructure will just
+    # re-add it afterwards (in other words, don't delete the above line)
+    $self->{pbot}->{event_queue}->dequeue_event('battleship loop', 0);
+}
+
 sub init_game {
-    my ($self, $nick1, $nick2) = @_;
+    my ($self, $state) = @_;
 
-    $self->{N_X}   = 15;
-    $self->{N_Y}   = 8;
-    $self->{SHIPS} = 6;
+    # default board dimensions
+    $self->{N_X}   = $self->{BOARD_X};
+    $self->{N_Y}   = $self->{BOARD_Y};
 
+    # increase board width by player count
+    $self->{N_X} += @{$state->{players}} * 2;
+
+    # default count of ships per player
+    $self->{SHIPS} = $self->{SHIP_COUNT};
+
+    # initialize ship length fields
     for (my $ship = 0; $ship < $self->{SHIPS}; $ship++) {
         $self->{ship_length}->[$ship] = 0;
     }
 
+    # the battleship board/grid. all ships share the same grid to add an
+    # element of strategy (namely, ships cannot overlap thus you know
+    # where your enemy ships are NOT located, which narrows the battle
+    # field and helps speed games up)
     $self->{board} = [];
 
-    $self->{player} = [
-        { bombs => 0, hit => 0, miss => 0, sunk => 0, nick => $nick1, done => 0 },
-        { bombs => 0, hit => 0, miss => 0, sunk => 0, nick => $nick2, done => 0 },
-    ];
-
-    $self->{horiz} = 0;
-
-    $self->generate_battlefield;
+    # place ships and ocean tiles
+    return $self->generate_battlefield;
 }
 
-sub count_ship_sections {
-    my ($self, $player) = @_;
-
-    my $sections = 0;
-
-    for (my $x = 0; $x < $self->{N_Y}; $x++) {
-        for (my $y = 0; $y < $self->{N_X}; $y++) {
-            if ($player == 0) {
-                if (   $self->{board}->[$x][$y] eq $self->{player_two_vert}
-                    || $self->{board}->[$x][$y] eq $self->{player_two_horiz})
-                {
-                    $sections++;
-                }
-            } else {
-                if (   $self->{board}->[$x][$y] eq $self->{player_one_vert}
-                    || $self->{board}->[$x][$y] eq $self->{player_one_horiz})
-                {
-                    $sections++;
-                }
-            }
-        }
-    }
-
-    return $sections;
-}
-
-sub check_ship {
-    my ($self, $x, $y, $o, $d, $l) = @_;
+# ensures a ship can be placed at this location (all desired tiles are ocean)
+sub check_ship_placement {
+    my ($self, $x, $y, $o, $l) = @_;
 
     my ($xd, $yd, $i);
 
-    if (!$o) {
-        if (!$d) {
-            $yd = -1;
-            if ($y - $l < 0) {
-                return 0;
-            }
-        } else {
-            $yd = 1;
-            if ($y + $l >= $self->{N_X}) {
-                return 0;
-            }
+    if ($o == $self->{ORIENT_VERT}) {
+        if ($y + $l >= $self->{N_Y}) {
+            return 0;
         }
         $xd = 0;
+        $yd = 1;
     } else {
-        if (!$d) {
-            $xd = -1;
-            if ($x - $l < 0) {
-                return 0;
-            }
-        } else {
-            $xd = 1;
-            if ($x + $l >= $self->{N_Y}) {
-                return 0;
-            }
+        if ($x + $l >= $self->{N_X}) {
+            return 0;
         }
+        $xd = 1;
         $yd = 0;
     }
 
     for (my $i = 0; $i < $l; $i++) {
-        if ($self->{board}->[$x += $o ? $xd : 0][$y += $o ? 0 : $yd] ne $self->{ocean}) {
+        if ($self->{board}->[$x += $o == $self->{ORIENT_HORIZ} ? $xd : 0][$y += $o == $self->{ORIENT_HORIZ} ? 0 : $yd]->{type} != $self->{TYPE_OCEAN}) {
             return 0;
         }
     }
@@ -571,90 +574,139 @@ sub check_ship {
     return 1;
 }
 
-sub number {
-    my ($self, $lower, $upper) = @_;
-    return int rand($upper - $lower) + $lower;
-}
-
-sub generate_ship {
-    my ($self, $player, $ship) = @_;
+# attempt to place a ship on the battlefield
+sub place_ship {
+    my ($self, $player_id, $player_index, $ship) = @_;
 
     my ($x, $y, $o, $d, $i, $l);
     my ($yd, $xd) = (0, 0);
 
     my $fail = 0;
 
-    while (1) {
-        $x = $self->number(0, $self->{N_Y});
-        $y = $self->number(0, $self->{N_X});
+    while (++$fail < 5000) {
+        $x = $self->number(0, $self->{N_X});
+        $y = $self->number(0, $self->{N_Y});
 
         $o = $self->number(1, 10) < 6;
-        $d = $self->number(1, 10) < 6;
 
         if ($self->{ship_length}->[$ship]) {
+            # reuse saved length so all players have equal sized ships.
+            # perfectly balanced as all things must be.
             $l = $self->{ship_length}->[$ship];
         } else {
-            $l = $self->number(3, 6);
+            # generate a random length ship
+            # TODO: perhaps use a fixed array of guaranteed ship lengths?
+            # i think random is more exciting because you never know what
+            # kinds of ships are going to be out there.
+            $l = $self->number(2, 6);
         }
 
         if ($self->{debug}) {
-            $self->{pbot}->{logger}->log("generate ships player $player: ship $ship x,y: $x,$y  o,d: $o,$d length: $l\n");
+            $self->{pbot}->{logger}->log("attempt to place ship for player $player_index: ship $ship x,y: $x,$y  o,d: $o,$d length: $l\n");
         }
 
-        if ($self->check_ship($x, $y, $o, $d, $l)) {
+        if ($self->check_ship_placement($x, $y, $o, $l)) {
+            if ($self->{debug}) {
+                $self->{pbot}->{logger}->log("SUCCESS!\n");
+            }
+
             if (!$o) {
-                if ($self->{horiz} < 2) {
+                $self->{vert}++;
+
+                if ($self->{horiz} < $self->{SHIPS} / 2) {
+                    # generate a battlefield with half vertical and half horizontal ships
+                    # perfectly balanced as all things must be.
                     next;
                 }
 
-                if (!$d) {
-                    $yd = -1;
-                } else {
-                    $yd = 1;
-                }
-
+                $yd = 1;
                 $xd = 0;
             } else {
                 $self->{horiz}++;
 
-                if (!$d) {
-                    $xd = -1;
-                } else {
-                    $xd = 1;
+                if ($self->{vert} < $self->{SHIPS} / 2) {
+                    # generate a battlefield with half vertical and half horizontal ships
+                    # perfectly balanced as all things must be.
+                    next;
                 }
 
+                $xd = 1;
                 $yd = 0;
             }
 
             for (my $i = 0; $i < $l; $i++) {
-                $self->{board}->[$x += $o ? $xd : 0][$y += $o ? 0 : $yd] =
-                  $player ? ($o ? $self->{player_two_vert} : $self->{player_two_horiz}) : ($o ? $self->{player_one_vert} : $self->{player_one_horiz});
+                my $tile_data = {
+                    type         => $self->{TYPE_SHIP},
+                    player_id    => $player_id,
+                    player_index => $player_index,
+                    orientation  => $o,
+                    length       => $l,
+                    index        => $i,
+                    hit_by       => 0,
+                };
+
+                $self->{board}->[$x += $o == $self->{ORIENT_HORIZ} ? $xd : 0][$y += $o == $self->{ORIENT_HORIZ} ? 0 : $yd] = $tile_data;
             }
 
             $self->{ship_length}->[$ship] = $l;
+            $self->{state_data}->{players}->[$player_index]->{health} += $l;
             return 1;
         }
-
-        if (++$fail >= 5000) {
-            $self->{pbot}->{logger}->log("Failed to generate ship\n");
-            $self->send_message($self->{channel}, "Failed to place a ship. I cannot continue. Game over.");
-            $self->set_state('nogame');
-            return 0;
-        }
     }
+
+    return 0;
+}
+
+sub place_whirlpool {
+    my ($self) = @_;
+
+    for (my $try = 0; $try < 1000; $try++) {
+        my $x = $self->number(0, $self->{N_X});
+        my $y = $self->number(0, $self->{N_Y});
+
+        # skip non-ocean tiles
+        if ($self->{board}->[$x][$y]->{type} != $self->{TYPE_OCEAN}) {
+            next;
+        }
+
+        # replace ocean tile with whirlpool
+        $self->{board}->[$x][$y]->{type} = $self->{TYPE_WHIRLPOOL};
+        $self->{board}->[$x][$y]->{tile} = $self->{TILE_OCEAN}; # whirlpools hidden initially, until shot
+        return 1;
+    }
+
+    $self->{pbot}->{logger}->log("Failed to place whirlpool.\n");
+    return 0;
 }
 
 sub generate_battlefield {
     my ($self) = @_;
 
-    for (my $y = 0; $y < $self->{N_Y}; $y++) {
-        for (my $x = 0; $x < $self->{N_X}; $x++) {
-            $self->{board}->[$y][$x] = $self->{ocean};
+    # fill board with ocean
+    for (my $x = 0; $x < $self->{N_X}; $x++) {
+        for (my $y = 0; $y < $self->{N_Y}; $y++) {
+            $self->{board}->[$x][$y] = {
+                type => $self->{TYPE_OCEAN},
+                tile => $self->{TILE_OCEAN},
+            };
         }
     }
 
-    for (my $x = 0; $x < $self->{SHIPS}; $x++) {
-        if (!$self->generate_ship(0, $x) || !$self->generate_ship(1, $x)) {
+    # place ships
+    for (my $player_index = 0; $player_index < @{$self->{state_data}->{players}}; $player_index++) {
+        # counts how many horizontal/vertical ships have been placed so far
+        $self->{horiz} = 0;
+        $self->{vert}  = 0;
+        for (my $ship = 0; $ship < $self->{SHIPS}; $ship++) {
+            if (!$self->place_ship($self->{state_data}->{players}->[$player_index]->{id}, $player_index, $ship)) {
+                return 0;
+            }
+        }
+    }
+
+    # place whirlpools (2 whirlpools per player)
+    for (my $whirlpool = 0; $whirlpool < @{$self->{state_data}->{players}} * 2; $whirlpool++) {
+        if (!$self->place_whirlpool) {
             return 0;
         }
     }
@@ -662,128 +714,52 @@ sub generate_battlefield {
     return 1;
 }
 
+# we hit a ship; check if the ship has sunk
 sub check_sunk {
-    my ($self, $x, $y, $player) = @_;
+    my ($self, $x, $y) = @_;
 
-    my $target = $self->{board}->[$x][$y];
+    # alias to the tile we hit
+    my $tile = $self->{board}->[$x][$y];
 
-    given ($target) {
-        when ($_ eq $self->{player_two_vert} or $_ eq $self->{player_one_vert}) {
-            for (my $i = $x + 1; $i < $self->{N_Y}; $i++) {
-                if (   ($self->{board}->[$i][$y] eq $self->{player_one_vert} && $player)
-                    || ($self->{board}->[$i][$y] eq $self->{player_two_vert} && !$player))
-                {
-                    return 0;
-                }
+    if ($tile->{orientation} == $self->{ORIENT_VERT}) {
+        my $top    = $y - $tile->{index};
+        my $bottom = $y + ($tile->{length} - ($tile->{index} + 1));
 
-                if (   $self->{board}->[$i][$y] eq $self->{ocean}
-                    || $self->{board}->[$i][$y] eq $self->{player_one_miss}
-                    || $self->{board}->[$i][$y] eq $self->{player_two_miss})
-                {
-                    last;
-                }
+        for (my $i = $y; $i >= $top; $i--) {
+            if (not $self->{board}->[$x][$i]->{hit_by}) {
+                return 0;
             }
-
-            for (my $i = $x - 1; $i >= 0; $i--) {
-                if (   ($self->{board}->[$i][$y] eq $self->{player_one_vert} && $player)
-                    || ($self->{board}->[$i][$y] eq $self->{player_two_vert} && !$player))
-                {
-                    return 0;
-                }
-
-                if (   $self->{board}->[$i][$y] eq $self->{ocean}
-                    || $self->{board}->[$i][$y] eq $self->{player_one_miss}
-                    || $self->{board}->[$i][$y] eq $self->{player_two_miss})
-                {
-                    last;
-                }
-            }
-
-            return 1;
         }
 
-        when ($_ eq $self->{player_one_horiz} or $_ eq $self->{player_two_horiz}) {
-            for (my $i = $y + 1; $i < $self->{N_X}; $i++) {
-                if (   ($self->{board}->[$x][$i] eq $self->{player_one_horiz} && $player)
-                    || ($self->{board}->[$x][$i] eq $self->{player_two_horiz} && !$player))
-                {
-                    return 0;
-                }
-
-                if ($self->{board}->[$x][$i] eq $self->{ocean}
-                    || $self->{board}->[$x][$i] eq $self->{player_one_miss}
-                    || $self->{board}->[$x][$i] eq $self->{player_two_miss}) {
-                    last;
-                }
+        for (my $i = $y + 1; $i <= $bottom; $i++) {
+            if (not $self->{board}->[$x][$i]->{hit_by}) {
+                return 0;
             }
-
-            for (my $i = $y - 1; $i >= 0; $i--) {
-                if (   ($self->{board}->[$x][$i] eq $self->{player_one_horiz} && $player)
-                    || ($self->{board}->[$x][$i] eq $self->{player_two_horiz} && !$player))
-                {
-                    return 0;
-                }
-
-                if (   $self->{board}->[$x][$i] eq $self->{ocean}
-                    || $self->{board}->[$x][$i] eq $self->{player_one_miss}
-                    || $self->{board}->[$x][$i] eq $self->{player_two_miss})
-                {
-                    last;
-                }
-            }
-
-            return 1;
         }
+
+        return 1;
+    } else {
+        my $left   = $x - $tile->{index};
+        my $right  = $x + ($tile->{length} - ($tile->{index} + 1));
+
+        for (my $i = $x; $i >= $left; $i--) {
+            if (not $self->{board}->[$i][$y]->{hit_by}) {
+                return 0;
+            }
+        }
+
+        for (my $i = $x + 1; $i <= $right; $i++) {
+            if (not $self->{board}->[$i][$y]->{hit_by}) {
+                return 0;
+            }
+        }
+
+        return 1;
     }
 }
 
-sub bomb {
-    my ($self, $player, $location) = @_;
-
-    my ($hit, $sections, $sunk) = (0, 0, 0, 0, 0);
-
-    my ($x, $y) = $location =~ /^(.)(.*)/;
-    $x = ord($x) - 65;
-    $y--;
-
-    if (!$player) {
-        if (   $self->{board}->[$x][$y] eq $self->{player_two_vert}
-            || $self->{board}->[$x][$y] eq $self->{player_two_horiz})
-        {
-            $hit = 1;
-        }
-    } else {
-        if (   $self->{board}->[$x][$y] eq $self->{player_one_vert}
-            || $self->{board}->[$x][$y] eq $self->{player_one_horiz})
-        {
-            $hit = 1;
-        }
-    }
-
-    $sunk = $self->check_sunk($x, $y, $player);
-
-    if ($hit) {
-        if (!$player) {
-            $self->{board}->[$x][$y] = $self->{player_one_hit};
-        } else {
-            $self->{board}->[$x][$y] = $self->{player_two_hit};
-        }
-
-        $self->{player}->[$player]->{hit}++;
-    } else {
-        if ($self->{board}->[$x][$y] eq $self->{ocean}) {
-            if (!$player) {
-                $self->{board}->[$x][$y] = $self->{player_one_miss};
-            } else {
-                $self->{board}->[$x][$y] = $self->{player_two_miss};
-            }
-
-            $self->{player}->[$player]->{miss}++;
-        }
-    }
-
-    my $nick1 = $self->{player}->[ $player]->{nick};
-    my $nick2 = $self->{player}->[!$player]->{nick};
+sub get_attack_text {
+    my ($self) = @_;
 
     my @attacks = (
         "launches torpedoes at",
@@ -796,294 +772,335 @@ sub bomb {
         "launches ballistic missiles at",
     );
 
-    my $attacked = $attacks[rand @attacks];
+    return $attacks[rand @attacks];
+}
 
-    if ($hit) {
-        $self->send_message($self->{channel}, "$nick1 $attacked $nick2 at $location! $color{red}--- HIT! --- $color{reset}");
+# checks if we hit whirlpool, ocean, ship, etc
+# places miss markers, reveals whirlpools
+sub check_hit {
+    my ($self, $state, $player, $location_data) = @_;
 
-        $self->{player}->[$player]->{destroyed}++;
+    my ($x, $y, $location) = (
+        $location_data->{x},
+        $location_data->{y},
+        $location_data->{location},
+    );
 
-        if ($sunk) {
-            $self->{player}->[$player]->{sunk}++;
-            my $remaining = $self->count_ship_sections($player);
-            $self->send_message($self->{channel}, "$color{red}$nick1 has sunk ${nick2}'s ship! $remaining ship section" . ($remaining != 1 ? 's' : '') . " remaining!$color{reset}");
+    # check if we hit a whirlpool. if so, reveal whirlpool on the
+    # battlefield and deflect the shot
+    if ($self->{board}->[$x][$y]->{type} == $self->{TYPE_WHIRLPOOL}) {
+        # reveal this whirlpool
+        $self->{board}->[$x][$y]->{tile} = $self->{TILE_WHIRLPOOL};
+
+        my $attack = $self->get_attack_text;
+
+        # keep trying until we don't hit another whirlpool
+        while (1) {
+            $self->send_message($self->{channel}, "$player->{name} $attack $location! $color{cyan}--- SPLASH! ---$color{reset} ");
+
+            $x = $self->number(0, $self->{N_X});
+            $y = $self->number(0, $self->{N_Y});
+
+            $location = ('A' .. 'Z')[$y] . ($x + 1);
+
+            $self->send_message($self->{channel}, "$player->{name} hit a whirlpool! It deflects their attack to $location!");
+
+            if ($self->{board}->[$x][$y]->{type} == $self->{TYPE_WHIRLPOOL}) {
+                # hit another whirlpool
+                next;
+            }
+
+            # update new location for caller
+            $location_data->{x} = $x;
+            $location_data->{y} = $y;
+            $location_data->{location} = $location;
+
+            last;
+        }
+    }
+
+    # hit a ship, damage self or enemy alike
+    if ($self->{board}->[$x][$y]->{type} == $self->{TYPE_SHIP}) {
+        return 1;
+    }
+
+    # did not hit whirlpool or ship
+    return 0;
+}
+
+sub perform_attack {
+    my ($self, $state, $player) = @_;
+
+    $player->{shots}++;
+
+    # random attack verb
+    my $attack = $self->get_attack_text;
+
+    # attack location
+    my $location = delete $player->{location};
+
+    # convert attack location to board coordinates
+    my ($y, $x) = $location =~ /^(.)(.*)/;
+    $y = ord($y) - 65;
+    $x--;
+
+    # set location data reference so check_hit can update values
+    my $location_data = {
+        x => $x,
+        y => $y,
+        location => $location,
+    };
+
+    # launch a shot and see if it hit a ship (handles hitting whirlpools, ocean, etc)
+    if ($self->check_hit($state, $player, $location_data)) {
+        # player hit a ship!
+
+        # location_data can be updated by whirlpools, etc
+        $x = $location_data->{x};
+        $y = $location_data->{y};
+        $location = $location_data->{location};
+
+        $self->send_message($self->{channel}, "$player->{name} $attack $location! $color{red}--- HIT! --- $color{reset}");
+
+        $player->{hit}++;
+
+        # place hit marker
+        $self->{board}->[$x][$y]->{tile}   = $color{red} . $self->{TILE_HIT}->[$player->{index}];
+        $self->{board}->[$x][$y]->{hit_by} = $player->{id};
+
+        # deduct hit points from player
+        $player->{health} -= 1;
+
+        # check if ship has sunk (reveal what kind and whose ship it is)
+        if ($self->check_sunk($x, $y)) {
+            $player->{sunk}++;
+
+            my $length    = $self->{board}->[$x][$y]->{length};
+            my $remaining = $player->{health};
+            my $victim    = $self->{state_data}->{players}->[$self->{board}->[$x][$y]->{player_index}]->{name};
+
+            my %ship_names = (
+                5 => 'battleship',
+                4 => 'destroyer',
+                3 => 'submarine',
+                2 => 'patrol boat',
+            );
+
+            $self->send_message($self->{channel}, "$color{red}$player->{name} has sunk ${victim}'s $ship_names{$length}! $victim has $remaining ship section" . ($remaining != 1 ? 's' : '') . " remaining!$color{reset}");
 
             if ($remaining == 0) {
-                $self->send_message($self->{channel}, "$nick1 has WON the game of Battleship!");
-                $self->{player}->[$player]->{won} = 1;
+                $self->send_message($self->{channel}, "$player->{name} has won the game of Battleship!");
+                $player->{won} = 1;
             }
         }
     } else {
-        $self->send_message($self->{channel}, "$nick1 $attacked $nick2 at $location! --- miss ---");
+        # player missed
+
+        # location_data can be updated by whirlpools, etc
+        $x = $location_data->{x};
+        $y = $location_data->{y};
+        $location = $location_data->{location};
+
+        $self->send_message($self->{channel}, "$player->{name} $attack $location! --- miss ---");
+
+        $player->{miss}++;
+
+        # update board tile
+        if ($self->{board}->[$x][$y]->{type} == $self->{TYPE_OCEAN}) {
+            $self->{board}->[$x][$y]->{tile} = $self->{TILE_MISS};
+            $self->{board}->[$x][$y]->{missed_by} = $player->{id};
+        }
+    }
+}
+
+sub list_players {
+    my ($self) = @_;
+
+    my @players;
+
+    foreach my $player (@{$self->{state_data}->{players}}) {
+        push @players, $player->{name} . ($player->{ready} ? '' : " $color{red}(not ready)$color{reset}");
     }
 
-    $self->{player}->[$player]->{bombs}++;
-    return 1;
+    if (@players) {
+        $self->send_message($self->{channel}, "Current players: " . (join ', ', @players) . ". Use `ready` when you are.");
+    }
 }
 
 sub show_scoreboard {
     my ($self) = @_;
 
-    my $p1sections = $self->count_ship_sections(1);
-    my $p2sections = $self->count_ship_sections(0);
+    foreach my $player (sort { $a->{health} <=> $b->{health} } @{$self->{state_data}->{players}}) {
+        my $buf = sprintf("%-15s shots: %2d, hit: %2d, miss: %2d, acc: %3d%%, sunk: %2d, sections left: %2d",
+            "$player->{name}:",
+            $player->{shots},
+            $player->{hit},
+            $player->{miss},
+            int (($player->{hit} / ($player->{shots} ? $player->{shots} : 1)) * 100),
+            $player->{sunk},
+            $player->{health},
+        );
 
-    my $p1win = '';
-    my $p2win = '';
-
-    if ($p1sections > $p2sections) {
-        $p1win = "$color{bold}$color{lightgreen} * ";
-        $p2win = "$color{red}   ";
-    } elsif ($p1sections < $p2sections) {
-        $p1win = "$color{red}   ";
-        $p2win = "$color{bold}$color{lightgreen} * ";
+        $self->send_message($self->{channel}, $buf);
     }
-
-    my $length_a = length $self->{player}->[0]->{nick};
-    my $length_b = length $self->{player}->[1]->{nick};
-    my $longest  = $length_a > $length_b ? $length_a : $length_b;
-
-    my $bombslen  = ($self->{player}->[0]->{bombs} > 10 || $self->{player}->[1]->{bombs} > 10) ? 2 : 1;
-    my $hitlen    = ($self->{player}->[0]->{hit}   > 10 || $self->{player}->[1]->{hit}   > 10) ? 2 : 1;
-    my $misslen   = ($self->{player}->[0]->{miss}  > 10 || $self->{player}->[1]->{miss}  > 10) ? 2 : 1;
-    my $sunklen   = ($self->{player}->[0]->{sunk}  > 10 || $self->{player}->[1]->{sunk}  > 10) ? 2 : 1;
-    my $intactlen = ($p1sections                   > 10 || $p2sections                   > 10) ? 2 : 1;
-
-    my $p1bombscolor  = $self->{player}->[0]->{bombs} > $self->{player}->[1]->{bombs} ? $color{green} : $color{red};
-    my $p1hitcolor    = $self->{player}->[0]->{hit}   > $self->{player}->[1]->{hit}   ? $color{green} : $color{red};
-    my $p1misscolor   = $self->{player}->[0]->{miss}  < $self->{player}->[1]->{miss}  ? $color{green} : $color{red};
-    my $p1sunkcolor   = $self->{player}->[0]->{sunk}  > $self->{player}->[1]->{sunk}  ? $color{green} : $color{red};
-    my $p1intactcolor = $p1sections                   > $p2sections                   ? $color{green} : $color{red};
-
-    my $p2bombscolor  = $self->{player}->[0]->{bombs} < $self->{player}->[1]->{bombs} ? $color{green} : $color{red};
-    my $p2hitcolor    = $self->{player}->[0]->{hit}   < $self->{player}->[1]->{hit}   ? $color{green} : $color{red};
-    my $p2misscolor   = $self->{player}->[0]->{miss}  > $self->{player}->[1]->{miss}  ? $color{green} : $color{red};
-    my $p2sunkcolor   = $self->{player}->[0]->{sunk}  < $self->{player}->[1]->{sunk}  ? $color{green} : $color{red};
-    my $p2intactcolor = $p1sections                   < $p2sections                   ? $color{green} : $color{red};
-
-    my $buf;
-
-    $buf = sprintf(
-        "$p1win%*s$color{reset}: bomb: $p1bombscolor%*d$color{reset}, hit: $p1hitcolor%*d$color{reset}, miss: $p1misscolor%*d$color{reset}, sunk: $p1sunkcolor%*d$color{reset}, sections left: $p1intactcolor%*d$color{reset}",
-        $longest, $self->{player}->[0]->{nick}, $bombslen,  $self->{player}->[0]->{bombs},
-        $hitlen,  $self->{player}->[0]->{hit},  $misslen,   $self->{player}->[0]->{miss},
-        $sunklen, $self->{player}->[0]->{sunk}, $intactlen, $p1sections
-    );
-
-    $self->send_message($self->{channel}, $buf);
-
-    $buf = sprintf(
-        "$p2win%*s$color{reset}: bomb: $p2bombscolor%*d$color{reset}, hit: $p2hitcolor%*d$color{reset}, miss: $p2misscolor%*d$color{reset}, sunk: $p2sunkcolor%*d$color{reset}, sections left: $p2intactcolor%*d$color{reset}",
-        $longest, $self->{player}->[1]->{nick}, $bombslen,  $self->{player}->[1]->{bombs},
-        $hitlen,  $self->{player}->[1]->{hit},  $misslen,   $self->{player}->[1]->{miss},
-        $sunklen, $self->{player}->[1]->{sunk}, $intactlen, $p2sections
-    );
-
-    $self->send_message($self->{channel}, $buf);
 }
 
 sub show_battlefield {
-    my ($self, $player, $nick) = @_;
+    my ($self, $player_index, $nick) = @_;
 
-    $self->{pbot}->{logger}->log("Showing battlefield for player $player\n");
+    $self->{pbot}->{logger}->log("Showing battlefield for player $player_index\n");
 
-    my $buf = "$color{cyan},01  ";
+    my $player;
+
+    if ($player_index >= 0) {
+        $player = $self->{state_data}->{players}->[$player_index];
+    }
+
+    my $output;
+
+    # player hit markers, for legend
+    my $hits;
+    foreach my $p (@{$self->{state_data}->{players}}) {
+        $hits .= "$p->{name} hit: $color{red}" . ($p->{index} + 1) . "$color{reset} ";
+    }
+
+    # render legend
+    if ($player) {
+        $output .= "Legend: ships: $self->{TILE_SHIP_VERT} $self->{TILE_SHIP_HORIZ}$color{reset} ${hits}ocean: $self->{TILE_OCEAN}$color{reset} miss: $self->{TILE_MISS}$color{reset} whirlpool: $self->{TILE_WHIRLPOOL}$color{reset}\n";
+    }
+    elsif ($player_index == $self->{BOARD_FULL} or $player_index == $self->{BOARD_FINAL}) {
+        my $ships;
+        foreach my $p (@{$self->{state_data}->{players}}) {
+            $ships .= "$p->{name}: $self->{TILE_SHIP}->[$p->{index}] ";
+        }
+
+        $output .= "Legend: ${ships}${hits}ocean: $self->{TILE_OCEAN}$color{reset} miss: $self->{TILE_MISS}$color{reset} whirlpool: $self->{TILE_WHIRLPOOL}$color{reset}\n";
+    }
+    else {
+        # spectator
+        $output .= "Legend: ${hits}ocean: $self->{TILE_OCEAN}$color{reset} miss: $self->{TILE_MISS}$color{reset} whirlpool: $self->{TILE_WHIRLPOOL}$color{reset}\n";
+    }
+
+    # render top column coordinates
+    $output .= "$color{cyan},01  ";
 
     for (my $x = 1; $x < $self->{N_X} + 1; $x++) {
         if ($x % 10 == 0) {
-            $buf .= "$color{yellow},01" if $self->{N_X} > 10;
-            $buf .= $x % 10;
-            $buf .= ' ';
-            $buf .= "$color{cyan},01" if $self->{N_X} > 10;
+            $output .= "$color{yellow},01" if $self->{N_X} > 10;
+            $output .= $x % 10;
+            $output .= ' ';
+            $output .= "$color{cyan},01" if $self->{N_X} > 10;
         } else {
-            $buf .= $x % 10;
-            $buf .= ' ';
+            $output .= $x % 10;
+            $output .= ' ';
         }
     }
 
-    $buf .= "\n";
+    $output .= "\n";
 
+    # render battlefield row by row
     for (my $y = 0; $y < $self->{N_Y}; $y++) {
+        # left row coordinates
+        $output .= sprintf("$color{cyan},01%c ", 97 + $y);
 
-        $buf .= sprintf("$color{cyan},01%c ", 97 + $y);
-
+        # render a row of the board column by column
         for (my $x = 0; $x < $self->{N_X}; $x++) {
+            my $tile = $self->{board}->[$x][$y];
 
-            if ($player == 0) {
-                if ($self->{board}->[$y][$x] eq $self->{player_two_vert}
-                    || $self->{board}->[$y][$x] eq $self->{player_two_horiz})
-                {
-                    $buf .= "$color{blue},01$self->{ocean} ";
-                    next;
-                } else {
-                    if ($self->{board}->[$y][$x] eq $self->{player_one_hit}
-                        || $self->{board}->[$y][$x] eq $self->{player_two_hit})
-                    {
-                        $buf .= "$color{red},01";
-                    }
-                    elsif ($self->{board}->[$y][$x] eq $self->{player_two_miss}
-                        || $self->{board}->[$y][$x] eq $self->{player_one_miss})
-                    {
-                        $buf .= "$color{cyan},01";
-                    }
-                    elsif ($self->{board}->[$y][$x] eq $self->{ocean})
-                    {
-                        $buf .= "$color{blue},01$self->{ocean} ";
-                        next;
+            # render ocean/whirlpool, miss, but not hits or ships yet
+            if ($tile->{type} != $self->{TYPE_SHIP}) {
+                # reveal whirlpools on full/final boards
+                if ($player_index == $self->{BOARD_FULL} || $player_index == $self->{BOARD_FINAL}) {
+                    if ($tile->{type} == $self->{TYPE_WHIRLPOOL}) {
+                        $output .= $self->{TILE_WHIRLPOOL} . ' ';
                     } else {
-                        $buf .= "$color{white},01";
+                        # render normal tile (ocean, miss)
+                        $output .= $tile->{tile} . ' ';
                     }
-
-                    $buf .= "$self->{board}->[$y][$x] ";
-                }
-            } elsif ($player == 1) {
-                if ($self->{board}->[$y][$x] eq $self->{player_one_vert}
-                    || $self->{board}->[$y][$x] eq $self->{player_one_horiz})
-                {
-                    $buf .= "$color{blue},01$self->{ocean} ";
-                    next;
                 } else {
-                    if ($self->{board}->[$y][$x] eq $self->{player_one_hit}
-                        || $self->{board}->[$y][$x] eq $self->{player_two_hit})
-                    {
-                        $buf .= "$color{red},01";
-                    }
-                    elsif ($self->{board}->[$y][$x] eq $self->{player_two_miss}
-                        || $self->{board}->[$y][$x] eq $self->{player_one_miss})
-                    {
-                        $buf .= "$color{cyan},01";
-                    }
-                    elsif ($self->{board}->[$y][$x] eq $self->{ocean})
-                    {
-                        $buf .= "$color{blue},01$self->{ocean} ";
-                        next;
-                    } else {
-                        $buf .= "$color{white},01";
-                    }
-
-                    $buf .= "$self->{board}->[$y][$x] ";
+                    # render normal tile (ocean, revealed/hidden whirlpools, miss)
+                    $output .= $tile->{tile} . ' ';
                 }
-            } elsif ($player == 2) {
-                if ($self->{board}->[$y][$x] eq $self->{player_one_vert}
-                    || $self->{board}->[$y][$x] eq $self->{player_one_horiz}
-                    || $self->{board}->[$y][$x] eq $self->{player_two_vert}
-                    || $self->{board}->[$y][$x] eq $self->{player_two_horiz})
-                {
-                    $buf .= "$color{blue},01$self->{ocean} ";
-                    next;
-                } else {
-                    if ($self->{board}->[$y][$x] eq $self->{player_one_hit}
-                        || $self->{board}->[$y][$x] eq $self->{player_two_hit})
-                    {
-                        $buf .= "$color{red},01";
-                    }
-                    elsif ($self->{board}->[$y][$x] eq $self->{player_two_miss}
-                        || $self->{board}->[$y][$x] eq $self->{player_one_miss})
-                    {
-                        $buf .= "$color{cyan},01";
-                    }
-                    elsif ($self->{board}->[$y][$x] eq $self->{ocean})
-                    {
-                        $buf .= "$color{blue},01$self->{ocean} ";
-                        next;
-                    } else {
-                        $buf .= "$color{white},01";
-                    }
-
-                    $buf .= "$self->{board}->[$y][$x] ";
-                }
-            } else {
-                if ($self->{board}->[$y][$x] eq $self->{player_one_hit}
-                    || $self->{board}->[$y][$x] eq $self->{player_two_hit})
-                {
-                    $buf .= "$color{red},01";
-                }
-                elsif ($self->{board}->[$y][$x] eq $self->{player_two_miss}
-                    || $self->{board}->[$y][$x] eq $self->{player_one_miss})
-                {
-                    $buf .= "$color{cyan},01";
-                }
-                elsif ($self->{board}->[$y][$x] eq $self->{ocean})
-                {
-                    $buf .= "$color{blue},01$self->{ocean} ";
-                    next;
-                } else {
-                    $buf .= "$color{white},01";
-                }
-
-                $buf .= "$self->{board}->[$y][$x] ";
+                next;
             }
+
+            # render hits
+            if ($tile->{hit_by}) {
+                $output .= $tile->{tile} . ' ';
+                next;
+            }
+
+            # render ships
+
+            # render player's view
+            if ($player) {
+                # not player's ship
+                if ($tile->{player_id} != $player->{id}) {
+                    # ship not found yet, show ocean
+                    $output .= $self->{TILE_OCEAN} . ' ';
+                    next;
+                }
+
+                if ($tile->{orientation} == $self->{ORIENT_VERT}) {
+                    # vertical ship
+                    $output .= $self->{TILE_SHIP_VERT};
+                } else {
+                    # horizontal ship
+                    $output .= $self->{TILE_SHIP_HORIZ};
+                }
+
+                $output .= ' ';
+                next;
+            }
+
+            # otherwise render spectator, full or final board
+
+            # spectators are not allowed to see ships unless hit
+            if ($player_index == $self->{BOARD_SPECTATOR}) {
+                # ship not found yet, show ocean
+                $output .= $self->{TILE_OCEAN} . ' ';
+                next;
+            }
+
+            # full or final board, show all ships
+            $output .= $color{white} . $self->{TILE_SHIP}->[$tile->{player_index}] . ' ';
         }
 
-        $buf .= sprintf("$color{cyan},01%c", 97 + $y);
-        $buf .= "$color{reset}\n";
+        # right row coordinates
+        $output .= sprintf("$color{cyan},01%c", 97 + $y);
+        $output .= "$color{reset}\n";
     }
 
-    # bottom border
-    $buf .= "$color{cyan},01  ";
+    # bottom column coordinates
+    $output .= "$color{cyan},01  ";
 
     for (my $x = 1; $x < $self->{N_X} + 1; $x++) {
         if ($x % 10 == 0) {
-            $buf .= $color{yellow}, 01 if $self->{N_X} > 10;
-            $buf .= $x % 10;
-            $buf .= ' ';
-            $buf .= $color{cyan}, 01 if $self->{N_X} > 10;
+            $output .= $color{yellow}, 01 if $self->{N_X} > 10;
+            $output .= $x % 10;
+            $output .= ' ';
+            $output .= $color{cyan}, 01 if $self->{N_X} > 10;
         } else {
-            $buf .= $x % 10;
-            $buf .= ' ';
+            $output .= $x % 10;
+            $output .= ' ';
         }
     }
 
-    $buf .= "\n";
+    $output .= "\n";
 
-    my $player1 = $self->{player}->[0]->{nick};
-    my $player2 = $self->{player}->[1]->{nick};
-
-    if ($player == 0) {
-        $self->send_message(
-            $self->{player}->[$player]->{nick},
-            "Player One Legend: ships: [$self->{player_one_vert} $self->{player_one_horiz}]  ocean: [$color{blue},01$self->{ocean}$color{reset}]  $player1 miss: [$color{cyan},01$self->{player_one_miss}$color{reset}]  $player2 miss: [$color{cyan},01$self->{player_two_miss}$color{reset}]  $player1 hit: [$color{red},01"
-              . $self->{player_one_hit}
-              . "$color{reset}]  $player2 hit: [$color{red},01$self->{player_two_hit}$color{reset}]"
-        );
-    } elsif ($player == 1) {
-        $self->send_message(
-            $self->{player}->[$player]->{nick},
-            "Player Two Legend: ships: [$self->{player_two_vert} $self->{player_two_horiz}]  ocean: [$color{blue},01$self->{ocean}$color{reset}]  $player1 miss: [$color{cyan},01$self->{player_one_miss}$color{reset}]  $player2 miss: [$color{cyan},01$self->{player_two_miss}$color{reset}]  $player1 hit: [$color{red},01"
-              . $self->{player_one_hit}
-              . "$color{reset}]  $player2 hit: [$color{red},01$self->{player_two_hit}$color{reset}]"
-        );
-    } elsif ($player == 2) {
-        $self->send_message(
-            $self->{channel},
-            "Spectator Legend: ocean: [$color{blue},01$self->{ocean}$color{reset}]  $player1 miss: [$color{cyan},01$self->{player_one_miss}$color{reset}]  $player2 miss: [$color{cyan},01$self->{player_two_miss}$color{reset}]  $player1 hit: [$color{red},01"
-              . $self->{player_one_hit}
-              . "$color{reset}]  $player2 hit: [$color{red},01$self->{player_two_hit}$color{reset}]"
-        );
-    } elsif ($player == 3) {
-        $self->send_message(
-            $self->{channel},
-            "Final Board Legend: $player1 ships: [$self->{player_one_vert} $self->{player_one_horiz}] $player2 ships: [$self->{player_two_vert} $self->{player_two_horiz}]  ocean: [$color{blue},01$self->{ocean}$color{reset}]  $player1 miss: [$color{cyan},01$self->{player_one_miss}$color{reset}]  $player2 miss: [$color{cyan},01$self->{player_two_miss}$color{reset}]  $player1 hit: [$color{red},01"
-              . $self->{player_one_hit}
-              . "$color{reset}]  $player2 hit: [$color{red},01$self->{player_two_hit}$color{reset}]"
-        );
-    } else {
-        $self->send_message(
-            $nick,
-            "Full Board Legend: $player1 ships: [$self->{player_one_vert} $self->{player_one_horiz}] $player2 ships: [$self->{player_two_vert} $self->{player_two_horiz}]  ocean: [$color{blue},01$self->{ocean}$color{reset}]  $player1 miss: [$color{cyan},01$self->{player_one_miss}$color{reset}]  $player2 miss: [$color{cyan},01$self->{player_two_miss}$color{reset}]  $player1 hit: [$color{red},01"
-              . $self->{player_one_hit}
-              . "$color{reset}]  $player2 hit: [$color{red},01$self->{player_two_hit}$color{reset}]"
-        );
-    }
-
-    foreach my $line (split /\n/, $buf) {
-        if ($player == 0 || $player == 1) {
-            $self->send_message($self->{player}->[$player]->{nick}, $line);
+    # send output, one message per line
+    foreach my $line (split /\n/, $output) {
+        if ($player) {
+            # player
+            $self->send_message($player->{name}, $line);
         }
-        elsif ($player == 2 || $player == 3) {
-            $self->send_message($self->{channel}, $line);
+        elsif ($player_index == $self->{BOARD_FULL}) {
+            # full
+            $self->send_message($nick, $line);
         }
         else {
-            $self->send_message($nick, $line);
+            # spectator, final
+            $self->send_message($self->{channel}, $line);
         }
     }
 }
@@ -1095,21 +1112,32 @@ sub run_one_state {
     my ($self) = @_;
 
     # check for naughty or missing players
-    for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
-        if ($self->{state_data}->{players}->[$i]->{missedinputs} >= 3) {
+    foreach my $player (@{$self->{state_data}->{players}}) {
+        next if $player->{removed};
+
+        if ($player->{missedinputs} >= 3) {
             # remove player if they have missed 3 inputs
             $self->send_message(
                 $self->{channel},
-                "$color{red}$self->{state_data}->{players}->[$i]->{name} has missed too many prompts and has been ejected from the game!$color{reset}"
+                "$color{red}$player->{name} has missed too many moves and has been ejected from the game!$color{reset}"
             );
 
-            $self->{state_data}->{players}->[$i]->{removed} = 1;
+            $player->{removed} = 1;
+        }
+    }
+
+    # ensure there's at least 2 players still playing
+    if ($self->{current_state} eq 'move' or $self->{current_state} eq 'attack') {
+        my $players = 0;
+
+        foreach my $player (@{$self->{state_data}->{players}}) {
+            next if $player->{removed};
+            ++$players;
         }
 
-        if ($self->{state_data}->{players}->[$i]->{removed}) {
-            # end game if a player has been removed
+        if ($players < 2) {
+            $self->send_message($self->{channel}, "Not enough players left in the game. Aborting...");
             $self->set_state('gameover');
-            last;
         }
     }
 
@@ -1165,70 +1193,56 @@ sub create_states {
 
     # initialize state data
     $self->{state_data} = {
-        players        => [], # array of player data
-        ticks          => 0,  # number of ticks elapsed
-        current_player => 0,  # whose turn is it?
+        players => [], # array of player data
+        ticks   => 0,  # number of ticks elapsed
     };
 
     $self->{states} = {
         nogame => {
-            sub => sub { $self->nogame(@_) },
-
+            sub => sub { $self->state_nogame(@_) },
             trans => {
-                challenge => 'accept',
+                challenge => 'challenge',
                 nogame    => 'nogame',
             }
         },
-
-        accept => {
-            sub => sub { $self->accept(@_) },
-
+        challenge => {
+            sub => sub { $self->state_challenge(@_) },
             trans => {
                 stop   => 'nogame',
-                wait   => 'accept',
-                accept => 'genboard',
+                wait   => 'challenge',
+                ready  => 'genboard',
             }
         },
-
         genboard => {
-            sub => sub { $self->genboard(@_) },
-
+            sub => sub { $self->state_genboard(@_) },
             trans => {
+                fail => 'nogame',
                 next => 'showboard',
             }
         },
-
         showboard => {
-            sub => sub { $self->showboard(@_) },
-
+            sub => sub { $self->state_showboard(@_) },
             trans => {
-                next => 'playermove',
+                next => 'move',
             }
         },
-
-        playermove => {
-            sub => sub { $self->playermove(@_) },
-
+        move => {
+            sub => sub { $self->state_move(@_) },
             trans => {
-                wait => 'playermove',
-                next => 'checkplayer',
+                wait => 'move',
+                next => 'attack',
             }
         },
-
-        checkplayer => {
-            sub => sub { $self->checkplayer(@_) },
-
+        attack => {
+            sub => sub { $self->state_attack(@_) },
             trans => {
                 gotwinner => 'gameover',
-                next      => 'playermove',
+                next      => 'move',
             }
         },
-
         gameover => {
-            sub => sub { $self->gameover(@_) },
-
+            sub => sub { $self->state_gameover(@_) },
             trans => {
-                wait => 'gameover',
                 next => 'nogame',
             }
         },
@@ -1237,142 +1251,202 @@ sub create_states {
 
 # game states
 
-sub nogame {
+sub state_nogame {
     my ($self, $state) = @_;
+    $self->end_game_loop;
     $state->{trans} = 'nogame';
-    $self->{pbot}->{event_queue}->update_repeating('battleship loop', 0);
 }
 
-sub accept {
+sub state_challenge {
     my ($self, $state) = @_;
 
-    $state->{tock_limit} = 3;
+    # max number of times to perform tock action
+    $state->{tock_limit} = 5;
 
-    if ($state->{players}->[1]->{accepted}) {
-        $state->{trans} = 'accept';
-        return;
+    # tock every 60 ticks
+    my $tock = 60;
+
+    # every tick we check if all players have readied yet
+    my $ready = 0;
+
+    foreach my $player (@{$state->{players}}) {
+        $ready++ if $player->{ready};
     }
 
-    my $tock = 15;
-
+    # is it time for a tock?
     if ($state->{ticks} % $tock == 0) {
-        $state->{tocked} = 1;
+        $state->{tocked} = 1;  # we've tocked
 
+        # reached maximum number of tocks
         if (++$state->{tocks} > $state->{tock_limit}) {
-            if ($state->{players}->[1]->{id} == -1) { $self->send_message($self->{channel}, "Nobody has accepted $state->{players}->[0]->{name}'s challenge."); }
-            else { $self->send_message($self->{channel}, "$state->{players}->[1]->{name} has failed to accept $state->{players}->[0]->{name}'s challenge."); }
+            $self->send_message($self->{channel}, "Not all players have readied in time. The game has been aborted.");
             $state->{trans}   = 'stop';
             $state->{players} = [];
             return;
         }
 
-        if ($state->{players}->[1]->{id} == -1) {
-            $self->send_message($self->{channel}, "$state->{players}->[0]->{name} has made an open challenge! Use `accept` to accept their challenge.");
-        } else {
-            $self->send_message($self->{channel}, "$state->{players}->[1]->{name}: $state->{players}->[0]->{name} has challenged you! Use `accept` to accept their challenge.");
+        my $max   = $self->{MAX_PLAYERS};
+        my $avail = $max - @{$self->{state_data}->{players}};
+        my $slots = 'slot' . ($avail == 1 ? '' : 's');
+
+        $self->send_message($self->{channel}, "There is a game of Battleship available! Use `accept` to enter the fray ($avail/$max $slots open).");
+
+        $self->list_players;
+
+        if ($ready == 1 && @{$self->{state_data}->{players}} == 1) {
+            $self->send_message($self->{channel}, "Cannot begin game with one player.");
         }
     }
 
-    $state->{trans} = 'wait';
+    if ($ready >= 2 && $ready == @{$state->{players}}) {
+        # all players ready (min 2 players to start)
+        $self->send_message($self->{channel}, "All players ready!");
+        $state->{trans} = 'ready';
+    } else {
+        # wait another tick
+        $state->{trans} = 'wait';
+    }
 }
 
-sub genboard {
+sub state_genboard {
     my ($self, $state) = @_;
-    $self->init_game($state->{players}->[0]->{name}, $state->{players}->[1]->{name});
-    $state->{current_player} = 0;
-    $state->{tock_limit}     = 3;
-    $state->{trans}          = 'next';
+
+    if (!$self->init_game($state)) {
+        $self->{pbot}->{logger}->log("Failed to generate battlefield\n");
+        $self->send_message($self->{channel}, "Failed to generate a suitable battlefield. Please try again.");
+        $state->{trans} = 'fail';
+    } else {
+        $state->{tock_limit} = 3;
+        $state->{trans} = 'next';
+    }
 }
 
-sub showboard {
+sub state_showboard {
     my ($self, $state) = @_;
-    $self->send_message($self->{channel}, "Showing battlefield to $self->{player}->[0]->{nick}...");
-    $self->show_battlefield(0);
-    $self->send_message($self->{channel}, "Showing battlefield to $self->{player}->[1]->{nick}...");
-    $self->show_battlefield(1);
+
+    for (my $player = 0; $player < @{$state->{players}}; $player++) {
+        $self->send_message($self->{channel}, "Showing battlefield to $state->{players}->[$player]->{name}...");
+        $self->show_battlefield($player);
+    }
+
     $self->send_message($self->{channel}, "Fight! Anybody (players and spectators) can use `board` at any time to see the battlefield.");
     $state->{trans} = 'next';
 }
 
-sub playermove {
+sub state_move {
     my ($self, $state) = @_;
 
+    # allow 5 tocks before players have missed their move
+    $state->{tock_limit} = 5;
+
+    # tock every 15 ticks
     my $tock = 15;
 
+    # tock sooner if this is the first
     if ($state->{first_tock}) {
-        $tock = 3;
+        $tock = 2;
     }
 
-    if ($self->{player}->[$state->{current_player}]->{done}) {
+    # every tick, check if all players have moved
+    my $moved   = 0;
+    my $players = 0;
+
+    foreach my $player (@{$state->{players}}) {
+        $moved++    if $player->{location};
+        $players++  if not $player->{removed};
+    }
+
+    if ($moved == $players) {
+        # all players have moved
         $state->{trans} = 'next';
         return;
     }
 
-    my $player   = $state->{current_player};
-    my $location = delete $state->{players}->[$player]->{location};
-
-    if (defined $location) {
-        if ($self->bomb($player, $location)) {
-            $self->{player}->[$player]->{done}    = 1;
-            $self->{player}->[!$player]->{done}   = 0;
-            $self->{state_data}->{current_player} = !$player;
-            $state->{trans}                       = 'next';
-            return;
-        }
-    }
-
+    # tock!
     if ($state->{ticks} % $tock == 0) {
         $state->{tocked} = 1;
 
         if (++$state->{tocks} > $state->{tock_limit}) {
-            $state->{players}->[$state->{current_player}]->{missedinputs}++;
-            $self->send_message($self->{channel}, "$state->{players}->[$state->{current_player}]->{name} failed to launch an attack in time. They forfeit their turn!");
+            # tock limit reached, flag all players who haven't moved
+            my @missed;
 
-            $self->{player}->[$state->{current_player}]->{done}  = 1;
-            $self->{player}->[!$state->{current_player}]->{done} = 0;
-            $state->{current_player}                             = !$state->{current_player};
-            $state->{trans}                                      = 'next';
+            foreach my $player (@{$state->{players}}) {
+                next if $player->{removed};
+
+                if (not $player->{location}) {
+                    $player->{missedinputs}++;
+                    push @missed, $player->{name};
+                }
+            }
+
+            my $msg = join ', ', @missed;
+
+            $msg .= " failed to launch an attack in time. They forfeit their turn!";
+
+            $self->send_message($self->{channel}, $msg);
+
+            $state->{trans} = 'next';
             return;
         }
 
-        my $red = $state->{tocks} == $state->{tock_limit} ? $color{red} : '';
+        # notify all players who haven't moved yet
+        my @pending;
 
-        my $remaining = 15 * $state->{tock_limit};
-        $remaining   -= 15 * ($state->{tocks} - 1);
-        $remaining    = "(" . (concise duration $remaining) . " remaining)";
+        foreach my $player (@{$state->{players}}) {
+            next if $player->{removed};
 
-        $self->send_message($self->{channel}, "$state->{players}->[$state->{current_player}]->{name}: $red$remaining Launch an attack now via `bomb <location>`!$color{reset}");
+            if (not $player->{location}) {
+                push @pending, $player->{name};
+            }
+        }
+
+        my $players = join ', ', @pending;
+
+        my $warning = $state->{tocks} == $state->{tock_limit} ? $color{red} : '';
+
+        my $remaining  = 15 * $state->{tock_limit};
+        $remaining    -= 15 * ($state->{tocks} - 1);
+        $remaining     = "(" . (concise duration $remaining) . " remaining)";
+
+        $self->send_message($self->{channel}, "$players: $warning$remaining Launch an attack now via `bomb <location>`!$color{reset}");
     }
 
     $state->{trans} = 'wait';
 }
 
-sub checkplayer {
+sub state_attack {
     my ($self, $state) = @_;
 
-    if ($self->{player}->[0]->{won} or $self->{player}->[1]->{won}) {
-        $state->{trans} = 'gotwinner';
-    } else {
-        $state->{trans} = 'next';
+    my $trans = 'next';
+
+    foreach my $player (@{$state->{players}}) {
+        # skip removed players
+        next if $player->{removed};
+
+        # skip players who haven't moved
+        next if not $player->{location};
+
+        # launch attack
+        $self->perform_attack($state, $player);
+
+        # transitiion to gameover if someone won
+        $trans = 'gotwinner' if $player->{won};
     }
+
+    $state->{trans} = $trans;
 }
 
-sub gameover {
+sub state_gameover {
     my ($self, $state) = @_;
 
-    if ($state->{ticks} % 5 == 0) {
-        if ($state->{players}->[1]->{id} != -1 && $state->{players}->[1]->{accepted}) {
-            $self->show_battlefield(3);
-            $self->show_scoreboard;
-            $self->send_message($self->{channel}, "Game over!");
-        }
-
-        $state->{players} = [];
-        $state->{tocks}   = 0;
-        $state->{trans}   = 'next';
-    } else {
-        $state->{trans}   = 'wait';
+    if (@{$state->{players}} >= 2) {
+        $self->show_battlefield($self->{BOARD_FINAL});
+        $self->show_scoreboard;
+        $self->send_message($self->{channel}, "Game over!");
     }
+
+    $state->{players} = [];
+    $state->{trans}   = 'next';
 }
 
 1;
