@@ -2,7 +2,7 @@
 #
 # Purpose: Simplified version of the Battleship board game. In this variant,
 # there is one game grid/board and every player's ships share it without
-# overlapping. This adds nn element of strategy: everybody knows where their
+# overlapping. This adds an element of strategy: everybody knows where their
 # own ships are located, ergo they know where NOT to aim. This helps to speed
 # games up by removing some randomness.
 #
@@ -963,7 +963,7 @@ sub show_scoreboard {
     foreach my $player (sort { $b->{health} <=> $a->{health} } @{$self->{state_data}->{players}}) {
         next if $player->{removed};
 
-        my $buf = sprintf("%-15s shots: %2d, hit: %2d, miss: %2d, acc: %3d%%, sunk: %2d, ships left: %d, sections left: %2d",
+        my $buf = sprintf("%-10s shots: %2d, hit: %2d, miss: %2d, acc: %3d%%, sunk: %2d, ships left: %d, sections left: %2d",
             "$player->{name}:",
             $player->{shots},
             $player->{hit},
