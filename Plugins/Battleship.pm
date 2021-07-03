@@ -75,6 +75,9 @@ sub initialize {
     # player limit per game
     $self->{MAX_PLAYERS} = 5;
 
+    # max missed moves before player is ejected from game
+    $self->{MAX_MISSED_MOVES} = 5;
+
     # types of board tiles
     $self->{TYPE_OCEAN}      = 0;
     $self->{TYPE_WHIRLPOOL}  = 1;
@@ -902,7 +905,7 @@ sub perform_attack {
             if ($sections_left > 0) {
                 $self->send_message($self->{channel}, "$color{red}$player->{name} has sunk $victim->{name}'s $ship_names{$length}! $victim->{name} has $ships_left $ships and $sections_left $sections remaining!$color{reset}");
             } else {
-                $self->send_message($self->{channel}, "$color{red}$player->{name} has sunk ${victim}->{name}'s final $ship_names{$length}! $victim->{name} is out of the game!$color{reset}");
+                $self->send_message($self->{channel}, "$color{red}$player->{name} has sunk $victim->{name}'s final $ship_names{$length}! $victim->{name} is out of the game!$color{reset}");
                 $victim->{lost} = 1;
 
                 # check if there is only one player still standing
@@ -1148,7 +1151,7 @@ sub run_one_state {
         next if $player->{removed} or $player->{lost};
 
         # remove player if they have missed 3 inputs
-        if ($player->{missedinputs} >= 3) {
+        if ($player->{missedinputs} >= $self->{MAX_MISSED_MOVES}) {
             $self->send_message(
                 $self->{channel},
                 "$color{red}$player->{name} has missed too many moves and has been ejected from the game!$color{reset}"
@@ -1381,8 +1384,9 @@ sub state_move {
     my $players = 0;
 
     foreach my $player (@{$state->{players}}) {
-        $moved++    if $player->{location};
-        $players++  if not $player->{removed};
+        next if $player->{removed} or $player->{lost};
+        $moved++ if $player->{location};
+        $players++;
     }
 
     if ($moved == $players) {
@@ -1400,7 +1404,7 @@ sub state_move {
             my @missed;
 
             foreach my $player (@{$state->{players}}) {
-                next if $player->{removed};
+                next if $player->{removed} or $player->{lost};
 
                 if (not $player->{location}) {
                     $player->{missedinputs}++;
@@ -1422,7 +1426,7 @@ sub state_move {
         my @pending;
 
         foreach my $player (@{$state->{players}}) {
-            next if $player->{removed};
+            next if $player->{removed} or $player->{lost};
 
             if (not $player->{location}) {
                 push @pending, $player->{name};
