@@ -54,6 +54,7 @@ my %autoloaded = (
     'hostname'    => undef,
     'pacing'      => undef,
     'utf8'        => undef,
+    'pbot'        => undef,
     'ssl'         => undef,
     'ssl_ca_path' => undef,
     'ssl_ca_file' => undef,
@@ -89,6 +90,7 @@ sub new {
         _ssl_ca_file => undef,
         _utf8        => 0,
         _format      => {'default' => "[%f:%t]  %m  <%d>",},
+        _pbot        => undef,
     };
 
     bless $self, $proto;
@@ -232,6 +234,7 @@ sub connect {
         $self->pacing($arg{'Pacing'})           if exists $arg{'Pacing'};
         $self->debug($arg{'Debug'})             if exists $arg{'Debug'};
         $self->utf8($arg{'UTF8'})               if exists $arg{'UTF8'};
+        $self->pbot($arg{'PBot'})               if exists $arg{'PBot'};
         $self->ssl($arg{'SSL'})                 if exists $arg{'SSL'};
         $self->ssl_ca_path($arg{'SSL_ca_path'}) if exists $arg{'SSL_ca_path'};
         $self->ssl_ca_file($arg{'SSL_ca_file'}) if exists $arg{'SSL_ca_file'};
@@ -1357,9 +1360,11 @@ sub sl {
 
     unless (@_) { croak "Not enough arguments to sl()"; }
 
-    if (!$self->pacing) { return $self->sl_real($line); }
+    if (!$self->pacing) {
+        return $self->sl_real($line);
+    }
 
-    if ($self->{_slcount} < 14) {
+    if ($self->{_slcount} < 10) {
         $self->{_slcount}++;
         $self->{_lastsl} = time;
         return $self->schedule_output_event(0, \&sl_real, $line);
@@ -1367,12 +1372,18 @@ sub sl {
 
     # calculate how long to wait before sending this line
     my $time = time;
-    if   ($time - $self->{_lastsl} > $self->pacing) { $self->{_lastsl} = $time; }
-    else                                            { $self->{_lastsl} += $self->pacing; }
+    if ($time - $self->{_lastsl} > $self->pacing) {
+        $self->{_lastsl} = $time;
+    } else {
+        $self->{_lastsl} += $self->pacing;
+    }
 
     my $seconds = $self->{_lastsl} - $time;
 
-    if ($seconds == 0) { $self->{_slcount} = 0; }
+    if ($seconds == 0) {
+        $self->{_slcount} = 0;
+        $self->pbot->{event_dispatcher}->dispatch_event('pbot.output_queue_flushed');
+    }
 
     ### DEBUG DEBUG DEBUG
     if ($self->{_debug}) { print STDERR "S-> $seconds $line\n"; }

@@ -61,9 +61,6 @@ use PBot::Users;
 use PBot::Utils::ParseDate;
 use PBot::WebPaste;
 
-# unbuffer stdout stream
-STDOUT->autoflush(1);
-
 # set standard output streams to encode as utf8
 binmode(STDOUT, ":utf8");
 binmode(STDERR, ":utf8");
@@ -247,9 +244,9 @@ sub connect {
 
     while (
         not $self->{conn} = $self->{irc}->newconn(
-            Nick     => $self->{registry}->get_value('irc', 'randomize_nick') ? $self->random_nick : $self->{registry}->get_value('irc', 'botnick'),
-            Username => $self->{registry}->get_value('irc', 'username'),
-            Ircname  => $self->{registry}->get_value('irc', 'realname'),
+            Nick        => $self->{registry}->get_value('irc', 'randomize_nick') ? $self->random_nick : $self->{registry}->get_value('irc', 'botnick'),
+            Username    => $self->{registry}->get_value('irc', 'username'),
+            Ircname     => $self->{registry}->get_value('irc', 'realname'),
             Server      => $server,
             Port        => $port,
             Pacing      => 1,
@@ -258,6 +255,7 @@ sub connect {
             SSL_ca_file => $self->{registry}->get_value('irc', 'ssl_ca_file'),
             SSL_ca_path => $self->{registry}->get_value('irc', 'ssl_ca_path'),
             Debug       => $self->{registry}->get_value('irc', 'debug'),
+            PBot        => $self,
         )
       )
     {
