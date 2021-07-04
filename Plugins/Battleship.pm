@@ -141,12 +141,11 @@ sub unload {
 sub on_output_queue_flushed {
     my ($self) = @_; # we don't care about the other event arguments
 
-    print "BATTLESHIDFPF ADF!!\n";
-
     # unless paused by a player, resume the game
     if (not $self->{state_data}->{paused_by_player}) {
         $self->{state_data}->{paused} = 0;
     }
+
     return 0;
 }
 
