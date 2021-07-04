@@ -114,6 +114,11 @@ sub initialize {
 
     # create game state machine
     $self->create_states;
+
+    # receive notification when all messages in IRC output queue have been sent
+    $self->{pbot}->{event_dispatcher}->register_handler(
+        'pbot.output_queue_flushed', sub { $self->on_output_queue_flushed(@_) }
+    );
 }
 
 sub unload {
@@ -126,11 +131,30 @@ sub unload {
     $self->end_game_loop;
 }
 
+# the game is paused at the beginning when sending the player boards to all
+# the players and then resumed when the output queue has depleted. this prevents
+# game events from queuing up while the board messages are being slowly
+# trickled out to the ircd to avoid filling up its message queue (and getting
+# disconnected with 'excess flood'). this event handler resumes the game once
+# the boards have finished transmitting, unless the game was manually paused
+# by a player.
+sub on_output_queue_flushed {
+    my ($self) = @_; # we don't care about the other event arguments
+
+    print "BATTLESHIDFPF ADF!!\n";
+
+    # unless paused by a player, resume the game
+    if (not $self->{state_data}->{paused_by_player}) {
+        $self->{state_data}->{paused} = 0;
+    }
+    return 0;
+}
+
 # `battleship` bot command
 sub cmd_battleship {
     my ($self, $context) = @_;
 
-    my $usage = "Usage: battleship challenge|accept|decline|ready|unready|bomb|board|score|players|join|quit|kick|abort; see also: battleship help <command>";
+    my $usage = "Usage: battleship challenge|accept|decline|ready|unready|bomb|board|score|players|pause|quit|kick|abort; see also: battleship help <command>";
 
     # strip leading and trailing whitespace
     $context->{arguments} =~ s/^\s+|\s+$//g;
@@ -282,6 +306,21 @@ sub cmd_battleship {
             $self->set_state('gameover');
 
             return "/msg $channel $nick: The game has been aborted.";
+        }
+
+        when (['pause', 'unpause']) {
+            if ($command eq 'pause') {
+                $self->{state_data}->{paused} = 1;
+
+                # this pause was set by a player.
+                # this is used by on_output_queue_flushed() to know if it's okay to unpause automatically
+                $self->{state_data}->{paused_by_player} = 1;
+            } else {
+                $self->{state_data}->{paused} = 0;
+                $self->{state_data}->{paused_by_player} = 0;
+            }
+
+            return "/msg $channel $nick has " . ($self->{state_data}->{paused} ? 'paused' : 'unpaused') . " the game!";
         }
 
         when ('score') {
@@ -613,10 +652,6 @@ sub place_ship {
         }
 
         if ($self->check_ship_placement($x, $y, $o, $l)) {
-            if ($self->{debug}) {
-                $self->{pbot}->{logger}->log("SUCCESS!\n");
-            }
-
             if (!$o) {
                 $self->{vert}++;
 
@@ -887,7 +922,7 @@ sub perform_attack {
             $player->{sunk}++;
             $victim->{ships}--;
 
-            my $length    = $self->{board}->[$x][$y]->{length};
+            my $length = $self->{board}->[$x][$y]->{length};
 
             my %ship_names = (
                 5 => 'battleship',
@@ -1144,6 +1179,11 @@ sub show_battlefield {
 sub run_one_state {
     my ($self) = @_;
 
+    # don't run a game loop if we're paused
+    if ($self->{state_data}->{paused}) {
+        return;
+    }
+
     # check for naughty or missing players
     my $players = 0;
 
@@ -1225,8 +1265,10 @@ sub create_states {
 
     # initialize state data
     $self->{state_data} = {
-        players => [], # array of player data
-        ticks   => 0,  # number of ticks elapsed
+        players          => [], # array of player data
+        ticks            => 0,  # number of ticks elapsed
+        paused           => 0,  # is the game paused?
+        paused_by_player => 0,  # game was manually paused by a player
     };
 
     $self->{states} = {
@@ -1355,6 +1397,14 @@ sub state_genboard {
 
 sub state_showboard {
     my ($self, $state) = @_;
+
+    # pause the game to send the boards to all the players.
+    # this is due to output pacing; the messages are trickled out slowly
+    # to avoid overflowing the ircd's receive queue. we do not want the
+    # game state to advance while the messages are being sent out. the
+    # game will resume when the `pbot.output_queue_flushed` notification
+    # is received.
+    $state->{paused} = 1;
 
     for (my $player = 0; $player < @{$state->{players}}; $player++) {
         $self->send_message($self->{channel}, "Showing battlefield to $state->{players}->[$player]->{name}...");
