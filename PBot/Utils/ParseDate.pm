@@ -1,7 +1,7 @@
 # File: ParseDate.pm
 #
-# Purpose: Intelligently parses strings like "3pm", "5 minutes", "next week",
-# etc, into seconds.
+# Purpose: Intelligently parses strings like "1h30m", "5 minutes", "next week",
+# "3:30 am pdt", "11 pm utc", etc, into seconds.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,9 +17,9 @@ use DateTime::Format::Duration;
 
 sub new {
     Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-    my ($class, %conf) = @_;
+    my ($class, %args) = @_;
     my $self = bless {}, $class;
-    $self->initialize(%conf);
+    $self->initialize(%args);
     return $self;
 }
 
@@ -42,9 +42,16 @@ sub unconcise {
 sub parsedate {
     my ($self, $input) = @_;
 
+    my $examples = "Try `30s`, `1h30m`, `tomorrow`, `next monday`, `9:30am pdt`, `11pm utc`, etc.";
+
+    my $attempts = 0;
+    my $original_input = $input;
+
     my $override = "";
   TRY_AGAIN:
     $input = "$override$input" if length $override;
+
+    return (0, "Could not parse `$original_input`. $examples") if ++$attempts > 10;
 
     # expand stuff like 7d3h
     $input = unconcise($input);
@@ -55,6 +62,7 @@ sub parsedate {
     $input =~ s/\bhrs?\b/hours/g;
     $input =~ s/\bwks?\b/weeks/g;
     $input =~ s/\byrs?\b/years/g;
+    $input =~ s/\butc\b/gmt/g;
 
     # sanitizers
     $input =~ s/\b(\d+)\s+(am?|pm?)\b/$1$2/;        # remove leading spaces from am/pm
@@ -107,16 +115,17 @@ sub parsedate {
             $to = eval { return DateTime::Format::Flexible->parse_datetime($input, lang => ['en'], base => $base); };
 
             # If there's still an error, it's bad input
-            if ($@) {
-                $@ =~ s/ ${override}from now at .*$//;
-                return (0, $@);
+            if (my $error = $@) {
+                $error =~ s/ ${override}from now at .*$//;
+                $error =~ s/\s*$/. $examples/;
+                return (0, $error);
             }
         }
 
         # there was a timezone parsed, set the tz override and try again
         if ($to->time_zone_short_name ne 'floating' and $to->time_zone_short_name ne 'UTC' and $tz_override eq 'UTC') {
             $tz_override = $to->time_zone_long_name;
-            $to          = undef;
+            $to = undef;
             goto ADJUST_TIMEZONE;
         }
 
@@ -126,8 +135,11 @@ sub parsedate {
 
         # If the time is in the past, prepend "tomorrow" or "next" and reparse
         if ($duration->is_negative) {
-            if   ($input =~ m/^\d/) { $override = "tomorrow "; }
-            else                    { $override = "next "; }
+            if ($input =~ m/^\d/) {
+                $override = "tomorrow ";
+            } else {
+                $override = "next ";
+            }
             $to = undef;
             goto TRY_AGAIN;
         }
