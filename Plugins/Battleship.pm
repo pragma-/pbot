@@ -626,9 +626,7 @@ sub place_ship {
     my ($x, $y, $o, $i, $l);
     my ($yd, $xd) = (0, 0);
 
-    my $fail = 0;
-
-    while (++$fail < 5000) {
+    for (my $attempt = 0; $attempt < 1000; $attempt++) {
         $x = $self->number(0, $self->{N_X});
         $y = $self->number(0, $self->{N_Y});
 
@@ -702,7 +700,7 @@ sub place_ship {
 sub place_whirlpool {
     my ($self) = @_;
 
-    for (my $try = 0; $try < 1000; $try++) {
+    for (my $attempt = 0; $attempt < 1000; $attempt++) {
         my $x = $self->number(0, $self->{N_X});
         my $y = $self->number(0, $self->{N_Y});
 
@@ -806,7 +804,7 @@ sub get_attack_text {
 }
 
 # checks if we hit whirlpool, ocean, ship, etc
-# places miss markers, reveals whirlpools
+# reveals struck whirlpools
 sub check_hit {
     my ($self, $state, $player, $location_data) = @_;
 
@@ -895,14 +893,15 @@ sub perform_attack {
     };
 
     # launch a shot and see if it hit a ship (handles hitting whirlpools, ocean, etc)
-    if ($self->check_hit($state, $player, $location_data)) {
+    my $hit_ship = $self->check_hit($state, $player, $location_data);
+
+    # location_data can be updated by whirlpools, etc
+    $x = $location_data->{x};
+    $y = $location_data->{y};
+    $location = $location_data->{location};
+
+    if ($hit_ship) {
         # player hit a ship!
-
-        # location_data can be updated by whirlpools, etc
-        $x = $location_data->{x};
-        $y = $location_data->{y};
-        $location = $location_data->{location};
-
         $self->send_message($self->{channel}, "$player->{name} $attack $location! $color{red}--- HIT! --- $color{reset}");
 
         $player->{hit}++;
@@ -959,17 +958,11 @@ sub perform_attack {
         }
     } else {
         # player missed
-
-        # location_data can be updated by whirlpools, etc
-        $x = $location_data->{x};
-        $y = $location_data->{y};
-        $location = $location_data->{location};
-
         $self->send_message($self->{channel}, "$player->{name} $attack $location! --- miss ---");
 
         $player->{miss}++;
 
-        # update board tile
+        # place miss marker
         if ($self->{board}->[$x][$y]->{type} == $self->{TYPE_OCEAN}) {
             $self->{board}->[$x][$y]->{tile} = $self->{TILE_MISS};
             $self->{board}->[$x][$y]->{missed_by} = $player->{id};
