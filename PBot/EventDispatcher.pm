@@ -15,75 +15,90 @@ use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{handlers} = {any => []};
+
+    # hash table of event handlers
+    $self->{handlers} = {};
 }
 
+# add an event handler
 sub register_handler {
-    my ($self, $event_type, $sub, $package_override) = @_;
-    my ($package) = caller(0);
-    $package = $package_override if defined $package_override;
-    my $info = "$package\-\>$event_type";
-    $self->{pbot}->{logger}->log("Adding handler: $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug');
-    push @{$self->{handlers}->{$event_type}}, [$sub, $info];
-}
+    my ($self, $event_name, $subref) = @_;
 
-sub remove_handler {
-    my ($self, $event_type, $package_override) = @_;
+    # get the package of the calling subroutine
     my ($package) = caller(0);
-    $package = $package_override if defined $package_override;
-    my $info = "$package\-\>$event_type";
 
-    if (exists $self->{handlers}->{$event_type}) {
-        for (my $i = 0; $i < @{$self->{handlers}->{$event_type}}; $i++) {
-            my $ref = @{$self->{handlers}->{$event_type}}[$i];
-            if ($info eq $ref->[1]) {
-                $self->{pbot}->{logger}->log("Removing handler: $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug');
-                splice @{$self->{handlers}->{$event_type}}, $i--, 1;
-            }
-        }
+    # internal identifier to find calling package's event handler
+    my $event_id = "$package-$event_name";
+
+    # add the event handler
+    $self->{handlers}->{$event_name}->{$event_id} = $subref;
+
+    # debugging
+    if ($self->{pbot}->{registry}->get_value('eventdispatcher', 'debug')) {
+        $self->{pbot}->{logger}->log("EventDispatcher: Add handler: $event_id\n");
     }
 }
 
+# remove an event handler
+sub remove_handler {
+    my ($self, $event_name) = @_;
+
+    # get the package of the calling subroutine
+    my ($package) = caller(0);
+
+    # internal identifier to find calling package's event handler
+    my $event_id = "$package-$event_name";
+
+    # remove the event handler
+    if (exists $self->{handlers}->{$event_name}) {
+        delete $self->{handlers}->{$event_name}->{$event_id};
+
+        # remove root event-name key if it has are no more handlers
+        if (not keys %{$self->{handlers}->{$event_name}}) {
+            delete $self->{handlers}->{$event_name};
+        }
+    }
+
+    # debugging
+    if ($self->{pbot}->{registry}->get_value('eventdispatcher', 'debug')) {
+        $self->{pbot}->{logger}->log("EventDispatcher: Remove handler: $event_id\n");
+    }
+}
+
+# send an event to its handlers
 sub dispatch_event {
-    my ($self, $event_type, $event_data) = @_;
+    my ($self, $event_name, $event_data) = @_;
+
+    # debugging flag
+    my $debug = $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug') // 0;
+
+    # event handler return value
     my $ret = undef;
 
-    if (exists $self->{handlers}->{$event_type}) {
-        for (my $i = 0; $i < @{$self->{handlers}->{$event_type}}; $i++) {
-            my $ref = @{$self->{handlers}->{$event_type}}[$i];
-            my ($handler, $info) = ($ref->[0], $ref->[1]);
-            my $debug = $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug') // 0;
-            $self->{pbot}->{logger}->log("Dispatching $event_type to handler $info\n") if $debug > 1;
+    # if the event-name has handlers
+    if (exists $self->{handlers}->{$event_name}) {
+        # then dispatch the event to each one
+        foreach my $event_id (keys %{$self->{handlers}->{$event_name}}) {
+            # event handler subref
+            my $subref = $self->{handlers}->{$event_name}->{$event_id};
 
-            eval { $ret = $handler->($event_type, $event_data); };
-
-            if ($@) {
-                chomp $@;
-                $self->{pbot}->{logger}->log("Error in event handler: $@\n");
-
-                #$self->{pbot}->{logger}->log("Removing handler.\n");
-                #splice @{$self->{handlers}->{$event_type}}, $i--, 1;
+            # debugging
+            if ($debug) {
+                $self->{pbot}->{logger}->log("Dispatching $event_name to handler $event_id\n");
             }
-            return $ret if $ret;
+
+            # invoke event handler
+            eval { $ret = $subref->($event_name, $event_data) };
+
+            # check for error
+            if (my $error = $@) {
+                chomp $error;
+                $self->{pbot}->{logger}->log("Error in event handler: $error\n");
+            }
         }
     }
 
-    for (my $i = 0; $i < @{$self->{handlers}->{any}}; $i++) {
-        my $ref = @{$self->{handlers}->{any}}[$i];
-        my ($handler, $info) = ($ref->[0], $ref->[1]);
-        $self->{pbot}->{logger}->log("Dispatching any to handler $info\n") if $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug');
-
-        eval { $ret = $handler->($event_type, $event_data); };
-
-        if ($@) {
-            chomp $@;
-            $self->{pbot}->{logger}->log("Error in event handler: $@\n");
-
-            #$self->{pbot}->{logger}->log("Removing handler.\n");
-            #splice @{$self->{handlers}->{any}}, $i--, 1;
-        }
-        return $ret if $ret;
-    }
+    # return event handler result
     return $ret;
 }
 
