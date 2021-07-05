@@ -144,6 +144,8 @@ sub export_factoids {
     else      { $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factoids.html'; }
     return if not defined $filename;
 
+    return if not defined $self->{factoids}->{dbh};
+
     $self->{pbot}->{logger}->log("Exporting factoids to $filename\n");
 
     open FILE, "> $filename" or return "Could not open export path.";

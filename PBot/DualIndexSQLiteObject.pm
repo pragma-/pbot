@@ -433,7 +433,7 @@ sub get_each {
     };
 
     if ($@) {
-        $self->{pbot}->{logger}->log("Error getting data: $@\n");
+        $self->{pbot}->{logger}->log("Error getting data: $@");
         return undef;
     }
 
@@ -448,7 +448,7 @@ sub get_next {
     };
 
     if ($@) {
-        $self->{pbot}->{logger}->log("Error getting next: $@\n");
+        $self->{pbot}->{logger}->log("Error getting next: $@");
         return undef;
     }
 

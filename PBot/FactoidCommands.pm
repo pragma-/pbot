@@ -663,6 +663,7 @@ sub cmd_factadd {
 
     $self->{pbot}->{factoids}->add_factoid('text', $from_chan, $context->{hostmask}, $keyword, $text);
     $self->{pbot}->{logger}->log("$context->{hostmask} added [$from_chan] $keyword_text => $text\n");
+    $self->log_factoid($channel, $trigger, $context->{hostmask}, "created");
     return "/say $keyword_text added to " . ($from_chan eq '.*' ? 'global channel' : $from_chan) . ".";
 }
 
@@ -961,8 +962,8 @@ sub cmd_factfind {
         my $unquoted_args = $arguments;
         $unquoted_args =~ s/(?:\\(?!\\))//g;
         $unquoted_args =~ s/(?:\\\\)/\\/g;
-        if (not defined $argtype) { $argtype = "with text containing '$unquoted_args'"; }
-        else                      { $argtype .= " and with text containing '$unquoted_args'"; }
+        if (not defined $argtype) { $argtype = "containing '$unquoted_args'"; }
+        else                      { $argtype .= " and containing '$unquoted_args'"; }
     }
 
     if (not defined $argtype) { return $usage; }
@@ -1021,14 +1022,14 @@ sub cmd_factfind {
     if ($i == 1) {
         chop $text;
         return
-            "Found one factoid submitted for "
-          . ($last_chan eq '.*' ? 'global channel' : $factoids->get_data($last_chan, '_name')) . ' '
+            "Found one factoid in "
+          . ($last_chan eq '.*' ? 'global' : $factoids->get_data($last_chan, '_name')) . ' '
           . $argtype
           . ": $last_trigger is "
           . $factoids->get_data($last_chan, $last_trigger, 'action');
     } else {
         return "Found $i factoids " . $argtype . ": $text" unless $i == 0;
-        my $chans = (defined $channel ? ($channel eq '.*' ? 'global channel' : $channel) : 'any channels');
+        my $chans = (defined $channel ? ($channel eq '.*' ? 'global' : $channel) : 'any channels');
         return "No factoids " . $argtype . " submitted for $chans.";
     }
 }
