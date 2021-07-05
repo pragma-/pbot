@@ -28,14 +28,14 @@ sub register_handler {
     my ($package) = caller(0);
 
     # internal identifier to find calling package's event handler
-    my $event_id = "$package-$event_name";
+    my $handler_id = "$package-$event_name";
 
     # add the event handler
-    $self->{handlers}->{$event_name}->{$event_id} = $subref;
+    $self->{handlers}->{$event_name}->{$handler_id} = $subref;
 
     # debugging
     if ($self->{pbot}->{registry}->get_value('eventdispatcher', 'debug')) {
-        $self->{pbot}->{logger}->log("EventDispatcher: Add handler: $event_id\n");
+        $self->{pbot}->{logger}->log("EventDispatcher: Add handler: $handler_id\n");
     }
 }
 
@@ -47,13 +47,13 @@ sub remove_handler {
     my ($package) = caller(0);
 
     # internal identifier to find calling package's event handler
-    my $event_id = "$package-$event_name";
+    my $handler_id = "$package-$event_name";
 
     # remove the event handler
     if (exists $self->{handlers}->{$event_name}) {
-        delete $self->{handlers}->{$event_name}->{$event_id};
+        delete $self->{handlers}->{$event_name}->{$handler_id};
 
-        # remove root event-name key if it has are no more handlers
+        # remove root event-name key if it has no more handlers
         if (not keys %{$self->{handlers}->{$event_name}}) {
             delete $self->{handlers}->{$event_name};
         }
@@ -61,7 +61,7 @@ sub remove_handler {
 
     # debugging
     if ($self->{pbot}->{registry}->get_value('eventdispatcher', 'debug')) {
-        $self->{pbot}->{logger}->log("EventDispatcher: Remove handler: $event_id\n");
+        $self->{pbot}->{logger}->log("EventDispatcher: Remove handler: $handler_id\n");
     }
 }
 
@@ -78,13 +78,13 @@ sub dispatch_event {
     # if the event-name has handlers
     if (exists $self->{handlers}->{$event_name}) {
         # then dispatch the event to each one
-        foreach my $event_id (keys %{$self->{handlers}->{$event_name}}) {
+        foreach my $handler_id (keys %{$self->{handlers}->{$event_name}}) {
             # event handler subref
-            my $subref = $self->{handlers}->{$event_name}->{$event_id};
+            my $subref = $self->{handlers}->{$event_name}->{$handler_id};
 
             # debugging
             if ($debug) {
-                $self->{pbot}->{logger}->log("Dispatching $event_name to handler $event_id\n");
+                $self->{pbot}->{logger}->log("Dispatching $event_name to handler $handler_id\n");
             }
 
             # invoke event handler
