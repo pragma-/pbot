@@ -34,6 +34,11 @@ $VERSION = "0.79";
 
 sub new {
     my $proto = shift;
+    my %args = @_;
+
+    if (not $args{pbot}) {
+        Carp::croak("Missing pbot reference to " . __PACKAGE__);
+    }
 
     my $self = {
         '_conn'          => [],
@@ -45,6 +50,7 @@ sub new {
         '_read'          => IO::Select->new(),
         '_timeout'       => 0,
         '_write'         => IO::Select->new(),
+        '_pbot'          => $args{pbot},
     };
 
     bless $self, $proto;
@@ -123,6 +129,8 @@ sub do_one_loop {
             $outputevent->content->{coderef}->(@{$outputevent->content->{args}});
         }
         $nexttimer = $self->outputqueue->head->time if !$self->outputqueue->is_empty();
+    } else {
+        $self->{_pbot}->{event_dispatcher}->dispatch_event('pbot.output_queue_empty');
     }
 
     # we don't want to bother waiting on input or running

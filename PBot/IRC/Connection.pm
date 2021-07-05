@@ -1382,7 +1382,6 @@ sub sl {
 
     if ($seconds == 0) {
         $self->{_slcount} = 0;
-        $self->pbot->{event_dispatcher}->dispatch_event('pbot.output_queue_flushed');
     }
 
     ### DEBUG DEBUG DEBUG

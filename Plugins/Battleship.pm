@@ -117,7 +117,7 @@ sub initialize {
 
     # receive notification when all messages in IRC output queue have been sent
     $self->{pbot}->{event_dispatcher}->register_handler(
-        'pbot.output_queue_flushed', sub { $self->on_output_queue_flushed(@_) }
+        'pbot.output_queue_empty', sub { $self->on_output_queue_empty(@_) }
     );
 }
 
@@ -129,6 +129,9 @@ sub unload {
 
     # remove battleship loop event from event queue
     $self->end_game_loop;
+
+    # remove event handler
+    $self->{pbot}->{event_dispatcher}->remove_handler('pbot.output_queue_empty');
 }
 
 # the game is paused at the beginning when sending the player boards to all
@@ -138,7 +141,7 @@ sub unload {
 # disconnected with 'excess flood'). this event handler resumes the game once
 # the boards have finished transmitting, unless the game was manually paused
 # by a player.
-sub on_output_queue_flushed {
+sub on_output_queue_empty {
     my ($self) = @_; # we don't care about the other event arguments
 
     # unless paused by a player, resume the game
@@ -312,7 +315,7 @@ sub cmd_battleship {
                 $self->{state_data}->{paused} = 1;
 
                 # this pause was set by a player.
-                # this is used by on_output_queue_flushed() to know if it's okay to unpause automatically
+                # this is used by on_output_queue_empty() to know if it's okay to unpause automatically
                 $self->{state_data}->{paused_by_player} = 1;
             } else {
                 $self->{state_data}->{paused} = 0;
@@ -1394,7 +1397,7 @@ sub state_showboard {
     # this is due to output pacing; the messages are trickled out slowly
     # to avoid overflowing the ircd's receive queue. we do not want the
     # game state to advance while the messages are being sent out. the
-    # game will resume when the `pbot.output_queue_flushed` notification
+    # game will resume when the `pbot.output_queue_empty` notification
     # is received.
     $state->{paused} = 1;
 

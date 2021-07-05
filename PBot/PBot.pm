@@ -172,7 +172,7 @@ sub initialize {
     }
 
     # prepare the IRC engine
-    $self->{irc} = PBot::IRC->new;
+    $self->{irc} = PBot::IRC->new(pbot => $self);
 
     # prepare remaining core PBot modules -- do not change this order
     $self->{event_queue}      = PBot::EventQueue->new(pbot => $self, name => 'PBot event queue', %conf);
