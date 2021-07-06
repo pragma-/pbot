@@ -14,29 +14,23 @@ use PBot::Imports;
 use LWP::UserAgent::Paranoid;
 use URI::Escape qw/uri_escape_utf8/;
 
-# called when plugin is loaded
 sub initialize {
     my ($self, %conf) = @_;
 
-    # add default registry entry for `appid`
+    # add default registry entry for `wolfram.appid`
     $self->{pbot}->{registry}->add_default('text', 'wolfram', 'appid', '');
 
-    # make `appid` registry entry private by default
+    # make `wolfram.appid` registry entry private by default
     $self->{pbot}->{registry}->set_default('wolfram', 'appid', 'private', 1);
 
-    # add `wolfram` bot command
     $self->{pbot}->{commands}->register(sub { $self->cmd_wolfram(@_) }, 'wolfram', 0);
 }
 
-# called when plugin is unloaded
 sub unload {
     my ($self) = @_;
-
-    # remove `wolfram` bot command
     $self->{pbot}->{commands}->unregister('wolfram');
 }
 
-# the `wolfram` bot command
 sub cmd_wolfram {
     my ($self, $context) = @_;
 
