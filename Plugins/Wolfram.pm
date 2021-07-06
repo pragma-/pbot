@@ -25,14 +25,14 @@ sub initialize {
 }
 
 sub unload {
-    my $self = shift;
+    my ($self) = @_;
     $self->{pbot}->{commands}->unregister('wolfram');
 }
 
 sub cmd_wolfram {
     my ($self, $context) = @_;
 
-    return "Usage: wolfram QUERY\n" if not length $context->{arguments};
+    return "Usage: wolfram <query>\n" if not length $context->{arguments};
 
     my $api_key = $self->{pbot}->{registry}->get_value('wolfram', 'api_key');
 
@@ -48,7 +48,11 @@ sub cmd_wolfram {
 
     if ($response->is_success) {
         return "$context->{nick}: " . $response->decoded_content;
-    } else {
+    }
+    elsif ($response->code eq 501) {
+        return "I don't know what that means.";
+    }
+    else {
         return "Failed to query Wolfram|Alpha: " . $response->status_line;
     }
 }
