@@ -18,13 +18,13 @@ use URI::Escape qw/uri_escape_utf8/;
 sub initialize {
     my ($self, %conf) = @_;
 
-    # add default registry entry
+    # add default registry entry for `appid`
     $self->{pbot}->{registry}->add_default('text', 'wolfram', 'appid', '');
 
-    # make registry entry private by default
+    # make `appid` registry entry private by default
     $self->{pbot}->{registry}->set_default('wolfram', 'appid', 'private', 1);
 
-    # registry `wolfram` bot command
+    # add `wolfram` bot command
     $self->{pbot}->{commands}->register(sub { $self->cmd_wolfram(@_) }, 'wolfram', 0);
 }
 
@@ -32,11 +32,11 @@ sub initialize {
 sub unload {
     my ($self) = @_;
 
-    # unregister `wolfram` bot command
+    # remove `wolfram` bot command
     $self->{pbot}->{commands}->unregister('wolfram');
 }
 
-# `wolfram` bot command
+# the `wolfram` bot command
 sub cmd_wolfram {
     my ($self, $context) = @_;
 
@@ -48,10 +48,11 @@ sub cmd_wolfram {
         return "$context->{nick}: Registry item wolfram.appid is not set. See https://developer.wolframalpha.com/portal/myapps to get an appid.";
     }
 
+    my $question = uri_escape_utf8 $context->{arguments};
+    my $units    = uri_escape_utf8 ($self->{pbot}->{users}->get_user_metadata($context->{from}, $context->{hostmask}, 'units') // 'metric');
+
     my $ua = LWP::UserAgent::Paranoid->new(agent => 'Mozilla/5.0', request_timeout => 10);
 
-    my $question = uri_escape_utf8 $context->{arguments};
-    my $units = uri_escape_utf8($self->{pbot}->{users}->get_user_metadata($context->{from}, $context->{hostmask}, 'units') // 'metric');
     my $response = $ua->get("https://api.wolframalpha.com/v1/result?appid=$appid&i=$question&units=$units&timeout=10");
 
     if ($response->is_success) {
