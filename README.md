@@ -218,6 +218,7 @@ Plugin | Description
 [UrlTitles](Plugins/UrlTitles.pm) | When a URL is seen in a channel, intelligently display its title. It will not display titles that are textually similiar to the URL, in order to maintain the channel signal-noise ratio.
 [Quotegrabs](Plugins/Quotegrabs.pm) | Grabs channel messages as quotes for posterity. Can grab messages from anywhere in the channel history. Can grab multiple messages at once!
 [Weather](Plugins/Weather.pm) | Fetches and shows weather data for a location.
+[Wolfram](Plugins/Wolfram.pm) | Queries Wolfram|Alpha for answers.
 [Wttr](Plugins/Wttr.pm) | Advanced weather Plugin with tons of options. Uses wttr.in.
 [RemindMe](Plugins/RemindMe.pm) | Lets people set up reminders. Lots of options.
 [ActionTrigger](Plugins/ActionTrigger.pm) | Lets admins set regular expression triggers to execute PBot commands or factoids.

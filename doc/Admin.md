@@ -522,7 +522,7 @@ Usage: `pluglist`
        <PBot> Loaded plugins: ActionTrigger, AntiAway, AntiKickAutoRejoin, AntiNickSpam,
               AntiRepeat, AntiTwitter, AutoRejoin, Battleship, Connect4, Counter, Date,
               GoogleSearch, Quotegrabs, RemindMe, RestrictedMod, Spinach, TypoSub, UrlTitles,
-              Weather, Wttr
+              Weather, Wolfram, Wttr
 
 ## Command metadata commands
 ### cmdset
