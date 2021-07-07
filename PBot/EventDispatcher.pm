@@ -90,8 +90,11 @@ sub dispatch_event {
             # invoke event handler
             my $handler_result = eval { $subref->($event_name, $event_data) };
 
-            # update $dispatch_result only to a true handler result
-            $dispatch_result = $handler_result if not $dispatch_result;
+            # update $dispatch_result only to a defined handler result because
+            # we want to know if at least one handler handled the event. the
+            # value of $dispatch_result will be undef if NONE of the handlers
+            # have kicked in.
+            $dispatch_result = $handler_result if defined $handler_result;
 
             # check for error
             if (my $error = $@) {
