@@ -98,6 +98,8 @@ sub default_handler {
 
     if (not defined $result and $self->{pbot}->{registry}->get_value('irc', 'log_default_handler')) {
         $Data::Dumper::Sortkeys = 1;
+        $Data::Dumper::Indent   = 2;
+        $Data::Dumper::Useqq    = 1;
         $self->{pbot}->{logger}->log(Dumper $event);
     }
 }
@@ -328,10 +330,10 @@ sub on_mode {
     ($nick, $user, $host) = $self->normalize_hostmask($nick, $user, $host);
 
     my $i = 0;
-    my ($mode, $mode_char, $modifier, $target);
+    my ($modifier, $char, $mode, $target);
 
     while ($mode_string =~ m/(.)/g) {
-        my $char = $1;
+        $char = $1;
 
         if ($char eq '-' or $char eq '+') {
             $modifier = $char;
@@ -356,7 +358,7 @@ sub on_mode {
 
             # TODO: here as well
             if ($modifier eq '-') {
-                $self->{pbot}->{nicklist}->delete_meta($channel, $target, "+$mode_char");
+                $self->{pbot}->{nicklist}->delete_meta($channel, $target, "+$char");
             } else {
                 $self->{pbot}->{nicklist}->set_meta($channel, $target, $mode, 1);
             }
@@ -367,9 +369,9 @@ sub on_mode {
             if (defined $modes) {
                 if ($modifier eq '+') {
                     $modes = '+' if not length $modes;
-                    $modes .= $mode_char;
+                    $modes .= $char;
                 } else {
-                    $modes =~ s/\Q$mode_char//g;
+                    $modes =~ s/\Q$char//g;
                 }
 
                 # TODO: here as well
