@@ -73,7 +73,7 @@ sub dispatch_event {
     my $debug = $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug') // 0;
 
     # event handler return value
-    my $ret = undef;
+    my $dispatch_result= undef;
 
     # if the event-name has handlers
     if (exists $self->{handlers}->{$event_name}) {
@@ -88,7 +88,10 @@ sub dispatch_event {
             }
 
             # invoke event handler
-            eval { $ret = $subref->($event_name, $event_data) };
+            my $handler_result = eval { $subref->($event_name, $event_data) };
+
+            # update $dispatch_result only to a true handler result
+            $dispatch_result = $handler_result if not $dispatch_result;
 
             # check for error
             if (my $error = $@) {
@@ -99,7 +102,7 @@ sub dispatch_event {
     }
 
     # return event handler result
-    return $ret;
+    return $dispatch_result;
 }
 
 1;
