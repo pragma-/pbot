@@ -93,7 +93,8 @@ sub dispatch_event {
             # update $dispatch_result only to a defined handler result because
             # we want to know if at least one handler handled the event. the
             # value of $dispatch_result will be undef if NONE of the handlers
-            # have kicked in.
+            # have kicked in. in other words, an event handler may return
+            # undef to indicate that they didn't handle the event after all.
             $dispatch_result = $handler_result if defined $handler_result;
 
             # check for error
