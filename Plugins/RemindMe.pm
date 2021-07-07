@@ -1,7 +1,7 @@
 # File: RemindMe.pm
 #
 # Purpose: Users can use `remindme` to set up reminders. Reminders are
-# sent to the user (or channel, if -c and admin).
+# sent to the user (or to a channel, if option -c is used).
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,7 @@ use parent 'Plugins::Plugin';
 use PBot::Imports;
 
 use DBI;
-use Time::Duration qw/concise duration/;
+use Time::Duration qw/ago concise duration/;
 use Time::HiRes    qw/time/;
 use Getopt::Long   qw/GetOptionsFromArray/;
 
@@ -57,7 +57,7 @@ sub cmd_remindme {
         return "Internal error.";
     }
 
-    my $usage = "Usage: remindme [-c channel] [-r count] message -t time | remindme -l [nick] | remindme -d id";
+    my $usage = "Usage: remindme -t time message [-c channel] [-r repeat count] | remindme -l [nick] | remindme -d id";
 
     return $usage if not length $context->{arguments};
 
@@ -114,8 +114,15 @@ sub cmd_remindme {
         my $now   = time;
 
         foreach my $reminder (@$reminders) {
-            my $interval = concise duration $reminder->{alarm} - $now;
-            $text .= "$reminder->{id}) in $interval";
+            my $interval = $reminder->{alarm} - $now;
+
+            if ($interval < 0) {
+                $interval = 'missed ' . concise ago -$interval;
+            } else {
+                $interval = 'in ' . concise duration $interval;
+            }
+
+            $text .= "$reminder->{id}) $interval";
 
             if ($reminder->{repeats}) {
                 $text .= " ($reminder->{repeats} repeat" . ($reminder->{repeats} == 1 ? '' : 's') . " left)";
@@ -141,36 +148,26 @@ sub cmd_remindme {
 
     # option -d was provided; delete a reminder
     if ($delete_id) {
-        my $admininfo = $self->{pbot}->{users}->loggedin_admin($channel ? $channel : $context->{from}, $context->{hostmask});
-
-        # admins can delete any reminders
-        if ($admininfo) {
-            my $reminder = $self->get_reminder($delete_id);
-
-            if (not $reminder) {
-                return "Reminder $delete_id does not exist.";
-            }
-
-            if ($self->delete_reminder($delete_id)) {
-                return "Reminder $delete_id ($reminder->{text}) deleted.";
-            } else {
-                return "Could not delete reminder $delete_id.";
-            }
-        }
-
-        my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
-        $account = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
-
         my $reminder = $self->get_reminder($delete_id);
 
         if (not $reminder) {
             return "Reminder $delete_id does not exist.";
         }
 
-        if ($reminder->{account} != $account) {
-            return "Reminder $delete_id does not belong to you.";
+        # admins can delete any reminder
+        my $admin = $self->{pbot}->{users}->loggedin_admin($channel ? $channel : $context->{from}, $context->{hostmask});
+
+        if (not $admin) {
+            # not an admin, check if they own this reminder
+            my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
+            $account = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
+
+            if ($reminder->{account} != $account) {
+                return "Reminder $delete_id does not belong to you.";
+            }
         }
 
+        # delete reminder
         if ($self->delete_reminder($delete_id)) {
             return "Reminder $delete_id ($reminder->{text}) deleted.";
         } else {
@@ -180,7 +177,7 @@ sub cmd_remindme {
 
     # otherwise we're adding a reminder
 
-    # if -t wasn't provided set text to ''
+    # if -m wasn't provided set text to ''
     $text //= '';
 
     # add to the reminder text anything left in the arguments
@@ -191,8 +188,6 @@ sub cmd_remindme {
 
     return "Please use -t to specify a time for this reminder." if not $alarm;
     return "Please specify a reminder message."                 if not $text;
-
-    my $admininfo = $self->{pbot}->{users}->loggedin_admin($channel ? $channel : $context->{from}, $context->{hostmask});
 
     # option -c was provided; ensure bot is in channel
     if ($channel and not $self->{pbot}->{channels}->is_active($channel)) {
@@ -210,13 +205,16 @@ sub cmd_remindme {
     # set repeats to 0 if option -r was not provided
     $repeats //= 0;
 
+    # get user account if user is an admin, undef otherwise
+    my $admin = $self->{pbot}->{users}->loggedin_admin($channel ? $channel : $context->{from}, $context->{hostmask});
+
     # prevent non-admins from abusing repeat
-    if (not defined $admininfo and $repeats > 20) {
+    if (not defined $admin and $repeats > 20) {
         return "You may only set up to 20 repeats.";
     }
 
     if ($repeats < 0) {
-        return "Repeats must be 0 or greater.";
+        return "Repeats cannot be negative.";
     }
 
     # set timestamp for alarm
@@ -226,7 +224,7 @@ sub cmd_remindme {
     $account = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
 
     # limit maximum reminders for non-admin users
-    if (not defined $admininfo) {
+    if (not defined $admin) {
         my $reminders = $self->get_reminders($account);
         if (@$reminders >= 50) {
             return "You may only set 50 reminders at a time. Use `remindme -d id` to remove a reminder.";
@@ -240,11 +238,17 @@ sub cmd_remindme {
         alarm    => $alarm,
         interval => $seconds,
         repeats  => $repeats,
-        hostmask => $context->{hostmask},
+        owner    => $context->{hostmask},
     );
 
+    my $duration = concise duration $seconds;
+
+    if ($repeats) {
+        $duration .= " repeating $repeats time" . ($repeats == 1 ? '' : 's');
+    }
+
     if ($id) {
-        return "Reminder $id added.";
+        return "Reminder $id added (in $duration).";
     } else {
         return "Failed to add reminder.";
     }
@@ -332,9 +336,9 @@ sub enqueue_reminders {
     foreach my $reminder (@$reminders) {
         my $timeout = $reminder->{alarm} - time;
 
-        # delete this reminder if it's expired by 31 days
-        if ($timeout <= 86400 * 31) {
-            $self->{pbot}->{logger}->log("Deleting expired reminder: $reminder->{id}) $reminder->{text} set by $reminder->{created_by}\n");
+        # delete this reminder if it's expired by approximately 1 year
+        if ($timeout <= -(86400 * 31 * 12)) {
+            $self->{pbot}->{logger}->log("Deleting expired reminder: $reminder->{id}) $reminder->{text} set by $reminder->{created_by}; alarm: $reminder->{alarm} - current time: " . (scalar time) . " = timeout: $timeout\n");
             $self->delete_reminder($reminder->{id});
             next;
         }
