@@ -87,6 +87,7 @@ sub on_departure {
     my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
     $self->decache_user($channel, "$nick!$user\@$host");
+    return 0;
 }
 
 sub on_kick {
@@ -94,11 +95,13 @@ sub on_kick {
     my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->{args}[0]);
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
     $self->decache_user($channel, "$nick!$user\@$host");
+    return 0;
 }
 
 sub on_self_part {
     my ($self, $event_type, $event) = @_;
     delete $self->{user_cache}->{lc $event->{channel}};
+    return 0;
 }
 
 sub cmd_login {
