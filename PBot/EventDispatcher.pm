@@ -105,7 +105,10 @@ sub dispatch_event {
         }
     }
 
-    # return event handler result
+    # return dispatch result. if at least one event handler returned a defined
+    # value, then this event is considered handled. if there were no handlers
+    # or if all of the available handers returned undef then this value will
+    # be undef.
     return $dispatch_result;
 }
 
