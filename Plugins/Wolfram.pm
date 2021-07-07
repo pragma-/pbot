@@ -53,10 +53,10 @@ sub cmd_wolfram {
         return "$context->{nick}: " . $response->decoded_content;
     }
     elsif ($response->code eq 501) {
-        return "I don't know what that means.";
+        return "$context->{nick}: I don't know what that means.";
     }
     else {
-        return "Failed to query Wolfram|Alpha: " . $response->status_line;
+        return "$context->{nick}: Failed to query Wolfram|Alpha: " . $response->status_line;
     }
 }
 
