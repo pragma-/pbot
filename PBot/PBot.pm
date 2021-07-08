@@ -61,12 +61,14 @@ use PBot::Users;
 use PBot::Utils::ParseDate;
 use PBot::WebPaste;
 
+use Encode;
+use File::Basename;
+
 # set standard output streams to encode as utf8
 binmode(STDOUT, ":utf8");
 binmode(STDERR, ":utf8");
 
 # decode command-line arguments from utf8
-use Encode;
 @ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
 
 sub new {
@@ -119,6 +121,12 @@ sub initialize {
             print STDERR "$path path ($conf{$path}) does not exist; aborting.\n";
             exit;
         }
+    }
+
+    # insist that data directory be copied
+    if (basename($conf{data_dir}) eq 'data') {
+        print STDERR "Data directory ($conf{data_dir}) cannot be named `data`. This is to ensure the directory is copied from its default location. Please follow doc/QuickStart.md.\n";
+        exit;
     }
 
     # let modules register atexit subroutines
