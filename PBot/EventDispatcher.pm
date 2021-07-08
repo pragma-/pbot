@@ -72,14 +72,14 @@ sub dispatch_event {
     # debugging flag
     my $debug = $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug') // 0;
 
-    # event handler return value
+    # undef means no handlers have handled this event
     my $dispatch_result= undef;
 
     # if the event-name has handlers
     if (exists $self->{handlers}->{$event_name}) {
         # then dispatch the event to each one
         foreach my $handler_id (keys %{$self->{handlers}->{$event_name}}) {
-            # event handler subref
+            # get event handler subref
             my $subref = $self->{handlers}->{$event_name}->{$handler_id};
 
             # debugging
@@ -87,28 +87,23 @@ sub dispatch_event {
                 $self->{pbot}->{logger}->log("Dispatching $event_name to handler $handler_id\n");
             }
 
-            # invoke event handler
+            # invoke an event handler. a handler may return undef to indicate
+            # that it decided not to handle this event.
             my $handler_result = eval { $subref->($event_name, $event_data) };
 
-            # update $dispatch_result only to a defined handler result because
-            # we want to know if at least one handler handled the event. the
-            # value of $dispatch_result will be undef if NONE of the handlers
-            # have kicked in. in other words, an event handler may return
-            # undef to indicate that they didn't handle the event after all.
+            # update $dispatch_result only when handler result is a defined
+            # value so we remember if any handlers have handled this event.
             $dispatch_result = $handler_result if defined $handler_result;
 
-            # check for error
-            if (my $error = $@) {
-                chomp $error;
-                $self->{pbot}->{logger}->log("Error in event handler: $error\n");
+            # check for exception
+            if (my $exception = $@) {
+                $self->{pbot}->{logger}->log("Exception in event handler: $exception");
             }
         }
     }
 
-    # return dispatch result. if at least one event handler returned a defined
-    # value, then this event is considered handled. if there were no handlers
-    # or if all of the available handers returned undef then this value will
-    # be undef.
+    # return undef if no handlers have handled this event; otherwise the return
+    # value of the last event handler to handle this event.
     return $dispatch_result;
 }
 
