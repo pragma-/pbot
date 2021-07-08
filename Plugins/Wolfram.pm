@@ -52,7 +52,7 @@ sub cmd_wolfram {
     if ($response->is_success) {
         return "$context->{nick}: " . $response->decoded_content;
     }
-    elsif ($response->code eq 501) {
+    elsif ($response->code == 501) {
         return "$context->{nick}: I don't know what that means.";
     }
     else {
