@@ -1146,7 +1146,7 @@ sub interpreter {
         # if multiple channels have this keyword, then ask user to disambiguate
         if (@chanlist> 1) {
             return undef if $context->{referenced};
-            return $ref_from . "Ambiguous keyword '$original_keyword' exists in multiple channels (use 'fact <channel> $original_keyword' to choose one): " . join(', ', @chanlist);
+            return $ref_from . "Factoid `$original_keyword` exists in " . join(', ', @chanlist) . "; use `fact <channel> $original_keyword` to choose one.";
         }
 
         # if there's just one other channel that has this keyword, trigger that instance
