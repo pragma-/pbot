@@ -112,6 +112,10 @@ sub initialize {
     $self->{ORIENT_VERT}     = 0;
     $self->{ORIENT_HORIZ}    = 1;
 
+    # paused state (0 is unpaused)
+    $self->{PAUSED_BY_PLAYER}        = 1;
+    $self->{PAUSED_FOR_OUTPUT_QUEUE} = 2;
+
     # create game state machine
     $self->create_states;
 
@@ -144,8 +148,8 @@ sub unload {
 sub on_output_queue_empty {
     my ($self) = @_; # we don't care about the other event arguments
 
-    # unless paused by a player, resume the game
-    if (not $self->{state_data}->{paused_by_player}) {
+    # if we're paused waiting for the output queue, go ahead and unpause
+    if ($self->{state_data}->{paused} == $self->{PAUSED_FOR_OUTPUT_QUEUE}) {
         $self->{state_data}->{paused} = 0;
     }
 
@@ -312,14 +316,9 @@ sub cmd_battleship {
 
         when (['pause', 'unpause']) {
             if ($command eq 'pause') {
-                $self->{state_data}->{paused} = 1;
-
-                # this pause was set by a player.
-                # this is used by on_output_queue_empty() to know if it's okay to unpause automatically
-                $self->{state_data}->{paused_by_player} = 1;
+                $self->{state_data}->{paused} = $self->{PAUSED_BY_PLAYER};
             } else {
                 $self->{state_data}->{paused} = 0;
-                $self->{state_data}->{paused_by_player} = 0;
             }
 
             return "/msg $channel $nick has " . ($self->{state_data}->{paused} ? 'paused' : 'unpaused') . " the game!";
@@ -1263,7 +1262,6 @@ sub create_states {
         players          => [], # array of player data
         ticks            => 0,  # number of ticks elapsed
         paused           => 0,  # is the game paused?
-        paused_by_player => 0,  # game was manually paused by a player
     };
 
     $self->{states} = {
@@ -1399,7 +1397,7 @@ sub state_showboard {
     # game state to advance while the messages are being sent out. the
     # game will resume when the `pbot.output_queue_empty` notification
     # is received.
-    $state->{paused} = 1;
+    $state->{paused} = $self->{PAUSED_FOR_OUTPUT_QUEUE};
 
     for (my $player = 0; $player < @{$state->{players}}; $player++) {
         $self->send_message($self->{channel}, "Showing battlefield to $state->{players}->[$player]->{name}...");
