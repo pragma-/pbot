@@ -57,11 +57,11 @@ sub cmd_remindme {
         return "Internal error.";
     }
 
-    my $usage = "Usage: remindme -t time message [-c channel] [-r repeat count] | remindme -l [nick] | remindme -d id";
+    my $usage = "Usage: remindme -t <time> <message> [-r <repeat count>] [-c <channel>] | remindme -l [nick] | remindme -d <id>";
 
     return $usage if not length $context->{arguments};
 
-    my ($channel, $repeats, $text, $alarm, $list_reminders, $delete_id);
+    my ($channel, $repeats, $text, $time, $list_reminders, $delete_id);
 
     my $getopt_error;
     local $SIG{__WARN__} = sub {
@@ -75,7 +75,7 @@ sub cmd_remindme {
     GetOptionsFromArray(
         \@opt_args,
         'r:i' => \$repeats,
-        't:s' => \$alarm,
+        't:s' => \$time,
         'c:s' => \$channel,
         'm:s' => \$text,
         'l:s' => \$list_reminders,
@@ -86,13 +86,16 @@ sub cmd_remindme {
 
     # option -l was provided; list reminders
     if (defined $list_reminders) {
-        my $nick_override = $list_reminders if length $list_reminders;
+        # unique internal account id for a hostmask
         my $account;
 
+        # if arg was provided to -l, list reminders belonging to args
+        my $nick_override = $list_reminders if length $list_reminders;
+
         if ($nick_override) {
+            # look up account id and hostmask for -l argument
             my $hostmask;
 
-            # look up account id and hostmask by nickname
             ($account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick_override);
 
             if (not $account) {
@@ -102,13 +105,17 @@ sub cmd_remindme {
             # capture nick portion of hostmask
             ($nick_override) = $hostmask =~ m/^([^!]+)!/;
         } else {
+            # look up caller's account id
             $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
         }
 
+        # get the root parent account id (consolidates nick-changes, etc)
         $account = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
 
+        # get the reminders
         my $reminders = $self->get_reminders($account);
 
+        # list the reminders
         my $count = 0;
         my $text  = '';
         my $now   = time;
@@ -125,7 +132,7 @@ sub cmd_remindme {
             $text .= "$reminder->{id}) $interval";
 
             if ($reminder->{repeats}) {
-                $text .= " ($reminder->{repeats} repeat" . ($reminder->{repeats} == 1 ? '' : 's') . " left)";
+                $text .= " (repeats every $reminder->{interval}, $reminder->{repeats} more time" . ($reminder->{repeats} == 1 ? '' : 's') . ')';
             }
 
             $text .= ": $reminder->{text}\n";
@@ -186,7 +193,7 @@ sub cmd_remindme {
         $text .= join ' ', @opt_args;
     }
 
-    return "Please use -t to specify a time for this reminder." if not $alarm;
+    return "Please use -t to specify a time for this reminder." if not $time;
     return "Please specify a reminder message."                 if not $text;
 
     # option -c was provided; ensure bot is in channel
@@ -195,7 +202,7 @@ sub cmd_remindme {
     }
 
     # parse "5 minutes", "next week", "3pm", etc into seconds
-    my ($seconds, $error) = $self->{pbot}->{parsedate}->parsedate($alarm);
+    my ($seconds, $error) = $self->{pbot}->{parsedate}->parsedate($time);
     return $error if $error;
 
     if ($seconds > 31536000 * 10) {
@@ -218,7 +225,7 @@ sub cmd_remindme {
     }
 
     # set timestamp for alarm
-    $alarm = time + $seconds;
+    my $alarm = time + $seconds;
 
     my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($context->{nick}, $context->{user}, $context->{host});
     $account = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
@@ -236,7 +243,8 @@ sub cmd_remindme {
         channel  => $channel,
         text     => $text,
         alarm    => $alarm,
-        interval => $seconds,
+        interval => $time,
+        seconds  => $seconds,
         repeats  => $repeats,
         owner    => $context->{hostmask},
     );
@@ -293,26 +301,65 @@ sub do_reminder {
     $self->{pbot}->{conn}->privmsg($target, $text);
 
     # log event
-    $self->{pbot}->{logger}->log("Reminded $target about \"$text\"\n");
+    $self->{pbot}->{logger}->log("Reminded $target about \"$text\"; interval: $reminder->{interval}\n");
 
     # update repeats or delete reminder
     if ($reminder->{repeats} > 0) {
         # update reminder
         $reminder->{repeats}--;
-        $reminder->{alarm} = time + $reminder->{interval};
+
+        # parse interval again to get correct offset in seconds
+        # e.g., if it's 12 pm and they set a repeating reminder for 3 pm then
+        # the interval would be 3h. we don't want the reminder to repeat every
+        # 3h but instead every day at 3 pm. so when this reminder fires at 3 pm,
+        # we reparse the interval "3 pm" again to get 24h, instead of storing 3h.
+        my ($seconds) = $self->{pbot}->{parsedate}->parsedate($reminder->{interval});
+
+        # if timeout is 0 or less, prepend "next" and try again.
+        # e.g., if interval is "10 pm" then at 10:00:00 pm the interval will
+        # parse to 0 seconds, i.e. right now, until it is 10:00:01 pm. we really
+        # want the next 10 pm, 24 hours from right now.
+        if ($seconds <= 0) {
+            my $override;
+            if ($reminder->{interval} =~ m/^\d/) {
+                $override = "tomorrow ";
+            } else {
+                $override = "next ";
+            }
+
+            ($seconds) = $self->{pbot}->{parsedate}->parsedate("$override $reminder->{interval}");
+        }
+
+        # update alarm timestamp
+        $reminder->{alarm} = time + $seconds;
 
         # update reminder in SQLite database
         my $data = { repeats => $reminder->{repeats}, alarm => $reminder->{alarm} };
         $self->update_reminder($reminder->{id}, $data);
 
         # update reminder event in PBot event queue
-        $event->{interval} = $reminder->{interval};
+        $event->{interval} = $seconds;
         $event->{repeating} = 1;
     } else {
-        # delete reminder
+        # delete reminder from SQLite database
         $self->delete_reminder($reminder->{id});
+
+        # tell PBot event queue not to reschedule this reminder
         $event->{repeating} = 0;
     }
+}
+
+# add a single reminder to the PBot event queue
+sub enqueue_reminder {
+    my ($self, $reminder, $timeout) = @_;
+
+    $self->{pbot}->{event_queue}->enqueue_event(
+        sub {
+            my ($event) = @_;
+            $self->do_reminder($reminder->{id}, $event);
+        },
+        $timeout, "reminder $reminder->{id}", $reminder->{repeats}
+    );
 }
 
 # load all reminders from SQLite database and add them
@@ -338,18 +385,12 @@ sub enqueue_reminders {
 
         # delete this reminder if it's expired by approximately 1 year
         if ($timeout <= -(86400 * 31 * 12)) {
-            $self->{pbot}->{logger}->log("Deleting expired reminder: $reminder->{id}) $reminder->{text} set by $reminder->{created_by}; alarm: $reminder->{alarm} - current time: " . (scalar time) . " = timeout: $timeout\n");
+            $self->{pbot}->{logger}->log("Deleting expired reminder: $reminder->{id}) $reminder->{text} set by $reminder->{created_by}\n");
             $self->delete_reminder($reminder->{id});
             next;
         }
 
-        $self->{pbot}->{event_queue}->enqueue_event(
-            sub {
-                my ($event) = @_;
-                $self->do_reminder($reminder->{id}, $event);
-            },
-            $timeout, "reminder $reminder->{id}", $reminder->{repeats}
-        );
+        $self->enqueue_reminder($reminder, $timeout);
     }
 }
 
@@ -367,7 +408,7 @@ CREATE TABLE IF NOT EXISTS Reminders (
   text        TEXT,
   alarm       NUMERIC,
   repeats     INTEGER,
-  interval    NUMERIC,
+  interval    TEXT,
   created_on  NUMERIC,
   created_by  TEXT
 )
@@ -400,10 +441,11 @@ sub dbi_end {
     delete $self->{dbh};
 }
 
-# add a reminder
+# add a reminder, to SQLite and the PBot event queue
 sub add_reminder {
     my ($self, %args) = @_;
 
+    # add reminder to SQLite database
     my $id = eval {
         my $sth = $self->{dbh}->prepare('INSERT INTO Reminders (account, channel, text, alarm, interval, repeats, created_on, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
 
@@ -421,43 +463,50 @@ sub add_reminder {
         return $self->{dbh}->sqlite_last_insert_rowid;
     };
 
+    # check for exception
     if ($@) {
         $self->{pbot}->{logger}->log("Add reminder failed: $@");
         return 0;
     }
 
-    $self->{pbot}->{event_queue}->enqueue_event(
-        sub {
-            my ($event) = @_;
-            $self->do_reminder($id, $event);
-        },
-        $args{interval}, "reminder $id", $args{repeats}
-    );
+    my $reminder = {
+        id      => $id,
+        repeats => $args{repeats},
+    };
 
+    # add reminder to event queue.
+    $self->enqueue_reminder($reminder, $args{seconds});
+
+    # return reminder id
     return $id;
 }
 
-# delete a reminder by its id
+# delete a reminder by its id, from SQLite and the PBot event queue
 sub delete_reminder {
     my ($self, $id) = @_;
 
     return if not $self->{dbh};
 
+    # remove from SQLite database
     eval {
         my $sth = $self->{dbh}->prepare('DELETE FROM Reminders WHERE id = ?');
         $sth->execute($id);
     };
 
+    # check for exeption
     if ($@) {
         $self->{pbot}->{logger}->log("Delete reminder $id failed: $@");
         return 0;
     }
 
-    $self->{pbot}->{event_queue}->dequeue_event("reminder $id");
+    # remove from event queue
+    my $removed = $self->{pbot}->{event_queue}->dequeue_event("reminder $id");
+
+    $self->{pbot}->{logger}->log("RemindMe: dequeued events: $removed\n");
     return 1;
 }
 
-# update a reminder's metadata
+# update a reminder's data, in SQLite
 sub update_reminder {
     my ($self, $id, $data) = @_;
 
@@ -488,7 +537,7 @@ sub update_reminder {
     $self->{pbot}->{logger}->log($@) if $@;
 }
 
-# get a single reminder by its id
+# get a single reminder by its id, from SQLite
 sub get_reminder {
     my ($self, $id) = @_;
 
@@ -506,7 +555,7 @@ sub get_reminder {
     return $reminder;
 }
 
-# get all reminders belonging to a user
+# get all reminders belonging to an account id, from SQLite
 sub get_reminders {
     my ($self, $account) = @_;
 
