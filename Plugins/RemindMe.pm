@@ -196,6 +196,11 @@ sub cmd_remindme {
     return "Please use -t to specify a time for this reminder." if not $time;
     return "Please specify a reminder message."                 if not $text;
 
+    # ensure option -c is a channel
+    if (defined $channel and $channel !~ /^#/) {
+        return "Option -c must be a channel.";
+    }
+
     # option -c was provided; ensure bot is in channel
     if ($channel and not $self->{pbot}->{channels}->is_active($channel)) {
         return "I'm not active in channel $channel.";
@@ -290,7 +295,7 @@ sub do_reminder {
     }
 
     # send reminder text to person
-    my $target = $reminder->{channel} // $nick;
+    my $target = $reminder->{channel} || $nick;
     my $text = $reminder->{text};
 
     # if sending reminder to channel, highlight person being reminded
