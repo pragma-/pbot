@@ -16,7 +16,7 @@ use parent 'PBot::Class';
 use PBot::Imports;
 
 use Getopt::Long qw(GetOptionsFromArray);
-use Time::HiRes qw(gettimeofday tv_interval);
+use Time::HiRes qw(time tv_interval);
 use Time::Duration;
 
 use PBot::MessageHistory_SQLite;
@@ -37,12 +37,13 @@ sub initialize {
     $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_recall_time', $conf{max_recall_time} // 0);
     $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_messages',    32);
 
-    $self->{pbot}->{commands}->register(sub { $self->cmd_list_also_known_as(@_) }, "aka",            0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_recall_message(@_) },     "recall",         0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_rebuild_aliases(@_) },    "rebuildaliases", 1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_list_also_known_as(@_) }, "aka",            0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_aka_link(@_) },           "akalink",        1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_aka_unlink(@_) },         "akaunlink",      1);
 
+    # add capabilities to admin group
     $self->{pbot}->{capabilities}->add('admin', 'can-akalink',   1);
     $self->{pbot}->{capabilities}->add('admin', 'can-akaunlink', 1);
 
@@ -54,7 +55,9 @@ sub cmd_list_also_known_as {
 
     my $usage = "Usage: aka [-hilngr] <nick> [-sort <by>]; -h show hostmasks; -i show ids; -l show last seen, -n show nickserv accounts; -g show gecos, -r show relationships";
 
-    if (not length $context->{arguments}) { return $usage; }
+    if (not length $context->{arguments}) {
+        return $usage;
+    }
 
     my $getopt_error;
     local $SIG{__WARN__} = sub {
@@ -187,8 +190,11 @@ sub cmd_list_also_known_as {
             $result .= " {$akas{$aka}->{gecos}}"    if $show_gecos and exists $akas{$aka}->{gecos};
 
             if ($show_relationship) {
-                if   ($akas{$aka}->{id} == $akas{$aka}->{alias}) { $result .= " [$akas{$aka}->{id}]"; }
-                else                                             { $result .= " [$akas{$aka}->{id} -> $akas{$aka}->{alias}]"; }
+                if ($akas{$aka}->{id} == $akas{$aka}->{alias}) {
+                    $result .= " [$akas{$aka}->{id}]";
+                } else {
+                    $result .= " [$akas{$aka}->{id} -> $akas{$aka}->{alias}]";
+                }
             } elsif ($show_id) {
                 $result .= " [$akas{$aka}->{id}]";
             }
@@ -196,12 +202,15 @@ sub cmd_list_also_known_as {
             $result .= " [WEAK]" if exists $akas{$aka}->{type} and $akas{$aka}->{type} == $self->{database}->{alias_type}->{WEAK};
 
             if ($show_last_seen) {
-                my $seen = concise ago (gettimeofday - $akas{$aka}->{last_seen});
+                my $seen = concise ago (time - $akas{$aka}->{last_seen});
                 $result .= " last seen: $seen";
             }
 
-            if   ($show_hostmasks or $show_nickserv or $show_gecos or $show_id or $show_relationship) { $sep = ",\n"; }
-            else                                                                                      { $sep = ", "; }
+            if ($show_hostmasks or $show_nickserv or $show_gecos or $show_id or $show_relationship) {
+                $sep = ",\n";
+            } else {
+                $sep = ", ";
+            }
         }
         return $result;
     } else {
@@ -221,7 +230,9 @@ sub cmd_recall_message {
 
     my $arguments = $context->{arguments};
 
-    if (not length $arguments) { return $usage; }
+    if (not length $arguments) {
+        return $usage;
+    }
 
     $arguments = lc $arguments;
 
@@ -284,14 +295,22 @@ sub cmd_recall_message {
         }
 
         my $max_count = $self->{pbot}->{registry}->get_value('messagehistory', 'max_recall_count') // 50;
-        $recall_count = 1 if (not defined $recall_count) || ($recall_count <= 0);
-        return "You may only select a count of up to $max_count messages." if $recall_count > $max_count;
+
+        if ((not defined $recall_count) || ($recall_count <= 0)) {
+            $recall_count = 1;
+        }
+
+        if ($recall_count > $max_count) {
+            return "You may only select a count of up to $max_count messages.";
+        }
 
         $recall_before = 0 if not defined $recall_before;
         $recall_after  = 0 if not defined $recall_after;
 
-        # imply -x if -n > 1 and no history and -x isn't already set to somebody
-        if ($recall_count > 1 and not defined $recall_history and not defined $recall_context) { $recall_context = $recall_nick; }
+        # imply -x if -n > 1 and -x isn't already set to somebody
+        if ($recall_count > 1 and not defined $recall_context) {
+            $recall_context = $recall_nick;
+        }
 
         # make -n behave like -b if -n > 1 and no history is specified
         if (not defined $recall_history and $recall_count > 1) {
@@ -366,14 +385,19 @@ sub cmd_recall_message {
             $recall_history--;
             $message = $self->{database}->recall_message_by_count($account, $recall_channel, $recall_history, '(?:recall|mock|ftfy|fix|clapper)');
 
-            if (not defined $message) { return "No message found at index $recall_history in channel $recall_channel."; }
+            if (not defined $message) {
+                return "No message found at index $recall_history in channel $recall_channel.";
+            }
         } else {
             # regex history
             $message = $self->{database}->recall_message_by_text($account, $recall_channel, $recall_history, '(?:recall|mock|ftfy|fix|clapper)');
 
             if (not defined $message) {
-                if   (defined $account) { return "No message for nick $found_nick in channel $recall_channel containing \"$recall_history\""; }
-                else                    { return "No message in channel $recall_channel containing \"$recall_history\"."; }
+                if (defined $account) {
+                    return "No message for nick $found_nick in channel $recall_channel containing \"$recall_history\"";
+                } else {
+                    return "No message in channel $recall_channel containing \"$recall_history\".";
+                }
             }
         }
 
@@ -390,14 +414,14 @@ sub cmd_recall_message {
         my $max_recall_time = $self->{pbot}->{registry}->get_value('messagehistory', 'max_recall_time');
 
         foreach my $msg (@$messages) {
-            if ($max_recall_time && gettimeofday - $msg->{timestamp} > $max_recall_time && not $self->{pbot}->{users}->loggedin_admin($context->{from}, $context->{hostmask})) {
+            if ($max_recall_time && time - $msg->{timestamp} > $max_recall_time && not $self->{pbot}->{users}->loggedin_admin($context->{from}, $context->{hostmask})) {
                 $max_recall_time = duration($max_recall_time);
                 $result .= "Sorry, you can not recall messages older than $max_recall_time.";
                 return $result;
             }
 
             my $text = $msg->{msg};
-            my $ago  = concise ago(gettimeofday - $msg->{timestamp});
+            my $ago  = concise ago(time - $msg->{timestamp});
 
             if (   $text =~ s/^(NICKCHANGE)\b/changed nick to/
                 or $text =~ s/^(KICKED|QUIT)\b/lc "$1"/e
@@ -429,14 +453,20 @@ sub cmd_aka_link {
 
     $type = $self->{database}->{alias_type}->{STRONG} if not defined $type;
 
-    if (not $id or not $alias) { return "Usage: link <target id> <alias id> [type]"; }
+    if (not $id or not $alias) {
+        return "Usage: link <target id> <alias id> [type]";
+    }
 
     my $source = $self->{database}->find_most_recent_hostmask($id);
     my $target = $self->{database}->find_most_recent_hostmask($alias);
 
-    if (not $source) { return "No such id $id found."; }
+    if (not $source) {
+        return "No such id $id found.";
+    }
 
-    if (not $target) { return "No such id $alias found."; }
+    if (not $target) {
+        return "No such id $alias found.";
+    }
 
     if ($self->{database}->link_alias($id, $alias, $type)) {
         return "/say $source " . ($type == $self->{database}->{alias_type}->{WEAK} ? "weakly" : "strongly") . " linked to $target.";
@@ -450,17 +480,26 @@ sub cmd_aka_unlink {
 
     my ($id, $alias) = split /\s+/, $context->{arguments};
 
-    if (not $id or not $alias) { return "Usage: unlink <target id> <alias id>"; }
+    if (not $id or not $alias) {
+        return "Usage: unlink <target id> <alias id>";
+    }
 
     my $source = $self->{database}->find_most_recent_hostmask($id);
     my $target = $self->{database}->find_most_recent_hostmask($alias);
 
-    if (not $source) { return "No such id $id found."; }
+    if (not $source) {
+        return "No such id $id found.";
+    }
 
-    if (not $target) { return "No such id $alias found."; }
+    if (not $target) {
+        return "No such id $alias found.";
+    }
 
-    if   ($self->{database}->unlink_alias($id, $alias)) { return "/say $source unlinked from $target."; }
-    else                                                { return "Unlink failed."; }
+    if ($self->{database}->unlink_alias($id, $alias)) {
+        return "/say $source unlinked from $target.";
+    } else {
+        return "Unlink failed.";
+    }
 }
 
 sub get_message_account {
@@ -470,7 +509,7 @@ sub get_message_account {
 
 sub add_message {
     my ($self, $account, $mask, $channel, $text, $mode) = @_;
-    $self->{database}->add_message($account, $mask, $channel, {timestamp => scalar gettimeofday, msg => $text, mode => $mode});
+    $self->{database}->add_message($account, $mask, $channel, { timestamp => scalar time, msg => $text, mode => $mode });
 }
 
 1;
