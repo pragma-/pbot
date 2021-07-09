@@ -256,13 +256,13 @@ sub cmd_recall_message {
         my @opt_args = $self->{pbot}->{interpreter}->split_line($recall, strip_quotes => 1);
         GetOptionsFromArray(
             \@opt_args,
-            'channel|c:s'        => \$recall_channel,
-            'history|h:s'        => \$recall_history,
-            'text|t:s'           => \$recall_text,
-            'before|b:i'         => \$recall_before,
-            'after|a:i'          => \$recall_after,
-            'count|n:i'          => \$recall_count,
-            'context|x:s'        => \$recall_context,
+            'channel|c=s'        => \$recall_channel,
+            'history|h=s'        => \$recall_history,
+            'text|t=s'           => \$recall_text,
+            'before|b=i'         => \$recall_before,
+            'after|a=i'          => \$recall_after,
+            'count|n=i'          => \$recall_count,
+            'context|x=s'        => \$recall_context,
             'raw|r'              => \$raw,
             'random'             => \$random,
         );
