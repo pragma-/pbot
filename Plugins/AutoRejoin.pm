@@ -28,10 +28,16 @@ sub unload {
 
 sub rejoin_channel {
     my ($self, $channel) = @_;
-    $self->{rejoins}->{$channel}->{rejoins} = 0 if not exists $self->{rejoins}->{$channel};
+
+    if (not exists $self->{rejoins}->{$channel}) {
+        $self->{rejoins}->{$channel}->{rejoins} = 0;
+    }
 
     my $delay = $self->{pbot}->{registry}->get_array_value($channel, 'rejoin_delay', $self->{rejoins}->{$channel}->{rejoins});
-    $delay = $self->{pbot}->{registry}->get_array_value('autorejoin', 'rejoin_delay', $self->{rejoins}->{$channel}->{rejoins}) if not defined $delay;
+
+    if (not defined $delay) {
+        $delay = $self->{pbot}->{registry}->get_array_value('autorejoin', 'rejoin_delay', $self->{rejoins}->{$channel}->{rejoins});
+    }
 
     $self->{pbot}->{interpreter}->add_botcmd_to_command_queue($channel, "join $channel", $delay);
 
@@ -42,25 +48,44 @@ sub rejoin_channel {
 
 sub on_kick {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $target, $channel, $reason) =
-      ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to, $event->{event}->{args}[0], $event->{event}->{args}[1]);
+
+    my ($nick, $user, $host, $target, $channel, $reason) = (
+        $event->{event}->nick,
+        $event->{event}->user,
+        $event->{event}->host,
+        $event->{event}->to,
+        $event->{event}->{args}[0],
+        $event->{event}->{args}[1],
+    );
 
     return 0 if not $self->{pbot}->{channels}->is_active($channel);
-    return 0 if $self->{pbot}->{channels}->{channels}->{hash}->{lc $channel}->{noautorejoin};
+    return 0 if $self->{pbot}->{channels}->{storage}->get_data($channel, 'noautorejoin');
 
-    if ($target eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) { $self->rejoin_channel($channel); }
-    return 0;
+    if ($target eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+        $self->rejoin_channel($channel);
+    }
+
+    return 1;
 }
 
 sub on_part {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
+
+    my ($nick, $user, $host, $channel) = (
+        $event->{event}->nick,
+        $event->{event}->user,
+        $event->{event}->host,
+        $event->{event}->to,
+    );
 
     return 0 if not $self->{pbot}->{channels}->is_active($channel);
-    return 0 if $self->{pbot}->{channels}->{channels}->{hash}->{lc $channel}->{noautorejoin};
+    return 0 if $self->{pbot}->{channels}->{storage}->get_data($channel, 'noautorejoin');
 
-    if ($nick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) { $self->rejoin_channel($channel); }
-    return 0;
+    if ($nick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+        $self->rejoin_channel($channel);
+    }
+
+    return 1;
 }
 
 1;

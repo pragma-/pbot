@@ -330,8 +330,8 @@ sub process_pipe_reader {
     if (not $context->{nickprefix}) {
         # if add_nick is set on the factoid, set the nick override to the caller's nick
         if (exists $context->{special} and $context->{special} ne 'code-factoid'
-            and $self->{pbot}->{factoids}->{factoids}->exists($context->{channel}, $context->{trigger}, 'add_nick')
-            and $self->{pbot}->{factoids}->{factoids}->get_data($context->{channel}, $context->{trigger}, 'add_nick') != 0)
+            and $self->{pbot}->{factoids}->{storage}->exists($context->{channel}, $context->{trigger}, 'add_nick')
+            and $self->{pbot}->{factoids}->{storage}->get_data($context->{channel}, $context->{trigger}, 'add_nick') != 0)
         {
             $context->{nickprefix}          = $context->{nick};
             $context->{nickprefix_disabled} = 0;

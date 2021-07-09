@@ -57,9 +57,9 @@ sub can_gain_ops {
     my ($self, $channel) = @_;
     $channel = lc $channel;
     return
-         $self->{pbot}->{channels}->{channels}->exists($channel)
-      && $self->{pbot}->{channels}->{channels}->get_data($channel, 'chanop')
-      && $self->{pbot}->{channels}->{channels}->get_data($channel, 'enabled');
+         $self->{pbot}->{channels}->{storage}->exists($channel)
+      && $self->{pbot}->{channels}->{storage}->get_data($channel, 'chanop')
+      && $self->{pbot}->{channels}->{storage}->get_data($channel, 'enabled');
 }
 
 sub gain_ops {
@@ -125,13 +125,13 @@ sub check_opped_timeouts {
     my $now  = gettimeofday();
     foreach my $channel (keys %{$self->{is_opped}}) {
         if ($self->{is_opped}->{$channel}{timeout} < $now) {
-            unless ($self->{pbot}->{channels}->{channels}->exists($channel) and $self->{pbot}->{channels}->{channels}->get_data($channel, 'permop')) { $self->lose_ops($channel); }
+            unless ($self->{pbot}->{channels}->{storage}->exists($channel) and $self->{pbot}->{channels}->{storage}->get_data($channel, 'permop')) { $self->lose_ops($channel); }
         }
     }
 
     foreach my $channel (keys %{$self->{op_requested}}) {
         if ($now - $self->{op_requested}->{$channel} > 60 * 5) {
-            if ($self->{pbot}->{channels}->{channels}->exists($channel) and $self->{pbot}->{channels}->{channels}->get_data($channel, 'enabled')) {
+            if ($self->{pbot}->{channels}->{storage}->exists($channel) and $self->{pbot}->{channels}->{storage}->get_data($channel, 'enabled')) {
                 $self->{pbot}->{logger}->log("5 minutes since OP request for $channel and no OP yet; trying again ...\n");
                 delete $self->{op_requested}->{$channel};
                 $self->gain_ops($channel);

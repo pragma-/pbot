@@ -218,7 +218,7 @@ sub plang_builtin_userget {
     my ($self, $plang, $context, $name, $arguments) = @_;
     my ($username) = ($arguments->[0], $arguments->[1]);
 
-    my $user = $self->{pbot}->{users}->{users}->get_data($username->[1]);
+    my $user = $self->{pbot}->{users}->{storage}->get_data($username->[1]);
 
     if (not defined $user) {
         return [['TYPE', 'Null'], undef];

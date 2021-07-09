@@ -149,7 +149,7 @@ sub do_events {
 
     for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
         # we call time for a fresh time, instead of using a stale $now that
-        # could be well in the past depending on a previous event's duration
+        # could be in the past depending on a previous event's duration
         if (time >= $self->{event_queue}->[$i]->{timeout}) {
             my $event = $self->{event_queue}->[$i];
 
@@ -306,8 +306,11 @@ sub dequeue_event {
         # nothing removed
         return "No matching events." if not $count;
 
+
         # list all removed events
-        return "Removed $count event" . ($count == 1 ? '' : 's') . ': ' . join(', ', map { $_->{id} } @removed);
+        my $removed = "Removed $count event" . ($count == 1 ? '' : 's') . ': ' . join(', ', map { $_->{id} } @removed);
+        $self->{pbot}->{logger}->log("EventQueue: dequeued $removed\n");
+        return $removed;
     };
 
     if ($@) {

@@ -72,11 +72,11 @@ sub cmd_regunset {
         return $usage;
     }
 
-    if (not $self->{pbot}->{registry}->{registry}->exists($section)) {
+    if (not $self->{pbot}->{registry}->{storage}->exists($section)) {
         return "No such registry section $section.";
     }
 
-    if (not $self->{pbot}->{registry}->{registry}->exists($section, $item)) {
+    if (not $self->{pbot}->{registry}->{storage}->exists($section, $item)) {
         return "No such item $item in section $section.";
     }
 
@@ -140,7 +140,7 @@ sub cmd_regshow {
     my ($self, $context) = @_;
 
     my $usage    = "Usage: regshow <section>.<item>";
-    my $registry = $self->{pbot}->{registry}->{registry};
+    my $registry = $self->{pbot}->{registry}->{storage};
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
     my $section = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}) // return $usage;
@@ -181,7 +181,7 @@ sub cmd_regfind {
     my ($self, $context) = @_;
 
     my $usage     = "Usage: regfind [-showvalues] [-section section] <regex>";
-    my $registry  = $self->{pbot}->{registry}->{registry};
+    my $registry  = $self->{pbot}->{registry}->{storage};
 
     my $arguments = $context->{arguments};
 
@@ -291,7 +291,7 @@ sub cmd_regchange {
     $section = lc $section;
     $item    = lc $item;
 
-    my $registry = $self->{pbot}->{registry}->{registry};
+    my $registry = $self->{pbot}->{registry}->{storage};
 
     if (not $registry->exists($section)) {
         return "No such registry section $section.";

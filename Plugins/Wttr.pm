@@ -80,7 +80,7 @@ sub cmd_wttr {
     if (defined $options{u}) {
         my $username = delete $options{u};
 
-        my $userdata = $self->{pbot}->{users}->{users}->get_data($username);
+        my $userdata = $self->{pbot}->{users}->{storage}->get_data($username);
         return "No such user account $username." if not defined $userdata;
         return "User account does not have `location` set." if not exists $userdata->{location};
         $arguments = $userdata->{location};

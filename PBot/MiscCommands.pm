@@ -83,11 +83,11 @@ sub cmd_list {
 
     if ($context->{arguments} =~ /^modules$/i) {
         $text = 'Loaded modules: ';
-        foreach my $channel (sort $self->{pbot}->{factoids}->{factoids}->get_keys) {
-            foreach my $command (sort $self->{pbot}->{factoids}->{factoids}->get_keys($channel)) {
+        foreach my $channel (sort $self->{pbot}->{factoids}->{storage}->get_keys) {
+            foreach my $command (sort $self->{pbot}->{factoids}->{storage}->get_keys($channel)) {
                 next if $command eq '_name';
-                if ($self->{pbot}->{factoids}->{factoids}->get_data($channel, $command, 'type') eq 'module') {
-                    $text .= $self->{pbot}->{factoids}->{factoids}->get_data($channel, $command, '_name') . ' ';
+                if ($self->{pbot}->{factoids}->{storage}->get_data($channel, $command, 'type') eq 'module') {
+                    $text .= $self->{pbot}->{factoids}->{storage}->get_data($channel, $command, '_name') . ' ';
                 }
             }
         }
@@ -176,7 +176,7 @@ sub cmd_reload {
         },
 
         'ignores' => sub {
-            $self->{pbot}->{ignorelist}->{ignorelist}->load;
+            $self->{pbot}->{ignorelist}->{storage}->load;
             return "Ignore list reloaded.";
         },
 
@@ -186,7 +186,7 @@ sub cmd_reload {
         },
 
         'channels' => sub {
-            $self->{pbot}->{channels}->{channels}->load;
+            $self->{pbot}->{channels}->{storage}->load;
             return "Channels reloaded.";
         },
 

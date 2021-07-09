@@ -135,8 +135,8 @@ sub cmd_help {
     }
 
     # get canonical channel and trigger names with original typographical casing
-    my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_key_name($channel);
-    my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_key_name($channel, $trigger);
+    my $channel_name = $self->{pbot}->{factoids}->{storage}->get_key_name($channel);
+    my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_key_name($channel, $trigger);
 
     # prettify channel name if it's ".*"
     if ($channel_name eq '.*') {
@@ -149,7 +149,7 @@ sub cmd_help {
     }
 
     # get factoid's `help` metadata
-    my $help = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, 'help');
+    my $help = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, 'help');
 
     # return immediately if no help text
     if (not defined $help or not length $help) {
@@ -305,8 +305,8 @@ sub interpreter {
                 $context->{arglist}   = $self->{pbot}->{interpreter}->make_args($context->{arguments});
             }
 
-            $self->{pbot}->{logger}->log("Disabling nickprefix\n");
-            $context->{nickprefix_disabled} = 1;
+            #            $self->{pbot}->{logger}->log("Disabling nickprefix\n");
+            #$context->{nickprefix_disabled} = 1;
 
             if ($self->get_meta($keyword, 'background-process')) {
                 # execute this command as a backgrounded process

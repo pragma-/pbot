@@ -51,7 +51,7 @@ sub cmd_weather {
     $arguments = "@opt_args";
 
     if (defined $user_override) {
-        my $userdata = $self->{pbot}->{users}->{users}->get_data($user_override);
+        my $userdata = $self->{pbot}->{users}->{storage}->get_data($user_override);
         return "No such user account $user_override." if not defined $userdata;
         return "User account does not have `location` set." if not exists $userdata->{location};
         $arguments = $userdata->{location};

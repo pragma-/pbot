@@ -33,7 +33,7 @@ sub cmd_load {
 
     return "Usage: load <keyword> <module>" if not defined $module;
 
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
 
     if ($factoids->exists('.*', $keyword)) {
         return 'There is already a keyword named ' . $factoids->get_data('.*', $keyword, '_name') . '.';
@@ -56,7 +56,7 @@ sub cmd_unload {
 
     return "Usage: unload <keyword>" if not defined $module;
 
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
 
     if (not $factoids->exists('.*', $module)) {
         return "/say $module not found.";
@@ -108,7 +108,7 @@ sub launch_module {
     $context->{keyword} = $trigger;
     $context->{trigger} = $trigger;
 
-    my $module = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, 'action');
+    my $module = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, 'action');
 
     $self->{pbot}->{logger}->log(
         '(' . (defined $context->{from} ? $context->{from} : "(undef)") . '): '
@@ -124,8 +124,8 @@ sub launch_module {
         Carp::croak("Could not chdir to '$module_dir': $!");
     }
 
-    if ($self->{pbot}->{factoids}->{factoids}->exists($channel, $trigger, 'workdir')) {
-        chdir $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, 'workdir');
+    if ($self->{pbot}->{factoids}->{storage}->exists($channel, $trigger, 'workdir')) {
+        chdir $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, 'workdir');
     }
 
     # FIXME -- add check to ensure $module exists

@@ -13,7 +13,7 @@ use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{users} = PBot::HashObject->new(name => 'Users', filename => $conf{filename}, pbot => $conf{pbot});
+    $self->{storage} = PBot::HashObject->new(name => 'Users', filename => $conf{filename}, pbot => $conf{pbot});
 
     $self->{pbot}->{commands}->register(sub { $self->cmd_login(@_) },     "login",     0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_logout(@_) },    "logout",    0);
@@ -121,11 +121,11 @@ sub cmd_login {
 
     my $name = $self->{user_index}->{$user_channel}->{$user_hostmask};
 
-    my $u            = $self->{users}->get_data($name);
+    my $u            = $self->{storage}->get_data($name);
     my $channel_text = $user_channel eq 'global' ? '' : " for $user_channel";
 
     if ($u->{loggedin}) {
-        return "/msg $context->{nick} You are already logged into " . $self->{users}->get_key_name($name) . " ($user_hostmask)$channel_text.";
+        return "/msg $context->{nick} You are already logged into " . $self->{storage}->get_key_name($name) . " ($user_hostmask)$channel_text.";
     }
 
     my $result = $self->login($user_channel, $user_hostmask, $arguments);
@@ -140,12 +140,12 @@ sub cmd_logout {
 
     my $name = $self->{user_index}->{$user_channel}->{$user_hostmask};
 
-    my $u            = $self->{users}->get_data($name);
+    my $u            = $self->{storage}->get_data($name);
     my $channel_text = $user_channel eq 'global' ? '' : " for $user_channel";
-    return "/msg $context->{nick} You are not logged into " . $self->{users}->get_key_name($name) . " ($user_hostmask)$channel_text." if not $u->{loggedin};
+    return "/msg $context->{nick} You are not logged into " . $self->{storage}->get_key_name($name) . " ($user_hostmask)$channel_text." if not $u->{loggedin};
 
     $self->logout($user_channel, $user_hostmask);
-    return "/msg $context->{nick} Logged out of " . $self->{users}->get_key_name($name) . " ($user_hostmask)$channel_text.";
+    return "/msg $context->{nick} Logged out of " . $self->{storage}->get_key_name($name) . " ($user_hostmask)$channel_text.";
 }
 
 sub cmd_users {
@@ -185,14 +185,14 @@ sub cmd_users {
             $seen_names{$name} = 1;
             $text .= $sep;
             my $has_cap = 0;
-            foreach my $key ($self->{users}->get_keys($name)) {
+            foreach my $key ($self->{storage}->get_keys($name)) {
                 if ($self->{pbot}->{capabilities}->exists($key)) {
                     $has_cap = 1;
                     last;
                 }
             }
             $text .= '+' if $has_cap;
-            $text .= $self->{users}->get_key_name($name);
+            $text .= $self->{storage}->get_key_name($name);
             $sep = " ";
         }
         $sep = "; ";
@@ -211,7 +211,7 @@ sub cmd_useradd {
 
     my $u;
     foreach my $channel (sort split /\s*,\s*/, lc $channels) {
-        $u = $self->{pbot}->{users}->find_user($channel, $context->{hostmask});
+        $u = $self->find_user($channel, $context->{hostmask});
 
         if (not defined $u) {
             return "You do not have a user account for $channel; cannot add users to that channel.\n";
@@ -234,7 +234,7 @@ sub cmd_useradd {
         }
     }
 
-    $self->{pbot}->{users}->add_user($name, $channels, $hostmasks, $capabilities, $password);
+    $self->add_user($name, $channels, $hostmasks, $capabilities, $password);
     return "User added.";
 }
 
@@ -244,7 +244,7 @@ sub cmd_userdel {
     if (not length $context->{arguments}) { return "Usage: userdel <username>"; }
 
     my $u = $self->find_user($context->{from}, $context->{hostmask});
-    my $t = $self->{users}->get_data($context->{arguments});
+    my $t = $self->{storage}->get_data($context->{arguments});
 
     if ($self->{pbot}->{capabilities}->userhas($t, 'botowner') and not $self->{pbot}->{capabilities}->userhas($u, 'botowner')) {
         return "Only botowners may delete botowner user accounts.";
@@ -267,7 +267,7 @@ sub cmd_userset {
     my $channel = $context->{from};
 
     my $u      = $self->find_user($channel, $context->{hostmask}, 1);
-    my $target = $self->{users}->get_data($name);
+    my $target = $self->{storage}->get_data($name);
 
     if (not $u) {
         $channel = 'global' if $channel !~ /^#/;
@@ -294,7 +294,7 @@ sub cmd_userset {
         return "To set the $key capability your user account must also have it." unless $self->{pbot}->{capabilities}->userhas($u, 'botowner');
     }
 
-    my $result = $self->{users}->set($name, $key, $value);
+    my $result = $self->{storage}->set($name, $key, $value);
     print "result [$result]\n";
     $result =~ s/^password: .*;?$/password: <private>;/m;
 
@@ -322,7 +322,7 @@ sub cmd_userunset {
     my $channel = $context->{from};
 
     my $u      = $self->find_user($channel, $context->{hostmask}, 1);
-    my $target = $self->{users}->get_data($name);
+    my $target = $self->{storage}->get_data($name);
 
     if (not $u) {
         $channel = 'global' if $channel !~ /^#/;
@@ -347,7 +347,7 @@ sub cmd_userunset {
         return "To unset the $key capability your user account must also have it." unless $self->{pbot}->{capabilities}->userhas($u, 'botowner');
     }
 
-    return $self->{users}->unset($name, $key);
+    return $self->{storage}->unset($name, $key);
 }
 
 sub cmd_my {
@@ -369,7 +369,7 @@ sub cmd_my {
         $hostmask = "$context->{nick}!$context->{user}\@" . $self->{pbot}->{antiflood}->address_to_mask($context->{host});
         $name = $context->{nick};
 
-        $u = $self->{users}->get_data($name);
+        $u = $self->{storage}->get_data($name);
         if ($u) {
             $self->{pbot}->{logger}->log("Adding additional hostmask $hostmask to user account $name\n");
             $u->{hostmasks} .= ",$hostmask";
@@ -412,7 +412,7 @@ sub cmd_my {
         $result = "Usage: my <key> [value]; ";
     }
 
-    $result .= $self->{users}->set($name, $key, $value);
+    $result .= $self->{storage}->set($name, $key, $value);
     $result =~ s/^password: .*;?$/password: <private>;/m;
     return $result;
 }
@@ -477,14 +477,14 @@ sub add_user {
     }
 
     $self->{pbot}->{logger}->log("Adding new user (caps: $capabilities): name: $name hostmasks: $hostmasks channels: $channels\n");
-    $self->{users}->add($name, $data, $dont_save);
+    $self->{storage}->add($name, $data, $dont_save);
     $self->rebuild_user_index;
     return $data;
 }
 
 sub remove_user {
     my ($self, $name) = @_;
-    my $result = $self->{users}->remove($name);
+    my $result = $self->{storage}->remove($name);
     $self->rebuild_user_index;
     return $result;
 }
@@ -492,15 +492,15 @@ sub remove_user {
 sub load {
     my $self = shift;
 
-    $self->{users}->load;
+    $self->{storage}->load;
     $self->rebuild_user_index;
 
     my $i = 0;
-    foreach my $name (sort $self->{users}->get_keys) {
+    foreach my $name (sort $self->{storage}->get_keys) {
         $i++;
-        my $password  = $self->{users}->get_data($name, 'password');
-        my $channels  = $self->{users}->get_data($name, 'channels');
-        my $hostmasks = $self->{users}->get_data($name, 'hostmasks');
+        my $password  = $self->{storage}->get_data($name, 'password');
+        my $channels  = $self->{storage}->get_data($name, 'channels');
+        my $hostmasks = $self->{storage}->get_data($name, 'hostmasks');
         if (not defined $channels or not defined $hostmasks or not defined $password) {
             Carp::croak "User $name is missing critical data\n";
         }
@@ -510,7 +510,7 @@ sub load {
 
 sub save {
     my ($self) = @_;
-    $self->{users}->save;
+    $self->{storage}->save;
 }
 
 sub rebuild_user_index {
@@ -519,9 +519,9 @@ sub rebuild_user_index {
     $self->{user_index} = {};
     $self->{user_cache} = {};
 
-    foreach my $name ($self->{users}->get_keys) {
-        my $channels  = $self->{users}->get_data($name, 'channels');
-        my $hostmasks = $self->{users}->get_data($name, 'hostmasks');
+    foreach my $name ($self->{storage}->get_keys) {
+        my $channels  = $self->{storage}->get_data($name, 'channels');
+        my $hostmasks = $self->{storage}->get_data($name, 'hostmasks');
 
         my @c = split /\s*,\s*/, $channels;
         my @h = split /\s*,\s*/, $hostmasks;
@@ -607,7 +607,7 @@ sub find_user {
     return undef if not defined $found_channel;
     my $name = $self->{user_index}->{$found_channel}->{$found_hostmask};
     $self->cache_user($found_channel, $hostmask, $name, $found_hostmask);
-    return wantarray ? ($self->{users}->get_data($name), $name) : $self->{users}->get_data($name);
+    return wantarray ? ($self->{storage}->get_data($name), $name) : $self->{storage}->get_data($name);
 }
 
 sub find_admin {
@@ -636,8 +636,8 @@ sub login {
     $user->{loggedin} = 1;
     my ($user_chan, $user_hostmask) = $self->find_user_account($channel, $hostmask);
     my $name = $self->{user_index}->{$user_chan}->{$user_hostmask};
-    $self->{pbot}->{logger}->log("$hostmask logged into " . $self->{users}->get_key_name($name) . " ($hostmask)$channel_text.\n");
-    return "Logged into " . $self->{users}->get_key_name($name) . " ($hostmask)$channel_text.";
+    $self->{pbot}->{logger}->log("$hostmask logged into " . $self->{storage}->get_key_name($name) . " ($hostmask)$channel_text.\n");
+    return "Logged into " . $self->{storage}->get_key_name($name) . " ($hostmask)$channel_text.";
 }
 
 sub logout {

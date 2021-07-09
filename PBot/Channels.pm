@@ -13,8 +13,8 @@ use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{channels} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => $conf{filename});
-    $self->{channels}->load;
+    $self->{storage} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => $conf{filename});
+    $self->{storage}->load;
 
     $self->{pbot}->{commands}->register(sub { $self->cmd_join(@_) },   "join",      1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_part(@_) },   "part",      1);
@@ -52,14 +52,14 @@ sub cmd_set {
     my ($self, $context) = @_;
     my ($channel, $key, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
     return "Usage: chanset <channel> [key [value]]" if not defined $channel;
-    return $self->{channels}->set($channel, $key, $value);
+    return $self->{storage}->set($channel, $key, $value);
 }
 
 sub cmd_unset {
     my ($self, $context) = @_;
     my ($channel, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
     return "Usage: chanunset <channel> <key>" if not defined $channel or not defined $key;
-    return $self->{channels}->unset($channel, $key);
+    return $self->{storage}->unset($channel, $key);
 }
 
 sub cmd_add {
@@ -72,7 +72,7 @@ sub cmd_add {
         permop  => 0
     };
 
-    return $self->{channels}->add($context->{arguments}, $data);
+    return $self->{storage}->add($context->{arguments}, $data);
 }
 
 sub cmd_remove {
@@ -86,17 +86,17 @@ sub cmd_remove {
     $self->{pbot}->{event_queue}->dequeue_event("unmute $context->{arguments} .*");
 
     # TODO: ignores, etc?
-    return $self->{channels}->remove($context->{arguments});
+    return $self->{storage}->remove($context->{arguments});
 }
 
 sub cmd_list {
     my ($self, $context) = @_;
     my $result;
-    foreach my $channel (sort $self->{channels}->get_keys) {
-        $result .= $self->{channels}->get_key_name($channel) . ': {';
+    foreach my $channel (sort $self->{storage}->get_keys) {
+        $result .= $self->{storage}->get_key_name($channel) . ': {';
         my $comma = ' ';
-        foreach my $key (sort $self->{channels}->get_keys($channel)) {
-            $result .= "$comma$key => " . $self->{channels}->get_data($channel, $key);
+        foreach my $key (sort $self->{storage}->get_keys($channel)) {
+            $result .= "$comma$key => " . $self->{storage}->get_data($channel, $key);
             $comma = ', ';
         }
         $result .= " }\n";
@@ -116,7 +116,7 @@ sub join {
         delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
         delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
 
-        if ($self->{channels}->exists($channel) and $self->{channels}->get_data($channel, 'permop')) {
+        if ($self->{storage}->exists($channel) and $self->{storage}->get_data($channel, 'permop')) {
             $self->{pbot}->{chanops}->gain_ops($channel);
         }
 
@@ -137,9 +137,9 @@ sub autojoin {
     my ($self) = @_;
     return if $self->{pbot}->{joined_channels};
     my $channels;
-    foreach my $channel ($self->{channels}->get_keys) {
-        if ($self->{channels}->get_data($channel, 'enabled')) {
-            $channels .= $self->{channels}->get_key_name($channel) . ',';
+    foreach my $channel ($self->{storage}->get_keys) {
+        if ($self->{storage}->get_data($channel, 'enabled')) {
+            $channels .= $self->{storage}->get_key_name($channel) . ',';
         }
     }
     $self->{pbot}->{logger}->log("Joining channels: $channels\n");
@@ -150,17 +150,17 @@ sub autojoin {
 sub is_active {
     my ($self, $channel) = @_;
     # returns undef if channel doesn't exist; otherwise, the value of 'enabled'
-    return $self->{channels}->get_data($channel, 'enabled');
+    return $self->{storage}->get_data($channel, 'enabled');
 }
 
 sub is_active_op {
     my ($self, $channel) = @_;
-    return $self->is_active($channel) && $self->{channels}->get_data($channel, 'chanop');
+    return $self->is_active($channel) && $self->{storage}->get_data($channel, 'chanop');
 }
 
 sub get_meta {
     my ($self, $channel, $key) = @_;
-    return $self->{channels}->get_data($channel, $key);
+    return $self->{storage}->get_data($channel, $key);
 }
 
 1;

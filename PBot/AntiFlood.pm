@@ -548,7 +548,7 @@ sub check_flood {
                         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
                     } else {    # private message flood
                         my $hostmask = $self->address_to_mask($host);
-                        next if $self->{pbot}->{ignorelist}->{ignorelist}->exists($chan, "*!$user\@$hostmask");
+                        next if $self->{pbot}->{ignorelist}->{storage}->exists($chan, "*!$user\@$hostmask");
 
                         my $chan_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'offenses', 'last_offense');
                         $chan_data->{offenses}++;

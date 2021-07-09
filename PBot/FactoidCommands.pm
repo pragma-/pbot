@@ -140,8 +140,8 @@ sub cmd_factundo {
     my $path  = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/factlog';
     my $undos = eval { retrieve("$path/$trigger_safe.$channel_path_safe.undo"); };
 
-    my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
-    my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
+    my $channel_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, '_name');
+    my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, '_name');
 
     $channel_name = 'global'            if $channel_name eq '.*';
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
@@ -153,7 +153,7 @@ sub cmd_factundo {
         return $self->list_undo_history($undos, $list_undos);
     }
 
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
     my $userinfo = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
     if ($factoids->get_data($channel, $trigger, 'locked')) {
         return "/say $trigger_name is locked and cannot be reverted." if not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin');
@@ -184,7 +184,7 @@ sub cmd_factundo {
         }
     }
 
-    $self->{pbot}->{factoids}->{factoids}->add($channel, $trigger, $undos->{list}->[$undos->{idx}], 0, 1);
+    $self->{pbot}->{factoids}->{storage}->add($channel, $trigger, $undos->{list}->[$undos->{idx}], 0, 1);
 
     my $changes = $self->hash_differences_as_string($undos->{list}->[$undos->{idx} + 1], $undos->{list}->[$undos->{idx}]);
     $self->log_factoid($channel, $trigger, $context->{hostmask}, "reverted (undo): $changes", 1);
@@ -230,8 +230,8 @@ sub cmd_factredo {
     my $channel_path_safe = safe_filename $channel_path;
     my $trigger_safe      = safe_filename $trigger;
 
-    my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
-    my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
+    my $channel_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, '_name');
+    my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, '_name');
     $channel_name = 'global'            if $channel_name eq '.*';
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
@@ -245,7 +245,7 @@ sub cmd_factredo {
         return $self->list_undo_history($undos, $list_undos);
     }
 
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
     my $userinfo = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
     if ($factoids->get_data($channel, $trigger, 'locked')) {
         return "/say $trigger_name is locked and cannot be reverted." if not defined $self->{pbot}->{capabilities}->userhas($userinfo, 'admin');
@@ -275,7 +275,7 @@ sub cmd_factredo {
         $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
     }
 
-    $self->{pbot}->{factoids}->{factoids}->add($channel, $trigger, $undos->{list}->[$undos->{idx}], 0, 1);
+    $self->{pbot}->{factoids}->{storage}->add($channel, $trigger, $undos->{list}->[$undos->{idx}], 0, 1);
 
     my $changes = $self->hash_differences_as_string($undos->{list}->[$undos->{idx} - 1], $undos->{list}->[$undos->{idx}]);
     $self->log_factoid($channel, $trigger, $context->{hostmask}, "reverted (redo): $changes", 1);
@@ -291,7 +291,7 @@ sub cmd_factset {
 
     return $channel if not defined $trigger;    # if $trigger is not defined, $channel is an error message
 
-    my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
+    my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, '_name');
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
     my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
@@ -312,16 +312,16 @@ sub cmd_factset {
             if (not $self->{pbot}->{capabilities}->userhas($userinfo, $meta_cap)) { return "Your user account must have the $meta_cap capability to set $key."; }
         }
 
-        if (defined $value and !$self->{pbot}->{capabilities}->userhas($userinfo, 'admin') and $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, 'locked')) {
+        if (defined $value and !$self->{pbot}->{capabilities}->userhas($userinfo, 'admin') and $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, 'locked')) {
             return "/say $trigger_name is locked; unlock before setting.";
         }
 
         if (lc $key eq 'cap-override' and defined $value) {
             if (not $self->{pbot}->{capabilities}->exists($value)) { return "No such capability $value."; }
-            $self->{pbot}->{factoids}->{factoids}->set($channel, $trigger, 'locked', '1');
+            $self->{pbot}->{factoids}->{storage}->set($channel, $trigger, 'locked', '1');
         }
 
-        if (lc $key eq 'locked' and $self->{pbot}->{factoids}->{factoids}->exists($channel, $trigger, 'cap-override')) {
+        if (lc $key eq 'locked' and $self->{pbot}->{factoids}->{storage}->exists($channel, $trigger, 'cap-override')) {
             if (not $self->{pbot}->{capabilities}->userhas($userinfo, 'botowner')) {
                 return "/say $trigger_name has a cap-override and cannot be unlocked until the override is removed.";
             }
@@ -329,7 +329,7 @@ sub cmd_factset {
     }
 
     if (defined $owner_channel) {
-        my $factoid = $self->{pbot}->{factoids}->{factoids}->get_data($owner_channel, $owner_trigger);
+        my $factoid = $self->{pbot}->{factoids}->{storage}->get_data($owner_channel, $owner_trigger);
 
         my $owner;
         my $mask;
@@ -348,7 +348,7 @@ sub cmd_factset {
         }
     }
 
-    my $result = $self->{pbot}->{factoids}->{factoids}->set($channel, $trigger, $key, $value);
+    my $result = $self->{pbot}->{factoids}->{storage}->set($channel, $trigger, $key, $value);
 
     if (defined $value and $result =~ m/set to/) { $self->log_factoid($channel, $trigger, $context->{hostmask}, "set $key to $value"); }
 
@@ -380,30 +380,30 @@ sub cmd_factunset {
         if (not $self->{pbot}->{capabilities}->userhas($userinfo, $meta_cap)) { return "Your user account must have the $meta_cap capability to unset $key."; }
     }
 
-    if ($self->{pbot}->{factoids}->{factoids}->exists($channel, $trigger, 'cap-override')) {
+    if ($self->{pbot}->{factoids}->{storage}->exists($channel, $trigger, 'cap-override')) {
         if (lc $key eq 'locked') {
-            if ($self->{pbot}->{capabilities}->userhas($userinfo, 'botowner')) { $self->{pbot}->{factoids}->{factoids}->unset($channel, $trigger, 'cap-override', 1); }
+            if ($self->{pbot}->{capabilities}->userhas($userinfo, 'botowner')) { $self->{pbot}->{factoids}->{storage}->unset($channel, $trigger, 'cap-override', 1); }
             else                                                               { return "You cannot unlock this factoid because it has a cap-override. Remove the override first."; }
         }
     }
 
-    my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
-    my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
+    my $channel_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, '_name');
+    my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, '_name');
     $channel_name = 'global'            if $channel_name eq '.*';
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
     my $oldvalue;
     if (defined $owner_channel) {
-        my $factoid = $self->{pbot}->{factoids}->{factoids}->get_data($owner_channel, $owner_trigger);
+        my $factoid = $self->{pbot}->{factoids}->{storage}->get_data($owner_channel, $owner_trigger);
         my ($owner) = $factoid->{'owner'} =~ m/([^!]+)/;
         if ($key ne 'action_with_args' and lc $context->{nick} ne lc $owner and not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin')) {
             return "You are not the owner of $trigger_name.";
         }
-        $oldvalue = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, $key);
+        $oldvalue = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, $key);
     }
 
     return "[$channel_name] $trigger_name: key '$key' does not exist." if not defined $oldvalue;
-    my $result = $self->{pbot}->{factoids}->{factoids}->unset($channel, $trigger, $key);
+    my $result = $self->{pbot}->{factoids}->{storage}->unset($channel, $trigger, $key);
     if ($result =~ m/unset/) { $self->log_factoid($channel, $trigger, $context->{hostmask}, "unset $key (value: $oldvalue)"); }
     return $result;
 }
@@ -432,12 +432,12 @@ sub cmd_factmove {
 
     if (not defined $found_src_channel) { return "Source factoid $source not found in channel $src_channel"; }
 
-    my $source_channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($found_src_channel, '_name');
-    my $source_trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($found_src_channel, $found_source, '_name');
+    my $source_channel_name = $self->{pbot}->{factoids}->{storage}->get_data($found_src_channel, '_name');
+    my $source_trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($found_src_channel, $found_source, '_name');
     $source_channel_name = 'global'                   if $source_channel_name eq '.*';
     $source_trigger_name = "\"$source_trigger_name\"" if $source_trigger_name =~ / /;
 
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
     my ($owner) = $factoids->get_data($found_src_channel, $found_source, 'owner') =~ m/([^!]+)/;
 
     if ((lc $context->{nick} ne lc $owner) and (not $self->{pbot}->{users}->loggedin_admin($found_src_channel, $context->{hostmask}))) {
@@ -514,16 +514,16 @@ sub cmd_factalias {
 
     my ($channel, $alias_trigger) = $self->{pbot}->{factoids}->find_factoid($chan, $alias, exact_channel => 1, exact_trigger => 1);
     if (defined $alias_trigger) {
-        my $alias_channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
-        my $alias_trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $alias_trigger, '_name');
+        my $alias_channel_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, '_name');
+        my $alias_trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, $alias_trigger, '_name');
         $alias_channel_name = 'global'                  if $alias_channel_name eq '.*';
         $alias_trigger_name = "\"$alias_trigger_name\"" if $alias_trigger_name =~ / /;
         return "$alias_trigger_name already exists for $alias_channel_name.";
     }
 
     my ($overchannel, $overtrigger) = $self->{pbot}->{factoids}->find_factoid('.*', $alias, exact_channel => 1, exact_trigger => 1);
-    if (defined $overtrigger and $self->{pbot}->{factoids}->{factoids}->get_data('.*', $overtrigger, 'nooverride')) {
-        my $override_trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($overchannel, $overtrigger, '_name');
+    if (defined $overtrigger and $self->{pbot}->{factoids}->{storage}->get_data('.*', $overtrigger, 'nooverride')) {
+        my $override_trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($overchannel, $overtrigger, '_name');
         $override_trigger_name = "\"$override_trigger_name\"" if $override_trigger_name =~ / /;
         return "/say $override_trigger_name already exists for the global channel and cannot be overridden for " . ($chan eq '.*' ? 'the global channel' : $chan) . ".";
     }
@@ -546,8 +546,8 @@ sub cmd_add_regex {
 
     if (not defined $text) {
         my @regexes;
-        my $iter = $self->{pbot}->{factoids}->{factoids}->get_each('type = regex', "index1 = $keyword", 'index2', '_sort = index2');
-        while (defined (my $factoid = $self->{pbot}->{factoids}->{factoids}->get_next($iter))) {
+        my $iter = $self->{pbot}->{factoids}->{storage}->get_each('type = regex', "index1 = $keyword", 'index2', '_sort = index2');
+        while (defined (my $factoid = $self->{pbot}->{factoids}->{storage}->get_next($iter))) {
             push @regexes, $factoid->{index2};
         }
         $text = join '; ', @regexes;
@@ -639,22 +639,22 @@ sub cmd_factadd {
 
     my ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid($from_chan, $keyword, exact_channel => 1, exact_trigger => 1);
     if (defined $trigger) {
-        my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
-        my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
+        my $channel_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, '_name');
+        my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, '_name');
         $channel_name = 'global'            if $channel_name eq '.*';
         $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
         if (not $force) {
             return "/say $trigger_name already exists for $channel_name.";
         } else {
-            my $factoids = $self->{pbot}->{factoids}->{factoids};
+            my $factoids = $self->{pbot}->{factoids}->{storage};
             if ($factoids->get_data($channel, $trigger, 'locked')) { return "/say $trigger_name is locked; unlock before overwriting."; }
         }
     }
 
     ($channel, $trigger) = $self->{pbot}->{factoids}->find_factoid('.*', $keyword, exact_channel => 1, exact_trigger => 1);
-    if (defined $trigger and $self->{pbot}->{factoids}->{factoids}->get_data('.*', $trigger, 'nooverride')) {
-        my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
+    if (defined $trigger and $self->{pbot}->{factoids}->{storage}->get_data('.*', $trigger, 'nooverride')) {
+        my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, '_name');
         $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
         return "/say $trigger_name already exists for the global channel and cannot be overridden for " . ($from_chan eq '.*' ? 'the global channel' : $from_chan) . ".";
     }
@@ -669,7 +669,7 @@ sub cmd_factadd {
 
 sub cmd_factrem {
     my ($self, $context) = @_;
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
 
     my ($from_chan, $from_trig) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
@@ -710,7 +710,7 @@ sub cmd_factrem {
 
 sub cmd_factshow {
     my ($self, $context) = @_;
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
     $context->{preserve_whitespace} = 1;
     my $usage = "Usage: factshow [-p] [channel] <keyword>; -p to paste";
     return $usage if not length $context->{arguments};
@@ -834,7 +834,7 @@ sub cmd_factlog {
 
 sub cmd_factinfo {
     my ($self, $context) = @_;
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
     my ($chan, $trig) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (not defined $trig) {
@@ -931,7 +931,7 @@ sub cmd_factfind {
     my $usage = "Usage: factfind [-channel channel] [-owner regex] [-editby regex] [-refby regex] [-regex] [text]";
     return $usage if not length $arguments;
 
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
     my ($channel, $owner, $refby, $editby, $use_regex);
     $channel   = $1 if $arguments =~ s/\s*-channel\s+([^\b\s]+)//i;
     $owner     = $1 if $arguments =~ s/\s*-owner\s+([^\b\s]+)//i;
@@ -1036,7 +1036,7 @@ sub cmd_factfind {
 
 sub cmd_factchange {
     my ($self, $context) = @_;
-    my $factoids_data = $self->{pbot}->{factoids}->{factoids};
+    my $factoids_data = $self->{pbot}->{factoids}->{storage};
     my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier, $url);
 
     $context->{preserve_whitespace} = 1;
@@ -1120,8 +1120,8 @@ sub cmd_factchange {
 
     if (not defined $trigger) { return "/say $keyword not found in channel $from_chan."; }
 
-    my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
-    my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
+    my $channel_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, '_name');
+    my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, '_name');
     $channel_name = 'global'            if $channel_name eq '.*';
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
@@ -1222,7 +1222,7 @@ sub cmd_factchange {
 
 sub cmd_top20 {
     my ($self, $context) = @_;
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
     my %hash     = ();
     my $text     = "";
     my $i        = 0;
@@ -1282,7 +1282,7 @@ sub cmd_top20 {
 
 sub cmd_histogram {
     my ($self, $context) = @_;
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
     my %owners;
     my $factoid_count = 0;
 
@@ -1307,7 +1307,7 @@ sub cmd_histogram {
 
 sub cmd_count {
     my ($self, $context) = @_;
-    my $factoids = $self->{pbot}->{factoids}->{factoids};
+    my $factoids = $self->{pbot}->{factoids}->{storage};
     my $i        = 0;
     my $total    = 0;
 
@@ -1381,7 +1381,7 @@ sub log_factoid {
 
     if ($undos->{idx} > -1 and @{$undos->{list}} > $undos->{idx} + 1) { splice @{$undos->{list}}, $undos->{idx} + 1; }
 
-    push @{$undos->{list}}, $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger);
+    push @{$undos->{list}}, $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger);
     $undos->{idx}++;
 
     eval { store $undos, "$path/$trigger_safe.$channel_path_safe.undo"; };
@@ -1478,8 +1478,8 @@ sub find_factoid_with_optional_channel {
     $from_chan = '.*' if $channel eq 'global';
 
     if ($opts{explicit} and $channel =~ /^#/ and $from_chan =~ /^#/ and lc $channel ne $from_chan) {
-        my $channel_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, '_name');
-        my $trigger_name = $self->{pbot}->{factoids}->{factoids}->get_data($channel, $trigger, '_name');
+        my $channel_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, '_name');
+        my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, '_name');
         $channel_name = 'global'            if $channel_name eq '.*';
         $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
         return "/say $trigger_name belongs to $channel_name, not $from_chan. Please switch to or explicitly specify $channel_name.";

@@ -55,8 +55,8 @@ sub cmd_cap {
                 return "No such capability $cap.";
             }
 
-            my $result  = "Users with capability $cap: ";
-            my $users   = $self->{pbot}->{users}->{users};
+            my $result   = "Users with capability $cap: ";
+            my $users = $self->{pbot}->{users}->{storage};
             my @matches;
 
             foreach my $name (sort $users->get_keys) {
@@ -85,13 +85,13 @@ sub cmd_cap {
 
             $cap = lc $cap if defined $cap;
 
-            my $u = $self->{pbot}->{users}->{users}->get_data($name);
+            my $u = $self->{pbot}->{users}->{storage}->get_data($name);
 
             if (not defined $u) {
                 return "No such user $name.";
             }
 
-            $name = $self->{pbot}->{users}->{users}->get_key_name($name);
+            $name = $self->{pbot}->{users}->{storage}->get_key_name($name);
 
             if (defined $cap) {
                 if (not $self->exists($cap)) {

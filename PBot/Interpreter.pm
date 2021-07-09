@@ -646,10 +646,10 @@ sub handle_result {
             my ($chan, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
 
             if ($context->{preserve_whitespace} == 0) {
-                $context->{preserve_whitespace} = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'preserve_whitespace') // 0;
+                $context->{preserve_whitespace} = $self->{pbot}->{factoids}->{storage}->get_data($chan, $trigger, 'preserve_whitespace') // 0;
             }
 
-            $use_output_queue = $self->{pbot}->{factoids}->{factoids}->get_data($chan, $trigger, 'use_output_queue') // 0;
+            $use_output_queue = $self->{pbot}->{factoids}->{storage}->get_data($chan, $trigger, 'use_output_queue') // 0;
         }
     }
 

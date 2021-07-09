@@ -59,7 +59,7 @@ sub cmd_date {
 
     # check for user timezone metadata
     if (defined $user_override) {
-        my $userdata = $self->{pbot}->{users}->{users}->get_data($user_override);
+        my $userdata = $self->{pbot}->{users}->{storage}->get_data($user_override);
 
         if (not defined $userdata) {
             return "No such user account $user_override. They may use the `my` command to create a user account and set their `timezone` user metadata."

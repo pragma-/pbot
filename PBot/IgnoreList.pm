@@ -18,8 +18,8 @@ sub initialize {
 
     $self->{filename} = $conf{filename};
 
-    $self->{ignorelist} = PBot::DualIndexHashObject->new(pbot => $self->{pbot}, name => 'IgnoreList', filename => $self->{filename});
-    $self->{ignorelist}->load;
+    $self->{storage} = PBot::DualIndexHashObject->new(pbot => $self->{pbot}, name => 'IgnoreList', filename => $self->{filename});
+    $self->{storage}->load;
     $self->enqueue_ignores;
 
     $self->{pbot}->{commands}->register(sub { $self->cmd_ignore(@_) },   "ignore",   1);
@@ -44,11 +44,11 @@ sub cmd_ignore {
         my $now  = time;
         my $ignored = 0;
 
-        foreach my $channel (sort $self->{ignorelist}->get_keys) {
+        foreach my $channel (sort $self->{storage}->get_keys) {
             $text .= $channel eq '.*' ? "global:\n" : "$channel:\n";
             my @list;
-            foreach my $hostmask (sort $self->{ignorelist}->get_keys($channel)) {
-                my $timeout = $self->{ignorelist}->get_data($channel, $hostmask, 'timeout');
+            foreach my $hostmask (sort $self->{storage}->get_keys($channel)) {
+                my $timeout = $self->{storage}->get_data($channel, $hostmask, 'timeout');
                 if ($timeout == -1) {
                     push @list, "  $hostmask";
                 } else {
@@ -90,9 +90,9 @@ sub enqueue_ignores {
     my ($self) = @_;
     my $now    = time;
 
-    foreach my $channel ($self->{ignorelist}->get_keys) {
-        foreach my $hostmask ($self->{ignorelist}->get_keys($channel)) {
-            my $timeout = $self->{ignorelist}->get_data($channel, $hostmask, 'timeout');
+    foreach my $channel ($self->{storage}->get_keys) {
+        foreach my $hostmask ($self->{storage}->get_keys($channel)) {
+            my $timeout = $self->{storage}->get_data($channel, $hostmask, 'timeout');
             next if $timeout == -1; # permanent ignore
 
             my $interval = $timeout - $now;
@@ -133,7 +133,7 @@ sub add {
         $data->{timeout} = time + $length;
     }
 
-    $self->{ignorelist}->add($channel, $hostmask, $data);
+    $self->{storage}->add($channel, $hostmask, $data);
 
     if ($length > 0) {
         $self->{pbot}->{event_queue}->dequeue_event("ignore_timeout $channel $hostmask");
@@ -160,7 +160,7 @@ sub remove {
     $channel = '.*' if $channel !~ /^#/;
 
     $self->{pbot}->{event_queue}->dequeue_event("ignore_timeout $channel $hostmask");
-    return $self->{ignorelist}->remove($channel, $hostmask);
+    return $self->{storage}->remove($channel, $hostmask);
 }
 
 sub is_ignored {
@@ -169,8 +169,8 @@ sub is_ignored {
     return 0 if $self->{pbot}->{users}->loggedin_admin($channel, $hostmask);
 
     foreach my $chan ('.*', $channel) {
-        foreach my $ignored ($self->{ignorelist}->get_keys($chan)) {
-            my $regex = $self->{ignorelist}->get_data($chan, $ignored, 'regex');
+        foreach my $ignored ($self->{storage}->get_keys($chan)) {
+            my $regex = $self->{storage}->get_data($chan, $ignored, 'regex');
             return 1 if $hostmask =~ /^$regex$/i;
         }
     }

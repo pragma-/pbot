@@ -375,7 +375,7 @@ sub on_mode {
                 }
 
                 # TODO: here as well
-                $self->{pbot}->{channels}->{channels}->set($channel, 'MODE', $modes, 1);
+                $self->{pbot}->{channels}->{storage}->set($channel, 'MODE', $modes, 1);
             }
         }
     }
@@ -839,7 +839,7 @@ sub on_channelmodeis {
 
     $self->{pbot}->{logger}->log("Channel $channel modes: $modes\n");
 
-    $self->{pbot}->{channels}->{channels}->set($channel, 'MODE', $modes, 1);
+    $self->{pbot}->{channels}->{storage}->set($channel, 'MODE', $modes, 1);
 }
 
 sub on_channelcreate {
@@ -849,8 +849,8 @@ sub on_channelcreate {
 
     $self->{pbot}->{logger}->log("Channel $channel created by $owner on " . localtime($timestamp) . "\n");
 
-    $self->{pbot}->{channels}->{channels}->set($channel, 'CREATED_BY', $owner,     1);
-    $self->{pbot}->{channels}->{channels}->set($channel, 'CREATED_ON', $timestamp, 1);
+    $self->{pbot}->{channels}->{storage}->set($channel, 'CREATED_BY', $owner,     1);
+    $self->{pbot}->{channels}->{storage}->set($channel, 'CREATED_ON', $timestamp, 1);
 }
 
 sub on_topic {
@@ -860,7 +860,7 @@ sub on_topic {
         # on join
         my (undef, $channel, $topic) = $event->{event}->args;
         $self->{pbot}->{logger}->log("Topic for $channel: $topic\n");
-        $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC', $topic, 1);
+        $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC', $topic, 1);
     } else {
         # user changing topic
         my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
@@ -868,9 +868,9 @@ sub on_topic {
         my $topic   = $event->{event}->{args}->[0];
 
         $self->{pbot}->{logger}->log("$nick!$user\@$host changed topic for $channel to: $topic\n");
-        $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC',        $topic,               1);
-        $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_BY', "$nick!$user\@$host", 1);
-        $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_ON', time);
+        $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC',        $topic,               1);
+        $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC_SET_BY', "$nick!$user\@$host", 1);
+        $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC_SET_ON', time);
     }
 
     return 0;
@@ -880,8 +880,8 @@ sub on_topicinfo {
     my ($self, $event_type, $event) = @_;
     my (undef, $channel, $by, $timestamp) = $event->{event}->args;
     $self->{pbot}->{logger}->log("Topic for $channel set by $by on " . localtime($timestamp) . "\n");
-    $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_BY', $by,        1);
-    $self->{pbot}->{channels}->{channels}->set($channel, 'TOPIC_SET_ON', $timestamp, 1);
+    $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC_SET_BY', $by,        1);
+    $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC_SET_ON', $timestamp, 1);
     return 0;
 }
 
