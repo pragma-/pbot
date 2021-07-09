@@ -74,12 +74,12 @@ sub cmd_remindme {
     Getopt::Long::Configure("bundling");
     GetOptionsFromArray(
         \@opt_args,
-        'r:i' => \$repeats,
-        't:s' => \$time,
-        'c:s' => \$channel,
-        'm:s' => \$text,
+        'r=i' => \$repeats,
+        't=s' => \$time,
+        'c=s' => \$channel,
+        'm=s' => \$text,
         'l:s' => \$list_reminders,
-        'd:i' => \$delete_id
+        'd=i' => \$delete_id
     );
 
     return "$getopt_error -- $usage" if defined $getopt_error;
