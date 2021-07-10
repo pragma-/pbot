@@ -413,4 +413,4 @@ If you have a question, try the [PBot FAQ](doc/FAQ.md)!
 For additional questions and support, feel free to join the `#pbot` channel on the [Libera.Chat](https://libera.chat/guides) IRC network ([Web Chat](https://web.libera.chat/#pbot)).
 
 ## License
-PBot is licensed under the [Mozilla Public License, version 2](https://www.mozilla.org/en-US/MPL/2.0/).
+PBot is licensed under the [MIT license](LICENSE).
