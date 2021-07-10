@@ -184,7 +184,7 @@ if ($unique) {
     foreach my $result (@results) {
         $i++;
         next if not $result or $result eq 'N/A';
-        $uniq{$result} = $i;
+        $uniq{$result} = $i unless exists $uniq{$result};
     }
 
     if (not keys %uniq) {
