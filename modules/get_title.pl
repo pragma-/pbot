@@ -1,8 +1,7 @@
 #!/usr/bin/perl -w
 
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
 
 # Quick and dirty by :pragma
 
@@ -31,7 +30,7 @@ exit if $arguments =~ m{https?://.*\.h$}i;
 exit if $arguments =~ m{https?://ibb.co/}i;
 exit if $arguments =~ m{https?://.*onlinegdb.com}i;
 exit if $arguments =~ m{googlesource.com/}i;
-exit if $arguments =~ m{https?://git}i;
+exit if $arguments =~ m{https?://git}i and $arguments !~ /commit/i and $arguments !~ /github.com/;
 exit if $arguments =~ m{https://.*swissborg.com}i;
 exit if $arguments =~ m{https://streamable.com}i;
 exit if $arguments =~ m{https://matrix.org}i;
@@ -78,7 +77,10 @@ exit if $arguments =~ m/lmgtfy.com/i;
 exit if $arguments =~ m/gyazo/i;
 exit if $arguments =~ m/imagebin/i;
 exit if $arguments =~ m/\/wiki\//i;
-exit if $arguments =~ m/github.com/i;
+exit if $arguments =~ m!github.com/.*/tree/.*/source/.*!i;
+exit if $arguments =~ m!github.com/.*/commits/.*!i;
+#exit if $arguments =~ m/github.com/i and $arguments !~ m/commit/i;
+exit if $arguments =~ m!/blob/!i;
 exit if $arguments =~ m/wiki.osdev.org/i;
 exit if $arguments =~ m/wikipedia.org/i;
 exit if $arguments =~ m/everfall.com/i;
@@ -91,6 +93,8 @@ exit if $arguments =~ m/codepad.org/i;
 exit if $arguments =~ m/^http\:\/\/past(e|ing)\./i;
 exit if $arguments =~ m/paste.*\.(?:com|org|net|ch|ca|de|uk|info)/i;
 exit if $arguments =~ m/pasting.*\.(?:com|org|net|ca|de|uk|info|ch)/i;
+
+print STDERR "fetching title\n";
 
 my $ua = LWP::UserAgent->new;
 if ($arguments =~ /youtube|youtu.be|googlevideo|twitter/) {
@@ -117,7 +121,7 @@ if ($text =~ m/<title>(.*?)<\/title>/msi) { $t = $1; }
 else {
     use Data::Dumper;
     print STDERR Dumper $response;
-    #print "No title for link.\n";
+    print STDERR "No title for link.\n";
     exit;
 }
 
@@ -148,8 +152,8 @@ $t =~ s/&bull;/-/g;
 $t =~ s/<em>//g;
 $t =~ s/<\/em>//g;
 
-if (length $t > 150) {
-    $t = substr($t, 0, 150);
+if (length $t > 300) {
+    $t = substr($t, 0, 300);
     $t = "$t [...]";
 }
 
@@ -167,6 +171,9 @@ my $distance = fastdistance(lc $file, lc $t);
 my $length   = (length $file > length $t) ? length $file : length $t;
 
 if ($distance / $length < 0.75) { exit; }
+
+print STDERR "passed distance, checking title\n";
+
 
 exit if $t !~ m/\s/;                                 # exit if title is only one word -- this isn't usually interesting
 exit if $t =~ m{christel}i;
@@ -193,6 +200,8 @@ exit if $t =~ m/past[ea]/i;
 exit if $t =~ m/^[0-9_-]+$/;
 exit if $t =~ m/^Index of \S+$/;
 exit if $t =~ m/(?:sign up|login)/i;
+
+print STDERR "passed spam filters\n";
 
 my @data;
 if (open my $fh, "<", "last-title-$nick.dat") {

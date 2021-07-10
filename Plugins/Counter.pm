@@ -1,6 +1,10 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# File: Counter.pm
+#
+# Purpose: Counts occurrences of phrases or keywords. Can automatically
+# respond about specific counters.
+
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
 
 package Plugins::Counter;
 use parent 'Plugins::Plugin';

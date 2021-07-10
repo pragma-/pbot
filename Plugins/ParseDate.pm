@@ -1,8 +1,10 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-# Just a quick interface to test/play with PBot::Utils::ParseDate
+# File: ParseDate.pm
+#
+# Purpose: Just a simple interface to test/play with PBot::Utils::ParseDate
+# and make sure it's working properly.
+#
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
 
 package Plugins::ParseDate;
 use parent 'Plugins::Plugin';

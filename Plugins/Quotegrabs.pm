@@ -5,9 +5,8 @@
 # not just the most recent message. Can grab multiple distinct messages with
 # one `grab` command.
 
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
 
 package Plugins::Quotegrabs;
 use parent 'Plugins::Plugin';

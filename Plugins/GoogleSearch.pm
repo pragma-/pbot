@@ -1,6 +1,10 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# File: GoogleSearch.pm
+#
+# Purpose: Google CustomSearch API. You'll need to configure an api-key and
+# a custom-search context. URLs to instructions are provided by the command.
+
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
 
 package Plugins::GoogleSearch;
 use parent 'Plugins::Plugin';

@@ -4,9 +4,8 @@
 # for internal strings. This means ensuring the string is not too long,
 # does not have undesired characters, etc.
 
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
 
 package PBot::Utils::ValidateString;
 

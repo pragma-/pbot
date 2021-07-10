@@ -1,6 +1,13 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# File: Spinach.pm
+#
+# Purpose: Trivial game engine with a twist. Game is played in rounds. Each
+# round players choose a category of questions. Then a random question from
+# that category is shown. All players then privately submit a "lie" to the
+# bot. Then all "lies" are revealed along with the true answer. Players
+# gain points every time another player picks their lie. Very fun!
+
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
 
 package Plugins::Spinach;
 use parent 'Plugins::Plugin';

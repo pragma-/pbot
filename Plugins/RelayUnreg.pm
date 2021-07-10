@@ -1,6 +1,13 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# File: RelayUnreg.pm
+#
+# Purpose: Relays messages from unidentifed muted people in +q $~a channels
+# with reduced-moderation in effect so OPs can see messages that would other-
+# wise be blocked. This was made for channels being attacked by spammers. It
+# allows unidentified users to still participate in the channel while blocking
+# unidentified spammers.
+
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
 
 package Plugins::RelayUnreg;
 use parent 'Plugins::Plugin';

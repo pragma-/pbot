@@ -1,4 +1,12 @@
-#!/bin/sh
+#!/usr/bin/perl
+
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
-~/pbot/modules/lookupbot.pl compliment "$*"
+
+use warnings;
+use strict;
+
+package clangpp;
+use parent '_c_base';
+
+1;
