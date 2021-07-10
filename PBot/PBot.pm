@@ -244,14 +244,15 @@ sub connect {
         # TODO: disconnect, clean-up, etc
     }
 
-    my $server = $self->{registry}->get_value('irc', 'server');
-    my $port   = $self->{registry}->get_value('irc', 'port');
-    my $delay  = $self->{registry}->get_value('irc', 'reconnect_delay') // 10;
+    my $server  = $self->{registry}->get_value('irc', 'server');
+    my $port    = $self->{registry}->get_value('irc', 'port');
+    my $delay   = $self->{registry}->get_value('irc', 'reconnect_delay') // 10;
+    my $retries = $self->{registry}->get_value('irc', 'reconnect_retries') // 10;
 
     $self->{logger}->log("Connecting to $server:$port\n");
 
-    while (
-        not $self->{conn} = $self->{irc}->newconn(
+    for (my $attempt = 0; $attempt < $retries; $attempt++) {
+        my %config = (
             Nick        => $self->{registry}->get_value('irc', 'randomize_nick') ? $self->random_nick : $self->{registry}->get_value('irc', 'botnick'),
             Username    => $self->{registry}->get_value('irc', 'username'),
             Ircname     => $self->{registry}->get_value('irc', 'realname'),
@@ -260,13 +261,30 @@ sub connect {
             Pacing      => 1,
             UTF8        => 1,
             SSL         => $self->{registry}->get_value('irc', 'ssl'),
-            SSL_ca_file => $self->{registry}->get_value('irc', 'ssl_ca_file'),
-            SSL_ca_path => $self->{registry}->get_value('irc', 'ssl_ca_path'),
             Debug       => $self->{registry}->get_value('irc', 'debug'),
             PBot        => $self,
-        )
-      )
-    {
+        );
+
+        # set SSL stuff
+        my $ssl_ca_file = $self->{registry}->get_value('irc', 'ssl_ca_file');
+
+        if (length $ssl_ca_file and $ssl_ca_file ne 'none') {
+            $config{SSL_ca_file} = $ssl_ca_file;
+        }
+
+        my $ssl_ca_path = $self->{registry}->get_value('irc', 'ssl_ca_path');
+
+        if (length $ssl_ca_file and $ssl_ca_file ne 'none') {
+            $config{SSL_ca_file} = $ssl_ca_file;
+        }
+
+        # attempt to connect
+        $self->{conn} = $self->{irc}->newconn(%config);
+
+        # connection succeeded
+        last if $self->{conn};
+
+        # connection failed
         $self->{logger}->log("$0: Can't connect to $server:$port: $!\nRetrying in $delay seconds...\n");
         sleep $delay;
     }

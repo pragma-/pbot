@@ -260,7 +260,7 @@ sub connect {
     if ($self->connected) { $self->quit("Changing servers"); }
 
     if ($self->ssl) {
-        require IO::Socket::SSL;
+        use IO::Socket::SSL;
 
         if ($self->ssl_ca_file) {
             $self->socket(
@@ -294,9 +294,7 @@ sub connect {
                 )
             );
         }
-
     } else {
-
         $self->socket(
             IO::Socket::INET->new(
                 PeerAddr  => $self->server,
@@ -308,12 +306,23 @@ sub connect {
     }
 
     if (!$self->socket) {
-        carp(
-            sprintf "Can't connect to %s:%s!",
-            $self->server, $self->port
-        );
+        if ($self->ssl) {
+            carp(
+                sprintf "Can't connect to %s:%s: error=$! SSL_ERROR=$SSL_ERROR",
+                $self->server, $self->port
+            );
+        } else {
+            carp(
+                sprintf "Can't connect to %s:%s: $!",
+                $self->server, $self->port
+            );
+        }
         $self->error(1);
         return;
+    }
+
+    if ($self->ssl) {
+        $self->socket->blocking(0);
     }
 
     # send CAP LS first
@@ -831,7 +840,26 @@ sub parse {
     my ($self) = shift;
     my ($from, $type, $message, @stuff, $itype, $ev, @lines, $line);
 
-    if (defined($self->ssl ? $self->socket->read($line, 10240) : $self->socket->recv($line, 10240, 0)) and (length($self->{_frag}) + length($line)) > 0) {
+    my $n;
+
+    if ($self->ssl) {
+        $n = sysread($self->socket, $line, 32767);
+
+        if (not defined $n) {
+            if ($!{EWOULDBLOCK}) {
+                if ($SSL_ERROR == SSL_WANT_READ or $SSL_ERROR = SSL_WANT_WRITE) {
+                    return;
+                }
+
+                print STDERR "SSL broke: $SSL_ERROR\n";
+            }
+        }
+
+    } else {
+        $n = $self->socket->recv($line, 32767, 0);
+    }
+
+    if (defined $n and (length($self->{_frag}) + length($line)) > 0) {
         # grab any remnant from the last go and split into lines
         my $chunk = $self->{_frag} . $line;
         @lines = split /\012/, $chunk;
