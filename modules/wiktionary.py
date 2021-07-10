@@ -13,11 +13,6 @@ from wiktionaryparser import WiktionaryParser
 import sys
 import json
 
-word=sys.argv[1]
-language=sys.argv[2]
-
 parser = WiktionaryParser()
-
-entries = parser.fetch(word, language=language)
-
+entries = parser.fetch(sys.argv[1], sys.argv[2])
 print(json.dumps(entries))
