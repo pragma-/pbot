@@ -847,7 +847,7 @@ sub parse {
 
         if (not defined $n) {
             if ($!{EWOULDBLOCK}) {
-                if ($SSL_ERROR == SSL_WANT_READ or $SSL_ERROR = SSL_WANT_WRITE) {
+                if ($SSL_ERROR == SSL_WANT_READ or $SSL_ERROR == SSL_WANT_WRITE) {
                     return;
                 }
 
