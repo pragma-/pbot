@@ -5,7 +5,7 @@
 # Purpose: Queries Wiktionary website.
 #
 # This is a rough first draft. There are more parts of the definitions
-# to process. Might reconsider --all and --unique.
+# to process.
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,12 +15,15 @@ use warnings;
 use strict;
 
 use Cache::FileCache;
+use Encode;
 use Getopt::Long qw/GetOptionsFromArray/;
 use JSON;
 
 binmode(STDOUT, ":utf8");
 
-my $usage = "Usage: wiktionary <term> [-e] [-p] [-l --lang <language>] [-s --section <section>] [-n --num <number>] [-a --all] [-u --unique]\n";
+@ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
+
+my $usage = "Usage: wiktionary <term> [-e] [-p] [-l <language>] [-n <entry number>]; -e for etymology; -p for pronunciation\n";
 
 my ($term, $lang, $section, $num, $all, $unique, $opt_e, $opt_p);
 
@@ -97,14 +100,26 @@ if (not grep { $_ eq $section } @valid_sections) {
 }
 
 my $entry_count = @$entries;
-my $entries_text = $entry_count == 1 ? 'entry' : 'entries';
+
+my $entries_text = $section;
+
+if ($entry_count == 1) {
+    $entries_text =~ s/s$//;
+} else {
+    $entries_text =~ s/y$/ies/;
+}
 
 if ($num > $entry_count) {
-    print "No such entry $num. There are $entry_count $entries_text for `$term`.\n";
+    my $are = $entry_count == 1 ? 'is' : 'are';
+    print "No such entry $num. There $are $entry_count $entries_text for `$term`.\n";
     exit 1;
 }
 
-print "$entry_count $entries_text for $term:\n\n";
+if ($unique) {
+    print "$entry_count $entries_text for $term (showing unique entries):\n\n";
+} else {
+    print "$entry_count $entries_text for $term:\n\n";
+}
 
 my $start = 0;
 
