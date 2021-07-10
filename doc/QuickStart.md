@@ -136,9 +136,10 @@ irc.botnick | IRC nickname. This is the name people see when you talk. _Required
 irc.username | IRC username. This is the `USER` field of your hostmask. | pbot3
 irc.realname | IRC gecos/realname. This is the `general information` or `real-name` field, as seen in `WHOIS`. | https://github.com/pragma-/pbot
 irc.server | IRC server address to connect. | irc.libera.chat
-irc.port | IRC server port. | 6667
+irc.port | IRC server port. | 6667 (secure port: 6697)
 irc.identify_password | Password to authenticate with services or bots. | _undefined_
 irc.sasl | Whether to use the IRCv3 SASL authentication mechanism. | 0
+irc.ssl | Whether to use SSL/TLS encryption. | 0 (1 to enable)
 general.trigger | Bot trigger. Can be a character class containing multiple trigger characters. Can be overridden per-channel. | [!]
 
 For a list of other available settings see [this table](Registry.md#list-of-known-registry-items) in the [Registry documentation](Registry.md).
@@ -146,10 +147,14 @@ For a list of other available settings see [this table](Registry.md#list-of-know
 #### Recommended settings for IRC Networks
 
 ##### Libera.Chat
-The default settings are tailored for the Libera.Chat IRC network. It is strongly recommended that
-you register an account with NickServ and to enable SASL authentication. Register your channels with
-ChanServ. You may request a host cloak from Libera staff. This  will protect your nickname, IP address
-and channels.
+The default settings are tailored for an insecure connection to the Libera.Chat IRC network.
+To make the connection secure, set `irc.ssl` to `1`. This will enable SSL/TLS encryption.
+You may optionally set `irc.ssl_ca_path` or `irc.ssl_ca_file` if necessary. Be sure to
+set `irc.port` to `6697` for the secure port.
+
+It is strongly recommended that you register an account with NickServ and to enable SASL authentication.
+Register your channels with ChanServ. You may request a host cloak from Libera staff. This will protect
+your nickname, channels and IP address.
 
 Once you register with NickServ, it is strongly recommended to enable `irc.sasl`. If you
 choose not to use IRCv3 SASL authentication, then it is recommended to set these options:
