@@ -202,7 +202,7 @@ sub cmd_list_also_known_as {
 
             if ($show_last_seen) {
                 my $seen = concise ago (time - $akas{$aka}->{last_seen});
-                $result .= " last seen: $seen";
+                $result .= " (seen $seen)";
             }
 
             if ($show_hostmasks or $show_nickserv or $show_gecos or $show_id or $show_relationship) {
