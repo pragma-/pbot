@@ -173,7 +173,7 @@ Revision history for Perl extension Net::IRC.
 	- Added Tkil's monster patch to fix Connection->parse errors, among
 	  other things. You go, Tkil!
 
-0.5    Wed Apr  1 23:28:13 CST 1998 
+0.5    Wed Apr  1 23:28:13 CST 1998
 	- Added a few Undernet compatibility changes suggested by Che_Fox.
 	- Fixed a really dumb bug in Connection->default. Umm, doh.
 	- DCC.pm got a number of miscellaneous changes, including making
@@ -189,7 +189,7 @@ Revision history for Perl extension Net::IRC.
 	- Stupid low-level CTCP dequoting bug fixed on a report from \mjd.
 	- Even stupider Connection->server bug tracked down and stomped.
 
-0.51   Tue May 19 01:03:57 CDT 1998 
+0.51   Tue May 19 01:03:57 CDT 1998
 	- Aryeh patched a few minor bugs in the formatting functions.
 	- Problem with the select timeout in do_one_loop() squashed.
 	- Minor changes to dain-bramaged parts of DCC::CHAT::parse().
@@ -301,7 +301,7 @@ Revision history for Perl extension Net::IRC.
 	- Kajetan Hinner sent me a monster patch against 0.54. I'm still picking
 	  the relevant parts out of it, but I've included a couple notable parts
 	  from it already... especially all the new event numerics he added.
-	
+
 0.58   Thu Apr  8 11:00:58 CDT 1999
 	- Oh, dear. Many thanks to kleptog and Epesh for bringing to my
 	  attention a really simple, stupid bug which broke scripts using
@@ -317,7 +317,7 @@ Revision history for Perl extension Net::IRC.
 	  you weren't already.
 	- Cleaned up some bogus ugly code here and there. Don't mind me, I'm
 	  just tidying up...
-	- Added Tom "tnalpggE" Monroe's nifty patch, which gives us away, rehash, 
+	- Added Tom "tnalpggE" Monroe's nifty patch, which gives us away, rehash,
 	  summon, and restart methods, and improves parsing of numeric events.
 	- Andrew Mackenzie kicks ass. After unsuccessfully nagging me to get off
 	  my lazy ass and fix a DCC bug, he did it himself. DCC receive now
@@ -381,7 +381,7 @@ Revision history for Perl extension Net::IRC.
 	- Made the LocalAddr option actually work, thanks to Abigail and
 	  Greg.
 	- Added some more Handlers, from Austnet, thanks to Andrew Macks
-	- Updated the documentation 
+	- Updated the documentation
 
 0.72   Fri Dec 14 13:00:00 GMT 2001
         - Added a patch from Anti Veeranna in Connection.pm to fix the
@@ -430,11 +430,14 @@ Revision history for Perl extension Net::IRC.
     search preview.
 
 PBot fork Jan 20, 2011
-
   - Renamed Net::IRC packages throughout to PBot::IRC.
   - Added support for PONG events in Connection.pm
 
 PBot fork Feb 10, 2011
-
   - Added support for freenode's whoisaccount
   - Moved debug output from STDERR to STDOUT
+
+PBot fork Jul 10, 2021
+  - I forgot this Changelog existed. There have been several modifications to
+    PBot::IRC in the past decade. I will not be updating this Changelog file
+    any longer, in favor of commit logs.

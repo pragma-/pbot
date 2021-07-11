@@ -138,8 +138,8 @@ irc.realname | IRC gecos/realname. This is the `general information` or `real-na
 irc.server | IRC server address to connect. | irc.libera.chat
 irc.port | IRC server port. | 6667 (secure port: 6697)
 irc.identify_password | Password to authenticate with services or bots. | _undefined_
-irc.sasl | Whether to use the IRCv3 SASL authentication mechanism. | 0
-irc.ssl | Whether to use SSL/TLS encryption. | 0 (1 to enable)
+irc.sasl | Whether to use the IRCv3 SASL authentication mechanism. | 0 (1 to enable)
+irc.tls | Whether to use TLS encryption. | 0 (1 to enable)
 general.trigger | Bot trigger. Can be a character class containing multiple trigger characters. Can be overridden per-channel. | [!]
 
 For a list of other available settings see [this table](Registry.md#list-of-known-registry-items) in the [Registry documentation](Registry.md).
@@ -148,8 +148,8 @@ For a list of other available settings see [this table](Registry.md#list-of-know
 
 ##### Libera.Chat
 The default settings are tailored for an insecure connection to the Libera.Chat IRC network.
-To make the connection secure, set `irc.ssl` to `1`. This will enable SSL/TLS encryption.
-You may optionally set `irc.ssl_ca_path` or `irc.ssl_ca_file` if necessary. Be sure to
+To make the connection secure, set `irc.tls` to `1`. This will enable TLS encryption.
+You may optionally set `irc.tls_ca_path` or `irc.tls_ca_file` if necessary. Be sure to
 set `irc.port` to `6697` for the secure port.
 
 It is strongly recommended that you register an account with NickServ and to enable SASL authentication.

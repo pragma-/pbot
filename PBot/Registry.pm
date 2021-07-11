@@ -55,9 +55,9 @@ sub initialize {
     $self->add_default('text', 'irc', 'server',            $conf{server}            // "irc.libera.chat");
     $self->add_default('text', 'irc', 'port',              $conf{port}              // 6667);
     $self->add_default('text', 'irc', 'sasl',              $conf{SASL}              // 0);
-    $self->add_default('text', 'irc', 'ssl',               $conf{SSL}               // 0);
-    $self->add_default('text', 'irc', 'ssl_ca_file',       $conf{SSL_ca_file}       // '');
-    $self->add_default('text', 'irc', 'ssl_ca_path',       $conf{SSL_ca_path}       // '');
+    $self->add_default('text', 'irc', 'tls',               $conf{TLS}               // 0);
+    $self->add_default('text', 'irc', 'tls_ca_file',       $conf{TLS_ca_file}       // '');
+    $self->add_default('text', 'irc', 'tls_ca_path',       $conf{TLS_ca_path}       // '');
     $self->add_default('text', 'irc', 'botnick',           $conf{botnick}           // "");
     $self->add_default('text', 'irc', 'username',          $conf{username}          // "pbot3");
     $self->add_default('text', 'irc', 'realname',          $conf{realname}          // "https://github.com/pragma-/pbot");
@@ -68,8 +68,8 @@ sub initialize {
     $self->add_default('text', 'interpreter', 'max_embed', 3);
 
     # make sensitive entries private
-    $self->set_default('irc', 'ssl_ca_file',       'private', 1);
-    $self->set_default('irc', 'ssl_ca_path',       'private', 1);
+    $self->set_default('irc', 'tls_ca_file',       'private', 1);
+    $self->set_default('irc', 'tls_ca_path',       'private', 1);
     $self->set_default('irc', 'identify_password', 'private', 1);
 
     # customizable regular expressions

@@ -461,10 +461,10 @@ you're set.
 
 =item *
 
-SSL
+TLS
 
-If you wish to connect to an irc server which is using SSL, set this to a
-true value.  Ie: "C<SSL => 1>".
+If you wish to connect to an irc server which is using TLS, set this to a
+true value.  Ie: "C<TLS => 1>".
 
 =back
 

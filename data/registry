@@ -2,7 +2,7 @@
    "$metadata$" : {
       "$metadata$" : {
          "name" : "Registry",
-         "update_version" : "3536"
+         "update_version" : "4171"
       }
    },
    "antiaway" : {
@@ -310,19 +310,19 @@
          "type" : "text",
          "value" : "1"
       },
-      "ssl" : {
+      "tls" : {
          "type" : "text",
          "value" : "0"
       },
-      "ssl_ca_file" : {
+      "tls_ca_file" : {
          "private" : "1",
          "type" : "text",
-         "value" : "none"
+         "value" : ""
       },
-      "ssl_ca_path" : {
+      "tls_ca_path" : {
          "private" : "1",
          "type" : "text",
-         "value" : "none"
+         "value" : ""
       },
       "username" : {
          "type" : "text",

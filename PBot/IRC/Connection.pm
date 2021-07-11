@@ -55,9 +55,9 @@ my %autoloaded = (
     'pacing'      => undef,
     'utf8'        => undef,
     'pbot'        => undef,
-    'ssl'         => undef,
-    'ssl_ca_path' => undef,
-    'ssl_ca_file' => undef,
+    'tls'         => undef,
+    'tls_ca_path' => undef,
+    'tls_ca_file' => undef,
 );
 
 # This hash will contain any global default handlers that the user specifies.
@@ -78,16 +78,16 @@ sub new {
         _nick        => $ENV{IRCNICK} || eval { scalar getpwuid($>) } || $ENV{USER} || $ENV{LOGNAME} || "WankerBot",
         _ignore      => {},
         _handler     => {},
-        _verbose     => 0,                                                                                             # Is this an OK default?
+        _verbose     => 0,                                       # Is this an OK default?
         _parent      => shift,
         _frag        => '',
         _connected   => 0,
-        _maxlinelen  => 510,                                                                                           # The RFC says we shouldn't exceed this.
+        _maxlinelen  => 510,                                     # The RFC says we shouldn't exceed this.
         _lastsl      => 0,
-        _pacing      => 0,                                                                                             # no pacing by default
-        _ssl         => 0,                                                                                             # no ssl by default
-        _ssl_ca_path => undef,
-        _ssl_ca_file => undef,
+        _pacing      => 0,                                       # no pacing by default
+        _tls         => 0,                                       # no tls by default (TODO: perhaps this should be enabled by default)
+        _tls_ca_path => undef,
+        _tls_ca_file => undef,
         _utf8        => 0,
         _format      => {'default' => "[%f:%t]  %m  <%d>",},
         _pbot        => undef,
@@ -235,9 +235,9 @@ sub connect {
         $self->debug($arg{'Debug'})             if exists $arg{'Debug'};
         $self->utf8($arg{'UTF8'})               if exists $arg{'UTF8'};
         $self->pbot($arg{'PBot'})               if exists $arg{'PBot'};
-        $self->ssl($arg{'SSL'})                 if exists $arg{'SSL'};
-        $self->ssl_ca_path($arg{'SSL_ca_path'}) if exists $arg{'SSL_ca_path'};
-        $self->ssl_ca_file($arg{'SSL_ca_file'}) if exists $arg{'SSL_ca_file'};
+        $self->tls($arg{'TLS'})                 if exists $arg{'TLS'};
+        $self->tls_ca_path($arg{'TLS_ca_path'}) if exists $arg{'TLS_ca_path'};
+        $self->tls_ca_file($arg{'TLS_ca_file'}) if exists $arg{'TLS_ca_file'};
     }
 
     # Lots of error-checking claptrap first...
@@ -259,10 +259,10 @@ sub connect {
     # Now for the socket stuff...
     if ($self->connected) { $self->quit("Changing servers"); }
 
-    if ($self->ssl) {
+    if ($self->tls) {
         use IO::Socket::SSL;
 
-        if ($self->ssl_ca_file) {
+        if ($self->tls_ca_file) {
             $self->socket(
                 IO::Socket::SSL->new(
                     PeerAddr        => $self->server,
@@ -270,10 +270,10 @@ sub connect {
                     Proto           => "tcp",
                     LocalAddr       => $self->hostname,
                     SSL_verify_mode => IO::Socket::SSL->SSL_VERIFY_PEER,
-                    SSL_ca_file     => $self->ssl_ca_file,
+                    SSL_ca_file     => $self->tls_ca_file,
                 )
             );
-        } elsif ($self->ssl_ca_path) {
+        } elsif ($self->tls_ca_path) {
             $self->socket(
                 IO::Socket::SSL->new(
                     PeerAddr        => $self->server,
@@ -281,7 +281,7 @@ sub connect {
                     Proto           => "tcp",
                     LocalAddr       => $self->hostname,
                     SSL_verify_mode => IO::Socket::SSL->SSL_VERIFY_PEER,
-                    SSL_ca_path     => $self->ssl_ca_path,
+                    SSL_ca_path     => $self->tls_ca_path,
                 )
             );
         } else {
@@ -306,7 +306,7 @@ sub connect {
     }
 
     if (!$self->socket) {
-        if ($self->ssl) {
+        if ($self->tls) {
             carp(
                 sprintf "Can't connect to %s:%s: error=$! SSL_ERROR=$SSL_ERROR",
                 $self->server, $self->port
@@ -321,7 +321,7 @@ sub connect {
         return;
     }
 
-    if ($self->ssl) {
+    if ($self->tls) {
         $self->socket->blocking(0);
     }
 
@@ -842,7 +842,7 @@ sub parse {
 
     my $n;
 
-    if ($self->ssl) {
+    if ($self->tls) {
         $n = sysread($self->socket, $line, 32767);
 
         if (not defined $n) {
@@ -851,7 +851,7 @@ sub parse {
                     return;
                 }
 
-                print STDERR "SSL broke: $SSL_ERROR\n";
+                print STDERR "TLS broke: $SSL_ERROR\n";
             }
         }
 
@@ -1436,7 +1436,7 @@ sub sl_real {
 
     my $rv = eval {
         # RFC compliance can be kinda nice...
-        my $rv = $self->ssl ? $self->socket->print("$line\015\012") : $self->socket->send("$line\015\012", 0);
+        my $rv = $self->tls ? $self->socket->print("$line\015\012") : $self->socket->send("$line\015\012", 0);
         unless ($rv) {
             $self->handler("sockerror");
             return;

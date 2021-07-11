@@ -209,9 +209,9 @@ irc.max_msg_len | The maximum length messages can be on this IRC server. | 425
 irc.port | The IRC server network port to connect to. | 6667
 irc.realname || https://github.com/pragma-/pbot
 irc.show_motd | If set to a true value, the IRC server MOTD will be shown when connecting. | 1
-irc.SSL_ca_file | Path to a specific SSL certificate authority file. |
-irc.SSL_ca_path | Path to the SSL certificate authority directory containing certificate files. |
-irc.SSL | If set to a true value, SSL will be enabled when connecting to the IRC server. | 0
+irc.tls_ca_file | Path to a specific TLS certificate authority file. |
+irc.tls_ca_path | Path to the TLS certificate authority directory containing certificate files. |
+irc.tls | If set to a true value, TLS encryption will be enabled when connecting to the IRC server. | 0
 irc.username || PBot
 interpreter.max_recursion | Maximum recursion depth for bot command aliasing. | 10
 lagchecker.lag_history_interval | How often, in seconds, to send a `PING` to the IRC server. | 10

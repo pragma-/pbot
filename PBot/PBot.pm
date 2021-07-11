@@ -257,22 +257,22 @@ sub connect {
             Port        => $port,
             Pacing      => 1,
             UTF8        => 1,
-            SSL         => $self->{registry}->get_value('irc', 'ssl'),
+            TLS         => $self->{registry}->get_value('irc', 'tls'),
             Debug       => $self->{registry}->get_value('irc', 'debug'),
             PBot        => $self,
         );
 
-        # set SSL stuff
-        my $ssl_ca_file = $self->{registry}->get_value('irc', 'ssl_ca_file');
+        # set TLS stuff
+        my $tls_ca_file = $self->{registry}->get_value('irc', 'tls_ca_file');
 
-        if (length $ssl_ca_file and $ssl_ca_file ne 'none') {
-            $config{SSL_ca_file} = $ssl_ca_file;
+        if (length $tls_ca_file and $tls_ca_file ne 'none') {
+            $config{TLS_ca_file} = $tls_ca_file;
         }
 
-        my $ssl_ca_path = $self->{registry}->get_value('irc', 'ssl_ca_path');
+        my $tls_ca_path = $self->{registry}->get_value('irc', 'tls_ca_path');
 
-        if (length $ssl_ca_file and $ssl_ca_file ne 'none') {
-            $config{SSL_ca_file} = $ssl_ca_file;
+        if (length $tls_ca_file and $tls_ca_file ne 'none') {
+            $config{TLS_ca_file} = $tls_ca_file;
         }
 
         # attempt to connect
