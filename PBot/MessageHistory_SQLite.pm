@@ -15,8 +15,8 @@ use parent 'PBot::Class';
 use PBot::Imports;
 
 use DBI;
-use Carp qw(shortmess);
-use Time::HiRes qw(gettimeofday);
+use Carp              qw/shortmess/;
+use Time::HiRes       qw/time/;
 use Text::CSV;
 use Text::Levenshtein qw/fastdistance/;
 use Time::Duration;
@@ -291,7 +291,7 @@ sub add_message_account {
 
     eval {
         my $sth = $self->{dbh}->prepare('INSERT INTO Hostmasks VALUES (?, ?, ?, 0, ?, ?, ?)');
-        $sth->execute($mask, $id, scalar gettimeofday, $nick, $user, $host);
+        $sth->execute($mask, $id, scalar time, $nick, $user, $host);
         $self->{new_entries}++;
 
         if ((not defined $link_id) || ((defined $link_id) && ($link_type == $self->{alias_type}->{WEAK}))) {
@@ -393,77 +393,110 @@ sub get_message_account {
     my $id   = $self->get_message_account_id($mask);
     return $id if defined $id;
 
-    $self->{pbot}->{logger}->log("Getting new message account for $nick!$user\@$host...\n");
+    $self->{pbot}->{logger}->log("Getting new message account for $nick!$user\@$host\n");
+    $self->{pbot}->{logger}->log("Nick-changing from $orig_nick\n") if defined $orig_nick;
 
     my $do_nothing = 0;
     my $sth;
 
     my ($rows, $link_type) = eval {
         my ($account1) = $host =~ m{/([^/]+)$};
-        $account1 = '' if not defined $account1;
+        $account1 //= '';
 
-        my $hostip = undef;
+        # extract ips from hosts like 75-42-36-105.foobar.com as 75.42.36.105
+        my $hostip;
+
         if ($host =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
             $hostip = $1;
             $hostip =~ s/[[:punct:]]/./g;
         }
 
+        # nick-change from $orig_nick to $nick
         if (defined $orig_nick) {
-            my $orig_id                = $self->get_message_account_id("$orig_nick!$user\@$host");
-            my @orig_nickserv_accounts = $self->get_nickserv_accounts($orig_id);
+            # get original nick's account id
+            my $orig_id = $self->get_message_account_id("$orig_nick!$user\@$host");
 
+            # changing nick to a Guest
             if ($nick =~ m/^Guest\d+$/) {
-                $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE user = ? and host = ? ORDER BY last_seen DESC');
+                # find most recent *!user@host, if any
+                $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE user = ? and host = ? ORDER BY last_seen DESC LIMIT 1');
                 $sth->execute($user, $host);
+
                 my $rows = $sth->fetchall_arrayref({});
+
+                # found a probable match
                 if (defined $rows->[0]) {
                     my $link_type = $self->{alias_type}->{STRONG};
-                    if (gettimeofday - $rows->[0]->{last_seen} > 60 * 60 * 48) {
+
+                    # if 48 hours have elapsed since this *!user@host was seen
+                    # then still link the Guest to this account, but weakly
+                    if (time - $rows->[0]->{last_seen} > 60 * 60 * 48) {
                         $link_type = $self->{alias_type}->{WEAK};
+
                         $self->{pbot}->{logger}->log(
-                            "Longer than 48 hours (" . concise duration(gettimeofday - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
+                            "Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ")"
+                            . " for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n"
+                        );
                     }
+
+                    # log match and return link
                     $self->{pbot}->{logger}->log("6: nick-change guest match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
-                    $orig_nick = undef;
+                    $orig_nick = undef; # nick-change handled
                     return ($rows, $link_type);
                 }
             }
 
+            # find all accounts that match nick!*@*, sorted by last-seen
             $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE nick = ? ORDER BY last_seen DESC');
             $sth->execute($nick);
             my $rows = $sth->fetchall_arrayref({});
 
+            # no nicks found, strongly link to original account
             if (not defined $rows->[0]) {
-                $rows->[0] = {id => $orig_id, hostmask => "$orig_nick!$user\@$host"};
+                $rows->[0] = { id => $orig_id, hostmask => "$orig_nick!$user\@$host" };
+                $orig_nick = undef; # nick-change handled
                 return ($rows, $self->{alias_type}->{STRONG});
             }
 
+            # look up original nick's NickServ accounts outside of upcoming loop
+            my @orig_nickserv_accounts = $self->get_nickserv_accounts($orig_id);
+
+            # go over the list of nicks and see if any identifying details match
             my %processed_nicks;
             my %processed_akas;
+
             foreach my $row (@$rows) {
-                $self->{pbot}->{logger}->log("Found matching nickchange account: [$row->{id}] $row->{hostmask}\n");
+                $self->{pbot}->{logger}->log("Found matching nick-change account: [$row->{id}] $row->{hostmask}\n");
                 my ($tnick) = $row->{hostmask} =~ m/^([^!]+)!/;
 
+                # don't process duplicates
                 next if exists $processed_nicks{lc $tnick};
                 $processed_nicks{lc $tnick} = 1;
 
+                # get all akas for this nick
                 my %akas = $self->get_also_known_as($tnick);
+
+                # check each aka for identifying details
                 foreach my $aka (keys %akas) {
+                    # skip dubious links
                     next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
                     next if $akas{$aka}->{nickchange} == 1;
 
+                    # don't process duplicates
                     next if exists $processed_akas{$akas{$aka}->{id}};
                     $processed_akas{$akas{$aka}->{id}} = 1;
 
                     $self->{pbot}->{logger}->log("Testing alias [$akas{$aka}->{id}] $aka\n");
                     my $match = 0;
 
+                    # account ids or *!user@host matches
                     if ($akas{$aka}->{id} == $orig_id || $aka =~ m/^.*!\Q$user\E\@\Q$host\E$/i) {
                         $self->{pbot}->{logger}->log("1: match: $akas{$aka}->{id} vs $orig_id // $aka vs *!$user\@$host\n");
                         $match = 1;
                         goto MATCH;
                     }
 
+                    # check if any nickserv accounts match
                     if (@orig_nickserv_accounts) {
                         my @nickserv_accounts = $self->get_nickserv_accounts($akas{$aka}->{id});
                         foreach my $ns1 (@orig_nickserv_accounts) {
@@ -477,6 +510,7 @@ sub get_message_account {
                         }
                     }
 
+                    # check if hosts match
                     my ($thost) = $aka =~ m/@(.*)$/;
 
                     if ($thost =~ m{/}) {
@@ -487,11 +521,15 @@ sub get_message_account {
                             next;
                         } else {
                             $self->{pbot}->{logger}->log("Cloaked hosts match: $host vs $thost\n");
-                            $rows->[0] = {id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka};
+                            $rows->[0] = {
+                                id       => $self->get_ancestor_id($akas{$aka}->{id}),
+                                hostmask => $aka,
+                            };
                             return ($rows, $self->{alias_type}->{STRONG});
                         }
                     }
 
+                    # fuzzy match hosts
                     my $distance = fastdistance($host, $thost);
                     my $length   = (length($host) > length($thost)) ? length $host : length $thost;
 
@@ -530,12 +568,12 @@ sub get_message_account {
 
             my $new_id = $self->add_message_account($mask);
             $self->link_alias($orig_id, $new_id, $self->{alias_type}->{WEAK});
-            $self->update_hostmask_data($mask, {nickchange => 1, last_seen => scalar gettimeofday});
+            $self->update_hostmask_data($mask, {nickchange => 1, last_seen => scalar time});
 
             $do_nothing = 1;
             $rows->[0] = {id => $new_id};
             return ($rows, 0);
-        }
+        } # end nick-change
 
         if ($host =~ m{^gateway/web/irccloud.com}) {
             $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE host = ? ORDER BY last_seen DESC');
@@ -576,10 +614,10 @@ sub get_message_account {
             my $rows = $sth->fetchall_arrayref({});
             if (defined $rows->[0]) {
                 my $link_type = $self->{alias_type}->{STRONG};
-                if (gettimeofday - $rows->[0]->{last_seen} > 60 * 60 * 48) {
+                if (time - $rows->[0]->{last_seen} > 60 * 60 * 48) {
                     $link_type = $self->{alias_type}->{WEAK};
                     $self->{pbot}->{logger}->log(
-                        "Longer than 48 hours (" . concise duration(gettimeofday - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
+                        "Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
                 }
                 $self->{pbot}->{logger}->log("6: guest match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
                 return ($rows, $link_type);
@@ -667,10 +705,10 @@ sub get_message_account {
             $sth->execute($user, $host);
             $rows = $sth->fetchall_arrayref({});
 
-            if (defined $rows->[0] and gettimeofday - $rows->[0]->{last_seen} > 60 * 60 * 48) {
+            if (defined $rows->[0] and time - $rows->[0]->{last_seen} > 60 * 60 * 48) {
                 $link_type = $self->{alias_type}->{WEAK};
                 $self->{pbot}->{logger}->log(
-                    "Longer than 48 hours (" . concise duration(gettimeofday - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
+                    "Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
             }
 
 =cut
@@ -684,20 +722,28 @@ sub get_message_account {
 
         return ($rows, $link_type);
     };
-    $self->{pbot}->{logger}->log($@) if $@;
 
+    if (my $exception = $@) {
+        $self->{pbot}->{logger}->log("Exception getting account: $exception");
+    }
+
+    # nothing else to do here for nick-change, return id
     return $rows->[0]->{id} if $do_nothing;
 
     if (defined $rows->[0] and not defined $orig_nick) {
         if ($link_type == $self->{alias_type}->{STRONG}) {
             my $host1 = lc "$nick!$user\@$host";
             my $host2 = lc $rows->[0]->{hostmask};
+
             my ($nick1) = $host1 =~ m/^([^!]+)!/;
             my ($nick2) = $host2 =~ m/^([^!]+)!/;
+
             my $distance = fastdistance($nick1, $nick2);
             my $length   = (length $nick1 > length $nick2) ? length $nick1 : length $nick2;
 
-            if ($distance > 1 && ($nick1 !~ /^guest/ && $nick2 !~ /^guest/) && ($host1 !~ /unaffiliated/ || $host2 !~ /unaffiliated/)) {
+            my $irc_cloak = $self->{pbot}->{registry}->get_value('irc', 'cloak') // 'user';
+
+            if ($distance > 1 && ($nick1 !~ /^guest/ && $nick2 !~ /^guest/) && ($host1 !~ /$irc_cloak/ || $host2 !~ /$irc_cloak/)) {
                 my $id = $rows->[0]->{id};
                 $self->{pbot}->{logger}->log("[$nick1][$nick2] $distance / $length\n");
                 $self->{pbot}->{logger}->log("Possible bogus account: ($id) $host1 vs ($id) $host2\n");
@@ -705,20 +751,24 @@ sub get_message_account {
         }
 
         $self->{pbot}->{logger}->log("message-history: [get-account] $nick!$user\@$host "
-              . ($link_type == $self->{alias_type}->{WEAK} ? "weakly linked to" : "added to account")
-              . " $rows->[0]->{hostmask} with id $rows->[0]->{id}\n");
+            . ($link_type == $self->{alias_type}->{WEAK} ? "weakly linked to" : "added to account")
+            . " $rows->[0]->{hostmask} with id $rows->[0]->{id}\n"
+        );
+
         $self->add_message_account("$nick!$user\@$host", $rows->[0]->{id}, $link_type);
         $self->devalidate_all_channels($rows->[0]->{id});
-        $self->update_hostmask_data("$nick!$user\@$host", {last_seen => scalar gettimeofday});
+        $self->update_hostmask_data("$nick!$user\@$host", { last_seen => scalar time });
+
         my @nickserv_accounts = $self->get_nickserv_accounts($rows->[0]->{id});
         foreach my $nickserv_account (@nickserv_accounts) {
             $self->{pbot}->{logger}->log("$nick!$user\@$host [$rows->[0]->{id}] seen with nickserv account [$nickserv_account]\n");
             $self->{pbot}->{antiflood}->check_nickserv_accounts($nick, $nickserv_account, "$nick!$user\@$host");
         }
+
         return $rows->[0]->{id};
     }
 
-    $self->{pbot}->{logger}->log("No account found for mask [$mask], adding new account\n");
+    $self->{pbot}->{logger}->log("No account found for $mask, adding new account\n");
     return $self->add_message_account($mask);
 }
 
@@ -1342,7 +1392,7 @@ sub link_aliases {
             $sth->execute($host);
             my $rows = $sth->fetchall_arrayref({});
 
-            my $now = gettimeofday;
+            my $now = time;
 
             foreach my $row (@$rows) {
                 my $idhost = $self->find_most_recent_hostmask($row->{id}) if $debug_link >= 2 && $row->{id} != $account;
@@ -1491,7 +1541,8 @@ sub link_alias {
         my ($nick2) = $host2 =~ m/^([^!]+)!/;
         my $distance = fastdistance($nick1, $nick2);
         my $length   = (length $nick1 > length $nick2) ? length $nick1 : length $nick2;
-        if ($distance > 1 && ($nick1 !~ /^guest/ && $nick2 !~ /^guest/) && ($host1 !~ /unaffiliated/ || $host2 !~ /unaffiliated/)) {
+        my $irc_cloak = $self->{pbot}->{registry}->get_value('irc', 'cloak') // 'user';
+        if ($distance > 1 && ($nick1 !~ /^guest/ && $nick2 !~ /^guest/) && ($host1 !~ /$irc_cloak/ || $host2 !~ /$irc_cloak/)) {
             $self->{pbot}->{logger}->log("[$nick1][$nick2] $distance / $length\n");
             $self->{pbot}->{logger}->log("Possible bogus link: ($id) $host1 vs ($alias) $host2\n");
         }
