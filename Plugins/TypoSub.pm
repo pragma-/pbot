@@ -77,7 +77,7 @@ sub on_public {
                         if   ($nick eq $target) { $result = "$nick meant to say: "; }
                         else                    { $result = "$nick thinks $target meant to say: "; }
                         my $text = $message->{msg};
-                        if ($modifiers =~ m/g/) {
+                        if ($modifiers and $modifiers =~ m/g/) {
                             $text =~ s{$rx}
                             {
                                 my @stuff = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
