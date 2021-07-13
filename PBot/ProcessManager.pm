@@ -327,6 +327,8 @@ sub process_pipe_reader {
     # if nick isn't overridden yet, check for a potential nick prefix
     # TODO: this stuff should be moved to Interpreter::output_result
     if (not $context->{nickprefix}) {
+        $context->{trigger} //= '';
+
         # if add_nick is set on the factoid, set the nick override to the caller's nick
         if (exists $context->{special} and $context->{special} ne 'code-factoid'
             and $self->{pbot}->{factoids}->{storage}->exists($context->{channel}, $context->{trigger}, 'add_nick')
