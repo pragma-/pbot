@@ -106,6 +106,8 @@ sub cmd_list {
 sub join {
     my ($self, $channels) = @_;
 
+    return if not $channels;
+
     $self->{pbot}->{conn}->join($channels);
 
     foreach my $channel (split /,/, $channels) {
@@ -134,13 +136,18 @@ sub part {
 
 sub autojoin {
     my ($self) = @_;
+
     return if $self->{pbot}->{joined_channels};
+
     my $channels;
     foreach my $channel ($self->{storage}->get_keys) {
         if ($self->{storage}->get_data($channel, 'enabled')) {
             $channels .= $self->{storage}->get_key_name($channel) . ',';
         }
     }
+
+    return if not $channels;
+
     $self->{pbot}->{logger}->log("Joining channels: $channels\n");
     $self->join($channels);
     $self->{pbot}->{joined_channels} = 1;
