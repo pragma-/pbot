@@ -139,7 +139,8 @@ CREATE TABLE IF NOT EXISTS Messages (
   channel    TEXT COLLATE NOCASE,
   msg        TEXT COLLATE NOCASE,
   timestamp  NUMERIC,
-  mode       INTEGER
+  mode       INTEGER,
+  hostmask   TEXT COLLATE NOCASE
 )
 SQL
 
@@ -863,23 +864,24 @@ sub get_hostmasks_for_nickserv {
 }
 
 sub add_message {
-    my ($self, $id, $mask, $channel, $message) = @_;
-
-    #$self->{pbot}->{logger}->log("Adding message [$id][$mask][$channel][$message->{msg}][$message->{timestamp}][$message->{mode}]\n");
+    my ($self, $id, $hostmask, $channel, $message) = @_;
 
     eval {
-        my $sth = $self->{dbh}->prepare('INSERT INTO Messages VALUES (?, ?, ?, ?, ?)');
-        $sth->execute($id, $channel, $message->{msg}, $message->{timestamp}, $message->{mode});
+        my $sth = $self->{dbh}->prepare('INSERT INTO Messages VALUES (?, ?, ?, ?, ?, ?)');
+        $sth->execute($id, $channel, $message->{msg}, $message->{timestamp}, $message->{mode}, $hostmask);
         $self->{new_entries}++;
     };
+
     $self->{pbot}->{logger}->log($@) if $@;
-    $self->update_channel_data($id, $channel, {last_seen => $message->{timestamp}});
-    $self->update_hostmask_data($mask, {last_seen => $message->{timestamp}});
+
+    $self->update_channel_data($id, $channel, { last_seen => $message->{timestamp }});
+    $self->update_hostmask_data($hostmask, { last_seen => $message->{timestamp }});
 }
 
 sub get_recent_messages {
     my ($self, $id, $channel, $limit, $mode, $nick) = @_;
-    $limit = 25 if not defined $limit;
+
+    $limit //= 25;
 
     $channel = lc $channel;
 
@@ -887,65 +889,55 @@ sub get_recent_messages {
     $mode_query = "AND mode = $mode" if defined $mode;
 
     my $messages = eval {
-        my $sql = "SELECT msg, mode, timestamp FROM Messages WHERE ";
+        my $sql = "SELECT * FROM Messages WHERE ";
+
+        my %seen_id;
 
         my %akas;
-        if (defined $mode and $mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) { %akas = $self->get_also_known_as($nick); }
-        else                                                                              { $akas{'this'} = {id => $id, type => $self->{alias_type}->{STRONG}, nickchange => 0}; }
+        if (defined $mode and $mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+            %akas = $self->get_also_known_as($nick);
+        } else {
+            $akas{$id} = {
+                id => $id,
+                type => $self->{alias_type}->{STRONG},
+                nickchange => 0,
+            };
+        }
 
-        my $ids;
-        my %seen_id;
-        my $or = '';
         foreach my $aka (keys %akas) {
             next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
             next if $akas{$aka}->{nickchange} == 1;
             next if exists $seen_id{$akas{$aka}->{id}};
-            $seen_id{$akas{$aka}->{id}} = 1;
 
-            $ids .= "${or}id = ?";
-            $or = ' OR ';
+            $seen_id{$akas{$aka}->{id}} = 1;
         }
 
+        my $ids = join " OR ", map { "id = ?" } keys %seen_id;
+
         $sql .= "($ids) AND channel = ? $mode_query ORDER BY timestamp ASC LIMIT ? OFFSET (SELECT COUNT(*) FROM Messages WHERE ($ids) AND channel = ? $mode_query) - ?";
+
         my $sth = $self->{dbh}->prepare($sql);
 
         my $param = 1;
-        %seen_id = ();
-        foreach my $aka (keys %akas) {
-            next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
-            next if $akas{$aka}->{nickchange} == 1;
-            next if exists $seen_id{$akas{$aka}->{id}};
-            $seen_id{$akas{$aka}->{id}} = 1;
-
-            $sth->bind_param($param++, $akas{$aka}->{id});
-        }
-
+        map { $sth->bind_param($param++, $_) } keys %seen_id;
         $sth->bind_param($param++, $channel);
         $sth->bind_param($param++, $limit);
-
-        %seen_id = ();
-        foreach my $aka (keys %akas) {
-            next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
-            next if $akas{$aka}->{nickchange} == 1;
-            next if exists $seen_id{$akas{$aka}->{id}};
-            $seen_id{$akas{$aka}->{id}} = 1;
-
-            $sth->bind_param($param++, $akas{$aka}->{id});
-        }
-
+        map { $sth->bind_param($param++, $_) } keys %seen_id;
         $sth->bind_param($param++, $channel);
         $sth->bind_param($param,   $limit);
-        $sth->execute();
+        $sth->execute;
         return $sth->fetchall_arrayref({});
     };
+
     $self->{pbot}->{logger}->log($@) if $@;
     return $messages;
 }
 
 sub get_recent_messages_from_channel {
     my ($self, $channel, $limit, $mode, $direction) = @_;
-    $limit     = 25    if not defined $limit;
-    $direction = 'ASC' if not defined $direction;
+
+    $limit     //= 25;
+    $direction //= 'ASC';
 
     $channel = lc $channel;
 
@@ -953,7 +945,7 @@ sub get_recent_messages_from_channel {
     $mode_query = "AND mode = $mode" if defined $mode;
 
     my $messages = eval {
-        my $sql = "SELECT id, msg, mode, timestamp FROM Messages WHERE channel = ? $mode_query ORDER BY timestamp $direction LIMIT ?";
+        my $sql = "SELECT * FROM Messages WHERE channel = ? $mode_query ORDER BY timestamp $direction LIMIT ?";
         my $sth = $self->{dbh}->prepare($sql);
         $sth->execute($channel, $limit);
         return $sth->fetchall_arrayref({});
@@ -963,7 +955,39 @@ sub get_recent_messages_from_channel {
 }
 
 sub get_message_context {
-    my ($self, $message, $before, $after, $count, $text, $context_id) = @_;
+    my ($self, $message, $before, $after, $count, $text, $context_id, $context_nick) = @_;
+
+    my %seen_id;
+    my $ids = '';
+
+    my $sql = 'SELECT * FROM Messages WHERE channel = ? ';
+
+    if (defined $context_id) {
+        my %akas;
+
+        if (defined $context_nick) {
+            %akas = $self->get_also_known_as($context_nick);
+        } else {
+            $akas{$context_id} = {
+                id         => $context_id,
+                type       => $self->{alias_type}->{STRONG},
+                nickchange => 0,
+            };
+        }
+
+        foreach my $aka (keys %akas) {
+            next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+            next if $akas{$aka}->{nickchange} == 1;
+            next if exists $seen_id{$akas{$aka}->{id}};
+
+            $seen_id{$akas{$aka}->{id}} = 1;
+        }
+
+        $ids = join " OR ", map { "id = ?" } keys %seen_id;
+        $ids = "AND ($ids) ";
+    }
+
+    $sql .= $ids;
 
     my ($messages_before, $messages_after, $messages_count);
 
@@ -973,70 +997,50 @@ sub get_message_context {
         $search =~ s/\?/_/g;
 
         $messages_count = eval {
-            my $sth;
-            if (defined $context_id) {
-                $sth = $self->{dbh}->prepare(
-                    'SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg LIKE ? ESCAPE "\" AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
-                $sth->bind_param(1, $context_id);
-                $sth->bind_param(2, $message->{channel});
-                $sth->bind_param(3, $search);
-                $sth->bind_param(4, $message->{timestamp});
-                $sth->bind_param(5, $count - 1);
-            } else {
-                $sth = $self->{dbh}
-                  ->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg LIKE ? ESCAPE "\" AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
-                $sth->bind_param(1, $message->{channel});
-                $sth->bind_param(2, $search);
-                $sth->bind_param(3, $message->{timestamp});
-                $sth->bind_param(4, $count - 1);
-            }
-            $sth->execute();
+            $sql .= 'AND msg LIKE ? ESCAPE "\" AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?';
+            my $sth = $self->{dbh}->prepare($sql);
+            my $param = 1;
+            $sth->bind_param($param++, $message->{channel});
+            map { $sth->bind_param($param++, $_) } keys %seen_id;
+            $sth->bind_param($param++, $search);
+            $sth->bind_param($param++, $message->{timestamp});
+            $sth->bind_param($param++, $count - 1);
+            $sth->execute;
             return [reverse @{$sth->fetchall_arrayref({})}];
         };
+
         $self->{pbot}->{logger}->log($@) if $@;
     }
 
     if (defined $before and $before > 0) {
         $messages_before = eval {
-            my $sth;
-            if (defined $context_id) {
-                $sth = $self->{dbh}
-                  ->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
-                $sth->bind_param(1, $context_id);
-                $sth->bind_param(2, $message->{channel});
-                $sth->bind_param(3, $message->{timestamp});
-                $sth->bind_param(4, $before);
-            } else {
-                $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
-                $sth->bind_param(1, $message->{channel});
-                $sth->bind_param(2, $message->{timestamp});
-                $sth->bind_param(3, $before);
-            }
-            $sth->execute();
+            $sql .= ' AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?';
+            my $sth = $self->{dbh}->prepare($sql);
+            my $param = 1;
+            $sth->bind_param($param++, $message->{channel});
+            map { $sth->bind_param($param++, $_) } keys %seen_id;
+            $sth->bind_param($param++, $message->{timestamp});
+            $sth->bind_param($param++, $before);
+            $sth->execute;
             return [reverse @{$sth->fetchall_arrayref({})}];
         };
+
         $self->{pbot}->{logger}->log($@) if $@;
     }
 
     if (defined $after and $after > 0) {
         $messages_after = eval {
-            my $sth;
-            if (defined $context_id) {
-                $sth = $self->{dbh}
-                  ->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND timestamp > ? AND mode = 0 ORDER BY timestamp ASC LIMIT ?');
-                $sth->bind_param(1, $context_id);
-                $sth->bind_param(2, $message->{channel});
-                $sth->bind_param(3, $message->{timestamp});
-                $sth->bind_param(4, $after);
-            } else {
-                $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND timestamp > ? AND mode = 0 ORDER BY timestamp ASC LIMIT ?');
-                $sth->bind_param(1, $message->{channel});
-                $sth->bind_param(2, $message->{timestamp});
-                $sth->bind_param(3, $after);
-            }
-            $sth->execute();
+            $sql .= ' AND timestamp > ? AND mode = 0 ORDER BY timestamp ASC LIMIT ?';
+            my $sth = $self->{dbh}->prepare($sql);
+            my $param = 1;
+            $sth->bind_param($param++, $message->{channel});
+            map { $sth->bind_param($param++, $_) } keys %seen_id;
+            $sth->bind_param($param++, $message->{timestamp});
+            $sth->bind_param($param++, $after);
+            $sth->execute;
             return $sth->fetchall_arrayref({});
         };
+
         $self->{pbot}->{logger}->log($@) if $@;
     }
 
@@ -1046,75 +1050,54 @@ sub get_message_context {
     push(@messages, $message);
     push(@messages, @$messages_after) if defined $messages_after;
 
-    my %nicks;
-    foreach my $msg (@messages) {
-        if (not exists $nicks{$msg->{id}}) {
-            my $hostmask = $self->find_most_recent_hostmask($msg->{id});
-            my ($nick) = $hostmask =~ m/^([^!]+)/;
-            $nicks{$msg->{id}} = $nick;
-        }
-        $msg->{nick} = $nicks{$msg->{id}};
-    }
-
     return \@messages;
 }
 
 sub recall_message_by_count {
     my ($self, $id, $channel, $count, $ignore_command, $use_aliases) = @_;
 
-    my $messages;
+    my $messages = eval {
+        my $sql = 'SELECT * FROM Messages WHERE ';
 
-    if (defined $id) {
-        $messages = eval {
+        my %seen_id;
+
+        if (defined $id) {
+            my %akas;
+
             if (defined $use_aliases) {
-                my %akas = $self->get_also_known_as($use_aliases);
-                my %seen_id;
-                my $ids;
-                my $or = '';
-                foreach my $aka (keys %akas) {
-                    next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
-                    next if $akas{$aka}->{nickchange} == 1;
-                    next if exists $seen_id{$akas{$aka}->{id}};
-                    $seen_id{$akas{$aka}->{id}} = 1;
-
-                    $ids .= "${or}id = ?";
-                    $or = ' OR ';
-                }
-
-                my $sql = "SELECT id, msg, mode, timestamp, channel FROM Messages WHERE ($ids) AND channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?";
-                my $sth = $self->{dbh}->prepare($sql);
-
-                my $param = 1;
-                %seen_id = ();
-                foreach my $aka (keys %akas) {
-                    next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
-                    next if $akas{$aka}->{nickchange} == 1;
-                    next if exists $seen_id{$akas{$aka}->{id}};
-                    $seen_id{$akas{$aka}->{id}} = 1;
-
-                    $sth->bind_param($param++, $akas{$aka}->{id});
-                }
-
-                $sth->bind_param($param++, $channel);
-                $sth->bind_param($param++, $count);
-                $sth->execute();
-                return $sth->fetchall_arrayref({});
+                %akas = $self->get_also_known_as($use_aliases);
             } else {
-                my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
-                $sth->bind_param(1, $id);
-                $sth->bind_param(2, $channel);
-                $sth->bind_param(3, $count);
-                $sth->execute();
-                return $sth->fetchall_arrayref({});
+                $akas{$id} = {
+                    id         => $id,
+                    type       => $self->{alias_type}->{STRONG},
+                    nickchange => 0,
+                };
             }
-        };
-    } else {
-        $messages = eval {
-            my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?');
-            $sth->execute($channel, $count);
-            return $sth->fetchall_arrayref({});
-        };
-    }
+
+            foreach my $aka (keys %akas) {
+                next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+                next if $akas{$aka}->{nickchange} == 1;
+                next if exists $seen_id{$akas{$aka}->{id}};
+
+                $seen_id{$akas{$aka}->{id}} = 1;
+            }
+
+            my $ids = join " OR ", map { "id = ?" } keys %seen_id;
+
+            $sql .= "($ids) AND ";
+        }
+
+        $sql .= 'channel = ? ORDER BY timestamp DESC LIMIT 10 OFFSET ?';
+
+        my $sth   = $self->{dbh}->prepare($sql);
+
+        my $param = 1;
+        map { $sth->bind_param($param++, $_) } keys %seen_id;
+        $sth->bind_param($param++, $channel);
+        $sth->bind_param($param++, $count);
+        $sth->execute;
+        return $sth->fetchall_arrayref({});
+    };
 
     $self->{pbot}->{logger}->log($@) if $@;
 
@@ -1125,33 +1108,64 @@ sub recall_message_by_count {
             next if $message->{msg} =~ m/^$botnick.? $ignore_command/ or $message->{msg} =~ m/^$bot_trigger$ignore_command/;
             return $message;
         }
+
         return undef;
     }
+
     return $messages->[0];
 }
 
 sub recall_message_by_text {
-    my ($self, $id, $channel, $text, $ignore_command) = @_;
+    my ($self, $id, $channel, $text, $ignore_command, $use_aliases) = @_;
 
     my $search = "%$text%";
     $search =~ s/\*/%/g;
     $search =~ s/\?/_/g;
 
-    my $messages;
+    my $messages = eval {
+        my $sql = 'SELECT * FROM Messages WHERE channel = ? AND msg LIKE ? ESCAPE "\" ';
 
-    if (defined $id) {
-        $messages = eval {
-            my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND msg LIKE ? ESCAPE "\" ORDER BY timestamp DESC LIMIT 10');
-            $sth->execute($id, $channel, $search);
-            return $sth->fetchall_arrayref({});
-        };
-    } else {
-        $messages = eval {
-            my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND msg LIKE ? ESCAPE "\" ORDER BY timestamp DESC LIMIT 10');
-            $sth->execute($channel, $search);
-            return $sth->fetchall_arrayref({});
-        };
-    }
+        my %seen_id;
+
+        if (defined $id) {
+            my %akas;
+
+            if (defined $use_aliases) {
+                %akas = $self->get_also_known_as($use_aliases);
+            } else {
+                $akas{$id} = {
+                    id         => $id,
+                    type       => $self->{alias_type}->{STRONG},
+                    nickchange => 0,
+                };
+            }
+
+            foreach my $aka (keys %akas) {
+                next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+                next if $akas{$aka}->{nickchange} == 1;
+                next if exists $seen_id{$akas{$aka}->{id}};
+
+                $seen_id{$akas{$aka}->{id}} = 1;
+            }
+
+            my $ids = join " OR ", map { "id = ?" } keys %seen_id;
+
+            $sql .= "AND ($ids) ";
+        }
+
+        $sql .= 'ORDER BY timestamp DESC LIMIT 10';
+
+        my $sth   = $self->{dbh}->prepare($sql);
+
+        my $param = 1;
+        $sth->bind_param($param++, $channel);
+        $sth->bind_param($param++, $search);
+
+        map { $sth->bind_param($param++, $_) } keys %seen_id;
+
+        $sth->execute;
+        return $sth->fetchall_arrayref({});
+    };
 
     $self->{pbot}->{logger}->log($@) if $@;
 
@@ -1165,29 +1179,61 @@ sub recall_message_by_text {
               or $message->{msg} =~ m/^\s*$ignore_command.? $botnick$/i;
             return $message;
         }
+
         return undef;
     }
+
     return $messages->[0];
 }
 
 sub get_random_message {
-    my ($self, $id, $channel) = @_;
+    my ($self, $id, $channel, $use_aliases) = @_;
 
-    my $message;
+    my $message = eval {
+        my $sql = 'SELECT * FROM Messages WHERE channel = ? AND mode = ? ';
 
-    if (defined $id) {
-        $message = eval {
-            my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE id = ? AND channel = ? AND mode = ? ORDER BY RANDOM() LIMIT 1');
-            $sth->execute($id, $channel, $self->{pbot}->{messagehistory}->{MSG_CHAT});
-            return $sth->fetchrow_hashref;
-        };
-    } else {
-        $message = eval {
-            my $sth = $self->{dbh}->prepare('SELECT id, msg, mode, timestamp, channel FROM Messages WHERE channel = ? AND mode = ? ORDER BY RANDOM() LIMIT 1');
-            $sth->execute($channel, $self->{pbot}->{messagehistory}->{MSG_CHAT});
-            return $sth->fetchrow_hashref;
-        };
-    }
+        my %seen_id;
+
+        if (defined $id) {
+            my %akas;
+
+            if (defined $use_aliases) {
+                %akas = $self->get_also_known_as($use_aliases);
+            } else {
+                $akas{$id} = {
+                    id         => $id,
+                    type       => $self->{alias_type}->{STRONG},
+                    nickchange => 0,
+                };
+            }
+
+            foreach my $aka (keys %akas) {
+                next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+                next if $akas{$aka}->{nickchange} == 1;
+                next if exists $seen_id{$akas{$aka}->{id}};
+
+                $seen_id{$akas{$aka}->{id}} = 1;
+            }
+
+            my $ids = join " OR ", map { "id = ?" } keys %seen_id;
+
+            $sql .= "AND ($ids) ";
+        }
+
+        $sql .= 'ORDER BY RANDOM() LIMIT 1';
+
+        my $sth   = $self->{dbh}->prepare($sql);
+
+        my $param = 1;
+        $sth->bind_param($param++, $channel);
+        $sth->bind_param($param++, $self->{pbot}->{messagehistory}->{MSG_CHAT});
+
+        map { $sth->bind_param($param++, $_) } keys %seen_id;
+
+        $sth->execute;
+
+        return $sth->fetchrow_hashref;
+    };
 
     $self->{pbot}->{logger}->log($@) if $@;
 
@@ -1198,24 +1244,31 @@ sub get_max_messages {
     my ($self, $id, $channel, $use_aliases) = @_;
 
     my $count = eval {
-        my $sql = "SELECT COUNT(*) FROM Messages WHERE channel = ? AND ";
+        my $sql = 'SELECT COUNT(*) FROM Messages WHERE channel = ? AND ';
 
         my %akas;
-        if   (defined $use_aliases) { %akas         = $self->get_also_known_as($use_aliases); }
-        else                        { $akas{'this'} = {id => $id, type => $self->{alias_type}->{STRONG}, nickchange => 0}; }
 
-        my $ids;
+        if (defined $use_aliases) {
+            %akas = $self->get_also_known_as($use_aliases);
+        } else {
+            $akas{$id} = {
+                id         => $id,
+                type       => $self->{alias_type}->{STRONG},
+                nickchange => 0,
+            };
+        }
+
         my %seen_id;
-        my $or = '';
+
         foreach my $aka (keys %akas) {
             next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
             next if $akas{$aka}->{nickchange} == 1;
             next if exists $seen_id{$akas{$aka}->{id}};
-            $seen_id{$akas{$aka}->{id}} = 1;
 
-            $ids .= "${or}id = ?";
-            $or = ' OR ';
+            $seen_id{$akas{$aka}->{id}} = 1;
         }
+
+        my $ids = join " OR ", map { "id = ?" } keys %seen_id;
 
         $sql .= "($ids)";
 
@@ -1223,21 +1276,12 @@ sub get_max_messages {
         my $param = 1;
         $sth->bind_param($param++, $channel);
 
-        %seen_id = ();
-        foreach my $aka (keys %akas) {
-            next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
-            next if $akas{$aka}->{nickchange} == 1;
-            next if exists $seen_id{$akas{$aka}->{id}};
-            $seen_id{$akas{$aka}->{id}} = 1;
+        map { $sth->bind_param($param++, $_) } keys %seen_id;
 
-            $sth->bind_param($param++, $akas{$aka}->{id});
-        }
-
-        $sth->execute();
-        my $row = $sth->fetchrow_hashref();
-        $sth->finish();
-        return $row->{'COUNT(*)'};
+        $sth->execute;
+        return $sth->fetchrow_hashref->{'COUNT(*)'};
     };
+
     $self->{pbot}->{logger}->log($@) if $@;
     $count = 0 if not defined $count;
     return $count;

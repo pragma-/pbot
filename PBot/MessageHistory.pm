@@ -34,7 +34,6 @@ sub initialize {
     $self->{MSG_NICKCHANGE} = 3;    # CHANGED NICK
 
     $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_recall_time', $conf{max_recall_time} // 0);
-    $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_messages',    32);
 
     $self->{pbot}->{commands}->register(sub { $self->cmd_recall_message(@_) },     "recall",         0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_rebuild_aliases(@_) },    "rebuildaliases", 1);
@@ -220,11 +219,6 @@ sub cmd_list_also_known_as {
 sub cmd_recall_message {
     my ($self, $context) = @_;
 
-    if (not defined $context->{from}) {
-        $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
-        return "";
-    }
-
     my $usage = 'Usage: recall [nick [history [channel]]] [-c <channel>] [-t <text>] [-b <context before>] [-a <context after>] [-x <filter to nick>] [-n <count>] [-r raw mode] [+ ...]';
 
     my $arguments = $context->{arguments};
@@ -338,7 +332,9 @@ sub cmd_recall_message {
         }
 
         # skip recall command if recalling self without arguments
-        $recall_history = $context->{nick} eq $recall_nick ? 2 : 1 if defined $recall_nick and not defined $recall_history;
+        if (defined $recall_nick and not defined $recall_history) {
+            $recall_history = $context->{nick} eq $recall_nick ? 2 : 1;
+        }
 
         # set history to most recent message if not specified
         $recall_history = '1' if not defined $recall_history;
@@ -352,26 +348,39 @@ sub cmd_recall_message {
             $recall_channel = $context->{from};
         }
 
-        if (not defined $recall_nick and defined $recall_context) { $recall_nick = $recall_context; }
+        # set nick argument to -x argument if no nick was provided but -x was
+        if (not defined $recall_nick and defined $recall_context) {
+            $recall_nick = $recall_context;
+        }
 
+        # message account and stored nickname with proper typographical casing
         my ($account, $found_nick);
 
+        # get message account and found nick if a nick was provided
         if (defined $recall_nick) {
+            # account and hostmask
             ($account, $found_nick) = $self->{database}->find_message_account_by_nick($recall_nick);
 
-            if (not defined $account) { return "I don't know anybody named $recall_nick."; }
+            if (not defined $account) {
+                return "I don't know anybody named $recall_nick.";
+            }
 
+            # keep only nick portion of hostmask
             $found_nick =~ s/!.*$//;
         }
 
+        # matching message found in database, if any
         my $message;
 
         if ($random) {
-            $message = $self->{database}->get_random_message($account, $recall_channel);
+            # get a random message
+            $message = $self->{database}->get_random_message($account, $recall_channel, $recall_nick);
         } elsif ($recall_history =~ /^\d+$/ and not defined $recall_text) {
             # integral history
+
+            # if a nick was given, ensure requested history is within range of nick's history count
             if (defined $account) {
-                my $max_messages = $self->{database}->get_max_messages($account, $recall_channel);
+                my $max_messages = $self->{database}->get_max_messages($account, $recall_channel, $recall_nick);
                 if ($recall_history < 1 || $recall_history > $max_messages) {
                     if ($max_messages == 0) {
                         return "No messages for $recall_nick in $recall_channel yet.";
@@ -382,57 +391,81 @@ sub cmd_recall_message {
             }
 
             $recall_history--;
-            $message = $self->{database}->recall_message_by_count($account, $recall_channel, $recall_history, '(?:recall|mock|ftfy|fix|clapper)');
-
-            if (not defined $message) {
-                return "No message found at index $recall_history in channel $recall_channel.";
-            }
-        } else {
-            # regex history
-            $message = $self->{database}->recall_message_by_text($account, $recall_channel, $recall_history, '(?:recall|mock|ftfy|fix|clapper)');
+            $message = $self->{database}->recall_message_by_count($account, $recall_channel, $recall_history, '(?:recall|mock|ftfy|fix|clapper)', $recall_nick);
 
             if (not defined $message) {
                 if (defined $account) {
-                    return "No message for nick $found_nick in channel $recall_channel containing \"$recall_history\"";
+                    return "No message found at index $recall_history for $found_nick in $recall_channel.";
                 } else {
-                    return "No message in channel $recall_channel containing \"$recall_history\".";
+                    return "No message found at index $recall_history in $recall_channel.";
+                }
+            }
+        } else {
+            # regex history
+            $message = $self->{database}->recall_message_by_text($account, $recall_channel, $recall_history, '(?:recall|mock|ftfy|fix|clapper)', $recall_nick);
+
+            if (not defined $message) {
+                if (defined $account) {
+                    return "No message for $found_nick in $recall_channel containing \"$recall_history\"";
+                } else {
+                    return "No message in $recall_channel containing \"$recall_history\".";
                 }
             }
         }
 
-        my $context_account;
+        my ($context_account, $context_nick);
 
         if (defined $recall_context) {
-            ($context_account) = $self->{database}->find_message_account_by_nick($recall_context);
+            ($context_account, $context_nick) = $self->{database}->find_message_account_by_nick($recall_context);
 
-            if (not defined $context_account) { return "I don't know anybody named $recall_context."; }
+            if (not defined $context_account) {
+                return "I don't know anybody named $recall_context.";
+            }
+
+            # keep only nick portion of hostmask
+            $context_nick =~ s/!.*$//;
         }
 
-        my $messages = $self->{database}->get_message_context($message, $recall_before, $recall_after, $recall_count, $recall_history, $context_account);
+        my $messages = $self->{database}->get_message_context($message, $recall_before, $recall_after, $recall_count, $recall_history, $context_account, $context_nick);
 
         my $max_recall_time = $self->{pbot}->{registry}->get_value('messagehistory', 'max_recall_time');
 
         foreach my $msg (@$messages) {
-            if ($max_recall_time && time - $msg->{timestamp} > $max_recall_time && not $self->{pbot}->{users}->loggedin_admin($context->{from}, $context->{hostmask})) {
-                $max_recall_time = duration($max_recall_time);
+            # optionally limit messages by by a maximum recall duration from the current time, for privacy
+            if ($max_recall_time && time - $msg->{timestamp} > $max_recall_time
+                && not $self->{pbot}->{users}->loggedin_admin($context->{from}, $context->{hostmask}))
+            {
+                $max_recall_time = duration $max_recall_time;
                 $result .= "Sorry, you can not recall messages older than $max_recall_time.";
                 return $result;
             }
 
             my $text = $msg->{msg};
-            my $ago  = concise ago(time - $msg->{timestamp});
+            my $ago  = concise ago (time - $msg->{timestamp});
+            my $nick;
+
+            if (not $raw) {
+                if ($msg->{hostmask}) {
+                    ($nick) = $msg->{hostmask} =~ /^([^!]+)!/;
+                } else {
+                    $nick = $self->{database}->find_most_recent_hostmask($msg->{id});
+                    ($nick) = $nick =~ m/^([^!]+)/;
+                }
+            }
 
             if (   $text =~ s/^(NICKCHANGE)\b/changed nick to/
                 or $text =~ s/^(KICKED|QUIT)\b/lc "$1"/e
                 or $text =~ s/^MODE ([^ ]+) (.*)/set mode $1 on $2/
                 or $text =~ s/^(JOIN|PART)\b/lc "$1ed"/e)
             {
-                $text =~ s/^(quit) (.*)/$1 ($2)/;    # fix ugly "[nick] quit Quit: Leaving."
-                $result .= $raw ? "$text\n" : "[$ago] $msg->{nick} $text\n";
-            } elsif ($text =~ s/^\/me\s+//) {
-                $result .= $raw ? "$text\n" : "[$ago] * $msg->{nick} $text\n";
-            } else {
-                $result .= $raw ? "$text\n" : "[$ago] <$msg->{nick}> $text\n";
+                $text =~ s/^(quit) (.*)/$1 ($2)/; # fix ugly "[nick] quit Quit: Leaving."
+                $result .= $raw ? "$text\n" : "[$ago] $nick $text\n";
+            }
+            elsif ($text =~ s/^\/me\s+//) {
+                $result .= $raw ? "$text\n" : "[$ago] * $nick $text\n";
+            }
+            else {
+                $result .= $raw ? "$text\n" : "[$ago] <$nick> $text\n";
             }
         }
     }
