@@ -12,14 +12,13 @@ use PBot::Imports;
 sub new {
     my ($class, %args) = @_;
 
-    my $self  = bless {}, $class;
-
     if (not exists $args{pbot}) {
         my ($package, $filename, $line) = caller(0);
         my (undef, undef, undef, $subroutine) = caller(1);
         Carp::croak("Missing pbot reference to " . $class . ", created by $subroutine at $filename:$line");
     }
 
+    my $self  = bless {}, $class;
     $self->{pbot} = $args{pbot};
     $self->initialize(%args);
     return $self;
