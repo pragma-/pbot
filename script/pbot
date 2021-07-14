@@ -1,0 +1,20 @@
+#!/usr/bin/env perl
+
+# File: pbot
+#
+# Purpose: PBot main entry point. See doc/QuickStart.md.
+
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
+
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+use lib "$ENV{HOME}/.pbot";
+
+use PBot::PBot;
+
+PBot::PBot->new(
+    data_dir   => "$Bin/../data",
+    module_dir => "$Bin/../modules",
+    update_dir => "$Bin/../updates",
+)->start;

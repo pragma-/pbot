@@ -14,6 +14,11 @@ my ($data_dir, $version, $last_update) = @ARGV;
 
 print "Updating message history database... version: $version, last_update: $last_update, data_dir: $data_dir\n";
 
+if (not -e "$data_dir/message_history.sqlite3") {
+    print "$data_dir/message_history.sqlite3 does not exist; skipping update.\n";
+    exit 0;
+}
+
 use DBI;
 
 my $dbh = DBI->connect("dbi:SQLite:dbname=$data_dir/message_history.sqlite3", "", "", {RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1, sqlite_unicode => 1})
