@@ -304,7 +304,7 @@
       },
       "server" : {
          "type" : "text",
-         "value" : "irc.freenode.net"
+         "value" : "irc.libera.chat"
       },
       "show_motd" : {
          "type" : "text",
