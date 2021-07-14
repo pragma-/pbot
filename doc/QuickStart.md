@@ -185,7 +185,7 @@ recommended settings should suffice. If you have any issues, please [report them
 or by sending `pragma-` a message on the Libera.Chat network.
 
 ## Starting PBot
-The executable to start PBot lives in `script/pbot`. You may create a symbolic
+The executable to start PBot is `script/pbot`. You may create a symbolic
 link to the `script/pbot` executable in `$HOME/bin/` or in `/usr/local/bin/`.
 
 If you choose not to install the `script/pbot` file to your PATH, remember

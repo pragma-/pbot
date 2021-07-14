@@ -227,9 +227,9 @@ There are even a few games!
 
 Plugin | Description
 --- | ---
-[Battleship](Plugins/Battleship.pm) | The classic Battleship board game, simplified for IRC
-[Connect4](Plugins/Connect4.pm) | The classic Connect-4 game.
-[Spinach](Plugins/Spinach.pm) | An advanced multiplayer Trivia game engine with a twist! A question is shown. Everybody privately submits a false answer. All false answers and the true answer is shown. Everybody tries to guess the true answer. Points are gained when people pick your false answer!
+[Battleship](lib/PBot/Plugin/Battleship.pm) | The classic Battleship board game, simplified for IRC
+[Connect4](lib/PBot/Plugin/Connect4.pm) | The classic Connect-4 game.
+[Spinach](lib/PBot/Plugin/Spinach.pm) | An advanced multiplayer Trivia game engine with a twist! A question is shown. Everybody privately submits a false answer. All false answers and the true answer is shown. Everybody tries to guess the true answer. Points are gained when people pick your false answer!
 
 #### Modules
 Modules are external command-line executable programs and scripts that can be
