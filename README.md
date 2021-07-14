@@ -210,32 +210,26 @@ For more information, see the [Code Factoid documentation](doc/Factoids.md#code)
 #### Plugins
 PBot can dynamically load and unload Perl modules to alter its behavior.
 
-These are some of the plugins that PBot has; there are many more:
+These are some of the plugins that PBot has; [there are many more](lib/PBot/Plugin):
 
 Plugin | Description
 --- | ---
-[GoogleSearch](Plugins/GoogleSearch.pm) | Performs Internet searches using the Google search engine.
-[UrlTitles](Plugins/UrlTitles.pm) | When a URL is seen in a channel, intelligently display its title. It will not display titles that are textually similiar to the URL, in order to maintain the channel signal-noise ratio.
-[Quotegrabs](Plugins/Quotegrabs.pm) | Grabs channel messages as quotes for posterity. Can grab messages from anywhere in the channel history. Can grab multiple messages at once!
-[Weather](Plugins/Weather.pm) | Fetches and shows weather data for a location.
-[Wolfram](Plugins/Wolfram.pm) | Queries Wolfram\|Alpha for answers.
-[Wttr](Plugins/Wttr.pm) | Advanced weather Plugin with tons of options. Uses wttr.in.
-[RemindMe](Plugins/RemindMe.pm) | Lets people set up reminders. Lots of options.
-[ActionTrigger](Plugins/ActionTrigger.pm) | Lets admins set regular expression triggers to execute PBot commands or factoids.
-[AntiAway](Plugins/AntiAway.pm) | Detects when a person uses annoying in-channel away messages and warns them.
-[AutoRejoin](Plugins/AutoRejoin.pm) | Automatically rejoin channels if kicked or removed.
-[AntiNickSpam](Plugins/AntiNickSpam.pm) | Detects when a person is spamming an excessive number of nicks in the channel and removes them.
-[AntiRepeat](Plugins/AntiRepeat.pm) | Warn people about excessively repeating messages. Kicks if they fail to heed warnings.
-[AntiTwitter](Plugins/AntiTwitter.pm) | Warn people about addressing others with `@<nick>`. Kicks if they fail to heed warnings.
-[Date](Plugins/Date.pm) | Displays date and time for a timezone.
+[ActionTrigger](lib/PBot/Plugin/ActionTrigger.pm) | Lets admins set regular expression triggers to execute PBot commands or factoids.
+[GoogleSearch](lib/PBot/Plugin/GoogleSearch.pm) | Performs Internet searches using the Google search engine.
+[Quotegrabs](lib/PBot/Plugin/Quotegrabs.pm) | Grabs channel messages as quotes for posterity. Can grab messages from anywhere in the channel history. Can grab multiple messages at once!
+[RemindMe](lib/PBot/Plugin/RemindMe.pm) | Lets people set up reminders. Lots of options.
+[Weather](lib/PBot/Plugin/Weather.pm) | Fetches and shows weather data for a location.
+[Wolfram](lib/PBot/Plugin/Wolfram.pm) | Queries Wolfram\|Alpha for answers.
+[Wttr](lib/PBot/Plugin/Wttr.pm) | Advanced weather Plugin with tons of options. Uses wttr.in.
+[UrlTitles](lib/PBot/Plugin/UrlTitles.pm) | When a URL is seen in a channel, intelligently display its title. It will not display titles that are textually similiar to the URL, in order to maintain the channel signal-noise ratio.
 
 There are even a few games!
 
 Plugin | Description
 --- | ---
-[Spinach](Plugins/Spinach.pm) | An advanced multiplayer Trivia game engine with a twist! A question is shown. Everybody privately submits a false answer. All false answers and the true answer is shown. Everybody tries to guess the true answer. Points are gained when people pick your false answer!
 [Battleship](Plugins/Battleship.pm) | The classic Battleship board game, simplified for IRC
 [Connect4](Plugins/Connect4.pm) | The classic Connect-4 game.
+[Spinach](Plugins/Spinach.pm) | An advanced multiplayer Trivia game engine with a twist! A question is shown. Everybody privately submits a false answer. All false answers and the true answer is shown. Everybody tries to guess the true answer. Points are gained when people pick your false answer!
 
 #### Modules
 Modules are external command-line executable programs and scripts that can be
