@@ -58,8 +58,7 @@ Despite these test failures, their core functionality should still work as
 expected.
 
 #### re::engine::RE2
-PBot uses the `re::engine::RE2` module for its regular expressions. This engine is safer
-for user-submitted regular expressions.
+PBot uses the `re::engine::RE2` module for user-submitted regular expressions.
 
 If you could not install it through CPAN, you must install it manually.
 
@@ -87,23 +86,16 @@ After git-cloning (or unpacking the ZIP archive) you should have a directory nam
 
 Name | Description
 --- | ---
-[`PBot/`](https://github.com/pragma-/pbot/tree/master/PBot) | PBot source tree
-[`Plugins/`](https://github.com/pragma-/pbot/tree/master/Plugins) | Dynamically loadable internal plugins
+[`lib/`](https://github.com/pragma-/pbot/tree/master/lib) | PBot source tree
+[`script/`](https://github.com/pragma-/pbot/tree/master/script) | PBot executables
 [`modules/`](https://github.com/pragma-/pbot/tree/master/modules) | External command-line executables invokable as PBot commands
 [`data/`](https://github.com/pragma-/pbot/tree/master/data) | Default data-directory
 [`doc/`](https://github.com/pragma-/pbot/tree/master/doc) | Helpful documentation
-[`pbot`](https://github.com/pragma-/pbot/blob/master/pbot) | executable used to launch PBot
-
-You may create a symbolic link to the `pbot` executable in `$HOME/bin/` or even
-in `/usr/local/bin/`.
 
 ### Clone data-directory
 PBot uses a data-directory to store all its configuration settings and data. You must
 clone this data-directory for each instance of PBot you want to run, otherwise they
 will become quite confused with each other and things will break horribly.
-
-Even if you're using just one instance of PBot it is still strongly recommended to clone
-the default data-directory, especially if you used `git` to install PBot.
 
 Here we clone the data-directory for two PBot instances, naming them after the
 IRC network they will connect to:
@@ -193,6 +185,11 @@ recommended settings should suffice. If you have any issues, please [report them
 or by sending `pragma-` a message on the Libera.Chat network.
 
 ## Starting PBot
+The executable to start PBot lives in `script/pbot`. You may create a symbolic
+link to the `script/pbot` executable in `$HOME/bin/` or in `/usr/local/bin/`.
+
+If you choose not to install the `script/pbot` file to your PATH, remember
+to use `./script/pbot` instead of `pbot` in the following examples.
 
 ### Usage
     $ pbot [directory overrides...] [registry overrides...]
@@ -206,7 +203,7 @@ the PBot STDIN interface.
 #### Overriding directories
 You may override PBot's default directory locations via the command-line.
 
-    $ pbot data_dir=/path/to/data plugin_dir=/path/to/Plugins modules_dir=/path/to/modules
+    $ pbot data_dir=/path/to/data modules_dir=/path/to/modules
 
 #### Overriding registry
 You may override any of your Registry values via the command-line. Any overrides made will be
