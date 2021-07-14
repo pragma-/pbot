@@ -38,7 +38,7 @@ sub cmd_version {
     if (time - $self->{last_check}->{timestamp} >= $ratelimit) {
         $self->{last_check}->{timestamp} = time;
 
-        my $url = $self->{pbot}->{registry}->get_value('version', 'check_url') // 'https://raw.githubusercontent.com/pragma-/pbot/master/PBot/VERSION.pm';
+        my $url = $self->{pbot}->{registry}->get_value('version', 'check_url') // 'https://raw.githubusercontent.com/pragma-/pbot/master/lib/PBot/VERSION.pm';
 
         $self->{pbot}->{logger}->log("Checking $url for new version...\n");
 
