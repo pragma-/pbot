@@ -12,7 +12,7 @@ Plugins have full access to PBot internal APIs and state.
 
 These are the Plugins that come with PBot. Click a Plugin to learn more about it.
 
-Note that this list is probably incomplete. For the complete list of Plugins, see [the Plugins directory.](https://github.com/pragma-/pbot/tree/master/lib/PBot/Plugin)
+Note that this list is probably incomplete. For the complete list of Plugins, see [the Plugins directory.](../lib/PBot/Plugin)
 
 ## [Plang](Plugins/Plang.md)
 Scripting interface to PBot.
