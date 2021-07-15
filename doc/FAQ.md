@@ -18,8 +18,8 @@ Whenever I push out an update to PBot, I increment the version. The PBot
 to see if it is newer.
 
 You can live-update PBot without shutting it down. None of your files in your custom
-ata-directories will be touched unless that update includes a migration script in the
-`updates/` directory.
+data-directories will be touched unless that update includes a migration script in the
+[`updates/`](../updates) directory.
 
 If you used `git` to install PBot, type `git pull` in the `pbot` directory. This will
 update the PBot files to the latest version from GitHub. If you used ZIP archives, download
@@ -28,7 +28,7 @@ the latest files and extract them again.
 Then, in your PBot instance on IRC, use the [`refresh`](Admin.md#refresh) command to refresh
 the PBot core and plugins. No restart required!
 
-If there is a migration script for this update then `refresh` will say "Migration available;
+If there is a migration script for this update then [`refresh`](Admin.md#refresh) will say "Migration available;
 cannot refresh." and you will need to restart PBot at some point for the update to take effect.
 
 ## How do I change the bot trigger?
