@@ -128,6 +128,9 @@ The following command will install and set-up local::lib in `~/perl5`:
 
     $ cpanm --local-lib=~/perl5 local::lib && eval $(perl -I ~/perl5/lib/perl5/ -Mlocal::lib)
 
+The local::lib set-up will be lost when you close your shell. To make the set-up permanent, add the
+`eval $(perl -I ~/perl5/lib/perl5/ -Mlocal::lib)` command to your `.bashrc` or shell equivalent.
+
 #### Using cpanminus
 Ensure you have set your current working directory to where you have git cloned
 or unzipped PBot. There should be a [`cpanfile`](../cpanfile) in the current
