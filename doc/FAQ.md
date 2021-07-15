@@ -2,12 +2,13 @@
 This is a work in progress. More questions coming soon!
 
 <!-- md-toc-begin -->
-  * [How do I change my password?](#how-do-i-change-my-password)
-  * [How do I make PBot remember my `date` timezone?](#how-do-i-make-pbot-remember-my-date-timezone)
-  * [How do I make PBot remember my `weather` location?](#how-do-i-make-pbot-remember-my-weather-location)
-  * [How do I change the bot trigger?](#how-do-i-change-the-bot-trigger)
-  * [How do I whitelist a user?](#how-do-i-whitelist-a-user)
-  * [How do I change how the bot outputs multi-line messages?](#how-do-i-change-how-the-bot-outputs-multi-line-messages)
+    * [How do I change my password?](#how-do-i-change-my-password)
+    * [How do I make PBot remember my `date` timezone?](#how-do-i-make-pbot-remember-my-date-timezone)
+    * [How do I make PBot remember my `weather` location?](#how-do-i-make-pbot-remember-my-weather-location)
+    * [How do I change the bot trigger?](#how-do-i-change-the-bot-trigger)
+    * [How do I whitelist a user?](#how-do-i-whitelist-a-user)
+    * [How do I change how the bot outputs multi-line messages?](#how-do-i-change-how-the-bot-outputs-multi-line-messages)
+    * [I made a command. It's supposed to output formatting with spaces and tabs?](#i-made-a-command-its-supposed-to-output-formatting-with-spaces-and-tabs)
 <!-- md-toc-end -->
 
 ### How do I change my password?
@@ -90,3 +91,14 @@ For example:
        <PBot> b
        <PBot> c
        <PBot> And that's all I have to say about that. See https://0x0.st/-Okb.txt for full text.
+
+### I made a command. It's supposed to output formatting with spaces and tabs?
+By default, PBot collapses adjacent whitespace in command output. This is intended to
+reduce visual noise in IRC channels.
+
+If your command is registered by a plugin, use the [`cmdset`](Admin.md#cmsdset) command
+to set the `preserve_whitespace` [command metadata](Admin.md#command-metadata-list) to
+control this behavior.
+
+If your command is a command-line module, use the [`factset`](Factoids.md#factset) command
+to set the `preserve_whitespace` [factoid metadata](Factoids.md#factoid-metadata-list) instead.
