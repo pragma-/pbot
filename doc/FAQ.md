@@ -33,7 +33,8 @@ cannot refresh." and you will need to restart PBot at some point for the update 
 
 ## How do I change the bot trigger?
 To change the default `!` trigger to a different character use the [`regset`](Registry.md#regset)
-command to change the `general.trigger` value.
+command to change the `general.trigger` value. Use `#channel.trigger` to change the trigger only
+for that channel.
 
 For example, to change it to the `~` character:
 
@@ -46,13 +47,6 @@ To change it to both `!` and `~` (and others):
 To use only the bot's nick:
 
     regset general.trigger ""
-
-You can also override the trigger on a per-channel basis by use the channel name
-in place of `general`.
-
-For example, to override the trigger specifically for `#channel`:
-
-    regset #channel.trigger ~
 
 ## How do I whitelist a user?
 Whitelisting a user exempts them from anti-flood enforcement, ban-evasion checking,
