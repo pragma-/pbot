@@ -2,32 +2,34 @@
 This is a work in progress. More questions coming soon!
 
 <!-- md-toc-begin -->
-* [How do I change my password?](#how-do-i-change-my-password)
-* [How do I make PBot remember my `date` timezone?](#how-do-i-make-pbot-remember-my-date-timezone)
-* [How do I make PBot remember my `weather` location?](#how-do-i-make-pbot-remember-my-weather-location)
+* [When I type `!version` it says new version available?](#when-i-type-version-it-says-new-version-available)
 * [How do I change the bot trigger?](#how-do-i-change-the-bot-trigger)
 * [How do I whitelist a user?](#how-do-i-whitelist-a-user)
 * [How do I change how the bot outputs multi-line messages?](#how-do-i-change-how-the-bot-outputs-multi-line-messages)
 * [I made a command. It's supposed to output formatting with spaces and tabs?](#i-made-a-command-its-supposed-to-output-formatting-with-spaces-and-tabs)
+* [How do I change my password?](#how-do-i-change-my-password)
+* [How do I make PBot remember my `date` timezone?](#how-do-i-make-pbot-remember-my-date-timezone)
+* [How do I make PBot remember my `weather` location?](#how-do-i-make-pbot-remember-my-weather-location)
 <!-- md-toc-end -->
 
-### How do I change my password?
-Use the [`my`](Commands.md#my) command to set the `password` user metadata for your
-user account. Your hostmask must match the user account.
+### When I type `!version` it says new version available?
+Whenever I push out an update to PBot, I increment the version. The PBot
+[`version`](Commands.md#version) command checks PBot's VERSION.pm file on GitHub
+to see if it is newer.
 
-    my password <your password>
+You can live-update PBot without shutting it down. None of your files in your custom
+ata-directories will be touched unless that update includes a migration script in the
+`updates/` directory.
 
-### How do I make PBot remember my `date` timezone?
-Use the [`my`](Commands.md#my) command to set the `timezone` user metadata for your
-user account. Your hostmask must match the user account.
+If you used `git` to install PBot, type `git pull` in the `pbot` directory. This will
+update the PBot files to the latest version from GitHub. If you used ZIP archives, download
+the latest files and extract them again.
 
-    my timezone <your timezone>
+Then, in your PBot instance on IRC, use the [`refresh`](Admin.md#refresh) command to refresh
+the PBot core and plugins. No restart required!
 
-### How do I make PBot remember my `weather` location?
-Use the [`my`](Commands.md#my) command to set the `location` user metadata for your
-user account. Your hostmask must match the user account.
-
-    my location <your location>
+If there is a migration script for this update then `refresh` will say "Migration available;
+cannot refresh." and you will need to restart PBot at some point for the update to take effect.
 
 ### How do I change the bot trigger?
 To change the default `!` trigger to a different character use the [`regset`](Registry.md#regset)
@@ -102,3 +104,26 @@ control this behavior.
 
 If your command is a command-line module, use the [`factset`](Factoids.md#factset) command
 to set the `preserve_whitespace` [factoid metadata](Factoids.md#factoid-metadata-list) instead.
+
+### How do I change my password?
+If you have a NickServ account or a unique hostmask, you don't need a PBot password.
+The `stayloggedin` metadata on your user account can be set instead.
+
+But if you prefer to be safe instead of sorry, use the [`my`](Commands.md#my) command
+to set the `password` user metadata for your user account. Your hostmask must match the
+user account.
+
+    my password <your password>
+
+### How do I make PBot remember my `date` timezone?
+Use the [`my`](Commands.md#my) command to set the `timezone` user metadata for your
+user account. Your hostmask must match the user account.
+
+    my timezone <your timezone>
+
+### How do I make PBot remember my `weather` location?
+Use the [`my`](Commands.md#my) command to set the `location` user metadata for your
+user account. Your hostmask must match the user account.
+
+    my location <your location>
+
