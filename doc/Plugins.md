@@ -10,9 +10,14 @@
 A Plugin is an independent unit of PBot code that can be loaded and unloaded at will.
 Plugins have full access to PBot internal APIs and state.
 
-These are the Plugins that come with PBot. Click a Plugin to learn more about it.
+The default plugins loaded by PBot is set by the [`plugin_autoload`](../data/plugin_autoload)
+file in your data-directory. To autoload additional plugins, add their name to this file.
 
-Note that this list is probably incomplete. For the complete list of Plugins, see [the Plugins directory.](../lib/PBot/Plugin)
+The plugins that come with PBot live in [`lib/PBot/Plugin/`](../lib/PBot/Plugin). Additional third-party
+plugins may be installed to `~/.pbot/PBot/Plugin/`.
+
+This is the woefully incomplete documentation for the plugins. For more documentation,
+browse the headers of the various plugin source files.
 
 ## [Plang](Plugins/Plang.md)
 Scripting interface to PBot.

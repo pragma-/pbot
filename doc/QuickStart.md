@@ -440,6 +440,9 @@ Plugins provide optional PBot features. The default plugins loaded by PBot is se
 the [`plugin_autoload`](../data/plugin_autoload) file in your data-directory. To autoload additional plugins,
 add their name to this file.
 
+The plugins that come with PBot live in [`lib/PBot/Plugin/`](../lib/PBot/Plugin). Additional third-party
+plugins may be installed to `~/.pbot/PBot/Plugin/`.
+
 You may manually load plugins using the `plug` command.
 
     plug <plugin>
