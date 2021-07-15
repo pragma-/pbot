@@ -12,7 +12,7 @@ This is a work in progress. More questions coming soon!
 * [How do I make PBot remember my `weather` location?](#how-do-i-make-pbot-remember-my-weather-location)
 <!-- md-toc-end -->
 
-### When I type `!version` it says new version available?
+## When I type `!version` it says new version available?
 Whenever I push out an update to PBot, I increment the version. The PBot
 [`version`](Commands.md#version) command checks PBot's VERSION.pm file on GitHub
 to see if it is newer.
@@ -31,7 +31,7 @@ the PBot core and plugins. No restart required!
 If there is a migration script for this update then `refresh` will say "Migration available;
 cannot refresh." and you will need to restart PBot at some point for the update to take effect.
 
-### How do I change the bot trigger?
+## How do I change the bot trigger?
 To change the default `!` trigger to a different character use the [`regset`](Registry.md#regset)
 command to change the `general.trigger` value.
 
@@ -54,7 +54,7 @@ For example, to override the trigger specifically for `#channel`:
 
     regset #channel.trigger ~
 
-### How do I whitelist a user?
+## How do I whitelist a user?
 Whitelisting a user exempts them from anti-flood enforcement, ban-evasion checking,
 being automatically muted or kicked for various offenses, and more.
 
@@ -69,7 +69,7 @@ grant them the `is-whitelisted` capability.
 
 Usage: `userset <username> is-whitelisted 1`
 
-### How do I change how the bot outputs multi-line messages?
+## How do I change how the bot outputs multi-line messages?
 When output from a command contains newlines, PBot will convert the newlines
 to spaces and output it as one message.
 
@@ -94,7 +94,7 @@ For example:
        <PBot> c
        <PBot> And that's all I have to say about that. See https://0x0.st/-Okb.txt for full text.
 
-### I made a command. It's supposed to output formatting with spaces and tabs?
+## I made a command. It's supposed to output formatting with spaces and tabs?
 By default, PBot collapses adjacent whitespace in command output. This is intended to
 reduce visual noise in IRC channels.
 
@@ -105,7 +105,7 @@ control this behavior.
 If your command is a command-line module, use the [`factset`](Factoids.md#factset) command
 to set the `preserve_whitespace` [factoid metadata](Factoids.md#factoid-metadata-list) instead.
 
-### How do I change my password?
+## How do I change my password?
 If you have a NickServ account or a unique hostmask, you don't need a PBot password.
 The `stayloggedin` metadata on your user account can be set instead.
 
@@ -115,13 +115,13 @@ user account.
 
     my password <your password>
 
-### How do I make PBot remember my `date` timezone?
+## How do I make PBot remember my `date` timezone?
 Use the [`my`](Commands.md#my) command to set the `timezone` user metadata for your
 user account. Your hostmask must match the user account.
 
     my timezone <your timezone>
 
-### How do I make PBot remember my `weather` location?
+## How do I make PBot remember my `weather` location?
 Use the [`my`](Commands.md#my) command to set the `location` user metadata for your
 user account. Your hostmask must match the user account.
 
