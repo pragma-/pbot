@@ -85,8 +85,8 @@
       * [regunsetmeta](Registry.md#regunsetmeta)
     * [Miscellaneous admin commands](#miscellaneous-admin-commands)
       * [export](Admin.md#export)
-      * [refresh](Admin.md#refresh])
-      * [reload](Admin.md#reload])
+      * [refresh](Admin.md#refresh)
+      * [reload](Admin.md#reload)
       * [sl](Admin.md#sl)
       * [die](Admin.md#die)
   * [Factoid commands](#factoid-commands)
@@ -569,8 +569,8 @@ to have the command remember your location.
 
 #### Miscellaneous admin commands
 ##### [export](Admin.md#export)
-##### [refresh](Admin.md#refresh])
-##### [reload](Admin.md#reload])
+##### [refresh](Admin.md#refresh)
+##### [reload](Admin.md#reload)
 ##### [sl](Admin.md#sl)
 ##### [die](Admin.md#die)
 
