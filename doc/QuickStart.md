@@ -56,24 +56,29 @@ your home directory using, .e.g., [perlbrew](https://metacpan.org/pod/perlbrew),
 ### Installing PBot
 
 #### git (recommended)
-The recommended way to install PBot is with `git`.  This will allow you easily update to
+The recommended way to install PBot is with `git`.  This will allow you to easily update to
 the latest version of PBot via the git update process by issuing the `git pull` command.
 Also, if you become interested in contributing improvements to PBot, you will be able to
 submit them through `git`.
 
 The command to install with `git` is:
 
-    $ git clone https://github.com/pragma-/pbot.git
+    $ git clone --recursive https://github.com/pragma-/pbot.git
 
 #### Download zip archive
 Alternatively, you may [download a ZIP archive](https://github.com/pragma-/pbot/archive/master.zip).
 
+If you want to use the [Plang](https://github.com/pragma-/Plang) scripting language within PBot, you'll
+need to [download the Plang ZIP archive](https://github.com/pragma-/Plang/archive/master.zip) as well.
+Extract it into `pbot/Plang` after you extract the PBot ZIP archive into `pbot`.
+
 ## Initial Setup
-After git-cloning (or unpacking the ZIP archive) you should have a directory named
+After git-cloning (or unpacking the ZIP archives) you should have a directory named
 `pbot/` (or `pbot-master/`). It should contain at least these directories and files:
 
 Name | Description
 --- | ---
+[`Plang/`](../Plang) | Plang scripting language
 [`lib/`](../lib) | PBot source tree
 [`script/`](../script) | PBot executables (e.g., [`script/pbot`](../script/pbot))
 [`modules/`](../modules) | External command-line executables invokable as PBot commands
@@ -155,7 +160,8 @@ You may then choose to install the missing CPAN modules on a feature-by-feature 
 where `...` is an optional PBot feature listed in PBot's [`cpanfile`](../cpanfile).
 
 #### re::engine::RE2
-PBot uses the `re::engine::RE2` module for user-submitted regular expressions.
+Perl's native regular expression engine is susceptible to [ReDoS](https://swtch.com/~rsc/regexp/regexp1.html)
+attacks. To prevent this, PBot uses the `re::engine::RE2` module for user-submitted regular expressions.
 
 If you could not install it through CPAN, you must install it manually.
 
@@ -336,10 +342,12 @@ commands as the built-in PBot console admin user account. This will allow you
 to use admin commands to create new users or join channels.
 
 ### Creating your bot owner admin account
-To create your own fully privileged admin user account, use the following
-commands in the PBot terminal console.
+To create your own fully privileged admin user account, use the [`useradd`](Commands.md#useradd)
+command in the PBot terminal console. Its usage is:
 
-Suppose your nick is `Bob` and your hostmask is `Bob!~user@some.domain.com`.
+    useradd <username> <hostmasks> [channels [capabilities [password]]]
+
+Suppose your nick is `Bob` and your hostmask is `Bob!~user@some.domain.com`. Use the following command:
 
     useradd Bob Bob!~user@*.domain.com global botowner
 
@@ -369,7 +377,7 @@ Now you can use `/msg` in your own IRC client to administrate PBot, instead of
 the terminal console.
 
 ### Adding other users and admins
-To add users to PBot, use the [`useradd`](Admin.md#useradd) command.
+To add users to PBot, use the [`useradd`](Admin.md#useradd) command. Its usage is:
 
     useradd <username> <hostmasks> [channels [capabilities [password]]]
 
@@ -381,7 +389,8 @@ for more information about user-capabilities.
 If you omit the `password` argument, a random password will be generated. The user
 can use the [`my`](Commands.md#my) command to view or change it.
 
-Users may view and change their own metadata by using the [`my`](Commands.md#my) command.
+Users may view and change their own metadata by using the [`my`](Commands.md#my) command,
+provided their hostmask matches the user account.
 
     my [key [value]]
 

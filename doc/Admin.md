@@ -122,18 +122,19 @@ This is a list of recognized metadata keys for user accounts.
 
 Name | Description
 --- | ---
-`hostmasks` | A comma-separated list of hostmasks this user is recognized by.
-`channels` | A comma-separated list of channels this user belongs to.
-`password` | The password for the user account.
-`loggedin` | Whether the user is logged in or not.
-`stayloggedin` | Do not log the user out when they part/quit.
 `autologin` | Automatically log the user in when they join the channel. *Note: make sure the user account's hostmask wildcards are as restrictive as possible.*
 `autoop` | Give the user `operator` status when they join the channel. *Note: make sure the user account's hostmask wildcards are as restrictive as possible.*
 `autovoice` | Give the user `voiced` status when they join the channel. *Note: make sure the user account's hostmask wildcards are as restrictive as possible.*
-`location` | Sets your location for using the [`weather`](Commands.md#weather) command without any arguments.
-`timezone` | Sets your timezone for using the [`date`](Commands.md#date) command without any arguments.
-`notyposub` | Disallows `s///` typo substitutions.
 [capabilities](#user-capabilities-list) | [User-capabilities](#user-capabilities) are managed as user metadata.
+`channels` | A comma-separated list of channels this user belongs to.
+`hostmasks` | A comma-separated list of hostmasks this user is recognized by.
+`location` | Sets your location for using the [`weather`](Commands.md#weather) command without any arguments.
+`loggedin` | Whether the user is logged in or not.
+`notyposub` | Disallows `s///` typo substitutions.
+`password` | The password for the user account.
+`stayloggedin` | Do not log the user out when they part/quit.
+`timezone` | Sets your timezone for using the [`date`](Commands.md#date) command without any arguments.
+`units` | Sets the unit for Wolfram\|Alpha answers (`imperial` or `metric`)
 
 ### Listing users
 To list user accounts, use the `users` command. This is not an admin command, but
