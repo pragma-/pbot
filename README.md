@@ -13,6 +13,9 @@ PBot is a versatile IRCv3 Bot written in Perl
       * [Inline invocation](#inline-invocation)
       * [Chaining](#chaining)
       * [Background processing](#background-processing)
+    * [Output customization](#output-customization)
+      * [Newlines in messages](#newlines-in-messages)
+      * [Truncating long messages](#truncating-long-messages)
     * [Scripting interface](#scripting-interface)
     * [Extensible](#extensible)
       * [Factoids](#factoids)
@@ -127,13 +130,29 @@ You can execute multiple commands sequentially as one command.
 [Learn more.](doc/Commands.md#chaining)
 
 #### Background processing
-All of PBot's internal commands complete instantly, but suppose you make a Plugin that provides a command that may potentially take a long time to complete?
+Suppose you make a Plugin that provides a command that may potentially take a long time to complete?
 Not a problem! You can use the [`cmdset`](doc/Admin.md#cmdset) command to set the `background-process` [command metadata](doc/Admin.md#command-metadata-list)
 and the command will now run as a background process, allowing PBot to carry on with its duties.
 
 The familiar [`ps`](doc/Admin.md#ps) and [`kill`](doc/Admin.md#kill) commands can be used to list and kill the background processes.
 
 You can also [`cmdset`](doc/Admin.md#cmdset) the `process-timeout` [command metadata](doc/Admin.md#command-metadata-list) to set the timeout, in seconds, before the command is automatically killed. Otherwise the `processmanager.default_timeout` [registry value](doc/Registry.md) will be used.
+
+### Output customization
+#### Newlines in messages
+By default, PBot replaces newlines in command output with spaces. This can be customized on a per-channel or global basis
+to instead preserve the newlines and output each line as a distinct message.
+
+[Learn more.](doc/FAQ.md#how-do-i-change-how-the-bot-outputs-multi-line-messages)
+
+#### Truncating long messages
+Output that is longer than the maximum length of an IRC message will be pasted,
+with all formatting preserved, to a web paste service. The IRC message itself
+will be truncated, with enough room to append the paste URL to the end.
+
+If `preserve_newlines` is enabled, then if there are more lines available than `max_newlines`
+all the lines will be pasted, with formatting preserved, to a web paste service. PBot will then
+output up to `max_newlines` lines and then output the URL to the paste.
 
 ### Scripting interface
 PBot uses [Plang](https://github.com/pragma-/Plang) as a scripting language. You can use the
