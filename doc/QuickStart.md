@@ -103,15 +103,15 @@ lightweight way to install CPAN modules.
 There are several ways to install cpanminus. If you have `wget` instead of `curl`,
 then replace `curl -L` in the following commands with `wget -O -`.
 
-* Option 1) Use your system package manager, e.g.:
+Option 1) Use your system package manager, e.g.:
 
     $ apt install cpanminus
 
-* Option 2) Install to `~/perl5` (if you used, e.g., perlbrew to install Perl):
+Option 2) Install to `~/perl5` (if you used, e.g., perlbrew to install Perl):
 
     $ curl -L https://cpanmin.us | perl - App::cpanminus
 
-* Option 3) Download the `cpanm` executable directly to `~/bin`:
+Option 3) Download the `cpanm` executable directly to `~/bin`:
 
     $ cd ~/bin
     $ curl -L https://cpanmin.us/ -o cpanm
@@ -120,8 +120,9 @@ then replace `curl -L` in the following commands with `wget -O -`.
 #### Installing and using local::lib
 If you prefer to install the CPAN modules into `~/perl5` you can use [`local::lib`](https://metacpan.org/pod/local::lib).
 
-If you installed Perl with, e.g., perlbrew or if you have system administrator privilege and prefer to install the CPAN modules
-to the system Perl location, you may ignore this step.
+You may ignore this step if you installed Perl with, e.g., perlbrew or if you have
+system administrator privilege and prefer to install the CPAN modules to the system
+Perl location.
 
 The following command will install and set-up local::lib in `~/perl5`:
 
