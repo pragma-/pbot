@@ -96,7 +96,7 @@ For example:
 By default, PBot collapses adjacent whitespace in command output. This is intended to
 reduce visual noise in IRC channels.
 
-If your command is registered by a plugin, use the [`cmdset`](Admin.md#cmsdset) command
+If your command is registered by a plugin, use the [`cmdset`](Admin.md#cmdset) command
 to set the `preserve_whitespace` [command metadata](Admin.md#command-metadata-list) to
 control this behavior.
 
