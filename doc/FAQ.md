@@ -83,7 +83,7 @@ For example:
        <PBot> general.preserve_newlines set to 1
 
     <pragma-> !regset general.max_newlines 4
-       <PBot> general.preserve_newlines set to 4
+       <PBot> general.max_newlines set to 4
 
     <pragma-> !sh printf "a\nb\nc\nd\ne\n"
        <PBot> a

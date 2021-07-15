@@ -78,7 +78,7 @@ After git-cloning (or unpacking the ZIP archives) you should have a directory na
 
 Name | Description
 --- | ---
-[`Plang/`](../Plang) | Plang scripting language
+[`Plang/`](https://github.com/pragma-/Plang) | Plang scripting language
 [`lib/`](../lib) | PBot source tree
 [`script/`](../script) | PBot executables (e.g., [`script/pbot`](../script/pbot))
 [`modules/`](../modules) | External command-line executables invokable as PBot commands
