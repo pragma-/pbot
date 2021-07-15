@@ -1,40 +1,44 @@
 # QuickStart
 
 <!-- md-toc-begin -->
-* [Installation](#installation)
-  * [Installing Perl](#installing-perl)
-  * [Installing CPAN modules](#installing-cpan-modules)
-    * [re::engine::RE2](#reenginere2)
-  * [Installing PBot](#installing-pbot)
-    * [git (recommended)](#git-recommended)
-    * [Download zip archive](#download-zip-archive)
-* [Initial Setup](#initial-setup)
-  * [Clone data-directory](#clone-data-directory)
-  * [Configuration](#configuration)
-    * [Recommended settings for IRC Networks](#recommended-settings-for-irc-networks)
-      * [Libera.Chat](#liberachat)
-      * [IRCnet](#ircnet)
-      * [Other networks](#other-networks)
-* [Starting PBot](#starting-pbot)
-  * [Usage](#usage)
-    * [rlwrap](#rlwrap)
-    * [Overriding directories](#overriding-directories)
-    * [Overriding registry](#overriding-registry)
-  * [First-time start-up](#first-time-start-up)
-    * [Using default settings](#using-default-settings)
-    * [Using custom settings](#using-custom-settings)
-      * [Custom recommended settings](#custom-recommended-settings)
-      * [Custom recommended IRCnet/other network settings](#custom-recommended-ircnetother-network-settings)
-  * [Regular start-up](#regular-start-up)
-* [Additional configuration](#additional-configuration)
-  * [Creating your bot owner admin account](#creating-your-bot-owner-admin-account)
-  * [Adding other users and admins](#adding-other-users-and-admins)
-  * [Adding channels](#adding-channels)
-* [Further Reading](#further-reading)
-  * [Commands](#commands)
-  * [Factoids](#factoids)
-  * [Plugins](#plugins)
-  * [Modules](#modules)
+* [QuickStart](#quickstart)
+  * [Installation](#installation)
+    * [Installing Perl](#installing-perl)
+    * [Installing PBot](#installing-pbot)
+      * [git (recommended)](#git-recommended)
+      * [Download zip archive](#download-zip-archive)
+  * [Initial Setup](#initial-setup)
+    * [Installing CPAN modules](#installing-cpan-modules)
+      * [Installing cpanminus](#installing-cpanminus)
+      * [Installing and using local::lib](#installing-and-using-locallib)
+      * [Using cpanminus](#using-cpanminus)
+      * [re::engine::RE2](#reenginere2)
+    * [Clone data-directory](#clone-data-directory)
+    * [Configuration](#configuration)
+      * [Recommended settings for IRC Networks](#recommended-settings-for-irc-networks)
+        * [Libera.Chat](#liberachat)
+        * [IRCnet](#ircnet)
+        * [Other networks](#other-networks)
+  * [Starting PBot](#starting-pbot)
+    * [Usage](#usage)
+      * [rlwrap](#rlwrap)
+      * [Overriding directories](#overriding-directories)
+      * [Overriding registry](#overriding-registry)
+    * [First-time start-up](#first-time-start-up)
+      * [Using default settings](#using-default-settings)
+      * [Using custom settings](#using-custom-settings)
+        * [Custom recommended settings](#custom-recommended-settings)
+        * [Custom recommended IRCnet/other network settings](#custom-recommended-ircnetother-network-settings)
+    * [Regular start-up](#regular-start-up)
+  * [Additional configuration](#additional-configuration)
+    * [Creating your bot owner admin account](#creating-your-bot-owner-admin-account)
+    * [Adding other users and admins](#adding-other-users-and-admins)
+    * [Adding channels](#adding-channels)
+  * [Further Reading](#further-reading)
+    * [Commands](#commands)
+    * [Factoids](#factoids)
+    * [Plugins](#plugins)
+    * [Modules](#modules)
 <!-- md-toc-end -->
 
 ## Installation
@@ -44,22 +48,10 @@ PBot uses the [Perl programming language](https://www.perl.org/). Perl is usuall
 part of a base Linux install. If you do not have Perl installed, please see your
 system's documentation to install it.
 
-### Installing CPAN modules
-Some of PBot's features depend on the availability of Perl modules written by
-third parties. To use such PBot features, the modules listed in the [`cpanfile`](../cpanfile)
-file need to be installed.
-
-The CPAN modules may be installed with this command:
-
-    $ cpanm -n --installdeps . --with-all-features --without-feature compiler_vm_win32
-
-#### re::engine::RE2
-PBot uses the `re::engine::RE2` module for user-submitted regular expressions.
-
-If you could not install it through CPAN, you must install it manually.
-
-* https://github.com/google/re2
-* https://github.com/dgl/re-engine-RE2/
+If you do not have system administrator access, you can install Perl locally into
+your home directory using, .e.g., [perlbrew](https://metacpan.org/pod/perlbrew),
+[plenv](https://metacpan.org/release/TOKUHIROM/App-plenv-v1.2.0/view/bin/plenv),
+[plx](https://metacpan.org/pod/App::plx), etc.
 
 ### Installing PBot
 
@@ -82,11 +74,89 @@ After git-cloning (or unpacking the ZIP archive) you should have a directory nam
 
 Name | Description
 --- | ---
-[`lib/`](https://github.com/pragma-/pbot/tree/master/lib) | PBot source tree
-[`script/`](https://github.com/pragma-/pbot/tree/master/script) | PBot executables
-[`modules/`](https://github.com/pragma-/pbot/tree/master/modules) | External command-line executables invokable as PBot commands
-[`data/`](https://github.com/pragma-/pbot/tree/master/data) | Default data-directory
-[`doc/`](https://github.com/pragma-/pbot/tree/master/doc) | Helpful documentation
+[`lib/`](../lib) | PBot source tree
+[`script/`](../script) | PBot executables (e.g., [`script/pbot`](../script/pbot))
+[`modules/`](../modules) | External command-line executables invokable as PBot commands
+[`data/`](../data) | Default data-directory
+[`doc/`](../doc) | Helpful documentation
+[`cpanfile`](../cpanfile) | CPAN dependencies file
+
+There are a few one-time configuration things we must do to get PBot's environment
+ready. Once the following steps are completed there is no need to do them again.
+
+### Installing CPAN modules
+Some of PBot's features depend on the availability of Perl modules written by
+third parties. To use such PBot features, the modules listed in the [`cpanfile`](../cpanfile)
+file need to be installed.
+
+This can be a lengthly process as each module may itself have a certain amount of
+dependencies and sub-dependencies. Perl is an extremely collaborative community!
+Fortunately, you only need to install the CPAN modules once.
+
+You must have `make`, `perl`, a C compiler, a C++ compiler, OpenSSL or LibreSSL
+or equivalent, `libssl-dev`, and other such tools and libraries installed.
+
+#### Installing cpanminus
+The [cpanminus](https://metacpan.org/pod/App::cpanminus) tool is a fast and
+lightweight way to install CPAN modules.
+
+There are several ways to install cpanminus. If you have `wget` instead of `curl`,
+then replace `curl -L` in the following commands with `wget -O -`.
+
+* Option 1) Use your system package manager, e.g.:
+
+    $ apt install cpanminus
+
+* Option 2) Install to `~/perl5` (if you used, e.g., perlbrew to install Perl):
+
+    $ curl -L https://cpanmin.us | perl - App::cpanminus
+
+* Option 3) Download the `cpanm` executable directly to `~/bin`:
+
+    $ cd ~/bin
+    $ curl -L https://cpanmin.us/ -o cpanm
+    $ chmod +x cpanm
+
+#### Installing and using local::lib
+If you prefer to install the CPAN modules into `~/perl5` you can use [`local::lib`](https://metacpan.org/pod/local::lib).
+
+If you installed Perl with, e.g., perlbrew or if you have system administrator privilege and prefer to install the CPAN modules
+to the system Perl location, you may ignore this step.
+
+The following command will install and set-up local::lib in `~/perl5`:
+
+    $ cpanm --local-lib=~/perl5 local::lib && eval $(perl -I ~/perl5/lib/perl5/ -Mlocal::lib)
+
+#### Using cpanminus
+Ensure you have set your current working directory to where you have git cloned
+or unzipped PBot. There should be a [`cpanfile`](../cpanfile) in the current
+directory, along with [`lib/`](../lib) and [`script/`](../script) directories.
+
+    $ cd pbot (or pbot-master)
+
+The CPAN modules may be installed with (assuming you do not need Windows support):
+
+    $ cpanm -n --installdeps . --with-all-features --without-feature=compiler_vm_win32
+
+If you want to install the bare minimum CPAN modules required for PBot's core functionality,
+you can use the following command. But be aware that several plugins and modules may not
+function.
+
+    $ cpanm -n --installdeps .
+
+You may then choose to install the missing CPAN modules on a feature-by-feature basis using:
+
+    $ cpanm -n --installdeps . --with-feature=... --with-feature=...
+
+where `...` is an optional PBot feature listed in PBot's [`cpanfile`](../cpanfile).
+
+#### re::engine::RE2
+PBot uses the `re::engine::RE2` module for user-submitted regular expressions.
+
+If you could not install it through CPAN, you must install it manually.
+
+* https://github.com/google/re2
+* https://github.com/dgl/re-engine-RE2/
 
 ### Clone data-directory
 PBot uses a data-directory to store all its configuration settings and data. You must
@@ -96,7 +166,6 @@ will become quite confused with each other and things will break horribly.
 Here we clone the data-directory for two PBot instances, naming them after the
 IRC network they will connect to:
 
-    $ cd pbot (or pbot-master)
     $ cp -r data libera
     $ cp -r data ircnet
 
@@ -274,8 +343,12 @@ This will create a user account named `Bob` with the `botowner` [user-capability
 all channels. Note the wildcard replacing `some` in `some.domain.com`. Now as long as
 your connected hostmask matches your user account hostmask, you will be recognized.
 
+It is very important that user account hostmasks are defined as strictly or as narrowly
+as possible to match only the person it is intended for. Ideally, the user would have a
+NickServ account, a user-cloak given by the staff of the IRC server or a unique DNS name.
+
 In your own IRC client, connected using the hostmask we just added, type the
-following command:
+following command, in a private `/query` or `/msg`:
 
     my password
 
