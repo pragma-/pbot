@@ -148,11 +148,11 @@ to instead preserve the newlines and output each line as a distinct message.
 #### Truncating long messages
 Output that is longer than the maximum length of an IRC message will be pasted,
 with all formatting preserved, to a web paste service. The IRC message itself
-will be truncated, with enough room to append the paste URL to the end.
+will be truncated, with enough room to append the paste URL.
 
-If `preserve_newlines` is enabled, then if there are more lines available than `max_newlines`
-all the lines will be pasted, with formatting preserved, to a web paste service. PBot will then
-output up to `max_newlines` lines and then output the URL to the paste.
+When `preserve_newlines` is enabled, if there are more lines available than `max_newlines` then
+all of the lines will be pasted, with formatting preserved, to a web paste service. PBot will then
+output up to `max_newlines` lines as distinct messages and then output the URL to the paste.
 
 ### Scripting interface
 PBot uses [Plang](https://github.com/pragma-/Plang) as a scripting language. You can use the
