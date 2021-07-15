@@ -94,7 +94,7 @@ dependencies and sub-dependencies. Perl is an extremely collaborative community!
 Fortunately, you only need to install the CPAN modules once.
 
 You must have `make`, `perl`, a C compiler, a C++ compiler, OpenSSL or LibreSSL
-or equivalent, `libssl-dev`, and other such tools and libraries installed.
+or equivalent, libssl-dev, and other such tools and libraries installed.
 
 #### Installing cpanminus
 The [cpanminus](https://metacpan.org/pod/App::cpanminus) tool is a fast and
@@ -111,7 +111,7 @@ Option 2) Install to `~/perl5` (if you used, e.g., perlbrew to install Perl):
 
     $ curl -L https://cpanmin.us | perl - App::cpanminus
 
-Option 3) Download the `cpanm` executable directly to `~/bin`:
+Option 3) Download the `cpanm` script directly to `~/bin`:
 
     $ cd ~/bin
     $ curl -L https://cpanmin.us/ -o cpanm
