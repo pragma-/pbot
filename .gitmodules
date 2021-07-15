@@ -1,3 +1,3 @@
-[submodule "Plang"]
+[submodule "lib/Plang"]
 	path = lib/Plang
 	url = https://github.com/pragma-/Plang
