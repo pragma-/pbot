@@ -46,16 +46,12 @@ system's documentation to install it.
 
 ### Installing CPAN modules
 Some of PBot's features depend on the availability of Perl modules written by
-third parties. To use such PBot features, the modules listed in the [`MODULES`](../MODULES)
+third parties. To use such PBot features, the modules listed in the [`cpanfile`](../cpanfile)
 file need to be installed.
 
-The modules may be installed with a simple command:
+The CPAN modules may be installed with this command:
 
-    $ cpan -f -i $(cat MODULES)
-
-Some CPAN modules may fail to pass certain tests due to outdated variables.
-Despite these test failures, their core functionality should still work as
-expected.
+    $ cpanm -n --installdeps . --with-all-features --without-feature compiler_vm_win32
 
 #### re::engine::RE2
 PBot uses the `re::engine::RE2` module for user-submitted regular expressions.
