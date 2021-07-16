@@ -28,7 +28,7 @@ Then, in your PBot instance on IRC, use the [`refresh`](Admin.md#refresh) comman
 the PBot core and plugins. No restart required!
 
 If there is a migration script for this update then [`refresh`](Admin.md#refresh) will say "Migration available;
-cannot refresh." and you will need to restart PBot at some point for the update to take effect.
+restart required." and you will need to restart PBot at some point for the update to take effect.
 
 ## How do I change the bot trigger?
 To change the default `!` trigger to a different character use the [`regset`](Registry.md#regset)
