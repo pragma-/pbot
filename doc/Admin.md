@@ -177,7 +177,7 @@ Now alice can use the `ban` command.
 
 Let's consider the [`mode`](#mode) command. Channel operators can use their IRC client's `/mode` command to
 set any channel modes, including any undesirable modes (such as +k). Suppose you'd prefer to limit
-their modes to just a specific subset of all modes. You can do this with user-cabilities. To do so,
+their modes to just a specific subset of all modes. You can do this with user-capabilities. To do so,
 instead of making them channel operators you can make them PBot users and grant them specific PBot
 user-capabilities.
 
