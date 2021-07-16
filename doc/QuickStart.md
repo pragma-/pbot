@@ -48,6 +48,10 @@ PBot uses the [Perl programming language](https://www.perl.org/). Perl is usuall
 part of a base Linux install. If you do not have Perl installed, please see your
 system's documentation to install it.
 
+Some systems may ship with a minimal Perl installation. You may need to complete
+the installation by, e.g., `yum install perl-core` on RHEL/CentOS or
+`dnf install perl` on RHEL/CentOS 8 or Fedora.
+
 If you do not have system administrator access, you can install Perl locally into
 your home directory using, .e.g., [perlbrew](https://metacpan.org/pod/perlbrew),
 [plenv](https://metacpan.org/release/TOKUHIROM/App-plenv-v1.2.0/view/bin/plenv),
