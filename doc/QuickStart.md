@@ -99,7 +99,7 @@ Some of PBot's features depend on the availability of Perl modules written by
 third parties. To use such PBot features, the modules listed in the [`cpanfile`](../cpanfile)
 file need to be installed.
 
-This can be a lengthly process as each module may itself have a certain amount of
+This can be a lengthy process as each module may itself have a certain amount of
 dependencies and sub-dependencies. Perl is an extremely collaborative community!
 Fortunately, you only need to install the CPAN modules once.
 
