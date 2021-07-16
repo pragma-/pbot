@@ -12,10 +12,10 @@ This is a work in progress. More questions coming soon!
 * [How do I make PBot remember my `weather` location?](#how-do-i-make-pbot-remember-my-weather-location)
 <!-- md-toc-end -->
 
-## When I type `!version` it says new version available?
-Whenever I push out an update to PBot, I increment the version. The PBot
-[`version`](Commands.md#version) command checks PBot's VERSION.pm file on GitHub
-to see if it is newer.
+## When I type `!version` it says "new version available"?
+The PBot [`version`](Commands.md#version) command checks PBot's VERSION.pm file on GitHub
+to see if it contains a higher version value. The command caches the version result and
+sends out an HTTP GET request only if at least 5 minutes have elapsed since the last HTTP GET.
 
 You can live-update PBot without shutting it down. None of your files in your custom
 data-directories will be touched unless that update includes a migration script in the
