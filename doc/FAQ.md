@@ -17,7 +17,7 @@ The PBot [`version`](Commands.md#version) command checks PBot's version informat
 The command caches and reuses this version result for 5 minutes before issuing another GitHub version check.
 
 You can live-update PBot without shutting it down. None of your files in your custom
-data-directories will be touched unless that update includes a migration script in the
+data-directories will be touched unless the update includes a migration script in the
 [`updates/`](../updates) directory.
 
 If you used `git` to install PBot, type `git pull` in the `pbot` directory. This will
