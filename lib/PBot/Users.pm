@@ -206,7 +206,7 @@ sub cmd_useradd {
 
     if (not defined $name or not defined $hostmasks) { return "Usage: useradd <username> <hostmasks> [channels [capabilities [password]]]"; }
 
-    $channels = 'global' if $channels !~ /^#/;
+    $channels = 'global' if !$channels or $channels !~ /^#/;
 
     my $u;
     foreach my $channel (sort split /\s*,\s*/, lc $channels) {
