@@ -110,13 +110,15 @@ user account.
 
 ## How do I make PBot remember my `date` timezone?
 Use the [`my`](Commands.md#my) command to set the `timezone` user metadata for your
-user account. Your hostmask must match the user account.
+user account. Your hostmask must match the user account. The `my` command will automatically
+create a user account for you if one does not exist.
 
     my timezone <your timezone>
 
 ## How do I make PBot remember my `weather` location?
 Use the [`my`](Commands.md#my) command to set the `location` user metadata for your
-user account. Your hostmask must match the user account.
+user account. Your hostmask must match the user account. The `my` command will automatically
+create a user account for you if one does not exist.
 
     my location <your location>
 
