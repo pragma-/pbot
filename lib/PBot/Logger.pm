@@ -12,6 +12,8 @@ use PBot::Imports;
 use Scalar::Util qw/openhandle/;
 use File::Basename;
 use File::Copy;
+use Time::HiRes qw/gettimeofday/;
+use POSIX;
 
 sub new {
     my ($class, %args) = @_;
@@ -54,7 +56,9 @@ sub log {
     my ($self, $text) = @_;
 
     # get current time
-    my $time = localtime;
+    my ($sec, $usec) = gettimeofday;
+    my $time = strftime "%a %b %e %Y %H:%M:%S", localtime $sec;
+    $time .= sprintf ".%03d", $usec / 1000;
 
     # replace potentially log-corrupting characters (colors, gibberish, etc)
     $text =~ s/(\P{PosixGraph})/my $ch = $1; if ($ch =~ m{[\s]}) { $ch } else { sprintf "\\x%02X", ord $ch }/ge;
