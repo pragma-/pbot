@@ -66,7 +66,6 @@ sub initialize {
     my $filename = $conf{filename};
 
     $self->{pbot} = $self->{pbot};
-    $self->{pbot}->{atexit}->register(sub { $self->save_factoids; return; });
 
     $self->{storage} = PBot::DualIndexSQLiteObject->new(name => 'Factoids', filename => $filename, pbot => $self->{pbot});
 
@@ -78,18 +77,21 @@ sub initialize {
     $self->{pbot}->{registry}->add_default('text', 'factoids', 'max_channel_length', 20);
 
     $self->load_factoids;
+
+    # save and export factoids at exit
+    $self->{pbot}->{atexit}->register(sub { $self->save_factoids(1) });
 }
 
 sub load_factoids {
-    my $self = shift;
+    my ($self) = @_;
     $self->{storage}->load;
     $self->{storage}->create_metadata(\%factoid_metadata);
 }
 
 sub save_factoids {
-    my $self = shift;
+    my ($self, $export) = @_;
     $self->{storage}->save;
-    $self->export_factoids;
+    $self->export_factoids if $export;
 }
 
 sub get_meta {
@@ -1239,7 +1241,7 @@ sub interpreter {
         last_referenced_on => scalar gettimeofday,
         last_referenced_in => $context->{from} || 'stdin',
     };
-    $self->{storage}->add($channel, $keyword, $update_data, 1, 1);
+    $self->{storage}->add($channel, $keyword, $update_data, 1);
 
     my $action;
 

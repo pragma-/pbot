@@ -53,9 +53,8 @@ sub begin {
 
     $self->{pbot}->{logger}->log("Opening $self->{name} database ($self->{filename})\n");
 
-    $self->{dbh} = DBI->connect(
-        "dbi:SQLite:dbname=$self->{filename}", "", "",
-        {RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1, sqlite_unicode => 1}
+    $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", undef, undef,
+        { AutoCommit => 0, RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1, sqlite_unicode => 1 }
     ) or die $DBI::errstr;
 
     eval {
@@ -86,6 +85,12 @@ sub load  {
     my ($self) = @_;
     $self->create_database;
     $self->create_cache;
+}
+
+sub save {
+    my ($self) = @_;
+    return if not $self->{dbh};
+    $self->{dbh}->commit;
 }
 
 sub create_database {
@@ -158,6 +163,7 @@ sub trim_cache {
 
 sub create_metadata {
     my ($self, $columns) = @_;
+
     return if not $self->{dbh};
 
     $self->{columns} = $columns;
@@ -165,8 +171,6 @@ sub create_metadata {
     eval {
         my %existing = ();
         foreach my $col (@{$self->{dbh}->selectall_arrayref("PRAGMA TABLE_INFO(Stuff)")}) { $existing{$col->[1]} = $col->[2]; }
-
-        $self->{dbh}->begin_work;
 
         foreach my $col (sort keys %$columns) {
             unless (exists $existing{$col}) { $self->{dbh}->do("ALTER TABLE Stuff ADD COLUMN \"$col\" $columns->{$col}"); }
@@ -183,6 +187,7 @@ sub create_metadata {
 
 sub levenshtein_matches {
     my ($self, $index1, $index2, $distance, $strictnamespace) = @_;
+
     my $comma  = '';
     my $result = '';
 
@@ -588,7 +593,6 @@ sub add {
 
     eval {
         my $sth;
-        $self->{dbh}->begin_work;
 
         if (not $self->exists($index1, $index2)) {
             $sth = $self->{dbh}->prepare('INSERT INTO Stuff (index1, index2) VALUES (?, ?)');
@@ -620,8 +624,6 @@ sub add {
         $sth->bind_param($param++, $index2);
         $sth->execute();
 
-        $self->{dbh}->commit;
-
         # no errors updating SQL -- now we update cache
         my ($lc_index1, $lc_index2) = (lc $index1, lc $index2);
         $self->{cache}->{$lc_index1}->{_name} = $index1 if $index1 ne $lc_index1 and not exists $self->{cache}->{$lc_index1}->{_name};
@@ -645,6 +647,7 @@ sub add {
     $index1 = 'global'      if $index1 eq '.*';
     $index2 = "\"$index2\"" if $index2 =~ / /;
     $self->{pbot}->{logger}->log("$self->{name}: [$index1]: $index2 added.\n") unless $quiet;
+    $self->save unless $quiet;
     return "$index2 added to $name1.";
 }
 
@@ -674,6 +677,8 @@ sub remove {
             return "Error removing $name1: $@";
         }
 
+        $self->save unless $dont_save;
+
         return "$name1 removed.";
     }
 
@@ -700,6 +705,7 @@ sub remove {
             return "Error removing $name2 from $name1: $@";
         }
 
+        $self->save unless $dont_save;
         return "$name2 removed from $name1.";
     }
 
@@ -720,6 +726,7 @@ sub remove {
             return "Error unsetting $data_index from $name2: $@";
         }
 
+        $self->save unless $dont_save;
         return "$name2.$data_index unset.";
     }
 
@@ -764,18 +771,24 @@ sub set {
         return "$self->{name} have no such metadata $key.";
     }
 
-    if (not defined $value) { $value = $self->get_data($index1, $index2, $key); }
+    if (not defined $value) {
+        $value = $self->get_data($index1, $index2, $key);
+    }
     else {
         eval {
             my $sth = $self->{dbh}->prepare("UPDATE Stuff SET '$key' = ? WHERE index1 = ? AND index2 = ?");
+
             $sth->execute($value, $index1, $index2);
 
             my ($lc_index1, $lc_index2) = (lc $index1, lc $index2);
+
             if (exists $self->{cache}->{$lc_index1}
                     and exists $self->{cache}->{$lc_index1}->{$lc_index2}
                     and exists $self->{cache}->{$lc_index1}->{$lc_index2}->{$key}) {
                 $self->{cache}->{$lc_index1}->{$lc_index2}->{$key} = $value;
             }
+
+            $self->save;
         };
 
         if ($@) {
@@ -814,14 +827,18 @@ sub unset {
 
     eval {
         my $sth = $self->{dbh}->prepare("UPDATE Stuff SET '$key' = ? WHERE index1 = ? AND index2 = ?");
+
         $sth->execute(undef, $index1, $index2);
 
         my ($lc_index1, $lc_index2) = (lc $index1, lc $index2);
+
         if (exists $self->{cache}->{$lc_index1}
                 and exists $self->{cache}->{$lc_index1}->{$lc_index2}
                 and exists $self->{cache}->{$lc_index1}->{$lc_index2}->{$key}) {
             $self->{cache}->{$lc_index1}->{$lc_index2}->{$key} = undef;
         }
+
+        $self->save;
     };
 
     if ($@) {
@@ -834,7 +851,6 @@ sub unset {
 
 # nothing to do here for SQLite
 # kept for compatibility with DualIndexHashObject
-sub save  { }
 sub clear { }
 
 1;
