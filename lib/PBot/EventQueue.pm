@@ -13,6 +13,8 @@ use parent 'PBot::Class';
 
 use PBot::Imports;
 
+use PBot::Utils::PriorityQueue;
+
 use Time::HiRes qw/time/;
 use Time::Duration;
 
@@ -20,7 +22,7 @@ sub initialize {
     my ($self, %conf) = @_;
 
     # array of pending events
-    $self->{event_queue} = [];
+    $self->{event_queue} = PBot::Utils::PriorityQueue->new(pbot => $self->{pbot});
 
     # register `eventqueue` bot command
     $self->{pbot}->{commands}->register(sub { $self->cmd_eventqueue(@_) }, 'eventqueue', 1);
@@ -42,7 +44,7 @@ sub cmd_eventqueue {
     }
 
     if ($command eq 'list') {
-        return "No events queued." if not @{$self->{event_queue}};
+        return "No events queued." if not $self->{event_queue}->count;
 
         my $result = eval {
             my $text = "Queued events:\n";
@@ -51,7 +53,7 @@ sub cmd_eventqueue {
 
             my $i = 0;
             my $events = 0;
-            foreach my $event (@{$self->{event_queue}}) {
+            foreach my $event ($self->{event_queue}->entries) {
                 $i++;
 
                 if ($regex) {
@@ -60,7 +62,7 @@ sub cmd_eventqueue {
 
                 $events++;
 
-                my $duration = $event->{timeout} - time;
+                my $duration = $event->{priority} - time;
 
                 if ($duration < 0) {
                     # current time has passed an event's time but the
@@ -130,8 +132,8 @@ sub cmd_eventqueue {
 # returns seconds until upcoming event.
 sub duration_until_next_event {
     my ($self) = @_;
-    return 0 if not @{$self->{event_queue}};
-    return $self->{event_queue}->[0]->{timeout} - time;
+    return 0 if not $self->{event_queue}->count;
+    return $self->{event_queue}->get_priority(0) - time;
 }
 
 # invokes any current events and then returns seconds until upcoming event.
@@ -139,18 +141,18 @@ sub do_events {
     my ($self) = @_;
 
     # early-return if no events available
-    return 0 if not @{$self->{event_queue}};
+    return 0 if not $self->{event_queue}->count;
 
     my $debug = $self->{pbot}->{registry}->get_value('eventqueue', 'debug') // 0;
 
     # repeating events to re-enqueue
     my @enqueue;
 
-    for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
+    for (my $i = 0; $i < $self->{event_queue}->entries; $i++) {
         # we call time for a fresh time, instead of using a stale $now that
         # could be in the past depending on a previous event's duration
-        if (time >= $self->{event_queue}->[$i]->{timeout}) {
-            my $event = $self->{event_queue}->[$i];
+        if (time >= $self->{event_queue}->get_priority($i)) {
+            my $event = $self->{event_queue}->get_entry($i);
 
             $self->{pbot}->{logger}->log("Processing event $i: $event->{id}\n") if $debug > 1;
 
@@ -158,14 +160,15 @@ sub do_events {
             $event->{subref}->($event);
 
             # remove event from queue
-            splice @{$self->{event_queue}}, $i--, 1;
+            $self->{event_queue}->remove($i--);
 
             # add event to re-enqueue queue if repeating
             push @enqueue, $event if $event->{repeating};
         } else {
             # no more events ready at this time
             if ($debug > 2) {
-                $self->{pbot}->{logger}->log("Event not ready yet: $self->{event_queue}->[$i]->{id} (timeout=$self->{event_queue}->[$i]->{timeout})\n");
+                my $event = $self->{event_queue}->get_entry($i);
+                $self->{pbot}->{logger}->log("Event not ready yet: $event->{id} (timeout=$event->{priority})\n");
             }
 
             last;
@@ -183,51 +186,7 @@ sub do_events {
 # check if an event is in the event queue.
 sub exists {
     my ($self, $id) = @_;
-    return scalar grep { $_->{id} eq $id } @{$self->{event_queue}};
-}
-
-# quickly and efficiently find the best position in the event
-# queue array for a given time value
-sub find_enqueue_position {
-    my ($self, $time) = @_;
-
-    # no events in queue yet, early-return first position
-    return 0 if not @{$self->{event_queue}};
-
-    # early-return first position if event's time is less
-    # than first position's
-    if ($time < $self->{event_queue}->[0]->{timeout}) {
-        return 0;
-    }
-
-    # early-return last position if event's time is greater
-    if ($time > $self->{event_queue}->[@{$self->{event_queue}} - 1]->{timeout}) {
-        return scalar @{$self->{event_queue}};
-    }
-
-    # binary search to find enqueue position
-
-    my $lo = 0;
-    my $hi = scalar @{$self->{event_queue}} - 1;
-
-    while ($lo <= $hi) {
-        my $mid = int (($hi + $lo) / 2);
-
-        if ($time < $self->{event_queue}->[$mid]->{timeout}) {
-            $hi = $mid - 1;
-        } elsif ($time > $self->{event_queue}->[$mid]->{timeout}) {
-            $lo = $mid + 1;
-        } else {
-            while ($mid < @{$self->{event_queue}} and $self->{event_queue}->[$mid]->{timeout} == $time) {
-                # found a slot with the same time. we "slide" down the array
-                # to append this event to the end of this region of same-times.
-                $mid++;
-            }
-            return $mid;
-        }
-    }
-
-    return $lo;
+    return scalar grep { $_->{id} eq $id } $self->{event_queue}->entries;
 }
 
 # adds an event to the event queue, optionally repeating
@@ -244,20 +203,17 @@ sub enqueue_event {
         id        => $id,
         subref    => $subref,
         interval  => $interval,
-        timeout   => time + $interval,
+        priority  => time + $interval,
         repeating => $repeating,
     };
 
-    # find position to add event
-    my $i = $self->find_enqueue_position($event->{timeout});
-
-    # add the event to the event queue array
-    splice @{$self->{event_queue}}, $i, 0, $event;
+    # add the event to the priority queue
+    my $position = $self->{event_queue}->add($event);
 
     # debugging noise
     my $debug = $self->{pbot}->{registry}->get_value('eventqueue', 'debug') // 0;
     if ($debug > 1) {
-        $self->{pbot}->{logger}->log("Enqueued new event $id at position $i: timeout=$event->{timeout} interval=$interval repeating=$repeating\n");
+        $self->{pbot}->{logger}->log("Enqueued new event $id at position $position: timeout=$event->{priority} interval=$interval repeating=$repeating\n");
     }
 }
 
@@ -284,16 +240,16 @@ sub dequeue_event {
         my $regex = qr/^$id$/i;
 
         # count total events before removal
-        my $count = @{$self->{event_queue}};
+        my $count = $self->{event_queue}->count;
 
         # collect events to be removed
-        my @removed = grep { $_->{id} =~ /$regex/i; } @{$self->{event_queue}};
+        my @removed = grep { $_->{id} =~ /$regex/i; } $self->{event_queue}->entries;
 
         # remove events from event queue
-        @{$self->{event_queue}} = grep { $_->{id} !~ /$regex/i; } @{$self->{event_queue}};
+        @{$self->{event_queue}->queue} = grep { $_->{id} !~ /$regex/i; } $self->{event_queue}->entries;
 
         # set count to total events removed
-        $count -= @{$self->{event_queue}};
+        $count -= $self->{event_queue}->count;
 
         # invoke removed events, if requested
         if ($execute) {
@@ -341,7 +297,7 @@ sub replace_subref_or_enqueue_event {
     my ($self, $subref, $interval, $id, $repeating) = @_;
 
     # find events matching id
-    my @events = grep { $_->{id} eq $id } @{$self->{event_queue}};
+    my @events = grep { $_->{id} eq $id } $self->{event_queue}->entries;
 
     # no events found, enqueue new event
     if (not @events) {
@@ -381,9 +337,9 @@ sub enqueue_event_unless_exists {
 sub update_repeating {
     my ($self, $id, $repeating) = @_;
 
-    for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
-        if ($self->{event_queue}->[$i]->{id} eq $id) {
-            $self->{event_queue}->[$i]->{repeating} = $repeating;
+    foreach my $event ($self->{event_queue}->entries) {
+        if ($event->{id} eq $id) {
+            $event->{repeating} = $repeating;
         }
     }
 }
@@ -392,15 +348,17 @@ sub update_repeating {
 sub update_interval {
     my ($self, $id, $interval, $dont_enqueue) = @_;
 
-    for (my $i = 0; $i < @{$self->{event_queue}}; $i++) {
-        if ($self->{event_queue}->[$i]->{id} eq $id) {
+    for (my $i = 0; $i < $self->{event_queue}->count; $i++) {
+        my $event = $self->{event_queue}->get_entry($i);
+
+        if ($event->{id} eq $id) {
             if ($dont_enqueue) {
                 # update interval in-place without moving event to new place in queue
                 # (allows event to fire at expected time, then updates to new timeout afterwards)
-                $self->{event_queue}->[$i]->{interval} = $interval;
+                $event->{interval} = $interval;
             } else {
                 # remove and add event in new position in queue
-                my $event = splice(@{$self->{event_queue}}, $i, 1);
+                $self->{event_queue}->remove($i);
                 $self->enqueue_event($event->{subref}, $interval, $id, $event->{repeating});
             }
         }
