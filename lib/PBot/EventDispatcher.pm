@@ -22,6 +22,14 @@ sub initialize {
 }
 
 # add an event handler
+#
+# priority ranges from 0 to 100. 0 is the highest priority, i.e. an handler with
+# priority 0 will handle events first. 100 is the lowest priority and will handle
+# events last. priority defaults to 50 if ommited.
+#
+# NickList reserves 0 and 100 to ensure its list is populated by JOINs, etc,
+# before any handlers need to consult its list, or depopulated by PARTs, QUITs,
+# KICKs, etc, after any other handlers need to consult its list.
 sub register_handler {
     my ($self, $event_name, $subref, $priority) = @_;
 
@@ -108,13 +116,13 @@ sub dispatch_event {
             # that it decided not to handle this event.
             my $handler_result = eval { $handler->{subref}->($event_name, $event_data) };
 
-            # update $dispatch_result only when handler result is a defined
-            # value so we remember if any handlers have handled this event.
-            $dispatch_result = $handler_result if defined $handler_result;
-
             # check for exception
             if (my $exception = $@) {
                 $self->{pbot}->{logger}->log("Exception in event handler: $exception");
+            } else {
+                # update $dispatch_result only when handler result is a defined
+                # value so we remember if any handlers have handled this event.
+                $dispatch_result = $handler_result if defined $handler_result;
             }
         }
     }
