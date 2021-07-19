@@ -152,7 +152,7 @@ sub do_events {
         # we call time for a fresh time, instead of using a stale $now that
         # could be in the past depending on a previous event's duration
         if (time >= $self->{event_queue}->get_priority($i)) {
-            my $event = $self->{event_queue}->get_entry($i);
+            my $event = $self->{event_queue}->get($i);
 
             $self->{pbot}->{logger}->log("Processing event $i: $event->{id}\n") if $debug > 1;
 
@@ -167,7 +167,7 @@ sub do_events {
         } else {
             # no more events ready at this time
             if ($debug > 2) {
-                my $event = $self->{event_queue}->get_entry($i);
+                my $event = $self->{event_queue}->get($i);
                 $self->{pbot}->{logger}->log("Event not ready yet: $event->{id} (timeout=$event->{priority})\n");
             }
 
@@ -349,7 +349,7 @@ sub update_interval {
     my ($self, $id, $interval, $dont_enqueue) = @_;
 
     for (my $i = 0; $i < $self->{event_queue}->count; $i++) {
-        my $event = $self->{event_queue}->get_entry($i);
+        my $event = $self->{event_queue}->get($i);
 
         if ($event->{id} eq $id) {
             if ($dont_enqueue) {

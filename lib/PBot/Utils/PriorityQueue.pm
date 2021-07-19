@@ -31,7 +31,7 @@ sub count {
     return scalar @{$self->{queue}};
 }
 
-sub get_entry {
+sub get {
     my ($self, $position) = @_;
     return $self->{queue}->[$position];
 }
@@ -50,6 +50,8 @@ sub remove {
 # queue array for a given priority value
 sub find_enqueue_position {
     my ($self, $priority) = @_;
+
+    $priority //= 0;
 
     # no entries in queue yet, early-return first position
     return 0 if not @{$self->{queue}};
