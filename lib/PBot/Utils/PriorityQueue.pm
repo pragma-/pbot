@@ -13,6 +13,7 @@ use PBot::Imports;
 sub initialize {
     my ($self, %conf) = @_;
 
+    # list of entrie; each entry is expected to have a `priority` and an `id` field
     $self->{queue} = [];
 }
 
@@ -98,6 +99,13 @@ sub add {
     my $position = $self->find_enqueue_position($entry->{priority});
     splice @{$self->{queue}}, $position, 0, $entry;
     return $position;
+}
+
+sub update_priority {
+    my ($self, $id, $priority) = @_;
+    my @entries = grep { $_->{id} eq $id } @{$self->{queue}};
+    map { $_->{priority} = $priority } @entries;
+    $self->{queue} = [ sort { $a->{priority} <=> $b->{priority} } @{$self->{queue}} ];
 }
 
 1;
