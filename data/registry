@@ -243,7 +243,7 @@
       },
       "strictnamespace" : {
          "type" : "text",
-         "value" : "1"
+         "value" : "0"
       },
       "trigger" : {
          "type" : "text",
