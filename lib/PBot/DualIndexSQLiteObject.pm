@@ -29,8 +29,8 @@ sub initialize {
     $self->{name}     = $conf{name}     // 'Dual Index SQLite object';
     $self->{filename} = $conf{filename} // Carp::croak("Missing filename in " . __FILE__);
 
-    $self->{dbh}            = undef;
-    $self->{cache}          = {};
+    $self->{dbh}   = undef;
+    $self->{cache} = {};
 
     $self->{pbot}->{registry}->add_default('text', 'dualindexsqliteobject', "debug_$self->{name}", 0);
     $self->{pbot}->{registry}->add_trigger('dualindexsqliteobject', "debug_$self->{name}", sub { $self->sqlite_debug_trigger(@_) });
