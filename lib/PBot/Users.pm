@@ -12,7 +12,7 @@ use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{storage} = PBot::HashObject->new(name => 'Users', filename => $conf{filename}, pbot => $conf{pbot});
+    $self->{storage} = PBot::Storage::HashObject->new(name => 'Users', filename => $conf{filename}, pbot => $conf{pbot});
 
     $self->{pbot}->{commands}->register(sub { $self->cmd_login(@_) },     "login",     0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_logout(@_) },    "logout",    0);

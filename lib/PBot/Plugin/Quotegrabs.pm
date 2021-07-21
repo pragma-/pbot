@@ -18,8 +18,8 @@ use Time::Duration;
 use Time::HiRes qw(gettimeofday);
 use Getopt::Long qw(GetOptionsFromArray);
 
-use PBot::Plugin::Quotegrabs::Quotegrabs_SQLite;    # use SQLite backend for quotegrabs database
-#use PBot::Plugin::Quotegrabs::Quotegrabs_Hashtable;  # use Perl hashtable backend for quotegrabs database
+use PBot::Plugin::Quotegrabs::Storage::SQLite;     # use SQLite backend for quotegrabs database
+#use PBot::Plugin::Quotegrabs::Storage::Hashtable; # use Perl hashtable backend for quotegrabs database
 use PBot::Utils::ValidateString;
 
 use POSIX qw(strftime);
@@ -28,8 +28,8 @@ sub initialize {
     my ($self, %conf) = @_;
     $self->{filename} = $conf{quotegrabs_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quotegrabs.sqlite3';
 
-    $self->{database} = PBot::Plugin::Quotegrabs::Quotegrabs_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
-    #$self->{database} = PBot::Plugin::Quotegrabs::Quotegrabs_Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
+    $self->{database} = PBot::Plugin::Quotegrabs::Storage::SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
+    #$self->{database} = PBot::Plugin::Quotegrabs::Storage::Hashtable->new(pbot => $self->{pbot}, filename => $self->{filename});
     $self->{database}->begin();
 
     $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });

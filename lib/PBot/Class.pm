@@ -13,8 +13,6 @@ use PBot::Imports;
 sub new {
     my ($class, %args) = @_;
 
-    my $self  = bless {}, $class;
-
     # ensure class was passed a PBot instance
     if (not exists $args{pbot}) {
         my ($package, $filename, $line) = caller(0);
@@ -22,7 +20,7 @@ sub new {
         Carp::croak("Missing pbot reference to " . $class . ", created by $subroutine at $filename:$line");
     }
 
-    $self->{pbot} = $args{pbot};
+    my $self = bless { pbot => $args{pbot} }, $class;
 
     $self->{pbot}->{logger}->log("Initializing $class\n");
     $self->initialize(%args);

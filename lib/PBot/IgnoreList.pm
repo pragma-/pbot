@@ -17,7 +17,7 @@ sub initialize {
 
     $self->{filename} = $conf{filename};
 
-    $self->{storage} = PBot::DualIndexHashObject->new(pbot => $self->{pbot}, name => 'IgnoreList', filename => $self->{filename});
+    $self->{storage} = PBot::Storage::DualIndexHashObject->new(pbot => $self->{pbot}, name => 'IgnoreList', filename => $self->{filename});
     $self->{storage}->load;
     $self->enqueue_ignores;
 

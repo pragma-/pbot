@@ -6,15 +6,16 @@
 # SPDX-License-Identifier: MIT
 
 package PBot::Utils::PriorityQueue;
-use parent 'PBot::Class';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub new {
+    my ($class, %args) = @_;
 
-    # list of entrie; each entry is expected to have a `priority` and an `id` field
-    $self->{queue} = [];
+    return bless {
+        # list of entries; each entry is expected to have a `priority` and an `id` field
+        queue => [],
+    }, $class;
 }
 
 sub queue {

@@ -10,8 +10,6 @@ use parent 'PBot::Class';
 
 use PBot::Imports;
 
-use PBot::ChanOpCommands;
-
 use Time::HiRes qw(gettimeofday);
 use Time::Duration qw(concise duration);
 
@@ -21,8 +19,6 @@ sub initialize {
     $self->{op_commands}  = {};
     $self->{is_opped}     = {};
     $self->{op_requested} = {};
-
-    $self->{commands} = PBot::ChanOpCommands->new(pbot => $self->{pbot});
 
     $self->{pbot}->{registry}->add_default('text', 'general', 'deop_timeout', 300);
 

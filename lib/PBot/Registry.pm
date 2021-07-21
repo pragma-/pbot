@@ -11,9 +11,6 @@ use parent 'PBot::Class';
 
 use PBot::Imports;
 
-use Time::HiRes qw(gettimeofday);
-use PBot::RegistryCommands;
-
 sub initialize {
     my ($self, %conf) = @_;
 
@@ -21,16 +18,13 @@ sub initialize {
     my $filename = $conf{filename} // Carp::croak("Missing filename configuration item in " . __FILE__);
 
     # registry is stored as a dual-index hash object
-    $self->{storage} = PBot::DualIndexHashObject->new(name => 'Registry', filename => $filename, pbot => $self->{pbot});
+    $self->{storage} = PBot::Storage::DualIndexHashObject->new(name => 'Registry', filename => $filename, pbot => $self->{pbot});
 
     # registry triggers are processed when a registry entry is modified
     $self->{triggers} = {};
 
     # save registry data at bot exit
     $self->{pbot}->{atexit}->register(sub { $self->save; return; });
-
-    # prepare registry-specific bot commands
-    PBot::RegistryCommands->new(pbot => $self->{pbot});
 
     # load existing registry entries from file (if exists)
     if (-e $filename) {

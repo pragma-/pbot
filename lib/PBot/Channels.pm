@@ -12,7 +12,7 @@ use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{storage} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => $conf{filename});
+    $self->{storage} = PBot::Storage::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => $conf{filename});
     $self->{storage}->load;
 
     $self->{pbot}->{commands}->register(sub { $self->cmd_join(@_) },   "join",      1);

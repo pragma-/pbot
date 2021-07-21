@@ -18,20 +18,19 @@ use Getopt::Long qw(GetOptionsFromArray);
 use Time::HiRes qw(time tv_interval);
 use Time::Duration;
 
-use PBot::MessageHistory_SQLite;
+use PBot::MessageHistory::Storage::SQLite;
 
 sub initialize {
     my ($self, %conf) = @_;
     $self->{filename} = $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/message_history.sqlite3';
 
-    $self->{database} = PBot::MessageHistory_SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
+    $self->{database} = PBot::MessageHistory::Storage::SQLite->new(
+        pbot     => $self->{pbot},
+        filename => $self->{filename}
+    );
+
     $self->{database}->begin();
     $self->{database}->devalidate_all_channels();
-
-    $self->{MSG_CHAT}       = 0;    # PRIVMSG, ACTION
-    $self->{MSG_JOIN}       = 1;    # JOIN
-    $self->{MSG_DEPARTURE}  = 2;    # PART, QUIT, KICK
-    $self->{MSG_NICKCHANGE} = 3;    # CHANGED NICK
 
     $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_recall_time', $conf{max_recall_time} // 0);
 

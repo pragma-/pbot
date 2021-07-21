@@ -1,14 +1,26 @@
-# File: RegistryCommands.pm
+# File: Registry.pm
 #
 # Purpose: Bot commands to manipulate Registry entries.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::RegistryCommands;
-use parent 'PBot::Class';
+package PBot::Commands::Registry;
 
 use PBot::Imports;
+
+sub new {
+    my ($class, %args) = @_;
+
+    # ensure class was passed a PBot instance
+    if (not exists $args{pbot}) {
+        Carp::croak("Missing pbot reference to $class");
+    }
+
+    my $self = bless { pbot => $args{pbot} }, $class;
+    $self->initialize(%args);
+    return $self;
+}
 
 sub initialize {
     my ($self, %conf) = @_;

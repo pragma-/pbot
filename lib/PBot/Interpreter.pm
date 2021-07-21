@@ -14,6 +14,8 @@ use parent 'PBot::Class', 'PBot::Registerable';
 
 use PBot::Imports;
 
+use PBot::MessageHistory::Constants ':all';
+
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 
@@ -64,7 +66,7 @@ sub process_line {
     $context->{message_account} = $message_account;
 
     # add message to message history as a chat message
-    $self->{pbot}->{messagehistory}->add_message($message_account, $context->{hostmask}, $from, $text, $self->{pbot}->{messagehistory}->{MSG_CHAT});
+    $self->{pbot}->{messagehistory}->add_message($message_account, $context->{hostmask}, $from, $text, MSG_CHAT);
 
     # look up channel-specific flood threshold settings from registry
     my $flood_threshold      = $self->{pbot}->{registry}->get_value($from, 'chat_flood_threshold');
@@ -78,7 +80,7 @@ sub process_line {
     $self->{pbot}->{antiflood}->check_flood(
         $from, $nick, $user, $host, $text,
         $flood_threshold, $flood_time_threshold,
-        $self->{pbot}->{messagehistory}->{MSG_CHAT},
+        MSG_CHAT,
         $context
     );
 

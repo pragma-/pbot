@@ -1,11 +1,11 @@
-# File: Quotegrabs_SQLite.pm
+# File: SQLite.pm
 #
-# Purpose: SQLite back-end for storing and retreiving quotegrabs
+# Purpose: SQLite backend for storing and retreiving quotegrabs.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Plugin::Quotegrabs::Quotegrabs_SQLite;
+package PBot::Plugin::Quotegrabs::Storage::SQLite;
 
 use PBot::Imports;
 

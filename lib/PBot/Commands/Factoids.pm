@@ -1,12 +1,11 @@
-# File: FactoidCommands.pm
+# File: Factoids.pm
 #
-# Purpose: Factoid command subroutines.
+# Purpose: Factoids command subroutines.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::FactoidCommands;
-use parent 'PBot::Class';
+package PBot::Commands::Factoids;
 
 use PBot::Imports;
 
@@ -41,9 +40,23 @@ our %factoid_metadata_capabilities = (
     # all others are allowed to be factset by anybody
 );
 
+sub new {
+    my ($class, %args) = @_;
+
+    # ensure class was passed a PBot instance
+    if (not exists $args{pbot}) {
+        Carp::croak("Missing pbot reference to $class");
+    }
+
+    my $self = bless { pbot => $args{pbot} }, $class;
+    $self->initialize(%args);
+    return $self;
+}
+
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{registry}->add_default('text', 'general', 'module_repo', $conf{module_repo} // 'https://github.com/pragma-/pbot/blob/master/modules/');
+    $self->{pbot}->{registry}->add_default('text', 'general', 'module_repo', $conf{module_repo}
+        // 'https://github.com/pragma-/pbot/blob/master/modules/');
 
     $self->{pbot}->{commands}->register(sub { $self->cmd_factadd(@_) },      "learn",      0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_factadd(@_) },      "factadd",    0);
@@ -849,8 +862,8 @@ sub cmd_factinfo {
     $channel_name = 'global'            if $channel_name eq '.*';
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
-    my $created_ago = ago(gettimeofday - $factoids->get_data($channel, $trigger, 'created_on'));
-    my $ref_ago = ago(gettimeofday - $factoids->get_data($channel, $trigger, 'last_referenced_on')) if defined $factoids->get_data($channel, $trigger, 'last_referenced_on');
+    my $created_ago = concise ago(gettimeofday - $factoids->get_data($channel, $trigger, 'created_on'));
+    my $ref_ago = concise ago(gettimeofday - $factoids->get_data($channel, $trigger, 'last_referenced_on')) if defined $factoids->get_data($channel, $trigger, 'last_referenced_on');
 
     # factoid
     if ($factoids->get_data($channel, $trigger, 'type') eq 'text') {
@@ -865,7 +878,7 @@ sub cmd_factinfo {
             ? 'last edited by '
               . $factoids->get_data($channel, $trigger, 'edited_by') . ' on '
               . localtime($factoids->get_data($channel, $trigger, 'edited_on')) . " ["
-              . ago(gettimeofday - $factoids->get_data($channel, $trigger, 'edited_on')) . "], "
+              . concise ago(gettimeofday - $factoids->get_data($channel, $trigger, 'edited_on')) . "], "
             : ""
           )
           . "referenced "
@@ -908,7 +921,7 @@ sub cmd_factinfo {
             ? 'last edited by '
               . $factoids->get_data($channel, $trigger, 'edited_by') . ' on '
               . localtime($factoids->get_data($channel, $trigger, 'edited_on')) . " ["
-              . ago(gettimeofday - $factoids->get_data($channel, $trigger, 'edited_on')) . "], "
+              . concise ago(gettimeofday - $factoids->get_data($channel, $trigger, 'edited_on')) . "], "
             : ""
           )
           . ' used '
@@ -1200,7 +1213,7 @@ sub cmd_factchange {
 
         if ($@) {
             my $err = $@;
-            $err =~ s/ at PBot\/FactoidCommand.*$//;
+            $err =~ s/ at PBot\/.*$//;
             return "/msg $context->{nick} Change $trigger_name failed: $err";
         }
         return $ret if length $ret;

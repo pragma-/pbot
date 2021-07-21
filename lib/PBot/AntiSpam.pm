@@ -16,7 +16,7 @@ use POSIX qw/strftime/;
 sub initialize {
     my ($self, %conf) = @_;
     my $filename = $conf{spamkeywords_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spam_keywords';
-    $self->{keywords} = PBot::DualIndexHashObject->new(name => 'SpamKeywords', filename => $filename, pbot => $self->{pbot});
+    $self->{keywords} = PBot::Storage::DualIndexHashObject->new(name => 'SpamKeywords', filename => $filename, pbot => $self->{pbot});
     $self->{keywords}->load;
 
     $self->{pbot}->{registry}->add_default('text', 'antispam', 'enforce', $conf{enforce_antispam} // 1);

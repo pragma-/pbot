@@ -1,17 +1,29 @@
-# File: ChanOpCommands.pm
+# File: ChanOp.pm
 #
 # Purpose: Channel operator command subroutines.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::ChanOpCommands;
-use parent 'PBot::Class';
+package PBot::Commands::ChanOp;
 
 use PBot::Imports;
 
 use Time::Duration;
 use Time::HiRes qw/gettimeofday/;
+
+sub new {
+    my ($class, %args) = @_;
+
+    # ensure class was passed a PBot instance
+    if (not exists $args{pbot}) {
+        Carp::croak("Missing pbot reference to $class");
+    }
+
+    my $self = bless { pbot => $args{pbot} }, $class;
+    $self->initialize(%args);
+    return $self;
+}
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -88,28 +100,43 @@ sub initialize {
 }
 
 sub on_inviting {
-    my ($self,    $event_type, $event)   = @_;
-    my ($botnick, $target,     $channel) = $event->{event}->args;
+    my ($self, $event_type, $event) = @_;
+
+    my ($botnick, $target, $channel) = $event->{event}->args;
+
     $self->{pbot}->{logger}->log("User $target invited to channel $channel.\n");
-    return 0 if not exists $self->{invites}->{lc $channel} or not exists $self->{invites}->{lc $channel}->{lc $target};
+
+    if (not exists $self->{invites}->{lc $channel} or not exists $self->{invites}->{lc $channel}->{lc $target}) {
+        return 0;
+    }
+
     $event->{conn}->privmsg($self->{invites}->{lc $channel}->{lc $target}, "$target invited to $channel.");
+
     delete $self->{invites}->{lc $channel}->{lc $target};
     return 1;
 }
 
 sub on_useronchannel {
-    my ($self,    $event_type, $event)   = @_;
-    my ($botnick, $target,     $channel) = $event->{event}->args;
+    my ($self, $event_type, $event)   = @_;
+
+    my ($botnick, $target, $channel) = $event->{event}->args;
+
     $self->{pbot}->{logger}->log("User $target is already on channel $channel.\n");
-    return 0 if not exists $self->{invites}->{lc $channel} or not exists $self->{invites}->{lc $channel}->{lc $target};
+
+    if (not exists $self->{invites}->{lc $channel} or not exists $self->{invites}->{lc $channel}->{lc $target}) {
+        return 0;
+    }
+
     $event->{conn}->privmsg($self->{invites}->{lc $channel}->{lc $target}, "$target is already on $channel.");
+
     delete $self->{invites}->{lc $channel}->{lc $target};
     return 1;
 }
 
 sub on_nosuchnick {
-    my ($self,    $event_type, $event) = @_;
-    my ($botnick, $target,     $msg)   = $event->{event}->args;
+    my ($self, $event_type, $event) = @_;
+
+    my ($botnick, $target, $msg) = $event->{event}->args;
 
     $self->{pbot}->{logger}->log("$target: $msg\n");
 

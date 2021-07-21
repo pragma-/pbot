@@ -3,13 +3,20 @@
 # Purpose: Provides a dual-indexed SQLite object with an abstracted API that includes
 # setting and deleting values, caching, displaying nearest matches, etc. Designed to
 # be as compatible as possible with DualIndexHashObject; e.g. get_keys, get_data, etc.
-
+#
+# This class is ideal if you don't want to store the data in working memory. However,
+# data is temporarily cached in working memory for lightning fast performance. The TTL
+# value can be adjusted via the `dualindexsqliteobject.cache_timeout` registry entry.
+#
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::DualIndexSQLiteObject;
+package PBot::Storage::DualIndexSQLiteObject;
 
 use PBot::Imports;
+
+use PBot::Utils::SQLiteLogger;
+use PBot::Utils::SQLiteLoggerLayer;
 
 use DBI;
 use Text::Levenshtein qw(fastdistance);
@@ -56,9 +63,7 @@ sub begin {
 
     eval {
         my $sqlite_debug = $self->{pbot}->{registry}->get_value('dualindexsqliteobject', "debug_$self->{name}");
-        use PBot::SQLiteLoggerLayer;
-        use PBot::SQLiteLogger;
-        open $self->{trace_layer}, '>:via(PBot::SQLiteLoggerLayer)', PBot::SQLiteLogger->new(pbot => $self->{pbot});
+        open $self->{trace_layer}, '>:via(PBot::Utils::SQLiteLoggerLayer)', PBot::Utils::SQLiteLogger->new(pbot => $self->{pbot});
         $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$sqlite_debug"), $self->{trace_layer});
     };
 

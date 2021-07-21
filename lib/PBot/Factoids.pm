@@ -17,8 +17,6 @@ use POSIX qw(strftime);
 use Text::ParseWords;
 use JSON;
 
-use PBot::FactoidCommands;
-
 use PBot::Utils::Indefinite;
 use PBot::Utils::ValidateString;
 
@@ -67,9 +65,7 @@ sub initialize {
 
     $self->{pbot} = $self->{pbot};
 
-    $self->{storage} = PBot::DualIndexSQLiteObject->new(name => 'Factoids', filename => $filename, pbot => $self->{pbot});
-
-    $self->{commands} = PBot::FactoidCommands->new(pbot => $self->{pbot});
+    $self->{storage} = PBot::Storage::DualIndexSQLiteObject->new(name => 'Factoids', filename => $filename, pbot => $self->{pbot});
 
     $self->{pbot}->{registry}->add_default('text', 'factoids', 'default_rate_limit', 15);
     $self->{pbot}->{registry}->add_default('text', 'factoids', 'max_name_length',    100);

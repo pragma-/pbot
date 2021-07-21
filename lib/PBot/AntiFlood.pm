@@ -14,6 +14,8 @@ use parent 'PBot::Class';
 
 use PBot::Imports;
 
+use PBot::MessageHistory::Constants ':all';
+
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
 use POSIX qw/strftime/;
@@ -32,7 +34,7 @@ sub initialize {
     $self->{changinghost}  = {};    # tracks nicks changing hosts/identifying to strongly link them
 
     my $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/ban-exemptions';
-    $self->{'ban-exemptions'} = PBot::DualIndexHashObject->new(name => 'Ban exemptions', filename => $filename, pbot => $self->{pbot});
+    $self->{'ban-exemptions'} = PBot::Storage::DualIndexHashObject->new(name => 'Ban exemptions', filename => $filename, pbot => $self->{pbot});
     $self->{'ban-exemptions'}->load;
 
     $self->{pbot}->{event_queue}->enqueue(sub { $self->adjust_offenses }, 60 * 60 * 1, 'Adjust anti-flood offenses');
@@ -237,10 +239,10 @@ sub update_join_watch {
 
     my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'join_watch');
 
-    if ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN}) {
+    if ($mode == MSG_JOIN) {
         $channel_data->{join_watch}++;
         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
-    } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
+    } elsif ($mode == MSG_DEPARTURE) {
         # PART or QUIT
         # check QUIT message for netsplits, and decrement joinwatch to allow a free rejoin
         if ($text =~ /^QUIT .*\.net .*\.split/) {
@@ -258,7 +260,7 @@ sub update_join_watch {
         } else {
             # some other type of QUIT or PART
         }
-    } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
+    } elsif ($mode == MSG_CHAT) {
         # reset joinwatch if they send a message
         if ($channel_data->{join_watch} > 0) {
             $channel_data->{join_watch} = 0;
@@ -267,6 +269,8 @@ sub update_join_watch {
     }
 }
 
+# TODO: break this gigantic function up into simple plugins
+# e.g. PBot::Plugin::AntiAbuse::ChatFlood, ::JoinFlood, ::EnterAbuse, etc.
 sub check_flood {
     my ($self, $channel, $nick, $user, $host, $text, $max_messages, $max_time, $mode, $context) = @_;
     $channel = lc $channel;
@@ -275,7 +279,7 @@ sub check_flood {
     my $oldnick = $nick;
     my $account;
 
-    if ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN} and exists $self->{changinghost}->{$nick}) {
+    if ($mode == MSG_JOIN and exists $self->{changinghost}->{$nick}) {
         $self->{pbot}->{logger}->log("Finalizing host change for $nick.\n");
         $account = delete $self->{changinghost}->{$nick};
 
@@ -306,7 +310,7 @@ sub check_flood {
 
     $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($mask, {last_seen => scalar gettimeofday});
 
-    if ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+    if ($mode == MSG_NICKCHANGE) {
         $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", "NICKCHANGE", $mask, $text));
 
         my ($newnick) = $text =~ m/NICKCHANGE (.*)/;
@@ -330,7 +334,7 @@ sub check_flood {
     $self->{pbot}->{logger}->log("Processing anti-flood account $account " . ($ancestor != $account ? "[ancestor $ancestor] " : '') . "for mask $mask\n")
       if $self->{pbot}->{registry}->get_value('antiflood', 'debug_account');
 
-    if ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+    if ($mode == MSG_NICKCHANGE) {
         $self->{nickflood}->{$ancestor}->{changes}++;
         $self->{pbot}->{logger}->log("account $ancestor has $self->{nickflood}->{$ancestor}->{changes} nickchanges\n");
     }
@@ -338,8 +342,9 @@ sub check_flood {
     # handle QUIT events
     # (these events come from $channel nick!user@host, not a specific channel or nick,
     # so they need to be dispatched to all channels the nick has been seen on)
-    if ($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE} and $text =~ /^QUIT/) {
+    if ($mode == MSG_DEPARTURE and $text =~ /^QUIT/) {
         my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
+
         foreach my $chan (@$channels) {
             next if $chan !~ m/^#/;
             $self->update_join_watch($account, $chan, $text, $mode);
@@ -356,7 +361,7 @@ sub check_flood {
     }
 
     my $channels;
-    if ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+    if ($mode == MSG_NICKCHANGE) {
         $channels = $self->{pbot}->{nicklist}->get_channels($oldnick);
     } else {
         $self->update_join_watch($account, $channel, $text, $mode);
@@ -369,7 +374,7 @@ sub check_flood {
         next if $chan =~ /^#/ and not $self->{pbot}->{chanops}->can_gain_ops($chan);
         my $u = $self->{pbot}->{users}->loggedin($chan, "$nick!$user\@$host");
 
-        if ($chan =~ /^#/ and $mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
+        if ($chan =~ /^#/ and $mode == MSG_DEPARTURE) {
             # remove validation on PART or KICK so we check for ban-evasion when user returns at a later time
             my $chan_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'validated');
             if ($chan_data->{validated} & $self->{NICKSERV_VALIDATED}) {
@@ -391,16 +396,16 @@ sub check_flood {
             my $validated = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'validated')->{'validated'};
 
             if ($validated & $self->{NEEDS_CHECKBAN} or not $validated & $self->{NICKSERV_VALIDATED}) {
-                if ($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
+                if ($mode == MSG_DEPARTURE) {
                     # don't check for evasion on PART/KICK
-                } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+                } elsif ($mode == MSG_NICKCHANGE) {
                     if (not exists $self->{whois_pending}->{$nick}) {
                         $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($account, '');
                         $self->{pbot}->{conn}->whois($nick);
                         $self->{whois_pending}->{$nick} = gettimeofday;
                     }
                 } else {
-                    if ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN} && exists $self->{pbot}->{irc_capabilities}->{'extended-join'}) {
+                    if ($mode == MSG_JOIN && exists $self->{pbot}->{irc_capabilities}->{'extended-join'}) {
                         # don't WHOIS joins if extended-join capability is active
                     } elsif (not exists $self->{pbot}->{irc_capabilities}->{'account-notify'}) {
                         if (not exists $self->{whois_pending}->{$nick}) {
@@ -436,20 +441,20 @@ sub check_flood {
 
         # check for chat/join/private message flooding
         if (    $max_messages > 0
-            and $self->{pbot}->{messagehistory}->{database}->get_max_messages($account, $chan, $mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} ? $nick : undef) >=
+            and $self->{pbot}->{messagehistory}->{database}->get_max_messages($account, $chan, $mode == MSG_NICKCHANGE ? $nick : undef) >=
             $max_messages)
         {
             my $msg;
-            if ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
+            if ($mode == MSG_CHAT) {
                 $msg = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $chan, $max_messages - 1);
-            } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN}) {
-                my $joins = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $chan, $max_messages, $self->{pbot}->{messagehistory}->{MSG_JOIN});
+            } elsif ($mode == MSG_JOIN) {
+                my $joins = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $chan, $max_messages, MSG_JOIN);
                 $msg = $joins->[0];
-            } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+            } elsif ($mode == MSG_NICKCHANGE) {
                 my $nickchanges =
-                  $self->{pbot}->{messagehistory}->{database}->get_recent_messages($ancestor, $chan, $max_messages, $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}, $nick);
+                  $self->{pbot}->{messagehistory}->{database}->get_recent_messages($ancestor, $chan, $max_messages, MSG_NICKCHANGE, $nick);
                 $msg = $nickchanges->[0];
-            } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_DEPARTURE}) {
+            } elsif ($mode == MSG_DEPARTURE) {
                 # no flood checks to be done for departure events
                 next;
             } else {
@@ -458,17 +463,17 @@ sub check_flood {
             }
 
             my $last;
-            if ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+            if ($mode == MSG_NICKCHANGE) {
                 $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($ancestor, $chan, 0, undef, $nick);
             } else {
                 $last = $self->{pbot}->{messagehistory}->{database}->recall_message_by_count($account, $chan, 0);
             }
 
             if ($last->{timestamp} - $msg->{timestamp} <= $max_time) {
-                if ($mode == $self->{pbot}->{messagehistory}->{MSG_JOIN}) {
+                if ($mode == MSG_JOIN) {
                     my $chan_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'offenses', 'last_offense', 'join_watch');
 
-                    #$self->{pbot}->{logger}->log("$account offenses $chan_data->{offenses}, join watch $chan_data->{join_watch}, max messages $max_messages\n");
+                    $self->{pbot}->{logger}->log("$account offenses $chan_data->{offenses}, join watch $chan_data->{join_watch}, max messages $max_messages\n");
                     if ($chan_data->{join_watch} >= $max_messages) {
                         $chan_data->{offenses}++;
                         $chan_data->{last_offense} = gettimeofday;
@@ -502,7 +507,7 @@ sub check_flood {
                         $chan_data->{join_watch} = $max_messages - 2;    # give them a chance to rejoin
                         $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
                     }
-                } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT}) {
+                } elsif ($mode == MSG_CHAT) {
                     if ($chan =~ /^#/) {                                #channel flood (opposed to private message or otherwise)
                         # don't increment offenses again if already banned
                         if ($self->{pbot}->{banlist}->has_ban_timeout($chan, "*!$user\@" . $self->address_to_mask($host))) {
@@ -563,7 +568,7 @@ sub check_flood {
                         $self->{pbot}->{conn}->privmsg($nick, "You have used too many commands in too short a time period, you have been ignored for $length.");
                     }
                     next;
-                } elsif ($mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE} and $self->{nickflood}->{$ancestor}->{changes} >= $max_messages) {
+                } elsif ($mode == MSG_NICKCHANGE and $self->{nickflood}->{$ancestor}->{changes} >= $max_messages) {
                     next if $chan !~ /^#/;
                     ($nick) = $text =~ m/NICKCHANGE (.*)/;
 
@@ -602,13 +607,13 @@ sub check_flood {
         }
 
         # check for enter abuse
-        if ($mode == $self->{pbot}->{messagehistory}->{MSG_CHAT} and $chan =~ m/^#/) {
+        if ($mode == MSG_CHAT and $chan =~ m/^#/) {
             my $chan_data         = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'enter_abuse', 'enter_abuses', 'offenses');
             my $other_offenses    = delete $chan_data->{offenses};
             my $debug_enter_abuse = $self->{pbot}->{registry}->get_value('antiflood', 'debug_enter_abuse');
 
             if (defined $self->{channels}->{$chan}->{last_spoken_nick} and $nick eq $self->{channels}->{$chan}->{last_spoken_nick}) {
-                my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $chan, 2, $self->{pbot}->{messagehistory}->{MSG_CHAT});
+                my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $chan, 2, MSG_CHAT);
 
                 my $enter_abuse_threshold      = $self->{pbot}->{registry}->get_value($chan, 'enter_abuse_threshold');
                 my $enter_abuse_time_threshold = $self->{pbot}->{registry}->get_value($chan, 'enter_abuse_time_threshold');
@@ -697,7 +702,7 @@ sub check_flood {
         }
     }
 
-    $self->{channels}->{$channel}->{last_spoken_nick} = $nick if $mode == $self->{pbot}->{messagehistory}->{MSG_CHAT};
+    $self->{channels}->{$channel}->{last_spoken_nick} = $nick if $mode == MSG_CHAT;
 }
 
 sub address_to_mask {

@@ -1,4 +1,4 @@
-# File: MessageHistory_SQLite.pm
+# File: SQLite.pm
 #
 # Purpose: SQLite backend for storing/retreiving a user's message history.
 # Peforms intelligent hostmask and nickserv heuristics to link nicknames
@@ -9,10 +9,15 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::MessageHistory_SQLite;
+package PBot::MessageHistory::Storage::SQLite;
 use parent 'PBot::Class';
 
 use PBot::Imports;
+
+use PBot::MessageHistory::Constants ':all';
+
+use PBot::Utils::SQLiteLogger;
+use PBot::Utils::SQLiteLoggerLayer;
 
 use DBI;
 use Carp              qw/shortmess/;
@@ -31,14 +36,16 @@ sub initialize {
     $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'sqlite_commit_interval', 30);
     $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'sqlite_debug',           $conf{sqlite_debug} // 0);
 
-    $self->{pbot}->{registry}->add_trigger('messagehistory', 'sqlite_commit_interval', sub { $self->sqlite_commit_interval_trigger(@_) });
-    $self->{pbot}->{registry}->add_trigger('messagehistory', 'sqlite_debug',           sub { $self->sqlite_debug_trigger(@_) });
+    $self->{pbot}->{registry}->add_trigger('messagehistory', 'sqlite_commit_interval',
+        sub { $self->sqlite_commit_interval_trigger(@_) });
+
+    $self->{pbot}->{registry}->add_trigger('messagehistory', 'sqlite_debug',
+        sub { $self->sqlite_debug_trigger(@_) });
 
     $self->{pbot}->{event_queue}->enqueue(
         sub { $self->commit_message_history },
         $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_commit_interval'),
-        'messagehistory commit'
-    );
+        'messagehistory commit');
 
     $self->{alias_type}->{WEAK}   = 0;
     $self->{alias_type}->{STRONG} = 1;
@@ -53,7 +60,7 @@ sub sqlite_debug_trigger {
     my ($self, $section, $item, $newvalue) = @_;
 
     if ($newvalue) {
-        open $self->{trace_layer}, '>:via(PBot::SQLiteLoggerLayer)', PBot::SQLiteLogger->new(pbot => $self->{pbot});
+        open $self->{trace_layer}, '>:via(PBot::Utils::SQLiteLoggerLayer)', PBot::Utils::SQLiteLogger->new(pbot => $self->{pbot});
     } else {
         close $self->{trace_layer} if $self->{trace_layer};
         delete $self->{trace_layer};
@@ -72,10 +79,8 @@ sub begin {
 
     eval {
         my $sqlite_debug = $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_debug');
-        use PBot::SQLiteLoggerLayer;
-        use PBot::SQLiteLogger;
         if ($sqlite_debug) {
-            open $self->{trace_layer}, '>:via(PBot::SQLiteLoggerLayer)', PBot::SQLiteLogger->new(pbot => $self->{pbot});
+            open $self->{trace_layer}, '>:via(PBot::Utils::SQLiteLoggerLayer)', PBot::Utils::SQLiteLogger->new(pbot => $self->{pbot});
             $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$sqlite_debug"), $self->{trace_layer});
         }
 
@@ -894,7 +899,7 @@ sub get_recent_messages {
         my %seen_id;
 
         my %akas;
-        if (defined $mode and $mode == $self->{pbot}->{messagehistory}->{MSG_NICKCHANGE}) {
+        if (defined $mode and $mode == MSG_NICKCHANGE) {
             %akas = $self->get_also_known_as($nick);
         } else {
             $akas{$id} = {
@@ -1226,7 +1231,7 @@ sub get_random_message {
 
         my $param = 1;
         $sth->bind_param($param++, $channel);
-        $sth->bind_param($param++, $self->{pbot}->{messagehistory}->{MSG_CHAT});
+        $sth->bind_param($param++, MSG_CHAT);
 
         map { $sth->bind_param($param++, $_) } keys %seen_id;
 

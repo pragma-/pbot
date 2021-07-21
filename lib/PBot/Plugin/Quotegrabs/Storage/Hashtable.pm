@@ -1,11 +1,11 @@
-# File: Quotegrabs_Hashtable.pm
+# File: Hashtable.pm
 #
-# Purpose: Hashtable backend for storing and retreiving quotegrabs
+# Purpose: Hashtable backend for storing and retreiving quotegrabs.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Plugin::Quotegrabs::Quotegrabs_Hashtable;
+package PBot::Plugin::Quotegrabs::Storage::Hashtable;
 
 use PBot::Imports;
 

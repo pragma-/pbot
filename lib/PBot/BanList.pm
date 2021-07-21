@@ -35,14 +35,14 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.endofbanlist',   sub { $self->compare_banlist(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.endofquietlist', sub { $self->compare_quietlist(@_) });
 
-    $self->{banlist} = PBot::DualIndexHashObject->new(
+    $self->{banlist} = PBot::Storage::DualIndexHashObject->new(
         pbot     => $self->{pbot},
         name     => 'Ban List',
         filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/banlist',
         save_queue_timeout => 15,
     );
 
-    $self->{quietlist} = PBot::DualIndexHashObject->new(
+    $self->{quietlist} = PBot::Storage::DualIndexHashObject->new(
         pbot     => $self->{pbot},
         name     => 'Quiet List',
         filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quietlist',
@@ -192,6 +192,7 @@ sub on_quietlist_entry {
     return 0;
 }
 
+# irc.endofbanlist
 sub compare_banlist {
     my ($self, $event_type, $event) = @_;
     my $channel = lc $event->{event}->{args}[1];
@@ -235,6 +236,7 @@ sub compare_banlist {
     delete $self->{temp_banlist}->{$channel}->{'+b'};
 }
 
+# irc.endofquietlist
 sub compare_quietlist {
     my ($self, $event_type, $event) = @_;
     my $channel = lc $event->{event}->{args}[1];

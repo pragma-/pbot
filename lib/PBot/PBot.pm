@@ -31,13 +31,10 @@ use PBot::Capabilities;
 use PBot::Commands;
 use PBot::Channels;
 use PBot::ChanOps;
-use PBot::DualIndexHashObject;
-use PBot::DualIndexSQLiteObject;
 use PBot::EventDispatcher;
 use PBot::EventQueue;
 use PBot::Factoids;
 use PBot::Functions;
-use PBot::HashObject;
 use PBot::IgnoreList;
 use PBot::Interpreter;
 use PBot::IRC;
@@ -45,7 +42,6 @@ use PBot::IRCHandlers;
 use PBot::LagChecker;
 use PBot::MessageHistory;
 use PBot::Modules;
-use PBot::MiscCommands;
 use PBot::NickList;
 use PBot::Plugins;
 use PBot::ProcessManager;
@@ -53,6 +49,9 @@ use PBot::Registry;
 use PBot::Refresher;
 use PBot::SelectHandler;
 use PBot::StdinReader;
+use PBot::Storage::HashObject;
+use PBot::Storage::DualIndexHashObject;
+use PBot::Storage::DualIndexSQLiteObject;
 use PBot::Updater;
 use PBot::Users;
 use PBot::Utils::ParseDate;
@@ -158,9 +157,6 @@ sub initialize {
     # create commands so the modules can register new commands
     $self->{commands} = PBot::Commands->new(pbot => $self, filename => "$conf{data_dir}/commands", %conf);
 
-    # add 'cap' capability command here since $self->{commands} is created after $self->{capabilities}
-    $self->{commands}->register(sub { $self->{capabilities}->cmd_cap(@_) }, "cap");
-
     # prepare the version information and `version` command
     $self->{version} = PBot::VERSION->new(pbot => $self, %conf);
     $self->{logger}->log($self->{version}->version . "\n");
@@ -194,7 +190,6 @@ sub initialize {
     $self->{irchandlers}      = PBot::IRCHandlers->new(pbot => $self, %conf);
     $self->{interpreter}      = PBot::Interpreter->new(pbot => $self, %conf);
     $self->{lagchecker}       = PBot::LagChecker->new(pbot => $self, %conf);
-    $self->{misc_commands}    = PBot::MiscCommands->new(pbot => $self, %conf);
     $self->{messagehistory}   = PBot::MessageHistory->new(pbot => $self, filename => "$conf{data_dir}/message_history.sqlite3", %conf);
     $self->{modules}          = PBot::Modules->new(pbot => $self, %conf);
     $self->{nicklist}         = PBot::NickList->new(pbot => $self, %conf);
@@ -204,6 +199,9 @@ sub initialize {
     $self->{select_handler}   = PBot::SelectHandler->new(pbot => $self, %conf);
     $self->{stdin_reader}     = PBot::StdinReader->new(pbot => $self, %conf);
     $self->{webpaste}         = PBot::WebPaste->new(pbot => $self, %conf);
+
+    # register commands in Commands directory
+    $self->{commands}->register_commands;
 
     # register command/factoid interpreters
     $self->{interpreter}->register(sub { $self->{commands}->interpreter(@_) });
@@ -286,24 +284,8 @@ sub connect {
 
     $self->{connected} = 1;
 
-    # set up handlers for the IRC engine
-    $self->{conn}->add_default_handler(sub { $self->{irchandlers}->default_handler(@_) }, 1);
-    $self->{conn}->add_handler([251, 252, 253, 254, 255, 302], sub { $self->{irchandlers}->on_init(@_) });
-
-    # ignore these events
-    $self->{conn}->add_handler(
-        [
-            'myinfo',
-            'whoisserver',
-            'whoiscountry',
-            'whoischannels',
-            'whoisidle',
-            'motdstart',
-            'endofmotd',
-            'away',
-        ],
-        sub { }
-    );
+    # set up IRC handlers
+    $self->{irchandlers}->add_handlers;
 }
 
 sub register_signal_handlers {

@@ -4,11 +4,14 @@
 # setting and deleting values, saving to and loading from files, etc.  Provides
 # case-insensitive access to the index key while preserving original case when
 # displaying index key.
+#
+# Data is stored in working memory for lightning fast performance. If a filename
+# is provided, data is written to a file after any modifications.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::HashObject;
+package PBot::Storage::HashObject;
 
 use PBot::Imports;
 

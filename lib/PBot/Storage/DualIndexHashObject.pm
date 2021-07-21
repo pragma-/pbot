@@ -8,12 +8,14 @@
 # original case when displaying the keys.
 #
 # Data is stored in working memory for lightning fast performance. If you have
-# a huge amount of data, consider DualIndexSQLiteObject instead.
+# a huge amount of data, consider using DualIndexSQLiteObject instead.
+#
+# If a filename is provided, data is written to a file after any modifications.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::DualIndexHashObject;
+package PBot::Storage::DualIndexHashObject;
 
 use PBot::Imports;
 

@@ -13,7 +13,7 @@ package PBot::Plugin::Spinach;
 use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
-use PBot::HashObject;
+use PBot::Storage::HashObject;
 
 use PBot::Plugin::Spinach::Stats;
 use PBot::Plugin::Spinach::Rank;
@@ -55,7 +55,7 @@ sub initialize {
     $self->{metadata_filename}  = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/metadata';
     $self->{stats_filename}     = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spinach/stats.sqlite';
 
-    $self->{metadata} = PBot::HashObject->new(pbot => $self->{pbot}, name => 'Spinach Metadata', filename => $self->{metadata_filename});
+    $self->{metadata} = PBot::Storage::HashObject->new(pbot => $self->{pbot}, name => 'Spinach Metadata', filename => $self->{metadata_filename});
     $self->{metadata}->load;
     $self->set_metadata_defaults;
 
