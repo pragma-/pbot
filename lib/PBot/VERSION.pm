@@ -12,13 +12,10 @@ use parent 'PBot::Core::Class';
 use PBot::Imports;
 
 use Exporter qw/import/;
-
 our @EXPORT = ();
-
 our %EXPORT_TAGS = (
     'all' => [qw/BUILD_NAME BUILD_REVISION BUILD_DATE/],
 );
-
 our @EXPORT_OK = (
     @{ $EXPORT_TAGS{all} },
 );
@@ -31,10 +28,7 @@ use constant {
 };
 
 sub initialize {
-    my ($self, %conf) = @_;
-
-    # initialize last_check version data
-    $self->{last_check} = {timestamp => 0, version => BUILD_REVISION, date => BUILD_DATE};
+    # nothing to do here
 }
 
 sub version {

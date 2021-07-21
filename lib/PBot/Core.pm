@@ -1,6 +1,6 @@
-# File: PBot.pm
+# File: Core.pm
 #
-# Purpose: IRC Bot
+# Purpose: PBot IRC Bot Core
 #
 # PBot was started around 2004, 2005. It has been lovingly maintained;
 # however, it does use the ancient but simple Net::IRC package (if it
@@ -16,7 +16,7 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::PBot;
+package PBot::Core;
 
 use PBot::Imports;
 use PBot::VERSION;

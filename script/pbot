@@ -11,9 +11,9 @@ use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 use lib "$ENV{HOME}/.pbot";
 
-use PBot::PBot;
+use PBot::Core;
 
-PBot::PBot->new(
+PBot::Core->new(
     data_dir   => "$RealBin/../data",
     module_dir => "$RealBin/../modules",
     update_dir => "$RealBin/../updates",
