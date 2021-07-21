@@ -44,12 +44,6 @@ sub load_packages {
 
         eval {
             require "$package";
-
-            if (my $exception = $@) {
-                $self->{pbot}->{logger}->log("Error loading $package: $exception");
-                return 0;
-            }
-
             $self->{packages}->{$name} = $class->new(pbot => $self->{pbot});
             $self->{pbot}->{refresher}->{refresher}->update_cache($package);
         };

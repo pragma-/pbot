@@ -126,15 +126,8 @@ sub load {
     $self->{pbot}->{refresher}->{refresher}->refresh_module($module);
 
     my $ret = eval {
-        require "$module";
-
-        if (my $exception = $@) {
-            $self->{pbot}->{logger}->log("Error loading $plugin: $exception");
-            return 0;
-        }
-
         $self->{pbot}->{logger}->log("Loading $plugin\n");
-
+        require "$module";
         my $class = "PBot::Plugin::$plugin";
         $self->{plugins}->{$plugin} = $class->new(pbot => $self->{pbot}, %conf);
         $self->{pbot}->{refresher}->{refresher}->update_cache($module);
