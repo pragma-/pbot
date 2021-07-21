@@ -39,7 +39,7 @@ sub cmd_set {
         return "Usage: cmdset <command> [key [value]]";
     }
 
-    return $self->{metadata}->set($command, $key, $value);
+    return $self->{pbot}->{commands}->{metadata}->set($command, $key, $value);
 }
 
 sub cmd_unset {
@@ -51,7 +51,7 @@ sub cmd_unset {
         return "Usage: cmdunset <command> <key>";
     }
 
-    return $self->{metadata}->unset($command, $key);
+    return $self->{pbot}->{commands}->{metadata}->unset($command, $key);
 }
 
 1;

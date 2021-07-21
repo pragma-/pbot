@@ -24,7 +24,6 @@ sub new {
 
 sub initialize {
     my ($self, %conf) = @_;
-
     $self->{pbot}->{commands}->register(sub { $self->cmd_help(@_) }, 'help');
 }
 
@@ -38,13 +37,13 @@ sub cmd_help {
     my $keyword = lc $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
     # check built-in commands first
-    if ($self->exists($keyword)) {
+    if ($self->{pbot}->{commands}->exists($keyword)) {
 
         # check for command metadata
-        if ($self->{metadata}->exists($keyword)) {
-            my $name         = $self->{metadata}->get_key_name($keyword);
-            my $requires_cap = $self->{metadata}->get_data($keyword, 'requires_cap');
-            my $help         = $self->{metadata}->get_data($keyword, 'help');
+        if ($self->{pbot}->{commands}->{metadata}->exists($keyword)) {
+            my $name         = $self->{pbot}->{commands}->{metadata}->get_key_name($keyword);
+            my $requires_cap = $self->{pbot}->{commands}->{metadata}->get_data($keyword, 'requires_cap');
+            my $help         = $self->{pbot}->{commands}->{metadata}->get_data($keyword, 'help');
 
             my $result = "/say $name: ";
 
