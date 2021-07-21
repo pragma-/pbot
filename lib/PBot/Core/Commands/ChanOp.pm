@@ -5,7 +5,7 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Commands::ChanOp;
+package PBot::Core::Commands::ChanOp;
 
 use PBot::Imports;
 

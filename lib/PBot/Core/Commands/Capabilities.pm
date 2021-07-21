@@ -5,7 +5,7 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Commands::Capabilities;
+package PBot::Core::Commands::Capabilities;
 
 use PBot::Imports;
 
@@ -24,7 +24,6 @@ sub new {
 
 sub initialize {
     my ($self, %conf) = @_;
-
     $self->{pbot}->{commands}->register(sub { $self->cmd_cap(@_) }, "cap");
 }
 

@@ -23,14 +23,14 @@ sub load_packages {
 
     my $cwd = getcwd;
 
-    chdir "$RealBin/../lib/PBot";
+    chdir "$RealBin/../lib/PBot/Core";
 
     my @packages = glob "$directory/*.pm";
 
     chdir $cwd;
 
     foreach my $package (sort @packages) {
-        $package = "PBot/$package";
+        $package = "PBot/Core/$package";
 
         my $class = $package;
         $class =~ s/\//::/g;

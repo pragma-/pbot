@@ -5,7 +5,7 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Commands::Factoids;
+package PBot::Core::Commands::Factoids;
 
 use PBot::Imports;
 
