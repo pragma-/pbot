@@ -405,7 +405,7 @@ feature trans => sub {
 feature urban => sub {
     requires 'WebService::UrbanDictionary';
     requires 'Getopt::Long';
-}
+};
 
 feature wikipedia => sub {
     requires 'WWW::Wikipedia';
