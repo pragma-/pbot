@@ -25,7 +25,7 @@ sub initialize {
 #
 # priority ranges from 0 to 100. 0 is the highest priority, i.e. an handler with
 # priority 0 will handle events first. 100 is the lowest priority and will handle
-# events last. priority defaults to 50 if ommited.
+# events last. priority defaults to 50 if omitted.
 #
 # NickList reserves 0 and 100 to ensure its list is populated by JOINs, etc,
 # before any handlers need to consult its list, or depopulated by PARTs, QUITs,
