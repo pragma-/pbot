@@ -9,9 +9,9 @@
 # classes instead of something like Moo or Object::Pad, though this may
 # change eventually.
 #
-# PBot has forked the Net::IRC package internally as PBot::IRC. It contains
-# numerous bugfixes and supports various new features such as IRCv3 client
-# capability negotiation and SASL user authentication.
+# PBot has forked the Net::IRC package internally as PBot::Core::IRC. It
+# contains numerous bugfixes and supports various new features such as IRCv3
+# client capability negotiation and SASL user authentication.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -19,43 +19,43 @@
 package PBot::PBot;
 
 use PBot::Imports;
+use PBot::VERSION;
 
 use Carp ();
-use PBot::Logger;
-use PBot::VERSION;
-use PBot::AntiFlood;
-use PBot::AntiSpam;
-use PBot::BanList;
-use PBot::BlackList;
-use PBot::Capabilities;
-use PBot::Commands;
-use PBot::Channels;
-use PBot::ChanOps;
-use PBot::EventDispatcher;
-use PBot::EventQueue;
-use PBot::Factoids;
-use PBot::Functions;
-use PBot::IgnoreList;
-use PBot::Interpreter;
-use PBot::IRC;
-use PBot::IRCHandlers;
-use PBot::LagChecker;
-use PBot::MessageHistory;
-use PBot::Modules;
-use PBot::NickList;
-use PBot::Plugins;
-use PBot::ProcessManager;
-use PBot::Registry;
-use PBot::Refresher;
-use PBot::SelectHandler;
-use PBot::StdinReader;
+use PBot::Core::Logger;
+use PBot::Core::AntiFlood;
+use PBot::Core::AntiSpam;
+use PBot::Core::BanList;
+use PBot::Core::BlackList;
+use PBot::Core::Capabilities;
+use PBot::Core::Commands;
+use PBot::Core::Channels;
+use PBot::Core::ChanOps;
+use PBot::Core::EventDispatcher;
+use PBot::Core::EventQueue;
+use PBot::Core::Factoids;
+use PBot::Core::Functions;
+use PBot::Core::IgnoreList;
+use PBot::Core::Interpreter;
+use PBot::Core::IRC;
+use PBot::Core::IRCHandlers;
+use PBot::Core::LagChecker;
+use PBot::Core::MessageHistory;
+use PBot::Core::Modules;
+use PBot::Core::NickList;
+use PBot::Core::Plugins;
+use PBot::Core::ProcessManager;
+use PBot::Core::Registry;
+use PBot::Core::Refresher;
+use PBot::Core::SelectHandler;
+use PBot::Core::StdinReader;
+use PBot::Core::Updater;
+use PBot::Core::Users;
+use PBot::Core::WebPaste;
 use PBot::Storage::HashObject;
 use PBot::Storage::DualIndexHashObject;
 use PBot::Storage::DualIndexSQLiteObject;
-use PBot::Updater;
-use PBot::Users;
 use PBot::Utils::ParseDate;
-use PBot::WebPaste;
 
 use Encode;
 use File::Basename;
@@ -125,13 +125,13 @@ sub initialize {
     }
 
     # let modules register atexit subroutines
-    $self->{atexit} = PBot::Registerable->new(pbot => $self, %conf);
+    $self->{atexit} = PBot::Core::Registerable->new(pbot => $self, %conf);
 
     # register default signal handlers
     $self->register_signal_handlers;
 
     # prepare and open logger
-    $self->{logger} = PBot::Logger->new(pbot => $self, filename => "$conf{data_dir}/log/log", %conf);
+    $self->{logger} = PBot::Core::Logger->new(pbot => $self, filename => "$conf{data_dir}/log/log", %conf);
 
     # log command-line arguments
     $self->{logger}->log("Args: @ARGV\n") if @ARGV;
@@ -142,7 +142,7 @@ sub initialize {
     $self->{logger}->log("update_dir: $conf{update_dir}\n");
 
     # prepare the updater
-    $self->{updater} = PBot::Updater->new(pbot => $self, data_dir => $conf{data_dir}, update_dir => $conf{update_dir});
+    $self->{updater} = PBot::Core::Updater->new(pbot => $self, data_dir => $conf{data_dir}, update_dir => $conf{update_dir});
 
     # update any data files to new locations/formats
     # --- this must happen before any data files are opened! ---
@@ -152,17 +152,17 @@ sub initialize {
     }
 
     # create capabilities so commands can add new capabilities
-    $self->{capabilities} = PBot::Capabilities->new(pbot => $self, filename => "$conf{data_dir}/capabilities", %conf);
+    $self->{capabilities} = PBot::Core::Capabilities->new(pbot => $self, filename => "$conf{data_dir}/capabilities", %conf);
 
     # create commands so the modules can register new commands
-    $self->{commands} = PBot::Commands->new(pbot => $self, filename => "$conf{data_dir}/commands", %conf);
+    $self->{commands} = PBot::Core::Commands->new(pbot => $self, filename => "$conf{data_dir}/commands", %conf);
 
     # prepare the version information and `version` command
     $self->{version} = PBot::VERSION->new(pbot => $self, %conf);
     $self->{logger}->log($self->{version}->version . "\n");
 
     # prepare registry
-    $self->{registry} = PBot::Registry->new(pbot => $self, filename => "$conf{data_dir}/registry", %conf);
+    $self->{registry} = PBot::Core::Registry->new(pbot => $self, filename => "$conf{data_dir}/registry", %conf);
 
     # ensure user has attempted to configure the bot
     if (not length $self->{registry}->get_value('irc', 'botnick')) {
@@ -171,34 +171,34 @@ sub initialize {
     }
 
     # prepare the IRC engine
-    $self->{irc} = PBot::IRC->new(pbot => $self);
+    $self->{irc} = PBot::Core::IRC->new(pbot => $self);
 
     # prepare remaining core PBot modules -- do not change this order
-    $self->{event_queue}      = PBot::EventQueue->new(pbot => $self, name => 'PBot event queue', %conf);
-    $self->{event_dispatcher} = PBot::EventDispatcher->new(pbot => $self, %conf);
-    $self->{users}            = PBot::Users->new(pbot => $self, filename => "$conf{data_dir}/users", %conf);
-    $self->{antiflood}        = PBot::AntiFlood->new(pbot => $self, %conf);
-    $self->{antispam}         = PBot::AntiSpam->new(pbot => $self, %conf);
-    $self->{banlist}          = PBot::BanList->new(pbot => $self, %conf);
-    $self->{blacklist}        = PBot::BlackList->new(pbot => $self, filename => "$conf{data_dir}/blacklist", %conf);
-    $self->{channels}         = PBot::Channels->new(pbot => $self, filename => "$conf{data_dir}/channels", %conf);
-    $self->{chanops}          = PBot::ChanOps->new(pbot => $self, %conf);
-    $self->{factoids}         = PBot::Factoids->new(pbot => $self, filename => "$conf{data_dir}/factoids.sqlite3", %conf);
-    $self->{functions}        = PBot::Functions->new(pbot => $self, %conf);
-    $self->{refresher}        = PBot::Refresher->new(pbot => $self);
-    $self->{ignorelist}       = PBot::IgnoreList->new(pbot => $self, filename => "$conf{data_dir}/ignorelist", %conf);
-    $self->{irchandlers}      = PBot::IRCHandlers->new(pbot => $self, %conf);
-    $self->{interpreter}      = PBot::Interpreter->new(pbot => $self, %conf);
-    $self->{lagchecker}       = PBot::LagChecker->new(pbot => $self, %conf);
-    $self->{messagehistory}   = PBot::MessageHistory->new(pbot => $self, filename => "$conf{data_dir}/message_history.sqlite3", %conf);
-    $self->{modules}          = PBot::Modules->new(pbot => $self, %conf);
-    $self->{nicklist}         = PBot::NickList->new(pbot => $self, %conf);
+    $self->{event_queue}      = PBot::Core::EventQueue->new(pbot => $self, name => 'PBot event queue', %conf);
+    $self->{event_dispatcher} = PBot::Core::EventDispatcher->new(pbot => $self, %conf);
+    $self->{users}            = PBot::Core::Users->new(pbot => $self, filename => "$conf{data_dir}/users", %conf);
+    $self->{antiflood}        = PBot::Core::AntiFlood->new(pbot => $self, %conf);
+    $self->{antispam}         = PBot::Core::AntiSpam->new(pbot => $self, %conf);
+    $self->{banlist}          = PBot::Core::BanList->new(pbot => $self, %conf);
+    $self->{blacklist}        = PBot::Core::BlackList->new(pbot => $self, filename => "$conf{data_dir}/blacklist", %conf);
+    $self->{channels}         = PBot::Core::Channels->new(pbot => $self, filename => "$conf{data_dir}/channels", %conf);
+    $self->{chanops}          = PBot::Core::ChanOps->new(pbot => $self, %conf);
+    $self->{factoids}         = PBot::Core::Factoids->new(pbot => $self, filename => "$conf{data_dir}/factoids.sqlite3", %conf);
+    $self->{functions}        = PBot::Core::Functions->new(pbot => $self, %conf);
+    $self->{refresher}        = PBot::Core::Refresher->new(pbot => $self);
+    $self->{ignorelist}       = PBot::Core::IgnoreList->new(pbot => $self, filename => "$conf{data_dir}/ignorelist", %conf);
+    $self->{irchandlers}      = PBot::Core::IRCHandlers->new(pbot => $self, %conf);
+    $self->{interpreter}      = PBot::Core::Interpreter->new(pbot => $self, %conf);
+    $self->{lagchecker}       = PBot::Core::LagChecker->new(pbot => $self, %conf);
+    $self->{messagehistory}   = PBot::Core::MessageHistory->new(pbot => $self, filename => "$conf{data_dir}/message_history.sqlite3", %conf);
+    $self->{modules}          = PBot::Core::Modules->new(pbot => $self, %conf);
+    $self->{nicklist}         = PBot::Core::NickList->new(pbot => $self, %conf);
     $self->{parsedate}        = PBot::Utils::ParseDate->new(pbot => $self, %conf);
-    $self->{plugins}          = PBot::Plugins->new(pbot => $self, %conf);
-    $self->{process_manager}  = PBot::ProcessManager->new(pbot => $self, %conf);
-    $self->{select_handler}   = PBot::SelectHandler->new(pbot => $self, %conf);
-    $self->{stdin_reader}     = PBot::StdinReader->new(pbot => $self, %conf);
-    $self->{webpaste}         = PBot::WebPaste->new(pbot => $self, %conf);
+    $self->{plugins}          = PBot::Core::Plugins->new(pbot => $self, %conf);
+    $self->{process_manager}  = PBot::Core::ProcessManager->new(pbot => $self, %conf);
+    $self->{select_handler}   = PBot::Core::SelectHandler->new(pbot => $self, %conf);
+    $self->{stdin_reader}     = PBot::Core::StdinReader->new(pbot => $self, %conf);
+    $self->{webpaste}         = PBot::Core::WebPaste->new(pbot => $self, %conf);
 
     # register commands in Commands directory
     $self->{commands}->register_commands;

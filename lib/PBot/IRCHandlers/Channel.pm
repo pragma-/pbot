@@ -6,11 +6,11 @@
 # SPDX-License-Identifier: MIT
 
 package PBot::IRCHandlers::Channel;
-use parent 'PBot::Class';
+use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-use PBot::MessageHistory::Constants ':all';
+use PBot::Core::MessageHistory::Constants ':all';
 
 use Time::HiRes qw/time/;
 use Data::Dumper;

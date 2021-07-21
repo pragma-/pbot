@@ -7,7 +7,7 @@
 # SPDX-License-Identifier: MIT
 
 package PBot::VERSION;
-use parent 'PBot::Class';
+use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 

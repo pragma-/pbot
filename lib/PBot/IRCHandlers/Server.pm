@@ -9,7 +9,7 @@ package PBot::IRCHandlers::Server;
 
 use PBot::Imports;
 
-use PBot::MessageHistory::Constants ':all';
+use PBot::Core::MessageHistory::Constants ':all';
 
 use Time::HiRes qw/time/;
 
