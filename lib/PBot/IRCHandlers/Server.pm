@@ -34,7 +34,6 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.motd',          sub { $self->on_motd          (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.notice',        sub { $self->on_notice        (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',          sub { $self->on_nickchange    (@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.nicknameinuse', sub { $self->on_nicknameinuse (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.isupport',      sub { $self->on_isupport      (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.yourhost',      sub { $self->log_first_arg    (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.created',       sub { $self->log_first_arg    (@_) });
@@ -169,17 +168,6 @@ sub on_nickchange {
         $self->{pbot}->{registry}->get_value('antiflood', 'nick_flood_time_threshold'),
         MSG_NICKCHANGE,
     );
-
-    return 1;
-}
-
-sub on_nicknameinuse {
-    my ($self, $event_type, $event) = @_;
-
-    my (undef, $nick, $msg)   = $event->{event}->args;
-    my $from = $event->{event}->from;
-
-    $self->{pbot}->{logger}->log("Received nicknameinuse for nick $nick from $from: $msg\n");
 
     return 1;
 }
