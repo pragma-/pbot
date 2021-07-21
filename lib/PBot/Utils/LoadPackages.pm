@@ -50,7 +50,7 @@ sub load_packages {
                 return 0;
             }
 
-            $self->{lc $directory}->{$name} = $class->new(pbot => $self->{pbot});
+            $self->{packages}->{$name} = $class->new(pbot => $self->{pbot});
             $self->{pbot}->{refresher}->{refresher}->update_cache($package);
         };
 

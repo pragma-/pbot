@@ -55,6 +55,7 @@ sub new {
 
 sub initialize {
     my ($self, %conf) = @_;
+
     $self->{pbot}->{registry}->add_default('text', 'general', 'module_repo', $conf{module_repo}
         // 'https://github.com/pragma-/pbot/blob/master/modules/');
 

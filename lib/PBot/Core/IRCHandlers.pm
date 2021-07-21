@@ -33,7 +33,7 @@ sub add_handlers {
 
     # send these events to on_init()
     $self->{pbot}->{conn}->add_handler([251, 252, 253, 254, 255, 302],
-        sub { $self->{irchandlers}->{Server}->on_init(@_) });
+        sub { $self->{packages}->{Server}->on_init(@_) });
 
     # ignore these events
     $self->{pbot}->{conn}->add_handler(
