@@ -1,7 +1,7 @@
 # File: IRCHandlers.pm
 #
 # Purpose: Pipes the PBot::Core::IRC default handler through PBot::Core::EventDispatcher,
-# and loads all the packages in the IRCHandlers directory.
+# and loads all the modules in the IRCHandlers directory.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -11,7 +11,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-use PBot::Utils::LoadPackages;
+use PBot::Utils::LoadModules;
 
 use Data::Dumper;
 
@@ -33,7 +33,7 @@ sub add_handlers {
 
     # send these events to on_init()
     $self->{pbot}->{conn}->add_handler([251, 252, 253, 254, 255, 302],
-        sub { $self->{packages}->{Server}->on_init(@_) });
+        sub { $self->{modules}->{Server}->on_init(@_) });
 
     # ignore these events
     $self->{pbot}->{conn}->add_handler(
@@ -57,7 +57,7 @@ sub register_handlers {
     my ($self, %conf) = @_;
 
     $self->{pbot}->{logger}->log("Registering IRC handlers:\n");
-    load_packages($self, 'PBot::Core::IRCHandlers');
+    load_modules($self, 'PBot::Core::IRCHandlers');
 }
 
 # this default handler prepends 'irc.' to the event-type and then dispatches

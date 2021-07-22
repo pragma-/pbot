@@ -11,7 +11,7 @@ use parent 'PBot::Core::Class', 'PBot::Core::Registerable';
 
 use PBot::Imports;
 
-use PBot::Utils::LoadPackages qw/load_packages/;
+use PBot::Utils::LoadModules qw/load_modules/;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -29,7 +29,7 @@ sub register_commands {
 
     # register commands in Commands directory
     $self->{pbot}->{logger}->log("Registering commands:\n");
-    load_packages($self, 'PBot::Core::Commands');
+    load_modules($self, 'PBot::Core::Commands');
 }
 
 sub register {

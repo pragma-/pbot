@@ -1166,7 +1166,7 @@ sub interpreter {
             if ($strictnamespace) { $namespace_regex = "(?:" . (quotemeta $namespace) . '|\\.\\*)'; }
 
             $context->{arguments} = quotemeta($original_keyword) . " -channel $namespace_regex";
-            my $matches = $self->{pbot}->{commands}->{packages}->{Factoids}->cmd_factfind($context);
+            my $matches = $self->{pbot}->{commands}->{modules}->{Factoids}->cmd_factfind($context);
 
             # found factfind matches
             if ($matches !~ m/^No factoids/) {
