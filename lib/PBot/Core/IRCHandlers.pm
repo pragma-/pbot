@@ -57,7 +57,7 @@ sub register_handlers {
     my ($self, %conf) = @_;
 
     $self->{pbot}->{logger}->log("Registering IRC handlers:\n");
-    load_packages($self, 'IRCHandlers');
+    load_packages($self, 'PBot::Core::IRCHandlers');
 }
 
 # this default handler prepends 'irc.' to the event-type and then dispatches

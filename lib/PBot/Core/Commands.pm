@@ -29,7 +29,7 @@ sub register_commands {
 
     # register commands in Commands directory
     $self->{pbot}->{logger}->log("Registering commands:\n");
-    load_packages($self, 'Commands');
+    load_packages($self, 'PBot::Core::Commands');
 }
 
 sub register {
