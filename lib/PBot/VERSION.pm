@@ -23,7 +23,7 @@ our @EXPORT_OK = (
 # These are set automatically by the misc/update_version script
 use constant {
     BUILD_NAME     => "PBot",
-    BUILD_REVISION => 4269,
+    BUILD_REVISION => 4271,
     BUILD_DATE     => "2021-07-22",
 };
 
