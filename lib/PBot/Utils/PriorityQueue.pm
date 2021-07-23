@@ -55,37 +55,40 @@ sub find_enqueue_position {
 
     $priority //= 0;
 
+    # shorter alias
+    my $queue = $self->{queue};
+
     # no entries in queue yet, early-return first position
-    return 0 if not @{$self->{queue}};
+    return 0 if not @$queue;
 
     # early-return first position if entry's priority is less
     # than first position's
-    if ($priority < $self->{queue}->[0]->{priority}) {
+    if ($priority < $queue->[0]->{priority}) {
         return 0;
     }
 
     # early-return last position if entry's priority is greater
-    if ($priority > $self->{queue}->[@{$self->{queue}} - 1]->{priority}) {
-        return scalar @{$self->{queue}};
+    if ($priority > $queue->[@$queue - 1]->{priority}) {
+        return scalar @$queue;
     }
 
     # binary search to find enqueue position
 
     my $lo = 0;
-    my $hi = scalar @{$self->{queue}} - 1;
+    my $hi = scalar @$queue - 1;
 
     while ($lo <= $hi) {
         my $mid = int (($hi + $lo) / 2);
 
-        if ($priority < $self->{queue}->[$mid]->{priority}) {
+        if ($priority < $queue->[$mid]->{priority}) {
             $hi = $mid - 1;
-        } elsif ($priority > $self->{queue}->[$mid]->{priority}) {
+        } elsif ($priority > $queue->[$mid]->{priority}) {
             $lo = $mid + 1;
         } else {
             # found a slot with the same priority. we "slide" down the array
             # to append this entry to the end of this region of same-priorities
             # and then return the final slot
-            while ($mid < @{$self->{queue}} and $self->{queue}->[$mid]->{priority} == $priority) {
+            while ($mid < @$queue and $queue->[$mid]->{priority} == $priority) {
                 $mid++;
             }
             return $mid;
