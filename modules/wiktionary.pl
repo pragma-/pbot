@@ -98,32 +98,26 @@ if (not grep { $_ eq $section } @valid_sections) {
     exit 1;
 }
 
-my $entry_count = @$entries;
+my $total_entries_count = @$entries;
 
 my $entries_text = $section;
 
-if ($entry_count == 1) {
-    $entries_text =~ s/s$//;
-} else {
-    $entries_text =~ s/y$/ies/;
-}
+if ($num > $total_entries_count) {
+    if ($total_entries_count == 1) {
+        $entries_text =~ s/s$//;
+    } else {
+        $entries_text =~ s/y$/ies/;
+    }
 
-if ($num > $entry_count) {
-    my $are = $entry_count == 1 ? 'is' : 'are';
-    print "No such entry $num. There $are $entry_count $entries_text for `$term`.\n";
+    my $are = $total_entries_count == 1 ? 'is' : 'are';
+    print "No such entry $num. There $are $total_entries_count $entries_text for `$term`.\n";
     exit 1;
-}
-
-if ($unique) {
-    print "$entry_count $entries_text for $term (showing unique entries):\n\n";
-} else {
-    print "$entry_count $entries_text for $term:\n\n";
 }
 
 my $start = 0;
 
 if ($num <= 0 or $all or $unique) {
-    $num = $entry_count;
+    $num = $total_entries_count;
 } else {
     $start = $num - 1;
 }
@@ -141,7 +135,7 @@ for (my $i = $start; $i < $num; $i++) {
             $ety = 'N/A';
         }
 
-        push @results, $ety;
+        push @results, $ety unless $ety eq 'N/A' and not $all;
     }
 
     elsif ($section eq 'pronunciations') {
@@ -152,7 +146,7 @@ for (my $i = $start; $i < $num; $i++) {
 
             $text = 'N/A' if not length $text;
 
-            push @results, $text;
+            push @results, $text unless $text eq 'N/A' and not $all;
         } else {
             push @results, 'N/A';
         }
@@ -172,9 +166,27 @@ for (my $i = $start; $i < $num; $i++) {
 
         }
 
-        push @results, $text;
+        push @results, $text if length $text;
     }
 }
+
+if (not @results) {
+    $entries_text =~ s/y$/ies/;
+    print "There are no $entries_text for $term.\n";
+    exit 0;
+}
+
+my $total_results_count = @results;
+
+if ($total_results_count == 1) {
+    $entries_text =~ s/s$//;
+} else {
+    $entries_text =~ s/y$/ies/;
+}
+
+print "$total_entries_count entries, " if $total_entries_count > 1;
+
+print "$total_results_count $entries_text for $term:\n\n";
 
 if ($unique) {
     my %uniq;
@@ -183,7 +195,7 @@ if ($unique) {
     foreach my $result (@results) {
         $i++;
         next if not $result or $result eq 'N/A';
-        $uniq{$result} = $i unless exists $uniq{$result};
+        $uniq{$result} .= "$i,";
     }
 
     if (not keys %uniq) {
@@ -191,9 +203,14 @@ if ($unique) {
         exit;
     }
 
+    no warnings; # sorting "1,2,3" numerically
     foreach my $key (sort { $uniq{$a} <=> $uniq{$b} } keys %uniq) {
+        my ($q, $p);
+        $uniq{$key} =~ s/,$//;
+        $uniq{$key} =~ s/\b(\d+)(?{$q=$1+1})(?:,(??{$q})\b(?{$p=$q++})){2,}/$1-$p/g;
         print "$uniq{$key}) $key\n\n";
     }
+    use warnings;
 
     exit;
 }
