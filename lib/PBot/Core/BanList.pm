@@ -25,10 +25,6 @@ sub initialize {
     $self->{pbot}->{registry}->add_default('text', 'banlist', 'debug',                '0');
     $self->{pbot}->{registry}->add_default('text', 'banlist', 'mute_mode_char',       'q');
 
-    $self->{pbot}->{commands}->register(sub { $self->cmd_banlist(@_) },   "banlist",   0);
-    $self->{pbot}->{commands}->register(sub { $self->cmd_checkban(@_) },  "checkban",  0);
-    $self->{pbot}->{commands}->register(sub { $self->cmd_checkmute(@_) }, "checkmute", 0);
-
     $self->{pbot}->{event_dispatcher}->register_handler('irc.endofnames',     sub { $self->get_banlist(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.banlist',        sub { $self->on_banlist_entry(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quietlist',      sub { $self->on_quietlist_entry(@_) });
@@ -59,91 +55,6 @@ sub initialize {
     $self->{unban_queue} = {};
 
     $self->{pbot}->{event_queue}->enqueue(sub { $self->flush_unban_queue }, 30, 'Flush unban queue');
-}
-
-sub cmd_banlist {
-    my ($self, $context) = @_;
-
-    if (not length $context->{arguments}) {
-        return "Usage: banlist <channel>";
-    }
-
-    my $result = "Ban list for $context->{arguments}:\n";
-
-    if ($self->{banlist}->exists($context->{arguments})) {
-        my $count = $self->{banlist}->get_keys($context->{arguments});
-        $result .= "$count ban" . ($count == 1 ? '' : 's') . ":\n";
-        foreach my $mask ($self->{banlist}->get_keys($context->{arguments})) {
-            my $data = $self->{banlist}->get_data($context->{arguments}, $mask);
-            $result .= "  $mask banned ";
-
-            if (defined $data->{timestamp}) {
-                my $date = strftime "%a %b %e %H:%M:%S %Y %Z", localtime $data->{timestamp};
-                my $ago = concise ago (time - $data->{timestamp});
-                $result .= "on $date ($ago) ";
-            }
-
-            $result .= "by $data->{owner} "   if defined $data->{owner};
-            $result .= "for $data->{reason} " if defined $data->{reason};
-            if (defined $data->{timeout} and $data->{timeout} > 0) {
-                my $duration = concise duration($data->{timeout} - gettimeofday);
-                $result .= "($duration remaining)";
-            }
-            $result .= ";\n";
-        }
-    } else {
-        $result .= "bans: none;\n";
-    }
-
-    if ($self->{quietlist}->exists($context->{arguments})) {
-        my $count = $self->{quietlist}->get_keys($context->{arguments});
-        $result .= "$count mute" . ($count == 1 ? '' : 's') . ":\n";
-        foreach my $mask ($self->{quietlist}->get_keys($context->{arguments})) {
-            my $data = $self->{quietlist}->get_data($context->{arguments}, $mask);
-            $result .= "  $mask muted ";
-
-            if (defined $data->{timestamp}) {
-                my $date = strftime "%a %b %e %H:%M:%S %Y %Z", localtime $data->{timestamp};
-                my $ago = concise ago (time - $data->{timestamp});
-                $result .= "on $date ($ago) ";
-            }
-
-            $result .= "by $data->{owner} "   if defined $data->{owner};
-            $result .= "for $data->{reason} " if defined $data->{reason};
-            if (defined $data->{timeout} and $data->{timeout} > 0) {
-                my $duration = concise duration($data->{timeout} - gettimeofday);
-                $result .= "($duration remaining)";
-            }
-            $result .= ";\n";
-        }
-    } else {
-        $result .= "quiets: none\n";
-    }
-
-    $result =~ s/ ;/;/g;
-    return $result;
-}
-
-sub cmd_checkban {
-    my ($self, $context) = @_;
-    my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
-
-    return "Usage: checkban <mask> [channel]" if not defined $target;
-    $channel = $context->{from} if not defined $channel;
-
-    return "Please specify a channel." if $channel !~ /^#/;
-    return $self->checkban($channel, 'b', $target);
-}
-
-sub cmd_checkmute {
-    my ($self, $context) = @_;
-    my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
-
-    return "Usage: checkmute <mask> [channel]" if not defined $target;
-    $channel = $context->{from} if not defined $channel;
-
-    return "Please specify a channel." if $channel !~ /^#/;
-    return $self->checkban($channel, $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char'), $target);
 }
 
 sub get_banlist {

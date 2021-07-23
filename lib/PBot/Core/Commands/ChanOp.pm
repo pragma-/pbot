@@ -8,22 +8,10 @@
 package PBot::Core::Commands::ChanOp;
 
 use PBot::Imports;
+use parent 'PBot::Core::Class';
 
 use Time::Duration;
 use Time::HiRes qw/gettimeofday/;
-
-sub new {
-    my ($class, %args) = @_;
-
-    # ensure class was passed a PBot instance
-    if (not exists $args{pbot}) {
-        Carp::croak("Missing pbot reference to $class");
-    }
-
-    my $self = bless { pbot => $args{pbot} }, $class;
-    $self->initialize(%args);
-    return $self;
-}
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -628,23 +616,18 @@ sub cmd_unmute {
 sub cmd_kick {
     my ($self, $context) = @_;
 
-    if (not defined $context->{from}) {
-        $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
-        return "";
-    }
-
     my ($channel, $victim, $reason);
     my $arguments = $context->{arguments};
 
     if (not $context->{from} =~ /^#/) {
         # used in private message
-        if (not $arguments =~ s/^(^#\S+) (\S+)\s*//) { return "Usage from private message: kick <channel> <nick> [reason]"; }
+        if (not $arguments =~ s/^(^#\S+) (\S+)\s*//) { return "Usage from private message: kick <channel> <nick[,nicks...]> [reason]; <nick> may include wildcards"; }
         ($channel, $victim) = ($1, $2);
     } else {
         # used in channel
         if    ($arguments =~ s/^(#\S+)\s+(\S+)\s*//) { ($channel, $victim) = ($1, $2); }
         elsif ($arguments =~ s/^(\S+)\s*//)          { ($victim, $channel) = ($1, exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from}); }
-        else                                         { return "Usage: kick [channel] <nick> [reason]"; }
+        else                                         { return "Usage: kick [channel] <nick[,nicks...]> [reason]; <nick> may include wildcards"; }
     }
 
     $reason = $arguments;

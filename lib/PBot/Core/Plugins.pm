@@ -18,68 +18,8 @@ sub initialize {
     # loaded plugins
     $self->{plugins} = {};
 
-    # plugin management bot commands
-    $self->{pbot}->{commands}->register(sub { $self->cmd_plug(@_) },     "plug",     1);
-    $self->{pbot}->{commands}->register(sub { $self->cmd_unplug(@_) },   "unplug",   1);
-    $self->{pbot}->{commands}->register(sub { $self->cmd_replug(@_) },   "replug",   1);
-    $self->{pbot}->{commands}->register(sub { $self->cmd_pluglist(@_) }, "pluglist", 0);
-
     # autoload plugins listed in `$data_dir/plugins_autoload` file
     $self->autoload(%conf);
-}
-
-sub cmd_plug {
-    my ($self, $context) = @_;
-
-    my $plugin = $context->{arguments};
-
-    if (not length $plugin) { return "Usage: plug <plugin>"; }
-
-    if ($self->load($plugin)) {
-        return "Loaded $plugin plugin.";
-    } else {
-        return "Plugin $plugin failed to load.";
-    }
-}
-
-sub cmd_unplug {
-    my ($self, $context) = @_;
-
-    my $plugin = $context->{arguments};
-
-    if (not length $plugin) { return "Usage: unplug <plugin>"; }
-
-    if ($self->unload($plugin)) {
-        return "Unloaded $plugin plugin.";
-    } else {
-        return "Plugin $plugin is not loaded.";
-    }
-}
-
-sub cmd_replug {
-    my ($self, $context) = @_;
-
-    my $plugin = $context->{arguments};
-
-    if (not length $plugin) { return "Usage: replug <plugin>"; }
-
-    my $unload_result = $self->cmd_unplug($context);
-    my $load_result   = $self->cmd_plug($context);
-
-    my $result;
-    $result .= "$unload_result " if $unload_result =~ m/^Unloaded/;
-    $result .= $load_result;
-    return $result;
-}
-
-sub cmd_pluglist {
-    my ($self, $context) = @_;
-
-    my @plugins = sort keys %{$self->{plugins}};
-
-    return "No plugins loaded." if not @plugins;
-
-    return scalar @plugins . ' plugin' . (@plugins == 1 ? '' : 's') . ' loaded: ' . join (', ', @plugins);
 }
 
 sub autoload {

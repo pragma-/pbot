@@ -10,6 +10,14 @@ package PBot::Core::Class;
 
 use PBot::Imports;
 
+our $quiet = 0;
+
+sub import {
+    my ($package, %opts) = @_;
+
+    $quiet = $opts{quiet};
+}
+
 sub new {
     my ($class, %args) = @_;
 
@@ -22,7 +30,7 @@ sub new {
 
     my $self = bless { pbot => $args{pbot} }, $class;
 
-    $self->{pbot}->{logger}->log("Initializing $class\n");
+    $self->{pbot}->{logger}->log("Initializing $class\n") unless $quiet;
     $self->initialize(%args);
 
     return $self;

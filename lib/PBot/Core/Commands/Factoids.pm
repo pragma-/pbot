@@ -8,6 +8,7 @@
 package PBot::Core::Commands::Factoids;
 
 use PBot::Imports;
+use parent 'PBot::Core::Class';
 
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
@@ -39,19 +40,6 @@ our %factoid_metadata_capabilities = (
 
     # all others are allowed to be factset by anybody
 );
-
-sub new {
-    my ($class, %args) = @_;
-
-    # ensure class was passed a PBot instance
-    if (not exists $args{pbot}) {
-        Carp::croak("Missing pbot reference to $class");
-    }
-
-    my $self = bless { pbot => $args{pbot} }, $class;
-    $self->initialize(%args);
-    return $self;
-}
 
 sub initialize {
     my ($self, %conf) = @_;

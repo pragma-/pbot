@@ -51,9 +51,6 @@ sub initialize {
         'lag check'
     );
 
-    # lagcheck bot command
-    $self->{pbot}->{commands}->register(sub { $self->cmd_lagcheck(@_) }, "lagcheck", 0);
-
     # PONG IRC handler
     $self->{pbot}->{event_dispatcher}->register_handler('irc.pong', sub { $self->on_pong(@_) });
 }
@@ -63,43 +60,6 @@ sub trigger_lag_history_interval {
     my ($self, $section, $item, $newvalue) = @_;
     $self->{pbot}->{event_queue}->update_interval('lag check', $newvalue);
 }
-
-# lagcheck bot command
-sub cmd_lagcheck {
-    my ($self, $context) = @_;
-
-    if (defined $self->{pong_received} and $self->{pong_received} == 0) {
-        # a ping has been sent (pong_received is not undef) and no pong has been received yet
-        my $elapsed   = tv_interval($self->{ping_send_time});
-        my $lag_total = $elapsed;
-        my $len       = @{$self->{lag_history}};
-
-        my @entries;
-
-        foreach my $entry (@{$self->{lag_history}}) {
-            my ($send_time, $lag_result) = @$entry;
-
-            $lag_total += $lag_result;
-
-            my $ago = concise ago(gettimeofday - $send_time);
-
-            push @entries, "[$ago] " . sprintf "%.1f ms", $lag_result;
-        }
-
-        push @entries, "[waiting for pong] $elapsed";
-
-        my $lagstring = join '; ', @entries;
-
-        my $average = $lag_total / ($len + 1);
-
-        $lagstring .= "; average: " . sprintf "%.1f ms", $average;
-
-        return $lagstring;
-    }
-
-    return "My lag: " . $self->lagstring;
-}
-
 
 sub send_ping {
     my $self = shift;

@@ -34,9 +34,9 @@ sub load_modules {
                 $self->{pbot}->{logger}->log("  $name\n");
 
                 eval {
-                    require "$module";
-
                     my $class = $base . '::' . $name;
+                    require "$module";
+                    $class->import(quiet => 1);
                     $self->{modules}->{$name} = $class->new(pbot => $self->{pbot});
                     $self->{pbot}->{refresher}->{refresher}->update_cache($module);
                 };

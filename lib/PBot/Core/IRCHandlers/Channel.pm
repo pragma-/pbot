@@ -9,6 +9,7 @@ package PBot::Core::IRCHandlers::Channel;
 use parent 'PBot::Core::Class';
 
 use PBot::Imports;
+use parent 'PBot::Core::Class';
 
 use PBot::Core::MessageHistory::Constants ':all';
 
@@ -17,19 +18,6 @@ use Data::Dumper;
 
 use MIME::Base64;
 use Encode;
-
-sub new {
-    my ($class, %args) = @_;
-
-    # ensure class was passed a PBot instance
-    if (not exists $args{pbot}) {
-        Carp::croak("Missing pbot reference to $class");
-    }
-
-    my $self = bless { pbot => $args{pbot} }, $class;
-    $self->initialize(%args);
-    return $self;
-}
 
 sub initialize {
     my ($self, %conf) = @_;

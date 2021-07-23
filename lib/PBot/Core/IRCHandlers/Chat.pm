@@ -8,19 +8,7 @@
 package PBot::Core::IRCHandlers::Chat;
 
 use PBot::Imports;
-
-sub new {
-    my ($class, %args) = @_;
-
-    # ensure class was passed a PBot instance
-    if (not exists $args{pbot}) {
-        Carp::croak("Missing pbot reference to $class");
-    }
-
-    my $self = bless { pbot => $args{pbot} }, $class;
-    $self->initialize(%args);
-    return $self;
-}
+use parent 'PBot::Core::Class';
 
 sub initialize {
     my ($self, %conf) = @_;
