@@ -1,7 +1,7 @@
 # File: IRCHandlers.pm
 #
 # Purpose: Pipes the PBot::Core::IRC default handler through PBot::Core::EventDispatcher,
-# and loads all the modules in the IRCHandlers directory.
+# and registers default IRC handlers.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -11,53 +11,10 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-use PBot::Utils::LoadModules;
-
 use Data::Dumper;
 
 sub initialize {
-    my ($self, %conf) = @_;
-
-    # register all the IRC handlers in the IRCHandlers directory
-    $self->register_handlers(%conf);
-}
-
-# registers handlers with a PBot::Core::IRC connection
-
-sub add_handlers {
-    my ($self) = @_;
-
-    # set up handlers for the IRC engine
-    $self->{pbot}->{conn}->add_default_handler(
-        sub { $self->default_handler(@_) }, 1);
-
-    # send these events to on_init()
-    $self->{pbot}->{conn}->add_handler([251, 252, 253, 254, 255, 302],
-        sub { $self->{modules}->{Server}->on_init(@_) });
-
-    # ignore these events
-    $self->{pbot}->{conn}->add_handler(
-        [
-            'myinfo',
-            'whoisserver',
-            'whoiscountry',
-            'whoischannels',
-            'whoisidle',
-            'motdstart',
-            'endofmotd',
-            'away',
-        ],
-        sub { }
-    );
-}
-
-# registers all the IRC handler files in the IRCHandlers directory
-
-sub register_handlers {
-    my ($self, %conf) = @_;
-
-    $self->{pbot}->{logger}->log("Registering IRC handlers:\n");
-    load_modules($self, 'PBot::Core::IRCHandlers');
+    # nothing to do here
 }
 
 # this default handler prepends 'irc.' to the event-type and then dispatches
@@ -81,6 +38,35 @@ sub default_handler {
         $Data::Dumper::Useqq    = 1;
         $self->{pbot}->{logger}->log(Dumper $event);
     }
+}
+
+# registers handlers with a PBot::Core::IRC connection
+
+sub add_handlers {
+    my ($self) = @_;
+
+    # set up handlers for the IRC engine
+    $self->{pbot}->{conn}->add_default_handler(
+        sub { $self->default_handler(@_) }, 1);
+
+    # send these events to on_init()
+    $self->{pbot}->{conn}->add_handler([251, 252, 253, 254, 255, 302],
+        sub { $self->{pbot}->{handlers}->{modules}->{Server}->on_init(@_) });
+
+    # ignore these events
+    $self->{pbot}->{conn}->add_handler(
+        [
+            'myinfo',
+            'whoisserver',
+            'whoiscountry',
+            'whoischannels',
+            'whoisidle',
+            'motdstart',
+            'endofmotd',
+            'away',
+        ],
+        sub { }
+    );
 }
 
 # replace randomized gibberish in certain hostmasks with identifying information

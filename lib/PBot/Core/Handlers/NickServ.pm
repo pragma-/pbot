@@ -5,7 +5,7 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Core::IRCHandlers::NickServ;
+package PBot::Core::Handlers::NickServ;
 
 use PBot::Imports;
 use parent 'PBot::Core::Class';

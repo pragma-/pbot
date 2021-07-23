@@ -5,7 +5,7 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Core::IRCHandlers::Channel;
+package PBot::Core::Handlers::Channel;
 use parent 'PBot::Core::Class';
 
 use PBot::Imports;

@@ -35,6 +35,7 @@ use PBot::Core::EventDispatcher;
 use PBot::Core::EventQueue;
 use PBot::Core::Factoids;
 use PBot::Core::Functions;
+use PBot::Core::Handlers;
 use PBot::Core::IgnoreList;
 use PBot::Core::Interpreter;
 use PBot::Core::IRC;
@@ -186,6 +187,7 @@ sub initialize {
     $self->{factoids}         = PBot::Core::Factoids->new(pbot => $self, filename => "$conf{data_dir}/factoids.sqlite3", %conf);
     $self->{functions}        = PBot::Core::Functions->new(pbot => $self, %conf);
     $self->{refresher}        = PBot::Core::Refresher->new(pbot => $self);
+    $self->{handlers}         = PBot::Core::Handlers->new(pbot => $self, %conf);
     $self->{ignorelist}       = PBot::Core::IgnoreList->new(pbot => $self, filename => "$conf{data_dir}/ignorelist", %conf);
     $self->{irchandlers}      = PBot::Core::IRCHandlers->new(pbot => $self, %conf);
     $self->{interpreter}      = PBot::Core::Interpreter->new(pbot => $self, %conf);
