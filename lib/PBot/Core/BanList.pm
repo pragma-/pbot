@@ -31,24 +31,33 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.endofbanlist',   sub { $self->compare_banlist(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.endofquietlist', sub { $self->compare_quietlist(@_) });
 
+    my $data_dir = $self->{pbot}->{registry}->get_value('general', 'data_dir');
+
+    $self->{'ban-exemptions'} = PBot::Storage::DualIndexHashObject->new(
+        pbot => $self->{pbot},
+        name => 'Ban exemptions',
+        filename => "$data_dir/ban-exemptions",
+    );
+
     $self->{banlist} = PBot::Storage::DualIndexHashObject->new(
         pbot     => $self->{pbot},
         name     => 'Ban List',
-        filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/banlist',
+        filename => "$data_dir/banlist",
         save_queue_timeout => 15,
     );
 
     $self->{quietlist} = PBot::Storage::DualIndexHashObject->new(
         pbot     => $self->{pbot},
         name     => 'Quiet List',
-        filename => $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quietlist',
+        filename => "$data_dir/quietlist",
         save_queue_timeout => 15,
     );
 
+    $self->{'ban-exemptions'}->load;
     $self->{banlist}->load;
     $self->{quietlist}->load;
 
-    $self->enqueue_timeouts($self->{banlist},   'b');
+    $self->enqueue_timeouts($self->{banlist}, 'b');
     $self->enqueue_timeouts($self->{quietlist}, $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char'));
 
     $self->{ban_queue}   = {};
@@ -274,6 +283,14 @@ sub track_mode {
             }
         }
     }
+}
+
+sub ban_exempted {
+    my ($self, $channel, $hostmask) = @_;
+    $channel  = lc $channel;
+    $hostmask = lc $hostmask;
+    return 1 if $self->{'ban-exemptions'}->exists($channel, $hostmask);
+    return 0;
 }
 
 sub ban_user {

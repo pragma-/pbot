@@ -12,6 +12,8 @@
 # The above would invoke the function 'uri_escape' on $args and then replace
 # the command-substitution with the result, thus escaping $args to be safely
 # used in the URL of this simple Google Image Search factoid command.
+#
+# See also: Plugin/FuncBuiltins.pm, Plugin/FuncGrep.pm and Plugin/FuncSed.pm
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -24,16 +26,8 @@ use PBot::Imports;
 sub initialize {
     my ($self, %conf) = @_;
 
-    $self->{pbot}->{commands}->register(sub { $self->cmd_func(@_) }, 'func', 0);
-
-    $self->register(
-        'help',
-        {
-            desc   => 'provides help about a func',
-            usage  => 'help [func]',
-            subref => sub { $self->func_help(@_) }
-        }
-    );
+    # register `list` and `help` functions used to list
+    # functions and obtain help about them
 
     $self->register(
         'list',
@@ -43,32 +37,15 @@ sub initialize {
             subref => sub { $self->func_list(@_) }
         }
     );
-}
 
-sub cmd_func {
-    my ($self, $context) = @_;
-
-    my $func = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
-
-    if (not defined $func) {
-        return "Usage: func <keyword> [arguments]; see also: func help";
-    }
-
-    if (not exists $self->{funcs}->{$func}) {
-        return "[No such func '$func']"
-    }
-
-    my @params;
-
-    while (defined(my $param = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}))) {
-        push @params, $param;
-    }
-
-    my $result = $self->{funcs}->{$func}->{subref}->(@params);
-
-    $result =~ s/\x1/1/g; # strip CTCP code
-
-    return $result;
+    $self->register(
+        'help',
+        {
+            desc   => 'provides help about a func',
+            usage  => 'help [func]',
+            subref => sub { $self->func_help(@_) }
+        }
+    );
 }
 
 sub register {
@@ -79,20 +56,6 @@ sub register {
 sub unregister {
     my ($self, $func) = @_;
     delete $self->{funcs}->{$func};
-}
-
-sub func_help {
-    my ($self, $func) = @_;
-
-    if (not length $func) {
-        return "func: invoke built-in functions; usage: func <keyword> [arguments]; to list available functions: func list [regex]";
-    }
-
-    if (not exists $self->{funcs}->{$func}) {
-        return "No such func '$func'.";
-    }
-
-    return "$func: $self->{funcs}->{$func}->{desc}; usage: $self->{funcs}->{$func}->{usage}";
 }
 
 sub func_list {
@@ -129,6 +92,20 @@ sub func_list {
     }
 
     return $result;
+}
+
+sub func_help {
+    my ($self, $func) = @_;
+
+    if (not length $func) {
+        return "func: invoke built-in functions; usage: func <keyword> [arguments]; to list available functions: func list [regex]";
+    }
+
+    if (not exists $self->{funcs}->{$func}) {
+        return "No such func '$func'.";
+    }
+
+    return "$func: $self->{funcs}->{$func}->{desc}; usage: $self->{funcs}->{$func}->{usage}";
 }
 
 1;
