@@ -12,7 +12,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-use PBot::Utils::PriorityQueue;
+use PBot::Core::Utils::PriorityQueue;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -47,7 +47,7 @@ sub register_handler {
 
     # create new priority-queue for event-name if one doesn't exist
     if (not exists $self->{handlers}->{$event_name}) {
-        $self->{handlers}->{$event_name} = PBot::Utils::PriorityQueue->new(pbot => $self->{pbot});
+        $self->{handlers}->{$event_name} = PBot::Core::Utils::PriorityQueue->new(pbot => $self->{pbot});
     }
 
     # add the event handler

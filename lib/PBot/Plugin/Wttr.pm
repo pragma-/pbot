@@ -9,7 +9,7 @@ package PBot::Plugin::Wttr;
 use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
-use PBot::Utils::LWPUserAgentCached;
+use PBot::Core::Utils::LWPUserAgentCached;
 
 use JSON;
 use URI::Escape qw/uri_escape_utf8/;
@@ -113,7 +113,7 @@ sub get_wttr {
 
     my $location_uri = uri_escape_utf8 $location;
 
-    my $ua       = PBot::Utils::LWPUserAgentCached->new(\%cache_opt, timeout => 30);
+    my $ua       = PBot::Core::Utils::LWPUserAgentCached->new(\%cache_opt, timeout => 30);
     my $response = $ua->get("http://wttr.in/$location_uri?format=j1&m");
 
     my $json;

@@ -13,7 +13,7 @@ use PBot::Imports;
 sub initialize {
     my ($self, %conf) = @_;
 
-    $self->{storage} = PBot::Storage::HashObject->new(
+    $self->{storage} = PBot::Core::Storage::HashObject->new(
         pbot     => $conf{pbot},
         name     => 'Users',
         filename => $conf{filename},

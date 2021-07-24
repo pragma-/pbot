@@ -18,7 +18,7 @@ sub initialize {
     my $filename = $conf{filename} // Carp::croak("Missing filename configuration item in " . __FILE__);
 
     # registry is stored as a dual-index hash object
-    $self->{storage} = PBot::Storage::DualIndexHashObject->new(
+    $self->{storage} = PBot::Core::Storage::DualIndexHashObject->new(
         pbot     => $self->{pbot},
         name     => 'Registry',
         filename => $filename,

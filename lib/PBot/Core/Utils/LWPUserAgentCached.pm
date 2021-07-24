@@ -7,7 +7,7 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Utils::LWPUserAgentCached;
+package PBot::Core::Utils::LWPUserAgentCached;
 
 use PBot::Imports;
 

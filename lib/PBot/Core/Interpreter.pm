@@ -22,7 +22,7 @@ use Time::Duration;
 use Encode;
 use Unicode::Truncate;
 
-use PBot::Utils::ValidateString;
+use PBot::Core::Utils::ValidateString;
 
 sub initialize {
     my ($self, %conf) = @_;

@@ -11,12 +11,12 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Storage::DualIndexSQLiteObject;
+package PBot::Core::Storage::DualIndexSQLiteObject;
 
 use PBot::Imports;
 
-use PBot::Utils::SQLiteLogger;
-use PBot::Utils::SQLiteLoggerLayer;
+use PBot::Core::Utils::SQLiteLogger;
+use PBot::Core::Utils::SQLiteLoggerLayer;
 
 use DBI;
 use Text::Levenshtein qw(fastdistance);
@@ -63,7 +63,7 @@ sub begin {
 
     eval {
         my $sqlite_debug = $self->{pbot}->{registry}->get_value('dualindexsqliteobject', "debug_$self->{name}");
-        open $self->{trace_layer}, '>:via(PBot::Utils::SQLiteLoggerLayer)', PBot::Utils::SQLiteLogger->new(pbot => $self->{pbot});
+        open $self->{trace_layer}, '>:via(PBot::Core::Utils::SQLiteLoggerLayer)', PBot::Core::Utils::SQLiteLogger->new(pbot => $self->{pbot});
         $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$sqlite_debug"), $self->{trace_layer});
     };
 

@@ -1,6 +1,6 @@
 # File: ParseDate.pm
 #
-# Purpose: Just a simple interface to test/play with PBot::Utils::ParseDate
+# Purpose: Just a simple interface to test/play with PBot::Core::Utils::ParseDate
 # and make sure it's working properly.
 #
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>

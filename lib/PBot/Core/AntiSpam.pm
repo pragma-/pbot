@@ -15,9 +15,9 @@ sub initialize {
 
     my $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spam_keywords';
 
-    $self->{keywords} = PBot::Storage::DualIndexHashObject->new(
-        pbot => $self->{pbot},
-        name => 'SpamKeywords',
+    $self->{keywords} = PBot::Core::Storage::DualIndexHashObject->new(
+        pbot     => $self->{pbot},
+        name     => 'SpamKeywords',
         filename => $filename,
     );
 

@@ -11,7 +11,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-use PBot::Utils::LoadModules qw/load_modules/;
+use PBot::Core::Utils::LoadModules qw/load_modules/;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -20,7 +20,7 @@ sub initialize {
     $self->{commands} = {};
 
     # command metadata stored as a HashObject
-    $self->{metadata} = PBot::Storage::HashObject->new(
+    $self->{metadata} = PBot::Core::Storage::HashObject->new(
         pbot     => $self->{pbot},
         name     => 'Command metadata',
         filename => $conf{filename},

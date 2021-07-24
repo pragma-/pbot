@@ -16,8 +16,8 @@ use PBot::Imports;
 
 use PBot::Core::MessageHistory::Constants ':all';
 
-use PBot::Utils::SQLiteLogger;
-use PBot::Utils::SQLiteLoggerLayer;
+use PBot::Core::Utils::SQLiteLogger;
+use PBot::Core::Utils::SQLiteLoggerLayer;
 
 use DBI;
 use Carp              qw/shortmess/;
@@ -60,7 +60,7 @@ sub sqlite_debug_trigger {
     my ($self, $section, $item, $newvalue) = @_;
 
     if ($newvalue) {
-        open $self->{trace_layer}, '>:via(PBot::Utils::SQLiteLoggerLayer)', PBot::Utils::SQLiteLogger->new(pbot => $self->{pbot});
+        open $self->{trace_layer}, '>:via(PBot::Core::Utils::SQLiteLoggerLayer)', PBot::Core::Utils::SQLiteLogger->new(pbot => $self->{pbot});
     } else {
         close $self->{trace_layer} if $self->{trace_layer};
         delete $self->{trace_layer};
@@ -80,7 +80,7 @@ sub begin {
     eval {
         my $sqlite_debug = $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_debug');
         if ($sqlite_debug) {
-            open $self->{trace_layer}, '>:via(PBot::Utils::SQLiteLoggerLayer)', PBot::Utils::SQLiteLogger->new(pbot => $self->{pbot});
+            open $self->{trace_layer}, '>:via(PBot::Core::Utils::SQLiteLoggerLayer)', PBot::Core::Utils::SQLiteLogger->new(pbot => $self->{pbot});
             $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$sqlite_debug"), $self->{trace_layer});
         }
 

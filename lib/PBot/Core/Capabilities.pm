@@ -17,7 +17,7 @@ sub initialize {
     my $filename = $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/capabilities';
 
     # capabilities hash table
-    $self->{caps} = PBot::Storage::HashObject->new(
+    $self->{caps} = PBot::Core::Storage::HashObject->new(
         pbot     => $self->{pbot},
         name     => 'Capabilities',
         filename => $filename,

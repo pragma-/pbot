@@ -10,7 +10,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-use PBot::Utils::LoadModules qw/load_modules/;
+use PBot::Core::Utils::LoadModules qw/load_modules/;
 
 sub initialize {
     my ($self, %conf) = @_;

@@ -2,7 +2,7 @@
 #
 # Purpose: Implements a/an inflexion for nouns.
 
-package PBot::Utils::Indefinite;
+package PBot::Core::Utils::Indefinite;
 
 use PBot::Imports;
 

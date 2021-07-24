@@ -6,12 +6,12 @@
 # displaying index key.
 #
 # Data is stored in working memory for lightning fast performance. If a filename
-# is provided, data is written to a file after any modifications.
+# is provided, data is written to the file after any modifications.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Storage::HashObject;
+package PBot::Core::Storage::HashObject;
 
 use PBot::Imports;
 

@@ -20,7 +20,7 @@ use Getopt::Long qw(GetOptionsFromArray);
 
 use PBot::Plugin::Quotegrabs::Storage::SQLite;     # use SQLite backend for quotegrabs database
 #use PBot::Plugin::Quotegrabs::Storage::Hashtable; # use Perl hashtable backend for quotegrabs database
-use PBot::Utils::ValidateString;
+use PBot::Core::Utils::ValidateString;
 
 use POSIX qw(strftime);
 

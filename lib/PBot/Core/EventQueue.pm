@@ -13,13 +13,13 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-use PBot::Utils::PriorityQueue;
+use PBot::Core::Utils::PriorityQueue;
 
 use Time::HiRes qw/time/;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{event_queue} = PBot::Utils::PriorityQueue->new(pbot => $self->{pbot});
+    $self->{event_queue} = PBot::Core::Utils::PriorityQueue->new(pbot => $self->{pbot});
 }
 
 # returns seconds until upcoming event.

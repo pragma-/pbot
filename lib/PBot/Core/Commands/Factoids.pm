@@ -18,7 +18,7 @@ use Storable;
 use LWP::UserAgent;
 use JSON;
 
-use PBot::Utils::SafeFilename;
+use PBot::Core::Utils::SafeFilename;
 
 our %factoid_metadata_capabilities = (
     created_on                => 'botowner',

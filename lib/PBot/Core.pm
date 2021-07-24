@@ -50,13 +50,13 @@ use PBot::Core::Registry;
 use PBot::Core::Refresher;
 use PBot::Core::SelectHandler;
 use PBot::Core::StdinReader;
+use PBot::Core::Storage::HashObject;
+use PBot::Core::Storage::DualIndexHashObject;
+use PBot::Core::Storage::DualIndexSQLiteObject;
 use PBot::Core::Updater;
 use PBot::Core::Users;
+use PBot::Core::Utils::ParseDate;
 use PBot::Core::WebPaste;
-use PBot::Storage::HashObject;
-use PBot::Storage::DualIndexHashObject;
-use PBot::Storage::DualIndexSQLiteObject;
-use PBot::Utils::ParseDate;
 
 use Encode;
 use File::Basename;
@@ -195,15 +195,15 @@ sub initialize {
     $self->{messagehistory}   = PBot::Core::MessageHistory->new(pbot => $self, filename => "$conf{data_dir}/message_history.sqlite3", %conf);
     $self->{modules}          = PBot::Core::Modules->new(pbot => $self, %conf);
     $self->{nicklist}         = PBot::Core::NickList->new(pbot => $self, %conf);
-    $self->{parsedate}        = PBot::Utils::ParseDate->new(pbot => $self, %conf);
+    $self->{parsedate}        = PBot::Core::Utils::ParseDate->new(pbot => $self, %conf);
     $self->{plugins}          = PBot::Core::Plugins->new(pbot => $self, %conf);
     $self->{process_manager}  = PBot::Core::ProcessManager->new(pbot => $self, %conf);
     $self->{select_handler}   = PBot::Core::SelectHandler->new(pbot => $self, %conf);
     $self->{stdin_reader}     = PBot::Core::StdinReader->new(pbot => $self, %conf);
     $self->{webpaste}         = PBot::Core::WebPaste->new(pbot => $self, %conf);
 
-    # register commands in Commands directory
-    $self->{commands}->register_commands;
+    # load commands in Commands directory
+    $self->{commands}->load_commands;
 
     # register command/factoid interpreters
     $self->{interpreter}->register(sub { $self->{commands}->interpreter(@_) });

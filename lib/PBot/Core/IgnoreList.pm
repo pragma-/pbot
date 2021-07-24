@@ -17,7 +17,7 @@ sub initialize {
 
     $self->{filename} = $conf{filename};
 
-    $self->{storage} = PBot::Storage::DualIndexHashObject->new(
+    $self->{storage} = PBot::Core::Storage::DualIndexHashObject->new(
         pbot     => $self->{pbot},
         name     => 'IgnoreList',
         filename => $self->{filename}

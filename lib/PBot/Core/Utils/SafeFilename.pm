@@ -6,7 +6,7 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Utils::SafeFilename;
+package PBot::Core::Utils::SafeFilename;
 
 use PBot::Imports;
 

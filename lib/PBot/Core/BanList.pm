@@ -33,20 +33,20 @@ sub initialize {
 
     my $data_dir = $self->{pbot}->{registry}->get_value('general', 'data_dir');
 
-    $self->{'ban-exemptions'} = PBot::Storage::DualIndexHashObject->new(
+    $self->{'ban-exemptions'} = PBot::Core::Storage::DualIndexHashObject->new(
         pbot => $self->{pbot},
         name => 'Ban exemptions',
         filename => "$data_dir/ban-exemptions",
     );
 
-    $self->{banlist} = PBot::Storage::DualIndexHashObject->new(
+    $self->{banlist} = PBot::Core::Storage::DualIndexHashObject->new(
         pbot     => $self->{pbot},
         name     => 'Ban List',
         filename => "$data_dir/banlist",
         save_queue_timeout => 15,
     );
 
-    $self->{quietlist} = PBot::Storage::DualIndexHashObject->new(
+    $self->{quietlist} = PBot::Core::Storage::DualIndexHashObject->new(
         pbot     => $self->{pbot},
         name     => 'Quiet List',
         filename => "$data_dir/quietlist",

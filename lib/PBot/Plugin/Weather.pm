@@ -10,7 +10,7 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-use PBot::Utils::LWPUserAgentCached;
+use PBot::Core::Utils::LWPUserAgentCached;
 use XML::LibXML;
 use Getopt::Long qw(GetOptionsFromArray);
 
@@ -72,7 +72,7 @@ sub get_weather {
         'default_expires_in' => 3600
     );
 
-    my $ua       = PBot::Utils::LWPUserAgentCached->new(\%cache_opt, timeout => 10);
+    my $ua       = PBot::Core::Utils::LWPUserAgentCached->new(\%cache_opt, timeout => 10);
     my $response = $ua->get("http://rss.accuweather.com/rss/liveweather_rss.asp?metric=0&locCode=$location");
 
     my $xml;

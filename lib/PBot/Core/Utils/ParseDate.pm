@@ -6,7 +6,7 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Utils::ParseDate;
+package PBot::Core::Utils::ParseDate;
 
 use PBot::Imports;
 

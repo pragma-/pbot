@@ -6,7 +6,7 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-package PBot::Utils::LoadModules;
+package PBot::Core::Utils::LoadModules;
 
 use PBot::Imports;
 
