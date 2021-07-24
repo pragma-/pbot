@@ -171,8 +171,8 @@ sub process_pipe_reader {
         $context->{result} = "No output.";
     }
 
-    # don't output unnecessary result if command was referenced within a message
-    if ($context->{referenced}) {
+    # don't output unnecessary result if command was embedded within a message
+    if ($context->{embedded}) {
         return if $context->{result} =~ m/(?:no results)/i;
     }
 

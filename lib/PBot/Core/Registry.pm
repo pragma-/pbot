@@ -18,7 +18,11 @@ sub initialize {
     my $filename = $conf{filename} // Carp::croak("Missing filename configuration item in " . __FILE__);
 
     # registry is stored as a dual-index hash object
-    $self->{storage} = PBot::Storage::DualIndexHashObject->new(name => 'Registry', filename => $filename, pbot => $self->{pbot});
+    $self->{storage} = PBot::Storage::DualIndexHashObject->new(
+        pbot     => $self->{pbot},
+        name     => 'Registry',
+        filename => $filename,
+    );
 
     # registry triggers are processed when a registry entry is modified
     $self->{triggers} = {};

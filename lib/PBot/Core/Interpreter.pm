@@ -214,7 +214,7 @@ sub process_line {
     }
 
     # set $context object's embedded flag
-    $context->{referenced} = $embedded;
+    $context->{embedded} = $embedded;
 
     # interpret all parsed commands
     foreach $command (@commands) {

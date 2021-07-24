@@ -65,7 +65,11 @@ sub initialize {
 
     $self->{pbot} = $self->{pbot};
 
-    $self->{storage} = PBot::Storage::DualIndexSQLiteObject->new(name => 'Factoids', filename => $filename, pbot => $self->{pbot});
+    $self->{storage} = PBot::Storage::DualIndexSQLiteObject->new(
+        pbot     => $self->{pbot},
+        name     => 'Factoids',
+        filename => $filename,
+    );
 
     $self->{pbot}->{registry}->add_default('text', 'factoids', 'default_rate_limit', 15);
     $self->{pbot}->{registry}->add_default('text', 'factoids', 'max_name_length',    100);
@@ -1144,7 +1148,7 @@ sub interpreter {
 
         # if multiple channels have this keyword, then ask user to disambiguate
         if (@chanlist> 1) {
-            return undef if $context->{referenced};
+            return undef if $context->{embedded};
             return $ref_from . "Factoid `$original_keyword` exists in " . join(', ', @chanlist) . "; use `fact <channel> $original_keyword` to choose one.";
         }
 
@@ -1170,7 +1174,7 @@ sub interpreter {
 
             # found factfind matches
             if ($matches !~ m/^No factoids/) {
-                return undef if $context->{referenced};
+                return undef if $context->{embedded};
                 return "No such factoid '$original_keyword'; $matches";
             }
 
@@ -1184,7 +1188,7 @@ sub interpreter {
 
             # /msg the caller if nothing similiar was found
             $context->{send_msg_to_caller} = 1 if $matches eq 'none';
-            $context->{send_msg_to_caller} = 1 if $context->{referenced};
+            $context->{send_msg_to_caller} = 1 if $context->{embedded};
 
             my $msg_caller = '';
             $msg_caller = "/msg $context->{nick} " if $context->{send_msg_to_caller};
@@ -1210,7 +1214,7 @@ sub interpreter {
     $context->{channel_name}     = $channel_name;
     $context->{trigger_name}     = $trigger_name;
 
-    return undef if $context->{referenced} and $self->{storage}->get_data($channel, $keyword, 'noembed');
+    return undef if $context->{embedded} and $self->{storage}->get_data($channel, $keyword, 'noembed');
 
     if ($self->{storage}->get_data($channel, $keyword, 'locked_to_channel')) {
         if ($context->{ref_from} ne "") {    # called from another channel

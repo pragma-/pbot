@@ -12,7 +12,13 @@ use PBot::Imports;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{storage} = PBot::Storage::HashObject->new(pbot => $self->{pbot}, name => 'Channels', filename => $conf{filename});
+
+    $self->{storage} = PBot::Storage::HashObject->new(
+        pbot     => $self->{pbot},
+        name     => 'Channels',
+        filename => $conf{filename}
+    );
+
     $self->{storage}->load;
 }
 
@@ -25,6 +31,7 @@ sub join {
 
     foreach my $channel (split /,/, $channels) {
         $channel = lc $channel;
+
         $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.join', {channel => $channel});
 
         delete $self->{pbot}->{chanops}->{is_opped}->{$channel};

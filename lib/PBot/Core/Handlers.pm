@@ -15,16 +15,14 @@ use PBot::Utils::LoadModules qw/load_modules/;
 sub initialize {
     my ($self, %conf) = @_;
 
-    # register all the handlers in the Handlers directory
-    $self->register_handlers(%conf);
+    # load the handlers in the Handlers directory
+    $self->load_handlers(%conf);
 }
 
-# registers all the handler files in the Handlers directory
-
-sub register_handlers {
+sub load_handlers {
     my ($self, %conf) = @_;
 
-    $self->{pbot}->{logger}->log("Registering handlers:\n");
+    $self->{pbot}->{logger}->log("Loading handlers:\n");
     load_modules($self, 'PBot::Core::Handlers');
 }
 
