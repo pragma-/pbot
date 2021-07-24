@@ -765,7 +765,7 @@ sub truncate_result {
             $trunc .= "; see $paste_result for full text.]";
         } else {
             # an error or something else
-            $trunc .= "$paste_result]";
+            $trunc .= "; $paste_result]";
         }
 
         $paste_result //= 'not pasted';

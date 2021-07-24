@@ -93,7 +93,7 @@ sub paste_0x0st {
 
     return $ua->post(
         "https://0x0.st",
-        [ file => [ undef, "file", Content => $text ] ],
+        [ file => [ undef, "foo", Content => $text, 'Content-Type' => 'text/plain' ] ],
         Content_Type => 'form-data'
     );
 }
