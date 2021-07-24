@@ -76,8 +76,7 @@ sub register {
 sub unregister {
     my ($self, $name) = @_;
     Carp::croak("Missing name parameter to Commands::unregister") if not defined $name;
-    $name = lc $name;
-    delete $self->{commands}->{$name};
+    delete $self->{commands}->{lc $name};
 }
 
 sub exists {
