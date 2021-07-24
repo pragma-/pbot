@@ -1,5 +1,5 @@
 # PBot
-PBot is a versatile IRCv3 Bot written in Perl
+PBot is a pragmatic IRCv3 Bot written in Perl
 
 <!-- md-toc-begin -->
   * [Installation / Quick Start](#installation--quick-start)
