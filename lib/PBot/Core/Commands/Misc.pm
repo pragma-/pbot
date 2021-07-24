@@ -94,12 +94,13 @@ sub cmd_list {
     }
 
     if ($context->{arguments} =~ /^commands$/i) {
+        my $commands = $self->{pbot}->{commands}->{commands};
         $text = 'Registered commands: ';
-        foreach my $command (sort { $a->{name} cmp $b->{name} } @{$self->{pbot}->{commands}->{handlers}}) {
-            if ($command->{requires_cap}) {
-                $text .= "+$command->{name} ";
+        foreach my $command (sort keys %$commands) {
+            if ($commands->{$command}->{requires_cap}) {
+                $text .= "+$command ";
             } else {
-                $text .= "$command->{name} ";
+                $text .= "$command ";
             }
         }
 
