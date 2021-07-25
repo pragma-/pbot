@@ -83,7 +83,7 @@ sub launch_module {
             $args = encode('UTF-8', $args);
         }
 
-        my @cmdline = ("./$module", $self->{pbot}->{interpreter}->split_line($args));
+        my @cmdline = ("./$module", $self->{pbot}->{interpreter}->split_line($args, strip_quotes => 1));
 
         my $timeout = $self->{pbot}->{registry}->get_value('general', 'module_timeout') // 30;
 
