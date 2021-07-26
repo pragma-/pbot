@@ -279,7 +279,9 @@ sub cmd_factredo {
     $self->{pbot}->{factoids}->{storage}->add($channel, $trigger, $undos->{list}->[$undos->{idx}], 0, 1);
 
     my $changes = $self->hash_differences_as_string($undos->{list}->[$undos->{idx} - 1], $undos->{list}->[$undos->{idx}]);
+
     $self->log_factoid($channel, $trigger, $context->{hostmask}, "reverted (redo): $changes", 1);
+
     return "[$channel_name] $trigger_name restored (revision " . ($undos->{idx} + 1) . "): $changes\n";
 }
 
@@ -293,32 +295,53 @@ sub cmd_factset {
     return $channel if not defined $trigger;    # if $trigger is not defined, $channel is an error message
 
     my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, '_name');
+
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
     my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
+
     my ($key, $value) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
 
     $channel = '.*' if $channel !~ /^#/;
+
     my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, exact_channel => 1, exact_trigger => 1);
 
     my $userinfo;
-    if   (defined $owner_channel) { $userinfo = $self->{pbot}->{users}->loggedin($owner_channel, $context->{hostmask}); }
-    else                          { $userinfo = $self->{pbot}->{users}->loggedin($channel,       $context->{hostmask}); }
+
+    if (defined $owner_channel) {
+        $userinfo = $self->{pbot}->{users}->loggedin($owner_channel, $context->{hostmask});
+    } else {
+        $userinfo = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
+    }
 
     my $meta_cap;
-    if (defined $key) {
-        if (defined $factoid_metadata_capabilities{$key}) { $meta_cap = $factoid_metadata_capabilities{$key}; }
 
-        if (defined $meta_cap) {
-            if (not $self->{pbot}->{capabilities}->userhas($userinfo, $meta_cap)) { return "Your user account must have the $meta_cap capability to set $key."; }
+    if (defined $key) {
+        if (defined $factoid_metadata_capabilities{$key}) {
+            $meta_cap = $factoid_metadata_capabilities{$key};
         }
 
-        if (defined $value and !$self->{pbot}->{capabilities}->userhas($userinfo, 'admin') and $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, 'locked')) {
+        if (defined $meta_cap) {
+            if (not $self->{pbot}->{capabilities}->userhas($userinfo, $meta_cap)) {
+                return "Your user account must have the $meta_cap capability to set $key.";
+            }
+        }
+
+        if (defined $value and !$self->{pbot}->{capabilities}->userhas($userinfo, 'admin')
+                and $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, 'locked'))
+        {
             return "/say $trigger_name is locked; unlock before setting.";
         }
 
         if (lc $key eq 'cap-override' and defined $value) {
-            if (not $self->{pbot}->{capabilities}->exists($value)) { return "No such capability $value."; }
+            if (not $self->{pbot}->{capabilities}->exists($value)) {
+                return "No such capability $value.";
+            }
+
+            if (not $self->{pbot}->{capabilities}->userhas($userinfo, $value)) {
+                return "Your user account must have the $value capability to set cap-override to $value.";
+            }
+
             $self->{pbot}->{factoids}->{storage}->set($channel, $trigger, 'locked', '1');
         }
 
@@ -334,6 +357,7 @@ sub cmd_factset {
 
         my $owner;
         my $mask;
+
         if ($factoid->{'locked'}) {
             # check owner against full hostmask for locked factoids
             $owner = $factoid->{'owner'};
@@ -344,7 +368,10 @@ sub cmd_factset {
             $mask = $context->{nick};
         }
 
-        if ((defined $value and $key ne 'action' and $key ne 'action_with_args') and lc $mask ne lc $owner and not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin')) {
+        if ((defined $value and $key ne 'action' and $key ne 'action_with_args')
+                and lc $mask ne lc $owner
+                and not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin'))
+        {
             return "You are not the owner of $trigger_name.";
         }
     }
@@ -364,66 +391,109 @@ sub cmd_factunset {
         $context->{from}, $context->{arguments}, 'factunset', usage => $usage, explicit => 1
     );
 
-    return $channel if not defined $trigger;    # if $trigger is not defined, $channel is an error message
+    return $channel if not defined $trigger; # if $trigger is not defined, $channel is an error message
 
     my ($key) = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
+
     return $usage if not length $key;
 
     my ($owner_channel, $owner_trigger) = $self->{pbot}->{factoids}->find_factoid($channel, $trigger, exact_channel => 1, exact_trigger => 1);
+
     my $userinfo;
-    if   (defined $owner_channel) { $userinfo = $self->{pbot}->{users}->loggedin($owner_channel, $context->{hostmask}); }
-    else                          { $userinfo = $self->{pbot}->{users}->loggedin($channel,       $context->{hostmask}); }
+
+    if (defined $owner_channel) {
+        $userinfo = $self->{pbot}->{users}->loggedin($owner_channel, $context->{hostmask});
+    } else {
+        $userinfo = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
+    }
 
     my $meta_cap;
-    if (exists $factoid_metadata_capabilities{$key}) { $meta_cap = $factoid_metadata_capabilities{$key}; }
+
+    if (exists $factoid_metadata_capabilities{$key}) {
+        $meta_cap = $factoid_metadata_capabilities{$key};
+    }
 
     if (defined $meta_cap) {
-        if (not $self->{pbot}->{capabilities}->userhas($userinfo, $meta_cap)) { return "Your user account must have the $meta_cap capability to unset $key."; }
+        if (not $self->{pbot}->{capabilities}->userhas($userinfo, $meta_cap)) {
+            return "Your user account must have the $meta_cap capability to unset $key.";
+        }
     }
 
     if ($self->{pbot}->{factoids}->{storage}->exists($channel, $trigger, 'cap-override')) {
         if (lc $key eq 'locked') {
-            if ($self->{pbot}->{capabilities}->userhas($userinfo, 'botowner')) { $self->{pbot}->{factoids}->{storage}->unset($channel, $trigger, 'cap-override', 1); }
-            else                                                               { return "You cannot unlock this factoid because it has a cap-override. Remove the override first."; }
+            if ($self->{pbot}->{capabilities}->userhas($userinfo, 'botowner')) {
+                $self->{pbot}->{factoids}->{storage}->unset($channel, $trigger, 'cap-override', 1);
+            } else {
+                return "You cannot unlock this factoid because it has a cap-override. Remove the override first.";
+            }
         }
     }
 
     my $channel_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, '_name');
     my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, '_name');
+
     $channel_name = 'global'            if $channel_name eq '.*';
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
     my $oldvalue;
+
     if (defined $owner_channel) {
         my $factoid = $self->{pbot}->{factoids}->{storage}->get_data($owner_channel, $owner_trigger);
         my ($owner) = $factoid->{'owner'} =~ m/([^!]+)/;
-        if ($key ne 'action_with_args' and lc $context->{nick} ne lc $owner and not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin')) {
+
+        if ($key ne 'action_with_args' and lc $context->{nick} ne lc $owner
+                and not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin'))
+        {
             return "You are not the owner of $trigger_name.";
         }
+
         $oldvalue = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, $key);
     }
 
-    return "[$channel_name] $trigger_name: key '$key' does not exist." if not defined $oldvalue;
+    if (not defined $oldvalue) {
+        return "[$channel_name] $trigger_name: key '$key' does not exist.";
+    }
+
+    if ($key eq 'cap-override') {
+        if (not $self->{pbot}->{capabilities}->userhas($userinfo, $oldvalue)) {
+            return "Your user account must have the $oldvalue capability to unset this cap-override.";
+        }
+    }
+
     my $result = $self->{pbot}->{factoids}->{storage}->unset($channel, $trigger, $key);
-    if ($result =~ m/unset/) { $self->log_factoid($channel, $trigger, $context->{hostmask}, "unset $key (value: $oldvalue)"); }
+
+    if ($result =~ m/unset/) {
+        $self->log_factoid($channel, $trigger, $context->{hostmask}, "unset $key (value: $oldvalue)");
+    }
+
     return $result;
 }
 
 sub cmd_factmove {
     my ($self, $context) = @_;
+
     my ($src_channel, $source, $target_channel, $target) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 5);
+
     my $usage = "Usage: factmove <source channel> <source factoid> <target channel/factoid> [target factoid]";
+
     return $usage if not defined $target_channel;
 
     if ($target_channel !~ /^#/ and $target_channel ne '.*') {
-        if (defined $target) { return "Unexpected argument '$target' when renaming to '$target_channel'. Perhaps '$target_channel' is missing #s? $usage"; }
+        if (defined $target) {
+            return "Unexpected argument '$target' when renaming to '$target_channel'. Perhaps '$target_channel' is missing #s? $usage";
+        }
+
         $target         = $target_channel;
         $target_channel = $src_channel;
     } else {
-        if (not defined $target) { $target = $source; }
+        if (not defined $target) {
+            $target = $source;
+        }
     }
 
-    if (length $target > $self->{pbot}->{registry}->get_value('factoids', 'max_name_length')) { return "/say $context->{nick}: I don't think the factoid name needs to be that long."; }
+    if (length $target > $self->{pbot}->{registry}->get_value('factoids', 'max_name_length')) {
+        return "/say $context->{nick}: I don't think the factoid name needs to be that long.";
+    }
 
     if (length $target_channel > $self->{pbot}->{registry}->get_value('factoids', 'max_channel_length')) {
         return "/say $context->{nick}: I don't think the channel name needs to be that long.";
@@ -431,7 +501,9 @@ sub cmd_factmove {
 
     my ($found_src_channel, $found_source) = $self->{pbot}->{factoids}->find_factoid($src_channel, $source, exact_channel => 1, exact_trigger => 1);
 
-    if (not defined $found_src_channel) { return "Source factoid $source not found in channel $src_channel"; }
+    if (not defined $found_src_channel) {
+        return "Source factoid $source not found in channel $src_channel";
+    }
 
     my $source_channel_name = $self->{pbot}->{factoids}->{storage}->get_data($found_src_channel, '_name');
     my $source_trigger_name = $self->{pbot}->{factoids}->{storage}->get_data($found_src_channel, $found_source, '_name');
@@ -447,7 +519,9 @@ sub cmd_factmove {
         return "You are not the owner of $source_trigger_name for $source_channel_name.";
     }
 
-    if ($factoids->get_data($found_src_channel, $found_source, 'locked')) { return "/say $source_trigger_name is locked; unlock before moving."; }
+    if ($factoids->get_data($found_src_channel, $found_source, 'locked')) {
+        return "/say $source_trigger_name is locked; unlock before moving.";
+    }
 
     my ($found_target_channel, $found_target) = $self->{pbot}->{factoids}->find_factoid($target_channel, $target, exact_channel => 1, exact_trigger => 1);
 
