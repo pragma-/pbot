@@ -1,11 +1,12 @@
 # File: RunCommand.pm
 #
-# Purpose: Runs a command, streaming each line of output in real-time.
+# Purpose: Runs a system command, streaming each line of output in real-time.
 #
-# WARNING: The `runcmd` will allow a user to run any command on your system. Do
-# not give out the `can-runcmd` capability to anyone you do not trust 100%.
+# WARNING: The `runcmd` command will allow a user to run any command on your
+# system. Do not give out the `can-runcmd` capability to anyone you do not
+# absolutely trust 100%.
 #
-# Consider making a locked-down factalias instead; i.e.:
+# Consider instead making a locked-down factalias; i.e.:
 #
 #   factalias ls runcmd ls $args
 #   factset ls cap-override can-runcmd
