@@ -1,6 +1,21 @@
 # File: RunCommand.pm
 #
 # Purpose: Runs a command, streaming each line of output in real-time.
+#
+# WARNING: The `runcmd` will allow a user to run any command on your system. Do
+# not give out the `can-runcmd` capability to anyone you do not trust 100%.
+#
+# Consider making a locked-down factalias instead; i.e.:
+#
+#   factalias ls runcmd ls $args
+#   factset ls cap-override can-runcmd
+#   factset ls locked 1
+#
+# The above will create an `ls` alias that can only run `runcmd ls $args` and
+# cannot be modified by anybody. The cap-override is necessary so the alias
+# itself has permission to use `runcmd` regardless of whether the user has the
+# `can-runcmd` capability.
+
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
