@@ -23,8 +23,8 @@ our @EXPORT_OK = (
 # These are set automatically by the misc/update_version script
 use constant {
     BUILD_NAME     => "PBot",
-    BUILD_REVISION => 4305,
-    BUILD_DATE     => "2021-07-25",
+    BUILD_REVISION => 4310,
+    BUILD_DATE     => "2021-07-26",
 };
 
 sub initialize {
