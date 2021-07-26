@@ -4,19 +4,18 @@
 #
 # WARNING: The `runcmd` command will allow a user to run any command on your
 # system. Do not give out the `can-runcmd` capability to anyone you do not
-# absolutely trust 100%. This Plugin is not added to data/plugin_autoload by
-# default. Load at your own risk.
-#
-# Consider instead making a locked-down factalias; i.e.:
+# absolutely trust 100%. Instead, make a locked-down factoid; i.e.:
 #
 #   factalias ls runcmd ls $args
 #   factset ls cap-override can-runcmd
 #   factset ls locked 1
 #
 # The above will create an `ls` alias that can only run `runcmd ls $args` and
-# cannot be modified by anybody. The cap-override is necessary so the alias
+# cannot be modified by anybody. The cap-override is necessary so the factoid
 # itself has permission to use `runcmd` regardless of whether the user has the
 # `can-runcmd` capability.
+#
+# This plugin is not in data/plugin_autoload. Load at your own risk.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
