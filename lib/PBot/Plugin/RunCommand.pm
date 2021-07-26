@@ -26,7 +26,7 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-use IPC::Run qw/start pump/;
+use IPC::Run qw/start pump finish/;
 
 sub initialize {
     my ($self, %conf) = @_;
