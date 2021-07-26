@@ -129,7 +129,7 @@ sub add_factoid {
     }
 
     $self->{storage}->add($channel, $trigger, $data, $dont_save);
-    $self->{commands}->log_factoid($channel, $trigger, $owner, "created: $action") unless $dont_save;
+    $self->{pbot}->{commands}->{modules}->{Factoids}->log_factoid($channel, $trigger, $owner, "created: $action") unless $dont_save;
 }
 
 sub remove_factoid {
