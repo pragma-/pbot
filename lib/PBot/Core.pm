@@ -219,6 +219,8 @@ sub initialize {
             return;
         }
     );
+
+    $self->{logger}->log("PBot::Core initialized.\n");
 }
 
 sub random_nick {

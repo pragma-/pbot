@@ -10,12 +10,15 @@ package PBot::Core::Class;
 
 use PBot::Imports;
 
-our $quiet = 0;
+my %import_opts;
 
 sub import {
     my ($package, %opts) = @_;
 
-    $quiet = $opts{quiet};
+    if (%opts) {
+        # set import options for package
+        $import_opts{$package} = \%opts;
+    }
 }
 
 sub new {
@@ -25,18 +28,24 @@ sub new {
     if (not exists $args{pbot}) {
         my ($package, $filename, $line) = caller(0);
         my (undef, undef, undef, $subroutine) = caller(1);
-        Carp::croak("Missing pbot reference to " . $class . ", created by $subroutine at $filename:$line");
+        Carp::croak("Missing pbot reference to $class, created by $subroutine at $filename:$line");
     }
 
+    # create class instance
     my $self = bless { pbot => $args{pbot} }, $class;
 
-    $self->{pbot}->{logger}->log("Initializing $class\n") unless $quiet;
+    # log class initialization unless quieted
+    unless (exists $import_opts{$class} and $import_opts{$class}{quiet}) {
+        $self->{pbot}->{logger}->log("Initializing $class\n")
+    }
+
     $self->initialize(%args);
 
     return $self;
 }
 
 sub initialize {
+    # ensure class has an initialize() subroutine
     my ($package, $filename, $line) = caller(0);
     my (undef, undef, undef, $subroutine) = caller(1);
     Carp::croak("Missing initialize subroutine in $subroutine at $filename:$line");

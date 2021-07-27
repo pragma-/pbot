@@ -29,17 +29,19 @@ sub autoload {
 
     my $data_dir = $self->{pbot}->{registry}->get_value('general', 'data_dir');
 
-    $self->{pbot}->{logger}->log("Loading plugins ...\n");
-
     my $plugin_count = 0;
 
     my $fh;
     if (not open $fh, "<$data_dir/plugin_autoload") {
-        $self->{pbot}->{logger}->log("warning: file $data_dir/plugin_autoload does not exist; skipping autoloading of Plugins\n");
+        $self->{pbot}->{logger}->log("Plugins: autoload: file $data_dir/plugin_autoload does not exist; skipping autoloading of Plugins\n");
         return;
     }
     chomp(my @plugins = <$fh>);
     close $fh;
+
+    $self->{pbot}->{logger}->log("Loading plugins:\n");
+
+    $conf{quiet} = 1;
 
     foreach my $plugin (sort @plugins) {
         # do not load plugins that begin with a comment
@@ -48,6 +50,9 @@ sub autoload {
 
         $plugin = basename $plugin;
         $plugin =~ s/.pm$//;
+
+        $self->{pbot}->{logger}->log("  $plugin\n");
+
         $plugin_count++ if $self->load($plugin, %conf);
     }
 
@@ -66,7 +71,7 @@ sub load {
     $self->{pbot}->{refresher}->{refresher}->refresh_module($module);
 
     my $ret = eval {
-        $self->{pbot}->{logger}->log("Loading $plugin\n");
+        $self->{pbot}->{logger}->log("Loading $plugin\n") unless $conf{quiet};
         require "$module";
         my $class = "PBot::Plugin::$plugin";
         $self->{plugins}->{$plugin} = $class->new(pbot => $self->{pbot}, %conf);

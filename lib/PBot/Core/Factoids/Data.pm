@@ -54,12 +54,10 @@ our %factoid_metadata = (
 sub initialize {
     my ($self, %conf) = @_;
 
-    my $filename = $conf{filename};
-
     $self->{storage} = PBot::Core::Storage::DualIndexSQLiteObject->new(
         pbot     => $self->{pbot},
         name     => 'Factoids',
-        filename => $filename,
+        filename => $conf{filename},
     );
 }
 
