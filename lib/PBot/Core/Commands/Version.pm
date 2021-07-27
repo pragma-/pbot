@@ -11,8 +11,6 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-use PBot::VERSION qw/BUILD_REVISION BUILD_DATE/;
-
 use LWP::UserAgent;
 
 sub initialize {
@@ -22,7 +20,11 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->cmd_version(@_) }, 'version');
 
     # initialize last_check version data
-    $self->{last_check} = {timestamp => 0, version => BUILD_REVISION, date => BUILD_DATE};
+    $self->{last_check} = {
+        timestamp => 0,
+        version   => PBot::VERSION::BUILD_REVISION,
+        date      => PBot::VERSION::BUILD_DATE,
+    };
 }
 
 sub cmd_version {
@@ -61,9 +63,9 @@ sub cmd_version {
 
     my $result = '/say ';
     $result .= "$target_nick: " if $target_nick;
-    $result .= $self->{pbot}->{version}->version;
+    $result .= PBot::VERSION::BUILD_NAME . ' version ' . PBot::VERSION::BUILD_REVISION . ' ' . PBot::VERSION::BUILD_DATE;
 
-    if ($self->{last_check}->{version} > BUILD_REVISION) {
+    if ($self->{last_check}->{version} > PBot::VERSION::BUILD_REVISION) {
         $result .= "; new version available: $self->{last_check}->{version} $self->{last_check}->{date}!";
     }
 

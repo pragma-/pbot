@@ -134,6 +134,9 @@ sub initialize {
     # prepare and open logger
     $self->{logger} = PBot::Core::Logger->new(pbot => $self, filename => "$conf{data_dir}/log/log", %conf);
 
+    # log the version
+    $self->{logger}->log(PBot::VERSION::BUILD_NAME . ' version ' . PBot::VERSION::BUILD_REVISION . ' ' . PBot::VERSION::BUILD_DATE . "\n");
+
     # log command-line arguments
     $self->{logger}->log("Args: @ARGV\n") if @ARGV;
 
@@ -157,10 +160,6 @@ sub initialize {
 
     # create commands so the modules can register new commands
     $self->{commands} = PBot::Core::Commands->new(pbot => $self, filename => "$conf{data_dir}/commands", %conf);
-
-    # prepare the version information and `version` command
-    $self->{version} = PBot::VERSION->new(pbot => $self, %conf);
-    $self->{logger}->log($self->{version}->version . "\n");
 
     # prepare registry
     $self->{registry} = PBot::Core::Registry->new(pbot => $self, filename => "$conf{data_dir}/registry", %conf);
