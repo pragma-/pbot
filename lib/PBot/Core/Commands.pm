@@ -169,7 +169,7 @@ sub interpreter {
     }
 
     unless ($self->get_meta($keyword, 'dont-replace-pronouns')) {
-        $context->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($context, $context->{arguments});
+        $context->{arguments} = $self->{pbot}->{factoids}->{variables}->expand_factoid_vars($context, $context->{arguments});
         $context->{arglist}   = $self->{pbot}->{interpreter}->make_args($context->{arguments});
     }
 

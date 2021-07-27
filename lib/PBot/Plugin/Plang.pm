@@ -168,13 +168,13 @@ sub plang_validate_builtin_print {
 
 sub is_locked {
     my ($self, $channel, $keyword) = @_;
-    return $self->{pbot}->{factoids}->get_meta($channel, $keyword, 'locked');
+    return $self->{pbot}->{factoids}->{data}->get_meta($channel, $keyword, 'locked');
 }
 
 sub plang_builtin_factget {
     my ($self, $plang, $context, $name, $arguments) = @_;
     my ($channel, $keyword, $meta) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
-    my $result = $self->{pbot}->{factoids}->get_meta($channel, $keyword, $meta);
+    my $result = $self->{pbot}->{factoids}->{data}->get_meta($channel, $keyword, $meta);
     if (defined $result) {
         return [['TYPE', 'String'], $result];
     } else {
@@ -190,7 +190,7 @@ sub plang_builtin_factset {
     my ($self, $plang, $context, $name, $arguments) = @_;
     my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     die "Factoid $channel.$keyword is locked. Cannot set.\n" if $self->is_locked($channel, $keyword);
-    $self->{pbot}->{factoids}->add_factoid('text', $channel, 'Plang', $keyword, $text);
+    $self->{pbot}->{factoids}->{data}->add_factoid('text', $channel, 'Plang', $keyword, $text);
     return [['TYPE', 'String'], $text];
 }
 
@@ -202,10 +202,10 @@ sub plang_builtin_factappend {
     my ($self, $plang, $context, $name, $arguments) = @_;
     my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     die "Factoid $channel.$keyword is locked. Cannot append.\n" if $self->is_locked($channel, $keyword);
-    my $action = $self->{pbot}->{factoids}->get_meta($channel, $keyword, 'action');
+    my $action = $self->{pbot}->{factoids}->{data}->get_meta($channel, $keyword, 'action');
     $action = "" if not defined $action;
     $action .= $text;
-    $self->{pbot}->{factoids}->add_factoid('text', $channel, 'Plang', $keyword, $action);
+    $self->{pbot}->{factoids}->{data}->add_factoid('text', $channel, 'Plang', $keyword, $action);
     return [['TYPE', 'String'], $action];
 }
 

@@ -72,7 +72,7 @@ sub cmd_reload {
         },
 
         'factoids' => sub {
-            $self->{pbot}->{factoids}->load_factoids;
+            $self->{pbot}->{factoids}->{data}->load;
             return "Factoids reloaded.";
         }
     );

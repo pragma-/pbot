@@ -418,7 +418,7 @@ sub interpret {
 
     # replace pronouns like "i", "my", etc, with "nick", "nick's", etc
     if (not $self->{pbot}->{commands}->get_meta($keyword, 'dont-replace-pronouns')
-        and not $self->{pbot}->{factoids}->get_meta($context->{from}, $keyword, 'dont-replace-pronouns'))
+        and not $self->{pbot}->{factoids}->{data}->get_meta($context->{from}, $keyword, 'dont-replace-pronouns'))
     {
 
         # if command recipient is "me" then replace it with invoker's nick
@@ -449,7 +449,7 @@ sub interpret {
     # the bot doesn't like performing bot commands on itself
     # unless dont-protect-self is true
     if (not $self->{pbot}->{commands}->get_meta($keyword, 'dont-protect-self')
-            and not $self->{pbot}->{factoids}->get_meta($context->{from}, $keyword, 'dont-protect-self'))
+            and not $self->{pbot}->{factoids}->{data}->get_meta($context->{from}, $keyword, 'dont-protect-self'))
     {
         my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
@@ -636,7 +636,7 @@ sub handle_result {
     my $use_output_queue = 0;
 
     if (not $self->{pbot}->{commands}->exists($context->{keyword})) {
-        my @factoids = $self->{pbot}->{factoids}->find_factoid($context->{from}, $context->{keyword},
+        my @factoids = $self->{pbot}->{factoids}->{data}->find($context->{from}, $context->{keyword},
             arguments     => $context->{arguments},
             exact_channel => 0,
             exact_trigger => 0,
@@ -647,10 +647,10 @@ sub handle_result {
             my ($chan, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
 
             if ($context->{preserve_whitespace} == 0) {
-                $context->{preserve_whitespace} = $self->{pbot}->{factoids}->{storage}->get_data($chan, $trigger, 'preserve_whitespace') // 0;
+                $context->{preserve_whitespace} = $self->{pbot}->{factoids}->{data}->{storage}->get_data($chan, $trigger, 'preserve_whitespace') // 0;
             }
 
-            $use_output_queue = $self->{pbot}->{factoids}->{storage}->get_data($chan, $trigger, 'use_output_queue') // 0;
+            $use_output_queue = $self->{pbot}->{factoids}->{data}->{storage}->get_data($chan, $trigger, 'use_output_queue') // 0;
         }
     }
 

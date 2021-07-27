@@ -207,7 +207,7 @@ sub initialize {
 
     # register command/factoid interpreters
     $self->{interpreter}->register(sub { $self->{commands}->interpreter(@_) });
-    $self->{interpreter}->register(sub { $self->{factoids}->interpreter(@_) });
+    $self->{interpreter}->register(sub { $self->{factoids}->{interpreter}->interpreter(@_) });
 
     # give botowner all capabilities
     # -- this must happen last after all modules have registered their capabilities --

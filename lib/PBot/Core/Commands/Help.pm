@@ -67,7 +67,7 @@ sub cmd_help {
     }
 
     # find factoids
-    my @factoids = $self->{pbot}->{factoids}->find_factoid($channel_arg, $keyword, exact_trigger => 1);
+    my @factoids = $self->{pbot}->{factoids}->{data}->find($channel_arg, $keyword, exact_trigger => 1);
 
     if (not @factoids or not $factoids[0]) {
         # nothing found
@@ -96,8 +96,8 @@ sub cmd_help {
     }
 
     # get canonical channel and trigger names with original typographical casing
-    my $channel_name = $self->{pbot}->{factoids}->{storage}->get_key_name($channel);
-    my $trigger_name = $self->{pbot}->{factoids}->{storage}->get_key_name($channel, $trigger);
+    my $channel_name = $self->{pbot}->{factoids}->{data}->{storage}->get_key_name($channel);
+    my $trigger_name = $self->{pbot}->{factoids}->{data}->{storage}->get_key_name($channel, $trigger);
 
     # prettify channel name if it's ".*"
     if ($channel_name eq '.*') {
@@ -110,7 +110,7 @@ sub cmd_help {
     }
 
     # get factoid's `help` metadata
-    my $help = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, 'help');
+    my $help = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $trigger, 'help');
 
     # return immediately if no help text
     if (not defined $help or not length $help) {

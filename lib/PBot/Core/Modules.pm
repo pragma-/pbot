@@ -40,7 +40,7 @@ sub launch_module {
 
     $context->{arguments} //= '';
 
-    my @factoids = $self->{pbot}->{factoids}->find_factoid($context->{from}, $context->{keyword}, exact_channel => 2, exact_trigger => 2);
+    my @factoids = $self->{pbot}->{factoids}->{data}->find($context->{from}, $context->{keyword}, exact_channel => 2, exact_trigger => 2);
 
     if (not @factoids or not $factoids[0]) {
         $context->{checkflood} = 1;
@@ -54,14 +54,14 @@ sub launch_module {
     $context->{keyword} = $trigger;
     $context->{trigger} = $trigger;
 
-    my $module = $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, 'action');
+    my $module = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $trigger, 'action');
 
     $self->{pbot}->{logger}->log(
         '(' . (defined $context->{from} ? $context->{from} : "(undef)") . '): '
         . "$context->{hostmask}: Executing module [$context->{command}] $module $context->{arguments}\n"
     );
 
-    $context->{arguments} = $self->{pbot}->{factoids}->expand_factoid_vars($context, $context->{arguments});
+    $context->{arguments} = $self->{pbot}->{factoids}->{variables}->expand_factoid_vars($context, $context->{arguments});
 
     my $module_dir = $self->{pbot}->{registry}->get_value('general', 'module_dir');
 
@@ -70,8 +70,8 @@ sub launch_module {
         Carp::croak("Could not chdir to '$module_dir': $!");
     }
 
-    if ($self->{pbot}->{factoids}->{storage}->exists($channel, $trigger, 'workdir')) {
-        chdir $self->{pbot}->{factoids}->{storage}->get_data($channel, $trigger, 'workdir');
+    if ($self->{pbot}->{factoids}->{data}->{storage}->exists($channel, $trigger, 'workdir')) {
+        chdir $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $trigger, 'workdir');
     }
 
     # FIXME -- add check to ensure $module exists

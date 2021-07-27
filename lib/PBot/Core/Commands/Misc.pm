@@ -81,11 +81,11 @@ sub cmd_list {
 
     if ($context->{arguments} =~ /^modules$/i) {
         $text = 'Loaded modules: ';
-        foreach my $channel (sort $self->{pbot}->{factoids}->{storage}->get_keys) {
-            foreach my $command (sort $self->{pbot}->{factoids}->{storage}->get_keys($channel)) {
+        foreach my $channel (sort $self->{pbot}->{factoids}->{data}->{storage}->get_keys) {
+            foreach my $command (sort $self->{pbot}->{factoids}->{data}->{storage}->get_keys($channel)) {
                 next if $command eq '_name';
-                if ($self->{pbot}->{factoids}->{storage}->get_data($channel, $command, 'type') eq 'module') {
-                    $text .= $self->{pbot}->{factoids}->{storage}->get_data($channel, $command, '_name') . ' ';
+                if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $command, 'type') eq 'module') {
+                    $text .= $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $command, '_name') . ' ';
                 }
             }
         }
@@ -128,8 +128,16 @@ sub cmd_die {
 
 sub cmd_export {
     my ($self, $context) = @_;
-    return "Usage: export <factoids>" if not length $context->{arguments};
-    if ($context->{arguments} =~ /^factoids$/i) { return $self->{pbot}->{factoids}->export_factoids; }
+
+    my $usage = "Usage: export factoids";
+
+    return $usage if not length $context->{arguments};
+
+    if ($context->{arguments} =~ /^factoids$/i) {
+        return $self->{pbot}->{factoids}->{exporter}->export;
+    }
+
+    return $usage;
 }
 
 sub cmd_eval {

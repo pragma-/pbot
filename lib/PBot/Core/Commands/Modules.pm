@@ -28,13 +28,13 @@ sub cmd_load {
 
     return "Usage: load <keyword> <module>" if not defined $module;
 
-    my $factoids = $self->{pbot}->{factoids}->{storage};
+    my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
 
     if ($factoids->exists('.*', $keyword)) {
         return 'There is already a keyword named ' . $factoids->get_data('.*', $keyword, '_name') . '.';
     }
 
-    $self->{pbot}->{factoids}->add_factoid('module', '.*', $context->{hostmask}, $keyword, $module, 1);
+    $self->{pbot}->{factoids}->{data}->add_factoid('module', '.*', $context->{hostmask}, $keyword, $module, 1);
 
     $factoids->set('.*', $keyword, 'add_nick',   1, 1);
     $factoids->set('.*', $keyword, 'nooverride', 1);
@@ -51,7 +51,7 @@ sub cmd_unload {
 
     return "Usage: unload <keyword>" if not defined $module;
 
-    my $factoids = $self->{pbot}->{factoids}->{storage};
+    my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
 
     if (not $factoids->exists('.*', $module)) {
         return "/say $module not found.";
