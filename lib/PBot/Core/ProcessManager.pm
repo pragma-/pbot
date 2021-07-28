@@ -109,7 +109,7 @@ sub execute_process {
 
         # execute the provided subroutine, results are stored in $context
         eval {
-            local $SIG{ALRM} = sub { die "Process `$context->{commands}->[0]` timed-out" };
+            local $SIG{ALRM} = sub { die "Process `$context->{commands}->[0]` timed-out\n" };
             alarm $timeout;
             $subref->($context);
             alarm 0;
@@ -119,13 +119,9 @@ sub execute_process {
         if ($@) {
             $context->{result} = $@;
 
-            $context->{'timed-out'} = 1 if $context->{result} =~ /^Process .* timed-out at PBot\/ProcessManager/;
+            $context->{'timed-out'} = 1 if $context->{result} =~ /^Process .* timed-out/;
 
             $self->{pbot}->{logger}->log("Error executing process: $context->{result}\n");
-
-            # strip internal PBot source data for IRC output
-            $context->{result} =~ s/ at PBot.*$//ms;
-            $context->{result} =~ s/\s+...propagated at .*$//ms;
         }
 
         # print $context to pipe
@@ -187,42 +183,6 @@ sub process_pipe_reader {
 
         $context->{original_keyword} = $context->{root_keyword};
         $context->{result} = $self->{pbot}->{factoids}->{interpreter}->handle_action($context, $context->{result});
-    }
-
-    # if nick isn't overridden yet, check for a potential nick prefix
-    # TODO: this stuff should be moved to Interpreter::output_result
-    if (not $context->{nickprefix}) {
-        $context->{trigger} //= '';
-
-        # if add_nick is set on the factoid, set the nick override to the caller's nick
-        if (exists $context->{special} and $context->{special} ne 'code-factoid'
-            and $self->{pbot}->{factoids}->{data}->{storage}->exists($context->{channel}, $context->{trigger}, 'add_nick')
-            and $self->{pbot}->{factoids}->{data}->{storage}->get_data($context->{channel}, $context->{trigger}, 'add_nick') != 0)
-        {
-            $context->{nickprefix}          = $context->{nick};
-            $context->{nickprefix_disabled} = 0;
-            $context->{nickprefix_forced}   = 1;
-        } else {
-            # extract nick-like thing from process result
-            if ($context->{result} =~ s/^(\S+): //) {
-                my $nick = $1;
-
-                if (lc $nick eq "usage") {
-                    # put it back on result if it's a usage message
-                    $context->{result} = "$nick: $context->{result}";
-                } else {
-                    my $present = $self->{pbot}->{nicklist}->is_present($context->{channel}, $nick);
-
-                    if ($present) {
-                        # nick is present in channel
-                        $context->{nickprefix} = $present;
-                    } else {
-                        # nick not present, put it back on result
-                        $context->{result} = "$nick: $context->{result}";
-                    }
-                }
-            }
-        }
     }
 
     # send the result off to the bot to be handled

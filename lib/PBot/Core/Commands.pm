@@ -97,7 +97,7 @@ sub get_meta {
 }
 
 # main entry point for PBot::Core::Interpreter to interpret a registered bot command
-# see also PBot::Core::Factoids::interpreter() for factoid commands
+# see also PBot::Core::Factoids::Interpreter for factoid commands
 sub interpreter {
     my ($self, $context) = @_;
 
@@ -166,6 +166,11 @@ sub interpreter {
 
     if ($self->get_meta($keyword, 'preserve_whitespace')) {
         $context->{preserve_whitespace} = 1;
+    }
+
+    # tell PBot::Core::Interpreter to prepend caller's nick to output
+    if ($self->get_meta($keyword, 'add_nick')) {
+        $context->{add_nick} = 1;
     }
 
     unless ($self->get_meta($keyword, 'dont-replace-pronouns')) {

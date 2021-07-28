@@ -890,15 +890,21 @@ sub output_result {
         if ($context->{nickprefix} && (! $context->{nickprefix_disabled} || $context->{nickprefix_forced})) {
             $output = "$context->{nickprefix}: $output";
         }
+        elsif ($context->{add_nick}) {
+            $output = "$context->{nick}: $output";
+        }
 
         # send the message to the channel/user
         $self->{pbot}->{conn}->privmsg($to, $output);
     }
     elsif ($type eq 'action') {
         # append nickprefix to output
-        if ($context->{nickprefix} && (! $context->{nickprefix_disabled} || $context->{nickprefix_forced})) {
-            $output = "$output (for $context->{nickprefix})";
-        }
+        #
+        # TODO: probably going to remove this code.
+        #
+        # if ($context->{nickprefix} && (! $context->{nickprefix_disabled} || $context->{nickprefix_forced})) {
+        #     $output = "$output (for $context->{nickprefix})";
+        # }
 
         # CTCP ACTION the message to the channel/user
         $self->{pbot}->{conn}->me($to, $output);

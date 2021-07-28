@@ -22,7 +22,7 @@ package PBot::VERSION;
 # These are set by the /misc/update_version script
 use constant {
     BUILD_NAME     => "PBot",
-    BUILD_REVISION => 4318,
+    BUILD_REVISION => 4319,
     BUILD_DATE     => "2021-07-27",
 };
 

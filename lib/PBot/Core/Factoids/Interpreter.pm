@@ -219,6 +219,11 @@ sub interpreter {
         return $usage;
     }
 
+    # tell PBot::Core::Interpreter to prepend caller's nick to output
+    if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'add_nick')) {
+        $context->{add_nick} = 1;
+    }
+
     # factoid action
     my $action;
 
