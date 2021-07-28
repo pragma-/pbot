@@ -19,10 +19,10 @@ sub initialize {
     # register `version` command
     $self->{pbot}->{commands}->register(sub { $self->cmd_version(@_) }, 'version');
 
-    # initialize last_check version data
+    # initialize last_check version data using compile-time constants
     $self->{last_check} = {
         timestamp => 0,
-        version   => PBot::VERSION::BUILD_REVISION,
+        revision  => PBot::VERSION::BUILD_REVISION,
         date      => PBot::VERSION::BUILD_DATE,
     };
 }
@@ -47,13 +47,13 @@ sub cmd_version {
         }
 
         my $text = $response->decoded_content;
-        my ($version, $date) = $text =~ m/^\s+BUILD_REVISION => (\d+).*^\s+BUILD_DATE\s+=> "([^"]+)"/ms;
+        my ($revision, $date) = $text =~ m/^\s+BUILD_REVISION => (\d+).*^\s+BUILD_DATE\s+=> "([^"]+)"/ms;
 
-        if (not defined $version or not defined $date) {
+        if (not defined $revision or not defined $date) {
             return "Unable to get version information: data did not match expected format";
         }
 
-        $self->{last_check} = {timestamp => time, version => $version, date => $date};
+        $self->{last_check} = { timestamp => time, revision => $revision, date => $date };
     }
 
     my $target_nick;
@@ -63,10 +63,10 @@ sub cmd_version {
 
     my $result = '/say ';
     $result .= "$target_nick: " if $target_nick;
-    $result .= PBot::VERSION::BUILD_NAME . ' version ' . PBot::VERSION::BUILD_REVISION . ' ' . PBot::VERSION::BUILD_DATE;
+    $result .= $self->{pbot}->{version}->version;
 
-    if ($self->{last_check}->{version} > PBot::VERSION::BUILD_REVISION) {
-        $result .= "; new version available: $self->{last_check}->{version} $self->{last_check}->{date}!";
+    if ($self->{last_check}->{revision} > $self->{pbot}->{version}->revision) {
+        $result .= "; new version available: $self->{last_check}->{revision} $self->{last_check}->{date}!";
     }
 
     return $result;

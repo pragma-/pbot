@@ -135,7 +135,8 @@ sub initialize {
     $self->{logger} = PBot::Core::Logger->new(pbot => $self, filename => "$conf{data_dir}/log/log", %conf);
 
     # log the version
-    $self->{logger}->log(PBot::VERSION::BUILD_NAME . ' version ' . PBot::VERSION::BUILD_REVISION . ' ' . PBot::VERSION::BUILD_DATE . "\n");
+    $self->{version} = PBot::VERSION->new(pbot => $self);
+    $self->{logger}->log($self->{version}->version . "\n");
 
     # log command-line arguments
     $self->{logger}->log("Args: @ARGV\n") if @ARGV;
