@@ -3,7 +3,7 @@
 # Purpose: Sets the PBot version constants.
 #
 # Rather than each PBot::Core package having its own version identifier, all
-# of PBot is considered a single package. The BUILD_REVSION constant is the
+# of PBot is considered a single package. The BUILD_REVISION constant is the
 # count of git commits to the PBot repository.
 #
 # See also the version command in PBot::Core::Commands::Version. It can compare
