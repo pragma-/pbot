@@ -18,6 +18,7 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->cmd_logout(@_) },    "logout",    0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_useradd(@_) },   "useradd",   1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_userdel(@_) },   "userdel",   1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_usershow(@_) },  "usershow",  0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_userset(@_) },   "userset",   1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_userunset(@_) }, "userunset", 1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_users(@_) },     "users",     0);
@@ -188,6 +189,30 @@ sub cmd_userdel {
     return $self->{pbot}->{users}->remove_user($context->{arguments});
 }
 
+sub cmd_usershow {
+    my ($self, $context) = @_;
+
+    my ($name, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
+
+    if (not defined $name) { return "Usage: usershow <username> [key]"; }
+
+    my $channel = $context->{from};
+
+    my $target = $self->{pbot}->{users}->{storage}->get_data($name);
+
+    if (not $target) {
+        return "There is no user account $name.";
+    }
+
+    if (lc $key eq 'password') {
+        return "I don't think so.";
+    }
+
+    my $result = $self->{pbot}->{users}->{storage}->set($name, $key, undef);
+    $result =~ s/^password: .*;?$/password: <private>;/m;
+    return $result;
+}
+
 sub cmd_userset {
     my ($self, $context) = @_;
 
@@ -226,7 +251,6 @@ sub cmd_userset {
     }
 
     my $result = $self->{pbot}->{users}->{storage}->set($name, $key, $value);
-    print "result [$result]\n";
     $result =~ s/^password: .*;?$/password: <private>;/m;
 
     if (defined $key and ($key eq 'channels' or $key eq 'hostmasks') and defined $value) {
