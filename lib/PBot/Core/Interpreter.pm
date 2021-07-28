@@ -416,10 +416,19 @@ sub interpret {
     # unescape any escaped pipes
     $arguments =~ s/\\\|\s*\{/| {/g;
 
-    # replace pronouns like "i", "my", etc, with "nick", "nick's", etc
-    if (not $self->{pbot}->{commands}->get_meta($keyword, 'dont-replace-pronouns')
-        and not $self->{pbot}->{factoids}->{data}->get_meta($context->{from}, $keyword, 'dont-replace-pronouns'))
+    my $from = $context->{from};
+
+    $from = '.*' unless $from =~ /^#/;
+
+    if ($self->{pbot}->{commands}->get_meta($keyword, 'dont-replace-pronouns')
+            or $self->{pbot}->{factoids}->{data}->get_meta($from, $keyword, 'dont-replace-pronouns'))
     {
+        $context->{'dont-replace-pronouns'} = 1;
+    }
+
+    # replace pronouns like "i", "my", etc, with "nick", "nick's", etc
+    if (not $context->{'dont-replace-pronouns'}) {
+        $self->{pbot}->{logger}->log("Replacing pronouns for $context->{from}.$keyword\n");
 
         # if command recipient is "me" then replace it with invoker's nick
         # e.g., "!tell me about date" or "!give me date", etc
