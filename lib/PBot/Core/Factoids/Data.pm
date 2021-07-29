@@ -129,7 +129,7 @@ sub find {
 
     my $debug = 0;
 
-    $from    = '.*' if not defined $from or $from !~ /^#/;
+    $from    = '.*' if $from !~ /^#/;
     $from    = lc $from;
     $keyword = lc $keyword;
 
@@ -138,9 +138,12 @@ sub find {
     my @result = eval {
         my @results;
         my ($channel, $trigger);
+
         for (my $depth = 0; $depth < 15; $depth++) {
             my $action;
+
             my $string = $keyword . (length $arguments ? " $arguments" : '');
+
             $self->{pbot}->{logger}->log("string: $string\n") if $debug;
 
             if ($opts{exact_channel} and $opts{exact_trigger}) {
@@ -187,6 +190,7 @@ sub find {
             CHECK_ALIAS:
             if ($opts{find_alias}) {
                 $action = $self->{storage}->get_data($channel, $trigger, 'action') if not defined $action;
+
                 if ($action =~ m{^/call\s+(.*)$}ms) {
                     my $command;
                     if (length $arguments) {
@@ -233,8 +237,11 @@ sub find {
                             goto NEXT_DEPTH;
                         }
 
-                        if ($opts{exact_channel} == 1) { return ($channel, $trigger); }
-                        else                           { push @results, [$channel, $trigger]; }
+                        if ($opts{exact_channel} == 1) {
+                            return ($channel, $trigger);
+                        } else {
+                            push @results, [$channel, $trigger];
+                        }
                     }
                 }
             }
@@ -247,11 +254,13 @@ sub find {
         }
 
         if ($debug) {
-            if (not @results) { $self->{pbot}->{logger}->log("Factoids: find: no match\n"); }
-            else {
+            if (not @results) {
+                $self->{pbot}->{logger}->log("Factoids: find: no match\n");
+            } else {
                 $self->{pbot}->{logger}->log("Factoids: find: got results: " . (join ', ', map { "$_->[0] -> $_->[1]" } @results) . "\n");
             }
         }
+
         return @results;
     };
 

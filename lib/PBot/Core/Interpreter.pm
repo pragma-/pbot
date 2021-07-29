@@ -416,20 +416,27 @@ sub interpret {
     # unescape any escaped pipes
     $arguments =~ s/\\\|\s*\{/| {/g;
 
-    my $from = $context->{from};
+    # find factoid channel for dont-replace-pronouns metadata
+    my ($fact_channel, $fact_trigger);
+    my @factoids = $self->{pbot}->{factoids}->{data}->find($context->{from}, $keyword, exact_trigger => 1);
 
-    $from = '.*' unless $from =~ /^#/;
+    if (@factoids == 1) {
+        # found the factoid's channel
+        ($fact_channel, $fact_trigger) = $factoids[0];
+    } else {
+        # more than one factoid found, normally we would prompt to disambiguate
+        # but in this case we'll just go ahead and assume global
+        ($fact_channel, $fact_trigger) = ('.*', $keyword);
+    }
 
     if ($self->{pbot}->{commands}->get_meta($keyword, 'dont-replace-pronouns')
-            or $self->{pbot}->{factoids}->{data}->get_meta($from, $keyword, 'dont-replace-pronouns'))
+            or $self->{pbot}->{factoids}->{data}->get_meta($fact_channel, $fact_trigger, 'dont-replace-pronouns'))
     {
         $context->{'dont-replace-pronouns'} = 1;
     }
 
     # replace pronouns like "i", "my", etc, with "nick", "nick's", etc
     if (not $context->{'dont-replace-pronouns'}) {
-        $self->{pbot}->{logger}->log("Replacing pronouns for $context->{from}.$keyword\n");
-
         # if command recipient is "me" then replace it with invoker's nick
         # e.g., "!tell me about date" or "!give me date", etc
         if (defined $context->{nickprefix} and lc $context->{nickprefix} eq 'me') {
