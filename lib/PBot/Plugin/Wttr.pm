@@ -31,6 +31,8 @@ sub cmd_wttr {
     my $arguments = $context->{arguments};
 
     my @wttr_options = (
+        "default",
+        "all",
         "conditions",
         "forecast",
         "feelslike",
@@ -49,8 +51,6 @@ sub cmd_wttr {
         "qlocation",
         "time",
         "population",
-        "default",
-        "all",
     );
 
     my $usage = "Usage: wttr (<location> | -u <user account>) [" . join(' ', map { "-$_" } @wttr_options) . "]; to have me remember your location, use `my location <location>`.";
