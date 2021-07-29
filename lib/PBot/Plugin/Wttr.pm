@@ -41,9 +41,9 @@ sub cmd_wttr {
         "cloudcover",
         "wind",
         "sun",
+        "sunhours",
         "moon",
         "chances",
-        "sunhours",
         "snowfall",
         "location",
         "qlocation",
@@ -100,11 +100,13 @@ sub cmd_wttr {
         delete $options{default};
     }
 
-    return $self->get_wttr($arguments, sort keys %options);
+    my @opts = keys %options;
+
+    return $self->get_wttr($arguments, \@opts, \@wttr_options);
 }
 
 sub get_wttr {
-    my ($self, $location, @options) = @_;
+    my ($self, $location, $options, $order) = @_;
 
     my %cache_opt = (
         'namespace'          => 'wttr',
@@ -118,8 +120,11 @@ sub get_wttr {
 
     my $json;
 
-    if ($response->is_success) { $json = $response->decoded_content; }
-    else                       { return "Failed to fetch weather data: " . $response->status_line; }
+    if ($response->is_success) {
+        $json = $response->decoded_content;
+    } else {
+        return "Failed to fetch weather data: " . $response->status_line;
+    }
 
     my $wttr = eval { decode_json $json };
 
@@ -153,11 +158,12 @@ sub get_wttr {
         $obsminute =~ s/ AM$//;
     }
 
-    if (@options == 1 and $options[0] eq 'default') {
-        push @options, 'chances';
+    if (@$options == 1 and $options->[0] eq 'default') {
+        push @$options, 'chances';
     }
 
-    foreach my $option (@options) {
+    foreach my $option (@$order) {
+        next if not grep { $_ eq $option } @$options;
         given ($option) {
             when ('default') {
                 $result .= "Currently: $c->{'weatherDesc'}->[0]->{'value'}: $c->{'temp_C'}C/$c->{'temp_F'}F";
