@@ -185,7 +185,7 @@ sub get_wttr {
                         my ($hour, $minute) = split /:/, $time;
                         if (($hour > $obshour) or ($hour == $obshour and $minute >= $obsminute)) {
                             $conditions .= "$sep$time: $condition ($temp)";
-                            $sep            = '-> ';
+                            $sep            = ' -> ';
                             $last_condition = $condition;
                         }
                     }
@@ -199,7 +199,7 @@ sub get_wttr {
                     $result .= $conditions;
                 }
 
-                $result .= '; ';
+                $result .= ";\n";
             }
 
             when ('conditions') {
@@ -211,7 +211,7 @@ sub get_wttr {
                 }
                 $result .= "Cloud cover: $c->{'cloudcover'}%; Visibility: $c->{'visibility'}km; ";
                 $result .= "Wind: $c->{'windspeedKmph'}kph/$c->{'windspeedMiles'}mph $c->{'winddirDegree'}°/$c->{'winddir16Point'}; ";
-                $result .= "Humidity: $c->{'humidity'}%; Precip: $c->{'precipMM'}mm; Pressure: $c->{'pressure'}hPa; UV Index: $c->{'uvIndex'}; ";
+                $result .= "Humidity: $c->{'humidity'}%; Precip: $c->{'precipMM'}mm; Pressure: $c->{'pressure'}hPa; UV Index: $c->{'uvIndex'};\n";
             }
 
             when ('forecast') {
@@ -243,7 +243,7 @@ sub get_wttr {
                         }
                     }
                 }
-                $result .= "; ";
+                $result .= ";\n";
             }
 
             when ('chances') {
@@ -258,46 +258,46 @@ sub get_wttr {
                 $result .= 'Sunshine: '      . $h->{'chanceofsunshine'} . '%, '  if $h->{'chanceofsunshine'};
                 $result .= 'Thunder: '       . $h->{'chanceofthunder'}  . '%, '  if $h->{'chanceofthunder'};
                 $result .= 'Windy: '         . $h->{'chanceofwindy'}    . '%, '  if $h->{'chanceofwindy'};
-                $result =~ s/,\s+$/; /;
+                $result =~ s/,\s+$/;\n/;
             }
 
             when ('wind') {
                 $result .= "Wind: $c->{'windspeedKmph'}kph/$c->{'windspeedMiles'}mph $c->{'winddirDegree'}°/$c->{'winddir16Point'}, ";
-                $result .= "gust: $h->{'WindGustKmph'}kph/$h->{'WindGustMiles'}mph, chill: $h->{'WindChillC'}C/$h->{'WindChillF'}F; ";
+                $result .= "gust: $h->{'WindGustKmph'}kph/$h->{'WindGustMiles'}mph, chill: $h->{'WindChillC'}C/$h->{'WindChillF'}F;\n";
             }
 
             when ('qlocation') {
                 my $l = $wttr->{'request'}->[0];
-                $result .= "Query location: $l->{'query'} ($l->{'type'}); ";
+                $result .= "Query location: $l->{'query'} ($l->{'type'});\n";
             }
 
-            when ('dewpoint') { $result .= "Dew point: $h->{'DewPointC'}C/$h->{'DewPointF'}F; "; }
+            when ('dewpoint') { $result .= "Dew point: $h->{'DewPointC'}C/$h->{'DewPointF'}F;\n"; }
 
-            when ('feelslike') { $result .= "Feels like: $h->{'FeelsLikeC'}C/$h->{'FeelsLikeF'}F; "; }
+            when ('feelslike') { $result .= "Feels like: $h->{'FeelsLikeC'}C/$h->{'FeelsLikeF'}F;\n"; }
 
-            when ('heatindex') { $result .= "Heat index: $h->{'HeatIndexC'}C/$h->{'HeatIndexF'}F; "; }
+            when ('heatindex') { $result .= "Heat index: $h->{'HeatIndexC'}C/$h->{'HeatIndexF'}F;\n"; }
 
             when ('moon') {
                 my $a = $w->{'astronomy'}->[0];
-                $result .= "Moon: phase: $a->{'moon_phase'}, illumination: $a->{'moon_illumination'}%, rise: $a->{'moonrise'}, set: $a->{'moonset'}; ";
+                $result .= "Moon: phase: $a->{'moon_phase'}, illumination: $a->{'moon_illumination'}%, rise: $a->{'moonrise'}, set: $a->{'moonset'};\n";
             }
 
             when ('sun') {
                 my $a = $w->{'astronomy'}->[0];
-                $result .= "Sun: rise: $a->{'sunrise'}, set: $a->{'sunset'}; ";
+                $result .= "Sun: rise: $a->{'sunrise'}, set: $a->{'sunset'};\n";
             }
 
-            when ('sunhours') { $result .= "Hours of sun: $w->{'sunHour'}; "; }
+            when ('sunhours') { $result .= "Hours of sun: $w->{'sunHour'};\n"; }
 
-            when ('snowfall') { $result .= "Total snow: $w->{'totalSnow_cm'}cm; "; }
+            when ('snowfall') { $result .= "Total snow: $w->{'totalSnow_cm'}cm;\n"; }
 
-            when ('uvindex') { $result .= "UV Index: $c->{'uvIndex'}; "; }
+            when ('uvindex') { $result .= "UV Index: $c->{'uvIndex'};\n"; }
 
-            when ('visibility') { $result .= "Visibility: $c->{'visibility'}km; "; }
+            when ('visibility') { $result .= "Visibility: $c->{'visibility'}km;\n"; }
 
-            when ('cloudcover') { $result .= "Cloud cover: $c->{'cloudcover'}%; "; }
+            when ('cloudcover') { $result .= "Cloud cover: $c->{'cloudcover'}%;\n"; }
 
-            when ('time') { $result .= "Observation time: $c->{'localObsDateTime'}; "; }
+            when ('time') { $result .= "Observation time: $c->{'localObsDateTime'};\n"; }
 
             when ('location') {
                 if (exists $wttr->{nearest_area}) {
@@ -311,19 +311,19 @@ sub get_wttr {
                     $location .= "$country, "  if length $country;
                     $location =~ s/, $//;
 
-                    $result .= "Observation location: $location";
+                    $result .= "Observation location: $location;\n";
                 } else {
-                    $result .= "Query location: $location";
+                    $result .= "Query location: $location;\n";
                 }
             }
 
             when ('population') {
                 my $population = $wttr->{nearest_area}->[0]->{population};
                 $population =~ s/(\d)(?=(\d{3})+(\D|$))/$1\,/g;
-                $result .= "Population: $population; ";
+                $result .= "Population: $population;\n";
             }
 
-            default { $result .= "Option $_ coming soon; " unless lc $_ eq 'u'; }
+            default { $result .= "Option $_ coming soon;\n" unless lc $_ eq 'u'; }
         }
     }
 
