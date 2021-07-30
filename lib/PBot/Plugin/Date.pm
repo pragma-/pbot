@@ -10,8 +10,6 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-use Getopt::Long qw(GetOptionsFromArray);
-
 sub initialize {
     my ($self, %conf) = @_;
 
@@ -31,29 +29,24 @@ sub unload {
 sub cmd_date {
     my ($self, $context) = @_;
 
-    my $usage = "date [-u <user account>] [timezone]";
+    my $usage = "Usage: date [-u <user account>] [timezone]";
 
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
+    my %opts;
 
-    my ($user_override, $show_usage);
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
-
-    Getopt::Long::Configure("bundling");
-    GetOptionsFromArray(
-        \@opt_args,
-        'u=s' => \$user_override,
-        'h'   => \$show_usage
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $context->{arguments},
+        \%opts,
+        ['bundling'],
+        'u=s',
+        'h',
     );
 
-    return $usage                         if $show_usage;
-    return "/say $getopt_error -- $usage" if defined $getopt_error;
+    return $usage                      if $opts{h};
+    return "/say $opt_error -- $usage" if $opt_error;
 
-    $context->{arguments} = "@opt_args";
+    $context->{arguments} = "@$opt_args";
 
+    my $user_override = $opts{u};
     my $tz_override;
 
     # check for user timezone metadata

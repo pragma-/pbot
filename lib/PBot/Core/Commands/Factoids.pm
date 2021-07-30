@@ -12,7 +12,6 @@ use parent 'PBot::Core::Class';
 
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
-use Getopt::Long qw(GetOptionsFromArray);
 use POSIX qw(strftime);
 use Storable;
 use LWP::UserAgent;
@@ -94,25 +93,26 @@ sub cmd_factundo {
 
     my $arguments = $context->{arguments};
 
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
-
     my ($list_undos, $goto_revision);
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
-    GetOptionsFromArray(
-        \@opt_args,
-        'l:i' => \$list_undos,
-        'r=i' => \$goto_revision
+
+    my %opts = (
+        l => \$list_undos,
+        r => \$goto_revision,
     );
 
-    return "/say $getopt_error -- $usage" if defined $getopt_error;
-    return $usage                         if @opt_args > 2;
-    return $usage                         if not @opt_args;
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $arguments,
+        \%opts,
+        ['bundling'],
+        'l:i',
+        'r=i',
+    );
 
-    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @opt_args);
+    return "/say $opt_error -- $usage" if defined $opt_error;
+    return $usage                      if @$opt_args > 2;
+    return $usage                      if not @$opt_args;
+
+    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$opt_args);
     my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel(
@@ -199,25 +199,26 @@ sub cmd_factredo {
 
     my $arguments = $context->{arguments};
 
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
-
     my ($list_undos, $goto_revision);
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
-    GetOptionsFromArray(
-        \@opt_args,
-        'l:i' => \$list_undos,
-        'r=i' => \$goto_revision
+
+    my %opts = (
+        l => \$list_undos,
+        r => \$goto_revision,
     );
 
-    return "/say $getopt_error -- $usage" if defined $getopt_error;
-    return $usage                         if @opt_args > 2;
-    return $usage                         if not @opt_args;
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $arguments,
+        \%opts,
+        ['bundling'],
+        'l:i',
+        'r=i',
+    );
 
-    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @opt_args);
+    return "/say $opt_error -- $usage" if defined $opt_error;
+    return $usage                      if @$opt_args > 2;
+    return $usage                      if not @$opt_args;
+
+    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$opt_args);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel(
         $context->{from}, $context->{arguments}, 'factredo', explicit => 1, exact_channel => 1
@@ -807,31 +808,30 @@ sub cmd_factrem {
 
 sub cmd_factshow {
     my ($self, $context) = @_;
-    my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
-    $context->{preserve_whitespace} = 1;
+
     my $usage = "Usage: factshow [-p] [channel] <keyword>; -p to paste";
     return $usage if not length $context->{arguments};
 
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
+    my %opts;
 
-    my ($paste);
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
-    GetOptionsFromArray(
-        \@opt_args,
-        'p' => \$paste
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $context->{arguments},
+        \%opts,
+        ['bundling'],
+        'p',
     );
 
-    return "/say $getopt_error -- $usage" if defined $getopt_error;
-    return "Too many arguments -- $usage" if @opt_args > 2;
-    return "Missing argument -- $usage"   if not @opt_args;
+    return "/say $opt_error -- $usage"    if defined $opt_error;
+    return "Too many arguments -- $usage" if @$opt_args > 2;
+    return "Missing argument -- $usage"   if not @$opt_args;
 
-    my ($chan, $trig) = @opt_args;
+    my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
+
+    $context->{preserve_whitespace} = 1;
+
+    my ($chan, $trig) = @$opt_args;
     $chan = $context->{from} if not defined $trig;
-    my $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @opt_args);
+    my $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$opt_args);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel($context->{from}, $args, 'factshow', usage => $usage);
     return $channel if not defined $trigger;    # if $trigger is not defined, $channel is an error message
@@ -843,7 +843,7 @@ sub cmd_factshow {
 
     my $result = "$trigger_name: ";
 
-    if ($paste) {
+    if ($opts{p}) {
         $result .= $self->{pbot}->{webpaste}->paste($factoids->get_data($channel, $trigger, 'action'), no_split => 1);
         $result = "[$channel_name] $result" if $channel ne lc $chan;
         return $result;
@@ -862,25 +862,25 @@ sub cmd_factlog {
 
     return $usage if not length $context->{arguments};
 
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
-
     my ($show_hostmask, $actual_timestamp);
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
-    GetOptionsFromArray(
-        \@opt_args,
-        'h' => \$show_hostmask,
-        't' => \$actual_timestamp
+
+    my %opts = (
+        h => \$show_hostmask,
+        t => \$actual_timestamp,
     );
 
-    return "/say $getopt_error -- $usage" if defined $getopt_error;
-    return "Too many arguments -- $usage" if @opt_args > 2;
-    return "Missing argument -- $usage"   if not @opt_args;
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $context->{arguments},
+        \%opts,
+        ['bundling'],
+        qw(h t),
+    );
 
-    my $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @opt_args);
+    return "/say $opt_error -- $usage"    if defined $opt_error;
+    return "Too many arguments -- $usage" if @$opt_args > 2;
+    return "Missing argument -- $usage"   if not @$opt_args;
+
+    my $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$opt_args);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel($context->{from}, $args, 'factlog', usage => $usage, exact_channel => 1);
 

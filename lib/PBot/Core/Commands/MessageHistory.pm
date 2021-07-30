@@ -10,7 +10,6 @@ package PBot::Core::Commands::MessageHistory;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-use Getopt::Long qw(GetOptionsFromArray);
 use Time::HiRes qw(time tv_interval);
 use Time::Duration;
 
@@ -40,33 +39,30 @@ sub cmd_list_also_known_as {
         return $usage;
     }
 
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
+    my ($show_hostmasks, $show_gecos, $show_nickserv, $show_id, $show_relationship, $show_weak, $show_last_seen, $dont_use_aliases_table, $sort_method);
 
-    Getopt::Long::Configure("bundling_override");
-
-    my $sort_method = undef;
-    my ($show_hostmasks, $show_gecos, $show_nickserv, $show_id, $show_relationship, $show_weak, $show_last_seen, $dont_use_aliases_table);
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
-    GetOptionsFromArray(
-        \@opt_args,
-        'h'  => \$show_hostmasks,
-        'l'  => \$show_last_seen,
-        'n'  => \$show_nickserv,
-        'r'  => \$show_relationship,
-        'g'  => \$show_gecos,
-        'w'  => \$show_weak,
-        'z' => \$dont_use_aliases_table,
-        'i'  => \$show_id,
-        'sort|s=s' => \$sort_method,
+    my %opts = (
+        h    => \$show_hostmasks,
+        i    => \$show_id,
+        l    => \$show_last_seen,
+        n    => \$show_nickserv,
+        g    => \$show_gecos,
+        r    => \$show_relationship,
+        w    => \$show_weak,
+        z    => \$dont_use_aliases_table,
+        sort => \$sort_method,
     );
 
-    return "/say $getopt_error -- $usage" if defined $getopt_error;
-    return "Too many arguments -- $usage" if @opt_args > 1;
-    return "Missing argument -- $usage"   if @opt_args != 1;
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $context->{arguments},
+        \%opts,
+        ['bundling_override'],
+        qw(h i l n g r w z sort|s=s),
+    );
+
+    return "/say $opt_error -- $usage"    if defined $opt_error;
+    return "Too many arguments -- $usage" if @$opt_args > 1;
+    return "Missing argument -- $usage"   if @$opt_args != 1;
 
     $sort_method = 'seen' if $show_last_seen and not defined $sort_method;
     $sort_method = 'nick' if not defined $sort_method;
@@ -146,10 +142,10 @@ sub cmd_list_also_known_as {
         return "Invalid sort method '$sort_method'; valid methods are: " . join(', ', sort keys %sort) . "; prefix with - to invert sort direction.";
     }
 
-    my %akas = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($opt_args[0], $dont_use_aliases_table);
+    my %akas = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($opt_args->[0], $dont_use_aliases_table);
 
     if (%akas) {
-        my $result = "$opt_args[0] also known as:\n";
+        my $result = "$opt_args->[0] also known as:\n";
 
         my %nicks;
         my $sep = "";
@@ -195,7 +191,7 @@ sub cmd_list_also_known_as {
         }
         return $result;
     } else {
-        return "I don't know anybody named $opt_args[0].";
+        return "I don't know anybody named $opt_args->[0].";
     }
 }
 
@@ -214,14 +210,7 @@ sub cmd_recall_message {
 
     my @recalls = split /\s\+\s/, $arguments;
 
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
-
     my $result = '';
-    Getopt::Long::Configure("bundling_override");
 
     # global state
     my ($recall_channel, $raw, $random);
@@ -229,21 +218,34 @@ sub cmd_recall_message {
     foreach my $recall (@recalls) {
         my ($recall_nick, $recall_text, $recall_history, $recall_before, $recall_after, $recall_context, $recall_count);
 
-        my @opt_args = $self->{pbot}->{interpreter}->split_line($recall, strip_quotes => 1);
-        GetOptionsFromArray(
-            \@opt_args,
-            'channel|c=s'        => \$recall_channel,
-            'history|h=s'        => \$recall_history,
-            'text|t=s'           => \$recall_text,
-            'before|b=i'         => \$recall_before,
-            'after|a=i'          => \$recall_after,
-            'count|n=i'          => \$recall_count,
-            'context|x=s'        => \$recall_context,
-            'raw|r'              => \$raw,
-            'random'             => \$random,
+        my %opts = (
+            'channel'  => \$recall_channel,
+            'history'  => \$recall_history,
+            'text'     => \$recall_text,
+            'before'   => \$recall_before,
+            'after'    => \$recall_after,
+            'count'    => \$recall_count,
+            'context'  => \$recall_context,
+            'raw'      => \$raw,
+            'random'   => \$random,
         );
 
-        return "/say $getopt_error -- $usage" if defined $getopt_error;
+        my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+            $recall,
+            \%opts,
+            ['bundling_override'],
+            'channel|c=s',
+            'history|h=s',
+            'text|t=s',
+            'before|b=i',
+            'after|a=i',
+            'count|n=i',
+            'context|x=s',
+            'raw|r',
+            'random',
+        );
+
+        return "/say $opt_error -- $usage" if defined $opt_error;
 
         if (defined $recall_history and defined $recall_text) {
             return "/say $context->{nick}: The -h and -t options cannot be used together.";
@@ -254,16 +256,16 @@ sub cmd_recall_message {
         my $channel_arg = 1 if defined $recall_channel;
         my $history_arg = 1 if defined $recall_history;
 
-        $recall_nick    = shift @opt_args if @opt_args;
-        $recall_history = shift @opt_args if @opt_args and not $history_arg and not defined $recall_text;
+        $recall_nick    = shift @$opt_args if @$opt_args;
+        $recall_history = shift @$opt_args if @$opt_args and not $history_arg and not defined $recall_text;
 
         if (not $channel_arg) {
-            $recall_channel = "@opt_args" if @opt_args;
+            $recall_channel = "@$opt_args" if @$opt_args;
         } else {
             if (defined $recall_history) {
                 $recall_history .= ' ';
             }
-            $recall_history .= "@opt_args" if @opt_args;
+            $recall_history .= "@$opt_args" if @$opt_args;
         }
 
         if (defined $recall_text and not defined $recall_history) {

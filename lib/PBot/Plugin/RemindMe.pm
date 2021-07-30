@@ -12,9 +12,8 @@ use parent 'PBot::Plugin::Base';
 use PBot::Imports;
 
 use DBI;
-use Time::Duration qw/ago concise duration/;
-use Time::HiRes    qw/time/;
-use Getopt::Long   qw/GetOptionsFromArray/;
+use Time::Duration qw(ago concise duration);
+use Time::HiRes    qw(time);
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -62,26 +61,28 @@ sub cmd_remindme {
 
     my ($channel, $repeats, $text, $time, $list_reminders, $delete_id);
 
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
-
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
-
-    Getopt::Long::Configure("bundling");
-    GetOptionsFromArray(
-        \@opt_args,
-        'r=i' => \$repeats,
-        't=s' => \$time,
-        'c=s' => \$channel,
-        'm=s' => \$text,
-        'l:s' => \$list_reminders,
-        'd=i' => \$delete_id
+    my %opts = (
+        c => \$channel,
+        r => \$repeats,
+        m => \$text,
+        t => \$time,
+        l => \$list_reminders,
+        d => \$delete_id,
     );
 
-    return "$getopt_error -- $usage" if defined $getopt_error;
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $context->{arguments},
+        \%opts,
+        ['bundling'],
+        'r=i',
+        't=s',
+        'c=s',
+        'm=s',
+        'l:s',
+        'd=i',
+    );
+
+    return "$opt_error -- $usage" if defined $opt_error;
 
     # option -l was provided; list reminders
     if (defined $list_reminders) {
@@ -187,9 +188,9 @@ sub cmd_remindme {
     $text //= '';
 
     # add to the reminder text anything left in the arguments
-    if (@opt_args) {
+    if (@$opt_args) {
         $text .= ' ' if length $text;
-        $text .= join ' ', @opt_args;
+        $text .= "@$opt_args";
     }
 
     return "Please use -t to specify a time for this reminder." if not $time;

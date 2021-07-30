@@ -15,14 +15,13 @@ use parent 'PBot::Core::Class', 'PBot::Core::Registerable';
 use PBot::Imports;
 
 use PBot::Core::MessageHistory::Constants ':all';
-
-use Time::HiRes qw/gettimeofday/;
-use Time::Duration;
+use PBot::Core::Utils::ValidateString;
 
 use Encode;
+use Getopt::Long qw(GetOptionsFromArray);
+use Time::Duration;
+use Time::HiRes  qw(gettimeofday);
 use Unicode::Truncate;
-
-use PBot::Core::Utils::ValidateString;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -422,7 +421,7 @@ sub interpret {
 
     if (@factoids == 1) {
         # found the factoid's channel
-        ($fact_channel, $fact_trigger) = $factoids[0];
+        ($fact_channel, $fact_trigger) = @{$factoids[0]};
     } else {
         # more than one factoid found, normally we would prompt to disambiguate
         # but in this case we'll just go ahead and assume global
@@ -1378,6 +1377,40 @@ sub split_args {
 sub lc_args {
     my ($self, $args) = @_;
     for (my $i = 0; $i < @$args; $i++) { $args->[$i] = lc $args->[$i]; }
+}
+
+# getopt boilerplate in one place
+
+# 99% of our getopt use is on a string
+sub getopt {
+    my $self = shift;
+    $self->getopt_from_string(@_);
+}
+
+# getopt_from_string() uses our split_line() function instead of
+# GetOpt::Long::GetOptionsFromString's Text::ParseWords
+sub getopt_from_string {
+    my ($self, $string, $result, $config, @opts) = @_;
+
+    my @opt_args = $self->split_line($string, strip_quotes => 1);
+
+    return $self->getopt_from_array(\@opt_args, $result, $config, @opts);
+}
+
+sub getopt_from_array {
+    my ($self, $opt_args, $result, $config, @opts) = @_;
+
+    my $opt_error;
+    local $SIG{__WARN__} = sub {
+        $opt_error = shift;
+        chomp $opt_error;
+    };
+
+    Getopt::Long::Configure(@$config);
+
+    GetOptionsFromArray($opt_args, $result, @opts);
+
+    return ($opt_args, $opt_error);
 }
 
 1;

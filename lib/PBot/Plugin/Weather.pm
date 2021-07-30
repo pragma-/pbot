@@ -12,7 +12,6 @@ use PBot::Imports;
 
 use PBot::Core::Utils::LWPUserAgentCached;
 use XML::LibXML;
-use Getopt::Long qw(GetOptionsFromArray);
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -26,28 +25,27 @@ sub unload {
 
 sub cmd_weather {
     my ($self, $context) = @_;
+
     my $usage = "Usage: weather (<location> | -u <user account>)";
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
 
     my $arguments = $context->{arguments};
 
-    Getopt::Long::Configure("bundling");
+    my %opts;
 
-    my ($user_override, $show_usage);
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
-    GetOptionsFromArray(
-        \@opt_args,
-        'u=s' => \$user_override,
-        'h'   => \$show_usage
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $arguments,
+        \%opts,
+        ['bundling'],
+        'u=s',
+        'h',
     );
 
-    return $usage                         if $show_usage;
-    return "/say $getopt_error -- $usage" if defined $getopt_error;
-    $arguments = "@opt_args";
+    return $usage                      if $opts{h};
+    return "/say $opt_error -- $usage" if defined $opt_error;
+
+    $arguments = "@$opt_args";
+
+    my $user_override = $opts{u};
 
     if (defined $user_override) {
         my $userdata = $self->{pbot}->{users}->{storage}->get_data($user_override);

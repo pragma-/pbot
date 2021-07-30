@@ -16,7 +16,6 @@ use PBot::Imports;
 use HTML::Entities;
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
-use Getopt::Long qw(GetOptionsFromArray);
 
 use PBot::Plugin::Quotegrabs::Storage::SQLite;     # use SQLite backend for quotegrabs database
 #use PBot::Plugin::Quotegrabs::Storage::Hashtable; # use Perl hashtable backend for quotegrabs database
@@ -60,17 +59,20 @@ sub export_quotegrabs {
     my $text;
     my $table_id  = 1;
     my $had_table = 0;
+    my $time      = localtime;
+    my $botnick   = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+
     open FILE, "> $self->{export_path}" or return "Could not open export path.";
-    my $time    = localtime;
-    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+
     print FILE "<html>\n<head><link href=\"css/blue.css\" rel=\"stylesheet\" type=\"text/css\">\n";
     print FILE '<script type="text/javascript" src="js/jquery-latest.js"></script>' . "\n";
     print FILE '<script type="text/javascript" src="js/jquery.tablesorter.js"></script>' . "\n";
     print FILE '<script type="text/javascript" src="js/picnet.table.filter.min.js"></script>' . "\n";
     print FILE "</head>\n<body><i>Generated at $time</i><hr><h2>$botnick\'s Quotegrabs</h2>\n";
-    my $i = 0;
 
-    my $last_channel = "";
+    my $i = 0;
+    my $last_channel = '';
+
     foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or $$a{nick} cmp $$b{nick} } @$quotegrabs) {
         if (not $quotegrab->{channel} =~ /^$last_channel$/i) {
             print FILE "<a href='#" . encode_entities($quotegrab->{channel}) . "'>" . encode_entities($quotegrab->{channel}) . "</a><br>\n";
@@ -78,7 +80,7 @@ sub export_quotegrabs {
         }
     }
 
-    $last_channel = "";
+    $last_channel = '';
     foreach my $quotegrab (sort { $$a{channel} cmp $$b{channel} or lc $$a{nick} cmp lc $$b{nick} } @$quotegrabs) {
         if (not $quotegrab->{channel} =~ /^$last_channel$/i) {
             print FILE "</tbody>\n</table>\n" if $had_table;
@@ -99,8 +101,11 @@ sub export_quotegrabs {
         $last_channel = $quotegrab->{channel};
         $i++;
 
-        if   ($i % 2) { print FILE "<tr bgcolor=\"#dddddd\">\n"; }
-        else          { print FILE "<tr>\n"; }
+        if ($i % 2) {
+            print FILE "<tr bgcolor=\"#dddddd\">\n";
+        } else {
+            print FILE "<tr>\n";
+        }
 
         print FILE "<td>" . ($quotegrab->{id}) . "</td>";
 
@@ -111,8 +116,11 @@ sub export_quotegrabs {
         my $nick;
         $text = $quotegrab->{text};
 
-        if   ($text =~ s/^\/me\s+//) { $nick = "* $nicks[0]"; }
-        else                         { $nick = "<$nicks[0]>"; }
+        if ($text =~ s/^\/me\s+//) {
+            $nick = "* $nicks[0]";
+        } else {
+            $nick = "<$nicks[0]>";
+        }
 
         $text = "<td><b>" . encode_entities($nick) . "</b> " . encode_entities($text) . "</td>\n";
         print FILE $text;
@@ -124,29 +132,30 @@ sub export_quotegrabs {
 
     print FILE "</tbody>\n</table>\n" if $had_table;
     print FILE "<script type='text/javascript'>\n";
+
     $table_id--;
+
     print FILE '$(document).ready(function() {' . "\n";
+
     while ($table_id > 0) {
         print FILE '$("#table' . $table_id . '").tablesorter();' . "\n";
         print FILE '$("#table' . $table_id . '").tableFilter();' . "\n";
         $table_id--;
     }
+
     print FILE "});\n";
     print FILE "</script>\n";
     print FILE "</body>\n</html>\n";
-    close(FILE);
+
+    close FILE;
+
     return "$i quotegrabs exported.";
 }
 
 sub cmd_grab_quotegrab {
     my ($self, $context) = @_;
 
-    if (not defined $context->{from}) {
-        $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
-        return "";
-    }
-
-    if (not defined $context->{arguments} or not length $context->{arguments}) {
+    if (not length $context->{arguments}) {
         return
           "Usage: grab <nick> [history [channel]] [+ <nick> [history [channel]] ...] -- where [history] is an optional regex argument; e.g., to grab a message containing 'pizza', use `grab nick pizza`; you can chain grabs with + to grab multiple messages";
     }
@@ -160,8 +169,12 @@ sub cmd_grab_quotegrab {
     foreach my $grab (@grabs) {
         ($grab_nick, $grab_history, $channel) = $self->{pbot}->{interpreter}->split_line($grab, strip_quotes => 1);
 
-        $grab_history = $context->{nick} eq $grab_nick ? 2 : 1 if not defined $grab_history;    # skip grab command if grabbing self without arguments
-        $channel      = $context->{from}                       if not defined $channel;
+        if (not defined $grab_history) {
+            # skip grab command if grabbing self without arguments
+            $grab_history = lc $context->{nick} eq $grab_nick ? 2 : 1;
+        }
+
+        $channel //= $context->{from};
 
         if (not $channel =~ m/^#/) {
             return "'$channel' is not a valid channel; usage: grab <nick> [[history] channel] (you must specify a history parameter before the channel parameter)";
@@ -169,18 +182,23 @@ sub cmd_grab_quotegrab {
 
         my ($account, $found_nick) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($grab_nick);
 
-        if (not defined $account) { return "I don't know anybody named $grab_nick"; }
+        if (not defined $account) {
+            return "I don't know anybody named $grab_nick";
+        }
 
         $found_nick =~ s/!.*$//;
 
-        $grab_nick = $found_nick;    # convert nick to proper casing
+        $grab_nick = $found_nick; # convert nick to proper casing
 
         my $message;
 
         if ($grab_history =~ /^\d+$/) {
             # integral history
             my $max_messages = $self->{pbot}->{messagehistory}->{database}->get_max_messages($account, $channel);
-            if ($grab_history < 1 || $grab_history > $max_messages) { return "Please choose a history between 1 and $max_messages"; }
+
+            if ($grab_history < 1 || $grab_history > $max_messages) {
+                return "Please choose a history between 1 and $max_messages";
+            }
 
             $grab_history--;
 
@@ -189,20 +207,29 @@ sub cmd_grab_quotegrab {
             # regex history
             $message = $self->{pbot}->{messagehistory}->{database}->recall_message_by_text($account, $channel, $grab_history, 'grab');
 
-            if (not defined $message) { return "No such message for nick $grab_nick in channel $channel containing text '$grab_history'"; }
+            if (not defined $message) {
+                return "No such message for nick $grab_nick in channel $channel containing text '$grab_history'";
+            }
         }
 
         $self->{pbot}->{logger}->log("$context->{nick} ($context->{from}) grabbed <$grab_nick/$channel> $message->{msg}\n");
 
-        if (not defined $grab_nicks) { $grab_nicks = $grab_nick; }
-        else                         { $grab_nicks .= "+$grab_nick"; }
+        if (not defined $grab_nicks) {
+            $grab_nicks = $grab_nick;
+        } else {
+            $grab_nicks .= "+$grab_nick";
+        }
 
         my $text = $message->{msg};
 
-        if (not defined $grab_text) { $grab_text = $text; }
-        else {
-            if   ($text =~ s/^\/me\s+//) { $grab_text .= "   * $grab_nick $text"; }
-            else                         { $grab_text .= "   <$grab_nick> $text"; }
+        if (not defined $grab_text) {
+            $grab_text = $text;
+        } else {
+            if ($text =~ s/^\/me\s+//) {
+                $grab_text .= "   * $grab_nick $text";
+            } else {
+                $grab_text .= "   <$grab_nick> $text";
+            }
         }
     }
 
@@ -216,9 +243,11 @@ sub cmd_grab_quotegrab {
 
     $quotegrab->{id} = $self->{database}->add_quotegrab($quotegrab);
 
-    if (not defined $quotegrab->{id}) { return "Failed to grab quote."; }
+    if (not defined $quotegrab->{id}) {
+        return "Failed to grab quote.";
+    }
 
-    $self->export_quotegrabs();
+    $self->export_quotegrabs;
 
     my $text = $quotegrab->{text};
     ($grab_nick) = split /\+/, $grab_nicks, 2;
@@ -239,21 +268,28 @@ sub cmd_delete_quotegrab {
 
     my $quotegrab = $self->{database}->get_quotegrab($context->{arguments});
 
-    if (not defined $quotegrab) { return "/msg $context->{nick} No quotegrab matching id $context->{arguments} found."; }
+    if (not defined $quotegrab) {
+        return "/msg $context->{nick} No quotegrab matching id $context->{arguments} found.";
+    }
 
-    if (not $self->{pbot}->{users}->loggedin_admin($context->{from}, $context->{hostmask}) and $quotegrab->{grabbed_by} ne $context->{hostmask}) {
+    if (not $self->{pbot}->{users}->loggedin_admin($context->{from}, $context->{hostmask})
+            and $quotegrab->{grabbed_by} ne $context->{hostmask})
+    {
         return "You are not the grabber of this quote.";
     }
 
     $self->{database}->delete_quotegrab($context->{arguments});
-    $self->export_quotegrabs();
+    $self->export_quotegrabs;
 
     my $text = $quotegrab->{text};
 
     my ($first_nick) = split /\+/, $quotegrab->{nick}, 2;
 
-    if   ($text =~ s/^\/me\s+//) { return "Deleted $context->{arguments}: * $first_nick $text"; }
-    else                         { return "Deleted $context->{arguments}: <$first_nick> $text"; }
+    if ($text =~ s/^\/me\s+//) {
+        return "Deleted $context->{arguments}: * $first_nick $text";
+    } else {
+        return "Deleted $context->{arguments}: <$first_nick> $text";
+    }
 }
 
 sub cmd_show_quotegrab {
@@ -261,63 +297,72 @@ sub cmd_show_quotegrab {
 
     my $quotegrab = $self->{database}->get_quotegrab($context->{arguments});
 
-    if (not defined $quotegrab) { return "/msg $context->{nick} No quotegrab matching id $context->{arguments} found."; }
+    if (not defined $quotegrab) {
+        return "/msg $context->{nick} No quotegrab matching id $context->{arguments} found.";
+    }
 
     my $timestamp = $quotegrab->{timestamp};
     my $ago       = ago(gettimeofday - $timestamp);
     my $text      = $quotegrab->{text};
     my ($first_nick) = split /\+/, $quotegrab->{nick}, 2;
 
+    my $result = "$context->{arguments}: grabbed by $quotegrab->{grabbed_by} in $quotegrab->{channel} on " . localtime($timestamp) . " [$ago]";
+
     if ($text =~ s/^\/me\s+//) {
-        return "$context->{arguments}: grabbed by $quotegrab->{grabbed_by} in $quotegrab->{channel} on " . localtime($timestamp) . " [$ago] * $first_nick $text";
+        return "$result * $first_nick $text";
     } else {
-        return "$context->{arguments}: grabbed by $quotegrab->{grabbed_by} in $quotegrab->{channel} on " . localtime($timestamp) . " [$ago] <$first_nick> $text";
+        return "$result <$first_nick> $text";
     }
 }
 
 sub cmd_show_random_quotegrab {
     my ($self, $context) = @_;
-    my @quotes = ();
-    my ($nick_search, $channel_search, $text_search);
-
-    if (not defined $context->{from}) {
-        $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
-        return "";
-    }
 
     my $usage = 'Usage: rq [nick [channel [text]]] [-c <channel>] [-t <text>]';
 
-    if (defined $context->{arguments}) {
-        my $getopt_error;
-        local $SIG{__WARN__} = sub {
-            $getopt_error = shift;
-            chomp $getopt_error;
-        };
+    my ($nick_search, $channel_search, $text_search);
 
-        my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, preserve_escapes => 1, strip_quotes => 1);
-        GetOptionsFromArray(
-            \@opt_args,
-            'channel|c=s' => \$channel_search,
-            'text|t=s'    => \$text_search
+    if (length $context->{arguments}) {
+        my %opts = (
+            channel => \$channel_search,
+            text    => \$text_search,
         );
 
-        return "$getopt_error -- $usage" if defined $getopt_error;
+        my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+            $context->{arguments},
+            \%opts,
+            ['bundling'],
+            'channel|c=s',
+            'text|t=s',
+        );
 
-        $nick_search    = shift @opt_args;
-        $channel_search = shift @opt_args if not defined $channel_search;
-        $text_search    = shift @opt_args if not defined $text_search;
+        return "$opt_error -- $usage" if defined $opt_error;
 
-        if ($nick_search =~ m/^#/) {
+        $nick_search = shift @$opt_args;
+
+        if (not defined $channel_search) {
+            $channel_search = shift @$opt_args;
+        }
+
+        if (not defined $text_search) {
+            $text_search = shift @$opt_args;
+        }
+
+        if (defined $nick_search and $nick_search =~ m/^#/) {
             my $tmp = $channel_search;
             $channel_search = $nick_search;
             $nick_search    = $tmp;
         }
 
-        if (not defined $channel_search) { $channel_search = $context->{from}; }
+        if (not defined $channel_search) {
+            $channel_search = $context->{from};
+        }
     }
 
     if (defined $channel_search and $channel_search !~ /^#/) {
-        if ($channel_search eq $context->{nick}) { $channel_search = undef; }
+        if ($channel_search eq $context->{nick}) {
+            $channel_search = undef;
+        }
         elsif ($channel_search =~ m/^\./) {
             # do nothing
         } else {
@@ -330,11 +375,17 @@ sub cmd_show_random_quotegrab {
     if (not defined $quotegrab) {
         my $result = "No quotes grabbed ";
 
-        if (defined $nick_search) { $result .= "for nick $nick_search "; }
+        if (defined $nick_search) {
+            $result .= "for nick $nick_search ";
+        }
 
-        if (defined $channel_search) { $result .= "in channel $channel_search "; }
+        if (defined $channel_search) {
+            $result .= "in channel $channel_search ";
+        }
 
-        if (defined $text_search) { $result .= "matching text '$text_search' "; }
+        if (defined $text_search) {
+            $result .= "matching text '$text_search' ";
+        }
 
         return $result . "yet ($usage).";
     }
@@ -342,10 +393,18 @@ sub cmd_show_random_quotegrab {
     my $text = $quotegrab->{text};
     my ($first_nick) = split /\+/, $quotegrab->{nick}, 2;
 
+    my $channel = '';
+
+    $channel_search //= '';
+
+    if ($channel_search eq '.*' or $quotegrab->{channel} ne $context->{from}) {
+        $channel = "[$quotegrab->{channel}] ";
+    }
+
     if ($text =~ s/^\/me\s+//) {
-        return "$quotegrab->{id}: " . (($channel_search eq '.*' or $quotegrab->{channel} ne $context->{from}) ? "[$quotegrab->{channel}] " : "") . "* $first_nick $text";
+        return "$quotegrab->{id}: $channel" . "* $first_nick $text";
     } else {
-        return "$quotegrab->{id}: " . (($channel_search eq '.*' or $quotegrab->{channel} ne $context->{from}) ? "[$quotegrab->{channel}] " : "") . "<$first_nick> $text";
+        return "$quotegrab->{id}: $channel" . "<$first_nick> $text";
     }
 }
 

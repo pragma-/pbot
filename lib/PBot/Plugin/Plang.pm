@@ -11,8 +11,6 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-use Getopt::Long qw(GetOptionsFromArray);
-
 sub initialize {
     my ($self, %conf) = @_;
 

@@ -12,7 +12,6 @@ use parent 'PBot::Core::Class';
 
 use Time::Duration qw/concise duration/;
 use Time::HiRes qw/gettimeofday/;
-use Getopt::Long qw/GetOptionsFromArray/;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -30,26 +29,24 @@ sub cmd_ps {
 
     my $usage = 'Usage: ps [-atu]; -a show all information; -t show running time; -u show user/channel';
 
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
-
-    Getopt::Long::Configure("bundling");
-
     my ($show_all, $show_user, $show_running_time);
 
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
-
-    GetOptionsFromArray(
-        \@opt_args,
-        'all|a'  => \$show_all,
-        'user|u' => \$show_user,
-        'time|t' => \$show_running_time
+    my %opts = (
+        all  => \$show_all,
+        user => \$show_user,
+        time => \$show_running_time,
     );
 
-    return "$getopt_error; $usage" if defined $getopt_error;
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $context->{arguments},
+        \%opts,
+        ['bundling'],
+        'all|a',
+        'user|u',
+        'time|t',
+    );
+
+    return "$opt_error; $usage" if defined $opt_error;
 
     my @processes;
 
@@ -90,28 +87,26 @@ sub cmd_kill {
 
     my $usage = 'Usage: kill [-a] [-t <seconds>] [-s <signal>]  [pids...]; -a kill all processes; -t <seconds> kill processes running longer than <seconds>; -s send <signal> to processes';
 
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
-
-    Getopt::Long::Configure("bundling");
-
     my ($kill_all, $kill_time, $signal);
 
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, preserve_escapes => 1, strip_quotes => 1);
-
-    GetOptionsFromArray(
-        \@opt_args,
-        'all|a'      => \$kill_all,
-        'time|t=i'   => \$kill_time,
-        'signal|s=s' => \$signal,
+    my %opts = (
+        all    => \$kill_all,
+        time   => \$kill_time,
+        signal => \$signal,
     );
 
-    return "$getopt_error; $usage" if defined $getopt_error;
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $context->{arguments},
+        \%opts,
+        ['bundling'],
+        'all|a',
+        'time|t=i',
+        'signal|s=s',
+    );
 
-    if (not $kill_all and not $kill_time and not @opt_args) {
+    return "$opt_error; $usage" if defined $opt_error;
+
+    if (not $kill_all and not $kill_time and not @$opt_args) {
         return "Must specify PIDs to kill unless options -a or -t are provided.";
     }
 
@@ -132,7 +127,7 @@ sub cmd_kill {
             push @pids, $pid;
         }
     } else {
-        foreach my $pid (@opt_args) {
+        foreach my $pid (@$opt_args) {
             return "No such pid $pid." if not exists $self->{pbot}->{process_manager}->{processes}->{$pid};
             push @pids, $pid;
         }

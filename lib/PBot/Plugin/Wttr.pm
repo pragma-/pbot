@@ -13,7 +13,6 @@ use PBot::Core::Utils::LWPUserAgentCached;
 
 use JSON;
 use URI::Escape qw/uri_escape_utf8/;
-use Getopt::Long qw(GetOptionsFromArray);
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -31,50 +30,45 @@ sub cmd_wttr {
     my $arguments = $context->{arguments};
 
     my @wttr_options = (
-        "default",
-        "all",
-        "conditions",
-        "forecast",
-        "feelslike",
-        "uvindex",
-        "visibility",
-        "dewpoint",
-        "heatindex",
-        "cloudcover",
-        "wind",
-        "sun",
-        "sunhours",
-        "moon",
-        "chances",
-        "snowfall",
-        "location",
-        "qlocation",
-        "time",
-        "population",
+        'default',
+        'all',
+        'conditions',
+        'forecast',
+        'feelslike',
+        'uvindex',
+        'visibility',
+        'dewpoint',
+        'heatindex',
+        'cloudcover',
+        'wind',
+        'sun',
+        'sunhours',
+        'moon',
+        'chances',
+        'snowfall',
+        'location',
+        'qlocation',
+        'time',
+        'population',
     );
 
     my $usage = "Usage: wttr (<location> | -u <user account>) [" . join(' ', map { "-$_" } @wttr_options) . "]; to have me remember your location, use `my location <location>`.";
-    my $getopt_error;
-    local $SIG{__WARN__} = sub {
-        $getopt_error = shift;
-        chomp $getopt_error;
-    };
-
-    Getopt::Long::Configure("bundling_override", "ignorecase_always");
 
     my %options;
-    my @opt_args = $self->{pbot}->{interpreter}->split_line($arguments, strip_quotes => 1);
-    GetOptionsFromArray(
-        \@opt_args,
+
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $arguments,
         \%options,
+        ['bundling_override', 'ignorecase_always'],
         'u=s',
         'h',
-        @wttr_options
+        @wttr_options,
     );
 
-    return "/say $getopt_error -- $usage" if defined $getopt_error;
-    return $usage                         if exists $options{h};
-    $arguments = "@opt_args";
+    return "/say $opt_error -- $usage" if defined $opt_error;
+    return $usage                      if exists $options{h};
+
+    $arguments = "@$opt_args";
 
     if (defined $options{u}) {
         my $username = delete $options{u};
