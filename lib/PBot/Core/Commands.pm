@@ -39,18 +39,30 @@ sub load_commands {
 sub add {
     my ($self, %args) = @_;
 
-    $self->register(
-        delete $args{subref},
-        delete $args{name},
-        delete $args{requires_cap},
-        delete $args{help},
-    );
+    # expected parameters
+    my @valid = qw(subref name requires_cap help);
 
-    # die if any unhandled arguments were passed
+    # check for unexpected parameters
+    my @invalid;
     foreach my $key (keys %args) {
-        $self->{pbot}->{logger}->log("Commands: error: extra arguments provided to add(): $key\n");
-        die;
+        if (not grep { $_ eq $key } @valid) {
+            push @invalid, $key;
+        }
     }
+
+    # die if any unexpected parameters were passed
+    if (@invalid) {
+        $self->{pbot}->{logger}->log("Commands: error: invalid arguments provided to add(): @invalid\n");
+        die "Commands: error: invalid arguments provided to add(): @invalid";
+    }
+
+    # register command
+    $self->register(
+        $args{subref},
+        $args{name},
+        $args{requires_cap},
+        $args{help},
+    );
 }
 
 # alias to unregister() for consistency
