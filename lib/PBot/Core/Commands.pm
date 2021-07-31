@@ -28,14 +28,14 @@ sub initialize {
     $self->{metadata}->load;
 }
 
+# load commands in PBot::Core::Commands directory
 sub load_commands {
     my ($self) = @_;
-    # load commands in Commands directory
     $self->{pbot}->{logger}->log("Loading commands:\n");
     load_modules($self, 'PBot::Core::Commands');
 }
 
-# named parameters interface to register()
+# named-parameters interface to register()
 sub add {
     my ($self, %args) = @_;
 
@@ -53,7 +53,7 @@ sub add {
     }
 }
 
-# alias to unregister() for conisistency
+# alias to unregister() for consistency
 sub remove {
     my ($self) = @_;
     $self->unregister(@_);
