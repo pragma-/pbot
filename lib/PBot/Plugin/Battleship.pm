@@ -63,7 +63,11 @@ sub initialize {
     my ($self, %conf) = @_;
 
     # register `battleship` bot command
-    $self->{pbot}->{commands}->register(sub { $self->cmd_battleship(@_) }, 'battleship', 0);
+    $self->{pbot}->{commands}->add(
+        name   => 'battleship',
+        help   => 'Battleship board game, simplified for IRC',
+        subref => sub { $self->cmd_battleship(@_) },
+    );
 
     # set the channel where to send game messages
     $self->{channel} = $self->{pbot}->{registry}->get_value('battleship', 'channel') // '##battleship';
@@ -128,7 +132,7 @@ sub unload {
     my ($self) = @_;
 
     # unregister `battleship` bot command
-    $self->{pbot}->{commands}->unregister('battleship');
+    $self->{pbot}->{commands}->remove('battleship');
 
     # remove battleship loop event from event queue
     $self->end_game_loop;

@@ -18,10 +18,11 @@ use Storable qw/dclone/;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->cmd_mod(@_) }, 'mod', 0);
-    $self->{pbot}->{commands}->set_meta(
-        'mod', 'help',
-        'Provides restricted moderation abilities to voiced users. They can kick/ban/etc only users that are not admins, whitelisted, voiced or opped.'
+
+    $self->{pbot}->{commands}->add(
+        name   => 'mod',
+        help   => 'Provides restricted moderation abilities to voiced users. They can kick/ban/etc only users that are not admins, whitelisted, voiced or opped.',
+        subref => sub { $self->cmd_mod(@_) },
     );
 
     $self->{pbot}->{capabilities}->add('chanmod', 'can-mod',     1);
@@ -42,7 +43,7 @@ sub initialize {
 
 sub unload {
     my ($self) = @_;
-    $self->{pbot}->{commands}->unregister('mod');
+    $self->{pbot}->{commands}->remove('mod');
     $self->{pbot}->{capabilities}->remove('chanmod');
 }
 

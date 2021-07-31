@@ -82,7 +82,7 @@ sub initialize {
 
     # process command-line arguments for path and registry overrides
     foreach my $arg (@ARGV) {
-        if ($arg =~ m/^-?(?:general\.)?((?:data|module|plugin|update)_dir)=(.*)$/) {
+        if ($arg =~ m/^-?(?:general\.)?((?:data|module|update)_dir)=(.*)$/) {
             # check command-line arguments for directory overrides
             my $override = $1;
             my $value    = $2;

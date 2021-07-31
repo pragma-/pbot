@@ -90,16 +90,17 @@ sub initialize {
     );
 
     # register the `plang` command
-    $self->{pbot}->{commands}->register(sub { $self->cmd_plang(@_) }, "plang", 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_plang(@_) }, 'plang');
 
     # register the `plangrepl` command (does not reset environment)
-    $self->{pbot}->{commands}->register(sub { $self->cmd_plangrepl(@_) }, "plangrepl", 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_plangrepl(@_) }, 'plangrepl');
 }
 
 # runs when plugin is unloaded
 sub unload {
     my $self = shift;
-    $self->{pbot}->{commands}->unregister("plang");
+    $self->{pbot}->{commands}->unregister('plang');
+    $self->{pbot}->{commands}->unregister('plangrepl');
 }
 
 sub cmd_plang {

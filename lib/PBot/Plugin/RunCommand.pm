@@ -30,12 +30,17 @@ use IPC::Run qw/start pump finish/;
 sub initialize {
     my ($self, %conf) = @_;
 
-    $self->{pbot}->{commands}->register(sub { $self->cmd_runcmd(@_) }, "runcmd", 1);
+    $self->{pbot}->{commands}->add(
+        name => 'runcmd',
+        help => 'Executes a system command and outputs each line in real-time',
+        requires_cap => 1,
+        subref => sub { $self->cmd_runcmd(@_) },
+    );
 }
 
 sub unload {
     my $self = shift;
-    $self->{pbot}->{commands}->unregister("runcmd");
+    $self->{pbot}->{commands}->remove('runcmd');
 }
 
 sub cmd_runcmd {

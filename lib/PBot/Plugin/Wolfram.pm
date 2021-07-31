@@ -22,12 +22,17 @@ sub initialize {
     # make `wolfram.appid` registry entry private by default
     $self->{pbot}->{registry}->set_default('wolfram', 'appid', 'private', 1);
 
-    $self->{pbot}->{commands}->register(sub { $self->cmd_wolfram(@_) }, 'wolfram', 0);
+    # add wolfram command
+    $self->{pbot}->{commands}->add(
+        name   => 'wolfram',
+        help   => 'Queries Wolfram|Alpha Short Answers API',
+        subref => sub { $self->cmd_wolfram(@_) },
+    );
 }
 
 sub unload {
     my ($self) = @_;
-    $self->{pbot}->{commands}->unregister('wolfram');
+    $self->{pbot}->{commands}->remove('wolfram');
 }
 
 sub cmd_wolfram {

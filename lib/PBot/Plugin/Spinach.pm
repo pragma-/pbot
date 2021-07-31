@@ -41,7 +41,8 @@ $Data::Dumper::Useqq = 1;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->cmd_spinach(@_) }, 'spinach', 0);
+
+    $self->{pbot}->{commands}->register(sub { $self->cmd_spinach(@_) }, 'spinach');
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quit', sub { $self->on_departure(@_) });

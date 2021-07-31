@@ -18,12 +18,16 @@ sub initialize {
     $self->{pbot}->{registry}->add_default('text', 'date', 'default_timezone', 'UTC');
 
     # register `date` bot command
-    $self->{pbot}->{commands}->register(sub { $self->cmd_date(@_) }, "date", 0);
+    $self->{pbot}->{commands}->add(
+        name   => 'date',
+        help   => 'Show date and time',
+        subref => sub { $self->cmd_date(@_) },
+    );
 }
 
 sub unload {
     my $self = shift;
-    $self->{pbot}->{commands}->unregister("date");
+    $self->{pbot}->{commands}->remove('date');
 }
 
 sub cmd_date {

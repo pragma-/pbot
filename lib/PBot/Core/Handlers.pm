@@ -9,19 +9,15 @@ package PBot::Core::Handlers;
 use parent 'PBot::Core::Class';
 
 use PBot::Imports;
-
 use PBot::Core::Utils::LoadModules qw/load_modules/;
 
 sub initialize {
     my ($self, %conf) = @_;
-
-    # load the handlers in the Handlers directory
     $self->load_handlers(%conf);
 }
 
 sub load_handlers {
     my ($self, %conf) = @_;
-
     $self->{pbot}->{logger}->log("Loading handlers:\n");
     load_modules($self, 'PBot::Core::Handlers');
 }

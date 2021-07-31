@@ -15,12 +15,16 @@ use Time::Duration qw/duration/;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { return $self->cmd_parsedate(@_) }, "pd", 0);
+    $self->{pbot}->{commands}->add(
+        name   => 'pd',
+        help   => 'Simple command to test ParseDate interface',
+        subref =>sub { return $self->cmd_parsedate(@_) },
+    );
 }
 
 sub unload {
     my $self = shift;
-    $self->{pbot}->{commands}->unregister("pd");
+    $self->{pbot}->{commands}->remove('pd');
 }
 
 sub cmd_parsedate {

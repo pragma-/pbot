@@ -19,7 +19,11 @@ sub initialize {
     my ($self, %conf) = @_;
 
     # register `remindme` bot command
-    $self->{pbot}->{commands}->register(sub { $self->cmd_remindme(@_) }, 'remindme', 0);
+    $self->{pbot}->{commands}->add(
+        name   => 'remindme',
+        help   => 'Manage personal reminder notifications',
+        subref => sub { $self->cmd_remindme(@_) },
+    );
 
     # set location of sqlite database
     $self->{filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/reminders.sqlite3';
@@ -41,7 +45,7 @@ sub unload {
     $self->dbi_end;
 
     # unregister `remindme` command
-    $self->{pbot}->{commands}->unregister('remindme');
+    $self->{pbot}->{commands}->remove('remindme');
 
     # remove all reminder events from event queue
     $self->{pbot}->{event_queue}->dequeue_event('reminder .*');

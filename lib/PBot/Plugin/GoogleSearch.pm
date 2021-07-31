@@ -22,12 +22,16 @@ sub initialize {
     $self->{pbot}->{registry}->set_default('googlesearch', 'api_key', 'private', 1);
     $self->{pbot}->{registry}->set_default('googlesearch', 'context', 'private', 1);
 
-    $self->{pbot}->{commands}->register(sub { $self->cmd_googlesearch(@_) }, 'google', 0);
+    $self->{pbot}->{commands}->add(
+        name   => 'google',
+        help   => 'Google search',
+        subref => sub { $self->cmd_googlesearch(@_) },
+    );
 }
 
 sub unload {
-    my $self = shift;
-    $self->{pbot}->{commands}->unregister('google');
+    my ($self) = @_;
+    $self->{pbot}->{commands}->remove('google');
 }
 
 sub cmd_googlesearch {

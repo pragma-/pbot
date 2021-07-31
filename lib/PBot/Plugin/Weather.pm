@@ -15,12 +15,17 @@ use XML::LibXML;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->cmd_weather(@_) }, "weather", 0);
+
+    $self->{pbot}->{commands}->add(
+        name   => 'weather',
+        help   => 'Provides weather service via AccuWeather',
+        subref => sub { $self->cmd_weather(@_) },
+    );
 }
 
 sub unload {
     my $self = shift;
-    $self->{pbot}->{commands}->unregister("weather");
+    $self->{pbot}->{commands}->remove('weather');
 }
 
 sub cmd_weather {

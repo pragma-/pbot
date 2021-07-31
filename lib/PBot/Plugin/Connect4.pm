@@ -19,7 +19,12 @@ $Data::Dumper::Sortkeys = 1;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->cmd_connect4(@_) }, 'connect4', 0);
+
+    $self->{pbot}->{commands}->add(
+        name   => 'connect4',
+        help   => 'Connect-4 board game',
+        subref => sub { $self->cmd_connect4(@_) },
+    );
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part', sub { $self->on_departure(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quit', sub { $self->on_departure(@_) });
@@ -32,7 +37,7 @@ sub initialize {
 
 sub unload {
     my $self = shift;
-    $self->{pbot}->{commands}->unregister('connect4');
+    $self->{pbot}->{commands}->remove('connect4');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');

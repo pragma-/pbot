@@ -33,10 +33,10 @@ sub initialize {
 
     $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
 
-    $self->{pbot}->{commands}->register(sub { $self->cmd_grab_quotegrab(@_) },        'grab', 0);
-    $self->{pbot}->{commands}->register(sub { $self->cmd_show_quotegrab(@_) },        'getq', 0);
-    $self->{pbot}->{commands}->register(sub { $self->cmd_delete_quotegrab(@_) },      'delq', 0);
-    $self->{pbot}->{commands}->register(sub { $self->cmd_show_random_quotegrab(@_) }, 'rq',   0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_grab_quotegrab(@_) },        'grab');
+    $self->{pbot}->{commands}->register(sub { $self->cmd_show_quotegrab(@_) },        'getq');
+    $self->{pbot}->{commands}->register(sub { $self->cmd_delete_quotegrab(@_) },      'delq');
+    $self->{pbot}->{commands}->register(sub { $self->cmd_show_random_quotegrab(@_) }, 'rq'  );
 }
 
 sub unload {

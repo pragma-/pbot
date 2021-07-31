@@ -47,7 +47,12 @@ sub initialize {
     my ($self, %conf) = @_;
 
     # register bot command
-    $self->{pbot}->{commands}->register(sub { $self->cmd_actiontrigger(@_) }, 'actiontrigger', 1);
+    $self->{pbot}->{commands}->add(
+        name => 'actiontrigger',
+        help => 'Manages regular expression triggers to invoke bot commands',
+        requires_cap => 1,
+        subref => sub { $self->cmd_actiontrigger(@_) },
+    );
 
     # add capability to admin group
     $self->{pbot}->{capabilities}->add('admin', 'can-actiontrigger', 1);
@@ -75,7 +80,7 @@ sub unload {
     $self->dbi_end;
 
     # unregister bot command
-    $self->{pbot}->{commands}->unregister('actiontrigger');
+    $self->{pbot}->{commands}->remove('actiontrigger');
 
     # remove capability
     $self->{pbot}->{capabilities}->remove('can-actiontrigger');

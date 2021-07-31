@@ -16,12 +16,17 @@ use URI::Escape qw/uri_escape_utf8/;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{commands}->register(sub { $self->cmd_wttr(@_) }, "wttr", 0);
+
+    $self->{pbot}->{commands}->add(
+        name   => 'wttr',
+        help   => 'Provides weather information via wttr.in',
+        subref => sub { $self->cmd_wttr(@_) },
+    );
 }
 
 sub unload {
     my $self = shift;
-    $self->{pbot}->{commands}->unregister("wttr");
+    $self->{pbot}->{commands}->remove('wttr');
 }
 
 sub cmd_wttr {

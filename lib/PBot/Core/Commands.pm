@@ -10,13 +10,12 @@ package PBot::Core::Commands;
 use parent 'PBot::Core::Class';
 
 use PBot::Imports;
-
 use PBot::Core::Utils::LoadModules qw/load_modules/;
 
 sub initialize {
     my ($self, %conf) = @_;
 
-    # registered commands hash table
+    # registered commands hashtable
     $self->{commands} = {};
 
     # command metadata stored as a HashObject
@@ -31,20 +30,45 @@ sub initialize {
 
 sub load_commands {
     my ($self) = @_;
-
     # load commands in Commands directory
     $self->{pbot}->{logger}->log("Loading commands:\n");
     load_modules($self, 'PBot::Core::Commands');
 }
 
+# named parameters interface to register()
+sub add {
+    my ($self, %args) = @_;
+
+    $self->register(
+        delete $args{subref},
+        delete $args{name},
+        delete $args{requires_cap},
+        delete $args{help},
+    );
+
+    # die if any unhandled arguments were passed
+    foreach my $key (keys %args) {
+        $self->{pbot}->{logger}->log("Commands: error: extra arguments provided to add(): $key\n");
+        die;
+    }
+}
+
+# alias to unregister() for conisistency
+sub remove {
+    my ($self) = @_;
+    $self->unregister(@_);
+}
+
 sub register {
-    my ($self, $subref, $name, $requires_cap) = @_;
+    my ($self, $subref, $name, $requires_cap, $help) = @_;
 
     if (not defined $subref or not defined $name) {
         Carp::croak("Missing parameters to Commands::register");
     }
 
     $name = lc $name;
+    $requires_cap //= 0;
+    $help //= '';
 
     if (exists $self->{commands}->{$name}) {
         $self->{pbot}->{logger}->log("Commands: warning: overwriting existing command $name\n");
@@ -52,18 +76,26 @@ sub register {
 
     # register command
     $self->{commands}->{$name} = {
-        requires_cap => $requires_cap // 0,
+        requires_cap => $requires_cap,
         subref       => $subref,
     };
 
     # update command metadata
     if (not $self->{metadata}->exists($name)) {
         # create new metadata
-        $self->{metadata}->add($name, { requires_cap => $requires_cap, help => '' }, 1);
+        $self->{metadata}->add($name, { requires_cap => $requires_cap, help => $help }, 1);
     } else {
-        # metadata already exists, just update requires_cap unless it's already set.
+        # metadata already exists
+        # we update data unless it's already set so the metadata file can be edited manually.
+
+        # update requires_cap unless it's already set.
         if (not defined $self->get_meta($name, 'requires_cap')) {
             $self->{metadata}->set($name, 'requires_cap', $requires_cap, 1);
+        }
+
+        # update help text unless it's already set.
+        if (not $self->get_meta($name, 'help')) {
+            $self->{metadata}->set($name, 'help', $help, 1);
         }
     }
 
