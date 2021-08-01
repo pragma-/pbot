@@ -31,16 +31,7 @@ sub join {
 
     foreach my $channel (split /,/, $channels) {
         $channel = lc $channel;
-
-        $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.join', {channel => $channel});
-
-        delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
-        delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
-
-        if ($self->{storage}->exists($channel) and $self->{storage}->get_data($channel, 'permop')) {
-            $self->{pbot}->{chanops}->gain_ops($channel);
-        }
-
+        $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.join', { channel => $channel });
         $self->{pbot}->{conn}->mode($channel);
     }
 }
@@ -48,10 +39,8 @@ sub join {
 sub part {
     my ($self, $channel) = @_;
     $channel = lc $channel;
-    $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.part', {channel => $channel});
+    $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.part', { channel => $channel });
     $self->{pbot}->{conn}->part($channel);
-    delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
-    delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
 }
 
 sub autojoin {

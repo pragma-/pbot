@@ -23,6 +23,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.join',     sub { $self->on_join(@_) },       0);
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',   sub { $self->on_activity(@_) },   0);
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction',  sub { $self->on_activity(@_) },   0);
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.onemode',  sub { $self->track_mode(@_) },    0);
 
     # lowest priority so these get handled by NickList after all other handlers
     # (all other handlers should be given a priority < 100)
@@ -141,6 +142,27 @@ sub on_nickchange {
     }
 
     return 0;
+}
+
+sub track_mode {
+    my ($self, $event_type, $event) = @_;
+
+    my ($source, $channel, $mode, $target) = (
+        $event->{source},
+        $event->{channel},
+        $event->{mode},
+        $event->{target},
+    );
+
+    return if not defined $target or not length $target;
+
+    my ($modifier, $char) = split //, $mode;
+
+    if ($modifier eq '-') {
+        $self->{pbot}->{nicklist}->delete_meta($channel, $target, "+$char");
+    } else {
+        $self->{pbot}->{nicklist}->set_meta($channel, $target, $mode, 1);
+    }
 }
 
 sub on_self_join {

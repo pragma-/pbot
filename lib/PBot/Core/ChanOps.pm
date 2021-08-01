@@ -1,6 +1,12 @@
 # File: ChanOps.pm
 #
-# Purpose: Provides channel operator status tracking and commands.
+# Purpose: Manages channel operator status and command queues.
+#
+# Unless the `permop` metadata is set, PBot remains unopped until an OP-related
+# command is queued. When a command is queued, PBot will request OP status.
+# Until PBot gains Op status, new OP commands will be added to the queue. Once
+# PBot gains OP status, all queued commands are invoked and then after a
+# timeout PBot will remove its OP status.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -10,111 +16,102 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-use Time::HiRes qw(gettimeofday);
+use Time::HiRes    qw(gettimeofday);
 use Time::Duration qw(concise duration);
 
 sub initialize {
     my ($self, %conf) = @_;
 
-    $self->{op_commands}  = {};
-    $self->{is_opped}     = {};
-    $self->{op_requested} = {};
+    $self->{op_commands}  = {}; # OP command queue
+    $self->{op_requested} = {}; # channels PBot has requested OP
+    $self->{is_opped}     = {}; # channels PBot is currently OP
 
+    # default de-OP timeout
     $self->{pbot}->{registry}->add_default('text', 'general', 'deop_timeout', 300);
 
     # TODO: enqueue OP events as needed instead of naively checking every 10 seconds
     $self->{pbot}->{event_queue}->enqueue(sub { $self->check_opped_timeouts },  10, 'Check opped timeouts');
 }
 
-sub track_mode {
-    my ($self, $source, $channel, $mode, $target) = @_;
-
-    $channel = defined $channel ? lc $channel : '';
-    $target  = defined $target ? lc $target : '';
-
-    if ($target eq lc $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
-        if ($mode eq '+o') {
-            $self->{pbot}->{logger}->log("$source opped me in $channel\n");
-            my $timeout = $self->{pbot}->{registry}->get_value($channel, 'deop_timeout') // $self->{pbot}->{registry}->get_value('general', 'deop_timeout');
-            $self->{is_opped}->{$channel}{timeout} = gettimeofday + $timeout;
-            delete $self->{op_requested}->{$channel};
-            $self->perform_op_commands($channel);
-        } elsif ($mode eq '-o') {
-            $self->{pbot}->{logger}->log("$source removed my ops in $channel\n");
-            delete $self->{is_opped}->{$channel};
-        } else {
-            $self->{pbot}->{logger}->log("ChanOps: $source performed unhandled mode '$mode' on me\n");
-        }
-    }
-}
-
+# returns true if PBot can gain OP status in $channel
 sub can_gain_ops {
     my ($self, $channel) = @_;
-    $channel = lc $channel;
     return
          $self->{pbot}->{channels}->{storage}->exists($channel)
       && $self->{pbot}->{channels}->{storage}->get_data($channel, 'chanop')
       && $self->{pbot}->{channels}->{storage}->get_data($channel, 'enabled');
 }
 
+# sends request to gain OP status in $channel
 sub gain_ops {
-    my $self    = shift;
-    my $channel = shift;
+    my ($self, $channel) = @_;
     $channel = lc $channel;
 
     return if exists $self->{op_requested}->{$channel};
     return if not $self->can_gain_ops($channel);
 
-    my $op_nick = $self->{pbot}->{registry}->get_value($channel, 'op_nick') // $self->{pbot}->{registry}->get_value('general', 'op_nick') // 'chanserv';
-
-    my $op_command = $self->{pbot}->{registry}->get_value($channel, 'op_command') // $self->{pbot}->{registry}->get_value('general', 'op_command') // "op $channel";
-
-    $op_command =~ s/\$channel\b/$channel/g;
-
     if (not exists $self->{is_opped}->{$channel}) {
+        # not opped in channel, send request for ops
+        my $op_nick = $self->{pbot}->{registry}->get_value($channel, 'op_nick')
+            // $self->{pbot}->{registry}->get_value('general', 'op_nick')
+            // 'chanserv';
+
+        my $op_command = $self->{pbot}->{registry}->get_value($channel, 'op_command')
+            // $self->{pbot}->{registry}->get_value('general', 'op_command')
+            // "op $channel";
+
+        $op_command =~ s/\$channel\b/$channel/g;
+
         $self->{pbot}->{conn}->privmsg($op_nick, $op_command);
         $self->{op_requested}->{$channel} = scalar gettimeofday;
     } else {
+        # already opped, invoke op commands
         $self->perform_op_commands($channel);
     }
 }
 
+# removes OP status in $channel
 sub lose_ops {
-    my $self    = shift;
-    my $channel = shift;
+    my ($self, $channel) = @_;
     $channel = lc $channel;
     $self->{pbot}->{conn}->mode($channel, '-o ' . $self->{pbot}->{registry}->get_value('irc', 'botnick'));
 }
 
+# adds a command to the OP command queue
 sub add_op_command {
     my ($self, $channel, $command) = @_;
-    $channel = lc $channel;
     return if not $self->can_gain_ops($channel);
-    push @{$self->{op_commands}->{$channel}}, $command;
+    push @{$self->{op_commands}->{lc $channel}}, $command;
 }
 
+# invokes commands in OP command queue
 sub perform_op_commands {
-    my $self    = shift;
-    my $channel = shift;
+    my ($self, $channel) = @_;
     $channel = lc $channel;
+
+    $self->{pbot}->{logger}->log("Performing op commands in $channel:\n");
+
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
-    $self->{pbot}->{logger}->log("Performing op commands...\n");
     while (my $command = shift @{$self->{op_commands}->{$channel}}) {
         if ($command =~ /^mode (.*?) (.*)/i) {
-            $self->{pbot}->{conn}->mode($1, $2);
             $self->{pbot}->{logger}->log("  executing mode $1 $2\n");
-        } elsif ($command =~ /^kick (.*?) (.*?) (.*)/i) {
-            $self->{pbot}->{conn}->kick($1, $2, $3) unless $1 =~ /^\Q$botnick\E$/i;
+            $self->{pbot}->{conn}->mode($1, $2);
+        }
+        elsif ($command =~ /^kick (.*?) (.*?) (.*)/i) {
             $self->{pbot}->{logger}->log("  executing kick on $1 $2 $3\n");
-        } elsif ($command =~ /^sl (.*)/i) {
-            $self->{pbot}->{conn}->sl($1);
+            $self->{pbot}->{conn}->kick($1, $2, $3) unless $1 =~ /^\Q$botnick\E$/i;
+        }
+        elsif ($command =~ /^sl (.*)/i) {
             $self->{pbot}->{logger}->log("  executing sl $1\n");
+            $self->{pbot}->{conn}->sl($1);
         }
     }
+
     $self->{pbot}->{logger}->log("Done.\n");
 }
 
+# manages OP-related timeouts
 sub check_opped_timeouts {
     my $self = shift;
     my $now  = gettimeofday();

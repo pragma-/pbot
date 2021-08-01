@@ -54,7 +54,7 @@ sub autoload {
         $self->{pbot}->{logger}->log("  $plugin\n");
 
         if ($self->load($plugin, %conf)) {
-            $plugin_count++
+            $plugin_count++;
         } else {
             die "Plugin $plugin failed to autoload. You may remove it from $data_dir/plugin_autoload.\n";
         }

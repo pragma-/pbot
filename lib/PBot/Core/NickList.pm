@@ -18,7 +18,7 @@ use Time::HiRes qw/gettimeofday/;
 sub initialize {
     my ($self, %conf) = @_;
 
-    # nicklist hash
+    # nicklist hashtable
     $self->{nicklist} = {};
 
     # nicklist debug registry entry
@@ -33,11 +33,11 @@ sub update_timestamp {
     $channel = lc $channel;
     $nick    = lc $nick;
 
-    if (exists $self->{nicklist}->{$channel} and exists $self->{nicklist}->{$channel}->{$nick}) { $self->{nicklist}->{$channel}->{$nick}->{timestamp} = gettimeofday; }
-    else {
-        $self->{pbot}->{logger}->log("Adding nick '$orig_nick' to channel '$channel'\n") if $self->{pbot}->{registry}->get_value('nicklist', 'debug');
-        $self->{nicklist}->{$channel}->{$nick} = {nick => $orig_nick, timestamp => scalar gettimeofday};
+    if (not exists $self->{nicklist}->{$channel} or not exists $self->{nicklist}->{$channel}->{$nick}) {
+        $self->add_nick($channel, $orig_nick);
     }
+
+    $self->{nicklist}->{$channel}->{$nick}->{timestamp} = gettimeofday;
 }
 
 sub remove_channel {
@@ -49,14 +49,19 @@ sub add_nick {
     my ($self, $channel, $nick) = @_;
 
     if (not exists $self->{nicklist}->{lc $channel}->{lc $nick}) {
-        $self->{pbot}->{logger}->log("Adding nick '$nick' to channel '$channel'\n") if $self->{pbot}->{registry}->get_value('nicklist', 'debug');
-        $self->{nicklist}->{lc $channel}->{lc $nick} = {nick => $nick, timestamp => 0};
+        if ($self->{pbot}->{registry}->get_value('nicklist', 'debug')) {
+            $self->{pbot}->{logger}->log("Adding nick '$nick' to channel '$channel'\n");
+        }
+        $self->{nicklist}->{lc $channel}->{lc $nick} = { nick => $nick, timestamp => 0, join => 0 };
     }
 }
 
 sub remove_nick {
     my ($self, $channel, $nick) = @_;
-    $self->{pbot}->{logger}->log("Removing nick '$nick' from channel '$channel'\n") if $self->{pbot}->{registry}->get_value('nicklist', 'debug');
+
+    if ($self->{pbot}->{registry}->get_value('nicklist', 'debug')) {
+        $self->{pbot}->{logger}->log("Removing nick '$nick' from channel '$channel'\n");
+    }
     delete $self->{nicklist}->{lc $channel}->{lc $nick};
 }
 

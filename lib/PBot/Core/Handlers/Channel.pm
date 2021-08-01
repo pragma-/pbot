@@ -1,6 +1,7 @@
 # File: Channel.pm
 #
-# Purpose: Handlers for channel-related IRC events.
+# Purpose: Handlers for general channel-related IRC events that aren't handled
+# by any specialized Handler modules.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -9,15 +10,12 @@ package PBot::Core::Handlers::Channel;
 use parent 'PBot::Core::Class';
 
 use PBot::Imports;
-use parent 'PBot::Core::Class';
-
 use PBot::Core::MessageHistory::Constants ':all';
 
-use Time::HiRes qw/time/;
 use Data::Dumper;
-
-use MIME::Base64;
 use Encode;
+use MIME::Base64;
+use Time::HiRes qw/time/;
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -31,9 +29,9 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.topic',         sub { $self->on_topic         (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.topicinfo',     sub { $self->on_topicinfo     (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.channelcreate', sub { $self->on_channelcreate (@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.onemode',       sub { $self->track_mode       (@_) });
 }
 
-# FIXME: on_mode doesn't handle chanmodes that have parameters, e.g. +l
 sub on_mode {
     my ($self, $event_type, $event) = @_;
 
@@ -50,6 +48,9 @@ sub on_mode {
     my $i = 0;
     my ($modifier, $char, $mode, $target);
 
+    my $source = "$nick!$user\@$host";
+
+    # split combined modes
     while ($mode_string =~ m/(.)/g) {
         $char = $1;
 
@@ -61,44 +62,49 @@ sub on_mode {
         $mode   = $modifier . $char;
         $target = $event->{event}->{args}->[++$i];
 
-        $self->{pbot}->{logger}->log("Mode $channel [$mode" . (length $target ? " $target" : '') . "] by $nick!$user\@$host\n");
+        $self->{pbot}->{logger}->log("Mode $channel [$mode" . (length $target ? " $target" : '') . "] by $source\n");
 
-        # TODO: figure out a good way to allow other packages to receive "track_mode" events
-        # i.e., perhaps by emitting a modechange event or some such and registering handlers
-        $self->{pbot}->{banlist}->track_mode("$nick!$user\@$host", $channel, $mode, $target);
-        $self->{pbot}->{chanops}->track_mode("$nick!$user\@$host", $channel, $mode, $target);
-
-        if (defined $target and length $target) {
-            # mode set on user
-            my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
-
-            $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "MODE $mode $target", MSG_CHAT);
-
-            # TODO: here as well
-            if ($modifier eq '-') {
-                $self->{pbot}->{nicklist}->delete_meta($channel, $target, "+$char");
-            } else {
-                $self->{pbot}->{nicklist}->set_meta($channel, $target, $mode, 1);
-            }
-        } else {
-            # mode set on channel
-            my $modes = $self->{pbot}->{channels}->get_meta($channel, 'MODE');
-
-            if (defined $modes) {
-                if ($modifier eq '+') {
-                    $modes = '+' if not length $modes;
-                    $modes .= $char;
-                } else {
-                    $modes =~ s/\Q$char//g;
-                }
-
-                # TODO: here as well
-                $self->{pbot}->{channels}->{storage}->set($channel, 'MODE', $modes, 1);
-            }
-        }
+        # dispatch a single mode event
+        $self->{pbot}->{event_dispatcher}->dispatch_event(
+            'irc.onemode',
+            {
+                source  => $source,
+                channel => $channel,
+                mode    => $mode,
+                target  => $target,
+            },
+        );
     }
 
-    return 0;
+    return 1;
+}
+
+sub track_mode {
+    my ($self, $event_type, $event) = @_;
+
+    my ($source, $channel, $mode, $target) = (
+        $event->{source},
+        $event->{channel},
+        $event->{mode},
+        $event->{target},
+    );
+
+    # disregard mode set on user instead of channel
+    return if defined $target and length $target;
+
+    my ($modifier, $char) = split //, $mode;
+
+    my $modes = $self->{pbot}->{channels}->get_meta($channel, 'MODE') // '';
+
+    if ($modifier eq '+') {
+        $modes = '+' if not length $modes;
+        $modes .= $char if $modes !~ /\Q$char/;
+    } else {
+        $modes =~ s/\Q$char//g;
+        $modes = '' if $modes eq '+';
+    }
+
+    $self->{pbot}->{channels}->{storage}->set($channel, 'MODE', $modes, 1);
 }
 
 sub on_join {
@@ -148,7 +154,7 @@ sub on_join {
         MSG_JOIN,
     );
 
-    return 0;
+    return 1;
 }
 
 sub on_invite {
@@ -173,7 +179,7 @@ sub on_invite {
         }
     }
 
-    return 0;
+    return 1;
 }
 
 sub on_kick {
@@ -232,7 +238,7 @@ sub on_kick {
         $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, $text, MSG_CHAT);
     }
 
-    return 0;
+    return 1;
 }
 
 sub on_departure {
@@ -280,7 +286,7 @@ sub on_departure {
         $self->{pbot}->{users}->save;
     }
 
-    return 0;
+    return 1;
 }
 
 sub on_channelmodeis {
@@ -291,6 +297,7 @@ sub on_channelmodeis {
     $self->{pbot}->{logger}->log("Channel $channel modes: $modes\n");
 
     $self->{pbot}->{channels}->{storage}->set($channel, 'MODE', $modes, 1);
+    return 1;
 }
 
 sub on_channelcreate {
@@ -302,6 +309,7 @@ sub on_channelcreate {
 
     $self->{pbot}->{channels}->{storage}->set($channel, 'CREATED_BY', $owner,     1);
     $self->{pbot}->{channels}->{storage}->set($channel, 'CREATED_ON', $timestamp, 1);
+    return 1;
 }
 
 sub on_topic {
@@ -324,7 +332,7 @@ sub on_topic {
         $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC_SET_ON', time);
     }
 
-    return 0;
+    return 1;
 }
 
 sub on_topicinfo {
@@ -333,7 +341,7 @@ sub on_topicinfo {
     $self->{pbot}->{logger}->log("Topic for $channel set by $by on " . localtime($timestamp) . "\n");
     $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC_SET_BY', $by,        1);
     $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC_SET_ON', $timestamp, 1);
-    return 0;
+    return 1;
 }
 
 1;

@@ -1,8 +1,7 @@
 # File: BanList.pm
 #
-# Purpose: Populates and maintains channel banlists by checking mode +b/+q on
-# joining channels and by tracking modes +b/+q and -b/-q in channels. Keeps
-# track of remaining duration for timed bans/quiets. Handles ban/unban queue.
+# Purpose: Implements functions related to maintaining and tracking channel
+# bans/mutes. Maintains ban/mute queues and timeouts.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -24,12 +23,6 @@ sub initialize {
     $self->{pbot}->{registry}->add_default('text', 'banlist', 'mute_timeout',         '604800');
     $self->{pbot}->{registry}->add_default('text', 'banlist', 'debug',                '0');
     $self->{pbot}->{registry}->add_default('text', 'banlist', 'mute_mode_char',       'q');
-
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.endofnames',     sub { $self->get_banlist(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.banlist',        sub { $self->on_banlist_entry(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.quietlist',      sub { $self->on_quietlist_entry(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.endofbanlist',   sub { $self->compare_banlist(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.endofquietlist', sub { $self->compare_quietlist(@_) });
 
     my $data_dir = $self->{pbot}->{registry}->get_value('general', 'data_dir');
 
@@ -66,231 +59,130 @@ sub initialize {
     $self->{pbot}->{event_queue}->enqueue(sub { $self->flush_unban_queue }, 30, 'Flush unban queue');
 }
 
-sub get_banlist {
-    my ($self, $event_type, $event) = @_;
-    my $channel = lc $event->{event}->{args}[1];
-    $self->{pbot}->{logger}->log("Retrieving banlist for $channel.\n");
-    delete $self->{temp_banlist};
+sub checkban {
+    my ($self, $channel, $mode, $mask) = @_;
 
-    my $mute_char = $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char');
+    $mask = $self->nick_to_banmask($mask);
 
-    if ($mute_char eq 'b') {
-        $event->{conn}->sl("mode $channel +b");
-    } else {
-        $event->{conn}->sl("mode $channel +b$mute_char");
+    my $data;
+
+    if ($mode eq 'b') {
+        $data = $self->{banlist}->get_data($channel, $mask);
+    } elsif ($mode eq $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char')) {
+        $data = $self->{quietlist}->get_data($channel, $mask);
     }
 
-    return 0;
+    if (not defined $data) {
+        return "$mask is not " . ($mode eq 'b' ? 'banned' : 'muted') . ".";
+    }
+
+    my $result = "$mask " . ($mode eq 'b' ? 'banned' : 'quieted') . " in $channel ";
+
+    if (defined $data->{timestamp}) {
+        my $date = strftime "%a %b %e %H:%M:%S %Y %Z", localtime $data->{timestamp};
+        my $ago = concise ago (time - $data->{timestamp});
+        $result .= "on $date ($ago) ";
+    }
+
+    $result .= "by $data->{owner} "   if defined $data->{owner};
+    $result .= "for $data->{reason} " if defined $data->{reason};
+
+    if (exists $data->{timeout} and $data->{timeout} > 0) {
+        my $duration = concise duration($data->{timeout} - gettimeofday);
+        $result .= "($duration remaining)";
+    }
+
+    return $result;
 }
 
-sub on_banlist_entry {
-    my ($self, $event_type, $event) = @_;
-
-    my $channel   = lc $event->{event}->{args}[1];
-    my $target    = lc $event->{event}->{args}[2];
-    my $source    = lc $event->{event}->{args}[3];
-    my $timestamp =    $event->{event}->{args}[4];
-
-    my $ago = concise ago(gettimeofday - $timestamp);
-    $self->{pbot}->{logger}->log("Ban List: [banlist entry] $channel: $target banned by $source $ago.\n");
-    $self->{temp_banlist}->{$channel}->{'+b'}->{$target} = [$source, $timestamp];
-    return 0;
-}
-
-sub on_quietlist_entry {
-    my ($self, $event_type, $event) = @_;
-
-    my $channel   = lc $event->{event}->{args}[1];
-    my $target    = lc $event->{event}->{args}[3];
-    my $source    = lc $event->{event}->{args}[4];
-    my $timestamp =    $event->{event}->{args}[5];
-
-    my $ago = concise ago(gettimeofday - $timestamp);
-    $self->{pbot}->{logger}->log("Ban List: [quietlist entry] $channel: $target quieted by $source $ago.\n");
-    my $mute_char = $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char');
-    $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$target} = [$source, $timestamp];
-    return 0;
-}
-
-# irc.endofbanlist
-sub compare_banlist {
-    my ($self, $event_type, $event) = @_;
-    my $channel = lc $event->{event}->{args}[1];
-
-    # first check for saved bans no longer in channel
-    foreach my $mask ($self->{banlist}->get_keys($channel)) {
-        if (not exists $self->{temp_banlist}->{$channel}->{'+b'}->{$mask}) {
-            $self->{pbot}->{logger}->log("BanList: Saved ban +b $mask no longer exists in $channel.\n");
-            # TODO option to restore ban
-            $self->{banlist}->remove($channel, $mask, undef, 1);
-            $self->{pbot}->{event_queue}->dequeue_event("unban $channel $mask");
-        }
-    }
-
-    # add channel bans to saved bans
-    foreach my $mask (keys %{$self->{temp_banlist}->{$channel}->{'+b'}}) {
-        my $data = $self->{banlist}->get_data($channel, $mask);
-        $data->{owner}     = $self->{temp_banlist}->{$channel}->{'+b'}->{$mask}->[0];
-        $data->{timestamp} = $self->{temp_banlist}->{$channel}->{'+b'}->{$mask}->[1];
-
-        # make some special-case bans temporary
-        if (not defined $data->{timeout} and $self->{pbot}->{chanops}->can_gain_ops($channel)) {
-            if ($mask =~ m/^\*!\*@/ or $mask =~ m/^\*!.*\@gateway\/web/i) {
-                my $timeout = 60 * 60 * 24 * 7;
-
-                # permanent bans for cloaks that aren't gateway
-                $timeout = 0 if $mask =~ m/\// and $mask !~ m/\@gateway/;
-
-                if ($timeout) {
-                    $self->{pbot}->{logger}->log("Temp ban for $mask in $channel.\n");
-                    $data->{timeout} = gettimeofday + $timeout;
-                    $self->enqueue_unban($channel, 'b', $mask, $timeout);
-                }
-            }
-        }
-
-        $self->{banlist}->add($channel, $mask, $data, 1);
-    }
-
-    $self->{banlist}->save if keys %{$self->{temp_banlist}->{$channel}->{'+b'}};
-    delete $self->{temp_banlist}->{$channel}->{'+b'};
-}
-
-# irc.endofquietlist
-sub compare_quietlist {
-    my ($self, $event_type, $event) = @_;
-    my $channel = lc $event->{event}->{args}[1];
-
-    my $mute_char = $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char');
-
-    # first check for saved quiets no longer in channel
-    foreach my $mask ($self->{quietlist}->get_keys($channel)) {
-        if (not exists $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$mask}) {
-            $self->{pbot}->{logger}->log("BanList: Saved quiet +q $mask no longer exists in $channel.\n");
-            # TODO option to restore quiet
-            $self->{quietlist}->remove($channel, $mask, undef, 1);
-            $self->{pbot}->{event_queue}->dequeue_event("unmute $channel $mask");
-        }
-    }
-
-    # add channel bans to saved bans
-    foreach my $mask (keys %{$self->{temp_banlist}->{$channel}->{"+$mute_char"}}) {
-        my $data = $self->{quietlist}->get_data($channel, $mask);
-        $data->{owner}     = $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$mask}->[0];
-        $data->{timestamp} = $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$mask}->[1];
-        $self->{quietlist}->add($channel, $mask, $data, 1);
-    }
-
-    $self->{quietlist}->save if keys %{$self->{temp_banlist}->{$channel}->{"+$mute_char"}};
-    delete $self->{temp_banlist}->{$channel}->{"+$mute_char"};
-}
-
-sub track_mode {
-    my $self = shift;
-    my ($source, $channel, $mode, $mask) = @_;
-
-    my ($nick) = $source =~ /(^[^!]+)/;
-    $channel = defined $channel ? lc $channel : '';
-    $mask    = defined $mask ? lc $mask : '';
-
-    my $mute_char = $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char');
-
-    if ($mode eq "+b" or $mode eq "+$mute_char") {
-        $self->{pbot}->{logger}->log("Ban List: $mask " . ($mode eq '+b' ? 'banned' : 'muted') . " by $source in $channel.\n");
-
-        my $data = {
-            owner => $source,
-            timestamp => scalar gettimeofday,
-        };
-
-        if ($mode eq "+b") {
-            $self->{banlist}->add($channel, $mask, $data);
-        } elsif ($mode eq "+$mute_char") {
-            $self->{quietlist}->add($channel, $mask, $data);
-        }
-
-        $self->{pbot}->{antiflood}->devalidate_accounts($mask, $channel);
-    } elsif ($mode eq "-b" or $mode eq "-$mute_char") {
-        $self->{pbot}->{logger}->log("Ban List: $mask " . ($mode eq '-b' ? 'unbanned' : 'unmuted') . " by $source in $channel.\n");
-
-        if ($mode eq "-b") {
-            $self->{banlist}->remove($channel, $mask);
-            $self->{pbot}->{event_queue}->dequeue_event("unban $channel $mask");
-
-            # freenode strips channel forwards from unban result if no ban exists with a channel forward
-            my $join_flood_channel = $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_channel') // '#stop-join-flood';
-            $self->{banlist}->remove($channel, "$mask\$$join_flood_channel");
-            $self->{pbot}->{event_queue}->dequeue_event(lc "unban $channel $mask\$$join_flood_channel");
-        } elsif ($mode eq "-$mute_char") {
-            $self->{quietlist}->remove($channel, $mask);
-            $self->{pbot}->{event_queue}->dequeue_event("unmute $channel $mask");
-        }
-    }
-
-    return if not $self->{pbot}->{chanops}->can_gain_ops($channel);
-
-    if ($mode eq "+b") {
-        if ($nick eq "ChanServ" or $mask =~ m/##fix_your_connection$/i) {
-            if ($self->{banlist}->exists($channel, $mask)) {
-                $self->{banlist}->set($channel, $mask, 'timeout', gettimeofday + $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'));
-                $self->{pbot}->{event_queue}->update_interval("unban $channel $mask", $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'));
-            } else {
-                my $data = {
-                    reason    => 'Temp ban for banned-by-ChanServ or mask is *!*@*##fix_your_connection',
-                    owner     => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
-                    timeout   => gettimeofday + $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'),
-                    timestamp => gettimeofday,
-                };
-                $self->{banlist}->add($channel, $mask, $data);
-                $self->enqueue_unban($channel, 'b', $mask, $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'));
-            }
-        } elsif ($mask =~ m/^\*!\*@/ or $mask =~ m/^\*!.*\@gateway\/web/i) {
-            my $timeout = 60 * 60 * 24 * 7;
-
-            if ($mask =~ m/\// and $mask !~ m/\@gateway/) {
-                $timeout = 0;    # permanent bans for cloaks that aren't gateway
-            }
-
-            if ($timeout) {
-                if (not $self->{banlist}->exists($channel, $mask)) {
-                    $self->{pbot}->{logger}->log("Temp ban for $mask in $channel.\n");
-                    my $data = {
-                        reason    => 'Temp ban for *!*@host',
-                        timeout   => gettimeofday + $timeout,
-                        owner     => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
-                        timestamp => gettimeofday,
-                    };
-                    $self->{banlist}->add($channel, $mask, $data);
-                    $self->enqueue_unban($channel, 'b', $mask, $timeout);
-                }
-            }
-        }
-    } elsif ($mode eq "+$mute_char") {
-        if (lc $nick ne lc $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
-            $self->{pbot}->{logger}->log("WEIRD MUTE THING $nick...\n");
-            if ($self->{quietlist}->exists($channel, $mask)) {
-                $self->{quietlist}->set($channel, $mask, 'timeout', gettimeofday + $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'));
-                $self->{pbot}->{event_queue}->update_interval("unmute $channel $mask", $self->{pbot}->{registry}->get_value('banlist', 'chanserv_ban_timeout'));
-            } else {
-                my $data = {
-                    reason    => 'Temp mute',
-                    owner     => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
-                    timeout   => gettimeofday + $self->{pbot}->{registry}->get_value('banlist', 'mute_timeout'),
-                    timestamp => gettimeofday,
-                };
-                $self->{quietlist}->add($channel, $mask, $data);
-                $self->enqueue_unban($channel, $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char'), $mask, $self->{pbot}->{registry}->get_value('banlist', 'mute_timeout'));
-            }
-        }
-    }
-}
-
-sub ban_exempted {
+sub is_ban_exempted {
     my ($self, $channel, $hostmask) = @_;
     $channel  = lc $channel;
     $hostmask = lc $hostmask;
     return 1 if $self->{'ban-exemptions'}->exists($channel, $hostmask);
     return 0;
+}
+
+sub is_banned {
+    my ($self, $channel, $nick, $user, $host) = @_;
+
+    my $message_account   = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+    my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
+    push @nickserv_accounts, undef;
+
+    my $banned = undef;
+
+    foreach my $nickserv_account (@nickserv_accounts) {
+        my $baninfos = $self->get_baninfo($channel, "$nick!$user\@$host", $nickserv_account);
+
+        if (defined $baninfos) {
+            foreach my $baninfo (@$baninfos) {
+                my $u           = $self->{pbot}->{users}->loggedin($baninfo->{channel}, "$nick!$user\@$host");
+                my $whitelisted = $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
+
+                if ($self->is_ban_exempted($baninfo->{channel}, $baninfo->{mask}) || $whitelisted) {
+                    $self->{pbot}->{logger}->log("[BanList] is_banned: $nick!$user\@$host banned as $baninfo->{mask} in $baninfo->{channel}, but allowed through whitelist\n");
+                } else {
+                    if ($channel eq lc $baninfo->{channel}) {
+                        my $mode = $baninfo->{type} eq 'b' ? "banned" : "quieted";
+                        $self->{pbot}->{logger}->log("[BanList] is_banned: $nick!$user\@$host $mode as $baninfo->{mask} in $baninfo->{channel} by $baninfo->{owner}\n");
+                        $banned = $baninfo;
+                        last;
+                    }
+                }
+            }
+        }
+    }
+
+    return $banned;
+}
+
+sub has_ban_timeout {
+    my ($self, $channel, $mask, $mode) = @_;
+
+    $mode ||= 'b';
+
+    my $list = $mode eq 'b' ? $self->{banlist} : $self->{quietlist};
+
+    my $data = $list->get_data($channel, $mask);
+
+    if (defined $data && $data->{timeout} > 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+sub ban_user_timed {
+    my ($self, $channel, $mode, $mask, $length, $owner, $reason, $immediately) = @_;
+
+    $channel = lc $channel;
+    $mask    = lc $mask;
+
+    $mask = $self->nick_to_banmask($mask);
+    $self->ban_user($channel, $mode, $mask, $immediately);
+
+    my $data = {
+        timeout   => $length > 0 ? gettimeofday + $length : -1,
+        owner     => $owner,
+        reason    => $reason,
+        timestamp => time,
+    };
+
+    if ($mode eq 'b') {
+        $self->{banlist}->remove($channel, $mask, 'timeout');
+        $self->{banlist}->add($channel, $mask, $data);
+    } elsif ($mode eq $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char')) {
+        $self->{quietlist}->remove($channel, $mask, 'timeout');
+        $self->{quietlist}->add($channel, $mask, $data);
+    }
+
+    my $method = $mode eq 'b' ? 'unban' : 'unmute';
+    $self->{pbot}->{event_queue}->dequeue_event("$method $channel $mask");
+
+    if ($length > 0) {
+        $self->enqueue_unban($channel, $mode, $mask, $length);
+    }
 }
 
 sub ban_user {
@@ -461,76 +353,19 @@ sub nick_to_banmask {
     return $mask;
 }
 
-sub ban_user_timed {
-    my ($self, $channel, $mode, $mask, $length, $owner, $reason, $immediately) = @_;
-
-    $channel = lc $channel;
-    $mask    = lc $mask;
-
-    $mask = $self->nick_to_banmask($mask);
-    $self->ban_user($channel, $mode, $mask, $immediately);
-
-    my $data = {
-        timeout   => $length > 0 ? gettimeofday + $length : -1,
-        owner     => $owner,
-        reason    => $reason,
-        timestamp => time,
-    };
-
-    if ($mode eq 'b') {
-        $self->{banlist}->remove($channel, $mask, 'timeout');
-        $self->{banlist}->add($channel, $mask, $data);
-    } elsif ($mode eq $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char')) {
-        $self->{quietlist}->remove($channel, $mask, 'timeout');
-        $self->{quietlist}->add($channel, $mask, $data);
-    }
-
-    my $method = $mode eq 'b' ? 'unban' : 'unmute';
-    $self->{pbot}->{event_queue}->dequeue_event("$method $channel $mask");
-
-    if ($length > 0) {
-        $self->enqueue_unban($channel, $mode, $mask, $length);
-    }
-}
-
-sub checkban {
-    my ($self, $channel, $mode, $mask) = @_;
-    $mask = $self->nick_to_banmask($mask);
-
-    my $data;
-
-    if ($mode eq 'b') {
-        $data = $self->{banlist}->get_data($channel, $mask);
-    } elsif ($mode eq $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char')) {
-        $data = $self->{quietlist}->get_data($channel, $mask);
-    }
-
-    if (not defined $data) {
-        return "$mask is not " . ($mode eq 'b' ? 'banned' : 'muted') . ".";
-    }
-
-    my $result = "$mask " . ($mode eq 'b' ? 'banned' : 'quieted') . " in $channel ";
-
-    if (defined $data->{timestamp}) {
-        my $date = strftime "%a %b %e %H:%M:%S %Y %Z", localtime $data->{timestamp};
-        my $ago = concise ago (time - $data->{timestamp});
-        $result .= "on $date ($ago) ";
-    }
-
-    $result .= "by $data->{owner} "   if defined $data->{owner};
-    $result .= "for $data->{reason} " if defined $data->{reason};
-    if (exists $data->{timeout} and $data->{timeout} > 0) {
-        my $duration = concise duration($data->{timeout} - gettimeofday);
-        $result .= "($duration remaining)";
-    }
-    return $result;
-}
-
 sub add_to_ban_queue {
     my ($self, $channel, $mode, $mask) = @_;
     if (not grep { $_ eq $mask } @{$self->{ban_queue}->{$channel}->{$mode}}) {
         push @{$self->{ban_queue}->{$channel}->{$mode}}, $mask;
         $self->{pbot}->{logger}->log("Added +$mode $mask for $channel to ban queue.\n");
+    }
+}
+
+sub add_to_unban_queue {
+    my ($self, $channel, $mode, $mask) = @_;
+    if (not grep { $_ eq $mask } @{$self->{unban_queue}->{$channel}->{$mode}}) {
+        push @{$self->{unban_queue}->{$channel}->{$mode}}, $mask;
+        $self->{pbot}->{logger}->log("Added -$mode $mask for $channel to unban queue.\n");
     }
 }
 
@@ -574,14 +409,6 @@ sub flush_ban_queue {
                 return if ++$commands >= $MAX_COMMANDS;
             }
         }
-    }
-}
-
-sub add_to_unban_queue {
-    my ($self, $channel, $mode, $mask) = @_;
-    if (not grep { $_ eq $mask } @{$self->{unban_queue}->{$channel}->{$mode}}) {
-        push @{$self->{unban_queue}->{$channel}->{$mode}}, $mask;
-        $self->{pbot}->{logger}->log("Added -$mode $mask for $channel to unban queue.\n");
     }
 }
 
@@ -635,7 +462,7 @@ sub enqueue_unban {
 
     $self->{pbot}->{event_queue}->enqueue_event(
         sub {
-            $self->{pbot}->{event_queue}->update_interval("$method $channel $hostmask", 60 * 15, 1); # try again in 15 minutes
+            $self->{pbot}->{event_queue}->update_interval("$method $channel $hostmask", 60 * 5, 1); # try again in 5 minutes
             return if not $self->{pbot}->{joined_channels};
             $self->unban_user($channel, $mode, $hostmask);
         }, $interval, "$method $channel $hostmask", 1
@@ -656,54 +483,6 @@ sub enqueue_timeouts {
             $self->enqueue_unban($channel, $mode, $mask, $interval);
         }
     }
-}
-
-sub has_ban_timeout {
-    my ($self, $channel, $mask, $mode) = @_;
-    $mode ||= 'b';
-
-    my $list = $mode eq 'b' ? $self->{banlist} : $self->{quietlist};
-
-    my $data = $list->get_data($channel, $mask);
-
-    if (defined $data && $data->{timeout} > 0) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-sub is_banned {
-    my ($self, $channel, $nick, $user, $host) = @_;
-
-    my $message_account   = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-    my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
-    push @nickserv_accounts, undef;
-
-    my $banned = undef;
-
-    foreach my $nickserv_account (@nickserv_accounts) {
-        my $baninfos = $self->get_baninfo($channel, "$nick!$user\@$host", $nickserv_account);
-
-        if (defined $baninfos) {
-            foreach my $baninfo (@$baninfos) {
-                my $u           = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
-                my $whitelisted = $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
-                if ($self->{pbot}->{antiflood}->ban_exempted($baninfo->{channel}, $baninfo->{mask}) || $whitelisted) {
-                    $self->{pbot}->{logger}->log("[BanList] is_banned: $nick!$user\@$host banned as $baninfo->{mask} in $baninfo->{channel}, but allowed through whitelist\n");
-                } else {
-                    if ($channel eq lc $baninfo->{channel}) {
-                        my $mode = $baninfo->{type} eq 'b' ? "banned" : "quieted";
-                        $self->{pbot}->{logger}->log("[BanList] is_banned: $nick!$user\@$host $mode as $baninfo->{mask} in $baninfo->{channel} by $baninfo->{owner}\n");
-                        $banned = $baninfo;
-                        last;
-                    }
-                }
-            }
-        }
-    }
-
-    return $banned;
 }
 
 1;

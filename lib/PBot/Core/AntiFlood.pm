@@ -697,7 +697,8 @@ sub check_bans {
 
                     my $u           = $self->{pbot}->{users}->loggedin($baninfo->{channel}, $mask);
                     my $whitelisted = $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
-                    if ($self->{pbot}->{banlist}->ban_exempted($baninfo->{channel}, $baninfo->{mask}) || $whitelisted) {
+
+                    if ($self->{pbot}->{banlist}->is_ban_exempted($baninfo->{channel}, $baninfo->{mask}) || $whitelisted) {
                         #$self->{pbot}->{logger}->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{mask} in $baninfo->{channel}, but allowed through whitelist\n");
                         next;
                     }
