@@ -406,7 +406,7 @@ These settings can easily be configured via several methods:
 For more information, see the [Registry documentation.](doc/Registry.md)
 
 ### Live reloading of core modules or data files
-Suppose you edit some PBot source file, be it a core file such as [PBot/Interpreter.pm](lib/PBot/Interpreter.pm) or
+Suppose you edit some PBot source file, be it a core file such as [PBot/Core/Interpreter.pm](lib/PBot/Core/Interpreter.pm) or
 a Plugin such as [PBot/Plugin/Wttr.pm](lib/PBot/Plugin/Wttr.pm). Or suppose there's a PBot update available. Most simple
 bots would require you to shut down the bot and restart it in order to see the modifications.
 
