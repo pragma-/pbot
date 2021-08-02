@@ -21,7 +21,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quietlist',      sub { $self->on_quietlist_entry(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.endofbanlist',   sub { $self->compare_banlist(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.endofquietlist', sub { $self->compare_quietlist(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.onemode',        sub { $self->track_mode(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.modeflag',       sub { $self->on_modeflag(@_) });
 
     $self->{mute_char} = $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char');
 }
@@ -44,7 +44,7 @@ sub get_banlist {
         $event->{conn}->sl("mode $channel +b$mute_char");
     }
 
-    return 0;
+    return 1;
 }
 
 sub on_banlist_entry {
@@ -58,7 +58,7 @@ sub on_banlist_entry {
     my $ago = concise ago(gettimeofday - $timestamp);
     $self->{pbot}->{logger}->log("Ban List: [banlist entry] $channel: $target banned by $source $ago.\n");
     $self->{temp_banlist}->{$channel}->{'+b'}->{$target} = [$source, $timestamp];
-    return 0;
+    return 1;
 }
 
 sub on_quietlist_entry {
@@ -73,7 +73,7 @@ sub on_quietlist_entry {
     $self->{pbot}->{logger}->log("Ban List: [quietlist entry] $channel: $target quieted by $source $ago.\n");
     my $mute_char = $self->{mute_char};
     $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$target} = [$source, $timestamp];
-    return 0;
+    return 1;
 }
 
 # irc.endofbanlist
@@ -118,6 +118,7 @@ sub compare_banlist {
 
     $self->{pbot}->{banlist}->{banlist}->save if keys %{$self->{temp_banlist}->{$channel}->{'+b'}};
     delete $self->{temp_banlist}->{$channel}->{'+b'};
+    return 1;
 }
 
 # irc.endofquietlist
@@ -147,10 +148,10 @@ sub compare_quietlist {
 
     $self->{pbot}->{banlist}->{quietlist}->save if keys %{$self->{temp_banlist}->{$channel}->{"+$mute_char"}};
     delete $self->{temp_banlist}->{$channel}->{"+$mute_char"};
+    return 1;
 }
 
-# irc.onemode
-sub track_mode {
+sub on_modeflag {
     my ($self, $event_type, $event) = @_;
 
     my ($source, $channel, $mode, $mask) = (
@@ -254,6 +255,8 @@ sub track_mode {
             }
         }
     }
+
+    return 1;
 }
 
 1;

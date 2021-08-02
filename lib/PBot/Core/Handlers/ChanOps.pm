@@ -15,9 +15,9 @@ use Time::HiRes qw(gettimeofday);
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{event_dispatcher}->register_handler('pbot.join',   sub { $self->on_self_join(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('pbot.part',   sub { $self->on_self_part(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.onemode', sub { $self->track_mode(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('pbot.join',    sub { $self->on_self_join(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('pbot.part',    sub { $self->on_self_part(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.modeflag', sub { $self->on_modeflag(@_) });
 }
 
 sub on_self_join {
@@ -30,6 +30,8 @@ sub on_self_join {
     if ($self->{pbot}->{channels}->{storage}->get_data($channel, 'permop')) {
         $self->{pbot}->{chanops}->gain_ops($channel);
     }
+
+    return 1;
 }
 
 sub on_self_part {
@@ -37,9 +39,10 @@ sub on_self_part {
     my $channel = $event->{channel};
     delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
     delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
+    return 1;
 }
 
-sub track_mode {
+sub on_modeflag {
     my ($self, $event_type, $event) = @_;
 
     my ($source, $channel, $mode, $target) = (
@@ -73,6 +76,8 @@ sub track_mode {
             $self->{pbot}->{logger}->log("ChanOps: $source performed unhandled mode '$mode' on me\n");
         }
     }
+
+    return 1;
 }
 
 1;

@@ -29,7 +29,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.topic',         sub { $self->on_topic         (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.topicinfo',     sub { $self->on_topicinfo     (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.channelcreate', sub { $self->on_channelcreate (@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.onemode',       sub { $self->track_mode       (@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.modeflag',      sub { $self->on_modeflag      (@_) });
 }
 
 sub on_mode {
@@ -46,27 +46,27 @@ sub on_mode {
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
     my $i = 0;
-    my ($modifier, $char, $mode, $target);
+    my ($modifier, $flag, $mode, $target);
 
     my $source = "$nick!$user\@$host";
 
     # split combined modes
     while ($mode_string =~ m/(.)/g) {
-        $char = $1;
+        $flag = $1;
 
-        if ($char eq '-' or $char eq '+') {
-            $modifier = $char;
+        if ($flag eq '-' or $flag eq '+') {
+            $modifier = $flag;
             next;
         }
 
-        $mode   = $modifier . $char;
+        $mode   = $modifier . $flag;
         $target = $event->{event}->{args}->[++$i];
 
         $self->{pbot}->{logger}->log("Mode $channel [$mode" . (length $target ? " $target" : '') . "] by $source\n");
 
-        # dispatch a single mode event
+        # dispatch a single mode flag event
         $self->{pbot}->{event_dispatcher}->dispatch_event(
-            'irc.onemode',
+            'irc.modeflag',
             {
                 source  => $source,
                 channel => $channel,
@@ -79,7 +79,7 @@ sub on_mode {
     return 1;
 }
 
-sub track_mode {
+sub on_modeflag {
     my ($self, $event_type, $event) = @_;
 
     my ($source, $channel, $mode, $target) = (
@@ -92,19 +92,20 @@ sub track_mode {
     # disregard mode set on user instead of channel
     return if defined $target and length $target;
 
-    my ($modifier, $char) = split //, $mode;
+    my ($modifier, $flag) = split //, $mode;
 
     my $modes = $self->{pbot}->{channels}->get_meta($channel, 'MODE') // '';
 
     if ($modifier eq '+') {
         $modes = '+' if not length $modes;
-        $modes .= $char if $modes !~ /\Q$char/;
+        $modes .= $flag if $modes !~ /\Q$flag/;
     } else {
-        $modes =~ s/\Q$char//g;
+        $modes =~ s/\Q$flag//g;
         $modes = '' if $modes eq '+';
     }
 
     $self->{pbot}->{channels}->{storage}->set($channel, 'MODE', $modes, 1);
+    return 1;
 }
 
 sub on_join {

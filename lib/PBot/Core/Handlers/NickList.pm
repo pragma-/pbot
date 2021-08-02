@@ -23,7 +23,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.join',     sub { $self->on_join(@_) },       0);
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',   sub { $self->on_activity(@_) },   0);
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction',  sub { $self->on_activity(@_) },   0);
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.onemode',  sub { $self->track_mode(@_) },    0);
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.modeflag', sub { $self->on_modeflag(@_) },    0);
 
     # lowest priority so these get handled by NickList after all other handlers
     # (all other handlers should be given a priority < 100)
@@ -64,7 +64,7 @@ sub on_namreply {
         if ($nick =~ m/\%/) { $self->{pbot}->{nicklist}->set_meta($channel, $stripped_nick, '+h', 1); }
     }
 
-    return 0;
+    return 1;
 }
 
 sub on_activity {
@@ -74,7 +74,7 @@ sub on_activity {
 
     $self->{pbot}->{nicklist}->update_timestamp($channel, $nick);
 
-    return 0;
+    return 1;
 }
 
 sub on_join {
@@ -89,7 +89,7 @@ sub on_join {
     $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'host',     $host);
     $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'join',     gettimeofday);
 
-    return 0;
+    return 1;
 }
 
 sub on_part {
@@ -99,7 +99,7 @@ sub on_part {
 
     $self->{pbot}->{nicklist}->remove_nick($channel, $nick);
 
-    return 0;
+    return 1;
 }
 
 sub on_quit {
@@ -113,7 +113,7 @@ sub on_quit {
         }
     }
 
-    return 0;
+    return 1;
 }
 
 sub on_kick {
@@ -123,7 +123,7 @@ sub on_kick {
 
     $self->{pbot}->{nicklist}->remove_nick($channel, $nick);
 
-    return 0;
+    return 1;
 }
 
 sub on_nickchange {
@@ -141,10 +141,10 @@ sub on_nickchange {
         }
     }
 
-    return 0;
+    return 1;
 }
 
-sub track_mode {
+sub on_modeflag {
     my ($self, $event_type, $event) = @_;
 
     my ($source, $channel, $mode, $target) = (
@@ -154,6 +154,7 @@ sub track_mode {
         $event->{target},
     );
 
+    # disregard mode set on channel
     return if not defined $target or not length $target;
 
     my ($modifier, $char) = split //, $mode;
@@ -163,19 +164,21 @@ sub track_mode {
     } else {
         $self->{pbot}->{nicklist}->set_meta($channel, $target, $mode, 1);
     }
+
+    return 1;
 }
 
 sub on_self_join {
     my ($self, $event_type, $event) = @_;
     # clear nicklist to remove any stale nicks before repopulating with namreplies
     $self->{pbot}->{nicklist}->remove_channel($event->{channel});
-    return 0;
+    return 1;
 }
 
 sub on_self_part {
     my ($self, $event_type, $event) = @_;
     $self->{pbot}->{nicklist}->remove_channel($event->{channel});
-    return 0;
+    return 1;
 }
 
 1;

@@ -37,6 +37,7 @@ sub on_init {
     my (@args) = ($event->args);
     shift @args;
     $self->{pbot}->{logger}->log("*** @args\n");
+    return 1;
 }
 
 sub on_welcome {
