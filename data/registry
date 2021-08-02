@@ -225,10 +225,6 @@
          "type" : "text",
          "value" : "chanserv"
       },
-      "plugin_dir" : {
-         "type" : "text",
-         "value" : "./Plugins"
-      },
       "show_url_titles" : {
          "type" : "text",
          "value" : "1"
