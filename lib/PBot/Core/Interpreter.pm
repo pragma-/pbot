@@ -1388,7 +1388,7 @@ sub getopt {
 }
 
 # getopt_from_string() uses our split_line() function instead of
-# GetOpt::Long::GetOptionsFromString's Text::ParseWords
+# Getopt::Long::GetOptionsFromString's Text::ParseWords
 sub getopt_from_string {
     my ($self, $string, $result, $config, @opts) = @_;
 
@@ -1397,9 +1397,11 @@ sub getopt_from_string {
     return $self->getopt_from_array(\@opt_args, $result, $config, @opts);
 }
 
+# the workhorse getopt function
 sub getopt_from_array {
     my ($self, $opt_args, $result, $config, @opts) = @_;
 
+    # emitting errors as Perl warnings instead of using die, weird.
     my $opt_error;
     local $SIG{__WARN__} = sub {
         $opt_error = shift;
