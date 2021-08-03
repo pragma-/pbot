@@ -6,18 +6,14 @@
 use warnings;
 use strict;
 
-my $args = join ' ', @ARGV;
-
-if (not length $args) {
+if (not @ARGV) {
     print "Usage: qalc <expression>\n";
     exit;
 }
 
-my $result = `ulimit -t 2; qalc '$args'`;
+my $result = `ulimit -t 2; qalc \Q@ARGV\E`;
 
 $result =~ s/^.*approx.\s+//;
 $result =~ s/^.*=\s+//;
 
-print "$args = $result\n";
-
-# print "$result\n";
+print "@ARGV = $result\n";
