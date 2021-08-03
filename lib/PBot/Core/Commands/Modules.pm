@@ -34,7 +34,7 @@ sub cmd_load {
         return 'There is already a keyword named ' . $factoids->get_data('.*', $keyword, '_name') . '.';
     }
 
-    $self->{pbot}->{factoids}->{data}->add_factoid('module', '.*', $context->{hostmask}, $keyword, $module, 1);
+    $self->{pbot}->{factoids}->{data}->add('module', '.*', $context->{hostmask}, $keyword, $module, 1);
 
     $factoids->set('.*', $keyword, 'add_nick',   1, 1);
     $factoids->set('.*', $keyword, 'nooverride', 1);
