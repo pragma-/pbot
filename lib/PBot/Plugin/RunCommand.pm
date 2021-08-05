@@ -55,24 +55,32 @@ sub cmd_runcmd {
     my $lines = 0;
 
     while (pump $h) {
-        if ($out =~ s/^(.*?)\n//) {
-            $self->{pbot}->{conn}->privmsg($context->{from}, $1);
-            $lines++;
-        }
+        $lines += $self->send_lines($context, \$out);
     }
 
     finish $h;
 
-    if (length $out) {
-        my @lines = split /\n/, $out;
+    $lines += $self->send_lines($context, \$out);
 
-        foreach my $line (@lines) {
+    return "No output." if not $lines;
+}
+
+sub send_lines {
+    my ($self, $context, $buffer) = @_;
+
+    my ($line, $lines);
+
+    while ($$buffer =~ s/(.{1,370})//) {
+        $line = $1;
+        $line =~ s/^\s+|\s+$//g;
+
+        if (length $line) {
             $self->{pbot}->{conn}->privmsg($context->{from}, $line);
             $lines++;
         }
     }
 
-    return "No output." if not $lines;
+    return $lines;
 }
 
 1;
