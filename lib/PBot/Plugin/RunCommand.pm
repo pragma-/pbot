@@ -68,10 +68,10 @@ sub cmd_runcmd {
 sub send_lines {
     my ($self, $context, $buffer) = @_;
 
-    my ($line, $lines);
+    my $lines = 0;
 
     while ($$buffer =~ s/(.{1,370})//) {
-        $line = $1;
+        my $line = $1;
         $line =~ s/^\s+|\s+$//g;
 
         if (length $line) {
