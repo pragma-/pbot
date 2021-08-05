@@ -50,27 +50,43 @@ sub cmd_runcmd {
 
     my ($in, $out, $err);
 
-    my $h = start \@args, \$in, \$out, \$err;
+    my $h = eval { start \@args, \$in, \$out, \$err };
+
+    if ($@) {
+        return "Error starting command: $@";
+    }
 
     my $lines = 0;
 
     while (pump $h) {
         $lines += $self->send_lines($context, \$out);
+        $lines += $self->send_lines($context, \$err);
     }
 
     finish $h;
 
-    $lines += $self->send_lines($context, \$out);
+    $lines += $self->send_lines($context, \$out, 1);
+    $lines += $self->send_lines($context, \$err, 1);
 
     return "No output." if not $lines;
 }
 
 sub send_lines {
-    my ($self, $context, $buffer) = @_;
+    my ($self, $context, $buffer, $send_all) = @_;
 
     my $lines = 0;
 
-    while ($$buffer =~ s/(.{1,370})//) {
+    my $regex;
+
+    if ($send_all) {
+        # all lines
+        $regex = qr/(.{1,450})/;
+    } else {
+        # lines that end with a newline
+        $regex = qr/^(.{1,450})\s+/;
+    }
+
+    while ($$buffer =~ s/$regex//) {
         my $line = $1;
         $line =~ s/^\s+|\s+$//g;
 
