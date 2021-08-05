@@ -4,9 +4,14 @@
 # setting and deleting values, caching, displaying nearest matches, etc. Designed to
 # be as compatible as possible with DualIndexHashObject; e.g. get_keys, get_data, etc.
 #
-# This class is ideal if you don't want to store the data in working memory. However,
-# data is temporarily cached in working memory for lightning fast performance. The TTL
-# value can be adjusted via the `dualindexsqliteobject.cache_timeout` registry entry.
+# This class is ideal if you don't want to store all of the data in working memory.
+# Instead, the data is stored to and fetched from an SQLite database. To ensure
+# lightning fast performance, data that is accessed will be temporarily cached
+# in working memory. The caching TTL value can be adjusted via the
+# `dualindexsqliteobject.cache_timeout` registry entry.
+#
+# Since this class does not store all the data in working memory, it provides
+# iterator-based access via get_each, get_next and get_all.
 #
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -40,7 +45,9 @@ sub initialize {
     $self->{cache} = {};
 
     $self->{pbot}->{registry}->add_default('text', 'dualindexsqliteobject', "debug_$self->{name}", 0);
-    $self->{pbot}->{registry}->add_trigger('dualindexsqliteobject', "debug_$self->{name}", sub { $self->sqlite_debug_trigger(@_) });
+
+    $self->{pbot}->{registry}->add_trigger('dualindexsqliteobject', "debug_$self->{name}",
+        sub { $self->sqlite_debug_trigger(@_) });
 
     $self->{pbot}->{atexit}->register(sub { $self->end });
 
@@ -49,7 +56,8 @@ sub initialize {
 
 sub sqlite_debug_trigger {
     my ($self, $section, $item, $newvalue) = @_;
-    $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$newvalue")) if defined $self->{dbh};
+    return if not defined $self->{dbh};
+    $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$newvalue"));
 }
 
 sub begin {
