@@ -67,7 +67,7 @@ sub add {
 
 # alias to unregister() for consistency
 sub remove {
-    my ($self) = @_;
+    my $self = shift @_;
     $self->unregister(@_);
 }
 
