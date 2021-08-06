@@ -351,7 +351,7 @@ sub do_reminder {
         $event->{repeating} = 1;
     } else {
         # delete reminder from SQLite database
-        $self->delete_reminder($reminder->{id});
+        $self->delete_reminder($reminder->{id}, 1);
 
         # tell PBot event queue not to reschedule this reminder
         $event->{repeating} = 0;
@@ -492,7 +492,7 @@ sub add_reminder {
 
 # delete a reminder by its id, from SQLite and the PBot event queue
 sub delete_reminder {
-    my ($self, $id) = @_;
+    my ($self, $id, $dont_dequeue) = @_;
 
     return if not $self->{dbh};
 
@@ -508,10 +508,12 @@ sub delete_reminder {
         return 0;
     }
 
-    # remove from event queue
-    my $removed = $self->{pbot}->{event_queue}->dequeue_event("reminder $id");
+    unless ($dont_dequeue) {
+        # remove from event queue
+        my $removed = $self->{pbot}->{event_queue}->dequeue_event("reminder $id");
+        $self->{pbot}->{logger}->log("RemindMe: dequeued events: $removed\n");
+    }
 
-    $self->{pbot}->{logger}->log("RemindMe: dequeued events: $removed\n");
     return 1;
 }
 
