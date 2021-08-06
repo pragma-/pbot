@@ -1,6 +1,8 @@
 # File: GetUrl.pm
 #
 # Purpose: Retrieves text contents of a URL.
+#
+# TODO: add --useragent and --striphtml, etc, options
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -53,8 +55,7 @@ sub cmd_geturl {
 
     if ($response->is_success) {
         return $response->decoded_content;
-    }
-    else {
+    } else {
         return "[Failed to fetch page: " . $response->status_line . "]";
     }
 }
