@@ -86,6 +86,7 @@ sub end {
     $self->{pbot}->{logger}->log("Closing $self->{name} database ($self->{filename})\n");
 
     if (defined $self->{dbh}) {
+        $self->{dbh}->commit;
         $self->{dbh}->disconnect;
         close $self->{trace_layer};
         $self->{dbh} = undef;

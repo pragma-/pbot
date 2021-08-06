@@ -49,7 +49,7 @@ sub initialize {
     LOGFILE->autoflush(1);
 
     # rename logfile to start-time at exit
-    $self->{pbot}->{atexit}->register(sub { $self->rotate_log; return; });
+    $self->{pbot}->{atexit}->register(sub { $self->rotate_log });
 }
 
 sub log {

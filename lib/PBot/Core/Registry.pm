@@ -28,7 +28,7 @@ sub initialize {
     $self->{triggers} = {};
 
     # save registry data at bot exit
-    $self->{pbot}->{atexit}->register(sub { $self->save; return; });
+    $self->{pbot}->{atexit}->register(sub { $self->save });
 
     # load existing registry entries from file (if exists)
     if (-e $filename) {

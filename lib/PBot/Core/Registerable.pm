@@ -26,10 +26,8 @@ sub initialize {
 sub execute_all {
     my $self = shift;
     foreach my $func (@{$self->{handlers}}) {
-        my $result = &{$func->{subref}}(@_);
-        return $result if defined $result;
+        $func->{subref}->(@_);
     }
-    return undef;
 }
 
 sub execute {
@@ -37,7 +35,7 @@ sub execute {
     my $ref  = shift;
     Carp::croak("Missing reference parameter to Registerable::execute") if not defined $ref;
     foreach my $func (@{$self->{handlers}}) {
-        if ($ref == $func || $ref == $func->{subref}) { return &{$func->{subref}}(@_); }
+        if ($ref == $func || $ref == $func->{subref}) { return $func->{subref}->(@_); }
     }
     return undef;
 }

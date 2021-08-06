@@ -28,6 +28,7 @@ use Time::Duration;
 
 sub initialize {
     my ($self, %conf) = @_;
+
     $self->{filename}    = $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/message_history.sqlite3';
     $self->{new_entries} = 0;
 
@@ -178,8 +179,8 @@ sub end {
     $self->{pbot}->{logger}->log("Closing message history SQLite database\n");
 
     if (exists $self->{dbh} and defined $self->{dbh}) {
-        $self->{dbh}->commit() if $self->{new_entries};
-        $self->{dbh}->disconnect();
+        $self->{dbh}->commit;
+        $self->{dbh}->disconnect;
         close $self->{trace_layer} if $self->{trace_layer};
         delete $self->{dbh};
     }
@@ -1925,7 +1926,7 @@ sub get_message_account_id {
 }
 
 sub commit_message_history {
-    my $self = shift;
+    my ($self) = @_;
 
     return if not $self->{dbh};
     return if $self->{pbot}->{child};  # don't commit() as child of fork()

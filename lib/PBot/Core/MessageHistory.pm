@@ -32,7 +32,7 @@ sub initialize {
 
     $self->{pbot}->{registry}->add_default('text', 'messagehistory', 'max_recall_time', $conf{max_recall_time} // 0);
 
-    $self->{pbot}->{atexit}->register(sub { $self->{database}->end(); return; });
+    $self->{pbot}->{atexit}->register(sub { $self->{database}->end });
 }
 
 sub get_message_account {

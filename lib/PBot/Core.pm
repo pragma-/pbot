@@ -216,7 +216,6 @@ sub initialize {
     # fire all pending save events at exit
     $self->{atexit}->register(sub {
             $self->{event_queue}->execute_and_dequeue_event('save .*');
-            return;
         }
     );
 
