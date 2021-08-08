@@ -3,9 +3,10 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-# use warnings;
+use warnings;
 use strict;
 use feature "switch";
+no if $] >= 5.018, warnings => 'experimental';
 
 use IPC::Open2;
 use Text::Balanced qw(extract_bracketed extract_delimited);
@@ -84,8 +85,9 @@ print "code after \\n replacement: [$code]\n" if $debug;
 my $single_quote = 0;
 my $double_quote = 0;
 my $parens       = 0;
-my $escaped      = 0;
 my $cpp          = 0;    # preprocessor
+
+$escaped = 0;
 
 while ($code =~ m/(.)/msg) {
     my $ch  = $1;
@@ -160,7 +162,7 @@ print "--- precode: [$precode]\n" if $debug;
 
 my $has_main = 0;
 if ($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
-    my $prelude = '';
+    my $prelude = "#include <stdio.h>\n#include <stddef.h>\n#include <stdlib.h>\n";
     while ($precode =~ s/^\s*(#.*\n{1,2})//g) { $prelude .= $1; }
 
     print "*** prelude: [$prelude]\n   precode: [$precode]\n" if $debug;
@@ -184,7 +186,7 @@ if ($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
     print "looking for functions, has main: $has_main\n" if $debug >= 2;
 
-    my $func_regex = qr/^([ *\w]+)\s+([*\w]+)\s*\(([^;{]*)\s*\)\s*({.*|<%.*|\?\?<.*)/ims;
+    my $func_regex = qr/^([ *\w]+)\s+([*\w]+)\s*\(([^;{]*)\s*\)\s*(\{.*|<%.*|\?\?<.*)/ims;
 
     # look for potential functions to extract
     while ($preprecode =~ /$func_regex/ms) {
@@ -268,7 +270,7 @@ print "after func extract, code: [$code]\n" if $debug;
 $code =~ s/\|n/\n/g;
 $code =~ s/^\s+//;
 $code =~ s/\s+$//;
-$code =~ s/({|})\n\s*;\n/$1\n/gs;
+$code =~ s/(\{|})\n\s*;\n/$1\n/gs;
 $code =~ s/(?:\n\n)+/\n\n/g;
 
 print "final code: [$code]\n" if $debug;
@@ -277,7 +279,7 @@ open my $fh, ">prog.c" or die "Couldn't write prog.c: $!";
 print $fh $code;
 close $fh;
 
-my ($ret, $result) = execute(2, "bash -c \"ulimit -t 1; gcc -E prog.c\"");
+my ($ret, $result) = execute(2, "bash -c \"ulimit -t 1; gcc -E -ftrack-macro-expansion=0 prog.c\"");
 
 $result =~ s/.*# \d+ "prog.c"(\s+\d+)*//ms;
 $result =~ s/^#.*$//gm;
