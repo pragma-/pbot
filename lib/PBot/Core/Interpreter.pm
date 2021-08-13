@@ -770,17 +770,17 @@ sub truncate_result {
             $paste_result = $self->{pbot}->{webpaste}->paste("$context->{from} <$context->{nick}> $context->{text}\n\n$paste_text");
         }
 
-        my $trunc = '... [truncated';
+        my $trunc = '... <truncated';
 
         if (not defined $paste_result) {
             # no paste
-            $trunc .= "]";
+            $trunc .= '>';
         } elsif ($paste_result =~ m/^http/) {
             # a link
-            $trunc .= "; see $paste_result for full text.]";
+            $trunc .= "; $paste_result>";
         } else {
             # an error or something else
-            $trunc .= "; $paste_result]";
+            $trunc .= "; $paste_result>";
         }
 
         $paste_result //= 'not pasted';

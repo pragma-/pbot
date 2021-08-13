@@ -48,7 +48,7 @@ sub initialize {
     # irc
     $self->add_default('text', 'irc', 'debug',             $conf{irc_debug}         // 0);
     $self->add_default('text', 'irc', 'show_motd',         $conf{show_motd}         // 1);
-    $self->add_default('text', 'irc', 'max_msg_len',       $conf{max_msg_len}       // 425);
+    $self->add_default('text', 'irc', 'max_msg_len',       $conf{max_msg_len}       // 460);
     $self->add_default('text', 'irc', 'server',            $conf{server}            // "irc.libera.chat");
     $self->add_default('text', 'irc', 'port',              $conf{port}              // 6667);
     $self->add_default('text', 'irc', 'sasl',              $conf{SASL}              // 0);
