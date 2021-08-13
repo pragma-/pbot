@@ -361,7 +361,6 @@
       "requires_cap" : 1
    },
    "recall" : {
-      "background-process" : "1",
       "dont-replace-pronouns" : "0",
       "help" : "Recalls previous chat history for a channel. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#recall",
       "requires_cap" : "0"
