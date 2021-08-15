@@ -64,78 +64,77 @@ undefinition:
       'undef' identifier <skip: '[ \t]*'> "\n"
           {
             @macros = grep { $_ ne $item{identifier} } @macros;
-            $return = "\nAnnul the definition of $item{identifier}.\n";
+            "\nAnnul the definition of $item{identifier}.\n"
           }
 
 inclusion:
       'include' '<' filename '>' <skip: '[ \t]*'> "\n"
-          { $return = "\nInclude the header $item{filename}.\n"; }
+          { "\nInclude the header $item{filename}.\n" }
     | 'include' '"' filename '"' <skip: '[ \t]*'> "\n"
-          { $return = "\nInclude the source file $item{filename}.\n"; }
+          { "\nInclude the source file $item{filename}.\n" }
     | 'include' token
-          { $return = "\nImport code noted by the token $item{token}.\n"; }
+          { "\nImport code noted by the token $item{token}.\n" }
 
 filename:
       /[_\.\-\w\/]+/
 
 line:
       'line' constant ('"' filename '"'
-          { $return = "and filename $item{filename}"; }
+          { "and filename $item{filename}" }
       )(?) <skip: '[ \t]*'> "\n"
-          { $return = "\nThis is line number $item{constant} " . join('', @{$item[-3]}) . ".\n"; }
+          { "\nThis is line number $item{constant} " . join('', @{$item[-3]}) . ".\n" }
 
 error:
       'error' token_sequence(?) <skip: '[ \t]*'> "\n"
-          { $return = "Stop compilation with error \"" . join('', @{$item{'token_sequence(?)'}}) . "\".\n"; }
+          { "Stop compilation with error \"" . join('', @{$item{'token_sequence(?)'}}) . "\".\n" }
 
 pragma:
       'pragma' token_sequence(?) <skip: '[ \t]*'> "\n"
           {
             my $pragma = join('',@{$item{'token_sequence(?)'}});
             if ($pragma) { $pragma = ' "$pragma"'; }
-            $return = "Process a compiler-dependent pragma$pragma.\n";
+            "Process a compiler-dependent pragma$pragma.\n"
           }
 
 preproc_conditional:
       if_line[matchrule => $arg{matchrule}]
           { $rule_name = $arg{matchrule}; }
       <matchrule: $rule_name>(s?)
-          { $return = $item{if_line} . join('',@{$item[-1]}); }
+          { $item{if_line} . join('',@{$item[-1]}) }
       (elif_parts[matchrule => $rule_name])(?)
       (else_parts[matchrule => $rule_name])(?)
-          { $return .= join('',@{$item[-2]}) .  join('',@{$item[-1]}); }
+          { join('',@{$item[-2]}) .  join('',@{$item[-1]}) }
       '#' 'endif'
-          { $return .= "End preprocessor conditional.\n"; }
+          { "End preprocessor conditional.\n" }
 
 if_line:
       'ifdef' identifier <skip: '[ \t]*'> "\n"
-          { $return .= "If the macro $item{identifier} is defined, then ^L"; }
+          { "If the macro $item{identifier} is defined, then ^L" }
     | 'ifndef' identifier <skip: '[ \t]*'> "\n"
-          { $return .= "If the macro $item{identifier} is not defined, then ^L"; }
+          { "If the macro $item{identifier} is not defined, then ^L" }
     | 'if' constant_expression <skip: '[ \t]*'> "\n"
-          { $return .= "If the preprocessor condition^L $item{constant_expression} is true, then ^L"; }
+          { "If the preprocessor condition^L $item{constant_expression} is true, then ^L" }
 
 elif_parts:
       ('#' 'elif' constant_expression
-          { $return .= "Otherwise, if the preprocessor condition $item{constant_expression} is true, then ^L"; }
+          { "Otherwise, if the preprocessor condition $item{constant_expression} is true, then ^L" }
       (<matchrule: $rule_name> )[matchrule => $arg{matchrule}](s?)
-          { $return .=  join('',@{$item[-1]}); }
+          { join('',@{$item[-1]}) }
       )(s)
-          { $return = join('', @{$item[-1]}); }
+          { join('', @{$item[-1]}) }
 
 else_parts:
       '#' 'else'
           { $rule_name = $arg{matchrule}; }
       (<matchrule: $rule_name>)[matchrule => $arg{matchrule}](s?)
-          { $return = "Otherwise, ^L" . join('',@{$item[-1]}); }
+          { "Otherwise, ^L" . join('',@{$item[-1]}) }
 
 token_sequence:
       token(s)
-          { $return = join(' ', @{$item[1]}); }
+          { join(' ', @{$item[1]}) }
 
 token:
       <skip: '[ \t]*'> /\S+/
-          { $return = $item[-1]; }
 
 external_declaration:
       declaration[context => 'external declaration']
@@ -262,7 +261,7 @@ statement_list:
                  if ($preproc) { $return = $preproc . $return; }
                }
         statement_list(?)
-               { $return .= join('',@{$item{'statement_list(?)'}}); }
+               { join('',@{$item{'statement_list(?)'}}) }
 
 statement:
       jump_statement
@@ -367,13 +366,11 @@ selection_statement:
             $return .= "^L$item{statement}";
           }
       ('else' statement[context => "$arg{context}|else block"]
-          { $return = "Otherwise, ^L$item{statement}"; }
+          { "Otherwise, ^L$item{statement}" }
       )(?)
           { $return .= join('',@{$item[-1]}); }
     | 'switch'  '(' expression[context => 'switch conditional'] ')'  statement[context => "$arg{context}|switch"]
-          {
-            $return = "When given the expression ^L$item{expression}, ^L$item{statement}";
-          }
+          { "When given the expression ^L$item{expression}, ^L$item{statement}" }
 
 jump_statement:
       'break' ';'
@@ -388,7 +385,7 @@ jump_statement:
             }
           }
     | 'continue' ';'
-          { $return = "Return to the top of the current loop.\n"; }
+          { "Return to the top of the current loop.\n" }
     | 'return' <commit> expression[context => "$arg{context}|return expression"](?) ';'
           {
             my $expression = join('', @{$item{'expression(?)'}});
@@ -425,9 +422,9 @@ expression_statement:
 
 labeled_statement:
       identifier ':' statement[context => 'label'] (';')(?)
-          { $return = "Let there be a label $item{identifier}.\n$item{statement}"; }
+          { "Let there be a label $item{identifier}.\n$item{statement}" }
     | ('case' constant_expression
-          { $return = $item{constant_expression}; }
+          { $item{constant_expression} }
         ':')(s)
           {
             my @items = @{$item[1]};
@@ -450,7 +447,7 @@ labeled_statement:
             $return = "If it has the value $item[-2], ^L$statements$last";
           }
     | 'default' ':' statement
-          { $return = "In the default case, ^L$item{statement}"; }
+          { "In the default case, ^L$item{statement}" }
 
 expression:
       <leftop: assignment_expression ',' assignment_expression>
@@ -507,118 +504,118 @@ conditional_expression:
 
 conditional_ternary_expression:
       '?' expression ':' conditional_expression
-          { $return = [$item{expression}, $item{conditional_expression}]; }
+          { [$item{expression}, $item{conditional_expression}] }
     | {""}
 
 assignment_operator:
       '='
           {
             if ($arg{context} =~ /for init/) {
-              $return = ['assigning to^L', 'the value^L' ];
+              ['assigning to^L', 'the value^L' ]
             } elsif ($arg{context} =~ /statement$/) {
-              $return = ['Assign to^L', 'the value^L' ];
+              ['Assign to^L', 'the value^L' ]
             } else {
-              $return = 'which is assigned to be^L';
+              'which is assigned to be^L'
             }
           }
     | '+='
           {
             if ($arg{context} =~ /for init/) {
-              $return = ['incrementing^L','by^L'];
+              ['incrementing^L','by^L']
             } elsif ($arg{context} =~ /statement$/) {
-              $return = ['Increment^L','by^L'];
+              ['Increment^L','by^L']
             } else {
-              $return = 'which is incremented by^L';
+              'which is incremented by^L'
             }
           }
     | '-='
           {
             if ($arg{context} =~ /for init/) {
-              $return = ['decrementing^L' , 'by^L'];
+              ['decrementing^L' , 'by^L']
             } elsif ($arg{context} =~ /statement$/) {
-              $return = ['Decrement^L', 'by^L'];
+              ['Decrement^L', 'by^L']
             } else {
-              $return = 'which is decremented by^L';
+              'which is decremented by^L'
             }
           }
     | '*='
           {
             if ($arg{context} =~ /for init/) {
-              $return = ['multiplying^L' , 'by^L'];
+              ['multiplying^L' , 'by^L']
             } elsif ($arg{context} =~ /statement$/) {
-              $return = ['Multiply^L' , 'by^L'];
+              ['Multiply^L' , 'by^L']
             } else {
-              $return = 'which is multiplied by^L';
+              'which is multiplied by^L'
             }
           }
     | '/='
           {
             if ($arg{context} =~ /for init/) {
-              $return = ['dividing^L' , 'by^L' ];
+              ['dividing^L' , 'by^L' ]
             } elsif ($arg{context} =~ /statement$/) {
-              $return = ['Divide^L' , 'by^L' ];
+              ['Divide^L' , 'by^L' ]
             } else {
-              $return = 'which is divided by^L';
+              'which is divided by^L'
             }
           }
     | '%='
           {
             if ($arg{context} =~ /for init/) {
-              $return = ['reducing^L', 'to modulo ^L'] ;
+              ['reducing^L', 'to modulo ^L']
             } elsif ($arg{context} =~ /statement$/) {
-              $return = ['Reduce^L', 'to modulo ^L'] ;
+              ['Reduce^L', 'to modulo ^L']
             } else {
-              $return = 'which is reduced to modulo^L';
+              'which is reduced to modulo^L'
             }
           }
     | '<<='
           {
             if ($arg{context} =~ /for init/) {
-              $return = ['bit-shifting^L', 'left by^L'];
+              ['bit-shifting^L', 'left by^L']
             } elsif ($arg{context} =~ /statement$/) {
-              $return = ['Bit-shift^L', 'left by^L'];
+              ['Bit-shift^L', 'left by^L']
             } else {
-              $return = 'which is bit-shifted left by^L';
+              'which is bit-shifted left by^L'
             }
           }
     | '>>='
           {
             if ($arg{context} =~ /for init/) {
-              $return = ['bit-shifting^L', 'right by^L'];
+              ['bit-shifting^L', 'right by^L']
             } elsif ($arg{context} =~ /statement$/) {
-              $return = ['Bit-shift^L', 'right by^L'];
+              ['Bit-shift^L', 'right by^L']
             } else {
-              $return = 'which is bit-shifted right by^L';
+              'which is bit-shifted right by^L'
             }
           }
     | '&='
           {
             if ($arg{context} =~ /for init/) {
-              $return = ['bitwise-ANDing^L', 'by^L' ];
+              ['bitwise-ANDing^L', 'by^L' ]
             } elsif ($arg{context} =~ /statement$/) {
-              $return = ['Bitwise-AND^L', 'by^L' ];
+              ['Bitwise-AND^L', 'by^L' ]
             } else {
-              $return = 'which is bitwise-ANDed by^L';
+              'which is bitwise-ANDed by^L'
             }
           }
     | '^='
           {
             if ($arg{context} =~ /for init/) {
-              $return = ['exclusive-ORing^L','by^L'];
+              ['exclusive-ORing^L','by^L']
             } elsif ($arg{context} =~ /statement$/) {
-              $return = ['Exclusive-OR^L','by^L'];
+              ['Exclusive-OR^L','by^L']
             } else {
-              $return = 'which is exclusive-ORed by^L';
+              'which is exclusive-ORed by^L'
             }
           }
     | '|='
           {
             if ($arg{context} =~ /for init/) {
-              $return = ['bitwise-ORing^L', 'by^L'];
+              ['bitwise-ORing^L', 'by^L']
             } elsif ($arg{context} =~ /statement$/) {
-              $return = ['Bitwise-OR^L', 'by^L'];
+              ['Bitwise-OR^L', 'by^L']
             } else {
-              $return = 'which is bitwise-ORed by^L';
+              'which is bitwise-ORed by^L'
             }
           }
 
@@ -645,58 +642,58 @@ logical_OR_AND_expression:
           }
 
 log_OR_AND_bit_or_and_eq:
-      '||' { $return = ' or ^L'; }
-    | '&&' { $return = ' and ^L'; }
-    | '|'  { $return = ' bitwise-ORed by ^L'; }
-    | '&'  { $return = ' bitwise-ANDed by ^L'; }
-    | '^'  { $return = ' bitwise-XORed by ^L';}
-    | '==' { $return = ' is equal to ^L'; }
-    | '!=' { $return = ' is not equal to ^L'; }
+      '||' { ' or ^L' }
+    | '&&' { ' and ^L' }
+    | '|'  { ' bitwise-ORed by ^L' }
+    | '&'  { ' bitwise-ANDed by ^L' }
+    | '^'  { ' bitwise-XORed by ^L'}
+    | '==' { ' is equal to ^L' }
+    | '!=' { ' is not equal to ^L' }
 
 rel_mul_add_ex_op:
-      '+'  { $return = ' plus ^L'; }
-    | '-'  { $return = ' minus ^L'; }
-    | '*'  { $return = ' times ^L'; }
-    | '/'  { $return = ' divided by ^L'; }
-    | '%'  { $return = ' modulo ^L'; }
-    | '<<' { $return = ' shifted left by ^L'; }
-    | '>>' { $return = ' shifted right by ^L'; }
-    | '>=' { $return = ' is greater than or equal to ^L'; }
-    | "<=" { $return = ' is less than or equal to ^L'; }
-    | '>'  { $return = ' is greater than ^L'; }
-    | '<'  { $return = ' is less than ^L'; }
+      '+'  { ' plus ^L' }
+    | '-'  { ' minus ^L' }
+    | '*'  { ' times ^L' }
+    | '/'  { ' divided by ^L' }
+    | '%'  { ' modulo ^L' }
+    | '<<' { ' shifted left by ^L' }
+    | '>>' { ' shifted right by ^L' }
+    | '>=' { ' is greater than or equal to ^L' }
+    | "<=" { ' is less than or equal to ^L' }
+    | '>'  { ' is greater than ^L' }
+    | '<'  { ' is less than ^L' }
 
 unary_operator:
-      '&' { $return = 'the address of ^L'; }
-    | '*' { $return = 'the dereference of ^L'; }
-    | '+' { $return = ''; }
-    | '-' ...identifier { $return  = 'negative ^L'; }
-    | '-' { $return = 'minus ^L'; }
-    | '~' { $return = "the one's complement of ^L"; }
-    | '!' '!' { $return = 'the normalized boolean value of ^L'; }
+      '&' { 'the address of ^L' }
+    | '*' { 'the dereference of ^L' }
+    | '+' { '' }
+    | '-' ...identifier { 'negative ^L' }
+    | '-' { 'minus ^L' }
+    | '~' { "the one's complement of ^L" }
+    | '!' '!' { 'the normalized boolean value of ^L' }
     | '!'
           {
             if ($arg{context} =~ /conditional/) {
-              $return = ['', ' is false'];
+              ['', ' is false']
             } else {
-              $return = 'the logical negation of ^L';
+              'the logical negation of ^L'
             }
           }
 
 rel_add_mul_shift_expression:
       cast_expression ...';'
-          { $return = $item{cast_expression}; }
+          { $item{cast_expression} }
     | <leftop: cast_expression rel_mul_add_ex_op cast_expression>
-          { $return = join('', @{$item[1]}); }
+          { join('', @{$item[1]}) }
 
 closure:
       ',' | ';' | ')'
 
 cast_expression:
       '(' type_name ')' cast_expression[context => 'recast']
-          { $return = "$item{cast_expression} converted to $item{type_name}"; }
+          { "$item{cast_expression} converted to $item{type_name}" }
     | unary_expression
-          { $return = $item{unary_expression}; }
+          { $item{unary_expression} }
 
 Static_assert:
       '_Static_assert'
@@ -706,12 +703,12 @@ static_assert_declaration:
       Static_assert '(' constant_expression[context => 'static assert'] ',' string ')' ';'
           {
             my $expression  = ::istrue $item{constant_expression};
-            $return = "Halt compilation and produce the diagnostic $item{string} unless $expression.\n";
+            "Halt compilation and produce the diagnostic $item{string} unless $expression.\n"
           }
 
 declaration_list:
       preproc[context => 'statement'](?) declaration(s)
-          { $return = join('', @{$item{'preproc(?)'}}) . join('', @{$item{'declaration(s)'}}); }
+          { join('', @{$item{'preproc(?)'}}) . join('', @{$item{'declaration(s)'}}) }
 
 declaration:
       declaration_specifiers init_declarator_list(?) ';'
@@ -904,9 +901,7 @@ init_declarator_list:
 
 init_declarator:
       declarator[context => "$arg{context}|init_declarator"]
-          {
-            $return = $item{declarator};
-          }
+          { $return = $item{declarator} }
       ('=' initializer)(?)
           {
             my $init = join('',@{$item[-1]});
@@ -918,7 +913,7 @@ init_declarator:
 
 initializer:
       designation initializer
-          { $return = "$item[1] $item[2]"; }
+          { "$item[1] $item[2]" }
     | comment(?) assignment_expression[context => "$arg{context}|initializer expression"] comment(?)
           {
             $return = $item[2];
@@ -932,15 +927,15 @@ initializer:
             }
           }
     | '{' comment(?) initializer_list (',' )(?) '}'
-          { $return = '{' . $item{'initializer_list'} . '}'; }
+          { '{' . $item{'initializer_list'} . '}' }
 
 initializer_list:
       <leftop: initializer ',' initializer >
-          { $return = join(', ', @{$item[1]}); }
+          { join(', ', @{$item[1]}) }
 
 designation:
       designator_list '='
-          { $return = $item{designator_list}; }
+          { $item{designator_list} }
 
 designator_list:
       designator(s)
@@ -977,11 +972,10 @@ designator:
             $return = $expression;
           }
     | '.' identifier
-          { $return = "the member $item{identifier}"; }
+          { "the member $item{identifier}" }
 
 unary_expression:
       postfix_expression
-          { $return = $item{postfix_expression}; }
     | '++' unary_expression
           {
             if ($arg{context} =~ /for init/) {
@@ -1047,11 +1041,9 @@ unary_expression:
             }
           }
     | Alignof '(' type_name ')'
-          { $return = "the alignment of the type $item{type_name}"; }
+          { "the alignment of the type $item{type_name}" }
     | 'offsetof' '(' type_name[context => 'offsetof'] ',' identifier ')'
-          {
-            $return = "the offset, in bytes, of member $item{identifier} from the beginning of $item{type_name}";
-          }
+          { "the offset, in bytes, of member $item{identifier} from the beginning of $item{type_name}" }
 
 Alignof:
       '_Alignof'
@@ -1311,7 +1303,7 @@ primary_expression:
 
 generic_selection:
       '_Generic' '(' assignment_expression ',' generic_assoc_list ')'
-          { $return = "a generic-selection on $item{assignment_expression} yielding $item{generic_assoc_list}"; }
+          { "a generic-selection on $item{assignment_expression} yielding $item{generic_assoc_list}" }
 
 generic_assoc_list:
       <leftop: generic_association ',' generic_association>
@@ -1326,9 +1318,9 @@ generic_assoc_list:
 
 generic_association:
       type_name ':' assignment_expression
-          { $return = "$item{assignment_expression} in the case that it has type $item{type_name}"; }
+          { "$item{assignment_expression} in the case that it has type $item{type_name}" }
     | 'default' ':' assignment_expression
-          { $return = "$item{assignment_expression} in the default case"; }
+          { "$item{assignment_expression} in the default case" }
 
 Alignas:
       '_Alignas'
@@ -1336,13 +1328,11 @@ Alignas:
 
 alignment_specifier:
       Alignas '(' type_name ')'
-          {
-            $return = "with alignment of the type $item{type_name}";
-          }
+          { "with alignment of the type $item{type_name}" }
     | Alignas '(' constant_expression ')'
           {
             my $plural = $item{constant_expression} != 1 ? 's' : '';
-            $return = "with alignment of $item{constant_expression} byte$plural between objects";
+            "with alignment of $item{constant_expression} byte$plural between objects"
           }
 
 declarator:
@@ -1358,14 +1348,14 @@ declarator:
     | pointer direct_declarator(s)
           {
             push @{$item{'direct_declarator(s)'}}, $item{pointer};
-            $return = $item{'direct_declarator(s)'};
+            $item{'direct_declarator(s)'}
           }
 
 direct_declarator:
       identifier ':' constant
           {
             my $bits = $item{constant} == 1 ? "$item{constant} bit" : "$item{constant} bits";
-            $return = [$item{identifier}, "bit-field of $bits"];
+            [$item{identifier}, "bit-field of $bits"]
           }
     | identifier[context => 'direct_declarator'] array_declarator(s?)
           {
@@ -1378,14 +1368,14 @@ direct_declarator:
     | '(' declarator ')' array_declarator(s)
           {
             push @{$item{declarator}}, join(' ', @{$item{'array_declarator(s)'}});
-            $return = $item{declarator};
+            $item{declarator}
           }
     | '(' parameter_type_list ')'
-          { $return = "function taking $item{parameter_type_list} and returning"; }
+          { "function taking $item{parameter_type_list} and returning" }
     | '(' declarator array_declarator(s) ')'
-          { $return = $item{'declarator'} . join(' ', @{$item{'array_declarator(s)'}}) }
+          { $item{'declarator'} . join(' ', @{$item{'array_declarator(s)'}}) }
     | '(' declarator ')'
-          { $return = $item{declarator}; }
+          { $item{declarator} }
 
 array_qualifiers:
       type_qualifier_list array_qualifiers(?)
@@ -1498,13 +1488,13 @@ parameter_list:
 
 parameter_declaration:
       declaration_specifiers declarator
-          { $return = [$item{declaration_specifiers}, $item{declarator}]; }
+          { [$item{declaration_specifiers}, $item{declarator}] }
     | '...'
-          { $return = "variadic arguments"; }
+          { "variadic arguments" }
     | declaration_specifiers abstract_declarator(?)
-          { $return = [$item{declaration_specifiers}, $item{'abstract_declarator(?)'}]; }
+          { [$item{declaration_specifiers}, $item{'abstract_declarator(?)'}] }
     | ''
-          { $return = "unspecified arguments"; }
+          { "unspecified arguments" }
 
 abstract_declarator:
       pointer(?) direct_abstract_declarator(s)
@@ -1517,11 +1507,11 @@ abstract_declarator:
 
 direct_abstract_declarator:
       '(' abstract_declarator ')'
-          { $return = $item{abstract_declarator}; }
+          { $item{abstract_declarator} }
     | '[' ']'
-          { $return = 'array of unspecified length of'; }
+          { 'array of unspecified length of' }
     | '[' '*' ']'
-          { $return = 'array of variable length of unspecified size of'; }
+          { 'array of variable length of unspecified size of' }
     | '[' array_qualifiers(?) assignment_expression(?) ']'
           {
             my $size;
@@ -1557,9 +1547,9 @@ direct_abstract_declarator:
     | DAD '[' ']'
     | DAD '[' array_qualifiers(?) assignment_expression(?) ']'
     | '(' ')'
-          { $return = 'function taking unspecified arguments and returning'; }
+          { 'function taking unspecified arguments and returning' }
     | '(' parameter_type_list ')'
-          { $return = "function taking $item{parameter_type_list} and returning"; }
+          { "function taking $item{parameter_type_list} and returning" }
     | DAD '(' ')'
     | DAD '(' parameter_type_list ')'
 
@@ -1576,7 +1566,7 @@ identifier:
             if (not grep { $_ eq $item{identifier_word} } @identifiers) {
               push @identifiers, $item{identifier_word};
             }
-            $return = $item{identifier_word};
+            $item{identifier_word}
           }
 
 pointer:
@@ -1594,19 +1584,19 @@ pointer:
 
 type_qualifier_list:
       type_qualifier(s)
-          { $return = join(' ', @{$item{'type_qualifier(s)'}}); }
+          { join(' ', @{$item{'type_qualifier(s)'}}) }
 
 function_specifier:
       'inline'
     | '_Noreturn'
     | 'noreturn'
-          { $return = '_Noreturn'; }
+          { '_Noreturn' }
 
 declaration_specifiers:
       comment[context => 'declaration_specifiers'] declaration_specifiers(s)
-          { $return = "$item{comment} " . join(' ', @{$item{'declaration_specifiers(s)'}}); }
+          { "$item{comment} " . join(' ', @{$item{'declaration_specifiers(s)'}}) }
     | type_specifier ...identifier
-          { $return = $item{type_specifier}; }
+          { $item{type_specifier} }
     | storage_class_specifier declaration_specifiers(?)
           {
             my $decl_spec =  join(' ', @{$item{'declaration_specifiers(?)'}});
@@ -1652,40 +1642,40 @@ declaration_specifiers:
 
 storage_class_specifier:
       'auto'
-          { $return = "with automatic storage-duration"; }
+          { 'with automatic storage-duration' }
     | 'extern'
           {
             if ($arg{context} eq 'function definition') {
-              $return = "with external linkage";
+              'with external linkage'
             } else {
-              $return = "with external linkage, possibly defined elsewhere";
+              'with external linkage, possibly defined elsewhere'
             }
           }
     | 'static'
           {
             if ($arg{context} eq 'function definition') {
-              $return = "with internal linkage";
+              'with internal linkage'
             } elsif ($arg{context} eq 'function definition statement') {
-              $return = "with life-time duration";
+              'with life-time duration'
             } else {
-              $return = "with internal linkage and life-time duration";
+              'with internal linkage and life-time duration'
             }
           }
     | 'register'
-          { $return = "with a suggestion to be as fast as possible"; }
+          { 'with a suggestion to be as fast as possible' }
     | 'typedef'
-          { $return = 'type definition of'; }
+          { 'type definition of' }
 
 type_qualifier:
       'const'
     | 'volatile'
     | 'restrict'
     | '_Atomic'
-          { $return = 'atomic'; }
+          { 'atomic' }
 
 atomic_type_specifier:
       '_Atomic' '(' type_name ')'
-          { $return = "atomic $item{type_name}"; }
+          { "atomic $item{type_name}" }
 
 type_specifier:
       <skip:''> /\s*/
@@ -1715,7 +1705,7 @@ type_specifier:
           | <skip:'[\s]*'> atomic_type_specifier | typedef_name
           | 'double' | 'float' | 'char' | 'short' | 'int' | 'long'
         ) .../\W/
-          { $return = $item[3]; }
+          { $item[3] }
 
 typedef_name:
       identifier
@@ -1764,7 +1754,7 @@ struct_declaration_list:
 
 struct_declaration:
       comment(s?) declaration[context => 'struct member'] comment(s?)
-          { $return = join('', @{$item[1]}) . $item{declaration} . join('', @{$item[-1]}); }
+          { join('', @{$item[1]}) . $item{declaration} . join('', @{$item[-1]}) }
 
 type_name:
         specifier_qualifier_list abstract_declarator(?)
@@ -1788,9 +1778,9 @@ specifier_qualifier_list:
 
 struct_or_union:
       comment(?) ('struct'
-          { $return = 'a structure'; }
+          { 'a structure' }
         | 'union'
-          { $return = 'an union'; }
+          { 'a union' }
       ) comment(?)
           {
             shift @item;
@@ -1823,7 +1813,7 @@ enum_specifier:
 
           }
     | 'enum' identifier
-          { $return = "an enumeration of type $item{identifier}"; }
+          { "an enumeration of type $item{identifier}" }
 
 enumerator_list:
       <leftop:enumerator ',' enumerator>
@@ -1931,7 +1921,7 @@ constant:
 
 identifier_word:
       /[a-z_\$][a-z0-9_]*/i
-          { $return = "`$item[-1]`"; }
+          { "`$item[1]`" }
 
 string:
       (/(u8|u|U|L)?(?:\"(?:\\\"|(?!\").)*\")/)(s)
