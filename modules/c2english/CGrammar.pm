@@ -1821,7 +1821,7 @@ enumerator_list:
 enumerator:
       identifier ( '=' constant_expression )(?)
           {
-            $return = $item[1];
+             $return = $item[1];
              if (@{$item[-1]}) {
                $return .= ' marking ^L' . join('', @{$item[-1]});
              }
@@ -1895,27 +1895,33 @@ constant:
             $modifier = '32-bit character ' if $constant =~ s/^U//;
 
             if ($constant eq q('\n')) {
-              $return = "a $modifier" . 'newline';
+              "a $modifier" . 'newline';
             } elsif ($constant eq q('\f')) {
-              $return = "a $modifier" . 'form-feed character';
+              "a $modifier" . 'form-feed character';
             } elsif ($constant eq q('\t')) {
-              $return = "a $modifier" . 'tab';
+              "a $modifier" . 'tab';
             } elsif ($constant eq q('\v')) {
-              $return = "a $modifier" . 'vertical tab';
+              "a $modifier" . 'vertical tab';
             } elsif ($constant eq q('\a')) {
-              $return = 'an alert character' if not length $modifier;
-              $return = "a $modifier" . 'alert character' if length $modifier;
+              if (not length $modifier) {
+                  'an alert character'
+              } else {
+                  "a $modifier" . 'alert character'
+              }
             } elsif ($constant eq q('\r')) {
-              $return = "a $modifier" . 'carriage-return';
+              "a $modifier" . 'carriage-return';
             } elsif ($constant eq q('\b')) {
-              $return = "a $modifier" . 'backspace character';
+              "a $modifier" . 'backspace character';
             } elsif ($constant eq q('\'')) {
-              $return = "a $modifier" . 'single-quote';
+              "a $modifier" . 'single-quote';
             } elsif ($constant eq q(' ')) {
-              $return = "a $modifier" . 'space';
+              "a $modifier" . 'space';
             } else {
-              $return = $constant if not length $modifier;
-              $return = "a $modifier$constant" if length $modifier;
+              if (not length $modifier) {
+                  $constant
+              } else {
+                  "a $modifier$constant"
+              }
             }
           }
 
