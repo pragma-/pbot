@@ -83,11 +83,11 @@ After git-cloning (or unpacking the ZIP archives) you should have a directory na
 Name | Description
 --- | ---
 [`Plang/`](https://github.com/pragma-/Plang) | Plang scripting language
+[`bin/`](../bin) | PBot executables (e.g., [`bin/pbot`](../bin/pbot))
 [`data/`](../data) | Default data-directory
 [`doc/`](../doc) | Helpful documentation
 [`lib/`](../lib) | PBot source tree
 [`modules/`](../modules) | External command-line executables invokable as PBot commands
-[`script/`](../script) | PBot executables (e.g., [`script/pbot`](../script/pbot))
 [`updates/`](../updates) | Migration scripts run automatically by PBot after updates that modify data structures
 [`cpanfile`](../cpanfile) | CPAN dependencies file
 
@@ -144,7 +144,7 @@ The local::lib set-up will be lost when you close your shell. To make the set-up
 #### Using cpanminus
 Ensure you have set your current working directory to where you have git cloned
 or unzipped PBot. There should be a [`cpanfile`](../cpanfile) in the current
-directory, along with [`lib/`](../lib) and [`script/`](../script) directories.
+directory, along with [`lib/`](../lib) and [`bin/`](../bin) directories.
 
     $ cd pbot (or pbot-master)
 
@@ -265,11 +265,11 @@ recommended settings should suffice. If you have any issues, please [report them
 or by sending `pragma-` a message on the Libera.Chat network.
 
 ## Starting PBot
-The executable to start PBot is `script/pbot`. You may create a symbolic
-link to the `script/pbot` executable in `$HOME/bin/` or in `/usr/local/bin/`.
+The executable to start PBot is `bin/pbot`. You may create a symbolic
+link to the `bin/pbot` executable in `$HOME/bin/` or in `/usr/local/bin/`.
 
-If you choose not to install the `script/pbot` file to your PATH, remember
-to use `./script/pbot` instead of `pbot` in the following examples.
+If you choose not to install the `bin/pbot` file to your PATH, remember
+to use `./bin/pbot` instead of `pbot` in the following examples.
 
 ### Usage
     $ pbot [directory overrides...] [registry overrides...]
