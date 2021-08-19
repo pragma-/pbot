@@ -1125,8 +1125,8 @@ sub recall_message_by_text {
     my ($self, $id, $channel, $text, $ignore_command, $use_aliases) = @_;
 
     my $search = "%$text%";
-    $search =~ s/\*/%/g;
-    $search =~ s/\?/_/g;
+    $search =~ s/(?<!\\)\.?\*/%/g;
+    $search =~ s/(?<!\\)\?/_/g;
 
     my $messages = eval {
         my $sql = 'SELECT * FROM Messages WHERE channel = ? AND msg LIKE ? ESCAPE "\" ';
