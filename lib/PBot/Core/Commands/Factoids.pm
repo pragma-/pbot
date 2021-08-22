@@ -888,10 +888,12 @@ sub cmd_factlog {
         # factoid not found or some error, try to continue and load factlog file if it exists
         my $arglist = $self->{pbot}->{interpreter}->make_args($args);
         ($channel, $trigger) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
+
         if (not defined $trigger) {
             $trigger = $channel;
             $channel = $context->{from};
         }
+
         $channel = '.*' if $channel !~ m/^#/;
     }
 
@@ -909,6 +911,7 @@ sub cmd_factlog {
     };
 
     my @entries;
+
     while (my $line = <$fh>) {
         my ($timestamp, $hostmask, $msg);
 
@@ -918,14 +921,21 @@ sub cmd_factlog {
         };
 
         ($timestamp, $hostmask, $msg) = split /\s+/, $line, 3 if $@;
+
         $hostmask =~ s/!.*$// if not $show_hostmask;
 
-        if ($actual_timestamp) { $timestamp = strftime "%a %b %e %H:%M:%S %Z %Y", localtime $timestamp; }
-        else                   { $timestamp = concise ago gettimeofday - $timestamp; }
+        if ($actual_timestamp) {
+            $timestamp = strftime "%a %b %e %H:%M:%S %Z %Y", localtime $timestamp;
+        } else {
+            $timestamp = concise ago gettimeofday - $timestamp;
+        }
+
         push @entries, "[$timestamp] $hostmask $msg\n";
     }
+
     close $fh;
-    my $result = join "", reverse @entries;
+
+    my $result = join "\n", reverse @entries;
     return $result;
 }
 
