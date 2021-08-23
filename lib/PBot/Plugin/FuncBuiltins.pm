@@ -10,6 +10,10 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
+use PBot::Core::Utils::Indefinite;
+
+use URI::Escape qw/uri_escape_utf8/;
+
 sub initialize {
     my ($self, %conf) = @_;
     $self->{pbot}->{functions}->register(
@@ -60,6 +64,14 @@ sub initialize {
             subref => sub { $self->func_uri_escape(@_) }
         }
     );
+    $self->{pbot}->{functions}->register(
+        'ana',
+        {
+            desc   => 'fix-up a/an article at front of text',
+            usage  => 'ana <text>',
+            subref => sub { $self->func_ana(@_) }
+        }
+    );
 }
 
 sub unload {
@@ -70,6 +82,7 @@ sub unload {
     $self->{pbot}->{functions}->unregister('lc');
     $self->{pbot}->{functions}->unregister('unquote');
     $self->{pbot}->{functions}->unregister('uri_escape');
+    $self->{pbot}->{functions}->unregister('ana');
 }
 
 sub func_unquote {
@@ -107,12 +120,30 @@ sub func_lc {
     return lc $text;
 }
 
-use URI::Escape qw/uri_escape_utf8/;
-
 sub func_uri_escape {
     my $self = shift;
     my $text = "@_";
     return uri_escape_utf8($text);
+}
+
+sub func_ana {
+    my $self = shift;
+    my $text = "@_";
+
+    if ($text =~ s/\b(an?)(\s+)//i) {
+        my ($article, $spaces) = ($1, $2);
+        my $fixed_article = select_indefinite_article $text;
+
+        if ($article eq 'AN') {
+            $fixed_article = uc $fixed_article;
+        } elsif ($article eq 'An' or $article eq 'A') {
+            $fixed_article = ucfirst $fixed_article;
+        }
+
+        $text = $fixed_article . $spaces . $text;
+    }
+
+    return $text;
 }
 
 1;
