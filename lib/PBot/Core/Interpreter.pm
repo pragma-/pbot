@@ -15,6 +15,7 @@ use parent 'PBot::Core::Class', 'PBot::Core::Registerable';
 use PBot::Imports;
 
 use PBot::Core::MessageHistory::Constants ':all';
+use PBot::Core::Utils::Indefinite;
 use PBot::Core::Utils::ValidateString;
 
 use Encode;
@@ -370,7 +371,7 @@ sub interpret {
             $command =~ s/^\s+|\s+$//g;
 
             # replace contextual command
-            $context->{command}  = $command;
+            $context->{command} = $command;
 
             # reset contextual command history
             $context->{commands} = [];
@@ -593,9 +594,25 @@ sub handle_result {
     if (exists $context->{subcmd}) {
         my $command = pop @{$context->{subcmd}};
 
-        if (@{$context->{subcmd}} == 0 or $context->{alldone}) { delete $context->{subcmd}; }
+        if (@{$context->{subcmd}} == 0 or $context->{alldone}) {
+            delete $context->{subcmd};
+        }
 
-        $command =~ s/&\{subcmd\}/$result/;
+        if ($command =~ s/\b(an?)(\s+)&\{subcmd\}/&{subcmd}/i) {
+            # fix-up a/an article
+            my ($article, $spaces) = ($1, $2);
+            my $fixed_article = select_indefinite_article $result;
+
+            if ($article eq 'AN') {
+                $fixed_article = uc $fixed_article;
+            } elsif ($article eq 'An' or $article eq 'A') {
+                $fixed_article = ucfirst $fixed_article;
+            }
+
+            $command =~ s/&\{subcmd\}/$fixed_article$spaces$result/;
+        } else {
+            $command =~ s/&\{subcmd\}/$result/;
+        }
 
         if (not $context->{alldone}) {
             $context->{command} = $command;
