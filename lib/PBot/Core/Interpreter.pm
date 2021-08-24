@@ -660,6 +660,9 @@ sub handle_result {
         $result = $context->{split_result} . $result;
     }
 
+    # nothing more to do here if we have no result or keyword
+    return 0 if not length $result or not exists $context->{keyword};
+
     # set preserve_whitespace and use_output_queue
     # TODO: this should be in Factoids.pm and update $context's flags
 
