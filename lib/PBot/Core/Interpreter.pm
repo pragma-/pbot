@@ -557,7 +557,7 @@ sub handle_result {
     $context->{preserve_whitespace} //= 0;
 
     # debug flag to trace $context location and contents
-    if ($self->{pbot}->{registry}->get_value('general', 'debugcontext') and length $context->{result}) {
+    if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
         $Data::Dumper::Sortkeys = 1;
         $self->{pbot}->{logger}->log("Interpreter::handle_result [$result]\n");
@@ -566,7 +566,7 @@ sub handle_result {
 
     # ensure we have a command result to work with
     if (not defined $result or length $result == 0) {
-        return 0;
+        $result = "";
     }
 
     # strip and store /command prefixes
