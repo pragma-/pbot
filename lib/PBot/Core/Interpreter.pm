@@ -553,6 +553,9 @@ sub handle_result {
     # if passed, allow $result parameter to override contextual result
     $result //= $context->{result};
 
+    # ensure we have a command result to work with
+    $result //= '';
+
     # preservation of consecutive whitespace is disabled by default
     $context->{preserve_whitespace} //= 0;
 
@@ -562,11 +565,6 @@ sub handle_result {
         $Data::Dumper::Sortkeys = 1;
         $self->{pbot}->{logger}->log("Interpreter::handle_result [$result]\n");
         $self->{pbot}->{logger}->log(Dumper $context);
-    }
-
-    # ensure we have a command result to work with
-    if (not defined $result or length $result == 0) {
-        $result = "";
     }
 
     # strip and store /command prefixes
