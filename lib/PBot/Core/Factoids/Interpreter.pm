@@ -426,15 +426,17 @@ sub handle_action {
         }
     }
 
+    my $preserve_whitespace = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'preserve_whitespace');
+
+    if (defined $preserve_whitespace) {
+        $context->{preserve_whitespace} = $preserve_whitespace;
+    }
+
     return $action if $context->{special} eq 'code-factoid';
 
     if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'type') eq 'module') {
-        my $preserve_whitespace = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'preserve_whitespace');
-        $preserve_whitespace = 0 if not defined $preserve_whitespace;
-
-        $context->{preserve_whitespace} = $preserve_whitespace;
-        $context->{root_keyword}        = $keyword unless defined $context->{root_keyword};
-        $context->{root_channel}        = $channel;
+        $context->{root_keyword} = $keyword unless defined $context->{root_keyword};
+        $context->{root_channel} = $channel;
 
         my $result = $self->{pbot}->{modules}->execute_module($context);
 
