@@ -730,6 +730,11 @@ sub handle_result {
             last;
         }
 
+        # insert null-width spaces into nicknames to prevent IRC clients
+        # from unncessarily highlighting people
+        $line = $self->dehighlight_nicks($line, $context->{from});
+
+        # truncate if necessary, pasting original result to a web paste site
         $line = $self->truncate_result($context, $line, $original_result);
 
         if ($use_output_queue) {
@@ -806,7 +811,9 @@ sub truncate_result {
 
         # make room to append the truncation text to the message text
         # (third argument to truncate_egc is '' to prevent appending its own ellipsis)
-        my $trunc_len = length $text < $max_msg_len ? length $text : $max_msg_len;
+        my $text_len = length $text;
+        my $trunc_len = $text_len < $max_msg_len ? $text_len : $max_msg_len;
+
         $text = truncate_egc $text, $trunc_len - length $trunc, '';
 
         # append the truncation text
@@ -861,12 +868,6 @@ sub output_result {
 
     # nothing more to do here if the command came from STDIN
     return if $context->{from} eq 'stdin@pbot';
-
-    # insert null-width spaces into nicknames to prevent IRC clients
-    # from unncessarily highlighting people
-    if ($context->{from} =~ /^#/ and $output !~ /^\/msg\s+/i) {
-        $output = $self->dehighlight_nicks($output, $context->{from});
-    }
 
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
     my $to      = $context->{from};
