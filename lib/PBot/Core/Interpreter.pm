@@ -691,6 +691,8 @@ sub handle_result {
 
     my $original_result = $result;
 
+    $context->{original_result} = $result;
+
     $result =~ s/[\n\r]/ /g unless $preserve_newlines;
     $result =~ s/[ \t]+/ /g unless $context->{preserve_whitespace};
 
@@ -729,13 +731,6 @@ sub handle_result {
 
             last;
         }
-
-        # insert null-width spaces into nicknames to prevent IRC clients
-        # from unncessarily highlighting people
-        $line = $self->dehighlight_nicks($line, $context->{from});
-
-        # truncate if necessary, pasting original result to a web paste site
-        $line = $self->truncate_result($context, $line, $original_result);
 
         if ($use_output_queue) {
             my $delay   = rand(10) + 5;
@@ -879,6 +874,13 @@ sub output_result {
 
     # nothing more to do here if the output is going to the bot
     return if $to eq $botnick;
+
+    # insert null-width spaces into nicknames to prevent IRC clients
+    # from unncessarily highlighting people
+    $output = $self->dehighlight_nicks($output, $to) unless $output =~ m|^/msg |;
+
+    # truncate if necessary, pasting original result to a web paste site
+    $output = $self->truncate_result($context, $output, $context->{original_result});
 
     # handle various /command prefixes
 
