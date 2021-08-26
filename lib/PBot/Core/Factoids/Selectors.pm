@@ -10,6 +10,8 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
+use PBot::Core::Utils::Indefinite;
+
 use Time::HiRes qw(gettimeofday);
 use Time::Duration qw(duration);
 
