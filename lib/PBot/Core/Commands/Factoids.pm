@@ -61,6 +61,7 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->cmd_factalias(@_) },    "factalias",  0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_factmove(@_) },     "factmove",   0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_call_factoid(@_) }, "fact",       0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_as_factoid(@_) },   "factoid",    0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_factfind(@_) },     "factfind",   0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_top20(@_) },        "top20",      0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_histogram(@_) },    "histogram",  0);
@@ -85,6 +86,47 @@ sub cmd_call_factoid {
     $context->{root_keyword} = $trigger;
 
     return $self->{pbot}->{factoids}->{interpreter}->interpreter($context);
+}
+
+sub cmd_as_factoid {
+    my ($self, $context) = @_;
+
+    my $arguments = $context->{arguments};
+
+    my $usage = "Usage: factoid <text to interpret as a factoid> [--args 'arguments passed to factoid']";
+
+    return $usage if not length $arguments;
+
+    my ($args);
+
+    my %opts = (
+        args => \$args,
+    );
+
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $arguments,
+        \%opts,
+        ['bundling'],
+        'args=s',
+    );
+
+    return "/say $opt_error -- $usage" if defined $opt_error;
+    return $usage                      if not @$opt_args;
+
+    my $action = "@$opt_args";
+
+    my $trigger = "__anon-$context->{nick}-" . $self->{pbot}->random_nick(4);
+
+    $self->{pbot}->{factoids}->{data}->add('text', $context->{from}, $context->{hostmask}, $trigger, $action);
+
+    $context->{keyword}   = $trigger;
+    $context->{arguments} = $args // '';
+
+    my $result = $self->{pbot}->{factoids}->{interpreter}->interpreter($context);
+
+    $self->{pbot}->{factoids}->{data}->remove($context->{from}, $trigger);
+
+    return $result;
 }
 
 sub cmd_factundo {
@@ -112,7 +154,7 @@ sub cmd_factundo {
     return $usage                      if @$opt_args > 2;
     return $usage                      if not @$opt_args;
 
-    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$opt_args);
+    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_ } @$opt_args);
     my $arglist = $self->{pbot}->{interpreter}->make_args($arguments);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel(
@@ -218,7 +260,7 @@ sub cmd_factredo {
     return $usage                      if @$opt_args > 2;
     return $usage                      if not @$opt_args;
 
-    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$opt_args);
+    $arguments = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_ } @$opt_args);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel(
         $context->{from}, $context->{arguments}, 'factredo', explicit => 1, exact_channel => 1
@@ -831,7 +873,7 @@ sub cmd_factshow {
 
     my ($chan, $trig) = @$opt_args;
     $chan = $context->{from} if not defined $trig;
-    my $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$opt_args);
+    my $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_ } @$opt_args);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel($context->{from}, $args, 'factshow', usage => $usage);
     return $channel if not defined $trigger;    # if $trigger is not defined, $channel is an error message
@@ -880,7 +922,7 @@ sub cmd_factlog {
     return "Too many arguments -- $usage" if @$opt_args > 2;
     return "Missing argument -- $usage"   if not @$opt_args;
 
-    my $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_; } @$opt_args);
+    my $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_ } @$opt_args);
 
     my ($channel, $trigger) = $self->find_factoid_with_optional_channel($context->{from}, $args, 'factlog', usage => $usage, exact_channel => 1);
 
