@@ -879,9 +879,6 @@ sub output_result {
     # from unncessarily highlighting people
     $output = $self->dehighlight_nicks($output, $to) unless $output =~ m|^/msg |;
 
-    # truncate if necessary, pasting original result to a web paste site
-    $output = $self->truncate_result($context, $output, $context->{original_result});
-
     # handle various /command prefixes
 
     my $type = 'echo'; # will be set to 'echo' or 'action' depending on /command prefix
@@ -921,6 +918,10 @@ sub output_result {
         }
     }
 
+    my $bot_nick     = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    my $bot_hostmask = "$bot_nick!pbot3\@pbot";
+    my $bot_account  = $self->{pbot}->{messagehistory}->get_message_account($bot_nick, 'pbot3', 'pbot');
+
     if ($type eq 'echo') {
         # prepend nickprefix to output
         if ($context->{nickprefix} && (! $context->{nickprefix_disabled} || $context->{nickprefix_forced})) {
@@ -930,17 +931,25 @@ sub output_result {
             $output = "$context->{nick}: $output";
         }
 
+        # truncate if necessary, pasting original result to a web paste site
+        $output = $self->truncate_result($context, $output, $context->{original_result});
+
+        # add bot's output to message history for recall/grab
+        if ($to =~ /^#/) {
+            $self->{pbot}->{messagehistory}->add_message($bot_account, $bot_hostmask, $to, $output, MSG_CHAT);
+        }
+
         # send the message to the channel/user
         $self->{pbot}->{conn}->privmsg($to, $output);
     }
     elsif ($type eq 'action') {
-        # append nickprefix to output
-        #
-        # TODO: probably going to remove this code.
-        #
-        # if ($context->{nickprefix} && (! $context->{nickprefix_disabled} || $context->{nickprefix_forced})) {
-        #     $output = "$output (for $context->{nickprefix})";
-        # }
+        # truncate if necessary, pasting original result to a web paste site
+        $output = $self->truncate_result($context, $output, $context->{original_result});
+
+        # add bot's output to message history for recall/grab
+        if ($to =~ /^#/) {
+            $self->{pbot}->{messagehistory}->add_message($bot_account, $bot_hostmask, $to, "/me $output", MSG_CHAT);
+        }
 
         # CTCP ACTION the message to the channel/user
         $self->{pbot}->{conn}->me($to, $output);
