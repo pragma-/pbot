@@ -1093,6 +1093,7 @@ sub cmd_factfind {
     $arguments =~ s/\s+/ /g;
 
     $arguments = substr($arguments, 0, 30);
+
     my $argtype = undef;
 
     $argtype = "owned by $owner" if defined $owner and $owner ne '.*';
@@ -1116,6 +1117,10 @@ sub cmd_factfind {
     }
 
     if (not defined $argtype) { return $usage; }
+
+    if ($channel eq 'global') {
+        $channel = '\.\*';
+    }
 
     my ($text, $last_trigger, $last_chan, $i);
     $last_chan = "";

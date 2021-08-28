@@ -24,7 +24,7 @@ use PBot::Core::Utils::SQLiteLogger;
 use PBot::Core::Utils::SQLiteLoggerLayer;
 
 use DBI;
-use Text::Levenshtein qw(fastdistance);
+use Text::Levenshtein::XS qw(distance);
 
 sub new {
     my ($class, %args) = @_;
@@ -238,7 +238,8 @@ sub levenshtein_matches {
         my $length_a = length $index1;
 
         foreach my $index (sort $self->get_keys) {
-            my $distance_result = fastdistance($index1, $index);
+            my $distance_result = distance($index1, $index, 20);
+            next if not defined $distance_result;
 
             my $length_b = length $index;
 
@@ -274,7 +275,8 @@ sub levenshtein_matches {
             }
 
             foreach my $i2 (sort $self->get_keys($i1)) {
-                my $distance_result = fastdistance($index2, $i2);
+                my $distance_result = distance($index2, $i2, 20);
+                next if not defined $distance_result;
 
                 my $length_b = length $i2;
 
@@ -304,6 +306,9 @@ sub levenshtein_matches {
     }
 
     $output =~ s/(.*), /$1 or /;
+
+    $output = 'none' if not length $output;
+
     return $output;
 }
 

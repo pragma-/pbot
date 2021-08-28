@@ -48,7 +48,7 @@ requires 'Socket';
 requires 'Storable';
 requires 'Symbol';
 requires 'Text::CSV';
-requires 'Text::Levenshtein';
+requires 'Text::Levenshtein::XS';
 requires 'Text::ParseWords';
 requires 'Time::Duration';
 requires 'Time::HiRes';

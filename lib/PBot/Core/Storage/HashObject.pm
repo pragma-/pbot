@@ -15,7 +15,7 @@ package PBot::Core::Storage::HashObject;
 
 use PBot::Imports;
 
-use Text::Levenshtein qw(fastdistance);
+use Text::Levenshtein::XS qw(distance);
 use JSON;
 
 sub new {
@@ -143,7 +143,8 @@ sub levenshtein_matches {
     my @matches;
 
     foreach my $index (sort keys %{$self->{hash}}) {
-        my $distance = fastdistance($keyword, $index);
+        my $distance = distance($keyword, $index, 20);
+        next if not defined $distance;
 
         my $length_a = length $keyword;
         my $length_b = length $index;

@@ -115,7 +115,7 @@ sub interpreter {
 
         # otherwise keyword hasn't been found, display similiar matches for all channels
         else {
-            my $namespace = $strictnamespace ? $context->{from} : '.*';
+            my $namespace = $context->{from};
             $namespace = '.*' if $namespace !~ /^#/;
 
             my $namespace_regex = $namespace;

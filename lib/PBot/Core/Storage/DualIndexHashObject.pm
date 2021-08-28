@@ -19,7 +19,7 @@ package PBot::Core::Storage::DualIndexHashObject;
 
 use PBot::Imports;
 
-use Text::Levenshtein qw(fastdistance);
+use Text::Levenshtein::XS qw(distance);
 use JSON;
 
 sub new {
@@ -153,8 +153,10 @@ sub levenshtein_matches {
 
     if (not $secondary_index) {
         foreach my $index (sort keys %{$self->{hash}}) {
-            my $distance_result = fastdistance($primary_index, $index);
-            my $length          = (length $primary_index > length $index) ? length $primary_index : length $index;
+            my $distance_result = distance($primary_index, $index, 20);
+            next if not defined $distance_result;
+
+            my $length = (length $primary_index > length $index) ? length $primary_index : length $index;
 
             if ($distance_result / $length < $distance) {
                 my $name = $self->get_key_name($index);
@@ -180,8 +182,10 @@ sub levenshtein_matches {
             }
 
             foreach my $index2 (sort keys %{$self->{hash}->{$index1}}) {
-                my $distance_result = fastdistance($secondary_index, $index2);
-                my $length          = (length $secondary_index > length $index2) ? length $secondary_index : length $index2;
+                my $distance_result = distance($secondary_index, $index2, 20);
+                next if not defined $distance_result;
+
+                my $length = (length $secondary_index > length $index2) ? length $secondary_index : length $index2;
 
                 if ($distance_result / $length < $distance) {
                     my $name = $self->get_key_name($index1, $index2);
