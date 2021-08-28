@@ -12,7 +12,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-use Text::Levenshtein qw/fastdistance/;
+use Text::Levenshtein::XS qw/distance/;
 use Time::HiRes qw/gettimeofday/;
 
 sub initialize {
@@ -217,7 +217,7 @@ sub is_present_similar {
             return 0;
         }
 
-        my $distance = fastdistance($nick, $person);
+        my $distance = distance($nick, $person);
         my $length   = length $nick > length $person ? length $nick : length $person;
 
         if ($length != 0 && $distance / $length <= $percentage) {

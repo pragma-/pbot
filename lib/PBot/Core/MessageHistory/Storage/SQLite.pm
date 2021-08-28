@@ -20,10 +20,10 @@ use PBot::Core::Utils::SQLiteLogger;
 use PBot::Core::Utils::SQLiteLoggerLayer;
 
 use DBI;
-use Carp              qw/shortmess/;
-use Time::HiRes       qw/time/;
+use Carp                  qw/shortmess/;
+use Time::HiRes           qw/time/;
 use Text::CSV;
-use Text::Levenshtein qw/fastdistance/;
+use Text::Levenshtein::XS qw/distance/;
 use Time::Duration;
 
 sub initialize {
@@ -537,7 +537,7 @@ sub get_message_account {
                     }
 
                     # fuzzy match hosts
-                    my $distance = fastdistance($host, $thost);
+                    my $distance = distance($host, $thost);
                     my $length   = (length($host) > length($thost)) ? length $host : length $thost;
 
                     #$self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
@@ -671,7 +671,7 @@ sub get_message_account {
                     }
                 }
 
-                my $distance = fastdistance($host, $thost);
+                my $distance = distance($host, $thost);
                 my $length   = (length($host) > length($thost)) ? length $host : length $thost;
 
                 #$self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
@@ -745,7 +745,7 @@ sub get_message_account {
             my ($nick1) = $host1 =~ m/^([^!]+)!/;
             my ($nick2) = $host2 =~ m/^([^!]+)!/;
 
-            my $distance = fastdistance($nick1, $nick2);
+            my $distance = distance($nick1, $nick2);
             my $length   = (length $nick1 > length $nick2) ? length $nick1 : length $nick2;
 
             my $irc_cloak = $self->{pbot}->{registry}->get_value('irc', 'cloak') // 'user';
@@ -1486,7 +1486,7 @@ sub link_aliases {
                         }
                     }
 
-                    my $distance = fastdistance($host, $thost);
+                    my $distance = distance($host, $thost);
                     my $length   = (length($host) > length($thost)) ? length $host : length $thost;
 
                     #$self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
@@ -1589,7 +1589,7 @@ sub link_alias {
         $host2 = lc $host2;
         my ($nick1) = $host1 =~ m/^([^!]+)!/;
         my ($nick2) = $host2 =~ m/^([^!]+)!/;
-        my $distance = fastdistance($nick1, $nick2);
+        my $distance = distance($nick1, $nick2);
         my $length   = (length $nick1 > length $nick2) ? length $nick1 : length $nick2;
         my $irc_cloak = $self->{pbot}->{registry}->get_value('irc', 'cloak') // 'user';
         if ($distance > 1 && ($nick1 !~ /^guest/ && $nick2 !~ /^guest/) && ($host1 !~ /$irc_cloak/ || $host2 !~ /$irc_cloak/)) {
