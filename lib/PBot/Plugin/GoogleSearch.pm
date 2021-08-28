@@ -39,8 +39,7 @@ sub cmd_googlesearch {
     return "Usage: google [-n <number of results>] query\n" if not length $context->{arguments};
 
     my $matches = 1;
-    $matches = $1 if $context->{arguments} =~ s/^-n\s+([0-9]+)\s*//;
-
+    $matches = $1 if $context->{arguments} =~ s/-n\s+([0-9]+)\s*//;
     $matches = 10 if $matches > 10;
 
     my $api_key = $self->{pbot}->{registry}->get_value('googlesearch', 'api_key');    # https://developers.google.com/custom-search/v1/overview
@@ -101,7 +100,7 @@ sub cmd_googlesearch {
         last if --$matches <= 0;
     }
 
-    $output = join "\n-- ", @results;
+    $output .= join "\n-- ", @results;
 
     return $output;
 }
