@@ -36,10 +36,12 @@ sub unload {
 
 sub cmd_googlesearch {
     my ($self, $context) = @_;
-    return "Usage: google [number of results] query\n" if not length $context->{arguments};
+    return "Usage: google [-n <number of results>] query\n" if not length $context->{arguments};
 
     my $matches = 1;
     $matches = $1 if $context->{arguments} =~ s/^-n\s+([0-9]+)\s*//;
+
+    $matches = 10 if $matches > 10;
 
     my $api_key = $self->{pbot}->{registry}->get_value('googlesearch', 'api_key');    # https://developers.google.com/custom-search/v1/overview
     my $cx      = $self->{pbot}->{registry}->get_value('googlesearch', 'context');    # https://cse.google.com/all
@@ -52,6 +54,7 @@ sub cmd_googlesearch {
 
     my $engine = WWW::Google::CustomSearch->new(api_key => $api_key, cx => $cx, quotaUser => $context->{hostmask});
 
+    # versus/fight mode: !google banana vs apple -- returns number of results for both terms.
     if ($context->{arguments} =~ m/(.*)\s+vs\s+(.*)/i) {
         my ($a, $b) = ($1, $2);
         my $result1 = $engine->search("\"$a\" -\"$b\"");
@@ -67,15 +70,12 @@ sub cmd_googlesearch {
         utf8::decode $title1;
         utf8::decode $title2;
 
-        return
-            "$context->{nick}: $a: ("
-          . $result1->formattedTotalResults . ") "
-          . decode_entities($title1) . " <"
-          . $result1->items->[0]->link
-          . "> VS $b: ("
-          . $result2->formattedTotalResults . ") "
-          . decode_entities($title2) . " <"
-          . $result2->items->[0]->link . ">";
+        return "$context->{nick}: "
+          . "$a: (" . $result1->formattedTotalResults . ') '
+          . decode_entities($title1) . ' <' . $result1->items->[0]->link . '> '
+          . 'VS '
+          . "$b: (" . $result2->formattedTotalResults . ') '
+          . decode_entities($title2) . ' <' . $result2->items->[0]->link . '>';
     }
 
     my $result = eval { $engine->search($context->{arguments}) };
@@ -92,14 +92,17 @@ sub cmd_googlesearch {
 
     my $output = "$context->{nick}: (" . $result->formattedTotalResults . " results) ";
 
-    my $comma = "";
+    my @results;
+
     foreach my $item (@{$result->items}) {
         my $title = $item->title;
         utf8::decode $title;
-        $output .= $comma . decode_entities($title) . ': <' . $item->link . ">";
-        $comma = " -- ";
+        push @results, decode_entities($title) . ': <' . $item->link . '>';
         last if --$matches <= 0;
     }
+
+    $output = join "\n-- ", @results;
+
     return $output;
 }
 
