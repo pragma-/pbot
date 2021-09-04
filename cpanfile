@@ -287,6 +287,7 @@ feature compiler_vm => sub {
     requires 'Getopt::Long';
     requires 'Encode';
     requires 'Data::Dumper';
+    requires 'Text::WordDiff';
 };
 
 feature compiler_vm_win32 => sub {
