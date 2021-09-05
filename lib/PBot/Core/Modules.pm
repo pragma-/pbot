@@ -23,7 +23,6 @@ sub initialize {
 
 sub execute_module {
     my ($self, $context) = @_;
-    my $text;
 
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;

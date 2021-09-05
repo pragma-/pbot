@@ -143,8 +143,8 @@ sub execute_process {
         # add reader handler
         $self->{pbot}->{select_handler}->add_reader($reader, sub { $self->process_pipe_reader($context->{pid}, @_) });
 
-        # return empty string since reader will handle the output when child is finished
-        return '';
+        # return undef since reader will handle the output when child is finished
+        return undef;
     }
 }
 

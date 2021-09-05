@@ -554,7 +554,7 @@ sub handle_result {
     $result //= $context->{result};
 
     # ensure we have a command result to work with
-    $result //= '';
+    return if not defined $result;
 
     # preservation of consecutive whitespace is disabled by default
     $context->{preserve_whitespace} //= 0;
@@ -1000,9 +1000,8 @@ sub add_to_command_queue {
                 $context->{'cap-override'} = $command->{'cap-override'};
             }
 
-            my $result = $self->interpret($context);
-            $context->{result} = $result;
-            $self->handle_result($context, $result);
+            $context->{result} = $self->interpret($context);
+            $self->handle_result($context);
         },
         $delay, "command $channel $command->{command}", $repeating
     );

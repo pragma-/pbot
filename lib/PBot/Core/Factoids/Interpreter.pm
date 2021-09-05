@@ -440,10 +440,10 @@ sub handle_action {
 
         my $result = $self->{pbot}->{modules}->execute_module($context);
 
-        if (length $result) {
+        if (defined $result && length $result) {
             return $ref_from . $result;
         } else {
-            return '';
+            return $result;
         }
     }
     elsif ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'type') eq 'text') {
