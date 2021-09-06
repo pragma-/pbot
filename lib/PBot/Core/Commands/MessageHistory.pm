@@ -584,7 +584,7 @@ sub cmd_aka_delete {
         return 'Deleted ' . (join ' and ', @deletions) . " from $hostmask ($id)";
     }
 
-    $self->{pbot}->{messagehistory}->database->delete_account($id);
+    $self->{pbot}->{messagehistory}->{database}->delete_account($id);
 
     return "/say Deleted $hostmask ($id).";
 }
