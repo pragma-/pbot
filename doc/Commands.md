@@ -83,6 +83,12 @@
       * [regfind](Registry.md#regfind)
       * [regsetmeta](Registry.md#regsetmeta)
       * [regunsetmeta](Registry.md#regunsetmeta)
+    * [Message history](#message-history)
+      * [recall](Commands.md#recall)
+      * [aka](Admin.md#aka)
+      * [akalink](Admin.md#akalink)
+      * [akaunlink](Admin.md#akaunlink)
+      * [akadelete](Admin.md#akadelete)
     * [Miscellaneous admin commands](#miscellaneous-admin-commands)
       * [export](Admin.md#export)
       * [refresh](Admin.md#refresh)
@@ -566,6 +572,13 @@ to have the command remember your location.
 ##### [regfind](Registry.md#regfind)
 ##### [regsetmeta](Registry.md#regsetmeta)
 ##### [regunsetmeta](Registry.md#regunsetmeta)
+
+#### Message history
+##### [recall](Commands.md#recall)
+##### [aka](Admin.md#aka)
+##### [akalink](Admin.md#akalink)
+##### [akaunlink](Admin.md#akaunlink)
+##### [akadelete](Admin.md#akadelete)
 
 #### Miscellaneous admin commands
 ##### [export](Admin.md#export)

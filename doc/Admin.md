@@ -61,6 +61,11 @@
 * [Process management commands](#process-management-commands)
   * [ps](#ps)
   * [kill](#kill)
+* [Message history commands](#message-history-commands)
+  * [aka](#aka)
+  * [akalink](#akalink)
+  * [akaunlink](#akaunlink)
+  * [akadelete](#akadelete)
 * [Miscellaneous commands](#miscellaneous-commands)
   * [export](#export)
   * [refresh](#refresh)
@@ -601,6 +606,74 @@ Option | Description
 `pids...` | space-delimited list of PIDs to kill
 
 If neither options `-a` or `-t` are provided then the `pids...` option is required.
+
+## Message history commands
+Message history has an advanced user tracking algorithm in order to ensure that
+messages are being stored in the right message history accounts. The following commands
+query and manipulate the message history account links.
+
+Note that "message history account" and "PBot user account" are distinct accounts.
+
+### aka
+The `aka` command lists all known aliases for a given message history account.
+
+Usage: `aka [-hilngr] <nick> [-sort <by>]`
+
+Option | Description
+--- | ---
+`-h` | show hostmasks
+`-i` | show ids
+`-l` | show last seen
+`-n` | show nickserv accounts
+`-g` | show gecos
+`-r` | show relationships
+
+Sort by | Description
+--- | ---
+gecos    | GECOS field
+host     | host portion of hostmask
+hostmask | hostmask
+id       | account id
+nick     | nick portion of hostmask
+nickserv | NickServ account
+seen     | last seen timestamp
+user     | user portion of hostmask
+
+Examples:
+
+    <pragma-> aka bob
+       <PBot> bob also known as: bob, bobby, robert
+
+    <pragma-> aka -hl bob
+       <PBot> bob also known as: bob!~bob@user/bob (seen 5m ago), bobby!~bob@user/bob (seen 6d ago), robert!~bob@127.0.0.1 (seen 20d ago)
+
+### akalink
+The `akalink` command manually links two message history accounts together.
+
+Usage: `akalink <target id> <alias id> [type]`
+
+The optional `type` argument can be `0` (weak) or `1` (strong). Defaults to `1`.
+
+Use the `id` command to look up message history account ids for a given hostmask.
+
+### akaunlink
+The `akaunlink` command manually unlinks two message history accounts from each other.
+
+Usage: `akaunlink <target id> <alias id>`
+
+Use the `-r` option with the `aka` command to see the `target -> alias` relationship.
+
+### akadelete
+The `akadelete` command deletes message history account metadata or entire message history accounts.
+
+Usage: `akadelete [-hn] <account id or hostmask>`
+
+Option | Description
+--- | ---
+`-h` | delete only hostmask
+`-n` | delete only nickserv accounts
+
+If neither options `-h` or `-n` are given, then the entire message history account will be deleted.
 
 ## Miscellaneous commands
 These are some of the miscellaneous admin commands that have not been covered
