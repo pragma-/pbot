@@ -190,7 +190,7 @@ sub get_gecos {
     my ($self, $id) = @_;
 
     my $gecos = eval {
-        my $sth = $self->{dbh}->prepare('SELECT gecos FROM Gecos WHERE ID = ?');
+        my $sth = $self->{dbh}->prepare('SELECT gecos FROM Gecos WHERE id = ?');
         $sth->execute($id);
         return $sth->fetchall_arrayref();
     };
@@ -202,12 +202,29 @@ sub get_nickserv_accounts {
     my ($self, $id) = @_;
 
     my $nickserv_accounts = eval {
-        my $sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE ID = ?');
+        my $sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE id = ?');
         $sth->execute($id);
         return $sth->fetchall_arrayref();
     };
     $self->{pbot}->{logger}->log($@) if $@;
     return map { $_->[0] } @$nickserv_accounts;
+}
+
+sub delete_nickserv_accounts {
+    my ($self, $id) = @_;
+
+    eval {
+        $self->{dbh}->do('DELETE FROM Nickserv WHERE id = ?', undef, $id);
+        $self->{dbh}->commit;
+        $self->{dbh}->begin_work;
+    };
+
+    if ($@) {
+        $self->{pbot}->{logger}->log($@);
+        return 0;
+    }
+
+    return 1;
 }
 
 sub set_current_nickserv_account {
@@ -785,7 +802,8 @@ sub find_most_recent_hostmask {
     my $hostmask = eval {
         my $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE ID = ? ORDER BY last_seen DESC LIMIT 1');
         $sth->execute($id);
-        return $sth->fetchrow_hashref()->{'hostmask'};
+        my $row = $sth->fetchrow_hashref();
+        return defined $row ? $row->{hostmask} : undef;
     };
     $self->{pbot}->{logger}->log($@) if $@;
     return $hostmask;
@@ -1623,6 +1641,53 @@ sub unlink_alias {
         return $ret;
     };
     $self->{pbot}->{logger}->log($@) if $@;
+    return $ret;
+}
+
+sub delete_hostmask {
+    my ($self, $id, $hostmask) = @_;
+
+    eval {
+        $self->{dbh}->do('DELETE FROM Hostmasks WHERE id = ? AND hostmask = ?', undef, $id, $hostmask);
+        $self->{dbh}->commit;
+        $self->{dbh}->begin_work;
+    };
+
+    if ($@) {
+        $self->{pbot}->{logger}->log($@);
+        return 0;
+    }
+
+    return 1;
+}
+
+sub delete_account {
+    my ($self, $id) = @_;
+
+    $self->{dbh}->commit;
+    $self->{dbh}->begin_work;
+
+    my $ret = eval {
+        $self->{dbh}->do('DELETE FROM Hostmasks WHERE id = ?', undef, $id);
+        $self->{dbh}->do('DELETE FROM Accounts  WHERE id = ?', undef, $id);
+        $self->{dbh}->do('DELETE FROM NickServ  WHERE id = ?', undef, $id);
+        $self->{dbh}->do('DELETE FROM Gecos     WHERE id = ?', undef, $id);
+        $self->{dbh}->do('DELETE FROM Channels  WHERE id = ?', undef, $id);
+        $self->{dbh}->do('DELETE FROM Messages  WHERE id = ?', undef, $id);
+        $self->{dbh}->do('DELETE FROM Aliases   WHERE id = ?', undef, $id);
+        $self->{dbh}->do('DELETE FROM Aliases   WHERE alias = ?', undef, $id);
+        $self->{dbh}->commit;
+        $self->{dbh}->begin_work;
+        return 1;
+    };
+
+    if ($@) {
+        $self->{pbot}->{logger}->log($@);
+        $self->{dbh}->rollback;
+        $self->{dbh}->begin_work;
+        return 0;
+    }
+
     return $ret;
 }
 

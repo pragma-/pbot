@@ -24,10 +24,12 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->cmd_rebuild_aliases(@_) },    "rebuildaliases", 1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_aka_link(@_) },           "akalink",        1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_aka_unlink(@_) },         "akaunlink",      1);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_aka_delete(@_) },         "akadelete",      1);
 
     # add capabilities to admin group
     $self->{pbot}->{capabilities}->add('admin', 'can-akalink',   1);
     $self->{pbot}->{capabilities}->add('admin', 'can-akaunlink', 1);
+    $self->{pbot}->{capabilities}->add('admin', 'can-akadelete', 1);
 }
 
 sub cmd_list_also_known_as {
@@ -471,7 +473,7 @@ sub cmd_aka_link {
     $type = $self->{pbot}->{messagehistory}->{database}->{alias_type}->{STRONG} if not defined $type;
 
     if (not $id or not $alias) {
-        return "Usage: link <target id> <alias id> [type]";
+        return "Usage: akalink <target id> <alias id> [type]";
     }
 
     my $source = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($id);
@@ -498,7 +500,7 @@ sub cmd_aka_unlink {
     my ($id, $alias) = split /\s+/, $context->{arguments};
 
     if (not $id or not $alias) {
-        return "Usage: unlink <target id> <alias id>";
+        return "Usage: akaunlink <target id> <alias id>";
     }
 
     my $source = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($id);
@@ -517,6 +519,74 @@ sub cmd_aka_unlink {
     } else {
         return "Unlink failed.";
     }
+}
+
+sub cmd_aka_delete {
+    my ($self, $context) = @_;
+
+    my $usage = "Usage: akadelete [-hn] <account id or hostmask>; -h delete only hostmask; -n delete only nickserv";
+
+    if (not length $context->{arguments}) {
+        return $usage;
+    }
+
+    my ($delete_hostmask, $delete_nickserv);
+
+    my %opts = (
+        h  => \$delete_hostmask,
+        n  => \$delete_nickserv,
+    );
+
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $context->{arguments},
+        \%opts,
+        ['bundling_override'],
+        qw(h n),
+    );
+
+    return "/say $opt_error -- $usage"    if defined $opt_error;
+    return "Too many arguments -- $usage" if @$opt_args > 1;
+    return "Missing argument -- $usage"   if @$opt_args != 1;
+
+    my $id = $opt_args->[0];
+
+    my $hostmask;
+
+    if ($id !~ /^\d+$/) {
+        $hostmask = $id;
+        $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_id($hostmask);
+
+        if (not defined $id) {
+            return "No such hostmask $hostmask found.";
+        }
+    } else {
+        $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($id);
+
+        if (not defined $hostmask) {
+            return "No such id $id found.";
+        }
+    }
+
+    my @deletions;
+
+    if ($delete_hostmask) {
+        $self->{pbot}->{messagehistory}->{database}->delete_hostmask($id, $hostmask);
+        push @deletions, 'hostmask';
+    }
+
+    if ($delete_nickserv) {
+        $self->{pbot}->{messagehistory}->{database}->delete_nickserv_accounts($id);
+        $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($id, undef);
+        push @deletions, 'NickServ accounts';
+    }
+
+    if ($delete_hostmask || $delete_nickserv) {
+        return 'Deleted ' . (join ' and ', @deletions) . " from $hostmask ($id)";
+    }
+
+    $self->{pbot}->{messagehistory}->database->delete_account($id);
+
+    return "/say Deleted $hostmask ($id).";
 }
 
 1;
