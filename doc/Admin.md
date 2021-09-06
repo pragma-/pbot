@@ -630,14 +630,14 @@ Option | Description
 
 Sort by | Description
 --- | ---
-gecos    | GECOS field
-host     | host portion of hostmask
-hostmask | hostmask
-id       | account id
-nick     | nick portion of hostmask
-nickserv | NickServ account
-seen     | last seen timestamp
-user     | user portion of hostmask
+`gecos`    | GECOS field
+`host`     | host portion of hostmask
+`hostmask` | hostmask
+`id`       | account id
+`nick`     | nick portion of hostmask
+`nickserv` | NickServ account
+`seen`     | last seen timestamp
+`user`     | user portion of hostmask
 
 Examples:
 
