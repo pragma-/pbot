@@ -550,11 +550,11 @@ sub interpret {
 sub handle_result {
     my ($self, $context, $result) = @_;
 
-    # if passed, allow $result parameter to override contextual result
+    # use context result if no result argument given
     $result //= $context->{result};
 
     # ensure we have a command result to work with
-    return if not defined $result;
+    return if not defined $result or not length $result;
 
     # preservation of consecutive whitespace is disabled by default
     $context->{preserve_whitespace} //= 0;
