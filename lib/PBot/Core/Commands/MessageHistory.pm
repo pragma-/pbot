@@ -298,9 +298,13 @@ sub cmd_recall_message {
             $recall_count  = 0;
         }
 
-        if ($recall_before + $recall_after > 100) { return "You may only select up to 100 lines of surrounding context."; }
+        if ($recall_before + $recall_after > 100) {
+            return "You may only select up to 100 lines of surrounding context.";
+        }
 
-        if ($recall_count > 1 and ($recall_before > 0 or $recall_after > 0)) { return "The `count` and `before/after` options cannot be used together."; }
+        if ($recall_count > 1 && ($recall_before > 0 || $recall_after > 0)) {
+            return "The `count` and `before/after` options cannot be used together.";
+        }
 
         # swap nick and channel if recall nick looks like channel and channel wasn't specified
         if (not $channel_arg and $recall_nick =~ m/^#/) {

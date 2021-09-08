@@ -1021,8 +1021,7 @@ sub get_message_context {
         $search =~ s/\?/_/g;
 
         $messages_count = eval {
-            $sql .= 'AND msg LIKE ? ESCAPE "\" AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?';
-            my $sth = $self->{dbh}->prepare($sql);
+            my $sth = $self->{dbh}->prepare($sql . ' AND msg LIKE ? ESCAPE "\" AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
             my $param = 1;
             $sth->bind_param($param++, $message->{channel});
             map { $sth->bind_param($param++, $_) } keys %seen_id;
@@ -1038,8 +1037,7 @@ sub get_message_context {
 
     if (defined $before and $before > 0) {
         $messages_before = eval {
-            $sql .= ' AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?';
-            my $sth = $self->{dbh}->prepare($sql);
+            my $sth = $self->{dbh}->prepare($sql . ' AND timestamp < ? AND mode = 0 ORDER BY timestamp DESC LIMIT ?');
             my $param = 1;
             $sth->bind_param($param++, $message->{channel});
             map { $sth->bind_param($param++, $_) } keys %seen_id;
@@ -1054,8 +1052,7 @@ sub get_message_context {
 
     if (defined $after and $after > 0) {
         $messages_after = eval {
-            $sql .= ' AND timestamp > ? AND mode = 0 ORDER BY timestamp ASC LIMIT ?';
-            my $sth = $self->{dbh}->prepare($sql);
+            my $sth = $self->{dbh}->prepare($sql . ' AND timestamp > ? AND mode = 0 ORDER BY timestamp ASC LIMIT ?');
             my $param = 1;
             $sth->bind_param($param++, $message->{channel});
             map { $sth->bind_param($param++, $_) } keys %seen_id;
