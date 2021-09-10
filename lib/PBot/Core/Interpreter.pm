@@ -663,30 +663,6 @@ sub handle_result {
     # nothing more to do here if we have no result or keyword
     return 0 if not length $result or not exists $context->{keyword};
 
-    # set preserve_whitespace and use_output_queue
-    # TODO: this should be in Factoids.pm and update $context's flags
-
-    my $use_output_queue = 0;
-
-    if (not $self->{pbot}->{commands}->exists($context->{keyword})) {
-        my @factoids = $self->{pbot}->{factoids}->{data}->find($context->{from}, $context->{keyword},
-            arguments     => $context->{arguments},
-            exact_channel => 0,
-            exact_trigger => 0,
-            find_alias    => 1
-        );
-
-        if (@factoids == 1) {
-            my ($chan, $trigger) = ($factoids[0]->[0], $factoids[0]->[1]);
-
-            if ($context->{preserve_whitespace} == 0) {
-                $context->{preserve_whitespace} = $self->{pbot}->{factoids}->{data}->{storage}->get_data($chan, $trigger, 'preserve_whitespace') // 0;
-            }
-
-            $use_output_queue = $self->{pbot}->{factoids}->{data}->{storage}->get_data($chan, $trigger, 'use_output_queue') // 0;
-        }
-    }
-
     my $preserve_newlines = $self->{pbot}->{registry}->get_value($context->{from}, 'preserve_newlines');
 
     my $original_result = $result;
@@ -711,7 +687,7 @@ sub handle_result {
 
             my $message = "And that's all I have to say about that. See $link for full text.";
 
-            if ($use_output_queue) {
+            if ($context->{use_output_queue}) {
                 my $message = {
                     nick       => $context->{nick},
                     user       => $context->{user},
@@ -732,7 +708,7 @@ sub handle_result {
             last;
         }
 
-        if ($use_output_queue) {
+        if ($context->{use_output_queue}) {
             my $delay   = rand(10) + 5;
             my $message = {
                 nick       => $context->{nick},

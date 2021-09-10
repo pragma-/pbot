@@ -219,6 +219,16 @@ sub interpreter {
         return $usage;
     }
 
+    # turn on context->{use_output_queue}?
+    if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'use_output_queue')) {
+        $context->{use_output_queue} = 1;
+    }
+
+    # turn on context->{preserve_whitespace}?
+    if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'preserve_whitespace')) {
+        $context->{preserve_whitespace} = 1;
+    }
+
     # tell PBot::Core::Interpreter to prepend caller's nick to output
     if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'add_nick')) {
         $context->{add_nick} = 1;

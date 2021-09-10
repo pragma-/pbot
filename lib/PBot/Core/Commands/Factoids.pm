@@ -1112,8 +1112,12 @@ sub cmd_factfind {
         my $unquoted_args = $arguments;
         $unquoted_args =~ s/(?:\\(?!\\))//g;
         $unquoted_args =~ s/(?:\\\\)/\\/g;
-        if (not defined $argtype) { $argtype = "containing '$unquoted_args'"; }
-        else                      { $argtype .= " and containing '$unquoted_args'"; }
+
+        if (not defined $argtype) {
+            $argtype = "containing '$unquoted_args'";
+        } else {
+            $argtype .= " and containing '$unquoted_args'";
+        }
     }
 
     if (not defined $argtype) { return $usage; }
@@ -1128,8 +1132,10 @@ sub cmd_factfind {
     eval {
         use re::engine::RE2 -strict => 1;
         my $regex;
-        if ($use_regex) { $regex = $arguments; }
-        else {
+
+        if ($use_regex) {
+            $regex = $arguments;
+        } else {
             $regex = ($arguments =~ m/^\w/) ? '\b' : '\B';
             $regex .= quotemeta $arguments;
             $regex .= ($arguments =~ m/\w$/) ? '\b' : '\B';
