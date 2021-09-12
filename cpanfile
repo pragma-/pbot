@@ -37,6 +37,7 @@ requires 'IO::Socket::INET';
 requires 'IO::Socket::SSL';
 requires 'IPC::Run';
 requires 'JSON';
+requires 'JSON::XS';
 requires 'LWP::Protocol::https';
 requires 'LWP::UserAgent';
 requires 'LWP::UserAgent::Paranoid';
