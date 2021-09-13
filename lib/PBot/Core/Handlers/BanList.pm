@@ -91,11 +91,25 @@ sub compare_banlist {
         }
     }
 
+    my $save = 0;
+
     # add channel bans to saved bans
     foreach my $mask (keys %{$self->{temp_banlist}->{$channel}->{'+b'}}) {
+        my $owner     = $self->{temp_banlist}->{$channel}->{'+b'}->{$mask}->[0];
+        my $timestamp = $self->{temp_banlist}->{$channel}->{'+b'}->{$mask}->[1];
+
+        my $add = 0;
+
         my $data = $self->{pbot}->{banlist}->{banlist}->get_data($channel, $mask);
-        $data->{owner}     = $self->{temp_banlist}->{$channel}->{'+b'}->{$mask}->[0];
-        $data->{timestamp} = $self->{temp_banlist}->{$channel}->{'+b'}->{$mask}->[1];
+
+        # only update owner/timestamp if there's no existing entry or if the owner is a full hostmask.
+        # this prevents updating the owner/timestamp to a server value, losing information about who
+        # originally set the ban
+        if (!defined $data || $owner =~ /@/) {
+            $data->{owner}     = $owner;
+            $data->{timestamp} = $timestamp;
+            $add = 1;
+        }
 
         # make some special-case bans temporary
         if (not defined $data->{timeout} and $self->{pbot}->{chanops}->can_gain_ops($channel)) {
@@ -108,15 +122,19 @@ sub compare_banlist {
                 if ($timeout) {
                     $self->{pbot}->{logger}->log("Temp ban for $mask in $channel.\n");
                     $data->{timeout} = gettimeofday + $timeout;
+                    $add = 1;
                     $self->{pbot}->{banlist}->enqueue_unban($channel, 'b', $mask, $timeout);
                 }
             }
         }
 
-        $self->{pbot}->{banlist}->{banlist}->add($channel, $mask, $data, 1);
+        if ($add) {
+            $self->{pbot}->{banlist}->{banlist}->add($channel, $mask, $data, 1);
+            $save = 1;
+        }
     }
 
-    $self->{pbot}->{banlist}->{banlist}->save if keys %{$self->{temp_banlist}->{$channel}->{'+b'}};
+    $self->{pbot}->{banlist}->{banlist}->save if $save;
     delete $self->{temp_banlist}->{$channel}->{'+b'};
     return 1;
 }
@@ -138,15 +156,27 @@ sub compare_quietlist {
         }
     }
 
+    my $save = 0;
+
     # add channel bans to saved bans
     foreach my $mask (keys %{$self->{temp_banlist}->{$channel}->{"+$mute_char"}}) {
+        my $owner     = $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$mask}->[0];
+        my $timestamp = $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$mask}->[1];
+
         my $data = $self->{pbot}->{banlist}->{quietlist}->get_data($channel, $mask);
-        $data->{owner}     = $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$mask}->[0];
-        $data->{timestamp} = $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$mask}->[1];
-        $self->{pbot}->{banlist}->{quietlist}->add($channel, $mask, $data, 1);
+
+        # only update owner/timestamp if there's no existing entry or if the owner is a full hostmask.
+        # this prevents updating the owner/timestamp to a server value, losing information about who
+        # originally set the quiet
+        if (!defined $data || $owner =~ /@/) {
+            $data->{owner}     = $owner;
+            $data->{timestamp} = $timestamp;
+            $self->{pbot}->{banlist}->{quietlist}->add($channel, $mask, $data, 1);
+            $save = 1;
+        }
     }
 
-    $self->{pbot}->{banlist}->{quietlist}->save if keys %{$self->{temp_banlist}->{$channel}->{"+$mute_char"}};
+    $self->{pbot}->{banlist}->{quietlist}->save if $save;
     delete $self->{temp_banlist}->{$channel}->{"+$mute_char"};
     return 1;
 }
@@ -170,15 +200,28 @@ sub on_modeflag {
     if ($mode eq "+b" or $mode eq "+$mute_char") {
         $self->{pbot}->{logger}->log("Ban List: $mask " . ($mode eq '+b' ? 'banned' : 'muted') . " by $source in $channel.\n");
 
-        my $data = {
-            owner => $source,
-            timestamp => scalar gettimeofday,
-        };
-
         if ($mode eq "+b") {
-            $self->{pbot}->{banlist}->{banlist}->add($channel, $mask, $data);
+            my $data = $self->{pbot}->{banlist}->{banlist}->get_data($channel, $mask);
+
+            # only update owner/timestamp if there's no existing entry or if the source is a full hostmask.
+            # this prevents updating the owner/timestamp to a server value, losing information about who
+            # originally set it
+            if (!defined $data || $source =~ /@/) {
+                $data->{owner}     = $source;
+                $data->{timestamp} = scalar gettimeofday;
+                $self->{pbot}->{banlist}->{banlist}->add($channel, $mask, $data);
+            }
         } elsif ($mode eq "+$mute_char") {
-            $self->{pbot}->{banlist}->{quietlist}->add($channel, $mask, $data);
+            my $data = $self->{pbot}->{banlist}->{quietlist}->get_data($channel, $mask);
+
+            # only update owner/timestamp if there's no existing entry or if the source is a full hostmask.
+            # this prevents updating the owner/timestamp to a server value, losing information about who
+            # originally set it
+            if (!defined $data || $source =~ /@/) {
+                $data->{owner}     = $source;
+                $data->{timestamp} = scalar gettimeofday;
+                $self->{pbot}->{banlist}->{quietlist}->add($channel, $mask, $data);
+            }
         }
 
         $self->{pbot}->{antiflood}->devalidate_accounts($mask, $channel);
