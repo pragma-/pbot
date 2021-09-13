@@ -98,7 +98,7 @@ sub cmd_checkban {
     return "Usage: checkban <mask> [channel]" if not defined $target;
     $channel = $context->{from} if not defined $channel;
 
-    return "Please specify a channel." if $channel !~ /^#/;
+    return "Channel must be specified in /msg; usage: checkban <mask> <channel>" if $channel !~ /^#/;
     return $self->{pbot}->{banlist}->checkban($channel, 'b', $target);
 }
 
@@ -109,7 +109,7 @@ sub cmd_checkmute {
     return "Usage: checkmute <mask> [channel]" if not defined $target;
     $channel = $context->{from} if not defined $channel;
 
-    return "Please specify a channel." if $channel !~ /^#/;
+    return "Channel must be specified in /msg; usage: checkmute <mask> <channel>" if $channel !~ /^#/;
     return $self->{pbot}->{banlist}->checkban($channel, $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char'), $target);
 }
 

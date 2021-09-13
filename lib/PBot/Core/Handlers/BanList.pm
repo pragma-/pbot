@@ -16,25 +16,27 @@ use Time::Duration;
 
 sub initialize {
     my ($self, %conf) = @_;
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.endofnames',     sub { $self->get_banlist(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.endofnames',     sub { $self->on_endofnames(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.banlist',        sub { $self->on_banlist_entry(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quietlist',      sub { $self->on_quietlist_entry(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.endofbanlist',   sub { $self->compare_banlist(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.endofquietlist', sub { $self->compare_quietlist(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.endofbanlist',   sub { $self->on_endofbanlist(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.endofquietlist', sub { $self->on_endofquietlist(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.modeflag',       sub { $self->on_modeflag(@_) });
 
     $self->{mute_char} = $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char');
 }
 
-# irc.endofnames
-sub get_banlist {
+# typically, immediately after joining a channel...
+sub on_endofnames {
     my ($self, $event_type, $event) = @_;
 
     my $channel = lc $event->{event}->{args}[1];
 
     $self->{pbot}->{logger}->log("Retrieving banlist for $channel.\n");
 
-    delete $self->{temp_banlist};
+    # banlist cache temporarily holds the banlist/quietlist entries until
+    # irc.endofbanlist and irc.endofquietlist are received.
+    delete $self->{banlist_cache};
 
     my $mute_char = $self->{mute_char};
 
@@ -57,7 +59,7 @@ sub on_banlist_entry {
 
     my $ago = concise ago(gettimeofday - $timestamp);
     $self->{pbot}->{logger}->log("Ban List: [banlist entry] $channel: $target banned by $source $ago.\n");
-    $self->{temp_banlist}->{$channel}->{'+b'}->{$target} = [$source, $timestamp];
+    $self->{banlist_cache}->{$channel}->{'+b'}->{$target} = [$source, $timestamp];
     return 1;
 }
 
@@ -72,18 +74,17 @@ sub on_quietlist_entry {
     my $ago = concise ago(gettimeofday - $timestamp);
     $self->{pbot}->{logger}->log("Ban List: [quietlist entry] $channel: $target quieted by $source $ago.\n");
     my $mute_char = $self->{mute_char};
-    $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$target} = [$source, $timestamp];
+    $self->{banlist_cache}->{$channel}->{"+$mute_char"}->{$target} = [$source, $timestamp];
     return 1;
 }
 
-# irc.endofbanlist
-sub compare_banlist {
+sub on_endofbanlist {
     my ($self, $event_type, $event) = @_;
     my $channel = lc $event->{event}->{args}[1];
 
     # first check for saved bans no longer in channel
     foreach my $mask ($self->{pbot}->{banlist}->{banlist}->get_keys($channel)) {
-        if (not exists $self->{temp_banlist}->{$channel}->{'+b'}->{$mask}) {
+        if (not exists $self->{banlist_cache}->{$channel}->{'+b'}->{$mask}) {
             $self->{pbot}->{logger}->log("BanList: Saved ban +b $mask no longer exists in $channel.\n");
             # TODO option to restore ban
             $self->{pbot}->{banlist}->{banlist}->remove($channel, $mask, undef, 1);
@@ -94,9 +95,9 @@ sub compare_banlist {
     my $save = 0;
 
     # add channel bans to saved bans
-    foreach my $mask (keys %{$self->{temp_banlist}->{$channel}->{'+b'}}) {
-        my $owner     = $self->{temp_banlist}->{$channel}->{'+b'}->{$mask}->[0];
-        my $timestamp = $self->{temp_banlist}->{$channel}->{'+b'}->{$mask}->[1];
+    foreach my $mask (keys %{$self->{banlist_cache}->{$channel}->{'+b'}}) {
+        my $owner     = $self->{banlist_cache}->{$channel}->{'+b'}->{$mask}->[0];
+        my $timestamp = $self->{banlist_cache}->{$channel}->{'+b'}->{$mask}->[1];
 
         my $add = 0;
 
@@ -105,7 +106,7 @@ sub compare_banlist {
         # only update owner/timestamp if there's no existing entry or if the owner is a full hostmask.
         # this prevents updating the owner/timestamp to a server value, losing information about who
         # originally set the ban
-        if (!defined $data || $owner =~ /@/) {
+        if (!defined $data || $owner =~ /^.+!.+@.+$/) {
             $data->{owner}     = $owner;
             $data->{timestamp} = $timestamp;
             $add = 1;
@@ -135,12 +136,11 @@ sub compare_banlist {
     }
 
     $self->{pbot}->{banlist}->{banlist}->save if $save;
-    delete $self->{temp_banlist}->{$channel}->{'+b'};
+    delete $self->{banlist_cache}->{$channel}->{'+b'};
     return 1;
 }
 
-# irc.endofquietlist
-sub compare_quietlist {
+sub on_endofquietlist {
     my ($self, $event_type, $event) = @_;
     my $channel = lc $event->{event}->{args}[1];
 
@@ -148,7 +148,7 @@ sub compare_quietlist {
 
     # first check for saved quiets no longer in channel
     foreach my $mask ($self->{pbot}->{banlist}->{quietlist}->get_keys($channel)) {
-        if (not exists $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$mask}) {
+        if (not exists $self->{banlist_cache}->{$channel}->{"+$mute_char"}->{$mask}) {
             $self->{pbot}->{logger}->log("BanList: Saved quiet +q $mask no longer exists in $channel.\n");
             # TODO option to restore quiet
             $self->{pbot}->{banlist}->{quietlist}->remove($channel, $mask, undef, 1);
@@ -159,16 +159,16 @@ sub compare_quietlist {
     my $save = 0;
 
     # add channel bans to saved bans
-    foreach my $mask (keys %{$self->{temp_banlist}->{$channel}->{"+$mute_char"}}) {
-        my $owner     = $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$mask}->[0];
-        my $timestamp = $self->{temp_banlist}->{$channel}->{"+$mute_char"}->{$mask}->[1];
+    foreach my $mask (keys %{$self->{banlist_cache}->{$channel}->{"+$mute_char"}}) {
+        my $owner     = $self->{banlist_cache}->{$channel}->{"+$mute_char"}->{$mask}->[0];
+        my $timestamp = $self->{banlist_cache}->{$channel}->{"+$mute_char"}->{$mask}->[1];
 
         my $data = $self->{pbot}->{banlist}->{quietlist}->get_data($channel, $mask);
 
         # only update owner/timestamp if there's no existing entry or if the owner is a full hostmask.
         # this prevents updating the owner/timestamp to a server value, losing information about who
         # originally set the quiet
-        if (!defined $data || $owner =~ /@/) {
+        if (!defined $data || $owner =~ /^.+!.+@.+$/) {
             $data->{owner}     = $owner;
             $data->{timestamp} = $timestamp;
             $self->{pbot}->{banlist}->{quietlist}->add($channel, $mask, $data, 1);
@@ -177,7 +177,7 @@ sub compare_quietlist {
     }
 
     $self->{pbot}->{banlist}->{quietlist}->save if $save;
-    delete $self->{temp_banlist}->{$channel}->{"+$mute_char"};
+    delete $self->{banlist_cache}->{$channel}->{"+$mute_char"};
     return 1;
 }
 
@@ -206,7 +206,7 @@ sub on_modeflag {
             # only update owner/timestamp if there's no existing entry or if the source is a full hostmask.
             # this prevents updating the owner/timestamp to a server value, losing information about who
             # originally set it
-            if (!defined $data || $source =~ /@/) {
+            if (!defined $data || $source =~ /^.+!.+@.+$/) {
                 $data->{owner}     = $source;
                 $data->{timestamp} = scalar gettimeofday;
                 $self->{pbot}->{banlist}->{banlist}->add($channel, $mask, $data);
@@ -217,7 +217,7 @@ sub on_modeflag {
             # only update owner/timestamp if there's no existing entry or if the source is a full hostmask.
             # this prevents updating the owner/timestamp to a server value, losing information about who
             # originally set it
-            if (!defined $data || $source =~ /@/) {
+            if (!defined $data || $source =~ /^.+!.+@.+$/) {
                 $data->{owner}     = $source;
                 $data->{timestamp} = scalar gettimeofday;
                 $self->{pbot}->{banlist}->{quietlist}->add($channel, $mask, $data);

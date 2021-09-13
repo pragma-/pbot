@@ -97,9 +97,7 @@ sub checkban {
 
 sub is_ban_exempted {
     my ($self, $channel, $hostmask) = @_;
-    $channel  = lc $channel;
-    $hostmask = lc $hostmask;
-    return 1 if $self->{'ban-exemptions'}->exists($channel, $hostmask);
+    return 1 if $self->{'ban-exemptions'}->exists(lc $channel, lc $hostmask);
     return 0;
 }
 
@@ -286,8 +284,11 @@ sub get_baninfo {
     foreach my $entry (@lists) {
         my ($mode, $list) = @$entry;
         foreach my $banmask ($list->get_keys($channel)) {
-            if   ($banmask =~ m/^\$a:(.*)/) { $ban_nickserv = lc $1; }
-            else                            { $ban_nickserv = ""; }
+            if ($banmask =~ m/^\$a:(.*)/) {
+                $ban_nickserv = lc $1;
+            } else {
+                $ban_nickserv = '';
+            }
 
             my $banmask_regex = quotemeta $banmask;
             $banmask_regex =~ s/\\\*/.*?/g;
@@ -338,16 +339,19 @@ sub nick_to_banmask {
         }
     }
 
-    # make sure $mask always has full wildcards
-    # there's probably a better way to do this...
-    if ($mask !~ /^\$/) {
-        if ($mask !~ /!/) {
-            $mask .= '!*@*';
-        } elsif ($mask !~ /@/) {
-            $mask =~ s/\*?$/*@*/;
-        } else {
-            $mask =~ s/\@$/@*/;
-        }
+    # $a:account, etc, don't need wildcards appended
+    if ($mask =~ /^\$/) {
+        return $mask;
+    }
+
+    # ensure $mask is a complete hostmask by appending missing bits with wildcards
+    if ($mask !~ /!/) {
+        $mask .= '!*@*';
+    } elsif ($mask !~ /@/) {
+        $mask =~ s/\*?$/*@*/;
+    } else {
+        # TODO find out if/where this weird case happens and why...
+        $mask =~ s/\@$/@*/;
     }
 
     return $mask;
