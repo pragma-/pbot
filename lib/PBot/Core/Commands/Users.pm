@@ -393,18 +393,11 @@ sub cmd_id {
             return "I don't know anybody matching hostmask $target.";
         } elsif (@accounts > 1) {
             # found more than one account, list them
-            my %users;
-
-            foreach my $account (@accounts) {
-                next if exists $users{$account};
-                my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($account);
-                $users{$account} = $hostmask;
-            }
-
             my @hostmasks;
 
-            foreach my $id (keys %users) {
-                push @hostmasks, "$users{$id} ($id)";
+            foreach my $account (@accounts) {
+                my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($account);
+                push @hostmasks, "$hostmask ($account)";
             }
 
             return "Found multiple accounts: " . (join ', ', sort @hostmasks);
