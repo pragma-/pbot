@@ -378,17 +378,20 @@ sub find_message_accounts_by_nickserv {
 }
 
 sub find_message_accounts_by_mask {
-    my ($self, $mask) = @_;
+    my ($self, $mask, $limit) = @_;
+
+    $limit //= 100;
 
     my $qmask = quotemeta $mask;
     $qmask =~ s/_/\\_/g;
+    $qmask =~ s/\\\./_/g;
     $qmask =~ s/\\\*/%/g;
     $qmask =~ s/\\\?/_/g;
     $qmask =~ s/\\\$.*$//;
 
     my $accounts = eval {
-        my $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\"');
-        $sth->execute($qmask);
+        my $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE hostmask LIKE ? ESCAPE "\" LIMIT ?');
+        $sth->execute($qmask, $limit);
         return $sth->fetchall_arrayref();
     };
     $self->{pbot}->{logger}->log($@) if $@;

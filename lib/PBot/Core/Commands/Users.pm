@@ -383,6 +383,36 @@ sub cmd_id {
         $hostmask = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_id($target);
         return "I don't know anybody with id $target." if not $hostmask;
         $message_account = $target;
+    } elsif ($target =~ m/[!@]/) {
+        my @accounts = $self->{pbot}->{messagehistory}->{database}->find_message_accounts_by_mask($target, 20);
+
+        my %seen;
+        @accounts = grep !$seen{$_}++, @accounts;
+
+        if (not @accounts) {
+            return "I don't know anybody matching hostmask $target.";
+        } elsif (@accounts > 1) {
+            # found more than one account, list them
+            my %users;
+
+            foreach my $account (@accounts) {
+                next if exists $users{$account};
+                my $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($account);
+                $users{$account} = $hostmask;
+            }
+
+            my @hostmasks;
+
+            foreach my $id (keys %users) {
+                push @hostmasks, "$users{$id} ($id)";
+            }
+
+            return "Found multiple accounts: " . (join ', ', sort @hostmasks);
+        } else {
+            # found just one account, we'll use it
+            $message_account = $accounts[0];
+            $hostmask = $self->{pbot}->{messagehistory}->{database}->find_most_recent_hostmask($accounts[0]);
+        }
     } else {
         ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($target);
         return "I don't know anybody named $target." if not $message_account;
