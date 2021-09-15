@@ -767,7 +767,7 @@ Examples:
 ### akalink
 PBot's message history has an advanced user-tracking algorithm in order to ensure that
 messages are being stored in the right message history accounts. But sometimes
-users connect from wholly distinct accounts with no obviously linkable metadata. But if
+users connect from wholly distinct accounts with no obviously linkable metadata. If
 you know for certain that they are the same individual, you can use the `akalink`
 command to manually link two message history accounts together.
 
