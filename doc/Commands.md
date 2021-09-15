@@ -14,6 +14,7 @@
   * [Background processing](#background-processing)
 * [Types of commands](#types-of-commands)
   * [Built-in commands](#built-in-commands)
+    * [Listing all built-in commands](#listing-all-built-in-commands)
     * [Creating new built-in commands](#creating-new-built-in-commands)
     * [Plugins](#plugins)
     * [Functions](#functions)
@@ -58,6 +59,10 @@
       * [unban/unmute](Admin.md#unbanunmute)
       * [invite](Admin.md#invite)
       * [kick](Admin.md#kick)
+      * [nicklist](Admin.md#nicklist)
+      * [banlist](Admin.md#banlist)
+      * [checkban](Admin.md#checkban)
+      * [checkmute](Admin.md#checkmute)
     * [Module-management](#module-management)
       * [load](Admin.md#load)
       * [unload](Admin.md#unload)
@@ -360,6 +365,12 @@ Built-in commands are commands that are internal and native to PBot. They are
 executed within PBot's API and context. They have access to PBot internal
 subroutine and data structures.
 
+#### Listing all built-in commands
+To list all built-in commands, use the `list commands` command.
+
+Commands prefixed with a `+` require the user to have the respective `can-<command>`
+user-capability in order to invoke it.
+
 #### Creating new built-in commands
 Built-in commands are created via the `register()` function of the `Commands`
 module. Such commands are registered throughout PBot's source code. The owner
@@ -540,15 +551,17 @@ to have the command remember your location.
 ##### [unban/unmute](Admin.md#unbanunmute)
 ##### [invite](Admin.md#invite)
 ##### [kick](Admin.md#kick)
+##### [nicklist](Admin.md#nicklist)
+##### [banlist](Admin.md#banlist)
+##### [checkban](Admin.md#checkban)
+##### [checkmute](Admin.md#checkmute)
 
 #### Module-management
-
 ##### [load](Admin.md#load)
 ##### [unload](Admin.md#unload)
 ##### [list modules](Admin.md#listing-modules)
 
 #### Plugin-management
-
 ##### [plug](Admin.md#plug)
 ##### [unplug](Admin.md#unplug)
 ##### [replug](Admin.md#replug)

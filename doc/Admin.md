@@ -34,6 +34,10 @@
   * [ignore](#ignore)
   * [unignore](#unignore)
   * [blacklist](#blacklist)
+  * [nicklist](Admin.md#nicklist)
+  * [banlist](Admin.md#banlist)
+  * [checkban](Admin.md#checkban)
+  * [checkmute](Admin.md#checkmute)
   * [op](#op)
   * [deop](#deop)
   * [voice](#voice)
@@ -416,6 +420,55 @@ Usages:
 - `blacklist <show/list>`
 - `blacklist add <hostmask regex> [channel]`
 - `blacklist remove <hostmask regex> [channel]`
+
+### [nicklist](Admin.md#nicklist)
+The `nicklist` command displays information about entries in PBot's internal nicklist.
+
+Usage: `nicklist (<channel [nick]> | <nick>) [-sort <by>] [-hostmask] [-join]`
+
+Option | Description
+--- | ---
+`-hostmask` | shows full hostmasks instead of nicks
+`-join` | include join timestamps
+
+Examples:
+
+    <pragma-> nicklist #c
+       <PBot> 701 nicks in #c: pragma-: last spoken 1h ago, etc...
+
+    <pragma-> nicklist #c pragma-
+       <PBot> Nicklist information for pragma-!~chaos@user/pragmatic-chaos in #c: last spoken 1h ago, etc...
+
+### [banlist](Admin.md#banlist)
+The `banlist` command displays information about entries in PBot's internal banlist.  PBot's internal banlist
+remembers the original setters and timestamps of ban entries when the IRC server forgets them. PBot's internal
+banlist can store extra metadata such as ban-reasons, ban-timeouts, etc.
+
+Usage: `banlist <channel>`
+
+Example:
+
+    <pragma-> banlist #c
+       <PBot> Ban list for #c: 1 ban: loser!*@* on Tue Aug 31 06:41:24 2021 PDT (14d15h ago) by candide!~pbot3@about/c/bot/candide for chat-flooding (2h remaining); 0 mutes.
+
+### [checkban](Admin.md#checkban)
+The `checkban` command displays information about an entry in PBot's internal banlist. PBot's internal banlist
+remembers the original setters and timestamps of ban entries when the IRC server forgets them. PBot's internal
+banlist can store extra metadata such as ban-reasons, ban-timeouts, etc.
+
+Usage: `checkban <mask> [channel]`
+
+If the `[channel]` option is omitted, the channel in which the command is invoked will be used.
+
+Example:
+
+    <pragma-> checkban loser!*@*
+       <PBot> loser!*@* banned in #c on Tue Aug 31 06:41:24 2021 PDT (14d15h ago) by candide!~pbot3@about/c/bot/candide for chat-flooding (2h remaining)
+
+### [checkmute](Admin.md#checkmute)
+The `checkmute` command is identical to the [`checkban`](#checkban) command, except for mutes instead of bans.
+
+Usage: checkban <mask> [channel]
 
 ### op
 ### deop
