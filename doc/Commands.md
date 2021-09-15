@@ -21,6 +21,7 @@
   * [Factoids](#factoids)
     * [Code Factoids](#code-factoids)
     * [Modules](#modules)
+      * [Listing all loaded modules](#listing-all-loaded-modules)
 * [Commands documented here](#commands-documented-here)
   * [version](#version)
   * [help](#help)
@@ -435,6 +436,12 @@ a PBot module.
 * Modules do not have access to PBot internal API functions and data structures
 
 For more information, see the [Modules documentation.](Modules.md)
+
+##### Listing all loaded modules
+To list all of the currently loaded modules, use the `list modules` command.
+
+    <pragma-> list modules
+       <PBot> Loaded modules: ago bashfaq bashpf c11std c2english c99std cdecl cfact cfaq ... etc.
 
 ## Commands documented here
 These are the commands documented in this file. For commands documented in
