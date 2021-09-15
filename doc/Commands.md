@@ -369,7 +369,10 @@ subroutine and data structures.
 To list all built-in commands, use the `list commands` command.
 
 Commands prefixed with a `+` require the user to have the respective `can-<command>`
-user-capability in order to invoke it.
+[user-capability](Admin.md#user-capabilities) in order to invoke it.
+
+    <pragma-> list commands
+       <PBot> Registered commands: +actiontrigger aka +akadelete +akalink +akaunlink +antispam +ban +ban-exempt banlist battleship +blacklist cap +chanadd +chanlist ... etc
 
 #### Creating new built-in commands
 Built-in commands are created via the `register()` function of the `Commands`
