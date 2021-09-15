@@ -4,7 +4,7 @@
 * [Logging in and out](#logging-in-and-out)
   * [login](#login)
   * [logout](#logout)
-* [User management commands](#user-management-commands)
+* [User-management commands](#user-management-commands)
   * [useradd](#useradd)
   * [userdel](#userdel)
   * [userset](#userset)
@@ -43,11 +43,11 @@
   * [unban/unmute](#unbanunmute)
   * [invite](#invite)
   * [kick](#kick)
-* [Module management commands](#module-management-commands)
+* [Module-management commands](#module-management-commands)
   * [load](#load)
   * [unload](#unload)
   * [Listing modules](#listing-modules)
-* [Plugin management commands](#plugin-management-commands)
+* [Plugin-management commands](#plugin-management-commands)
   * [plug](#plug)
   * [unplug](#unplug)
   * [replug](#replug)
@@ -56,12 +56,14 @@
   * [cmdset](#cmdset)
   * [cmdunset](#cmdunset)
   * [Command metadata list](#command-metadata-list)
-* [Event queue management](#event-queue-management)
+* [Event-queue management](#event-queue-management)
   * [eventqueue](#eventqueue)
-* [Process management commands](#process-management-commands)
+* [Process-management commands](#process-management-commands)
   * [ps](#ps)
   * [kill](#kill)
-* [Message history commands](#message-history-commands)
+* [Message-history/user-tracking commands](#message-historyuser-tracking-commands)
+  * [recall](#recall)
+  * [id](#id)
   * [aka](#aka)
   * [akalink](#akalink)
   * [akaunlink](#akaunlink)
@@ -91,7 +93,7 @@ Logs out of PBot.
 
 Usage: `logout`
 
-## User management commands
+## User-management commands
 ### useradd
 Adds a new user to PBot.
 
@@ -478,7 +480,7 @@ Removes a user from the channel. `<nick>` can be a comma-separated list of multi
 Usage from channel:   `kick <nick> [reason]`
 From private message: `kick <channel> <nick> [reason]`
 
-## Module management commands
+## Module-management commands
 Note that modules are "reloaded" each time they are executed. There is no need to `refresh` after editing a module.
 
 ### load
@@ -503,7 +505,7 @@ it is included here for completeness.
 
 Usage: `list modules`
 
-## Plugin management commands
+## Plugin-management commands
 ### plug
 Loads a plugin into PBot.
 
@@ -552,7 +554,7 @@ Name | Description
 `background-process` | When set to a true value then this command will be executed as a background process. Use this for commands that can potentially take a long time to complete.
 `process-timeout` | The timeout, in seconds, before the process is automatically killed. If not set then the `processmanager.default_timeout` [registry](Registry.md) value will be used.
 
-## Event queue management
+## Event-queue management
 ### eventqueue
 PBot uses an event queue to schedule future tasks or commands. The `eventqueue` command can
 be used to list or remove upcoming events. It can also be used to schedule a command.
@@ -581,7 +583,7 @@ Or to remove all `command` events in `#channel`:
 
     <pragma-> eventqueue remove command #channel *
 
-## Process management commands
+## Process-management commands
 ### ps
 Lists all currently running background processes.
 
@@ -607,12 +609,66 @@ Option | Description
 
 If neither options `-a` or `-t` are provided then the `pids...` option is required.
 
-## Message history commands
+## Message-history/user-tracking commands
 Message history has an advanced user tracking algorithm in order to ensure that
 messages are being stored in the right message history accounts. The following commands
 query and manipulate the message history account links.
 
 Note that "message history account" and "PBot user account" are distinct accounts.
+
+### recall
+The `recall` command queries the message history and displays matching results.
+
+Usage: `recall [nick [history [channel]]] [-c <channel>] [-t <text>] [-b <context before>] [-a <context after>] [-x <filter to nick>] [-n <count>] [-r raw mode] [+ ...]`
+
+You can chain multiple recalls together with the `+` operator.
+
+Option | Description
+--- | ---
+`-c <channel>` | Filter to messages only in `<channel>`
+`-t <text>` | Filter to messages containing `<text>`
+`-b <context before>` | Show `<context before>` (integral) count messages appearing immediately before matching messages
+`-a <context after>` | Show `<context after>` (integral) count messages appearing immediately after matching messages
+`-x <filter to nick>` | Filter messages to only those spoken by `<filter to nick>`
+`-n <count>` | Limit results to `<count>` (integral); implies `-x`
+`-r` | Show only the message without any nickname or timestamp prefixes
+
+Examples:
+
+    <pragma-> hello
+       <garp> hi there
+       <john> hey
+    <pragma-> PBot: recall garp
+       <PBot> [20s ago] <garp> hi there
+     <pragma> PBot: recall garp -b1 -a1
+       <PBot> [35s ago] <pragma-> hello [20s ago] <garp> hi there [10s ago] <john> hey
+     <pragma> PBot: recall -t hey
+       <PBot> [10s ago] <john> hey
+
+### id
+The `id` command lists various user-tracking and user-account metadata about a user hostmask.
+
+Usage: `id [nickname | hostmask | message account id]`
+
+If no argument is provided, your own id information will be shown. The `hostmask` form accepts wildcards.
+The `message account id` form is an integer.
+
+Examples:
+
+    <pragma-> id
+       <PBot> pragma- (pragma-!~chaos@user/pragmatic-chaos): user id: 2; user account: pragma- (logged in); NickServ: pragma-
+
+    <pragma-> id pragma-
+       <PBot> pragma- (pragma-!~chaos@user/pragmatic-chaos): user id: 2; user account: pragma- (logged in); NickServ: pragma-
+
+    <pragma-> id 2
+       <PBot> pragma- (pragma-!~chaos@user/pragmatic-chaos): user id: 2; user account: pragma- (logged in); NickServ: pragma-
+
+    <pragma-> id *!*@*/pragmatic-chaos
+       <PBot> pragma- (pragma-!~chaos@user/pragmatic-chaos): user id: 2; user account: pragma- (logged in); NickServ: pragma-
+
+    <pragma-> id *!*@user/*
+       <PBot> Multiple accounts found: PBot!pbot3@user/pbot (1), pragma-!~chaos@user/pragmatic-chaos (2), ...
 
 ### aka
 The `aka` command lists all known aliases for a given message history account.
@@ -623,7 +679,7 @@ Option | Description
 --- | ---
 `-h` | show hostmasks
 `-i` | show ids
-`-l` | show last seen
+`-l` | show last seen timestamps
 `-n` | show nickserv accounts
 `-g` | show gecos
 `-r` | show relationships
@@ -654,7 +710,7 @@ Usage: `akalink <target id> <alias id> [type]`
 
 The optional `type` argument can be `0` (weak) or `1` (strong). Defaults to `1`.
 
-Use the `id` command to look up message history account ids for a given hostmask.
+Use the [`id`](#id) command to look up message history account ids for a given hostmask.
 
 ### akaunlink
 The `akaunlink` command manually unlinks two message history accounts from each other.

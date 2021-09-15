@@ -21,6 +21,7 @@ Name | Description
 --- | ---
 `uri_escape` | Percent-encodes unsafe URI characters.
 `sed` | Performs sed-like regex substitution.
+`grep` | Searches a string, using a regex, and prints the matching whole-word (e.g. `echo pizza hamburger hotdog \| {grep burger}` outputs `hamburger`).
 `pluralize` | Intelligently makes a word or phrase plural.
 `unquote` | Removes surrounding quotation marks.
 `title` | Title-cases text. That is, lowercases the text then uppercases the first letter of each word.
@@ -28,4 +29,5 @@ Name | Description
 `uc` | Uppercases all characters.
 `lc` | Lowercases all characters.
 
-Additional Functions can be loaded via PBot Plugins.
+Additional Functions can be loaded via PBot Plugins. For examples, see [Plugin/FuncBuiltins.pm](../lib/PBot/Plugin/FuncBuiltins.pm) and
+[Plugin/FuncGrep.pm](../lib/PBot/Plugin/FuncGrep.pm).
