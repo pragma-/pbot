@@ -765,7 +765,11 @@ Examples:
        <PBot> bob also known as: bob!~bob@user/bob (seen 5m ago), bobby!~bob@user/bob (seen 6d ago), robert!~bob@127.0.0.1 (seen 20d ago)
 
 ### akalink
-The `akalink` command manually links two message history accounts together.
+PBot's message history has an advanced user-tracking algorithm in order to ensure that
+messages are being stored in the right message history accounts. But sometimes
+users connect from wholly distinct accounts with no obviously linkable metadata. But if
+you know for certain that they are the same individual, you can use the `akalink`
+command to manually link two message history accounts together.
 
 Usage: `akalink <target id> <alias id> [type]`
 
