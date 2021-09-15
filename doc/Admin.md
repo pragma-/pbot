@@ -428,8 +428,16 @@ Usage: `nicklist (<channel [nick]> | <nick>) [-sort <by>] [-hostmask] [-join]`
 
 Option | Description
 --- | ---
+`-sort <by>` | sorts results by `<by>`
 `-hostmask` | shows full hostmasks instead of nicks
 `-join` | include join timestamps
+
+Sort method | Description
+--- | ---
+host | Sort by host portion of hostmask
+join | Sort by channel join timestamp
+nick | Sort by nick
+spoken | Sort by last spoken timestamp
 
 Examples:
 
