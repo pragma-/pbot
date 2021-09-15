@@ -28,17 +28,17 @@
   * [date](#date)
   * [weather](#weather)
 * [Commands documented elsewhere](#commands-documented-elsewhere)
-  * [Administrative commands](#administrative-commands)
+  * [Administrative](#administrative)
     * [Logging in and out of PBot](#logging-in-and-out-of-pbot)
       * [login](Admin.md#login)
       * [logout](Admin.md#logout)
-    * [User-management commands](#user-management-commands)
+    * [User-management](#user-management)
       * [useradd](Admin.md#useradd)
       * [userdel](Admin.md#userdel)
       * [userset](Admin.md#userset)
       * [userunset](Admin.md#userunset)
       * [users](Admin.md#listing-users)
-    * [Channel-management commands](#channel-management-commands)
+    * [Channel-management](#channel-management)
       * [join](Admin.md#join)
       * [part](Admin.md#part)
       * [chanadd](Admin.md#chanadd)
@@ -58,11 +58,11 @@
       * [unban/unmute](Admin.md#unbanunmute)
       * [invite](Admin.md#invite)
       * [kick](Admin.md#kick)
-    * [Module-management commands](#module-management-commands)
+    * [Module-management](#module-management)
       * [load](Admin.md#load)
       * [unload](Admin.md#unload)
       * [list modules](Admin.md#listing-modules)
-    * [Plugin-management commands](#plugin-management-commands)
+    * [Plugin-management](#plugin-management)
       * [plug](Admin.md#plug)
       * [unplug](Admin.md#unplug)
       * [replug](Admin.md#replug)
@@ -72,10 +72,10 @@
       * [cmdunset](Admin.md#cmdunset)
     * [Event-queue management](#event-queue-management)
       * [eventqueue](Admin.md#eventqueue)
-    * [Process-management commands](#process-management-commands)
+    * [Process-management](#process-management)
       * [ps](Admin.md#ps)
       * [kill](Admin.md#kill)
-    * [Registry commands](#registry-commands)
+    * [Registry](#registry)
       * [regset](Registry.md#regset)
       * [regunset](Registry.md#regunset)
       * [regchange](Registry.md#regchange)
@@ -83,7 +83,7 @@
       * [regfind](Registry.md#regfind)
       * [regsetmeta](Registry.md#regsetmeta)
       * [regunsetmeta](Registry.md#regunsetmeta)
-    * [Message-history/user-tracking commands](#message-historyuser-tracking-commands)
+    * [Message-history/user-tracking](#message-historyuser-tracking)
       * [recall](Admin.md#recall)
       * [aka](Admin.md#aka)
       * [akalink](Admin.md#akalink)
@@ -508,19 +508,19 @@ to have the command remember your location.
               Forecast: High: 72F/22C Low: 53F/11C Warmer with sunshine
 
 ## Commands documented elsewhere
-### Administrative commands
+### Administrative
 #### Logging in and out of PBot
 ##### [login](Admin.md#login)
 ##### [logout](Admin.md#logout)
 
-#### User-management commands
+#### User-management
 ##### [useradd](Admin.md#useradd)
 ##### [userdel](Admin.md#userdel)
 ##### [userset](Admin.md#userset)
 ##### [userunset](Admin.md#userunset)
 ##### [users](Admin.md#listing-users)
 
-#### Channel-management commands
+#### Channel-management
 ##### [join](Admin.md#join)
 ##### [part](Admin.md#part)
 ##### [chanadd](Admin.md#chanadd)
@@ -541,13 +541,13 @@ to have the command remember your location.
 ##### [invite](Admin.md#invite)
 ##### [kick](Admin.md#kick)
 
-#### Module-management commands
+#### Module-management
 
 ##### [load](Admin.md#load)
 ##### [unload](Admin.md#unload)
 ##### [list modules](Admin.md#listing-modules)
 
-#### Plugin-management commands
+#### Plugin-management
 
 ##### [plug](Admin.md#plug)
 ##### [unplug](Admin.md#unplug)
@@ -561,11 +561,11 @@ to have the command remember your location.
 #### Event-queue management
 ##### [eventqueue](Admin.md#eventqueue)
 
-#### Process-management commands
+#### Process-management
 ##### [ps](Admin.md#ps)
 ##### [kill](Admin.md#kill)
 
-#### Registry commands
+#### Registry
 ##### [regset](Registry.md#regset)
 ##### [regunset](Registry.md#regunset)
 ##### [regchange](Registry.md#regchange)
@@ -574,7 +574,7 @@ to have the command remember your location.
 ##### [regsetmeta](Registry.md#regsetmeta)
 ##### [regunsetmeta](Registry.md#regunsetmeta)
 
-#### Message-history/user-tracking commands
+#### Message-history/user-tracking
 ##### [recall](Admin.md#recall)
 ##### [aka](Admin.md#aka)
 ##### [akalink](Admin.md#akalink)

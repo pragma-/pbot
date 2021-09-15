@@ -4,7 +4,7 @@
 * [Logging in and out](#logging-in-and-out)
   * [login](#login)
   * [logout](#logout)
-* [User-management commands](#user-management-commands)
+* [User-management](#user-management)
   * [useradd](#useradd)
   * [userdel](#userdel)
   * [userset](#userset)
@@ -22,7 +22,7 @@
     * [Checking user capabilities](#checking-user-capabilities)
     * [Listing users who have a capability](#listing-users-who-have-a-capability)
     * [User capabilities list](#user-capabilities-list)
-* [Channel management commands](#channel-management-commands)
+* [Channel management](#channel-management)
   * [join](#join)
   * [part](#part)
   * [chanadd](#chanadd)
@@ -43,32 +43,32 @@
   * [unban/unmute](#unbanunmute)
   * [invite](#invite)
   * [kick](#kick)
-* [Module-management commands](#module-management-commands)
+* [Module-management](#module-management)
   * [load](#load)
   * [unload](#unload)
   * [Listing modules](#listing-modules)
-* [Plugin-management commands](#plugin-management-commands)
+* [Plugin-management](#plugin-management)
   * [plug](#plug)
   * [unplug](#unplug)
   * [replug](#replug)
   * [pluglist](#pluglist)
-* [Command metadata commands](#command-metadata-commands)
+* [Command metadata](#command-metadata)
   * [cmdset](#cmdset)
   * [cmdunset](#cmdunset)
   * [Command metadata list](#command-metadata-list)
 * [Event-queue management](#event-queue-management)
   * [eventqueue](#eventqueue)
-* [Process-management commands](#process-management-commands)
+* [Process-management](#process-management)
   * [ps](#ps)
   * [kill](#kill)
-* [Message-history/user-tracking commands](#message-historyuser-tracking-commands)
+* [Message-history/user-tracking](#message-historyuser-tracking)
   * [recall](#recall)
   * [id](#id)
   * [aka](#aka)
   * [akalink](#akalink)
   * [akaunlink](#akaunlink)
   * [akadelete](#akadelete)
-* [Miscellaneous commands](#miscellaneous-commands)
+* [Miscellaneous](#miscellaneous)
   * [export](#export)
   * [refresh](#refresh)
   * [reload](#reload)
@@ -93,7 +93,7 @@ Logs out of PBot.
 
 Usage: `logout`
 
-## User-management commands
+## User-management
 ### useradd
 Adds a new user to PBot.
 
@@ -350,7 +350,7 @@ Name | Description | Belongs to group
 `can-voice-wildcard` | Allows the user to use wildcards with the [`voice`](#voice) command. | botowner, admin, chanop, chanmod
 `is-whitelisted` | The user is exempt from anti-flood, ban-evasion checks, wild-card kicking, etc. | botowner, admin, chanop
 
-## Channel management commands
+## Channel management
 ### join
 To temporarily join a channel, use the `join` command. The channels may be a comma-
 separated list.
@@ -480,7 +480,7 @@ Removes a user from the channel. `<nick>` can be a comma-separated list of multi
 Usage from channel:   `kick <nick> [reason]`
 From private message: `kick <channel> <nick> [reason]`
 
-## Module-management commands
+## Module-management
 Note that modules are "reloaded" each time they are executed. There is no need to `refresh` after editing a module.
 
 ### load
@@ -505,7 +505,7 @@ it is included here for completeness.
 
 Usage: `list modules`
 
-## Plugin-management commands
+## Plugin-management
 ### plug
 Loads a plugin into PBot.
 
@@ -532,7 +532,7 @@ Usage: `pluglist`
               GoogleSearch, Quotegrabs, RemindMe, RestrictedMod, Spinach, TypoSub, UrlTitles,
               Weather, Wolfram, Wttr
 
-## Command metadata commands
+## Command metadata
 ### cmdset
 Use `cmdset` to set various [metadata](#command-metadata-list) for built-in commands.
 
@@ -583,7 +583,7 @@ Or to remove all `command` events in `#channel`:
 
     <pragma-> eventqueue remove command #channel *
 
-## Process-management commands
+## Process-management
 ### ps
 Lists all currently running background processes.
 
@@ -609,7 +609,7 @@ Option | Description
 
 If neither options `-a` or `-t` are provided then the `pids...` option is required.
 
-## Message-history/user-tracking commands
+## Message-history/user-tracking
 Message history has an advanced user tracking algorithm in order to ensure that
 messages are being stored in the right message history accounts. The following commands
 query and manipulate the message history account links.
@@ -731,7 +731,7 @@ Option | Description
 
 If neither options `-h` or `-n` are given, then the entire message history account will be deleted.
 
-## Miscellaneous commands
+## Miscellaneous
 These are some of the miscellaneous admin commands that have not been covered
 above or in the rest of the PBot documentation.
 
