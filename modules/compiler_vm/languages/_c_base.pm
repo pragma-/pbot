@@ -352,7 +352,7 @@ sub preprocess_code {
   $self->{code} =~ s/\s+$//;
   $self->{code} =~ s/;\s*;\n/;\n/gs;
   $self->{code} =~ s/;(\s*\/\*.*?\*\/\s*);\n/;$1/gs;
-  $self->{code} =~ s/;(\s*\/\/.*?\s*);\n/;$1/gs;
+  $self->{code} =~ s/;(\s*\/\/.*?\s*);\n/;$1;/gs;
   $self->{code} =~ s/(\{|})\n\s*;\n/$1\n/gs;
   $self->{code} =~ s/(?:\n\n)+/\n\n/g;
 
