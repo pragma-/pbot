@@ -16,13 +16,13 @@ PBot is a pragmatic IRCv3 Bot written in Perl
     * [Output customization](#output-customization)
       * [Newlines in messages](#newlines-in-messages)
       * [Truncating long messages](#truncating-long-messages)
-    * [Scripting interface](#scripting-interface)
     * [Extensible](#extensible)
       * [Factoids](#factoids)
       * [Code factoids](#code-factoids)
       * [Plugins](#plugins)
       * [Modules](#modules)
       * [Functions](#functions)
+      * [Scripting interface](#scripting-interface)
     * [Virtual machine to safely execute user-submitted code](#virtual-machine-to-safely-execute-user-submitted-code)
     * [Powerful user management](#powerful-user-management)
     * [Useful IRC quality-of-life improvements](#useful-irc-quality-of-life-improvements)
@@ -153,13 +153,6 @@ will be truncated, with enough room to append the paste URL.
 When `preserve_newlines` is enabled, if there are more lines available than `max_newlines` then
 all of the lines will be pasted, with formatting preserved, to a web paste service. PBot will then
 output up to `max_newlines` lines as distinct messages and then output the URL to the paste.
-
-### Scripting interface
-PBot uses [Plang](https://github.com/pragma-/Plang) as a scripting language. You can use the
-scripting language to construct advanced commands that are capable of interacting with PBot
-internal API functions.
-
-[Learn more.](doc/Plugins/Plang.md)
 
 ### Extensible
 Additional commands and functionality can  be added to PBot in the following ways.
@@ -321,6 +314,13 @@ Additional Functions can easily be added by making a very simple PBot Plugin.
 
 For more information, see the [Functions documentation](doc/Functions.md).
 
+#### Scripting interface
+PBot uses [Plang](https://github.com/pragma-/Plang) as a scripting language. You can use the
+scripting language to construct advanced commands that are capable of interacting with PBot
+internal API functions.
+
+[Learn more.](doc/Plugins/Plang.md)
+
 ### Virtual machine to safely execute user-submitted code
 PBot can integrate with a virtual machine to safely execute arbitrary user-submitted
 operating system commands or code.
@@ -383,11 +383,11 @@ For more information, see the [Admin documentation.](doc/Admin.md)
 ### Channel management and protection
 PBot can perform the typical channel management tasks.
 
-* opping/deopping, etc
-* channel-mode tracking
-* user hostmask/alias tracking
-* ban-evasion detection
-* flood detection
+* opping/deopping known users, etc
+* channel-mode tracking/protection
+* [user hostmask/alias tracking](doc/Admin.md#message-historyuser-tracking)
+* [ban-evasion detection](doc/Admin.md#akalink)
+* [flood detection](doc/AntiAbuse.md)
 * whitelisting, blacklisting, etc
 * spam/advertisement detection
 * and much, much more!

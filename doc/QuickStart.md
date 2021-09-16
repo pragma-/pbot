@@ -422,7 +422,7 @@ enabled | If set to false, PBot will not autojoin or respond to this channel. | 
 chanop | If set to true, PBot will perform OP duties in this channel. | 0
 permop | If set to true, PBot will not de-OP itself in this channel. | 0
 
-For more information, see the [Channels documentation](Admin.md#channel-management-commands).
+For more information, see the [Channels documentation](Admin.md#channel-management).
 
 ## Further Reading
 That should get you started. For further information about PBot, check out these topics.

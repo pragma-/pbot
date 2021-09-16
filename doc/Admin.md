@@ -671,7 +671,7 @@ Option | Description
 If neither options `-a` or `-t` are provided then the `pids...` option is required.
 
 ## Message-history/user-tracking
-Message history has an advanced user tracking algorithm in order to ensure that
+PBot's message history uses an advanced user tracking algorithm in order to ensure that
 messages are being stored in the right message history accounts. The following commands
 query and manipulate the message history account links.
 
@@ -765,11 +765,13 @@ Examples:
        <PBot> bob also known as: bob!~bob@user/bob (seen 5m ago), bobby!~bob@user/bob (seen 6d ago), robert!~bob@127.0.0.1 (seen 20d ago)
 
 ### akalink
-PBot's message history has an advanced user-tracking algorithm in order to ensure that
-messages are being stored in the right message history accounts. But sometimes
-users connect from wholly distinct accounts with no obviously linkable metadata. If
-you know for certain that they are the same individual, you can use the `akalink`
-command to manually link two message history accounts together.
+PBot's message history uses an advanced user-tracking algorithm in order to ensure that
+messages are being stored in the right message history accounts. This is also used for
+detecting ban-evasions and looking up also-known-as aliases.
+
+But sometimes users connect from wholly distinct accounts with no obviously linkable metadata.
+If you know for certain that they are the same individual, you can use the `akalink` command
+to manually link two message history accounts together.
 
 Usage: `akalink <target id> <alias id> [type]`
 
