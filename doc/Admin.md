@@ -672,8 +672,8 @@ If neither options `-a` or `-t` are provided then the `pids...` option is requir
 
 ## Message-history/user-tracking
 PBot's message history uses an advanced user tracking algorithm in order to ensure that
-messages are being stored in the right message history accounts. The following commands
-query and manipulate the message history account links.
+messages are being stored in the right message history accounts. This is also used for
+detecting ban-evasions and looking up also-known-as aliases.
 
 Note that "message history account" and "PBot user account" are distinct accounts.
 
@@ -723,10 +723,10 @@ Examples:
        <PBot> pragma- (pragma-!~chaos@user/pragmatic-chaos): user id: 2; user account: pragma- (logged in); NickServ: pragma-
 
     <pragma-> id 2
-       <PBot> pragma- (pragma-!~chaos@user/pragmatic-chaos): user id: 2; user account: pragma- (logged in); NickServ: pragma-
+       <PBot> 2 (pragma-!~chaos@user/pragmatic-chaos): user id: 2; user account: pragma- (logged in); NickServ: pragma-
 
     <pragma-> id *!*@*/pragmatic-chaos
-       <PBot> pragma- (pragma-!~chaos@user/pragmatic-chaos): user id: 2; user account: pragma- (logged in); NickServ: pragma-
+       <PBot> *!*@*/pragmatic-chaos (pragma-!~chaos@user/pragmatic-chaos): user id: 2; user account: pragma- (logged in); NickServ: pragma-
 
     <pragma-> id *!*@user/*
        <PBot> Multiple accounts found: PBot!pbot3@user/pbot (1), pragma-!~chaos@user/pragmatic-chaos (2), ...
