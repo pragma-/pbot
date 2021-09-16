@@ -48,7 +48,7 @@ For example, the bot's trigger is defined in `general.trigger`. You may set a `t
 You may override the Registry values via the PBot start-up command-line. These
 overrides are not temporary; they will be saved.
 
-    $ ./pbot data_dir=mybot irc.botnick=coolbot irc.server=freenode.net irc.port=6667
+    $ ./pbot data_dir=mybot irc.botnick=coolbot irc.server=irc.libera.chat irc.port=6667
 
 ## Registry commands
 ### regset
@@ -203,7 +203,7 @@ interpreter.max_recursion | The maximum number of recursions allowed before the 
 irc.botnick | The IRC nickname of this PBot instance. |
 irc.debug | Log verbose debugging information about the IRC engine. | 0
 irc.identify_password | The password to identify to NickServ or other service bots. |
-irc.server | The IRC server network address to connect to. | irc.freenode.net
+irc.server | The IRC server network address to connect to. | irc.libera.chat
 irc.log_default_handler | If set to a true value, any IRC events that are not explicitly handled by PBot will be dumped to the log. | 1
 irc.max_msg_len | The maximum length messages can be on this IRC server. | 425
 irc.port | The IRC server network port to connect to. | 6667
