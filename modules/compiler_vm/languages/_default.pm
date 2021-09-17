@@ -232,7 +232,7 @@ sub show_output {
     $pretty_code .= "$output\n";
     $pretty_code .= $output_closing_comment;
 
-    my $uri = $self->paste_ixio($pretty_code);
+    my $uri = $self->paste_0x0($pretty_code);
     print "$uri\n";
     exit 0;
   }
@@ -287,6 +287,33 @@ sub paste_ixio {
   $result =~ s/^\s+//;
   $result =~ s/\s+$//;
   return $result;
+}
+
+sub paste_0x0 {
+    my $self = shift;
+    my $text = join ' ', @_;
+
+    $text =~ s/(.{120})\s/$1\n/g;
+
+    my $ua = LWP::UserAgent->new();
+    $ua->agent("Mozilla/5.0");
+    push @{ $ua->requests_redirectable }, 'POST';
+    $ua->timeout(10);
+
+    my $response =  $ua->post(
+        "https://0x0.st",
+        [ file => [ undef, "filename", Content => $text, 'Content-Type' => 'text/plain' ] ],
+        Content_Type => 'form-data'
+    );
+
+    if(not $response->is_success) {
+        return "error pasting: " . $response->status_line;
+    }
+
+    my $result = $response->decoded_content;
+    $result =~ s/^\s+//;
+    $result =~ s/\s+$//;
+    return $result;
 }
 
 sub execute {
