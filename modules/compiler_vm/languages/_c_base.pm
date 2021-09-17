@@ -68,7 +68,11 @@ sub process_custom_options {
   my $self = shift;
 
   $self->add_option("-nomain") if $self->{code} =~ s/(?:^|(?<=\s))-nomain\s*//i;
-  $self->add_option("-noheaders") if $self->{code} =~ s/(?:^|(?<=\s))-noheaders\s*//i;
+
+  if ($self->{code} =~ s/(?:^|(?<=\s))-noheaders\s*//i) {
+      $self->add_option("-noheaders");
+      $self->{no_gdb_extensions} = 1;
+  }
 
   $self->{include_options} = "";
   while ($self->{code} =~ s/(?:^|(?<=\s))-include\s+(\S+)\s+//) {
@@ -99,7 +103,7 @@ sub pretty_format {
 
 sub preprocess_code {
   my $self = shift;
-  $self->SUPER::preprocess_code;
+  $self->SUPER::preprocess_code(omit_prelude => 1);
 
   my $default_prelude = exists $self->{options}->{'-noheaders'} ? '' : $self->{prelude};
 
@@ -208,7 +212,7 @@ sub preprocess_code {
     }
   }
 
-  if (not $self->{no_gdb_extensions} and $prelude !~ m/^#include <prelude.h>/mg) {
+  if (not exists $self->{options}->{'-noheaders'} and not $self->{no_gdb_extensions} and $prelude !~ m/^#include <prelude.h>/mg) {
     $prelude .= "\n#include <prelude.h>\n";
   }
 

@@ -60,7 +60,7 @@ sub pretty_format {
 }
 
 sub preprocess_code {
-  my $self = shift;
+  my ($self, %opts) = @_;
 
   if ($self->{only_show}) {
     print "$self->{code}\n";
@@ -72,10 +72,6 @@ sub preprocess_code {
     print FILE localtime() . "\n";
     print FILE "$self->{nick} $self->{channel}: [" . $self->{arguments} . "] " . $self->{cmdline_options} . "$self->{code}\n";
     close FILE;
-  }
-
-  if (exists $self->{prelude}) {
-    $self->{code} = "$self->{prelude}\n$self->{code}";
   }
 
   # replace \n outside of quotes with literal newline
@@ -131,6 +127,10 @@ sub preprocess_code {
 
     $new_code .= '\\' and $escaped = 0 if $escaped;
     $new_code .= $ch;
+  }
+
+  if (!$opts{omit_prelude} && exists $self->{prelude}) {
+    $self->{code} = "$self->{prelude}\n$self->{code}";
   }
 
   $self->{code} = $new_code;
