@@ -92,7 +92,7 @@ pragma:
       'pragma' token_sequence(?) <skip: '[ \t]*'> "\n"
           {
             my $pragma = join('',@{$item{'token_sequence(?)'}});
-            if ($pragma) { $pragma = ' "$pragma"'; }
+            if ($pragma) { $pragma = " \"$pragma\""; }
             "Process a compiler-dependent pragma$pragma.\n"
           }
 
