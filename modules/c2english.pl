@@ -295,7 +295,7 @@ close $fh;
 
 #my ($ret, $result) = execute(10, "gcc -std=c89 -pedantic -Werror -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
 my ($ret, $result) =
-  execute(10, "gcc -std=c11 -pedantic -Werror -Wno-implicit -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
+  execute(10, "ulimit -t 2; gcc -std=c11 -pedantic -Werror -Wno-implicit -Wno-unused -fsyntax-only -fno-diagnostics-show-option -fno-diagnostics-show-caret code.c");
 
 if (not $force and $ret != 0) {
     $output = $result;
