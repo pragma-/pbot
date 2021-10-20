@@ -20,6 +20,14 @@ sub initialize {
     );
 
     $self->{storage}->load;
+
+    # reset joined_channels flag when disconnected
+    $self->{pbot}->{event_dispatcher}->register_handler(
+        'pbot.disconnect',
+        sub {
+            $self->{pbot}->{joined_channels} = 0;
+        }
+    );
 }
 
 sub join {
@@ -59,6 +67,7 @@ sub autojoin {
 
     $self->{pbot}->{logger}->log("Joining channels: $channels\n");
     $self->join($channels);
+
     $self->{pbot}->{joined_channels} = 1;
 }
 

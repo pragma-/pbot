@@ -60,6 +60,11 @@ sub on_disconnect {
     $self->{pbot}->{logger}->log("Disconnected...\n");
     $self->{pbot}->{connected} = 0;
 
+    # send pbot.disconnect to notify PBot internals
+    $self->{pbot}->{event_dispatcher}->dispatch_event(
+        'pbot.disconnect', undef
+    );
+
     # attempt to reconnect to server
     # TODO: maybe add a registry entry to control whether the bot auto-reconnects
     $self->{pbot}->connect;
