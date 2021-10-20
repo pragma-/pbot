@@ -62,6 +62,8 @@ my ($term, $lang, $section, $num, $all, $unique, $opt_e, $opt_p);
 $lang    //= 'English';
 $section //= 'definitions';
 
+$all //= 1;
+
 if ($opt_p and $opt_e) {
     print "Options -e and -p cannot be used together.\n";
     exit 1;
