@@ -1,6 +1,6 @@
 {
    "$metadata$" : {
-      "name" : "Commands",
+      "name" : "Command metadata",
       "update_version" : 3503
    },
    "actiontrigger" : {
@@ -11,6 +11,10 @@
    "aka" : {
       "help" : "Lists known aliases for a given nick. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#aka",
       "requires_cap" : 0
+   },
+   "akadelete" : {
+      "help" : "",
+      "requires_cap" : 1
    },
    "akalink" : {
       "help" : "Manually link a known alias to a nick. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#akalink",
@@ -153,6 +157,7 @@
       "requires_cap" : "1"
    },
    "export" : {
+      "background-process" : "1",
       "help" : "Exports specified list to HTML file. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#export",
       "requires_cap" : 1
    },
@@ -190,6 +195,10 @@
    },
    "factmove" : {
       "help" : "Renames a factoid or moves a factoid to a different channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factmove",
+      "requires_cap" : 0
+   },
+   "factoid" : {
+      "help" : "",
       "requires_cap" : 0
    },
    "factredo" : {
@@ -288,7 +297,8 @@
       "requires_cap" : "0"
    },
    "list" : {
-      "help" : "Lists various collections, such as channels or admins. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#list"
+      "help" : "Lists various collections, such as channels or admins. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#list",
+      "requires_cap" : 0
    },
    "load" : {
       "help" : "This command loads a module as a PBot command. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#load",
@@ -324,6 +334,10 @@
       "help" : "Dumps the internal nicklist structure. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#nicklist",
       "requires_cap" : 0
    },
+   "nop" : {
+      "help" : "",
+      "requires_cap" : 0
+   },
    "op" : {
       "help" : "Gives channel operator status to users. Accepts wildcards. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#op",
       "requires_cap" : "1"
@@ -331,6 +345,10 @@
    "part" : {
       "help" : "Departs a channel, without removing it from PBot's list of channels to manage/auto-join. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#part",
       "requires_cap" : 1
+   },
+   "pd" : {
+      "help" : "",
+      "requires_cap" : 0
    },
    "plang" : {
       "dont-replace-pronouns" : "1",
@@ -362,7 +380,7 @@
    },
    "recall" : {
       "dont-replace-pronouns" : "0",
-      "help" : "Recalls previous chat history for a channel. See https://github.com/pragma-/pbot/blob/master/doc/Commands.md#recall",
+      "help" : "Recalls previous chat history for a channel. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#recall",
       "requires_cap" : "0"
    },
    "refresh" : {
@@ -417,6 +435,11 @@
       "dont-replace-pronouns" : "1",
       "help" : "Retrieves and displays a random quote from the quotegrabs database. See https://github.com/pragma-/pbot/blob/master/doc/Plugins/Quotegrabs.md#rq",
       "requires_cap" : 0
+   },
+   "runcmd" : {
+      "help" : "Executes a system command and outputs each line in real-time",
+      "interpolate" : "0",
+      "requires_cap" : 1
    },
    "sl" : {
       "help" : "Sends a raw IRC command to the server. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#sl",
@@ -480,6 +503,10 @@
       "help" : "Sets metadata for an user account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#userset and https://github.com/pragma-/pbot/blob/master/doc/Admin.md#user-metadata-list",
       "requires_cap" : 1
    },
+   "usershow" : {
+      "help" : "",
+      "requires_cap" : 0
+   },
    "userunset" : {
       "dont-replace-pronouns" : "1",
       "help" : "Deletes a metadata key from an user account. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#userunset",
@@ -498,9 +525,13 @@
       "help" : "Fetches and displays weather data. You may set `!my location ...` to remember your location.",
       "requires_cap" : 0
    },
+   "wolfram" : {
+      "help" : "Queries Wolfram|Alpha Short Answers API",
+      "requires_cap" : 0
+   },
    "wttr" : {
       "background-process" : "1",
-      "help" : "",
+      "help" : "Provides weather information via wttr.in",
       "requires_cap" : "0"
    }
 }
