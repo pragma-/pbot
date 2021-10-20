@@ -79,7 +79,15 @@ sub postprocess {
 
   print "Executing gdb\n";
   my @args = $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 0);
-  my ($exitval, $stdout, $stderr) = $self->execute(60, undef, 'compiler_watchdog.pl', @args);
+  my ($exitval, $stdout, $stderr);
+
+  if ($self->{cmdline} =~ /-fsanitize=(?:[^ ]+,)?address/) {
+      # leak sanitizer doesn't work under ptrace/gdb
+      # ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
+      ($exitval, $stdout, $stderr) = $self->execute(60, undef, './prog', @args);
+  } else {
+      ($exitval, $stdout, $stderr) = $self->execute(60, undef, 'compiler_watchdog.pl', @args);
+  }
 
   my $result = $stderr;
   $result .= ' ' if length $result;
