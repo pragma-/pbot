@@ -73,16 +73,20 @@ sub cmd_call_factoid {
     my ($self, $context) = @_;
     my ($chan, $keyword, $args) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3, 0, 1);
 
-    if (not defined $chan or not defined $keyword) { return "Usage: fact <channel> <keyword> [arguments]"; }
+    if (not defined $chan or not defined $keyword) {
+        return "Usage: fact <channel> <keyword> [arguments]";
+    }
 
     my ($channel, $trigger) = $self->{pbot}->{factoids}->{data}->find($chan, $keyword, arguments => $args, exact_channel => 1, exact_trigger => 1);
 
-    if (not defined $trigger) { return "No such factoid $keyword exists for $chan"; }
+    if (not defined $trigger) {
+        return "No such factoid $keyword exists for $chan";
+    }
 
     $context->{keyword}      = $trigger;
     $context->{trigger}      = $trigger;
     $context->{ref_from}     = $channel;
-    $context->{arguments}    = $args;
+    $context->{arguments}    = $args // '';
     $context->{root_keyword} = $trigger;
 
     return $self->{pbot}->{factoids}->{interpreter}->interpreter($context);
