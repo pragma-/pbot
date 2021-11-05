@@ -33,8 +33,13 @@ sub execute {
 
         my $variables = $self->{pbot}->{factoids}->{variables};
 
+        # expand factoid variables/selectors/etc in code
         $context->{code} = $variables->expand_factoid_vars($context, $context->{code});
 
+        # expand factoid variables/selectors/etc in arguments
+        $context->{arguments} = $variables->expand_factoid_vars($context, $context->{arguments});
+
+        # expand factoid action $args
         if ($factoids->get_data($context->{channel}, $context->{keyword}, 'allow_empty_args')) {
             $context->{code} = $variables->expand_action_arguments($context->{code}, $context->{arguments}, '');
         } else {
